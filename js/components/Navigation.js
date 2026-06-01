@@ -2540,6 +2540,42 @@ class Navigation {
   }
 
   /**
+   * Colapsa el sidebar de forma temporal para vistas inmersivas (ej. Vera),
+   * recordando el estado previo SIN tocar la preferencia global (localStorage).
+   * Restaurar con restoreFromImmersive() al salir de la vista.
+   */
+  collapseForImmersive() {
+    if (this._immersiveActive) return;
+    const sidebar = document.getElementById('sideNavigation');
+    if (!sidebar) return;
+    this._immersiveActive = true;
+    this._immersivePrevCollapsed = this.isCollapsed;
+    if (!this.isCollapsed) {
+      this.isCollapsed = true;
+      sidebar.classList.add('collapsed');
+      document.body.classList.add('sidebar-collapsed');
+      this.updateSidebarToggleIcon();
+    }
+  }
+
+  /**
+   * Restaura el estado del sidebar previo a collapseForImmersive().
+   */
+  restoreFromImmersive() {
+    if (!this._immersiveActive) return;
+    this._immersiveActive = false;
+    const sidebar = document.getElementById('sideNavigation');
+    if (!sidebar) return;
+    if (this._immersivePrevCollapsed === false) {
+      this.isCollapsed = false;
+      sidebar.classList.remove('collapsed');
+      document.body.classList.remove('sidebar-collapsed');
+      this.updateSidebarToggleIcon();
+    }
+    this._immersivePrevCollapsed = undefined;
+  }
+
+  /**
    * Toggle navegación móvil
    */
   toggleMobileNav() {

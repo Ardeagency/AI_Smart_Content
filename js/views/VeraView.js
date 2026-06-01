@@ -1238,6 +1238,7 @@ class VeraView extends (window.BaseView || class {}) {
       organization_id: null,
       active_conversation_id: null,
       messages: [],
+      conversations: [],
       isLoading: false,
       pendingAttachments: []
     };
@@ -1356,6 +1357,11 @@ class VeraView extends (window.BaseView || class {}) {
       await window.appNavigation.render();
     }
 
+    // Vista inmersiva: al entrar a Vera se colapsa el sidebar global para dar
+    // todo el ancho al chat + su propio historial. Recuerda el estado previo y
+    // lo restaura en onLeave() — no toca la preferencia global del usuario.
+    try { window.appNavigation?.collapseForImmersive?.(); } catch (_) {}
+
     this.aiState.organization_id =
       this.routeParams?.orgId ||
       window.appState?.get('selectedOrganizationId') ||
@@ -1416,6 +1422,22 @@ class VeraView extends (window.BaseView || class {}) {
   renderHTML() {
     return `
       <div id="chatcontainer" class="gpt-layout">
+        <aside class="vera-history" id="veraHistory" aria-label="Historial de conversaciones">
+          <div class="vera-history-head">
+            <span class="vera-history-title">Conversaciones</span>
+            <button class="vera-history-collapse" id="veraHistoryCollapse" title="Ocultar historial" aria-label="Ocultar historial">
+              <i class="fas fa-angles-left"></i>
+            </button>
+          </div>
+          <button class="vera-history-new" id="veraNewChat" title="Nueva conversación">
+            <i class="fas fa-pen-to-square"></i><span>Nueva conversación</span>
+          </button>
+          <div class="vera-history-list" id="veraHistoryList"></div>
+        </aside>
+        <button class="vera-history-open" id="veraHistoryOpen" title="Mostrar conversaciones" aria-label="Mostrar conversaciones">
+          <i class="fas fa-bars-staggered"></i>
+        </button>
+        <div class="vera-history-scrim" id="veraHistoryScrim"></div>
         <div class="gpt-main" id="gptMain">
           <div class="gpt-messages-scroll" id="veraMessagesWrap">
             <div class="gpt-messages-inner" id="veraMessageList"></div>
@@ -1487,6 +1509,12 @@ class VeraView extends (window.BaseView || class {}) {
       this.renderWelcome();
     }
 
+    // Historial de conversaciones (rail izquierdo, estilo ChatGPT).
+    this.bindHistory();
+    this._applyHistoryCollapsed();
+    await this.loadConversations();
+    this.renderHistory();
+
     // Prefill desde ?q=<prompt> (usado por Monitoring → cards de perfiles).
     // Precarga el textarea sin enviar, deja la URL limpia y enfoca.
     try {
@@ -1553,6 +1581,168 @@ class VeraView extends (window.BaseView || class {}) {
       .limit(1)
       .maybeSingle();
     if (data?.id) this.aiState.active_conversation_id = data.id;
+  }
+
+  /* ── Historial de conversaciones (rail izquierdo) ────── */
+
+  // Al salir de Vera (router.onLeave) restauramos el sidebar global.
+  onLeave() {
+    try { window.appNavigation?.restoreFromImmersive?.(); } catch (_) {}
+  }
+
+  /**
+   * Carga las conversaciones del usuario en esta organización. Pide el conteo
+   * de mensajes embebido (FK ai_messages_conv_fkey) para filtrar las sesiones
+   * vacías (p. ej. "Sesión de voz" sin mensajes) que solo serían ruido.
+   */
+  async loadConversations() {
+    this.aiState.conversations = [];
+    if (!this.supabase || !this.aiState.organization_id || !this.userId) return;
+    try {
+      const { data, error } = await this.supabase
+        .from('ai_conversations')
+        .select('id, title, updated_at, ai_messages(count)')
+        .eq('organization_id', this.aiState.organization_id)
+        .eq('user_id', this.userId)
+        .order('updated_at', { ascending: false })
+        .limit(60);
+      if (error || !data) return;
+      this.aiState.conversations = data.filter(
+        (c) => (c.ai_messages?.[0]?.count || 0) > 0
+      );
+    } catch (_) { /* lista vacía si falla */ }
+  }
+
+  // Agrupa por antigüedad relativa al día actual (estilo ChatGPT).
+  _historyBucket(updatedAt) {
+    const startOfDay = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const now = new Date();
+    const d = new Date(updatedAt);
+    if (Number.isNaN(d.getTime())) return 'Anteriores';
+    const diff = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+    if (diff <= 0) return 'Hoy';
+    if (diff === 1) return 'Ayer';
+    if (diff <= 7) return 'Últimos 7 días';
+    if (diff <= 30) return 'Últimos 30 días';
+    return 'Anteriores';
+  }
+
+  _convTitle(c) {
+    const t = (c?.title || '').trim();
+    if (!t || t === 'Sesión de voz') return 'Conversación';
+    return t;
+  }
+
+  renderHistory() {
+    const list = document.getElementById('veraHistoryList');
+    if (!list) return;
+    const convs = this.aiState.conversations || [];
+    if (!convs.length) {
+      list.innerHTML = `<div class="vera-history-empty">Aún no tienes conversaciones.<br>Escribe abajo para empezar.</div>`;
+      return;
+    }
+    const order = ['Hoy', 'Ayer', 'Últimos 7 días', 'Últimos 30 días', 'Anteriores'];
+    const groups = {};
+    for (const c of convs) {
+      const b = this._historyBucket(c.updated_at);
+      (groups[b] = groups[b] || []).push(c);
+    }
+    const active = this.aiState.active_conversation_id;
+    let html = '';
+    for (const g of order) {
+      if (!groups[g]) continue;
+      html += `<div class="vera-history-group">${g}</div>`;
+      for (const c of groups[g]) {
+        const title = this._convTitle(c);
+        const safe = escapeHtml(title);
+        const attr = safe.replace(/"/g, '&quot;');
+        const cls = c.id === active ? 'vera-history-item active' : 'vera-history-item';
+        html += `<button class="${cls}" data-conv-id="${c.id}" title="${attr}"><span class="vera-history-item-title">${safe}</span></button>`;
+      }
+    }
+    list.innerHTML = html;
+  }
+
+  bindHistory() {
+    const list = document.getElementById('veraHistoryList');
+    if (list && !list.__veraHistBound) {
+      list.__veraHistBound = true;
+      list.addEventListener('click', (e) => {
+        const item = e.target.closest('.vera-history-item');
+        if (!item) return;
+        const id = item.getAttribute('data-conv-id');
+        if (id) this.selectConversation(id);
+      });
+    }
+    const wire = (id, fn) => {
+      const el = document.getElementById(id);
+      if (el && !el.__veraBound) { el.__veraBound = true; el.addEventListener('click', fn); }
+    };
+    wire('veraNewChat', () => this.startNewConversation());
+    wire('veraHistoryCollapse', () => this.toggleHistory(true));
+    wire('veraHistoryOpen', () => this.toggleHistory(false));
+    wire('veraHistoryScrim', () => this.toggleHistory(true));
+  }
+
+  _isMobile() {
+    return !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+  }
+
+  // collapsed === undefined → alterna. true → oculta, false → muestra.
+  toggleHistory(collapsed) {
+    const layout = document.getElementById('chatcontainer');
+    if (!layout) return;
+    const next = collapsed === undefined
+      ? !layout.classList.contains('history-collapsed')
+      : !!collapsed;
+    layout.classList.toggle('history-collapsed', next);
+    // En móvil el historial es un drawer temporal: no persistimos su estado.
+    if (!this._isMobile()) {
+      try { localStorage.setItem('veraHistoryCollapsed', next ? 'true' : 'false'); } catch (_) {}
+    }
+  }
+
+  _applyHistoryCollapsed() {
+    const layout = document.getElementById('chatcontainer');
+    if (!layout) return;
+    let collapsed = false;
+    if (this._isMobile()) {
+      collapsed = true; // móvil: drawer cerrado por defecto
+    } else {
+      try { collapsed = localStorage.getItem('veraHistoryCollapsed') === 'true'; } catch (_) {}
+    }
+    layout.classList.toggle('history-collapsed', collapsed);
+  }
+
+  async selectConversation(id) {
+    if (!id) return;
+    if (id !== this.aiState.active_conversation_id) {
+      this.aiState.active_conversation_id = id;
+      await this.loadMessages();
+      this.renderMessages();
+      this.renderHistory();
+    }
+    if (this._isMobile()) this.toggleHistory(true);
+  }
+
+  startNewConversation() {
+    this.aiState.active_conversation_id = null;
+    this.aiState.messages = [];
+    this.renderWelcome();
+    this.renderHistory();
+    const input = document.getElementById('veraInput');
+    if (input) requestAnimationFrame(() => input.focus());
+    if (this._isMobile()) this.toggleHistory(true);
+  }
+
+  // Refresca el rail tras un intercambio (nueva conversación o título nuevo).
+  // Debounced: el backend puede tardar en generar el título de la sesión.
+  _refreshHistorySoon() {
+    if (this._histRefreshTimer) clearTimeout(this._histRefreshTimer);
+    this._histRefreshTimer = setTimeout(async () => {
+      await this.loadConversations();
+      this.renderHistory();
+    }, 1200);
   }
 
   /* ── Messages ────────────────────────────────────────── */
@@ -2151,6 +2341,9 @@ class VeraView extends (window.BaseView || class {}) {
     }
 
     list.insertAdjacentHTML('beforeend', this._msgHTML(prepared));
+    // Respuesta real de Vera: el backend pudo crear/renombrar la sesión →
+    // refresca el rail para reflejar título y orden por updated_at.
+    if (msg.role === 'assistant') this._refreshHistorySoon();
     this._bindMediaHover();
     this._bindTaskEvents();
     this._bindQuickReplyButtons();
@@ -2674,6 +2867,8 @@ class VeraView extends (window.BaseView || class {}) {
       // Guardar conversation_id si es nuevo
       if (json?.conversation_id && !this.aiState.active_conversation_id) {
         this.aiState.active_conversation_id = json.conversation_id;
+        // Conversación recién creada: refresca el rail para que aparezca.
+        this._refreshHistorySoon();
       }
 
       const convId = json?.conversation_id || this.aiState.active_conversation_id;
