@@ -1767,22 +1767,25 @@ class VeraView extends (window.BaseView || class {}) {
         }
       },
       campaign: {
+        // Campañas REALES = sincronizadas desde Meta/Google (last_synced_at no nulo).
         label: 'Campaña', icon: 'fa-bullhorn',
         load: async () => {
           const { data } = await sb().from('campaigns')
             .select('id, nombre_campana, status')
-            .eq('organization_id', orgId).neq('status', 'conceptual')
+            .eq('organization_id', orgId).not('last_synced_at', 'is', null)
             .order('created_at', { ascending: false }).limit(300);
           const st = { active: 'Activa', paused: 'Pausada', draft: 'Borrador', ended: 'Finalizada', archived: 'Archivada' };
           return (data || []).map((r) => ({ id: r.id, name: r.nombre_campana || 'Campaña sin nombre', meta: st[r.status] || r.status || '' }));
         }
       },
       campaign_objective: {
+        // Campañas CONCEPTUALES = no sincronizadas (last_synced_at nulo); sirven
+        // para dirigir la producción hacia un objetivo.
         label: 'Objetivo de campaña', icon: 'fa-bullseye',
         load: async () => {
           const { data } = await sb().from('campaigns')
             .select('id, nombre_campana')
-            .eq('organization_id', orgId).eq('status', 'conceptual')
+            .eq('organization_id', orgId).is('last_synced_at', null)
             .order('created_at', { ascending: false }).limit(300);
           return (data || []).map((r) => ({ id: r.id, name: r.nombre_campana || 'Objetivo sin nombre', meta: 'Conceptual' }));
         }
