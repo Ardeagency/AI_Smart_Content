@@ -223,7 +223,8 @@ class PlacesView extends BaseView {
 
     const itemHtmls = this.places.map((p, i) => this._renderPlaceCard(p, i));
     container.innerHTML = `<div class="living-masonry-grid products-list-masonry-grid">${itemHtmls.join('')}</div>`;
-    // Grid uniforme via CSS (sin justified-layout).
+    const grid = container.querySelector('.living-masonry-grid');
+    if (grid && window.applyJustifiedLayout) window.applyJustifiedLayout(grid, { targetHeight: 260 });
 
     container.querySelectorAll('.product-list-card').forEach((card) => {
       const placeId = card.getAttribute('data-place-id');

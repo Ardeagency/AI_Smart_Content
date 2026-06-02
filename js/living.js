@@ -1244,7 +1244,8 @@ class LivingManager {
         const gridHtml = `<div class="living-masonry-grid living-history-masonry" role="list" aria-label="Producciones">${itemHtmls.join('')}</div>`;
         container.innerHTML = gridHtml;
 
-        // Grid uniforme via CSS (sin justified-layout): las cards son cuadradas e iguales.
+        const grid = container.querySelector('.living-masonry-grid') || container;
+        if (window.applyJustifiedLayout) window.applyJustifiedLayout(grid);
         this.setupHistoryCardListeners(container);
         this.setupHistoryFilters();
         this.setupHistoryInfiniteScroll();
