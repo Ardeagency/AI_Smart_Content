@@ -2246,7 +2246,9 @@
 /* ── EVIDENCIA: cards "lo que te funciona" (Tema/Tono/Horario/Hashtag) ── */
 .mb-feat-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* auto-fit: cuando una dimension vacia se reemplaza (o falta un backup),
+     las 3-4 cards resultantes siguen llenando el ancho sin huecos. */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.85rem;
 }
 .mb-feat-card {
@@ -2271,7 +2273,10 @@
   text-transform: capitalize;
 }
 .mb-feat-card--hashtag .mb-feat-headline,
-.mb-feat-card--hour .mb-feat-headline { text-transform: none; }
+.mb-feat-card--hour .mb-feat-headline,
+.mb-feat-card--platform .mb-feat-headline,
+.mb-feat-card--growth .mb-feat-headline,
+.mb-feat-card--profile .mb-feat-headline { text-transform: none; }
 .mb-feat-metrics {
   display: flex; flex-direction: column; gap: 0.1rem;
   margin-top: auto; font-variant-numeric: tabular-nums;

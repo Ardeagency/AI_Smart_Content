@@ -335,50 +335,81 @@
       return out.slice(0, 8);
     },
 
-    /* ── 4 cards featured (Tema / Tono / Horario / Hashtag) ─── */
+    /* ── Cards featured con pool priorizado ───────────────────────────────
+       4 dimensiones primarias (Tema/Tono/Horario/Hashtag) + 3 backups
+       (Plataforma/Crecimiento/Cuenta). Si una primaria viene vacia (0 data),
+       NO se muestra hueco: se rellena con el siguiente backup que SI tiene
+       datos. Se renderizan las primeras 4 con datos del pool ordenado. */
     _buildFeaturedCards(featured) {
-      const topic   = (featured?.topic?.data   || [])[0] || null;
-      const tone    = (featured?.tones?.data   || [])[0] || null;
-      const hour    = (featured?.hour?.data    || [])[0] || null;
-      const hashtag = (featured?.hashtag?.data || [])[0] || null;
+      const f = featured || {};
+      const topic    = (f.topic?.data    || [])[0] || null;
+      const tone     = (f.tones?.data    || [])[0] || null;
+      const hour     = (f.hour?.data     || [])[0] || null;
+      const hashtag  = (f.hashtag?.data  || [])[0] || null;
+      const platform = (f.platform?.data || [])[0] || null;
+      const growth   = (f.growth?.data   || [])[0] || null;
+      const profile  = (f.profile?.data  || [])[0] || null;
 
-      return `
-        ${this._buildFeaturedCard({
-          kind: 'topic',
-          label: 'Tema ganador',
-          headline: topic?.topic,
-          metricPrimary: topic ? `${fmt.int(topic.usage_count)} posts` : null,
-          metricSecondary: topic ? `${this._compactNum(topic.total_engagement)} engagement` : null,
-          emptyHint: 'Sin temas detectados en la ventana.',
-        })}
+      const pool = [
+        (topic && topic.topic) && {
+          kind: 'topic', label: 'Tema ganador', headline: topic.topic,
+          metricPrimary: `${fmt.int(topic.usage_count)} posts`,
+          metricSecondary: `${this._compactNum(topic.total_engagement)} engagement`,
+        },
+        (tone && tone.tone_name) && {
+          kind: 'tone', label: 'Tono efectivo', headline: tone.tone_name,
+          metricPrimary: `${fmt.int(tone.posts_count)} posts`,
+          metricSecondary: `${this._compactNum(tone.total_engagement)} engagement`,
+        },
+        (hour && hour.hour != null) && {
+          kind: 'hour', label: 'Horario estrella', headline: `${String(hour.hour).padStart(2, '0')}:00`,
+          metricPrimary: `${fmt.int(hour.posts_count)} posts publicados`,
+          metricSecondary: `${this._compactNum(hour.avg_engagement_per_post)} eng/post`,
+        },
+        (hashtag && hashtag.hashtag) && {
+          kind: 'hashtag', label: 'Hashtag dominante', headline: `#${hashtag.hashtag}`,
+          metricPrimary: `${fmt.int(hashtag.usage_count)} usos`,
+          metricSecondary: `${this._compactNum(hashtag.total_engagement)} engagement`,
+        },
+        // ── Backups (rellenan huecos de las primarias) ──
+        (platform && platform.platform) && {
+          kind: 'platform', label: 'Plataforma estrella', headline: this._prettyPlatform(platform.platform),
+          metricPrimary: `${fmt.int(platform.total_posts)} posts`,
+          metricSecondary: `${this._compactNum(platform.total_engagement)} engagement`,
+        },
+        (growth && growth.engagement_growth_percent != null) && {
+          kind: 'growth', label: 'Crecimiento',
+          headline: `${growth.engagement_growth_percent >= 0 ? '+' : ''}${Math.round(growth.engagement_growth_percent)}%`,
+          metricPrimary: 'engagement',
+          metricSecondary: `${fmt.int(growth.start_posts)} → ${fmt.int(growth.end_posts)} posts`,
+        },
+        (profile && profile.brand_name) && {
+          kind: 'profile', label: 'Cuenta lider', headline: profile.brand_name,
+          metricPrimary: `${fmt.int(profile.total_posts)} posts`,
+          metricSecondary: `${this._compactNum(profile.total_engagement)} engagement`,
+        },
+      ].filter(Boolean);
 
-        ${this._buildFeaturedCard({
-          kind: 'tone',
-          label: 'Tono efectivo',
-          headline: tone?.tone_name,
-          metricPrimary: tone ? `${fmt.int(tone.posts_count)} posts` : null,
-          metricSecondary: tone ? `${this._compactNum(tone.total_engagement)} engagement` : null,
-          emptyHint: 'Sin tonos detectados aún.',
-        })}
+      // Sin ninguna señal con datos: card vacia informativa (o nada si hide).
+      if (!pool.length) {
+        if (shouldHideEmpty()) return '';
+        return this._buildFeaturedCard({
+          kind: 'topic', label: 'Tema ganador', headline: null,
+          emptyHint: 'Sin datos suficientes en la ventana.',
+        });
+      }
 
-        ${this._buildFeaturedCard({
-          kind: 'hour',
-          label: 'Horario estrella',
-          headline: (hour && hour.hour != null) ? `${String(hour.hour).padStart(2, '0')}:00` : null,
-          metricPrimary: hour ? `${fmt.int(hour.posts_count)} posts publicados` : null,
-          metricSecondary: hour ? `${this._compactNum(hour.avg_engagement_per_post)} eng/post` : null,
-          emptyHint: 'Sin publicaciones medidas por hora.',
-        })}
+      return pool.slice(0, 4).map((c) => this._buildFeaturedCard(c)).join('');
+    },
 
-        ${this._buildFeaturedCard({
-          kind: 'hashtag',
-          label: 'Hashtag dominante',
-          headline: hashtag?.hashtag ? `#${hashtag.hashtag}` : null,
-          metricPrimary: hashtag ? `${fmt.int(hashtag.usage_count)} usos` : null,
-          metricSecondary: hashtag ? `${this._compactNum(hashtag.total_engagement)} engagement` : null,
-          emptyHint: 'Aún no se detectan hashtags propios.',
-        })}
-      `;
+    /** Nombre legible de plataforma para la card "Plataforma estrella". */
+    _prettyPlatform(p) {
+      const m = {
+        tiktok: 'TikTok', instagram: 'Instagram', facebook: 'Facebook',
+        youtube: 'YouTube', x: 'X', twitter: 'X', linkedin: 'LinkedIn', pinterest: 'Pinterest',
+      };
+      const key = String(p || '').toLowerCase();
+      return m[key] || (p ? p.charAt(0).toUpperCase() + p.slice(1) : '—');
     },
 
     _buildFeaturedCard(opts) {

@@ -118,6 +118,7 @@ class CampanasDataService {
       health,
       kpis, list, dailySeries, winnersVsBurners, briefVsOutcome,
       featuredTopic, featuredHashtag, featuredHour, estrategiaTones,
+      featuredPlatform, featuredProfile, featuredGrowth,
       vulnerabilities,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_brand_health',                { p_org_id: this.orgId, p_date_window: healthWindowDays }),
@@ -133,6 +134,11 @@ class CampanasDataService {
       this.sb.rpc('dashboard_brand_featured_hashtag',      featuredArgs),
       this.sb.rpc('dashboard_brand_featured_hour',         featuredArgs),
       this.sb.rpc('dashboard_estrategia_tones',            { ...featuredArgs, p_limit: 5 }),
+
+      // Featured backup: rellenan una card primaria que venga vacia (0 data)
+      this.sb.rpc('dashboard_brand_featured_platform',     featuredArgs),
+      this.sb.rpc('dashboard_brand_featured_profile',      featuredArgs),
+      this.sb.rpc('dashboard_brand_featured_growth',       featuredArgs),
 
       vulnsPromise,
     ]);
@@ -151,10 +157,13 @@ class CampanasDataService {
       briefVsOutcome:   u(briefVsOutcome),
 
       featured: {
-        topic:   u(featuredTopic),
-        hashtag: u(featuredHashtag),
-        hour:    u(featuredHour),
-        tones:   u(estrategiaTones),
+        topic:    u(featuredTopic),
+        hashtag:  u(featuredHashtag),
+        hour:     u(featuredHour),
+        tones:    u(estrategiaTones),
+        platform: u(featuredPlatform),
+        profile:  u(featuredProfile),
+        growth:   u(featuredGrowth),
       },
 
       vulnerabilities: u(vulnerabilities),
