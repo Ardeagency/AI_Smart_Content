@@ -2637,6 +2637,13 @@ class Navigation {
       window.addEventListener('routechange', () => {
         this.updateActiveLink();
         this.updateHeaderTitle();
+        // Cerrar paneles de header (Actividad/Notificaciones/flyouts) al navegar:
+        // viven en portal fixed; sin esto quedaban flotando sobre la vista nueva
+        // si la navegacion no fue por click (teclado, back, navegacion programatica).
+        try { this.closeActivityDropdown?.(); } catch (_) {}
+        try { this.closeNotificationsFlyout?.(); } catch (_) {}
+        try { this.closeNotificationsDropdown?.(); } catch (_) {}
+        try { this.closeFlyout?.(); } catch (_) {}
       });
     }
     if (!this._userDropdownPositionAttached) {

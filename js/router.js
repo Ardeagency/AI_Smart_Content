@@ -157,15 +157,16 @@ class Router {
 
     // Feedback de navegacion: barra de progreso fina arriba (estilo NProgress),
     // NO overlay full-screen. La vista anterior sigue visible debajo mientras
-    // carga la nueva — patron pro SaaS (GitHub/Linear/Vercel): un spinner que
-    // tapa todo "se siente lento". Umbral 180ms: la barra no bloquea, asi que
-    // damos feedback temprano de que el click registro; en navegaciones rapidas
-    // (cache hit) nunca llega a mostrarse. Se limpia en el finally.
+    // carga la nueva — patron pro SaaS (GitHub/Linear/Vercel).
+    // Umbral 350ms (no 180): la view-transition (~280ms) ya da el feedback visual
+    // del "click registro" en navegaciones normales, asi que la barra SOLO aparece
+    // en cargas genuinamente lentas (fetch pesado). Antes a 180ms se solapaba con
+    // el crossfade y se veia doble feedback. Se limpia en el finally.
     const spinnerTimer = setTimeout(() => {
       if (window.appLoader && typeof window.appLoader.showProgress === 'function') {
         try { window.appLoader.showProgress(); } catch (_) {}
       }
-    }, 180);
+    }, 350);
 
     try {
       let path = window.location.pathname || '/';
@@ -384,6 +385,10 @@ class Router {
       if (!ViewClass || typeof ViewClass !== 'function') return;
 
       const prevView = this.currentView;
+      // Ruta anterior REAL (antes de que this.currentRoute se pise con el path nuevo):
+      // fuente de verdad para detectar el cruce org<->dev en la view-transition,
+      // en vez de leer body.route-dev (estado del DOM, mutable por otros caminos).
+      const prevPath = this.currentRoute;
       const canSoftNavigate =
         prevView &&
         prevView.constructor === ViewClass &&
@@ -494,7 +499,7 @@ class Router {
         // nav-root/app-root hace que el sidebar/header se snapshoteen y animen (parpadeo)
         // aunque no cambien -> dejamos el crossfade root global (invisible si son identicos).
         const isDevRoute = path.startsWith('/dev/');
-        const wasDevRoute = document.body.classList.contains('route-dev');
+        const wasDevRoute = (prevPath || '').startsWith('/dev/');
         if (isDevRoute !== wasDevRoute) {
           if (navEl) navEl.style.viewTransitionName = 'nav-root';
           if (appEl) appEl.style.viewTransitionName = 'app-root';

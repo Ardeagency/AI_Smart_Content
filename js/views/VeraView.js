@@ -1673,6 +1673,9 @@ class VeraView extends (window.BaseView || class {}) {
     // Matar cualquier espera async en vuelo (ticker + polling 6s + realtime) para
     // que no siga golpeando Supabase en background tras salir de Vera.
     try { this._cancelAsyncWait?.(); } catch (_) {}
+    // El modal de adjuntar (#veraLibModal) vive en <body>; si se navega con el
+    // abierto (teclado/back) quedaba huerfano tapando la vista siguiente.
+    try { document.getElementById('veraLibModal')?.remove(); } catch (_) {}
   }
 
   /**
