@@ -2459,3 +2459,64 @@
 .mb-feat-card--sentiment[data-value="POS"] .mb-feat-headline { color: #6bcf7f; }
 .mb-feat-card--sentiment[data-value="NEG"] .mb-feat-headline { color: #e06464; }
 .mb-feat-card--sentiment[data-value="NEU"] .mb-feat-headline { color: var(--text-secondary, rgba(212, 209, 216, 0.85)); }
+
+/* ════════════════════════════════════════════════════════════════════
+   Mi Marca CAUSAL — cards que muestran el resultado + el POR QUE
+   ════════════════════════════════════════════════════════════════════ */
+.mb-section-hint { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.5)); font-weight: 400; letter-spacing: 0; text-transform: none; }
+.mb-causal-empty { font-size: 0.8125rem; color: var(--text-muted, rgba(212,209,216,0.55)); padding: 1.25rem; border: 1px dashed var(--border-divider, #242424); border-radius: 12px; text-align: center; }
+
+.mb-causal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.85rem; }
+
+.mb-causal-card {
+  position: relative; cursor: pointer;
+  display: flex; flex-direction: column; gap: 0.5rem;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 14px;
+  padding: 1.05rem 1.15rem 1.1rem;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.mb-causal-card:hover { transform: translateY(-2px); }
+.mb-causal-card--boost:hover { border-color: rgba(107,207,127,0.45); }
+.mb-causal-card--drag:hover  { border-color: rgba(224,160,69,0.45); }
+.mb-causal-card:focus-visible { outline: 2px solid var(--accent-brand, rgba(255,255,255,0.4)); outline-offset: 2px; }
+/* Acento lateral por tipo */
+.mb-causal-card::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 3px; }
+.mb-causal-card--boost::before { background: #6bcf7f; }
+.mb-causal-card--drag::before  { background: #e0a045; }
+
+.mb-causal-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.mb-causal-label {
+  font-size: 0.625rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted, rgba(212,209,216,0.55)); line-height: 1.2;
+}
+.mb-causal-lift {
+  flex: 0 0 auto; font-size: 0.75rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  padding: 0.12rem 0.45rem; border-radius: 6px; letter-spacing: 0.01em;
+}
+.mb-causal-lift--up   { color: #6bcf7f; background: rgba(107,207,127,0.14); }
+.mb-causal-lift--down { color: #e0a045; background: rgba(224,160,69,0.14); }
+
+.mb-causal-value {
+  font-size: 1.3rem; font-weight: 700; color: var(--text-primary, #D4D1D8);
+  line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Barra de lift vs tu promedio (centro = tu promedio) */
+.mb-causal-bar { position: relative; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; margin: 0.1rem 0 0.15rem; }
+.mb-causal-bar::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: rgba(255,255,255,0.22); }
+.mb-causal-bar > span { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.mb-causal-card--boost .mb-causal-bar > span { left: 50%; background: #6bcf7f; }
+.mb-causal-card--drag  .mb-causal-bar > span { right: 50%; background: #e0a045; }
+
+.mb-causal-why { margin: 0; font-size: 0.75rem; line-height: 1.45; color: var(--text-secondary, rgba(212,209,216,0.82)); }
+.mb-causal-why b { color: var(--text-primary, #D4D1D8); font-weight: 600; }
+
+.mb-causal-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.2rem; }
+.mb-causal-evidence { font-size: 0.625rem; color: var(--text-muted, rgba(212,209,216,0.5)); }
+.mb-causal-detail { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.03em; color: var(--text-muted, rgba(212,209,216,0.5)); display: inline-flex; align-items: center; gap: 0.3rem; transition: color 0.15s ease, gap 0.15s ease; }
+.mb-causal-detail i { font-size: 0.6rem; }
+.mb-causal-card:hover .mb-causal-detail { color: var(--text-primary, #D4D1D8); gap: 0.5rem; }
+
+@media (max-width: 480px) { .mb-causal-grid { grid-template-columns: 1fr; } }

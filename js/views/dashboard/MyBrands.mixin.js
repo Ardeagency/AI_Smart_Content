@@ -151,26 +151,105 @@
        Cards se construyen una a una. Por ahora: solo Brand Health.
        ════════════════════════════════════════════════════════════════ */
     _buildMyBrandsHtml(data) {
+      const insights = Array.isArray(data?.whatWorks?.data) ? data.whatWorks.data : [];
       return `
         <div class="insight-page mb-dash" id="mbPage">
           ${this._buildMbFiltersBar(data)}
           ${this._buildHealthGauge(data?.health?.data)}
-          ${this._buildFeaturedSection(data?.featured)}
+          ${this._buildCausalSection(insights, 'boost')}
+          ${this._buildCausalSection(insights, 'drag')}
           ${this._buildSwotCard(data)}
         </div>`;
     },
 
-    /* Seccion "Lo que te esta funcionando" — grid de cards de evidencia. */
-    _buildFeaturedSection(featured) {
-      const cards = this._buildFeaturedCards(featured);
-      if (!cards.trim()) return '';
+    /* Seccion causal: 'boost' = lo que te impulsa, 'drag' = lo que te resta.
+       Cada card muestra el resultado + lift vs tu promedio + el POR QUE
+       (emocion + sentimiento) + evidencia + ver detalles. */
+    _buildCausalSection(insights, kind) {
+      const items = (insights || []).filter((i) => i.kind === kind);
+      const title = kind === 'boost' ? 'Lo que te esta funcionando' : 'Lo que te esta restando';
+      const hint  = kind === 'boost'
+        ? 'Esto dispara la resonancia de tu audiencia — y por que'
+        : 'Esto te baja rendimiento frente a tu propio promedio';
+      if (!items.length) {
+        if (shouldHideEmpty()) return '';
+        return `
+          <section class="mb-section">
+            <div class="mb-section-head"><span class="mb-section-title">${title}</span></div>
+            <div class="mb-causal-empty">No hay contenido propio analizado en esta ventana. Amplia el rango (prueba <b>Todo el periodo</b>) para ver el analisis causal de tu marca.</div>
+          </section>`;
+      }
+      // Orden: boost por mayor lift; drag por lift mas negativo.
+      items.sort((a, b) => kind === 'boost'
+        ? Number(b.lift_pct) - Number(a.lift_pct)
+        : Number(a.lift_pct) - Number(b.lift_pct));
       return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">Lo que te esta funcionando</span>
+            <span class="mb-section-title">${title}</span>
+            <span class="mb-section-hint">${hint}</span>
           </div>
-          <div class="mb-feat-grid">${cards}</div>
+          <div class="mb-causal-grid">${items.map((i) => this._buildCausalCard(i, kind)).join('')}</div>
         </section>`;
+    },
+
+    _buildCausalCard(i, kind) {
+      const dimMeta = {
+        tono:    { label: 'Tono',    detailDim: 'tone' },
+        tema:    { label: 'Tema',    detailDim: 'topic' },
+        formato: { label: 'Formato', detailDim: 'format' },
+        horario: { label: 'Horario', detailDim: 'hour' },
+      }[i.dimension] || { label: i.dimension, detailDim: i.dimension };
+
+      const lift   = Math.round(Number(i.lift_pct) || 0);
+      const isUp   = lift >= 0;
+      const headLabel = (kind === 'boost')
+        ? `${dimMeta.label} que mas conecta`
+        : `${dimMeta.label} que te resta`;
+      const value  = this._causalValueLabel(i.dimension, i.value);
+      const posPct = Number.isFinite(Number(i.pos_ratio)) ? Math.round(Number(i.pos_ratio) * 100) : null;
+      const emo    = i.dominant_emotion && i.dominant_emotion !== 'emoción' ? i.dominant_emotion : null;
+      const n      = Number(i.post_count) || 0;
+      const conf   = n >= 10 ? 'alta' : n >= 4 ? 'media' : 'baja';
+
+      // El "por que": emocion que despierta + sentimiento de la audiencia.
+      const whyParts = [];
+      if (emo)        whyParts.push(`despierta <b>${this._esc(emo)}</b>`);
+      if (posPct != null) whyParts.push(`${posPct}% de tu audiencia reacciona en positivo`);
+      const why = whyParts.length ? whyParts.join(' · ') : 'senal emocional aun debil';
+
+      // Barra de lift desde el centro (vs tu promedio). Cap visual a 50% por lado.
+      const barW = Math.min(50, Math.abs(lift) / 4);
+
+      const detailValue = i.dimension === 'horario' ? String(parseInt(i.value, 10) || 0) : i.value;
+      const detailTitle = `${headLabel}: ${value}`;
+
+      return `
+        <article class="mb-causal-card mb-causal-card--${kind}"
+                 data-feat-detail data-dim="${this._esc(dimMeta.detailDim)}"
+                 data-value="${this._esc(detailValue)}" data-title="${this._esc(detailTitle)}"
+                 role="button" tabindex="0">
+          <div class="mb-causal-top">
+            <span class="mb-causal-label">${this._esc(headLabel)}</span>
+            <span class="mb-causal-lift mb-causal-lift--${isUp ? 'up' : 'down'}">
+              ${isUp ? '▲' : '▼'} ${isUp ? '+' : ''}${lift}%
+            </span>
+          </div>
+          <div class="mb-causal-value" title="${this._esc(value)}">${this._esc(value)}</div>
+          <div class="mb-causal-bar"><span style="width:${barW}%;"></span></div>
+          <p class="mb-causal-why">${why}</p>
+          <div class="mb-causal-foot">
+            <span class="mb-causal-evidence">${n} ${n === 1 ? 'post' : 'posts'} · confianza ${conf}</span>
+            <span class="mb-causal-detail">Ver detalles <i class="fas fa-arrow-right"></i></span>
+          </div>
+        </article>`;
+    },
+
+    /** Formatea el valor de la dimension para mostrar. */
+    _causalValueLabel(dim, val) {
+      if (dim === 'horario') return `${val}`;
+      const s = String(val || '').replace(/_/g, ' ');
+      return s.charAt(0).toUpperCase() + s.slice(1);
     },
 
     /* ════════════════════════════════════════════════════════════════
@@ -460,10 +539,11 @@
       const containers = data?.containers || this._campanasService?.containers || [];
 
       const windowOpts = [
-        { v: 7,   label: 'Últimos 7 días' },
-        { v: 30,  label: 'Últimos 30 días' },
-        { v: 90,  label: 'Últimos 90 días' },
-        { v: 365, label: 'Últimos 12 meses' },
+        { v: 7,     label: 'Últimos 7 días' },
+        { v: 30,    label: 'Últimos 30 días' },
+        { v: 90,    label: 'Últimos 90 días' },
+        { v: 365,   label: 'Últimos 12 meses' },
+        { v: 99999, label: 'Todo el periodo' },
       ];
       const winOptsHtml = windowOpts.map(o =>
         `<option value="${o.v}"${Number(f.windowDays) === o.v ? ' selected' : ''}>${o.label}</option>`

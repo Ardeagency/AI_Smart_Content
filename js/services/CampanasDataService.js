@@ -119,6 +119,7 @@ class CampanasDataService {
       kpis, list, dailySeries, winnersVsBurners, briefVsOutcome,
       featuredTopic, featuredHashtag, featuredHour, estrategiaTones,
       featuredSentiment, featuredProfile, featuredGrowth,
+      whatWorks,
       vulnerabilities,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_brand_health',                { p_org_id: this.orgId, p_date_window: healthWindowDays }),
@@ -139,6 +140,12 @@ class CampanasDataService {
       this.sb.rpc('dashboard_brand_featured_sentiment',    featuredArgs),
       this.sb.rpc('dashboard_brand_featured_profile',      featuredArgs),
       this.sb.rpc('dashboard_brand_featured_growth',       featuredArgs),
+
+      // Mi Marca CAUSAL: lo que te impulsa / te resta por dimension (vs tu propio promedio)
+      this.sb.rpc('dashboard_mimarca_what_works', {
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
+        p_brand_container_ids: bcids, p_min_posts: 2,
+      }),
 
       vulnsPromise,
     ]);
@@ -165,6 +172,8 @@ class CampanasDataService {
         profile:   u(featuredProfile),
         growth:    u(featuredGrowth),
       },
+
+      whatWorks: u(whatWorks),
 
       vulnerabilities: u(vulnerabilities),
     };
