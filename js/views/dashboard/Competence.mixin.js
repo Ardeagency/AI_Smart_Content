@@ -26,6 +26,8 @@
       this._renderCompSkeleton(body);
       try {
         const data = await this._competenciaService.loadAll({
+          dateFromIso: this._compFilters.dateFrom || null,
+          dateToIso:   this._compFilters.dateTo   || null,
           windowDays: this._compFilters.windowDays,
           entityId: this._compFilters.entityId,
         });
@@ -37,6 +39,7 @@
         }
         body.innerHTML = this._buildCompetenciaHtml(data);
         this._bindCompetenceHandlers(body);
+        this._mountCompDatePicker(body);
       } catch (e) {
         console.error('[Competence] load failed:', e);
         body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">No se pudo cargar Competencia. ${this._esc(e?.message || '')}</div>`;
@@ -59,6 +62,8 @@
       this._compFilters = {
         windowDays: Number(stored?.windowDays) > 0 ? Number(stored.windowDays) : 99999,
         entityId: stored?.entityId || null,
+        dateFrom: stored?.dateFrom || null,
+        dateTo:   stored?.dateTo   || null,
       };
       return this._compFilters;
     },
@@ -91,12 +96,6 @@
 
     _buildCompFiltersBar() {
       const f = this._compFilters || { windowDays: 99999, entityId: null };
-      const opts = [
-        { v: 30, label: 'Últimos 30 días' },
-        { v: 90, label: 'Últimos 90 días' },
-        { v: 365, label: 'Últimos 12 meses' },
-        { v: 99999, label: 'Todo el periodo' },
-      ].map(o => `<option value="${o.v}"${Number(f.windowDays) === o.v ? ' selected' : ''}>${o.label}</option>`).join('');
 
       // Perfil = enfocar el tab en un rival (p_entity_ids). Opciones de la lista
       // completa de rivales (capturada sin filtro). Plataforma requiere backend.
@@ -108,10 +107,7 @@
 
       return `
         <header class="living-history-filters mb-filters-bar" id="compFilters">
-          <div class="living-filter living-filter-window">
-            <label class="living-filter-label" for="compFilterWindow">Fecha</label>
-            <select class="living-filter-select" id="compFilterWindow" data-comp-filter="windowDays">${opts}</select>
-          </div>
+          ${this._compFechaControl()}
           <div class="living-filter living-filter--disabled" title="Próximamente">
             <label class="living-filter-label">Plataforma</label>
             <select class="living-filter-select" disabled><option>Todas</option></select>
@@ -121,6 +117,32 @@
             <select class="living-filter-select" id="compFilterPerfil" data-comp-filter="entityId">${perfilOpts}</select>
           </div>
         </header>`;
+    },
+
+    _compFechaControl() {
+      if (typeof DateRangePicker !== 'function') {
+        return `<div class="living-filter"><label class="living-filter-label">Fecha</label>
+          <select class="living-filter-select" disabled><option>Todo el periodo</option></select></div>`;
+      }
+      return this._ensureCompDatePicker().html();
+    },
+    _ensureCompDatePicker() {
+      if (!this._compDatePicker) {
+        const f = this._compFilters || {};
+        this._compDatePicker = new DateRangePicker({
+          from: f.dateFrom || null, to: f.dateTo || null,
+          onChange: (r) => this._onCompFilterChange({
+            dateFrom: r.from ? r.from.toISOString() : null,
+            dateTo:   r.to   ? r.to.toISOString()   : null,
+          }),
+        });
+      }
+      return this._compDatePicker;
+    },
+    _mountCompDatePicker(scope) {
+      if (typeof DateRangePicker !== 'function' || !this._compDatePicker) return;
+      const el = (scope || document).querySelector('[data-drp]');
+      if (el) this._compDatePicker.mount(el);
     },
 
     /* ── 1. El campo de batalla: panorámica + ranking de rivales ──────── */

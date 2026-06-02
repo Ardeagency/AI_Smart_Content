@@ -31,6 +31,9 @@ class CompetenciaDataService {
   }
 
   _resolveWindow(opts = {}) {
+    if (opts.dateFromIso && opts.dateToIso) {
+      return { from: new Date(opts.dateFromIso).toISOString(), to: new Date(opts.dateToIso).toISOString() };
+    }
     const windowDays = Math.max(1, Number(opts.windowDays || 99999));
     const now = new Date();
     const from = new Date(now.getTime() - windowDays * 86400_000);

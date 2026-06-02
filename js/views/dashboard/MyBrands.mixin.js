@@ -61,6 +61,7 @@
         this._mbCampanasData = data;
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
+        this._mountMbDatePicker(body);
       } catch (e) {
         console.error('[MyBrands] loadAll failed:', e);
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
@@ -70,8 +71,10 @@
     async _loadMyBrandsData() {
       const f = this._mbFilters || { windowDays: 30, brandContainerId: null };
       return this._campanasService.loadAll({
-        windowDays: f.windowDays,
-        brandIds:   f.brandContainerId ? [f.brandContainerId] : null,
+        dateFromIso: f.dateFrom || null,
+        dateToIso:   f.dateTo   || null,
+        windowDays:  f.windowDays,
+        brandIds:    f.brandContainerId ? [f.brandContainerId] : null,
       });
     },
 
@@ -87,6 +90,8 @@
       this._mbFilters = {
         windowDays:        Number(stored?.windowDays) > 0 ? Number(stored.windowDays) : 99999,
         brandContainerId:  stored?.brandContainerId || null,
+        dateFrom:          stored?.dateFrom || null,   // ISO o null (= todo el periodo)
+        dateTo:            stored?.dateTo   || null,
       };
       return this._mbFilters;
     },
@@ -106,6 +111,7 @@
         this._mbCampanasData = data;
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
+        this._mountMbDatePicker(body);
       } catch (e) {
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
       }
@@ -934,27 +940,12 @@
       const f = this._mbFilters || { windowDays: 30, brandContainerId: null };
       const containers = data?.containers || this._campanasService?.containers || [];
 
-      const windowOpts = [
-        { v: 7,     label: 'Últimos 7 días' },
-        { v: 30,    label: 'Últimos 30 días' },
-        { v: 90,    label: 'Últimos 90 días' },
-        { v: 365,   label: 'Últimos 12 meses' },
-        { v: 99999, label: 'Todo el periodo' },
-      ];
-      const winOptsHtml = windowOpts.map(o =>
-        `<option value="${o.v}"${Number(f.windowDays) === o.v ? ' selected' : ''}>${o.label}</option>`
-      ).join('');
-
-      // Mi Marca = fecha + plataforma + campañas. Plataforma y campañas requieren
-      // un parametro nuevo en las RPCs (agregan server-side); van como pendientes.
+      // Mi Marca = fecha (calendario de rango) + plataforma + campañas.
+      // Plataforma y campañas requieren un parametro nuevo en las RPCs (agregan
+      // server-side); van como pendientes.
       return `
         <header class="living-history-filters mb-filters-bar" id="mbFilters">
-          <div class="living-filter living-filter-window">
-            <label class="living-filter-label" for="mbFilterWindow">Fecha</label>
-            <select class="living-filter-select" id="mbFilterWindow" data-mb-filter="windowDays">
-              ${winOptsHtml}
-            </select>
-          </div>
+          ${this._mbFechaControl()}
           <div class="living-filter living-filter--disabled" title="Próximamente">
             <label class="living-filter-label">Plataforma</label>
             <select class="living-filter-select" disabled><option>Todas</option></select>
@@ -964,6 +955,32 @@
             <select class="living-filter-select" disabled><option>Todas</option></select>
           </div>
         </header>`;
+    },
+
+    _mbFechaControl() {
+      if (typeof DateRangePicker !== 'function') {
+        return `<div class="living-filter"><label class="living-filter-label">Fecha</label>
+          <select class="living-filter-select" disabled><option>Todo el periodo</option></select></div>`;
+      }
+      return this._ensureMbDatePicker().html();
+    },
+    _ensureMbDatePicker() {
+      if (!this._mbDatePicker) {
+        const f = this._mbFilters || {};
+        this._mbDatePicker = new DateRangePicker({
+          from: f.dateFrom || null, to: f.dateTo || null,
+          onChange: (r) => this._onMbFilterChange({
+            dateFrom: r.from ? r.from.toISOString() : null,
+            dateTo:   r.to   ? r.to.toISOString()   : null,
+          }),
+        });
+      }
+      return this._mbDatePicker;
+    },
+    _mountMbDatePicker(scope) {
+      if (typeof DateRangePicker !== 'function' || !this._mbDatePicker) return;
+      const el = (scope || document).querySelector('[data-drp]');
+      if (el) this._mbDatePicker.mount(el);
     },
 
     /* ════════════════════════════════════════════════════════════════

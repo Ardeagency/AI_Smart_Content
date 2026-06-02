@@ -115,6 +115,8 @@ class DashboardView extends BaseView {
 
   onLeave() {
     this.clearSubnavFromHeader();
+    [this._mbDatePicker, this._compDatePicker, this._tendDatePicker]
+      .forEach(p => { try { p?.destroy?.(); } catch (_) {} });
     this._unsubscribeRealtime();
     this._destroyCharts();
     if (this._onHashChange) {

@@ -47,6 +47,7 @@
         this._tendData = data;
         body.innerHTML = this._buildTendenciasHtml(data);
         this._bindTendenciesHandlers(body);
+        this._mountTendDatePicker(body);
       } catch (e) {
         console.error('[Tendencies] load failed:', e);
         body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">No se pudo cargar Tendencias. ${this._esc(e?.message || '')}</div>`;
@@ -69,6 +70,8 @@
       this._tendFilters = {
         windowDays: Number(stored?.windowDays) > 0 ? Number(stored.windowDays) : 90,
         source: stored?.source || '',
+        dateFrom: stored?.dateFrom || null,
+        dateTo:   stored?.dateTo   || null,
       };
       return this._tendFilters;
     },
@@ -103,11 +106,6 @@
 
     _buildTendFiltersBar(data) {
       const f = this._tendFilters || { windowDays: 90, source: '' };
-      const opts = [
-        { v: 30, label: 'Últimos 30 días' },
-        { v: 90, label: 'Últimos 90 días' },
-        { v: 365, label: 'Últimos 12 meses' },
-      ].map(o => `<option value="${o.v}"${Number(f.windowDays) === o.v ? ' selected' : ''}>${o.label}</option>`).join('');
 
       // Tendencia = filtro por fuente de la señal (client-side sobre lo cargado).
       const sources = Array.isArray(data?.signals?.data?.by_source) ? data.signals.data.by_source : [];
@@ -118,15 +116,46 @@
 
       return `
         <header class="living-history-filters mb-filters-bar" id="tendFilters">
-          <div class="living-filter living-filter-window">
-            <label class="living-filter-label" for="tendFilterWindow">Fecha</label>
-            <select class="living-filter-select" id="tendFilterWindow" data-tend-filter="windowDays">${opts}</select>
-          </div>
+          ${this._tendFechaControl()}
           <div class="living-filter">
             <label class="living-filter-label" for="tendFilterSource">Tendencia</label>
             <select class="living-filter-select" id="tendFilterSource" data-tend-filter="source">${srcOpts}</select>
           </div>
         </header>`;
+    },
+
+    _tendFechaControl() {
+      if (typeof DateRangePicker !== 'function') {
+        return `<div class="living-filter"><label class="living-filter-label">Fecha</label>
+          <select class="living-filter-select" disabled><option>Últimos 90 días</option></select></div>`;
+      }
+      return this._ensureTendDatePicker().html();
+    },
+    _ensureTendDatePicker() {
+      if (!this._tendDatePicker) {
+        const f = this._tendFilters || {};
+        this._tendDatePicker = new DateRangePicker({
+          from: f.dateFrom || null, to: f.dateTo || null,
+          allLabel: 'Últimos 90 días',
+          onChange: (r) => {
+            // La RPC solo soporta "ultimos N dias": el rango se traduce a window_d
+            // contando desde la fecha de inicio hasta hoy.
+            let windowDays = 90;
+            if (r.from) windowDays = Math.max(1, Math.ceil((Date.now() - new Date(r.from).getTime()) / 86400000));
+            this._onTendFilterChange({
+              dateFrom: r.from ? r.from.toISOString() : null,
+              dateTo:   r.to   ? r.to.toISOString()   : null,
+              windowDays,
+            });
+          },
+        });
+      }
+      return this._tendDatePicker;
+    },
+    _mountTendDatePicker(scope) {
+      if (typeof DateRangePicker !== 'function' || !this._tendDatePicker) return;
+      const el = (scope || document).querySelector('[data-drp]');
+      if (el) this._tendDatePicker.mount(el);
     },
 
     /* ── 1. Pulso del nicho: KPIs vivos + clima de sentimiento ────────── */
