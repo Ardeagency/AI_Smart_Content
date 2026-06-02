@@ -2833,3 +2833,27 @@
 .comp-risk-chip--neg { color: #e06464; background: rgba(224,100,100,0.12); border-color: rgba(224,100,100,0.3); }
 
 @media (max-width: 760px) { .comp-kpis { grid-template-columns: repeat(2, 1fr); } .comp-rank-row { grid-template-columns: 24px 1fr auto; } .comp-rank-posts, .comp-rank-avg { display: none; } }
+
+/* Competencia — clickable (drill-down) */
+.comp-clickable { cursor: pointer; transition: border-color 0.15s ease, transform 0.15s ease; }
+.comp-rank-row.comp-clickable:hover { border-color: rgba(255,255,255,0.18); transform: translateX(2px); }
+.comp-voice-card.comp-clickable:hover { border-color: rgba(255,255,255,0.18); transform: translateY(-2px); }
+.comp-clickable:focus-visible { outline: 2px solid var(--accent-brand, rgba(255,255,255,0.4)); outline-offset: 2px; }
+
+/* Competencia — Que les funciona (formulas ganadoras del nicho) */
+.comp-combos { display: flex; flex-direction: column; gap: 0.5rem; }
+.comp-combo-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-radius: 11px; padding: 0.7rem 1rem;
+}
+.comp-combo-dims { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; min-width: 0; }
+.comp-combo-tag {
+  font-size: 0.75rem; font-weight: 600; color: var(--text-primary, #D4D1D8);
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border-divider, #242424);
+  border-radius: 7px; padding: 0.2rem 0.55rem;
+}
+.comp-combo-sep { color: var(--text-muted, rgba(212,209,216,0.35)); font-size: 0.75rem; }
+.comp-combo-meta { display: flex; align-items: center; gap: 0.85rem; }
+.comp-combo-brands { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); }
+.comp-combo-eng { font-size: 0.8125rem; font-weight: 700; color: var(--text-secondary, rgba(212,209,216,0.85)); font-variant-numeric: tabular-nums; }

@@ -51,11 +51,13 @@ class CompetenciaDataService {
 
   async _fetchAll(from, to) {
     const org = this.orgId;
-    const [kpis, top, risk, voice] = await Promise.allSettled([
+    const windowD = Math.max(1, Math.round((Date.now() - new Date(from).getTime()) / 86400_000));
+    const [kpis, top, risk, voice, intel] = await Promise.allSettled([
       this.sb.rpc('dashboard_competencia_kpis', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: null }),
       this.sb.rpc('dashboard_competencia_top',  { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: null, p_limit: 8 }),
       this.sb.rpc('dashboard_competencia_risk', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: null, p_limit: 6 }),
       this.sb.rpc('dashboard_competencia_audience_voice', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: null, p_limit: 6 }),
+      this.sb.rpc('dashboard_competencia_intelligence', { p_org_id: org, p_window_d: windowD }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -65,7 +67,19 @@ class CompetenciaDataService {
       top:   u(top),
       risk:  u(risk),
       voice: u(voice),
+      intelligence: u(intel),
     };
+  }
+
+  /** Drill-down: posts de UN rival (on-demand, no cacheado). */
+  async loadActorPosts(entityId, from, to, limit = 30) {
+    if (!this.sb || !this.orgId || !entityId) return [];
+    const { data, error } = await this.sb.rpc('dashboard_competencia_actor_posts', {
+      p_org_id: this.orgId, p_entity_id: entityId,
+      p_date_from: from, p_date_to: to, p_limit: limit, p_offset: 0, p_order_by: 'engagement',
+    });
+    if (error) throw error;
+    return Array.isArray(data) ? data : [];
   }
 }
 

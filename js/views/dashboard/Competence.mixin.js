@@ -72,6 +72,7 @@
         <div class="insight-page mb-dash" id="compPage">
           ${this._buildCompFiltersBar()}
           ${this._buildBattlefield(data?.kpis?.data, data?.top?.data)}
+          ${this._buildWinningFormula(data?.intelligence?.data)}
           ${this._buildAudienceVoice(data?.voice?.data)}
           ${this._buildRivalRisk(data?.risk?.data)}
         </div>`;
@@ -110,7 +111,7 @@
       const rows = list.map((r, i) => {
         const tipo = this._compTipoMeta(r.tipo);
         return `
-          <div class="comp-rank-row">
+          <div class="comp-rank-row comp-clickable" data-comp-entity="${this._esc(r.entity_id)}" data-comp-name="${this._esc(r.entity_name)}" role="button" tabindex="0">
             <span class="comp-rank-pos">${i + 1}</span>
             <div class="comp-rank-name">
               <span class="comp-rank-brand">${this._esc(r.entity_name)}</span>
@@ -130,6 +131,35 @@
           </div>
           ${kpiCards}
           ${list.length ? `<div class="comp-rank">${rows}</div>` : `<div class="mb-causal-empty">Sin rivales con actividad en la ventana.</div>`}
+        </section>`;
+    },
+
+    /* ── 1b. Qué les funciona: la fórmula ganadora del nicho ──────────── */
+    _buildWinningFormula(intel) {
+      const combos = Array.isArray(intel?.winning_combos) ? intel.winning_combos.slice(0, 6) : [];
+      if (!combos.length) { if (HIDE_EMPTY) return ''; return ''; }
+      const cap = (s) => { const t = String(s || '').replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); };
+      const rows = combos.map((c) => `
+        <div class="comp-combo-row">
+          <div class="comp-combo-dims">
+            <span class="comp-combo-tag">${this._esc(cap(c.tone))}</span>
+            <span class="comp-combo-sep">·</span>
+            <span class="comp-combo-tag">${this._esc(cap(c.topic))}</span>
+            <span class="comp-combo-sep">·</span>
+            <span class="comp-combo-tag">${this._esc(cap(c.format))}</span>
+          </div>
+          <div class="comp-combo-meta">
+            <span class="comp-combo-brands">${this._esc((Array.isArray(c.brands_using) ? c.brands_using : []).join(', '))} · ${fmt.int(c.posts_count)} posts</span>
+            <span class="comp-combo-eng">${this._compactNum(c.avg_engagement)}/post</span>
+          </div>
+        </div>`).join('');
+      return `
+        <section class="mb-section">
+          <div class="mb-section-head">
+            <span class="mb-section-title">Qué les funciona</span>
+            <span class="mb-section-hint">La fórmula ganadora de tu nicho — qué replicar o contraatacar</span>
+          </div>
+          <div class="comp-combos">${rows}</div>
         </section>`;
     },
 
@@ -155,7 +185,7 @@
       const poss = (Array.isArray(v.sample_positive) ? v.sample_positive : []).filter(Boolean);
       const quote = (t) => `<li class="comp-voice-quote">${this._esc(t)}</li>`;
       return `
-        <article class="comp-voice-card">
+        <article class="comp-voice-card comp-clickable" data-comp-entity="${this._esc(v.entity_id)}" data-comp-name="${this._esc(v.entity_name)}" role="button" tabindex="0">
           <div class="comp-voice-head">
             <span class="comp-voice-name">${this._esc(v.entity_name)}</span>
             <span class="comp-voice-meta">${fmt.int(v.total_comments)} comentarios · <b style="color:#e06464;">${negPct}% neg</b> · ${posPct}% pos</span>
@@ -218,6 +248,47 @@
         if (!el) return;
         this._onCompFilterChange({ windowDays: Number(el.value) || 99999 });
       });
+      body.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-comp-entity]');
+        if (!el) return;
+        this._openCompetitorDetail(el.dataset.compEntity, el.dataset.compName);
+      });
+      body.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const el = e.target.closest('[data-comp-entity]');
+        if (!el) return;
+        e.preventDefault();
+        this._openCompetitorDetail(el.dataset.compEntity, el.dataset.compName);
+      });
+    },
+
+    /* Drill-down: modal con las publicaciones de UN rival (reusa el modal de detalle). */
+    async _openCompetitorDetail(entityId, name) {
+      if (!entityId || !this._competenciaService) return;
+      const { ov, dr } = this._ensureDetailDrawer();
+      const titleEl = document.getElementById('mbDetailTitle');
+      const subEl   = document.getElementById('mbDetailSub');
+      const bodyEl  = document.getElementById('mbDetailBody');
+      if (titleEl) titleEl.textContent = name || 'Rival';
+      if (subEl)   subEl.textContent = 'Cargando…';
+      if (bodyEl)  bodyEl.innerHTML = `<div class="mb-detail-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+      ov.classList.add('active'); dr.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      if (this._detailEscHandler) document.addEventListener('keydown', this._detailEscHandler);
+      try {
+        const win = this._compData?.window || {};
+        const rows = await this._competenciaService.loadActorPosts(entityId, win.from, win.to, 30);
+        const posts = rows.map((r) => ({
+          network: r.network, content: r.content_preview, captured_at: r.captured_at,
+          engagement_total: r.engagement_total, metrics: r.metrics, sentiment_text: r.sentiment_text,
+        }));
+        if (subEl) subEl.textContent = `${posts.length} ${posts.length === 1 ? 'publicacion' : 'publicaciones'}`;
+        this._renderDetailPosts(bodyEl, posts);
+      } catch (e) {
+        console.error('[comp detail] load failed:', e?.message || e);
+        if (subEl) subEl.textContent = '';
+        if (bodyEl) bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-triangle-exclamation"></i><p>No se pudieron cargar las publicaciones.</p></div>`;
+      }
     },
   });
 })();
