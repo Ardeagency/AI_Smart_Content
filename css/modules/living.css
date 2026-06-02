@@ -2133,6 +2133,10 @@ body.production-modal-open { overflow: hidden; }
 }
 
 @media (max-width: 1024px) {
+    .living-history-masonry {
+        column-count: 2;
+    }
+    
     .history-video-card {
         height: 200px;
     }
@@ -2152,6 +2156,10 @@ body.production-modal-open { overflow: hidden; }
 
     .living-hero-grid .featured-card {
         width: 250px;
+    }
+    
+    .living-history-masonry {
+        column-count: 1;
     }
     
     .history-video-card {
