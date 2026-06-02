@@ -3118,7 +3118,14 @@ class VeraView extends (window.BaseView || class {}) {
         '<style>',
         '*{box-sizing:border-box;margin:0;padding:0}',
         'body{font-family:system-ui,sans-serif;background:#0d0d0f;color:#f0eff5;padding:16px}',
-        '@media print{html,body{background:#0d0d0f !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}',
+        // Export PDF grado documento: A4 con margenes, colores fieles y cortes
+        // de pagina limpios (no parte titulos/tablas/imagenes a la mitad).
+        '@page{size:A4;margin:14mm}',
+        '@media print{',
+          'html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#fff !important;padding:0 !important}',
+          'h1,h2,h3,thead{break-after:avoid;page-break-after:avoid}',
+          'img,table,figure,tr,li,.avoid-break{break-inside:avoid;page-break-inside:avoid}',
+        '}',
         '</style>',
         '</head><body>',
         code,
