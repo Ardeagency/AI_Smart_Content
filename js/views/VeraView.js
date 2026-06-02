@@ -1497,7 +1497,8 @@ class VeraView extends (window.BaseView || class {}) {
               <button class="vera-artifact-act" id="veraArtifactView" data-view="preview" title="Vista previa"><i class="fas fa-eye"></i></button>
               <button class="vera-artifact-act" id="veraArtifactCode" title="Ver código"><i class="fas fa-code"></i></button>
               <button class="vera-artifact-act" id="veraArtifactCopy" title="Copiar"><i class="fas fa-copy"></i></button>
-              <button class="vera-artifact-act" id="veraArtifactDownload" title="Descargar"><i class="fas fa-download"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactPdf" title="Descargar como PDF"><i class="fas fa-file-pdf"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactDownload" title="Descargar HTML"><i class="fas fa-download"></i></button>
               <button class="vera-artifact-act" id="veraArtifactFull" title="Pantalla completa"><i class="fas fa-expand-alt"></i></button>
               <button class="vera-artifact-act vera-artifact-act--close" id="veraArtifactClose" title="Cerrar"><i class="fas fa-times"></i></button>
             </div>
@@ -2132,6 +2133,19 @@ class VeraView extends (window.BaseView || class {}) {
     on('veraArtifactView', () => { this._artifactView = 'preview'; this._renderArtifactBody(); });
     on('veraArtifactCode', () => { this._artifactView = 'code'; this._renderArtifactBody(); });
     on('veraArtifactFull', () => { try { this._artifactFrame?.requestFullscreen?.(); } catch (_) {} });
+    on('veraArtifactPdf', () => {
+      // Imprime el artefacto (Guardar como PDF). Requiere la vista previa (iframe).
+      const doPrint = () => {
+        try { this._artifactFrame?.contentWindow?.postMessage({ type: 'vera_print' }, '*'); } catch (_) {}
+      };
+      if (this._artifactView !== 'preview') {
+        this._artifactView = 'preview';
+        this._renderArtifactBody();
+        setTimeout(doPrint, 250); // deja cargar el iframe nuevo
+      } else {
+        doPrint();
+      }
+    });
     on('veraArtifactCopy', () => {
       const txt = this._artifactSrcdoc || '';
       navigator.clipboard?.writeText(txt).then(() => this._flashArtifactBtn('veraArtifactCopy')).catch(() => {});
@@ -3085,6 +3099,11 @@ class VeraView extends (window.BaseView || class {}) {
           'var cb = window.__veraActionCallbacks[e.data.requestId];',
           'if(cb){ cb({ok:e.data.ok,data:e.data.data,error:e.data.error}); delete window.__veraActionCallbacks[e.data.requestId]; }',
         '});',
+        // ── Imprimir/PDF: el panel envia "vera_print" y el iframe imprime su
+        //    propio documento (Guardar como PDF en el dialogo del navegador).
+        'window.addEventListener("message", function(e){',
+          'if(e && e.data && e.data.type === "vera_print"){ try{ window.focus(); window.print(); }catch(_){} }',
+        '});',
         '})();',
         '<\/script>'
       ].join('');
@@ -3096,6 +3115,7 @@ class VeraView extends (window.BaseView || class {}) {
         '<style>',
         '*{box-sizing:border-box;margin:0;padding:0}',
         'body{font-family:system-ui,sans-serif;background:#0d0d0f;color:#f0eff5;padding:16px}',
+        '@media print{html,body{background:#0d0d0f !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}',
         '</style>',
         '</head><body>',
         code,
