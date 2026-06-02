@@ -11,6 +11,32 @@ paint del glass/animaciones, (3) unos pocos bugs de runtime concretos.
 
 ---
 
+## CIERRE 2026-06-02 — sprint de perf completado (todo en produccion)
+
+Desplegado a main: barra de progreso de navegacion (no overlay), prefetch JS+CSS on
+hover, route-split CSS (command-center/insight/monitoring + **developer.css 351KB**
+con dev-shared.css global para clases no-dev), skeleton-first en inicios de pagina,
+carga premium de imagenes (fade-in, sin render por pedazos), microinteracciones
+(btn:active, modal fade, sidebar sync, easing tokens), fix de leaks (living.js modal
+observers + FlowCatalog carrusel), fix delete produccion (system_ai_outputs), galerias
+justified (revertido el grid cuadrado por decision del usuario).
+
+### F4 (dividir monolitos + BaseDataService) — RESUELTO sin ejecutar, con rationale
+- **BaseDataService: MOOT.** El cleanup de codigo muerto borro 4 de 6 DataServices
+  (Competencia, MiBranda, Strategia, Tendencias). Quedan solo Campanas + Monitoring;
+  una clase base para 2 no aporta.
+- **Dividir monolitos (CanvasStore 5296, living.js 4945, VeraView 3923): NO se hace en
+  el sprint de perf.** Son archivos lazy-loaded (parse una vez, cacheado) -> dividirlos
+  da CERO beneficio de rendimiento; es puramente mantenibilidad, y reescribir archivos
+  de 5000 lineas interconectados es alto riesgo de regresion. Queda como tarea de
+  mantenibilidad futura (rama dedicada + pruebas), NO de perf.
+
+Items menores aun abiertos (bajo impacto, opcionales): `.card` glass->solido (433 usos,
+cambio visual amplio), z-index magic numbers->tokens, consolidar 13 keyframes spin/
+pulse/shimmer, consolidar escapeHtml (item de seguridad: subclases no escapan comillas).
+
+---
+
 ## ✅ HECHO (en esta rama, pendiente QA en deploy preview)
 
 ### Perf global CSS (`css/bundle.css`) — preserva el look
