@@ -33,7 +33,7 @@ class DashboardView extends BaseView {
     'my-brands':  true,   // FEAT-023 Ola 1: sección "Mis Campañas" activa
     'competence': true,   // Competencia: campo de batalla + voz de audiencia + vulnerabilidades
     'tendencies': false,
-    'strategy':   false,
+    'strategy':   true,   // Estrategia: recomendaciones de Vera (cross-signal) + aprendizaje
   };
 
   constructor() {
