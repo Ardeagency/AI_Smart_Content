@@ -35,6 +35,25 @@ Items menores aun abiertos (bajo impacto, opcionales): `.card` glass->solido (43
 cambio visual amplio), z-index magic numbers->tokens, consolidar 13 keyframes spin/
 pulse/shimmer, consolidar escapeHtml (item de seguridad: subclases no escapan comillas).
 
+### Auditoria navegacion/transiciones (2026-06-02)
+ARREGLADO (commit a6c14f5f): C1 deteccion org<->dev por prevPath real (no body.route-dev);
+M1 umbral barra 180->350ms (no solape con view-transition); B2 leak #veraLibModal en
+VeraView.onLeave; B3 cierre de paneles de header (Actividad/Notif/flyout) en routechange.
+
+DIFERIDO (riesgoso, NO tocar a ciegas — requiere QA en rama):
+- **A1 doble pintado en vistas cacheable**: router.js:~443 hace `container.innerHTML =
+  cached.html` y luego BaseView.render() (:67) re-pinta incondicionalmente. 12 de 14
+  vistas cacheable IGNORAN `_restoredFromCache` y re-pintan todo encima del cache. Dentro
+  de view-transition NO hay flash visible; en fallback (Firefox/reduce-motion) si parpadea
+  + reflow desperdiciado. OJO: el instant-restore es LOAD-BEARING para PlanesView (early-
+  return en _restoredFromCache) y DashboardView; quitarlo a secas las rompe. Fix correcto:
+  gate en BaseView.render() + hook refreshFromCache() por vista, o migrar las 12. No trivial.
+- **M3 flash de 1 frame del fondo en org<->dev**: `route-dev` se togglea sincrono dentro
+  de doRender (VT callback) pero `org-brand-context` lo gestiona OrgBrandTheme async fuera
+  de la VT -> ventana de 1 frame con ambas clases. Fix: aplicar/limpiar org-brand-context
+  dentro de doRender (o resolver el theme antes de startViewTransition).
+- B4 comentarios obsoletos en bundle.css (~757 background-attachment, ~844 viewFadeIn).
+
 ---
 
 ## ✅ HECHO (en esta rama, pendiente QA en deploy preview)
