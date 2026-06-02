@@ -355,38 +355,45 @@
           kind: 'topic', label: 'Tema ganador', headline: topic.topic,
           metricPrimary: `${fmt.int(topic.usage_count)} posts`,
           metricSecondary: `${this._compactNum(topic.total_engagement)} engagement`,
+          dim: 'topic', value: topic.topic,
         },
         (tone && tone.tone_name) && {
           kind: 'tone', label: 'Tono efectivo', headline: tone.tone_name,
           metricPrimary: `${fmt.int(tone.posts_count)} posts`,
           metricSecondary: `${this._compactNum(tone.total_engagement)} engagement`,
+          dim: 'tone', value: tone.tone_name,
         },
         (hour && hour.hour != null) && {
           kind: 'hour', label: 'Horario estrella', headline: `${String(hour.hour).padStart(2, '0')}:00`,
           metricPrimary: `${fmt.int(hour.posts_count)} posts publicados`,
           metricSecondary: `${this._compactNum(hour.avg_engagement_per_post)} eng/post`,
+          dim: 'hour', value: String(hour.hour),
         },
         (hashtag && hashtag.hashtag) && {
           kind: 'hashtag', label: 'Hashtag dominante', headline: `#${hashtag.hashtag}`,
           metricPrimary: `${fmt.int(hashtag.usage_count)} usos`,
           metricSecondary: `${this._compactNum(hashtag.total_engagement)} engagement`,
+          dim: 'hashtag', value: hashtag.hashtag,
         },
         // ── Backups (rellenan huecos de las primarias) ──
         (platform && platform.platform) && {
           kind: 'platform', label: 'Plataforma estrella', headline: this._prettyPlatform(platform.platform),
           metricPrimary: `${fmt.int(platform.total_posts)} posts`,
           metricSecondary: `${this._compactNum(platform.total_engagement)} engagement`,
+          dim: 'platform', value: platform.platform,
         },
         (growth && growth.engagement_growth_percent != null) && {
           kind: 'growth', label: 'Crecimiento',
           headline: `${growth.engagement_growth_percent >= 0 ? '+' : ''}${Math.round(growth.engagement_growth_percent)}%`,
           metricPrimary: 'engagement',
           metricSecondary: `${fmt.int(growth.start_posts)} → ${fmt.int(growth.end_posts)} posts`,
+          dim: 'growth', value: '',
         },
         (profile && profile.brand_name) && {
           kind: 'profile', label: 'Cuenta lider', headline: profile.brand_name,
           metricPrimary: `${fmt.int(profile.total_posts)} posts`,
           metricSecondary: `${this._compactNum(profile.total_engagement)} engagement`,
+          dim: 'profile', value: '',
         },
       ].filter(Boolean);
 
@@ -415,8 +422,14 @@
     _buildFeaturedCard(opts) {
       const has = !!opts.headline;
       if (!has && shouldHideEmpty()) return '';
+      // Card clickable solo si tiene datos + dimension para abrir el detalle.
+      const clickable = has && !!opts.dim;
+      const detailTitle = `${opts.label}: ${opts.headline}`;
+      const dataAttrs = clickable
+        ? `data-feat-detail data-dim="${this._esc(opts.dim)}" data-value="${this._esc(opts.value || '')}" data-title="${this._esc(detailTitle)}" role="button" tabindex="0"`
+        : '';
       return `
-        <section class="mb-feat-card mb-feat-card--${opts.kind}">
+        <section class="mb-feat-card mb-feat-card--${opts.kind}${clickable ? ' mb-feat-card--clickable' : ''}" ${dataAttrs}>
           <div class="mb-feat-label">${this._esc(opts.label)}</div>
           ${has ? `
             <div class="mb-feat-headline" title="${this._esc(opts.headline)}">${this._esc(opts.headline)}</div>
@@ -424,6 +437,7 @@
               <div class="mb-feat-metric-primary">${this._esc(opts.metricPrimary || '')}</div>
               <div class="mb-feat-metric-secondary">${this._esc(opts.metricSecondary || '')}</div>
             </div>
+            ${clickable ? `<div class="mb-feat-detail-hint">Ver detalles <i class="fas fa-arrow-right"></i></div>` : ''}
           ` : `
             <div class="mb-feat-empty">${this._esc(opts.emptyHint)}</div>
           `}
@@ -578,6 +592,10 @@
 
     _bindMyBrandsHandlers(body) {
       if (!body) return;
+      // El #insightTabBody persiste entre renders → bindear una sola vez por
+      // elemento (la delegacion sigue cubriendo el HTML reescrito).
+      if (body.dataset.mbBound === '1') return;
+      body.dataset.mbBound = '1';
 
       // Filtros: cambio de ventana / sub-marca
       body.addEventListener('change', (e) => {
@@ -590,6 +608,152 @@
         this._onMbFilterChange({ [key]: value });
       });
 
+      // Click en una card featured → abrir ventana de detalle con sus posts.
+      body.addEventListener('click', (e) => {
+        const card = e.target.closest('[data-feat-detail]');
+        if (!card) return;
+        this._openFeaturedDetail(card.dataset.dim, card.dataset.value, card.dataset.title);
+      });
+      body.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const card = e.target.closest('[data-feat-detail]');
+        if (!card) return;
+        e.preventDefault();
+        this._openFeaturedDetail(card.dataset.dim, card.dataset.value, card.dataset.title);
+      });
+    },
+
+    /* ════════════════════════════════════════════════════════════════
+       Ventana de detalle (drawer derecho) — publicaciones detras de una card
+       ════════════════════════════════════════════════════════════════ */
+    _ensureDetailDrawer() {
+      let ov = document.getElementById('mbDetailOverlay');
+      let dr = document.getElementById('mbDetailDrawer');
+      if (!dr) {
+        ov = document.createElement('div');
+        ov.id = 'mbDetailOverlay';
+        ov.className = 'mb-detail-overlay';
+        dr = document.createElement('aside');
+        dr.id = 'mbDetailDrawer';
+        dr.className = 'mb-detail-drawer';
+        dr.setAttribute('role', 'dialog');
+        dr.setAttribute('aria-modal', 'true');
+        dr.setAttribute('aria-label', 'Detalle de publicaciones');
+        dr.innerHTML = `
+          <header class="mb-detail-head">
+            <div class="mb-detail-head-text">
+              <span class="mb-detail-title" id="mbDetailTitle">Detalles</span>
+              <span class="mb-detail-sub" id="mbDetailSub"></span>
+            </div>
+            <button class="mb-detail-close" id="mbDetailClose" type="button" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+          </header>
+          <div class="mb-detail-body" id="mbDetailBody"></div>`;
+        document.body.appendChild(ov);
+        document.body.appendChild(dr);
+        ov.addEventListener('click', () => this._closeDetailDrawer());
+        dr.querySelector('#mbDetailClose').addEventListener('click', () => this._closeDetailDrawer());
+        this._detailEscHandler = (e) => { if (e.key === 'Escape') this._closeDetailDrawer(); };
+      }
+      return { ov, dr };
+    },
+
+    async _openFeaturedDetail(dim, value, title) {
+      if (!dim || !this._supabase || !this._orgId) return;
+      const { ov, dr } = this._ensureDetailDrawer();
+      const titleEl = document.getElementById('mbDetailTitle');
+      const subEl   = document.getElementById('mbDetailSub');
+      const bodyEl  = document.getElementById('mbDetailBody');
+      if (titleEl) titleEl.textContent = title || 'Detalles';
+      if (subEl)   subEl.textContent = 'Cargando…';
+      if (bodyEl)  bodyEl.innerHTML = `<div class="mb-detail-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+
+      ov.classList.add('active');
+      dr.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      document.addEventListener('keydown', this._detailEscHandler);
+
+      try {
+        const win = this._mbCampanasData?.window || {};
+        const f = this._mbFilters || {};
+        const { data, error } = await this._supabase.rpc('dashboard_brand_posts_by_dimension', {
+          p_org_id:              this._orgId,
+          p_date_from:           win.date_from,
+          p_date_to:             win.date_to,
+          p_brand_container_ids: f.brandContainerId ? [f.brandContainerId] : null,
+          p_post_source:         'own',
+          p_dimension:           dim,
+          p_value:               value || null,
+          p_limit:               100,
+        });
+        if (error) throw error;
+        const posts = Array.isArray(data) ? data : [];
+        if (subEl) subEl.textContent = `${posts.length} ${posts.length === 1 ? 'publicacion' : 'publicaciones'}`;
+        this._renderDetailPosts(bodyEl, posts);
+      } catch (e) {
+        console.error('[detail] load failed:', e?.message || e);
+        if (subEl) subEl.textContent = '';
+        if (bodyEl) bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-triangle-exclamation"></i><p>No se pudieron cargar las publicaciones.</p></div>`;
+      }
+    },
+
+    _closeDetailDrawer() {
+      const ov = document.getElementById('mbDetailOverlay');
+      const dr = document.getElementById('mbDetailDrawer');
+      if (ov) ov.classList.remove('active');
+      if (dr) dr.classList.remove('active');
+      document.body.style.overflow = '';
+      if (this._detailEscHandler) document.removeEventListener('keydown', this._detailEscHandler);
+    },
+
+    _renderDetailPosts(bodyEl, posts) {
+      if (!bodyEl) return;
+      if (!posts.length) {
+        bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-inbox"></i><p>Sin publicaciones en esta ventana.</p></div>`;
+        return;
+      }
+      bodyEl.innerHTML = `<ul class="mb-detail-list">${posts.map((p) => this._detailPostHtml(p)).join('')}</ul>`;
+    },
+
+    _detailPostHtml(p) {
+      const m = p.metrics || {};
+      const likes    = Number(m.likes ?? m.reactions ?? 0) || 0;
+      const comments = Number(m.comments ?? 0) || 0;
+      const shares   = Number(m.shares ?? 0) || 0;
+      const net  = this._prettyPlatform(p.network);
+      const date = this._detailDate(p.captured_at);
+      const sent = this._detailSentiment(p.sentiment_text);
+      const content = this._esc(String(p.content || '').slice(0, 240)) || '<span class="mb-detail-post-empty">(sin texto)</span>';
+      return `
+        <li class="mb-detail-post">
+          <div class="mb-detail-post-top">
+            <span class="mb-detail-post-net">${this._esc(net)}</span>
+            ${sent}
+            <span class="mb-detail-post-date">${this._esc(date)}</span>
+          </div>
+          <p class="mb-detail-post-content">${content}</p>
+          <div class="mb-detail-post-foot">
+            <span class="mb-detail-post-metric"><i class="fas fa-heart"></i> ${this._compactNum(likes)}</span>
+            <span class="mb-detail-post-metric"><i class="fas fa-comment"></i> ${this._compactNum(comments)}</span>
+            <span class="mb-detail-post-metric"><i class="fas fa-retweet"></i> ${this._compactNum(shares)}</span>
+            <span class="mb-detail-post-eng">${this._compactNum(p.engagement_total)} eng</span>
+          </div>
+        </li>`;
+    },
+
+    _detailSentiment(s) {
+      if (!s) return '';
+      const u = String(s).toUpperCase();
+      if (u.startsWith('POS')) return `<span class="mb-detail-chip mb-detail-chip--pos">Positivo</span>`;
+      if (u.startsWith('NEG')) return `<span class="mb-detail-chip mb-detail-chip--neg">Negativo</span>`;
+      return `<span class="mb-detail-chip mb-detail-chip--neu">Neutro</span>`;
+    },
+
+    _detailDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: '2-digit' }) +
+             ' · ' + d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
     },
   });
 })();
