@@ -476,6 +476,21 @@ class Router {
       // crossfade nativo a 60fps a nivel de pintura. Fallback al .route-fade-in
       // de 140ms si no hay soporte (Firefox aún no lo implementa).
       if (typeof document.startViewTransition === 'function' && !this._reduceMotion()) {
+        // Crossfade granular por region (sidebar + contenido cada uno en su caja)
+        // en vez del crossfade de pagina completa (que mostraba un "fantasma" al
+        // pasar dev↔org porque dos layouts distintos se solapaban). Los
+        // view-transition-name se aplican SOLO durante la transicion: crean un
+        // backdrop root boundary que romperia el glass, pero durante la animacion
+        // se ven snapshots rasterizados (no el DOM vivo), asi que es invisible; al
+        // terminar los quitamos y el backdrop-filter vuelve a funcionar.
+        const navEl = document.getElementById('navigation-container');
+        const appEl = container;
+        const clearVTNames = () => {
+          if (navEl) navEl.style.viewTransitionName = '';
+          if (appEl) appEl.style.viewTransitionName = '';
+        };
+        if (navEl) navEl.style.viewTransitionName = 'nav-root';
+        if (appEl) appEl.style.viewTransitionName = 'app-root';
         try {
           const transition = document.startViewTransition(doRender);
           // Silenciar los otros 2 promises del ViewTransition. Si el callback
@@ -485,7 +500,8 @@ class Router {
           // aparecerían como "Uncaught (in promise) TimeoutError". Atacharlos
           // a noop catch evita el warning en consola sin cambiar el flujo.
           transition.ready.catch(() => {});
-          transition.finished.catch(() => {});
+          // Quitar los nombres al terminar (o si falla) -> restaura el glass del DOM vivo.
+          transition.finished.catch(() => {}).then(clearVTNames);
           await transition.updateCallbackDone;
           // Path success de View Transitions: no se llama _playRouteFade, pero
           // sí necesitamos enhance de a11y labels y document.title en el nuevo DOM.
@@ -494,6 +510,7 @@ class Router {
         } catch (e) {
           // Solo log si NO es el timeout esperado del browser (4s default).
           // TimeoutError es benigno: la transición no se animó pero el DOM ya está.
+          clearVTNames();
           if (e?.name !== 'TimeoutError') {
             console.warn('Router: View Transition falló, fallback a fade.', e);
             await doRender();

@@ -906,25 +906,17 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 @keyframes routeVTFadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes routeVTFadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-/* view-transition-name removido de #app-container y #navigation-container.
-   Esta propiedad CREA un backdrop root boundary segun la spec CSS Backdrop
-   Filter (igual que `contain: paint`). Mientras estaba activa, cualquier
-   elemento con backdrop-filter DENTRO de esos containers (notablemente
-   .app-header dentro de #navigation-container, y cualquier .glass-black
-   dentro de #app-container) quedaba aislado y no podia difuminar pixels
-   del brand-bg-overlay ni del body.
+/* view-transition-name (nav-root/app-root) NO es estatico: el router (router.js)
+   lo aplica a #navigation-container y #app-container SOLO durante la transicion y
+   lo quita al terminar. Razon: la propiedad crea un backdrop root boundary (spec
+   CSS Backdrop Filter, igual que `contain: paint`) que aislaria el glass de
+   .app-header/.glass-black de esos containers. Pero durante la transicion se ven
+   snapshots rasterizados (no el DOM vivo), asi que el blur "roto" es invisible; al
+   terminar la animacion se quitan los nombres y el backdrop-filter vuelve a funcionar.
 
-   El sidebar y el contenido principal pierden su snapshot nombrado en
-   view-transitions y caen al root snapshot (un solo crossfade global),
-   que sigue siendo aceptable visualmente. La animacion granular ya no
-   se aplica, pero el efecto glass es mas importante.
-
-   Si en el futuro se quiere recuperar las view-transitions sin romper
-   backdrop, opciones:
-   - Aplicar view-transition-name solo durante la animacion via JS, no
-     estatico.
-   - Crear wrappers internos para los containers que NO sean ancestores
-     de elementos glass. */
+   Asi recuperamos el crossfade GRANULAR por region (fondo + sidebar + contenido cada
+   uno en su caja) en vez del crossfade de pagina completa, que mostraba un "fantasma"
+   al pasar dev<->org porque dos layouts distintos se solapaban. */
 
 /* ========== Skeleton screens (placeholder de carga premium) ==========
    Patrón Linear/Vercel: en lugar de spinner global, cada sección pinta
