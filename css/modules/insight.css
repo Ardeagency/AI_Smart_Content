@@ -3009,26 +3009,32 @@
 @media (max-width: 760px) { .tend-gaps { grid-template-columns: 1fr; } }
 
 /* ════════════════════════════════════════════════════════════════════
-   MINIMAL MONO — capa unificada de los 4 dashboards
+   DARK ELEVADO SOBRIO — capa unificada de los 4 dashboards
    ─────────────────────────────────────────────────────────────────────
-   Direccion visual elegida: Linear-style. Casi monocromo, guiado por
-   tipografia y aire. La inteligencia causal se conserva intacta: el
-   minimalismo va en color y chrome, NO en el contenido. El color queda
-   reservado SOLO para significado (delta positivo / negativo), en tono
-   apagado. Tecnica: redefinir los tokens de superficie dentro del scope
-   .insight-page aplana TODAS las cards (mb-/comp-/tend-/strat-) que usan
+   Direccion visual elegida: dark-premium con profundidad (estilo
+   Supabase/Datadog + lenguaje del Command Center). Cards con superficie
+   raised + sheen + sombra de elevacion sobria; glow-whisper de marca solo
+   en el hero; color con proposito (delta pos/neg apagado), no monocromo.
+   Conserva la jerarquia tipografica y el ritmo del paso anterior, pero
+   RESTAURA la profundidad que un tema oscuro necesita. Tecnica: redefinir
+   los tokens de superficie dentro del scope .insight-page afecta TODAS las
+   cards (mb-/comp-/tend-/strat-) que usan
    var(--bg-card) sin tocar cada selector.
    ════════════════════════════════════════════════════════════════════ */
 .insight-page {
-  /* Aplana toda superficie de card en el scope del dashboard */
-  --bg-card: transparent;
-  --border-divider: rgba(255, 255, 255, 0.07);
-  /* Paleta semantica apagada (color solo con significado) */
+  /* Superficie elevada (raised) en el scope del dashboard — depth por capas */
+  --bg-card: #161719;
+  --border-divider: rgba(255, 255, 255, 0.08);
+  /* Paleta semantica apagada (color con proposito) */
   --dash-pos: #6e9f81;   /* arriba / funciona / saludable  */
   --dash-neg: #b3796f;   /* abajo / resta / critico        */
   --dash-warn: #9c8e6b;  /* atencion / optimiza / irregular */
   --dash-line: rgba(255, 255, 255, 0.08);
-  --dash-bar: rgba(255, 255, 255, 0.26);
+  --dash-bar: rgba(255, 255, 255, 0.30);
+  /* Elevacion sobria + sheen de superficie raised (depth, glow tenue) */
+  --dash-elev: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --dash-elev-hover: 0 8px 22px rgba(0, 0, 0, 0.45);
+  --dash-sheen: linear-gradient(180deg, rgba(255,255,255,0.028), rgba(255,255,255,0) 46%);
 }
 
 /* Ritmo: mas aire entre secciones */
@@ -3049,20 +3055,26 @@
   text-transform: none; color: var(--text-muted);
 }
 
-/* ── Sin sombras; hover lift sin color saturado ── */
+/* ── Cards top-level: superficie raised + sheen + sombra sobria ──
+   (las filas de lista quedan planas-raised, estilo Datadog/Supabase) */
 .insight-page .mb-causal-card,
 .insight-page .comp-voice-card,
-.insight-page .comp-rank-row,
-.insight-page .comp-combo-row,
-.insight-page .comp-risk-row,
 .insight-page .tend-gap-card,
 .insight-page .tend-brand-card,
-.insight-page .tend-signal,
 .insight-page .strat-card,
-.insight-page .strat-prod-row,
 .insight-page .mb-act-card,
 .insight-page .mb-eff-card,
-.insight-page .mb-evo-card { box-shadow: none; }
+.insight-page .mb-evo-card {
+  background-image: var(--dash-sheen);
+  box-shadow: var(--dash-elev);
+}
+/* Hover lift en cards clickables (la sombra crece, no el color) */
+.insight-page .mb-causal-card:hover,
+.insight-page .comp-voice-card.comp-clickable:hover,
+.insight-page .tend-gap-card:hover {
+  box-shadow: var(--dash-elev-hover);
+  border-color: rgba(255, 255, 255, 0.16);
+}
 .insight-page .mb-causal-card--boost:hover,
 .insight-page .mb-causal-card--drag:hover { border-color: rgba(255, 255, 255, 0.18); }
 
@@ -3071,15 +3083,21 @@
 .insight-page .mb-causal-card--boost::before { background: var(--dash-pos); opacity: 0.6; }
 .insight-page .mb-causal-card--drag::before  { background: var(--dash-warn); opacity: 0.6; }
 
-/* ── Hero anclado: la unica superficie con un velo sutil ── */
+/* ── Hero: superficie raised + gradiente + glow-whisper de marca abajo ──
+   El glow va como inset box-shadow → se pinta sobre el fondo pero BAJO el
+   texto (sin z-index gymnastics, el contenido nunca se tapa). */
 .insight-page .mb-health-card {
-  background: rgba(255, 255, 255, 0.022);
-  border: 1px solid var(--dash-line);
+  background: linear-gradient(180deg, rgba(255,255,255,0.032), rgba(255,255,255,0) 55%), var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    var(--dash-elev),
+    inset 0 -52px 46px -34px var(--accent-brand-soft, rgba(110, 159, 129, 0.07));
 }
 
-/* ── KPI strip: contenedor con regla fina, sin cajas individuales ── */
+/* ── KPI strip: panel raised unificado con divisores internos ── */
 .insight-page .comp-kpis {
-  background: transparent; border: 1px solid var(--dash-line);
+  background-color: var(--bg-card); background-image: var(--dash-sheen);
+  border: 1px solid var(--border-divider); box-shadow: var(--dash-elev);
   border-radius: 14px; gap: 0; overflow: hidden;
 }
 .insight-page .comp-kpi {
@@ -3134,7 +3152,8 @@
 
 /* ── Tendencias: oceano azul y acentos → mono apagado ── */
 .insight-page .tend-gap-card--blue {
-  background: transparent; border-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: var(--dash-elev), inset 0 -40px 36px -30px rgba(110, 159, 129, 0.10);
 }
 .insight-page .tend-gap-badge { color: var(--text-secondary); border-color: var(--border-divider); }
 .insight-page .tend-gaps-note {
