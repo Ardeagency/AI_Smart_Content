@@ -160,6 +160,8 @@
           ${this._buildHealthGauge(data?.health?.data)}
           ${this._buildCausalSection(insights, 'boost')}
           ${this._buildAudienceSection(data?.audiencePatterns?.data)}
+          ${this._buildActivitySection(data?.activity?.data)}
+          ${this._buildPillarsSection(data?.pillars?.data)}
           ${this._buildCausalSection(insights, 'drag')}
         </div>`;
     },
@@ -292,6 +294,110 @@
             <span class="mb-aud-lift mb-aud-lift--${isUp ? 'up' : 'down'}">${isUp ? '▲ +' : '▼ '}${lift}%</span>
             ${pos != null ? `<span class="mb-aud-pos">${pos}% positivo</span>` : ''}
           </div>
+        </div>`;
+    },
+
+    /* ── Actividad: ritmo de publicacion propio en el tiempo ──────────── */
+    _buildActivitySection(a) {
+      if (!a || a.status === 'sin_datos' || !Number(a.total)) {
+        if (shouldHideEmpty()) return '';
+        return '';
+      }
+      const statusMeta = {
+        activo:    { color: '#6bcf7f', label: 'Activo' },
+        irregular: { color: '#e0a045', label: 'Irregular' },
+        lento:     { color: '#e0a045', label: 'Lento' },
+        dormido:   { color: '#e06464', label: 'Dormido' },
+      }[a.status] || { color: '#87868b', label: a.status };
+      const days = Number(a.days_since);
+      const headline = a.status === 'dormido'
+        ? `Llevas <strong>${this._daysHuman(days)}</strong> sin publicar`
+        : `Tu ultima publicacion fue hace <strong>${this._daysHuman(days)}</strong>`;
+
+      const nets = (Array.isArray(a.networks) ? a.networks : []).map((n) => `
+        <div class="mb-act-net">
+          <span class="mb-act-net-name">${this._esc(this._prettyPlatform(n.network))}</span>
+          <span class="mb-act-net-posts">${Number(n.posts)} ${Number(n.posts) === 1 ? 'post' : 'posts'}</span>
+          <span class="mb-act-net-since">hace ${this._daysHuman(Number(n.days_since))}</span>
+        </div>`).join('');
+
+      return `
+        <section class="mb-section">
+          <div class="mb-section-head">
+            <span class="mb-section-title">Actividad</span>
+            <span class="mb-section-hint">Tu ritmo de publicacion — y donde tienes silencios</span>
+          </div>
+          <div class="mb-act-card">
+            <div class="mb-act-status">
+              <span class="mb-act-dot" style="background:${statusMeta.color};"></span>
+              <span class="mb-act-status-label" style="color:${statusMeta.color};">${this._esc(statusMeta.label)}</span>
+              <span class="mb-act-headline">${headline}</span>
+            </div>
+            ${this._buildActivitySparkline(a.timeline)}
+            <div class="mb-act-nets">${nets}</div>
+          </div>
+        </section>`;
+    },
+
+    _buildActivitySparkline(timeline) {
+      const list = (Array.isArray(timeline) ? timeline : []).slice(-24);
+      if (list.length < 2) return '';
+      const max = Math.max(1, ...list.map((t) => Number(t.posts) || 0));
+      const bars = list.map((t) => {
+        const h = Math.round((Number(t.posts) || 0) / max * 100);
+        return `<span class="mb-act-bar" style="height:${Math.max(3, h)}%;" title="${this._esc(t.month)}: ${Number(t.posts)} posts"></span>`;
+      }).join('');
+      const first = list[0]?.month || '';
+      const last  = list[list.length - 1]?.month || '';
+      return `
+        <div class="mb-act-spark-wrap">
+          <div class="mb-act-spark">${bars}</div>
+          <div class="mb-act-spark-axis"><span>${this._esc(first)}</span><span>${this._esc(last)}</span></div>
+        </div>`;
+    },
+
+    _daysHuman(d) {
+      const n = Number(d) || 0;
+      if (n < 60) return `${n} dias`;
+      return `${n} dias (${Math.round(n / 30)} meses)`;
+    },
+
+    /* ── Pilares narrativos: de que hablas + temas huerfanos ──────────── */
+    _buildPillarsSection(rows) {
+      const list = Array.isArray(rows) ? rows : [];
+      if (!list.length) {
+        if (shouldHideEmpty()) return '';
+        return '';
+      }
+      const orphans = list.filter((r) => r.is_orphan).length;
+      return `
+        <section class="mb-section">
+          <div class="mb-section-head">
+            <span class="mb-section-title">Pilares narrativos</span>
+            <span class="mb-section-hint">De que hablas — y que tema rinde pero subexplotas${orphans ? ` (${orphans} oportunidad${orphans === 1 ? '' : 'es'})` : ''}</span>
+          </div>
+          <div class="mb-pil-list">${list.map((r) => this._buildPillarRow(r)).join('')}</div>
+        </section>`;
+    },
+
+    _buildPillarRow(r) {
+      const share = Math.max(0, Math.min(100, Number(r.share_pct) || 0));
+      const lift  = Math.round(Number(r.lift_pct) || 0);
+      const isUp  = lift >= 0;
+      const orphan = r.is_orphan === true;
+      return `
+        <div class="mb-pil-row${orphan ? ' mb-pil-row--orphan' : ''} mb-pil-row--clickable"
+             data-feat-detail data-dim="pillar" data-value="${this._esc(r.pillar)}"
+             data-title="Pilar: ${this._esc(r.pillar)}" role="button" tabindex="0">
+          <div class="mb-pil-name">
+            <span class="mb-pil-pillar">${this._esc(r.pillar)}</span>
+            ${orphan ? `<span class="mb-pil-orphan-badge">Huerfano · explotalo</span>` : ''}
+          </div>
+          <div class="mb-pil-share">
+            <div class="mb-pil-bar"><span style="width:${share}%;"></span></div>
+            <span class="mb-pil-share-pct">${share}%</span>
+          </div>
+          <span class="mb-pil-lift mb-pil-lift--${isUp ? 'up' : 'down'}">${isUp ? '▲ +' : '▼ '}${lift}%</span>
         </div>`;
     },
 
