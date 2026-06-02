@@ -2119,9 +2119,15 @@ class VeraView extends (window.BaseView || class {}) {
   }
 
   _bindArtifactPanel() {
-    if (this.__artifactBound) return;
-    this.__artifactBound = true;
-    const on = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
+    // Guard POR ELEMENTO (no por instancia): seguro ante re-render del DOM y sin
+    // doble-bind si el DOM persiste (bfcache). Si el panel se reconstruye, los
+    // elementos nuevos no tienen el flag y se enlazan.
+    const on = (id, fn) => {
+      const el = document.getElementById(id);
+      if (!el || el.__artBound) return;
+      el.__artBound = true;
+      el.addEventListener('click', fn);
+    };
     on('veraArtifactClose', () => this._closeArtifactPanel());
     on('veraArtifactView', () => { this._artifactView = 'preview'; this._renderArtifactBody(); });
     on('veraArtifactCode', () => { this._artifactView = 'code'; this._renderArtifactBody(); });
