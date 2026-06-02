@@ -3101,6 +3101,18 @@
 /* Ritmo: mas aire entre secciones */
 .insight-page.mb-dash { gap: 2.5rem; }
 
+/* ── Filtros: glass-black (no la variante blanca translucida) ── */
+.insight-page .mb-filters-bar .living-filter {
+  background: rgba(11, 11, 11, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+}
+.insight-page .mb-filters-bar .living-filter:hover { background: rgba(11, 11, 11, 0.62); }
+.insight-page .mb-filters-bar .living-filter-label { border-right-color: rgba(255, 255, 255, 0.08); }
+.insight-page .mb-filters-bar .living-filter--disabled { opacity: 0.55; }
+.insight-page .mb-filters-bar .living-filter--disabled .living-filter-select { cursor: not-allowed; }
+
 /* ── Header de seccion: tipografia con jerarquia real + regla fina ── */
 .insight-page .mb-section { gap: 1.15rem; }
 .insight-page .mb-section-head {

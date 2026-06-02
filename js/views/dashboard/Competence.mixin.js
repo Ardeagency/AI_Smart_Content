@@ -25,8 +25,16 @@
       this._restoreCompFilters();
       this._renderCompSkeleton(body);
       try {
-        const data = await this._competenciaService.loadAll({ windowDays: this._compFilters.windowDays });
+        const data = await this._competenciaService.loadAll({
+          windowDays: this._compFilters.windowDays,
+          entityId: this._compFilters.entityId,
+        });
         this._compData = data;
+        // Lista completa de perfiles para el dropdown (solo cuando NO hay foco
+        // en un rival, asi no se pierden las demas opciones al filtrar).
+        if (!this._compFilters.entityId && Array.isArray(data?.top?.data)) {
+          this._compActors = data.top.data;
+        }
         body.innerHTML = this._buildCompetenciaHtml(data);
         this._bindCompetenceHandlers(body);
       } catch (e) {
@@ -48,7 +56,10 @@
       if (this._compFilters) return this._compFilters;
       let stored = null;
       try { stored = JSON.parse(localStorage.getItem(this._compFiltersKey()) || 'null'); } catch (_) {}
-      this._compFilters = { windowDays: Number(stored?.windowDays) > 0 ? Number(stored.windowDays) : 99999 };
+      this._compFilters = {
+        windowDays: Number(stored?.windowDays) > 0 ? Number(stored.windowDays) : 99999,
+        entityId: stored?.entityId || null,
+      };
       return this._compFilters;
     },
     async _onCompFilterChange(patch) {
@@ -79,18 +90,35 @@
     },
 
     _buildCompFiltersBar() {
-      const f = this._compFilters || { windowDays: 99999 };
+      const f = this._compFilters || { windowDays: 99999, entityId: null };
       const opts = [
         { v: 30, label: 'Últimos 30 días' },
         { v: 90, label: 'Últimos 90 días' },
         { v: 365, label: 'Últimos 12 meses' },
         { v: 99999, label: 'Todo el periodo' },
       ].map(o => `<option value="${o.v}"${Number(f.windowDays) === o.v ? ' selected' : ''}>${o.label}</option>`).join('');
+
+      // Perfil = enfocar el tab en un rival (p_entity_ids). Opciones de la lista
+      // completa de rivales (capturada sin filtro). Plataforma requiere backend.
+      const actors = Array.isArray(this._compActors) ? this._compActors : [];
+      const perfilOpts = [
+        `<option value=""${!f.entityId ? ' selected' : ''}>Todos los perfiles</option>`,
+        ...actors.map(a => `<option value="${this._esc(a.entity_id)}"${f.entityId === a.entity_id ? ' selected' : ''}>${this._esc(a.entity_name)}</option>`),
+      ].join('');
+
       return `
         <header class="living-history-filters mb-filters-bar" id="compFilters">
           <div class="living-filter living-filter-window">
-            <label class="living-filter-label" for="compFilterWindow">Ventana</label>
+            <label class="living-filter-label" for="compFilterWindow">Fecha</label>
             <select class="living-filter-select" id="compFilterWindow" data-comp-filter="windowDays">${opts}</select>
+          </div>
+          <div class="living-filter living-filter--disabled" title="Próximamente">
+            <label class="living-filter-label">Plataforma</label>
+            <select class="living-filter-select" disabled><option>Todas</option></select>
+          </div>
+          <div class="living-filter">
+            <label class="living-filter-label" for="compFilterPerfil">Perfil</label>
+            <select class="living-filter-select" id="compFilterPerfil" data-comp-filter="entityId">${perfilOpts}</select>
           </div>
         </header>`;
     },
@@ -246,7 +274,9 @@
       body.addEventListener('change', (e) => {
         const el = e.target.closest('[data-comp-filter]');
         if (!el) return;
-        this._onCompFilterChange({ windowDays: Number(el.value) || 99999 });
+        const key = el.dataset.compFilter;
+        if (key === 'windowDays') this._onCompFilterChange({ windowDays: Number(el.value) || 99999 });
+        else if (key === 'entityId') this._onCompFilterChange({ entityId: el.value || null });
       });
       body.addEventListener('click', (e) => {
         const el = e.target.closest('[data-comp-entity]');

@@ -945,29 +945,24 @@
         `<option value="${o.v}"${Number(f.windowDays) === o.v ? ' selected' : ''}>${o.label}</option>`
       ).join('');
 
-      const brandOptsHtml = [
-        `<option value=""${!f.brandContainerId ? ' selected' : ''}>Todas las sub-marcas</option>`,
-        ...containers.map(c =>
-          `<option value="${this._esc(c.id)}"${f.brandContainerId === c.id ? ' selected' : ''}>${this._esc(c.nombre_marca || '—')}</option>`
-        ),
-      ].join('');
-
+      // Mi Marca = fecha + plataforma + campañas. Plataforma y campañas requieren
+      // un parametro nuevo en las RPCs (agregan server-side); van como pendientes.
       return `
         <header class="living-history-filters mb-filters-bar" id="mbFilters">
           <div class="living-filter living-filter-window">
-            <label class="living-filter-label" for="mbFilterWindow">Ventana</label>
+            <label class="living-filter-label" for="mbFilterWindow">Fecha</label>
             <select class="living-filter-select" id="mbFilterWindow" data-mb-filter="windowDays">
               ${winOptsHtml}
             </select>
           </div>
-          ${containers.length > 1 ? `
-            <div class="living-filter living-filter-brand">
-              <label class="living-filter-label" for="mbFilterBrand">Sub-marca</label>
-              <select class="living-filter-select" id="mbFilterBrand" data-mb-filter="brandContainerId">
-                ${brandOptsHtml}
-              </select>
-            </div>
-          ` : ''}
+          <div class="living-filter living-filter--disabled" title="Próximamente">
+            <label class="living-filter-label">Plataforma</label>
+            <select class="living-filter-select" disabled><option>Todas</option></select>
+          </div>
+          <div class="living-filter living-filter--disabled" title="Próximamente">
+            <label class="living-filter-label">Campañas</label>
+            <select class="living-filter-select" disabled><option>Todas</option></select>
+          </div>
         </header>`;
     },
 

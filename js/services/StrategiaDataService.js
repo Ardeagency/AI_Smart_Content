@@ -39,15 +39,16 @@ class StrategiaDataService {
     return this._ok(s.value?.data);
   }
 
-  async loadAll() {
+  async loadAll(opts = {}) {
     if (!this.sb || !this.containerId) return null;
     const bc = this.containerId;
-    const [master, proposed] = await Promise.allSettled([
+    const status = opts.status || 'proposed';
+    const [master, list] = await Promise.allSettled([
       this.sb.rpc('dashboard_strategy_master', { p_brand_container_id: bc }),
-      this.sb.rpc('dashboard_strategic_recommendations', { p_brand_container_id: bc, p_status: 'proposed' }),
+      this.sb.rpc('dashboard_strategic_recommendations', { p_brand_container_id: bc, p_status: status }),
     ]);
     const u = (s) => this._unwrap(s);
-    return { containerId: bc, master: u(master), proposed: u(proposed) };
+    return { containerId: bc, status, master: u(master), proposed: u(list) };
   }
 
   async approve(recId) {

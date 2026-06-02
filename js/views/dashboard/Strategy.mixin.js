@@ -27,9 +27,10 @@
       if (!body) return;
       if (!this._orgId) { this._renderEmptyOrgState?.(body); return; }
       await this._ensureStrategiaService();
+      this._restoreStratFilters();
       this._renderStratSkeleton(body);
       try {
-        const data = await this._strategiaService.loadAll();
+        const data = await this._strategiaService.loadAll({ status: this._stratFilters.status });
         this._stratData = data;
         body.innerHTML = this._buildStrategiaHtml(data);
         this._bindStrategyHandlers(body);
@@ -37,6 +38,21 @@
         console.error('[Strategy] load failed:', e);
         body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">No se pudo cargar Estrategia. ${this._esc(e?.message || '')}</div>`;
       }
+    },
+
+    _stratFiltersKey() { return `strat:filters:v1:${this._orgId || 'global'}`; },
+    _restoreStratFilters() {
+      if (this._stratFilters) return this._stratFilters;
+      let stored = null;
+      try { stored = JSON.parse(localStorage.getItem(this._stratFiltersKey()) || 'null'); } catch (_) {}
+      this._stratFilters = { status: stored?.status || 'proposed' };
+      return this._stratFilters;
+    },
+    async _onStratFilterChange(patch) {
+      this._stratFilters = { ...(this._stratFilters || {}), ...patch };
+      try { localStorage.setItem(this._stratFiltersKey(), JSON.stringify(this._stratFilters)); } catch (_) {}
+      const body = document.getElementById('insightTabBody');
+      if (body) this._renderStrategy(body);
     },
 
     async _ensureStrategiaService() {
@@ -62,10 +78,33 @@
       const inProd = Array.isArray(master.in_production) ? master.in_production : [];
       return `
         <div class="insight-page mb-dash" id="stratPage">
+          ${this._buildStratFiltersBar()}
           ${this._buildStratHeader(master, proposed.length)}
           ${this._buildStratPending(proposed)}
           ${this._buildStratInProduction(inProd)}
         </div>`;
+    },
+
+    _buildStratFiltersBar() {
+      const f = this._stratFilters || { status: 'proposed' };
+      // Estrategia = estado de las recomendaciones (p_status). Fecha no es un
+      // parametro de las RPCs de estrategia → pendiente de backend.
+      const statusOpts = [
+        { v: 'proposed', label: 'Pendientes' },
+        { v: 'approved', label: 'Aprobadas' },
+        { v: 'rejected', label: 'Descartadas' },
+      ].map(o => `<option value="${o.v}"${f.status === o.v ? ' selected' : ''}>${o.label}</option>`).join('');
+      return `
+        <header class="living-history-filters mb-filters-bar" id="stratFilters">
+          <div class="living-filter living-filter--disabled" title="Próximamente">
+            <label class="living-filter-label">Fecha</label>
+            <select class="living-filter-select" disabled><option>Todo el periodo</option></select>
+          </div>
+          <div class="living-filter">
+            <label class="living-filter-label" for="stratFilterStatus">Estrategia</label>
+            <select class="living-filter-select" id="stratFilterStatus" data-strat-filter="status">${statusOpts}</select>
+          </div>
+        </header>`;
     },
 
     _buildStratHeader(master, pendingCount) {
@@ -87,24 +126,30 @@
     },
 
     _buildStratPending(list) {
+      const status = this._stratFilters?.status || 'proposed';
+      const meta = {
+        proposed: { title: 'Recomendaciones pendientes', hint: 'Cada una cruza tu marca + tu competencia · aprueba, ajusta o descarta', empty: 'Sin recomendaciones pendientes. Vera propondrá nuevas en su próximo ciclo.' },
+        approved: { title: 'Recomendaciones aprobadas',  hint: 'Las que aprobaste — en camino a producción', empty: 'Aún no has aprobado recomendaciones.' },
+        rejected: { title: 'Recomendaciones descartadas', hint: 'Las que decidiste no ejecutar', empty: 'No has descartado recomendaciones.' },
+      }[status] || { title: 'Recomendaciones', hint: '', empty: 'Sin recomendaciones.' };
       if (!list.length) {
         return `
           <section class="mb-section">
-            <div class="mb-section-head"><span class="mb-section-title">Recomendaciones pendientes</span></div>
-            <div class="mb-causal-empty">Sin recomendaciones pendientes. Vera propondrá nuevas en su próximo ciclo.</div>
+            <div class="mb-section-head"><span class="mb-section-title">${meta.title}</span></div>
+            <div class="mb-causal-empty">${meta.empty}</div>
           </section>`;
       }
       return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">Recomendaciones pendientes</span>
-            <span class="mb-section-hint">Cada una cruza tu marca + tu competencia · aprueba, ajusta o descarta</span>
+            <span class="mb-section-title">${meta.title}</span>
+            ${meta.hint ? `<span class="mb-section-hint">${meta.hint}</span>` : ''}
           </div>
-          <div class="strat-cards">${list.map(r => this._buildRecCard(r)).join('')}</div>
+          <div class="strat-cards">${list.map(r => this._buildRecCard(r, status)).join('')}</div>
         </section>`;
     },
 
-    _buildRecCard(r) {
+    _buildRecCard(r, status = 'proposed') {
       const conf = CONF[String(r.confidence || '').toLowerCase()] || { label: r.confidence || '', color: '#87868b' };
       const cap = (s) => { const t = String(s || '').replace(/_/g, ' '); return t ? t.charAt(0).toUpperCase() + t.slice(1) : ''; };
       const chips = [r.tone, r.topic, r.format].filter(Boolean)
@@ -118,11 +163,12 @@
           ${r.description ? `<p class="strat-card-desc">${this._esc(r.description)}</p>` : ''}
           ${chips ? `<div class="strat-card-chips">${chips}</div>` : ''}
           ${r.copy_seed ? `<div class="strat-card-copy"><i class="fas fa-quote-left"></i> ${this._esc(r.copy_seed)}</div>` : ''}
+          ${status === 'proposed' ? `
           <div class="strat-card-actions">
             <button type="button" class="strat-btn strat-btn--approve" data-rec-action="approve">Aprobar</button>
             <button type="button" class="strat-btn" data-rec-action="iterate">Ajustar</button>
             <button type="button" class="strat-btn strat-btn--reject" data-rec-action="reject">Descartar</button>
-          </div>
+          </div>` : ''}
         </article>`;
     },
 
@@ -153,6 +199,12 @@
         const card = btn.closest('[data-rec-id]');
         if (!card) return;
         this._resolveRecommendation(card.dataset.recId, btn.dataset.recAction, card);
+      });
+      body.addEventListener('change', (e) => {
+        const el = e.target.closest('[data-strat-filter]');
+        if (el && el.dataset.stratFilter === 'status') {
+          this._onStratFilterChange({ status: el.value || 'proposed' });
+        }
       });
     },
 

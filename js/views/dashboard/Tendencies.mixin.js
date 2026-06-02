@@ -66,7 +66,10 @@
       if (this._tendFilters) return this._tendFilters;
       let stored = null;
       try { stored = JSON.parse(localStorage.getItem(this._tendFiltersKey()) || 'null'); } catch (_) {}
-      this._tendFilters = { windowDays: Number(stored?.windowDays) > 0 ? Number(stored.windowDays) : 90 };
+      this._tendFilters = {
+        windowDays: Number(stored?.windowDays) > 0 ? Number(stored.windowDays) : 90,
+        source: stored?.source || '',
+      };
       return this._tendFilters;
     },
     async _onTendFilterChange(patch) {
@@ -88,7 +91,7 @@
     _buildTendenciasHtml(data) {
       return `
         <div class="insight-page mb-dash" id="tendPage">
-          ${this._buildTendFiltersBar()}
+          ${this._buildTendFiltersBar(data)}
           ${this._buildTendPulse(data?.kpis?.data, data?.pulse?.data)}
           ${this._buildTendSignals(data?.signals?.data)}
           ${this._buildTendGaps(data?.gaps?.data)}
@@ -98,18 +101,30 @@
         </div>`;
     },
 
-    _buildTendFiltersBar() {
-      const f = this._tendFilters || { windowDays: 90 };
+    _buildTendFiltersBar(data) {
+      const f = this._tendFilters || { windowDays: 90, source: '' };
       const opts = [
         { v: 30, label: 'Últimos 30 días' },
         { v: 90, label: 'Últimos 90 días' },
         { v: 365, label: 'Últimos 12 meses' },
       ].map(o => `<option value="${o.v}"${Number(f.windowDays) === o.v ? ' selected' : ''}>${o.label}</option>`).join('');
+
+      // Tendencia = filtro por fuente de la señal (client-side sobre lo cargado).
+      const sources = Array.isArray(data?.signals?.data?.by_source) ? data.signals.data.by_source : [];
+      const srcOpts = [
+        `<option value=""${!f.source ? ' selected' : ''}>Todas las fuentes</option>`,
+        ...sources.map(s => `<option value="${this._esc(s.source)}"${f.source === s.source ? ' selected' : ''}>${this._esc(this._prettyPlatform(s.source))}</option>`),
+      ].join('');
+
       return `
         <header class="living-history-filters mb-filters-bar" id="tendFilters">
           <div class="living-filter living-filter-window">
-            <label class="living-filter-label" for="tendFilterWindow">Ventana</label>
+            <label class="living-filter-label" for="tendFilterWindow">Fecha</label>
             <select class="living-filter-select" id="tendFilterWindow" data-tend-filter="windowDays">${opts}</select>
+          </div>
+          <div class="living-filter">
+            <label class="living-filter-label" for="tendFilterSource">Tendencia</label>
+            <select class="living-filter-select" id="tendFilterSource" data-tend-filter="source">${srcOpts}</select>
           </div>
         </header>`;
     },
@@ -156,8 +171,10 @@
     /* ── 2. Señales emergentes: keywords con velocidad (filtradas) ─────── */
     _buildTendSignals(signals) {
       const raw = Array.isArray(signals?.top_velocity) ? signals.top_velocity : [];
+      const srcFilter = this._tendFilters?.source || '';
       const list = raw
         .filter(s => Number(s.relevance_score) >= MIN_SIGNAL_RELEVANCE)
+        .filter(s => !srcFilter || s.source === srcFilter)
         .slice(0, 24);
       const bySource = Array.isArray(signals?.by_source) ? signals.by_source : [];
       const head = `
@@ -366,7 +383,9 @@
       body.addEventListener('change', (e) => {
         const el = e.target.closest('[data-tend-filter]');
         if (!el) return;
-        this._onTendFilterChange({ windowDays: Number(el.value) || 90 });
+        const key = el.dataset.tendFilter;
+        if (key === 'windowDays') this._onTendFilterChange({ windowDays: Number(el.value) || 90 });
+        else if (key === 'source') this._onTendFilterChange({ source: el.value || '' });
       });
     },
   });
