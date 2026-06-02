@@ -963,6 +963,11 @@ class FlowCatalogView extends BaseView {
       clearTimeout(this.heroScrollDebounce);
       this.heroScrollDebounce = null;
     }
+    // Timers de carrusel por-card (limpia los que quedaron si la card murio en hover).
+    if (this._cardCarouselTimers && this._cardCarouselTimers.length) {
+      this._cardCarouselTimers.forEach(t => clearInterval(t));
+      this._cardCarouselTimers = [];
+    }
   }
 
   async onLeave() {
@@ -1477,6 +1482,10 @@ class FlowCatalogView extends BaseView {
   }
 
   _bindExecCarousels(container) {
+    // Timers rastreados: si la card se destruye estando en hover (re-render por
+    // busqueda/filtro o navegacion), el mouseleave no dispara y el interval quedaba
+    // inalcanzable. Los limpiamos todos en onLeave/destroy (patron de ExecutionHistoryView).
+    this._cardCarouselTimers = this._cardCarouselTimers || [];
     container.querySelectorAll('.exec-card[data-carousel]').forEach(card => {
       const imgs = Array.from(card.querySelectorAll('.exec-card-img'));
       const dots = Array.from(card.querySelectorAll('.exec-card-dot'));
@@ -1487,7 +1496,7 @@ class FlowCatalogView extends BaseView {
         idx = (n + imgs.length) % imgs.length;
         imgs[idx]?.classList.add('is-visible'); dots[idx]?.classList.add('is-active');
       };
-      card.addEventListener('mouseenter', () => { if (!timer) timer = setInterval(() => show(idx + 1), 900); });
+      card.addEventListener('mouseenter', () => { if (!timer) { timer = setInterval(() => show(idx + 1), 900); this._cardCarouselTimers.push(timer); } });
       card.addEventListener('mouseleave', () => { if (timer) { clearInterval(timer); timer = null; } show(0); });
     });
   }

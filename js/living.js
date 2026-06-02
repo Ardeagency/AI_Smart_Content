@@ -3520,6 +3520,10 @@ class LivingManager {
 
         canvas.addEventListener('mousedown', startStroke);
         canvas.addEventListener('mousemove', moveStroke);
+        // Limpiar el mouseup global de una apertura previa antes de agregar el nuevo,
+        // para no acumular un listener en window por cada apertura del modal de edicion.
+        if (this._endStrokeHandler) { try { window.removeEventListener('mouseup', this._endStrokeHandler); } catch (_) {} }
+        this._endStrokeHandler = endStroke;
         window.addEventListener('mouseup', endStroke);
         canvas.addEventListener('touchstart', startStroke, { passive: false });
         canvas.addEventListener('touchmove', moveStroke, { passive: false });
@@ -3528,8 +3532,10 @@ class LivingManager {
         // Re-sincronizar tamano al cambiar viewport (re-layout de la imagen).
         const img = document.getElementById('pmodalImage');
         if (img) {
-            const ro = new ResizeObserver(() => this._syncEditCanvasSize(img));
-            ro.observe(img);
+            // Desconectar el ResizeObserver de una apertura previa antes de crear uno nuevo.
+            if (this._editCanvasRo) { try { this._editCanvasRo.disconnect(); } catch (_) {} }
+            this._editCanvasRo = new ResizeObserver(() => this._syncEditCanvasSize(img));
+            this._editCanvasRo.observe(img);
         }
 
         // Slider de tamano de pincel.
@@ -4930,6 +4936,11 @@ class LivingManager {
             this._modalEscBound = false;
         }
         this._modalState = null;
+        // Observers/listeners que viven mientras hay modal abierto: desconectar al
+        // desmontar la vista (antes solo se limpiaban al re-abrir, no al salir).
+        if (this._siblingObserver) { try { this._siblingObserver.disconnect(); } catch (_) {} this._siblingObserver = null; }
+        if (this._editCanvasRo) { try { this._editCanvasRo.disconnect(); } catch (_) {} this._editCanvasRo = null; }
+        if (this._endStrokeHandler) { try { window.removeEventListener('mouseup', this._endStrokeHandler); } catch (_) {} this._endStrokeHandler = null; }
         this.supabase = null;
         this.userId = null;
         this.userData = null;
