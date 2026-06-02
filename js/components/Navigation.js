@@ -467,6 +467,7 @@ class Navigation {
     }
     if (config.showHeader) {
       this.refreshNotificationsBadge();
+      this.refreshActivityBadge();
     }
     this.initialized = true;
     await Promise.allSettled(dataTasks);
@@ -542,6 +543,298 @@ class Navigation {
               </button>
               <span class="header-notifications-badge" id="headerNotificationsBadge" hidden aria-hidden="true"></span>
             </span>`;
+  }
+
+  /* ════════════════════════════════════════════════════════════════════════
+     ACTIVIDAD — panel del header (junto a notificaciones) con 2 pestañas:
+       · Tareas    → vera_pending_actions (status=pending): lo que el HUMANO
+                     debe hacer para optimizar su marketing.
+       · Misiones  → body_missions: lo que VERA esta ejecutando autonomamente.
+     Org-scoped (this.currentOrgId). Panel en portal de body para no quedar
+     atrapado bajo el glass del header.
+     ════════════════════════════════════════════════════════════════════════ */
+  getHeaderActivityButtonGroupHTML() {
+    return `
+            <span class="header-activity-wrap">
+              <button
+                type="button"
+                class="user-menu-btn nav-footer-btn"
+                data-activity-btn
+                data-tooltip="Actividad de Vera"
+                aria-label="Actividad de Vera"
+                id="headerActivityBtn"
+              >
+                <i class="fas fa-heart-pulse"></i>
+              </button>
+              <span class="header-activity-badge" id="headerActivityBadge" hidden aria-hidden="true"></span>
+            </span>`;
+  }
+
+  ensureActivityDropdown() {
+    let panel = document.getElementById('activityDropdown');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'activityDropdown';
+      panel.className = 'activity-dropdown glass-black';
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-label', 'Actividad de Vera');
+      panel.setAttribute('aria-hidden', 'true');
+      panel.innerHTML = `
+        <div class="activity-head">
+          <span class="activity-title">Actividad</span>
+          <div class="activity-tabs" role="tablist">
+            <button type="button" class="activity-tab is-active" data-activity-tab="tareas" role="tab">Tareas</button>
+            <button type="button" class="activity-tab" data-activity-tab="misiones" role="tab">Misiones</button>
+          </div>
+        </div>
+        <div class="activity-body" id="activityBody"></div>`;
+      document.body.appendChild(panel);
+
+      panel.querySelector('.activity-tabs')?.addEventListener('click', (e) => {
+        const tab = e.target.closest('[data-activity-tab]');
+        if (!tab) return;
+        panel.querySelectorAll('.activity-tab').forEach((t) => t.classList.toggle('is-active', t === tab));
+        this._activityTab = tab.dataset.activityTab;
+        this._loadActivity(this._activityTab);
+      });
+
+      panel.querySelector('#activityBody')?.addEventListener('click', (e) => {
+        const ap = e.target.closest('[data-act-approve]');
+        if (ap) { this._resolveActivityTask(ap.closest('[data-task-id]')?.dataset.taskId, 'approve'); return; }
+        const rj = e.target.closest('[data-act-dismiss]');
+        if (rj) { this._resolveActivityTask(rj.closest('[data-task-id]')?.dataset.taskId, 'reject'); return; }
+      });
+    } else if (panel.parentElement !== document.body) {
+      document.body.appendChild(panel);
+    }
+    return panel;
+  }
+
+  toggleActivityDropdown(btn) {
+    const panel = this.ensureActivityDropdown();
+    if (panel.classList.contains('active')) { this.closeActivityDropdown(); return; }
+    const r = btn.getBoundingClientRect();
+    const width = 384;
+    let left = Math.round(r.right - width);
+    if (left < 12) left = 12;
+    panel.style.position = 'fixed';
+    panel.style.top = `${Math.round(r.bottom + 8)}px`;
+    panel.style.left = `${left}px`;
+    panel.style.width = `${width}px`;
+    panel.classList.add('active');
+    panel.setAttribute('aria-hidden', 'false');
+    this._activityTab = this._activityTab || 'tareas';
+    this._loadActivity(this._activityTab);
+  }
+
+  closeActivityDropdown() {
+    const panel = document.getElementById('activityDropdown');
+    if (panel) { panel.classList.remove('active'); panel.setAttribute('aria-hidden', 'true'); }
+  }
+
+  async _loadActivity(tab) {
+    const body = document.getElementById('activityBody');
+    if (!body) return;
+    body.innerHTML = `<div class="activity-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+    const sb = await this._supabase();
+    const orgId = this.currentOrgId;
+    if (!sb || !orgId) { this._activityEmpty(body, 'fa-circle-info', 'Selecciona una marca para ver la actividad de Vera.'); return; }
+    try {
+      if (tab === 'misiones') {
+        const { data, error } = await sb
+          .from('body_missions')
+          .select('id,mission_type,status,result_reference,created_at,updated_at')
+          .eq('organization_id', orgId)
+          .order('created_at', { ascending: false })
+          .limit(30);
+        if (error) throw error;
+        this._renderActivityMissions(body, Array.isArray(data) ? data : []);
+      } else {
+        const { data, error } = await sb
+          .from('vera_pending_actions')
+          .select('id,action_type,vera_reasoning,vera_confidence,priority,proposed_payload,status,created_at,expires_at')
+          .eq('organization_id', orgId)
+          .eq('status', 'pending')
+          .order('priority', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(40);
+        if (error) throw error;
+        const list = (Array.isArray(data) ? data : []).filter((a) =>
+          a?.proposed_payload?.placeholder !== true && !/bootstrap\s*stub/i.test(a?.vera_reasoning || ''));
+        this._renderActivityTasks(body, list);
+      }
+    } catch (e) {
+      console.warn('[activity] load failed:', e?.message || e);
+      this._activityEmpty(body, 'fa-triangle-exclamation', 'No se pudo cargar la actividad.');
+    }
+  }
+
+  _renderActivityTasks(body, list) {
+    if (!list.length) { this._activityEmpty(body, 'fa-circle-check', 'Sin tareas pendientes. Vera tiene tu marca al dia.'); return; }
+    body.innerHTML = `<ol class="activity-list">${list.map((t) => this._activityTaskItemHtml(t)).join('')}</ol>`;
+  }
+
+  _activityTaskItemHtml(t) {
+    const meta   = this._activityActionMeta(t.action_type);
+    const detail = String(t.vera_reasoning || t.proposed_payload?.summary || '').trim();
+    const det    = detail ? `<p class="activity-item-detail">${_escapeHtml(detail.length > 160 ? detail.slice(0, 160) + '…' : detail)}</p>` : '';
+    const conf   = Number.isFinite(Number(t.vera_confidence)) ? Math.round(Number(t.vera_confidence) * 100) + '%' : '';
+    const prio   = Number(t.priority) >= 8 ? `<span class="activity-chip activity-chip--prio">Alta</span>` : '';
+    return `
+      <li class="activity-item" data-task-id="${_escapeHtml(t.id)}">
+        <span class="activity-node" style="--act:${meta.color};"><i class="${meta.icon}"></i></span>
+        <div class="activity-card">
+          <div class="activity-item-head">
+            <span class="activity-item-title">${_escapeHtml(meta.title)}</span>
+            <span class="activity-item-time">${_escapeHtml(this._activityTime(t.created_at))}</span>
+          </div>
+          ${det}
+          <div class="activity-item-foot">
+            ${prio}${conf ? `<span class="activity-chip">${conf}</span>` : ''}
+            <span class="activity-spacer"></span>
+            <button type="button" class="activity-mini-btn activity-mini-btn--ok" data-act-approve>Aprobar</button>
+            <button type="button" class="activity-mini-btn" data-act-dismiss>Descartar</button>
+          </div>
+        </div>
+      </li>`;
+  }
+
+  _renderActivityMissions(body, list) {
+    if (!list.length) { this._activityEmpty(body, 'fa-robot', 'Vera aun no ha ejecutado misiones.'); return; }
+    body.innerHTML = `<ol class="activity-list">${list.map((m) => this._activityMissionItemHtml(m)).join('')}</ol>`;
+  }
+
+  _activityMissionItemHtml(m) {
+    const st      = this._activityMissionStatus(m.status);
+    const summary = this._missionSummary(m);
+    const det     = summary ? `<p class="activity-item-detail">${_escapeHtml(summary)}</p>` : '';
+    return `
+      <li class="activity-item">
+        <span class="activity-node" style="--act:${st.color};"><i class="${st.icon}"></i></span>
+        <div class="activity-card">
+          <div class="activity-item-head">
+            <span class="activity-item-title">${_escapeHtml(this._humanizeMission(m.mission_type))}</span>
+            <span class="activity-item-time">${_escapeHtml(this._activityTime(m.created_at))}</span>
+          </div>
+          ${det}
+          <div class="activity-item-foot">
+            <span class="activity-chip activity-chip--${st.kind}">${st.label}</span>
+          </div>
+        </div>
+      </li>`;
+  }
+
+  _activityEmpty(body, icon, msg) {
+    body.innerHTML = `<div class="activity-empty"><i class="fas ${icon}"></i><p>${_escapeHtml(msg)}</p></div>`;
+  }
+
+  _activityActionMeta(type) {
+    const M = {
+      pause_campaign:             { title: 'Pausar campaña',             icon: 'fas fa-triangle-exclamation', color: '#e06464' },
+      resume_campaign:            { title: 'Reactivar campaña',          icon: 'fas fa-rocket',               color: '#4cb37a' },
+      launch_campaign:            { title: 'Lanzar campaña',             icon: 'fas fa-rocket',               color: '#a07bd0' },
+      create_brief:               { title: 'Crear brief de campaña',     icon: 'fas fa-list-check',           color: '#5b9bd5' },
+      update_brief:               { title: 'Actualizar brief',           icon: 'fas fa-list-check',           color: '#5b9bd5' },
+      update_persona:             { title: 'Actualizar persona',         icon: 'fas fa-users',                color: '#a07bd0' },
+      create_audience:            { title: 'Crear audiencia',            icon: 'fas fa-users',                color: '#3fb6a8' },
+      update_audience:            { title: 'Actualizar audiencia',       icon: 'fas fa-users',                color: '#3fb6a8' },
+      link_brief_to_campaign:     { title: 'Vincular brief a campaña',   icon: 'fas fa-link',                 color: '#4cb37a' },
+      link_campaign_to_persona:   { title: 'Vincular campaña a persona', icon: 'fas fa-link',                 color: '#4cb37a' },
+      link_segment_to_persona:    { title: 'Vincular audiencia a persona', icon: 'fas fa-link',               color: '#4cb37a' },
+      update_brand_container:     { title: 'Actualizar marca',           icon: 'fas fa-wand-magic-sparkles',  color: '#e09145' },
+      update_shopify_product_seo: { title: 'Optimizar SEO de producto',  icon: 'fas fa-magnifying-glass',     color: '#4cb37a' },
+      adjust_price:               { title: 'Ajustar precio',             icon: 'fas fa-tag',                  color: '#e06464' },
+      adjust_tone:                { title: 'Ajustar tono del contenido', icon: 'fas fa-wand-magic-sparkles',  color: '#00c7d6' },
+    };
+    return M[type] || { title: this._humanizeMission(type), icon: 'fas fa-bolt', color: '#87868b' };
+  }
+
+  _activityMissionStatus(s) {
+    const M = {
+      completed: { label: 'Completada', kind: 'ok',   icon: 'fas fa-circle-check',           color: '#6bcf7f' },
+      running:   { label: 'En curso',   kind: 'run',  icon: 'fas fa-circle-notch fa-spin',   color: '#5b9bd5' },
+      pending:   { label: 'En cola',    kind: 'wait', icon: 'fas fa-clock-rotate-left',      color: '#87868b' },
+      failed:    { label: 'Fallida',    kind: 'fail', icon: 'fas fa-triangle-exclamation',   color: '#e06464' },
+    };
+    return M[s] || { label: s || '—', kind: 'wait', icon: 'fas fa-robot', color: '#87868b' };
+  }
+
+  _humanizeMission(t) {
+    const map = {
+      daily_briefing:             'Briefing diario',
+      competitor_signal_analysis: 'Analisis de competencia',
+      execute_update_persona:     'Actualizacion de persona',
+      opportunity_scan:           'Escaneo de oportunidades',
+      cross_signal_synthesis:     'Sintesis de senales',
+    };
+    if (map[t]) return map[t];
+    const s = String(t || 'Mision').replace(/_/g, ' ');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  _missionSummary(m) {
+    const r = m.result_reference || {};
+    const txt = r.briefing_text || r.summary || r.execution_summary || '';
+    return String(txt).trim().slice(0, 160);
+  }
+
+  _activityTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const mins = Math.floor((new Date() - d) / 60000);
+    if (mins < 1)  return 'ahora';
+    if (mins < 60) return `${mins}m`;
+    const h = Math.floor(mins / 60);
+    if (h < 24)    return `${h}h`;
+    const days = Math.floor(h / 24);
+    if (days < 7)  return `${days}d`;
+    return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+  }
+
+  async _resolveActivityTask(id, op) {
+    if (!id) return;
+    const sb = await this._supabase();
+    if (!sb) return;
+    const li = document.querySelector(`#activityDropdown .activity-item[data-task-id="${id}"]`);
+    if (li) { li.style.opacity = '0.45'; li.style.pointerEvents = 'none'; }
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('Sin sesion');
+      const res = await fetch(`/api/vera/pending-actions/${id}/${op}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: op === 'reject' ? JSON.stringify({ reason: '' }) : '{}',
+      });
+      if (!res.ok) throw new Error((await res.text().catch(() => '')).slice(0, 200));
+      li?.remove();
+      this.refreshActivityBadge();
+      if (!document.querySelector('#activityDropdown .activity-item[data-task-id]')) this._loadActivity('tareas');
+    } catch (e) {
+      console.error('[activity] resolve failed:', e?.message || e);
+      if (li) { li.style.opacity = ''; li.style.pointerEvents = ''; }
+    }
+  }
+
+  async refreshActivityBadge() {
+    const badge = document.getElementById('headerActivityBadge');
+    if (!badge) return;
+    const sb = await this._supabase();
+    const orgId = this.currentOrgId;
+    if (!sb || !orgId) { badge.hidden = true; return; }
+    try {
+      const { count, error } = await sb
+        .from('vera_pending_actions')
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', orgId)
+        .eq('status', 'pending');
+      if (error) throw error;
+      const n = Number(count) || 0;
+      if (n > 0) { badge.textContent = n > 9 ? '9+' : String(n); badge.hidden = false; badge.removeAttribute('aria-hidden'); }
+      else { badge.hidden = true; badge.setAttribute('aria-hidden', 'true'); }
+    } catch (_) { badge.hidden = true; }
   }
 
   /**
@@ -1430,6 +1723,7 @@ class Navigation {
           </div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
+              ${this.getHeaderActivityButtonGroupHTML()}
               ${this.getHeaderNotificationsButtonGroupHTML()}
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
@@ -1664,6 +1958,7 @@ class Navigation {
           </div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
+              ${this.getHeaderActivityButtonGroupHTML()}
               ${this.getHeaderNotificationsButtonGroupHTML()}
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
@@ -1828,6 +2123,7 @@ class Navigation {
           </div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
+              ${this.getHeaderActivityButtonGroupHTML()}
               ${this.getHeaderNotificationsButtonGroupHTML()}
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
@@ -2201,6 +2497,24 @@ class Navigation {
           e.preventDefault();
           e.stopPropagation();
           this.openNotificationsModal();
+        },
+        false
+      );
+    }
+
+    /* Delegación en document: boton de Actividad abre/cierra su panel propio.
+       Click fuera del panel lo cierra. */
+    if (!this._activityClickDelegation) {
+      this._activityClickDelegation = true;
+      document.addEventListener(
+        'click',
+        (e) => {
+          const btn = e.target.closest('[data-activity-btn]');
+          if (btn) { e.preventDefault(); e.stopPropagation(); this.toggleActivityDropdown(btn); return; }
+          const panel = document.getElementById('activityDropdown');
+          if (panel && panel.classList.contains('active') && !panel.contains(e.target)) {
+            this.closeActivityDropdown();
+          }
         },
         false
       );
