@@ -2714,3 +2714,54 @@
   .mb-eff-geo { grid-template-columns: 1fr; gap: 0.3rem; }
   .mb-eff-geo-val { text-align: left; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Tu plan de accion — Explota / Optimiza / Elimina (resumen ejecutivo)
+   ════════════════════════════════════════════════════════════════════ */
+.mb-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
+.mb-plan-col {
+  position: relative;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem 1.15rem;
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+.mb-plan-col::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 3px; }
+.mb-plan-col--explota::before  { background: #6bcf7f; }
+.mb-plan-col--optimiza::before { background: #5b9bd5; }
+.mb-plan-col--elimina::before  { background: #e06464; }
+.mb-plan-col-head {
+  display: flex; align-items: center; gap: 0.45rem;
+  font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--text-muted, rgba(212,209,216,0.55));
+}
+.mb-plan-col--explota  .mb-plan-col-head { color: #6bcf7f; }
+.mb-plan-col--optimiza .mb-plan-col-head { color: #5b9bd5; }
+.mb-plan-col--elimina  .mb-plan-col-head { color: #e06464; }
+.mb-plan-col-head i { font-size: 0.8125rem; }
+.mb-plan-title { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary, #D4D1D8); line-height: 1.25; margin-top: 0.15rem; }
+.mb-plan-metric { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary, rgba(212,209,216,0.82)); font-variant-numeric: tabular-nums; }
+.mb-plan-why { margin: 0.2rem 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--text-muted, rgba(212,209,216,0.6)); }
+.mb-plan-empty { margin: 0.3rem 0 0; font-size: 0.75rem; color: var(--text-muted, rgba(212,209,216,0.45)); }
+
+@media (max-width: 760px) { .mb-plan-grid { grid-template-columns: 1fr; } }
+
+/* ════════════════════════════════════════════════════════════════════
+   Evolucion — impacto social en el tiempo (sparkline + veredicto)
+   ════════════════════════════════════════════════════════════════════ */
+.mb-evo-card {
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  display: flex; flex-direction: column; gap: 0.85rem;
+}
+.mb-evo-top { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.mb-evo-verdict { font-size: 1rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; }
+.mb-evo-verdict i { font-size: 0.875rem; }
+.mb-evo-chg { font-variant-numeric: tabular-nums; }
+.mb-evo-range { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.5)); font-variant-numeric: tabular-nums; }
+.mb-evo-spark { width: 100%; }
+.mb-evo-spark svg { display: block; }
+.mb-evo-summary { margin: 0; font-size: 0.8125rem; line-height: 1.45; color: var(--text-secondary, rgba(212,209,216,0.82)); }

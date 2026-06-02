@@ -158,13 +158,92 @@
         <div class="insight-page mb-dash" id="mbPage">
           ${this._buildMbFiltersBar(data)}
           ${this._buildHealthGauge(data?.health?.data)}
+          ${this._buildActionPlanSection(data, insights)}
           ${this._buildCausalSection(insights, 'boost')}
           ${this._buildEffectiveAudienceSection(data?.audienceEffective?.data, insights)}
           ${this._buildAudienceSection(data?.audiencePatterns?.data)}
           ${this._buildActivitySection(data?.activity?.data)}
+          ${this._buildEvolutionSection(data?.evolution?.data)}
           ${this._buildPillarsSection(data?.pillars?.data)}
           ${this._buildCausalSection(insights, 'drag')}
         </div>`;
+    },
+
+    /* ── Plan de accion: Explota / Optimiza / Elimina (de un golpe) ─────
+       Resumen ejecutivo que sintetiza lo que el resto del dashboard detalla:
+       que explotar (tu mejor palanca), que optimizar (tarea de salud de mayor
+       impacto) y que eliminar (lo que mas te resta). Ensambla data existente. */
+    _buildActionPlanSection(data, insights) {
+      const arr = Array.isArray(insights) ? insights : [];
+      const boosts = arr.filter((i) => i.kind === 'boost').sort((a, b) => Number(b.lift_pct) - Number(a.lift_pct));
+      const drags  = arr.filter((i) => i.kind === 'drag').sort((a, b) => Number(a.lift_pct) - Number(b.lift_pct));
+      const tasks  = Array.isArray(data?.health?.data?.tasks)
+        ? [...data.health.data.tasks].sort((a, b) => (Number(b.impact_pts) || 0) - (Number(a.impact_pts) || 0))
+        : [];
+      const orphan = (Array.isArray(data?.pillars?.data) ? data.pillars.data : []).find((p) => p.is_orphan);
+
+      const dimLabel = { tono: 'Tono', tema: 'Tema', formato: 'Formato', horario: 'Horario' };
+
+      // EXPLOTA: el mejor boost (o pilar huerfano si no hay boost).
+      let explota = null;
+      if (boosts[0]) {
+        const b = boosts[0];
+        explota = {
+          title: `${dimLabel[b.dimension] || b.dimension} "${this._causalValueLabel(b.dimension, b.value)}"`,
+          metric: `+${Math.round(Number(b.lift_pct))}% sobre tu promedio`,
+          why: orphan ? `Tu pilar "${this._esc(orphan.pillar)}" tambien rinde y lo usas solo ${orphan.share_pct}%.` : 'Usalo mas, lo subexplotas.',
+        };
+      } else if (orphan) {
+        explota = {
+          title: `Pilar "${this._esc(orphan.pillar)}"`,
+          metric: `+${Math.round(Number(orphan.lift_pct))}% pero solo ${orphan.share_pct}% de tu contenido`,
+          why: 'Te funciona y lo subexplotas. Produce mas de esto.',
+        };
+      }
+
+      // OPTIMIZA: la tarea de salud de mayor impacto.
+      const optimiza = tasks[0] ? {
+        title: tasks[0].label,
+        metric: Number(tasks[0].impact_pts) > 0 ? `+${Math.round(Number(tasks[0].impact_pts))} pts de salud` : '',
+        why: tasks[0].detail || '',
+      } : null;
+
+      // ELIMINA: lo que mas te resta.
+      const elimina = drags[0] ? {
+        title: `${dimLabel[drags[0].dimension] || drags[0].dimension} "${this._causalValueLabel(drags[0].dimension, drags[0].value)}"`,
+        metric: `${Math.round(Number(drags[0].lift_pct))}% bajo tu promedio`,
+        why: `Lo usas ${Number(drags[0].post_count) || 0} ${Number(drags[0].post_count) === 1 ? 'vez' : 'veces'} y rinde por debajo. Reducelo.`,
+      } : null;
+
+      if (!explota && !optimiza && !elimina) return '';
+
+      const col = (kind, icon, label, item) => {
+        if (!item) {
+          return `<div class="mb-plan-col mb-plan-col--${kind} mb-plan-col--empty">
+            <div class="mb-plan-col-head"><i class="${icon}"></i><span>${label}</span></div>
+            <p class="mb-plan-empty">Sin senal clara aun.</p></div>`;
+        }
+        return `
+          <div class="mb-plan-col mb-plan-col--${kind}">
+            <div class="mb-plan-col-head"><i class="${icon}"></i><span>${label}</span></div>
+            <div class="mb-plan-title">${this._esc(item.title)}</div>
+            ${item.metric ? `<div class="mb-plan-metric">${this._esc(item.metric)}</div>` : ''}
+            ${item.why ? `<p class="mb-plan-why">${this._esc(item.why)}</p>` : ''}
+          </div>`;
+      };
+
+      return `
+        <section class="mb-section">
+          <div class="mb-section-head">
+            <span class="mb-section-title">Tu plan de accion</span>
+            <span class="mb-section-hint">Que explotar, optimizar y eliminar — de un golpe</span>
+          </div>
+          <div class="mb-plan-grid">
+            ${col('explota',  'fas fa-arrow-trend-up',   'Explota',  explota)}
+            ${col('optimiza', 'fas fa-sliders',          'Optimiza', optimiza)}
+            ${col('elimina',  'fas fa-arrow-trend-down', 'Elimina',  elimina)}
+          </div>
+        </section>`;
     },
 
     /* Seccion causal: 'boost' = lo que te impulsa, 'drag' = lo que te resta.
@@ -364,6 +443,69 @@
             ${atrae ? `<p class="mb-eff-atrae">${atrae}</p>` : ''}
           </div>
         </section>`;
+    },
+
+    /* ── Evolucion: impacto social en el tiempo (la pelicula) ─────────── */
+    _buildEvolutionSection(e) {
+      const series = Array.isArray(e?.series) ? e.series : [];
+      if (!e || e.verdict === 'sin_datos' || series.length < 2) {
+        if (shouldHideEmpty()) return '';
+        return '';
+      }
+      const meta = {
+        mejorando: { color: '#6bcf7f', label: 'Mejorando', icon: 'fas fa-arrow-trend-up' },
+        estable:   { color: '#87868b', label: 'Estable',   icon: 'fas fa-arrows-left-right' },
+        cayendo:   { color: '#e06464', label: 'Cayendo',   icon: 'fas fa-arrow-trend-down' },
+      }[e.verdict] || { color: '#87868b', label: e.verdict, icon: 'fas fa-chart-line' };
+
+      const chg = Number(e.impact_change_pct);
+      const sentChg = Number(e.sentiment_change_pts);
+      const chgStr = Number.isFinite(chg) ? `${chg >= 0 ? '+' : ''}${chg}%` : '';
+      const summary = e.verdict === 'mejorando'
+        ? `Tu impacto viene subiendo (${chgStr}) frente a tus inicios${Number.isFinite(sentChg) && sentChg !== 0 ? ` · sentimiento ${sentChg >= 0 ? '+' : ''}${sentChg} pts` : ''}.`
+        : e.verdict === 'cayendo'
+        ? `Tu impacto viene cayendo (${chgStr}) frente a tus inicios. Revisa que cambiaste.`
+        : `Tu impacto se mantiene estable en el tiempo.`;
+
+      return `
+        <section class="mb-section">
+          <div class="mb-section-head">
+            <span class="mb-section-title">Evolucion</span>
+            <span class="mb-section-hint">Tu impacto social en el tiempo — la pelicula, no la foto</span>
+          </div>
+          <div class="mb-evo-card">
+            <div class="mb-evo-top">
+              <span class="mb-evo-verdict" style="color:${meta.color};"><i class="${meta.icon}"></i> ${this._esc(meta.label)} ${chgStr ? `<span class="mb-evo-chg">${chgStr}</span>` : ''}</span>
+              <span class="mb-evo-range">${this._esc(series[0].period)} → ${this._esc(series[series.length - 1].period)} · ${e.months} ${e.months === 1 ? 'mes' : 'meses'} con data</span>
+            </div>
+            ${this._buildEvolutionSpark(series, meta.color)}
+            <p class="mb-evo-summary">${this._esc(summary)}</p>
+          </div>
+        </section>`;
+    },
+
+    /** Sparkline SVG de la serie de impacto en el tiempo. */
+    _buildEvolutionSpark(series, color) {
+      const vals = series.map((s) => Number(s.impact) || 0);
+      const max = Math.max(...vals, 0.001);
+      const W = 600, H = 60, pad = 4;
+      const n = vals.length;
+      const pts = vals.map((v, i) => {
+        const x = pad + (n === 1 ? 0 : (i / (n - 1)) * (W - pad * 2));
+        const y = H - pad - (v / max) * (H - pad * 2);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      });
+      const dots = vals.map((v, i) => {
+        const [x, y] = pts[i].split(',');
+        return `<circle cx="${x}" cy="${y}" r="2.2" fill="${color}"/>`;
+      }).join('');
+      return `
+        <div class="mb-evo-spark">
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" width="100%" height="60" aria-label="Evolucion de impacto">
+            <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+            ${dots}
+          </svg>
+        </div>`;
     },
 
     /* ── Actividad: ritmo de publicacion propio en el tiempo ──────────── */

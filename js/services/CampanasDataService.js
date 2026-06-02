@@ -119,7 +119,7 @@ class CampanasDataService {
       kpis, list, dailySeries, winnersVsBurners, briefVsOutcome,
       featuredTopic, featuredHashtag, featuredHour, estrategiaTones,
       featuredSentiment, featuredProfile, featuredGrowth,
-      whatWorks, audiencePatterns, activity, pillars, audienceEffective,
+      whatWorks, audiencePatterns, activity, pillars, audienceEffective, evolution,
       vulnerabilities,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
@@ -164,6 +164,10 @@ class CampanasDataService {
       this.sb.rpc('dashboard_mimarca_audience_effective', {
         p_org_id: this.orgId, p_brand_container_ids: bcids,
       }),
+      // Impacto social en el tiempo (la pelicula): serie + veredicto
+      this.sb.rpc('dashboard_mimarca_evolution', {
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids,
+      }),
 
       vulnsPromise,
     ]);
@@ -196,6 +200,7 @@ class CampanasDataService {
       activity: u(activity),
       pillars: u(pillars),
       audienceEffective: u(audienceEffective),
+      evolution: u(evolution),
 
       vulnerabilities: u(vulnerabilities),
     };
