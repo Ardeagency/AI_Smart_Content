@@ -3007,3 +3007,160 @@
 .tend-world-geo { font-size: 0.625rem; color: var(--text-muted, rgba(212,209,216,0.5)); text-transform: uppercase; letter-spacing: 0.03em; }
 
 @media (max-width: 760px) { .tend-gaps { grid-template-columns: 1fr; } }
+
+/* ════════════════════════════════════════════════════════════════════
+   MINIMAL MONO — capa unificada de los 4 dashboards
+   ─────────────────────────────────────────────────────────────────────
+   Direccion visual elegida: Linear-style. Casi monocromo, guiado por
+   tipografia y aire. La inteligencia causal se conserva intacta: el
+   minimalismo va en color y chrome, NO en el contenido. El color queda
+   reservado SOLO para significado (delta positivo / negativo), en tono
+   apagado. Tecnica: redefinir los tokens de superficie dentro del scope
+   .insight-page aplana TODAS las cards (mb-/comp-/tend-/strat-) que usan
+   var(--bg-card) sin tocar cada selector.
+   ════════════════════════════════════════════════════════════════════ */
+.insight-page {
+  /* Aplana toda superficie de card en el scope del dashboard */
+  --bg-card: transparent;
+  --border-divider: rgba(255, 255, 255, 0.07);
+  /* Paleta semantica apagada (color solo con significado) */
+  --dash-pos: #6e9f81;   /* arriba / funciona / saludable  */
+  --dash-neg: #b3796f;   /* abajo / resta / critico        */
+  --dash-warn: #9c8e6b;  /* atencion / optimiza / irregular */
+  --dash-line: rgba(255, 255, 255, 0.08);
+  --dash-bar: rgba(255, 255, 255, 0.26);
+}
+
+/* Ritmo: mas aire entre secciones */
+.insight-page.mb-dash { gap: 2.5rem; }
+
+/* ── Header de seccion: tipografia con jerarquia real + regla fina ── */
+.insight-page .mb-section { gap: 1.15rem; }
+.insight-page .mb-section-head {
+  flex-direction: column; align-items: stretch; gap: 0.2rem;
+  padding-bottom: 0.7rem; border-bottom: 1px solid var(--dash-line);
+}
+.insight-page .mb-section-title {
+  font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.012em;
+  text-transform: none; color: var(--text-primary);
+}
+.insight-page .mb-section-hint {
+  font-size: 0.8125rem; font-weight: 400; letter-spacing: 0;
+  text-transform: none; color: var(--text-muted);
+}
+
+/* ── Sin sombras; hover lift sin color saturado ── */
+.insight-page .mb-causal-card,
+.insight-page .comp-voice-card,
+.insight-page .comp-rank-row,
+.insight-page .comp-combo-row,
+.insight-page .comp-risk-row,
+.insight-page .tend-gap-card,
+.insight-page .tend-brand-card,
+.insight-page .tend-signal,
+.insight-page .strat-card,
+.insight-page .strat-prod-row,
+.insight-page .mb-act-card,
+.insight-page .mb-eff-card,
+.insight-page .mb-evo-card { box-shadow: none; }
+.insight-page .mb-causal-card--boost:hover,
+.insight-page .mb-causal-card--drag:hover { border-color: rgba(255, 255, 255, 0.18); }
+
+/* Acento lateral de las causal cards → mono apagado por significado */
+.insight-page .mb-causal-card::before { background: var(--dash-line); }
+.insight-page .mb-causal-card--boost::before { background: var(--dash-pos); opacity: 0.6; }
+.insight-page .mb-causal-card--drag::before  { background: var(--dash-warn); opacity: 0.6; }
+
+/* ── Hero anclado: la unica superficie con un velo sutil ── */
+.insight-page .mb-health-card {
+  background: rgba(255, 255, 255, 0.022);
+  border: 1px solid var(--dash-line);
+}
+
+/* ── KPI strip: contenedor con regla fina, sin cajas individuales ── */
+.insight-page .comp-kpis {
+  background: transparent; border: 1px solid var(--dash-line);
+  border-radius: 14px; gap: 0; overflow: hidden;
+}
+.insight-page .comp-kpi {
+  background: transparent; border: 0;
+  border-right: 1px solid var(--dash-line); border-radius: 0;
+}
+.insight-page .comp-kpi:last-child { border-right: 0; }
+
+/* ── Disciplina tipografica de numeros (tabular + tracking) ── */
+.insight-page .comp-kpi-val,
+.insight-page .strat-stat-val,
+.insight-page .mb-causal-value,
+.insight-page .mb-plan-metric,
+.insight-page .mb-hero-verdict,
+.insight-page .tend-signal-vel,
+.insight-page .tend-brand-count {
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+
+/* ── Barras → mono (el numero/delta lleva el significado, no la barra) ── */
+.insight-page .mb-causal-card--boost .mb-causal-bar > span,
+.insight-page .mb-causal-card--drag  .mb-causal-bar > span,
+.insight-page .mb-aud-row--up   .mb-aud-bar > span,
+.insight-page .mb-aud-row--down  .mb-aud-bar > span,
+.insight-page .mb-hc-bar-fill--good,
+.insight-page .mb-hc-bar-fill--mid,
+.insight-page .mb-hc-bar-fill--low,
+.insight-page .mb-pil-bar > span,
+.insight-page .mb-eff-geo-bar > span { background: var(--dash-bar); }
+
+/* ── Deltas → texto en tono apagado, sin pildora de fondo ── */
+.insight-page .mb-causal-lift--up,
+.insight-page .mb-aud-lift--up,
+.insight-page .mb-pil-lift--up   { color: var(--dash-pos);  background: transparent; padding: 0.12rem 0; }
+.insight-page .mb-causal-lift--down,
+.insight-page .mb-aud-lift--down,
+.insight-page .mb-pil-lift--down { color: var(--dash-warn); background: transparent; padding: 0.12rem 0; }
+
+/* ── Neutralizacion de colores saturados compartidos ── */
+.insight-page .comp-voice-block--pos .comp-voice-label,
+.insight-page .strat-prod-dot { color: var(--dash-pos); }
+.insight-page .strat-prod-dot { background: var(--dash-pos); box-shadow: none; }
+.insight-page .comp-voice-block--neg .comp-voice-label { color: var(--dash-neg); }
+.insight-page .comp-voice-block--pos .comp-voice-quote { border-left-color: rgba(110, 159, 129, 0.5); }
+.insight-page .comp-voice-block--neg .comp-voice-quote { border-left-color: rgba(179, 121, 111, 0.5); }
+.insight-page .comp-risk-row { border-left-color: var(--dash-neg); }
+.insight-page .comp-risk-chip--neg {
+  color: var(--dash-neg); background: transparent; border-color: var(--border-divider);
+}
+.insight-page .mb-hc-bar-fill--good,
+.insight-page .mb-feat-card--sentiment[data-value="POS"] .mb-feat-headline { color: inherit; }
+
+/* ── Tendencias: oceano azul y acentos → mono apagado ── */
+.insight-page .tend-gap-card--blue {
+  background: transparent; border-color: rgba(255, 255, 255, 0.14);
+}
+.insight-page .tend-gap-badge { color: var(--text-secondary); border-color: var(--border-divider); }
+.insight-page .tend-gaps-note {
+  background: rgba(255, 255, 255, 0.03); border-color: var(--dash-line);
+  color: var(--text-secondary);
+}
+.insight-page .tend-gap-samples li { border-left-color: var(--dash-line); }
+.insight-page .tend-signal-vel,
+.insight-page .tend-brand-count,
+.insight-page .tend-world-when { color: var(--dash-warn); }
+
+/* ── Botones de Estrategia → mono con acento apagado ── */
+.insight-page .strat-btn--approve {
+  color: var(--dash-pos); background: rgba(110, 159, 129, 0.12);
+  border-color: rgba(110, 159, 129, 0.35);
+}
+.insight-page .strat-btn--approve:hover { background: rgba(110, 159, 129, 0.2); }
+.insight-page .strat-btn--reject:hover { color: var(--dash-neg); }
+.insight-page .strat-card-conf { /* confianza: el texto ya viene coloreado inline, lo suaviza JS */ }
+
+/* ── Empty states: regla fina en vez de borde punteado pesado ── */
+.insight-page .mb-causal-empty {
+  border: 1px solid var(--dash-line); border-radius: 12px;
+  color: var(--text-muted); background: transparent;
+}
+
+@media (max-width: 760px) {
+  .insight-page .comp-kpi:nth-child(2n) { border-right: 0; }
+}

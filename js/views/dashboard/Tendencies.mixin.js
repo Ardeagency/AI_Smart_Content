@@ -25,12 +25,12 @@
   const MIN_SIGNAL_RELEVANCE = 0.45; // filtra ruido pre-recalibracion del motor
   const fmt = { int: (n) => (n == null ? '—' : Number(n).toLocaleString('es-CO')) };
   const SENT = {
-    positivo: { label: 'Positivo', color: '#6bcf7f' },
-    positive: { label: 'Positivo', color: '#6bcf7f' },
-    negativo: { label: 'Negativo', color: '#e06464' },
-    negative: { label: 'Negativo', color: '#e06464' },
-    neutro:   { label: 'Neutro',   color: '#87868b' },
-    neutral:  { label: 'Neutro',   color: '#87868b' },
+    positivo: { label: 'Positivo', color: '#6e9f81' },
+    positive: { label: 'Positivo', color: '#6e9f81' },
+    negativo: { label: 'Negativo', color: '#b3796f' },
+    negative: { label: 'Negativo', color: '#b3796f' },
+    neutro:   { label: 'Neutro',   color: '#8a8a8e' },
+    neutral:  { label: 'Neutro',   color: '#8a8a8e' },
   };
 
   Object.assign(DashboardView.prototype, {
@@ -135,11 +135,11 @@
           <div class="tend-climate">
             <span class="tend-climate-label">Clima del nicho</span>
             <div class="tend-climate-bar">
-              <span class="tend-climate-seg" style="width:${pos}%;background:#6bcf7f;" title="Positivo ${pos}%"></span>
-              <span class="tend-climate-seg" style="width:${neu}%;background:#3a3a3d;" title="Neutro ${neu}%"></span>
-              <span class="tend-climate-seg" style="width:${neg}%;background:#e06464;" title="Negativo ${neg}%"></span>
+              <span class="tend-climate-seg" style="width:${pos}%;background:var(--dash-pos,#6e9f81);" title="Positivo ${pos}%"></span>
+              <span class="tend-climate-seg" style="width:${neu}%;background:rgba(255,255,255,0.14);" title="Neutro ${neu}%"></span>
+              <span class="tend-climate-seg" style="width:${neg}%;background:var(--dash-neg,#b3796f);" title="Negativo ${neg}%"></span>
             </div>
-            <span class="tend-climate-legend"><b style="color:#6bcf7f;">${pos}%</b> positivo · ${neu}% neutro · <b style="color:#e06464;">${neg}%</b> negativo · ${fmt.int(sent.total)} señales</span>
+            <span class="tend-climate-legend"><b style="color:var(--dash-pos,#6e9f81);">${pos}%</b> positivo · ${neu}% neutro · <b style="color:var(--dash-neg,#b3796f);">${neg}%</b> negativo · ${fmt.int(sent.total)} señales</span>
           </div>`;
       }
       return `

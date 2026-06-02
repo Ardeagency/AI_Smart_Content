@@ -16,9 +16,9 @@
 
   const fmt = { int: (n) => (n == null ? '—' : Number(n).toLocaleString('es-CO')) };
   const CONF = {
-    alta:  { label: 'Alta confianza',  color: '#6bcf7f' },
-    media: { label: 'Media confianza', color: '#e0a045' },
-    baja:  { label: 'Baja confianza',  color: '#87868b' },
+    alta:  { label: 'Alta confianza',  color: '#6e9f81' },
+    media: { label: 'Media confianza', color: '#9c8e6b' },
+    baja:  { label: 'Baja confianza',  color: '#8a8a8e' },
   };
 
   Object.assign(DashboardView.prototype, {

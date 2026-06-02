@@ -384,10 +384,10 @@
         return '';
       }
       const levelMeta = {
-        alta:  { color: '#6bcf7f', label: 'Alta' },
-        media: { color: '#e0a045', label: 'Media' },
-        baja:  { color: '#e06464', label: 'Baja' },
-      }[e.capture_level] || { color: '#87868b', label: e.capture_level };
+        alta:  { color: '#6e9f81', label: 'Alta' },
+        media: { color: '#9c8e6b', label: 'Media' },
+        baja:  { color: '#b3796f', label: 'Baja' },
+      }[e.capture_level] || { color: '#8a8a8e', label: e.capture_level };
 
       const objLabel = {
         OUTCOME_LEADS: 'Leads / Formularios',
@@ -453,10 +453,10 @@
         return '';
       }
       const meta = {
-        mejorando: { color: '#6bcf7f', label: 'Mejorando', icon: 'fas fa-arrow-trend-up' },
-        estable:   { color: '#87868b', label: 'Estable',   icon: 'fas fa-arrows-left-right' },
-        cayendo:   { color: '#e06464', label: 'Cayendo',   icon: 'fas fa-arrow-trend-down' },
-      }[e.verdict] || { color: '#87868b', label: e.verdict, icon: 'fas fa-chart-line' };
+        mejorando: { color: '#6e9f81', label: 'Mejorando', icon: 'fas fa-arrow-trend-up' },
+        estable:   { color: '#8a8a8e', label: 'Estable',   icon: 'fas fa-arrows-left-right' },
+        cayendo:   { color: '#b3796f', label: 'Cayendo',   icon: 'fas fa-arrow-trend-down' },
+      }[e.verdict] || { color: '#8a8a8e', label: e.verdict, icon: 'fas fa-chart-line' };
 
       const chg = Number(e.impact_change_pct);
       const sentChg = Number(e.sentiment_change_pts);
@@ -515,11 +515,11 @@
         return '';
       }
       const statusMeta = {
-        activo:    { color: '#6bcf7f', label: 'Activo' },
-        irregular: { color: '#e0a045', label: 'Irregular' },
-        lento:     { color: '#e0a045', label: 'Lento' },
-        dormido:   { color: '#e06464', label: 'Dormido' },
-      }[a.status] || { color: '#87868b', label: a.status };
+        activo:    { color: '#6e9f81', label: 'Activo' },
+        irregular: { color: '#9c8e6b', label: 'Irregular' },
+        lento:     { color: '#9c8e6b', label: 'Lento' },
+        dormido:   { color: '#b3796f', label: 'Dormido' },
+      }[a.status] || { color: '#8a8a8e', label: a.status };
       const days = Number(a.days_since);
       const headline = a.status === 'dormido'
         ? `Llevas <strong>${this._daysHuman(days)}</strong> sin publicar`
@@ -957,11 +957,11 @@
       const band     = h.band || { p25: 50, p50: 65, p75: 80 };
 
       const verdictMeta = {
-        elite:     { color: '#6bcf7f', label: 'Élite' },
-        saludable: { color: '#4cb37a', label: 'Saludable' },
-        atencion:  { color: '#e09145', label: 'Atención' },
-        critico:   { color: '#e06464', label: 'Crítico' },
-      }[verdict] || { color: '#7c7c7c', label: verdict };
+        elite:     { color: '#6e9f81', label: 'Élite' },
+        saludable: { color: '#6e9f81', label: 'Saludable' },
+        atencion:  { color: '#9c8e6b', label: 'Atención' },
+        critico:   { color: '#b3796f', label: 'Crítico' },
+      }[verdict] || { color: '#8a8a8e', label: verdict };
 
       const gaugeSvg = this._buildGaugeSvg(score, verdictMeta.color, band);
       const target = Number(h.target);

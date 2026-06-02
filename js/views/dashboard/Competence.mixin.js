@@ -188,7 +188,7 @@
         <article class="comp-voice-card comp-clickable" data-comp-entity="${this._esc(v.entity_id)}" data-comp-name="${this._esc(v.entity_name)}" role="button" tabindex="0">
           <div class="comp-voice-head">
             <span class="comp-voice-name">${this._esc(v.entity_name)}</span>
-            <span class="comp-voice-meta">${fmt.int(v.total_comments)} comentarios · <b style="color:#e06464;">${negPct}% neg</b> · ${posPct}% pos</span>
+            <span class="comp-voice-meta">${fmt.int(v.total_comments)} comentarios · <b style="color:var(--dash-neg,#b3796f);">${negPct}% neg</b> · ${posPct}% pos</span>
           </div>
           ${negs.length ? `
             <div class="comp-voice-block comp-voice-block--neg">
@@ -234,10 +234,10 @@
 
     _compTipoMeta(tipo) {
       return {
-        competidor_directo:   { label: 'Directo',   color: '#e06464' },
-        competidor_indirecto: { label: 'Indirecto', color: '#e0a045' },
-        referencia_cultural:  { label: 'Referencia', color: '#5b9bd5' },
-      }[tipo] || { label: tipo || '—', color: '#87868b' };
+        competidor_directo:   { label: 'Directo',   color: '#b3796f' },
+        competidor_indirecto: { label: 'Indirecto', color: '#9c8e6b' },
+        referencia_cultural:  { label: 'Referencia', color: '#8a8a8e' },
+      }[tipo] || { label: tipo || '—', color: '#8a8a8e' };
     },
 
     _bindCompetenceHandlers(body) {
