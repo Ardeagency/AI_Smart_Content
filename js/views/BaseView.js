@@ -148,6 +148,52 @@ class BaseView {
   }
 
   /**
+   * Mueve una sub-navegacion de tabs al header principal (segunda fila), igual
+   * que Production mueve sus filtros. Reusa el slot #headerProductionSlot. Solo
+   * una vista lo ocupa a la vez (cada una limpia en onLeave).
+   *
+   * Race: Navigation.render() corre en paralelo con view.render(); si el slot
+   * aun no existe, reintenta brevemente.
+   *
+   * @param {string} html      markup de los tabs (contenedor + .mb-firebar-tab)
+   * @param {(tab:string)=>void} onTabClick  callback con el data-tab clickeado
+   */
+  moveSubnavToHeader(html, onTabClick, attempts = 0) {
+    const slot = document.getElementById('headerProductionSlot');
+    if (!slot) {
+      if (attempts < 20) {
+        this._subnavMoveTimer = setTimeout(
+          () => this.moveSubnavToHeader(html, onTabClick, attempts + 1), 50);
+      }
+      return null;
+    }
+    slot.innerHTML = html;
+    slot.setAttribute('aria-hidden', 'false');
+    // onclick (handler unico) evita listeners duplicados si se re-inyecta.
+    slot.onclick = (e) => {
+      const btn = e.target.closest('[data-tab]');
+      if (btn && typeof onTabClick === 'function') onTabClick(btn.dataset.tab);
+    };
+    document.body.classList.add('subnav-in-header');
+    return slot;
+  }
+
+  /** Restaura el slot del header al salir de la vista. */
+  clearSubnavFromHeader() {
+    if (this._subnavMoveTimer) {
+      clearTimeout(this._subnavMoveTimer);
+      this._subnavMoveTimer = null;
+    }
+    const slot = document.getElementById('headerProductionSlot');
+    if (slot) {
+      slot.innerHTML = '';
+      slot.onclick = null;
+      slot.setAttribute('aria-hidden', 'true');
+    }
+    document.body.classList.remove('subnav-in-header');
+  }
+
+  /**
    * Sistema centralizado de carga de scripts dinámicos
    * Evita duplicaciones y maneja correctamente scripts ya cargados
    * 

@@ -2080,6 +2080,43 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     gap: 12px;
 }
 
+/* Sub-nav de tabs (Dashboard / Monitoring) en el header — mismo patron que
+   Production: el header pasa a columna y el slot es la segunda fila. */
+body.subnav-in-header .app-header.with-sidebar {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    min-height: var(--app-header-height, 45.8px);
+    padding-top: 12px;
+}
+body.subnav-in-header .app-header .header-content {
+    padding-bottom: 14px;
+}
+body.subnav-in-header .app-header .header-production-slot {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    padding: 0 20px 14px;
+    box-sizing: border-box;
+}
+.app-header .header-production-slot .dash-header-tabs {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+}
+.app-header .header-production-slot .dash-header-tabs .mb-firebar-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+.app-header .header-production-slot .dash-header-tabs .mb-firebar-tabs--right {
+    margin-left: auto;
+}
+
 .app-header .header-center {
   flex: 1;
   display: flex;

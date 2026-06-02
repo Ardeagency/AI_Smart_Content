@@ -114,6 +114,7 @@ class DashboardView extends BaseView {
   }
 
   onLeave() {
+    this.clearSubnavFromHeader();
     this._unsubscribeRealtime();
     this._destroyCharts();
     if (this._onHashChange) {
@@ -210,6 +211,7 @@ class DashboardView extends BaseView {
     const container = document.getElementById('app-container');
     if (!container) return;
     container.innerHTML = this._buildShell();
+    this.moveSubnavToHeader(this._buildHeaderTabs(), (tab) => this._switchTab(tab, /* fromUser */ true));
     this._setupTabs();
     this._renderTab(this._activeTab);
   }
@@ -219,7 +221,16 @@ class DashboardView extends BaseView {
   }
 
   _buildShell() {
-    // Grupo izquierdo (Mi Marca / Competencia / Tendencias) y Estrategia separado a la derecha.
+    // La barra de tabs ya no vive en la pagina: se inyecta en el header
+    // principal (segunda fila), solo en /dashboard. Ver _buildHeaderTabs().
+    return `
+      <div class="insight-page page-content" id="insightPage">
+        <div class="insight-tab-body" id="insightTabBody"></div>
+      </div>`;
+  }
+
+  /** Tabs para inyectar en el header principal (mismo patron que Production). */
+  _buildHeaderTabs() {
     const leftTabs  = [
       { id: 'my-brands',  label: 'Mi Marca'    },
       { id: 'competence', label: 'Competencia' },
@@ -233,32 +244,14 @@ class DashboardView extends BaseView {
         <span>${t.label}</span>
       </button>`;
     return `
-      <div class="insight-page page-content" id="insightPage">
-        <div class="mb-firebar" id="insightSubnav" data-mb-firebar>
-          <div class="mb-firebar-bg" aria-hidden="true">
-            <div class="mb-firebar-gradient"></div>
-          </div>
-          <div class="mb-firebar-tabs mb-firebar-tabs--left">
-            ${leftTabs.map(pill).join('')}
-          </div>
-          <div class="mb-firebar-tabs mb-firebar-tabs--right">
-            ${rightTabs.map(pill).join('')}
-          </div>
-        </div>
-        <div class="insight-tab-body" id="insightTabBody"></div>
+      <div class="dash-header-tabs" id="dashHeaderTabs">
+        <div class="mb-firebar-tabs mb-firebar-tabs--left">${leftTabs.map(pill).join('')}</div>
+        <div class="mb-firebar-tabs mb-firebar-tabs--right">${rightTabs.map(pill).join('')}</div>
       </div>`;
   }
 
   _setupTabs() {
-    const nav = document.getElementById('insightSubnav');
-    if (!nav) return;
-
-    nav.addEventListener('click', e => {
-      const btn = e.target.closest('[data-tab]');
-      if (!btn) return;
-      this._switchTab(btn.dataset.tab, /* fromUser */ true);
-    });
-
+    // El click de los tabs lo maneja el slot del header (moveSubnavToHeader).
     // hashchange: que el back/forward del browser cambie el tab.
     // Solo registrar una vez (este método se llama en cada render).
     if (!this._onHashChange) {
@@ -287,7 +280,7 @@ class DashboardView extends BaseView {
       }
     }
 
-    const nav = document.getElementById('insightSubnav');
+    const nav = document.getElementById('headerProductionSlot');
     if (nav) {
       nav.querySelectorAll('.mb-firebar-tab')
         .forEach(b => b.classList.toggle('is-active', b.dataset.tab === tabId));

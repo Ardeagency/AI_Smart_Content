@@ -120,6 +120,7 @@ class MonitoringView extends BaseView {
     const container = document.getElementById('app-container');
     if (!container) return;
     container.innerHTML = this._buildShell();
+    this.moveSubnavToHeader(this._buildHeaderTabs(), (tab) => this._switchTab(tab));
     this._setupTabs();
 
     await this._ensureService();
@@ -131,6 +132,16 @@ class MonitoringView extends BaseView {
   }
 
   _buildShell() {
+    // La barra de tabs se inyecta en el header principal (segunda fila), solo
+    // en /monitoring. Ver _buildHeaderTabs().
+    return `
+      <div class="insight-page page-content monitoring-page" id="monitoringPage">
+        <div class="insight-tab-body" id="monitoringTabBody"></div>
+      </div>`;
+  }
+
+  /** Tabs para inyectar en el header principal (mismo patron que Production). */
+  _buildHeaderTabs() {
     const tabs = [
       { id: 'profiles', label: 'Perfiles' },
       { id: 'watchers', label: 'URL Watchers' },
@@ -140,30 +151,28 @@ class MonitoringView extends BaseView {
         <span>${t.label}</span>
       </button>`;
     return `
-      <div class="insight-page page-content monitoring-page" id="monitoringPage">
-        <div class="mb-firebar" id="monitoringSubnav">
-          <div class="mb-firebar-bg" aria-hidden="true">
-            <div class="mb-firebar-gradient"></div>
-          </div>
-          <div class="mb-firebar-tabs mb-firebar-tabs--left">
-            ${tabs.map(pill).join('')}
-          </div>
-        </div>
-        <div class="insight-tab-body" id="monitoringTabBody"></div>
+      <div class="dash-header-tabs" id="monitoringHeaderTabs">
+        <div class="mb-firebar-tabs mb-firebar-tabs--left">${tabs.map(pill).join('')}</div>
       </div>`;
   }
 
   _setupTabs() {
-    const nav = document.getElementById('monitoringSubnav');
-    if (!nav) return;
-    nav.addEventListener('click', e => {
-      const btn = e.target.closest('[data-tab]');
-      if (!btn) return;
-      this._activeTab = btn.dataset.tab;
+    // El click de los tabs lo maneja el slot del header (moveSubnavToHeader).
+  }
+
+  _switchTab(tabId) {
+    if (!tabId || tabId === this._activeTab) return;
+    this._activeTab = tabId;
+    const nav = document.getElementById('headerProductionSlot');
+    if (nav) {
       nav.querySelectorAll('.mb-firebar-tab')
-        .forEach(b => b.classList.toggle('is-active', b.dataset.tab === this._activeTab));
-      this._renderTab(this._activeTab);
-    });
+        .forEach(b => b.classList.toggle('is-active', b.dataset.tab === tabId));
+    }
+    this._renderTab(tabId);
+  }
+
+  onLeave() {
+    this.clearSubnavFromHeader();
   }
 
   _renderTab(tabId) {
