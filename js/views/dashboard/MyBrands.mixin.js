@@ -76,14 +76,16 @@
     },
 
     /* ── Filtros: estado persistido en localStorage ──────────── */
-    _mbFiltersKey() { return `mb:filters:${this._orgId || 'global'}`; },
+    // v2: el default pasa a "Todo el periodo" (la data propia real puede ser
+    // antigua); bumpear la clave ignora el "30 dias" guardado de antes.
+    _mbFiltersKey() { return `mb:filters:v2:${this._orgId || 'global'}`; },
 
     _restoreMbFilters() {
       if (this._mbFilters) return this._mbFilters;
       let stored = null;
       try { stored = JSON.parse(localStorage.getItem(this._mbFiltersKey()) || 'null'); } catch (_) {}
       this._mbFilters = {
-        windowDays:        Number(stored?.windowDays) > 0 ? Number(stored.windowDays) : 30,
+        windowDays:        Number(stored?.windowDays) > 0 ? Number(stored.windowDays) : 99999,
         brandContainerId:  stored?.brandContainerId || null,
       };
       return this._mbFilters;
