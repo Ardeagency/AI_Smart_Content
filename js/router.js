@@ -489,8 +489,16 @@ class Router {
           if (navEl) navEl.style.viewTransitionName = '';
           if (appEl) appEl.style.viewTransitionName = '';
         };
-        if (navEl) navEl.style.viewTransitionName = 'nav-root';
-        if (appEl) appEl.style.viewTransitionName = 'app-root';
+        // SOLO al cambiar de modo org<->dev: ahi el sidebar/header cambian de verdad
+        // y el crossfade granular se ve limpio. En navegaciones del MISMO modo, nombrar
+        // nav-root/app-root hace que el sidebar/header se snapshoteen y animen (parpadeo)
+        // aunque no cambien -> dejamos el crossfade root global (invisible si son identicos).
+        const isDevRoute = path.startsWith('/dev/');
+        const wasDevRoute = document.body.classList.contains('route-dev');
+        if (isDevRoute !== wasDevRoute) {
+          if (navEl) navEl.style.viewTransitionName = 'nav-root';
+          if (appEl) appEl.style.viewTransitionName = 'app-root';
+        }
         try {
           const transition = document.startViewTransition(doRender);
           // Silenciar los otros 2 promises del ViewTransition. Si el callback
