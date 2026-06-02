@@ -31,7 +31,9 @@
 @import url('modules/services.css?v=__BUILD_ID__');
 /* command-center.css: route-split — se carga via app.js _loadCss solo en /command-center (ver commandCenterLoader). */
 @import url('modules/organization.css?v=__BUILD_ID__');
-@import url('modules/developer.css?v=__BUILD_ID__');
+/* developer.css (351KB): route-split — se carga solo en /dev/* via app.js _loadCss.
+   dev-shared.css queda global: clases de developer.css que usa codigo no-dev. */
+@import url('modules/dev-shared.css?v=__BUILD_ID__');
 @import url('modules/payment-modal.css?v=__BUILD_ID__');
 @import url('modules/video.css?v=__BUILD_ID__');
 /* insight.css: route-split via app.js _loadCss (dashboardLoader + monitoringLoader). */

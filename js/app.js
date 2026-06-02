@@ -69,7 +69,8 @@ class App {
    * FOUC: la promesa resuelve en onload del <link>, asi el router no pinta la
    * vista hasta tener su CSS (mismo patron que con los <script>).
    */
-  _loadCss(href) {
+  _loadCss(href, opts) {
+    const append = !!(opts && opts.append);
     const url = `${href}?v=${APP_LAZY_SCRIPT_VER}`;
     if (this._loadedCss && this._loadedCss.has(url)) return this._loadedCss.get(url);
     if (!this._loadedCss) this._loadedCss = new Map();
@@ -81,8 +82,17 @@ class App {
       link.onload = () => resolve();
       link.onerror = () => { this._loadedCss.delete(url); resolve(); };
       const bundleLink = document.querySelector('link[rel="stylesheet"][href*="css/bundle.css"]');
-      if (bundleLink && bundleLink.parentNode) bundleLink.parentNode.insertBefore(link, bundleLink);
-      else document.head.appendChild(link);
+      if (append) {
+        // append: el modulo gana sobre bundle.css (sus reglas van al final del head).
+        // Lo usa developer.css en /dev/*: sus overrides genericos (.btn/.app-header)
+        // deben ganar igual que cuando era @import dentro del bundle.
+        document.head.appendChild(link);
+      } else if (bundleLink && bundleLink.parentNode) {
+        // default: antes de bundle.css (preserva cascada modulo-antes-de-reglas-propias).
+        bundleLink.parentNode.insertBefore(link, bundleLink);
+      } else {
+        document.head.appendChild(link);
+      }
     });
     this._loadedCss.set(url, promise);
     return promise;
@@ -92,8 +102,9 @@ class App {
     const self = this;
     return async function() {
       // CSS (si lo hay) y JS en paralelo: la red baja ambos a la vez; await junta.
+      // cssHrefs: string '/css/...' o { href, append } (append => gana sobre bundle).
       const cssPromise = (cssHrefs && cssHrefs.length)
-        ? Promise.all(cssHrefs.map((h) => self._loadCss(h)))
+        ? Promise.all(cssHrefs.map((h) => (typeof h === 'string' ? self._loadCss(h) : self._loadCss(h.href, h))))
         : null;
       if (deps && deps.length) await self._loadScripts(deps);
       if (cssPromise) await cssPromise;
@@ -175,6 +186,10 @@ class App {
     // input-registry y los mixins de marca usan window.ColorPickerModal
     // (compartido desde 2026-05-12). Cargar antes que input-registry.
     const inputDeps = ['/js/utils/brand-colors.js', '/js/components/ColorPickerModal.js', '/js/flags-data.js', '/js/input-registry.js'];
+    // developer.css (351KB) ya NO esta en el bundle global: se carga por ruta aqui.
+    // append:true => va al final del <head> para que sus overrides genericos
+    // (.btn/.app-header) ganen sobre bundle.css en /dev/* (como cuando era @import).
+    const DEV_CSS = [{ href: '/css/modules/developer.css', append: true }];
     const devBase = ['/js/views/DevBaseView.js'];
     const devInput = ['/js/views/DevBaseView.js', '/js/flags-data.js', '/js/components/ColorPickerModal.js', '/js/input-registry.js'];
 
@@ -440,32 +455,32 @@ class App {
     r.register('/create', this._lazy('CreateView', ['/js/views/CreateView.js']), auth);
 
     // ── Dev: Portal PaaS ──
-    r.register('/dev/dashboard', this._lazy('DevDashboardView', [...devBase, '/js/views/DevDashboardView.js']), auth);
-    const devFlowsLoader = this._lazy('DevFlowsView', [...devBase, '/js/views/DevFlowsView.js']);
+    r.register('/dev/dashboard', this._lazy('DevDashboardView', [...devBase, '/js/views/DevDashboardView.js'], DEV_CSS), auth);
+    const devFlowsLoader = this._lazy('DevFlowsView', [...devBase, '/js/views/DevFlowsView.js'], DEV_CSS);
     r.register('/dev/flows', devFlowsLoader, auth);
     r.register('/dev/flows/:flowId', devFlowsLoader, auth);
-    r.register('/dev/logs', this._lazy('DevLogsView', [...devBase, '/js/views/DevLogsView.js']), auth);
-    const devBuilderLoader = this._lazy('DevBuilderView', [...devInput, '/js/services/FlowWebhookService.js', '/js/views/DevBuilderView.js', '/js/views/builder/BuilderInputs.js', '/js/views/builder/BuilderModules.js', '/js/views/builder/BuilderPersistence.js', '/js/views/builder/BuilderProductivity.js', '/js/views/builder/BuilderAdvanced.js', '/js/views/builder/BuilderGraph.js', '/js/views/builder/BuilderEnterprise.js']);
+    r.register('/dev/logs', this._lazy('DevLogsView', [...devBase, '/js/views/DevLogsView.js'], DEV_CSS), auth);
+    const devBuilderLoader = this._lazy('DevBuilderView', [...devInput, '/js/services/FlowWebhookService.js', '/js/views/DevBuilderView.js', '/js/views/builder/BuilderInputs.js', '/js/views/builder/BuilderModules.js', '/js/views/builder/BuilderPersistence.js', '/js/views/builder/BuilderProductivity.js', '/js/views/builder/BuilderAdvanced.js', '/js/views/builder/BuilderGraph.js', '/js/views/builder/BuilderEnterprise.js'], DEV_CSS);
     r.register('/dev/builder', devBuilderLoader, auth);
     r.register('/dev/builder/:flowId', devBuilderLoader, auth);
-    const devTestLoader = this._lazy('DevTestView', [...devInput, '/js/services/FlowWebhookService.js', '/js/views/DevTestView.js']);
+    const devTestLoader = this._lazy('DevTestView', [...devInput, '/js/services/FlowWebhookService.js', '/js/views/DevTestView.js'], DEV_CSS);
     r.register('/dev/test', devTestLoader, auth);
     r.register('/dev/test/:flowId', devTestLoader, auth);
-    r.register('/dev/webhooks', this._lazy('DevWebhooksView', [...devBase, '/js/services/FlowWebhookService.js', '/js/views/DevWebhooksView.js']), auth);
-    r.register('/dev/web-vitals', this._lazy('DevWebVitalsView', [...devBase, '/js/views/DevWebVitalsView.js']), auth);
+    r.register('/dev/webhooks', this._lazy('DevWebhooksView', [...devBase, '/js/services/FlowWebhookService.js', '/js/views/DevWebhooksView.js'], DEV_CSS), auth);
+    r.register('/dev/web-vitals', this._lazy('DevWebVitalsView', [...devBase, '/js/views/DevWebVitalsView.js'], DEV_CSS), auth);
 
     // ── Dev Lead ──
-    r.register('/dev/provisioning/users', this._lazy('DevLeadUserProvisioningView', [...devBase, '/js/views/DevLeadUserProvisioningView.js']), auth);
-    r.register('/dev/provisioning/create-org', this._lazy('DevLeadCreateOrgView', [...devBase, '/js/views/DevLeadCreateOrgView.js']), auth);
-    r.register('/dev/lead/team', this._lazy('DevLeadTeamView', [...devBase, '/js/views/DevLeadTeamView.js']), auth);
-    r.register('/dev/lead/orgs', this._lazy('DevLeadOrgsView', [...devBase, '/js/views/DevLeadOrgsView.js']), auth);
-    r.register('/dev/lead/categories', this._lazy('DevLeadCategoriesView', [...devBase, '/js/views/DevLeadCategoriesView.js']), auth);
-    r.register('/dev/lead/input-schemas', this._lazy('DevLeadInputSchemasView', [...devBase, '/js/views/DevLeadInputSchemasView.js']), auth);
+    r.register('/dev/provisioning/users', this._lazy('DevLeadUserProvisioningView', [...devBase, '/js/views/DevLeadUserProvisioningView.js'], DEV_CSS), auth);
+    r.register('/dev/provisioning/create-org', this._lazy('DevLeadCreateOrgView', [...devBase, '/js/views/DevLeadCreateOrgView.js'], DEV_CSS), auth);
+    r.register('/dev/lead/team', this._lazy('DevLeadTeamView', [...devBase, '/js/views/DevLeadTeamView.js'], DEV_CSS), auth);
+    r.register('/dev/lead/orgs', this._lazy('DevLeadOrgsView', [...devBase, '/js/views/DevLeadOrgsView.js'], DEV_CSS), auth);
+    r.register('/dev/lead/categories', this._lazy('DevLeadCategoriesView', [...devBase, '/js/views/DevLeadCategoriesView.js'], DEV_CSS), auth);
+    r.register('/dev/lead/input-schemas', this._lazy('DevLeadInputSchemasView', [...devBase, '/js/views/DevLeadInputSchemasView.js'], DEV_CSS), auth);
     // "Entrenamiento" (LLM): vista unificada con pestañas Entrenar + Conocimientos.
-    const veraTrainingLoader = this._lazy('DevLeadVeraTrainingView', [...devBase, '/js/views/DevLeadVeraTrainingView.js']);
+    const veraTrainingLoader = this._lazy('DevLeadVeraTrainingView', [...devBase, '/js/views/DevLeadVeraTrainingView.js'], DEV_CSS);
     r.register('/dev/lead/vera-training', veraTrainingLoader, auth);
-    r.register('/dev/lead/lexicon', this._lazy('DevLeadLexiconView', [...devBase, '/js/views/DevLeadLexiconView.js']), auth);
-    r.register('/dev/lead/billing', this._lazy('DevLeadBillingView', [...devBase, '/js/views/DevLeadBillingView.js']), auth);
+    r.register('/dev/lead/lexicon', this._lazy('DevLeadLexiconView', [...devBase, '/js/views/DevLeadLexiconView.js'], DEV_CSS), auth);
+    r.register('/dev/lead/billing', this._lazy('DevLeadBillingView', [...devBase, '/js/views/DevLeadBillingView.js'], DEV_CSS), auth);
 
     // ── 404 ──
     // El 404 de la plataforma vive en la landing (aismartcontent.io/404).
