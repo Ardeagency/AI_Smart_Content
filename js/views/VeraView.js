@@ -1490,6 +1490,20 @@ class VeraView extends (window.BaseView || class {}) {
             </div>
           </div>
         </div>
+        <aside class="vera-artifact-panel" id="veraArtifactPanel" hidden aria-label="Panel de artefacto">
+          <div class="vera-artifact-panel-head">
+            <span class="vera-artifact-panel-title" id="veraArtifactTitle">Artefacto</span>
+            <div class="vera-artifact-panel-actions">
+              <button class="vera-artifact-act" id="veraArtifactView" data-view="preview" title="Vista previa"><i class="fas fa-eye"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactCode" title="Ver código"><i class="fas fa-code"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactCopy" title="Copiar"><i class="fas fa-copy"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactDownload" title="Descargar"><i class="fas fa-download"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactFull" title="Pantalla completa"><i class="fas fa-expand-alt"></i></button>
+              <button class="vera-artifact-act vera-artifact-act--close" id="veraArtifactClose" title="Cerrar"><i class="fas fa-times"></i></button>
+            </div>
+          </div>
+          <div class="vera-artifact-panel-body" id="veraArtifactBody"></div>
+        </aside>
       </div>
     `;
   }
@@ -1536,6 +1550,9 @@ class VeraView extends (window.BaseView || class {}) {
     } else {
       this.renderWelcome();
     }
+
+    // Panel de artefactos (Canvas) — botones del header.
+    this._bindArtifactPanel();
 
     // Historial de conversaciones (rail izquierdo, estilo ChatGPT).
     this.bindHistory();
@@ -2030,6 +2047,110 @@ class VeraView extends (window.BaseView || class {}) {
     return `<div class="gpt-msg-attachments gpt-msg-attachments--lib">${items}</div>`;
   }
 
+  /* ── Panel de artefactos (Canvas) ────────────────────────
+     Abre los bloques [artifact]/[html] de Vera en un panel derecho grande, con
+     vista previa / código / copiar / descargar / pantalla completa. Reusa el
+     srcdoc del iframe inline (que ya tiene el HTML completo). */
+
+  // Llamado desde el botón "Abrir en panel" del bloque inline.
+  _openArtifactPanel(btnEl) {
+    const block = btnEl?.closest?.('.vera-artifact-block, .vera-html-block');
+    const iframe = block?.querySelector('iframe');
+    if (!iframe) return;
+    const srcdoc = iframe.srcdoc || iframe.getAttribute('srcdoc') || '';
+    if (!srcdoc) return;
+    const rawLabel = block.querySelector('.vera-artifact-bar span')?.textContent || 'Artefacto';
+    const title = rawLabel.replace(/^[⬡\s]+/, '').replace(/·.*$/, '').trim() || 'Artefacto';
+    this._showArtifactPanel({ srcdoc, title });
+  }
+
+  _showArtifactPanel({ srcdoc, title }) {
+    const panel = document.getElementById('veraArtifactPanel');
+    const body = document.getElementById('veraArtifactBody');
+    const titleEl = document.getElementById('veraArtifactTitle');
+    const layout = document.getElementById('chatcontainer');
+    if (!panel || !body) return;
+
+    this._artifactSrcdoc = srcdoc;
+    this._artifactView = 'preview';
+    if (titleEl) titleEl.textContent = title || 'Artefacto';
+    this._renderArtifactBody();
+
+    panel.hidden = false;
+    requestAnimationFrame(() => layout?.classList.add('artifact-open'));
+    // El panel ocupa la derecha → colapsa el rail de historial para no solapar.
+    this._artifactReopenHistory = !document.getElementById('chatcontainer')?.classList.contains('history-collapsed');
+    this.toggleHistory(true);
+  }
+
+  _renderArtifactBody() {
+    const body = document.getElementById('veraArtifactBody');
+    if (!body) return;
+    const viewBtn = document.getElementById('veraArtifactView');
+    const codeBtn = document.getElementById('veraArtifactCode');
+    if (this._artifactView === 'code') {
+      body.innerHTML = `<pre class="vera-artifact-code"><code>${escapeHtml(this._artifactSrcdoc || '')}</code></pre>`;
+      this._artifactFrame = null;
+    } else {
+      body.innerHTML = '';
+      const f = document.createElement('iframe');
+      f.className = 'vera-artifact-panel-frame';
+      f.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals');
+      f.srcdoc = this._artifactSrcdoc || '';
+      body.appendChild(f);
+      this._artifactFrame = f;
+    }
+    viewBtn?.classList.toggle('active', this._artifactView === 'preview');
+    codeBtn?.classList.toggle('active', this._artifactView === 'code');
+  }
+
+  _closeArtifactPanel() {
+    const panel = document.getElementById('veraArtifactPanel');
+    const body = document.getElementById('veraArtifactBody');
+    const layout = document.getElementById('chatcontainer');
+    layout?.classList.remove('artifact-open');
+    if (body) body.innerHTML = '';
+    this._artifactFrame = null;
+    this._artifactSrcdoc = '';
+    // Oculta tras la transición.
+    setTimeout(() => { if (panel && !layout?.classList.contains('artifact-open')) panel.hidden = true; }, 260);
+    if (this._artifactReopenHistory && !this._isMobile()) this.toggleHistory(false);
+    this._artifactReopenHistory = false;
+  }
+
+  _bindArtifactPanel() {
+    if (this.__artifactBound) return;
+    this.__artifactBound = true;
+    const on = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
+    on('veraArtifactClose', () => this._closeArtifactPanel());
+    on('veraArtifactView', () => { this._artifactView = 'preview'; this._renderArtifactBody(); });
+    on('veraArtifactCode', () => { this._artifactView = 'code'; this._renderArtifactBody(); });
+    on('veraArtifactFull', () => { try { this._artifactFrame?.requestFullscreen?.(); } catch (_) {} });
+    on('veraArtifactCopy', () => {
+      const txt = this._artifactSrcdoc || '';
+      navigator.clipboard?.writeText(txt).then(() => this._flashArtifactBtn('veraArtifactCopy')).catch(() => {});
+    });
+    on('veraArtifactDownload', () => {
+      try {
+        const blob = new Blob([this._artifactSrcdoc || ''], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'artefacto-vera.html';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      } catch (_) {}
+    });
+  }
+
+  _flashArtifactBtn(id) {
+    const b = document.getElementById(id);
+    if (!b) return;
+    const i = b.querySelector('i');
+    const prev = i?.className;
+    if (i) i.className = 'fas fa-check';
+    setTimeout(() => { if (i && prev) i.className = prev; }, 1200);
+  }
+
   _isMobile() {
     return !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
   }
@@ -2513,6 +2634,7 @@ class VeraView extends (window.BaseView || class {}) {
     // Handler global para action pills emitidos por bloques [ACTIONS].
     if (typeof window !== 'undefined') {
       window._veraSendAction = (text) => this.sendMessage(text);
+      window._veraOpenArtifact = (btnEl) => this._openArtifactPanel(btnEl);
     }
   }
 
@@ -2980,26 +3102,22 @@ class VeraView extends (window.BaseView || class {}) {
         .replace(/&/g, '&amp;')
         .replace(/"/g, '&quot;');
 
-      let iframeHtml;
-      if (type === 'artifact') {
-        iframeHtml =
-          '<div class="vera-artifact-block">' +
-            '<div class="vera-artifact-bar">' +
-              '<span>⬡ Artifact · VERA</span>' +
-              '<button onclick="this.closest(\'.vera-artifact-block\').querySelector(\'iframe\').requestFullscreen()">⤢ expandir</button>' +
-            '</div>' +
-            '<iframe class="vera-artifact-frame" ' +
-              'sandbox="allow-scripts allow-forms allow-modals" ' +
-              'srcdoc="' + srcdoc + '"></iframe>' +
-          '</div>';
-      } else {
-        iframeHtml =
-          '<div class="vera-html-block">' +
-            '<iframe class="vera-sandbox-frame" ' +
-              'sandbox="allow-scripts allow-forms allow-modals" ' +
-              'srcdoc="' + srcdoc + '"></iframe>' +
-          '</div>';
-      }
+      const isArtifact = type === 'artifact';
+      const blockClass = isArtifact ? 'vera-artifact-block' : 'vera-html-block';
+      const frameClass = isArtifact ? 'vera-artifact-frame' : 'vera-sandbox-frame';
+      const barLabel = isArtifact ? '⬡ Artifact · VERA' : '⬡ Vista · VERA';
+      const iframeHtml =
+        '<div class="' + blockClass + ' vera-canvas-block">' +
+          '<div class="vera-artifact-bar">' +
+            '<span>' + barLabel + '</span>' +
+            '<button type="button" class="vera-artifact-open" onclick="window._veraOpenArtifact && window._veraOpenArtifact(this)">' +
+              '<i class="fas fa-expand-alt"></i> Abrir en panel' +
+            '</button>' +
+          '</div>' +
+          '<iframe class="' + frameClass + '" ' +
+            'sandbox="allow-scripts allow-forms allow-modals" ' +
+            'srcdoc="' + srcdoc + '"></iframe>' +
+        '</div>';
 
       // Marked puede envolver el placeholder solo o en <p>. Cubrimos ambos.
       html = html.replace(`<p>${id}</p>`, iframeHtml).replace(id, iframeHtml);
@@ -3089,6 +3207,7 @@ class VeraView extends (window.BaseView || class {}) {
     // Handler global para action pills (sobrescribe en cada append, OK).
     if (typeof window !== 'undefined') {
       window._veraSendAction = (text) => this.sendMessage(text);
+      window._veraOpenArtifact = (btnEl) => this._openArtifactPanel(btnEl);
       // Handler de [CONFIRM] — busca metadata.original_message en el ai_message
       // por id y re-envia segun la accion (authorize / simplify / cancel).
       window._veraConfirmAction = (msgId, action, btnEl) => {

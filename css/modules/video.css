@@ -3517,44 +3517,114 @@
 /* ── Widgets HTML (```html) y Artifacts (```artifact) ────
    Iframes sandbox null-origin emitidos por VERA. Altura ajustada
    por VeraView._initWidgetBridge() vía postMessage `vera_resize`. */
-.vera-html-block {
-  margin: 12px 0;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
+.vera-canvas-block {
+  margin: 14px 0;
+  border-radius: 12px;
+  border: 1px solid var(--glass-black-border, #242429);
   overflow: hidden;
   background: #0d0d0f;
   min-height: 80px;
 }
-.vera-sandbox-frame {
+.vera-html-block, .vera-artifact-block { background: #0d0d0f; }
+.vera-sandbox-frame, .vera-artifact-frame {
   display: block; width: 100%; border: none;
-  min-height: 120px; transition: height 0.3s ease;
-}
-.vera-artifact-block {
-  margin: 12px 0;
-  border-radius: 10px;
-  border: 1px solid rgba(139,127,240,0.3);
-  overflow: hidden;
-  background: #0d0d0f;
+  min-height: 160px; transition: height 0.3s ease;
 }
 .vera-artifact-bar {
   display: flex; align-items: center;
   justify-content: space-between;
-  padding: 8px 14px;
-  border-bottom: 1px solid rgba(139,127,240,0.2);
-  font-size: 12px; color: #8b7ff0;
-  font-family: system-ui, sans-serif;
+  padding: 9px 12px 9px 14px;
+  border-bottom: 1px solid var(--glass-black-border, #242429);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-family: inherit;
 }
-.vera-artifact-bar button {
-  background: none;
-  border: 1px solid rgba(139,127,240,0.3);
-  color: #8b7ff0; border-radius: 6px;
-  padding: 3px 10px; font-size: 11px; cursor: pointer;
+.vera-artifact-open {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--white-8);
+  border: 1px solid var(--white-10);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 5px 11px; font-size: 11.5px; font-family: inherit; cursor: pointer;
+  transition: background .14s ease;
 }
-.vera-artifact-frame {
-  display: block; width: 100%; border: none;
-  min-height: 200px; transition: height 0.3s ease;
-}
+.vera-artifact-open:hover { background: var(--white-10); }
+.vera-artifact-open i { font-size: 10px; }
 /* ── FIN VERA INTERACTIVE COMPONENTS ────────────────── */
+
+/* ===========================================================================
+   VERA · PANEL DE ARTEFACTOS (Canvas) — panel derecho con vista/código/acciones
+   =========================================================================== */
+.vera-artifact-panel {
+  flex: 0 0 0;
+  width: 0;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border-left: 1px solid var(--glass-black-border, var(--border-divider));
+  overflow: hidden;
+  opacity: 0;
+  transition: flex-basis .26s cubic-bezier(0.33,0,0.2,1), width .26s cubic-bezier(0.33,0,0.2,1), opacity .2s ease;
+}
+.vera-artifact-panel[hidden] { display: none; }
+.gpt-layout.artifact-open .vera-artifact-panel {
+  flex: 0 0 46%;
+  width: 46%;
+  opacity: 1;
+}
+/* Con el panel abierto, oculta el botón flotante de historial (mismo lado) */
+.gpt-layout.artifact-open .vera-history-open { display: none !important; }
+.vera-artifact-panel-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 12px 12px 16px;
+  border-bottom: 1px solid var(--glass-black-border, var(--border-divider));
+}
+.vera-artifact-panel-title {
+  font-size: .9rem; font-weight: 600; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vera-artifact-panel-actions { display: inline-flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+.vera-artifact-act {
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; border-radius: 8px; background: transparent;
+  color: var(--text-muted); cursor: pointer; font-size: .82rem;
+  transition: background .14s ease, color .14s ease;
+}
+.vera-artifact-act:hover { background: var(--white-8); color: var(--text-primary); }
+.vera-artifact-act.active { background: var(--white-10); color: var(--text-primary); }
+.vera-artifact-act--close:hover { background: rgba(192,57,43,0.18); color: #ff6b5e; }
+.vera-artifact-panel-body { flex: 1; min-height: 0; position: relative; background: #0d0d0f; }
+.vera-artifact-panel-frame {
+  display: block; width: 100%; height: 100%; border: none;
+}
+.vera-artifact-code {
+  margin: 0; height: 100%; overflow: auto;
+  padding: 16px; background: #0d0d0f;
+  color: var(--text-primary);
+  font-size: 12.5px; line-height: 1.55;
+  white-space: pre-wrap; word-break: break-word;
+  scrollbar-width: thin; scrollbar-color: var(--white-10) transparent;
+}
+.vera-artifact-code::-webkit-scrollbar { width: 7px; }
+.vera-artifact-code::-webkit-scrollbar-thumb { background: var(--white-10); border-radius: 3px; }
+
+@media (max-width: 880px) {
+  .gpt-layout.artifact-open .vera-artifact-panel {
+    position: absolute;
+    inset: 0;
+    flex-basis: 100%;
+    width: 100%;
+    z-index: 40;
+  }
+}
 
 /* ── Adjuntos en composer ───────────────────────────── */
 .gpt-attach-chips {
