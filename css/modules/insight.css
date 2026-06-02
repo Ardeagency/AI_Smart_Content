@@ -3101,14 +3101,16 @@
 /* Ritmo: mas aire entre secciones */
 .insight-page.mb-dash { gap: 2.5rem; }
 
-/* ── Filtros: glass-black (no la variante blanca translucida) ── */
+/* ── Filtros: glass-black (no la variante blanca translucida) ──
+   OJO: nada de backdrop-filter en .living-filter — crea un bloque contenedor
+   que (junto a su overflow:hidden) rompe el dropdown position:fixed del
+   calendario. El color dark translucido ya da el look glass-black; el popup
+   del calendario conserva su propio blur. */
 .insight-page .mb-filters-bar .living-filter {
-  background: rgba(11, 11, 11, 0.55);
+  background: rgba(11, 11, 11, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
 }
-.insight-page .mb-filters-bar .living-filter:hover { background: rgba(11, 11, 11, 0.62); }
+.insight-page .mb-filters-bar .living-filter:hover { background: rgba(11, 11, 11, 0.8); }
 .insight-page .mb-filters-bar .living-filter-label { border-right-color: rgba(255, 255, 255, 0.08); }
 .insight-page .mb-filters-bar .living-filter--disabled { opacity: 0.55; }
 .insight-page .mb-filters-bar .living-filter--disabled .living-filter-select { cursor: not-allowed; }
