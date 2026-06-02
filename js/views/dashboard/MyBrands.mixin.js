@@ -345,10 +345,10 @@
       const topic    = (f.topic?.data    || [])[0] || null;
       const tone     = (f.tones?.data    || [])[0] || null;
       const hour     = (f.hour?.data     || [])[0] || null;
-      const hashtag  = (f.hashtag?.data  || [])[0] || null;
-      const platform = (f.platform?.data || [])[0] || null;
-      const growth   = (f.growth?.data   || [])[0] || null;
-      const profile  = (f.profile?.data  || [])[0] || null;
+      const hashtag   = (f.hashtag?.data   || [])[0] || null;
+      const sentiment = (f.sentiment?.data || [])[0] || null;
+      const growth    = (f.growth?.data    || [])[0] || null;
+      const profile   = (f.profile?.data   || [])[0] || null;
 
       const pool = [
         (topic && topic.topic) && {
@@ -376,11 +376,11 @@
           dim: 'hashtag', value: hashtag.hashtag,
         },
         // ── Backups (rellenan huecos de las primarias) ──
-        (platform && platform.platform) && {
-          kind: 'platform', label: 'Plataforma estrella', headline: this._prettyPlatform(platform.platform),
-          metricPrimary: `${fmt.int(platform.total_posts)} posts`,
-          metricSecondary: `${this._compactNum(platform.total_engagement)} engagement`,
-          dim: 'platform', value: platform.platform,
+        (sentiment && sentiment.dominant_label && Number(sentiment.dominant_count) > 0) && {
+          kind: 'sentiment', label: 'Sentimiento dominante', headline: sentiment.dominant_label,
+          metricPrimary: `${fmt.int(sentiment.dominant_count)} posts`,
+          metricSecondary: `${Math.round(Number(sentiment.dominant_ratio || 0) * 100)}% del total`,
+          dim: 'sentiment', value: sentiment.dominant,
         },
         (growth && growth.engagement_growth_percent != null) && {
           kind: 'growth', label: 'Crecimiento',

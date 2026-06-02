@@ -2453,3 +2453,9 @@
 @media (max-width: 520px) {
   .mb-detail-drawer { width: 94vw; max-width: 94vw; max-height: 86vh; }
 }
+
+/* Card Sentimiento dominante: headline coloreado por sentimiento */
+.mb-feat-card--sentiment .mb-feat-headline { text-transform: none; }
+.mb-feat-card--sentiment[data-value="POS"] .mb-feat-headline { color: #6bcf7f; }
+.mb-feat-card--sentiment[data-value="NEG"] .mb-feat-headline { color: #e06464; }
+.mb-feat-card--sentiment[data-value="NEU"] .mb-feat-headline { color: var(--text-secondary, rgba(212, 209, 216, 0.85)); }
