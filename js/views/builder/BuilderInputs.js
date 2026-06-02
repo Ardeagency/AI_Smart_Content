@@ -2613,6 +2613,17 @@
                   <option value="multiple" ${selectionMode === 'multiple' ? 'selected' : ''}>Múltiple</option>
                 </select>
               </div>
+              ${selectionMode === 'multiple' ? `
+              <div class="property-field">
+                <label for="propImageMaxSel">Máximo seleccionable</label>
+                <input type="number" id="propImageMaxSel" min="1" max="20" value="${field.max_selections != null ? field.max_selections : ''}" placeholder="sin límite">
+              </div>
+              <div class="property-field">
+                <label for="propImageMinSel">Mínimo seleccionable</label>
+                <input type="number" id="propImageMinSel" min="0" max="20" value="${field.min_selections != null ? field.min_selections : ''}" placeholder="0">
+                <span class="field-help">Si el flujo exige una cantidad fija (ej. 3 productos obligatorios), pon el mismo número en mínimo y máximo.</span>
+              </div>
+              ` : ''}
               <div class="property-field">
                 <label for="propMediaSource">Tipo de función</label>
                 <select id="propMediaSource">
@@ -3313,6 +3324,31 @@
       imageSelectionModeSelect.addEventListener('change', (e) => {
         field.image_selection_mode = e.target.value;
         field.selection_mode = e.target.value;
+        // En 'single' no aplican limites de cantidad: limpiarlos.
+        if (e.target.value !== 'multiple') { delete field.max_selections; delete field.min_selections; }
+        this.renderCanvas();
+        this.onFieldChange();
+        this.renderPropertiesPanel(); // re-render: muestra/oculta Maximo/Minimo seleccionable
+      });
+    }
+
+    // Maximo / Minimo seleccionable (solo image_selector multiple)
+    const imageMaxSel = this.querySelector('#propImageMaxSel');
+    if (imageMaxSel) {
+      imageMaxSel.addEventListener('input', (e) => {
+        const n = parseInt(e.target.value, 10);
+        if (e.target.value === '' || isNaN(n)) { delete field.max_selections; }
+        else { field.max_selections = Math.max(1, n); if (field.min_selections > field.max_selections) field.min_selections = field.max_selections; }
+        this.renderCanvas();
+        this.onFieldChange();
+      });
+    }
+    const imageMinSel = this.querySelector('#propImageMinSel');
+    if (imageMinSel) {
+      imageMinSel.addEventListener('input', (e) => {
+        const n = parseInt(e.target.value, 10);
+        if (e.target.value === '' || isNaN(n)) { delete field.min_selections; }
+        else { field.min_selections = Math.max(0, n); if (field.max_selections != null && field.min_selections > field.max_selections) field.min_selections = field.max_selections; }
         this.renderCanvas();
         this.onFieldChange();
       });

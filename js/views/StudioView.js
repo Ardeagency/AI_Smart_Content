@@ -2097,6 +2097,31 @@ class StudioView extends BaseView {
   }
 
   /**
+   * Valida los limites min/max de los selectores de imagen MULTIPLES contra lo que el usuario eligio.
+   * Devuelve un mensaje de error (string) si algo no cumple, o null si todo OK.
+   * Un selector con data_type=array o selection_mode=multiple se trata como multiple.
+   */
+  _validateSelectionLimits(payload = {}) {
+    const schema = this.selectedFlow && this.selectedFlow.input_schema || {};
+    const fields = Array.isArray(schema) ? schema : (schema.fields || schema.inputs || []);
+    for (const f of (Array.isArray(fields) ? fields : [])) {
+      const type = (f.input_type || f.type || '').toLowerCase();
+      if (type !== 'image_selector') continue;
+      const mode = f.image_selection_mode || f.selection_mode || (f.data_type === 'array' ? 'multiple' : 'single');
+      if (mode !== 'multiple') continue;
+      const key = f.key || f.name;
+      const val = payload[key];
+      const n = Array.isArray(val) ? val.length : (val ? 1 : 0);
+      const min = parseInt(f.min_selections, 10) || 0;
+      const max = parseInt(f.max_selections, 10) || 0;
+      const label = f.label || key;
+      if (min && n < min) return `"${label}": selecciona ${min === max ? '' : 'al menos '}${min} ${min === 1 ? 'elemento' : 'elementos'} (llevas ${n}).`;
+      if (max && n > max) return `"${label}": máximo ${max} ${max === 1 ? 'elemento' : 'elementos'} (llevas ${n}).`;
+    }
+    return null;
+  }
+
+  /**
    * Reemplaza en el payload los campos "selector de productos" (UUID o array de UUIDs)
    * por el objeto completo de cada producto (con imágenes y todos los datos de BD), vía RPC get_products_full_by_ids.
    * El webhook recibe así todos los datos del producto, no solo el ID.
@@ -2185,6 +2210,10 @@ class StudioView extends BaseView {
     try {
       let payload = this.collectFormData();
       payload = await this.enrichProductPayload(payload);
+      // Validar limites de seleccion (min/max) de los selectores de imagen multiples.
+      // Ej: un flujo que exige 3 productos obligatorios bloquea aqui si no se cumplen.
+      const selErr = this._validateSelectionLimits(payload);
+      if (selErr) { this._notify(selErr); return; }
       // Aspect ratio elegido: el skeleton lo usa para mostrarse con la misma
       // proporcion que la produccion en camino (horizontal/cuadrado/vertical).
       this._activeAspectRatio = payload.aspect_ratio || this._activeAspectRatio || null;
