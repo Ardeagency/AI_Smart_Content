@@ -2911,3 +2911,99 @@
 .strat-prod-meta { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); }
 
 @media (max-width: 600px) { .strat-stats { gap: 1rem; flex-wrap: wrap; } }
+
+/* ════════════════════════════════════════════════════════════════════
+   TENDENCIAS — el pulso del nicho y del mundo (lente externa de Vera)
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 1. Clima del nicho (sentimiento del mercado) */
+.tend-climate { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem; }
+.tend-climate-label { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
+.tend-climate-bar { display: flex; height: 8px; border-radius: 6px; overflow: hidden; background: #1a1b1d; }
+.tend-climate-seg { display: block; height: 100%; }
+.tend-climate-legend { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
+
+/* 2. Señales emergentes */
+.tend-signals { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.tend-signal {
+  display: flex; flex-direction: column; gap: 0.3rem;
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-radius: 11px; padding: 0.6rem 0.8rem; min-width: 120px;
+}
+.tend-signal-kw { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.tend-signal-meta { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; }
+.tend-signal-src { font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted, rgba(212,209,216,0.5)); }
+.tend-signal-vel { font-size: 0.6875rem; font-weight: 700; color: #e0a045; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 0.2rem; }
+.tend-signal-sent { font-size: 0.625rem; font-weight: 600; }
+.tend-source-line { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.85rem; }
+.tend-source-pill { font-size: 0.625rem; font-weight: 600; color: var(--text-muted, rgba(212,209,216,0.6)); background: rgba(255,255,255,0.05); border: 1px solid var(--border-divider, #242424); border-radius: 6px; padding: 0.2rem 0.5rem; }
+
+/* 3. Océanos azules (content gaps) */
+.tend-gaps-note { font-size: 0.75rem; color: var(--text-secondary, rgba(212,209,216,0.82)); margin-bottom: 0.85rem; padding: 0.55rem 0.75rem; background: rgba(91,155,213,0.08); border: 1px solid rgba(91,155,213,0.25); border-radius: 9px; }
+.tend-gaps { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.85rem; }
+.tend-gap-card {
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-radius: 14px; padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.6rem;
+}
+.tend-gap-card--blue { border-color: rgba(91,155,213,0.4); background: linear-gradient(180deg, rgba(91,155,213,0.06), var(--bg-card, #141517)); }
+.tend-gap-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.tend-gap-topic { font-size: 0.875rem; font-weight: 700; color: var(--text-primary, #D4D1D8); }
+.tend-gap-badge { flex: 0 0 auto; font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #5b9bd5; border: 1px solid rgba(91,155,213,0.5); border-radius: 6px; padding: 0.15rem 0.45rem; display: inline-flex; align-items: center; gap: 0.25rem; }
+.tend-gap-cover { flex: 0 0 auto; font-size: 0.625rem; font-weight: 600; color: var(--text-muted, rgba(212,209,216,0.55)); }
+.tend-gap-desc { font-size: 0.75rem; line-height: 1.4; color: var(--text-secondary, rgba(212,209,216,0.78)); margin: 0; }
+.tend-gap-stats { display: flex; flex-direction: column; gap: 0.25rem; }
+.tend-gap-stat { font-size: 0.75rem; color: var(--text-secondary, rgba(212,209,216,0.82)); }
+.tend-gap-stat b { color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+.tend-gap-bd { color: var(--text-muted, rgba(212,209,216,0.5)); font-size: 0.6875rem; }
+.tend-gap-samples { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.tend-gap-samples li {
+  font-size: 0.6875rem; line-height: 1.35; color: var(--text-muted, rgba(212,209,216,0.62));
+  background: var(--bg-primary, #0b0b0b); border-left: 2px solid rgba(91,155,213,0.4);
+  border-radius: 0 7px 7px 0; padding: 0.35rem 0.5rem;
+}
+
+/* 4. Léxico emergente */
+.tend-dims { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.85rem; }
+.tend-dim {
+  display: flex; flex-direction: column; gap: 0.2rem;
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-radius: 10px; padding: 0.55rem 0.8rem;
+}
+.tend-dim-name { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted, rgba(212,209,216,0.5)); }
+.tend-dim-counts { font-size: 0.75rem; color: var(--text-secondary, rgba(212,209,216,0.82)); }
+.tend-dim-counts b { color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+.tend-words { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.tend-word {
+  display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 600;
+  color: var(--text-primary, #D4D1D8); background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-divider, #242424); border-radius: 8px; padding: 0.25rem 0.6rem;
+}
+.tend-word-dim { font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted, rgba(212,209,216,0.45)); }
+.tend-lex-note { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); margin-top: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+
+/* 5. Marcas emergentes */
+.tend-brands { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.7rem; }
+.tend-brand-card {
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-radius: 12px; padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.5rem;
+}
+.tend-brand-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.tend-brand-name { font-size: 0.875rem; font-weight: 700; color: var(--text-primary, #D4D1D8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tend-brand-count { flex: 0 0 auto; font-size: 0.625rem; font-weight: 700; color: #e0a045; font-variant-numeric: tabular-nums; }
+.tend-brand-meta { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+.tend-brand-niche { font-size: 0.625rem; font-weight: 600; color: var(--text-secondary, rgba(212,209,216,0.78)); background: rgba(255,255,255,0.05); border-radius: 6px; padding: 0.15rem 0.45rem; }
+.tend-brand-geo, .tend-brand-rank { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); }
+
+/* 6. Sincronización con el mundo */
+.tend-world-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.tend-world-row {
+  display: flex; align-items: center; gap: 0.85rem;
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-radius: 10px; padding: 0.6rem 0.9rem;
+}
+.tend-world-when { flex: 0 0 auto; font-size: 0.6875rem; font-weight: 700; color: #e0a045; min-width: 84px; font-variant-numeric: tabular-nums; }
+.tend-world-body { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+.tend-world-name { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); }
+.tend-world-geo { font-size: 0.625rem; color: var(--text-muted, rgba(212,209,216,0.5)); text-transform: uppercase; letter-spacing: 0.03em; }
+
+@media (max-width: 760px) { .tend-gaps { grid-template-columns: 1fr; } }

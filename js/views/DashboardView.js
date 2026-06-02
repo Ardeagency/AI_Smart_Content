@@ -32,7 +32,7 @@ class DashboardView extends BaseView {
   static TABS_ENABLED = {
     'my-brands':  true,   // FEAT-023 Ola 1: sección "Mis Campañas" activa
     'competence': true,   // Competencia: campo de batalla + voz de audiencia + vulnerabilidades
-    'tendencies': false,
+    'tendencies': true,   // Tendencias: pulso del nicho + señales + océanos azules + léxico + marcas emergentes
     'strategy':   true,   // Estrategia: recomendaciones de Vera (cross-signal) + aprendizaje
   };
 
