@@ -152,16 +152,25 @@
        ════════════════════════════════════════════════════════════════ */
     _buildMyBrandsHtml(data) {
       return `
-        <div class="insight-page" id="mbPage">
+        <div class="insight-page mb-dash" id="mbPage">
           ${this._buildMbFiltersBar(data)}
-
-          <div class="mb-cards-row">
-            ${this._buildHealthGauge(data?.health?.data)}
-            ${this._buildFeaturedCards(data?.featured)}
-          </div>
-
+          ${this._buildHealthGauge(data?.health?.data)}
+          ${this._buildFeaturedSection(data?.featured)}
           ${this._buildSwotCard(data)}
         </div>`;
+    },
+
+    /* Seccion "Lo que te esta funcionando" — grid de cards de evidencia. */
+    _buildFeaturedSection(featured) {
+      const cards = this._buildFeaturedCards(featured);
+      if (!cards.trim()) return '';
+      return `
+        <section class="mb-section">
+          <div class="mb-section-head">
+            <span class="mb-section-title">Lo que te esta funcionando</span>
+          </div>
+          <div class="mb-feat-grid">${cards}</div>
+        </section>`;
     },
 
     /* ════════════════════════════════════════════════════════════════
@@ -465,15 +474,12 @@
       const gaugeSvg = this._buildGaugeSvg(score, verdictMeta.color, band);
 
       return `
-        <section class="mb-health-card">
-          <div class="mb-health-gauge">
-            ${gaugeSvg}
-            <div class="mb-health-verdict" style="color:${verdictMeta.color};">
-              <span class="mb-health-verdict-label">${this._esc(verdictMeta.label)}</span>
-            </div>
-            <div class="mb-health-band">
-              Saludable para tu segmento: <strong>${band.p50}-${band.p75}</strong>
-            </div>
+        <section class="mb-hero">
+          <div class="mb-hero-gauge">${gaugeSvg}</div>
+          <div class="mb-hero-meta">
+            <span class="mb-hero-label">Salud de tu marca</span>
+            <span class="mb-hero-verdict" style="color:${verdictMeta.color};">${this._esc(verdictMeta.label)}</span>
+            <span class="mb-hero-band">Saludable para tu segmento: <strong>${band.p50}–${band.p75}</strong></span>
           </div>
         </section>`;
     },
@@ -534,7 +540,7 @@
 
     _buildHealthEmpty() {
       return `
-        <section class="mb-health-card mb-health-card--empty">
+        <section class="mb-hero mb-hero--empty">
           <p>Calculando salud de tu marca… (sin datos suficientes aún)</p>
         </section>`;
     },
