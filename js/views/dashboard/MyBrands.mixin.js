@@ -159,6 +159,7 @@
           ${this._buildMbFiltersBar(data)}
           ${this._buildHealthGauge(data?.health?.data)}
           ${this._buildCausalSection(insights, 'boost')}
+          ${this._buildEffectiveAudienceSection(data?.audienceEffective?.data, insights)}
           ${this._buildAudienceSection(data?.audiencePatterns?.data)}
           ${this._buildActivitySection(data?.activity?.data)}
           ${this._buildPillarsSection(data?.pillars?.data)}
@@ -295,6 +296,74 @@
             ${pos != null ? `<span class="mb-aud-pos">${pos}% positivo</span>` : ''}
           </div>
         </div>`;
+    },
+
+    /* ── Tu publico efectivo: a quien estas convirtiendo (geo + captacion) ── */
+    _buildEffectiveAudienceSection(e, insights) {
+      if (!e || e.capture_level === 'sin_datos' || !Number(e.total_conversions)) {
+        if (shouldHideEmpty()) return '';
+        return '';
+      }
+      const levelMeta = {
+        alta:  { color: '#6bcf7f', label: 'Alta' },
+        media: { color: '#e0a045', label: 'Media' },
+        baja:  { color: '#e06464', label: 'Baja' },
+      }[e.capture_level] || { color: '#87868b', label: e.capture_level };
+
+      const objLabel = {
+        OUTCOME_LEADS: 'Leads / Formularios',
+        OUTCOME_SALES: 'Ventas',
+        OUTCOME_TRAFFIC: 'Tráfico',
+        OUTCOME_ENGAGEMENT: 'Interacción',
+        OUTCOME_AWARENESS: 'Reconocimiento',
+      }[e.objective] || (e.objective ? this._humanizeMission?.(e.objective) || e.objective : null);
+
+      const geo = Array.isArray(e.geo) ? e.geo : [];
+      const flag = (cc) => cc === 'CO' ? '🇨🇴' : cc === 'MX' ? '🇲🇽' : '📍';
+      const geoRows = geo.map((g) => {
+        const conv = Number(g.conversions) || 0;
+        const share = Math.max(0, Number(g.share_pct) || 0);
+        const zero = conv === 0;
+        return `
+          <div class="mb-eff-geo${zero ? ' mb-eff-geo--zero' : ''}">
+            <span class="mb-eff-geo-name">${flag(g.country)} ${this._esc(this._causalValueLabel('loc', g.location))}</span>
+            <div class="mb-eff-geo-bar"><span style="width:${zero ? 0 : Math.max(4, share)}%;"></span></div>
+            <span class="mb-eff-geo-val">${zero ? 'no convierte' : `${this._compactNum(conv)} · ${share}%`}</span>
+          </div>`;
+      }).join('');
+
+      // Lo que los atrae: top boost de tono + tema de la seccion causal.
+      const boosts = (Array.isArray(insights) ? insights : []).filter((i) => i.kind === 'boost');
+      const tono = boosts.find((i) => i.dimension === 'tono')?.value;
+      const tema = boosts.find((i) => i.dimension === 'tema')?.value;
+      const atrae = (tono || tema)
+        ? `Lo que mejor los atrae: ${tono ? `tono <b>${this._esc(this._causalValueLabel('tono', tono))}</b>` : ''}${tono && tema ? ' + ' : ''}${tema ? `tema <b>${this._esc(this._causalValueLabel('tema', tema))}</b>` : ''}`
+        : '';
+
+      return `
+        <section class="mb-section">
+          <div class="mb-section-head">
+            <span class="mb-section-title">Tu publico efectivo</span>
+            <span class="mb-section-hint">A quien estas convirtiendo con lo que ya haces</span>
+          </div>
+          <div class="mb-eff-card">
+            <div class="mb-eff-top">
+              <div class="mb-eff-capture">
+                <span class="mb-eff-capture-label">Captacion</span>
+                <span class="mb-eff-capture-level" style="color:${levelMeta.color};">${this._esc(levelMeta.label)}</span>
+              </div>
+              <div class="mb-eff-summary">
+                <span class="mb-eff-total">${this._compactNum(e.total_conversions)} <span class="mb-eff-total-unit">leads reales</span></span>
+                ${objLabel ? `<span class="mb-eff-obj">Objetivo: ${this._esc(objLabel)}</span>` : ''}
+              </div>
+            </div>
+            <div class="mb-eff-geo-block">
+              <span class="mb-eff-geo-title">Donde conviertes</span>
+              <div class="mb-eff-geos">${geoRows}</div>
+            </div>
+            ${atrae ? `<p class="mb-eff-atrae">${atrae}</p>` : ''}
+          </div>
+        </section>`;
     },
 
     /* ── Actividad: ritmo de publicacion propio en el tiempo ──────────── */

@@ -119,7 +119,7 @@ class CampanasDataService {
       kpis, list, dailySeries, winnersVsBurners, briefVsOutcome,
       featuredTopic, featuredHashtag, featuredHour, estrategiaTones,
       featuredSentiment, featuredProfile, featuredGrowth,
-      whatWorks, audiencePatterns, activity, pillars,
+      whatWorks, audiencePatterns, activity, pillars, audienceEffective,
       vulnerabilities,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
@@ -160,6 +160,10 @@ class CampanasDataService {
       this.sb.rpc('dashboard_mimarca_pillars', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids,
       }),
+      // Tu publico efectivo: geo + captacion (conversiones reales)
+      this.sb.rpc('dashboard_mimarca_audience_effective', {
+        p_org_id: this.orgId, p_brand_container_ids: bcids,
+      }),
 
       vulnsPromise,
     ]);
@@ -191,6 +195,7 @@ class CampanasDataService {
       audiencePatterns: u(audiencePatterns),
       activity: u(activity),
       pillars: u(pillars),
+      audienceEffective: u(audienceEffective),
 
       vulnerabilities: u(vulnerabilities),
     };
