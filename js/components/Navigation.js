@@ -613,6 +613,7 @@ class Navigation {
   toggleActivityDropdown(btn) {
     const panel = this.ensureActivityDropdown();
     if (panel.classList.contains('active')) { this.closeActivityDropdown(); return; }
+    this.closeNotificationsFlyout();
     const r = btn.getBoundingClientRect();
     const width = 384;
     let left = Math.round(r.right - width);
@@ -978,6 +979,69 @@ class Navigation {
       list.map((n) => this._renderRichNotificationCard(n, { mode: 'expanded' })).join('') +
       '</div>';
     this._attachNotificationListeners(body, () => this.closeNotificationsModal(), list);
+  }
+
+  /* ── Notificaciones como flyout (mismo chrome que el panel de Actividad) ──
+     Reemplaza el modal emergente por un dropdown anclado al boton, para
+     consistencia visual con "Actividad". Reusa _orgNotificationsList +
+     _renderRichNotificationCard + _attachNotificationListeners. */
+  ensureNotificationsFlyout() {
+    let panel = document.getElementById('notificationsFlyout');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'notificationsFlyout';
+      panel.className = 'activity-dropdown notifications-flyout glass-black';
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-label', 'Notificaciones');
+      panel.setAttribute('aria-hidden', 'true');
+      panel.innerHTML = `
+        <div class="activity-head">
+          <span class="activity-title">Notificaciones</span>
+        </div>
+        <div class="activity-body" id="notificationsFlyoutBody"></div>`;
+      document.body.appendChild(panel);
+    } else if (panel.parentElement !== document.body) {
+      document.body.appendChild(panel);
+    }
+    return panel;
+  }
+
+  toggleNotificationsFlyout(btn) {
+    const panel = this.ensureNotificationsFlyout();
+    if (panel.classList.contains('active')) { this.closeNotificationsFlyout(); return; }
+    this.closeActivityDropdown();
+    const r = btn.getBoundingClientRect();
+    const width = 384;
+    let left = Math.round(r.right - width);
+    if (left < 12) left = 12;
+    panel.style.position = 'fixed';
+    panel.style.top = `${Math.round(r.bottom + 8)}px`;
+    panel.style.left = `${left}px`;
+    panel.style.width = `${width}px`;
+    panel.classList.add('active');
+    panel.setAttribute('aria-hidden', 'false');
+    this._loadNotificationsFlyout();
+  }
+
+  closeNotificationsFlyout() {
+    const panel = document.getElementById('notificationsFlyout');
+    if (panel) { panel.classList.remove('active'); panel.setAttribute('aria-hidden', 'true'); }
+  }
+
+  async _loadNotificationsFlyout() {
+    const body = document.getElementById('notificationsFlyoutBody');
+    if (!body) return;
+    body.innerHTML = `<div class="activity-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+    const list = await this._orgNotificationsList('all', 100);
+    if (!list.length) {
+      body.innerHTML = `<div class="activity-empty"><i class="fas fa-circle-info"></i><p>No hay notificaciones</p></div>`;
+      return;
+    }
+    body.innerHTML = '<div class="notif-list">' +
+      list.map((n) => this._renderRichNotificationCard(n, { mode: 'expanded' })).join('') +
+      '</div>';
+    this._attachNotificationListeners(body, () => this.closeNotificationsFlyout(), list);
+    this.refreshNotificationsBadge();
   }
 
   // ───────────────────────────────────────── Org notifications (sistema nuevo)
@@ -2493,10 +2557,16 @@ class Navigation {
         'click',
         (e) => {
           const btn = e.target.closest('.nav-footer-btn[data-flyout="notifications"]');
-          if (!btn) return;
-          e.preventDefault();
-          e.stopPropagation();
-          this.openNotificationsModal();
+          if (btn) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleNotificationsFlyout(btn);
+            return;
+          }
+          const panel = document.getElementById('notificationsFlyout');
+          if (panel && panel.classList.contains('active') && !panel.contains(e.target)) {
+            this.closeNotificationsFlyout();
+          }
         },
         false
       );

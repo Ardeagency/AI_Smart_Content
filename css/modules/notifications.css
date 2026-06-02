@@ -627,3 +627,8 @@
 @media (max-width: 480px) {
   .activity-dropdown { left: 12px !important; right: 12px; width: auto !important; }
 }
+
+/* Notificaciones dentro del flyout (mismo chrome que Actividad) */
+.notifications-flyout .activity-body { padding: 12px; }
+.notifications-flyout .notif-list { display: flex; flex-direction: column; gap: 8px; padding: 0; margin: 0; }
+.notifications-flyout .notif-card { border-radius: 11px; }
