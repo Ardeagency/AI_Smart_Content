@@ -31,7 +31,7 @@ class DashboardView extends BaseView {
   // el mixin del tab esté listo.
   static TABS_ENABLED = {
     'my-brands':  true,   // FEAT-023 Ola 1: sección "Mis Campañas" activa
-    'competence': false,
+    'competence': true,   // Competencia: campo de batalla + voz de audiencia + vulnerabilidades
     'tendencies': false,
     'strategy':   false,
   };

@@ -1,0 +1,72 @@
+/**
+ * CompetenciaDataService — capa de datos del tab "Competencia".
+ *
+ * Lente = rivales. Llama a las RPCs dashboard_competencia_* (org-scoped, RLS):
+ *   - kpis            → panorámica del campo de batalla
+ *   - top             → ranking de rivales por engagement
+ *   - risk            → vulnerabilidades / crisis del rival
+ *   - audience_voice  → la voz de su audiencia (pain points de comentarios)
+ *
+ * Las RPCs filtran por entity (competidores), no por brand_container, y reciben
+ * timestamptz. Devuelve { data, isEmpty, error } por bloque para manejo graceful.
+ */
+class CompetenciaDataService {
+  constructor() {
+    this.sb = null;
+    this.orgId = null;
+  }
+
+  async init(supabase, orgId) {
+    this.sb = supabase;
+    this.orgId = orgId;
+    return this;
+  }
+
+  _ok(data)  { return { data, isEmpty: !data || (Array.isArray(data) && data.length === 0), error: null }; }
+  _err(error){ return { data: null, isEmpty: true, error }; }
+  _unwrap(s) {
+    if (s.status === 'rejected') return this._err(s.reason);
+    if (s.value?.error) return this._err(s.value.error);
+    return this._ok(s.value?.data);
+  }
+
+  _resolveWindow(opts = {}) {
+    const windowDays = Math.max(1, Number(opts.windowDays || 99999));
+    const now = new Date();
+    const from = new Date(now.getTime() - windowDays * 86400_000);
+    return { from: from.toISOString(), to: now.toISOString() };
+  }
+
+  async loadAll(opts = {}) {
+    if (!this.sb || !this.orgId) return null;
+    const { from, to } = this._resolveWindow(opts);
+
+    const cacheKey = `dash:competencia:${this.orgId}:${from}:${to}`;
+    const run = () => this._fetchAll(from, to);
+    if (window.apiClient) {
+      return window.apiClient.query(cacheKey, run, { ttl: 60 * 1000, staleWhileRevalidate: true });
+    }
+    return run();
+  }
+
+  async _fetchAll(from, to) {
+    const org = this.orgId;
+    const [kpis, top, risk, voice] = await Promise.allSettled([
+      this.sb.rpc('dashboard_competencia_kpis', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: null }),
+      this.sb.rpc('dashboard_competencia_top',  { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: null, p_limit: 8 }),
+      this.sb.rpc('dashboard_competencia_risk', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: null, p_limit: 6 }),
+      this.sb.rpc('dashboard_competencia_audience_voice', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: null, p_limit: 6 }),
+    ]);
+
+    const u = (s) => this._unwrap(s);
+    return {
+      window: { from, to },
+      kpis:  u(kpis),
+      top:   u(top),
+      risk:  u(risk),
+      voice: u(voice),
+    };
+  }
+}
+
+window.CompetenciaDataService = CompetenciaDataService;

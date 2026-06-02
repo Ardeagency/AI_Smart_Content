@@ -2765,3 +2765,71 @@
 .mb-evo-spark { width: 100%; }
 .mb-evo-spark svg { display: block; }
 .mb-evo-summary { margin: 0; font-size: 0.8125rem; line-height: 1.45; color: var(--text-secondary, rgba(212,209,216,0.82)); }
+
+/* ════════════════════════════════════════════════════════════════════
+   COMPETENCIA — campo de batalla + voz de audiencia + vulnerabilidades
+   ════════════════════════════════════════════════════════════════════ */
+/* KPIs panoramica */
+.comp-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.85rem; margin-bottom: 1rem; }
+.comp-kpi {
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-radius: 12px; padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.2rem;
+}
+.comp-kpi-val { font-size: 1.4rem; font-weight: 700; color: var(--text-primary, #D4D1D8); line-height: 1; letter-spacing: -0.01em; }
+.comp-kpi-lbl { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
+
+/* Ranking de rivales */
+.comp-rank { display: flex; flex-direction: column; gap: 0.4rem; }
+.comp-rank-row {
+  display: grid; grid-template-columns: 28px minmax(150px, 1.4fr) auto auto auto;
+  align-items: center; gap: 0.85rem;
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-radius: 11px; padding: 0.6rem 0.9rem;
+}
+.comp-rank-pos { font-size: 0.8125rem; font-weight: 700; color: var(--text-muted, rgba(212,209,216,0.5)); text-align: center; font-variant-numeric: tabular-nums; }
+.comp-rank-name { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+.comp-rank-brand { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comp-rank-tipo {
+  flex: 0 0 auto; font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+  color: var(--ct, #87868b); border: 1px solid var(--ct, #87868b); border-radius: 5px; padding: 0.08rem 0.35rem; opacity: 0.9;
+}
+.comp-rank-posts, .comp-rank-avg { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); font-variant-numeric: tabular-nums; text-align: right; }
+.comp-rank-eng { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary, rgba(212,209,216,0.82)); font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Voz de su audiencia */
+.comp-voice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0.85rem; }
+.comp-voice-card {
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-radius: 14px; padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: 0.85rem;
+}
+.comp-voice-head { display: flex; flex-direction: column; gap: 0.2rem; }
+.comp-voice-name { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary, #D4D1D8); }
+.comp-voice-meta { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
+.comp-voice-block { display: flex; flex-direction: column; gap: 0.4rem; }
+.comp-voice-label { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.35rem; }
+.comp-voice-block--neg .comp-voice-label { color: #e06464; }
+.comp-voice-block--pos .comp-voice-label { color: #6bcf7f; }
+.comp-voice-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.comp-voice-quote {
+  font-size: 0.75rem; line-height: 1.4; color: var(--text-secondary, rgba(212,209,216,0.82));
+  background: var(--bg-primary, #0b0b0b); border-left: 2px solid var(--border-divider, #242424);
+  border-radius: 0 8px 8px 0; padding: 0.45rem 0.6rem;
+}
+.comp-voice-block--neg .comp-voice-quote { border-left-color: rgba(224,100,100,0.5); }
+.comp-voice-block--pos .comp-voice-quote { border-left-color: rgba(107,207,127,0.5); }
+
+/* Vulnerabilidades */
+.comp-risk-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.comp-risk-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-left: 3px solid #e06464; border-radius: 11px; padding: 0.75rem 1rem;
+}
+.comp-risk-name { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.comp-risk-brand { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); }
+.comp-risk-desc { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
+.comp-risk-stats { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.comp-risk-chip { font-size: 0.625rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 6px; color: var(--text-muted, rgba(212,209,216,0.6)); background: rgba(255,255,255,0.05); border: 1px solid var(--border-divider, #242424); }
+.comp-risk-chip--neg { color: #e06464; background: rgba(224,100,100,0.12); border-color: rgba(224,100,100,0.3); }
+
+@media (max-width: 760px) { .comp-kpis { grid-template-columns: repeat(2, 1fr); } .comp-rank-row { grid-template-columns: 24px 1fr auto; } .comp-rank-posts, .comp-rank-avg { display: none; } }
