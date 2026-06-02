@@ -45,24 +45,25 @@ class CompetenciaDataService {
     const { from, to } = this._resolveWindow(opts);
     // Perfil: si se elige un rival, todo el tab se enfoca en el (p_entity_ids).
     const entityIds = opts.entityId ? [opts.entityId] : null;
+    const platforms = Array.isArray(opts.platforms) && opts.platforms.length ? opts.platforms : null;
 
-    const cacheKey = `dash:competencia:${this.orgId}:${from}:${to}:${opts.entityId || 'all'}`;
-    const run = () => this._fetchAll(from, to, entityIds);
+    const cacheKey = `dash:competencia:${this.orgId}:${from}:${to}:${opts.entityId || 'all'}:${(platforms || []).join(',')}`;
+    const run = () => this._fetchAll(from, to, entityIds, platforms);
     if (window.apiClient) {
       return window.apiClient.query(cacheKey, run, { ttl: 60 * 1000, staleWhileRevalidate: true });
     }
     return run();
   }
 
-  async _fetchAll(from, to, entityIds = null) {
+  async _fetchAll(from, to, entityIds = null, platforms = null) {
     const org = this.orgId;
     const windowD = Math.max(1, Math.round((Date.now() - new Date(from).getTime()) / 86400_000));
     const [kpis, top, risk, voice, intel] = await Promise.allSettled([
-      this.sb.rpc('dashboard_competencia_kpis', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds }),
-      this.sb.rpc('dashboard_competencia_top',  { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 8 }),
-      this.sb.rpc('dashboard_competencia_risk', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 6 }),
-      this.sb.rpc('dashboard_competencia_audience_voice', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 6 }),
-      this.sb.rpc('dashboard_competencia_intelligence', { p_org_id: org, p_window_d: windowD }),
+      this.sb.rpc('dashboard_competencia_kpis', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_platforms: platforms }),
+      this.sb.rpc('dashboard_competencia_top',  { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 8, p_platforms: platforms }),
+      this.sb.rpc('dashboard_competencia_risk', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 6, p_platforms: platforms }),
+      this.sb.rpc('dashboard_competencia_audience_voice', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 6, p_platforms: platforms }),
+      this.sb.rpc('dashboard_competencia_intelligence', { p_org_id: org, p_window_d: windowD, p_platforms: platforms }),
     ]);
 
     const u = (s) => this._unwrap(s);

@@ -69,19 +69,20 @@ class CampanasDataService {
     if (!this.sb || !this.orgId) return null;
     const { date_from, date_to } = this._resolveWindow(opts);
     const bcids = this._resolveBrands(opts);
+    const platforms = Array.isArray(opts.platforms) && opts.platforms.length ? opts.platforms : null;
 
-    const cacheKey = `dash:campanas:${this.orgId}:${date_from}:${date_to}:${(bcids || []).join(',')}`;
+    const cacheKey = `dash:campanas:${this.orgId}:${date_from}:${date_to}:${(bcids || []).join(',')}:${(platforms || []).join(',')}`;
     if (window.apiClient) {
       return window.apiClient.query(
         cacheKey,
-        () => this._fetchAll(date_from, date_to, bcids),
+        () => this._fetchAll(date_from, date_to, bcids, platforms),
         { ttl: 60 * 1000, staleWhileRevalidate: true }
       );
     }
-    return this._fetchAll(date_from, date_to, bcids);
+    return this._fetchAll(date_from, date_to, bcids, platforms);
   }
 
-  async _fetchAll(date_from, date_to, bcids) {
+  async _fetchAll(date_from, date_to, bcids, platforms = null) {
     const baseArgs = {
       p_org_id:              this.orgId,
       p_date_from:           date_from,
@@ -123,7 +124,7 @@ class CampanasDataService {
       vulnerabilities,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
-        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids,
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
       }),
 
       this.sb.rpc('dashboard_campaign_kpis_strip',         baseArgs),
@@ -146,27 +147,27 @@ class CampanasDataService {
       // Mi Marca CAUSAL: lo que te impulsa / te resta por dimension (vs tu propio promedio)
       this.sb.rpc('dashboard_mimarca_what_works', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
-        p_brand_container_ids: bcids, p_min_posts: 2,
+        p_brand_container_ids: bcids, p_min_posts: 2, p_platforms: platforms,
       }),
       // Patrones de tu publico: resonancia emocional del contenido propio
       this.sb.rpc('dashboard_mimarca_audience_patterns', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
-        p_brand_container_ids: bcids, p_min_posts: 2,
+        p_brand_container_ids: bcids, p_min_posts: 2, p_platforms: platforms,
       }),
       // Actividad (ritmo propio) + Pilares narrativos
       this.sb.rpc('dashboard_mimarca_activity', {
-        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids,
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
       }),
       this.sb.rpc('dashboard_mimarca_pillars', {
-        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids,
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
       }),
-      // Tu publico efectivo: geo + captacion (conversiones reales)
+      // Tu publico efectivo: geo + captacion (conversiones reales) — sin filtro de plataforma (es geo/leads)
       this.sb.rpc('dashboard_mimarca_audience_effective', {
         p_org_id: this.orgId, p_brand_container_ids: bcids,
       }),
       // Impacto social en el tiempo (la pelicula): serie + veredicto
       this.sb.rpc('dashboard_mimarca_evolution', {
-        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids,
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
       }),
 
       vulnsPromise,

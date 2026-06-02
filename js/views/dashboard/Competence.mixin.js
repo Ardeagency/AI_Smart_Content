@@ -30,6 +30,7 @@
           dateToIso:   this._compFilters.dateTo   || null,
           windowDays: this._compFilters.windowDays,
           entityId: this._compFilters.entityId,
+          platforms: this._compFilters.platforms || null,
         });
         this._compData = data;
         // Lista completa de perfiles para el dropdown (solo cuando NO hay foco
@@ -64,6 +65,7 @@
         entityId: stored?.entityId || null,
         dateFrom: stored?.dateFrom || null,
         dateTo:   stored?.dateTo   || null,
+        platforms: Array.isArray(stored?.platforms) ? stored.platforms : null,
       };
       return this._compFilters;
     },
@@ -105,12 +107,18 @@
         ...actors.map(a => `<option value="${this._esc(a.entity_id)}"${f.entityId === a.entity_id ? ' selected' : ''}>${this._esc(a.entity_name)}</option>`),
       ].join('');
 
+      const curPlat = (f.platforms && f.platforms[0]) || '';
+      const platOpts = [
+        ['', 'Todas'], ['instagram', 'Instagram'], ['facebook', 'Facebook'],
+        ['tiktok', 'TikTok'], ['x', 'X'], ['youtube', 'YouTube'],
+      ].map(([v, l]) => `<option value="${v}"${curPlat === v ? ' selected' : ''}>${l}</option>`).join('');
+
       return `
         <header class="living-history-filters mb-filters-bar" id="compFilters">
           ${this._compFechaControl()}
-          <div class="living-filter living-filter--disabled" title="Próximamente">
-            <label class="living-filter-label">Plataforma</label>
-            <select class="living-filter-select" disabled><option>Todas</option></select>
+          <div class="living-filter">
+            <label class="living-filter-label" for="compFilterPlatform">Plataforma</label>
+            <select class="living-filter-select" id="compFilterPlatform" data-comp-filter="platform">${platOpts}</select>
           </div>
           <div class="living-filter">
             <label class="living-filter-label" for="compFilterPerfil">Perfil</label>
@@ -299,6 +307,7 @@
         const key = el.dataset.compFilter;
         if (key === 'windowDays') this._onCompFilterChange({ windowDays: Number(el.value) || 99999 });
         else if (key === 'entityId') this._onCompFilterChange({ entityId: el.value || null });
+        else if (key === 'platform') this._onCompFilterChange({ platforms: el.value ? [el.value] : null });
       });
       body.addEventListener('click', (e) => {
         const el = e.target.closest('[data-comp-entity]');

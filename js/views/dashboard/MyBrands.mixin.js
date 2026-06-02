@@ -75,6 +75,7 @@
         dateToIso:   f.dateTo   || null,
         windowDays:  f.windowDays,
         brandIds:    f.brandContainerId ? [f.brandContainerId] : null,
+        platforms:   f.platforms || null,
       });
     },
 
@@ -92,6 +93,7 @@
         brandContainerId:  stored?.brandContainerId || null,
         dateFrom:          stored?.dateFrom || null,   // ISO o null (= todo el periodo)
         dateTo:            stored?.dateTo   || null,
+        platforms:         Array.isArray(stored?.platforms) ? stored.platforms : null,
       };
       return this._mbFilters;
     },
@@ -940,19 +942,18 @@
       const f = this._mbFilters || { windowDays: 30, brandContainerId: null };
       const containers = data?.containers || this._campanasService?.containers || [];
 
-      // Mi Marca = fecha (calendario de rango) + plataforma + campañas.
-      // Plataforma y campañas requieren un parametro nuevo en las RPCs (agregan
-      // server-side); van como pendientes.
+      // Mi Marca = fecha (calendario de rango) + plataforma. (Campañas no aplica:
+      // post_patterns no tiene dimension de campaña.)
+      const cur = (f.platforms && f.platforms[0]) || '';
+      const platOpts = [
+        ['', 'Todas'], ['instagram', 'Instagram'], ['facebook', 'Facebook'],
+      ].map(([v, l]) => `<option value="${v}"${cur === v ? ' selected' : ''}>${l}</option>`).join('');
       return `
         <header class="living-history-filters mb-filters-bar" id="mbFilters">
           ${this._mbFechaControl()}
-          <div class="living-filter living-filter--disabled" title="Próximamente">
-            <label class="living-filter-label">Plataforma</label>
-            <select class="living-filter-select" disabled><option>Todas</option></select>
-          </div>
-          <div class="living-filter living-filter--disabled" title="Próximamente">
-            <label class="living-filter-label">Campañas</label>
-            <select class="living-filter-select" disabled><option>Todas</option></select>
+          <div class="living-filter">
+            <label class="living-filter-label" for="mbFilterPlatform">Plataforma</label>
+            <select class="living-filter-select" id="mbFilterPlatform" data-mb-filter="platform">${platOpts}</select>
           </div>
         </header>`;
     },
@@ -1140,6 +1141,7 @@
         const el = e.target.closest('[data-mb-filter]');
         if (!el) return;
         const key = el.dataset.mbFilter;
+        if (key === 'platform') { this._onMbFilterChange({ platforms: el.value ? [el.value] : null }); return; }
         let value = el.value;
         if (key === 'windowDays') value = Number(value) || 30;
         if (key === 'brandContainerId') value = value || null;
