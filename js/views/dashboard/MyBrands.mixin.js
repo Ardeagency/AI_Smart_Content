@@ -159,6 +159,7 @@
           ${this._buildMbFiltersBar(data)}
           ${this._buildHealthGauge(data?.health?.data)}
           ${this._buildCausalSection(insights, 'boost')}
+          ${this._buildAudienceSection(data?.audiencePatterns?.data)}
           ${this._buildCausalSection(insights, 'drag')}
         </div>`;
     },
@@ -244,6 +245,54 @@
             <span class="mb-causal-detail">Ver detalles <i class="fas fa-arrow-right"></i></span>
           </div>
         </article>`;
+    },
+
+    /* Seccion "Patrones de tu publico": resonancia emocional del contenido.
+       Que emocion despierta tu contenido y como responde tu audiencia. */
+    _buildAudienceSection(rows) {
+      // Filtra el label basura 'emoción' del clasificador.
+      const list = (Array.isArray(rows) ? rows : []).filter((r) => r.emotion && r.emotion !== 'emoción');
+      if (!list.length) {
+        if (shouldHideEmpty()) return '';
+        return '';
+      }
+      return `
+        <section class="mb-section">
+          <div class="mb-section-head">
+            <span class="mb-section-title">Patrones de tu publico</span>
+            <span class="mb-section-hint">Lo que tu contenido despierta en tu audiencia — y como responde</span>
+          </div>
+          <div class="mb-aud-list">${list.map((r) => this._buildAudienceRow(r)).join('')}</div>
+        </section>`;
+    },
+
+    _buildAudienceRow(r) {
+      const emotional = r.is_emotional === true;
+      const lift = Math.round(Number(r.lift_pct) || 0);
+      const isUp = lift >= 0;
+      const pos  = Number.isFinite(Number(r.pos_ratio)) ? Math.round(Number(r.pos_ratio) * 100) : null;
+      const n    = Number(r.post_count) || 0;
+      const name = emotional
+        ? this._causalValueLabel('emo', r.emotion)
+        : 'Contenido sin carga emocional';
+      // Barra de resonancia desde el centro (vs tu promedio).
+      const barW = Math.min(50, Math.abs(lift) / 4);
+      const clickable = emotional;
+      const dataAttrs = clickable
+        ? `data-feat-detail data-dim="emotion" data-value="${this._esc(r.emotion)}" data-title="Patrones de tu publico: ${this._esc(name)}" role="button" tabindex="0"`
+        : '';
+      return `
+        <div class="mb-aud-row${clickable ? ' mb-aud-row--clickable' : ''} mb-aud-row--${isUp ? 'up' : 'down'}" ${dataAttrs}>
+          <div class="mb-aud-name">
+            <span class="mb-aud-emotion">${this._esc(name)}</span>
+            <span class="mb-aud-count">${n} ${n === 1 ? 'post' : 'posts'}</span>
+          </div>
+          <div class="mb-aud-bar"><span style="width:${barW}%;"></span></div>
+          <div class="mb-aud-stats">
+            <span class="mb-aud-lift mb-aud-lift--${isUp ? 'up' : 'down'}">${isUp ? '▲ +' : '▼ '}${lift}%</span>
+            ${pos != null ? `<span class="mb-aud-pos">${pos}% positivo</span>` : ''}
+          </div>
+        </div>`;
     },
 
     /** Formatea el valor de la dimension para mostrar. */

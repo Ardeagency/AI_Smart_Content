@@ -2578,3 +2578,38 @@
   .mb-health-gauge-col { width: 100%; }
   .mb-hc-comps { grid-template-columns: 1fr; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Patrones de tu publico — resonancia emocional (filas)
+   ════════════════════════════════════════════════════════════════════ */
+.mb-aud-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.mb-aud-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.2fr) 2fr minmax(150px, auto);
+  align-items: center; gap: 1rem;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+.mb-aud-row--clickable { cursor: pointer; transition: border-color 0.15s ease; }
+.mb-aud-row--clickable:hover { border-color: rgba(255,255,255,0.18); }
+.mb-aud-row--clickable:focus-visible { outline: 2px solid var(--accent-brand, rgba(255,255,255,0.4)); outline-offset: 2px; }
+.mb-aud-name { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.mb-aud-emotion { font-size: 0.875rem; font-weight: 600; color: var(--text-primary, #D4D1D8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mb-aud-count { font-size: 0.625rem; color: var(--text-muted, rgba(212,209,216,0.5)); }
+.mb-aud-bar { position: relative; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; }
+.mb-aud-bar::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: rgba(255,255,255,0.22); }
+.mb-aud-bar > span { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.mb-aud-row--up   .mb-aud-bar > span { left: 50%; background: #6bcf7f; }
+.mb-aud-row--down .mb-aud-bar > span { right: 50%; background: #e0a045; }
+.mb-aud-stats { display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem; font-variant-numeric: tabular-nums; }
+.mb-aud-lift { font-size: 0.75rem; font-weight: 700; padding: 0.12rem 0.45rem; border-radius: 6px; }
+.mb-aud-lift--up   { color: #6bcf7f; background: rgba(107,207,127,0.14); }
+.mb-aud-lift--down { color: #e0a045; background: rgba(224,160,69,0.14); }
+.mb-aud-pos { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
+
+@media (max-width: 620px) {
+  .mb-aud-row { grid-template-columns: 1fr; gap: 0.5rem; }
+  .mb-aud-stats { justify-content: flex-start; }
+}

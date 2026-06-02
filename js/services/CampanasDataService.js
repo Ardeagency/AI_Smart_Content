@@ -119,7 +119,7 @@ class CampanasDataService {
       kpis, list, dailySeries, winnersVsBurners, briefVsOutcome,
       featuredTopic, featuredHashtag, featuredHour, estrategiaTones,
       featuredSentiment, featuredProfile, featuredGrowth,
-      whatWorks,
+      whatWorks, audiencePatterns,
       vulnerabilities,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
@@ -145,6 +145,11 @@ class CampanasDataService {
 
       // Mi Marca CAUSAL: lo que te impulsa / te resta por dimension (vs tu propio promedio)
       this.sb.rpc('dashboard_mimarca_what_works', {
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
+        p_brand_container_ids: bcids, p_min_posts: 2,
+      }),
+      // Patrones de tu publico: resonancia emocional del contenido propio
+      this.sb.rpc('dashboard_mimarca_audience_patterns', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
         p_brand_container_ids: bcids, p_min_posts: 2,
       }),
@@ -176,6 +181,7 @@ class CampanasDataService {
       },
 
       whatWorks: u(whatWorks),
+      audiencePatterns: u(audiencePatterns),
 
       vulnerabilities: u(vulnerabilities),
     };
