@@ -253,8 +253,8 @@
       const items = (insights || []).filter((i) => i.kind === kind);
       const title = kind === 'boost' ? 'Lo que te esta funcionando' : 'Lo que te esta restando';
       const hint  = kind === 'boost'
-        ? 'Esto dispara la resonancia de tu audiencia — y por que'
-        : 'Esto te baja rendimiento frente a tu propio promedio';
+        ? 'Lo que mas conecta con tu gente — y que hacer para aprovecharlo'
+        : 'Lo que baja tu rendimiento frente a lo que sueles lograr — y como corregirlo';
       if (!items.length) {
         if (shouldHideEmpty()) return '';
         return `
@@ -277,56 +277,85 @@
         </section>`;
     },
 
+    /* Card causal en formato TODO PUBLICO: lenguaje de a pie + visual que se
+       explica solo (numero grande comparativo + pictograma "X de cada 10").
+       Estructura de historia: titulo en humano → que significa → evidencia
+       → que hacer. La metrica es evidencia, no encabezado. */
     _buildCausalCard(i, kind) {
-      const dimMeta = {
-        tono:    { label: 'Tono',    detailDim: 'tone' },
-        tema:    { label: 'Tema',    detailDim: 'topic' },
-        formato: { label: 'Formato', detailDim: 'format' },
-        horario: { label: 'Horario', detailDim: 'hour' },
-      }[i.dimension] || { label: i.dimension, detailDim: i.dimension };
+      const meta = {
+        tono:    { detailDim: 'tone',   what: 'forma de hablar', headUp: 'Tu mejor forma de hablar',     headDown: 'Una forma de hablar que te resta', actUp: 'Publica mas con este tono esta semana',  actDown: 'Usa menos este tono' },
+        tema:    { detailDim: 'topic',  what: 'tema',            headUp: 'Tu tema mas potente',           headDown: 'Un tema que te resta',             actUp: 'Crea mas contenido sobre este tema',     actDown: 'Habla menos de este tema' },
+        formato: { detailDim: 'format', what: 'tipo de post',    headUp: 'Tu tipo de publicacion ganador',headDown: 'Un tipo de publicacion que te resta',actUp: 'Haz mas publicaciones de este tipo',     actDown: 'Reduce este tipo de publicacion' },
+        horario: { detailDim: 'hour',   what: 'horario',         headUp: 'Tu mejor hora para publicar',   headDown: 'Una hora que te resta',            actUp: 'Publica mas a esta hora',                actDown: 'Evita publicar a esta hora' },
+      }[i.dimension] || { detailDim: i.dimension, what: i.dimension, headUp: 'Lo que te funciona', headDown: 'Lo que te resta', actUp: 'Haz mas de esto', actDown: 'Reduce esto' };
 
+      const isUp   = kind === 'boost';
       const lift   = Math.round(Number(i.lift_pct) || 0);
-      const isUp   = lift >= 0;
-      const headLabel = (kind === 'boost')
-        ? `${dimMeta.label} que mas conecta`
-        : `${dimMeta.label} que te resta`;
-      const value  = this._causalValueLabel(i.dimension, i.value);
-      const posPct = Number.isFinite(Number(i.pos_ratio)) ? Math.round(Number(i.pos_ratio) * 100) : null;
-      const emo    = i.dominant_emotion && i.dominant_emotion !== 'emoción' ? i.dominant_emotion : null;
+      const absLift = Math.abs(lift);
+      const value  = i.dimension === 'horario'
+        ? `las ${String(parseInt(i.value, 10) || 0).padStart(2, '0')}:00`
+        : this._causalValueLabel(i.dimension, i.value);
+      const posRatio = Number.isFinite(Number(i.pos_ratio)) ? Number(i.pos_ratio) : null;
       const n      = Number(i.post_count) || 0;
-      const conf   = n >= 10 ? 'alta' : n >= 4 ? 'media' : 'baja';
 
-      // El "por que": emocion que despierta + sentimiento de la audiencia.
-      const whyParts = [];
-      if (emo)        whyParts.push(`despierta <b>${this._esc(emo)}</b>`);
-      if (posPct != null) whyParts.push(`${posPct}% de tu audiencia reacciona en positivo`);
-      const why = whyParts.length ? whyParts.join(' · ') : 'senal emocional aun debil';
+      // Encabezado en humano + frase que explica el por que sin jerga.
+      const headline = `${isUp ? meta.headUp : meta.headDown}: ${value}`;
+      const sent = this._tpSentimentPhrase(posRatio);
+      const say = isUp
+        ? `Cuando publicas asi, la gente interactua (likes, comentarios, compartidos) un <b>${absLift}% mas</b> que de costumbre${sent ? ` — ${sent}` : ''}.`
+        : `Cuando publicas asi, la gente interactua un <b>${absLift}% menos</b> que de costumbre${sent ? ` — ${sent}` : ''}.`;
 
-      // Barra de lift desde el centro (vs tu promedio). Cap visual a 50% por lado.
-      const barW = Math.min(50, Math.abs(lift) / 4);
+      // Visual: numero grande comparativo + pictograma de reaccion.
+      const filled = posRatio != null ? Math.round(posRatio * 10) : null;
+      const picto = filled != null
+        ? `<div class="mb-tp-picto">
+             ${this._pictograph10(filled)}
+             <span class="mb-tp-picto-cap"><b>${filled} de cada 10</b> reaccionan bien</span>
+           </div>`
+        : '';
 
       const detailValue = i.dimension === 'horario' ? String(parseInt(i.value, 10) || 0) : i.value;
-      const detailTitle = `${headLabel}: ${value}`;
 
       return `
-        <article class="mb-causal-card mb-causal-card--${kind}"
-                 data-feat-detail data-dim="${this._esc(dimMeta.detailDim)}"
-                 data-value="${this._esc(detailValue)}" data-title="${this._esc(detailTitle)}"
+        <article class="mb-causal-card mb-tp-card mb-causal-card--${kind}"
+                 data-feat-detail data-dim="${this._esc(meta.detailDim)}"
+                 data-value="${this._esc(detailValue)}" data-title="${this._esc(headline)}"
                  role="button" tabindex="0">
-          <div class="mb-causal-top">
-            <span class="mb-causal-label">${this._esc(headLabel)}</span>
-            <span class="mb-causal-lift mb-causal-lift--${isUp ? 'up' : 'down'}">
-              ${isUp ? '▲' : '▼'} ${isUp ? '+' : ''}${lift}%
-            </span>
+          <div class="mb-tp-head">
+            <span class="mb-tp-mark mb-tp-mark--${isUp ? 'up' : 'down'}">${isUp ? '✓' : '!'}</span>
+            <span class="mb-tp-title" title="${this._esc(headline)}">${this._esc(headline)}</span>
           </div>
-          <div class="mb-causal-value" title="${this._esc(value)}">${this._esc(value)}</div>
-          <div class="mb-causal-bar"><span style="width:${barW}%;"></span></div>
-          <p class="mb-causal-why">${why}</p>
-          <div class="mb-causal-foot">
-            <span class="mb-causal-evidence">${n} ${n === 1 ? 'post' : 'posts'} · confianza ${conf}</span>
-            <span class="mb-causal-detail">Ver detalles <i class="fas fa-arrow-right"></i></span>
+          <p class="mb-tp-say">${say}</p>
+          <div class="mb-tp-viz">
+            <div class="mb-tp-big mb-tp-big--${isUp ? 'up' : 'down'}">
+              <span class="mb-tp-big-num">${isUp ? '↑' : '↓'} ${absLift}%</span>
+              <span class="mb-tp-big-cap">${isUp ? 'mejor' : 'peor'} que de costumbre</span>
+            </div>
+            ${picto}
+          </div>
+          <div class="mb-tp-foot">
+            <span class="mb-tp-evidence">Lo vimos en ${n} ${n === 1 ? 'publicacion' : 'publicaciones'} tuyas</span>
+            <span class="mb-tp-action">${this._esc(isUp ? meta.actUp : meta.actDown)} <i class="fas fa-arrow-right"></i></span>
           </div>
         </article>`;
+    },
+
+    /** Traduce el % de reaccion positiva a una frase de a pie (sin "sentimiento"). */
+    _tpSentimentPhrase(posRatio) {
+      if (posRatio == null) return '';
+      const p = Math.round(posRatio * 100);
+      if (p >= 70) return 'a casi todos les gusta';
+      if (p >= 50) return 'a la mayoria le gusta';
+      if (p >= 30) return 'aunque a varios no les convence';
+      return 'pero a muchos no les convence';
+    },
+
+    /** Pictograma de 10 puntos: X llenos = X de cada 10 (legible sin saber leer datos). */
+    _pictograph10(filled) {
+      const f = Math.max(0, Math.min(10, Math.round(Number(filled) || 0)));
+      let dots = '';
+      for (let k = 0; k < 10; k++) dots += `<span class="mb-tp-dot${k < f ? ' mb-tp-dot--on' : ''}"></span>`;
+      return `<div class="mb-tp-dots" aria-hidden="true">${dots}</div>`;
     },
 
     /* Seccion "Patrones de tu publico": resonancia emocional del contenido.
