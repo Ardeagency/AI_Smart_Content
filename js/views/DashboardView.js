@@ -147,7 +147,7 @@ class DashboardView extends BaseView {
       this._channels.push(ch);
     };
 
-    sub('vpa',   'vera_pending_actions',  orgFilter, ['strategy']);
+    sub('vpa',   'vera_pending_actions',  orgFilter, ['strategy', 'vera-rail']);
     sub('vuln',  'brand_vulnerabilities', orgFilter, ['my-brands', 'strategy']);
     sub('bm',    'body_missions',         orgFilter, ['strategy']);
     sub('rp',    'retail_prices',         orgFilter, ['competence']);
@@ -192,6 +192,9 @@ class DashboardView extends BaseView {
     if (scopes.includes('tendencies')) { this._tendData  = null; window.apiClient?.invalidate((k) => k.startsWith(`dash:tendencias:${orgId}`)); }
     if (scopes.includes('strategy'))   { this._stratData = null; window.apiClient?.invalidate(`dash:strategia:${orgId}`); }
 
+    // Rail de tareas de Vera: refresca silenciosamente sin importar el tab activo.
+    if (scopes.includes('vera-rail')) this._loadVeraTasks();
+
     if (!scopes.includes(this._activeTab)) return;
     if (!document.getElementById('insightTabBody')) return;
 
@@ -212,6 +215,14 @@ class DashboardView extends BaseView {
     container.innerHTML = this._buildShell();
     this._setupTabs();
     this._renderTab(this._activeTab);
+
+    // Rail de tareas de Vera: bind delegado una vez por shell + carga inicial.
+    const railBody = document.getElementById('veraRailBody');
+    if (railBody && !railBody.dataset.bound) {
+      railBody.dataset.bound = '1';
+      this._bindVeraRailHandlers(railBody);
+    }
+    this._loadVeraTasks();
   }
 
   renderHTML() {
@@ -233,20 +244,42 @@ class DashboardView extends BaseView {
         <span>${t.label}</span>
       </button>`;
     return `
-      <div class="insight-page page-content" id="insightPage">
-        <div class="mb-firebar" id="insightSubnav" data-mb-firebar>
-          <div class="mb-firebar-bg" aria-hidden="true">
-            <div class="mb-firebar-gradient"></div>
+      <div class="insight-shell" id="insightShell">
+        <div class="insight-page page-content insight-main" id="insightPage">
+          <div class="mb-firebar" id="insightSubnav" data-mb-firebar>
+            <div class="mb-firebar-bg" aria-hidden="true">
+              <div class="mb-firebar-gradient"></div>
+            </div>
+            <div class="mb-firebar-tabs mb-firebar-tabs--left">
+              ${leftTabs.map(pill).join('')}
+            </div>
+            <div class="mb-firebar-tabs mb-firebar-tabs--right">
+              ${rightTabs.map(pill).join('')}
+            </div>
           </div>
-          <div class="mb-firebar-tabs mb-firebar-tabs--left">
-            ${leftTabs.map(pill).join('')}
-          </div>
-          <div class="mb-firebar-tabs mb-firebar-tabs--right">
-            ${rightTabs.map(pill).join('')}
-          </div>
+          <div class="insight-tab-body" id="insightTabBody"></div>
         </div>
-        <div class="insight-tab-body" id="insightTabBody"></div>
+        ${this._buildVeraRailShell()}
       </div>`;
+  }
+
+  /* ── Vera Task Rail (sidebar derecho) ──────────────────────────────────
+     Timeline de tareas que Vera le asigna a la org para optimizar su
+     marketing. Fuente: vera_pending_actions (status='pending') org-scoped.
+     Independiente del tab activo: vive en el shell y se refresca por su
+     propia suscripcion realtime (scope 'vera-rail'). */
+  _buildVeraRailShell() {
+    return `
+      <aside class="vera-rail" id="veraRail" aria-label="Tareas de Vera para tu marca">
+        <header class="vera-rail-head">
+          <div class="vera-rail-title-wrap">
+            <span class="vera-rail-title">Tareas de Vera</span>
+            <span class="vera-rail-sub">Lo que debes hacer para optimizar tu marketing</span>
+          </div>
+          <span class="vera-rail-count" id="veraRailCount" aria-live="polite" aria-label="Tareas pendientes"></span>
+        </header>
+        <div class="vera-rail-body" id="veraRailBody"></div>
+      </aside>`;
   }
 
   _setupTabs() {
@@ -334,6 +367,208 @@ class DashboardView extends BaseView {
           Próximamente
         </h2>
       </div>`;
+  }
+
+  /* ── Vera Task Rail: carga + render + acciones ─────────────────────────── */
+
+  /** Filtra placeholders/stubs de bootstrap para no ensuciar el rail. */
+  _filterVeraStubs(rows) {
+    return (Array.isArray(rows) ? rows : []).filter((a) => {
+      if (a?.proposed_payload?.placeholder === true) return false;
+      if (typeof a?.vera_reasoning === 'string' && /bootstrap\s*stub/i.test(a.vera_reasoning)) return false;
+      return true;
+    });
+  }
+
+  async _loadVeraTasks() {
+    const bodyEl = document.getElementById('veraRailBody');
+    if (!bodyEl) return;
+    if (!this._supabase || !this._orgId) { this._renderVeraRailEmpty(bodyEl, 'no-org'); return; }
+
+    // Skeleton solo en la primera carga (refrescos realtime son silenciosos).
+    if (!this._veraTasks) this._renderVeraRailSkeleton(bodyEl);
+
+    try {
+      const { data, error } = await this._supabase
+        .from('vera_pending_actions')
+        .select('id,action_type,vera_reasoning,vera_confidence,priority,proposed_payload,impact_estimate,status,created_at,expires_at')
+        .eq('organization_id', this._orgId)
+        .eq('status', 'pending')
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(40);
+      if (error) throw error;
+      this._veraTasks = this._filterVeraStubs(data);
+      this._renderVeraRail(this._veraTasks);
+    } catch (e) {
+      console.warn('[VeraRail] load failed:', e?.message || e);
+      this._renderVeraRailEmpty(bodyEl, 'error');
+    }
+  }
+
+  _renderVeraRail(tasks) {
+    const bodyEl  = document.getElementById('veraRailBody');
+    const countEl = document.getElementById('veraRailCount');
+    if (!bodyEl) return;
+    if (countEl) countEl.textContent = tasks.length ? String(tasks.length) : '';
+    if (!tasks.length) { this._renderVeraRailEmpty(bodyEl, 'clean'); return; }
+    bodyEl.innerHTML = `<ol class="vrail-timeline">${
+      tasks.map((t, i) => this._buildVeraTaskItem(t, i === tasks.length - 1)).join('')
+    }</ol>`;
+  }
+
+  _buildVeraTaskItem(t, isLast) {
+    const meta   = this._veraActionMeta(t.action_type);
+    const time   = this._veraTimeLabel(t.created_at);
+    const detail = String(t.vera_reasoning || t.proposed_payload?.summary || '').trim();
+    const detailHtml = detail
+      ? `<p class="vrail-card-detail">${this._esc(detail.length > 180 ? detail.slice(0, 180) + '…' : detail)}</p>`
+      : '';
+
+    const conf     = Number.isFinite(Number(t.vera_confidence)) ? Math.round(Number(t.vera_confidence) * 100) : null;
+    const confChip = conf != null ? `<span class="vrail-chip vrail-chip--conf" title="Confianza de Vera">${conf}%</span>` : '';
+    const expiry   = this._veraExpiryLabel(t.expires_at);
+    const expChip  = expiry ? `<span class="vrail-chip vrail-chip--${expiry.urgent ? 'urgent' : 'soft'}">${this._esc(expiry.label)}</span>` : '';
+    const prioChip = (Number(t.priority) >= 8) ? `<span class="vrail-chip vrail-chip--prio">Alta prioridad</span>` : '';
+
+    return `
+      <li class="vrail-item${isLast ? ' vrail-item--last' : ''}" data-task-id="${this._esc(t.id)}">
+        <div class="vrail-rail-col">
+          <span class="vrail-time">${this._esc(time)}</span>
+          <span class="vrail-node" style="--vrail-accent:${meta.color};"><i class="${meta.icon}"></i></span>
+        </div>
+        <div class="vrail-card" style="--vrail-accent:${meta.color};">
+          <div class="vrail-card-head">
+            <span class="vrail-card-title">${this._esc(meta.title)}</span>
+            <button type="button" class="vrail-card-menu" data-vrail-menu aria-label="Opciones de la tarea" title="Opciones">
+              <i class="fas fa-ellipsis"></i>
+            </button>
+          </div>
+          ${detailHtml}
+          <div class="vrail-card-foot">${prioChip}${expChip}${confChip}</div>
+          <div class="vrail-card-actions" data-vrail-actions hidden>
+            <button type="button" class="vrail-btn vrail-btn--approve" data-vrail-approve>
+              <i class="fas fa-check"></i> Aprobar
+            </button>
+            <button type="button" class="vrail-btn vrail-btn--dismiss" data-vrail-dismiss>
+              Descartar
+            </button>
+          </div>
+        </div>
+      </li>`;
+  }
+
+  /** Mapa action_type → titulo imperativo + icono + color del nodo. */
+  _veraActionMeta(type) {
+    const M = {
+      pause_campaign:             { title: 'Pausar campaña',            icon: 'fas fa-circle-pause',        color: '#e06464' },
+      resume_campaign:            { title: 'Reactivar campaña',         icon: 'fas fa-circle-play',         color: '#4cb37a' },
+      launch_campaign:            { title: 'Lanzar campaña',            icon: 'fas fa-rocket',              color: '#a07bd0' },
+      create_brief:               { title: 'Crear brief de campaña',    icon: 'fas fa-file-pen',            color: '#5b9bd5' },
+      update_brief:               { title: 'Actualizar brief',          icon: 'fas fa-file-pen',            color: '#5b9bd5' },
+      update_persona:             { title: 'Actualizar persona',        icon: 'fas fa-user-pen',            color: '#a07bd0' },
+      create_audience:            { title: 'Crear audiencia',           icon: 'fas fa-users',               color: '#3fb6a8' },
+      update_audience:            { title: 'Actualizar audiencia',      icon: 'fas fa-user-gear',           color: '#3fb6a8' },
+      link_brief_to_campaign:     { title: 'Vincular brief a campaña',  icon: 'fas fa-link',                color: '#4cb37a' },
+      link_campaign_to_persona:   { title: 'Vincular campaña a persona',icon: 'fas fa-link',                color: '#4cb37a' },
+      link_segment_to_persona:    { title: 'Vincular audiencia a persona', icon: 'fas fa-link',             color: '#4cb37a' },
+      update_brand_container:     { title: 'Actualizar marca',          icon: 'fas fa-pen-to-square',       color: '#e09145' },
+      update_shopify_product_seo: { title: 'Optimizar SEO de producto', icon: 'fas fa-magnifying-glass',    color: '#4cb37a' },
+      adjust_price:               { title: 'Ajustar precio',            icon: 'fas fa-tag',                 color: '#e06464' },
+      adjust_tone:                { title: 'Ajustar tono del contenido',icon: 'fas fa-wand-magic-sparkles', color: '#00c7d6' },
+    };
+    return M[type] || { title: this._humanizeType(type), icon: 'fas fa-bolt', color: '#87868b' };
+  }
+
+  _humanizeType(t) {
+    const s = String(t || 'Tarea').replace(/_/g, ' ').trim();
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  /** HH:MM si es hoy, "Ayer", "Nd" si <7d, o fecha corta. */
+  _veraTimeLabel(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const now = new Date();
+    if (d.toDateString() === now.toDateString()) {
+      return d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+    const days = Math.floor((now - d) / 86400000);
+    if (days <= 1) return 'Ayer';
+    if (days < 7)  return `${days}d`;
+    return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+  }
+
+  /** Etiqueta de vencimiento de la ventana de oportunidad. */
+  _veraExpiryLabel(iso) {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    const ms = d - new Date();
+    if (ms <= 0) return { label: 'Vencida', urgent: true };
+    const h = Math.floor(ms / 3600000);
+    if (h < 24) return { label: `Vence en ${h}h`, urgent: true };
+    const days = Math.round(h / 24);
+    return { label: `Vence en ${days}d`, urgent: days <= 2 };
+  }
+
+  _bindVeraRailHandlers(bodyEl) {
+    bodyEl.addEventListener('click', (e) => {
+      const menuBtn = e.target.closest('[data-vrail-menu]');
+      if (menuBtn) {
+        const actions = menuBtn.closest('.vrail-card')?.querySelector('[data-vrail-actions]');
+        if (actions) actions.hidden = !actions.hidden;
+        return;
+      }
+      const approve = e.target.closest('[data-vrail-approve]');
+      if (approve) { this._resolveVeraTask(approve.closest('[data-task-id]')?.dataset.taskId, 'approve'); return; }
+      const dismiss = e.target.closest('[data-vrail-dismiss]');
+      if (dismiss) { this._resolveVeraTask(dismiss.closest('[data-task-id]')?.dataset.taskId, 'reject'); return; }
+    });
+  }
+
+  async _resolveVeraTask(id, op) {
+    if (!id || !this._supabase) return;
+    const li = document.querySelector(`.vrail-item[data-task-id="${id}"]`);
+    if (li) { li.classList.add('vrail-item--resolving'); li.style.pointerEvents = 'none'; }
+    try {
+      const { data: { session } } = await this._supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('Sin sesion');
+      const res = await fetch(`/api/vera/pending-actions/${id}/${op}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: op === 'reject' ? JSON.stringify({ reason: '' }) : '{}',
+      });
+      if (!res.ok) throw new Error((await res.text().catch(() => '')).slice(0, 200));
+      this._veraTasks = (this._veraTasks || []).filter((t) => t.id !== id);
+      this._renderVeraRail(this._veraTasks);
+    } catch (e) {
+      console.error('[VeraRail] resolve failed:', e?.message || e);
+      if (li) { li.classList.remove('vrail-item--resolving'); li.style.pointerEvents = ''; }
+    }
+  }
+
+  _renderVeraRailSkeleton(el) {
+    el.innerHTML = `<div class="vrail-skeleton">${[0, 1, 2].map(() => `
+      <div class="vrail-skel-item">
+        <span class="vrail-skel-node skeleton-shimmer"></span>
+        <div class="vrail-skel-card skeleton-shimmer"></div>
+      </div>`).join('')}</div>`;
+  }
+
+  _renderVeraRailEmpty(el, kind) {
+    const map = {
+      clean:    { icon: 'fas fa-circle-check',        text: 'Sin tareas pendientes. Vera tiene tu marca al dia.' },
+      'no-org': { icon: 'fas fa-circle-info',         text: 'Selecciona una marca para ver las tareas de Vera.' },
+      error:    { icon: 'fas fa-triangle-exclamation',text: 'No se pudieron cargar las tareas de Vera.' },
+    };
+    const m = map[kind] || map.clean;
+    const countEl = document.getElementById('veraRailCount');
+    if (countEl) countEl.textContent = '';
+    el.innerHTML = `<div class="vrail-empty"><i class="${m.icon}"></i><p>${m.text}</p></div>`;
   }
 
   /* ── Helpers compartidos por todos los mixins ──────────────────────────── */
