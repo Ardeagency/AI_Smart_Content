@@ -160,7 +160,6 @@
           ${this._buildHealthGauge(data?.health?.data)}
           ${this._buildCausalSection(insights, 'boost')}
           ${this._buildCausalSection(insights, 'drag')}
-          ${this._buildSwotCard(data)}
         </div>`;
     },
 
@@ -599,16 +598,66 @@
       }[verdict] || { color: '#7c7c7c', label: verdict };
 
       const gaugeSvg = this._buildGaugeSvg(score, verdictMeta.color, band);
+      const target = Number(h.target);
+      const gap    = Number(h.gap);
+      const objetivo = Number.isFinite(target)
+        ? `Objetivo de tu segmento: <strong>${target}</strong>${gap > 0 ? ` · te faltan <strong>${gap}</strong> pts` : ' · objetivo alcanzado ✓'}`
+        : `Saludable para tu segmento: <strong>${band.p50}–${band.p75}</strong>`;
 
       return `
-        <section class="mb-hero">
-          <div class="mb-hero-gauge">${gaugeSvg}</div>
-          <div class="mb-hero-meta">
-            <span class="mb-hero-label">Salud de tu marca</span>
-            <span class="mb-hero-verdict" style="color:${verdictMeta.color};">${this._esc(verdictMeta.label)}</span>
-            <span class="mb-hero-band">Saludable para tu segmento: <strong>${band.p50}–${band.p75}</strong></span>
+        <section class="mb-health-card">
+          <div class="mb-health-row">
+            <div class="mb-health-gauge-col">
+              <div class="mb-hero-gauge">${gaugeSvg}</div>
+              <span class="mb-hero-verdict" style="color:${verdictMeta.color};">${this._esc(verdictMeta.label)}</span>
+            </div>
+            <div class="mb-health-mid">
+              <span class="mb-hero-label">Salud de tu marca</span>
+              <span class="mb-health-objetivo">${objetivo}</span>
+              ${this._buildHealthComponents(h.components)}
+            </div>
           </div>
+          ${this._buildHealthTasks(h.tasks)}
         </section>`;
+    },
+
+    _buildHealthComponents(components) {
+      const list = Array.isArray(components) ? components : [];
+      if (!list.length) return '';
+      return `<div class="mb-hc-comps">${list.map((c) => {
+        const sc = Math.max(0, Math.min(100, Number(c.score) || 0));
+        const lvl = sc >= 70 ? 'good' : sc >= 40 ? 'mid' : 'low';
+        return `
+          <div class="mb-hc-comp">
+            <div class="mb-hc-comp-head">
+              <span class="mb-hc-comp-label">${this._esc(c.label || c.key)}</span>
+              <span class="mb-hc-comp-score">${sc}</span>
+            </div>
+            <div class="mb-hc-bar"><span class="mb-hc-bar-fill mb-hc-bar-fill--${lvl}" style="width:${sc}%;"></span></div>
+            <div class="mb-hc-comp-detail">${this._esc(c.detail || '')}</div>
+          </div>`;
+      }).join('')}</div>`;
+    },
+
+    _buildHealthTasks(tasks) {
+      const list = Array.isArray(tasks) ? tasks : [];
+      if (!list.length) return '';
+      const sorted = [...list].sort((a, b) => (Number(b.impact_pts) || 0) - (Number(a.impact_pts) || 0));
+      return `
+        <div class="mb-health-tasks">
+          <div class="mb-health-tasks-title">Tareas para llegar a tu objetivo</div>
+          <ul class="mb-hc-tasks">
+            ${sorted.map((t) => `
+              <li class="mb-hc-task">
+                <span class="mb-hc-task-check"><i class="far fa-circle"></i></span>
+                <div class="mb-hc-task-body">
+                  <span class="mb-hc-task-label">${this._esc(t.label || '')}</span>
+                  ${t.detail ? `<span class="mb-hc-task-detail">${this._esc(t.detail)}</span>` : ''}
+                </div>
+                ${Number(t.impact_pts) > 0 ? `<span class="mb-hc-task-impact">+${Math.round(Number(t.impact_pts))} pts</span>` : ''}
+              </li>`).join('')}
+          </ul>
+        </div>`;
     },
 
     /** SVG gauge semicircular con dot al final del arco. */

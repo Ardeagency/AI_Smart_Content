@@ -122,7 +122,9 @@ class CampanasDataService {
       whatWorks,
       vulnerabilities,
     ] = await Promise.allSettled([
-      this.sb.rpc('dashboard_brand_health',                { p_org_id: this.orgId, p_date_window: healthWindowDays }),
+      this.sb.rpc('dashboard_mimarca_health', {
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids,
+      }),
 
       this.sb.rpc('dashboard_campaign_kpis_strip',         baseArgs),
       this.sb.rpc('dashboard_campaign_list',               { ...baseArgs, p_status: null }),

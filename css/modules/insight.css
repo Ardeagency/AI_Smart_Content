@@ -2520,3 +2520,61 @@
 .mb-causal-card:hover .mb-causal-detail { color: var(--text-primary, #D4D1D8); gap: 0.5rem; }
 
 @media (max-width: 480px) { .mb-causal-grid { grid-template-columns: 1fr; } }
+
+/* ════════════════════════════════════════════════════════════════════
+   Salud de tu marca = OBJETIVO + tareas (no metrica)
+   ════════════════════════════════════════════════════════════════════ */
+.mb-health-card {
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  display: flex; flex-direction: column; gap: 1.25rem;
+}
+.mb-health-row { display: flex; align-items: center; gap: 1.75rem; }
+.mb-health-gauge-col { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; width: 190px; }
+.mb-health-gauge-col .mb-hero-gauge { width: 190px; }
+.mb-health-gauge-col .mb-gauge-svg { width: 190px; max-width: none; }
+.mb-health-gauge-col .mb-hero-verdict { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1; }
+.mb-health-mid { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.mb-health-objetivo { font-size: 0.8125rem; color: var(--text-secondary, rgba(212,209,216,0.82)); font-variant-numeric: tabular-nums; margin-bottom: 0.35rem; }
+.mb-health-objetivo strong { color: var(--text-primary, #D4D1D8); font-weight: 600; }
+
+/* Componentes (barras) */
+.mb-hc-comps { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem 1.5rem; }
+.mb-hc-comp { min-width: 0; }
+.mb-hc-comp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.mb-hc-comp-label { font-size: 0.75rem; font-weight: 600; color: var(--text-primary, #D4D1D8); }
+.mb-hc-comp-score { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary, rgba(212,209,216,0.82)); font-variant-numeric: tabular-nums; }
+.mb-hc-bar { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; margin: 0.25rem 0; overflow: hidden; }
+.mb-hc-bar-fill { display: block; height: 100%; border-radius: 3px; }
+.mb-hc-bar-fill--good { background: #6bcf7f; }
+.mb-hc-bar-fill--mid  { background: #e0a045; }
+.mb-hc-bar-fill--low  { background: #e06464; }
+.mb-hc-comp-detail { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); line-height: 1.35; }
+
+/* Tareas para llegar al objetivo */
+.mb-health-tasks { border-top: 1px solid var(--border-divider, #242424); padding-top: 1.1rem; }
+.mb-health-tasks-title { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); margin-bottom: 0.75rem; }
+.mb-hc-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.mb-hc-task {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.7rem 0.85rem; border-radius: 11px;
+  background: var(--bg-primary, #0b0b0b);
+  border: 1px solid var(--border-divider, #242424);
+}
+.mb-hc-task-check { flex: 0 0 auto; color: var(--text-muted, rgba(212,209,216,0.4)); font-size: 15px; }
+.mb-hc-task-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.mb-hc-task-label { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); }
+.mb-hc-task-detail { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); line-height: 1.35; }
+.mb-hc-task-impact {
+  flex: 0 0 auto; font-size: 0.6875rem; font-weight: 700; color: #6bcf7f;
+  background: rgba(107,207,127,0.12); border: 1px solid rgba(107,207,127,0.3);
+  padding: 0.2rem 0.5rem; border-radius: 7px; font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 760px) {
+  .mb-health-row { flex-direction: column; align-items: stretch; gap: 1rem; }
+  .mb-health-gauge-col { width: 100%; }
+  .mb-hc-comps { grid-template-columns: 1fr; }
+}
