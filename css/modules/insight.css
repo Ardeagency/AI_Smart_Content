@@ -3165,6 +3165,9 @@
 .mb-lev-col--neg .mb-lev-bar { background: #e06464; }
 .mb-lev-col--pos .mb-lev-bar { background: #6bcf7f; }
 .mb-lev-empty { font-size: 0.75rem; color: var(--text-muted, rgba(212,209,216,0.5)); padding: 0.2rem 0.3rem; }
+
+/* Radar "huella emocional" de Patrones de tu publico */
+.mb-aud-radar { position: relative; height: 290px; max-width: 440px; margin: 0.4rem auto 0; }
 @media (max-width: 760px) {
   .mb-lev { grid-template-columns: 1fr; gap: 1rem; }
   .mb-lev-col--neg { border-right: 0; padding-right: 0; }

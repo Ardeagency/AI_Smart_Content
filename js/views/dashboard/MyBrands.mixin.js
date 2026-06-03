@@ -64,6 +64,7 @@
         this._mountMbDatePicker(body);
         this._renderLongitudinalCharts(data);
         this._renderAudienceMap(data);
+        this._renderAudienceRadar(data);
       } catch (e) {
         console.error('[MyBrands] loadAll failed:', e);
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
@@ -118,6 +119,7 @@
         this._mountMbDatePicker(body);
         this._renderLongitudinalCharts(data);
         this._renderAudienceMap(data);
+        this._renderAudienceRadar(data);
       } catch (e) {
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
       }
@@ -496,6 +498,44 @@
       try { await window.AudienceMap.render(el, dist); } catch (_) {}
     },
 
+    /** Radar "huella emocional" — resonancia por emocion (50 = tu promedio). */
+    async _renderAudienceRadar(data) {
+      const el = document.getElementById('mbAudienceRadar');
+      if (!el) return;
+      const list = (Array.isArray(data?.audiencePatterns?.data) ? data.audiencePatterns.data : [])
+        .filter((r) => r.is_emotional && r.emotion && r.emotion !== 'emoción').slice(0, 8);
+      if (list.length < 3) return;
+      try { await this._ensureChartJs(); } catch (_) {}
+      const Chart = window.Chart; if (!Chart) return;
+      const labels = list.map((r) => this._causalValueLabel('emo', r.emotion));
+      const idx = list.map((r) => { const lift = Number(r.lift_pct) || 0; return Math.max(0, Math.min(100, Math.round(50 * (1 + lift / 100)))); });
+      const TICK = 'rgba(212,209,216,0.65)', GRID = 'rgba(255,255,255,0.06)';
+      try {
+        this._reg(new Chart(el.getContext('2d'), {
+          type: 'radar',
+          data: { labels, datasets: [
+            { label: 'Tu promedio', data: labels.map(() => 50), borderColor: 'rgba(255,255,255,0.22)', borderDash: [4, 4], borderWidth: 1, pointRadius: 0, fill: false },
+            { label: 'Resonancia', data: idx, borderColor: '#7c83ff', backgroundColor: 'rgba(124,131,255,0.18)', borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: '#7c83ff', fill: true },
+          ] },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#1b1d22', borderColor: '#34363A', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10,
+                filter: (it) => it.datasetIndex === 1,
+                callbacks: {
+                  title: (items) => items[0]?.label || '',
+                  label: (c) => { const r = list[c.dataIndex]; const lift = Math.round(Number(r.lift_pct) || 0); const pos = Math.round((Number(r.pos_ratio) || 0) * 100); return `${lift >= 0 ? '+' : ''}${lift}% vs tu promedio · ${pos}% positivo`; },
+                },
+              },
+            },
+            scales: { r: { min: 0, max: 100, grid: { color: GRID }, angleLines: { color: GRID }, pointLabels: { color: TICK, font: { size: 10 } }, ticks: { display: false, stepSize: 25 } } },
+          },
+        }));
+      } catch (e) { console.warn('[audience radar]', e?.message); }
+    },
+
     /** Instancia los charts Chart.js del analisis longitudinal (post-render). */
     async _renderLongitudinalCharts(data) {
       this._destroyCharts();
@@ -715,13 +755,18 @@
         if (shouldHideEmpty()) return '';
         return '';
       }
+      // Radar ("huella emocional") si hay >=3 emociones; si no, lista fallback.
+      const emo = list.filter((r) => r.is_emotional && r.emotion);
+      const body = emo.length >= 3
+        ? `<div class="mb-aud-radar"><canvas id="mbAudienceRadar"></canvas></div>`
+        : `<div class="mb-aud-list">${list.map((r) => this._buildAudienceRow(r)).join('')}</div>`;
       return `
         <section class="mb-section">
           <div class="mb-section-head">
             <span class="mb-section-title">Patrones de tu publico</span>
-            <span class="mb-section-hint">Lo que tu contenido despierta en tu audiencia — y como responde</span>
+            <span class="mb-section-hint">La huella emocional de tu contenido — que tan lejos de tu promedio resuena cada emocion</span>
           </div>
-          <div class="mb-aud-list">${list.map((r) => this._buildAudienceRow(r)).join('')}</div>
+          ${body}
         </section>`;
     },
 
