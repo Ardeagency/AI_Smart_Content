@@ -653,9 +653,11 @@ class TasksView extends BaseView {
 
     if (this.viewMode === 'calendar') {
       if (loadMoreWrap) loadMoreWrap.style.display = 'none';
+      grid.classList.add('tasks-grid--calendar');
       this.renderCalendar(grid, empty);
       return;
     }
+    grid.classList.remove('tasks-grid--calendar');
 
     if (this.currentFilter === 'history') {
       if (loadMoreWrap) loadMoreWrap.style.display = 'none';
@@ -1074,9 +1076,39 @@ class TasksView extends BaseView {
     return status === 'active' ? 'active' : status === 'draft' ? 'draft' : 'paused';
   }
 
+  /** Asigna lanes (columnas) a eventos solapados de un mismo dia. Devuelve laneCount por evento. */
+  _layoutDayEvents(events, eventH) {
+    events.sort((a, b) => a.top - b.top || a.min - b.min);
+    let i = 0;
+    while (i < events.length) {
+      // Cluster de eventos que se solapan en cadena.
+      let j = i;
+      let clusterEnd = events[i].top + eventH;
+      while (j + 1 < events.length && events[j + 1].top < clusterEnd) {
+        j++;
+        clusterEnd = Math.max(clusterEnd, events[j].top + eventH);
+      }
+      const cluster = events.slice(i, j + 1);
+      const laneEnds = []; // bottom del ultimo evento por lane
+      cluster.forEach(e => {
+        let lane = laneEnds.findIndex(end => e.top >= end);
+        if (lane === -1) { lane = laneEnds.length; laneEnds.push(0); }
+        laneEnds[lane] = e.top + eventH;
+        e.lane = lane;
+      });
+      const laneCount = laneEnds.length;
+      cluster.forEach(e => { e.laneCount = laneCount; });
+      i = j + 1;
+    }
+    return events;
+  }
+
   renderCalendar(grid, empty) {
     if (!grid) return;
     if (empty) empty.style.display = 'none';
+
+    const HOUR_H = 56;   // px por hora
+    const EVENT_H = 50;  // px alto de chip
 
     // Schedules a mostrar: respeta el filtro de estado; 'history'/'all' = todos.
     let list = this.schedules || [];
@@ -1087,6 +1119,7 @@ class TasksView extends BaseView {
     if (!this.calWeekStart) this.calWeekStart = this._startOfWeek(new Date());
     const weekStart = this.calWeekStart;
     const today = new Date(); today.setHours(0, 0, 0, 0);
+    const now = new Date();
 
     const days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(weekStart);
@@ -1094,23 +1127,25 @@ class TasksView extends BaseView {
       return d;
     });
 
-    // Mapa (dayIdx -> hour -> [eventos]) y rango de horas.
-    const byDayHour = days.map(() => ({}));
+    // Eventos por dia + rango de horas.
+    const eventsByDay = days.map(() => []);
     const hoursSeen = new Set();
     days.forEach((d, di) => {
       list.forEach(s => {
         const occ = this._cronOccurrence(s.cron_expression, d);
         if (!occ) return;
         hoursSeen.add(occ.hour);
-        (byDayHour[di][occ.hour] = byDayHour[di][occ.hour] || []).push({ s, min: occ.min });
+        eventsByDay[di].push({ s, hour: occ.hour, min: occ.min });
       });
     });
 
-    let startHour = 7, endHour = 19;
+    let startHour = 7, endHour = 20;
     if (hoursSeen.size) {
       startHour = Math.min(7, ...hoursSeen);
-      endHour = Math.max(19, ...hoursSeen);
+      endHour = Math.min(23, Math.max(20, ...hoursSeen));
     }
+    const totalHours = endHour - startHour + 1;
+    const bodyH = totalHours * HOUR_H;
 
     const dowNames = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
     const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -1120,57 +1155,81 @@ class TasksView extends BaseView {
     // Header de dias
     const dayHeads = days.map((d, di) => {
       const isToday = d.getTime() === today.getTime();
-      return `<div class="cal-dayhead${isToday ? ' cal-dayhead--today' : ''}">
-        <span class="cal-dayhead-dow">${dowNames[di]}</span>
-        <span class="cal-dayhead-num">${d.getDate()}</span>
+      return `<div class="cal2-dayhead${isToday ? ' cal2-dayhead--today' : ''}">
+        <span class="cal2-dayhead-dow">${dowNames[di]}</span>
+        <span class="cal2-dayhead-num">${d.getDate()}</span>
       </div>`;
     }).join('');
 
-    // Filas por hora
-    let rows = '';
+    // Columna de horas (labels)
+    let hourLabels = '';
     for (let h = startHour; h <= endHour; h++) {
       const period = h >= 12 ? 'PM' : 'AM';
       const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-      rows += `<div class="cal-hourlabel">${h12} ${period}</div>`;
-      for (let di = 0; di < 7; di++) {
-        const isToday = days[di].getTime() === today.getTime();
-        const evs = (byDayHour[di][h] || []).sort((a, b) => a.min - b.min);
-        const evHtml = evs.map(({ s, min }) => {
-          const sc = this._statusClass(s.status);
-          const timeStr = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-          const title = `${s.job_name || 'Sin nombre'} — ${s.flow_name || ''} (${timeStr})`;
-          return `<div class="cal-event cal-event--${sc}" data-task-id="${s.id}" role="button" tabindex="0" title="${this.escapeHtml(title)}">
-            <span class="cal-event-time">${timeStr}</span>
-            <span class="cal-event-name">${this.escapeHtml(s.job_name || 'Sin nombre')}</span>
-            <span class="cal-event-flow">${this.escapeHtml(s.flow_name || '—')}</span>
-          </div>`;
-        }).join('');
-        rows += `<div class="cal-cell${isToday ? ' cal-cell--today' : ''}">${evHtml}</div>`;
-      }
+      hourLabels += `<div class="cal2-hourlabel" style="height:${HOUR_H}px">${h12} ${period}</div>`;
     }
+
+    // Columnas de dias con eventos absolutos
+    const dayCols = days.map((d, di) => {
+      const isToday = d.getTime() === today.getTime();
+      const evs = eventsByDay[di].map(e => ({ ...e, top: (e.hour - startHour) * HOUR_H + (e.min / 60) * HOUR_H }));
+      this._layoutDayEvents(evs, EVENT_H);
+      const evHtml = evs.map(e => {
+        const s = e.s;
+        const sc = this._statusClass(s.status);
+        const timeStr = `${String(e.hour).padStart(2, '0')}:${String(e.min).padStart(2, '0')}`;
+        const laneCount = e.laneCount || 1;
+        const gap = 4;
+        const widthPct = 100 / laneCount;
+        const left = `calc(${e.lane * widthPct}% + 3px)`;
+        const width = `calc(${widthPct}% - ${gap + 3}px)`;
+        const title = `${s.job_name || 'Sin nombre'} · ${s.flow_name || ''} · ${timeStr}`;
+        const showFlow = laneCount === 1;
+        return `<div class="cal2-event cal2-event--${sc}" data-task-id="${s.id}" role="button" tabindex="0" title="${this.escapeHtml(title)}"
+                  style="top:${e.top}px;height:${EVENT_H}px;left:${left};width:${width}">
+          <span class="cal2-event-time">${timeStr}</span>
+          <span class="cal2-event-name">${this.escapeHtml(s.job_name || 'Sin nombre')}</span>
+          ${showFlow ? `<span class="cal2-event-flow">${this.escapeHtml(s.flow_name || '—')}</span>` : ''}
+        </div>`;
+      }).join('');
+      // Linea de "ahora"
+      let nowLine = '';
+      if (isToday && now.getHours() >= startHour && now.getHours() <= endHour) {
+        const top = (now.getHours() - startHour) * HOUR_H + (now.getMinutes() / 60) * HOUR_H;
+        nowLine = `<div class="cal2-now" style="top:${top}px"><span class="cal2-now-dot"></span></div>`;
+      }
+      return `<div class="cal2-col${isToday ? ' cal2-col--today' : ''}" style="height:${bodyH}px;--hour-h:${HOUR_H}px">${nowLine}${evHtml}</div>`;
+    }).join('');
 
     const isEmpty = !list.length;
     grid.innerHTML = `
-      <div class="tasks-calendar">
-        <div class="cal-toolbar">
-          <div class="cal-toolbar-left">
-            <span class="cal-month">${monthLabel}</span>
-            <span class="cal-week">/ ${weekLabel}</span>
-            <button type="button" class="cal-nav" id="calPrev" aria-label="Semana anterior"><i class="fas fa-chevron-left"></i></button>
-            <button type="button" class="cal-nav" id="calNext" aria-label="Semana siguiente"><i class="fas fa-chevron-right"></i></button>
+      <div class="cal2">
+        <div class="cal2-toolbar">
+          <div class="cal2-toolbar-left">
+            <span class="cal2-month">${monthLabel}</span>
+            <span class="cal2-week">/ ${weekLabel}</span>
+            <div class="cal2-navgroup">
+              <button type="button" class="cal2-nav" id="calPrev" aria-label="Semana anterior"><i class="fas fa-chevron-left"></i></button>
+              <button type="button" class="cal2-today" id="calToday">Hoy</button>
+              <button type="button" class="cal2-nav" id="calNext" aria-label="Semana siguiente"><i class="fas fa-chevron-right"></i></button>
+            </div>
           </div>
-          <div class="cal-toolbar-right">
-            <span class="cal-legend"><span class="cal-legend-dot cal-legend-dot--active"></span>Activa</span>
-            <span class="cal-legend"><span class="cal-legend-dot cal-legend-dot--paused"></span>Pausada</span>
-            <span class="cal-legend"><span class="cal-legend-dot cal-legend-dot--draft"></span>Borrador</span>
-            <button type="button" class="cal-today" id="calToday">Hoy</button>
+          <div class="cal2-toolbar-right">
+            <span class="cal2-legend"><span class="cal2-legend-dot cal2-legend-dot--active"></span>Activa</span>
+            <span class="cal2-legend"><span class="cal2-legend-dot cal2-legend-dot--paused"></span>Pausada</span>
+            <span class="cal2-legend"><span class="cal2-legend-dot cal2-legend-dot--draft"></span>Borrador</span>
           </div>
         </div>
-        ${isEmpty ? '<p class="cal-empty">No hay tareas programadas en esta vista.</p>' : ''}
-        <div class="cal-grid"${isEmpty ? ' style="opacity:.4"' : ''}>
-          <div class="cal-corner"></div>
-          ${dayHeads}
-          ${rows}
+        ${isEmpty ? '<p class="cal2-empty">No hay tareas programadas en esta vista.</p>' : ''}
+        <div class="cal2-frame">
+          <div class="cal2-head">
+            <div class="cal2-head-corner"></div>
+            ${dayHeads}
+          </div>
+          <div class="cal2-body">
+            <div class="cal2-hours">${hourLabels}</div>
+            ${dayCols}
+          </div>
         </div>
       </div>
     `;
@@ -1185,7 +1244,7 @@ class TasksView extends BaseView {
     if (prev) prev.onclick = () => { this.calWeekStart = new Date(this.calWeekStart); this.calWeekStart.setDate(this.calWeekStart.getDate() - 7); this.renderTasksList(); };
     if (next) next.onclick = () => { this.calWeekStart = new Date(this.calWeekStart); this.calWeekStart.setDate(this.calWeekStart.getDate() + 7); this.renderTasksList(); };
     if (todayBtn) todayBtn.onclick = () => { this.calWeekStart = this._startOfWeek(new Date()); this.renderTasksList(); };
-    grid.querySelectorAll('.cal-event').forEach(ev => {
+    grid.querySelectorAll('.cal2-event').forEach(ev => {
       const id = ev.getAttribute('data-task-id');
       ev.addEventListener('click', () => { if (id) this.navigateToTask(id); });
       ev.addEventListener('keydown', (e) => {
