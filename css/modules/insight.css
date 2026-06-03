@@ -2677,7 +2677,11 @@
 .mb-health-ring { position: relative; width: 160px; height: 160px; margin: 0.4rem auto 0.5rem; }
 .mb-health-ring::before {
   content: ""; position: absolute; inset: 0; border-radius: 50%;
-  background: conic-gradient(from 90deg, #FF0000, #FF6500, #FFE100, #8FCE00, #2ECC40, #00FFFF, #0063FF, #6E2CF4, #9B00C8, #FF004D, #FF0000);
+  background: conic-gradient(from 0deg,
+    var(--ring-c1, #FF0000) 0deg,
+    var(--ring-c2, #FF6500) calc(var(--score, 0) * 3.6deg),
+    rgba(255,255,255,0.08) calc(var(--score, 0) * 3.6deg),
+    rgba(255,255,255,0.08) 360deg);
   -webkit-mask: radial-gradient(closest-side, transparent 70%, #000 72%);
           mask: radial-gradient(closest-side, transparent 70%, #000 72%);
 }
@@ -2689,10 +2693,10 @@
   background-image: var(--mb-band-grad, linear-gradient(180deg, #FF0000 0%, #FF6500 100%));
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
 }
-.mb-health-ring--critico   { --mb-band-grad: linear-gradient(180deg, #FF0000 0%, #FF6500 100%); }
-.mb-health-ring--atencion  { --mb-band-grad: linear-gradient(180deg, #E0A045 0%, #E8C84B 100%); }
-.mb-health-ring--saludable { --mb-band-grad: linear-gradient(180deg, #2ECC71 0%, #7BE0A0 100%); }
-.mb-health-ring--elite     { --mb-band-grad: linear-gradient(180deg, #2ECC71 0%, #00E0C0 100%); }
+.mb-health-ring--critico   { --mb-band-grad: linear-gradient(180deg, #FF0000 0%, #FF6500 100%); --ring-c1:#FF0000; --ring-c2:#FF6500; }
+.mb-health-ring--atencion  { --mb-band-grad: linear-gradient(180deg, #E0A045 0%, #E8C84B 100%); --ring-c1:#E0A045; --ring-c2:#E8C84B; }
+.mb-health-ring--saludable { --mb-band-grad: linear-gradient(180deg, #2ECC71 0%, #7BE0A0 100%); --ring-c1:#2ECC71; --ring-c2:#7BE0A0; }
+.mb-health-ring--elite     { --mb-band-grad: linear-gradient(180deg, #2ECC71 0%, #00E0C0 100%); --ring-c1:#2ECC71; --ring-c2:#00E0C0; }
 .mb-health-card--aside .mb-hc-comps { grid-template-columns: 1fr; gap: 1rem; }
 .mb-health-card--aside .mb-health-tasks { padding-top: 1rem; }
 

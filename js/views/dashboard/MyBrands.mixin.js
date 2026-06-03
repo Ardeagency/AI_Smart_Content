@@ -1119,7 +1119,7 @@
       return `
         <section class="mb-health-card mb-health-card--aside">
           <span class="mb-hero-label">Salud de tu marca</span>
-          <div class="mb-health-ring mb-health-ring--${this._esc(verdict)}">
+          <div class="mb-health-ring mb-health-ring--${this._esc(verdict)}" style="--score:${Math.max(0, Math.min(100, Math.round(score)))}">
             <div class="mb-health-ring-center">
               <span class="mb-health-score">${Math.round(score)}</span>
               <span class="mb-health-max">/100</span>
