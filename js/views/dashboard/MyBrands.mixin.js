@@ -384,11 +384,44 @@
               <div class="mb-long-canvas"><canvas id="mbLongActivity"></canvas></div>
             </div>
             ${card('mbLongEngagement', 'Tendencia de engagement')}
-            ${card('mbLongHours', 'Patron de horas de publicacion')}
+            <div class="mb-long-card">
+              <div class="mb-long-card-title">Patron de horas de publicacion</div>
+              ${this._buildPostingHeatmap(L.hours?.data)}
+            </div>
             ${card('mbLongSentiment', 'Actividad de sentimientos')}
             ${card('mbLongGrowth', 'Crecimiento')}
           </div>`}
         </section>`;
+    },
+
+    /** Heatmap dia-de-semana x hora (intensidad = posts), estilo calendario. */
+    _buildPostingHeatmap(rows) {
+      const list = Array.isArray(rows) ? rows : [];
+      const m = Array.from({ length: 7 }, () => new Array(24).fill(0));
+      let max = 0;
+      list.forEach((r) => {
+        const d = Number(r.day_of_week), h = Number(r.hour_of_day), c = Number(r.posts_count) || 0;
+        if (d >= 0 && d < 7 && h >= 0 && h < 24) { m[d][h] += c; if (m[d][h] > max) max = m[d][h]; }
+      });
+      if (!max) return `<div class="mb-causal-empty" style="margin:0;">Sin datos de horario aun.</div>`;
+      const dayName = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+      const order = [1, 2, 3, 4, 5, 6, 0];
+      const bucket = (v) => { if (v <= 0) return 0; const r = v / max; if (r <= 0.25) return 1; if (r <= 0.5) return 2; if (r <= 0.75) return 3; return 4; };
+      const rowsHtml = order.map((d) => {
+        const cells = m[d].map((v, h) => `<span class="mb-heat-cell mb-heat-cell--l${bucket(v)}" title="${dayName[d]} ${h}:00 · ${v} ${v === 1 ? 'post' : 'posts'}"></span>`).join('');
+        return `<span class="mb-heat-rowlbl">${dayName[d]}</span><div class="mb-heat-cells">${cells}</div>`;
+      }).join('');
+      return `
+        <div class="mb-heat">
+          <div class="mb-heat-legend">
+            <span><i class="mb-heat-dot mb-heat-dot--l1"></i> Bajo</span>
+            <span><i class="mb-heat-dot mb-heat-dot--l2"></i> Medio</span>
+            <span><i class="mb-heat-dot mb-heat-dot--l3"></i> Alto</span>
+            <span><i class="mb-heat-dot mb-heat-dot--l4"></i> Mejor</span>
+          </div>
+          <div class="mb-heat-grid">${rowsHtml}</div>
+          <div class="mb-heat-axis"><span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>11p</span></div>
+        </div>`;
     },
 
     /** Instancia los charts Chart.js del analisis longitudinal (post-render). */
@@ -444,13 +477,7 @@
         mk('mbLongEngagement', { type: 'line', data: { labels: eng.map((r) => r.period_label), datasets: [areaDs(cv, 'Engagement', eng.map((r) => Number(r.total_engagement) || 0), '#6bcf7f')] }, options: baseOpts(compact) });
       }
 
-      // 3. Patron de horas (posts por hora del dia, agregado)
-      if (hrs.length) {
-        const byHour = new Array(24).fill(0);
-        hrs.forEach((r) => { const h = Number(r.hour_of_day); if (h >= 0 && h < 24) byHour[h] += Number(r.posts_count) || 0; });
-        const hourLbl = byHour.map((_, h) => `${((h % 12) || 12)}${h < 12 ? 'a' : 'p'}`);
-        mk('mbLongHours', { type: 'bar', data: { labels: hourLbl, datasets: [{ label: 'Posts', data: byHour, backgroundColor: '#7c83ff', borderRadius: 3, maxBarThickness: 14 }] }, options: baseOpts() });
-      }
+      // 3. Patron de horas → heatmap CSS (no Chart.js), construido en _buildPostingHeatmap.
 
       // 4. Actividad de sentimientos (positivo / negativo / neutro)
       if (sent.length) {

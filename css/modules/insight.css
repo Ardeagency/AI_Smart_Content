@@ -3121,6 +3121,21 @@
 .mb-long-card--wide .mb-long-canvas { height: 230px; }
 @media (max-width: 760px) { .mb-long-grid { grid-template-columns: 1fr; } }
 
+/* Heatmap de horas de publicacion (dia x hora, intensidad = posts) */
+.mb-heat { display: flex; flex-direction: column; gap: 0.6rem; padding-top: 0.1rem; }
+.mb-heat-legend { display: flex; flex-wrap: wrap; gap: 0.7rem; font-size: 0.625rem; color: var(--text-muted, rgba(212,209,216,0.55)); }
+.mb-heat-dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; vertical-align: middle; margin-right: 0.2rem; }
+.mb-heat-grid { display: grid; grid-template-columns: 26px 1fr; gap: 3px 6px; align-items: center; }
+.mb-heat-rowlbl { font-size: 0.625rem; font-weight: 600; color: var(--text-muted, rgba(212,209,216,0.55)); text-align: right; }
+.mb-heat-cells { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; }
+.mb-heat-cell { aspect-ratio: 1; border-radius: 2px; background: rgba(255,255,255,0.04); }
+.mb-heat-cell--l0 { background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0 1.5px, transparent 1.5px 4px); }
+.mb-heat-cell--l1, .mb-heat-dot--l1 { background: rgba(124,131,255,0.25); }
+.mb-heat-cell--l2, .mb-heat-dot--l2 { background: rgba(124,131,255,0.5); }
+.mb-heat-cell--l3, .mb-heat-dot--l3 { background: rgba(124,131,255,0.75); }
+.mb-heat-cell--l4, .mb-heat-dot--l4 { background: #7c83ff; }
+.mb-heat-axis { display: flex; justify-content: space-between; padding-left: 32px; font-size: 0.5625rem; color: var(--text-muted, rgba(212,209,216,0.45)); }
+
 /* Delta periodo-vs-periodo en KPI strips */
 .comp-kpi-delta { font-size: 0.625rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 0.1rem; display: inline-flex; align-items: center; gap: 0.15rem; }
 .comp-kpi-delta.is-up { color: #6bcf7f; }
