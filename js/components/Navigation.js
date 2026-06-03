@@ -2885,7 +2885,7 @@ class Navigation {
       '/organization': 'SETTINGS',
       '/credits': 'CREDITS',
       '/plans': 'PLANES',
-      '/monitoring': 'MONITOREO',
+      '/monitoring': 'VIGILANCIA',
       '/dev/lead/lexicon': 'LÉXICO',
       '/dev/dashboard': 'DASHBOARD',
       '/dev/flows': 'MIS FLUJOS',

@@ -1,16 +1,21 @@
 /**
- * MonitoringView — Centro de Monitoreo de la organización.
+ * MonitoringView — "Vigilancia".
  *
- * Dos tabs CRUD:
- *   - Perfiles      → intelligence_entities (competidores / referencias / owned)
- *   - URL Watchers  → url_watchers          (URLs vigiladas por hash)
+ * Vitrina humana de lo que la marca está siguiendo. No es un centro de control:
+ * el usuario ve a quién sigue, qué tal va la vigilancia, prende/apaga, y revisa
+ * si llegaron propuestas nuevas. Pensada para que cualquier persona la entienda
+ * de un vistazo, sin tecnicismos.
  *
- * (Sensores quedó fuera del front por ahora: la tabla monitoring_triggers
- *  sigue activa en Supabase, pero su UI se reescribirá cuando tengamos un
- *  flujo entendible para el usuario final.)
+ * Una sola vista unificada sobre dos tablas (RLS por organization_id):
+ *   - intelligence_entities → marcas / perfiles que seguimos
+ *   - url_watchers          → páginas web que vigilamos
+ * Las novedades vienen de intelligence_signals (vía MonitoringDataService).
  *
- * Permisos: cualquier miembro de la organización puede crear / editar / borrar
- * (RLS = is_developer() OR is_org_member(organization_id) en las tablas).
+ * Estructura: tira "Pulso" (resumen) → banner de "Propuestas nuevas" → grid
+ * unificado "Lo que sigo" con filtros. El lenguaje técnico (identificadores,
+ * dominio, hash) queda plegado en "Opciones avanzadas" del formulario.
+ *
+ * Permisos: cualquier miembro de la organización puede crear / editar / borrar.
  */
 class MonitoringView extends BaseView {
 
@@ -19,12 +24,12 @@ class MonitoringView extends BaseView {
   static ENTITY_TIPOS = [
     { value: 'competidor_directo',   label: 'Competidor directo' },
     { value: 'competidor_indirecto', label: 'Competidor indirecto' },
-    { value: 'referencia_cultural',  label: 'Referencia cultural' },
-    { value: 'owned_media',          label: 'Owned media (mío)' },
+    { value: 'referencia_cultural',  label: 'Referencia / inspiración' },
+    { value: 'owned_media',          label: 'Algo mío' },
   ];
 
   static PLATFORMS = [
-    { value: '',                  label: '— sin plataforma —' },
+    { value: '',                  label: '— Sin plataforma —' },
     { value: 'instagram',         label: 'Instagram' },
     { value: 'facebook',          label: 'Facebook' },
     { value: 'tiktok',            label: 'TikTok' },
@@ -35,13 +40,26 @@ class MonitoringView extends BaseView {
     { value: 'web',               label: 'Sitio web' },
   ];
 
+  // Plataforma → icono (Font Awesome, ya cargado globalmente en la app).
+  static PLATFORM_ICON = {
+    instagram:        'fab fa-instagram',
+    facebook:         'fab fa-facebook',
+    tiktok:           'fab fa-tiktok',
+    youtube:          'fab fa-youtube',
+    twitter:          'fab fa-x-twitter',
+    x:                'fab fa-x-twitter',
+    linkedin:         'fab fa-linkedin-in',
+    google_analytics: 'fas fa-chart-line',
+    web:              'fas fa-globe',
+  };
+
   constructor() {
     super();
-    this._activeTab = 'profiles';
-    this._supabase  = null;
-    this._orgId     = null;
-    this._service   = null;
-    this._data      = null;
+    this._filter   = 'all';   // all | brands | pages | paused
+    this._supabase = null;
+    this._orgId    = null;
+    this._service  = null;
+    this._data     = null;
   }
 
   async onEnter() {
@@ -91,37 +109,34 @@ class MonitoringView extends BaseView {
   }
 
   /** Carga inicial / revisita: usa cache SWR para pintar al instante al volver
-      a Monitoreo (antes re-consultaba todo desde cero en cada navegacion). El
-      skeleton cubre la primera carga; en revisitas devuelve lo cacheado al toque
-      y revalida en background. */
+      a Vigilancia. El skeleton cubre la primera carga; en revisitas devuelve lo
+      cacheado al toque y revalida en background. */
   async _loadInitial() {
     if (!this._service) return;
     const key = `monitoring:${this._orgId}`;
     this._data = window.apiClient
       ? await window.apiClient.query(key, () => this._service.loadAll(), { ttl: 60000, staleWhileRevalidate: true })
       : await this._service.loadAll();
-    this._renderTab(this._activeTab);
+    this._renderBody();
   }
 
-  /** Post-mutacion (CRUD): SIEMPRE fresco. force:true ignora el cache y ademas lo
-      repuebla, asi la proxima visita ve los cambios sin quedar stale. */
+  /** Post-mutación (CRUD): SIEMPRE fresco. force:true ignora el cache y lo
+      repuebla, así la próxima visita ve los cambios sin quedar stale. */
   async _refresh() {
     if (!this._service) return;
     const key = `monitoring:${this._orgId}`;
     this._data = window.apiClient
       ? await window.apiClient.query(key, () => this._service.loadAll(), { force: true })
       : await this._service.loadAll();
-    this._renderTab(this._activeTab);
+    this._renderBody();
   }
 
   async render() {
     await super.render();
-    this.updateHeaderContext('Monitoreo', null, window.currentOrgName || '');
+    this.updateHeaderContext('Vigilancia', null, window.currentOrgName || '');
     const container = document.getElementById('app-container');
     if (!container) return;
     container.innerHTML = this._buildShell();
-    this.moveSubnavToHeader(this._buildHeaderTabs(), (tab) => this._switchTab(tab));
-    this._setupTabs();
 
     await this._ensureService();
     await this._loadInitial();
@@ -132,88 +147,433 @@ class MonitoringView extends BaseView {
   }
 
   _buildShell() {
-    // La barra de tabs se inyecta en el header principal (segunda fila), solo
-    // en /monitoring. Ver _buildHeaderTabs().
     return `
       <div class="insight-page page-content monitoring-page" id="monitoringPage">
-        <div class="insight-tab-body" id="monitoringTabBody"></div>
+        <div class="mn-body" id="monitoringBody"></div>
       </div>`;
-  }
-
-  /** Tabs para inyectar en el header principal (mismo patron que Production). */
-  _buildHeaderTabs() {
-    const tabs = [
-      { id: 'profiles', label: 'Perfiles' },
-      { id: 'watchers', label: 'URL Watchers' },
-    ];
-    const pill = (t) => `
-      <button class="mb-firebar-tab${this._activeTab === t.id ? ' is-active' : ''}" data-tab="${t.id}">
-        <span>${t.label}</span>
-      </button>`;
-    return `
-      <div class="dash-header-tabs" id="monitoringHeaderTabs">
-        <div class="mb-firebar-tabs mb-firebar-tabs--left">${tabs.map(pill).join('')}</div>
-      </div>`;
-  }
-
-  _setupTabs() {
-    // El click de los tabs lo maneja el slot del header (moveSubnavToHeader).
-  }
-
-  _switchTab(tabId) {
-    if (!tabId || tabId === this._activeTab) return;
-    this._activeTab = tabId;
-    const nav = document.getElementById('headerProductionSlot');
-    if (nav) {
-      nav.querySelectorAll('.mb-firebar-tab')
-        .forEach(b => b.classList.toggle('is-active', b.dataset.tab === tabId));
-    }
-    this._renderTab(tabId);
   }
 
   onLeave() {
     this.clearSubnavFromHeader();
   }
 
-  _renderTab(tabId) {
-    const body = document.getElementById('monitoringTabBody');
+  /* ══════════════════════════════════════════════════════════
+     MODELO — fusiona perfiles + páginas en una lista de "seguidos"
+     y calcula el resumen (Pulso) y las propuestas nuevas.
+  ══════════════════════════════════════════════════════════ */
+  _computeModel() {
+    const entities = (this._data.entities.data || [])
+      .filter(e => e.metadata?.tipo !== 'owned_media');
+    const pages    = this._data.watchers.data || [];
+    const signals  = this._data.signals?.data || [];
+    const containers = this._data.containers.data || [];
+
+    // Señales indexadas por entity_id (la más reciente primero, ya vienen desc).
+    const sigByEntity = new Map();
+    signals.forEach(s => {
+      if (!sigByEntity.has(s.entity_id)) sigByEntity.set(s.entity_id, []);
+      sigByEntity.get(s.entity_id).push(s);
+    });
+    // Cambios de URL indexados por url (para el feed de páginas).
+    const sigByUrl = new Map();
+    signals.filter(s => s.signal_type === 'url_change').forEach(s => {
+      const c = this._parseSignalContent(s.content_text);
+      const key = c.url || `entity:${s.entity_id}`;
+      if (!sigByUrl.has(key)) sigByUrl.set(key, []);
+      sigByUrl.get(key).push({ ...s, _parsed: c });
+    });
+
+    const isPendingProp = (e) =>
+      e.metadata?.auto_provisioned === true && e.is_active === false;
+
+    // Propuestas nuevas: sugeridas por el sistema, sin activar y sin descartar.
+    const propuestas = entities.filter(e => isPendingProp(e) && e.metadata?.dismissed !== true);
+
+    // Perfiles en la lista: todo lo que el usuario realmente sigue
+    // (excluye propuestas pendientes y descartadas — ambas viven fuera del grid).
+    const listProfiles = entities.filter(e => !isPendingProp(e));
+
+    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+    const recent = (iso) => iso && (Date.now() - new Date(iso).getTime()) < SEVEN_DAYS;
+
+    // Items unificados.
+    const items = [];
+    listProfiles.forEach(e => {
+      const sigs = sigByEntity.get(e.id) || [];
+      const lastAt = sigs[0]?.captured_at || null;
+      items.push({
+        kind: 'profile', raw: e, id: e.id,
+        title: e.name || '—',
+        subtitle: e.target_identifier || '',
+        platform: e.metadata?.platform || '',
+        isActive: e.is_active !== false,
+        highlighted: e.metadata?.highlighted === true,
+        lastAt,
+        hasNews: recent(lastAt),
+        containerId: e.brand_container_id || null,
+        status: this._estadoPerfil(e, lastAt),
+      });
+    });
+    pages.forEach(w => {
+      let hostname = w.url;
+      try { hostname = new URL(w.url).hostname.replace(/^www\./, ''); } catch (_) {}
+      const wsigs = (sigByUrl.get(w.url) || []).slice(0, 3);
+      const lastAt = wsigs[0]?.captured_at || null;
+      items.push({
+        kind: 'page', raw: w, id: w.id,
+        title: w.label || hostname,
+        subtitle: hostname,
+        url: w.url,
+        platform: 'web',
+        isActive: w.is_active !== false,
+        highlighted: false,
+        lastAt,
+        hasNews: recent(lastAt) && (Date.now() - new Date(lastAt).getTime()) < 24 * 60 * 60 * 1000,
+        feed: wsigs,
+        status: this._estadoPagina(w, lastAt),
+      });
+    });
+
+    // Orden: destacados primero, luego activos, luego por novedad reciente.
+    items.sort((a, b) =>
+      (b.highlighted - a.highlighted) ||
+      (b.isActive - a.isActive) ||
+      (new Date(b.lastAt || 0) - new Date(a.lastAt || 0)));
+
+    const counts = {
+      siguiendo: items.filter(i => i.isActive).length,
+      novedades: items.filter(i => i.isActive && i.hasNews).length,
+      propuestas: propuestas.length,
+    };
+
+    return { items, propuestas, counts, containers };
+  }
+
+  /* ── Estado en lenguaje humano ── */
+  _estadoPerfil(e, lastAt) {
+    if (e.is_active === false) return { tone: 'paused', icon: 'fa-circle-pause', text: 'En pausa' };
+    if ((e.metadata?.consecutive_empty_runs || 0) >= 3)
+      return { tone: 'stale', icon: 'fa-moon', text: 'Callado hace rato' };
+    if (lastAt && (Date.now() - new Date(lastAt).getTime()) < 7 * 24 * 60 * 60 * 1000)
+      return { tone: 'fresh', icon: 'fa-circle-check', text: `Al día · novedad ${this._relativeTime(lastAt)}` };
+    return { tone: 'quiet', icon: 'fa-circle-check', text: 'Tranquilo · sin novedades por ahora' };
+  }
+
+  _estadoPagina(w, lastAt) {
+    if (w.is_active === false) return { tone: 'paused', icon: 'fa-circle-pause', text: 'En pausa' };
+    if (lastAt && (Date.now() - new Date(lastAt).getTime()) < 24 * 60 * 60 * 1000)
+      return { tone: 'changed', icon: 'fa-bolt', text: `Cambio detectado · ${this._relativeTime(lastAt)}` };
+    if (w.last_checked_at)
+      return { tone: 'quiet', icon: 'fa-circle-check', text: `Sin cambios · revisado ${this._relativeTime(w.last_checked_at)}` };
+    return { tone: 'new', icon: 'fa-hourglass-start', text: 'Empezando a vigilar…' };
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════════════════ */
+  _renderBody() {
+    const body = document.getElementById('monitoringBody');
     if (!body) return;
-    if (!this._data) {
-      body.innerHTML = this._skeleton();
-      return;
-    }
-    if (tabId === 'profiles') return this._renderProfiles(body);
-    if (tabId === 'watchers') return this._renderWatchers(body);
+    if (!this._data) { body.innerHTML = this._skeleton(); return; }
+
+    const model = this._computeModel();
+    body.innerHTML = `
+      <div class="mn-page">
+        ${this._buildPulse(model)}
+        ${this._buildPropuestas(model)}
+        ${this._buildSeguidos(model)}
+      </div>`;
+    this._bind(body, model);
   }
 
   _skeleton() {
     return `
       <div class="mn-page">
-        <div class="mn-toolbar">
-          <div class="mb-skel-block" style="height:36px;width:160px"></div>
+        <div class="mn-kpi-skel">
+          ${Array(4).fill('<div class="mb-skel-block" style="height:74px;border-radius:12px"></div>').join('')}
         </div>
-        ${Array(4).fill('<div class="mn-row-skel"><div class="mb-skel-block"></div></div>').join('')}
+        <div class="mn-grid">
+          ${Array(6).fill('<div class="mb-skel-block" style="height:150px;border-radius:12px"></div>').join('')}
+        </div>
       </div>`;
   }
 
+  /* ── Tira "Pulso" — cómo va la vigilancia de un vistazo ── */
+  _buildPulse(model) {
+    const { counts } = model;
+    const algoVigilado = counts.siguiendo > 0;
+    const estado = algoVigilado
+      ? { label: 'Todo en marcha', sub: 'Vigilancia activa', color: 'green', icon: 'fa-circle-check' }
+      : { label: 'En reposo',      sub: 'Nada activo aún',   color: 'teal',  icon: 'fa-pause' };
+
+    const tile = (color, icon, value, label, sub, pulse) => `
+      <div class="mb-kpi-card mb-kpi--${color}${pulse ? ' mn-kpi--pulse' : ''}">
+        <div class="mb-kpi-icon"><i class="fas ${icon}"></i></div>
+        <div class="mb-kpi-body">
+          <div class="mb-kpi-value">${value}</div>
+          <div class="mb-kpi-label">${label}</div>
+          ${sub ? `<div class="mb-kpi-sub">${sub}</div>` : ''}
+        </div>
+      </div>`;
+
+    return `
+      <div class="mn-hero">
+        <h2 class="mn-hero-title">Esto es lo que vigilamos por ti</h2>
+        <p class="mn-hero-sub">Lo revisamos solos cada cierto tiempo. Tú solo prende, apaga, y mira qué encontramos.</p>
+      </div>
+      <div class="mb-kpi-strip mn-pulse">
+        ${tile('blue',   'fa-binoculars',   counts.siguiendo,  'Siguiendo',        'Marcas y páginas activas')}
+        ${tile('orange', 'fa-bolt',         counts.novedades,  'Con novedades',    'En los últimos 7 días')}
+        ${tile('pink',   'fa-wand-magic-sparkles', counts.propuestas, 'Propuestas nuevas', 'Por revisar', counts.propuestas > 0)}
+        ${tile(estado.color, estado.icon,   estado.label,      'Estado',           estado.sub)}
+      </div>`;
+  }
+
+  /* ── Banner "Propuestas nuevas" ── */
+  _buildPropuestas(model) {
+    const props = model.propuestas;
+    if (!props.length) return '';
+    const tipoLabel = (t) =>
+      MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || 'Perfil';
+    const cards = props.map(e => {
+      const platform = e.metadata?.platform || '';
+      const icon = MonitoringView.PLATFORM_ICON[platform] || 'fas fa-hashtag';
+      const why = `${tipoLabel(e.metadata?.tipo)}${platform ? ' en ' + this._platformName(platform) : ''}. Lo encontramos cerca de tu competencia.`;
+      return `
+        <div class="mn-prop" data-id="${this._esc(e.id)}">
+          <div class="mn-prop-avatar"><i class="${icon}"></i></div>
+          <div class="mn-prop-main">
+            <div class="mn-prop-name">${this._esc(e.name || '—')}</div>
+            <div class="mn-prop-why">${this._esc(why)}</div>
+          </div>
+          <div class="mn-prop-actions">
+            <button class="mn-prop-btn mn-prop-btn--yes" data-action="prop-follow" data-id="${this._esc(e.id)}">
+              <i class="fas fa-plus"></i> Seguir
+            </button>
+            <button class="mn-prop-btn mn-prop-btn--no" data-action="prop-dismiss" data-id="${this._esc(e.id)}">
+              Descartar
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+
+    return `
+      <section class="mn-prop-banner">
+        <header class="mn-prop-head">
+          <div class="mn-prop-head-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+          <div>
+            <h3 class="mn-prop-title">Encontramos ${props.length} ${props.length === 1 ? 'perfil que quizá quieras seguir' : 'perfiles que quizá quieras seguir'}</h3>
+            <p class="mn-prop-subtitle">Tú decides: súmalos a tu vigilancia o descártalos.</p>
+          </div>
+        </header>
+        <div class="mn-prop-list">${cards}</div>
+      </section>`;
+  }
+
+  /* ── Grid unificado "Lo que sigo" ── */
+  _buildSeguidos(model) {
+    const { items, containers } = model;
+    const containerName = (id) => containers.find(c => c.id === id)?.nombre_marca || null;
+
+    const filtered = items.filter(i => {
+      if (this._filter === 'brands') return i.kind === 'profile';
+      if (this._filter === 'pages')  return i.kind === 'page';
+      if (this._filter === 'paused') return !i.isActive;
+      return true;
+    });
+
+    const chip = (id, label, n) => `
+      <button class="mn-chip${this._filter === id ? ' is-active' : ''}" data-filter="${id}">
+        ${label}<span class="mn-chip-n">${n}</span>
+      </button>`;
+
+    const counts = {
+      all:    items.length,
+      brands: items.filter(i => i.kind === 'profile').length,
+      pages:  items.filter(i => i.kind === 'page').length,
+      paused: items.filter(i => !i.isActive).length,
+    };
+
+    const grid = filtered.length
+      ? `<div class="mn-grid">${filtered.map(i => this._buildCard(i, containerName)).join('')}</div>`
+      : `<div class="mn-empty"><p>${this._emptyMsg()}</p></div>`;
+
+    return `
+      <div class="mn-toolbar">
+        <div class="mn-filter">
+          ${chip('all',    'Todo',     counts.all)}
+          ${chip('brands', 'Marcas',   counts.brands)}
+          ${chip('pages',  'Páginas',  counts.pages)}
+          ${chip('paused', 'En pausa', counts.paused)}
+        </div>
+        <button class="mn-btn-primary" data-action="new-item">
+          <i class="fas fa-plus"></i> Seguir algo nuevo
+        </button>
+      </div>
+      ${items.length ? grid : `
+        <div class="mn-empty mn-empty--first">
+          <div class="mn-empty-icon"><i class="fas fa-binoculars"></i></div>
+          <p>Aún no sigues a nadie.<br>Agrega tu primera marca o página y nosotros nos encargamos del resto.</p>
+          <button class="mn-btn-primary" data-action="new-item"><i class="fas fa-plus"></i> Seguir algo nuevo</button>
+        </div>`}`;
+  }
+
+  _emptyMsg() {
+    return ({
+      brands: 'No sigues ninguna marca o perfil todavía.',
+      pages:  'No vigilas ninguna página web todavía.',
+      paused: 'Nada en pausa. Todo lo que sigues está activo. ✨',
+      all:    'Nada por aquí todavía.',
+    })[this._filter] || 'Nada por aquí todavía.';
+  }
+
+  _buildCard(item, containerName) {
+    const icon = MonitoringView.PLATFORM_ICON[item.platform] || 'fas fa-hashtag';
+    const typeLabel = item.kind === 'page' ? 'Página web' : 'Marca / perfil';
+    const brand = item.kind === 'profile' ? containerName(item.containerId) : null;
+    const st = item.status;
+
+    const star = item.kind === 'profile' ? `
+      <button class="mn-star${item.highlighted ? ' is-on' : ''}" data-action="toggle-highlight" data-id="${this._esc(item.id)}"
+              title="${item.highlighted ? 'Quitar destacado' : 'Destacar'}" aria-pressed="${item.highlighted}">
+        <i class="fas fa-star"></i>
+      </button>` : '';
+
+    const vera = item.kind === 'profile' ? `
+      <div class="mn-card-vera">
+        <button class="mn-vera-btn" data-action="vera-analizar" data-id="${this._esc(item.id)}" title="Que Vera analice este perfil">
+          <i class="fas fa-wand-magic-sparkles"></i> Analizar
+        </button>
+        <button class="mn-vera-btn" data-action="vera-comparar" data-id="${this._esc(item.id)}" title="Comparar con mi marca">
+          <i class="fas fa-code-compare"></i> Comparar
+        </button>
+        <button class="mn-vera-btn" data-action="vera-inspirar" data-id="${this._esc(item.id)}" title="Pedir ideas inspiradas en este perfil">
+          <i class="fas fa-lightbulb"></i> Ideas
+        </button>
+      </div>` : '';
+
+    // Páginas: pequeño feed de cambios recientes.
+    let feed = '';
+    if (item.kind === 'page' && item.feed && item.feed.length) {
+      feed = `<div class="mn-card-feed">${item.feed.map(s => {
+        const excerpt = (s._parsed?.excerpt || '').slice(0, 140);
+        return `
+          <div class="mn-feed-row">
+            <span class="mn-feed-when">${this._esc(this._relativeTime(s.captured_at))}</span>
+            ${excerpt ? `<span class="mn-feed-text">${this._esc(excerpt)}${excerpt.length === 140 ? '…' : ''}</span>` : ''}
+          </div>`;
+      }).join('')}</div>`;
+    }
+
+    const editAction = item.kind === 'page' ? 'edit-watcher' : 'edit-entity';
+    const delAction  = item.kind === 'page' ? 'delete-watcher' : 'delete-entity';
+    const toggleAction = item.kind === 'page' ? 'toggle-watcher' : 'toggle-entity';
+    const link = item.kind === 'page'
+      ? `<a class="mn-card-sub mn-card-sub--link" href="${this._esc(item.url)}" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i> ${this._esc(item.subtitle)}</a>`
+      : (item.subtitle ? `<div class="mn-card-sub">${this._esc(item.subtitle)}</div>` : '');
+
+    return `
+      <article class="mn-card${item.highlighted ? ' mn-card--star' : ''}${!item.isActive ? ' mn-card--off' : ''}" data-id="${this._esc(item.id)}">
+        <div class="mn-card-head">
+          <div class="mn-card-avatar mn-card-avatar--${item.kind}"><i class="${icon}"></i></div>
+          <div class="mn-card-id">
+            <div class="mn-card-title">${this._esc(item.title)}</div>
+            ${link}
+          </div>
+          ${star}
+        </div>
+        <div class="mn-card-meta">
+          <span class="mn-status mn-status--${st.tone}"><i class="fas ${st.icon}"></i> ${this._esc(st.text)}</span>
+          <span class="mn-type">${typeLabel}${brand ? ' · ' + this._esc(brand) : ''}</span>
+        </div>
+        ${vera}
+        ${feed}
+        <div class="mn-card-foot">
+          <label class="mn-onoff" title="${item.isActive ? 'Pausar' : 'Activar'}">
+            <input type="checkbox" ${item.isActive ? 'checked' : ''} data-action="${toggleAction}" data-id="${this._esc(item.id)}">
+            <span class="mn-onoff-track"></span>
+            <span class="mn-onoff-label">${item.isActive ? 'Vigilando' : 'En pausa'}</span>
+          </label>
+          <div class="mn-card-foot-actions">
+            <button class="mn-btn-icon" data-action="${editAction}" data-id="${this._esc(item.id)}" title="Editar"><i class="fas fa-pen"></i></button>
+            <button class="mn-btn-icon mn-btn-icon--danger" data-action="${delAction}" data-id="${this._esc(item.id)}" title="Dejar de seguir"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      </article>`;
+  }
+
   /* ══════════════════════════════════════════════════════════
-     TAB: PERFILES (intelligence_entities) — Kanban
-     Columnas: Nuevos / Activos / Sin actividad / Pausados
-     - owned_media (analytics propios) se excluye del kanban
-     - "Nuevos" = sugeridos por auto-provisioner y NO activados aún
-     Cross-cut: chip "Destacado" cuando metadata.highlighted = true
+     EVENTOS
   ══════════════════════════════════════════════════════════ */
-  _classifyEntity(e) {
-    // Excluir analytics propios — el usuario ya sabe que monitorea su contenido
-    if (e.metadata?.tipo === 'owned_media') return null;
+  _bind(body, model) {
+    body.addEventListener('click',  (e) => this._onClick(e));
+    body.addEventListener('change', (e) => this._onChange(e));
+  }
 
-    const isAutoSuggested = e.metadata?.auto_provisioned === true;
-    // Sugerencia pendiente: auto-detectada y aún sin activar por el user
-    if (isAutoSuggested && e.is_active === false) return 'new';
+  async _onClick(e) {
+    const chip = e.target.closest('[data-filter]');
+    if (chip) { this._filter = chip.dataset.filter; this._renderBody(); return; }
 
-    if (e.is_active === false) return 'paused';
-    if ((e.metadata?.consecutive_empty_runs || 0) >= 3) return 'stale';
-    return 'active';
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const id     = btn.dataset.id;
+
+    switch (action) {
+      case 'new-item':        return this._openCreateModal();
+      case 'edit-entity':     return this._openEntityModal(id);
+      case 'edit-watcher':    return this._openWatcherModal(id);
+      case 'delete-entity':   return this._confirmDeleteEntity(id);
+      case 'delete-watcher':  return this._confirmDeleteWatcher(id);
+      case 'toggle-highlight':return this._toggleHighlight(id);
+      case 'prop-follow':     return this._propFollow(id);
+      case 'prop-dismiss':    return this._propDismiss(id);
+      case 'vera-analizar':
+      case 'vera-comparar':
+      case 'vera-inspirar':   return this._goToVera(action, id);
+    }
+  }
+
+  async _onChange(e) {
+    const ent = e.target.closest('[data-action="toggle-entity"]');
+    if (ent) {
+      const { error } = await this._service.updateEntity(ent.dataset.id, { is_active: ent.checked });
+      if (error) { alert('No se pudo cambiar: ' + error.message); ent.checked = !ent.checked; }
+      else await this._refresh();
+      return;
+    }
+    const w = e.target.closest('[data-action="toggle-watcher"]');
+    if (w) {
+      const { error } = await this._service.updateWatcher(w.dataset.id, { is_active: w.checked });
+      if (error) { alert('No se pudo cambiar: ' + error.message); w.checked = !w.checked; }
+      else await this._refresh();
+    }
+  }
+
+  async _propFollow(id) {
+    const { error } = await this._service.updateEntity(id, { is_active: true });
+    if (error) { alert('No se pudo seguir: ' + error.message); return; }
+    await this._refresh();
+  }
+
+  async _propDismiss(id) {
+    const { error } = await this._service.updateEntity(id, { metadata: { dismissed: true } });
+    if (error) { alert('No se pudo descartar: ' + error.message); return; }
+    await this._refresh();
+  }
+
+  async _toggleHighlight(id) {
+    const entity = (this._data.entities.data || []).find(x => x.id === id);
+    if (!entity) return;
+    const next = !(entity.metadata?.highlighted === true);
+    const { error } = await this._service.updateEntity(id, { metadata: { highlighted: next } });
+    if (error) { alert('Error: ' + error.message); return; }
+    await this._refresh();
+  }
+
+  /* ── Vera ── */
+  _platformName(p) {
+    return MonitoringView.PLATFORMS.find(x => x.value === p)?.label || p;
   }
 
   _veraUrl(prompt) {
@@ -243,160 +603,6 @@ class MonitoringView extends BaseView {
     return `Mostrame 5 ideas de contenido accionables que puedo aprender del perfil "${e.name}", adaptadas a la voz y audiencia de ${orgName}. Para cada idea: formato sugerido, gancho de copy (1 línea) y la métrica esperada que debería mover.`;
   }
 
-  _renderProfiles(body) {
-    // Excluir owned_media también del conteo total — no es contenido a monitorear
-    const entities   = (this._data.entities.data || [])
-      .filter(e => e.metadata?.tipo !== 'owned_media');
-    const containers = this._data.containers.data || [];
-    const tipoLabel = (t) =>
-      MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || (t || '—');
-    const containerName = (id) =>
-      containers.find(c => c.id === id)?.nombre_marca || null;
-
-    const columns = [
-      { id: 'new',    label: 'Nuevos encontrados', hint: 'Sugeridos por el sistema · pendientes de activar', tone: 'new'    },
-      { id: 'active', label: 'Activos',            hint: 'En marcha y con actividad',                         tone: 'active' },
-      { id: 'stale',  label: 'Sin actividad',      hint: 'Activos pero sin señales recientes',                tone: 'stale'  },
-      { id: 'paused', label: 'Pausados',           hint: 'Desactivados manualmente o por el sistema',         tone: 'paused' },
-    ];
-
-    const buckets = { new: [], active: [], stale: [], paused: [] };
-    entities.forEach(e => {
-      const col = this._classifyEntity(e);
-      if (!col) return; // owned_media: excluido del kanban
-      buckets[col].push(e);
-    });
-
-    const renderCard = (e) => {
-      const tipo     = e.metadata?.tipo || '';
-      const platform = e.metadata?.platform || '';
-      const highlighted = e.metadata?.highlighted === true;
-      const containerLabel = containerName(e.brand_container_id);
-      const handle = e.target_identifier ? this._esc(e.target_identifier) : '';
-      const tipoBadge = tipo ? `<span class="mn-card-chip mn-card-chip--${tipo.split('_')[0]}">${this._esc(tipoLabel(tipo))}</span>` : '';
-      const platBadge = platform ? `<span class="mn-card-chip">${this._esc(platform)}</span>` : '';
-      const brandBadge = containerLabel ? `<span class="mn-card-chip mn-card-chip--muted">${this._esc(containerLabel)}</span>` : '';
-      const starTitle = highlighted ? 'Quitar destacado' : 'Destacar como alto impacto';
-
-      return `
-        <article class="mn-card${highlighted ? ' mn-card--highlighted' : ''}" data-row-id="${this._esc(e.id)}">
-          <div class="mn-card-head">
-            <div class="mn-card-head-main">
-              <div class="mn-card-title">${this._esc(e.name || '—')}</div>
-              ${handle ? `<div class="mn-card-handle">${handle}</div>` : ''}
-            </div>
-            <button class="mn-card-star${highlighted ? ' is-on' : ''}" data-action="toggle-highlight" data-id="${this._esc(e.id)}" title="${starTitle}" aria-pressed="${highlighted}">
-              <i class="fas fa-star"></i>
-            </button>
-          </div>
-          <div class="mn-card-chips">
-            ${tipoBadge}${platBadge}${brandBadge}
-            ${highlighted ? `<span class="mn-card-chip mn-card-chip--highlight"><i class="fas fa-star"></i> Destacado</span>` : ''}
-          </div>
-          <div class="mn-card-vera">
-            <button class="mn-vera-btn" data-action="vera-analizar" data-id="${this._esc(e.id)}" title="Analiza este perfil con Vera">
-              <i class="fas fa-wand-magic-sparkles"></i> Analizar
-            </button>
-            <button class="mn-vera-btn" data-action="vera-comparar" data-id="${this._esc(e.id)}" title="Compara este perfil con mi marca">
-              <i class="fas fa-code-compare"></i> Comparar
-            </button>
-            <button class="mn-vera-btn" data-action="vera-inspirar" data-id="${this._esc(e.id)}" title="Pide ideas inspiradas en este perfil">
-              <i class="fas fa-lightbulb"></i> Inspirarme
-            </button>
-          </div>
-          <div class="mn-card-foot">
-            <label class="mn-toggle" title="${e.is_active ? 'Pausar' : 'Activar'}">
-              <input type="checkbox" ${e.is_active ? 'checked' : ''} data-action="toggle-entity" data-id="${this._esc(e.id)}">
-              <span class="mn-toggle-track"></span>
-            </label>
-            <div class="mn-card-foot-actions">
-              <button class="mn-btn-icon" data-action="edit-entity" data-id="${this._esc(e.id)}" title="Editar"><i class="fas fa-pen"></i></button>
-              <button class="mn-btn-icon mn-btn-icon--danger" data-action="delete-entity" data-id="${this._esc(e.id)}" title="Eliminar"><i class="fas fa-trash"></i></button>
-            </div>
-          </div>
-        </article>`;
-    };
-
-    const renderColumn = (col) => {
-      const items = buckets[col.id];
-      const emptyMsg = ({
-        new:    'No hay perfiles recién encontrados.',
-        active: 'Todavía no hay perfiles activos.',
-        stale:  'Ningún perfil sin actividad. ✨',
-        paused: 'No hay perfiles pausados.',
-      })[col.id];
-      return `
-        <section class="mn-kanban-col mn-kanban-col--${col.tone}">
-          <header class="mn-kanban-col-head">
-            <div class="mn-kanban-col-title">
-              <span class="mn-kanban-col-dot"></span>
-              <h3>${col.label}</h3>
-              <span class="mn-kanban-col-count">${items.length}</span>
-            </div>
-            <p class="mn-kanban-col-hint">${col.hint}</p>
-          </header>
-          <div class="mn-kanban-col-body">
-            ${items.length ? items.map(renderCard).join('') : `<div class="mn-kanban-empty">${emptyMsg}</div>`}
-          </div>
-        </section>`;
-    };
-
-    body.innerHTML = `
-      <div class="mn-page">
-        <div class="mn-toolbar">
-          <div class="mn-toolbar-main">
-            <h2 class="mn-section-title">Perfiles monitoreados <span class="mn-count">${entities.length}</span></h2>
-            <p class="mn-toolbar-sub">Organizados por estado. Cada card te conecta con Vera para analizar, comparar o inspirarte.</p>
-          </div>
-          <button class="mn-btn-primary" data-action="new-entity">
-            <i class="fas fa-plus"></i> Nuevo perfil
-          </button>
-        </div>
-        ${entities.length ? `
-          <div class="mn-kanban">
-            ${columns.map(renderColumn).join('')}
-          </div>` : `
-          <div class="mn-empty">
-            <p>Aún no hay perfiles monitoreados. Crea el primero para empezar a vigilar.</p>
-          </div>`}
-      </div>`;
-
-    body.addEventListener('click',  this._onProfilesClick.bind(this));
-    body.addEventListener('change', this._onProfilesChange.bind(this));
-  }
-
-  async _onProfilesClick(e) {
-    const btn = e.target.closest('[data-action]');
-    if (!btn) return;
-    const action = btn.dataset.action;
-    const id     = btn.dataset.id;
-    if (action === 'new-entity')      return this._openEntityModal(null);
-    if (action === 'edit-entity')     return this._openEntityModal(id);
-    if (action === 'delete-entity')   return this._confirmDeleteEntity(id);
-    if (action === 'toggle-highlight')return this._toggleHighlight(id);
-    if (action === 'vera-analizar' || action === 'vera-comparar' || action === 'vera-inspirar') {
-      return this._goToVera(action, id);
-    }
-  }
-
-  async _onProfilesChange(e) {
-    const input = e.target.closest('[data-action="toggle-entity"]');
-    if (!input) return;
-    const id = input.dataset.id;
-    const { error } = await this._service.updateEntity(id, { is_active: input.checked });
-    if (error) { alert('Error: ' + error.message); input.checked = !input.checked; }
-    else await this._refresh();
-  }
-
-  async _toggleHighlight(id) {
-    const entity = (this._data.entities.data || []).find(x => x.id === id);
-    if (!entity) return;
-    const next = !(entity.metadata?.highlighted === true);
-    const { error } = await this._service.updateEntity(id, { metadata: { highlighted: next } });
-    if (error) { alert('Error: ' + error.message); return; }
-    await this._refresh();
-  }
-
   _goToVera(action, id) {
     const entity = (this._data.entities.data || []).find(x => x.id === id);
     if (!entity || !window.router) return;
@@ -407,9 +613,115 @@ class MonitoringView extends BaseView {
     window.router.navigate(this._veraUrl(prompt));
   }
 
+  /* ══════════════════════════════════════════════════════════
+     MODALES
+  ══════════════════════════════════════════════════════════ */
+  /** Crear: el usuario elige primero qué quiere seguir (marca/perfil o página). */
+  _openCreateModal() {
+    const containers = this._data.containers.data || [];
+    const tipoOpts = MonitoringView.ENTITY_TIPOS
+      .map(o => `<option value="${o.value}"${o.value === 'competidor_directo' ? ' selected' : ''}>${o.label}</option>`).join('');
+    const platOpts = MonitoringView.PLATFORMS
+      .map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+    const containerOpts = [
+      `<option value="">— Sin marca —</option>`,
+      ...containers.map(c => `<option value="${this._esc(c.id)}">${this._esc(c.nombre_marca)}</option>`),
+    ].join('');
+
+    const body = `
+      <div class="mn-form" id="mnCreateForm">
+        <div class="mn-kindpick">
+          <button type="button" class="mn-kind is-active" data-kind="profile">
+            <i class="fas fa-user-group"></i> Una marca o perfil
+          </button>
+          <button type="button" class="mn-kind" data-kind="page">
+            <i class="fas fa-globe"></i> Una página web
+          </button>
+        </div>
+
+        <div data-pane="profile">
+          <label>¿A quién quieres seguir?
+            <input name="name" value="" placeholder="Ej. Red Bull">
+          </label>
+          <div class="mn-form-grid">
+            <label>¿Qué es?<select name="tipo">${tipoOpts}</select></label>
+            <label>Plataforma<select name="platform">${platOpts}</select></label>
+          </div>
+          <label>Usuario o enlace
+            <input name="target_identifier" value="" placeholder="@usuario">
+          </label>
+          <details class="mn-advanced">
+            <summary>Opciones avanzadas</summary>
+            <div class="mn-advanced-body">
+              <label>Marca asociada<select name="brand_container_id">${containerOpts}</select></label>
+              <label>Tipo de dato
+                <select name="domain">
+                  <option value="social" selected>Redes sociales</option>
+                  <option value="analytics">Analítica</option>
+                  <option value="web">Sitio web</option>
+                </select>
+              </label>
+              <small>Para fuentes técnicas puedes usar identificadores como <code>meta:1234</code> o <code>ga4:5678</code> en el campo "Usuario o enlace".</small>
+            </div>
+          </details>
+        </div>
+
+        <div data-pane="page" hidden>
+          <label>Dirección de la página
+            <input name="url" type="url" value="" placeholder="https://ejemplo.com/pagina-a-vigilar">
+            <small>Te avisamos cuando esa página cambie.</small>
+          </label>
+          <label>Nombre (opcional)
+            <input name="label" value="" placeholder="Ej. Precios de Competidor X">
+          </label>
+        </div>
+
+        <footer class="mn-modal-foot">
+          <button type="button" class="mn-btn-secondary" data-action="close-modal">Cancelar</button>
+          <button type="button" class="mn-btn-primary" data-action="create-submit">Empezar a seguir</button>
+        </footer>
+      </div>`;
+
+    const { modal, close } = window.Modal.show({ title: 'Seguir algo nuevo', body, className: 'mn-modal-content' });
+    let kind = 'profile';
+    modal.querySelectorAll('[data-kind]').forEach(b => b.addEventListener('click', () => {
+      kind = b.dataset.kind;
+      modal.querySelectorAll('[data-kind]').forEach(x => x.classList.toggle('is-active', x === b));
+      modal.querySelector('[data-pane="profile"]').hidden = kind !== 'profile';
+      modal.querySelector('[data-pane="page"]').hidden    = kind !== 'page';
+    }));
+    modal.querySelector('[data-action="close-modal"]')?.addEventListener('click', () => close());
+    modal.querySelector('[data-action="create-submit"]')?.addEventListener('click', async () => {
+      const root = modal.querySelector('#mnCreateForm');
+      const val = (n) => root.querySelector(`[name="${n}"]`)?.value?.trim() || '';
+      if (kind === 'profile') {
+        const name = val('name');
+        if (!name) { alert('Escribe un nombre.'); return; }
+        const { error } = await this._service.createEntity({
+          name,
+          target_identifier: val('target_identifier') || null,
+          domain: val('domain') || 'social',
+          brand_container_id: val('brand_container_id') || null,
+          tipo: val('tipo'),
+          platform: val('platform') || null,
+          is_active: true,
+        });
+        if (error) { alert('Error: ' + error.message); return; }
+      } else {
+        const url = val('url');
+        if (!url) { alert('Escribe la dirección de la página.'); return; }
+        const { error } = await this._service.createWatcher({
+          url, label: val('label') || null, is_active: true,
+        });
+        if (error) { alert('Error: ' + error.message); return; }
+      }
+      close();
+      await this._refresh();
+    });
+  }
+
   _openEntityModal(id) {
-    const isEdit = !!id;
-    const e = isEdit ? (this._data.entities.data || []).find(x => x.id === id) : {};
+    const e = (this._data.entities.data || []).find(x => x.id === id) || {};
     const containers = this._data.containers.data || [];
     const tipo     = e.metadata?.tipo     || 'competidor_directo';
     const platform = e.metadata?.platform || '';
@@ -419,46 +731,47 @@ class MonitoringView extends BaseView {
     const platOpts = MonitoringView.PLATFORMS
       .map(o => `<option value="${o.value}"${o.value === platform ? ' selected' : ''}>${o.label}</option>`).join('');
     const containerOpts = [
-      `<option value="">— sin marca —</option>`,
+      `<option value="">— Sin marca —</option>`,
       ...containers.map(c => `<option value="${this._esc(c.id)}"${c.id === e.brand_container_id ? ' selected' : ''}>${this._esc(c.nombre_marca)}</option>`),
     ].join('');
 
-    // FEAT-028: migrado a window.Modal (ESC/focus-trap/focus-return); se conservan
-    // las clases mn-form/mn-btn para que el form se vea igual.
     const body = `
       <form class="mn-form" id="mnEntityForm">
         <label>Nombre
           <input name="name" required value="${this._esc(e.name || '')}" placeholder="Ej. Red Bull">
         </label>
-        <label>Identificador
-          <input name="target_identifier" value="${this._esc(e.target_identifier || '')}" placeholder="@redbull, meta:1234, ga4:5678…">
-          <small>Handle social, meta page id, ga4 property, etc.</small>
-        </label>
         <div class="mn-form-grid">
-          <label>Tipo<select name="tipo">${tipoOpts}</select></label>
+          <label>¿Qué es?<select name="tipo">${tipoOpts}</select></label>
           <label>Plataforma<select name="platform">${platOpts}</select></label>
         </div>
-        <div class="mn-form-grid">
-          <label>Marca asociada<select name="brand_container_id">${containerOpts}</select></label>
-          <label>Dominio
-            <select name="domain">
-              <option value="social"    ${e.domain === 'social'    ? 'selected' : ''}>social</option>
-              <option value="analytics" ${e.domain === 'analytics' ? 'selected' : ''}>analytics</option>
-              <option value="web"       ${e.domain === 'web'       ? 'selected' : ''}>web</option>
-            </select>
-          </label>
-        </div>
+        <label>Usuario o enlace
+          <input name="target_identifier" value="${this._esc(e.target_identifier || '')}" placeholder="@usuario">
+        </label>
+        <details class="mn-advanced">
+          <summary>Opciones avanzadas</summary>
+          <div class="mn-advanced-body">
+            <label>Marca asociada<select name="brand_container_id">${containerOpts}</select></label>
+            <label>Tipo de dato
+              <select name="domain">
+                <option value="social"    ${e.domain === 'social'    ? 'selected' : ''}>Redes sociales</option>
+                <option value="analytics" ${e.domain === 'analytics' ? 'selected' : ''}>Analítica</option>
+                <option value="web"       ${e.domain === 'web'       ? 'selected' : ''}>Sitio web</option>
+              </select>
+            </label>
+            <small>Para fuentes técnicas usa identificadores como <code>meta:1234</code> o <code>ga4:5678</code> en "Usuario o enlace".</small>
+          </div>
+        </details>
         <label class="mn-checkbox">
           <input type="checkbox" name="is_active" ${e.is_active === false ? '' : 'checked'}>
-          Activo
+          Vigilando activamente
         </label>
         <footer class="mn-modal-foot">
           <button type="button" class="mn-btn-secondary" data-action="close-modal">Cancelar</button>
-          <button type="submit" class="mn-btn-primary">${isEdit ? 'Guardar cambios' : 'Crear perfil'}</button>
+          <button type="submit" class="mn-btn-primary">Guardar cambios</button>
         </footer>
       </form>`;
 
-    const { modal, close } = window.Modal.show({ title: isEdit ? 'Editar perfil' : 'Nuevo perfil', body, className: 'mn-modal-content' });
+    const { modal, close } = window.Modal.show({ title: 'Editar', body, className: 'mn-modal-content' });
     modal.querySelector('[data-action="close-modal"]')?.addEventListener('click', () => close());
     modal.querySelector('#mnEntityForm').addEventListener('submit', async (ev) => {
       ev.preventDefault();
@@ -472,9 +785,7 @@ class MonitoringView extends BaseView {
         platform:          fd.get('platform') || null,
         is_active:         fd.get('is_active') === 'on',
       };
-      const { error } = isEdit
-        ? await this._service.updateEntity(id, payload)
-        : await this._service.createEntity(payload);
+      const { error } = await this._service.updateEntity(id, payload);
       if (error) { alert('Error: ' + error.message); return; }
       close();
       await this._refresh();
@@ -484,15 +795,18 @@ class MonitoringView extends BaseView {
   async _confirmDeleteEntity(id) {
     const e = (this._data.entities.data || []).find(x => x.id === id);
     if (!e) return;
-    if (!confirm(`¿Eliminar perfil "${e.name}"?\nEsta acción no se puede deshacer.`)) return;
+    if (!confirm(`¿Dejar de seguir a "${e.name}"?\nEsta acción no se puede deshacer.`)) return;
     const { error } = await this._service.deleteEntity(id);
     if (error) { alert('Error: ' + error.message); return; }
     await this._refresh();
   }
 
-  /* ══════════════════════════════════════════════════════════
-     TAB: URL WATCHERS — cards con feed in-line de cambios detectados
-  ══════════════════════════════════════════════════════════ */
+  /* ── Páginas web (watchers) ── */
+  _parseSignalContent(text) {
+    if (!text) return {};
+    try { return JSON.parse(text); } catch (_) { return {}; }
+  }
+
   _relativeTime(iso) {
     if (!iso) return '—';
     const diff = Date.now() - new Date(iso).getTime();
@@ -503,169 +817,32 @@ class MonitoringView extends BaseView {
     if (h < 24) return `hace ${h} h`;
     const d = Math.floor(h / 24);
     if (d < 7) return `hace ${d} d`;
-    return new Date(iso).toLocaleDateString('es-CO',
-      { day: '2-digit', month: 'short' });
-  }
-
-  _parseSignalContent(text) {
-    if (!text) return {};
-    try { return JSON.parse(text); } catch (_) { return {}; }
-  }
-
-  _renderWatchers(body) {
-    const watchers   = this._data.watchers.data || [];
-    const signals    = this._data.urlChanges?.data || [];
-
-    // Indexar signals por url (de su content_text JSON) y por entity_id como
-    // fallback, para asociar cada signal al watcher correcto aun cuando una
-    // entity tenga múltiples watchers.
-    const signalsByUrl = new Map();
-    signals.forEach(s => {
-      const c = this._parseSignalContent(s.content_text);
-      const key = c.url || `entity:${s.entity_id}`;
-      if (!signalsByUrl.has(key)) signalsByUrl.set(key, []);
-      signalsByUrl.get(key).push({ ...s, _parsed: c });
-    });
-
-    const cards = watchers.map(w => {
-      const wsigs = (signalsByUrl.get(w.url) || []).slice(0, 3);
-      const lastChange = wsigs[0]?.captured_at || null;
-      const hostname = (() => {
-        try { return new URL(w.url).hostname.replace(/^www\./, ''); } catch (_) { return w.url; }
-      })();
-
-      // Estado del watcher: paused | error | changed | quiet | new
-      let statusTone, statusLabel;
-      if (!w.is_active) {
-        statusTone = 'paused';  statusLabel = 'Pausada';
-      } else if (lastChange && (Date.now() - new Date(lastChange).getTime()) < 24 * 60 * 60 * 1000) {
-        statusTone = 'changed'; statusLabel = 'Cambio reciente';
-      } else if (w.last_checked_at) {
-        statusTone = 'quiet';   statusLabel = 'Sin cambios';
-      } else {
-        statusTone = 'new';     statusLabel = 'Pendiente primer scan';
-      }
-
-      const feedHtml = wsigs.length
-        ? wsigs.map(s => {
-            const excerpt = (s._parsed.excerpt || '').slice(0, 180);
-            return `
-              <div class="mn-watcher-signal">
-                <div class="mn-watcher-signal-head">
-                  <i class="fas fa-circle-dot mn-watcher-signal-dot"></i>
-                  <span class="mn-watcher-signal-when">${this._esc(this._relativeTime(s.captured_at))}</span>
-                </div>
-                ${excerpt ? `<div class="mn-watcher-signal-excerpt">${this._esc(excerpt)}${excerpt.length === 180 ? '…' : ''}</div>` : ''}
-              </div>`;
-          }).join('')
-        : `<div class="mn-watcher-feed-empty">
-             ${w.last_checked_at
-               ? `Revisado ${this._esc(this._relativeTime(w.last_checked_at))}. Sin cambios desde entonces.`
-               : `Primer scan en marcha — el scheduler corre cada ~10 min.`}
-           </div>`;
-
-      return `
-        <article class="mn-watcher-card" data-row-id="${this._esc(w.id)}">
-          <header class="mn-watcher-head">
-            <div class="mn-watcher-head-main">
-              <div class="mn-watcher-title">${this._esc(w.label || hostname)}</div>
-              <a class="mn-watcher-url" href="${this._esc(w.url)}" target="_blank" rel="noopener">
-                <i class="fas fa-external-link-alt"></i> ${this._esc(hostname)}
-              </a>
-            </div>
-            <span class="mn-watcher-status mn-watcher-status--${statusTone}">
-              <span class="mn-watcher-status-dot"></span>${statusLabel}
-            </span>
-          </header>
-          <div class="mn-watcher-feed">
-            <div class="mn-watcher-feed-title">
-              <span>Cambios detectados</span>
-              <span class="mn-watcher-feed-count">${wsigs.length}</span>
-            </div>
-            ${feedHtml}
-          </div>
-          <footer class="mn-watcher-foot">
-            <span class="mn-watcher-meta">
-              <i class="fas fa-rotate"></i> ${this._esc(this._relativeTime(w.last_checked_at))}
-            </span>
-            <div class="mn-watcher-foot-actions">
-              <label class="mn-toggle" title="${w.is_active ? 'Pausar' : 'Activar'}">
-                <input type="checkbox" ${w.is_active ? 'checked' : ''} data-action="toggle-watcher" data-id="${this._esc(w.id)}">
-                <span class="mn-toggle-track"></span>
-              </label>
-              <button class="mn-btn-icon" data-action="edit-watcher" data-id="${this._esc(w.id)}" title="Editar"><i class="fas fa-pen"></i></button>
-              <button class="mn-btn-icon mn-btn-icon--danger" data-action="delete-watcher" data-id="${this._esc(w.id)}" title="Eliminar"><i class="fas fa-trash"></i></button>
-            </div>
-          </footer>
-        </article>`;
-    }).join('');
-
-    body.innerHTML = `
-      <div class="mn-page">
-        <div class="mn-toolbar">
-          <div class="mn-toolbar-main">
-            <h2 class="mn-section-title">URLs vigiladas <span class="mn-count">${watchers.length}</span></h2>
-            <p class="mn-toolbar-sub">Detectamos cambios cada ~10 min comparando el hash del contenido. Vincula la URL a un perfil para que los cambios alimenten señales y trends.</p>
-          </div>
-          <button class="mn-btn-primary" data-action="new-watcher">
-            <i class="fas fa-plus"></i> Nueva URL
-          </button>
-        </div>
-        ${watchers.length ? `
-          <div class="mn-watcher-grid">${cards}</div>` : `
-          <div class="mn-empty">
-            <p>Aún no hay URLs vigiladas. Agrega la primera para detectar cambios automáticamente.</p>
-          </div>`}
-      </div>`;
-
-    body.addEventListener('click',  this._onWatchersClick.bind(this));
-    body.addEventListener('change', this._onWatchersChange.bind(this));
-  }
-
-  async _onWatchersClick(e) {
-    const btn = e.target.closest('[data-action]');
-    if (!btn) return;
-    const action = btn.dataset.action;
-    const id     = btn.dataset.id;
-    if (action === 'new-watcher')    return this._openWatcherModal(null);
-    if (action === 'edit-watcher')   return this._openWatcherModal(id);
-    if (action === 'delete-watcher') return this._confirmDeleteWatcher(id);
-  }
-
-  async _onWatchersChange(e) {
-    const input = e.target.closest('[data-action="toggle-watcher"]');
-    if (!input) return;
-    const id = input.dataset.id;
-    const { error } = await this._service.updateWatcher(id, { is_active: input.checked });
-    if (error) { alert('Error: ' + error.message); input.checked = !input.checked; }
-    else await this._refresh();
+    return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
   }
 
   _openWatcherModal(id) {
-    const isEdit = !!id;
-    const w = isEdit ? (this._data.watchers.data || []).find(x => x.id === id) : {};
+    const w = (this._data.watchers.data || []).find(x => x.id === id) || {};
 
-    // FEAT-028: migrado a window.Modal (se conservan clases mn-form/mn-btn).
     const body = `
       <form class="mn-form" id="mnWatcherForm">
-        <label>URL
+        <label>Dirección de la página
           <input name="url" type="url" required value="${this._esc(w.url || '')}" placeholder="https://ejemplo.com/pagina-a-vigilar">
-          <small>Detectamos cambios comparando el hash del contenido en cada revisión.</small>
+          <small>Te avisamos cuando esa página cambie.</small>
         </label>
-        <label>Etiqueta (opcional)
-          <input name="label" value="${this._esc(w.label || '')}" placeholder="Ej. Página de pricing de Competidor X">
+        <label>Nombre (opcional)
+          <input name="label" value="${this._esc(w.label || '')}" placeholder="Ej. Precios de Competidor X">
         </label>
         <label class="mn-checkbox">
           <input type="checkbox" name="is_active" ${w.is_active === false ? '' : 'checked'}>
-          Activa
+          Vigilando activamente
         </label>
         <footer class="mn-modal-foot">
           <button type="button" class="mn-btn-secondary" data-action="close-modal">Cancelar</button>
-          <button type="submit" class="mn-btn-primary">${isEdit ? 'Guardar cambios' : 'Crear watcher'}</button>
+          <button type="submit" class="mn-btn-primary">Guardar cambios</button>
         </footer>
       </form>`;
 
-    const { modal, close } = window.Modal.show({ title: isEdit ? 'Editar URL vigilada' : 'Nueva URL vigilada', body, className: 'mn-modal-content' });
+    const { modal, close } = window.Modal.show({ title: 'Editar página vigilada', body, className: 'mn-modal-content' });
     modal.querySelector('[data-action="close-modal"]')?.addEventListener('click', () => close());
     modal.querySelector('#mnWatcherForm').addEventListener('submit', async (ev) => {
       ev.preventDefault();
@@ -675,10 +852,8 @@ class MonitoringView extends BaseView {
         label:     fd.get('label')?.trim() || null,
         is_active: fd.get('is_active') === 'on',
       };
-      if (!payload.url) { alert('La URL es obligatoria.'); return; }
-      const { error } = isEdit
-        ? await this._service.updateWatcher(id, payload)
-        : await this._service.createWatcher(payload);
+      if (!payload.url) { alert('La dirección es obligatoria.'); return; }
+      const { error } = await this._service.updateWatcher(id, payload);
       if (error) { alert('Error: ' + error.message); return; }
       close();
       await this._refresh();
@@ -688,13 +863,13 @@ class MonitoringView extends BaseView {
   async _confirmDeleteWatcher(id) {
     const w = (this._data.watchers.data || []).find(x => x.id === id);
     if (!w) return;
-    if (!confirm(`¿Eliminar "${w.label || w.url}"?\nEsta acción no se puede deshacer.`)) return;
+    if (!confirm(`¿Dejar de vigilar "${w.label || w.url}"?\nEsta acción no se puede deshacer.`)) return;
     const { error } = await this._service.deleteWatcher(id);
     if (error) { alert('Error: ' + error.message); return; }
     await this._refresh();
   }
 
-  /* ── helpers ───────────────────────────────────────────── */
+  /* ── helpers ── */
   _esc(s) {
     if (s == null) return '';
     return String(s)

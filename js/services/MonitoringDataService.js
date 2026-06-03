@@ -64,10 +64,13 @@ class MonitoringDataService {
       ? { data: s.value.data || [], error: s.value.error || null }
       : { data: [], error: s.reason };
 
-    // url_change signals: traer cambios detectados por el scraper para
-    // pintarlos in-line en las cards del tab Watchers. Filtramos por las
-    // entities ya cargadas (signals no tienen organization_id propio).
-    let urlChanges = { data: [], error: null };
+    // Novedades recientes: traemos las señales detectadas por el scraper para
+    // poder mostrarlas en lenguaje humano. Antes filtrábamos solo 'url_change'
+    // (para el feed de páginas web); ahora traemos cualquier tipo para poder
+    // decir también "novedad hace X" en las tarjetas de perfiles. Las signals
+    // no tienen organization_id propio, así que filtramos por las entities ya
+    // cargadas. La vista las re-indexa por entity_id y por url según convenga.
+    let signals = { data: [], error: null };
     const entityIds = (u(entities).data || []).map(e => e.id);
     if (entityIds.length) {
       try {
@@ -75,12 +78,11 @@ class MonitoringDataService {
           .from('intelligence_signals')
           .select('id, entity_id, signal_type, content_text, captured_at')
           .in('entity_id', entityIds)
-          .eq('signal_type', 'url_change')
           .order('captured_at', { ascending: false })
-          .limit(200);
-        urlChanges = { data: data || [], error: error || null };
+          .limit(300);
+        signals = { data: data || [], error: error || null };
       } catch (e) {
-        urlChanges = { data: [], error: e };
+        signals = { data: [], error: e };
       }
     }
 
@@ -89,7 +91,7 @@ class MonitoringDataService {
       entities:    u(entities),
       triggers:    u(triggers),
       watchers:    u(watchers),
-      urlChanges,
+      signals,
     };
   }
 
