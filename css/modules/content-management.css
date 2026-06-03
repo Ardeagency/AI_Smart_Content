@@ -615,9 +615,9 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   display: inline-block;
 }
 
-.cal2-legend-dot--active { background: linear-gradient(180deg, #9acc00 0%, var(--color-success, #00d614) 100%); }
+.cal2-legend-dot--active { background: linear-gradient(180deg, color-mix(in srgb, #9acc00 60%, #9a9a92) 0%, color-mix(in srgb, var(--color-success, #00d614) 60%, #9a9a92) 100%); }
 .cal2-legend-dot--paused { background: var(--text-tertiary); }
-.cal2-legend-dot--draft  { background: linear-gradient(180deg, var(--color-warning, #ffe500) 0%, #9acc00 100%); }
+.cal2-legend-dot--draft  { background: linear-gradient(180deg, color-mix(in srgb, var(--color-warning, #ffe500) 60%, #9a9a92) 0%, color-mix(in srgb, #9acc00 60%, #9a9a92) 100%); }
 
 .cal2-empty {
   color: var(--text-secondary);
@@ -787,10 +787,14 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 /* Fondos por estado: gradientes de marca (borrador y activa); pausada neutra.
    Texto oscuro en las cards claras para contraste. */
 .cal2-event--draft {
-  background: linear-gradient(180deg, var(--color-warning, #ffe500) 0%, #9acc00 100%);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--color-warning, #ffe500) 60%, #9a9a92) 0%,
+    color-mix(in srgb, #9acc00 60%, #9a9a92) 100%);
 }
 .cal2-event--active {
-  background: linear-gradient(180deg, #9acc00 0%, var(--color-success, #00d614) 100%);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, #9acc00 60%, #9a9a92) 0%,
+    color-mix(in srgb, var(--color-success, #00d614) 60%, #9a9a92) 100%);
 }
 .cal2-event--draft .cal2-event-name,
 .cal2-event--active .cal2-event-name { color: rgba(12, 22, 0, 0.92); }
