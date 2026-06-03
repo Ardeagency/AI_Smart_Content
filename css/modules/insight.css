@@ -2925,8 +2925,8 @@
 
 /* Tira de signos vitales (momentum del CMO) */
 .mb-plan-vitals { position: relative; overflow: hidden; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 1rem; background: linear-gradient(180deg, #222429 0%, #1B1D22 100%); border: 1px solid #34363A; border-radius: 10px; box-shadow: var(--dash-elev); }
-/* Wash de color contenido en el borde superior (no desborda: overflow hidden clipa) */
-.mb-plan-vitals::before { content: ""; position: absolute; left: 0; right: 0; top: -8px; height: 44px; pointer-events: none; z-index: 0; background: linear-gradient(270deg, #0063FF 0%, #814AC8 30%, #FF004D 70%, #FF5C23 100%); opacity: 0.28; filter: blur(14px); }
+/* Borde superior de gradiente arcoiris (linea fina, clipada a las esquinas) */
+.mb-plan-vitals::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2.5px; pointer-events: none; z-index: 2; background: linear-gradient(270deg, #0063FF 0%, #814AC8 30%, #FF004D 70%, #FF5C23 100%); }
 .mb-plan-vital { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.95rem 1.2rem; border-right: 1px solid var(--dash-line, rgba(255,255,255,0.08)); }
 .mb-plan-vital:last-child { border-right: 0; }
 .mb-plan-vital-val { font-size: 1.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.025em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
