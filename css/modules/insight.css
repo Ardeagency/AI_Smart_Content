@@ -3168,6 +3168,12 @@
 
 /* Radar "huella emocional" de Patrones de tu publico */
 .mb-aud-radar { position: relative; height: 290px; max-width: 440px; margin: 0.4rem auto 0; }
+
+/* Pilares narrativos — matriz de oportunidad (bubble) + callout de oro */
+.mb-pil-gold { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.8125rem; line-height: 1.4; color: var(--text-secondary, rgba(212,209,216,0.85)); background: rgba(107,207,127,0.08); border: 1px solid rgba(107,207,127,0.25); border-radius: 10px; padding: 0.65rem 0.85rem; margin-bottom: 0.9rem; }
+.mb-pil-gold i { color: #6bcf7f; margin-top: 0.15rem; flex: 0 0 auto; }
+.mb-pil-gold b { color: var(--text-primary, #D4D1D8); font-weight: 700; }
+.mb-pil-matrix { position: relative; height: 300px; }
 @media (max-width: 760px) {
   .mb-lev { grid-template-columns: 1fr; gap: 1rem; }
   .mb-lev-col--neg { border-right: 0; padding-right: 0; }

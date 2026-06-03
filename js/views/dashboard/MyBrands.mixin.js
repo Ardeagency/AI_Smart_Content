@@ -65,6 +65,7 @@
         this._renderLongitudinalCharts(data);
         this._renderAudienceMap(data);
         this._renderAudienceRadar(data);
+        this._renderPillarsBubble(data);
       } catch (e) {
         console.error('[MyBrands] loadAll failed:', e);
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
@@ -120,6 +121,7 @@
         this._renderLongitudinalCharts(data);
         this._renderAudienceMap(data);
         this._renderAudienceRadar(data);
+        this._renderPillarsBubble(data);
       } catch (e) {
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
       }
@@ -534,6 +536,93 @@
           },
         }));
       } catch (e) { console.warn('[audience radar]', e?.message); }
+    },
+
+    /** Matriz de oportunidad (bubble de cuadrantes) — uso (x) vs rendimiento (y). */
+    async _renderPillarsBubble(data) {
+      const el = document.getElementById('mbPillarsBubble');
+      if (!el) return;
+      const list = (Array.isArray(data?.pillars?.data) ? data.pillars.data : []).filter((r) => r.pillar);
+      if (list.length < 2) return;
+      try { await this._ensureChartJs(); } catch (_) {}
+      const Chart = window.Chart; if (!Chart) return;
+      const TICK = 'rgba(212,209,216,0.5)', GRID = 'rgba(255,255,255,0.06)';
+      const color = (p) => p.orphan ? '#6bcf7f' : (p.y >= 0 ? '#5b9bd5' : '#e0a045');
+      const points = list.map((r) => {
+        const x = Math.max(0, Number(r.share_pct) || 0);
+        const y = Math.round(Number(r.lift_pct) || 0);
+        const orphan = r.is_orphan === true;
+        return { x, y, r: orphan ? 11 : 8, label: r.pillar, orphan };
+      });
+      points.forEach((p) => { p.color = color(p); });
+      const shares = points.map((p) => p.x), lifts = points.map((p) => p.y);
+      const xThreshold = shares.reduce((s, v) => s + v, 0) / shares.length;
+      const xMax = Math.max(10, Math.ceil(Math.max(...shares) * 1.2));
+      const yMax = Math.max(10, Math.ceil(Math.max(...lifts, 0) * 1.25));
+      const yMin = Math.min(0, Math.floor(Math.min(...lifts, 0) * 1.25));
+      const quad = {
+        id: 'pilQuad',
+        beforeDatasetsDraw(chart) {
+          const { ctx, chartArea: ca, scales } = chart; if (!ca) return;
+          const xMid = scales.x.getPixelForValue(xThreshold), yMid = scales.y.getPixelForValue(0);
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+          ctx.beginPath(); ctx.moveTo(xMid, ca.top); ctx.lineTo(xMid, ca.bottom); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(ca.left, yMid); ctx.lineTo(ca.right, yMid); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = '700 9.5px ui-sans-serif, system-ui, sans-serif';
+          ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+          ctx.fillStyle = 'rgba(107,207,127,0.65)'; ctx.fillText('EXPLOTALO', ca.left + 6, ca.top + 5);
+          ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(212,209,216,0.38)'; ctx.fillText('TU FORMULA', ca.right - 6, ca.top + 5);
+          ctx.textBaseline = 'bottom'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(212,209,216,0.3)'; ctx.fillText('IGNORA', ca.left + 6, ca.bottom - 5);
+          ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(224,160,69,0.6)'; ctx.fillText('REVISA', ca.right - 6, ca.bottom - 5);
+          ctx.restore();
+        },
+        afterDatasetsDraw(chart) {
+          const { ctx, chartArea: ca, scales } = chart; if (!ca) return;
+          ctx.save();
+          ctx.font = '600 10.5px ui-sans-serif, system-ui, sans-serif';
+          ctx.fillStyle = 'rgba(212,209,216,0.92)'; ctx.textBaseline = 'middle';
+          const midX = (ca.left + ca.right) / 2;
+          points.forEach((p) => {
+            const px = scales.x.getPixelForValue(p.x), py = scales.y.getPixelForValue(p.y);
+            if (px > midX) { ctx.textAlign = 'right'; ctx.fillText(p.label, px - p.r - 5, py); }
+            else { ctx.textAlign = 'left'; ctx.fillText(p.label, px + p.r + 5, py); }
+          });
+          ctx.restore();
+        },
+      };
+      try {
+        this._reg(new Chart(el.getContext('2d'), {
+          type: 'bubble',
+          data: { datasets: [{
+            data: points,
+            backgroundColor: (c) => (points[c.dataIndex].color + '99'),
+            borderColor: (c) => points[c.dataIndex].color,
+            borderWidth: 1.5,
+            hoverBackgroundColor: (c) => points[c.dataIndex].color,
+          }] },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            layout: { padding: { top: 6, right: 10, bottom: 2, left: 2 } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#1b1d22', borderColor: '#34363A', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10,
+                callbacks: {
+                  title: () => null,
+                  label: (c) => { const p = points[c.dataIndex]; return `${p.label}: ${Math.round(p.x)}% de uso · ${p.y >= 0 ? '+' : ''}${p.y}% rendimiento${p.orphan ? ' · huerfano' : ''}`; },
+                },
+              },
+            },
+            scales: {
+              x: { min: 0, max: xMax, grid: { color: GRID }, border: { display: false }, title: { display: true, text: '% de uso', color: TICK, font: { size: 10 } }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => v + '%', maxTicksLimit: 6 } },
+              y: { min: yMin, max: yMax, grid: { color: GRID }, border: { display: false }, title: { display: true, text: 'Rendimiento vs promedio', color: TICK, font: { size: 10 } }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => (v > 0 ? '+' : '') + v + '%', maxTicksLimit: 6 } },
+            },
+          },
+          plugins: [quad],
+        }));
+      } catch (e) { console.warn('[pillars bubble]', e?.message); }
     },
 
     /** Instancia los charts Chart.js del analisis longitudinal (post-render). */
@@ -1004,13 +1093,26 @@
         return '';
       }
       const orphans = list.filter((r) => r.is_orphan).length;
+      const withName = list.filter((r) => r.pillar);
+      // Callout "oro": el huerfano de mayor lift (rinde pero subexplotas).
+      const topOrphan = withName.filter((r) => r.is_orphan)
+        .sort((a, b) => Number(b.lift_pct) - Number(a.lift_pct))[0];
+      const gold = topOrphan ? `
+        <div class="mb-pil-gold">
+          <i class="fas fa-gem"></i>
+          <span><b>${this._esc(topOrphan.pillar)}</b> rinde <b>+${Math.round(Number(topOrphan.lift_pct) || 0)}%</b> pero es solo el <b>${Math.round(Number(topOrphan.share_pct) || 0)}%</b> de tu contenido — <b>explotalo</b>.</span>
+        </div>` : '';
+      // Matriz de oportunidad (bubble) si hay >=2 pilares; si no, lista fallback.
+      const body = withName.length >= 2
+        ? `${gold}<div class="mb-pil-matrix"><canvas id="mbPillarsBubble"></canvas></div>`
+        : `<div class="mb-pil-list">${list.map((r) => this._buildPillarRow(r)).join('')}</div>`;
       return `
-        <section class="mb-section">
+        <section class="mb-section mb-section--wide">
           <div class="mb-section-head">
             <span class="mb-section-title">Pilares narrativos</span>
-            <span class="mb-section-hint">De que hablas — y que tema rinde pero subexplotas${orphans ? ` (${orphans} oportunidad${orphans === 1 ? '' : 'es'})` : ''}</span>
+            <span class="mb-section-hint">Cuanto usas cada tema vs que tan bien rinde — los huerfanos (arriba-izquierda) son oportunidades${orphans ? ` (${orphans})` : ''}</span>
           </div>
-          <div class="mb-pil-list">${list.map((r) => this._buildPillarRow(r)).join('')}</div>
+          ${body}
         </section>`;
     },
 
