@@ -219,14 +219,14 @@
       }
 
       // OPTIMIZA: la tarea de salud de mayor impacto.
-      const optimiza = tasks[0] ? {
+      let optimiza = tasks[0] ? {
         title: tasks[0].label,
         metric: Number(tasks[0].impact_pts) > 0 ? `+${Math.round(Number(tasks[0].impact_pts))} pts de salud` : '',
         why: tasks[0].detail || '',
       } : null;
 
       // ELIMINA: lo que mas te resta.
-      const elimina = drags[0] ? {
+      let elimina = drags[0] ? {
         title: `${dimLabel[drags[0].dimension] || drags[0].dimension} "${this._causalValueLabel(drags[0].dimension, drags[0].value)}"`,
         metric: `${Math.round(Number(drags[0].lift_pct))}% bajo tu promedio`,
         why: `Lo usas ${Number(drags[0].post_count) || 0} ${Number(drags[0].post_count) === 1 ? 'vez' : 'veces'} y rinde por debajo. Reducelo.`,
