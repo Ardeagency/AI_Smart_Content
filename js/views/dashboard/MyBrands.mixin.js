@@ -466,10 +466,24 @@
       const reg = (c) => this._reg(c);
       const mk = (id, cfg) => { const cv = document.getElementById(id); if (!cv) return; try { reg(new Chart(cv, cfg)); } catch (e) { console.warn('[long chart]', id, e?.message); } };
 
-      // 1. Historial de actividad (posts por periodo)
+      // Gradiente horizontal arcoiris (azul->morado->magenta->rojo) scriptable:
+      // usa el ancho real del area de plot (disponible tras el layout).
+      const rainbowStops = (g, alpha) => {
+        const a = (c) => alpha == null ? c : c.replace('rgb(', 'rgba(').replace(')', `,${alpha})`);
+        g.addColorStop(0, a('rgb(0,99,255)')); g.addColorStop(0.34, a('rgb(129,74,200)'));
+        g.addColorStop(0.67, a('rgb(255,0,77)')); g.addColorStop(1, a('rgb(255,92,35)'));
+        return g;
+      };
+      const rainbowLine = (cxt) => { const ch = cxt.chart; const { ctx, chartArea } = ch; if (!chartArea) return '#5b9bd5'; return rainbowStops(ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0)); };
+      const rainbowFill = (cxt) => { const ch = cxt.chart; const { ctx, chartArea } = ch; if (!chartArea) return 'rgba(91,155,213,0.12)'; return rainbowStops(ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0), 0.16); };
+
+      // 1. Historial de actividad (posts por periodo) — linea con degradado arcoiris
       const actLabels = act.map((r) => r.period_label);
-      const cvAct = document.getElementById('mbLongActivity');
-      mk('mbLongActivity', { type: 'line', data: { labels: actLabels, datasets: [areaDs(cvAct, 'Posts', act.map((r) => Number(r.posts_count) || 0), '#5b9bd5')] }, options: baseOpts() });
+      mk('mbLongActivity', { type: 'line', data: { labels: actLabels, datasets: [{
+        label: 'Posts', data: act.map((r) => Number(r.posts_count) || 0),
+        borderColor: rainbowLine, backgroundColor: rainbowFill, fill: true, tension: 0.4, borderWidth: 2.5,
+        pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: '#FF004D',
+      }] }, options: baseOpts() });
 
       // 2. Tendencia de engagement
       if (eng.length) {
