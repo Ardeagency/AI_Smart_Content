@@ -176,13 +176,12 @@
               ${this._buildMbFiltersBar(data)}
               ${this._buildActionPlanSection(data, insights)}
               ${this._buildLongitudinalSection(data)}
-              ${this._buildCausalSection(insights, 'boost')}
+              ${this._buildLeverageSection(insights)}
               ${this._buildEffectiveAudienceSection(data?.audienceEffective?.data, insights)}
               ${this._buildAudienceSection(data?.audiencePatterns?.data)}
               ${this._buildActivitySection(data?.activity?.data)}
               ${this._buildEvolutionSection(data?.evolution?.data)}
               ${this._buildPillarsSection(data?.pillars?.data)}
-              ${this._buildCausalSection(insights, 'drag')}
             </div>
             <aside class="mb-layout-aside">
               ${this._buildHealthGauge(data?.health?.data)}
@@ -357,6 +356,60 @@
           </div>
           ${vitals}
           <div class="mb-plan-grid mb-plan-grid--4">${cards.join('')}</div>
+        </section>`;
+    },
+
+    /* ── Que te impulsa y que te frena: barras divergentes hermanas ────────
+       Unifica "lo que funciona" (boost, verde, derecha) y "lo que resta"
+       (drag, rojo, izquierda) centradas en tu promedio (=0). Cada barra se
+       escala vs el |lift| maximo para que ambos lados sean comparables. */
+    _buildLeverageSection(insights) {
+      const arr = Array.isArray(insights) ? insights : [];
+      const dimLabel = { tono: 'Tono', tema: 'Tema', formato: 'Formato', horario: 'Hora' };
+      const detailDim = { tono: 'tone', tema: 'topic', formato: 'format', horario: 'hour' };
+      const boosts = arr.filter((i) => i.kind === 'boost' && Number(i.lift_pct) > 0)
+        .sort((a, b) => Number(b.lift_pct) - Number(a.lift_pct)).slice(0, 6);
+      const drags = arr.filter((i) => i.kind === 'drag' && Number(i.lift_pct) < 0)
+        .sort((a, b) => Number(a.lift_pct) - Number(b.lift_pct)).slice(0, 6);
+      if (!boosts.length && !drags.length) {
+        if (shouldHideEmpty()) return '';
+        return `
+          <section class="mb-section mb-section--wide">
+            <div class="mb-section-head"><span class="mb-section-title">Que te impulsa y que te frena</span><span class="mb-section-hint">Tus palancas frente a tu promedio</span></div>
+            <div class="mb-causal-empty">No hay contenido propio analizado en esta ventana. Amplia el rango (prueba Todo el periodo).</div>
+          </section>`;
+      }
+      const maxAbs = Math.max(1, ...arr.map((i) => Math.abs(Number(i.lift_pct) || 0)));
+      const row = (i) => {
+        const lift = Math.round(Number(i.lift_pct) || 0);
+        const w = Math.max(3, Math.round(Math.abs(lift) / maxAbs * 100));
+        const label = `${dimLabel[i.dimension] || i.dimension} "${this._esc(this._causalValueLabel(i.dimension, i.value))}"`;
+        const dd = detailDim[i.dimension];
+        const attrs = dd ? `data-feat-detail data-dim="${dd}" data-value="${this._esc(i.value)}" data-title="${label}" role="button" tabindex="0"` : '';
+        return `
+          <div class="mb-lev-row${dd ? ' mb-feat-detail' : ''}" ${attrs}>
+            <span class="mb-lev-label">${label}</span>
+            <span class="mb-lev-val">${lift > 0 ? '+' : ''}${lift}%</span>
+            <div class="mb-lev-track"><span class="mb-lev-bar" style="width:${w}%;"></span></div>
+          </div>`;
+      };
+      const colNote = 'Sin senal clara aun.';
+      return `
+        <section class="mb-section mb-section--wide">
+          <div class="mb-section-head">
+            <span class="mb-section-title">Que te impulsa y que te frena</span>
+            <span class="mb-section-hint">Tus palancas frente a tu promedio — verde suma, rojo resta</span>
+          </div>
+          <div class="mb-lev">
+            <div class="mb-lev-col mb-lev-col--neg">
+              <div class="mb-lev-coltitle">Lo que te frena</div>
+              ${drags.length ? drags.map(row).join('') : `<div class="mb-lev-empty">${colNote}</div>`}
+            </div>
+            <div class="mb-lev-col mb-lev-col--pos">
+              <div class="mb-lev-coltitle">Lo que te impulsa</div>
+              ${boosts.length ? boosts.map(row).join('') : `<div class="mb-lev-empty">${colNote}</div>`}
+            </div>
+          </div>
         </section>`;
     },
 

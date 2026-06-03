@@ -3140,6 +3140,41 @@
 .mb-eff-map { position: relative; height: 210px; margin: 0.5rem 0 0.85rem; }
 @media (max-width: 480px) { .mb-eff-map { height: auto; } }
 
+/* Que te impulsa / te frena — barras divergentes hermanas (tornado) */
+.mb-lev { display: grid; grid-template-columns: 1fr 1fr; gap: 0; align-items: start; }
+.mb-lev-col { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.mb-lev-col--neg { padding-right: 1.4rem; border-right: 1px solid var(--dash-line, rgba(255,255,255,0.08)); }
+.mb-lev-col--pos { padding-left: 1.4rem; }
+.mb-lev-coltitle { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.35rem; }
+.mb-lev-col--neg .mb-lev-coltitle { color: #e06464; text-align: right; }
+.mb-lev-col--pos .mb-lev-coltitle { color: #6bcf7f; }
+.mb-lev-row { display: flex; align-items: center; gap: 0.5rem; min-width: 0; border-radius: 6px; padding: 0.2rem 0.3rem; }
+.mb-lev-row.mb-feat-detail { cursor: pointer; transition: background 0.12s ease; }
+.mb-lev-row.mb-feat-detail:hover { background: rgba(255,255,255,0.05); }
+.mb-lev-col--pos .mb-lev-row { flex-direction: row-reverse; }
+.mb-lev-label { font-size: 0.75rem; color: var(--text-primary, #D4D1D8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 0; }
+.mb-lev-col--neg .mb-lev-label { text-align: left; }
+.mb-lev-col--pos .mb-lev-label { text-align: right; }
+.mb-lev-val { font-size: 0.75rem; font-weight: 700; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+.mb-lev-col--neg .mb-lev-val { color: #e06464; }
+.mb-lev-col--pos .mb-lev-val { color: #6bcf7f; }
+.mb-lev-track { flex: 1 1 auto; min-width: 36px; display: flex; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+.mb-lev-col--neg .mb-lev-track { justify-content: flex-end; }
+.mb-lev-col--pos .mb-lev-track { justify-content: flex-start; }
+.mb-lev-bar { height: 100%; border-radius: 4px; }
+.mb-lev-col--neg .mb-lev-bar { background: #e06464; }
+.mb-lev-col--pos .mb-lev-bar { background: #6bcf7f; }
+.mb-lev-empty { font-size: 0.75rem; color: var(--text-muted, rgba(212,209,216,0.5)); padding: 0.2rem 0.3rem; }
+@media (max-width: 760px) {
+  .mb-lev { grid-template-columns: 1fr; gap: 1rem; }
+  .mb-lev-col--neg { border-right: 0; padding-right: 0; }
+  .mb-lev-col--pos { padding-left: 0; }
+  .mb-lev-col--pos .mb-lev-row { flex-direction: row; }
+  .mb-lev-col--pos .mb-lev-label { text-align: left; }
+  .mb-lev-col--neg .mb-lev-track, .mb-lev-col--pos .mb-lev-track { justify-content: flex-end; }
+  .mb-lev-coltitle, .mb-lev-col--neg .mb-lev-coltitle { text-align: left; }
+}
+
 /* Delta periodo-vs-periodo en KPI strips */
 .comp-kpi-delta { font-size: 0.625rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 0.1rem; display: inline-flex; align-items: center; gap: 0.15rem; }
 .comp-kpi-delta.is-up { color: #6bcf7f; }
