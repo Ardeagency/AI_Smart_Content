@@ -176,11 +176,14 @@ class CampanasDataService {
       // Plan de accion CMO-grade: recomendaciones priorizadas + momentum +
       // consistencia (server-side). p_brand_container_id es un solo uuid (no
       // array): si hay 1 marca filtrada la pasamos, si no NULL = toda la org.
-      // window cap 365d para que el "vs periodo previo" siga siendo significativo.
+      // window = el periodo seleccionado (sin cap): asi "posts analizados"
+      // refleja todo el contenido real, no solo el ultimo ano. Con "Todo el
+      // periodo" no hay periodo previo → trend null (la UI muestra "—").
+      // La consistencia la calcula la RPC sobre el span real de los posts.
       this.sb.rpc('dashboard_brand_optimization_insights', {
         p_org_id: this.orgId,
         p_brand_container_id: (Array.isArray(bcids) && bcids.length === 1) ? bcids[0] : null,
-        p_window_d: Math.min(healthWindowDays, 365),
+        p_window_d: healthWindowDays,
       }),
       // Riesgo de marca (4ta card "Vigila"): risk_score, posts de riesgo, sentimiento.
       this.sb.rpc('dashboard_brand_alert_score', {
