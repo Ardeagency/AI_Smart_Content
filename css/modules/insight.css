@@ -2836,7 +2836,8 @@
 .mb-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
 /* auto-fit: el grid se adapta a cuantas cards queden (las vacias se ocultan),
    sin dejar columna fantasma. */
-.mb-plan-grid--4 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.1rem; align-items: start; }
+.mb-plan-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+@media (max-width: 1100px) { .mb-plan-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .mb-plan-col {
   position: relative; overflow: hidden;
   background: var(--bg-card, #141517);
@@ -2846,16 +2847,16 @@
   display: flex; flex-direction: column; gap: 0.35rem;
   box-shadow: var(--dash-elev);
 }
-/* Glow sutil de acento arriba (profundidad premium sin saturar) */
+/* Relleno de gradiente diagonal de acento (estilo mockup) */
 .mb-plan-col::after {
-  content: ""; position: absolute; left: 0; top: 0; right: 0; height: 150px; pointer-events: none;
-  background: radial-gradient(130% 100% at 0% 0%, var(--mb-plan-glow, transparent), transparent 72%);
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(135deg, var(--mb-plan-glow, transparent) 0%, transparent 58%);
 }
 .mb-plan-col > * { position: relative; z-index: 1; }
-.mb-plan-col--explota  { --mb-plan-glow: rgba(107,207,127,0.12); }
-.mb-plan-col--optimiza { --mb-plan-glow: rgba(91,155,213,0.12); }
-.mb-plan-col--elimina  { --mb-plan-glow: rgba(224,100,100,0.12); }
-.mb-plan-col--vigila   { --mb-plan-glow: rgba(224,160,69,0.12); }
+.mb-plan-col--explota  { --mb-plan-glow: rgba(107,207,127,0.18); }
+.mb-plan-col--optimiza { --mb-plan-glow: rgba(91,155,213,0.18); }
+.mb-plan-col--elimina  { --mb-plan-glow: rgba(224,100,100,0.18); }
+.mb-plan-col--vigila   { --mb-plan-glow: rgba(224,160,69,0.18); }
 .mb-plan-col-head { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.5rem; }
 .mb-plan-cat { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); }
 /* Boton de preview circular (estilo ref) */
@@ -2883,7 +2884,7 @@
 .mb-plan-col--vigila   .mb-plan-metric-val { color: #e0a045; font-size: 1.25rem; }
 /* Lever (subtitulo bajo el hero) */
 .mb-plan-title { font-size: 0.9375rem; font-weight: 600; color: var(--text-primary, #D4D1D8); line-height: 1.3; margin-top: 0.4rem; }
-.mb-plan-why { margin: 0.3rem 0 0; font-size: 0.75rem; line-height: 1.5; color: var(--text-muted, rgba(212,209,216,0.55)); }
+.mb-plan-why { margin: 0.3rem 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--text-muted, rgba(212,209,216,0.55)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .mb-plan-empty { margin: 0.3rem 0 0; font-size: 0.75rem; color: var(--text-muted, rgba(212,209,216,0.45)); }
 
 /* Badge de impacto en el head de cada card */
