@@ -11,11 +11,8 @@
     position: relative;
 }
 
-/* Hero layout: imagen full-bleed + card glass a la derecha */
+/* Hero layout: video full-bleed + card glass a la derecha */
 .signin-container--hero {
-    background:
-        linear-gradient(rgba(11, 11, 11, 0.18), rgba(11, 11, 11, 0.18)),
-        url('https://res.cloudinary.com/dmruwjuxn/image/upload/v1779481981/__8_kejphv.jpg') center/cover no-repeat;
     background-color: var(--bg-primary);
     display: flex;
     align-items: center;
@@ -24,6 +21,27 @@
     min-height: 100vh;
     position: relative;
     overflow: hidden;
+}
+
+/* Video de fondo full-bleed */
+.signin-hero-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Capa de oscurecimiento sobre el video para legibilidad de la card */
+.signin-container--hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(11, 11, 11, 0.18), rgba(11, 11, 11, 0.18));
+    z-index: 1;
+    pointer-events: none;
 }
 
 .signin-container--hero .signin-card {

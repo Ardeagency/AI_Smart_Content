@@ -25,6 +25,10 @@ class SignInView extends BaseView {
     const year = new Date().getFullYear();
     return `
       <div class="signin-container signin-container--hero">
+        <video class="signin-hero-video" autoplay muted loop playsinline preload="auto"
+               poster="https://res.cloudinary.com/dmruwjuxn/image/upload/v1779481981/__8_kejphv.jpg">
+          <source src="https://res.cloudinary.com/dmruwjuxn/video/upload/v1779651061/Home_banner_kjnlcm.mp4" type="video/mp4">
+        </video>
         <div class="signin-card">
           <div class="signin-brand">
             <img src="/recursos/logos/logo-02.svg" alt="AI Smart Content" class="signin-brand-logo" width="180" height="72" decoding="async">
