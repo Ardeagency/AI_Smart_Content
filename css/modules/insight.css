@@ -3121,6 +3121,14 @@
 .mb-long-card--wide .mb-long-canvas { height: 230px; }
 @media (max-width: 760px) { .mb-long-grid { grid-template-columns: 1fr; } }
 
+/* Banner de actividad (estado + redes) al tope de Analisis Longitudinal */
+.mb-actb { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: space-between; padding: 0.7rem 0.95rem; margin-bottom: 1rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-divider, #34363A); border-radius: 10px; }
+.mb-actb-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary, rgba(212,209,216,0.85)); }
+.mb-actb-status strong { color: var(--text-primary, #D4D1D8); font-weight: 700; }
+.mb-actb-label { font-size: 0.8125rem; font-weight: 700; }
+.mb-actb-nets { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.mb-actb-net { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); background: rgba(255,255,255,0.05); border-radius: 6px; padding: 0.2rem 0.5rem; }
+
 /* Heatmap de horas de publicacion (dia x hora, intensidad = posts) */
 .mb-heat { display: flex; flex-direction: column; gap: 0.6rem; padding-top: 0.1rem; }
 .mb-heat-legend { display: flex; flex-wrap: wrap; gap: 0.7rem; font-size: 0.625rem; color: var(--text-muted, rgba(212,209,216,0.55)); }

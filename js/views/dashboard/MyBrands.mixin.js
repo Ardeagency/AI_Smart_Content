@@ -183,7 +183,6 @@
               ${this._buildLeverageSection(insights)}
               ${this._buildEffectiveAudienceSection(data?.audienceEffective?.data, insights)}
               ${this._buildAudienceSection(data?.audiencePatterns?.data)}
-              ${this._buildActivitySection(data?.activity?.data)}
               ${this._buildEvolutionSection(data?.evolution?.data)}
               ${this._buildPillarsSection(data?.pillars?.data)}
             </div>
@@ -434,8 +433,9 @@
         <section class="mb-section mb-section--wide mb-long">
           <div class="mb-section-head">
             <span class="mb-section-title">Analisis longitudinal</span>
-            <span class="mb-section-hint">Tu evolucion en el tiempo — actividad, engagement, horas y sentimiento</span>
+            <span class="mb-section-hint">Tu evolucion en el tiempo — ritmo, engagement, horas y sentimiento</span>
           </div>
+          ${this._buildActivityBanner(data?.activity?.data)}
           ${!act.length ? `<div class="mb-causal-empty">Aun no hay suficiente historial. Amplia el rango (prueba Todo el periodo).</div>` : `
           <div class="mb-long-grid">
             <div class="mb-long-card mb-long-card--wide">
@@ -1021,6 +1021,32 @@
     },
 
     /* ── Actividad: ritmo de publicacion propio en el tiempo ──────────── */
+    /** Banner de actividad para el tope de Analisis Longitudinal (estado + redes). */
+    _buildActivityBanner(a) {
+      if (!a || a.status === 'sin_datos' || !Number(a.total)) return '';
+      const statusMeta = {
+        activo:    { color: '#6e9f81', label: 'Activo' },
+        irregular: { color: '#9c8e6b', label: 'Irregular' },
+        lento:     { color: '#9c8e6b', label: 'Lento' },
+        dormido:   { color: '#b3796f', label: 'Dormido' },
+      }[a.status] || { color: '#8a8a8e', label: a.status };
+      const days = Number(a.days_since);
+      const headline = a.status === 'dormido'
+        ? `Llevas <strong>${this._daysHuman(days)}</strong> sin publicar`
+        : `Tu ultima publicacion fue hace <strong>${this._daysHuman(days)}</strong>`;
+      const nets = (Array.isArray(a.networks) ? a.networks : []).map((n) =>
+        `<span class="mb-actb-net">${this._esc(this._prettyPlatform(n.network))} · ${Number(n.posts)} ${Number(n.posts) === 1 ? 'post' : 'posts'} · hace ${this._daysHuman(Number(n.days_since))}</span>`).join('');
+      return `
+        <div class="mb-actb">
+          <div class="mb-actb-status">
+            <span class="mb-act-dot" style="background:${statusMeta.color};"></span>
+            <span class="mb-actb-label" style="color:${statusMeta.color};">${this._esc(statusMeta.label)}</span>
+            <span class="mb-actb-headline">${headline}</span>
+          </div>
+          ${nets ? `<div class="mb-actb-nets">${nets}</div>` : ''}
+        </div>`;
+    },
+
     _buildActivitySection(a) {
       if (!a || a.status === 'sin_datos' || !Number(a.total)) {
         if (shouldHideEmpty()) return '';
