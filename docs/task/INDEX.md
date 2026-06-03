@@ -4,10 +4,11 @@ Ordenado por severity desc. Cuando se cierra una tarea: eliminar el archivo Y la
 linea aqui. Las que solo esperan accion humana viven en
 [`PENDING-HUMAN-VERIFICATION.md`](./PENDING-HUMAN-VERIFICATION.md).
 
-**Ultima actualizacion: 2026-06-03** — barrido de cierre. Se eliminaron 2 tareas
-verificadas COMPLETED (FEAT-035 roles/permisos: enums confirmados en BD; FEAT-035
-flows-market: rediseño entregado, solo extras diferidos) y se indexo FEAT-037
-(dashboard Tier-1, en curso). Ver "Resueltas / reclasificadas" al final.
+**Ultima actualizacion: 2026-06-03** — barrido de cierre. Se eliminaron 3 tareas
+(FEAT-035 roles/permisos: enums confirmados en BD; FEAT-035 flows-market: rediseño
+entregado; AUDIT-005: deuda DB aplicada en lo sustantivo — seguridad + indices),
+se indexo FEAT-037 (dashboard Tier-1, en curso) y BUG-005 (residuo de AUDIT-005:
+indice vectorial sin uso). Ver "Resueltas / reclasificadas" al final.
 
 **2026-05-27** — reconciliacion total docs/task vs codigo vivo + BD. Se verifico
 el estado real de las 29 tareas que el INDEX listaba como pendientes; el INDEX
@@ -70,6 +71,7 @@ BUG-004, SPRINT-FRONTEND-100)
 |---|---|
 | [OPS-001](./OPS-001-hetzner-snapshots.md) | Configurar snapshots semanales del CCX33 en consola Hetzner. |
 | [OPS-002](./OPS-002-uptime-monitor-external.md) | Uptime monitor externo (Better Stack / UptimeRobot). |
+| [BUG-005](./BUG-005-semantic-search-vector-index-unused.md) | `ai_brand_vectors_embedding_idx` nunca escaneado (69 filas, 2 RPCs). Verificar si es "indice dormido por corpus chico" (esperado) o busqueda semantica de Vera cayendo siempre al fallback ILIKE (bug). Residuo de AUDIT-005. |
 
 ---
 
@@ -80,7 +82,6 @@ conservan como referencia, no se ejecutan directamente.
 
 - [AUDIT-003](./AUDIT-003-enterprise-readiness-2026-05-12.md) — gap analysis enterprise readiness (roadmap/decisiones).
 - [AUDIT-004](./AUDIT-004-premium-saas-tier1-brands-2026-05-13.md) — premium SaaS Tier-1 (Fase A/B/C + costos).
-- [AUDIT-005](./AUDIT-005-db-architecture-tech-debt-2026-05-29.md) — deuda DB schema (56 fn definer sin search_path, 23 vistas sin security_invoker, 15 indices duplicados, ~17 no usados, ~98 FKs sin indice, 4 backups). DOCUMENTADO, no aplicado; re-auditar antes de corregir. Queries reproducibles incluidas.
 - [FEAT-032-DISCOVERY-PFA-vs-SAUL](./FEAT-032-DISCOVERY-PFA-vs-SAUL.md) — discovery PFA vs workflow Saul (soporte de FEAT-032).
 - [FEAT-032-INFORME-DIRECTOR-CREATIVO](./FEAT-032-INFORME-DIRECTOR-CREATIVO.md) — diagnostico de 14 obstaculos ComfyUI (soporte de FEAT-032/033).
 
@@ -104,6 +105,15 @@ conservan como referencia, no se ejecutan directamente.
   real. Si se retoman seran un FEAT nuevo.
 
 - **FEAT-037 (Dashboard Tier-1)** — INDEXADA. Creada 2026-06-03, Fase 1 en curso.
+
+- **AUDIT-005 (deuda DB)** — RESUELTA en lo sustantivo y borrada. Aplicado a BD:
+  S1 (56 fn definer -> search_path fijo), S3 (13 vistas invoker + RPC
+  `get_org_server_status` con gate + revoke; `v_user_mfa_status` se deja definer
+  self-scoped), P1 (15 indices duplicados dropeados), P3 (17 indices FK en tablas
+  calientes). Diferido: P2 (indices `idx_scan=0` — no dropear en BD joven) se
+  extrajo a [BUG-005](./BUG-005-semantic-search-vector-index-unused.md); Bloque 3
+  limpieza (backups con gate 2026-06-04, vacias, naming) sin valor de tracking.
+  Audit completo + queries reproducibles viven en git history.
 
 ---
 
