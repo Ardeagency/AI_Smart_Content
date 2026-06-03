@@ -1,0 +1,126 @@
+{
+  "name": "IGNIS - Hero Ingredientes (cat01)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ignis-hero-ingredientes",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "8a1b3d22-0001-4e10-9f01-aaaa00000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1600, 0],
+      "webhookId": "ignis-hero-ingredientes-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Validate & Prepare ===\n// Espera body con:\n//   schedule_id, products[3]{name,url,prompt_override?},\n//   references[2], aspect_ratio, resolution, video_duration, callback_url\nconst b = $input.first().json.body || $input.first().json;\n\nif (!b || !Array.isArray(b.products) || b.products.length !== 3) {\n  throw new Error('Se esperan exactamente 3 productos en body.products[]');\n}\nif (!Array.isArray(b.references) || b.references.length < 1) {\n  throw new Error('Se esperan 1-2 imagenes de referencia en body.references[]');\n}\nif (!b.schedule_id) {\n  throw new Error('schedule_id es requerido');\n}\n\n// Prompts default por producto (toman el plano de Saul si no hay override)\nconst DEFAULT_PROMPTS = {\n  'AFTERBURN':  \"HERO PRODUCT SHOT — IGNIS AFTERBURN (red slim can, silver calligraphic 'Ignis' logo, 250ml, 'Stay In Motion' tagline). PRODUCT LOCK: preserve EXACT can geometry, label, logo, typography from reference. SCENE: dynamic motion explosion of pomegranate burst with ginseng particles around the can. LIGHTING: cinematic rim red.\",\n  'BLACK CORE': \"HERO PRODUCT SHOT — IGNIS BLACK CORE (matte black slim can, red calligraphic 'Ignis' logo, 250ml, 'Focus Is Power' tagline). PRODUCT LOCK: preserve EXACT can geometry. SCENE: dark cherry essence with caffeine matrix crystals floating. LIGHTING: moody noir red rim, deep blacks.\",\n  'OVERDRIVE':  \"HERO PRODUCT SHOT — IGNIS OVERDRIVE (silver/metallic slim can, red calligraphic 'Ignis' logo, 250ml, 'Move Faster Than The Market' tagline). PRODUCT LOCK: preserve EXACT can geometry. SCENE: citrus electric splash with B-vitamins glow particles. LIGHTING: cinematic golden hour with chrome reflections.\"\n};\n\nconst DEFAULT_VIDEO_PROMPT = \"slow camera push-in towards the can, subtle product rotation, particles floating in slow motion, professional cinematography, 24fps\";\n\nconst products = b.products.map((p, i) => ({\n  index: i,\n  name: p.name || `PRODUCT_${i+1}`,\n  url: p.url,\n  prompt: (p.prompt_override && p.prompt_override.trim()) || DEFAULT_PROMPTS[p.name] || `HERO PRODUCT SHOT — ${p.name}`,\n  video_prompt: p.video_prompt_override || DEFAULT_VIDEO_PROMPT,\n  save_path_image: p.save_path_image || `ignis/cat01/${p.name.toLowerCase().replace(/\\s/g,'_')}_hero`,\n  save_path_video: p.save_path_video || `ignis/cat01/${p.name.toLowerCase().replace(/\\s/g,'_')}_hero_reel`,\n}));\n\nreturn [{\n  json: {\n    schedule_id: b.schedule_id,\n    products,\n    references: b.references,\n    aspect_ratio: b.aspect_ratio || '1:1',\n    resolution: b.resolution || '2K',\n    output_format: b.output_format || 'png',\n    video_duration: String(b.video_duration || 5),\n    video_aspect_ratio: b.video_aspect_ratio || '1:1',\n    callback_url: b.callback_url || ''\n  }\n}];"
+      },
+      "id": "8a1b3d22-0002-4e10-9f01-aaaa00000002",
+      "name": "Validate & Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1400, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Generate 3 NanoBanana images in parallel with polling ===\n// Cada imagen toma ~30-60s. En paralelo total ~60s.\nconst cfg = $input.first().json;\nconst KIE_BASE = 'https://api.kie.ai';\nconst KIE_API_KEY = $env.KIE_API_KEY;\nif (!KIE_API_KEY) throw new Error('Falta variable de entorno KIE_API_KEY en n8n');\n\nconst headers = {\n  'Authorization': `Bearer ${KIE_API_KEY}`,\n  'Content-Type': 'application/json'\n};\n\nasync function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }\n\nasync function createTask(product) {\n  // image_input = [imagen_producto, ...refs]. Maximo 8 segun KIE.\n  const image_input = [product.url, ...cfg.references].slice(0, 8);\n  const payload = {\n    model: 'nano-banana-pro',\n    input: {\n      prompt: product.prompt,\n      image_input,\n      aspect_ratio: cfg.aspect_ratio,\n      resolution: cfg.resolution,\n      output_format: cfg.output_format\n    }\n  };\n  const res = await fetch(`${KIE_BASE}/api/v1/jobs/createTask`, {\n    method: 'POST', headers, body: JSON.stringify(payload)\n  });\n  const data = await res.json();\n  if (data.code !== 200 || !data.data?.taskId) {\n    throw new Error(`KIE create error para ${product.name}: ${data.msg || JSON.stringify(data)}`);\n  }\n  return data.data.taskId;\n}\n\nasync function pollTask(taskId, productName, maxAttempts = 30, delayMs = 8000) {\n  for (let i = 0; i < maxAttempts; i++) {\n    await sleep(delayMs);\n    const res = await fetch(`${KIE_BASE}/api/v1/jobs/recordInfo?taskId=${taskId}`, { headers });\n    const data = await res.json();\n    const d = data.data || {};\n    const state = (d.state || d.status || '').toLowerCase();\n    if (state === 'success' || state === 'succeeded') {\n      const url = d.resultUrls?.[0] || d.resultJson?.resultUrls?.[0] || d.imageUrl || d.url;\n      if (!url) throw new Error(`KIE success pero sin URL en ${productName}`);\n      return { url, taskId, raw: d };\n    }\n    if (state === 'fail' || state === 'failed') {\n      throw new Error(`KIE fail para ${productName}: ${d.failMsg || JSON.stringify(d)}`);\n    }\n    // sigue esperando: waiting, processing, queuing, etc.\n  }\n  throw new Error(`Timeout en NanoBanana para ${productName} (${maxAttempts * delayMs / 1000}s)`);\n}\n\nasync function processProduct(product) {\n  const taskId = await createTask(product);\n  const result = await pollTask(taskId, product.name);\n  return { ...product, image_taskId: taskId, image_url: result.url };\n}\n\nconst results = await Promise.all(cfg.products.map(processProduct));\n\nreturn [{\n  json: {\n    ...cfg,\n    products: results\n  }\n}];"
+      },
+      "id": "8a1b3d22-0003-4e10-9f01-aaaa00000003",
+      "name": "Generate 3 NanoBanana Images",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1200, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Generate 3 Kling videos in parallel ===\n// Cada video toma ~90-180s. En paralelo total ~3min.\nconst cfg = $input.first().json;\nconst KIE_BASE = 'https://api.kie.ai';\nconst KIE_API_KEY = $env.KIE_API_KEY;\n\nconst headers = {\n  'Authorization': `Bearer ${KIE_API_KEY}`,\n  'Content-Type': 'application/json'\n};\n\nasync function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }\n\nasync function createVideoTask(product) {\n  const payload = {\n    model: 'kling-3.0/video',\n    input: {\n      mode: 'pro',\n      sound: false,\n      duration: cfg.video_duration,\n      aspect_ratio: cfg.video_aspect_ratio,\n      prompt: product.video_prompt,\n      image_urls: [product.image_url],\n      multi_shots: false\n    }\n  };\n  const res = await fetch(`${KIE_BASE}/api/v1/jobs/createTask`, {\n    method: 'POST', headers, body: JSON.stringify(payload)\n  });\n  const data = await res.json();\n  if (data.code !== 200 || !data.data?.taskId) {\n    throw new Error(`Kling create error para ${product.name}: ${data.msg || JSON.stringify(data)}`);\n  }\n  return data.data.taskId;\n}\n\nasync function pollTask(taskId, productName, maxAttempts = 40, delayMs = 10000) {\n  for (let i = 0; i < maxAttempts; i++) {\n    await sleep(delayMs);\n    const res = await fetch(`${KIE_BASE}/api/v1/jobs/recordInfo?taskId=${taskId}`, { headers });\n    const data = await res.json();\n    const d = data.data || {};\n    const state = (d.state || d.status || '').toLowerCase();\n    if (state === 'success' || state === 'succeeded') {\n      const url = d.resultUrls?.[0] || d.resultJson?.resultUrls?.[0] || d.videoUrl || d.url;\n      if (!url) throw new Error(`Kling success pero sin URL en ${productName}`);\n      return { url, taskId, raw: d };\n    }\n    if (state === 'fail' || state === 'failed') {\n      throw new Error(`Kling fail para ${productName}: ${d.failMsg || JSON.stringify(d)}`);\n    }\n  }\n  throw new Error(`Timeout en Kling para ${productName} (${maxAttempts * delayMs / 1000}s)`);\n}\n\nasync function processProduct(product) {\n  const taskId = await createVideoTask(product);\n  const result = await pollTask(taskId, product.name);\n  return { ...product, video_taskId: taskId, video_url: result.url };\n}\n\nconst results = await Promise.all(cfg.products.map(processProduct));\n\nreturn [{\n  json: {\n    ...cfg,\n    products: results\n  }\n}];"
+      },
+      "id": "8a1b3d22-0004-4e10-9f01-aaaa00000004",
+      "name": "Generate 3 Kling Videos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1000, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Build callback payload for the platform ===\nconst cfg = $input.first().json;\n\nconst outputs = [];\nfor (const p of cfg.products) {\n  outputs.push({\n    kind: 'image',\n    product_name: p.name,\n    storage_path: p.save_path_image,\n    external_url: p.image_url,\n    provider: 'kie.ai',\n    model: 'nano-banana-pro',\n    external_task_id: p.image_taskId,\n    metadata: {\n      aspect_ratio: cfg.aspect_ratio,\n      resolution: cfg.resolution,\n      prompt_used: p.prompt\n    }\n  });\n  outputs.push({\n    kind: 'video',\n    product_name: p.name,\n    storage_path: p.save_path_video,\n    external_url: p.video_url,\n    provider: 'kie.ai',\n    model: 'kling-3.0/video',\n    external_task_id: p.video_taskId,\n    metadata: {\n      duration: cfg.video_duration,\n      aspect_ratio: cfg.video_aspect_ratio,\n      first_frame_image_task_id: p.image_taskId,\n      prompt_used: p.video_prompt\n    }\n  });\n}\n\nreturn [{\n  json: {\n    schedule_id: cfg.schedule_id,\n    callback_url: cfg.callback_url,\n    payload: {\n      schedule_id: cfg.schedule_id,\n      flow_slug: 'ignis-cat01-hero-ingredientes',\n      outputs\n    }\n  }\n}];"
+      },
+      "id": "8a1b3d22-0005-4e10-9f01-aaaa00000005",
+      "name": "Build Callback Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-800, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.callback_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "8a1b3d22-0006-4e10-9f01-aaaa00000006",
+      "name": "Callback to Platform",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-600, 0],
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, schedule_id: $('Build Callback Payload').first().json.schedule_id, outputs_count: $('Build Callback Payload').first().json.payload.outputs.length }) }}"
+      },
+      "id": "8a1b3d22-0007-4e10-9f01-aaaa00000007",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-400, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Validate & Prepare", "type": "main", "index": 0 }]]
+    },
+    "Validate & Prepare": {
+      "main": [[{ "node": "Generate 3 NanoBanana Images", "type": "main", "index": 0 }]]
+    },
+    "Generate 3 NanoBanana Images": {
+      "main": [[{ "node": "Generate 3 Kling Videos", "type": "main", "index": 0 }]]
+    },
+    "Generate 3 Kling Videos": {
+      "main": [[{ "node": "Build Callback Payload", "type": "main", "index": 0 }]]
+    },
+    "Build Callback Payload": {
+      "main": [[{ "node": "Callback to Platform", "type": "main", "index": 0 }]]
+    },
+    "Callback to Platform": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "",
+    "timezone": "America/Bogota"
+  }
+}

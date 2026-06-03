@@ -4,12 +4,16 @@ Ordenado por severity desc. Cuando se cierra una tarea: eliminar el archivo Y la
 linea aqui. Las que solo esperan accion humana viven en
 [`PENDING-HUMAN-VERIFICATION.md`](./PENDING-HUMAN-VERIFICATION.md).
 
-**Ultima actualizacion: 2026-05-27** — reconciliacion total docs/task vs codigo
-vivo + BD. Se verifico el estado real de las 29 tareas que el INDEX listaba como
-pendientes; el INDEX estaba masivamente desactualizado. Resultado: 7 ya estaban
-COMPLETED (borradas), 9 solo esperan verificacion humana (consolidadas en 1 doc),
-y quedan las que de verdad faltan por construir. Ver "Resueltas / reclasificadas
-2026-05-27" al final.
+**Ultima actualizacion: 2026-06-03** — barrido de cierre. Se eliminaron 2 tareas
+verificadas COMPLETED (FEAT-035 roles/permisos: enums confirmados en BD; FEAT-035
+flows-market: rediseño entregado, solo extras diferidos) y se indexo FEAT-037
+(dashboard Tier-1, en curso). Ver "Resueltas / reclasificadas" al final.
+
+**2026-05-27** — reconciliacion total docs/task vs codigo vivo + BD. Se verifico
+el estado real de las 29 tareas que el INDEX listaba como pendientes; el INDEX
+estaba masivamente desactualizado. Resultado: 7 ya estaban COMPLETED (borradas),
+9 solo esperan verificacion humana (consolidadas en 1 doc), y quedan las que de
+verdad faltan por construir.
 
 ---
 
@@ -37,7 +41,7 @@ BUG-004, SPRINT-FRONTEND-100)
 | [FEAT-022](./FEAT-022-rbac-granular.md) | RBAC formal owner/admin/editor/viewer: matriz de permisos + audit de RLS policies + UI + transfer ownership. Hoy solo hay selector de rol suelto. |
 | [FEAT-018](./FEAT-018-notifications-rich-model.md) | Modelo rico de notifs: render ya existe (`Navigation.js:944`), pero falta backfill SQL de `metadata.label` (solo 2 de ~50 filas lo tienen) + backend que escriba metadata al crear. |
 | [FEAT-031](./FEAT-031-dev-portal-iteration-2026-05-22.md) | Backend ai-engine: B1 endpoint `POST /api/vera/train` (vectoriza file/prompt/image en `ai_global_vectors`); B2 extender edge function `provision-user-start` para guardar `new_brand_name_oficial`/`slogan`/`logo_url`. Frontend ya cablea ambos. |
-| [FEAT-035](./FEAT-035-flows-market-redesign.md) | Rediseño del Market de Flows (premium + Netflix + editorial) por fases. Plan aprobado 2026-05-27; ejecucion fase por fase con revision intermedia. |
+| [FEAT-037](./FEAT-037-dashboard-tier1-gap-closure.md) | Dashboard Tier-1 gap closure: ~33 RPCs `dashboard_*` huerfanas + capacidades de plataforma (frescura, deltas, export, alertas). **Fase 1 EN CURSO** (commit 21f032c4: benchmark Mi Marca vs Competencia cableado). Falta Fases 2-3 + verificacion humana. |
 
 ## 🟡 Medium — falta construir
 
@@ -79,6 +83,27 @@ conservan como referencia, no se ejecutan directamente.
 - [AUDIT-005](./AUDIT-005-db-architecture-tech-debt-2026-05-29.md) — deuda DB schema (56 fn definer sin search_path, 23 vistas sin security_invoker, 15 indices duplicados, ~17 no usados, ~98 FKs sin indice, 4 backups). DOCUMENTADO, no aplicado; re-auditar antes de corregir. Queries reproducibles incluidas.
 - [FEAT-032-DISCOVERY-PFA-vs-SAUL](./FEAT-032-DISCOVERY-PFA-vs-SAUL.md) — discovery PFA vs workflow Saul (soporte de FEAT-032).
 - [FEAT-032-INFORME-DIRECTOR-CREATIVO](./FEAT-032-INFORME-DIRECTOR-CREATIVO.md) — diagnostico de 14 obstaculos ComfyUI (soporte de FEAT-032/033).
+
+---
+
+## Resueltas / reclasificadas 2026-06-03
+
+- **FEAT-035 (migracion roles/permisos)** — RESUELTA y borrada. DDL aplicado
+  (commit `bb0fef35`) y verificado contra BD: enums `organization_member_role`
+  `{owner,admin,editor,creator,vera_user,viewer}`, `developer_rank_type`
+  `{rookie,junior,builder,expert,master,legend}`, `developer_role_type`
+  `{lead,senior,contributor,viewer}` existen con los valores canonicos.
+  `AuthService.js` ya usa fallback `'rookie'`. (Nota: este archivo nunca estuvo
+  en el INDEX; reusaba el numero FEAT-035 — colision resuelta al borrarlo.)
+
+- **FEAT-035 (rediseño Market de Flows)** — CERRADA y borrada. Fases 1-4 HECHAS
+  + Fase 5 (rails de personalizacion, descubrimiento dinamico sin LLM, Destacado
+  del dia, brand-fit, Novedades, Favoritos) entregada. Solo quedaron diferidos
+  como feature futura (no deuda del rediseño): Colecciones/bundles curados y
+  `content_flows.created_by` — requieren schema + tooling de curaduria + catalogo
+  real. Si se retoman seran un FEAT nuevo.
+
+- **FEAT-037 (Dashboard Tier-1)** — INDEXADA. Creada 2026-06-03, Fase 1 en curso.
 
 ---
 
