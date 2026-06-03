@@ -2640,6 +2640,36 @@
   .mb-hc-comps { grid-template-columns: 1fr; }
 }
 
+/* ── Mi Marca: layout 2 columnas (cuerpo + sidebar de Salud) ──
+   El cuerpo del dashboard va a la izquierda (ancho); la Salud de la marca
+   vive como sidebar fijo a la derecha, mas angosto. Solo aplica al tab Mi Marca. */
+.mb-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1.75rem; align-items: start; }
+.mb-layout-main { min-width: 0; display: flex; flex-direction: column; gap: 2.5rem; }
+.mb-layout-aside { min-width: 0; position: sticky; top: 1rem; }
+
+/* Variante sidebar de la health card: stack vertical, gauge centrado */
+.mb-health-card--aside { padding: 1.35rem 1.4rem; gap: 1rem; }
+.mb-health-card--aside .mb-hero-label { text-align: left; }
+.mb-aside-gauge { width: 100%; display: flex; justify-content: center; }
+.mb-aside-gauge .mb-gauge-svg { width: 200px; max-width: 100%; }
+.mb-health-card--aside .mb-hero-verdict { font-size: 1.375rem; font-weight: 700; text-align: center; line-height: 1; }
+.mb-health-card--aside .mb-health-objetivo { text-align: center; font-size: 0.75rem; margin-bottom: 0; }
+.mb-health-card--aside .mb-hc-comps { grid-template-columns: 1fr; gap: 0.55rem; }
+.mb-health-card--aside .mb-health-tasks { padding-top: 1rem; }
+
+/* Alertas del sidebar (componentes en zona baja como chips) */
+.mb-aside-alerts { border-top: 1px solid var(--border-divider, #242424); padding-top: 1rem; }
+.mb-aside-block-title { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); margin-bottom: 0.6rem; }
+.mb-alert-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.mb-alert-chip { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.6875rem; font-weight: 600; padding: 0.25rem 0.55rem; border-radius: 7px; color: #e0a045; background: rgba(224,160,69,0.1); border: 1px solid rgba(224,160,69,0.28); }
+.mb-alert-chip--crit { color: #e06464; background: rgba(224,100,100,0.1); border-color: rgba(224,100,100,0.3); }
+
+/* Responsive: bajo 980px el sidebar pasa debajo del cuerpo, a ancho completo */
+@media (max-width: 980px) {
+  .mb-layout { grid-template-columns: 1fr; }
+  .mb-layout-aside { position: static; }
+}
+
 /* ════════════════════════════════════════════════════════════════════
    Patrones de tu publico — resonancia emocional (filas)
    ════════════════════════════════════════════════════════════════════ */

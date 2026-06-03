@@ -162,18 +162,27 @@
        ════════════════════════════════════════════════════════════════ */
     _buildMyBrandsHtml(data) {
       const insights = Array.isArray(data?.whatWorks?.data) ? data.whatWorks.data : [];
+      // Layout 2 columnas: el cuerpo del dashboard a la izquierda (ancho) y la
+      // Salud de la marca como sidebar fijo a la derecha (mas angosto). El gauge
+      // de salud dejo de ser hero del cuerpo y vive solo en el sidebar.
       return `
         <div class="insight-page mb-dash" id="mbPage">
           ${this._buildMbFiltersBar(data)}
-          ${this._buildHealthGauge(data?.health?.data)}
-          ${this._buildActionPlanSection(data, insights)}
-          ${this._buildCausalSection(insights, 'boost')}
-          ${this._buildEffectiveAudienceSection(data?.audienceEffective?.data, insights)}
-          ${this._buildAudienceSection(data?.audiencePatterns?.data)}
-          ${this._buildActivitySection(data?.activity?.data)}
-          ${this._buildEvolutionSection(data?.evolution?.data)}
-          ${this._buildPillarsSection(data?.pillars?.data)}
-          ${this._buildCausalSection(insights, 'drag')}
+          <div class="mb-layout">
+            <div class="mb-layout-main">
+              ${this._buildActionPlanSection(data, insights)}
+              ${this._buildCausalSection(insights, 'boost')}
+              ${this._buildEffectiveAudienceSection(data?.audienceEffective?.data, insights)}
+              ${this._buildAudienceSection(data?.audiencePatterns?.data)}
+              ${this._buildActivitySection(data?.activity?.data)}
+              ${this._buildEvolutionSection(data?.evolution?.data)}
+              ${this._buildPillarsSection(data?.pillars?.data)}
+              ${this._buildCausalSection(insights, 'drag')}
+            </div>
+            <aside class="mb-layout-aside">
+              ${this._buildHealthGauge(data?.health?.data)}
+            </aside>
+          </div>
         </div>`;
     },
 
@@ -1013,21 +1022,37 @@
         ? `Objetivo de tu segmento: <strong>${target}</strong>${gap > 0 ? ` · te faltan <strong>${gap}</strong> pts` : ' · objetivo alcanzado ✓'}`
         : `Saludable para tu segmento: <strong>${band.p50}–${band.p75}</strong>`;
 
+      // Sidebar vertical (solo en Mi Marca): gauge centrado + componentes +
+      // alertas (componentes en zona baja) + tareas (el plan de salud).
       return `
-        <section class="mb-health-card">
-          <div class="mb-health-row">
-            <div class="mb-health-gauge-col">
-              <div class="mb-hero-gauge">${gaugeSvg}</div>
-              <span class="mb-hero-verdict" style="color:${verdictMeta.color};">${this._esc(verdictMeta.label)}</span>
-            </div>
-            <div class="mb-health-mid">
-              <span class="mb-hero-label">Salud de tu marca</span>
-              <span class="mb-health-objetivo">${objetivo}</span>
-              ${this._buildHealthComponents(h.components)}
-            </div>
-          </div>
+        <section class="mb-health-card mb-health-card--aside">
+          <span class="mb-hero-label">Salud de tu marca</span>
+          <div class="mb-aside-gauge">${gaugeSvg}</div>
+          <span class="mb-hero-verdict" style="color:${verdictMeta.color};">${this._esc(verdictMeta.label)}</span>
+          <span class="mb-health-objetivo">${objetivo}</span>
+          ${this._buildHealthComponents(h.components)}
+          ${this._buildHealthAlerts(h.components)}
           ${this._buildHealthTasks(h.tasks)}
         </section>`;
+    },
+
+    /* Alertas del sidebar: componentes de salud en zona baja (<50) como chips.
+       Datos ya disponibles en h.components — sin RPC extra. */
+    _buildHealthAlerts(components) {
+      const list = (Array.isArray(components) ? components : [])
+        .filter((c) => (Number(c.score) || 0) < 50)
+        .sort((a, b) => (Number(a.score) || 0) - (Number(b.score) || 0));
+      if (!list.length) return '';
+      const chips = list.map((c) => {
+        const sc = Math.round(Number(c.score) || 0);
+        const crit = sc < 40;
+        return `<span class="mb-alert-chip${crit ? ' mb-alert-chip--crit' : ''}"><i class="fas fa-triangle-exclamation"></i> ${this._esc(c.label || c.key)} ${sc}</span>`;
+      }).join('');
+      return `
+        <div class="mb-aside-alerts">
+          <div class="mb-aside-block-title">Alertas</div>
+          <div class="mb-alert-chips">${chips}</div>
+        </div>`;
     },
 
     _buildHealthComponents(components) {
