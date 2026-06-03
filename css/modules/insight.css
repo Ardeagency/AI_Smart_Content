@@ -2846,16 +2846,18 @@
 }
 /* Header estilo referencia: icono en badge redondeado + categoria + impacto */
 .mb-plan-col-head { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.35rem; }
-.mb-plan-icon {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; border-radius: 9px; flex: 0 0 auto;
-  font-size: 0.8125rem; background: rgba(255,255,255,0.06);
-}
 .mb-plan-cat { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); }
-.mb-plan-col--explota  .mb-plan-icon { color: #6bcf7f; background: rgba(107,207,127,0.14); }
-.mb-plan-col--optimiza .mb-plan-icon { color: #5b9bd5; background: rgba(91,155,213,0.14); }
-.mb-plan-col--elimina  .mb-plan-icon { color: #e06464; background: rgba(224,100,100,0.14); }
-.mb-plan-col--vigila   .mb-plan-icon { color: #e0a045; background: rgba(224,160,69,0.14); }
+/* Acciones del header (impacto + preview) alineadas a la derecha */
+.mb-plan-head-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 0.45rem; }
+.mb-plan-expand {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 8px; flex: 0 0 auto;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border-divider, #242424);
+  color: var(--text-muted, rgba(212,209,216,0.6)); cursor: pointer; font-size: 0.7rem;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.mb-plan-expand:hover { background: rgba(255,255,255,0.1); color: var(--text-primary, #D4D1D8); border-color: rgba(255,255,255,0.18); }
+.mb-plan-expand:focus-visible { outline: 2px solid rgba(255,255,255,0.4); outline-offset: 2px; }
 .mb-plan-col--explota  .mb-plan-cat { color: #6bcf7f; }
 .mb-plan-col--optimiza .mb-plan-cat { color: #5b9bd5; }
 .mb-plan-col--elimina  .mb-plan-cat { color: #e06464; }
@@ -2873,7 +2875,7 @@
 .mb-plan-empty { margin: 0.3rem 0 0; font-size: 0.75rem; color: var(--text-muted, rgba(212,209,216,0.45)); }
 
 /* Badge de impacto en el head de cada card */
-.mb-plan-impact { margin-left: auto; font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.15rem 0.4rem; border-radius: 6px; border: 1px solid currentColor; opacity: 0.85; }
+.mb-plan-impact { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.15rem 0.4rem; border-radius: 6px; border: 1px solid currentColor; opacity: 0.85; }
 .mb-plan-impact--alto  { color: #6bcf7f; }
 .mb-plan-impact--medio { color: #e0a045; }
 .mb-plan-impact--bajo  { color: var(--text-muted, rgba(212,209,216,0.5)); }

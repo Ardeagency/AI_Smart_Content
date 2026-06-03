@@ -246,23 +246,25 @@
           title: `${ec[0].dim} "${this._esc(ec[0].val)}"`,
           metric: `+${Math.round(Number(ec[0].lift))}%`, metricSub: 'sobre tu promedio',
           why: `Tu mejor palanca (${ec[0].n} posts). Produce mas de esto.`, impact: 'alto',
+          detailDim: ec[0].dim === 'Tema' ? 'topic' : 'tone', detailValue: ec[0].val,
         };
         const oc = [
-          oi.best_hour_co && Number(oi.best_hour_co.lift_pct) > 0 && { txt: `Publica a las ${oi.best_hour_co.hour_co}h`, lift: oi.best_hour_co.lift_pct },
-          oi.best_format  && Number(oi.best_format.lift_pct)  > 0 && { txt: `Usa mas "${oi.best_format.format}"`, lift: oi.best_format.lift_pct },
+          oi.best_hour_co && Number(oi.best_hour_co.lift_pct) > 0 && { txt: `Publica a las ${oi.best_hour_co.hour_co}h`, lift: oi.best_hour_co.lift_pct, dim: 'hour', value: String(oi.best_hour_co.hour_co) },
+          oi.best_format  && Number(oi.best_format.lift_pct)  > 0 && { txt: `Usa mas "${oi.best_format.format}"`, lift: oi.best_format.lift_pct, dim: 'format', value: oi.best_format.format },
         ].filter(Boolean).sort((a, b) => Number(b.lift) - Number(a.lift));
         if (oc[0]) optimiza = {
           title: oc[0].txt, metric: `+${Math.round(Number(oc[0].lift))}%`, metricSub: 'engagement',
           why: oi.posting_consistency ? `Consistencia actual: ${Math.round(Number(oi.posting_consistency.posting_consistency_pct))}%.` : '',
-          impact: 'medio',
+          impact: 'medio', detailDim: oc[0].dim, detailValue: oc[0].value,
         };
         const dc = [
-          oi.worst_tone    && Number(oi.worst_tone.lift_pct)    < 0 && { title: `Tono "${oi.worst_tone.tone}"`, lift: oi.worst_tone.lift_pct },
-          oi.worst_hour_co && Number(oi.worst_hour_co.lift_pct) < 0 && { title: `Publicar a las ${oi.worst_hour_co.hour_co}h`, lift: oi.worst_hour_co.lift_pct },
+          oi.worst_tone    && Number(oi.worst_tone.lift_pct)    < 0 && { title: `Tono "${oi.worst_tone.tone}"`, lift: oi.worst_tone.lift_pct, dim: 'tone', value: oi.worst_tone.tone },
+          oi.worst_hour_co && Number(oi.worst_hour_co.lift_pct) < 0 && { title: `Publicar a las ${oi.worst_hour_co.hour_co}h`, lift: oi.worst_hour_co.lift_pct, dim: 'hour', value: String(oi.worst_hour_co.hour_co) },
         ].filter(Boolean).sort((a, b) => Number(a.lift) - Number(b.lift));
         if (dc[0]) elimina = {
           title: dc[0].title, metric: `${Math.round(Number(dc[0].lift))}%`, metricSub: 'bajo tu promedio',
           why: 'Rinde muy por debajo de tu media. Reducelo o evitalo.', impact: 'medio',
+          detailDim: dc[0].dim, detailValue: dc[0].value,
         };
       }
       if (explota  && !explota.impact)  explota.impact  = 'alto';
@@ -286,6 +288,7 @@
           metric: parts[0] || `riesgo ${Math.round(Number(risk.risk_score))}`,
           why: parts.slice(1).join(' · ') || (risk.description || 'Revisa sentimiento y flags.'),
           impact: Number(risk.risk_score) >= 50 ? 'alto' : 'medio',
+          detailDim: 'sentiment', detailValue: 'negative',
         };
       }
 
@@ -319,12 +322,14 @@
       // pinta empty state). El grid se adapta a cuantas cards queden.
       const col = (kind, icon, label, item) => {
         if (!item) return '';
+        const expand = item.detailDim
+          ? `<button type="button" class="mb-plan-expand" data-feat-detail data-dim="${this._esc(item.detailDim)}" data-value="${this._esc(item.detailValue || '')}" data-title="${this._esc(label + ': ' + item.title)}" aria-label="Ver publicaciones detras de esta recomendacion"><i class="fas fa-up-right-and-down-left-from-center"></i></button>`
+          : '';
         return `
           <div class="mb-plan-col mb-plan-col--${kind}">
             <div class="mb-plan-col-head">
-              <span class="mb-plan-icon"><i class="${icon}"></i></span>
               <span class="mb-plan-cat">${label}</span>
-              ${impactBadge(item.impact)}
+              <div class="mb-plan-head-actions">${impactBadge(item.impact)}${expand}</div>
             </div>
             ${item.metric ? `<div class="mb-plan-metric"><span class="mb-plan-metric-val">${this._esc(item.metric)}</span>${item.metricSub ? `<span class="mb-plan-metric-sub">${this._esc(item.metricSub)}</span>` : ''}</div>` : ''}
             <div class="mb-plan-title">${this._esc(item.title)}</div>
