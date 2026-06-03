@@ -1,0 +1,60 @@
+/* ============================================================
+   Status gradient cards — estilo reutilizable
+   ------------------------------------------------------------
+   Creado para el calendario de Tasks (TasksView). Pensado para
+   reutilizarse en CUALQUIER card que represente un estado.
+
+   Uso:
+     <div class="status-card status-card--draft">
+       <h4>Titulo</h4>
+       <span class="status-card-sub">subtitulo</span>
+     </div>
+
+   Estados:
+     --active  = gradiente lima -> verde   (color-success de la plataforma)
+     --draft   = gradiente amarillo -> lima (color-warning de la plataforma)
+     --paused  = relleno gris neutro translucido
+
+   Los gradientes usan los tokens de marca (--color-success / --color-warning)
+   mezclados 60/40 con gris para BAJAR la saturacion (no chillon). Para ajustar
+   intensidad globalmente, cambia el 60% o --status-gray-mix aqui — todo lo que
+   use estos tokens (calendario incluido) se actualiza solo.
+   ============================================================ */
+:root {
+  --status-gray-mix: #9a9a92;
+
+  --status-gradient-active: linear-gradient(180deg,
+    color-mix(in srgb, #9acc00 60%, var(--status-gray-mix)) 0%,
+    color-mix(in srgb, var(--color-success, #00d614) 60%, var(--status-gray-mix)) 100%);
+
+  --status-gradient-draft: linear-gradient(180deg,
+    color-mix(in srgb, var(--color-warning, #ffe500) 60%, var(--status-gray-mix)) 0%,
+    color-mix(in srgb, #9acc00 60%, var(--status-gray-mix)) 100%);
+
+  --status-fill-paused: color-mix(in srgb, var(--text-tertiary, #87868B) 22%, transparent);
+
+  /* Texto sobre los gradientes claros (borrador/activa) */
+  --status-text-strong: rgba(12, 22, 0, 0.92);
+  --status-text-soft:   rgba(12, 22, 0, 0.62);
+}
+
+/* Card base reutilizable */
+.status-card {
+  border: none;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.status-card--active { background: var(--status-gradient-active); color: var(--status-text-strong); }
+.status-card--draft  { background: var(--status-gradient-draft);  color: var(--status-text-strong); }
+.status-card--paused { background: var(--status-fill-paused);     color: var(--text-primary); }
+
+/* Subtexto/secundario dentro de la card */
+.status-card--active .status-card-sub,
+.status-card--draft  .status-card-sub { color: var(--status-text-soft); }
+.status-card--paused .status-card-sub { color: var(--text-tertiary); }
+
+/* Punto/chip de leyenda con el mismo lenguaje de color */
+.status-dot--active { background: var(--status-gradient-active); }
+.status-dot--draft  { background: var(--status-gradient-draft); }
+.status-dot--paused { background: var(--text-tertiary); }

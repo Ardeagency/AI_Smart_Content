@@ -18,6 +18,7 @@
    cada módulo va en URL propia; sin ?v= aquí el CDN/navegador puede quedarse con CSS viejo.
    Subir APP_CSS_MODULES_VER en todos los imports cuando cambie cualquier modules/*.css.
    ============================================================ */
+@import url('modules/status-cards.css?v=__BUILD_ID__');
 @import url('modules/navigation.css?v=__BUILD_ID__');
 @import url('modules/auth.css?v=__BUILD_ID__');
 @import url('modules/brands.css?v=__BUILD_ID__');

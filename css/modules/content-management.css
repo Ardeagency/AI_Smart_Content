@@ -615,9 +615,9 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   display: inline-block;
 }
 
-.cal2-legend-dot--active { background: linear-gradient(180deg, color-mix(in srgb, #9acc00 60%, #9a9a92) 0%, color-mix(in srgb, var(--color-success, #00d614) 60%, #9a9a92) 100%); }
+.cal2-legend-dot--active { background: var(--status-gradient-active); }
 .cal2-legend-dot--paused { background: var(--text-tertiary); }
-.cal2-legend-dot--draft  { background: linear-gradient(180deg, color-mix(in srgb, var(--color-warning, #ffe500) 60%, #9a9a92) 0%, color-mix(in srgb, #9acc00 60%, #9a9a92) 100%); }
+.cal2-legend-dot--draft  { background: var(--status-gradient-draft); }
 
 .cal2-empty {
   color: var(--text-secondary);
@@ -784,25 +784,17 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .cal2-bub--more { background: rgba(255, 255, 255, 0.22); color: #fff; font-weight: 700; }
 .cal2-bub--ph { background: rgba(255, 255, 255, 0.12); }
 
-/* Fondos por estado: gradientes de marca (borrador y activa); pausada neutra.
-   Texto oscuro en las cards claras para contraste. */
-.cal2-event--draft {
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--color-warning, #ffe500) 60%, #9a9a92) 0%,
-    color-mix(in srgb, #9acc00 60%, #9a9a92) 100%);
-}
-.cal2-event--active {
-  background: linear-gradient(180deg,
-    color-mix(in srgb, #9acc00 60%, #9a9a92) 0%,
-    color-mix(in srgb, var(--color-success, #00d614) 60%, #9a9a92) 100%);
-}
+/* Fondos por estado: consume los tokens reutilizables de status-cards.css
+   (gradientes de marca con baja saturacion). Single source of truth. */
+.cal2-event--draft  { background: var(--status-gradient-draft); }
+.cal2-event--active { background: var(--status-gradient-active); }
 .cal2-event--draft .cal2-event-name,
-.cal2-event--active .cal2-event-name { color: rgba(12, 22, 0, 0.92); }
+.cal2-event--active .cal2-event-name { color: var(--status-text-strong); }
 .cal2-event--draft .cal2-event-when,
-.cal2-event--active .cal2-event-when { color: rgba(12, 22, 0, 0.62); }
+.cal2-event--active .cal2-event-when { color: var(--status-text-soft); }
 
 .cal2-event--paused {
-  background: color-mix(in srgb, var(--text-tertiary, #87868B) 22%, transparent);
+  background: var(--status-fill-paused);
 }
 .cal2-event--paused .cal2-event-name { color: #e2e2e8; }
 .cal2-event--paused .cal2-event-when { color: #b6b6be; }
