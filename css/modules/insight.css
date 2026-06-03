@@ -2650,7 +2650,7 @@
 .mb-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1.75rem; align-items: start; }
 /* Cuerpo principal = grid de 2 columnas. Las secciones "banner" (plan de accion,
    evolucion) ocupan el ancho completo via .mb-section--wide. */
-.mb-layout-main { min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem; align-items: start; }
+.mb-layout-main { min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; align-items: start; }
 .mb-section--wide { grid-column: 1 / -1; }
 /* La barra de filtros vive dentro de la columna izquierda y ocupa su ancho completo. */
 .mb-layout-main > .mb-filters-bar { grid-column: 1 / -1; margin: 0; }
@@ -2660,7 +2660,7 @@
 /* Variante sidebar (specs Figma): fondo gradiente, borde, radio + glow arcoiris al fondo */
 .insight-page .mb-health-card.mb-health-card--aside {
   position: relative; overflow: hidden;
-  padding: 1.5rem 1.4rem; gap: 1rem;
+  padding: 1.2rem 1.2rem; gap: 0.8rem;
   background: linear-gradient(180deg, #222429 0%, #1B1D22 100%);
   border: 1px solid #34363A; border-radius: 10px;
   box-shadow: var(--dash-elev);
@@ -2674,7 +2674,7 @@
 .mb-health-card--aside .mb-hero-label { text-align: left; text-transform: uppercase; color: #7B7B7B; font-size: 0.8125rem; letter-spacing: 0.04em; }
 .mb-health-card--aside .mb-health-objetivo { text-align: center; font-size: 0.75rem; margin-bottom: 0; }
 /* Anillo circular con borde arcoiris (conic) + numero/banda en gradiente por banda */
-.mb-health-ring { position: relative; width: 160px; height: 160px; margin: 0.4rem auto 0.5rem; }
+.mb-health-ring { position: relative; width: 130px; height: 130px; margin: 0.3rem auto 0.4rem; }
 .mb-health-ring::before {
   content: ""; position: absolute; inset: 0; border-radius: 50%;
   background: conic-gradient(from 0deg,
@@ -2686,9 +2686,9 @@
           mask: radial-gradient(closest-side, transparent 70%, #000 72%);
 }
 .mb-health-ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.05rem; }
-.mb-health-score { font-size: 2.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-.mb-health-max { font-size: 0.875rem; color: #7B7B7B; line-height: 1.2; }
-.mb-health-band { font-size: 0.875rem; font-weight: 700; line-height: 1.3; }
+.mb-health-score { font-size: 2rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+.mb-health-max { font-size: 0.75rem; color: #7B7B7B; line-height: 1.2; }
+.mb-health-band { font-size: 0.8125rem; font-weight: 700; line-height: 1.3; }
 .mb-health-score, .mb-health-band {
   background-image: var(--mb-band-grad, linear-gradient(180deg, #FF0000 0%, #FF6500 100%));
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
@@ -2697,7 +2697,7 @@
 .mb-health-ring--atencion  { --mb-band-grad: linear-gradient(180deg, #E0A045 0%, #E8C84B 100%); --ring-c1:#E0A045; --ring-c2:#E8C84B; }
 .mb-health-ring--saludable { --mb-band-grad: linear-gradient(180deg, #2ECC71 0%, #7BE0A0 100%); --ring-c1:#2ECC71; --ring-c2:#7BE0A0; }
 .mb-health-ring--elite     { --mb-band-grad: linear-gradient(180deg, #2ECC71 0%, #00E0C0 100%); --ring-c1:#2ECC71; --ring-c2:#00E0C0; }
-.mb-health-card--aside .mb-hc-comps { grid-template-columns: 1fr; gap: 1rem; }
+.mb-health-card--aside .mb-hc-comps { grid-template-columns: 1fr; gap: 0.7rem; }
 .mb-health-card--aside .mb-health-tasks { padding-top: 1rem; }
 
 /* Componentes del sidebar: legibilidad + color con significado (override del
@@ -2869,15 +2869,15 @@
 .mb-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
 /* auto-fit: el grid se adapta a cuantas cards queden (las vacias se ocultan),
    sin dejar columna fantasma. */
-.mb-plan-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; align-items: stretch; }
+.mb-plan-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.85rem; align-items: stretch; }
 @media (max-width: 1100px) { .mb-plan-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .mb-plan-col {
   position: relative; overflow: hidden;
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
-  border-radius: 18px;
-  padding: 1.25rem 1.4rem 1.35rem;
-  display: flex; flex-direction: column; gap: 0.35rem;
+  border-radius: 14px;
+  padding: 1rem 1.1rem 1.1rem;
+  display: flex; flex-direction: column; gap: 0.25rem;
   box-shadow: var(--dash-elev);
 }
 /* Relleno de gradiente diagonal de dos tonos por tipo (palette del mockup) */
@@ -2887,7 +2887,7 @@
 .mb-plan-col--optimiza::after { background: linear-gradient(135deg, rgba(91,155,213,0.24) 0%, rgba(139,92,246,0.10) 42%, transparent 66%); }
 .mb-plan-col--elimina::after  { background: linear-gradient(135deg, rgba(224,100,100,0.24) 0%, rgba(224,140,69,0.10) 42%, transparent 66%); }
 .mb-plan-col--vigila::after   { background: linear-gradient(135deg, rgba(224,160,69,0.24) 0%, rgba(234,200,80,0.10) 42%, transparent 66%); }
-.mb-plan-col-head { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.5rem; }
+.mb-plan-col-head { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.35rem; }
 .mb-plan-cat { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); }
 /* Boton de preview circular (estilo ref) */
 .mb-plan-head-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 0.45rem; }
@@ -2906,15 +2906,15 @@
 .mb-plan-col--vigila   .mb-plan-cat { color: #e0a045; }
 /* Numero hero (grande + sufijo fino) */
 .mb-plan-metric { display: flex; align-items: baseline; gap: 0.45rem; flex-wrap: wrap; }
-.mb-plan-metric-val { font-size: 1.875rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
-.mb-plan-metric-sub { font-size: 0.75rem; font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.55)); }
+.mb-plan-metric-val { font-size: 1.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+.mb-plan-metric-sub { font-size: 0.6875rem; font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.55)); }
 .mb-plan-col--explota  .mb-plan-metric-val { color: #6bcf7f; }
 .mb-plan-col--optimiza .mb-plan-metric-val { color: #5b9bd5; }
 .mb-plan-col--elimina  .mb-plan-metric-val { color: #e06464; }
-.mb-plan-col--vigila   .mb-plan-metric-val { color: #e0a045; font-size: 1.25rem; }
+.mb-plan-col--vigila   .mb-plan-metric-val { color: #e0a045; font-size: 1.0625rem; }
 /* Lever (subtitulo bajo el hero) */
-.mb-plan-title { font-size: 0.9375rem; font-weight: 600; color: var(--text-primary, #D4D1D8); line-height: 1.3; margin-top: 0.4rem; }
-.mb-plan-why { margin: 0.3rem 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--text-muted, rgba(212,209,216,0.55)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mb-plan-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary, #D4D1D8); line-height: 1.3; margin-top: 0.3rem; }
+.mb-plan-why { margin: 0.25rem 0 0; font-size: 0.6875rem; line-height: 1.4; color: var(--text-muted, rgba(212,209,216,0.55)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .mb-plan-empty { margin: 0.3rem 0 0; font-size: 0.75rem; color: var(--text-muted, rgba(212,209,216,0.45)); }
 
 /* Badge de impacto en el head de cada card */
@@ -2924,12 +2924,12 @@
 .mb-plan-impact--bajo  { color: var(--text-muted, rgba(212,209,216,0.5)); }
 
 /* Tira de signos vitales (momentum del CMO) */
-.mb-plan-vitals { position: relative; overflow: hidden; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 1.3rem; background: linear-gradient(180deg, #222429 0%, #1B1D22 100%); border: 1px solid #34363A; border-radius: 10px; box-shadow: var(--dash-elev); }
+.mb-plan-vitals { position: relative; overflow: hidden; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 1rem; background: linear-gradient(180deg, #222429 0%, #1B1D22 100%); border: 1px solid #34363A; border-radius: 10px; box-shadow: var(--dash-elev); }
 /* Wash de color contenido en el borde superior (no desborda: overflow hidden clipa) */
 .mb-plan-vitals::before { content: ""; position: absolute; left: 0; right: 0; top: -8px; height: 44px; pointer-events: none; z-index: 0; background: linear-gradient(270deg, #0063FF 0%, #814AC8 30%, #FF004D 70%, #FF5C23 100%); opacity: 0.28; filter: blur(14px); }
-.mb-plan-vital { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0.35rem; padding: 1.25rem 1.5rem; border-right: 1px solid var(--dash-line, rgba(255,255,255,0.08)); }
+.mb-plan-vital { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.95rem 1.2rem; border-right: 1px solid var(--dash-line, rgba(255,255,255,0.08)); }
 .mb-plan-vital:last-child { border-right: 0; }
-.mb-plan-vital-val { font-size: 1.875rem; font-weight: 800; line-height: 1; letter-spacing: -0.025em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+.mb-plan-vital-val { font-size: 1.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.025em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
 .mb-plan-vital-val.is-up   { color: #6bcf7f; }
 .mb-plan-vital-val.is-down { color: #e06464; }
 .mb-plan-vital-val.is-flat { color: var(--text-muted, rgba(212,209,216,0.6)); }
@@ -3293,7 +3293,7 @@
 }
 
 /* Ritmo: mas aire entre secciones */
-.insight-page.mb-dash { gap: 2.5rem; }
+.insight-page.mb-dash { gap: 1.5rem; }
 
 /* ── Filtros: glass-black (no la variante blanca translucida) ──
    OJO: nada de backdrop-filter en .living-filter — crea un bloque contenedor
@@ -3310,17 +3310,17 @@
 .insight-page .mb-filters-bar .living-filter--disabled .living-filter-select { cursor: not-allowed; }
 
 /* ── Header de seccion: tipografia con jerarquia real + regla fina ── */
-.insight-page .mb-section { gap: 1.15rem; }
+.insight-page .mb-section { gap: 0.85rem; }
 .insight-page .mb-section-head {
-  flex-direction: column; align-items: stretch; gap: 0.2rem;
-  padding-bottom: 0.7rem; border-bottom: 1px solid var(--dash-line);
+  flex-direction: column; align-items: stretch; gap: 0.15rem;
+  padding-bottom: 0.5rem; border-bottom: 1px solid var(--dash-line);
 }
 .insight-page .mb-section-title {
-  font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.012em;
+  font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.01em;
   text-transform: none; color: var(--text-primary);
 }
 .insight-page .mb-section-hint {
-  font-size: 0.8125rem; font-weight: 400; letter-spacing: 0;
+  font-size: 0.75rem; font-weight: 400; letter-spacing: 0;
   text-transform: none; color: var(--text-muted);
 }
 
