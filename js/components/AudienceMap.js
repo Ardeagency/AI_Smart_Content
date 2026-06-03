@@ -206,10 +206,11 @@
     const sat = Math.min(90, Math.max(70, brandSat));
 
     const fillFor = (value) => {
-      if (value == null) return 'rgba(255,255,255,0.04)';
+      if (value == null) return 'rgba(255,255,255,0.05)';
       const t  = curve(value / maxVal);
-      // 18% (top, casi negro brand) → 82% (cola, casi blanco brand): 64pt range
-      const lightness = 82 - (64 * t);
+      // Dark mode: mas valor = mas BRILLANTE (no mas oscuro). Cola ~42% (tenue)
+      // -> top ~66% (vibrante), para que el pais con data resalte sobre el fondo.
+      const lightness = 42 + (24 * t);
       return `hsl(${brandHue.toFixed(1)}, ${sat.toFixed(1)}%, ${lightness.toFixed(1)}%)`;
     };
 
