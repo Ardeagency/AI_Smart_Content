@@ -315,12 +315,10 @@
       const impactBadge = (impact) =>
         impact ? `<span class="mb-plan-impact mb-plan-impact--${impact}">impacto ${this._esc(impact)}</span>` : '';
 
+      // Card de un bucket. Devuelve '' si el item esta vacio → se oculta (no se
+      // pinta empty state). El grid se adapta a cuantas cards queden.
       const col = (kind, icon, label, item) => {
-        if (!item) {
-          return `<div class="mb-plan-col mb-plan-col--${kind} mb-plan-col--empty">
-            <div class="mb-plan-col-head"><i class="${icon}"></i><span>${label}</span></div>
-            <p class="mb-plan-empty">${kind === 'vigila' ? 'Sin riesgos detectados.' : 'Sin senal clara aun.'}</p></div>`;
-        }
+        if (!item) return '';
         return `
           <div class="mb-plan-col mb-plan-col--${kind}">
             <div class="mb-plan-col-head"><i class="${icon}"></i><span>${label}</span>${impactBadge(item.impact)}</div>
@@ -330,6 +328,13 @@
           </div>`;
       };
 
+      const cards = [
+        col('explota',  'fas fa-arrow-trend-up',   'Explota',  explota),
+        col('optimiza', 'fas fa-sliders',          'Optimiza', optimiza),
+        col('elimina',  'fas fa-arrow-trend-down', 'Elimina',  elimina),
+        col('vigila',   'fas fa-shield-halved',    'Vigila',   vigila),
+      ].filter(Boolean);
+
       return `
         <section class="mb-section mb-section--wide">
           <div class="mb-section-head">
@@ -337,12 +342,7 @@
             <span class="mb-section-hint">Que explotar, optimizar, eliminar y vigilar — priorizado por impacto</span>
           </div>
           ${vitals}
-          <div class="mb-plan-grid mb-plan-grid--4">
-            ${col('explota',  'fas fa-arrow-trend-up',   'Explota',  explota)}
-            ${col('optimiza', 'fas fa-sliders',          'Optimiza', optimiza)}
-            ${col('elimina',  'fas fa-arrow-trend-down', 'Elimina',  elimina)}
-            ${col('vigila',   'fas fa-shield-halved',    'Vigila',   vigila)}
-          </div>
+          <div class="mb-plan-grid mb-plan-grid--4">${cards.join('')}</div>
         </section>`;
     },
 
