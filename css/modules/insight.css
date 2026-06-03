@@ -2901,6 +2901,48 @@
 .comp-voice-card.comp-clickable:hover { border-color: rgba(255,255,255,0.18); transform: translateY(-2px); }
 .comp-clickable:focus-visible { outline: 2px solid var(--accent-brand, rgba(255,255,255,0.4)); outline-offset: 2px; }
 
+/* ── Mi Marca vs Competencia (benchmark head-to-head + share-of-voice) ── */
+.comp-bench-head {
+  font-size: 0.875rem; line-height: 1.4; color: var(--text-secondary, rgba(212,209,216,0.82));
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-left: 3px solid var(--text-muted, rgba(212,209,216,0.4));
+  border-radius: 11px; padding: 0.7rem 1rem; margin-bottom: 0.85rem;
+}
+.comp-bench-head b { color: var(--text-primary, #D4D1D8); font-weight: 700; }
+.comp-bench-head--win  { border-left-color: #6bcf7f; }
+.comp-bench-head--lose { border-left-color: #e0a464; }
+.comp-bench-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+.comp-bench-h2h, .comp-bench-sov {
+  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  border-radius: 12px; padding: 0.9rem 1.1rem;
+}
+.comp-bench-row { display: grid; grid-template-columns: 1.3fr 1fr 1fr; align-items: center; gap: 0.5rem; padding: 0.4rem 0; }
+.comp-bench-row + .comp-bench-row { border-top: 1px solid var(--border-divider, #242424); }
+.comp-bench-row--head { padding-top: 0; }
+.comp-bench-metric { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
+.comp-bench-col { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; text-align: right; }
+.comp-bench-col--brand { color: #6ba8d6; }
+.comp-bench-col--comp { color: var(--text-muted, rgba(212,209,216,0.55)); }
+.comp-bench-val { font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary, rgba(212,209,216,0.82)); text-align: right; font-variant-numeric: tabular-nums; }
+.comp-bench-val.is-win { color: #6bcf7f; font-weight: 700; }
+.comp-bench-sov-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--bg-primary, #0b0b0b); margin-bottom: 0.55rem; }
+.comp-bench-sov-seg { height: 100%; }
+.comp-bench-sov-seg--brand { background: #6ba8d6; }
+.comp-bench-sov-seg--comp { background: rgba(212,209,216,0.22); }
+.comp-bench-sov-legend { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
+.comp-bench-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; vertical-align: middle; margin-right: 0.25rem; }
+.comp-bench-dot--brand { background: #6ba8d6; }
+.comp-bench-dot--comp { background: rgba(212,209,216,0.22); }
+.comp-bench-sov-cap { display: block; font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.45)); margin-top: 0.5rem; }
+.comp-bench-sov-list { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--border-divider, #242424); }
+.comp-bench-sov-row { display: grid; grid-template-columns: minmax(70px, 1fr) 2fr auto; align-items: center; gap: 0.5rem; border-radius: 7px; padding: 0.15rem 0.25rem; }
+.comp-bench-sov-row.comp-clickable:hover { background: rgba(255,255,255,0.04); }
+.comp-bench-sov-name { font-size: 0.6875rem; color: var(--text-secondary, rgba(212,209,216,0.82)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comp-bench-sov-track { height: 7px; border-radius: 4px; background: var(--bg-primary, #0b0b0b); overflow: hidden; }
+.comp-bench-sov-fill { display: block; height: 100%; background: rgba(212,209,216,0.3); border-radius: 4px; }
+.comp-bench-sov-pct { font-size: 0.6875rem; font-weight: 600; color: var(--text-muted, rgba(212,209,216,0.6)); font-variant-numeric: tabular-nums; text-align: right; }
+@media (max-width: 760px) { .comp-bench-grid { grid-template-columns: 1fr; } }
+
 /* Competencia — Que les funciona (formulas ganadoras del nicho) */
 .comp-combos { display: flex; flex-direction: column; gap: 0.5rem; }
 .comp-combo-row {

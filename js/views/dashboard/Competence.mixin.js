@@ -90,6 +90,7 @@
         <div class="insight-page mb-dash" id="compPage">
           ${this._buildCompFiltersBar()}
           ${this._buildBattlefield(data?.kpis?.data, data?.top?.data)}
+          ${this._buildBenchmark(data?.benchmark?.data, data?.shareOfVoice?.data)}
           ${this._buildWinningFormula(data?.intelligence?.data)}
           ${this._buildAudienceVoice(data?.voice?.data)}
           ${this._buildRivalRisk(data?.risk?.data)}
@@ -189,6 +190,101 @@
           </div>
           ${kpiCards}
           ${list.length ? `<div class="comp-rank">${rows}</div>` : `<div class="mb-causal-empty">Sin rivales con actividad en la ventana.</div>`}
+        </section>`;
+    },
+
+    /* ── 1a. Mi Marca vs Competencia: benchmark head-to-head + share-of-voice ──
+       dashboard_brand_vs_competencia (jsonb {brand, competencia}) +
+       dashboard_competencia_comparison (share-of-voice por rival). */
+    _buildBenchmark(bench, sov) {
+      const b = (bench && bench.brand) || null;
+      const c = (bench && bench.competencia) || null;
+      // Sin marca propia con actividad o sin competencia: no mostrar el bloque.
+      if (!b || !c) return '';
+
+      const num = (x) => Number(x || 0);
+      const bEng = num(b.engagement), cEng = num(c.engagement);
+      const bAvg = num(b.avg_engagement_per_post), cAvg = num(c.avg_engagement_per_post);
+      const bP = num(b.posts), cP = num(c.posts);
+      const bPos = num(b.positive_posts), cPos = num(c.positive_posts);
+      if (bP === 0 && cP === 0) return '';
+
+      // Headline = engagement por post (metrica justa, normalizada por volumen).
+      let headline = 'Aun no hay suficiente actividad para comparar engagement por post.';
+      let headCls = 'comp-bench-head--neutral';
+      if (bAvg > 0 && cAvg > 0) {
+        if (bAvg >= cAvg) {
+          headline = `Tu engagement por post es <b>${(bAvg / cAvg).toFixed(1)}x</b> el promedio de tu competencia.`;
+          headCls = 'comp-bench-head--win';
+        } else {
+          headline = `Tu engagement por post esta <b>${Math.round((1 - bAvg / cAvg) * 100)}%</b> por debajo del promedio de tu competencia.`;
+          headCls = 'comp-bench-head--lose';
+        }
+      }
+
+      // Share of voice (engagement): mi marca vs total competencia.
+      const totalEng = bEng + cEng;
+      const brandShare = totalEng > 0 ? (bEng / totalEng * 100) : 0;
+      const compShare = 100 - brandShare;
+
+      const posPctB = bP > 0 ? Math.round(bPos / bP * 100) : 0;
+      const posPctC = cP > 0 ? Math.round(cPos / cP * 100) : 0;
+      const row = (label, bv, cv, bWin, cWin) => `
+        <div class="comp-bench-row">
+          <span class="comp-bench-metric">${label}</span>
+          <span class="comp-bench-val${bWin ? ' is-win' : ''}">${bv}</span>
+          <span class="comp-bench-val${cWin ? ' is-win' : ''}">${cv}</span>
+        </div>`;
+      const rows = [
+        row('Engagement por post', this._compactNum(bAvg), this._compactNum(cAvg), bAvg > cAvg, cAvg > bAvg),
+        row('% posts positivos', `${posPctB}%`, `${posPctC}%`, posPctB > posPctC, posPctC > posPctB),
+        row('Engagement total', this._compactNum(bEng), this._compactNum(cEng), false, false),
+        row('Posts publicados', fmt.int(bP), fmt.int(cP), false, false),
+      ].join('');
+
+      // Share of voice por rival (% del engagement del set competitivo).
+      const sovList = (Array.isArray(sov) ? sov : []).filter(r => Number(r.total_engagement) > 0).slice(0, 6);
+      const maxPct = sovList.reduce((m, r) => Math.max(m, Number(r.engagement_pct || 0)), 0) || 1;
+      const sovRows = sovList.map(r => {
+        const pct = Number(r.engagement_pct || 0);
+        const w = Math.max(2, Math.round(pct / maxPct * 100));
+        return `
+          <div class="comp-bench-sov-row comp-clickable" data-comp-entity="${this._esc(r.entity_id)}" data-comp-name="${this._esc(r.entity_name)}" role="button" tabindex="0">
+            <span class="comp-bench-sov-name">${this._esc(r.entity_name)}</span>
+            <div class="comp-bench-sov-track"><span class="comp-bench-sov-fill" style="width:${w}%;"></span></div>
+            <span class="comp-bench-sov-pct">${pct.toFixed(1)}%</span>
+          </div>`;
+      }).join('');
+
+      return `
+        <section class="mb-section">
+          <div class="mb-section-head">
+            <span class="mb-section-title">Mi Marca vs Competencia</span>
+            <span class="mb-section-hint">Como te mides contra el promedio de tu nicho</span>
+          </div>
+          <div class="comp-bench-head ${headCls}">${headline}</div>
+          <div class="comp-bench-grid">
+            <div class="comp-bench-h2h">
+              <div class="comp-bench-row comp-bench-row--head">
+                <span class="comp-bench-metric"></span>
+                <span class="comp-bench-col comp-bench-col--brand">Mi Marca</span>
+                <span class="comp-bench-col comp-bench-col--comp">Competencia</span>
+              </div>
+              ${rows}
+            </div>
+            <div class="comp-bench-sov">
+              <div class="comp-bench-sov-bar">
+                <span class="comp-bench-sov-seg comp-bench-sov-seg--brand" style="width:${brandShare.toFixed(1)}%;"></span>
+                <span class="comp-bench-sov-seg comp-bench-sov-seg--comp" style="width:${compShare.toFixed(1)}%;"></span>
+              </div>
+              <div class="comp-bench-sov-legend">
+                <span><i class="comp-bench-dot comp-bench-dot--brand"></i> Mi Marca ${Math.round(brandShare)}%</span>
+                <span><i class="comp-bench-dot comp-bench-dot--comp"></i> Competencia ${Math.round(compShare)}%</span>
+              </div>
+              <span class="comp-bench-sov-cap">Share of voice por engagement</span>
+              ${sovList.length ? `<div class="comp-bench-sov-list">${sovRows}</div>` : ''}
+            </div>
+          </div>
         </section>`;
     },
 

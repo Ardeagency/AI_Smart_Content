@@ -58,12 +58,17 @@ class CompetenciaDataService {
   async _fetchAll(from, to, entityIds = null, platforms = null) {
     const org = this.orgId;
     const windowD = Math.max(1, Math.round((Date.now() - new Date(from).getTime()) / 86400_000));
-    const [kpis, top, risk, voice, intel] = await Promise.allSettled([
+    const [kpis, top, risk, voice, intel, bench, sov] = await Promise.allSettled([
       this.sb.rpc('dashboard_competencia_kpis', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_platforms: platforms }),
       this.sb.rpc('dashboard_competencia_top',  { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 8, p_platforms: platforms }),
       this.sb.rpc('dashboard_competencia_risk', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 6, p_platforms: platforms }),
       this.sb.rpc('dashboard_competencia_audience_voice', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 6, p_platforms: platforms }),
       this.sb.rpc('dashboard_competencia_intelligence', { p_org_id: org, p_window_d: windowD, p_platforms: platforms }),
+      // Benchmark Mi Marca vs Competencia (head-to-head). p_brand_container_ids
+      // null = todas las marcas propias de la org. Devuelve jsonb {brand, competencia}.
+      this.sb.rpc('dashboard_brand_vs_competencia', { p_org_id: org, p_date_from: from, p_date_to: to, p_brand_container_ids: null, p_entity_ids: entityIds }),
+      // Share-of-voice por rival (ranking por % de engagement del set competitivo).
+      this.sb.rpc('dashboard_competencia_comparison', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 8 }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -74,6 +79,8 @@ class CompetenciaDataService {
       risk:  u(risk),
       voice: u(voice),
       intelligence: u(intel),
+      benchmark:    u(bench),
+      shareOfVoice: u(sov),
     };
   }
 
