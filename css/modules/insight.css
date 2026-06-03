@@ -2652,6 +2652,8 @@
    evolucion) ocupan el ancho completo via .mb-section--wide. */
 .mb-layout-main { min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; align-items: start; }
 .mb-section--wide { grid-column: 1 / -1; }
+/* La barra de filtros vive dentro de la columna izquierda y ocupa su ancho completo. */
+.mb-layout-main > .mb-filters-bar { grid-column: 1 / -1; margin: 0; }
 .mb-layout-aside { min-width: 0; position: sticky; top: 1rem; }
 @media (max-width: 640px) { .mb-layout-main { grid-template-columns: 1fr; } }
 

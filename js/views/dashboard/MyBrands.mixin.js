@@ -167,9 +167,9 @@
       // de salud dejo de ser hero del cuerpo y vive solo en el sidebar.
       return `
         <div class="insight-page mb-dash" id="mbPage">
-          ${this._buildMbFiltersBar(data)}
           <div class="mb-layout">
             <div class="mb-layout-main">
+              ${this._buildMbFiltersBar(data)}
               ${this._buildActionPlanSection(data, insights)}
               ${this._buildCausalSection(insights, 'boost')}
               ${this._buildEffectiveAudienceSection(data?.audienceEffective?.data, insights)}
