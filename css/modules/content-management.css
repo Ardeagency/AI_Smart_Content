@@ -615,9 +615,9 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   display: inline-block;
 }
 
-.cal2-legend-dot--active { background: color-mix(in srgb, var(--color-success, #00d614) 70%, #2a2a2e); }
+.cal2-legend-dot--active { background: var(--color-success, #00d614); }
 .cal2-legend-dot--paused { background: var(--text-tertiary); }
-.cal2-legend-dot--draft  { background: color-mix(in srgb, var(--color-warning, #ffe500) 70%, #2a2a2e); }
+.cal2-legend-dot--draft  { background: var(--color-warning, #ffe500); }
 
 .cal2-empty {
   color: var(--text-secondary);
@@ -784,27 +784,27 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .cal2-bub--more { background: rgba(255, 255, 255, 0.22); color: #fff; font-weight: 700; }
 .cal2-bub--ph { background: rgba(255, 255, 255, 0.12); }
 
-/* Fondos solidos por estado: colores de la plataforma pero con baja saturacion
-   (se mezclan con un base oscuro para muteralos). */
+/* Fondos por estado: tinte translucido del color de marca (baja saturacion,
+   el tono se reconoce porque NO se mezcla con negro, solo se baja la opacidad). */
 .cal2-event--active {
-  background: color-mix(in srgb, var(--color-success, #00d614) 24%, #17171b);
+  background: color-mix(in srgb, var(--color-success, #00d614) 26%, transparent);
 }
 .cal2-event--active .cal2-event-when {
-  color: color-mix(in srgb, var(--color-success, #00d614) 42%, #c4c4c8);
+  color: color-mix(in srgb, var(--color-success, #00d614) 78%, #ffffff);
 }
 
 .cal2-event--draft {
-  background: color-mix(in srgb, var(--color-warning, #ffe500) 22%, #17171b);
+  background: color-mix(in srgb, var(--color-warning, #ffe500) 24%, transparent);
 }
 .cal2-event--draft .cal2-event-when {
-  color: color-mix(in srgb, var(--color-warning, #ffe500) 46%, #c4c4c8);
+  color: color-mix(in srgb, var(--color-warning, #ffe500) 82%, #ffffff);
 }
 
 .cal2-event--paused {
-  background: color-mix(in srgb, var(--text-tertiary, #87868B) 16%, #17171b);
+  background: color-mix(in srgb, var(--text-tertiary, #87868B) 22%, transparent);
 }
-.cal2-event--paused .cal2-event-name { color: #dcdce2; }
-.cal2-event--paused .cal2-event-when { color: #aeaeb6; }
+.cal2-event--paused .cal2-event-name { color: #e2e2e8; }
+.cal2-event--paused .cal2-event-when { color: #b6b6be; }
 
 /* Linea de "ahora" */
 .cal2-now {
