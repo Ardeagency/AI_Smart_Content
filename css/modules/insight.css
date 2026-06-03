@@ -2662,8 +2662,22 @@
 .mb-aside-gauge .mb-gauge-svg { width: 200px; max-width: 100%; }
 .mb-health-card--aside .mb-hero-verdict { font-size: 1.375rem; font-weight: 700; text-align: center; line-height: 1; }
 .mb-health-card--aside .mb-health-objetivo { text-align: center; font-size: 0.75rem; margin-bottom: 0; }
-.mb-health-card--aside .mb-hc-comps { grid-template-columns: 1fr; gap: 0.55rem; }
+.mb-health-card--aside .mb-hc-comps { grid-template-columns: 1fr; gap: 1rem; }
 .mb-health-card--aside .mb-health-tasks { padding-top: 1rem; }
+
+/* Componentes del sidebar: legibilidad + color con significado (override del
+   mono global). El score y la barra leen verde/ambar/rojo segun nivel para
+   que "96 vs 7" se entienda de un vistazo. */
+.mb-health-card--aside .mb-hc-comp-label { font-size: 0.8125rem; font-weight: 600; }
+.mb-health-card--aside .mb-hc-comp-score { font-size: 1rem; font-weight: 700; }
+.mb-health-card--aside .mb-hc-comp-score--good { color: #6bcf7f; }
+.mb-health-card--aside .mb-hc-comp-score--mid  { color: #e0a045; }
+.mb-health-card--aside .mb-hc-comp-score--low  { color: #e06464; }
+.mb-health-card--aside .mb-hc-bar { height: 7px; background: rgba(255,255,255,0.09); border-radius: 4px; margin: 0.4rem 0 0.35rem; }
+.mb-health-card--aside .mb-hc-comp-detail { font-size: 0.6875rem; }
+.insight-page .mb-health-card--aside .mb-hc-bar-fill--good { background: #6bcf7f; }
+.insight-page .mb-health-card--aside .mb-hc-bar-fill--mid  { background: #e0a045; }
+.insight-page .mb-health-card--aside .mb-hc-bar-fill--low  { background: #e06464; }
 
 /* Alertas del sidebar (componentes en zona baja como chips) */
 .mb-aside-alerts { border-top: 1px solid var(--border-divider, #242424); padding-top: 1rem; }

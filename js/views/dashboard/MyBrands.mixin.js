@@ -1062,10 +1062,10 @@
         const sc = Math.max(0, Math.min(100, Number(c.score) || 0));
         const lvl = sc >= 70 ? 'good' : sc >= 40 ? 'mid' : 'low';
         return `
-          <div class="mb-hc-comp">
+          <div class="mb-hc-comp mb-hc-comp--${lvl}">
             <div class="mb-hc-comp-head">
               <span class="mb-hc-comp-label">${this._esc(c.label || c.key)}</span>
-              <span class="mb-hc-comp-score">${sc}</span>
+              <span class="mb-hc-comp-score mb-hc-comp-score--${lvl}">${sc}</span>
             </div>
             <div class="mb-hc-bar"><span class="mb-hc-bar-fill mb-hc-bar-fill--${lvl}" style="width:${sc}%;"></span></div>
             <div class="mb-hc-comp-detail">${this._esc(c.detail || '')}</div>
