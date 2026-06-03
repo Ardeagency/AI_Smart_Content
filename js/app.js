@@ -266,6 +266,7 @@ class App {
     // deben ir DESPUÉS de DashboardView.js. El orden secuencial está garantizado
     // por _loadScripts (await por cada src).
     const dashboardLoader = this._lazy('DashboardView', [
+      '/js/components/AudienceMap.js',
       '/js/views/DashboardView.js',
       '/js/views/dashboard/MyBrands.mixin.js',
       '/js/views/dashboard/Competence.mixin.js',

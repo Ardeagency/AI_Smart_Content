@@ -63,6 +63,7 @@
         this._bindMyBrandsHandlers(body);
         this._mountMbDatePicker(body);
         this._renderLongitudinalCharts(data);
+        this._renderAudienceMap(data);
       } catch (e) {
         console.error('[MyBrands] loadAll failed:', e);
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
@@ -116,6 +117,7 @@
         this._bindMyBrandsHandlers(body);
         this._mountMbDatePicker(body);
         this._renderLongitudinalCharts(data);
+        this._renderAudienceMap(data);
       } catch (e) {
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
       }
@@ -422,6 +424,23 @@
           <div class="mb-heat-grid">${rowsHtml}</div>
           <div class="mb-heat-axis"><span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>11p</span></div>
         </div>`;
+    },
+
+    /** Choropleth de "Tu publico efectivo" — reusa window.AudienceMap (por pais). */
+    async _renderAudienceMap(data) {
+      const el = document.getElementById('mbEffMap');
+      if (!el) return;
+      if (typeof window.AudienceMap?.render !== 'function') { el.style.display = 'none'; return; }
+      const geo = data?.audienceEffective?.data?.geo;
+      const dist = {};
+      (Array.isArray(geo) ? geo : []).forEach((g) => {
+        const cc = g.country, v = Number(g.conversions) || 0;
+        if (cc && /^[A-Z]{2}$/.test(cc) && v > 0) dist[cc] = (dist[cc] || 0) + v;
+      });
+      if (!Object.keys(dist).length) { el.style.display = 'none'; return; }
+      el.style.display = '';
+      el.innerHTML = '';
+      try { await window.AudienceMap.render(el, dist); } catch (_) {}
     },
 
     /** Instancia los charts Chart.js del analisis longitudinal (post-render). */
@@ -743,6 +762,7 @@
             </div>
             <div class="mb-eff-geo-block">
               <span class="mb-eff-geo-title">Donde conviertes</span>
+              <div class="mb-eff-map" id="mbEffMap"></div>
               <div class="mb-eff-geos">${geoRows}</div>
             </div>
             ${atrae ? `<p class="mb-eff-atrae">${atrae}</p>` : ''}

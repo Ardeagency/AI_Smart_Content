@@ -3136,6 +3136,10 @@
 .mb-heat-cell--l4, .mb-heat-dot--l4 { background: #7c83ff; }
 .mb-heat-axis { display: flex; justify-content: space-between; padding-left: 32px; font-size: 0.5625rem; color: var(--text-muted, rgba(212,209,216,0.45)); }
 
+/* Choropleth de publico efectivo (window.AudienceMap) */
+.mb-eff-map { position: relative; height: 210px; margin: 0.5rem 0 0.85rem; }
+@media (max-width: 480px) { .mb-eff-map { height: auto; } }
+
 /* Delta periodo-vs-periodo en KPI strips */
 .comp-kpi-delta { font-size: 0.625rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 0.1rem; display: inline-flex; align-items: center; gap: 0.15rem; }
 .comp-kpi-delta.is-up { color: #6bcf7f; }
