@@ -627,24 +627,20 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 
 .cal2-frame {
   width: 100%;
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider);
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
 }
 
 /* Header de dias: alineado con la grilla del body */
 .cal2-head {
   display: grid;
   grid-template-columns: 64px repeat(7, minmax(0, 1fr));
-  border-bottom: 1px solid var(--border-divider);
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: var(--bg-card, #141517);
+  background: transparent;
 }
 
-.cal2-head-corner { border-right: 1px solid var(--border-divider); }
+.cal2-head-corner { background: transparent; }
 
 .cal2-dayhead {
   display: flex;
@@ -653,9 +649,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   justify-content: center;
   gap: 3px;
   padding: 0.7rem 0.25rem;
-  border-right: 1px solid var(--border-divider);
 }
-.cal2-dayhead:last-child { border-right: none; }
 
 .cal2-dayhead-dow {
   font-size: 0.72rem;
@@ -688,12 +682,10 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .cal2-body {
   display: grid;
   grid-template-columns: 64px repeat(7, minmax(0, 1fr));
-  max-height: 70vh;
-  overflow-y: auto;
 }
 
 .cal2-hours {
-  border-right: 1px solid var(--border-divider);
+  background: transparent;
 }
 
 .cal2-hourlabel {
@@ -703,24 +695,20 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   padding: 4px 8px 0 0;
   font-size: 0.7rem;
   color: var(--text-tertiary);
-  border-bottom: 1px solid var(--border-divider);
   box-sizing: border-box;
 }
 
 .cal2-col {
   position: relative;
-  border-right: 1px solid var(--border-divider);
-  /* Lineas de hora de fondo */
+  /* Lineas de hora de fondo, muy sutiles (sin bordes ni fondo de tarjeta) */
   background-image: repeating-linear-gradient(
     to bottom,
     transparent 0,
     transparent calc(var(--hour-h) - 1px),
-    var(--border-divider) calc(var(--hour-h) - 1px),
-    var(--border-divider) var(--hour-h)
+    rgba(255, 255, 255, 0.05) calc(var(--hour-h) - 1px),
+    rgba(255, 255, 255, 0.05) var(--hour-h)
   );
 }
-.cal2-col:last-child { border-right: none; }
-.cal2-col--today { background-color: rgba(255, 255, 255, 0.022); }
 
 .cal2-event {
   position: absolute;
