@@ -58,7 +58,13 @@ class CompetenciaDataService {
   async _fetchAll(from, to, entityIds = null, platforms = null) {
     const org = this.orgId;
     const windowD = Math.max(1, Math.round((Date.now() - new Date(from).getTime()) / 86400_000));
-    const [kpis, top, risk, voice, intel, bench, sov] = await Promise.allSettled([
+    // Ventana previa (misma longitud, inmediatamente anterior) para deltas
+    // periodo-vs-periodo. Con ventana "todo el periodo" (99999d) la previa cae
+    // en fechas vacias y los deltas no se muestran (guard prev===0): correcto.
+    const span = new Date(to).getTime() - new Date(from).getTime();
+    const prevFrom = new Date(new Date(from).getTime() - span).toISOString();
+    const prevTo = from;
+    const [kpis, top, risk, voice, intel, bench, sov, kpisPrev] = await Promise.allSettled([
       this.sb.rpc('dashboard_competencia_kpis', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_platforms: platforms }),
       this.sb.rpc('dashboard_competencia_top',  { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 8, p_platforms: platforms }),
       this.sb.rpc('dashboard_competencia_risk', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 6, p_platforms: platforms }),
@@ -69,6 +75,7 @@ class CompetenciaDataService {
       this.sb.rpc('dashboard_brand_vs_competencia', { p_org_id: org, p_date_from: from, p_date_to: to, p_brand_container_ids: null, p_entity_ids: entityIds }),
       // Share-of-voice por rival (ranking por % de engagement del set competitivo).
       this.sb.rpc('dashboard_competencia_comparison', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 8 }),
+      this.sb.rpc('dashboard_competencia_kpis', { p_org_id: org, p_date_from: prevFrom, p_date_to: prevTo, p_entity_ids: entityIds, p_platforms: platforms }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -81,6 +88,7 @@ class CompetenciaDataService {
       intelligence: u(intel),
       benchmark:    u(bench),
       shareOfVoice: u(sov),
+      kpisPrev:     u(kpisPrev),
     };
   }
 

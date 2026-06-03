@@ -89,7 +89,7 @@
       return `
         <div class="insight-page mb-dash" id="compPage">
           ${this._buildCompFiltersBar()}
-          ${this._buildBattlefield(data?.kpis?.data, data?.top?.data)}
+          ${this._buildBattlefield(data?.kpis?.data, data?.top?.data, data?.kpisPrev?.data)}
           ${this._buildBenchmark(data?.benchmark?.data, data?.shareOfVoice?.data)}
           ${this._buildWinningFormula(data?.intelligence?.data)}
           ${this._buildAudienceVoice(data?.voice?.data)}
@@ -125,6 +125,7 @@
             <label class="living-filter-label" for="compFilterPerfil">Perfil</label>
             <select class="living-filter-select" id="compFilterPerfil" data-comp-filter="entityId">${perfilOpts}</select>
           </div>
+          ${this._freshnessChip('competence')}
         </header>`;
     },
 
@@ -154,15 +155,29 @@
       if (el) this._compDatePicker.mount(el);
     },
 
+    /* Delta periodo-vs-periodo: badge ▲/▼ %. Solo para KPIs numericos y cuando
+       hay ventana previa con datos (prev>0). Devuelve '' en otros casos. */
+    _kpiDelta(cur, prev) {
+      const c = Number(cur), p = Number(prev);
+      if (!Number.isFinite(c) || !Number.isFinite(p) || p === 0) return '';
+      const pct = Math.round((c - p) / Math.abs(p) * 100);
+      if (pct === 0) return `<span class="comp-kpi-delta is-flat">0%</span>`;
+      const up = pct > 0;
+      return `<span class="comp-kpi-delta ${up ? 'is-up' : 'is-down'}" title="vs periodo previo">${up ? '▲' : '▼'} ${Math.abs(pct)}%</span>`;
+    },
+
     /* ── 1. El campo de batalla: panorámica + ranking de rivales ──────── */
-    _buildBattlefield(k, top) {
+    _buildBattlefield(k, top, kPrev) {
       const list = Array.isArray(top) ? top : [];
       const kpis = k || {};
+      const prev = kPrev || {};
       const sentMap = { positive: 'Positivo', negative: 'Negativo', neutral: 'Neutro' };
+      const compCur = kpis.active_competitors ?? kpis.total_competitors;
+      const compPrev = prev.active_competitors ?? prev.total_competitors;
       const kpiCards = `
         <div class="comp-kpis">
-          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(kpis.active_competitors ?? kpis.total_competitors)}</span><span class="comp-kpi-lbl">Rivales activos</span></div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${this._compactNum(kpis.total_engagement)}</span><span class="comp-kpi-lbl">Engagement del nicho</span></div>
+          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(compCur)}</span><span class="comp-kpi-lbl">Rivales activos</span>${this._kpiDelta(compCur, compPrev)}</div>
+          <div class="comp-kpi"><span class="comp-kpi-val">${this._compactNum(kpis.total_engagement)}</span><span class="comp-kpi-lbl">Engagement del nicho</span>${this._kpiDelta(kpis.total_engagement, prev.total_engagement)}</div>
           <div class="comp-kpi"><span class="comp-kpi-val">${this._esc(this._prettyPlatform(kpis.dominant_platform))}</span><span class="comp-kpi-lbl">Plataforma dominante</span></div>
           <div class="comp-kpi"><span class="comp-kpi-val">${this._esc(sentMap[kpis.dominant_sentiment] || kpis.dominant_sentiment || '—')}</span><span class="comp-kpi-lbl">Sentimiento dominante</span></div>
         </div>`;

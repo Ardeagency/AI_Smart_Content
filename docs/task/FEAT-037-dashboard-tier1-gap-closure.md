@@ -63,14 +63,16 @@ Agency).
 
 ## Plan por fases
 
-### Fase 1 — Quick wins (cableado puro, dato ya existe) [EN CURSO]
-1. **Benchmark Mi Marca vs Competencia**: cablear `dashboard_brand_vs_competencia`
-   + `dashboard_competencia_comparison` como bloque nuevo en el tab Competencia
+### Fase 1 — Quick wins (cableado puro, dato ya existe) [HECHO 2026-06-03]
+1. [x] **Benchmark Mi Marca vs Competencia**: cableado `dashboard_brand_vs_competencia`
+   + `dashboard_competencia_comparison` como bloque en el tab Competencia
    (head-to-head + share-of-voice por rival). Diferenciador Tier-1 #1.
-2. **Indicador de frescura** global: leer max(captured_at) del scope y mostrar
-   "datos al {fecha}" en cada tab.
-3. **Deltas periodo-vs-periodo** en los KPI strips existentes (comparar ventana
-   actual vs ventana previa de igual longitud).
+2. [x] **Indicador de frescura** global: RPC nueva `dashboard_data_freshness`
+   (own_posts / competitor_posts / latest) + chip "Datos al {fecha}" en los 4
+   tabs (verde fresco / ambar si >3 dias).
+3. [x] **Deltas periodo-vs-periodo** en el KPI strip de Competencia (ventana
+   actual vs previa de igual longitud; solo se muestra con rango acotado).
+   Tendencias usa KPIs de velocidad (ya temporales) → no aplica delta.
 
 ### Fase 2 — Profundidad (cablear resto de huerfanas)
 4. Drill-down de competidor completo (`top_posts`, `distributions`,

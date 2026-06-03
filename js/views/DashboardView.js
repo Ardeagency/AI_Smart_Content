@@ -111,6 +111,46 @@ class DashboardView extends BaseView {
     }
 
     this._subscribeRealtime();
+    await this._ensureFreshness();
+  }
+
+  /* ── Frescura de datos ──────────────────────────────────────────────
+     Una sola RPC org-scoped (dashboard_data_freshness) cacheada en la
+     instancia. Devuelve { own_posts, competitor_posts, latest } (timestamptz).
+     Cada tab pinta el timestamp relevante a su scope via _freshnessChip(). */
+  async _ensureFreshness() {
+    if (this._freshness !== undefined) return this._freshness;
+    this._freshness = null;
+    try {
+      if (this._supabase && this._orgId) {
+        const { data } = await this._supabase.rpc('dashboard_data_freshness', { p_org_id: this._orgId });
+        this._freshness = data || null;
+      }
+    } catch (_) { this._freshness = null; }
+    return this._freshness;
+  }
+
+  /** Chip "Datos al {fecha}" para inyectar en la barra de filtros de cada tab. */
+  _freshnessChip(scope) {
+    const f = this._freshness;
+    if (!f) return '';
+    const ts = ({ 'my-brands': f.own_posts, 'competence': f.competitor_posts }[scope]) || f.latest;
+    if (!ts) return '';
+    const days = Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
+    const stale = days > 3 ? ' dash-freshness--stale' : '';
+    return `<span class="dash-freshness${stale}" title="Ultima captura de datos del scraping">
+      <i class="dash-freshness-dot"></i> Datos al ${this._esc(this._fmtFreshness(ts, days))}
+    </span>`;
+  }
+
+  _fmtFreshness(ts, days) {
+    try {
+      const d = new Date(ts);
+      const dateStr = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+      if (days <= 0) return `hoy (${dateStr})`;
+      if (days === 1) return `ayer (${dateStr})`;
+      return dateStr;
+    } catch (_) { return ''; }
   }
 
   onLeave() {

@@ -2943,6 +2943,23 @@
 .comp-bench-sov-pct { font-size: 0.6875rem; font-weight: 600; color: var(--text-muted, rgba(212,209,216,0.6)); font-variant-numeric: tabular-nums; text-align: right; }
 @media (max-width: 760px) { .comp-bench-grid { grid-template-columns: 1fr; } }
 
+/* ── Indicador de frescura de datos (chip en la barra de filtros) ── */
+.dash-freshness {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.6875rem; font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.55));
+  white-space: nowrap; align-self: center;
+}
+.dash-freshness-dot { width: 7px; height: 7px; border-radius: 50%; background: #6bcf7f; flex: 0 0 auto; box-shadow: 0 0 0 3px rgba(107,207,127,0.15); }
+.dash-freshness--stale { color: var(--text-muted, rgba(212,209,216,0.5)); }
+.dash-freshness--stale .dash-freshness-dot { background: #e0a464; box-shadow: 0 0 0 3px rgba(224,164,100,0.15); }
+@media (max-width: 760px) { .dash-freshness { margin-left: 0; width: 100%; } }
+
+/* Delta periodo-vs-periodo en KPI strips */
+.comp-kpi-delta { font-size: 0.625rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 0.1rem; display: inline-flex; align-items: center; gap: 0.15rem; }
+.comp-kpi-delta.is-up { color: #6bcf7f; }
+.comp-kpi-delta.is-down { color: #e06464; }
+.comp-kpi-delta.is-flat { color: var(--text-muted, rgba(212,209,216,0.45)); }
+
 /* Competencia — Que les funciona (formulas ganadoras del nicho) */
 .comp-combos { display: flex; flex-direction: column; gap: 0.5rem; }
 .comp-combo-row {
