@@ -1297,7 +1297,7 @@ class OrganizationView extends BaseView {
   async _loadEngineServer() {
     try {
       const { data } = await this.supabase
-        .from('v_org_server_status').select('*').eq('organization_id', this.orgId).maybeSingle();
+        .rpc('get_org_server_status', { p_org: this.orgId }).maybeSingle();
       this.serverStatus = data || null;
     } catch (_) { /* vista opcional */ }
   }

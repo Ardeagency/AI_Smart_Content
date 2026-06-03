@@ -2,7 +2,30 @@
 
 **Fecha:** 2026-05-29
 **Proyecto Supabase:** `tsdpbqcwjckbfsdqacam` (AI Smart Content / ai-engine)
-**Estado:** DOCUMENTADO — no aplicado. El usuario termina su iteracion en curso y luego re-auditamos antes de corregir.
+**Estado:** PARCIALMENTE APLICADO 2026-06-03 — ver "CIERRE" abajo. Re-auditoria en vivo confirmo los numeros (identicos a 2026-05-29). Bloque 1 (seguridad) + P1/P3 del Bloque 2 aplicados; P2 + Bloque 3 diferidos con justificacion.
+
+---
+
+## ✅ CIERRE 2026-06-03 — bloques aplicados
+
+### Bloque 1 — Seguridad (COMPLETO)
+- **S1 RESUELTA.** Las 56 funciones `SECURITY DEFINER` sin `search_path` -> `SET search_path = public, extensions, pg_temp` (superset seguro: cubre pgvector/pgcrypto/uuid en schema `extensions`). Verificado: **0 restantes**.
+- **S3 RESUELTA (con 2 excepciones justificadas).** 13 vistas -> `security_invoker = on`. De las 15 vistas reales (las 8 `mv_*`/matviews no soportan invoker — inherente):
+  - `v_org_claude_usage_today` -> invoker OK (su base `credit_usage` tiene policy `credit_usage_org_isolate`, queda org-scoped y seguro).
+  - `v_org_server_status` -> **leak real cerrado de otra forma**: su base `openclaw_instances` es `service_only` (RLS qual `false`), asi que invoker la vaciaria. En su lugar: RPC definer `get_org_server_status(p_org)` con gate `is_org_member` + `REVOKE SELECT` a anon/authenticated sobre la vista + frontend migrado a `.rpc()` (`OrganizationView.js:1300`). Un usuario ya no puede leer el `server_ip` de otra org.
+  - `v_user_mfa_status` -> **se deja definer a proposito**: ya esta auto-scopeada por `WHERE om.user_id = auth.uid()` (no es leak) y lee `auth.mfa_factors`, que `authenticated` no puede leer directo (invoker la romperia).
+
+### Bloque 2 — Indices (P1 + P3 aplicados; P2 diferido)
+- **P1 RESUELTA.** 15 indices duplicados dropeados (el "suelto" de cada par; se conservo el que respalda UNIQUE/PK o el de nombre canonico). Verificado identidad de columnas antes de dropear. **0 pares restantes.** Mayor win: `system_metrics_time_idx` (~4.8MB).
+- **P3 PARCIAL (tablas calientes).** 17 indices de cobertura creados en `system_ai_outputs` (7), `sensor_runs` (3), `monitoring_triggers` (3), `runs_outputs` (2), `intelligence_entities` (1), `intelligence_signals` (1). Quedan **84 FKs frias sin indice** (`created_by`/`user_id` mayormente) — se dejan por el doc (no duelen a esta escala).
+- **P2 DIFERIDA (a proposito).** No se dropean los ~17 indices `idx_scan=0`: en una BD joven significa "feature no ejercitada aun", no "muerto". **Pendiente verificar `ai_brand_vectors_embedding_idx` (nunca escaneado) -> confirmar si la busqueda semantica esta cableada ANTES de dropear.**
+
+### Bloque 3 — Limpieza (DIFERIDO)
+- **L1 (4 backups)** — no se dropean hoy: ya quedaron deny-all (RLS 2026-05-27, no son leak) y el INDEX fija el drop de los `_bak_stuck_*` como opcional **tras 2026-06-04**. Borrar datos es irreversible -> se respeta el gate.
+- **L2 (~43 vacias)** — mayoria features pendientes legitimas. Sin accion.
+- **L3 (naming `org` vs `organization_id`)** — su peor sintoma (indices duplicados) ya se resolvio en P1. El rename de columnas es refactor mayor; se deja.
+
+---
 
 ## Veredicto general
 
