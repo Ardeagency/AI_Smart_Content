@@ -2836,14 +2836,14 @@
 .mb-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
 /* auto-fit: el grid se adapta a cuantas cards queden (las vacias se ocultan),
    sin dejar columna fantasma. */
-.mb-plan-grid--4 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.1rem; }
+.mb-plan-grid--4 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.1rem; align-items: start; }
 .mb-plan-col {
   position: relative; overflow: hidden;
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
   border-radius: 18px;
-  padding: 1.6rem 1.65rem 1.65rem;
-  display: flex; flex-direction: column; gap: 0.45rem;
+  padding: 1.25rem 1.4rem 1.35rem;
+  display: flex; flex-direction: column; gap: 0.35rem;
   box-shadow: var(--dash-elev);
 }
 /* Glow sutil de acento arriba (profundidad premium sin saturar) */
@@ -2856,7 +2856,7 @@
 .mb-plan-col--optimiza { --mb-plan-glow: rgba(91,155,213,0.12); }
 .mb-plan-col--elimina  { --mb-plan-glow: rgba(224,100,100,0.12); }
 .mb-plan-col--vigila   { --mb-plan-glow: rgba(224,160,69,0.12); }
-.mb-plan-col-head { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.7rem; }
+.mb-plan-col-head { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.5rem; }
 .mb-plan-cat { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); }
 /* Boton de preview circular (estilo ref) */
 .mb-plan-head-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 0.45rem; }
@@ -2875,14 +2875,14 @@
 .mb-plan-col--vigila   .mb-plan-cat { color: #e0a045; }
 /* Numero hero (grande + sufijo fino) */
 .mb-plan-metric { display: flex; align-items: baseline; gap: 0.45rem; flex-wrap: wrap; }
-.mb-plan-metric-val { font-size: 2.25rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+.mb-plan-metric-val { font-size: 1.875rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
 .mb-plan-metric-sub { font-size: 0.75rem; font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.55)); }
 .mb-plan-col--explota  .mb-plan-metric-val { color: #6bcf7f; }
 .mb-plan-col--optimiza .mb-plan-metric-val { color: #5b9bd5; }
 .mb-plan-col--elimina  .mb-plan-metric-val { color: #e06464; }
-.mb-plan-col--vigila   .mb-plan-metric-val { color: #e0a045; font-size: 1.375rem; }
+.mb-plan-col--vigila   .mb-plan-metric-val { color: #e0a045; font-size: 1.25rem; }
 /* Lever (subtitulo bajo el hero) */
-.mb-plan-title { font-size: 0.9375rem; font-weight: 600; color: var(--text-primary, #D4D1D8); line-height: 1.3; margin-top: 0.55rem; }
+.mb-plan-title { font-size: 0.9375rem; font-weight: 600; color: var(--text-primary, #D4D1D8); line-height: 1.3; margin-top: 0.4rem; }
 .mb-plan-why { margin: 0.3rem 0 0; font-size: 0.75rem; line-height: 1.5; color: var(--text-muted, rgba(212,209,216,0.55)); }
 .mb-plan-empty { margin: 0.3rem 0 0; font-size: 0.75rem; color: var(--text-muted, rgba(212,209,216,0.45)); }
 
