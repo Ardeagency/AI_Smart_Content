@@ -713,72 +713,87 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .cal2-event {
   position: absolute;
   box-sizing: border-box;
-  border-radius: 8px;
-  padding: 5px 8px;
+  border-radius: 12px;
+  padding: 9px 11px;
   cursor: pointer;
   overflow: hidden;
-  border: 1px solid transparent;
+  border: none;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  justify-content: space-between;
+  gap: 6px;
   transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
 }
 
 .cal2-event:hover {
   transform: translateY(-1px);
-  filter: brightness(1.08);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  filter: brightness(1.07);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
   z-index: 4;
 }
 
-.cal2-event-time {
-  font-size: 0.7rem;
-  font-weight: 700;
-  line-height: 1.1;
+.cal2-event-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
 }
 
 .cal2-event-name {
-  font-size: 0.8rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cal2-event-when {
+  font-size: 0.72rem;
   font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1.15;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.cal2-event-flow {
-  font-size: 0.7rem;
-  color: var(--text-tertiary);
-  white-space: nowrap;
+/* Burbujas de identities */
+.cal2-event-bubbles {
+  display: flex;
+  align-items: center;
+}
+
+.cal2-bub {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-left: -7px;
+  border: 2px solid rgba(0, 0, 0, 0.28);
   overflow: hidden;
-  text-overflow: ellipsis;
+  background: rgba(0, 0, 0, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.58rem;
+  color: rgba(255, 255, 255, 0.75);
+  flex-shrink: 0;
 }
+.cal2-bub:first-child { margin-left: 0; }
+.cal2-bub img { width: 100%; height: 100%; object-fit: cover; }
+.cal2-bub--more { background: rgba(255, 255, 255, 0.22); color: #fff; font-weight: 700; }
+.cal2-bub--ph { background: rgba(255, 255, 255, 0.12); }
 
-/* Activa: verde, barra izquierda */
-.cal2-event--active {
-  background: rgba(107, 207, 127, 0.16);
-  border-color: rgba(107, 207, 127, 0.45);
-  border-left: 3px solid #6bcf7f;
-}
-.cal2-event--active .cal2-event-time { color: #6bcf7f; }
+/* Fondos solidos por estado (sin bordes) */
+.cal2-event--active { background: #27613f; }
+.cal2-event--active .cal2-event-when { color: #b6ecc6; }
 
-/* Borrador: ambar, punteado */
-.cal2-event--draft {
-  background: rgba(245, 185, 66, 0.1);
-  border: 1px dashed rgba(245, 185, 66, 0.55);
-  border-left: 3px solid #f5b942;
-}
-.cal2-event--draft .cal2-event-time { color: #f5b942; }
+.cal2-event--draft { background: #7c5f22; }
+.cal2-event--draft .cal2-event-when { color: #ffe1a3; }
 
-/* Pausada: atenuada */
-.cal2-event--paused {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--border-divider);
-  border-left: 3px solid var(--text-tertiary);
-  opacity: 0.72;
-}
-.cal2-event--paused .cal2-event-time { color: var(--text-tertiary); }
+.cal2-event--paused { background: #34343c; }
+.cal2-event--paused .cal2-event-name { color: #dcdce2; }
+.cal2-event--paused .cal2-event-when { color: #adadb6; }
 
 /* Linea de "ahora" */
 .cal2-now {

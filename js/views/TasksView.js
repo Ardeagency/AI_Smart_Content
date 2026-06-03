@@ -1103,12 +1103,35 @@ class TasksView extends BaseView {
     return events;
   }
 
+  /** Burbujas de identities (productos) conectadas a un schedule. */
+  _eventBubbles(s) {
+    const imgs = Array.isArray(s.entity_image_urls) ? s.entity_image_urls : [];
+    const eids = Array.isArray(s.entity_ids) ? s.entity_ids : (s.entity_ids ? [s.entity_ids] : []);
+    const max = 4;
+    let html = '';
+    if (imgs.length) {
+      html = imgs.slice(0, max).map(u =>
+        `<span class="cal2-bub"><img src="${this.escapeHtml(u)}" alt="" loading="lazy"></span>`
+      ).join('');
+      const extra = imgs.length > max ? imgs.length - max : 0;
+      if (extra) html += `<span class="cal2-bub cal2-bub--more">+${extra}</span>`;
+    } else if (eids.length) {
+      const n = Math.min(eids.length, max);
+      html = Array.from({ length: n }).map(() =>
+        `<span class="cal2-bub cal2-bub--ph"><i class="fas fa-box"></i></span>`
+      ).join('');
+      const extra = eids.length > max ? eids.length - max : 0;
+      if (extra) html += `<span class="cal2-bub cal2-bub--more">+${extra}</span>`;
+    }
+    return html ? `<div class="cal2-event-bubbles">${html}</div>` : '';
+  }
+
   renderCalendar(grid, empty) {
     if (!grid) return;
     if (empty) empty.style.display = 'none';
 
-    const HOUR_H = 56;   // px por hora
-    const EVENT_H = 50;  // px alto de chip
+    const HOUR_H = 116;  // px por hora (cards grandes)
+    const EVENT_H = 108; // px alto de card
 
     // Schedules a mostrar: respeta el filtro de estado; 'history'/'all' = todos.
     let list = this.schedules || [];
@@ -1179,18 +1202,21 @@ class TasksView extends BaseView {
         const s = e.s;
         const sc = this._statusClass(s.status);
         const timeStr = `${String(e.hour).padStart(2, '0')}:${String(e.min).padStart(2, '0')}`;
+        const freq = this.cronToFreqLabel(s.cron_expression);
         const laneCount = e.laneCount || 1;
         const gap = 4;
         const widthPct = 100 / laneCount;
         const left = `calc(${e.lane * widthPct}% + 3px)`;
         const width = `calc(${widthPct}% - ${gap + 3}px)`;
-        const title = `${s.job_name || 'Sin nombre'} · ${s.flow_name || ''} · ${timeStr}`;
-        const showFlow = laneCount === 1;
+        const title = `${s.job_name || 'Sin nombre'} · ${timeStr} · ${freq}`;
+        const bubbles = this._eventBubbles(s);
         return `<div class="cal2-event cal2-event--${sc}" data-task-id="${s.id}" role="button" tabindex="0" title="${this.escapeHtml(title)}"
                   style="top:${e.top}px;height:${EVENT_H}px;left:${left};width:${width}">
-          <span class="cal2-event-time">${timeStr}</span>
-          <span class="cal2-event-name">${this.escapeHtml(s.job_name || 'Sin nombre')}</span>
-          ${showFlow ? `<span class="cal2-event-flow">${this.escapeHtml(s.flow_name || '—')}</span>` : ''}
+          <div class="cal2-event-main">
+            <span class="cal2-event-name">${this.escapeHtml(s.job_name || 'Sin nombre')}</span>
+            <span class="cal2-event-when">${timeStr} · ${this.escapeHtml(freq)}</span>
+          </div>
+          ${bubbles}
         </div>`;
       }).join('');
       // Linea de "ahora"
