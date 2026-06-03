@@ -3180,19 +3180,25 @@
    var(--bg-card) sin tocar cada selector.
    ════════════════════════════════════════════════════════════════════ */
 .insight-page {
-  /* Superficie elevada (raised) en el scope del dashboard — depth por capas */
-  --bg-card: #161719;
-  --border-divider: rgba(255, 255, 255, 0.08);
+  /* Escala de elevacion re-tuneada (fix "opaco / no respira"):
+     en dark UI se eleva ACLARANDO la superficie, no con sombra negra sobre
+     negro. La card sube de #161719 (~contraste 1.1:1 vs fondo) a #1b1d22, los
+     bordes pasan de 8% a 11% blanco y se agrega un hairline highlight superior
+     que finge el lift. El fondo de pagina (--bg-primary #0b0b0b) se mantiene
+     oscuro para que la card flote. Respeta "glass solo botones" (sin blur). */
+  --bg-card: #1b1d22;
+  --border-divider: rgba(255, 255, 255, 0.11);
   /* Paleta semantica apagada (color con proposito) */
   --dash-pos: #6e9f81;   /* arriba / funciona / saludable  */
   --dash-neg: #b3796f;   /* abajo / resta / critico        */
   --dash-warn: #9c8e6b;  /* atencion / optimiza / irregular */
-  --dash-line: rgba(255, 255, 255, 0.08);
+  --dash-line: rgba(255, 255, 255, 0.10);
   --dash-bar: rgba(255, 255, 255, 0.30);
-  /* Elevacion sobria + sheen de superficie raised (depth, glow tenue) */
-  --dash-elev: 0 2px 10px rgba(0, 0, 0, 0.35);
-  --dash-elev-hover: 0 8px 22px rgba(0, 0, 0, 0.45);
-  --dash-sheen: linear-gradient(180deg, rgba(255,255,255,0.028), rgba(255,255,255,0) 46%);
+  /* Elevacion = sombra sobria + hairline highlight superior (el cue real de
+     lift en superficies oscuras) + sheen de superficie raised. */
+  --dash-elev: 0 2px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --dash-elev-hover: 0 8px 22px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --dash-sheen: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0) 46%);
 }
 
 /* Ritmo: mas aire entre secciones */
