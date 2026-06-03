@@ -2862,10 +2862,11 @@
 .mb-plan-col--optimiza .mb-plan-cat { color: #5b9bd5; }
 .mb-plan-col--elimina  .mb-plan-cat { color: #e06464; }
 .mb-plan-col--vigila   .mb-plan-cat { color: #e0a045; }
-.mb-plan-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary, #D4D1D8); line-height: 1.3; }
-/* Metric tipo "hero": numero grande + sufijo pequeno */
-.mb-plan-metric { display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap; }
-.mb-plan-metric-val { font-size: 2rem; font-weight: 800; line-height: 1; letter-spacing: -0.025em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+/* Valor = el lever (la accion), elemento prominente de la card (estilo ref) */
+.mb-plan-title { font-size: 1.1875rem; font-weight: 700; color: var(--text-primary, #D4D1D8); line-height: 1.25; margin-top: 0.15rem; letter-spacing: -0.01em; }
+/* Metric = % como caption de acento (no hero) */
+.mb-plan-metric { display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.1rem; }
+.mb-plan-metric-val { font-size: 1.0625rem; font-weight: 700; line-height: 1; letter-spacing: -0.01em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
 .mb-plan-metric-sub { font-size: 0.6875rem; font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.55)); }
 .mb-plan-col--explota  .mb-plan-metric-val { color: #6bcf7f; }
 .mb-plan-col--optimiza .mb-plan-metric-val { color: #5b9bd5; }

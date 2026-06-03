@@ -329,10 +329,10 @@
           <div class="mb-plan-col mb-plan-col--${kind}">
             <div class="mb-plan-col-head">
               <span class="mb-plan-cat">${label}</span>
-              <div class="mb-plan-head-actions">${impactBadge(item.impact)}${expand}</div>
+              ${expand ? `<div class="mb-plan-head-actions">${expand}</div>` : ''}
             </div>
-            ${item.metric ? `<div class="mb-plan-metric"><span class="mb-plan-metric-val">${this._esc(item.metric)}</span>${item.metricSub ? `<span class="mb-plan-metric-sub">${this._esc(item.metricSub)}</span>` : ''}</div>` : ''}
             <div class="mb-plan-title">${this._esc(item.title)}</div>
+            ${item.metric ? `<div class="mb-plan-metric"><span class="mb-plan-metric-val">${this._esc(item.metric)}</span>${item.metricSub ? `<span class="mb-plan-metric-sub">${this._esc(item.metricSub)}</span>` : ''}</div>` : ''}
             ${item.why ? `<p class="mb-plan-why">${this._esc(item.why)}</p>` : ''}
           </div>`;
       };
