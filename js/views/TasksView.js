@@ -23,6 +23,8 @@ class TasksView extends BaseView {
     this.currentFilter = 'history';
     this.taskCardLimit = 9;
     this.taskCardDisplayCount = 9;
+    this.viewMode = 'list';      // 'list' | 'calendar'
+    this.calWeekStart = null;    // Date (lunes de la semana visible en calendario)
   }
 
   renderHTML() {
@@ -35,9 +37,15 @@ class TasksView extends BaseView {
         <h1 class="tasks-title">Tareas programadas</h1>
         <p class="tasks-subtitle">Gestiona tus flujos programados y asigna entidad, campaña y audiencia a cada tarea.</p>
       </div>
-      <a class="btn btn-primary tasks-create-btn" id="tasksCreateNewBtn" href="#">
-        <i class="fas fa-plus"></i> Create New Task
-      </a>
+      <div class="tasks-header-actions">
+        <div class="tasks-viewtoggle" id="tasksViewToggle" role="tablist" aria-label="Vista">
+          <button type="button" class="tasks-viewtoggle-btn active" data-view="list" aria-label="Vista de lista"><i class="fas fa-th-large"></i> Lista</button>
+          <button type="button" class="tasks-viewtoggle-btn" data-view="calendar" aria-label="Vista de calendario"><i class="fas fa-calendar-alt"></i> Calendario</button>
+        </div>
+        <a class="btn btn-primary tasks-create-btn" id="tasksCreateNewBtn" href="#">
+          <i class="fas fa-plus"></i> Create New Task
+        </a>
+      </div>
     </div>
 
     <nav class="tasks-tabs" id="tasksTabs" aria-label="Filtrar tareas">
@@ -641,6 +649,13 @@ class TasksView extends BaseView {
     this.updateTasksTabCounts();
     this.setupTasksTabs();
     this.setupCreateNewTaskButton();
+    this.setupViewToggle();
+
+    if (this.viewMode === 'calendar') {
+      if (loadMoreWrap) loadMoreWrap.style.display = 'none';
+      this.renderCalendar(grid, empty);
+      return;
+    }
 
     if (this.currentFilter === 'history') {
       if (loadMoreWrap) loadMoreWrap.style.display = 'none';
@@ -988,6 +1003,194 @@ class TasksView extends BaseView {
         this._historyFallbackApplied = false;
         this.renderTasksList();
       };
+    });
+  }
+
+  setupViewToggle() {
+    const toggle = document.getElementById('tasksViewToggle');
+    if (!toggle) return;
+    toggle.querySelectorAll('.tasks-viewtoggle-btn').forEach(btn => {
+      const view = btn.getAttribute('data-view') || 'list';
+      btn.classList.toggle('active', view === this.viewMode);
+      btn.onclick = () => {
+        if (this.viewMode === view) return;
+        this.viewMode = view;
+        this.taskCardDisplayCount = this.taskCardLimit;
+        this.renderTasksList();
+      };
+    });
+  }
+
+  // ── Calendario de produccion ───────────────────────────────────────────────
+
+  /** Lunes 00:00 de la semana que contiene `date`. */
+  _startOfWeek(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const dow = (d.getDay() + 6) % 7; // 0 = lunes
+    d.setDate(d.getDate() - dow);
+    return d;
+  }
+
+  /** Numero de semana ISO-8601. */
+  _isoWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = (d.getUTCDay() + 6) % 7;
+    d.setUTCDate(d.getUTCDate() - dayNum + 3);
+    const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+    const firstDayNum = (firstThursday.getUTCDay() + 6) % 7;
+    firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3);
+    return 1 + Math.round((d - firstThursday) / (7 * 86400000));
+  }
+
+  /**
+   * Si el schedule (cron) ocurre en `date`, devuelve {hour, min}; si no, null.
+   * Soporta: diario (* * *), semanal (dow), mensual (dom). Hora/min fijos.
+   */
+  _cronOccurrence(cron, date) {
+    if (!cron || typeof cron !== 'string') return null;
+    const p = cron.trim().split(/\s+/);
+    if (p.length < 5) return null;
+    const min = parseInt(p[0], 10);
+    const hour = parseInt(p[1], 10);
+    if (Number.isNaN(hour)) return null; // no soportamos */N de hora en el grid
+    const dom = p[2], dowField = p[4];
+    let occurs = false;
+    if (dowField !== '*' && dowField.length) {
+      // Semanal: cron dow 0/7 = domingo
+      const dows = dowField.split(',').map(x => parseInt(x, 10) % 7);
+      occurs = dows.includes(date.getDay());
+    } else if (dom !== '*' && dom.length) {
+      // Mensual: dia del mes
+      const doms = dom.split(',').map(x => parseInt(x, 10));
+      occurs = doms.includes(date.getDate());
+    } else {
+      occurs = true; // diario
+    }
+    return occurs ? { hour, min: Number.isNaN(min) ? 0 : min } : null;
+  }
+
+  _statusClass(status) {
+    return status === 'active' ? 'active' : status === 'draft' ? 'draft' : 'paused';
+  }
+
+  renderCalendar(grid, empty) {
+    if (!grid) return;
+    if (empty) empty.style.display = 'none';
+
+    // Schedules a mostrar: respeta el filtro de estado; 'history'/'all' = todos.
+    let list = this.schedules || [];
+    if (this.currentFilter === 'active') list = list.filter(s => s.status === 'active');
+    else if (this.currentFilter === 'paused') list = list.filter(s => s.status === 'paused');
+    else if (this.currentFilter === 'draft') list = list.filter(s => s.status === 'draft');
+
+    if (!this.calWeekStart) this.calWeekStart = this._startOfWeek(new Date());
+    const weekStart = this.calWeekStart;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      return d;
+    });
+
+    // Mapa (dayIdx -> hour -> [eventos]) y rango de horas.
+    const byDayHour = days.map(() => ({}));
+    const hoursSeen = new Set();
+    days.forEach((d, di) => {
+      list.forEach(s => {
+        const occ = this._cronOccurrence(s.cron_expression, d);
+        if (!occ) return;
+        hoursSeen.add(occ.hour);
+        (byDayHour[di][occ.hour] = byDayHour[di][occ.hour] || []).push({ s, min: occ.min });
+      });
+    });
+
+    let startHour = 7, endHour = 19;
+    if (hoursSeen.size) {
+      startHour = Math.min(7, ...hoursSeen);
+      endHour = Math.max(19, ...hoursSeen);
+    }
+
+    const dowNames = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const monthLabel = `${monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
+    const weekLabel = `W${this._isoWeek(weekStart)}`;
+
+    // Header de dias
+    const dayHeads = days.map((d, di) => {
+      const isToday = d.getTime() === today.getTime();
+      return `<div class="cal-dayhead${isToday ? ' cal-dayhead--today' : ''}">
+        <span class="cal-dayhead-dow">${dowNames[di]}</span>
+        <span class="cal-dayhead-num">${d.getDate()}</span>
+      </div>`;
+    }).join('');
+
+    // Filas por hora
+    let rows = '';
+    for (let h = startHour; h <= endHour; h++) {
+      const period = h >= 12 ? 'PM' : 'AM';
+      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      rows += `<div class="cal-hourlabel">${h12} ${period}</div>`;
+      for (let di = 0; di < 7; di++) {
+        const isToday = days[di].getTime() === today.getTime();
+        const evs = (byDayHour[di][h] || []).sort((a, b) => a.min - b.min);
+        const evHtml = evs.map(({ s, min }) => {
+          const sc = this._statusClass(s.status);
+          const timeStr = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+          const title = `${s.job_name || 'Sin nombre'} — ${s.flow_name || ''} (${timeStr})`;
+          return `<div class="cal-event cal-event--${sc}" data-task-id="${s.id}" role="button" tabindex="0" title="${this.escapeHtml(title)}">
+            <span class="cal-event-time">${timeStr}</span>
+            <span class="cal-event-name">${this.escapeHtml(s.job_name || 'Sin nombre')}</span>
+            <span class="cal-event-flow">${this.escapeHtml(s.flow_name || '—')}</span>
+          </div>`;
+        }).join('');
+        rows += `<div class="cal-cell${isToday ? ' cal-cell--today' : ''}">${evHtml}</div>`;
+      }
+    }
+
+    const isEmpty = !list.length;
+    grid.innerHTML = `
+      <div class="tasks-calendar">
+        <div class="cal-toolbar">
+          <div class="cal-toolbar-left">
+            <span class="cal-month">${monthLabel}</span>
+            <span class="cal-week">/ ${weekLabel}</span>
+            <button type="button" class="cal-nav" id="calPrev" aria-label="Semana anterior"><i class="fas fa-chevron-left"></i></button>
+            <button type="button" class="cal-nav" id="calNext" aria-label="Semana siguiente"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          <div class="cal-toolbar-right">
+            <span class="cal-legend"><span class="cal-legend-dot cal-legend-dot--active"></span>Activa</span>
+            <span class="cal-legend"><span class="cal-legend-dot cal-legend-dot--paused"></span>Pausada</span>
+            <span class="cal-legend"><span class="cal-legend-dot cal-legend-dot--draft"></span>Borrador</span>
+            <button type="button" class="cal-today" id="calToday">Hoy</button>
+          </div>
+        </div>
+        ${isEmpty ? '<p class="cal-empty">No hay tareas programadas en esta vista.</p>' : ''}
+        <div class="cal-grid"${isEmpty ? ' style="opacity:.4"' : ''}>
+          <div class="cal-corner"></div>
+          ${dayHeads}
+          ${rows}
+        </div>
+      </div>
+    `;
+
+    this._wireCalendar(grid);
+  }
+
+  _wireCalendar(grid) {
+    const prev = grid.querySelector('#calPrev');
+    const next = grid.querySelector('#calNext');
+    const todayBtn = grid.querySelector('#calToday');
+    if (prev) prev.onclick = () => { this.calWeekStart = new Date(this.calWeekStart); this.calWeekStart.setDate(this.calWeekStart.getDate() - 7); this.renderTasksList(); };
+    if (next) next.onclick = () => { this.calWeekStart = new Date(this.calWeekStart); this.calWeekStart.setDate(this.calWeekStart.getDate() + 7); this.renderTasksList(); };
+    if (todayBtn) todayBtn.onclick = () => { this.calWeekStart = this._startOfWeek(new Date()); this.renderTasksList(); };
+    grid.querySelectorAll('.cal-event').forEach(ev => {
+      const id = ev.getAttribute('data-task-id');
+      ev.addEventListener('click', () => { if (id) this.navigateToTask(id); });
+      ev.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (id) this.navigateToTask(id); }
+      });
     });
   }
 
