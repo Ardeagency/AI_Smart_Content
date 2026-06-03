@@ -232,19 +232,100 @@
         why: `Lo usas ${Number(drags[0].post_count) || 0} ${Number(drags[0].post_count) === 1 ? 'vez' : 'veces'} y rinde por debajo. Reducelo.`,
       } : null;
 
-      if (!explota && !optimiza && !elimina) return '';
+      // ── Enriquecer con dashboard_brand_optimization_insights (server-side):
+      // palancas cuantificadas + momentum + consistencia. Si hay data,
+      // sobreescribe los buckets con la señal mas fuerte; si no, cae al
+      // synthesis client-side de arriba (whatWorks/health/pillars).
+      const oi = data?.optimizationInsights?.data || null;
+      if (oi) {
+        const ec = [
+          oi.best_topic && Number(oi.best_topic.lift_pct) > 0 && { dim: 'Tema', val: oi.best_topic.topic, lift: oi.best_topic.lift_pct, n: oi.best_topic.n },
+          oi.best_tone  && Number(oi.best_tone.lift_pct)  > 0 && { dim: 'Tono', val: oi.best_tone.tone,  lift: oi.best_tone.lift_pct,  n: oi.best_tone.n },
+        ].filter(Boolean).sort((a, b) => Number(b.lift) - Number(a.lift));
+        if (ec[0]) explota = {
+          title: `${ec[0].dim} "${this._esc(ec[0].val)}"`,
+          metric: `+${Math.round(Number(ec[0].lift))}%`, metricSub: 'sobre tu promedio',
+          why: `Tu mejor palanca (${ec[0].n} posts). Produce mas de esto.`, impact: 'alto',
+        };
+        const oc = [
+          oi.best_hour_co && Number(oi.best_hour_co.lift_pct) > 0 && { txt: `Publica a las ${oi.best_hour_co.hour_co}h`, lift: oi.best_hour_co.lift_pct },
+          oi.best_format  && Number(oi.best_format.lift_pct)  > 0 && { txt: `Usa mas "${oi.best_format.format}"`, lift: oi.best_format.lift_pct },
+        ].filter(Boolean).sort((a, b) => Number(b.lift) - Number(a.lift));
+        if (oc[0]) optimiza = {
+          title: oc[0].txt, metric: `+${Math.round(Number(oc[0].lift))}%`, metricSub: 'engagement',
+          why: oi.posting_consistency ? `Consistencia actual: ${Math.round(Number(oi.posting_consistency.posting_consistency_pct))}%.` : '',
+          impact: 'medio',
+        };
+        const dc = [
+          oi.worst_tone    && Number(oi.worst_tone.lift_pct)    < 0 && { title: `Tono "${oi.worst_tone.tone}"`, lift: oi.worst_tone.lift_pct },
+          oi.worst_hour_co && Number(oi.worst_hour_co.lift_pct) < 0 && { title: `Publicar a las ${oi.worst_hour_co.hour_co}h`, lift: oi.worst_hour_co.lift_pct },
+        ].filter(Boolean).sort((a, b) => Number(a.lift) - Number(b.lift));
+        if (dc[0]) elimina = {
+          title: dc[0].title, metric: `${Math.round(Number(dc[0].lift))}%`, metricSub: 'bajo tu promedio',
+          why: 'Rinde muy por debajo de tu media. Reducelo o evitalo.', impact: 'medio',
+        };
+      }
+      if (explota  && !explota.impact)  explota.impact  = 'alto';
+      if (optimiza && !optimiza.impact) optimiza.impact = 'medio';
+      if (elimina  && !elimina.impact)  elimina.impact  = 'medio';
+
+      // VIGILA (4ta card) = riesgo de marca desde dashboard_brand_alert_score.
+      const alertRows = Array.isArray(data?.alertScore?.data) ? data.alertScore.data : [];
+      const risk = alertRows
+        .filter((r) => Number(r.risk_score) > 0 || Number(r.high_risk_posts) > 0 || Number(r.negative_sentiment_ratio) > 0)
+        .sort((a, b) => Number(b.risk_score) - Number(a.risk_score))[0];
+      let vigila = null;
+      if (risk) {
+        const neg = Math.round(Number(risk.negative_sentiment_ratio || 0) * 100);
+        const parts = [];
+        if (Number(risk.high_risk_posts) > 0) parts.push(`${Number(risk.high_risk_posts)} posts de riesgo`);
+        if (neg > 0) parts.push(`${neg}% sentimiento negativo`);
+        if (Number(risk.flags_count) > 0) parts.push(`${Number(risk.flags_count)} flags`);
+        vigila = {
+          title: risk.brand_name || 'Riesgo de marca',
+          metric: parts[0] || `riesgo ${Math.round(Number(risk.risk_score))}`,
+          why: parts.slice(1).join(' · ') || (risk.description || 'Revisa sentimiento y flags.'),
+          impact: Number(risk.risk_score) >= 50 ? 'alto' : 'medio',
+        };
+      }
+
+      if (!explota && !optimiza && !elimina && !vigila) return '';
+
+      // Tira de signos vitales (momentum) — lo primero que mira un CMO.
+      const vitals = oi ? (() => {
+        const trend = oi.engagement_vs_prior_period_pct;
+        const hasTrend = trend != null && Number.isFinite(Number(trend));
+        const tNum = Math.round(Number(trend));
+        const tCls = !hasTrend ? '' : tNum > 0 ? 'is-up' : tNum < 0 ? 'is-down' : 'is-flat';
+        const tStr = !hasTrend ? '—' : `${tNum > 0 ? '+' : ''}${tNum}%`;
+        const cons = oi.posting_consistency ? `${Math.round(Number(oi.posting_consistency.posting_consistency_pct))}%` : '—';
+        const vital = (val, lbl, cls = '') => `
+          <div class="mb-plan-vital">
+            <span class="mb-plan-vital-val ${cls}">${this._esc(val)}</span>
+            <span class="mb-plan-vital-lbl">${this._esc(lbl)}</span>
+          </div>`;
+        return `
+          <div class="mb-plan-vitals">
+            ${vital(tStr, 'Engagement vs periodo previo', tCls)}
+            ${vital(fmt.int(oi.posts_analyzed), 'Posts analizados')}
+            ${vital(cons, 'Consistencia de publicacion')}
+          </div>`;
+      })() : '';
+
+      const impactBadge = (impact) =>
+        impact ? `<span class="mb-plan-impact mb-plan-impact--${impact}">impacto ${this._esc(impact)}</span>` : '';
 
       const col = (kind, icon, label, item) => {
         if (!item) {
           return `<div class="mb-plan-col mb-plan-col--${kind} mb-plan-col--empty">
             <div class="mb-plan-col-head"><i class="${icon}"></i><span>${label}</span></div>
-            <p class="mb-plan-empty">Sin senal clara aun.</p></div>`;
+            <p class="mb-plan-empty">${kind === 'vigila' ? 'Sin riesgos detectados.' : 'Sin senal clara aun.'}</p></div>`;
         }
         return `
           <div class="mb-plan-col mb-plan-col--${kind}">
-            <div class="mb-plan-col-head"><i class="${icon}"></i><span>${label}</span></div>
+            <div class="mb-plan-col-head"><i class="${icon}"></i><span>${label}</span>${impactBadge(item.impact)}</div>
             <div class="mb-plan-title">${this._esc(item.title)}</div>
-            ${item.metric ? `<div class="mb-plan-metric">${this._esc(item.metric)}</div>` : ''}
+            ${item.metric ? `<div class="mb-plan-metric"><span class="mb-plan-metric-val">${this._esc(item.metric)}</span>${item.metricSub ? `<span class="mb-plan-metric-sub">${this._esc(item.metricSub)}</span>` : ''}</div>` : ''}
             ${item.why ? `<p class="mb-plan-why">${this._esc(item.why)}</p>` : ''}
           </div>`;
       };
@@ -253,12 +334,14 @@
         <section class="mb-section mb-section--wide">
           <div class="mb-section-head">
             <span class="mb-section-title">Tu plan de accion</span>
-            <span class="mb-section-hint">Que explotar, optimizar y eliminar — de un golpe</span>
+            <span class="mb-section-hint">Que explotar, optimizar, eliminar y vigilar — priorizado por impacto</span>
           </div>
-          <div class="mb-plan-grid">
+          ${vitals}
+          <div class="mb-plan-grid mb-plan-grid--4">
             ${col('explota',  'fas fa-arrow-trend-up',   'Explota',  explota)}
             ${col('optimiza', 'fas fa-sliders',          'Optimiza', optimiza)}
             ${col('elimina',  'fas fa-arrow-trend-down', 'Elimina',  elimina)}
+            ${col('vigila',   'fas fa-shield-halved',    'Vigila',   vigila)}
           </div>
         </section>`;
     },

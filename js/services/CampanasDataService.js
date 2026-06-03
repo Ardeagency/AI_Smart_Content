@@ -122,6 +122,7 @@ class CampanasDataService {
       featuredSentiment, featuredProfile, featuredGrowth,
       whatWorks, audiencePatterns, activity, pillars, audienceEffective, evolution,
       vulnerabilities,
+      optimizationInsights, alertScore,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
@@ -171,6 +172,21 @@ class CampanasDataService {
       }),
 
       vulnsPromise,
+
+      // Plan de accion CMO-grade: recomendaciones priorizadas + momentum +
+      // consistencia (server-side). p_brand_container_id es un solo uuid (no
+      // array): si hay 1 marca filtrada la pasamos, si no NULL = toda la org.
+      // window cap 365d para que el "vs periodo previo" siga siendo significativo.
+      this.sb.rpc('dashboard_brand_optimization_insights', {
+        p_org_id: this.orgId,
+        p_brand_container_id: (Array.isArray(bcids) && bcids.length === 1) ? bcids[0] : null,
+        p_window_d: Math.min(healthWindowDays, 365),
+      }),
+      // Riesgo de marca (4ta card "Vigila"): risk_score, posts de riesgo, sentimiento.
+      this.sb.rpc('dashboard_brand_alert_score', {
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
+        p_brand_container_ids: bcids, p_limit: 5,
+      }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -204,6 +220,8 @@ class CampanasDataService {
       evolution: u(evolution),
 
       vulnerabilities: u(vulnerabilities),
+      optimizationInsights: u(optimizationInsights),
+      alertScore: u(alertScore),
     };
   }
 

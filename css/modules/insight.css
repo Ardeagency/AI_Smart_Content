@@ -2832,6 +2832,7 @@
    Tu plan de accion — Explota / Optimiza / Elimina (resumen ejecutivo)
    ════════════════════════════════════════════════════════════════════ */
 .mb-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
+.mb-plan-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .mb-plan-col {
   position: relative;
   background: var(--bg-card, #141517);
@@ -2844,6 +2845,7 @@
 .mb-plan-col--explota::before  { background: #6bcf7f; }
 .mb-plan-col--optimiza::before { background: #5b9bd5; }
 .mb-plan-col--elimina::before  { background: #e06464; }
+.mb-plan-col--vigila::before   { background: #e0a045; }
 .mb-plan-col-head {
   display: flex; align-items: center; gap: 0.45rem;
   font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
@@ -2852,13 +2854,38 @@
 .mb-plan-col--explota  .mb-plan-col-head { color: #6bcf7f; }
 .mb-plan-col--optimiza .mb-plan-col-head { color: #5b9bd5; }
 .mb-plan-col--elimina  .mb-plan-col-head { color: #e06464; }
+.mb-plan-col--vigila   .mb-plan-col-head { color: #e0a045; }
 .mb-plan-col-head i { font-size: 0.8125rem; }
 .mb-plan-title { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary, #D4D1D8); line-height: 1.25; margin-top: 0.15rem; }
-.mb-plan-metric { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary, rgba(212,209,216,0.82)); font-variant-numeric: tabular-nums; }
-.mb-plan-why { margin: 0.2rem 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--text-muted, rgba(212,209,216,0.6)); }
+/* Metric tipo "hero": numero grande + sufijo pequeno */
+.mb-plan-metric { display: flex; align-items: baseline; gap: 0.4rem; margin-top: 0.1rem; }
+.mb-plan-metric-val { font-size: 1.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+.mb-plan-metric-sub { font-size: 0.6875rem; font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.55)); }
+.mb-plan-col--explota  .mb-plan-metric-val { color: #6bcf7f; }
+.mb-plan-col--optimiza .mb-plan-metric-val { color: #5b9bd5; }
+.mb-plan-col--elimina  .mb-plan-metric-val { color: #e06464; }
+.mb-plan-col--vigila   .mb-plan-metric-val { color: #e0a045; font-size: 1.0625rem; font-weight: 700; }
+.mb-plan-why { margin: 0.25rem 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--text-muted, rgba(212,209,216,0.6)); }
 .mb-plan-empty { margin: 0.3rem 0 0; font-size: 0.75rem; color: var(--text-muted, rgba(212,209,216,0.45)); }
 
-@media (max-width: 760px) { .mb-plan-grid { grid-template-columns: 1fr; } }
+/* Badge de impacto en el head de cada card */
+.mb-plan-impact { margin-left: auto; font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.15rem 0.4rem; border-radius: 6px; border: 1px solid currentColor; opacity: 0.85; }
+.mb-plan-impact--alto  { color: #6bcf7f; }
+.mb-plan-impact--medio { color: #e0a045; }
+.mb-plan-impact--bajo  { color: var(--text-muted, rgba(212,209,216,0.5)); }
+
+/* Tira de signos vitales (momentum del CMO) */
+.mb-plan-vitals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 1rem; background-color: var(--bg-card, #1b1d22); background-image: var(--dash-sheen); border: 1px solid var(--border-divider, #242424); border-radius: 14px; box-shadow: var(--dash-elev); overflow: hidden; }
+.mb-plan-vital { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.85rem 1.1rem; border-right: 1px solid var(--dash-line, rgba(255,255,255,0.08)); }
+.mb-plan-vital:last-child { border-right: 0; }
+.mb-plan-vital-val { font-size: 1.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+.mb-plan-vital-val.is-up   { color: #6bcf7f; }
+.mb-plan-vital-val.is-down { color: #e06464; }
+.mb-plan-vital-val.is-flat { color: var(--text-muted, rgba(212,209,216,0.6)); }
+.mb-plan-vital-lbl { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
+
+@media (max-width: 1100px) { .mb-plan-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .mb-plan-grid, .mb-plan-grid--4 { grid-template-columns: 1fr; } .mb-plan-vitals { grid-template-columns: 1fr; } .mb-plan-vital { border-right: 0; border-bottom: 1px solid var(--dash-line, rgba(255,255,255,0.08)); } .mb-plan-vital:last-child { border-bottom: 0; } }
 
 /* ════════════════════════════════════════════════════════════════════
    Evolucion — impacto social en el tiempo (sparkline + veredicto)
