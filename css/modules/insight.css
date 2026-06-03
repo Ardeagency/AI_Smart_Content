@@ -2650,7 +2650,7 @@
 .mb-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1.75rem; align-items: start; }
 /* Cuerpo principal = grid de 2 columnas. Las secciones "banner" (plan de accion,
    evolucion) ocupan el ancho completo via .mb-section--wide. */
-.mb-layout-main { min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; align-items: start; }
+.mb-layout-main { min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem; align-items: start; }
 .mb-section--wide { grid-column: 1 / -1; }
 /* La barra de filtros vive dentro de la columna izquierda y ocupa su ancho completo. */
 .mb-layout-main > .mb-filters-bar { grid-column: 1 / -1; margin: 0; }
@@ -2836,43 +2836,54 @@
 .mb-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
 /* auto-fit: el grid se adapta a cuantas cards queden (las vacias se ocultan),
    sin dejar columna fantasma. */
-.mb-plan-grid--4 { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.mb-plan-grid--4 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.1rem; }
 .mb-plan-col {
+  position: relative; overflow: hidden;
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
-  border-radius: 16px;
-  padding: 1.35rem 1.4rem;
-  display: flex; flex-direction: column; gap: 0.5rem;
+  border-radius: 18px;
+  padding: 1.6rem 1.65rem 1.65rem;
+  display: flex; flex-direction: column; gap: 0.45rem;
+  box-shadow: var(--dash-elev);
 }
-/* Header estilo referencia: icono en badge redondeado + categoria + impacto */
-.mb-plan-col-head { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.35rem; }
-.mb-plan-cat { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); }
-/* Acciones del header (impacto + preview) alineadas a la derecha */
+/* Glow sutil de acento arriba (profundidad premium sin saturar) */
+.mb-plan-col::after {
+  content: ""; position: absolute; left: 0; top: 0; right: 0; height: 150px; pointer-events: none;
+  background: radial-gradient(130% 100% at 0% 0%, var(--mb-plan-glow, transparent), transparent 72%);
+}
+.mb-plan-col > * { position: relative; z-index: 1; }
+.mb-plan-col--explota  { --mb-plan-glow: rgba(107,207,127,0.12); }
+.mb-plan-col--optimiza { --mb-plan-glow: rgba(91,155,213,0.12); }
+.mb-plan-col--elimina  { --mb-plan-glow: rgba(224,100,100,0.12); }
+.mb-plan-col--vigila   { --mb-plan-glow: rgba(224,160,69,0.12); }
+.mb-plan-col-head { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.7rem; }
+.mb-plan-cat { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); }
+/* Boton de preview circular (estilo ref) */
 .mb-plan-head-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 0.45rem; }
 .mb-plan-expand {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; border-radius: 8px; flex: 0 0 auto;
+  width: 32px; height: 32px; border-radius: 50%; flex: 0 0 auto;
   background: rgba(255,255,255,0.05); border: 1px solid var(--border-divider, #242424);
-  color: var(--text-muted, rgba(212,209,216,0.6)); cursor: pointer; font-size: 0.7rem;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  color: var(--text-muted, rgba(212,209,216,0.65)); cursor: pointer; font-size: 0.7rem;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
-.mb-plan-expand:hover { background: rgba(255,255,255,0.1); color: var(--text-primary, #D4D1D8); border-color: rgba(255,255,255,0.18); }
+.mb-plan-expand:hover { background: rgba(255,255,255,0.12); color: var(--text-primary, #D4D1D8); border-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
 .mb-plan-expand:focus-visible { outline: 2px solid rgba(255,255,255,0.4); outline-offset: 2px; }
 .mb-plan-col--explota  .mb-plan-cat { color: #6bcf7f; }
 .mb-plan-col--optimiza .mb-plan-cat { color: #5b9bd5; }
 .mb-plan-col--elimina  .mb-plan-cat { color: #e06464; }
 .mb-plan-col--vigila   .mb-plan-cat { color: #e0a045; }
-/* Valor = el lever (la accion), elemento prominente de la card (estilo ref) */
-.mb-plan-title { font-size: 1.1875rem; font-weight: 700; color: var(--text-primary, #D4D1D8); line-height: 1.25; margin-top: 0.15rem; letter-spacing: -0.01em; }
-/* Metric = % como caption de acento (no hero) */
-.mb-plan-metric { display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.1rem; }
-.mb-plan-metric-val { font-size: 1.0625rem; font-weight: 700; line-height: 1; letter-spacing: -0.01em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
-.mb-plan-metric-sub { font-size: 0.6875rem; font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.55)); }
+/* Numero hero (grande + sufijo fino) */
+.mb-plan-metric { display: flex; align-items: baseline; gap: 0.45rem; flex-wrap: wrap; }
+.mb-plan-metric-val { font-size: 2.25rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+.mb-plan-metric-sub { font-size: 0.75rem; font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.55)); }
 .mb-plan-col--explota  .mb-plan-metric-val { color: #6bcf7f; }
 .mb-plan-col--optimiza .mb-plan-metric-val { color: #5b9bd5; }
 .mb-plan-col--elimina  .mb-plan-metric-val { color: #e06464; }
-.mb-plan-col--vigila   .mb-plan-metric-val { color: #e0a045; font-size: 1.0625rem; font-weight: 700; }
-.mb-plan-why { margin: 0.25rem 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--text-muted, rgba(212,209,216,0.6)); }
+.mb-plan-col--vigila   .mb-plan-metric-val { color: #e0a045; font-size: 1.375rem; }
+/* Lever (subtitulo bajo el hero) */
+.mb-plan-title { font-size: 0.9375rem; font-weight: 600; color: var(--text-primary, #D4D1D8); line-height: 1.3; margin-top: 0.55rem; }
+.mb-plan-why { margin: 0.3rem 0 0; font-size: 0.75rem; line-height: 1.5; color: var(--text-muted, rgba(212,209,216,0.55)); }
 .mb-plan-empty { margin: 0.3rem 0 0; font-size: 0.75rem; color: var(--text-muted, rgba(212,209,216,0.45)); }
 
 /* Badge de impacto en el head de cada card */
@@ -2882,10 +2893,10 @@
 .mb-plan-impact--bajo  { color: var(--text-muted, rgba(212,209,216,0.5)); }
 
 /* Tira de signos vitales (momentum del CMO) */
-.mb-plan-vitals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 1rem; background-color: var(--bg-card, #1b1d22); background-image: var(--dash-sheen); border: 1px solid var(--border-divider, #242424); border-radius: 14px; box-shadow: var(--dash-elev); overflow: hidden; }
-.mb-plan-vital { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.85rem 1.1rem; border-right: 1px solid var(--dash-line, rgba(255,255,255,0.08)); }
+.mb-plan-vitals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 1.3rem; background-color: var(--bg-card, #1b1d22); background-image: var(--dash-sheen); border: 1px solid var(--border-divider, #242424); border-radius: 18px; box-shadow: var(--dash-elev); overflow: hidden; }
+.mb-plan-vital { display: flex; flex-direction: column; gap: 0.35rem; padding: 1.25rem 1.5rem; border-right: 1px solid var(--dash-line, rgba(255,255,255,0.08)); }
 .mb-plan-vital:last-child { border-right: 0; }
-.mb-plan-vital-val { font-size: 1.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+.mb-plan-vital-val { font-size: 1.875rem; font-weight: 800; line-height: 1; letter-spacing: -0.025em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
 .mb-plan-vital-val.is-up   { color: #6bcf7f; }
 .mb-plan-vital-val.is-down { color: #e06464; }
 .mb-plan-vital-val.is-flat { color: var(--text-muted, rgba(212,209,216,0.6)); }

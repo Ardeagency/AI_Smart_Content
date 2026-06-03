@@ -331,8 +331,8 @@
               <span class="mb-plan-cat">${label}</span>
               ${expand ? `<div class="mb-plan-head-actions">${expand}</div>` : ''}
             </div>
-            <div class="mb-plan-title">${this._esc(item.title)}</div>
             ${item.metric ? `<div class="mb-plan-metric"><span class="mb-plan-metric-val">${this._esc(item.metric)}</span>${item.metricSub ? `<span class="mb-plan-metric-sub">${this._esc(item.metricSub)}</span>` : ''}</div>` : ''}
+            <div class="mb-plan-title">${this._esc(item.title)}</div>
             ${item.why ? `<p class="mb-plan-why">${this._esc(item.why)}</p>` : ''}
           </div>`;
       };
