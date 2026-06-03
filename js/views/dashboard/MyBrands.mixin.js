@@ -321,9 +321,13 @@
         if (!item) return '';
         return `
           <div class="mb-plan-col mb-plan-col--${kind}">
-            <div class="mb-plan-col-head"><i class="${icon}"></i><span>${label}</span>${impactBadge(item.impact)}</div>
-            <div class="mb-plan-title">${this._esc(item.title)}</div>
+            <div class="mb-plan-col-head">
+              <span class="mb-plan-icon"><i class="${icon}"></i></span>
+              <span class="mb-plan-cat">${label}</span>
+              ${impactBadge(item.impact)}
+            </div>
             ${item.metric ? `<div class="mb-plan-metric"><span class="mb-plan-metric-val">${this._esc(item.metric)}</span>${item.metricSub ? `<span class="mb-plan-metric-sub">${this._esc(item.metricSub)}</span>` : ''}</div>` : ''}
+            <div class="mb-plan-title">${this._esc(item.title)}</div>
             ${item.why ? `<p class="mb-plan-why">${this._esc(item.why)}</p>` : ''}
           </div>`;
       };
