@@ -1139,10 +1139,11 @@ class TasksView extends BaseView {
       });
     });
 
-    let startHour = 7, endHour = 20;
+    // Solo mostramos el rango de horas que TIENE programacion (sin filas vacias).
+    let startHour = 8, endHour = 18;
     if (hoursSeen.size) {
-      startHour = Math.min(7, ...hoursSeen);
-      endHour = Math.min(23, Math.max(20, ...hoursSeen));
+      startHour = Math.min(...hoursSeen);
+      endHour = Math.max(...hoursSeen);
     }
     const totalHours = endHour - startHour + 1;
     const bodyH = totalHours * HOUR_H;
