@@ -370,68 +370,75 @@ class MonitoringView extends BaseView {
       </section>`;
   }
 
-  /* ── Grid unificado "Lo que sigo" ── */
+  /* ── Columnas "Lo que sigo" — kanban limpio por estado ── */
+  static COLUMNS = [
+    { id: 'news',   label: 'Con novedad', hint: 'Cambios recientes' },
+    { id: 'calm',   label: 'Al día',      hint: 'Activo y tranquilo' },
+    { id: 'silent', label: 'Sin señales', hint: 'Callados hace rato' },
+    { id: 'paused', label: 'En pausa',    hint: 'Desactivados' },
+  ];
+
+  _columnOf(item) {
+    const t = item.status.tone;
+    if (t === 'paused') return 'paused';
+    if (t === 'fresh' || t === 'changed') return 'news';
+    if (t === 'stale') return 'silent';
+    return 'calm'; // quiet, new (empezando a vigilar)
+  }
+
   _buildSeguidos(model) {
     const { items, containers } = model;
     const containerName = (id) => containers.find(c => c.id === id)?.nombre_marca || null;
 
-    const filtered = items.filter(i => {
-      if (this._filter === 'brands') return i.kind === 'profile';
-      if (this._filter === 'pages')  return i.kind === 'page';
-      if (this._filter === 'paused') return !i.isActive;
-      return true;
-    });
+    const buckets = { news: [], calm: [], silent: [], paused: [] };
+    items.forEach(i => buckets[this._columnOf(i)].push(i));
 
-    const chip = (id, label, n) => `
-      <button class="mn-chip${this._filter === id ? ' is-active' : ''}" data-filter="${id}">
-        ${label}<span class="mn-chip-n">${n}</span>
-      </button>`;
-
-    const counts = {
-      all:    items.length,
-      brands: items.filter(i => i.kind === 'profile').length,
-      pages:  items.filter(i => i.kind === 'page').length,
-      paused: items.filter(i => !i.isActive).length,
+    const column = (c) => {
+      const list = buckets[c.id];
+      return `
+        <section class="mn-col mn-col--${c.id}">
+          <header class="mn-col-head">
+            <span class="mn-col-dot"></span>
+            <h3 class="mn-col-title">${c.label}</h3>
+            <span class="mn-col-count">${list.length}</span>
+          </header>
+          <p class="mn-col-hint">${c.hint}</p>
+          <div class="mn-col-body">
+            ${list.length
+              ? list.map(i => this._buildCard(i, containerName, c.id)).join('')
+              : `<div class="mn-col-empty">—</div>`}
+          </div>
+        </section>`;
     };
 
-    const grid = filtered.length
-      ? `<div class="mn-grid">${filtered.map(i => this._buildCard(i, containerName)).join('')}</div>`
-      : `<div class="mn-empty"><p>${this._emptyMsg()}</p></div>`;
-
-    return `
-      <div class="mn-toolbar">
-        <div class="mn-filter">
-          ${chip('all',    'Todo',     counts.all)}
-          ${chip('brands', 'Marcas',   counts.brands)}
-          ${chip('pages',  'Páginas',  counts.pages)}
-          ${chip('paused', 'En pausa', counts.paused)}
-        </div>
-        <button class="mn-btn-primary" data-action="new-item">
-          <i class="fas fa-plus"></i> Seguir algo nuevo
-        </button>
-      </div>
-      ${items.length ? grid : `
+    if (!items.length) {
+      return `
         <div class="mn-empty mn-empty--first">
           <div class="mn-empty-icon"><i class="fas fa-binoculars"></i></div>
           <p>Aún no sigues a nadie.<br>Agrega tu primera marca o página y nosotros nos encargamos del resto.</p>
           <button class="mn-btn-primary" data-action="new-item"><i class="fas fa-plus"></i> Seguir algo nuevo</button>
-        </div>`}`;
+        </div>`;
+    }
+
+    return `
+      <div class="mn-toolbar">
+        <h2 class="mn-section-title">Lo que sigo <span class="mn-count">${items.length}</span></h2>
+        <button class="mn-btn-primary" data-action="new-item">
+          <i class="fas fa-plus"></i> Seguir algo nuevo
+        </button>
+      </div>
+      <div class="mn-cols">${MonitoringView.COLUMNS.map(column).join('')}</div>`;
   }
 
-  _emptyMsg() {
-    return ({
-      brands: 'No sigues ninguna marca o perfil todavía.',
-      pages:  'No vigilas ninguna página web todavía.',
-      paused: 'Nada en pausa. Todo lo que sigues está activo. ✨',
-      all:    'Nada por aquí todavía.',
-    })[this._filter] || 'Nada por aquí todavía.';
-  }
-
-  _buildCard(item, containerName) {
+  /** Tarjeta compacta. La columna ya comunica el estado, así que la tarjeta no
+      lo repite: solo identidad + tipo + acciones. En la columna "Con novedad"
+      añadimos cuándo fue el último movimiento. */
+  _buildCard(item, containerName, colId) {
     const icon = MonitoringView.PLATFORM_ICON[item.platform] || 'fas fa-hashtag';
     const typeLabel = item.kind === 'page' ? 'Página web' : 'Marca / perfil';
     const brand = item.kind === 'profile' ? containerName(item.containerId) : null;
-    const st = item.status;
+    const when = (colId === 'news' && item.lastAt) ? ' · ' + this._relativeTime(item.lastAt) : '';
+    const meta = `${typeLabel}${brand ? ' · ' + this._esc(brand) : ''}${when}`;
 
     const star = item.kind === 'profile' ? `
       <button class="mn-star${item.highlighted ? ' is-on' : ''}" data-action="toggle-highlight" data-id="${this._esc(item.id)}"
@@ -439,38 +446,20 @@ class MonitoringView extends BaseView {
         <i class="fas fa-star"></i>
       </button>` : '';
 
-    const vera = item.kind === 'profile' ? `
-      <div class="mn-card-vera">
-        <button class="mn-vera-btn" data-action="vera-analizar" data-id="${this._esc(item.id)}" title="Que Vera analice este perfil">
-          <i class="fas fa-wand-magic-sparkles"></i> Analizar
-        </button>
-        <button class="mn-vera-btn" data-action="vera-comparar" data-id="${this._esc(item.id)}" title="Comparar con mi marca">
-          <i class="fas fa-code-compare"></i> Comparar
-        </button>
-        <button class="mn-vera-btn" data-action="vera-inspirar" data-id="${this._esc(item.id)}" title="Pedir ideas inspiradas en este perfil">
-          <i class="fas fa-lightbulb"></i> Ideas
-        </button>
-      </div>` : '';
+    // Acciones compactas (solo iconos) para no saturar las columnas.
+    const actions = item.kind === 'profile' ? `
+      <div class="mn-acts">
+        <button class="mn-act" data-action="vera-analizar" data-id="${this._esc(item.id)}" title="Analizar con Vera"><i class="fas fa-wand-magic-sparkles"></i></button>
+        <button class="mn-act" data-action="vera-comparar" data-id="${this._esc(item.id)}" title="Comparar con mi marca"><i class="fas fa-code-compare"></i></button>
+        <button class="mn-act" data-action="vera-inspirar" data-id="${this._esc(item.id)}" title="Pedir ideas"><i class="fas fa-lightbulb"></i></button>
+      </div>` : `
+      <div class="mn-acts">
+        <a class="mn-act" href="${this._esc(item.url)}" target="_blank" rel="noopener" title="Abrir página"><i class="fas fa-arrow-up-right-from-square"></i></a>
+      </div>`;
 
-    // Páginas: pequeño feed de cambios recientes.
-    let feed = '';
-    if (item.kind === 'page' && item.feed && item.feed.length) {
-      feed = `<div class="mn-card-feed">${item.feed.map(s => {
-        const excerpt = (s._parsed?.excerpt || '').slice(0, 140);
-        return `
-          <div class="mn-feed-row">
-            <span class="mn-feed-when">${this._esc(this._relativeTime(s.captured_at))}</span>
-            ${excerpt ? `<span class="mn-feed-text">${this._esc(excerpt)}${excerpt.length === 140 ? '…' : ''}</span>` : ''}
-          </div>`;
-      }).join('')}</div>`;
-    }
-
-    const editAction = item.kind === 'page' ? 'edit-watcher' : 'edit-entity';
-    const delAction  = item.kind === 'page' ? 'delete-watcher' : 'delete-entity';
     const toggleAction = item.kind === 'page' ? 'toggle-watcher' : 'toggle-entity';
-    const link = item.kind === 'page'
-      ? `<a class="mn-card-sub mn-card-sub--link" href="${this._esc(item.url)}" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i> ${this._esc(item.subtitle)}</a>`
-      : (item.subtitle ? `<div class="mn-card-sub">${this._esc(item.subtitle)}</div>` : '');
+    const editAction   = item.kind === 'page' ? 'edit-watcher'   : 'edit-entity';
+    const delAction    = item.kind === 'page' ? 'delete-watcher' : 'delete-entity';
 
     return `
       <article class="mn-card${item.highlighted ? ' mn-card--star' : ''}${!item.isActive ? ' mn-card--off' : ''}" data-id="${this._esc(item.id)}">
@@ -478,23 +467,18 @@ class MonitoringView extends BaseView {
           <div class="mn-card-avatar mn-card-avatar--${item.kind}"><i class="${icon}"></i></div>
           <div class="mn-card-id">
             <div class="mn-card-title">${this._esc(item.title)}</div>
-            ${link}
+            ${item.subtitle ? `<div class="mn-card-sub">${this._esc(item.subtitle)}</div>` : ''}
           </div>
           ${star}
         </div>
-        <div class="mn-card-meta">
-          <span class="mn-status mn-status--${st.tone}"><i class="fas ${st.icon}"></i> ${this._esc(st.text)}</span>
-          <span class="mn-type">${typeLabel}${brand ? ' · ' + this._esc(brand) : ''}</span>
-        </div>
-        ${vera}
-        ${feed}
+        <div class="mn-card-metaline">${meta}</div>
         <div class="mn-card-foot">
-          <label class="mn-onoff" title="${item.isActive ? 'Pausar' : 'Activar'}">
-            <input type="checkbox" ${item.isActive ? 'checked' : ''} data-action="${toggleAction}" data-id="${this._esc(item.id)}">
-            <span class="mn-onoff-track"></span>
-            <span class="mn-onoff-label">${item.isActive ? 'Vigilando' : 'En pausa'}</span>
-          </label>
-          <div class="mn-card-foot-actions">
+          ${actions}
+          <div class="mn-card-foot-right">
+            <label class="mn-onoff mn-onoff--sm" title="${item.isActive ? 'Pausar' : 'Activar'}">
+              <input type="checkbox" ${item.isActive ? 'checked' : ''} data-action="${toggleAction}" data-id="${this._esc(item.id)}">
+              <span class="mn-onoff-track"></span>
+            </label>
             <button class="mn-btn-icon" data-action="${editAction}" data-id="${this._esc(item.id)}" title="Editar"><i class="fas fa-pen"></i></button>
             <button class="mn-btn-icon mn-btn-icon--danger" data-action="${delAction}" data-id="${this._esc(item.id)}" title="Dejar de seguir"><i class="fas fa-trash"></i></button>
           </div>
@@ -511,9 +495,6 @@ class MonitoringView extends BaseView {
   }
 
   async _onClick(e) {
-    const chip = e.target.closest('[data-filter]');
-    if (chip) { this._filter = chip.dataset.filter; this._renderBody(); return; }
-
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const action = btn.dataset.action;
