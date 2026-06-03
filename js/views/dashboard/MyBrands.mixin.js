@@ -1119,8 +1119,13 @@
       return `
         <section class="mb-health-card mb-health-card--aside">
           <span class="mb-hero-label">Salud de tu marca</span>
-          <div class="mb-aside-gauge">${gaugeSvg}</div>
-          <span class="mb-hero-verdict" style="color:${verdictMeta.color};">${this._esc(verdictMeta.label)}</span>
+          <div class="mb-health-ring mb-health-ring--${this._esc(verdict)}">
+            <div class="mb-health-ring-center">
+              <span class="mb-health-score">${Math.round(score)}</span>
+              <span class="mb-health-max">/100</span>
+              <span class="mb-health-band">${this._esc(verdictMeta.label)}</span>
+            </div>
+          </div>
           <span class="mb-health-objetivo">${objetivo}</span>
           ${this._buildHealthComponents(h.components)}
           ${this._buildHealthAlerts(h.components)}
