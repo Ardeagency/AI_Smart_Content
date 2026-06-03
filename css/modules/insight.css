@@ -3169,11 +3169,29 @@
 /* Radar "huella emocional" de Patrones de tu publico */
 .mb-aud-radar { position: relative; height: 290px; max-width: 440px; margin: 0.4rem auto 0; }
 
-/* Pilares narrativos — matriz de oportunidad (bubble) + callout de oro */
-.mb-pil-gold { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.8125rem; line-height: 1.4; color: var(--text-secondary, rgba(212,209,216,0.85)); background: rgba(107,207,127,0.08); border: 1px solid rgba(107,207,127,0.25); border-radius: 10px; padding: 0.65rem 0.85rem; margin-bottom: 0.9rem; }
-.mb-pil-gold i { color: #6bcf7f; margin-top: 0.15rem; flex: 0 0 auto; }
-.mb-pil-gold b { color: var(--text-primary, #D4D1D8); font-weight: 700; }
-.mb-pil-matrix { position: relative; height: 300px; }
+/* Pilares narrativos — lista priorizada de cards-consejo (lenguaje plano) */
+.mb-pil2-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.mb-pil2 {
+  --pil-accent: #8a8a8e;
+  background: linear-gradient(180deg, #222429 0%, #1B1D22 100%);
+  border: 1px solid var(--border-divider, #34363A); border-left: 3px solid var(--pil-accent);
+  border-radius: 12px; padding: 0.85rem 1rem; cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.mb-pil2:hover { border-color: rgba(255,255,255,0.18); transform: translateX(2px); }
+.mb-pil2--explota { --pil-accent: #6bcf7f; background: linear-gradient(180deg, rgba(107,207,127,0.08) 0%, #1B1D22 60%); border-color: rgba(107,207,127,0.28); }
+.mb-pil2--formula { --pil-accent: #5b9bd5; }
+.mb-pil2--revisa  { --pil-accent: #e0a045; }
+.mb-pil2--flojo   { --pil-accent: #8a8a8e; }
+.mb-pil2-top { display: flex; align-items: center; gap: 0.6rem; }
+.mb-pil2-verdict { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.2rem 0.45rem; border-radius: 6px; border: 1px solid currentColor; color: var(--pil-accent); }
+.mb-pil2-name { flex: 1 1 auto; min-width: 0; font-size: 0.9375rem; font-weight: 700; color: var(--text-primary, #D4D1D8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mb-pil2-lift { flex: 0 0 auto; font-size: 1rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--pil-accent); }
+.mb-pil2-say { margin: 0.45rem 0 0.55rem; font-size: 0.8125rem; line-height: 1.4; color: var(--text-secondary, rgba(212,209,216,0.82)); }
+.mb-pil2-foot { display: flex; align-items: center; gap: 0.6rem; }
+.mb-pil2-track { flex: 0 0 110px; height: 5px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; }
+.mb-pil2-fill { display: block; height: 100%; border-radius: 3px; background: var(--pil-accent); }
+.mb-pil2-share { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); }
 @media (max-width: 760px) {
   .mb-lev { grid-template-columns: 1fr; gap: 1rem; }
   .mb-lev-col--neg { border-right: 0; padding-right: 0; }

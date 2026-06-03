@@ -1087,32 +1087,48 @@
 
     /* ── Pilares narrativos: de que hablas + temas huerfanos ──────────── */
     _buildPillarsSection(rows) {
-      const list = Array.isArray(rows) ? rows : [];
+      const list = (Array.isArray(rows) ? rows : []).filter((r) => r.pillar);
       if (!list.length) {
         if (shouldHideEmpty()) return '';
         return '';
       }
-      const orphans = list.filter((r) => r.is_orphan).length;
-      const withName = list.filter((r) => r.pillar);
-      // Callout "oro": el huerfano de mayor lift (rinde pero subexplotas).
-      const topOrphan = withName.filter((r) => r.is_orphan)
-        .sort((a, b) => Number(b.lift_pct) - Number(a.lift_pct))[0];
-      const gold = topOrphan ? `
-        <div class="mb-pil-gold">
-          <i class="fas fa-gem"></i>
-          <span><b>${this._esc(topOrphan.pillar)}</b> rinde <b>+${Math.round(Number(topOrphan.lift_pct) || 0)}%</b> pero es solo el <b>${Math.round(Number(topOrphan.share_pct) || 0)}%</b> de tu contenido — <b>explotalo</b>.</span>
-        </div>` : '';
-      // Matriz de oportunidad (bubble) si hay >=2 pilares; si no, lista fallback.
-      const body = withName.length >= 2
-        ? `${gold}<div class="mb-pil-matrix"><canvas id="mbPillarsBubble"></canvas></div>`
-        : `<div class="mb-pil-list">${list.map((r) => this._buildPillarRow(r)).join('')}</div>`;
+      const avg = list.reduce((s, r) => s + (Number(r.share_pct) || 0), 0) / Math.max(1, list.length);
+      // Veredicto en lenguaje plano por pilar. rank = prioridad de accion.
+      const verdictOf = (r) => {
+        const share = Number(r.share_pct) || 0, lift = Number(r.lift_pct) || 0;
+        if (r.is_orphan || (lift > 0 && share < avg * 0.6)) return { k: 'explota', rank: 0, label: 'Explotalo', icon: 'fa-gem', say: (ls, s) => `Rinde ${ls} pero es solo el ${s}% de tu contenido — produce mas de esto.` };
+        if (lift < 0 && share >= avg) return { k: 'revisa', rank: 1, label: 'Revisa', icon: 'fa-triangle-exclamation', say: (ls, s) => `Es el ${s}% de tu contenido pero rinde ${ls} — replantealo o reducelo.` };
+        if (lift >= 0) return { k: 'formula', rank: 2, label: 'Tu formula', icon: 'fa-circle-check', say: (ls, s) => `Rinde ${ls} y ya es el ${s}% de lo que publicas — mantenlo.` };
+        return { k: 'flojo', rank: 3, label: 'Bajo perfil', icon: 'fa-circle-minus', say: (ls, s) => `Poco uso (${s}%) y rinde ${ls} — baja prioridad.` };
+      };
+      const cards = list.map((r) => ({ r, v: verdictOf(r) }))
+        .sort((a, b) => a.v.rank - b.v.rank || Math.abs(Number(b.r.lift_pct) || 0) - Math.abs(Number(a.r.lift_pct) || 0))
+        .map(({ r, v }) => {
+          const share = Math.round(Number(r.share_pct) || 0);
+          const lift = Math.round(Number(r.lift_pct) || 0);
+          const ls = `${lift >= 0 ? '+' : ''}${lift}%`;
+          const barW = Math.min(100, Math.max(3, share));
+          return `
+            <div class="mb-pil2 mb-pil2--${v.k}" data-feat-detail data-dim="pillar" data-value="${this._esc(r.pillar)}" data-title="Pilar: ${this._esc(r.pillar)}" role="button" tabindex="0">
+              <div class="mb-pil2-top">
+                <span class="mb-pil2-verdict"><i class="fas ${v.icon}"></i> ${v.label}</span>
+                <span class="mb-pil2-name">${this._esc(r.pillar)}</span>
+                <span class="mb-pil2-lift">${ls}</span>
+              </div>
+              <p class="mb-pil2-say">${this._esc(v.say(ls, share))}</p>
+              <div class="mb-pil2-foot">
+                <div class="mb-pil2-track"><span class="mb-pil2-fill" style="width:${barW}%;"></span></div>
+                <span class="mb-pil2-share">${share}% de tu contenido</span>
+              </div>
+            </div>`;
+        }).join('');
       return `
-        <section class="mb-section mb-section--wide">
+        <section class="mb-section">
           <div class="mb-section-head">
             <span class="mb-section-title">Pilares narrativos</span>
-            <span class="mb-section-hint">Cuanto usas cada tema vs que tan bien rinde — los huerfanos (arriba-izquierda) son oportunidades${orphans ? ` (${orphans})` : ''}</span>
+            <span class="mb-section-hint">Que hacer con cada tema — ordenado por prioridad</span>
           </div>
-          ${body}
+          <div class="mb-pil2-list">${cards}</div>
         </section>`;
     },
 
