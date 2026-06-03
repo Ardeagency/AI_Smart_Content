@@ -250,7 +250,7 @@
       };
 
       return `
-        <section class="mb-section">
+        <section class="mb-section mb-section--wide">
           <div class="mb-section-head">
             <span class="mb-section-title">Tu plan de accion</span>
             <span class="mb-section-hint">Que explotar, optimizar y eliminar — de un golpe</span>
@@ -514,7 +514,7 @@
         : `Tu impacto se mantiene estable en el tiempo.`;
 
       return `
-        <section class="mb-section">
+        <section class="mb-section mb-section--wide">
           <div class="mb-section-head">
             <span class="mb-section-title">Evolucion</span>
             <span class="mb-section-hint">Tu impacto social en el tiempo — la pelicula, no la foto</span>
