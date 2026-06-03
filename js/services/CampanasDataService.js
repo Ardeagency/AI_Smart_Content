@@ -123,6 +123,7 @@ class CampanasDataService {
       whatWorks, audiencePatterns, activity, pillars, audienceEffective, evolution,
       vulnerabilities,
       optimizationInsights, alertScore,
+      activityHistory, engagementTrend, sentimentActivity, postingHours,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
@@ -190,6 +191,15 @@ class CampanasDataService {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
         p_brand_container_ids: bcids, p_limit: 5,
       }),
+
+      // Analisis longitudinal (series temporales propias de la marca).
+      this.sb.rpc('dashboard_brand_activity_history',  { ...featuredArgs }),
+      this.sb.rpc('dashboard_brand_engagement_trend',  { ...featuredArgs }),
+      this.sb.rpc('dashboard_brand_sentiment_activity', { ...featuredArgs }),
+      this.sb.rpc('dashboard_brand_posting_hours', {
+        p_org_id: this.orgId, p_brand_container_ids: bcids,
+        p_date_from: date_from, p_date_to: date_to, p_post_source: 'own', p_timezone: 'America/Bogota',
+      }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -225,6 +235,13 @@ class CampanasDataService {
       vulnerabilities: u(vulnerabilities),
       optimizationInsights: u(optimizationInsights),
       alertScore: u(alertScore),
+
+      longitudinal: {
+        activity:  u(activityHistory),
+        engagement: u(engagementTrend),
+        sentiment: u(sentimentActivity),
+        hours:     u(postingHours),
+      },
     };
   }
 

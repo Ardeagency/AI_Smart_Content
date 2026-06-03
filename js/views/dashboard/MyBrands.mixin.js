@@ -62,6 +62,7 @@
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
         this._mountMbDatePicker(body);
+        this._renderLongitudinalCharts(data);
       } catch (e) {
         console.error('[MyBrands] loadAll failed:', e);
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
@@ -114,6 +115,7 @@
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
         this._mountMbDatePicker(body);
+        this._renderLongitudinalCharts(data);
       } catch (e) {
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
       }
@@ -171,6 +173,7 @@
             <div class="mb-layout-main">
               ${this._buildMbFiltersBar(data)}
               ${this._buildActionPlanSection(data, insights)}
+              ${this._buildLongitudinalSection(data)}
               ${this._buildCausalSection(insights, 'boost')}
               ${this._buildEffectiveAudienceSection(data?.audienceEffective?.data, insights)}
               ${this._buildAudienceSection(data?.audiencePatterns?.data)}
@@ -353,6 +356,129 @@
           ${vitals}
           <div class="mb-plan-grid mb-plan-grid--4">${cards.join('')}</div>
         </section>`;
+    },
+
+    /* ── Analisis longitudinal: series temporales propias de la marca ──────
+       Inspirado en el dashboard de AI Partner, pero unico para la marca
+       (no por perfil monitoreado). 5 charts Chart.js: historial de actividad,
+       tendencia de engagement, patron de horas, sentimientos y crecimiento. */
+    _buildLongitudinalSection(data) {
+      const L = data?.longitudinal || {};
+      const act = Array.isArray(L.activity?.data) ? L.activity.data : [];
+      if (!act.length) { if (shouldHideEmpty()) return ''; }
+      const card = (id, title) => `
+        <div class="mb-long-card">
+          <div class="mb-long-card-title">${title}</div>
+          <div class="mb-long-canvas"><canvas id="${id}"></canvas></div>
+        </div>`;
+      return `
+        <section class="mb-section mb-section--wide mb-long">
+          <div class="mb-section-head">
+            <span class="mb-section-title">Analisis longitudinal</span>
+            <span class="mb-section-hint">Tu evolucion en el tiempo — actividad, engagement, horas y sentimiento</span>
+          </div>
+          ${!act.length ? `<div class="mb-causal-empty">Aun no hay suficiente historial. Amplia el rango (prueba Todo el periodo).</div>` : `
+          <div class="mb-long-grid">
+            <div class="mb-long-card mb-long-card--wide">
+              <div class="mb-long-card-title">Historial de actividad</div>
+              <div class="mb-long-canvas"><canvas id="mbLongActivity"></canvas></div>
+            </div>
+            ${card('mbLongEngagement', 'Tendencia de engagement')}
+            ${card('mbLongHours', 'Patron de horas de publicacion')}
+            ${card('mbLongSentiment', 'Actividad de sentimientos')}
+            ${card('mbLongGrowth', 'Crecimiento')}
+          </div>`}
+        </section>`;
+    },
+
+    /** Instancia los charts Chart.js del analisis longitudinal (post-render). */
+    async _renderLongitudinalCharts(data) {
+      this._destroyCharts();
+      const L = data?.longitudinal; if (!L) return;
+      const act  = Array.isArray(L.activity?.data) ? L.activity.data : [];
+      if (!act.length) return;
+      const eng  = Array.isArray(L.engagement?.data) ? L.engagement.data : [];
+      const sent = Array.isArray(L.sentiment?.data) ? L.sentiment.data : [];
+      const hrs  = Array.isArray(L.hours?.data) ? L.hours.data : [];
+      try { await this._ensureChartJs(); } catch (_) {}
+      const Chart = window.Chart;
+      if (!Chart || !document.getElementById('mbLongActivity')) return;
+
+      const TICK = 'rgba(212,209,216,0.45)';
+      const GRID = 'rgba(255,255,255,0.05)';
+      const grad = (cv, hex) => {
+        const ctx = cv.getContext('2d');
+        const g = ctx.createLinearGradient(0, 0, 0, cv.height || 180);
+        g.addColorStop(0, hex + '4D'); g.addColorStop(1, hex + '00');
+        return g;
+      };
+      const baseOpts = (yFmt) => ({
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: '#1b1d22', borderColor: '#34363A', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10, displayColors: true },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: TICK, font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 } },
+          y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, ticks: { color: TICK, font: { size: 10 }, maxTicksLimit: 5, callback: yFmt || ((v) => v) } },
+        },
+      });
+      const compact = (v) => this._compactNum(v);
+      const areaDs = (cv, label, dataArr, hex) => ({
+        label, data: dataArr, borderColor: hex, backgroundColor: grad(cv, hex),
+        fill: true, tension: 0.4, borderWidth: 2,
+        pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: hex,
+      });
+      const reg = (c) => this._reg(c);
+      const mk = (id, cfg) => { const cv = document.getElementById(id); if (!cv) return; try { reg(new Chart(cv, cfg)); } catch (e) { console.warn('[long chart]', id, e?.message); } };
+
+      // 1. Historial de actividad (posts por periodo)
+      const actLabels = act.map((r) => r.period_label);
+      const cvAct = document.getElementById('mbLongActivity');
+      mk('mbLongActivity', { type: 'line', data: { labels: actLabels, datasets: [areaDs(cvAct, 'Posts', act.map((r) => Number(r.posts_count) || 0), '#5b9bd5')] }, options: baseOpts() });
+
+      // 2. Tendencia de engagement
+      if (eng.length) {
+        const cv = document.getElementById('mbLongEngagement');
+        mk('mbLongEngagement', { type: 'line', data: { labels: eng.map((r) => r.period_label), datasets: [areaDs(cv, 'Engagement', eng.map((r) => Number(r.total_engagement) || 0), '#6bcf7f')] }, options: baseOpts(compact) });
+      }
+
+      // 3. Patron de horas (posts por hora del dia, agregado)
+      if (hrs.length) {
+        const byHour = new Array(24).fill(0);
+        hrs.forEach((r) => { const h = Number(r.hour_of_day); if (h >= 0 && h < 24) byHour[h] += Number(r.posts_count) || 0; });
+        const hourLbl = byHour.map((_, h) => `${((h % 12) || 12)}${h < 12 ? 'a' : 'p'}`);
+        mk('mbLongHours', { type: 'bar', data: { labels: hourLbl, datasets: [{ label: 'Posts', data: byHour, backgroundColor: '#7c83ff', borderRadius: 3, maxBarThickness: 14 }] }, options: baseOpts() });
+      }
+
+      // 4. Actividad de sentimientos (positivo / negativo / neutro)
+      if (sent.length) {
+        const sLbl = sent.map((r) => this._fmtMonthLabel(r.period_start));
+        const cv = document.getElementById('mbLongSentiment');
+        mk('mbLongSentiment', { type: 'line', data: { labels: sLbl, datasets: [
+          areaDs(cv, 'Positivo', sent.map((r) => Number(r.positive_posts) || 0), '#6bcf7f'),
+          areaDs(cv, 'Neutro', sent.map((r) => Number(r.neutral_posts) || 0), '#8a8a8e'),
+          areaDs(cv, 'Negativo', sent.map((r) => Number(r.negative_posts) || 0), '#e06464'),
+        ] }, options: { ...baseOpts(), plugins: { legend: { display: true, labels: { color: TICK, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { size: 10 } } }, tooltip: baseOpts().plugins.tooltip } } });
+      }
+
+      // 5. Crecimiento (variacion % de engagement periodo a periodo)
+      if (eng.length > 1) {
+        const growth = eng.map((r, i) => {
+          if (i === 0) return 0;
+          const prev = Number(eng[i - 1].total_engagement) || 0;
+          const cur = Number(r.total_engagement) || 0;
+          return prev > 0 ? Math.round((cur - prev) / prev * 100) : 0;
+        });
+        const cv = document.getElementById('mbLongGrowth');
+        mk('mbLongGrowth', { type: 'line', data: { labels: eng.map((r) => r.period_label), datasets: [areaDs(cv, 'Crecimiento %', growth, '#e0a045')] }, options: baseOpts((v) => `${v}%`) });
+      }
+    },
+
+    _fmtMonthLabel(ts) {
+      try { return new Date(ts).toLocaleDateString('es-CO', { month: 'short', year: '2-digit' }); }
+      catch (_) { return ''; }
     },
 
     /* Seccion causal: 'boost' = lo que te impulsa, 'drag' = lo que te resta.

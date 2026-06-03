@@ -3112,6 +3112,15 @@
 }
 .dash-report-item:hover { background: rgba(255,255,255,0.06); color: var(--text-primary, #D4D1D8); }
 
+/* Analisis longitudinal — grid de charts Chart.js */
+.mb-long-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
+.mb-long-card { background: linear-gradient(180deg, #222429 0%, #1B1D22 100%); border: 1px solid #34363A; border-radius: 12px; padding: 0.9rem 1rem 0.75rem; box-shadow: var(--dash-elev); min-width: 0; }
+.mb-long-card--wide { grid-column: 1 / -1; }
+.mb-long-card-title { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); margin-bottom: 0.65rem; }
+.mb-long-canvas { position: relative; height: 185px; }
+.mb-long-card--wide .mb-long-canvas { height: 230px; }
+@media (max-width: 760px) { .mb-long-grid { grid-template-columns: 1fr; } }
+
 /* Delta periodo-vs-periodo en KPI strips */
 .comp-kpi-delta { font-size: 0.625rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 0.1rem; display: inline-flex; align-items: center; gap: 0.15rem; }
 .comp-kpi-delta.is-up { color: #6bcf7f; }
