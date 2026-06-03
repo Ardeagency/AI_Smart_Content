@@ -121,7 +121,7 @@
             <label class="living-filter-label" for="tendFilterSource">Tendencia</label>
             <select class="living-filter-select" id="tendFilterSource" data-tend-filter="source">${srcOpts}</select>
           </div>
-          ${this._freshnessChip('tendencies')}
+          ${this._reportDropdown()}
         </header>`;
     },
 

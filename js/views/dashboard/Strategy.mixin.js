@@ -104,7 +104,7 @@
             <label class="living-filter-label" for="stratFilterStatus">Estrategia</label>
             <select class="living-filter-select" id="stratFilterStatus" data-strat-filter="status">${statusOpts}</select>
           </div>
-          ${this._freshnessChip('strategy')}
+          ${this._reportDropdown()}
         </header>`;
     },
 

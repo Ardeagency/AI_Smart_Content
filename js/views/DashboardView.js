@@ -153,6 +153,54 @@ class DashboardView extends BaseView {
     } catch (_) { return ''; }
   }
 
+  /* ── Dropdown "Crear informe" (barra de filtros, derecha) ──────────────
+     <details> nativo: el toggle no necesita JS. Solo manejamos el click de
+     opcion + cierre al hacer click afuera, via un listener delegado unico. */
+  _reportDropdown() {
+    const opts = [
+      { k: 'competencia', label: 'Informes de competencia' },
+      { k: 'diagnostico', label: 'Diagnostico de marca' },
+      { k: 'ventas',      label: 'Informes de ventas' },
+      { k: 'productos',   label: 'Research de productos' },
+    ];
+    return `
+      <details class="dash-report-dd">
+        <summary class="dash-report-btn"><i class="fas fa-file-circle-plus"></i><span>Crear informe</span><i class="fas fa-chevron-down dash-report-caret"></i></summary>
+        <div class="dash-report-menu">
+          ${opts.map((o) => `<button type="button" class="dash-report-item" data-report="${o.k}">${o.label}</button>`).join('')}
+        </div>
+      </details>`;
+  }
+
+  _setupReportDropdown() {
+    if (this._reportClickHandler) return;
+    this._reportClickHandler = (e) => {
+      // Cerrar dropdowns abiertos al hacer click afuera.
+      document.querySelectorAll('details.dash-report-dd[open]').forEach((dd) => {
+        if (!dd.contains(e.target)) dd.removeAttribute('open');
+      });
+      const item = e.target.closest('[data-report]');
+      if (!item) return;
+      const dd = item.closest('details.dash-report-dd');
+      if (dd) dd.removeAttribute('open');
+      this._onCreateReport(item.dataset.report);
+    };
+    document.addEventListener('click', this._reportClickHandler);
+  }
+
+  _onCreateReport(type) {
+    const labels = {
+      competencia: 'Informes de competencia',
+      diagnostico: 'Diagnostico de marca',
+      ventas: 'Informes de ventas',
+      productos: 'Research de productos',
+    };
+    const label = labels[type] || 'Informe';
+    if (typeof window.showToast === 'function') {
+      window.showToast(`${label}: proximamente`, { type: 'info' });
+    }
+  }
+
   onLeave() {
     this.clearSubnavFromHeader();
     [this._mbDatePicker, this._compDatePicker, this._tendDatePicker]
@@ -162,6 +210,10 @@ class DashboardView extends BaseView {
     if (this._onHashChange) {
       window.removeEventListener('hashchange', this._onHashChange);
       this._onHashChange = null;
+    }
+    if (this._reportClickHandler) {
+      document.removeEventListener('click', this._reportClickHandler);
+      this._reportClickHandler = null;
     }
   }
 
@@ -255,6 +307,7 @@ class DashboardView extends BaseView {
     container.innerHTML = this._buildShell();
     this.moveSubnavToHeader(this._buildHeaderTabs(), (tab) => this._switchTab(tab, /* fromUser */ true));
     this._setupTabs();
+    this._setupReportDropdown();
     this._renderTab(this._activeTab);
   }
 

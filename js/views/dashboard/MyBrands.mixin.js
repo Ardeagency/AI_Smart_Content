@@ -1056,7 +1056,7 @@
             <label class="living-filter-label" for="mbFilterPlatform">Plataforma</label>
             <select class="living-filter-select" id="mbFilterPlatform" data-mb-filter="platform">${platOpts}</select>
           </div>
-          ${this._freshnessChip('my-brands')}
+          ${this._reportDropdown()}
         </header>`;
     },
 
