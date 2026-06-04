@@ -1867,6 +1867,13 @@ body.has-sidebar #app-container:has(> .organization-container) {
     padding: 0;
 }
 
+/* Dashboard con hero: sin padding superior — el degradado sangra hasta arriba,
+   bajo el header glass. El hero aplica su propio padding-top interno para que
+   el titulo no quede tapado por el header principal. */
+body.has-sidebar #app-container:has(> .insight-page--hero) {
+    padding-top: 0;
+}
+
 body.has-sidebar.sidebar-collapsed #app-container {
     margin-left: var(--nav-width-collapsed, 72px);
     max-width: calc(100vw - var(--nav-width-collapsed, 72px));

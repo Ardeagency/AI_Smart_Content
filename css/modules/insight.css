@@ -3589,17 +3589,21 @@
    fondo se construye 100% con degradados (sin imagenes). */
 
 /* El hero sangra a los bordes de la columna del dashboard: anulamos el
-   padding superior/lateral de .insight-page solo cuando contiene el hero. */
+   padding superior de .insight-page cuando contiene el hero (el app-container
+   tambien pierde su padding-top de 45px via navigation.css). */
 .insight-page--hero { padding-top: 0; }
 
 .dash-hero {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  /* Rompe el padding (15px) de .insight-page para sangrar arriba y a los lados. */
-  margin: -15px -15px clamp(1.25rem, 2.5vw, 1.75rem);
+  /* Sangra a los lados (rompe el padding lateral de 15px) y llega a tope
+     arriba (sin margen superior). El degradado queda bajo el header glass. */
+  margin: 0 -15px clamp(1.25rem, 2.5vw, 1.75rem);
   border-radius: 0 0 22px 22px;
-  padding: clamp(1.75rem, 3.5vw, 3rem) clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 2.5vw, 1.85rem);
+  /* +45px arriba = altura del header principal, para que el titulo no quede
+     tapado pese a que el degradado sí sangra hasta el borde superior. */
+  padding: calc(45px + clamp(1.5rem, 2.5vw, 2.25rem)) clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 2.5vw, 1.85rem);
 }
 /* Trio de colores por tab (stops de --brand-gradient) → variables del degradado. */
 .dash-hero[data-tab="my-brands"]  { --c1: #ff0000; --c2: #ff6500; --c3: #ffe500; }
@@ -3712,14 +3716,14 @@
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
 }
 
-/* Tira de KPIs en vidrio (glass-white) sobre el degradado, con divisores sutiles. */
+/* Tira de KPIs en vidrio (glass-black) sobre el degradado, con divisores sutiles. */
 .dash-hero-kpis {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1px;
   margin-top: clamp(1.25rem, 3vw, 1.85rem);
-  background: var(--glass-white-border, rgba(255, 255, 255, 0.22));
-  border: 1px solid var(--glass-white-border, rgba(255, 255, 255, 0.22));
+  background: var(--glass-black-border, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--glass-radius, 14px);
   overflow: hidden;
   backdrop-filter: var(--glass-blur, blur(14px) saturate(120%));
@@ -3730,14 +3734,14 @@
   flex-direction: column;
   gap: 0.3rem;
   padding: clamp(0.85rem, 1.6vw, 1.15rem) clamp(0.9rem, 1.8vw, 1.4rem);
-  background: var(--glass-white-bg, rgba(255, 255, 255, 0.14));
+  background: var(--glass-black-bg, rgba(11, 11, 11, 0.55));
 }
 .dash-kpi-label {
   font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.7);
 }
 .dash-kpi-value {
   font-size: clamp(1.25rem, 2vw, 1.7rem);
@@ -3769,7 +3773,7 @@
   .dash-hero-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
-  .dash-hero { margin: -15px -15px 1.25rem; border-radius: 0 0 16px 16px; }
+  .dash-hero { margin: 0 -15px 1.25rem; border-radius: 0 0 16px 16px; }
   .dash-hero-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-hero-desc { display: none; }
 }
