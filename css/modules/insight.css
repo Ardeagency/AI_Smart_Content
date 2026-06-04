@@ -3589,21 +3589,23 @@
    fondo se construye 100% con degradados (sin imagenes). */
 
 /* El hero sangra a los bordes de la columna del dashboard: anulamos el
-   padding superior de .insight-page cuando contiene el hero (el app-container
-   tambien pierde su padding-top de 45px via navigation.css). */
+   padding superior de .insight-page cuando contiene el hero. */
 .insight-page--hero { padding-top: 0; }
 
 .dash-hero {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  /* Sangra a los lados (rompe el padding lateral de 15px) y llega a tope
-     arriba (sin margen superior). El degradado queda bajo el header glass. */
-  margin: 0 -15px clamp(1.25rem, 2.5vw, 1.75rem);
+  /* Autocontenido: el margen superior negativo (= altura del header fijo)
+     cancela el padding-top que #app-container reserva para el header, asi el
+     degradado sangra HASTA arriba, bajo el header glass — sin depender de
+     ninguna regla en navigation.css. Los lados sangran rompiendo el padding
+     lateral de 15px de .insight-page. */
+  margin: calc(-1 * var(--app-header-height, 45.8px)) -15px clamp(1.25rem, 2.5vw, 1.75rem);
   border-radius: 0 0 22px 22px;
-  /* +45px arriba = altura del header principal, para que el titulo no quede
-     tapado pese a que el degradado sí sangra hasta el borde superior. */
-  padding: calc(45px + clamp(1.5rem, 2.5vw, 2.25rem)) clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 2.5vw, 1.85rem);
+  /* Padding-top interno = altura del header + aire, para que el titulo no
+     quede tapado pese a que el degradado sí sangra hasta el borde superior. */
+  padding: calc(var(--app-header-height, 45.8px) + clamp(1.5rem, 2.5vw, 2.25rem)) clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 2.5vw, 1.85rem);
 }
 /* Trio de colores por tab (stops de --brand-gradient) → variables del degradado. */
 .dash-hero[data-tab="my-brands"]  { --c1: #ff0000; --c2: #ff6500; --c3: #ffe500; }
@@ -3773,7 +3775,7 @@
   .dash-hero-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
-  .dash-hero { margin: 0 -15px 1.25rem; border-radius: 0 0 16px 16px; }
+  .dash-hero { margin: calc(-1 * var(--app-header-height, 45.8px)) -15px 1.25rem; border-radius: 0 0 16px 16px; }
   .dash-hero-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-hero-desc { display: none; }
 }
