@@ -381,14 +381,13 @@ class DashboardView extends BaseView {
       </section>`;
   }
 
-  // Cards del plan de accion (EXPLOTA/OPTIMIZA/ELIMINA/VIGILA) en version
-  // compacta para el hero: categoria + metrica + titulo, SIN el parrafo "why"
-  // (texto redundante que solo va en la seccion del cuerpo). Sin data → 4
-  // placeholders con shimmer.
+  // Cards del plan de accion (EXPLOTA/OPTIMIZA/ELIMINA/VIGILA) en el hero.
+  // Reusan EXACTAMENTE las clases .mb-plan-* del cuerpo (mismo diseno y
+  // proporciones) pero sin el parrafo "why" (texto redundante) ni el boton
+  // de expandir. Sin data → 4 placeholders con shimmer.
   _buildHeroCards(data) {
     if (!data || typeof this._computeActionPlanItems !== 'function') {
-      return Array.from({ length: 4 }, () => `
-        <div class="dash-hero-card dash-hero-card--skeleton"><span class="dash-hero-card-cat"></span><span class="dash-hero-card-metric"></span></div>`).join('');
+      return Array.from({ length: 4 }, () => `<div class="dash-hero-card-skeleton"></div>`).join('');
     }
     const insights = Array.isArray(data?.whatWorks?.data) ? data.whatWorks.data : [];
     const items = this._computeActionPlanItems(data, insights);
@@ -401,13 +400,13 @@ class DashboardView extends BaseView {
     const cards = defs.filter((d) => d.item).map((d) => {
       const it = d.item;
       const metric = it.metric
-        ? `<div class="dash-hero-card-metric"><span class="dash-hero-card-metric-val">${this._esc(it.metric)}</span>${it.metricSub ? `<span class="dash-hero-card-metric-sub">${this._esc(it.metricSub)}</span>` : ''}</div>`
+        ? `<div class="mb-plan-metric"><span class="mb-plan-metric-val">${this._esc(it.metric)}</span>${it.metricSub ? `<span class="mb-plan-metric-sub">${this._esc(it.metricSub)}</span>` : ''}</div>`
         : '';
       return `
-        <div class="dash-hero-card mb-plan-col mb-plan-col--${d.kind}">
-          <span class="dash-hero-card-cat mb-plan-cat">${d.label}</span>
+        <div class="mb-plan-col mb-plan-col--${d.kind}">
+          <div class="mb-plan-col-head"><span class="mb-plan-cat">${d.label}</span></div>
           ${metric}
-          ${it.title ? `<div class="dash-hero-card-title mb-plan-title">${this._esc(it.title)}</div>` : ''}
+          ${it.title ? `<div class="mb-plan-title">${this._esc(it.title)}</div>` : ''}
         </div>`;
     });
     return cards.join('') || this._buildHeroCards(null);
