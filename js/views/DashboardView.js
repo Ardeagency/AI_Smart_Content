@@ -361,7 +361,7 @@ class DashboardView extends BaseView {
   };
 
   // Hero estilo overview: degradado organico animado (por tab) + titulo en
-  // peso mixto + tabs sobre el degradado + tira de KPIs en vidrio.
+  // peso mixto + tabs sobre el degradado + cards del plan de accion.
   _buildHero(tabId) {
     const copy = DashboardView.HERO_COPY[tabId] || DashboardView.HERO_COPY['my-brands'];
     const org  = window.currentOrgName || '';
@@ -376,64 +376,56 @@ class DashboardView extends BaseView {
             ${DashboardView.TABS.map((t) => `
               <button class="dash-hero-tab${this._activeTab === t.id ? ' is-active' : ''}" role="tab" data-tab="${t.id}">${this._esc(t.label)}</button>`).join('')}
           </nav>
-          <div class="dash-hero-kpis" id="dashHeroKpis">${this._buildHeroKpis(null)}</div>
+          <div class="dash-hero-cards" id="dashHeroCards">${this._buildHeroCards(null)}</div>
         </div>
       </section>`;
   }
 
-  // Tira de KPIs del hero. Con `data` pinta valores reales; sin data, skeleton.
-  _buildHeroKpis(data) {
-    const items = this._heroKpiItems(data);
-    return items.map((k) => {
-      const delta = k.delta
-        ? `<span class="dash-kpi-delta is-${k.delta.dir}"><i class="fas fa-arrow-${k.delta.dir === 'down' ? 'down' : 'up'}"></i>${this._esc(k.delta.txt)}</span>`
-        : '';
-      const valCls = k.loading ? ' is-loading' : '';
-      const suffix = k.suffix ? `<span class="dash-kpi-suffix">${this._esc(k.suffix)}</span>` : '';
-      return `
-        <div class="dash-kpi">
-          <span class="dash-kpi-label">${this._esc(k.label)}</span>
-          <span class="dash-kpi-value${valCls}">${this._esc(k.value)}${suffix}</span>
-          ${delta}
-        </div>`;
-    }).join('');
-  }
-
-  // Construye los 5 KPIs a partir de la data de "Mi Marca". Sin data → '—'.
-  _heroKpiItems(data) {
-    const oi     = data?.optimizationInsights?.data || {};
-    const health = data?.health?.data || {};
-    const list   = Array.isArray(data?.list) ? data.list : [];
-    const loading = !data;
-    const num = (n) => (n == null || !Number.isFinite(Number(n)) ? '—' : Number(n).toLocaleString('es-CO'));
-    const pct = (n) => (n == null || !Number.isFinite(Number(n)) ? '—' : `${Math.round(Number(n))}%`);
-    const trend = (n) => {
-      if (n == null || !Number.isFinite(Number(n))) return null;
-      const v = Math.round(Number(n));
-      return { dir: v > 0 ? 'up' : v < 0 ? 'down' : 'flat', txt: `${v > 0 ? '+' : ''}${v}%` };
-    };
-    return [
-      { label: 'Salud de marca', value: health.score != null ? String(Math.round(Number(health.score))) : '—', suffix: health.score != null ? '/100' : '', loading },
-      { label: 'Engagement vs previo', value: trend(oi.engagement_vs_prior_period_pct)?.txt || '—', delta: trend(oi.engagement_vs_prior_period_pct), loading },
-      { label: 'Posts analizados', value: num(oi.posts_analyzed), loading },
-      { label: 'Consistencia', value: pct(oi.posting_consistency?.posting_consistency_pct), loading },
-      { label: 'Campanas', value: list.length ? String(list.length) : '—', loading },
+  // Cards del plan de accion (EXPLOTA/OPTIMIZA/ELIMINA/VIGILA) en version
+  // compacta para el hero: categoria + metrica + titulo, SIN el parrafo "why"
+  // (texto redundante que solo va en la seccion del cuerpo). Sin data → 4
+  // placeholders con shimmer.
+  _buildHeroCards(data) {
+    if (!data || typeof this._computeActionPlanItems !== 'function') {
+      return Array.from({ length: 4 }, () => `
+        <div class="dash-hero-card dash-hero-card--skeleton"><span class="dash-hero-card-cat"></span><span class="dash-hero-card-metric"></span></div>`).join('');
+    }
+    const insights = Array.isArray(data?.whatWorks?.data) ? data.whatWorks.data : [];
+    const items = this._computeActionPlanItems(data, insights);
+    const defs = [
+      { kind: 'explota',  label: 'Explota',  item: items.explota  },
+      { kind: 'optimiza', label: 'Optimiza', item: items.optimiza },
+      { kind: 'elimina',  label: 'Elimina',  item: items.elimina  },
+      { kind: 'vigila',   label: 'Vigila',   item: items.vigila   },
     ];
+    const cards = defs.filter((d) => d.item).map((d) => {
+      const it = d.item;
+      const metric = it.metric
+        ? `<div class="dash-hero-card-metric"><span class="dash-hero-card-metric-val">${this._esc(it.metric)}</span>${it.metricSub ? `<span class="dash-hero-card-metric-sub">${this._esc(it.metricSub)}</span>` : ''}</div>`
+        : '';
+      return `
+        <div class="dash-hero-card mb-plan-col mb-plan-col--${d.kind}">
+          <span class="dash-hero-card-cat mb-plan-cat">${d.label}</span>
+          ${metric}
+          ${it.title ? `<div class="dash-hero-card-title mb-plan-title">${this._esc(it.title)}</div>` : ''}
+        </div>`;
+    });
+    return cards.join('') || this._buildHeroCards(null);
   }
 
-  // Pinta los KPIs reales en el hero (idempotente). Llamado tras cargar la
-  // data de "Mi Marca" o por _ensureHeroKpis en background.
-  _renderHeroKpis(data) {
+  // Pinta las cards reales en el hero (idempotente). Llamado tras cargar la
+  // data de "Mi Marca" o por _ensureHeroCards en background.
+  _renderHeroCards(data) {
     if (data) this._heroKpiData = data;
-    const host = document.getElementById('dashHeroKpis');
-    if (host) host.innerHTML = this._buildHeroKpis(this._heroKpiData || null);
+    const host = document.getElementById('dashHeroCards');
+    if (host) host.innerHTML = this._buildHeroCards(this._heroKpiData || null);
   }
 
   // Si aun no hay data de marca cacheada, dispara una carga en background
-  // (sin bloquear el render del tab activo) y refresca la tira de KPIs.
+  // (sin bloquear el render del tab activo) y refresca las cards del hero.
   async _ensureHeroKpis() {
-    if (this._heroKpiData) { this._renderHeroKpis(); return; }
-    // En "Mi Marca" la propia carga del tab alimenta los KPIs: evitamos
+    if (this._heroKpiData) { this._renderHeroCards(); return; }
+    // En "Mi Marca" la propia carga del tab alimenta las cards: evitamos
     // disparar un segundo loadAll en paralelo (doble rafaga de RPCs).
     if (this._activeTab === 'my-brands') return;
     if (this._heroKpiLoading || !this._orgId) return;
@@ -442,9 +434,9 @@ class DashboardView extends BaseView {
       await this._ensureCampanasService();
       this._restoreMbFilters();
       const data = await this._loadMyBrandsData();
-      this._renderHeroKpis(data);
+      this._renderHeroCards(data);
     } catch (e) {
-      console.warn('[Dashboard] hero KPIs load failed:', e);
+      console.warn('[Dashboard] hero cards load failed:', e);
     } finally {
       this._heroKpiLoading = false;
     }

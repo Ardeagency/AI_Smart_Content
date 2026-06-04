@@ -59,7 +59,7 @@
       try {
         const data = await this._loadMyBrandsData();
         this._mbCampanasData = data;
-        this._renderHeroKpis?.(data); // alimenta la tira de KPIs del hero
+        this._renderHeroCards?.(data); // alimenta las cards del hero
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
         this._mountMbDatePicker(body);
@@ -116,7 +116,7 @@
       try {
         const data = await this._loadMyBrandsData();
         this._mbCampanasData = data;
-        this._renderHeroKpis?.(data); // alimenta la tira de KPIs del hero
+        this._renderHeroCards?.(data); // alimenta las cards del hero
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
         this._mountMbDatePicker(body);
@@ -195,11 +195,11 @@
         </div>`;
     },
 
-    /* ── Plan de accion: Explota / Optimiza / Elimina (de un golpe) ─────
-       Resumen ejecutivo que sintetiza lo que el resto del dashboard detalla:
-       que explotar (tu mejor palanca), que optimizar (tarea de salud de mayor
-       impacto) y que eliminar (lo que mas te resta). Ensambla data existente. */
-    _buildActionPlanSection(data, insights) {
+    /* ── Plan de accion: Explota / Optimiza / Elimina / Vigila ─────────
+       Calcula los 4 items (que explotar, optimizar, eliminar y vigilar) a
+       partir de la data existente. Lo consume tanto la seccion del cuerpo
+       (_buildActionPlanSection) como el hero del dashboard. */
+    _computeActionPlanItems(data, insights) {
       const arr = Array.isArray(insights) ? insights : [];
       const boosts = arr.filter((i) => i.kind === 'boost').sort((a, b) => Number(b.lift_pct) - Number(a.lift_pct));
       const drags  = arr.filter((i) => i.kind === 'drag').sort((a, b) => Number(a.lift_pct) - Number(b.lift_pct));
@@ -300,6 +300,14 @@
           detailDim: 'sentiment', detailValue: 'negative',
         };
       }
+
+      return { explota, optimiza, elimina, vigila };
+    },
+
+    /* Seccion "Tu plan de accion" del cuerpo (cards + signos vitales). */
+    _buildActionPlanSection(data, insights) {
+      const { explota, optimiza, elimina, vigila } = this._computeActionPlanItems(data, insights);
+      const oi = data?.optimizationInsights?.data || null;
 
       if (!explota && !optimiza && !elimina && !vigila) return '';
 
