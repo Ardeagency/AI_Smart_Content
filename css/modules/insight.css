@@ -3157,6 +3157,17 @@
 .mb-eff-map { position: relative; height: 210px; margin: 0.5rem 0 0.85rem; }
 @media (max-width: 480px) { .mb-eff-map { height: auto; } }
 
+/* Titulo dentro de la card (reemplaza el header flotante .mb-section-head).
+   Sin descripcion: solo el titulo, arriba a la izquierda sobre el fondo de card. */
+.mb-card-title {
+  font-size: 0.95rem; font-weight: 700; letter-spacing: -0.01em;
+  color: var(--text-primary, #D4D1D8); margin: 0 0 1rem;
+}
+/* En cards flex (gap propio) el margen sobra: el gap separa titulo y contenido. */
+.mb-eff-card > .mb-card-title,
+.mb-evo-card > .mb-card-title,
+.mb-act-card > .mb-card-title { margin-bottom: 0; }
+
 /* Card de grafico: superficie estandar para que todos los charts del cuerpo
    (palancas, radar de patrones, etc.) compartan el mismo fondo que el resto
    (longitudinal, evolucion, publico efectivo). */

@@ -325,10 +325,7 @@
 
       return `
         <section class="mb-section mb-section--wide">
-          <div class="mb-section-head">
-            <span class="mb-section-title">Momentum</span>
-            <span class="mb-section-hint">Tu pulso reciente — engagement, volumen y consistencia de publicacion</span>
-          </div>
+          <div class="mb-card-title">Momentum</div>
           <div class="mb-plan-vitals">
             ${vital(tStr, 'Engagement vs periodo previo', tCls)}
             ${vital(fmt.int(oi.posts_analyzed), 'Posts analizados')}
@@ -353,8 +350,10 @@
         if (shouldHideEmpty()) return '';
         return `
           <section class="mb-section mb-section--wide">
-            <div class="mb-section-head"><span class="mb-section-title">Que te impulsa y que te frena</span><span class="mb-section-hint">Tus palancas frente a tu promedio</span></div>
-            <div class="mb-causal-empty">No hay contenido propio analizado en esta ventana. Amplia el rango (prueba Todo el periodo).</div>
+            <div class="mb-chart-card">
+              <div class="mb-card-title">Que te impulsa y que te frena</div>
+              <div class="mb-causal-empty" style="margin:0;">No hay contenido propio analizado en esta ventana. Amplia el rango (prueba Todo el periodo).</div>
+            </div>
           </section>`;
       }
       const maxAbs = Math.max(1, ...arr.map((i) => Math.abs(Number(i.lift_pct) || 0)));
@@ -374,11 +373,8 @@
       const colNote = 'Sin senal clara aun.';
       return `
         <section class="mb-section mb-section--wide">
-          <div class="mb-section-head">
-            <span class="mb-section-title">Que te impulsa y que te frena</span>
-            <span class="mb-section-hint">Tus palancas frente a tu promedio — verde suma, rojo resta</span>
-          </div>
           <div class="mb-chart-card">
+            <div class="mb-card-title">Que te impulsa y que te frena</div>
             <div class="mb-lev">
               <div class="mb-lev-col mb-lev-col--neg">
                 <div class="mb-lev-coltitle">Lo que te frena</div>
@@ -408,10 +404,7 @@
         </div>`;
       return `
         <section class="mb-section mb-section--wide mb-long">
-          <div class="mb-section-head">
-            <span class="mb-section-title">Analisis longitudinal</span>
-            <span class="mb-section-hint">Tu evolucion en el tiempo — ritmo, engagement, horas y sentimiento</span>
-          </div>
+          <div class="mb-card-title">Analisis longitudinal</div>
           ${this._buildActivityBanner(data?.activity?.data)}
           ${!act.length ? `<div class="mb-causal-empty">Aun no hay suficiente historial. Amplia el rango (prueba Todo el periodo).</div>` : `
           <div class="mb-long-grid">
@@ -828,11 +821,10 @@
         : `<div class="mb-aud-list">${list.map((r) => this._buildAudienceRow(r)).join('')}</div>`;
       return `
         <section class="mb-section">
-          <div class="mb-section-head">
-            <span class="mb-section-title">Patrones de tu publico</span>
-            <span class="mb-section-hint">La huella emocional de tu contenido — que tan lejos de tu promedio resuena cada emocion</span>
+          <div class="mb-chart-card">
+            <div class="mb-card-title">Patrones de tu publico</div>
+            ${body}
           </div>
-          <div class="mb-chart-card">${body}</div>
         </section>`;
     },
 
@@ -909,11 +901,8 @@
 
       return `
         <section class="mb-section">
-          <div class="mb-section-head">
-            <span class="mb-section-title">Tu publico efectivo</span>
-            <span class="mb-section-hint">A quien estas convirtiendo con lo que ya haces</span>
-          </div>
           <div class="mb-eff-card">
+            <div class="mb-card-title">Tu publico efectivo</div>
             <div class="mb-eff-top">
               <div class="mb-eff-capture">
                 <span class="mb-eff-capture-label">Captacion</span>
@@ -958,11 +947,8 @@
 
       return `
         <section class="mb-section mb-section--wide">
-          <div class="mb-section-head">
-            <span class="mb-section-title">Evolucion</span>
-            <span class="mb-section-hint">Tu impacto social en el tiempo — la pelicula, no la foto</span>
-          </div>
           <div class="mb-evo-card">
+            <div class="mb-card-title">Evolucion</div>
             <div class="mb-evo-top">
               <span class="mb-evo-verdict" style="color:${meta.color};"><i class="${meta.icon}"></i> ${this._esc(meta.label)} ${chgStr ? `<span class="mb-evo-chg">${chgStr}</span>` : ''}</span>
               <span class="mb-evo-range">${this._esc(series[0].period)} → ${this._esc(series[series.length - 1].period)} · ${e.months} ${e.months === 1 ? 'mes' : 'meses'} con data</span>
@@ -1049,11 +1035,8 @@
 
       return `
         <section class="mb-section">
-          <div class="mb-section-head">
-            <span class="mb-section-title">Actividad</span>
-            <span class="mb-section-hint">Tu ritmo de publicacion — y donde tienes silencios</span>
-          </div>
           <div class="mb-act-card">
+            <div class="mb-card-title">Actividad</div>
             <div class="mb-act-status">
               <span class="mb-act-dot" style="background:${statusMeta.color};"></span>
               <span class="mb-act-status-label" style="color:${statusMeta.color};">${this._esc(statusMeta.label)}</span>
@@ -1127,10 +1110,7 @@
         }).join('');
       return `
         <section class="mb-section">
-          <div class="mb-section-head">
-            <span class="mb-section-title">Pilares narrativos</span>
-            <span class="mb-section-hint">Que hacer con cada tema — ordenado por prioridad</span>
-          </div>
+          <div class="mb-card-title">Pilares narrativos</div>
           <div class="mb-pil2-list">${cards}</div>
         </section>`;
     },
