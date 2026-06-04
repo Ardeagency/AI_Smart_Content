@@ -2654,7 +2654,9 @@
 .mb-section--wide { grid-column: 1 / -1; }
 /* La barra de filtros vive dentro de la columna izquierda y ocupa su ancho completo. */
 .mb-layout-main > .mb-filters-bar { grid-column: 1 / -1; margin: 0; }
-.mb-layout-aside { min-width: 0; position: sticky; top: 1rem; }
+.mb-layout-aside { min-width: 0; position: sticky; top: 1rem; display: flex; flex-direction: column; gap: 1.25rem; }
+/* Pilares en el sidebar: header mas compacto */
+.mb-layout-aside .mb-section-head { padding-bottom: 0.5rem; }
 @media (max-width: 640px) { .mb-layout-main { grid-template-columns: 1fr; } }
 
 /* Variante sidebar (specs Figma): fondo gradiente, borde, radio + glow arcoiris al fondo */

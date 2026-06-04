@@ -184,10 +184,10 @@
               ${this._buildEffectiveAudienceSection(data?.audienceEffective?.data, insights)}
               ${this._buildAudienceSection(data?.audiencePatterns?.data)}
               ${this._buildEvolutionSection(data?.evolution?.data)}
-              ${this._buildPillarsSection(data?.pillars?.data)}
             </div>
             <aside class="mb-layout-aside">
               ${this._buildHealthGauge(data?.health?.data)}
+              ${this._buildPillarsSection(data?.pillars?.data)}
             </aside>
           </div>
         </div>`;
