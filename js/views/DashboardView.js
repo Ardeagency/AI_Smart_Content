@@ -305,10 +305,15 @@ class DashboardView extends BaseView {
     const container = document.getElementById('app-container');
     if (!container) return;
     container.innerHTML = this._buildShell();
-    this.moveSubnavToHeader(this._buildHeaderTabs(), (tab) => this._switchTab(tab, /* fromUser */ true));
+    // Los tabs ahora viven DENTRO del hero (sobre el degradado), no en el
+    // header global. Limpiamos cualquier subnav residual del header.
+    this.clearSubnavFromHeader();
+    this._setupHeroTabs();
     this._setupTabs();
     this._setupReportDropdown();
     this._renderTab(this._activeTab);
+    // KPIs del hero: se llenan en background (data de marca compartida).
+    this._ensureHeroKpis();
   }
 
   renderHTML() {
@@ -316,95 +321,169 @@ class DashboardView extends BaseView {
   }
 
   _buildShell() {
-    // La barra de tabs ya no vive en la pagina: se inyecta en el header
-    // principal (segunda fila), solo en /dashboard. Ver _buildHeaderTabs().
+    // Hero a sangre completa (degradado organico por tab) con titulo en peso
+    // mixto, los tabs encima del degradado y una tira de KPIs en vidrio.
+    // Debajo, el cuerpo del tab activo.
     return `
-      <div class="insight-page page-content" id="insightPage">
-        ${this._buildBanner(this._activeTab)}
+      <div class="insight-page page-content insight-page--hero" id="insightPage">
+        ${this._buildHero(this._activeTab)}
         <div class="insight-tab-body" id="insightTabBody"></div>
       </div>`;
   }
 
-  // Copy del banner por tab: eyebrow + titulo + descripcion de cada vista.
+  // Definicion unica de los tabs (orden = orden visual en el hero).
+  static TABS = [
+    { id: 'my-brands',  label: 'Mi Marca'    },
+    { id: 'competence', label: 'Competencia' },
+    { id: 'tendencies', label: 'Tendencias'  },
+    { id: 'strategy',   label: 'Estrategia'  },
+  ];
+
+  // Copy del hero por tab: titulo (parte fuerte + parte ligera) + descripcion.
   // El trio de colores del degradado vive en CSS via [data-tab] (insight.css).
-  static BANNER_COPY = {
+  static HERO_COPY = {
     'my-brands': {
-      eyebrow: 'Tu marca',
-      title: 'Mi Marca',
-      desc: 'El pulso de tu marca en un solo lugar: salud, campanas activas y como rinde tu contenido frente a tu audiencia.',
+      strong: 'Mi Marca',
+      desc: 'El pulso de tu marca: salud, campanas activas y como rinde tu contenido frente a tu audiencia.',
     },
     'competence': {
-      eyebrow: 'Inteligencia competitiva',
-      title: 'Competencia',
-      desc: 'El campo de batalla: que publican tus competidores, la voz de su audiencia y donde estan sus vulnerabilidades.',
+      strong: 'Competencia',
+      desc: 'El campo de batalla: que publican tus competidores, la voz de su audiencia y sus vulnerabilidades.',
     },
     'tendencies': {
-      eyebrow: 'Senales del mercado',
-      title: 'Tendencias',
-      desc: 'El pulso del nicho: senales emergentes, oceanos azules, lexico vivo y las marcas que estan despuntando.',
+      strong: 'Tendencias',
+      desc: 'El pulso del nicho: senales emergentes, oceanos azules, lexico vivo y marcas que despuntan.',
     },
     'strategy': {
-      eyebrow: 'Decisiones con Vera',
-      title: 'Estrategia',
-      desc: 'Las recomendaciones de Vera: lecturas cruzadas de todas las senales y aprendizaje continuo para decidir mejor.',
+      strong: 'Estrategia',
+      desc: 'Las recomendaciones de Vera: lecturas cruzadas de todas las senales y aprendizaje continuo.',
     },
   };
 
-  // Banner estilo hero (como FlowCatalog) con degradado animado por tab.
-  // Tab-aware: eyebrow/titulo/descripcion + trio de colores cambian segun
-  // la vista activa (ver _updateBanner en _switchTab).
-  _buildBanner(tabId) {
-    const copy = DashboardView.BANNER_COPY[tabId] || DashboardView.BANNER_COPY['my-brands'];
+  // Hero estilo overview: degradado organico animado (por tab) + titulo en
+  // peso mixto + tabs sobre el degradado + tira de KPIs en vidrio.
+  _buildHero(tabId) {
+    const copy = DashboardView.HERO_COPY[tabId] || DashboardView.HERO_COPY['my-brands'];
+    const org  = window.currentOrgName || '';
+    const light = org ? ` <span class="dash-hero-title-light">de ${this._esc(org)}</span>` : '';
     return `
-      <section class="dash-banner" id="dashBanner" data-tab="${this._esc(tabId)}" aria-label="Resumen del dashboard">
-        <div class="dash-banner-grad" aria-hidden="true"></div>
-        <div class="dash-banner-overlay">
-          <div class="dash-banner-content">
-            <span class="dash-banner-eyebrow" id="dashBannerEyebrow">${this._esc(copy.eyebrow)}</span>
-            <h1 class="dash-banner-title" id="dashBannerTitle">${this._esc(copy.title)}</h1>
-            <p class="dash-banner-desc" id="dashBannerDesc">${this._esc(copy.desc)}</p>
-          </div>
+      <section class="dash-hero" id="dashHero" data-tab="${this._esc(tabId)}" aria-label="Resumen del dashboard">
+        <div class="dash-hero-grad" aria-hidden="true"></div>
+        <div class="dash-hero-inner">
+          <h1 class="dash-hero-title" id="dashHeroTitle"><strong>${this._esc(copy.strong)}</strong>${light}</h1>
+          <p class="dash-hero-desc" id="dashHeroDesc">${this._esc(copy.desc)}</p>
+          <nav class="dash-hero-tabs" id="dashHeroTabs" role="tablist">
+            ${DashboardView.TABS.map((t) => `
+              <button class="dash-hero-tab${this._activeTab === t.id ? ' is-active' : ''}" role="tab" data-tab="${t.id}">${this._esc(t.label)}</button>`).join('')}
+          </nav>
+          <div class="dash-hero-kpis" id="dashHeroKpis">${this._buildHeroKpis(null)}</div>
         </div>
       </section>`;
   }
 
-  // Refresca eyebrow/titulo/descripcion + el trio de colores (data-tab) sin
-  // reconstruir la capa de degradado, asi la animacion no se reinicia.
-  _updateBanner(tabId) {
-    const copy = DashboardView.BANNER_COPY[tabId] || DashboardView.BANNER_COPY['my-brands'];
-    const banner = document.getElementById('dashBanner');
-    if (banner) banner.dataset.tab = tabId;
-    const e = document.getElementById('dashBannerEyebrow');
-    const t = document.getElementById('dashBannerTitle');
-    const d = document.getElementById('dashBannerDesc');
-    if (e) e.textContent = copy.eyebrow;
-    if (t) t.textContent = copy.title;
+  // Tira de KPIs del hero. Con `data` pinta valores reales; sin data, skeleton.
+  _buildHeroKpis(data) {
+    const items = this._heroKpiItems(data);
+    return items.map((k) => {
+      const delta = k.delta
+        ? `<span class="dash-kpi-delta is-${k.delta.dir}"><i class="fas fa-arrow-${k.delta.dir === 'down' ? 'down' : 'up'}"></i>${this._esc(k.delta.txt)}</span>`
+        : '';
+      const valCls = k.loading ? ' is-loading' : '';
+      const suffix = k.suffix ? `<span class="dash-kpi-suffix">${this._esc(k.suffix)}</span>` : '';
+      return `
+        <div class="dash-kpi">
+          <span class="dash-kpi-label">${this._esc(k.label)}</span>
+          <span class="dash-kpi-value${valCls}">${this._esc(k.value)}${suffix}</span>
+          ${delta}
+        </div>`;
+    }).join('');
+  }
+
+  // Construye los 5 KPIs a partir de la data de "Mi Marca". Sin data → '—'.
+  _heroKpiItems(data) {
+    const oi     = data?.optimizationInsights?.data || {};
+    const health = data?.health?.data || {};
+    const list   = Array.isArray(data?.list) ? data.list : [];
+    const loading = !data;
+    const num = (n) => (n == null || !Number.isFinite(Number(n)) ? '—' : Number(n).toLocaleString('es-CO'));
+    const pct = (n) => (n == null || !Number.isFinite(Number(n)) ? '—' : `${Math.round(Number(n))}%`);
+    const trend = (n) => {
+      if (n == null || !Number.isFinite(Number(n))) return null;
+      const v = Math.round(Number(n));
+      return { dir: v > 0 ? 'up' : v < 0 ? 'down' : 'flat', txt: `${v > 0 ? '+' : ''}${v}%` };
+    };
+    return [
+      { label: 'Salud de marca', value: health.score != null ? String(Math.round(Number(health.score))) : '—', suffix: health.score != null ? '/100' : '', loading },
+      { label: 'Engagement vs previo', value: trend(oi.engagement_vs_prior_period_pct)?.txt || '—', delta: trend(oi.engagement_vs_prior_period_pct), loading },
+      { label: 'Posts analizados', value: num(oi.posts_analyzed), loading },
+      { label: 'Consistencia', value: pct(oi.posting_consistency?.posting_consistency_pct), loading },
+      { label: 'Campanas', value: list.length ? String(list.length) : '—', loading },
+    ];
+  }
+
+  // Pinta los KPIs reales en el hero (idempotente). Llamado tras cargar la
+  // data de "Mi Marca" o por _ensureHeroKpis en background.
+  _renderHeroKpis(data) {
+    if (data) this._heroKpiData = data;
+    const host = document.getElementById('dashHeroKpis');
+    if (host) host.innerHTML = this._buildHeroKpis(this._heroKpiData || null);
+  }
+
+  // Si aun no hay data de marca cacheada, dispara una carga en background
+  // (sin bloquear el render del tab activo) y refresca la tira de KPIs.
+  async _ensureHeroKpis() {
+    if (this._heroKpiData) { this._renderHeroKpis(); return; }
+    // En "Mi Marca" la propia carga del tab alimenta los KPIs: evitamos
+    // disparar un segundo loadAll en paralelo (doble rafaga de RPCs).
+    if (this._activeTab === 'my-brands') return;
+    if (this._heroKpiLoading || !this._orgId) return;
+    this._heroKpiLoading = true;
+    try {
+      await this._ensureCampanasService();
+      this._restoreMbFilters();
+      const data = await this._loadMyBrandsData();
+      this._renderHeroKpis(data);
+    } catch (e) {
+      console.warn('[Dashboard] hero KPIs load failed:', e);
+    } finally {
+      this._heroKpiLoading = false;
+    }
+  }
+
+  // Refresca titulo (peso mixto) + descripcion + el trio de colores (data-tab)
+  // y el tab activo, sin reconstruir el degradado (asi la animacion no se
+  // reinicia). Los KPIs son de marca: no cambian al cambiar de tab.
+  _updateHero(tabId) {
+    const copy = DashboardView.HERO_COPY[tabId] || DashboardView.HERO_COPY['my-brands'];
+    const hero = document.getElementById('dashHero');
+    if (hero) {
+      hero.dataset.tab = tabId;
+      hero.querySelectorAll('.dash-hero-tab')
+        .forEach((b) => b.classList.toggle('is-active', b.dataset.tab === tabId));
+    }
+    const title = document.getElementById('dashHeroTitle');
+    if (title) {
+      const org = window.currentOrgName || '';
+      const light = org ? ` <span class="dash-hero-title-light">de ${this._esc(org)}</span>` : '';
+      title.innerHTML = `<strong>${this._esc(copy.strong)}</strong>${light}`;
+    }
+    const d = document.getElementById('dashHeroDesc');
     if (d) d.textContent = copy.desc;
   }
 
-  /** Tabs para inyectar en el header principal (mismo patron que Production). */
-  _buildHeaderTabs() {
-    const leftTabs  = [
-      { id: 'my-brands',  label: 'Mi Marca'    },
-      { id: 'competence', label: 'Competencia' },
-      { id: 'tendencies', label: 'Tendencias'  },
-    ];
-    const rightTabs = [
-      { id: 'strategy',   label: 'Estrategia'  },
-    ];
-    const pill = (t) => `
-      <button class="mb-firebar-tab${this._activeTab === t.id ? ' is-active' : ''}" data-tab="${t.id}">
-        <span>${t.label}</span>
-      </button>`;
-    return `
-      <div class="dash-header-tabs" id="dashHeaderTabs">
-        <div class="mb-firebar-tabs mb-firebar-tabs--left">${leftTabs.map(pill).join('')}</div>
-        <div class="mb-firebar-tabs mb-firebar-tabs--right">${rightTabs.map(pill).join('')}</div>
-      </div>`;
+  /** Click handler de los tabs del hero (delegado, un solo listener). */
+  _setupHeroTabs() {
+    const nav = document.getElementById('dashHeroTabs');
+    if (!nav || nav._wired) return;
+    nav._wired = true;
+    nav.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-tab]');
+      if (btn) this._switchTab(btn.dataset.tab, /* fromUser */ true);
+    });
   }
 
   _setupTabs() {
-    // El click de los tabs lo maneja el slot del header (moveSubnavToHeader).
+    // El click de los tabs lo maneja el hero (_setupHeroTabs).
     // hashchange: que el back/forward del browser cambie el tab.
     // Solo registrar una vez (este método se llama en cada render).
     if (!this._onHashChange) {
@@ -433,12 +512,7 @@ class DashboardView extends BaseView {
       }
     }
 
-    const nav = document.getElementById('headerProductionSlot');
-    if (nav) {
-      nav.querySelectorAll('.mb-firebar-tab')
-        .forEach(b => b.classList.toggle('is-active', b.dataset.tab === tabId));
-    }
-    this._updateBanner(tabId);
+    this._updateHero(tabId);
     this._renderTab(tabId);
   }
 

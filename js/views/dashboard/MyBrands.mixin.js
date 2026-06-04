@@ -59,6 +59,7 @@
       try {
         const data = await this._loadMyBrandsData();
         this._mbCampanasData = data;
+        this._renderHeroKpis?.(data); // alimenta la tira de KPIs del hero
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
         this._mountMbDatePicker(body);
@@ -115,6 +116,7 @@
       try {
         const data = await this._loadMyBrandsData();
         this._mbCampanasData = data;
+        this._renderHeroKpis?.(data); // alimenta la tira de KPIs del hero
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
         this._mountMbDatePicker(body);
