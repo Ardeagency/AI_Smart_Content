@@ -3582,66 +3582,98 @@
   .insight-page .comp-kpi:nth-child(2n) { border-right: 0; }
 }
 
-/* ========== Dashboard banner (gradiente animado de marca) ========== */
+/* ========== Dashboard banner (estilo hero flows, degradado por tab) ==========
+   Mismo lenguaje cinematografico que el hero de FlowCatalog (eyebrow ->
+   titulo grande -> descripcion, anclado abajo-izquierda, halos de texto
+   para legibilidad), pero el fondo es un trio de colores de marca animado
+   en vez de una imagen. Cada tab define su propio trio via --dash-banner-grad. */
 .dash-banner {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  border: 1px solid var(--border-divider, #242424);
-  border-radius: 16px;
-  padding: 1.85rem 2rem;
+  border-radius: 18px;
+  height: clamp(200px, 30vh, 340px);
   margin-bottom: 1.75rem;
 }
-/* Capa 1: el gradiente de marca, ampliado y desplazandose en loop. */
-.dash-banner::before {
-  content: '';
+/* Capa de degradado: trio de marca, ampliado y flotando en loop suave. */
+.dash-banner-grad {
   position: absolute;
   inset: 0;
-  z-index: -2;
-  background: var(--brand-gradient);
-  background-size: 250% 100%;
-  background-position: 0% 0;
-  animation: dashBannerFlow 20s ease-in-out infinite alternate;
+  z-index: 0;
+  background: var(--dash-banner-grad, linear-gradient(120deg, #ff0000 0%, #ff6500 50%, #ffe500 100%));
+  background-size: 220% 220%;
+  background-position: 0% 50%;
+  animation: dashBannerFlow 22s ease-in-out infinite alternate;
 }
-/* Capa 2: scrim oscuro para que el texto blanco siempre sea legible
-   sobre cualquier tramo del arcoiris. */
-.dash-banner::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(
-    100deg,
-    rgba(10, 11, 13, 0.86) 0%,
-    rgba(10, 11, 13, 0.60) 52%,
-    rgba(10, 11, 13, 0.32) 100%
-  );
-}
+/* Trio de colores por tab (todos extraidos de los stops de --brand-gradient). */
+.dash-banner[data-tab="my-brands"]  { --dash-banner-grad: linear-gradient(120deg, #ff0000 0%, #ff6500 50%, #ffe500 100%); }
+.dash-banner[data-tab="competence"] { --dash-banner-grad: linear-gradient(120deg, #900090 0%, #5b00ea 50%, #0018ee 100%); }
+.dash-banner[data-tab="tendencies"] { --dash-banner-grad: linear-gradient(120deg, #9acc00 0%, #00d614 50%, #00e7ff 100%); }
+.dash-banner[data-tab="strategy"]   { --dash-banner-grad: linear-gradient(120deg, #00e7ff 0%, #0018ee 50%, #5b00ea 100%); }
 @keyframes dashBannerFlow {
-  0%   { background-position: 0% 0; }
-  100% { background-position: 100% 0; }
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
-.dash-banner-content { position: relative; max-width: 64ch; }
-.dash-banner-title {
-  margin: 0 0 0.45rem 0;
-  font-size: 1.6rem;
+/* Overlay: ancla el contenido abajo y aporta un scrim sutil para que el
+   texto blanco respire sobre los tramos mas claros del degradado. */
+.dash-banner-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: linear-gradient(to top, rgba(8, 9, 11, 0.55) 0%, rgba(8, 9, 11, 0.12) 45%, transparent 75%);
+}
+.dash-banner-content {
+  padding: clamp(1.5rem, 4vw, 2.75rem) clamp(1.5rem, 5vw, 3.5rem);
+  max-width: min(680px, 82%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.dash-banner-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
   color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7), 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+.dash-banner-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+}
+.dash-banner-title {
+  margin: 0;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 32px rgba(0, 0, 0, 0.3);
 }
 .dash-banner-desc {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: clamp(0.9rem, 1.1vw, 1.05rem);
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 92%;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 @media (max-width: 760px) {
-  .dash-banner { padding: 1.4rem 1.25rem; border-radius: 14px; }
-  .dash-banner-title { font-size: 1.35rem; }
-  .dash-banner-desc { font-size: 0.9rem; }
+  .dash-banner { height: clamp(180px, 26vh, 260px); border-radius: 14px; }
 }
-/* Respeta a usuarios que reducen movimiento: gradiente fijo, sin loop. */
+/* Respeta a usuarios que reducen movimiento: degradado fijo, sin loop. */
 @media (prefers-reduced-motion: reduce) {
-  .dash-banner::before { animation: none; }
+  .dash-banner-grad { animation: none; }
 }

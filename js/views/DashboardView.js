@@ -325,45 +325,59 @@ class DashboardView extends BaseView {
       </div>`;
   }
 
-  // Copy del banner por tab: titulo + descripcion de que hace cada vista.
+  // Copy del banner por tab: eyebrow + titulo + descripcion de cada vista.
+  // El trio de colores del degradado vive en CSS via [data-tab] (insight.css).
   static BANNER_COPY = {
     'my-brands': {
+      eyebrow: 'Tu marca',
       title: 'Mi Marca',
       desc: 'El pulso de tu marca en un solo lugar: salud, campanas activas y como rinde tu contenido frente a tu audiencia.',
     },
     'competence': {
+      eyebrow: 'Inteligencia competitiva',
       title: 'Competencia',
       desc: 'El campo de batalla: que publican tus competidores, la voz de su audiencia y donde estan sus vulnerabilidades.',
     },
     'tendencies': {
+      eyebrow: 'Senales del mercado',
       title: 'Tendencias',
       desc: 'El pulso del nicho: senales emergentes, oceanos azules, lexico vivo y las marcas que estan despuntando.',
     },
     'strategy': {
+      eyebrow: 'Decisiones con Vera',
       title: 'Estrategia',
       desc: 'Las recomendaciones de Vera: lecturas cruzadas de todas las senales y aprendizaje continuo para decidir mejor.',
     },
   };
 
-  // Banner con gradiente animado de marca. Tab-aware: titulo + descripcion
-  // cambian segun la vista activa (ver _updateBanner en _switchTab).
+  // Banner estilo hero (como FlowCatalog) con degradado animado por tab.
+  // Tab-aware: eyebrow/titulo/descripcion + trio de colores cambian segun
+  // la vista activa (ver _updateBanner en _switchTab).
   _buildBanner(tabId) {
     const copy = DashboardView.BANNER_COPY[tabId] || DashboardView.BANNER_COPY['my-brands'];
     return `
-      <section class="dash-banner" id="dashBanner" aria-label="Resumen del dashboard">
-        <div class="dash-banner-content">
-          <h1 class="dash-banner-title" id="dashBannerTitle">${this._esc(copy.title)}</h1>
-          <p class="dash-banner-desc" id="dashBannerDesc">${this._esc(copy.desc)}</p>
+      <section class="dash-banner" id="dashBanner" data-tab="${this._esc(tabId)}" aria-label="Resumen del dashboard">
+        <div class="dash-banner-grad" aria-hidden="true"></div>
+        <div class="dash-banner-overlay">
+          <div class="dash-banner-content">
+            <span class="dash-banner-eyebrow" id="dashBannerEyebrow">${this._esc(copy.eyebrow)}</span>
+            <h1 class="dash-banner-title" id="dashBannerTitle">${this._esc(copy.title)}</h1>
+            <p class="dash-banner-desc" id="dashBannerDesc">${this._esc(copy.desc)}</p>
+          </div>
         </div>
       </section>`;
   }
 
-  // Refresca titulo + descripcion del banner sin reconstruir el gradiente
-  // (asi la animacion no se reinicia al cambiar de tab).
+  // Refresca eyebrow/titulo/descripcion + el trio de colores (data-tab) sin
+  // reconstruir la capa de degradado, asi la animacion no se reinicia.
   _updateBanner(tabId) {
     const copy = DashboardView.BANNER_COPY[tabId] || DashboardView.BANNER_COPY['my-brands'];
+    const banner = document.getElementById('dashBanner');
+    if (banner) banner.dataset.tab = tabId;
+    const e = document.getElementById('dashBannerEyebrow');
     const t = document.getElementById('dashBannerTitle');
     const d = document.getElementById('dashBannerDesc');
+    if (e) e.textContent = copy.eyebrow;
     if (t) t.textContent = copy.title;
     if (d) d.textContent = copy.desc;
   }
