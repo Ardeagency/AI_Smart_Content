@@ -3581,3 +3581,67 @@
 @media (max-width: 760px) {
   .insight-page .comp-kpi:nth-child(2n) { border-right: 0; }
 }
+
+/* ========== Dashboard banner (gradiente animado de marca) ========== */
+.dash-banner {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 16px;
+  padding: 1.85rem 2rem;
+  margin-bottom: 1.75rem;
+}
+/* Capa 1: el gradiente de marca, ampliado y desplazandose en loop. */
+.dash-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: var(--brand-gradient);
+  background-size: 250% 100%;
+  background-position: 0% 0;
+  animation: dashBannerFlow 20s ease-in-out infinite alternate;
+}
+/* Capa 2: scrim oscuro para que el texto blanco siempre sea legible
+   sobre cualquier tramo del arcoiris. */
+.dash-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    rgba(10, 11, 13, 0.86) 0%,
+    rgba(10, 11, 13, 0.60) 52%,
+    rgba(10, 11, 13, 0.32) 100%
+  );
+}
+@keyframes dashBannerFlow {
+  0%   { background-position: 0% 0; }
+  100% { background-position: 100% 0; }
+}
+.dash-banner-content { position: relative; max-width: 64ch; }
+.dash-banner-title {
+  margin: 0 0 0.45rem 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+.dash-banner-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
+@media (max-width: 760px) {
+  .dash-banner { padding: 1.4rem 1.25rem; border-radius: 14px; }
+  .dash-banner-title { font-size: 1.35rem; }
+  .dash-banner-desc { font-size: 0.9rem; }
+}
+/* Respeta a usuarios que reducen movimiento: gradiente fijo, sin loop. */
+@media (prefers-reduced-motion: reduce) {
+  .dash-banner::before { animation: none; }
+}

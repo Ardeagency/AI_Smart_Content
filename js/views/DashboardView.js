@@ -320,8 +320,52 @@ class DashboardView extends BaseView {
     // principal (segunda fila), solo en /dashboard. Ver _buildHeaderTabs().
     return `
       <div class="insight-page page-content" id="insightPage">
+        ${this._buildBanner(this._activeTab)}
         <div class="insight-tab-body" id="insightTabBody"></div>
       </div>`;
+  }
+
+  // Copy del banner por tab: titulo + descripcion de que hace cada vista.
+  static BANNER_COPY = {
+    'my-brands': {
+      title: 'Mi Marca',
+      desc: 'El pulso de tu marca en un solo lugar: salud, campanas activas y como rinde tu contenido frente a tu audiencia.',
+    },
+    'competence': {
+      title: 'Competencia',
+      desc: 'El campo de batalla: que publican tus competidores, la voz de su audiencia y donde estan sus vulnerabilidades.',
+    },
+    'tendencies': {
+      title: 'Tendencias',
+      desc: 'El pulso del nicho: senales emergentes, oceanos azules, lexico vivo y las marcas que estan despuntando.',
+    },
+    'strategy': {
+      title: 'Estrategia',
+      desc: 'Las recomendaciones de Vera: lecturas cruzadas de todas las senales y aprendizaje continuo para decidir mejor.',
+    },
+  };
+
+  // Banner con gradiente animado de marca. Tab-aware: titulo + descripcion
+  // cambian segun la vista activa (ver _updateBanner en _switchTab).
+  _buildBanner(tabId) {
+    const copy = DashboardView.BANNER_COPY[tabId] || DashboardView.BANNER_COPY['my-brands'];
+    return `
+      <section class="dash-banner" id="dashBanner" aria-label="Resumen del dashboard">
+        <div class="dash-banner-content">
+          <h1 class="dash-banner-title" id="dashBannerTitle">${this._esc(copy.title)}</h1>
+          <p class="dash-banner-desc" id="dashBannerDesc">${this._esc(copy.desc)}</p>
+        </div>
+      </section>`;
+  }
+
+  // Refresca titulo + descripcion del banner sin reconstruir el gradiente
+  // (asi la animacion no se reinicia al cambiar de tab).
+  _updateBanner(tabId) {
+    const copy = DashboardView.BANNER_COPY[tabId] || DashboardView.BANNER_COPY['my-brands'];
+    const t = document.getElementById('dashBannerTitle');
+    const d = document.getElementById('dashBannerDesc');
+    if (t) t.textContent = copy.title;
+    if (d) d.textContent = copy.desc;
   }
 
   /** Tabs para inyectar en el header principal (mismo patron que Production). */
@@ -380,6 +424,7 @@ class DashboardView extends BaseView {
       nav.querySelectorAll('.mb-firebar-tab')
         .forEach(b => b.classList.toggle('is-active', b.dataset.tab === tabId));
     }
+    this._updateBanner(tabId);
     this._renderTab(tabId);
   }
 
