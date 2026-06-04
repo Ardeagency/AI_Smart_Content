@@ -3626,7 +3626,9 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 
 .dash-hero {
   position: relative;
-  overflow: hidden;
+  /* Sin overflow:hidden → los dropdowns (date picker, Crear informe) pueden
+     desbordar el hero sin recortarse. El redondeo lo aplican las capas del
+     degradado (.dash-hero-grad / ::after) via border-radius: inherit. */
   isolation: isolate;
   /* Sin margen superior: con los dos paddings de arriba anulados, el hero ya
      arranca en el borde superior del area de contenido (bajo el header glass).
@@ -3643,6 +3645,7 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
   position: absolute;
   inset: 0;
   z-index: 0;
+  border-radius: inherit;
   background: linear-gradient(90deg, #0063FF 0%, #814AC8 33%, #FF004D 70%, #FF5C23 100%);
 }
 /* Scrim de legibilidad: oscurece sutil arriba (titulo/tabs) y abajo (KPIs). */
@@ -3651,12 +3654,24 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
   position: absolute;
   inset: 0;
   z-index: 0;
+  border-radius: inherit;
   pointer-events: none;
   background:
     linear-gradient(to bottom, rgba(8, 9, 11, 0.28) 0%, transparent 30%),
     linear-gradient(to top, rgba(8, 9, 11, 0.42) 0%, transparent 50%);
 }
 .dash-hero-inner { position: relative; z-index: 1; }
+
+/* Fila superior: titulo+descripcion a la izquierda, filtros + Crear informe a
+   la derecha. Las acciones solo aplican a Mi Marca → ocultas en otros tabs. */
+.dash-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem 1.5rem; flex-wrap: wrap; }
+.dash-hero-headings { min-width: 0; }
+.dash-hero-actions { flex-shrink: 0; position: relative; z-index: 5; }
+.dash-hero:not([data-tab="my-brands"]) .dash-hero-actions { display: none; }
+/* La barra de filtros heredada (living-history-filters) sobre el degradado:
+   alinea a la derecha y da legibilidad a labels claros. */
+.dash-hero-actions .mb-filters-bar { margin: 0; padding: 0; background: none; border: 0; flex-wrap: wrap; justify-content: flex-end; }
+.dash-hero-actions .living-filter-label { color: rgba(255, 255, 255, 0.85); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); }
 
 .dash-hero-title {
   margin: 0;

@@ -304,11 +304,16 @@ class DashboardView extends BaseView {
     this.updateHeaderContext('Dashboard', null, window.currentOrgName || '');
     const container = document.getElementById('app-container');
     if (!container) return;
+    // Restaurar filtros guardados antes de construir el hero (los controles
+    // reflejan el estado persistido).
+    this._restoreMbFilters?.();
     container.innerHTML = this._buildShell();
     // Los tabs ahora viven DENTRO del hero (sobre el degradado), no en el
     // header global. Limpiamos cualquier subnav residual del header.
     this.clearSubnavFromHeader();
     this._setupHeroTabs();
+    this._setupHeroFilters();
+    this._mountMbDatePicker?.(document.getElementById('dashHero'));
     this._setupTabs();
     this._setupReportDropdown();
     this._renderTab(this._activeTab);
@@ -366,12 +371,23 @@ class DashboardView extends BaseView {
     const copy = DashboardView.HERO_COPY[tabId] || DashboardView.HERO_COPY['my-brands'];
     const org  = window.currentOrgName || '';
     const light = org ? ` <span class="dash-hero-title-light">de ${this._esc(org)}</span>` : '';
+    // Filtros (Fecha + Plataforma) + boton "Crear informe": viven en el hero,
+    // alineados a la derecha del titulo. Solo aplican a Mi Marca (el CSS los
+    // oculta en los demas tabs).
+    const actions = (typeof this._buildMbFiltersBar === 'function')
+      ? `<div class="dash-hero-actions">${this._buildMbFiltersBar(this._heroKpiData || null)}</div>`
+      : '';
     return `
       <section class="dash-hero" id="dashHero" data-tab="${this._esc(tabId)}" aria-label="Resumen del dashboard">
         <div class="dash-hero-grad" aria-hidden="true"></div>
         <div class="dash-hero-inner">
-          <h1 class="dash-hero-title" id="dashHeroTitle"><strong>${this._esc(copy.strong)}</strong>${light}</h1>
-          <p class="dash-hero-desc" id="dashHeroDesc">${this._esc(copy.desc)}</p>
+          <div class="dash-hero-top">
+            <div class="dash-hero-headings">
+              <h1 class="dash-hero-title" id="dashHeroTitle"><strong>${this._esc(copy.strong)}</strong>${light}</h1>
+              <p class="dash-hero-desc" id="dashHeroDesc">${this._esc(copy.desc)}</p>
+            </div>
+            ${actions}
+          </div>
           <nav class="dash-hero-tabs" id="dashHeroTabs" role="tablist">
             ${DashboardView.TABS.map((t) => `
               <button class="dash-hero-tab${this._activeTab === t.id ? ' is-active' : ''}" role="tab" data-tab="${t.id}">${this._esc(t.label)}</button>`).join('')}
@@ -470,6 +486,24 @@ class DashboardView extends BaseView {
     nav.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-tab]');
       if (btn) this._switchTab(btn.dataset.tab, /* fromUser */ true);
+    });
+  }
+
+  /** Cambio de filtros (Plataforma) desde el hero → delega en MyBrands.
+      El date picker llama _onMbFilterChange por su cuenta (onChange). */
+  _setupHeroFilters() {
+    const hero = document.getElementById('dashHero');
+    if (!hero || hero._filtersWired) return;
+    hero._filtersWired = true;
+    hero.addEventListener('change', (e) => {
+      const el = e.target.closest('[data-mb-filter]');
+      if (!el || typeof this._onMbFilterChange !== 'function') return;
+      const key = el.dataset.mbFilter;
+      if (key === 'platform') { this._onMbFilterChange({ platforms: el.value ? [el.value] : null }); return; }
+      let value = el.value;
+      if (key === 'windowDays') value = Number(value) || 30;
+      if (key === 'brandContainerId') value = value || null;
+      this._onMbFilterChange({ [key]: value });
     });
   }
 

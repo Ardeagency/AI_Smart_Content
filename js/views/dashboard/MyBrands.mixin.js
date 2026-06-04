@@ -62,7 +62,6 @@
         this._renderHeroCards?.(data); // alimenta las cards del hero
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
-        this._mountMbDatePicker(body);
         this._renderLongitudinalCharts(data);
         this._renderAudienceMap(data);
         this._renderAudienceRadar(data);
@@ -110,22 +109,24 @@
     async _onMbFilterChange(patch) {
       this._mbFilters = { ...(this._mbFilters || {}), ...patch };
       this._saveMbFilters();
+      // Los filtros viven en el hero (compartido). Solo tocamos el cuerpo si
+      // Mi Marca esta activo; en otros tabs solo refrescamos las cards del hero.
+      const onMyBrands = this._activeTab === 'my-brands';
       const body = document.getElementById('insightTabBody');
-      if (!body) return;
-      this._renderMyBrandsSkeleton(body);
+      if (onMyBrands && body) this._renderMyBrandsSkeleton(body);
       try {
         const data = await this._loadMyBrandsData();
         this._mbCampanasData = data;
         this._renderHeroCards?.(data); // alimenta las cards del hero
+        if (!onMyBrands || !body) return;
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
-        this._mountMbDatePicker(body);
         this._renderLongitudinalCharts(data);
         this._renderAudienceMap(data);
         this._renderAudienceRadar(data);
         this._renderPillarsBubble(data);
       } catch (e) {
-        body.innerHTML = this._buildMyBrandsErrorHtml(e);
+        if (onMyBrands && body) body.innerHTML = this._buildMyBrandsErrorHtml(e);
       }
     },
 
@@ -179,7 +180,6 @@
         <div class="insight-page mb-dash" id="mbPage">
           <div class="mb-layout">
             <div class="mb-layout-main">
-              ${this._buildMbFiltersBar(data)}
               ${this._buildActionPlanSection(data, insights)}
               ${this._buildLongitudinalSection(data)}
               ${this._buildLeverageSection(insights)}
