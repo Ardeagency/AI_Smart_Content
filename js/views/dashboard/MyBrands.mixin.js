@@ -304,71 +304,36 @@
       return { explota, optimiza, elimina, vigila };
     },
 
-    /* Seccion "Tu plan de accion" del cuerpo (cards + signos vitales). */
-    _buildActionPlanSection(data, insights) {
-      const { explota, optimiza, elimina, vigila } = this._computeActionPlanItems(data, insights);
+    /* Seccion "Momentum" del cuerpo: signos vitales (engagement vs previo,
+       volumen y consistencia). Las cards del plan de accion (Explota/Optimiza/
+       Elimina/Vigila) ya viven en el hero del dashboard — aqui no se duplican. */
+    _buildActionPlanSection(data) {
       const oi = data?.optimizationInsights?.data || null;
+      if (!oi) return '';
 
-      if (!explota && !optimiza && !elimina && !vigila) return '';
-
-      // Tira de signos vitales (momentum) — lo primero que mira un CMO.
-      const vitals = oi ? (() => {
-        const trend = oi.engagement_vs_prior_period_pct;
-        const hasTrend = trend != null && Number.isFinite(Number(trend));
-        const tNum = Math.round(Number(trend));
-        const tCls = !hasTrend ? '' : tNum > 0 ? 'is-up' : tNum < 0 ? 'is-down' : 'is-flat';
-        const tStr = !hasTrend ? '—' : `${tNum > 0 ? '+' : ''}${tNum}%`;
-        const cons = oi.posting_consistency ? `${Math.round(Number(oi.posting_consistency.posting_consistency_pct))}%` : '—';
-        const vital = (val, lbl, cls = '') => `
-          <div class="mb-plan-vital">
-            <span class="mb-plan-vital-val ${cls}">${this._esc(val)}</span>
-            <span class="mb-plan-vital-lbl">${this._esc(lbl)}</span>
-          </div>`;
-        return `
-          <div class="mb-plan-vitals">
-            ${vital(tStr, 'Engagement vs periodo previo', tCls)}
-            ${vital(fmt.int(oi.posts_analyzed), 'Posts analizados')}
-            ${vital(cons, 'Consistencia de publicacion')}
-          </div>`;
-      })() : '';
-
-      const impactBadge = (impact) =>
-        impact ? `<span class="mb-plan-impact mb-plan-impact--${impact}">impacto ${this._esc(impact)}</span>` : '';
-
-      // Card de un bucket. Devuelve '' si el item esta vacio → se oculta (no se
-      // pinta empty state). El grid se adapta a cuantas cards queden.
-      const col = (kind, icon, label, item) => {
-        if (!item) return '';
-        const expand = item.detailDim
-          ? `<button type="button" class="mb-plan-expand" data-feat-detail data-dim="${this._esc(item.detailDim)}" data-value="${this._esc(item.detailValue || '')}" data-title="${this._esc(label + ': ' + item.title)}" aria-label="Ver publicaciones detras de esta recomendacion"><i class="fas fa-up-right-and-down-left-from-center"></i></button>`
-          : '';
-        return `
-          <div class="mb-plan-col mb-plan-col--${kind}">
-            <div class="mb-plan-col-head">
-              <span class="mb-plan-cat">${label}</span>
-              ${expand ? `<div class="mb-plan-head-actions">${expand}</div>` : ''}
-            </div>
-            ${item.metric ? `<div class="mb-plan-metric"><span class="mb-plan-metric-val">${this._esc(item.metric)}</span>${item.metricSub ? `<span class="mb-plan-metric-sub">${this._esc(item.metricSub)}</span>` : ''}</div>` : ''}
-            <div class="mb-plan-title">${this._esc(item.title)}</div>
-            ${item.why ? `<p class="mb-plan-why">${this._esc(item.why)}</p>` : ''}
-          </div>`;
-      };
-
-      const cards = [
-        col('explota',  'fas fa-arrow-trend-up',   'Explota',  explota),
-        col('optimiza', 'fas fa-sliders',          'Optimiza', optimiza),
-        col('elimina',  'fas fa-arrow-trend-down', 'Elimina',  elimina),
-        col('vigila',   'fas fa-shield-halved',    'Vigila',   vigila),
-      ].filter(Boolean);
+      const trend = oi.engagement_vs_prior_period_pct;
+      const hasTrend = trend != null && Number.isFinite(Number(trend));
+      const tNum = Math.round(Number(trend));
+      const tCls = !hasTrend ? '' : tNum > 0 ? 'is-up' : tNum < 0 ? 'is-down' : 'is-flat';
+      const tStr = !hasTrend ? '—' : `${tNum > 0 ? '+' : ''}${tNum}%`;
+      const cons = oi.posting_consistency ? `${Math.round(Number(oi.posting_consistency.posting_consistency_pct))}%` : '—';
+      const vital = (val, lbl, cls = '') => `
+        <div class="mb-plan-vital">
+          <span class="mb-plan-vital-val ${cls}">${this._esc(val)}</span>
+          <span class="mb-plan-vital-lbl">${this._esc(lbl)}</span>
+        </div>`;
 
       return `
         <section class="mb-section mb-section--wide">
           <div class="mb-section-head">
-            <span class="mb-section-title">Tu plan de accion</span>
-            <span class="mb-section-hint">Que explotar, optimizar, eliminar y vigilar — priorizado por impacto</span>
+            <span class="mb-section-title">Momentum</span>
+            <span class="mb-section-hint">Tu pulso reciente — engagement, volumen y consistencia de publicacion</span>
           </div>
-          ${vitals}
-          <div class="mb-plan-grid mb-plan-grid--4">${cards.join('')}</div>
+          <div class="mb-plan-vitals">
+            ${vital(tStr, 'Engagement vs periodo previo', tCls)}
+            ${vital(fmt.int(oi.posts_analyzed), 'Posts analizados')}
+            ${vital(cons, 'Consistencia de publicacion')}
+          </div>
         </section>`;
     },
 

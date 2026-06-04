@@ -2672,6 +2672,12 @@
   background: linear-gradient(90deg, #FF5C23 12%, #FF004D 42%, #814AC8 82%, #0063FF 112%);
   opacity: 0.3; filter: blur(60px);
 }
+/* Borde superior de gradiente arcoiris (linea fina, clipada a las esquinas),
+   reubicada desde el strip de vitals: corona la card de Salud de marca. */
+.mb-health-card--aside::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2.5px; pointer-events: none; z-index: 2;
+  background: linear-gradient(270deg, #0063FF 0%, #814AC8 30%, #FF004D 70%, #FF5C23 100%);
+}
 .mb-health-card--aside > * { position: relative; z-index: 1; }
 .mb-health-card--aside .mb-hero-label { text-align: left; text-transform: uppercase; color: #7B7B7B; font-size: 0.8125rem; letter-spacing: 0.04em; }
 .mb-health-card--aside .mb-health-objetivo { text-align: center; font-size: 0.75rem; margin-bottom: 0; }
@@ -2927,8 +2933,8 @@
 
 /* Tira de signos vitales (momentum del CMO) */
 .mb-plan-vitals { position: relative; overflow: hidden; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 1rem; background: linear-gradient(180deg, #222429 0%, #1B1D22 100%); border: 1px solid #34363A; border-radius: 10px; box-shadow: var(--dash-elev); }
-/* Borde superior de gradiente arcoiris (linea fina, clipada a las esquinas) */
-.mb-plan-vitals::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2.5px; pointer-events: none; z-index: 2; background: linear-gradient(270deg, #0063FF 0%, #814AC8 30%, #FF004D 70%, #FF5C23 100%); }
+/* La linea arcoiris superior se movio a la card de Salud de marca
+   (.mb-health-card--aside::before). El strip de Momentum ya no la lleva. */
 .mb-plan-vital { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.95rem 1.2rem; border-right: 1px solid var(--dash-line, rgba(255,255,255,0.08)); }
 .mb-plan-vital:last-child { border-right: 0; }
 .mb-plan-vital-val { font-size: 1.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.025em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
@@ -3730,6 +3736,9 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
   margin-top: clamp(1.25rem, 3vw, 1.85rem);
   align-items: stretch;
 }
+/* El titulo (linea blanca) se ancla abajo en cada card → todas alineadas al
+   mismo nivel inferior aunque la metrica de arriba ocupe 1 o 2 lineas. */
+.dash-hero-cards .mb-plan-title { margin-top: auto; }
 .dash-hero-card-skeleton {
   min-height: 104px;
   background: var(--glass-black-bg, rgba(11, 11, 11, 0.45));
