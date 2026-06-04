@@ -325,7 +325,6 @@
 
       return `
         <section class="mb-section mb-section--wide">
-          <div class="mb-card-title">Momentum</div>
           <div class="mb-plan-vitals">
             ${vital(tStr, 'Engagement vs periodo previo', tCls)}
             ${vital(fmt.int(oi.posts_analyzed), 'Posts analizados')}
@@ -404,7 +403,6 @@
         </div>`;
       return `
         <section class="mb-section mb-section--wide mb-long">
-          <div class="mb-card-title">Analisis longitudinal</div>
           ${this._buildActivityBanner(data?.activity?.data)}
           ${!act.length ? `<div class="mb-causal-empty">Aun no hay suficiente historial. Amplia el rango (prueba Todo el periodo).</div>` : `
           <div class="mb-long-grid">
@@ -1110,7 +1108,6 @@
         }).join('');
       return `
         <section class="mb-section">
-          <div class="mb-card-title">Pilares narrativos</div>
           <div class="mb-pil2-list">${cards}</div>
         </section>`;
     },
