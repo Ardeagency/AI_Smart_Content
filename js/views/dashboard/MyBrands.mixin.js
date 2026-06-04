@@ -378,14 +378,16 @@
             <span class="mb-section-title">Que te impulsa y que te frena</span>
             <span class="mb-section-hint">Tus palancas frente a tu promedio — verde suma, rojo resta</span>
           </div>
-          <div class="mb-lev">
-            <div class="mb-lev-col mb-lev-col--neg">
-              <div class="mb-lev-coltitle">Lo que te frena</div>
-              ${drags.length ? drags.map(row).join('') : `<div class="mb-lev-empty">${colNote}</div>`}
-            </div>
-            <div class="mb-lev-col mb-lev-col--pos">
-              <div class="mb-lev-coltitle">Lo que te impulsa</div>
-              ${boosts.length ? boosts.map(row).join('') : `<div class="mb-lev-empty">${colNote}</div>`}
+          <div class="mb-chart-card">
+            <div class="mb-lev">
+              <div class="mb-lev-col mb-lev-col--neg">
+                <div class="mb-lev-coltitle">Lo que te frena</div>
+                ${drags.length ? drags.map(row).join('') : `<div class="mb-lev-empty">${colNote}</div>`}
+              </div>
+              <div class="mb-lev-col mb-lev-col--pos">
+                <div class="mb-lev-coltitle">Lo que te impulsa</div>
+                ${boosts.length ? boosts.map(row).join('') : `<div class="mb-lev-empty">${colNote}</div>`}
+              </div>
             </div>
           </div>
         </section>`;
@@ -830,7 +832,7 @@
             <span class="mb-section-title">Patrones de tu publico</span>
             <span class="mb-section-hint">La huella emocional de tu contenido — que tan lejos de tu promedio resuena cada emocion</span>
           </div>
-          ${body}
+          <div class="mb-chart-card">${body}</div>
         </section>`;
     },
 

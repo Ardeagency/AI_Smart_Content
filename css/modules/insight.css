@@ -2933,8 +2933,9 @@
 
 /* Tira de signos vitales (momentum del CMO) */
 .mb-plan-vitals { position: relative; overflow: hidden; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 1rem; background: linear-gradient(180deg, #222429 0%, #1B1D22 100%); border: 1px solid #34363A; border-radius: 10px; box-shadow: var(--dash-elev); }
-/* La linea arcoiris superior se movio a la card de Salud de marca
-   (.mb-health-card--aside::before). El strip de Momentum ya no la lleva. */
+/* Borde superior de gradiente arcoiris (linea fina, clipada a las esquinas).
+   Presente tanto en el strip de Momentum como en la card de Salud de marca. */
+.mb-plan-vitals::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2.5px; pointer-events: none; z-index: 2; background: linear-gradient(270deg, #0063FF 0%, #814AC8 30%, #FF004D 70%, #FF5C23 100%); }
 .mb-plan-vital { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.95rem 1.2rem; border-right: 1px solid var(--dash-line, rgba(255,255,255,0.08)); }
 .mb-plan-vital:last-child { border-right: 0; }
 .mb-plan-vital-val { font-size: 1.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.025em; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
@@ -3155,6 +3156,17 @@
 /* Choropleth de publico efectivo (window.AudienceMap) */
 .mb-eff-map { position: relative; height: 210px; margin: 0.5rem 0 0.85rem; }
 @media (max-width: 480px) { .mb-eff-map { height: auto; } }
+
+/* Card de grafico: superficie estandar para que todos los charts del cuerpo
+   (palancas, radar de patrones, etc.) compartan el mismo fondo que el resto
+   (longitudinal, evolucion, publico efectivo). */
+.mb-chart-card {
+  background: linear-gradient(180deg, #222429 0%, #1B1D22 100%);
+  border: 1px solid #34363A;
+  border-radius: 14px;
+  padding: 1.2rem 1.35rem;
+  box-shadow: var(--dash-elev);
+}
 
 /* Que te impulsa / te frena — barras divergentes hermanas (tornado) */
 .mb-lev { display: grid; grid-template-columns: 1fr 1fr; gap: 0; align-items: start; }
