@@ -551,9 +551,9 @@ class Router {
         window.errorLogger.capture(error, { source: 'router.handleRoute', path: window.location.pathname });
       }
       if (window.errorHandler) {
-        window.errorHandler.showError(error, 'Error cargando la página. Por favor, recarga.');
+        window.errorHandler.showError(error, t('Error cargando la página. Por favor, recarga.'));
       } else {
-        this.showError('Error cargando la página. Por favor, recarga.');
+        this.showError(t('Error cargando la página. Por favor, recarga.'));
       }
     } finally {
       clearTimeout(spinnerTimer);
@@ -794,6 +794,21 @@ class Router {
   }
 
   /**
+   * Re-montar la ruta actual desde cero (usado al cambiar de idioma).
+   * Anula currentView para forzar montaje completo (evita la soft-navigation,
+   * que reusaria el DOM ya pintado en el idioma anterior) y re-ejecuta
+   * handleRoute(), que vuelve a correr renderHTML() con los nuevos t().
+   */
+  reloadCurrentRoute() {
+    const prev = this.currentView;
+    if (prev && typeof prev.destroy === 'function') {
+      try { prev.destroy(); } catch (_) {}
+    }
+    this.currentView = null;
+    this.handleRoute();
+  }
+
+  /**
    * Mostrar error al usuario
    * @param {string} message - Mensaje de error
    */
@@ -813,7 +828,7 @@ class Router {
           <div class="error-icon" style="font-size: 3rem; color: var(--accent-warm, #e09145); margin-bottom: 1rem;">
             <i class="fas fa-exclamation-triangle"></i>
           </div>
-          <h2 style="color: var(--text-primary, #ecebda); margin-bottom: 1rem;">Error</h2>
+          <h2 style="color: var(--text-primary, #ecebda); margin-bottom: 1rem;">${t('Error')}</h2>
           <p style="color: var(--text-secondary, #a0a0a0);">${message}</p>
           <button onclick="window.location.reload()" style="
             margin-top: 1.5rem;
@@ -824,7 +839,7 @@ class Router {
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-          ">Recargar Página</button>
+          ">${t('Recargar Página')}</button>
         </div>
       `;
     }

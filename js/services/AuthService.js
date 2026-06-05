@@ -162,12 +162,18 @@ class AuthService {
           default_view_mode: profile.default_view_mode || 'user', // 'user' | 'developer'
           is_developer: !!profile.is_developer,
           dev_role: profile.dev_role || 'contributor', // lead | senior | contributor | viewer
-          dev_rank: profile.dev_rank || 'rookie' // rookie | junior | builder | expert | master | legend
+          dev_rank: profile.dev_rank || 'rookie', // rookie | junior | builder | expert | master | legend
+          locale: profile.locale || 'es' // idioma preferido del usuario (i18n)
         };
 
         this.userMode = this.currentUser.default_view_mode;
         this._userDataLoadedAt = Date.now();
         localStorage.setItem('userViewMode', this.userMode);
+
+        // i18n: aplicar el idioma del perfil (respeta la eleccion local si existe).
+        if (window.i18n && typeof window.i18n.applyUserLocale === 'function') {
+          window.i18n.applyUserLocale(this.currentUser.locale);
+        }
 
         // Guardar en sessionManager si está disponible
         if (window.sessionManager) {
@@ -480,6 +486,30 @@ class AuthService {
 
     // Notificar listeners del cambio de modo
     this.notifyListeners('mode_changed', { mode });
+  }
+
+  /**
+   * Guardar el idioma preferido del usuario (i18n).
+   * Espeja el patron de setUserMode: memoria + persistencia opcional en perfil.
+   * El servicio window.i18n ya maneja localStorage y el repintado; aqui solo
+   * persistimos en profiles.locale para que cruce dispositivos.
+   * @param {string} locale - 'es' | 'en' | ...
+   * @param {boolean} persist - Si debe guardarse en la base de datos (default true)
+   */
+  async setUserLocale(locale, persist = true) {
+    if (this.currentUser) {
+      this.currentUser.locale = locale;
+    }
+    if (persist && this.supabase && this.currentUser?.id) {
+      try {
+        await this.supabase
+          .from('profiles')
+          .update({ locale })
+          .eq('id', this.currentUser.id);
+      } catch (error) {
+        console.error('Error actualizando idioma del usuario:', error);
+      }
+    }
   }
 
   /**

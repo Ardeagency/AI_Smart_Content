@@ -219,6 +219,12 @@
     <!-- URL base del ai-engine (opcional). Ver js/runtime-config.js -->
     <script src="js/runtime-config.js?v=__BUILD_ID__" defer></script>
 
+    <!-- i18n: catalogos + servicio (window.i18n / window.t). DEBE ir antes de
+         BaseView y de cualquier vista, porque los templates usan ${t('...')}.
+         Cada idioma extra = un <script> de catalogo mas + su codigo en SUPPORTED. -->
+    <script src="js/i18n/en.js?v=__BUILD_ID__" defer></script>
+    <script src="js/services/I18n.js?v=__BUILD_ID__" defer></script>
+
     <!-- Core: app-loader (Supabase config + spinner global) — rutas relativas a <base href="/"> -->
     <script src="js/app-loader.js?v=__BUILD_ID__" defer></script>
     <!-- ErrorLogger temprano para capturar crashes del bootstrap (window.error + unhandledrejection).

@@ -45,31 +45,31 @@ class VerificationView extends BaseView {
             </svg>
           </div>
 
-          <h1 class="verification-title">Verifica tu correo</h1>
+          <h1 class="verification-title">${t('Verifica tu correo')}</h1>
           <p class="verification-desc">
-            Te enviamos un enlace de verificación. Abre tu bandeja de entrada y haz click en el enlace para activar tu cuenta y continuar el proceso.
+            ${t('Te enviamos un enlace de verificación. Abre tu bandeja de entrada y haz click en el enlace para activar tu cuenta y continuar el proceso.')}
           </p>
           ${emailHtml}
-          <p class="verification-hint">¿No te llega? Revisa la carpeta de spam o promociones.</p>
+          <p class="verification-hint">${t('¿No te llega? Revisa la carpeta de spam o promociones.')}</p>
 
           <button type="button" class="btn btn-primary signin-submit" id="btnResendVerification">
-            Reenviar correo de verificación
+            ${t('Reenviar correo de verificación')}
           </button>
           <p class="verification-status" id="verificationStatus" hidden></p>
 
           <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkBackToLogin">
-            Volver al inicio de sesión
+            ${t('Volver al inicio de sesión')}
           </button>
         </div>
 
         <footer class="signin-footer">
-          <span class="signin-footer-copy">${year} AI SMART CONTENT by ARDE AGENCY S.A.S. Todos los derechos reservados.</span>
+          <span class="signin-footer-copy">${year} AI SMART CONTENT by ARDE AGENCY S.A.S. ${t('Todos los derechos reservados.')}</span>
           <span class="signin-footer-links">
-            <a href="https://aismartcontent.io/privacy-policy" target="_blank" rel="noopener">Privacidad</a>
+            <a href="https://aismartcontent.io/privacy-policy" target="_blank" rel="noopener">${t('Privacidad')}</a>
             <span aria-hidden="true">·</span>
-            <a href="https://aismartcontent.io/terms-and-conditions" target="_blank" rel="noopener">Términos</a>
+            <a href="https://aismartcontent.io/terms-and-conditions" target="_blank" rel="noopener">${t('Términos')}</a>
             <span aria-hidden="true">·</span>
-            <a href="https://aismartcontent.io/contact" target="_blank" rel="noopener">Contacto</a>
+            <a href="https://aismartcontent.io/contact" target="_blank" rel="noopener">${t('Contacto')}</a>
           </span>
         </footer>
       </div>
@@ -100,12 +100,12 @@ class VerificationView extends BaseView {
 
     let email = this._email;
     if (!email) {
-      email = (prompt('¿A qué correo enviamos el enlace?') || '').trim().toLowerCase();
+      email = (prompt(t('¿A qué correo enviamos el enlace?')) || '').trim().toLowerCase();
       if (!email) return;
       this._email = email;
     }
 
-    if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+    if (btn) { btn.disabled = true; btn.textContent = t('Enviando...'); }
     if (status) {
       status.hidden = true;
       status.classList.remove('verification-status--ok', 'verification-status--err');
@@ -123,18 +123,18 @@ class VerificationView extends BaseView {
       });
 
       if (error) {
-        this._showStatus(status, error.message || 'No se pudo reenviar el correo.', false);
+        this._showStatus(status, error.message || t('No se pudo reenviar el correo.'), false);
       } else {
-        this._showStatus(status, `Correo reenviado a ${email}. Revisa tu bandeja.`, true);
+        this._showStatus(status, t('Correo reenviado a {email}. Revisa tu bandeja.', { email }), true);
         this._startCooldown(60);
       }
     } catch (err) {
       console.error('VerificationView.handleResend:', err);
-      this._showStatus(status, 'Error reenviando el correo. Intenta de nuevo en un momento.', false);
+      this._showStatus(status, t('Error reenviando el correo. Intenta de nuevo en un momento.'), false);
     } finally {
       if (btn && Date.now() >= this._resendCooldownUntil) {
         btn.disabled = false;
-        btn.textContent = 'Reenviar correo de verificación';
+        btn.textContent = t('Reenviar correo de verificación');
       }
     }
   }
@@ -155,12 +155,12 @@ class VerificationView extends BaseView {
       if (!btn) return;
       if (remaining <= 0) {
         btn.disabled = false;
-        btn.textContent = 'Reenviar correo de verificación';
+        btn.textContent = t('Reenviar correo de verificación');
         if (this._cooldownTimer) { clearInterval(this._cooldownTimer); this._cooldownTimer = null; }
         return;
       }
       btn.disabled = true;
-      btn.textContent = `Reenviar en ${remaining}s`;
+      btn.textContent = t('Reenviar en {n}s', { n: remaining });
     };
     tick();
     if (this._cooldownTimer) clearInterval(this._cooldownTimer);

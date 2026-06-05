@@ -80,7 +80,7 @@
   let offlineToast = null;
   function onOffline() {
     if (offlineToast) return;
-    offlineToast = showToast('Sin conexión a internet', {
+    offlineToast = showToast(t('Sin conexión a internet'), {
       duration: 0,
       type: 'warning',
     });
@@ -90,7 +90,7 @@
       offlineToast.close();
       offlineToast = null;
       // Solo mostrar "restablecida" si veníamos de offline (no en first load).
-      showToast('Conexión restablecida', { duration: 2500, type: 'success' });
+      showToast(t('Conexión restablecida'), { duration: 2500, type: 'success' });
     }
   }
   window.addEventListener('offline', onOffline);
