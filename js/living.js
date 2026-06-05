@@ -2037,6 +2037,7 @@ class LivingManager {
         // Estado interno + abrir.
         this._modalState = { outputId, mediaUrl, prompt: (data?.prompt || ''), runId: run?.id };
         this._bindModalListenersOnce(modal);
+        this._resetModalZoom(); // cada apertura/variante arranca a 100% centrado
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('production-modal-open');
@@ -2061,6 +2062,8 @@ class LivingManager {
         if (bgVideoEl) { bgVideoEl.pause(); bgVideoEl.removeAttribute('src'); bgVideoEl.load(); bgVideoEl.hidden = true; }
         const bgImgEl = document.getElementById('pmodalBgImage');
         if (bgImgEl) { bgImgEl.removeAttribute('src'); bgImgEl.hidden = true; }
+        // Resetear zoom/paneo (limpia el transform de img/video).
+        this._resetModalZoom();
         // Cerrar overlay de edicion si estaba abierto, liberando canvas y prompt.
         this._closeEditOverlay();
         if (this._siblingObserver) {
@@ -2915,6 +2918,9 @@ class LivingManager {
         }
         // Guardar el elemento que tenia focus para restaurar al cerrar (a11y).
         this._editOverlayLastFocus = document.activeElement;
+
+        // La mascara se pinta sobre la imagen sin transform: resetear el zoom.
+        this._resetModalZoom();
 
         overlay.hidden = false;
         overlay.setAttribute('aria-hidden', 'false');
@@ -4402,6 +4408,152 @@ class LivingManager {
             };
             document.addEventListener('keydown', this._modalEscHandler);
         }
+
+        this._initModalZoom(modal);
+    }
+
+    // ====================================================================
+    // Zoom + paneo del asset (inspector tipo Lightroom/Figma). Aplica un
+    // transform translate+scale al media VISIBLE (img o video). Rueda = zoom
+    // al cursor; arrastre = paneo cuando esta acercado; doble clic = toggle.
+    // Se desactiva mientras el overlay de edicion esta abierto (la mascara
+    // necesita la imagen sin transform). El toolbar/overlay no se transforman.
+    // ====================================================================
+    _initModalZoom(modal) {
+        if (modal._zoomBound) return;
+        modal._zoomBound = true;
+        const stage = modal.querySelector('.production-modal-visual-inner');
+        if (!stage) return;
+        this._zoom = { scale: 1, x: 0, y: 0 };
+        this._zoomPan = null;
+
+        // Controles minimos (aparecen al hover del visual o cuando hay zoom).
+        const visual = modal.querySelector('.production-modal-visual');
+        if (visual && !visual.querySelector('.pmodal-zoom-controls')) {
+            const ctr = document.createElement('div');
+            ctr.className = 'pmodal-zoom-controls';
+            ctr.innerHTML = `
+                <button type="button" class="pmodal-zoom-btn" data-zoom="out" aria-label="Alejar"><i class="fas fa-minus"></i></button>
+                <span class="pmodal-zoom-level">100%</span>
+                <button type="button" class="pmodal-zoom-btn" data-zoom="in" aria-label="Acercar"><i class="fas fa-plus"></i></button>
+                <button type="button" class="pmodal-zoom-btn pmodal-zoom-reset" data-zoom="reset" aria-label="Ajustar"><i class="fas fa-compress"></i></button>`;
+            visual.appendChild(ctr);
+            ctr.addEventListener('click', (e) => {
+                const b = e.target.closest('[data-zoom]'); if (!b) return;
+                const act = b.getAttribute('data-zoom');
+                if (act === 'reset') { this._resetModalZoom(); return; }
+                // Botones acercan/alejan respecto al centro.
+                this._setModalZoom(this._zoom.scale * (act === 'in' ? 1.4 : 1 / 1.4), 0, 0);
+            });
+        }
+
+        const editing = () => {
+            const ov = document.getElementById('pmodalEditOverlay');
+            return ov && !ov.hidden;
+        };
+
+        // Rueda: zoom hacia el cursor.
+        stage.addEventListener('wheel', (e) => {
+            if (editing()) return;
+            e.preventDefault();
+            const rect = stage.getBoundingClientRect();
+            const ox = e.clientX - (rect.left + rect.width / 2);
+            const oy = e.clientY - (rect.top + rect.height / 2);
+            this._setModalZoom(this._zoom.scale * Math.pow(1.0018, -e.deltaY), ox, oy);
+        }, { passive: false });
+
+        // Doble clic: alterna 1x <-> 2.5x en el punto del cursor.
+        stage.addEventListener('dblclick', (e) => {
+            if (editing()) return;
+            e.preventDefault();
+            const rect = stage.getBoundingClientRect();
+            const ox = e.clientX - (rect.left + rect.width / 2);
+            const oy = e.clientY - (rect.top + rect.height / 2);
+            this._setModalZoom(this._zoom.scale > 1.05 ? 1 : 2.5, ox, oy);
+        });
+
+        // Arrastre = paneo (solo cuando esta acercado, para no robar los
+        // controles del video al 100%).
+        stage.addEventListener('pointerdown', (e) => {
+            if (editing() || this._zoom.scale <= 1.001 || e.button !== 0) return;
+            e.preventDefault();
+            this._zoomPan = { px: e.clientX, py: e.clientY, x: this._zoom.x, y: this._zoom.y };
+            stage.classList.add('is-panning');
+            try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+        });
+        stage.addEventListener('pointermove', (e) => {
+            if (!this._zoomPan) return;
+            this._zoom.x = this._zoomPan.x + (e.clientX - this._zoomPan.px);
+            this._zoom.y = this._zoomPan.y + (e.clientY - this._zoomPan.py);
+            this._clampZoomPan();
+            this._applyModalZoom();
+        });
+        const endPan = (e) => {
+            if (!this._zoomPan) return;
+            this._zoomPan = null;
+            stage.classList.remove('is-panning');
+            try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+        };
+        stage.addEventListener('pointerup', endPan);
+        stage.addEventListener('pointercancel', endPan);
+    }
+
+    _zoomTargetEl() {
+        const video = document.getElementById('pmodalVideo');
+        if (video && !video.hidden) return video;
+        const img = document.getElementById('pmodalImage');
+        if (img && !img.hidden) return img;
+        return null;
+    }
+
+    _setModalZoom(scale, ox = 0, oy = 0) {
+        if (!this._zoom) this._zoom = { scale: 1, x: 0, y: 0 };
+        const s1 = this._zoom.scale;
+        const s2 = Math.max(1, Math.min(6, scale));
+        if (s2 <= 1.001) {
+            this._zoom = { scale: 1, x: 0, y: 0 };
+        } else {
+            // Mantener fijo el punto bajo el cursor (ox,oy relativos al centro).
+            const k = s2 / s1;
+            this._zoom.x = ox - k * (ox - this._zoom.x);
+            this._zoom.y = oy - k * (oy - this._zoom.y);
+            this._zoom.scale = s2;
+            this._clampZoomPan();
+        }
+        this._applyModalZoom();
+    }
+
+    _clampZoomPan() {
+        const el = this._zoomTargetEl();
+        if (!el || !this._zoom) return;
+        const s = this._zoom.scale;
+        // Limite: el asset escalado no puede salirse de su huella original
+        // centrada (no se revela vacio alrededor).
+        const maxX = Math.max(0, (s - 1) * el.offsetWidth / 2);
+        const maxY = Math.max(0, (s - 1) * el.offsetHeight / 2);
+        this._zoom.x = Math.max(-maxX, Math.min(maxX, this._zoom.x));
+        this._zoom.y = Math.max(-maxY, Math.min(maxY, this._zoom.y));
+    }
+
+    _applyModalZoom() {
+        const z = this._zoom || { scale: 1, x: 0, y: 0 };
+        const t = `translate(${z.x}px, ${z.y}px) scale(${z.scale})`;
+        const img = document.getElementById('pmodalImage');
+        const video = document.getElementById('pmodalVideo');
+        if (img) img.style.transform = t;
+        if (video) video.style.transform = t;
+        const stage = document.querySelector('.production-modal-visual-inner');
+        if (stage) stage.classList.toggle('is-zoomed', z.scale > 1.001);
+        const visual = document.querySelector('.production-modal-visual');
+        if (visual) visual.classList.toggle('has-zoom', z.scale > 1.001);
+        const lvl = document.querySelector('.pmodal-zoom-level');
+        if (lvl) lvl.textContent = Math.round(z.scale * 100) + '%';
+    }
+
+    _resetModalZoom() {
+        this._zoom = { scale: 1, x: 0, y: 0 };
+        this._zoomPan = null;
+        this._applyModalZoom();
     }
 
     _closeModalKebabs(modal) {
