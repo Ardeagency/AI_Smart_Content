@@ -36,7 +36,7 @@
         this._bindStrategyHandlers(body);
       } catch (e) {
         console.error('[Strategy] load failed:', e);
-        body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">No se pudo cargar Estrategia. ${this._esc(e?.message || '')}</div>`;
+        body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">${__('No se pudo cargar Estrategia.')} ${this._esc(e?.message || '')}</div>`;
       }
     },
 
@@ -90,18 +90,18 @@
       // Estrategia = estado de las recomendaciones (p_status). Fecha no es un
       // parametro de las RPCs de estrategia → pendiente de backend.
       const statusOpts = [
-        { v: 'proposed', label: 'Pendientes' },
-        { v: 'approved', label: 'Aprobadas' },
-        { v: 'rejected', label: 'Descartadas' },
+        { v: 'proposed', label: __('Pendientes') },
+        { v: 'approved', label: __('Aprobadas') },
+        { v: 'rejected', label: __('Descartadas') },
       ].map(o => `<option value="${o.v}"${f.status === o.v ? ' selected' : ''}>${o.label}</option>`).join('');
       return `
         <header class="living-history-filters mb-filters-bar" id="stratFilters">
-          <div class="living-filter living-filter--disabled" title="Próximamente">
-            <label class="living-filter-label">Fecha</label>
-            <select class="living-filter-select" disabled><option>Todo el periodo</option></select>
+          <div class="living-filter living-filter--disabled" title="${__('Próximamente')}">
+            <label class="living-filter-label">${__('Fecha')}</label>
+            <select class="living-filter-select" disabled><option>${__('Todo el periodo')}</option></select>
           </div>
           <div class="living-filter">
-            <label class="living-filter-label" for="stratFilterStatus">Estrategia</label>
+            <label class="living-filter-label" for="stratFilterStatus">${__('Estrategia')}</label>
             <select class="living-filter-select" id="stratFilterStatus" data-strat-filter="status">${statusOpts}</select>
           </div>
           ${this._reportDropdown()}
@@ -114,14 +114,14 @@
       return `
         <section class="strat-header">
           <div class="strat-header-main">
-            <span class="strat-header-title">Estrategia de Vera</span>
-            <span class="strat-header-sub">Recomendaciones que cruzan tu marca, tu competencia y lo que te funciona — para que apruebes, ajustes o descartes.</span>
+            <span class="strat-header-title">${__('Estrategia de Vera')}</span>
+            <span class="strat-header-sub">${__('Recomendaciones que cruzan tu marca, tu competencia y lo que te funciona — para que apruebes, ajustes o descartes.')}</span>
           </div>
           <div class="strat-stats">
-            <div class="strat-stat"><span class="strat-stat-val">${fmt.int(pendingCount)}</span><span class="strat-stat-lbl">Pendientes</span></div>
-            <div class="strat-stat"><span class="strat-stat-val">${fmt.int((master.in_production || []).length)}</span><span class="strat-stat-lbl">En producción</span></div>
-            <div class="strat-stat"><span class="strat-stat-val">${rate}</span><span class="strat-stat-lbl">Tasa de aprobación</span></div>
-            <div class="strat-stat"><span class="strat-stat-val">${fmt.int(ls.total_proposals)}</span><span class="strat-stat-lbl">Propuestas totales</span></div>
+            <div class="strat-stat"><span class="strat-stat-val">${fmt.int(pendingCount)}</span><span class="strat-stat-lbl">${__('Pendientes')}</span></div>
+            <div class="strat-stat"><span class="strat-stat-val">${fmt.int((master.in_production || []).length)}</span><span class="strat-stat-lbl">${__('En producción')}</span></div>
+            <div class="strat-stat"><span class="strat-stat-val">${rate}</span><span class="strat-stat-lbl">${__('Tasa de aprobación')}</span></div>
+            <div class="strat-stat"><span class="strat-stat-val">${fmt.int(ls.total_proposals)}</span><span class="strat-stat-lbl">${__('Propuestas totales')}</span></div>
           </div>
         </section>`;
     },
@@ -129,10 +129,10 @@
     _buildStratPending(list) {
       const status = this._stratFilters?.status || 'proposed';
       const meta = {
-        proposed: { title: 'Recomendaciones pendientes', hint: 'Cada una cruza tu marca + tu competencia · aprueba, ajusta o descarta', empty: 'Sin recomendaciones pendientes. Vera propondrá nuevas en su próximo ciclo.' },
-        approved: { title: 'Recomendaciones aprobadas',  hint: 'Las que aprobaste — en camino a producción', empty: 'Aún no has aprobado recomendaciones.' },
-        rejected: { title: 'Recomendaciones descartadas', hint: 'Las que decidiste no ejecutar', empty: 'No has descartado recomendaciones.' },
-      }[status] || { title: 'Recomendaciones', hint: '', empty: 'Sin recomendaciones.' };
+        proposed: { title: __('Recomendaciones pendientes'), hint: __('Cada una cruza tu marca + tu competencia · aprueba, ajusta o descarta'), empty: __('Sin recomendaciones pendientes. Vera propondrá nuevas en su próximo ciclo.') },
+        approved: { title: __('Recomendaciones aprobadas'),  hint: __('Las que aprobaste — en camino a producción'), empty: __('Aún no has aprobado recomendaciones.') },
+        rejected: { title: __('Recomendaciones descartadas'), hint: __('Las que decidiste no ejecutar'), empty: __('No has descartado recomendaciones.') },
+      }[status] || { title: __('Recomendaciones'), hint: '', empty: __('Sin recomendaciones.') };
       if (!list.length) {
         return `
           <section class="mb-section">
@@ -166,9 +166,9 @@
           ${r.copy_seed ? `<div class="strat-card-copy"><i class="fas fa-quote-left"></i> ${this._esc(r.copy_seed)}</div>` : ''}
           ${status === 'proposed' ? `
           <div class="strat-card-actions">
-            <button type="button" class="strat-btn strat-btn--approve" data-rec-action="approve">Aprobar</button>
-            <button type="button" class="strat-btn" data-rec-action="iterate">Ajustar</button>
-            <button type="button" class="strat-btn strat-btn--reject" data-rec-action="reject">Descartar</button>
+            <button type="button" class="strat-btn strat-btn--approve" data-rec-action="approve">${__('Aprobar')}</button>
+            <button type="button" class="strat-btn" data-rec-action="iterate">${__('Ajustar')}</button>
+            <button type="button" class="strat-btn strat-btn--reject" data-rec-action="reject">${__('Descartar')}</button>
           </div>` : ''}
         </article>`;
     },
@@ -184,8 +184,8 @@
       return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">En producción</span>
-            <span class="mb-section-hint">Lo que Vera ya está ejecutando</span>
+            <span class="mb-section-title">${__('En producción')}</span>
+            <span class="mb-section-hint">${__('Lo que Vera ya está ejecutando')}</span>
           </div>
           <div class="strat-prod-list">${rows}</div>
         </section>`;

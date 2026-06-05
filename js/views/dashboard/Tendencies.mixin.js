@@ -50,7 +50,7 @@
         this._mountTendDatePicker(body);
       } catch (e) {
         console.error('[Tendencies] load failed:', e);
-        body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">No se pudo cargar Tendencias. ${this._esc(e?.message || '')}</div>`;
+        body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">${__('No se pudo cargar Tendencias.')} ${this._esc(e?.message || '')}</div>`;
       }
     },
 
@@ -110,7 +110,7 @@
       // Tendencia = filtro por fuente de la señal (client-side sobre lo cargado).
       const sources = Array.isArray(data?.signals?.data?.by_source) ? data.signals.data.by_source : [];
       const srcOpts = [
-        `<option value=""${!f.source ? ' selected' : ''}>Todas las fuentes</option>`,
+        `<option value=""${!f.source ? ' selected' : ''}>${__('Todas las fuentes')}</option>`,
         ...sources.map(s => `<option value="${this._esc(s.source)}"${f.source === s.source ? ' selected' : ''}>${this._esc(this._prettyPlatform(s.source))}</option>`),
       ].join('');
 
@@ -118,7 +118,7 @@
         <header class="living-history-filters mb-filters-bar" id="tendFilters">
           ${this._tendFechaControl()}
           <div class="living-filter">
-            <label class="living-filter-label" for="tendFilterSource">Tendencia</label>
+            <label class="living-filter-label" for="tendFilterSource">${__('Tendencia')}</label>
             <select class="living-filter-select" id="tendFilterSource" data-tend-filter="source">${srcOpts}</select>
           </div>
           ${this._reportDropdown()}
@@ -127,8 +127,8 @@
 
     _tendFechaControl() {
       if (typeof DateRangePicker !== 'function') {
-        return `<div class="living-filter"><label class="living-filter-label">Fecha</label>
-          <select class="living-filter-select" disabled><option>Últimos 90 días</option></select></div>`;
+        return `<div class="living-filter"><label class="living-filter-label">${__('Fecha')}</label>
+          <select class="living-filter-select" disabled><option>${__('Últimos 90 días')}</option></select></div>`;
       }
       return this._ensureTendDatePicker().html();
     },
@@ -137,7 +137,7 @@
         const f = this._tendFilters || {};
         this._tendDatePicker = new DateRangePicker({
           from: f.dateFrom || null, to: f.dateTo || null,
-          allLabel: 'Últimos 90 días',
+          allLabel: __('Últimos 90 días'),
           onChange: (r) => {
             // La RPC solo soporta "ultimos N dias": el rango se traduce a window_d
             // contando desde la fecha de inicio hasta hoy.
@@ -165,10 +165,10 @@
       const sent = (pulse && pulse.sentiment_breakdown) ? pulse.sentiment_breakdown : null;
       const kpiCards = `
         <div class="comp-kpis">
-          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.topicsTracked)}</span><span class="comp-kpi-lbl">Señales rastreadas</span></div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.velocityLast24h)}</span><span class="comp-kpi-lbl">Velocidad 24h</span></div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.lexiconApproved)}</span><span class="comp-kpi-lbl">Palabras aprendidas</span></div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.emergingBrandsPending)}</span><span class="comp-kpi-lbl">Marcas emergentes</span></div>
+          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.topicsTracked)}</span><span class="comp-kpi-lbl">${__('Señales rastreadas')}</span></div>
+          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.velocityLast24h)}</span><span class="comp-kpi-lbl">${__('Velocidad 24h')}</span></div>
+          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.lexiconApproved)}</span><span class="comp-kpi-lbl">${__('Palabras aprendidas')}</span></div>
+          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.emergingBrandsPending)}</span><span class="comp-kpi-lbl">${__('Marcas emergentes')}</span></div>
         </div>`;
       let climate = '';
       if (sent && Number(sent.total) > 0) {
@@ -178,20 +178,20 @@
         const neu = Math.max(0, 100 - pos - neg);
         climate = `
           <div class="tend-climate">
-            <span class="tend-climate-label">Clima del nicho</span>
+            <span class="tend-climate-label">${__('Clima del nicho')}</span>
             <div class="tend-climate-bar">
-              <span class="tend-climate-seg" style="width:${pos}%;background:var(--dash-pos,#6e9f81);" title="Positivo ${pos}%"></span>
-              <span class="tend-climate-seg" style="width:${neu}%;background:rgba(255,255,255,0.14);" title="Neutro ${neu}%"></span>
-              <span class="tend-climate-seg" style="width:${neg}%;background:var(--dash-neg,#b3796f);" title="Negativo ${neg}%"></span>
+              <span class="tend-climate-seg" style="width:${pos}%;background:var(--dash-pos,#6e9f81);" title="${__('Positivo {n}%', { n: pos })}"></span>
+              <span class="tend-climate-seg" style="width:${neu}%;background:rgba(255,255,255,0.14);" title="${__('Neutro {n}%', { n: neu })}"></span>
+              <span class="tend-climate-seg" style="width:${neg}%;background:var(--dash-neg,#b3796f);" title="${__('Negativo {n}%', { n: neg })}"></span>
             </div>
-            <span class="tend-climate-legend"><b style="color:var(--dash-pos,#6e9f81);">${pos}%</b> positivo · ${neu}% neutro · <b style="color:var(--dash-neg,#b3796f);">${neg}%</b> negativo · ${fmt.int(sent.total)} señales</span>
+            <span class="tend-climate-legend">${__('{pos}% positivo · {neu}% neutro · {neg}% negativo · {total} señales', { pos: `<b style="color:var(--dash-pos,#6e9f81);">${pos}%</b>`, neu, neg: `<b style="color:var(--dash-neg,#b3796f);">${neg}%</b>`, total: fmt.int(sent.total) })}</span>
           </div>`;
       }
       return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">Pulso del nicho</span>
-            <span class="mb-section-hint">Lo que se mueve afuera — la mirada externa de Vera</span>
+            <span class="mb-section-title">${__('Pulso del nicho')}</span>
+            <span class="mb-section-hint">${__('Lo que se mueve afuera — la mirada externa de Vera')}</span>
           </div>
           ${kpiCards}
           ${climate}
@@ -209,14 +209,14 @@
       const bySource = Array.isArray(signals?.by_source) ? signals.by_source : [];
       const head = `
         <div class="mb-section-head">
-          <span class="mb-section-title">Señales emergentes del nicho</span>
-          <span class="mb-section-hint">Temas que aceleran afuera — ordenados por velocidad, filtrados por calidad</span>
+          <span class="mb-section-title">${__('Señales emergentes del nicho')}</span>
+          <span class="mb-section-hint">${__('Temas que aceleran afuera — ordenados por velocidad, filtrados por calidad')}</span>
         </div>`;
       if (!list.length) {
         return `
           <section class="mb-section">
             ${head}
-            <div class="mb-causal-empty">Sin señales de calidad en esta ventana. El motor de tendencias fue recalibrado; las próximas corridas (cuando se reactiven los scrapers) poblarán esto con señales reales del nicho.</div>
+            <div class="mb-causal-empty">${__('Sin señales de calidad en esta ventana. El motor de tendencias fue recalibrado; las próximas corridas (cuando se reactiven los scrapers) poblarán esto con señales reales del nicho.')}</div>
           </section>`;
       }
       const chips = list.map((s) => {
@@ -251,14 +251,14 @@
       const totals = gaps?.totals || {};
       const head = `
         <div class="mb-section-head">
-          <span class="mb-section-title">Océanos azules</span>
-          <span class="mb-section-hint">El mercado lo pide y tu competencia no lo cubre — terreno libre para capturar</span>
+          <span class="mb-section-title">${__('Océanos azules')}</span>
+          <span class="mb-section-hint">${__('El mercado lo pide y tu competencia no lo cubre — terreno libre para capturar')}</span>
         </div>`;
       if (!list.length) {
         return `
           <section class="mb-section">
             ${head}
-            <div class="mb-causal-empty">Aún no hay señal de demanda suficiente para detectar océanos azules. Se enciende cuando los sensores de audiencia (Google Trends, noticias del nicho) vuelvan a correr.</div>
+            <div class="mb-causal-empty">${__('Aún no hay señal de demanda suficiente para detectar océanos azules. Se enciende cuando los sensores de audiencia (Google Trends, noticias del nicho) vuelvan a correr.')}</div>
           </section>`;
       }
       const cards = list.map((g) => {
@@ -268,25 +268,25 @@
         const news = Array.isArray(g.sample_news) ? g.sample_news.filter(Boolean) : [];
         const samples = [...aud.slice(0, 2).map(a => a?.sample), ...news.slice(0, 1).map(n => n?.sample)].filter(Boolean);
         const breakdown = [
-          Number(mb.trend_topics) > 0 ? `${fmt.int(mb.trend_topics)} en redes` : '',
-          Number(mb.audience_demand) > 0 ? `${fmt.int(mb.audience_demand)} búsquedas` : '',
-          Number(mb.targeted_news) > 0 ? `${fmt.int(mb.targeted_news)} noticias` : '',
+          Number(mb.trend_topics) > 0 ? __('{n} en redes', { n: fmt.int(mb.trend_topics) }) : '',
+          Number(mb.audience_demand) > 0 ? __('{n} búsquedas', { n: fmt.int(mb.audience_demand) }) : '',
+          Number(mb.targeted_news) > 0 ? __('{n} noticias', { n: fmt.int(mb.targeted_news) }) : '',
         ].filter(Boolean).join(' · ');
         return `
           <article class="tend-gap-card${blue ? ' tend-gap-card--blue' : ''}">
             <div class="tend-gap-head">
               <span class="tend-gap-topic">${this._esc(g.topic_label || g.topic)}</span>
-              ${blue ? `<span class="tend-gap-badge"><i class="fas fa-water"></i> Océano azul</span>` : `<span class="tend-gap-cover">${fmt.int(g.competitor_post_count)} posts de rivales</span>`}
+              ${blue ? `<span class="tend-gap-badge"><i class="fas fa-water"></i> ${__('Océano azul')}</span>` : `<span class="tend-gap-cover">${__('{n} posts de rivales', { n: fmt.int(g.competitor_post_count) })}</span>`}
             </div>
             ${g.topic_description ? `<p class="tend-gap-desc">${this._esc(g.topic_description)}</p>` : ''}
             <div class="tend-gap-stats">
-              <span class="tend-gap-stat"><b>${fmt.int(g.market_signal_count)}</b> señales de mercado${breakdown ? ` <span class="tend-gap-bd">(${breakdown})</span>` : ''}</span>
+              <span class="tend-gap-stat">${__('{n} señales de mercado', { n: `<b>${fmt.int(g.market_signal_count)}</b>` })}${breakdown ? ` <span class="tend-gap-bd">(${breakdown})</span>` : ''}</span>
             </div>
             ${samples.length ? `<ul class="tend-gap-samples">${samples.map(s => `<li>${this._esc(s)}</li>`).join('')}</ul>` : ''}
           </article>`;
       }).join('');
       const note = Number(totals.topics_with_zero_competitor_coverage) > 0
-        ? `<div class="tend-gaps-note">${fmt.int(totals.topics_with_zero_competitor_coverage)} de ${fmt.int(totals.topics_with_market_signal)} temas con demanda no tienen NINGÚN rival cubriéndolos.</div>`
+        ? `<div class="tend-gaps-note">${__('{a} de {b} temas con demanda no tienen NINGÚN rival cubriéndolos.', { a: fmt.int(totals.topics_with_zero_competitor_coverage), b: fmt.int(totals.topics_with_market_signal) })}</div>`
         : '';
       return `
         <section class="mb-section">
@@ -303,24 +303,24 @@
       const pending = Array.isArray(lex?.pending) ? lex.pending : [];
       const head = `
         <div class="mb-section-head">
-          <span class="mb-section-title">Léxico emergente del nicho</span>
-          <span class="mb-section-hint">Las palabras que Vera aprendió escuchando tu nicho — el idioma con el que debes hablarle</span>
+          <span class="mb-section-title">${__('Léxico emergente del nicho')}</span>
+          <span class="mb-section-hint">${__('Las palabras que Vera aprendió escuchando tu nicho — el idioma con el que debes hablarle')}</span>
         </div>`;
       if (!approved.length && !byDim.length) {
         return `
           <section class="mb-section">
             ${head}
-            <div class="mb-causal-empty">Vera aún no ha consolidado vocabulario del nicho.</div>
+            <div class="mb-causal-empty">${__('Vera aún no ha consolidado vocabulario del nicho.')}</div>
           </section>`;
       }
       const dims = byDim.map(d => `
         <div class="tend-dim">
           <span class="tend-dim-name">${this._esc(this._tendDimLabel(d.dimension))}</span>
-          <span class="tend-dim-counts"><b>${fmt.int(d.approved)}</b> aprendidas${Number(d.proposed) > 0 ? ` · ${fmt.int(d.proposed)} en revisión` : ''}</span>
+          <span class="tend-dim-counts">${__('{n} aprendidas', { n: `<b>${fmt.int(d.approved)}</b>` })}${Number(d.proposed) > 0 ? __(' · {n} en revisión', { n: fmt.int(d.proposed) }) : ''}</span>
         </div>`).join('');
       const words = approved.map(w => `<span class="tend-word">${this._esc(w.word)}<span class="tend-word-dim">${this._esc(this._tendDimLabel(w.dimension))}</span></span>`).join('');
       const pendNote = pending.length
-        ? `<div class="tend-lex-note"><i class="fas fa-hourglass-half"></i> ${fmt.int(pending.length)} palabra(s) nuevas esperando tu revisión en el Léxico.</div>`
+        ? `<div class="tend-lex-note"><i class="fas fa-hourglass-half"></i> ${__('{n} palabra(s) nuevas esperando tu revisión en el Léxico.', { n: fmt.int(pending.length) })}</div>`
         : '';
       return `
         <section class="mb-section">
@@ -333,9 +333,9 @@
 
     _tendDimLabel(dim) {
       return {
-        topic: 'Tema', tone: 'Tono', format: 'Formato', mood: 'Ánimo',
-        emotion: 'Emoción', style: 'Estilo', audience: 'Audiencia',
-        cluster_candidate: 'Clúster nuevo',
+        topic: __('Tema'), tone: __('Tono'), format: __('Formato'), mood: __('Ánimo'),
+        emotion: __('Emoción'), style: __('Estilo'), audience: __('Audiencia'),
+        cluster_candidate: __('Clúster nuevo'),
       }[dim] || (dim ? String(dim).replace(/_/g, ' ') : '—');
     },
 
@@ -344,14 +344,14 @@
       const pending = Array.isArray(brands?.pending) ? brands.pending : [];
       const head = `
         <div class="mb-section-head">
-          <span class="mb-section-title">Marcas emergentes</span>
-          <span class="mb-section-hint">Nuevos jugadores que Vera detectó entrando a tu nicho — vigílalos antes de que crezcan</span>
+          <span class="mb-section-title">${__('Marcas emergentes')}</span>
+          <span class="mb-section-hint">${__('Nuevos jugadores que Vera detectó entrando a tu nicho — vigílalos antes de que crezcan')}</span>
         </div>`;
       if (!pending.length) {
         return `
           <section class="mb-section">
             ${head}
-            <div class="mb-causal-empty">Sin marcas emergentes pendientes. Vera avisará cuando un jugador nuevo aparezca repetidamente en tu nicho.</div>
+            <div class="mb-causal-empty">${__('Sin marcas emergentes pendientes. Vera avisará cuando un jugador nuevo aparezca repetidamente en tu nicho.')}</div>
           </section>`;
       }
       const cards = pending.slice(0, 12).map((b) => {
@@ -360,12 +360,12 @@
           <article class="tend-brand-card">
             <div class="tend-brand-head">
               <span class="tend-brand-name">${this._esc(b.candidate_name)}</span>
-              <span class="tend-brand-count">${fmt.int(b.detection_count)}× detectada</span>
+              <span class="tend-brand-count">${__('{n}× detectada', { n: fmt.int(b.detection_count) })}</span>
             </div>
             <div class="tend-brand-meta">
               ${b.niche ? `<span class="tend-brand-niche">${this._esc(b.niche)}</span>` : ''}
               ${geos.length ? `<span class="tend-brand-geo"><i class="fas fa-location-dot"></i> ${this._esc(geos.slice(0, 3).join(', '))}</span>` : ''}
-              ${Number(b.best_rank_position) > 0 ? `<span class="tend-brand-rank">mejor posición #${fmt.int(b.best_rank_position)}</span>` : ''}
+              ${Number(b.best_rank_position) > 0 ? `<span class="tend-brand-rank">${__('mejor posición #{n}', { n: fmt.int(b.best_rank_position) })}</span>` : ''}
             </div>
           </article>`;
       }).join('');
@@ -382,19 +382,19 @@
       const history  = Array.isArray(world?.today_history) ? world.today_history : [];
       const head = `
         <div class="mb-section-head">
-          <span class="mb-section-title">Sincronización con el mundo</span>
-          <span class="mb-section-hint">Festivos, efemérides y clima — para que tu contenido llegue cuando el mundo está mirando</span>
+          <span class="mb-section-title">${__('Sincronización con el mundo')}</span>
+          <span class="mb-section-hint">${__('Festivos, efemérides y clima — para que tu contenido llegue cuando el mundo está mirando')}</span>
         </div>`;
       if (!holidays.length && !history.length) {
         return `
           <section class="mb-section">
             ${head}
-            <div class="mb-causal-empty">Los sensores del mundo real (festivos, efemérides, clima) están en pausa. Se encenderán con la próxima activación de scrapers y te avisarán de fechas clave con anticipación.</div>
+            <div class="mb-causal-empty">${__('Los sensores del mundo real (festivos, efemérides, clima) están en pausa. Se encenderán con la próxima activación de scrapers y te avisarán de fechas clave con anticipación.')}</div>
           </section>`;
       }
       const holRows = holidays.slice(0, 8).map((h) => `
         <div class="tend-world-row">
-          <span class="tend-world-when">${Number(h.days_until) >= 0 ? `en ${fmt.int(h.days_until)} día(s)` : '—'}</span>
+          <span class="tend-world-when">${Number(h.days_until) >= 0 ? __('en {n} día(s)', { n: fmt.int(h.days_until) }) : '—'}</span>
           <div class="tend-world-body">
             <span class="tend-world-name">${this._esc(h.event_name)}</span>
             ${h.geo ? `<span class="tend-world-geo">${this._esc(h.geo)}</span>` : ''}

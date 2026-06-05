@@ -43,7 +43,7 @@
         this._mountCompDatePicker(body);
       } catch (e) {
         console.error('[Competence] load failed:', e);
-        body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">No se pudo cargar Competencia. ${this._esc(e?.message || '')}</div>`;
+        body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">${__('No se pudo cargar Competencia.')} ${this._esc(e?.message || '')}</div>`;
       }
     },
 
@@ -104,7 +104,7 @@
       // completa de rivales (capturada sin filtro). Plataforma requiere backend.
       const actors = Array.isArray(this._compActors) ? this._compActors : [];
       const perfilOpts = [
-        `<option value=""${!f.entityId ? ' selected' : ''}>Todos los perfiles</option>`,
+        `<option value=""${!f.entityId ? ' selected' : ''}>${__('Todos los perfiles')}</option>`,
         ...actors.map(a => `<option value="${this._esc(a.entity_id)}"${f.entityId === a.entity_id ? ' selected' : ''}>${this._esc(a.entity_name)}</option>`),
       ].join('');
 
@@ -119,7 +119,7 @@
           ${this._compFechaControl()}
           ${this._buildFilterMenu({ label: 'Plataforma', value: curPlat, key: 'platform', options: platOptions })}
           <div class="living-filter">
-            <label class="living-filter-label" for="compFilterPerfil">Perfil</label>
+            <label class="living-filter-label" for="compFilterPerfil">${__('Perfil')}</label>
             <select class="living-filter-select" id="compFilterPerfil" data-comp-filter="entityId">${perfilOpts}</select>
           </div>
           ${this._reportDropdown()}
@@ -128,8 +128,8 @@
 
     _compFechaControl() {
       if (typeof DateRangePicker !== 'function') {
-        return `<div class="living-filter"><label class="living-filter-label">Fecha</label>
-          <select class="living-filter-select" disabled><option>Todo el periodo</option></select></div>`;
+        return `<div class="living-filter"><label class="living-filter-label">${__('Fecha')}</label>
+          <select class="living-filter-select" disabled><option>${__('Todo el periodo')}</option></select></div>`;
       }
       return this._ensureCompDatePicker().html();
     },
@@ -168,15 +168,15 @@
       const list = Array.isArray(top) ? top : [];
       const kpis = k || {};
       const prev = kPrev || {};
-      const sentMap = { positive: 'Positivo', negative: 'Negativo', neutral: 'Neutro' };
+      const sentMap = { positive: __('Positivo'), negative: __('Negativo'), neutral: __('Neutro') };
       const compCur = kpis.active_competitors ?? kpis.total_competitors;
       const compPrev = prev.active_competitors ?? prev.total_competitors;
       const kpiCards = `
         <div class="comp-kpis">
-          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(compCur)}</span><span class="comp-kpi-lbl">Rivales activos</span>${this._kpiDelta(compCur, compPrev)}</div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${this._compactNum(kpis.total_engagement)}</span><span class="comp-kpi-lbl">Engagement del nicho</span>${this._kpiDelta(kpis.total_engagement, prev.total_engagement)}</div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${this._esc(this._prettyPlatform(kpis.dominant_platform))}</span><span class="comp-kpi-lbl">Plataforma dominante</span></div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${this._esc(sentMap[kpis.dominant_sentiment] || kpis.dominant_sentiment || '—')}</span><span class="comp-kpi-lbl">Sentimiento dominante</span></div>
+          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(compCur)}</span><span class="comp-kpi-lbl">${__('Rivales activos')}</span>${this._kpiDelta(compCur, compPrev)}</div>
+          <div class="comp-kpi"><span class="comp-kpi-val">${this._compactNum(kpis.total_engagement)}</span><span class="comp-kpi-lbl">${__('Engagement del nicho')}</span>${this._kpiDelta(kpis.total_engagement, prev.total_engagement)}</div>
+          <div class="comp-kpi"><span class="comp-kpi-val">${this._esc(this._prettyPlatform(kpis.dominant_platform))}</span><span class="comp-kpi-lbl">${__('Plataforma dominante')}</span></div>
+          <div class="comp-kpi"><span class="comp-kpi-val">${this._esc(sentMap[kpis.dominant_sentiment] || kpis.dominant_sentiment || '—')}</span><span class="comp-kpi-lbl">${__('Sentimiento dominante')}</span></div>
         </div>`;
 
       const rows = list.map((r, i) => {
@@ -197,11 +197,11 @@
       return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">El campo de batalla</span>
-            <span class="mb-section-hint">Quién domina la conversación de tu nicho</span>
+            <span class="mb-section-title">${__('El campo de batalla')}</span>
+            <span class="mb-section-hint">${__('Quién domina la conversación de tu nicho')}</span>
           </div>
           ${kpiCards}
-          ${list.length ? `<div class="comp-rank">${rows}</div>` : `<div class="mb-causal-empty">Sin rivales con actividad en la ventana.</div>`}
+          ${list.length ? `<div class="comp-rank">${rows}</div>` : `<div class="mb-causal-empty">${__('Sin rivales con actividad en la ventana.')}</div>`}
         </section>`;
     },
 
@@ -222,14 +222,14 @@
       if (bP === 0 && cP === 0) return '';
 
       // Headline = engagement por post (metrica justa, normalizada por volumen).
-      let headline = 'Aun no hay suficiente actividad para comparar engagement por post.';
+      let headline = __('Aun no hay suficiente actividad para comparar engagement por post.');
       let headCls = 'comp-bench-head--neutral';
       if (bAvg > 0 && cAvg > 0) {
         if (bAvg >= cAvg) {
-          headline = `Tu engagement por post es <b>${(bAvg / cAvg).toFixed(1)}x</b> el promedio de tu competencia.`;
+          headline = __('Tu engagement por post es {x} el promedio de tu competencia.', { x: `<b>${(bAvg / cAvg).toFixed(1)}x</b>` });
           headCls = 'comp-bench-head--win';
         } else {
-          headline = `Tu engagement por post esta <b>${Math.round((1 - bAvg / cAvg) * 100)}%</b> por debajo del promedio de tu competencia.`;
+          headline = __('Tu engagement por post esta {x} por debajo del promedio de tu competencia.', { x: `<b>${Math.round((1 - bAvg / cAvg) * 100)}%</b>` });
           headCls = 'comp-bench-head--lose';
         }
       }
@@ -271,16 +271,16 @@
       return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">Mi Marca vs Competencia</span>
-            <span class="mb-section-hint">Como te mides contra el promedio de tu nicho</span>
+            <span class="mb-section-title">${__('Mi Marca vs Competencia')}</span>
+            <span class="mb-section-hint">${__('Como te mides contra el promedio de tu nicho')}</span>
           </div>
           <div class="comp-bench-head ${headCls}">${headline}</div>
           <div class="comp-bench-grid">
             <div class="comp-bench-h2h">
               <div class="comp-bench-row comp-bench-row--head">
                 <span class="comp-bench-metric"></span>
-                <span class="comp-bench-col comp-bench-col--brand">Mi Marca</span>
-                <span class="comp-bench-col comp-bench-col--comp">Competencia</span>
+                <span class="comp-bench-col comp-bench-col--brand">${__('Mi Marca')}</span>
+                <span class="comp-bench-col comp-bench-col--comp">${__('Competencia')}</span>
               </div>
               ${rows}
             </div>
@@ -290,10 +290,10 @@
                 <span class="comp-bench-sov-seg comp-bench-sov-seg--comp" style="width:${compShare.toFixed(1)}%;"></span>
               </div>
               <div class="comp-bench-sov-legend">
-                <span><i class="comp-bench-dot comp-bench-dot--brand"></i> Mi Marca ${Math.round(brandShare)}%</span>
-                <span><i class="comp-bench-dot comp-bench-dot--comp"></i> Competencia ${Math.round(compShare)}%</span>
+                <span><i class="comp-bench-dot comp-bench-dot--brand"></i> ${__('Mi Marca {n}%', { n: Math.round(brandShare) })}</span>
+                <span><i class="comp-bench-dot comp-bench-dot--comp"></i> ${__('Competencia {n}%', { n: Math.round(compShare) })}</span>
               </div>
-              <span class="comp-bench-sov-cap">Share of voice por engagement</span>
+              <span class="comp-bench-sov-cap">${__('Share of voice por engagement')}</span>
               ${sovList.length ? `<div class="comp-bench-sov-list">${sovRows}</div>` : ''}
             </div>
           </div>
@@ -322,8 +322,8 @@
       return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">Qué les funciona</span>
-            <span class="mb-section-hint">La fórmula ganadora de tu nicho — qué replicar o contraatacar</span>
+            <span class="mb-section-title">${__('Qué les funciona')}</span>
+            <span class="mb-section-hint">${__('La fórmula ganadora de tu nicho — qué replicar o contraatacar')}</span>
           </div>
           <div class="comp-combos">${rows}</div>
         </section>`;
@@ -336,11 +336,11 @@
       return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">La voz de su audiencia</span>
-            <span class="mb-section-hint">De qué se quejan sus seguidores — tu munición de contenido</span>
+            <span class="mb-section-title">${__('La voz de su audiencia')}</span>
+            <span class="mb-section-hint">${__('De qué se quejan sus seguidores — tu munición de contenido')}</span>
           </div>
           ${list.length ? `<div class="comp-voice-grid">${list.map(v => this._buildVoiceCard(v)).join('')}</div>`
-            : `<div class="mb-causal-empty">Aún no hay comentarios analizados de tus rivales.</div>`}
+            : `<div class="mb-causal-empty">${__('Aún no hay comentarios analizados de tus rivales.')}</div>`}
         </section>`;
     },
 
@@ -382,19 +382,19 @@
               ${r.description ? `<span class="comp-risk-desc">${this._esc(r.description)}</span>` : ''}
             </div>
             <div class="comp-risk-stats">
-              ${neg > 0 ? `<span class="comp-risk-chip comp-risk-chip--neg">${neg}% negativo</span>` : ''}
-              ${Number(r.high_risk_posts) > 0 ? `<span class="comp-risk-chip">${fmt.int(r.high_risk_posts)} posts de riesgo</span>` : ''}
-              ${Number(r.flags_count) > 0 ? `<span class="comp-risk-chip">${fmt.int(r.flags_count)} flags</span>` : ''}
+              ${neg > 0 ? `<span class="comp-risk-chip comp-risk-chip--neg">${__('{n}% negativo', { n: neg })}</span>` : ''}
+              ${Number(r.high_risk_posts) > 0 ? `<span class="comp-risk-chip">${__('{n} posts de riesgo', { n: fmt.int(r.high_risk_posts) })}</span>` : ''}
+              ${Number(r.flags_count) > 0 ? `<span class="comp-risk-chip">${__('{n} flags', { n: fmt.int(r.flags_count) })}</span>` : ''}
             </div>
           </div>`;
       }).join('');
       return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">Vulnerabilidades del rival</span>
-            <span class="mb-section-hint">Rival con sentimiento negativo = momento de capturar su audiencia</span>
+            <span class="mb-section-title">${__('Vulnerabilidades del rival')}</span>
+            <span class="mb-section-hint">${__('Rival con sentimiento negativo = momento de capturar su audiencia')}</span>
           </div>
-          ${list.length ? `<div class="comp-risk-list">${rows}</div>` : `<div class="mb-causal-empty">Ningún rival muestra vulnerabilidad clara ahora.</div>`}
+          ${list.length ? `<div class="comp-risk-list">${rows}</div>` : `<div class="mb-causal-empty">${__('Ningún rival muestra vulnerabilidad clara ahora.')}</div>`}
         </section>`;
     },
 
@@ -455,7 +455,7 @@
           network: r.network, content: r.content_preview, captured_at: r.captured_at,
           engagement_total: r.engagement_total, metrics: r.metrics, sentiment_text: r.sentiment_text,
         }));
-        if (subEl) subEl.textContent = `${posts.length} ${posts.length === 1 ? 'publicacion' : 'publicaciones'}`;
+        if (subEl) subEl.textContent = __('{n} {pub}', { n: posts.length, pub: posts.length === 1 ? __('publicacion') : __('publicaciones') });
         this._renderDetailPosts(bodyEl, posts);
       } catch (e) {
         console.error('[comp detail] load failed:', e?.message || e);
