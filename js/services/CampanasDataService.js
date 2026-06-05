@@ -205,7 +205,7 @@ class CampanasDataService {
       // Widgets nuevos: temas (mirror de tonos), top posts, comportamiento de
       // publico (personas) y analisis de comentarios.
       this.sb.rpc('dashboard_estrategia_topics',          { ...featuredArgs, p_limit: 5 }),
-      this.sb.rpc('dashboard_brand_top_highlighted_posts', { ...featuredArgs, p_limit: 3 }),
+      this.sb.rpc('dashboard_brand_top_highlighted_posts', { ...featuredArgs, p_limit: 5 }),
       this.sb.rpc('dashboard_mimarca_audience_behavior',  { p_org_id: this.orgId, p_brand_container_ids: bcids }),
       this.sb.rpc('dashboard_mimarca_comments', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,

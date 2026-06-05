@@ -64,6 +64,7 @@
         this._bindMyBrandsHandlers(body);
         this._renderLongitudinalCharts(data);
         this._renderPillarsBubble(data);
+        this._renderToneTopicDonuts(data);
       } catch (e) {
         console.error('[MyBrands] loadAll failed:', e);
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
@@ -121,6 +122,7 @@
         this._bindMyBrandsHandlers(body);
         this._renderLongitudinalCharts(data);
         this._renderPillarsBubble(data);
+        this._renderToneTopicDonuts(data);
       } catch (e) {
         if (onMyBrands && body) body.innerHTML = this._buildMyBrandsErrorHtml(e);
       }
@@ -350,31 +352,78 @@
     },
     _capWords(s) { const t = String(s || '').replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); },
 
-    /* ── Top 3 mejores posts de tu marca ── */
+    /* ── Top posts de tu marca: tabla (perfil/contenido/metricas/analisis/link) ── */
+    _sentLabel(s) {
+      const v = String(s || '').toUpperCase();
+      return v === 'POS' ? 'Positivo' : v === 'NEG' ? 'Critico' : v === 'NEU' ? 'Neutro' : 'Sin datos';
+    },
+    _fmtPostDate(ts) {
+      if (!ts) return '';
+      try {
+        const d = new Date(ts);
+        return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }) +
+          ' ' + d.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' });
+      } catch (_) { return ''; }
+    },
+    _postUrl(p) {
+      const h = String(p.profile_handle || '').replace(/^@/, '');
+      const n = String(p.network || '').toLowerCase();
+      if (!h) return '';
+      if (n.includes('insta')) return `https://www.instagram.com/${h}/`;
+      if (n.includes('face'))  return `https://www.facebook.com/${h}`;
+      if (n.includes('tik'))   return `https://www.tiktok.com/@${h}`;
+      if (n === 'x' || n.includes('twit')) return `https://x.com/${h}`;
+      if (n.includes('you'))   return `https://www.youtube.com/@${h}`;
+      return '';
+    },
+    _postMetricsHtml(m) {
+      m = m || {};
+      const n = (v) => Number(v) || 0;
+      const views = n(m.reach) || n(m.impressions) || n(m.video_views);
+      const isVideo = n(m.video_views) > 0;
+      const rows = [
+        { i: 'fa-heart',   v: n(m.likes),    c: '#e06464', show: true },
+        { i: 'fa-comment', v: n(m.comments), c: '#5b9bd5', show: true },
+        { i: 'fa-retweet', v: n(m.shares),   c: '#6bcf7f', show: n(m.shares) > 0 },
+        { i: isVideo ? 'fa-play' : 'fa-eye', v: views, c: '#a78bfa', show: views > 0 },
+      ].filter((r) => r.show);
+      return rows.map((r) => `<span class="mb-tpt-metric"><i class="fas ${r.i}" style="color:${r.c}"></i> ${this._compactNum(r.v)}</span>`).join('');
+    },
     _buildTopPostsSection(rows) {
-      const list = (Array.isArray(rows) ? rows : []).slice(0, 3);
+      const list = (Array.isArray(rows) ? rows : []).slice(0, 5);
       if (!list.length) return '';
-      const items = list.map((p, i) => {
+      const items = list.map((p) => {
         const topics = (Array.isArray(p.topics) ? p.topics : []).slice(0, 2);
+        const sc = this._sentClass(p.sentiment_text);
+        const url = this._postUrl(p);
         return `
-          <div class="mb-top-post">
-            <span class="mb-top-post-rank">${i + 1}</span>
-            <span class="mb-top-post-net"><i class="fab ${this._platformIcon(p.network)}"></i></span>
-            <div class="mb-top-post-body">
-              <div class="mb-top-post-head">
-                <span class="mb-top-post-handle">@${this._esc(String(p.profile_handle || '').replace(/^@/, ''))}</span>
-                <span class="mb-top-post-eng">${this._compactNum(p.engagement_total)} <small>eng</small></span>
+          <div class="mb-tpt-row">
+            <div class="mb-tpt-profile">
+              <span class="mb-tpt-net"><i class="fab ${this._platformIcon(p.network)}"></i></span>
+              <div>
+                <div class="mb-tpt-name">@${this._esc(String(p.profile_handle || '').replace(/^@/, ''))}</div>
+                <div class="mb-tpt-date">${this._esc(this._fmtPostDate(p.captured_at))}</div>
               </div>
-              <p class="mb-top-post-text">${this._esc(p.content_preview || '')}</p>
-              ${topics.length ? `<div class="mb-top-post-tags">${topics.map((t) => `<span class="mb-tag">${this._esc(this._capWords(t))}</span>`).join('')}<span class="mb-cmt-dot mb-cmt-dot--${this._sentClass(p.sentiment_text)}" title="Sentimiento"></span></div>` : ''}
             </div>
+            <div class="mb-tpt-content">${this._esc(p.content_preview || '')}</div>
+            <div class="mb-tpt-metrics">${this._postMetricsHtml(p.metrics)}</div>
+            <div class="mb-tpt-analysis">
+              <span class="mb-tpt-sent mb-tpt-sent--${sc}">${this._sentLabel(p.sentiment_text)}</span>
+              ${topics.map((t) => `<span class="mb-tag">${this._esc(this._capWords(t))}</span>`).join('')}
+            </div>
+            <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="Abrir perfil"><i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}</div>
           </div>`;
       }).join('');
       return `
-        <section class="mb-section">
-          <div class="mb-chart-card">
-            <div class="mb-card-title">Top 3 posts de tu marca</div>
-            <div class="mb-top-posts">${items}</div>
+        <section class="mb-section mb-section--wide">
+          <div class="mb-chart-card mb-tpt-card">
+            <div class="mb-card-title">Top publicaciones destacadas</div>
+            <div class="mb-tpt">
+              <div class="mb-tpt-head">
+                <span>Perfil</span><span>Contenido</span><span>Métricas</span><span>Análisis</span><span></span>
+              </div>
+              ${items}
+            </div>
           </div>
         </section>`;
     },
@@ -388,8 +437,8 @@
       const topics = (Array.isArray(f.topics?.data) ? f.topics.data : []).map((r) => ({
         name: r.topic_name, used: Number(r.usage_count) || 0, eng: Number(r.total_engagement) || 0,
       }));
-      const toneCard = this._buildHierarchyCard('Tonos', tones);
-      const topicCard = this._buildHierarchyCard('Temas', topics);
+      const toneCard = this._buildHierarchyCard('Tonos', tones, 'mbToneDonut');
+      const topicCard = this._buildHierarchyCard('Temas', topics, 'mbTopicDonut');
       if (!toneCard && !topicCard) return '';
       return `
         <section class="mb-section mb-section--wide">
@@ -397,20 +446,24 @@
         </section>`;
     },
 
-    /** Card jerarquia (tonos/temas): mas usado + mas efectivo + lista priorizada. */
-    _buildHierarchyCard(title, items) {
-      const list = (Array.isArray(items) ? items : []).filter((x) => x.name);
+    /** Paleta de segmentos para donas (consistente entre leyenda y chart). */
+    _palette() { return ['#6bcf7f', '#5b9bd5', '#e0a045', '#a78bfa', '#e06464', '#22d3ee', '#f472b6']; },
+
+    /** Card jerarquia (tonos/temas): mas usado + mas efectivo + dona + leyenda. */
+    _buildHierarchyCard(title, items, canvasId) {
+      const list = (Array.isArray(items) ? items : []).filter((x) => x.name && x.used > 0);
       if (!list.length) return '';
       const withAvg = list.map((x) => ({ ...x, avg: x.used > 0 ? x.eng / x.used : 0 }));
       const mostUsed = [...withAvg].sort((a, b) => b.used - a.used)[0];
       const mostEff  = [...withAvg].sort((a, b) => b.avg - a.avg)[0];
-      const maxUsed = Math.max(...withAvg.map((x) => x.used), 1);
-      const ranked = [...withAvg].sort((a, b) => b.used - a.used).slice(0, 5);
-      const rows = ranked.map((x) => `
-        <div class="mb-hier-row${x.name === mostEff.name ? ' mb-hier-row--eff' : ''}">
-          <span class="mb-hier-name">${this._esc(this._capWords(x.name))}</span>
-          <div class="mb-hier-track"><span style="width:${Math.max(4, Math.round(x.used / maxUsed * 100))}%;"></span></div>
-          <span class="mb-hier-val">${x.used} <small>posts</small></span>
+      const ranked = [...withAvg].sort((a, b) => b.used - a.used).slice(0, 6);
+      const total = ranked.reduce((s, x) => s + x.used, 0) || 0;
+      const PAL = this._palette();
+      const legend = ranked.map((x, i) => `
+        <div class="mb-donut-leg">
+          <span class="mb-donut-dot" style="background:${PAL[i % PAL.length]}"></span>
+          <span class="mb-donut-leg-name">${this._esc(this._capWords(x.name))}</span>
+          <span class="mb-donut-leg-val">${x.used}</span>
         </div>`).join('');
       return `
         <div class="mb-long-card">
@@ -427,8 +480,48 @@
               <span class="mb-hier-stat-sub">${this._compactNum(Math.round(mostEff.avg))} eng/post</span>
             </div>
           </div>
-          <div class="mb-hier-list">${rows}</div>
+          <div class="mb-donut-wrap">
+            <div class="mb-donut">
+              <canvas id="${canvasId}"></canvas>
+              <div class="mb-donut-center"><span class="mb-donut-center-val">${total}</span><span class="mb-donut-center-cap">posts</span></div>
+            </div>
+            <div class="mb-donut-legend">${legend}</div>
+          </div>
         </div>`;
+    },
+
+    /** Pinta las donas de Tonos y Temas (Chart.js doughnut). */
+    async _renderToneTopicDonuts(data) {
+      try { await this._ensureChartJs(); } catch (_) { /* noop */ }
+      const Chart = window.Chart; if (!Chart) return;
+      const PAL = this._palette();
+      const f = data?.featured || {};
+      const draw = (id, rows, nameKey, usedKey) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const list = (Array.isArray(rows) ? rows : []).map((r) => ({ name: r[nameKey], used: Number(r[usedKey]) || 0 }))
+          .filter((x) => x.name && x.used > 0).sort((a, b) => b.used - a.used).slice(0, 6);
+        if (!list.length) return;
+        try {
+          this._reg(new Chart(el.getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: list.map((x) => this._capWords(x.name)), datasets: [{
+              data: list.map((x) => x.used),
+              backgroundColor: list.map((_, i) => PAL[i % PAL.length]),
+              borderColor: '#1b1d22', borderWidth: 2, hoverOffset: 4,
+            }] },
+            options: {
+              responsive: true, maintainAspectRatio: false, cutout: '66%',
+              plugins: {
+                legend: { display: false },
+                tooltip: { backgroundColor: '#1b1d22', borderColor: '#34363A', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10, callbacks: { label: (c) => ` ${c.label}: ${c.parsed} posts` } },
+              },
+            },
+          }));
+        } catch (e) { console.warn('[donut]', id, e?.message); }
+      };
+      draw('mbToneDonut', f.tones?.data, 'tone_name', 'posts_count');
+      draw('mbTopicDonut', f.topics?.data, 'topic_name', 'usage_count');
     },
 
     /* ── Patrones del publico: intereses y comportamiento (personas) ── */
