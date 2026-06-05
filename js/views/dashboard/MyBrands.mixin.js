@@ -1532,6 +1532,34 @@
        HERO: Brand Health Gauge (card cuadrada, solo gauge)
        Diagnóstico/análisis se reintroducirá después en otro formato.
        ════════════════════════════════════════════════════════════════ */
+    /* Gauge semicircular de segmentos redondeados (estilo "expense tracker"):
+       arco rojo->ambar->verde, encendido hasta el score; resto en gris tenue. */
+    _buildSegGauge(score) {
+      const N = 22;
+      const sc = Math.max(0, Math.min(100, Number(score) || 0));
+      const lit = Math.round(sc / 100 * N);
+      const cx = 100, cy = 100, r = 82, w = 11, gap = 2.4;
+      const a0 = 180, span = 180, step = span / N;
+      const stops = [[239, 68, 68], [224, 160, 69], [107, 207, 127]];
+      const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+      const colorAt = (t) => {
+        const seg = t <= 0.5 ? 0 : 1;
+        const tt = t <= 0.5 ? t / 0.5 : (t - 0.5) / 0.5;
+        const c0 = stops[seg], c1 = stops[seg + 1];
+        return `rgb(${lerp(c0[0], c1[0], tt)},${lerp(c0[1], c1[1], tt)},${lerp(c0[2], c1[2], tt)})`;
+      };
+      const pt = (ang) => [(cx + r * Math.cos(ang * Math.PI / 180)).toFixed(2), (cy - r * Math.sin(ang * Math.PI / 180)).toFixed(2)];
+      let segs = '';
+      for (let i = 0; i < N; i++) {
+        const [x1, y1] = pt(a0 - i * step - gap / 2);
+        const [x2, y2] = pt(a0 - (i + 1) * step + gap / 2);
+        const on = i < lit;
+        const col = on ? colorAt(N <= 1 ? 0 : i / (N - 1)) : 'rgba(255,255,255,0.08)';
+        segs += `<path d="M${x1} ${y1} A${r} ${r} 0 0 1 ${x2} ${y2}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" fill="none"/>`;
+      }
+      return `<svg class="mb-health-gauge-svg" viewBox="0 0 200 116" role="img" aria-label="Salud ${Math.round(sc)} de 100">${segs}</svg>`;
+    },
+
     _buildHealthGauge(h) {
       if (!h || h.score == null) {
         if (shouldHideEmpty()) return '';
@@ -1543,13 +1571,12 @@
       const band     = h.band || { p25: 50, p50: 65, p75: 80 };
 
       const verdictMeta = {
-        elite:     { color: '#6e9f81', label: 'Élite' },
-        saludable: { color: '#6e9f81', label: 'Saludable' },
-        atencion:  { color: '#9c8e6b', label: 'Atención' },
-        critico:   { color: '#b3796f', label: 'Crítico' },
+        elite:     { color: '#6bcf7f', label: 'Élite' },
+        saludable: { color: '#6bcf7f', label: 'Saludable' },
+        atencion:  { color: '#e0a045', label: 'Atención' },
+        critico:   { color: '#ff5c23', label: 'Crítico' },
       }[verdict] || { color: '#8a8a8e', label: verdict };
 
-      const gaugeSvg = this._buildGaugeSvg(score, verdictMeta.color, band);
       const target = Number(h.target);
       const gap    = Number(h.gap);
       const objetivo = Number.isFinite(target)
@@ -1561,11 +1588,12 @@
       return `
         <section class="mb-health-card mb-health-card--aside">
           <span class="mb-hero-label">Salud de tu marca</span>
-          <div class="mb-health-ring mb-health-ring--${this._esc(verdict)}" style="--score:${Math.max(0, Math.min(100, Math.round(score)))}">
-            <div class="mb-health-ring-center">
-              <span class="mb-health-score">${Math.round(score)}</span>
+          <div class="mb-health-gauge">
+            ${this._buildSegGauge(score)}
+            <div class="mb-health-gauge-center">
+              <span class="mb-health-score" style="color:${verdictMeta.color}">${Math.round(score)}</span>
               <span class="mb-health-max">/100</span>
-              <span class="mb-health-band">${this._esc(verdictMeta.label)}</span>
+              <span class="mb-health-band" style="color:${verdictMeta.color}">${this._esc(verdictMeta.label)}</span>
             </div>
           </div>
           <span class="mb-health-objetivo">${objetivo}</span>
@@ -1594,20 +1622,35 @@
         </div>`;
     },
 
+    /** Icono por componente de salud (match por keyword en key/label). */
+    _healthCompIcon(c) {
+      const s = `${c.key || ''} ${c.label || ''}`.toLowerCase();
+      if (/caden|frecuen|public/.test(s)) return 'fa-calendar-day';
+      if (/coheren|tono|voz/.test(s))     return 'fa-comment-dots';
+      if (/aline|formula|fórmula/.test(s)) return 'fa-bullseye';
+      if (/resonan|social|audien/.test(s)) return 'fa-heart';
+      if (/tendenc|trend/.test(s))        return 'fa-arrow-trend-up';
+      return 'fa-chart-simple';
+    },
+
     _buildHealthComponents(components) {
       const list = Array.isArray(components) ? components : [];
       if (!list.length) return '';
+      const lvlColor = { good: '#6bcf7f', mid: '#e0a045', low: '#ff5c23' };
       return `<div class="mb-hc-comps">${list.map((c) => {
         const sc = Math.max(0, Math.min(100, Number(c.score) || 0));
         const lvl = sc >= 70 ? 'good' : sc >= 40 ? 'mid' : 'low';
         return `
           <div class="mb-hc-comp mb-hc-comp--${lvl}">
-            <div class="mb-hc-comp-head">
-              <span class="mb-hc-comp-label">${this._esc(c.label || c.key)}</span>
-              <span class="mb-hc-comp-score mb-hc-comp-score--${lvl}">${sc}</span>
+            <span class="mb-hc-comp-icon"><i class="fas ${this._healthCompIcon(c)}"></i></span>
+            <div class="mb-hc-comp-main">
+              <div class="mb-hc-comp-head">
+                <span class="mb-hc-comp-label">${this._esc(c.label || c.key)}</span>
+                <span class="mb-hc-comp-score mb-hc-comp-score--${lvl}">${sc}</span>
+              </div>
+              <div class="mb-hc-ticks" style="--pct:${sc}%;--c:${lvlColor[lvl]}"></div>
+              <div class="mb-hc-comp-detail">${this._esc(c.detail || '')}</div>
             </div>
-            <div class="mb-hc-bar"><span class="mb-hc-bar-fill mb-hc-bar-fill--${lvl}" style="width:${sc}%;"></span></div>
-            <div class="mb-hc-comp-detail">${this._esc(c.detail || '')}</div>
           </div>`;
       }).join('')}</div>`;
     },
