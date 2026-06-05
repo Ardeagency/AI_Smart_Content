@@ -124,7 +124,7 @@ class CampanasDataService {
       vulnerabilities,
       optimizationInsights, alertScore,
       activityHistory, engagementTrend, sentimentActivity, postingHours,
-      estrategiaTopics, topHighlightedPosts, audienceBehavior, comments,
+      estrategiaTopics, topHighlightedPosts, comments,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
@@ -211,7 +211,6 @@ class CampanasDataService {
       this.sb.rpc('dashboard_brand_top_highlighted_posts', {
         ...featuredArgs, p_date_from: '2000-01-01T00:00:00Z', p_date_to: new Date().toISOString(), p_limit: 3,
       }),
-      this.sb.rpc('dashboard_mimarca_audience_behavior',  { p_org_id: this.orgId, p_brand_container_ids: bcids }),
       this.sb.rpc('dashboard_mimarca_comments', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
         p_brand_container_ids: bcids, p_platforms: platforms, p_limit: 5,
@@ -243,7 +242,6 @@ class CampanasDataService {
       },
 
       topPosts:         u(topHighlightedPosts),
-      audienceBehavior: u(audienceBehavior),
       comments:         u(comments),
 
       whatWorks: u(whatWorks),

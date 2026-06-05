@@ -182,7 +182,6 @@
               ${this._buildLongitudinalSection(data)}
               ${this._buildTopPostsSection(data?.topPosts?.data)}
               ${this._buildToneTopicSection(data?.featured)}
-              ${this._buildAudienceBehaviorSection(data?.audienceBehavior?.data)}
               ${this._buildCommentsSection(data?.comments?.data)}
               ${this._buildLeverageSection(insights)}
             </div>
@@ -531,25 +530,6 @@
       draw('mbTopicDonut', f.topics?.data, 'topic_name', 'usage_count');
     },
 
-    /* ── Patrones del publico: intereses y comportamiento (personas) ── */
-    _buildAudienceBehaviorSection(b) {
-      if (!b || !Number(b.personas)) return '';
-      const chips = (arr, cls) => (Array.isArray(arr) ? arr : []).slice(0, 6)
-        .map((x) => `<span class="mb-beh-chip mb-beh-chip--${cls}">${this._esc(this._capWords(x.text || x))}</span>`).join('');
-      const genders = (Array.isArray(b.genders) ? b.genders : []).map((g) => g === 'male' ? 'Hombres' : g === 'female' ? 'Mujeres' : g).join(' · ');
-      const ageStr = (b.age_min && b.age_max) ? `${b.age_min}–${b.age_max} años` : '';
-      const block = (label, arr, cls) => { const c = chips(arr, cls); return c ? `<div class="mb-beh-block"><span class="mb-beh-label">${label}</span><div class="mb-beh-chips">${c}</div></div>` : ''; };
-      return `
-        <section class="mb-section">
-          <div class="mb-chart-card">
-            <div class="mb-card-title">${__('Patrones del público')}</div>
-            <div class="mb-beh-meta">${b.personas} ${b.personas === 1 ? 'persona' : 'personas'}${ageStr ? ` · ${ageStr}` : ''}${genders ? ` · ${genders}` : ''}</div>
-            ${block(__('Qué desean'), b.deseos, 'want')}
-            ${block(__('Qué los gatilla a comprar'), b.gatillos, 'trig')}
-            ${block(__('Qué los frena (dolores)'), b.dolores, 'pain')}
-          </div>
-        </section>`;
-    },
 
     /* ── Analisis de comentarios + comentarios de alto impacto ── */
     _buildCommentsSection(c) {

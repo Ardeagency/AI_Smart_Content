@@ -3956,16 +3956,8 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .mb-donut-leg-val { font-size: 0.78rem; color: var(--text-secondary, rgba(212,209,216,0.7)); font-variant-numeric: tabular-nums; }
 @media (max-width: 480px) { .mb-donut-wrap { flex-direction: column; } }
 
-/* ── Patrones del publico (comportamiento) ── */
-.mb-beh-meta { font-size: 0.78rem; color: var(--text-secondary, rgba(212,209,216,0.78)); margin-bottom: 0.9rem; }
-.mb-beh-block { margin-bottom: 0.85rem; }
-.mb-beh-block:last-child { margin-bottom: 0; }
+/* .mb-beh-label: label generico reusado por la seccion de comentarios ("Emociones top"). */
 .mb-beh-label { display: block; font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); margin-bottom: 0.45rem; }
-.mb-beh-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.mb-beh-chip { font-size: 0.75rem; font-weight: 500; padding: 0.3rem 0.6rem; border-radius: 8px; color: var(--text-secondary, rgba(212,209,216,0.85)); background: rgba(255,255,255,0.04); border: 1px solid var(--border-divider); }
-.mb-beh-chip--want { color: #6bcf7f; background: rgba(107,207,127,0.08); border-color: rgba(107,207,127,0.2); }
-.mb-beh-chip--trig { color: #5b9bd5; background: rgba(91,155,213,0.08); border-color: rgba(91,155,213,0.2); }
-.mb-beh-chip--pain { color: #e0a045; background: rgba(224,160,69,0.08); border-color: rgba(224,160,69,0.2); }
 
 /* ── Comentarios: analisis + alto impacto ── */
 .mb-cmt-total { font-size: 1.4rem; font-weight: 800; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; margin-bottom: 0.7rem; }
