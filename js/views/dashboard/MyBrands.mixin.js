@@ -515,13 +515,13 @@
             data: { labels: list.map((x) => this._capWords(x.name)), datasets: [{
               data: list.map((x) => x.used),
               backgroundColor: list.map((_, i) => PAL[i % PAL.length]),
-              borderColor: '#1b1d22', borderWidth: 2, hoverOffset: 4,
+              borderColor: '#141517', borderWidth: 2, hoverOffset: 4,
             }] },
             options: {
               responsive: true, maintainAspectRatio: false, cutout: '66%',
               plugins: {
                 legend: { display: false },
-                tooltip: { backgroundColor: '#1b1d22', borderColor: '#34363A', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10, callbacks: { label: (c) => ` ${c.label}: ${c.parsed} posts` } },
+                tooltip: { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10, callbacks: { label: (c) => ` ${c.label}: ${c.parsed} posts` } },
               },
             },
           }));
@@ -788,7 +788,7 @@
             plugins: {
               legend: { display: false },
               tooltip: {
-                backgroundColor: '#1b1d22', borderColor: '#34363A', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10,
+                backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10,
                 callbacks: {
                   title: () => null,
                   label: (c) => { const p = points[c.dataIndex]; return `${p.label}: ${Math.round(p.x)}% de uso · ${p.y >= 0 ? '+' : ''}${p.y}% rendimiento${p.orphan ? ' · huerfano' : ''}`; },
@@ -831,7 +831,7 @@
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
-          tooltip: { backgroundColor: '#1b1d22', borderColor: '#34363A', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10, displayColors: true },
+          tooltip: { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10, displayColors: true },
         },
         scales: {
           x: { grid: { display: false }, ticks: { color: TICK, font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 } },

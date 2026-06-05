@@ -3401,14 +3401,12 @@
    var(--bg-card) sin tocar cada selector.
    ════════════════════════════════════════════════════════════════════ */
 .insight-page {
-  /* Escala de elevacion re-tuneada (fix "opaco / no respira"):
-     en dark UI se eleva ACLARANDO la superficie, no con sombra negra sobre
-     negro. La card sube de #161719 (~contraste 1.1:1 vs fondo) a #1b1d22, los
-     bordes pasan de 8% a 11% blanco y se agrega un hairline highlight superior
-     que finge el lift. El fondo de pagina (--bg-primary #0b0b0b) se mantiene
-     oscuro para que la card flote. Respeta "glass solo botones" (sin blur). */
-  --bg-card: #1b1d22;
-  --border-divider: rgba(255, 255, 255, 0.11);
+  /* Cards = tokens OFICIALES de la plataforma (los mismos que Command Center y el
+     resto): superficie #141517 + borde #242424. NO redefinir a un gris propio.
+     El "lift" lo da --dash-elev (sombra + hairline highlight superior), no un bg
+     mas claro. Fondo de pagina --bg-primary #0b0b0b para que la card flote. */
+  --bg-card: #141517;
+  --border-divider: #242424;
   /* Paleta semantica apagada (color con proposito) */
   --dash-pos: #6e9f81;   /* arriba / funciona / saludable  */
   --dash-neg: #b3796f;   /* abajo / resta / critico        */
