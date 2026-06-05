@@ -514,8 +514,8 @@ class Navigation {
     banner.id = 'demoBanner';
     banner.className = 'demo-banner';
     banner.innerHTML = `
-      <span class="demo-banner__text">Estás viendo <strong>IGNIS</strong>, una marca de demostración — modo solo lectura</span>
-      <a class="demo-banner__cta" href="https://aismartcontent.io/contact" target="_blank" rel="noopener">Solicitar acceso →</a>
+      <span class="demo-banner__text">${__('Estás viendo {brand}, una marca de demostración — modo solo lectura', { brand: '<strong>IGNIS</strong>' })}</span>
+      <a class="demo-banner__cta" href="https://aismartcontent.io/contact" target="_blank" rel="noopener">${__('Solicitar acceso →')}</a>
     `;
     document.body.insertBefore(banner, document.body.firstChild);
     document.body.classList.add('has-demo-banner');
@@ -535,8 +535,8 @@ class Navigation {
                 type="button"
                 class="user-menu-btn nav-footer-btn"
                 data-flyout="notifications"
-                data-tooltip="Notificaciones"
-                aria-label="Notificaciones"
+                data-tooltip="${__('Notificaciones')}"
+                aria-label="${__('Notificaciones')}"
                 id="headerNotificationsBtn"
               >
                 <img src="/recursos/icons/notification.svg" class="nav-icon nav-icon-img" alt="" width="16" height="16">
@@ -560,8 +560,8 @@ class Navigation {
                 type="button"
                 class="user-menu-btn nav-footer-btn"
                 data-activity-btn
-                data-tooltip="Actividad de Vera"
-                aria-label="Actividad de Vera"
+                data-tooltip="${__('Actividad de Vera')}"
+                aria-label="${__('Actividad de Vera')}"
                 id="headerActivityBtn"
               >
                 <i class="fas fa-heart-pulse"></i>
@@ -577,14 +577,14 @@ class Navigation {
       panel.id = 'activityDropdown';
       panel.className = 'activity-dropdown glass-black';
       panel.setAttribute('role', 'dialog');
-      panel.setAttribute('aria-label', 'Actividad de Vera');
+      panel.setAttribute('aria-label', __('Actividad de Vera'));
       panel.setAttribute('aria-hidden', 'true');
       panel.innerHTML = `
         <div class="activity-head">
-          <span class="activity-title">Actividad</span>
+          <span class="activity-title">${__('Actividad')}</span>
           <div class="activity-tabs" role="tablist">
-            <button type="button" class="activity-tab is-active" data-activity-tab="tareas" role="tab">Tareas</button>
-            <button type="button" class="activity-tab" data-activity-tab="misiones" role="tab">Misiones</button>
+            <button type="button" class="activity-tab is-active" data-activity-tab="tareas" role="tab">${__('Tareas')}</button>
+            <button type="button" class="activity-tab" data-activity-tab="misiones" role="tab">${__('Misiones')}</button>
           </div>
         </div>
         <div class="activity-body" id="activityBody"></div>`;
@@ -680,7 +680,7 @@ class Navigation {
     const detail = String(t.vera_reasoning || t.proposed_payload?.summary || '').trim();
     const det    = detail ? `<p class="activity-item-detail">${_escapeHtml(detail.length > 160 ? detail.slice(0, 160) + '…' : detail)}</p>` : '';
     const conf   = Number.isFinite(Number(t.vera_confidence)) ? Math.round(Number(t.vera_confidence) * 100) + '%' : '';
-    const prio   = Number(t.priority) >= 8 ? `<span class="activity-chip activity-chip--prio">Alta</span>` : '';
+    const prio   = Number(t.priority) >= 8 ? `<span class="activity-chip activity-chip--prio">${__('Alta')}</span>` : '';
     return `
       <li class="activity-item" data-task-id="${_escapeHtml(t.id)}">
         <span class="activity-node" style="--act:${meta.color};"><i class="${meta.icon}"></i></span>
@@ -693,8 +693,8 @@ class Navigation {
           <div class="activity-item-foot">
             ${prio}${conf ? `<span class="activity-chip">${conf}</span>` : ''}
             <span class="activity-spacer"></span>
-            <button type="button" class="activity-mini-btn activity-mini-btn--ok" data-act-approve>Aprobar</button>
-            <button type="button" class="activity-mini-btn" data-act-dismiss>Descartar</button>
+            <button type="button" class="activity-mini-btn activity-mini-btn--ok" data-act-approve>${__('Aprobar')}</button>
+            <button type="button" class="activity-mini-btn" data-act-dismiss>${__('Descartar')}</button>
           </div>
         </div>
       </li>`;
@@ -752,24 +752,24 @@ class Navigation {
 
   _activityMissionStatus(s) {
     const M = {
-      completed: { label: 'Completada', kind: 'ok',   icon: 'fas fa-circle-check',           color: '#6bcf7f' },
-      running:   { label: 'En curso',   kind: 'run',  icon: 'fas fa-circle-notch fa-spin',   color: '#5b9bd5' },
-      pending:   { label: 'En cola',    kind: 'wait', icon: 'fas fa-clock-rotate-left',      color: '#87868b' },
-      failed:    { label: 'Fallida',    kind: 'fail', icon: 'fas fa-triangle-exclamation',   color: '#e06464' },
+      completed: { label: __('Completada'), kind: 'ok',   icon: 'fas fa-circle-check',           color: '#6bcf7f' },
+      running:   { label: __('En curso'),   kind: 'run',  icon: 'fas fa-circle-notch fa-spin',   color: '#5b9bd5' },
+      pending:   { label: __('En cola'),    kind: 'wait', icon: 'fas fa-clock-rotate-left',      color: '#87868b' },
+      failed:    { label: __('Fallida'),    kind: 'fail', icon: 'fas fa-triangle-exclamation',   color: '#e06464' },
     };
     return M[s] || { label: s || '—', kind: 'wait', icon: 'fas fa-robot', color: '#87868b' };
   }
 
   _humanizeMission(t) {
     const map = {
-      daily_briefing:             'Briefing diario',
-      competitor_signal_analysis: 'Analisis de competencia',
-      execute_update_persona:     'Actualizacion de persona',
-      opportunity_scan:           'Escaneo de oportunidades',
-      cross_signal_synthesis:     'Sintesis de senales',
+      daily_briefing:             __('Briefing diario'),
+      competitor_signal_analysis: __('Analisis de competencia'),
+      execute_update_persona:     __('Actualizacion de persona'),
+      opportunity_scan:           __('Escaneo de oportunidades'),
+      cross_signal_synthesis:     __('Sintesis de senales'),
     };
     if (map[t]) return map[t];
-    const s = String(t || 'Mision').replace(/_/g, ' ');
+    const s = String(t || __('Mision')).replace(/_/g, ' ');
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
@@ -784,7 +784,7 @@ class Navigation {
     const d = new Date(iso);
     if (isNaN(d.getTime())) return '';
     const mins = Math.floor((new Date() - d) / 60000);
-    if (mins < 1)  return 'ahora';
+    if (mins < 1)  return __('ahora');
     if (mins < 60) return `${mins}m`;
     const h = Math.floor(mins / 60);
     if (h < 24)    return `${h}h`;
@@ -852,7 +852,7 @@ class Navigation {
       panel.id = 'notificationsDropdown';
       panel.className = 'user-dropdown glass-black notifications-dropdown';
       panel.setAttribute('role', 'dialog');
-      panel.setAttribute('aria-label', 'Notificaciones');
+      panel.setAttribute('aria-label', __('Notificaciones'));
       panel.setAttribute('aria-hidden', 'true');
       document.body.appendChild(panel);
     } else if (panel.parentElement !== document.body) {
@@ -902,11 +902,11 @@ class Navigation {
         <div class="modal-overlay" id="notificationsModalOverlay"></div>
         <div class="modal-content glass-white">
           <div class="modal-header">
-            <h3 id="notificationsModalTitle">Notificaciones</h3>
-            <button type="button" class="modal-close" id="notificationsModalClose" data-action="close-notifications-modal" aria-label="Cerrar">&times;</button>
+            <h3 id="notificationsModalTitle">${__('Notificaciones')}</h3>
+            <button type="button" class="modal-close" id="notificationsModalClose" data-action="close-notifications-modal" aria-label="${__('Cerrar')}">&times;</button>
           </div>
           <div class="modal-body notifications-modal-body" id="notificationsModalBody">
-            <div class="nav-flyout-notifications-loading">Cargando…</div>
+            <div class="nav-flyout-notifications-loading">${__('Cargando…')}</div>
           </div>
         </div>
       </div>`;
@@ -967,11 +967,11 @@ class Navigation {
     modal.setAttribute('aria-hidden', 'false');
     modal.style.display = 'flex';
 
-    body.innerHTML = '<div class="nav-flyout-notifications-loading">Cargando…</div>';
+    body.innerHTML = `<div class="nav-flyout-notifications-loading">${__('Cargando…')}</div>`;
 
     const list = await this._orgNotificationsList('all', 100);
     if (!list.length) {
-      body.innerHTML = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
+      body.innerHTML = `<div class="nav-flyout-notifications-empty">${__('No hay notificaciones')}</div>`;
       return;
     }
     body.innerHTML =
@@ -992,11 +992,11 @@ class Navigation {
       panel.id = 'notificationsFlyout';
       panel.className = 'activity-dropdown notifications-flyout glass-black';
       panel.setAttribute('role', 'dialog');
-      panel.setAttribute('aria-label', 'Notificaciones');
+      panel.setAttribute('aria-label', __('Notificaciones'));
       panel.setAttribute('aria-hidden', 'true');
       panel.innerHTML = `
         <div class="activity-head">
-          <span class="activity-title">Notificaciones</span>
+          <span class="activity-title">${__('Notificaciones')}</span>
         </div>
         <div class="activity-body" id="notificationsFlyoutBody"></div>`;
       document.body.appendChild(panel);
@@ -1034,7 +1034,7 @@ class Navigation {
     body.innerHTML = `<div class="activity-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
     const list = await this._orgNotificationsList('all', 100);
     if (!list.length) {
-      body.innerHTML = `<div class="activity-empty"><i class="fas fa-circle-info"></i><p>No hay notificaciones</p></div>`;
+      body.innerHTML = `<div class="activity-empty"><i class="fas fa-circle-info"></i><p>${__('No hay notificaciones')}</p></div>`;
       return;
     }
     body.innerHTML = '<div class="notif-list">' +
@@ -1383,7 +1383,7 @@ class Navigation {
       }).join('');
       outputsHtml = `
         <div class="notif-outputs">
-          <div class="notif-outputs-head"><i class="fas fa-wand-magic-sparkles"></i> Producciones generadas</div>
+          <div class="notif-outputs-head"><i class="fas fa-wand-magic-sparkles"></i> ${__('Producciones generadas')}</div>
           <div class="notif-outputs-grid">${items}</div>
         </div>`;
     }
@@ -1399,7 +1399,7 @@ class Navigation {
       const items = n.checklist.map((step, i) => {
         const stepId = step.id || `step_${i}`;
         const checked = !!progress[stepId];
-        const opt = step.optional ? ' <span class="notif-step-optional">(opcional)</span>' : '';
+        const opt = step.optional ? ` <span class="notif-step-optional">${__('(opcional)')}</span>` : '';
         return `
           <label class="notif-step ${checked ? 'done' : ''}">
             <input type="checkbox" data-step-id="${_escapeHtml(stepId)}" ${checked ? 'checked' : ''}>
@@ -1409,8 +1409,8 @@ class Navigation {
       checklistHtml = `
         <div class="notif-checklist">
           <div class="notif-checklist-head">
-            <span><i class="fas fa-clipboard"></i> Tareas a completar</span>
-            <span class="notif-checklist-progress" data-progress>${doneCount} de ${total}</span>
+            <span><i class="fas fa-clipboard"></i> ${__('Tareas a completar')}</span>
+            <span class="notif-checklist-progress" data-progress>${__('{done} de {total}', { done: doneCount, total })}</span>
           </div>
           ${items}
         </div>`;
@@ -1422,17 +1422,17 @@ class Navigation {
       const btns = n.actions.map((a, i) => {
         const cls = a.primary ? 'notif-action primary' : 'notif-action';
         const icon = a.icon ? `<i class="${_escapeHtml(a.icon)}"></i> ` : '';
-        return `<button type="button" class="${cls}" data-action-idx="${i}">${icon}${_escapeHtml(a.label || 'Acción')}</button>`;
+        return `<button type="button" class="${cls}" data-action-idx="${i}">${icon}${_escapeHtml(a.label || __('Acción'))}</button>`;
       }).join('');
       actionsHtml = `<div class="notif-actions">${btns}</div>`;
     }
 
     // Estado de tarea (status)
     const statusMap = {
-      pending:    { icon: '⏳', label: 'Pendiente' },
-      in_progress:{ icon: '🟡', label: 'En progreso' },
-      completed:  { icon: '✅', label: 'Completada' },
-      dismissed:  { icon: '⏭', label: 'Descartada' },
+      pending:    { icon: '⏳', label: __('Pendiente') },
+      in_progress:{ icon: '🟡', label: __('En progreso') },
+      completed:  { icon: '✅', label: __('Completada') },
+      dismissed:  { icon: '⏭', label: __('Descartada') },
     };
     const st = statusMap[n.status] || statusMap.pending;
 
@@ -1441,7 +1441,7 @@ class Navigation {
     // mode-compact / mode-expanded (ver notifications.css).
     const hasExpandable = !!(n.body || n.subject || n.outputs?.length || n.checklist?.length);
     const toggleBtnHtml = hasExpandable ? `
-      <button type="button" class="notif-toggle" data-toggle-expand aria-label="Expandir/colapsar">
+      <button type="button" class="notif-toggle" data-toggle-expand aria-label="${__('Expandir/colapsar')}">
         <i class="fas fa-chevron-down notif-toggle-icon"></i>
       </button>` : '';
 
@@ -1462,7 +1462,7 @@ class Navigation {
           ${subjectHtml}
           ${outputsHtml}
           ${checklistHtml}
-          <div class="notif-status"><span>${st.icon}</span> Estado: <strong>${st.label}</strong></div>
+          <div class="notif-status"><span>${st.icon}</span> ${__('Estado:')} <strong>${st.label}</strong></div>
         </div>
         ${actionsHtml}
       </article>`;
@@ -1731,43 +1731,43 @@ class Navigation {
     return `
       <div class="user-dropdown glass-black" id="userDropdown">
         <div class="user-dropdown-header">
-          <div class="user-dropdown-name" id="userDropdownName">Usuario</div>
+          <div class="user-dropdown-name" id="userDropdownName">${__('Usuario')}</div>
           <div class="user-dropdown-email" id="userDropdownEmail">usuario@email.com</div>
         </div>
         <div class="user-dropdown-divider"></div>
         <a href="${settingsHref}" class="user-dropdown-item" data-route="${settingsHref}" id="userDropdownSettingsLink">
           <img src="/recursos/icons/settings.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
-          <span>Settings</span>
+          <span>${__('Ajustes')}</span>
         </a>
         <a href="${orgHref}" class="user-dropdown-item" data-route="${orgHref}" id="userDropdownOrgLink">
           <img src="/recursos/icons/confg organization.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
-          <span>Organization</span>
+          <span>${__('Organización')}</span>
         </a>
         <a href="${plansHref}" class="user-dropdown-item" data-route="${plansHref}" id="userDropdownPlansLink">
           <img src="/recursos/icons/Planes.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
-          <span>Plans</span>
+          <span>${__('Planes')}</span>
         </a>
         <a href="${creditsHref}" class="user-dropdown-item" data-route="${creditsHref}" id="userDropdownCreditsLink">
           <img src="/recursos/icons/Credits.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
-          <span>Credits</span>
+          <span>${__('Créditos')}</span>
         </a>
         ${window.SwitchUserController?.hasImpersonation?.() ? `
         <div class="user-dropdown-divider"></div>
         <button class="user-dropdown-item user-dropdown-item--accent" id="returnLeadBtn">
           <i class="fas fa-arrow-left"></i>
-          <span>Volver a mi cuenta de Lead</span>
+          <span>${__('Volver a mi cuenta de Lead')}</span>
         </button>
         ` : ''}
         ${window.SwitchUserController?.isLead?.() ? `
         <div class="user-dropdown-divider"></div>
         <button class="user-dropdown-item" id="switchUserBtn">
           <i class="fas fa-user-tag"></i>
-          <span>Cambiar usuario</span>
+          <span>${__('Cambiar usuario')}</span>
         </button>
         ` : ''}
         <button class="user-dropdown-item" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i>
-          <span>Sign out</span>
+          <span>${__('Cerrar sesión')}</span>
         </button>
       </div>`;
   }
@@ -1789,7 +1789,7 @@ class Navigation {
             <div class="header-user-menu-wrap">
               ${this.getHeaderActivityButtonGroupHTML()}
               ${this.getHeaderNotificationsButtonGroupHTML()}
-              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
+              <button class="user-menu-btn" id="userMenuBtn" aria-label="${__('Menú de usuario')}">
                 <i class="fas fa-chevron-down"></i>
               </button>
               ${this.getUserDropdownHTML(settingsHref)}
@@ -1890,14 +1890,14 @@ class Navigation {
         const href = full(item.route);
         const isPrimary = !!item.primary;
         const hideLabel = !!item.hideLabel;
-        const ariaLabel = hideLabel ? ` aria-label="${_escapeHtml(item.label)}"` : '';
+        const ariaLabel = hideLabel ? ` aria-label="${_escapeHtml(__(item.label))}"` : '';
         const idAttr = item.navId ? ` id="${_escapeHtml(item.navId)}"` : '';
         const hiddenStyle = item.hidden ? ' style="display:none"' : '';
         return `
           <div class="nav-item${isPrimary ? ' nav-item--primary' : ''}">
-            <a href="${href}" class="nav-link nav-main-link${isPrimary ? ' nav-link--primary' : ''}${hideLabel ? ' nav-link--no-label' : ''}"${idAttr}${hiddenStyle}${ariaLabel} data-route="${href}" data-tooltip="${item.label}">
+            <a href="${href}" class="nav-link nav-main-link${isPrimary ? ' nav-link--primary' : ''}${hideLabel ? ' nav-link--no-label' : ''}"${idAttr}${hiddenStyle}${ariaLabel} data-route="${href}" data-tooltip="${__(item.label)}">
               ${iconHTML(item)}
-              ${hideLabel ? '' : `<span class="nav-text">${item.label}</span>`}
+              ${hideLabel ? '' : `<span class="nav-text">${__(item.label)}</span>`}
             </a>
           </div>`;
       }
@@ -1917,14 +1917,14 @@ class Navigation {
               <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
             </button>
           </div>
-          <div class="nav-submenu" id="nav-sub-brand-storage" role="group" aria-label="${_escapeHtml(item.label)}">
+          <div class="nav-submenu" id="nav-sub-brand-storage" role="group" aria-label="${_escapeHtml(__(item.label))}">
             ${subHtml}
           </div>
         </div>
         <div class="nav-item" id="navCommandCenterSingle" style="display:none">
           <a href="#" class="nav-link nav-main-link" id="navCommandCenterSingleLink" data-route="" data-tooltip="Command Center">
             <img src="${commandCenterIconSrc}" class="nav-icon nav-icon-img" alt="" width="16" height="16">
-            <span class="nav-text">Command Center</span>
+            <span class="nav-text">${__('Command Center')}</span>
           </a>
         </div>`;
       }
@@ -1939,7 +1939,7 @@ class Navigation {
         // la org tiene guardados (mismo patron que una categoria vacia: se oculta).
         const myFlowsChild = this._hasSavedFlows ? `
             <a href="${savedHref}" class="nav-submenu-link nav-submenu-link--myflows" data-route="${savedHref}" data-tooltip="My Flows">
-              <span>My Flows</span>
+              <span>${__('My Flows')}</span>
             </a>` : '';
         const catChildren = myFlowsChild + cats
           .map((c) => {
@@ -1953,15 +1953,15 @@ class Navigation {
         return `
         <div class="nav-item has-submenu nav-flows-wrap ${isOpen ? 'submenu-open' : ''}" data-container-id="catalog">
           <div class="nav-flows-head">
-            <a href="${catalogHref}" class="nav-link nav-main-link nav-flows-page" data-route="${catalogHref}" data-tooltip="${item.label}">
+            <a href="${catalogHref}" class="nav-link nav-main-link nav-flows-page" data-route="${catalogHref}" data-tooltip="${__(item.label)}">
               ${iconHTML(item)}
-              <span class="nav-text">${item.label}</span>
+              <span class="nav-text">${__(item.label)}</span>
             </a>
-            <button type="button" class="nav-submenu-toggle nav-flows-expand-btn" data-tooltip="${item.label}" aria-expanded="${isOpen}" aria-controls="nav-sub-catalog">
+            <button type="button" class="nav-submenu-toggle nav-flows-expand-btn" data-tooltip="${__(item.label)}" aria-expanded="${isOpen}" aria-controls="nav-sub-catalog">
               <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
             </button>
           </div>
-          <div class="nav-submenu" id="nav-sub-catalog" role="group" aria-label="${item.label}">
+          <div class="nav-submenu" id="nav-sub-catalog" role="group" aria-label="${__(item.label)}">
             ${catChildren}
           </div>
         </div>`;
@@ -1973,20 +1973,20 @@ class Navigation {
             const idAttr = c.navId ? ` id="${_escapeHtml(c.navId)}"` : '';
             const hiddenStyle = c.hidden ? ' style="display:none"' : '';
             return `
-            <a href="${full(c.route)}" class="nav-submenu-link"${idAttr}${hiddenStyle} data-route="${full(c.route)}" data-tooltip="${c.label}">
-              <span>${c.label}</span>
+            <a href="${full(c.route)}" class="nav-submenu-link"${idAttr}${hiddenStyle} data-route="${full(c.route)}" data-tooltip="${__(c.label)}">
+              <span>${__(c.label)}</span>
             </a>`;
           }
         )
         .join('');
       return `
         <div class="nav-item has-submenu ${isOpen ? 'submenu-open' : ''}" data-container-id="${item.id}">
-          <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${item.label}" aria-expanded="${isOpen}" aria-controls="nav-sub-${item.id}">
+          <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${__(item.label)}" aria-expanded="${isOpen}" aria-controls="nav-sub-${item.id}">
             ${iconHTML(item)}
-            <span class="nav-text">${item.label}</span>
+            <span class="nav-text">${__(item.label)}</span>
             <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
           </button>
-          <div class="nav-submenu" id="nav-sub-${item.id}" role="group" aria-label="${item.label}">
+          <div class="nav-submenu" id="nav-sub-${item.id}" role="group" aria-label="${__(item.label)}">
             ${children}
           </div>
         </div>`;
@@ -1999,16 +1999,16 @@ class Navigation {
     const footerHTML = SIDEBAR_USER_CONFIG.footer.map((f) => {
       if (f.flyout === 'notifications') {
         return `
-          <button type="button" class="nav-footer-link nav-footer-btn" data-flyout="notifications" data-tooltip="${f.label}" aria-label="${f.label}">
+          <button type="button" class="nav-footer-link nav-footer-btn" data-flyout="notifications" data-tooltip="${__(f.label)}" aria-label="${__(f.label)}">
             ${footerIconHTML(f)}
-            <span class="nav-text">${f.label}</span>
+            <span class="nav-text">${__(f.label)}</span>
           </button>`;
       }
       const href = full(f.route);
       return `
-        <a href="${href}" class="nav-footer-link" data-route="${href}" data-tooltip="${f.label}">
+        <a href="${href}" class="nav-footer-link" data-route="${href}" data-tooltip="${__(f.label)}">
           ${footerIconHTML(f)}
-          <span class="nav-text">${f.label}</span>
+          <span class="nav-text">${__(f.label)}</span>
         </a>`;
     }).join('');
 
@@ -2024,7 +2024,7 @@ class Navigation {
             <div class="header-user-menu-wrap">
               ${this.getHeaderActivityButtonGroupHTML()}
               ${this.getHeaderNotificationsButtonGroupHTML()}
-              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
+              <button class="user-menu-btn" id="userMenuBtn" aria-label="${__('Menú de usuario')}">
                 <i class="fas fa-chevron-down"></i>
               </button>
               ${this.getUserDropdownHTML('/home')}
@@ -2034,12 +2034,12 @@ class Navigation {
         <div class="header-production-slot" id="headerProductionSlot" aria-hidden="true"></div>
       </header>
 
-      <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
+      <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="${__('Navegación principal')}">
         <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
-          <h2 class="nav-org-title" id="navOrgName">Mi Organización</h2>
-          <a href="${this.getUserSidebarRoute('credits')}" class="nav-org-credits" id="navOrgCreditsBlock" data-route="${this.getUserSidebarRoute('credits')}" aria-label="Ir a créditos">
+          <h2 class="nav-org-title" id="navOrgName">${__('Mi Organización')}</h2>
+          <a href="${this.getUserSidebarRoute('credits')}" class="nav-org-credits" id="navOrgCreditsBlock" data-route="${this.getUserSidebarRoute('credits')}" aria-label="${__('Ir a créditos')}">
             <div class="nav-org-credits-row">
-              <span class="nav-org-credits-label">credits</span>
+              <span class="nav-org-credits-label">${__('créditos')}</span>
               <span class="nav-org-credits-value" id="navTokensValue">—</span>
             </div>
             <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill" style="width:0%"></div></div>
@@ -2049,17 +2049,17 @@ class Navigation {
           </div>
         </div>
 
-        <div class="nav-menu" role="navigation" aria-label="Navegación del workspace">
+        <div class="nav-menu" role="navigation" aria-label="${__('Navegación del workspace')}">
           ${mainHTML}
         </div>
 
         <div class="nav-spacer" aria-hidden="true"></div>
 
-        ${footerHTML ? `<div class="nav-footer" role="navigation" aria-label="Administración organizacional">${footerHTML}</div>` : ''}
+        ${footerHTML ? `<div class="nav-footer" role="navigation" aria-label="${__('Administración organizacional')}">${footerHTML}</div>` : ''}
 
         <div class="nav-system-stats">
           <div class="nav-system-stats-row">
-            <span class="nav-system-stats-label">Storage</span>
+            <span class="nav-system-stats-label">${__('Almacenamiento')}</span>
             <span class="nav-system-stats-value" id="navStorageValue">—</span>
           </div>
           <a href="${this.getUserSidebarRoute('plans')}"
@@ -2067,7 +2067,7 @@ class Navigation {
              id="navUpgradeBtn"
              data-route="${this.getUserSidebarRoute('plans')}"
              hidden>
-            <span id="navUpgradeBtnLabel">Upgrade</span>
+            <span id="navUpgradeBtnLabel">${__('Mejorar plan')}</span>
           </a>
         </div>
 
@@ -2075,7 +2075,7 @@ class Navigation {
           <span class="nav-brand-footer-logo-link" aria-hidden="true">
             <img src="${_navSidebarIconUrl('/recursos/logos/logo-03.svg')}" class="nav-brand-footer-logo" alt="">
           </span>
-          <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
+          <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="${__('Abrir o cerrar menú')}">
             ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
           </button>
         </div>
@@ -2128,9 +2128,9 @@ class Navigation {
         const href = this.getDevUrl(item.route);
         return `
           <div class="${pageClass}"${pageAttrs}>
-            <a href="${href}" class="nav-link" data-route="${href}" data-tooltip="${item.label}">
+            <a href="${href}" class="nav-link" data-route="${href}" data-tooltip="${__(item.label)}">
               ${iconHTML(item)}
-              <span class="nav-text">${item.label}</span>
+              <span class="nav-text">${__(item.label)}</span>
             </a>
           </div>`;
       }
@@ -2139,20 +2139,20 @@ class Navigation {
         .map((c) => {
           const childHref = this.getDevUrl(c.route);
           return `
-            <a href="${childHref}" class="nav-submenu-link" data-route="${childHref}" data-tooltip="${c.label}">
-              <span>${c.label}</span>
+            <a href="${childHref}" class="nav-submenu-link" data-route="${childHref}" data-tooltip="${__(c.label)}">
+              <span>${__(c.label)}</span>
             </a>`;
         })
         .join('');
 
       return `
         <div class="${wrapClass}" data-container-id="${item.id}"${attrs}>
-          <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${item.label}" aria-expanded="false" aria-controls="nav-dev-sub-${item.id}">
+          <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${__(item.label)}" aria-expanded="false" aria-controls="nav-dev-sub-${item.id}">
             ${iconHTML(item)}
-            <span class="nav-text">${item.label}</span>
+            <span class="nav-text">${__(item.label)}</span>
             <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
           </button>
-          <div class="nav-submenu" id="nav-dev-sub-${item.id}" role="group" aria-label="${item.label}">
+          <div class="nav-submenu" id="nav-dev-sub-${item.id}" role="group" aria-label="${__(item.label)}">
             ${children}
           </div>
         </div>`;
@@ -2189,7 +2189,7 @@ class Navigation {
             <div class="header-user-menu-wrap">
               ${this.getHeaderActivityButtonGroupHTML()}
               ${this.getHeaderNotificationsButtonGroupHTML()}
-              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
+              <button class="user-menu-btn" id="userMenuBtn" aria-label="${__('Menú de usuario')}">
                 <i class="fas fa-chevron-down"></i>
               </button>
               ${this.getUserDropdownHTML('/home')}
@@ -2219,7 +2219,7 @@ class Navigation {
           <span class="nav-brand-footer-logo-link" aria-hidden="true">
             <img src="${_navSidebarIconUrl('/recursos/logos/logo-03.svg')}" class="nav-brand-footer-logo" alt="">
           </span>
-          <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
+          <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="${__('Abrir o cerrar menú')}">
             ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
           </button>
         </div>
@@ -2998,7 +2998,7 @@ class Navigation {
    * Modal de confirmación para Salir de la organización. Navega a otra org o a configuración.
    */
   async showLeaveWorkspaceConfirm() {
-    const msg = '¿Salir de la organización? Serás redirigido a otra organización o a configuración.';
+    const msg = __('¿Salir de la organización? Serás redirigido a otra organización o a configuración.');
     if (!window.confirm(msg)) return;
     this.closeMobileNav();
     const url = window.authService && typeof window.authService.getDefaultUserRoute === 'function'
@@ -3048,14 +3048,14 @@ class Navigation {
     const currentMode = window.authService?.getUserMode() || 'user';
     const html = `
       <div class="user-dropdown-mode-switcher" id="userDropdownModeSwitcher">
-        <div class="user-dropdown-mode-label">Ver como</div>
+        <div class="user-dropdown-mode-label">${__('Ver como')}</div>
         <label class="user-dropdown-mode-option">
           <input type="radio" name="viewMode" value="user" ${currentMode === 'user' ? 'checked' : ''} id="viewModeUser">
-          <span>Consumidor</span>
+          <span>${__('Consumidor')}</span>
         </label>
         <label class="user-dropdown-mode-option">
           <input type="radio" name="viewMode" value="developer" ${currentMode === 'developer' ? 'checked' : ''} id="viewModeDeveloper">
-          <span>Desarrollador</span>
+          <span>${__('Desarrollador')}</span>
         </label>
       </div>
       <div class="user-dropdown-divider"></div>`;
@@ -3166,7 +3166,7 @@ class Navigation {
       if (!this.currentOrgId) {
         const typeEl = document.getElementById('navOrgType');
         const tokensEl = document.getElementById('navTokensValue');
-        this._renderAdaptiveOrgName('Seleccionar organización');
+        this._renderAdaptiveOrgName(__('Seleccionar organización'));
         if (typeEl) typeEl.textContent = '';
         if (tokensEl) tokensEl.textContent = '—';
         const barFill = document.querySelector('.nav-org-credits-bar-fill');
@@ -3505,7 +3505,7 @@ class Navigation {
         <div class="nav-org-divider"></div>
         <div class="nav-org-option nav-org-create" data-action="create-org">
           <i class="fas fa-plus"></i>
-          <span>Crear nueva organización</span>
+          <span>${__('Crear nueva organización')}</span>
         </div>
       `);
 

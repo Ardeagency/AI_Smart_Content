@@ -40,7 +40,7 @@
     const label =
       containerEl.querySelector('.nav-brand-storage-page')?.dataset?.tooltip ||
       toggle?.dataset?.tooltip ||
-      'Módulo';
+      __('Módulo');
     const iconEl =
       containerEl.querySelector('.nav-brand-storage-head .nav-icon-img') ||
       containerEl.querySelector('.nav-brand-storage-head .nav-icon') ||
