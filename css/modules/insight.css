@@ -2683,8 +2683,8 @@
 .insight-page .mb-health-card.mb-health-card--aside {
   position: relative; overflow: hidden;
   padding: 1.2rem 1.2rem; gap: 0.8rem;
-  background: linear-gradient(180deg, #222429 0%, #1B1D22 100%);
-  border: 1px solid #34363A; border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider); border-radius: 14px;
   box-shadow: var(--dash-elev);
 }
 .mb-health-card--aside::after {
@@ -2961,7 +2961,7 @@
 .mb-plan-impact--bajo  { color: var(--text-muted, rgba(212,209,216,0.5)); }
 
 /* Tira de signos vitales (momentum del CMO) */
-.mb-plan-vitals { position: relative; overflow: hidden; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 1rem; background: linear-gradient(180deg, #222429 0%, #1B1D22 100%); border: 1px solid #34363A; border-radius: 10px; box-shadow: var(--dash-elev); }
+.mb-plan-vitals { position: relative; overflow: hidden; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 1rem; background: var(--bg-card); border: 1px solid var(--border-divider); border-radius: 14px; box-shadow: var(--dash-elev); }
 /* Borde superior con el degradado dinamico de la marca (linea fina, clipada a
    las esquinas). Presente en el strip de Momentum y en la card de Salud. */
 .mb-plan-vitals::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2.5px; pointer-events: none; z-index: 2; background: var(--brand-gradient-dynamic, linear-gradient(90deg, #0063FF 0%, #814AC8 30%, #FF004D 70%, #FF5C23 100%)); }
@@ -3152,7 +3152,7 @@
 
 /* Analisis longitudinal — grid de charts Chart.js */
 .mb-long-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
-.mb-long-card { background: linear-gradient(180deg, #222429 0%, #1B1D22 100%); border: 1px solid #34363A; border-radius: 12px; padding: 0.9rem 1rem 0.75rem; box-shadow: var(--dash-elev); min-width: 0; }
+.mb-long-card { background: var(--bg-card); border: 1px solid var(--border-divider); border-radius: 14px; padding: 0.9rem 1rem 0.75rem; box-shadow: var(--dash-elev); min-width: 0; }
 .mb-long-card--wide { grid-column: 1 / -1; }
 .mb-long-card-title { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); margin-bottom: 0.65rem; }
 .mb-long-canvas { position: relative; height: 185px; }
@@ -3201,8 +3201,8 @@
    (palancas, radar de patrones, etc.) compartan el mismo fondo que el resto
    (longitudinal, evolucion, publico efectivo). */
 .mb-chart-card {
-  background: linear-gradient(180deg, #222429 0%, #1B1D22 100%);
-  border: 1px solid #34363A;
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
   border-radius: 14px;
   padding: 1.2rem 1.35rem;
   box-shadow: var(--dash-elev);
@@ -3240,8 +3240,8 @@
 /* Pilares de contenido — estilo "stage flow": una card con header + filas de
    stage (acento+icono+titulo/subtitulo+badge), conectores y footer resumen. */
 .mb-stageflow {
-  background: linear-gradient(180deg, #222429 0%, #1B1D22 100%);
-  border: 1px solid var(--border-divider, #34363A); border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider); border-radius: 14px;
   padding: 1rem 1.1rem 1.1rem; box-shadow: var(--dash-elev);
 }
 .mb-stageflow-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.85rem; }
