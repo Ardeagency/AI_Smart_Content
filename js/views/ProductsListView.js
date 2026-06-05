@@ -21,14 +21,14 @@ class ProductsListView extends BaseView {
     return `
 <div class="products-list-page" id="productsListPage">
   <div class="products-list-header">
-    <h1 class="products-list-title">Productos</h1>
+    <h1 class="products-list-title">${__('Productos')}</h1>
     <div class="products-list-header-actions">
-      <button type="button" class="products-list-add-btn" id="productsListAttachBtn" aria-label="Adjuntar producto desde URL o archivos">
+      <button type="button" class="products-list-add-btn" id="productsListAttachBtn" aria-label="${__('Adjuntar producto desde URL o archivos')}">
         <i class="fas fa-paperclip" aria-hidden="true"></i>
-        <span>Adjuntar producto</span>
+        <span>${__('Adjuntar producto')}</span>
       </button>
-      <button type="button" class="products-list-add-btn" id="productsListAddBtn" aria-label="Agregar producto">
-        <span>+ Producto</span>
+      <button type="button" class="products-list-add-btn" id="productsListAddBtn" aria-label="${__('Agregar producto')}">
+        <span>${__('+ Producto')}</span>
       </button>
     </div>
   </div>
@@ -36,7 +36,7 @@ class ProductsListView extends BaseView {
   <section class="products-list-section" id="productsListSection">
     <div class="products-list-section-head">
       <div class="products-list-section-head-main">
-        <h2 class="products-list-section-title">Catálogo</h2>
+        <h2 class="products-list-section-title">${__('Catálogo')}</h2>
         <span class="products-list-section-count" id="productsListCount">0</span>
       </div>
     </div>
@@ -45,7 +45,7 @@ class ProductsListView extends BaseView {
 
   <div class="products-list-empty" id="productsListEmpty" style="display:none;">
     <i class="fas fa-box-open" aria-hidden="true"></i>
-    <p>Aún no hay productos. Crea el primero con + Producto.</p>
+    <p>${__('Aún no hay productos. Crea el primero con + Producto.')}</p>
   </div>
 </div>`;
   }
@@ -302,7 +302,7 @@ class ProductsListView extends BaseView {
 
   async _onDeleteProduct(productId, btn) {
     if (!productId || !this.supabase) return;
-    if (!confirm('¿Eliminar este producto? Se borraran tambien sus imagenes.')) return;
+    if (!confirm(__('¿Eliminar este producto? Se borraran tambien sus imagenes.'))) return;
     if (btn) btn.disabled = true;
     try {
       const { error } = await this.supabase.from('products').delete().eq('id', productId);
@@ -310,10 +310,10 @@ class ProductsListView extends BaseView {
       this._invalidateCache();
       await this._loadData();
       this._renderProductsMasonry();
-      this._showNotification('Producto eliminado', 'success');
+      this._showNotification(__('Producto eliminado'), 'success');
     } catch (e) {
       console.error('ProductsListView _onDeleteProduct:', e);
-      this._showNotification(e?.message || 'Error al eliminar el producto', 'error');
+      this._showNotification(e?.message || __('Error al eliminar el producto'), 'error');
       if (btn) btn.disabled = false;
     }
   }
@@ -327,7 +327,7 @@ class ProductsListView extends BaseView {
         .select('*')
         .eq('id', productId)
         .single();
-      if (fetchError || !product) throw fetchError || new Error('No se pudo cargar el producto');
+      if (fetchError || !product) throw fetchError || new Error(__('No se pudo cargar el producto'));
 
       const { id: _id, created_at: _c, updated_at: _u, ...rest } = product;
       const copyData = {
@@ -339,7 +339,7 @@ class ProductsListView extends BaseView {
         .insert(copyData)
         .select('id')
         .single();
-      if (insertError || !newProduct?.id) throw insertError || new Error('No se pudo crear la copia');
+      if (insertError || !newProduct?.id) throw insertError || new Error(__('No se pudo crear la copia'));
 
       const { data: images } = await this.supabase
         .from('product_images')
@@ -360,10 +360,10 @@ class ProductsListView extends BaseView {
       this._invalidateCache();
       await this._loadData();
       this._renderProductsMasonry();
-      this._showNotification('Producto duplicado', 'success');
+      this._showNotification(__('Producto duplicado'), 'success');
     } catch (e) {
       console.error('ProductsListView _onDuplicateProduct:', e);
-      this._showNotification(e?.message || 'Error al duplicar el producto', 'error');
+      this._showNotification(e?.message || __('Error al duplicar el producto'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -391,7 +391,7 @@ class ProductsListView extends BaseView {
 
   _renderProductCard(p, _i) {
     const imageUrl = this.productImageById[p.id] || '';
-    const name = p.nombre_producto || 'Producto';
+    const name = p.nombre_producto || __('Producto');
     const entityId = p.entity_id || this._fallbackEntityId || '';
     const safeName = this.escapeHtml(name);
     return `
@@ -402,8 +402,8 @@ class ProductsListView extends BaseView {
             : `<div class="product-list-card-placeholder"><i class="fas fa-image" aria-hidden="true"></i></div>`
           }
           <div class="product-list-card-actions">
-            <button type="button" class="glass product-list-card-action" data-action="duplicate" title="Duplicar producto" aria-label="Duplicar producto"><i class="fas fa-copy" aria-hidden="true"></i></button>
-            <button type="button" class="glass product-list-card-action product-list-card-action--danger" data-action="delete" title="Eliminar producto" aria-label="Eliminar producto"><i class="fas fa-trash" aria-hidden="true"></i></button>
+            <button type="button" class="glass product-list-card-action" data-action="duplicate" title="${__('Duplicar producto')}" aria-label="${__('Duplicar producto')}"><i class="fas fa-copy" aria-hidden="true"></i></button>
+            <button type="button" class="glass product-list-card-action product-list-card-action--danger" data-action="delete" title="${__('Eliminar producto')}" aria-label="${__('Eliminar producto')}"><i class="fas fa-trash" aria-hidden="true"></i></button>
           </div>
           <div class="history-card-flow-name">${safeName}</div>
         </article>
@@ -424,31 +424,31 @@ class ProductsListView extends BaseView {
 
   _onAttachProduct() {
     if (!window.Modal || typeof window.Modal.show !== 'function') {
-      this._showNotification('Modal no disponible', 'error');
+      this._showNotification(__('Modal no disponible'), 'error');
       return;
     }
     const body = `
       <div class="attach-product-wizard" data-step="picker">
         <!-- Paso 1: elegir fuente -->
         <section class="attach-product-step attach-product-step--picker" data-panel="picker">
-          <p class="attach-product-intro">Elegi como queres que Vera obtenga la informacion del producto. En ambos casos, la ficha se crea automaticamente con los datos detectados.</p>
+          <p class="attach-product-intro">${__('Elegi como queres que Vera obtenga la informacion del producto. En ambos casos, la ficha se crea automaticamente con los datos detectados.')}</p>
           <div class="attach-product-options">
-            <button type="button" class="attach-product-option" data-go="url" aria-label="Adjuntar producto por URL">
+            <button type="button" class="attach-product-option" data-go="url" aria-label="${__('Adjuntar producto por URL')}">
               <div class="attach-product-option-head">
                 <span class="attach-product-option-icon"><i class="fas fa-link" aria-hidden="true"></i></span>
-                <h4 class="attach-product-option-title">URL del producto</h4>
+                <h4 class="attach-product-option-title">${__('URL del producto')}</h4>
               </div>
-              <p class="attach-product-option-desc">Pega el enlace de la pagina del producto. Vera leera la URL, extraera nombre, descripcion, precio, imagenes y caracteristicas, y armara la ficha automaticamente.</p>
-              <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+              <p class="attach-product-option-desc">${__('Pega el enlace de la pagina del producto. Vera leera la URL, extraera nombre, descripcion, precio, imagenes y caracteristicas, y armara la ficha automaticamente.')}</p>
+              <span class="attach-product-option-cta">${__('Continuar')} <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </button>
 
-            <button type="button" class="attach-product-option" data-go="attach" aria-label="Adjuntar archivos y fotos del producto">
+            <button type="button" class="attach-product-option" data-go="attach" aria-label="${__('Adjuntar archivos y fotos del producto')}">
               <div class="attach-product-option-head">
                 <span class="attach-product-option-icon"><i class="fas fa-paperclip" aria-hidden="true"></i></span>
-                <h4 class="attach-product-option-title">Adjuntar archivos</h4>
+                <h4 class="attach-product-option-title">${__('Adjuntar archivos')}</h4>
               </div>
-              <p class="attach-product-option-desc">Subi fotos del producto o archivos como PDFs, fichas tecnicas y catalogos. Vera analizara el contenido y construira la ficha automaticamente.</p>
-              <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+              <p class="attach-product-option-desc">${__('Subi fotos del producto o archivos como PDFs, fichas tecnicas y catalogos. Vera analizara el contenido y construira la ficha automaticamente.')}</p>
+              <span class="attach-product-option-cta">${__('Continuar')} <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </button>
           </div>
         </section>
@@ -456,34 +456,34 @@ class ProductsListView extends BaseView {
         <!-- Paso 2a: URL -->
         <section class="attach-product-step attach-product-step--form" data-panel="url" hidden>
           <label class="attach-product-field">
-            <span class="attach-product-field-label">Enlace</span>
+            <span class="attach-product-field-label">${__('Enlace')}</span>
             <input type="url" class="attach-product-url-input" placeholder="https://..." autocomplete="off" />
           </label>
           <button type="button" class="attach-product-submit" data-action="submit-url">
             <i class="fas fa-magic" aria-hidden="true"></i>
-            <span>Analizar URL con Vera</span>
+            <span>${__('Analizar URL con Vera')}</span>
           </button>
         </section>
 
         <!-- Paso 2b: Adjuntar archivos — ambos inputs (fotos + documentos) en una sola pantalla -->
         <section class="attach-product-step attach-product-step--form" data-panel="attach" hidden>
           <div class="attach-product-field-group" data-group="photos">
-            <span class="attach-product-field-label">Fotos del producto</span>
-            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="Subir fotos del producto">
+            <span class="attach-product-field-label">${__('Fotos del producto')}</span>
+            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="${__('Subir fotos del producto')}">
               <input type="file" class="attach-product-photos-input" multiple accept="image/jpeg,image/png,image/webp,image/jpg" hidden />
               <i class="fas fa-image" aria-hidden="true"></i>
-              <span class="attach-product-dropzone-text">Arrastra fotos o hace click para elegirlas</span>
-              <span class="attach-product-dropzone-hint">JPG, PNG, WebP · max 10 imagenes · 25MB c/u</span>
+              <span class="attach-product-dropzone-text">${__('Arrastra fotos o hace click para elegirlas')}</span>
+              <span class="attach-product-dropzone-hint">${__('JPG, PNG, WebP · max 10 imagenes · 25MB c/u')}</span>
             </div>
             <ul class="attach-product-file-list" hidden></ul>
           </div>
 
           <div class="attach-product-field-group" data-group="files">
-            <span class="attach-product-field-label">Archivos del producto</span>
-            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="Subir archivos del producto">
+            <span class="attach-product-field-label">${__('Archivos del producto')}</span>
+            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="${__('Subir archivos del producto')}">
               <input type="file" class="attach-product-file-input" multiple accept=".pdf,.doc,.docx,.txt,.md" hidden />
               <i class="fas fa-paperclip" aria-hidden="true"></i>
-              <span class="attach-product-dropzone-text">Arrastra archivos o hace click para elegirlos</span>
+              <span class="attach-product-dropzone-text">${__('Arrastra archivos o hace click para elegirlos')}</span>
               <span class="attach-product-dropzone-hint">PDF, DOC, DOCX, TXT, MD</span>
             </div>
             <ul class="attach-product-file-list" hidden></ul>
@@ -491,7 +491,7 @@ class ProductsListView extends BaseView {
 
           <button type="button" class="attach-product-submit" data-action="submit-attach">
             <i class="fas fa-magic" aria-hidden="true"></i>
-            <span>Analizar con Vera</span>
+            <span>${__('Analizar con Vera')}</span>
           </button>
         </section>
 
@@ -499,15 +499,15 @@ class ProductsListView extends BaseView {
         <section class="attach-product-step attach-product-step--loading" data-panel="loading" hidden>
           <div class="attach-product-loading">
             <div class="attach-product-spinner" aria-hidden="true"></div>
-            <h4 class="attach-product-loading-title">Creando ficha del producto</h4>
-            <p class="attach-product-loading-hint" data-loading-hint>Vera esta preparando la ficha. Te redirigimos al detalle en un momento.</p>
+            <h4 class="attach-product-loading-title">${__('Creando ficha del producto')}</h4>
+            <p class="attach-product-loading-hint" data-loading-hint>${__('Vera esta preparando la ficha. Te redirigimos al detalle en un momento.')}</p>
           </div>
         </section>
       </div>
     `;
 
     const handle = window.Modal.show({
-      title: 'Adjuntar producto',
+      title: __('Adjuntar producto'),
       body,
       className: 'attach-product-modal',
     });
@@ -540,10 +540,10 @@ class ProductsListView extends BaseView {
     }
 
     const stepConfig = {
-      picker:  { title: 'Adjuntar producto',          icon: null,            back: false, backTo: null     },
+      picker:  { title: __('Adjuntar producto'),          icon: null,            back: false, backTo: null     },
       url:     { title: 'URL del producto',           icon: 'fa-link',       back: true,  backTo: 'picker' },
       attach:  { title: 'Adjuntar archivos',          icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
-      loading: { title: 'Creando ficha del producto', icon: null,            back: false, backTo: null     },
+      loading: { title: __('Creando ficha del producto'), icon: null,            back: false, backTo: null     },
     };
 
     const goToStep = (step) => {
@@ -591,7 +591,7 @@ class ProductsListView extends BaseView {
             <i class="fas ${iconClass}" aria-hidden="true"></i>
             <span class="attach-product-file-name">${this.escapeHtml(f.name)}</span>
             <span class="attach-product-file-size">${sizeStr}</span>
-            <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="Quitar archivo" title="Quitar"><i class="fas fa-times" aria-hidden="true"></i></button>
+            <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar archivo')}" title="${__('Quitar')}"><i class="fas fa-times" aria-hidden="true"></i></button>
           </li>`;
         }).join('');
       };
@@ -645,7 +645,7 @@ class ProductsListView extends BaseView {
       const value = (urlInput?.value || '').trim();
       if (!value) {
         urlInput?.focus();
-        this._showNotification('Pega una URL primero', 'error');
+        this._showNotification(__('Pega una URL primero'), 'error');
         return;
       }
       let parsed;
@@ -654,7 +654,7 @@ class ProductsListView extends BaseView {
         if (!/^https?:$/.test(parsed.protocol)) throw new Error('protocol');
       } catch (_) {
         urlInput?.focus();
-        this._showNotification('La URL no es valida', 'error');
+        this._showNotification(__('La URL no es valida'), 'error');
         return;
       }
       submitBtn.disabled = true;
@@ -669,15 +669,15 @@ class ProductsListView extends BaseView {
       const docFiles = Array.from(docs.input?.files || []);
 
       if (!photoFiles.length && !docFiles.length) {
-        this._showNotification('Adjunta al menos una foto o un archivo', 'error');
+        this._showNotification(__('Adjunta al menos una foto o un archivo'), 'error');
         return;
       }
       if (photoFiles.length) {
         const invalid = photoFiles.find((f) => !/^image\//.test(f.type));
-        if (invalid) return this._showNotification(`"${invalid.name}" no es una imagen`, 'error');
-        if (photoFiles.length > 10) return this._showNotification('Maximo 10 imagenes por ficha', 'error');
+        if (invalid) return this._showNotification(__('"{name}" no es una imagen', { name: invalid.name }), 'error');
+        if (photoFiles.length > 10) return this._showNotification(__('Maximo 10 imagenes por ficha'), 'error');
         const oversize = photoFiles.find((f) => f.size > 25 * 1024 * 1024);
-        if (oversize) return this._showNotification(`"${oversize.name}" supera el limite de 25MB`, 'error');
+        if (oversize) return this._showNotification(__('"{name}" supera el limite de 25MB', { name: oversize.name }), 'error');
       }
 
       submitBtn.disabled = true;
@@ -706,7 +706,7 @@ class ProductsListView extends BaseView {
 
   async _analyzePhotosAndCreateProduct({ files, docFiles = [], modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification('Sesion no disponible', 'error');
+      this._showNotification(__('Sesion no disponible'), 'error');
       modalHandle?.close();
       return;
     }
@@ -714,9 +714,9 @@ class ProductsListView extends BaseView {
     let productId = null;  // declarado fuera para cleanup en error
     try {
       // 1) Crear producto placeholder para tener product_id antes de subir
-      setHint('Creando producto inicial...');
+      setHint(__('Creando producto inicial...'));
       const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error('No se pudo obtener una identidad para vincular el producto');
+      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el producto'));
       const placeholderMetadata = { ai_generated: false, pending_ai_enrichment: true, source: 'photos' };
       if (docFiles.length) {
         placeholderMetadata.pending_files = docFiles;
@@ -735,11 +735,11 @@ class ProductsListView extends BaseView {
         })
         .select('id')
         .single();
-      if (insertError || !created?.id) throw insertError || new Error('No se pudo crear el producto');
+      if (insertError || !created?.id) throw insertError || new Error(__('No se pudo crear el producto'));
       productId = created.id;
 
       // 2) Subir imagenes a Supabase Storage
-      setHint(`Subiendo ${files.length} foto${files.length === 1 ? '' : 's'} a storage...`);
+      setHint(__('Subiendo {n} {fotos} a storage...', { n: files.length, fotos: files.length === 1 ? __('foto') : __('fotos') }));
       const imageUrls = [];
       for (const file of files) {
         const ext = (file.name?.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
@@ -753,7 +753,7 @@ class ProductsListView extends BaseView {
       }
 
       // 3) Llamar a la Netlify function que analiza con OpenAI y cobra creditos
-      setHint('Vera esta analizando las fotos con OpenAI Vision...');
+      setHint(__('Vera esta analizando las fotos con OpenAI Vision...'));
       await this._callFicheFunction({
         productId, entityId,
         payload: { product_id: productId, organization_id: this.organizationId, image_urls: imageUrls },
@@ -773,7 +773,7 @@ class ProductsListView extends BaseView {
 
   async _analyzeUrlAndCreateProduct({ url, hostname, modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification('Sesion no disponible', 'error');
+      this._showNotification(__('Sesion no disponible'), 'error');
       modalHandle?.close();
       return;
     }
@@ -781,9 +781,9 @@ class ProductsListView extends BaseView {
     let productId = null;  // declarado fuera del try para que el catch pueda limpiarlo
     try {
       // 1) Crear producto placeholder
-      setHint('Creando producto inicial...');
+      setHint(__('Creando producto inicial...'));
       const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error('No se pudo obtener una identidad para vincular el producto');
+      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el producto'));
       const { data: created, error: insertError } = await this.supabase
         .from('products')
         .insert({
@@ -798,11 +798,11 @@ class ProductsListView extends BaseView {
         })
         .select('id')
         .single();
-      if (insertError || !created?.id) throw insertError || new Error('No se pudo crear el producto');
+      if (insertError || !created?.id) throw insertError || new Error(__('No se pudo crear el producto'));
       productId = created.id;
 
       // 2) Llamar a la function (hace scrape + reupload + OpenAI)
-      setHint(`Leyendo ${hostname || 'la pagina'} y extrayendo datos del producto...`);
+      setHint(__('Leyendo {page} y extrayendo datos del producto...', { page: hostname || __('la pagina') }));
       await this._callFicheFunction({
         productId, entityId,
         payload: { product_id: productId, organization_id: this.organizationId, url },
@@ -824,7 +824,7 @@ class ProductsListView extends BaseView {
   async _callFicheFunction({ productId, entityId, payload, modalHandle, setHint }) {
     const { data: sessionData } = await this.supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) throw new Error('No hay sesion activa');
+    if (!accessToken) throw new Error(__('No hay sesion activa'));
 
     const resp = await fetch('/.netlify/functions/api-products-generate-fiche', {
       method: 'POST',
@@ -842,22 +842,22 @@ class ProductsListView extends BaseView {
       const errMsg = result.error || `HTTP ${resp.status}`;
       const detail = result.detail ? ` (${result.detail})` : '';
       if (resp.status === 402) {
-        this._showNotification(`Creditos insuficientes. Necesitas ${result.credits_needed?.toFixed?.(4) || '?'} creditos`, 'error');
+        this._showNotification(__('Creditos insuficientes. Necesitas {n} creditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
       } else {
-        this._showNotification(`Error generando ficha: ${errMsg}${detail}`, 'error');
+        this._showNotification(__('Error generando ficha: {msg}', { msg: `${errMsg}${detail}` }), 'error');
       }
       console.error('[ProductsListView] fiche function error:', result);
       throw new Error(errMsg);
     }
 
-    setHint(`Ficha generada (costo: ${result.credits_charged.toFixed(4)} creditos). Redirigiendo...`);
+    setHint(__('Ficha generada (costo: {n} creditos). Redirigiendo...', { n: result.credits_charged.toFixed(4) }));
     this._invalidateCache();
     window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
     modalHandle?.close();
     const imgCount = result.images?.inserted || 0;
     if (result.images?.error) {
       console.warn('[ProductsListView] imagenes no se vincularon:', result.images.error);
-      this._showNotification(`Ficha generada · imagenes no se vincularon: ${result.images.error}`, 'error');
+      this._showNotification(__('Ficha generada · imagenes no se vincularon: {err}', { err: result.images.error }), 'error');
     } else {
       const sourceLabel = result.source === 'url'
         ? `desde URL${result.scraped?.brand ? ' (' + result.scraped.brand + ')' : ''}`
@@ -874,13 +874,13 @@ class ProductsListView extends BaseView {
 
   async _createPendingProduct({ url = null, files = null, modalHandle = null } = {}) {
     if (!this.supabase || !this.organizationId) {
-      this._showNotification('Sesion no disponible', 'error');
+      this._showNotification(__('Sesion no disponible'), 'error');
       modalHandle?.close();
       return;
     }
     try {
       const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error('No se pudo obtener una identidad para vincular el producto');
+      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el producto'));
 
       const name = url
         ? this._nameFromUrl(url)
@@ -909,14 +909,14 @@ class ProductsListView extends BaseView {
         .select('id')
         .single();
       if (error) throw error;
-      if (!data?.id) throw new Error('No se obtuvo el id del producto creado');
+      if (!data?.id) throw new Error(__('No se obtuvo el id del producto creado'));
 
       this._invalidateCache();
       modalHandle?.close();
       this._navigateToProductDetail(entityId, data.id);
     } catch (err) {
       console.error('ProductsListView _createPendingProduct:', err);
-      this._showNotification(err?.message || 'No se pudo crear la ficha', 'error');
+      this._showNotification(err?.message || __('No se pudo crear la ficha'), 'error');
       modalHandle?.close();
     }
   }
