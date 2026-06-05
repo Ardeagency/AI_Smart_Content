@@ -11,34 +11,41 @@
 (function () {
   'use strict';
 
-  /** Nicho principal de la marca (dropdown `nicho_core`). */
-  const NICHO_CORE_OPTIONS = [
-    { value: '', label: 'Seleccionar nicho' },
-    { value: 'tecnologia_saas', label: 'Tecnología / SaaS' },
-    { value: 'ecommerce_retail', label: 'E-commerce / Retail' },
-    { value: 'salud_bienestar', label: 'Salud y bienestar' },
-    { value: 'fitness_deporte', label: 'Fitness y deporte' },
-    { value: 'alimentacion', label: 'Alimentación y gastronomía' },
-    { value: 'educacion', label: 'Educación y formación' },
-    { value: 'inmobiliaria', label: 'Inmobiliaria' },
-    { value: 'servicios_profesionales', label: 'Servicios profesionales' },
-    { value: 'marketing_agencia', label: 'Marketing y agencias' },
-    { value: 'entretenimiento', label: 'Entretenimiento y medios' },
-    { value: 'moda_belleza', label: 'Moda y belleza' },
-    { value: 'turismo', label: 'Turismo y hospitalidad' },
-    { value: 'finanzas', label: 'Finanzas y seguros' },
-    { value: 'industrial_b2b', label: 'Industrial / B2B' },
-    { value: 'sostenibilidad', label: 'Sostenibilidad e impacto' },
-    { value: 'arte_cultura', label: 'Arte y cultura' },
-    { value: 'hogar_lifestyle', label: 'Hogar y lifestyle' },
-    { value: 'otro', label: 'Otro' }
-  ];
+  // i18n: helper local. Las etiquetas se traducen en cada acceso (getters),
+  // no en la definicion, para respetar el cambio de idioma en caliente.
+  const _t = (s) => (window.__ ? window.__(s) : s);
+
+  /** Nicho principal de la marca (dropdown `nicho_core`). Los `value` son datos
+   *  (se guardan en BD); solo se traduce el `label`. */
+  function nichoCoreOptions() {
+    return [
+      { value: '', label: _t('Seleccionar nicho') },
+      { value: 'tecnologia_saas', label: _t('Tecnología / SaaS') },
+      { value: 'ecommerce_retail', label: _t('E-commerce / Retail') },
+      { value: 'salud_bienestar', label: _t('Salud y bienestar') },
+      { value: 'fitness_deporte', label: _t('Fitness y deporte') },
+      { value: 'alimentacion', label: _t('Alimentación y gastronomía') },
+      { value: 'educacion', label: _t('Educación y formación') },
+      { value: 'inmobiliaria', label: _t('Inmobiliaria') },
+      { value: 'servicios_profesionales', label: _t('Servicios profesionales') },
+      { value: 'marketing_agencia', label: _t('Marketing y agencias') },
+      { value: 'entretenimiento', label: _t('Entretenimiento y medios') },
+      { value: 'moda_belleza', label: _t('Moda y belleza') },
+      { value: 'turismo', label: _t('Turismo y hospitalidad') },
+      { value: 'finanzas', label: _t('Finanzas y seguros') },
+      { value: 'industrial_b2b', label: _t('Industrial / B2B') },
+      { value: 'sostenibilidad', label: _t('Sostenibilidad e impacto') },
+      { value: 'arte_cultura', label: _t('Arte y cultura') },
+      { value: 'hogar_lifestyle', label: _t('Hogar y lifestyle') },
+      { value: 'otro', label: _t('Otro') }
+    ];
+  }
 
   function getNichoCoreLabel(storedValue) {
     const v = storedValue == null ? '' : String(storedValue);
-    const row = NICHO_CORE_OPTIONS.find((o) => o.value === v);
+    const row = nichoCoreOptions().find((o) => o.value === v);
     if (row) return row.label;
-    return v.trim() ? v : 'Seleccionar nicho';
+    return v.trim() ? v : _t('Seleccionar nicho');
   }
 
   /**
@@ -53,26 +60,30 @@
    * (warning visual), no bloqueantes: el usuario puede pasarse, pero ve
    * counter en rojo + advertencia.
    */
-  const BRAND_SCHEMA_BLOCKS_CONTAINER = [
-    { field: 'creative_brief',        label: 'Sintesis creativa',        type: 'textarea', maxChars: 200 },
-    { field: 'idiomas_contenido',     label: 'Idiomas de contenido',     type: 'array',    maxItems: 3 },
-    { field: 'mercado_objetivo',      label: 'Mercado objetivo',         type: 'array',    maxItems: 4 },
-    { field: 'nicho_core',            label: 'Nicho core',               type: 'select' },
-    { field: 'sub_nichos',            label: 'Sub-nichos',               type: 'array',    maxItems: 3 },
-    { field: 'arquetipo',             label: 'Arquetipo',                type: 'text',     maxChars: 40 },
-    { field: 'propuesta_valor',       label: 'Propuesta de valor',       type: 'textarea', maxChars: 200 },
-    { field: 'mision_vision',         label: 'Misión y visión',          type: 'textarea', maxChars: 250 },
-    { field: 'verbal_dna',            label: 'ADN verbal',               type: 'json' },
-    { field: 'visual_dna',            label: 'ADN visual',               type: 'json' },
-    { field: 'palabras_clave',        label: 'Palabras clave',           type: 'array',    maxItems: 6 },
-    { field: 'palabras_prohibidas',   label: 'Palabras prohibidas',      type: 'array',    maxItems: 6 },
-    { field: 'objetivos_estrategicos', label: 'Objetivos estratégicos',  type: 'array',    maxItems: 3 }
-  ];
+  function brandSchemaBlocksContainer() {
+    return [
+      { field: 'creative_brief',        label: _t('Sintesis creativa'),        type: 'textarea', maxChars: 200 },
+      { field: 'idiomas_contenido',     label: _t('Idiomas de contenido'),     type: 'array',    maxItems: 3 },
+      { field: 'mercado_objetivo',      label: _t('Mercado objetivo'),         type: 'array',    maxItems: 4 },
+      { field: 'nicho_core',            label: _t('Nicho core'),               type: 'select' },
+      { field: 'sub_nichos',            label: _t('Sub-nichos'),               type: 'array',    maxItems: 3 },
+      { field: 'arquetipo',             label: _t('Arquetipo'),                type: 'text',     maxChars: 40 },
+      { field: 'propuesta_valor',       label: _t('Propuesta de valor'),       type: 'textarea', maxChars: 200 },
+      { field: 'mision_vision',         label: _t('Misión y visión'),          type: 'textarea', maxChars: 250 },
+      { field: 'verbal_dna',            label: _t('ADN verbal'),               type: 'json' },
+      { field: 'visual_dna',            label: _t('ADN visual'),               type: 'json' },
+      { field: 'palabras_clave',        label: _t('Palabras clave'),           type: 'array',    maxItems: 6 },
+      { field: 'palabras_prohibidas',   label: _t('Palabras prohibidas'),      type: 'array',    maxItems: 6 },
+      { field: 'objetivos_estrategicos', label: _t('Objetivos estratégicos'),  type: 'array',    maxItems: 3 }
+    ];
+  }
 
   /** Variante para panel INFO de organización: sin `idiomas_contenido`/`mercado_objetivo`. */
-  const BRAND_SCHEMA_BLOCKS_ORG = BRAND_SCHEMA_BLOCKS_CONTAINER.filter(
-    (b) => !['idiomas_contenido', 'mercado_objetivo'].includes(b.field)
-  );
+  function brandSchemaBlocksOrg() {
+    return brandSchemaBlocksContainer().filter(
+      (b) => !['idiomas_contenido', 'mercado_objetivo'].includes(b.field)
+    );
+  }
 
   /** Utilidad para extraer nombres de campos por tipo de editor. */
   function fieldsByType(schema, type) {
@@ -128,10 +139,11 @@
   ];
 
   window.BrandSchema = {
-    NICHO_CORE_OPTIONS,
+    // Getters: re-evaluan __() en cada acceso para reflejar el idioma activo.
+    get NICHO_CORE_OPTIONS() { return nichoCoreOptions(); },
     getNichoCoreLabel,
-    BRAND_SCHEMA_BLOCKS_CONTAINER,
-    BRAND_SCHEMA_BLOCKS_ORG,
+    get BRAND_SCHEMA_BLOCKS_CONTAINER() { return brandSchemaBlocksContainer(); },
+    get BRAND_SCHEMA_BLOCKS_ORG() { return brandSchemaBlocksOrg(); },
     fieldsByType,
     BRAND_IDIOMAS_OPTIONS,
     BRAND_IDIOMAS_ALIASES,

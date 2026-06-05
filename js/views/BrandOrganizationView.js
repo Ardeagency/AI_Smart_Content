@@ -3,7 +3,7 @@
  * Sin `brand_containers`; sin card de entidades. Hereda la UX premium del antiguo BrandsView.
  */
 class BrandOrganizationView extends BaseView {
-  static documentTitle = 'Marca de la organización';
+  static get documentTitle() { return __('Marca de la organización'); }
 
   constructor() {
     super();
@@ -74,7 +74,7 @@ class BrandOrganizationView extends BaseView {
     <!-- Footer: MARCA + Mercado -->
     <div class="brand-corner-bottom-left">
         <div class="brand-main-info">
-            <button type="button" class="brand-corner-logo-btn" id="brandCornerLogoBtn" aria-label="Subir logo de organización">
+            <button type="button" class="brand-corner-logo-btn" id="brandCornerLogoBtn" aria-label="${__('Subir logo de organización')}">
                 <span class="brand-corner-logo-inner" id="brandCornerLogoInner">
                     <i class="fas fa-plus" aria-hidden="true"></i>
                 </span>
@@ -299,8 +299,8 @@ class BrandOrganizationView extends BaseView {
   async updateHeader() {
     await super.updateHeader();
     const name =
-      (this.organizationRow?.brand_name_oficial || this.organizationRow?.name || 'Marca').trim();
-    this.updateHeaderContext('Marca', name);
+      (this.organizationRow?.brand_name_oficial || this.organizationRow?.name || __('Marca')).trim();
+    this.updateHeaderContext(__('Marca'), name);
   }
 
   async initSupabase() {
@@ -739,7 +739,7 @@ class BrandOrganizationView extends BaseView {
     const el = document.getElementById('brandMarketLabel');
     if (!el) return;
     el.removeAttribute('data-field');
-    el.textContent = 'Workspace · identidad organizacional';
+    el.textContent = __('Workspace · identidad organizacional');
     el.style.cursor = 'default';
     el.style.opacity = '0.72';
   }
@@ -951,7 +951,7 @@ class BrandOrganizationView extends BaseView {
     container.classList.remove('assets-files--empty');
 
     const cards = assets.map((asset) => {
-      const fileName = asset.file_name || 'Archivo';
+      const fileName = asset.file_name || __('Archivo');
       const fileType = String(asset.file_type || '').toLowerCase();
       const fileUrl = String(asset.file_url || '').trim();
       const isImage = fileType.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(fileName);
@@ -1155,7 +1155,7 @@ class BrandOrganizationView extends BaseView {
       }
     } catch (error) {
       console.error(`BrandOrganizationView saveContainerField ${fieldName}:`, error);
-      alert(`Error al guardar ${fieldName}.`);
+      alert(__('Error al guardar {field}.', { field: fieldName }));
     } finally {
       this.savingFields.delete(saveKey);
     }
@@ -1177,7 +1177,7 @@ class BrandOrganizationView extends BaseView {
       if (this.brandData) this.brandData[fieldName] = v;
     } catch (error) {
       console.error('BrandOrganizationView saveBrandField:', error);
-      alert(`Error al guardar ${fieldName}.`);
+      alert(__('Error al guardar {field}.', { field: fieldName }));
     } finally {
       this.savingFields.delete(saveKey);
     }
@@ -1248,7 +1248,7 @@ class BrandOrganizationView extends BaseView {
       const removeBtn = document.createElement('span');
       removeBtn.className = 'editable-tag-remove';
       removeBtn.innerHTML = ' ×';
-      removeBtn.setAttribute('aria-label', 'Quitar');
+      removeBtn.setAttribute('aria-label', __('Quitar'));
       removeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         const newValues = currentValues.filter(v => v !== val);

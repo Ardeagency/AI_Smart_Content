@@ -122,7 +122,7 @@
         const actionHtml = row.connected
           ? `
             <div class="info-connect-actions">
-              <a class="info-connect-action is-open" ${linkAttrs} aria-label="Abrir ${this.escapeHtml(row.label)}">Abrir</a>
+              <a class="info-connect-action is-open" ${linkAttrs} aria-label="${__('Abrir {x}', { x: this.escapeHtml(row.label) })}">${__('Abrir')}</a>
               <button type="button" class="info-connect-action is-disconnect" data-disconnect-provider="${this.escapeHtml(row.oauthProvider || '')}" data-brand-container-id="${this.escapeHtml(String(brandContainerId || ''))}" aria-label="Desconectar ${this.escapeHtml(row.label)}">Desconectar</button>
             </div>
           `
@@ -232,13 +232,13 @@
     const chips = arr.map((v) => `
       <span class="info-brand-tag">
         <span class="info-brand-tag__label">${this.escapeHtml(v)}</span>
-        <button type="button" class="info-brand-tag__remove" data-value="${this.escapeHtml(v)}" aria-label="Quitar ${this.escapeHtml(v)}">×</button>
+        <button type="button" class="info-brand-tag__remove" data-value="${this.escapeHtml(v)}" aria-label="${__('Quitar {x}', { x: this.escapeHtml(v) })}">×</button>
       </span>
     `).join('');
     return `
       <div class="info-brand-tags-editor" data-brand-field="${this.escapeHtml(field)}" data-brand-input-type="array-tags" data-json-path="${this.escapeHtml(path)}">
         <div class="info-brand-tags-list">${chips}</div>
-        <input type="text" class="info-brand-tag-input" placeholder="+ Añadir etiqueta" aria-label="Añadir etiqueta">
+        <input type="text" class="info-brand-tag-input" placeholder="${__('+ Añadir etiqueta')}" aria-label="${__('Añadir etiqueta')}">
       </div>`;
     },
 
@@ -251,7 +251,7 @@
   _renderJsonObjectBody(field, pathArr, obj) {
     const keys = Object.keys(obj || {});
     if (!keys.length) {
-      return `<p class="info-brand-json-empty">Sin datos definidos.</p>`;
+      return `<p class="info-brand-json-empty">${__('Sin datos definidos.')}</p>`;
     }
     return keys.map((key) => {
       const childPath = [...pathArr, key];
@@ -263,7 +263,7 @@
       } else if (v !== null && typeof v === 'object') {
         inner = `<div class="info-brand-json-subgroup">${this._renderJsonObjectBody(field, childPath, v)}</div>`;
       } else if (typeof v === 'boolean') {
-        inner = `<label class="info-brand-json-bool"><input type="checkbox" data-brand-field="${this.escapeHtml(field)}" data-brand-input-type="json-bool" data-json-path="${this.escapeHtml(childPathStr)}" ${v ? 'checked' : ''}><span class="info-brand-json-bool__txt">${v ? 'Sí' : 'No'}</span></label>`;
+        inner = `<label class="info-brand-json-bool"><input type="checkbox" data-brand-field="${this.escapeHtml(field)}" data-brand-input-type="json-bool" data-json-path="${this.escapeHtml(childPathStr)}" ${v ? 'checked' : ''}><span class="info-brand-json-bool__txt">${v ? __('Sí') : __('No')}</span></label>`;
       } else if (typeof v === 'number') {
         inner = `<input type="number" class="info-brand-json-number" data-brand-field="${this.escapeHtml(field)}" data-brand-input-type="json-number" data-json-path="${this.escapeHtml(childPathStr)}" value="${this.escapeHtml(String(v))}">`;
       } else {
@@ -283,8 +283,8 @@
     if (!rows.length) {
       return `
       <section class="info-section" aria-labelledby="infoBrandEntitiesHeading">
-        <h3 class="info-section-title" id="infoBrandEntitiesHeading">Entidades y descripciones</h3>
-        <p class="info-assets-empty">Sin entidades vinculadas.</p>
+        <h3 class="info-section-title" id="infoBrandEntitiesHeading">${__('Entidades y descripciones')}</h3>
+        <p class="info-assets-empty">${__('Sin entidades vinculadas.')}</p>
       </section>`;
     }
 
@@ -293,7 +293,7 @@
         <div class="info-asset-preview"><span class="info-asset-icon" aria-hidden="true"><i class="fas fa-cube"></i></span></div>
         <div class="info-asset-main">
           <input type="text" class="info-brand-textarea" data-entity-id="${this.escapeHtml(String(row.id || ''))}" data-entity-field="name" value="${this.escapeHtml(String(row.name || ''))}" placeholder="Nombre entidad">
-          <textarea class="info-brand-textarea" data-entity-id="${this.escapeHtml(String(row.id || ''))}" data-entity-field="description" rows="2" spellcheck="true" placeholder="Descripción de entidad">${this.escapeHtml(String(row.description || ''))}</textarea>
+          <textarea class="info-brand-textarea" data-entity-id="${this.escapeHtml(String(row.id || ''))}" data-entity-field="description" rows="2" spellcheck="true" placeholder="${__('Descripción de entidad')}">${this.escapeHtml(String(row.description || ''))}</textarea>
           <span class="info-asset-meta">${this.escapeHtml(row.entity_type || 'Sin tipo')}</span>
         </div>
         <span class="info-connect-external" aria-hidden="true"><i class="fas fa-file-alt"></i></span>
@@ -302,7 +302,7 @@
 
     return `
       <section class="info-section" aria-labelledby="infoBrandEntitiesHeading">
-        <h3 class="info-section-title" id="infoBrandEntitiesHeading">Entidades y descripciones</h3>
+        <h3 class="info-section-title" id="infoBrandEntitiesHeading">${__('Entidades y descripciones')}</h3>
         <ul class="info-asset-list" role="list">${items}</ul>
       </section>`;
     },
@@ -321,7 +321,7 @@
       <div class="info-panel-grid">
         <div class="info-panel-grid__primary">
           <section class="info-section info-section-identity" aria-labelledby="infoBrandIdentityHeading">
-            <h3 class="info-section-title" id="infoBrandIdentityHeading">Identidad</h3>
+            <h3 class="info-section-title" id="infoBrandIdentityHeading">${__('Identidad')}</h3>
             <div class="info-identity-row info-identity-row--logo-only">
               <div class="info-logo-container">
                 ${logoUrl
@@ -330,9 +330,9 @@
               </div>
             </div>
             <div class="brand-storage-info-summary">
-              <div class="brand-storage-info-title editable-inline-title" role="textbox" contenteditable="true" spellcheck="true" data-inline-field="nombre_marca" data-placeholder="Nombre de sub-marca">${name}</div>
-              <div class="brand-storage-info-subtitle editable-inline-subtitle" role="textbox" contenteditable="true" spellcheck="true" data-inline-field="propuesta_valor" data-placeholder="Sin propuesta de valor definida">${slogan}</div>
-              <div class="brand-storage-info-dates">${updated ? `Última actualización ${this.escapeHtml(updated)}` : 'Sin actualizaciones'}</div>
+              <div class="brand-storage-info-title editable-inline-title" role="textbox" contenteditable="true" spellcheck="true" data-inline-field="nombre_marca" data-placeholder="${__('Nombre de sub-marca')}">${name}</div>
+              <div class="brand-storage-info-subtitle editable-inline-subtitle" role="textbox" contenteditable="true" spellcheck="true" data-inline-field="propuesta_valor" data-placeholder="${__('Sin propuesta de valor definida')}">${slogan}</div>
+              <div class="brand-storage-info-dates">${updated ? __('Última actualización {d}', { d: this.escapeHtml(updated) }) : __('Sin actualizaciones')}</div>
             </div>
           </section>
           ${this.renderIntegrationsSection(item?.id)}
@@ -432,7 +432,7 @@
     if (fieldName === 'nombre_marca') {
       const trimmed = String(normalizedValue || '').trim();
       if (!trimmed) {
-        alert('El nombre de la sub-marca no puede estar vacío.');
+        alert(__('El nombre de la sub-marca no puede estar vacío.'));
         return false;
       }
       const orgId = this.organizationRow?.id
@@ -448,7 +448,7 @@
         if (checkErr) {
           console.error('saveBrandContainerFieldById uniqueness check:', checkErr);
         } else if ((conflicts || []).length > 0) {
-          alert(`Ya existe una sub-marca con el nombre "${trimmed}" en esta organización. Elige otro nombre.`);
+          alert(__('Ya existe una sub-marca con el nombre "{name}" en esta organización. Elige otro nombre.', { name: trimmed }));
           return false;
         }
       }
@@ -460,10 +460,10 @@
       .eq('id', brandContainerId);
     if (error) {
       if (error.code === '23505') {
-        alert(`Ya existe una sub-marca con ese nombre en esta organización.`);
+        alert(__('Ya existe una sub-marca con ese nombre en esta organización.'));
       } else {
         console.error('BrandstorageView saveBrandContainerFieldById:', error);
-        alert(`No se pudo guardar ${fieldName}.`);
+        alert(__('No se pudo guardar {field}.', { field: fieldName }));
       }
       return false;
     }
@@ -481,7 +481,7 @@
       .eq('id', integrationId);
     if (error) {
       console.error('BrandstorageView saveBrandIntegrationField:', error);
-      alert(`No se pudo guardar integración (${fieldName}).`);
+      alert(__('No se pudo guardar integración ({field}).', { field: fieldName }));
       return false;
     }
     const row = (this.brandIntegrations || []).find((item) => String(item.id) === String(integrationId));
@@ -498,7 +498,7 @@
       .eq('id', entityId);
     if (error) {
       console.error('BrandstorageView saveBrandEntityField:', error);
-      alert(`No se pudo guardar entidad (${fieldName}).`);
+      alert(__('No se pudo guardar entidad ({field}).', { field: fieldName }));
       return false;
     }
     const row = (this.brandEntities || []).find((item) => String(item.id) === String(entityId));
@@ -516,21 +516,21 @@
       return;
     }
     if (!this.supabase) {
-      alert('Supabase no disponible para conectar integración.');
+      alert(__('Supabase no disponible para conectar integración.'));
       return;
     }
 
     try {
       if (actionButton) {
         actionButton.disabled = true;
-        actionButton.dataset.originalText = actionButton.textContent || 'Conectar';
+        actionButton.dataset.originalText = actionButton.textContent || __('Conectar');
         actionButton.textContent = 'Conectando...';
       }
 
       const { data: { session } } = await this.supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
-        alert('Sesión no válida. Inicia sesión y vuelve a intentar.');
+        alert(__('Sesión no válida. Inicia sesión y vuelve a intentar.'));
         return;
       }
 
@@ -567,11 +567,11 @@
       window.location.href = json.authorize_url;
     } catch (error) {
       console.error('BrandstorageView startBrandIntegrationOAuth:', error);
-      alert(error?.message || 'No se pudo conectar la integración.');
+      alert(error?.message || __('No se pudo conectar la integración.'));
     } finally {
       if (actionButton) {
         actionButton.disabled = false;
-        actionButton.textContent = actionButton.dataset.originalText || 'Conectar';
+        actionButton.textContent = actionButton.dataset.originalText || __('Conectar');
       }
     }
     },
@@ -603,8 +603,7 @@
         // Body HTML — el título y close button los pone el Modal automáticamente.
         const bodyHtml = `
           <p style="margin:0 0 1rem;color:var(--text-secondary,#a0a0a0)">
-            Ingresa el dominio de tu tienda Shopify. Lo encontrarás como
-            <code>mitienda.myshopify.com</code>.
+            ${__('Ingresa el dominio de tu tienda Shopify. Lo encontrarás como {ex}.', { ex: '<code>mitienda.myshopify.com</code>' })}
           </p>
           <input
             type="text"
@@ -615,12 +614,12 @@
           />
           <p id="bs-shopify-err" style="margin:.5rem 0 0;color:#e74c3c;font-size:.85rem;min-height:1.2em"></p>
           <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
-            <button type="button" id="bs-shopify-cancel" class="btn btn-secondary">Cancelar</button>
-            <button type="button" id="bs-shopify-ok" class="btn btn-primary">Continuar</button>
+            <button type="button" id="bs-shopify-cancel" class="btn btn-secondary">${__('Cancelar')}</button>
+            <button type="button" id="bs-shopify-ok" class="btn btn-primary">${__('Continuar')}</button>
           </div>`;
 
         const { bodyEl, close } = window.Modal.show({
-          title:     'Conectar Shopify',
+          title:     __('Conectar Shopify'),
           body:      bodyHtml,
           className: 'bs-shopify-modal',
           onClose:   () => safeResolve(null)
@@ -646,7 +645,7 @@
         const submit = () => {
           const normalized = normalize(input.value);
           if (!normalized) {
-            if (err) err.textContent = 'Formato inválido. Usa: mitienda.myshopify.com';
+            if (err) err.textContent = __('Formato inválido. Usa: mitienda.myshopify.com');
             input.focus();
             return;
           }
@@ -666,7 +665,7 @@
         if (raw == null) return safeResolve(null);
         const normalized = normalize(raw);
         if (!normalized) {
-          alert('Formato inválido. Debe ser mitienda.myshopify.com');
+          alert(__('Formato inválido. Debe ser mitienda.myshopify.com'));
           return safeResolve(null);
         }
         safeResolve(normalized);
@@ -683,21 +682,21 @@
       return;
     }
     if (!this.supabase) {
-      alert('Supabase no disponible para desconectar integración.');
+      alert(__('Supabase no disponible para desconectar integración.'));
       return;
     }
 
     try {
       if (actionButton) {
         actionButton.disabled = true;
-        actionButton.dataset.originalText = actionButton.textContent || 'Desconectar';
+        actionButton.dataset.originalText = actionButton.textContent || __('Desconectar');
         actionButton.textContent = 'Desconectando...';
       }
 
       const { data: { session } } = await this.supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
-        alert('Sesión no válida. Inicia sesión y vuelve a intentar.');
+        alert(__('Sesión no válida. Inicia sesión y vuelve a intentar.'));
         return;
       }
 
@@ -721,11 +720,11 @@
       this._refreshInfoPanelIfOpen();
     } catch (error) {
       console.error('BrandstorageView disconnectBrandIntegration:', error);
-      alert(error?.message || 'No se pudo desconectar la integración.');
+      alert(error?.message || __('No se pudo desconectar la integración.'));
     } finally {
       if (actionButton) {
         actionButton.disabled = false;
-        actionButton.textContent = actionButton.dataset.originalText || 'Desconectar';
+        actionButton.textContent = actionButton.dataset.originalText || __('Desconectar');
       }
     }
     },
@@ -924,11 +923,11 @@
               .map((value) => `
                 <span class="info-brand-multiselect__chip">
                   <span class="info-brand-multiselect__chip-label">${this.escapeHtml(this.getBrandArrayValueLabel(field, value))}</span>
-                  <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="Quitar ${this.escapeHtml(this.getBrandArrayValueLabel(field, value))}">×</button>
+                  <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="${__('Quitar {x}', { x: this.escapeHtml(this.getBrandArrayValueLabel(field, value)) })}">×</button>
                 </span>
               `)
               .join('')
-          : '<span class="info-brand-multiselect__placeholder">Seleccionar</span>';
+          : `<span class="info-brand-multiselect__placeholder">${__('Seleccionar')}</span>`;
         wrap.setAttribute('data-selected', JSON.stringify(selected));
       };
 
@@ -1047,7 +1046,7 @@
         list.innerHTML = arr.map((v) => `
           <span class="info-brand-tag">
             <span class="info-brand-tag__label">${this.escapeHtml(v)}</span>
-            <button type="button" class="info-brand-tag__remove" data-value="${this.escapeHtml(v)}" aria-label="Quitar ${this.escapeHtml(v)}">×</button>
+            <button type="button" class="info-brand-tag__remove" data-value="${this.escapeHtml(v)}" aria-label="${__('Quitar {x}', { x: this.escapeHtml(v) })}">×</button>
           </span>
         `).join('');
       };
@@ -1104,7 +1103,7 @@
       const path = el.getAttribute('data-json-path');
       el.addEventListener('change', async () => {
         const txt = el.parentElement?.querySelector('.info-brand-json-bool__txt');
-        if (txt) txt.textContent = el.checked ? 'Sí' : 'No';
+        if (txt) txt.textContent = el.checked ? __('Sí') : __('No');
         await persistJsonScalarChange(field, path, !!el.checked);
       });
     });
@@ -1459,8 +1458,8 @@
     if (!assets.length) {
       return `
       <section class="info-section info-section-assets" aria-labelledby="infoAssetsHeading">
-        <h3 class="info-section-title" id="infoAssetsHeading">Assets</h3>
-        <p class="info-assets-empty">Aún no hay archivos. Súbelos desde la card «Archivos de identidad».</p>
+        <h3 class="info-section-title" id="infoAssetsHeading">${__('Assets')}</h3>
+        <p class="info-assets-empty">${__('Aún no hay archivos. Súbelos desde la card «Archivos de identidad».')}</p>
       </section>`;
     }
     const items = assets.slice(0, 16).map((a) => {
@@ -1484,22 +1483,22 @@
             <span class="info-asset-name">${name}</span>
             ${sizeKb}
           </div>
-          <a class="info-connect-external" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="Abrir archivo"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+          <a class="info-connect-external" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="${__('Abrir archivo')}"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
         </li>`;
     }).join('');
     return `
       <section class="info-section info-section-assets" aria-labelledby="infoAssetsHeading">
-        <h3 class="info-section-title" id="infoAssetsHeading">Assets</h3>
+        <h3 class="info-section-title" id="infoAssetsHeading">${__('Assets')}</h3>
         <ul class="info-asset-list" role="list">${items}</ul>
       </section>`;
     },
 
   renderBrandSchemaAsideHtml() {
     const blocks = [
-      { field: 'brand_name_oficial', label: 'Nombre de marca', type: 'text' },
-      { field: 'name', label: 'Nombre del workspace', type: 'text' },
-      { field: 'brand_slogan', label: 'Tagline / eslogan', type: 'textarea' },
-      { field: 'level_of_autonomy', label: 'Nivel de autonomía', type: 'text' }
+      { field: 'brand_name_oficial', label: __('Nombre de marca'), type: 'text' },
+      { field: 'name', label: __('Nombre del workspace'), type: 'text' },
+      { field: 'brand_slogan', label: __('Tagline / eslogan'), type: 'textarea' },
+      { field: 'level_of_autonomy', label: __('Nivel de autonomía'), type: 'text' }
     ]
       .map(({ field, label, type }) => {
         const f = this.escapeHtml(field);
@@ -1520,8 +1519,8 @@
 
     return `
       <div class="info-brand-aside-inner">
-        <h3 class="info-section-title" id="infoBrandSchemaHeading">Organización</h3>
-        <p class="info-brand-aside-lead">Campos persistidos en la fila del workspace.</p>
+        <h3 class="info-section-title" id="infoBrandSchemaHeading">${__('Organización')}</h3>
+        <p class="info-brand-aside-lead">${__('Campos persistidos en la fila del workspace.')}</p>
         <div class="info-brand-fields">
           ${blocks}
         </div>
@@ -1653,7 +1652,7 @@
           try {
             parsed = JSON.parse(t);
           } catch (_) {
-            alert(`JSON no válido en ${field}. Revisá la sintaxis.`);
+            alert(__('JSON no válido en {field}. Revisá la sintaxis.', { field }));
             el.focus();
             return;
           }
@@ -1819,11 +1818,11 @@
           .map((value) => `
             <span class="info-brand-multiselect__chip">
               <span class="info-brand-multiselect__chip-label">${this.escapeHtml(this.getBrandArrayValueLabel(fieldName, value))}</span>
-              <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="Quitar ${this.escapeHtml(this.getBrandArrayValueLabel(fieldName, value))}">×</button>
+              <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="${__('Quitar {x}', { x: this.escapeHtml(this.getBrandArrayValueLabel(fieldName, value)) })}">×</button>
             </span>
           `)
           .join('')
-      : '<span class="info-brand-multiselect__placeholder">Seleccionar</span>';
+      : `<span class="info-brand-multiselect__placeholder">${__('Seleccionar')}</span>`;
     const optionsHtml = options.map((option) => {
       const optionValue = String(option.value || '');
       const optionLabel = String(option.label || optionValue);
