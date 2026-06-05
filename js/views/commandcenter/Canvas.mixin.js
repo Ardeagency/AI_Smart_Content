@@ -310,7 +310,7 @@
   /* ── Nodo identity (producto/servicio/lugar/flow/brief): conexion libre ─ */
   P._nodeIdentityHTML = function (n, pos) {
     const r = n.row || {};
-    const labels = { products: 'Producto', services: 'Servicio', places: 'Lugar', flows: 'Flow', briefs: 'Brief' };
+    const labels = { products: __('Producto'), services: __('Servicio'), places: __('Lugar'), flows: 'Flow', briefs: 'Brief' };
     const icons  = { products: 'fa-box', services: 'fa-tag', places: 'fa-map-pin', flows: 'fa-diagram-project', briefs: 'fa-file-lines' };
     const t = n.identityType;
     return `

@@ -6,7 +6,7 @@
  * - Conexiones existentes: integraciones + segmentos con vínculo a persona
  */
 class CommandCenterView extends BaseView {
-  static documentTitle = 'Command Center';
+  static get documentTitle() { return __('Command Center'); }
 
   constructor() {
     super();
@@ -94,15 +94,15 @@ class CommandCenterView extends BaseView {
 <div class="cc-page" id="commandCenterPage">
 
   <!-- OPTIMIZACIÓN: comentarios de Vera. Sección oculta hasta que haya comentarios reales -->
-  <section class="cc-section cc-section--optim" id="ccOptimSection" style="display:none;" aria-label="Optimización propuesta por Vera">
+  <section class="cc-section cc-section--optim" id="ccOptimSection" style="display:none;" aria-label="${__('Optimización propuesta por Vera')}">
     <div class="cc-optim-bg" aria-hidden="true">
       <div class="cc-optim-gradient"></div>
     </div>
     <div class="cc-optim-body">
       <div class="cc-section-head">
         <div class="cc-section-head-main">
-          <h2 class="cc-section-title">Optimización</h2>
-          <p class="cc-section-lede">Lecturas y recomendaciones de Vera sobre tus campañas y audiencia real. Aprueba para que se materialice en el próximo plan.</p>
+          <h2 class="cc-section-title">${__('Optimización')}</h2>
+          <p class="cc-section-lede">${__('Lecturas y recomendaciones de Vera sobre tus campañas y audiencia real. Aprueba para que se materialice en el próximo plan.')}</p>
         </div>
         <div class="cc-optim-count-wrap" aria-live="polite" aria-atomic="true">
           <span class="cc-optim-count-num" id="ccVeraInboxCount" aria-label="Total de comentarios">0</span>
@@ -172,7 +172,7 @@ class CommandCenterView extends BaseView {
               <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="Cerrar seccion" aria-label="Cerrar seccion">
                 <i class="fas fa-times"></i>
               </button>
-              <span class="cc-fp-title" id="ccPanelTitle">Biblioteca</span>
+              <span class="cc-fp-title" id="ccPanelTitle">${__('Biblioteca')}</span>
             </div>
             <div class="cc-fp-body" id="ccPanelBody"></div>
           </div>
@@ -237,8 +237,8 @@ class CommandCenterView extends BaseView {
     this._organizationId  = this._resolveOrganizationId();
 
     if (!this._organizationId) {
-      this.updateHeaderContext('Command Center', this._subBrandSlug || '—', window.currentOrgName || '');
-      this._setError('Selecciona una organización o inicia sesión de nuevo.');
+      this.updateHeaderContext(__('Command Center'), this._subBrandSlug || '—', window.currentOrgName || '');
+      this._setError(__('Selecciona una organización o inicia sesión de nuevo.'));
       return;
     }
 
@@ -246,7 +246,7 @@ class CommandCenterView extends BaseView {
       ? await window.supabaseService.getClient()
       : window.supabase;
     this._supabase = supabase || null;
-    if (!supabase) { this._setError('No hay conexión con la base de datos.'); return; }
+    if (!supabase) { this._setError(__('No hay conexión con la base de datos.')); return; }
 
     const slugFn = typeof window.getOrgSlug === 'function'
       ? window.getOrgSlug
@@ -282,7 +282,7 @@ class CommandCenterView extends BaseView {
     const displayName = match
       ? (String(match.nombre_marca || '').trim() || 'Sub-marca')
       : (this._subBrandSlug || this._subBrandShortId || '—');
-    this.updateHeaderContext('Command Center', displayName, window.currentOrgName || '');
+    this.updateHeaderContext(__('Command Center'), displayName, window.currentOrgName || '');
 
     if (!match) {
       this._setError(`No se encontró la sub-marca "${displayName}". Revisa el nombre en Brand Storage.`);
@@ -403,19 +403,19 @@ class CommandCenterView extends BaseView {
     if (section) section.style.display = '';
 
     if (count) count.textContent = String(actions.length);
-    if (label) label.textContent = actions.length === 1 ? 'comentario' : 'comentarios';
+    if (label) label.textContent = actions.length === 1 ? __('comentario') : __('comentarios');
 
     const personaNameById = this._personaNameById();
     const fmtPct = (n) => Number.isFinite(Number(n)) ? `${Math.round(Number(n) * 100)}%` : '—';
     const labelByType = {
-      link_campaign_to_persona:    'Vincular campaña a persona',
-      link_segment_to_persona:     'Vincular audiencia a persona',
-      update_persona:              'Actualizar persona',
-      create_audience:             'Crear nueva audiencia',
-      update_audience:             'Actualizar audiencia',
-      update_brand_container:      'Actualizar marca',
-      strategic_recommendation_for_campaign: 'Recomendación estratégica',
-      update_shopify_product_seo:  'Optimizar SEO de producto',
+      link_campaign_to_persona:    __('Vincular campaña a persona'),
+      link_segment_to_persona:     __('Vincular audiencia a persona'),
+      update_persona:              __('Actualizar persona'),
+      create_audience:             __('Crear nueva audiencia'),
+      update_audience:             __('Actualizar audiencia'),
+      update_brand_container:      __('Actualizar marca'),
+      strategic_recommendation_for_campaign: __('Recomendación estratégica'),
+      update_shopify_product_seo:  __('Optimizar SEO de producto'),
     };
 
     list.innerHTML = actions.map((a) => {
@@ -533,7 +533,7 @@ class CommandCenterView extends BaseView {
     if (empty) empty.style.display = 'none';
 
     const statusClass = { active: 'cc-badge--green', conceptual: 'cc-badge--blue', draft: 'cc-badge--gray', paused: 'cc-badge--yellow', ended: 'cc-badge--red', archived: 'cc-badge--gray' };
-    const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: 'Orgánico', internal: 'Interno' };
+    const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: __('Orgánico'), internal: __('Interno') };
     // Label de "Resultados" según el objetivo real de la campaña (Meta/Google).
     // Si no podemos inferir el tipo, default a "resultados" (genérico).
     const resultLabel = (obj) => {
@@ -676,7 +676,7 @@ class CommandCenterView extends BaseView {
     }
 
     if (!source) {
-      mapEl.innerHTML = `<div class="cc-map-empty"><i class="fas fa-satellite-dish"></i><p>Aún no hay lectura del mercado. Conecta una integración (Meta/Google) o espera a que los sensores corran (próxima corrida diaria).</p></div>`;
+      mapEl.innerHTML = `<div class="cc-map-empty"><i class="fas fa-satellite-dish"></i><p>${__('Aún no hay lectura del mercado. Conecta una integración (Meta/Google) o espera a que los sensores corran (próxima corrida diaria).')}</p></div>`;
       if (ageEl) ageEl.innerHTML = '';
       if (genEl) genEl.innerHTML = '';
       if (ageOverlay) ageOverlay.style.display = 'none';
@@ -692,7 +692,7 @@ class CommandCenterView extends BaseView {
         await window.AudienceMap.render(mapEl, agg.country);
         const fellBack = !!mapEl.querySelector('.cc-map-fallback');
         if (fellBack) {
-          const errMsg = mapEl.__lastError || 'razón desconocida (revisa consola)';
+          const errMsg = mapEl.__lastError || __('razón desconocida (revisa consola)');
           const chip = document.createElement('div');
           chip.className = 'cc-map-error-chip';
           chip.innerHTML = `<i class="fas fa-triangle-exclamation"></i> Mapa no disponible: ${this.escapeHtml(errMsg)}`;
@@ -737,8 +737,8 @@ class CommandCenterView extends BaseView {
           }).join('')
       : '';
 
-    if (ageEl)  ageEl.innerHTML  = ageRows    ? `<h4 class="cc-break-title">Edad</h4>${ageRows}`     : '';
-    if (genEl)  genEl.innerHTML  = genderRows ? `<h4 class="cc-break-title">Género</h4>${genderRows}` : '';
+    if (ageEl)  ageEl.innerHTML  = ageRows    ? `<h4 class="cc-break-title">${__('Edad')}</h4>${ageRows}`     : '';
+    if (genEl)  genEl.innerHTML  = genderRows ? `<h4 class="cc-break-title">${__('Género')}</h4>${genderRows}` : '';
     if (ageOverlay) ageOverlay.style.display = ageRows    ? '' : 'none';
     if (genOverlay) genOverlay.style.display = genderRows ? '' : 'none';
   }
@@ -769,7 +769,7 @@ class CommandCenterView extends BaseView {
     const isAudience = kind === 'audience';
     const table  = isAudience ? 'audience_personas' : 'campaigns';
     const nameField = isAudience ? 'name' : 'nombre_campana';
-    const prefix = isAudience ? 'Nueva audiencia' : 'Nueva campaña';
+    const prefix = isAudience ? __('Nueva audiencia') : __('Nueva campaña');
 
     // Calcular siguiente N revisando los registros existentes que matchean
     // el patrón "<prefix> (N)" en esta marca.
