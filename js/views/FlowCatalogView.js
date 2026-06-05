@@ -4,7 +4,7 @@
  */
 class FlowCatalogView extends BaseView {
   static cacheable = true;
-  static documentTitle = 'Flujos';
+  static get documentTitle() { return __('Flujos'); }
 
   constructor() {
     super();
@@ -185,30 +185,30 @@ class FlowCatalogView extends BaseView {
           <div class="flow-catalog-toolbar" id="flowCatalogToolbar">
             <div class="flow-toolbar-search">
               <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
-              <input type="search" id="flowSearchInput" placeholder="Buscar flows..." autocomplete="off" aria-label="Buscar flows">
-              <button type="button" class="flow-search-clear" id="flowSearchClear" style="display:none" aria-label="Limpiar busqueda"><i class="fas fa-xmark"></i></button>
+              <input type="search" id="flowSearchInput" placeholder="${__('Buscar flows...')}" autocomplete="off" aria-label="${__('Buscar flows')}">
+              <button type="button" class="flow-search-clear" id="flowSearchClear" style="display:none" aria-label="${__('Limpiar busqueda')}"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="flow-toolbar-controls">
-              <select id="flowSortSelect" class="flow-toolbar-select" aria-label="Ordenar">
-                <option value="trending">Trending</option>
-                <option value="new">Nuevos</option>
-                <option value="used">Mas usados</option>
+              <select id="flowSortSelect" class="flow-toolbar-select" aria-label="${__('Ordenar')}">
+                <option value="trending">${__('Trending')}</option>
+                <option value="new">${__('Nuevos')}</option>
+                <option value="used">${__('Mas usados')}</option>
                 <option value="az">A-Z</option>
               </select>
-              <select id="flowFilterOutput" class="flow-toolbar-select" aria-label="Tipo de salida">
-                <option value="">Todo tipo</option>
-                <option value="image">Imagen</option>
+              <select id="flowFilterOutput" class="flow-toolbar-select" aria-label="${__('Tipo de salida')}">
+                <option value="">${__('Todo tipo')}</option>
+                <option value="image">${__('Imagen')}</option>
                 <option value="video">Video</option>
-                <option value="text">Texto</option>
+                <option value="text">${__('Texto')}</option>
                 <option value="audio">Audio</option>
-                <option value="document">Documento</option>
-                <option value="mixed">Mixto</option>
+                <option value="document">${__('Documento')}</option>
+                <option value="mixed">${__('Mixto')}</option>
               </select>
-              <select id="flowFilterExec" class="flow-toolbar-select" aria-label="Modo de ejecucion">
-                <option value="">Todo modo</option>
-                <option value="single_step">Un paso</option>
-                <option value="multi_step">Multi paso</option>
-                <option value="sequential">Secuencial</option>
+              <select id="flowFilterExec" class="flow-toolbar-select" aria-label="${__('Modo de ejecucion')}">
+                <option value="">${__('Todo modo')}</option>
+                <option value="single_step">${__('Un paso')}</option>
+                <option value="multi_step">${__('Multi paso')}</option>
+                <option value="sequential">${__('Secuencial')}</option>
               </select>
             </div>
           </div>
@@ -318,7 +318,7 @@ class FlowCatalogView extends BaseView {
   showContentError() {
     const loading = document.getElementById('flowCatalogLoading');
     const content = document.getElementById('flowCatalogContent');
-    if (loading) loading.innerHTML = '<p>No se pudo conectar. Revisa tu sesión.</p>';
+    if (loading) loading.innerHTML = `<p>${__('No se pudo conectar. Revisa tu sesión.')}</p>`;
     if (content) content.style.display = 'block';
   }
 
@@ -675,13 +675,13 @@ class FlowCatalogView extends BaseView {
 
   getOutputTypeLabel(type) {
     const t = (type || 'text').toLowerCase();
-    const labels = { text: 'Texto', image: 'Imagen', video: 'Video', audio: 'Audio', document: 'Documento', mixed: 'Mixto' };
+    const labels = { text: __('Texto'), image: __('Imagen'), video: 'Video', audio: 'Audio', document: __('Documento'), mixed: __('Mixto') };
     return labels[t] || t;
   }
 
   getExecutionModeLabel(mode) {
     const m = (mode || 'single_step').toLowerCase();
-    const labels = { single_step: 'Un paso', multi_step: 'Multi paso', sequential: 'Secuencial' };
+    const labels = { single_step: __('Un paso'), multi_step: __('Multi paso'), sequential: __('Secuencial') };
     return labels[m] || m;
   }
 
@@ -733,7 +733,7 @@ class FlowCatalogView extends BaseView {
           <div class="flow-card-actions">
             <button type="button" class="flow-card-icon-btn flow-card-icon-run" data-action="run" title="Ejecutar" aria-label="Ejecutar"><i class="fas fa-play"></i></button>
             <button type="button" class="flow-card-icon-btn flow-card-icon-like ${isLiked ? 'is-active' : ''}" data-action="like" title="Like" aria-label="Like"><i class="fas fa-heart"></i></button>
-            <button type="button" class="flow-card-icon-btn flow-card-icon-save ${isSaved ? 'is-active' : ''}" data-action="save" title="Guardar" aria-label="Guardar"><i class="fas fa-bookmark"></i></button>
+            <button type="button" class="flow-card-icon-btn flow-card-icon-save ${isSaved ? 'is-active' : ''}" data-action="save" title="${__('Guardar')}" aria-label="${__('Guardar')}"><i class="fas fa-bookmark"></i></button>
           </div>
           <div class="flow-card-info">
             <h3 class="flow-card-title">${name}</h3>
@@ -771,12 +771,12 @@ class FlowCatalogView extends BaseView {
         <div class="flow-hero-slide-bg">${bg}</div>
         <div class="flow-hero-slide-overlay">
           <div class="flow-hero-slide-content">
-            <span class="flow-hero-slide-eyebrow">Categoría destacada</span>
+            <span class="flow-hero-slide-eyebrow">${__('Categoría destacada')}</span>
             <h2 class="flow-hero-slide-title">${name}</h2>
             ${desc ? `<p class="flow-hero-slide-desc">${desc}</p>` : ''}
             <span class="flow-hero-slide-cta">
               <i class="fas fa-play"></i>
-              <span>Explorar flujos</span>
+              <span>${__('Explorar flujos')}</span>
             </span>
           </div>
         </div>
@@ -999,7 +999,7 @@ class FlowCatalogView extends BaseView {
     strip.style.display = '';
     const activeSubFromUrl = new URLSearchParams(window.location.search).get('sub');
     const chips = [
-      { id: '', name: 'Todos', isAll: true },
+      { id: '', name: __('Todos'), isAll: true },
       ...this.subcategoriesInCategory.map(s => ({ id: s.id, name: s.name }))
     ];
     strip.innerHTML = chips.map(chip => `
@@ -1029,7 +1029,7 @@ class FlowCatalogView extends BaseView {
           emptyEl = document.createElement('div');
           emptyEl.className = 'flow-catalog-empty flow-catalog-empty--in-section flow-catalog-empty--filtered';
           emptyEl.setAttribute('aria-live', 'polite');
-          emptyEl.innerHTML = '<p class="flow-catalog-empty-text">Aún no hay flujos de esta técnica</p>';
+          emptyEl.innerHTML = `<p class="flow-catalog-empty-text">${__('Aún no hay flujos de esta técnica')}</p>`;
           gallery.appendChild(emptyEl);
         }
         emptyEl.style.display = '';
@@ -1100,7 +1100,7 @@ class FlowCatalogView extends BaseView {
         <div class="flow-catalog-empty flow-catalog-empty--teach" aria-live="polite">
           <i class="fas fa-wand-magic-sparkles flow-catalog-empty-icon" aria-hidden="true"></i>
           <p class="flow-catalog-empty-title">Tu catalogo de flows esta por encenderse</p>
-          <p class="flow-catalog-empty-sub">Los flows son recetas listas para producir contenido de tu marca: posts, historias, piezas de campaña. En cuanto se publiquen, apareceran aqui organizados por categoria.</p>
+          <p class="flow-catalog-empty-sub">${__('Los flows son recetas listas para producir contenido de tu marca: posts, historias, piezas de campaña. En cuanto se publiquen, apareceran aqui organizados por categoria.')}</p>
         </div>`;
       return;
     }
@@ -1225,7 +1225,7 @@ class FlowCatalogView extends BaseView {
       grid.innerHTML = `
         <div class="flow-catalog-empty flow-catalog-empty--teach" aria-live="polite">
           <i class="fas fa-magnifying-glass flow-catalog-empty-icon" aria-hidden="true"></i>
-          <p class="flow-catalog-empty-title">Sin resultados</p>
+          <p class="flow-catalog-empty-title">${__('Sin resultados')}</p>
           <p class="flow-catalog-empty-sub">Prueba con otra busqueda o quita algun filtro.</p>
         </div>`;
       return;
@@ -1378,10 +1378,10 @@ class FlowCatalogView extends BaseView {
             ${desc ? `<p class="flow-featured-desc">${desc}</p>` : ''}
             <div class="flow-featured-actions">
               <button type="button" class="flow-featured-cta" data-action="run">
-                <i class="fas fa-play" aria-hidden="true"></i><span>Ejecutar</span>
+                <i class="fas fa-play" aria-hidden="true"></i><span>${__('Ejecutar')}</span>
                 <span class="flow-featured-cost"><i class="fas fa-bolt" aria-hidden="true"></i>${cost}</span>
               </button>
-              <button type="button" class="flow-featured-cta flow-featured-cta--ghost" data-action="detail">Ver detalle</button>
+              <button type="button" class="flow-featured-cta flow-featured-cta--ghost" data-action="detail">${__('Ver detalle')}</button>
             </div>
           </div>
         </article>
@@ -1512,7 +1512,7 @@ class FlowCatalogView extends BaseView {
       <section class="flow-catalog-row-section">
         <div class="flow-rail-head">
           <h2 class="flow-catalog-row-title">Continua produciendo</h2>
-          <a class="flow-rail-seeall" href="${execUrl}" data-exec-link>Ver todo <i class="fas fa-chevron-right" aria-hidden="true"></i></a>
+          <a class="flow-rail-seeall" href="${execUrl}" data-exec-link>${__('Ver todo')} <i class="fas fa-chevron-right" aria-hidden="true"></i></a>
         </div>
         <div class="flow-catalog-row-scroll flow-continue-rail">${prods.map(r => this.renderExecCard(r)).join('')}</div>
       </section>`;
@@ -1561,15 +1561,15 @@ class FlowCatalogView extends BaseView {
     if (featured) { parts.push(this.renderDailyFeaturedHtml(featured)); seen.add(featured.id); }
 
     // Hechos para tu marca: rail primario, siempre (siembra el set de vistos)
-    addRail('Hechos para tu marca', this.getBrandFitFlows(), { minNew: 0 });
+    addRail(__('Hechos para tu marca'), this.getBrandFitFlows(), { minNew: 0 });
 
     // Secundarios: condicionales — solo si aportan contenido nuevo suficiente
-    addRail('Novedades', this.getNewFlows(), { minNew: 4 });
-    addRail('Favoritos de la audiencia', this.getAudienceFavorites(), { minNew: 4 });
-    addRail('Top 10', this.getTop10(), { minNew: 5, numbered: true });
+    addRail(__('Novedades'), this.getNewFlows(), { minNew: 4 });
+    addRail(__('Favoritos de la audiencia'), this.getAudienceFavorites(), { minNew: 4 });
+    addRail(__('Top 10'), this.getTop10(), { minNew: 5, numbered: true });
     this.getSubcategoryRails().forEach(rail => addRail(this.escapeHtml(rail.name), rail.flows, { minNew: 3 }));
     const because = this.getBecauseYouUsed();
-    if (because) addRail(`Porque usaste ${this.escapeHtml(because.seedName)}`, because.flows, { minNew: 3 });
+    if (because) addRail(__('Porque usaste {x}', { x: this.escapeHtml(because.seedName) }), because.flows, { minNew: 3 });
 
     host.innerHTML = parts.join('');
     host.querySelectorAll('.flow-catalog-row-scroll').forEach(scroll => this.bindFlowCardListeners(scroll));
@@ -1641,7 +1641,7 @@ class FlowCatalogView extends BaseView {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = `flow-catalog-row-nav flow-catalog-row-nav--${dir}`;
-      btn.setAttribute('aria-label', dir === 'left' ? 'Anterior' : 'Siguiente');
+      btn.setAttribute('aria-label', dir === 'left' ? __('Anterior') : __('Siguiente'));
       btn.innerHTML = `<i class="fas fa-chevron-${dir}"></i>`;
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1889,9 +1889,9 @@ class FlowCatalogView extends BaseView {
 
   _runStatusInfo(status) {
     const s = (status || '').toLowerCase();
-    if (['completed', 'success', 'done', 'ready', 'completado'].includes(s)) return { label: 'Listo', cls: 'ok' };
-    if (['failed', 'error'].includes(s)) return { label: 'Fallo', cls: 'err' };
-    if (['running', 'processing', 'pending', 'queued', 'in_progress'].includes(s)) return { label: 'En proceso', cls: 'run' };
+    if (['completed', 'success', 'done', 'ready', 'completado'].includes(s)) return { label: __('Listo'), cls: 'ok' };
+    if (['failed', 'error'].includes(s)) return { label: __('Fallo'), cls: 'err' };
+    if (['running', 'processing', 'pending', 'queued', 'in_progress'].includes(s)) return { label: __('En proceso'), cls: 'run' };
     return { label: s ? this.escapeHtml(s) : 'Run', cls: 'idle' };
   }
 
@@ -2001,10 +2001,10 @@ class FlowCatalogView extends BaseView {
           <div class="flow-detail-actions">
             <button type="button" class="flow-detail-cta flow-detail-cta--run" data-detail-action="run">
               <i class="fas fa-play" aria-hidden="true"></i>
-              <span>Ejecutar</span>
+              <span>${__('Ejecutar')}</span>
               <span class="flow-detail-cta-cost"><i class="fas fa-bolt" aria-hidden="true"></i>${cost}</span>
             </button>
-            <button type="button" class="flow-detail-icon-btn flow-detail-save ${isSaved ? 'is-active' : ''}" data-detail-action="save" aria-label="Guardar" title="Guardar">
+            <button type="button" class="flow-detail-icon-btn flow-detail-save ${isSaved ? 'is-active' : ''}" data-detail-action="save" aria-label="${__('Guardar')}" title="${__('Guardar')}">
               <i class="fas fa-bookmark" aria-hidden="true"></i>
             </button>
             <button type="button" class="flow-detail-icon-btn flow-detail-like ${isLiked ? 'is-active' : ''}" data-detail-action="like" aria-label="Like" title="Like">
