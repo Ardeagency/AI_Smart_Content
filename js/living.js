@@ -4452,14 +4452,23 @@ class LivingManager {
             return ov && !ov.hidden;
         };
 
-        // Rueda: zoom hacia el cursor.
+        // Rueda: zoom hacia el cursor. Normalizamos el delta porque algunos
+        // mouse reportan en lineas (deltaMode 1) o paginas (2) en vez de px,
+        // lo que hacia el zoom lentisimo. Lo pasamos a px y aplicamos una tasa
+        // exponencial agil (~35-45% por muesca tipica).
         stage.addEventListener('wheel', (e) => {
             if (editing()) return;
             e.preventDefault();
             const rect = stage.getBoundingClientRect();
             const ox = e.clientX - (rect.left + rect.width / 2);
             const oy = e.clientY - (rect.top + rect.height / 2);
-            this._setModalZoom(this._zoom.scale * Math.pow(1.0018, -e.deltaY), ox, oy);
+            let dy = e.deltaY;
+            if (e.deltaMode === 1) dy *= 16;        // lineas -> px
+            else if (e.deltaMode === 2) dy *= rect.height || 800; // paginas -> px
+            // Acotar el paso por evento para que un golpe fuerte de trackpad no
+            // salte de golpe.
+            dy = Math.max(-120, Math.min(120, dy));
+            this._setModalZoom(this._zoom.scale * Math.exp(-dy * 0.004), ox, oy);
         }, { passive: false });
 
         // Doble clic: alterna 1x <-> 2.5x en el punto del cursor.
