@@ -3639,14 +3639,51 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
      quede tapado por el header pese a que el degradado sangra hasta arriba. */
   padding: calc(var(--app-header-height, 45.8px) + clamp(1.5rem, 2.5vw, 2.25rem)) clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 2.5vw, 1.85rem);
 }
-/* Degradado estatico unico, identico en los 4 tabs (azul → morado → rojo →
-   naranja, mismos stops que la linea arcoiris). Sin animacion. */
+/* Trio de colores por tab (stops de --brand-gradient) → variables del degradado. */
+.dash-hero[data-tab="my-brands"]  { --c1: #ff0000; --c2: #ff6500; --c3: #ffe500; }
+.dash-hero[data-tab="competence"] { --c1: #900090; --c2: #5b00ea; --c3: #0018ee; }
+.dash-hero[data-tab="tendencies"] { --c1: #9acc00; --c2: #00d614; --c3: #00e7ff; }
+.dash-hero[data-tab="strategy"]   { --c1: #00e7ff; --c2: #0018ee; --c3: #5b00ea; }
+
+/* Capa de degradado organico: dos planos de blobs radiales borrosos que giran
+   en sentidos opuestos → churn marmolado. mix-blend brilla en los cruces. */
 .dash-hero-grad {
   position: absolute;
   inset: 0;
   z-index: 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, #0063FF 0%, #814AC8 33%, #FF004D 70%, #FF5C23 100%);
+  overflow: hidden;
+  background: var(--c2, #ff6500);
+}
+.dash-hero-grad::before,
+.dash-hero-grad::after {
+  content: '';
+  position: absolute;
+  inset: -45%;
+  border-radius: 40%;
+}
+.dash-hero-grad::before {
+  background:
+    radial-gradient(circle at 30% 30%, var(--c1) 0%, transparent 45%),
+    radial-gradient(circle at 75% 25%, var(--c3) 0%, transparent 45%),
+    radial-gradient(circle at 62% 80%, var(--c1) 0%, transparent 50%),
+    radial-gradient(circle at 20% 72%, var(--c3) 0%, transparent 45%);
+  filter: blur(22px) saturate(1.25);
+  animation: dashHeroSpin 42s linear infinite;
+}
+.dash-hero-grad::after {
+  background:
+    radial-gradient(circle at 50% 45%, var(--c2) 0%, transparent 42%),
+    radial-gradient(circle at 82% 62%, var(--c1) 0%, transparent 46%),
+    radial-gradient(circle at 25% 55%, var(--c3) 0%, transparent 46%);
+  filter: blur(34px);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  animation: dashHeroSpin 58s linear infinite reverse;
+}
+@keyframes dashHeroSpin {
+  0%   { transform: rotate(0deg)   scale(1.12); }
+  100% { transform: rotate(360deg) scale(1.12); }
 }
 /* Scrim de legibilidad: oscurece sutil arriba (titulo/tabs) y abajo (KPIs). */
 .dash-hero::after {
@@ -3756,4 +3793,9 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
   .dash-hero { margin: 0 -15px 1.25rem; border-radius: 0 0 16px 16px; }
   .dash-hero-cards { grid-template-columns: 1fr; }
   .dash-hero-desc { display: none; }
+}
+/* Respeta reduce-motion: degradado quieto, sin churn. */
+@media (prefers-reduced-motion: reduce) {
+  .dash-hero-grad::before,
+  .dash-hero-grad::after { animation: none; }
 }
