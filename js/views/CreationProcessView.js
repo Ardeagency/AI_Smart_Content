@@ -82,29 +82,29 @@ class CreationProcessView extends BaseView {
             <div class="creation-spinner-ring"></div>
           </div>
 
-          <h1 class="verification-title">Estamos preparando tu workspace</h1>
+          <h1 class="verification-title">${__('Estamos preparando tu workspace')}</h1>
           <p class="verification-desc">
-            Estamos trabajando para crear la mejor experiencia para tu marca. En cuanto tu espacio esté listo, te enviaremos un correo y podrás entrar a la plataforma.
+            ${__('Estamos trabajando para crear la mejor experiencia para tu marca. En cuanto tu espacio esté listo, te enviaremos un correo y podrás entrar a la plataforma.')}
           </p>
           ${emailHtml}
-          <p class="verification-hint">Este proceso puede tardar unos minutos. Puedes cerrar esta ventana — te avisaremos por email.</p>
+          <p class="verification-hint">${__('Este proceso puede tardar unos minutos. Puedes cerrar esta ventana — te avisaremos por email.')}</p>
 
           <button type="button" class="btn btn-primary signin-submit" id="btnCheckStatus">
-            Ya verifiqué, refrescar
+            ${__('Ya verifiqué, refrescar')}
           </button>
           <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkLogout">
-            Cerrar sesión
+            ${__('Cerrar sesión')}
           </button>
         </div>
 
         <footer class="signin-footer">
-          <span class="signin-footer-copy">${year} AI SMART CONTENT by ARDE AGENCY S.A.S. Todos los derechos reservados.</span>
+          <span class="signin-footer-copy">${year} AI SMART CONTENT by ARDE AGENCY S.A.S. ${__('Todos los derechos reservados.')}</span>
           <span class="signin-footer-links">
-            <a href="https://aismartcontent.io/privacy-policy" target="_blank" rel="noopener">Privacidad</a>
+            <a href="https://aismartcontent.io/privacy-policy" target="_blank" rel="noopener">${__('Privacidad')}</a>
             <span aria-hidden="true">·</span>
-            <a href="https://aismartcontent.io/terms-and-conditions" target="_blank" rel="noopener">Términos</a>
+            <a href="https://aismartcontent.io/terms-and-conditions" target="_blank" rel="noopener">${__('Términos')}</a>
             <span aria-hidden="true">·</span>
-            <a href="mailto:soporte@ardeagency.com">Soporte</a>
+            <a href="mailto:soporte@ardeagency.com">${__('Soporte')}</a>
           </span>
         </footer>
       </div>
@@ -136,7 +136,7 @@ class CreationProcessView extends BaseView {
 
   async _refreshStatus(silent = false) {
     const btn = this.querySelector('#btnCheckStatus');
-    if (!silent && btn) { btn.disabled = true; btn.textContent = 'Verificando...'; }
+    if (!silent && btn) { btn.disabled = true; btn.textContent = __('Verificando...'); }
     try {
       const supabase = window.supabase
         || (window.supabaseService && (await window.supabaseService.getClient()));
@@ -155,14 +155,14 @@ class CreationProcessView extends BaseView {
         return;
       }
       if (!silent && btn) {
-        btn.textContent = 'Aún en proceso — te avisaremos por correo';
+        btn.textContent = __('Aún en proceso — te avisaremos por correo');
         setTimeout(() => {
-          if (btn) { btn.disabled = false; btn.textContent = 'Ya verifiqué, refrescar'; }
+          if (btn) { btn.disabled = false; btn.textContent = __('Ya verifiqué, refrescar'); }
         }, 2500);
       }
     } catch (err) {
       console.warn('CreationProcessView._refreshStatus:', err);
-      if (!silent && btn) { btn.disabled = false; btn.textContent = 'Ya verifiqué, refrescar'; }
+      if (!silent && btn) { btn.disabled = false; btn.textContent = __('Ya verifiqué, refrescar'); }
     }
   }
 
