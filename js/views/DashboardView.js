@@ -326,7 +326,7 @@ class DashboardView extends BaseView {
   }
 
   _buildShell() {
-    // Hero a sangre completa (degradado organico por tab) con titulo en peso
+    // Hero a sangre completa (degradado dinamico de la marca) con titulo en peso
     // mixto, los tabs encima del degradado y una tira de KPIs en vidrio.
     // Debajo, el cuerpo del tab activo.
     return `
@@ -345,7 +345,7 @@ class DashboardView extends BaseView {
   ];
 
   // Copy del hero por tab: titulo (parte fuerte + parte ligera) + descripcion.
-  // El trio de colores del degradado vive en CSS via [data-tab] (insight.css).
+  // El degradado del hero es el dinamico de la marca (--brand-gradient-dynamic).
   static HERO_COPY = {
     'my-brands': {
       strong: 'Mi Marca',
@@ -365,7 +365,7 @@ class DashboardView extends BaseView {
     },
   };
 
-  // Hero estilo overview: degradado organico animado (por tab) + titulo en
+  // Hero estilo overview: degradado dinamico de la marca + titulo en
   // peso mixto + tabs sobre el degradado + cards del plan de accion.
   _buildHero(tabId) {
     const copy = DashboardView.HERO_COPY[tabId] || DashboardView.HERO_COPY['my-brands'];
@@ -457,9 +457,9 @@ class DashboardView extends BaseView {
     }
   }
 
-  // Refresca titulo (peso mixto) + descripcion + el trio de colores (data-tab)
-  // y el tab activo, sin reconstruir el degradado (asi la animacion no se
-  // reinicia). Los KPIs son de marca: no cambian al cambiar de tab.
+  // Refresca titulo (peso mixto) + descripcion + el tab activo. data-tab solo
+  // controla la visibilidad de las acciones (el degradado es el dinamico de la
+  // marca, igual en los 4 tabs). Los KPIs son de marca: no cambian por tab.
   _updateHero(tabId) {
     const copy = DashboardView.HERO_COPY[tabId] || DashboardView.HERO_COPY['my-brands'];
     const hero = document.getElementById('dashHero');
