@@ -26,14 +26,14 @@ class PlacesView extends BaseView {
     return `
 <div class="products-list-page" id="placesListPage">
   <div class="products-list-header">
-    <h1 class="products-list-title">Lugares</h1>
+    <h1 class="products-list-title">${__('Lugares')}</h1>
     <div class="products-list-header-actions">
-      <button type="button" class="products-list-add-btn" id="placesListAttachBtn" aria-label="Adjuntar lugar desde URL o fotos">
+      <button type="button" class="products-list-add-btn" id="placesListAttachBtn" aria-label="${__('Adjuntar lugar desde URL o fotos')}">
         <i class="fas fa-paperclip" aria-hidden="true"></i>
-        <span>Adjuntar lugar</span>
+        <span>${__('Adjuntar lugar')}</span>
       </button>
-      <button type="button" class="products-list-add-btn" id="placesListAddBtn" aria-label="Agregar lugar">
-        <span>+ Lugar</span>
+      <button type="button" class="products-list-add-btn" id="placesListAddBtn" aria-label="${__('Agregar lugar')}">
+        <span>${__('+ Lugar')}</span>
       </button>
     </div>
   </div>
@@ -41,7 +41,7 @@ class PlacesView extends BaseView {
   <section class="products-list-section" id="placesListSection">
     <div class="products-list-section-head">
       <div class="products-list-section-head-main">
-        <h2 class="products-list-section-title">Catalogo</h2>
+        <h2 class="products-list-section-title">${__('Catalogo')}</h2>
         <span class="products-list-section-count" id="placesListCount">0</span>
       </div>
     </div>
@@ -50,7 +50,7 @@ class PlacesView extends BaseView {
 
   <div class="products-list-empty" id="placesListEmpty" style="display:none;">
     <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-    <p>Aun no hay lugares. Crea el primero con + Lugar o adjunta uno.</p>
+    <p>${__('Aun no hay lugares. Crea el primero con + Lugar o adjunta uno.')}</p>
   </div>
 </div>`;
   }
@@ -184,7 +184,7 @@ class PlacesView extends BaseView {
     if (btn) btn.disabled = true;
     try {
       const entityId = await this._ensureEntityId();
-      if (!entityId) { this._showNotification('No se pudo obtener una identidad para vincular el lugar', 'error'); return; }
+      if (!entityId) { this._showNotification(__('No se pudo obtener una identidad para vincular el lugar'), 'error'); return; }
       const { error } = await this.supabase.from('brand_places').insert({
         entity_id: entityId,
         nombre_lugar: 'Nuevo lugar',
@@ -197,7 +197,7 @@ class PlacesView extends BaseView {
       this._renderPlacesMasonry();
     } catch (e) {
       console.error('PlacesView _onAddPlace:', e);
-      this._showNotification(e?.message || 'Error al crear el lugar', 'error');
+      this._showNotification(e?.message || __('Error al crear el lugar'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -241,7 +241,7 @@ class PlacesView extends BaseView {
 
   _renderPlaceCard(p, _i) {
     const imageUrl = this.placeImageById[p.id] || '';
-    const name = p.nombre_lugar || 'Lugar';
+    const name = p.nombre_lugar || __('Lugar');
     const safeName = this.escapeHtml(name);
     return `
       <div class="living-masonry-item">
@@ -251,8 +251,8 @@ class PlacesView extends BaseView {
             : `<div class="product-list-card-placeholder"><i class="fas fa-map-marker-alt" aria-hidden="true"></i></div>`
           }
           <div class="product-list-card-actions">
-            <button type="button" class="glass product-list-card-action" data-action="duplicate" title="Duplicar lugar" aria-label="Duplicar lugar"><i class="fas fa-copy" aria-hidden="true"></i></button>
-            <button type="button" class="glass product-list-card-action product-list-card-action--danger" data-action="delete" title="Eliminar lugar" aria-label="Eliminar lugar"><i class="fas fa-trash" aria-hidden="true"></i></button>
+            <button type="button" class="glass product-list-card-action" data-action="duplicate" title="${__('Duplicar lugar')}" aria-label="${__('Duplicar lugar')}"><i class="fas fa-copy" aria-hidden="true"></i></button>
+            <button type="button" class="glass product-list-card-action product-list-card-action--danger" data-action="delete" title="${__('Eliminar lugar')}" aria-label="${__('Eliminar lugar')}"><i class="fas fa-trash" aria-hidden="true"></i></button>
           </div>
           <div class="history-card-flow-name">${safeName}</div>
         </article>
@@ -262,7 +262,7 @@ class PlacesView extends BaseView {
 
   async _onDeletePlace(placeId, btn) {
     if (!placeId || !this.supabase) return;
-    if (!confirm('¿Eliminar este lugar? Se borraran tambien sus fotos.')) return;
+    if (!confirm(__('¿Eliminar este lugar? Se borraran tambien sus fotos.'))) return;
     if (btn) btn.disabled = true;
     try {
       const { error } = await this.supabase.from('brand_places').delete().eq('id', placeId);
@@ -270,10 +270,10 @@ class PlacesView extends BaseView {
       this._invalidateCache();
       await this._loadData();
       this._renderPlacesMasonry();
-      this._showNotification('Lugar eliminado', 'success');
+      this._showNotification(__('Lugar eliminado'), 'success');
     } catch (e) {
       console.error('PlacesView _onDeletePlace:', e);
-      this._showNotification(e?.message || 'Error al eliminar el lugar', 'error');
+      this._showNotification(e?.message || __('Error al eliminar el lugar'), 'error');
       if (btn) btn.disabled = false;
     }
   }
@@ -284,12 +284,12 @@ class PlacesView extends BaseView {
     try {
       const { data: place, error: fetchError } = await this.supabase
         .from('brand_places').select('*').eq('id', placeId).single();
-      if (fetchError || !place) throw fetchError || new Error('No se pudo cargar el lugar');
+      if (fetchError || !place) throw fetchError || new Error(__('No se pudo cargar el lugar'));
       const { id: _id, created_at: _c, ...rest } = place;
       const copyData = { ...rest, nombre_lugar: (place.nombre_lugar || 'Lugar').trim() + ' (copia)' };
       const { data: newPlace, error: insertError } = await this.supabase
         .from('brand_places').insert(copyData).select('id').single();
-      if (insertError || !newPlace?.id) throw insertError || new Error('No se pudo crear la copia');
+      if (insertError || !newPlace?.id) throw insertError || new Error(__('No se pudo crear la copia'));
 
       // Copiar imagenes
       const { data: images } = await this.supabase
@@ -309,10 +309,10 @@ class PlacesView extends BaseView {
       this._invalidateCache();
       await this._loadData();
       this._renderPlacesMasonry();
-      this._showNotification('Lugar duplicado', 'success');
+      this._showNotification(__('Lugar duplicado'), 'success');
     } catch (e) {
       console.error('PlacesView _onDuplicatePlace:', e);
-      this._showNotification(e?.message || 'Error al duplicar el lugar', 'error');
+      this._showNotification(e?.message || __('Error al duplicar el lugar'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -322,63 +322,63 @@ class PlacesView extends BaseView {
 
   _onAttachPlace() {
     if (!window.Modal || typeof window.Modal.show !== 'function') {
-      this._showNotification('Modal no disponible', 'error');
+      this._showNotification(__('Modal no disponible'), 'error');
       return;
     }
     const body = `
       <div class="attach-product-wizard" data-step="picker">
         <section class="attach-product-step attach-product-step--picker" data-panel="picker">
-          <p class="attach-product-intro">Elegi como queres que Vera obtenga la informacion del lugar. La ficha se crea automaticamente y solo te cobra el costo real de OpenAI.</p>
+          <p class="attach-product-intro">${__('Elegi como queres que Vera obtenga la informacion del lugar. La ficha se crea automaticamente y solo te cobra el costo real de OpenAI.')}</p>
           <div class="attach-product-options">
-            <button type="button" class="attach-product-option" data-go="url" aria-label="Adjuntar lugar por URL">
+            <button type="button" class="attach-product-option" data-go="url" aria-label="${__('Adjuntar lugar por URL')}">
               <div class="attach-product-option-head">
                 <span class="attach-product-option-icon"><i class="fas fa-link" aria-hidden="true"></i></span>
-                <h4 class="attach-product-option-title">URL del lugar</h4>
+                <h4 class="attach-product-option-title">${__('URL del lugar')}</h4>
               </div>
-              <p class="attach-product-option-desc">Pega el enlace de la pagina del lugar (Google Maps, sitio propio, TripAdvisor, etc.). Vera extraera nombre, direccion, descripcion, fotos y caracteristicas detectadas.</p>
-              <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+              <p class="attach-product-option-desc">${__('Pega el enlace de la pagina del lugar (Google Maps, sitio propio, TripAdvisor, etc.). Vera extraera nombre, direccion, descripcion, fotos y caracteristicas detectadas.')}</p>
+              <span class="attach-product-option-cta">${__('Continuar')} <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </button>
 
-            <button type="button" class="attach-product-option" data-go="attach" aria-label="Adjuntar fotos y archivos del lugar">
+            <button type="button" class="attach-product-option" data-go="attach" aria-label="${__('Adjuntar fotos y archivos del lugar')}">
               <div class="attach-product-option-head">
                 <span class="attach-product-option-icon"><i class="fas fa-paperclip" aria-hidden="true"></i></span>
-                <h4 class="attach-product-option-title">Adjuntar fotos y archivos</h4>
+                <h4 class="attach-product-option-title">${__('Adjuntar fotos y archivos')}</h4>
               </div>
-              <p class="attach-product-option-desc">Subi fotos del lugar (interior, exterior, fachada) y archivos como brochures o PDFs. Vera analiza el espacio con vision y arma la ficha con ambiente, amenidades y caracteristicas visuales.</p>
-              <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+              <p class="attach-product-option-desc">${__('Subi fotos del lugar (interior, exterior, fachada) y archivos como brochures o PDFs. Vera analiza el espacio con vision y arma la ficha con ambiente, amenidades y caracteristicas visuales.')}</p>
+              <span class="attach-product-option-cta">${__('Continuar')} <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </button>
           </div>
         </section>
 
         <section class="attach-product-step attach-product-step--form" data-panel="url" hidden>
           <label class="attach-product-field">
-            <span class="attach-product-field-label">Enlace</span>
+            <span class="attach-product-field-label">${__('Enlace')}</span>
             <input type="url" class="attach-product-url-input" placeholder="https://..." autocomplete="off" />
           </label>
           <button type="button" class="attach-product-submit" data-action="submit-url">
             <i class="fas fa-magic" aria-hidden="true"></i>
-            <span>Analizar URL con Vera</span>
+            <span>${__('Analizar URL con Vera')}</span>
           </button>
         </section>
 
         <section class="attach-product-step attach-product-step--form" data-panel="attach" hidden>
           <div class="attach-product-field-group" data-group="photos">
-            <span class="attach-product-field-label">Fotos del lugar</span>
-            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="Subir fotos del lugar">
+            <span class="attach-product-field-label">${__('Fotos del lugar')}</span>
+            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="${__('Subir fotos del lugar')}">
               <input type="file" class="attach-product-photos-input" multiple accept="image/jpeg,image/png,image/webp,image/jpg" hidden />
               <i class="fas fa-image" aria-hidden="true"></i>
-              <span class="attach-product-dropzone-text">Arrastra fotos o hace click para elegirlas</span>
-              <span class="attach-product-dropzone-hint">JPG, PNG, WebP · max 10 imagenes · 25MB c/u</span>
+              <span class="attach-product-dropzone-text">${__('Arrastra fotos o hace click para elegirlas')}</span>
+              <span class="attach-product-dropzone-hint">${__('JPG, PNG, WebP · max 10 imagenes · 25MB c/u')}</span>
             </div>
             <ul class="attach-product-file-list" hidden></ul>
           </div>
 
           <div class="attach-product-field-group" data-group="files">
-            <span class="attach-product-field-label">Archivos del lugar</span>
-            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="Subir archivos del lugar">
+            <span class="attach-product-field-label">${__('Archivos del lugar')}</span>
+            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="${__('Subir archivos del lugar')}">
               <input type="file" class="attach-product-file-input" multiple accept=".pdf,.doc,.docx,.txt,.md" hidden />
               <i class="fas fa-paperclip" aria-hidden="true"></i>
-              <span class="attach-product-dropzone-text">Arrastra archivos o hace click para elegirlos</span>
+              <span class="attach-product-dropzone-text">${__('Arrastra archivos o hace click para elegirlos')}</span>
               <span class="attach-product-dropzone-hint">PDF, DOC, DOCX, TXT, MD</span>
             </div>
             <ul class="attach-product-file-list" hidden></ul>
@@ -386,21 +386,21 @@ class PlacesView extends BaseView {
 
           <button type="button" class="attach-product-submit" data-action="submit-attach">
             <i class="fas fa-magic" aria-hidden="true"></i>
-            <span>Analizar con Vera</span>
+            <span>${__('Analizar con Vera')}</span>
           </button>
         </section>
 
         <section class="attach-product-step attach-product-step--loading" data-panel="loading" hidden>
           <div class="attach-product-loading">
             <div class="attach-product-spinner" aria-hidden="true"></div>
-            <h4 class="attach-product-loading-title">Creando ficha del lugar</h4>
-            <p class="attach-product-loading-hint" data-loading-hint>Vera esta preparando la ficha. Te recargamos el listado en un momento.</p>
+            <h4 class="attach-product-loading-title">${__('Creando ficha del lugar')}</h4>
+            <p class="attach-product-loading-hint" data-loading-hint>${__('Vera esta preparando la ficha. Te recargamos el listado en un momento.')}</p>
           </div>
         </section>
       </div>
     `;
 
-    const handle = window.Modal.show({ title: 'Adjuntar lugar', body, className: 'attach-product-modal' });
+    const handle = window.Modal.show({ title: __('Adjuntar lugar'), body, className: 'attach-product-modal' });
     if (!handle) return;
     const root = handle.bodyEl;
     const wizard = root.querySelector('.attach-product-wizard');
@@ -415,7 +415,7 @@ class PlacesView extends BaseView {
       backBtn.type = 'button';
       backBtn.className = 'attach-product-back';
       backBtn.hidden = true;
-      backBtn.setAttribute('aria-label', 'Volver');
+      backBtn.setAttribute('aria-label', __('Volver'));
       backBtn.innerHTML = '<i class="fas fa-arrow-left" aria-hidden="true"></i><span>Volver</span>';
       backBtn.addEventListener('click', () => {
         const currentStep = wizard?.getAttribute('data-step');
@@ -428,10 +428,10 @@ class PlacesView extends BaseView {
     }
 
     const stepConfig = {
-      picker:  { title: 'Adjuntar lugar',           icon: null,            back: false, backTo: null     },
+      picker:  { title: __('Adjuntar lugar'),           icon: null,            back: false, backTo: null     },
       url:     { title: 'URL del lugar',            icon: 'fa-link',       back: true,  backTo: 'picker' },
-      attach:  { title: 'Adjuntar fotos y archivos',icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
-      loading: { title: 'Creando ficha del lugar',  icon: null,            back: false, backTo: null     },
+      attach:  { title: __('Adjuntar fotos y archivos'),icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
+      loading: { title: __('Creando ficha del lugar'),  icon: null,            back: false, backTo: null     },
     };
 
     const goToStep = (step) => {
@@ -463,13 +463,13 @@ class PlacesView extends BaseView {
     root.querySelector('[data-action="submit-url"]')?.addEventListener('click', async (e) => {
       const submitBtn = e.currentTarget;
       const value = (urlInput?.value || '').trim();
-      if (!value) { urlInput?.focus(); this._showNotification('Pega una URL primero', 'error'); return; }
+      if (!value) { urlInput?.focus(); this._showNotification(__('Pega una URL primero'), 'error'); return; }
       let parsed;
       try {
         parsed = new URL(value);
         if (!/^https?:$/.test(parsed.protocol)) throw new Error('protocol');
       } catch (_) {
-        urlInput?.focus(); this._showNotification('La URL no es valida', 'error'); return;
+        urlInput?.focus(); this._showNotification(__('La URL no es valida'), 'error'); return;
       }
       submitBtn.disabled = true;
       goToStep('loading');
@@ -481,13 +481,13 @@ class PlacesView extends BaseView {
       const submitBtn = e.currentTarget;
       const photoFiles = Array.from(photos.input?.files || []);
       const docFiles = Array.from(docs.input?.files || []);
-      if (!photoFiles.length && !docFiles.length) { this._showNotification('Adjunta al menos una foto o un archivo', 'error'); return; }
+      if (!photoFiles.length && !docFiles.length) { this._showNotification(__('Adjunta al menos una foto o un archivo'), 'error'); return; }
       if (photoFiles.length) {
         const invalid = photoFiles.find((f) => !/^image\//.test(f.type));
-        if (invalid) return this._showNotification(`"${invalid.name}" no es una imagen`, 'error');
-        if (photoFiles.length > 10) return this._showNotification('Maximo 10 imagenes por ficha', 'error');
+        if (invalid) return this._showNotification(__('"{name}" no es una imagen', { name: invalid.name }), 'error');
+        if (photoFiles.length > 10) return this._showNotification(__('Maximo 10 imagenes por ficha'), 'error');
         const oversize = photoFiles.find((f) => f.size > 25 * 1024 * 1024);
-        if (oversize) return this._showNotification(`"${oversize.name}" supera 25MB`, 'error');
+        if (oversize) return this._showNotification(__('"{name}" supera 25MB', { name: oversize.name }), 'error');
       }
       submitBtn.disabled = true;
       goToStep('loading');
@@ -525,7 +525,7 @@ class PlacesView extends BaseView {
           <i class="fas ${iconClass}" aria-hidden="true"></i>
           <span class="attach-product-file-name">${this.escapeHtml(f.name)}</span>
           <span class="attach-product-file-size">${sizeStr}</span>
-          <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="Quitar"><i class="fas fa-times" aria-hidden="true"></i></button>
+          <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar')}"><i class="fas fa-times" aria-hidden="true"></i></button>
         </li>`;
       }).join('');
     };
@@ -563,16 +563,16 @@ class PlacesView extends BaseView {
 
   async _analyzePhotosAndCreatePlace({ files, docFiles = [], modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification('Sesion no disponible', 'error');
+      this._showNotification(__('Sesion no disponible'), 'error');
       modalHandle?.close();
       return;
     }
     const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
     let placeId = null;
     try {
-      setHint('Creando lugar inicial...');
+      setHint(__('Creando lugar inicial...'));
       const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error('No se pudo obtener una identidad para vincular el lugar');
+      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el lugar'));
       const placeholderMeta = docFiles.length ? { pending_files: docFiles } : null;
       const { data: created, error: insertError } = await this.supabase
         .from('brand_places')
@@ -584,11 +584,11 @@ class PlacesView extends BaseView {
           ...(placeholderMeta ? { contact_info: placeholderMeta } : {})  // reusamos contact_info jsonb para guardar metadata temporal
         })
         .select('id').single();
-      if (insertError || !created?.id) throw insertError || new Error('No se pudo crear el lugar');
+      if (insertError || !created?.id) throw insertError || new Error(__('No se pudo crear el lugar'));
       placeId = created.id;
 
       // Subir imagenes a bucket place-images
-      setHint(`Subiendo ${files.length} foto${files.length === 1 ? '' : 's'} a storage...`);
+      setHint(__('Subiendo {n} {fotos} a storage...', { n: files.length, fotos: files.length === 1 ? __('foto') : __('fotos') }));
       const imageUrls = [];
       for (const file of files) {
         const ext = (file.name?.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
@@ -601,7 +601,7 @@ class PlacesView extends BaseView {
         imageUrls.push(publicUrl);
       }
 
-      setHint('Vera esta analizando las fotos con OpenAI Vision...');
+      setHint(__('Vera esta analizando las fotos con OpenAI Vision...'));
       await this._callFichePlaceFunction({
         placeId,
         payload: { place_id: placeId, organization_id: this.organizationId, image_urls: imageUrls },
@@ -621,16 +621,16 @@ class PlacesView extends BaseView {
 
   async _analyzeUrlAndCreatePlace({ url, hostname, modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification('Sesion no disponible', 'error');
+      this._showNotification(__('Sesion no disponible'), 'error');
       modalHandle?.close();
       return;
     }
     const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
     let placeId = null;
     try {
-      setHint('Creando lugar inicial...');
+      setHint(__('Creando lugar inicial...'));
       const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error('No se pudo obtener una identidad para vincular el lugar');
+      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el lugar'));
       const { data: created, error: insertError } = await this.supabase
         .from('brand_places')
         .insert({
@@ -641,10 +641,10 @@ class PlacesView extends BaseView {
           url_lugar: url,
         })
         .select('id').single();
-      if (insertError || !created?.id) throw insertError || new Error('No se pudo crear el lugar');
+      if (insertError || !created?.id) throw insertError || new Error(__('No se pudo crear el lugar'));
       placeId = created.id;
 
-      setHint(`Leyendo ${hostname || 'la pagina'} y extrayendo datos del lugar...`);
+      setHint(__('Leyendo {page} y extrayendo datos del lugar...', { page: hostname || __('la pagina') }));
       await this._callFichePlaceFunction({
         placeId,
         payload: { place_id: placeId, organization_id: this.organizationId, url },
@@ -665,7 +665,7 @@ class PlacesView extends BaseView {
   async _callFichePlaceFunction({ placeId, payload, modalHandle, setHint }) {
     const { data: sessionData } = await this.supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) throw new Error('No hay sesion activa');
+    if (!accessToken) throw new Error(__('No hay sesion activa'));
 
     const resp = await fetch('/.netlify/functions/api-places-generate-fiche', {
       method: 'POST',
@@ -682,24 +682,29 @@ class PlacesView extends BaseView {
       const errMsg = result.error || `HTTP ${resp.status}`;
       const detail = result.detail ? ` (${result.detail})` : '';
       if (resp.status === 402) {
-        this._showNotification(`Creditos insuficientes. Necesitas ${result.credits_needed?.toFixed?.(4) || '?'} creditos`, 'error');
+        this._showNotification(__('Creditos insuficientes. Necesitas {n} creditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
       } else {
-        this._showNotification(`Error generando ficha: ${errMsg}${detail}`, 'error');
+        this._showNotification(__('Error generando ficha: {msg}', { msg: `${errMsg}${detail}` }), 'error');
       }
       throw new Error(errMsg);
     }
 
-    setHint(`Ficha generada (costo: ${result.credits_charged.toFixed(4)} creditos). Recargando listado...`);
+    setHint(__('Ficha generada (costo: {n} creditos). Recargando listado...', { n: result.credits_charged.toFixed(4) }));
     this._invalidateCache();
     window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
     modalHandle?.close();
     const imgCount = result.images?.inserted || 0;
     if (result.images?.error) {
-      this._showNotification(`Ficha generada · imagenes no se vincularon: ${result.images.error}`, 'error');
+      this._showNotification(__('Ficha generada · imagenes no se vincularon: {err}', { err: result.images.error }), 'error');
     } else {
-      const sourceLabel = result.source === 'url' ? 'desde URL' : 'desde fotos';
+      const sourceLabel = result.source === 'url' ? __('desde URL') : __('desde fotos');
       this._showNotification(
-        `Ficha de lugar generada ${sourceLabel} · ${result.credits_charged.toFixed(4)} creditos · ${imgCount} foto${imgCount === 1 ? '' : 's'}`,
+        __('Ficha de lugar generada {source} · {n} creditos · {count} {fotos}', {
+          source: sourceLabel,
+          n: result.credits_charged.toFixed(4),
+          count: imgCount,
+          fotos: imgCount === 1 ? __('foto') : __('fotos'),
+        }),
         'success'
       );
     }
@@ -709,13 +714,13 @@ class PlacesView extends BaseView {
 
   async _createPendingPlace({ files = null, modalHandle = null }) {
     if (!this.supabase || !this.organizationId) {
-      this._showNotification('Sesion no disponible', 'error');
+      this._showNotification(__('Sesion no disponible'), 'error');
       modalHandle?.close();
       return;
     }
     try {
       const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error('No se pudo obtener una identidad');
+      if (!entityId) throw new Error(__('No se pudo obtener una identidad'));
       const { error } = await this.supabase
         .from('brand_places')
         .insert({
@@ -729,10 +734,10 @@ class PlacesView extends BaseView {
       modalHandle?.close();
       await this._loadData();
       this._renderPlacesMasonry();
-      this._showNotification('Lugar guardado para procesamiento posterior', 'info');
+      this._showNotification(__('Lugar guardado para procesamiento posterior'), 'info');
     } catch (err) {
       console.error('PlacesView _createPendingPlace:', err);
-      this._showNotification(err?.message || 'No se pudo crear el lugar', 'error');
+      this._showNotification(err?.message || __('No se pudo crear el lugar'), 'error');
       modalHandle?.close();
     }
   }
