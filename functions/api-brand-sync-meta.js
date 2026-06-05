@@ -537,7 +537,12 @@ exports.handler = async (event) => {
   // (scheduler/cron). El interno salta la verificacion de usuario + membresia.
   const hdrs = event.headers || {};
   const internalSecret = hdrs['x-internal-secret'] || hdrs['X-Internal-Secret'];
-  const isInternal = !!internalSecret && !!process.env.INTERNAL_SYNC_SECRET && internalSecret === process.env.INTERNAL_SYNC_SECRET;
+  // Acepta un secreto dedicado (INTERNAL_SYNC_SECRET) o el service_role key (que
+  // el scheduler/cron ya posee) → no requiere env var nueva en Netlify.
+  const isInternal = !!internalSecret && (
+    (!!process.env.INTERNAL_SYNC_SECRET && internalSecret === process.env.INTERNAL_SYNC_SECRET) ||
+    (!!env.serviceKey && internalSecret === env.serviceKey)
+  );
 
   let user = null;
   if (!isInternal) {
