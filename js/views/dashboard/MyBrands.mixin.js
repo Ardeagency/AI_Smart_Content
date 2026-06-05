@@ -1126,30 +1126,53 @@
         if (lift >= 0) return { k: 'formula', rank: 2, label: 'Tu formula', icon: 'fa-circle-check', say: (ls, s) => `Rinde ${ls} y ya es el ${s}% de lo que publicas — mantenlo.` };
         return { k: 'flojo', rank: 3, label: 'Bajo perfil', icon: 'fa-circle-minus', say: (ls, s) => `Poco uso (${s}%) y rinde ${ls} — baja prioridad.` };
       };
-      const cards = list.map((r) => ({ r, v: verdictOf(r) }))
-        .sort((a, b) => a.v.rank - b.v.rank || Math.abs(Number(b.r.lift_pct) || 0) - Math.abs(Number(a.r.lift_pct) || 0))
-        .map(({ r, v }) => {
-          const share = Math.round(Number(r.share_pct) || 0);
-          const lift = Math.round(Number(r.lift_pct) || 0);
-          const ls = `${lift >= 0 ? '+' : ''}${lift}%`;
-          const barW = Math.min(100, Math.max(3, share));
-          return `
-            <div class="mb-pil2 mb-pil2--${v.k}" data-feat-detail data-dim="pillar" data-value="${this._esc(r.pillar)}" data-title="Pilar: ${this._esc(r.pillar)}" role="button" tabindex="0">
-              <div class="mb-pil2-top">
-                <span class="mb-pil2-verdict"><i class="fas ${v.icon}"></i> ${v.label}</span>
-                <span class="mb-pil2-name">${this._esc(r.pillar)}</span>
-                <span class="mb-pil2-lift">${ls}</span>
-              </div>
-              <p class="mb-pil2-say">${this._esc(v.say(ls, share))}</p>
-              <div class="mb-pil2-foot">
-                <div class="mb-pil2-track"><span class="mb-pil2-fill" style="width:${barW}%;"></span></div>
-                <span class="mb-pil2-share">${share}% de tu contenido</span>
-              </div>
-            </div>`;
-        }).join('');
+      const ranked = list.map((r) => ({ r, v: verdictOf(r) }))
+        .sort((a, b) => a.v.rank - b.v.rank || Math.abs(Number(b.r.lift_pct) || 0) - Math.abs(Number(a.r.lift_pct) || 0));
+
+      const stageRows = ranked.map(({ r, v }, i) => {
+        const share = Math.round(Number(r.share_pct) || 0);
+        const lift = Math.round(Number(r.lift_pct) || 0);
+        const ls = `${lift >= 0 ? '+' : ''}${lift}%`;
+        const conn = i < ranked.length - 1
+          ? `<div class="mb-stage-conn"><span>${share}% de tu contenido</span></div>`
+          : '';
+        return `
+          <div class="mb-stage mb-stage--${v.k}" data-feat-detail data-dim="pillar" data-value="${this._esc(r.pillar)}" data-title="Pilar: ${this._esc(r.pillar)}" role="button" tabindex="0">
+            <span class="mb-stage-icon"><i class="fas ${v.icon}"></i></span>
+            <div class="mb-stage-main">
+              <span class="mb-stage-name">${this._esc(r.pillar)}</span>
+              <span class="mb-stage-say">${this._esc(v.say(ls, share))}</span>
+            </div>
+            <span class="mb-stage-badge">${v.label}</span>
+          </div>${conn}`;
+      }).join('');
+
+      // Footer resumen (analogo a "System health"): metricas derivadas de los pilares.
+      const positives = ranked.filter(({ r }) => (Number(r.lift_pct) || 0) >= 0);
+      const rindeShare = Math.round(positives.reduce((s, { r }) => s + (Number(r.share_pct) || 0), 0));
+      const toOptimize = ranked.filter(({ v }) => v.k === 'explota' || v.k === 'revisa').length;
+      const priority = ranked[0];
+      const priorityLabel = priority ? `${priority.v.label.toUpperCase()}: ${this._esc(priority.r.pillar)}` : '';
+
       return `
         <section class="mb-section">
-          <div class="mb-pil2-list">${cards}</div>
+          <div class="mb-stageflow">
+            <div class="mb-stageflow-head">
+              <span class="mb-stageflow-title">Pilares de contenido</span>
+              <span class="mb-stageflow-count">${ranked.length} ${ranked.length === 1 ? 'pilar' : 'pilares'}</span>
+            </div>
+            <div class="mb-stageflow-list">${stageRows}</div>
+            <div class="mb-stageflow-foot">
+              <div class="mb-stageflow-foot-label">Resumen</div>
+              <div class="mb-stageflow-stats">
+                <div class="mb-stageflow-stat"><span class="mb-stageflow-stat-val">${ranked.length}</span><span class="mb-stageflow-stat-cap">Pilares</span></div>
+                <div class="mb-stageflow-stat"><span class="mb-stageflow-stat-val">${rindeShare}%</span><span class="mb-stageflow-stat-cap">Rinde +</span></div>
+                <div class="mb-stageflow-stat${toOptimize ? ' mb-stageflow-stat--warn' : ' mb-stageflow-stat--ok'}"><span class="mb-stageflow-stat-val">${toOptimize}</span><span class="mb-stageflow-stat-cap">A optimizar</span></div>
+              </div>
+              <div class="mb-stageflow-bar"><span style="width:${Math.min(100, Math.max(2, rindeShare))}%;"></span></div>
+              <div class="mb-stageflow-foot-meta"><span>Prioridad: ${priorityLabel}</span><span>${rindeShare}% rinde</span></div>
+            </div>
+          </div>
         </section>`;
     },
 
@@ -1596,17 +1619,20 @@
       return `
         <div class="mb-health-tasks">
           <div class="mb-health-tasks-title">Tareas para llegar a tu objetivo</div>
-          <ul class="mb-hc-tasks">
-            ${sorted.map((t) => `
+          <ol class="mb-hc-tasks">
+            ${sorted.map((t, i) => {
+              const pts = Number(t.impact_pts) > 0 ? Math.round(Number(t.impact_pts)) : null;
+              return `
               <li class="mb-hc-task">
-                <span class="mb-hc-task-check"><i class="far fa-circle"></i></span>
+                <span class="mb-hc-task-pts${pts ? '' : ' mb-hc-task-pts--empty'}">${pts ? `+${pts}<small>pts</small>` : ''}</span>
+                <span class="mb-hc-task-rail"><span class="mb-hc-task-node">${i + 1}</span></span>
                 <div class="mb-hc-task-body">
                   <span class="mb-hc-task-label">${this._esc(t.label || '')}</span>
                   ${t.detail ? `<span class="mb-hc-task-detail">${this._esc(t.detail)}</span>` : ''}
                 </div>
-                ${Number(t.impact_pts) > 0 ? `<span class="mb-hc-task-impact">+${Math.round(Number(t.impact_pts))} pts</span>` : ''}
-              </li>`).join('')}
-          </ul>
+              </li>`;
+            }).join('')}
+          </ol>
         </div>`;
     },
 
