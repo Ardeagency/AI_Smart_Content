@@ -779,6 +779,10 @@ body.production-filters-in-header .living-container > .living-history-section {
        robarle el foco al CTA blanco. Usado SOLO en micro-acentos: eyebrows,
        iconos de seccion, hairlines. */
     --pmodal-accent-warm: #d4b896;
+    /* Acento DINAMICO para iconos: toma el color de marca de la org
+       (--brand-primary, lo setea OrgBrandTheme). Cae al dorado editorial si la
+       org no tiene tema. Asi los iconos hablan el color de la marca activa. */
+    --pmodal-accent-dyn: var(--brand-primary, var(--pmodal-accent-warm));
     --pmodal-side-width: 400px;
 
     position: fixed;
@@ -953,7 +957,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     transition: background 140ms ease, color 140ms ease;
 }
 .pmodal-zoom-btn:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); }
-.pmodal-zoom-reset { color: var(--pmodal-accent-warm); }
+.pmodal-zoom-reset { color: var(--pmodal-accent-dyn); }
 .pmodal-zoom-level {
     min-width: 46px;
     text-align: center;
@@ -1000,7 +1004,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     white-space: nowrap;
     transition: background 140ms ease, color 140ms ease;
 }
-.pmodal-toolpill i { font-size: 0.85rem; }
+.pmodal-toolpill i { font-size: 0.85rem; color: var(--pmodal-accent-dyn); opacity: 0.95; }
 .pmodal-toolpill:hover:not([disabled]) {
     background: rgba(255, 255, 255, 0.05);
     color: var(--text-primary);
@@ -1700,8 +1704,8 @@ body.production-filters-in-header .living-container > .living-history-section {
     font-weight: 700;
 }
 .pmodal-section-title i {
-    color: var(--pmodal-accent-warm);
-    opacity: 0.9;
+    color: var(--pmodal-accent-dyn);
+    opacity: 0.95;
     font-size: 0.78rem;
 }
 
@@ -1901,7 +1905,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     transition: border-color 140ms ease, background 140ms ease;
 }
 .pmodal-model-chip:hover {
-    border-color: rgba(212, 184, 150, 0.35);
+    border-color: color-mix(in srgb, var(--pmodal-accent-dyn) 40%, transparent);
     background: rgba(255, 255, 255, 0.07);
 }
 
