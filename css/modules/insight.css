@@ -3458,19 +3458,30 @@
 /* Ritmo: mas aire entre secciones */
 .insight-page.mb-dash { gap: 1.5rem; }
 
-/* ── Filtros: glass-black (no la variante blanca translucida) ──
+/* ── Filtros: glass-black con el mismo radio y color que el boton "Crear informe" ──
    OJO: nada de backdrop-filter en .living-filter — crea un bloque contenedor
    que (junto a su overflow:hidden) rompe el dropdown position:fixed del
-   calendario. El color dark translucido ya da el look glass-black; el popup
-   del calendario conserva su propio blur. */
+   calendario. El color dark translucido ya da el look glass-black. */
 .insight-page .mb-filters-bar .living-filter {
   background: rgba(11, 11, 11, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
 }
 .insight-page .mb-filters-bar .living-filter:hover { background: rgba(11, 11, 11, 0.8); }
 .insight-page .mb-filters-bar .living-filter-label { border-right-color: rgba(255, 255, 255, 0.08); }
 .insight-page .mb-filters-bar .living-filter--disabled { opacity: 0.55; }
 .insight-page .mb-filters-bar .living-filter--disabled .living-filter-select { cursor: not-allowed; }
+
+/* El popover del calendario adopta el mismo estilo que el menu de "Crear informe"
+   (superficie solida, sin blur): gradiente, borde y sombra identicos. */
+.insight-page .mb-filters-bar .living-date-dropdown {
+  background: linear-gradient(180deg, #222429 0%, #1B1D22 100%);
+  border: 1px solid #34363A;
+  border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 
 /* ── Header de seccion: tipografia con jerarquia real + regla fina ── */
 .insight-page .mb-section { gap: 0.85rem; }
