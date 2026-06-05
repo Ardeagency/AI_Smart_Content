@@ -926,6 +926,14 @@ class StudioView extends BaseView {
         <div class="production-modal-backdrop" data-action="modal-close"></div>
         <div class="production-modal-content">
           <div class="production-modal-visual">
+            <!-- Fondo ambiente: la misma produccion desenfocada + oscurecida
+                 (patron lightbox cinematografico, igual que el banner del detalle
+                 de Flujo). El asset nitido va por encima en visual-inner. -->
+            <div class="pmodal-visual-bg" aria-hidden="true">
+              <img id="pmodalBgImage" class="pmodal-visual-bg-el" alt="" hidden>
+              <video id="pmodalBgVideo" class="pmodal-visual-bg-el" muted loop playsinline preload="metadata" hidden aria-hidden="true"></video>
+            </div>
+            <div class="pmodal-visual-scrim" aria-hidden="true"></div>
             <div class="production-modal-visual-inner">
               <img id="pmodalImage" src="" alt="" hidden>
               <video id="pmodalVideo" controls playsinline preload="metadata" hidden aria-label="Production video"></video>

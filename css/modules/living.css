@@ -838,7 +838,48 @@ body.production-filters-in-header .living-container > .living-history-section {
     background: transparent !important;
 }
 
+/* ── Fondo ambiente (lightbox): la misma produccion desenfocada + oscurecida
+   detras del asset nitido. Reemplaza el negro solido plano por un halo
+   cinematografico, mismo recurso que el banner de fondo del detalle de Flujo. */
+.pmodal-visual-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.pmodal-visual-bg-el {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Blur fuerte + oscurecido: el asset central (nitido, contained) se despega
+       del halo. scale evita que el desenfoque deje bordes transparentes. */
+    filter: blur(48px) brightness(0.4) saturate(1.15);
+    transform: scale(1.18);
+    opacity: 0.9;
+}
+.pmodal-visual-bg-el[hidden] { display: none; }
+/* Scrim: vignette radial que hunde los bordes y centra la mirada en el asset. */
+.pmodal-visual-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+        radial-gradient(120% 90% at 50% 45%, transparent 34%, rgba(8, 8, 10, 0.55) 100%),
+        linear-gradient(to top, rgba(8, 8, 10, 0.5) 0%, transparent 42%);
+}
+/* Outputs con alpha (Sin fondo): ocultamos el halo para que se perciba la
+   transparencia real (glass-black detras, ya definido arriba). */
+.production-modal.has-alpha-output .pmodal-visual-bg,
+.production-modal.has-alpha-output .pmodal-visual-scrim { display: none; }
+
 .production-modal-visual-inner {
+    /* relative + z-index: el asset nitido va por encima del halo y el scrim. */
+    position: relative;
+    z-index: 2;
     flex: 1;
     min-width: 0;
     display: flex;

@@ -1969,6 +1969,32 @@ class LivingManager {
             imgEl.alt = (typeof data?.prompt === 'string' ? data.prompt : 'Produccion');
         }
 
+        // Fondo ambiente (lightbox): la MISMA media, desenfocada + oscurecida por
+        // CSS, llena el contenedor izquierdo detras del asset nitido. El JS solo
+        // alimenta el src; el blur/scrim viven en .pmodal-visual-bg-el / scrim.
+        const bgImg = document.getElementById('pmodalBgImage');
+        const bgVideo = document.getElementById('pmodalBgVideo');
+        if (bgVideo) { bgVideo.pause(); bgVideo.removeAttribute('src'); bgVideo.load(); }
+        if (mediaUrl && isVideo) {
+            if (bgImg) { bgImg.hidden = true; bgImg.removeAttribute('src'); }
+            if (bgVideo) {
+                bgVideo.hidden = false;
+                // Defer igual que el video principal: no descargar si se cierra al instante.
+                requestAnimationFrame(() => {
+                    if (!this._modalState || this._modalState.outputId !== outputId) return;
+                    bgVideo.src = mediaUrl;
+                    bgVideo.load();
+                    bgVideo.play().catch(() => {});
+                });
+            }
+        } else if (mediaUrl) {
+            if (bgVideo) bgVideo.hidden = true;
+            if (bgImg) { bgImg.hidden = false; bgImg.src = mediaUrl; }
+        } else {
+            if (bgImg) { bgImg.hidden = true; bgImg.removeAttribute('src'); }
+            if (bgVideo) bgVideo.hidden = true;
+        }
+
         // Prompt → bloques labeled. La fuente primaria es output.generated_copy
         // (estructurado) o el prompt que pasó la card. El disclosure técnico
         // se llena con metadata.prompt_used si existe.
@@ -2030,6 +2056,11 @@ class LivingManager {
         if (videoEl) { videoEl.pause(); videoEl.removeAttribute('src'); videoEl.load(); }
         const imgEl = document.getElementById('pmodalImage');
         if (imgEl) { imgEl.removeAttribute('src'); imgEl.hidden = true; }
+        // Liberar el fondo ambiente (img + video del halo).
+        const bgVideoEl = document.getElementById('pmodalBgVideo');
+        if (bgVideoEl) { bgVideoEl.pause(); bgVideoEl.removeAttribute('src'); bgVideoEl.load(); bgVideoEl.hidden = true; }
+        const bgImgEl = document.getElementById('pmodalBgImage');
+        if (bgImgEl) { bgImgEl.removeAttribute('src'); bgImgEl.hidden = true; }
         // Cerrar overlay de edicion si estaba abierto, liberando canvas y prompt.
         this._closeEditOverlay();
         if (this._siblingObserver) {
