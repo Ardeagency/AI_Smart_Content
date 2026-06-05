@@ -391,7 +391,7 @@ class DashboardView extends BaseView {
   static get HERO_COPY() {
     return {
       'my-brands': {
-        strong: __('Mi Marca'),
+        strong: __('Analisis de la Marca'),
         desc: __('El pulso de tu marca: salud, campanas activas y como rinde tu contenido frente a tu audiencia.'),
       },
       'competence': {
