@@ -448,7 +448,7 @@ async function upsertBrandPost(env, brandContainerId, postRow, postId) {
       url: env.url, serviceKey: env.serviceKey,
       path: 'brand_posts', method: 'PATCH',
       searchParams: { id: `eq.${existing[0].id}` },
-      body: [{ metrics: postRow.metrics, captured_at: postRow.captured_at }]
+      body: [{ metrics: postRow.metrics, captured_at: postRow.captured_at, permalink: postRow.permalink }]
     }).catch(e => console.warn('[sync] upsert patch:', e.message));
   } else {
     await supabaseRest({
@@ -663,6 +663,7 @@ exports.handler = async (event) => {
           network:        'facebook',
           profile_handle: page.name,
           post_id:        post.id,
+          permalink:      post.permalink_url || null,
           content:        post.message || post.story || '',
           media_assets:   post.full_picture ? [{ type: post.attachments?.data?.[0]?.media_type || 'text', url: post.full_picture, permalink: post.permalink_url }] : [],
           metrics,
@@ -716,6 +717,7 @@ exports.handler = async (event) => {
             network:        'instagram',
             profile_handle: igAccount?.username || '',
             post_id:        m.id,
+            permalink:      m.permalink || null,
             content:        m.caption || '',
             media_assets:   m.media_url ? [{ type: m.media_type?.toLowerCase(), url: m.media_url, permalink: m.permalink }] : [],
             metrics,
