@@ -381,10 +381,13 @@
       const n = (v) => Number(v) || 0;
       const views = n(m.reach) || n(m.impressions) || n(m.video_views);
       const isVideo = n(m.video_views) > 0;
+      // Interacciones sociales primero (likes/comentarios/guardados/compartidos),
+      // alcance pasivo (vistas/reproducciones) al final.
       const rows = [
-        { i: 'fa-heart',   v: n(m.likes),    c: '#e06464', show: true },
-        { i: 'fa-comment', v: n(m.comments), c: '#5b9bd5', show: true },
-        { i: 'fa-retweet', v: n(m.shares),   c: '#6bcf7f', show: n(m.shares) > 0 },
+        { i: 'fa-heart',    v: n(m.likes),    c: '#e06464', show: true },
+        { i: 'fa-comment',  v: n(m.comments), c: '#5b9bd5', show: true },
+        { i: 'fa-bookmark', v: n(m.saved),    c: '#e0a045', show: n(m.saved) > 0 },
+        { i: 'fa-retweet',  v: n(m.shares),   c: '#6bcf7f', show: n(m.shares) > 0 },
         { i: isVideo ? 'fa-play' : 'fa-eye', v: views, c: '#a78bfa', show: views > 0 },
       ].filter((r) => r.show);
       return rows.map((r) => `<span class="mb-tpt-metric"><i class="fas ${r.i}" style="color:${r.c}"></i> ${this._compactNum(r.v)}</span>`).join('');
