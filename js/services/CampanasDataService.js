@@ -124,6 +124,7 @@ class CampanasDataService {
       vulnerabilities,
       optimizationInsights, alertScore,
       activityHistory, engagementTrend, sentimentActivity, postingHours,
+      estrategiaTopics, topHighlightedPosts, audienceBehavior, comments,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
@@ -200,6 +201,16 @@ class CampanasDataService {
         p_org_id: this.orgId, p_brand_container_ids: bcids,
         p_date_from: date_from, p_date_to: date_to, p_post_source: 'own', p_timezone: 'America/Bogota',
       }),
+
+      // Widgets nuevos: temas (mirror de tonos), top posts, comportamiento de
+      // publico (personas) y analisis de comentarios.
+      this.sb.rpc('dashboard_estrategia_topics',          { ...featuredArgs, p_limit: 5 }),
+      this.sb.rpc('dashboard_brand_top_highlighted_posts', { ...featuredArgs, p_limit: 3 }),
+      this.sb.rpc('dashboard_mimarca_audience_behavior',  { p_org_id: this.orgId, p_brand_container_ids: bcids }),
+      this.sb.rpc('dashboard_mimarca_comments', {
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
+        p_brand_container_ids: bcids, p_platforms: platforms, p_limit: 5,
+      }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -220,10 +231,15 @@ class CampanasDataService {
         hashtag:  u(featuredHashtag),
         hour:     u(featuredHour),
         tones:    u(estrategiaTones),
+        topics:   u(estrategiaTopics),
         sentiment: u(featuredSentiment),
         profile:   u(featuredProfile),
         growth:    u(featuredGrowth),
       },
+
+      topPosts:         u(topHighlightedPosts),
+      audienceBehavior: u(audienceBehavior),
+      comments:         u(comments),
 
       whatWorks: u(whatWorks),
       audiencePatterns: u(audiencePatterns),

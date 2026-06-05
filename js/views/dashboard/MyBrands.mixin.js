@@ -178,6 +178,10 @@
             <div class="mb-layout-main">
               ${this._buildActionPlanSection(data, insights)}
               ${this._buildLongitudinalSection(data)}
+              ${this._buildTopPostsSection(data?.topPosts?.data)}
+              ${this._buildToneTopicSection(data?.featured)}
+              ${this._buildAudienceBehaviorSection(data?.audienceBehavior?.data)}
+              ${this._buildCommentsSection(data?.comments?.data)}
               ${this._buildLeverageSection(insights)}
             </div>
             <aside class="mb-layout-aside">
@@ -323,6 +327,173 @@
             ${vital(fmt.int(oi.posts_analyzed), 'Posts analizados')}
             ${vital(cons, 'Consistencia de publicacion')}
           </div>
+        </section>`;
+    },
+
+    /* ════════════════ Widgets de contenido + publico ════════════════ */
+
+    /** Icono FA (brands) por red social. */
+    _platformIcon(net) {
+      const n = String(net || '').toLowerCase();
+      if (n.includes('insta')) return 'fa-instagram';
+      if (n.includes('face'))  return 'fa-facebook';
+      if (n.includes('tik'))   return 'fa-tiktok';
+      if (n === 'x' || n.includes('twit')) return 'fa-x-twitter';
+      if (n.includes('you'))   return 'fa-youtube';
+      if (n.includes('link'))  return 'fa-linkedin';
+      return 'fa-hashtag';
+    },
+    /** Clase de sentimiento POS/NEU/NEG. */
+    _sentClass(s) {
+      const v = String(s || '').toUpperCase();
+      return v === 'POS' ? 'pos' : v === 'NEG' ? 'neg' : 'neu';
+    },
+    _capWords(s) { const t = String(s || '').replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); },
+
+    /* ── Top 3 mejores posts de tu marca ── */
+    _buildTopPostsSection(rows) {
+      const list = (Array.isArray(rows) ? rows : []).slice(0, 3);
+      if (!list.length) return '';
+      const items = list.map((p, i) => {
+        const topics = (Array.isArray(p.topics) ? p.topics : []).slice(0, 2);
+        return `
+          <div class="mb-top-post">
+            <span class="mb-top-post-rank">${i + 1}</span>
+            <span class="mb-top-post-net"><i class="fab ${this._platformIcon(p.network)}"></i></span>
+            <div class="mb-top-post-body">
+              <div class="mb-top-post-head">
+                <span class="mb-top-post-handle">@${this._esc(String(p.profile_handle || '').replace(/^@/, ''))}</span>
+                <span class="mb-top-post-eng">${this._compactNum(p.engagement_total)} <small>eng</small></span>
+              </div>
+              <p class="mb-top-post-text">${this._esc(p.content_preview || '')}</p>
+              ${topics.length ? `<div class="mb-top-post-tags">${topics.map((t) => `<span class="mb-tag">${this._esc(this._capWords(t))}</span>`).join('')}<span class="mb-cmt-dot mb-cmt-dot--${this._sentClass(p.sentiment_text)}" title="Sentimiento"></span></div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+      return `
+        <section class="mb-section">
+          <div class="mb-chart-card">
+            <div class="mb-card-title">Top 3 posts de tu marca</div>
+            <div class="mb-top-posts">${items}</div>
+          </div>
+        </section>`;
+    },
+
+    /* ── Tonos + Temas: misma estructura (jerarquia + mas usado + mas efectivo) ── */
+    _buildToneTopicSection(featured) {
+      const f = featured || {};
+      const tones = (Array.isArray(f.tones?.data) ? f.tones.data : []).map((r) => ({
+        name: r.tone_name, used: Number(r.posts_count) || 0, eng: Number(r.total_engagement) || 0,
+      }));
+      const topics = (Array.isArray(f.topics?.data) ? f.topics.data : []).map((r) => ({
+        name: r.topic_name, used: Number(r.usage_count) || 0, eng: Number(r.total_engagement) || 0,
+      }));
+      const toneCard = this._buildHierarchyCard('Tonos', tones);
+      const topicCard = this._buildHierarchyCard('Temas', topics);
+      if (!toneCard && !topicCard) return '';
+      return `
+        <section class="mb-section mb-section--wide">
+          <div class="mb-long-grid">${toneCard}${topicCard}</div>
+        </section>`;
+    },
+
+    /** Card jerarquia (tonos/temas): mas usado + mas efectivo + lista priorizada. */
+    _buildHierarchyCard(title, items) {
+      const list = (Array.isArray(items) ? items : []).filter((x) => x.name);
+      if (!list.length) return '';
+      const withAvg = list.map((x) => ({ ...x, avg: x.used > 0 ? x.eng / x.used : 0 }));
+      const mostUsed = [...withAvg].sort((a, b) => b.used - a.used)[0];
+      const mostEff  = [...withAvg].sort((a, b) => b.avg - a.avg)[0];
+      const maxUsed = Math.max(...withAvg.map((x) => x.used), 1);
+      const ranked = [...withAvg].sort((a, b) => b.used - a.used).slice(0, 5);
+      const rows = ranked.map((x) => `
+        <div class="mb-hier-row${x.name === mostEff.name ? ' mb-hier-row--eff' : ''}">
+          <span class="mb-hier-name">${this._esc(this._capWords(x.name))}</span>
+          <div class="mb-hier-track"><span style="width:${Math.max(4, Math.round(x.used / maxUsed * 100))}%;"></span></div>
+          <span class="mb-hier-val">${x.used} <small>posts</small></span>
+        </div>`).join('');
+      return `
+        <div class="mb-long-card">
+          <div class="mb-card-title">${this._esc(title)}</div>
+          <div class="mb-hier-stats">
+            <div class="mb-hier-stat">
+              <span class="mb-hier-stat-cap">Más usado</span>
+              <span class="mb-hier-stat-val">${this._esc(this._capWords(mostUsed.name))}</span>
+              <span class="mb-hier-stat-sub">${mostUsed.used} posts</span>
+            </div>
+            <div class="mb-hier-stat mb-hier-stat--eff">
+              <span class="mb-hier-stat-cap">Más efectivo</span>
+              <span class="mb-hier-stat-val">${this._esc(this._capWords(mostEff.name))}</span>
+              <span class="mb-hier-stat-sub">${this._compactNum(Math.round(mostEff.avg))} eng/post</span>
+            </div>
+          </div>
+          <div class="mb-hier-list">${rows}</div>
+        </div>`;
+    },
+
+    /* ── Patrones del publico: intereses y comportamiento (personas) ── */
+    _buildAudienceBehaviorSection(b) {
+      if (!b || !Number(b.personas)) return '';
+      const chips = (arr, cls) => (Array.isArray(arr) ? arr : []).slice(0, 6)
+        .map((x) => `<span class="mb-beh-chip mb-beh-chip--${cls}">${this._esc(this._capWords(x.text || x))}</span>`).join('');
+      const genders = (Array.isArray(b.genders) ? b.genders : []).map((g) => g === 'male' ? 'Hombres' : g === 'female' ? 'Mujeres' : g).join(' · ');
+      const ageStr = (b.age_min && b.age_max) ? `${b.age_min}–${b.age_max} años` : '';
+      const block = (label, arr, cls) => { const c = chips(arr, cls); return c ? `<div class="mb-beh-block"><span class="mb-beh-label">${label}</span><div class="mb-beh-chips">${c}</div></div>` : ''; };
+      return `
+        <section class="mb-section">
+          <div class="mb-chart-card">
+            <div class="mb-card-title">Patrones del público</div>
+            <div class="mb-beh-meta">${b.personas} ${b.personas === 1 ? 'persona' : 'personas'}${ageStr ? ` · ${ageStr}` : ''}${genders ? ` · ${genders}` : ''}</div>
+            ${block('Qué desean', b.deseos, 'want')}
+            ${block('Qué los gatilla a comprar', b.gatillos, 'trig')}
+            ${block('Qué los frena (dolores)', b.dolores, 'pain')}
+          </div>
+        </section>`;
+    },
+
+    /* ── Analisis de comentarios + comentarios de alto impacto ── */
+    _buildCommentsSection(c) {
+      if (!c || !Number(c.total)) return '';
+      const pos = Number(c.pos) || 0, neu = Number(c.neu) || 0, neg = Number(c.neg) || 0;
+      const known = (pos + neu + neg) || 1;
+      const pct = (n) => Math.round(n / known * 100);
+      const emos = (Array.isArray(c.top_emotions) ? c.top_emotions : []).slice(0, 4)
+        .map((e) => `<span class="mb-cmt-emo">${this._esc(this._capWords(e.emotion))} <small>${this._compactNum(e.count)}</small></span>`).join('');
+      const analisis = `
+        <div class="mb-long-card">
+          <div class="mb-card-title">Análisis de comentarios</div>
+          <div class="mb-cmt-total">${this._compactNum(c.total)} <small>comentarios analizados</small></div>
+          <div class="mb-cmt-sent">
+            <span class="mb-cmt-seg mb-cmt-seg--pos" style="width:${pct(pos)}%"></span>
+            <span class="mb-cmt-seg mb-cmt-seg--neu" style="width:${pct(neu)}%"></span>
+            <span class="mb-cmt-seg mb-cmt-seg--neg" style="width:${pct(neg)}%"></span>
+          </div>
+          <div class="mb-cmt-legend">
+            <span class="mb-cmt-leg mb-cmt-leg--pos">${pct(pos)}% positivo</span>
+            <span class="mb-cmt-leg mb-cmt-leg--neu">${pct(neu)}% neutro</span>
+            <span class="mb-cmt-leg mb-cmt-leg--neg">${pct(neg)}% negativo</span>
+          </div>
+          ${emos ? `<div class="mb-cmt-emos"><span class="mb-beh-label">Emociones top</span><div class="mb-cmt-emo-list">${emos}</div></div>` : ''}
+        </div>`;
+      const items = (Array.isArray(c.top) ? c.top : []).slice(0, 5).map((t) => `
+        <div class="mb-cmt-item">
+          <span class="mb-cmt-dot mb-cmt-dot--${this._sentClass(t.sentiment)}"></span>
+          <div class="mb-cmt-item-body">
+            <p class="mb-cmt-item-text">${this._esc(t.content || '')}</p>
+            <div class="mb-cmt-item-meta">
+              <span class="mb-cmt-author">@${this._esc(String(t.author || '').replace(/^@/, ''))}</span>
+              <span class="mb-cmt-eng"><i class="fas fa-heart"></i> ${this._compactNum(t.likes)}${Number(t.replies) ? ` · <i class="fas fa-reply"></i> ${this._compactNum(t.replies)}` : ''}</span>
+            </div>
+          </div>
+        </div>`).join('');
+      const impacto = items ? `
+        <div class="mb-long-card">
+          <div class="mb-card-title">Comentarios de alto impacto</div>
+          <div class="mb-cmt-list">${items}</div>
+        </div>` : '';
+      return `
+        <section class="mb-section mb-section--wide">
+          <div class="mb-long-grid">${analisis}${impacto}</div>
         </section>`;
     },
 
