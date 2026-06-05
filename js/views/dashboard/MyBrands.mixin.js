@@ -390,8 +390,8 @@
 
     /* ── Analisis longitudinal: series temporales propias de la marca ──────
        Inspirado en el dashboard de AI Partner, pero unico para la marca
-       (no por perfil monitoreado). 5 charts Chart.js: historial de actividad,
-       tendencia de engagement, patron de horas, sentimientos y crecimiento. */
+       (no por perfil monitoreado). Charts Chart.js: historial de actividad,
+       tendencia de engagement + crecimiento (doble eje), patron de horas y sentimientos. */
     _buildLongitudinalSection(data) {
       const L = data?.longitudinal || {};
       const act = Array.isArray(L.activity?.data) ? L.activity.data : [];
@@ -410,13 +410,15 @@
               <div class="mb-long-card-title">Historial de actividad</div>
               <div class="mb-long-canvas"><canvas id="mbLongActivity"></canvas></div>
             </div>
-            ${card('mbLongEngagement', 'Tendencia de engagement')}
+            <div class="mb-long-card mb-long-card--wide">
+              <div class="mb-long-card-title">Tendencia de engagement y crecimiento</div>
+              <div class="mb-long-canvas"><canvas id="mbLongEngGrowth"></canvas></div>
+            </div>
             <div class="mb-long-card">
               <div class="mb-long-card-title">Patron de horas de publicacion</div>
               ${this._buildPostingHeatmap(L.hours?.data)}
             </div>
             ${card('mbLongSentiment', 'Actividad de sentimientos')}
-            ${card('mbLongGrowth', 'Crecimiento')}
           </div>`}
         </section>`;
     },
@@ -676,10 +678,38 @@
         pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: brandHexes[brandHexes.length - 1],
       }] }, options: baseOpts() });
 
-      // 2. Tendencia de engagement
+      // 2+5. Tendencia de engagement (eje izq, absoluto, verde) + Crecimiento %
+      // (eje der, ambar). Ambas series salen del mismo array `eng` y comparten el
+      // eje X, asi que viven en un solo grafico de doble eje Y.
       if (eng.length) {
-        const cv = document.getElementById('mbLongEngagement');
-        mk('mbLongEngagement', { type: 'line', data: { labels: eng.map((r) => r.period_label), datasets: [areaDs(cv, 'Engagement', eng.map((r) => Number(r.total_engagement) || 0), '#6bcf7f')] }, options: baseOpts(compact) });
+        const cv = document.getElementById('mbLongEngGrowth');
+        const engData = eng.map((r) => Number(r.total_engagement) || 0);
+        const datasets = [{
+          label: 'Engagement', data: engData, yAxisID: 'y',
+          borderColor: '#6bcf7f', backgroundColor: grad(cv, '#6bcf7f'),
+          fill: true, tension: 0.4, borderWidth: 2,
+          pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: '#6bcf7f',
+        }];
+        if (eng.length > 1) {
+          const growth = eng.map((r, i) => {
+            if (i === 0) return 0;
+            const prev = Number(eng[i - 1].total_engagement) || 0;
+            const cur = Number(r.total_engagement) || 0;
+            return prev > 0 ? Math.round((cur - prev) / prev * 100) : 0;
+          });
+          datasets.push({
+            label: 'Crecimiento %', data: growth, yAxisID: 'y1',
+            borderColor: '#e0a045', backgroundColor: 'transparent',
+            fill: false, tension: 0.4, borderWidth: 2, borderDash: [4, 3],
+            pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: '#e0a045',
+          });
+        }
+        const opts = baseOpts(compact);
+        opts.plugins.legend = { display: true, labels: { color: TICK, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { size: 10 } } };
+        opts.scales.y.position = 'left';
+        opts.scales.y.ticks.color = '#6bcf7f';
+        opts.scales.y1 = { position: 'right', grid: { display: false }, border: { display: false }, beginAtZero: false, ticks: { color: '#e0a045', font: { size: 10 }, maxTicksLimit: 5, callback: (v) => `${v}%` } };
+        mk('mbLongEngGrowth', { type: 'line', data: { labels: eng.map((r) => r.period_label), datasets }, options: opts });
       }
 
       // 3. Patron de horas → heatmap CSS (no Chart.js), construido en _buildPostingHeatmap.
@@ -695,17 +725,6 @@
         ] }, options: { ...baseOpts(), plugins: { legend: { display: true, labels: { color: TICK, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { size: 10 } } }, tooltip: baseOpts().plugins.tooltip } } });
       }
 
-      // 5. Crecimiento (variacion % de engagement periodo a periodo)
-      if (eng.length > 1) {
-        const growth = eng.map((r, i) => {
-          if (i === 0) return 0;
-          const prev = Number(eng[i - 1].total_engagement) || 0;
-          const cur = Number(r.total_engagement) || 0;
-          return prev > 0 ? Math.round((cur - prev) / prev * 100) : 0;
-        });
-        const cv = document.getElementById('mbLongGrowth');
-        mk('mbLongGrowth', { type: 'line', data: { labels: eng.map((r) => r.period_label), datasets: [areaDs(cv, 'Crecimiento %', growth, '#e0a045')] }, options: baseOpts((v) => `${v}%`) });
-      }
     },
 
     _fmtMonthLabel(ts) {
