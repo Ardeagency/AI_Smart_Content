@@ -189,12 +189,24 @@ class DateRangePicker {
       inp.addEventListener('change', () => this._commitInputs());
     });
 
-    this._docClick = (e) => { if (this._root && !this._root.contains(e.target)) this._close(); };
+    // Cierra al click afuera. El dropdown se porta a body (fuera de _root), asi
+    // que hay que excluir explicitamente los clicks dentro del panel.
+    this._docClick = (e) => {
+      if (!this._root) return;
+      if (this._root.contains(e.target)) return;
+      if (this._dropdown && this._dropdown.contains(e.target)) return;
+      this._close();
+    };
     document.addEventListener('click', this._docClick);
   }
 
   destroy() {
     if (this._docClick) { document.removeEventListener('click', this._docClick); this._docClick = null; }
+    // Limpia un dropdown porteado de un mount/instancia previa (evita huerfanos en body).
+    if (this._portalNode && this._portalNode.parentNode === document.body) {
+      document.body.removeChild(this._portalNode);
+    }
+    this._portalNode = null;
   }
 
   _shiftMonth(delta) {
@@ -311,11 +323,19 @@ class DateRangePicker {
   }
 
   _open() {
-    this._dropdown?.classList.add('is-open');
-    this._dropdown?.setAttribute('aria-hidden', 'false');
+    if (!this._dropdown) return;
+    // Portal a document.body: el dropdown es position:fixed pero vive dentro del
+    // hero (isolation: isolate), que lo atrapa por debajo de las cards. Moverlo a
+    // body lo saca de ese stacking context y su z-index pasa a ser global.
+    if (this._dropdown.parentNode !== document.body) {
+      document.body.appendChild(this._dropdown);
+    }
+    this._portalNode = this._dropdown;
+    this._dropdown.classList.add('is-open');
+    this._dropdown.setAttribute('aria-hidden', 'false');
     this._trigger?.setAttribute('aria-expanded', 'true');
     // Posicion: anclada al trigger, clampeada al viewport (panel ancho).
-    if (this._trigger && this._dropdown) {
+    if (this._trigger) {
       const rect = this._trigger.getBoundingClientRect();
       const dw = this._dropdown.offsetWidth || 540;
       const vw = window.innerWidth;
@@ -328,10 +348,16 @@ class DateRangePicker {
   }
 
   _close() {
-    this._dropdown?.classList.remove('is-open');
-    this._dropdown?.setAttribute('aria-hidden', 'true');
+    if (!this._dropdown) return;
+    this._dropdown.classList.remove('is-open');
+    this._dropdown.setAttribute('aria-hidden', 'true');
     this._trigger?.setAttribute('aria-expanded', 'false');
-    if (this._dropdown) { this._dropdown.style.left = ''; this._dropdown.style.top = ''; }
+    this._dropdown.style.left = ''; this._dropdown.style.top = '';
+    // Saca el dropdown de body; el proximo render recrea su markup en el filtro.
+    if (this._dropdown.parentNode === document.body) {
+      document.body.removeChild(this._dropdown);
+    }
+    this._portalNode = null;
   }
 }
 
