@@ -151,7 +151,7 @@
     _renderEmptyOrgState(body) {
       body.innerHTML = `
         <div class="insight-page" style="text-align:center; padding-top:4rem;">
-          <h2 style="margin:0 0 0.5rem; font-size:1.5rem; color:var(--text-primary);">Sin organización activa</h2>
+          <h2 style="margin:0 0 0.5rem; font-size:1.5rem; color:var(--text-primary);">${__('Sin organización activa')}</h2>
           <p style="color:var(--text-secondary);">Selecciona una marca desde el menú para empezar.</p>
         </div>`;
     },
@@ -160,7 +160,7 @@
       const msg = this._esc(err?.message || String(err) || 'Error desconocido');
       return `
         <div class="insight-page" style="text-align:center; padding-top:4rem;">
-          <h2 style="margin:0 0 0.5rem; font-size:1.25rem; color:var(--text-primary);">No se pudo cargar el dashboard</h2>
+          <h2 style="margin:0 0 0.5rem; font-size:1.25rem; color:var(--text-primary);">${__('No se pudo cargar el dashboard')}</h2>
           <p style="color:var(--text-secondary); max-width:520px; margin:0 auto;">${msg}</p>
         </div>`;
     },
@@ -207,7 +207,7 @@
         : [];
       const orphan = (Array.isArray(data?.pillars?.data) ? data.pillars.data : []).find((p) => p.is_orphan);
 
-      const dimLabel = { tono: 'Tono', tema: 'Tema', formato: 'Formato', horario: 'Horario' };
+      const dimLabel = { tono: __('Tono'), tema: __('Tema'), formato: __('Formato'), horario: __('Horario') };
 
       // EXPLOTA: el mejor boost (o pilar huerfano si no hay boost).
       let explota = null;
@@ -215,29 +215,29 @@
         const b = boosts[0];
         explota = {
           title: `${dimLabel[b.dimension] || b.dimension} "${this._causalValueLabel(b.dimension, b.value)}"`,
-          metric: `+${Math.round(Number(b.lift_pct))}% sobre tu promedio`,
-          why: orphan ? `Tu pilar "${this._esc(orphan.pillar)}" tambien rinde y lo usas solo ${orphan.share_pct}%.` : 'Usalo mas, lo subexplotas.',
+          metric: __('+{n}% sobre tu promedio', { n: Math.round(Number(b.lift_pct)) }),
+          why: orphan ? __('Tu pilar "{pillar}" tambien rinde y lo usas solo {pct}%.', { pillar: this._esc(orphan.pillar), pct: orphan.share_pct }) : __('Usalo mas, lo subexplotas.'),
         };
       } else if (orphan) {
         explota = {
-          title: `Pilar "${this._esc(orphan.pillar)}"`,
-          metric: `+${Math.round(Number(orphan.lift_pct))}% pero solo ${orphan.share_pct}% de tu contenido`,
-          why: 'Te funciona y lo subexplotas. Produce mas de esto.',
+          title: __('Pilar "{pillar}"', { pillar: this._esc(orphan.pillar) }),
+          metric: __('+{n}% pero solo {pct}% de tu contenido', { n: Math.round(Number(orphan.lift_pct)), pct: orphan.share_pct }),
+          why: __('Te funciona y lo subexplotas. Produce mas de esto.'),
         };
       }
 
       // OPTIMIZA: la tarea de salud de mayor impacto.
       let optimiza = tasks[0] ? {
         title: tasks[0].label,
-        metric: Number(tasks[0].impact_pts) > 0 ? `+${Math.round(Number(tasks[0].impact_pts))} pts de salud` : '',
+        metric: Number(tasks[0].impact_pts) > 0 ? __('+{n} pts de salud', { n: Math.round(Number(tasks[0].impact_pts)) }) : '',
         why: tasks[0].detail || '',
       } : null;
 
       // ELIMINA: lo que mas te resta.
       let elimina = drags[0] ? {
         title: `${dimLabel[drags[0].dimension] || drags[0].dimension} "${this._causalValueLabel(drags[0].dimension, drags[0].value)}"`,
-        metric: `${Math.round(Number(drags[0].lift_pct))}% bajo tu promedio`,
-        why: `Lo usas ${Number(drags[0].post_count) || 0} ${Number(drags[0].post_count) === 1 ? 'vez' : 'veces'} y rinde por debajo. Reducelo.`,
+        metric: __('{n}% bajo tu promedio', { n: Math.round(Number(drags[0].lift_pct)) }),
+        why: __('Lo usas {n} {times} y rinde por debajo. Reducelo.', { n: Number(drags[0].post_count) || 0, times: Number(drags[0].post_count) === 1 ? __('vez') : __('veces') }),
       } : null;
 
       // ── Enriquecer con dashboard_brand_optimization_insights (server-side):
@@ -247,31 +247,31 @@
       const oi = data?.optimizationInsights?.data || null;
       if (oi) {
         const ec = [
-          oi.best_topic && Number(oi.best_topic.lift_pct) > 0 && { dim: 'Tema', val: oi.best_topic.topic, lift: oi.best_topic.lift_pct, n: oi.best_topic.n },
-          oi.best_tone  && Number(oi.best_tone.lift_pct)  > 0 && { dim: 'Tono', val: oi.best_tone.tone,  lift: oi.best_tone.lift_pct,  n: oi.best_tone.n },
+          oi.best_topic && Number(oi.best_topic.lift_pct) > 0 && { dim: __('Tema'), val: oi.best_topic.topic, lift: oi.best_topic.lift_pct, n: oi.best_topic.n },
+          oi.best_tone  && Number(oi.best_tone.lift_pct)  > 0 && { dim: __('Tono'), val: oi.best_tone.tone,  lift: oi.best_tone.lift_pct,  n: oi.best_tone.n },
         ].filter(Boolean).sort((a, b) => Number(b.lift) - Number(a.lift));
         if (ec[0]) explota = {
           title: `${ec[0].dim} "${this._esc(ec[0].val)}"`,
-          metric: `+${Math.round(Number(ec[0].lift))}%`, metricSub: 'sobre tu promedio',
-          why: `Tu mejor palanca (${ec[0].n} posts). Produce mas de esto.`, impact: 'alto',
-          detailDim: ec[0].dim === 'Tema' ? 'topic' : 'tone', detailValue: ec[0].val,
+          metric: __('+{n}%', { n: Math.round(Number(ec[0].lift)) }), metricSub: __('sobre tu promedio'),
+          why: __('Tu mejor palanca ({n} posts). Produce mas de esto.', { n: ec[0].n }), impact: 'alto',
+          detailDim: ec[0].dim === __('Tema') ? 'topic' : 'tone', detailValue: ec[0].val,
         };
         const oc = [
-          oi.best_hour_co && Number(oi.best_hour_co.lift_pct) > 0 && { txt: `Publica a las ${oi.best_hour_co.hour_co}h`, lift: oi.best_hour_co.lift_pct, dim: 'hour', value: String(oi.best_hour_co.hour_co) },
-          oi.best_format  && Number(oi.best_format.lift_pct)  > 0 && { txt: `Usa mas "${oi.best_format.format}"`, lift: oi.best_format.lift_pct, dim: 'format', value: oi.best_format.format },
+          oi.best_hour_co && Number(oi.best_hour_co.lift_pct) > 0 && { txt: __('Publica a las {h}h', { h: oi.best_hour_co.hour_co }), lift: oi.best_hour_co.lift_pct, dim: 'hour', value: String(oi.best_hour_co.hour_co) },
+          oi.best_format  && Number(oi.best_format.lift_pct)  > 0 && { txt: __('Usa mas "{f}"', { f: oi.best_format.format }), lift: oi.best_format.lift_pct, dim: 'format', value: oi.best_format.format },
         ].filter(Boolean).sort((a, b) => Number(b.lift) - Number(a.lift));
         if (oc[0]) optimiza = {
-          title: oc[0].txt, metric: `+${Math.round(Number(oc[0].lift))}%`, metricSub: 'engagement',
-          why: oi.posting_consistency ? `Consistencia actual: ${Math.round(Number(oi.posting_consistency.posting_consistency_pct))}%.` : '',
+          title: oc[0].txt, metric: __('+{n}%', { n: Math.round(Number(oc[0].lift)) }), metricSub: 'engagement',
+          why: oi.posting_consistency ? __('Consistencia actual: {n}%.', { n: Math.round(Number(oi.posting_consistency.posting_consistency_pct)) }) : '',
           impact: 'medio', detailDim: oc[0].dim, detailValue: oc[0].value,
         };
         const dc = [
-          oi.worst_tone    && Number(oi.worst_tone.lift_pct)    < 0 && { title: `Tono "${oi.worst_tone.tone}"`, lift: oi.worst_tone.lift_pct, dim: 'tone', value: oi.worst_tone.tone },
-          oi.worst_hour_co && Number(oi.worst_hour_co.lift_pct) < 0 && { title: `Publicar a las ${oi.worst_hour_co.hour_co}h`, lift: oi.worst_hour_co.lift_pct, dim: 'hour', value: String(oi.worst_hour_co.hour_co) },
+          oi.worst_tone    && Number(oi.worst_tone.lift_pct)    < 0 && { title: __('Tono "{t}"', { t: oi.worst_tone.tone }), lift: oi.worst_tone.lift_pct, dim: 'tone', value: oi.worst_tone.tone },
+          oi.worst_hour_co && Number(oi.worst_hour_co.lift_pct) < 0 && { title: __('Publicar a las {h}h', { h: oi.worst_hour_co.hour_co }), lift: oi.worst_hour_co.lift_pct, dim: 'hour', value: String(oi.worst_hour_co.hour_co) },
         ].filter(Boolean).sort((a, b) => Number(a.lift) - Number(b.lift));
         if (dc[0]) elimina = {
-          title: dc[0].title, metric: `${Math.round(Number(dc[0].lift))}%`, metricSub: 'bajo tu promedio',
-          why: 'Rinde muy por debajo de tu media. Reducelo o evitalo.', impact: 'medio',
+          title: dc[0].title, metric: __('{n}%', { n: Math.round(Number(dc[0].lift)) }), metricSub: __('bajo tu promedio'),
+          why: __('Rinde muy por debajo de tu media. Reducelo o evitalo.'), impact: 'medio',
           detailDim: dc[0].dim, detailValue: dc[0].value,
         };
       }
@@ -325,9 +325,9 @@
       return `
         <section class="mb-section mb-section--wide">
           <div class="mb-plan-vitals">
-            ${vital(tStr, 'Engagement vs periodo previo', tCls)}
-            ${vital(fmt.int(oi.posts_analyzed), 'Posts analizados')}
-            ${vital(cons, 'Consistencia de publicacion')}
+            ${vital(tStr, __('Engagement vs periodo previo'), tCls)}
+            ${vital(fmt.int(oi.posts_analyzed), __('Posts analizados'))}
+            ${vital(cons, __('Consistencia de publicacion'))}
           </div>
         </section>`;
     },
@@ -355,13 +355,13 @@
     /* ── Top posts de tu marca: tabla (perfil/contenido/metricas/analisis/link) ── */
     _sentLabel(s) {
       const v = String(s || '').toUpperCase();
-      return v === 'POS' ? 'Positivo' : v === 'NEG' ? 'Critico' : v === 'NEU' ? 'Neutro' : 'Sin datos';
+      return v === 'POS' ? __('Positivo') : v === 'NEG' ? __('Critico') : v === 'NEU' ? __('Neutro') : __('Sin datos');
     },
     _fmtPostDate(ts) {
       if (!ts) return '';
       try {
         const d = new Date(ts);
-        return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }) +
+        return d.toLocaleDateString((window.i18n && window.i18n.getLocale() === 'en') ? 'en-US' : 'es-CO', { day: 'numeric', month: 'short', year: 'numeric' }) +
           ' ' + d.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' });
       } catch (_) { return ''; }
     },
@@ -417,10 +417,10 @@
       return `
         <section class="mb-section mb-section--wide">
           <div class="mb-chart-card mb-tpt-card">
-            <div class="mb-card-title">Top publicaciones destacadas</div>
+            <div class="mb-card-title">${__('Top publicaciones destacadas')}</div>
             <div class="mb-tpt">
               <div class="mb-tpt-head">
-                <span>Perfil</span><span>Contenido</span><span>Métricas</span><span>Análisis</span><span></span>
+                <span>${__('Perfil')}</span><span>${__('Contenido')}</span><span>${__('Métricas')}</span><span>${__('Análisis')}</span><span></span>
               </div>
               ${items}
             </div>
@@ -437,8 +437,8 @@
       const topics = (Array.isArray(f.topics?.data) ? f.topics.data : []).map((r) => ({
         name: r.topic_name, used: Number(r.usage_count) || 0, eng: Number(r.total_engagement) || 0,
       }));
-      const toneCard = this._buildHierarchyCard('Tonos', tones, 'mbToneDonut');
-      const topicCard = this._buildHierarchyCard('Temas', topics, 'mbTopicDonut');
+      const toneCard = this._buildHierarchyCard(__('Tonos'), tones, 'mbToneDonut');
+      const topicCard = this._buildHierarchyCard(__('Temas'), topics, 'mbTopicDonut');
       if (!toneCard && !topicCard) return '';
       return `
         <section class="mb-section mb-section--wide">
@@ -470,12 +470,12 @@
           <div class="mb-card-title">${this._esc(title)}</div>
           <div class="mb-hier-stats">
             <div class="mb-hier-stat">
-              <span class="mb-hier-stat-cap">Más usado</span>
+              <span class="mb-hier-stat-cap">${__('Más usado')}</span>
               <span class="mb-hier-stat-val">${this._esc(this._capWords(mostUsed.name))}</span>
               <span class="mb-hier-stat-sub">${mostUsed.used} posts</span>
             </div>
             <div class="mb-hier-stat mb-hier-stat--eff">
-              <span class="mb-hier-stat-cap">Más efectivo</span>
+              <span class="mb-hier-stat-cap">${__('Más efectivo')}</span>
               <span class="mb-hier-stat-val">${this._esc(this._capWords(mostEff.name))}</span>
               <span class="mb-hier-stat-sub">${this._compactNum(Math.round(mostEff.avg))} eng/post</span>
             </div>
@@ -535,11 +535,11 @@
       return `
         <section class="mb-section">
           <div class="mb-chart-card">
-            <div class="mb-card-title">Patrones del público</div>
+            <div class="mb-card-title">${__('Patrones del público')}</div>
             <div class="mb-beh-meta">${b.personas} ${b.personas === 1 ? 'persona' : 'personas'}${ageStr ? ` · ${ageStr}` : ''}${genders ? ` · ${genders}` : ''}</div>
-            ${block('Qué desean', b.deseos, 'want')}
-            ${block('Qué los gatilla a comprar', b.gatillos, 'trig')}
-            ${block('Qué los frena (dolores)', b.dolores, 'pain')}
+            ${block(__('Qué desean'), b.deseos, 'want')}
+            ${block(__('Qué los gatilla a comprar'), b.gatillos, 'trig')}
+            ${block(__('Qué los frena (dolores)'), b.dolores, 'pain')}
           </div>
         </section>`;
     },
@@ -554,7 +554,7 @@
         .map((e) => `<span class="mb-cmt-emo">${this._esc(this._capWords(e.emotion))} <small>${this._compactNum(e.count)}</small></span>`).join('');
       const analisis = `
         <div class="mb-long-card">
-          <div class="mb-card-title">Análisis de comentarios</div>
+          <div class="mb-card-title">${__('Análisis de comentarios')}</div>
           <div class="mb-cmt-total">${this._compactNum(c.total)} <small>comentarios analizados</small></div>
           <div class="mb-cmt-sent">
             <span class="mb-cmt-seg mb-cmt-seg--pos" style="width:${pct(pos)}%"></span>
@@ -566,7 +566,7 @@
             <span class="mb-cmt-leg mb-cmt-leg--neu">${pct(neu)}% neutro</span>
             <span class="mb-cmt-leg mb-cmt-leg--neg">${pct(neg)}% negativo</span>
           </div>
-          ${emos ? `<div class="mb-cmt-emos"><span class="mb-beh-label">Emociones top</span><div class="mb-cmt-emo-list">${emos}</div></div>` : ''}
+          ${emos ? `<div class="mb-cmt-emos"><span class="mb-beh-label">${__('Emociones top')}</span><div class="mb-cmt-emo-list">${emos}</div></div>` : ''}
         </div>`;
       const items = (Array.isArray(c.top) ? c.top : []).slice(0, 5).map((t) => `
         <div class="mb-cmt-item">
@@ -581,7 +581,7 @@
         </div>`).join('');
       const impacto = items ? `
         <div class="mb-long-card">
-          <div class="mb-card-title">Comentarios de alto impacto</div>
+          <div class="mb-card-title">${__('Comentarios de alto impacto')}</div>
           <div class="mb-cmt-list">${items}</div>
         </div>` : '';
       return `
@@ -596,7 +596,7 @@
        escala vs el |lift| maximo para que ambos lados sean comparables. */
     _buildLeverageSection(insights) {
       const arr = Array.isArray(insights) ? insights : [];
-      const dimLabel = { tono: 'Tono', tema: 'Tema', formato: 'Formato', horario: 'Hora' };
+      const dimLabel = { tono: __('Tono'), tema: __('Tema'), formato: __('Formato'), horario: __('Hora') };
       const detailDim = { tono: 'tone', tema: 'topic', formato: 'format', horario: 'hour' };
       const boosts = arr.filter((i) => i.kind === 'boost' && Number(i.lift_pct) > 0)
         .sort((a, b) => Number(b.lift_pct) - Number(a.lift_pct)).slice(0, 6);
@@ -607,7 +607,7 @@
         return `
           <section class="mb-section mb-section--wide">
             <div class="mb-chart-card">
-              <div class="mb-card-title">Que te impulsa y que te frena</div>
+              <div class="mb-card-title">${__('Que te impulsa y que te frena')}</div>
               <div class="mb-causal-empty" style="margin:0;">No hay contenido propio analizado en esta ventana. Amplia el rango (prueba Todo el periodo).</div>
             </div>
           </section>`;
@@ -626,18 +626,18 @@
             <div class="mb-lev-track"><span class="mb-lev-bar" style="width:${w}%;"></span></div>
           </div>`;
       };
-      const colNote = 'Sin senal clara aun.';
+      const colNote = __('Sin senal clara aun.');
       return `
         <section class="mb-section mb-section--wide">
           <div class="mb-chart-card">
-            <div class="mb-card-title">Que te impulsa y que te frena</div>
+            <div class="mb-card-title">${__('Que te impulsa y que te frena')}</div>
             <div class="mb-lev">
               <div class="mb-lev-col mb-lev-col--neg">
-                <div class="mb-lev-coltitle">Lo que te frena</div>
+                <div class="mb-lev-coltitle">${__('Lo que te frena')}</div>
                 ${drags.length ? drags.map(row).join('') : `<div class="mb-lev-empty">${colNote}</div>`}
               </div>
               <div class="mb-lev-col mb-lev-col--pos">
-                <div class="mb-lev-coltitle">Lo que te impulsa</div>
+                <div class="mb-lev-coltitle">${__('Lo que te impulsa')}</div>
                 ${boosts.length ? boosts.map(row).join('') : `<div class="mb-lev-empty">${colNote}</div>`}
               </div>
             </div>
@@ -662,18 +662,18 @@
         <section class="mb-section mb-section--wide mb-long">
           ${this._buildActivityBanner(data?.activity?.data)}
           ${this._buildHealthAlerts(data?.health?.data?.components)}
-          ${!act.length ? `<div class="mb-causal-empty">Aun no hay suficiente historial. Amplia el rango (prueba Todo el periodo).</div>` : `
+          ${!act.length ? `<div class="mb-causal-empty">${__('Aun no hay suficiente historial. Amplia el rango (prueba Todo el periodo).')}</div>` : `
           <div class="mb-long-grid">
             <div class="mb-long-card mb-long-card--wide">
-              <div class="mb-long-card-title">Historial de actividad</div>
+              <div class="mb-long-card-title">${__('Historial de actividad')}</div>
               <div class="mb-long-canvas"><canvas id="mbLongActivity"></canvas></div>
             </div>
             <div class="mb-long-card mb-long-card--wide">
-              <div class="mb-long-card-title">Tendencia de engagement y crecimiento</div>
+              <div class="mb-long-card-title">${__('Tendencia de engagement y crecimiento')}</div>
               <div class="mb-long-canvas"><canvas id="mbLongEngGrowth"></canvas></div>
             </div>
             <div class="mb-long-card">
-              <div class="mb-long-card-title">Patron de horas de publicacion</div>
+              <div class="mb-long-card-title">${__('Patron de horas de publicacion')}</div>
               ${this._buildPostingHeatmap(L.hours?.data)}
             </div>
             ${card('mbLongSentiment', 'Actividad de sentimientos')}
@@ -691,7 +691,7 @@
         if (d >= 0 && d < 7 && h >= 0 && h < 24) { m[d][h] += c; if (m[d][h] > max) max = m[d][h]; }
       });
       if (!max) return `<div class="mb-causal-empty" style="margin:0;">Sin datos de horario aun.</div>`;
-      const dayName = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+      const dayName = [__('Dom'), __('Lun'), __('Mar'), __('Mie'), __('Jue'), __('Vie'), __('Sab')];
       const order = [1, 2, 3, 4, 5, 6, 0];
       const bucket = (v) => { if (v <= 0) return 0; const r = v / max; if (r <= 0.25) return 1; if (r <= 0.5) return 2; if (r <= 0.75) return 3; return 4; };
       const rowsHtml = order.map((d) => {
@@ -876,7 +876,7 @@
       // 1. Historial de actividad (posts por periodo) — linea con degradado de marca
       const actLabels = act.map((r) => r.period_label);
       mk('mbLongActivity', { type: 'line', data: { labels: actLabels, datasets: [{
-        label: 'Posts', data: act.map((r) => Number(r.posts_count) || 0),
+        label: __('Posts'), data: act.map((r) => Number(r.posts_count) || 0),
         borderColor: brandLine, backgroundColor: brandFill, fill: true, tension: 0.4, borderWidth: 2.5,
         pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: brandHexes[brandHexes.length - 1],
       }] }, options: baseOpts() });
@@ -888,7 +888,7 @@
         const cv = document.getElementById('mbLongEngGrowth');
         const engData = eng.map((r) => Number(r.total_engagement) || 0);
         const datasets = [{
-          label: 'Engagement', data: engData, yAxisID: 'y',
+          label: __('Engagement'), data: engData, yAxisID: 'y',
           borderColor: '#6bcf7f', backgroundColor: grad(cv, '#6bcf7f'),
           fill: true, tension: 0.4, borderWidth: 2,
           pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: '#6bcf7f',
@@ -901,7 +901,7 @@
             return prev > 0 ? Math.round((cur - prev) / prev * 100) : 0;
           });
           datasets.push({
-            label: 'Crecimiento %', data: growth, yAxisID: 'y1',
+            label: __('Crecimiento %'), data: growth, yAxisID: 'y1',
             borderColor: '#e0a045', backgroundColor: 'transparent',
             fill: false, tension: 0.4, borderWidth: 2, borderDash: [4, 3],
             pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: '#e0a045',
@@ -922,9 +922,9 @@
         const sLbl = sent.map((r) => this._fmtMonthLabel(r.period_start));
         const cv = document.getElementById('mbLongSentiment');
         mk('mbLongSentiment', { type: 'line', data: { labels: sLbl, datasets: [
-          areaDs(cv, 'Positivo', sent.map((r) => Number(r.positive_posts) || 0), '#6bcf7f'),
-          areaDs(cv, 'Neutro', sent.map((r) => Number(r.neutral_posts) || 0), '#8a8a8e'),
-          areaDs(cv, 'Negativo', sent.map((r) => Number(r.negative_posts) || 0), '#e06464'),
+          areaDs(cv, __('Positivo'), sent.map((r) => Number(r.positive_posts) || 0), '#6bcf7f'),
+          areaDs(cv, __('Neutro'), sent.map((r) => Number(r.neutral_posts) || 0), '#8a8a8e'),
+          areaDs(cv, __('Negativo'), sent.map((r) => Number(r.negative_posts) || 0), '#e06464'),
         ] }, options: { ...baseOpts(), plugins: { legend: { display: true, labels: { color: TICK, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { size: 10 } } }, tooltip: baseOpts().plugins.tooltip } } });
       }
 
@@ -940,16 +940,16 @@
        (emocion + sentimiento) + evidencia + ver detalles. */
     _buildCausalSection(insights, kind) {
       const items = (insights || []).filter((i) => i.kind === kind);
-      const title = kind === 'boost' ? 'Lo que te esta funcionando' : 'Lo que te esta restando';
+      const title = kind === 'boost' ? __('Lo que te esta funcionando') : __('Lo que te esta restando');
       const hint  = kind === 'boost'
-        ? 'Lo que mas conecta con tu gente — y que hacer para aprovecharlo'
-        : 'Lo que baja tu rendimiento frente a lo que sueles lograr — y como corregirlo';
+        ? __('Lo que mas conecta con tu gente — y que hacer para aprovecharlo')
+        : __('Lo que baja tu rendimiento frente a lo que sueles lograr — y como corregirlo');
       if (!items.length) {
         if (shouldHideEmpty()) return '';
         return `
           <section class="mb-section">
             <div class="mb-section-head"><span class="mb-section-title">${title}</span></div>
-            <div class="mb-causal-empty">No hay contenido propio analizado en esta ventana. Amplia el rango (prueba <b>Todo el periodo</b>) para ver el analisis causal de tu marca.</div>
+            <div class="mb-causal-empty">${__('No hay contenido propio analizado en esta ventana. Amplia el rango (prueba {x}) para ver el analisis causal de tu marca.', { x: '<b>' + __('Todo el periodo') + '</b>' })}</div>
           </section>`;
       }
       // Orden: boost por mayor lift; drag por lift mas negativo.
@@ -972,11 +972,11 @@
        → que hacer. La metrica es evidencia, no encabezado. */
     _buildCausalCard(i, kind) {
       const meta = {
-        tono:    { detailDim: 'tone',   what: 'forma de hablar', headUp: 'Tu mejor forma de hablar',     headDown: 'Una forma de hablar que te resta', actUp: 'Publica mas con este tono esta semana',  actDown: 'Usa menos este tono' },
-        tema:    { detailDim: 'topic',  what: 'tema',            headUp: 'Tu tema mas potente',           headDown: 'Un tema que te resta',             actUp: 'Crea mas contenido sobre este tema',     actDown: 'Habla menos de este tema' },
-        formato: { detailDim: 'format', what: 'tipo de post',    headUp: 'Tu tipo de publicacion ganador',headDown: 'Un tipo de publicacion que te resta',actUp: 'Haz mas publicaciones de este tipo',     actDown: 'Reduce este tipo de publicacion' },
-        horario: { detailDim: 'hour',   what: 'horario',         headUp: 'Tu mejor hora para publicar',   headDown: 'Una hora que te resta',            actUp: 'Publica mas a esta hora',                actDown: 'Evita publicar a esta hora' },
-      }[i.dimension] || { detailDim: i.dimension, what: i.dimension, headUp: 'Lo que te funciona', headDown: 'Lo que te resta', actUp: 'Haz mas de esto', actDown: 'Reduce esto' };
+        tono:    { detailDim: 'tone',   what: __('forma de hablar'), headUp: __('Tu mejor forma de hablar'),     headDown: __('Una forma de hablar que te resta'), actUp: __('Publica mas con este tono esta semana'),  actDown: __('Usa menos este tono') },
+        tema:    { detailDim: 'topic',  what: __('tema'),            headUp: __('Tu tema mas potente'),           headDown: __('Un tema que te resta'),             actUp: __('Crea mas contenido sobre este tema'),     actDown: __('Habla menos de este tema') },
+        formato: { detailDim: 'format', what: __('tipo de post'),    headUp: __('Tu tipo de publicacion ganador'),headDown: __('Un tipo de publicacion que te resta'),actUp: __('Haz mas publicaciones de este tipo'),     actDown: __('Reduce este tipo de publicacion') },
+        horario: { detailDim: 'hour',   what: __('horario'),         headUp: __('Tu mejor hora para publicar'),   headDown: __('Una hora que te resta'),            actUp: __('Publica mas a esta hora'),                actDown: __('Evita publicar a esta hora') },
+      }[i.dimension] || { detailDim: i.dimension, what: i.dimension, headUp: __('Lo que te funciona'), headDown: __('Lo que te resta'), actUp: __('Haz mas de esto'), actDown: __('Reduce esto') };
 
       const isUp   = kind === 'boost';
       const lift   = Math.round(Number(i.lift_pct) || 0);
@@ -1052,10 +1052,10 @@
     _buildActivityBanner(a) {
       if (!a || a.status === 'sin_datos' || !Number(a.total)) return '';
       const statusMeta = {
-        activo:    { color: '#6e9f81', label: 'Activo' },
-        irregular: { color: '#9c8e6b', label: 'Irregular' },
-        lento:     { color: '#9c8e6b', label: 'Lento' },
-        dormido:   { color: '#b3796f', label: 'Dormido' },
+        activo:    { color: '#6e9f81', label: __('Activo') },
+        irregular: { color: '#9c8e6b', label: __('Irregular') },
+        lento:     { color: '#9c8e6b', label: __('Lento') },
+        dormido:   { color: '#b3796f', label: __('Dormido') },
       }[a.status] || { color: '#8a8a8e', label: a.status };
       const days = Number(a.days_since);
       const headline = a.status === 'dormido'
@@ -1080,10 +1080,10 @@
         return '';
       }
       const statusMeta = {
-        activo:    { color: '#6e9f81', label: 'Activo' },
-        irregular: { color: '#9c8e6b', label: 'Irregular' },
-        lento:     { color: '#9c8e6b', label: 'Lento' },
-        dormido:   { color: '#b3796f', label: 'Dormido' },
+        activo:    { color: '#6e9f81', label: __('Activo') },
+        irregular: { color: '#9c8e6b', label: __('Irregular') },
+        lento:     { color: '#9c8e6b', label: __('Lento') },
+        dormido:   { color: '#b3796f', label: __('Dormido') },
       }[a.status] || { color: '#8a8a8e', label: a.status };
       const days = Number(a.days_since);
       const headline = a.status === 'dormido'
@@ -1100,7 +1100,7 @@
       return `
         <section class="mb-section">
           <div class="mb-act-card">
-            <div class="mb-card-title">Actividad</div>
+            <div class="mb-card-title">${__('Actividad')}</div>
             <div class="mb-act-status">
               <span class="mb-act-dot" style="background:${statusMeta.color};"></span>
               <span class="mb-act-status-label" style="color:${statusMeta.color};">${this._esc(statusMeta.label)}</span>
@@ -1146,10 +1146,10 @@
       // Veredicto en lenguaje plano por pilar. rank = prioridad de accion.
       const verdictOf = (r) => {
         const share = Number(r.share_pct) || 0, lift = Number(r.lift_pct) || 0;
-        if (r.is_orphan || (lift > 0 && share < avg * 0.6)) return { k: 'explota', rank: 0, label: 'Explotalo', icon: 'fa-gem', say: (ls, s) => `Rinde ${ls} pero es solo el ${s}% de tu contenido — produce mas de esto.` };
-        if (lift < 0 && share >= avg) return { k: 'revisa', rank: 1, label: 'Revisa', icon: 'fa-triangle-exclamation', say: (ls, s) => `Es el ${s}% de tu contenido pero rinde ${ls} — replantealo o reducelo.` };
-        if (lift >= 0) return { k: 'formula', rank: 2, label: 'Tu formula', icon: 'fa-circle-check', say: (ls, s) => `Rinde ${ls} y ya es el ${s}% de lo que publicas — mantenlo.` };
-        return { k: 'flojo', rank: 3, label: 'Bajo perfil', icon: 'fa-circle-minus', say: (ls, s) => `Poco uso (${s}%) y rinde ${ls} — baja prioridad.` };
+        if (r.is_orphan || (lift > 0 && share < avg * 0.6)) return { k: 'explota', rank: 0, label: __('Explotalo'), icon: 'fa-gem', say: (ls, s) => __('Rinde {ls} pero es solo el {s}% de tu contenido — produce mas de esto.', { ls, s }) };
+        if (lift < 0 && share >= avg) return { k: 'revisa', rank: 1, label: __('Revisa'), icon: 'fa-triangle-exclamation', say: (ls, s) => __('Es el {s}% de tu contenido pero rinde {ls} — replantealo o reducelo.', { ls, s }) };
+        if (lift >= 0) return { k: 'formula', rank: 2, label: __('Tu formula'), icon: 'fa-circle-check', say: (ls, s) => __('Rinde {ls} y ya es el {s}% de lo que publicas — mantenlo.', { ls, s }) };
+        return { k: 'flojo', rank: 3, label: __('Bajo perfil'), icon: 'fa-circle-minus', say: (ls, s) => __('Poco uso ({s}%) y rinde {ls} — baja prioridad.', { ls, s }) };
       };
       const ranked = list.map((r) => ({ r, v: verdictOf(r) }))
         .sort((a, b) => a.v.rank - b.v.rank || Math.abs(Number(b.r.lift_pct) || 0) - Math.abs(Number(a.r.lift_pct) || 0));
@@ -1183,14 +1183,14 @@
         <section class="mb-section">
           <div class="mb-stageflow">
             <div class="mb-stageflow-head">
-              <span class="mb-stageflow-title">Pilares de contenido</span>
+              <span class="mb-stageflow-title">${__('Pilares de contenido')}</span>
               <span class="mb-stageflow-count">${ranked.length} ${ranked.length === 1 ? 'pilar' : 'pilares'}</span>
             </div>
             <div class="mb-stageflow-list">${stageRows}</div>
             <div class="mb-stageflow-foot">
-              <div class="mb-stageflow-foot-label">Resumen</div>
+              <div class="mb-stageflow-foot-label">${__('Resumen')}</div>
               <div class="mb-stageflow-stats">
-                <div class="mb-stageflow-stat"><span class="mb-stageflow-stat-val">${ranked.length}</span><span class="mb-stageflow-stat-cap">Pilares</span></div>
+                <div class="mb-stageflow-stat"><span class="mb-stageflow-stat-val">${ranked.length}</span><span class="mb-stageflow-stat-cap">${__('Pilares')}</span></div>
                 <div class="mb-stageflow-stat"><span class="mb-stageflow-stat-val">${rindeShare}%</span><span class="mb-stageflow-stat-cap">Rinde +</span></div>
                 <div class="mb-stageflow-stat${toOptimize ? ' mb-stageflow-stat--warn' : ' mb-stageflow-stat--ok'}"><span class="mb-stageflow-stat-val">${toOptimize}</span><span class="mb-stageflow-stat-cap">A optimizar</span></div>
               </div>
@@ -1243,19 +1243,19 @@
       return `
         <section class="mb-swot-card">
           <header class="mb-swot-header">
-            <div class="mb-swot-title">Diagnóstico Estratégico</div>
-            <div class="mb-swot-subtitle">Vera detecta qué estás haciendo bien y dónde te están golpeando.</div>
+            <div class="mb-swot-title">${__('Diagnóstico Estratégico')}</div>
+            <div class="mb-swot-subtitle">${__('Vera detecta qué estás haciendo bien y dónde te están golpeando.')}</div>
           </header>
 
           <div class="mb-swot-grid">
             <div class="mb-swot-col mb-swot-col--virtudes">
               <div class="mb-swot-col-header">
                 <span class="mb-swot-col-dot mb-swot-col-dot--pos"></span>
-                <span class="mb-swot-col-name">Virtudes</span>
+                <span class="mb-swot-col-name">${__('Virtudes')}</span>
                 <span class="mb-swot-col-count">${virtudes.length}</span>
               </div>
               ${virtudes.length === 0
-                ? `<div class="mb-swot-empty">Vera aún no detecta fortalezas claras en la ventana.</div>`
+                ? `<div class="mb-swot-empty">${__('Vera aún no detecta fortalezas claras en la ventana.')}</div>`
                 : `<ul class="mb-swot-list">${virtudes.map(v => this._buildSwotItem(v, 'pos')).join('')}</ul>`
               }
             </div>
@@ -1263,7 +1263,7 @@
             <div class="mb-swot-col mb-swot-col--vulnerabilidades">
               <div class="mb-swot-col-header">
                 <span class="mb-swot-col-dot mb-swot-col-dot--neg"></span>
-                <span class="mb-swot-col-name">Vulnerabilidades</span>
+                <span class="mb-swot-col-name">${__('Vulnerabilidades')}</span>
                 <span class="mb-swot-col-count">${vulnerabilidades.length}</span>
               </div>
               ${vulnerabilidades.length === 0
@@ -1313,7 +1313,7 @@
         out.push({
           label:  `Tema "${topic.topic}"`,
           tag:    `${this._compactNum(topic.total_engagement)} eng`,
-          detail: `Tu tema más exitoso en la ventana — ${topic.usage_count} posts.`,
+          detail: __('Tu tema más exitoso en la ventana — {n} posts.', { n: topic.usage_count }),
         });
       }
       const tone = (featured.tones?.data || [])[0];
@@ -1321,7 +1321,7 @@
         out.push({
           label:  `Tono "${tone.tone_name}"`,
           tag:    `${this._compactNum(tone.total_engagement)} eng`,
-          detail: `Tu tono más efectivo — ${tone.posts_count} posts conectan con tu audiencia.`,
+          detail: __('Tu tono más efectivo — {n} posts conectan con tu audiencia.', { n: tone.posts_count }),
         });
       }
       const hour = (featured.hour?.data || [])[0];
@@ -1329,7 +1329,7 @@
         out.push({
           label:  `Horario ${String(hour.hour).padStart(2, '0')}:00`,
           tag:    `${this._compactNum(hour.avg_engagement_per_post)} eng/post`,
-          detail: `Tu micro-momento ganador del día — ${hour.posts_count} publicaciones lo confirman.`,
+          detail: __('Tu micro-momento ganador del día — {n} publicaciones lo confirman.', { n: hour.posts_count }),
         });
       }
 
@@ -1339,7 +1339,7 @@
         out.push({
           label:  w.nombre_campana,
           tag:    `${this._compactNum(w.conversions)} conv`,
-          detail: w.description || `Campaña convirtiendo a $${Math.round(w.cost_per_conv || 0).toLocaleString('es-CO')}/conv.`,
+          detail: w.description || __('Campaña convirtiendo a ${amount}/conv.', { amount: Math.round(w.cost_per_conv || 0).toLocaleString((window.i18n && window.i18n.getLocale() === 'en') ? 'en-US' : 'es-CO') }),
         });
       }
 
@@ -1384,7 +1384,7 @@
         out.push({
           label:  b.nombre_campana,
           tag:    `${fmt.money(b.spend)} gasto`,
-          detail: b.description || `Inversión sin conversiones medibles en la ventana.`,
+          detail: b.description || __('Inversión sin conversiones medibles en la ventana.'),
         });
       }
 
@@ -1408,45 +1408,45 @@
 
       const pool = [
         (topic && topic.topic) && {
-          kind: 'topic', label: 'Tema ganador', headline: topic.topic,
+          kind: 'topic', label: __('Tema ganador'), headline: topic.topic,
           metricPrimary: `${fmt.int(topic.usage_count)} posts`,
           metricSecondary: `${this._compactNum(topic.total_engagement)} engagement`,
           dim: 'topic', value: topic.topic,
         },
         (tone && tone.tone_name) && {
-          kind: 'tone', label: 'Tono efectivo', headline: tone.tone_name,
+          kind: 'tone', label: __('Tono efectivo'), headline: tone.tone_name,
           metricPrimary: `${fmt.int(tone.posts_count)} posts`,
           metricSecondary: `${this._compactNum(tone.total_engagement)} engagement`,
           dim: 'tone', value: tone.tone_name,
         },
         (hour && hour.hour != null) && {
-          kind: 'hour', label: 'Horario estrella', headline: `${String(hour.hour).padStart(2, '0')}:00`,
+          kind: 'hour', label: __('Horario estrella'), headline: `${String(hour.hour).padStart(2, '0')}:00`,
           metricPrimary: `${fmt.int(hour.posts_count)} posts publicados`,
           metricSecondary: `${this._compactNum(hour.avg_engagement_per_post)} eng/post`,
           dim: 'hour', value: String(hour.hour),
         },
         (hashtag && hashtag.hashtag) && {
-          kind: 'hashtag', label: 'Hashtag dominante', headline: `#${hashtag.hashtag}`,
+          kind: 'hashtag', label: __('Hashtag dominante'), headline: `#${hashtag.hashtag}`,
           metricPrimary: `${fmt.int(hashtag.usage_count)} usos`,
           metricSecondary: `${this._compactNum(hashtag.total_engagement)} engagement`,
           dim: 'hashtag', value: hashtag.hashtag,
         },
         // ── Backups (rellenan huecos de las primarias) ──
         (sentiment && sentiment.dominant_label && Number(sentiment.dominant_count) > 0) && {
-          kind: 'sentiment', label: 'Sentimiento dominante', headline: sentiment.dominant_label,
+          kind: 'sentiment', label: __('Sentimiento dominante'), headline: sentiment.dominant_label,
           metricPrimary: `${fmt.int(sentiment.dominant_count)} posts`,
           metricSecondary: `${Math.round(Number(sentiment.dominant_ratio || 0) * 100)}% del total`,
           dim: 'sentiment', value: sentiment.dominant,
         },
         (growth && growth.engagement_growth_percent != null) && {
-          kind: 'growth', label: 'Crecimiento',
+          kind: 'growth', label: __('Crecimiento'),
           headline: `${growth.engagement_growth_percent >= 0 ? '+' : ''}${Math.round(growth.engagement_growth_percent)}%`,
           metricPrimary: 'engagement',
           metricSecondary: `${fmt.int(growth.start_posts)} → ${fmt.int(growth.end_posts)} posts`,
           dim: 'growth', value: '',
         },
         (profile && profile.brand_name) && {
-          kind: 'profile', label: 'Cuenta lider', headline: profile.brand_name,
+          kind: 'profile', label: __('Cuenta lider'), headline: profile.brand_name,
           metricPrimary: `${fmt.int(profile.total_posts)} posts`,
           metricSecondary: `${this._compactNum(profile.total_engagement)} engagement`,
           dim: 'profile', value: '',
@@ -1457,8 +1457,8 @@
       if (!pool.length) {
         if (shouldHideEmpty()) return '';
         return this._buildFeaturedCard({
-          kind: 'topic', label: 'Tema ganador', headline: null,
-          emptyHint: 'Sin datos suficientes en la ventana.',
+          kind: 'topic', label: __('Tema ganador'), headline: null,
+          emptyHint: __('Sin datos suficientes en la ventana.'),
         });
       }
 
@@ -1522,15 +1522,15 @@
       return `
         <header class="living-history-filters mb-filters-bar" id="mbFilters">
           ${this._mbFechaControl()}
-          ${this._buildFilterMenu({ label: 'Plataforma', value: cur, key: 'platform', options: platOptions })}
+          ${this._buildFilterMenu({ label: __('Plataforma'), value: cur, key: 'platform', options: platOptions })}
           ${this._reportDropdown()}
         </header>`;
     },
 
     _mbFechaControl() {
       if (typeof DateRangePicker !== 'function') {
-        return `<div class="living-filter"><label class="living-filter-label">Fecha</label>
-          <select class="living-filter-select" disabled><option>Todo el periodo</option></select></div>`;
+        return `<div class="living-filter"><label class="living-filter-label">${__('Fecha')}</label>
+          <select class="living-filter-select" disabled><option>${__('Todo el periodo')}</option></select></div>`;
       }
       return this._ensureMbDatePicker().html();
     },
@@ -1596,10 +1596,10 @@
       const band     = h.band || { p25: 50, p50: 65, p75: 80 };
 
       const verdictMeta = {
-        elite:     { color: '#6bcf7f', label: 'Élite' },
-        saludable: { color: '#6bcf7f', label: 'Saludable' },
-        atencion:  { color: '#e0a045', label: 'Atención' },
-        critico:   { color: '#ff5c23', label: 'Crítico' },
+        elite:     { color: '#6bcf7f', label: __('Élite') },
+        saludable: { color: '#6bcf7f', label: __('Saludable') },
+        atencion:  { color: '#e0a045', label: __('Atención') },
+        critico:   { color: '#ff5c23', label: __('Crítico') },
       }[verdict] || { color: '#8a8a8e', label: verdict };
 
       const target = Number(h.target);
@@ -1612,7 +1612,7 @@
       // alertas (componentes en zona baja) + tareas (el plan de salud).
       return `
         <section class="mb-health-card mb-health-card--aside">
-          <span class="mb-hero-label">Salud de tu marca</span>
+          <span class="mb-hero-label">${__('Salud de tu marca')}</span>
           <div class="mb-health-gauge">
             ${this._buildSegGauge(score)}
             <div class="mb-health-gauge-center">
@@ -1641,7 +1641,7 @@
       }).join('');
       return `
         <div class="mb-body-alerts">
-          <span class="mb-body-alerts-label">Alertas</span>
+          <span class="mb-body-alerts-label">${__('Alertas')}</span>
           <div class="mb-alert-chips">${chips}</div>
         </div>`;
     },
@@ -1685,7 +1685,7 @@
       const sorted = [...list].sort((a, b) => (Number(b.impact_pts) || 0) - (Number(a.impact_pts) || 0));
       return `
         <div class="mb-health-tasks">
-          <div class="mb-health-tasks-title">Tareas para llegar a tu objetivo</div>
+          <div class="mb-health-tasks-title">${__('Tareas para llegar a tu objetivo')}</div>
           <ol class="mb-hc-tasks">
             ${sorted.map((t, i) => {
               const pts = Number(t.impact_pts) > 0 ? Math.round(Number(t.impact_pts)) : null;
@@ -1760,7 +1760,7 @@
     _buildHealthEmpty() {
       return `
         <section class="mb-hero mb-hero--empty">
-          <p>Calculando salud de tu marca… (sin datos suficientes aún)</p>
+          <p>${__('Calculando salud de tu marca… (sin datos suficientes aún)')}</p>
         </section>`;
     },
 
@@ -1821,7 +1821,7 @@
         dr.innerHTML = `
           <header class="mb-detail-head">
             <div class="mb-detail-head-text">
-              <span class="mb-detail-title" id="mbDetailTitle">Detalles</span>
+              <span class="mb-detail-title" id="mbDetailTitle">${__('Detalles')}</span>
               <span class="mb-detail-sub" id="mbDetailSub"></span>
             </div>
             <button class="mb-detail-close" id="mbDetailClose" type="button" aria-label="Cerrar"><i class="fas fa-times"></i></button>
@@ -1922,9 +1922,9 @@
     _detailSentiment(s) {
       if (!s) return '';
       const u = String(s).toUpperCase();
-      if (u.startsWith('POS')) return `<span class="mb-detail-chip mb-detail-chip--pos">Positivo</span>`;
-      if (u.startsWith('NEG')) return `<span class="mb-detail-chip mb-detail-chip--neg">Negativo</span>`;
-      return `<span class="mb-detail-chip mb-detail-chip--neu">Neutro</span>`;
+      if (u.startsWith('POS')) return `<span class="mb-detail-chip mb-detail-chip--pos">${__('Positivo')}</span>`;
+      if (u.startsWith('NEG')) return `<span class="mb-detail-chip mb-detail-chip--neg">${__('Negativo')}</span>`;
+      return `<span class="mb-detail-chip mb-detail-chip--neu">${__('Neutro')}</span>`;
     },
 
     _detailDate(iso) {
