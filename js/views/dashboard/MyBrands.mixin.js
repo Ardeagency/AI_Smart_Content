@@ -390,7 +390,7 @@
       return rows.map((r) => `<span class="mb-tpt-metric"><i class="fas ${r.i}" style="color:${r.c}"></i> ${this._compactNum(r.v)}</span>`).join('');
     },
     _buildTopPostsSection(rows) {
-      const list = (Array.isArray(rows) ? rows : []).slice(0, 5);
+      const list = (Array.isArray(rows) ? rows : []).slice(0, 10);
       if (!list.length) return '';
       const items = list.map((p) => {
         const topics = (Array.isArray(p.topics) ? p.topics : []).slice(0, 2);
