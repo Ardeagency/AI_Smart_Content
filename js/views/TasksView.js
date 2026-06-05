@@ -4,7 +4,7 @@
  */
 class TasksView extends BaseView {
   static cacheable = true;
-  static documentTitle = 'Tareas programadas';
+  static get documentTitle() { return __('Tareas programadas'); }
 
   constructor() {
     super();
@@ -34,35 +34,35 @@ class TasksView extends BaseView {
   <div class="tasks-container tasks-list-view" id="tasksListContainer">
     <div class="tasks-header-row">
       <div class="tasks-header">
-        <h1 class="tasks-title">Tareas programadas</h1>
-        <p class="tasks-subtitle">Gestiona tus flujos programados y asigna entidad, campaña y audiencia a cada tarea.</p>
+        <h1 class="tasks-title">${__('Tareas programadas')}</h1>
+        <p class="tasks-subtitle">${__('Gestiona tus flujos programados y asigna entidad, campaña y audiencia a cada tarea.')}</p>
       </div>
       <div class="tasks-header-actions">
-        <div class="tasks-viewtoggle" id="tasksViewToggle" role="tablist" aria-label="Vista">
-          <button type="button" class="tasks-viewtoggle-btn active" data-view="list" aria-label="Vista de lista"><i class="fas fa-th-large"></i> Lista</button>
-          <button type="button" class="tasks-viewtoggle-btn" data-view="calendar" aria-label="Vista de calendario"><i class="fas fa-calendar-alt"></i> Calendario</button>
+        <div class="tasks-viewtoggle" id="tasksViewToggle" role="tablist" aria-label="${__('Vista')}">
+          <button type="button" class="tasks-viewtoggle-btn active" data-view="list" aria-label="${__('Vista de lista')}"><i class="fas fa-th-large"></i> ${__('Lista')}</button>
+          <button type="button" class="tasks-viewtoggle-btn" data-view="calendar" aria-label="${__('Vista de calendario')}"><i class="fas fa-calendar-alt"></i> ${__('Calendario')}</button>
         </div>
         <a class="btn btn-primary tasks-create-btn" id="tasksCreateNewBtn" href="#">
-          <i class="fas fa-plus"></i> Create New Task
+          <i class="fas fa-plus"></i> ${__('Create New Task')}
         </a>
       </div>
     </div>
 
-    <nav class="tasks-tabs" id="tasksTabs" aria-label="Filtrar tareas">
+    <nav class="tasks-tabs" id="tasksTabs" aria-label="${__('Filtrar tareas')}">
       <button type="button" class="tasks-tab active" data-filter="history" id="tasksTabHistory">
-        Historial
+        ${__('Historial')}
       </button>
       <button type="button" class="tasks-tab" data-filter="all" id="tasksTabAll">
-        Todas (<span id="tasksCountAll">0</span>)
+        ${__('Todas')} (<span id="tasksCountAll">0</span>)
       </button>
       <button type="button" class="tasks-tab" data-filter="active" id="tasksTabActive">
-        Activas (<span id="tasksCountActive">0</span>)
+        ${__('Activas')} (<span id="tasksCountActive">0</span>)
       </button>
       <button type="button" class="tasks-tab" data-filter="paused" id="tasksTabPaused">
-        Pausadas (<span id="tasksCountPaused">0</span>)
+        ${__('Pausadas')} (<span id="tasksCountPaused">0</span>)
       </button>
       <button type="button" class="tasks-tab" data-filter="draft" id="tasksTabDraft">
-        Borradores (<span id="tasksCountDraft">0</span>)
+        ${__('Borradores')} (<span id="tasksCountDraft">0</span>)
       </button>
     </nav>
 
@@ -71,12 +71,12 @@ class TasksView extends BaseView {
     </div>
     <div class="tasks-empty" id="tasksEmpty" style="display: none;">
       <div class="tasks-empty-icon"><i class="fas fa-calendar-alt"></i></div>
-      <p>Aún no tienes tareas programadas.</p>
-      <p class="tasks-empty-hint">Las tareas se crean al programar un flujo desde el Estudio. Cuando tengas alguna, aparecerán aquí y podrás asignarles entidad, campaña y audiencia.</p>
+      <p>${__('Aún no tienes tareas programadas.')}</p>
+      <p class="tasks-empty-hint">${__('Las tareas se crean al programar un flujo desde el Estudio. Cuando tengas alguna, aparecerán aquí y podrás asignarles entidad, campaña y audiencia.')}</p>
     </div>
 
     <div class="tasks-load-more-wrap" id="tasksLoadMoreWrap" style="display: none;">
-      <button type="button" class="btn tasks-load-more" id="tasksLoadMoreBtn">Load More Tasks</button>
+      <button type="button" class="btn tasks-load-more" id="tasksLoadMoreBtn">${__('Load More Tasks')}</button>
     </div>
   </div>
 
@@ -105,7 +105,7 @@ class TasksView extends BaseView {
         <!-- Dashboard (arriba izq, span 2 col) -->
         <section class="task-detail-section task-detail-dashboard">
           <header class="task-detail-section-header">
-            <h2 class="task-detail-section-title">Dashboard</h2>
+            <h2 class="task-detail-section-title">${__('Dashboard')}</h2>
           </header>
           <div class="task-detail-metrics" id="taskDetailMetrics"></div>
         </section>
@@ -113,43 +113,43 @@ class TasksView extends BaseView {
         <!-- Editor (derecha, span 2 row) -->
         <aside class="task-detail-section task-detail-editor">
           <header class="task-detail-section-header">
-            <h2 class="task-detail-section-title">Editar</h2>
+            <h2 class="task-detail-section-title">${__('Editar')}</h2>
           </header>
           <div class="task-detail-editor-body">
             <div class="task-detail-field">
-              <label class="task-detail-label">Frecuencia</label>
-              <select id="taskDetailFreq" class="task-detail-select" aria-label="Frecuencia" disabled>
-                <option value="daily">Diario</option>
-                <option value="weekly">Semanal</option>
-                <option value="monthly">Mensual</option>
+              <label class="task-detail-label">${__('Frecuencia')}</label>
+              <select id="taskDetailFreq" class="task-detail-select" aria-label="${__('Frecuencia')}" disabled>
+                <option value="daily">${__('Diario')}</option>
+                <option value="weekly">${__('Semanal')}</option>
+                <option value="monthly">${__('Mensual')}</option>
               </select>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">Regla activa</label>
+              <label class="task-detail-label">${__('Regla activa')}</label>
               <p class="task-detail-readonly" id="taskDetailRuleActive">—</p>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">Creación</label>
+              <label class="task-detail-label">${__('Creación')}</label>
               <p class="task-detail-readonly" id="taskDetailCreated">—</p>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">Marca</label>
-              <select id="taskDetailBrandSelect" class="task-detail-select" aria-label="Marca"><option value="">—</option></select>
+              <label class="task-detail-label">${__('Marca')}</label>
+              <select id="taskDetailBrandSelect" class="task-detail-select" aria-label="${__('Marca')}"><option value="">—</option></select>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">Campaña</label>
-              <select id="taskDetailCampaignSelect" class="task-detail-select" aria-label="Campaña"><option value="">—</option></select>
+              <label class="task-detail-label">${__('Campaña')}</label>
+              <select id="taskDetailCampaignSelect" class="task-detail-select" aria-label="${__('Campaña')}"><option value="">—</option></select>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">Entidad</label>
-              <select id="taskDetailEntitySelect" class="task-detail-select" aria-label="Entidad"><option value="">—</option></select>
+              <label class="task-detail-label">${__('Entidad')}</label>
+              <select id="taskDetailEntitySelect" class="task-detail-select" aria-label="${__('Entidad')}"><option value="">—</option></select>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">Audiencia</label>
-              <select id="taskDetailAudienceSelect" class="task-detail-select" aria-label="Audiencia"><option value="">—</option></select>
+              <label class="task-detail-label">${__('Audiencia')}</label>
+              <select id="taskDetailAudienceSelect" class="task-detail-select" aria-label="${__('Audiencia')}"><option value="">—</option></select>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">Formato</label>
+              <label class="task-detail-label">${__('Formato')}</label>
               <select id="taskDetailAspectSelect" class="task-detail-select" aria-label="Aspect ratio">
                 <option value="1:1">1:1</option>
                 <option value="9:16">9:16</option>
@@ -158,12 +158,12 @@ class TasksView extends BaseView {
               </select>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">Producciones por ejecución</label>
-              <input type="number" id="taskDetailProductionCountInput" class="task-detail-input" min="1" value="1" aria-label="Número de producciones" />
+              <label class="task-detail-label">${__('Producciones por ejecución')}</label>
+              <input type="number" id="taskDetailProductionCountInput" class="task-detail-input" min="1" value="1" aria-label="${__('Número de producciones')}" />
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">Especificaciones</label>
-              <textarea id="taskDetailSpecsText" class="task-detail-textarea" rows="4" placeholder="Instrucciones de producción..."></textarea>
+              <label class="task-detail-label">${__('Especificaciones')}</label>
+              <textarea id="taskDetailSpecsText" class="task-detail-textarea" rows="4" placeholder="${__('Instrucciones de producción...')}"></textarea>
             </div>
           </div>
         </aside>
@@ -231,10 +231,10 @@ class TasksView extends BaseView {
         const wrap = container.querySelector('.tasks-page') || container;
         wrap.innerHTML = `
           <div class="tasks-page" style="padding: 2rem;">
-            <h1 class="tasks-title">Tareas programadas</h1>
+            <h1 class="tasks-title">${__('Tareas programadas')}</h1>
             <div class="error-container" style="margin-top: 2rem; text-align: center;">
               <p style="color: var(--text-secondary);">Error al cargar las tareas. ${err && err.message ? err.message : 'Por favor, recarga la página.'}</p>
-              <button type="button" class="btn btn-primary" style="margin-top: 1rem;" onclick="window.location.reload()">Recargar</button>
+              <button type="button" class="btn btn-primary" style="margin-top: 1rem;" onclick="window.location.reload()">${__('Recargar')}</button>
             </div>
           </div>`;
       }
@@ -527,16 +527,16 @@ class TasksView extends BaseView {
 
   formatDate(ts) {
     if (!ts) return '—';
-    return new Date(ts).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+    return new Date(ts).toLocaleDateString((window.i18n && window.i18n.getLocale() === 'en') ? 'en-US' : 'es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   /** Descripción legible del cron (ej: "Todos los días a las 9:00"). */
   cronDescription(cron) {
     if (!cron || typeof cron !== 'string') return cron || '—';
-    if (cron === '0 9 * * *') return 'Todos los días a las 9:00';
-    if (cron === '0 */6 * * *') return 'Cada 6 horas';
-    if (cron === '0 * * * *') return 'Cada hora';
-    if (/^0 0 \* \* \*$/.test(cron)) return 'Diario a medianoche';
+    if (cron === '0 9 * * *') return __('Todos los días a las 9:00');
+    if (cron === '0 */6 * * *') return __('Cada 6 horas');
+    if (cron === '0 * * * *') return __('Cada hora');
+    if (/^0 0 \* \* \*$/.test(cron)) return __('Diario a medianoche');
     return cron;
   }
 
@@ -549,9 +549,9 @@ class TasksView extends BaseView {
     const period = hour >= 12 ? 'PM' : 'AM';
     const h = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
     const timeStr = `${h}:00 ${period}`;
-    if (parts[4] !== '*' && parts[4].length > 0) return `${timeStr} - Semanal`;
-    if (parts[2] !== '*' && parts[3] === '*') return `${timeStr} - Mensual`;
-    return `${timeStr} - Diario`;
+    if (parts[4] !== '*' && parts[4].length > 0) return `${timeStr} - ${__('Semanal')}`;
+    if (parts[2] !== '*' && parts[3] === '*') return `${timeStr} - ${__('Mensual')}`;
+    return `${timeStr} - ${__('Diario')}`;
   }
 
   /** Etiqueta corta de frecuencia: Semanal, Diario, etc. */
@@ -559,16 +559,16 @@ class TasksView extends BaseView {
     if (!cron || typeof cron !== 'string') return '—';
     const p = cron.trim().split(/\s+/);
     if (p.length < 5) return '—';
-    if (p[4] !== '*' && p[4].length > 0) return 'Semanal';
-    if (p[2] !== '*' && p[3] === '*') return 'Mensual';
-    return 'Diario';
+    if (p[4] !== '*' && p[4].length > 0) return __('Semanal');
+    if (p[2] !== '*' && p[3] === '*') return __('Mensual');
+    return __('Diario');
   }
 
   /** Valor para select FRECUENCIA: weekly, daily, monthly. */
   cronToFreqValue(cron) {
-    const label = this.cronToFreqLabel(cron);
-    if (label === 'Semanal') return 'weekly';
-    if (label === 'Mensual') return 'monthly';
+    const p = (cron && typeof cron === 'string') ? cron.trim().split(/\s+/) : [];
+    if (p.length >= 5 && p[4] !== '*' && p[4].length > 0) return 'weekly';
+    if (p.length >= 5 && p[2] !== '*' && p[3] === '*') return 'monthly';
     return 'daily';
   }
 
@@ -580,9 +580,9 @@ class TasksView extends BaseView {
     const hour = parseInt(parts[1], 10);
     const min = parseInt(parts[0], 10) || 0;
     const hourStr = String(hour).padStart(2, '0') + ':' + String(min).padStart(2, '0');
-    const dowNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const freq = this.cronToFreqLabel(cron);
-    if (freq === 'Semanal') {
+    const dowNames = [__('Dom'), __('Lun'), __('Mar'), __('Mié'), __('Jue'), __('Vie'), __('Sáb')];
+    const freq = this.cronToFreqValue(cron);
+    if (freq === 'weekly') {
       const dowPart = parts[4];
       let dayStr = '—';
       if (dowPart && dowPart !== '*') {
@@ -590,10 +590,10 @@ class TasksView extends BaseView {
         dayStr = days.map(d => dowNames[parseInt(d, 10)] || d).join(', ');
       }
       const weekNum = 1;
-      return `Cada ${weekNum} semana · ${dayStr} · ${hourStr}`;
+      return __('Cada {n} semana · {days} · {hour}', { n: weekNum, days: dayStr, hour: hourStr });
     }
-    if (freq === 'Mensual') return `Mensual · ${hourStr}`;
-    return `Diario · ${hourStr}`;
+    if (freq === 'monthly') return __('Mensual · {hour}', { hour: hourStr });
+    return __('Diario · {hour}', { hour: hourStr });
   }
 
   escapeHtml(s) {
@@ -834,12 +834,12 @@ class TasksView extends BaseView {
     grid.innerHTML = `
       <div class="tasks-history-table" role="table">
         <div class="tasks-history-thead" role="row">
-          <div class="tasks-history-th" role="columnheader">Fecha</div>
-          <div class="tasks-history-th" role="columnheader">Tarea</div>
-          <div class="tasks-history-th" role="columnheader">Productos</div>
-          <div class="tasks-history-th" role="columnheader">Contexto</div>
-          <div class="tasks-history-th" role="columnheader">Status</div>
-          <div class="tasks-history-th tasks-history-th--num" role="columnheader">Costo</div>
+          <div class="tasks-history-th" role="columnheader">${__('Fecha')}</div>
+          <div class="tasks-history-th" role="columnheader">${__('Tarea')}</div>
+          <div class="tasks-history-th" role="columnheader">${__('Productos')}</div>
+          <div class="tasks-history-th" role="columnheader">${__('Contexto')}</div>
+          <div class="tasks-history-th" role="columnheader">${__('Estado')}</div>
+          <div class="tasks-history-th tasks-history-th--num" role="columnheader">${__('Costo')}</div>
         </div>
         <div class="tasks-history-tbody" role="rowgroup">
           ${runs.map(r => this.renderHistoryRow(r)).join('')}
@@ -854,9 +854,9 @@ class TasksView extends BaseView {
                       : status === 'failed' || status === 'error' ? 'task-card-badge-danger'
                       : status === 'running' || status === 'in_progress' ? 'task-card-badge-running'
                       : 'task-card-badge-paused';
-    const statusLabel = status === 'completed' ? 'Completado'
-                      : status === 'failed' || status === 'error' ? 'Error'
-                      : status === 'running' || status === 'in_progress' ? 'En curso'
+    const statusLabel = status === 'completed' ? __('Completado')
+                      : status === 'failed' || status === 'error' ? __('Error')
+                      : status === 'running' || status === 'in_progress' ? __('En curso')
                       : status ? status.charAt(0).toUpperCase() + status.slice(1) : '—';
     const thumb = r.flow_image_url
       ? `<img class="tasks-history-thumb" src="${this.escapeHtml(r.flow_image_url)}" alt="" loading="lazy">`
@@ -906,7 +906,7 @@ class TasksView extends BaseView {
         </div>
         <div class="tasks-history-cell tasks-history-cell--num tasks-history-cell--cost" role="cell">
           <span class="tasks-history-cost-value">${this.escapeHtml(cost)}</span>
-          <span class="tasks-history-cost-unit">créditos</span>
+          <span class="tasks-history-cost-unit">${__('créditos')}</span>
         </div>
       </div>
     `;
@@ -936,9 +936,9 @@ class TasksView extends BaseView {
     const statusClass = t.status === 'active' ? 'task-card-badge-active'
                       : t.status === 'draft'  ? 'task-card-badge-draft'
                       : 'task-card-badge-paused';
-    const statusLabel = t.status === 'active' ? 'ACTIVA'
-                      : t.status === 'draft'  ? 'BORRADOR'
-                      : 'PAUSADA';
+    const statusLabel = t.status === 'active' ? __('ACTIVA')
+                      : t.status === 'draft'  ? __('BORRADOR')
+                      : __('PAUSADA');
     const coverHtml = t.flow_image_url
       ? `<div class="task-card-cover"><img src="${this.escapeHtml(t.flow_image_url)}" alt="" loading="lazy"></div>`
       : `<div class="task-card-cover task-card-cover-placeholder"><i class="fas fa-project-diagram"></i></div>`;
@@ -966,7 +966,7 @@ class TasksView extends BaseView {
           </div>
           <div class="task-card-body">
             <div class="task-card-header">
-              <h3 class="task-card-title">${this.escapeHtml(t.job_name || 'Sin nombre')}</h3>
+              <h3 class="task-card-title">${this.escapeHtml(t.job_name || __('Sin nombre'))}</h3>
             </div>
             <p class="task-card-subtitle">${this.escapeHtml(t.flow_name)}</p>
             <div class="task-card-tags">
@@ -1171,8 +1171,8 @@ class TasksView extends BaseView {
     const totalHours = endHour - startHour + 1;
     const bodyH = totalHours * HOUR_H;
 
-    const dowNames = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
-    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const dowNames = [__('lun'), __('mar'), __('mié'), __('jue'), __('vie'), __('sáb'), __('dom')];
+    const monthNames = [__('Enero'), __('Febrero'), __('Marzo'), __('Abril'), __('Mayo'), __('Junio'), __('Julio'), __('Agosto'), __('Septiembre'), __('Octubre'), __('Noviembre'), __('Diciembre')];
     const monthLabel = `${monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
     const weekLabel = `W${this._isoWeek(weekStart)}`;
 
@@ -1208,12 +1208,12 @@ class TasksView extends BaseView {
         const widthPct = 100 / laneCount;
         const left = `calc(${e.lane * widthPct}% + 3px)`;
         const width = `calc(${widthPct}% - ${gap + 3}px)`;
-        const title = `${s.job_name || 'Sin nombre'} · ${timeStr} · ${freq}`;
+        const title = `${s.job_name || __('Sin nombre')} · ${timeStr} · ${freq}`;
         const bubbles = this._eventBubbles(s);
         return `<div class="cal2-event cal2-event--${sc}" data-task-id="${s.id}" role="button" tabindex="0" title="${this.escapeHtml(title)}"
                   style="top:${e.top}px;height:${EVENT_H}px;left:${left};width:${width}">
           <div class="cal2-event-main">
-            <span class="cal2-event-name">${this.escapeHtml(s.job_name || 'Sin nombre')}</span>
+            <span class="cal2-event-name">${this.escapeHtml(s.job_name || __('Sin nombre'))}</span>
             <span class="cal2-event-when">${timeStr} · ${this.escapeHtml(freq)}</span>
           </div>
           ${bubbles}
@@ -1237,14 +1237,14 @@ class TasksView extends BaseView {
             <span class="cal2-week">/ ${weekLabel}</span>
             <div class="cal2-navgroup">
               <button type="button" class="cal2-nav" id="calPrev" aria-label="Semana anterior"><i class="fas fa-chevron-left"></i></button>
-              <button type="button" class="cal2-today" id="calToday">Hoy</button>
+              <button type="button" class="cal2-today" id="calToday">${__('Hoy')}</button>
               <button type="button" class="cal2-nav" id="calNext" aria-label="Semana siguiente"><i class="fas fa-chevron-right"></i></button>
             </div>
           </div>
           <div class="cal2-toolbar-right">
-            <span class="cal2-legend"><span class="cal2-legend-dot cal2-legend-dot--active"></span>Activa</span>
-            <span class="cal2-legend"><span class="cal2-legend-dot cal2-legend-dot--paused"></span>Pausada</span>
-            <span class="cal2-legend"><span class="cal2-legend-dot cal2-legend-dot--draft"></span>Borrador</span>
+            <span class="cal2-legend"><span class="cal2-legend-dot cal2-legend-dot--active"></span>${__('Activa')}</span>
+            <span class="cal2-legend"><span class="cal2-legend-dot cal2-legend-dot--paused"></span>${__('Pausada')}</span>
+            <span class="cal2-legend"><span class="cal2-legend-dot cal2-legend-dot--draft"></span>${__('Borrador')}</span>
           </div>
         </div>
         ${isEmpty ? '<p class="cal2-empty">No hay tareas programadas en esta vista.</p>' : ''}
@@ -1383,10 +1383,10 @@ class TasksView extends BaseView {
       const icon = toggleBtn.querySelector('i');
       if (task.is_active) {
         if (icon) icon.className = 'fas fa-pause-circle';
-        if (toggleLabel) toggleLabel.textContent = 'Pausar';
+        if (toggleLabel) toggleLabel.textContent = __('Pausar');
       } else {
         if (icon) icon.className = 'fas fa-play-circle';
-        if (toggleLabel) toggleLabel.textContent = 'Activar';
+        if (toggleLabel) toggleLabel.textContent = __('Activar');
       }
     }
 
@@ -1450,10 +1450,10 @@ class TasksView extends BaseView {
     const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
     const metrics = [
-      { label: 'Ejecuciones', value: String(total), hint: total ? `${successRate}% completadas` : 'Sin ejecuciones' },
-      { label: 'Completadas', value: String(completed), hint: total ? `${total - completed} con error` : '—' },
-      { label: 'Créditos consumidos', value: tokens.toLocaleString('es'), hint: 'Total acumulado' },
-      { label: 'Última ejecución', value: lastWhen ? lastWhen.rel : '—', hint: lastWhen ? lastWhen.abs : 'Sin ejecuciones aún' }
+      { label: __('Ejecuciones'), value: String(total), hint: total ? __('{n}% completadas', { n: successRate }) : __('Sin ejecuciones') },
+      { label: __('Completadas'), value: String(completed), hint: total ? __('{n} con error', { n: total - completed }) : '—' },
+      { label: __('Créditos consumidos'), value: tokens.toLocaleString('es'), hint: __('Total acumulado') },
+      { label: __('Última ejecución'), value: lastWhen ? lastWhen.rel : '—', hint: lastWhen ? lastWhen.abs : __('Sin ejecuciones aún') }
     ];
 
     metricsEl.innerHTML = metrics.map(m => `
@@ -1469,15 +1469,15 @@ class TasksView extends BaseView {
     const el = document.getElementById('taskDetailRunsBody');
     if (!el) return;
     if (!runs.length) {
-      el.innerHTML = '<p class="task-detail-empty">Esta tarea aún no se ha ejecutado.</p>';
+      el.innerHTML = `<p class="task-detail-empty">${__('Esta tarea aún no se ha ejecutado.')}</p>`;
       return;
     }
     el.innerHTML = `
       <div class="task-detail-runs-table" role="table">
         <div class="task-detail-runs-thead" role="row">
-          <div role="columnheader">Fecha</div>
-          <div role="columnheader">Status</div>
-          <div role="columnheader" class="task-detail-runs-th--num">Costo</div>
+          <div role="columnheader">${__('Fecha')}</div>
+          <div role="columnheader">${__('Estado')}</div>
+          <div role="columnheader" class="task-detail-runs-th--num">${__('Costo')}</div>
         </div>
         <div class="task-detail-runs-tbody" role="rowgroup">
           ${runs.map(r => this._renderTaskRunRow(r)).join('')}
@@ -1492,9 +1492,9 @@ class TasksView extends BaseView {
                       : status === 'failed' || status === 'error' ? 'task-card-badge-danger'
                       : status === 'running' || status === 'in_progress' ? 'task-card-badge-running'
                       : 'task-card-badge-paused';
-    const statusLabel = status === 'completed' ? 'Completado'
-                      : status === 'failed' || status === 'error' ? 'Error'
-                      : status === 'running' || status === 'in_progress' ? 'En curso'
+    const statusLabel = status === 'completed' ? __('Completado')
+                      : status === 'failed' || status === 'error' ? __('Error')
+                      : status === 'running' || status === 'in_progress' ? __('En curso')
                       : status ? status.charAt(0).toUpperCase() + status.slice(1) : '—';
     const { rel, abs } = this._formatRunDateParts(r.created_at);
     const cost = r.tokens_consumed != null ? Number(r.tokens_consumed).toLocaleString('es') : '—';
@@ -1550,11 +1550,11 @@ class TasksView extends BaseView {
       .eq('user_id', this.userId);
     if (error) {
       console.error('TasksView saveTaskDetail:', error);
-      this.showNotification('No se pudieron guardar los cambios', 'error');
+      this.showNotification(__('No se pudieron guardar los cambios'), 'error');
       return;
     }
     this._invalidateSchedulesCache();
-    this.showNotification('Cambios guardados', 'success');
+    this.showNotification(__('Cambios guardados'), 'success');
     await this.renderTaskDetail();
   }
 
@@ -1569,7 +1569,7 @@ class TasksView extends BaseView {
       .eq('user_id', this.userId);
     if (error) {
       console.error('TasksView toggleActive:', error);
-      this.showNotification('No se pudo cambiar el estado', 'error');
+      this.showNotification(__('No se pudo cambiar el estado'), 'error');
       return;
     }
     this._invalidateSchedulesCache();
@@ -1608,11 +1608,11 @@ class TasksView extends BaseView {
     const { data: created, error } = await this.supabase.from('flow_schedules').insert(insert).select('id').single();
     if (error) {
       console.error('TasksView duplicateSchedule:', error);
-      this.showNotification('No se pudo duplicar la tarea', 'error');
+      this.showNotification(__('No se pudo duplicar la tarea'), 'error');
       return;
     }
     this._invalidateSchedulesCache();
-    this.showNotification('Tarea duplicada. La copia está pausada.', 'success');
+    this.showNotification(__('Tarea duplicada. La copia está pausada.'), 'success');
     if (window.router && created?.id) window.router.navigate(`${this.getTasksBasePath()}/${created.id}`, true);
     await this.render();
   }
@@ -1634,11 +1634,11 @@ class TasksView extends BaseView {
       .eq('user_id', this.userId);
     if (error) {
       console.error('TasksView deleteSchedule:', error);
-      this.showNotification('No se pudo eliminar la tarea', 'error');
+      this.showNotification(__('No se pudo eliminar la tarea'), 'error');
       return;
     }
     this._invalidateSchedulesCache();
-    this.showNotification('Tarea eliminada', 'success');
+    this.showNotification(__('Tarea eliminada'), 'success');
     if (window.router) window.router.navigate(this.getTasksBasePath(), true);
     await this.render();
   }
@@ -1654,32 +1654,32 @@ class TasksView extends BaseView {
       const aspectOpts = this.ASPECT_RATIOS.map(ar => `<option value="${ar}" ${ar === (task.aspect_ratio || '1:1') ? 'selected' : ''}>${ar}</option>`).join('');
       // FEAT-028: migrado a window.Modal (mismos IDs de campo, misma logica de update).
       const body = `
-        <label>Entidad</label>
+        <label>${__('Entidad')}</label>
         <select id="taskEditEntity" class="task-edit-select">
-          <option value="">Ninguna</option>
+          <option value="">${__('Ninguna')}</option>
           ${entityOpts}
         </select>
-        <label>Campaña</label>
+        <label>${__('Campaña')}</label>
         <select id="taskEditCampaign" class="task-edit-select">
-          <option value="">Ninguna</option>
+          <option value="">${__('Ninguna')}</option>
           ${campaignOpts}
         </select>
-        <label>Audiencia</label>
+        <label>${__('Audiencia')}</label>
         <select id="taskEditAudience" class="task-edit-select">
-          <option value="">Ninguna</option>
+          <option value="">${__('Ninguna')}</option>
           ${audienceOpts}
         </select>
-        <label>Relación de aspecto</label>
+        <label>${__('Relación de aspecto')}</label>
         <select id="taskEditAspectRatio" class="task-edit-select">
           ${aspectOpts}
         </select>
         <label>Nº producciones por ejecución</label>
         <input type="number" id="taskEditProductionCount" min="1" value="${task.production_count ?? 1}" />
-        <label>Activa</label>
+        <label>${__('Activa')}</label>
         <input type="checkbox" id="taskEditIsActive" ${task.is_active ? 'checked' : ''} />
         <div class="modal-footer">
-          <button type="button" class="btn btn-ghost modal-cancel">Cancelar</button>
-          <button type="button" class="btn btn-primary" id="taskEditSubmit">Guardar</button>
+          <button type="button" class="btn btn-ghost modal-cancel">${__('Cancelar')}</button>
+          <button type="button" class="btn btn-primary" id="taskEditSubmit">${__('Guardar')}</button>
         </div>
       `;
       const { modal, close } = window.Modal.show({ title: 'Configurar tarea', body, className: 'task-modal' });
