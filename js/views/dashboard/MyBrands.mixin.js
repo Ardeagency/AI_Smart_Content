@@ -366,6 +366,10 @@
       } catch (_) { return ''; }
     },
     _postUrl(p) {
+      // Permalink real del post (lo trae el sync de Meta en url_external_id).
+      const ext = String(p.url_external_id || '');
+      if (/^https?:\/\//.test(ext)) return ext;
+      // Fallback: perfil de la cuenta (cuando aun no hay permalink sincronizado).
       const h = String(p.profile_handle || '').replace(/^@/, '');
       const n = String(p.network || '').toLowerCase();
       if (!h) return '';
