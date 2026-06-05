@@ -390,7 +390,7 @@
       return rows.map((r) => `<span class="mb-tpt-metric"><i class="fas ${r.i}" style="color:${r.c}"></i> ${this._compactNum(r.v)}</span>`).join('');
     },
     _buildTopPostsSection(rows) {
-      const list = (Array.isArray(rows) ? rows : []).slice(0, 10);
+      const list = (Array.isArray(rows) ? rows : []).slice(0, 3);
       if (!list.length) return '';
       const items = list.map((p) => {
         const topics = (Array.isArray(p.topics) ? p.topics : []).slice(0, 2);
@@ -417,7 +417,7 @@
       return `
         <section class="mb-section mb-section--wide">
           <div class="mb-chart-card mb-tpt-card">
-            <div class="mb-card-title">${__('Top publicaciones destacadas')}</div>
+            <div class="mb-card-title">${__('Top 3 publicaciones destacadas')}</div>
             <div class="mb-tpt">
               <div class="mb-tpt-head">
                 <span>${__('Perfil')}</span><span>${__('Contenido')}</span><span>${__('Métricas')}</span><span>${__('Análisis')}</span><span></span>
