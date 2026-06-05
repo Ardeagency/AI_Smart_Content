@@ -115,40 +115,45 @@ async function fetchIgMedia(pageToken, igId, limit = 50) {
 }
 
 // ── Instagram: insights por post ─────────────────────────────────────────────
-// Los campos disponibles varían por media_type:
-//   IMAGE/CAROUSEL_ALBUM : impressions, reach, saved, likes, comments, shares, follows, profile_visits
-//   VIDEO                : impressions, reach, saved, video_views, plays, total_interactions
-//   REEL                 : plays, reach, likes, comments, shares, saved, total_interactions,
-//                          ig_reels_avg_watch_time, ig_reels_video_view_total_time
+// Graph API v22+: Meta ELIMINO `impressions`, `plays` y `video_views` de los
+// insights de media y los unifico en `views` (cuenta de reproducciones/vistas
+// para TODOS los tipos, incl. reels). Pedir un metric removido hace fallar la
+// llamada entera (400) → por eso antes quedaba todo en 0. Aqui pedimos el set
+// moderno valido en v22 y, si aun asi falla, reintentamos con un set minimo.
+//   likes/comments NO se piden aqui: vienen de like_count/comments_count del media.
 
 const IG_POST_METRICS = {
-  IMAGE:          'impressions,reach,saved,likes,comments,shares,follows,profile_visits',
-  CAROUSEL_ALBUM: 'impressions,reach,saved,likes,comments,shares,follows,profile_visits',
-  VIDEO:          'impressions,reach,saved,video_views,plays,total_interactions',
-  REEL:           'plays,reach,likes,comments,shares,saved,total_interactions,ig_reels_avg_watch_time,ig_reels_video_view_total_time',
+  IMAGE:          'reach,views,saved,total_interactions',
+  CAROUSEL_ALBUM: 'reach,views,saved,total_interactions',
+  VIDEO:          'reach,views,saved,total_interactions',
+  REEL:           'reach,views,saved,total_interactions,ig_reels_avg_watch_time',
 };
 
 async function fetchIgPostInsights(pageToken, mediaId, mediaType) {
-  const metrics = IG_POST_METRICS[mediaType] || IG_POST_METRICS.IMAGE;
-  try {
-    const data = await meta(`/${mediaId}/insights`, pageToken, { metric: metrics });
+  const parse = (data) => {
     const m = {};
-    (data.data || []).forEach(item => {
-      m[item.name] = item.values?.[0]?.value ?? item.value ?? 0;
-    });
-    return {
-      impressions:        m.impressions          || 0,
-      reach:              m.reach                || 0,
-      saved:              m.saved                || 0,
-      video_views:        m.video_views || m.plays || m.ig_reels_video_view_total_time || 0,
-      avg_watch_time_ms:  m.ig_reels_avg_watch_time || 0,
-      total_interactions: m.total_interactions   || 0,
-      profile_visits:     m.profile_visits       || 0,
-      follows:            m.follows              || 0,
-    };
+    (data.data || []).forEach(item => { m[item.name] = item.values?.[0]?.value ?? item.value ?? 0; });
+    return m;
+  };
+  let m = null;
+  try {
+    m = parse(await meta(`/${mediaId}/insights`, pageToken, { metric: IG_POST_METRICS[mediaType] || IG_POST_METRICS.IMAGE }));
   } catch (_) {
-    return {};
+    // Fallback: set minimo que nunca deberia 400 en v22 (un metric invalido
+    // tumba toda la llamada, asi no perdemos reach/views por un campo extra).
+    try { m = parse(await meta(`/${mediaId}/insights`, pageToken, { metric: 'reach,views' })); }
+    catch (_) { m = {}; }
   }
+  return {
+    impressions:        m.views                 || 0,   // v22: `views` sucede a impressions
+    reach:              m.reach                  || 0,
+    saved:              m.saved                  || 0,
+    video_views:        m.views                  || 0,   // v22: `views` = reproducciones (todos los tipos)
+    avg_watch_time_ms:  m.ig_reels_avg_watch_time || 0,
+    total_interactions: m.total_interactions     || 0,
+    profile_visits:     0,
+    follows:            0,
+  };
 }
 
 // ── Instagram: time series de cuenta ─────────────────────────────────────────
@@ -528,13 +533,22 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
-  const accessToken = getBearerToken(event);
-  if (!accessToken)
-    return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unauthorized' }) };
+  // Auth: sesion de usuario (Bearer, llamado desde la UI) O secreto interno
+  // (scheduler/cron). El interno salta la verificacion de usuario + membresia.
+  const hdrs = event.headers || {};
+  const internalSecret = hdrs['x-internal-secret'] || hdrs['X-Internal-Secret'];
+  const isInternal = !!internalSecret && !!process.env.INTERNAL_SYNC_SECRET && internalSecret === process.env.INTERNAL_SYNC_SECRET;
 
-  const user = await fetchSupabaseUser({ url: env.url, anonKey: env.anonKey, accessToken });
-  if (!user?.id)
-    return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Invalid session' }) };
+  let user = null;
+  if (!isInternal) {
+    const accessToken = getBearerToken(event);
+    if (!accessToken)
+      return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unauthorized' }) };
+
+    user = await fetchSupabaseUser({ url: env.url, anonKey: env.anonKey, accessToken });
+    if (!user?.id)
+      return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Invalid session' }) };
+  }
 
   let body = {};
   try { body = typeof event.body === 'string' ? JSON.parse(event.body) : (event.body || {}); } catch (_) {}
@@ -554,7 +568,7 @@ exports.handler = async (event) => {
     bc = Array.isArray(containers) ? containers[0] : null;
     if (!bc) return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'Brand container not found' }) };
 
-    if (bc.user_id !== user.id) {
+    if (!isInternal && bc.user_id !== user.id) {
       const members = await supabaseRest({
         url: env.url, serviceKey: env.serviceKey,
         path: 'organization_members', method: 'GET',
