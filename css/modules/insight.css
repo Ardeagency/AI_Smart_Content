@@ -3483,6 +3483,125 @@
   -webkit-backdrop-filter: none;
 }
 
+/* ── Date range picker v2 (tema oscuro adaptado): sidebar de presets + dos
+   inputs MM/DD/YYYY + calendario con rango. Acento = --brand-primary. ── */
+.insight-page .mb-filters-bar .living-date-dropdown.drp2 {
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0;
+  overflow: hidden;
+  width: auto;
+  min-width: 0;
+  max-width: min(560px, calc(100vw - 24px));
+}
+/* Sidebar de presets */
+.drp2-presets {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px; min-width: 172px;
+  background: rgba(0, 0, 0, 0.18);
+  border-right: 1px solid #2c2e33;
+}
+.drp2-preset {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  text-align: left; background: transparent; border: 0; cursor: pointer;
+  font-size: 0.8125rem; font-weight: 500; color: var(--text-secondary, rgba(212, 209, 216, 0.82));
+  padding: 0.5rem 0.7rem; border-radius: 8px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.drp2-preset:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-primary, #D4D1D8); }
+.drp2-preset.is-active { color: var(--brand-primary, #8b7bff); font-weight: 600; }
+.drp2-preset-check { width: 12px; font-size: 0.7rem; opacity: 0; color: var(--brand-primary, #8b7bff); flex: 0 0 auto; }
+.drp2-preset.is-active .drp2-preset-check { opacity: 1; }
+/* Columna principal */
+.drp2-main { display: flex; flex-direction: column; gap: 12px; padding: 12px 14px 10px; }
+.drp2-inputs { display: flex; align-items: center; gap: 10px; }
+.drp2-input-wrap { position: relative; }
+.drp2-input {
+  width: 124px; box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid #34363A; border-radius: 10px;
+  padding: 8px 10px; text-align: center;
+  color: var(--text-primary, #D4D1D8); font-size: 0.95rem; font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.drp2-input::placeholder { color: rgba(212, 209, 216, 0.35); }
+.drp2-input:focus { outline: none; border-color: var(--brand-primary, #8b7bff); box-shadow: 0 0 0 2px rgba(139, 123, 255, 0.25); }
+.drp2-arrow { color: var(--text-muted, rgba(212, 209, 216, 0.45)); font-size: 0.8rem; flex: 0 0 auto; }
+.drp2-hint {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 3; display: none; white-space: nowrap;
+  background: #15161a; border: 1px solid #34363A; border-radius: 8px;
+  padding: 6px 12px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em;
+  color: rgba(212, 209, 216, 0.55); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+}
+.drp2-hint b { color: #fff; }
+.drp2-input-wrap:focus-within .drp2-hint { display: block; }
+/* Calendario */
+.drp2-cal { display: flex; flex-direction: column; }
+.drp2-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 6px; }
+.drp2-monthyear { font-size: 0.95rem; font-weight: 700; color: var(--text-primary, #D4D1D8); }
+.drp2-nav-btn {
+  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+  background: transparent; border: 0; border-radius: 7px; cursor: pointer;
+  color: var(--text-secondary, rgba(212, 209, 216, 0.75)); font-size: 0.8rem;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.drp2-nav-btn:hover { background: rgba(255, 255, 255, 0.07); color: var(--text-primary, #D4D1D8); }
+.drp2-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); }
+.drp2-weekdays span { text-align: center; padding: 4px 0; font-size: 0.72rem; font-weight: 600; color: var(--text-muted, rgba(212, 209, 216, 0.42)); }
+.drp2-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px 0; }
+/* Neutraliza los fondos de celda de living.css (hover/today/range/in-range):
+   en drp2 todo el color vive en .drp2-d (circulo) y ::before (banda). */
+.drp2-grid .living-date-cell,
+.drp2-grid .living-date-cell.today,
+.drp2-grid .living-date-cell.in-range,
+.drp2-grid .living-date-cell.range-start,
+.drp2-grid .living-date-cell.range-end,
+.drp2-grid .living-date-cell:not(.other-month):hover { background: transparent; }
+.drp2-grid .living-date-cell {
+  position: relative; aspect-ratio: auto;
+  display: flex; align-items: center; justify-content: center;
+  height: 36px; border-radius: 0; cursor: pointer; user-select: none;
+}
+.drp2-grid .living-date-cell .drp2-d {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  font-size: 0.85rem; color: var(--text-primary, #D4D1D8);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.drp2-grid .living-date-cell.other-month { cursor: default; }
+.drp2-grid .living-date-cell.other-month .drp2-d { color: rgba(212, 209, 216, 0.22); }
+.drp2-grid .living-date-cell:not(.other-month):not(.range-start):not(.range-end):hover .drp2-d { background: rgba(255, 255, 255, 0.08); }
+.drp2-grid .living-date-cell.today .drp2-d { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28); }
+/* Banda de rango: fondo continuo entre extremos (las celdas se tocan en X). */
+.drp2-grid .living-date-cell.in-range::before,
+.drp2-grid .living-date-cell.range-start::before,
+.drp2-grid .living-date-cell.range-end::before {
+  content: ''; position: absolute; top: 3px; bottom: 3px; left: 0; right: 0; z-index: 0;
+  background: rgba(139, 123, 255, 0.16);
+  background: color-mix(in srgb, var(--brand-primary, #8b7bff) 18%, transparent);
+}
+.drp2-grid .living-date-cell.range-start::before { left: 50%; }
+.drp2-grid .living-date-cell.range-end::before { right: 50%; }
+.drp2-grid .living-date-cell.range-single::before { display: none; }
+.drp2-grid .living-date-cell.in-range .drp2-d { color: var(--brand-primary, #b4a7ff); }
+.drp2-grid .living-date-cell.range-start .drp2-d,
+.drp2-grid .living-date-cell.range-end .drp2-d {
+  background: var(--brand-primary, #7c5cfc); color: #fff; font-weight: 600;
+}
+/* Footer: limpiar (no esta en la referencia, pero preserva el reset a "todo el periodo") */
+.drp2-footer { margin-top: 8px; padding-top: 8px; border-top: 1px solid #2c2e33; text-align: center; }
+.drp2-clear {
+  background: transparent; border: 0; cursor: pointer;
+  font-size: 0.78rem; color: var(--text-muted, rgba(212, 209, 216, 0.5));
+  padding: 4px 8px; border-radius: 6px; transition: color 0.12s ease, background 0.12s ease;
+}
+.drp2-clear:hover { color: var(--text-primary, #D4D1D8); background: rgba(255, 255, 255, 0.05); }
+@media (max-width: 560px) {
+  .insight-page .mb-filters-bar .living-date-dropdown.drp2 { flex-direction: column; max-width: calc(100vw - 24px); }
+  .drp2-presets { flex-direction: row; flex-wrap: wrap; min-width: 0; border-right: 0; border-bottom: 1px solid #2c2e33; }
+}
+
 /* ── Filtro como menu custom (Plataforma): pill .living-filter con <details>.
    Reemplaza el <select> nativo; el menu reusa el estilo de "Crear informe". ── */
 .insight-page .mb-filters-bar .living-filter--menu {
