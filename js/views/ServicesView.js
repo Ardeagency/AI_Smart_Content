@@ -20,14 +20,14 @@ class ServicesView extends BaseView {
     return `
 <div class="services-page" id="servicesPage">
   <div class="services-header">
-    <h1 class="services-title">Servicios</h1>
+    <h1 class="services-title">${__('Servicios')}</h1>
     <div class="services-header-actions">
-      <button type="button" class="services-add-btn" id="servicesAttachBtn" aria-label="Adjuntar servicio desde URL o archivos">
+      <button type="button" class="services-add-btn" id="servicesAttachBtn" aria-label="${__('Adjuntar servicio desde URL o archivos')}">
         <i class="fas fa-paperclip" aria-hidden="true"></i>
-        <span>Adjuntar servicio</span>
+        <span>${__('Adjuntar servicio')}</span>
       </button>
-      <button type="button" class="services-add-btn" id="servicesAddBtn" aria-label="Agregar servicio">
-        <span>+ Servicio</span>
+      <button type="button" class="services-add-btn" id="servicesAddBtn" aria-label="${__('Agregar servicio')}">
+        <span>${__('+ Servicio')}</span>
       </button>
     </div>
   </div>
@@ -35,7 +35,7 @@ class ServicesView extends BaseView {
   <section class="services-section" id="servicesSection">
     <div class="services-section-head">
       <div class="services-section-head-main">
-        <h2 class="services-section-title">Catálogo</h2>
+        <h2 class="services-section-title">${__('Catálogo')}</h2>
         <span class="services-section-count" id="servicesCount">0</span>
       </div>
     </div>
@@ -44,7 +44,7 @@ class ServicesView extends BaseView {
 
   <div class="services-empty" id="servicesEmpty" style="display:none;">
     <i class="fas fa-briefcase" aria-hidden="true"></i>
-    <p>Aun no hay servicios. Crea el primero con + Servicio o adjunta uno.</p>
+    <p>${__('Aun no hay servicios. Crea el primero con + Servicio o adjunta uno.')}</p>
   </div>
 </div>`;
   }
@@ -154,7 +154,7 @@ class ServicesView extends BaseView {
     try {
       const entityId = await this._ensureEntityId();
       if (!entityId) {
-        this._showNotification('No se pudo obtener una identidad para vincular el servicio.', 'error');
+        this._showNotification(__('No se pudo obtener una identidad para vincular el servicio.'), 'error');
         return;
       }
       const { error } = await this.supabase.from('services').insert({
@@ -169,7 +169,7 @@ class ServicesView extends BaseView {
       this._renderServices();
     } catch (e) {
       console.error('ServicesView _onAddService:', e);
-      this._showNotification(e?.message || 'Error al crear el servicio', 'error');
+      this._showNotification(e?.message || __('Error al crear el servicio'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -196,18 +196,18 @@ class ServicesView extends BaseView {
     grid.innerHTML = this.services.map((s) => {
       const price = s.precio_base != null ? `${s.precio_base} ${s.moneda || 'USD'}` : '';
       const tags = (s.beneficios_principales || []).slice(0, 3);
-      const name = this.escapeHtml(s.nombre_servicio || 'Servicio');
+      const name = this.escapeHtml(s.nombre_servicio || __('Servicio'));
       return `
         <article class="service-card" data-service-id="${s.id}">
           <div class="service-card-actions">
-            <button type="button" class="glass service-card-action" data-action="duplicate" title="Duplicar servicio" aria-label="Duplicar servicio"><i class="fas fa-copy" aria-hidden="true"></i></button>
-            <button type="button" class="glass service-card-action service-card-action--danger" data-action="delete" title="Eliminar servicio" aria-label="Eliminar servicio"><i class="fas fa-trash" aria-hidden="true"></i></button>
+            <button type="button" class="glass service-card-action" data-action="duplicate" title="${__('Duplicar servicio')}" aria-label="${__('Duplicar servicio')}"><i class="fas fa-copy" aria-hidden="true"></i></button>
+            <button type="button" class="glass service-card-action service-card-action--danger" data-action="delete" title="${__('Eliminar servicio')}" aria-label="${__('Eliminar servicio')}"><i class="fas fa-trash" aria-hidden="true"></i></button>
           </div>
           <div class="service-card-head">
             <h3 class="service-card-title">${name}</h3>
             ${price ? `<span class="service-card-price">${this.escapeHtml(price)}</span>` : ''}
           </div>
-          ${s.descripcion_servicio ? `<p class="service-card-desc">${this.escapeHtml(s.descripcion_servicio)}</p>` : '<p class="service-card-desc service-card-desc-empty">Sin descripcion todavia.</p>'}
+          ${s.descripcion_servicio ? `<p class="service-card-desc">${this.escapeHtml(s.descripcion_servicio)}</p>` : `<p class="service-card-desc service-card-desc-empty">${__('Sin descripcion todavia.')}</p>`}
           <div class="service-card-meta">
             ${s.duracion_estimada ? `<span class="service-card-duration"><i class="fas fa-clock" aria-hidden="true"></i> ${this.escapeHtml(s.duracion_estimada)}</span>` : ''}
           </div>
@@ -232,7 +232,7 @@ class ServicesView extends BaseView {
 
   async _onDeleteService(serviceId, btn) {
     if (!serviceId || !this.supabase) return;
-    if (!confirm('¿Eliminar este servicio?')) return;
+    if (!confirm(__('¿Eliminar este servicio?'))) return;
     if (btn) btn.disabled = true;
     try {
       const { error } = await this.supabase.from('services').delete().eq('id', serviceId);
@@ -240,10 +240,10 @@ class ServicesView extends BaseView {
       this._invalidateCache();
       await this._loadData();
       this._renderServices();
-      this._showNotification('Servicio eliminado', 'success');
+      this._showNotification(__('Servicio eliminado'), 'success');
     } catch (e) {
       console.error('ServicesView _onDeleteService:', e);
-      this._showNotification(e?.message || 'Error al eliminar el servicio', 'error');
+      this._showNotification(e?.message || __('Error al eliminar el servicio'), 'error');
       if (btn) btn.disabled = false;
     }
   }
@@ -257,7 +257,7 @@ class ServicesView extends BaseView {
         .select('*')
         .eq('id', serviceId)
         .single();
-      if (fetchError || !service) throw fetchError || new Error('No se pudo cargar el servicio');
+      if (fetchError || !service) throw fetchError || new Error(__('No se pudo cargar el servicio'));
       const { id: _id, created_at: _c, updated_at: _u, ...rest } = service;
       const copyData = {
         ...rest,
@@ -268,10 +268,10 @@ class ServicesView extends BaseView {
       this._invalidateCache();
       await this._loadData();
       this._renderServices();
-      this._showNotification('Servicio duplicado', 'success');
+      this._showNotification(__('Servicio duplicado'), 'success');
     } catch (e) {
       console.error('ServicesView _onDuplicateService:', e);
-      this._showNotification(e?.message || 'Error al duplicar el servicio', 'error');
+      this._showNotification(e?.message || __('Error al duplicar el servicio'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -281,74 +281,74 @@ class ServicesView extends BaseView {
 
   _onAttachService() {
     if (!window.Modal || typeof window.Modal.show !== 'function') {
-      this._showNotification('Modal no disponible', 'error');
+      this._showNotification(__('Modal no disponible'), 'error');
       return;
     }
     const body = `
       <div class="attach-product-wizard" data-step="picker">
         <section class="attach-product-step attach-product-step--picker" data-panel="picker">
-          <p class="attach-product-intro">Elegi como queres que Vera obtenga la informacion del servicio. La ficha se crea automaticamente y solo te cobra el costo real de OpenAI.</p>
+          <p class="attach-product-intro">${__('Elegi como queres que Vera obtenga la informacion del servicio. La ficha se crea automaticamente y solo te cobra el costo real de OpenAI.')}</p>
           <div class="attach-product-options">
-            <button type="button" class="attach-product-option" data-go="url" aria-label="Adjuntar servicio por URL">
+            <button type="button" class="attach-product-option" data-go="url" aria-label="${__('Adjuntar servicio por URL')}">
               <div class="attach-product-option-head">
                 <span class="attach-product-option-icon"><i class="fas fa-link" aria-hidden="true"></i></span>
-                <h4 class="attach-product-option-title">URL del servicio</h4>
+                <h4 class="attach-product-option-title">${__('URL del servicio')}</h4>
               </div>
-              <p class="attach-product-option-desc">Pega el enlace de la pagina del servicio. Vera leera la URL y armara la ficha con descripcion, beneficios, entregables y metodologia detectados.</p>
-              <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+              <p class="attach-product-option-desc">${__('Pega el enlace de la pagina del servicio. Vera leera la URL y armara la ficha con descripcion, beneficios, entregables y metodologia detectados.')}</p>
+              <span class="attach-product-option-cta">${__('Continuar')} <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </button>
 
-            <button type="button" class="attach-product-option" data-go="attach" aria-label="Adjuntar archivos del servicio">
+            <button type="button" class="attach-product-option" data-go="attach" aria-label="${__('Adjuntar archivos del servicio')}">
               <div class="attach-product-option-head">
                 <span class="attach-product-option-icon"><i class="fas fa-paperclip" aria-hidden="true"></i></span>
-                <h4 class="attach-product-option-title">Adjuntar archivos</h4>
+                <h4 class="attach-product-option-title">${__('Adjuntar archivos')}</h4>
               </div>
-              <p class="attach-product-option-desc">Subi PDFs, brochures, fichas tecnicas o catalogos del servicio. Vera analizara el contenido y construira la ficha estructurada.</p>
-              <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+              <p class="attach-product-option-desc">${__('Subi PDFs, brochures, fichas tecnicas o catalogos del servicio. Vera analizara el contenido y construira la ficha estructurada.')}</p>
+              <span class="attach-product-option-cta">${__('Continuar')} <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </button>
           </div>
         </section>
 
         <section class="attach-product-step attach-product-step--form" data-panel="url" hidden>
           <label class="attach-product-field">
-            <span class="attach-product-field-label">Enlace</span>
+            <span class="attach-product-field-label">${__('Enlace')}</span>
             <input type="url" class="attach-product-url-input" placeholder="https://..." autocomplete="off" />
           </label>
           <button type="button" class="attach-product-submit" data-action="submit-url">
             <i class="fas fa-magic" aria-hidden="true"></i>
-            <span>Analizar URL con Vera</span>
+            <span>${__('Analizar URL con Vera')}</span>
           </button>
         </section>
 
         <section class="attach-product-step attach-product-step--form" data-panel="attach" hidden>
           <div class="attach-product-field-group" data-group="files">
-            <span class="attach-product-field-label">Archivos del servicio</span>
-            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="Subir archivos del servicio">
+            <span class="attach-product-field-label">${__('Archivos del servicio')}</span>
+            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="${__('Subir archivos del servicio')}">
               <input type="file" class="attach-product-file-input" multiple accept=".pdf,.doc,.docx,.txt,.md" hidden />
               <i class="fas fa-paperclip" aria-hidden="true"></i>
-              <span class="attach-product-dropzone-text">Arrastra archivos o hace click para elegirlos</span>
+              <span class="attach-product-dropzone-text">${__('Arrastra archivos o hace click para elegirlos')}</span>
               <span class="attach-product-dropzone-hint">PDF, DOC, DOCX, TXT, MD</span>
             </div>
             <ul class="attach-product-file-list" hidden></ul>
           </div>
           <button type="button" class="attach-product-submit" data-action="submit-files">
             <i class="fas fa-magic" aria-hidden="true"></i>
-            <span>Analizar con Vera</span>
+            <span>${__('Analizar con Vera')}</span>
           </button>
         </section>
 
         <section class="attach-product-step attach-product-step--loading" data-panel="loading" hidden>
           <div class="attach-product-loading">
             <div class="attach-product-spinner" aria-hidden="true"></div>
-            <h4 class="attach-product-loading-title">Creando ficha del servicio</h4>
-            <p class="attach-product-loading-hint" data-loading-hint>Vera esta preparando la ficha del servicio. Te recargamos el listado en un momento.</p>
+            <h4 class="attach-product-loading-title">${__('Creando ficha del servicio')}</h4>
+            <p class="attach-product-loading-hint" data-loading-hint>${__('Vera esta preparando la ficha del servicio. Te recargamos el listado en un momento.')}</p>
           </div>
         </section>
       </div>
     `;
 
     const handle = window.Modal.show({
-      title: 'Adjuntar servicio',
+      title: __('Adjuntar servicio'),
       body,
       className: 'attach-product-modal',
     });
@@ -380,10 +380,10 @@ class ServicesView extends BaseView {
     }
 
     const stepConfig = {
-      picker:  { title: 'Adjuntar servicio',          icon: null,            back: false, backTo: null },
-      url:     { title: 'URL del servicio',           icon: 'fa-link',       back: true,  backTo: 'picker' },
-      attach:  { title: 'Adjuntar archivos',          icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
-      loading: { title: 'Creando ficha del servicio', icon: null,            back: false, backTo: null },
+      picker:  { title: __('Adjuntar servicio'),          icon: null,            back: false, backTo: null },
+      url:     { title: __('URL del servicio'),           icon: 'fa-link',       back: true,  backTo: 'picker' },
+      attach:  { title: __('Adjuntar archivos'),          icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
+      loading: { title: __('Creando ficha del servicio'), icon: null,            back: false, backTo: null },
     };
 
     const goToStep = (step) => {
@@ -416,13 +416,13 @@ class ServicesView extends BaseView {
     root.querySelector('[data-action="submit-url"]')?.addEventListener('click', async (e) => {
       const submitBtn = e.currentTarget;
       const value = (urlInput?.value || '').trim();
-      if (!value) { urlInput?.focus(); this._showNotification('Pega una URL primero', 'error'); return; }
+      if (!value) { urlInput?.focus(); this._showNotification(__('Pega una URL primero'), 'error'); return; }
       let parsed;
       try {
         parsed = new URL(value);
         if (!/^https?:$/.test(parsed.protocol)) throw new Error('protocol');
       } catch (_) {
-        urlInput?.focus(); this._showNotification('La URL no es valida', 'error'); return;
+        urlInput?.focus(); this._showNotification(__('La URL no es valida'), 'error'); return;
       }
       submitBtn.disabled = true;
       goToStep('loading');
@@ -434,13 +434,13 @@ class ServicesView extends BaseView {
       const submitBtn = e.currentTarget;
       const docFiles = Array.from(docs.input?.files || []);
       if (!docFiles.length) {
-        this._showNotification('Adjunta al menos un archivo', 'error');
+        this._showNotification(__('Adjunta al menos un archivo'), 'error');
         return;
       }
       submitBtn.disabled = true;
       goToStep('loading');
       const hint = root.querySelector('[data-loading-hint]');
-      if (hint) hint.textContent = `Guardando ${docFiles.length} archivo${docFiles.length === 1 ? '' : 's'} para procesamiento. Te redirigimos al detalle.`;
+      if (hint) hint.textContent = __('Guardando {n} {files} para procesamiento. Te redirigimos al detalle.', { n: docFiles.length, files: docFiles.length === 1 ? __('archivo') : __('archivos') });
       await this._createPendingService({
         files: docFiles.map((f) => ({ name: f.name, size: f.size, type: f.type })),
         modalHandle: handle,
@@ -509,16 +509,16 @@ class ServicesView extends BaseView {
 
   async _analyzeUrlAndCreateService({ url, hostname, modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification('Sesion no disponible', 'error');
+      this._showNotification(__('Sesion no disponible'), 'error');
       modalHandle?.close();
       return;
     }
     const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
     let serviceId = null;
     try {
-      setHint('Creando servicio inicial...');
+      setHint(__('Creando servicio inicial...'));
       const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error('No se pudo obtener una identidad para vincular el servicio');
+      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el servicio'));
       const { data: created, error: insertError } = await this.supabase
         .from('services')
         .insert({
@@ -584,13 +584,13 @@ class ServicesView extends BaseView {
 
   async _createPendingService({ files = null, modalHandle = null }) {
     if (!this.supabase || !this.organizationId) {
-      this._showNotification('Sesion no disponible', 'error');
+      this._showNotification(__('Sesion no disponible'), 'error');
       modalHandle?.close();
       return;
     }
     try {
       const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error('No se pudo obtener una identidad para vincular el servicio');
+      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el servicio'));
       const { error } = await this.supabase
         .from('services')
         .insert({
