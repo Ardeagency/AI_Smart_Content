@@ -202,6 +202,11 @@ class DateRangePicker {
 
   destroy() {
     if (this._docClick) { document.removeEventListener('click', this._docClick); this._docClick = null; }
+    if (this._reposition) {
+      window.removeEventListener('scroll', this._reposition, true);
+      window.removeEventListener('resize', this._reposition);
+      this._reposition = null;
+    }
     // Limpia un dropdown porteado de un mount/instancia previa (evita huerfanos en body).
     if (this._portalNode && this._portalNode.parentNode === document.body) {
       document.body.removeChild(this._portalNode);
@@ -334,21 +339,47 @@ class DateRangePicker {
     this._dropdown.classList.add('is-open');
     this._dropdown.setAttribute('aria-hidden', 'false');
     this._trigger?.setAttribute('aria-expanded', 'true');
-    // Posicion: anclada al trigger, clampeada al viewport (panel ancho).
-    if (this._trigger) {
-      const rect = this._trigger.getBoundingClientRect();
-      const dw = this._dropdown.offsetWidth || 540;
-      const vw = window.innerWidth;
-      let left = rect.left;
-      if (left + dw > vw - 12) left = Math.max(12, vw - dw - 12);
-      this._dropdown.style.left = left + 'px';
-      this._dropdown.style.top  = (rect.bottom + 6) + 'px';
-    }
     this._syncInputs(); this._syncPresets(); this._renderCalendar();
+    this._position();
+    // Reposiciona mientras esta abierto: sigue al trigger en scroll/resize y se
+    // cierra si el trigger sale de la vista (cualquier contenedor scrolleable).
+    this._reposition = () => {
+      if (!this._trigger || !this._dropdown) return;
+      const r = this._trigger.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (r.bottom < 0 || r.top > vh) { this._close(); return; }
+      this._position();
+    };
+    window.addEventListener('scroll', this._reposition, true);
+    window.addEventListener('resize', this._reposition);
+  }
+
+  /** Ancla el panel al trigger, clampeado al viewport, con flip arriba si no cabe. */
+  _position() {
+    if (!this._trigger || !this._dropdown) return;
+    const rect = this._trigger.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const dw = this._dropdown.offsetWidth || 540;
+    const dh = this._dropdown.offsetHeight || 360;
+    const gap = 6;
+    let left = rect.left;
+    if (left + dw > vw - 12) left = Math.max(12, vw - dw - 12);
+    // Por defecto abajo; si no cabe y arriba hay mas espacio, flip.
+    let top = rect.bottom + gap;
+    if (top + dh > vh - 12 && rect.top - gap - dh > 12) top = rect.top - gap - dh;
+    top = Math.max(12, Math.min(top, vh - dh - 12));
+    this._dropdown.style.left = left + 'px';
+    this._dropdown.style.top  = top + 'px';
   }
 
   _close() {
     if (!this._dropdown) return;
+    if (this._reposition) {
+      window.removeEventListener('scroll', this._reposition, true);
+      window.removeEventListener('resize', this._reposition);
+      this._reposition = null;
+    }
     this._dropdown.classList.remove('is-open');
     this._dropdown.setAttribute('aria-hidden', 'true');
     this._trigger?.setAttribute('aria-expanded', 'false');
