@@ -943,6 +943,7 @@ class StudioView extends BaseView {
               <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="fas fa-pen"></i><span>Editar</span></button>
               <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale"><i class="fas fa-expand-alt"></i><span>Mejorar 4K</span></button>
               <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background"><i class="fas fa-cut"></i><span>Sin fondo</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="change-ratio" data-kie-model="nano-banana-pro" aria-haspopup="true" aria-expanded="false"><i class="fas fa-crop-simple"></i><span>Cambiar ratio</span></button>
               <button type="button" class="pmodal-toolpill" data-tool="variations"><i class="fas fa-arrows-rotate"></i><span>Variar</span></button>
               <button type="button" class="pmodal-toolpill" data-tool="animate"><i class="fas fa-film"></i><span>Animar</span></button>
             </div>

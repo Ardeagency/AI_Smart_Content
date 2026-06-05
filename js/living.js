@@ -1497,6 +1497,7 @@ class LivingManager {
             image_upscale: 'Mejorado 4K',
             image_remove_bg: 'Fondo Eliminado',
             image_fix_text: 'Texto corregido',
+            image_reframe: 'Reencuadrado',
             video_generated: 'Video Studio'
         };
         if (KIND_LABELS[kind]) return KIND_LABELS[kind];
@@ -2554,6 +2555,8 @@ class LivingManager {
         }
         // Edit abre overlay: no lock aqui (el lock va en _applyEditOverlay).
         if (tool === 'edit') { this._openEditOverlay(); return; }
+        // Cambiar ratio abre un selector (no dispara directo): el lock va en _applyChangeRatio.
+        if (tool === 'change-ratio') { this._toggleRatioPicker(btn); return; }
 
         // Para click-directos (upscale/remove-bg/fix-text), lock al click + UI feedback.
         this._inflightToolbarOps.add(lockKey);
@@ -2570,6 +2573,158 @@ class LivingManager {
             case 'fix-text':  run(() => this._applyFixText()); break;
             default: release(); break;
         }
+    }
+
+    /**
+     * Selector de ratio (outpaint): popover sobre el toolbar con los formatos
+     * destino. Al elegir uno, _applyChangeRatio re-encuadra la imagen extendiendo
+     * la escena (no recorta) via nano-banana. Toggle: segundo click lo cierra.
+     */
+    _toggleRatioPicker(btn) {
+        const modal = document.getElementById('productionModal');
+        if (!modal) return;
+        const closePicker = () => {
+            modal.querySelector('.pmodal-ratio-picker')?.remove();
+            btn?.setAttribute('aria-expanded', 'false');
+            if (this._ratioOutsideHandler) {
+                document.removeEventListener('pointerdown', this._ratioOutsideHandler, true);
+                this._ratioOutsideHandler = null;
+            }
+        };
+        if (modal.querySelector('.pmodal-ratio-picker')) { closePicker(); return; }
+
+        // Solo aplica a imagenes (no video).
+        const video = document.getElementById('pmodalVideo');
+        if (video && !video.hidden) {
+            if (typeof window.showToast === 'function') window.showToast('Cambiar ratio solo aplica a imagenes');
+            return;
+        }
+
+        const RATIOS = [
+            { ar: '9:16', label: 'Vertical',   w: 9,  h: 16 },
+            { ar: '4:5',  label: 'Retrato',    w: 4,  h: 5  },
+            { ar: '1:1',  label: 'Cuadrado',   w: 1,  h: 1  },
+            { ar: '16:9', label: 'Horizontal', w: 16, h: 9  },
+            { ar: '3:2',  label: 'Apaisado',   w: 3,  h: 2  }
+        ];
+        const pop = document.createElement('div');
+        pop.className = 'pmodal-ratio-picker';
+        pop.setAttribute('role', 'menu');
+        pop.innerHTML = `
+            <div class="pmodal-ratio-head">Reencuadrar a</div>
+            <div class="pmodal-ratio-opts">
+                ${RATIOS.map(r => `
+                    <button type="button" class="pmodal-ratio-opt" role="menuitem" data-ratio="${r.ar}" title="${r.label} ${r.ar}">
+                        <span class="pmodal-ratio-glyph" style="--rw:${r.w};--rh:${r.h};"></span>
+                        <span class="pmodal-ratio-text"><strong>${r.label}</strong><em>${r.ar}</em></span>
+                    </button>`).join('')}
+            </div>`;
+        (modal.querySelector('.production-modal-visual') || modal).appendChild(pop);
+        btn?.setAttribute('aria-expanded', 'true');
+
+        pop.addEventListener('click', (e) => {
+            const opt = e.target.closest('[data-ratio]');
+            if (!opt) return;
+            const ratio = opt.getAttribute('data-ratio');
+            closePicker();
+            this._applyChangeRatio(ratio);
+        });
+        // Cerrar al click fuera (o al re-tocar el pill).
+        this._ratioOutsideHandler = (e) => {
+            if (e.target.closest('.pmodal-ratio-picker') || e.target.closest('[data-tool="change-ratio"]')) return;
+            closePicker();
+        };
+        setTimeout(() => document.addEventListener('pointerdown', this._ratioOutsideHandler, true), 0);
+    }
+
+    /**
+     * Reencuadra la imagen a un ratio destino extendiendo la escena (outpaint)
+     * via nano-banana. Mismo flujo que remove-bg: create → pending card →
+     * polling → persist. El backend (kie-image-reframe-create) recibe el ratio
+     * destino y un prompt de extension; nunca recorta al sujeto.
+     */
+    async _applyChangeRatio(targetRatio) {
+        const state = this._modalState || {};
+        const imageUrl = state.mediaUrl;
+        const sourceOutputId = state.outputId || null;
+        const lockKey = `change-ratio:${sourceOutputId || 'no-source'}`;
+        if (!this._inflightToolbarOps) this._inflightToolbarOps = new Set();
+        if (this._inflightToolbarOps.has(lockKey)) {
+            if (typeof window.showToast === 'function') window.showToast('Ya estamos reencuadrando esta imagen.');
+            return;
+        }
+        if (!imageUrl || !/^https?:\/\//i.test(imageUrl)) {
+            if (typeof window.showToast === 'function') window.showToast('No hay URL valida de la imagen original');
+            return;
+        }
+        if (!this.organizationId) {
+            if (typeof window.showToast === 'function') window.showToast('Falta organization_id');
+            return;
+        }
+        this._inflightToolbarOps.add(lockKey);
+        const release = () => this._inflightToolbarOps.delete(lockKey);
+
+        const sourceInfo = (await this._detectSourceProductInfo().catch(() => null)) || {};
+        if (typeof window.showToast === 'function') window.showToast(`Reencuadrando a ${targetRatio} — toma 20-40s`);
+
+        let createPayload;
+        try {
+            const accessToken = await this._getAccessToken();
+            if (!accessToken) throw new Error('No hay sesion activa');
+            const res = await fetch('/.netlify/functions/kie-image-reframe-create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                body: JSON.stringify({
+                    image_url: imageUrl,
+                    source_output_id: sourceOutputId,
+                    organization_id: this.organizationId,
+                    target_aspect_ratio: targetRatio
+                })
+            });
+            let parsed;
+            try { parsed = await res.json(); }
+            catch (_) {
+                const text = await res.text().catch(() => '');
+                throw new Error(`Gateway HTTP ${res.status}: ${text.slice(0, 200) || 'sin body'}`);
+            }
+            if (!res.ok) {
+                if (res.status === 402) throw new Error(`Creditos insuficientes (${parsed.credits_needed ?? '?'} cred)`);
+                throw new Error(parsed.error || `HTTP ${res.status}`);
+            }
+            createPayload = parsed;
+        } catch (err) {
+            console.error('[change-ratio] create error:', err);
+            if (typeof window.showToast === 'function') window.showToast(`No se pudo reencuadrar: ${err.message}`);
+            release();
+            return;
+        }
+
+        const clientId = `pending-reframe-${createPayload.taskId}`;
+        this.closeProductionModal?.();
+        this._addPendingEditCard({
+            clientId,
+            taskId: createPayload.taskId,
+            sourceImageUrl: imageUrl,
+            aspectRatio: targetRatio,
+            label: `Reencuadrando a ${targetRatio}`
+        });
+
+        Promise.resolve(this._runStandaloneKieOp({
+            clientId,
+            taskId: createPayload.taskId,
+            createPayload,
+            sourceOutputId,
+            sourceImageUrl: imageUrl,
+            aspectRatio: targetRatio,
+            sourceInfo,
+            kind: 'image_reframe',
+            downloadKind: 'reframe',
+            successLabel: `Imagen reencuadrada a ${targetRatio} en el grid`,
+            failLabel: 'Reencuadre fallo',
+            buildModels: (cp) => ({ editor: cp.kie_model || null, prompter: null }),
+            buildTechnicalParams: (cp, ar) => ({ output_format: 'png', aspect_ratio: ar }),
+            buildMetadataExtras: () => ({ reframed_to: targetRatio })
+        })).finally(release);
     }
 
     /**

@@ -183,6 +183,7 @@ exports.handler = async (event) => {
     edit: 'image-edits',
     upscale: 'image-upscales',
     'remove-bg': 'image-remove-bg',
+    reframe: 'image-reframes',
     variations: 'image-variations'
   };
   const folder = folderMap[kind] || 'image-edits';

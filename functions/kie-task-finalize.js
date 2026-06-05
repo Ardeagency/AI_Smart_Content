@@ -53,6 +53,7 @@ const MARKUP_BY_KIND = {
   image_fix_text: Number(process.env.OPENAI_OPS_MARKUP_USD || 3),
   image_upscale: 0,
   image_remove_bg: 0,
+  image_reframe: 0, // outpaint nano-banana, KIE-only (prompt server-side, sin OpenAI)
   video_generated: Number(process.env.VIDEO_MARKUP_USD || 5)
 };
 
