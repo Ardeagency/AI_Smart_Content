@@ -635,23 +635,45 @@
       const reg = (c) => this._reg(c);
       const mk = (id, cfg) => { const cv = document.getElementById(id); if (!cv) return; try { reg(new Chart(cv, cfg)); } catch (e) { console.warn('[long chart]', id, e?.message); } };
 
-      // Gradiente horizontal arcoiris (azul->morado->magenta->rojo) scriptable:
-      // usa el ancho real del area de plot (disponible tras el layout).
-      const rainbowStops = (g, alpha) => {
-        const a = (c) => alpha == null ? c : c.replace('rgb(', 'rgba(').replace(')', `,${alpha})`);
-        g.addColorStop(0, a('rgb(0,99,255)')); g.addColorStop(0.34, a('rgb(129,74,200)'));
-        g.addColorStop(0.67, a('rgb(255,0,77)')); g.addColorStop(1, a('rgb(255,92,35)'));
+      // Colores del degradado dinamico de la marca (los mismos que inyecta
+      // OrgBrandTheme desde brand_colors). Fallback: parsear --brand-gradient-dynamic,
+      // y si no hay nada, el arcoiris estatico (azul->morado->magenta->naranja).
+      const brandHexes = (() => {
+        try {
+          const fromTheme = window.OrgBrandTheme?.getLastBrandHexes?.() || [];
+          if (fromTheme.length >= 2) return fromTheme.slice(0, 4);
+          const cs = getComputedStyle(document.documentElement);
+          const grad = (cs.getPropertyValue('--brand-gradient-dynamic') ||
+                        cs.getPropertyValue('--brand-gradient') || '').trim();
+          const m = grad.match(/#[0-9a-fA-F]{6,8}/g);
+          if (m && m.length >= 2) return m.slice(0, 4);
+        } catch (_) { /* noop */ }
+        return ['#0063FF', '#814AC8', '#FF004D', '#FF5C23'];
+      })();
+      const hexToRgba = (hex, alpha) => {
+        let h = hex.replace('#', '');
+        if (h.length === 8) h = h.slice(0, 6);
+        if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+        const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+        return alpha == null ? `rgb(${r},${g},${b})` : `rgba(${r},${g},${b},${alpha})`;
+      };
+
+      // Gradiente horizontal de marca scriptable: reparte los hex de marca a lo
+      // largo del area de plot (ancho real disponible tras el layout).
+      const brandStops = (g, alpha) => {
+        const n = brandHexes.length;
+        brandHexes.forEach((hex, i) => g.addColorStop(n === 1 ? 0 : i / (n - 1), hexToRgba(hex, alpha)));
         return g;
       };
-      const rainbowLine = (cxt) => { const ch = cxt.chart; const { ctx, chartArea } = ch; if (!chartArea) return '#5b9bd5'; return rainbowStops(ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0)); };
-      const rainbowFill = (cxt) => { const ch = cxt.chart; const { ctx, chartArea } = ch; if (!chartArea) return 'rgba(91,155,213,0.12)'; return rainbowStops(ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0), 0.16); };
+      const brandLine = (cxt) => { const ch = cxt.chart; const { ctx, chartArea } = ch; if (!chartArea) return brandHexes[0]; return brandStops(ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0)); };
+      const brandFill = (cxt) => { const ch = cxt.chart; const { ctx, chartArea } = ch; if (!chartArea) return hexToRgba(brandHexes[0], 0.16); return brandStops(ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0), 0.16); };
 
-      // 1. Historial de actividad (posts por periodo) — linea con degradado arcoiris
+      // 1. Historial de actividad (posts por periodo) — linea con degradado de marca
       const actLabels = act.map((r) => r.period_label);
       mk('mbLongActivity', { type: 'line', data: { labels: actLabels, datasets: [{
         label: 'Posts', data: act.map((r) => Number(r.posts_count) || 0),
-        borderColor: rainbowLine, backgroundColor: rainbowFill, fill: true, tension: 0.4, borderWidth: 2.5,
-        pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: '#FF004D',
+        borderColor: brandLine, backgroundColor: brandFill, fill: true, tension: 0.4, borderWidth: 2.5,
+        pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: brandHexes[brandHexes.length - 1],
       }] }, options: baseOpts() });
 
       // 2. Tendencia de engagement
