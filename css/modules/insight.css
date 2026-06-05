@@ -2759,40 +2759,6 @@
   .mb-layout-aside { position: static; }
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   Patrones de tu publico — resonancia emocional (filas)
-   ════════════════════════════════════════════════════════════════════ */
-.mb-aud-list { display: flex; flex-direction: column; gap: 0.5rem; }
-.mb-aud-row {
-  display: grid;
-  grid-template-columns: minmax(160px, 1.2fr) 2fr minmax(150px, auto);
-  align-items: center; gap: 1rem;
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider, #242424);
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
-}
-.mb-aud-row--clickable { cursor: pointer; transition: border-color 0.15s ease; }
-.mb-aud-row--clickable:hover { border-color: rgba(255,255,255,0.18); }
-.mb-aud-row--clickable:focus-visible { outline: 2px solid var(--accent-brand, rgba(255,255,255,0.4)); outline-offset: 2px; }
-.mb-aud-name { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
-.mb-aud-emotion { font-size: 0.875rem; font-weight: 600; color: var(--text-primary, #D4D1D8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mb-aud-count { font-size: 0.625rem; color: var(--text-muted, rgba(212,209,216,0.5)); }
-.mb-aud-bar { position: relative; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; }
-.mb-aud-bar::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: rgba(255,255,255,0.22); }
-.mb-aud-bar > span { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
-.mb-aud-row--up   .mb-aud-bar > span { left: 50%; background: #6bcf7f; }
-.mb-aud-row--down .mb-aud-bar > span { right: 50%; background: #e0a045; }
-.mb-aud-stats { display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem; font-variant-numeric: tabular-nums; }
-.mb-aud-lift { font-size: 0.75rem; font-weight: 700; padding: 0.12rem 0.45rem; border-radius: 6px; }
-.mb-aud-lift--up   { color: #6bcf7f; background: rgba(107,207,127,0.14); }
-.mb-aud-lift--down { color: #e0a045; background: rgba(224,160,69,0.14); }
-.mb-aud-pos { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
-
-@media (max-width: 620px) {
-  .mb-aud-row { grid-template-columns: 1fr; gap: 0.5rem; }
-  .mb-aud-stats { justify-content: flex-start; }
-}
 
 /* ════════════════════════════════════════════════════════════════════
    Actividad (ritmo propio) + Pilares narrativos
@@ -2857,43 +2823,6 @@
   .mb-pil-row { grid-template-columns: 1fr; gap: 0.5rem; }
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   Tu publico efectivo — geo + captacion
-   ════════════════════════════════════════════════════════════════════ */
-.mb-eff-card {
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider, #242424);
-  border-radius: 14px;
-  padding: 1.2rem 1.35rem;
-  display: flex; flex-direction: column; gap: 1.1rem;
-}
-.mb-eff-top { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
-.mb-eff-capture { display: flex; flex-direction: column; gap: 0.1rem; }
-.mb-eff-capture-label { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
-.mb-eff-capture-level { font-size: 1.5rem; font-weight: 700; line-height: 1; letter-spacing: -0.01em; }
-.mb-eff-summary { display: flex; flex-direction: column; gap: 0.15rem; }
-.mb-eff-total { font-size: 1.1rem; font-weight: 700; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
-.mb-eff-total-unit { font-size: 0.75rem; font-weight: 400; color: var(--text-muted, rgba(212,209,216,0.55)); }
-.mb-eff-obj { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); }
-
-.mb-eff-geo-block { display: flex; flex-direction: column; gap: 0.55rem; }
-.mb-eff-geo-title { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
-.mb-eff-geos { display: flex; flex-direction: column; gap: 0.4rem; }
-.mb-eff-geo { display: grid; grid-template-columns: minmax(120px, 1fr) 2.2fr minmax(110px, auto); align-items: center; gap: 0.85rem; }
-.mb-eff-geo-name { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); white-space: nowrap; }
-.mb-eff-geo-bar { height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
-.mb-eff-geo-bar > span { display: block; height: 100%; background: #6bcf7f; border-radius: 4px; }
-.mb-eff-geo-val { font-size: 0.6875rem; color: var(--text-secondary, rgba(212,209,216,0.82)); font-variant-numeric: tabular-nums; text-align: right; }
-.mb-eff-geo--zero .mb-eff-geo-name { color: var(--text-muted, rgba(212,209,216,0.5)); }
-.mb-eff-geo--zero .mb-eff-geo-val { color: #e06464; }
-
-.mb-eff-atrae { margin: 0; padding-top: 0.9rem; border-top: 1px solid var(--border-divider, #242424); font-size: 0.8125rem; color: var(--text-secondary, rgba(212,209,216,0.82)); line-height: 1.45; }
-.mb-eff-atrae b { color: var(--text-primary, #D4D1D8); font-weight: 600; }
-
-@media (max-width: 620px) {
-  .mb-eff-geo { grid-template-columns: 1fr; gap: 0.3rem; }
-  .mb-eff-geo-val { text-align: left; }
-}
 
 /* ════════════════════════════════════════════════════════════════════
    Tu plan de accion — Explota / Optimiza / Elimina (resumen ejecutivo)
@@ -2974,25 +2903,6 @@
 .mb-plan-vital-lbl { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
 
 @media (max-width: 760px) { .mb-plan-grid { grid-template-columns: 1fr; } .mb-plan-vitals { grid-template-columns: 1fr; } .mb-plan-vital { border-right: 0; border-bottom: 1px solid var(--dash-line, rgba(255,255,255,0.08)); } .mb-plan-vital:last-child { border-bottom: 0; } }
-
-/* ════════════════════════════════════════════════════════════════════
-   Evolucion — impacto social en el tiempo (sparkline + veredicto)
-   ════════════════════════════════════════════════════════════════════ */
-.mb-evo-card {
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider, #242424);
-  border-radius: 14px;
-  padding: 1.1rem 1.25rem;
-  display: flex; flex-direction: column; gap: 0.85rem;
-}
-.mb-evo-top { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-.mb-evo-verdict { font-size: 1rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; }
-.mb-evo-verdict i { font-size: 0.875rem; }
-.mb-evo-chg { font-variant-numeric: tabular-nums; }
-.mb-evo-range { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.5)); font-variant-numeric: tabular-nums; }
-.mb-evo-spark { width: 100%; }
-.mb-evo-spark svg { display: block; }
-.mb-evo-summary { margin: 0; font-size: 0.8125rem; line-height: 1.45; color: var(--text-secondary, rgba(212,209,216,0.82)); }
 
 /* ════════════════════════════════════════════════════════════════════
    COMPETENCIA — campo de batalla + voz de audiencia + vulnerabilidades
@@ -3182,9 +3092,6 @@
 .mb-heat-cell--l4, .mb-heat-dot--l4 { background: #7c83ff; }
 .mb-heat-axis { display: flex; justify-content: space-between; padding-left: 32px; font-size: 0.5625rem; color: var(--text-muted, rgba(212,209,216,0.45)); }
 
-/* Choropleth de publico efectivo (window.AudienceMap) */
-.mb-eff-map { position: relative; height: 210px; margin: 0.5rem 0 0.85rem; }
-@media (max-width: 480px) { .mb-eff-map { height: auto; } }
 
 /* Titulo dentro de la card (reemplaza el header flotante .mb-section-head).
    Sin descripcion: solo el titulo, arriba a la izquierda sobre el fondo de card. */
@@ -3193,8 +3100,6 @@
   color: var(--text-primary, #D4D1D8); margin: 0 0 1rem;
 }
 /* En cards flex (gap propio) el margen sobra: el gap separa titulo y contenido. */
-.mb-eff-card > .mb-card-title,
-.mb-evo-card > .mb-card-title,
 .mb-act-card > .mb-card-title { margin-bottom: 0; }
 
 /* Card de grafico: superficie estandar para que todos los charts del cuerpo
@@ -3234,8 +3139,6 @@
 .mb-lev-col--pos .mb-lev-bar { background: #6bcf7f; }
 .mb-lev-empty { font-size: 0.75rem; color: var(--text-muted, rgba(212,209,216,0.5)); padding: 0.2rem 0.3rem; }
 
-/* Radar "huella emocional" de Patrones de tu publico */
-.mb-aud-radar { position: relative; height: 290px; max-width: 440px; margin: 0.4rem auto 0; }
 
 /* Pilares de contenido — estilo "stage flow": una card con header + filas de
    stage (acento+icono+titulo/subtitulo+badge), conectores y footer resumen. */
@@ -3734,9 +3637,7 @@
 .insight-page .tend-gap-card,
 .insight-page .tend-brand-card,
 .insight-page .strat-card,
-.insight-page .mb-act-card,
-.insight-page .mb-eff-card,
-.insight-page .mb-evo-card {
+.insight-page .mb-act-card {
   background-image: var(--dash-sheen);
   box-shadow: var(--dash-elev);
 }
@@ -3792,20 +3693,15 @@
 /* ── Barras → mono (el numero/delta lleva el significado, no la barra) ── */
 .insight-page .mb-causal-card--boost .mb-causal-bar > span,
 .insight-page .mb-causal-card--drag  .mb-causal-bar > span,
-.insight-page .mb-aud-row--up   .mb-aud-bar > span,
-.insight-page .mb-aud-row--down  .mb-aud-bar > span,
 .insight-page .mb-hc-bar-fill--good,
 .insight-page .mb-hc-bar-fill--mid,
 .insight-page .mb-hc-bar-fill--low,
-.insight-page .mb-pil-bar > span,
-.insight-page .mb-eff-geo-bar > span { background: var(--dash-bar); }
+.insight-page .mb-pil-bar > span { background: var(--dash-bar); }
 
 /* ── Deltas → texto en tono apagado, sin pildora de fondo ── */
 .insight-page .mb-causal-lift--up,
-.insight-page .mb-aud-lift--up,
 .insight-page .mb-pil-lift--up   { color: var(--dash-pos);  background: transparent; padding: 0.12rem 0; }
 .insight-page .mb-causal-lift--down,
-.insight-page .mb-aud-lift--down,
 .insight-page .mb-pil-lift--down { color: var(--dash-warn); background: transparent; padding: 0.12rem 0; }
 
 /* ── Neutralizacion de colores saturados compartidos ── */

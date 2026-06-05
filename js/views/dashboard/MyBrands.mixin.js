@@ -63,8 +63,6 @@
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
         this._renderLongitudinalCharts(data);
-        this._renderAudienceMap(data);
-        this._renderAudienceRadar(data);
         this._renderPillarsBubble(data);
       } catch (e) {
         console.error('[MyBrands] loadAll failed:', e);
@@ -122,8 +120,6 @@
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
         this._renderLongitudinalCharts(data);
-        this._renderAudienceMap(data);
-        this._renderAudienceRadar(data);
         this._renderPillarsBubble(data);
       } catch (e) {
         if (onMyBrands && body) body.innerHTML = this._buildMyBrandsErrorHtml(e);
@@ -449,61 +445,6 @@
           <div class="mb-heat-grid">${rowsHtml}</div>
           <div class="mb-heat-axis"><span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>11p</span></div>
         </div>`;
-    },
-
-    /** Choropleth de "Tu publico efectivo" — reusa window.AudienceMap (por pais). */
-    async _renderAudienceMap(data) {
-      const el = document.getElementById('mbEffMap');
-      if (!el) return;
-      if (typeof window.AudienceMap?.render !== 'function') { el.style.display = 'none'; return; }
-      const geo = data?.audienceEffective?.data?.geo;
-      const dist = {};
-      (Array.isArray(geo) ? geo : []).forEach((g) => {
-        const cc = g.country, v = Number(g.conversions) || 0;
-        if (cc && /^[A-Z]{2}$/.test(cc) && v > 0) dist[cc] = (dist[cc] || 0) + v;
-      });
-      if (!Object.keys(dist).length) { el.style.display = 'none'; return; }
-      el.style.display = '';
-      el.innerHTML = '';
-      try { await window.AudienceMap.render(el, dist); } catch (_) {}
-    },
-
-    /** Radar "huella emocional" — resonancia por emocion (50 = tu promedio). */
-    async _renderAudienceRadar(data) {
-      const el = document.getElementById('mbAudienceRadar');
-      if (!el) return;
-      const list = (Array.isArray(data?.audiencePatterns?.data) ? data.audiencePatterns.data : [])
-        .filter((r) => r.is_emotional && r.emotion && r.emotion !== 'emoción').slice(0, 8);
-      if (list.length < 3) return;
-      try { await this._ensureChartJs(); } catch (_) {}
-      const Chart = window.Chart; if (!Chart) return;
-      const labels = list.map((r) => this._causalValueLabel('emo', r.emotion));
-      const idx = list.map((r) => { const lift = Number(r.lift_pct) || 0; return Math.max(0, Math.min(100, Math.round(50 * (1 + lift / 100)))); });
-      const TICK = 'rgba(212,209,216,0.65)', GRID = 'rgba(255,255,255,0.06)';
-      try {
-        this._reg(new Chart(el.getContext('2d'), {
-          type: 'radar',
-          data: { labels, datasets: [
-            { label: 'Tu promedio', data: labels.map(() => 50), borderColor: 'rgba(255,255,255,0.22)', borderDash: [4, 4], borderWidth: 1, pointRadius: 0, fill: false },
-            { label: 'Resonancia', data: idx, borderColor: '#7c83ff', backgroundColor: 'rgba(124,131,255,0.18)', borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: '#7c83ff', fill: true },
-          ] },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: '#1b1d22', borderColor: '#34363A', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10,
-                filter: (it) => it.datasetIndex === 1,
-                callbacks: {
-                  title: (items) => items[0]?.label || '',
-                  label: (c) => { const r = list[c.dataIndex]; const lift = Math.round(Number(r.lift_pct) || 0); const pos = Math.round((Number(r.pos_ratio) || 0) * 100); return `${lift >= 0 ? '+' : ''}${lift}% vs tu promedio · ${pos}% positivo`; },
-                },
-              },
-            },
-            scales: { r: { min: 0, max: 100, grid: { color: GRID }, angleLines: { color: GRID }, pointLabels: { color: TICK, font: { size: 10 } }, ticks: { display: false, stepSize: 25 } } },
-          },
-        }));
-      } catch (e) { console.warn('[audience radar]', e?.message); }
     },
 
     /** Matriz de oportunidad (bubble de cuadrantes) — uso (x) vs rendimiento (y). */
@@ -840,184 +781,6 @@
       let dots = '';
       for (let k = 0; k < 10; k++) dots += `<span class="mb-tp-dot${k < f ? ' mb-tp-dot--on' : ''}"></span>`;
       return `<div class="mb-tp-dots" aria-hidden="true">${dots}</div>`;
-    },
-
-    /* Seccion "Patrones de tu publico": resonancia emocional del contenido.
-       Que emocion despierta tu contenido y como responde tu audiencia. */
-    _buildAudienceSection(rows) {
-      // Filtra el label basura 'emoción' del clasificador.
-      const list = (Array.isArray(rows) ? rows : []).filter((r) => r.emotion && r.emotion !== 'emoción');
-      if (!list.length) {
-        if (shouldHideEmpty()) return '';
-        return '';
-      }
-      // Radar ("huella emocional") si hay >=3 emociones; si no, lista fallback.
-      const emo = list.filter((r) => r.is_emotional && r.emotion);
-      const body = emo.length >= 3
-        ? `<div class="mb-aud-radar"><canvas id="mbAudienceRadar"></canvas></div>`
-        : `<div class="mb-aud-list">${list.map((r) => this._buildAudienceRow(r)).join('')}</div>`;
-      return `
-        <section class="mb-section">
-          <div class="mb-chart-card">
-            <div class="mb-card-title">Patrones de tu publico</div>
-            ${body}
-          </div>
-        </section>`;
-    },
-
-    _buildAudienceRow(r) {
-      const emotional = r.is_emotional === true;
-      const lift = Math.round(Number(r.lift_pct) || 0);
-      const isUp = lift >= 0;
-      const pos  = Number.isFinite(Number(r.pos_ratio)) ? Math.round(Number(r.pos_ratio) * 100) : null;
-      const n    = Number(r.post_count) || 0;
-      const name = emotional
-        ? this._causalValueLabel('emo', r.emotion)
-        : 'Contenido sin carga emocional';
-      // Barra de resonancia desde el centro (vs tu promedio).
-      const barW = Math.min(50, Math.abs(lift) / 4);
-      const clickable = emotional;
-      const dataAttrs = clickable
-        ? `data-feat-detail data-dim="emotion" data-value="${this._esc(r.emotion)}" data-title="Patrones de tu publico: ${this._esc(name)}" role="button" tabindex="0"`
-        : '';
-      return `
-        <div class="mb-aud-row${clickable ? ' mb-aud-row--clickable' : ''} mb-aud-row--${isUp ? 'up' : 'down'}" ${dataAttrs}>
-          <div class="mb-aud-name">
-            <span class="mb-aud-emotion">${this._esc(name)}</span>
-            <span class="mb-aud-count">${n} ${n === 1 ? 'post' : 'posts'}</span>
-          </div>
-          <div class="mb-aud-bar"><span style="width:${barW}%;"></span></div>
-          <div class="mb-aud-stats">
-            <span class="mb-aud-lift mb-aud-lift--${isUp ? 'up' : 'down'}">${isUp ? '▲ +' : '▼ '}${lift}%</span>
-            ${pos != null ? `<span class="mb-aud-pos">${pos}% positivo</span>` : ''}
-          </div>
-        </div>`;
-    },
-
-    /* ── Tu publico efectivo: a quien estas convirtiendo (geo + captacion) ── */
-    _buildEffectiveAudienceSection(e, insights) {
-      if (!e || e.capture_level === 'sin_datos' || !Number(e.total_conversions)) {
-        if (shouldHideEmpty()) return '';
-        return '';
-      }
-      const levelMeta = {
-        alta:  { color: '#6e9f81', label: 'Alta' },
-        media: { color: '#9c8e6b', label: 'Media' },
-        baja:  { color: '#b3796f', label: 'Baja' },
-      }[e.capture_level] || { color: '#8a8a8e', label: e.capture_level };
-
-      const objLabel = {
-        OUTCOME_LEADS: 'Leads / Formularios',
-        OUTCOME_SALES: 'Ventas',
-        OUTCOME_TRAFFIC: 'Tráfico',
-        OUTCOME_ENGAGEMENT: 'Interacción',
-        OUTCOME_AWARENESS: 'Reconocimiento',
-      }[e.objective] || (e.objective ? this._humanizeMission?.(e.objective) || e.objective : null);
-
-      const geo = Array.isArray(e.geo) ? e.geo : [];
-      const flag = (cc) => cc === 'CO' ? '🇨🇴' : cc === 'MX' ? '🇲🇽' : '📍';
-      const geoRows = geo.map((g) => {
-        const conv = Number(g.conversions) || 0;
-        const share = Math.max(0, Number(g.share_pct) || 0);
-        const zero = conv === 0;
-        return `
-          <div class="mb-eff-geo${zero ? ' mb-eff-geo--zero' : ''}">
-            <span class="mb-eff-geo-name">${flag(g.country)} ${this._esc(this._causalValueLabel('loc', g.location))}</span>
-            <div class="mb-eff-geo-bar"><span style="width:${zero ? 0 : Math.max(4, share)}%;"></span></div>
-            <span class="mb-eff-geo-val">${zero ? 'no convierte' : `${this._compactNum(conv)} · ${share}%`}</span>
-          </div>`;
-      }).join('');
-
-      // Lo que los atrae: top boost de tono + tema de la seccion causal.
-      const boosts = (Array.isArray(insights) ? insights : []).filter((i) => i.kind === 'boost');
-      const tono = boosts.find((i) => i.dimension === 'tono')?.value;
-      const tema = boosts.find((i) => i.dimension === 'tema')?.value;
-      const atrae = (tono || tema)
-        ? `Lo que mejor los atrae: ${tono ? `tono <b>${this._esc(this._causalValueLabel('tono', tono))}</b>` : ''}${tono && tema ? ' + ' : ''}${tema ? `tema <b>${this._esc(this._causalValueLabel('tema', tema))}</b>` : ''}`
-        : '';
-
-      return `
-        <section class="mb-section">
-          <div class="mb-eff-card">
-            <div class="mb-card-title">Tu publico efectivo</div>
-            <div class="mb-eff-top">
-              <div class="mb-eff-capture">
-                <span class="mb-eff-capture-label">Captacion</span>
-                <span class="mb-eff-capture-level" style="color:${levelMeta.color};">${this._esc(levelMeta.label)}</span>
-              </div>
-              <div class="mb-eff-summary">
-                <span class="mb-eff-total">${this._compactNum(e.total_conversions)} <span class="mb-eff-total-unit">leads reales</span></span>
-                ${objLabel ? `<span class="mb-eff-obj">Objetivo: ${this._esc(objLabel)}</span>` : ''}
-              </div>
-            </div>
-            <div class="mb-eff-geo-block">
-              <span class="mb-eff-geo-title">Donde conviertes</span>
-              <div class="mb-eff-map" id="mbEffMap"></div>
-              <div class="mb-eff-geos">${geoRows}</div>
-            </div>
-            ${atrae ? `<p class="mb-eff-atrae">${atrae}</p>` : ''}
-          </div>
-        </section>`;
-    },
-
-    /* ── Evolucion: impacto social en el tiempo (la pelicula) ─────────── */
-    _buildEvolutionSection(e) {
-      const series = Array.isArray(e?.series) ? e.series : [];
-      if (!e || e.verdict === 'sin_datos' || series.length < 2) {
-        if (shouldHideEmpty()) return '';
-        return '';
-      }
-      const meta = {
-        mejorando: { color: '#6e9f81', label: 'Mejorando', icon: 'fas fa-arrow-trend-up' },
-        estable:   { color: '#8a8a8e', label: 'Estable',   icon: 'fas fa-arrows-left-right' },
-        cayendo:   { color: '#b3796f', label: 'Cayendo',   icon: 'fas fa-arrow-trend-down' },
-      }[e.verdict] || { color: '#8a8a8e', label: e.verdict, icon: 'fas fa-chart-line' };
-
-      const chg = Number(e.impact_change_pct);
-      const sentChg = Number(e.sentiment_change_pts);
-      const chgStr = Number.isFinite(chg) ? `${chg >= 0 ? '+' : ''}${chg}%` : '';
-      const summary = e.verdict === 'mejorando'
-        ? `Tu impacto viene subiendo (${chgStr}) frente a tus inicios${Number.isFinite(sentChg) && sentChg !== 0 ? ` · sentimiento ${sentChg >= 0 ? '+' : ''}${sentChg} pts` : ''}.`
-        : e.verdict === 'cayendo'
-        ? `Tu impacto viene cayendo (${chgStr}) frente a tus inicios. Revisa que cambiaste.`
-        : `Tu impacto se mantiene estable en el tiempo.`;
-
-      return `
-        <section class="mb-section mb-section--wide">
-          <div class="mb-evo-card">
-            <div class="mb-card-title">Evolucion</div>
-            <div class="mb-evo-top">
-              <span class="mb-evo-verdict" style="color:${meta.color};"><i class="${meta.icon}"></i> ${this._esc(meta.label)} ${chgStr ? `<span class="mb-evo-chg">${chgStr}</span>` : ''}</span>
-              <span class="mb-evo-range">${this._esc(series[0].period)} → ${this._esc(series[series.length - 1].period)} · ${e.months} ${e.months === 1 ? 'mes' : 'meses'} con data</span>
-            </div>
-            ${this._buildEvolutionSpark(series, meta.color)}
-            <p class="mb-evo-summary">${this._esc(summary)}</p>
-          </div>
-        </section>`;
-    },
-
-    /** Sparkline SVG de la serie de impacto en el tiempo. */
-    _buildEvolutionSpark(series, color) {
-      const vals = series.map((s) => Number(s.impact) || 0);
-      const max = Math.max(...vals, 0.001);
-      const W = 600, H = 60, pad = 4;
-      const n = vals.length;
-      const pts = vals.map((v, i) => {
-        const x = pad + (n === 1 ? 0 : (i / (n - 1)) * (W - pad * 2));
-        const y = H - pad - (v / max) * (H - pad * 2);
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      });
-      const dots = vals.map((v, i) => {
-        const [x, y] = pts[i].split(',');
-        return `<circle cx="${x}" cy="${y}" r="2.2" fill="${color}"/>`;
-      }).join('');
-      return `
-        <div class="mb-evo-spark">
-          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" width="100%" height="60" aria-label="Evolucion de impacto">
-            <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-            ${dots}
-          </svg>
-        </div>`;
     },
 
     /* ── Actividad: ritmo de publicacion propio en el tiempo ──────────── */
