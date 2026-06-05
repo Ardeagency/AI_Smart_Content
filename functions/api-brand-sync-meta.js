@@ -769,9 +769,10 @@ exports.handler = async (event) => {
         ago90.toISOString().slice(0, 10), now.toISOString().slice(0, 10));
       summary.snapshots_updated++;
 
-      // ── Build + upsert heatmap ──────────────────────────────────────────
+      // ── Build + upsert heatmap (defensivo: no debe abortar el sync de posts) ──
       const heatmap = buildHeatmap(allPosts, igOnlineFollowers);
-      await upsertHeatmap(env, brand_container_id, heatmap, igAudience);
+      await upsertHeatmap(env, brand_container_id, heatmap, igAudience)
+        .catch(e => console.warn('[sync] heatmap upsert:', e?.message));
 
       summary.pages_synced++;
     }
