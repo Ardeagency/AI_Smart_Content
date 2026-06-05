@@ -205,7 +205,12 @@ class CampanasDataService {
       // Widgets nuevos: temas (mirror de tonos), top posts, comportamiento de
       // publico (personas) y analisis de comentarios.
       this.sb.rpc('dashboard_estrategia_topics',          { ...featuredArgs, p_limit: 5 }),
-      this.sb.rpc('dashboard_brand_top_highlighted_posts', { ...featuredArgs, p_limit: 10 }),
+      // Top publicaciones destacadas: SIEMPRE las de mayor impacto social de todo
+      // el historial (no se recorta por el filtro de fecha del dashboard) — es una
+      // vitrina del mejor contenido, no un listado del periodo.
+      this.sb.rpc('dashboard_brand_top_highlighted_posts', {
+        ...featuredArgs, p_date_from: '2000-01-01T00:00:00Z', p_date_to: new Date().toISOString(), p_limit: 10,
+      }),
       this.sb.rpc('dashboard_mimarca_audience_behavior',  { p_org_id: this.orgId, p_brand_container_ids: bcids }),
       this.sb.rpc('dashboard_mimarca_comments', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
