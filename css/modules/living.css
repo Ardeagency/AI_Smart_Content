@@ -1831,7 +1831,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     font-size: 0.68rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--pmodal-accent-warm);
+    color: rgba(255, 255, 255, 0.6);
     font-weight: 700;
 }
 .pmodal-prompt-block-copy {
