@@ -2834,9 +2834,9 @@
 @media (max-width: 1100px) { .mb-plan-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .mb-plan-col {
   position: relative; overflow: hidden;
-  /* glass-black: sobre el degradado del hero deja pasar un toque del fondo,
-     igual que el strip de KPIs en vidrio. */
-  background: var(--glass-black-bg, rgba(11, 11, 11, 0.55));
+  /* glass-black mas solido sobre el degradado del hero (opacidad subida para que
+     las cards no se transparenten tanto). Sigue dejando pasar un toque del fondo. */
+  background: rgba(11, 11, 11, 0.85);
   border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   backdrop-filter: blur(24px) saturate(140%);
   -webkit-backdrop-filter: blur(24px) saturate(140%);
@@ -3806,11 +3806,11 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
    la derecha. Las acciones solo aplican a Mi Marca → ocultas en otros tabs. */
 .dash-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem 1.5rem; flex-wrap: wrap; }
 .dash-hero-headings { min-width: 0; }
-.dash-hero-actions { flex-shrink: 0; position: relative; z-index: 5; }
+.dash-hero-actions { flex-shrink: 0; position: relative; z-index: 5; margin-top: clamp(1.1rem, 2.5vw, 1.5rem); }
 .dash-hero:not([data-tab="my-brands"]) .dash-hero-actions { display: none; }
 /* La barra de filtros heredada (living-history-filters) sobre el degradado:
    alinea a la derecha y da legibilidad a labels claros. */
-.dash-hero-actions .mb-filters-bar { margin: 0; padding: 0; background: none; border: 0; flex-wrap: wrap; justify-content: flex-end; }
+.dash-hero-actions .mb-filters-bar { margin: 0; padding: 0; background: none; border: 0; flex-wrap: wrap; justify-content: flex-start; }
 .dash-hero-actions .living-filter-label { color: rgba(255, 255, 255, 0.85); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); }
 
 .dash-hero-title {

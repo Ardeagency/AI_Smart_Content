@@ -20,7 +20,7 @@
   const ORG = '^/org/[^/]+/[^/]+';
 
   const ROUTE_LABELS = [
-    [new RegExp(`${ORG}/dashboard$`),                          'Dashboard'],
+    [new RegExp(`${ORG}/dashboard$`),                          'Analisis de la Marca'],
     [new RegExp(`${ORG}/production$`),                         'Production'],
     [new RegExp(`${ORG}/monitoring$`),                         'Monitoring'],
     [new RegExp(`${ORG}/tasks(/.+)?$`),                        'Tasks'],
@@ -46,7 +46,7 @@
     [/^\/signin$/,                                             'Sign in'],
     [/^\/cambiar-contrasena$/,                                 'Cambiar contraseña'],
 
-    [/^\/dashboard$/,                                          'Dashboard'],
+    [/^\/dashboard$/,                                          'Analisis de la Marca'],
     [/^\/production$/,                                         'Production'],
     [/^\/monitoring$/,                                         'Monitoring'],
     [/^\/tasks(\/.+)?$/,                                       'Tasks'],

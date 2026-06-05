@@ -430,12 +430,12 @@ class DashboardView extends BaseView {
               <h1 class="dash-hero-title" id="dashHeroTitle"><strong>${this._esc(copy.strong)}</strong>${light}</h1>
               <p class="dash-hero-desc" id="dashHeroDesc">${this._esc(copy.desc)}</p>
             </div>
-            ${actions}
           </div>
           <nav class="dash-hero-tabs" id="dashHeroTabs" role="tablist">
             ${DashboardView.TABS.map((t) => `
               <button class="dash-hero-tab${this._activeTab === t.id ? ' is-active' : ''}" role="tab" data-tab="${t.id}">${this._esc(t.label)}</button>`).join('')}
           </nav>
+          ${actions}
           <div class="dash-hero-cards" id="dashHeroCards">${this._buildHeroCards(null)}</div>
         </div>
       </section>`;
