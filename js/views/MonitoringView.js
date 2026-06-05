@@ -21,15 +21,18 @@ class MonitoringView extends BaseView {
 
   static cacheable = true;
 
-  static ENTITY_TIPOS = [
-    { value: 'competidor_directo',   label: 'Competidor directo' },
-    { value: 'competidor_indirecto', label: 'Competidor indirecto' },
-    { value: 'referencia_cultural',  label: 'Referencia / inspiración' },
-    { value: 'owned_media',          label: 'Algo mío' },
-  ];
+  static get ENTITY_TIPOS() {
+    return [
+      { value: 'competidor_directo',   label: __('Competidor directo') },
+      { value: 'competidor_indirecto', label: __('Competidor indirecto') },
+      { value: 'referencia_cultural',  label: __('Referencia / inspiración') },
+      { value: 'owned_media',          label: __('Algo mío') },
+    ];
+  }
 
-  static PLATFORMS = [
-    { value: '',                  label: '— Sin plataforma —' },
+  static get PLATFORMS() {
+    return [
+    { value: '',                  label: __('— Sin plataforma —') },
     { value: 'instagram',         label: 'Instagram' },
     { value: 'facebook',          label: 'Facebook' },
     { value: 'tiktok',            label: 'TikTok' },
@@ -37,8 +40,9 @@ class MonitoringView extends BaseView {
     { value: 'twitter',           label: 'Twitter / X' },
     { value: 'linkedin',          label: 'LinkedIn' },
     { value: 'google_analytics',  label: 'Google Analytics' },
-    { value: 'web',               label: 'Sitio web' },
-  ];
+    { value: 'web',               label: __('Sitio web') },
+    ];
+  }
 
   // Plataforma → icono (Font Awesome, ya cargado globalmente en la app).
   static PLATFORM_ICON = {
@@ -133,7 +137,7 @@ class MonitoringView extends BaseView {
 
   async render() {
     await super.render();
-    this.updateHeaderContext('Vigilancia', null, window.currentOrgName || '');
+    this.updateHeaderContext(__('Vigilancia'), null, window.currentOrgName || '');
     const container = document.getElementById('app-container');
     if (!container) return;
     container.innerHTML = this._buildShell();
@@ -251,21 +255,21 @@ class MonitoringView extends BaseView {
 
   /* ── Estado en lenguaje humano ── */
   _estadoPerfil(e, lastAt) {
-    if (e.is_active === false) return { tone: 'paused', icon: 'fa-circle-pause', text: 'En pausa' };
+    if (e.is_active === false) return { tone: 'paused', icon: 'fa-circle-pause', text: __('En pausa') };
     if ((e.metadata?.consecutive_empty_runs || 0) >= 3)
-      return { tone: 'stale', icon: 'fa-moon', text: 'Callado hace rato' };
+      return { tone: 'stale', icon: 'fa-moon', text: __('Callado hace rato') };
     if (lastAt && (Date.now() - new Date(lastAt).getTime()) < 7 * 24 * 60 * 60 * 1000)
-      return { tone: 'fresh', icon: 'fa-circle-check', text: `Al día · novedad ${this._relativeTime(lastAt)}` };
-    return { tone: 'quiet', icon: 'fa-circle-check', text: 'Tranquilo · sin novedades por ahora' };
+      return { tone: 'fresh', icon: 'fa-circle-check', text: __('Al día · novedad {rel}', { rel: this._relativeTime(lastAt) }) };
+    return { tone: 'quiet', icon: 'fa-circle-check', text: __('Tranquilo · sin novedades por ahora') };
   }
 
   _estadoPagina(w, lastAt) {
-    if (w.is_active === false) return { tone: 'paused', icon: 'fa-circle-pause', text: 'En pausa' };
+    if (w.is_active === false) return { tone: 'paused', icon: 'fa-circle-pause', text: __('En pausa') };
     if (lastAt && (Date.now() - new Date(lastAt).getTime()) < 24 * 60 * 60 * 1000)
-      return { tone: 'changed', icon: 'fa-bolt', text: `Cambio detectado · ${this._relativeTime(lastAt)}` };
+      return { tone: 'changed', icon: 'fa-bolt', text: __('Cambio detectado · {rel}', { rel: this._relativeTime(lastAt) }) };
     if (w.last_checked_at)
-      return { tone: 'quiet', icon: 'fa-circle-check', text: `Sin cambios · revisado ${this._relativeTime(w.last_checked_at)}` };
-    return { tone: 'new', icon: 'fa-hourglass-start', text: 'Empezando a vigilar…' };
+      return { tone: 'quiet', icon: 'fa-circle-check', text: __('Sin cambios · revisado {rel}', { rel: this._relativeTime(w.last_checked_at) }) };
+    return { tone: 'new', icon: 'fa-hourglass-start', text: __('Empezando a vigilar…') };
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -303,8 +307,8 @@ class MonitoringView extends BaseView {
     const { counts } = model;
     const algoVigilado = counts.siguiendo > 0;
     const estado = algoVigilado
-      ? { label: 'Todo en marcha', sub: 'Vigilancia activa', color: 'green', icon: 'fa-circle-check' }
-      : { label: 'En reposo',      sub: 'Nada activo aún',   color: 'teal',  icon: 'fa-pause' };
+      ? { label: __('Todo en marcha'), sub: __('Vigilancia activa'), color: 'green', icon: 'fa-circle-check' }
+      : { label: __('En reposo'),      sub: __('Nada activo aún'),   color: 'teal',  icon: 'fa-pause' };
 
     const tile = (color, icon, value, label, sub, pulse) => `
       <div class="mb-kpi-card mb-kpi--${color}${pulse ? ' mn-kpi--pulse' : ''}">
@@ -318,14 +322,14 @@ class MonitoringView extends BaseView {
 
     return `
       <div class="mn-hero">
-        <h2 class="mn-hero-title">Esto es lo que vigilamos por ti</h2>
-        <p class="mn-hero-sub">Lo revisamos solos cada cierto tiempo. Tú solo prende, apaga, y mira qué encontramos.</p>
+        <h2 class="mn-hero-title">${__('Esto es lo que vigilamos por ti')}</h2>
+        <p class="mn-hero-sub">${__('Lo revisamos solos cada cierto tiempo. Tú solo prende, apaga, y mira qué encontramos.')}</p>
       </div>
       <div class="mb-kpi-strip mn-pulse">
-        ${tile('blue',   'fa-binoculars',   counts.siguiendo,  'Siguiendo',        'Marcas y páginas activas')}
-        ${tile('orange', 'fa-bolt',         counts.novedades,  'Con novedades',    'En los últimos 7 días')}
-        ${tile('pink',   'fa-wand-magic-sparkles', counts.propuestas, 'Propuestas nuevas', 'Por revisar', counts.propuestas > 0)}
-        ${tile(estado.color, estado.icon,   estado.label,      'Estado',           estado.sub)}
+        ${tile('blue',   'fa-binoculars',   counts.siguiendo,  __('Siguiendo'),        __('Marcas y páginas activas'))}
+        ${tile('orange', 'fa-bolt',         counts.novedades,  __('Con novedades'),    __('En los últimos 7 días'))}
+        ${tile('pink',   'fa-wand-magic-sparkles', counts.propuestas, __('Propuestas nuevas'), __('Por revisar'), counts.propuestas > 0)}
+        ${tile(estado.color, estado.icon,   estado.label,      __('Estado'),           estado.sub)}
       </div>`;
   }
 
@@ -334,11 +338,11 @@ class MonitoringView extends BaseView {
     const props = model.propuestas;
     if (!props.length) return '';
     const tipoLabel = (t) =>
-      MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || 'Perfil';
+      MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || __('Perfil');
     const cards = props.map(e => {
       const platform = e.metadata?.platform || '';
       const icon = MonitoringView.PLATFORM_ICON[platform] || 'fas fa-hashtag';
-      const why = `${tipoLabel(e.metadata?.tipo)}${platform ? ' en ' + this._platformName(platform) : ''}. Lo encontramos cerca de tu competencia.`;
+      const why = `${tipoLabel(e.metadata?.tipo)}${platform ? __(' en {p}', { p: this._platformName(platform) }) : ''}. ${__('Lo encontramos cerca de tu competencia.')}`;
       return `
         <div class="mn-prop" data-id="${this._esc(e.id)}">
           <div class="mn-prop-avatar"><i class="${icon}"></i></div>
@@ -348,10 +352,10 @@ class MonitoringView extends BaseView {
           </div>
           <div class="mn-prop-actions">
             <button class="mn-prop-btn mn-prop-btn--yes" data-action="prop-follow" data-id="${this._esc(e.id)}">
-              <i class="fas fa-plus"></i> Seguir
+              <i class="fas fa-plus"></i> ${__('Seguir')}
             </button>
             <button class="mn-prop-btn mn-prop-btn--no" data-action="prop-dismiss" data-id="${this._esc(e.id)}">
-              Descartar
+              ${__('Descartar')}
             </button>
           </div>
         </div>`;
@@ -362,8 +366,8 @@ class MonitoringView extends BaseView {
         <header class="mn-prop-head">
           <div class="mn-prop-head-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
           <div>
-            <h3 class="mn-prop-title">Encontramos ${props.length} ${props.length === 1 ? 'perfil que quizá quieras seguir' : 'perfiles que quizá quieras seguir'}</h3>
-            <p class="mn-prop-subtitle">Tú decides: súmalos a tu vigilancia o descártalos.</p>
+            <h3 class="mn-prop-title">${props.length === 1 ? __('Encontramos {n} perfil que quizá quieras seguir', { n: props.length }) : __('Encontramos {n} perfiles que quizá quieras seguir', { n: props.length })}</h3>
+            <p class="mn-prop-subtitle">${__('Tú decides: súmalos a tu vigilancia o descártalos.')}</p>
           </div>
         </header>
         <div class="mn-prop-list">${cards}</div>
@@ -371,12 +375,14 @@ class MonitoringView extends BaseView {
   }
 
   /* ── Columnas "Lo que sigo" — kanban limpio por estado ── */
-  static COLUMNS = [
-    { id: 'news',   label: 'Con novedad', hint: 'Cambios recientes' },
-    { id: 'calm',   label: 'Al día',      hint: 'Activo y tranquilo' },
-    { id: 'silent', label: 'Sin señales', hint: 'Callados hace rato' },
-    { id: 'paused', label: 'En pausa',    hint: 'Desactivados' },
-  ];
+  static get COLUMNS() {
+    return [
+      { id: 'news',   label: __('Con novedad'), hint: __('Cambios recientes') },
+      { id: 'calm',   label: __('Al día'),      hint: __('Activo y tranquilo') },
+      { id: 'silent', label: __('Sin señales'), hint: __('Callados hace rato') },
+      { id: 'paused', label: __('En pausa'),    hint: __('Desactivados') },
+    ];
+  }
 
   _columnOf(item) {
     const t = item.status.tone;
@@ -415,16 +421,16 @@ class MonitoringView extends BaseView {
       return `
         <div class="mn-empty mn-empty--first">
           <div class="mn-empty-icon"><i class="fas fa-binoculars"></i></div>
-          <p>Aún no sigues a nadie.<br>Agrega tu primera marca o página y nosotros nos encargamos del resto.</p>
-          <button class="mn-btn-primary" data-action="new-item"><i class="fas fa-plus"></i> Seguir algo nuevo</button>
+          <p>${__('Aún no sigues a nadie.')}<br>${__('Agrega tu primera marca o página y nosotros nos encargamos del resto.')}</p>
+          <button class="mn-btn-primary" data-action="new-item"><i class="fas fa-plus"></i> ${__('Seguir algo nuevo')}</button>
         </div>`;
     }
 
     return `
       <div class="mn-toolbar">
-        <h2 class="mn-section-title">Lo que sigo <span class="mn-count">${items.length}</span></h2>
+        <h2 class="mn-section-title">${__('Lo que sigo')} <span class="mn-count">${items.length}</span></h2>
         <button class="mn-btn-primary" data-action="new-item">
-          <i class="fas fa-plus"></i> Seguir algo nuevo
+          <i class="fas fa-plus"></i> ${__('Seguir algo nuevo')}
         </button>
       </div>
       <div class="mn-cols">${MonitoringView.COLUMNS.map(column).join('')}</div>`;
@@ -435,26 +441,26 @@ class MonitoringView extends BaseView {
       añadimos cuándo fue el último movimiento. */
   _buildCard(item, containerName, colId) {
     const icon = MonitoringView.PLATFORM_ICON[item.platform] || 'fas fa-hashtag';
-    const typeLabel = item.kind === 'page' ? 'Página web' : 'Marca / perfil';
+    const typeLabel = item.kind === 'page' ? __('Página web') : __('Marca / perfil');
     const brand = item.kind === 'profile' ? containerName(item.containerId) : null;
     const when = (colId === 'news' && item.lastAt) ? ' · ' + this._relativeTime(item.lastAt) : '';
     const meta = `${typeLabel}${brand ? ' · ' + this._esc(brand) : ''}${when}`;
 
     const star = item.kind === 'profile' ? `
       <button class="mn-star${item.highlighted ? ' is-on' : ''}" data-action="toggle-highlight" data-id="${this._esc(item.id)}"
-              title="${item.highlighted ? 'Quitar destacado' : 'Destacar'}" aria-pressed="${item.highlighted}">
+              title="${item.highlighted ? __('Quitar destacado') : __('Destacar')}" aria-pressed="${item.highlighted}">
         <i class="fas fa-star"></i>
       </button>` : '';
 
     // Acciones compactas (solo iconos) para no saturar las columnas.
     const actions = item.kind === 'profile' ? `
       <div class="mn-acts">
-        <button class="mn-act" data-action="vera-analizar" data-id="${this._esc(item.id)}" title="Analizar con Vera"><i class="fas fa-wand-magic-sparkles"></i></button>
-        <button class="mn-act" data-action="vera-comparar" data-id="${this._esc(item.id)}" title="Comparar con mi marca"><i class="fas fa-code-compare"></i></button>
-        <button class="mn-act" data-action="vera-inspirar" data-id="${this._esc(item.id)}" title="Pedir ideas"><i class="fas fa-lightbulb"></i></button>
+        <button class="mn-act" data-action="vera-analizar" data-id="${this._esc(item.id)}" title="${__('Analizar con Vera')}"><i class="fas fa-wand-magic-sparkles"></i></button>
+        <button class="mn-act" data-action="vera-comparar" data-id="${this._esc(item.id)}" title="${__('Comparar con mi marca')}"><i class="fas fa-code-compare"></i></button>
+        <button class="mn-act" data-action="vera-inspirar" data-id="${this._esc(item.id)}" title="${__('Pedir ideas')}"><i class="fas fa-lightbulb"></i></button>
       </div>` : `
       <div class="mn-acts">
-        <a class="mn-act" href="${this._esc(item.url)}" target="_blank" rel="noopener" title="Abrir página"><i class="fas fa-arrow-up-right-from-square"></i></a>
+        <a class="mn-act" href="${this._esc(item.url)}" target="_blank" rel="noopener" title="${__('Abrir página')}"><i class="fas fa-arrow-up-right-from-square"></i></a>
       </div>`;
 
     const toggleAction = item.kind === 'page' ? 'toggle-watcher' : 'toggle-entity';
@@ -475,12 +481,12 @@ class MonitoringView extends BaseView {
         <div class="mn-card-foot">
           ${actions}
           <div class="mn-card-foot-right">
-            <label class="mn-onoff mn-onoff--sm" title="${item.isActive ? 'Pausar' : 'Activar'}">
+            <label class="mn-onoff mn-onoff--sm" title="${item.isActive ? __('Pausar') : __('Activar')}">
               <input type="checkbox" ${item.isActive ? 'checked' : ''} data-action="${toggleAction}" data-id="${this._esc(item.id)}">
               <span class="mn-onoff-track"></span>
             </label>
-            <button class="mn-btn-icon" data-action="${editAction}" data-id="${this._esc(item.id)}" title="Editar"><i class="fas fa-pen"></i></button>
-            <button class="mn-btn-icon mn-btn-icon--danger" data-action="${delAction}" data-id="${this._esc(item.id)}" title="Dejar de seguir"><i class="fas fa-trash"></i></button>
+            <button class="mn-btn-icon" data-action="${editAction}" data-id="${this._esc(item.id)}" title="${__('Editar')}"><i class="fas fa-pen"></i></button>
+            <button class="mn-btn-icon mn-btn-icon--danger" data-action="${delAction}" data-id="${this._esc(item.id)}" title="${__('Dejar de seguir')}"><i class="fas fa-trash"></i></button>
           </div>
         </div>
       </article>`;
@@ -519,27 +525,27 @@ class MonitoringView extends BaseView {
     const ent = e.target.closest('[data-action="toggle-entity"]');
     if (ent) {
       const { error } = await this._service.updateEntity(ent.dataset.id, { is_active: ent.checked });
-      if (error) { alert('No se pudo cambiar: ' + error.message); ent.checked = !ent.checked; }
+      if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); ent.checked = !ent.checked; }
       else await this._refresh();
       return;
     }
     const w = e.target.closest('[data-action="toggle-watcher"]');
     if (w) {
       const { error } = await this._service.updateWatcher(w.dataset.id, { is_active: w.checked });
-      if (error) { alert('No se pudo cambiar: ' + error.message); w.checked = !w.checked; }
+      if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); w.checked = !w.checked; }
       else await this._refresh();
     }
   }
 
   async _propFollow(id) {
     const { error } = await this._service.updateEntity(id, { is_active: true });
-    if (error) { alert('No se pudo seguir: ' + error.message); return; }
+    if (error) { alert(__('No se pudo seguir:') + ' ' + error.message); return; }
     await this._refresh();
   }
 
   async _propDismiss(id) {
     const { error } = await this._service.updateEntity(id, { metadata: { dismissed: true } });
-    if (error) { alert('No se pudo descartar: ' + error.message); return; }
+    if (error) { alert(__('No se pudo descartar:') + ' ' + error.message); return; }
     await this._refresh();
   }
 
@@ -548,7 +554,7 @@ class MonitoringView extends BaseView {
     if (!entity) return;
     const next = !(entity.metadata?.highlighted === true);
     const { error } = await this._service.updateEntity(id, { metadata: { highlighted: next } });
-    if (error) { alert('Error: ' + error.message); return; }
+    if (error) { alert(__('Error:') + ' ' + error.message); return; }
     await this._refresh();
   }
 
@@ -605,7 +611,7 @@ class MonitoringView extends BaseView {
     const platOpts = MonitoringView.PLATFORMS
       .map(o => `<option value="${o.value}">${o.label}</option>`).join('');
     const containerOpts = [
-      `<option value="">— Sin marca —</option>`,
+      `<option value="">${__('— Sin marca —')}</option>`,
       ...containers.map(c => `<option value="${this._esc(c.id)}">${this._esc(c.nombre_marca)}</option>`),
     ].join('');
 
@@ -613,57 +619,57 @@ class MonitoringView extends BaseView {
       <div class="mn-form" id="mnCreateForm">
         <div class="mn-kindpick">
           <button type="button" class="mn-kind is-active" data-kind="profile">
-            <i class="fas fa-user-group"></i> Una marca o perfil
+            <i class="fas fa-user-group"></i> ${__('Una marca o perfil')}
           </button>
           <button type="button" class="mn-kind" data-kind="page">
-            <i class="fas fa-globe"></i> Una página web
+            <i class="fas fa-globe"></i> ${__('Una página web')}
           </button>
         </div>
 
         <div data-pane="profile">
-          <label>¿A quién quieres seguir?
-            <input name="name" value="" placeholder="Ej. Red Bull">
+          <label>${__('¿A quién quieres seguir?')}
+            <input name="name" value="" placeholder="${__('Ej. Red Bull')}">
           </label>
           <div class="mn-form-grid">
-            <label>¿Qué es?<select name="tipo">${tipoOpts}</select></label>
-            <label>Plataforma<select name="platform">${platOpts}</select></label>
+            <label>${__('¿Qué es?')}<select name="tipo">${tipoOpts}</select></label>
+            <label>${__('Plataforma')}<select name="platform">${platOpts}</select></label>
           </div>
-          <label>Usuario o enlace
+          <label>${__('Usuario o enlace')}
             <input name="target_identifier" value="" placeholder="@usuario">
           </label>
           <details class="mn-advanced">
-            <summary>Opciones avanzadas</summary>
+            <summary>${__('Opciones avanzadas')}</summary>
             <div class="mn-advanced-body">
-              <label>Marca asociada<select name="brand_container_id">${containerOpts}</select></label>
-              <label>Tipo de dato
+              <label>${__('Marca asociada')}<select name="brand_container_id">${containerOpts}</select></label>
+              <label>${__('Tipo de dato')}
                 <select name="domain">
-                  <option value="social" selected>Redes sociales</option>
-                  <option value="analytics">Analítica</option>
-                  <option value="web">Sitio web</option>
+                  <option value="social" selected>${__('Redes sociales')}</option>
+                  <option value="analytics">${__('Analítica')}</option>
+                  <option value="web">${__('Sitio web')}</option>
                 </select>
               </label>
-              <small>Para fuentes técnicas puedes usar identificadores como <code>meta:1234</code> o <code>ga4:5678</code> en el campo "Usuario o enlace".</small>
+              <small>${__('Para fuentes técnicas puedes usar identificadores como {meta} o {ga4} en el campo "Usuario o enlace".', { meta: '<code>meta:1234</code>', ga4: '<code>ga4:5678</code>' })}</small>
             </div>
           </details>
         </div>
 
         <div data-pane="page" hidden>
-          <label>Dirección de la página
+          <label>${__('Dirección de la página')}
             <input name="url" type="url" value="" placeholder="https://ejemplo.com/pagina-a-vigilar">
-            <small>Te avisamos cuando esa página cambie.</small>
+            <small>${__('Te avisamos cuando esa página cambie.')}</small>
           </label>
-          <label>Nombre (opcional)
-            <input name="label" value="" placeholder="Ej. Precios de Competidor X">
+          <label>${__('Nombre (opcional)')}
+            <input name="label" value="" placeholder="${__('Ej. Precios de Competidor X')}">
           </label>
         </div>
 
         <footer class="mn-modal-foot">
-          <button type="button" class="mn-btn-secondary" data-action="close-modal">Cancelar</button>
-          <button type="button" class="mn-btn-primary" data-action="create-submit">Empezar a seguir</button>
+          <button type="button" class="mn-btn-secondary" data-action="close-modal">${__('Cancelar')}</button>
+          <button type="button" class="mn-btn-primary" data-action="create-submit">${__('Empezar a seguir')}</button>
         </footer>
       </div>`;
 
-    const { modal, close } = window.Modal.show({ title: 'Seguir algo nuevo', body, className: 'mn-modal-content' });
+    const { modal, close } = window.Modal.show({ title: __('Seguir algo nuevo'), body, className: 'mn-modal-content' });
     let kind = 'profile';
     modal.querySelectorAll('[data-kind]').forEach(b => b.addEventListener('click', () => {
       kind = b.dataset.kind;
@@ -677,7 +683,7 @@ class MonitoringView extends BaseView {
       const val = (n) => root.querySelector(`[name="${n}"]`)?.value?.trim() || '';
       if (kind === 'profile') {
         const name = val('name');
-        if (!name) { alert('Escribe un nombre.'); return; }
+        if (!name) { alert(__('Escribe un nombre.')); return; }
         const { error } = await this._service.createEntity({
           name,
           target_identifier: val('target_identifier') || null,
@@ -687,14 +693,14 @@ class MonitoringView extends BaseView {
           platform: val('platform') || null,
           is_active: true,
         });
-        if (error) { alert('Error: ' + error.message); return; }
+        if (error) { alert(__('Error:') + ' ' + error.message); return; }
       } else {
         const url = val('url');
-        if (!url) { alert('Escribe la dirección de la página.'); return; }
+        if (!url) { alert(__('Escribe la dirección de la página.')); return; }
         const { error } = await this._service.createWatcher({
           url, label: val('label') || null, is_active: true,
         });
-        if (error) { alert('Error: ' + error.message); return; }
+        if (error) { alert(__('Error:') + ' ' + error.message); return; }
       }
       close();
       await this._refresh();
@@ -718,41 +724,41 @@ class MonitoringView extends BaseView {
 
     const body = `
       <form class="mn-form" id="mnEntityForm">
-        <label>Nombre
-          <input name="name" required value="${this._esc(e.name || '')}" placeholder="Ej. Red Bull">
+        <label>${__('Nombre')}
+          <input name="name" required value="${this._esc(e.name || '')}" placeholder="${__('Ej. Red Bull')}">
         </label>
         <div class="mn-form-grid">
-          <label>¿Qué es?<select name="tipo">${tipoOpts}</select></label>
-          <label>Plataforma<select name="platform">${platOpts}</select></label>
+          <label>${__('¿Qué es?')}<select name="tipo">${tipoOpts}</select></label>
+          <label>${__('Plataforma')}<select name="platform">${platOpts}</select></label>
         </div>
-        <label>Usuario o enlace
+        <label>${__('Usuario o enlace')}
           <input name="target_identifier" value="${this._esc(e.target_identifier || '')}" placeholder="@usuario">
         </label>
         <details class="mn-advanced">
-          <summary>Opciones avanzadas</summary>
+          <summary>${__('Opciones avanzadas')}</summary>
           <div class="mn-advanced-body">
-            <label>Marca asociada<select name="brand_container_id">${containerOpts}</select></label>
-            <label>Tipo de dato
+            <label>${__('Marca asociada')}<select name="brand_container_id">${containerOpts}</select></label>
+            <label>${__('Tipo de dato')}
               <select name="domain">
-                <option value="social"    ${e.domain === 'social'    ? 'selected' : ''}>Redes sociales</option>
-                <option value="analytics" ${e.domain === 'analytics' ? 'selected' : ''}>Analítica</option>
-                <option value="web"       ${e.domain === 'web'       ? 'selected' : ''}>Sitio web</option>
+                <option value="social"    ${e.domain === 'social'    ? 'selected' : ''}>${__('Redes sociales')}</option>
+                <option value="analytics" ${e.domain === 'analytics' ? 'selected' : ''}>${__('Analítica')}</option>
+                <option value="web"       ${e.domain === 'web'       ? 'selected' : ''}>${__('Sitio web')}</option>
               </select>
             </label>
-            <small>Para fuentes técnicas usa identificadores como <code>meta:1234</code> o <code>ga4:5678</code> en "Usuario o enlace".</small>
+            <small>${__('Para fuentes técnicas usa identificadores como {meta} o {ga4} en "Usuario o enlace".', { meta: '<code>meta:1234</code>', ga4: '<code>ga4:5678</code>' })}</small>
           </div>
         </details>
         <label class="mn-checkbox">
           <input type="checkbox" name="is_active" ${e.is_active === false ? '' : 'checked'}>
-          Vigilando activamente
+          ${__('Vigilando activamente')}
         </label>
         <footer class="mn-modal-foot">
-          <button type="button" class="mn-btn-secondary" data-action="close-modal">Cancelar</button>
-          <button type="submit" class="mn-btn-primary">Guardar cambios</button>
+          <button type="button" class="mn-btn-secondary" data-action="close-modal">${__('Cancelar')}</button>
+          <button type="submit" class="mn-btn-primary">${__('Guardar cambios')}</button>
         </footer>
       </form>`;
 
-    const { modal, close } = window.Modal.show({ title: 'Editar', body, className: 'mn-modal-content' });
+    const { modal, close } = window.Modal.show({ title: __('Editar'), body, className: 'mn-modal-content' });
     modal.querySelector('[data-action="close-modal"]')?.addEventListener('click', () => close());
     modal.querySelector('#mnEntityForm').addEventListener('submit', async (ev) => {
       ev.preventDefault();
@@ -767,7 +773,7 @@ class MonitoringView extends BaseView {
         is_active:         fd.get('is_active') === 'on',
       };
       const { error } = await this._service.updateEntity(id, payload);
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { alert(__('Error:') + ' ' + error.message); return; }
       close();
       await this._refresh();
     });
@@ -776,9 +782,9 @@ class MonitoringView extends BaseView {
   async _confirmDeleteEntity(id) {
     const e = (this._data.entities.data || []).find(x => x.id === id);
     if (!e) return;
-    if (!confirm(`¿Dejar de seguir a "${e.name}"?\nEsta acción no se puede deshacer.`)) return;
+    if (!confirm(__('¿Dejar de seguir a "{name}"?', { name: e.name }) + '\n' + __('Esta acción no se puede deshacer.'))) return;
     const { error } = await this._service.deleteEntity(id);
-    if (error) { alert('Error: ' + error.message); return; }
+    if (error) { alert(__('Error:') + ' ' + error.message); return; }
     await this._refresh();
   }
 
@@ -791,14 +797,15 @@ class MonitoringView extends BaseView {
   _relativeTime(iso) {
     if (!iso) return '—';
     const diff = Date.now() - new Date(iso).getTime();
-    if (diff < 60 * 1000) return 'hace segundos';
+    if (diff < 60 * 1000) return __('hace segundos');
     const min = Math.floor(diff / 60000);
-    if (min < 60) return `hace ${min} min`;
+    if (min < 60) return __('hace {n} min', { n: min });
     const h = Math.floor(min / 60);
-    if (h < 24) return `hace ${h} h`;
+    if (h < 24) return __('hace {n} h', { n: h });
     const d = Math.floor(h / 24);
-    if (d < 7) return `hace ${d} d`;
-    return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+    if (d < 7) return __('hace {n} d', { n: d });
+    const dl = (window.i18n && window.i18n.getLocale() === 'en') ? 'en-US' : 'es-CO';
+    return new Date(iso).toLocaleDateString(dl, { day: '2-digit', month: 'short' });
   }
 
   _openWatcherModal(id) {
@@ -806,24 +813,24 @@ class MonitoringView extends BaseView {
 
     const body = `
       <form class="mn-form" id="mnWatcherForm">
-        <label>Dirección de la página
+        <label>${__('Dirección de la página')}
           <input name="url" type="url" required value="${this._esc(w.url || '')}" placeholder="https://ejemplo.com/pagina-a-vigilar">
-          <small>Te avisamos cuando esa página cambie.</small>
+          <small>${__('Te avisamos cuando esa página cambie.')}</small>
         </label>
-        <label>Nombre (opcional)
-          <input name="label" value="${this._esc(w.label || '')}" placeholder="Ej. Precios de Competidor X">
+        <label>${__('Nombre (opcional)')}
+          <input name="label" value="${this._esc(w.label || '')}" placeholder="${__('Ej. Precios de Competidor X')}">
         </label>
         <label class="mn-checkbox">
           <input type="checkbox" name="is_active" ${w.is_active === false ? '' : 'checked'}>
-          Vigilando activamente
+          ${__('Vigilando activamente')}
         </label>
         <footer class="mn-modal-foot">
-          <button type="button" class="mn-btn-secondary" data-action="close-modal">Cancelar</button>
-          <button type="submit" class="mn-btn-primary">Guardar cambios</button>
+          <button type="button" class="mn-btn-secondary" data-action="close-modal">${__('Cancelar')}</button>
+          <button type="submit" class="mn-btn-primary">${__('Guardar cambios')}</button>
         </footer>
       </form>`;
 
-    const { modal, close } = window.Modal.show({ title: 'Editar página vigilada', body, className: 'mn-modal-content' });
+    const { modal, close } = window.Modal.show({ title: __('Editar página vigilada'), body, className: 'mn-modal-content' });
     modal.querySelector('[data-action="close-modal"]')?.addEventListener('click', () => close());
     modal.querySelector('#mnWatcherForm').addEventListener('submit', async (ev) => {
       ev.preventDefault();
@@ -833,9 +840,9 @@ class MonitoringView extends BaseView {
         label:     fd.get('label')?.trim() || null,
         is_active: fd.get('is_active') === 'on',
       };
-      if (!payload.url) { alert('La dirección es obligatoria.'); return; }
+      if (!payload.url) { alert(__('La dirección es obligatoria.')); return; }
       const { error } = await this._service.updateWatcher(id, payload);
-      if (error) { alert('Error: ' + error.message); return; }
+      if (error) { alert(__('Error:') + ' ' + error.message); return; }
       close();
       await this._refresh();
     });
@@ -844,9 +851,9 @@ class MonitoringView extends BaseView {
   async _confirmDeleteWatcher(id) {
     const w = (this._data.watchers.data || []).find(x => x.id === id);
     if (!w) return;
-    if (!confirm(`¿Dejar de vigilar "${w.label || w.url}"?\nEsta acción no se puede deshacer.`)) return;
+    if (!confirm(__('¿Dejar de vigilar "{name}"?', { name: w.label || w.url }) + '\n' + __('Esta acción no se puede deshacer.'))) return;
     const { error } = await this._service.deleteWatcher(id);
-    if (error) { alert('Error: ' + error.message); return; }
+    if (error) { alert(__('Error:') + ' ' + error.message); return; }
     await this._refresh();
   }
 
