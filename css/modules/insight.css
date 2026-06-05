@@ -2745,8 +2745,10 @@
 .mb-hc-comp-detail { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); line-height: 1.35; }
 
 /* Alertas del sidebar (componentes en zona baja como chips) */
-.mb-aside-alerts { border-top: 1px solid var(--border-divider, #242424); padding-top: 1rem; }
 .mb-aside-block-title { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); margin-bottom: 0.6rem; }
+/* Alertas en el cuerpo (debajo del banner "Dormido"): tira horizontal label + chips. */
+.mb-body-alerts { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 0.65rem; margin: 0.85rem 0 0.25rem; }
+.mb-body-alerts-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
 .mb-alert-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .mb-alert-chip { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.6875rem; font-weight: 600; padding: 0.25rem 0.55rem; border-radius: 7px; color: #e0a045; background: rgba(224,160,69,0.1); border: 1px solid rgba(224,160,69,0.28); }
 .mb-alert-chip--crit { color: #e06464; background: rgba(224,100,100,0.1); border-color: rgba(224,100,100,0.3); }

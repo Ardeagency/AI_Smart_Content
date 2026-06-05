@@ -404,6 +404,7 @@
       return `
         <section class="mb-section mb-section--wide mb-long">
           ${this._buildActivityBanner(data?.activity?.data)}
+          ${this._buildHealthAlerts(data?.health?.data?.components)}
           ${!act.length ? `<div class="mb-causal-empty">Aun no hay suficiente historial. Amplia el rango (prueba Todo el periodo).</div>` : `
           <div class="mb-long-grid">
             <div class="mb-long-card mb-long-card--wide">
@@ -1598,13 +1599,12 @@
           </div>
           <span class="mb-health-objetivo">${objetivo}</span>
           ${this._buildHealthComponents(h.components)}
-          ${this._buildHealthAlerts(h.components)}
           ${this._buildHealthTasks(h.tasks)}
         </section>`;
     },
 
-    /* Alertas del sidebar: componentes de salud en zona baja (<50) como chips.
-       Datos ya disponibles en h.components — sin RPC extra. */
+    /* Alertas: componentes de salud en zona baja (<50) como chips. Viven en el
+       cuerpo, debajo del banner de actividad ("Dormido"). Sin RPC extra. */
     _buildHealthAlerts(components) {
       const list = (Array.isArray(components) ? components : [])
         .filter((c) => (Number(c.score) || 0) < 50)
@@ -1616,8 +1616,8 @@
         return `<span class="mb-alert-chip${crit ? ' mb-alert-chip--crit' : ''}"><i class="fas fa-triangle-exclamation"></i> ${this._esc(c.label || c.key)} ${sc}</span>`;
       }).join('');
       return `
-        <div class="mb-aside-alerts">
-          <div class="mb-aside-block-title">Alertas</div>
+        <div class="mb-body-alerts">
+          <span class="mb-body-alerts-label">Alertas</span>
           <div class="mb-alert-chips">${chips}</div>
         </div>`;
     },
