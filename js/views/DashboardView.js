@@ -172,11 +172,49 @@ class DashboardView extends BaseView {
       </details>`;
   }
 
+  /* ── Filtro como menu custom (reemplaza <select> nativo) ────────────────
+     Pill .living-filter con un <details> dentro: el trigger muestra label +
+     valor, y el menu reusa el estilo de "Crear informe". La seleccion la maneja
+     un click delegado en cada vista (data-filter-key / data-filter-value). */
+  _buildFilterMenu({ label, value, options, key }) {
+    const cur = options.find(([v]) => v === (value || '')) || options[0];
+    const curLabel = cur ? cur[1] : '';
+    return `
+      <details class="living-filter living-filter--menu" data-filter-menu>
+        <summary class="living-filter-menu-trigger">
+          <span class="living-filter-label">${this._esc(label)}</span>
+          <span class="living-filter-menu-value">
+            <span data-filter-menu-text>${this._esc(curLabel)}</span>
+            <i class="fas fa-chevron-down living-filter-menu-caret" aria-hidden="true"></i>
+          </span>
+        </summary>
+        <div class="living-filter-menu">
+          ${options.map(([v, l]) => `<button type="button" class="living-filter-menu-item${v === (value || '') ? ' is-active' : ''}" data-filter-key="${this._esc(key)}" data-filter-value="${this._esc(v)}">${this._esc(l)}</button>`).join('')}
+        </div>
+      </details>`;
+  }
+
+  /* Click delegado para los menus de filtro: actualiza el texto del trigger,
+     marca el activo y cierra el <details>. Devuelve { key, value } del item
+     seleccionado, o null si el click no fue sobre un item. */
+  _handleFilterMenuClick(e) {
+    const item = e.target.closest('[data-filter-value]');
+    if (!item) return null;
+    const dd = item.closest('details.living-filter--menu');
+    if (dd) {
+      dd.removeAttribute('open');
+      const txt = dd.querySelector('[data-filter-menu-text]');
+      if (txt) txt.textContent = item.textContent;
+      dd.querySelectorAll('.living-filter-menu-item').forEach((b) => b.classList.toggle('is-active', b === item));
+    }
+    return { key: item.dataset.filterKey, value: item.dataset.filterValue || '' };
+  }
+
   _setupReportDropdown() {
     if (this._reportClickHandler) return;
     this._reportClickHandler = (e) => {
-      // Cerrar dropdowns abiertos al hacer click afuera.
-      document.querySelectorAll('details.dash-report-dd[open]').forEach((dd) => {
+      // Cerrar dropdowns abiertos al hacer click afuera (informe + menus de filtro).
+      document.querySelectorAll('details.dash-report-dd[open], details.living-filter--menu[open]').forEach((dd) => {
         if (!dd.contains(e.target)) dd.removeAttribute('open');
       });
       const item = e.target.closest('[data-report]');

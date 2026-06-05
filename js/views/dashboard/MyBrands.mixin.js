@@ -1470,16 +1470,11 @@
       // Mi Marca = fecha (calendario de rango) + plataforma. (Campañas no aplica:
       // post_patterns no tiene dimension de campaña.)
       const cur = (f.platforms && f.platforms[0]) || '';
-      const platOpts = [
-        ['', 'Todas'], ['instagram', 'Instagram'], ['facebook', 'Facebook'],
-      ].map(([v, l]) => `<option value="${v}"${cur === v ? ' selected' : ''}>${l}</option>`).join('');
+      const platOptions = [['', 'Todas'], ['instagram', 'Instagram'], ['facebook', 'Facebook']];
       return `
         <header class="living-history-filters mb-filters-bar" id="mbFilters">
           ${this._mbFechaControl()}
-          <div class="living-filter">
-            <label class="living-filter-label" for="mbFilterPlatform">Plataforma</label>
-            <select class="living-filter-select" id="mbFilterPlatform" data-mb-filter="platform">${platOpts}</select>
-          </div>
+          ${this._buildFilterMenu({ label: 'Plataforma', value: cur, key: 'platform', options: platOptions })}
           ${this._reportDropdown()}
         </header>`;
     },
@@ -1683,20 +1678,24 @@
       if (body.dataset.mbBound === '1') return;
       body.dataset.mbBound = '1';
 
-      // Filtros: cambio de ventana / sub-marca
+      // Filtros tipo <select> (ventana / sub-marca). Plataforma es menu custom (click).
       body.addEventListener('change', (e) => {
         const el = e.target.closest('[data-mb-filter]');
         if (!el) return;
         const key = el.dataset.mbFilter;
-        if (key === 'platform') { this._onMbFilterChange({ platforms: el.value ? [el.value] : null }); return; }
         let value = el.value;
         if (key === 'windowDays') value = Number(value) || 30;
         if (key === 'brandContainerId') value = value || null;
         this._onMbFilterChange({ [key]: value });
       });
 
-      // Click en una card featured → abrir ventana de detalle con sus posts.
+      // Click: menu de filtro (Plataforma) o card featured.
       body.addEventListener('click', (e) => {
+        const sel = this._handleFilterMenuClick(e);
+        if (sel) {
+          if (sel.key === 'platform') this._onMbFilterChange({ platforms: sel.value ? [sel.value] : null });
+          return;
+        }
         const card = e.target.closest('[data-feat-detail]');
         if (!card) return;
         this._openFeaturedDetail(card.dataset.dim, card.dataset.value, card.dataset.title);

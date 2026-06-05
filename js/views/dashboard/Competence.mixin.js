@@ -109,18 +109,15 @@
       ].join('');
 
       const curPlat = (f.platforms && f.platforms[0]) || '';
-      const platOpts = [
+      const platOptions = [
         ['', 'Todas'], ['instagram', 'Instagram'], ['facebook', 'Facebook'],
         ['tiktok', 'TikTok'], ['x', 'X'], ['youtube', 'YouTube'],
-      ].map(([v, l]) => `<option value="${v}"${curPlat === v ? ' selected' : ''}>${l}</option>`).join('');
+      ];
 
       return `
         <header class="living-history-filters mb-filters-bar" id="compFilters">
           ${this._compFechaControl()}
-          <div class="living-filter">
-            <label class="living-filter-label" for="compFilterPlatform">Plataforma</label>
-            <select class="living-filter-select" id="compFilterPlatform" data-comp-filter="platform">${platOpts}</select>
-          </div>
+          ${this._buildFilterMenu({ label: 'Plataforma', value: curPlat, key: 'platform', options: platOptions })}
           <div class="living-filter">
             <label class="living-filter-label" for="compFilterPerfil">Perfil</label>
             <select class="living-filter-select" id="compFilterPerfil" data-comp-filter="entityId">${perfilOpts}</select>
@@ -418,9 +415,13 @@
         const key = el.dataset.compFilter;
         if (key === 'windowDays') this._onCompFilterChange({ windowDays: Number(el.value) || 99999 });
         else if (key === 'entityId') this._onCompFilterChange({ entityId: el.value || null });
-        else if (key === 'platform') this._onCompFilterChange({ platforms: el.value ? [el.value] : null });
       });
       body.addEventListener('click', (e) => {
+        const sel = this._handleFilterMenuClick(e);
+        if (sel) {
+          if (sel.key === 'platform') this._onCompFilterChange({ platforms: sel.value ? [sel.value] : null });
+          return;
+        }
         const el = e.target.closest('[data-comp-entity]');
         if (!el) return;
         this._openCompetitorDetail(el.dataset.compEntity, el.dataset.compName);
