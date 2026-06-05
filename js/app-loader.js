@@ -41,7 +41,7 @@
                     if (notified || !hadControllerAtStart) return;
                     notified = true;
                     if (window.showToast) {
-                        window.showToast((window.t ? window.t('Nueva versión disponible — recarga la página') : 'Nueva versión disponible — recarga la página'), {
+                        window.showToast((window.__ ? window.__('Nueva versión disponible — recarga la página') : 'Nueva versión disponible — recarga la página'), {
                             duration: 0,
                             type: 'info',
                         });

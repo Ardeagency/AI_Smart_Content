@@ -36,59 +36,59 @@ class SignInView extends BaseView {
 
           <div class="signin-success-banner" id="signinPasswordChangedBanner" hidden>
             <span class="signin-success-banner-icon" aria-hidden="true">✓</span>
-            <span>${t('Contraseña actualizada. Inicia sesión con tu nueva contraseña.')}</span>
+            <span>${__('Contraseña actualizada. Inicia sesión con tu nueva contraseña.')}</span>
           </div>
 
           <div class="signin-main" id="signinMain">
             <form id="form_signin" novalidate>
               <div class="auth-state active" data-state="signin">
                 <div class="signin-field">
-                  <label class="signin-field-label" for="signinEmail">${t('Email Address')}</label>
+                  <label class="signin-field-label" for="signinEmail">${__('Email Address')}</label>
                   <input type="email" class="form-input" id="signinEmail" name="email" placeholder="name@company.com" autocomplete="email" required>
                 </div>
                 <div class="signin-field">
-                  <label class="signin-field-label" for="signinPassword">${t('Password')}</label>
+                  <label class="signin-field-label" for="signinPassword">${__('Password')}</label>
                   <input type="password" class="form-input" id="signinPassword" name="password" placeholder="********" autocomplete="current-password" required>
                 </div>
-                <button type="button" class="signin-forgot signin-forgot-btn" id="linkForgotPassword">${t('¿Olvidaste tu contraseña?')}</button>
-                <button type="submit" class="btn btn-primary signin-submit" id="btnSignIn">${t('Login')}</button>
+                <button type="button" class="signin-forgot signin-forgot-btn" id="linkForgotPassword">${__('¿Olvidaste tu contraseña?')}</button>
+                <button type="submit" class="btn btn-primary signin-submit" id="btnSignIn">${__('Login')}</button>
               </div>
             </form>
           </div>
 
           <div class="signin-mfa" id="signinMfa" aria-hidden="true" hidden>
-            <h2 class="signin-recover-title">${t('Verificación de 2 pasos')}</h2>
-            <p class="signin-recover-desc">${t('Abre tu app autenticadora ({app}) e ingresa el código de 6 dígitos.', { app: '<span id="mfaFactorName">Authenticator</span>' })}</p>
+            <h2 class="signin-recover-title">${__('Verificación de 2 pasos')}</h2>
+            <p class="signin-recover-desc">${__('Abre tu app autenticadora ({app}) e ingresa el código de 6 dígitos.', { app: '<span id="mfaFactorName">Authenticator</span>' })}</p>
             <form id="form_mfa" novalidate>
               <input type="text" class="form-input signin-mfa-code" id="mfaCode" placeholder="123456" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" required>
               <p class="signin-mfa-error" id="mfaError" hidden></p>
-              <button type="submit" class="btn btn-primary signin-submit" id="btnVerifyMfa">${t('Verificar')}</button>
-              <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkMfaBack">${t('Volver')}</button>
+              <button type="submit" class="btn btn-primary signin-submit" id="btnVerifyMfa">${__('Verificar')}</button>
+              <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkMfaBack">${__('Volver')}</button>
             </form>
           </div>
 
           <div class="signin-recover" id="signinRecover" aria-hidden="true" hidden>
-            <h2 class="signin-recover-title">${t('Recuperar contraseña')}</h2>
-            <p class="signin-recover-desc">${t('Te enviaremos un enlace a tu correo para restablecer la contraseña. Debes hacer clic en el enlace para verificar que eres tú.')}</p>
+            <h2 class="signin-recover-title">${__('Recuperar contraseña')}</h2>
+            <p class="signin-recover-desc">${__('Te enviaremos un enlace a tu correo para restablecer la contraseña. Debes hacer clic en el enlace para verificar que eres tú.')}</p>
             <div class="signin-recover-form" id="recoverForm">
-              <input type="email" class="form-input" id="recoverEmail" placeholder="${t('Correo electrónico')}" autocomplete="email" required>
-              <button type="button" class="btn btn-primary" id="btnSendRecover">${t('Enviar enlace')}</button>
+              <input type="email" class="form-input" id="recoverEmail" placeholder="${__('Correo electrónico')}" autocomplete="email" required>
+              <button type="button" class="btn btn-primary" id="btnSendRecover">${__('Enviar enlace')}</button>
             </div>
             <div class="signin-recover-success" id="recoverSuccess" hidden>
-              <p class="signin-recover-success-text">${t('Si existe una cuenta con ese correo, recibirás un enlace en unos minutos. Revisa también la carpeta de spam.')}</p>
+              <p class="signin-recover-success-text">${__('Si existe una cuenta con ese correo, recibirás un enlace en unos minutos. Revisa también la carpeta de spam.')}</p>
             </div>
-            <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkRecoverBack">${t('Volver al inicio de sesión')}</button>
+            <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkRecoverBack">${__('Volver al inicio de sesión')}</button>
           </div>
         </div>
 
         <footer class="signin-footer">
-          <span class="signin-footer-copy">${year} AI SMART CONTENT by ARDE AGENCY S.A.S. ${t('Todos los derechos reservados.')}</span>
+          <span class="signin-footer-copy">${year} AI SMART CONTENT by ARDE AGENCY S.A.S. ${__('Todos los derechos reservados.')}</span>
           <span class="signin-footer-links">
-            <a href="https://aismartcontent.io/privacy-policy" target="_blank" rel="noopener">${t('Privacidad')}</a>
+            <a href="https://aismartcontent.io/privacy-policy" target="_blank" rel="noopener">${__('Privacidad')}</a>
             <span aria-hidden="true">·</span>
-            <a href="https://aismartcontent.io/terms-and-conditions" target="_blank" rel="noopener">${t('Términos')}</a>
+            <a href="https://aismartcontent.io/terms-and-conditions" target="_blank" rel="noopener">${__('Términos')}</a>
             <span aria-hidden="true">·</span>
-            <a href="https://aismartcontent.io/contact" target="_blank" rel="noopener">${t('Contacto')}</a>
+            <a href="https://aismartcontent.io/contact" target="_blank" rel="noopener">${__('Contacto')}</a>
           </span>
         </footer>
       </div>
@@ -177,17 +177,17 @@ class SignInView extends BaseView {
     const btn = this.querySelector('#btnSignIn');
 
     if (!email || !password) {
-      alert(t('Introduce email y contraseña.'));
+      alert(__('Introduce email y contraseña.'));
       return;
     }
     if (!window.authService) {
-      alert(t('Error: servicio de autenticación no disponible.'));
+      alert(__('Error: servicio de autenticación no disponible.'));
       return;
     }
 
     if (btn) {
       btn.disabled = true;
-      btn.textContent = t('Iniciando sesión...');
+      btn.textContent = __('Iniciando sesión...');
     }
 
     try {
@@ -207,7 +207,7 @@ class SignInView extends BaseView {
 
       // FEAT-020 · org exige MFA pero user no tiene factor → forzar enroll
       if (result.requiresMfaEnroll) {
-        alert(result.message || t('Tu organización requiere 2FA. Te llevamos al flujo de activación.'));
+        alert(result.message || __('Tu organización requiere 2FA. Te llevamos al flujo de activación.'));
         const route = result.enforceOrgId ? `/org/${result.enforceOrgId}/configuracion` : '/configuracion';
         if (window.router) window.router.navigate(route, true);
         else window.location.href = `/#${route}`;
@@ -221,16 +221,16 @@ class SignInView extends BaseView {
         return;
       }
       const msg = result.error && result.error.includes('Invalid')
-        ? t('Email o contraseña incorrectos.')
-        : (result.error || t('Error al iniciar sesión.'));
+        ? __('Email o contraseña incorrectos.')
+        : (result.error || __('Error al iniciar sesión.'));
       alert(msg);
     } catch (err) {
       console.error('Error en login:', err);
-      alert(t('Error al iniciar sesión. Intenta de nuevo.'));
+      alert(__('Error al iniciar sesión. Intenta de nuevo.'));
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = t('Login');
+        btn.textContent = __('Login');
       }
     }
   }
@@ -270,11 +270,11 @@ class SignInView extends BaseView {
     const btn       = this.querySelector('#btnVerifyMfa');
     const code = String(codeInput?.value || '').trim();
     if (!/^[0-9]{6}$/.test(code)) {
-      if (errorEl) { errorEl.textContent = t('El código debe ser de 6 dígitos.'); errorEl.hidden = false; }
+      if (errorEl) { errorEl.textContent = __('El código debe ser de 6 dígitos.'); errorEl.hidden = false; }
       return;
     }
     if (errorEl) errorEl.hidden = true;
-    if (btn) { btn.disabled = true; btn.textContent = t('Verificando...'); }
+    if (btn) { btn.disabled = true; btn.textContent = __('Verificando...'); }
     try {
       const result = await window.authService.verifyMfa(this._pendingMfa.factorId, code);
       if (result.success && result.redirectRoute) {
@@ -283,14 +283,14 @@ class SignInView extends BaseView {
         return;
       }
       if (errorEl) {
-        errorEl.textContent = result.error || t('Código inválido. Intenta de nuevo.');
+        errorEl.textContent = result.error || __('Código inválido. Intenta de nuevo.');
         errorEl.hidden = false;
       }
     } catch (e) {
       console.error('handleVerifyMfa:', e);
-      if (errorEl) { errorEl.textContent = t('Error inesperado verificando código.'); errorEl.hidden = false; }
+      if (errorEl) { errorEl.textContent = __('Error inesperado verificando código.'); errorEl.hidden = false; }
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = t('Verificar'); }
+      if (btn) { btn.disabled = false; btn.textContent = __('Verificar'); }
     }
   }
 
@@ -327,21 +327,21 @@ class SignInView extends BaseView {
       return;
     }
     if (!window.authService) {
-      alert(t('Servicio no disponible.'));
+      alert(__('Servicio no disponible.'));
       return;
     }
 
     const btn = this.querySelector('#btnSendRecover');
     if (btn) {
       btn.disabled = true;
-      btn.textContent = t('Enviando...');
+      btn.textContent = __('Enviando...');
     }
 
     const result = await window.authService.resetPassword(email);
 
     if (btn) {
       btn.disabled = false;
-      btn.textContent = t('Enviar enlace');
+      btn.textContent = __('Enviar enlace');
     }
 
     if (result.success) {
@@ -350,7 +350,7 @@ class SignInView extends BaseView {
       if (form) form.hidden = true;
       if (success) success.hidden = false;
     } else {
-      alert(result.error || t('Error al enviar el correo. Intenta de nuevo.'));
+      alert(result.error || __('Error al enviar el correo. Intenta de nuevo.'));
     }
   }
 }

@@ -6,8 +6,10 @@
  *   - otro locale  -> busca en el catalogo; si falta, cae a la key (ES).
  *
  * Catalogos: window.__I18N_CATALOGS[locale] = { "texto ES": "translation" }.
- * Exposicion global: window.i18n y window.t para usar ${t('...')} en templates
+ * Exposicion global: window.i18n y window.__ para usar ${__('...')} en templates
  * (las vistas corren en el navegador con `window` global, sin imports).
+ * Se usa `__` (no `t`) porque `t` colisiona con variables locales comunes
+ * (forEach((t)=>...), const t=..., t.priority) en decenas de archivos.
  *
  * Resolucion inicial de idioma (precedencia):
  *   localStorage.userLocale > profiles.locale (al login) > navigator.language > 'es'
@@ -135,5 +137,6 @@
   }
 
   window.i18n = new I18n();
-  window.t = function (key, params) { return window.i18n.t(key, params); };
+  // Alias global corto para templates: ${__('texto')}. NO usar `t` (colisiona).
+  window.__ = function (key, params) { return window.i18n.t(key, params); };
 })();

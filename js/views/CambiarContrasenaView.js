@@ -23,24 +23,24 @@ class CambiarContrasenaView extends BaseView {
             </div>
 
             <div class="cambiar-contrasena-invalid" id="changePasswordInvalid" hidden>
-              <h2 class="signin-recover-title">${t('Enlace inválido o expirado')}</h2>
-              <p class="signin-recover-desc">${t('Este enlace ya no es válido. Solicita uno nuevo desde la página de inicio de sesión.')}</p>
-              <a href="/login" class="btn btn-primary" id="linkInvalidToLogin">${t('Ir a iniciar sesión')}</a>
+              <h2 class="signin-recover-title">${__('Enlace inválido o expirado')}</h2>
+              <p class="signin-recover-desc">${__('Este enlace ya no es válido. Solicita uno nuevo desde la página de inicio de sesión.')}</p>
+              <a href="/login" class="btn btn-primary" id="linkInvalidToLogin">${__('Ir a iniciar sesión')}</a>
             </div>
 
             <div class="cambiar-contrasena-form-wrap" id="changePasswordFormWrap" hidden>
-              <h2 class="signin-recover-title">${t('Cambiar contraseña')}</h2>
-              <p class="signin-recover-desc">${t('Introduce tu nueva contraseña. Debe tener al menos 8 caracteres.')}</p>
+              <h2 class="signin-recover-title">${__('Cambiar contraseña')}</h2>
+              <p class="signin-recover-desc">${__('Introduce tu nueva contraseña. Debe tener al menos 8 caracteres.')}</p>
               <form id="form_change_password" novalidate>
-                <input type="password" class="form-input" id="newPassword" name="newPassword" placeholder="${t('Nueva contraseña')}" autocomplete="new-password" required minlength="8">
-                <input type="password" class="form-input" id="newPasswordConfirm" name="newPasswordConfirm" placeholder="${t('Confirmar contraseña')}" autocomplete="new-password" required minlength="8">
-                <button type="submit" class="btn btn-primary" id="btnChangePassword">${t('Cambiar contraseña')}</button>
+                <input type="password" class="form-input" id="newPassword" name="newPassword" placeholder="${__('Nueva contraseña')}" autocomplete="new-password" required minlength="8">
+                <input type="password" class="form-input" id="newPasswordConfirm" name="newPasswordConfirm" placeholder="${__('Confirmar contraseña')}" autocomplete="new-password" required minlength="8">
+                <button type="submit" class="btn btn-primary" id="btnChangePassword">${__('Cambiar contraseña')}</button>
               </form>
-              <a href="/login" class="signin-recover-back" id="linkChangeBackToLogin">${t('Volver al inicio de sesión')}</a>
+              <a href="/login" class="signin-recover-back" id="linkChangeBackToLogin">${__('Volver al inicio de sesión')}</a>
             </div>
 
             <div class="cambiar-contrasena-loading" id="changePasswordLoading">
-              <p class="signin-recover-desc">${t('Verificando enlace...')}</p>
+              <p class="signin-recover-desc">${__('Verificando enlace...')}</p>
             </div>
           </div>
         </div>
@@ -119,28 +119,28 @@ class CambiarContrasenaView extends BaseView {
       const btn = this.querySelector('#btnChangePassword');
 
       if (!newPassword || newPassword.length < 8) {
-        alert(t('La contraseña debe tener al menos 8 caracteres.'));
+        alert(__('La contraseña debe tener al menos 8 caracteres.'));
         return;
       }
       if (newPassword !== confirm) {
-        alert(t('Las contraseñas no coinciden.'));
+        alert(__('Las contraseñas no coinciden.'));
         return;
       }
 
       if (btn) {
         btn.disabled = true;
-        btn.textContent = t('Guardando...');
+        btn.textContent = __('Guardando...');
       }
 
       const { error } = await supabase.auth.updateUser({ password: newPassword });
 
       if (btn) {
         btn.disabled = false;
-        btn.textContent = t('Cambiar contraseña');
+        btn.textContent = __('Cambiar contraseña');
       }
 
       if (error) {
-        alert(error.message || t('Error al actualizar la contraseña.'));
+        alert(error.message || __('Error al actualizar la contraseña.'));
         return;
       }
 

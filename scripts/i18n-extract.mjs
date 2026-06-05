@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * i18n-extract — recolecta las claves t('...') del frontend de cara al usuario
+ * i18n-extract — recolecta las claves __('...') del frontend de cara al usuario
  * y mantiene en sincronia el catalogo EN.
  *
  * Modelo "espanol como clave": la clave es el texto espanol literal dentro de
  * t('...') / t("..."). Este script:
  *   1. Escanea js/ (excluyendo vistas Dev/Lead y los propios archivos i18n).
  *   2. Escribe la lista canonica ordenada en js/i18n/keys.json.
- *   3. Hace merge NO destructivo en js/i18n/en.js entre los marcadores
+ *   3. Hace merge NO destructivo en js/i18n/en.js entre los marcadores (no se
  *      I18N:BEGIN / I18N:END: agrega claves nuevas con valor "", conserva las
  *      traducidas, y reporta claves huerfanas (en el catalogo pero ya sin uso).
  *
@@ -43,9 +43,9 @@ function walk(dir, acc = []) {
   return acc;
 }
 
-// Captura t('...') / t("...") incluyendo escapes. Solo `t(` standalone
-// (\b evita coincidir con palabras como import(, consent(, split(...).
-const CALL_RE = /\bt\(\s*(['"])((?:\\.|(?!\1).)*)\1/g;
+// Captura __('...') / __("...") incluyendo escapes. El nombre `__` se eligio
+// por no colisionar con variables locales (a diferencia de `t`).
+const CALL_RE = /(?<![\w$])__\(\s*(['"])((?:\\.|(?!\1).)*)\1/g;
 
 function unescape(str, quote) {
   // Convierte la secuencia tal como la veria JS en runtime.

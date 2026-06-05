@@ -21,24 +21,24 @@
         <div class="modal-overlay" id="userSettingsModalOverlay"></div>
         <div class="modal-content glass-white">
           <div class="modal-header">
-            <h3 id="userSettingsModalTitle">${t('Configuración')}</h3>
-            <button type="button" class="modal-close" id="userSettingsModalClose" data-action="close-settings-modal" aria-label="${t('Cerrar')}">&times;</button>
+            <h3 id="userSettingsModalTitle">${__('Configuración')}</h3>
+            <button type="button" class="modal-close" id="userSettingsModalClose" data-action="close-settings-modal" aria-label="${__('Cerrar')}">&times;</button>
           </div>
           <div class="modal-body user-settings-modal-body">
             <div id="userSettingsTabs" class="user-settings-tabs">
-              <button type="button" class="btn btn-secondary" data-section="account">${t('Cuenta')}</button>
-              <button type="button" class="btn btn-secondary" data-section="general">${t('General')}</button>
-              <button type="button" class="btn btn-secondary" data-section="security">${t('Seguridad')}</button>
+              <button type="button" class="btn btn-secondary" data-section="account">${__('Cuenta')}</button>
+              <button type="button" class="btn btn-secondary" data-section="general">${__('General')}</button>
+              <button type="button" class="btn btn-secondary" data-section="security">${__('Seguridad')}</button>
             </div>
             <div id="userSettingsPanels" class="user-settings-panels">
               <section data-section="account">
-                <div class="form-group"><label>${t('Nombre')}</label><input type="text" class="form-input" id="settingsAccountName" readonly></div>
-                <div class="form-group"><label>${t('Correo')}</label><input type="email" class="form-input" id="settingsAccountEmail" readonly></div>
-                <div class="form-group"><label>${t('Organización')}</label><input type="text" class="form-input" id="settingsAccountOrg" readonly></div>
+                <div class="form-group"><label>${__('Nombre')}</label><input type="text" class="form-input" id="settingsAccountName" readonly></div>
+                <div class="form-group"><label>${__('Correo')}</label><input type="email" class="form-input" id="settingsAccountEmail" readonly></div>
+                <div class="form-group"><label>${__('Organización')}</label><input type="text" class="form-input" id="settingsAccountOrg" readonly></div>
               </section>
               <section data-section="general" class="is-hidden">
                 <div class="form-group">
-                  <label for="settingsGeneralLanguage">${t('Idioma')}</label>
+                  <label for="settingsGeneralLanguage">${__('Idioma')}</label>
                   <select id="settingsGeneralLanguage" class="form-select">
                     <option value="es">Español</option>
                     <option value="en">English</option>
@@ -47,16 +47,16 @@
                 <div class="form-group">
                   <label style="display:flex;align-items:center;gap:.5rem;">
                     <input type="checkbox" id="settingsGeneralNotifications" checked>
-                    <span>${t('Notificaciones')}</span>
+                    <span>${__('Notificaciones')}</span>
                   </label>
                 </div>
               </section>
               <section data-section="security" class="is-hidden">
                 <div class="form-group">
-                  <button type="button" class="btn btn-primary" id="settingsSecurityChangePassword"><i class="fas fa-key"></i> ${t('Cambiar contraseña')}</button>
+                  <button type="button" class="btn btn-primary" id="settingsSecurityChangePassword"><i class="fas fa-key"></i> ${__('Cambiar contraseña')}</button>
                 </div>
                 <div class="form-group">
-                  <button type="button" class="btn btn-secondary" id="settingsSecurityEditEmail"><i class="fas fa-envelope"></i> ${t('Editar correo')}</button>
+                  <button type="button" class="btn btn-secondary" id="settingsSecurityEditEmail"><i class="fas fa-envelope"></i> ${__('Editar correo')}</button>
                 </div>
               </section>
             </div>
@@ -100,7 +100,7 @@
       window.router?.navigate('/cambiar-contrasena');
     });
     document.getElementById('settingsSecurityEditEmail')?.addEventListener('click', () => {
-      alert(t('La edición de correo estará disponible pronto.'));
+      alert(__('La edición de correo estará disponible pronto.'));
     });
     document.getElementById('userSettingsTabs')?.querySelectorAll('[data-section]').forEach((btn) => {
       btn.addEventListener('click', () => this.setSettingsSection(btn.getAttribute('data-section') || 'account'));
@@ -141,8 +141,8 @@
     const modal = document.getElementById('userSettingsModal');
     if (!modal) return;
     const user = window.authService?.getCurrentUser();
-    const orgName = this._orgCache?.name || window.currentOrgName || t('Sin organización');
-    const name = user?.full_name || user?.user_metadata?.full_name || t('Usuario');
+    const orgName = this._orgCache?.name || window.currentOrgName || __('Sin organización');
+    const name = user?.full_name || user?.user_metadata?.full_name || __('Usuario');
     const email = user?.email || '';
     const nameEl = modal.querySelector('#settingsAccountName');
     const emailEl = modal.querySelector('#settingsAccountEmail');
