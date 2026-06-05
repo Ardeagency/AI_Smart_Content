@@ -8,7 +8,7 @@
  */
 class ProductionView extends BaseView {
   static cacheable = true;
-  static documentTitle = 'Producción';
+  static get documentTitle() { return __('Producción'); }
 
   constructor() {
     super();
@@ -26,39 +26,39 @@ class ProductionView extends BaseView {
                 <!-- Header de filtros -->
                 <header class="living-history-filters">
                     <div class="living-filter living-filter-date">
-                        <label class="living-filter-label">Fecha</label>
+                        <label class="living-filter-label">${__('Fecha')}</label>
                         <div class="living-date-trigger" id="livingDateTrigger" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
-                            <span class="living-date-value" id="livingDateValue">Seleccionar</span>
+                            <span class="living-date-value" id="livingDateValue">${__('Seleccionar')}</span>
                             <i class="fas fa-calendar-alt living-date-icon" aria-hidden="true"></i>
                         </div>
                         <div class="living-date-dropdown" id="livingDateDropdown" aria-hidden="true">
                             <div class="living-date-nav">
-                                <button type="button" class="living-date-nav-btn" id="livingDatePrev" aria-label="Mes anterior"><i class="fas fa-chevron-left"></i></button>
+                                <button type="button" class="living-date-nav-btn" id="livingDatePrev" aria-label="${__('Mes anterior')}"><i class="fas fa-chevron-left"></i></button>
                                 <span class="living-date-month-year" id="livingDateMonthYear">Noviembre 2022</span>
-                                <button type="button" class="living-date-nav-btn" id="livingDateNext" aria-label="Mes siguiente"><i class="fas fa-chevron-right"></i></button>
+                                <button type="button" class="living-date-nav-btn" id="livingDateNext" aria-label="${__('Mes siguiente')}"><i class="fas fa-chevron-right"></i></button>
                             </div>
                             <div class="living-date-weekdays">
-                                <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+                                <span>${__('Lun')}</span><span>${__('Mar')}</span><span>${__('Mié')}</span><span>${__('Jue')}</span><span>${__('Vie')}</span><span>${__('Sáb')}</span><span>${__('Dom')}</span>
                             </div>
                             <div class="living-date-grid" id="livingDateGrid"></div>
                             <div class="living-date-actions">
-                                <button type="button" class="living-date-clear" id="livingDateClear">Limpiar</button>
+                                <button type="button" class="living-date-clear" id="livingDateClear">${__('Limpiar')}</button>
                             </div>
                         </div>
                     </div>
                     <div class="living-filter living-filter-type">
-                        <label class="living-filter-label">Tipo de contenido</label>
+                        <label class="living-filter-label">${__('Tipo de contenido')}</label>
                         <select class="living-filter-select" id="livingFilterType">
-                            <option value="">Todos</option>
-                            <option value="image">Imagen</option>
-                            <option value="video">Video</option>
-                            <option value="text">Texto</option>
+                            <option value="">${__('Todos')}</option>
+                            <option value="image">${__('Imagen')}</option>
+                            <option value="video">${__('Video')}</option>
+                            <option value="text">${__('Texto')}</option>
                         </select>
                     </div>
                     <div class="living-filter living-filter-flow">
-                        <label class="living-filter-label">Flujo</label>
+                        <label class="living-filter-label">${__('Flujo')}</label>
                         <select class="living-filter-select" id="livingFilterFlow">
-                            <option value="">Todos los flujos</option>
+                            <option value="">${__('Todos los flujos')}</option>
                         </select>
                     </div>
                 </header>
@@ -219,7 +219,7 @@ class ProductionView extends BaseView {
                         <i class="fas fa-film"></i>
                         <span>Animate</span>
                     </button>
-                    <button type="button" class="pmodal-cta pmodal-cta--outline" data-action="publish" disabled title="Próximamente">
+                    <button type="button" class="pmodal-cta pmodal-cta--outline" data-action="publish" disabled title="${__('Próximamente')}">
                         <i class="fas fa-upload"></i>
                         <span>Publish</span>
                     </button>
@@ -231,7 +231,7 @@ class ProductionView extends BaseView {
                         <i class="fas fa-external-link-alt"></i>
                         <span>Open in</span>
                     </button>
-                    <button type="button" class="pmodal-secondary" data-action="reference" disabled title="Próximamente">
+                    <button type="button" class="pmodal-secondary" data-action="reference" disabled title="${__('Próximamente')}">
                         <i class="fas fa-bookmark"></i>
                         <span>Reference</span>
                     </button>
@@ -244,22 +244,22 @@ class ProductionView extends BaseView {
                         <span>Download</span>
                     </button>
                     <div class="pmodal-footer-icons">
-                        <button type="button" class="pmodal-icon-btn" data-action="like" aria-pressed="false" aria-label="Me gusta">
+                        <button type="button" class="pmodal-icon-btn" data-action="like" aria-pressed="false" aria-label="${__('Me gusta')}">
                             <i class="fas fa-heart"></i>
                         </button>
                         <div class="pmodal-kebab-wrap">
-                            <button type="button" class="pmodal-icon-btn" data-action="kebab" aria-expanded="false" aria-label="Más">
+                            <button type="button" class="pmodal-icon-btn" data-action="kebab" aria-expanded="false" aria-label="${__('Más')}">
                                 <i class="fas fa-bars"></i>
                             </button>
                             <div class="pmodal-kebab-menu" role="menu" hidden>
                                 <button type="button" role="menuitem" data-action="copy-prompt">
-                                    <i class="fas fa-copy"></i> Copiar prompt
+                                    <i class="fas fa-copy"></i> ${__('Copiar prompt')}
                                 </button>
                                 <button type="button" role="menuitem" data-action="copy-url">
-                                    <i class="fas fa-link"></i> Copiar enlace
+                                    <i class="fas fa-link"></i> ${__('Copiar enlace')}
                                 </button>
                                 <button type="button" role="menuitem" class="pmodal-kebab-danger" data-action="delete">
-                                    <i class="fas fa-trash"></i> Eliminar producción
+                                    <i class="fas fa-trash"></i> ${__('Eliminar producción')}
                                 </button>
                             </div>
                         </div>

@@ -13,7 +13,7 @@
  */
 class ExecutionHistoryView extends BaseView {
   static cacheable = true;
-  static documentTitle = 'Execution History';
+  static get documentTitle() { return __('Execution History'); }
 
   constructor() {
     super();
@@ -29,16 +29,16 @@ class ExecutionHistoryView extends BaseView {
 <div class="exec-page" id="execPage">
   <div class="exec-container">
     <div class="exec-header">
-      <h1 class="exec-title">Execution History</h1>
-      <p class="exec-subtitle">Cada sesion agrupa las producciones de un mismo run. Abre una para seguir generando dentro de ella.</p>
+      <h1 class="exec-title">${__('Execution History')}</h1>
+      <p class="exec-subtitle">${__('Cada sesion agrupa las producciones de un mismo run. Abre una para seguir generando dentro de ella.')}</p>
     </div>
     <div class="exec-grid" id="execGrid">
       ${ExecutionHistoryView.skeletonGrid(8, 'lg')}
     </div>
     <div class="exec-empty" id="execEmpty" style="display: none;">
       <div class="exec-empty-icon"><i class="fas fa-clock-rotate-left"></i></div>
-      <p>Aun no tienes sesiones de produccion manual.</p>
-      <p class="exec-empty-hint">Cada vez que produces un flujo desde el Estudio se crea una sesion. Aqui podras reabrirla y seguir generando dentro del mismo run.</p>
+      <p>${__('Aun no tienes sesiones de produccion manual.')}</p>
+      <p class="exec-empty-hint">${__('Cada vez que produces un flujo desde el Estudio se crea una sesion. Aqui podras reabrirla y seguir generando dentro del mismo run.')}</p>
     </div>
   </div>
 </div>`;
@@ -72,7 +72,7 @@ class ExecutionHistoryView extends BaseView {
     } catch (err) {
       console.error('ExecutionHistoryView render:', err);
       const grid = document.getElementById('execGrid');
-      if (grid) grid.innerHTML = `<p class="exec-error">Error al cargar el historial. ${err && err.message ? this.escapeHtml(err.message) : 'Recarga la pagina.'}</p>`;
+      if (grid) grid.innerHTML = `<p class="exec-error">${__('Error al cargar el historial.')} ${err && err.message ? this.escapeHtml(err.message) : __('Recarga la pagina.')}</p>`;
     }
   }
 
@@ -173,7 +173,7 @@ class ExecutionHistoryView extends BaseView {
         if (!images.length && flow?.flow_image_url) images.push(flow.flow_image_url);
         return {
           ...r,
-          flow_name: flow?.name || 'Flujo eliminado',
+          flow_name: flow?.name || __('Flujo eliminado'),
           flow_slug: flow ? this.flowNameToSlug(flow.name) : '',
           images,
           output_count: outs.length
@@ -207,9 +207,9 @@ class ExecutionHistoryView extends BaseView {
                       : status === 'failed' || status === 'error' ? 'task-card-badge-danger'
                       : status === 'running' || status === 'in_progress' ? 'task-card-badge-running'
                       : 'task-card-badge-paused';
-    const statusLabel = status === 'completed' ? 'Completado'
-                      : status === 'failed' || status === 'error' ? 'Error'
-                      : status === 'running' || status === 'in_progress' ? 'En curso'
+    const statusLabel = status === 'completed' ? __('Completado')
+                      : status === 'failed' || status === 'error' ? __('Error')
+                      : status === 'running' || status === 'in_progress' ? __('En curso')
                       : status ? status.charAt(0).toUpperCase() + status.slice(1) : '—';
     const { rel } = this._formatRunDateParts(r.created_at);
     const images = Array.isArray(r.images) ? r.images : [];
@@ -228,7 +228,7 @@ class ExecutionHistoryView extends BaseView {
       : '';
 
     return `
-      <button type="button" class="exec-card${disabled ? ' exec-card--disabled' : ''}"${multi ? ' data-carousel="1"' : ''} data-run-id="${this.escapeHtml(r.id)}" data-flow-slug="${this.escapeHtml(r.flow_slug)}"${disabled ? ' disabled title="El flujo de esta sesion ya no existe"' : ''}>
+      <button type="button" class="exec-card${disabled ? ' exec-card--disabled' : ''}"${multi ? ' data-carousel="1"' : ''} data-run-id="${this.escapeHtml(r.id)}" data-flow-slug="${this.escapeHtml(r.flow_slug)}"${disabled ? ` disabled title="${__('El flujo de esta sesion ya no existe')}"` : ''}>
         <div class="exec-card-media">
           ${media}
           <div class="exec-card-gradient" aria-hidden="true"></div>
@@ -240,7 +240,7 @@ class ExecutionHistoryView extends BaseView {
           <div class="exec-card-info">
             <h3 class="exec-card-flow">${this.escapeHtml(r.flow_name)}</h3>
             <span class="exec-card-when">${this.escapeHtml(rel)}</span>
-            <span class="exec-card-resume"><i class="fas fa-arrow-right"></i> Continuar sesion</span>
+            <span class="exec-card-resume"><i class="fas fa-arrow-right"></i> ${__('Continuar sesion')}</span>
           </div>
         </div>
       </button>
@@ -317,10 +317,10 @@ class ExecutionHistoryView extends BaseView {
     const diff = Math.max(0, Date.now() - d.getTime());
     const m = Math.floor(diff / 60000);
     let rel;
-    if (m < 1) rel = 'ahora';
-    else if (m < 60) rel = `hace ${m} min`;
-    else if (m < 1440) rel = `hace ${Math.floor(m / 60)} h`;
-    else rel = `hace ${Math.floor(m / 1440)} d`;
+    if (m < 1) rel = __('ahora');
+    else if (m < 60) rel = __('hace {n} min', { n: m });
+    else if (m < 1440) rel = __('hace {n} h', { n: Math.floor(m / 60) });
+    else rel = __('hace {n} d', { n: Math.floor(m / 1440) });
     return { rel };
   }
 

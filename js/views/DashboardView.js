@@ -20,7 +20,7 @@
  * ARDE Agency S.A.S. — spec: dashboard_mi_marca_spec.docx
  */
 class DashboardView extends BaseView {
-  static documentTitle = 'Inicio';
+  static get documentTitle() { return __('Inicio'); }
 
   // Habilita back/forward HTML cache: al volver desde Studio/Production al
   // dashboard, restaura HTML+scroll instant; los tabs refrescan en background.
@@ -138,17 +138,18 @@ class DashboardView extends BaseView {
     if (!ts) return '';
     const days = Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
     const stale = days > 3 ? ' dash-freshness--stale' : '';
-    return `<span class="dash-freshness${stale}" title="Ultima captura de datos del scraping">
-      <i class="dash-freshness-dot"></i> Datos al ${this._esc(this._fmtFreshness(ts, days))}
+    return `<span class="dash-freshness${stale}" title="${__('Ultima captura de datos del scraping')}">
+      <i class="dash-freshness-dot"></i> ${__('Datos al {fecha}', { fecha: this._esc(this._fmtFreshness(ts, days)) })}
     </span>`;
   }
 
   _fmtFreshness(ts, days) {
     try {
       const d = new Date(ts);
-      const dateStr = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
-      if (days <= 0) return `hoy (${dateStr})`;
-      if (days === 1) return `ayer (${dateStr})`;
+      const dl = (window.i18n && window.i18n.getLocale() === 'en') ? 'en-US' : 'es-CO';
+      const dateStr = d.toLocaleDateString(dl, { day: 'numeric', month: 'short' });
+      if (days <= 0) return __('hoy ({date})', { date: dateStr });
+      if (days === 1) return __('ayer ({date})', { date: dateStr });
       return dateStr;
     } catch (_) { return ''; }
   }
@@ -158,14 +159,14 @@ class DashboardView extends BaseView {
      opcion + cierre al hacer click afuera, via un listener delegado unico. */
   _reportDropdown() {
     const opts = [
-      { k: 'competencia', label: 'Informes de competencia' },
-      { k: 'diagnostico', label: 'Diagnostico de marca' },
-      { k: 'ventas',      label: 'Informes de ventas' },
-      { k: 'productos',   label: 'Research de productos' },
+      { k: 'competencia', label: __('Informes de competencia') },
+      { k: 'diagnostico', label: __('Diagnostico de marca') },
+      { k: 'ventas',      label: __('Informes de ventas') },
+      { k: 'productos',   label: __('Research de productos') },
     ];
     return `
       <details class="dash-report-dd">
-        <summary class="dash-report-btn"><i class="fas fa-file-circle-plus"></i><span>Crear informe</span><i class="fas fa-chevron-down dash-report-caret"></i></summary>
+        <summary class="dash-report-btn"><i class="fas fa-file-circle-plus"></i><span>${__('Crear informe')}</span><i class="fas fa-chevron-down dash-report-caret"></i></summary>
         <div class="dash-report-menu">
           ${opts.map((o) => `<button type="button" class="dash-report-item" data-report="${o.k}">${o.label}</button>`).join('')}
         </div>
@@ -228,14 +229,14 @@ class DashboardView extends BaseView {
 
   _onCreateReport(type) {
     const labels = {
-      competencia: 'Informes de competencia',
-      diagnostico: 'Diagnostico de marca',
-      ventas: 'Informes de ventas',
-      productos: 'Research de productos',
+      competencia: __('Informes de competencia'),
+      diagnostico: __('Diagnostico de marca'),
+      ventas: __('Informes de ventas'),
+      productos: __('Research de productos'),
     };
-    const label = labels[type] || 'Informe';
+    const label = labels[type] || __('Informe');
     if (typeof window.showToast === 'function') {
-      window.showToast(`${label}: proximamente`, { type: 'info' });
+      window.showToast(__('{label}: próximamente', { label }), { type: 'info' });
     }
   }
 
@@ -375,33 +376,38 @@ class DashboardView extends BaseView {
   }
 
   // Definicion unica de los tabs (orden = orden visual en el hero).
-  static TABS = [
-    { id: 'my-brands',  label: 'Mi Marca'    },
-    { id: 'competence', label: 'Competencia' },
-    { id: 'tendencies', label: 'Tendencias'  },
-    { id: 'strategy',   label: 'Estrategia'  },
-  ];
+  // Getter (no static field) para que __() se evalue con el idioma activo.
+  static get TABS() {
+    return [
+      { id: 'my-brands',  label: __('Mi Marca')    },
+      { id: 'competence', label: __('Competencia') },
+      { id: 'tendencies', label: __('Tendencias')  },
+      { id: 'strategy',   label: __('Estrategia')  },
+    ];
+  }
 
   // Copy del hero por tab: titulo (parte fuerte + parte ligera) + descripcion.
   // El degradado del hero es el dinamico de la marca (--brand-gradient-dynamic).
-  static HERO_COPY = {
-    'my-brands': {
-      strong: 'Mi Marca',
-      desc: 'El pulso de tu marca: salud, campanas activas y como rinde tu contenido frente a tu audiencia.',
-    },
-    'competence': {
-      strong: 'Competencia',
-      desc: 'El campo de batalla: que publican tus competidores, la voz de su audiencia y sus vulnerabilidades.',
-    },
-    'tendencies': {
-      strong: 'Tendencias',
-      desc: 'El pulso del nicho: senales emergentes, oceanos azules, lexico vivo y marcas que despuntan.',
-    },
-    'strategy': {
-      strong: 'Estrategia',
-      desc: 'Las recomendaciones de Vera: lecturas cruzadas de todas las senales y aprendizaje continuo.',
-    },
-  };
+  static get HERO_COPY() {
+    return {
+      'my-brands': {
+        strong: __('Mi Marca'),
+        desc: __('El pulso de tu marca: salud, campanas activas y como rinde tu contenido frente a tu audiencia.'),
+      },
+      'competence': {
+        strong: __('Competencia'),
+        desc: __('El campo de batalla: que publican tus competidores, la voz de su audiencia y sus vulnerabilidades.'),
+      },
+      'tendencies': {
+        strong: __('Tendencias'),
+        desc: __('El pulso del nicho: senales emergentes, oceanos azules, lexico vivo y marcas que despuntan.'),
+      },
+      'strategy': {
+        strong: __('Estrategia'),
+        desc: __('Las recomendaciones de Vera: lecturas cruzadas de todas las senales y aprendizaje continuo.'),
+      },
+    };
+  }
 
   // Hero estilo overview: degradado dinamico de la marca + titulo en
   // peso mixto + tabs sobre el degradado + cards del plan de accion.
@@ -615,7 +621,7 @@ class DashboardView extends BaseView {
         min-height:60vh;padding:48px 24px;
       ">
         <h2 style="margin:0;font-size:28px;font-weight:600;letter-spacing:-.02em;">
-          Próximamente
+          ${__('Próximamente')}
         </h2>
       </div>`;
   }
