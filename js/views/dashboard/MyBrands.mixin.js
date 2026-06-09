@@ -686,7 +686,12 @@
       const order = [1, 2, 3, 4, 5, 6, 0];
       const bucket = (v) => { if (v <= 0) return 0; const r = v / max; if (r <= 0.25) return 1; if (r <= 0.5) return 2; if (r <= 0.75) return 3; return 4; };
       const rowsHtml = order.map((d) => {
-        const cells = m[d].map((v, h) => `<span class="mb-heat-cell mb-heat-cell--l${bucket(v)}" title="${dayName[d]} ${h}:00 · ${v} ${v === 1 ? 'post' : 'posts'}"></span>`).join('');
+        const cells = m[d].map((v, h) => {
+          const t = `${dayName[d]} ${h}:00 · ${v} ${v === 1 ? 'post' : 'posts'}`;
+          const cls = `mb-heat-cell mb-heat-cell--l${bucket(v)}${v > 0 ? ' mb-heat-cell--click' : ''}`;
+          const attrs = v > 0 ? ` data-mb-hours-modal data-hour="${h}" role="button" tabindex="0"` : '';
+          return `<span class="${cls}" title="${t}"${attrs}></span>`;
+        }).join('');
         return `<span class="mb-heat-rowlbl">${dayName[d]}</span><div class="mb-heat-cells">${cells}</div>`;
       }).join('');
       return `
@@ -1116,6 +1121,117 @@
           </div>
           <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="${__('Abrir publicacion')}"><i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}</div>
         </div>`;
+    },
+
+    /* ════════════════════════════════════════════════════════════════
+       Popup de Patron de horas: click en una celda → publicaciones de ESA hora
+       (agregadas en todas las dias de la ventana, hora en zona America/Bogota,
+       igual que el heatmap). Navegable entre horas con publicaciones. Mismo
+       diseno universal (dash-modal) + tabla de contenido.
+       ════════════════════════════════════════════════════════════════ */
+    _fmtHour(h) {
+      const ampm = h < 12 ? 'AM' : 'PM';
+      let hh = h % 12; if (hh === 0) hh = 12;
+      return `${hh}:00 ${ampm}`;
+    },
+    /** Hora 0–23 del post en zona horaria de la marca (America/Bogota). */
+    _bogotaHour(ts) {
+      if (!ts) return null;
+      try {
+        const s = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Bogota', hour: '2-digit', hour12: false, hourCycle: 'h23' }).format(new Date(ts));
+        const h = parseInt(s, 10);
+        return Number.isFinite(h) ? (h % 24) : null;
+      } catch (_) { return null; }
+    },
+    /** Trae los posts propios de la ventana y los agrupa por hora (Bogota). */
+    async _loadHoursBuckets() {
+      const map = new Map();
+      if (!this._supabase || !this._orgId) return map;
+      const win = this._mbCampanasData?.window || {};
+      const bcid = this._mbFilters?.brandContainerId;
+      try {
+        const { data, error } = await this._supabase.rpc('dashboard_brand_top_highlighted_posts', {
+          p_org_id:              this._orgId,
+          p_brand_container_ids: bcid ? [bcid] : null,
+          p_post_source:         'own',
+          p_date_from:           win.date_from || '2000-01-01T00:00:00Z',
+          p_date_to:             win.date_to   || new Date().toISOString(),
+          p_limit:               500,
+        });
+        if (error) throw error;
+        (Array.isArray(data) ? data : []).forEach((p) => {
+          const h = this._bogotaHour(p.captured_at);
+          if (h == null) return;
+          if (!map.has(h)) map.set(h, []);
+          map.get(h).push(p);
+        });
+      } catch (e) { console.warn('[hours posts]', e?.message || e); }
+      return map;
+    },
+    _openHoursModal(hour) {
+      if (!window.Modal || typeof window.Modal.show !== 'function') return;
+      const headLabel = `${__('Publicaciones a las')} ${this._fmtHour(hour)}`;
+      const body = `
+        <div class="mb-actm">
+          <div class="mb-actm-nav">
+            <button class="mb-actm-navbtn" data-mb-hr-prev type="button" aria-label="${__('Anterior')}"><i class="fas fa-chevron-left"></i></button>
+            <div class="mb-actm-nav-info">
+              <div class="mb-actm-period" data-mb-hr-label>${this._esc(headLabel)}</div>
+              <div class="mb-actm-sub" data-mb-hr-sub></div>
+            </div>
+            <button class="mb-actm-navbtn" data-mb-hr-next type="button" aria-label="${__('Siguiente')}"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          <div class="mb-actm-content" style="border-top:none;padding-top:0">
+            <div class="mb-actm-content-body" data-mb-hr-content>
+              <div class="mb-actm-content-loading"><i class="fas fa-circle-notch fa-spin"></i></div>
+            </div>
+          </div>
+        </div>`;
+
+      const { modal, bodyEl } = window.Modal.show({ title: headLabel, body, className: 'dash-modal' });
+      const titleH3   = modal.querySelector('.modal-header h3');
+      const labelEl   = bodyEl.querySelector('[data-mb-hr-label]');
+      const subEl     = bodyEl.querySelector('[data-mb-hr-sub]');
+      const prevBtn   = bodyEl.querySelector('[data-mb-hr-prev]');
+      const nextBtn   = bodyEl.querySelector('[data-mb-hr-next]');
+      const contentEl = bodyEl.querySelector('[data-mb-hr-content]');
+
+      let hoursList = [];
+      let sel = 0;
+      const render = () => {
+        const h = hoursList[sel];
+        const posts = h == null ? [] : (this._hoursBuckets.get(h) || []);
+        const label = `${__('Publicaciones a las')} ${this._fmtHour(h == null ? hour : h)}`;
+        if (titleH3) titleH3.textContent = label;
+        if (labelEl) labelEl.textContent = label;
+        if (subEl)   subEl.textContent = `${posts.length} ${posts.length === 1 ? __('publicacion') : __('publicaciones')}`;
+        if (prevBtn) prevBtn.disabled = sel <= 0;
+        if (nextBtn) nextBtn.disabled = sel >= hoursList.length - 1;
+        if (contentEl) contentEl.innerHTML = posts.length
+          ? `<div class="mb-tpt">
+               <div class="mb-tpt-head"><span>${__('Autor')}</span><span>${__('Contenido')}</span><span>${__('Métricas')}</span><span>${__('Análisis')}</span><span></span></div>
+               ${posts.map((p) => this._activityPostRow(p)).join('')}
+             </div>`
+          : `<div class="mb-actm-content-empty">${__('Sin publicaciones en esta hora.')}</div>`;
+      };
+
+      prevBtn?.addEventListener('click', () => { if (sel > 0) { sel--; render(); } });
+      nextBtn?.addEventListener('click', () => { if (sel < hoursList.length - 1) { sel++; render(); } });
+
+      this._loadHoursBuckets().then((map) => {
+        this._hoursBuckets = map;
+        hoursList = [...map.keys()].sort((a, b) => a - b);
+        if (!hoursList.length) {
+          if (subEl) subEl.textContent = `0 ${__('publicaciones')}`;
+          if (contentEl) contentEl.innerHTML = `<div class="mb-actm-content-empty">${__('Sin publicaciones en esta hora.')}</div>`;
+          if (prevBtn) prevBtn.disabled = true;
+          if (nextBtn) nextBtn.disabled = true;
+          return;
+        }
+        sel = hoursList.indexOf(hour);
+        if (sel < 0) sel = 0;
+        render();
+      });
     },
 
     /* Seccion causal: 'boost' = lo que te impulsa, 'drag' = lo que te resta.
@@ -1974,6 +2090,8 @@
         }
         const actCard = e.target.closest('[data-mb-activity-modal]');
         if (actCard) { if (!e.target.closest('canvas')) this._openActivityModal(); return; }
+        const hourCell = e.target.closest('[data-mb-hours-modal]');
+        if (hourCell) { this._openHoursModal(Number(hourCell.dataset.hour)); return; }
         const card = e.target.closest('[data-feat-detail]');
         if (!card) return;
         this._openFeaturedDetail(card.dataset.dim, card.dataset.value, card.dataset.title);
@@ -1981,6 +2099,8 @@
       body.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
         if (e.target.closest('[data-mb-activity-modal]')) { e.preventDefault(); this._openActivityModal(); return; }
+        const hourCell = e.target.closest('[data-mb-hours-modal]');
+        if (hourCell) { e.preventDefault(); this._openHoursModal(Number(hourCell.dataset.hour)); return; }
         const card = e.target.closest('[data-feat-detail]');
         if (!card) return;
         e.preventDefault();

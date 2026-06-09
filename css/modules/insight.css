@@ -3162,6 +3162,9 @@
 .mb-heat-cell--l2, .mb-heat-dot--l2 { background: rgba(124,131,255,0.5); }
 .mb-heat-cell--l3, .mb-heat-dot--l3 { background: rgba(124,131,255,0.75); }
 .mb-heat-cell--l4, .mb-heat-dot--l4 { background: #7c83ff; }
+.mb-heat-cell--click { cursor: pointer; transition: outline 0.12s ease, transform 0.12s ease; }
+.mb-heat-cell--click:hover { outline: 1.5px solid rgba(255,255,255,0.55); outline-offset: 0; transform: scale(1.18); }
+.mb-heat-cell--click:focus-visible { outline: 1.5px solid #7c83ff; }
 .mb-heat-axis { display: flex; justify-content: space-between; padding-left: 32px; font-size: 0.5625rem; color: var(--text-muted, rgba(212,209,216,0.45)); }
 
 
