@@ -2970,8 +2970,14 @@ class VeraView extends (window.BaseView || class {}) {
         return `<div class="vera-metrics-grid">${metricsHtml}</div>`;
       }
       case 'actions': {
-        const actionsHtml = block.actions.map(a => `
-          <button class="vera-action-pill" onclick="window._veraSendAction && window._veraSendAction(${JSON.stringify(a)})">${esc(a)} ↗</button>`).join('');
+        // Las acciones son SEGUIMIENTOS CONVERSACIONALES: al click se envian como
+        // mensaje del usuario a Vera (no navegan). Escapamos para atributo HTML
+        // (las comillas en el texto rompian el onclick -> click muerto).
+        const actionsHtml = block.actions.map(a => {
+          const safe = String(a ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          return `
+          <button class="vera-action-pill" title="Click para preguntarle esto a Vera" onclick="window._veraSendAction && window._veraSendAction('${safe}')">${esc(a)}</button>`;
+        }).join('');
         return `<div class="vera-actions-row">${actionsHtml}</div>`;
       }
       case 'confirm': {
