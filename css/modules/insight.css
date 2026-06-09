@@ -3097,7 +3097,11 @@
    botones; anula --glass-bg/blur de .modal-content que sobre --bg-overlay daba
    el morado-gris deprecado). Apaisado/horizontal en pantallas grandes, alto
    segun contenido con scroll (hasta 88vh). Uso: Modal.show({ className: 'dash-modal' }). */
-.dash-modal {
+/* Selector duplicado con prefijo #modals-portal para ganarle en especificidad
+   a `#modals-portal .modal-content { max-width: 640px }` (developer.css), que
+   si no aplasta el ancho apaisado. */
+.modal-content.dash-modal,
+#modals-portal .modal-content.dash-modal {
   width: 100%;
   max-width: min(1100px, calc(100vw - 3rem));
   max-height: 88vh;
@@ -3108,7 +3112,8 @@
   -webkit-backdrop-filter: none;
 }
 @media (max-width: 720px) {
-  .dash-modal { max-width: calc(100vw - 1.5rem); max-height: 92vh; }
+  .modal-content.dash-modal,
+  #modals-portal .modal-content.dash-modal { max-width: calc(100vw - 1.5rem); max-height: 92vh; }
 }
 .mb-actm { display: flex; flex-direction: column; gap: 1rem; }
 .mb-actm-sub { font-size: 0.72rem; color: var(--text-muted); }
