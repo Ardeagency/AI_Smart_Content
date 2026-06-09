@@ -3081,6 +3081,36 @@
 .mb-long-card--wide .mb-long-canvas { height: 230px; }
 @media (max-width: 760px) { .mb-long-grid { grid-template-columns: 1fr; } }
 
+/* Card "Historial de actividad": clickable → abre el popup detallado */
+.mb-long-card--clickable { cursor: pointer; transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease; }
+.mb-long-card--clickable:hover { border-color: var(--brand-primary, #5b9bd5); box-shadow: 0 6px 20px rgba(0,0,0,0.28); transform: translateY(-1px); }
+.mb-long-card--clickable:focus-visible { outline: 2px solid var(--brand-primary, #5b9bd5); outline-offset: 2px; }
+.mb-long-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.65rem; }
+.mb-long-card-head .mb-long-card-title { margin-bottom: 0; }
+.mb-long-card-expand { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
+.mb-long-card--clickable:hover .mb-long-card-expand { color: var(--text-primary, #D4D1D8); }
+
+/* Popup detallado del Historial de actividad (Modal.show) */
+.mb-activity-modal { max-width: min(880px, calc(100vw - 2rem)); }
+.mb-actm { display: flex; flex-direction: column; gap: 1rem; }
+.mb-actm-sub { font-size: 0.78rem; color: var(--text-muted); }
+.mb-actm-stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 0.6rem; }
+.mb-actm-stat { background: var(--bg-card); border: 1px solid var(--border-divider); border-radius: 12px; padding: 0.7rem 0.85rem; display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.mb-actm-stat-val { font-size: 1.15rem; font-weight: 700; color: var(--text-primary, #D4D1D8); line-height: 1.1; }
+.mb-actm-stat-lbl { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+.mb-actm-chart { position: relative; height: 240px; }
+.mb-actm-tablewrap { max-height: 280px; overflow-y: auto; border: 1px solid var(--border-divider); border-radius: 12px; }
+.mb-actm-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.mb-actm-table thead th { position: sticky; top: 0; background: var(--bg-card); text-align: left; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 600; padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border-divider); }
+.mb-actm-table td { padding: 0.55rem 0.85rem; border-bottom: 1px solid var(--border-divider); color: var(--text-primary, #D4D1D8); }
+.mb-actm-table tbody tr:last-child td { border-bottom: none; }
+.mb-actm-num { text-align: right; }
+.mb-actm-muted { color: var(--text-muted); }
+.mb-actm-sen { width: 120px; }
+.mb-actm-senbar { display: flex; height: 7px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,0.06); }
+.mb-actm-senbar span { display: block; height: 100%; }
+@media (max-width: 640px) { .mb-actm-stats { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+
 /* Banner de actividad (estado + redes) al tope de Analisis Longitudinal */
 .mb-actb { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: space-between; padding: 0.7rem 0.95rem; margin-bottom: 1rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-divider, #34363A); border-radius: 10px; }
 .mb-actb-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary, rgba(212,209,216,0.85)); }

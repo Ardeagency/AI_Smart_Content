@@ -652,8 +652,11 @@
           ${this._buildHealthAlerts(data?.health?.data?.components)}
           ${!act.length ? `<div class="mb-causal-empty">${__('Aun no hay suficiente historial. Amplia el rango (prueba Todo el periodo).')}</div>` : `
           <div class="mb-long-grid">
-            <div class="mb-long-card mb-long-card--wide">
-              <div class="mb-long-card-title">${__('Historial de actividad')}</div>
+            <div class="mb-long-card mb-long-card--wide mb-long-card--clickable" data-mb-activity-modal role="button" tabindex="0" aria-label="${__('Ver historial de actividad en detalle')}">
+              <div class="mb-long-card-head">
+                <div class="mb-long-card-title">${__('Historial de actividad')}</div>
+                <span class="mb-long-card-expand"><i class="fas fa-up-right-and-down-left-from-center"></i> ${__('Ver detalle')}</span>
+              </div>
               <div class="mb-long-canvas"><canvas id="mbLongActivity"></canvas></div>
             </div>
             <div class="mb-long-card mb-long-card--wide">
@@ -921,6 +924,151 @@
     _fmtMonthLabel(ts) {
       try { return new Date(ts).toLocaleDateString('es-CO', { month: 'short', year: '2-digit' }); }
       catch (_) { return ''; }
+    },
+
+    /* ════════════════════════════════════════════════════════════════
+       Popup detallado del Historial de actividad
+       Click en la card → modal (primitiva Modal.show) con una vista ampliada
+       de la serie longitudinal de la marca: resumen + chart grande + desglose
+       por periodo. Adaptado del popup de AI Partner, pero con la data propia
+       de Mi Marca (no inventa metricas: solo cruza activity/engagement/sentiment).
+       ════════════════════════════════════════════════════════════════ */
+    _openActivityModal() {
+      if (!window.Modal || typeof window.Modal.show !== 'function') return;
+      const L = this._mbCampanasData?.longitudinal || {};
+      const act  = Array.isArray(L.activity?.data)   ? L.activity.data   : [];
+      const eng  = Array.isArray(L.engagement?.data) ? L.engagement.data : [];
+      const sent = Array.isArray(L.sentiment?.data)  ? L.sentiment.data  : [];
+      if (!act.length) return;
+
+      // Cruces por periodo: engagement por etiqueta (fallback por indice),
+      // sentimiento por period_start.
+      const engByLabel  = new Map(eng.map((r) => [r.period_label, Number(r.total_engagement) || 0]));
+      const sentByStart = new Map(sent.map((r) => [r.period_start, r]));
+      const C = (n) => this._compactNum(n);
+
+      const totalPosts = act.reduce((s, r) => s + (Number(r.posts_count) || 0), 0);
+      const totalEng   = eng.reduce((s, r) => s + (Number(r.total_engagement) || 0), 0);
+      const avgPosts   = act.length ? Math.round(totalPosts / act.length) : 0;
+      const sPos = sent.reduce((s, r) => s + (Number(r.positive_posts) || 0), 0);
+      const sNeu = sent.reduce((s, r) => s + (Number(r.neutral_posts)  || 0), 0);
+      const sNeg = sent.reduce((s, r) => s + (Number(r.negative_posts) || 0), 0);
+      const sTot = sPos + sNeu + sNeg;
+      const posPct = sTot ? Math.round(sPos / sTot * 100) : null;
+
+      const stat = (val, lbl) => `
+        <div class="mb-actm-stat">
+          <span class="mb-actm-stat-val">${val}</span>
+          <span class="mb-actm-stat-lbl">${lbl}</span>
+        </div>`;
+
+      const rows = act.map((r, i) => {
+        const posts = Number(r.posts_count) || 0;
+        const e = engByLabel.has(r.period_label)
+          ? engByLabel.get(r.period_label)
+          : (eng[i] ? Number(eng[i].total_engagement) || 0 : null);
+        const sd = sentByStart.get(r.period_start);
+        let senCell = '<span class="mb-actm-muted">—</span>';
+        if (sd) {
+          const p = Number(sd.positive_posts) || 0, n = Number(sd.neutral_posts) || 0, g = Number(sd.negative_posts) || 0;
+          const t = p + n + g || 1;
+          senCell = `
+            <div class="mb-actm-senbar" title="${p} ${__('Positivo')} · ${n} ${__('Neutro')} · ${g} ${__('Negativo')}">
+              <span style="width:${p / t * 100}%;background:#6bcf7f"></span>
+              <span style="width:${n / t * 100}%;background:#8a8a8e"></span>
+              <span style="width:${g / t * 100}%;background:#e06464"></span>
+            </div>`;
+        }
+        return `
+          <tr>
+            <td>${this._esc(r.period_label || '')}</td>
+            <td class="mb-actm-num">${fmt.int(posts)}</td>
+            <td class="mb-actm-num">${e == null ? '<span class="mb-actm-muted">—</span>' : C(e)}</td>
+            <td class="mb-actm-sen">${senCell}</td>
+          </tr>`;
+      }).join('');
+
+      const range = act.length
+        ? `${this._esc(act[0].period_label)} – ${this._esc(act[act.length - 1].period_label)}`
+        : '';
+
+      const body = `
+        <div class="mb-actm">
+          <div class="mb-actm-sub">${range} · ${act.length} ${act.length === 1 ? __('periodo') : __('periodos')}</div>
+          <div class="mb-actm-stats">
+            ${stat(fmt.int(totalPosts), __('Publicaciones'))}
+            ${stat(C(totalEng), __('Engagement'))}
+            ${stat(fmt.int(avgPosts), __('Promedio por periodo'))}
+            ${stat(posPct == null ? '—' : posPct + '%', __('Positivo'))}
+          </div>
+          <div class="mb-actm-chart"><canvas id="mbActModalChart"></canvas></div>
+          <div class="mb-actm-tablewrap">
+            <table class="mb-actm-table">
+              <thead><tr>
+                <th>${__('Periodo')}</th>
+                <th class="mb-actm-num">${__('Posts')}</th>
+                <th class="mb-actm-num">${__('Engagement')}</th>
+                <th>${__('Sentimiento')}</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+
+      let chart = null;
+      window.Modal.show({
+        title: __('Historial de actividad'),
+        body,
+        className: 'modal-content--lg mb-activity-modal',
+        onClose: () => { try { chart?.destroy(); } catch (_) {} },
+      });
+      this._renderActivityModalChart(act, eng).then((c) => { chart = c; });
+    },
+
+    /** Chart grande del popup: posts (eje izq) + engagement (eje der, punteado). */
+    async _renderActivityModalChart(act, eng) {
+      try { await this._ensureChartJs(); } catch (_) {}
+      const Chart = window.Chart;
+      const cv = document.getElementById('mbActModalChart');
+      if (!Chart || !cv) return null;
+      const TICK = 'rgba(212,209,216,0.45)';
+      const GRID = 'rgba(255,255,255,0.05)';
+      const grad = (hex) => { const ctx = cv.getContext('2d'); const g = ctx.createLinearGradient(0, 0, 0, 240); g.addColorStop(0, hex + '4D'); g.addColorStop(1, hex + '00'); return g; };
+      const labels = act.map((r) => r.period_label);
+      const datasets = [{
+        label: __('Posts'), data: act.map((r) => Number(r.posts_count) || 0), yAxisID: 'y',
+        borderColor: '#5b9bd5', backgroundColor: grad('#5b9bd5'),
+        fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4,
+      }];
+      const scales = {
+        x: { grid: { display: false }, ticks: { color: TICK, font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+        y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, ticks: { color: '#5b9bd5', font: { size: 10 }, maxTicksLimit: 5 } },
+      };
+      if (eng.length) {
+        const engByLabel = new Map(eng.map((r) => [r.period_label, Number(r.total_engagement) || 0]));
+        datasets.push({
+          label: __('Engagement'), yAxisID: 'y1',
+          data: act.map((r, i) => engByLabel.has(r.period_label) ? engByLabel.get(r.period_label) : (eng[i] ? Number(eng[i].total_engagement) || 0 : null)),
+          borderColor: '#6bcf7f', backgroundColor: 'transparent',
+          fill: false, tension: 0.4, borderWidth: 2, borderDash: [4, 3], pointRadius: 0, pointHoverRadius: 4,
+        });
+        scales.y1 = { position: 'right', grid: { display: false }, border: { display: false }, beginAtZero: true, ticks: { color: '#6bcf7f', font: { size: 10 }, maxTicksLimit: 5, callback: (v) => this._compactNum(v) } };
+      }
+      try {
+        return new Chart(cv, {
+          type: 'line',
+          data: { labels, datasets },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { display: true, labels: { color: TICK, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { size: 10 } } },
+              tooltip: { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10 },
+            },
+            scales,
+          },
+        });
+      } catch (_) { return null; }
     },
 
     /* Seccion causal: 'boost' = lo que te impulsa, 'drag' = lo que te resta.
@@ -1777,12 +1925,14 @@
           if (sel.key === 'platform') this._onMbFilterChange({ platforms: sel.value ? [sel.value] : null });
           return;
         }
+        if (e.target.closest('[data-mb-activity-modal]')) { this._openActivityModal(); return; }
         const card = e.target.closest('[data-feat-detail]');
         if (!card) return;
         this._openFeaturedDetail(card.dataset.dim, card.dataset.value, card.dataset.title);
       });
       body.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.target.closest('[data-mb-activity-modal]')) { e.preventDefault(); this._openActivityModal(); return; }
         const card = e.target.closest('[data-feat-detail]');
         if (!card) return;
         e.preventDefault();
