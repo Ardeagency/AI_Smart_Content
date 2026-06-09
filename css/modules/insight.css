@@ -3117,6 +3117,12 @@
 .mb-actm-stat--sen { justify-content: center; gap: 0.45rem; }
 .mb-actm-stat--sen .mb-actm-senbar { width: 100%; }
 .mb-actm-chart { position: relative; height: 240px; }
+/* Contenido del periodo: posts reales del rango seleccionado */
+.mb-actm-content { display: flex; flex-direction: column; gap: 0.7rem; padding-top: 0.25rem; border-top: 1px solid var(--border-divider); }
+.mb-actm-content-title { display: flex; align-items: center; gap: 0.45rem; font-size: 0.85rem; font-weight: 700; color: var(--text-primary, #D4D1D8); }
+.mb-actm-content-title i { color: #5b9bd5; font-size: 0.8rem; }
+.mb-actm-content-loading, .mb-actm-content-empty { padding: 1.1rem; text-align: center; color: var(--text-muted); font-size: 0.8rem; }
+.mb-actm-content-loading i { font-size: 1.05rem; }
 .mb-actm-muted { color: var(--text-muted); }
 .mb-actm-senbar { display: flex; height: 7px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,0.06); }
 .mb-actm-senbar span { display: block; height: 100%; }

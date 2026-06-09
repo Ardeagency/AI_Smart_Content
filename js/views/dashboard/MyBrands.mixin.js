@@ -990,6 +990,10 @@
           </div>
           <div class="mb-actm-stats" data-mb-act-stats></div>
           <div class="mb-actm-chart"><canvas id="mbActModalChart"></canvas></div>
+          <div class="mb-actm-content">
+            <div class="mb-actm-content-title"><i class="fas fa-newspaper"></i> ${__('Contenido del periodo')}</div>
+            <div class="mb-actm-content-body" data-mb-act-content></div>
+          </div>
         </div>`;
 
       let chart = null;
@@ -1000,11 +1004,39 @@
         onClose: () => { try { chart?.destroy(); } catch (_) {} },
       });
 
-      const labelEl = bodyEl.querySelector('[data-mb-act-label]');
-      const subEl   = bodyEl.querySelector('[data-mb-act-sub]');
-      const statsEl = bodyEl.querySelector('[data-mb-act-stats]');
-      const prevBtn = bodyEl.querySelector('[data-mb-act-prev]');
-      const nextBtn = bodyEl.querySelector('[data-mb-act-next]');
+      const labelEl   = bodyEl.querySelector('[data-mb-act-label]');
+      const subEl     = bodyEl.querySelector('[data-mb-act-sub]');
+      const statsEl   = bodyEl.querySelector('[data-mb-act-stats]');
+      const prevBtn   = bodyEl.querySelector('[data-mb-act-prev]');
+      const nextBtn   = bodyEl.querySelector('[data-mb-act-next]');
+      const contentEl = bodyEl.querySelector('[data-mb-act-content]');
+
+      // Contenido del periodo: posts REALES de ese rango. Cache por indice +
+      // token de request para que navegar rapido no pinte resultados viejos.
+      const postsCache = new Map();
+      let reqToken = 0;
+      let lastContentIdx = -1;
+      const renderPosts = (posts) => {
+        if (!contentEl) return;
+        if (posts == null) { contentEl.innerHTML = `<div class="mb-actm-content-empty">${__('No se pudieron cargar las publicaciones.')}</div>`; return; }
+        if (!posts.length) { contentEl.innerHTML = `<div class="mb-actm-content-empty">${__('Sin publicaciones en este periodo.')}</div>`; return; }
+        contentEl.innerHTML = `
+          <div class="mb-tpt">
+            <div class="mb-tpt-head"><span>${__('Autor')}</span><span>${__('Contenido')}</span><span>${__('Métricas')}</span><span>${__('Análisis')}</span><span></span></div>
+            ${posts.map((p) => this._activityPostRow(p)).join('')}
+          </div>`;
+      };
+      const loadContent = (i) => {
+        if (!contentEl) return;
+        if (postsCache.has(i)) { renderPosts(postsCache.get(i)); return; }
+        const token = ++reqToken;
+        contentEl.innerHTML = `<div class="mb-actm-content-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+        this._loadActivityPeriodPosts(i, act).then((posts) => {
+          if (token !== reqToken) return;
+          postsCache.set(i, posts);
+          renderPosts(posts);
+        });
+      };
 
       const render = () => {
         const d = periodData(sel);
@@ -1027,6 +1059,7 @@
         if (prevBtn) prevBtn.disabled = sel <= 0;
         if (nextBtn) nextBtn.disabled = sel >= N - 1;
         if (chart) chart.update();
+        if (lastContentIdx !== sel) { lastContentIdx = sel; loadContent(sel); }
       };
 
       prevBtn?.addEventListener('click', () => { if (sel > 0) { sel--; render(); } });
@@ -1035,6 +1068,60 @@
       this._renderActivityModalChart(act, eng, () => sel, (i) => { sel = i; render(); })
         .then((c) => { chart = c; render(); });
       render();
+    },
+
+    /** Posts reales del periodo seleccionado (rango [period_start, siguiente)).
+        Reusa el RPC de posts destacados acotado por fechas. */
+    async _loadActivityPeriodPosts(i, act) {
+      if (!this._supabase || !this._orgId) return null;
+      const start = act[i]?.period_start;
+      if (!start) return [];
+      let end;
+      if (i < act.length - 1 && act[i + 1]?.period_start) {
+        end = new Date(new Date(act[i + 1].period_start).getTime() - 1).toISOString();
+      } else {
+        end = this._mbCampanasData?.window?.date_to || new Date().toISOString();
+      }
+      const bcid = this._mbFilters?.brandContainerId;
+      try {
+        const { data, error } = await this._supabase.rpc('dashboard_brand_top_highlighted_posts', {
+          p_org_id:              this._orgId,
+          p_brand_container_ids: bcid ? [bcid] : null,
+          p_post_source:         'own',
+          p_date_from:           start,
+          p_date_to:             end,
+          p_limit:               50,
+        });
+        if (error) throw error;
+        return Array.isArray(data) ? data : [];
+      } catch (e) {
+        console.warn('[activity posts]', e?.message || e);
+        return null;
+      }
+    },
+
+    /** Fila de post para el popup (mismo layout que Top posts: perfil/contenido/metricas/analisis/link). */
+    _activityPostRow(p) {
+      const topics = (Array.isArray(p.topics) ? p.topics : []).slice(0, 2);
+      const sc = this._sentClass(p.sentiment_text);
+      const url = this._postUrl(p);
+      return `
+        <div class="mb-tpt-row">
+          <div class="mb-tpt-profile">
+            <span class="mb-tpt-net"><i class="fab ${this._platformIcon(p.network)}"></i></span>
+            <div>
+              <div class="mb-tpt-name">@${this._esc(String(p.profile_handle || '').replace(/^@/, ''))}</div>
+              <div class="mb-tpt-date">${this._esc(this._fmtPostDate(p.captured_at))}</div>
+            </div>
+          </div>
+          <div class="mb-tpt-content">${this._esc(p.content_preview || '')}</div>
+          <div class="mb-tpt-metrics">${this._postMetricsHtml(p.metrics)}</div>
+          <div class="mb-tpt-analysis">
+            <span class="mb-tpt-sent mb-tpt-sent--${sc}">${this._sentLabel(p.sentiment_text)}</span>
+            ${topics.map((t) => `<span class="mb-tag">${this._esc(this._capWords(t))}</span>`).join('')}
+          </div>
+          <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="${__('Abrir publicacion')}"><i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}</div>
+        </div>`;
     },
 
     /** Chart del popup: serie completa de contexto (posts + engagement punteado),
