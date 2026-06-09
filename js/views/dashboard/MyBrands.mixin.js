@@ -869,7 +869,10 @@
       mk('mbLongActivity', { type: 'line', data: { labels: actLabels, datasets: [{
         label: __('Posts'), data: act.map((r) => Number(r.posts_count) || 0),
         borderColor: brandLine, backgroundColor: brandFill, fill: true, tension: 0.4, borderWidth: 2.5,
-        pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: brandHexes[brandHexes.length - 1],
+        // Un punto por cada periodo CON publicaciones (posts > 0); los ceros no marcan.
+        pointRadius: (ctx) => (Number(ctx.parsed?.y) > 0 ? 3 : 0),
+        pointHoverRadius: 5, pointBackgroundColor: brandHexes[brandHexes.length - 1],
+        pointBorderColor: brandHexes[brandHexes.length - 1],
       }] }, options: baseOpts() });
 
       // 2+5. Tendencia de engagement (eje izq, absoluto, verde) + Crecimiento %
@@ -1038,7 +1041,9 @@
       const datasets = [{
         label: __('Posts'), data: act.map((r) => Number(r.posts_count) || 0), yAxisID: 'y',
         borderColor: '#5b9bd5', backgroundColor: grad('#5b9bd5'),
-        fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4,
+        fill: true, tension: 0.4, borderWidth: 2.5,
+        pointRadius: (ctx) => (Number(ctx.parsed?.y) > 0 ? 3 : 0),
+        pointHoverRadius: 5, pointBackgroundColor: '#5b9bd5', pointBorderColor: '#5b9bd5',
       }];
       const scales = {
         x: { grid: { display: false }, ticks: { color: TICK, font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
