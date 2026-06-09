@@ -1000,7 +1000,7 @@
       const { bodyEl } = window.Modal.show({
         title: __('Historial de actividad'),
         body,
-        className: 'modal-content--lg mb-activity-modal',
+        className: 'dash-modal',
         onClose: () => { try { chart?.destroy(); } catch (_) {} },
       });
 
