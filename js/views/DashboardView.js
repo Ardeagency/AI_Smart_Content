@@ -26,6 +26,12 @@ class DashboardView extends BaseView {
   // dashboard, restaura HTML+scroll instant; los tabs refrescan en background.
   static cacheable = true;
 
+  // Auto-actualizacion en vivo: cada cuanto el tab activo re-lee datos en
+  // background (silencioso, sin skeleton ni recargar la pagina). Complementa al
+  // realtime de Supabase (que solo dispara si la tabla tiene replication on);
+  // el polling cubre datos que llegan via scrapers/jobs/RPCs agregadas.
+  static AUTO_REFRESH_MS = 60000;
+
   // Activación granular por tab. En 'false' renderiza el placeholder
   // "Próximamente" (definido en _renderComingSoon). Flipear a 'true' cuando
   // el mixin del tab esté listo.
@@ -112,6 +118,7 @@ class DashboardView extends BaseView {
 
     this._subscribeRealtime();
     await this._ensureFreshness();
+    this._startAutoRefresh();
   }
 
   /* ── Frescura de datos ──────────────────────────────────────────────
@@ -244,6 +251,7 @@ class DashboardView extends BaseView {
     this.clearSubnavFromHeader();
     [this._mbDatePicker, this._compDatePicker, this._tendDatePicker]
       .forEach(p => { try { p?.destroy?.(); } catch (_) {} });
+    this._stopAutoRefresh();
     this._unsubscribeRealtime();
     this._destroyCharts();
     if (this._onHashChange) {
@@ -314,8 +322,18 @@ class DashboardView extends BaseView {
   }
 
   _onRealtimeChange(scopes, _payload) {
-    // Invalida tanto el cache local del mixin como el del apiClient para que
-    // el próximo _fetchAll() vaya a Supabase (no devuelva data stale).
+    this._invalidateScopes(scopes);
+    if (!scopes.includes(this._activeTab)) return;
+    if (!document.getElementById('insightTabBody')) return;
+    // Re-render silencioso (sin skeleton): el usuario ve la data nueva aparecer
+    // en su sitio, no una recarga del layout.
+    this._refreshActiveTabSilently();
+  }
+
+  /* Invalida el cache local del mixin + el del apiClient para los scopes dados,
+     de modo que el proximo loadAll vaya a Supabase y no devuelva data stale.
+     Compartido por el realtime (_onRealtimeChange) y el polling (_startAutoRefresh). */
+  _invalidateScopes(scopes) {
     const orgId = this._orgId;
     if (scopes.includes('my-brands'))  {
       this._mbData = null;
@@ -325,12 +343,69 @@ class DashboardView extends BaseView {
     if (scopes.includes('competence')) { this._compData  = null; window.apiClient?.invalidate((k) => k.startsWith(`dash:competencia:${orgId}`)); }
     if (scopes.includes('tendencies')) { this._tendData  = null; window.apiClient?.invalidate((k) => k.startsWith(`dash:tendencias:${orgId}`)); }
     if (scopes.includes('strategy'))   { this._stratData = null; window.apiClient?.invalidate(`dash:strategia:${orgId}`); }
+  }
 
-    if (!scopes.includes(this._activeTab)) return;
-    if (!document.getElementById('insightTabBody')) return;
+  /* ── Auto-actualizacion en vivo (polling silencioso) ───────────────────
+     Cada AUTO_REFRESH_MS, mientras la pestana este visible, re-lee los datos
+     del tab activo y los re-pinta SIN skeleton (this._silentRefresh suprime
+     los skeletons de cada mixin). Pausa cuando el documento esta oculto y
+     refresca de inmediato al volver. No corre si el usuario tiene un menu
+     abierto (dropdown de filtros/informe) para no interrumpir su interaccion. */
+  _startAutoRefresh() {
+    if (this._autoRefreshTimer || !this._orgId) return;
+    const period = DashboardView.AUTO_REFRESH_MS || 60000;
+    this._autoRefreshTimer = setInterval(() => {
+      if (document.hidden) return;
+      this._invalidateScopes([this._activeTab]);
+      this._refreshActiveTabSilently();
+    }, period);
+    // Al volver a una pestaña que estuvo oculta, refrescar enseguida (la data
+    // pudo cambiar mientras no se veia) en vez de esperar al proximo tick.
+    this._onVisRefresh = () => {
+      if (document.hidden) return;
+      this._invalidateScopes([this._activeTab]);
+      this._refreshActiveTabSilently();
+    };
+    document.addEventListener('visibilitychange', this._onVisRefresh);
+  }
 
-    this._destroyCharts();
-    this._renderTab(this._activeTab);
+  _stopAutoRefresh() {
+    if (this._autoRefreshTimer) { clearInterval(this._autoRefreshTimer); this._autoRefreshTimer = null; }
+    if (this._onVisRefresh) { document.removeEventListener('visibilitychange', this._onVisRefresh); this._onVisRefresh = null; }
+  }
+
+  /* Re-pinta el tab activo en background sin skeleton ni parpadeo de charts.
+     - this._silentRefresh hace que los _render*Skeleton sean no-op: el contenido
+       viejo se queda en pantalla hasta que el innerHTML nuevo lo reemplaza.
+     - Los charts viejos se preservan visibles hasta el swap y se destruyen
+       despues (evita el frame en blanco de destruir-antes-de-cargar).
+     - Re-lee la frescura para que el chip "Datos al …" avance. */
+  async _refreshActiveTabSilently() {
+    if (this._silentRefresh) return;                       // ya hay un refresh en vuelo
+    const body = document.getElementById('insightTabBody');
+    if (!body || document.hidden) return;
+    // No interrumpir si el usuario tiene un menu abierto (filtros / crear informe).
+    if (document.querySelector('details.dash-report-dd[open], details.living-filter--menu[open]')) return;
+
+    const tab = this._activeTab;
+    const page = document.getElementById('insightPage');
+    const prevCharts = this._charts;
+    this._charts = [];                                     // el render nuevo registra aqui
+    this._silentRefresh = true;
+    page?.classList.add('is-refreshing');
+    try {
+      this._freshness = undefined;                         // forzar re-lectura de frescura
+      await this._ensureFreshness();
+      if (this._activeTab !== tab) return;                 // el usuario cambio de tab mientras tanto
+      await this._renderTab(tab);
+    } catch (e) {
+      console.warn('[Dashboard] auto-refresh failed:', e?.message || e);
+    } finally {
+      this._silentRefresh = false;
+      page?.classList.remove('is-refreshing');
+      // Destruir los charts viejos, ya reemplazados por el innerHTML del render.
+      prevCharts.forEach(c => { try { c.destroy(); } catch (_) {} });
+    }
   }
 
   _destroyCharts() {
@@ -594,7 +669,7 @@ class DashboardView extends BaseView {
     }
     // Skeleton inmediato: el usuario ve la silueta del layout mientras el
     // mixin fetchea data y reemplaza el HTML. Evita "salto" de empty a fresh.
-    if (!this._restoredFromCache) this._renderTabSkeleton(body);
+    if (!this._restoredFromCache && !this._silentRefresh) this._renderTabSkeleton(body);
     if (tabId === 'my-brands')  return this._renderMyBrands(body);
     if (tabId === 'competence') return this._renderCompetence(body);
     if (tabId === 'tendencies') return this._renderTendencies(body);

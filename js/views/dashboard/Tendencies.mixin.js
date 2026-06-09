@@ -83,6 +83,7 @@
     },
 
     _renderTendSkeleton(body) {
+      if (this._silentRefresh) return; // auto-refresh: conservar contenido hasta el swap
       body.innerHTML = `
         <div class="insight-page mb-dash">
           <div class="mb-gauge-skeleton skeleton-shimmer" style="height:90px;"></div>

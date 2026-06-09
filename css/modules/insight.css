@@ -3031,6 +3031,18 @@
 .dash-freshness--stale .dash-freshness-dot { background: #e0a464; box-shadow: 0 0 0 3px rgba(224,164,100,0.15); }
 @media (max-width: 760px) { .dash-freshness { margin-left: 0; width: 100%; } }
 
+/* Auto-actualizacion en vivo: mientras el dashboard re-lee datos en background
+   (sin recargar la pagina), el punto de frescura late suavemente como senal de
+   "actualizando". Se activa via .is-refreshing en #insightPage. */
+@keyframes dash-live-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(107,207,127,0.15); }
+  50%      { box-shadow: 0 0 0 5px rgba(107,207,127,0.30); }
+}
+.insight-page.is-refreshing .dash-freshness-dot { animation: dash-live-pulse 1.1s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .insight-page.is-refreshing .dash-freshness-dot { animation: none; }
+}
+
 /* Dropdown "Crear informe" (barra de filtros, derecha) */
 .dash-report-dd { margin-left: auto; position: relative; }
 .dash-report-dd > summary { list-style: none; }
