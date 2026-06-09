@@ -989,19 +989,16 @@
             <button class="mb-actm-navbtn" data-mb-act-next type="button" aria-label="${__('Siguiente')}"><i class="fas fa-chevron-right"></i></button>
           </div>
           <div class="mb-actm-stats" data-mb-act-stats></div>
-          <div class="mb-actm-chart"><canvas id="mbActModalChart"></canvas></div>
           <div class="mb-actm-content">
             <div class="mb-actm-content-title"><i class="fas fa-newspaper"></i> ${__('Contenido del periodo')}</div>
             <div class="mb-actm-content-body" data-mb-act-content></div>
           </div>
         </div>`;
 
-      let chart = null;
       const { bodyEl } = window.Modal.show({
         title: __('Historial de actividad'),
         body,
         className: 'dash-modal',
-        onClose: () => { try { chart?.destroy(); } catch (_) {} },
       });
 
       const labelEl   = bodyEl.querySelector('[data-mb-act-label]');
@@ -1058,15 +1055,12 @@
           `<div class="mb-actm-stat mb-actm-stat--sen"><span class="mb-actm-stat-lbl">${__('Sentimiento')}</span>${senBar}</div>`;
         if (prevBtn) prevBtn.disabled = sel <= 0;
         if (nextBtn) nextBtn.disabled = sel >= N - 1;
-        if (chart) chart.update();
         if (lastContentIdx !== sel) { lastContentIdx = sel; loadContent(sel); }
       };
 
       prevBtn?.addEventListener('click', () => { if (sel > 0) { sel--; render(); } });
       nextBtn?.addEventListener('click', () => { if (sel < N - 1) { sel++; render(); } });
 
-      this._renderActivityModalChart(act, eng, () => sel, (i) => { sel = i; render(); })
-        .then((c) => { chart = c; render(); });
       render();
     },
 
@@ -1122,65 +1116,6 @@
           </div>
           <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="${__('Abrir publicacion')}"><i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}</div>
         </div>`;
-    },
-
-    /** Chart del popup: serie completa de contexto (posts + engagement punteado),
-        con el periodo seleccionado resaltado. getSel()=indice activo; onSelect=click. */
-    async _renderActivityModalChart(act, eng, getSel, onSelect) {
-      try { await this._ensureChartJs(); } catch (_) {}
-      const Chart = window.Chart;
-      const cv = document.getElementById('mbActModalChart');
-      if (!Chart || !cv) return null;
-      const TICK = 'rgba(212,209,216,0.45)';
-      const GRID = 'rgba(255,255,255,0.05)';
-      const grad = (hex) => { const ctx = cv.getContext('2d'); const g = ctx.createLinearGradient(0, 0, 0, 240); g.addColorStop(0, hex + '4D'); g.addColorStop(1, hex + '00'); return g; };
-      const labels = act.map((r) => r.period_label);
-      const datasets = [{
-        label: __('Posts'), data: act.map((r) => Number(r.posts_count) || 0), yAxisID: 'y',
-        borderColor: '#5b9bd5', backgroundColor: grad('#5b9bd5'),
-        fill: true, tension: 0.4, borderWidth: 2.5,
-        // Periodo seleccionado resaltado; el resto: punto solo si posts>0.
-        pointRadius: (ctx) => (ctx.dataIndex === getSel() ? 6 : (Number(ctx.parsed?.y) > 0 ? 3 : 0)),
-        pointHoverRadius: 6,
-        pointBackgroundColor: (ctx) => (ctx.dataIndex === getSel() ? '#a7e4fb' : '#5b9bd5'),
-        pointBorderColor: (ctx) => (ctx.dataIndex === getSel() ? '#ffffff' : '#5b9bd5'),
-        pointBorderWidth: (ctx) => (ctx.dataIndex === getSel() ? 2 : 1),
-      }];
-      const scales = {
-        x: { grid: { display: false }, ticks: { color: TICK, font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
-        y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, ticks: { color: '#5b9bd5', font: { size: 10 }, maxTicksLimit: 5 } },
-      };
-      if (eng.length) {
-        const engByLabel = new Map(eng.map((r) => [r.period_label, Number(r.total_engagement) || 0]));
-        datasets.push({
-          label: __('Engagement'), yAxisID: 'y1',
-          data: act.map((r, i) => engByLabel.has(r.period_label) ? engByLabel.get(r.period_label) : (eng[i] ? Number(eng[i].total_engagement) || 0 : null)),
-          borderColor: '#6bcf7f', backgroundColor: 'transparent',
-          fill: false, tension: 0.4, borderWidth: 2, borderDash: [4, 3], pointRadius: 0, pointHoverRadius: 4,
-        });
-        scales.y1 = { position: 'right', grid: { display: false }, border: { display: false }, beginAtZero: true, ticks: { color: '#6bcf7f', font: { size: 10 }, maxTicksLimit: 5, callback: (v) => this._compactNum(v) } };
-      }
-      try {
-        return new Chart(cv, {
-          type: 'line',
-          data: { labels, datasets },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            onClick: (evt, els, chart) => {
-              try {
-                const pts = chart.getElementsAtEventForMode(evt, 'index', { intersect: false }, false);
-                if (pts && pts.length && typeof onSelect === 'function') onSelect(pts[0].index);
-              } catch (_) {}
-            },
-            plugins: {
-              legend: { display: true, labels: { color: TICK, boxWidth: 8, boxHeight: 8, usePointStyle: true, font: { size: 10 } } },
-              tooltip: { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10 },
-            },
-            scales,
-          },
-        });
-      } catch (_) { return null; }
     },
 
     /* Seccion causal: 'boost' = lo que te impulsa, 'drag' = lo que te resta.

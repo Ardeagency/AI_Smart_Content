@@ -3130,7 +3130,6 @@
 .mb-actm-stat-lbl { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
 .mb-actm-stat--sen { justify-content: center; gap: 0.45rem; }
 .mb-actm-stat--sen .mb-actm-senbar { width: 100%; }
-.mb-actm-chart { position: relative; height: 240px; }
 /* Contenido del periodo: posts reales del rango seleccionado */
 .mb-actm-content { display: flex; flex-direction: column; gap: 0.7rem; padding-top: 0.25rem; border-top: 1px solid var(--border-divider); }
 .mb-actm-content-title { display: flex; align-items: center; gap: 0.45rem; font-size: 0.85rem; font-weight: 700; color: var(--text-primary, #D4D1D8); }
