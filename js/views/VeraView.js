@@ -2657,6 +2657,27 @@ class VeraView extends (window.BaseView || class {}) {
     // Handler global para action pills emitidos por bloques [ACTIONS].
     if (typeof window !== 'undefined') {
       window._veraSendAction = (text) => this.sendMessage(text);
+      // Aprobacion de accion de escritura (gate APPROVE_ACTION): persiste el
+      // TASK_EVENT (igual que el checkbox) y dispara a Vera para que ejecute.
+      window._veraApproveAction = async (key, msgId, btnEl) => {
+        if (btnEl) { btnEl.disabled = true; btnEl.textContent = '✓ Aprobado'; btnEl.classList.add('vera-approve-pill--done'); }
+        try {
+          const token = this.supabase ? (await this.supabase.auth.getSession())?.data?.session?.access_token : null;
+          await fetch(getAiTaskEventUrl(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+            body: JSON.stringify({
+              organization_id: this.aiState.organization_id,
+              conversation_id: this.aiState.active_conversation_id,
+              source_message_id: msgId,
+              task_index: 0,
+              task_text: 'APPROVE_ACTION:' + key,
+              checked: true,
+            }),
+          });
+        } catch (err) { console.warn('approve failed', err); }
+        this.sendMessage('Aprobado, procede con la accion.');
+      };
       window._veraOpenArtifact = (btnEl) => this._openArtifactPanel(btnEl);
     }
   }
@@ -2788,6 +2809,14 @@ class VeraView extends (window.BaseView || class {}) {
         .filter(l => l.startsWith('- '))
         .map(l => l.replace(/^- /, '').trim());
       blocks.push({ id, type: 'actions', actions });
+      return `\n\n{{${id}}}\n\n`;
+    });
+
+    // APPROVE_ACTION:KEY (gate de escritura) -> boton de aprobacion en vez de
+    // un checkbox markdown crudo. El click persiste el TASK_EVENT de aprobacion.
+    processed = processed.replace(/^[ \t]*[-*]\s*\[ \]\s*APPROVE_ACTION:([A-Z0-9_:-]+)\s*$/gm, (_, key) => {
+      const id = `vb_${blocks.length}`;
+      blocks.push({ id, type: 'approve', key });
       return `\n\n{{${id}}}\n\n`;
     });
 
@@ -2979,6 +3008,12 @@ class VeraView extends (window.BaseView || class {}) {
           <button class="vera-action-pill" title="Click para preguntarle esto a Vera" onclick="window._veraSendAction && window._veraSendAction('${safe}')">${esc(a)}</button>`;
         }).join('');
         return `<div class="vera-actions-row">${actionsHtml}</div>`;
+      }
+      case 'approve': {
+        // Gate de escritura: boton de aprobacion (en vez del checkbox crudo).
+        const aMsgId = block._msgId || '';
+        const aKey = esc(block.key || '');
+        return `<div class="vera-actions-row"><button class="vera-action-pill vera-approve-pill" title="Aprobar y ejecutar esta accion" onclick="window._veraApproveAction && window._veraApproveAction('${aKey}', ${JSON.stringify(aMsgId)}, this)">✓ Aprobar y ejecutar</button></div>`;
       }
       case 'confirm': {
         const msgId = block._msgId || '';
