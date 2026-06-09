@@ -2420,6 +2420,23 @@ class VeraView extends (window.BaseView || class {}) {
         block.classList.add('answered');
         btn.classList.add('selected');
       }
+      // Si el mensaje trae VARIOS grupos interactivos (formulario multi-parametro,
+      // p.ej. Escenario + Formato + Movimiento), acumula cada seleccion en el
+      // composer en vez de enviar — asi el usuario junta todas las decisiones y
+      // envia una sola vez. Con un solo grupo (quick reply) se envia de inmediato.
+      const msgEl = btn.closest('.gpt-msg');
+      const groupCount = msgEl ? msgEl.querySelectorAll('.vera-interactive').length : 1;
+      if (groupCount > 1) {
+        const input = document.getElementById('veraInput');
+        if (input) {
+          const cur = (input.value || '').trim();
+          input.value = cur ? `${cur}, ${value.trim()}` : value.trim();
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.focus();
+          try { input.selectionStart = input.selectionEnd = input.value.length; } catch (_) {}
+        }
+        return;
+      }
       this._undockQuestion();
       this.sendMessage(value.trim());
     });
