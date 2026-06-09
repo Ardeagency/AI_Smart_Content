@@ -19,7 +19,7 @@
     const html = `
       <div class="modal user-settings-modal" id="userSettingsModal" aria-hidden="true" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="userSettingsModalTitle">
         <div class="modal-overlay" id="userSettingsModalOverlay"></div>
-        <div class="modal-content glass-white">
+        <div class="modal-content glass-black">
           <div class="modal-header">
             <h3 id="userSettingsModalTitle">${__('Configuración')}</h3>
             <button type="button" class="modal-close" id="userSettingsModalClose" data-action="close-settings-modal" aria-label="${__('Cerrar')}">&times;</button>

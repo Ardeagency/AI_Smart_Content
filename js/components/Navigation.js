@@ -900,7 +900,7 @@ class Navigation {
     const html = `
       <div class="modal user-settings-modal notifications-modal" id="notificationsModal" aria-hidden="true" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="notificationsModalTitle">
         <div class="modal-overlay" id="notificationsModalOverlay"></div>
-        <div class="modal-content glass-white">
+        <div class="modal-content glass-black">
           <div class="modal-header">
             <h3 id="notificationsModalTitle">${__('Notificaciones')}</h3>
             <button type="button" class="modal-close" id="notificationsModalClose" data-action="close-notifications-modal" aria-label="${__('Cerrar')}">&times;</button>

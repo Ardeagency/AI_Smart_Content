@@ -1631,7 +1631,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .form-textarea {
     width: 100%;
     padding: 1rem;
-    background: var(--bg-dark);
+    background: var(--bg-primary);
     border: 1px solid rgba(236, 235, 218, 0.2);
     border-radius: var(--radius-sm);
     color: var(--text-primary);

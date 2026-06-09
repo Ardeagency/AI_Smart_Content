@@ -529,6 +529,20 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border: 1px solid var(--glass-white-border);
 }
 
+/* Modo blanco = frost blanco real (--glass-white-bg 0.55): el texto debe ir oscuro.
+   Redefinimos los tokens de texto en el scope para voltear toda la tipografia de las
+   cards de una sola vez; los colores semanticos (--color-*) quedan intactos. */
+#brandsListContainer.brand-cards-glass-white,
+.brand-dashboard-container.brand-cards-glass-white {
+    --text-primary: #0b0b0b;
+    --text-secondary: rgba(11, 11, 11, 0.82);
+    --text-muted: rgba(11, 11, 11, 0.6);
+    --brand-text-gold: #0b0b0b;
+    --brand-text-light: #0b0b0b;
+    --brand-text-muted: rgba(11, 11, 11, 0.6);
+    --icon-button: rgba(11, 11, 11, 0.7);
+}
+
 /* Trigger del dropdown (boton) sigue el patron glass de la card.
    El PANEL desplegable usa su propio bg solido (.typography-dropdown-panel),
    no se sobre-escribe aqui — la regla "Glass solo para botones, NO containers"

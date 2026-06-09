@@ -1335,7 +1335,7 @@
 }
 .video-prompt-ai-prompt-btn:hover {
     background: var(--accent-brand);
-    color: var(--bg-dark);
+    color: var(--bg-primary);
 }
 .video-prompt-db-list {
     flex: 1;
@@ -1375,7 +1375,7 @@
 }
 .video-prompt-db-item-btn:hover {
     background: var(--accent-brand);
-    color: var(--bg-dark);
+    color: var(--bg-primary);
     border-color: var(--accent-brand);
 }
 .video-prompt-db-list-empty {

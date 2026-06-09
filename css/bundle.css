@@ -60,9 +60,7 @@
     --accent-brand: var(--brand-primary, rgba(255, 255, 255, 0.35));
     --accent-brand-soft: var(--brand-primary-brillo, rgba(255, 255, 255, 0.08));
     --icon-button-active: var(--brand-primary, var(--icon-button));
-    --bg-overlay: rgba(23, 20, 29, 0.9);
     --bg-black: #000000;
-    --bg-dark: #0F0D12;
     --bg-interactive: #000000;
     --border-color: #242424;
     --border-light: #242424;
@@ -202,9 +200,12 @@
        muy sutil que mantiene la estetica frosted. */
     --glass-black-border: rgba(255, 255, 255, 0.08);
     --glass-black-text: #ffffff;
-    /* glass-white: panel más claro para legibilidad sobre fondos oscuros */
-    --glass-white-bg: rgba(255, 255, 255, 0.14);
-    --glass-white-border: rgba(255, 255, 255, 0.22);
+    /* glass-white: espejo blanco de glass-black (mismo recipe, en blanco).
+       Frost blanco real: base blanca 0.55 + filete negro 0.08 + blur 24/sat 140.
+       Texto oscuro (--glass-white-text) para legibilidad sobre el frost claro. */
+    --glass-white-bg: rgba(255, 255, 255, 0.55);
+    --glass-white-border: rgba(0, 0, 0, 0.08);
+    --glass-white-text: #0b0b0b;
     /* Blur para fondos de overlay (modales, backdrops); distinto del glass de UI */
     --overlay-blur: blur(6px);
     --shadow-card: 0 4px 16px rgba(32, 29, 38, 0.5);
@@ -439,7 +440,7 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: var(--bg-overlay);
+    background: var(--black-70);
     backdrop-filter: var(--overlay-blur);
     -webkit-backdrop-filter: var(--overlay-blur);
     z-index: 0;
@@ -675,13 +676,15 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
     border-radius: var(--glass-radius);
 }
-/* .glass-white — superficie sólida de card (#141517) en lugar de la blanca translúcida.
-   Nombre conservado por compatibilidad; aplicado a modales de Settings/Notifications.
-   La variable --glass-white-bg/--glass-white-border sigue disponible para acentos
-   sutiles (hovers, foco, micro-overlays) que sí quieren el tinte semi-transparente. */
+/* .glass-white — espejo blanco de .glass-black: mismo recipe frosted en blanco.
+   Base blanca 0.55 + filete negro 0.08 + blur 24/sat 140 + texto oscuro.
+   Para un panel oscuro frosted usar .glass-black; para uno claro, este. */
 .glass-white {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: var(--glass-white-bg);
+    border: 1px solid var(--glass-white-border);
+    color: var(--glass-white-text);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
     border-radius: var(--glass-radius);
 }
 

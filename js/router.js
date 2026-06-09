@@ -834,7 +834,7 @@ class Router {
             margin-top: 1.5rem;
             padding: 0.75rem 1.5rem;
             background: var(--primary-color, #ecebda);
-            color: var(--bg-dark, #1a1a1a);
+            color: #1a1a1a;
             border: none;
             border-radius: 8px;
             cursor: pointer;

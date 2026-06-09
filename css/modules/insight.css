@@ -56,7 +56,7 @@
 .insight-date-tab:hover { color: var(--text-primary); background: var(--white-8); }
 .insight-date-tab.active {
   background: var(--accent-brand, var(--text-primary));
-  color: var(--bg-dark, #131418);
+  color: #131418;
   font-weight: 600;
 }
 
@@ -581,7 +581,7 @@
   padding: 0.7rem 1.5rem;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--bg-dark, #131418);
+  color: #131418;
   background: var(--accent-brand, #a78bfa);
   border: none;
   border-radius: 999px;
