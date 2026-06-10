@@ -6,7 +6,7 @@ correr a mano cada vez que se agregaba un `<i class="fas fa-NUEVO">`.
 
 Que hace:
   1. Escanea el repo y junta todos los iconos `fa-*` usados (mismo filtro que la ficha).
-  2. Descarga FA Free 6.4.0 (woff2 solid + brands + all.min.css con los codepoints).
+  2. Descarga FA Free 6.5.2 (woff2 solid + brands + all.min.css con los codepoints).
   3. Mapea icono -> codepoint, separa solid vs brands.
   4. Subsetea los woff2 a recursos/fonts/fa/{solid,brands}.subset.woff2 (pyftsubset).
   5. Regenera css/fa-subset.css (font-face + clases base + reglas :before ordenadas).
@@ -27,7 +27,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-FA_VERSION = "6.4.0"
+FA_VERSION = "6.5.2"
 CDN = f"https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@{FA_VERSION}"
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -152,7 +152,7 @@ def main():
         mapping = build_mapping(all_css.read_text(encoding="utf-8"))
         missing = sorted(i for i in used if i not in mapping)
         if missing:
-            print("AVISO: iconos usados que NO existen en FA Free 6.4.0 (no se incluyen):",
+            print(f"AVISO: iconos usados que NO existen en FA Free {FA_VERSION} (no se incluyen):",
                   ", ".join(missing), file=sys.stderr)
 
         brand_cp = sorted({mapping[i] for i in used if i in mapping and i in BRAND_ICONS})

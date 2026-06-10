@@ -616,7 +616,7 @@ class DevBuilderView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-variables">
           <div class="modal-header">
-            <h3 id="variablesTitle"><i class="ph ph-curly-braces"></i> Insertar variable</h3>
+            <h3 id="variablesTitle"><i class="ph ph-brackets-curly"></i> Insertar variable</h3>
             <button type="button" class="modal-close" id="variablesClose" aria-label="Cerrar">&times;</button>
           </div>
           <div class="modal-body">

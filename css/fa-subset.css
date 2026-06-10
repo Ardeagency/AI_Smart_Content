@@ -1,4 +1,4 @@
-/* Font Awesome 6.4.0 — SUBSET local (woff2 + CSS). NO editar a mano. */
+/* Font Awesome 6.5.2 — SUBSET local (woff2 + CSS). NO editar a mano. */
 /* Regenerar con: python3 scripts/fa-subset.py (sustituye el CDN, ~240KB). */
 @font-face {
   font-family: "Font Awesome 6 Free";
@@ -35,20 +35,23 @@
 .fa-lg{font-size:1.25em;line-height:.05em;vertical-align:-.075em}
 .fa-sm{font-size:.875em;line-height:1.4285714em;vertical-align:.05357142em}
 
-/* === 250 icon rules === */
+/* === 282 icon rules === */
 .fa-ad:before{content:"\f641"}
 .fa-align-left:before{content:"\f036"}
 .fa-archive:before{content:"\f187"}
 .fa-arrow-down:before{content:"\f063"}
 .fa-arrow-left:before{content:"\f060"}
 .fa-arrow-right:before{content:"\f061"}
+.fa-arrow-trend-up:before{content:"\e098"}
 .fa-arrow-up:before{content:"\f062"}
+.fa-arrow-up-right-from-square:before{content:"\f08e"}
 .fa-arrows-rotate:before{content:"\f021"}
 .fa-arrows-spin:before{content:"\e4bb"}
 .fa-arrows-up-down-left-right:before{content:"\f047"}
 .fa-bag-shopping:before{content:"\f290"}
 .fa-bars:before{content:"\f0c9"}
 .fa-bell:before{content:"\f0f3"}
+.fa-binoculars:before{content:"\f1e5"}
 .fa-bolt:before{content:"\f0e7"}
 .fa-book:before{content:"\f02d"}
 .fa-book-open:before{content:"\f518"}
@@ -65,8 +68,10 @@
 .fa-bullseye:before{content:"\f140"}
 .fa-calendar:before{content:"\f133"}
 .fa-calendar-alt:before{content:"\f073"}
+.fa-calendar-day:before{content:"\f783"}
 .fa-camera:before{content:"\f030"}
 .fa-camera-retro:before{content:"\f083"}
+.fa-caret-down:before{content:"\f0d7"}
 .fa-cart-plus:before{content:"\f217"}
 .fa-chart-area:before{content:"\f1fe"}
 .fa-chart-bar:before{content:"\f080"}
@@ -87,14 +92,18 @@
 .fa-circle-exclamation:before{content:"\f06a"}
 .fa-circle-half-stroke:before{content:"\f042"}
 .fa-circle-info:before{content:"\f05a"}
+.fa-circle-minus:before{content:"\f056"}
 .fa-circle-nodes:before{content:"\e4e2"}
 .fa-circle-notch:before{content:"\f1ce"}
+.fa-circle-pause:before{content:"\f28b"}
 .fa-circle-radiation:before{content:"\f7ba"}
 .fa-circle-xmark:before{content:"\f057"}
 .fa-clipboard:before{content:"\f328"}
 .fa-clock:before{content:"\f017"}
 .fa-clock-rotate-left:before{content:"\f1da"}
+.fa-clone:before{content:"\f24d"}
 .fa-cloud:before{content:"\f0c2"}
+.fa-cloud-upload-alt:before{content:"\f0ee"}
 .fa-code:before{content:"\f121"}
 .fa-code-compare:before{content:"\e13a"}
 .fa-cogs:before{content:"\f085"}
@@ -103,11 +112,13 @@
 .fa-comment-alt:before{content:"\f27a"}
 .fa-comment-dots:before{content:"\f4ad"}
 .fa-compass:before{content:"\f14e"}
+.fa-compress:before{content:"\f066"}
 .fa-compress-alt:before{content:"\f422"}
 .fa-cookie:before{content:"\f563"}
 .fa-copy:before{content:"\f0c5"}
 .fa-credit-card:before{content:"\f09d"}
 .fa-crop:before{content:"\f125"}
+.fa-crop-simple:before{content:"\f565"}
 .fa-crown:before{content:"\f521"}
 .fa-cube:before{content:"\f1b2"}
 .fa-cut:before{content:"\f0c4"}
@@ -134,10 +145,12 @@
 .fa-file:before{content:"\f15b"}
 .fa-file-alt:before{content:"\f15c"}
 .fa-file-audio:before{content:"\f1c7"}
+.fa-file-circle-plus:before{content:"\e494"}
 .fa-file-code:before{content:"\f1c9"}
 .fa-file-csv:before{content:"\f6dd"}
 .fa-file-excel:before{content:"\f1c3"}
 .fa-file-image:before{content:"\f1c5"}
+.fa-file-invoice-dollar:before{content:"\f571"}
 .fa-file-lines:before{content:"\f15c"}
 .fa-file-pdf:before{content:"\f1c1"}
 .fa-file-powerpoint:before{content:"\f1c4"}
@@ -153,6 +166,7 @@
 .fa-folder:before{content:"\f07b"}
 .fa-folder-open:before{content:"\f07c"}
 .fa-font:before{content:"\f031"}
+.fa-gauge:before{content:"\f624"}
 .fa-gauge-high:before{content:"\f625"}
 .fa-gem:before{content:"\f3a5"}
 .fa-gift:before{content:"\f06b"}
@@ -160,6 +174,7 @@
 .fa-globe:before{content:"\f0ac"}
 .fa-google:before{content:"\f1a0"}
 .fa-hand:before{content:"\f256"}
+.fa-hashtag:before{content:"\23"}
 .fa-heart:before{content:"\f004"}
 .fa-heart-pulse:before{content:"\f21e"}
 .fa-heartbeat:before{content:"\f21e"}
@@ -167,7 +182,7 @@
 .fa-history:before{content:"\f1da"}
 .fa-home:before{content:"\f015"}
 .fa-hourglass-half:before{content:"\f252"}
-.fa-id-badge:before{content:"\f2c1"}
+.fa-hourglass-start:before{content:"\f251"}
 .fa-image:before{content:"\f03e"}
 .fa-images:before{content:"\f302"}
 .fa-inbox:before{content:"\f01c"}
@@ -179,10 +194,14 @@
 .fa-life-ring:before{content:"\f1cd"}
 .fa-lightbulb:before{content:"\f0eb"}
 .fa-link:before{content:"\f0c1"}
+.fa-linkedin:before{content:"\f08c"}
+.fa-linkedin-in:before{content:"\f0e1"}
 .fa-list:before{content:"\f03a"}
 .fa-list-check:before{content:"\f0ae"}
+.fa-location-dot:before{content:"\f3c5"}
 .fa-lock:before{content:"\f023"}
 .fa-magic:before{content:"\f0d0"}
+.fa-magic-wand-sparkles:before{content:"\e2ca"}
 .fa-magnifying-glass:before{content:"\f002"}
 .fa-map-marker-alt:before{content:"\f3c5"}
 .fa-map-pin:before{content:"\f276"}
@@ -190,30 +209,37 @@
 .fa-medal:before{content:"\f5a2"}
 .fa-meta:before{content:"\e49b"}
 .fa-microphone:before{content:"\f130"}
+.fa-minus:before{content:"\f068"}
 .fa-mobile-screen:before{content:"\f3cf"}
 .fa-mobile-screen-button:before{content:"\f3cd"}
 .fa-moon:before{content:"\f186"}
 .fa-mountain-sun:before{content:"\e52f"}
 .fa-music:before{content:"\f001"}
+.fa-newspaper:before{content:"\f1ea"}
+.fa-note-sticky:before{content:"\f249"}
+.fa-object-group:before{content:"\f247"}
 .fa-paintbrush:before{content:"\f1fc"}
 .fa-palette:before{content:"\f53f"}
 .fa-paper-plane:before{content:"\f1d8"}
 .fa-paperclip:before{content:"\f0c6"}
+.fa-paste:before{content:"\f0ea"}
+.fa-pause:before{content:"\f04c"}
 .fa-pause-circle:before{content:"\f28b"}
 .fa-pen:before{content:"\f304"}
 .fa-pen-fancy:before{content:"\f5ac"}
 .fa-pen-nib:before{content:"\f5ad"}
+.fa-pen-to-square:before{content:"\f044"}
 .fa-percentage:before{content:"\25"}
 .fa-pills:before{content:"\f484"}
 .fa-play:before{content:"\f04b"}
 .fa-play-circle:before{content:"\f144"}
 .fa-plus:before{content:"\2b"}
-.fa-plus-circle:before{content:"\f055"}
 .fa-project-diagram:before{content:"\f542"}
 .fa-puzzle-piece:before{content:"\f12e"}
 .fa-quote-left:before{content:"\f10d"}
 .fa-receipt:before{content:"\f543"}
 .fa-reply:before{content:"\f3e5"}
+.fa-retweet:before{content:"\f079"}
 .fa-robot:before{content:"\f544"}
 .fa-rocket:before{content:"\f135"}
 .fa-rotate-left:before{content:"\f2ea"}
@@ -256,8 +282,10 @@
 .fa-th:before{content:"\f00a"}
 .fa-th-large:before{content:"\f009"}
 .fa-thumbtack:before{content:"\f08d"}
+.fa-tiktok:before{content:"\e07b"}
 .fa-times:before{content:"\f00d"}
 .fa-times-circle:before{content:"\f057"}
+.fa-tools:before{content:"\f7d9"}
 .fa-trash:before{content:"\f1f8"}
 .fa-trash-alt:before{content:"\f2ed"}
 .fa-triangle-exclamation:before{content:"\f071"}
@@ -273,16 +301,20 @@
 .fa-user-plus:before{content:"\f234"}
 .fa-user-secret:before{content:"\f21b"}
 .fa-user-slash:before{content:"\f506"}
+.fa-user-tag:before{content:"\f507"}
 .fa-users:before{content:"\f0c0"}
-.fa-users-slash:before{content:"\e073"}
+.fa-users-gear:before{content:"\f509"}
 .fa-utensils:before{content:"\f2e7"}
 .fa-video:before{content:"\f03d"}
 .fa-volume-up:before{content:"\f028"}
 .fa-volume-xmark:before{content:"\f6a9"}
 .fa-wand-magic:before{content:"\f0d0"}
 .fa-wand-magic-sparkles:before{content:"\e2ca"}
+.fa-water:before{content:"\f773"}
 .fa-whatsapp:before{content:"\f232"}
 .fa-wind:before{content:"\f72e"}
 .fa-wine-glass:before{content:"\f4e3"}
 .fa-wrench:before{content:"\f0ad"}
+.fa-x-twitter:before{content:"\e61b"}
+.fa-xmark:before{content:"\f00d"}
 .fa-youtube:before{content:"\f167"}

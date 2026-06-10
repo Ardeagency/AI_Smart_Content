@@ -1,5 +1,5 @@
-/* Phosphor Icons (regular) — SUBSET local (~7KB woff2 + ~3KB CSS) */
-/* Generated from Phosphor 2.1.2. Sustituye CDN @phosphor-icons/web. */
+/* Phosphor Icons (regular) — SUBSET local (woff2 + CSS). NO editar a mano. */
+/* Regenerar con: python3 scripts/phosphor-subset.py. Phosphor 2.1.2. */
 @font-face {
   font-family: "Phosphor";
   font-style: normal;
@@ -24,7 +24,9 @@
 .ph-spin{animation:ph-spin 2s linear infinite}
 @keyframes ph-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
-/* === 61 icon rules === */
+/* === 70 icon rules === */
+.ph-arrow-bend-up-right:before{content:"\e026"}
+.ph-arrow-clockwise:before{content:"\e036"}
 .ph-arrow-counter-clockwise:before{content:"\e038"}
 .ph-arrow-right:before{content:"\e06c"}
 .ph-arrow-square-out:before{content:"\e5de"}
@@ -51,7 +53,9 @@
 .ph-floppy-disk:before{content:"\e248"}
 .ph-folder-simple:before{content:"\e25a"}
 .ph-gear:before{content:"\e270"}
+.ph-git-branch:before{content:"\e278"}
 .ph-globe:before{content:"\e288"}
+.ph-hand:before{content:"\e298"}
 .ph-hand-pointing:before{content:"\e29a"}
 .ph-heartbeat:before{content:"\e2ac"}
 .ph-image:before{content:"\e2ca"}
@@ -59,8 +63,12 @@
 .ph-link:before{content:"\e2e2"}
 .ph-list-bullets:before{content:"\e2f2"}
 .ph-list-checks:before{content:"\eadc"}
+.ph-magic-wand:before{content:"\e6b6"}
 .ph-magnifying-glass:before{content:"\e30c"}
+.ph-monitor-play:before{content:"\e58c"}
 .ph-note:before{content:"\e348"}
+.ph-palette:before{content:"\e6c8"}
+.ph-path:before{content:"\e39c"}
 .ph-pencil:before{content:"\e3ae"}
 .ph-pencil-simple:before{content:"\e3b4"}
 .ph-play:before{content:"\e3d0"}
@@ -68,6 +76,7 @@
 .ph-plus-circle:before{content:"\e3d6"}
 .ph-question:before{content:"\e3e8"}
 .ph-robot:before{content:"\e762"}
+.ph-rows:before{content:"\e5a2"}
 .ph-sliders:before{content:"\e432"}
 .ph-sliders-horizontal:before{content:"\e434"}
 .ph-sparkle:before{content:"\e6a2"}
