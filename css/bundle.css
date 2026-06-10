@@ -268,9 +268,7 @@
     --living-text-gold: var(--icon-button);
     --living-text-muted: var(--text-muted);
     --living-text-whisper: var(--text-disabled);
-    /* Base de fondo de las views. Default = --bg-primary opaco. Dentro de
-       body.org-brand-context cascada a transparent para que el tinte de marca
-       en #app-container aflore. body.route-dev devuelve a opaco. */
+    /* Base de fondo de las views. Siempre --bg-primary opaco. */
     --view-bg-base: var(--bg-primary);
     --living-bg-deep: var(--view-bg-base);
     --living-bg-surface: var(--bg-secondary);
@@ -755,65 +753,11 @@ textarea:focus-visible,
     padding-top: 45px; /* Evitar que el contenido quede debajo del header principal */
 }
 
-/* Tinte de marca solo dentro de org (clase la setea OrgBrandTheme tras resolver
-   palette primary/secondary). El gradient vive en un div fixed #brand-bg-overlay
-   (declarado en index.html) que se posiciona detrás de todo el contenido — evita
-   los quirks de background-attachment: fixed en body cuando hay view-transition-name
-   en #app-container u overflow restrictions. La cascada --view-bg-base hace que
-   cualquier wrapper full-bleed que use var(--view-bg-base) (o el alias
-   --living-bg-deep) se vuelva transparente, dejando ver el overlay. Vistas /dev/*
-   mantienen fondo opaco. */
-#brand-bg-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    /* EXPERIMENTO: degradado dinamico desactivado; fondo plano igual al sidebar de nav.
-       Para revertir, restaurar background-image con las vars --dev/--brand-gradient-app-container. */
-    background-color: var(--sidebar-background, var(--bg-primary));
-    background-image: none;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    pointer-events: none;
-    display: none;
-}
-
-body.org-brand-context:not(.route-dev) #brand-bg-overlay,
-body.dev-rank-context #brand-bg-overlay {
-    display: block;
-}
-
-/* En modo dev (con rank), #app-container debe ser transparente para dejar ver el overlay */
-body.dev-rank-context {
-    --view-bg-base: transparent;
-    --living-bg-deep: transparent;
-    background: transparent;
-}
-body.dev-rank-context #app-container {
-    background: transparent;
-}
-
-body.org-brand-context {
-    --view-bg-base: transparent;
-    /* Re-declarar el alias: la cadena var() de :root { --living-bg-deep: var(--view-bg-base) }
-       se resuelve en :root y queda congelada en opaco; redeclarar acá hace que descendants
-       (products, organization, content-management, developer wrappers) hereden transparente. */
-    --living-bg-deep: transparent;
-    background: transparent;
-}
-
-body.org-brand-context #app-container {
-    background: transparent;
-}
-
-body.org-brand-context.route-dev {
-    --view-bg-base: var(--bg-primary);
-    --living-bg-deep: var(--bg-primary);
-    background: var(--bg-primary);
-}
-
-body.org-brand-context.route-dev #app-container {
-    background: var(--bg-primary);
-}
+/* El degradado dinamico de fondo del #app-container (div fixed #brand-bg-overlay
+   + clases body.org-brand-context / body.dev-rank-context que volvian la vista
+   transparente) fue eliminado por completo. El fondo de las views queda opaco con
+   --bg-primary. El tinte de marca dinamico (--brand-gradient-dynamic*) que vive
+   DENTRO de la vista de marca se conserva intacto. */
 
 /* Cuando está el chat de Vera, el scroll vive en #chatcontainer para evitar doble scroll */
 #app-container:has(> #chatcontainer) {
@@ -875,7 +819,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 
    Tres áreas se transicionan sincronizadas — mismo duration + easing — para que
    los cambios dev↔org no se sientan como un brinco abrupto:
-   - root           → fondo (body, brand-bg-overlay): crossfade puro.
+   - root           → fondo (body): crossfade puro.
    - nav-root       → sidebar (#navigation-container): crossfade puro.
    - app-root       → vista (#app-container): crossfade + sutil translateY.
 */
@@ -1103,7 +1047,6 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
   }
   /* Chrome de la app fuera de la impresión */
   #navigation-container,
-  #brand-bg-overlay,
   #modals-portal,
   #globalSpinner,
   #toast-container,

@@ -55,17 +55,6 @@
     legend:  { primary: '#900090', secondary: '#ff0000' }
   };
 
-  /** Rank → 4 colores (TL, TR, BR, BL) para el edge gradient del app-container.
-   *  Cada rank usa sus 2 colores: izquierda (TL/BL) = color 1, derecha (TR/BR) = color 2. */
-  const RANK_CORNERS = {
-    rookie:  { tl: '#9acc00', tr: '#00d614', br: '#00d614', bl: '#9acc00' },
-    junior:  { tl: '#00d614', tr: '#00e7ff', br: '#00e7ff', bl: '#00d614' },
-    builder: { tl: '#00e7ff', tr: '#0018ee', br: '#0018ee', bl: '#00e7ff' },
-    expert:  { tl: '#0018ee', tr: '#5b00ea', br: '#5b00ea', bl: '#0018ee' },
-    master:  { tl: '#5b00ea', tr: '#900090', br: '#900090', bl: '#5b00ea' },
-    legend:  { tl: '#900090', tr: '#ff0000', br: '#ff0000', bl: '#900090' }
-  };
-
   function _hexToRgba(hex, alpha) {
     const h = String(hex || '').replace(/^#/, '');
     if (h.length !== 6) return `rgba(0,0,0,${alpha})`;
@@ -73,22 +62,6 @@
     const g = parseInt(h.slice(2, 4), 16);
     const b = parseInt(h.slice(4, 6), 16);
     return `rgba(${r},${g},${b},${alpha})`;
-  }
-
-  /** Construye el edge-gradient del app-container con 4 colores rainbow (uno por esquina).
-   *  4 radial-gradients superpuestos, cada uno desde una esquina, se desvanecen hacia el centro. */
-  function _buildEdgeGradient(corners) {
-    if (!corners) return '';
-    const tl = _hexToRgba(corners.tl, 0.22);
-    const tr = _hexToRgba(corners.tr, 0.22);
-    const br = _hexToRgba(corners.br, 0.22);
-    const bl = _hexToRgba(corners.bl, 0.22);
-    return [
-      `radial-gradient(ellipse 70% 60% at top left, ${tl} 0%, transparent 55%)`,
-      `radial-gradient(ellipse 70% 60% at top right, ${tr} 0%, transparent 55%)`,
-      `radial-gradient(ellipse 70% 60% at bottom right, ${br} 0%, transparent 55%)`,
-      `radial-gradient(ellipse 70% 60% at bottom left, ${bl} 0%, transparent 55%)`
-    ].join(', ');
   }
 
   /** Normaliza un rank arbitrario al canónico más cercano (case-insensitive); fallback rookie. */
@@ -118,7 +91,6 @@
     root.style.removeProperty('--dev-rank-accent-2');
     root.style.removeProperty('--dev-sidebar-hover');
     root.style.removeProperty('--dev-sidebar-active');
-    root.style.removeProperty('--dev-gradient-app-container');
     document.body.classList.remove('dev-rank-context');
     // Limpiar clases granulares
     ['rookie', 'junior', 'builder', 'expert', 'master', 'legend'].forEach(r =>
@@ -150,12 +122,6 @@
       // si ambos servicios setean :root en transiciones rapidas.
       root.style.setProperty('--dev-sidebar-hover', _hexToRgba(pal.secondary, 0.12));
       root.style.setProperty('--dev-sidebar-active', _hexToRgba(pal.secondary, 0.20));
-    }
-    // App-container edge gradient: 4 esquinas rainbow para el modo developer (visible vía #brand-bg-overlay)
-    const corners = RANK_CORNERS[canonical];
-    const edge = _buildEdgeGradient(corners);
-    if (edge) {
-      root.style.setProperty('--dev-gradient-app-container', edge);
     }
     document.body.classList.add('dev-rank-context');
     // Limpiar clases granulares previas y aplicar la nueva

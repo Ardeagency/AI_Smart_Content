@@ -199,8 +199,8 @@
 }
 
 /* Hero carrusel: full-bleed por categoría, minimalista, sin flechas.
-   El bottom del slide hace mask-image fade-out → se funde con el fondo dinámico
-   de la app (brand gradient en org-brand-context), sin corte visible. */
+   El bottom del slide hace mask-image fade-out → se funde con el fondo
+   de la app (--bg-primary), sin corte visible. */
 .flow-catalog-hero-section {
   position: relative;
   width: 100%;
@@ -251,7 +251,7 @@
   z-index: 0;
   background: transparent;
   /* Fade-out del bottom 30% de la imagen para que el hero se funda con el fondo
-     dinámico de la página (#brand-bg-overlay o --bg-primary), sin corte. */
+     de la página (--bg-primary), sin corte. */
   -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
   mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
 }

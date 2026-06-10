@@ -126,29 +126,13 @@
     return `linear-gradient(${angle}deg, ${stops.join(', ')})`;
   }
 
-  /**
-   * Degradado de "tinte de marca" para #app-container: primario visible a la izquierda,
-   * secundario a la derecha, transparente al centro. Alpha 0.20 — tinte presente pero
-   * dejando que var(--bg-primary) siga dominando.
-   * @param {string} primaryHex   Hex del color primario (#rrggbb)
-   * @param {string} secondaryHex Hex del color secundario (#rrggbb)
-   * @param {number} angle        Ángulo en grados (default 90.7 — matching design ref)
-   */
-  function buildAppContainerEdgeGradient(primaryHex, secondaryHex, angle = 90.7) {
-    if (!primaryHex || !secondaryHex) return '';
-    const p = hexToRgba(primaryHex, 0.20);
-    const s = hexToRgba(secondaryHex, 0.20);
-    return `linear-gradient(${angle}deg, ${p} 0.19%, ${p} 3.51%, transparent 47.82%, ${s} 90.44%, ${s} 98.99%)`;
-  }
-
   window.BrandColors = {
     hexToRgba,
     hexToHSL,
     hslToHex,
     filterAndScoreBrandColors,
     getBrandUIPalette,
-    buildBrandGradientCss,
-    buildAppContainerEdgeGradient
+    buildBrandGradientCss
   };
 
   if (typeof module !== 'undefined' && module.exports) {

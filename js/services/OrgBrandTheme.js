@@ -72,7 +72,6 @@
   function filterAndScoreBrandColors(hexes){ return _BC().filterAndScoreBrandColors(hexes); }
   function getBrandUIPalette(hexes)        { return _BC().getBrandUIPalette(hexes); }
   function buildBrandGradientCss(hexes, angle) { return _BC().buildBrandGradientCss(hexes, angle); }
-  function buildAppContainerEdgeGradient(p, s, a) { return _BC().buildAppContainerEdgeGradient(p, s, a); }
 
   function getLastBrandHexes() {
     return lastAppliedHexes.length ? lastAppliedHexes.slice() : [];
@@ -87,8 +86,6 @@
     root.style.removeProperty('--brand-primary-brillo-strong');
     root.style.removeProperty('--brand-gradient-dynamic');
     root.style.removeProperty('--brand-gradient-dynamic-vertical');
-    root.style.removeProperty('--brand-gradient-app-container');
-    document.body.classList.remove('org-brand-context');
   }
 
   /**
@@ -130,13 +127,6 @@
         root.style.setProperty('--brand-primary-rgb', r + ',' + g + ',' + b);
         root.style.setProperty('--brand-primary-brillo', hexToRgba(palette.primary, 0.12));
         root.style.setProperty('--brand-primary-brillo-strong', hexToRgba(palette.primary, 0.18));
-      }
-      if (palette.secondary) {
-        const edge = buildAppContainerEdgeGradient(palette.primary, palette.secondary);
-        if (edge) {
-          root.style.setProperty('--brand-gradient-app-container', edge);
-          document.body.classList.add('org-brand-context');
-        }
       }
     }
   }
