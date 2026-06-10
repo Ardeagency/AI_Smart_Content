@@ -2218,12 +2218,124 @@
     });
   };
 
+  // ── FEAT-038: Satelites de PRODUCCION (runs_outputs) colgando del brief/campaign,
+  // con badge de publicada (social_publications). Reusa el patron de satelites.
+  // Depende de FEAT-037 (tagging brief_id/campaign_id) para tener datos. Estilos
+  // inline a proposito: el visual final se pulira en Figma. Guardado en try/catch.
+  P._fetchNodeProductions = async function (key, col, id) {
+    if (!this._supabase) return;
+    if (!this._prodData) this._prodData = {};
+    try {
+      const { data: prods } = await this._supabase
+        .from('runs_outputs')
+        .select('id, output_type, published_at')
+        .eq(col, id)
+        .order('created_at', { ascending: false })
+        .limit(6);
+      const list = Array.isArray(prods) ? prods : [];
+      if (list.length) {
+        const ids = list.map((p) => p.id);
+        const { data: pubs } = await this._supabase
+          .from('social_publications')
+          .select('output_id, status, platform')
+          .in('output_id', ids);
+        const by = {};
+        (pubs || []).forEach((pb) => { by[pb.output_id] = pb; });
+        list.forEach((p) => { p._pub = by[p.id] || null; });
+      }
+      this._prodData[key] = list;
+    } catch (_) { this._prodData[key] = []; }
+  };
+
+  P._renderProductionSatellites = function () {
+    try {
+      const world = document.getElementById('ccCanvasWorld');
+      const svg   = document.getElementById('ccCanvasEdges');
+      if (!world || !svg) return;
+      world.querySelectorAll('.cc-prod-sat').forEach((el) => el.remove());
+      svg.querySelectorAll('.cc-prod-sat-edge').forEach((el) => el.remove());
+      const positions = this._positions || {};
+      if (!this._prodData) this._prodData = {};
+      if (!this._ccPendingProdFetch) this._ccPendingProdFetch = new Set();
+      const linkages = [];
+      Object.keys(positions).forEach((key) => {
+        let col = null;
+        if (key.startsWith('briefs:')) col = 'brief_id';
+        else if (key.startsWith('camp:')) col = 'campaign_id';
+        else return;
+        const id = key.slice(key.indexOf(':') + 1);
+        const cached = this._prodData[key];
+        if (cached === undefined) {
+          if (!this._ccPendingProdFetch.has(key)) {
+            this._ccPendingProdFetch.add(key);
+            this._fetchNodeProductions(key, col, id).then(() => {
+              this._ccPendingProdFetch.delete(key);
+              this._renderProductionSatellites();
+            }).catch(() => this._ccPendingProdFetch.delete(key));
+          }
+          return;
+        }
+        if (!cached.length) return;
+        const pos = positions[key];
+        if (!pos) return;
+        const parentEl = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(key)}"]`);
+        if (!parentEl) return;
+        const PW = 280, PH = 140, SW = 150, SH = 88, GAP = 20;
+        const items = cached.slice(0, 6);
+        const totalW = items.length * SW + (items.length - 1) * GAP;
+        const startX = pos.x + PW / 2 - totalW / 2;
+        const rowY = pos.y + PH + 70;
+        items.forEach((p, i) => {
+          const x = startX + i * (SW + GAP);
+          const div = document.createElement('div');
+          div.className = 'cc-prod-sat';
+          div.style.cssText = `position:absolute;left:${x}px;top:${rowY}px;width:${SW}px;height:${SH}px;background:#141517;border:1px solid #242424;border-radius:10px;padding:8px;box-sizing:border-box;font-size:11px;color:#d4d1d8;overflow:hidden;`;
+          const isVideo = p.output_type === 'video';
+          const pub = p._pub;
+          let badge;
+          if (pub && pub.status === 'published') {
+            badge = `<span style="color:#6bcf7f;font-size:10px;">&#9679; Publicada${pub.platform ? ' &middot; ' + this.escapeHtml(pub.platform) : ''}</span>`;
+          } else if (p.published_at) {
+            badge = `<span style="color:#5b9bd5;font-size:10px;">&#9679; En pauta</span>`;
+          } else {
+            badge = `<span style="color:rgba(212,209,216,.5);font-size:10px;">&#9675; Producida</span>`;
+          }
+          div.innerHTML = `<div style="display:flex;align-items:center;gap:6px;"><i class="fas ${isVideo ? 'fa-film' : 'fa-image'}" style="color:#6aa3ff;"></i><span>${isVideo ? 'Video' : 'Imagen'}</span></div><div style="margin-top:8px;">${badge}</div>`;
+          world.appendChild(div);
+          linkages.push({ from: parentEl, to: div });
+        });
+      });
+      if (!linkages.length) return;
+      const canvas = document.getElementById('ccCanvas');
+      if (!canvas) return;
+      const canvasRect = canvas.getBoundingClientRect();
+      const NS = 'http://www.w3.org/2000/svg';
+      linkages.forEach((link) => {
+        const fr = link.from.getBoundingClientRect();
+        const tr = link.to.getBoundingClientRect();
+        const fromX = (fr.left + fr.width / 2) - canvasRect.left;
+        const fromY = fr.bottom - canvasRect.top;
+        const toX   = (tr.left + tr.width / 2) - canvasRect.left;
+        const toY   = tr.top - canvasRect.top;
+        const path = document.createElementNS(NS, 'path');
+        path.setAttribute('class', 'cc-prod-sat-edge');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'rgba(106,163,255,.4)');
+        path.setAttribute('stroke-dasharray', '4 4');
+        const dy = toY - fromY;
+        path.setAttribute('d', `M ${fromX} ${fromY} C ${fromX} ${fromY + dy * 0.45}, ${toX} ${toY - dy * 0.45}, ${toX} ${toY}`);
+        svg.appendChild(path);
+      });
+    } catch (e) { /* nunca romper el render core */ }
+  };
+
   // Wrap _renderCanvas para tambien renderear satelites + vera_states + Vera Insights
   const _f12RenderCanvas = P._renderCanvas;
   if (typeof _f12RenderCanvas === 'function') {
     P._renderCanvas = function () {
       const r = _f12RenderCanvas.apply(this, arguments);
       this._renderCampaignSatellites();
+      this._renderProductionSatellites();
       // Sprint 1: aplicar vera_state al DOM (las clases se pierden en re-render)
       this._applyAllVeraStates();
       // Sprint 2: render de Vera Insights (cards en columna izquierda)
@@ -2239,6 +2351,7 @@
     P._updateEdgeGeometry = function () {
       const r = _f12UpdateEdgeGeometry.apply(this, arguments);
       this._renderCampaignSatellites();
+      this._renderProductionSatellites();
       return r;
     };
   }
@@ -2249,6 +2362,7 @@
     P._renderEdges = function () {
       const r = _f12RenderEdges.apply(this, arguments);
       this._renderCampaignSatellites();
+      this._renderProductionSatellites();
       return r;
     };
   }
