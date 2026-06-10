@@ -707,8 +707,14 @@
     if (!canvas || !world) return;
 
     // Toolbar zoom + relayout + crear
-    document.getElementById('ccBtnZoomIn') ?.addEventListener('click', () => this._setZoom((this._canvasScale || 1) + 0.15));
-    document.getElementById('ccBtnZoomOut')?.addEventListener('click', () => this._setZoom((this._canvasScale || 1) - 0.15));
+    // Zoom por boton: multiplicativo (mismo "feel" que la rueda) y anclado al
+    // centro del canvas para que no salte hacia la esquina.
+    const _canvasCenter = () => {
+      const r = document.getElementById('ccCanvas')?.getBoundingClientRect();
+      return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null;
+    };
+    document.getElementById('ccBtnZoomIn') ?.addEventListener('click', () => this._setZoom((this._canvasScale || 1) * 1.2, _canvasCenter()));
+    document.getElementById('ccBtnZoomOut')?.addEventListener('click', () => this._setZoom((this._canvasScale || 1) / 1.2, _canvasCenter()));
     document.getElementById('ccBtnZoomReset')?.addEventListener('click', () => this._zoomToFit());
     document.getElementById('ccBtnRelayout')?.addEventListener('click', () => this._relayout());
 
@@ -757,10 +763,18 @@
       this._canvasWheel = (e) => {
         // Scroll dentro de un nodo o del panel flotante: no hacer zoom.
         if (e.target.closest('.cc-node-body, .cc-node-ads, .cc-floating-panel')) return;
-        if (!e.ctrlKey && Math.abs(e.deltaY) < 1) return;
+        if (Math.abs(e.deltaY) < 0.01) return;
         e.preventDefault();
-        const dir = e.deltaY < 0 ? 1 : -1;
-        this._setZoom((this._canvasScale || 1) + dir * 0.12, { x: e.clientX, y: e.clientY });
+        // Normaliza deltaY (lineas/paginas → px) y acota saltos bruscos del
+        // trackpad/rueda para que el zoom no se vaya a saltos.
+        let dy = e.deltaY;
+        if (e.deltaMode === 1) dy *= 16;        // DOM_DELTA_LINE
+        else if (e.deltaMode === 2) dy *= 100;  // DOM_DELTA_PAGE
+        dy = Math.max(-80, Math.min(80, dy));
+        // Zoom multiplicativo: suave y uniforme en todo el rango (0.4–2),
+        // anclado al cursor. Pinch del trackpad = muchos eventos pequenos = fluido.
+        const factor = Math.exp(-dy * 0.002);
+        this._setZoom((this._canvasScale || 1) * factor, { x: e.clientX, y: e.clientY });
       };
       canvas.addEventListener('wheel', this._canvasWheel, { passive: false });
     }
