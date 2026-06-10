@@ -2055,6 +2055,7 @@ class LivingManager {
         this._bindModalListenersOnce(modal);
         this._resetModalZoom(); // cada apertura/variante arranca a 100% centrado
         modal.classList.add('is-open');
+        modal.inert = false;
         modal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('production-modal-open');
         document.getElementById('pmodalScroll')?.scrollTo(0, 0);
@@ -2087,6 +2088,9 @@ class LivingManager {
             this._siblingObserver = null;
         }
         modal.classList.remove('is-open');
+        // inert ANTES de aria-hidden: saca el foco de cualquier descendiente
+        // (boton de toolbar) para no disparar el warning "aria-hidden on focused".
+        modal.inert = true;
         modal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('production-modal-open');
         // Cerrar kebabs internos.
@@ -2235,8 +2239,12 @@ class LivingManager {
         this._updatePublishSelectionUI();
 
         sheet.classList.add('is-open');
+        sheet.inert = false;
         sheet.setAttribute('aria-hidden', 'false');
         document.body.classList.add('publish-sheet-open');
+        // Mover el foco a la hoja (el dialogo activo) para que no quede atrapado
+        // en un boton del modal de produccion que esta detras.
+        sheet.querySelector('.publish-sheet-close')?.focus();
 
         this._loadPublishConnections();
     }
@@ -2246,6 +2254,7 @@ class LivingManager {
         if (!sheet) return;
         if (sheet.contains(document.activeElement) && document.activeElement?.blur) document.activeElement.blur();
         sheet.classList.remove('is-open');
+        sheet.inert = true;
         sheet.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('publish-sheet-open');
     }
