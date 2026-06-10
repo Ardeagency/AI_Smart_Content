@@ -45,11 +45,13 @@
         this._tendenciasService.setWindow(this._tendFilters.windowDays);
         const data = await this._tendenciasService.loadAll();
         this._tendData = data;
+        if (!this._shouldRepaint('tendencies', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildTendenciasHtml(data);
         this._bindTendenciesHandlers(body);
         this._mountTendDatePicker(body);
       } catch (e) {
         console.error('[Tendencies] load failed:', e);
+        if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
         body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">${__('No se pudo cargar Tendencias.')} ${this._esc(e?.message || '')}</div>`;
       }
     },

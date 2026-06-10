@@ -59,6 +59,7 @@
       try {
         const data = await this._loadMyBrandsData();
         this._mbCampanasData = data;
+        if (!this._shouldRepaint('my-brands', data)) return; // refresh silencioso sin cambios: no re-pintar
         this._renderHeroCards?.(data); // alimenta las cards del hero
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
@@ -67,6 +68,7 @@
         this._renderToneTopicDonuts(data);
       } catch (e) {
         console.error('[MyBrands] loadAll failed:', e);
+        if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
       }
     },

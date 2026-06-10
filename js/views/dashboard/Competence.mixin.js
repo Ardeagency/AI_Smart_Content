@@ -38,11 +38,13 @@
         if (!this._compFilters.entityId && Array.isArray(data?.top?.data)) {
           this._compActors = data.top.data;
         }
+        if (!this._shouldRepaint('competence', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildCompetenciaHtml(data);
         this._bindCompetenceHandlers(body);
         this._mountCompDatePicker(body);
       } catch (e) {
         console.error('[Competence] load failed:', e);
+        if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
         body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">${__('No se pudo cargar Competencia.')} ${this._esc(e?.message || '')}</div>`;
       }
     },

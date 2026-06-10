@@ -390,8 +390,9 @@ class DashboardView extends BaseView {
     const tab = this._activeTab;
     const page = document.getElementById('insightPage');
     const prevCharts = this._charts;
-    this._charts = [];                                     // el render nuevo registra aqui
+    this._charts = [];                                     // el render nuevo registra aqui (si pinta)
     this._silentRefresh = true;
+    this._silentChanged = false;                           // el gate (_shouldRepaint) lo pone true si hubo repaint real
     page?.classList.add('is-refreshing');
     try {
       this._freshness = undefined;                         // forzar re-lectura de frescura
@@ -403,9 +404,45 @@ class DashboardView extends BaseView {
     } finally {
       this._silentRefresh = false;
       page?.classList.remove('is-refreshing');
-      // Destruir los charts viejos, ya reemplazados por el innerHTML del render.
-      prevCharts.forEach(c => { try { c.destroy(); } catch (_) {} });
+      if (this._silentChanged) {
+        // Hubo repaint real: this._charts ya tiene los charts nuevos; destruir los viejos.
+        prevCharts.forEach(c => { try { c.destroy(); } catch (_) {} });
+      } else {
+        // Sin cambios (o el usuario cambio de tab): el mixin abortó el repaint.
+        // Conservar el DOM y los charts viejos intactos = cero parpadeo.
+        this._charts = prevCharts;
+      }
     }
+  }
+
+  /* Firma estable y barata de los datos de un tab, para detectar si cambiaron
+     respecto al render anterior. Si no se puede serializar (p.ej. referencia
+     circular), devuelve null y el llamador re-pinta por las dudas. */
+  _dataSignature(data) {
+    let json;
+    try { json = JSON.stringify(data); } catch (_) { return null; }
+    if (json == null) return null;
+    // djb2 — alcanza para comparar igualdad; no es criptografico.
+    let h = 5381;
+    for (let i = 0; i < json.length; i++) h = ((h << 5) + h + json.charCodeAt(i)) | 0;
+    return `${json.length}:${h}`;
+  }
+
+  /* Decide si el tab debe re-pintarse con estos datos. Es el corazon del
+     "refresh sin parpadeo":
+       - Render normal (no silencioso): siempre pinta y memoriza la firma.
+       - Refresh silencioso (polling / realtime): solo pinta si la firma cambio
+         respecto al ultimo pintado de ese tab. Si no cambio, devuelve false y
+         el mixin debe `return` sin tocar el DOM ni registrar charts; el
+         orquestador conserva todo intacto. */
+  _shouldRepaint(tab, data) {
+    if (!this._renderSig) this._renderSig = {};
+    const sig = this._dataSignature(data);
+    if (!this._silentRefresh) { this._renderSig[tab] = sig; return true; }
+    if (sig != null && this._renderSig[tab] === sig) return false;   // sin cambios reales
+    this._renderSig[tab] = sig;
+    this._silentChanged = true;
+    return true;
   }
 
   _destroyCharts() {

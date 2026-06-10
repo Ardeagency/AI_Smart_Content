@@ -32,10 +32,12 @@
       try {
         const data = await this._strategiaService.loadAll({ status: this._stratFilters.status });
         this._stratData = data;
+        if (!this._shouldRepaint('strategy', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildStrategiaHtml(data);
         this._bindStrategyHandlers(body);
       } catch (e) {
         console.error('[Strategy] load failed:', e);
+        if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
         body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">${__('No se pudo cargar Estrategia.')} ${this._esc(e?.message || '')}</div>`;
       }
     },
