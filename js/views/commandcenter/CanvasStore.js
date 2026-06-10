@@ -2892,8 +2892,11 @@
     const { eventType, new: row, old: oldRow } = payload;
     if (eventType === 'INSERT') {
       const r = row;
-      const from = `${r.source_type}:${r.source_id}`;
-      const to   = `${r.target_type}:${r.target_id}`;
+      // Las keys de nodo usan prefijos cortos (aud/camp/products...) — convertir
+      // con el mismo mapa que _keyFromPlacement, no el source_type crudo, o el
+      // edge apunta a nodos inexistentes y la conexion no se dibuja.
+      const from = this._keyFromPlacement(r.source_type, r.source_id);
+      const to   = this._keyFromPlacement(r.target_type, r.target_id);
       this._ccSuspendRemoteEdges = true;
       this._store.addFreeLink(from, to);
       this._ccSuspendRemoteEdges = false;
@@ -2901,8 +2904,8 @@
     } else if (eventType === 'DELETE') {
       const r = oldRow;
       if (!r) return;
-      const from = `${r.source_type}:${r.source_id}`;
-      const to   = `${r.target_type}:${r.target_id}`;
+      const from = this._keyFromPlacement(r.source_type, r.source_id);
+      const to   = this._keyFromPlacement(r.target_type, r.target_id);
       this._ccSuspendRemoteEdges = true;
       this._store.removeFreeLink(from, to);
       this._ccSuspendRemoteEdges = false;
@@ -3134,8 +3137,11 @@
         return;
       }
       const bdEdges = (rows || []).map((r) => ({
-        from: `${r.source_type}:${r.source_id}`,
-        to:   `${r.target_type}:${r.target_id}`,
+        // Convertir node_type -> prefijo de key (aud/camp/products...) con el
+        // mismo mapa que _keyFromPlacement; el source_type crudo no matchea las
+        // keys de nodo y las conexiones no se dibujan.
+        from: this._keyFromPlacement(r.source_type, r.source_id),
+        to:   this._keyFromPlacement(r.target_type, r.target_id),
       }));
       const localCount = (this._store.edges.freeLinks || []).length;
 
