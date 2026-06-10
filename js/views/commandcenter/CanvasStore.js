@@ -1411,6 +1411,8 @@
       const k = n.getAttribute('data-node-key');
       n.classList.toggle('cc-node--selected', !!(set && set.has(k)));
     });
+    // Inspector derecho: abre/actualiza/cierra segun la seleccion single.
+    if (typeof this._renderInspector === 'function') this._renderInspector();
   };
 
   /** Toggle in/out del set y re-render selection. Mantiene focus solo en single. */
@@ -2040,9 +2042,9 @@
       this._installStickyContentListener();
       // F1.11: listener de title de group (delegado, no depende de strategy)
       this._installGroupTitleListener();
-      // F1.12 eliminado por decision del usuario (2026-05-29) — sidebar
-      // derecho del inspector retirado del UX. Codigo de _installInspector
-      // / _renderInspector queda dormido (no se invoca).
+      // Inspector derecho REACTIVADO (2026-06-10): nodos minimalistas en el
+      // canvas + panel derecho con TODOS los campos editables al seleccionar.
+      this._installInspector();
       return r;
     };
   }
@@ -4864,23 +4866,74 @@
       this._renderInspector();
     });
 
-    // Delegacion: clicks color + inputs size/text
+    // Delegacion del inspector. Convive con: (a) color de group + size/text
+    // legacy (.cc-insp-input[data-insp-field] -> _scheduleInspectorSave) y
+    // (b) el form rico de audiencia/campana que REUSA el pipeline de los nodos
+    // (.cc-field[data-field] -> _queueFieldSave, tags, flags, eliminar). El
+    // contenedor del form lleva [data-field-host] + data-type/data-id.
+    const hostOf = (el) => el.closest('[data-field-host]');
     aside.addEventListener('click', (e) => {
       const colorBtn = e.target.closest('.cc-insp-color-btn[data-color]');
       if (colorBtn) {
         const color = colorBtn.getAttribute('data-color');
         const gid = colorBtn.getAttribute('data-target-id');
         if (gid && color) this._setGroupColor(gid, color);
+        return;
+      }
+      const tagX = e.target.closest('.cc-tag-x');
+      if (tagX) {
+        e.preventDefault();
+        const chip = tagX.closest('.cc-tag');
+        const cont = chip ? chip.closest('.cc-field--tags') : null;
+        if (chip && cont) { chip.remove(); this._commitTags(cont); }
+        return;
+      }
+      const toggle = e.target.closest('.cc-node-toggle[data-toggle]');
+      if (toggle) {
+        const host = hostOf(toggle);
+        if (host) this._toggleAudienceFlag(host.getAttribute('data-id'), toggle.getAttribute('data-toggle'), host);
+        return;
+      }
+      const del = e.target.closest('.cc-insp-delete[data-del-type]');
+      if (del) {
+        e.preventDefault();
+        this._confirmAndDelete(del.getAttribute('data-del-type'), del.getAttribute('data-del-id'), null);
       }
     });
-    aside.addEventListener('input', (e) => {
-      const inp = e.target.closest('.cc-insp-input[data-insp-field]');
-      if (!inp) return;
-      const field = inp.getAttribute('data-insp-field');
-      const tType = inp.getAttribute('data-target-type');
-      const tId   = inp.getAttribute('data-target-id');
-      if (!field || !tType || !tId) return;
-      this._scheduleInspectorSave(tType, tId, field, inp.value);
+    const onEdit = (e) => {
+      const legacy = e.target.closest('.cc-insp-input[data-insp-field]');
+      if (legacy) {
+        const field = legacy.getAttribute('data-insp-field');
+        const tType = legacy.getAttribute('data-target-type');
+        const tId   = legacy.getAttribute('data-target-id');
+        if (field && tType && tId) this._scheduleInspectorSave(tType, tId, field, legacy.value);
+        return;
+      }
+      const fieldEl = e.target.closest('[data-field]');
+      if (!fieldEl) return;
+      const host = hostOf(fieldEl);
+      if (!host) return;
+      this._queueFieldSave(host, fieldEl, e.type === 'change');
+      // Live-sync del nombre visible en el nodo compacto (evita que la tarjeta
+      // muestre el nombre viejo mientras editas en el inspector).
+      const fld = fieldEl.getAttribute('data-field');
+      if (fld === 'name' || fld === 'nombre_campana') {
+        const pfx = host.getAttribute('data-type') === 'audience' ? 'aud' : 'camp';
+        const nameEl = document.querySelector(`.cc-node[data-node-key="${pfx}:${host.getAttribute('data-id')}"] .cc-node-name`);
+        if (nameEl) nameEl.textContent = (fieldEl.value || '').trim() || 'Sin nombre';
+      }
+    };
+    aside.addEventListener('input', onEdit);
+    aside.addEventListener('change', onEdit);
+    aside.addEventListener('keydown', (e) => {
+      const input = e.target.closest('.cc-tag-input');
+      if (!input) return;
+      if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); this._addTag(input); }
+      else if (e.key === 'Backspace' && input.value === '') {
+        const cont = input.closest('.cc-field--tags');
+        const chips = cont ? cont.querySelectorAll('.cc-tag') : null;
+        if (chips && chips.length) { chips[chips.length - 1].remove(); this._commitTags(cont); }
+      }
     });
   };
 
@@ -4920,38 +4973,35 @@
     return null;
   };
 
-  // ── Inspector: audiencia ─────────────────────────────────────────────
+  // ── Inspector: audiencia (form completo editable) ────────────────────
   P._inspectorAudience = function (id) {
-    const row = (this._audiences || []).find((a) => String(a.id) === String(id));
-    if (!row) return { title: '<i class="fas fa-users"></i> Audiencia', body: '<div class="cc-insp-empty">No encontrada.</div>' };
-    const align = Number.isFinite(Number(row.alignment_score))
-      ? `${(Number(row.alignment_score) * 100).toFixed(0)}%`
-      : '—';
-    const awareness = row.awareness_level || '—';
-    const flags = [];
-    if (row.is_liked) flags.push('Me gusta');
-    if (row.is_featured) flags.push('Destacada');
-    if (row.is_active === false) flags.push('Apagada');
+    const a = (this._audiences || []).find((x) => String(x.id) === String(id));
+    if (!a) return { title: '<i class="fas fa-users"></i> Audiencia', body: '<div class="cc-insp-empty">No encontrada.</div>' };
+    const eid = this.escapeHtml(String(id));
+    const liked = !!a.is_liked, featured = !!a.is_featured, off = a.is_active === false;
     return {
-      title: `<i class="fas fa-users"></i> ${this.escapeHtml(row.name || 'Objetivo de Audiencia')}`,
+      title: `<i class="fas fa-users"></i> ${this.escapeHtml(a.name || 'Objetivo de Audiencia')}`,
       body: `
-        <div class="cc-insp-section">
-          <span class="cc-insp-label">Descripcion</span>
-          <textarea class="cc-insp-input" rows="3" data-insp-field="description" data-target-type="audience" data-target-id="${this.escapeHtml(String(id))}" placeholder="Sin descripcion">${this.escapeHtml(row.description || '')}</textarea>
+        <div class="cc-insp-form" data-field-host data-type="audience" data-id="${eid}">
+          ${this._fieldText('Nombre', 'str', 'name', a.name, { placeholder: 'Nombre de la audiencia' })}
+          ${this._fieldAgeRange(a.target_age_min, a.target_age_max)}
+          ${this._fieldGenders(a.target_genders)}
+          ${this._fieldSelect('Awareness', 'awareness_level', a.awareness_level, [
+            ['', 'Sin definir'], ['unaware', 'Unaware'], ['problem_aware', 'Problem aware'],
+            ['solution_aware', 'Solution aware'], ['product_aware', 'Product aware'], ['most_aware', 'Most aware'],
+          ])}
+          ${this._fieldArea('Descripcion', 'str', 'description', a.description, { rows: 3, placeholder: 'Quien es esta audiencia' })}
+          ${this._fieldTags('Dolores', 'dolores', a.dolores)}
+          ${this._fieldTags('Deseos', 'deseos', a.deseos)}
+          ${this._fieldTags('Objeciones', 'objeciones', a.objeciones)}
+          ${this._fieldTags('Gatillos de compra', 'gatillos_compra', a.gatillos_compra)}
+          <div class="cc-insp-flags">
+            <button type="button" class="cc-node-toggle cc-toggle-like ${liked ? 'is-on' : ''}" data-toggle="is_liked" title="Me gusta"><i class="fas fa-heart"></i></button>
+            <button type="button" class="cc-node-toggle cc-toggle-feature ${featured ? 'is-on' : ''}" data-toggle="is_featured" title="Destacar"><i class="fas fa-star"></i></button>
+            <button type="button" class="cc-node-toggle cc-toggle-power ${off ? 'is-off' : 'is-on'}" data-toggle="is_active" title="${off ? 'Encender' : 'Apagar'}"><i class="fas fa-lightbulb"></i></button>
+          </div>
+          <button type="button" class="cc-insp-delete" data-del-type="audience" data-del-id="${eid}"><i class="fas fa-trash"></i> Eliminar audiencia</button>
         </div>
-        <div class="cc-insp-section">
-          <span class="cc-insp-label">Nivel de conciencia</span>
-          <span class="cc-insp-value">${this.escapeHtml(awareness)}</span>
-        </div>
-        <div class="cc-insp-meta">
-          <span class="cc-insp-label">Alineamiento</span>
-          <span class="cc-insp-value">${align}</span>
-        </div>
-        <div class="cc-insp-meta">
-          <span class="cc-insp-label">Flags</span>
-          <span class="cc-insp-value">${flags.length ? flags.map((f) => this.escapeHtml(f)).join(' · ') : '—'}</span>
-        </div>
-        <div class="cc-insp-hint">Mas campos editables inline en el nodo.</div>
       `,
     };
   };
@@ -5004,22 +5054,33 @@
         `,
       };
     }
+    const c = row, eid = this.escapeHtml(String(id));
+    const linkedName = c.persona_id ? ((this._audiences || []).find((x) => String(x.id) === String(c.persona_id))?.name || 'Audiencia vinculada') : '';
     return {
-      title: `<i class="fas fa-lightbulb"></i> ${this.escapeHtml(row.nombre_campana || 'Objetivo de Campana')}`,
+      title: `<i class="fas fa-bullseye"></i> ${this.escapeHtml(c.nombre_campana || 'Objetivo de Campana')}`,
       body: `
-        <div class="cc-insp-section">
-          <span class="cc-insp-label">Objetivo comercial</span>
-          <textarea class="cc-insp-input" rows="3" data-insp-field="objetivo_comercial" data-target-type="campaign" data-target-id="${this.escapeHtml(String(id))}" placeholder="Define el objetivo...">${this.escapeHtml(objetivo)}</textarea>
+        <div class="cc-insp-form" data-field-host data-type="campaign-concept" data-id="${eid}">
+          ${this._fieldText('Nombre', 'str', 'nombre_campana', c.nombre_campana, { placeholder: 'Nombre de la campana' })}
+          ${linkedName ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="fas fa-link"></i> ${this.escapeHtml(linkedName)}</span></div>` : ''}
+          ${this._fieldArea('Descripcion interna', 'str', 'descripcion_interna', c.descripcion_interna, { rows: 3, placeholder: 'Objetivo del concepto' })}
+          ${this._fieldSelect('Estado', 'status', c.status || 'draft', [
+            ['draft', 'Borrador'], ['conceptual', 'Conceptual'], ['active', 'Activa'],
+            ['paused', 'Pausada'], ['ended', 'Finalizada'], ['archived', 'Archivada'],
+          ])}
+          ${this._fieldSelect('Plataforma', 'platform', c.platform || '', [
+            ['', 'Sin definir'], ['meta_facebook', 'Facebook'], ['meta_instagram', 'Instagram'],
+            ['google_ads', 'Google Ads'], ['tiktok_ads', 'TikTok'], ['linkedin_ads', 'LinkedIn'],
+            ['pinterest_ads', 'Pinterest'], ['organic', 'Organico'], ['internal', 'Interno'],
+          ])}
+          ${this._fieldText('Objetivo', 'str', 'platform_objective', c.platform_objective, { placeholder: 'OUTCOME_LEADS, PURCHASE…' })}
+          ${this._fieldText('CTA', 'str', 'cta', c.cta)}
+          ${this._fieldText('CTA URL', 'str', 'cta_url', c.cta_url, { inputType: 'url', placeholder: 'https://…' })}
+          ${this._fieldText('Presupuesto/dia', 'num', 'budget_daily', c.budget_daily, { inputType: 'number', dataType: 'number' })}
+          ${this._fieldText('Moneda', 'str', 'budget_currency', c.budget_currency || 'USD')}
+          ${this._fieldText('Inicio', 'date', 'starts_at', c.starts_at ? String(c.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
+          ${this._fieldText('Fin', 'date', 'ends_at', c.ends_at ? String(c.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
+          <button type="button" class="cc-insp-delete" data-del-type="campaign-concept" data-del-id="${eid}"><i class="fas fa-trash"></i> Eliminar campana</button>
         </div>
-        <div class="cc-insp-section">
-          <span class="cc-insp-label">Estado</span>
-          <span class="cc-insp-value">${this.escapeHtml(status)}</span>
-        </div>
-        <div class="cc-insp-meta">
-          <span class="cc-insp-label">Audiencia</span>
-          <span class="cc-insp-value">${persona}</span>
-        </div>
-        <div class="cc-insp-hint">Mas campos editables inline en el nodo.</div>
       `,
     };
   };

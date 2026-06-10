@@ -1264,6 +1264,42 @@
 .cc-node--featured { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4), 0 6px 22px rgba(0, 0, 0, 0.45); }
 .cc-node--off { opacity: 0.45; filter: grayscale(0.4); }
 
+/* ── Nodos minimalistas (audiencia / campana): se editan en el inspector ── */
+.cc-node--mini { width: 200px; }
+.cc-node--mini .cc-node-head { border-bottom: none; padding: 10px 11px; }
+.cc-node-head-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.cc-node--mini .cc-node-title { flex: 0 0 auto; font-size: 0.56rem; }
+.cc-node-name {
+  font-size: 0.82rem; font-weight: 600; color: var(--text-primary, #fff);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25;
+}
+.cc-node-status {
+  flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+}
+.cc-node-status.is-on,
+.cc-node-status--active { background: #3cd264; box-shadow: 0 0 7px rgba(60, 210, 100, 0.7); }
+.cc-node-status.is-off { background: rgba(255, 255, 255, 0.22); box-shadow: none; }
+.cc-node-status--paused { background: #f4b942; box-shadow: 0 0 7px rgba(244, 185, 66, 0.6); }
+.cc-node-status--ended { background: #f06060; }
+.cc-node-status--conceptual { background: #5aaeff; box-shadow: 0 0 7px rgba(90, 170, 255, 0.6); }
+.cc-node-status--draft,
+.cc-node-status--archived { background: rgba(255, 255, 255, 0.3); }
+.cc-node-body--mini { padding: 0 11px 11px; gap: 0; }
+.cc-node-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.cc-node-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 0.62rem; font-weight: 600;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary, #d4d1d8);
+}
+.cc-node-chip--status.cc-node-chip--active { color: #3cd264; border-color: rgba(60, 210, 100, 0.3); }
+.cc-node-chip--status.cc-node-chip--paused { color: #f4b942; border-color: rgba(244, 185, 66, 0.3); }
+.cc-node-chip--status.cc-node-chip--conceptual { color: #5aaeff; border-color: rgba(90, 170, 255, 0.3); }
+.cc-node-chip--link { color: var(--cc-accent); }
+.cc-node--selected { box-shadow: 0 0 0 1.5px var(--cc-accent, #6aa3ff), 0 8px 26px rgba(0, 0, 0, 0.55); }
+
 .cc-node-head {
   display: flex;
   align-items: center;
@@ -2933,6 +2969,32 @@
 }
 .cc-insp-input:focus { border-color: rgba(255, 255, 255, 0.28); background: rgba(255, 255, 255, 0.05); }
 .cc-insp-row { display: flex; gap: 8px; }
+
+/* Form rico del inspector (reusa .cc-field de los nodos) + flags + eliminar. */
+.cc-insp-form { display: flex; flex-direction: column; gap: 13px; }
+.cc-insp-flags { display: flex; gap: 8px; }
+.cc-insp-flags .cc-node-toggle {
+  width: 34px; height: 34px;
+  border: 1px solid var(--border-divider, #242424); border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04); color: var(--text-muted);
+  cursor: pointer; display: grid; place-items: center; font-size: 0.82rem;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.cc-insp-flags .cc-node-toggle:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.cc-insp-flags .cc-node-toggle.is-on { border-color: rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.08); }
+.cc-insp-flags .cc-toggle-like.is-on { color: #ff6b81; }
+.cc-insp-flags .cc-toggle-feature.is-on { color: #f4b942; }
+.cc-insp-flags .cc-toggle-power.is-on { color: #3cd264; }
+.cc-insp-flags .cc-toggle-power.is-off { color: var(--text-muted); opacity: 0.6; }
+.cc-insp-delete {
+  margin-top: 4px; width: 100%; padding: 9px;
+  border: 1px solid rgba(225, 87, 96, 0.3); border-radius: 8px;
+  background: rgba(225, 87, 96, 0.08); color: #f06060;
+  cursor: pointer; font-size: 0.74rem; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background 0.15s ease;
+}
+.cc-insp-delete:hover { background: rgba(225, 87, 96, 0.16); }
 .cc-insp-row > .cc-insp-input { flex: 1; min-width: 0; }
 .cc-insp-row-sep { color: var(--text-muted); font-size: 0.7rem; display: flex; align-items: center; }
 .cc-insp-colors { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }

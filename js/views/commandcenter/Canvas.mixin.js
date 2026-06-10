@@ -272,37 +272,23 @@
 
   P._nodeAudienceHTML = function (n, pos) {
     const a = n.row;
-    const collapsed = this._collapsed && this._collapsed.has(n.key);
     const off = a.is_active === false;
-    const liked = !!a.is_liked, featured = !!a.is_featured;
+    const featured = !!a.is_featured;
+    const aw = { unaware: 'Unaware', problem_aware: 'Problem aware', solution_aware: 'Solution aware', product_aware: 'Product aware', most_aware: 'Most aware' }[a.awareness_level] || '';
+    const age = (a.target_age_min || a.target_age_max) ? `${a.target_age_min || '?'}–${a.target_age_max || '?'}` : '';
+    const chips = `${age ? `<span class="cc-node-chip">${this.escapeHtml(age)}</span>` : ''}${aw ? `<span class="cc-node-chip">${this.escapeHtml(aw)}</span>` : ''}`;
     return `
-    <div class="cc-node cc-node--audience ${collapsed ? 'cc-node--collapsed' : ''} ${off ? 'cc-node--off' : ''} ${featured ? 'cc-node--featured' : ''}" data-node-key="${n.key}" data-type="audience" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+    <div class="cc-node cc-node--audience cc-node--mini ${off ? 'cc-node--off' : ''} ${featured ? 'cc-node--featured' : ''}" data-node-key="${n.key}" data-type="audience" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+      <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon"><i class="fas fa-users"></i></span>
-        <span class="cc-node-title">Objetivo de Audiencia</span>
-        <div class="cc-node-actions">
-          <button type="button" class="cc-node-act cc-node-toggle cc-toggle-like ${liked ? 'is-on' : ''}" data-toggle="is_liked" title="Me gusta esta audiencia"><i class="fas fa-heart"></i></button>
-          <button type="button" class="cc-node-act cc-node-toggle cc-toggle-feature ${featured ? 'is-on' : ''}" data-toggle="is_featured" title="Destacar audiencia"><i class="fas fa-star"></i></button>
-          <button type="button" class="cc-node-act cc-node-toggle cc-toggle-power ${off ? 'is-off' : 'is-on'}" data-toggle="is_active" title="${off ? 'Encender audiencia' : 'Apagar audiencia'}"><i class="fas fa-lightbulb"></i></button>
-          <button type="button" class="cc-node-act cc-node-collapse" title="${collapsed ? 'Expandir' : 'Colapsar'}"><i class="fas fa-${collapsed ? 'chevron-down' : 'chevron-up'}"></i></button>
-          <button type="button" class="cc-node-act cc-node-delete" title="Eliminar"><i class="fas fa-trash"></i></button>
+        <div class="cc-node-head-text">
+          <span class="cc-node-title">Audiencia</span>
+          <span class="cc-node-name" title="${this.escapeHtml(a.name || '')}">${this.escapeHtml(a.name || 'Sin nombre')}</span>
         </div>
+        <span class="cc-node-status ${off ? 'is-off' : 'is-on'}" title="${off ? 'Apagada' : 'Activa'}"></span>
       </div>
-      <div class="cc-node-body">
-        ${this._fieldText('Nombre', 'str', 'name', a.name, { placeholder: 'Nombre de la audiencia' })}
-        ${this._fieldAgeRange(a.target_age_min, a.target_age_max)}
-        ${this._fieldGenders(a.target_genders)}
-        ${this._fieldSelect('Awareness', 'awareness_level', a.awareness_level, [
-          ['', 'Sin definir'], ['unaware', 'Unaware'], ['problem_aware', 'Problem aware'],
-          ['solution_aware', 'Solution aware'], ['product_aware', 'Product aware'], ['most_aware', 'Most aware'],
-        ])}
-        ${this._fieldArea('Descripcion', 'str', 'description', a.description, { rows: 2, placeholder: 'Quien es esta audiencia' })}
-        ${this._fieldTags('Dolores', 'dolores', a.dolores)}
-        ${this._fieldTags('Deseos', 'deseos', a.deseos)}
-        ${this._fieldTags('Objeciones', 'objeciones', a.objeciones)}
-        ${this._fieldTags('Gatillos de compra', 'gatillos_compra', a.gatillos_compra)}
-      </div>
-      <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
+      ${chips ? `<div class="cc-node-body cc-node-body--mini"><div class="cc-node-chips">${chips}</div></div>` : ''}
       <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
     </div>`;
   };
@@ -372,38 +358,23 @@
     </div>`;
     }
 
-    // Objetivo de Campana: ANCLA editable. Es el nodo padre/trigger de la
-    // estrategia — todos los demas (audiencias, productos, servicios, campanas
-    // reales) se conectan a este. Visual distintivo: icono diana + accent ring.
+    // Objetivo de Campana: ANCLA. Nodo minimalista; todos los campos se editan
+    // en el inspector derecho al seleccionarlo.
+    const statusLabel = { draft: 'Borrador', conceptual: 'Conceptual', active: 'Activa', paused: 'Pausada', ended: 'Finalizada', archived: 'Archivada' }[c.status] || '';
+    const platLabelC = platformLabel[c.platform] || '';
+    const chipsC = `${statusLabel ? `<span class="cc-node-chip cc-node-chip--status cc-node-chip--${this.escapeHtml(c.status)}">${this.escapeHtml(statusLabel)}</span>` : ''}${platLabelC ? `<span class="cc-node-chip">${this.escapeHtml(platLabelC)}</span>` : ''}${linked ? `<span class="cc-node-chip cc-node-chip--link" title="Audiencia: ${this.escapeHtml(linkedName)}"><i class="fas fa-link"></i></span>` : ''}`;
     return `
-    <div class="cc-node cc-node--campaign cc-node--anchor ${collapsed ? 'cc-node--collapsed' : ''}" data-node-key="${n.key}" data-type="campaign-concept" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+    <div class="cc-node cc-node--campaign cc-node--anchor cc-node--mini" data-node-key="${n.key}" data-type="campaign-concept" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Conectar entrada"></span>
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon cc-node-icon--anchor"><i class="fas fa-bullseye"></i></span>
-        <span class="cc-node-title">Objetivo de Campana</span>
-        ${this._nodeActionsHTML(collapsed)}
+        <div class="cc-node-head-text">
+          <span class="cc-node-title">Campana</span>
+          <span class="cc-node-name" title="${this.escapeHtml(c.nombre_campana || '')}">${this.escapeHtml(c.nombre_campana || 'Sin nombre')}</span>
+        </div>
+        <span class="cc-node-status cc-node-status--${this.escapeHtml(c.status || 'draft')}" title="${this.escapeHtml(statusLabel || 'Borrador')}"></span>
       </div>
-      <div class="cc-node-body">
-        ${this._fieldText('Nombre', 'str', 'nombre_campana', c.nombre_campana, { placeholder: 'Nombre de la campana' })}
-        ${linkedName ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="fas fa-link"></i> ${this.escapeHtml(linkedName)}</span></div>` : ''}
-        ${this._fieldArea('Descripcion interna', 'str', 'descripcion_interna', c.descripcion_interna, { rows: 2, placeholder: 'Objetivo del concepto' })}
-        ${this._fieldSelect('Estado', 'status', c.status || 'draft', [
-          ['draft', 'Borrador'], ['conceptual', 'Conceptual'], ['active', 'Activa'],
-          ['paused', 'Pausada'], ['ended', 'Finalizada'], ['archived', 'Archivada'],
-        ])}
-        ${this._fieldSelect('Plataforma', 'platform', c.platform || '', [
-          ['', 'Sin definir'], ['meta_facebook', 'Facebook'], ['meta_instagram', 'Instagram'],
-          ['google_ads', 'Google Ads'], ['tiktok_ads', 'TikTok'], ['linkedin_ads', 'LinkedIn'],
-          ['pinterest_ads', 'Pinterest'], ['organic', 'Organico'], ['internal', 'Interno'],
-        ])}
-        ${this._fieldText('Objetivo', 'str', 'platform_objective', c.platform_objective, { placeholder: 'OUTCOME_LEADS, PURCHASE…' })}
-        ${this._fieldText('CTA', 'str', 'cta', c.cta)}
-        ${this._fieldText('CTA URL', 'str', 'cta_url', c.cta_url, { inputType: 'url', placeholder: 'https://…' })}
-        ${this._fieldText('Presupuesto/dia', 'num', 'budget_daily', c.budget_daily, { inputType: 'number', dataType: 'number' })}
-        ${this._fieldText('Moneda', 'str', 'budget_currency', c.budget_currency || 'USD')}
-        ${this._fieldText('Inicio', 'date', 'starts_at', c.starts_at ? String(c.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
-        ${this._fieldText('Fin', 'date', 'ends_at', c.ends_at ? String(c.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
-      </div>
+      ${chipsC ? `<div class="cc-node-body cc-node-body--mini"><div class="cc-node-chips">${chipsC}</div></div>` : ''}
       <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
     </div>`;
   };
@@ -1035,7 +1006,8 @@
 
   /** Recolecta los chips de un campo, actualiza el contador/limite y persiste. */
   P._commitTags = function (cont) {
-    const nodeEl = cont.closest('.cc-node');
+    // Acepta el nodo del canvas o el contenedor de campos del inspector derecho.
+    const nodeEl = cont.closest('.cc-node, [data-field-host]');
     if (!nodeEl) return;
     const field = cont.getAttribute('data-field-tags');
     const max   = parseInt(cont.getAttribute('data-max'), 10) || MAX_TAGS;
@@ -1141,7 +1113,7 @@
     const multi    = fieldEl.getAttribute('data-multi');
     let val = fieldEl.value;
     if (multi === 'checks') {
-      const nodeEl = fieldEl.closest('.cc-node');
+      const nodeEl = fieldEl.closest('.cc-node, [data-field-host]');
       val = nodeEl ? [...nodeEl.querySelectorAll(`[data-field="${field}"]`)].filter((x) => x.checked).map((x) => x.value) : [];
     } else if (multi === 'lines') {
       val = String(val || '').split('\n').map((s) => s.trim()).filter(Boolean);
