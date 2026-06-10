@@ -1029,17 +1029,20 @@
   // — el usuario no deberia memorizar direccionalidad del drag.
   // ------------------------------------------------------------------
 
+  // Pipeline de la estrategia (mismo que el backend canvas.tools.js):
+  // campana CONCEPTUAL (trigger) -> audiencia -> identities -> produccion -> campana REAL (cierre).
+  // El front valida bidireccional; estos pares son la cadena de valor. Tipo "campaign"
+  // (lo que _typeFromKey produce): conceptual y real comparten tipo, se distinguen por estado.
   const CC_CONNECTION_RULES = {
-    product:            ['brief', 'flow', 'campaign-concept'],
-    service:            ['brief', 'flow', 'campaign-concept'],
-    place:              ['brief', 'flow', 'campaign-concept'],
-    audience:           ['flow', 'campaign-concept', 'campaign-real'],
-    brief:              ['flow', 'campaign-concept', 'campaign-real'],
-    flow:               ['campaign-concept', 'campaign-real'],
-    'campaign-concept': ['campaign-real'],
-    'campaign-real':    [],
-    sticky:             [],
-    group:              [],
+    campaign:  ['audience'],                              // campana conceptual -> a quien
+    audience:  ['product', 'service', 'place', 'brief', 'flow'],
+    product:   ['brief', 'flow'],
+    service:   ['brief', 'flow'],
+    place:     ['brief', 'flow'],
+    brief:     ['flow', 'campaign'],                      // produccion -> campana real (cierre)
+    flow:      ['campaign'],
+    sticky:    [],
+    group:     [],
   };
 
   P._typeFromKey = function (key) {
