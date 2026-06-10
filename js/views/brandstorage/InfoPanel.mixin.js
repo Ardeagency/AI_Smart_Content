@@ -548,7 +548,13 @@
         /* shopify */                       '/api/integrations/shopify/start'
       );
 
-      const returnTo = this.getBrandStorageReturnPath();
+      // Volver EXACTAMENTE a la pagina donde estaba el usuario al iniciar OAuth
+      // (la ruta actual). getBrandStorageReturnPath() queda solo como fallback —
+      // antes forzaba brand-storage aunque hubieras iniciado desde otra vista.
+      const currentPath = (typeof window !== 'undefined' && window.location?.pathname) || '';
+      const returnTo = (/^\/[A-Za-z0-9_\-/.]*$/.test(currentPath) && currentPath !== '/brand-integration-callback')
+        ? currentPath
+        : this.getBrandStorageReturnPath();
       const qsParams = {
         brand_container_id: brandId,
         return_to: returnTo
