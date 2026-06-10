@@ -80,11 +80,41 @@ async function metaGraphGetPaged(path, accessToken, appSecret, params = {}, maxI
   return out;
 }
 
+/**
+ * POST a un edge del Graph (form-urlencoded) con appsecret_proof.
+ * Usado para publicar contenido (page/photos, page/videos, ig/media, ig/media_publish).
+ */
+async function metaGraphPost(path, accessToken, appSecret, params = {}) {
+  const base = getGraphBase();
+  const p = path.startsWith('/') ? path : `/${path}`;
+  const form = new URLSearchParams();
+  form.set('access_token', accessToken);
+  const proof = appSecretProof(accessToken, appSecret);
+  if (proof) form.set('appsecret_proof', proof);
+  Object.entries(params).forEach(([k, v]) => {
+    if (v != null && v !== '') form.set(k, String(v));
+  });
+  const res = await fetch(`${base}${p}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: form.toString()
+  });
+  const json = await res.json().catch(() => ({}));
+  if (json.error) {
+    const msg = json.error.message || json.error.type || JSON.stringify(json.error);
+    const err = new Error(msg);
+    err.metaError = json.error;
+    throw err;
+  }
+  return json;
+}
+
 module.exports = {
   getMetaGraphVersion,
   getGraphBase,
   appSecretProof,
   buildMetaGraphUrl,
   metaGraphGet,
-  metaGraphGetPaged
+  metaGraphGetPaged,
+  metaGraphPost
 };

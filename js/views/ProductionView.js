@@ -230,9 +230,9 @@ class ProductionView extends BaseView {
                         <i class="fas fa-film"></i>
                         <span>Animate</span>
                     </button>
-                    <button type="button" class="pmodal-cta pmodal-cta--outline" data-action="publish" disabled title="${__('Próximamente')}">
+                    <button type="button" class="pmodal-cta pmodal-cta--outline" data-action="publish" title="${__('Publicar')}">
                         <i class="fas fa-upload"></i>
-                        <span>Publish</span>
+                        <span>${__('Publicar')}</span>
                     </button>
                 </div>
 

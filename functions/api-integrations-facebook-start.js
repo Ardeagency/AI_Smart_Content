@@ -112,7 +112,7 @@ exports.handler = async (event) => {
     // Flujo clásico (fallback sin config_id)
     const scopes = [
       'public_profile', 'email', 'pages_show_list', 'pages_read_engagement',
-      'pages_read_user_content', 'instagram_basic', 'instagram_manage_insights',
+      'pages_read_user_content', 'pages_manage_posts', 'instagram_basic', 'instagram_manage_insights',
       'instagram_manage_comments', 'instagram_content_publish', 'read_insights',
       'business_management',
       'ads_read'

@@ -1544,10 +1544,9 @@ class LivingManager {
                             <i class="fas fa-link" aria-hidden="true"></i>
                             <span>Compartir enlace</span>
                         </button>
-                        <button type="button" role="menuitem" data-action="publish-meta" disabled aria-disabled="true" title="Próximamente">
+                        <button type="button" role="menuitem" data-action="publish-meta">
                             <i class="fas fa-upload" aria-hidden="true"></i>
-                            <span>Publicar a Meta</span>
-                            <em class="card-kebab-menu-soon">Próximamente</em>
+                            <span>Publicar</span>
                         </button>
                         <button type="button" role="menuitem" class="card-kebab-menu-danger" data-action="delete" data-output-id="${safeId}">
                             <i class="fas fa-trash" aria-hidden="true"></i>
@@ -1800,8 +1799,17 @@ class LivingManager {
                     break;
                 }
                 case 'publish-meta': {
-                    if (typeof window.showToast === 'function') window.showToast('Publicar a Meta llega pronto');
                     this._closeAllKebabs(container);
+                    const cd = card?.dataset.cardInfo;
+                    if (cd) {
+                        try {
+                            const data = JSON.parse(cd
+                                .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+                                .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+                            await this.openProductionModal(data);
+                        } catch (_) {}
+                    }
+                    this.openPublishSheet();
                     break;
                 }
                 case 'delete': {
@@ -2036,7 +2044,14 @@ class LivingManager {
         }
 
         // Estado interno + abrir.
-        this._modalState = { outputId, mediaUrl, prompt: (data?.prompt || ''), runId: run?.id };
+        this._modalState = {
+            outputId, mediaUrl, prompt: (data?.prompt || ''), runId: run?.id,
+            isVideo: !!isVideo,
+            mediaType: isVideo ? 'video' : 'image',
+            fileName: (output?.storage_path ? String(output.storage_path).split('/').pop() : (isVideo ? 'video.mp4' : 'imagen.png')),
+            caption: (output?.generated_copy || data?.prompt || ''),
+            brandContainerId: output?.brand_container_id || null
+        };
         this._bindModalListenersOnce(modal);
         this._resetModalZoom(); // cada apertura/variante arranca a 100% centrado
         modal.classList.add('is-open');
@@ -2080,6 +2095,273 @@ class LivingManager {
             m.previousElementSibling?.setAttribute('aria-expanded', 'false');
         });
         this._modalState = null;
+    }
+
+    // ── Publish Sheet ───────────────────────────────────────────────────────────
+    // Hoja de publicacion a redes (Facebook/Instagram reales; YouTube/X/TikTok
+    // "Proximamente"). El diseno vive en el Figma maqueta; estilos en living.css.
+
+    _publishPlatformMeta() {
+        const S = (p) => `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${p}</svg>`;
+        return [
+            { key: 'facebook',  label: 'Facebook',  tile: '#1877F2', logo: S('<path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/>') },
+            { key: 'instagram', label: 'Instagram', gradient: true, logo: S('<path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.336 3.608 1.311.975.975 1.249 2.242 1.311 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.336 2.633-1.311 3.608-.975.975-2.242 1.249-3.608 1.311-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.336-3.608-1.311-.975-.975-1.249-2.242-1.311-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.336-2.633 1.311-3.608.975-.975 2.242-1.249 3.608-1.311C8.416 2.175 8.796 2.163 12 2.163zm0 1.802c-3.15 0-3.523.012-4.767.069-.975.045-1.504.207-1.856.344-.466.181-.8.398-1.15.748-.35.35-.567.684-.748 1.15-.137.352-.3.881-.344 1.856-.057 1.244-.069 1.617-.069 4.767s.012 3.523.069 4.767c.045.975.207 1.504.344 1.856.181.466.398.8.748 1.15.35.35.684.567 1.15.748.352.137.881.3 1.856.344 1.244.057 1.617.069 4.767.069s3.523-.012 4.767-.069c.975-.045 1.504-.207 1.856-.344.466-.181.8-.398 1.15-.748.35-.35.567-.684.748-1.15.137-.352.3-.881.344-1.856.057-1.244.069-1.617.069-4.767s-.012-3.523-.069-4.767c-.045-.975-.207-1.504-.344-1.856-.181-.466-.398-.8-.748-1.15-.35-.35-.684-.567-1.15-.748-.352-.137-.881-.3-1.856-.344-1.244-.057-1.617-.069-4.767-.069zM12 6.865a5.135 5.135 0 1 0 0 10.27 5.135 5.135 0 0 0 0-10.27zm0 8.468a3.333 3.333 0 1 1 0-6.666 3.333 3.333 0 0 1 0 6.666zm6.538-8.671a1.2 1.2 0 1 1-2.4 0 1.2 1.2 0 0 1 2.4 0z"/>') },
+            { key: 'youtube',   label: 'YouTube',   tile: '#FF0000', soon: true, logo: S('<path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>') },
+            { key: 'x',         label: 'X',         tile: '#09090b', soon: true, ring: true, logo: S('<path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/>') },
+            { key: 'tiktok',    label: 'TikTok',    tile: '#09090b', soon: true, ring: true, logo: S('<path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>') },
+        ];
+    }
+
+    _ensurePublishSheet() {
+        let sheet = document.getElementById('publishSheet');
+        if (sheet) return sheet;
+        sheet = document.createElement('div');
+        sheet.id = 'publishSheet';
+        sheet.className = 'publish-sheet';
+        sheet.setAttribute('aria-hidden', 'true');
+        sheet.setAttribute('role', 'dialog');
+        sheet.setAttribute('aria-modal', 'true');
+        sheet.innerHTML = `
+            <div class="publish-sheet-backdrop" data-pub="close"></div>
+            <div class="publish-sheet-panel" role="document">
+                <header class="publish-sheet-header">
+                    <div class="publish-sheet-titles">
+                        <h2 class="publish-sheet-title">Publicar produccion</h2>
+                        <p class="publish-sheet-sub">Selecciona los destinos para este contenido</p>
+                    </div>
+                    <button type="button" class="publish-sheet-close" data-pub="close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+                </header>
+                <div class="publish-sheet-body">
+                    <div class="publish-preview">
+                        <div class="publish-preview-thumb" id="publishThumb"></div>
+                        <div class="publish-preview-meta">
+                            <div class="publish-preview-top">
+                                <span class="publish-preview-name" id="publishFileName">archivo</span>
+                                <span class="publish-type-chip" id="publishTypeChip">IMAGEN</span>
+                            </div>
+                            <span class="publish-preview-sub" id="publishMediaSub">listo para publicar</span>
+                        </div>
+                    </div>
+                    <div class="publish-label">PUBLICAR EN</div>
+                    <div class="publish-platforms" id="publishPlatforms"></div>
+                    <div class="publish-label">MENSAJE</div>
+                    <div class="publish-caption-wrap">
+                        <textarea class="publish-caption" id="publishCaption" rows="3" maxlength="2200" placeholder="Escribe un mensaje para esta publicacion..."></textarea>
+                        <span class="publish-caption-count" id="publishCaptionCount">0 / 2200</span>
+                    </div>
+                </div>
+                <footer class="publish-sheet-footer">
+                    <span class="publish-footer-count" id="publishFooterCount">0 destinos seleccionados</span>
+                    <div class="publish-footer-btns">
+                        <button type="button" class="publish-btn publish-btn--ghost" data-pub="close">Cancelar</button>
+                        <button type="button" class="publish-btn publish-btn--primary" data-pub="submit" disabled>
+                            <span>Publicar</span><span class="publish-btn-count" id="publishBtnCount">0</span>
+                        </button>
+                    </div>
+                </footer>
+            </div>`;
+        document.body.appendChild(sheet);
+        this._bindPublishSheetOnce(sheet);
+        return sheet;
+    }
+
+    _bindPublishSheetOnce(sheet) {
+        if (sheet._bound) return;
+        sheet._bound = true;
+        sheet.addEventListener('click', async (e) => {
+            const el = e.target.closest('[data-pub]');
+            if (el) {
+                const act = el.dataset.pub;
+                if (act === 'close') { this.closePublishSheet(); return; }
+                if (act === 'submit') { await this._submitPublish(el); return; }
+                if (act === 'toggle') {
+                    const row = el.closest('.publish-platform');
+                    const key = row?.dataset.platform;
+                    if (!key || !this._publishCtx) return;
+                    const on = !this._publishCtx.selected.has(key);
+                    if (on) this._publishCtx.selected.add(key); else this._publishCtx.selected.delete(key);
+                    el.classList.toggle('is-on', on);
+                    el.setAttribute('aria-checked', on ? 'true' : 'false');
+                    this._updatePublishSelectionUI();
+                    return;
+                }
+                if (act === 'connect') {
+                    this.closePublishSheet();
+                    this.closeProductionModal?.();
+                    if (window.router) {
+                        const base = (this.organizationId && typeof window.getOrgPathPrefix === 'function')
+                            ? window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') : '';
+                        window.router.navigate(`${base}/brand`);
+                    }
+                    return;
+                }
+            }
+        });
+        const ta = sheet.querySelector('#publishCaption');
+        if (ta) ta.addEventListener('input', () => { if (this._publishCtx) this._publishCtx.caption = ta.value; this._updatePublishCount(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sheet.classList.contains('is-open')) this.closePublishSheet();
+        });
+    }
+
+    openPublishSheet() {
+        const st = this._modalState;
+        if (!st || !st.outputId) { if (typeof window.showToast === 'function') window.showToast('Abre una produccion para publicar'); return; }
+        this._publishCtx = {
+            outputId: st.outputId, mediaUrl: st.mediaUrl, mediaType: st.mediaType, isVideo: !!st.isVideo,
+            fileName: st.fileName || (st.isVideo ? 'video.mp4' : 'imagen.png'),
+            caption: st.caption || '', brandContainerId: st.brandContainerId || null,
+            selected: new Set(), connections: null
+        };
+        const sheet = this._ensurePublishSheet();
+
+        // Preview
+        const thumb = sheet.querySelector('#publishThumb');
+        if (thumb) {
+            thumb.classList.toggle('is-video', !!st.isVideo);
+            if (st.isVideo) { thumb.style.backgroundImage = ''; thumb.innerHTML = '<i class="fas fa-play"></i>'; }
+            else { thumb.innerHTML = ''; thumb.style.backgroundImage = st.mediaUrl ? `url("${st.mediaUrl}")` : ''; }
+        }
+        sheet.querySelector('#publishFileName').textContent = this._publishCtx.fileName;
+        sheet.querySelector('#publishTypeChip').textContent = st.isVideo ? 'VIDEO' : 'IMAGEN';
+        sheet.querySelector('#publishMediaSub').textContent = st.isVideo ? 'video · listo para publicar' : 'imagen · lista para publicar';
+
+        const ta = sheet.querySelector('#publishCaption');
+        if (ta) ta.value = this._publishCtx.caption;
+        this._updatePublishCount();
+
+        // Estado de carga inicial
+        this._renderPublishPlatforms(null);
+        this._updatePublishSelectionUI();
+
+        sheet.classList.add('is-open');
+        sheet.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('publish-sheet-open');
+
+        this._loadPublishConnections();
+    }
+
+    closePublishSheet() {
+        const sheet = document.getElementById('publishSheet');
+        if (!sheet) return;
+        if (sheet.contains(document.activeElement) && document.activeElement?.blur) document.activeElement.blur();
+        sheet.classList.remove('is-open');
+        sheet.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('publish-sheet-open');
+    }
+
+    async _loadPublishConnections() {
+        const ctx = this._publishCtx;
+        if (!ctx) return;
+        try {
+            const token = await this._getAccessToken();
+            if (!token) throw new Error('No hay sesion activa');
+            const res = await fetch(`/.netlify/functions/api-social-publish?output_id=${encodeURIComponent(ctx.outputId)}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+            ctx.connections = data.connections || {};
+            // Pre-seleccionar las plataformas reales conectadas.
+            ctx.selected = new Set(['facebook', 'instagram'].filter(k => ctx.connections[k]?.connected));
+            this._renderPublishPlatforms(ctx.connections);
+            this._updatePublishSelectionUI();
+        } catch (err) {
+            console.error('[publish] status error:', err);
+            this._renderPublishPlatforms({});
+            this._updatePublishSelectionUI();
+        }
+    }
+
+    _renderPublishPlatforms(connections) {
+        const wrap = document.getElementById('publishPlatforms');
+        if (!wrap) return;
+        const ctx = this._publishCtx || {};
+        const loading = connections === null;
+        const rows = this._publishPlatformMeta().map(p => {
+            const conn = (connections && connections[p.key]) || {};
+            const connected = !!conn.connected;
+            const selected = ctx.selected?.has(p.key);
+            const tileStyle = p.gradient
+                ? 'background:linear-gradient(45deg,#f9ce34 0%,#ee2a7b 45%,#6a29c9 100%)'
+                : `background:${p.tile}`;
+            let right;
+            if (loading) {
+                right = '<span class="publish-platform-skel"></span>';
+            } else if (p.soon) {
+                right = '<span class="publish-coming">Proximamente</span>';
+            } else if (connected) {
+                right = `<button type="button" class="publish-toggle ${selected ? 'is-on' : ''}" data-pub="toggle" role="switch" aria-checked="${selected ? 'true' : 'false'}"><span class="publish-toggle-knob"></span></button>`;
+            } else {
+                right = '<button type="button" class="publish-connect" data-pub="connect">Conectar</button>';
+            }
+            const handle = loading ? '' : (p.soon
+                ? (p.key === 'youtube' || p.key === 'tiktok' ? 'Solo video' : 'Proximamente')
+                : (connected ? this.escapeHtml(conn.account_name || 'Conectado') : 'Sin conectar'));
+            const disabledCls = (p.soon || (!loading && !connected)) ? 'is-disabled' : '';
+            return `
+                <div class="publish-platform ${disabledCls}" data-platform="${p.key}">
+                    <div class="publish-platform-left">
+                        <span class="publish-platform-tile ${p.ring ? 'has-ring' : ''}" style="${tileStyle}">${p.logo}</span>
+                        <span class="publish-platform-text">
+                            <span class="publish-platform-name">${p.label}</span>
+                            <span class="publish-platform-handle">${handle}</span>
+                        </span>
+                    </div>
+                    <div class="publish-platform-right">${right}</div>
+                </div>`;
+        }).join('');
+        wrap.innerHTML = rows;
+    }
+
+    _updatePublishCount() {
+        const ta = document.getElementById('publishCaption');
+        const cnt = document.getElementById('publishCaptionCount');
+        if (ta && cnt) cnt.textContent = `${ta.value.length} / 2200`;
+    }
+
+    _updatePublishSelectionUI() {
+        const ctx = this._publishCtx;
+        const n = ctx?.selected?.size || 0;
+        const footer = document.getElementById('publishFooterCount');
+        const btnCount = document.getElementById('publishBtnCount');
+        const btn = document.querySelector('#publishSheet .publish-btn--primary');
+        if (footer) footer.textContent = n === 1 ? '1 destino seleccionado' : `${n} destinos seleccionados`;
+        if (btnCount) btnCount.textContent = String(n);
+        if (btn) btn.disabled = n === 0;
+    }
+
+    async _submitPublish(btn) {
+        const ctx = this._publishCtx;
+        if (!ctx || !ctx.selected.size) return;
+        const platforms = [...ctx.selected];
+        const caption = document.getElementById('publishCaption')?.value || ctx.caption || '';
+        if (btn) { btn.disabled = true; btn.classList.add('is-loading'); }
+        if (typeof window.showToast === 'function') window.showToast('Publicando…');
+        try {
+            const token = await this._getAccessToken();
+            if (!token) throw new Error('No hay sesion activa');
+            const res = await fetch('/.netlify/functions/api-social-publish', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ output_id: ctx.outputId, platforms, caption })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.status === 401) throw new Error('Sesion expirada, vuelve a entrar');
+            const results = Array.isArray(data.results) ? data.results : [];
+            const ok = results.filter(r => r.status === 'published').map(r => r.platform);
+            const fail = results.filter(r => r.status === 'failed');
+            const soon = results.filter(r => r.status === 'not_implemented').map(r => r.platform);
+            if (ok.length && typeof window.showToast === 'function') window.showToast(`Publicado en ${ok.join(', ')}`);
+            if (fail.length && typeof window.showToast === 'function') window.showToast(`Error en ${fail[0].platform}: ${fail[0].error || 'fallo'}`);
+            if (!ok.length && !fail.length && soon.length && typeof window.showToast === 'function') window.showToast('Esas plataformas llegan pronto');
+            if (ok.length) this.closePublishSheet();
+        } catch (err) {
+            console.error('[publish] submit error:', err);
+            if (typeof window.showToast === 'function') window.showToast(`No se pudo publicar: ${err.message}`);
+        } finally {
+            if (btn) { btn.classList.remove('is-loading'); btn.disabled = (this._publishCtx?.selected?.size || 0) === 0; }
+        }
     }
 
     /**
@@ -4410,7 +4692,7 @@ class LivingManager {
                         break;
                     }
                     case 'publish': {
-                        if (typeof window.showToast === 'function') window.showToast('Publicar a Meta llega pronto');
+                        this.openPublishSheet();
                         break;
                     }
                     case 'open-in': {
