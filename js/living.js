@@ -1868,45 +1868,159 @@ class LivingManager {
             if (count === 0) return;
             bar = document.createElement('div');
             bar.id = 'productionSelectionBar';
-            bar.className = 'production-selection-bar';
+            bar.className = 'selbar';
             bar.innerHTML = `
-                <span class="production-selection-bar-count"></span>
-                <div class="production-selection-bar-actions">
-                    <button type="button" class="btn btn-secondary production-selection-bar-clear" data-action="clear-selection">
-                        <i class="fas fa-times"></i> Limpiar
-                    </button>
-                    <button type="button" class="btn btn-danger production-selection-bar-delete" data-action="bulk-delete">
-                        <i class="fas fa-trash"></i> Eliminar
-                    </button>
+                <div class="selbar-count">
+                    <span class="selbar-thumb" id="selbarThumb" aria-hidden="true"></span>
+                    <span class="selbar-count-text"></span>
                 </div>
-            `;
+                <div class="selbar-actions">
+                    <button type="button" class="selbar-btn" data-action="bulk-download"><i class="fas fa-download"></i><span>Descargar</span></button>
+                    <button type="button" class="selbar-btn" data-action="bulk-publish"><i class="fas fa-upload"></i><span>Publicar todo</span></button>
+                    <button type="button" class="selbar-btn" data-action="add-campaign"><i class="fas fa-bullhorn"></i><span>Agregar a campaña</span></button>
+                    <button type="button" class="selbar-icon" data-action="bulk-like" aria-label="Me gusta"><i class="fas fa-heart"></i></button>
+                    <button type="button" class="selbar-icon selbar-icon--danger" data-action="bulk-delete" aria-label="Eliminar"><i class="fas fa-trash"></i></button>
+                    <button type="button" class="selbar-icon" data-action="clear-selection" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+                </div>`;
             document.body.appendChild(bar);
-            bar.addEventListener('click', async (e) => {
-                const btn = e.target.closest('[data-action]');
-                if (!btn) return;
-                if (btn.dataset.action === 'clear-selection') {
-                    this._clearSelection();
-                } else if (btn.dataset.action === 'bulk-delete') {
-                    const ids = Array.from(this.selectedOutputs);
-                    if (!ids.length) return;
-                    if (!confirm(`¿Eliminar ${ids.length} producción${ids.length === 1 ? '' : 'es'}? No se puede deshacer.`)) return;
-                    const n = await this.bulkDeleteOutputs(ids);
-                    if (n > 0) {
-                        ids.forEach(id => {
-                            document.querySelectorAll(`[data-output-id="${CSS.escape(id)}"]`).forEach(el => {
-                                const item = el.closest('.living-masonry-item') || el.closest('.history-image-card, .history-video-card');
-                                item?.remove();
-                            });
-                        });
-                        this._updateSelectionBar();
-                        if (typeof window.showToast === 'function') window.showToast(`${n} producción${n === 1 ? '' : 'es'} eliminada${n === 1 ? '' : 's'}`);
-                    }
-                }
-            });
+            bar.addEventListener('click', (e) => this._handleSelbarClick(e));
         }
-        const countEl = bar.querySelector('.production-selection-bar-count');
-        if (countEl) countEl.textContent = `${count} producción${count === 1 ? '' : 'es'} seleccionada${count === 1 ? '' : 's'}`;
+        const countEl = bar.querySelector('.selbar-count-text');
+        if (countEl) countEl.textContent = `${count} seleccionada${count === 1 ? '' : 's'}`;
+        const thumb = bar.querySelector('#selbarThumb');
+        if (thumb) {
+            const url = this._selectionThumbUrl();
+            thumb.style.backgroundImage = url ? `url("${url}")` : '';
+        }
         bar.classList.toggle('is-visible', count > 0);
+    }
+
+    async _handleSelbarClick(e) {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const ids = Array.from(this.selectedOutputs);
+        switch (action) {
+            case 'clear-selection': this._clearSelection(); break;
+            case 'bulk-download': await this._bulkDownload(ids); break;
+            case 'bulk-publish':
+                if (ids.length) this.openPublishSheet(ids);
+                break;
+            case 'add-campaign': await this._openCampaignPicker(btn, ids); break;
+            case 'bulk-like': await this._bulkLike(ids); break;
+            case 'bulk-delete': {
+                if (!ids.length) break;
+                if (!confirm(`¿Eliminar ${ids.length} producción${ids.length === 1 ? '' : 'es'}? No se puede deshacer.`)) break;
+                const n = await this.bulkDeleteOutputs(ids);
+                if (n > 0) {
+                    ids.forEach(id => document.querySelectorAll(`[data-output-id="${CSS.escape(id)}"]`).forEach(el => {
+                        (el.closest('.living-masonry-item') || el.closest('.history-image-card, .history-video-card'))?.remove();
+                    }));
+                    this._updateSelectionBar();
+                    window.showToast?.(`${n} producción${n === 1 ? '' : 'es'} eliminada${n === 1 ? '' : 's'}`);
+                }
+                break;
+            }
+        }
+    }
+
+    _selectionThumbUrl() {
+        const first = Array.from(this.selectedOutputs)[0];
+        if (!first) return '';
+        const o = (this.flowOutputs || []).find(x => x?.id === first);
+        return (o && this.resolveOutputMediaUrl(o)) || '';
+    }
+
+    async _bulkDownload(ids) {
+        if (!ids.length) return;
+        let n = 0;
+        for (const id of ids) {
+            const o = (this.flowOutputs || []).find(x => x?.id === id);
+            const url = o ? this.resolveOutputMediaUrl(o) : null;
+            if (url) { this.downloadImage(url); n++; await new Promise(r => setTimeout(r, 350)); }
+        }
+        window.showToast?.(n ? `Descargando ${n} producción${n === 1 ? '' : 'es'}…` : 'Nada que descargar');
+    }
+
+    async _bulkLike(ids) {
+        if (!ids.length) return;
+        let liked = 0;
+        for (const id of ids) {
+            if (!this.likedOutputs.has(id)) {
+                const now = await this.toggleLike(id);
+                if (now) {
+                    liked++;
+                    document.querySelectorAll(`[data-output-id="${CSS.escape(id)}"] .card-action--like`).forEach(el => {
+                        el.classList.add('is-liked'); el.setAttribute('aria-pressed', 'true');
+                    });
+                }
+            }
+        }
+        window.showToast?.(liked ? `${liked} marcada${liked === 1 ? '' : 's'} como me gusta` : 'Ya estaban marcadas');
+    }
+
+    async _openCampaignPicker(anchor, ids) {
+        if (!ids.length) return;
+        this._closeCampaignPicker();
+        let campaigns = [];
+        try {
+            const { data } = await this.supabase
+                .from('campaigns')
+                .select('id,nombre_campana,status')
+                .eq('organization_id', this.organizationId)
+                .order('updated_at', { ascending: false })
+                .limit(50);
+            campaigns = data || [];
+        } catch (_) {}
+
+        const pop = document.createElement('div');
+        pop.id = 'campaignPicker';
+        pop.className = 'campaign-picker';
+        const list = campaigns.length
+            ? campaigns.map(c => `
+                <button type="button" class="campaign-picker-item" data-campaign-id="${this.escapeHtml(c.id)}">
+                    <i class="fas fa-bullhorn"></i>
+                    <span class="campaign-picker-name">${this.escapeHtml(c.nombre_campana || 'Campaña')}</span>
+                    ${c.status ? `<em class="campaign-picker-status">${this.escapeHtml(c.status)}</em>` : ''}
+                </button>`).join('')
+            : `<div class="campaign-picker-empty">No hay campañas en esta organizacion.</div>`;
+        pop.innerHTML = `
+            <div class="campaign-picker-head">Agregar ${ids.length} a una campaña</div>
+            <div class="campaign-picker-list">${list}</div>`;
+        document.body.appendChild(pop);
+
+        const r = anchor.getBoundingClientRect();
+        pop.style.left = `${Math.max(12, Math.min(r.left, window.innerWidth - pop.offsetWidth - 12))}px`;
+        pop.style.bottom = `${window.innerHeight - r.top + 10}px`;
+
+        pop.addEventListener('click', async (e) => {
+            const item = e.target.closest('[data-campaign-id]');
+            if (!item) return;
+            const campaignId = item.dataset.campaignId;
+            try {
+                const { error } = await this.supabase
+                    .from('runs_outputs').update({ campaign_id: campaignId }).in('id', ids);
+                if (error) throw error;
+                window.showToast?.(`${ids.length} agregada${ids.length === 1 ? '' : 's'} a la campaña`, { type: 'success' });
+                this._closeCampaignPicker();
+                this._clearSelection();
+            } catch (err) {
+                console.error('[campaign] add error:', err);
+                window.showToast?.('No se pudo agregar a la campaña', { type: 'error' });
+            }
+        });
+        this._campaignPickerOutside = (ev) => {
+            if (!pop.contains(ev.target) && ev.target !== anchor && !anchor.contains(ev.target)) this._closeCampaignPicker();
+        };
+        setTimeout(() => document.addEventListener('click', this._campaignPickerOutside), 0);
+    }
+
+    _closeCampaignPicker() {
+        document.getElementById('campaignPicker')?.remove();
+        if (this._campaignPickerOutside) {
+            document.removeEventListener('click', this._campaignPickerOutside);
+            this._campaignPickerOutside = null;
+        }
     }
 
     _clearSelection() {
@@ -2208,11 +2322,29 @@ class LivingManager {
         });
     }
 
-    openPublishSheet() {
-        const st = this._modalState;
+    openPublishSheet(multiIds) {
+        // Modo multiple: publicar todas las producciones seleccionadas a la vez
+        // (caption compartido). El estado de conexion se lee del primer output.
+        const isMulti = Array.isArray(multiIds) && multiIds.length > 0;
+        let st;
+        if (isMulti) {
+            const first = (this.flowOutputs || []).find(o => o?.id === multiIds[0]) || null;
+            st = {
+                outputId: multiIds[0],
+                mediaUrl: first ? (this.resolveOutputMediaUrl(first) || '') : '',
+                isVideo: false, mediaType: 'image',
+                fileName: `${multiIds.length} producciones`,
+                caption: '', brandContainerId: first?.brand_container_id || null
+            };
+        } else {
+            st = this._modalState;
+        }
         if (!st || !st.outputId) { if (typeof window.showToast === 'function') window.showToast('Abre una produccion para publicar'); return; }
         this._publishCtx = {
-            outputId: st.outputId, mediaUrl: st.mediaUrl, mediaType: st.mediaType, isVideo: !!st.isVideo,
+            outputId: st.outputId,
+            outputIds: isMulti ? multiIds.slice() : null,
+            multi: isMulti,
+            mediaUrl: st.mediaUrl, mediaType: st.mediaType, isVideo: !!st.isVideo,
             fileName: st.fileName || (st.isVideo ? 'video.mp4' : 'imagen.png'),
             caption: st.caption || '', brandContainerId: st.brandContainerId || null,
             selected: new Set(), connections: null
@@ -2227,8 +2359,10 @@ class LivingManager {
             else { thumb.innerHTML = ''; thumb.style.backgroundImage = st.mediaUrl ? `url("${st.mediaUrl}")` : ''; }
         }
         sheet.querySelector('#publishFileName').textContent = this._publishCtx.fileName;
-        sheet.querySelector('#publishTypeChip').textContent = st.isVideo ? 'VIDEO' : 'IMAGEN';
-        sheet.querySelector('#publishMediaSub').textContent = st.isVideo ? 'video · listo para publicar' : 'imagen · lista para publicar';
+        sheet.querySelector('#publishTypeChip').textContent = isMulti ? `${multiIds.length}` : (st.isVideo ? 'VIDEO' : 'IMAGEN');
+        sheet.querySelector('#publishMediaSub').textContent = isMulti
+            ? 'se publicaran todas las seleccionadas'
+            : (st.isVideo ? 'video · listo para publicar' : 'imagen · lista para publicar');
 
         const ta = sheet.querySelector('#publishCaption');
         if (ta) ta.value = this._publishCtx.caption;
@@ -2345,38 +2479,43 @@ class LivingManager {
         if (!ctx || !ctx.selected.size) return;
         const platforms = [...ctx.selected];
         const caption = document.getElementById('publishCaption')?.value || ctx.caption || '';
+        const ids = (ctx.outputIds && ctx.outputIds.length) ? ctx.outputIds : [ctx.outputId];
+        const multi = ids.length > 1;
         if (btn) { btn.disabled = true; btn.classList.add('is-loading'); }
-        const loadingToast = window.showToast?.('Publicando…', { duration: 0 });
+        const loadingToast = window.showToast?.(multi ? `Publicando ${ids.length}…` : 'Publicando…', { duration: 0 });
         try {
             const token = await this._getAccessToken();
             if (!token) throw new Error('No hay sesion activa');
-            const res = await fetch('/.netlify/functions/api-social-publish', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ output_id: ctx.outputId, platforms, caption })
-            });
-            const data = await res.json().catch(() => ({}));
+            const all = [];
+            for (const oid of ids) {
+                const res = await fetch('/.netlify/functions/api-social-publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ output_id: oid, platforms, caption })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.status === 401) throw new Error('Sesion expirada, vuelve a entrar');
+                (Array.isArray(data.results) ? data.results : []).forEach(r => all.push({ ...r, output_id: oid }));
+            }
             loadingToast?.close?.();
-            if (res.status === 401) throw new Error('Sesion expirada, vuelve a entrar');
-            const results = Array.isArray(data.results) ? data.results : [];
-            const ok   = results.filter(r => r.status === 'published');
-            const fail = results.filter(r => r.status === 'failed');
-            const soon = results.filter(r => r.status === 'not_implemented');
+            const ok   = all.filter(r => r.status === 'published');
+            const fail = all.filter(r => r.status === 'failed');
+            const soon = all.filter(r => r.status === 'not_implemented');
 
             // Diagnostico explicito en consola: exito (con link) y error (mensaje de Meta).
-            console.log('[publish] resultados:', results);
+            console.log('[publish] resultados:', all);
             ok.forEach(r => console.log(`[publish] ✅ ${r.platform}: ${r.remote_url || r.remote_post_id || 'publicado'}`));
             fail.forEach(r => console.error(`[publish] ❌ ${r.platform}: ${r.error || 'fallo desconocido'}`));
 
             if (ok.length) {
-                window.showToast?.('Produccion publicada', { type: 'success' });
-                this._renderPublishResult(ok, fail);
+                window.showToast?.(multi ? 'Producciones publicadas' : 'Produccion publicada', { type: 'success' });
+                this._renderPublishResult(ok, fail, multi);
             } else if (fail.length) {
                 window.showToast?.(`Error en ${fail[0].platform}: ${fail[0].error || 'fallo'}`, { type: 'error' });
             } else if (soon.length) {
                 window.showToast?.('Esas plataformas llegan pronto');
             } else {
-                window.showToast?.(`No se pudo publicar: ${data.error || 'sin respuesta'}`, { type: 'error' });
+                window.showToast?.('No se pudo publicar', { type: 'error' });
             }
         } catch (err) {
             loadingToast?.close?.();
@@ -2387,26 +2526,35 @@ class LivingManager {
         }
     }
 
-    // Estado de exito dentro de la hoja: "Produccion publicada" + link(s) a la publicacion.
-    _renderPublishResult(ok, fail) {
+    // Estado de exito dentro de la hoja: "Produccion publicada" + link(s) o resumen.
+    _renderPublishResult(ok, fail, multi) {
         const sheet = document.getElementById('publishSheet');
         if (!sheet) return;
         const body = sheet.querySelector('.publish-sheet-body');
         const footer = sheet.querySelector('.publish-sheet-footer');
         const labelMap = { facebook: 'Facebook', instagram: 'Instagram', youtube: 'YouTube', x: 'X', tiktok: 'TikTok' };
-        const links = (ok || []).map(r => {
-            const label = labelMap[r.platform] || r.platform;
-            return r.remote_url
-                ? `<a class="publish-result-link" href="${this.escapeHtml(r.remote_url)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> Ver en ${label}</a>`
-                : `<span class="publish-result-link is-static"><i class="fas fa-check"></i> Publicado en ${label}</span>`;
-        }).join('');
+        let links;
+        if (multi) {
+            // Resumen por plataforma (varias producciones → no listamos cada link).
+            const byPlat = {};
+            (ok || []).forEach(r => { byPlat[r.platform] = (byPlat[r.platform] || 0) + 1; });
+            links = Object.entries(byPlat).map(([p, n]) =>
+                `<span class="publish-result-link is-static"><i class="fas fa-check"></i> ${n} en ${labelMap[p] || p}</span>`).join('');
+        } else {
+            links = (ok || []).map(r => {
+                const label = labelMap[r.platform] || r.platform;
+                return r.remote_url
+                    ? `<a class="publish-result-link" href="${this.escapeHtml(r.remote_url)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> Ver en ${label}</a>`
+                    : `<span class="publish-result-link is-static"><i class="fas fa-check"></i> Publicado en ${label}</span>`;
+            }).join('');
+        }
         const failNote = (fail && fail.length)
-            ? `<p class="publish-result-fail">No se pudo en ${fail.map(f => labelMap[f.platform] || f.platform).join(', ')}.</p>`
+            ? `<p class="publish-result-fail">${fail.length} no se pudo${fail.length === 1 ? '' : 'ieron'} publicar.</p>`
             : '';
         if (body) body.innerHTML = `
             <div class="publish-result">
                 <div class="publish-result-check"><i class="fas fa-check"></i></div>
-                <h3 class="publish-result-title">Produccion publicada</h3>
+                <h3 class="publish-result-title">${multi ? 'Producciones publicadas' : 'Produccion publicada'}</h3>
                 <div class="publish-result-links">${links}</div>
                 ${failNote}
             </div>`;
@@ -5609,6 +5757,7 @@ class LivingManager {
         // La selection bar vive en <body>, no en la vista; al salir de
         // Production hay que removerla manualmente.
         document.getElementById('productionSelectionBar')?.remove();
+        this._closeCampaignPicker?.();
         this.selectedOutputs?.clear();
         this.likedOutputs?.clear();
         // Modal listener global de Esc.
