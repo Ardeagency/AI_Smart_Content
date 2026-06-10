@@ -2257,6 +2257,14 @@
       const positions = this._positions || {};
       if (!this._prodData) this._prodData = {};
       if (!this._ccPendingProdFetch) this._ccPendingProdFetch = new Set();
+      // F3: boton "Publicar" en satelites de produccion (publicacion manual del humano).
+      if (!this._ccProdPublishWired) {
+        this._ccProdPublishWired = true;
+        document.addEventListener('click', (ev) => {
+          const b = ev.target.closest && ev.target.closest('.cc-prod-publish-btn');
+          if (b) { ev.preventDefault(); ev.stopPropagation(); this._publishProductionFromCanvas(b.getAttribute('data-output-id'), b); }
+        });
+      }
       const linkages = [];
       Object.keys(positions).forEach((key) => {
         let col = null;
@@ -2292,15 +2300,18 @@
           div.style.cssText = `position:absolute;left:${x}px;top:${rowY}px;width:${SW}px;height:${SH}px;background:#141517;border:1px solid #242424;border-radius:10px;padding:8px;box-sizing:border-box;font-size:11px;color:#d4d1d8;overflow:hidden;`;
           const isVideo = p.output_type === 'video';
           const pub = p._pub;
-          let badge;
-          if (pub && pub.status === 'published') {
+          const isPublished = !!(pub && pub.status === 'published');
+          let badge, action = '';
+          if (isPublished) {
             badge = `<span style="color:#6bcf7f;font-size:10px;">&#9679; Publicada${pub.platform ? ' &middot; ' + this.escapeHtml(pub.platform) : ''}</span>`;
           } else if (p.published_at) {
             badge = `<span style="color:#5b9bd5;font-size:10px;">&#9679; En pauta</span>`;
           } else {
-            badge = `<span style="color:rgba(212,209,216,.5);font-size:10px;">&#9675; Producida</span>`;
+            badge = `<span style="color:rgba(212,209,216,.5);font-size:10px;">&#9675; Lista para publicar</span>`;
+            action = `<button class="cc-prod-publish-btn" data-output-id="${p.id}" style="margin-top:6px;width:100%;padding:4px 0;border:1px solid #3a7bd5;border-radius:6px;background:rgba(58,123,213,.18);color:#9cc2ff;font-size:10px;cursor:pointer;">Publicar</button>`;
           }
-          div.innerHTML = `<div style="display:flex;align-items:center;gap:6px;"><i class="fas ${isVideo ? 'fa-film' : 'fa-image'}" style="color:#6aa3ff;"></i><span>${isVideo ? 'Video' : 'Imagen'}</span></div><div style="margin-top:8px;">${badge}</div>`;
+          div.style.height = action ? `${SH + 28}px` : `${SH}px`;
+          div.innerHTML = `<div style="display:flex;align-items:center;gap:6px;"><i class="fas ${isVideo ? 'fa-film' : 'fa-image'}" style="color:#6aa3ff;"></i><span>${isVideo ? 'Video' : 'Imagen'}</span></div><div style="margin-top:6px;">${badge}</div>${action}`;
           world.appendChild(div);
           linkages.push({ from: parentEl, to: div });
         });
@@ -2327,6 +2338,39 @@
         svg.appendChild(path);
       });
     } catch (e) { /* nunca romper el render core */ }
+  };
+
+  // F3: publica una produccion manualmente (humano) via la funcion probada
+  // api-social-publish, con la auth del usuario. ai-engine NUNCA postea.
+  P._publishProductionFromCanvas = async function (outputId, btn) {
+    if (!outputId || !this._supabase) return;
+    try {
+      if (btn) { btn.disabled = true; btn.textContent = 'Publicando...'; }
+      const { data: { session } } = await this._supabase.auth.getSession();
+      const token = session && session.access_token;
+      if (!token) { window.showToast && window.showToast('Sin sesion activa', { type: 'error' }); return; }
+      const res = await fetch('/.netlify/functions/api-social-publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ output_id: outputId, platforms: ['instagram', 'facebook'] }),
+      });
+      const data = await res.json().catch(() => ({}));
+      const results = Array.isArray(data.results) ? data.results : [];
+      const ok = results.some((r) => r.status === 'published');
+      if (ok) {
+        window.showToast && window.showToast('Produccion publicada', { type: 'success' });
+        this._prodData = {};                 // invalidar cache -> re-render muestra "Publicada"
+        this._renderProductionSatellites();
+      } else {
+        const fail = results.find((r) => r.status === 'failed');
+        const msg = fail ? `Error: ${fail.error || 'fallo'}` : (data.error || 'No se pudo publicar');
+        window.showToast && window.showToast(msg, { type: 'error' });
+        if (btn) { btn.disabled = false; btn.textContent = 'Publicar'; }
+      }
+    } catch (e) {
+      window.showToast && window.showToast('Error al publicar', { type: 'error' });
+      if (btn) { btn.disabled = false; btn.textContent = 'Publicar'; }
+    }
   };
 
   // Wrap _renderCanvas para tambien renderear satelites + vera_states + Vera Insights
