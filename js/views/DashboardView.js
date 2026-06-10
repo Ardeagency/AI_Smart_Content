@@ -49,7 +49,7 @@ class DashboardView extends BaseView {
     this._chartJsReady  = false;
     this._supabase      = null;
     this._orgId         = null;
-    this._channels      = []; // Suscripciones realtime activas (limpiar en onLeave)
+    // Canales realtime los gestiona BaseView (this._liveChannels) via liveSubscribe/liveUnsubscribe.
     this._onHashChange  = null;
   }
 
@@ -274,51 +274,41 @@ class DashboardView extends BaseView {
      `intelligence_signals` no tiene `organization_id` directo — se filtra
      en el handler usando los entity_ids cacheados en los services. */
   _subscribeRealtime() {
-    if (!this._supabase || !this._orgId) return;
-    if (this._channels.length) return;
+    if (!this._orgId) return;
+    if (this._liveChannels?.length) return;
 
     const orgFilter = `organization_id=eq.${this._orgId}`;
+    const sub = (name, table, scopes) => ({
+      name, table, filter: orgFilter,
+      onChange: (payload) => this._onRealtimeChange(scopes, payload),
+    });
 
-    const sub = (name, table, filter, scopes) => {
-      const ch = this._supabase
-        .channel(`dash-${name}-${this._orgId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table, filter }, (payload) => {
-          this._onRealtimeChange(scopes, payload);
-        })
-        .subscribe();
-      this._channels.push(ch);
-    };
-
-    sub('vpa',   'vera_pending_actions',  orgFilter, ['strategy']);
-    sub('vuln',  'brand_vulnerabilities', orgFilter, ['my-brands', 'strategy']);
-    sub('bm',    'body_missions',         orgFilter, ['strategy']);
-    sub('rp',    'retail_prices',         orgFilter, ['competence']);
-    sub('tt',    'trend_topics',          orgFilter, ['tendencies']);
-
-    // FEAT-023: invalida sección Mis Campañas si cambian ad_insights_daily o campaigns.
-    sub('aid',   'ad_insights_daily',     orgFilter, ['my-brands']);
-    sub('camp',  'campaigns',             orgFilter, ['my-brands']);
-    sub('cb',    'campaign_briefs',       orgFilter, ['my-brands']);
-
-    // intelligence_signals: filtro lo hace el handler (la tabla no tiene
-    // organization_id; verificamos entity_id contra los services al recibir).
-    const ch = this._supabase
-      .channel(`dash-sig-${this._orgId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'intelligence_signals' }, (payload) => {
-        const entityId = payload?.new?.entity_id;
-        const known = (this._mbService?.entityIds || this._compService?.entityIds || []);
-        if (entityId && known.length && !known.includes(entityId)) return;
-        this._onRealtimeChange(['my-brands', 'tendencies'], payload);
-      })
-      .subscribe();
-    this._channels.push(ch);
+    this.liveSubscribe([
+      sub('vpa',  'vera_pending_actions',  ['strategy']),
+      sub('vuln', 'brand_vulnerabilities', ['my-brands', 'strategy']),
+      sub('bm',   'body_missions',         ['strategy']),
+      sub('rp',   'retail_prices',         ['competence']),
+      sub('tt',   'trend_topics',          ['tendencies']),
+      // FEAT-023: invalida sección Mis Campañas si cambian ad_insights_daily o campaigns.
+      sub('aid',  'ad_insights_daily',     ['my-brands']),
+      sub('camp', 'campaigns',             ['my-brands']),
+      sub('cb',   'campaign_briefs',       ['my-brands']),
+      // intelligence_signals: filtro lo hace el handler (la tabla no tiene
+      // organization_id; verificamos entity_id contra los services al recibir).
+      {
+        name: 'sig', table: 'intelligence_signals', event: 'INSERT',
+        onChange: (payload) => {
+          const entityId = payload?.new?.entity_id;
+          const known = (this._mbService?.entityIds || this._compService?.entityIds || []);
+          if (entityId && known.length && !known.includes(entityId)) return;
+          this._onRealtimeChange(['my-brands', 'tendencies'], payload);
+        },
+      },
+    ]);
   }
 
   _unsubscribeRealtime() {
-    for (const ch of this._channels) {
-      try { ch.unsubscribe(); } catch (_) {}
-    }
-    this._channels = [];
+    this.liveUnsubscribe();
   }
 
   _onRealtimeChange(scopes, _payload) {
@@ -415,18 +405,8 @@ class DashboardView extends BaseView {
     }
   }
 
-  /* Firma estable y barata de los datos de un tab, para detectar si cambiaron
-     respecto al render anterior. Si no se puede serializar (p.ej. referencia
-     circular), devuelve null y el llamador re-pinta por las dudas. */
-  _dataSignature(data) {
-    let json;
-    try { json = JSON.stringify(data); } catch (_) { return null; }
-    if (json == null) return null;
-    // djb2 — alcanza para comparar igualdad; no es criptografico.
-    let h = 5381;
-    for (let i = 0; i < json.length; i++) h = ((h << 5) + h + json.charCodeAt(i)) | 0;
-    return `${json.length}:${h}`;
-  }
+  /* _dataSignature(data) lo provee BaseView (firma djb2 compartida por toda
+     la plataforma). El Dashboard solo agrega su orquestacion por tab/charts. */
 
   /* Decide si el tab debe re-pintarse con estos datos. Es el corazon del
      "refresh sin parpadeo":

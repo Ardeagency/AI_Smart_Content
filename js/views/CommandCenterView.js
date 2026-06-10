@@ -228,6 +228,77 @@ class CommandCenterView extends BaseView {
     await super.render();
     await this._loadData();
     this._setupEventListeners();
+    this._setupLive();
+  }
+
+  /* Las 4 queries del bundle (audiencias/segmentos/campanas/integraciones)
+     scopeadas por brand_container. Compartido por _loadData (cacheado) y el
+     refresh en vivo (fresco). */
+  async _fetchCcBundle(supabase, bid) {
+    const [audRes, segRes, campRes, intRes] = await Promise.all([
+      supabase
+        .from('audience_personas')
+        .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, target_age_min, target_age_max, target_genders, is_liked, is_featured, is_active, real_age_distribution, real_gender_distribution, real_location_distribution, real_interests, updated_at')
+        .eq('brand_container_id', bid)
+        .order('updated_at', { ascending: false }),
+      supabase
+        .from('audience_segments')
+        .select('id, persona_id, platform, external_audience_name, external_audience_type, age_range, genders, interests, behaviors, estimated_size, size_lower_bound, size_upper_bound, status, source, last_synced_at')
+        .eq('brand_container_id', bid)
+        .order('platform', { ascending: true }),
+      supabase
+        .from('campaigns')
+        .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics')
+        .eq('brand_container_id', bid)
+        .order('updated_at', { ascending: false }),
+      supabase
+        .from('brand_integrations')
+        .select('id, platform, external_account_name, is_active, last_sync_at, updated_at')
+        .eq('brand_container_id', bid)
+        .order('platform', { ascending: true }),
+    ]);
+    return {
+      audiences:    !audRes.error  && Array.isArray(audRes.data)  ? audRes.data  : [],
+      segments:     !segRes.error  && Array.isArray(segRes.data)  ? segRes.data  : [],
+      campaigns:    !campRes.error && Array.isArray(campRes.data) ? campRes.data : [],
+      integrations: !intRes.error  && Array.isArray(intRes.data)  ? intRes.data  : [],
+    };
+  }
+
+  /* Datos en vivo: realtime sobre campanas/audiencias/segmentos/integraciones
+     de esta sub-marca + polling de respaldo. Re-pinta solo los paneles resumen
+     (lista de campanas + mini-dash); el canvas de nodos ya es live via
+     CanvasStore (no lo tocamos). Teardown automatico en BaseView.destroy(). */
+  _setupLive() {
+    const bid = this._containerRow?.id;
+    if (!this._supabase || !bid || this._liveReady) return;
+    this._liveReady = true;
+
+    const snapshot = () => ({
+      campaigns: this._campaigns, audiences: this._audiences,
+      segments: this._segments, integrations: this._integrations,
+    });
+    if (!this._liveSig) this._liveSig = {};
+    this._liveSig['cc'] = this._dataSignature(snapshot());
+
+    this._liveTick = () => this.liveRefresh('cc',
+      async () => {
+        window.apiClient?.invalidate?.(`cc:bundle:${bid}`);
+        const bundle = await this._fetchCcBundle(this._supabase, bid);
+        this._audiences = bundle.audiences; this._segments = bundle.segments;
+        this._campaigns = bundle.campaigns; this._integrations = bundle.integrations;
+        return bundle;
+      },
+      () => { this._renderCampaigns(); this._renderMiniDash?.(); });
+
+    const f = `brand_container_id=eq.${bid}`;
+    this.liveSubscribe([
+      { name: 'camp', table: 'campaigns',         filter: f, onChange: () => this._liveTick() },
+      { name: 'aud',  table: 'audience_personas', filter: f, onChange: () => this._liveTick() },
+      { name: 'seg',  table: 'audience_segments', filter: f, onChange: () => this._liveTick() },
+      { name: 'int',  table: 'brand_integrations',filter: f, onChange: () => this._liveTick() },
+    ]);
+    this.startLivePoll(60000, () => this._liveTick());
   }
 
   /* ── Data fetching ────────────────────────────────────────────────── */
@@ -295,39 +366,9 @@ class CommandCenterView extends BaseView {
     /* Fetch paralelo (snapshots + heatmap vía API: RLS suele devolver [] al cliente)
        Cacheado vía apiClient 60s + SWR por brand_container_id. */
     try {
-      const fetchBundle = async () => {
-        const [audRes, segRes, campRes, intRes] = await Promise.all([
-          supabase
-            .from('audience_personas')
-            .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, target_age_min, target_age_max, target_genders, is_liked, is_featured, is_active, real_age_distribution, real_gender_distribution, real_location_distribution, real_interests, updated_at')
-            .eq('brand_container_id', bid)
-            .order('updated_at', { ascending: false }),
-          supabase
-            .from('audience_segments')
-            .select('id, persona_id, platform, external_audience_name, external_audience_type, age_range, genders, interests, behaviors, estimated_size, size_lower_bound, size_upper_bound, status, source, last_synced_at')
-            .eq('brand_container_id', bid)
-            .order('platform', { ascending: true }),
-          supabase
-            .from('campaigns')
-            .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics')
-            .eq('brand_container_id', bid)
-            .order('updated_at', { ascending: false }),
-          supabase
-            .from('brand_integrations')
-            .select('id, platform, external_account_name, is_active, last_sync_at, updated_at')
-            .eq('brand_container_id', bid)
-            .order('platform', { ascending: true }),
-        ]);
-        return {
-          audiences:    !audRes.error  && Array.isArray(audRes.data)  ? audRes.data  : [],
-          segments:     !segRes.error  && Array.isArray(segRes.data)  ? segRes.data  : [],
-          campaigns:    !campRes.error && Array.isArray(campRes.data) ? campRes.data : [],
-          integrations: !intRes.error  && Array.isArray(intRes.data)  ? intRes.data  : [],
-        };
-      };
       const bundle = window.apiClient
-        ? await window.apiClient.query(`cc:bundle:${bid}`, fetchBundle, { ttl: 60 * 1000, staleWhileRevalidate: true })
-        : await fetchBundle();
+        ? await window.apiClient.query(`cc:bundle:${bid}`, () => this._fetchCcBundle(supabase, bid), { ttl: 60 * 1000, staleWhileRevalidate: true })
+        : await this._fetchCcBundle(supabase, bid);
       this._audiences    = bundle.audiences;
       this._segments     = bundle.segments;
       this._campaigns    = bundle.campaigns;

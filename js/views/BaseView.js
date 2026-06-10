@@ -144,6 +144,7 @@ class BaseView {
    * Destruir vista: limpiar listeners. Llamado por el router antes de cambiar de ruta.
    */
   destroy() {
+    this.liveTeardown();
     this.cleanup();
   }
 
@@ -901,6 +902,133 @@ class BaseView {
         this.forceFixedSize(e.target);
       }, { passive: true });
     });
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     Datos en vivo (realtime + polling de respaldo, sin parpadeo)
+     ─────────────────────────────────────────────────────────────────────
+     Primitiva compartida por todas las vistas. Generaliza el patron probado
+     en DashboardView: suscripcion a Supabase realtime por tabla + un polling
+     silencioso de respaldo, ambos pasando por liveRefresh(), que solo re-pinta
+     cuando los datos REALMENTE cambiaron (gate por firma). El teardown es
+     automatico en destroy() (el router lo invoca al cambiar de ruta).
+
+     Uso tipico en una subclase (en init(), tras el primer render):
+       this._liveTick = () => this.liveRefresh('main',
+         () => this._loadX(),              // fetch
+         (data) => this._applyX(data));    // re-pinta SOLO la region viva
+       await this.liveSubscribe([
+         { name: 'runs', table: 'flow_runs', filter: `organization_id=eq.${orgId}`,
+           onChange: () => this._liveTick() },
+       ]);
+       this.startLivePoll(60000, () => this._liveTick());
+     ════════════════════════════════════════════════════════════════════ */
+
+  /** Cliente Supabase (cacheado). Mismo patron que el resto de la app. */
+  async _supabaseClient() {
+    if (this._sb) return this._sb;
+    try {
+      if (window.supabaseService?.getClient) this._sb = await window.supabaseService.getClient();
+      else if (window.supabase)              this._sb = window.supabase;
+    } catch (_) { this._sb = null; }
+    return this._sb;
+  }
+
+  /** Firma estable y barata (djb2 sobre JSON) para detectar si los datos
+      cambiaron entre refreshes. Devuelve null si no se puede serializar
+      (p.ej. referencia circular) → el llamador re-pinta por las dudas. */
+  _dataSignature(data) {
+    let json;
+    try { json = JSON.stringify(data); } catch (_) { return null; }
+    if (json == null) return null;
+    let h = 5381;
+    for (let i = 0; i < json.length; i++) h = ((h << 5) + h + json.charCodeAt(i)) | 0;
+    return `${json.length}:${h}`;
+  }
+
+  /** Suscribe canales de Supabase realtime de forma declarativa.
+      specs: [{ name, table, filter?, event='*', onChange(payload) }] */
+  async liveSubscribe(specs) {
+    if (!Array.isArray(specs) || !specs.length) return;
+    const sb = await this._supabaseClient();
+    if (!sb?.channel) return;
+    if (!this._liveChannels) this._liveChannels = [];
+    for (const s of specs) {
+      if (!s?.table) continue;
+      const cfg = { event: s.event || '*', schema: 'public', table: s.table };
+      if (s.filter) cfg.filter = s.filter;
+      try {
+        const ch = sb
+          .channel(`live-${this.constructor.name}-${s.name || s.table}`)
+          .on('postgres_changes', cfg, (payload) => {
+            try { s.onChange?.(payload); } catch (e) { console.warn('[live] onChange:', e?.message || e); }
+          })
+          .subscribe();
+        this._liveChannels.push(ch);
+      } catch (e) {
+        console.warn('[live] subscribe failed:', s.table, e?.message || e);
+      }
+    }
+  }
+
+  /** Des-suscribe todos los canales realtime de esta vista. */
+  liveUnsubscribe() {
+    if (!this._liveChannels) return;
+    for (const ch of this._liveChannels) {
+      try { ch.unsubscribe?.(); } catch (_) {}
+    }
+    this._liveChannels = [];
+  }
+
+  /** Corazon sin parpadeo: fetchea, compara firma contra el ultimo render de
+      `key`; si no cambio, NO toca el DOM; si cambio, llama applyFn(data).
+      Guarda de re-entrancia por key y respeta document.hidden. */
+  async liveRefresh(key, fetchFn, applyFn) {
+    if (!this._liveBusy) this._liveBusy = {};
+    if (!this._liveSig)  this._liveSig = {};
+    if (this._liveBusy[key]) return;          // ya hay un refresh de esta key en vuelo
+    if (document.hidden) return;
+    this._liveBusy[key] = true;
+    try {
+      const data = await fetchFn();
+      const sig = this._dataSignature(data);
+      if (sig != null && this._liveSig[key] === sig) return;   // sin cambios reales → cero parpadeo
+      this._liveSig[key] = sig;
+      await applyFn(data);
+    } catch (e) {
+      console.warn(`[live:${key}] refresh failed:`, e?.message || e);
+    } finally {
+      this._liveBusy[key] = false;
+    }
+  }
+
+  /** Reinicia la firma de una key (o todas) para forzar el proximo repaint.
+      Util tras un cambio de filtro hecho por el usuario. */
+  liveResetSignature(key) {
+    if (!this._liveSig) return;
+    if (key == null) this._liveSig = {};
+    else delete this._liveSig[key];
+  }
+
+  /** Polling de respaldo: corre tickFn cada `ms`, pausado mientras la pestana
+      esta oculta, y dispara un tick inmediato al volver a estar visible. */
+  startLivePoll(ms, tickFn) {
+    this.stopLivePoll();
+    if (!(ms > 0) || typeof tickFn !== 'function') return;
+    this._livePollTimer = setInterval(() => { if (!document.hidden) tickFn(); }, ms);
+    this._livePollVis = () => { if (!document.hidden) tickFn(); };
+    document.addEventListener('visibilitychange', this._livePollVis);
+  }
+
+  stopLivePoll() {
+    if (this._livePollTimer) { clearInterval(this._livePollTimer); this._livePollTimer = null; }
+    if (this._livePollVis) { document.removeEventListener('visibilitychange', this._livePollVis); this._livePollVis = null; }
+  }
+
+  /** Teardown de toda la maquinaria live. Lo llama destroy(). */
+  liveTeardown() {
+    this.liveUnsubscribe();
+    this.stopLivePoll();
   }
 }
 

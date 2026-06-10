@@ -144,6 +144,38 @@ class MonitoringView extends BaseView {
 
     await this._ensureService();
     await this._loadInitial();
+    this._setupLive();
+  }
+
+  /* Datos en vivo: realtime sobre las tablas de Vigilancia + polling de
+     respaldo, todo pasando por liveRefresh (re-pinta solo el body y solo si
+     los datos cambiaron). Teardown automatico en BaseView.destroy(). */
+  _setupLive() {
+    if (!this._service || !this._orgId || this._liveReady) return;
+    this._liveReady = true;
+
+    // Sembrar la firma con lo ya pintado para que el 1er tick no re-pinte de mas.
+    if (!this._liveSig) this._liveSig = {};
+    this._liveSig['monitoring'] = this._dataSignature(this._data);
+
+    this._liveTick = () => this.liveRefresh('monitoring',
+      () => this._service.loadAll(),
+      (data) => { this._data = data; this._renderBody(); });
+
+    const orgFilter = `organization_id=eq.${this._orgId}`;
+    this.liveSubscribe([
+      { name: 'ent', table: 'intelligence_entities', filter: orgFilter, onChange: () => this._liveTick() },
+      { name: 'wat', table: 'url_watchers',           filter: orgFilter, onChange: () => this._liveTick() },
+      // intelligence_signals no tiene organization_id: filtramos por entity_id
+      // contra las entities ya cargadas (mismo criterio que el servicio).
+      { name: 'sig', table: 'intelligence_signals', event: 'INSERT', onChange: (p) => {
+          const eid = p?.new?.entity_id;
+          const known = (this._data?.entities?.data || []).map(e => e.id);
+          if (eid && known.length && !known.includes(eid)) return;
+          this._liveTick();
+        } },
+    ]);
+    this.startLivePoll(60000, () => this._liveTick());
   }
 
   renderHTML() {

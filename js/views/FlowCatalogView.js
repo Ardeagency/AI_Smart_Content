@@ -313,6 +313,72 @@ class FlowCatalogView extends BaseView {
     // Deep-link: ?flow=<id> abre el modal de detalle si el flow esta cargado.
     const deepFlowId = new URLSearchParams(window.location.search).get('flow');
     if (deepFlowId && this.getFlowById(deepFlowId)) this.openFlowDetail(deepFlowId);
+
+    this._setupLive();
+  }
+
+  /* Datos en vivo: realtime sobre el catalogo (content_flows), likes y saves
+     colaborativos y runs recientes, mas polling de respaldo. Solo re-pinta los
+     grids del modo actual (sin tocar hero/toolbar) y solo si algo cambio.
+     Teardown automatico en destroy() (que llama super.destroy()). */
+  _setupLive() {
+    if (!this.supabase || this._liveReady) return;
+    this._liveReady = true;
+
+    const reload = async () => {
+      window.apiClient?.invalidate?.((k) => k.startsWith('flow:flows:'));
+      if (this.userId) {
+        window.apiClient?.invalidate?.(`flow:likes:${this.userId}`);
+        window.apiClient?.invalidate?.(`flow:recent_runs:${this.userId}`);
+      }
+      if (this.organizationId) window.apiClient?.invalidate?.(`flow:saves:${this.organizationId}`);
+      await this.loadFlows();
+      this.enrichFlowsWithCategories();
+      if (this.userId) await Promise.all([this.loadLikesAndSaves(), this.loadRecentRuns()]);
+      return {
+        flows: this.flows,
+        liked: this.likedFlowIds ? [...this.likedFlowIds] : [],
+        saved: this.savedFlowIds ? [...this.savedFlowIds] : [],
+        recent: this.recentRunFlowIds || [],
+      };
+    };
+
+    this._liveTick = () => this.liveRefresh('catalog', reload, () => this._rerenderFlowGrids());
+
+    // Sembrar firma con el estado ya pintado para que el 1er tick no re-pinte de mas.
+    if (!this._liveSig) this._liveSig = {};
+    this._liveSig['catalog'] = this._dataSignature({
+      flows: this.flows,
+      liked: this.likedFlowIds ? [...this.likedFlowIds] : [],
+      saved: this.savedFlowIds ? [...this.savedFlowIds] : [],
+      recent: this.recentRunFlowIds || [],
+    });
+
+    const specs = [
+      { name: 'cf', table: 'content_flows', onChange: () => this._liveTick() }, // catalogo global
+    ];
+    if (this.userId) {
+      specs.push({ name: 'likes', table: 'user_flow_likes', filter: `user_id=eq.${this.userId}`, onChange: () => this._liveTick() });
+      specs.push({ name: 'runs',  table: 'flow_runs',       filter: `user_id=eq.${this.userId}`, onChange: () => this._liveTick() });
+    }
+    if (this.organizationId) {
+      specs.push({ name: 'saves', table: 'org_flow_saves', filter: `organization_id=eq.${this.organizationId}`, onChange: () => this._liveTick() });
+    }
+    this.liveSubscribe(specs);
+    this.startLivePoll(60000, () => this._liveTick());
+  }
+
+  /* Re-pinta solo los grids del modo actual (espejo de init sin hero/toolbar/
+     deep-link). No toca menus ni el carrusel. */
+  _rerenderFlowGrids() {
+    if (this.savedView) { this.renderSavedFlows(); return; }
+    if (this.selectedCategoryId || this.selectedSubcategoryId) {
+      this.renderRecentInCategory();
+      this.renderGalleryBySubcategory();
+    } else {
+      this.renderPersonalRails();
+      this.renderSectionAllFlows();
+    }
   }
 
   showContentError() {

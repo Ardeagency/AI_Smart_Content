@@ -69,6 +69,7 @@ class ExecutionHistoryView extends BaseView {
       await this.initSupabase();
       await this.renderRuns();
       this.setupEventListeners();
+      this._setupLive();
     } catch (err) {
       console.error('ExecutionHistoryView render:', err);
       const grid = document.getElementById('execGrid');
@@ -191,14 +192,47 @@ class ExecutionHistoryView extends BaseView {
     if (!grid) return;
     grid.innerHTML = ExecutionHistoryView.skeletonGrid(8, 'lg');
     this.runs = await this.loadRuns();
-    if (!this.runs.length) {
+    this._paintRuns(this.runs);
+  }
+
+  /* Pinta el grid desde runs ya cargados, SIN skeleton (para el refresh en vivo).
+     renderRuns() lo usa tras el skeleton inicial; el tick live lo usa directo. */
+  _paintRuns(runs) {
+    const grid = document.getElementById('execGrid');
+    const empty = document.getElementById('execEmpty');
+    if (!grid) return;
+    if (!runs || !runs.length) {
       grid.innerHTML = '';
       if (empty) empty.style.display = 'block';
       return;
     }
     if (empty) empty.style.display = 'none';
-    grid.innerHTML = this.runs.map(r => this.renderRunCard(r)).join('');
+    grid.innerHTML = runs.map(r => this.renderRunCard(r)).join('');
     this._bindCarousels();
+  }
+
+  /* Datos en vivo: realtime sobre flow_runs (las sesiones se crean/cambian de
+     estado en vivo) + polling de respaldo (que tambien capta el crecimiento de
+     outputs dentro de un run). Re-pinta el grid sin skeleton y solo si cambio.
+     Teardown automatico en BaseView.destroy(). */
+  _setupLive() {
+    if (!this.supabase || this._liveReady) return;
+    this._liveReady = true;
+
+    if (!this._liveSig) this._liveSig = {};
+    this._liveSig['exec'] = this._dataSignature(this.runs);
+
+    this._liveTick = () => this.liveRefresh('exec',
+      () => this.loadRuns(),
+      (runs) => { this.runs = runs; this._paintRuns(runs); });
+
+    const filter = this.organizationId
+      ? `organization_id=eq.${this.organizationId}`
+      : (this.userId ? `user_id=eq.${this.userId}` : null);
+    this.liveSubscribe([
+      { name: 'runs', table: 'flow_runs', filter, onChange: () => this._liveTick() },
+    ]);
+    this.startLivePoll(60000, () => this._liveTick());
   }
 
   renderRunCard(r) {

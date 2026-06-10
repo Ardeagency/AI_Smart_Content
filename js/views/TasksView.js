@@ -222,6 +222,7 @@ class TasksView extends BaseView {
         const detailEl = document.getElementById('taskDetailContainer');
         if (listEl) listEl.style.display = 'block';
         if (detailEl) detailEl.style.display = 'none';
+        this._setupLive();
       }
       this.setupEventListeners();
     } catch (err) {
@@ -239,6 +240,45 @@ class TasksView extends BaseView {
           </div>`;
       }
     }
+  }
+
+  /* Datos en vivo: realtime sobre flow_schedules + flow_runs del usuario, mas
+     polling de respaldo. El snapshot cubre schedules Y runs (pestana Historial)
+     para que el gate detecte cambios en ambos. Re-pinta solo el grid y solo si
+     algo cambio. Teardown automatico en BaseView.destroy(). */
+  _setupLive() {
+    if (!this.supabase || !this.userId || this._liveReady) return;
+    this._liveReady = true;
+
+    this._liveSnapshot = async () => {
+      const schedules = await this._fetchSchedules(this.userId);
+      const { data: runs } = await this.supabase
+        .from('flow_runs')
+        .select('id, status, created_at')
+        .eq('user_id', this.userId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      return { schedules, runs: runs || [] };
+    };
+
+    this._liveTick = () => this.liveRefresh('tasks',
+      () => this._liveSnapshot(),
+      async () => {
+        window.apiClient?.invalidate?.(`tasks:schedules:${this.userId}`);
+        await this.renderTasksList();
+      });
+
+    // Sembrar la firma con el estado actual para que el 1er tick no re-pinte de mas.
+    this._liveSnapshot()
+      .then(d => { if (!this._liveSig) this._liveSig = {}; this._liveSig['tasks'] = this._dataSignature(d); })
+      .catch(() => {});
+
+    const userFilter = `user_id=eq.${this.userId}`;
+    this.liveSubscribe([
+      { name: 'sch',  table: 'flow_schedules', filter: userFilter, onChange: () => this._liveTick() },
+      { name: 'runs', table: 'flow_runs',      filter: userFilter, onChange: () => this._liveTick() },
+    ]);
+    this.startLivePoll(60000, () => this._liveTick());
   }
 
   async initSupabase() {
