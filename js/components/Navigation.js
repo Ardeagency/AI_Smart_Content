@@ -653,10 +653,9 @@ class Navigation {
       } else {
         const { data, error } = await sb
           .from('vera_pending_actions')
-          .select('id,action_type,vera_reasoning,vera_confidence,priority,proposed_payload,status,created_at,expires_at')
+          .select('id,action_type,vera_reasoning,vera_confidence,priority,proposed_payload,status,created_at,expires_at,executed_at')
           .eq('organization_id', orgId)
-          .eq('status', 'pending')
-          .order('priority', { ascending: false })
+          .in('status', ['pending', 'approved', 'executing', 'executed', 'completed', 'failed'])
           .order('created_at', { ascending: false })
           .limit(40);
         if (error) throw error;
@@ -671,18 +670,26 @@ class Navigation {
   }
 
   _renderActivityTasks(body, list) {
-    if (!list.length) { this._activityEmpty(body, 'fa-circle-check', 'Sin tareas pendientes. Vera tiene tu marca al dia.'); return; }
+    if (!list.length) { this._activityEmpty(body, 'fa-circle-check', 'Sin actividad reciente de Vera para esta marca.'); return; }
     body.innerHTML = `<ol class="activity-list">${list.map((t) => this._activityTaskItemHtml(t)).join('')}</ol>`;
   }
 
   _activityTaskItemHtml(t) {
     const meta   = this._activityActionMeta(t.action_type);
+    const st     = this._activityActionStatus(t.status);
     const detail = String(t.vera_reasoning || t.proposed_payload?.summary || '').trim();
     const det    = detail ? `<p class="activity-item-detail">${_escapeHtml(detail.length > 160 ? detail.slice(0, 160) + '…' : detail)}</p>` : '';
     const conf   = Number.isFinite(Number(t.vera_confidence)) ? Math.round(Number(t.vera_confidence) * 100) + '%' : '';
-    const prio   = Number(t.priority) >= 8 ? `<span class="activity-chip activity-chip--prio">${__('Alta')}</span>` : '';
+    // Estado primero (feed unificado: pendiente/ejecutando/completada/fallida)
+    const badge  = `<span class="activity-chip activity-chip--${st.kind}">${st.label}</span>`;
+    const prio   = (t.status === 'pending' && Number(t.priority) >= 8) ? `<span class="activity-chip activity-chip--prio">${__('Alta')}</span>` : '';
+    // Aprobar/Descartar SOLO cuando necesita decision humana (pending)
+    const actions = t.status === 'pending'
+      ? `<button type="button" class="activity-mini-btn activity-mini-btn--ok" data-act-approve>${__('Aprobar')}</button>
+            <button type="button" class="activity-mini-btn" data-act-dismiss>${__('Descartar')}</button>`
+      : '';
     return `
-      <li class="activity-item" data-task-id="${_escapeHtml(t.id)}">
+      <li class="activity-item activity-item--${st.kind}" data-task-id="${_escapeHtml(t.id)}">
         <span class="activity-node" style="--act:${meta.color};"><i class="${meta.icon}"></i></span>
         <div class="activity-card">
           <div class="activity-item-head">
@@ -691,13 +698,24 @@ class Navigation {
           </div>
           ${det}
           <div class="activity-item-foot">
-            ${prio}${conf ? `<span class="activity-chip">${conf}</span>` : ''}
+            ${badge}${prio}${conf ? `<span class="activity-chip">${conf}</span>` : ''}
             <span class="activity-spacer"></span>
-            <button type="button" class="activity-mini-btn activity-mini-btn--ok" data-act-approve>${__('Aprobar')}</button>
-            <button type="button" class="activity-mini-btn" data-act-dismiss>${__('Descartar')}</button>
+            ${actions}
           </div>
         </div>
       </li>`;
+  }
+
+  _activityActionStatus(s) {
+    const M = {
+      pending:   { label: __('Pendiente'),  kind: 'wait' },
+      approved:  { label: __('Aprobada'),   kind: 'run'  },
+      executing: { label: __('Ejecutando'), kind: 'run'  },
+      executed:  { label: __('Completada'), kind: 'ok'   },
+      completed: { label: __('Completada'), kind: 'ok'   },
+      failed:    { label: __('Fallida'),    kind: 'fail' },
+    };
+    return M[s] || { label: s || '—', kind: 'wait' };
   }
 
   _renderActivityMissions(body, list) {
