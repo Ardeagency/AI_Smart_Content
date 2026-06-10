@@ -768,12 +768,13 @@
         // Normaliza deltaY (lineas/paginas → px) y acota saltos bruscos del
         // trackpad/rueda para que el zoom no se vaya a saltos.
         let dy = e.deltaY;
-        if (e.deltaMode === 1) dy *= 16;        // DOM_DELTA_LINE
-        else if (e.deltaMode === 2) dy *= 100;  // DOM_DELTA_PAGE
-        dy = Math.max(-80, Math.min(80, dy));
+        if (e.deltaMode === 1) dy *= 24;        // DOM_DELTA_LINE → px aprox
+        else if (e.deltaMode === 2) dy *= 120;  // DOM_DELTA_PAGE
+        dy = Math.max(-100, Math.min(100, dy));
         // Zoom multiplicativo: suave y uniforme en todo el rango (0.4–2),
-        // anclado al cursor. Pinch del trackpad = muchos eventos pequenos = fluido.
-        const factor = Math.exp(-dy * 0.002);
+        // anclado al cursor. Sensibilidad alta para que pocos scrolls basten;
+        // el pinch del trackpad (muchos eventos pequenos) sigue siendo fluido.
+        const factor = Math.exp(-dy * 0.0045);
         this._setZoom((this._canvasScale || 1) * factor, { x: e.clientX, y: e.clientY });
       };
       canvas.addEventListener('wheel', this._canvasWheel, { passive: false });

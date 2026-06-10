@@ -832,14 +832,73 @@
   P._savePlaced    = function () { if (this._store) this._store.persistPlaced();   };
   P._saveLinks     = function () { if (this._store) this._store.persistFreeLinks(); };
 
-  // _relayout reasignaba this._positions = {}; ahora vacia in place via store.
+  // Auto-organizar: layout en columnas (audiencias | campanas | identidades)
+  // MIDIENDO la altura real de cada nodo (respeta colapsado/expandido) para que
+  // nunca se encimen, y luego encuadra todo. El layout viejo apilaba con un
+  // ROW_GAP fijo de 150px y los nodos (200-900px de alto) se solapaban.
   P._relayout = function () {
     this._ensureStore();
-    this._store.clearPositions();
-    this._store.setViewport({ x: 0, y: 0, scale: 1 });
-    this._canvasPan = { x: 0, y: 0 };
-    this._canvasScale = 1;
+    this._loadPositions();
+    const world  = document.getElementById('ccCanvasWorld');
+    const canvas = document.getElementById('ccCanvas');
+    const nodes  = this._canvasNodes();
+    if (!world || !nodes.length) {
+      this._store.clearPositions();
+      this._store.setViewport({ x: 0, y: 0, scale: 1 });
+      this._canvasPan = { x: 0, y: 0 };
+      this._canvasScale = 1;
+      this._renderCanvas();
+      return;
+    }
+    // 1) Garantiza el DOM de los nodos para poder medir alturas reales.
     this._renderCanvas();
+    // Des-cull temporal: un nodo con display:none mide 0; lo mostramos para medir.
+    world.querySelectorAll('.cc-node').forEach((n) => { n.style.display = ''; });
+
+    const VGAP = 44, HGAP = 130, X0 = 40, Y0 = 40;
+    const colOf = (t) => (t === 'audience' ? 0 : t === 'identity' ? 2 : 1);
+    const cols = [[], [], []];
+    nodes.forEach((n) => { cols[colOf(n.type)].push(n.key); });
+    const elOf = (k) => world.querySelector(`.cc-node[data-node-key="${k}"]`);
+
+    let curX = X0, maxRight = X0, maxBottom = Y0;
+    cols.forEach((keys) => {
+      if (!keys.length) return;
+      let colW = 0;
+      keys.forEach((k) => { const el = elOf(k); if (el) colW = Math.max(colW, el.offsetWidth || 268); });
+      let y = Y0;
+      keys.forEach((k) => {
+        const el = elOf(k);
+        const h = el ? (el.offsetHeight || 220) : 220;
+        this._positions[k] = { x: curX, y };
+        if (el) { el.style.left = `${curX}px`; el.style.top = `${y}px`; }
+        y += h + VGAP;
+      });
+      maxBottom = Math.max(maxBottom, y - VGAP);
+      maxRight  = Math.max(maxRight, curX + colW);
+      curX += colW + HGAP;
+    });
+    this._savePositions();
+
+    // 2) Encuadrar todo (zoom-to-fit con medidas reales; no acerca mas de 1x).
+    if (canvas) {
+      const r = canvas.getBoundingClientRect();
+      const pad = 80;
+      const cw = Math.max(1, maxRight - X0);
+      const ch = Math.max(1, maxBottom - Y0);
+      const s = Math.min(1, Math.max(0.3, Math.min((r.width - pad * 2) / cw, (r.height - pad * 2) / ch)));
+      this._canvasScale = s;
+      this._canvasPan = {
+        x: (r.width  - cw * s) / 2 - X0 * s,
+        y: (r.height - ch * s) / 2 - Y0 * s,
+      };
+    } else {
+      this._canvasPan = { x: 0, y: 0 };
+      this._canvasScale = 1;
+    }
+    this._store.setViewport({ x: this._canvasPan.x, y: this._canvasPan.y, scale: this._canvasScale });
+    this._applyCanvasTransform();
+    this._renderEdges();
   };
 
   // F1.2: _removeLink ahora dispatchea como command (undoable). La rama

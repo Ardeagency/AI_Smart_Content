@@ -1152,6 +1152,12 @@
   inset: 0;
   transform-origin: 0 0;
   will-change: transform;
+  /* El world (con los nodos) debe quedar POR ENCIMA del overlay de aristas
+     (.cc-canvas-edges, z-index:1) para que los cables se dibujen DETRAS de los
+     nodos. Como el world esta transformado crea su propio contexto de apilado,
+     asi que el z-index interno de cada nodo no compite con el SVG; hay que
+     elevar el world entero. Queda debajo de minimapa (6) y panel (8). */
+  z-index: 2;
 }
 
 .cc-canvas-edges {
