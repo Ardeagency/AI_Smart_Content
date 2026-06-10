@@ -31,15 +31,25 @@ const STUB_PLATFORMS = ['youtube', 'x', 'tiktok'];
 function nowIso() { return new Date().toISOString(); }
 
 function publicStorageUrl(supabaseUrl, bucket, path) {
-  return `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/${bucket}/${String(path).replace(/^\/+/, '')}`;
+  let p = String(path || '').replace(/^\/+/, '');
+  // storage_path en runs_outputs suele venir con el nombre del bucket YA como
+  // prefijo (ej. "production-outputs/<org>/...") — no duplicarlo, o Supabase
+  // devuelve 400 (JSON de error) y Meta lo rechaza con "Only photo or video".
+  if (p === bucket) p = '';
+  else if (p.startsWith(bucket + '/')) p = p.slice(bucket.length + 1);
+  return `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/${bucket}/${p}`;
 }
 
 // Instagram SOLO acepta JPEG para imagenes; nuestros outputs pueden ser PNG/WebP.
 // Reencodamos via Netlify Image CDN (first-party, on-demand) a JPEG baseline.
 // Si SITE_URL no esta configurado, devolvemos la URL original (best effort).
 function toInstagramImageUrl(mediaUrl) {
+  if (!mediaUrl) return mediaUrl;
+  // IG acepta JPEG directo — solo convertimos PNG/WebP/etc.
+  const clean = String(mediaUrl).split('?')[0].toLowerCase();
+  if (clean.endsWith('.jpg') || clean.endsWith('.jpeg')) return mediaUrl;
   const base = (process.env.SITE_URL || '').replace(/\/$/, '');
-  if (!base || !mediaUrl) return mediaUrl;
+  if (!base) return mediaUrl;
   return `${base}/.netlify/images?url=${encodeURIComponent(mediaUrl)}&fm=jpg&q=90`;
 }
 

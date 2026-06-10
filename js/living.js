@@ -2337,7 +2337,7 @@ class LivingManager {
         const platforms = [...ctx.selected];
         const caption = document.getElementById('publishCaption')?.value || ctx.caption || '';
         if (btn) { btn.disabled = true; btn.classList.add('is-loading'); }
-        if (typeof window.showToast === 'function') window.showToast('Publicando…');
+        const loadingToast = window.showToast?.('Publicando…', { duration: 0 });
         try {
             const token = await this._getAccessToken();
             if (!token) throw new Error('No hay sesion activa');
@@ -2347,21 +2347,65 @@ class LivingManager {
                 body: JSON.stringify({ output_id: ctx.outputId, platforms, caption })
             });
             const data = await res.json().catch(() => ({}));
+            loadingToast?.close?.();
             if (res.status === 401) throw new Error('Sesion expirada, vuelve a entrar');
             const results = Array.isArray(data.results) ? data.results : [];
-            const ok = results.filter(r => r.status === 'published').map(r => r.platform);
+            const ok   = results.filter(r => r.status === 'published');
             const fail = results.filter(r => r.status === 'failed');
-            const soon = results.filter(r => r.status === 'not_implemented').map(r => r.platform);
-            if (ok.length && typeof window.showToast === 'function') window.showToast(`Publicado en ${ok.join(', ')}`);
-            if (fail.length && typeof window.showToast === 'function') window.showToast(`Error en ${fail[0].platform}: ${fail[0].error || 'fallo'}`);
-            if (!ok.length && !fail.length && soon.length && typeof window.showToast === 'function') window.showToast('Esas plataformas llegan pronto');
-            if (ok.length) this.closePublishSheet();
+            const soon = results.filter(r => r.status === 'not_implemented');
+
+            // Diagnostico explicito en consola: exito (con link) y error (mensaje de Meta).
+            console.log('[publish] resultados:', results);
+            ok.forEach(r => console.log(`[publish] ✅ ${r.platform}: ${r.remote_url || r.remote_post_id || 'publicado'}`));
+            fail.forEach(r => console.error(`[publish] ❌ ${r.platform}: ${r.error || 'fallo desconocido'}`));
+
+            if (ok.length) {
+                window.showToast?.('Produccion publicada', { type: 'success' });
+                this._renderPublishResult(ok, fail);
+            } else if (fail.length) {
+                window.showToast?.(`Error en ${fail[0].platform}: ${fail[0].error || 'fallo'}`, { type: 'error' });
+            } else if (soon.length) {
+                window.showToast?.('Esas plataformas llegan pronto');
+            } else {
+                window.showToast?.(`No se pudo publicar: ${data.error || 'sin respuesta'}`, { type: 'error' });
+            }
         } catch (err) {
-            console.error('[publish] submit error:', err);
-            if (typeof window.showToast === 'function') window.showToast(`No se pudo publicar: ${err.message}`);
+            loadingToast?.close?.();
+            console.error('[publish] error:', err);
+            window.showToast?.(`No se pudo publicar: ${err.message}`, { type: 'error' });
         } finally {
             if (btn) { btn.classList.remove('is-loading'); btn.disabled = (this._publishCtx?.selected?.size || 0) === 0; }
         }
+    }
+
+    // Estado de exito dentro de la hoja: "Produccion publicada" + link(s) a la publicacion.
+    _renderPublishResult(ok, fail) {
+        const sheet = document.getElementById('publishSheet');
+        if (!sheet) return;
+        const body = sheet.querySelector('.publish-sheet-body');
+        const footer = sheet.querySelector('.publish-sheet-footer');
+        const labelMap = { facebook: 'Facebook', instagram: 'Instagram', youtube: 'YouTube', x: 'X', tiktok: 'TikTok' };
+        const links = (ok || []).map(r => {
+            const label = labelMap[r.platform] || r.platform;
+            return r.remote_url
+                ? `<a class="publish-result-link" href="${this.escapeHtml(r.remote_url)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> Ver en ${label}</a>`
+                : `<span class="publish-result-link is-static"><i class="fas fa-check"></i> Publicado en ${label}</span>`;
+        }).join('');
+        const failNote = (fail && fail.length)
+            ? `<p class="publish-result-fail">No se pudo en ${fail.map(f => labelMap[f.platform] || f.platform).join(', ')}.</p>`
+            : '';
+        if (body) body.innerHTML = `
+            <div class="publish-result">
+                <div class="publish-result-check"><i class="fas fa-check"></i></div>
+                <h3 class="publish-result-title">Produccion publicada</h3>
+                <div class="publish-result-links">${links}</div>
+                ${failNote}
+            </div>`;
+        if (footer) footer.innerHTML = `
+            <span class="publish-footer-count"></span>
+            <div class="publish-footer-btns">
+                <button type="button" class="publish-btn publish-btn--primary" data-pub="close"><span>Listo</span></button>
+            </div>`;
     }
 
     /**
