@@ -428,7 +428,7 @@
   P._updateLOD = function () {
     const canvas = document.getElementById('ccCanvas');
     if (!canvas) return;
-    canvas.classList.toggle('cc-canvas--far', (this._canvasScale || 1) < 0.58);
+    canvas.classList.toggle('cc-canvas--far', (this._canvasScale || 1) < 0.42);
   };
 
   /** Viewport culling (patron tldraw): oculta nodos fuera de vista via display,

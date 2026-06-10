@@ -1247,12 +1247,12 @@
 /* Performance: oculta los edges durante el pan (se redibujan al asentar). */
 .cc-canvas--panning .cc-canvas-edges { visibility: hidden; }
 
-/* Level-of-detail: al alejar (zoom < 0.58) se simplifican los nodos
-   (sin glow ni cuerpo) para no saturar ni penalizar el paint. */
+/* Level-of-detail: al alejar mucho solo se aligera el glow y la sombra
+   (cambios sutiles). NO ocultamos el cuerpo/acciones del nodo: hacerlo
+   provocaba que al cruzar el umbral de zoom el nodo "se abriera/cerrara"
+   de golpe, lo cual se veia raro. El cuerpo se mantiene a cualquier zoom;
+   el culling por viewport ya cubre el rendimiento. */
 .cc-canvas--far .cc-node::before { display: none; }
-.cc-canvas--far .cc-node-body,
-.cc-canvas--far .cc-node-actions { display: none; }
-.cc-canvas--far .cc-node-head { border-bottom: none; cursor: grab; }
 .cc-canvas--far .cc-node { box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4); }
 
 .cc-node--readonly { width: 248px; }
