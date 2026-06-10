@@ -90,7 +90,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
 
       // Solo Facebook necesita selección de página
       if (json.platform !== 'facebook') {
-        this._redirect(returnTo);
+        this._showSuccess(json.platform, returnTo);
         return;
       }
 
@@ -106,7 +106,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       // 1 sola página: auto-seleccionar sin molestar al usuario
       if (pages.length === 1) {
         await this._savePage(integId, pages[0]);
-        this._redirect(returnTo);
+        this._showSuccess('facebook', returnTo);
         return;
       }
 
@@ -207,7 +207,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
 
       try {
         await this._savePage(integId, page);
-        this._redirect(returnTo);
+        this._showSuccess('facebook', returnTo);
       } catch (err) {
         console.error('[BrandIntegrationCallback] save page error:', err);
         btn.disabled = false;
@@ -267,6 +267,28 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
     const safe = this._safeInternalPath(to);
     if (window.router) window.router.navigate(safe, true);
     else window.location.href = safe;
+  }
+
+  _showSuccess(platform, returnTo) {
+    const safe = this._safeInternalPath(returnTo);
+    const wrap = document.getElementById('bic-container');
+    if (!wrap) { this._redirect(safe); return; }
+    const label = platform === 'google' ? 'Google' : (platform === 'shopify' ? 'Shopify' : 'Meta');
+    wrap.innerHTML = `
+      <div class="bic-success">
+        <div class="bic-success-check"><i class="fas fa-check"></i></div>
+        <h2>Integracion conectada</h2>
+        <p>${this._esc(label)} se conecto correctamente a tu marca.</p>
+        <button type="button" class="bic-confirm-btn" data-bic-continue="1">
+          <i class="fas fa-arrow-right"></i> Continuar
+        </button>
+      </div>`;
+    wrap.querySelector('[data-bic-continue="1"]')?.addEventListener('click', () => {
+      if (this._successTimer) clearTimeout(this._successTimer);
+      this._redirect(safe);
+    });
+    // Auto-avanzar tras un momento para que el usuario vea la confirmacion.
+    this._successTimer = setTimeout(() => this._redirect(safe), 2200);
   }
 
   _showError(msg) {

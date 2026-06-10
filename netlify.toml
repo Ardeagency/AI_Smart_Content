@@ -469,7 +469,12 @@
 # - SUPABASE_ANON_KEY
 # - SUPABASE_SERVICE_ROLE_KEY (solo para backend, no se expone)
 # - SUPABASE_JWT_SECRET (solo para backend, no se expone)
-# - SITE_URL = https://aismartcontent.io  (sin barra final, determina la redirect_uri OAuth)
+# - SITE_URL = https://console.aismartcontent.io  (sin barra final; determina la redirect_uri OAuth)
+#   IMPORTANTE: debe ser el dominio de LA APP (console.*), NO la landing de Framer
+#   (aismartcontent.io). Tras el split de dominios (2026-05-13) la app vive en
+#   console.aismartcontent.io. Si apunta a la landing, el callback OAuth aterriza
+#   en un 404 y la integracion (Meta/Google) nunca se completa.
+#   El mismo SITE_URL lo usa api-social-publish para el Image CDN (JPEG de Instagram).
 # - GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
 # - GOOGLE_OAUTH_SCOPES = openid email profile https://www.googleapis.com/auth/analytics.readonly
 # - META_APP_ID / META_APP_SECRET
