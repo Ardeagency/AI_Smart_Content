@@ -34,6 +34,15 @@ function publicStorageUrl(supabaseUrl, bucket, path) {
   return `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/${bucket}/${String(path).replace(/^\/+/, '')}`;
 }
 
+// Instagram SOLO acepta JPEG para imagenes; nuestros outputs pueden ser PNG/WebP.
+// Reencodamos via Netlify Image CDN (first-party, on-demand) a JPEG baseline.
+// Si SITE_URL no esta configurado, devolvemos la URL original (best effort).
+function toInstagramImageUrl(mediaUrl) {
+  const base = (process.env.SITE_URL || '').replace(/\/$/, '');
+  if (!base || !mediaUrl) return mediaUrl;
+  return `${base}/.netlify/images?url=${encodeURIComponent(mediaUrl)}&fm=jpg&q=90`;
+}
+
 function isVideoOutput(output, mediaUrl) {
   const t = String(output?.output_type || '').toLowerCase();
   const ext = String(mediaUrl || output?.storage_path || '').split('?')[0].split('.').pop().toLowerCase();
@@ -91,7 +100,7 @@ async function publishInstagram({ page, mediaUrl, isVideo, caption, appSecret })
 
   const containerParams = isVideo
     ? { media_type: 'REELS', video_url: mediaUrl, caption: caption || '' }
-    : { image_url: mediaUrl, caption: caption || '' };
+    : { image_url: toInstagramImageUrl(mediaUrl), caption: caption || '' };
 
   const container = await metaGraphPost(`/${igId}/media`, token, appSecret, containerParams);
   const creationId = container.id;

@@ -18,6 +18,16 @@
   directory = "functions"
   # En Dashboard: KLING_ACCESS_KEY (o KLING_ACCESSS_KEY), KLING_SECRET_KEY
 
+# Netlify Image CDN: permite transformar imagenes de fuentes remotas (Supabase
+# Storage). Lo usa api-social-publish para forzar JPEG en Instagram (IG solo
+# acepta JPEG; nuestros outputs pueden ser PNG). Se invoca como
+# /.netlify/images?url=<src>&fm=jpg&q=90
+[images]
+  remote_images = [
+    "https://tsdpbqcwjckbfsdqacam.supabase.co/storage/.*",
+    "https://*.supabase.co/storage/.*"
+  ]
+
 # Excluir archivos estáticos del redirect SPA
 # Netlify procesa los redirects en orden, el primero que coincide gana.
 # IMPORTANTE: Las funciones deben matchear ANTES que el fallback /* para no devolver index.html.
