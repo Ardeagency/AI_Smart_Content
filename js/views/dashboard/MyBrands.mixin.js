@@ -344,52 +344,51 @@
         };
       }
 
-      // ── RIESGO: sentimiento HOSTIL del PÚBLICO en los comentarios de tus posts
-      //    propios (no el sentimiento del texto del post). Hostil = anger/disgust
-      //    o score muy negativo. Si no hay comentarios analizados, lo decimos: no
-      //    inventamos un riesgo a partir de la copy del post.
+      // ── RIESGO COMPUESTO (reputación + desempeño): combina cómo reacciona el
+      //    público (hostilidad/sentimiento/crisis) con la salud del contenido
+      //    propio (posts fuera de tono / Brand Soul, fatiga, claridad). Lidera con
+      //    la señal más severa; el detalle desglosa todas. NO es una sola señal.
       const cr = data?.alertScore?.data || null;
       let vigila = null;
       if (cr) {
-        const scored = Number(cr.scored) || 0;
-        const hostile = Number(cr.hostile) || 0;
-        const negC = Number(cr.neg) || 0;
-        const negPct = Math.round(Number(cr.neg_ratio || 0) * 100);
-        const hostPct = Math.round(Number(cr.hostile_ratio || 0) * 100);
-        const emos = Array.isArray(cr.top_hostile_emotions) ? cr.top_hostile_emotions : [];
-        const emoTxt = emos.slice(0, 3).map((e) => `${e.emotion} (${e.n})`).join(', ');
-        if (scored === 0) {
-          // Sin comentarios del público en posts propios: estado honesto, no alarma.
+        const findings = Array.isArray(cr.findings) ? cr.findings : [];
+        const dom = cr.dominant || findings[0] || null;
+        const fMeta = {
+          tono_desviado: { sub: __('fuera de tu tono de marca'),   action: __('Realínealo') },
+          fatiga:        { sub: __('con fatiga de contenido'),     action: __('Renueva el formato') },
+          claridad:      { sub: __('con mensaje poco claro'),      action: __('Aclara el mensaje') },
+          hostiles:      { sub: __('comentarios hostiles'),        action: __('Revísalo') },
+          negativos:     { sub: __('comentarios negativos'),       action: __('Revísalo') },
+          crisis:        { sub: __('señales de crisis'),           action: __('Atiéndelo') },
+        };
+        if (!dom) {
           vigila = {
-            title: __('Sentimiento del público'),
-            metric: __('Sin comentarios'), metricSub: __('en tus publicaciones propias'),
-            action: __('Ver por qué'), impact: 'bajo', earlySignal: false,
-            detail: detail('vigila', __('Riesgo'), __('Sentimiento del público'),
-              __('El sentimiento de marca se mide de cómo reacciona tu audiencia en los comentarios de TUS publicaciones, no del texto que escribes. Hoy no tenemos comentarios recolectados en tus posts propios, así que no hay señal de audiencia que medir.'),
-              __('Para activar esta lectura hay que recolectar los comentarios de tus publicaciones propias (hoy solo se recolectan los de la competencia).'),
-              __('0 comentarios analizados en tus posts propios en el periodo.')),
+            title: __('Riesgo de marca'),
+            metric: __('Sin riesgos'), metricSub: __('detectados en el periodo'),
+            action: __('Ver detalle'), impact: 'bajo', earlySignal: false,
+            detail: detail('vigila', __('Riesgo'), __('Riesgo de marca'),
+              __('No detectamos señales de riesgo (reputación ni desempeño) en el periodo. Buena señal — mantén el monitoreo.'),
+              __('Sigue publicando con tu tono de marca y atendiendo los comentarios de tu público.'),
+              __('{p} posts y {c} comentarios analizados, sin flags.', { p: Number(cr.posts_analyzed) || 0, c: Number(cr.scored_comments) || 0 })),
           };
         } else {
-          const metric = hostile > 0
-            ? __('{n} comentarios hostiles', { n: hostile })
-            : (negC > 0 ? __('{n}% comentarios negativos', { n: negPct }) : __('Sin hostilidad'));
-          const metricSub = hostile > 0
-            ? __('{p}% del público · {pw} posts afectados', { p: hostPct, pw: Number(cr.posts_with_hostile) || 0 })
-            : __('{n} de {t} comentarios analizados', { n: negC, t: scored });
-          const vDetail = detail('vigila', __('Riesgo'), cr.brand_name || __('Sentimiento del público'),
-            hostile > 0
-              ? __('{n} comentarios hostiles/ofensivos de tu público ({p}% de los analizados){e}. Esto sí erosiona tu marca: es cómo reacciona la gente, no tu copy.', { n: hostile, p: hostPct, e: emoTxt ? __(', con {x}', { x: emoTxt }) : '' })
-              : __('Tu público no muestra hostilidad relevante: {neg} comentarios negativos de {t} analizados ({p}%), sin ataques. La crítica leve es normal.', { neg: negC, t: scored, p: negPct }),
-            hostile > 0
-              ? __('Lee los comentarios hostiles de abajo: identifica el patrón (qué post, qué los detonó), responde donde aplique y ajusta el mensaje a futuro.')
-              : __('Mantén el monitoreo. Responde la crítica leve para sostener la relación con tu público.'),
-            __('{t} comentarios analizados · {h} hostiles · {n} negativos.', { t: scored, h: hostile, n: negC }));
-          vDetail.risk = true;
+          const m = fMeta[dom.key] || { sub: dom.label, action: __('Revísalo') };
+          const metric = dom.total != null ? `${dom.n}/${dom.total}` : `${dom.n}`;
+          const sev = Number(dom.severity) || 0;
+          const hasRep = findings.some((x) => x.category === 'reputacion');
           vigila = {
-            title: __('Sentimiento del público'),
-            metric, metricSub,
-            action: __('Revísalo'), impact: hostPct >= 10 ? 'alto' : 'medio', earlySignal: false,
-            detail: vDetail,
+            title: __('Riesgo de marca'),
+            metric, metricSub: m.sub,
+            action: m.action, impact: sev >= 50 ? 'alto' : sev >= 25 ? 'medio' : 'bajo', earlySignal: false,
+            detail: {
+              color: 'vigila', category: __('Riesgo'),
+              title: __('{b} · riesgo de marca', { b: cr.brand_name || __('tu marca') }),
+              risk: hasRep, findings,
+              sections: [{
+                h: __('¿Qué está en riesgo?'),
+                b: __('Tu riesgo combina REPUTACIÓN (cómo reacciona tu público) y DESEMPEÑO (si tu contenido mantiene tono, frescura y claridad). Señales activas, de mayor a menor:'),
+              }],
+            },
           };
         }
       }

@@ -187,11 +187,12 @@ class CampanasDataService {
         p_brand_container_id: (Array.isArray(bcids) && bcids.length === 1) ? bcids[0] : null,
         p_window_d: healthWindowDays,
       }),
-      // Riesgo de marca (card "Riesgo"): sentimiento HOSTIL del PÚBLICO en los
-      // comentarios de tus posts propios (no el sentimiento del texto del post).
-      this.sb.rpc('dashboard_brand_comment_risk', {
+      // Riesgo de marca COMPUESTO (reputación + desempeño): hostilidad/sentimiento
+      // del público + posts fuera de tono (Brand Soul) + fatiga + claridad. Lidera
+      // con la señal más severa; el detalle desglosa todas.
+      this.sb.rpc('dashboard_brand_risk_composite', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
-        p_brand_container_ids: bcids, p_post_source: 'own',
+        p_brand_container_ids: bcids,
       }),
 
       // Analisis longitudinal (series temporales propias de la marca).

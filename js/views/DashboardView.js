@@ -609,11 +609,23 @@ class DashboardView extends BaseView {
         <div class="plan-detail-h">${this._esc(s.h)}</div>
         <div class="plan-detail-b">${this._esc(s.b)}</div>
       </div>`).join('');
-    // Para Riesgo, reservamos un bloque que se llena con la evidencia real
-    // (publicaciones señaladas con su tono/tema/sentimiento) al abrir.
+    // Riesgo compuesto: lista de señales de riesgo (findings) por severidad.
+    const sevCls = (s) => (Number(s) >= 50 ? 'bad' : Number(s) >= 25 ? 'mid' : 'low');
+    const findBlock = (Array.isArray(detail.findings) && detail.findings.length) ? `
+      <div class="plan-detail-sec">
+        <div class="plan-find">
+          ${detail.findings.map((f) => `
+            <div class="plan-find-row plan-find-row--${sevCls(f.severity)}">
+              <span class="plan-find-cat">${this._esc(f.category === 'reputacion' ? __('Reputación') : __('Desempeño'))}</span>
+              <span class="plan-find-label">${this._esc(f.label || '')}</span>
+              <span class="plan-find-n">${f.total != null ? `${this._esc(String(f.n))}/${this._esc(String(f.total))}` : this._esc(String(f.n))}</span>
+            </div>`).join('')}
+        </div>
+      </div>` : '';
+    // Para Riesgo de reputación, evidencia real (comentarios hostiles/negativos) al abrir.
     const evBlock = detail.risk ? `
       <div class="plan-detail-sec">
-        <div class="plan-detail-h">${this._esc(__('Publicaciones señaladas'))}</div>
+        <div class="plan-detail-h">${this._esc(__('Comentarios señalados'))}</div>
         <div class="plan-detail-evidence" data-plan-evidence>
           <div class="plan-ev-loading"><i class="fas fa-circle-notch fa-spin"></i> ${this._esc(__('Cargando evidencia…'))}</div>
         </div>
@@ -622,6 +634,7 @@ class DashboardView extends BaseView {
       <div class="plan-detail plan-detail--${this._esc(detail.color || '')}">
         ${detail.title ? `<div class="plan-detail-title">${this._esc(detail.title)}</div>` : ''}
         ${secs}
+        ${findBlock}
         ${evBlock}
       </div>`;
     const { bodyEl } = window.Modal.show({ title: detail.category || detail.title || '', body, className: 'dash-modal plan-detail-modal' });

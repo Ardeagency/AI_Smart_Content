@@ -4015,6 +4015,15 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .plan-detail-sec { margin-top: 1.1rem; }
 .plan-detail-h { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); margin-bottom: 0.3rem; }
 .plan-detail-b { font-size: 0.9375rem; line-height: 1.5; color: var(--text-secondary, #C9C7CE); }
+/* Riesgo compuesto: lista de señales de riesgo por severidad. */
+.plan-find { display: flex; flex-direction: column; gap: 0.5rem; }
+.plan-find-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.75rem; border-radius: 9px; border: 1px solid var(--border-divider, #242424); background: rgba(255,255,255,0.02); border-left-width: 3px; }
+.plan-find-row--bad { border-left-color: #e06464; }
+.plan-find-row--mid { border-left-color: #e0a045; }
+.plan-find-row--low { border-left-color: #8a8a8e; }
+.plan-find-cat { flex: none; font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; background: rgba(255,255,255,0.06); color: var(--text-muted, rgba(212,209,216,0.6)); }
+.plan-find-label { flex: 1 1 auto; min-width: 0; font-size: 0.875rem; color: var(--text-primary, #D4D1D8); }
+.plan-find-n { flex: none; font-size: 1rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-secondary, #C9C7CE); }
 /* Evidencia real de riesgo: publicaciones señaladas. */
 .plan-detail-evidence { display: flex; flex-direction: column; gap: 0.6rem; }
 .plan-ev-loading { font-size: 0.875rem; color: var(--text-muted, rgba(212,209,216,0.55)); padding: 0.3rem 0; }
