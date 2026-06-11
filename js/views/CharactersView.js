@@ -55,8 +55,13 @@ class CharactersView extends BaseView {
   </section>
 
   <div class="products-list-empty" id="charactersListEmpty" style="display:none;">
-    <i class="fas fa-user" aria-hidden="true"></i>
-    <p>${__('Aun no hay personajes. Crea el primero con + Personaje o adjunta uno.')}</p>
+    ${this.emptyState({
+      icon: 'fa-users',
+      title: __('Crea tu primer personaje'),
+      subtitle: __('Sube fotos de referencia y Vera arma la ficha: rasgos, vestuario y rol. Apareceran aqui listos para protagonizar tus producciones.'),
+      primaryLabel: __('+ Personaje'),
+      secondaryLabel: __('Adjuntar personaje'),
+    })}
   </div>
 </div>`;
   }
@@ -564,6 +569,11 @@ class CharactersView extends BaseView {
     if (addBtn) addBtn.onclick = () => this._onAddCharacter();
     const attachBtn = document.getElementById('charactersListAttachBtn');
     if (attachBtn) attachBtn.onclick = () => this._onAttachCharacter();
+    // CTAs del empty state premium
+    const emptyAdd = document.querySelector('#charactersListEmpty [data-empty-add]');
+    if (emptyAdd) emptyAdd.onclick = () => this._onAddCharacter();
+    const emptyAttach = document.querySelector('#charactersListEmpty [data-empty-attach]');
+    if (emptyAttach) emptyAttach.onclick = () => this._onAttachCharacter();
   }
 
   async onLeave() {

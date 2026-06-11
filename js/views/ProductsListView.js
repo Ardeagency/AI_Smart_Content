@@ -44,8 +44,13 @@ class ProductsListView extends BaseView {
   </section>
 
   <div class="products-list-empty" id="productsListEmpty" style="display:none;">
-    <i class="fas fa-box-open" aria-hidden="true"></i>
-    <p>${__('Aún no hay productos. Crea el primero con + Producto.')}</p>
+    ${this.emptyState({
+      icon: 'fa-box-open',
+      title: __('Crea tu primer producto'),
+      subtitle: __('Sube fotos o una URL y Vera arma la ficha: beneficios, diferenciadores y caracteristicas. Apareceran aqui como base para tus producciones.'),
+      primaryLabel: __('+ Producto'),
+      secondaryLabel: __('Adjuntar producto'),
+    })}
   </div>
 </div>`;
   }
@@ -420,6 +425,11 @@ class ProductsListView extends BaseView {
     if (addBtn) addBtn.onclick = () => this._onAddProduct();
     const attachBtn = document.getElementById('productsListAttachBtn');
     if (attachBtn) attachBtn.onclick = () => this._onAttachProduct();
+    // CTAs del empty state premium
+    const emptyAdd = document.querySelector('#productsListEmpty [data-empty-add]');
+    if (emptyAdd) emptyAdd.onclick = () => this._onAddProduct();
+    const emptyAttach = document.querySelector('#productsListEmpty [data-empty-attach]');
+    if (emptyAttach) emptyAttach.onclick = () => this._onAttachProduct();
   }
 
   _onAttachProduct() {

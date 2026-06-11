@@ -478,6 +478,33 @@ class BaseView {
     const item = '<div class="living-masonry-item"><div class="living-history-skeleton"></div></div>';
     return `<div class="living-masonry-grid ${gridClass}">${item.repeat(count)}</div>`;
   }
+  /**
+   * Empty state premium para listados de identidades (Products/Services/Sets/
+   * Characters). Devuelve el INNER de un contenedor .products-list-empty:
+   * ghost cards de preview + medallon con icono + titular accionable +
+   * subtitulo + CTAs. Los botones llevan data-empty-add / data-empty-attach
+   * para cablearlos en la vista. Diseño en Figma node 133:14.
+   */
+  static emptyState({ icon = 'fa-inbox', title = '', subtitle = '', primaryLabel = '', secondaryLabel = '' } = {}) {
+    const esc = BaseView.escapeHtml;
+    const ghosts = '<div class="ple-ghost"></div>'.repeat(3);
+    const primary = primaryLabel
+      ? `<button type="button" class="ple-btn ple-btn--primary" data-empty-add>${esc(primaryLabel)}</button>` : '';
+    const secondary = secondaryLabel
+      ? `<button type="button" class="ple-btn ple-btn--secondary" data-empty-attach>${esc(secondaryLabel)}</button>` : '';
+    const actions = (primary || secondary) ? `<div class="ple-actions">${primary}${secondary}</div>` : '';
+    const sub = subtitle ? `<p class="ple-subtitle">${esc(subtitle)}</p>` : '';
+    return `
+      <div class="ple-ghosts" aria-hidden="true">${ghosts}</div>
+      <div class="ple-veil" aria-hidden="true"></div>
+      <div class="ple-content">
+        <div class="ple-medallion" aria-hidden="true"><i class="fas ${esc(icon)}"></i></div>
+        <h3 class="ple-title">${esc(title)}</h3>
+        ${sub}
+        ${actions}
+      </div>`;
+  }
+
   static skeletonRows(count = 3) {
     const row = `<div class="skeleton-row">${BaseView.skeletonCircle('sm')}<div style="flex:1 1 auto;">
       <span class="skeleton skeleton-text skeleton-text--w75"></span>
@@ -493,6 +520,7 @@ class BaseView {
   skeletonGrid(c, s)    { return BaseView.skeletonGrid(c, s); }
   masonrySkeleton(c, g) { return BaseView.masonrySkeleton(c, g); }
   skeletonRows(c)       { return BaseView.skeletonRows(c); }
+  emptyState(o)         { return BaseView.emptyState(o); }
 
   /**
    * Actualizar header existente con nuevo contexto.

@@ -42,9 +42,14 @@ class ServicesView extends BaseView {
     <div class="services-grid" id="servicesGrid">${this.skeletonGrid(8, 'lg')}</div>
   </section>
 
-  <div class="services-empty" id="servicesEmpty" style="display:none;">
-    <i class="fas fa-briefcase" aria-hidden="true"></i>
-    <p>${__('Aun no hay servicios. Crea el primero con + Servicio o adjunta uno.')}</p>
+  <div class="products-list-empty" id="servicesEmpty" style="display:none;">
+    ${this.emptyState({
+      icon: 'fa-briefcase',
+      title: __('Crea tu primer servicio'),
+      subtitle: __('Sube fotos o una URL y Vera arma la ficha: entregables, metodologia y diferenciadores. Apareceran aqui para tus producciones.'),
+      primaryLabel: __('+ Servicio'),
+      secondaryLabel: __('Adjuntar servicio'),
+    })}
   </div>
 </div>`;
   }
@@ -626,6 +631,11 @@ class ServicesView extends BaseView {
     if (addBtn) addBtn.onclick = () => this._onAddService();
     const attachBtn = document.getElementById('servicesAttachBtn');
     if (attachBtn) attachBtn.onclick = () => this._onAttachService();
+    // CTAs del empty state premium
+    const emptyAdd = document.querySelector('#servicesEmpty [data-empty-add]');
+    if (emptyAdd) emptyAdd.onclick = () => this._onAddService();
+    const emptyAttach = document.querySelector('#servicesEmpty [data-empty-attach]');
+    if (emptyAttach) emptyAttach.onclick = () => this._onAttachService();
   }
 
   escapeHtml(s) {

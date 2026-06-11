@@ -49,8 +49,13 @@ class PlacesView extends BaseView {
   </section>
 
   <div class="products-list-empty" id="placesListEmpty" style="display:none;">
-    <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-    <p>${__('Aun no hay escenarios. Crea el primero con + Escenario o adjunta uno.')}</p>
+    ${this.emptyState({
+      icon: 'fa-map-marker-alt',
+      title: __('Crea tu primer escenario'),
+      subtitle: __('Sube fotos o una URL y Vera arma la ficha del lugar: ambiente, amenidades y caracteristicas visuales. Apareceran aqui como sets para tus producciones.'),
+      primaryLabel: __('+ Escenario'),
+      secondaryLabel: __('Adjuntar escenario'),
+    })}
   </div>
 </div>`;
   }
@@ -760,6 +765,11 @@ class PlacesView extends BaseView {
     if (addBtn) addBtn.onclick = () => this._onAddPlace();
     const attachBtn = document.getElementById('placesListAttachBtn');
     if (attachBtn) attachBtn.onclick = () => this._onAttachPlace();
+    // CTAs del empty state premium
+    const emptyAdd = document.querySelector('#placesListEmpty [data-empty-add]');
+    if (emptyAdd) emptyAdd.onclick = () => this._onAddPlace();
+    const emptyAttach = document.querySelector('#placesListEmpty [data-empty-attach]');
+    if (emptyAttach) emptyAttach.onclick = () => this._onAttachPlace();
   }
 
   async onLeave() {
