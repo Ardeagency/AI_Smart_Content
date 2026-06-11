@@ -6,8 +6,20 @@
    para el skeleton.
    ════════════════════════════════════════════════════════════ */
 
-.monitoring-page { min-height: 100%; }
-.mn-page { padding: 18px 0 48px; display: flex; flex-direction: column; gap: 22px; }
+/* Board a pantalla completa: la pagina NO scrollea por fuera; el scroll vive
+   dentro del cuerpo de cada columna. Full-width (sin el max-width:1280 de
+   .insight-page) para que las 4 columnas respiren. */
+.monitoring-page.monitoring-page {
+  height: calc(100dvh - 45px);
+  max-width: none;
+  margin: 0;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.monitoring-page .mn-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.mn-page { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 0; }
 
 /* ── Hero / encabezado humano ── */
 .mn-hero { display: flex; flex-direction: column; gap: 4px; }
@@ -103,6 +115,7 @@
 .mn-toolbar {
   display: flex; align-items: center; justify-content: space-between;
   gap: 16px; flex-wrap: wrap;
+  flex-shrink: 0;
 }
 .mn-section-title {
   margin: 0; font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.01em;
@@ -116,11 +129,13 @@
 /* ── Botones ── */
 .mn-btn-primary {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 14px; border-radius: 8px;
-  background: #ff5400; color: #fff; border: none; cursor: pointer;
-  font-size: 13px; font-weight: 600; transition: background 0.15s ease;
+  padding: 8px 14px; border-radius: 10px;
+  background: var(--bg-card, #141517); color: var(--text-primary, #fff);
+  border: 1px solid var(--border-divider, #242424); cursor: pointer;
+  font-size: 13px; font-weight: 600;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.mn-btn-primary:hover { background: #e64a00; }
+.mn-btn-primary:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--edge-stroke, #b1b1b7); }
 .mn-btn-primary i { font-size: 11px; }
 .mn-btn-secondary {
   padding: 8px 14px; border-radius: 8px;
@@ -144,15 +159,28 @@
    COLUMNAS "LO QUE SIGO" — kanban limpio por estado
    ════════════════════════════════════════════════════════════ */
 .mn-cols {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
-  align-items: start;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px; /* espacio decorativo entre columnas */
 }
-.mn-col { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; min-width: 0; }
-.mn-col:first-child { padding-left: 0; }
-.mn-col:last-child  { padding-right: 0; }
-.mn-col + .mn-col { border-left: 1px solid rgba(255, 255, 255, 0.06); }
+/* Cada columna = card (tokens oficiales: bg #141517 + borde #242424), altura
+   completa, sin desbordar la pantalla. El scroll vive en .mn-col-body. */
+.mn-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  padding: 14px;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 14px;
+}
 
-.mn-col-head { display: flex; align-items: center; gap: 8px; }
+.mn-col-head { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .mn-col-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: rgba(255,255,255,0.3); }
 .mn-col--news   .mn-col-dot { background: #60a5fa; box-shadow: 0 0 7px rgba(96,165,250,0.55); }
 .mn-col--calm   .mn-col-dot { background: #22c55e; }
@@ -163,32 +191,48 @@
   font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px;
   background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.6);
 }
-.mn-col-hint { margin: -6px 0 2px 15px; font-size: 11px; color: rgba(255, 255, 255, 0.38); }
-.mn-col-body { display: flex; flex-direction: column; gap: 9px; }
+.mn-col-hint { margin: 0 0 4px 15px; font-size: 11px; color: rgba(255, 255, 255, 0.38); flex-shrink: 0; }
+.mn-col-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-right: -6px; /* deja respiro al scrollbar */
+  padding-right: 6px;
+}
+/* Scrollbar sutil dentro de la columna */
+.mn-col-body::-webkit-scrollbar { width: 6px; }
+.mn-col-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 999px; }
+.mn-col-body::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.18); }
 .mn-col-empty {
   font-size: 12px; color: rgba(255, 255, 255, 0.22); text-align: center;
   padding: 14px 8px; border: 1px dashed rgba(255, 255, 255, 0.06); border-radius: 9px;
 }
 
+/* Cuando las columnas pasan a varias filas, el alto fijo del board cortaria las
+   filas inferiores → se vuelve a scroll natural de la pagina y cards de alto
+   automatico (el scroll deja de ser interno por columna). */
 @media (max-width: 1100px) {
-  .mn-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 0; }
-  .mn-col:nth-child(odd)  { padding-left: 0; }
-  .mn-col:nth-child(even) { padding-right: 0; }
-  .mn-col + .mn-col:nth-child(odd) { border-left: none; }
+  .monitoring-page.monitoring-page { height: auto; overflow: visible; }
+  .mn-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mn-col { height: auto; min-height: 240px; }
+  .mn-col-body { overflow: visible; }
 }
 @media (max-width: 640px) {
-  .mn-cols { grid-template-columns: 1fr; gap: 22px; }
-  .mn-col { padding: 0; }
-  .mn-col + .mn-col { border-left: none; }
+  .mn-cols { grid-template-columns: 1fr; }
 }
 
-/* ── Tarjeta compacta ── */
+/* ── Tarjeta compacta — elevada sobre la columna (que ya es #141517) ── */
 .mn-card {
-  background: #141517; border: 1px solid #242424; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025); border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
   padding: 11px 12px; display: flex; flex-direction: column; gap: 10px;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
-.mn-card:hover { border-color: rgba(255, 255, 255, 0.18); }
+.mn-card:hover { border-color: rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.04); }
 .mn-card--off { opacity: 0.55; }
 .mn-card--star {
   border-color: rgba(251, 146, 60, 0.45);
@@ -272,6 +316,7 @@
 }
 .mn-empty p { margin: 0; line-height: 1.6; }
 .mn-empty--first {
+  margin: auto; text-align: center;
   padding: 56px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px;
 }
 .mn-empty-icon {

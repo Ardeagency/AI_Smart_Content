@@ -315,8 +315,6 @@ class MonitoringView extends BaseView {
     const model = this._computeModel();
     body.innerHTML = `
       <div class="mn-page">
-        ${this._buildPulse(model)}
-        ${this._buildPropuestas(model)}
         ${this._buildSeguidos(model)}
       </div>`;
     this._bind(body, model);
