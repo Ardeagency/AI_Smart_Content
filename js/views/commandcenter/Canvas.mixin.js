@@ -1439,7 +1439,8 @@
     const sc = Math.min((W - pad * 2) / Math.max(1, x1 - x0), (H - pad * 2) / Math.max(1, y1 - y0));
     const ox = pad - x0 * sc, oy = pad - y0 * sc;
     this._miniTransform = { sc, ox, oy };
-    const colorByType = { audience: '#e0a045', 'campaign-concept': '#6aa3ff', 'campaign-real': '#e15760', identity: '#5fe0c0' };
+    // Monocromo: tipos diferenciados por brillo, sin color.
+    const colorByType = { audience: '#c9cdd3', 'campaign-concept': '#e8eaed', 'campaign-real': '#90959c', identity: '#aeb3b9' };
     nodes.forEach((n) => {
       const p = this._positions[n.key]; if (!p) return;
       ctx.fillStyle = colorByType[n.type] || '#888';

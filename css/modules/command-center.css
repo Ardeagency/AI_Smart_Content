@@ -1781,26 +1781,26 @@
 .cc-node--identity[data-identity-type="services"]   .cc-node-port--out,
 .cc-node--identity[data-identity-type="places"]     .cc-node-port--out,
 .cc-node--identity[data-identity-type="characters"] .cc-node-port--out {
-  top: -7px; right: auto; left: 50%; transform: translateX(-50%); opacity: 1;
+  top: -7px !important; bottom: auto !important; right: auto !important; left: 50% !important; transform: translateX(-50%) !important; opacity: 1 !important;
 }
 
 /* Trigger (campana conceptual): 3 puertos — abajo-izq = audiencia,
    abajo-der = entidades, derecha = produccion (brief). */
 .cc-node[data-type="campaign-concept"] .cc-node-port--in {
-  top: auto; bottom: -7px; left: 33%; right: auto; transform: translateX(-50%); opacity: 1;
+  top: auto !important; bottom: -7px !important; left: 33% !important; right: auto !important; transform: translateX(-50%) !important; opacity: 1 !important;
 }
 .cc-node[data-type="campaign-concept"] .cc-node-port--bottom2 {
-  top: auto; bottom: -7px; left: 67%; right: auto; transform: translateX(-50%);
+  top: auto !important; bottom: -7px !important; left: 67% !important; right: auto !important; transform: translateX(-50%) !important;
 }
 .cc-node[data-type="campaign-concept"] .cc-node-port--out {
-  top: 50%; right: -7px; left: auto; transform: translateY(-50%);
+  top: 50% !important; right: -7px !important; left: auto !important; transform: translateY(-50%) !important;
 }
 
 /* Cierre (campana real): recibe por la izquierda; sin salida. */
 .cc-node--campaign.cc-node--readonly .cc-node-port--out,
 .cc-node[data-type="campaign-real"]  .cc-node-port--out { display: none !important; }
 .cc-node[data-type="campaign-real"]  .cc-node-port--in {
-  top: 50%; left: -7px; transform: translateY(-50%); opacity: 1;
+  top: 50% !important; left: -7px !important; right: auto !important; transform: translateY(-50%) !important; opacity: 1 !important;
 }
 
 /* Anotaciones (sticky/group): sin puertos. */

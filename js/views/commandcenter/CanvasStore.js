@@ -1240,12 +1240,12 @@
     // Ports tipados visuales (placeholder estatico para v1; el schema real
     // vive en flow_modules y se incorporara en una iteracion posterior)
     const inputPorts = [
-      { id: 'input',  color: '#e3c64a', label: 'input' },
-      { id: 'config', color: '#5fe0a8', label: 'config' },
-      { id: 'brief',  color: '#e57186', label: 'brief' },
+      { id: 'input',  color: '#c9cdd3', label: 'input' },
+      { id: 'config', color: '#c9cdd3', label: 'config' },
+      { id: 'brief',  color: '#c9cdd3', label: 'brief' },
     ];
     const outputPorts = [
-      { id: 'output', color: '#6aa3ff', label: sub || 'output' },
+      { id: 'output', color: '#c9cdd3', label: sub || 'output' },
     ];
     const fields = [
       { label: 'Output', value: sub || '—' },
@@ -2310,15 +2310,15 @@
           const isPublished = !!(pub && pub.status === 'published');
           let badge, action = '';
           if (isPublished) {
-            badge = `<span style="color:#6bcf7f;font-size:10px;">&#9679; Publicada${pub.platform ? ' &middot; ' + this.escapeHtml(pub.platform) : ''}</span>`;
+            badge = `<span style="color:#e8eaed;font-size:10px;">&#9679; Publicada${pub.platform ? ' &middot; ' + this.escapeHtml(pub.platform) : ''}</span>`;
           } else if (p.published_at) {
-            badge = `<span style="color:#5b9bd5;font-size:10px;">&#9679; En pauta</span>`;
+            badge = `<span style="color:#b8bdc4;font-size:10px;">&#9679; En pauta</span>`;
           } else {
             badge = `<span style="color:rgba(212,209,216,.5);font-size:10px;">&#9675; Lista para publicar</span>`;
-            action = `<button class="cc-prod-publish-btn" data-output-id="${p.id}" style="margin-top:6px;width:100%;padding:4px 0;border:1px solid #3a7bd5;border-radius:6px;background:rgba(58,123,213,.18);color:#9cc2ff;font-size:10px;cursor:pointer;">Publicar</button>`;
+            action = `<button class="cc-prod-publish-btn" data-output-id="${p.id}" style="margin-top:6px;width:100%;padding:4px 0;border:1px solid rgba(255,255,255,0.22);border-radius:6px;background:rgba(255,255,255,0.10);color:#e8eaed;font-size:10px;cursor:pointer;">Publicar</button>`;
           }
           div.style.height = action ? `${SH + 28}px` : `${SH}px`;
-          div.innerHTML = `<div style="display:flex;align-items:center;gap:6px;"><i class="fas ${isVideo ? 'fa-film' : 'fa-image'}" style="color:#6aa3ff;"></i><span>${isVideo ? 'Video' : 'Imagen'}</span></div><div style="margin-top:6px;">${badge}</div>${action}`;
+          div.innerHTML = `<div style="display:flex;align-items:center;gap:6px;"><i class="fas ${isVideo ? 'fa-film' : 'fa-image'}" style="color:#cfd3d8;"></i><span>${isVideo ? 'Video' : 'Imagen'}</span></div><div style="margin-top:6px;">${badge}</div>${action}`;
           world.appendChild(div);
           linkages.push({ from: parentEl, to: div });
         });
