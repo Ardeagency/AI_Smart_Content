@@ -124,7 +124,7 @@ class CampanasDataService {
       vulnerabilities,
       optimizationInsights, alertScore,
       activityHistory, engagementTrend, sentimentActivity, postingHours,
-      estrategiaTopics, topHighlightedPosts, comments, postReception, whatDrags,
+      estrategiaTopics, topHighlightedPosts, comments, postReception, whatDrags, whatWins,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
@@ -229,6 +229,12 @@ class CampanasDataService {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
         p_brand_container_ids: bcids, p_min_posts: 3,
       }),
+      // "Lo que funciona" como SÍNTESIS: pilares/tonos/temas/formatos ganadores +
+      // por qué funcionó el top post + mejor campaña de conversión.
+      this.sb.rpc('dashboard_brand_what_wins', {
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
+        p_brand_container_ids: bcids, p_min_posts: 3,
+      }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -259,6 +265,7 @@ class CampanasDataService {
       comments:         u(comments),
       postReception:    u(postReception),
       whatDrags:        u(whatDrags),
+      whatWins:         u(whatWins),
 
       whatWorks: u(whatWorks),
       audiencePatterns: u(audiencePatterns),

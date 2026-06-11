@@ -4021,6 +4021,8 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .plan-find-row--bad { border-left-color: #e06464; }
 .plan-find-row--mid { border-left-color: #e0a045; }
 .plan-find-row--low { border-left-color: #8a8a8e; }
+.plan-find-row--good { border-left-color: #6bcf7f; }
+.plan-find-row--opp { border-left-color: #5b9bd5; }
 .plan-find-cat { flex: none; font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; background: rgba(255,255,255,0.06); color: var(--text-muted, rgba(212,209,216,0.6)); }
 .plan-find-label { flex: 1 1 auto; min-width: 0; font-size: 0.875rem; color: var(--text-primary, #D4D1D8); }
 .plan-find-n { flex: none; font-size: 1rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-secondary, #C9C7CE); }

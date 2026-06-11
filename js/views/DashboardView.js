@@ -609,15 +609,18 @@ class DashboardView extends BaseView {
         <div class="plan-detail-h">${this._esc(s.h)}</div>
         <div class="plan-detail-b">${this._esc(s.b)}</div>
       </div>`).join('');
-    // Lista de findings (señales) por severidad — la usan Riesgo y Lo que te resta.
+    // Lista de findings (señales) — la usan las 4 cards. El borde toma el color de
+    // la card (verde=funciona, azul=oportunidad; rojo/ámbar por severidad en las
+    // negativas). El número se formatea según el tipo (lift%, conversión, ratio).
     const sevCls = (s) => (Number(s) >= 40 ? 'bad' : Number(s) >= 15 ? 'mid' : 'low');
-    const CAT = { reputacion: __('Reputación'), desempeno: __('Desempeño'), tono: __('Tono'), tema: __('Tema'), formato: __('Formato'), pilar: __('Pilar'), caida_causal: __('Tendencia') };
-    const findNum = (f) => (f.lift != null ? `${f.lift}%` : (f.total != null ? `${f.n}/${f.total}` : (f.n != null ? String(f.n) : '')));
+    const findCls = (s) => (detail.color === 'explota' ? 'good' : detail.color === 'optimiza' ? 'opp' : sevCls(s));
+    const CAT = { reputacion: __('Reputación'), desempeno: __('Desempeño'), tono: __('Tono'), tema: __('Tema'), formato: __('Formato'), pilar: __('Pilar'), caida_causal: __('Tendencia'), campana: __('Campaña'), top_post: __('Top post') };
+    const findNum = (f) => (f.lift != null ? `${f.lift > 0 ? '+' : ''}${f.lift}%` : (f.total != null ? `${f.n}/${f.total}` : (f.n != null ? this._compactNum(f.n) : '')));
     const findBlock = (Array.isArray(detail.findings) && detail.findings.length) ? `
       <div class="plan-detail-sec">
         <div class="plan-find">
           ${detail.findings.map((f) => `
-            <div class="plan-find-row plan-find-row--${sevCls(f.severity)}">
+            <div class="plan-find-row plan-find-row--${findCls(f.severity)}">
               <span class="plan-find-cat">${this._esc(CAT[f.category] || CAT[f.key] || f.category || f.key || '')}</span>
               <span class="plan-find-label">${this._esc(f.label || '')}</span>
               <span class="plan-find-n">${this._esc(findNum(f))}</span>

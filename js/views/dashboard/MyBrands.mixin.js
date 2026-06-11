@@ -249,34 +249,39 @@
 
       // ── LO QUE FUNCIONA: pilar caballo-de-batalla (lift>0, n sano, max share×lift).
       //    Fallback: mejor palanca (tono/tema) si no hay pilar fiable.
-      let explota = null;
+      // exP = mejor pilar ganador (se reutiliza para excluirlo de OPORTUNIDAD).
       const exP = pillars.filter((p) => p.lift > 0 && p.n >= N_MIN)
         .sort((a, b) => (b.share * b.lift) - (a.share * a.lift))[0];
-      if (exP) {
-        explota = {
-          title: __('Tu pilar "{p}" sostiene la marca', { p: exP.name }),
-          metric: `+${r(exP.lift)}%`,
-          metricSub: __('vs tu promedio · {s}% de tu mezcla · {n} posts', { s: r(exP.share), n: exP.n }),
-          action: __('Protégelo'), impact: 'alto', earlySignal: false,
-          detail: detail('explota', __('Lo que funciona'),
-            __('Pilar "{p}" · tu caballo de batalla', { p: exP.name }),
-            whyAncla,
-            __('Mantén "{p}" como columna (~{s}% de tu mezcla) y úsalo de ancla en tus lanzamientos; combínalo con tus pilares subexplotados para crecer sin perder lo que ya rinde.', { p: exP.name, s: r(exP.share) }),
-            evidLine(exP.n, exP.lift)),
+      // explota = SÍNTESIS de virtudes (dashboard_brand_what_wins): pilares/dims
+      // ganadores + por qué funcionó el top post + mejor campaña de conversión.
+      let explota = null;
+      const ww = data?.whatWins?.data || null;
+      const wwFindings = (ww && Array.isArray(ww.findings)) ? ww.findings : [];
+      const wwDom = (ww && ww.dominant) || wwFindings[0] || null;
+      if (wwDom) {
+        const subj = wwDom.subject || '';
+        const lift = Math.abs(r(wwDom.lift));
+        const byKey = {
+          campana:  { title: __('Tu campaña "{s}" convirtió alto', { s: subj }), metric: this._compactNum(wwDom.n), sub: __('conversiones — reusa el enfoque'), action: __('Reúsalo') },
+          top_post: { title: __('Tu mejor post tiene un gancho ganador'),       metric: '',                        sub: subj ? __('gatillo: {s}', { s: subj }) : __('replícalo'), action: __('Replícalo') },
+          pilar:    { title: __('Tu pilar "{s}" sostiene la marca', { s: subj }), metric: `+${lift}%`, sub: __('{n} posts sobre tu promedio', { n: wwDom.n }), action: __('Protégelo') },
+          tono:     { title: __('Tu tono "{s}" rinde', { s: subj }),             metric: `+${lift}%`, sub: __('{n} posts sobre tu promedio', { n: wwDom.n }), action: __('Produce más de esto') },
+          tema:     { title: __('Tu tema "{s}" rinde', { s: subj }),             metric: `+${lift}%`, sub: __('{n} posts sobre tu promedio', { n: wwDom.n }), action: __('Produce más de esto') },
+          formato:  { title: __('Tu formato "{s}" rinde', { s: subj }),          metric: `+${lift}%`, sub: __('{n} posts sobre tu promedio', { n: wwDom.n }), action: __('Úsalo más') },
         };
-      } else if (boosts[0]) {
-        const b = boosts[0];
-        const bn = Number(b.post_count) || 0;
+        const g = byKey[wwDom.key] || byKey.tono;
         explota = {
-          title: `${dimLabel[b.dimension] || b.dimension} "${this._causalValueLabel(b.dimension, b.value)}"`,
-          metric: `+${r(b.lift_pct)}%`,
-          metricSub: __('vs tu promedio · {n} posts', { n: bn }),
-          action: __('Produce más de esto'), impact: 'alto', earlySignal: bn < N_MIN,
-          detail: detail('explota', __('Lo que funciona'),
-            `${dimLabel[b.dimension] || b.dimension} "${this._causalValueLabel(b.dimension, b.value)}"`,
-            b.dominant_emotion ? __('Tu público responde con {e} a este enfoque. {w}', { e: b.dominant_emotion, w: whyAncla }) : whyAncla,
-            __('Replica este patrón en más piezas y obsérvalo: si sostiene el lift con más volumen, súbelo a pilar fijo de tu marca.'),
-            evidLine(bn, Number(b.lift_pct))),
+          title: g.title, metric: g.metric, metricSub: g.sub,
+          action: g.action, impact: 'alto',
+          earlySignal: (wwDom.n != null && wwDom.key !== 'campana' && wwDom.n < N_MIN),
+          detail: {
+            color: 'explota', category: __('Lo que funciona'), title: __('Tus fortalezas'),
+            findings: wwFindings,
+            sections: [{
+              h: __('¿Qué está ganando?'),
+              b: __('Tus fortalezas con mayor impacto — combina campañas, posts, pilares, tonos y temas. Replica y potencia las de arriba:'),
+            }],
+          },
         };
       }
 
