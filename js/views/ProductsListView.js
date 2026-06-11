@@ -21,7 +21,6 @@ class ProductsListView extends BaseView {
     return `
 <div class="products-list-page" id="productsListPage">
   <div class="products-list-header">
-    <h1 class="products-list-title">${__('Productos')}</h1>
     <div class="products-list-header-actions">
       <button type="button" class="products-list-add-btn" id="productsListAttachBtn" aria-label="${__('Adjuntar producto desde URL o archivos')}">
         <i class="fas fa-paperclip" aria-hidden="true"></i>

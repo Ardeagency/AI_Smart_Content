@@ -26,7 +26,6 @@ class PlacesView extends BaseView {
     return `
 <div class="products-list-page" id="placesListPage">
   <div class="products-list-header">
-    <h1 class="products-list-title">${__('Escenarios')}</h1>
     <div class="products-list-header-actions">
       <button type="button" class="products-list-add-btn" id="placesListAttachBtn" aria-label="${__('Adjuntar escenario desde URL o fotos')}">
         <i class="fas fa-paperclip" aria-hidden="true"></i>

@@ -487,7 +487,6 @@ class BaseView {
    */
   static emptyState({ icon = 'fa-inbox', iconSrc = '', title = '', subtitle = '', primaryLabel = '', secondaryLabel = '' } = {}) {
     const esc = BaseView.escapeHtml;
-    const ghosts = '<div class="ple-ghost"></div>'.repeat(3);
     const medallionInner = iconSrc
       ? `<img class="ple-medallion-img" src="${esc(iconSrc)}" alt="" width="30" height="30">`
       : `<i class="fas ${esc(icon)}"></i>`;
@@ -498,8 +497,6 @@ class BaseView {
     const actions = (primary || secondary) ? `<div class="ple-actions">${primary}${secondary}</div>` : '';
     const sub = subtitle ? `<p class="ple-subtitle">${esc(subtitle)}</p>` : '';
     return `
-      <div class="ple-ghosts" aria-hidden="true">${ghosts}</div>
-      <div class="ple-veil" aria-hidden="true"></div>
       <div class="ple-content">
         <div class="ple-medallion" aria-hidden="true">${medallionInner}</div>
         <h3 class="ple-title">${esc(title)}</h3>

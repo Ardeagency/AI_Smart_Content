@@ -20,7 +20,6 @@ class ServicesView extends BaseView {
     return `
 <div class="services-page" id="servicesPage">
   <div class="services-header">
-    <h1 class="services-title">${__('Servicios')}</h1>
     <div class="services-header-actions">
       <button type="button" class="services-add-btn" id="servicesAttachBtn" aria-label="${__('Adjuntar servicio desde URL o archivos')}">
         <i class="fas fa-paperclip" aria-hidden="true"></i>

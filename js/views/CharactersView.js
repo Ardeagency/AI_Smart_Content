@@ -32,7 +32,6 @@ class CharactersView extends BaseView {
     return `
 <div class="products-list-page" id="charactersListPage">
   <div class="products-list-header">
-    <h1 class="products-list-title">${__('Personajes')}</h1>
     <div class="products-list-header-actions">
       <button type="button" class="products-list-add-btn" id="charactersListAttachBtn" aria-label="${__('Adjuntar personaje desde fotos')}">
         <i class="fas fa-paperclip" aria-hidden="true"></i>
