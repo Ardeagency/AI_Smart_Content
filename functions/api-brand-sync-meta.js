@@ -450,13 +450,67 @@ async function upsertBrandPost(env, brandContainerId, postRow, postId) {
       searchParams: { id: `eq.${existing[0].id}` },
       body: [{ metrics: postRow.metrics, captured_at: postRow.captured_at, permalink: postRow.permalink }]
     }).catch(e => console.warn('[sync] upsert patch:', e.message));
+    return existing[0].id;
   } else {
-    await supabaseRest({
+    const inserted = await supabaseRest({
       url: env.url, serviceKey: env.serviceKey,
       path: 'brand_posts', method: 'POST',
       body: [postRow]
-    }).catch(e => console.warn('[sync] upsert insert:', e.message));
+    }).catch(e => { console.warn('[sync] upsert insert:', e.message); return null; });
+    return Array.isArray(inserted) && inserted[0] ? inserted[0].id : null;
   }
+}
+
+// ── Comentarios de posts PROPIOS vía Graph API (sin Apify) ──────────────────────
+// Se guardan crudos (sentiment/emotion = null, is_processed=false); los punta el
+// analyzer en batch. Dedupe por (network, external_comment_id).
+async function fetchFbComments(pageToken, postId, max = 150) {
+  try {
+    return await metaPaged(`/${postId}/comments`, pageToken,
+      { fields: 'id,message,from{id,name},created_time,like_count', order: 'reverse_chronological' }, max);
+  } catch (e) { console.warn(`[sync] fb comments ${postId}: ${e.message}`); return []; }
+}
+async function fetchIgComments(pageToken, mediaId, max = 150) {
+  try {
+    return await metaPaged(`/${mediaId}/comments`, pageToken,
+      { fields: 'id,text,username,timestamp,like_count' }, max);
+  } catch (e) { console.warn(`[sync] ig comments ${mediaId}: ${e.message}`); return []; }
+}
+
+async function syncPostComments(env, { brandContainerId, orgId, brandPostId, externalPostId, network, token }) {
+  if (!brandPostId || !externalPostId) return 0;
+  const isIg = network === 'instagram';
+  const raw = isIg ? await fetchIgComments(token, externalPostId) : await fetchFbComments(token, externalPostId);
+  if (!Array.isArray(raw) || raw.length === 0) return 0;
+
+  const mapped = raw.map((c) => ({
+    external_comment_id: c.id,
+    content: isIg ? (c.text || '') : (c.message || ''),
+    author_handle: isIg ? (c.username || null) : (c.from?.id || null),
+    author_display_name: isIg ? (c.username || null) : (c.from?.name || null),
+    posted_at: isIg ? (c.timestamp || null) : (c.created_time || null),
+    metrics: { likes: Number(c.like_count) || 0 },
+  })).filter((c) => c.external_comment_id && c.content);
+  if (!mapped.length) return 0;
+
+  // Dedupe contra lo ya guardado de este post.
+  const existing = await supabaseRest({
+    url: env.url, serviceKey: env.serviceKey, path: 'brand_post_comments', method: 'GET',
+    searchParams: { select: 'external_comment_id', network: `eq.${network}`, brand_post_id: `eq.${brandPostId}`, limit: '1000' }
+  }).catch(() => []);
+  const seen = new Set((Array.isArray(existing) ? existing : []).map((r) => r.external_comment_id));
+  const rows = mapped.filter((c) => !seen.has(c.external_comment_id)).map((c) => ({
+    brand_post_id: brandPostId, brand_container_id: brandContainerId, organization_id: orgId,
+    network, external_comment_id: c.external_comment_id,
+    author_handle: c.author_handle, author_display_name: c.author_display_name,
+    content: c.content, posted_at: c.posted_at, metrics: c.metrics,
+    source: 'meta_api', is_processed: false,
+  }));
+  if (!rows.length) return 0;
+  await supabaseRest({
+    url: env.url, serviceKey: env.serviceKey, path: 'brand_post_comments', method: 'POST', body: rows
+  }).catch((e) => console.warn(`[sync] comments insert ${externalPostId}: ${e.message}`));
+  return rows.length;
 }
 
 // ── Upsert: brand_analytics_snapshots ─────────────────────────────────────────
@@ -630,6 +684,7 @@ exports.handler = async (event) => {
         body: JSON.stringify({ ok: true, summary: { ...summary, message: 'No granted pages in metadata. Reconnect Meta selecting the page.' } }) };
     }
 
+    let commentsBackfilled = false;  // backfill de comentarios: una sola vez por sync
     for (const page of pages.slice(0, 3)) {
       const pageToken = await getPageToken(userToken, page.id).catch(() => userToken);
       const igAccount = page.instagram_business_account || null;
@@ -672,6 +727,29 @@ exports.handler = async (event) => {
           captured_at:    post.created_time
         }, post.id);
         summary.posts_synced++;
+      }
+
+      // ── Backfill de comentarios: TODO el historial de posts propios (no solo los
+      // recientes del sync). Una sola vez por sync, acotado a 300 posts (recientes
+      // primero) para respetar rate limits. Usa el token de esta page. Dedupe en BD.
+      if (!commentsBackfilled) {
+        commentsBackfilled = true;
+        try {
+          const ownPosts = await supabaseRest({
+            url: env.url, serviceKey: env.serviceKey, path: 'brand_posts', method: 'GET',
+            searchParams: {
+              select: 'id,post_id,network', brand_container_id: `eq.${brand_container_id}`,
+              is_competitor: 'eq.false', order: 'captured_at.desc', limit: '300',
+            },
+          }).catch(() => []);
+          for (const op of (Array.isArray(ownPosts) ? ownPosts : [])) {
+            if (!op.post_id) continue;
+            summary.comments_synced = (summary.comments_synced || 0) + await syncPostComments(env, {
+              brandContainerId: brand_container_id, orgId: bc.organization_id,
+              brandPostId: op.id, externalPostId: op.post_id, network: op.network, token: pageToken,
+            });
+          }
+        } catch (e) { console.warn('[sync] comments backfill:', e.message); }
       }
 
       // Page insights (para snapshot)
