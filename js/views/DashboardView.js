@@ -554,17 +554,26 @@ class DashboardView extends BaseView {
       { kind: 'elimina',  label: __('Lo que te resta'), action: __('Redúcelo o evítalo'),   item: items.elimina  },
       { kind: 'vigila',   label: __('Riesgo'),          action: __('Revísalo'),             item: items.vigila   },
     ];
+    // Guardamos los items por categoria para abrir el detalle al hacer click.
+    this._heroPlanItems = {};
     const cards = defs.filter((d) => d.item).map((d) => {
       const it = d.item;
+      this._heroPlanItems[d.kind] = it;
       const metric = it.metric
         ? `<div class="mb-plan-metric"><span class="mb-plan-metric-val">${this._esc(it.metric)}</span>${it.metricSub ? `<span class="mb-plan-metric-sub">${this._esc(it.metricSub)}</span>` : ''}</div>`
         : '';
+      // Pildora de muestra chica: honestidad estadistica (no apostar con n<5).
+      const pill = it.earlySignal ? `<span class="mb-plan-early">${__('Señal temprana')}</span>` : '';
+      const action = it.action || d.action;
+      const hasDetail = !!it.detail;
+      const attrs = hasDetail ? ` data-plan-kind="${d.kind}" role="button" tabindex="0"` : '';
       return `
-        <div class="mb-plan-col mb-plan-col--${d.kind}">
+        <div class="mb-plan-col mb-plan-col--${d.kind}${hasDetail ? ' is-clickable' : ''}"${attrs}>
           <div class="mb-plan-col-head"><span class="mb-plan-cat">${this._esc(d.label)}</span></div>
           ${it.title ? `<div class="mb-plan-title">${this._esc(it.title)}</div>` : ''}
           ${metric}
-          <div class="mb-plan-action">${this._esc(d.action)}<span class="mb-plan-action-arrow">→</span></div>
+          ${pill}
+          <div class="mb-plan-action">${this._esc(action)}<span class="mb-plan-action-arrow">→</span></div>
         </div>`;
     });
     return cards.join('') || this._buildHeroCards(null);
@@ -575,7 +584,37 @@ class DashboardView extends BaseView {
   _renderHeroCards(data) {
     if (data) this._heroKpiData = data;
     const host = document.getElementById('dashHeroCards');
-    if (host) host.innerHTML = this._buildHeroCards(this._heroKpiData || null);
+    if (!host) return;
+    host.innerHTML = this._buildHeroCards(this._heroKpiData || null);
+    // Click en una card → modal de detalle (consultor). Listener delegado una vez.
+    if (!host._planBound) {
+      host._planBound = true;
+      const open = (e) => {
+        const col = e.target.closest('.mb-plan-col[data-plan-kind]');
+        if (!col) return;
+        const it = this._heroPlanItems && this._heroPlanItems[col.getAttribute('data-plan-kind')];
+        if (it && it.detail) this._openPlanDetail(it.detail);
+      };
+      host.addEventListener('click', open);
+      host.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(e); } });
+    }
+  }
+
+  // Modal de detalle "consultor" de una card del plan: por que te conviene /
+  // como lo exploto / evidencia y confianza. Reusa la primitiva Modal.show.
+  _openPlanDetail(detail) {
+    if (!detail || !window.Modal || typeof window.Modal.show !== 'function') return;
+    const secs = (detail.sections || []).map((s) => `
+      <div class="plan-detail-sec">
+        <div class="plan-detail-h">${this._esc(s.h)}</div>
+        <div class="plan-detail-b">${this._esc(s.b)}</div>
+      </div>`).join('');
+    const body = `
+      <div class="plan-detail plan-detail--${this._esc(detail.color || '')}">
+        ${detail.title ? `<div class="plan-detail-title">${this._esc(detail.title)}</div>` : ''}
+        ${secs}
+      </div>`;
+    window.Modal.show({ title: detail.category || detail.title || '', body, className: 'dash-modal plan-detail-modal' });
   }
 
   // Si aun no hay data de marca cacheada, dispara una carga en background

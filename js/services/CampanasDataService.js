@@ -25,7 +25,7 @@ class CampanasDataService {
 
     const { data, error } = await this.sb
       .from('brand_containers')
-      .select('id, nombre_marca, organization_id')
+      .select('id, nombre_marca, organization_id, arquetipo, propuesta_valor, nicho_core')
       .eq('organization_id', orgId)
       .order('created_at', { ascending: true });
 

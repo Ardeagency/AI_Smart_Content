@@ -3975,6 +3975,25 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .dash-hero-cards .mb-plan-col--optimiza .mb-plan-action { color: rgba(91,155,213,0.85); }
 .dash-hero-cards .mb-plan-col--elimina  .mb-plan-action { color: rgba(224,100,100,0.85); }
 .dash-hero-cards .mb-plan-col--vigila   .mb-plan-action { color: rgba(224,160,69,0.85); }
+/* Card clickable → abre el detalle consultor. */
+.dash-hero-cards .mb-plan-col.is-clickable { cursor: pointer; transition: border-color 0.18s ease, transform 0.18s ease; }
+.dash-hero-cards .mb-plan-col.is-clickable:hover { border-color: rgba(255,255,255,0.16); transform: translateY(-1px); }
+/* Pildora "señal temprana": guardrail de muestra chica (n<5). */
+.dash-hero-cards .mb-plan-early { align-self: flex-start; margin-top: 0.15rem; padding: 2px 8px; border-radius: 6px; font-size: 0.625rem; font-weight: 600; letter-spacing: 0.01em; }
+.dash-hero-cards .mb-plan-col--explota  .mb-plan-early { color: #6bcf7f; background: rgba(107,207,127,0.14); }
+.dash-hero-cards .mb-plan-col--optimiza .mb-plan-early { color: #5b9bd5; background: rgba(91,155,213,0.14); }
+.dash-hero-cards .mb-plan-col--elimina  .mb-plan-early { color: #e06464; background: rgba(224,100,100,0.14); }
+.dash-hero-cards .mb-plan-col--vigila   .mb-plan-early { color: #e0a045; background: rgba(224,160,69,0.14); }
+
+/* Modal de detalle "consultor" del plan de accion. */
+.plan-detail-title { font-size: 1.125rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.2rem; color: var(--text-primary, #D4D1D8); }
+.plan-detail--explota  .plan-detail-title { color: #6bcf7f; }
+.plan-detail--optimiza .plan-detail-title { color: #5b9bd5; }
+.plan-detail--elimina  .plan-detail-title { color: #e06464; }
+.plan-detail--vigila   .plan-detail-title { color: #e0a045; }
+.plan-detail-sec { margin-top: 1.1rem; }
+.plan-detail-h { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); margin-bottom: 0.3rem; }
+.plan-detail-b { font-size: 0.9375rem; line-height: 1.5; color: var(--text-secondary, #C9C7CE); }
 .dash-hero-card-skeleton {
   min-height: 104px;
   background: var(--glass-black-bg, rgba(11, 11, 11, 0.45));

@@ -200,105 +200,172 @@
        Calcula los 4 items (que explotar, optimizar, eliminar y vigilar) a
        partir de la data existente. Lo consume tanto la seccion del cuerpo
        (_buildActionPlanSection) como el hero del dashboard. */
+    /* ── Plan de accion ESTRATEGICO: Lo que funciona / Oportunidad / Lo que te
+       resta / Riesgo. Selecciona por IMPACTO real (pilares > palancas), con
+       baseline explicito, guardrail de muestra (n>=5 = fiable; n<5 = señal
+       temprana) y anclaje al Brand DNA. Cada item trae un `detail` (modal
+       consultor: por que / como / evidencia). Lo consume el hero del dashboard. */
     _computeActionPlanItems(data, insights) {
+      const N_MIN = 5;
+      const r = (x) => Math.round(Number(x) || 0);
       const arr = Array.isArray(insights) ? insights : [];
-      const boosts = arr.filter((i) => i.kind === 'boost').sort((a, b) => Number(b.lift_pct) - Number(a.lift_pct));
-      const drags  = arr.filter((i) => i.kind === 'drag').sort((a, b) => Number(a.lift_pct) - Number(b.lift_pct));
-      const tasks  = Array.isArray(data?.health?.data?.tasks)
-        ? [...data.health.data.tasks].sort((a, b) => (Number(b.impact_pts) || 0) - (Number(a.impact_pts) || 0))
-        : [];
-      const orphan = (Array.isArray(data?.pillars?.data) ? data.pillars.data : []).find((p) => p.is_orphan);
-
+      const boosts = arr.filter((i) => i.kind === 'boost' && Number(i.lift_pct) > 0)
+        .sort((a, b) => Number(b.lift_pct) - Number(a.lift_pct));
+      const drags  = arr.filter((i) => i.kind === 'drag' && Number(i.lift_pct) < 0)
+        .sort((a, b) => Number(a.lift_pct) - Number(b.lift_pct));
       const dimLabel = { tono: __('Tono'), tema: __('Tema'), formato: __('Formato'), horario: __('Horario') };
 
-      // EXPLOTA: el mejor boost (o pilar huerfano si no hay boost).
+      // Pilares narrativos = mezcla de contenido (la dimension mas estrategica).
+      const pillars = (Array.isArray(data?.pillars?.data) ? data.pillars.data : []).map((p) => ({
+        name: p.pillar, n: Number(p.post_count) || 0, share: Number(p.share_pct) || 0,
+        lift: Number(p.lift_pct) || 0, isOrphan: !!p.is_orphan,
+      }));
+
+      // Brand DNA para anclar el "por que te conviene" (no metricas sueltas).
+      const dna = (() => {
+        const cs = Array.isArray(data?.containers) ? data.containers : [];
+        const bcid = this._mbFilters?.brandContainerId;
+        const c = (bcid && cs.find((x) => x.id === bcid)) || cs[0] || {};
+        return { arquetipo: c.arquetipo || '', propuesta: c.propuesta_valor || '', nicho: c.nicho_core || '' };
+      })();
+      const whyAncla = dna.arquetipo
+        ? __('Conecta con tu arquetipo "{a}" y tu propuesta de marca — es donde tu público reacciona, no solo donde te ven.', { a: dna.arquetipo })
+        : __('Es donde tu público reacciona por encima de tu promedio, no solo donde te ven.');
+
+      const detail = (color, cat, ttl, why, how, evid) => ({
+        color, category: cat, title: ttl,
+        sections: [
+          { h: __('¿Por qué te conviene?'), b: why },
+          { h: __('¿Cómo lo exploto?'), b: how },
+          { h: __('Evidencia y confianza'), b: evid },
+        ],
+      });
+      const evidLine = (n, lift) => {
+        const base = __('{n} posts · {s}{l}% sobre tu promedio de interacción.', { n, s: lift > 0 ? '+' : '', l: r(lift) });
+        const conf = n >= N_MIN
+          ? __(' Muestra suficiente = señal fiable, no es ruido.')
+          : __(' Muestra chica = señal temprana, a validar con más posts.');
+        return base + conf;
+      };
+
+      // ── LO QUE FUNCIONA: pilar caballo-de-batalla (lift>0, n sano, max share×lift).
+      //    Fallback: mejor palanca (tono/tema) si no hay pilar fiable.
       let explota = null;
-      if (boosts[0]) {
+      const exP = pillars.filter((p) => p.lift > 0 && p.n >= N_MIN)
+        .sort((a, b) => (b.share * b.lift) - (a.share * a.lift))[0];
+      if (exP) {
+        explota = {
+          title: __('Tu pilar "{p}" sostiene la marca', { p: exP.name }),
+          metric: `+${r(exP.lift)}%`,
+          metricSub: __('vs tu promedio · {s}% de tu mezcla · {n} posts', { s: r(exP.share), n: exP.n }),
+          action: __('Protégelo'), impact: 'alto', earlySignal: false,
+          detail: detail('explota', __('Lo que funciona'),
+            __('Pilar "{p}" · tu caballo de batalla', { p: exP.name }),
+            whyAncla,
+            __('Mantén "{p}" como columna (~{s}% de tu mezcla) y úsalo de ancla en tus lanzamientos; combínalo con tus pilares subexplotados para crecer sin perder lo que ya rinde.', { p: exP.name, s: r(exP.share) }),
+            evidLine(exP.n, exP.lift)),
+        };
+      } else if (boosts[0]) {
         const b = boosts[0];
+        const bn = Number(b.post_count) || 0;
         explota = {
           title: `${dimLabel[b.dimension] || b.dimension} "${this._causalValueLabel(b.dimension, b.value)}"`,
-          metric: __('+{n}% sobre tu promedio', { n: Math.round(Number(b.lift_pct)) }),
-          why: orphan ? __('Tu pilar "{pillar}" tambien rinde y lo usas solo {pct}%.', { pillar: this._esc(orphan.pillar), pct: orphan.share_pct }) : __('Usalo mas, lo subexplotas.'),
+          metric: `+${r(b.lift_pct)}%`,
+          metricSub: __('vs tu promedio · {n} posts', { n: bn }),
+          action: __('Produce más de esto'), impact: 'alto', earlySignal: bn < N_MIN,
+          detail: detail('explota', __('Lo que funciona'),
+            `${dimLabel[b.dimension] || b.dimension} "${this._causalValueLabel(b.dimension, b.value)}"`,
+            b.dominant_emotion ? __('Tu público responde con {e} a este enfoque. {w}', { e: b.dominant_emotion, w: whyAncla }) : whyAncla,
+            __('Replica este patrón en más piezas y obsérvalo: si sostiene el lift con más volumen, súbelo a pilar fijo de tu marca.'),
+            evidLine(bn, Number(b.lift_pct))),
         };
-      } else if (orphan) {
-        explota = {
-          title: __('Pilar "{pillar}"', { pillar: this._esc(orphan.pillar) }),
-          metric: __('+{n}% pero solo {pct}% de tu contenido', { n: Math.round(Number(orphan.lift_pct)), pct: orphan.share_pct }),
-          why: __('Te funciona y lo subexplotas. Produce mas de esto.'),
+      }
+
+      // ── OPORTUNIDAD: subexplotado de alto rendimiento (huérfano o share bajo),
+      //    distinto del caballo de batalla. Muestra chica → señal temprana.
+      let optimiza = null;
+      const opP = pillars.filter((p) => p.lift > 0 && p.name !== (exP && exP.name) && (p.isOrphan || p.share < 15))
+        .sort((a, b) => b.lift - a.lift)[0];
+      if (opP) {
+        const early = opP.n < N_MIN;
+        optimiza = {
+          title: __('"{p}" rinde pero casi no lo usas', { p: opP.name }),
+          metric: `+${r(opP.lift)}%`,
+          metricSub: __('vs tu promedio · solo {s}% de tu mezcla', { s: r(opP.share) }),
+          action: early ? __('Prueba 3-4 posts y mide') : __('Súbelo en tu mezcla'),
+          impact: 'medio', earlySignal: early,
+          detail: detail('optimiza', __('Oportunidad'),
+            __('Pilar "{p}" · subexplotado', { p: opP.name }),
+            whyAncla,
+            early
+              ? __('Solo tienes {n} post(s) de este pilar: produce 3-4 más y vuelve a medir antes de escalarlo. Si sostiene el rendimiento, súbelo hacia ~20-30% de tu mezcla.', { n: opP.n })
+              : __('Súbelo de {s}% hacia ~20-30% de tu mezcla, sin canibalizar tu pilar más fuerte.', { s: r(opP.share) }),
+            evidLine(opP.n, opP.lift)),
         };
       }
 
-      // OPTIMIZA: la tarea de salud de mayor impacto.
-      let optimiza = tasks[0] ? {
-        title: tasks[0].label,
-        metric: Number(tasks[0].impact_pts) > 0 ? __('+{n} pts de salud', { n: Math.round(Number(tasks[0].impact_pts)) }) : '',
-        why: tasks[0].detail || '',
-      } : null;
-
-      // ELIMINA: lo que mas te resta.
-      let elimina = drags[0] ? {
-        title: `${dimLabel[drags[0].dimension] || drags[0].dimension} "${this._causalValueLabel(drags[0].dimension, drags[0].value)}"`,
-        metric: __('{n}% bajo tu promedio', { n: Math.round(Number(drags[0].lift_pct)) }),
-        why: __('Lo usas {n} {times} y rinde por debajo. Reducelo.', { n: Number(drags[0].post_count) || 0, times: Number(drags[0].post_count) === 1 ? __('vez') : __('veces') }),
-      } : null;
-
-      // ── Enriquecer con dashboard_brand_optimization_insights (server-side):
-      // palancas cuantificadas + momentum + consistencia. Si hay data,
-      // sobreescribe los buckets con la señal mas fuerte; si no, cae al
-      // synthesis client-side de arriba (whatWorks/health/pillars).
-      const oi = data?.optimizationInsights?.data || null;
-      if (oi) {
-        const ec = [
-          oi.best_topic && Number(oi.best_topic.lift_pct) > 0 && { dim: __('Tema'), val: oi.best_topic.topic, lift: oi.best_topic.lift_pct, n: oi.best_topic.n },
-          oi.best_tone  && Number(oi.best_tone.lift_pct)  > 0 && { dim: __('Tono'), val: oi.best_tone.tone,  lift: oi.best_tone.lift_pct,  n: oi.best_tone.n },
-        ].filter(Boolean).sort((a, b) => Number(b.lift) - Number(a.lift));
-        if (ec[0]) explota = {
-          title: `${ec[0].dim} "${this._esc(ec[0].val)}"`,
-          metric: __('+{n}%', { n: Math.round(Number(ec[0].lift)) }), metricSub: __('sobre tu promedio'),
-          why: __('Tu mejor palanca ({n} posts). Produce mas de esto.', { n: ec[0].n }), impact: 'alto',
-          detailDim: ec[0].dim === __('Tema') ? 'topic' : 'tone', detailValue: ec[0].val,
+      // ── LO QUE TE RESTA: la mayor fuga FIABLE. Compite pilar sobre-invertido
+      //    (share alto + lift<0) vs dimension muy usada (n alto + lift<0).
+      let elimina = null;
+      const drP = pillars.filter((p) => p.lift < 0 && p.n >= N_MIN)
+        .sort((a, b) => (b.share * Math.abs(b.lift)) - (a.share * Math.abs(a.lift)))[0];
+      const drD = drags.filter((d) => (Number(d.post_count) || 0) >= N_MIN)
+        .sort((a, b) => ((Number(b.post_count) || 0) * Math.abs(b.lift_pct)) - ((Number(a.post_count) || 0) * Math.abs(a.lift_pct)))[0];
+      // Coste comparable = fracción de contenido afectada × magnitud del lift.
+      // (Sin normalizar, share% [0-100] y post_count [conteo] no son comparables y
+      // el pilar siempre ganaría, ocultando fugas tácticas muy usadas.)
+      const totalPosts = Number(data?.optimizationInsights?.data?.posts_analyzed)
+        || pillars.reduce((s, p) => s + p.n, 0) || 0;
+      const costP = drP ? (drP.share / 100) * Math.abs(drP.lift) : -1;
+      const costD = (drD && totalPosts > 0) ? ((Number(drD.post_count) || 0) / totalPosts) * Math.abs(drD.lift_pct) : -1;
+      if (drP && costP >= costD) {
+        elimina = {
+          title: __('Tu pilar "{p}" está sobre-invertido', { p: drP.name }),
+          metric: `−${Math.abs(r(drP.lift))}%`,
+          metricSub: __('vs tu promedio · {s}% de tu mezcla · {n} posts', { s: r(drP.share), n: drP.n }),
+          action: __('Replantéalo'), impact: 'medio', earlySignal: false,
+          detail: detail('elimina', __('Lo que te resta'),
+            __('Pilar "{p}" · sobre-invertido', { p: drP.name }),
+            __('Le dedicas {s}% de tu contenido pero rinde por debajo de tu promedio: te cuesta alcance y energía creativa.', { s: r(drP.share) }),
+            __('Baja su frecuencia y reinvierte ese espacio en tu pilar más fuerte o en el subexplotado. Antes de cortar, prueba renovar el ángulo creativo.'),
+            evidLine(drP.n, drP.lift)),
         };
-        const oc = [
-          oi.best_hour_co && Number(oi.best_hour_co.lift_pct) > 0 && { txt: __('Publica a las {h}h', { h: oi.best_hour_co.hour_co }), lift: oi.best_hour_co.lift_pct, dim: 'hour', value: String(oi.best_hour_co.hour_co) },
-          oi.best_format  && Number(oi.best_format.lift_pct)  > 0 && { txt: __('Usa mas "{f}"', { f: oi.best_format.format }), lift: oi.best_format.lift_pct, dim: 'format', value: oi.best_format.format },
-        ].filter(Boolean).sort((a, b) => Number(b.lift) - Number(a.lift));
-        if (oc[0]) optimiza = {
-          title: oc[0].txt, metric: __('+{n}%', { n: Math.round(Number(oc[0].lift)) }), metricSub: 'engagement',
-          why: oi.posting_consistency ? __('Consistencia actual: {n}%.', { n: Math.round(Number(oi.posting_consistency.posting_consistency_pct)) }) : '',
-          impact: 'medio', detailDim: oc[0].dim, detailValue: oc[0].value,
-        };
-        const dc = [
-          oi.worst_tone    && Number(oi.worst_tone.lift_pct)    < 0 && { title: __('Tono "{t}"', { t: oi.worst_tone.tone }), lift: oi.worst_tone.lift_pct, dim: 'tone', value: oi.worst_tone.tone },
-          oi.worst_hour_co && Number(oi.worst_hour_co.lift_pct) < 0 && { title: __('Publicar a las {h}h', { h: oi.worst_hour_co.hour_co }), lift: oi.worst_hour_co.lift_pct, dim: 'hour', value: String(oi.worst_hour_co.hour_co) },
-        ].filter(Boolean).sort((a, b) => Number(a.lift) - Number(b.lift));
-        if (dc[0]) elimina = {
-          title: dc[0].title, metric: __('{n}%', { n: Math.round(Number(dc[0].lift)) }), metricSub: __('bajo tu promedio'),
-          why: __('Rinde muy por debajo de tu media. Reducelo o evitalo.'), impact: 'medio',
-          detailDim: dc[0].dim, detailValue: dc[0].value,
+      } else if (drD) {
+        const dn = Number(drD.post_count) || 0;
+        elimina = {
+          title: __('Tu {d} "{v}" es tu mayor fuga', { d: (dimLabel[drD.dimension] || drD.dimension).toLowerCase(), v: this._causalValueLabel(drD.dimension, drD.value) }),
+          metric: `−${Math.abs(r(drD.lift_pct))}%`,
+          metricSub: __('vs tu promedio · {n} posts (de lo que más usas)', { n: dn }),
+          action: __('Replantéalo'), impact: 'medio', earlySignal: false,
+          detail: detail('elimina', __('Lo que te resta'),
+            `${dimLabel[drD.dimension] || drD.dimension} "${this._causalValueLabel(drD.dimension, drD.value)}"`,
+            __('Es de lo que más usas ({n} posts) y rinde por debajo de tu promedio: tu audiencia no conecta ahí.', { n: dn }),
+            __('Replantéalo o redúcelo y observa el efecto; reasigna ese volumen a lo que sí te funciona.'),
+            evidLine(dn, Number(drD.lift_pct))),
         };
       }
-      if (explota  && !explota.impact)  explota.impact  = 'alto';
-      if (optimiza && !optimiza.impact) optimiza.impact = 'medio';
-      if (elimina  && !elimina.impact)  elimina.impact  = 'medio';
 
-      // VIGILA (4ta card) = riesgo de marca desde dashboard_brand_alert_score.
+      // ── RIESGO: alerta de marca (sentimiento / flags). Ya es estratégico.
       const alertRows = Array.isArray(data?.alertScore?.data) ? data.alertScore.data : [];
       const risk = alertRows
-        .filter((r) => Number(r.risk_score) > 0 || Number(r.high_risk_posts) > 0 || Number(r.negative_sentiment_ratio) > 0)
+        .filter((x) => Number(x.risk_score) > 0 || Number(x.high_risk_posts) > 0 || Number(x.negative_sentiment_ratio) > 0)
         .sort((a, b) => Number(b.risk_score) - Number(a.risk_score))[0];
       let vigila = null;
       if (risk) {
         const neg = Math.round(Number(risk.negative_sentiment_ratio || 0) * 100);
         const parts = [];
-        if (Number(risk.high_risk_posts) > 0) parts.push(`${Number(risk.high_risk_posts)} posts de riesgo`);
-        if (neg > 0) parts.push(`${neg}% sentimiento negativo`);
-        if (Number(risk.flags_count) > 0) parts.push(`${Number(risk.flags_count)} flags`);
+        if (Number(risk.high_risk_posts) > 0) parts.push(__('{n} posts de riesgo', { n: Number(risk.high_risk_posts) }));
+        if (neg > 0) parts.push(__('{n}% sentimiento negativo', { n: neg }));
+        if (Number(risk.flags_count) > 0) parts.push(__('{n} flags', { n: Number(risk.flags_count) }));
         vigila = {
-          title: risk.brand_name || 'Riesgo de marca',
-          metric: parts[0] || `riesgo ${Math.round(Number(risk.risk_score))}`,
-          why: parts.slice(1).join(' · ') || (risk.description || 'Revisa sentimiento y flags.'),
-          impact: Number(risk.risk_score) >= 50 ? 'alto' : 'medio',
-          detailDim: 'sentiment', detailValue: 'negative',
+          title: __('Sentimiento de tu marca'),
+          metric: parts[0] || __('riesgo {n}', { n: r(risk.risk_score) }),
+          metricSub: parts.slice(1).join(' · '),
+          action: __('Revísalo'), impact: Number(risk.risk_score) >= 50 ? 'alto' : 'medio', earlySignal: false,
+          detail: detail('vigila', __('Riesgo'), risk.brand_name || __('Riesgo de marca'),
+            __('Tu sentimiento negativo y/o los flags están por encima de lo saludable. Sin atención, erosiona la percepción de marca.'),
+            __('Revisa los posts señalados y los comentarios negativos; ajusta el mensaje o responde donde haga falta.'),
+            risk.description || __('Revisa el sentimiento y los flags marcados.')),
         };
       }
 
