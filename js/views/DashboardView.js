@@ -609,16 +609,18 @@ class DashboardView extends BaseView {
         <div class="plan-detail-h">${this._esc(s.h)}</div>
         <div class="plan-detail-b">${this._esc(s.b)}</div>
       </div>`).join('');
-    // Riesgo compuesto: lista de señales de riesgo (findings) por severidad.
-    const sevCls = (s) => (Number(s) >= 50 ? 'bad' : Number(s) >= 25 ? 'mid' : 'low');
+    // Lista de findings (señales) por severidad — la usan Riesgo y Lo que te resta.
+    const sevCls = (s) => (Number(s) >= 40 ? 'bad' : Number(s) >= 15 ? 'mid' : 'low');
+    const CAT = { reputacion: __('Reputación'), desempeno: __('Desempeño'), tono: __('Tono'), tema: __('Tema'), formato: __('Formato'), pilar: __('Pilar'), caida_causal: __('Tendencia') };
+    const findNum = (f) => (f.lift != null ? `${f.lift}%` : (f.total != null ? `${f.n}/${f.total}` : (f.n != null ? String(f.n) : '')));
     const findBlock = (Array.isArray(detail.findings) && detail.findings.length) ? `
       <div class="plan-detail-sec">
         <div class="plan-find">
           ${detail.findings.map((f) => `
             <div class="plan-find-row plan-find-row--${sevCls(f.severity)}">
-              <span class="plan-find-cat">${this._esc(f.category === 'reputacion' ? __('Reputación') : __('Desempeño'))}</span>
+              <span class="plan-find-cat">${this._esc(CAT[f.category] || CAT[f.key] || f.category || f.key || '')}</span>
               <span class="plan-find-label">${this._esc(f.label || '')}</span>
-              <span class="plan-find-n">${f.total != null ? `${this._esc(String(f.n))}/${this._esc(String(f.total))}` : this._esc(String(f.n))}</span>
+              <span class="plan-find-n">${this._esc(findNum(f))}</span>
             </div>`).join('')}
         </div>
       </div>` : '';

@@ -303,44 +303,40 @@
         };
       }
 
-      // ── LO QUE TE RESTA: la mayor fuga FIABLE. Compite pilar sobre-invertido
-      //    (share alto + lift<0) vs dimension muy usada (n alto + lift<0).
+      // ── LO QUE TE RESTA: SÍNTESIS de fugas (no una). Viene de
+      //    dashboard_brand_what_drags: drags de tono/tema/formato + pilar
+      //    sobre-invertido + caída causal temporal, rankeados por costo.
       let elimina = null;
-      const drP = pillars.filter((p) => p.lift < 0 && p.n >= N_MIN)
-        .sort((a, b) => (b.share * Math.abs(b.lift)) - (a.share * Math.abs(a.lift)))[0];
-      const drD = drags.filter((d) => (Number(d.post_count) || 0) >= N_MIN)
-        .sort((a, b) => ((Number(b.post_count) || 0) * Math.abs(b.lift_pct)) - ((Number(a.post_count) || 0) * Math.abs(a.lift_pct)))[0];
-      // Coste comparable = fracción de contenido afectada × magnitud del lift.
-      // (Sin normalizar, share% [0-100] y post_count [conteo] no son comparables y
-      // el pilar siempre ganaría, ocultando fugas tácticas muy usadas.)
-      const totalPosts = Number(data?.optimizationInsights?.data?.posts_analyzed)
-        || pillars.reduce((s, p) => s + p.n, 0) || 0;
-      const costP = drP ? (drP.share / 100) * Math.abs(drP.lift) : -1;
-      const costD = (drD && totalPosts > 0) ? ((Number(drD.post_count) || 0) / totalPosts) * Math.abs(drD.lift_pct) : -1;
-      if (drP && costP >= costD) {
-        elimina = {
-          title: __('Tu pilar "{p}" está sobre-invertido', { p: drP.name }),
-          metric: `−${Math.abs(r(drP.lift))}%`,
-          metricSub: __('vs tu promedio · {s}% de tu mezcla · {n} posts', { s: r(drP.share), n: drP.n }),
-          action: __('Replantéalo'), impact: 'medio', earlySignal: false,
-          detail: detail('elimina', __('Lo que te resta'),
-            __('Pilar "{p}" · sobre-invertido', { p: drP.name }),
-            __('Le dedicas {s}% de tu contenido pero rinde por debajo de tu promedio: te cuesta alcance y energía creativa.', { s: r(drP.share) }),
-            __('Baja su frecuencia y reinvierte ese espacio en tu pilar más fuerte o en el subexplotado. Antes de cortar, prueba renovar el ángulo creativo.'),
-            evidLine(drP.n, drP.lift)),
+      const wd = data?.whatDrags?.data || null;
+      const wdFindings = (wd && Array.isArray(wd.findings)) ? wd.findings : [];
+      const wdDom = (wd && wd.dominant) || wdFindings[0] || null;
+      if (wdDom) {
+        const subj = wdDom.subject || '';
+        const lift = Math.abs(r(wdDom.lift));
+        const titleByKey = {
+          pilar:        __('Pilar "{s}" te resta', { s: subj }),
+          tono:         __('Tu tono "{s}" te resta', { s: subj }),
+          tema:         __('Tu tema "{s}" te resta', { s: subj }),
+          formato:      __('Tu formato "{s}" te resta', { s: subj }),
+          caida_causal: __('Tu impacto viene cayendo'),
         };
-      } else if (drD) {
-        const dn = Number(drD.post_count) || 0;
+        const subByKey = {
+          pilar:        __('sobre-invertido en tu mezcla ({n} posts)', { n: wdDom.n }),
+          caida_causal: __('desde que usas más "{s}"', { s: subj }),
+        };
         elimina = {
-          title: __('Tu {d} "{v}" es tu mayor fuga', { d: (dimLabel[drD.dimension] || drD.dimension).toLowerCase(), v: this._causalValueLabel(drD.dimension, drD.value) }),
-          metric: `−${Math.abs(r(drD.lift_pct))}%`,
-          metricSub: __('vs tu promedio · {n} posts (de lo que más usas)', { n: dn }),
-          action: __('Replantéalo'), impact: 'medio', earlySignal: false,
-          detail: detail('elimina', __('Lo que te resta'),
-            `${dimLabel[drD.dimension] || drD.dimension} "${this._causalValueLabel(drD.dimension, drD.value)}"`,
-            __('Es de lo que más usas ({n} posts) y rinde por debajo de tu promedio: tu audiencia no conecta ahí.', { n: dn }),
-            __('Replantéalo o redúcelo y observa el efecto; reasigna ese volumen a lo que sí te funciona.'),
-            evidLine(dn, Number(drD.lift_pct))),
+          title: titleByKey[wdDom.key] || __('"{s}" te resta', { s: subj }),
+          metric: `−${lift}%`,
+          metricSub: subByKey[wdDom.key] || (wdDom.n != null ? __('{n} posts bajo tu promedio', { n: wdDom.n }) : __('bajo tu promedio')),
+          action: __('Replantéalo'), impact: Number(wdDom.severity) >= 15 ? 'alto' : 'medio', earlySignal: false,
+          detail: {
+            color: 'elimina', category: __('Lo que te resta'), title: __('Fugas de tu marca'),
+            findings: wdFindings,
+            sections: [{
+              h: __('¿Qué te está costando?'),
+              b: __('Estas son las fugas que más te restan impacto, de mayor a menor — combina tonos, temas, formatos y pilares. Replantea las de arriba primero:'),
+            }],
+          },
         };
       }
 

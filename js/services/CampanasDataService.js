@@ -124,7 +124,7 @@ class CampanasDataService {
       vulnerabilities,
       optimizationInsights, alertScore,
       activityHistory, engagementTrend, sentimentActivity, postingHours,
-      estrategiaTopics, topHighlightedPosts, comments, postReception,
+      estrategiaTopics, topHighlightedPosts, comments, postReception, whatDrags,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
@@ -223,6 +223,12 @@ class CampanasDataService {
         p_org_id: this.orgId, p_date_from: '2000-01-01T00:00:00Z', p_date_to: new Date().toISOString(),
         p_brand_container_ids: bcids, p_min_comments: 2, p_limit: 6,
       }),
+      // "Lo que te resta" como SÍNTESIS: drags de tono/tema/formato + pilar
+      // sobre-invertido + caída causal temporal. Findings rankeados por costo.
+      this.sb.rpc('dashboard_brand_what_drags', {
+        p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
+        p_brand_container_ids: bcids, p_min_posts: 3,
+      }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -252,6 +258,7 @@ class CampanasDataService {
       topPosts:         u(topHighlightedPosts),
       comments:         u(comments),
       postReception:    u(postReception),
+      whatDrags:        u(whatDrags),
 
       whatWorks: u(whatWorks),
       audiencePatterns: u(audiencePatterns),
