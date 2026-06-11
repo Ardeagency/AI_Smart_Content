@@ -1,7 +1,14 @@
 # FEAT-040 — Recolección de comentarios de publicaciones propias (vía Meta API)
 
-> Estado: **A implementado + desplegado; B/C ya resueltos; D pendiente.** Decisiones
-> tomadas: scoring = batch (cron existente); cobertura = todos los posts propios.
+> Estado: **AUTOMÁTICO Y VALIDADO (2026-06-11). Solo falta D.**
+> La recolección quedó AUTOMÁTICA dentro del sensor `meta_posts` de ai-engine (el
+> camino automático real, no el de Netlify). `fetchOwnPostComments` (social.tools.js)
+> + persistencia en el branch `meta_posts` de social-scraper.service.js. El cron
+> `python-analyzer-comments-cron` los puntúa. Validado en IGNIS: 35 comentarios
+> propios traídos por Graph API → puntuados (17 POS / 16 NEU / 2 NEG) → la RPC
+> `dashboard_brand_comment_risk` ya devuelve datos reales (2 hostiles, risk_score 14).
+> Nota: tambien quedó en el sync de Netlify (api-brand-sync-meta) para el on-demand.
+> Decisiones: scoring = batch (cron existente); cobertura = todos los posts propios.
 > Origen: el sentimiento/riesgo de marca
 > debe leer comentarios de la audiencia, no el texto del post (ver
 > `docs/MODELO-CARDS-ACCION-ESTRATEGICAS.md` y memoria `feedback_sentiment_from_comments_not_posts`).
