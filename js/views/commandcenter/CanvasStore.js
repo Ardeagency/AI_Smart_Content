@@ -1029,26 +1029,11 @@
   // — el usuario no deberia memorizar direccionalidad del drag.
   // ------------------------------------------------------------------
 
-  // Topologia REAL (rediseno 2026-06-11, keyed por tipo granular de _typeFromKey).
-  // El TRIGGER (campana CONCEPTUAL) define sus ingredientes —audiencia + entidades
-  // (producto/servicio/lugar/actor)— y arranca la produccion (brief). Audiencia y
-  // entidades SOLO se conectan al trigger, a nada mas (son hojas, 1 puerto). La
-  // produccion fluye brief -> flow -> campana REAL (cierre pago; despliega adsets/ads
-  // como satelites). Bidireccional: A→B OK si A lista B o B lista A.
-  const CC_CONNECTION_RULES = {
-    'campaign-concept': ['audience', 'product', 'service', 'place', 'character', 'brief'],
-    'campaign-real':    [],                               // cierre: recibe de flow; no inicia
-    audience:  [],                                        // solo trigger conceptual
-    product:   [],
-    service:   [],
-    place:     [],
-    character: [],
-    brief:     ['flow'],
-    flow:      ['campaign-real'],                         // produccion -> campana real (cierre)
-    sticky:    [],
-    group:     [],
-  };
-
+  // Conexion MANUAL libre (2026-06-11): el usuario arma su estrategia conectando
+  // lo que quiera. La topologia "real" (trigger CONCEPTUAL define ingredientes y
+  // arranca produccion; cierre en campana real) se EXPRESA por el layout en arbol
+  // (_posFor) y el estilo de cable (punteado = ingrediente, solido = produccion),
+  // NO por bloqueo duro. Las reglas estrictas frustraban la conexion manual.
   P._typeFromKey = function (key) {
     if (!key) return null;
     if (key.startsWith('aud:'))    return 'audience';
@@ -1067,20 +1052,16 @@
     return null;
   };
 
-  /** Bidireccional: A→B esta OK si CC_CONNECTION_RULES[A] contiene B
-      o CC_CONNECTION_RULES[B] contiene A. */
+  /** Conexion manual permisiva: se permite cualquier par de nodos distintos,
+      salvo mismo-tipo-exacto y anotaciones (sticky/group, sin puertos). */
   P._canConnect = function (fromKey, toKey) {
     if (!fromKey || !toKey || fromKey === toKey) return false;
-    // Tipos granulares directos: campaign-concept (trigger) y campaign-real (cierre)
-    // tienen reglas distintas (ver CC_CONNECTION_RULES). conceptual<->real queda
-    // bloqueado (ninguno se lista al otro = es la misma fila convergida).
     const a = this._typeFromKey(fromKey);
     const b = this._typeFromKey(toKey);
     if (!a || !b) return false;
     if (a === b) return false; // mismo tipo no se conecta entre si
-    const allowedFromA = CC_CONNECTION_RULES[a] || [];
-    const allowedFromB = CC_CONNECTION_RULES[b] || [];
-    return allowedFromA.includes(b) || allowedFromB.includes(a);
+    if (a === 'sticky' || a === 'group' || b === 'sticky' || b === 'group') return false;
+    return true;
   };
 
   // Override _addLink: bloquea silenciosamente si la conexion no es valida.
