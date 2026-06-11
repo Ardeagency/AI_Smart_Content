@@ -1070,15 +1070,15 @@
   cursor: pointer;
 }
 .cc-strategy-item.is-active {
-  background: rgba(106, 163, 255, 0.10);
-  border-color: rgba(106, 163, 255, 0.42);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.22);
 }
-.cc-strategy-item.is-active .cc-lib-item-name { color: #d8e4fc; }
+.cc-strategy-item.is-active .cc-lib-item-name { color: #ececec; }
 .cc-strategy-check {
   position: absolute;
   right: 9px; top: 50%;
   transform: translateY(-50%);
-  color: #b9d5ff;
+  color: #cfd3d8;
   font-size: 0.68rem;
 }
 .cc-strategy-create {
@@ -1096,9 +1096,9 @@
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 .cc-strategy-create:hover {
-  background: rgba(106, 163, 255, 0.08);
-  border-color: rgba(106, 163, 255, 0.42);
-  color: #d8e4fc;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #e8eaed;
 }
 .cc-strategy-create i { font-size: 0.7rem; }
 
@@ -1310,8 +1310,8 @@
 .cc-satellite--adset .cc-satellite-icon {
   width: 36px; height: 36px;
   border-radius: 8px;
-  background: rgba(106, 163, 255, 0.14);
-  color: #b9d5ff;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cfd3d8;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 0.85rem;
 }
@@ -2072,18 +2072,18 @@
    Visual distintivo: icono diana en cuadrado de accent + ring sutil. Todos
    los demas nodos pueden conectarse a este (es el centro de la estrategia). */
 .cc-node--anchor {
-  border-color: rgba(106, 163, 255, 0.45) !important;
-  box-shadow: 0 0 0 1px rgba(106, 163, 255, 0.18), 0 2px 6px rgba(0,0,0,0.25), 0 12px 28px rgba(0,0,0,0.18);
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 2px 6px rgba(0,0,0,0.25), 0 12px 28px rgba(0,0,0,0.18);
 }
 .cc-node--anchor.cc-node--selected {
-  box-shadow: 0 0 0 2px #6aa3ff, 0 0 0 6px rgba(106, 163, 255, 0.18), 0 12px 28px rgba(0,0,0,0.30);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55), 0 12px 28px rgba(0,0,0,0.30);
 }
 .cc-node--anchor .cc-node-head {
-  background: rgba(106, 163, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
 }
 .cc-node--anchor .cc-node-icon--anchor {
-  background: rgba(106, 163, 255, 0.20);
-  color: #b9d5ff;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d8dade;
   border-radius: 8px;
   width: 28px; height: 28px;
   display: inline-flex; align-items: center; justify-content: center;
@@ -2091,19 +2091,18 @@
   flex: 0 0 auto;
 }
 .cc-node--anchor .cc-node-title {
-  color: #d8e4fc;
+  color: #ececec;
   font-weight: 700;
 }
 
-/* Boton toolbar del ancla (Objetivo de Campana) con tinte azul para senalar
-   que ese boton crea el nodo PADRE de la estrategia. */
+/* Boton toolbar del ancla (Objetivo de Campana): tinte neutro (crea el nodo padre). */
 .cc-canvas-btn--anchor {
-  background: rgba(106, 163, 255, 0.14) !important;
-  color: #b9d5ff !important;
-  border: 1px solid rgba(106, 163, 255, 0.32) !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: #e8eaed !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
 }
-.cc-canvas-btn--anchor:hover { background: rgba(106, 163, 255, 0.22) !important; }
-.cc-canvas-btn--anchor i { color: #b9d5ff; }
+.cc-canvas-btn--anchor:hover { background: rgba(255, 255, 255, 0.16) !important; }
+.cc-canvas-btn--anchor i { color: #e8eaed; }
 
 /* F2: rediseno nodo Campana — n8n-style limpio con la paleta de la
    plataforma (bg-card #141517 + border-divider #212126/#242424). Sin
