@@ -62,6 +62,7 @@ const SIDEBAR_USER_CONFIG = {
       id: 'places',
       label: 'Places',
       icon: 'fa-map-marker-alt',
+      iconSrc: '/recursos/icons/Places.svg',
       route: 'places',
       requireCap: 'brand.identity.edit'
     },
@@ -564,7 +565,7 @@ class Navigation {
                 aria-label="${__('Actividad de Vera')}"
                 id="headerActivityBtn"
               >
-                <i class="fas fa-heart-pulse"></i>
+                <img src="/recursos/icons/Actividad.svg" class="nav-icon nav-icon-img" alt="" width="20" height="20">
               </button>
               <span class="header-activity-badge" id="headerActivityBadge" hidden aria-hidden="true"></span>
             </span>`;

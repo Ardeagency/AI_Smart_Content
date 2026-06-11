@@ -647,6 +647,8 @@
 .header-user-menu-wrap .user-menu-btn { width: 34px; height: 34px; border-radius: 9px; }
 #headerActivityBtn { font-size: 18px; }
 #headerActivityBtn .fa-heart-pulse { font-size: 18px; }
+#headerActivityBtn .nav-icon-img,
+#headerActivityBtn img.nav-icon { width: 20px !important; height: 20px !important; }
 .header-notifications-wrap .nav-icon-img,
 .header-notifications-wrap img.nav-icon { width: 20px !important; height: 20px !important; }
 /* El badge de notificaciones acompana el icono mas grande */
