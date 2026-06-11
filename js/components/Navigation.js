@@ -671,12 +671,22 @@ class Navigation {
 
   _renderActivityTasks(body, list) {
     if (!list.length) { this._activityEmpty(body, 'fa-circle-check', 'Sin actividad reciente de Vera para esta marca.'); return; }
-    body.innerHTML = `<ol class="activity-list">${list.map((t) => this._activityTaskItemHtml(t)).join('')}</ol>`;
+    const byNewest = (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    // Lo que necesita decision humana (pending) va primero, ordenado por prioridad; lo demas debajo.
+    const pending = list.filter((t) => t.status === 'pending')
+      .sort((a, b) => (Number(b.priority) || 0) - (Number(a.priority) || 0) || byNewest(a, b));
+    const rest = list.filter((t) => t.status !== 'pending').sort(byNewest);
+    const section = (label, items) => items.length
+      ? `<li class="activity-section"><span>${__(label)}</span><span class="activity-section-count">${items.length}</span></li>${items.map((t) => this._activityTaskItemHtml(t)).join('')}`
+      : '';
+    body.innerHTML = `<ol class="activity-list">${section('Acciones requeridas', pending)}${section('Actividad reciente', rest)}</ol>`;
   }
 
   _activityTaskItemHtml(t) {
     const meta   = this._activityActionMeta(t.action_type);
     const st     = this._activityActionStatus(t.status);
+    // Completada/fallida = estado terminal → se atenua (opaco), ya no requiere atencion.
+    const done   = st.kind === 'ok' || st.kind === 'fail';
     const detail = String(t.vera_reasoning || t.proposed_payload?.summary || '').trim();
     const det    = detail ? `<p class="activity-item-detail">${_escapeHtml(detail.length > 160 ? detail.slice(0, 160) + '…' : detail)}</p>` : '';
     const conf   = Number.isFinite(Number(t.vera_confidence)) ? Math.round(Number(t.vera_confidence) * 100) + '%' : '';
@@ -689,8 +699,7 @@ class Navigation {
             <button type="button" class="activity-mini-btn" data-act-dismiss>${__('Descartar')}</button>`
       : '';
     return `
-      <li class="activity-item activity-item--${st.kind}" data-task-id="${_escapeHtml(t.id)}">
-        <span class="activity-node" style="--act:${meta.color};"><i class="${meta.icon}"></i></span>
+      <li class="activity-item activity-item--${st.kind}${done ? ' activity-item--done' : ''}" data-task-id="${_escapeHtml(t.id)}">
         <div class="activity-card">
           <div class="activity-item-head">
             <span class="activity-item-title">${_escapeHtml(meta.title)}</span>
@@ -727,9 +736,9 @@ class Navigation {
     const st      = this._activityMissionStatus(m.status);
     const summary = this._missionSummary(m);
     const det     = summary ? `<p class="activity-item-detail">${_escapeHtml(summary)}</p>` : '';
+    const done = st.kind === 'ok' || st.kind === 'fail';
     return `
-      <li class="activity-item">
-        <span class="activity-node" style="--act:${st.color};"><i class="${st.icon}"></i></span>
+      <li class="activity-item${done ? ' activity-item--done' : ''}">
         <div class="activity-card">
           <div class="activity-item-head">
             <span class="activity-item-title">${_escapeHtml(this._humanizeMission(m.mission_type))}</span>
@@ -851,7 +860,9 @@ class Navigation {
         .eq('status', 'pending');
       if (error) throw error;
       const n = Number(count) || 0;
-      if (n > 0) { badge.textContent = n > 9 ? '9+' : String(n); badge.hidden = false; badge.removeAttribute('aria-hidden'); }
+      // Punto rojo (sin número), igual que la campana: solo señala "hay actividad pendiente".
+      badge.textContent = '';
+      if (n > 0) { badge.hidden = false; badge.removeAttribute('aria-hidden'); }
       else { badge.hidden = true; badge.setAttribute('aria-hidden', 'true'); }
     } catch (_) { badge.hidden = true; }
   }

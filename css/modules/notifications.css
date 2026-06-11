@@ -518,17 +518,17 @@
 /* ============================================================================
    ACTIVIDAD — boton del header + panel flyout con 2 tabs (Tareas / Misiones)
    ============================================================================ */
-.header-activity-wrap { position: relative; display: inline-flex; }
+.header-activity-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+/* Mismo patrón que la campana: punto rojo de "hay actividad pendiente", sin número. */
 .header-activity-badge {
-  position: absolute; top: -2px; right: -2px;
-  min-width: 16px; height: 16px; padding: 0 4px;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 0.625rem; font-weight: 700; line-height: 1;
-  color: #fff; background: #e0563f;
-  border: 1px solid var(--bg-secondary, #141517);
-  border-radius: 999px; pointer-events: none;
+  position: absolute; top: 2px; right: 2px;
+  width: 8px; height: 8px; padding: 0;
+  border-radius: 50%;
+  background: var(--color-error, #ef4444);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
 }
-.header-activity-badge[hidden] { display: none; }
+.header-activity-badge[hidden] { display: none !important; }
 
 .activity-dropdown {
   position: fixed;
@@ -570,19 +570,29 @@
 /* Lista (timeline ligero) */
 .activity-list { list-style: none; margin: 0; padding: 0; }
 .activity-item {
-  display: grid; grid-template-columns: 30px 1fr; gap: 11px;
   padding-bottom: 11px;
 }
-.activity-node {
-  width: 30px; height: 30px; flex: 0 0 30px; margin-top: 1px;
-  display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 50%; font-size: 12px;
-  color: var(--act, #87868b);
-  background: rgba(255, 255, 255, 0.06);
-  background: color-mix(in srgb, var(--act, #87868b) 20%, transparent);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-color: color-mix(in srgb, var(--act, #87868b) 45%, transparent);
+/* Encabezado de grupo: "Acciones requeridas" arriba, "Actividad reciente" debajo. */
+.activity-section {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 2px 8px; margin-top: 2px;
+  font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--text-muted, rgba(212, 209, 216, 0.55));
 }
+.activity-section + .activity-item { margin-top: 0; }
+.activity-list > .activity-item + .activity-section { margin-top: 6px; border-top: 1px solid var(--border-divider, #242424); padding-top: 12px; }
+.activity-section-count {
+  font-size: 0.625rem; font-weight: 600; line-height: 1;
+  min-width: 16px; height: 16px; padding: 0 5px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px;
+  color: var(--text-muted, rgba(212, 209, 216, 0.6));
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-divider, #242424);
+}
+/* Completada/fallida: se atenua para que no compita con lo que requiere accion. */
+.activity-item--done { opacity: 0.5; }
+.activity-item--done:hover { opacity: 0.8; }
 .activity-card {
   min-width: 0;
   background: var(--bg-primary, #0b0b0b);
