@@ -376,27 +376,27 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .tasks-container::after {
   content: '';
   position: absolute;
-  width: 540px;
-  height: 540px;
+  width: 440px;
+  height: 440px;
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.28) 1.3px, transparent 1.6px),
-    radial-gradient(circle, rgba(255, 255, 255, 0.13) 1.3px, transparent 1.6px);
+    radial-gradient(circle, rgba(255, 255, 255, 0.16) 1.1px, transparent 1.4px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.07) 1.1px, transparent 1.4px);
   background-size: 22px 22px, 22px 22px;
   background-position: 0 0, 11px 11px;
 }
 .tasks-container::before {
   top: 0;
   left: 0;
-  -webkit-mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 78%);
-  mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 78%);
+  -webkit-mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.45) 28%, transparent 58%);
+  mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.45) 28%, transparent 58%);
 }
 .tasks-container::after {
   bottom: 0;
   right: 0;
-  -webkit-mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 78%);
-  mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 78%);
+  -webkit-mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.45) 28%, transparent 58%);
+  mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.45) 28%, transparent 58%);
 }
 /* El contenido por encima de los puntitos. */
 .tasks-container > * {
