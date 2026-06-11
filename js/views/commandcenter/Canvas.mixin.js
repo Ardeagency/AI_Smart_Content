@@ -136,11 +136,18 @@
   P._posFor = function (node, audIdx, campIdx, idIdx) {
     const pos = this._positions[node.key];
     if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) return pos;
-    let x, row;
-    if (node.type === 'audience') { x = COL_AUD; row = audIdx; }
-    else if (node.type === 'identity') { x = COL_CAMP + 320; row = idIdx; }
-    else { x = COL_CAMP; row = campIdx; }
-    const next = { x, y: ROW_TOP + row * ROW_GAP };
+    // Layout default en ARBOL (rework 2026-06-11): trigger arriba; audiencia +
+    // entidades como ingredientes abajo; produccion (brief/flow) + cierre a la derecha.
+    const TOP = ROW_TOP;
+    const it = node.identityType;
+    const isProdId = it === 'flows' || it === 'briefs';
+    let x, y;
+    if (node.type === 'campaign-concept')      { x = 360 + campIdx * 380; y = TOP; }
+    else if (node.type === 'campaign-real')    { x = 1180; y = TOP + 300 + campIdx * 180; }
+    else if (node.type === 'audience')         { x = 40 + audIdx * 300; y = TOP + 280; }
+    else if (node.type === 'identity' && isProdId) { x = 800 + idIdx * 300; y = TOP + 60; }
+    else                                       { x = 40 + idIdx * 300; y = TOP + 520; }
+    const next = { x, y };
     this._positions[node.key] = next;
     return next;
   };
@@ -356,7 +363,8 @@
     const chipsC = `${statusLabel ? `<span class="cc-node-chip cc-node-chip--status cc-node-chip--${this.escapeHtml(c.status)}">${this.escapeHtml(statusLabel)}</span>` : ''}${platLabelC ? `<span class="cc-node-chip">${this.escapeHtml(platLabelC)}</span>` : ''}${linked ? `<span class="cc-node-chip cc-node-chip--link" title="Audiencia: ${this.escapeHtml(linkedName)}"><i class="fas fa-link"></i></span>` : ''}`;
     return `
     <div class="cc-node cc-node--campaign cc-node--anchor cc-node--mini" data-node-key="${n.key}" data-type="campaign-concept" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
-      <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Conectar entrada"></span>
+      <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Audiencia"></span>
+      <span class="cc-node-port cc-node-port--bottom2" data-port="bottom2" title="Entidades"></span>
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon cc-node-icon--anchor"><i class="fas fa-bullseye"></i></span>
         <div class="cc-node-head-text">
@@ -460,6 +468,32 @@
     return { x: pr.left + pr.width / 2 - cr.left, y: pr.top + pr.height / 2 - cr.top };
   };
 
+  /** Ancla de arista por POSICION (rework 2026-06-11): entre los puertos VISIBLES
+      del nodo, el mas cercano al nodo `towardKey`. Direccion-agnostico → el cable
+      sale por el lado que mira al otro nodo, sirva cual sea el layout. */
+  P._portAnchor = function (nodeKey, towardKey, canvasRect) {
+    const node = document.querySelector(`.cc-node[data-node-key="${cssEsc(nodeKey)}"]`);
+    if (!node) return null;
+    if (node.style.display === 'none' || node.offsetParent === null) return null;
+    const cr = canvasRect || document.getElementById('ccCanvas')?.getBoundingClientRect();
+    if (!cr) return null;
+    const center = (el) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2 - cr.left, y: r.top + r.height / 2 - cr.top }; };
+    let tx = null, ty = null;
+    const toward = document.querySelector(`.cc-node[data-node-key="${cssEsc(towardKey)}"]`);
+    if (toward) { const tc = center(toward); tx = tc.x; ty = tc.y; }
+    const ports = node.querySelectorAll('.cc-node-port');
+    if (!ports.length) return center(node);
+    let best = null, bestD = Infinity;
+    ports.forEach((p) => {
+      if (p.offsetParent === null) return; // puerto oculto (display:none)
+      const c = center(p);
+      if (tx == null) { if (!best) best = c; return; }
+      const d = (c.x - tx) ** 2 + (c.y - ty) ** 2;
+      if (d < bestD) { bestD = d; best = c; }
+    });
+    return best || center(node);
+  };
+
   /** Cables monocromos: sin color de tipo (rediseno monocromo). */
   P._nodeTypeColor = function () {
     return 'rgba(255, 255, 255, 0.5)';
@@ -517,8 +551,8 @@
     // generaba jank en arrastre/paneo con muchos nodos conectados.
     const updates = [];
     groups.forEach((g) => {
-      const from = this._portCenter(g.getAttribute('data-edge-from'), '.cc-node-port--out', cr);
-      const to   = this._portCenter(g.getAttribute('data-edge-to'), '.cc-node-port--in', cr);
+      const from = this._portAnchor(g.getAttribute('data-edge-from'), g.getAttribute('data-edge-to'), cr);
+      const to   = this._portAnchor(g.getAttribute('data-edge-to'), g.getAttribute('data-edge-from'), cr);
       if (!from || !to) return;
       updates.push({
         g,
@@ -551,8 +585,8 @@
       return el ? el.getAttribute('data-type') : '';
     };
     this._allLinks().forEach((link) => {
-      const from = this._portCenter(link.from, '.cc-node-port--out');
-      const to   = this._portCenter(link.to, '.cc-node-port--in');
+      const from = this._portAnchor(link.from, link.to);
+      const to   = this._portAnchor(link.to, link.from);
       if (!from || !to) return;
 
       const color = this._nodeTypeColor(link.from);
@@ -738,7 +772,7 @@
     if (!this._canvasMouseDown) {
       this._canvasMouseDown = (e) => {
         if (e.button !== 0) return;
-        const port = e.target.closest('.cc-node-port--out');
+        const port = e.target.closest('.cc-node-port');
         if (port) { this._beginConnect(e, port); return; }
 
         // Panel flotante, controles editables y botones de accion: dejar que
@@ -1248,9 +1282,14 @@
 
   /* ── Links: crear / quitar ─────────────────────────────────────────── */
   P._addLink = function (fromKey, toKey) {
-    // Caso especial: audiencia -> campana persiste persona_id en BD.
+    // audiencia <-> campana persiste persona_id en BD (cualquier direccion:
+    // con el trigger arriba se arrastra camp->aud; antes solo aud->camp).
     if (fromKey.startsWith('aud:') && toKey.startsWith('camp:')) {
       this._connectCampaignToPersona(toKey.slice(5), fromKey.slice(4));
+      return;
+    }
+    if (fromKey.startsWith('camp:') && toKey.startsWith('aud:')) {
+      this._connectCampaignToPersona(fromKey.slice(5), toKey.slice(4));
       return;
     }
     // Link libre (visual). Evitar duplicado en cualquier direccion.

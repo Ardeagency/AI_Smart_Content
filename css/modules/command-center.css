@@ -847,21 +847,15 @@
   border-radius: 50%;
   border: 2px solid var(--bg-card, #141517);
   top: 16px;
+  background: var(--cc-accent, #c9cdd3);   /* monocromo */
+  cursor: crosshair;
   z-index: 3;
 }
-/* Puertos tipados: toman el color del tipo del nodo (estilo Weavy). */
-.cc-node-port--out {
-  right: -7px;
-  background: var(--cc-accent, #6aa3ff);
-  cursor: crosshair;
-}
-.cc-node-port--out:hover { box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-accent, #6aa3ff) 35%, transparent); }
-.cc-node-port--in {
-  left: -7px;
-  background: var(--cc-accent, #6aa3ff);
-  opacity: 0.55;
-}
+.cc-node-port:hover { box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-accent, #c9cdd3) 35%, transparent); }
+.cc-node-port--out { right: -7px; }
+.cc-node-port--in  { left: -7px; opacity: 0.55; }
 .cc-node-port--in.cc-node-port--linked { opacity: 1; }
+.cc-node-port--bottom2 { top: auto; bottom: -7px; left: 67%; transform: translateX(-50%); }
 
 /* ── Aristas ───────────────────────────────────────────────────────── */
 .cc-edge-path {
@@ -1772,23 +1766,44 @@
      Nota (canvas_stickies), Grupo (canvas_groups) — visual del usuario,
        sin relacion BD con otros nodos. */
 
-/* Recursos: ocultar port-IN */
-.cc-node--identity[data-identity-type="products"] .cc-node-port--in,
-.cc-node--identity[data-identity-type="services"] .cc-node-port--in,
-.cc-node--identity[data-identity-type="places"]   .cc-node-port--in,
-.cc-node--audience                                .cc-node-port--in {
+/* ── Topologia de puertos (rework 2026-06-11) ─────────────────────────
+   Ingredientes (audiencia + entidades producto/servicio/lugar/actor):
+   UN solo puerto, arriba-centro (se conectan solo al trigger). */
+.cc-node--audience                                  .cc-node-port--in,
+.cc-node--identity[data-identity-type="products"]   .cc-node-port--in,
+.cc-node--identity[data-identity-type="services"]   .cc-node-port--in,
+.cc-node--identity[data-identity-type="places"]     .cc-node-port--in,
+.cc-node--identity[data-identity-type="characters"] .cc-node-port--in {
   display: none !important;
 }
+.cc-node--audience                                  .cc-node-port--out,
+.cc-node--identity[data-identity-type="products"]   .cc-node-port--out,
+.cc-node--identity[data-identity-type="services"]   .cc-node-port--out,
+.cc-node--identity[data-identity-type="places"]     .cc-node-port--out,
+.cc-node--identity[data-identity-type="characters"] .cc-node-port--out {
+  top: -7px; right: auto; left: 50%; transform: translateX(-50%); opacity: 1;
+}
 
-/* Destino final: ocultar port-OUT */
+/* Trigger (campana conceptual): 3 puertos — abajo-izq = audiencia,
+   abajo-der = entidades, derecha = produccion (brief). */
+.cc-node[data-type="campaign-concept"] .cc-node-port--in {
+  top: auto; bottom: -7px; left: 33%; right: auto; transform: translateX(-50%); opacity: 1;
+}
+.cc-node[data-type="campaign-concept"] .cc-node-port--bottom2 {
+  top: auto; bottom: -7px; left: 67%; right: auto; transform: translateX(-50%);
+}
+.cc-node[data-type="campaign-concept"] .cc-node-port--out {
+  top: 50%; right: -7px; left: auto; transform: translateY(-50%);
+}
+
+/* Cierre (campana real): recibe por la izquierda; sin salida. */
 .cc-node--campaign.cc-node--readonly .cc-node-port--out,
-.cc-node[data-type="campaign-real"]  .cc-node-port--out {
-  display: none !important;
+.cc-node[data-type="campaign-real"]  .cc-node-port--out { display: none !important; }
+.cc-node[data-type="campaign-real"]  .cc-node-port--in {
+  top: 50%; left: -7px; transform: translateY(-50%); opacity: 1;
 }
 
-/* Anotaciones: ocultar ambos ports (defensivo; el HTML que genera
-   _nodeStickyHTML / _nodeGroupHTML no los incluye, pero por si algun
-   render legacy los inyecta) */
+/* Anotaciones (sticky/group): sin puertos. */
 .cc-node[data-type="sticky"] .cc-node-port,
 .cc-node[data-type="group"]  .cc-node-port {
   display: none !important;
