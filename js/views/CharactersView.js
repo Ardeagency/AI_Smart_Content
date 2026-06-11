@@ -330,7 +330,7 @@ class CharactersView extends BaseView {
     const body = `
       <div class="attach-product-wizard" data-step="attach">
         <section class="attach-product-step attach-product-step--form" data-panel="attach">
-          <p class="attach-product-intro">${__('Sube fotos del personaje (referencia visual, poses, vestuario). Se crea la ficha y podras completar sus rasgos.')}</p>
+          <p class="attach-product-intro">${__('Sube fotos de referencia del personaje (poses, vestuario, expresiones). Vera analiza la imagen con vision y arma la ficha (rasgos, vestuario, rol). Solo te cobra el costo real de OpenAI.')}</p>
           <div class="attach-product-field-group" data-group="photos">
             <span class="attach-product-field-label">${__('Fotos del personaje')}</span>
             <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="${__('Subir fotos del personaje')}">
@@ -341,21 +341,17 @@ class CharactersView extends BaseView {
             </div>
             <ul class="attach-product-file-list" hidden></ul>
           </div>
-          <label class="attach-product-field">
-            <span class="attach-product-field-label">${__('Nombre del personaje')}</span>
-            <input type="text" class="attach-character-name-input" placeholder="${__('Ej: Mascota de la marca')}" autocomplete="off" />
-          </label>
           <button type="button" class="attach-product-submit" data-action="submit-attach">
-            <i class="fas fa-plus" aria-hidden="true"></i>
-            <span>${__('Crear personaje')}</span>
+            <i class="fas fa-magic" aria-hidden="true"></i>
+            <span>${__('Analizar con Vera')}</span>
           </button>
         </section>
 
         <section class="attach-product-step attach-product-step--loading" data-panel="loading" hidden>
           <div class="attach-product-loading">
             <div class="attach-product-spinner" aria-hidden="true"></div>
-            <h4 class="attach-product-loading-title">${__('Creando personaje')}</h4>
-            <p class="attach-product-loading-hint" data-loading-hint>${__('Subiendo fotos y creando la ficha.')}</p>
+            <h4 class="attach-product-loading-title">${__('Creando ficha del personaje')}</h4>
+            <p class="attach-product-loading-hint" data-loading-hint>${__('Vera esta preparando la ficha. Te recargamos el listado en un momento.')}</p>
           </div>
         </section>
       </div>
@@ -365,7 +361,6 @@ class CharactersView extends BaseView {
     if (!handle) return;
     const root = handle.bodyEl;
     const wizard = root.querySelector('.attach-product-wizard');
-    const nameInput = root.querySelector('.attach-character-name-input');
 
     const goToStep = (step) => {
       if (!wizard) return;
@@ -389,11 +384,7 @@ class CharactersView extends BaseView {
       submitBtn.disabled = true;
       goToStep('loading');
       const hint = root.querySelector('[data-loading-hint]');
-      await this._uploadPhotosAndCreateCharacter({
-        files: photoFiles,
-        name: (nameInput?.value || '').trim(),
-        modalHandle: handle, hintEl: hint
-      });
+      await this._analyzePhotosAndCreateCharacter({ files: photoFiles, modalHandle: handle, hintEl: hint });
     });
   }
 
@@ -450,7 +441,7 @@ class CharactersView extends BaseView {
     return { input, list };
   }
 
-  async _uploadPhotosAndCreateCharacter({ files, name, modalHandle, hintEl }) {
+  async _analyzePhotosAndCreateCharacter({ files, modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
       this._showNotification(__('Sesion no disponible'), 'error');
       modalHandle?.close();
@@ -466,17 +457,17 @@ class CharactersView extends BaseView {
         .from('brand_characters')
         .insert({
           entity_id: entityId,
-          nombre_personaje: name || 'Nuevo personaje',
-          descripcion_personaje: 'Pendiente de descripcion.',
+          nombre_personaje: 'Procesando ficha...',
+          descripcion_personaje: 'Vera esta analizando las fotos del personaje.',
           tipo_personaje: 'otro',
         })
         .select('id').single();
       if (insertError || !created?.id) throw insertError || new Error(__('No se pudo crear el personaje'));
       characterId = created.id;
 
+      // Subir imagenes a bucket character-images
       setHint(__('Subiendo {n} {fotos} a storage...', { n: files.length, fotos: files.length === 1 ? __('foto') : __('fotos') }));
-      const rows = [];
-      let order = 0;
+      const imageUrls = [];
       for (const file of files) {
         const ext = (file.name?.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
         const fileName = `${this.userId}/${characterId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
@@ -485,29 +476,18 @@ class CharactersView extends BaseView {
           .upload(fileName, file, { contentType: file.type, cacheControl: '3600', upsert: false });
         if (uploadError) throw new Error(`Error subiendo "${file.name}": ${uploadError.message}`);
         const { data: { publicUrl } } = this.supabase.storage.from('character-images').getPublicUrl(fileName);
-        rows.push({
-          character_id: characterId,
-          image_url: publicUrl,
-          storage_path: fileName,
-          image_order: order++,
-          image_type: 'reference',
-          download_status: 'stored',
-          mime_type: file.type,
-          bytes: file.size,
-        });
-      }
-      if (rows.length) {
-        const { error: imgErr } = await this.supabase.from('character_images').insert(rows);
-        if (imgErr) throw imgErr;
+        imageUrls.push(publicUrl);
       }
 
-      this._invalidateCache();
-      modalHandle?.close();
-      await this._loadData();
-      this._renderCharactersMasonry();
-      this._showNotification(__('Personaje creado con {count} {fotos}', { count: rows.length, fotos: rows.length === 1 ? __('foto') : __('fotos') }), 'success');
+      setHint(__('Vera esta analizando las fotos con OpenAI Vision...'));
+      await this._callFicheCharacterFunction({
+        characterId,
+        payload: { character_id: characterId, organization_id: this.organizationId, image_urls: imageUrls },
+        modalHandle, setHint
+      });
+      characterId = null;
     } catch (err) {
-      console.error('CharactersView _uploadPhotosAndCreateCharacter:', err);
+      console.error('CharactersView _analyzePhotosAndCreateCharacter:', err);
       if (characterId) {
         try { await this.supabase.from('brand_characters').delete().eq('id', characterId); }
         catch (delErr) { console.warn('No se pudo limpiar placeholder:', delErr); }
@@ -516,6 +496,54 @@ class CharactersView extends BaseView {
       this._showNotification(err?.message || __('No se pudo crear el personaje'), 'error');
       modalHandle?.close();
     }
+  }
+
+  async _callFicheCharacterFunction({ characterId, payload, modalHandle, setHint }) {
+    const { data: sessionData } = await this.supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) throw new Error(__('No hay sesion activa'));
+
+    const resp = await fetch('/.netlify/functions/api-characters-generate-fiche', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload),
+    });
+    let result;
+    try { result = await resp.json(); }
+    catch (_) {
+      const text = await resp.text().catch(() => '');
+      throw new Error(`Gateway HTTP ${resp.status}: ${text.slice(0, 200) || 'sin body'}`);
+    }
+    if (!resp.ok || !result.ok) {
+      const errMsg = result.error || `HTTP ${resp.status}`;
+      const detail = result.detail ? ` (${result.detail})` : '';
+      if (resp.status === 402) {
+        this._showNotification(__('Creditos insuficientes. Necesitas {n} creditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
+      } else {
+        this._showNotification(__('Error generando ficha: {msg}', { msg: `${errMsg}${detail}` }), 'error');
+      }
+      throw new Error(errMsg);
+    }
+
+    setHint(__('Ficha generada (costo: {n} creditos). Recargando listado...', { n: result.credits_charged.toFixed(4) }));
+    this._invalidateCache();
+    window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
+    modalHandle?.close();
+    const imgCount = result.images?.inserted || 0;
+    if (result.images?.error) {
+      this._showNotification(__('Ficha generada · imagenes no se vincularon: {err}', { err: result.images.error }), 'error');
+    } else {
+      this._showNotification(
+        __('Ficha de personaje generada · {n} creditos · {count} {fotos}', {
+          n: result.credits_charged.toFixed(4),
+          count: imgCount,
+          fotos: imgCount === 1 ? __('foto') : __('fotos'),
+        }),
+        'success'
+      );
+    }
+    await this._loadData();
+    this._renderCharactersMasonry();
   }
 
   _showNotification(message, type = 'info') {
