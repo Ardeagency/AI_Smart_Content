@@ -217,7 +217,6 @@
         <select class="cc-field-input cc-field-select" data-field="${field}">${opts}</select>
       </div>`;
   };
-  P._linesOf = function (arr) { return Array.isArray(arr) ? arr.join('\n') : ''; };
 
   /** Editor de array tipo chips/tags con tope (no sobresaturar al LLM). */
   P._fieldTags = function (label, field, arr, max) {
@@ -260,14 +259,6 @@
         <div class="cc-field-head"><span class="cc-field-label">Objetivos de genero</span><span class="cc-field-type">array</span></div>
         <div class="cc-checks">${opt('male', 'Hombres')}${opt('female', 'Mujeres')}<span class="cc-checks-hint">${set.size ? '' : 'vacio = todos'}</span></div>
       </div>`;
-  };
-
-  P._nodeActionsHTML = function (collapsed) {
-    return `
-        <div class="cc-node-actions">
-          <button type="button" class="cc-node-act cc-node-collapse" title="${collapsed ? 'Expandir' : 'Colapsar'}"><i class="fas fa-${collapsed ? 'chevron-down' : 'chevron-up'}"></i></button>
-          <button type="button" class="cc-node-act cc-node-delete" title="Eliminar"><i class="fas fa-trash"></i></button>
-        </div>`;
   };
 
   P._nodeAudienceHTML = function (n, pos) {
@@ -602,23 +593,6 @@
     if (this._focusSet) this._applyFocus();
   };
 
-  P._ensureArrowMarker = function (svg) {
-    if (svg.querySelector('#ccEdgeArrow')) return;
-    const defs = document.createElementNS(NS, 'defs');
-    const marker = document.createElementNS(NS, 'marker');
-    marker.setAttribute('id', 'ccEdgeArrow');
-    marker.setAttribute('viewBox', '0 0 10 10');
-    marker.setAttribute('refX', '8'); marker.setAttribute('refY', '5');
-    marker.setAttribute('markerWidth', '6'); marker.setAttribute('markerHeight', '6');
-    marker.setAttribute('orient', 'auto-start-reverse');
-    const path = document.createElementNS(NS, 'path');
-    path.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-    path.setAttribute('class', 'cc-edge-arrow-head');
-    marker.appendChild(path);
-    defs.appendChild(marker);
-    svg.appendChild(defs);
-  };
-
   // ------------------------------------------------------------------
   // Persistencia del vinculo (BD live)
   // ------------------------------------------------------------------
@@ -822,11 +796,6 @@
           e.preventDefault(); e.stopPropagation();
           if (type === 'identity') this._removeIdentityFromCanvas(nodeEl.getAttribute('data-identity-type'), id);
           else this._removeRealFromCanvas(id);
-          return;
-        }
-        if (e.target.closest('.cc-node-expand-btn')) {
-          e.preventDefault(); e.stopPropagation();
-          this._toggleRealExpand(id, nodeEl);
           return;
         }
         if (e.target.closest('.cc-node-delete')) {
@@ -1594,33 +1563,6 @@
   // Fuente: ad_insights_daily (metricas por external_ad_id/external_adset_id)
   // + runs_outputs (copy generado, vinculado por external_ad_id).
   // ------------------------------------------------------------------
-  P._toggleRealExpand = async function (campId, nodeEl) {
-    if (!this._expandedReal) this._expandedReal = new Set();
-    const key = String(campId);
-    const expanding = !this._expandedReal.has(key);
-    if (expanding) this._expandedReal.add(key); else this._expandedReal.delete(key);
-
-    nodeEl.classList.toggle('cc-node--expanded', expanding);
-    const btn = nodeEl.querySelector('.cc-node-expand-btn');
-    const cont = nodeEl.querySelector('.cc-node-ads');
-    if (btn) btn.innerHTML = `<i class="fas fa-chevron-${expanding ? 'up' : 'down'}"></i><span>${expanding ? 'Ocultar conjuntos y ads' : 'Ver conjuntos y ads'}</span>`;
-    if (!cont) return;
-
-    if (!expanding) { cont.style.display = 'none'; cont.innerHTML = ''; this._renderEdges(); return; }
-    cont.style.display = '';
-
-    const cached = this._adData[key];
-    if (cached) { cont.innerHTML = this._adsHTML(campId); this._renderEdges(); return; }
-
-    cont.innerHTML = '<div class="cc-ads-loading"><i class="fas fa-spinner fa-spin"></i> Cargando conjuntos y ads…</div>';
-    this._renderEdges();
-    await this._fetchCampaignAds(campId);
-    // El nodo pudo re-renderizarse; re-localizar el contenedor por id.
-    const cont2 = document.querySelector(`.cc-node-ads[data-ads-for="${cssEsc(key)}"]`);
-    if (cont2 && this._expandedReal.has(key)) { cont2.style.display = ''; cont2.innerHTML = this._adsHTML(campId); }
-    this._renderEdges();
-  };
-
   P._fetchCampaignAds = async function (campId) {
     const key = String(campId);
     if (this._adData[key]) return this._adData[key];
@@ -1686,33 +1628,6 @@
       this._adData[key] = { adsets: [], error: e?.message || 'error' };
     }
     return this._adData[key];
-  };
-
-  P._adsHTML = function (campId) {
-    const data = this._adData[String(campId)];
-    if (!data) return '';
-    if (data.error) return `<div class="cc-ads-empty"><i class="fas fa-triangle-exclamation"></i> No se pudieron cargar los ads (${this.escapeHtml(String(data.error))}).</div>`;
-    if (!data.adsets.length) return '<div class="cc-ads-empty"><i class="fas fa-circle-info"></i> Sin datos de ads para esta campana todavia.</div>';
-    const fmt = (v) => { const n = Number(v); return Number.isFinite(n) ? (n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n.toLocaleString('es-ES')) : '0'; };
-    const shortId = (id) => { const s = String(id || ''); return s.length > 10 ? '…' + s.slice(-8) : s; };
-
-    return data.adsets.map((aset) => `
-      <div class="cc-adset">
-        <div class="cc-adset-head">
-          <i class="fas fa-layer-group"></i>
-          <span class="cc-adset-name">${this.escapeHtml(aset.name || (aset.id === 'sin-conjunto' ? 'Conjunto' : shortId(aset.id)))}</span>
-          <span class="cc-adset-meta">${aset.ads.length} ad${aset.ads.length === 1 ? '' : 's'} · ${fmt(aset.spend)} gasto · ${fmt(aset.conv)} result.</span>
-        </div>
-        <div class="cc-ad-list">
-          ${aset.ads.map((ad) => `
-            <div class="cc-ad">
-              <div class="cc-ad-head"><i class="fas fa-image"></i><span class="cc-ad-name">${this.escapeHtml(ad.name || shortId(ad.id))}</span></div>
-              ${ad.title ? `<div class="cc-ad-headline">${this.escapeHtml(ad.title)}</div>` : ''}
-              ${ad.body || ad.copy ? `<div class="cc-ad-copy">${this.escapeHtml(ad.body || ad.copy)}</div>` : ''}
-              <div class="cc-ad-stats"><span>${fmt(ad.impr)} impr.</span><span>${fmt(ad.clicks)} clics</span><span>${fmt(ad.spend)} gasto</span><span>${fmt(ad.conv)} result.</span></div>
-            </div>`).join('')}
-        </div>
-      </div>`).join('');
   };
 
   // ------------------------------------------------------------------

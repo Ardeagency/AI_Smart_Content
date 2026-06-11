@@ -88,12 +88,6 @@
 .cc-camp-row[draggable="true"]:hover { border-color: rgba(255, 255, 255, 0.3); }
 .cc-camp-row[draggable="true"]:active { cursor: grabbing; }
 .cc-camp-row--dragging { opacity: 0.5; }
-.cc-camp-drag-hint {
-  display: flex; align-items: center; gap: 6px;
-  margin-top: 8px;
-  font-size: 0.66rem; color: var(--text-muted);
-}
-.cc-camp-drag-hint i { font-size: 0.6rem; }
 .cc-canvas--droptarget { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35); }
 
 .cc-camp-row-head {
@@ -186,166 +180,6 @@
   margin-left: 0.2rem;
 }
 
-/* ── Bandeja de Vera (cards de pending_actions, dentro de .cc-section--optim) ─ */
-.cc-vera-inbox-card {
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider);
-  border-radius: var(--radius-sm, 8px);
-  padding: 0.85rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.cc-vera-inbox-card-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem;
-}
-
-.cc-vera-inbox-card-type {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--accent-warm, #e09145);
-  font-weight: 600;
-}
-
-.cc-vera-inbox-conf {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: rgba(255,255,255,0.05);
-  padding: 0.1rem 0.4rem;
-  border-radius: 999px;
-}
-
-.cc-vera-inbox-summary {
-  font-size: 0.9rem;
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.4;
-}
-
-.cc-vera-inbox-reason {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin: 0;
-  font-style: italic;
-}
-
-.cc-vera-inbox-meta {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.cc-vera-inbox-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.cc-vera-inbox-actions .btn {
-  flex: 1;
-  font-size: 0.8rem;
-  padding: 0.4rem 0.6rem;
-}
-
-/* ── Sección "Optimización" (sustituye Mercado objetivo + Bandeja Vera) ─── */
-.cc-section--optim {
-  position: relative;
-  margin: 0 0 1.5rem 0;
-  padding: 1.5rem 1.75rem;
-  border-radius: var(--radius-md, 14px);
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.cc-optim-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  overflow: hidden;
-}
-
-.cc-optim-gradient {
-  position: absolute;
-  inset: 0;
-  background: var(--brand-gradient-dynamic, var(--brand-gradient));
-  opacity: 0.65;
-}
-
-/* Velo oscuro arriba del degradado para garantizar contraste del texto */
-.cc-optim-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(11,11,11,0.42) 0%, rgba(11,11,11,0.62) 100%);
-  pointer-events: none;
-}
-
-.cc-optim-body {
-  position: relative;
-  z-index: 2;
-}
-
-.cc-section--optim .cc-section-title {
-  color: #ffffff;
-  letter-spacing: -0.01em;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.35);
-}
-
-.cc-section--optim .cc-section-lede {
-  color: rgba(255,255,255,0.88);
-  font-size: 0.92rem;
-  margin: 0.3rem 0 0 0;
-  max-width: 60ch;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-}
-
-.cc-optim-count-wrap {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.35rem;
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(0,0,0,0.35);
-  backdrop-filter: blur(4px);
-}
-
-.cc-optim-count-num {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #fff;
-}
-
-.cc-optim-count-label {
-  font-size: 0.78rem;
-  color: rgba(255,255,255,0.78);
-  text-transform: lowercase;
-}
-
-.cc-optim-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 0.85rem;
-  margin-top: 1rem;
-}
-
-/* Las cards de comentarios reusan el estilo de cc-vera-inbox-card pero
-   sobre el degradado tienen que ser más opacas para legibilidad */
-.cc-optim-list .cc-vera-inbox-card {
-  background: rgba(20, 21, 23, 0.92);
-  border-color: rgba(255,255,255,0.1);
-  backdrop-filter: blur(6px);
-}
-
 /* ── Mapa de segmentación (choropleth + breakdowns) ──────────────────── */
 .cc-map-canvas {
   width: 100% !important;
@@ -414,194 +248,6 @@
   text-align: right;
 }
 
-/* Breakdowns (género + edad) — overlays del mapa */
-.cc-break-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.cc-break-title {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary);
-  margin: 0 0 0.25rem 0;
-}
-
-.cc-break-row {
-  display: grid;
-  grid-template-columns: 70px 1fr 40px;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.cc-break-label {
-  font-size: 0.78rem;
-  color: var(--text-primary);
-}
-
-.cc-break-bar-wrap {
-  height: 6px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.cc-break-bar {
-  height: 100%;
-  background: var(--accent-warm, #e09145);
-  opacity: 0.85;
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
-
-.cc-break-pct {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  text-align: right;
-}
-
-@media (max-width: 720px) {
-  .cc-section--optim { padding: 1.2rem 1rem; }
-  .cc-optim-list { grid-template-columns: 1fr; }
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   ENTORNO LAYOUT — clone de "actores externos" (IA Partner) en dark theme
-   2 columnas: mapa LEFT + sidebar RIGHT (380px) con KPIs + secciones
-   ════════════════════════════════════════════════════════════════════ */
-.cc-entorno-layout {
-  display: flex;
-  gap: 1.25rem;
-  width: 100%;
-  /* Toma todo el alto disponible del padre (.cc-page es flex column con
-     height fijo = 100vh - header). Sin min-height para no forzar overflow
-     en viewports pequeños — el min-height vivía en el viejo modelo de altura
-     fija basada en viewport. */
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-/* ── MAPA (left, flex 1) ───────────────────────────────────────────── */
-.cc-entorno-map {
-  position: relative;
-  flex: 1;
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-  display: flex;
-  align-items: stretch;
-  justify-content: stretch;
-}
-
-.cc-entorno-map-canvas {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
-.cc-entorno-map-canvas canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-}
-
-/* Loading overlay */
-.cc-entorno-loading {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  background: rgba(11, 11, 11, 0.85);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-}
-
-.cc-entorno-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--accent-warm, #e09145);
-  border-radius: 50%;
-  animation: ccEntornoSpin 0.8s linear infinite;
-}
-
-@keyframes ccEntornoSpin {
-  to { transform: rotate(360deg); }
-}
-
-.cc-entorno-loading-text {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-/* Comparación demográfica como overlays del mapa (sin fondo, sin bordes).
-   EDAD bottom-left, GÉNERO bottom-right. pointer-events:none deja
-   interactuar con el mapa por debajo. */
-.cc-entorno-demog {
-  position: absolute;
-  bottom: 18px;
-  z-index: 5;
-  pointer-events: none;
-  width: 260px;
-  max-width: 32%;
-}
-.cc-entorno-demog--age    { left: 18px; }
-.cc-entorno-demog--gender { right: 18px; }
-
-.cc-entorno-demog .cc-break-group {
-  background: transparent;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.cc-entorno-demog .cc-break-title {
-  color: rgba(255, 255, 255, 0.92);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  margin: 0 0 0.4rem 0;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.cc-entorno-demog .cc-break-row {
-  display: grid;
-  grid-template-columns: 60px 1fr 38px;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.cc-entorno-demog .cc-break-label,
-.cc-entorno-demog .cc-break-pct {
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-  font-weight: 600;
-  font-size: 0.78rem;
-}
-
-.cc-entorno-demog .cc-break-bar-wrap {
-  background: rgba(0, 0, 0, 0.35);
-  height: 7px;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.cc-entorno-demog .cc-break-bar {
-  background: var(--brand-primary, var(--accent-warm, #e09145));
-  opacity: 1;
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
-
 /* Chip de error visible cuando el choropleth cae al fallback de lista */
 .cc-map-error-chip {
   position: absolute;
@@ -630,77 +276,6 @@
   border-radius: 4px;
 }
 
-/* ── SIDEBAR (right, 380px) ──────────────────────────────────────────
-   Flex column: breadcrumb arriba (alto natural) + section que ocupa el
-   resto del alto y maneja su propio scroll interno. El aside ya no
-   scrollea — eso permitía que la section "flotara" sin llenar el alto. */
-.cc-entorno-sidebar {
-  width: 380px;
-  min-width: 320px;
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-}
-
-/* Breadcrumb (alto fijo, no se encoge) */
-.cc-entorno-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-divider);
-  flex: 0 0 auto;
-}
-
-.cc-entorno-bc-item { color: var(--text-secondary); }
-.cc-entorno-bc-current { color: var(--text-primary); font-weight: 500; }
-.cc-entorno-bc-sep { font-size: 0.65rem; opacity: 0.6; }
-
-/* Section que ocupa el resto del aside; flex column para que su .cc-list
-   pueda crecer y scrollear. */
-.cc-entorno-section {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  margin: 0;
-}
-
-.cc-entorno-section-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: 0.02em;
-  margin: 0;
-}
-
-.cc-entorno-subsection-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-divider);
-}
-
-.cc-entorno-subsection-count {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-}
-
 /* Empty state compacto (dentro del sidebar) */
 .cc-empty--compact {
   display: flex;
@@ -718,141 +293,6 @@
   font-size: 1rem;
   opacity: 0.6;
 }
-
-/* Lista de campañas (reading mode): ocupa el alto sobrante y scrollea. */
-.cc-entorno-section .cc-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.cc-entorno-section .cc-list::-webkit-scrollbar,
-.cc-panel-analysis::-webkit-scrollbar { width: 6px; }
-.cc-entorno-section .cc-list::-webkit-scrollbar-track,
-.cc-panel-analysis::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.03); border-radius: 3px; }
-.cc-entorno-section .cc-list::-webkit-scrollbar-thumb,
-.cc-panel-analysis::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 3px; }
-.cc-entorno-section .cc-list::-webkit-scrollbar-thumb:hover,
-.cc-panel-analysis::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
-
-/* ── Acciones del breadcrumb (Crear + expand/compress) ─────────────── */
-.cc-panel-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-/* Botones "Crear campaña/audiencia": visibles SOLO en analysis mode */
-.cc-panel-action-btn {
-  display: none;
-  align-items: center;
-  gap: 0.4rem;
-  height: 32px;
-  padding: 0 0.7rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-divider);
-  border-radius: 8px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 0.78rem;
-  font-weight: 600;
-  transition: background-color 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
-  white-space: nowrap;
-}
-.cc-panel-action-btn i { font-size: 0.72rem; opacity: 0.85; }
-/* Hover: SOLO el borde toma el degradado dinámico, fondo se mantiene oscuro.
-   Técnica padding-box + border-box (misma que studio.css). */
-.cc-panel-action-btn:hover {
-  background:
-    linear-gradient(var(--bg-card, #141517), var(--bg-card, #141517)) padding-box,
-    var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-  border-color: transparent;
-  color: var(--text-primary);
-}
-.cc-panel-action-btn:hover i { opacity: 1; color: var(--text-primary); }
-.cc-sidebar--expanded .cc-panel-action-btn,
-#ccSidebar.cc-sidebar--expanded .cc-panel-action-btn { display: inline-flex; }
-
-.cc-panel-expand-btn {
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-divider);
-  border-radius: 8px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  transition: background-color 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
-  flex-shrink: 0;
-}
-.cc-panel-expand-btn:hover {
-  background:
-    linear-gradient(var(--bg-card, #141517), var(--bg-card, #141517)) padding-box,
-    var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-  border-color: transparent;
-  color: var(--text-primary);
-}
-.cc-panel-expand-btn i { display: none; }
-.cc-sidebar:not(.cc-sidebar--expanded) .cc-panel-expand-btn .fa-expand-alt,
-#ccSidebar:not(.cc-sidebar--expanded) .cc-panel-expand-btn .fa-expand-alt { display: inline-block; }
-.cc-sidebar--expanded .cc-panel-expand-btn .fa-compress-alt,
-#ccSidebar.cc-sidebar--expanded .cc-panel-expand-btn .fa-compress-alt { display: inline-block; }
-
-/* ── Modos del panel: reading (default) vs analysis (expanded) ─────── */
-.cc-panel-reading {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  opacity: 1;
-  transition: opacity 0.2s ease;
-}
-
-.cc-panel-analysis {
-  display: none;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.cc-sidebar--expanded .cc-panel-reading { display: none; }
-.cc-sidebar--expanded .cc-panel-analysis {
-  display: block;
-  animation: ccPanelFadeIn 0.25s ease;
-}
-
-@keyframes ccPanelFadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* En analysis mode el layout se expande: sidebar al 100%, mapa oculto */
-.cc-entorno-layout--expanded .cc-entorno-map {
-  display: none !important;
-}
-.cc-entorno-layout--expanded .cc-entorno-sidebar {
-  width: 100% !important;
-  min-width: 0 !important;
-  flex: 1 1 100% !important;
-  max-width: 100% !important;
-}
-
-.cc-entorno-layout { transition: gap 0.3s ease; }
-.cc-entorno-sidebar { transition: width 0.3s cubic-bezier(.4,0,.2,1), max-width 0.3s cubic-bezier(.4,0,.2,1); }
 
 /* ── Galería (analysis mode): grilla responsive de cards ───────────── */
 .cc-gallery {
@@ -987,65 +427,6 @@
   border-color: rgba(90, 170, 255, 0.32);
 }
 
-/* Badges de awareness/score reutilizados en audiencias */
-.cc-aud-score {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 0.18rem 0.5rem;
-  border-radius: 999px;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.cc-aud-score--hi  { color: #3cd264; background: rgba(60,210,100,.13); border: 1px solid rgba(60,210,100,.25); }
-.cc-aud-score--mid { color: #f4b942; background: rgba(244,185,66,.13); border: 1px solid rgba(244,185,66,.25); }
-.cc-aud-score--lo  { color: #f06060; background: rgba(240,96,96,.13);  border: 1px solid rgba(240,96,96,.25); }
-
-.cc-aud-level {
-  display: inline-flex;
-  width: fit-content;
-  padding: 0.18rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border-divider);
-}
-.cc-aud-level--problem_aware  { background: rgba(244,185,66,.12);  border-color: rgba(244,185,66,.22);  color: #f4b942; }
-.cc-aud-level--solution_aware { background: rgba(90,170,255,.12);  border-color: rgba(90,170,255,.22);  color: #5aaeff; }
-.cc-aud-level--product_aware  { background: rgba(140,100,255,.12); border-color: rgba(140,100,255,.22); color: #9b7aff; }
-.cc-aud-level--most_aware     { background: rgba(60,210,100,.12);  border-color: rgba(60,210,100,.22);  color: #3cd264; }
-
-/* En analysis mode los íconos del badge se quedan compactos */
-.cc-panel-analysis .cc-entorno-section { margin-bottom: 1.5rem; }
-.cc-panel-analysis .cc-entorno-section:last-child { margin-bottom: 0; }
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .cc-entorno-sidebar { width: 320px; min-width: 280px; }
-}
-
-@media (max-width: 992px) {
-  .cc-entorno-layout {
-    flex-direction: column;
-    height: auto;
-  }
-  .cc-entorno-map {
-    height: 55vh;
-    min-height: 400px;
-  }
-  .cc-entorno-sidebar {
-    width: 100%;
-    max-height: 50vh;
-  }
-}
-
-@media (max-width: 768px) {
-  .cc-entorno-demog          { bottom: 10px; width: 180px; }
-  .cc-entorno-demog--age     { left: 10px; }
-  .cc-entorno-demog--gender  { right: 10px; }
-}
-
 /* ── Full-width override cuando el layout Entorno está activo ──────── */
 /* La página entera (header + mapa + sidebar) debe entrar al 100% en el
    viewport SIN scroll. height fijo en vez de min-height para que el alto
@@ -1064,8 +445,7 @@
 
 /* ════════════════════════════════════════════════════════════════════
    CANVAS v6 — lienzo de nodos (audiencias ↔ campanas)
-   El mapa quedo oculto en #ccMapLegacy. Tokens del canvas:
-   audiencia = ambar, campana conceptual = azul, campana real = rojo.
+   Estetica monocroma: el chrome del nodo no lleva color (solo el contenido).
    ════════════════════════════════════════════════════════════════════ */
 #commandCenterPage {
   --cc-aud:     #e0a045;   /* audiencia (ambar warm) */
@@ -1328,12 +708,6 @@
 }
 .cc-node-badge--concept { background: rgba(255, 255, 255, 0.06); color: var(--text-secondary); }
 .cc-node-badge--real    { background: rgba(255, 255, 255, 0.06); color: var(--text-secondary); }
-.cc-node-tag {
-  align-self: flex-start;
-  font-size: 0.68rem; font-weight: 600;
-  padding: 2px 8px; border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06); color: var(--text-secondary);
-}
 /* Toggles de audiencia (me gusta / destacar / apagar): monocromo, on = brillante. */
 .cc-node-toggle { color: var(--text-muted); }
 .cc-node-toggle.is-on { color: var(--text-primary, #fff); }
@@ -1357,21 +731,6 @@
 .cc-node-meta i { font-size: 0.64rem; opacity: 0.8; }
 .cc-node-badge--link { background: rgba(255, 255, 255, 0.08); color: var(--text-secondary); display: inline-flex; align-items: center; gap: 4px; }
 .cc-node-badge--link i { font-size: 0.58rem; }
-
-/* ── Titulo editable (estilo Segmind) ──────────────────────────────── */
-.cc-node-title-input {
-  flex: 1; min-width: 0;
-  font-size: 0.84rem; font-weight: 600;
-  color: var(--text-primary, #fff);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 3px 6px;
-  outline: none;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-.cc-node-title-input:hover { background: rgba(255, 255, 255, 0.04); }
-.cc-node-title-input:focus { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.18); }
 
 /* ── Body editable: capar altura, scroll interno ───────────────────── */
 .cc-node-body { padding: 9px 10px; display: flex; flex-direction: column; gap: 7px; max-height: 380px; overflow-y: auto; }
@@ -2026,10 +1385,6 @@
    Las imagenes y preview areas internas tienen su propio overflow:hidden
    sobre sus border-radius, asi que el clipping interno se preserva. */
 .cc-node { overflow: visible !important; }
-
-/* Sprint 2: Vera Inbox legacy desactivado (la franja superior gigante).
-   Las propuestas viven ahora en el sidebar Dashboard. */
-.cc-section--optim, #ccOptimSection { display: none !important; }
 
 /* Sprint 2: Vera Insight cards FUERA del canvas — solo en sidebar Dashboard. */
 .cc-vera-insight, .cc-vera-edge { display: none !important; }
@@ -2870,8 +2225,6 @@
 .cc-node--campaign-v2 .cc-node-expand-btn--v2 i { font-size: 0.62rem; color: var(--text-muted); }
 .cc-node--campaign-v2 .cc-node-expand-btn--v2:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.18); }
 .cc-node--campaign-v2 .cc-node-expand-btn--v2:hover i { color: var(--text-primary, #fff); }
-.cc-node--campaign-v2 .cc-node-ads,
-.cc-node--campaign-v2 .cc-node-realname[title] { /* legado oculto */ }
 
 /* F1.12: side-panel inspector derecho */
 .cc-inspector {

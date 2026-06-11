@@ -17,13 +17,9 @@ class CommandCenterView extends BaseView {
     this._segments        = [];   // audience_segments
     this._campaigns       = [];   // campaigns (con cached metrics)
     this._integrations    = [];   // brand_integrations (sync status)
-    this._pendingActions  = [];   // vera_pending_actions (status='pending')
     this._supabase        = null;
 
     // Canvas (v6): Command Center es un canvas de nodos audiencias↔campanas.
-    // El mapa de mercado queda oculto (this._mapEnabled = false) pero su codigo
-    // y HTML siguen vivos en #ccMapLegacy para retomarlo a futuro.
-    this._mapEnabled      = false;
     this._canvasScale     = 1;
     this._canvasPan       = { x: 0, y: 0 };
     this._positions       = {};   // { 'aud:<id>'|'camp:<id>': {x,y} }
@@ -92,26 +88,6 @@ class CommandCenterView extends BaseView {
   renderHTML() {
     return `
 <div class="cc-page" id="commandCenterPage">
-
-  <!-- OPTIMIZACIÓN: comentarios de Vera. Sección oculta hasta que haya comentarios reales -->
-  <section class="cc-section cc-section--optim" id="ccOptimSection" style="display:none;" aria-label="${__('Optimización propuesta por Vera')}">
-    <div class="cc-optim-bg" aria-hidden="true">
-      <div class="cc-optim-gradient"></div>
-    </div>
-    <div class="cc-optim-body">
-      <div class="cc-section-head">
-        <div class="cc-section-head-main">
-          <h2 class="cc-section-title">${__('Optimización')}</h2>
-          <p class="cc-section-lede">${__('Lecturas y recomendaciones de Vera sobre tus campañas y audiencia real. Aprueba para que se materialice en el próximo plan.')}</p>
-        </div>
-        <div class="cc-optim-count-wrap" aria-live="polite" aria-atomic="true">
-          <span class="cc-optim-count-num" id="ccVeraInboxCount" aria-label="Total de comentarios">0</span>
-          <span class="cc-optim-count-label" id="ccVeraInboxLabel">comentarios</span>
-        </div>
-      </div>
-      <div class="cc-optim-list" id="ccVeraInboxList"></div>
-    </div>
-  </section>
 
   <!-- LAYOUT CANVAS: el lienzo abarca todo; el panel va flotante dentro ── -->
   <div class="cc-cc-layout" id="ccTwoCol" style="display:none;">
@@ -196,24 +172,6 @@ class CommandCenterView extends BaseView {
       </header>
       <div class="cc-report-body" id="ccReportBody"></div>
       <footer class="cc-report-foot" id="ccReportFoot"></footer>
-    </div>
-  </div>
-
-  <!-- OCULTO: mapa de mercado. No se elimina; se retoma a futuro con
-       this._mapEnabled = true + mostrar #ccMapLegacy. -->
-  <div class="cc-entorno-layout" id="ccMapLegacy" style="display:none;">
-    <div class="cc-entorno-map">
-      <div class="cc-entorno-loading" id="ccEntornoLoading" style="display:none;">
-        <div class="cc-entorno-spinner"></div>
-        <div class="cc-entorno-loading-text">Cargando lectura del mercado…</div>
-      </div>
-      <div class="cc-entorno-map-canvas" id="ccAudienceMap"></div>
-      <div class="cc-entorno-demog cc-entorno-demog--age" id="ccEntornoDemogAge" style="display:none;">
-        <div class="cc-break-group" id="ccBreakAge"></div>
-      </div>
-      <div class="cc-entorno-demog cc-entorno-demog--gender" id="ccEntornoDemogGender" style="display:none;">
-        <div class="cc-break-group" id="ccBreakGender"></div>
-      </div>
     </div>
   </div>
 
@@ -381,179 +339,13 @@ class CommandCenterView extends BaseView {
       this._integrations = [];
     }
 
-    // Bandeja de Vera: pending_actions sin resolver para esta marca
-    this._pendingActions = await this._fetchPendingActions(bid);
-
     const twoCol = document.getElementById('ccTwoCol');
     if (twoCol) twoCol.style.display = '';
 
-    /* this._renderVeraInbox(); */ // Sprint 2: reemplazado por Dashboard sidebar
     this._renderCampaigns();    // alimenta la lista compacta del mini-dashboard
     this._renderCanvas();       // (mixin Canvas) nodos + aristas
     this._renderMiniDash();     // (mixin Canvas) stats + conteos
-    this._renderAudienceMap();  // no-op mientras this._mapEnabled === false
     this.updateLinksForRouter();
-  }
-
-  /* ── Vera Inbox: pending_actions ──────────────────────────────────────── */
-  async _fetchPendingActions(brandContainerId) {
-    if (!brandContainerId || !this._supabase) return [];
-    try {
-      const { data: { session } } = await this._supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) return [];
-      const qs = new URLSearchParams({ brand_container_id: String(brandContainerId), status: 'pending' });
-      const res = await fetch(`/api/vera/pending-actions?${qs}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: 'same-origin',
-      });
-      if (!res.ok) return [];
-      const json = await res.json();
-      return Array.isArray(json?.actions) ? json.actions : [];
-    } catch (e) {
-      console.warn('CommandCenterView: fetchPendingActions:', e?.message);
-      return [];
-    }
-  }
-
-  /* ── OPTIMIZACIÓN — comentarios de Vera ──────────────────────────── */
-  _renderVeraInbox() {
-    const section = document.getElementById('ccOptimSection');
-    const list    = document.getElementById('ccVeraInboxList');
-    const count   = document.getElementById('ccVeraInboxCount');
-    const label   = document.getElementById('ccVeraInboxLabel');
-    if (!list) return;
-
-    // Filtrar placeholders/stubs: cualquier acción marcada como tal o con un
-    // reasoning que indique "bootstrap stub" no es análisis real y no debe
-    // ensuciar la bandeja de Optimización.
-    const rawActions = Array.isArray(this._pendingActions) ? this._pendingActions : [];
-    const actions = rawActions.filter((a) => {
-      if (a?.proposed_payload?.placeholder === true) return false;
-      if (typeof a?.vera_reasoning === 'string' && /bootstrap\s*stub/i.test(a.vera_reasoning)) return false;
-      return true;
-    });
-
-    // Si no hay comentarios reales, ocultar la sección entera (no mostrar
-    // header con "0 comentarios" — ruido visual sin valor).
-    if (actions.length === 0) {
-      if (section) section.style.display = 'none';
-      list.innerHTML = '';
-      return;
-    }
-    if (section) section.style.display = '';
-
-    if (count) count.textContent = String(actions.length);
-    if (label) label.textContent = actions.length === 1 ? __('comentario') : __('comentarios');
-
-    const personaNameById = this._personaNameById();
-    const fmtPct = (n) => Number.isFinite(Number(n)) ? `${Math.round(Number(n) * 100)}%` : '—';
-    const labelByType = {
-      link_campaign_to_persona:    __('Vincular campaña a persona'),
-      link_segment_to_persona:     __('Vincular audiencia a persona'),
-      update_persona:              __('Actualizar persona'),
-      create_audience:             __('Crear nueva audiencia'),
-      update_audience:             __('Actualizar audiencia'),
-      update_brand_container:      __('Actualizar marca'),
-      strategic_recommendation_for_campaign: __('Recomendación estratégica'),
-      update_shopify_product_seo:  __('Optimizar SEO de producto'),
-    };
-
-    list.innerHTML = actions.map((a) => {
-      const summary = a.proposed_payload?.summary || a.vera_reasoning || '';
-      const typeLabel = labelByType[a.action_type] || a.action_type;
-      const personaTarget = a.proposed_payload?.persona_id ? (personaNameById[String(a.proposed_payload.persona_id)] || '') : '';
-      const reasoningRow = a.vera_reasoning && summary !== a.vera_reasoning
-        ? `<p class="cc-vera-inbox-reason">${this.escapeHtml(a.vera_reasoning.slice(0, 200))}</p>`
-        : '';
-      const conf = Number.isFinite(Number(a.vera_confidence)) ? fmtPct(a.vera_confidence) : null;
-      const confBadge = conf ? `<span class="cc-vera-inbox-conf" title="Confianza de Vera">${conf}</span>` : '';
-      const personaRow = personaTarget ? `<span class="cc-vera-inbox-meta"><i class="fas fa-user"></i> ${this.escapeHtml(personaTarget)}</span>` : '';
-      return `
-      <article class="cc-vera-inbox-card" data-action-id="${a.id}">
-        <div class="cc-vera-inbox-card-head">
-          <span class="cc-vera-inbox-card-type">${this.escapeHtml(typeLabel)}</span>
-          ${confBadge}
-        </div>
-        ${summary ? `<p class="cc-vera-inbox-summary">${this.escapeHtml(summary)}</p>` : ''}
-        ${reasoningRow}
-        ${personaRow}
-        <div class="cc-vera-inbox-actions">
-          <button type="button" class="btn btn-sm btn-primary cc-vera-inbox-btn-approve" data-id="${a.id}">
-            <i class="fas fa-check"></i> Aprobar
-          </button>
-          <button type="button" class="btn btn-sm btn-secondary cc-vera-inbox-btn-reject" data-id="${a.id}">
-            <i class="fas fa-times"></i> Descartar
-          </button>
-        </div>
-      </article>`;
-    }).join('');
-
-    // Listeners
-    list.querySelectorAll('.cc-vera-inbox-btn-approve').forEach((btn) => {
-      btn.addEventListener('click', (e) => this._approvePendingAction(e.currentTarget.dataset.id));
-    });
-    list.querySelectorAll('.cc-vera-inbox-btn-reject').forEach((btn) => {
-      btn.addEventListener('click', (e) => this._rejectPendingAction(e.currentTarget.dataset.id));
-    });
-  }
-
-  async _approvePendingAction(actionId) {
-    if (!actionId) return;
-    try {
-      const { data: { session } } = await this._supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) return;
-      const res = await fetch(`/api/vera/pending-actions/${actionId}/approve`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-      });
-      if (!res.ok) {
-        const err = await res.text().catch(() => '');
-        console.error('approve action failed:', err.slice(0, 200));
-        return;
-      }
-      // Quitar localmente y re-renderizar
-      this._pendingActions = this._pendingActions.filter((a) => a.id !== actionId);
-      /* this._renderVeraInbox(); */ // Sprint 2: reemplazado por Dashboard sidebar
-    } catch (e) {
-      console.error('approve action:', e);
-    }
-  }
-
-  async _rejectPendingAction(actionId) {
-    if (!actionId) return;
-    // Sin prompt de razon (UX silenciosa). Reason vacio.
-    try {
-      const { data: { session } } = await this._supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) return;
-      const res = await fetch(`/api/vera/pending-actions/${actionId}/reject`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ reason: '' }),
-      });
-      if (!res.ok) {
-        const err = await res.text().catch(() => '');
-        console.error('reject action failed:', err.slice(0, 200));
-        return;
-      }
-      this._pendingActions = this._pendingActions.filter((a) => a.id !== actionId);
-      /* this._renderVeraInbox(); */ // Sprint 2: reemplazado por Dashboard sidebar
-    } catch (e) {
-      console.error('reject action:', e);
-    }
-  }
-
-  /** Mapa id → nombre de persona (legacy, queda por si se usa en otro lado). */
-  _personaNameById() {
-    const m = {};
-    (this._audiences || []).forEach((p) => {
-      if (p?.id) m[String(p.id)] = String(p.name || '').trim() || 'Persona';
-    });
-    return m;
   }
 
   /* ── CAMPAÑAS reales: solo las sincronizadas desde una integración ─── */
@@ -634,154 +426,6 @@ class CommandCenterView extends BaseView {
         </dl>
       </div>`;
     }).join('');
-  }
-
-  /* ── Mapa choropleth + breakdowns (segmentación real) ─────────────── */
-  async _renderAudienceMap() {
-    // OCULTO (v6): el mapa de mercado vive en #ccMapLegacy pero no se pinta.
-    // Reactivar con this._mapEnabled = true + mostrar #ccMapLegacy.
-    if (!this._mapEnabled) return;
-    const mapEl       = document.getElementById('ccAudienceMap');
-    const ageOverlay  = document.getElementById('ccEntornoDemogAge');
-    const genOverlay  = document.getElementById('ccEntornoDemogGender');
-    const ageEl       = document.getElementById('ccBreakAge');
-    const genEl       = document.getElementById('ccBreakGender');
-    if (!mapEl) return;
-
-    // Filtra claves "_raw", "_totals", "_sources", "_updated_at" del jsonb de personas
-    const isInternalKey = (k) => typeof k === 'string' && k.startsWith('_');
-
-    // Acepta dos shapes:
-    //   campaigns.real_demographics: { age: { "25-34": {impressions, reach} } }
-    //   personas.real_*:             { age: { "25-34": 0.45 } }  (fracción 0-1)
-    // Devuelve número absoluto o fracción según el caso. El choropleth normaliza por max.
-    const toNumeric = (v) => {
-      if (typeof v === 'number') return v;
-      if (v && typeof v === 'object' && typeof v.impressions === 'number') return v.impressions;
-      return 0;
-    };
-
-    const agg = { age: {}, gender: {}, country: {} };
-    let source = null;  // 'campaigns' | 'personas' | null
-
-    // ── 1) Intento PRIMERO: agregar campaigns.real_demographics (data por
-    //    campaña, granular). Solo si tiene cualquier valor > 0.
-    const camps = Array.isArray(this._campaigns) ? this._campaigns : [];
-    for (const c of camps) {
-      const rd = c.real_demographics;
-      if (!rd || typeof rd !== 'object') continue;
-      for (const axis of ['age', 'gender', 'country']) {
-        const dist = rd[axis];
-        if (!dist || typeof dist !== 'object') continue;
-        for (const [k, v] of Object.entries(dist)) {
-          if (isInternalKey(k)) continue;
-          const n = toNumeric(v);
-          if (n <= 0) continue;
-          agg[axis][k] = (agg[axis][k] || 0) + n;
-          source = 'campaigns';
-        }
-      }
-    }
-
-    // ── 2) Fallback: si campañas no aportaron data, agregar audience_personas.real_*
-    //    (data brand-wide poblada por sensores meta_audience_demographics + ga4)
-    if (!source) {
-      const personas = Array.isArray(this._audiences) ? this._audiences : [];
-      for (const p of personas) {
-        const ageDist     = p.real_age_distribution      || {};
-        const genderDist  = p.real_gender_distribution   || {};
-        const locDist     = p.real_location_distribution || {};
-        for (const [k, v] of Object.entries(ageDist)) {
-          if (isInternalKey(k)) continue;
-          const n = toNumeric(v); if (n <= 0) continue;
-          agg.age[k] = (agg.age[k] || 0) + n;
-          source = 'personas';
-        }
-        for (const [k, v] of Object.entries(genderDist)) {
-          if (isInternalKey(k) || k === 'unknown') continue;
-          const n = toNumeric(v); if (n <= 0) continue;
-          agg.gender[k] = (agg.gender[k] || 0) + n;
-          source = 'personas';
-        }
-        const countries = locDist.countries || {};
-        for (const [k, v] of Object.entries(countries)) {
-          if (isInternalKey(k)) continue;
-          // Solo aceptamos ISO-A2 (2 letras mayúsculas); descartamos nombres
-          // ("Colombia", "United States") que vienen del fallback GA4 raw.
-          if (typeof k !== 'string' || k.length !== 2 || !/^[A-Z]{2}$/.test(k)) continue;
-          const n = toNumeric(v); if (n <= 0) continue;
-          agg.country[k] = (agg.country[k] || 0) + n;
-          source = 'personas';
-        }
-      }
-    }
-
-    if (!source) {
-      mapEl.innerHTML = `<div class="cc-map-empty"><i class="fas fa-satellite-dish"></i><p>${__('Aún no hay lectura del mercado. Conecta una integración (Meta/Google) o espera a que los sensores corran (próxima corrida diaria).')}</p></div>`;
-      if (ageEl) ageEl.innerHTML = '';
-      if (genEl) genEl.innerHTML = '';
-      if (ageOverlay) ageOverlay.style.display = 'none';
-      if (genOverlay) genOverlay.style.display = 'none';
-      return;
-    }
-
-    // Mapa choropleth (country). Si AudienceMap.render dispara su fallback
-    // interno de lista, lo detectamos por DOM y mostramos un chip visible para
-    // poder diagnosticar el motivo real desde la consola del usuario.
-    if (window.AudienceMap) {
-      try {
-        await window.AudienceMap.render(mapEl, agg.country);
-        const fellBack = !!mapEl.querySelector('.cc-map-fallback');
-        if (fellBack) {
-          const errMsg = mapEl.__lastError || __('razón desconocida (revisa consola)');
-          const chip = document.createElement('div');
-          chip.className = 'cc-map-error-chip';
-          chip.innerHTML = `<i class="fas fa-triangle-exclamation"></i> Mapa no disponible: ${this.escapeHtml(errMsg)}`;
-          mapEl.appendChild(chip);
-        }
-      } catch (e) {
-        console.warn('AudienceMap render:', e?.message);
-        mapEl.innerHTML = `<div class="cc-map-empty"><i class="fas fa-triangle-exclamation"></i><p>Error al cargar el mapa: ${this.escapeHtml(e?.message || String(e))}</p></div>`;
-      }
-    } else {
-      mapEl.innerHTML = `<div class="cc-map-empty">Cargando mapa…</div>`;
-    }
-
-    // Breakdowns: edad (bottom-left) + género (bottom-right) — overlays sin fondo
-    const totalGender = Object.values(agg.gender).reduce((s, v) => s + Number(v || 0), 0);
-    const totalAge    = Object.values(agg.age).reduce((s, v) => s + Number(v || 0), 0);
-    const buildRow = (label, pct, aria) => `
-      <div class="cc-break-row" role="progressbar" aria-valuenow="${pct}" aria-label="${aria}">
-        <span class="cc-break-label">${label}</span>
-        <div class="cc-break-bar-wrap"><div class="cc-break-bar" style="width:${pct}%"></div></div>
-        <span class="cc-break-pct">${pct}%</span>
-      </div>`;
-
-    const genderRows = totalGender > 0
-      ? Object.entries(agg.gender)
-          .sort((a, b) => Number(b[1]) - Number(a[1]))
-          .slice(0, 4)
-          .map(([k, v]) => {
-            const pct = Math.round((Number(v) / totalGender) * 100);
-            const label = k === 'male' ? 'Hombres' : k === 'female' ? 'Mujeres' : k;
-            return buildRow(label, pct, `${label}: ${pct}%`);
-          }).join('')
-      : '';
-
-    const ageRows = totalAge > 0
-      ? Object.entries(agg.age)
-          .sort((a, b) => Number(b[1]) - Number(a[1]))
-          .slice(0, 6)
-          .map(([k, v]) => {
-            const pct = Math.round((Number(v) / totalAge) * 100);
-            return buildRow(k, pct, `Edad ${k}: ${pct}%`);
-          }).join('')
-      : '';
-
-    if (ageEl)  ageEl.innerHTML  = ageRows    ? `<h4 class="cc-break-title">${__('Edad')}</h4>${ageRows}`     : '';
-    if (genEl)  genEl.innerHTML  = genderRows ? `<h4 class="cc-break-title">${__('Género')}</h4>${genderRows}` : '';
-    if (ageOverlay) ageOverlay.style.display = ageRows    ? '' : 'none';
-    if (genOverlay) genOverlay.style.display = genderRows ? '' : 'none';
   }
 
   /* ── Listeners: toggle del panel + botones de acción ────────────────
@@ -888,7 +532,6 @@ class CommandCenterView extends BaseView {
       // reales no se tocan: no se pueden eliminar desde aquí.
       if (isAudience) {
         this._audiences = (this._audiences || []).filter(a => String(a.id) !== String(entityId));
-        this._renderAudienceMap();
       } else {
         // isConcept
         this._campaigns = (this._campaigns || []).filter(c => String(c.id) !== String(entityId));
