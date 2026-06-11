@@ -602,19 +602,88 @@ class DashboardView extends BaseView {
 
   // Modal de detalle "consultor" de una card del plan: por que te conviene /
   // como lo exploto / evidencia y confianza. Reusa la primitiva Modal.show.
-  _openPlanDetail(detail) {
+  async _openPlanDetail(detail) {
     if (!detail || !window.Modal || typeof window.Modal.show !== 'function') return;
     const secs = (detail.sections || []).map((s) => `
       <div class="plan-detail-sec">
         <div class="plan-detail-h">${this._esc(s.h)}</div>
         <div class="plan-detail-b">${this._esc(s.b)}</div>
       </div>`).join('');
+    // Para Riesgo, reservamos un bloque que se llena con la evidencia real
+    // (publicaciones señaladas con su tono/tema/sentimiento) al abrir.
+    const evBlock = detail.risk ? `
+      <div class="plan-detail-sec">
+        <div class="plan-detail-h">${this._esc(__('Publicaciones señaladas'))}</div>
+        <div class="plan-detail-evidence" data-plan-evidence>
+          <div class="plan-ev-loading"><i class="fas fa-circle-notch fa-spin"></i> ${this._esc(__('Cargando evidencia…'))}</div>
+        </div>
+      </div>` : '';
     const body = `
       <div class="plan-detail plan-detail--${this._esc(detail.color || '')}">
         ${detail.title ? `<div class="plan-detail-title">${this._esc(detail.title)}</div>` : ''}
         ${secs}
+        ${evBlock}
       </div>`;
-    window.Modal.show({ title: detail.category || detail.title || '', body, className: 'dash-modal plan-detail-modal' });
+    const { bodyEl } = window.Modal.show({ title: detail.category || detail.title || '', body, className: 'dash-modal plan-detail-modal' });
+
+    if (detail.risk && bodyEl) {
+      const host = bodyEl.querySelector('[data-plan-evidence]');
+      try {
+        await this._ensureCampanasService();
+        const f = this._mbFilters || {};
+        const posts = await this._campanasService.getRiskEvidence({
+          dateFromIso: f.dateFrom || null, dateToIso: f.dateTo || null,
+          windowDays: f.windowDays || 99999,
+          brandIds: f.brandContainerId ? [f.brandContainerId] : null,
+        });
+        if (host) host.innerHTML = this._renderRiskEvidence(posts);
+      } catch (e) {
+        if (host) host.innerHTML = `<div class="plan-ev-empty">${this._esc(__('No se pudo cargar la evidencia.'))}</div>`;
+      }
+    }
+  }
+
+  // Lista de COMENTARIOS del público señalados (evidencia de riesgo): autor +
+  // texto del comentario + emoción + post sobre el que comentó + enlace. Responde
+  // "¿qué dijo la gente, en qué post y por qué es hostil?".
+  _renderRiskEvidence(comments) {
+    if (!Array.isArray(comments) || !comments.length) {
+      return `<div class="plan-ev-empty">${this._esc(__('Sin comentarios hostiles ni negativos del público en el periodo. 👍'))}</div>`;
+    }
+    const netLabel = (n) => {
+      const s = String(n || '').toLowerCase();
+      if (s.includes('insta')) return 'Instagram';
+      if (s.includes('face')) return 'Facebook';
+      if (s.includes('tik')) return 'TikTok';
+      if (s.includes('linkedin')) return 'LinkedIn';
+      if (s.includes('twitter') || s === 'x') return 'X';
+      return n ? n.charAt(0).toUpperCase() + n.slice(1) : '—';
+    };
+    const fmtDate = (ts) => { try { return new Date(ts).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (_) { return ''; } };
+    const HOSTILE = ['anger', 'disgust'];
+    const emoLabel = { anger: __('Ira'), disgust: __('Asco'), sadness: __('Tristeza'), fear: __('Miedo'), surprise: __('Sorpresa'), joy: __('Alegría') };
+    return comments.map((c) => {
+      const emo = String(c.emotion || '').toLowerCase();
+      const hostile = HOSTILE.includes(emo) || Number(c.sentiment_score) <= -0.7;
+      const neg = /^neg/i.test(String(c.sentiment || ''));
+      const tags = [];
+      if (hostile) tags.push(`<span class="plan-ev-badge is-risk">${this._esc(__('Hostil'))}</span>`);
+      else if (neg) tags.push(`<span class="plan-ev-badge is-neg">${this._esc(__('Negativo'))}</span>`);
+      if (emo && emo !== 'others') tags.push(`<span class="plan-ev-badge">${this._esc(emoLabel[emo] || c.emotion)}</span>`);
+      const author = c.author ? '@' + String(c.author).replace(/^@/, '') : __('Anónimo');
+      const link = c.permalink ? `<a class="plan-ev-link" href="${this._esc(c.permalink)}" target="_blank" rel="noopener">${this._esc(__('Ver publicación'))} →</a>` : '';
+      return `
+        <div class="plan-ev-post">
+          <div class="plan-ev-row">
+            <span class="plan-ev-net">${this._esc(netLabel(c.network))} · ${this._esc(author)}</span>
+            <span class="plan-ev-date">${this._esc(fmtDate(c.posted_at))}</span>
+          </div>
+          ${c.snippet ? `<div class="plan-ev-snippet">“${this._esc(c.snippet)}”</div>` : ''}
+          <div class="plan-ev-badges">${tags.join('')}</div>
+          ${c.post_snippet ? `<div class="plan-ev-context">${this._esc(__('En tu post'))}: “${this._esc(c.post_snippet)}”</div>` : ''}
+          ${link}
+        </div>`;
+    }).join('');
   }
 
   // Si aun no hay data de marca cacheada, dispara una carga en background

@@ -187,10 +187,11 @@ class CampanasDataService {
         p_brand_container_id: (Array.isArray(bcids) && bcids.length === 1) ? bcids[0] : null,
         p_window_d: healthWindowDays,
       }),
-      // Riesgo de marca (4ta card "Vigila"): risk_score, posts de riesgo, sentimiento.
-      this.sb.rpc('dashboard_brand_alert_score', {
+      // Riesgo de marca (card "Riesgo"): sentimiento HOSTIL del PÚBLICO en los
+      // comentarios de tus posts propios (no el sentimiento del texto del post).
+      this.sb.rpc('dashboard_brand_comment_risk', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
-        p_brand_container_ids: bcids, p_limit: 5,
+        p_brand_container_ids: bcids, p_post_source: 'own',
       }),
 
       // Analisis longitudinal (series temporales propias de la marca).
@@ -262,6 +263,23 @@ class CampanasDataService {
         hours:     u(postingHours),
       },
     };
+  }
+
+  /** Evidencia de riesgo: las publicaciones propias señaladas (sentimiento
+   *  negativo / flags / risk_level alto) con su tono y tema, para el modal de
+   *  detalle de la card "Riesgo". Se pide bajo demanda al abrir el modal. */
+  async getRiskEvidence(opts = {}) {
+    if (!this.sb || !this.orgId) return [];
+    const { date_from, date_to } = this._resolveWindow(opts);
+    const bcids = this._resolveBrands(opts);
+    const { data, error } = await this.sb.rpc('dashboard_brand_risk_evidence', {
+      p_org_id:              this.orgId,
+      p_date_from:           date_from,
+      p_date_to:             date_to,
+      p_brand_container_ids: bcids,
+      p_limit:               6,
+    });
+    return error ? [] : (Array.isArray(data) ? data : []);
   }
 
   /** Drill-down: time-series de UNA campaña específica. */

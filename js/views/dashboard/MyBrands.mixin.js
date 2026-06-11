@@ -343,28 +343,54 @@
         };
       }
 
-      // ── RIESGO: alerta de marca (sentimiento / flags). Ya es estratégico.
-      const alertRows = Array.isArray(data?.alertScore?.data) ? data.alertScore.data : [];
-      const risk = alertRows
-        .filter((x) => Number(x.risk_score) > 0 || Number(x.high_risk_posts) > 0 || Number(x.negative_sentiment_ratio) > 0)
-        .sort((a, b) => Number(b.risk_score) - Number(a.risk_score))[0];
+      // ── RIESGO: sentimiento HOSTIL del PÚBLICO en los comentarios de tus posts
+      //    propios (no el sentimiento del texto del post). Hostil = anger/disgust
+      //    o score muy negativo. Si no hay comentarios analizados, lo decimos: no
+      //    inventamos un riesgo a partir de la copy del post.
+      const cr = data?.alertScore?.data || null;
       let vigila = null;
-      if (risk) {
-        const neg = Math.round(Number(risk.negative_sentiment_ratio || 0) * 100);
-        const parts = [];
-        if (Number(risk.high_risk_posts) > 0) parts.push(__('{n} posts de riesgo', { n: Number(risk.high_risk_posts) }));
-        if (neg > 0) parts.push(__('{n}% sentimiento negativo', { n: neg }));
-        if (Number(risk.flags_count) > 0) parts.push(__('{n} flags', { n: Number(risk.flags_count) }));
-        vigila = {
-          title: __('Sentimiento de tu marca'),
-          metric: parts[0] || __('riesgo {n}', { n: r(risk.risk_score) }),
-          metricSub: parts.slice(1).join(' · '),
-          action: __('Revísalo'), impact: Number(risk.risk_score) >= 50 ? 'alto' : 'medio', earlySignal: false,
-          detail: detail('vigila', __('Riesgo'), risk.brand_name || __('Riesgo de marca'),
-            __('Tu sentimiento negativo y/o los flags están por encima de lo saludable. Sin atención, erosiona la percepción de marca.'),
-            __('Revisa los posts señalados y los comentarios negativos; ajusta el mensaje o responde donde haga falta.'),
-            risk.description || __('Revisa el sentimiento y los flags marcados.')),
-        };
+      if (cr) {
+        const scored = Number(cr.scored) || 0;
+        const hostile = Number(cr.hostile) || 0;
+        const negC = Number(cr.neg) || 0;
+        const negPct = Math.round(Number(cr.neg_ratio || 0) * 100);
+        const hostPct = Math.round(Number(cr.hostile_ratio || 0) * 100);
+        const emos = Array.isArray(cr.top_hostile_emotions) ? cr.top_hostile_emotions : [];
+        const emoTxt = emos.slice(0, 3).map((e) => `${e.emotion} (${e.n})`).join(', ');
+        if (scored === 0) {
+          // Sin comentarios del público en posts propios: estado honesto, no alarma.
+          vigila = {
+            title: __('Sentimiento del público'),
+            metric: __('Sin comentarios'), metricSub: __('en tus publicaciones propias'),
+            action: __('Ver por qué'), impact: 'bajo', earlySignal: false,
+            detail: detail('vigila', __('Riesgo'), __('Sentimiento del público'),
+              __('El sentimiento de marca se mide de cómo reacciona tu audiencia en los comentarios de TUS publicaciones, no del texto que escribes. Hoy no tenemos comentarios recolectados en tus posts propios, así que no hay señal de audiencia que medir.'),
+              __('Para activar esta lectura hay que recolectar los comentarios de tus publicaciones propias (hoy solo se recolectan los de la competencia).'),
+              __('0 comentarios analizados en tus posts propios en el periodo.')),
+          };
+        } else {
+          const metric = hostile > 0
+            ? __('{n} comentarios hostiles', { n: hostile })
+            : (negC > 0 ? __('{n}% comentarios negativos', { n: negPct }) : __('Sin hostilidad'));
+          const metricSub = hostile > 0
+            ? __('{p}% del público · {pw} posts afectados', { p: hostPct, pw: Number(cr.posts_with_hostile) || 0 })
+            : __('{n} de {t} comentarios analizados', { n: negC, t: scored });
+          const vDetail = detail('vigila', __('Riesgo'), cr.brand_name || __('Sentimiento del público'),
+            hostile > 0
+              ? __('{n} comentarios hostiles/ofensivos de tu público ({p}% de los analizados){e}. Esto sí erosiona tu marca: es cómo reacciona la gente, no tu copy.', { n: hostile, p: hostPct, e: emoTxt ? __(', con {x}', { x: emoTxt }) : '' })
+              : __('Tu público no muestra hostilidad relevante: {neg} comentarios negativos de {t} analizados ({p}%), sin ataques. La crítica leve es normal.', { neg: negC, t: scored, p: negPct }),
+            hostile > 0
+              ? __('Lee los comentarios hostiles de abajo: identifica el patrón (qué post, qué los detonó), responde donde aplique y ajusta el mensaje a futuro.')
+              : __('Mantén el monitoreo. Responde la crítica leve para sostener la relación con tu público.'),
+            __('{t} comentarios analizados · {h} hostiles · {n} negativos.', { t: scored, h: hostile, n: negC }));
+          vDetail.risk = true;
+          vigila = {
+            title: __('Sentimiento del público'),
+            metric, metricSub,
+            action: __('Revísalo'), impact: hostPct >= 10 ? 'alto' : 'medio', earlySignal: false,
+            detail: vDetail,
+          };
+        }
       }
 
       return { explota, optimiza, elimina, vigila };
@@ -1817,8 +1843,8 @@
         },
         // ── Backups (rellenan huecos de las primarias) ──
         (sentiment && sentiment.dominant_label && Number(sentiment.dominant_count) > 0) && {
-          kind: 'sentiment', label: __('Sentimiento dominante'), headline: sentiment.dominant_label,
-          metricPrimary: `${fmt.int(sentiment.dominant_count)} posts`,
+          kind: 'sentiment', label: __('Sentimiento del público'), headline: sentiment.dominant_label,
+          metricPrimary: `${fmt.int(sentiment.dominant_count)} ${__('comentarios')}`,
           metricSecondary: `${Math.round(Number(sentiment.dominant_ratio || 0) * 100)}% del total`,
           dim: 'sentiment', value: sentiment.dominant,
         },
