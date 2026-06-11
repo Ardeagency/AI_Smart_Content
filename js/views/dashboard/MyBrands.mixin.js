@@ -285,26 +285,36 @@
         };
       }
 
-      // ── OPORTUNIDAD: subexplotado de alto rendimiento (huérfano o share bajo),
-      //    distinto del caballo de batalla. Muestra chica → señal temprana.
+      // ── OPORTUNIDAD: SÍNTESIS de subexplotados (alto lift + bajo uso) desde
+      //    dashboard_brand_opportunities: pilares huérfanos + tonos/temas/formatos
+      //    poco usados. El glance lidera con la mayor oportunidad; detalle = todas.
       let optimiza = null;
-      const opP = pillars.filter((p) => p.lift > 0 && p.name !== (exP && exP.name) && (p.isOrphan || p.share < 15))
-        .sort((a, b) => b.lift - a.lift)[0];
-      if (opP) {
-        const early = opP.n < N_MIN;
+      const op = data?.opportunities?.data || null;
+      const opFindings = (op && Array.isArray(op.findings)) ? op.findings : [];
+      const opDom = (op && op.dominant) || opFindings[0] || null;
+      if (opDom) {
+        const subj = opDom.subject || '';
+        const lift = Math.abs(r(opDom.lift));
+        const titleByKey = {
+          pilar:   __('"{s}" rinde pero casi no lo usas', { s: subj }),
+          tono:    __('Tu tono "{s}" rinde pero lo usas poco', { s: subj }),
+          tema:    __('Tu tema "{s}" rinde pero lo usas poco', { s: subj }),
+          formato: __('Tu formato "{s}" rinde pero lo usas poco', { s: subj }),
+        };
         optimiza = {
-          title: __('"{p}" rinde pero casi no lo usas', { p: opP.name }),
-          metric: `+${r(opP.lift)}%`,
-          metricSub: __('vs tu promedio · solo {s}% de tu mezcla', { s: r(opP.share) }),
-          action: early ? __('Prueba 3-4 posts y mide') : __('Súbelo en tu mezcla'),
-          impact: 'medio', earlySignal: early,
-          detail: detail('optimiza', __('Oportunidad'),
-            __('Pilar "{p}" · subexplotado', { p: opP.name }),
-            whyAncla,
-            early
-              ? __('Solo tienes {n} post(s) de este pilar: produce 3-4 más y vuelve a medir antes de escalarlo. Si sostiene el rendimiento, súbelo hacia ~20-30% de tu mezcla.', { n: opP.n })
-              : __('Súbelo de {s}% hacia ~20-30% de tu mezcla, sin canibalizar tu pilar más fuerte.', { s: r(opP.share) }),
-            evidLine(opP.n, opP.lift)),
+          title: titleByKey[opDom.key] || __('"{s}" rinde pero lo usas poco', { s: subj }),
+          metric: `+${lift}%`,
+          metricSub: opDom.n != null ? __('solo {n} posts', { n: opDom.n }) : __('subexplotado'),
+          action: opDom.early ? __('Prueba 3-4 posts y mide') : __('Súbelo en tu mezcla'),
+          impact: 'medio', earlySignal: !!opDom.early,
+          detail: {
+            color: 'optimiza', category: __('Oportunidad'), title: __('Oportunidades subexplotadas'),
+            findings: opFindings,
+            sections: [{
+              h: __('¿Qué rinde y no aprovechas?'),
+              b: __('Esto rinde sobre tu promedio pero casi no lo usas — súbelo en tu mezcla y mide. Las de muestra chica, valídalas con 3-4 posts antes de escalar:'),
+            }],
+          },
         };
       }
 
