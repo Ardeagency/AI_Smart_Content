@@ -363,8 +363,6 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .task-detail-wrapper {
   min-height: calc(100vh - 48px);
   padding: 15px;
-  max-width: 1200px;
-  margin: 0 auto;
   padding-top: calc(48px + 15px);
   background: var(--living-bg-deep, var(--bg-primary));
   position: relative;
@@ -378,27 +376,27 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .tasks-container::after {
   content: '';
   position: absolute;
-  width: 420px;
-  height: 420px;
+  width: 540px;
+  height: 540px;
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1.2px),
-    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.2px);
+    radial-gradient(circle, rgba(255, 255, 255, 0.28) 1.3px, transparent 1.6px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.13) 1.3px, transparent 1.6px);
   background-size: 22px 22px, 22px 22px;
   background-position: 0 0, 11px 11px;
 }
 .tasks-container::before {
   top: 0;
   left: 0;
-  -webkit-mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.5) 35%, transparent 65%);
-  mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.5) 35%, transparent 65%);
+  -webkit-mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 78%);
+  mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 78%);
 }
 .tasks-container::after {
   bottom: 0;
   right: 0;
-  -webkit-mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.5) 35%, transparent 65%);
-  mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.5) 35%, transparent 65%);
+  -webkit-mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 78%);
+  mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 78%);
 }
 /* El contenido por encima de los puntitos. */
 .tasks-container > * {
