@@ -1029,18 +1029,22 @@
   // — el usuario no deberia memorizar direccionalidad del drag.
   // ------------------------------------------------------------------
 
-  // Pipeline de la estrategia (mismo que el backend canvas.tools.js):
-  // campana CONCEPTUAL (trigger) -> audiencia -> identities -> produccion -> campana REAL (cierre).
-  // El front valida bidireccional; estos pares son la cadena de valor. Tipo "campaign"
-  // (lo que _typeFromKey produce): conceptual y real comparten tipo, se distinguen por estado.
+  // Topologia REAL (rediseno 2026-06-11, keyed por tipo granular de _typeFromKey).
+  // El TRIGGER (campana CONCEPTUAL) define sus ingredientes —audiencia + entidades
+  // (producto/servicio/lugar/actor)— y arranca la produccion (brief). Audiencia y
+  // entidades SOLO se conectan al trigger, a nada mas (son hojas, 1 puerto). La
+  // produccion fluye brief -> flow -> campana REAL (cierre pago; despliega adsets/ads
+  // como satelites). Bidireccional: A→B OK si A lista B o B lista A.
   const CC_CONNECTION_RULES = {
-    campaign:  ['audience'],                              // campana conceptual -> a quien
-    audience:  ['product', 'service', 'place', 'brief', 'flow'],
-    product:   ['brief', 'flow'],
-    service:   ['brief', 'flow'],
-    place:     ['brief', 'flow'],
-    brief:     ['flow', 'campaign'],                      // produccion -> campana real (cierre)
-    flow:      ['campaign'],
+    'campaign-concept': ['audience', 'product', 'service', 'place', 'character', 'brief'],
+    'campaign-real':    [],                               // cierre: recibe de flow; no inicia
+    audience:  [],                                        // solo trigger conceptual
+    product:   [],
+    service:   [],
+    place:     [],
+    character: [],
+    brief:     ['flow'],
+    flow:      ['campaign-real'],                         // produccion -> campana real (cierre)
     sticky:    [],
     group:     [],
   };
@@ -1058,7 +1062,7 @@
     const colon = key.indexOf(':');
     if (colon > 0) {
       const t = key.slice(0, colon);
-      return ({ products: 'product', services: 'service', places: 'place', flows: 'flow', briefs: 'brief' })[t] || null;
+      return ({ products: 'product', services: 'service', places: 'place', characters: 'character', flows: 'flow', briefs: 'brief' })[t] || null;
     }
     return null;
   };
@@ -1067,12 +1071,11 @@
       o CC_CONNECTION_RULES[B] contiene A. */
   P._canConnect = function (fromKey, toKey) {
     if (!fromKey || !toKey || fromKey === toKey) return false;
-    // conceptual y real comparten regla bajo la llave 'campaign' (CC_CONNECTION_RULES).
-    // _typeFromKey devuelve campaign-real/campaign-concept; normalizamos para que
-    // matcheen las reglas (sin esto, toda conexion a un nodo de campana se bloquea).
-    const norm = (t) => (t && t.indexOf('campaign') === 0) ? 'campaign' : t;
-    const a = norm(this._typeFromKey(fromKey));
-    const b = norm(this._typeFromKey(toKey));
+    // Tipos granulares directos: campaign-concept (trigger) y campaign-real (cierre)
+    // tienen reglas distintas (ver CC_CONNECTION_RULES). conceptual<->real queda
+    // bloqueado (ninguno se lista al otro = es la misma fila convergida).
+    const a = this._typeFromKey(fromKey);
+    const b = this._typeFromKey(toKey);
     if (!a || !b) return false;
     if (a === b) return false; // mismo tipo no se conecta entre si
     const allowedFromA = CC_CONNECTION_RULES[a] || [];
@@ -1138,7 +1141,7 @@
       }
       if (lib && lib.type && lib.id != null) {
         const pos = this._positions[`${lib.type}:${lib.id}`];
-        const singular = ({ products: 'product', services: 'service', places: 'place', flows: 'flow', briefs: 'brief' })[lib.type] || lib.type;
+        const singular = ({ products: 'product', services: 'service', places: 'place', characters: 'character', flows: 'flow', briefs: 'brief' })[lib.type] || lib.type;
         if (pos) this._insertPlacement(singular, lib.id, pos.x, pos.y);
       }
       return r;
@@ -1276,7 +1279,7 @@
   const _f2pRemoveIdentityFromCanvas = P._removeIdentityFromCanvas;
   if (typeof _f2pRemoveIdentityFromCanvas === 'function') {
     P._removeIdentityFromCanvas = function (type, id) {
-      const singular = ({ products: 'product', services: 'service', places: 'place', flows: 'flow', briefs: 'brief' })[type] || type;
+      const singular = ({ products: 'product', services: 'service', places: 'place', characters: 'character', flows: 'flow', briefs: 'brief' })[type] || type;
       this._deletePlacement(singular, id);
       return _f2pRemoveIdentityFromCanvas.apply(this, arguments);
     };
@@ -2539,7 +2542,7 @@
 
   // Mapping bidireccional entre key-prefix frontend y node_type BD
   P._keyFromPlacement = function (type, id) {
-    const map = { audience: 'aud', campaign: 'camp', product: 'products', service: 'services', place: 'places', flow: 'flows', brief: 'briefs' };
+    const map = { audience: 'aud', campaign: 'camp', product: 'products', service: 'services', place: 'places', character: 'characters', flow: 'flows', brief: 'briefs' };
     return `${map[type] || type}:${id}`;
   };
   P._typeAndIdFromKey = function (key) {
@@ -2548,7 +2551,7 @@
     if (colon < 0) return null;
     const prefix = key.slice(0, colon);
     const id = key.slice(colon + 1);
-    const map = { aud: 'audience', camp: 'campaign', products: 'product', services: 'service', places: 'place', flows: 'flow', briefs: 'brief' };
+    const map = { aud: 'audience', camp: 'campaign', products: 'product', services: 'service', places: 'place', characters: 'character', flows: 'flow', briefs: 'brief' };
     if (!map[prefix]) return null; // sticky/group/group:... van por otras tablas
     return { node_type: map[prefix], node_id: id };
   };
@@ -2902,7 +2905,7 @@
 
   P._veraInsightTargetKey = function (insight) {
     if (!insight || !insight.target_table || !insight.target_id) return null;
-    const map = { audience_personas: 'aud', campaigns: 'camp', products: 'products', services: 'services', brand_places: 'places', content_flows: 'flows', campaign_briefs: 'briefs' };
+    const map = { audience_personas: 'aud', campaigns: 'camp', products: 'products', services: 'services', brand_places: 'places', brand_characters: 'characters', content_flows: 'flows', campaign_briefs: 'briefs' };
     const prefix = map[insight.target_table];
     if (!prefix) return null;
     return `${prefix}:${insight.target_id}`;
@@ -3869,7 +3872,7 @@
   const _f2OrigFetchLibrary = P._fetchLibrary;
   if (typeof _f2OrigFetchLibrary === 'function') {
     P._fetchLibrary = async function (key) {
-      if (!['products', 'services', 'places', 'flows'].includes(key)) {
+      if (!['products', 'services', 'places', 'characters', 'flows'].includes(key)) {
         return _f2OrigFetchLibrary.apply(this, arguments);
       }
       if (this._libCache[key] || (this._libFetching && this._libFetching[key])) return;
@@ -3946,6 +3949,39 @@
           } else {
             this._libCache[key] = [];
           }
+        } else if (key === 'characters') {
+          // brand_characters se filtra via entity_id → brand_entities con organization_id
+          const { data: ents } = await this._supabase
+            .from('brand_entities')
+            .select('id')
+            .eq('organization_id', org);
+          const eids = (ents || []).map((e) => e.id);
+          if (eids.length) {
+            const { data: characters } = await this._supabase
+              .from('brand_characters')
+              .select('id, nombre_personaje, tipo_personaje')
+              .in('entity_id', eids)
+              .limit(200);
+            const cids = (characters || []).map((c) => c.id);
+            const imageMap = {};
+            if (cids.length) {
+              const { data: imgs } = await this._supabase
+                .from('character_images')
+                .select('character_id, image_url, image_order')
+                .in('character_id', cids)
+                .order('image_order', { ascending: true });
+              (imgs || []).forEach((img) => {
+                if (img.character_id && img.image_url && !imageMap[img.character_id]) imageMap[img.character_id] = img.image_url;
+              });
+            }
+            this._libCache[key] = (characters || []).map((r) => ({
+              id: r.id, name: r.nombre_personaje || 'Personaje',
+              sub: r.tipo_personaje || '',
+              imageUrl: imageMap[r.id] || '',
+            }));
+          } else {
+            this._libCache[key] = [];
+          }
         } else if (key === 'flows') {
           // Solo flujos guardados (is_active = true) del usuario actual
           const { data: { user } } = await this._supabase.auth.getUser();
@@ -4012,7 +4048,7 @@
       }));
       dragHint = ' — arrastra al canvas';
     } else if (['product', 'service', 'place', 'flow', 'brief'].includes(t)) {
-      const libKey = ({ product: 'products', service: 'services', place: 'places', flow: 'flows', brief: 'briefs' })[t];
+      const libKey = ({ product: 'products', service: 'services', place: 'places', character: 'characters', flow: 'flows', brief: 'briefs' })[t];
       const cached = this._libCache && this._libCache[libKey];
       if (cached === undefined) {
         if (typeof this._fetchLibrary === 'function') {
@@ -4029,12 +4065,13 @@
       // Render especial: thumbnail + nombre + tipo. Aplica a productos y
       // lugares (que tienen imagenes), tambien a servicios y flows que
       // usan icono de fallback (sin tabla de imagenes).
-      if (['product', 'place', 'service', 'flow'].includes(t)) {
+      if (['product', 'place', 'character', 'service', 'flow'].includes(t)) {
         if (!instances.length) {
           const emptyMsg = ({
             product: 'Sin productos.',
             service: 'Sin servicios.',
             place: 'Sin lugares.',
+            character: 'Sin personajes.',
             flow: 'Sin flujos guardados.',
           })[t];
           return `<div class="cc-nodo-sublist"><div class="cc-nodo-empty">${this.escapeHtml(emptyMsg)}</div></div>`;
@@ -4043,6 +4080,7 @@
           product: 'fa-box',
           service: 'fa-tag',
           place: 'fa-map-pin',
+          character: 'fa-masks-theater',
           flow: 'fa-diagram-project',
         })[t];
         const itemsHTML = instances.map((it) => {
@@ -5299,8 +5337,8 @@
   };
 
   P._inspectorIdentity = function (type, id) {
-    const labels = { products: 'Producto', services: 'Servicio', places: 'Lugar', flows: 'Flow', briefs: 'Brief' };
-    const icons  = { products: 'fa-box', services: 'fa-tag', places: 'fa-map-pin', flows: 'fa-diagram-project', briefs: 'fa-file-lines' };
+    const labels = { products: 'Producto', services: 'Servicio', places: 'Lugar', characters: 'Personaje', flows: 'Flow', briefs: 'Brief' };
+    const icons  = { products: 'fa-box', services: 'fa-tag', places: 'fa-map-pin', characters: 'fa-masks-theater', flows: 'fa-diagram-project', briefs: 'fa-file-lines' };
     const placed = (this._placed || []).find((p) => p.type === type && String(p.id) === String(id));
     const name = (placed && placed.name) || labels[type] || 'Identidad';
     const sub  = (placed && placed.sub)  || '';

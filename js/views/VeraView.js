@@ -1472,6 +1472,7 @@ class VeraView extends (window.BaseView || class {}) {
                       <button class="vera-plus-item" data-lib-type="brief" role="menuitem"><i class="fas fa-clipboard"></i><span>Brief</span></button>
                       <button class="vera-plus-item" data-lib-type="service" role="menuitem"><i class="fas fa-briefcase"></i><span>Servicios</span></button>
                       <button class="vera-plus-item" data-lib-type="place" role="menuitem"><i class="fas fa-map-pin"></i><span>Lugares</span></button>
+                      <button class="vera-plus-item" data-lib-type="character" role="menuitem"><i class="fas fa-masks-theater"></i><span>Personajes</span></button>
                     </div>
                   </div>
                 </div>
@@ -1878,6 +1879,19 @@ class VeraView extends (window.BaseView || class {}) {
             .select('id, nombre_lugar').in('entity_id', ids).limit(300);
           return (data || []).map((r) => ({ id: r.id, name: r.nombre_lugar || 'Lugar sin nombre', meta: '' }));
         }
+      },
+      character: {
+        label: 'Personaje', icon: 'fa-masks-theater',
+        load: async () => {
+          // brand_characters no tiene organization_id → se filtra por entity_id de la org.
+          const { data: ents } = await sb().from('brand_entities')
+            .select('id').eq('organization_id', orgId).limit(500);
+          const ids = (ents || []).map((e) => e.id);
+          if (!ids.length) return [];
+          const { data } = await sb().from('brand_characters')
+            .select('id, nombre_personaje').in('entity_id', ids).limit(300);
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_personaje || 'Personaje sin nombre', meta: '' }));
+        }
       }
     };
     return defs[kind] || null;
@@ -2030,7 +2044,7 @@ class VeraView extends (window.BaseView || class {}) {
     if (!m) return { text: raw, refs: [] };
     const labelToKind = {
       'Producto': 'product', 'Campaña': 'campaign', 'Objetivo de campaña': 'campaign_objective',
-      'Objetivo de audiencia': 'audience_objective', 'Brief': 'brief', 'Servicio': 'service', 'Lugar': 'place'
+      'Objetivo de audiencia': 'audience_objective', 'Brief': 'brief', 'Servicio': 'service', 'Lugar': 'place', 'Personaje': 'character'
     };
     const refs = m[1].split('\n').map((line) => {
       const p = line.replace(/^-\s*/, '').split('|').map((s) => s.trim());

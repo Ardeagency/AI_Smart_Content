@@ -27,7 +27,7 @@
   const ROW_GAP  = 150;   // separacion vertical en auto-layout
   const ROW_TOP  = 40;
   const MAX_TAGS = 8;     // tope por campo array (no sobresaturar al LLM)
-  const ID_TYPES = ['products', 'services', 'places', 'flows', 'briefs']; // identities
+  const ID_TYPES = ['products', 'services', 'places', 'characters', 'flows', 'briefs']; // identities
 
   // ------------------------------------------------------------------
   // Estado / helpers
@@ -296,8 +296,8 @@
   /* ── Nodo identity (producto/servicio/lugar/flow/brief): conexion libre ─ */
   P._nodeIdentityHTML = function (n, pos) {
     const r = n.row || {};
-    const labels = { products: __('Producto'), services: __('Servicio'), places: __('Lugar'), flows: 'Flow', briefs: 'Brief' };
-    const icons  = { products: 'fa-box', services: 'fa-tag', places: 'fa-map-pin', flows: 'fa-diagram-project', briefs: 'fa-file-lines' };
+    const labels = { products: __('Producto'), services: __('Servicio'), places: __('Lugar'), characters: __('Personaje'), flows: 'Flow', briefs: 'Brief' };
+    const icons  = { products: 'fa-box', services: 'fa-tag', places: 'fa-map-pin', characters: 'fa-masks-theater', flows: 'fa-diagram-project', briefs: 'fa-file-lines' };
     const t = n.identityType;
     return `
     <div class="cc-node cc-node--identity" data-node-key="${n.key}" data-type="identity" data-identity-type="${this.escapeHtml(t)}" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
@@ -1316,6 +1316,7 @@
       { key: 'products',  label: 'Productos',           icon: 'fa-box' },
       { key: 'services',  label: 'Servicios',           icon: 'fa-tag' },
       { key: 'places',    label: 'Lugares',             icon: 'fa-map-pin' },
+      { key: 'characters', label: 'Personajes',         icon: 'fa-masks-theater' },
       { key: 'flows',     label: 'My Flows',            icon: 'fa-diagram-project' },
       { key: 'briefs',    label: 'Briefs',              icon: 'fa-file-lines' },
     ];
@@ -1478,6 +1479,13 @@
         if (ids.length) {
           const { data } = await this._supabase.from('brand_places').select('id, nombre_lugar, city').in('entity_id', ids).limit(200);
           items = (data || []).map((r) => ({ id: r.id, name: r.nombre_lugar || 'Lugar', sub: r.city || '' }));
+        }
+      } else if (key === 'characters') {
+        const { data: ents } = await this._supabase.from('brand_entities').select('id').eq('organization_id', org);
+        const ids = (ents || []).map((e) => e.id);
+        if (ids.length) {
+          const { data } = await this._supabase.from('brand_characters').select('id, nombre_personaje, tipo_personaje').in('entity_id', ids).limit(200);
+          items = (data || []).map((r) => ({ id: r.id, name: r.nombre_personaje || 'Personaje', sub: r.tipo_personaje || '' }));
         }
       } else if (key === 'flows') {
         const { data: { user } } = await this._supabase.auth.getUser();

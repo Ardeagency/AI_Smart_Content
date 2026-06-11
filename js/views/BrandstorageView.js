@@ -952,7 +952,7 @@ class BrandstorageView extends BaseView {
   }
 
   openAddEntityModal() {
-    const ENTITY_TYPES = ['product', 'service', 'place', 'brand', 'influencer', 'competitor', 'other'];
+    const ENTITY_TYPES = ['product', 'service', 'place', 'character', 'brand', 'influencer', 'competitor', 'other'];
     const typeOpts = ENTITY_TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
 
     // FEAT-028: migrado a window.Modal (mismos IDs de campo).

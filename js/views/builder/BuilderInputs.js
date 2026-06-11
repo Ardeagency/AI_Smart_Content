@@ -2573,6 +2573,10 @@
                   <input type="checkbox" data-type="place" ${entityTypes.includes('place') ? 'checked' : ''}>
                   <span>Lugares</span>
                 </label>
+                <label class="property-toggle">
+                  <input type="checkbox" data-type="character" ${entityTypes.includes('character') ? 'checked' : ''}>
+                  <span>Personajes</span>
+                </label>
               </div>
             </div>
           `;

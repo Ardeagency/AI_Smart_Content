@@ -2863,7 +2863,7 @@ class LivingManager {
         // Plumbing del contexto del motor — jamas se muestra como parametro.
         const PLUMBING_KEYS = new Set([
             'meta','user','credits','entities','products','services',
-            'brand_fonts','brand_assets','brand_colors','brand_places',
+            'brand_fonts','brand_assets','brand_colors','brand_places','brand_characters',
             'brand_identity','brand_identities','brand_entities','previous_trends',
             'schedule_config','context','raw','payload','captured_from','flow_name',
             'flow_id','flow_slug','org_id','organization_id','user_id',
@@ -4075,6 +4075,24 @@ class LivingManager {
                         .limit(3);
                     imageUrls = (imgs || [])
                         .map(i => i.image_url || this.getPublicUrlFromStorage('place-images', i.storage_path))
+                        .filter(Boolean);
+                }
+            } else if (entityType === 'character') {
+                const { data: character } = await this.supabase
+                    .from('brand_characters')
+                    .select('id, nombre_personaje')
+                    .eq('entity_id', entityId)
+                    .maybeSingle();
+                if (character?.id) {
+                    productName = character.nombre_personaje || entityName;
+                    const { data: imgs } = await this.supabase
+                        .from('character_images')
+                        .select('image_url, storage_path')
+                        .eq('character_id', character.id)
+                        .order('image_order', { ascending: true })
+                        .limit(3);
+                    imageUrls = (imgs || [])
+                        .map(i => i.image_url || this.getPublicUrlFromStorage('character-images', i.storage_path))
                         .filter(Boolean);
                 }
             }
