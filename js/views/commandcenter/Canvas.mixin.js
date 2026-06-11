@@ -460,13 +460,9 @@
     return { x: pr.left + pr.width / 2 - cr.left, y: pr.top + pr.height / 2 - cr.top };
   };
 
-  /** Color del tipo del nodo (para puertos/cables tipados). */
-  P._nodeTypeColor = function (key) {
-    const el = document.querySelector(`.cc-node[data-node-key="${cssEsc(key)}"]`);
-    const t = el ? el.getAttribute('data-type') : '';
-    return ({
-      audience: '#e0a045', 'campaign-concept': '#6aa3ff', 'campaign-real': '#e15760', identity: '#5fe0c0',
-    })[t] || 'rgba(255,255,255,0.45)';
+  /** Cables monocromos: sin color de tipo (rediseno monocromo). */
+  P._nodeTypeColor = function () {
+    return 'rgba(255, 255, 255, 0.5)';
   };
 
   /** Zoom-to-fit: encuadra todos los nodos del canvas con padding. */
@@ -550,15 +546,22 @@
     // limpiar conexiones previas (mantener defs/preview)
     Array.from(svg.querySelectorAll('.cc-edge')).forEach((n) => n.remove());
 
+    const _typeOfNode = (key) => {
+      const el = document.querySelector(`.cc-node[data-node-key="${cssEsc(key)}"]`);
+      return el ? el.getAttribute('data-type') : '';
+    };
     this._allLinks().forEach((link) => {
       const from = this._portCenter(link.from, '.cc-node-port--out');
       const to   = this._portCenter(link.to, '.cc-node-port--in');
       if (!from || !to) return;
 
-      const color = this._nodeTypeColor(link.from); // cable = color del tipo origen
+      const color = this._nodeTypeColor(link.from);
+      // Ingrediente (audiencia/entidades <-> trigger) = punteado; produccion = solido.
+      const _ing = (t) => t === 'audience' || t === 'identity';
+      const isIngredient = _ing(_typeOfNode(link.from)) || _ing(_typeOfNode(link.to));
 
       const g = document.createElementNS(NS, 'g');
-      g.setAttribute('class', `cc-edge ${link.persona ? 'cc-edge--persona' : 'cc-edge--free'}`);
+      g.setAttribute('class', `cc-edge ${isIngredient ? 'cc-edge--ingredient' : 'cc-edge--production'} ${link.persona ? 'cc-edge--persona' : 'cc-edge--free'}`);
       g.setAttribute('data-edge-from', link.from);
       g.setAttribute('data-edge-to', link.to);
 
