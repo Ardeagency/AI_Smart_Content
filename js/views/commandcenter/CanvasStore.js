@@ -1067,8 +1067,12 @@
       o CC_CONNECTION_RULES[B] contiene A. */
   P._canConnect = function (fromKey, toKey) {
     if (!fromKey || !toKey || fromKey === toKey) return false;
-    const a = this._typeFromKey(fromKey);
-    const b = this._typeFromKey(toKey);
+    // conceptual y real comparten regla bajo la llave 'campaign' (CC_CONNECTION_RULES).
+    // _typeFromKey devuelve campaign-real/campaign-concept; normalizamos para que
+    // matcheen las reglas (sin esto, toda conexion a un nodo de campana se bloquea).
+    const norm = (t) => (t && t.indexOf('campaign') === 0) ? 'campaign' : t;
+    const a = norm(this._typeFromKey(fromKey));
+    const b = norm(this._typeFromKey(toKey));
     if (!a || !b) return false;
     if (a === b) return false; // mismo tipo no se conecta entre si
     const allowedFromA = CC_CONNECTION_RULES[a] || [];
