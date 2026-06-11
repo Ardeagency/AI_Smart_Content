@@ -904,20 +904,24 @@
   // F1.2: _removeLink ahora dispatchea como command (undoable). La rama
   // persona_id sigue siendo BD live, NO entra en la pila de undo.
   P._removeLink = function (fromKey, toKey) {
-    if (fromKey && fromKey.startsWith('aud:') && toKey && toKey.startsWith('camp:')) {
-      this._disconnectCampaign(toKey.slice(5));
-      return;
-    }
+    // audiencia <-> campana (cualquier direccion): borra el audience_segments.
+    let camp, persona;
+    if (fromKey && fromKey.startsWith('aud:') && toKey && toKey.startsWith('camp:')) { camp = toKey.slice(5); persona = fromKey.slice(4); }
+    else if (fromKey && fromKey.startsWith('camp:') && toKey && toKey.startsWith('aud:')) { camp = fromKey.slice(5); persona = toKey.slice(4); }
+    if (camp) { this._disconnectCampaignAudience(camp, persona); return; }
     this._ensureStore();
     this._store.dispatch(this._commands.removeFreeLink(fromKey, toKey));
     this._renderCanvas();
   };
 
-  // F1.2: _addLink dispatchea como command (undoable). Rama persona_id BD live.
+  // F1.2: _addLink dispatchea como command (undoable). Rama persona_id/segments BD live.
   P._addLink = function (fromKey, toKey) {
+    // audiencia <-> campana (cualquier direccion): persona_id + audience_segments
     if (fromKey && fromKey.startsWith('aud:') && toKey && toKey.startsWith('camp:')) {
-      this._connectCampaignToPersona(toKey.slice(5), fromKey.slice(4));
-      return;
+      this._connectCampaignToPersona(toKey.slice(5), fromKey.slice(4)); return;
+    }
+    if (fromKey && fromKey.startsWith('camp:') && toKey && toKey.startsWith('aud:')) {
+      this._connectCampaignToPersona(fromKey.slice(5), toKey.slice(4)); return;
     }
     this._ensureStore();
     this._store.dispatch(this._commands.addFreeLink(fromKey, toKey));
