@@ -105,9 +105,12 @@
       if (seen.has(k)) return; seen.add(k);
       out.push({ from, to, persona: !!persona });
     };
-    // persona_id: audiencia -> campana
+    // persona_id: audiencia -> campana (la "primaria")
     (this._campaigns || []).forEach((c) => { if (c.persona_id) push(`aud:${c.persona_id}`, `camp:${c.id}`, true); });
-    // libres
+    // audience_segments: N audiencias por campana (la relacion REAL, multiple).
+    // El set `seen` dedup contra la persona_id primaria.
+    (this._segments || []).forEach((s) => { if (s.persona_id && s.campaign_id) push(`aud:${s.persona_id}`, `camp:${s.campaign_id}`, true); });
+    // libres (canvas_edges)
     (this._links || []).forEach((l) => push(l.from, l.to, false));
     return out;
   };
