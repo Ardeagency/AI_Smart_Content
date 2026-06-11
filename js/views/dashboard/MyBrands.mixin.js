@@ -312,24 +312,43 @@
       const oi = data?.optimizationInsights?.data || null;
       if (!oi) return '';
 
-      const trend = oi.engagement_vs_prior_period_pct;
-      const hasTrend = trend != null && Number.isFinite(Number(trend));
-      const tNum = Math.round(Number(trend));
-      const tCls = !hasTrend ? '' : tNum > 0 ? 'is-up' : tNum < 0 ? 'is-down' : 'is-flat';
-      const tStr = !hasTrend ? '—' : `${tNum > 0 ? '+' : ''}${tNum}%`;
-      const cons = oi.posting_consistency ? `${Math.round(Number(oi.posting_consistency.posting_consistency_pct))}%` : '—';
-      const vital = (val, lbl, cls = '') => `
-        <div class="mb-plan-vital">
+      // Impacto social del periodo: suma absoluta del engagement (reacciones +
+      // comentarios + compartidos) de los posts propios dentro de la ventana.
+      // Sustituye al "engagement vs periodo previo", que mostraba "—" cuando no
+      // existe un periodo anterior comparable (p. ej. con "Todo el periodo"). El
+      // total lo entrega la RPC (mismo dataset que "posts analizados"); si por
+      // algun motivo no viniera, cae a la suma de la serie longitudinal.
+      let totalEng = oi.total_engagement != null ? Number(oi.total_engagement) : null;
+      if (totalEng == null) {
+        const engSeries = data?.longitudinal?.engagement?.data;
+        if (Array.isArray(engSeries)) {
+          totalEng = engSeries.reduce((s, r) => s + (Number(r.total_engagement) || 0), 0);
+        }
+      }
+      const impactStr = totalEng == null ? '—' : this._compactNum(totalEng);
+
+      // Consistencia POR SEMANAS: % de semanas del periodo con al menos una
+      // publicacion. El subtitulo "N de M semanas activas" la hace auto-explicativa
+      // (un cliente entiende de inmediato de donde sale el porcentaje).
+      const pc = oi.posting_consistency || null;
+      const cons = pc ? `${Math.round(Number(pc.posting_consistency_pct))}%` : '—';
+      const consSub = (pc && pc.total_weeks != null)
+        ? __('{a} de {b} semanas activas', { a: Number(pc.active_weeks) || 0, b: Number(pc.total_weeks) || 0 })
+        : '';
+
+      const vital = (val, lbl, { cls = '', sub = '', tip = '' } = {}) => `
+        <div class="mb-plan-vital"${tip ? ` title="${this._esc(tip)}"` : ''}>
           <span class="mb-plan-vital-val ${cls}">${this._esc(val)}</span>
           <span class="mb-plan-vital-lbl">${this._esc(lbl)}</span>
+          ${sub ? `<span class="mb-plan-vital-sub">${this._esc(sub)}</span>` : ''}
         </div>`;
 
       return `
         <section class="mb-section mb-section--wide">
           <div class="mb-plan-vitals">
-            ${vital(tStr, __('Engagement vs periodo previo'), tCls)}
-            ${vital(fmt.int(oi.posts_analyzed), __('Posts analizados'))}
-            ${vital(cons, __('Consistencia de publicacion'))}
+            ${vital(impactStr, __('Impacto social en el periodo'), { tip: __('Suma de reacciones, comentarios y compartidos de tus publicaciones en el periodo.') })}
+            ${vital(fmt.int(oi.posts_analyzed), __('Posts analizados'), { tip: __('Número de publicaciones propias analizadas en el periodo.') })}
+            ${vital(cons, __('Consistencia de publicacion'), { sub: consSub, tip: __('Porcentaje de semanas del periodo en las que publicaste al menos una vez (desde tu primer post).') })}
           </div>
         </section>`;
     },
