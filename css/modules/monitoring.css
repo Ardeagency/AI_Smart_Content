@@ -155,6 +155,61 @@
   background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.3); color: #fca5a5;
 }
 
+/* ── Navegacion del header (tabs): Seguidos / URLs / Sugerencias ── */
+.mn-tabs {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px; border-radius: 12px;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  flex-wrap: wrap;
+}
+.mn-tab {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px; border-radius: 9px;
+  background: transparent; border: none; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.55);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.mn-tab:hover { color: rgba(255, 255, 255, 0.85); }
+.mn-tab.is-active { background: rgba(255, 255, 255, 0.06); color: #fff; }
+.mn-tab-count {
+  font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.6);
+}
+.mn-tab.is-active .mn-tab-count { background: rgba(255, 255, 255, 0.14); color: #fff; }
+/* Acento de marca (warm) cuando hay sugerencias nuevas — NO rosa */
+.mn-tab--accent:not(.is-active) .mn-tab-count {
+  background: rgba(224, 145, 69, 0.18); color: #e0a045;
+}
+
+/* Area de contenido del tab activo: ocupa el alto restante del board */
+.mn-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+/* ── Tab "Sugerencias del sistema" (propuestas) ── */
+.mn-suggestions { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }
+.mn-sug-intro { margin: 0 0 14px; font-size: 13px; color: rgba(255, 255, 255, 0.55); }
+.mn-sug-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 12px; align-content: start;
+}
+.mn-sug-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px; border-radius: 12px;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+}
+.mn-sug-avatar {
+  flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.7); font-size: 15px;
+}
+.mn-sug-main { flex: 1; min-width: 0; }
+.mn-sug-name { font-size: 14px; font-weight: 600; color: #fff; }
+.mn-sug-why { margin-top: 3px; font-size: 12px; line-height: 1.5; color: rgba(255, 255, 255, 0.5); }
+.mn-sug-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.mn-sug-actions .mn-btn-primary,
+.mn-sug-actions .mn-btn-secondary { justify-content: center; padding: 7px 12px; font-size: 12px; }
+
 /* ════════════════════════════════════════════════════════════
    COLUMNAS "LO QUE SIGO" — kanban limpio por estado
    ════════════════════════════════════════════════════════════ */

@@ -60,10 +60,13 @@ class MonitoringView extends BaseView {
   constructor() {
     super();
     this._filter   = 'all';   // all | brands | pages | paused
+    this._tab      = 'follows'; // follows | urls | suggestions (nav del header)
     this._supabase = null;
     this._orgId    = null;
     this._service  = null;
     this._data     = null;
+    this._model    = null;
+    this._bound    = false;
   }
 
   async onEnter() {
@@ -312,12 +315,15 @@ class MonitoringView extends BaseView {
     if (!body) return;
     if (!this._data) { body.innerHTML = this._skeleton(); return; }
 
-    const model = this._computeModel();
+    this._model = this._computeModel();
     body.innerHTML = `
       <div class="mn-page">
-        ${this._buildSeguidos(model)}
+        ${this._buildHeader(this._model)}
+        <div class="mn-content" id="mnContent"></div>
       </div>`;
-    this._bind(body, model);
+    this._renderContent();
+    // Bind una sola vez: el listener vive en #monitoringBody (persiste entre re-renders).
+    if (!this._bound) { this._bind(body, this._model); this._bound = true; }
   }
 
   _skeleton() {
@@ -422,13 +428,68 @@ class MonitoringView extends BaseView {
     return 'calm'; // quiet, new (empezando a vigilar)
   }
 
-  _buildSeguidos(model) {
-    const { items, containers } = model;
+  /* ── Header con navegacion (tabs) + accion ── */
+  _buildHeader(model) {
+    const profiles = model.items.filter(i => i.kind === 'profile').length;
+    const pages    = model.items.filter(i => i.kind === 'page').length;
+    const sugs     = model.propuestas.length;
+    const tabs = [
+      { id: 'follows',     label: __('Seguidos'),               count: profiles },
+      { id: 'urls',        label: __('URLs monitoreadas'),      count: pages },
+      { id: 'suggestions', label: __('Sugerencias del sistema'), count: sugs, accent: sugs > 0 },
+    ];
+    const nav = tabs.map(t => `
+      <button type="button" class="mn-tab${this._tab === t.id ? ' is-active' : ''}${t.accent ? ' mn-tab--accent' : ''}"
+              data-action="tab" data-tab="${t.id}" role="tab" aria-selected="${this._tab === t.id}">
+        ${this._esc(t.label)}${t.count ? `<span class="mn-tab-count">${t.count}</span>` : ''}
+      </button>`).join('');
+    return `
+      <div class="mn-toolbar">
+        <nav class="mn-tabs" role="tablist">${nav}</nav>
+        <button type="button" class="mn-btn-primary" data-action="new-item">
+          <i class="fas fa-plus"></i> ${__('Seguir algo nuevo')}
+        </button>
+      </div>`;
+  }
+
+  /* ── Renderiza el contenido del tab activo en #mnContent ── */
+  _renderContent() {
+    const el = document.getElementById('mnContent');
+    if (!el || !this._model) return;
+    if (this._tab === 'suggestions')  el.innerHTML = this._buildSuggestionsTab(this._model);
+    else if (this._tab === 'urls')    el.innerHTML = this._buildBoard(this._model, 'page');
+    else                              el.innerHTML = this._buildBoard(this._model, 'profile');
+  }
+
+  _switchTab(tab) {
+    if (!tab || tab === this._tab) return;
+    this._tab = tab;
+    document.querySelectorAll('#monitoringBody .mn-tab').forEach((b) => {
+      const on = b.dataset.tab === tab;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    this._renderContent();
+  }
+
+  /* ── Board kanban por estado, filtrado por kind (profile|page) ── */
+  _buildBoard(model, kind) {
+    const { containers } = model;
     const containerName = (id) => containers.find(c => c.id === id)?.nombre_marca || null;
+    const items = model.items.filter(i => i.kind === kind);
+
+    if (!items.length) {
+      const isPage = kind === 'page';
+      return `
+        <div class="mn-empty mn-empty--first">
+          <div class="mn-empty-icon"><i class="fas ${isPage ? 'fa-globe' : 'fa-binoculars'}"></i></div>
+          <p>${isPage ? __('Aún no monitoreas ninguna URL.') : __('Aún no sigues a ninguna marca o perfil.')}<br>${__('Agrega el primero y nosotros nos encargamos del resto.')}</p>
+          <button type="button" class="mn-btn-primary" data-action="new-item"><i class="fas fa-plus"></i> ${__('Seguir algo nuevo')}</button>
+        </div>`;
+    }
 
     const buckets = { news: [], calm: [], silent: [], paused: [] };
     items.forEach(i => buckets[this._columnOf(i)].push(i));
-
     const column = (c) => {
       const list = buckets[c.id];
       return `
@@ -446,24 +507,46 @@ class MonitoringView extends BaseView {
           </div>
         </section>`;
     };
+    return `<div class="mn-cols">${MonitoringView.COLUMNS.map(column).join('')}</div>`;
+  }
 
-    if (!items.length) {
+  /* ── Tab de sugerencias del sistema (propuestas, sin el banner rosa) ── */
+  _buildSuggestionsTab(model) {
+    const props = model.propuestas;
+    if (!props.length) {
       return `
         <div class="mn-empty mn-empty--first">
-          <div class="mn-empty-icon"><i class="fas fa-binoculars"></i></div>
-          <p>${__('Aún no sigues a nadie.')}<br>${__('Agrega tu primera marca o página y nosotros nos encargamos del resto.')}</p>
-          <button class="mn-btn-primary" data-action="new-item"><i class="fas fa-plus"></i> ${__('Seguir algo nuevo')}</button>
+          <div class="mn-empty-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+          <p>${__('No hay sugerencias nuevas por ahora.')}<br>${__('Cuando detectemos perfiles o páginas cerca de tu competencia, aparecerán aquí.')}</p>
         </div>`;
     }
-
+    const tipoLabel = (t) => MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || __('Perfil');
+    const cards = props.map((e) => {
+      const platform = e.metadata?.platform || '';
+      const icon = MonitoringView.PLATFORM_ICON[platform] || 'fas fa-hashtag';
+      const why = `${tipoLabel(e.metadata?.tipo)}${platform ? __(' en {p}', { p: this._platformName(platform) }) : ''}. ${__('Lo encontramos cerca de tu competencia.')}`;
+      return `
+        <article class="mn-sug-card" data-id="${this._esc(e.id)}">
+          <div class="mn-sug-avatar"><i class="${icon}"></i></div>
+          <div class="mn-sug-main">
+            <div class="mn-sug-name">${this._esc(e.name || '—')}</div>
+            <div class="mn-sug-why">${this._esc(why)}</div>
+          </div>
+          <div class="mn-sug-actions">
+            <button type="button" class="mn-btn-primary" data-action="prop-follow" data-id="${this._esc(e.id)}">
+              <i class="fas fa-plus"></i> ${__('Seguir')}
+            </button>
+            <button type="button" class="mn-btn-secondary" data-action="prop-dismiss" data-id="${this._esc(e.id)}">
+              ${__('Descartar')}
+            </button>
+          </div>
+        </article>`;
+    }).join('');
     return `
-      <div class="mn-toolbar">
-        <h2 class="mn-section-title">${__('Lo que sigo')} <span class="mn-count">${items.length}</span></h2>
-        <button class="mn-btn-primary" data-action="new-item">
-          <i class="fas fa-plus"></i> ${__('Seguir algo nuevo')}
-        </button>
-      </div>
-      <div class="mn-cols">${MonitoringView.COLUMNS.map(column).join('')}</div>`;
+      <div class="mn-suggestions">
+        <p class="mn-sug-intro">${__('Tú decides: súmalos a tu vigilancia o descártalos.')}</p>
+        <div class="mn-sug-grid">${cards}</div>
+      </div>`;
   }
 
   /** Tarjeta compacta. La columna ya comunica el estado, así que la tarjeta no
@@ -537,6 +620,7 @@ class MonitoringView extends BaseView {
     const id     = btn.dataset.id;
 
     switch (action) {
+      case 'tab':             return this._switchTab(btn.dataset.tab);
       case 'new-item':        return this._openCreateModal();
       case 'edit-entity':     return this._openEntityModal(id);
       case 'edit-watcher':    return this._openWatcherModal(id);
