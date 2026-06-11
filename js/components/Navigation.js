@@ -60,7 +60,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'places',
-      label: 'Escenarios',
+      label: 'Sets',
       icon: 'fa-map-marker-alt',
       iconSrc: '/recursos/icons/Places.svg',
       route: 'places',
@@ -69,7 +69,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'characters',
-      label: 'Personajes',
+      label: 'Characters',
       icon: 'fa-masks-theater',
       route: 'characters',
       requireCap: 'brand.identity.edit'
