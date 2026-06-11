@@ -375,10 +375,15 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/services', servicesLoader, auth);
     r.register('/services', servicesLoader, auth);
 
-    // ── Org: Lugares (listado masonry) ──
+    // ── Org: Escenarios / Sets (listado masonry) ──
     const placesListLoader = this._lazy('PlacesView', ['/js/views/PlacesView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/places', placesListLoader, auth);
     r.register('/places', placesListLoader, auth);
+
+    // ── Org: Personajes / Characters (listado masonry) ──
+    const charactersListLoader = this._lazy('CharactersView', ['/js/views/CharactersView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/characters', charactersListLoader, auth);
+    r.register('/characters', charactersListLoader, auth);
 
     // ── Legacy: /identities → /products (bookmarks viejos) ──
     const redirectIdentitiesToProducts = class extends (window.BaseView || class {}) {

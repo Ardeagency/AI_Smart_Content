@@ -26,14 +26,14 @@ class PlacesView extends BaseView {
     return `
 <div class="products-list-page" id="placesListPage">
   <div class="products-list-header">
-    <h1 class="products-list-title">${__('Lugares')}</h1>
+    <h1 class="products-list-title">${__('Escenarios')}</h1>
     <div class="products-list-header-actions">
-      <button type="button" class="products-list-add-btn" id="placesListAttachBtn" aria-label="${__('Adjuntar lugar desde URL o fotos')}">
+      <button type="button" class="products-list-add-btn" id="placesListAttachBtn" aria-label="${__('Adjuntar escenario desde URL o fotos')}">
         <i class="fas fa-paperclip" aria-hidden="true"></i>
-        <span>${__('Adjuntar lugar')}</span>
+        <span>${__('Adjuntar escenario')}</span>
       </button>
-      <button type="button" class="products-list-add-btn" id="placesListAddBtn" aria-label="${__('Agregar lugar')}">
-        <span>${__('+ Lugar')}</span>
+      <button type="button" class="products-list-add-btn" id="placesListAddBtn" aria-label="${__('Agregar escenario')}">
+        <span>${__('+ Escenario')}</span>
       </button>
     </div>
   </div>
@@ -50,7 +50,7 @@ class PlacesView extends BaseView {
 
   <div class="products-list-empty" id="placesListEmpty" style="display:none;">
     <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-    <p>${__('Aun no hay lugares. Crea el primero con + Lugar o adjunta uno.')}</p>
+    <p>${__('Aun no hay escenarios. Crea el primero con + Escenario o adjunta uno.')}</p>
   </div>
 </div>`;
   }
