@@ -312,20 +312,14 @@
       const oi = data?.optimizationInsights?.data || null;
       if (!oi) return '';
 
-      // Impacto social del periodo: suma absoluta del engagement (reacciones +
-      // comentarios + compartidos) de los posts propios dentro de la ventana.
-      // Sustituye al "engagement vs periodo previo", que mostraba "—" cuando no
-      // existe un periodo anterior comparable (p. ej. con "Todo el periodo"). El
-      // total lo entrega la RPC (mismo dataset que "posts analizados"); si por
-      // algun motivo no viniera, cae a la suma de la serie longitudinal.
-      let totalEng = oi.total_engagement != null ? Number(oi.total_engagement) : null;
-      if (totalEng == null) {
-        const engSeries = data?.longitudinal?.engagement?.data;
-        if (Array.isArray(engSeries)) {
-          totalEng = engSeries.reduce((s, r) => s + (Number(r.total_engagement) || 0), 0);
-        }
-      }
-      const impactStr = totalEng == null ? '—' : this._compactNum(totalEng);
+      // Engagement del periodo: interacciones REALES de seguidores que reaccionan
+      // (likes + comentarios + compartidos + guardados). Excluye vistas/repro-
+      // ducciones a proposito: esas son alcance/publico frio, no compromiso. La
+      // RPC lo entrega en `engagement_interactions` (mismo dataset que "posts
+      // analizados"). Sustituye al "engagement vs periodo previo", que mostraba
+      // "—" cuando no hay un periodo anterior comparable (p. ej. "Todo el periodo").
+      const engInteractions = oi.engagement_interactions != null ? Number(oi.engagement_interactions) : null;
+      const engStr = engInteractions == null ? '—' : this._compactNum(engInteractions);
 
       // Consistencia POR SEMANAS: % de semanas del periodo con al menos una
       // publicacion. El subtitulo "N de M semanas activas" la hace auto-explicativa
@@ -346,7 +340,7 @@
       return `
         <section class="mb-section mb-section--wide">
           <div class="mb-plan-vitals">
-            ${vital(impactStr, __('Impacto social en el periodo'), { tip: __('Suma total de interacciones de tus publicaciones en el periodo: likes, comentarios, compartidos, guardados, vistas y reproducciones.') })}
+            ${vital(engStr, __('Engagement del periodo'), { tip: __('Interacciones reales de tus seguidores en el periodo: likes, comentarios, compartidos y guardados. No cuenta vistas ni reproducciones (alcance/público frío que no reacciona).') })}
             ${vital(fmt.int(oi.posts_analyzed), __('Posts analizados'), { tip: __('Número de publicaciones propias analizadas en el periodo.') })}
             ${vital(cons, __('Consistencia de publicacion'), { sub: consSub, tip: __('Porcentaje de semanas del periodo en las que publicaste al menos una vez (desde tu primer post).') })}
           </div>
