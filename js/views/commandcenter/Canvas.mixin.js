@@ -278,7 +278,6 @@
     return `
     <div class="cc-node cc-node--audience cc-node--mini ${off ? 'cc-node--off' : ''} ${featured ? 'cc-node--featured' : ''}" data-node-key="${n.key}" data-type="audience" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
-      <span class="cc-node-port cc-node-port--ap" data-port="ap" title="↔ producto / servicio"></span>
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon"><i class="fas fa-users"></i></span>
         <div class="cc-node-head-text">
@@ -303,7 +302,7 @@
       <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
       ${t === 'briefs'
         ? '<span class="cc-node-port cc-node-port--bl" data-port="bl" title="Identidades"></span><span class="cc-node-port cc-node-port--br" data-port="br" title="Identidades"></span>'
-        : '<span class="cc-node-port cc-node-port--ap" data-port="ap" title="↔ audiencia"></span>'}
+        : ''}
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon"><i class="fas ${icons[t] || 'fa-cube'}"></i></span>
         <span class="cc-node-title">${this.escapeHtml(labels[t] || 'Identity')}</span>
@@ -367,8 +366,7 @@
     const chipsC = `${statusLabel ? `<span class="cc-node-chip cc-node-chip--status cc-node-chip--${this.escapeHtml(c.status)}">${this.escapeHtml(statusLabel)}</span>` : ''}${platLabelC ? `<span class="cc-node-chip">${this.escapeHtml(platLabelC)}</span>` : ''}${linked ? `<span class="cc-node-chip cc-node-chip--link" title="Audiencia: ${this.escapeHtml(linkedName)}"><i class="fas fa-link"></i></span>` : ''}`;
     return `
     <div class="cc-node cc-node--campaign cc-node--anchor cc-node--mini" data-node-key="${n.key}" data-type="campaign-concept" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
-      <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Audiencia"></span>
-      <span class="cc-node-port cc-node-port--bottom2" data-port="bottom2" title="Entidades"></span>
+      <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Audiencias"></span>
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon cc-node-icon--anchor"><i class="fas fa-bullseye"></i></span>
         <div class="cc-node-head-text">
