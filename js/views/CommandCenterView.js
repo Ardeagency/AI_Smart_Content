@@ -206,7 +206,7 @@ class CommandCenterView extends BaseView {
         .order('platform', { ascending: true }),
       supabase
         .from('campaigns')
-        .select('id, nombre_campana, descripcion_interna, persona_id, brief_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics')
+        .select('id, organization_id, nombre_campana, descripcion_interna, persona_id, brief_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics')
         .eq('brand_container_id', bid)
         .order('updated_at', { ascending: false }),
       supabase

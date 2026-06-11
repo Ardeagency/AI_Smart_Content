@@ -111,6 +111,11 @@
     (this._segments || []).forEach((s) => { if (s.persona_id && s.campaign_id) push(`aud:${s.persona_id}`, `camp:${s.campaign_id}`, true); });
     // campaigns.brief_id: campana -> brief (si el brief esta colocado en el canvas)
     (this._campaigns || []).forEach((c) => { if (c.brief_id) push(`camp:${c.id}`, `briefs:${c.brief_id}`, false); });
+    // campaign_brief_entities: entidad -> brief (mapa entity_id -> nodo colocado)
+    (this._briefEntities || []).forEach((be) => {
+      const nodeKey = this._entByEntityId && this._entByEntityId[be.entity_id];
+      if (nodeKey && be.brief_id) push(nodeKey, `briefs:${be.brief_id}`, false);
+    });
     // libres
     (this._links || []).forEach((l) => push(l.from, l.to, false));
     return out;
@@ -171,6 +176,9 @@
     const world = document.getElementById('ccCanvasWorld');
     const empty = document.getElementById('ccCanvasEmpty');
     if (!world) return;
+
+    // Precarga (una vez) las relaciones reales brief↔entidad + mapa entity_id.
+    if (!this._stratRelLoaded) { this._stratRelLoaded = true; this._loadStrategyRelations(); }
 
     this._loadPositions();
     const nodes = this._canvasNodes();
@@ -972,6 +980,8 @@
     if (!this._placed.some((p) => p.type === lib.type && String(p.id) === String(lib.id))) {
       this._placed.push({ type: lib.type, id: lib.id, name: lib.name, sub: lib.sub });
       this._savePlaced();
+      // refresca el mapa entity_id de la nueva identidad (para conectar a briefs)
+      if (/^(products|services|places|characters)$/.test(lib.type)) this._loadStrategyRelations();
     }
     const w = this._worldPointFromClient(clientX, clientY);
     this._positions[key] = { x: Math.max(0, w.x - 110), y: Math.max(0, w.y - 20) };
@@ -1291,11 +1301,11 @@
     // audiencia <-> campana persiste persona_id en BD (cualquier direccion:
     // con el trigger arriba se arrastra camp->aud; antes solo aud->camp).
     if (fromKey.startsWith('aud:') && toKey.startsWith('camp:')) {
-      this._connectCampaignToPersona(toKey.slice(5), fromKey.slice(4));
+      this._linkAudienceSegment(toKey.slice(5), fromKey.slice(4));
       return;
     }
     if (fromKey.startsWith('camp:') && toKey.startsWith('aud:')) {
-      this._connectCampaignToPersona(fromKey.slice(5), toKey.slice(4));
+      this._linkAudienceSegment(fromKey.slice(5), toKey.slice(4));
       return;
     }
     // campana <-> brief persiste campaigns.brief_id (cualquier direccion)
@@ -1305,6 +1315,10 @@
     if (fromKey.startsWith('briefs:') && toKey.startsWith('camp:')) {
       this._linkCampaignBrief(toKey.slice(5), fromKey.slice(7)); return;
     }
+    // entidad <-> brief persiste campaign_brief_entities (con is_hero en la 1ra)
+    const _isEnt = (k) => /^(products|services|places|characters):/.test(k);
+    if (_isEnt(fromKey) && toKey.startsWith('briefs:')) { this._linkBriefEntity(toKey.slice(7), fromKey); return; }
+    if (fromKey.startsWith('briefs:') && _isEnt(toKey)) { this._linkBriefEntity(fromKey.slice(7), toKey); return; }
     // Link libre (visual). Evitar duplicado en cualquier direccion.
     this._loadLinks();
     const dup = this._links.some((l) => (l.from === fromKey && l.to === toKey) || (l.from === toKey && l.to === fromKey));
@@ -1314,12 +1328,21 @@
 
   P._removeLink = function (fromKey, toKey) {
     if (fromKey.startsWith('aud:') && toKey.startsWith('camp:')) {
-      this._disconnectCampaign(toKey.slice(5));
+      this._unlinkAudienceSegment(toKey.slice(5), fromKey.slice(4));
+      return;
+    }
+    if (fromKey.startsWith('camp:') && toKey.startsWith('aud:')) {
+      this._unlinkAudienceSegment(fromKey.slice(5), toKey.slice(4));
       return;
     }
     if ((fromKey.startsWith('camp:') && toKey.startsWith('briefs:')) || (fromKey.startsWith('briefs:') && toKey.startsWith('camp:'))) {
       this._unlinkCampaignBrief(fromKey.startsWith('camp:') ? fromKey.slice(5) : toKey.slice(5));
       return;
+    }
+    {
+      const _isEnt = (k) => /^(products|services|places|characters):/.test(k);
+      if (_isEnt(fromKey) && toKey.startsWith('briefs:')) { this._unlinkBriefEntity(toKey.slice(7), fromKey); return; }
+      if (fromKey.startsWith('briefs:') && _isEnt(toKey)) { this._unlinkBriefEntity(fromKey.slice(7), toKey); return; }
     }
     this._loadLinks();
     this._links = this._links.filter((l) => !((l.from === fromKey && l.to === toKey) || (l.from === toKey && l.to === fromKey)));
@@ -1346,6 +1369,115 @@
     if (error) { console.warn('[CC] brief_id clear:', error.message); return; }
     c.brief_id = null;
     this._renderCanvas();
+  };
+
+  /** audiencia -> campana: persiste una fila en audience_segments (permite N
+      audiencias por campana). La 1ra ademas queda como persona_id (primaria). */
+  P._linkAudienceSegment = async function (campId, persId) {
+    const c = (this._campaigns || []).find((x) => String(x.id) === String(campId));
+    if (!c || !this._supabase) return;
+    const dup = (this._segments || []).some((s) => String(s.campaign_id) === String(campId) && String(s.persona_id) === String(persId));
+    if (!dup) {
+      const row = { persona_id: persId, campaign_id: campId, brand_container_id: this._containerRow?.id, organization_id: c.organization_id, status: 'active', source: 'canvas', created_via: 'manual' };
+      const { data, error } = await this._supabase.from('audience_segments').insert(row).select('id, persona_id, campaign_id, platform, status, source').single();
+      if (error) { console.warn('[CC] audience_segments insert:', error.message); return; }
+      this._segments = [...(this._segments || []), data];
+    }
+    if (!c.persona_id) {
+      const { error } = await this._supabase.from('campaigns').update({ persona_id: persId }).eq('id', campId);
+      if (!error) c.persona_id = persId;
+    }
+    this._renderCanvas();
+  };
+
+  /** Quitar una audiencia de una campana: borra su audience_segments y reconcilia
+      persona_id (si era la primaria, pasa a otra restante o null). */
+  P._unlinkAudienceSegment = async function (campId, persId) {
+    const c = (this._campaigns || []).find((x) => String(x.id) === String(campId));
+    if (!c || !this._supabase) return;
+    const { error } = await this._supabase.from('audience_segments').delete().eq('campaign_id', campId).eq('persona_id', persId);
+    if (error) { console.warn('[CC] audience_segments delete:', error.message); return; }
+    this._segments = (this._segments || []).filter((s) => !(String(s.campaign_id) === String(campId) && String(s.persona_id) === String(persId)));
+    if (String(c.persona_id || '') === String(persId)) {
+      const other = (this._segments || []).find((s) => String(s.campaign_id) === String(campId));
+      const newPid = other ? other.persona_id : null;
+      await this._supabase.from('campaigns').update({ persona_id: newPid }).eq('id', campId);
+      c.persona_id = newPid;
+    }
+    this._renderCanvas();
+  };
+
+  /** brand_entities.id de un nodo identidad (subtipo:id → entity_id). */
+  P._entityIdForNode = async function (type, id) {
+    const table = { products: 'products', services: 'services', places: 'brand_places', characters: 'brand_characters' }[type];
+    if (!table || !this._supabase) return null;
+    if (this._entityIdMap && this._entityIdMap[`${type}:${id}`]) return this._entityIdMap[`${type}:${id}`];
+    const { data } = await this._supabase.from(table).select('entity_id').eq('id', id).single();
+    return data?.entity_id || null;
+  };
+
+  /** entidad -> brief: persiste campaign_brief_entities (is_hero en la 1ra del brief). */
+  P._linkBriefEntity = async function (briefId, entKey) {
+    const sep = entKey.indexOf(':');
+    const type = entKey.slice(0, sep), id = entKey.slice(sep + 1);
+    const entityId = await this._entityIdForNode(type, id);
+    if (!entityId || !this._supabase) return;
+    const list = this._briefEntities || [];
+    if (list.some((b) => String(b.brief_id) === String(briefId) && String(b.entity_id) === String(entityId))) return;
+    const isHero = !list.some((b) => String(b.brief_id) === String(briefId)); // 1ra del brief = hero
+    const { data, error } = await this._supabase.from('campaign_brief_entities').insert({ brief_id: briefId, entity_id: entityId, is_hero: isHero }).select('id, brief_id, entity_id, is_hero').single();
+    if (error) { console.warn('[CC] brief_entities insert:', error.message); return; }
+    this._briefEntities = [...list, data];
+    if (!this._entByEntityId) this._entByEntityId = {};
+    this._entByEntityId[entityId] = entKey;
+    if (!this._entityIdMap) this._entityIdMap = {};
+    this._entityIdMap[entKey] = entityId;
+    this._renderCanvas();
+  };
+
+  /** Quitar entidad de un brief: borra campaign_brief_entities. */
+  P._unlinkBriefEntity = async function (briefId, entKey) {
+    const sep = entKey.indexOf(':');
+    const type = entKey.slice(0, sep), id = entKey.slice(sep + 1);
+    const entityId = await this._entityIdForNode(type, id);
+    if (!entityId || !this._supabase) return;
+    const { error } = await this._supabase.from('campaign_brief_entities').delete().eq('brief_id', briefId).eq('entity_id', entityId);
+    if (error) { console.warn('[CC] brief_entities delete:', error.message); return; }
+    this._briefEntities = (this._briefEntities || []).filter((b) => !(String(b.brief_id) === String(briefId) && String(b.entity_id) === String(entityId)));
+    this._renderCanvas();
+  };
+
+  /** Precarga las relaciones brief↔entidad de la BD + el mapa entity_id↔nodo
+      para las identidades colocadas. Fire-and-forget; re-pinta aristas al terminar. */
+  P._loadStrategyRelations = async function () {
+    if (!this._supabase) return;
+    const bid = this._containerRow?.id;
+    try {
+      // 1. brief_entities de los briefs de esta sub-marca
+      let be = [];
+      if (bid) {
+        const { data: briefs } = await this._supabase.from('campaign_briefs').select('id').eq('brand_container_id', bid);
+        const briefIds = (briefs || []).map((b) => b.id);
+        if (briefIds.length) {
+          const { data } = await this._supabase.from('campaign_brief_entities').select('id, brief_id, entity_id, is_hero').in('brief_id', briefIds);
+          be = data || [];
+        }
+      }
+      this._briefEntities = be;
+      // 2. entity_id de las identidades colocadas → mapas en ambos sentidos
+      this._loadPlaced();
+      const table = { products: 'products', services: 'services', places: 'brand_places', characters: 'brand_characters' };
+      const byType = {};
+      (this._placed || []).forEach((p) => { if (table[p.type]) (byType[p.type] = byType[p.type] || []).push(p.id); });
+      const fwd = {}, rev = {};
+      for (const t of Object.keys(byType)) {
+        const { data } = await this._supabase.from(table[t]).select('id, entity_id').in('id', byType[t]);
+        (data || []).forEach((r) => { if (r.entity_id) { fwd[`${t}:${r.id}`] = r.entity_id; rev[r.entity_id] = `${t}:${r.id}`; } });
+      }
+      this._entityIdMap = fwd;
+      this._entByEntityId = rev;
+      this._renderEdges();
+    } catch (e) { console.warn('[CC] _loadStrategyRelations:', e?.message); }
   };
 
   // ------------------------------------------------------------------
