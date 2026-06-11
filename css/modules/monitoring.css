@@ -184,6 +184,8 @@
 
 /* Area de contenido del tab activo: ocupa el alto restante del board */
 .mn-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* El empty state premium (.products-list-empty + .ple-*, globales) llena el area */
+.mn-content > .products-list-empty { flex: 1; min-height: 0; }
 
 /* ── Tab "Sugerencias del sistema" (propuestas) ── */
 .mn-suggestions { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }
@@ -201,7 +203,8 @@
 .mn-sug-avatar {
   flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.7); font-size: 15px;
+  background: linear-gradient(135deg, #0018ee 0%, #5b00ea 60%, #900090 100%);
+  color: #fff; font-size: 15px;
 }
 .mn-sug-main { flex: 1; min-width: 0; }
 .mn-sug-name { font-size: 14px; font-weight: 600; color: #fff; }
@@ -237,7 +240,7 @@
 
 .mn-col-head { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .mn-col-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: rgba(255,255,255,0.3); }
-.mn-col--news   .mn-col-dot { background: var(--brand-gradient-dynamic, var(--brand-gradient)); box-shadow: 0 0 8px rgba(255, 255, 255, 0.3); }
+.mn-col--news   .mn-col-dot { background: #7c5cff; box-shadow: 0 0 7px rgba(124,92,255,0.6); }
 .mn-col--calm   .mn-col-dot { background: #22c55e; }
 .mn-col--silent .mn-col-dot { background: #9ca3af; }
 .mn-col--paused .mn-col-dot { background: #5b616e; }
@@ -299,7 +302,11 @@
   width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center; font-size: 13px;
 }
-.mn-card-avatar--profile { background: rgba(99, 102, 241, 0.14); color: #a5b4fc; }
+/* Avatar de perfil: degradado de marca azul-morado (--brand-gradient-3) */
+.mn-card-avatar--profile {
+  background: linear-gradient(135deg, #0018ee 0%, #5b00ea 60%, #900090 100%);
+  color: #fff;
+}
 .mn-card-avatar--page    { background: rgba(20, 184, 166, 0.14); color: #5eead4; }
 .mn-card-id { flex: 1; min-width: 0; }
 .mn-card-title {
@@ -336,13 +343,13 @@
 .mn-acts { display: inline-flex; gap: 4px; }
 .mn-act {
   width: 28px; height: 28px; border-radius: 7px;
-  background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.16);
-  color: rgba(199, 210, 254, 0.8); cursor: pointer; font-size: 11px;
+  background: rgba(91, 0, 234, 0.12); border: 1px solid rgba(91, 0, 234, 0.28);
+  color: #c4b5fd; cursor: pointer; font-size: 11px;
   display: inline-flex; align-items: center; justify-content: center;
   transition: all 0.15s ease; text-decoration: none;
 }
 .mn-act:hover {
-  background: rgba(99, 102, 241, 0.16); border-color: rgba(129, 140, 248, 0.4); color: #e0e7ff;
+  background: rgba(91, 0, 234, 0.22); border-color: rgba(124, 58, 237, 0.5); color: #ede9fe;
 }
 .mn-card-foot-right { display: inline-flex; align-items: center; gap: 6px; }
 .mn-card-foot-right .mn-btn-icon { width: 27px; height: 27px; }

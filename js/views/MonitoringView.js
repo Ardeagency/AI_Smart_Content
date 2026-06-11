@@ -480,12 +480,11 @@ class MonitoringView extends BaseView {
 
     if (!items.length) {
       const isPage = kind === 'page';
-      return `
-        <div class="mn-empty mn-empty--first">
-          <div class="mn-empty-icon"><i class="fas ${isPage ? 'fa-globe' : 'fa-binoculars'}"></i></div>
-          <p>${isPage ? __('Aún no monitoreas ninguna URL.') : __('Aún no sigues a ninguna marca o perfil.')}<br>${__('Agrega el primero y nosotros nos encargamos del resto.')}</p>
-          <button type="button" class="mn-btn-primary" data-action="new-item"><i class="fas fa-plus"></i> ${__('Seguir algo nuevo')}</button>
-        </div>`;
+      return this._emptyState({
+        icon: isPage ? 'fa-globe' : 'fa-binoculars',
+        title: isPage ? __('Aún no monitoreas ninguna URL.') : __('Aún no sigues a ninguna marca o perfil.'),
+        subtitle: __('Agrega el primero y nosotros nos encargamos del resto.'),
+      });
     }
 
     const buckets = { news: [], calm: [], silent: [], paused: [] };
@@ -510,15 +509,34 @@ class MonitoringView extends BaseView {
     return `<div class="mn-cols">${MonitoringView.COLUMNS.map(column).join('')}</div>`;
   }
 
+  /* ── Empty state premium (mismo patron que las paginas de identidad:
+        spotlight de puntos + medallon + titular + CTA). Reusa .products-list-empty
+        y .ple-* (globales via bundle.css). ── */
+  _emptyState({ icon, title, subtitle, cta = true }) {
+    const actions = cta
+      ? `<div class="ple-actions"><button type="button" class="ple-btn ple-btn--primary" data-action="new-item"><i class="fas fa-plus"></i> ${__('Seguir algo nuevo')}</button></div>`
+      : '';
+    return `
+      <div class="products-list-empty">
+        <div class="ple-content">
+          <div class="ple-medallion" aria-hidden="true"><i class="fas ${icon}"></i></div>
+          <h3 class="ple-title">${this._esc(title)}</h3>
+          <p class="ple-subtitle">${this._esc(subtitle)}</p>
+          ${actions}
+        </div>
+      </div>`;
+  }
+
   /* ── Tab de sugerencias del sistema (propuestas, sin el banner rosa) ── */
   _buildSuggestionsTab(model) {
     const props = model.propuestas;
     if (!props.length) {
-      return `
-        <div class="mn-empty mn-empty--first">
-          <div class="mn-empty-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
-          <p>${__('No hay sugerencias nuevas por ahora.')}<br>${__('Cuando detectemos perfiles o páginas cerca de tu competencia, aparecerán aquí.')}</p>
-        </div>`;
+      return this._emptyState({
+        icon: 'fa-wand-magic-sparkles',
+        title: __('No hay sugerencias nuevas por ahora.'),
+        subtitle: __('Cuando detectemos perfiles o páginas cerca de tu competencia, aparecerán aquí.'),
+        cta: false,
+      });
     }
     const tipoLabel = (t) => MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || __('Perfil');
     const cards = props.map((e) => {
