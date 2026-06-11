@@ -3179,6 +3179,27 @@
 /* En cards flex (gap propio) el margen sobra: el gap separa titulo y contenido. */
 .mb-act-card > .mb-card-title { margin-bottom: 0; }
 
+/* ── Recepción del público (score dinámico por publicación) ── */
+.mb-rcp-card .mb-card-title { margin-bottom: 0.3rem; }
+.mb-rcp-sub { font-size: 0.75rem; line-height: 1.4; color: var(--text-muted, rgba(212,209,216,0.55)); margin-bottom: 1rem; }
+.mb-rcp { display: flex; flex-direction: column; }
+.mb-rcp-row { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border-divider, #242424); }
+.mb-rcp-row:last-child { border-bottom: 0; }
+.mb-rcp-rank { flex: none; width: 1.1rem; text-align: center; font-size: 0.8125rem; font-weight: 700; color: var(--text-muted, rgba(212,209,216,0.4)); font-variant-numeric: tabular-nums; }
+.mb-rcp-net { flex: none; width: 1.5rem; text-align: center; color: var(--text-muted, rgba(212,209,216,0.6)); font-size: 0.95rem; }
+.mb-rcp-body { flex: 1 1 auto; min-width: 0; }
+.mb-rcp-snippet { font-size: 0.875rem; line-height: 1.35; color: var(--text-primary, #D4D1D8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mb-rcp-meta { margin-top: 0.2rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.5)); }
+.mb-rcp-emo { font-weight: 600; color: var(--text-secondary, #C9C7CE); }
+.mb-rcp-host { color: #e06464; font-weight: 600; }
+.mb-rcp-early { padding: 1px 6px; border-radius: 5px; background: rgba(255,255,255,0.06); }
+.mb-rcp-score { flex: none; min-width: 3.4rem; text-align: right; font-size: 1.0625rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.mb-rcp-score--good { color: #6bcf7f; }
+.mb-rcp-score--mid  { color: #e0a045; }
+.mb-rcp-score--bad  { color: #e06464; }
+.mb-rcp-link { flex: none; color: var(--text-muted, rgba(212,209,216,0.45)); font-size: 0.8125rem; text-decoration: none; transition: color 0.18s ease; }
+.mb-rcp-link:hover { color: var(--text-primary, #D4D1D8); }
+
 /* Card de grafico: superficie estandar para que todos los charts del cuerpo
    (palancas, radar de patrones, etc.) compartan el mismo fondo que el resto
    (longitudinal, evolucion, publico efectivo). */

@@ -184,6 +184,7 @@
               ${this._buildActionPlanSection(data, insights)}
               ${this._buildLongitudinalSection(data)}
               ${this._buildTopPostsSection(data?.topPosts?.data)}
+              ${this._buildReceptionSection(data?.postReception?.data)}
               ${this._buildToneTopicSection(data?.featured)}
               ${this._buildCommentsSection(data?.comments?.data)}
               ${this._buildLeverageSection(insights)}
@@ -542,6 +543,48 @@
               </div>
               ${items}
             </div>
+          </div>
+        </section>`;
+    },
+
+    /* ── Recepción del público: score DINÁMICO por publicación (−100..+100) desde
+       el sentimiento de SUS comentarios, no el engagement bruto. Destaca cuál
+       resonó más y cuál cayó. ── */
+    _buildReceptionSection(rows) {
+      const list = (Array.isArray(rows) ? rows : []).filter((r) => Number(r.comments_count) > 0);
+      if (!list.length) return '';
+      const emoMap = { joy: __('Alegría'), anger: __('Ira'), disgust: __('Asco'), sadness: __('Tristeza'), fear: __('Miedo'), surprise: __('Sorpresa') };
+      const item = (r, rank) => {
+        const sc = Number(r.reception_score) || 0;
+        const cls = sc >= 40 ? 'good' : sc >= 0 ? 'mid' : 'bad';
+        const scoreStr = `${sc > 0 ? '+' : ''}${sc.toFixed(1)}`;
+        const emoKey = String(r.dominant_emotion || '').toLowerCase();
+        const emo = emoKey ? (emoMap[emoKey] || this._capWords(r.dominant_emotion)) : '';
+        const n = Number(r.comments_count) || 0;
+        const host = Number(r.hostile_count) || 0;
+        return `
+          <div class="mb-rcp-row">
+            <span class="mb-rcp-rank">${rank}</span>
+            <span class="mb-rcp-net"><i class="fab ${this._platformIcon(r.network)}"></i></span>
+            <div class="mb-rcp-body">
+              <div class="mb-rcp-snippet">${this._esc(r.snippet || '')}</div>
+              <div class="mb-rcp-meta">
+                ${emo ? `<span class="mb-rcp-emo">${this._esc(emo)}</span>` : ''}
+                <span>${n} ${n === 1 ? __('comentario') : __('comentarios')}</span>
+                ${host > 0 ? `<span class="mb-rcp-host">${host} ${host === 1 ? __('hostil') : __('hostiles')}</span>` : ''}
+                ${n < 3 ? `<span class="mb-rcp-early">${__('señal temprana')}</span>` : ''}
+              </div>
+            </div>
+            <div class="mb-rcp-score mb-rcp-score--${cls}">${this._esc(scoreStr)}</div>
+            ${r.permalink ? `<a class="mb-rcp-link" href="${this._esc(r.permalink)}" target="_blank" rel="noopener" aria-label="${__('Abrir publicación')}"><i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}
+          </div>`;
+      };
+      return `
+        <section class="mb-section mb-section--wide">
+          <div class="mb-chart-card mb-rcp-card">
+            <div class="mb-card-title">${__('Recepción del público')}</div>
+            <div class="mb-rcp-sub">${__('Qué tan bien recibió tu audiencia cada publicación, según el sentimiento de sus comentarios — no el engagement. Escala −100 a +100.')}</div>
+            <div class="mb-rcp">${list.slice(0, 6).map((r, i) => item(r, i + 1)).join('')}</div>
           </div>
         </section>`;
     },

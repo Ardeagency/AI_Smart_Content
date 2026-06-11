@@ -124,7 +124,7 @@ class CampanasDataService {
       vulnerabilities,
       optimizationInsights, alertScore,
       activityHistory, engagementTrend, sentimentActivity, postingHours,
-      estrategiaTopics, topHighlightedPosts, comments,
+      estrategiaTopics, topHighlightedPosts, comments, postReception,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
@@ -216,6 +216,12 @@ class CampanasDataService {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
         p_brand_container_ids: bcids, p_platforms: platforms, p_limit: 5,
       }),
+      // Recepción del público: score dinámico por post desde el sentimiento de SUS
+      // comentarios (no el engagement). Ventana amplia: la recepción es evergreen.
+      this.sb.rpc('dashboard_brand_post_reception', {
+        p_org_id: this.orgId, p_date_from: '2000-01-01T00:00:00Z', p_date_to: new Date().toISOString(),
+        p_brand_container_ids: bcids, p_min_comments: 2, p_limit: 6,
+      }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -244,6 +250,7 @@ class CampanasDataService {
 
       topPosts:         u(topHighlightedPosts),
       comments:         u(comments),
+      postReception:    u(postReception),
 
       whatWorks: u(whatWorks),
       audiencePatterns: u(audiencePatterns),
