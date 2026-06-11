@@ -45,6 +45,7 @@ class ServicesView extends BaseView {
   <div class="products-list-empty" id="servicesEmpty" style="display:none;">
     ${this.emptyState({
       icon: 'fa-briefcase',
+      iconSrc: '/recursos/icons/Service.svg',
       title: __('Crea tu primer servicio'),
       subtitle: __('Sube fotos o una URL y Vera arma la ficha: entregables, metodologia y diferenciadores. Apareceran aqui para tus producciones.'),
       primaryLabel: __('+ Servicio'),
@@ -189,14 +190,17 @@ class ServicesView extends BaseView {
 
     if (count) count.textContent = String(this.services.length || 0);
 
+    const page = document.getElementById('servicesPage');
     if (!this.services.length) {
       grid.innerHTML = '';
       if (section) section.style.display = 'none';
       if (empty) empty.style.display = '';
+      if (page) page.classList.add('is-empty');
       return;
     }
     if (section) section.style.display = '';
     if (empty) empty.style.display = 'none';
+    if (page) page.classList.remove('is-empty');
 
     grid.innerHTML = this.services.map((s) => {
       const price = s.precio_base != null ? `${s.precio_base} ${s.moneda || 'USD'}` : '';

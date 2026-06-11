@@ -485,9 +485,12 @@ class BaseView {
    * subtitulo + CTAs. Los botones llevan data-empty-add / data-empty-attach
    * para cablearlos en la vista. Diseño en Figma node 133:14.
    */
-  static emptyState({ icon = 'fa-inbox', title = '', subtitle = '', primaryLabel = '', secondaryLabel = '' } = {}) {
+  static emptyState({ icon = 'fa-inbox', iconSrc = '', title = '', subtitle = '', primaryLabel = '', secondaryLabel = '' } = {}) {
     const esc = BaseView.escapeHtml;
     const ghosts = '<div class="ple-ghost"></div>'.repeat(3);
+    const medallionInner = iconSrc
+      ? `<img class="ple-medallion-img" src="${esc(iconSrc)}" alt="" width="30" height="30">`
+      : `<i class="fas ${esc(icon)}"></i>`;
     const primary = primaryLabel
       ? `<button type="button" class="ple-btn ple-btn--primary" data-empty-add>${esc(primaryLabel)}</button>` : '';
     const secondary = secondaryLabel
@@ -498,7 +501,7 @@ class BaseView {
       <div class="ple-ghosts" aria-hidden="true">${ghosts}</div>
       <div class="ple-veil" aria-hidden="true"></div>
       <div class="ple-content">
-        <div class="ple-medallion" aria-hidden="true"><i class="fas ${esc(icon)}"></i></div>
+        <div class="ple-medallion" aria-hidden="true">${medallionInner}</div>
         <h3 class="ple-title">${esc(title)}</h3>
         ${sub}
         ${actions}

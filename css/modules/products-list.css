@@ -180,11 +180,8 @@
   justify-content: center;
   min-height: 440px;
   text-align: center;
-  border-radius: 16px;
-  border: 1px solid var(--border-divider, #242424);
-  background-color: #0f1011;
-  /* puntitos sutiles de fondo (motivo de la plataforma) */
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.4px);
+  /* Sin caja: sin color ni borde, se funde con la pagina. Solo puntitos sutiles. */
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1.4px);
   background-size: 22px 22px;
 }
 
@@ -237,9 +234,9 @@
   z-index: 1;
   pointer-events: none;
   background: radial-gradient(ellipse 62% 72% at 50% 48%,
-    rgba(15, 16, 17, 0.9) 0%,
-    rgba(15, 16, 17, 0.55) 52%,
-    rgba(15, 16, 17, 0) 100%);
+    rgba(11, 11, 11, 0.9) 0%,
+    rgba(11, 11, 11, 0.55) 52%,
+    rgba(11, 11, 11, 0) 100%);
 }
 
 .ple-content {
@@ -272,6 +269,20 @@
   line-height: 1;
   color: var(--text-primary, #D4D1D8);
   opacity: 0.92;
+}
+.ple-medallion-img {
+  width: 30px;
+  height: 30px;
+  opacity: 0.92;
+}
+
+/* Empty state ocupando toda la pagina: se oculta el header (titulo + botones,
+   que el empty state ya provee) y el contenido se centra en el alto disponible. */
+.products-list-page.is-empty .products-list-header,
+.services-page.is-empty .services-header { display: none; }
+.products-list-page.is-empty .products-list-empty,
+.services-page.is-empty .products-list-empty {
+  min-height: calc(100vh - 110px);
 }
 
 .ple-title {

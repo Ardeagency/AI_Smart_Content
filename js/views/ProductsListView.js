@@ -46,6 +46,7 @@ class ProductsListView extends BaseView {
   <div class="products-list-empty" id="productsListEmpty" style="display:none;">
     ${this.emptyState({
       icon: 'fa-box-open',
+      iconSrc: '/recursos/icons/Identities.svg',
       title: __('Crea tu primer producto'),
       subtitle: __('Sube fotos o una URL y Vera arma la ficha: beneficios, diferenciadores y caracteristicas. Apareceran aqui como base para tus producciones.'),
       primaryLabel: __('+ Producto'),
@@ -257,14 +258,17 @@ class ProductsListView extends BaseView {
 
     if (count) count.textContent = String(this.products.length || 0);
 
+    const page = document.getElementById('productsListPage');
     if (!this.products.length) {
       container.innerHTML = '';
       if (section) section.style.display = 'none';
       if (empty) empty.style.display = '';
+      if (page) page.classList.add('is-empty');
       return;
     }
     if (section) section.style.display = '';
     if (empty) empty.style.display = 'none';
+    if (page) page.classList.remove('is-empty');
 
     const itemHtmls = this.products.map((p, i) => this._renderProductCard(p, i));
 

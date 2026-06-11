@@ -51,6 +51,7 @@ class PlacesView extends BaseView {
   <div class="products-list-empty" id="placesListEmpty" style="display:none;">
     ${this.emptyState({
       icon: 'fa-map-marker-alt',
+      iconSrc: '/recursos/icons/Places.svg',
       title: __('Crea tu primer escenario'),
       subtitle: __('Sube fotos o una URL y Vera arma la ficha del lugar: ambiente, amenidades y caracteristicas visuales. Apareceran aqui como sets para tus producciones.'),
       primaryLabel: __('+ Escenario'),
@@ -217,12 +218,15 @@ class PlacesView extends BaseView {
 
     if (count) count.textContent = String(this.places.length || 0);
 
+    const page = document.getElementById('placesListPage');
     if (!this.places.length) {
       container.innerHTML = '';
       if (section) section.style.display = 'none';
       if (empty) empty.style.display = '';
+      if (page) page.classList.add('is-empty');
       return;
     }
+    if (page) page.classList.remove('is-empty');
     if (section) section.style.display = '';
     if (empty) empty.style.display = 'none';
 

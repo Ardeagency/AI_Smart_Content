@@ -57,6 +57,7 @@ class CharactersView extends BaseView {
   <div class="products-list-empty" id="charactersListEmpty" style="display:none;">
     ${this.emptyState({
       icon: 'fa-users',
+      iconSrc: '/recursos/icons/Characters.svg',
       title: __('Crea tu primer personaje'),
       subtitle: __('Sube fotos de referencia y Vera arma la ficha: rasgos, vestuario y rol. Apareceran aqui listos para protagonizar tus producciones.'),
       primaryLabel: __('+ Personaje'),
@@ -220,14 +221,17 @@ class CharactersView extends BaseView {
 
     if (count) count.textContent = String(this.characters.length || 0);
 
+    const page = document.getElementById('charactersListPage');
     if (!this.characters.length) {
       container.innerHTML = '';
       if (section) section.style.display = 'none';
       if (empty) empty.style.display = '';
+      if (page) page.classList.add('is-empty');
       return;
     }
     if (section) section.style.display = '';
     if (empty) empty.style.display = 'none';
+    if (page) page.classList.remove('is-empty');
 
     const itemHtmls = this.characters.map((c, i) => this._renderCharacterCard(c, i));
     container.innerHTML = `<div class="living-masonry-grid products-list-masonry-grid">${itemHtmls.join('')}</div>`;
