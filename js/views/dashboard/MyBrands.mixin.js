@@ -242,9 +242,7 @@
       });
       const evidLine = (n, lift) => {
         const base = __('{n} posts · {s}{l}% sobre tu promedio de interacción.', { n, s: lift > 0 ? '+' : '', l: r(lift) });
-        const conf = n >= N_MIN
-          ? __(' Muestra suficiente = señal fiable, no es ruido.')
-          : __(' Muestra chica = señal temprana, a validar con más posts.');
+        const conf = n >= N_MIN ? '' : __(' Muestra pequeña — conviene validar con más posts.');
         return base + conf;
       };
 
