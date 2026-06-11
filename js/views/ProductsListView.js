@@ -42,16 +42,16 @@ class ProductsListView extends BaseView {
     <div class="products-list-masonry" id="productsListMasonry">${this.masonrySkeleton(12, 'products-list-masonry-grid')}</div>
   </section>
 
-  <div class="products-list-empty" id="productsListEmpty" style="display:none;">
-    ${this.emptyState({
-      icon: 'fa-box-open',
-      iconSrc: '/recursos/icons/Identities.svg',
-      title: __('Crea tu primer producto'),
-      subtitle: __('Sube fotos o una URL y Vera arma la ficha: beneficios, diferenciadores y caracteristicas. Apareceran aqui como base para tus producciones.'),
-      primaryLabel: __('+ Producto'),
-      secondaryLabel: __('Adjuntar producto'),
-    })}
-  </div>
+  ${this.emptyState({
+    id: 'productsListEmpty',
+    hidden: true,
+    icon: 'fa-box-open',
+    iconSrc: '/recursos/icons/Identities.svg',
+    title: __('Crea tu primer producto'),
+    subtitle: __('Sube fotos o una URL y Vera arma la ficha: beneficios, diferenciadores y caracteristicas. Apareceran aqui como base para tus producciones.'),
+    primaryLabel: __('+ Producto'),
+    secondaryLabel: __('Adjuntar producto'),
+  })}
 </div>`;
   }
 

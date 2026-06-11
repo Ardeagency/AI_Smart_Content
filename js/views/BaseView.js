@@ -479,29 +479,49 @@ class BaseView {
     return `<div class="living-masonry-grid ${gridClass}">${item.repeat(count)}</div>`;
   }
   /**
-   * Empty state premium para listados de identidades (Products/Services/Sets/
-   * Characters). Devuelve el INNER de un contenedor .products-list-empty:
-   * ghost cards de preview + medallon con icono + titular accionable +
-   * subtitulo + CTAs. Los botones llevan data-empty-add / data-empty-attach
-   * para cablearlos en la vista. Diseño en Figma node 133:14.
+   * EMPTY STATE — plantilla canonica de la plataforma. Devuelve el componente
+   * COMPLETO (contenedor .empty-state + spotlight + medallon + titular +
+   * subtitulo + CTAs). Estilos en css/modules/empty-state.css (global).
+   *
+   * Opciones:
+   *   icon | iconSrc   medallion (FA class o ruta a SVG propio)
+   *   title, subtitle
+   *   primaryLabel, secondaryLabel   textos de los CTA (omitir = sin boton)
+   *   primaryAction, secondaryAction data-action de cada CTA (si se omite, el
+   *                                  boton lleva data-empty-add / data-empty-attach)
+   *   id        id del contenedor (para toggle show/hide desde la vista)
+   *   hidden    arranca oculto (display:none)
+   *   fill      ocupa el alto del contenedor flex (.empty-state--fill)
+   *   compact   variante chica para areas pequeñas (columnas, paneles)
+   * Diseño en Figma node 133:14.
    */
-  static emptyState({ icon = 'fa-inbox', iconSrc = '', title = '', subtitle = '', primaryLabel = '', secondaryLabel = '' } = {}) {
+  static emptyState({
+    icon = 'fa-inbox', iconSrc = '', title = '', subtitle = '',
+    primaryLabel = '', secondaryLabel = '', primaryAction = '', secondaryAction = '',
+    id = '', hidden = false, fill = false, compact = false,
+  } = {}) {
     const esc = BaseView.escapeHtml;
     const medallionInner = iconSrc
       ? `<img class="ple-medallion-img" src="${esc(iconSrc)}" alt="" width="30" height="30">`
       : `<i class="fas ${esc(icon)}"></i>`;
+    const pAttr = primaryAction ? `data-action="${esc(primaryAction)}"` : 'data-empty-add';
+    const sAttr = secondaryAction ? `data-action="${esc(secondaryAction)}"` : 'data-empty-attach';
     const primary = primaryLabel
-      ? `<button type="button" class="ple-btn ple-btn--primary" data-empty-add>${esc(primaryLabel)}</button>` : '';
+      ? `<button type="button" class="ple-btn ple-btn--primary" ${pAttr}>${esc(primaryLabel)}</button>` : '';
     const secondary = secondaryLabel
-      ? `<button type="button" class="ple-btn ple-btn--secondary" data-empty-attach>${esc(secondaryLabel)}</button>` : '';
+      ? `<button type="button" class="ple-btn ple-btn--secondary" ${sAttr}>${esc(secondaryLabel)}</button>` : '';
     const actions = (primary || secondary) ? `<div class="ple-actions">${primary}${secondary}</div>` : '';
     const sub = subtitle ? `<p class="ple-subtitle">${esc(subtitle)}</p>` : '';
+    const cls = ['empty-state', fill && 'empty-state--fill', compact && 'empty-state--compact'].filter(Boolean).join(' ');
+    const attrs = `${id ? ` id="${esc(id)}"` : ''}${hidden ? ' style="display:none;"' : ''}`;
     return `
-      <div class="ple-content">
-        <div class="ple-medallion" aria-hidden="true">${medallionInner}</div>
-        <h3 class="ple-title">${esc(title)}</h3>
-        ${sub}
-        ${actions}
+      <div class="${cls}"${attrs}>
+        <div class="ple-content">
+          <div class="ple-medallion" aria-hidden="true">${medallionInner}</div>
+          <h3 class="ple-title">${esc(title)}</h3>
+          ${sub}
+          ${actions}
+        </div>
       </div>`;
   }
 

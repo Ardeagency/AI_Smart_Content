@@ -182,10 +182,9 @@
   background: rgba(224, 145, 69, 0.18); color: #e0a045;
 }
 
-/* Area de contenido del tab activo: ocupa el alto restante del board */
+/* Area de contenido del tab activo: ocupa el alto restante del board.
+   El empty state premium usa la variante .empty-state--fill (flex:1). */
 .mn-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-/* El empty state premium (.products-list-empty + .ple-*, globales) llena el area */
-.mn-content > .products-list-empty { flex: 1; min-height: 0; }
 
 /* ── Tab "Sugerencias del sistema" (propuestas) ── */
 .mn-suggestions { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }

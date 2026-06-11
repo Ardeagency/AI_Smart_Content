@@ -413,10 +413,10 @@ class MonitoringView extends BaseView {
   /* ── Columnas "Lo que sigo" — kanban limpio por estado ── */
   static get COLUMNS() {
     return [
-      { id: 'news',   label: __('Con novedad'), hint: __('Cambios recientes') },
-      { id: 'calm',   label: __('Al día'),      hint: __('Activo y tranquilo') },
-      { id: 'silent', label: __('Sin señales'), hint: __('Callados hace rato') },
-      { id: 'paused', label: __('En pausa'),    hint: __('Desactivados') },
+      { id: 'news',   label: __('Con novedad'), hint: __('Cambios recientes'),  emptyIcon: 'fa-bell',         emptyText: __('Sin novedades por ahora') },
+      { id: 'calm',   label: __('Al día'),      hint: __('Activo y tranquilo'), emptyIcon: 'fa-circle-check', emptyText: __('Nada por aquí todavía') },
+      { id: 'silent', label: __('Sin señales'), hint: __('Callados hace rato'), emptyIcon: 'fa-moon',         emptyText: __('Nada callado por ahora') },
+      { id: 'paused', label: __('En pausa'),    hint: __('Desactivados'),       emptyIcon: 'fa-circle-pause', emptyText: __('Nada en pausa') },
     ];
   }
 
@@ -480,10 +480,13 @@ class MonitoringView extends BaseView {
 
     if (!items.length) {
       const isPage = kind === 'page';
-      return this._emptyState({
+      return this.emptyState({
+        fill: true,
         icon: isPage ? 'fa-globe' : 'fa-binoculars',
         title: isPage ? __('Aún no monitoreas ninguna URL.') : __('Aún no sigues a ninguna marca o perfil.'),
         subtitle: __('Agrega el primero y nosotros nos encargamos del resto.'),
+        primaryLabel: __('Seguir algo nuevo'),
+        primaryAction: 'new-item',
       });
     }
 
@@ -502,40 +505,22 @@ class MonitoringView extends BaseView {
           <div class="mn-col-body">
             ${list.length
               ? list.map(i => this._buildCard(i, containerName, c.id)).join('')
-              : `<div class="mn-col-empty">—</div>`}
+              : this.emptyState({ compact: true, icon: c.emptyIcon, title: c.emptyText })}
           </div>
         </section>`;
     };
     return `<div class="mn-cols">${MonitoringView.COLUMNS.map(column).join('')}</div>`;
   }
 
-  /* ── Empty state premium (mismo patron que las paginas de identidad:
-        spotlight de puntos + medallon + titular + CTA). Reusa .products-list-empty
-        y .ple-* (globales via bundle.css). ── */
-  _emptyState({ icon, title, subtitle, cta = true }) {
-    const actions = cta
-      ? `<div class="ple-actions"><button type="button" class="ple-btn ple-btn--primary" data-action="new-item"><i class="fas fa-plus"></i> ${__('Seguir algo nuevo')}</button></div>`
-      : '';
-    return `
-      <div class="products-list-empty">
-        <div class="ple-content">
-          <div class="ple-medallion" aria-hidden="true"><i class="fas ${icon}"></i></div>
-          <h3 class="ple-title">${this._esc(title)}</h3>
-          <p class="ple-subtitle">${this._esc(subtitle)}</p>
-          ${actions}
-        </div>
-      </div>`;
-  }
-
   /* ── Tab de sugerencias del sistema (propuestas, sin el banner rosa) ── */
   _buildSuggestionsTab(model) {
     const props = model.propuestas;
     if (!props.length) {
-      return this._emptyState({
+      return this.emptyState({
+        fill: true,
         icon: 'fa-wand-magic-sparkles',
         title: __('No hay sugerencias nuevas por ahora.'),
         subtitle: __('Cuando detectemos perfiles o páginas cerca de tu competencia, aparecerán aquí.'),
-        cta: false,
       });
     }
     const tipoLabel = (t) => MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || __('Perfil');

@@ -47,16 +47,16 @@ class PlacesView extends BaseView {
     <div class="products-list-masonry" id="placesListMasonry">${this.masonrySkeleton(12, 'products-list-masonry-grid')}</div>
   </section>
 
-  <div class="products-list-empty" id="placesListEmpty" style="display:none;">
-    ${this.emptyState({
-      icon: 'fa-map-marker-alt',
-      iconSrc: '/recursos/icons/Places.svg',
-      title: __('Crea tu primer escenario'),
-      subtitle: __('Sube fotos o una URL y Vera arma la ficha del lugar: ambiente, amenidades y caracteristicas visuales. Apareceran aqui como sets para tus producciones.'),
-      primaryLabel: __('+ Escenario'),
-      secondaryLabel: __('Adjuntar escenario'),
-    })}
-  </div>
+  ${this.emptyState({
+    id: 'placesListEmpty',
+    hidden: true,
+    icon: 'fa-map-marker-alt',
+    iconSrc: '/recursos/icons/Places.svg',
+    title: __('Crea tu primer escenario'),
+    subtitle: __('Sube fotos o una URL y Vera arma la ficha del lugar: ambiente, amenidades y caracteristicas visuales. Apareceran aqui como sets para tus producciones.'),
+    primaryLabel: __('+ Escenario'),
+    secondaryLabel: __('Adjuntar escenario'),
+  })}
 </div>`;
   }
 

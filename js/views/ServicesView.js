@@ -41,16 +41,16 @@ class ServicesView extends BaseView {
     <div class="services-grid" id="servicesGrid">${this.skeletonGrid(8, 'lg')}</div>
   </section>
 
-  <div class="products-list-empty" id="servicesEmpty" style="display:none;">
-    ${this.emptyState({
-      icon: 'fa-briefcase',
-      iconSrc: '/recursos/icons/Service.svg',
-      title: __('Crea tu primer servicio'),
-      subtitle: __('Sube fotos o una URL y Vera arma la ficha: entregables, metodologia y diferenciadores. Apareceran aqui para tus producciones.'),
-      primaryLabel: __('+ Servicio'),
-      secondaryLabel: __('Adjuntar servicio'),
-    })}
-  </div>
+  ${this.emptyState({
+    id: 'servicesEmpty',
+    hidden: true,
+    icon: 'fa-briefcase',
+    iconSrc: '/recursos/icons/Service.svg',
+    title: __('Crea tu primer servicio'),
+    subtitle: __('Sube fotos o una URL y Vera arma la ficha: entregables, metodologia y diferenciadores. Apareceran aqui para tus producciones.'),
+    primaryLabel: __('+ Servicio'),
+    secondaryLabel: __('Adjuntar servicio'),
+  })}
 </div>`;
   }
 

@@ -53,16 +53,16 @@ class CharactersView extends BaseView {
     <div class="products-list-masonry" id="charactersListMasonry">${this.masonrySkeleton(12, 'products-list-masonry-grid')}</div>
   </section>
 
-  <div class="products-list-empty" id="charactersListEmpty" style="display:none;">
-    ${this.emptyState({
-      icon: 'fa-users',
-      iconSrc: '/recursos/icons/Characters.svg',
-      title: __('Crea tu primer personaje'),
-      subtitle: __('Sube fotos de referencia y Vera arma la ficha: rasgos, vestuario y rol. Apareceran aqui listos para protagonizar tus producciones.'),
-      primaryLabel: __('+ Personaje'),
-      secondaryLabel: __('Adjuntar personaje'),
-    })}
-  </div>
+  ${this.emptyState({
+    id: 'charactersListEmpty',
+    hidden: true,
+    icon: 'fa-users',
+    iconSrc: '/recursos/icons/Characters.svg',
+    title: __('Crea tu primer personaje'),
+    subtitle: __('Sube fotos de referencia y Vera arma la ficha: rasgos, vestuario y rol. Apareceran aqui listos para protagonizar tus producciones.'),
+    primaryLabel: __('+ Personaje'),
+    secondaryLabel: __('Adjuntar personaje'),
+  })}
 </div>`;
   }
 

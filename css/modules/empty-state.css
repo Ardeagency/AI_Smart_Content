@@ -1,0 +1,145 @@
+/* ════════════════════════════════════════════════════════════════════
+   EMPTY STATE — plantilla CANONICA de la plataforma
+   ════════════════════════════════════════════════════════════════════
+   Uso (cualquier vista que extienda BaseView):
+     ${this.emptyState({ icon|iconSrc, title, subtitle,
+                         primaryLabel, secondaryLabel,
+                         primaryAction, secondaryAction,   // data-action (opcional)
+                         id, hidden, fill, compact })}
+   Composicion: spotlight de puntos central (mismo patron que video) + medallon
+   con icono y glow calido + titular + subtitulo + CTAs. Sin caja (se funde con
+   el fondo). Diseño en Figma node 133:14.
+   Variantes:
+     .empty-state--fill    → ocupa el alto del contenedor flex (flex:1)
+     .empty-state--compact → areas pequeñas (columnas kanban, paneles)
+   (.products-list-empty se mantiene como alias por compatibilidad.)
+   ════════════════════════════════════════════════════════════════════ */
+.empty-state,
+.products-list-empty {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 440px;
+  text-align: center;
+}
+
+/* Spotlight de puntos central — grid de dots concentrado al centro y
+   desvanecido a los bordes con mask radial. */
+.empty-state::before,
+.products-list-empty::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1.2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.2px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+  mask-image: radial-gradient(circle at 50% 45%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+}
+
+/* Ocupa el alto disponible cuando el contenedor padre es flex */
+.empty-state--fill { flex: 1; min-height: 0; }
+
+.ple-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 24px;
+  max-width: 520px;
+}
+
+.ple-medallion {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #16181b;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 0 72px 14px rgba(224, 86, 63, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.ple-medallion i {
+  font-size: 28px;
+  line-height: 1;
+  color: var(--text-primary, #D4D1D8);
+  opacity: 0.92;
+}
+.ple-medallion-img {
+  width: 30px;
+  height: 30px;
+  opacity: 0.92;
+}
+
+.ple-title {
+  margin: 22px 0 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-primary, #D4D1D8);
+  letter-spacing: -0.01em;
+}
+.ple-subtitle {
+  margin: 9px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: rgba(212, 209, 216, 0.62);
+  max-width: 460px;
+}
+
+.ple-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+.ple-btn {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  padding: 11px 18px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+.ple-btn:active { transform: translateY(1px); }
+.ple-btn--primary {
+  background: #f2f0f4;
+  color: #0f1011;
+}
+.ple-btn--primary:hover { background: #ffffff; }
+.ple-btn--secondary {
+  background: transparent;
+  color: rgba(212, 209, 216, 0.9);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.ple-btn--secondary:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ── Variante COMPACTA — areas pequeñas (columnas kanban, paneles) ── */
+.empty-state--compact { min-height: 0; padding: 6px; }
+.empty-state--compact::before { display: none; }
+.empty-state--compact .ple-content { padding: 16px 12px; max-width: none; }
+.empty-state--compact .ple-medallion {
+  width: 48px; height: 48px;
+  box-shadow: 0 0 36px 6px rgba(224, 86, 63, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.empty-state--compact .ple-medallion i { font-size: 18px; }
+.empty-state--compact .ple-medallion-img { width: 20px; height: 20px; }
+.empty-state--compact .ple-title { margin-top: 12px; font-size: 0.9rem; }
+.empty-state--compact .ple-subtitle { margin-top: 5px; font-size: 0.78rem; }
+.empty-state--compact .ple-actions { margin-top: 14px; }
