@@ -1298,6 +1298,13 @@
       this._connectCampaignToPersona(fromKey.slice(5), toKey.slice(4));
       return;
     }
+    // campana <-> brief persiste campaigns.brief_id (cualquier direccion)
+    if (fromKey.startsWith('camp:') && toKey.startsWith('briefs:')) {
+      this._linkCampaignBrief(fromKey.slice(5), toKey.slice(7)); return;
+    }
+    if (fromKey.startsWith('briefs:') && toKey.startsWith('camp:')) {
+      this._linkCampaignBrief(toKey.slice(5), fromKey.slice(7)); return;
+    }
     // Link libre (visual). Evitar duplicado en cualquier direccion.
     this._loadLinks();
     const dup = this._links.some((l) => (l.from === fromKey && l.to === toKey) || (l.from === toKey && l.to === fromKey));
@@ -1310,9 +1317,34 @@
       this._disconnectCampaign(toKey.slice(5));
       return;
     }
+    if ((fromKey.startsWith('camp:') && toKey.startsWith('briefs:')) || (fromKey.startsWith('briefs:') && toKey.startsWith('camp:'))) {
+      this._unlinkCampaignBrief(fromKey.startsWith('camp:') ? fromKey.slice(5) : toKey.slice(5));
+      return;
+    }
     this._loadLinks();
     this._links = this._links.filter((l) => !((l.from === fromKey && l.to === toKey) || (l.from === toKey && l.to === fromKey)));
     this._saveLinks();
+    this._renderCanvas();
+  };
+
+  /** campana -> brief: persiste campaigns.brief_id (BD live, fuera de undo). */
+  P._linkCampaignBrief = async function (campId, briefId) {
+    const c = (this._campaigns || []).find((x) => String(x.id) === String(campId));
+    if (!c || !this._supabase) return;
+    if (String(c.brief_id || '') === String(briefId)) return;
+    const { error } = await this._supabase.from('campaigns').update({ brief_id: briefId }).eq('id', campId);
+    if (error) { console.warn('[CC] brief_id update:', error.message); return; }
+    c.brief_id = briefId;
+    this._renderCanvas();
+  };
+
+  /** Quitar el brief de una campana (brief_id = null). */
+  P._unlinkCampaignBrief = async function (campId) {
+    const c = (this._campaigns || []).find((x) => String(x.id) === String(campId));
+    if (!c || !this._supabase) return;
+    const { error } = await this._supabase.from('campaigns').update({ brief_id: null }).eq('id', campId);
+    if (error) { console.warn('[CC] brief_id clear:', error.message); return; }
+    c.brief_id = null;
     this._renderCanvas();
   };
 
