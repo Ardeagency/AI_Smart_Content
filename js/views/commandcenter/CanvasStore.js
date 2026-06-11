@@ -1198,6 +1198,7 @@
     return `
     <div class="cc-node cc-node--identity cc-node--prem cc-node--prem-product" data-node-key="${n.key}" data-type="identity" data-identity-type="products" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
+      <span class="cc-node-port cc-node-port--ap" data-port="ap" title="↔ audiencia"></span>
       <div class="cc-prem-toolbar" data-drag-handle>
         <span class="cc-prem-tag">PRODUCTO</span>
         <button type="button" class="cc-prem-x cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-times"></i></button>

@@ -278,6 +278,7 @@
     return `
     <div class="cc-node cc-node--audience cc-node--mini ${off ? 'cc-node--off' : ''} ${featured ? 'cc-node--featured' : ''}" data-node-key="${n.key}" data-type="audience" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
+      <span class="cc-node-port cc-node-port--ap" data-port="ap" title="↔ producto / servicio"></span>
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon"><i class="fas fa-users"></i></span>
         <div class="cc-node-head-text">
@@ -300,6 +301,9 @@
     return `
     <div class="cc-node cc-node--identity" data-node-key="${n.key}" data-type="identity" data-identity-type="${this.escapeHtml(t)}" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
+      ${t === 'briefs'
+        ? '<span class="cc-node-port cc-node-port--bl" data-port="bl" title="Identidades"></span><span class="cc-node-port cc-node-port--br" data-port="br" title="Identidades"></span>'
+        : '<span class="cc-node-port cc-node-port--ap" data-port="ap" title="↔ audiencia"></span>'}
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon"><i class="fas ${icons[t] || 'fa-cube'}"></i></span>
         <span class="cc-node-title">${this.escapeHtml(labels[t] || 'Identity')}</span>
