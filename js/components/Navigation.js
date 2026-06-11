@@ -1778,7 +1778,7 @@ class Navigation {
           <span>${__('Planes')}</span>
         </a>
         <a href="${creditsHref}" class="user-dropdown-item" data-route="${creditsHref}" id="userDropdownCreditsLink">
-          <img src="/recursos/icons/Credits.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
+          <img src="/recursos/icons/credits.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
           <span>${__('Créditos')}</span>
         </a>
         ${window.SwitchUserController?.hasImpersonation?.() ? `
