@@ -533,21 +533,26 @@ class DashboardView extends BaseView {
       </section>`;
   }
 
-  // Cards del plan de accion (EXPLOTA/OPTIMIZA/ELIMINA/VIGILA) en el hero.
-  // Reusan EXACTAMENTE las clases .mb-plan-* del cuerpo (mismo diseno y
-  // proporciones) pero sin el parrafo "why" (texto redundante) ni el boton
-  // de expandir. Sin data → 4 placeholders con shimmer.
+  // Cards del plan de accion en el hero. Categoria en lenguaje natural (Lo que
+  // funciona / Oportunidad / Lo que te resta / Riesgo) en vez del verbo jerga;
+  // reusan las clases .mb-plan-* del cuerpo, con overrides scopeados a
+  // .dash-hero-cards para la jerarquia (sujeto primero + linea de accion al pie).
+  // Sin el parrafo "why" largo ni el boton de expandir. Sin data → 4 shimmers.
   _buildHeroCards(data) {
     if (!data || typeof this._computeActionPlanItems !== 'function') {
       return Array.from({ length: 4 }, () => `<div class="dash-hero-card-skeleton"></div>`).join('');
     }
     const insights = Array.isArray(data?.whatWorks?.data) ? data.whatWorks.data : [];
     const items = this._computeActionPlanItems(data, insights);
+    // Jerarquia: categoria en lenguaje natural (no el verbo jerga) → SUJETO arriba
+    // y prominente → evidencia (metrica) → linea de accion al pie. Asi la card se
+    // lee como una frase ("Tu tono alegre rinde +55% → produce mas de esto") en
+    // lugar de un "EXPLOTA = alegre" que nadie entiende.
     const defs = [
-      { kind: 'explota',  label: 'Explota',  item: items.explota  },
-      { kind: 'optimiza', label: 'Optimiza', item: items.optimiza },
-      { kind: 'elimina',  label: 'Elimina',  item: items.elimina  },
-      { kind: 'vigila',   label: 'Vigila',   item: items.vigila   },
+      { kind: 'explota',  label: __('Lo que funciona'), action: __('Produce más de esto'),  item: items.explota  },
+      { kind: 'optimiza', label: __('Oportunidad'),     action: __('Aplícalo ya'),          item: items.optimiza },
+      { kind: 'elimina',  label: __('Lo que te resta'), action: __('Redúcelo o evítalo'),   item: items.elimina  },
+      { kind: 'vigila',   label: __('Riesgo'),          action: __('Revísalo'),             item: items.vigila   },
     ];
     const cards = defs.filter((d) => d.item).map((d) => {
       const it = d.item;
@@ -556,9 +561,10 @@ class DashboardView extends BaseView {
         : '';
       return `
         <div class="mb-plan-col mb-plan-col--${d.kind}">
-          <div class="mb-plan-col-head"><span class="mb-plan-cat">${d.label}</span></div>
-          ${metric}
+          <div class="mb-plan-col-head"><span class="mb-plan-cat">${this._esc(d.label)}</span></div>
           ${it.title ? `<div class="mb-plan-title">${this._esc(it.title)}</div>` : ''}
+          ${metric}
+          <div class="mb-plan-action">${this._esc(d.action)}<span class="mb-plan-action-arrow">→</span></div>
         </div>`;
     });
     return cards.join('') || this._buildHeroCards(null);
