@@ -1,6 +1,16 @@
 # FEAT-041 — Las 4 cards como SÍNTESIS estratégica (no una señal cada una)
 
-> Estado: **modelo, pendiente de aprobación.** Fuente de verdad: specs del usuario
+> Estado: **MOTOR DE SÍNTESIS COMPLETO (4/4 cards) — desplegado 2026-06-11.**
+> RPCs: dashboard_brand_what_wins (Lo que funciona), dashboard_brand_opportunities
+> (Oportunidad), dashboard_brand_what_drags (Lo que te resta), dashboard_brand_risk_composite
+> (Riesgo). Cada una agrega varias fuentes con reglas+matemática (SIN LLM); glance =
+> hallazgo dominante, detalle (modal) = findings rankeados por severidad. Riesgo =
+> reputación + desempeño (competitivo va a Competencia). Pendiente fase 2: detalle
+> narrativo en Figma + sumar más fuentes (crecimiento de público, blind spots de
+> brand_vulnerabilities, fuga de audiencia por retención de video).
+> Modelo original abajo.
+
+> Estado original: **modelo, pendiente de aprobación.** Fuente de verdad: specs del usuario
 > (`~/Downloads/Dashboards-Specs/Dashboard - mi marca.txt` + `dashboard_mi_marca_spec.docx`).
 > Corrige el gap: hoy cada card analiza UN tema (un pilar, un tono, hostilidad);
 > deben sintetizar TODAS las señales y narrarle al CMO.

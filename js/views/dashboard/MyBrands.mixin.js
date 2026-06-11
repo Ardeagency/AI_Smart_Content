@@ -209,30 +209,8 @@
     _computeActionPlanItems(data, insights) {
       const N_MIN = 5;
       const r = (x) => Math.round(Number(x) || 0);
-      const arr = Array.isArray(insights) ? insights : [];
-      const boosts = arr.filter((i) => i.kind === 'boost' && Number(i.lift_pct) > 0)
-        .sort((a, b) => Number(b.lift_pct) - Number(a.lift_pct));
-      const drags  = arr.filter((i) => i.kind === 'drag' && Number(i.lift_pct) < 0)
-        .sort((a, b) => Number(a.lift_pct) - Number(b.lift_pct));
-      const dimLabel = { tono: __('Tono'), tema: __('Tema'), formato: __('Formato'), horario: __('Horario') };
-
-      // Pilares narrativos = mezcla de contenido (la dimension mas estrategica).
-      const pillars = (Array.isArray(data?.pillars?.data) ? data.pillars.data : []).map((p) => ({
-        name: p.pillar, n: Number(p.post_count) || 0, share: Number(p.share_pct) || 0,
-        lift: Number(p.lift_pct) || 0, isOrphan: !!p.is_orphan,
-      }));
-
-      // Brand DNA para anclar el "por que te conviene" (no metricas sueltas).
-      const dna = (() => {
-        const cs = Array.isArray(data?.containers) ? data.containers : [];
-        const bcid = this._mbFilters?.brandContainerId;
-        const c = (bcid && cs.find((x) => x.id === bcid)) || cs[0] || {};
-        return { arquetipo: c.arquetipo || '', propuesta: c.propuesta_valor || '', nicho: c.nicho_core || '' };
-      })();
-      const whyAncla = dna.arquetipo
-        ? __('Conecta con tu arquetipo "{a}" y tu propuesta de marca — es donde tu público reacciona, no solo donde te ven.', { a: dna.arquetipo })
-        : __('Es donde tu público reacciona por encima de tu promedio, no solo donde te ven.');
-
+      // Las 4 cards se arman desde RPCs de SÍNTESIS (what_wins / opportunities /
+      // what_drags / risk_composite). `detail` arma el modal cuando no hay findings.
       const detail = (color, cat, ttl, why, how, evid) => ({
         color, category: cat, title: ttl,
         sections: [
@@ -241,18 +219,7 @@
           { h: __('Evidencia y confianza'), b: evid },
         ],
       });
-      const evidLine = (n, lift) => {
-        const base = __('{n} posts · {s}{l}% sobre tu promedio de interacción.', { n, s: lift > 0 ? '+' : '', l: r(lift) });
-        const conf = n >= N_MIN ? '' : __(' Muestra pequeña — conviene validar con más posts.');
-        return base + conf;
-      };
-
-      // ── LO QUE FUNCIONA: pilar caballo-de-batalla (lift>0, n sano, max share×lift).
-      //    Fallback: mejor palanca (tono/tema) si no hay pilar fiable.
-      // exP = mejor pilar ganador (se reutiliza para excluirlo de OPORTUNIDAD).
-      const exP = pillars.filter((p) => p.lift > 0 && p.n >= N_MIN)
-        .sort((a, b) => (b.share * b.lift) - (a.share * a.lift))[0];
-      // explota = SÍNTESIS de virtudes (dashboard_brand_what_wins): pilares/dims
+      // ── LO QUE FUNCIONA = SÍNTESIS de virtudes (dashboard_brand_what_wins): pilares/dims
       // ganadores + por qué funcionó el top post + mejor campaña de conversión.
       let explota = null;
       const ww = data?.whatWins?.data || null;
