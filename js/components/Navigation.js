@@ -70,7 +70,8 @@ const SIDEBAR_USER_CONFIG = {
       type: 'page',
       id: 'characters',
       label: 'Characters',
-      icon: 'fa-masks-theater',
+      icon: 'fa-users',
+      iconSrc: '/recursos/icons/Characters.svg',
       route: 'characters',
       requireCap: 'brand.identity.edit'
     },
