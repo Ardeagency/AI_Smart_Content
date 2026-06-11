@@ -346,7 +346,7 @@
       return `
         <section class="mb-section mb-section--wide">
           <div class="mb-plan-vitals">
-            ${vital(impactStr, __('Impacto social en el periodo'), { tip: __('Suma de reacciones, comentarios y compartidos de tus publicaciones en el periodo.') })}
+            ${vital(impactStr, __('Impacto social en el periodo'), { tip: __('Suma total de interacciones de tus publicaciones en el periodo: likes, comentarios, compartidos, guardados, vistas y reproducciones.') })}
             ${vital(fmt.int(oi.posts_analyzed), __('Posts analizados'), { tip: __('Número de publicaciones propias analizadas en el periodo.') })}
             ${vital(cons, __('Consistencia de publicacion'), { sub: consSub, tip: __('Porcentaje de semanas del periodo en las que publicaste al menos una vez (desde tu primer post).') })}
           </div>
