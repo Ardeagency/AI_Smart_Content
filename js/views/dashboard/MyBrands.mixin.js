@@ -330,11 +330,16 @@
         ? __('{a} de {b} semanas activas', { a: Number(pc.active_weeks) || 0, b: Number(pc.total_weeks) || 0 })
         : '';
 
+      // El pie (.mb-plan-vital-foot) se ancla al fondo de la celda (margin-top:auto
+      // en CSS) para que las ETIQUETAS de las 3 metricas queden alineadas abajo,
+      // tengan o no subtitulo. El subtitulo va encima de la etiqueta.
       const vital = (val, lbl, { cls = '', sub = '', tip = '' } = {}) => `
         <div class="mb-plan-vital"${tip ? ` title="${this._esc(tip)}"` : ''}>
           <span class="mb-plan-vital-val ${cls}">${this._esc(val)}</span>
-          <span class="mb-plan-vital-lbl">${this._esc(lbl)}</span>
-          ${sub ? `<span class="mb-plan-vital-sub">${this._esc(sub)}</span>` : ''}
+          <div class="mb-plan-vital-foot">
+            ${sub ? `<span class="mb-plan-vital-sub">${this._esc(sub)}</span>` : ''}
+            <span class="mb-plan-vital-lbl">${this._esc(lbl)}</span>
+          </div>
         </div>`;
 
       return `

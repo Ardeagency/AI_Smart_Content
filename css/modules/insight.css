@@ -2900,8 +2900,9 @@
 .mb-plan-vital-val.is-up   { color: #6bcf7f; }
 .mb-plan-vital-val.is-down { color: #e06464; }
 .mb-plan-vital-val.is-flat { color: var(--text-muted, rgba(212,209,216,0.6)); }
+.mb-plan-vital-foot { margin-top: auto; display: flex; flex-direction: column; gap: 0.3rem; }
 .mb-plan-vital-lbl { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
-.mb-plan-vital-sub { margin-top: 0.15rem; font-size: 0.625rem; font-weight: 500; letter-spacing: 0.01em; color: var(--text-muted, rgba(212,209,216,0.38)); font-variant-numeric: tabular-nums; }
+.mb-plan-vital-sub { font-size: 0.625rem; font-weight: 500; letter-spacing: 0.01em; color: var(--text-muted, rgba(212,209,216,0.38)); font-variant-numeric: tabular-nums; }
 
 @media (max-width: 760px) { .mb-plan-grid { grid-template-columns: 1fr; } .mb-plan-vitals { grid-template-columns: 1fr; } .mb-plan-vital { border-right: 0; border-bottom: 1px solid var(--dash-line, rgba(255,255,255,0.08)); } .mb-plan-vital:last-child { border-bottom: 0; } }
 
