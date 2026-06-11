@@ -201,12 +201,12 @@ class CommandCenterView extends BaseView {
         .order('updated_at', { ascending: false }),
       supabase
         .from('audience_segments')
-        .select('id, persona_id, platform, external_audience_name, external_audience_type, age_range, genders, interests, behaviors, estimated_size, size_lower_bound, size_upper_bound, status, source, last_synced_at')
+        .select('id, persona_id, campaign_id, platform, external_audience_name, external_audience_type, age_range, genders, interests, behaviors, estimated_size, size_lower_bound, size_upper_bound, status, source, last_synced_at')
         .eq('brand_container_id', bid)
         .order('platform', { ascending: true }),
       supabase
         .from('campaigns')
-        .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics')
+        .select('id, nombre_campana, descripcion_interna, persona_id, brief_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics')
         .eq('brand_container_id', bid)
         .order('updated_at', { ascending: false }),
       supabase

@@ -105,12 +105,13 @@
       if (seen.has(k)) return; seen.add(k);
       out.push({ from, to, persona: !!persona });
     };
-    // persona_id: audiencia -> campana (la "primaria")
+    // persona_id: audiencia -> campana (audiencia primaria)
     (this._campaigns || []).forEach((c) => { if (c.persona_id) push(`aud:${c.persona_id}`, `camp:${c.id}`, true); });
-    // audience_segments: N audiencias por campana (la relacion REAL, multiple).
-    // El set `seen` dedup contra la persona_id primaria.
+    // audience_segments: N audiencias por campana (relacion real, dedupe con persona_id por la clave from->to)
     (this._segments || []).forEach((s) => { if (s.persona_id && s.campaign_id) push(`aud:${s.persona_id}`, `camp:${s.campaign_id}`, true); });
-    // libres (canvas_edges)
+    // campaigns.brief_id: campana -> brief (si el brief esta colocado en el canvas)
+    (this._campaigns || []).forEach((c) => { if (c.brief_id) push(`camp:${c.id}`, `briefs:${c.brief_id}`, false); });
+    // libres
     (this._links || []).forEach((l) => push(l.from, l.to, false));
     return out;
   };
@@ -641,24 +642,7 @@
   P._connectCampaignToPersona = async function (campaignId, personaId) {
     const c = (this._campaigns || []).find((x) => String(x.id) === String(campaignId));
     if (!c || !this._supabase) return;
-    // (1) audience_segments = relacion REAL (N audiencias por campana). Insert idempotente.
-    const has = (this._segments || []).some((s) => String(s.campaign_id) === String(campaignId) && String(s.persona_id) === String(personaId));
-    if (!has && c.organization_id && c.brand_container_id) {
-      const row = { organization_id: c.organization_id, brand_container_id: c.brand_container_id, campaign_id: campaignId, persona_id: personaId, source: 'canvas' };
-      this._segments = [...(this._segments || []), row]; // optimista
-      this._renderCanvas();
-      try {
-        const { data, error } = await this._supabase.from('audience_segments').insert(row).select().single();
-        if (error) throw error;
-        this._segments = (this._segments || []).map((s) => (s === row ? data : s));
-      } catch (e) {
-        console.error('[CC] audience_segments insert:', e?.message || e);
-        this._segments = (this._segments || []).filter((s) => s !== row); // rollback
-        this._renderCanvas();
-      }
-    }
-    // (2) persona_id "primaria": solo si la campana aun no tiene (no pisa la existente).
-    if (c.persona_id) return;
+    if (String(c.persona_id) === String(personaId)) return; // ya vinculada
     const prev = c.persona_id;
     c.persona_id = personaId;           // optimista
     this._renderCanvas();
@@ -699,35 +683,6 @@
       this._renderCanvas();
       this._renderMiniDash();
       this._renderCampaigns();
-    }
-  };
-
-  /** Quita UNA audiencia de una campana (borra su audience_segments). Si era la
-      persona_id primaria, la reasigna a otra audiencia restante o null. */
-  P._disconnectCampaignAudience = async function (campaignId, personaId) {
-    if (!this._supabase) return;
-    const c = (this._campaigns || []).find((x) => String(x.id) === String(campaignId));
-    const match = (s) => String(s.campaign_id) === String(campaignId) && String(s.persona_id) === String(personaId);
-    const removed = (this._segments || []).filter(match);
-    this._segments = (this._segments || []).filter((s) => !match(s)); // optimista
-    let prevPersona;
-    if (c && String(c.persona_id) === String(personaId)) {
-      prevPersona = c.persona_id;
-      const other = (this._segments || []).find((s) => String(s.campaign_id) === String(campaignId) && s.persona_id);
-      c.persona_id = other ? other.persona_id : null;
-    }
-    this._renderCanvas(); this._renderMiniDash(); this._renderCampaigns();
-    try {
-      const { error } = await this._supabase.from('audience_segments').delete().eq('campaign_id', campaignId).eq('persona_id', personaId);
-      if (error) throw error;
-      if (prevPersona !== undefined) {
-        await this._supabase.from('campaigns').update({ persona_id: c.persona_id, updated_at: new Date().toISOString() }).eq('id', campaignId);
-      }
-    } catch (e) {
-      console.error('[CC] disconnect audience:', e?.message || e);
-      this._segments = [...(this._segments || []), ...removed]; // rollback
-      if (prevPersona !== undefined && c) c.persona_id = prevPersona;
-      this._renderCanvas(); this._renderMiniDash(); this._renderCampaigns();
     }
   };
 
