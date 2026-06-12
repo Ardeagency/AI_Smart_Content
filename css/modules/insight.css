@@ -3729,12 +3729,17 @@
 /* ── Cards top-level: superficie raised + sheen + sombra sobria ──
    (las filas de lista quedan planas-raised, estilo Datadog/Supabase) */
 .insight-page .mb-causal-card,
+.insight-page .mb-act-card {
+  background-image: var(--dash-sheen);
+  box-shadow: var(--dash-elev);
+}
+/* Competencia / Tendencias / Estrategia: cards PLANAS como .mb-chart-card de Mi
+   Marca — solo la elevación sobria, SIN el sheen (el degradado gris claro→oscuro).
+   Mismo look oficial unificado en los 4 dashboards. */
 .insight-page .comp-voice-card,
 .insight-page .tend-gap-card,
 .insight-page .tend-brand-card,
-.insight-page .strat-card,
-.insight-page .mb-act-card {
-  background-image: var(--dash-sheen);
+.insight-page .strat-card {
   box-shadow: var(--dash-elev);
 }
 /* Hover lift en cards clickables (la sombra crece, no el color) */
@@ -3765,7 +3770,7 @@
 
 /* ── KPI strip: panel raised unificado con divisores internos ── */
 .insight-page .comp-kpis {
-  background-color: var(--bg-card); background-image: var(--dash-sheen);
+  background-color: var(--bg-card);
   border: 1px solid var(--border-divider); box-shadow: var(--dash-elev);
   border-radius: 14px; gap: 0; overflow: hidden;
 }
