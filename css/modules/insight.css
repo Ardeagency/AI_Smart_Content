@@ -3521,6 +3521,15 @@
 /* Ritmo: mas aire entre secciones */
 .insight-page.mb-dash { gap: 1.5rem; }
 
+/* Competencia / Tendencias / Estrategia: paleta semantica VIBRANTE (la oficial,
+   la misma de las cards del hero), no la apagada de Mi Marca. Aplica solo a estos
+   3 dashboards (.mb-dash); Mi Marca (.mb-page) conserva su paleta sobria. */
+.insight-page.mb-dash {
+  --dash-pos:  #6bcf7f;
+  --dash-neg:  #e06464;
+  --dash-warn: #e0a045;
+}
+
 /* ── Filtros: glass-black con el mismo radio y color que el boton "Crear informe" ──
    OJO: nada de backdrop-filter en .living-filter — crea un bloque contenedor
    que (junto a su overflow:hidden) rompe el dropdown position:fixed del
