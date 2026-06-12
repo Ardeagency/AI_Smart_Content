@@ -68,10 +68,13 @@
     const facebook = this._pickBrandIntegrationForContainer(brandContainerId, 'facebook');
     const shopify = this._pickBrandIntegrationForContainer(brandContainerId, 'shopify');
     const meli = this._pickBrandIntegrationForContainer(brandContainerId, 'mercadolibre');
+    const x = this._pickBrandIntegrationForContainer(brandContainerId, 'x');
     const gOk = this._integrationUsable(google);
     const fOk = this._integrationUsable(facebook);
     const sOk = this._integrationUsable(shopify);
     const mOk = this._integrationUsable(meli);
+    const xOk = this._integrationUsable(x);
+    const xUrl = xOk && x?.account_url ? x.account_url : null;
     const shopUrl = sOk && shopify?.account_url ? shopify.account_url : null;
     const meliUrl = mOk && meli?.account_url ? meli.account_url : null;
 
@@ -117,6 +120,16 @@
         // Sin hint: el nickname de ML es autogenerado (ej. IA2026...), no aporta
         // y expone el id publico de la cuenta. La fila queda limpia como Google/Meta.
         hint: ''
+      },
+      {
+        key: 'x',
+        label: 'X',
+        iconClass: 'fab fa-x-twitter',
+        connected: xOk,
+        oauthProvider: 'x',
+        actionHref: xUrl || dashboardHref,
+        actionExternal: !!xUrl,
+        hint: xOk && x?.external_account_name ? x.external_account_name : ''
       }
     ];
     },
@@ -524,7 +537,7 @@
   async startBrandIntegrationOAuth(provider, brandContainerId, actionButton = null) {
     const normalizedProvider = String(provider || '').toLowerCase();
     const brandId = String(brandContainerId || '').trim();
-    const SUPPORTED = ['google', 'facebook', 'shopify', 'mercadolibre'];
+    const SUPPORTED = ['google', 'facebook', 'shopify', 'mercadolibre', 'x'];
     if (!brandId || !SUPPORTED.includes(normalizedProvider)) return;
     if (window.DemoGuard?.isDemo?.()) {
       window.DemoGuard.showSignupModal(`conectar ${normalizedProvider}`);
@@ -561,6 +574,7 @@
         normalizedProvider === 'facebook'     ? '/api/integrations/facebook/start' :
         normalizedProvider === 'google'       ? '/api/integrations/google/start'   :
         normalizedProvider === 'mercadolibre' ? '/api/integrations/meli/start'      :
+        normalizedProvider === 'x'            ? '/api/integrations/x/start'         :
         /* shopify */                           '/api/integrations/shopify/start'
       );
 

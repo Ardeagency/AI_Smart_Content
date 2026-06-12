@@ -236,6 +236,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/integrations/x/start"
+  to = "/.netlify/functions/api-integrations-x-start"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/integrations/link"
   to = "/.netlify/functions/api-integrations-link"
   status = 200

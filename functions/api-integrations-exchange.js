@@ -194,7 +194,7 @@ exports.handler = async (event) => {
   const brandContainerId = String(stateObj.brand_container_id || '').trim();
   const returnTo         = sanitizeReturnTo(String(stateObj.return_to || '/home'));
 
-  if (!['google', 'facebook', 'shopify', 'mercadolibre'].includes(platform)) {
+  if (!['google', 'facebook', 'shopify', 'mercadolibre', 'x'].includes(platform)) {
     return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unsupported platform' }) };
   }
   if (!brandContainerId) {
@@ -712,6 +712,97 @@ exports.handler = async (event) => {
       }
     }
 
+    // ── X / Twitter ───────────────────────────────────────────────────────────
+    let xIntegId = null;
+    if (platform === 'x') {
+      const clientId     = process.env.X_CLIENT_ID || '';
+      const clientSecret = process.env.X_CLIENT_SECRET || '';
+      if (!clientId || !clientSecret) throw new Error('Missing X_CLIENT_ID/X_CLIENT_SECRET env vars');
+      const codeVerifier = String(stateObj.cv || '');
+      if (!codeVerifier) throw new Error('Missing PKCE code_verifier in state');
+
+      // Exchange code → tokens. X OAuth 2.0 confidencial = client_id:secret via
+      // HTTP Basic. access_token ~2h; refresh_token ROTA (un solo uso, como ML)
+      // → siempre persistimos el nuevo (lo hace ai-engine al refrescar).
+      const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+      const tokenRes = await fetch('https://api.twitter.com/2/oauth2/token', {
+        method:  'POST',
+        headers: { Authorization: `Basic ${basic}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type:    'authorization_code',
+          code:          String(code),
+          redirect_uri:  redirectUri,
+          code_verifier: codeVerifier,
+          client_id:     clientId
+        }).toString()
+      });
+      const tokenJson = await tokenRes.json().catch(() => ({}));
+      if (!tokenRes.ok || !tokenJson.access_token) {
+        throw new Error(tokenJson?.error_description || tokenJson?.error || 'X token exchange failed');
+      }
+
+      const grantedScopes = typeof tokenJson.scope === 'string'
+        ? tokenJson.scope.split(/\s+/).filter(Boolean) : [];
+
+      let me = {};
+      try {
+        const meRes = await fetch('https://api.twitter.com/2/users/me?user.fields=username,name,profile_image_url,public_metrics,verified', {
+          headers: { Authorization: `Bearer ${tokenJson.access_token}` }
+        });
+        if (meRes.ok) { const j = await meRes.json().catch(() => ({})); me = j?.data || {}; }
+      } catch (e) { console.warn('[exchange] x /users/me (non-blocking):', e.message); }
+
+      const existing = await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'GET',
+        searchParams: { select: 'id', brand_container_id: `eq.${brandContainerId}`, platform: 'eq.x', limit: '1' }
+      });
+      const isReconnection = Array.isArray(existing) && existing[0]?.id;
+
+      await upsertBrandIntegration({
+        env,
+        payload: {
+          brand_container_id:    brandContainerId,
+          platform:              'x',
+          external_account_id:   me.id || null,
+          external_account_name: me.username ? `@${me.username}` : (me.name || null),
+          account_url:           me.username ? `https://x.com/${me.username}` : null,
+          access_token:          tokenJson.access_token,
+          refresh_token:         tokenJson.refresh_token || null,
+          token_expires_at:      expiresIso(tokenJson.expires_in),
+          is_active:             true,
+          scope:                 grantedScopes,
+          encryption_iv:         null,
+          ...(isReconnection ? {} : { bootstrap_status: 'pending' }),
+          metadata: {
+            provider:            'x',
+            x_user_id:           me.id || null,
+            username:            me.username || null,
+            display_name:        me.name || null,
+            profile_image:       me.profile_image_url || null,
+            followers:           me.public_metrics?.followers_count ?? null,
+            verified:            me.verified ?? null,
+            scope_at_last_oauth: grantedScopes
+          },
+          updated_at: nowIso(), last_sync_at: nowIso()
+        }
+      });
+
+      const xRow = await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'GET',
+        searchParams: { select: 'id', brand_container_id: `eq.${brandContainerId}`, platform: 'eq.x', limit: '1' }
+      });
+      xIntegId = Array.isArray(xRow) && xRow[0] ? xRow[0].id : null;
+
+      if (!isReconnection && xIntegId && stateObj.organization_id) {
+        await enqueueIntegrationBootstrap({
+          env, platform: 'x', integrationId: xIntegId,
+          brandContainerId, organizationId: stateObj.organization_id,
+        });
+      }
+    }
+
     // Obtener el id de la integración guardada para devolverlo al callback
     const savedIntegRow = platform === 'facebook'
       ? await (async () => {
@@ -735,6 +826,7 @@ exports.handler = async (event) => {
     if (stateObj.organization_id) {
       const integId = platform === 'shopify' ? shopifyIntegId
         : platform === 'mercadolibre' ? meliIntegId
+        : platform === 'x' ? xIntegId
         : (savedIntegRow?.id || null);
       await logUserAudit({
         env,
@@ -770,6 +862,9 @@ exports.handler = async (event) => {
         } : {}),
         ...(platform === 'mercadolibre' ? {
           integ_id: meliIntegId
+        } : {}),
+        ...(platform === 'x' ? {
+          integ_id: xIntegId
         } : {})
       })
     };
