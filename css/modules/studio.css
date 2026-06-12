@@ -95,12 +95,16 @@
   color: var(--text-muted);
 }
 
-/* Empty state premium (plantilla .empty-state) ocupando y centrado en el canvas.
+/* Empty state premium (plantilla .empty-state) ocupando y centrado en TODO el
+   alto del canvas. El canvas se vuelve flex cuando esta vacio para que el
+   living y el empty state llenen el alto (min-height:100% no resuelve aqui).
    Los puntos los pone el canvas (.studio-canvas-empty::before), por eso el
    empty state se renderiza con noDots (.empty-state--flat). */
+.studio-canvas-empty:has(.empty-state) { display: flex; }
 .studio-canvas-living:has(> .empty-state) {
   display: flex;
-  min-height: 100%;
+  flex: 1;
+  min-height: 0;
   padding: 0;
 }
 .studio-canvas-living > .empty-state { flex: 1; }
