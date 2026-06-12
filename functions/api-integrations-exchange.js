@@ -263,25 +263,38 @@ exports.handler = async (event) => {
         }
       });
 
-      // Encolar bootstrap del populator de Google Ads (campanas por cliente).
-      // Idempotente: solo si no hay bootstrap previo completado/en curso, para
-      // no re-sincronizar en cada login.
+      // Encolar LISTADO de cuentas (selector), NO el bootstrap completo: el
+      // usuario debe elegir QUE cuenta de Ads es de esta marca antes de
+      // sincronizar (nunca jalar todo el portafolio del MCC). El sync real lo
+      // dispara api-integrations-google-select tras la seleccion.
       const gIntegRows = await supabaseRest({
         url: env.url, serviceKey: env.serviceKey,
         path: 'brand_integrations', method: 'GET',
         searchParams: {
-          select: 'id,bootstrap_status',
+          select: 'id',
           brand_container_id: `eq.${brandContainerId}`,
           platform: 'eq.google', is_active: 'eq.true', limit: '1'
         }
       });
       const gInteg = Array.isArray(gIntegRows) ? gIntegRows[0] : null;
-      if (gInteg?.id && stateObj.organization_id &&
-          gInteg.bootstrap_status !== 'completed' && gInteg.bootstrap_status !== 'running') {
-        await enqueueIntegrationBootstrap({
-          env, platform: 'google', integrationId: gInteg.id,
-          brandContainerId, organizationId: stateObj.organization_id,
-        });
+      if (gInteg?.id && stateObj.organization_id) {
+        try {
+          await supabaseRest({
+            url: env.url, serviceKey: env.serviceKey,
+            path: 'agent_queue_jobs', method: 'POST',
+            body: [{
+              organization_id: stateObj.organization_id,
+              job_type: 'mission', priority: 5,
+              payload: {
+                mission_type:         'google_list_accounts',
+                brand_integration_id: gInteg.id,
+                brand_container_id:   brandContainerId,
+                platform:             'google'
+              },
+              status: 'queued'
+            }]
+          });
+        } catch (e) { console.warn('[exchange] enqueue google_list_accounts (non-blocking):', e?.message || e); }
       }
     }
 
