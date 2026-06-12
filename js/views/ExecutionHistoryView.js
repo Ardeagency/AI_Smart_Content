@@ -251,9 +251,19 @@ class ExecutionHistoryView extends BaseView {
     const disabled = !r.flow_slug;
     const multi = images.length > 1;
 
-    // Capas de imagen apiladas: la primera visible; el hover recorre el resto.
+    // Capas de medios apiladas: la primera visible; el hover recorre el resto.
+    // Mezcla imagenes y videos en el mismo carrusel (los videos se reproducen
+    // solo cuando son el slide activo durante el hover).
+    const isVid = (u) => /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u || '');
     const media = images.length
-      ? images.map((url, i) => `<img class="exec-card-img${i === 0 ? ' is-visible' : ''}" src="${this.escapeHtml(url)}" alt="" loading="lazy">`).join('')
+      ? images.map((url, i) => {
+          const vis = i === 0 ? ' is-visible' : '';
+          // #t=0.1 fuerza al navegador a mostrar ese frame como "poster" sin reproducir.
+          const vsrc = url.includes('#') ? url : url + '#t=0.1';
+          return isVid(url)
+            ? `<video class="exec-card-img exec-card-img--video${vis}" src="${this.escapeHtml(vsrc)}" muted loop playsinline preload="metadata" aria-hidden="true"></video>`
+            : `<img class="exec-card-img${vis}" src="${this.escapeHtml(url)}" alt="" loading="lazy">`;
+        }).join('')
       : `<div class="exec-card-placeholder"><i class="fas fa-wand-magic-sparkles"></i></div>`;
 
     // Puntos indicadores del carrusel (solo si hay >1 imagen).
@@ -300,25 +310,31 @@ class ExecutionHistoryView extends BaseView {
   _bindCarousels() {
     const cards = this.querySelectorAll('.exec-card[data-carousel]');
     cards.forEach(card => {
-      const imgs = Array.from(card.querySelectorAll('.exec-card-img'));
+      const items = Array.from(card.querySelectorAll('.exec-card-img'));
       const dots = Array.from(card.querySelectorAll('.exec-card-dot'));
-      if (imgs.length < 2) return;
+      if (items.length < 2) return;
       let idx = 0;
       let timer = null;
-      const show = (n) => {
-        imgs[idx]?.classList.remove('is-visible');
+      const playVid = (el) => { if (el && el.tagName === 'VIDEO') { try { el.currentTime = 0; el.play(); } catch (_) {} } };
+      const pauseVid = (el) => { if (el && el.tagName === 'VIDEO') { try { el.pause(); } catch (_) {} } };
+      const show = (n, playActive = true) => {
+        items[idx]?.classList.remove('is-visible');
+        pauseVid(items[idx]);
         dots[idx]?.classList.remove('is-active');
-        idx = (n + imgs.length) % imgs.length;
-        imgs[idx]?.classList.add('is-visible');
+        idx = (n + items.length) % items.length;
+        items[idx]?.classList.add('is-visible');
         dots[idx]?.classList.add('is-active');
+        if (playActive) playVid(items[idx]);
       };
       const start = () => {
         if (timer) return;
-        timer = setInterval(() => show(idx + 1), 900);
+        playVid(items[idx]); // reproduce el slide actual si es video
+        timer = setInterval(() => show(idx + 1), 1400);
       };
       const stop = () => {
         if (timer) { clearInterval(timer); timer = null; }
-        show(0); // vuelve al primer output al salir
+        items.forEach(pauseVid);
+        show(0, false); // vuelve al primer output (sin autoplay) al salir
       };
       this.addEventListener(card, 'mouseenter', start);
       this.addEventListener(card, 'mouseleave', stop);

@@ -1526,8 +1526,15 @@ class FlowCatalogView extends BaseView {
     const count = r.output_count || 0;
     const disabled = !r.flow_slug;
     const multi = images.length > 1;
+    const isVid = (u) => /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u || '');
     const media = images.length
-      ? images.map((url, i) => `<img class="exec-card-img${i === 0 ? ' is-visible' : ''}" src="${this.escapeHtml(url)}" alt="" loading="lazy">`).join('')
+      ? images.map((url, i) => {
+          const vis = i === 0 ? ' is-visible' : '';
+          const vsrc = url.includes('#') ? url : url + '#t=0.1';
+          return isVid(url)
+            ? `<video class="exec-card-img exec-card-img--video${vis}" src="${this.escapeHtml(vsrc)}" muted loop playsinline preload="metadata" aria-hidden="true"></video>`
+            : `<img class="exec-card-img${vis}" src="${this.escapeHtml(url)}" alt="" loading="lazy">`;
+        }).join('')
       : `<div class="exec-card-placeholder"><i class="fas fa-wand-magic-sparkles"></i></div>`;
     const dots = multi ? `<div class="exec-card-dots" aria-hidden="true">${images.map((_, i) => `<span class="exec-card-dot${i === 0 ? ' is-active' : ''}"></span>`).join('')}</div>` : '';
     return `
@@ -1553,17 +1560,20 @@ class FlowCatalogView extends BaseView {
     // inalcanzable. Los limpiamos todos en onLeave/destroy (patron de ExecutionHistoryView).
     this._cardCarouselTimers = this._cardCarouselTimers || [];
     container.querySelectorAll('.exec-card[data-carousel]').forEach(card => {
-      const imgs = Array.from(card.querySelectorAll('.exec-card-img'));
+      const items = Array.from(card.querySelectorAll('.exec-card-img'));
       const dots = Array.from(card.querySelectorAll('.exec-card-dot'));
-      if (imgs.length < 2) return;
+      if (items.length < 2) return;
       let idx = 0, timer = null;
-      const show = (n) => {
-        imgs[idx]?.classList.remove('is-visible'); dots[idx]?.classList.remove('is-active');
-        idx = (n + imgs.length) % imgs.length;
-        imgs[idx]?.classList.add('is-visible'); dots[idx]?.classList.add('is-active');
+      const playVid = (el) => { if (el && el.tagName === 'VIDEO') { try { el.currentTime = 0; el.play(); } catch (_) {} } };
+      const pauseVid = (el) => { if (el && el.tagName === 'VIDEO') { try { el.pause(); } catch (_) {} } };
+      const show = (n, playActive = true) => {
+        items[idx]?.classList.remove('is-visible'); pauseVid(items[idx]); dots[idx]?.classList.remove('is-active');
+        idx = (n + items.length) % items.length;
+        items[idx]?.classList.add('is-visible'); dots[idx]?.classList.add('is-active');
+        if (playActive) playVid(items[idx]);
       };
-      card.addEventListener('mouseenter', () => { if (!timer) { timer = setInterval(() => show(idx + 1), 900); this._cardCarouselTimers.push(timer); } });
-      card.addEventListener('mouseleave', () => { if (timer) { clearInterval(timer); timer = null; } show(0); });
+      card.addEventListener('mouseenter', () => { if (!timer) { playVid(items[idx]); timer = setInterval(() => show(idx + 1), 1400); this._cardCarouselTimers.push(timer); } });
+      card.addEventListener('mouseleave', () => { if (timer) { clearInterval(timer); timer = null; } items.forEach(pauseVid); show(0, false); });
     });
   }
 
