@@ -45,7 +45,10 @@
         this._tendenciasService.setWindow(this._tendFilters.windowDays);
         const data = await this._tendenciasService.loadAll();
         this._tendData = data;
-        if (this._activeTab === 'tendencies' && !this._silentRefresh) this._renderHeroActions(); // filtros del banner (opciones de fuente)
+        if (this._activeTab === 'tendencies') {
+          this._renderHeroCards();                             // cards del hero = pulso del nicho
+          if (!this._silentRefresh) this._renderHeroActions(); // filtros del banner (opciones de fuente)
+        }
         if (!this._shouldRepaint('tendencies', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildTendenciasHtml(data);
         this._bindTendenciesHandlers(body);
@@ -104,6 +107,89 @@
           ${this._buildTendBrands(data?.brands?.data)}
           ${this._buildTendRealWorld(data?.world?.data)}
         </div>`;
+    },
+
+    /* ── Cards del hero en Tendencias: el PULSO del nicho. Tendencia caliente
+       (keyword acelerando) + Oportunidad (content gap / océano azul) + Marca
+       emergente (nuevo rival) + Próximo evento (calendario real-world). ── */
+    _computeTendenciesCards(td) {
+      const signals  = (td?.signals?.data?.top_velocity) || [];
+      const gaps     = (td?.gaps?.data?.gaps) || [];
+      const brands   = (td?.brands?.data?.pending) || [];
+      const holidays = (td?.world?.data?.upcoming_holidays) || [];
+      const C = (n) => this._compactNum(Number(n) || 0);
+
+      let funciona = null;
+      const hot = [...signals].sort((a, b) => Number(b.velocity_score) - Number(a.velocity_score))[0];
+      if (hot) {
+        funciona = {
+          title: __('"{k}" está acelerando en tu nicho', { k: hot.keyword }),
+          metric: C(hot.velocity_score), metricSub: __('velocidad — súbete a la ola'),
+          impact: 'alto', earlySignal: false,
+          detail: { color: 'explota', category: __('Tendencia caliente'), title: __('Señales emergentes'),
+            findings: [...signals].sort((a, b) => Number(b.velocity_score) - Number(a.velocity_score)).slice(0, 5).map((s) => ({
+              key: 'tendencia', n: Number(s.velocity_score) || 0, severity: 50,
+              label: __('"{k}"{s}', { k: s.keyword, s: s.sentiment ? ` · ${s.sentiment}` : '' }),
+            })),
+            sections: [{ h: __('¿Qué está emergiendo?'), b: __('Estas keywords están acelerando en tu nicho. Crea contenido sobre las de arriba mientras están calientes — el timing lo es todo.') }],
+          },
+        };
+      }
+
+      let oportunidad = null;
+      const blue = [...gaps].sort((a, b) => Number(a.competitor_post_count || 0) - Number(b.competitor_post_count || 0))[0];
+      if (blue) {
+        const zero = Number(blue.competitor_post_count) === 0;
+        oportunidad = {
+          title: zero ? __('"{t}" — nadie lo cubre', { t: blue.topic_label || blue.topic }) : __('"{t}" está subexplotado', { t: blue.topic_label || blue.topic }),
+          metric: zero ? __('Océano azul') : `${Number(blue.competitor_post_count) || 0}`,
+          metricSub: zero ? __('demanda sin competencia — es tuyo') : __('posts de rivales — hay espacio'),
+          impact: 'medio', earlySignal: false,
+          detail: { color: 'optimiza', category: __('Oportunidad'), title: __('Espacios sin cubrir (content gaps)'),
+            findings: [...gaps].slice(0, 5).map((g) => ({
+              key: 'gap', n: Number(g.competitor_post_count) || 0, severity: 50,
+              label: __('"{t}" · {n} posts de rivales', { t: g.topic_label || g.topic, n: Number(g.competitor_post_count) || 0 }),
+            })),
+            sections: [{ h: __('¿Qué demanda el nicho que nadie cubre?'), b: __('Hay demanda en estos temas y poca o ninguna cobertura de rivales. Ocúpalos antes de que lo hagan ellos.') }],
+          },
+        };
+      }
+
+      let resta = null;
+      const eb = [...brands].sort((a, b) => Number(b.detection_count) - Number(a.detection_count))[0];
+      if (eb) {
+        resta = {
+          title: __('"{n}" emerge en tu nicho', { n: eb.candidate_name }),
+          metric: C(eb.detection_count), metricSub: __('detecciones — nuevo competidor'),
+          impact: 'medio', earlySignal: false,
+          detail: { color: 'elimina', category: __('Marca emergente'), title: __('Nuevos competidores'),
+            findings: [...brands].slice(0, 5).map((b) => ({
+              key: 'rival', n: Number(b.detection_count) || 0, severity: 45,
+              label: __('"{n}" · {c} detecciones', { n: b.candidate_name, c: Number(b.detection_count) || 0 }),
+            })),
+            sections: [{ h: __('¿Quién está apareciendo?'), b: __('Marcas nuevas que empiezan a aparecer en tu nicho. Vigílalas temprano: hoy son pequeñas, mañana pueden no serlo.') }],
+          },
+        };
+      }
+
+      let riesgo = null;
+      const ev = [...holidays].sort((a, b) => Number(a.days_until) - Number(b.days_until))[0];
+      if (ev) {
+        riesgo = {
+          title: __('{e} en {d} días', { e: ev.event_name, d: Number(ev.days_until) || 0 }),
+          metric: `${Number(ev.days_until) || 0}d`, metricSub: __('prepara contenido con tiempo'),
+          impact: 'medio', earlySignal: false,
+          detail: { color: 'vigila', category: __('Próximo evento'), title: __('Calendario del mundo real'),
+            findings: [...holidays].slice(0, 5).map((h) => ({
+              key: 'evento', n: Number(h.days_until) || 0, severity: 40,
+              label: __('{e} · en {d} días', { e: h.event_name, d: Number(h.days_until) || 0 }),
+            })),
+            sections: [{ h: __('¿Qué se viene?'), b: __('Fechas y eventos relevantes que se acercan. Prepara contenido con anticipación para llegar primero.') }],
+          },
+        };
+      }
+
+      return { funciona, oportunidad, resta, riesgo };
     },
 
     _buildTendFiltersBar(data) {
