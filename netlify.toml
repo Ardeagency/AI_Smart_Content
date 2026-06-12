@@ -242,6 +242,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/integrations/google/select"
+  to = "/.netlify/functions/api-integrations-google-select"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/integrations/link"
   to = "/.netlify/functions/api-integrations-link"
   status = 200

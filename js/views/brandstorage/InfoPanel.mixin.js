@@ -87,6 +87,11 @@
         oauthProvider: 'google',
         actionHref: gOk ? 'https://myaccount.google.com/' : dashboardHref,
         actionExternal: gOk,
+        // Selector de cuenta de Ads: tras conectar, el usuario debe elegir QUE
+        // cuenta es de la marca (nunca jalamos todo el portafolio del MCC).
+        needsAccountSelection: gOk && !!google?.metadata?.awaiting_account_selection
+          && Array.isArray(google?.metadata?.available_accounts) && google.metadata.available_accounts.length > 0,
+        availableAccounts: (google?.metadata?.available_accounts) || [],
         hint: ''
       },
       {
@@ -147,7 +152,9 @@
         const hint = row.hint
           ? `<span class="info-connect-hint">${this.escapeHtml(row.hint)}</span>`
           : '';
-        const actionHtml = row.connected
+        const actionHtml = row.needsAccountSelection
+          ? `<button type="button" class="info-connect-action is-connect" data-select-google-accounts="1" data-brand-container-id="${this.escapeHtml(String(brandContainerId || ''))}" aria-label="Elegir cuenta de Google Ads">${__('Elegir cuenta')}</button>`
+          : row.connected
           ? `
             <div class="info-connect-actions">
               <a class="info-connect-action is-open" ${linkAttrs} aria-label="${__('Abrir {x}', { x: this.escapeHtml(row.label) })}">${__('Abrir')}</a>
@@ -613,6 +620,77 @@
     },
 
   /**
+   * Selector de cuenta de Google Ads: el usuario elige QUE cuenta(s) son de la
+   * marca. Solo esas se sincronizan — nunca todo el portafolio del MCC.
+   */
+  async selectGoogleAdsAccounts(brandContainerId, actionButton = null) {
+    const brandId = String(brandContainerId || '').trim();
+    if (!brandId) return;
+    const integ = this._pickBrandIntegrationForContainer(brandId, 'google');
+    const accounts = (integ?.metadata?.available_accounts) || [];
+    if (!accounts.length) { alert(__('No hay cuentas de Google Ads para elegir. Reconecta Google.')); return; }
+
+    const selected = await this._promptGoogleAccounts(accounts);
+    if (!selected || !selected.length) return;
+
+    try {
+      if (actionButton) { actionButton.disabled = true; actionButton.textContent = 'Guardando...'; }
+      const { data: { session } } = await this.supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) { alert(__('Sesión no válida. Inicia sesión y vuelve a intentar.')); return; }
+      const res = await fetch(`${location.origin}/api/integrations/google/select`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ brand_container_id: brandId, selected_customer_ids: selected })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || `Error ${res.status}`);
+      alert(__('Cuenta(s) seleccionada(s). Importando campañas…'));
+      if (window.router) window.router.navigate(window.location.pathname, true);
+    } catch (e) {
+      console.error('selectGoogleAdsAccounts:', e);
+      alert(e?.message || __('No se pudo guardar la selección.'));
+    } finally {
+      if (actionButton) { actionButton.disabled = false; actionButton.textContent = __('Elegir cuenta'); }
+    }
+    },
+
+  /** Modal con checkboxes de las cuentas de Ads disponibles. Devuelve [ids] o null. */
+  _promptGoogleAccounts(accounts) {
+    return new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      const rows = accounts.map((a) => `
+        <label style="display:flex;align-items:center;gap:.6rem;padding:.6rem .4rem;border-bottom:1px solid #242424;cursor:pointer;">
+          <input type="checkbox" value="${this.escapeHtml(String(a.customer_id))}" class="gads-acc-chk">
+          <span style="flex:1;">
+            <strong>${this.escapeHtml(a.name || String(a.customer_id))}</strong>
+            <span style="display:block;font-size:.78rem;color:#888;">${this.escapeHtml(String(a.customer_id))}${a.currency ? ' · ' + this.escapeHtml(a.currency) : ''}</span>
+          </span>
+        </label>`).join('');
+      overlay.innerHTML = `
+        <div style="background:#141517;border:1px solid #242424;border-radius:12px;max-width:440px;width:90%;padding:1.25rem;">
+          <h3 style="margin:0 0 .25rem;color:#fff;">¿Qué cuenta de Google Ads es de esta marca?</h3>
+          <p style="margin:0 0 1rem;font-size:.85rem;color:#999;">Elige solo la(s) cuenta(s) de esta marca. Solo se importarán esas — no todo tu portafolio.</p>
+          <div style="max-height:300px;overflow:auto;margin-bottom:1rem;">${rows}</div>
+          <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+            <button type="button" class="gads-cancel" style="padding:.5rem 1rem;background:transparent;border:1px solid #333;border-radius:8px;color:#ccc;cursor:pointer;">Cancelar</button>
+            <button type="button" class="gads-confirm" style="padding:.5rem 1rem;background:#3b82f6;border:none;border-radius:8px;color:#fff;cursor:pointer;">Conectar cuenta(s)</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+      const close = (val) => { overlay.remove(); resolve(val); };
+      overlay.querySelector('.gads-cancel').addEventListener('click', () => close(null));
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(null); });
+      overlay.querySelector('.gads-confirm').addEventListener('click', () => {
+        const ids = Array.from(overlay.querySelectorAll('.gads-acc-chk:checked')).map((c) => c.value);
+        if (!ids.length) { alert('Selecciona al menos una cuenta.'); return; }
+        close(ids);
+      });
+    });
+    },
+
+  /**
    * Modal para que el usuario ingrese su dominio Shopify (mitienda.myshopify.com).
    * Acepta input libre y lo normaliza: https://, trailing slashes, mayúsculas.
    * Devuelve string normalizado o null si cancela.
@@ -846,6 +924,17 @@
         const provider = btn.getAttribute('data-disconnect-provider');
         const targetBrandId = btn.getAttribute('data-brand-container-id') || brandContainerId;
         await this.disconnectBrandIntegration(provider, targetBrandId, btn);
+      });
+    });
+
+    panelRoot.querySelectorAll('.info-connect-action[data-select-google-accounts][data-brand-container-id]').forEach((btn) => {
+      if (btn.dataset.boundSelectAccounts === '1') return;
+      btn.dataset.boundSelectAccounts = '1';
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const targetBrandId = btn.getAttribute('data-brand-container-id') || brandContainerId;
+        await this.selectGoogleAdsAccounts(targetBrandId, btn);
       });
     });
 
