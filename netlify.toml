@@ -230,6 +230,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/integrations/meli/start"
+  to = "/.netlify/functions/api-integrations-meli-start"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/integrations/link"
   to = "/.netlify/functions/api-integrations-link"
   status = 200
