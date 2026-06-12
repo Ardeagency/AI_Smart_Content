@@ -67,10 +67,13 @@
     const google = this._pickBrandIntegrationForContainer(brandContainerId, 'google');
     const facebook = this._pickBrandIntegrationForContainer(brandContainerId, 'facebook');
     const shopify = this._pickBrandIntegrationForContainer(brandContainerId, 'shopify');
+    const meli = this._pickBrandIntegrationForContainer(brandContainerId, 'mercadolibre');
     const gOk = this._integrationUsable(google);
     const fOk = this._integrationUsable(facebook);
     const sOk = this._integrationUsable(shopify);
+    const mOk = this._integrationUsable(meli);
     const shopUrl = sOk && shopify?.account_url ? shopify.account_url : null;
+    const meliUrl = mOk && meli?.account_url ? meli.account_url : null;
 
     return [
       {
@@ -102,6 +105,16 @@
         actionHref: shopUrl || dashboardHref,
         actionExternal: !!shopUrl,
         hint: sOk && shopify?.shop_domain ? shopify.shop_domain : ''
+      },
+      {
+        key: 'mercadolibre',
+        label: 'Mercado Libre',
+        iconClass: 'fas fa-store',
+        connected: mOk,
+        oauthProvider: 'mercadolibre',
+        actionHref: meliUrl || dashboardHref,
+        actionExternal: !!meliUrl,
+        hint: mOk && meli?.external_account_name ? meli.external_account_name : ''
       }
     ];
     },
@@ -509,7 +522,7 @@
   async startBrandIntegrationOAuth(provider, brandContainerId, actionButton = null) {
     const normalizedProvider = String(provider || '').toLowerCase();
     const brandId = String(brandContainerId || '').trim();
-    const SUPPORTED = ['google', 'facebook', 'shopify'];
+    const SUPPORTED = ['google', 'facebook', 'shopify', 'mercadolibre'];
     if (!brandId || !SUPPORTED.includes(normalizedProvider)) return;
     if (window.DemoGuard?.isDemo?.()) {
       window.DemoGuard.showSignupModal(`conectar ${normalizedProvider}`);
@@ -541,11 +554,12 @@
         if (!shopDomain) return;
       }
 
-      // Endpoint Netlify (idéntico patrón para Meta/Google/Shopify)
+      // Endpoint Netlify (idéntico patrón para Meta/Google/Shopify/Mercado Libre)
       const endpoint = (
-        normalizedProvider === 'facebook' ? '/api/integrations/facebook/start' :
-        normalizedProvider === 'google'   ? '/api/integrations/google/start'   :
-        /* shopify */                       '/api/integrations/shopify/start'
+        normalizedProvider === 'facebook'     ? '/api/integrations/facebook/start' :
+        normalizedProvider === 'google'       ? '/api/integrations/google/start'   :
+        normalizedProvider === 'mercadolibre' ? '/api/integrations/meli/start'      :
+        /* shopify */                           '/api/integrations/shopify/start'
       );
 
       // Volver EXACTAMENTE a la pagina donde estaba el usuario al iniciar OAuth

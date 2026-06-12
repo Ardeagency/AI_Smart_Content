@@ -194,7 +194,7 @@ exports.handler = async (event) => {
   const brandContainerId = String(stateObj.brand_container_id || '').trim();
   const returnTo         = sanitizeReturnTo(String(stateObj.return_to || '/home'));
 
-  if (!['google', 'facebook', 'shopify'].includes(platform)) {
+  if (!['google', 'facebook', 'shopify', 'mercadolibre'].includes(platform)) {
     return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unsupported platform' }) };
   }
   if (!brandContainerId) {
@@ -583,6 +583,114 @@ exports.handler = async (event) => {
       }
     }
 
+    // ── Mercado Libre ─────────────────────────────────────────────────────────
+    let meliIntegId = null;
+    if (platform === 'mercadolibre') {
+      const appId     = process.env.MELI_APP_ID || '';
+      const appSecret = process.env.MELI_APP_SECRET || '';
+      if (!appId || !appSecret) throw new Error('Missing MELI_APP_ID/MELI_APP_SECRET env vars');
+
+      // Exchange code → tokens (form-urlencoded). access_token expira en ~6h
+      // (expires_in); refresh_token es de un solo uso (rota en cada refresh) y
+      // dura ~6 meses. Guardamos ambos encriptados; el refresh lo hace ai-engine.
+      const tokenRes = await fetch('https://api.mercadolibre.com/oauth/token', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+        body: new URLSearchParams({
+          grant_type:    'authorization_code',
+          client_id:     appId,
+          client_secret: appSecret,
+          code:          String(code),
+          redirect_uri:  redirectUri
+        }).toString()
+      });
+      const tokenJson = await tokenRes.json().catch(() => ({}));
+      if (!tokenRes.ok || !tokenJson.access_token) {
+        throw new Error(tokenJson?.message || tokenJson?.error || 'Mercado Libre token exchange failed');
+      }
+
+      const grantedScopes = typeof tokenJson.scope === 'string'
+        ? tokenJson.scope.split(/\s+/).filter(Boolean)
+        : [];
+      const meliUserId = tokenJson.user_id != null ? String(tokenJson.user_id) : null;
+
+      // GET /users/me para metadata del vendedor (nickname, país, sitio, reputación)
+      let me = {};
+      try {
+        const meRes = await fetch('https://api.mercadolibre.com/users/me', {
+          headers: { Authorization: `Bearer ${tokenJson.access_token}` }
+        });
+        if (meRes.ok) me = await meRes.json().catch(() => ({}));
+      } catch (e) { console.warn('[exchange] meli /users/me (non-blocking):', e.message); }
+
+      const acctId = meliUserId || (me.id != null ? String(me.id) : null);
+
+      // ¿ya existe integración para este brand_container? → reconnection (no re-bootstrap)
+      const existing = await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'GET',
+        searchParams: {
+          select: 'id',
+          brand_container_id: `eq.${brandContainerId}`,
+          platform:           'eq.mercadolibre',
+          limit:              '1'
+        }
+      });
+      const existingRow = Array.isArray(existing) ? existing[0] : null;
+      const isReconnection = !!existingRow?.id;
+
+      await upsertBrandIntegration({
+        env,
+        payload: {
+          brand_container_id:    brandContainerId,
+          platform:              'mercadolibre',
+          external_account_id:   acctId,
+          external_account_name: me.nickname || me.first_name || acctId || null,
+          account_url:           me.permalink || null,
+          access_token:          tokenJson.access_token,
+          refresh_token:         tokenJson.refresh_token || null,
+          token_expires_at:      expiresIso(tokenJson.expires_in),
+          is_active:             true,
+          scope:                 grantedScopes,
+          encryption_iv:         null,
+          ...(isReconnection ? {} : { bootstrap_status: 'pending' }),
+          metadata: {
+            provider:                'mercadolibre',
+            meli_user_id:            meliUserId,
+            nickname:                me.nickname || null,
+            site_id:                 me.site_id || null,
+            country_id:              me.country_id || null,
+            permalink:               me.permalink || null,
+            seller_reputation_level: me.seller_reputation?.level_id || null,
+            scope_at_last_oauth:     grantedScopes
+          },
+          updated_at: nowIso(), last_sync_at: nowIso()
+        }
+      });
+
+      // Recuperar el id para enqueue + respuesta al callback
+      const meliRow = await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'GET',
+        searchParams: {
+          select: 'id', brand_container_id: `eq.${brandContainerId}`,
+          platform: 'eq.mercadolibre', limit: '1'
+        }
+      });
+      meliIntegId = Array.isArray(meliRow) && meliRow[0] ? meliRow[0].id : null;
+
+      // Encolar bootstrap solo en conexión nueva (populator idempotente igual)
+      if (!isReconnection && meliIntegId && stateObj.organization_id) {
+        await enqueueIntegrationBootstrap({
+          env,
+          platform:         'mercadolibre',
+          integrationId:    meliIntegId,
+          brandContainerId,
+          organizationId:   stateObj.organization_id,
+        });
+      }
+    }
+
     // Obtener el id de la integración guardada para devolverlo al callback
     const savedIntegRow = platform === 'facebook'
       ? await (async () => {
@@ -604,7 +712,9 @@ exports.handler = async (event) => {
     // Audit log: registrar la conexión exitosa para que el admin de la org
     // vea quién conectó qué integración y cuándo (style Sprout Social).
     if (stateObj.organization_id) {
-      const integId = platform === 'shopify' ? shopifyIntegId : (savedIntegRow?.id || null);
+      const integId = platform === 'shopify' ? shopifyIntegId
+        : platform === 'mercadolibre' ? meliIntegId
+        : (savedIntegRow?.id || null);
       await logUserAudit({
         env,
         event,
@@ -636,6 +746,9 @@ exports.handler = async (event) => {
         ...(platform === 'shopify' ? {
           integ_id:    shopifyIntegId,
           shop_domain: stateObj.shop
+        } : {}),
+        ...(platform === 'mercadolibre' ? {
+          integ_id: meliIntegId
         } : {})
       })
     };

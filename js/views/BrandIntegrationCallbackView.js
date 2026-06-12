@@ -273,7 +273,10 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
     const safe = this._safeInternalPath(returnTo);
     const wrap = document.getElementById('bic-container');
     if (!wrap) { this._redirect(safe); return; }
-    const label = platform === 'google' ? 'Google' : (platform === 'shopify' ? 'Shopify' : 'Meta');
+    const label = platform === 'google' ? 'Google'
+      : platform === 'shopify' ? 'Shopify'
+      : platform === 'mercadolibre' ? 'Mercado Libre'
+      : 'Meta';
     wrap.innerHTML = `
       <div class="bic-success">
         <div class="bic-success-check"><i class="fas fa-check"></i></div>
