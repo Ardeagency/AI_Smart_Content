@@ -560,6 +560,16 @@ class DashboardView extends BaseView {
         { kind: 'vigila',   label: __('Próximo evento'),     action: __('Prepáralo'),       item: c.riesgo },
       ]);
     }
+    if (this._activeTab === 'strategy') {
+      if (!this._stratData || typeof this._computeStrategyCards !== 'function') return skel();
+      const c = this._computeStrategyCards(this._stratData);
+      return this._renderHeroCardDefs([
+        { kind: 'explota',  label: __('Tu mejor jugada'),  action: __('Apruébalo'),    item: c.funciona },
+        { kind: 'optimiza', label: __('Por decidir'),      action: __('Revísalas'),    item: c.oportunidad },
+        { kind: 'elimina',  label: __('Baja prioridad'),   action: __('Despriorízalas'), item: c.resta },
+        { kind: 'vigila',   label: __('En producción'),    action: __('Mídelo'),       item: c.riesgo },
+      ]);
+    }
     if (!data || typeof this._computeActionPlanItems !== 'function') return skel();
     const insights = Array.isArray(data?.whatWorks?.data) ? data.whatWorks.data : [];
     const items = this._computeActionPlanItems(data, insights);
@@ -634,7 +644,7 @@ class DashboardView extends BaseView {
     // negativas). El número se formatea según el tipo (lift%, conversión, ratio).
     const sevCls = (s) => (Number(s) >= 40 ? 'bad' : Number(s) >= 15 ? 'mid' : 'low');
     const findCls = (s) => (detail.color === 'explota' ? 'good' : detail.color === 'optimiza' ? 'opp' : sevCls(s));
-    const CAT = { reputacion: __('Reputación'), desempeno: __('Desempeño'), tono: __('Tono'), tema: __('Tema'), formato: __('Formato'), pilar: __('Pilar'), caida_causal: __('Tendencia'), campana: __('Campaña'), top_post: __('Top post'), rival: __('Rival'), engagement: __('Brecha'), volumen: __('Volumen'), tendencia: __('Tendencia'), gap: __('Gap'), evento: __('Evento') };
+    const CAT = { reputacion: __('Reputación'), desempeno: __('Desempeño'), tono: __('Tono'), tema: __('Tema'), formato: __('Formato'), pilar: __('Pilar'), caida_causal: __('Tendencia'), campana: __('Campaña'), top_post: __('Top post'), rival: __('Rival'), engagement: __('Brecha'), volumen: __('Volumen'), tendencia: __('Tendencia'), gap: __('Gap'), evento: __('Evento'), rec: __('Recomendación') };
     const findNum = (f) => (f.lift != null ? `${f.lift > 0 ? '+' : ''}${f.lift}%` : (f.total != null ? `${f.n}/${f.total}` : (f.n != null ? this._compactNum(f.n) : '')));
     const findBlock = (Array.isArray(detail.findings) && detail.findings.length) ? `
       <div class="plan-detail-sec">

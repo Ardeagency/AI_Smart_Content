@@ -32,6 +32,10 @@
       try {
         const data = await this._strategiaService.loadAll({ status: this._stratFilters.status });
         this._stratData = data;
+        if (this._activeTab === 'strategy') {
+          this._renderHeroCards();                             // cards del hero = pipeline de Vera
+          if (!this._silentRefresh) this._renderHeroActions(); // filtros del banner
+        }
         if (!this._shouldRepaint('strategy', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildStrategiaHtml(data);
         this._bindStrategyHandlers(body);
@@ -85,6 +89,77 @@
           ${this._buildStratPending(proposed)}
           ${this._buildStratInProduction(inProd)}
         </div>`;
+    },
+
+    /* ── Cards del hero en Estrategia: el pipeline de recomendaciones de Vera.
+       Tu mejor jugada (top por confianza) + Por decidir (pendientes) + Baja
+       prioridad (baja confianza) + En producción (estrategias activas). ── */
+    _computeStrategyCards(sd) {
+      const proposed = Array.isArray(sd?.proposed?.data) ? sd.proposed.data : [];
+      const master = sd?.master?.data || {};
+      const inProd = Array.isArray(master.in_production) ? master.in_production : [];
+      const rank = { alta: 3, media: 2, baja: 1 };
+      const sorted = [...proposed].sort((a, b) => (rank[b.confidence] || 0) - (rank[a.confidence] || 0));
+
+      let funciona = null;
+      const top = sorted[0];
+      if (top) {
+        funciona = {
+          title: top.title,
+          metric: __('Confianza {c}', { c: top.confidence || '—' }), metricSub: __('Vera lo propone — apruébalo'),
+          impact: 'alto', earlySignal: false,
+          detail: { color: 'explota', category: __('Tu mejor jugada'), title: top.title,
+            sections: [
+              { h: __('¿Por qué esta jugada?'), b: top.description || __('Recomendación generada cruzando tus señales.') },
+              ...(top.copy_seed ? [{ h: __('Semilla de copy'), b: `“${top.copy_seed}”` }] : []),
+              { h: __('Configuración'), b: __('Tono {t} · ánimo {m} · tema {x} · formato {f}', { t: top.tone || '—', m: top.mood || '—', x: top.topic || '—', f: top.format || '—' }) },
+            ],
+          },
+        };
+      }
+
+      let oportunidad = null;
+      if (proposed.length) {
+        const alta = proposed.filter((r) => r.confidence === 'alta').length;
+        oportunidad = {
+          title: __('{n} recomendaciones esperan tu decisión', { n: proposed.length }),
+          metric: `${proposed.length}`, metricSub: alta ? __('{a} de alta confianza', { a: alta }) : __('por revisar'),
+          impact: 'medio', earlySignal: false,
+          detail: { color: 'optimiza', category: __('Por decidir'), title: __('Recomendaciones pendientes'),
+            findings: sorted.slice(0, 6).map((r) => ({ key: 'rec', severity: (rank[r.confidence] || 0) * 20, label: __('{t} · confianza {c}', { t: r.title, c: r.confidence || '—' }) })),
+            sections: [{ h: __('Tu cola de decisiones'), b: __('Vera generó estas recomendaciones cruzando todas tus señales. Aprueba las de alta confianza, itera o descarta el resto.') }],
+          },
+        };
+      }
+
+      let resta = null;
+      const low = proposed.filter((r) => r.confidence === 'baja');
+      if (low.length) {
+        resta = {
+          title: __('{n} de baja confianza', { n: low.length }),
+          metric: `${low.length}`, metricSub: __('no las priorices'),
+          impact: 'medio', earlySignal: false,
+          detail: { color: 'elimina', category: __('Baja prioridad'), title: __('Recomendaciones de baja confianza'),
+            findings: low.slice(0, 6).map((r) => ({ key: 'rec', severity: 20, label: r.title })),
+            sections: [{ h: __('¿Por qué bajas?'), b: __('Vera tiene baja confianza en estas (poca evidencia o señal débil). Déjalas al final de la cola; si insistes, itéralas con feedback.') }],
+          },
+        };
+      }
+
+      let riesgo = null;
+      if (inProd.length) {
+        riesgo = {
+          title: inProd.length === 1 ? __('1 estrategia en producción') : __('{n} estrategias en producción', { n: inProd.length }),
+          metric: `${inProd.length}`, metricSub: __('ya en marcha — mide su impacto'),
+          impact: 'medio', earlySignal: false,
+          detail: { color: 'vigila', category: __('En producción'), title: __('Estrategias activas'),
+            findings: inProd.slice(0, 6).map((r) => ({ key: 'rec', severity: 50, label: r.title })),
+            sections: [{ h: __('Qué está en marcha'), b: __('Estas estrategias ya están aprobadas y en producción. Mide su impacto en Mi Marca y ajusta el rumbo.') }],
+          },
+        };
+      }
+
+      return { funciona, oportunidad, resta, riesgo };
     },
 
     _buildStratFiltersBar() {
