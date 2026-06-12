@@ -86,16 +86,21 @@ exports.handler = async (event) => {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
   if (!clientId) return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing GOOGLE_CLIENT_ID env var' }) };
 
-  // Permisos completos de Google: Analytics, YouTube, Ads y Business Profile
+  // Set minimo de scopes — cada uno mapea a una feature real y demostrable para
+  // la verificacion de Google (no se piden scopes sin consumir):
+  //   analytics.readonly → GA4 (lectura)
+  //   youtube            → leer videos + actualizar titulo/descripcion (boton humano)
+  //   yt-analytics.readonly → metricas de YouTube (no sensible)
+  //   adwords            → Google Ads: leer campanas + optimizar keywords (boton humano)
+  // Business Profile (business.manage) diferido (ICP B2B + gate de aprobacion manual).
+  // `youtube` ya cubre lectura, asi que NO se pide youtube.readonly; analytics full
+  // tampoco (solo readonly, no escribimos config de GA4).
   const scopes = process.env.GOOGLE_OAUTH_SCOPES ||
     'openid email profile ' +
-    'https://www.googleapis.com/auth/analytics ' +
     'https://www.googleapis.com/auth/analytics.readonly ' +
     'https://www.googleapis.com/auth/youtube ' +
-    'https://www.googleapis.com/auth/youtube.readonly ' +
     'https://www.googleapis.com/auth/yt-analytics.readonly ' +
-    'https://www.googleapis.com/auth/adwords ' +
-    'https://www.googleapis.com/auth/business.manage';
+    'https://www.googleapis.com/auth/adwords';
 
   const redirectUri = getRedirectUri();
 
