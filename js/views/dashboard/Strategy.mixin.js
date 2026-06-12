@@ -81,7 +81,6 @@
       const inProd = Array.isArray(master.in_production) ? master.in_production : [];
       return `
         <div class="insight-page mb-dash" id="stratPage">
-          ${this._buildStratFiltersBar()}
           ${this._buildStratHeader(master, proposed.length)}
           ${this._buildStratPending(proposed)}
           ${this._buildStratInProduction(inProd)}

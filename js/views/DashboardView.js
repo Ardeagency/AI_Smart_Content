@@ -444,7 +444,7 @@ class DashboardView extends BaseView {
     this.clearSubnavFromHeader();
     this._setupHeroTabs();
     this._setupHeroFilters();
-    this._mountMbDatePicker?.(document.getElementById('dashHero'));
+    this._mountTabDatePicker();
     this._setupTabs();
     this._setupReportDropdown();
     this._renderTab(this._activeTab);
@@ -507,12 +507,9 @@ class DashboardView extends BaseView {
     const copy = DashboardView.HERO_COPY[tabId] || DashboardView.HERO_COPY['my-brands'];
     const org  = window.currentOrgName || '';
     const light = org ? ` <span class="dash-hero-title-light">de ${this._esc(org)}</span>` : '';
-    // Filtros (Fecha + Plataforma) + boton "Crear informe": viven en el hero,
-    // alineados a la derecha del titulo. Solo aplican a Mi Marca (el CSS los
-    // oculta en los demas tabs).
-    const actions = (typeof this._buildMbFiltersBar === 'function')
-      ? `<div class="dash-hero-actions">${this._buildMbFiltersBar(this._heroKpiData || null)}</div>`
-      : '';
+    // Filtros TAB-AWARE en el banner: cada tab muestra los suyos aquí (no en el
+    // cuerpo). El manejo de cambios se centraliza en _setupHeroFilters.
+    const actions = `<div class="dash-hero-actions" id="dashHeroActions">${this._buildTabFiltersBar(tabId)}</div>`;
     return `
       <section class="dash-hero" id="dashHero" data-tab="${this._esc(tabId)}" aria-label="Resumen del dashboard">
         <div class="dash-hero-grad" aria-hidden="true"></div>
@@ -770,21 +767,63 @@ class DashboardView extends BaseView {
     });
   }
 
-  /** Cambio de filtros (Plataforma) desde el hero → delega en MyBrands.
-      El date picker llama _onMbFilterChange por su cuenta (onChange). */
+  // Barra de filtros del tab activo (vive en el banner). Cada tab trae la suya.
+  _buildTabFiltersBar(tabId) {
+    if (tabId === 'competence') return typeof this._buildCompFiltersBar === 'function' ? this._buildCompFiltersBar() : '';
+    if (tabId === 'tendencies') return typeof this._buildTendFiltersBar === 'function' ? this._buildTendFiltersBar(this._tendData || null) : '';
+    if (tabId === 'strategy')   return typeof this._buildStratFiltersBar === 'function' ? this._buildStratFiltersBar() : '';
+    return typeof this._buildMbFiltersBar === 'function' ? this._buildMbFiltersBar(this._heroKpiData || null) : '';
+  }
+
+  // Re-renderiza la barra de filtros del banner para el tab activo y monta su date
+  // picker. Se llama al cambiar de tab y al cargar la data (opciones dinámicas).
+  _renderHeroActions() {
+    const host = document.getElementById('dashHeroActions');
+    if (host) host.innerHTML = this._buildTabFiltersBar(this._activeTab);
+    this._mountTabDatePicker();
+  }
+
+  _mountTabDatePicker() {
+    const hero = document.getElementById('dashHero');
+    const t = this._activeTab;
+    if (t === 'competence') this._mountCompDatePicker?.(hero);
+    else if (t === 'tendencies') this._mountTendDatePicker?.(hero);
+    else this._mountMbDatePicker?.(hero);  // Estrategia no tiene date picker (solo status)
+  }
+
+  /** Manejo CENTRALIZADO de filtros del banner (todos los tabs). Selects → change;
+      menús custom (Plataforma) → click. El date picker llama a su _onXFilterChange
+      por su cuenta. Se rutea al handler del tab activo. */
   _setupHeroFilters() {
     const hero = document.getElementById('dashHero');
     if (!hero || hero._filtersWired) return;
     hero._filtersWired = true;
+
+    const route = (patch) => {
+      const t = this._activeTab;
+      if (t === 'competence') this._onCompFilterChange?.(patch);
+      else if (t === 'tendencies') this._onTendFilterChange?.(patch);
+      else if (t === 'strategy') this._onStratFilterChange?.(patch);
+      else this._onMbFilterChange?.(patch);
+    };
+
     hero.addEventListener('change', (e) => {
-      const el = e.target.closest('[data-mb-filter]');
-      if (!el || typeof this._onMbFilterChange !== 'function') return;
-      const key = el.dataset.mbFilter;
-      if (key === 'platform') { this._onMbFilterChange({ platforms: el.value ? [el.value] : null }); return; }
-      let value = el.value;
-      if (key === 'windowDays') value = Number(value) || 30;
-      if (key === 'brandContainerId') value = value || null;
-      this._onMbFilterChange({ [key]: value });
+      const el = e.target.closest('[data-mb-filter],[data-comp-filter],[data-tend-filter],[data-strat-filter]');
+      if (!el) return;
+      const key = el.dataset.mbFilter || el.dataset.compFilter || el.dataset.tendFilter || el.dataset.stratFilter;
+      const v = el.value;
+      if (key === 'platform') return route({ platforms: v ? [v] : null });
+      if (key === 'windowDays') return route({ windowDays: Number(v) || (this._activeTab === 'competence' ? 99999 : this._activeTab === 'tendencies' ? 90 : 30) });
+      if (key === 'entityId') return route({ entityId: v || null });
+      if (key === 'source') return route({ source: v || '' });
+      if (key === 'status') return route({ status: v || 'proposed' });
+      if (key === 'brandContainerId') return route({ brandContainerId: v || null });
+      route({ [key]: v });
+    });
+
+    hero.addEventListener('click', (e) => {
+      const sel = this._handleFilterMenuClick(e);
+      if (sel && sel.key === 'platform') route({ platforms: sel.value ? [sel.value] : null });
     });
   }
 
@@ -819,7 +858,8 @@ class DashboardView extends BaseView {
     }
 
     this._updateHero(tabId);
-    this._renderHeroCards();  // las cards del hero son TAB-AWARE (Mi Marca vs Competencia)
+    this._renderHeroCards();    // cards del hero TAB-AWARE (Mi Marca vs Competencia)
+    this._renderHeroActions();  // filtros del banner TAB-AWARE
     this._renderTab(tabId);
   }
 

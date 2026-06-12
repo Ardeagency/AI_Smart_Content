@@ -33,16 +33,18 @@
           platforms: this._compFilters.platforms || null,
         });
         this._compData = data;
-        if (this._activeTab === 'competence') this._renderHeroCards(); // cards del hero = campo de batalla
         // Lista completa de perfiles para el dropdown (solo cuando NO hay foco
         // en un rival, asi no se pierden las demas opciones al filtrar).
         if (!this._compFilters.entityId && Array.isArray(data?.top?.data)) {
           this._compActors = data.top.data;
         }
+        if (this._activeTab === 'competence') {
+          this._renderHeroCards();                             // cards del hero = campo de batalla
+          if (!this._silentRefresh) this._renderHeroActions(); // filtros del banner (opciones de perfil)
+        }
         if (!this._shouldRepaint('competence', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildCompetenciaHtml(data);
         this._bindCompetenceHandlers(body);
-        this._mountCompDatePicker(body);
       } catch (e) {
         console.error('[Competence] load failed:', e);
         if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
@@ -193,7 +195,6 @@
     _buildCompetenciaHtml(data) {
       return `
         <div class="insight-page mb-dash" id="compPage">
-          ${this._buildCompFiltersBar()}
           ${this._buildBattlefield(data?.kpis?.data, data?.top?.data, data?.kpisPrev?.data)}
           ${this._buildBenchmark(data?.benchmark?.data, data?.shareOfVoice?.data)}
           ${this._buildWinningFormula(data?.intelligence?.data)}

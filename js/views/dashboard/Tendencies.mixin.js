@@ -45,10 +45,10 @@
         this._tendenciasService.setWindow(this._tendFilters.windowDays);
         const data = await this._tendenciasService.loadAll();
         this._tendData = data;
+        if (this._activeTab === 'tendencies' && !this._silentRefresh) this._renderHeroActions(); // filtros del banner (opciones de fuente)
         if (!this._shouldRepaint('tendencies', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildTendenciasHtml(data);
         this._bindTendenciesHandlers(body);
-        this._mountTendDatePicker(body);
       } catch (e) {
         console.error('[Tendencies] load failed:', e);
         if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
@@ -97,7 +97,6 @@
     _buildTendenciasHtml(data) {
       return `
         <div class="insight-page mb-dash" id="tendPage">
-          ${this._buildTendFiltersBar(data)}
           ${this._buildTendPulse(data?.kpis?.data, data?.pulse?.data)}
           ${this._buildTendSignals(data?.signals?.data)}
           ${this._buildTendGaps(data?.gaps?.data)}

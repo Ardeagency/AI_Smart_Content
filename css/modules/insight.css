@@ -3905,7 +3905,7 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .dash-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem 1.5rem; flex-wrap: wrap; }
 .dash-hero-headings { min-width: 0; }
 .dash-hero-actions { flex-shrink: 0; position: relative; z-index: 5; margin-top: clamp(1.1rem, 2.5vw, 1.5rem); }
-.dash-hero:not([data-tab="my-brands"]) .dash-hero-actions { display: none; }
+/* Los filtros viven en el banner en TODOS los tabs (no solo Mi Marca). */
 /* La barra de filtros heredada (living-history-filters) sobre el degradado:
    alinea a la derecha y da legibilidad a labels claros. */
 .dash-hero-actions .mb-filters-bar { margin: 0; padding: 0; background: none; border: 0; flex-wrap: wrap; justify-content: flex-start; }
