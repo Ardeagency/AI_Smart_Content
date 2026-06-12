@@ -539,30 +539,43 @@ class DashboardView extends BaseView {
   // .dash-hero-cards para la jerarquia (sujeto primero + linea de accion al pie).
   // Sin el parrafo "why" largo ni el boton de expandir. Sin data → 4 shimmers.
   _buildHeroCards(data) {
-    if (!data || typeof this._computeActionPlanItems !== 'function') {
-      return Array.from({ length: 4 }, () => `<div class="dash-hero-card-skeleton"></div>`).join('');
+    const skel = () => Array.from({ length: 4 }, () => `<div class="dash-hero-card-skeleton"></div>`).join('');
+    // El hero es TAB-AWARE: en Competencia muestra las cards del campo de batalla
+    // (fórmula del nicho / vulnerabilidad rival / te están ganando / amenaza), no
+    // las de Mi Marca.
+    if (this._activeTab === 'competence') {
+      if (!this._compData || typeof this._computeCompetitionCards !== 'function') return skel();
+      const c = this._computeCompetitionCards(this._compData);
+      return this._renderHeroCardDefs([
+        { kind: 'explota',  label: __('Fórmula del nicho'),    action: __('Estudia su fórmula'), item: c.funciona },
+        { kind: 'optimiza', label: __('Vulnerabilidad rival'), action: __('Atácalo'),            item: c.oportunidad },
+        { kind: 'elimina',  label: __('Te están ganando'),     action: __('Cierra la brecha'),   item: c.resta },
+        { kind: 'vigila',   label: __('Amenaza'),              action: __('Vigílalo'),           item: c.riesgo },
+      ]);
     }
+    if (!data || typeof this._computeActionPlanItems !== 'function') return skel();
     const insights = Array.isArray(data?.whatWorks?.data) ? data.whatWorks.data : [];
     const items = this._computeActionPlanItems(data, insights);
-    // Jerarquia: categoria en lenguaje natural (no el verbo jerga) → SUJETO arriba
-    // y prominente → evidencia (metrica) → linea de accion al pie. Asi la card se
-    // lee como una frase ("Tu tono alegre rinde +55% → produce mas de esto") en
-    // lugar de un "EXPLOTA = alegre" que nadie entiende.
-    const defs = [
+    return this._renderHeroCardDefs([
       { kind: 'explota',  label: __('Lo que funciona'), action: __('Produce más de esto'),  item: items.explota  },
       { kind: 'optimiza', label: __('Oportunidad'),     action: __('Aplícalo ya'),          item: items.optimiza },
       { kind: 'elimina',  label: __('Lo que te resta'), action: __('Redúcelo o evítalo'),   item: items.elimina  },
       { kind: 'vigila',   label: __('Riesgo'),          action: __('Revísalo'),             item: items.vigila   },
-    ];
-    // Guardamos los items por categoria para abrir el detalle al hacer click.
+    ]);
+  }
+
+  // Render compartido de las cards del hero (Mi Marca + Competencia). Jerarquía:
+  // categoría → sujeto arriba → evidencia → acción al pie. Guarda los items por
+  // categoría para abrir el detalle (modal) al hacer click.
+  _renderHeroCardDefs(defs) {
     this._heroPlanItems = {};
+    const skel = () => Array.from({ length: 4 }, () => `<div class="dash-hero-card-skeleton"></div>`).join('');
     const cards = defs.filter((d) => d.item).map((d) => {
       const it = d.item;
       this._heroPlanItems[d.kind] = it;
       const metric = it.metric
         ? `<div class="mb-plan-metric"><span class="mb-plan-metric-val">${this._esc(it.metric)}</span>${it.metricSub ? `<span class="mb-plan-metric-sub">${this._esc(it.metricSub)}</span>` : ''}</div>`
         : '';
-      // Pildora de muestra chica: honestidad estadistica (no apostar con n<5).
       const pill = it.earlySignal ? `<span class="mb-plan-early">${__('Señal temprana')}</span>` : '';
       const action = it.action || d.action;
       const hasDetail = !!it.detail;
@@ -576,7 +589,7 @@ class DashboardView extends BaseView {
           <div class="mb-plan-action">${this._esc(action)}<span class="mb-plan-action-arrow">→</span></div>
         </div>`;
     });
-    return cards.join('') || this._buildHeroCards(null);
+    return cards.join('') || skel();
   }
 
   // Pinta las cards reales en el hero (idempotente). Llamado tras cargar la
@@ -614,7 +627,7 @@ class DashboardView extends BaseView {
     // negativas). El número se formatea según el tipo (lift%, conversión, ratio).
     const sevCls = (s) => (Number(s) >= 40 ? 'bad' : Number(s) >= 15 ? 'mid' : 'low');
     const findCls = (s) => (detail.color === 'explota' ? 'good' : detail.color === 'optimiza' ? 'opp' : sevCls(s));
-    const CAT = { reputacion: __('Reputación'), desempeno: __('Desempeño'), tono: __('Tono'), tema: __('Tema'), formato: __('Formato'), pilar: __('Pilar'), caida_causal: __('Tendencia'), campana: __('Campaña'), top_post: __('Top post') };
+    const CAT = { reputacion: __('Reputación'), desempeno: __('Desempeño'), tono: __('Tono'), tema: __('Tema'), formato: __('Formato'), pilar: __('Pilar'), caida_causal: __('Tendencia'), campana: __('Campaña'), top_post: __('Top post'), rival: __('Rival'), engagement: __('Brecha'), volumen: __('Volumen') };
     const findNum = (f) => (f.lift != null ? `${f.lift > 0 ? '+' : ''}${f.lift}%` : (f.total != null ? `${f.n}/${f.total}` : (f.n != null ? this._compactNum(f.n) : '')));
     const findBlock = (Array.isArray(detail.findings) && detail.findings.length) ? `
       <div class="plan-detail-sec">
@@ -806,6 +819,7 @@ class DashboardView extends BaseView {
     }
 
     this._updateHero(tabId);
+    this._renderHeroCards();  // las cards del hero son TAB-AWARE (Mi Marca vs Competencia)
     this._renderTab(tabId);
   }
 

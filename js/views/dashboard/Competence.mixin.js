@@ -33,6 +33,7 @@
           platforms: this._compFilters.platforms || null,
         });
         this._compData = data;
+        if (this._activeTab === 'competence') this._renderHeroCards(); // cards del hero = campo de batalla
         // Lista completa de perfiles para el dropdown (solo cuando NO hay foco
         // en un rival, asi no se pierden las demas opciones al filtrar).
         if (!this._compFilters.entityId && Array.isArray(data?.top?.data)) {
@@ -47,6 +48,107 @@
         if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
         body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">${__('No se pudo cargar Competencia.')} ${this._esc(e?.message || '')}</div>`;
       }
+    },
+
+    /* ── Cards del hero en Competencia: SÍNTESIS del campo de batalla (no las de
+       Mi Marca). Fórmula del nicho (quién/qué domina) + Vulnerabilidad rival (sus
+       clientes se quejan → munición) + Te están ganando (brecha vs competencia) +
+       Amenaza (rival que domina la atención). Reglas+matemática, sin LLM. */
+    _computeCompetitionCards(cd) {
+      const top   = Array.isArray(cd?.top?.data)   ? cd.top.data   : [];
+      const voice = Array.isArray(cd?.voice?.data) ? cd.voice.data : [];
+      const risk  = Array.isArray(cd?.risk?.data)  ? cd.risk.data  : [];
+      const bench = cd?.benchmark?.data || null;
+      const C = (n) => this._compactNum(Number(n) || 0);
+      const byEng = (a, b) => Number(b.total_engagement) - Number(a.total_engagement);
+
+      // 1. FÓRMULA DEL NICHO: el rival líder por engagement + ranking.
+      let funciona = null;
+      const leader = [...top].sort(byEng)[0];
+      if (leader) {
+        funciona = {
+          title: __('{r} domina tu nicho', { r: leader.entity_name }),
+          metric: C(leader.total_engagement),
+          metricSub: __('engagement · {a}/post en {p}', { a: C(leader.avg_engagement_per_post), p: leader.platform || '—' }),
+          impact: 'alto', earlySignal: false,
+          detail: {
+            color: 'explota', category: __('Fórmula del nicho'), title: __('Quién domina el nicho'),
+            findings: [...top].sort(byEng).slice(0, 5).map((r) => ({
+              key: 'rival', n: Number(r.total_engagement) || 0, severity: 50,
+              label: __('{r} — {a}/post · {p}% positivo', { r: r.entity_name, a: C(r.avg_engagement_per_post), p: Math.round(Number(r.positive_sentiment_ratio || 0) * 100) }),
+            })),
+            sections: [{ h: __('¿Qué le funciona al nicho?'), b: __('Estos rivales dominan la conversación. Estudia su fórmula (temas, formatos, cadencia) para competir mejor — no para copiar.') }],
+          },
+        };
+      }
+
+      // 2. VULNERABILIDAD RIVAL: el rival con más insatisfacción + queja real.
+      let oportunidad = null;
+      const vuln = [...voice].filter((v) => Number(v.neg_ratio) > 0 && Number(v.total_comments) >= 20)
+        .sort((a, b) => Number(b.neg_ratio) - Number(a.neg_ratio))[0];
+      if (vuln) {
+        const negPct = Math.round(Number(vuln.neg_ratio) * 100);
+        const sample = Array.isArray(vuln.sample_negative) ? vuln.sample_negative[0] : null;
+        oportunidad = {
+          title: __('Los clientes de {r} se quejan', { r: vuln.entity_name }),
+          metric: `${negPct}%`, metricSub: __('de su público insatisfecho — tu munición'),
+          impact: 'medio', earlySignal: false,
+          detail: {
+            color: 'optimiza', category: __('Vulnerabilidad rival'), title: __('La debilidad del rival = tu oportunidad'),
+            findings: [...voice].filter((v) => Number(v.neg_ratio) > 0).sort((a, b) => Number(b.neg_ratio) - Number(a.neg_ratio)).slice(0, 4).map((v) => ({
+              key: 'rival', severity: 50,
+              label: __('{r} — {p}% negativo · {n} comentarios de su público', { r: v.entity_name, p: Math.round(Number(v.neg_ratio) * 100), n: Number(v.total_comments) || 0 }),
+            })),
+            sections: [
+              { h: __('¿Dónde le duele al rival?'), b: __('Donde la audiencia del rival está insatisfecha, está tu oportunidad: crea contenido que resuelva ese dolor (sin nombrarlos) para captar a su público.') },
+              ...(sample ? [{ h: __('Queja real de su público'), b: `“${String(sample).slice(0, 220)}”` }] : []),
+            ],
+          },
+        };
+      }
+
+      // 3. TE ESTÁN GANANDO: brecha vs competencia (benchmark).
+      let resta = null;
+      if (bench && bench.brand && bench.competencia) {
+        const youAvg = Number(bench.brand.avg_engagement_per_post) || 0;
+        const compAvg = Number(bench.competencia.avg_engagement_per_post) || 0;
+        const gap = youAvg > 0 ? Math.round(compAvg / youAvg) : null;
+        resta = {
+          title: __('La competencia te supera en engagement'),
+          metric: gap ? `${C(gap)}x` : __('te superan'),
+          metricSub: __('más engagement/post ({y} vs {c})', { y: C(youAvg), c: C(compAvg) }),
+          impact: 'alto', earlySignal: false,
+          detail: {
+            color: 'elimina', category: __('Te están ganando'), title: __('La brecha competitiva'),
+            findings: [
+              { key: 'engagement', severity: 60, label: __('Engagement/post: tú {y} vs competencia {c}', { y: C(youAvg), c: C(compAvg) }) },
+              { key: 'volumen',    severity: 30, label: __('Volumen: tú {y} posts vs competencia {c}', { y: Number(bench.brand.posts) || 0, c: Number(bench.competencia.posts) || 0 }) },
+            ],
+            sections: [{ h: __('¿Dónde te están ganando?'), b: __('La competencia domina el engagement del nicho. No compitas en volumen bruto — compite en resonancia: replica lo que sí te funciona (ver Mi Marca) con más constancia.') }],
+          },
+        };
+      }
+
+      // 4. AMENAZA: el rival que más domina la atención del nicho.
+      let riesgo = null;
+      const threat = [...(risk.length ? risk : top)].sort(byEng)[0];
+      if (threat) {
+        riesgo = {
+          title: __('{r} es tu mayor amenaza', { r: threat.entity_name }),
+          metric: C(threat.total_engagement), metricSub: __('engagement — domina la atención del nicho'),
+          impact: 'alto', earlySignal: false,
+          detail: {
+            color: 'vigila', category: __('Amenaza'), title: __('Amenazas competitivas'),
+            findings: [...(risk.length ? risk : top)].sort(byEng).slice(0, 5).map((r) => ({
+              key: 'rival', n: Number(r.total_engagement) || 0, severity: 55,
+              label: r.description || __('{r} domina la conversación', { r: r.entity_name }),
+            })),
+            sections: [{ h: __('¿Quién amenaza tu posición?'), b: __('Estos rivales dominan la atención del nicho. Vigila sus lanzamientos y su pauta; cuando uno tropiece (una crisis), es tu momento de capturar a su público decepcionado.') }],
+          },
+        };
+      }
+
+      return { funciona, oportunidad, resta, riesgo };
     },
 
     async _ensureCompetenciaService() {
