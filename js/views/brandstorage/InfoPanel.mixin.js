@@ -114,7 +114,9 @@
         oauthProvider: 'mercadolibre',
         actionHref: meliUrl || dashboardHref,
         actionExternal: !!meliUrl,
-        hint: mOk && meli?.external_account_name ? meli.external_account_name : ''
+        // Sin hint: el nickname de ML es autogenerado (ej. IA2026...), no aporta
+        // y expone el id publico de la cuenta. La fila queda limpia como Google/Meta.
+        hint: ''
       }
     ];
     },
