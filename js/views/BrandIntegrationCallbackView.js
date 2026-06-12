@@ -276,6 +276,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
     const label = platform === 'google' ? 'Google'
       : platform === 'shopify' ? 'Shopify'
       : platform === 'mercadolibre' ? 'Mercado Libre'
+      : platform === 'x' ? 'X'
       : 'Meta';
     wrap.innerHTML = `
       <div class="bic-success">
