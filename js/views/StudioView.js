@@ -140,7 +140,7 @@ class StudioView extends BaseView {
     try {
       const canvas = document.getElementById('studioCanvas');
       if (!canvas) return;
-      const target = canvas.querySelector('.studio-skeleton') || canvas.querySelector('.studio-history-empty');
+      const target = canvas.querySelector('.studio-skeleton') || canvas.querySelector('.empty-state') || canvas.querySelector('.studio-history-empty');
       const html = `
         <div class="studio-skeleton studio-run-error" role="alert" aria-live="assertive">
           <p class="studio-skeleton-label">Se produjo un error en la producción</p>
@@ -889,12 +889,12 @@ class StudioView extends BaseView {
           <p class="studio-skeleton-hint">Esto puede tardar un momento. Tu resultado aparecerá aquí en cuanto esté listo.</p>
         </div>
       `
-        : `
-        <div class="living-history-empty studio-history-empty">
-          <p class="living-history-empty-message">Empieza una nueva produccion</p>
-          <p class="living-history-empty-hint">Llena el formulario de la derecha y pulsa Producir. Veras aqui los resultados de este run.</p>
-        </div>
-      `;
+        : this.emptyState({
+          noDots: true,
+          icon: 'fa-wand-magic-sparkles',
+          title: 'Empieza una nueva producción',
+          subtitle: 'Llena el formulario de la derecha y pulsa Producir. Verás aquí los resultados de este run.',
+        });
       this.livingManager = lm;
       this._livingScopedFlowName = flowName;
       await lm.init();

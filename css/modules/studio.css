@@ -95,6 +95,16 @@
   color: var(--text-muted);
 }
 
+/* Empty state premium (plantilla .empty-state) ocupando y centrado en el canvas.
+   Los puntos los pone el canvas (.studio-canvas-empty::before), por eso el
+   empty state se renderiza con noDots (.empty-state--flat). */
+.studio-canvas-living:has(> .empty-state) {
+  display: flex;
+  min-height: 100%;
+  padding: 0;
+}
+.studio-canvas-living > .empty-state { flex: 1; }
+
 /* ========== Skeleton de carga (run activo esperando su output) ========== */
 /* Se muestra mientras el run corre y persiste hasta que el output real lo
    reemplaza. Reutiliza el shimmer .living-history-skeleton (living.css). */

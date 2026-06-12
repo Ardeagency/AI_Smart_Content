@@ -493,12 +493,14 @@ class BaseView {
    *   hidden    arranca oculto (display:none)
    *   fill      ocupa el alto del contenedor flex (.empty-state--fill)
    *   compact   variante chica para areas pequeñas (columnas, paneles)
+   *   noDots    sin spotlight propio (para contenedores que ya ponen los puntos,
+   *             ej. el canvas de Studio) — evita duplicar el patron
    * Diseño en Figma node 133:14.
    */
   static emptyState({
     icon = 'fa-inbox', iconSrc = '', title = '', subtitle = '',
     primaryLabel = '', secondaryLabel = '', primaryAction = '', secondaryAction = '',
-    id = '', hidden = false, fill = false, compact = false,
+    id = '', hidden = false, fill = false, compact = false, noDots = false,
   } = {}) {
     const esc = BaseView.escapeHtml;
     const medallionInner = iconSrc
@@ -512,7 +514,7 @@ class BaseView {
       ? `<button type="button" class="ple-btn ple-btn--secondary" ${sAttr}>${esc(secondaryLabel)}</button>` : '';
     const actions = (primary || secondary) ? `<div class="ple-actions">${primary}${secondary}</div>` : '';
     const sub = subtitle ? `<p class="ple-subtitle">${esc(subtitle)}</p>` : '';
-    const cls = ['empty-state', fill && 'empty-state--fill', compact && 'empty-state--compact'].filter(Boolean).join(' ');
+    const cls = ['empty-state', fill && 'empty-state--fill', compact && 'empty-state--compact', noDots && 'empty-state--flat'].filter(Boolean).join(' ');
     const attrs = `${id ? ` id="${esc(id)}"` : ''}${hidden ? ' style="display:none;"' : ''}`;
     return `
       <div class="${cls}"${attrs}>

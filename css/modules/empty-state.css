@@ -45,6 +45,10 @@
 /* Ocupa el alto disponible cuando el contenedor padre es flex */
 .empty-state--fill { flex: 1; min-height: 0; }
 
+/* Sin puntos propios — para contenedores que ya proveen el spotlight de fondo
+   (ej. el canvas de Studio). Evita duplicar el patron de puntos. */
+.empty-state--flat::before { display: none; }
+
 .ple-content {
   position: relative;
   z-index: 2;
