@@ -262,6 +262,27 @@ exports.handler = async (event) => {
           updated_at: nowIso(), last_sync_at: nowIso()
         }
       });
+
+      // Encolar bootstrap del populator de Google Ads (campanas por cliente).
+      // Idempotente: solo si no hay bootstrap previo completado/en curso, para
+      // no re-sincronizar en cada login.
+      const gIntegRows = await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'GET',
+        searchParams: {
+          select: 'id,bootstrap_status',
+          brand_container_id: `eq.${brandContainerId}`,
+          platform: 'eq.google', is_active: 'eq.true', limit: '1'
+        }
+      });
+      const gInteg = Array.isArray(gIntegRows) ? gIntegRows[0] : null;
+      if (gInteg?.id && stateObj.organization_id &&
+          gInteg.bootstrap_status !== 'completed' && gInteg.bootstrap_status !== 'running') {
+        await enqueueIntegrationBootstrap({
+          env, platform: 'google', integrationId: gInteg.id,
+          brandContainerId, organizationId: stateObj.organization_id,
+        });
+      }
     }
 
     // ── Facebook / Meta ──────────────────────────────────────────────────────
