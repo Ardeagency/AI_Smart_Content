@@ -2051,6 +2051,35 @@ h1.brand-name-large[contenteditable="true"]:hover,
     }
 }
 
+/* INFO expandido en móvil: el JS mueve la card al contenedor y oculta corner +
+   cards-zone con opacity:0 (que en flujo relativo SEGUÍAN ocupando alto -> vacío
+   gigante arriba). Aquí los sacamos del flujo y forzamos el panel a ancho
+   completo del viewport (antes el panel/cerrar se desbordaban por la derecha). */
+@media (max-width: 768px) {
+    .brand-dashboard-container.info-mode-secondary .brand-corner-bottom-left,
+    .brand-dashboard-container.info-mode-secondary .brand-cards-zone {
+        display: none;
+    }
+    .brand-dashboard-container.info-mode-secondary .card-info.expanded,
+    #brandsListContainer > div.brand-card.card-info.expanded {
+        position: relative;
+        inset: auto;
+        align-self: stretch;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        height: auto;
+        min-height: calc(100dvh - 48px);
+        max-height: none;
+    }
+    /* Botón cerrar: touch target cómodo y siempre dentro del panel. */
+    .card-info.expanded .info-close-btn {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+    }
+}
+
 /* ============================================
    CONTENIDO EXPANDIDO DE INFO
    ============================================ */
