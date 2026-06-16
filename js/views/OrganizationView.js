@@ -1,14 +1,12 @@
 /**
  * OrganizationView — Panel administrativo técnico de la organización.
  *
- * No es branding (eso vive en BrandOrganizationView). Aquí: límites de uso,
- * actividad operativa, salud del sistema, monitoreo, notificaciones,
- * seguridad, miembros. Solo timezone/locale son editables a nivel de datos
- * generales — el resto del config (nombre, logo, slogan, autonomy, sub-marcas)
- * NO se edita acá.
+ * No es branding (eso vive en BrandOrganizationView). Aquí: miembros,
+ * facturación, actividad operativa, notificaciones y seguridad. Solo
+ * timezone/locale son editables a nivel de datos generales — el resto del
+ * config (nombre, logo, slogan, autonomy, sub-marcas) NO se edita acá.
  *
- * Tabs: General · Miembros · Plan & Límites · Actividad · Monitoreo ·
- *       Salud de Vera · Notificaciones · Seguridad · Danger zone
+ * Tabs: General · Miembros · Facturación · Actividad · Notificaciones · Seguridad
  */
 class OrganizationView extends BaseView {
   static documentTitle = 'Configuración';
@@ -31,33 +29,12 @@ class OrganizationView extends BaseView {
     this.membersWithProfile = [];
     this.invitations = [];
 
-    // Plan / Caps
-    this.subscription = null;
-    this.plan = null;
-    this.credits = { credits_available: 0, credits_total: 0, updated_at: null };
-    this.storage = { used_mb: 0, max_mb: 0, updated_at: null };
-    this.aiCaps = null;
-    this.aiUsageToday = null;
-
     // Sub-marcas (read-only)
     this.brandContainers = [];
 
     // Actividad
     this.creditTimeline = [];
     this.recentFlowRuns = [];
-
-    // Monitoreo
-    this.monitoringTriggers = [];
-
-    // AI Engine
-    this.apifyRuns = [];
-    this.apifyStats30d = { runs: 0, items: 0, usd: 0, byPlatform: {} };
-    this.trendJobs30d = { runs: 0, signals: 0, briefs: 0, usd: 0 };
-
-    // Salud
-    this.veraPendingByStatus = {};
-    this.recentMissionErrors = [];
-    this.queueByStatus = {};
 
     // Notificaciones
     this.notifications = [];
@@ -86,15 +63,10 @@ class OrganizationView extends BaseView {
   <div class="organization-tabs" role="tablist">
     <button type="button" class="tab-btn active" data-tab="general" role="tab" aria-selected="true">${__('General')}</button>
     <button type="button" class="tab-btn" data-tab="members" role="tab" aria-selected="false">${__('Miembros')}</button>
-    <button type="button" class="tab-btn" data-tab="plan" role="tab" aria-selected="false">${__('Plan & Límites')}</button>
     <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">${__('Facturación')}</button>
-    <button type="button" class="tab-btn" data-tab="engine" role="tab" aria-selected="false">${__('AI Engine')}</button>
     <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">${__('Actividad')}</button>
-    <button type="button" class="tab-btn" data-tab="monitoring" role="tab" aria-selected="false">${__('Monitoreo')}</button>
-    <button type="button" class="tab-btn" data-tab="health" role="tab" aria-selected="false">${__('Salud de Vera')}</button>
     <button type="button" class="tab-btn" data-tab="notifications" role="tab" aria-selected="false">${__('Notificaciones')}</button>
     <button type="button" class="tab-btn" data-tab="security" role="tab" aria-selected="false">${__('Seguridad')}</button>
-    <button type="button" class="tab-btn tab-btn--danger" data-tab="danger" role="tab" aria-selected="false">${__('Danger zone')}</button>
   </div>
 
   <div class="organization-content">
@@ -161,60 +133,6 @@ class OrganizationView extends BaseView {
       </section>
     </div>
 
-    <!-- ── Plan & Límites ───────────────────────────────── -->
-    <div class="tab-content" id="planTab" role="tabpanel">
-      <section class="org-section">
-        <h2>${__('Plan actual')}</h2>
-        <div class="org-plan-card" id="orgPlanCard"><p class="org-placeholder">${__('Cargando…')}</p></div>
-      </section>
-
-      <section class="org-section">
-        <h2>${__('Almacenamiento')}</h2>
-        <p class="org-section-desc">${__('Cuota incluida en tu plan. Para ampliar contacta a soporte.')}</p>
-        <div class="org-usage-card" id="orgStorageCard"></div>
-      </section>
-
-      <section class="org-section">
-        <h2>${__('Créditos del ciclo')}</h2>
-        <div class="org-usage-card" id="orgCreditsCard"></div>
-      </section>
-
-      <section class="org-section">
-        <h2>${__('Límites de uso de IA')}</h2>
-        <p class="org-section-desc">${__('Define topes diarios y mensuales de consumo del agente Vera. Si alcanzas el umbral de aviso, recibirás una notificación; al llegar al cap se bloquean nuevas operaciones automáticas.')}</p>
-        <form id="orgCapsForm" class="org-form">
-          <div class="org-form-grid">
-            <div class="form-group">
-              <label for="capsDaily">${__('Cap diario (USD)')}</label>
-              <input type="number" min="0" step="0.01" id="capsDaily" class="form-input" placeholder="${__('ej. 10')}">
-            </div>
-            <div class="form-group">
-              <label for="capsMonthly">${__('Cap mensual (USD)')}</label>
-              <input type="number" min="0" step="0.01" id="capsMonthly" class="form-input" placeholder="${__('ej. 200')}">
-            </div>
-            <div class="form-group">
-              <label for="capsWarn">${__('Umbral de aviso (%)')}</label>
-              <input type="number" min="0" max="100" step="1" id="capsWarn" class="form-input" placeholder="${__('ej. 80')}">
-            </div>
-            <div class="form-group">
-              <label for="capsConfirm">${__('Umbral de confirmación (USD por op.)')}</label>
-              <input type="number" min="0" step="0.01" id="capsConfirm" class="form-input" placeholder="${__('ej. 1.50')}">
-            </div>
-            <div class="form-group form-group--full">
-              <label class="org-checkbox">
-                <input type="checkbox" id="capsConfirmEnabled">
-                <span>${__('Pedir confirmación al usuario antes de operaciones que excedan el umbral por operación')}</span>
-              </label>
-            </div>
-          </div>
-          <div class="org-usage-card" id="orgAiCard" style="margin-top: 1rem;"></div>
-          <div class="org-form-actions">
-            <button type="submit" class="btn btn-primary" id="orgCapsSubmit"><i class="fas fa-save"></i> ${__('Guardar límites')}</button>
-          </div>
-        </form>
-      </section>
-    </div>
-
     <!-- ── Facturación ──────────────────────────────────── -->
     <div class="tab-content" id="billingTab" role="tabpanel">
       <section class="org-section">
@@ -238,27 +156,6 @@ class OrganizationView extends BaseView {
       </section>
     </div>
 
-    <!-- ── AI Engine ────────────────────────────────────── -->
-    <div class="tab-content" id="engineTab" role="tabpanel">
-      <section class="org-section">
-        <div class="org-section-head">
-          <div>
-            <h2>${__('Scrapers (últimos 30 días)')}</h2>
-            <p class="org-section-desc">${__('Costo y volumen real de las extracciones que ejecutó Vera para esta organización. Cada run trae datos públicos de Meta/TikTok/IG/etc. para alimentar sensores y briefs.')}</p>
-          </div>
-        </div>
-        <div class="org-engine-stats" id="orgScrapersStats"></div>
-        <h3 class="org-usage-subtitle">${__('Últimas ejecuciones')}</h3>
-        <div class="org-scrapers-list" id="orgScrapersList"><p class="org-placeholder">${__('Cargando…')}</p></div>
-      </section>
-
-      <section class="org-section">
-        <h2>${__('Trend Engine (últimos 30 días)')}</h2>
-        <p class="org-section-desc">${__('Pipeline de inteligencia: genera queries, recolecta señales del mercado, las puntúa y produce briefs estratégicos.')}</p>
-        <div class="org-engine-stats" id="orgTrendStats"></div>
-      </section>
-    </div>
-
     <!-- ── Actividad ────────────────────────────────────── -->
     <div class="tab-content" id="activityTab" role="tabpanel">
       <section class="org-section">
@@ -275,34 +172,6 @@ class OrganizationView extends BaseView {
       <section class="org-section">
         <h2>${__('Consumo de créditos (últimos 30 días)')}</h2>
         <div class="org-usage-timeline" id="orgCreditsTimeline"></div>
-      </section>
-    </div>
-
-    <!-- ── Monitoreo ────────────────────────────────────── -->
-    <div class="tab-content" id="monitoringTab" role="tabpanel">
-      <section class="org-section">
-        <div class="org-section-head">
-          <div>
-            <h2>${__('Triggers activos')}</h2>
-            <p class="org-section-desc">${__('Sensores configurados para esta organización. Para crear/editar usa la página de Monitoreo.')}</p>
-          </div>
-          <a href="#" class="btn btn-secondary btn-sm" id="orgMonitoringLink">${__('Abrir Monitoreo')}</a>
-        </div>
-        <div class="org-monitoring-list" id="orgMonitoringList"><p class="org-placeholder">${__('Cargando…')}</p></div>
-      </section>
-    </div>
-
-    <!-- ── Salud de Vera ────────────────────────────────── -->
-    <div class="tab-content" id="healthTab" role="tabpanel">
-      <section class="org-section">
-        <h2>${__('Estado del agente')}</h2>
-        <p class="org-section-desc">${__('Acciones propuestas por Vera, ejecución de misiones y cola de trabajos.')}</p>
-        <div class="org-health-grid" id="orgHealthGrid"></div>
-      </section>
-
-      <section class="org-section">
-        <h2>${__('Errores recientes de misiones')}</h2>
-        <div class="org-mission-errors" id="orgMissionErrors"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
     </div>
 
@@ -375,25 +244,6 @@ class OrganizationView extends BaseView {
       </section>
     </div>
 
-    <!-- ── Danger zone ──────────────────────────────────── -->
-    <div class="tab-content" id="dangerTab" role="tabpanel">
-      <section class="org-section org-section--danger">
-        <h2>${__('Transferir propiedad')}</h2>
-        <p class="org-section-desc">${__('Mueve la organización a otro administrador. Perderás los privilegios de propietario.')}</p>
-        <button type="button" class="btn btn-danger-ghost" id="orgTransferBtn">${__('Transferir propiedad')}</button>
-      </section>
-      <section class="org-section org-section--danger">
-        <h2>${__('Exportar datos')}</h2>
-        <p class="org-section-desc">${__('Solicita una copia de los datos operativos (runs, audiencias, campañas).')}</p>
-        <button type="button" class="btn btn-danger-ghost" id="orgExportBtn"><i class="fas fa-download"></i> ${__('Solicitar export')}</button>
-      </section>
-      <section class="org-section org-section--danger">
-        <h2>${__('Archivar organización')}</h2>
-        <p class="org-section-desc">${__('La organización queda inaccesible y deja de consumir créditos. Puedes restaurarla contactando soporte dentro de 30 días.')}</p>
-        <button type="button" class="btn btn-danger" id="orgArchiveBtn"><i class="fas fa-archive"></i> ${__('Archivar organización')}</button>
-      </section>
-    </div>
-
   </div>
 
   <footer class="organization-footer">
@@ -437,32 +287,6 @@ class OrganizationView extends BaseView {
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" id="orgInviteCancel">${__('Cancelar')}</button>
         <button type="submit" class="btn btn-primary">${__('Enviar invitación')}</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- ── Modal: Transferir propiedad ────────────────────── -->
-<div class="modal org-modal" id="orgTransferModal" aria-hidden="true">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>${__('Transferir propiedad')}</h3>
-      <button type="button" class="modal-close" id="orgTransferModalClose" aria-label="${__('Cerrar')}">&times;</button>
-    </div>
-    <form id="orgTransferForm">
-      <div class="form-group">
-        <label for="transferTo">${__('Nuevo propietario')}</label>
-        <select id="transferTo" class="form-input" required>
-          <option value="">${__('Selecciona un miembro…')}</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="transferConfirm">${__('Escribe')} <strong id="transferOrgNameLabel"></strong> ${__('para confirmar')}</label>
-        <input type="text" id="transferConfirm" class="form-input" required placeholder="${__('Nombre exacto de la organización')}">
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" id="orgTransferCancel">${__('Cancelar')}</button>
-        <button type="submit" class="btn btn-danger">${__('Transferir propiedad')}</button>
       </div>
     </form>
   </div>
@@ -574,18 +398,10 @@ class OrganizationView extends BaseView {
         this._loadMembers(),
         this._loadInvitations(),
         this._loadBrandContainers(),
-        this._loadCredits(),
-        this._loadStorage(),
-        this._loadSubscription(),
-        this._loadAiCaps(),
         this._loadCreditTimeline(),
         this._loadFlowRuns(),
-        this._loadMonitoringTriggers(),
-        this._loadVeraHealth(),
         this._loadNotifications(),
         this._loadAuditLog(),
-        this._loadApifyRuns(),
-        this._loadTrendJobs(),
         this._loadMfa(),
       ]);
 
@@ -594,11 +410,7 @@ class OrganizationView extends BaseView {
       this._renderSubbrands();
       this._renderMembers();
       this._renderInvitations();
-      this._renderPlanAndLimits();
-      this._renderEngine();
       this._renderActivity();
-      this._renderMonitoring();
-      this._renderHealth();
       this._renderNotifications();
       this._renderAuditLog();
       this._renderMfa();
@@ -977,49 +789,6 @@ class OrganizationView extends BaseView {
     this.brandContainers = data || [];
   }
 
-  async _loadCredits() {
-    const { data } = await this.supabase
-      .from('organization_credits')
-      .select('credits_available, credits_total, updated_at')
-      .eq('organization_id', this.orgId).maybeSingle();
-    if (data) this.credits = data;
-  }
-
-  async _loadStorage() {
-    const { data } = await this.supabase
-      .from('storage_usage').select('used_mb, max_mb, updated_at')
-      .eq('organization_id', this.orgId).maybeSingle();
-    if (data) this.storage = data;
-  }
-
-  async _loadSubscription() {
-    const { data: sub } = await this.supabase
-      .from('subscriptions')
-      .select('id, plan_id, status, current_period_start, current_period_end, stripe_subscription_id, metadata, created_at')
-      .eq('organization_id', this.orgId).order('created_at', { ascending: false }).limit(1).maybeSingle();
-    this.subscription = sub || null;
-    if (sub?.plan_id) {
-      const { data: plan } = await this.supabase
-        .from('plans')
-        .select('id, name, description, price_usd_month, credits_monthly, storage_mb, features, is_popular')
-        .eq('id', sub.plan_id).maybeSingle();
-      this.plan = plan || null;
-    }
-  }
-
-  async _loadAiCaps() {
-    try {
-      const { data: caps } = await this.supabase
-        .from('org_claude_caps').select('*').eq('organization_id', this.orgId).maybeSingle();
-      this.aiCaps = caps || null;
-    } catch (_) {}
-    try {
-      const { data: today } = await this.supabase
-        .from('v_org_claude_usage_today').select('*').eq('organization_id', this.orgId).maybeSingle();
-      this.aiUsageToday = today || null;
-    } catch (_) {}
-  }
-
   async _loadCreditTimeline() {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     // credit_usage usa credits_delta (negativo = consumo). Para el timeline
@@ -1046,42 +815,6 @@ class OrganizationView extends BaseView {
       .select('id, flow_id, status, created_at, tokens_consumed, current_module_order, total_modules_count, user_id')
       .eq('organization_id', this.orgId).order('created_at', { ascending: false }).limit(20);
     this.recentFlowRuns = data || [];
-  }
-
-  async _loadMonitoringTriggers() {
-    const { data } = await this.supabase
-      .from('monitoring_triggers')
-      .select('id, sensor_type, cadence, cadence_value, priority, status, next_run_at, last_run_at, last_run_status, paused_reason')
-      .eq('organization_id', this.orgId).order('priority', { ascending: false }).limit(50);
-    this.monitoringTriggers = data || [];
-  }
-
-  async _loadVeraHealth() {
-    try {
-      const { data: actions } = await this.supabase
-        .from('vera_pending_actions').select('status').eq('organization_id', this.orgId);
-      const counts = {};
-      (actions || []).forEach((a) => { counts[a.status] = (counts[a.status] || 0) + 1; });
-      this.veraPendingByStatus = counts;
-    } catch (_) {}
-
-    try {
-      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const { data: missions } = await this.supabase
-        .from('mission_runs')
-        .select('id, status, error_message, completed_at, started_at, duration_ms')
-        .eq('organization_id', this.orgId).eq('status', 'failed').gte('created_at', since)
-        .order('created_at', { ascending: false }).limit(10);
-      this.recentMissionErrors = missions || [];
-    } catch (_) {}
-
-    try {
-      const { data: jobs } = await this.supabase
-        .from('agent_queue_jobs').select('status').eq('organization_id', this.orgId);
-      const counts = {};
-      (jobs || []).forEach((j) => { counts[j.status] = (counts[j.status] || 0) + 1; });
-      this.queueByStatus = counts;
-    } catch (_) {}
   }
 
   async _loadNotifications() {
@@ -1286,44 +1019,6 @@ class OrganizationView extends BaseView {
     this.auditLog = data || [];
   }
 
-  async _loadApifyRuns() {
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { data } = await this.supabase
-      .from('apify_runs')
-      .select('run_id, platform, handle, status, started_at, finished_at, usage_usd, items_count, charged_credits, error')
-      .eq('organization_id', this.orgId).gte('created_at', since)
-      .order('started_at', { ascending: false }).limit(50);
-    this.apifyRuns = data || [];
-    const totals = { runs: 0, items: 0, usd: 0, byPlatform: {} };
-    this.apifyRuns.forEach((r) => {
-      totals.runs += 1;
-      totals.items += Number(r.items_count) || 0;
-      totals.usd += Number(r.usage_usd) || 0;
-      const p = (r.platform || 'unknown').toLowerCase();
-      totals.byPlatform[p] = totals.byPlatform[p] || { runs: 0, items: 0, usd: 0 };
-      totals.byPlatform[p].runs += 1;
-      totals.byPlatform[p].items += Number(r.items_count) || 0;
-      totals.byPlatform[p].usd += Number(r.usage_usd) || 0;
-    });
-    this.apifyStats30d = totals;
-  }
-
-  async _loadTrendJobs() {
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { data } = await this.supabase
-      .from('trend_query_jobs')
-      .select('total_signals_collected, total_signals_scored, total_briefs_generated, total_cost_usd, total_credits_consumed, status, started_at')
-      .eq('organization_id', this.orgId).gte('started_at', since);
-    const rows = data || [];
-    const stats = { runs: rows.length, signals: 0, briefs: 0, usd: 0 };
-    rows.forEach((r) => {
-      stats.signals += Number(r.total_signals_collected) || 0;
-      stats.briefs += Number(r.total_briefs_generated) || 0;
-      stats.usd += Number(r.total_cost_usd) || 0;
-    });
-    this.trendJobs30d = stats;
-  }
-
   // ── Render ─────────────────────────────────────────────
   _renderHeaderStatus() {
     const el = this.querySelector('#orgHeaderStatus');
@@ -1427,166 +1122,6 @@ class OrganizationView extends BaseView {
     }).join('');
   }
 
-  _renderPlanAndLimits() {
-    // Plan card
-    const card = this.querySelector('#orgPlanCard');
-    if (card) {
-      if (!this.subscription) {
-        card.innerHTML = `
-          <div class="org-plan-empty">
-            <p>${__('No tienes un plan activo.')}</p>
-            <button type="button" class="btn btn-primary" id="orgChoosePlanBtn">${__('Ver planes')}</button>
-          </div>`;
-        this.querySelector('#orgChoosePlanBtn')?.addEventListener('click', () => this._goToPlans());
-      } else {
-        const planName = this.plan?.name || this.subscription.plan_id || __('Plan');
-        const price = this.plan?.price_usd_month != null ? __('{precio}/mes', { precio: `$${this.plan.price_usd_month}` }) : '';
-        const status = this.subscription.status || '—';
-        const renewal = this.subscription.current_period_end
-          ? new Date(this.subscription.current_period_end).toLocaleDateString('es', { year: 'numeric', month: 'long', day: 'numeric' })
-          : '—';
-        card.innerHTML = `
-          <div class="org-plan-head">
-            <div>
-              <h3 class="org-plan-name">${this.escapeHtml(planName)}</h3>
-              <span class="org-plan-status org-plan-status--${this.escapeHtml(status)}">${this.escapeHtml(status)}</span>
-            </div>
-            <div class="org-plan-price">${this.escapeHtml(price)}</div>
-          </div>
-          <div class="org-plan-stats">
-            <div><span class="org-plan-stat-label">${__('Renovación')}</span><span class="org-plan-stat-value">${this.escapeHtml(renewal)}</span></div>
-            <div><span class="org-plan-stat-label">${__('Créditos / mes')}</span><span class="org-plan-stat-value">${this.plan?.credits_monthly ?? '—'}</span></div>
-            <div><span class="org-plan-stat-label">${__('Almacenamiento')}</span><span class="org-plan-stat-value">${this._formatStorage(this.plan?.storage_mb)}</span></div>
-          </div>
-          <div class="org-plan-actions">
-            <button type="button" class="btn btn-primary" id="orgUpgradeBtn">${__('Cambiar de plan')}</button>
-          </div>`;
-        this.querySelector('#orgUpgradeBtn')?.addEventListener('click', () => this._goToPlans());
-      }
-    }
-
-    // Storage
-    const stEl = this.querySelector('#orgStorageCard');
-    if (stEl) {
-      const used = Number(this.storage.used_mb) || 0;
-      const max = Number(this.storage.max_mb) || 0;
-      const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
-      stEl.innerHTML = this._usageCardHTML({
-        label: __('Almacenamiento usado'),
-        primary: this._formatStorage(used),
-        secondary: max > 0 ? __('de {valor}', { valor: this._formatStorage(max) }) : '',
-        pct,
-        sub: '',
-      });
-    }
-
-    // Credits
-    const cEl = this.querySelector('#orgCreditsCard');
-    if (cEl) {
-      const used = Math.max(0, (this.credits.credits_total || 0) - (this.credits.credits_available || 0));
-      const pct = this.credits.credits_total > 0 ? Math.min(100, Math.round((used / this.credits.credits_total) * 100)) : 0;
-      cEl.innerHTML = this._usageCardHTML({
-        label: __('Créditos usados'),
-        primary: used.toLocaleString('es'),
-        secondary: this.credits.credits_total > 0 ? __('de {valor}', { valor: this.credits.credits_total.toLocaleString('es') }) : '',
-        pct,
-        sub: this.credits.credits_available != null ? __('{valor} disponibles', { valor: this.credits.credits_available.toLocaleString('es') }) : '',
-      });
-    }
-
-    // AI caps form
-    const setVal = (sel, v) => { const el = this.querySelector(sel); if (el) el.value = v == null ? '' : v; };
-    setVal('#capsDaily', this.aiCaps?.daily_usd_cap);
-    setVal('#capsMonthly', this.aiCaps?.monthly_usd_cap);
-    setVal('#capsWarn', this.aiCaps?.warn_threshold != null ? Math.round(this.aiCaps.warn_threshold * 100) : '');
-    setVal('#capsConfirm', this.aiCaps?.confirm_threshold_usd);
-    const cb = this.querySelector('#capsConfirmEnabled');
-    if (cb) cb.checked = !!this.aiCaps?.confirm_enabled;
-
-    // AI usage today card
-    const aiEl = this.querySelector('#orgAiCard');
-    if (aiEl) {
-      const cap = this.aiCaps?.daily_usd_cap ?? null;
-      const usedToday = this.aiUsageToday?.cost_usd_today ?? this.aiUsageToday?.usd ?? null;
-      const pct = cap && usedToday != null ? Math.min(100, Math.round((usedToday / cap) * 100)) : 0;
-      aiEl.innerHTML = this._usageCardHTML({
-        label: __('Consumo de IA hoy'),
-        primary: usedToday != null ? `$${Number(usedToday).toFixed(2)}` : '—',
-        secondary: cap ? __('de {valor}', { valor: `$${Number(cap).toFixed(2)}` }) : __('sin cap configurado'),
-        pct,
-        sub: '',
-      });
-    }
-
-    const capsForm = this.querySelector('#orgCapsForm');
-    if (capsForm) {
-      const canEdit = this.isOwner || this.canManageMembers;
-      capsForm.querySelectorAll('input').forEach((i) => { i.disabled = !canEdit; });
-      const btn = this.querySelector('#orgCapsSubmit');
-      if (btn) btn.disabled = !canEdit;
-    }
-  }
-
-  _renderEngine() {
-    // Apify stats
-    const apEl = this.querySelector('#orgScrapersStats');
-    if (apEl) {
-      const s = this.apifyStats30d;
-      apEl.innerHTML = `
-        ${this._engineStatHTML(__('Runs'), s.runs.toLocaleString('es'), 'fa-bolt')}
-        ${this._engineStatHTML(__('Items extraídos'), s.items.toLocaleString('es'), 'fa-database')}
-        ${this._engineStatHTML(__('Gastado en scrapers'), `$${s.usd.toFixed(2)}`, 'fa-dollar-sign', 'cost')}
-      `;
-    }
-
-    // Apify recent runs
-    const apList = this.querySelector('#orgScrapersList');
-    if (apList) {
-      if (!this.apifyRuns.length) {
-        apList.innerHTML = `<p class="org-members-empty">${__('Sin scrapers ejecutados en los últimos 30 días.')}</p>`;
-      } else {
-        apList.innerHTML = this.apifyRuns.slice(0, 20).map((r) => {
-          const when = r.started_at ? new Date(r.started_at).toLocaleString('es') : '—';
-          const status = r.status || 'unknown';
-          const usd = r.usage_usd != null ? `$${Number(r.usage_usd).toFixed(3)}` : '—';
-          const items = r.items_count != null ? Number(r.items_count).toLocaleString('es') : '—';
-          return `
-            <div class="org-scraper-row">
-              <span class="org-scraper-when">${this.escapeHtml(when)}</span>
-              <span class="org-scraper-platform">${this.escapeHtml((r.platform || '—').toLowerCase())}</span>
-              <span class="org-scraper-handle" title="${this.escapeHtml(r.handle || '')}">${this.escapeHtml(r.handle || '—')}</span>
-              <span class="org-scraper-items">${__('{n} items', { n: this.escapeHtml(items) })}</span>
-              <span class="org-scraper-cost">${this.escapeHtml(usd)}</span>
-              <span class="org-run-status org-run-status--${this.escapeHtml(status.toLowerCase())}">${this.escapeHtml(status)}</span>
-            </div>`;
-        }).join('');
-      }
-    }
-
-    // Trend stats
-    const trEl = this.querySelector('#orgTrendStats');
-    if (trEl) {
-      const t = this.trendJobs30d;
-      trEl.innerHTML = `
-        ${this._engineStatHTML(__('Ciclos'), t.runs.toLocaleString('es'), 'fa-sync')}
-        ${this._engineStatHTML(__('Señales recolectadas'), t.signals.toLocaleString('es'), 'fa-broadcast-tower')}
-        ${this._engineStatHTML(__('Briefs generados'), t.briefs.toLocaleString('es'), 'fa-file-alt')}
-        ${this._engineStatHTML(__('Costo total'), `$${t.usd.toFixed(2)}`, 'fa-dollar-sign', 'cost')}
-      `;
-    }
-  }
-
-  _engineStatHTML(label, value, icon, tone) {
-    return `
-      <div class="org-engine-stat${tone ? ' org-engine-stat--' + this.escapeHtml(tone) : ''}">
-        <i class="fas ${this.escapeHtml(icon)} org-engine-stat-icon"></i>
-        <div>
-          <div class="org-engine-stat-value">${this.escapeHtml(String(value))}</div>
-          <div class="org-engine-stat-label">${this.escapeHtml(label)}</div>
-        </div>
-      </div>`;
-  }
-
   _renderActivity() {
     const list = this.querySelector('#orgRunsList');
     if (list) {
@@ -1628,70 +1163,6 @@ class OrganizationView extends BaseView {
             <span>${this.escapeHtml(this.creditTimeline[0]?.day || '')}</span>
             <span>${this.escapeHtml(this.creditTimeline[this.creditTimeline.length - 1]?.day || '')}</span>
           </div>`;
-      }
-    }
-  }
-
-  _renderMonitoring() {
-    const list = this.querySelector('#orgMonitoringList');
-    if (!list) return;
-    if (!this.monitoringTriggers.length) {
-      list.innerHTML = `<p class="org-members-empty">${__('No hay sensores configurados.')}</p>`;
-      return;
-    }
-    list.innerHTML = this.monitoringTriggers.map((t) => {
-      const next = t.next_run_at ? new Date(t.next_run_at).toLocaleString('es') : '—';
-      const last = t.last_run_at ? new Date(t.last_run_at).toLocaleString('es') : '—';
-      const status = t.status || 'unknown';
-      const lastStatus = t.last_run_status || '—';
-      return `
-        <div class="org-monitor-row">
-          <div class="org-monitor-info">
-            <span class="org-monitor-name">${this.escapeHtml(t.sensor_type || __('sensor'))}</span>
-            <span class="org-monitor-meta">${__('cadencia:')} ${this.escapeHtml(t.cadence || '—')}${t.cadence_value ? ' (' + this.escapeHtml(t.cadence_value) + ')' : ''} · ${__('prioridad')} ${t.priority ?? '—'}</span>
-          </div>
-          <div class="org-monitor-runs">
-            <span class="org-monitor-last">${__('Último:')} ${this.escapeHtml(last)} <em class="org-run-status org-run-status--${this.escapeHtml(lastStatus)}">${this.escapeHtml(lastStatus)}</em></span>
-            <span class="org-monitor-next">${__('Próximo:')} ${this.escapeHtml(next)}</span>
-          </div>
-          <span class="org-monitor-status org-monitor-status--${this.escapeHtml(status)}">${this.escapeHtml(status)}</span>
-        </div>`;
-    }).join('');
-  }
-
-  _renderHealth() {
-    const grid = this.querySelector('#orgHealthGrid');
-    if (grid) {
-      const pending = this.veraPendingByStatus.pending || 0;
-      const executed = this.veraPendingByStatus.executed || 0;
-      const failed = this.veraPendingByStatus.failed || 0;
-      const queueRunning = this.queueByStatus.running || this.queueByStatus.processing || 0;
-      const queueFailed = this.queueByStatus.failed || 0;
-      const queuePending = this.queueByStatus.pending || this.queueByStatus.queued || 0;
-      grid.innerHTML = `
-        ${this._healthStatHTML(__('Acciones pendientes de Vera'), pending, 'fa-hourglass-half', pending > 0 ? 'warning' : 'ok')}
-        ${this._healthStatHTML(__('Ejecutadas (vida total)'), executed, 'fa-check-circle', 'ok')}
-        ${this._healthStatHTML(__('Fallidas (vida total)'), failed, 'fa-exclamation-triangle', failed > 0 ? 'error' : 'ok')}
-        ${this._healthStatHTML(__('En cola'), queuePending, 'fa-list', 'neutral')}
-        ${this._healthStatHTML(__('En ejecución'), queueRunning, 'fa-spinner', 'neutral')}
-        ${this._healthStatHTML(__('Jobs fallidos'), queueFailed, 'fa-times-circle', queueFailed > 0 ? 'error' : 'ok')}
-      `;
-    }
-
-    const errEl = this.querySelector('#orgMissionErrors');
-    if (errEl) {
-      if (!this.recentMissionErrors.length) {
-        errEl.innerHTML = `<p class="org-members-empty">${__('Sin errores en los últimos 7 días.')}</p>`;
-      } else {
-        errEl.innerHTML = this.recentMissionErrors.map((m) => {
-          const when = m.completed_at || m.started_at;
-          const t = when ? new Date(when).toLocaleString('es') : '—';
-          return `
-            <div class="org-error-row">
-              <span class="org-error-when">${this.escapeHtml(t)}</span>
-              <span class="org-error-message">${this.escapeHtml((m.error_message || __('Sin detalle')).slice(0, 220))}</span>
-            </div>`;
-        }).join('');
       }
     }
   }
@@ -1761,44 +1232,9 @@ class OrganizationView extends BaseView {
       ? window.getOrgPathPrefix(this.orgId, this.org?.name || '') : '';
     const tasksLink = this.querySelector('#orgActivityTasksLink');
     if (tasksLink) tasksLink.setAttribute('href', (prefix || '') + '/tasks');
-    const monLink = this.querySelector('#orgMonitoringLink');
-    if (monLink) monLink.setAttribute('href', (prefix || '') + '/monitoring');
   }
 
   // ── Helpers ────────────────────────────────────────────
-  _usageCardHTML({ label, primary, secondary, pct, sub }) {
-    return `
-      <div class="org-usage-label">${this.escapeHtml(label)}</div>
-      <div class="org-usage-main">
-        <span class="org-usage-primary">${this.escapeHtml(primary)}</span>
-        ${secondary ? `<span class="org-usage-secondary">${this.escapeHtml(secondary)}</span>` : ''}
-      </div>
-      <div class="org-usage-bar"><div class="org-usage-bar-fill" style="width:${pct}%"></div></div>
-      ${sub ? `<div class="org-usage-sub">${this.escapeHtml(sub)}</div>` : ''}`;
-  }
-
-  _healthStatHTML(label, value, icon, tone) {
-    return `
-      <div class="org-health-stat org-health-stat--${this.escapeHtml(tone)}">
-        <i class="fas ${this.escapeHtml(icon)} org-health-stat-icon"></i>
-        <div>
-          <div class="org-health-stat-value">${this.escapeHtml(String(value))}</div>
-          <div class="org-health-stat-label">${this.escapeHtml(label)}</div>
-        </div>
-      </div>`;
-  }
-
-  _formatStorage(mb) {
-    if (mb == null) return '—';
-    return mb >= 1024 ? (mb / 1024).toFixed(2) + ' GB' : Math.round(mb) + ' MB';
-  }
-
-  _goToPlans() {
-    const prefix = (this.orgId && typeof window.getOrgPathPrefix === 'function')
-      ? window.getOrgPathPrefix(this.orgId, this.org?.name || '') : '';
-    window.router?.navigate((prefix || '') + '/plans');
-  }
-
   _showError(msg) {
     const c = this.container || document.getElementById('app-container');
     if (c) c.querySelector('.organization-content')?.insertAdjacentHTML('beforebegin',
@@ -1824,7 +1260,6 @@ class OrganizationView extends BaseView {
     });
 
     this.querySelector('#orgGeneralForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveGeneral(); });
-    this.querySelector('#orgCapsForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveCaps(); });
     this.querySelector('#orgInviteBtn')?.addEventListener('click', () => this._openInviteModal());
 
     this.container.addEventListener('change', (e) => {
@@ -1847,13 +1282,6 @@ class OrganizationView extends BaseView {
 
     this.querySelector('#auditFilterAction')?.addEventListener('change', (e) => { this.auditFilter.action = e.target.value; this._renderAuditLog(); });
     this.querySelector('#auditFilterUser')?.addEventListener('change', (e) => { this.auditFilter.user = e.target.value; this._renderAuditLog(); });
-
-    this.querySelector('#orgTransferBtn')?.addEventListener('click', () => this._openTransferModal());
-    this.querySelector('#orgArchiveBtn')?.addEventListener('click', () => this._archiveOrg());
-    this.querySelector('#orgExportBtn')?.addEventListener('click', () => this._requestExport());
-    document.getElementById('orgTransferModalClose')?.addEventListener('click', () => this._closeTransferModal());
-    document.getElementById('orgTransferCancel')?.addEventListener('click', () => this._closeTransferModal());
-    document.getElementById('orgTransferForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._submitTransfer(); });
   }
 
   // ── Acciones ───────────────────────────────────────────
@@ -1873,35 +1301,6 @@ class OrganizationView extends BaseView {
       alert(e.message || __('No se pudo guardar.'));
     } finally {
       if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-save"></i> ${__('Guardar')}`; }
-    }
-  }
-
-  async _saveCaps() {
-    const btn = this.querySelector('#orgCapsSubmit');
-    const num = (sel) => {
-      const v = this.querySelector(sel)?.value;
-      if (v === '' || v == null) return null;
-      const n = Number(v); return isNaN(n) ? null : n;
-    };
-    const payload = {
-      organization_id: this.orgId,
-      daily_usd_cap: num('#capsDaily'),
-      monthly_usd_cap: num('#capsMonthly'),
-      warn_threshold: (() => { const v = num('#capsWarn'); return v == null ? null : v / 100; })(),
-      confirm_threshold_usd: num('#capsConfirm'),
-      confirm_enabled: !!this.querySelector('#capsConfirmEnabled')?.checked,
-    };
-    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${__('Guardando…')}`; }
-    try {
-      const { error } = await this.supabase.from('org_claude_caps').upsert(payload, { onConflict: 'organization_id' });
-      if (error) throw error;
-      await this._loadAiCaps();
-      this._renderPlanAndLimits();
-      this._toast(__('Límites de IA actualizados'));
-    } catch (e) {
-      alert(e.message || __('No se pudo guardar los límites.'));
-    } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-save"></i> ${__('Guardar límites')}`; }
     }
   }
 
@@ -1965,52 +1364,6 @@ class OrganizationView extends BaseView {
     if (error) { alert(error.message || __('Error.')); return; }
     await this._loadMembers(); this._renderMembers();
     this._toast(__('Miembro eliminado'));
-  }
-
-  _openTransferModal() {
-    if (!this.isOwner) { alert(__('Solo el propietario puede transferir.')); return; }
-    const sel = document.getElementById('transferTo');
-    if (sel) {
-      const opts = this.membersWithProfile
-        .filter((m) => m.user_id && m.user_id !== this.userId)
-        .map((m) => `<option value="${this.escapeHtml(m.user_id)}">${this.escapeHtml(m.full_name || m.email || m.user_id.slice(0, 8) + '…')}</option>`).join('');
-      sel.innerHTML = `<option value="">${__('Selecciona un miembro…')}</option>` + opts;
-    }
-    const label = document.getElementById('transferOrgNameLabel');
-    if (label) label.textContent = this.org?.name || '';
-    const modal = document.getElementById('orgTransferModal');
-    if (modal) { modal.classList.add('modal-open'); modal.setAttribute('aria-hidden', 'false'); }
-  }
-  _closeTransferModal() {
-    const modal = document.getElementById('orgTransferModal');
-    if (modal) { modal.classList.remove('modal-open'); modal.setAttribute('aria-hidden', 'true'); }
-  }
-  async _submitTransfer() {
-    if (!this.isOwner) return;
-    const newOwner = document.getElementById('transferTo')?.value;
-    const confirmTxt = document.getElementById('transferConfirm')?.value?.trim();
-    if (!newOwner) { alert(__('Selecciona un miembro.')); return; }
-    if (confirmTxt !== (this.org?.name || '')) { alert(__('El nombre no coincide.')); return; }
-    const { error } = await this.supabase.from('organizations').update({ owner_user_id: newOwner }).eq('id', this.orgId).eq('owner_user_id', this.userId);
-    if (error) { alert(error.message || __('No se pudo transferir.')); return; }
-    this._closeTransferModal();
-    this._toast(__('Propiedad transferida'));
-    await this._loadOrg(); await this._loadMembers();
-    this._renderHeaderStatus(); this._renderGeneral(); this._renderMembers();
-  }
-
-  async _archiveOrg() {
-    if (!this.isOwner) { alert(__('Solo el propietario puede archivar.')); return; }
-    const confirmTxt = prompt(__('Escribe "{nombre}" para archivar:', { nombre: this.org?.name || '' }));
-    if (confirmTxt !== this.org?.name) { if (confirmTxt != null) alert(__('El nombre no coincide.')); return; }
-    const { error } = await this.supabase.from('organizations').update({ deleted_at: new Date().toISOString() }).eq('id', this.orgId).eq('owner_user_id', this.userId);
-    if (error) { alert(error.message || __('No se pudo archivar.')); return; }
-    this._toast(__('Organización archivada'));
-    setTimeout(() => window.router?.navigate('/home', true), 600);
-  }
-
-  async _requestExport() {
-    alert(__('Solicitud de export registrada. Recibirás un email con el enlace de descarga cuando esté lista.'));
   }
 
   _toast(msg) {
