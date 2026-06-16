@@ -242,6 +242,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/integrations/tiktok/start"
+  to = "/.netlify/functions/api-integrations-tiktok-start"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/integrations/google/select"
   to = "/.netlify/functions/api-integrations-google-select"
   status = 200

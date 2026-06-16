@@ -194,7 +194,7 @@ exports.handler = async (event) => {
   const brandContainerId = String(stateObj.brand_container_id || '').trim();
   const returnTo         = sanitizeReturnTo(String(stateObj.return_to || '/home'));
 
-  if (!['google', 'facebook', 'shopify', 'mercadolibre', 'x'].includes(platform)) {
+  if (!['google', 'facebook', 'shopify', 'mercadolibre', 'x', 'tiktok'].includes(platform)) {
     return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unsupported platform' }) };
   }
   if (!brandContainerId) {
@@ -816,6 +816,106 @@ exports.handler = async (event) => {
       }
     }
 
+    // ── TikTok ────────────────────────────────────────────────────────────────
+    let tiktokIntegId = null;
+    if (platform === 'tiktok') {
+      const clientKey    = process.env.TIKTOK_CLIENT_KEY || '';
+      const clientSecret = process.env.TIKTOK_CLIENT_SECRET || '';
+      if (!clientKey || !clientSecret) throw new Error('Missing TIKTOK_CLIENT_KEY/TIKTOK_CLIENT_SECRET env vars');
+      const codeVerifier = String(stateObj.cv || '');
+      if (!codeVerifier) throw new Error('Missing PKCE code_verifier in state');
+
+      // Exchange code → tokens. TikTok v2 NO usa HTTP Basic: client_key/secret van
+      // en el body form-urlencoded. access_token ~24h; refresh_token ~365d (puede
+      // rotar en cada refresh → siempre persistimos el nuevo, lo hace ai-engine).
+      const tokenRes = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+        body: new URLSearchParams({
+          client_key:    clientKey,
+          client_secret: clientSecret,
+          grant_type:    'authorization_code',
+          code:          String(code),
+          redirect_uri:  redirectUri,
+          code_verifier: codeVerifier
+        }).toString()
+      });
+      const tokenJson = await tokenRes.json().catch(() => ({}));
+      if (!tokenRes.ok || !tokenJson.access_token) {
+        throw new Error(tokenJson?.error_description || tokenJson?.error || 'TikTok token exchange failed');
+      }
+
+      const grantedScopes = typeof tokenJson.scope === 'string'
+        ? tokenJson.scope.split(/[\s,]+/).filter(Boolean) : [];
+      const openId = tokenJson.open_id != null ? String(tokenJson.open_id) : null;
+
+      // GET /user/info para metadata (no bloqueante: campos de stats/profile solo
+      // llegan si el usuario concedió user.info.stats / user.info.profile).
+      let me = {};
+      try {
+        const fields = 'open_id,union_id,avatar_url,display_name,bio_description,profile_deep_link,is_verified,username,follower_count,likes_count,video_count';
+        const meRes = await fetch(`https://open.tiktokapis.com/v2/user/info/?fields=${encodeURIComponent(fields)}`, {
+          headers: { Authorization: `Bearer ${tokenJson.access_token}` }
+        });
+        if (meRes.ok) { const j = await meRes.json().catch(() => ({})); me = j?.data?.user || {}; }
+      } catch (e) { console.warn('[exchange] tiktok /user/info (non-blocking):', e.message); }
+
+      const username = me.username || null;
+
+      const existing = await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'GET',
+        searchParams: { select: 'id', brand_container_id: `eq.${brandContainerId}`, platform: 'eq.tiktok', limit: '1' }
+      });
+      const isReconnection = Array.isArray(existing) && existing[0]?.id;
+
+      await upsertBrandIntegration({
+        env,
+        payload: {
+          brand_container_id:    brandContainerId,
+          platform:              'tiktok',
+          external_account_id:   openId || me.open_id || null,
+          external_account_name: username ? `@${username}` : (me.display_name || null),
+          account_url:           username ? `https://www.tiktok.com/@${username}` : (me.profile_deep_link || null),
+          access_token:          tokenJson.access_token,
+          refresh_token:         tokenJson.refresh_token || null,
+          token_expires_at:      expiresIso(tokenJson.expires_in),
+          is_active:             true,
+          scope:                 grantedScopes,
+          encryption_iv:         null,
+          ...(isReconnection ? {} : { bootstrap_status: 'pending' }),
+          metadata: {
+            provider:               'tiktok',
+            tiktok_open_id:         openId || me.open_id || null,
+            union_id:               me.union_id || null,
+            username:               username,
+            display_name:           me.display_name || null,
+            avatar_url:             me.avatar_url || null,
+            bio_description:        me.bio_description || null,
+            profile_deep_link:      me.profile_deep_link || null,
+            is_verified:            me.is_verified ?? null,
+            followers:              me.follower_count ?? null,
+            likes:                  me.likes_count ?? null,
+            video_count:            me.video_count ?? null,
+            // TikTok rota el refresh_token y entrega su propia expiración:
+            refresh_expires_in:     tokenJson.refresh_expires_in ?? null,
+            scope_at_last_oauth:    grantedScopes
+          },
+          updated_at: nowIso(), last_sync_at: nowIso()
+        }
+      });
+
+      const tkRow = await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'GET',
+        searchParams: { select: 'id', brand_container_id: `eq.${brandContainerId}`, platform: 'eq.tiktok', limit: '1' }
+      });
+      tiktokIntegId = Array.isArray(tkRow) && tkRow[0] ? tkRow[0].id : null;
+
+      // NOTA: no encolamos bootstrap todavía — ai-engine aún no tiene populator de
+      // TikTok. Cuando exista, agregar enqueueIntegrationBootstrap como en X/Meta.
+    }
+
     // Obtener el id de la integración guardada para devolverlo al callback
     const savedIntegRow = platform === 'facebook'
       ? await (async () => {
@@ -840,6 +940,7 @@ exports.handler = async (event) => {
       const integId = platform === 'shopify' ? shopifyIntegId
         : platform === 'mercadolibre' ? meliIntegId
         : platform === 'x' ? xIntegId
+        : platform === 'tiktok' ? tiktokIntegId
         : (savedIntegRow?.id || null);
       await logUserAudit({
         env,
@@ -878,6 +979,9 @@ exports.handler = async (event) => {
         } : {}),
         ...(platform === 'x' ? {
           integ_id: xIntegId
+        } : {}),
+        ...(platform === 'tiktok' ? {
+          integ_id: tiktokIntegId
         } : {})
       })
     };

@@ -93,7 +93,7 @@ exports.handler = async (event) => {
   if (!brandContainerId || !platform) {
     return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing brand_container_id or platform' }) };
   }
-  if (!['google', 'facebook', 'shopify'].includes(platform)) {
+  if (!['google', 'facebook', 'shopify', 'tiktok'].includes(platform)) {
     return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unsupported platform' }) };
   }
 
@@ -129,6 +129,20 @@ exports.handler = async (event) => {
     if (platform === 'facebook') {
       const userId = integ.external_account_id || integ.metadata?.provider_user_id;
       await revokeMetaToken(userId, integ.access_token, process.env.META_APP_SECRET);
+    }
+    if (platform === 'tiktok') {
+      // Best-effort: revocar el access_token en TikTok antes del hard-delete.
+      try {
+        await fetch('https://open.tiktokapis.com/v2/oauth/revoke/', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_key:    process.env.TIKTOK_CLIENT_KEY || '',
+            client_secret: process.env.TIKTOK_CLIENT_SECRET || '',
+            token:         integ.access_token || ''
+          }).toString()
+        });
+      } catch (e) { console.warn('[disconnect] tiktok revoke (non-blocking):', e?.message || e); }
     }
 
     if (platform === 'shopify') {

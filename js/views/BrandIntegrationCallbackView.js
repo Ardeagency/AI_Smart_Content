@@ -275,6 +275,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       : platform === 'shopify' ? 'Shopify'
       : platform === 'mercadolibre' ? 'Mercado Libre'
       : platform === 'x' ? 'X'
+      : platform === 'tiktok' ? 'TikTok'
       : 'Meta';
     wrap.innerHTML = `
       <div class="bic-success">

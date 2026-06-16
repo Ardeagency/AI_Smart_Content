@@ -69,12 +69,15 @@
     const shopify = this._pickBrandIntegrationForContainer(brandContainerId, 'shopify');
     const meli = this._pickBrandIntegrationForContainer(brandContainerId, 'mercadolibre');
     const x = this._pickBrandIntegrationForContainer(brandContainerId, 'x');
+    const tiktok = this._pickBrandIntegrationForContainer(brandContainerId, 'tiktok');
     const gOk = this._integrationUsable(google);
     const fOk = this._integrationUsable(facebook);
     const sOk = this._integrationUsable(shopify);
     const mOk = this._integrationUsable(meli);
     const xOk = this._integrationUsable(x);
+    const tkOk = this._integrationUsable(tiktok);
     const xUrl = xOk && x?.account_url ? x.account_url : null;
+    const tkUrl = tkOk && tiktok?.account_url ? tiktok.account_url : null;
     const shopUrl = sOk && shopify?.account_url ? shopify.account_url : null;
     const meliUrl = mOk && meli?.account_url ? meli.account_url : null;
 
@@ -135,6 +138,16 @@
         actionHref: xUrl || dashboardHref,
         actionExternal: !!xUrl,
         hint: xOk && x?.external_account_name ? x.external_account_name : ''
+      },
+      {
+        key: 'tiktok',
+        label: 'TikTok',
+        iconClass: 'fab fa-tiktok',
+        connected: tkOk,
+        oauthProvider: 'tiktok',
+        actionHref: tkUrl || dashboardHref,
+        actionExternal: !!tkUrl,
+        hint: tkOk && tiktok?.external_account_name ? tiktok.external_account_name : ''
       }
     ];
     },
@@ -544,7 +557,7 @@
   async startBrandIntegrationOAuth(provider, brandContainerId, actionButton = null) {
     const normalizedProvider = String(provider || '').toLowerCase();
     const brandId = String(brandContainerId || '').trim();
-    const SUPPORTED = ['google', 'facebook', 'shopify', 'mercadolibre', 'x'];
+    const SUPPORTED = ['google', 'facebook', 'shopify', 'mercadolibre', 'x', 'tiktok'];
     if (!brandId || !SUPPORTED.includes(normalizedProvider)) return;
     if (window.DemoGuard?.isDemo?.()) {
       window.DemoGuard.showSignupModal(`conectar ${normalizedProvider}`);
@@ -582,6 +595,7 @@
         normalizedProvider === 'google'       ? '/api/integrations/google/start'   :
         normalizedProvider === 'mercadolibre' ? '/api/integrations/meli/start'      :
         normalizedProvider === 'x'            ? '/api/integrations/x/start'         :
+        normalizedProvider === 'tiktok'       ? '/api/integrations/tiktok/start'    :
         /* shopify */                           '/api/integrations/shopify/start'
       );
 
