@@ -912,8 +912,12 @@ exports.handler = async (event) => {
       });
       tiktokIntegId = Array.isArray(tkRow) && tkRow[0] ? tkRow[0].id : null;
 
-      // NOTA: no encolamos bootstrap todavía — ai-engine aún no tiene populator de
-      // TikTok. Cuando exista, agregar enqueueIntegrationBootstrap como en X/Meta.
+      if (!isReconnection && tiktokIntegId && stateObj.organization_id) {
+        await enqueueIntegrationBootstrap({
+          env, platform: 'tiktok', integrationId: tiktokIntegId,
+          brandContainerId, organizationId: stateObj.organization_id,
+        });
+      }
     }
 
     // Obtener el id de la integración guardada para devolverlo al callback
