@@ -55,7 +55,6 @@ class OrganizationView extends BaseView {
   <div class="organization-header">
     <div>
       <h1 class="organization-title">${__('Configuración')}</h1>
-      <p class="organization-subtitle">${__('Panel técnico-administrativo de la organización. La identidad de marca se gestiona en')} <a href="#" data-route="brand">Identity</a>.</p>
     </div>
     <div class="organization-header-status" id="orgHeaderStatus"></div>
   </div>
