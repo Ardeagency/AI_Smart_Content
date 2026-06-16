@@ -2331,5 +2331,22 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Ya tienes sesión iniciada. Redirigiendo…": "You're already signed in. Redirecting…",
   "Ya verifiqué, refrescar": "I already verified, refresh",
   "Zona horaria": "Time zone",
-  "Zona horaria: {tz}": "Time zone: {tz}"
+  "Zona horaria: {tz}": "Time zone: {tz}",
+  "Uso": "Usage",
+  "Consumo de créditos de la plataforma por día — scrapers, flujos, generación e IA.": "Daily platform credit consumption — scrapers, flows, generation and AI.",
+  "7 días": "7 days",
+  "30 días": "30 days",
+  "90 días": "90 days",
+  "Créditos consumidos · {d}d": "Credits used · {d}d",
+  "{n} operaciones": "{n} operations",
+  "Promedio diario": "Daily average",
+  "créditos / día": "credits / day",
+  "Día pico": "Peak day",
+  "sin datos": "no data",
+  "Fuente principal": "Top source",
+  "{p}% del consumo": "{p}% of usage",
+  "Sin consumo de créditos registrado en este período.": "No credit usage recorded in this period.",
+  "Consumo diario por fuente": "Daily consumption by source",
+  "Créditos consumidos por día, apilados por área de la plataforma.": "Credits used per day, stacked by platform area.",
+  "Consumo por fuente · {d} días": "Consumption by source · {d} days"
 }/* I18N:END */;

@@ -32,9 +32,9 @@ class OrganizationView extends BaseView {
     // Sub-marcas (read-only)
     this.brandContainers = [];
 
-    // Actividad
-    this.creditTimeline = [];
-    this.recentFlowRuns = [];
+    // Uso (consumo de créditos)
+    this.usageRange = 30;
+    this.usage = null;
 
     // Notificaciones
     this.notifications = [];
@@ -63,7 +63,7 @@ class OrganizationView extends BaseView {
     <button type="button" class="tab-btn active" data-tab="general" role="tab" aria-selected="true">${__('General')}</button>
     <button type="button" class="tab-btn" data-tab="members" role="tab" aria-selected="false">${__('Miembros')}</button>
     <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">${__('Facturación')}</button>
-    <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">${__('Actividad')}</button>
+    <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">${__('Uso')}</button>
     <button type="button" class="tab-btn" data-tab="notifications" role="tab" aria-selected="false">${__('Notificaciones')}</button>
     <button type="button" class="tab-btn" data-tab="security" role="tab" aria-selected="false">${__('Seguridad')}</button>
   </div>
@@ -155,22 +155,23 @@ class OrganizationView extends BaseView {
       </section>
     </div>
 
-    <!-- ── Actividad ────────────────────────────────────── -->
+    <!-- ── Uso ──────────────────────────────────────────── -->
     <div class="tab-content" id="activityTab" role="tabpanel">
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>${__('Ejecuciones recientes')}</h2>
-            <p class="org-section-desc">${__('Últimos flujos ejecutados en la organización.')}</p>
+            <h2>${__('Uso')}</h2>
+            <p class="org-section-desc">${__('Consumo de créditos de la plataforma por día — scrapers, flujos, generación e IA.')}</p>
           </div>
-          <a href="#" class="btn btn-secondary btn-sm" id="orgActivityTasksLink">${__('Historial completo')}</a>
+          <div class="org-usage-range" id="orgUsageRange" role="tablist">
+            <button type="button" class="org-range-pill" data-range="7">${__('7 días')}</button>
+            <button type="button" class="org-range-pill org-range-pill--active" data-range="30">${__('30 días')}</button>
+            <button type="button" class="org-range-pill" data-range="90">${__('90 días')}</button>
+          </div>
         </div>
-        <div class="org-runs-list" id="orgRunsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
-      </section>
-
-      <section class="org-section">
-        <h2>${__('Consumo de créditos (últimos 30 días)')}</h2>
-        <div class="org-usage-timeline" id="orgCreditsTimeline"></div>
+        <div class="org-usage-stats" id="orgUsageStats"></div>
+        <div class="org-usage-chart-card" id="orgUsageChart"><p class="org-placeholder">${__('Cargando…')}</p></div>
+        <div class="org-usage-breakdown-card" id="orgUsageBreakdown"></div>
       </section>
     </div>
 
@@ -397,8 +398,7 @@ class OrganizationView extends BaseView {
         this._loadMembers(),
         this._loadInvitations(),
         this._loadBrandContainers(),
-        this._loadCreditTimeline(),
-        this._loadFlowRuns(),
+        this._loadUsage(),
         this._loadNotifications(),
         this._loadAuditLog(),
         this._loadMfa(),
@@ -409,12 +409,11 @@ class OrganizationView extends BaseView {
       this._renderSubbrands();
       this._renderMembers();
       this._renderInvitations();
-      this._renderActivity();
+      this._renderUsage();
       this._renderNotifications();
       this._renderAuditLog();
       this._renderMfa();
       this._renderSessions();
-      this._configureExternalLinks();
     } catch (e) {
       console.error('OrganizationView _loadAll:', e);
       this._showError(e.message || __('Error al cargar la configuración.'));
@@ -788,32 +787,43 @@ class OrganizationView extends BaseView {
     this.brandContainers = data || [];
   }
 
-  async _loadCreditTimeline() {
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    // credit_usage usa credits_delta (negativo = consumo). Para el timeline
-    // de uso diario filtramos solo consumos y sumamos su valor absoluto.
+  // ── Uso: consumo de créditos por día y por área (fuente) ──
+  // credit_usage.credits_delta < 0 = consumo. El área (studio/video/vera/
+  // production/background/system) viene de feature_costs vía CreditCosts.get(kind).
+  async _loadUsage() {
+    const days = this.usageRange || 30;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    try { await (window.CreditCosts?.getMap?.()); } catch (_) {}
     const { data } = await this.supabase
-      .from('credit_usage').select('credits_delta, created_at')
+      .from('credit_usage').select('kind, credits_delta, created_at')
       .eq('organization_id', this.orgId)
       .lt('credits_delta', 0)
       .gte('created_at', since)
       .order('created_at', { ascending: true });
     const rows = data || [];
-    const byDay = {};
+    const byDayMap = {};
+    const byArea = { studio: 0, video: 0, vera: 0, production: 0, background: 0, system: 0 };
+    let total = 0;
     rows.forEach((r) => {
       const day = (r.created_at || '').slice(0, 10);
       if (!day) return;
-      byDay[day] = (byDay[day] || 0) + Math.abs(Number(r.credits_delta) || 0);
+      const area = (window.CreditCosts?.get?.(r.kind)?.area) || 'background';
+      const c = Math.abs(Number(r.credits_delta) || 0);
+      if (!byDayMap[day]) byDayMap[day] = { day, total: 0, byArea: {} };
+      byDayMap[day].byArea[area] = (byDayMap[day].byArea[area] || 0) + c;
+      byDayMap[day].total += c;
+      byArea[area] = (byArea[area] || 0) + c;
+      total += c;
     });
-    this.creditTimeline = Object.entries(byDay).sort((a, b) => a[0].localeCompare(b[0])).map(([day, total]) => ({ day, total }));
-  }
-
-  async _loadFlowRuns() {
-    const { data } = await this.supabase
-      .from('flow_runs')
-      .select('id, flow_id, status, created_at, tokens_consumed, current_module_order, total_modules_count, user_id')
-      .eq('organization_id', this.orgId).order('created_at', { ascending: false }).limit(20);
-    this.recentFlowRuns = data || [];
+    const byDay = Object.values(byDayMap).sort((a, b) => a.day.localeCompare(b.day));
+    const peak = byDay.reduce((m, d) => (d.total > (m ? m.total : 0) ? d : m), null);
+    const topAreaKey = Object.entries(byArea).sort((a, b) => b[1] - a[1])[0];
+    this.usage = {
+      days, byDay, byArea, total,
+      peak,
+      topAreaKey: total > 0 && topAreaKey ? topAreaKey[0] : null,
+      events: rows.length,
+    };
   }
 
   async _loadNotifications() {
@@ -1121,49 +1131,138 @@ class OrganizationView extends BaseView {
     }).join('');
   }
 
-  _renderActivity() {
-    const list = this.querySelector('#orgRunsList');
-    if (list) {
-      if (!this.recentFlowRuns.length) {
-        list.innerHTML = `<p class="org-members-empty">${__('Sin ejecuciones recientes.')}</p>`;
+  // Áreas (fuentes) del consumo, en orden de apilado (arriba → abajo).
+  static USAGE_AREAS = [
+    { key: 'studio',     label: 'Studio' },
+    { key: 'video',      label: 'Video' },
+    { key: 'vera',       label: 'Vera' },
+    { key: 'production', label: 'Producción' },
+    { key: 'background', label: 'Scrapers' },
+    { key: 'system',     label: 'Sistema' },
+  ];
+
+  _usageColor(area) { return (window.CreditCosts?.getAreaColor?.(area)) || '#64748b'; }
+  _fmtCredits(n) { return Math.round(Number(n) || 0).toLocaleString('es'); }
+  _fmtCreditsK(n) {
+    n = Number(n) || 0;
+    if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k';
+    return String(Math.round(n));
+  }
+  _fmtDay(d) {
+    if (!d) return '—';
+    const dt = new Date(d + 'T00:00:00');
+    return isNaN(dt) ? d : dt.toLocaleDateString('es', { day: 'numeric', month: 'short' });
+  }
+  _niceMax(v) {
+    v = Math.max(1, v);
+    const pow = Math.pow(10, Math.floor(Math.log10(v)));
+    const n = v / pow;
+    const m = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10;
+    return m * pow;
+  }
+
+  _renderUsage() {
+    // Pills de rango activas
+    this.querySelectorAll('#orgUsageRange .org-range-pill').forEach((p) => {
+      p.classList.toggle('org-range-pill--active', Number(p.dataset.range) === this.usageRange);
+    });
+
+    const u = this.usage;
+    const statsEl = this.querySelector('#orgUsageStats');
+    const chartEl = this.querySelector('#orgUsageChart');
+    const bdEl = this.querySelector('#orgUsageBreakdown');
+    const empty = !u || u.total <= 0;
+
+    // ── Stat cards ──
+    if (statsEl) {
+      if (empty) {
+        statsEl.innerHTML = '';
       } else {
-        list.innerHTML = this.recentFlowRuns.map((r) => {
-          const when = r.created_at ? new Date(r.created_at).toLocaleString('es') : '—';
-          const status = r.status || 'unknown';
-          const progress = r.total_modules_count > 0
-            ? `${r.current_module_order || 0}/${r.total_modules_count}`
-            : '—';
-          return `
-            <div class="org-run-row">
-              <span class="org-run-when">${this.escapeHtml(when)}</span>
-              <span class="org-run-flow">${this.escapeHtml(r.flow_id ? r.flow_id.slice(0, 8) + '…' : '—')}</span>
-              <span class="org-run-progress">${this.escapeHtml(progress)}</span>
-              <span class="org-run-tokens">${__('{n} tk', { n: r.tokens_consumed || 0 })}</span>
-              <span class="org-run-status org-run-status--${this.escapeHtml(status)}">${this.escapeHtml(status)}</span>
-            </div>`;
-        }).join('');
+        const topMeta = OrganizationView.USAGE_AREAS.find((a) => a.key === u.topAreaKey);
+        const topPct = u.topAreaKey ? Math.round((u.byArea[u.topAreaKey] / u.total) * 100) : 0;
+        statsEl.innerHTML = [
+          this._usageStat(__('Créditos consumidos · {d}d', { d: u.days }), this._fmtCredits(u.total), __('{n} operaciones', { n: u.events })),
+          this._usageStat(__('Promedio diario'), this._fmtCredits(u.total / u.days), __('créditos / día')),
+          this._usageStat(__('Día pico'), u.peak ? this._fmtCredits(u.peak.total) : '—', u.peak ? this._fmtDay(u.peak.day) : __('sin datos')),
+          this._usageStat(__('Fuente principal'), topMeta ? topMeta.label : '—', topMeta ? __('{p}% del consumo', { p: topPct }) : '—', topMeta ? this._usageColor(topMeta.key) : null),
+        ].join('');
       }
     }
 
-    const tlEl = this.querySelector('#orgCreditsTimeline');
-    if (tlEl) {
-      if (!this.creditTimeline.length) {
-        tlEl.innerHTML = `<p class="org-placeholder">${__('Sin consumo registrado en los últimos 30 días.')}</p>`;
+    // ── Gráfica apilada ──
+    if (chartEl) {
+      if (empty) {
+        chartEl.innerHTML = `<p class="org-placeholder">${__('Sin consumo de créditos registrado en este período.')}</p>`;
       } else {
-        const max = Math.max(...this.creditTimeline.map((d) => d.total)) || 1;
-        tlEl.innerHTML = `
-          <div class="org-spark">
-            ${this.creditTimeline.map((d) => {
-              const h = Math.max(2, Math.round((d.total / max) * 100));
-              return `<div class="org-spark-bar" style="height:${h}%" title="${__('{dia} — {total} créditos', { dia: this.escapeHtml(d.day), total: d.total })}"></div>`;
-            }).join('')}
+        const niceMax = this._niceMax(Math.max(...u.byDay.map((d) => d.total)));
+        const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => this._fmtCreditsK(niceMax * f));
+        const legend = OrganizationView.USAGE_AREAS.map((a) =>
+          `<span class="org-uchart-leg"><i style="background:${this._usageColor(a.key)}"></i>${this.escapeHtml(a.label)}</span>`).join('');
+        const bars = u.byDay.map((d) => {
+          const hPct = Math.max(1, (d.total / niceMax) * 100);
+          const segs = OrganizationView.USAGE_AREAS.filter((a) => (d.byArea[a.key] || 0) > 0).map((a) => {
+            const segPct = (d.byArea[a.key] / d.total) * 100;
+            return `<div class="org-uchart-seg" style="height:${segPct}%;background:${this._usageColor(a.key)}"></div>`;
+          }).join('');
+          const tip = `${this._fmtDay(d.day)} · ${this._fmtCredits(d.total)} ${__('créditos')}`;
+          return `<div class="org-uchart-col"><div class="org-uchart-bar" style="height:${hPct}%" title="${this.escapeHtml(tip)}">${segs}</div></div>`;
+        }).join('');
+        // Etiquetas X: hasta 6 fechas equiespaciadas
+        const n = u.byDay.length;
+        const idxs = n <= 6 ? u.byDay.map((_, i) => i) : [0, 1, 2, 3, 4, 5].map((k) => Math.round(k * (n - 1) / 5));
+        const xlabels = [...new Set(idxs)].map((i) => `<span>${this.escapeHtml(this._fmtDay(u.byDay[i].day))}</span>`).join('');
+        chartEl.innerHTML = `
+          <div class="org-uchart-head">
+            <div>
+              <h3 class="org-uchart-title">${__('Consumo diario por fuente')}</h3>
+              <p class="org-uchart-desc">${__('Créditos consumidos por día, apilados por área de la plataforma.')}</p>
+            </div>
+            <div class="org-uchart-legend">${legend}</div>
           </div>
-          <div class="org-spark-axis">
-            <span>${this.escapeHtml(this.creditTimeline[0]?.day || '')}</span>
-            <span>${this.escapeHtml(this.creditTimeline[this.creditTimeline.length - 1]?.day || '')}</span>
+          <div class="org-uchart-body">
+            <div class="org-uchart-yaxis">${ticks.map((t) => `<span>${this.escapeHtml(t)}</span>`).join('')}</div>
+            <div class="org-uchart-plotcol">
+              <div class="org-uchart-plot">${bars}</div>
+              <div class="org-uchart-xaxis">${xlabels}</div>
+            </div>
           </div>`;
       }
     }
+
+    // ── Desglose por fuente ──
+    if (bdEl) {
+      if (empty) {
+        bdEl.innerHTML = '';
+      } else {
+        const rows = OrganizationView.USAGE_AREAS
+          .map((a) => ({ ...a, value: u.byArea[a.key] || 0 }))
+          .filter((a) => a.value > 0)
+          .sort((a, b) => b.value - a.value)
+          .map((a) => {
+            const pct = Math.round((a.value / u.total) * 100);
+            const col = this._usageColor(a.key);
+            return `
+              <div class="org-bd-row">
+                <span class="org-bd-label"><i style="background:${col}"></i>${this.escapeHtml(a.label)}</span>
+                <span class="org-bd-track"><span class="org-bd-fill" style="width:${(a.value / u.total) * 100}%;background:${col}"></span></span>
+                <span class="org-bd-value">${this._fmtCredits(a.value)}</span>
+                <span class="org-bd-pct">${pct}%</span>
+              </div>`;
+          }).join('');
+        bdEl.innerHTML = `
+          <h3 class="org-uchart-title">${__('Consumo por fuente · {d} días', { d: u.days })}</h3>
+          <div class="org-bd-rows">${rows}</div>`;
+      }
+    }
+  }
+
+  _usageStat(label, value, sub, accent) {
+    return `
+      <div class="org-ustat">
+        <span class="org-ustat-label">${this.escapeHtml(label)}</span>
+        <span class="org-ustat-value"${accent ? ` style="color:${accent}"` : ''}>${this.escapeHtml(value)}</span>
+        <span class="org-ustat-sub">${this.escapeHtml(sub)}</span>
+      </div>`;
   }
 
   _renderNotifications() {
@@ -1226,13 +1325,6 @@ class OrganizationView extends BaseView {
     }).join('');
   }
 
-  _configureExternalLinks() {
-    const prefix = (this.orgId && typeof window.getOrgPathPrefix === 'function')
-      ? window.getOrgPathPrefix(this.orgId, this.org?.name || '') : '';
-    const tasksLink = this.querySelector('#orgActivityTasksLink');
-    if (tasksLink) tasksLink.setAttribute('href', (prefix || '') + '/tasks');
-  }
-
   // ── Helpers ────────────────────────────────────────────
   _showError(msg) {
     const c = this.container || document.getElementById('app-container');
@@ -1260,6 +1352,17 @@ class OrganizationView extends BaseView {
 
     this.querySelector('#orgGeneralForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveGeneral(); });
     this.querySelector('#orgInviteBtn')?.addEventListener('click', () => this._openInviteModal());
+
+    this.querySelector('#orgUsageRange')?.addEventListener('click', async (e) => {
+      const pill = e.target.closest('.org-range-pill');
+      if (!pill) return;
+      const range = Number(pill.dataset.range);
+      if (!range || range === this.usageRange) return;
+      this.usageRange = range;
+      this.querySelector('#orgUsageChart').innerHTML = `<p class="org-placeholder">${__('Cargando…')}</p>`;
+      await this._loadUsage();
+      this._renderUsage();
+    });
 
     this.container.addEventListener('change', (e) => {
       const sel = e.target.closest('.org-role-select');
