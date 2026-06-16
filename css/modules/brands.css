@@ -2029,6 +2029,17 @@ h1.brand-name-large[contenteditable="true"]:hover,
         position: relative;
         width: 100%;
         padding: 1rem;
+        /* En escritorio va a z-index:1010 para tapar el header; en móvil el
+           contenido debe pasar POR DEBAJO del header fijo al scrollear. */
+        z-index: 1;
+    }
+    /* Nombre de marca: en móvil pasa de fijo (≥4.25rem ≈ 68px, desbordaba en
+       360px) a fluido. Misma especificidad que el override de arriba para ganar. */
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large,
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:hover,
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:active,
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:focus {
+        font-size: clamp(2.25rem, 11vw, 4rem);
     }
 }
 
