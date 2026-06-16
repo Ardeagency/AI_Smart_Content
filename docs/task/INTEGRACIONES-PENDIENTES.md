@@ -2,17 +2,17 @@
 
 > Lista viva de lo que cada integración YA hace vs lo que está **planificado pero todavía NO funciona**.
 > Convención: ✅ funciona · 🟡 parcial/stub · 🔲 planificado, NO construido · 🔒 bloqueado por aprobación externa.
-> Borrar cada ítem cuando se resuelva. Última actualización: 2026-06-12.
+> Borrar cada ítem cuando se resuelva. Última actualización: 2026-06-16.
 
 ---
 
 ## Patrón común a TODAS las integraciones (cross-cutting)
 
-- 🔲 **Botón humano "actualizar ficha / publicar" (write gateado, SEO/GEO).** Los scopes de escritura ya se piden, pero **el botón y su backend NO existen** en ninguna integración. Vera propone → el usuario aplica. Pendiente en ML, Shopify, Amazon, YouTube, Google Ads, Meta, X. Ver `project_integration_write_policy`.
+- 🔲 **Botón humano "actualizar ficha / publicar" (write gateado, SEO/GEO).** Los scopes de escritura ya se piden, pero **el botón y su backend NO existen** en ninguna integración. Vera propone → el usuario aplica. Pendiente en ML, Shopify, Amazon, YouTube, Google Ads, Meta, X, TikTok. Ver `project_integration_write_policy`.
 - 🔲 **Selector de cuenta por marca.** En integraciones multi-cuenta (Google Ads, ad accounts de Meta) NO debe jalarse todo lo accesible; el usuario elige qué cuenta es de la marca (patrón page-picker de Meta). Hoy Google Ads jala TODO. Ver `feedback_no_auto_pull_all_accounts`.
-- 🔲 **Webhooks / sync en vivo.** Salvo Shopify (que sí registra webhooks), las demás hacen pull bajo demanda; falta push en vivo (ML, X).
+- 🔲 **Webhooks / sync en vivo.** Salvo Shopify (que sí registra webhooks), las demás hacen pull bajo demanda; falta push en vivo (ML, X, TikTok).
 - 🔒 **Verificaciones / App Reviews de producción** (detalle por plataforma abajo).
-- 🔒 **Seguridad — rotar secretos que se vieron en chat:** ML Secret Key y X (Bearer + OAuth2 secret) deben regenerarse una vez validado todo.
+- 🔒 **Seguridad — rotar secretos que se vieron en chat:** ML Secret Key, X (Bearer + OAuth2 secret) y **TikTok (Client Secret de Production Y de Sandbox)** deben regenerarse una vez validado todo.
 
 ---
 
@@ -78,6 +78,21 @@
 - 🔲 **Leer menciones / monitoreo de marca** (hoy solo trae posts propios).
 - 🔲 **Suscripciones/webhooks** (menciones en vivo) — omitido a propósito.
 - 🔒 Rotar Bearer + OAuth2 secret (se vieron en chat).
+
+---
+
+## TikTok
+**✅ Funciona (construido 2026-06-16):** OAuth 2.0 connect (PKCE) por marca (`api-integrations-tiktok-start` + rama en `exchange`/`disconnect`) · UI en el catálogo "Integraciones" (ícono `fa-tiktok`) · refresh del token de 24h (rota `refresh_token`; background `token-refresh.service` cada 6h si vence en <12h; flag `TIKTOK_ENV` sandbox/production elige el par de credenciales). App id TikTok `7650485490868570132`.
+
+**Pendiente (todo el ciclo "downstream" — conectar ≠ analizar/actuar):**
+- 🔲 **Populator** (`tiktok.populator.js` + `tiktok-rest.js`): importar videos propios → `brand_posts` (network=`tiktok`, post_source=`own`, `ai_analyzed_at=NULL`) para alimentar el pipeline de sentimiento/análisis. HOY el `exchange` **NO encola bootstrap** (a propósito: no hay populator). Calcar `x.populator`.
+- 🔲 **Tools de lectura de Vera**: ningún tool consume TikTok (perfil/stats/videos). Falta cablear en `social.tools`/`integration-data.tools` usando `getIntegrationToken(..., 'tiktok')` (la lectura del token ya funcionaría — consulta por `platform` sin allowlist).
+- 🟡 **Publicar = STUB**: en `api-social-publish.js` tiktok está en `STUB_PLATFORMS` → responde `not_implemented` ("Próximamente"). Falta construir el upload a **borrador** (Content Posting API, `video.upload`).
+- 🔲 **Análisis/insights** propios de TikTok (engagement, stats) — nada construido; depende del populator.
+- 🔲 **Validar E2E** — requiere del lado config: redirect URI `https://console.aismartcontent.io/brand-integration-callback` registrado en TikTok Login Kit (sandbox), `TIKTOK_CLIENT_KEY`/`SECRET` (sandbox) en Netlify, y **Target Users** agregados en el sandbox.
+- 🔒 **`video.publish`** (publicación directa pública) bloqueado hasta pasar la **auditoría de Content Posting API** (Production). En sandbox solo borrador.
+- 🔒 **App Review de Production** (demo-video por scope) + cambiar a credenciales de producción + `TIKTOK_ENV=production`.
+- 🔒 Rotar el Client Secret (Production y Sandbox se vieron en chat).
 
 ---
 
