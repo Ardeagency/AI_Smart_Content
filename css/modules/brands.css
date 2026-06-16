@@ -1484,6 +1484,25 @@ h1.brand-name-large[contenteditable="true"]:hover,
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
 }
 
+/* ===== Brand Storage — móvil =====
+   .brand-storage-standalone tiene mayor especificidad que el reflow genérico
+   .brand-dashboard-container, así que en móvil se quedaba position:absolute +
+   overflow:hidden -> el grid de sub-marcas se cortaba sin poder scrollear. */
+@media (max-width: 768px) {
+    .brand-dashboard-container.brand-storage-standalone {
+        position: relative;
+        inset: auto;
+        min-height: calc(100vh - 48px);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    /* minmax(260px,…) forzaba 260px y desbordaba en pantallas estrechas (≤320px).
+       min(220px,100%) garantiza que el tile nunca exceda el ancho disponible. */
+    .brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry {
+        grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+    }
+}
+
 .brand-storage-tile__head {
     grid-row: 1;
     grid-column: 1;
