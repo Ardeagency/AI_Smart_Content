@@ -82,11 +82,10 @@
 ---
 
 ## TikTok
-**✅ Funciona (construido 2026-06-16):** OAuth 2.0 connect (PKCE) por marca (`api-integrations-tiktok-start` + rama en `exchange`/`disconnect`) · UI en el catálogo "Integraciones" (ícono `fa-tiktok`) · refresh del token de 24h (rota `refresh_token`; background `token-refresh.service` cada 6h si vence en <12h; flag `TIKTOK_ENV` sandbox/production elige el par de credenciales). App id TikTok `7650485490868570132`.
+**✅ Funciona (construido 2026-06-16):** OAuth 2.0 connect (PKCE) por marca (`api-integrations-tiktok-start` + rama en `exchange`/`disconnect`) · UI en el catálogo "Integraciones" (ícono `fa-tiktok`) · refresh del token de 24h (rota `refresh_token`; background `token-refresh.service` cada 6h si vence en <12h; flag `TIKTOK_ENV` sandbox/production elige el par de credenciales) · **populator** (`tiktok-rest.js` lazy-refresh + `tiktok.populator.js`: videos propios → `brand_posts` network=`tiktok`, post_source=`own`, `ai_analyzed_at=NULL` → alimenta el pipeline de sentimiento existente) + **bootstrap encolado al conectar** (`tiktok_initial_bootstrap`). App id TikTok `7650485490868570132`.
 
-**Pendiente (todo el ciclo "downstream" — conectar ≠ analizar/actuar):**
-- 🔲 **Populator** (`tiktok.populator.js` + `tiktok-rest.js`): importar videos propios → `brand_posts` (network=`tiktok`, post_source=`own`, `ai_analyzed_at=NULL`) para alimentar el pipeline de sentimiento/análisis. HOY el `exchange` **NO encola bootstrap** (a propósito: no hay populator). Calcar `x.populator`.
-- 🔲 **Tools de lectura de Vera**: ningún tool consume TikTok (perfil/stats/videos). Falta cablear en `social.tools`/`integration-data.tools` usando `getIntegrationToken(..., 'tiktok')` (la lectura del token ya funcionaría — consulta por `platform` sin allowlist).
+**Pendiente (capa "act" + análisis dedicado — conectar/leer ≠ actuar):**
+- 🔲 **Tools de lectura dedicadas de Vera**: el sentimiento ya recoge los `brand_posts` de TikTok, pero ningún tool surfacea stats/perfil/videos de TikTok a Vera de forma específica (estilo `getMetaPosts`). Cablear en `social.tools`/`integration-data.tools` con `getIntegrationToken(..., 'tiktok')`.
 - 🟡 **Publicar = STUB**: en `api-social-publish.js` tiktok está en `STUB_PLATFORMS` → responde `not_implemented` ("Próximamente"). Falta construir el upload a **borrador** (Content Posting API, `video.upload`).
 - 🔲 **Análisis/insights** propios de TikTok (engagement, stats) — nada construido; depende del populator.
 - 🔲 **Validar E2E** — requiere del lado config: redirect URI `https://console.aismartcontent.io/brand-integration-callback` registrado en TikTok Login Kit (sandbox), `TIKTOK_CLIENT_KEY`/`SECRET` (sandbox) en Netlify, y **Target Users** agregados en el sandbox.
