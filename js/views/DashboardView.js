@@ -506,7 +506,7 @@ class DashboardView extends BaseView {
   _buildHero(tabId) {
     const copy = DashboardView.HERO_COPY[tabId] || DashboardView.HERO_COPY['my-brands'];
     const org  = window.currentOrgName || '';
-    const light = org ? ` <span class="dash-hero-title-light">de ${this._esc(org)}</span>` : '';
+    const light = org ? ` <span class="dash-hero-title-light">${__('de {org}', { org: this._esc(org) })}</span>` : '';
     // Filtros TAB-AWARE en el banner: cada tab muestra los suyos aquí (no en el
     // cuerpo). El manejo de cambios se centraliza en _setupHeroFilters.
     const actions = `<div class="dash-hero-actions" id="dashHeroActions">${this._buildTabFiltersBar(tabId)}</div>`;
@@ -769,7 +769,7 @@ class DashboardView extends BaseView {
     const title = document.getElementById('dashHeroTitle');
     if (title) {
       const org = window.currentOrgName || '';
-      const light = org ? ` <span class="dash-hero-title-light">de ${this._esc(org)}</span>` : '';
+      const light = org ? ` <span class="dash-hero-title-light">${__('de {org}', { org: this._esc(org) })}</span>` : '';
       title.innerHTML = `<strong>${this._esc(copy.strong)}</strong>${light}`;
     }
     const d = document.getElementById('dashHeroDesc');

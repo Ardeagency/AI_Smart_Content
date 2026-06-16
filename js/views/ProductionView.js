@@ -87,36 +87,36 @@ class ProductionView extends BaseView {
                 <div class="pmodal-visual-scrim" aria-hidden="true"></div>
                 <div class="production-modal-visual-inner">
                     <img id="pmodalImage" src="" alt="" hidden>
-                    <video id="pmodalVideo" controls playsinline preload="metadata" hidden aria-label="Production video"></video>
+                    <video id="pmodalVideo" controls playsinline preload="metadata" hidden aria-label="${__('Video de producción')}"></video>
                     <!-- Canvas de mascara: sibling de la imagen para compartir stacking
                          context y permitir mix-blend-mode:difference (invierte la zona
                          pintada sobre la imagen, visible en fondos claros y oscuros). -->
                     <canvas class="pmodal-edit-canvas" id="pmodalEditCanvas" hidden></canvas>
                 </div>
-                <div class="production-modal-toolbar" role="toolbar" aria-label="Acciones sobre la produccion">
-                    <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="fas fa-pen"></i><span>Editar</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale"><i class="fas fa-expand-alt"></i><span>Mejorar 4K</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background"><i class="fas fa-cut"></i><span>Sin fondo</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="fix-text" data-kie-model="nano-banana-pro"><i class="fas fa-font"></i><span>Mejorar texto</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="change-ratio" data-kie-model="nano-banana-pro" aria-haspopup="true" aria-expanded="false"><i class="fas fa-crop-simple"></i><span>Cambiar ratio</span></button>
+                <div class="production-modal-toolbar" role="toolbar" aria-label="${__('Acciones sobre la producción')}">
+                    <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="fas fa-pen"></i><span>${__('Editar')}</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale"><i class="fas fa-expand-alt"></i><span>${__('Mejorar 4K')}</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background"><i class="fas fa-cut"></i><span>${__('Sin fondo')}</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="fix-text" data-kie-model="nano-banana-pro"><i class="fas fa-font"></i><span>${__('Mejorar texto')}</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="change-ratio" data-kie-model="nano-banana-pro" aria-haspopup="true" aria-expanded="false"><i class="fas fa-crop-simple"></i><span>${__('Cambiar ratio')}</span></button>
                 </div>
 
                 <!-- Overlay de edicion: solo contiene los floats de tools y panel.
                      El canvas vive como sibling de la imagen (arriba) para que
                      mix-blend-mode:difference se aplique directamente sobre ella. -->
                 <div class="pmodal-edit-overlay" id="pmodalEditOverlay" hidden aria-hidden="true">
-                    <div class="pmodal-edit-toolbar" role="toolbar" aria-label="Herramientas de edicion">
-                        <button type="button" class="pmodal-edit-tool is-active" data-edit-tool="brush" title="Pincel" aria-label="Pincel">
+                    <div class="pmodal-edit-toolbar" role="toolbar" aria-label="${__('Herramientas de edición')}">
+                        <button type="button" class="pmodal-edit-tool is-active" data-edit-tool="brush" title="${__('Pincel')}" aria-label="${__('Pincel')}">
                             <i class="fas fa-paintbrush"></i>
                         </button>
-                        <button type="button" class="pmodal-edit-tool" data-edit-tool="eraser" title="Borrador" aria-label="Borrador">
+                        <button type="button" class="pmodal-edit-tool" data-edit-tool="eraser" title="${__('Borrador')}" aria-label="${__('Borrador')}">
                             <i class="fas fa-eraser"></i>
                         </button>
                         <label class="pmodal-edit-size">
                             <i class="fas fa-circle" aria-hidden="true"></i>
-                            <input type="range" id="pmodalEditBrushSize" min="10" max="200" value="60" aria-label="Tamano del pincel">
+                            <input type="range" id="pmodalEditBrushSize" min="10" max="200" value="60" aria-label="${__('Tamaño del pincel')}">
                         </label>
-                        <button type="button" class="pmodal-edit-tool" data-edit-action="clear" title="Limpiar mascara" aria-label="Limpiar mascara">
+                        <button type="button" class="pmodal-edit-tool" data-edit-action="clear" title="${__('Limpiar máscara')}" aria-label="${__('Limpiar máscara')}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -127,9 +127,9 @@ class ProductionView extends BaseView {
                                 id="pmodalEditPrompt"
                                 class="pmodal-edit-prompt pmodal-edit-director-input"
                                 rows="3"
-                                placeholder="Tu idea en texto — describe que cambiar en la zona pintada. La IA generara el prompt final."
+                                placeholder="${__('Tu idea en texto — describe qué cambiar en la zona pintada. La IA generará el prompt final.')}"
                                 autocomplete="off"
-                                aria-label="Describe el cambio"></textarea>
+                                aria-label="${__('Describe el cambio')}"></textarea>
                         </div>
 
                         <!-- Attachments row: visible cuando hay producto/referencia seleccionado. -->
@@ -143,32 +143,32 @@ class ProductionView extends BaseView {
 
                         <!-- Barra inferior estilo Director Console. -->
                         <div class="pmodal-edit-director-controls">
-                            <button type="button" class="pmodal-edit-add-btn" id="pmodalEditAddBtn" data-edit-action="add-attachment" aria-label="Adjuntar imagen o producto" hidden>
+                            <button type="button" class="pmodal-edit-add-btn" id="pmodalEditAddBtn" data-edit-action="add-attachment" aria-label="${__('Adjuntar imagen o producto')}" hidden>
                                 <i class="fas fa-plus" aria-hidden="true"></i>
                             </button>
-                            <div class="pmodal-edit-mode-pills" role="tablist" aria-label="Modo de edicion">
+                            <div class="pmodal-edit-mode-pills" role="tablist" aria-label="${__('Modo de edición')}">
                                 <button type="button" class="pmodal-edit-mode-pill is-active" role="tab" aria-selected="true" data-edit-mode="remove">
                                     <i class="fas fa-eraser" aria-hidden="true"></i>
-                                    <span>Eliminar</span>
+                                    <span>${__('Eliminar')}</span>
                                 </button>
                                 <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="replace">
                                     <i class="fas fa-arrows-rotate" aria-hidden="true"></i>
-                                    <span>Reemplazar</span>
+                                    <span>${__('Reemplazar')}</span>
                                 </button>
                                 <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="fix-product">
                                     <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-                                    <span>Corregir producto</span>
+                                    <span>${__('Corregir producto')}</span>
                                 </button>
                                 <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="change-product">
                                     <i class="fas fa-box" aria-hidden="true"></i>
-                                    <span>Cambiar producto</span>
+                                    <span>${__('Cambiar producto')}</span>
                                 </button>
                             </div>
                             <div class="pmodal-edit-actions">
-                                <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" data-edit-action="cancel">Cancelar</button>
+                                <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" data-edit-action="cancel">${__('Cancelar')}</button>
                                 <button type="button" class="pmodal-edit-btn pmodal-edit-btn--accent" data-edit-action="apply">
                                     <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-                                    <span>APLICAR</span>
+                                    <span>${__('APLICAR')}</span>
                                 </button>
                             </div>
                         </div>
@@ -177,19 +177,19 @@ class ProductionView extends BaseView {
             </div>
 
             <!-- Columna derecha: header con cerrar, tabs Output/Input, contenido scrolleable, CTAs y footer -->
-            <aside class="production-modal-side" aria-label="Detalles de la produccion">
+            <aside class="production-modal-side" aria-label="${__('Detalles de la producción')}">
                 <header class="pmodal-side-header">
-                    <button type="button" class="pmodal-close" data-action="modal-close" aria-label="Cerrar">
+                    <button type="button" class="pmodal-close" data-action="modal-close" aria-label="${__('Cerrar')}">
                         <i class="fas fa-times"></i>
                     </button>
                 </header>
 
-                <nav class="pmodal-tabs" role="tablist" aria-label="Vistas de produccion">
+                <nav class="pmodal-tabs" role="tablist" aria-label="${__('Vistas de producción')}">
                     <button type="button" class="pmodal-tab is-active" role="tab" aria-selected="true" data-tab="output">
-                        Resultado
+                        ${__('Resultado')}
                     </button>
                     <button type="button" class="pmodal-tab" role="tab" aria-selected="false" data-tab="input">
-                        Briefing
+                        ${__('Briefing')}
                     </button>
                 </nav>
 
@@ -228,7 +228,7 @@ class ProductionView extends BaseView {
                 <div class="pmodal-cta-grid">
                     <button type="button" class="pmodal-cta pmodal-cta--accent" data-action="animate">
                         <i class="fas fa-film"></i>
-                        <span>Animate</span>
+                        <span>${__('Animar')}</span>
                     </button>
                     <button type="button" class="pmodal-cta pmodal-cta--outline" data-action="publish" title="${__('Publicar')}">
                         <i class="fas fa-upload"></i>
@@ -240,11 +240,11 @@ class ProductionView extends BaseView {
                 <div class="pmodal-secondary-grid">
                     <button type="button" class="pmodal-secondary" data-action="open-in">
                         <i class="fas fa-external-link-alt"></i>
-                        <span>Open in</span>
+                        <span>${__('Abrir en')}</span>
                     </button>
                     <button type="button" class="pmodal-secondary" data-action="reference" disabled title="${__('Próximamente')}">
                         <i class="fas fa-bookmark"></i>
-                        <span>Reference</span>
+                        <span>${__('Referencia')}</span>
                     </button>
                 </div>
 
@@ -252,7 +252,7 @@ class ProductionView extends BaseView {
                 <footer class="pmodal-footer">
                     <button type="button" class="pmodal-footer-download" data-action="download">
                         <i class="fas fa-download"></i>
-                        <span>Download</span>
+                        <span>${__('Descargar')}</span>
                     </button>
                     <div class="pmodal-footer-icons">
                         <button type="button" class="pmodal-icon-btn" data-action="like" aria-pressed="false" aria-label="${__('Me gusta')}">

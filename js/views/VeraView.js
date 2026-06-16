@@ -72,11 +72,11 @@ const CHART_TYPE_ALIASES = {
 
 function parseChartSpec(jsonText) {
   const t = String(jsonText || '').trim();
-  if (!t) throw new Error('Spec vacío');
+  if (!t) throw new Error(__('Spec vacío'));
   const spec = JSON.parse(t);
-  if (!spec || typeof spec !== 'object') throw new Error('Spec inválido');
+  if (!spec || typeof spec !== 'object') throw new Error(__('Spec inválido'));
   const rawType = String(spec.type || spec.kind || spec.chartType || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
-  if (!rawType) throw new Error('Falta spec.type');
+  if (!rawType) throw new Error(__('Falta spec.type'));
   // Normaliza vía alias; si ya es un tipo soportado, queda igual.
   const type = CHART_TYPE_ALIASES[rawType] || CHART_TYPE_ALIASES[rawType.replace(/_/g, '')] || rawType;
   return { ...spec, type };
@@ -88,11 +88,11 @@ function renderChartAsDataTable(spec) {
   const title = spec.title ? String(spec.title) : '';
   const data = Array.isArray(spec.data) ? spec.data : [];
   if (!data.length) {
-    return `<div class="gpt-viz gpt-viz--fallback"><strong>${escapeHtml(title || 'Datos')}</strong><p style="color:var(--text-muted);margin-top:8px">El tipo <code>${escapeHtml(spec.type)}</code> no tiene render visual disponible y no hay datos para tabular.</p></div>`;
+    return `<div class="gpt-viz gpt-viz--fallback"><strong>${escapeHtml(title || __('Datos'))}</strong><p style="color:var(--text-muted);margin-top:8px">${__('El tipo')} <code>${escapeHtml(spec.type)}</code> ${__('no tiene render visual disponible y no hay datos para tabular.')}</p></div>`;
   }
-  const hint = spec.type ? `<div style="font-size:.8em;color:var(--text-muted);margin-top:4px;">(tipo solicitado: <code>${escapeHtml(spec.type)}</code> — mostrado como tabla)</div>` : '';
+  const hint = spec.type ? `<div style="font-size:.8em;color:var(--text-muted);margin-top:4px;">(${__('tipo solicitado:')} <code>${escapeHtml(spec.type)}</code> ${__('— mostrado como tabla')})</div>` : '';
   const headerKeys = Array.from(new Set(data.flatMap((d) => d && typeof d === 'object' ? Object.keys(d) : [])));
-  const cols = headerKeys.length ? headerKeys : ['valor'];
+  const cols = headerKeys.length ? headerKeys : [__('valor')];
   const ths = cols.map((c) => `<th>${escapeHtml(c)}</th>`).join('');
   const rows = data.map((d) => {
     const cells = cols.map((c) => {
@@ -340,7 +340,7 @@ function renderChartSVG(spec) {
     });
   } else if (type === 'stacked_column' || type === 'stacked-column') {
     if (!isMulti) {
-      svg += `<text x="${pad}" y="${plotY + 18}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="12">stacked_column requiere { categories:[], series:[] }</text>`;
+      svg += `<text x="${pad}" y="${plotY + 18}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="12">${__('stacked_column requiere { categories:[], series:[] }')}</text>`;
     } else {
       const cat = categories;
       const sers = series.map((s, i) => ({
@@ -442,7 +442,7 @@ function renderChartSVG(spec) {
     spec.__legendSeries = sers.map((s) => ({ label: s.name, color: s.color }));
   } else {
     // Unknown
-    svg += `<text x="${pad}" y="${plotY + 18}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="12">Tipo de gráfico no soportado: ${escapeHtml(type)}</text>`;
+    svg += `<text x="${pad}" y="${plotY + 18}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="12">${__('Tipo de gráfico no soportado:')} ${escapeHtml(type)}</text>`;
   }
 
   // Legend
@@ -458,7 +458,7 @@ function renderChartSVG(spec) {
       ly += 18;
     }
     if (legendItems.length > maxItems) {
-      svg += `<text x="${lx}" y="${ly + 2}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="11">+${legendItems.length - maxItems} más</text>`;
+      svg += `<text x="${lx}" y="${ly + 2}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="11">${__('+{n} más', { n: legendItems.length - maxItems })}</text>`;
     }
   }
 
@@ -504,8 +504,8 @@ function renderChartBlock(code) {
     // Último recurso: mostrar los datos como tabla (mejor que un error críptico)
     return renderChartAsDataTable(spec);
   } catch (e) {
-    const msg = escapeHtml(e?.message || 'Error de chart spec');
-    return `<div class="gpt-viz gpt-viz--error"><strong>Chart inválido:</strong> ${msg}<pre><code>${escapeHtml(String(code || '').trim())}</code></pre></div>`;
+    const msg = escapeHtml(e?.message || __('Error de chart spec'));
+    return `<div class="gpt-viz gpt-viz--error"><strong>${__('Chart inválido:')}</strong> ${msg}<pre><code>${escapeHtml(String(code || '').trim())}</code></pre></div>`;
   }
 }
 
@@ -515,7 +515,7 @@ function renderButtonsBlock(code) {
     const spec = JSON.parse(t);
     const buttons = Array.isArray(spec?.buttons) ? spec.buttons : (Array.isArray(spec) ? spec : []);
     if (!Array.isArray(buttons) || buttons.length === 0) {
-      throw new Error('Spec sin botones');
+      throw new Error(__('Spec sin botones'));
     }
     const title = spec?.title ? String(spec.title) : '';
     const rows = buttons
@@ -527,7 +527,7 @@ function renderButtonsBlock(code) {
       }))
       .filter((b) => b.text.trim().length > 0);
 
-    if (rows.length === 0) throw new Error('Botones sin texto');
+    if (rows.length === 0) throw new Error(__('Botones sin texto'));
 
     return (
       `<div class="gpt-qr" data-qr="true">` +
@@ -543,8 +543,8 @@ function renderButtonsBlock(code) {
       `</div>`
     );
   } catch (e) {
-    const msg = escapeHtml(e?.message || 'Error de buttons spec');
-    return `<div class="gpt-viz gpt-viz--error"><strong>Buttons inválido:</strong> ${msg}<pre><code>${escapeHtml(String(code || '').trim())}</code></pre></div>`;
+    const msg = escapeHtml(e?.message || __('Error de buttons spec'));
+    return `<div class="gpt-viz gpt-viz--error"><strong>${__('Buttons inválido:')}</strong> ${msg}<pre><code>${escapeHtml(String(code || '').trim())}</code></pre></div>`;
   }
 }
 
@@ -1415,29 +1415,29 @@ class VeraView extends (window.BaseView || class {}) {
         console.warn('[VeraView] no se pudo resolver organization.name:', err?.message || err);
       }
     }
-    if (!this.organizationName) this.organizationName = 'Organización';
+    if (!this.organizationName) this.organizationName = __('Organización');
   }
 
   /* ── HTML skeleton ───────────────────────────────────── */
   renderHTML() {
     return `
       <div id="chatcontainer" class="gpt-layout">
-        <aside class="vera-history" id="veraHistory" aria-label="Conversaciones recientes">
+        <aside class="vera-history" id="veraHistory" aria-label="${__('Conversaciones recientes')}">
           <div class="vera-history-head">
-            <button class="vera-history-new" id="veraNewChat" title="Nuevo chat">
-              <i class="fas fa-pen"></i><span>Nuevo chat</span>
+            <button class="vera-history-new" id="veraNewChat" title="${__('Nuevo chat')}">
+              <i class="fas fa-pen"></i><span>${__('Nuevo chat')}</span>
             </button>
-            <button class="vera-history-collapse" id="veraHistoryCollapse" title="Ocultar" aria-label="Ocultar">
+            <button class="vera-history-collapse" id="veraHistoryCollapse" title="${__('Ocultar')}" aria-label="${__('Ocultar')}">
               <i class="fas fa-chevron-right"></i>
             </button>
           </div>
-          <button class="vera-history-search" id="veraHistorySearchBtn" title="Buscar chats">
-            <i class="fas fa-magnifying-glass"></i><span>Buscar chats</span>
+          <button class="vera-history-search" id="veraHistorySearchBtn" title="${__('Buscar chats')}">
+            <i class="fas fa-magnifying-glass"></i><span>${__('Buscar chats')}</span>
           </button>
-          <input type="text" class="vera-history-search-input" id="veraHistorySearchInput" placeholder="Buscar…" hidden />
+          <input type="text" class="vera-history-search-input" id="veraHistorySearchInput" placeholder="${__('Buscar…')}" hidden />
           <div class="vera-history-list" id="veraHistoryList"></div>
         </aside>
-        <button class="vera-history-open" id="veraHistoryOpen" title="Mostrar conversaciones" aria-label="Mostrar conversaciones">
+        <button class="vera-history-open" id="veraHistoryOpen" title="${__('Mostrar conversaciones')}" aria-label="${__('Mostrar conversaciones')}">
           <i class="fas fa-clock-rotate-left"></i>
         </button>
         <div class="vera-history-scrim" id="veraHistoryScrim"></div>
@@ -1451,32 +1451,32 @@ class VeraView extends (window.BaseView || class {}) {
               <textarea
                 class="gpt-composer-textarea"
                 id="veraInput"
-                placeholder="Pregunta lo que quieras"
+                placeholder="${__('Pregunta lo que quieras')}"
                 rows="1"
               ></textarea>
               <div class="gpt-composer-row">
                 <div class="gpt-composer-btns">
                   <div class="vera-plus-wrap">
-                    <button class="gpt-composer-icon" id="veraPlus" title="Adjuntar" aria-haspopup="true" aria-expanded="false">
+                    <button class="gpt-composer-icon" id="veraPlus" title="${__('Adjuntar')}" aria-haspopup="true" aria-expanded="false">
                       <i class="fas fa-plus"></i>
                     </button>
                     <div class="vera-plus-menu" id="veraPlusMenu" hidden role="menu">
                       <button class="vera-plus-item" id="veraMenuFiles" role="menuitem">
-                        <i class="fas fa-paperclip"></i><span>Agregar archivos o fotos</span>
+                        <i class="fas fa-paperclip"></i><span>${__('Agregar archivos o fotos')}</span>
                       </button>
                       <div class="vera-plus-sep"></div>
-                      <button class="vera-plus-item" data-lib-type="product" role="menuitem"><i class="fas fa-box"></i><span>Producto</span></button>
-                      <button class="vera-plus-item" data-lib-type="campaign" role="menuitem"><i class="fas fa-bullhorn"></i><span>Campaña</span></button>
-                      <button class="vera-plus-item" data-lib-type="campaign_objective" role="menuitem"><i class="fas fa-bullseye"></i><span>Objetivo de campaña</span></button>
-                      <button class="vera-plus-item" data-lib-type="audience_objective" role="menuitem"><i class="fas fa-users"></i><span>Objetivo de audiencia</span></button>
-                      <button class="vera-plus-item" data-lib-type="brief" role="menuitem"><i class="fas fa-clipboard"></i><span>Brief</span></button>
-                      <button class="vera-plus-item" data-lib-type="service" role="menuitem"><i class="fas fa-briefcase"></i><span>Servicios</span></button>
-                      <button class="vera-plus-item" data-lib-type="place" role="menuitem"><i class="fas fa-map-pin"></i><span>Lugares</span></button>
-                      <button class="vera-plus-item" data-lib-type="character" role="menuitem"><i class="fas fa-masks-theater"></i><span>Personajes</span></button>
+                      <button class="vera-plus-item" data-lib-type="product" role="menuitem"><i class="fas fa-box"></i><span>${__('Producto')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="campaign" role="menuitem"><i class="fas fa-bullhorn"></i><span>${__('Campaña')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="campaign_objective" role="menuitem"><i class="fas fa-bullseye"></i><span>${__('Objetivo de campaña')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="audience_objective" role="menuitem"><i class="fas fa-users"></i><span>${__('Objetivo de audiencia')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="brief" role="menuitem"><i class="fas fa-clipboard"></i><span>${__('Brief')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="service" role="menuitem"><i class="fas fa-briefcase"></i><span>${__('Servicios')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="place" role="menuitem"><i class="fas fa-map-pin"></i><span>${__('Lugares')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="character" role="menuitem"><i class="fas fa-masks-theater"></i><span>${__('Personajes')}</span></button>
                     </div>
                   </div>
                 </div>
-                <button class="gpt-send-btn" id="veraSend" title="Enviar" disabled>
+                <button class="gpt-send-btn" id="veraSend" title="${__('Enviar')}" disabled>
                   <i class="fas fa-arrow-up"></i>
                 </button>
               </div>
@@ -1491,17 +1491,17 @@ class VeraView extends (window.BaseView || class {}) {
             </div>
           </div>
         </div>
-        <aside class="vera-artifact-panel" id="veraArtifactPanel" hidden aria-label="Panel de artefacto">
+        <aside class="vera-artifact-panel" id="veraArtifactPanel" hidden aria-label="${__('Panel de artefacto')}">
           <div class="vera-artifact-panel-head">
-            <span class="vera-artifact-panel-title" id="veraArtifactTitle">Artefacto</span>
+            <span class="vera-artifact-panel-title" id="veraArtifactTitle">${__('Artefacto')}</span>
             <div class="vera-artifact-panel-actions">
-              <button class="vera-artifact-act" id="veraArtifactView" data-view="preview" title="Vista previa"><i class="fas fa-eye"></i></button>
-              <button class="vera-artifact-act" id="veraArtifactCode" title="Ver código"><i class="fas fa-code"></i></button>
-              <button class="vera-artifact-act" id="veraArtifactCopy" title="Copiar"><i class="fas fa-copy"></i></button>
-              <button class="vera-artifact-act" id="veraArtifactPdf" title="Descargar como PDF"><i class="fas fa-file-pdf"></i></button>
-              <button class="vera-artifact-act" id="veraArtifactDownload" title="Descargar HTML"><i class="fas fa-download"></i></button>
-              <button class="vera-artifact-act" id="veraArtifactFull" title="Pantalla completa"><i class="fas fa-expand-alt"></i></button>
-              <button class="vera-artifact-act vera-artifact-act--close" id="veraArtifactClose" title="Cerrar"><i class="fas fa-times"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactView" data-view="preview" title="${__('Vista previa')}"><i class="fas fa-eye"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactCode" title="${__('Ver código')}"><i class="fas fa-code"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactCopy" title="${__('Copiar')}"><i class="fas fa-copy"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactPdf" title="${__('Descargar como PDF')}"><i class="fas fa-file-pdf"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactDownload" title="${__('Descargar HTML')}"><i class="fas fa-download"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactFull" title="${__('Pantalla completa')}"><i class="fas fa-expand-alt"></i></button>
+              <button class="vera-artifact-act vera-artifact-act--close" id="veraArtifactClose" title="${__('Cerrar')}"><i class="fas fa-times"></i></button>
             </div>
           </div>
           <div class="vera-artifact-panel-body" id="veraArtifactBody"></div>
@@ -1707,18 +1707,18 @@ class VeraView extends (window.BaseView || class {}) {
     const startOfDay = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
     const now = new Date();
     const d = new Date(updatedAt);
-    if (Number.isNaN(d.getTime())) return 'Anteriores';
+    if (Number.isNaN(d.getTime())) return __('Anteriores');
     const diff = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
-    if (diff <= 0) return 'Hoy';
-    if (diff === 1) return 'Ayer';
-    if (diff <= 7) return 'Últimos 7 días';
-    if (diff <= 30) return 'Últimos 30 días';
-    return 'Anteriores';
+    if (diff <= 0) return __('Hoy');
+    if (diff === 1) return __('Ayer');
+    if (diff <= 7) return __('Últimos 7 días');
+    if (diff <= 30) return __('Últimos 30 días');
+    return __('Anteriores');
   }
 
   _convTitle(c) {
     const t = (c?.title || '').trim();
-    if (!t || t === 'Sesión de voz') return 'Conversación';
+    if (!t || t === 'Sesión de voz') return __('Conversación');
     return t;
   }
 
@@ -1730,12 +1730,12 @@ class VeraView extends (window.BaseView || class {}) {
     if (q) convs = convs.filter((c) => this._convTitle(c).toLowerCase().includes(q));
 
     if (!convs.length) {
-      list.innerHTML = `<div class="vera-history-empty">${q ? 'Sin resultados.' : 'Aún no tienes chats.<br>Escribe abajo para empezar.'}</div>`;
+      list.innerHTML = `<div class="vera-history-empty">${q ? __('Sin resultados.') : __('Aún no tienes chats.<br>Escribe abajo para empezar.')}</div>`;
       return;
     }
     // Lista plana "Recientes" (ya viene ordenada por updated_at desc).
     const active = this.aiState.active_conversation_id;
-    let html = `<div class="vera-history-group">Recientes</div>`;
+    let html = `<div class="vera-history-group">${__('Recientes')}</div>`;
     for (const c of convs) {
       const title = this._convTitle(c);
       const safe = escapeHtml(title);
@@ -1806,69 +1806,69 @@ class VeraView extends (window.BaseView || class {}) {
     const sb = () => this.supabase;
     const defs = {
       product: {
-        label: 'Producto', icon: 'fa-box',
+        label: __('Producto'), icon: 'fa-box',
         load: async () => {
           const { data } = await sb().from('products')
             .select('id, nombre_producto, tipo_producto')
             .eq('organization_id', orgId).order('nombre_producto', { ascending: true }).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_producto || 'Producto sin nombre', meta: r.tipo_producto || '' }));
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_producto || __('Producto sin nombre'), meta: r.tipo_producto || '' }));
         }
       },
       campaign: {
         // Campañas REALES = sincronizadas desde Meta/Google (last_synced_at no nulo).
-        label: 'Campaña', icon: 'fa-bullhorn',
+        label: __('Campaña'), icon: 'fa-bullhorn',
         load: async () => {
           const { data } = await sb().from('campaigns')
             .select('id, nombre_campana, status')
             .eq('organization_id', orgId).not('last_synced_at', 'is', null)
             .order('created_at', { ascending: false }).limit(300);
-          const st = { active: 'Activa', paused: 'Pausada', draft: 'Borrador', ended: 'Finalizada', archived: 'Archivada' };
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_campana || 'Campaña sin nombre', meta: st[r.status] || r.status || '' }));
+          const st = { active: __('Activa'), paused: __('Pausada'), draft: __('Borrador'), ended: __('Finalizada'), archived: __('Archivada') };
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_campana || __('Campaña sin nombre'), meta: st[r.status] || r.status || '' }));
         }
       },
       campaign_objective: {
         // Campañas CONCEPTUALES = no sincronizadas (last_synced_at nulo); sirven
         // para dirigir la producción hacia un objetivo.
-        label: 'Objetivo de campaña', icon: 'fa-bullseye',
+        label: __('Objetivo de campaña'), icon: 'fa-bullseye',
         load: async () => {
           const { data } = await sb().from('campaigns')
             .select('id, nombre_campana')
             .eq('organization_id', orgId).is('last_synced_at', null)
             .order('created_at', { ascending: false }).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_campana || 'Objetivo sin nombre', meta: 'Conceptual' }));
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_campana || __('Objetivo sin nombre'), meta: __('Conceptual') }));
         }
       },
       audience_objective: {
-        label: 'Objetivo de audiencia', icon: 'fa-users',
+        label: __('Objetivo de audiencia'), icon: 'fa-users',
         load: async () => {
           const { data } = await sb().from('audience_personas')
             .select('id, name, awareness_level')
             .eq('organization_id', orgId).order('name', { ascending: true }).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.name || 'Audiencia sin nombre', meta: r.awareness_level || '' }));
+          return (data || []).map((r) => ({ id: r.id, name: r.name || __('Audiencia sin nombre'), meta: r.awareness_level || '' }));
         }
       },
       brief: {
-        label: 'Brief', icon: 'fa-clipboard',
+        label: __('Brief'), icon: 'fa-clipboard',
         load: async () => {
           const { data } = await sb().from('brand_containers')
             .select('id, nombre_marca, creative_brief')
             .eq('organization_id', orgId).order('created_at', { ascending: true }).limit(100);
           return (data || [])
             .filter((r) => r.creative_brief && String(r.creative_brief).trim())
-            .map((r) => ({ id: r.id, name: `Brief — ${r.nombre_marca || 'Marca'}`, meta: '' }));
+            .map((r) => ({ id: r.id, name: __('Brief — {marca}', { marca: r.nombre_marca || __('Marca') }), meta: '' }));
         }
       },
       service: {
-        label: 'Servicio', icon: 'fa-briefcase',
+        label: __('Servicio'), icon: 'fa-briefcase',
         load: async () => {
           const { data } = await sb().from('services')
             .select('id, nombre_servicio')
             .eq('organization_id', orgId).order('nombre_servicio', { ascending: true }).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_servicio || 'Servicio sin nombre', meta: '' }));
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_servicio || __('Servicio sin nombre'), meta: '' }));
         }
       },
       place: {
-        label: 'Lugar', icon: 'fa-map-pin',
+        label: __('Lugar'), icon: 'fa-map-pin',
         load: async () => {
           // brand_places no tiene organization_id → se filtra por entity_id de la org.
           const { data: ents } = await sb().from('brand_entities')
@@ -1877,11 +1877,11 @@ class VeraView extends (window.BaseView || class {}) {
           if (!ids.length) return [];
           const { data } = await sb().from('brand_places')
             .select('id, nombre_lugar').in('entity_id', ids).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_lugar || 'Lugar sin nombre', meta: '' }));
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_lugar || __('Lugar sin nombre'), meta: '' }));
         }
       },
       character: {
-        label: 'Personaje', icon: 'fa-masks-theater',
+        label: __('Personaje'), icon: 'fa-masks-theater',
         load: async () => {
           // brand_characters no tiene organization_id → se filtra por entity_id de la org.
           const { data: ents } = await sb().from('brand_entities')
@@ -1890,7 +1890,7 @@ class VeraView extends (window.BaseView || class {}) {
           if (!ids.length) return [];
           const { data } = await sb().from('brand_characters')
             .select('id, nombre_personaje').in('entity_id', ids).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_personaje || 'Personaje sin nombre', meta: '' }));
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_personaje || __('Personaje sin nombre'), meta: '' }));
         }
       }
     };
@@ -1927,18 +1927,18 @@ class VeraView extends (window.BaseView || class {}) {
     overlay.className = 'vera-lib-modal';
     overlay.innerHTML = `
       <div class="vera-lib-scrim" data-lib-close></div>
-      <div class="vera-lib-panel" role="dialog" aria-label="Adjuntar ${escapeHtml(def.label)}">
+      <div class="vera-lib-panel" role="dialog" aria-label="${__('Adjuntar {tipo}', { tipo: escapeHtml(def.label) })}">
         <div class="vera-lib-head">
-          <span class="vera-lib-title"><i class="fas ${def.icon}"></i> Adjuntar ${escapeHtml(def.label)}</span>
-          <button class="vera-lib-x" data-lib-close aria-label="Cerrar"><i class="fas fa-times"></i></button>
+          <span class="vera-lib-title"><i class="fas ${def.icon}"></i> ${__('Adjuntar {tipo}', { tipo: escapeHtml(def.label) })}</span>
+          <button class="vera-lib-x" data-lib-close aria-label="${__('Cerrar')}"><i class="fas fa-times"></i></button>
         </div>
-        <input type="text" class="vera-lib-search" id="veraLibSearch" placeholder="Buscar…" />
+        <input type="text" class="vera-lib-search" id="veraLibSearch" placeholder="${__('Buscar…')}" />
         <div class="vera-lib-list" id="veraLibList"></div>
         <div class="vera-lib-foot">
-          <span class="vera-lib-count" id="veraLibCount">0 seleccionados</span>
+          <span class="vera-lib-count" id="veraLibCount">${__('0 seleccionados')}</span>
           <div class="vera-lib-foot-actions">
-            <button class="vera-lib-cancel" data-lib-close>Cancelar</button>
-            <button class="vera-lib-confirm" id="veraLibConfirm">Adjuntar</button>
+            <button class="vera-lib-cancel" data-lib-close>${__('Cancelar')}</button>
+            <button class="vera-lib-confirm" id="veraLibConfirm">${__('Adjuntar')}</button>
           </div>
         </div>
       </div>`;
@@ -1950,14 +1950,14 @@ class VeraView extends (window.BaseView || class {}) {
     const confirmBtn = overlay.querySelector('#veraLibConfirm');
 
     const updateFoot = () => {
-      countEl.textContent = `${selected.size} seleccionado${selected.size === 1 ? '' : 's'}`;
+      countEl.textContent = __('{n} seleccionado(s)', { n: selected.size });
     };
 
     const renderList = (items) => {
       const q = (searchEl.value || '').trim().toLowerCase();
       const filtered = q ? items.filter((it) => it.name.toLowerCase().includes(q)) : items;
       if (!filtered.length) {
-        listEl.innerHTML = `<div class="vera-lib-empty">${items.length ? 'Sin resultados.' : `No hay ${def.label.toLowerCase()}s disponibles.`}</div>`;
+        listEl.innerHTML = `<div class="vera-lib-empty">${items.length ? __('Sin resultados.') : __('No hay {tipo}s disponibles.', { tipo: def.label.toLowerCase() })}</div>`;
         return;
       }
       listEl.innerHTML = filtered.map((it) => `
@@ -1972,7 +1972,7 @@ class VeraView extends (window.BaseView || class {}) {
 
     const load = async () => {
       if (!this._libCache[typeKey]) {
-        listEl.innerHTML = `<div class="vera-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div>`;
+        listEl.innerHTML = `<div class="vera-lib-loading"><i class="fas fa-spinner fa-spin"></i> ${__('Cargando…')}</div>`;
         try { this._libCache[typeKey] = await def.load(); }
         catch (_) { this._libCache[typeKey] = []; }
       }
@@ -2077,8 +2077,8 @@ class VeraView extends (window.BaseView || class {}) {
     if (!iframe) return;
     const srcdoc = iframe.srcdoc || iframe.getAttribute('srcdoc') || '';
     if (!srcdoc) return;
-    const rawLabel = block.querySelector('.vera-artifact-bar span')?.textContent || 'Artefacto';
-    const title = rawLabel.replace(/^[⬡\s]+/, '').replace(/·.*$/, '').trim() || 'Artefacto';
+    const rawLabel = block.querySelector('.vera-artifact-bar span')?.textContent || __('Artefacto');
+    const title = rawLabel.replace(/^[⬡\s]+/, '').replace(/·.*$/, '').trim() || __('Artefacto');
     this._showArtifactPanel({ srcdoc, title });
   }
 
@@ -2091,7 +2091,7 @@ class VeraView extends (window.BaseView || class {}) {
 
     this._artifactSrcdoc = srcdoc;
     this._artifactView = 'preview';
-    if (titleEl) titleEl.textContent = title || 'Artefacto';
+    if (titleEl) titleEl.textContent = title || __('Artefacto');
     this._renderArtifactBody();
 
     panel.hidden = false;
@@ -2320,7 +2320,7 @@ class VeraView extends (window.BaseView || class {}) {
       return fn.split(/\s+/)[0];
     }
     const org = (this.organizationName || '').trim();
-    if (org && org !== 'Organización') return org;
+    if (org && org !== __('Organización')) return org;
     return '';
   }
 
@@ -2336,14 +2336,14 @@ class VeraView extends (window.BaseView || class {}) {
     if (!list) return;
     this._setWelcomeMode(true);
     const name = this._greetingName();
-    const greeting = name ? `Hola, ${escapeHtml(name)}` : 'Hola';
+    const greeting = name ? __('Hola, {nombre}', { nombre: escapeHtml(name) }) : __('Hola');
     list.innerHTML = `
       <div class="gpt-welcome gpt-welcome--hero">
         <div class="gpt-welcome-mark">
           <img src="${VERA_AVATAR_SRC}" alt="Vera" width="60" height="60" decoding="async" />
         </div>
         <h1 class="gpt-welcome-title">${greeting}</h1>
-        <p class="gpt-welcome-subtitle">¿En qué puedo ayudarte hoy?</p>
+        <p class="gpt-welcome-subtitle">${__('¿En qué puedo ayudarte hoy?')}</p>
       </div>
     `;
   }
@@ -2510,7 +2510,7 @@ class VeraView extends (window.BaseView || class {}) {
         page = (i + total) % total;
         pagesEls.forEach((p, idx) => { p.hidden = idx !== page; });
         if (qEl) qEl.textContent = currentPage().getAttribute('data-q') || '';
-        if (countEl) countEl.textContent = `${page + 1} de ${total}`;
+        if (countEl) countEl.textContent = __('{n} de {total}', { n: page + 1, total });
         focusIdx = -1;
         clearFocus();
         refreshConfirm();
@@ -2691,7 +2691,7 @@ class VeraView extends (window.BaseView || class {}) {
       // Aprobacion de accion de escritura (gate APPROVE_ACTION): persiste el
       // TASK_EVENT (igual que el checkbox) y dispara a Vera para que ejecute.
       window._veraApproveAction = async (key, msgId, btnEl) => {
-        if (btnEl) { btnEl.disabled = true; btnEl.textContent = '✓ Aprobado'; btnEl.classList.add('vera-approve-pill--done'); }
+        if (btnEl) { btnEl.disabled = true; btnEl.textContent = __('✓ Aprobado'); btnEl.classList.add('vera-approve-pill--done'); }
         try {
           const token = this.supabase ? (await this.supabase.auth.getSession())?.data?.session?.access_token : null;
           await fetch(getAiTaskEventUrl(), {
@@ -2707,7 +2707,7 @@ class VeraView extends (window.BaseView || class {}) {
             }),
           });
         } catch (err) { console.warn('approve failed', err); }
-        this.sendMessage('Aprobado, procede con la accion.');
+        this.sendMessage(__('Aprobado, procede con la accion.'));
       };
       window._veraOpenArtifact = (btnEl) => this._openArtifactPanel(btnEl);
     }
@@ -2719,7 +2719,7 @@ class VeraView extends (window.BaseView || class {}) {
     if (!list.length) return '';
     const items = list.map(a => {
       const type = String(a.type || '').toLowerCase();
-      const name = escapeHtml(a.name || 'archivo');
+      const name = escapeHtml(a.name || __('archivo'));
       const url = a.url || '#';
       if (type === 'image') {
         return `<a class="gpt-msg-att gpt-msg-att--image" href="${escapeHtml(url)}" target="_blank" rel="noopener">
@@ -2982,22 +2982,22 @@ class VeraView extends (window.BaseView || class {}) {
             <p class="vera-clarify-q">${esc(firstQ)}</p>
             <div class="vera-clarify-tools">
               ${multiPage ? `<div class="vera-clarify-pager">
-                <button type="button" class="vera-clarify-prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
-                <span class="vera-clarify-count">1 de ${pages.length}</span>
-                <button type="button" class="vera-clarify-next" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
+                <button type="button" class="vera-clarify-prev" aria-label="${__('Anterior')}"><i class="fas fa-chevron-left"></i></button>
+                <span class="vera-clarify-count">${__('{n} de {total}', { n: 1, total: pages.length })}</span>
+                <button type="button" class="vera-clarify-next" aria-label="${__('Siguiente')}"><i class="fas fa-chevron-right"></i></button>
               </div>` : ''}
-              <button type="button" class="vera-clarify-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+              <button type="button" class="vera-clarify-close" aria-label="${__('Cerrar')}"><i class="fas fa-times"></i></button>
             </div>
           </div>
           <div class="vera-clarify-pages">${pagesHtml}</div>
           <div class="vera-clarify-more">
             <button type="button" class="vera-clarify-morebtn" data-vera-more>
               <span class="vera-opt-num vera-opt-num--pencil"><i class="fas fa-pen"></i></span>
-              <span class="vera-clarify-more-text">Algo más</span>
+              <span class="vera-clarify-more-text">${__('Algo más')}</span>
             </button>
             <div class="vera-clarify-actions">
-              <button type="button" class="vera-clarify-skip" data-vera-skip>Omitir</button>
-              <button type="button" class="vera-clarify-confirm" data-vera-confirm hidden disabled>Confirmar</button>
+              <button type="button" class="vera-clarify-skip" data-vera-skip>${__('Omitir')}</button>
+              <button type="button" class="vera-clarify-confirm" data-vera-confirm hidden disabled>${__('Confirmar')}</button>
             </div>
           </div>
         </div>`;
@@ -3036,7 +3036,7 @@ class VeraView extends (window.BaseView || class {}) {
         const actionsHtml = block.actions.map(a => {
           const safe = String(a ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
           return `
-          <button class="vera-action-pill" title="Click para preguntarle esto a Vera" onclick="window._veraSendAction && window._veraSendAction('${safe}')">${esc(a)}</button>`;
+          <button class="vera-action-pill" title="${__('Click para preguntarle esto a Vera')}" onclick="window._veraSendAction && window._veraSendAction('${safe}')">${esc(a)}</button>`;
         }).join('');
         return `<div class="vera-actions-row">${actionsHtml}</div>`;
       }
@@ -3044,7 +3044,7 @@ class VeraView extends (window.BaseView || class {}) {
         // Gate de escritura: boton de aprobacion (en vez del checkbox crudo).
         const aMsgId = block._msgId || '';
         const aKey = esc(block.key || '');
-        return `<div class="vera-actions-row"><button class="vera-action-pill vera-approve-pill" title="Aprobar y ejecutar esta accion" onclick="window._veraApproveAction && window._veraApproveAction('${aKey}', ${JSON.stringify(aMsgId)}, this)">✓ Aprobar y ejecutar</button></div>`;
+        return `<div class="vera-actions-row"><button class="vera-action-pill vera-approve-pill" title="${__('Aprobar y ejecutar esta accion')}" onclick="window._veraApproveAction && window._veraApproveAction('${aKey}', ${JSON.stringify(aMsgId)}, this)">${__('✓ Aprobar y ejecutar')}</button></div>`;
       }
       case 'confirm': {
         const msgId = block._msgId || '';
@@ -3055,18 +3055,18 @@ class VeraView extends (window.BaseView || class {}) {
         return `<div class="vera-confirm-block" data-msg-id="${esc(msgId)}">
           <div class="vera-confirm-header">
             <span class="vera-confirm-icon">⚠</span>
-            <span class="vera-confirm-title">Tarea de alto costo detectada</span>
+            <span class="vera-confirm-title">${__('Tarea de alto costo detectada')}</span>
           </div>
           <div class="vera-confirm-estimate">
             <strong>$${usd} USD</strong>
             <span class="vera-confirm-sep">·</span>
-            <span class="vera-confirm-minutes">${mins} min</span>
+            <span class="vera-confirm-minutes">${__('{mins} min', { mins })}</span>
           </div>
           ${reasonsHtml ? `<ul class="vera-confirm-reasons">${reasonsHtml}</ul>` : ''}
           <div class="vera-confirm-actions">
-            <button class="vera-confirm-btn vera-confirm-btn-primary" onclick="${handler('authorize')}">Autorizar</button>
-            <button class="vera-confirm-btn" onclick="${handler('simplify')}">Simplificar</button>
-            <button class="vera-confirm-btn vera-confirm-btn-cancel" onclick="${handler('cancel')}">Cancelar</button>
+            <button class="vera-confirm-btn vera-confirm-btn-primary" onclick="${handler('authorize')}">${__('Autorizar')}</button>
+            <button class="vera-confirm-btn" onclick="${handler('simplify')}">${__('Simplificar')}</button>
+            <button class="vera-confirm-btn vera-confirm-btn-cancel" onclick="${handler('cancel')}">${__('Cancelar')}</button>
           </div>
         </div>`;
       }
@@ -3213,13 +3213,13 @@ class VeraView extends (window.BaseView || class {}) {
       const isArtifact = type === 'artifact';
       const blockClass = isArtifact ? 'vera-artifact-block' : 'vera-html-block';
       const frameClass = isArtifact ? 'vera-artifact-frame' : 'vera-sandbox-frame';
-      const barLabel = isArtifact ? '⬡ Artifact · VERA' : '⬡ Vista · VERA';
+      const barLabel = isArtifact ? __('⬡ Artifact · VERA') : __('⬡ Vista · VERA');
       const iframeHtml =
         '<div class="' + blockClass + ' vera-canvas-block">' +
           '<div class="vera-artifact-bar">' +
             '<span>' + barLabel + '</span>' +
             '<button type="button" class="vera-artifact-open" onclick="window._veraOpenArtifact && window._veraOpenArtifact(this)">' +
-              '<i class="fas fa-expand-alt"></i> Abrir en panel' +
+              '<i class="fas fa-expand-alt"></i> ' + __('Abrir en panel') +
             '</button>' +
           '</div>' +
           '<iframe class="' + frameClass + '" ' +
@@ -3330,8 +3330,8 @@ class VeraView extends (window.BaseView || class {}) {
           block.querySelectorAll('button').forEach((b) => { b.disabled = true; });
           const tag = document.createElement('div');
           tag.className = 'vera-confirm-status';
-          const labels = { authorize: '✓ Autorizado', simplify: '✓ Autorizado (version simplificada)', cancel: '✕ Cancelado' };
-          tag.textContent = labels[action] || `accion: ${action}`;
+          const labels = { authorize: __('✓ Autorizado'), simplify: __('✓ Autorizado (version simplificada)'), cancel: __('✕ Cancelado') };
+          tag.textContent = labels[action] || __('accion: {action}', { action });
           block.appendChild(tag);
         }
         if (action === 'cancel') return;
@@ -3452,7 +3452,7 @@ class VeraView extends (window.BaseView || class {}) {
             };
           } catch (e) {
             console.warn('ECharts init error:', e?.message || e);
-            node.innerHTML = `<div class="gpt-viz--error" style="padding:14px;">Error renderizando chart: ${escapeHtml(e?.message || 'unknown')}</div>`;
+            node.innerHTML = `<div class="gpt-viz--error" style="padding:14px;">${__('Error renderizando chart:')} ${escapeHtml(e?.message || 'unknown')}</div>`;
           }
         });
       }).catch((e) => console.warn('ECharts load error:', e?.message || e));
@@ -3547,8 +3547,8 @@ class VeraView extends (window.BaseView || class {}) {
     if (document.hasFocus()) return; // Solo si el usuario está en otra pestaña
 
     try {
-      const notif = new Notification('Vera terminó de trabajar', {
-        body: text ? text.slice(0, 100) : 'Tu solicitud está lista.',
+      const notif = new Notification(__('Vera terminó de trabajar'), {
+        body: text ? text.slice(0, 100) : __('Tu solicitud está lista.'),
         icon: '/img/vera-avatar.png',
         badge: '/img/vera-avatar.png',
         tag: 'vera-response', // Reemplaza notificaciones anteriores
@@ -3683,7 +3683,7 @@ class VeraView extends (window.BaseView || class {}) {
 
   /* ── Adjuntos: subir a Supabase Storage ─────────────── */
   async _uploadAttachment(att, file) {
-    if (!this.supabase?.storage) throw new Error('Supabase storage no disponible');
+    if (!this.supabase?.storage) throw new Error(__('Supabase storage no disponible'));
     const orgId = this.aiState.organization_id;
     const userId = this.userId || 'anon';
     const safeName = (file.name || 'archivo')
@@ -3696,7 +3696,7 @@ class VeraView extends (window.BaseView || class {}) {
       .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
     if (error) throw error;
     const { data } = this.supabase.storage.from('org-assets').getPublicUrl(path);
-    if (!data?.publicUrl) throw new Error('No se obtuvo URL pública');
+    if (!data?.publicUrl) throw new Error(__('No se obtuvo URL pública'));
     att.url = data.publicUrl;
     att.path = path;
   }
@@ -3726,7 +3726,7 @@ class VeraView extends (window.BaseView || class {}) {
         .catch((err) => {
           console.error('[VeraView] upload falló:', err?.message || err);
           att.status = 'error';
-          att.error = err?.message || 'Error al subir';
+          att.error = err?.message || __('Error al subir');
         })
         .finally(() => {
           this._renderAttachChips();
@@ -3747,13 +3747,13 @@ class VeraView extends (window.BaseView || class {}) {
       const stateClass = a.status === 'error' ? ' gpt-attach-chip--error'
                         : a.status === 'uploading' ? ' gpt-attach-chip--uploading' : '';
       const spinner = a.status === 'uploading' ? '<i class="fas fa-spinner fa-spin"></i>' : '';
-      const errorTitle = a.status === 'error' ? ` title="${escapeHtml(a.error || 'Error')}"` : '';
+      const errorTitle = a.status === 'error' ? ` title="${escapeHtml(a.error || __('Error'))}"` : '';
       return `
         <span class="gpt-attach-chip${stateClass}" data-att-id="${escapeHtml(a.id)}"${errorTitle}>
           <i class="fas ${icon}"></i>
           <span class="gpt-attach-chip-name">${escapeHtml(a.name)}</span>
           ${spinner}
-          <button type="button" class="gpt-attach-chip-remove" data-remove-id="${escapeHtml(a.id)}" aria-label="Quitar">
+          <button type="button" class="gpt-attach-chip-remove" data-remove-id="${escapeHtml(a.id)}" aria-label="${__('Quitar')}">
             <i class="fas fa-times"></i>
           </button>
         </span>`;
@@ -3864,7 +3864,7 @@ class VeraView extends (window.BaseView || class {}) {
               this.hideTypingIndicator();
               this.aiState.isLoading = false;
               if (userMsg) this._removeMessage(userMsg.id);
-              window.DemoGuard.showSignupModal('seguir conversando con Vera');
+              window.DemoGuard.showSignupModal(__('seguir conversando con Vera'));
               return;
             }
           } catch (_) { /* fall through to generic error */ }
@@ -3934,7 +3934,7 @@ class VeraView extends (window.BaseView || class {}) {
       const errMsg = {
         id: `local-error-${Date.now()}`,
         role: 'error',
-        content: 'Lo siento, hubo un error al procesar tu mensaje. Inténtalo de nuevo.',
+        content: __('Lo siento, hubo un error al procesar tu mensaje. Inténtalo de nuevo.'),
         created_at: new Date().toISOString()
       };
       this.aiState.messages.push(errMsg);
@@ -3951,15 +3951,15 @@ class VeraView extends (window.BaseView || class {}) {
     if (!estimate) return true;
     const usdMin = Number(estimate.usd_min || 0).toFixed(2);
     const usdMax = Number(estimate.usd_max || 0).toFixed(2);
-    const minutesRange = `${estimate.minutes_min || 1}-${estimate.minutes_max || 10} min`;
+    const minutesRange = `${estimate.minutes_min || 1}-${estimate.minutes_max || 10} ${__('min')}`;
     const reasons = (estimate.reasons || []).map(r => `  • ${r}`).join('\n');
     const msg =
-      `⚠️ Vera detectó una tarea potencialmente costosa.\n\n` +
-      `Costo estimado: $${usdMin} – $${usdMax} USD\n` +
-      `Duración estimada: ${minutesRange}\n\n` +
-      `Razones:\n${reasons}\n\n` +
-      `¿Continuar con esta tarea?\n` +
-      `(Aceptar = ejecutar · Cancelar = replantear o descartar)`;
+      `${__('⚠️ Vera detectó una tarea potencialmente costosa.')}\n\n` +
+      `${__('Costo estimado:')} $${usdMin} – $${usdMax} USD\n` +
+      `${__('Duración estimada:')} ${minutesRange}\n\n` +
+      `${__('Razones:')}\n${reasons}\n\n` +
+      `${__('¿Continuar con esta tarea?')}\n` +
+      `${__('(Aceptar = ejecutar · Cancelar = replantear o descartar)')}`;
     return window.confirm(msg);
   }
 
@@ -3971,12 +3971,12 @@ class VeraView extends (window.BaseView || class {}) {
 
   /* ── Mensajes de espera cíclicos (cuando no hay status del backend) ─────── */
   _getWaitMessage(elapsedMs) {
-    if (elapsedMs < 15_000)  return 'Vera está pensando…';
-    if (elapsedMs < 40_000)  return 'Vera está procesando tu solicitud…';
-    if (elapsedMs < 90_000)  return 'Vera está trabajando en segundo plano…';
-    if (elapsedMs < 180_000) return 'Vera está realizando tareas complejas — puede tardar unos minutos…';
-    if (elapsedMs < 360_000) return 'Vera sigue activa — procesando en background…';
-    return 'Vera lleva un buen rato trabajando. Si hay algo urgente, puedes enviar otro mensaje.';
+    if (elapsedMs < 15_000)  return __('Vera está pensando…');
+    if (elapsedMs < 40_000)  return __('Vera está procesando tu solicitud…');
+    if (elapsedMs < 90_000)  return __('Vera está trabajando en segundo plano…');
+    if (elapsedMs < 180_000) return __('Vera está realizando tareas complejas — puede tardar unos minutos…');
+    if (elapsedMs < 360_000) return __('Vera sigue activa — procesando en background…');
+    return __('Vera lleva un buen rato trabajando. Si hay algo urgente, puedes enviar otro mensaje.');
   }
 
   /* ── Espera la respuesta async SOLO via Supabase Realtime ───────────────── */
@@ -4115,7 +4115,7 @@ class VeraView extends (window.BaseView || class {}) {
             const timeoutMsg = {
               id: `local-timeout-${Date.now()}`,
               role: 'error',
-              content: 'Vera sigue trabajando en segundo plano. Recarga la página cuando quieras ver su respuesta.',
+              content: __('Vera sigue trabajando en segundo plano. Recarga la página cuando quieras ver su respuesta.'),
               created_at: new Date().toISOString()
             };
             this.aiState.messages.push(timeoutMsg);
@@ -4139,7 +4139,7 @@ class VeraView extends (window.BaseView || class {}) {
         // Sin cliente Supabase no podemos escuchar — informar al usuario
         finish({
           role: 'error',
-          content: 'No se pudo conectar al tiempo real. Recarga la página para ver la respuesta de Vera.'
+          content: __('No se pudo conectar al tiempo real. Recarga la página para ver la respuesta de Vera.')
         });
         return;
       }
@@ -4164,7 +4164,7 @@ class VeraView extends (window.BaseView || class {}) {
         console.warn('VeraView: Realtime no disponible:', e.message);
         finish({
           role: 'error',
-          content: 'No se pudo conectar al tiempo real. Recarga la página para ver la respuesta de Vera.'
+          content: __('No se pudo conectar al tiempo real. Recarga la página para ver la respuesta de Vera.')
         });
       }
     });

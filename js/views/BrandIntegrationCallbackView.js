@@ -21,7 +21,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
         <div id="bic-container" class="bic-wrap">
           <div class="bic-spinner">
             <i class="fas fa-sync-alt fa-spin"></i>
-            <p>Conectando integración…</p>
+            <p>${window.__('Conectando integración…')}</p>
           </div>
         </div>
       </div>`;
@@ -154,8 +154,8 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       <div class="bic-page-picker">
         <div class="bic-page-picker-head">
           <i class="fab fa-facebook bic-fb-icon"></i>
-          <h2>¿Qué página quieres conectar?</h2>
-          <p>Tu cuenta tiene acceso a <strong>${pages.length} páginas</strong>. Elige la que corresponde a esta marca.</p>
+          <h2>${window.__('¿Qué página quieres conectar?')}</h2>
+          <p>${window.__('Tu cuenta tiene acceso a <strong>{n} páginas</strong>. Elige la que corresponde a esta marca.', { n: pages.length })}</p>
         </div>
         <ul class="bic-page-list" id="bicPageList">
           ${pages.map((pg) => {
@@ -171,7 +171,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
                       : `<div class="bic-page-avatar bic-page-avatar--placeholder"><i class="fab fa-facebook"></i></div>`}
                     <div class="bic-page-text">
                       <strong>${this._esc(pg.name)}</strong>
-                      ${hasIg ? `<span class="bic-page-ig"><i class="fab fa-instagram"></i> Instagram Business vinculado</span>` : ''}
+                      ${hasIg ? `<span class="bic-page-ig"><i class="fab fa-instagram"></i> ${window.__('Instagram Business vinculado')}</span>` : ''}
                     </div>
                   </div>
                 </label>
@@ -180,10 +180,10 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
         </ul>
         <div class="bic-page-actions">
           <button id="bicConfirmBtn" class="bic-confirm-btn" disabled>
-            <i class="fas fa-check"></i> Conectar esta página
+            <i class="fas fa-check"></i> ${window.__('Conectar esta página')}
           </button>
         </div>
-        <p class="bic-page-note">Solo se conectará la página elegida. El resto quedará excluido.</p>
+        <p class="bic-page-note">${window.__('Solo se conectará la página elegida. El resto quedará excluido.')}</p>
       </div>`;
 
     const list = document.getElementById('bicPageList');
@@ -203,7 +203,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       if (!page) return;
 
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…';
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${window.__('Guardando…')}`;
 
       try {
         await this._savePage(integId, page);
@@ -211,8 +211,8 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       } catch (err) {
         console.error('[BrandIntegrationCallback] save page error:', err);
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-check"></i> Conectar esta página';
-        alert('No se pudo guardar. Inténtalo de nuevo.');
+        btn.innerHTML = `<i class="fas fa-check"></i> ${window.__('Conectar esta página')}`;
+        alert(window.__('No se pudo guardar. Inténtalo de nuevo.'));
       }
     });
   }
@@ -226,19 +226,17 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
     wrap.innerHTML = `
       <div class="bic-error">
         <i class="fas fa-flag"></i>
-        <h2>No se encontraron páginas</h2>
+        <h2>${window.__('No se encontraron páginas')}</h2>
         <p>
-          Tu cuenta de Facebook no devolvió ninguna Página. Puede ocurrir si no seleccionaste
-          ninguna en el paso de autorización de Meta.
+          ${window.__('Tu cuenta de Facebook no devolvió ninguna Página. Puede ocurrir si no seleccionaste ninguna en el paso de autorización de Meta.')}
         </p>
         <ul style="text-align:left;font-size:.88rem;line-height:1.6;color:var(--text-secondary);max-width:440px;margin:0 auto 1.25rem">
-          <li>Haz clic en <strong>Volver</strong> y vuelve a conectar Meta.</li>
-          <li>En el diálogo de Facebook, en el paso <em>"Elige qué páginas conectar"</em>,
-              asegúrate de seleccionar al menos una página antes de continuar.</li>
-          <li>Si no eres Administrador de ninguna Página, primero crea una o pide acceso de administrador.</li>
+          <li>${window.__('Haz clic en <strong>Volver</strong> y vuelve a conectar Meta.')}</li>
+          <li>${window.__('En el diálogo de Facebook, en el paso <em>"Elige qué páginas conectar"</em>, asegúrate de seleccionar al menos una página antes de continuar.')}</li>
+          <li>${window.__('Si no eres Administrador de ninguna Página, primero crea una o pide acceso de administrador.')}</li>
         </ul>
         <button type="button" class="bic-confirm-btn" data-bic-back="1">
-          <i class="fas fa-arrow-left"></i> Volver
+          <i class="fas fa-arrow-left"></i> ${window.__('Volver')}
         </button>
       </div>`;
     wrap.querySelector('[data-bic-back="1"]')?.addEventListener('click', () => this._redirect(safeReturn));
@@ -281,10 +279,10 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
     wrap.innerHTML = `
       <div class="bic-success">
         <div class="bic-success-check"><i class="fas fa-check"></i></div>
-        <h2>Integracion conectada</h2>
-        <p>${this._esc(label)} se conecto correctamente a tu marca.</p>
+        <h2>${window.__('Integración conectada')}</h2>
+        <p>${window.__('{label} se conectó correctamente a tu marca.', { label: this._esc(label) })}</p>
         <button type="button" class="bic-confirm-btn" data-bic-continue="1">
-          <i class="fas fa-arrow-right"></i> Continuar
+          <i class="fas fa-arrow-right"></i> ${window.__('Continuar')}
         </button>
       </div>`;
     wrap.querySelector('[data-bic-continue="1"]')?.addEventListener('click', () => {
@@ -301,10 +299,10 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
     wrap.innerHTML = `
       <div class="bic-error">
         <i class="fas fa-exclamation-triangle"></i>
-        <h2>Error al conectar</h2>
+        <h2>${window.__('Error al conectar')}</h2>
         <p>${this._esc(msg)}</p>
         <button type="button" class="bic-confirm-btn" data-bic-back="1">
-          <i class="fas fa-arrow-left"></i> Volver a Marcas
+          <i class="fas fa-arrow-left"></i> ${window.__('Volver a Marcas')}
         </button>
       </div>`;
     wrap.querySelector('[data-bic-back="1"]')?.addEventListener('click', () => this._redirect('/brands'));

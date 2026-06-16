@@ -80,7 +80,7 @@ class BrandstorageView extends BaseView {
     <div class="brand-cards-zone">
         <div class="brand-card card-storage-library">
             <div class="card-header">
-                <h2 class="card-title">Sub-marcas</h2>
+                <h2 class="card-title">${__('Sub-marcas')}</h2>
                 <span class="card-title-counter" id="brandStorageCount">0</span>
             </div>
             <div class="card-content">
@@ -687,7 +687,7 @@ class BrandstorageView extends BaseView {
 
     const logoUrl = String(this.brandContainerData?.logo_url || '').trim();
     if (logoUrl) {
-      inner.innerHTML = `<img src="${this.escapeHtml(logoUrl)}" alt="Logo organización" class="brand-corner-logo-img" loading="lazy">`;
+      inner.innerHTML = `<img src="${this.escapeHtml(logoUrl)}" alt="${__('Logo organización')}" class="brand-corner-logo-img" loading="lazy">`;
       btn.classList.add('has-logo');
     } else {
       inner.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i>';
@@ -756,7 +756,7 @@ class BrandstorageView extends BaseView {
     const el = document.getElementById('brandMarketLabel');
     if (!el) return;
     el.removeAttribute('data-field');
-    el.textContent = 'Workspace · identidad organizacional';
+    el.textContent = __('Workspace · identidad organizacional');
     el.style.cursor = 'default';
     el.style.opacity = '0.72';
   }
@@ -788,7 +788,7 @@ class BrandstorageView extends BaseView {
     } catch (_) {
       opts = [];
     }
-    if (!arr.length) return 'Sin mercado definido';
+    if (!arr.length) return __('Sin mercado definido');
     return arr
       .map((v) => {
         const s = String(v).trim();
@@ -830,14 +830,14 @@ class BrandstorageView extends BaseView {
     }
 
     grid.innerHTML = rows.map((item) => {
-      const name = this.escapeHtml(item.nombre_marca || 'Sin nombre');
+      const name = this.escapeHtml(item.nombre_marca || __('Sin nombre'));
       const mercado = this.escapeHtml(this.formatMercadoObjetivoTile(item));
       const updatedRaw = item.updated_at
         ? new Date(item.updated_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
         : '';
       const updatedLine = updatedRaw
-        ? `Última actualización: ${this.escapeHtml(updatedRaw)}`
-        : 'Sin actualizaciones';
+        ? __('Última actualización: {d}', { d: this.escapeHtml(updatedRaw) })
+        : __('Sin actualizaciones');
       const prods = this.getProductionCountForContainer(item.id);
       const prodsStr = this.escapeHtml(String(prods));
 
@@ -848,9 +848,9 @@ class BrandstorageView extends BaseView {
             <div class="brand-storage-tile__mercado">${mercado}</div>
           </div>
           <div class="brand-storage-tile__bottom">
-            <div class="brand-storage-tile__prods" aria-label="Producciones">
+            <div class="brand-storage-tile__prods" aria-label="${__('Producciones')}">
               <span class="brand-storage-tile__prods-num">${prodsStr}</span>
-              <span class="brand-storage-tile__prods-label">Producciones</span>
+              <span class="brand-storage-tile__prods-label">${__('Producciones')}</span>
             </div>
             <div class="brand-storage-tile__updated">${updatedLine}</div>
           </div>
@@ -870,7 +870,7 @@ class BrandstorageView extends BaseView {
 
     const entities = this.brandEntities || [];
     if (!entities.length) {
-      container.innerHTML = '<p class="entities-empty">Sin entidades. Agrega productos o servicios como entidades de marca.</p>';
+      container.innerHTML = `<p class="entities-empty">${__('Sin entidades. Agrega productos o servicios como entidades de marca.')}</p>`;
     } else {
       container.innerHTML = entities.map(e => {
         const places = (this.brandPlaces || []).filter(p => p.entity_id === e.id);
@@ -879,14 +879,14 @@ class BrandstorageView extends BaseView {
           : '';
         return `
           <div class="entity-row" data-entity-id="${e.id}">
-            <span class="entity-type-badge entity-type-${this.escapeHtml(e.entity_type || 'other')}">${this.escapeHtml(e.entity_type || 'otro')}</span>
+            <span class="entity-type-badge entity-type-${this.escapeHtml(e.entity_type || 'other')}">${this.escapeHtml(e.entity_type || __('otro'))}</span>
             <div class="entity-main">
               <span class="entity-name">${this.escapeHtml(e.name)}</span>
               ${places.length ? `<div class="entity-places">${placesHtml}</div>` : ''}
             </div>
             ${e.price != null ? `<span class="entity-price">${e.price} ${this.escapeHtml(e.currency || 'USD')}</span>` : ''}
-            <button type="button" class="entity-add-place-btn btn btn-ghost btn-sm" data-entity-id="${e.id}" title="Agregar lugar"><i class="fas fa-map-pin"></i></button>
-            <button type="button" class="entity-delete-btn" data-entity-id="${e.id}" title="Eliminar" aria-label="Eliminar entidad">×</button>
+            <button type="button" class="entity-add-place-btn btn btn-ghost btn-sm" data-entity-id="${e.id}" title="${__('Agregar lugar')}"><i class="fas fa-map-pin"></i></button>
+            <button type="button" class="entity-delete-btn" data-entity-id="${e.id}" title="${__('Eliminar')}" aria-label="${__('Eliminar entidad')}">×</button>
           </div>
         `;
       }).join('');
@@ -1024,13 +1024,13 @@ class BrandstorageView extends BaseView {
       const colorId = color.id;
       return `
         <div class="color-swatch" style="background: ${hex};" data-color-id="${colorId}">
-          <button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button>
+          <button type="button" class="color-delete-btn" title="${__('Eliminar')}" aria-label="${__('Eliminar color')}">×</button>
         </div>
       `;
     }).join('');
 
     const addBtnHtml = colors.length < MAX_COLORS
-      ? `<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>`
+      ? `<button type="button" class="color-swatch-add-btn" title="${__('Agregar color')}" aria-label="${__('Agregar color')}"><span>+</span></button>`
       : '';
 
     container.innerHTML = swatchesHtml + addBtnHtml;
@@ -1092,7 +1092,7 @@ class BrandstorageView extends BaseView {
     container.classList.remove('identity-files--empty');
 
     container.innerHTML = identityAssets.map((asset) => {
-      const fileName = asset.file_name || 'Archivo identidad';
+      const fileName = asset.file_name || __('Archivo identidad');
       const fileType = String(asset.file_type || '').toLowerCase();
       const fileUrl = String(asset.file_url || '').trim();
       const isImage = fileType.includes('image') || /\.(png|jpe?g|gif|webp|svg)$/i.test(fileName);
@@ -1106,8 +1106,8 @@ class BrandstorageView extends BaseView {
             <div class="identity-file-name">${this.escapeHtml(fileName)}</div>
           </div>
           <div class="assets-file-actions">
-            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="Abrir archivo identidad"><i class="fas fa-external-link-alt"></i></a>` : ''}
-            <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="Eliminar archivo identidad">
+            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir archivo identidad')}"><i class="fas fa-external-link-alt"></i></a>` : ''}
+            <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="${__('Eliminar archivo identidad')}">
               <i class="fas fa-trash-alt"></i>
             </button>
           </div>
@@ -1142,14 +1142,14 @@ class BrandstorageView extends BaseView {
     container.classList.remove('assets-files--empty');
 
     container.innerHTML = assets.map((asset) => {
-      const fileName = asset.file_name || 'Archivo';
+      const fileName = asset.file_name || __('Archivo');
       const fileType = String(asset.file_type || asset.asset_type || 'file').toLowerCase();
       const fileUrl = String(asset.file_url || '').trim();
       const uploadDate = asset.created_at ? new Date(asset.created_at) : null;
       const isImage = fileType.includes('image') || /\.(png|jpe?g|gif|webp|svg)$/i.test(fileName);
 
       const dateText = uploadDate
-        ? `Subido · ${uploadDate.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}`
+        ? __('Subido · {d}', { d: uploadDate.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }) })
         : '';
 
       const preview = isImage && fileUrl
@@ -1164,8 +1164,8 @@ class BrandstorageView extends BaseView {
             ${dateText ? `<div class="identity-file-date">${dateText}</div>` : ''}
           </div>
           <div class="assets-file-actions">
-            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="Abrir asset"><i class="fas fa-external-link-alt"></i></a>` : ''}
-            <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="Eliminar asset">
+            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir asset')}"><i class="fas fa-external-link-alt"></i></a>` : ''}
+            <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="${__('Eliminar asset')}">
               <i class="fas fa-trash-alt"></i>
             </button>
           </div>
@@ -1224,7 +1224,7 @@ class BrandstorageView extends BaseView {
     return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  renderInfoTags(values, fallback = 'Sin datos') {
+  renderInfoTags(values, fallback = __('Sin datos')) {
     const list = Array.isArray(values) ? values.filter(Boolean).map((v) => String(v).trim()).filter(Boolean) : [];
     if (!list.length) {
       return `<span class="brand-storage-info-empty">${this.escapeHtml(fallback)}</span>`;
@@ -1234,10 +1234,10 @@ class BrandstorageView extends BaseView {
 
   renderInfoJson(value) {
     if (!value || typeof value !== 'object') {
-      return '<span class="brand-storage-info-empty">Sin datos</span>';
+      return `<span class="brand-storage-info-empty">${__('Sin datos')}</span>`;
     }
     const entries = Object.entries(value).filter(([, v]) => v != null && String(v).trim() !== '');
-    if (!entries.length) return '<span class="brand-storage-info-empty">Sin datos</span>';
+    if (!entries.length) return `<span class="brand-storage-info-empty">${__('Sin datos')}</span>`;
     return `<pre class="brand-storage-info-json">${this.escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
   }
 
@@ -1298,11 +1298,11 @@ class BrandstorageView extends BaseView {
           .map((value) => `
             <span class="info-brand-multiselect__chip">
               <span class="info-brand-multiselect__chip-label">${this.escapeHtml(this.getBrandArrayValueLabel(fieldName, value))}</span>
-              <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="Quitar ${this.escapeHtml(this.getBrandArrayValueLabel(fieldName, value))}">×</button>
+              <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="${__('Quitar {x}', { x: this.escapeHtml(this.getBrandArrayValueLabel(fieldName, value)) })}">×</button>
             </span>
           `)
           .join('')
-      : '<span class="info-brand-multiselect__placeholder">Seleccionar</span>';
+      : `<span class="info-brand-multiselect__placeholder">${__('Seleccionar')}</span>`;
     const optionsHtml = options.map((option) => {
       const optionValue = String(option.value || '');
       const optionLabel = String(option.label || optionValue);
@@ -1331,7 +1331,7 @@ class BrandstorageView extends BaseView {
     const normalized = rawValue == null ? '' : String(rawValue);
     const currentLabel = fieldName === 'nicho_core'
       ? BrandstorageView.getNichoCoreLabel(normalized)
-      : (normalized || 'Seleccionar');
+      : (normalized || __('Seleccionar'));
     const optionsHtml = (options || []).map((opt) => {
       const value = String(opt?.value ?? '');
       const label = String(opt?.label ?? value);
@@ -1394,7 +1394,7 @@ class BrandstorageView extends BaseView {
             : ''
           }
           <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="fas fa-image"></i></div>
-          <input type="file" accept="image/*" class="info-logo-input" title="Subir logo">
+          <input type="file" accept="image/*" class="info-logo-input" title="${__('Subir logo')}">
         </div>
       </div>
     `;
@@ -1429,7 +1429,7 @@ class BrandstorageView extends BaseView {
       }
     } catch (error) {
       console.error(`BrandstorageView saveContainerField ${fieldName}:`, error);
-      alert(`Error al guardar ${fieldName}.`);
+      alert(__('Error al guardar {field}.', { field: fieldName }));
     } finally {
       this.savingFields.delete(saveKey);
     }
@@ -1451,7 +1451,7 @@ class BrandstorageView extends BaseView {
       if (this.brandData) this.brandData[fieldName] = v;
     } catch (error) {
       console.error('BrandstorageView saveBrandField:', error);
-      alert(`Error al guardar ${fieldName}.`);
+      alert(__('Error al guardar {field}.', { field: fieldName }));
     } finally {
       this.savingFields.delete(saveKey);
     }
@@ -1529,7 +1529,7 @@ class BrandstorageView extends BaseView {
       const removeBtn = document.createElement('span');
       removeBtn.className = 'editable-tag-remove';
       removeBtn.innerHTML = ' ×';
-      removeBtn.setAttribute('aria-label', 'Quitar');
+      removeBtn.setAttribute('aria-label', __('Quitar'));
       removeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         const newValues = currentValues.filter(v => v !== val);
@@ -1544,7 +1544,7 @@ class BrandstorageView extends BaseView {
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'editable-tag-input';
-    input.placeholder = '+ Agregar';
+    input.placeholder = __('+ Agregar');
     input.style.minWidth = '80px';
     input.style.flex = '1';
 

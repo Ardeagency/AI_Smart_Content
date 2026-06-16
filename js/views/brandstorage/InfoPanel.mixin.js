@@ -147,21 +147,21 @@
           ? `href="${row.actionHref}" target="_blank" rel="noopener noreferrer"`
           : `href="${row.actionHref}" data-route="${row.actionHref}"`;
         const linkedIcon = row.connected
-          ? '<span class="info-connect-linked" title="Conectado" aria-hidden="true"><i class="fas fa-link"></i></span>'
+          ? `<span class="info-connect-linked" title="${__('Conectado')}" aria-hidden="true"><i class="fas fa-link"></i></span>`
           : '';
         const hint = row.hint
           ? `<span class="info-connect-hint">${this.escapeHtml(row.hint)}</span>`
           : '';
         const actionHtml = row.needsAccountSelection
-          ? `<button type="button" class="info-connect-action is-connect" data-select-google-accounts="1" data-brand-container-id="${this.escapeHtml(String(brandContainerId || ''))}" aria-label="Elegir cuenta de Google Ads">${__('Elegir cuenta')}</button>`
+          ? `<button type="button" class="info-connect-action is-connect" data-select-google-accounts="1" data-brand-container-id="${this.escapeHtml(String(brandContainerId || ''))}" aria-label="${__('Elegir cuenta de Google Ads')}">${__('Elegir cuenta')}</button>`
           : row.connected
           ? `
             <div class="info-connect-actions">
               <a class="info-connect-action is-open" ${linkAttrs} aria-label="${__('Abrir {x}', { x: this.escapeHtml(row.label) })}">${__('Abrir')}</a>
-              <button type="button" class="info-connect-action is-disconnect" data-disconnect-provider="${this.escapeHtml(row.oauthProvider || '')}" data-brand-container-id="${this.escapeHtml(String(brandContainerId || ''))}" aria-label="Desconectar ${this.escapeHtml(row.label)}">Desconectar</button>
+              <button type="button" class="info-connect-action is-disconnect" data-disconnect-provider="${this.escapeHtml(row.oauthProvider || '')}" data-brand-container-id="${this.escapeHtml(String(brandContainerId || ''))}" aria-label="${__('Desconectar {x}', { x: this.escapeHtml(row.label) })}">${__('Desconectar')}</button>
             </div>
           `
-          : `<button type="button" class="info-connect-action is-connect" data-connect-provider="${this.escapeHtml(row.oauthProvider || '')}" data-connect-label="${this.escapeHtml(row.label)}" data-brand-container-id="${this.escapeHtml(String(brandContainerId || ''))}" aria-label="Conectar ${this.escapeHtml(row.label)}">Conectar</button>`;
+          : `<button type="button" class="info-connect-action is-connect" data-connect-provider="${this.escapeHtml(row.oauthProvider || '')}" data-connect-label="${this.escapeHtml(row.label)}" data-brand-container-id="${this.escapeHtml(String(brandContainerId || ''))}" aria-label="${__('Conectar {x}', { x: this.escapeHtml(row.label) })}">${__('Conectar')}</button>`;
         return `
           <li class="info-connect-row" data-connect-key="${this.escapeHtml(row.key)}">
             <span class="info-connect-icon" aria-hidden="true"><i class="${this.escapeHtml(row.iconClass)}"></i></span>
@@ -177,7 +177,7 @@
 
     return `
       <section class="info-section info-section-connect" aria-labelledby="infoConnectHeading">
-        <h3 class="info-section-title" id="infoConnectHeading">En la web</h3>
+        <h3 class="info-section-title" id="infoConnectHeading">${__('En la web')}</h3>
         <ul class="info-connect-list" role="list">${items}</ul>
       </section>`;
     },
@@ -327,9 +327,9 @@
       <li class="info-asset-row">
         <div class="info-asset-preview"><span class="info-asset-icon" aria-hidden="true"><i class="fas fa-cube"></i></span></div>
         <div class="info-asset-main">
-          <input type="text" class="info-brand-textarea" data-entity-id="${this.escapeHtml(String(row.id || ''))}" data-entity-field="name" value="${this.escapeHtml(String(row.name || ''))}" placeholder="Nombre entidad">
+          <input type="text" class="info-brand-textarea" data-entity-id="${this.escapeHtml(String(row.id || ''))}" data-entity-field="name" value="${this.escapeHtml(String(row.name || ''))}" placeholder="${__('Nombre entidad')}">
           <textarea class="info-brand-textarea" data-entity-id="${this.escapeHtml(String(row.id || ''))}" data-entity-field="description" rows="2" spellcheck="true" placeholder="${__('Descripción de entidad')}">${this.escapeHtml(String(row.description || ''))}</textarea>
-          <span class="info-asset-meta">${this.escapeHtml(row.entity_type || 'Sin tipo')}</span>
+          <span class="info-asset-meta">${this.escapeHtml(row.entity_type || __('Sin tipo'))}</span>
         </div>
         <span class="info-connect-external" aria-hidden="true"><i class="fas fa-file-alt"></i></span>
       </li>
@@ -343,7 +343,7 @@
     },
 
   renderBrandContainerInfoContent(item) {
-    const name = this.escapeHtml(item?.nombre_marca || 'Sub-marca');
+    const name = this.escapeHtml(item?.nombre_marca || __('Sub-marca'));
     const slogan = this.escapeHtml(String(item?.brand_slogan || item?.propuesta_valor || '').trim());
     const href = this.escapeHtml(this.getBrandContainerHref(item?.id));
     const updated = item?.updated_at ? this.formatInfoDate(item.updated_at) : '';
@@ -399,7 +399,7 @@
     infoCard.setAttribute('data-brand-container-id', String(item.id));
     infoCard.innerHTML = `
       <div class="card-header">
-        <h2 class="card-title">INFO · ${this.escapeHtml(item.nombre_marca || 'Sub-marca')}</h2>
+        <h2 class="card-title">INFO · ${this.escapeHtml(item.nombre_marca || __('Sub-marca'))}</h2>
       </div>
       <div class="card-content-expanded" id="infoPanelContent">${this.renderBrandContainerInfoContent(item)}</div>
     `;
@@ -559,7 +559,7 @@
       if (actionButton) {
         actionButton.disabled = true;
         actionButton.dataset.originalText = actionButton.textContent || __('Conectar');
-        actionButton.textContent = 'Conectando...';
+        actionButton.textContent = __('Conectando...');
       }
 
       const { data: { session } } = await this.supabase.auth.getSession();
@@ -634,7 +634,7 @@
     if (!selected || !selected.length) return;
 
     try {
-      if (actionButton) { actionButton.disabled = true; actionButton.textContent = 'Guardando...'; }
+      if (actionButton) { actionButton.disabled = true; actionButton.textContent = __('Guardando...'); }
       const { data: { session } } = await this.supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) { alert(__('Sesión no válida. Inicia sesión y vuelve a intentar.')); return; }
@@ -670,12 +670,12 @@
         </label>`).join('');
       overlay.innerHTML = `
         <div style="background:#141517;border:1px solid #242424;border-radius:12px;max-width:440px;width:90%;padding:1.25rem;">
-          <h3 style="margin:0 0 .25rem;color:#fff;">¿Qué cuenta de Google Ads es de esta marca?</h3>
-          <p style="margin:0 0 1rem;font-size:.85rem;color:#999;">Elige solo la(s) cuenta(s) de esta marca. Solo se importarán esas — no todo tu portafolio.</p>
+          <h3 style="margin:0 0 .25rem;color:#fff;">${__('¿Qué cuenta de Google Ads es de esta marca?')}</h3>
+          <p style="margin:0 0 1rem;font-size:.85rem;color:#999;">${__('Elige solo la(s) cuenta(s) de esta marca. Solo se importarán esas — no todo tu portafolio.')}</p>
           <div style="max-height:300px;overflow:auto;margin-bottom:1rem;">${rows}</div>
           <div style="display:flex;gap:.5rem;justify-content:flex-end;">
-            <button type="button" class="gads-cancel" style="padding:.5rem 1rem;background:transparent;border:1px solid #333;border-radius:8px;color:#ccc;cursor:pointer;">Cancelar</button>
-            <button type="button" class="gads-confirm" style="padding:.5rem 1rem;background:#3b82f6;border:none;border-radius:8px;color:#fff;cursor:pointer;">Conectar cuenta(s)</button>
+            <button type="button" class="gads-cancel" style="padding:.5rem 1rem;background:transparent;border:1px solid #333;border-radius:8px;color:#ccc;cursor:pointer;">${__('Cancelar')}</button>
+            <button type="button" class="gads-confirm" style="padding:.5rem 1rem;background:#3b82f6;border:none;border-radius:8px;color:#fff;cursor:pointer;">${__('Conectar cuenta(s)')}</button>
           </div>
         </div>`;
       document.body.appendChild(overlay);
@@ -684,7 +684,7 @@
       overlay.addEventListener('click', (e) => { if (e.target === overlay) close(null); });
       overlay.querySelector('.gads-confirm').addEventListener('click', () => {
         const ids = Array.from(overlay.querySelectorAll('.gads-acc-chk:checked')).map((c) => c.value);
-        if (!ids.length) { alert('Selecciona al menos una cuenta.'); return; }
+        if (!ids.length) { alert(__('Selecciona al menos una cuenta.')); return; }
         close(ids);
       });
     });
@@ -775,7 +775,7 @@
         cancel.addEventListener('click', () => close());
       } else {
         // Fallback: prompt nativo
-        const raw = window.prompt('Ingresa tu dominio Shopify (ej. mitienda.myshopify.com):');
+        const raw = window.prompt(__('Ingresa tu dominio Shopify (ej. mitienda.myshopify.com):'));
         if (raw == null) return safeResolve(null);
         const normalized = normalize(raw);
         if (!normalized) {
@@ -804,7 +804,7 @@
       if (actionButton) {
         actionButton.disabled = true;
         actionButton.dataset.originalText = actionButton.textContent || __('Desconectar');
-        actionButton.textContent = 'Desconectando...';
+        actionButton.textContent = __('Desconectando...');
       }
 
       const { data: { session } } = await this.supabase.auth.getSession();
@@ -960,7 +960,7 @@
         });
         valueEl.textContent = field === 'nicho_core'
           ? (window.BrandSchema?.getNichoCoreLabel ? window.BrandSchema.getNichoCoreLabel(selected) : selected)
-          : (selected || 'Seleccionar');
+          : (selected || __('Seleccionar'));
         wrap.setAttribute('data-selected', selected);
       };
 
@@ -1783,7 +1783,7 @@
           }
         }
         if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-          alert('Este campo debe ser un objeto JSON (por ejemplo { "clave": "valor" }).');
+          alert(__('Este campo debe ser un objeto JSON (por ejemplo { "clave": "valor" }).'));
           return;
         }
         const prev = JSON.stringify(this.brandData?.[field] || {});
@@ -1976,7 +1976,7 @@
     const normalized = rawValue == null ? '' : String(rawValue);
     const currentLabel = fieldName === 'nicho_core'
       ? (window.BrandSchema?.getNichoCoreLabel ? window.BrandSchema.getNichoCoreLabel(normalized) : normalized)
-      : (normalized || 'Seleccionar');
+      : (normalized || __('Seleccionar'));
     const optionsHtml = (options || []).map((opt) => {
       const value = String(opt?.value ?? '');
       const label = String(opt?.label ?? value);

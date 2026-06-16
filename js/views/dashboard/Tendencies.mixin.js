@@ -311,12 +311,12 @@
         const sm = SENT[String(s.sentiment || '').toLowerCase()] || null;
         const vel = Number(s.velocity_score);
         return `
-          <div class="tend-signal" title="relevancia ${Number(s.relevance_score).toFixed(2)}">
+          <div class="tend-signal" title="${__('relevancia {n}', { n: Number(s.relevance_score).toFixed(2) })}">
             <span class="tend-signal-kw">${this._esc(s.keyword)}</span>
             <span class="tend-signal-meta">
               <span class="tend-signal-src">${this._esc(this._prettyPlatform(s.source))}</span>
               ${Number.isFinite(vel) ? `<span class="tend-signal-vel"><i class="fas fa-bolt"></i> ${vel.toFixed(0)}</span>` : ''}
-              ${sm ? `<span class="tend-signal-sent" style="color:${sm.color};">${sm.label}</span>` : ''}
+              ${sm ? `<span class="tend-signal-sent" style="color:${sm.color};">${__(sm.label)}</span>` : ''}
             </span>
           </div>`;
       }).join('');

@@ -164,36 +164,36 @@ class PlanesView extends BaseView {
    */
   ctaForPlan(plan) {
     if (this.isCurrentPlan(plan)) {
-      return { label: 'Current plan', icon: 'fa-check', kind: 'current' };
+      return { label: window.__('Plan actual'), icon: 'fa-check', kind: 'current' };
     }
     if (!this._hasActiveSubscription() || !this.currentPlan) {
-      return { label: 'Start 14-day trial', icon: 'fa-arrow-right', kind: 'trial' };
+      return { label: window.__('Iniciar prueba de 14 días'), icon: 'fa-arrow-right', kind: 'trial' };
     }
     const cur = Number(this.currentPlan.display_order) || 0;
     const tgt = Number(plan.display_order) || 0;
-    if (tgt > cur) return { label: `Upgrade to ${plan.name}`, icon: 'fa-arrow-up', kind: 'upgrade' };
-    if (tgt < cur) return { label: `Downgrade to ${plan.name}`, icon: 'fa-arrow-down', kind: 'downgrade' };
-    return { label: `Switch to ${plan.name}`, icon: 'fa-exchange-alt', kind: 'switch' };
+    if (tgt > cur) return { label: window.__('Mejorar a {nombre}', { nombre: plan.name }), icon: 'fa-arrow-up', kind: 'upgrade' };
+    if (tgt < cur) return { label: window.__('Bajar a {nombre}', { nombre: plan.name }), icon: 'fa-arrow-down', kind: 'downgrade' };
+    return { label: window.__('Cambiar a {nombre}', { nombre: plan.name }), icon: 'fa-exchange-alt', kind: 'switch' };
   }
 
   buildFeatureBullets(plan) {
     const items = [];
     if (plan.credits_monthly > 0) {
-      items.push(`<strong>${plan.credits_monthly.toLocaleString('en-US')}</strong> credits / month`);
+      items.push(`<strong>${plan.credits_monthly.toLocaleString('en-US')}</strong> ${window.__('créditos / mes')}`);
     }
     if (plan.max_handles > 0) {
-      items.push(`Up to <strong>${plan.max_handles}</strong> brands / handles`);
+      items.push(window.__('Hasta <strong>{n}</strong> marcas / perfiles', { n: plan.max_handles }));
     }
     const storage = this.formatStorage(plan.storage_mb);
-    if (storage) items.push(`<strong>${storage}</strong> of Storage`);
-    if (plan.features?.vera_full) items.push(`Vera full (chat + actions)`);
-    else if (plan.features?.vera_basic) items.push(`Vera chat`);
-    if (plan.features?.team_seats) items.push(`<strong>${plan.features.team_seats}</strong> members`);
-    if (plan.features?.insights) items.push(`Insights & analytics`);
-    if (plan.features?.brand_kits) items.push(`<strong>${plan.features.brand_kits}</strong> brand kits`);
-    if (plan.features?.sub_brands) items.push(`Sub-brands (multi-client)`);
-    if (plan.features?.custom_domain) items.push(`Custom domain`);
-    if (plan.features?.priority_support) items.push(`Priority support`);
+    if (storage) items.push(`<strong>${storage}</strong> ${window.__('de Almacenamiento')}`);
+    if (plan.features?.vera_full) items.push(window.__('Vera completa (chat + acciones)'));
+    else if (plan.features?.vera_basic) items.push(window.__('Vera chat'));
+    if (plan.features?.team_seats) items.push(`<strong>${plan.features.team_seats}</strong> ${window.__('miembros')}`);
+    if (plan.features?.insights) items.push(window.__('Insights y analítica'));
+    if (plan.features?.brand_kits) items.push(`<strong>${plan.features.brand_kits}</strong> ${window.__('brand kits')}`);
+    if (plan.features?.sub_brands) items.push(window.__('Sub-marcas (multi-cliente)'));
+    if (plan.features?.custom_domain) items.push(window.__('Dominio personalizado'));
+    if (plan.features?.priority_support) items.push(window.__('Soporte prioritario'));
     return items;
   }
 
@@ -203,14 +203,14 @@ class PlanesView extends BaseView {
     return `
       <div class="planes-page">
         <header class="planes-hero">
-          <h1 class="planes-hero-bg-word" aria-hidden="true">PLANS</h1>
+          <h1 class="planes-hero-bg-word" aria-hidden="true">${window.__('PLANES')}</h1>
           <div class="planes-hero-content">
             <div class="planes-org-context glass-black" id="planesOrgContext" hidden></div>
 
-            <div class="planes-billing-toggle" role="group" aria-label="Billing period">
-              <button type="button" class="planes-toggle-btn" data-billing="monthly" id="toggleMonthly">Monthly</button>
+            <div class="planes-billing-toggle" role="group" aria-label="${window.__('Periodo de facturación')}">
+              <button type="button" class="planes-toggle-btn" data-billing="monthly" id="toggleMonthly">${window.__('Mensual')}</button>
               <button type="button" class="planes-toggle-btn active" data-billing="annual" id="toggleAnnual">
-                Annual <span class="planes-toggle-discount">Save 20%</span>
+                ${window.__('Anual')} <span class="planes-toggle-discount">${window.__('Ahorra 20%')}</span>
               </button>
             </div>
 
@@ -240,7 +240,7 @@ class PlanesView extends BaseView {
     if (!orgId) { host.hidden = true; return; }
 
     const orgName = (window.currentOrgName || '').trim();
-    const planName = this.currentPlan?.name || (this._hasActiveSubscription() ? '—' : 'No active plan');
+    const planName = this.currentPlan?.name || (this._hasActiveSubscription() ? '—' : window.__('Sin plan activo'));
     const hasActive = this._hasActiveSubscription();
 
     const renewISO = this.currentSubscription?.current_period_end;
@@ -253,7 +253,7 @@ class PlanesView extends BaseView {
     const creditsBlock = credits && Number(credits.credits_total) > 0
       ? this._usageMeter({
           icon: 'fa-bolt',
-          label: 'Credits',
+          label: window.__('Créditos'),
           used: Number(credits.credits_total) - Number(credits.credits_available || 0),
           total: Number(credits.credits_total),
           formatter: (n) => Number(n).toLocaleString('en-US'),
@@ -264,7 +264,7 @@ class PlanesView extends BaseView {
     const storageBlock = storage && Number(storage.max_mb) > 0
       ? this._usageMeter({
           icon: 'fa-database',
-          label: 'Storage',
+          label: window.__('Almacenamiento'),
           used: Number(storage.used_mb) || 0,
           total: Number(storage.max_mb) || 0,
           formatter: (n) => this.formatStorage(n) || `${n} MB`,
@@ -275,10 +275,10 @@ class PlanesView extends BaseView {
     host.innerHTML = `
       <div class="planes-org-context-main">
         <div class="planes-org-context-org">
-          <span class="planes-org-context-eyebrow">${hasActive ? 'Currently on' : 'No active plan for'}</span>
+          <span class="planes-org-context-eyebrow">${hasActive ? window.__('Plan actual') : window.__('Sin plan activo para')}</span>
           <span class="planes-org-context-plan">${this.escapeHtml(orgName ? `${orgName} · ${planName}` : planName)}</span>
         </div>
-        ${renewLabel ? `<div class="planes-org-context-renew"><i class="fas fa-sync-alt"></i> Renews on ${this.escapeHtml(renewLabel)}</div>` : ''}
+        ${renewLabel ? `<div class="planes-org-context-renew"><i class="fas fa-sync-alt"></i> ${window.__('Renueva el')} ${this.escapeHtml(renewLabel)}</div>` : ''}
       </div>
       ${(creditsBlock || storageBlock) ? `<div class="planes-org-context-usage">${creditsBlock}${storageBlock}</div>` : ''}
     `;
@@ -305,7 +305,7 @@ class PlanesView extends BaseView {
     const container = this.container?.querySelector('#planesList');
     if (!container) return;
     if (!this.plans.length) {
-      container.innerHTML = `<div class="planes-empty">No plans available.</div>`;
+      container.innerHTML = `<div class="planes-empty">${window.__('No hay planes disponibles.')}</div>`;
       return;
     }
     container.innerHTML = this.plans.map((plan) => this._planCardHtml(plan)).join('');
@@ -327,21 +327,21 @@ class PlanesView extends BaseView {
 
     const priceBlock = `
       <div class="plan-card-price">
-        <span class="price-monthly">$${monthly}<span>/mo</span></span>
+        <span class="price-monthly">$${monthly}<span>${window.__('/mes')}</span></span>
         <span class="price-annual">
-          $${monthlyEquivalent}<span>/mo</span>
-          <small>billed annually · $${annual.toLocaleString('en-US')}/yr</small>
+          $${monthlyEquivalent}<span>${window.__('/mes')}</span>
+          <small>${window.__('facturado anualmente')} · $${annual.toLocaleString('en-US')}${window.__('/año')}</small>
         </span>
       </div>`;
 
     const badges = [];
-    if (current) badges.push('<span class="plan-card-badge plan-card-badge--current">Current plan</span>');
-    else if (plan.is_popular) badges.push('<span class="plan-card-badge">Recommended</span>');
+    if (current) badges.push(`<span class="plan-card-badge plan-card-badge--current">${window.__('Plan actual')}</span>`);
+    else if (plan.is_popular) badges.push(`<span class="plan-card-badge">${window.__('Recomendado')}</span>`);
 
     // En la card del plan actual no renderizamos botón: queda un status footer
     // discreto en su lugar (el badge "Current plan" arriba ya identifica la card).
     const ctaBlock = current
-      ? `<div class="plan-card-current-status"><i class="fas fa-check-circle"></i> You're on this plan</div>`
+      ? `<div class="plan-card-current-status"><i class="fas fa-check-circle"></i> ${window.__('Estás en este plan')}</div>`
       : `<button type="button"
           class="btn btn-primary plan-card-cta plan-card-cta--${cta.kind}"
           data-plan="${plan.id}"
@@ -410,7 +410,7 @@ class PlanesView extends BaseView {
   _handleCtaKind(kind, planId) {
     if (kind === 'current') return;
     if (!window.billingService) {
-      const msg = 'Billing service no disponible. Recarga la página.';
+      const msg = window.__('Billing service no disponible. Recarga la página.');
       if (window.showToast) window.showToast(msg, 'error'); else alert(msg);
       return;
     }

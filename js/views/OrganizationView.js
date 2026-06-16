@@ -78,24 +78,24 @@ class OrganizationView extends BaseView {
 <div class="organization-container">
   <div class="organization-header">
     <div>
-      <h1 class="organization-title">Configuración</h1>
-      <p class="organization-subtitle">Panel técnico-administrativo de la organización. La identidad de marca se gestiona en <a href="#" data-route="brand">Identity</a>.</p>
+      <h1 class="organization-title">${__('Configuración')}</h1>
+      <p class="organization-subtitle">${__('Panel técnico-administrativo de la organización. La identidad de marca se gestiona en')} <a href="#" data-route="brand">Identity</a>.</p>
     </div>
     <div class="organization-header-status" id="orgHeaderStatus"></div>
   </div>
 
   <div class="organization-tabs" role="tablist">
-    <button type="button" class="tab-btn active" data-tab="general" role="tab" aria-selected="true">General</button>
-    <button type="button" class="tab-btn" data-tab="members" role="tab" aria-selected="false">Miembros</button>
-    <button type="button" class="tab-btn" data-tab="plan" role="tab" aria-selected="false">Plan & Límites</button>
-    <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">Facturación</button>
-    <button type="button" class="tab-btn" data-tab="engine" role="tab" aria-selected="false">AI Engine</button>
-    <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">Actividad</button>
-    <button type="button" class="tab-btn" data-tab="monitoring" role="tab" aria-selected="false">Monitoreo</button>
-    <button type="button" class="tab-btn" data-tab="health" role="tab" aria-selected="false">Salud de Vera</button>
-    <button type="button" class="tab-btn" data-tab="notifications" role="tab" aria-selected="false">Notificaciones</button>
-    <button type="button" class="tab-btn" data-tab="security" role="tab" aria-selected="false">Seguridad</button>
-    <button type="button" class="tab-btn tab-btn--danger" data-tab="danger" role="tab" aria-selected="false">Danger zone</button>
+    <button type="button" class="tab-btn active" data-tab="general" role="tab" aria-selected="true">${__('General')}</button>
+    <button type="button" class="tab-btn" data-tab="members" role="tab" aria-selected="false">${__('Miembros')}</button>
+    <button type="button" class="tab-btn" data-tab="plan" role="tab" aria-selected="false">${__('Plan & Límites')}</button>
+    <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">${__('Facturación')}</button>
+    <button type="button" class="tab-btn" data-tab="engine" role="tab" aria-selected="false">${__('AI Engine')}</button>
+    <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">${__('Actividad')}</button>
+    <button type="button" class="tab-btn" data-tab="monitoring" role="tab" aria-selected="false">${__('Monitoreo')}</button>
+    <button type="button" class="tab-btn" data-tab="health" role="tab" aria-selected="false">${__('Salud de Vera')}</button>
+    <button type="button" class="tab-btn" data-tab="notifications" role="tab" aria-selected="false">${__('Notificaciones')}</button>
+    <button type="button" class="tab-btn" data-tab="security" role="tab" aria-selected="false">${__('Seguridad')}</button>
+    <button type="button" class="tab-btn tab-btn--danger" data-tab="danger" role="tab" aria-selected="false">${__('Danger zone')}</button>
   </div>
 
   <div class="organization-content">
@@ -103,18 +103,18 @@ class OrganizationView extends BaseView {
     <!-- ── General ──────────────────────────────────────── -->
     <div class="tab-content active" id="generalTab" role="tabpanel">
       <section class="org-section org-section-form">
-        <h2>Datos regionales</h2>
-        <p class="org-section-desc">Estos valores afectan reportes, scheduling y formato de fechas/idioma del workspace.</p>
+        <h2>${__('Datos regionales')}</h2>
+        <p class="org-section-desc">${__('Estos valores afectan reportes, scheduling y formato de fechas/idioma del workspace.')}</p>
         <form id="orgGeneralForm" class="org-form">
           <div class="org-form-grid">
             <div class="form-group">
-              <label for="orgTimezone">Zona horaria</label>
+              <label for="orgTimezone">${__('Zona horaria')}</label>
               <select id="orgTimezone" class="form-input"></select>
             </div>
             <div class="form-group">
-              <label for="orgLocale">Idioma</label>
+              <label for="orgLocale">${__('Idioma')}</label>
               <select id="orgLocale" class="form-input">
-                <option value="es">Español</option>
+                <option value="es">${__('Español')}</option>
                 <option value="en">English</option>
                 <option value="pt">Português</option>
               </select>
@@ -122,7 +122,7 @@ class OrganizationView extends BaseView {
           </div>
           <div class="org-form-actions">
             <button type="submit" class="btn btn-primary" id="orgGeneralSubmit">
-              <i class="fas fa-save"></i> Guardar
+              <i class="fas fa-save"></i> ${__('Guardar')}
             </button>
           </div>
         </form>
@@ -131,13 +131,13 @@ class OrganizationView extends BaseView {
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Marcas gestionadas</h2>
-            <p class="org-section-desc">Cada <strong>marca gestionada</strong> es un workspace de datos aislado dentro de tu organización: tiene sus propias audiencias, campañas, integraciones (Meta, Shopify, etc.), sensores de monitoreo y producción de contenido. Sirve para que una agencia o equipo opere varias marcas/regiones bajo una misma cuenta, sin que se mezclen datos entre ellas.</p>
-            <p class="org-section-desc"><strong>Provisión gestionada:</strong> cada marca requiere configuración inicial del equipo de plataforma (mapeo de fuentes, conexión de cuentas, calibrado de Vera). Por eso no se crean desde la app — son un servicio adicional con costo por marca activa.</p>
+            <h2>${__('Marcas gestionadas')}</h2>
+            <p class="org-section-desc">${__('Cada <strong>marca gestionada</strong> es un workspace de datos aislado dentro de tu organización: tiene sus propias audiencias, campañas, integraciones (Meta, Shopify, etc.), sensores de monitoreo y producción de contenido. Sirve para que una agencia o equipo opere varias marcas/regiones bajo una misma cuenta, sin que se mezclen datos entre ellas.')}</p>
+            <p class="org-section-desc">${__('<strong>Provisión gestionada:</strong> cada marca requiere configuración inicial del equipo de plataforma (mapeo de fuentes, conexión de cuentas, calibrado de Vera). Por eso no se crean desde la app — son un servicio adicional con costo por marca activa.')}</p>
           </div>
-          <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nueva%20marca%20gestionada&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20una%20nueva%20marca%20gestionada%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-primary" id="orgRequestBrandBtn"><i class="fas fa-paper-plane"></i> Solicitar nueva marca</a>
+          <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nueva%20marca%20gestionada&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20una%20nueva%20marca%20gestionada%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-primary" id="orgRequestBrandBtn"><i class="fas fa-paper-plane"></i> ${__('Solicitar nueva marca')}</a>
         </div>
-        <div class="org-subbrands-list" id="orgSubbrandsList"><p class="org-placeholder">Cargando…</p></div>
+        <div class="org-subbrands-list" id="orgSubbrandsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
     </div>
 
@@ -146,18 +146,18 @@ class OrganizationView extends BaseView {
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Miembros</h2>
-            <p class="org-section-desc">Roles y acceso al workspace.</p>
+            <h2>${__('Miembros')}</h2>
+            <p class="org-section-desc">${__('Roles y acceso al workspace.')}</p>
           </div>
           <button type="button" class="btn btn-primary" id="orgInviteBtn">
-            <i class="fas fa-user-plus"></i> Invitar
+            <i class="fas fa-user-plus"></i> ${__('Invitar')}
           </button>
         </div>
         <div class="org-members-list" id="orgMembersList"></div>
       </section>
 
       <section class="org-section" id="orgInvitationsSection" hidden>
-        <h3>Invitaciones pendientes</h3>
+        <h3>${__('Invitaciones pendientes')}</h3>
         <div class="org-invitations-list" id="orgInvitationsList"></div>
       </section>
     </div>
@@ -165,52 +165,52 @@ class OrganizationView extends BaseView {
     <!-- ── Plan & Límites ───────────────────────────────── -->
     <div class="tab-content" id="planTab" role="tabpanel">
       <section class="org-section">
-        <h2>Plan actual</h2>
-        <div class="org-plan-card" id="orgPlanCard"><p class="org-placeholder">Cargando…</p></div>
+        <h2>${__('Plan actual')}</h2>
+        <div class="org-plan-card" id="orgPlanCard"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
 
       <section class="org-section">
-        <h2>Almacenamiento</h2>
-        <p class="org-section-desc">Cuota incluida en tu plan. Para ampliar contacta a soporte.</p>
+        <h2>${__('Almacenamiento')}</h2>
+        <p class="org-section-desc">${__('Cuota incluida en tu plan. Para ampliar contacta a soporte.')}</p>
         <div class="org-usage-card" id="orgStorageCard"></div>
       </section>
 
       <section class="org-section">
-        <h2>Créditos del ciclo</h2>
+        <h2>${__('Créditos del ciclo')}</h2>
         <div class="org-usage-card" id="orgCreditsCard"></div>
       </section>
 
       <section class="org-section">
-        <h2>Límites de uso de IA</h2>
-        <p class="org-section-desc">Define topes diarios y mensuales de consumo del agente Vera. Si alcanzas el umbral de aviso, recibirás una notificación; al llegar al cap se bloquean nuevas operaciones automáticas.</p>
+        <h2>${__('Límites de uso de IA')}</h2>
+        <p class="org-section-desc">${__('Define topes diarios y mensuales de consumo del agente Vera. Si alcanzas el umbral de aviso, recibirás una notificación; al llegar al cap se bloquean nuevas operaciones automáticas.')}</p>
         <form id="orgCapsForm" class="org-form">
           <div class="org-form-grid">
             <div class="form-group">
-              <label for="capsDaily">Cap diario (USD)</label>
-              <input type="number" min="0" step="0.01" id="capsDaily" class="form-input" placeholder="ej. 10">
+              <label for="capsDaily">${__('Cap diario (USD)')}</label>
+              <input type="number" min="0" step="0.01" id="capsDaily" class="form-input" placeholder="${__('ej. 10')}">
             </div>
             <div class="form-group">
-              <label for="capsMonthly">Cap mensual (USD)</label>
-              <input type="number" min="0" step="0.01" id="capsMonthly" class="form-input" placeholder="ej. 200">
+              <label for="capsMonthly">${__('Cap mensual (USD)')}</label>
+              <input type="number" min="0" step="0.01" id="capsMonthly" class="form-input" placeholder="${__('ej. 200')}">
             </div>
             <div class="form-group">
-              <label for="capsWarn">Umbral de aviso (%)</label>
-              <input type="number" min="0" max="100" step="1" id="capsWarn" class="form-input" placeholder="ej. 80">
+              <label for="capsWarn">${__('Umbral de aviso (%)')}</label>
+              <input type="number" min="0" max="100" step="1" id="capsWarn" class="form-input" placeholder="${__('ej. 80')}">
             </div>
             <div class="form-group">
-              <label for="capsConfirm">Umbral de confirmación (USD por op.)</label>
-              <input type="number" min="0" step="0.01" id="capsConfirm" class="form-input" placeholder="ej. 1.50">
+              <label for="capsConfirm">${__('Umbral de confirmación (USD por op.)')}</label>
+              <input type="number" min="0" step="0.01" id="capsConfirm" class="form-input" placeholder="${__('ej. 1.50')}">
             </div>
             <div class="form-group form-group--full">
               <label class="org-checkbox">
                 <input type="checkbox" id="capsConfirmEnabled">
-                <span>Pedir confirmación al usuario antes de operaciones que excedan el umbral por operación</span>
+                <span>${__('Pedir confirmación al usuario antes de operaciones que excedan el umbral por operación')}</span>
               </label>
             </div>
           </div>
           <div class="org-usage-card" id="orgAiCard" style="margin-top: 1rem;"></div>
           <div class="org-form-actions">
-            <button type="submit" class="btn btn-primary" id="orgCapsSubmit"><i class="fas fa-save"></i> Guardar límites</button>
+            <button type="submit" class="btn btn-primary" id="orgCapsSubmit"><i class="fas fa-save"></i> ${__('Guardar límites')}</button>
           </div>
         </form>
       </section>
@@ -221,47 +221,47 @@ class OrganizationView extends BaseView {
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Suscripción activa</h2>
-            <p class="org-section-desc">Estado de tu plan y próximo cobro.</p>
+            <h2>${__('Suscripción activa')}</h2>
+            <p class="org-section-desc">${__('Estado de tu plan y próximo cobro.')}</p>
           </div>
         </div>
-        <div class="org-billing-summary" id="orgBillingSummary"><p class="org-placeholder">Cargando…</p></div>
+        <div class="org-billing-summary" id="orgBillingSummary"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
 
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Historial de facturas</h2>
-            <p class="org-section-desc">Facturas pagadas y pagos únicos de paquetes de créditos.</p>
+            <h2>${__('Historial de facturas')}</h2>
+            <p class="org-section-desc">${__('Facturas pagadas y pagos únicos de paquetes de créditos.')}</p>
           </div>
         </div>
-        <div class="org-billing-invoices" id="orgBillingInvoices"><p class="org-placeholder">Cargando…</p></div>
+        <div class="org-billing-invoices" id="orgBillingInvoices"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
     </div>
 
     <!-- ── AI Engine ────────────────────────────────────── -->
     <div class="tab-content" id="engineTab" role="tabpanel">
       <section class="org-section">
-        <h2>Servidor AI Engine</h2>
-        <p class="org-section-desc">Servidor dedicado donde Vera procesa los scrapers, sensores y agentes para esta organización. Se aprovisiona en Hetzner Cloud y se suspende automáticamente tras inactividad para ahorrar costos.</p>
-        <div class="org-engine-server" id="orgEngineServer"><p class="org-placeholder">Cargando…</p></div>
+        <h2>${__('Servidor AI Engine')}</h2>
+        <p class="org-section-desc">${__('Servidor dedicado donde Vera procesa los scrapers, sensores y agentes para esta organización. Se aprovisiona en Hetzner Cloud y se suspende automáticamente tras inactividad para ahorrar costos.')}</p>
+        <div class="org-engine-server" id="orgEngineServer"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
 
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Scrapers (Apify, últimos 30 días)</h2>
-            <p class="org-section-desc">Costo y volumen real de las extracciones que ejecutó Vera para esta organización. Cada run trae datos públicos de Meta/TikTok/IG/etc. para alimentar sensores y briefs.</p>
+            <h2>${__('Scrapers (Apify, últimos 30 días)')}</h2>
+            <p class="org-section-desc">${__('Costo y volumen real de las extracciones que ejecutó Vera para esta organización. Cada run trae datos públicos de Meta/TikTok/IG/etc. para alimentar sensores y briefs.')}</p>
           </div>
         </div>
         <div class="org-engine-stats" id="orgScrapersStats"></div>
-        <h3 class="org-usage-subtitle">Últimas ejecuciones</h3>
-        <div class="org-scrapers-list" id="orgScrapersList"><p class="org-placeholder">Cargando…</p></div>
+        <h3 class="org-usage-subtitle">${__('Últimas ejecuciones')}</h3>
+        <div class="org-scrapers-list" id="orgScrapersList"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
 
       <section class="org-section">
-        <h2>Trend Engine (últimos 30 días)</h2>
-        <p class="org-section-desc">Pipeline de inteligencia: genera queries, recolecta señales del mercado, las puntúa y produce briefs estratégicos.</p>
+        <h2>${__('Trend Engine (últimos 30 días)')}</h2>
+        <p class="org-section-desc">${__('Pipeline de inteligencia: genera queries, recolecta señales del mercado, las puntúa y produce briefs estratégicos.')}</p>
         <div class="org-engine-stats" id="orgTrendStats"></div>
       </section>
     </div>
@@ -271,16 +271,16 @@ class OrganizationView extends BaseView {
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Ejecuciones recientes</h2>
-            <p class="org-section-desc">Últimos flujos ejecutados en la organización.</p>
+            <h2>${__('Ejecuciones recientes')}</h2>
+            <p class="org-section-desc">${__('Últimos flujos ejecutados en la organización.')}</p>
           </div>
-          <a href="#" class="btn btn-secondary btn-sm" id="orgActivityTasksLink">Historial completo</a>
+          <a href="#" class="btn btn-secondary btn-sm" id="orgActivityTasksLink">${__('Historial completo')}</a>
         </div>
-        <div class="org-runs-list" id="orgRunsList"><p class="org-placeholder">Cargando…</p></div>
+        <div class="org-runs-list" id="orgRunsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
 
       <section class="org-section">
-        <h2>Consumo de créditos (últimos 30 días)</h2>
+        <h2>${__('Consumo de créditos (últimos 30 días)')}</h2>
         <div class="org-usage-timeline" id="orgCreditsTimeline"></div>
       </section>
     </div>
@@ -290,38 +290,38 @@ class OrganizationView extends BaseView {
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Triggers activos</h2>
-            <p class="org-section-desc">Sensores configurados para esta organización. Para crear/editar usa la página de Monitoreo.</p>
+            <h2>${__('Triggers activos')}</h2>
+            <p class="org-section-desc">${__('Sensores configurados para esta organización. Para crear/editar usa la página de Monitoreo.')}</p>
           </div>
-          <a href="#" class="btn btn-secondary btn-sm" id="orgMonitoringLink">Abrir Monitoreo</a>
+          <a href="#" class="btn btn-secondary btn-sm" id="orgMonitoringLink">${__('Abrir Monitoreo')}</a>
         </div>
-        <div class="org-monitoring-list" id="orgMonitoringList"><p class="org-placeholder">Cargando…</p></div>
+        <div class="org-monitoring-list" id="orgMonitoringList"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
     </div>
 
     <!-- ── Salud de Vera ────────────────────────────────── -->
     <div class="tab-content" id="healthTab" role="tabpanel">
       <section class="org-section">
-        <h2>Estado del agente</h2>
-        <p class="org-section-desc">Acciones propuestas por Vera, ejecución de misiones y cola de trabajos.</p>
+        <h2>${__('Estado del agente')}</h2>
+        <p class="org-section-desc">${__('Acciones propuestas por Vera, ejecución de misiones y cola de trabajos.')}</p>
         <div class="org-health-grid" id="orgHealthGrid"></div>
       </section>
 
       <section class="org-section">
-        <h2>Errores recientes de misiones</h2>
-        <div class="org-mission-errors" id="orgMissionErrors"><p class="org-placeholder">Cargando…</p></div>
+        <h2>${__('Errores recientes de misiones')}</h2>
+        <div class="org-mission-errors" id="orgMissionErrors"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
     </div>
 
     <!-- ── Notificaciones ───────────────────────────────── -->
     <div class="tab-content" id="notificationsTab" role="tabpanel">
       <section class="org-section">
-        <h2>Notificaciones recientes</h2>
-        <div class="org-notifications-list" id="orgNotificationsList"><p class="org-placeholder">Cargando…</p></div>
+        <h2>${__('Notificaciones recientes')}</h2>
+        <div class="org-notifications-list" id="orgNotificationsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
       <section class="org-section">
-        <h2>Preferencias</h2>
-        <p class="org-section-desc org-placeholder">Configuración de canales (email, in-app, Slack) por tipo de evento — próximamente.</p>
+        <h2>${__('Preferencias')}</h2>
+        <p class="org-section-desc org-placeholder">${__('Configuración de canales (email, in-app, Slack) por tipo de evento — próximamente.')}</p>
       </section>
     </div>
 
@@ -330,38 +330,38 @@ class OrganizationView extends BaseView {
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Registro de actividad (audit log)</h2>
-            <p class="org-section-desc">Acciones realizadas en la organización. Se conserva para compliance.</p>
+            <h2>${__('Registro de actividad (audit log)')}</h2>
+            <p class="org-section-desc">${__('Acciones realizadas en la organización. Se conserva para compliance.')}</p>
           </div>
           <div class="org-audit-filters">
             <select id="auditFilterAction" class="form-input form-input-sm">
-              <option value="">Todas las acciones</option>
+              <option value="">${__('Todas las acciones')}</option>
             </select>
             <select id="auditFilterUser" class="form-input form-input-sm">
-              <option value="">Todos los miembros</option>
+              <option value="">${__('Todos los miembros')}</option>
             </select>
           </div>
         </div>
-        <div class="org-audit-list" id="orgAuditList"><p class="org-placeholder">Cargando…</p></div>
+        <div class="org-audit-list" id="orgAuditList"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Autenticación de dos factores (2FA)</h2>
-            <p class="org-section-desc">Añade un código de 6 dígitos generado por una app autenticadora (Google Authenticator, Authy, 1Password) además de tu contraseña. No requiere SMS — funciona offline desde tu celular.</p>
+            <h2>${__('Autenticación de dos factores (2FA)')}</h2>
+            <p class="org-section-desc">${__('Añade un código de 6 dígitos generado por una app autenticadora (Google Authenticator, Authy, 1Password) además de tu contraseña. No requiere SMS — funciona offline desde tu celular.')}</p>
           </div>
         </div>
 
         <div class="org-mfa-personal" id="orgMfaPersonal">
-          <p class="org-placeholder">Cargando…</p>
+          <p class="org-placeholder">${__('Cargando…')}</p>
         </div>
 
         <div class="org-mfa-policy" id="orgMfaPolicy" hidden>
-          <h3 style="margin-top: 1.5rem; font-size: 0.95rem;">Política de organización</h3>
-          <p class="org-section-desc">Como propietario, puedes exigir 2FA a todos los miembros antes de que puedan acceder.</p>
+          <h3 style="margin-top: 1.5rem; font-size: 0.95rem;">${__('Política de organización')}</h3>
+          <p class="org-section-desc">${__('Como propietario, puedes exigir 2FA a todos los miembros antes de que puedan acceder.')}</p>
           <label class="org-toggle">
             <input type="checkbox" id="orgMfaRequireToggle">
-            <span class="org-toggle-label">Exigir 2FA a todos los miembros de esta organización</span>
+            <span class="org-toggle-label">${__('Exigir 2FA a todos los miembros de esta organización')}</span>
           </label>
           <p class="org-mfa-policy-hint" id="orgMfaPolicyHint"></p>
         </div>
@@ -369,15 +369,15 @@ class OrganizationView extends BaseView {
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Sesiones activas</h2>
-            <p class="org-section-desc">Dispositivos donde tu cuenta tiene sesión abierta. Cierra cualquier sesión que no reconozcas.</p>
+            <h2>${__('Sesiones activas')}</h2>
+            <p class="org-section-desc">${__('Dispositivos donde tu cuenta tiene sesión abierta. Cierra cualquier sesión que no reconozcas.')}</p>
           </div>
           <button type="button" class="btn btn-secondary" id="orgSessionsRevokeAllBtn">
-            <i class="fas fa-sign-out-alt"></i> Cerrar todas las otras sesiones
+            <i class="fas fa-sign-out-alt"></i> ${__('Cerrar todas las otras sesiones')}
           </button>
         </div>
         <div class="org-sessions-list" id="orgSessionsList">
-          <p class="org-placeholder">Cargando…</p>
+          <p class="org-placeholder">${__('Cargando…')}</p>
         </div>
       </section>
     </div>
@@ -385,19 +385,19 @@ class OrganizationView extends BaseView {
     <!-- ── Danger zone ──────────────────────────────────── -->
     <div class="tab-content" id="dangerTab" role="tabpanel">
       <section class="org-section org-section--danger">
-        <h2>Transferir propiedad</h2>
-        <p class="org-section-desc">Mueve la organización a otro administrador. Perderás los privilegios de propietario.</p>
-        <button type="button" class="btn btn-danger-ghost" id="orgTransferBtn">Transferir propiedad</button>
+        <h2>${__('Transferir propiedad')}</h2>
+        <p class="org-section-desc">${__('Mueve la organización a otro administrador. Perderás los privilegios de propietario.')}</p>
+        <button type="button" class="btn btn-danger-ghost" id="orgTransferBtn">${__('Transferir propiedad')}</button>
       </section>
       <section class="org-section org-section--danger">
-        <h2>Exportar datos</h2>
-        <p class="org-section-desc">Solicita una copia de los datos operativos (runs, audiencias, campañas).</p>
-        <button type="button" class="btn btn-danger-ghost" id="orgExportBtn"><i class="fas fa-download"></i> Solicitar export</button>
+        <h2>${__('Exportar datos')}</h2>
+        <p class="org-section-desc">${__('Solicita una copia de los datos operativos (runs, audiencias, campañas).')}</p>
+        <button type="button" class="btn btn-danger-ghost" id="orgExportBtn"><i class="fas fa-download"></i> ${__('Solicitar export')}</button>
       </section>
       <section class="org-section org-section--danger">
-        <h2>Archivar organización</h2>
-        <p class="org-section-desc">La organización queda inaccesible y deja de consumir créditos. Puedes restaurarla contactando soporte dentro de 30 días.</p>
-        <button type="button" class="btn btn-danger" id="orgArchiveBtn"><i class="fas fa-archive"></i> Archivar organización</button>
+        <h2>${__('Archivar organización')}</h2>
+        <p class="org-section-desc">${__('La organización queda inaccesible y deja de consumir créditos. Puedes restaurarla contactando soporte dentro de 30 días.')}</p>
+        <button type="button" class="btn btn-danger" id="orgArchiveBtn"><i class="fas fa-archive"></i> ${__('Archivar organización')}</button>
       </section>
     </div>
 
@@ -410,13 +410,13 @@ class OrganizationView extends BaseView {
       <a href="mailto:info@ardeagency.com">info@ardeagency.com</a>
     </div>
     <nav class="organization-footer-links" aria-label="Legal">
-      <a href="https://aismartcontent.io/privacy-policy" target="_blank" rel="noopener">Política de privacidad</a>
+      <a href="https://aismartcontent.io/privacy-policy" target="_blank" rel="noopener">${__('Política de privacidad')}</a>
       <span class="organization-footer-sep">·</span>
-      <a href="https://aismartcontent.io/terms-and-conditions" target="_blank" rel="noopener">Términos de servicio</a>
+      <a href="https://aismartcontent.io/terms-and-conditions" target="_blank" rel="noopener">${__('Términos de servicio')}</a>
       <span class="organization-footer-sep">·</span>
-      <a href="https://aismartcontent.io/data-deletion" target="_blank" rel="noopener">Eliminación de datos</a>
+      <a href="https://aismartcontent.io/data-deletion" target="_blank" rel="noopener">${__('Eliminación de datos')}</a>
       <span class="organization-footer-sep">·</span>
-      <a href="https://aismartcontent.io/contact" target="_blank" rel="noopener">Contacto</a>
+      <a href="https://aismartcontent.io/contact" target="_blank" rel="noopener">${__('Contacto')}</a>
     </nav>
   </footer>
 </div>
@@ -425,25 +425,25 @@ class OrganizationView extends BaseView {
 <div class="modal org-modal" id="orgInviteModal" aria-hidden="true">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>Invitar miembro</h3>
-      <button type="button" class="modal-close" id="orgInviteModalClose" aria-label="Cerrar">&times;</button>
+      <h3>${__('Invitar miembro')}</h3>
+      <button type="button" class="modal-close" id="orgInviteModalClose" aria-label="${__('Cerrar')}">&times;</button>
     </div>
     <form id="orgInviteForm">
       <div class="form-group">
-        <label for="inviteEmail">Email del usuario</label>
+        <label for="inviteEmail">${__('Email del usuario')}</label>
         <input type="email" id="inviteEmail" class="form-input" required placeholder="usuario@empresa.com">
       </div>
       <div class="form-group">
-        <label for="inviteRole">Rol</label>
+        <label for="inviteRole">${__('Rol')}</label>
         <select id="inviteRole" class="form-input">
-          <option value="member">Miembro</option>
-          <option value="admin">Administrador</option>
-          <option value="viewer">Viewer (solo lectura)</option>
+          <option value="member">${__('Miembro')}</option>
+          <option value="admin">${__('Administrador')}</option>
+          <option value="viewer">${__('Viewer (solo lectura)')}</option>
         </select>
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" id="orgInviteCancel">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Enviar invitación</button>
+        <button type="button" class="btn btn-secondary" id="orgInviteCancel">${__('Cancelar')}</button>
+        <button type="submit" class="btn btn-primary">${__('Enviar invitación')}</button>
       </div>
     </form>
   </div>
@@ -453,23 +453,23 @@ class OrganizationView extends BaseView {
 <div class="modal org-modal" id="orgTransferModal" aria-hidden="true">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>Transferir propiedad</h3>
-      <button type="button" class="modal-close" id="orgTransferModalClose" aria-label="Cerrar">&times;</button>
+      <h3>${__('Transferir propiedad')}</h3>
+      <button type="button" class="modal-close" id="orgTransferModalClose" aria-label="${__('Cerrar')}">&times;</button>
     </div>
     <form id="orgTransferForm">
       <div class="form-group">
-        <label for="transferTo">Nuevo propietario</label>
+        <label for="transferTo">${__('Nuevo propietario')}</label>
         <select id="transferTo" class="form-input" required>
-          <option value="">Selecciona un miembro…</option>
+          <option value="">${__('Selecciona un miembro…')}</option>
         </select>
       </div>
       <div class="form-group">
-        <label for="transferConfirm">Escribe <strong id="transferOrgNameLabel"></strong> para confirmar</label>
-        <input type="text" id="transferConfirm" class="form-input" required placeholder="Nombre exacto de la organización">
+        <label for="transferConfirm">${__('Escribe')} <strong id="transferOrgNameLabel"></strong> ${__('para confirmar')}</label>
+        <input type="text" id="transferConfirm" class="form-input" required placeholder="${__('Nombre exacto de la organización')}">
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" id="orgTransferCancel">Cancelar</button>
-        <button type="submit" class="btn btn-danger">Transferir propiedad</button>
+        <button type="button" class="btn btn-secondary" id="orgTransferCancel">${__('Cancelar')}</button>
+        <button type="submit" class="btn btn-danger">${__('Transferir propiedad')}</button>
       </div>
     </form>
   </div>
@@ -479,31 +479,31 @@ class OrganizationView extends BaseView {
 <div class="modal org-modal" id="orgMfaEnrollModal" aria-hidden="true">
   <div class="modal-content" style="max-width: 480px;">
     <div class="modal-header">
-      <h3>Activar autenticación de 2 pasos</h3>
-      <button type="button" class="modal-close" id="orgMfaEnrollClose" aria-label="Cerrar">&times;</button>
+      <h3>${__('Activar autenticación de 2 pasos')}</h3>
+      <button type="button" class="modal-close" id="orgMfaEnrollClose" aria-label="${__('Cerrar')}">&times;</button>
     </div>
     <div id="orgMfaEnrollBody">
       <ol class="org-mfa-steps">
-        <li>Abre tu app autenticadora (Google Authenticator, Authy, 1Password).</li>
-        <li>Escanea este código QR. Si no puedes, copia el código manualmente.</li>
-        <li>Ingresa el código de 6 dígitos que muestra tu app.</li>
+        <li>${__('Abre tu app autenticadora (Google Authenticator, Authy, 1Password).')}</li>
+        <li>${__('Escanea este código QR. Si no puedes, copia el código manualmente.')}</li>
+        <li>${__('Ingresa el código de 6 dígitos que muestra tu app.')}</li>
       </ol>
       <div class="org-mfa-qr-wrap" id="orgMfaQrWrap">
-        <p class="org-placeholder">Generando código…</p>
+        <p class="org-placeholder">${__('Generando código…')}</p>
       </div>
       <div class="form-group" id="orgMfaSecretWrap" hidden>
-        <label>Código manual (si el QR no funciona)</label>
+        <label>${__('Código manual (si el QR no funciona)')}</label>
         <input type="text" id="orgMfaSecret" class="form-input" readonly style="font-family: monospace; letter-spacing: 1px;">
       </div>
       <form id="orgMfaEnrollForm">
         <div class="form-group">
-          <label for="orgMfaCode">Código de 6 dígitos</label>
+          <label for="orgMfaCode">${__('Código de 6 dígitos')}</label>
           <input type="text" id="orgMfaCode" class="form-input" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" style="font-size: 1.5rem; letter-spacing: 0.3rem; text-align: center; font-family: monospace;">
         </div>
         <p class="org-mfa-error" id="orgMfaEnrollError" hidden></p>
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="orgMfaEnrollCancel">Cancelar</button>
-          <button type="submit" class="btn btn-primary" id="orgMfaEnrollSubmit">Verificar y activar</button>
+          <button type="button" class="btn btn-secondary" id="orgMfaEnrollCancel">${__('Cancelar')}</button>
+          <button type="submit" class="btn btn-primary" id="orgMfaEnrollSubmit">${__('Verificar y activar')}</button>
         </div>
       </form>
     </div>
@@ -540,7 +540,7 @@ class OrganizationView extends BaseView {
     this._populateTimezones();
     await this._loadAll();
     this._bindEvents();
-    this.updateHeaderContext('Configuración', null, this.org?.name || null);
+    this.updateHeaderContext(__('Configuración'), null, this.org?.name || null);
   }
 
   async _initSupabase() {
@@ -614,7 +614,7 @@ class OrganizationView extends BaseView {
       this._configureExternalLinks();
     } catch (e) {
       console.error('OrganizationView _loadAll:', e);
-      this._showError(e.message || 'Error al cargar la configuración.');
+      this._showError(e.message || __('Error al cargar la configuración.'));
     }
   }
 
@@ -624,7 +624,7 @@ class OrganizationView extends BaseView {
       .select('id, name, owner_user_id, created_at, deleted_at, timezone, locale, mfa_required')
       .eq('id', this.orgId).maybeSingle();
     if (error) throw error;
-    if (!data) throw new Error('Organización no encontrada.');
+    if (!data) throw new Error(__('Organización no encontrada.'));
     this.org = data;
     this.isOwner = this.org.owner_user_id === this.userId;
     this.mfaOrgRequired = Boolean(data.mfa_required);
@@ -651,11 +651,11 @@ class OrganizationView extends BaseView {
           <div class="org-mfa-status org-mfa-status--off">
             <i class="fas fa-shield-alt"></i>
             <div>
-              <strong>2FA no activa</strong>
-              <p>Tu cuenta usa solo email + contraseña. Activa la autenticación de 2 pasos para una capa extra de seguridad.</p>
+              <strong>${__('2FA no activa')}</strong>
+              <p>${__('Tu cuenta usa solo email + contraseña. Activa la autenticación de 2 pasos para una capa extra de seguridad.')}</p>
             </div>
             <button type="button" class="btn btn-primary" id="orgMfaEnrollBtn">
-              <i class="fas fa-lock"></i> Activar 2FA
+              <i class="fas fa-lock"></i> ${__('Activar 2FA')}
             </button>
           </div>
         `;
@@ -666,11 +666,11 @@ class OrganizationView extends BaseView {
           <div class="org-mfa-status org-mfa-status--on">
             <i class="fas fa-shield-halved"></i>
             <div>
-              <strong>2FA activa</strong>
-              <p>Factor TOTP enrolado el ${this.escapeHtml(created)}. En tu próximo login se te pedirá el código de 6 dígitos.</p>
+              <strong>${__('2FA activa')}</strong>
+              <p>${__('Factor TOTP enrolado el {fecha}. En tu próximo login se te pedirá el código de 6 dígitos.', { fecha: this.escapeHtml(created) })}</p>
             </div>
             <button type="button" class="btn btn-secondary" data-factor-id="${this.escapeHtml(f.id)}" id="orgMfaUnenrollBtn">
-              <i class="fas fa-trash"></i> Desactivar
+              <i class="fas fa-trash"></i> ${__('Desactivar')}
             </button>
           </div>
         `;
@@ -686,8 +686,8 @@ class OrganizationView extends BaseView {
         if (toggle) toggle.checked = this.mfaOrgRequired;
         if (hint) {
           hint.textContent = this.mfaOrgRequired
-            ? 'Todos los miembros deben activar 2FA antes de poder acceder. Quienes aún no la tengan serán redirigidos al flujo de activación en su próximo login.'
-            : 'Cada miembro decide si activa 2FA por su cuenta. Actívalo arriba para tu propia cuenta.';
+            ? __('Todos los miembros deben activar 2FA antes de poder acceder. Quienes aún no la tengan serán redirigidos al flujo de activación en su próximo login.')
+            : __('Cada miembro decide si activa 2FA por su cuenta. Actívalo arriba para tu propia cuenta.');
         }
       } else {
         policy.hidden = true;
@@ -730,7 +730,7 @@ class OrganizationView extends BaseView {
 
     if (errorEl) { errorEl.hidden = true; errorEl.textContent = ''; }
     if (codeInput) codeInput.value = '';
-    if (qrWrap) qrWrap.innerHTML = '<p class="org-placeholder">Generando código…</p>';
+    if (qrWrap) qrWrap.innerHTML = `<p class="org-placeholder">${__('Generando código…')}</p>`;
     if (secretWrap) secretWrap.hidden = true;
 
     modal.setAttribute('aria-hidden', 'false');
@@ -769,7 +769,7 @@ class OrganizationView extends BaseView {
         if (qr.startsWith('data:image')) {
           const img = document.createElement('img');
           img.src = qr;
-          img.alt = 'QR 2FA';
+          img.alt = __('QR 2FA');
           img.style.cssText = 'width:200px;height:200px;background:white;padding:8px;border-radius:8px;';
           qrWrap.appendChild(img);
         } else if (qr.includes('<svg')) {
@@ -780,7 +780,7 @@ class OrganizationView extends BaseView {
         } else {
           const p = document.createElement('p');
           p.className = 'org-placeholder';
-          p.textContent = 'QR no disponible. Usa el código manual.';
+          p.textContent = __('QR no disponible. Usa el código manual.');
           qrWrap.appendChild(p);
         }
       }
@@ -792,7 +792,7 @@ class OrganizationView extends BaseView {
     } catch (e) {
       console.error('OrganizationView _openMfaEnrollModal enroll:', e);
       if (errorEl) {
-        errorEl.textContent = `No se pudo iniciar el enroll: ${e.message || 'error desconocido'}`;
+        errorEl.textContent = __('No se pudo iniciar el enroll: {error}', { error: e.message || __('error desconocido') });
         errorEl.hidden = false;
       }
     }
@@ -819,7 +819,7 @@ class OrganizationView extends BaseView {
     if (!codeInput || !this.mfaEnroll) return;
     const code = String(codeInput.value || '').trim();
     if (!/^[0-9]{6}$/.test(code)) {
-      if (errorEl) { errorEl.textContent = 'El código debe ser de 6 dígitos numéricos.'; errorEl.hidden = false; }
+      if (errorEl) { errorEl.textContent = __('El código debe ser de 6 dígitos numéricos.'); errorEl.hidden = false; }
       return;
     }
     if (errorEl) errorEl.hidden = true;
@@ -843,14 +843,14 @@ class OrganizationView extends BaseView {
         modal.classList.remove('modal-open');
         modal.setAttribute('aria-hidden', 'true');
       }
-      this._toast('2FA activada. En tu próximo login se pedirá el código.');
+      this._toast(__('2FA activada. En tu próximo login se pedirá el código.'));
       await this._loadMfa();
       this._renderMfa();
       this._bindMfaEvents();
     } catch (e) {
       console.error('OrganizationView _submitMfaEnroll:', e);
       if (errorEl) {
-        errorEl.textContent = `Código inválido o expirado: ${e.message || 'intenta de nuevo'}`;
+        errorEl.textContent = __('Código inválido o expirado: {error}', { error: e.message || __('intenta de nuevo') });
         errorEl.hidden = false;
       }
     } finally {
@@ -860,17 +860,17 @@ class OrganizationView extends BaseView {
 
   async _unenrollMfa(factorId) {
     if (!factorId) return;
-    if (!confirm('¿Desactivar 2FA? Tu cuenta volverá a quedar solo con email + contraseña.')) return;
+    if (!confirm(__('¿Desactivar 2FA? Tu cuenta volverá a quedar solo con email + contraseña.'))) return;
     try {
       const { error } = await this.supabase.auth.mfa.unenroll({ factorId });
       if (error) throw error;
-      this._toast('2FA desactivada.');
+      this._toast(__('2FA desactivada.'));
       await this._loadMfa();
       this._renderMfa();
       this._bindMfaEvents();
     } catch (e) {
       console.error('OrganizationView _unenrollMfa:', e);
-      this._toast(`No se pudo desactivar: ${e.message || 'error'}`);
+      this._toast(__('No se pudo desactivar: {error}', { error: e.message || __('error') }));
     }
   }
 
@@ -882,12 +882,12 @@ class OrganizationView extends BaseView {
       });
       if (error) throw error;
       this.mfaOrgRequired = Boolean(data);
-      this._toast(required ? 'Política activada: 2FA exigida para todos los miembros.' : 'Política desactivada.');
+      this._toast(required ? __('Política activada: 2FA exigida para todos los miembros.') : __('Política desactivada.'));
       this._renderMfa();
       this._bindMfaEvents();
     } catch (e) {
       console.error('OrganizationView _toggleOrgMfaRequired:', e);
-      this._toast(`No se pudo guardar: ${e.message || 'error'}`);
+      this._toast(__('No se pudo guardar: {error}', { error: e.message || __('error') }));
       // revertir UI
       const toggle = this.querySelector('#orgMfaRequireToggle');
       if (toggle) toggle.checked = this.mfaOrgRequired;
@@ -901,7 +901,7 @@ class OrganizationView extends BaseView {
 
     // Supabase no expone auth.sessions al cliente — solo podemos mostrar la sesión
     // actual y permitir cerrar globalmente vía signOut({ scope: 'others' }).
-    const ua = navigator.userAgent || 'Navegador desconocido';
+    const ua = navigator.userAgent || __('Navegador desconocido');
     const platform = navigator.platform || '';
     const sessionStartIso = (() => {
       try {
@@ -911,19 +911,19 @@ class OrganizationView extends BaseView {
         return parsed?.expires_at ? new Date((parsed.expires_at - 3600) * 1000).toISOString() : null;
       } catch { return null; }
     })();
-    const sessionStartHuman = sessionStartIso ? new Date(sessionStartIso).toLocaleString() : 'desconocido';
+    const sessionStartHuman = sessionStartIso ? new Date(sessionStartIso).toLocaleString() : __('desconocido');
 
     wrap.innerHTML = `
       <div class="org-session-card">
         <i class="fas fa-laptop"></i>
         <div class="org-session-info">
-          <strong>Esta sesión <span class="org-session-badge">actual</span></strong>
+          <strong>${__('Esta sesión')} <span class="org-session-badge">${__('actual')}</span></strong>
           <p>${this.escapeHtml(ua.slice(0, 120))}</p>
-          <p class="org-session-meta">Plataforma: ${this.escapeHtml(platform || '—')} · Iniciada: ${this.escapeHtml(sessionStartHuman)}</p>
+          <p class="org-session-meta">${__('Plataforma:')} ${this.escapeHtml(platform || '—')} · ${__('Iniciada:')} ${this.escapeHtml(sessionStartHuman)}</p>
         </div>
       </div>
       <p class="org-section-desc" style="margin-top: 0.75rem; font-size: 0.85rem;">
-        Si tienes acceso desde otros dispositivos o navegadores y quieres revocarlos, usa el botón "Cerrar todas las otras sesiones" arriba. Esta sesión actual no se cerrará.
+        ${__('Si tienes acceso desde otros dispositivos o navegadores y quieres revocarlos, usa el botón "Cerrar todas las otras sesiones" arriba. Esta sesión actual no se cerrará.')}
       </p>
     `;
   }
@@ -934,14 +934,14 @@ class OrganizationView extends BaseView {
   }
 
   async _revokeOtherSessions() {
-    if (!confirm('¿Cerrar todas las otras sesiones? Tendrás que volver a iniciar sesión en cualquier otro dispositivo o navegador.')) return;
+    if (!confirm(__('¿Cerrar todas las otras sesiones? Tendrás que volver a iniciar sesión en cualquier otro dispositivo o navegador.'))) return;
     try {
       const { error } = await this.supabase.auth.signOut({ scope: 'others' });
       if (error) throw error;
-      this._toast('Todas las otras sesiones fueron cerradas.');
+      this._toast(__('Todas las otras sesiones fueron cerradas.'));
     } catch (e) {
       console.error('OrganizationView _revokeOtherSessions:', e);
-      this._toast(`No se pudo cerrar: ${e.message || 'error'}`);
+      this._toast(__('No se pudo cerrar: {error}', { error: e.message || __('error') }));
     }
   }
 
@@ -1143,37 +1143,37 @@ class OrganizationView extends BaseView {
     const past_due = sub?.status === 'past_due';
     const canceled = sub?.status === 'canceled' || sub?.cancel_at_period_end;
 
-    const providerLabel = sub?.provider === 'wompi' ? 'Wompi (COP)' : sub?.provider === 'stripe' ? 'Stripe (USD)' : '—';
-    const planName      = plan?.name || sub?.plan_id || 'Sin plan';
+    const providerLabel = sub?.provider === 'wompi' ? __('Wompi (COP)') : sub?.provider === 'stripe' ? __('Stripe (USD)') : '—';
+    const planName      = plan?.name || sub?.plan_id || __('Sin plan');
     const nextRenew     = sub?.provider === 'wompi' ? sub?.next_charge_at : sub?.current_period_end;
     const nextRenewStr  = nextRenew ? new Date(nextRenew).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-    const statusLabel   = ({ active: 'Activa', trial: 'En prueba', past_due: 'Pago pendiente', canceled: 'Cancelada' }[sub?.status]) || (sub?.status || 'Sin suscripción');
+    const statusLabel   = ({ active: __('Activa'), trial: __('En prueba'), past_due: __('Pago pendiente'), canceled: __('Cancelada') }[sub?.status]) || (sub?.status || __('Sin suscripción'));
 
     const banner = past_due
-      ? `<div class="org-error-banner" style="margin-bottom:1rem;">Tu último pago no se procesó correctamente. Actualiza tu método de pago para evitar la suspensión del servicio.</div>`
+      ? `<div class="org-error-banner" style="margin-bottom:1rem;">${__('Tu último pago no se procesó correctamente. Actualiza tu método de pago para evitar la suspensión del servicio.')}</div>`
       : canceled
-      ? `<div class="org-warning-banner" style="margin-bottom:1rem;background:#3a2410;border:1px solid #6b3a17;color:#fbbf24;padding:.75rem 1rem;border-radius:8px;">Tu suscripción terminará el ${this.escapeHtml(nextRenewStr)}.</div>`
+      ? `<div class="org-warning-banner" style="margin-bottom:1rem;background:#3a2410;border:1px solid #6b3a17;color:#fbbf24;padding:.75rem 1rem;border-radius:8px;">${__('Tu suscripción terminará el {fecha}.', { fecha: this.escapeHtml(nextRenewStr) })}</div>`
       : '';
 
     const stripePortalBtn = sub?.provider === 'stripe'
-      ? `<button type="button" class="btn btn-secondary" id="orgBillingPortalBtn"><i class="fas fa-external-link-alt"></i> Gestionar suscripción</button>`
+      ? `<button type="button" class="btn btn-secondary" id="orgBillingPortalBtn"><i class="fas fa-external-link-alt"></i> ${__('Gestionar suscripción')}</button>`
       : '';
     const hasActiveSub = sub && ['active','trial','past_due'].includes(sub.status);
     const cancelBtn = hasActiveSub && !sub.cancel_at_period_end
-      ? `<button type="button" class="btn btn-secondary" id="orgBillingCancelBtn"><i class="fas fa-times"></i> Cancelar suscripción</button>`
+      ? `<button type="button" class="btn btn-secondary" id="orgBillingCancelBtn"><i class="fas fa-times"></i> ${__('Cancelar suscripción')}</button>`
       : '';
     const reactivateBtn = hasActiveSub && sub.cancel_at_period_end
-      ? `<button type="button" class="btn btn-secondary" id="orgBillingReactivateBtn"><i class="fas fa-undo"></i> Reactivar suscripción</button>`
+      ? `<button type="button" class="btn btn-secondary" id="orgBillingReactivateBtn"><i class="fas fa-undo"></i> ${__('Reactivar suscripción')}</button>`
       : '';
-    const upgradeBtn = `<a href="${this.escapeHtml(this._plansHref())}" class="btn btn-primary"><i class="fas fa-arrow-up"></i> Ver planes</a>`;
+    const upgradeBtn = `<a href="${this.escapeHtml(this._plansHref())}" class="btn btn-primary"><i class="fas fa-arrow-up"></i> ${__('Ver planes')}</a>`;
 
     summary.innerHTML = `
       ${banner}
       <div class="org-billing-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
-        <div><span class="org-section-desc">Plan</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(planName)}</strong></div>
-        <div><span class="org-section-desc">Estado</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(statusLabel)}</strong></div>
-        <div><span class="org-section-desc">Próximo cobro</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(nextRenewStr)}</strong></div>
-        <div><span class="org-section-desc">Pasarela</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(providerLabel)}</strong></div>
+        <div><span class="org-section-desc">${__('Plan')}</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(planName)}</strong></div>
+        <div><span class="org-section-desc">${__('Estado')}</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(statusLabel)}</strong></div>
+        <div><span class="org-section-desc">${__('Próximo cobro')}</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(nextRenewStr)}</strong></div>
+        <div><span class="org-section-desc">${__('Pasarela')}</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(providerLabel)}</strong></div>
       </div>
       <div class="org-form-actions" style="margin-top:1.25rem;display:flex;gap:.5rem;flex-wrap:wrap;">
         ${upgradeBtn} ${stripePortalBtn} ${cancelBtn} ${reactivateBtn}
@@ -1188,7 +1188,7 @@ class OrganizationView extends BaseView {
       amount:   (inv.amount_paid_cents || 0) / 100,
       currency: (inv.currency || 'usd').toUpperCase(),
       status:   inv.status,
-      desc:     `Período ${this._fmtPeriod(inv.period_start, inv.period_end)}`,
+      desc:     __('Período {periodo}', { periodo: this._fmtPeriod(inv.period_start, inv.period_end) }),
       url:      inv.hosted_invoice_url || inv.invoice_pdf || null,
     }));
     const wompiRows = (this.billingWompiTxs || []).map((tx) => ({
@@ -1198,24 +1198,24 @@ class OrganizationView extends BaseView {
       amount:   (tx.amount_in_cents || 0) / 100,
       currency: tx.currency || 'COP',
       status:   tx.status,
-      desc:     tx.target === 'subscription' ? 'Suscripción' : 'Paquete de créditos',
+      desc:     tx.target === 'subscription' ? __('Suscripción') : __('Paquete de créditos'),
       url:      null,
     }));
     const all = [...stripeRows, ...wompiRows].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (all.length === 0) {
-      list.innerHTML = `<p class="org-placeholder">Sin facturas todavía. Las verás aquí después de tu primer pago.</p>`;
+      list.innerHTML = `<p class="org-placeholder">${__('Sin facturas todavía. Las verás aquí después de tu primer pago.')}</p>`;
       return;
     }
 
     list.innerHTML = `
       <table class="org-billing-table" style="width:100%;border-collapse:collapse;font-size:.9rem;">
         <thead><tr style="text-align:left;color:#9ca3af;border-bottom:1px solid #242424;">
-          <th style="padding:.5rem .25rem;">Fecha</th>
-          <th style="padding:.5rem .25rem;">Concepto</th>
-          <th style="padding:.5rem .25rem;">Pasarela</th>
-          <th style="padding:.5rem .25rem;text-align:right;">Monto</th>
-          <th style="padding:.5rem .25rem;text-align:right;">Acción</th>
+          <th style="padding:.5rem .25rem;">${__('Fecha')}</th>
+          <th style="padding:.5rem .25rem;">${__('Concepto')}</th>
+          <th style="padding:.5rem .25rem;">${__('Pasarela')}</th>
+          <th style="padding:.5rem .25rem;text-align:right;">${__('Monto')}</th>
+          <th style="padding:.5rem .25rem;text-align:right;">${__('Acción')}</th>
         </tr></thead>
         <tbody>${all.map((r) => `
           <tr style="border-bottom:1px solid #1f1f1f;">
@@ -1223,7 +1223,7 @@ class OrganizationView extends BaseView {
             <td style="padding:.5rem .25rem;">${this.escapeHtml(r.desc || '—')}</td>
             <td style="padding:.5rem .25rem;">${r.provider === 'wompi' ? 'Wompi' : 'Stripe'}</td>
             <td style="padding:.5rem .25rem;text-align:right;font-variant-numeric:tabular-nums;">${this._fmtMoney(r.amount, r.currency)}</td>
-            <td style="padding:.5rem .25rem;text-align:right;">${r.url ? `<a href="${this.escapeHtml(r.url)}" target="_blank" rel="noopener" class="btn btn-link">Ver</a>` : '—'}</td>
+            <td style="padding:.5rem .25rem;text-align:right;">${r.url ? `<a href="${this.escapeHtml(r.url)}" target="_blank" rel="noopener" class="btn btn-link">${__('Ver')}</a>` : '—'}</td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -1238,8 +1238,8 @@ class OrganizationView extends BaseView {
   }
 
   async _cancelSubscription(undo) {
-    const action = undo ? 'reactivar' : 'cancelar';
-    if (!undo && !window.confirm('¿Cancelar la suscripción al final del período actual? Mantendrás acceso hasta entonces y no se hará otro cobro automático.')) return;
+    const action = undo ? __('reactivar') : __('cancelar');
+    if (!undo && !window.confirm(__('¿Cancelar la suscripción al final del período actual? Mantendrás acceso hasta entonces y no se hará otro cobro automático.'))) return;
 
     try {
       const supabase = window.supabaseService?.getClient ? await window.supabaseService.getClient() : window.supabase;
@@ -1254,14 +1254,14 @@ class OrganizationView extends BaseView {
         body: JSON.stringify({ organization_id: this.orgId, undo: !!undo }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `No se pudo ${action}`);
-      const msg = undo ? 'Suscripción reactivada. El próximo cobro procederá como antes.'
-                       : `Suscripción cancelada. Mantienes acceso hasta el ${this._fmtDate(data.cancel_at)}.`;
+      if (!res.ok) throw new Error(data.error || __('No se pudo {accion}', { accion: action }));
+      const msg = undo ? __('Suscripción reactivada. El próximo cobro procederá como antes.')
+                       : __('Suscripción cancelada. Mantienes acceso hasta el {fecha}.', { fecha: this._fmtDate(data.cancel_at) });
       (window.showToast || window.alert)(msg, 'success');
       this._billingLoaded = false;
       await this._loadBilling();
     } catch (e) {
-      (window.showToast || window.alert)(`Error: ${e.message}`, 'error');
+      (window.showToast || window.alert)(__('Error: {error}', { error: e.message }), 'error');
     }
   }
 
@@ -1346,8 +1346,8 @@ class OrganizationView extends BaseView {
     if (!el || !this.org) return;
     const archived = !!this.org.deleted_at;
     el.innerHTML = archived
-      ? `<span class="org-status-pill org-status-pill--archived"><i class="fas fa-archive"></i> Archivada</span>`
-      : `<span class="org-status-pill org-status-pill--active">Activa</span>`;
+      ? `<span class="org-status-pill org-status-pill--archived"><i class="fas fa-archive"></i> ${__('Archivada')}</span>`
+      : `<span class="org-status-pill org-status-pill--active">${__('Activa')}</span>`;
   }
 
   _renderGeneral() {
@@ -1367,7 +1367,7 @@ class OrganizationView extends BaseView {
     const el = this.querySelector('#orgSubbrandsList');
     if (!el) return;
     if (!this.brandContainers.length) {
-      el.innerHTML = '<p class="org-members-empty">Aún no tienes marcas gestionadas. Pulsa "Solicitar nueva marca" para iniciar el proceso de provisión.</p>';
+      el.innerHTML = `<p class="org-members-empty">${__('Aún no tienes marcas gestionadas. Pulsa "Solicitar nueva marca" para iniciar el proceso de provisión.')}</p>`;
       return;
     }
     el.innerHTML = this.brandContainers.map((b) => {
@@ -1375,10 +1375,10 @@ class OrganizationView extends BaseView {
       return `
         <div class="org-subbrand-row">
           <div class="org-subbrand-info">
-            <span class="org-subbrand-name">${this.escapeHtml(b.nombre_marca || 'Marca')}</span>
-            <span class="org-subbrand-meta">Activa desde ${this.escapeHtml(since)}</span>
+            <span class="org-subbrand-name">${this.escapeHtml(b.nombre_marca || __('Marca'))}</span>
+            <span class="org-subbrand-meta">${__('Activa desde {fecha}', { fecha: this.escapeHtml(since) })}</span>
           </div>
-          <span class="org-subbrand-lock" title="Provisión gestionada por el equipo de plataforma"><i class="fas fa-lock"></i> Gestionada por plataforma</span>
+          <span class="org-subbrand-lock" title="${__('Provisión gestionada por el equipo de plataforma')}"><i class="fas fa-lock"></i> ${__('Gestionada por plataforma')}</span>
         </div>`;
     }).join('');
   }
@@ -1388,25 +1388,25 @@ class OrganizationView extends BaseView {
     if (!listEl) return;
     const canManage = this.canManageMembers;
     if (!this.membersWithProfile.length) {
-      listEl.innerHTML = '<p class="org-members-empty">Sin miembros cargados.</p>';
+      listEl.innerHTML = `<p class="org-members-empty">${__('Sin miembros cargados.')}</p>`;
       return;
     }
     listEl.innerHTML = this.membersWithProfile.map((m) => {
-      const display = m.full_name || m.email || (m.user_id ? m.user_id.slice(0, 8) + '…' : 'Miembro');
+      const display = m.full_name || m.email || (m.user_id ? m.user_id.slice(0, 8) + '…' : __('Miembro'));
       const isCurrent = m.user_id === this.userId;
       const isOrgOwner = this.org?.owner_user_id === m.user_id;
-      const roleLabel = isOrgOwner ? 'Propietario' : (m.role || 'member');
+      const roleLabel = isOrgOwner ? __('Propietario') : (m.role || 'member');
       const canChangeRole = canManage && !isOrgOwner && !isCurrent;
       const canRemove = canManage && !isOrgOwner && !isCurrent;
       const rolePicker = canChangeRole
         ? `<select class="org-role-select" data-member-id="${this.escapeHtml(m.id)}">
-             <option value="admin"${m.role === 'admin' ? ' selected' : ''}>Administrador</option>
-             <option value="member"${m.role === 'member' ? ' selected' : ''}>Miembro</option>
-             <option value="viewer"${m.role === 'viewer' ? ' selected' : ''}>Viewer</option>
+             <option value="admin"${m.role === 'admin' ? ' selected' : ''}>${__('Administrador')}</option>
+             <option value="member"${m.role === 'member' ? ' selected' : ''}>${__('Miembro')}</option>
+             <option value="viewer"${m.role === 'viewer' ? ' selected' : ''}>${__('Viewer')}</option>
            </select>`
         : `<span class="org-member-role org-role-${(roleLabel || 'member').toLowerCase()}">${this.escapeHtml(roleLabel)}</span>`;
       const removeBtn = canRemove
-        ? `<button type="button" class="btn btn-ghost btn-sm org-member-remove" data-member-id="${this.escapeHtml(m.id)}" title="Quitar"><i class="fas fa-times"></i></button>`
+        ? `<button type="button" class="btn btn-ghost btn-sm org-member-remove" data-member-id="${this.escapeHtml(m.id)}" title="${__('Quitar')}"><i class="fas fa-times"></i></button>`
         : '';
       return `
         <div class="org-member-row" data-member-id="${this.escapeHtml(m.id)}">
@@ -1434,10 +1434,10 @@ class OrganizationView extends BaseView {
         <div class="org-invitation-row">
           <div class="org-invitation-info">
             <span class="org-invitation-email">${this.escapeHtml(inv.email)}</span>
-            <span class="org-invitation-meta">${this.escapeHtml(inv.role)} · expira ${expires}</span>
+            <span class="org-invitation-meta">${this.escapeHtml(inv.role)} · ${__('expira {fecha}', { fecha: expires })}</span>
           </div>
           <div class="org-invitation-actions">
-            <button type="button" class="btn btn-ghost btn-sm org-invitation-revoke" data-invitation-id="${this.escapeHtml(inv.id)}">Revocar</button>
+            <button type="button" class="btn btn-ghost btn-sm org-invitation-revoke" data-invitation-id="${this.escapeHtml(inv.id)}">${__('Revocar')}</button>
           </div>
         </div>`;
     }).join('');
@@ -1450,13 +1450,13 @@ class OrganizationView extends BaseView {
       if (!this.subscription) {
         card.innerHTML = `
           <div class="org-plan-empty">
-            <p>No tienes un plan activo.</p>
-            <button type="button" class="btn btn-primary" id="orgChoosePlanBtn">Ver planes</button>
+            <p>${__('No tienes un plan activo.')}</p>
+            <button type="button" class="btn btn-primary" id="orgChoosePlanBtn">${__('Ver planes')}</button>
           </div>`;
         this.querySelector('#orgChoosePlanBtn')?.addEventListener('click', () => this._goToPlans());
       } else {
-        const planName = this.plan?.name || this.subscription.plan_id || 'Plan';
-        const price = this.plan?.price_usd_month != null ? `$${this.plan.price_usd_month}/mes` : '';
+        const planName = this.plan?.name || this.subscription.plan_id || __('Plan');
+        const price = this.plan?.price_usd_month != null ? __('{precio}/mes', { precio: `$${this.plan.price_usd_month}` }) : '';
         const status = this.subscription.status || '—';
         const renewal = this.subscription.current_period_end
           ? new Date(this.subscription.current_period_end).toLocaleDateString('es', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -1470,12 +1470,12 @@ class OrganizationView extends BaseView {
             <div class="org-plan-price">${this.escapeHtml(price)}</div>
           </div>
           <div class="org-plan-stats">
-            <div><span class="org-plan-stat-label">Renovación</span><span class="org-plan-stat-value">${this.escapeHtml(renewal)}</span></div>
-            <div><span class="org-plan-stat-label">Créditos / mes</span><span class="org-plan-stat-value">${this.plan?.credits_monthly ?? '—'}</span></div>
-            <div><span class="org-plan-stat-label">Almacenamiento</span><span class="org-plan-stat-value">${this._formatStorage(this.plan?.storage_mb)}</span></div>
+            <div><span class="org-plan-stat-label">${__('Renovación')}</span><span class="org-plan-stat-value">${this.escapeHtml(renewal)}</span></div>
+            <div><span class="org-plan-stat-label">${__('Créditos / mes')}</span><span class="org-plan-stat-value">${this.plan?.credits_monthly ?? '—'}</span></div>
+            <div><span class="org-plan-stat-label">${__('Almacenamiento')}</span><span class="org-plan-stat-value">${this._formatStorage(this.plan?.storage_mb)}</span></div>
           </div>
           <div class="org-plan-actions">
-            <button type="button" class="btn btn-primary" id="orgUpgradeBtn">Cambiar de plan</button>
+            <button type="button" class="btn btn-primary" id="orgUpgradeBtn">${__('Cambiar de plan')}</button>
           </div>`;
         this.querySelector('#orgUpgradeBtn')?.addEventListener('click', () => this._goToPlans());
       }
@@ -1488,9 +1488,9 @@ class OrganizationView extends BaseView {
       const max = Number(this.storage.max_mb) || 0;
       const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
       stEl.innerHTML = this._usageCardHTML({
-        label: 'Almacenamiento usado',
+        label: __('Almacenamiento usado'),
         primary: this._formatStorage(used),
-        secondary: max > 0 ? `de ${this._formatStorage(max)}` : '',
+        secondary: max > 0 ? __('de {valor}', { valor: this._formatStorage(max) }) : '',
         pct,
         sub: '',
       });
@@ -1502,11 +1502,11 @@ class OrganizationView extends BaseView {
       const used = Math.max(0, (this.credits.credits_total || 0) - (this.credits.credits_available || 0));
       const pct = this.credits.credits_total > 0 ? Math.min(100, Math.round((used / this.credits.credits_total) * 100)) : 0;
       cEl.innerHTML = this._usageCardHTML({
-        label: 'Créditos usados',
+        label: __('Créditos usados'),
         primary: used.toLocaleString('es'),
-        secondary: this.credits.credits_total > 0 ? `de ${this.credits.credits_total.toLocaleString('es')}` : '',
+        secondary: this.credits.credits_total > 0 ? __('de {valor}', { valor: this.credits.credits_total.toLocaleString('es') }) : '',
         pct,
-        sub: this.credits.credits_available != null ? `${this.credits.credits_available.toLocaleString('es')} disponibles` : '',
+        sub: this.credits.credits_available != null ? __('{valor} disponibles', { valor: this.credits.credits_available.toLocaleString('es') }) : '',
       });
     }
 
@@ -1526,9 +1526,9 @@ class OrganizationView extends BaseView {
       const usedToday = this.aiUsageToday?.cost_usd_today ?? this.aiUsageToday?.usd ?? null;
       const pct = cap && usedToday != null ? Math.min(100, Math.round((usedToday / cap) * 100)) : 0;
       aiEl.innerHTML = this._usageCardHTML({
-        label: 'Consumo de IA hoy',
+        label: __('Consumo de IA hoy'),
         primary: usedToday != null ? `$${Number(usedToday).toFixed(2)}` : '—',
-        secondary: cap ? `de $${Number(cap).toFixed(2)}` : 'sin cap configurado',
+        secondary: cap ? __('de {valor}', { valor: `$${Number(cap).toFixed(2)}` }) : __('sin cap configurado'),
         pct,
         sub: '',
       });
@@ -1551,43 +1551,43 @@ class OrganizationView extends BaseView {
         srv.innerHTML = `
           <div class="org-server-card">
             <div class="org-server-row">
-              <span class="org-server-label">Estado</span>
-              <span class="org-status-pill org-status-pill--archived">Sin servidor dedicado</span>
+              <span class="org-server-label">${__('Estado')}</span>
+              <span class="org-status-pill org-status-pill--archived">${__('Sin servidor dedicado')}</span>
             </div>
-            <p class="org-server-hint">Esta organización aún no tiene un AI Engine aprovisionado. Vera usa la infraestructura compartida hasta que se asigne uno dedicado.</p>
+            <p class="org-server-hint">${__('Esta organización aún no tiene un AI Engine aprovisionado. Vera usa la infraestructura compartida hasta que se asigne uno dedicado.')}</p>
           </div>`;
       } else {
         const s = this.serverStatus;
         const sleeping = !!s.sleeping;
         const stateClass = sleeping ? 'archived' : (s.status === 'ready' || s.status === 'active' ? 'active' : 'archived');
-        const stateLabel = sleeping ? 'Suspendido' : (s.status || '—');
+        const stateLabel = sleeping ? __('Suspendido') : (s.status || '—');
         const lastActivity = s.last_activity_at ? new Date(s.last_activity_at).toLocaleString('es') : '—';
-        const inactive = s.inactive_days != null ? `${Number(s.inactive_days).toFixed(0)} días sin actividad` : '';
+        const inactive = s.inactive_days != null ? __('{dias} días sin actividad', { dias: Number(s.inactive_days).toFixed(0) }) : '';
         srv.innerHTML = `
           <div class="org-server-card">
             <div class="org-server-grid">
               <div class="org-server-row">
-                <span class="org-server-label">Estado</span>
+                <span class="org-server-label">${__('Estado')}</span>
                 <span class="org-status-pill org-status-pill--${stateClass}">${this.escapeHtml(stateLabel)}</span>
               </div>
               <div class="org-server-row">
-                <span class="org-server-label">Tipo de servidor</span>
+                <span class="org-server-label">${__('Tipo de servidor')}</span>
                 <span class="org-server-value">${this.escapeHtml(s.server_type || '—')}</span>
               </div>
               <div class="org-server-row">
-                <span class="org-server-label">Hetzner ID</span>
+                <span class="org-server-label">${__('Hetzner ID')}</span>
                 <code class="org-server-mono">${this.escapeHtml(s.hetzner_server_id || '—')}</code>
               </div>
               <div class="org-server-row">
-                <span class="org-server-label">Última actividad</span>
+                <span class="org-server-label">${__('Última actividad')}</span>
                 <span class="org-server-value">${this.escapeHtml(lastActivity)}${inactive ? ' · ' + this.escapeHtml(inactive) : ''}</span>
               </div>
               <div class="org-server-row">
-                <span class="org-server-label">Snapshot disponible</span>
-                <span class="org-server-value">${s.has_snapshot ? 'Sí' : 'No'}</span>
+                <span class="org-server-label">${__('Snapshot disponible')}</span>
+                <span class="org-server-value">${s.has_snapshot ? __('Sí') : __('No')}</span>
               </div>
             </div>
-            <p class="org-server-hint"><i class="fas fa-info-circle"></i> El servidor se reactiva automáticamente cuando Vera necesita ejecutar una tarea; mientras tanto no genera costo de cómputo.</p>
+            <p class="org-server-hint"><i class="fas fa-info-circle"></i> ${__('El servidor se reactiva automáticamente cuando Vera necesita ejecutar una tarea; mientras tanto no genera costo de cómputo.')}</p>
           </div>`;
       }
     }
@@ -1597,9 +1597,9 @@ class OrganizationView extends BaseView {
     if (apEl) {
       const s = this.apifyStats30d;
       apEl.innerHTML = `
-        ${this._engineStatHTML('Runs', s.runs.toLocaleString('es'), 'fa-bolt')}
-        ${this._engineStatHTML('Items extraídos', s.items.toLocaleString('es'), 'fa-database')}
-        ${this._engineStatHTML('Gastado en Apify', `$${s.usd.toFixed(2)}`, 'fa-dollar-sign', 'cost')}
+        ${this._engineStatHTML(__('Runs'), s.runs.toLocaleString('es'), 'fa-bolt')}
+        ${this._engineStatHTML(__('Items extraídos'), s.items.toLocaleString('es'), 'fa-database')}
+        ${this._engineStatHTML(__('Gastado en Apify'), `$${s.usd.toFixed(2)}`, 'fa-dollar-sign', 'cost')}
       `;
     }
 
@@ -1607,7 +1607,7 @@ class OrganizationView extends BaseView {
     const apList = this.querySelector('#orgScrapersList');
     if (apList) {
       if (!this.apifyRuns.length) {
-        apList.innerHTML = '<p class="org-members-empty">Sin scrapers ejecutados en los últimos 30 días.</p>';
+        apList.innerHTML = `<p class="org-members-empty">${__('Sin scrapers ejecutados en los últimos 30 días.')}</p>`;
       } else {
         apList.innerHTML = this.apifyRuns.slice(0, 20).map((r) => {
           const when = r.started_at ? new Date(r.started_at).toLocaleString('es') : '—';
@@ -1619,7 +1619,7 @@ class OrganizationView extends BaseView {
               <span class="org-scraper-when">${this.escapeHtml(when)}</span>
               <span class="org-scraper-platform">${this.escapeHtml((r.platform || '—').toLowerCase())}</span>
               <span class="org-scraper-handle" title="${this.escapeHtml(r.handle || '')}">${this.escapeHtml(r.handle || '—')}</span>
-              <span class="org-scraper-items">${this.escapeHtml(items)} items</span>
+              <span class="org-scraper-items">${__('{n} items', { n: this.escapeHtml(items) })}</span>
               <span class="org-scraper-cost">${this.escapeHtml(usd)}</span>
               <span class="org-run-status org-run-status--${this.escapeHtml(status.toLowerCase())}">${this.escapeHtml(status)}</span>
             </div>`;
@@ -1632,10 +1632,10 @@ class OrganizationView extends BaseView {
     if (trEl) {
       const t = this.trendJobs30d;
       trEl.innerHTML = `
-        ${this._engineStatHTML('Ciclos', t.runs.toLocaleString('es'), 'fa-sync')}
-        ${this._engineStatHTML('Señales recolectadas', t.signals.toLocaleString('es'), 'fa-broadcast-tower')}
-        ${this._engineStatHTML('Briefs generados', t.briefs.toLocaleString('es'), 'fa-file-alt')}
-        ${this._engineStatHTML('Costo total', `$${t.usd.toFixed(2)}`, 'fa-dollar-sign', 'cost')}
+        ${this._engineStatHTML(__('Ciclos'), t.runs.toLocaleString('es'), 'fa-sync')}
+        ${this._engineStatHTML(__('Señales recolectadas'), t.signals.toLocaleString('es'), 'fa-broadcast-tower')}
+        ${this._engineStatHTML(__('Briefs generados'), t.briefs.toLocaleString('es'), 'fa-file-alt')}
+        ${this._engineStatHTML(__('Costo total'), `$${t.usd.toFixed(2)}`, 'fa-dollar-sign', 'cost')}
       `;
     }
   }
@@ -1655,7 +1655,7 @@ class OrganizationView extends BaseView {
     const list = this.querySelector('#orgRunsList');
     if (list) {
       if (!this.recentFlowRuns.length) {
-        list.innerHTML = '<p class="org-members-empty">Sin ejecuciones recientes.</p>';
+        list.innerHTML = `<p class="org-members-empty">${__('Sin ejecuciones recientes.')}</p>`;
       } else {
         list.innerHTML = this.recentFlowRuns.map((r) => {
           const when = r.created_at ? new Date(r.created_at).toLocaleString('es') : '—';
@@ -1668,7 +1668,7 @@ class OrganizationView extends BaseView {
               <span class="org-run-when">${this.escapeHtml(when)}</span>
               <span class="org-run-flow">${this.escapeHtml(r.flow_id ? r.flow_id.slice(0, 8) + '…' : '—')}</span>
               <span class="org-run-progress">${this.escapeHtml(progress)}</span>
-              <span class="org-run-tokens">${r.tokens_consumed || 0} tk</span>
+              <span class="org-run-tokens">${__('{n} tk', { n: r.tokens_consumed || 0 })}</span>
               <span class="org-run-status org-run-status--${this.escapeHtml(status)}">${this.escapeHtml(status)}</span>
             </div>`;
         }).join('');
@@ -1678,14 +1678,14 @@ class OrganizationView extends BaseView {
     const tlEl = this.querySelector('#orgCreditsTimeline');
     if (tlEl) {
       if (!this.creditTimeline.length) {
-        tlEl.innerHTML = '<p class="org-placeholder">Sin consumo registrado en los últimos 30 días.</p>';
+        tlEl.innerHTML = `<p class="org-placeholder">${__('Sin consumo registrado en los últimos 30 días.')}</p>`;
       } else {
         const max = Math.max(...this.creditTimeline.map((d) => d.total)) || 1;
         tlEl.innerHTML = `
           <div class="org-spark">
             ${this.creditTimeline.map((d) => {
               const h = Math.max(2, Math.round((d.total / max) * 100));
-              return `<div class="org-spark-bar" style="height:${h}%" title="${this.escapeHtml(d.day)} — ${d.total} créditos"></div>`;
+              return `<div class="org-spark-bar" style="height:${h}%" title="${__('{dia} — {total} créditos', { dia: this.escapeHtml(d.day), total: d.total })}"></div>`;
             }).join('')}
           </div>
           <div class="org-spark-axis">
@@ -1700,7 +1700,7 @@ class OrganizationView extends BaseView {
     const list = this.querySelector('#orgMonitoringList');
     if (!list) return;
     if (!this.monitoringTriggers.length) {
-      list.innerHTML = '<p class="org-members-empty">No hay sensores configurados.</p>';
+      list.innerHTML = `<p class="org-members-empty">${__('No hay sensores configurados.')}</p>`;
       return;
     }
     list.innerHTML = this.monitoringTriggers.map((t) => {
@@ -1711,12 +1711,12 @@ class OrganizationView extends BaseView {
       return `
         <div class="org-monitor-row">
           <div class="org-monitor-info">
-            <span class="org-monitor-name">${this.escapeHtml(t.sensor_type || 'sensor')}</span>
-            <span class="org-monitor-meta">cadencia: ${this.escapeHtml(t.cadence || '—')}${t.cadence_value ? ' (' + this.escapeHtml(t.cadence_value) + ')' : ''} · prioridad ${t.priority ?? '—'}</span>
+            <span class="org-monitor-name">${this.escapeHtml(t.sensor_type || __('sensor'))}</span>
+            <span class="org-monitor-meta">${__('cadencia:')} ${this.escapeHtml(t.cadence || '—')}${t.cadence_value ? ' (' + this.escapeHtml(t.cadence_value) + ')' : ''} · ${__('prioridad')} ${t.priority ?? '—'}</span>
           </div>
           <div class="org-monitor-runs">
-            <span class="org-monitor-last">Último: ${this.escapeHtml(last)} <em class="org-run-status org-run-status--${this.escapeHtml(lastStatus)}">${this.escapeHtml(lastStatus)}</em></span>
-            <span class="org-monitor-next">Próximo: ${this.escapeHtml(next)}</span>
+            <span class="org-monitor-last">${__('Último:')} ${this.escapeHtml(last)} <em class="org-run-status org-run-status--${this.escapeHtml(lastStatus)}">${this.escapeHtml(lastStatus)}</em></span>
+            <span class="org-monitor-next">${__('Próximo:')} ${this.escapeHtml(next)}</span>
           </div>
           <span class="org-monitor-status org-monitor-status--${this.escapeHtml(status)}">${this.escapeHtml(status)}</span>
         </div>`;
@@ -1733,19 +1733,19 @@ class OrganizationView extends BaseView {
       const queueFailed = this.queueByStatus.failed || 0;
       const queuePending = this.queueByStatus.pending || this.queueByStatus.queued || 0;
       grid.innerHTML = `
-        ${this._healthStatHTML('Acciones pendientes de Vera', pending, 'fa-hourglass-half', pending > 0 ? 'warning' : 'ok')}
-        ${this._healthStatHTML('Ejecutadas (vida total)', executed, 'fa-check-circle', 'ok')}
-        ${this._healthStatHTML('Fallidas (vida total)', failed, 'fa-exclamation-triangle', failed > 0 ? 'error' : 'ok')}
-        ${this._healthStatHTML('En cola', queuePending, 'fa-list', 'neutral')}
-        ${this._healthStatHTML('En ejecución', queueRunning, 'fa-spinner', 'neutral')}
-        ${this._healthStatHTML('Jobs fallidos', queueFailed, 'fa-times-circle', queueFailed > 0 ? 'error' : 'ok')}
+        ${this._healthStatHTML(__('Acciones pendientes de Vera'), pending, 'fa-hourglass-half', pending > 0 ? 'warning' : 'ok')}
+        ${this._healthStatHTML(__('Ejecutadas (vida total)'), executed, 'fa-check-circle', 'ok')}
+        ${this._healthStatHTML(__('Fallidas (vida total)'), failed, 'fa-exclamation-triangle', failed > 0 ? 'error' : 'ok')}
+        ${this._healthStatHTML(__('En cola'), queuePending, 'fa-list', 'neutral')}
+        ${this._healthStatHTML(__('En ejecución'), queueRunning, 'fa-spinner', 'neutral')}
+        ${this._healthStatHTML(__('Jobs fallidos'), queueFailed, 'fa-times-circle', queueFailed > 0 ? 'error' : 'ok')}
       `;
     }
 
     const errEl = this.querySelector('#orgMissionErrors');
     if (errEl) {
       if (!this.recentMissionErrors.length) {
-        errEl.innerHTML = '<p class="org-members-empty">Sin errores en los últimos 7 días.</p>';
+        errEl.innerHTML = `<p class="org-members-empty">${__('Sin errores en los últimos 7 días.')}</p>`;
       } else {
         errEl.innerHTML = this.recentMissionErrors.map((m) => {
           const when = m.completed_at || m.started_at;
@@ -1753,7 +1753,7 @@ class OrganizationView extends BaseView {
           return `
             <div class="org-error-row">
               <span class="org-error-when">${this.escapeHtml(t)}</span>
-              <span class="org-error-message">${this.escapeHtml((m.error_message || 'Sin detalle').slice(0, 220))}</span>
+              <span class="org-error-message">${this.escapeHtml((m.error_message || __('Sin detalle')).slice(0, 220))}</span>
             </div>`;
         }).join('');
       }
@@ -1764,7 +1764,7 @@ class OrganizationView extends BaseView {
     const list = this.querySelector('#orgNotificationsList');
     if (!list) return;
     if (!this.notifications.length) {
-      list.innerHTML = '<p class="org-members-empty">No hay notificaciones recientes.</p>';
+      list.innerHTML = `<p class="org-members-empty">${__('No hay notificaciones recientes.')}</p>`;
       return;
     }
     list.innerHTML = this.notifications.map((n) => {
@@ -1775,11 +1775,11 @@ class OrganizationView extends BaseView {
         <div class="org-notif-row org-notif-row--${this.escapeHtml(sev)}">
           ${unread}
           <div class="org-notif-info">
-            <span class="org-notif-title">${this.escapeHtml(n.title || n.type || 'Notificación')}</span>
+            <span class="org-notif-title">${this.escapeHtml(n.title || n.type || __('Notificación'))}</span>
             ${n.body ? `<span class="org-notif-body">${this.escapeHtml(n.body)}</span>` : ''}
             <span class="org-notif-meta">${this.escapeHtml(when)} · ${this.escapeHtml(n.type || '')}</span>
           </div>
-          ${n.action_url ? `<a href="${this.escapeHtml(n.action_url)}" class="btn btn-secondary btn-sm">${this.escapeHtml(n.action_label || 'Abrir')}</a>` : ''}
+          ${n.action_url ? `<a href="${this.escapeHtml(n.action_url)}" class="btn btn-secondary btn-sm">${this.escapeHtml(n.action_label || __('Abrir'))}</a>` : ''}
         </div>`;
     }).join('');
   }
@@ -1805,7 +1805,7 @@ class OrganizationView extends BaseView {
     let rows = this.auditLog;
     if (this.auditFilter.action) rows = rows.filter((r) => r.action === this.auditFilter.action);
     if (this.auditFilter.user) rows = rows.filter((r) => r.user_id === this.auditFilter.user);
-    if (!rows.length) { listEl.innerHTML = '<p class="org-members-empty">Sin actividad registrada.</p>'; return; }
+    if (!rows.length) { listEl.innerHTML = `<p class="org-members-empty">${__('Sin actividad registrada.')}</p>`; return; }
     listEl.innerHTML = rows.map((r) => {
       const when = r.created_at ? new Date(r.created_at).toLocaleString('es') : '—';
       const who = r.user_email || r.user_id?.slice(0, 8) + '…' || '—';
@@ -1927,16 +1927,16 @@ class OrganizationView extends BaseView {
       timezone: this.querySelector('#orgTimezone')?.value || 'UTC',
       locale: this.querySelector('#orgLocale')?.value || 'es',
     };
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${__('Guardando…')}`; }
     try {
       const { error } = await this.supabase.from('organizations').update(payload).eq('id', this.orgId);
       if (error) throw error;
       this.org = { ...this.org, ...payload };
-      this._toast('Configuración regional guardada');
+      this._toast(__('Configuración regional guardada'));
     } catch (e) {
-      alert(e.message || 'No se pudo guardar.');
+      alert(e.message || __('No se pudo guardar.'));
     } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Guardar'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-save"></i> ${__('Guardar')}`; }
     }
   }
 
@@ -1955,17 +1955,17 @@ class OrganizationView extends BaseView {
       confirm_threshold_usd: num('#capsConfirm'),
       confirm_enabled: !!this.querySelector('#capsConfirmEnabled')?.checked,
     };
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${__('Guardando…')}`; }
     try {
       const { error } = await this.supabase.from('org_claude_caps').upsert(payload, { onConflict: 'organization_id' });
       if (error) throw error;
       await this._loadAiCaps();
       this._renderPlanAndLimits();
-      this._toast('Límites de IA actualizados');
+      this._toast(__('Límites de IA actualizados'));
     } catch (e) {
-      alert(e.message || 'No se pudo guardar los límites.');
+      alert(e.message || __('No se pudo guardar los límites.'));
     } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Guardar límites'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-save"></i> ${__('Guardar límites')}`; }
     }
   }
 
@@ -1984,61 +1984,61 @@ class OrganizationView extends BaseView {
     const role = (document.getElementById('inviteRole')?.value || 'member').toLowerCase();
     if (!email) return;
     const btn = document.querySelector('#orgInviteForm button[type="submit"]');
-    if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
+    if (btn) { btn.disabled = true; btn.textContent = __('Enviando…'); }
     try {
       const { data: existing } = await this.supabase
         .from('organization_invitations').select('id').eq('organization_id', this.orgId).eq('email', email).eq('status', 'pending').maybeSingle();
-      if (existing) { alert('Ya existe una invitación pendiente para ese email.'); return; }
+      if (existing) { alert(__('Ya existe una invitación pendiente para ese email.')); return; }
       const { data: profile } = await this.supabase.from('profiles').select('id').eq('email', email).maybeSingle();
-      if (profile && this.members.some((m) => m.user_id === profile.id)) { alert('Ese usuario ya es miembro.'); return; }
+      if (profile && this.members.some((m) => m.user_id === profile.id)) { alert(__('Ese usuario ya es miembro.')); return; }
       const { error } = await this.supabase.from('organization_invitations').insert({ organization_id: this.orgId, email, role, invited_by: this.userId });
       if (error) throw error;
       this._closeInviteModal();
       await this._loadInvitations();
       this._renderInvitations();
-      this._toast('Invitación enviada');
+      this._toast(__('Invitación enviada'));
     } catch (e) {
-      alert(e.message || 'No se pudo enviar la invitación.');
+      alert(e.message || __('No se pudo enviar la invitación.'));
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Enviar invitación'; }
+      if (btn) { btn.disabled = false; btn.textContent = __('Enviar invitación'); }
     }
   }
 
   async _revokeInvitation(invitationId) {
-    if (!invitationId || !confirm('¿Revocar esta invitación?')) return;
+    if (!invitationId || !confirm(__('¿Revocar esta invitación?'))) return;
     const { error } = await this.supabase.from('organization_invitations').update({ status: 'revoked' }).eq('id', invitationId);
-    if (error) { alert(error.message || 'Error.'); return; }
+    if (error) { alert(error.message || __('Error.')); return; }
     await this._loadInvitations(); this._renderInvitations();
-    this._toast('Invitación revocada');
+    this._toast(__('Invitación revocada'));
   }
 
   async _changeRole(memberId, role) {
     if (!memberId || !role || !this.canManageMembers) return;
     const { error } = await this.supabase.from('organization_members').update({ role }).eq('id', memberId).eq('organization_id', this.orgId);
-    if (error) { alert(error.message || 'No se pudo cambiar el rol.'); return; }
+    if (error) { alert(error.message || __('No se pudo cambiar el rol.')); return; }
     await this._loadMembers(); this._renderMembers();
-    this._toast('Rol actualizado');
+    this._toast(__('Rol actualizado'));
   }
 
   async _removeMember(memberId) {
     if (!memberId || !this.canManageMembers) return;
     const m = this.members.find((x) => x.id === memberId);
     if (!m || m.user_id === this.org?.owner_user_id) return;
-    if (!confirm('¿Quitar a este miembro de la organización?')) return;
+    if (!confirm(__('¿Quitar a este miembro de la organización?'))) return;
     const { error } = await this.supabase.from('organization_members').delete().eq('id', memberId).eq('organization_id', this.orgId);
-    if (error) { alert(error.message || 'Error.'); return; }
+    if (error) { alert(error.message || __('Error.')); return; }
     await this._loadMembers(); this._renderMembers();
-    this._toast('Miembro eliminado');
+    this._toast(__('Miembro eliminado'));
   }
 
   _openTransferModal() {
-    if (!this.isOwner) { alert('Solo el propietario puede transferir.'); return; }
+    if (!this.isOwner) { alert(__('Solo el propietario puede transferir.')); return; }
     const sel = document.getElementById('transferTo');
     if (sel) {
       const opts = this.membersWithProfile
         .filter((m) => m.user_id && m.user_id !== this.userId)
         .map((m) => `<option value="${this.escapeHtml(m.user_id)}">${this.escapeHtml(m.full_name || m.email || m.user_id.slice(0, 8) + '…')}</option>`).join('');
-      sel.innerHTML = '<option value="">Selecciona un miembro…</option>' + opts;
+      sel.innerHTML = `<option value="">${__('Selecciona un miembro…')}</option>` + opts;
     }
     const label = document.getElementById('transferOrgNameLabel');
     if (label) label.textContent = this.org?.name || '';
@@ -2053,28 +2053,28 @@ class OrganizationView extends BaseView {
     if (!this.isOwner) return;
     const newOwner = document.getElementById('transferTo')?.value;
     const confirmTxt = document.getElementById('transferConfirm')?.value?.trim();
-    if (!newOwner) { alert('Selecciona un miembro.'); return; }
-    if (confirmTxt !== (this.org?.name || '')) { alert('El nombre no coincide.'); return; }
+    if (!newOwner) { alert(__('Selecciona un miembro.')); return; }
+    if (confirmTxt !== (this.org?.name || '')) { alert(__('El nombre no coincide.')); return; }
     const { error } = await this.supabase.from('organizations').update({ owner_user_id: newOwner }).eq('id', this.orgId).eq('owner_user_id', this.userId);
-    if (error) { alert(error.message || 'No se pudo transferir.'); return; }
+    if (error) { alert(error.message || __('No se pudo transferir.')); return; }
     this._closeTransferModal();
-    this._toast('Propiedad transferida');
+    this._toast(__('Propiedad transferida'));
     await this._loadOrg(); await this._loadMembers();
     this._renderHeaderStatus(); this._renderGeneral(); this._renderMembers();
   }
 
   async _archiveOrg() {
-    if (!this.isOwner) { alert('Solo el propietario puede archivar.'); return; }
-    const confirmTxt = prompt(`Escribe "${this.org?.name || ''}" para archivar:`);
-    if (confirmTxt !== this.org?.name) { if (confirmTxt != null) alert('El nombre no coincide.'); return; }
+    if (!this.isOwner) { alert(__('Solo el propietario puede archivar.')); return; }
+    const confirmTxt = prompt(__('Escribe "{nombre}" para archivar:', { nombre: this.org?.name || '' }));
+    if (confirmTxt !== this.org?.name) { if (confirmTxt != null) alert(__('El nombre no coincide.')); return; }
     const { error } = await this.supabase.from('organizations').update({ deleted_at: new Date().toISOString() }).eq('id', this.orgId).eq('owner_user_id', this.userId);
-    if (error) { alert(error.message || 'No se pudo archivar.'); return; }
-    this._toast('Organización archivada');
+    if (error) { alert(error.message || __('No se pudo archivar.')); return; }
+    this._toast(__('Organización archivada'));
     setTimeout(() => window.router?.navigate('/home', true), 600);
   }
 
   async _requestExport() {
-    alert('Solicitud de export registrada. Recibirás un email con el enlace de descarga cuando esté lista.');
+    alert(__('Solicitud de export registrada. Recibirás un email con el enlace de descarga cuando esté lista.'));
   }
 
   _toast(msg) {

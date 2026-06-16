@@ -86,7 +86,7 @@ class TasksView extends BaseView {
       <header class="task-detail-header">
         <div class="task-detail-header-left">
           <a class="btn btn-ghost task-detail-back" id="backToTasksBtn">
-            <i class="fas fa-arrow-left"></i> Volver
+            <i class="fas fa-arrow-left"></i> ${__('Volver')}
           </a>
           <div class="task-detail-title-block">
             <h1 class="task-detail-title" id="taskDetailTitle">—</h1>
@@ -94,10 +94,10 @@ class TasksView extends BaseView {
           </div>
         </div>
         <div class="task-detail-header-right">
-          <button type="button" class="btn btn-ghost" id="taskDetailToggleActiveBtn" title="Activar o pausar"><i class="fas fa-pause-circle"></i> <span id="taskDetailToggleActiveLabel">Pausar</span></button>
-          <button type="button" class="btn btn-ghost" id="taskDetailDuplicateBtn"><i class="fas fa-copy"></i> Duplicar</button>
-          <button type="button" class="btn btn-ghost task-detail-danger" id="taskDetailDeleteBtn"><i class="fas fa-trash-alt"></i> Eliminar</button>
-          <button type="button" class="btn btn-primary" id="taskDetailSaveBtn"><i class="fas fa-save"></i> Guardar</button>
+          <button type="button" class="btn btn-ghost" id="taskDetailToggleActiveBtn" title="${__('Activar o pausar')}"><i class="fas fa-pause-circle"></i> <span id="taskDetailToggleActiveLabel">${__('Pausar')}</span></button>
+          <button type="button" class="btn btn-ghost" id="taskDetailDuplicateBtn"><i class="fas fa-copy"></i> ${__('Duplicar')}</button>
+          <button type="button" class="btn btn-ghost task-detail-danger" id="taskDetailDeleteBtn"><i class="fas fa-trash-alt"></i> ${__('Eliminar')}</button>
+          <button type="button" class="btn btn-primary" id="taskDetailSaveBtn"><i class="fas fa-save"></i> ${__('Guardar')}</button>
         </div>
       </header>
 
@@ -171,7 +171,7 @@ class TasksView extends BaseView {
         <!-- Runs (abajo izq, span 2 col) -->
         <section class="task-detail-section task-detail-runs">
           <header class="task-detail-section-header">
-            <h2 class="task-detail-section-title">Últimas ejecuciones</h2>
+            <h2 class="task-detail-section-title">${__('Últimas ejecuciones')}</h2>
           </header>
           <div class="task-detail-runs-body" id="taskDetailRunsBody"></div>
         </section>
@@ -234,7 +234,7 @@ class TasksView extends BaseView {
           <div class="tasks-page" style="padding: 2rem;">
             <h1 class="tasks-title">${__('Tareas programadas')}</h1>
             <div class="error-container" style="margin-top: 2rem; text-align: center;">
-              <p style="color: var(--text-secondary);">Error al cargar las tareas. ${err && err.message ? err.message : 'Por favor, recarga la página.'}</p>
+              <p style="color: var(--text-secondary);">${__('Error al cargar las tareas.')} ${err && err.message ? err.message : __('Por favor, recarga la página.')}</p>
               <button type="button" class="btn btn-primary" style="margin-top: 1rem;" onclick="window.location.reload()">${__('Recargar')}</button>
             </div>
           </div>`;
@@ -1276,9 +1276,9 @@ class TasksView extends BaseView {
             <span class="cal2-month">${monthLabel}</span>
             <span class="cal2-week">/ ${weekLabel}</span>
             <div class="cal2-navgroup">
-              <button type="button" class="cal2-nav" id="calPrev" aria-label="Semana anterior"><i class="fas fa-chevron-left"></i></button>
+              <button type="button" class="cal2-nav" id="calPrev" aria-label="${__('Semana anterior')}"><i class="fas fa-chevron-left"></i></button>
               <button type="button" class="cal2-today" id="calToday">${__('Hoy')}</button>
-              <button type="button" class="cal2-nav" id="calNext" aria-label="Semana siguiente"><i class="fas fa-chevron-right"></i></button>
+              <button type="button" class="cal2-nav" id="calNext" aria-label="${__('Semana siguiente')}"><i class="fas fa-chevron-right"></i></button>
             </div>
           </div>
           <div class="cal2-toolbar-right">
@@ -1287,7 +1287,7 @@ class TasksView extends BaseView {
             <span class="cal2-legend"><span class="cal2-legend-dot cal2-legend-dot--draft"></span>${__('Borrador')}</span>
           </div>
         </div>
-        ${isEmpty ? '<p class="cal2-empty">No hay tareas programadas en esta vista.</p>' : ''}
+        ${isEmpty ? `<p class="cal2-empty">${__('No hay tareas programadas en esta vista.')}</p>` : ''}
         <div class="cal2-frame">
           <div class="cal2-head">
             <div class="cal2-head-corner"></div>
@@ -1367,7 +1367,7 @@ class TasksView extends BaseView {
     // Header: título (job_name) + subtítulo (flow_name)
     const titleEl = document.getElementById('taskDetailTitle');
     const subtitleEl = document.getElementById('taskDetailSubtitle');
-    if (titleEl) titleEl.textContent = task.job_name || 'Tarea sin nombre';
+    if (titleEl) titleEl.textContent = task.job_name || __('Tarea sin nombre');
     if (subtitleEl) subtitleEl.textContent = task.flow_name || '—';
 
     // Dashboard + Runs en paralelo (no bloquean form)
@@ -1445,7 +1445,7 @@ class TasksView extends BaseView {
     const metricsEl = document.getElementById('taskDetailMetrics');
     const runsEl = document.getElementById('taskDetailRunsBody');
     if (metricsEl) metricsEl.innerHTML = this._renderTaskMetricsSkeleton();
-    if (runsEl) runsEl.innerHTML = '<p class="task-detail-empty">Cargando ejecuciones…</p>';
+    if (runsEl) runsEl.innerHTML = `<p class="task-detail-empty">${__('Cargando ejecuciones…')}</p>`;
 
     const runs = await this._loadTaskRuns(task);
     this._renderTaskMetrics(task, runs);
@@ -1613,19 +1613,19 @@ class TasksView extends BaseView {
       return;
     }
     this._invalidateSchedulesCache();
-    this.showNotification(newActive ? 'Tarea activada' : 'Tarea pausada', 'success');
+    this.showNotification(newActive ? __('Tarea activada') : __('Tarea pausada'), 'success');
     await this.renderTaskDetail();
   }
 
   /** Duplicar schedule: mismo flujo y configuración, job_name único. */
   async duplicateSchedule(task) {
     if (!this.supabase || !task?.id) return;
-    const baseName = (task.job_name || 'Tarea').trim();
-    const suffix = ` (copia ${new Date().toISOString().slice(0, 10)})`;
+    const baseName = (task.job_name || __('Tarea')).trim();
+    const suffix = ` ${__('(copia {date})', { date: new Date().toISOString().slice(0, 10) })}`;
     let jobName = baseName + suffix;
     if (jobName.length > 255) jobName = baseName.slice(0, 255 - suffix.length) + suffix;
     const { data: existing } = await this.supabase.from('flow_schedules').select('id').eq('job_name', jobName).maybeSingle();
-    if (existing) jobName = `${baseName} (copia ${Date.now()})`;
+    if (existing) jobName = `${baseName} ${__('(copia {date})', { date: Date.now() })}`;
     const firstCampaignId = Array.isArray(task.campaign_ids) ? task.campaign_ids[0] : task.campaign_ids;
     const firstAudienceId = Array.isArray(task.audience_ids) ? task.audience_ids[0] : task.audience_ids;
     const insert = {
@@ -1660,8 +1660,8 @@ class TasksView extends BaseView {
   /** Pedir confirmación y eliminar el schedule. */
   async confirmDeleteSchedule(task) {
     if (!task?.id) return;
-    const name = task.job_name || 'esta tarea';
-    if (!confirm(`¿Eliminar la tarea "${name}"? Esta acción no se puede deshacer.`)) return;
+    const name = task.job_name || __('esta tarea');
+    if (!confirm(__('¿Eliminar la tarea "{name}"? Esta acción no se puede deshacer.', { name }))) return;
     await this.deleteSchedule(task.id);
   }
 
@@ -1713,7 +1713,7 @@ class TasksView extends BaseView {
         <select id="taskEditAspectRatio" class="task-edit-select">
           ${aspectOpts}
         </select>
-        <label>Nº producciones por ejecución</label>
+        <label>${__('Nº producciones por ejecución')}</label>
         <input type="number" id="taskEditProductionCount" min="1" value="${task.production_count ?? 1}" />
         <label>${__('Activa')}</label>
         <input type="checkbox" id="taskEditIsActive" ${task.is_active ? 'checked' : ''} />
@@ -1722,7 +1722,7 @@ class TasksView extends BaseView {
           <button type="button" class="btn btn-primary" id="taskEditSubmit">${__('Guardar')}</button>
         </div>
       `;
-      const { modal, close } = window.Modal.show({ title: 'Configurar tarea', body, className: 'task-modal' });
+      const { modal, close } = window.Modal.show({ title: __('Configurar tarea'), body, className: 'task-modal' });
       modal.querySelector('.modal-cancel').onclick = () => close();
       modal.querySelector('#taskEditSubmit').onclick = async () => {
         const entityId = document.getElementById('taskEditEntity').value || null;

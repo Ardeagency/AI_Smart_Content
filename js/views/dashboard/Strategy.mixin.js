@@ -16,9 +16,9 @@
 
   const fmt = { int: (n) => (n == null ? '—' : Number(n).toLocaleString('es-CO')) };
   const CONF = {
-    alta:  { label: 'Alta confianza',  color: '#6e9f81' },
-    media: { label: 'Media confianza', color: '#9c8e6b' },
-    baja:  { label: 'Baja confianza',  color: '#8a8a8e' },
+    alta:  { label: __('Alta confianza'),  color: '#6e9f81' },
+    media: { label: __('Media confianza'), color: '#9c8e6b' },
+    baja:  { label: __('Baja confianza'),  color: '#8a8a8e' },
   };
 
   Object.assign(DashboardView.prototype, {
@@ -290,7 +290,7 @@
       if (!recId || !this._strategiaService) return;
       let feedback = '';
       if (action === 'iterate') {
-        feedback = (window.prompt('¿Qué quieres ajustar de esta recomendación?') || '').trim();
+        feedback = (window.prompt(__('¿Qué quieres ajustar de esta recomendación?')) || '').trim();
         if (!feedback) return; // cancelado
       }
       if (card) { card.style.opacity = '0.5'; card.style.pointerEvents = 'none'; }

@@ -153,7 +153,7 @@ class FlowCatalogView extends BaseView {
         <div class="flow-catalog-content" id="flowCatalogContent" style="display: none;">
           <header class="flow-catalog-saved-header">
             <h1 class="flow-catalog-saved-title">My Flows</h1>
-            <p class="flow-catalog-saved-sub">Tus flujos guardados. Toca el icono de guardar en cualquier flujo del catalogo para tenerlo aqui a la mano.</p>
+            <p class="flow-catalog-saved-sub">${__('Tus flujos guardados. Toca el icono de guardar en cualquier flujo del catalogo para tenerlo aqui a la mano.')}</p>
           </header>
           <section class="flow-catalog-row-section flow-catalog-row-section--unframed">
             <div class="flow-catalog-saved-grid" id="savedFlowsGrid"></div>
@@ -198,9 +198,9 @@ class FlowCatalogView extends BaseView {
               <select id="flowFilterOutput" class="flow-toolbar-select" aria-label="${__('Tipo de salida')}">
                 <option value="">${__('Todo tipo')}</option>
                 <option value="image">${__('Imagen')}</option>
-                <option value="video">Video</option>
+                <option value="video">${__('Video')}</option>
                 <option value="text">${__('Texto')}</option>
-                <option value="audio">Audio</option>
+                <option value="audio">${__('Audio')}</option>
                 <option value="document">${__('Documento')}</option>
                 <option value="mixed">${__('Mixto')}</option>
               </select>
@@ -238,13 +238,13 @@ class FlowCatalogView extends BaseView {
             <div class="flow-catalog-category-main">
               <!-- Últimos en esta categoría -->
               <section class="flow-catalog-row-section" id="sectionRecentCategory">
-                <h2 class="flow-catalog-row-title">Continuar</h2>
+                <h2 class="flow-catalog-row-title">${__('Continuar')}</h2>
                 <div class="flow-catalog-row-scroll" id="rowRecentCategory"></div>
               </section>
               <!-- Galería por subcategoría -->
               <div class="flow-catalog-gallery-by-sub" id="galleryBySub"></div>
             </div>
-            <nav class="flow-catalog-subnav-side" id="subcategoriesStrip" aria-label="Subcategorias"></nav>
+            <nav class="flow-catalog-subnav-side" id="subcategoriesStrip" aria-label="${__('Subcategorias')}"></nav>
           </div>
           `}
         </div>
@@ -660,7 +660,7 @@ class FlowCatalogView extends BaseView {
         }
         if (!bySub.has(f.subcategory_id)) {
           const sub = this.subcategories.find(s => s.id === f.subcategory_id);
-          bySub.set(f.subcategory_id, { sub: sub || { id: f.subcategory_id, name: 'Sin nombre' }, flows: [] });
+          bySub.set(f.subcategory_id, { sub: sub || { id: f.subcategory_id, name: __('Sin nombre') }, flows: [] });
         }
         bySub.get(f.subcategory_id).flows.push(f);
       });
@@ -693,7 +693,7 @@ class FlowCatalogView extends BaseView {
     const uncategorized = this.flows.filter(f => !f.category_id);
     if (uncategorized.length > 0) {
       result.push({
-        category: { id: null, name: 'Sin categoría' },
+        category: { id: null, name: __('Sin categoría') },
         rows: [{ subcategory: { id: null, name: '' }, flows: uncategorized }]
       });
     }
@@ -765,13 +765,13 @@ class FlowCatalogView extends BaseView {
     const isSaved = this.savedFlowIds.has(flow.id);
 
     const badges = [];
-    if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
+    if (this.isNew(flow)) badges.push(`<span class="flow-card-badge flow-card-badge--new">${__('Nuevo')}</span>`);
     // Trending (top engagement) tiene prioridad sobre Popular (uso absoluto) para no apilar dos badges de prueba social.
-    if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
-    else if (this.isPopular(flow)) badges.push('<span class="flow-card-badge flow-card-badge--popular">Popular</span>');
+    if (this.isTrending(flow)) badges.push(`<span class="flow-card-badge flow-card-badge--trending">${__('Trending')}</span>`);
+    else if (this.isPopular(flow)) badges.push(`<span class="flow-card-badge flow-card-badge--popular">${__('Popular')}</span>`);
     const t = flow.flow_category_type || 'manual';
     const isAutopilotLike = (t === 'autopilot');
-    if (isAutopilotLike) badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
+    if (isAutopilotLike) badges.push(`<span class="flow-card-badge flow-card-badge--auto">${__('Autopilot')}</span>`);
     // Video: NO autoplay — se reproduce solo en hover (preview Netflix + mejor
     // rendimiento con muchas cards). El play/pause lo maneja bindFlowCardListeners.
     const img = flow.flow_image_url
@@ -787,7 +787,7 @@ class FlowCatalogView extends BaseView {
     const version = (flow.version || '1.0.0').toString();
     const runs = flow.run_count || 0;
     const usesHtml = runs > 0
-      ? `<span class="flow-card-info-uses" title="Ejecuciones"><i class="fas fa-play"></i>${this.formatCount(runs)} usos</span>`
+      ? `<span class="flow-card-info-uses" title="${__('Ejecuciones')}"><i class="fas fa-play"></i>${this.formatCount(runs)} ${__('usos')}</span>`
       : '';
 
     return `
@@ -797,7 +797,7 @@ class FlowCatalogView extends BaseView {
           <div class="flow-card-gradient" aria-hidden="true"></div>
           <div class="flow-card-badges">${badges.join('')}</div>
           <div class="flow-card-actions">
-            <button type="button" class="flow-card-icon-btn flow-card-icon-run" data-action="run" title="Ejecutar" aria-label="Ejecutar"><i class="fas fa-play"></i></button>
+            <button type="button" class="flow-card-icon-btn flow-card-icon-run" data-action="run" title="${__('Ejecutar')}" aria-label="${__('Ejecutar')}"><i class="fas fa-play"></i></button>
             <button type="button" class="flow-card-icon-btn flow-card-icon-like ${isLiked ? 'is-active' : ''}" data-action="like" title="Like" aria-label="Like"><i class="fas fa-heart"></i></button>
             <button type="button" class="flow-card-icon-btn flow-card-icon-save ${isSaved ? 'is-active' : ''}" data-action="save" title="${__('Guardar')}" aria-label="${__('Guardar')}"><i class="fas fa-bookmark"></i></button>
           </div>
@@ -806,7 +806,7 @@ class FlowCatalogView extends BaseView {
             <div class="flow-card-info-meta">
               ${primaryTagHtml}
               ${usesHtml}
-              <span class="flow-card-info-credits" title="Creditos por ejecucion"><i class="fas fa-bolt"></i>${cost}</span>
+              <span class="flow-card-info-credits" title="${__('Creditos por ejecucion')}"><i class="fas fa-bolt"></i>${cost}</span>
             </div>
             <div class="flow-card-info-extra">
               <span class="flow-card-info-pill">${outputTypeLabel}</span>
@@ -874,7 +874,7 @@ class FlowCatalogView extends BaseView {
     if (list.length > 1) {
       dotsContainer.style.display = '';
       dotsContainer.innerHTML = list.map((_, i) => `
-        <button type="button" class="flow-catalog-hero-dot" data-slide-index="${i}" aria-label="Ir al slide ${i + 1}">
+        <button type="button" class="flow-catalog-hero-dot" data-slide-index="${i}" aria-label="${__('Ir al slide {n}', { n: i + 1 })}">
           <span class="flow-catalog-hero-dot-fill"></span>
         </button>
       `).join('');
@@ -1006,13 +1006,13 @@ class FlowCatalogView extends BaseView {
       : '';
     const totalFlows = (this.flows || []).length;
     const countLabel = totalFlows > 0
-      ? `${totalFlows} flujo${totalFlows !== 1 ? 's' : ''}`
+      ? (totalFlows !== 1 ? __('{n} flujos', { n: totalFlows }) : __('{n} flujo', { n: totalFlows }))
       : '';
     header.style.display = '';
     header.innerHTML = `
       <div class="flow-catalog-category-header-bg">${cover}</div>
       <div class="flow-catalog-category-header-content">
-        <span class="flow-catalog-category-header-eyebrow">${this.selectedSubcategoryId ? 'Subcategoría' : 'Categoría'}</span>
+        <span class="flow-catalog-category-header-eyebrow">${this.selectedSubcategoryId ? __('Subcategoría') : __('Categoría')}</span>
         <h1 class="flow-catalog-category-header-title">${name}</h1>
         ${desc ? `<p class="flow-catalog-category-header-desc">${desc}</p>` : ''}
         ${countLabel ? `<span class="flow-catalog-category-header-count">${countLabel}</span>` : ''}
@@ -1146,8 +1146,8 @@ class FlowCatalogView extends BaseView {
       grid.innerHTML = `
         <div class="flow-catalog-empty flow-catalog-empty--teach" aria-live="polite">
           <i class="fas fa-bookmark flow-catalog-empty-icon" aria-hidden="true"></i>
-          <p class="flow-catalog-empty-title">Aun no has guardado flujos</p>
-          <p class="flow-catalog-empty-sub">Explora el catalogo y toca el icono de guardar en los flujos que mas uses. Apareceran aqui para acceso rapido.</p>
+          <p class="flow-catalog-empty-title">${__('Aun no has guardado flujos')}</p>
+          <p class="flow-catalog-empty-sub">${__('Explora el catalogo y toca el icono de guardar en los flujos que mas uses. Apareceran aqui para acceso rapido.')}</p>
         </div>`;
       return;
     }
@@ -1165,7 +1165,7 @@ class FlowCatalogView extends BaseView {
       gallery.innerHTML = `
         <div class="flow-catalog-empty flow-catalog-empty--teach" aria-live="polite">
           <i class="fas fa-wand-magic-sparkles flow-catalog-empty-icon" aria-hidden="true"></i>
-          <p class="flow-catalog-empty-title">Tu catalogo de flows esta por encenderse</p>
+          <p class="flow-catalog-empty-title">${__('Tu catalogo de flows esta por encenderse')}</p>
           <p class="flow-catalog-empty-sub">${__('Los flows son recetas listas para producir contenido de tu marca: posts, historias, piezas de campaña. En cuanto se publiquen, apareceran aqui organizados por categoria.')}</p>
         </div>`;
       return;
@@ -1292,7 +1292,7 @@ class FlowCatalogView extends BaseView {
         <div class="flow-catalog-empty flow-catalog-empty--teach" aria-live="polite">
           <i class="fas fa-magnifying-glass flow-catalog-empty-icon" aria-hidden="true"></i>
           <p class="flow-catalog-empty-title">${__('Sin resultados')}</p>
-          <p class="flow-catalog-empty-sub">Prueba con otra busqueda o quita algun filtro.</p>
+          <p class="flow-catalog-empty-sub">${__('Prueba con otra busqueda o quita algun filtro.')}</p>
         </div>`;
       return;
     }
@@ -1396,7 +1396,7 @@ class FlowCatalogView extends BaseView {
       .map(subId => {
         const sub = (this.subcategories || []).find(s => s.id === subId);
         const flows = bySub.get(subId).slice().sort((a, b) => this._engagementScore(b) - this._engagementScore(a));
-        return { name: sub?.name || 'Estilo', flows: flows.slice(0, perRail) };
+        return { name: sub?.name || __('Estilo'), flows: flows.slice(0, perRail) };
       })
       .filter(r => r.flows.length);
   }
@@ -1439,7 +1439,7 @@ class FlowCatalogView extends BaseView {
           <div class="flow-featured-bg" aria-hidden="true">${bg}</div>
           <div class="flow-featured-scrim" aria-hidden="true"></div>
           <div class="flow-featured-body">
-            <span class="flow-featured-eyebrow">Destacado hoy</span>
+            <span class="flow-featured-eyebrow">${__('Destacado hoy')}</span>
             <h2 class="flow-featured-title">${name}</h2>
             ${desc ? `<p class="flow-featured-desc">${desc}</p>` : ''}
             <div class="flow-featured-actions">
@@ -1507,7 +1507,7 @@ class FlowCatalogView extends BaseView {
           if (images.length >= MAX) break;
         }
         if (!images.length && flow?.flow_image_url) images.push(flow.flow_image_url);
-        return { ...r, flow_name: flow?.name || 'Flujo eliminado', flow_slug: flow ? this.flowNameToSlug(flow.name) : '', images, output_count: outs.length };
+        return { ...r, flow_name: flow?.name || __('Flujo eliminado'), flow_slug: flow ? this.flowNameToSlug(flow.name) : '', images, output_count: outs.length };
       });
     } catch (e) { console.warn('loadRecentProductions:', e); return []; }
   }
@@ -1518,9 +1518,9 @@ class FlowCatalogView extends BaseView {
       : (status === 'failed' || status === 'error') ? 'task-card-badge-danger'
       : (status === 'running' || status === 'in_progress') ? 'task-card-badge-running'
       : 'task-card-badge-paused';
-    const statusLabel = status === 'completed' ? 'Completado'
-      : (status === 'failed' || status === 'error') ? 'Error'
-      : (status === 'running' || status === 'in_progress') ? 'En curso'
+    const statusLabel = status === 'completed' ? __('Completado')
+      : (status === 'failed' || status === 'error') ? __('Error')
+      : (status === 'running' || status === 'in_progress') ? __('En curso')
       : (status ? status.charAt(0).toUpperCase() + status.slice(1) : '—');
     const images = Array.isArray(r.images) ? r.images : [];
     const count = r.output_count || 0;
@@ -1548,7 +1548,7 @@ class FlowCatalogView extends BaseView {
           <div class="exec-card-info">
             <h3 class="exec-card-flow">${this.escapeHtml(r.flow_name)}</h3>
             <span class="exec-card-when">${this.escapeHtml(this.relativeTime(r.created_at))}</span>
-            <span class="exec-card-resume"><i class="fas fa-arrow-right"></i> Continuar sesion</span>
+            <span class="exec-card-resume"><i class="fas fa-arrow-right"></i> ${__('Continuar sesion')}</span>
           </div>
         </div>
       </button>`;
@@ -1587,7 +1587,7 @@ class FlowCatalogView extends BaseView {
     host.innerHTML = `
       <section class="flow-catalog-row-section">
         <div class="flow-rail-head">
-          <h2 class="flow-catalog-row-title">Continua produciendo</h2>
+          <h2 class="flow-catalog-row-title">${__('Continua produciendo')}</h2>
           <a class="flow-rail-seeall" href="${execUrl}" data-exec-link>${__('Ver todo')} <i class="fas fa-chevron-right" aria-hidden="true"></i></a>
         </div>
         <div class="flow-catalog-row-scroll flow-continue-rail">${prods.map(r => this.renderExecCard(r)).join('')}</div>
@@ -1679,7 +1679,7 @@ class FlowCatalogView extends BaseView {
       // flow-catalog-empty global que quedaba ARRIBA del header — feo.
       gallery.innerHTML = `
         <div class="flow-catalog-empty flow-catalog-empty--in-section" aria-live="polite">
-          <p class="flow-catalog-empty-text">Aún no hay flujos en esta categoría</p>
+          <p class="flow-catalog-empty-text">${__('Aún no hay flujos en esta categoría')}</p>
         </div>`;
       return;
     }
@@ -1952,15 +1952,15 @@ class FlowCatalogView extends BaseView {
     const d = dateStr ? new Date(dateStr).getTime() : 0;
     if (!d) return '';
     const min = Math.floor((Date.now() - d) / 60000);
-    if (min < 1) return 'ahora';
-    if (min < 60) return `hace ${min} min`;
+    if (min < 1) return __('ahora');
+    if (min < 60) return __('hace {n} min', { n: min });
     const h = Math.floor(min / 60);
-    if (h < 24) return `hace ${h} h`;
+    if (h < 24) return __('hace {n} h', { n: h });
     const days = Math.floor(h / 24);
-    if (days < 30) return `hace ${days} d`;
+    if (days < 30) return __('hace {n} d', { n: days });
     const months = Math.floor(days / 30);
-    if (months < 12) return `hace ${months} mes${months > 1 ? 'es' : ''}`;
-    return `hace ${Math.floor(months / 12)} a`;
+    if (months < 12) return months > 1 ? __('hace {n} meses', { n: months }) : __('hace {n} mes', { n: months });
+    return __('hace {n} a', { n: Math.floor(months / 12) });
   }
 
   _runStatusInfo(status) {
@@ -1998,7 +1998,7 @@ class FlowCatalogView extends BaseView {
     const runs = await this.loadFlowRuns(flow.id, 2);
     if (!document.body.contains(host)) return; // modal cerrado mientras cargaba
     if (!runs.length) {
-      host.innerHTML = `<div class="flow-detail-runs-empty">Este flow aun no tiene producciones. Cuando se ejecute, veras aqui las ultimas.</div>`;
+      host.innerHTML = `<div class="flow-detail-runs-empty">${__('Este flow aun no tiene producciones. Cuando se ejecute, veras aqui las ultimas.')}</div>`;
       return;
     }
     host.innerHTML = runs.map(r => this.renderRunItem(r)).join('');
@@ -2024,11 +2024,11 @@ class FlowCatalogView extends BaseView {
     const runs = flow.run_count || 0;
 
     const badges = [];
-    if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
-    if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
-    else if (this.isPopular(flow)) badges.push('<span class="flow-card-badge flow-card-badge--popular">Popular</span>');
+    if (this.isNew(flow)) badges.push(`<span class="flow-card-badge flow-card-badge--new">${__('Nuevo')}</span>`);
+    if (this.isTrending(flow)) badges.push(`<span class="flow-card-badge flow-card-badge--trending">${__('Trending')}</span>`);
+    else if (this.isPopular(flow)) badges.push(`<span class="flow-card-badge flow-card-badge--popular">${__('Popular')}</span>`);
     const ftype = flow.flow_category_type || 'manual';
-    if (ftype === 'autopilot') badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
+    if (ftype === 'autopilot') badges.push(`<span class="flow-card-badge flow-card-badge--auto">${__('Autopilot')}</span>`);
 
     // El banner del flow es el fondo de toda la card.
     const bg = flow.flow_image_url
@@ -2038,10 +2038,10 @@ class FlowCatalogView extends BaseView {
       : '';
 
     const catLabel = [flow._categoryName, flow._subcategoryName].filter(Boolean).map(s => this.escapeHtml(s)).join('  ·  ');
-    const desc = flow.description ? this.escapeHtml(flow.description) : 'Sin descripcion disponible para este flow.';
+    const desc = flow.description ? this.escapeHtml(flow.description) : __('Sin descripcion disponible para este flow.');
 
     const meta = [
-      runs > 0 ? `<span class="flow-detail-meta-item"><i class="fas fa-play"></i>${this.formatCount(runs)} usos</span>` : '',
+      runs > 0 ? `<span class="flow-detail-meta-item"><i class="fas fa-play"></i>${this.formatCount(runs)} ${__('usos')}</span>` : '',
       `<span class="flow-detail-meta-item"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i>${this.getOutputTypeLabel(flow.output_type)}</span>`,
       `<span class="flow-detail-meta-item"><i class="fas fa-diagram-project"></i>${this.getExecutionModeLabel(flow.execution_mode)}</span>`,
       `<span class="flow-detail-meta-item">v${this.escapeHtml((flow.version || '1.0.0').toString())}</span>`
@@ -2050,7 +2050,7 @@ class FlowCatalogView extends BaseView {
     const related = this.getRelatedFlows(flow);
     const suggestHtml = related.length ? `
       <div class="flow-detail-suggest">
-        <h3 class="flow-detail-section-title">Flows que te pueden interesar</h3>
+        <h3 class="flow-detail-section-title">${__('Flows que te pueden interesar')}</h3>
         <div class="flow-catalog-row-scroll flow-detail-related-row">
           ${related.map(f => this.renderFlowCard(f)).join('')}
         </div>
@@ -2064,7 +2064,7 @@ class FlowCatalogView extends BaseView {
       <div class="flow-detail-bg-scrim" aria-hidden="true"></div>
       <div class="flow-detail-grid">
         <aside class="flow-detail-col flow-detail-col--runs">
-          <h3 class="flow-detail-section-title">Ultimas producciones</h3>
+          <h3 class="flow-detail-section-title">${__('Ultimas producciones')}</h3>
           <div class="flow-detail-runs" data-runs>
             <div class="flow-detail-run flow-detail-run--skel"></div>
             <div class="flow-detail-run flow-detail-run--skel"></div>

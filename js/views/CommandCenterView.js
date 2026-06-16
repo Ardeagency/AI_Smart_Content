@@ -57,7 +57,7 @@ class CommandCenterView extends BaseView {
     // /{shortId}/{slug} (canónico) como /{slug} (legacy) o /{uuid}.
     const tail = path.replace(/^\/command-center\//, '');
     if (!tail) return false;
-    if (container) container.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo…</p></div>';
+    if (container) container.innerHTML = `<div class="page-content"><p class="text-muted">${__('Redirigiendo…')}</p></div>`;
     window.router?.navigate(
       `${prefix}/command-center/${tail}${window.location.search || ''}`, true);
     return true;
@@ -94,32 +94,32 @@ class CommandCenterView extends BaseView {
     <div class="cc-canvas-wrap">
       <div class="cc-canvas-toolbar">
         <div class="cc-canvas-toolbar-group">
-          <button class="cc-canvas-btn cc-canvas-btn--primary" id="ccBtnCreateAudience" type="button" title="Crear Objetivo de Audiencia">
-            <i class="fas fa-user-plus"></i><span>Objetivo de Audiencia</span>
+          <button class="cc-canvas-btn cc-canvas-btn--primary" id="ccBtnCreateAudience" type="button" title="${__('Crear Objetivo de Audiencia')}">
+            <i class="fas fa-user-plus"></i><span>${__('Objetivo de Audiencia')}</span>
           </button>
-          <button class="cc-canvas-btn cc-canvas-btn--primary cc-canvas-btn--anchor" id="ccBtnCreateCampaign" type="button" title="Crear Objetivo de Campana (ancla de la estrategia)">
-            <i class="fas fa-bullseye"></i><span>Objetivo de Campana</span>
+          <button class="cc-canvas-btn cc-canvas-btn--primary cc-canvas-btn--anchor" id="ccBtnCreateCampaign" type="button" title="${__('Crear Objetivo de Campana (ancla de la estrategia)')}">
+            <i class="fas fa-bullseye"></i><span>${__('Objetivo de Campana')}</span>
           </button>
           <div class="cc-report-dd" id="ccReportDD">
-            <button class="cc-canvas-btn" id="ccBtnReport" type="button" title="Crear informe con Vera (Claude)">
-              <i class="fas fa-file-lines"></i><span>Crear informe</span><i class="fas fa-chevron-down cc-report-caret"></i>
+            <button class="cc-canvas-btn" id="ccBtnReport" type="button" title="${__('Crear informe con Vera (Claude)')}">
+              <i class="fas fa-file-lines"></i><span>${__('Crear informe')}</span><i class="fas fa-chevron-down cc-report-caret"></i>
             </button>
             <div class="cc-report-menu" id="ccReportMenu" role="menu" style="display:none;">
-              <button type="button" role="menuitem" data-scope="all"><i class="fas fa-layer-group"></i> Informar todo</button>
-              <button type="button" role="menuitem" data-scope="campaign"><i class="fas fa-bullhorn"></i> Campana seleccionada</button>
-              <button type="button" role="menuitem" data-scope="audience"><i class="fas fa-users"></i> Audiencia seleccionada</button>
-              <button type="button" role="menuitem" data-scope="ecosystem"><i class="fas fa-brain"></i> Aprendizaje del ecosistema</button>
-              <button type="button" role="menuitem" data-scope="selection"><i class="fas fa-bullseye"></i> Seleccionado</button>
+              <button type="button" role="menuitem" data-scope="all"><i class="fas fa-layer-group"></i> ${__('Informar todo')}</button>
+              <button type="button" role="menuitem" data-scope="campaign"><i class="fas fa-bullhorn"></i> ${__('Campana seleccionada')}</button>
+              <button type="button" role="menuitem" data-scope="audience"><i class="fas fa-users"></i> ${__('Audiencia seleccionada')}</button>
+              <button type="button" role="menuitem" data-scope="ecosystem"><i class="fas fa-brain"></i> ${__('Aprendizaje del ecosistema')}</button>
+              <button type="button" role="menuitem" data-scope="selection"><i class="fas fa-bullseye"></i> ${__('Seleccionado')}</button>
             </div>
           </div>
         </div>
         <div class="cc-canvas-toolbar-group">
-          <button class="cc-canvas-btn" id="ccBtnRelayout" type="button" title="Reorganizar nodos">
-            <i class="fas fa-th"></i><span>Reorganizar</span>
+          <button class="cc-canvas-btn" id="ccBtnRelayout" type="button" title="${__('Reorganizar nodos')}">
+            <i class="fas fa-th"></i><span>${__('Reorganizar')}</span>
           </button>
-          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomOut" type="button" title="Alejar" aria-label="Alejar"><span class="cc-zoom-glyph">&minus;</span></button>
-          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomReset" type="button" title="Centrar" aria-label="Centrar zoom"><i class="fas fa-up-right-and-down-left-from-center"></i></button>
-          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomIn" type="button" title="Acercar" aria-label="Acercar"><span class="cc-zoom-glyph">+</span></button>
+          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomOut" type="button" title="${__('Alejar')}" aria-label="${__('Alejar')}"><span class="cc-zoom-glyph">&minus;</span></button>
+          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomReset" type="button" title="${__('Centrar')}" aria-label="${__('Centrar zoom')}"><i class="fas fa-up-right-and-down-left-from-center"></i></button>
+          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomIn" type="button" title="${__('Acercar')}" aria-label="${__('Acercar')}"><span class="cc-zoom-glyph">+</span></button>
         </div>
       </div>
 
@@ -128,7 +128,7 @@ class CommandCenterView extends BaseView {
         <div class="cc-canvas-world" id="ccCanvasWorld"></div>
         <div class="cc-canvas-empty" id="ccCanvasEmpty" style="display:none;">
           <i class="fas fa-diagram-project"></i>
-          <p>Sin audiencias ni campanas todavia. Crea una audiencia o conecta una integracion (Meta, Google).</p>
+          <p>${__('Sin audiencias ni campanas todavia. Crea una audiencia o conecta una integracion (Meta, Google).')}</p>
         </div>
 
         <!-- Minimapa flotante (esquina inferior izquierda), estilo n8n/React Flow -->
@@ -145,7 +145,7 @@ class CommandCenterView extends BaseView {
           <!-- Panel de datos de la seccion activa (abre a la izquierda) -->
           <div class="cc-fp-panel" role="tabpanel" aria-labelledby="ccPanelTitle">
             <div class="cc-fp-head">
-              <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="Cerrar seccion" aria-label="Cerrar seccion">
+              <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="${__('Cerrar seccion')}" aria-label="${__('Cerrar seccion')}">
                 <i class="fas fa-times"></i>
               </button>
               <span class="cc-fp-title" id="ccPanelTitle">${__('Biblioteca')}</span>
@@ -153,7 +153,7 @@ class CommandCenterView extends BaseView {
             <div class="cc-fp-body" id="ccPanelBody"></div>
           </div>
           <!-- Rail de navegacion (fijo a la derecha, iconos sin texto) -->
-          <nav class="cc-fp-rail" id="ccPanelRail" role="tablist" aria-orientation="vertical" aria-label="Biblioteca"></nav>
+          <nav class="cc-fp-rail" id="ccPanelRail" role="tablist" aria-orientation="vertical" aria-label="${__('Biblioteca')}"></nav>
         </aside>
       </div>
     </div>
@@ -163,11 +163,11 @@ class CommandCenterView extends BaseView {
   <div class="cc-report-backdrop" id="ccReportBackdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="ccReportTitle">
     <div class="cc-report-modal glass-black">
       <header class="cc-report-head">
-        <h3 class="cc-report-title" id="ccReportTitle"><i class="fas fa-file-lines"></i> Informe</h3>
+        <h3 class="cc-report-title" id="ccReportTitle"><i class="fas fa-file-lines"></i> ${__('Informe')}</h3>
         <div class="cc-report-head-actions">
-          <button type="button" class="cc-report-act" id="ccReportCopy" title="Copiar" aria-label="Copiar"><i class="fas fa-copy"></i></button>
-          <button type="button" class="cc-report-act" id="ccReportDownload" title="Descargar .md" aria-label="Descargar"><i class="fas fa-download"></i></button>
-          <button type="button" class="cc-report-act" id="ccReportClose" title="Cerrar" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+          <button type="button" class="cc-report-act" id="ccReportCopy" title="${__('Copiar')}" aria-label="${__('Copiar')}"><i class="fas fa-copy"></i></button>
+          <button type="button" class="cc-report-act" id="ccReportDownload" title="${__('Descargar .md')}" aria-label="${__('Descargar')}"><i class="fas fa-download"></i></button>
+          <button type="button" class="cc-report-act" id="ccReportClose" title="${__('Cerrar')}" aria-label="${__('Cerrar')}"><i class="fas fa-times"></i></button>
         </div>
       </header>
       <div class="cc-report-body" id="ccReportBody"></div>
@@ -309,12 +309,12 @@ class CommandCenterView extends BaseView {
     } catch (e) { console.warn('CommandCenterView: brand_containers', e); }
 
     const displayName = match
-      ? (String(match.nombre_marca || '').trim() || 'Sub-marca')
+      ? (String(match.nombre_marca || '').trim() || __('Sub-marca'))
       : (this._subBrandSlug || this._subBrandShortId || '—');
     this.updateHeaderContext(__('Command Center'), displayName, window.currentOrgName || '');
 
     if (!match) {
-      this._setError(`No se encontró la sub-marca "${displayName}". Revisa el nombre en Brand Storage.`);
+      this._setError(__('No se encontró la sub-marca "{displayName}". Revisa el nombre en Brand Storage.', { displayName }));
       return;
     }
 
@@ -371,14 +371,14 @@ class CommandCenterView extends BaseView {
     // Si no podemos inferir el tipo, default a "resultados" (genérico).
     const resultLabel = (obj) => {
       const s = String(obj || '').toLowerCase();
-      if (s.includes('lead'))                                     return 'leads';
-      if (s.includes('purchase') || s.includes('sales') || s.includes('conversion')) return 'compras';
-      if (s.includes('install') || s.includes('app'))             return 'instalaciones';
-      if (s.includes('message') || s.includes('chat'))            return 'mensajes';
-      if (s.includes('engagement') || s.includes('reach'))        return 'interacciones';
-      if (s.includes('traffic') || s.includes('link_click'))      return 'clics';
-      if (s.includes('view') || s.includes('thruplay'))           return 'vistas';
-      return 'resultados';
+      if (s.includes('lead'))                                     return __('leads');
+      if (s.includes('purchase') || s.includes('sales') || s.includes('conversion')) return __('compras');
+      if (s.includes('install') || s.includes('app'))             return __('instalaciones');
+      if (s.includes('message') || s.includes('chat'))            return __('mensajes');
+      if (s.includes('engagement') || s.includes('reach'))        return __('interacciones');
+      if (s.includes('traffic') || s.includes('link_click'))      return __('clics');
+      if (s.includes('view') || s.includes('thruplay'))           return __('vistas');
+      return __('resultados');
     };
     const fmtCompact = (v) => {
       const n = Number(v);
@@ -416,13 +416,13 @@ class CommandCenterView extends BaseView {
       return `
       <div class="cc-camp-row">
         <div class="cc-camp-row-head">
-          <span class="cc-camp-name" title="${this.escapeHtml(c.nombre_campana || 'Campaña')}">${this.escapeHtml(c.nombre_campana || 'Campaña')}</span>
+          <span class="cc-camp-name" title="${this.escapeHtml(c.nombre_campana || __('Campaña'))}">${this.escapeHtml(c.nombre_campana || __('Campaña'))}</span>
           <div class="cc-camp-badges">${stBadge}${platBadge}</div>
         </div>
         <dl class="cc-camp-stats">
-          <div class="cc-camp-stat"><dt>Publicada</dt><dd>${this.escapeHtml(fmtDate(c.starts_at || c.created_at))}</dd></div>
-          <div class="cc-camp-stat"><dt>Resultados</dt><dd>${fmtCompact(resultsValue)} <small>${this.escapeHtml(resultsLbl)}</small></dd></div>
-          <div class="cc-camp-stat"><dt>Gastos</dt><dd>${this.escapeHtml(fmtMoney(c.cached_spend, c.budget_currency))}</dd></div>
+          <div class="cc-camp-stat"><dt>${__('Publicada')}</dt><dd>${this.escapeHtml(fmtDate(c.starts_at || c.created_at))}</dd></div>
+          <div class="cc-camp-stat"><dt>${__('Resultados')}</dt><dd>${fmtCompact(resultsValue)} <small>${this.escapeHtml(resultsLbl)}</small></dd></div>
+          <div class="cc-camp-stat"><dt>${__('Gastos')}</dt><dd>${this.escapeHtml(fmtMoney(c.cached_spend, c.budget_currency))}</dd></div>
         </dl>
       </div>`;
     }).join('');

@@ -143,8 +143,8 @@ class StudioView extends BaseView {
       const target = canvas.querySelector('.studio-skeleton') || canvas.querySelector('.empty-state') || canvas.querySelector('.studio-history-empty');
       const html = `
         <div class="studio-skeleton studio-run-error" role="alert" aria-live="assertive">
-          <p class="studio-skeleton-label">Se produjo un error en la producción</p>
-          <p class="studio-skeleton-hint">No pudimos generar tu resultado. Intenta de nuevo o ajusta el formulario; si el problema persiste, contacta al administrador.</p>
+          <p class="studio-skeleton-label">${__('Se produjo un error en la producción')}</p>
+          <p class="studio-skeleton-hint">${__('No pudimos generar tu resultado. Intenta de nuevo o ajusta el formulario; si el problema persiste, contacta al administrador.')}</p>
         </div>`;
       if (target) target.outerHTML = html;
       else canvas.insertAdjacentHTML('afterbegin', html);
@@ -161,7 +161,7 @@ class StudioView extends BaseView {
     const mods = (this._seq && this._seq.modules) || (this.selectedFlow && this.selectedFlow.modules) || [];
     const steps = mods.map(m => {
       const cls = m.step_order < currentOrder ? 'is-done' : (m.step_order === currentOrder ? 'is-active' : '');
-      return `<span class="stage-step ${cls}"><b>${m.step_order}</b> ${this.escapeHtmlSafe(m.name || ('Etapa ' + m.step_order))}</span>`;
+      return `<span class="stage-step ${cls}"><b>${m.step_order}</b> ${this.escapeHtmlSafe(m.name || __('Etapa {n}', { n: m.step_order }))}</span>`;
     }).join('<span class="stage-step-sep">›</span>');
     return `<div class="studio-stage-steps">${steps}</div>`;
   }
@@ -180,8 +180,8 @@ class StudioView extends BaseView {
         <div class="studio-stage-body">
           <div class="studio-skeleton" role="status" aria-live="polite">
             <div class="studio-skeleton-grid"><div class="studio-skeleton-card" style="${this._skeletonCardStyle()}"><div class="living-history-skeleton"></div></div></div>
-            <p class="studio-skeleton-label">${this.escapeHtmlSafe(label || 'Generando…')}</p>
-            <p class="studio-skeleton-hint">Esto puede tardar un momento. Podras revisar y aprobar antes de continuar.</p>
+            <p class="studio-skeleton-label">${this.escapeHtmlSafe(label || __('Generando…'))}</p>
+            <p class="studio-skeleton-hint">${__('Esto puede tardar un momento. Podras revisar y aprobar antes de continuar.')}</p>
           </div>
         </div>
       </div>`;
@@ -192,7 +192,7 @@ class StudioView extends BaseView {
   _enterStageWait(runId, order) {
     const mods = (this._seq && this._seq.modules) || [];
     const mod = mods.find(m => m.step_order === order);
-    const label = order === 1 ? 'Generando guion…' : (order === 2 ? 'Generando imagen…' : `Encolando ${mod ? mod.name : 'etapa ' + order}…`);
+    const label = order === 1 ? __('Generando guion…') : (order === 2 ? __('Generando imagen…') : __('Encolando {name}…', { name: mod ? mod.name : __('etapa {n}', { n: order }) }));
     this._renderStageSkeleton(order, label);
     if (order >= 3) { // Fase 3: Video aun no conectado
       setTimeout(() => this._renderStageStub(order, mod), 1000);
@@ -209,8 +209,8 @@ class StudioView extends BaseView {
         ${this._renderStageIndicator(order)}
         <div class="studio-stage-body">
           <div class="studio-skeleton">
-            <p class="studio-skeleton-label">Imagen aprobada ✓ — el run avanzó a “${this.escapeHtmlSafe(mod ? mod.name : 'Video')}”.</p>
-            <p class="studio-skeleton-hint">La etapa de Video todavía no está conectada (Fase 3 — migración a KIE+Supabase en construcción).</p>
+            <p class="studio-skeleton-label">${__('Imagen aprobada ✓ — el run avanzó a “{name}”.', { name: this.escapeHtmlSafe(mod ? mod.name : __('Video')) })}</p>
+            <p class="studio-skeleton-hint">${__('La etapa de Video todavía no está conectada (Fase 3 — migración a KIE+Supabase en construcción).')}</p>
           </div>
         </div>
       </div>`;
@@ -259,12 +259,12 @@ class StudioView extends BaseView {
       try { url = path ? this.supabase.storage.from('production-outputs').getPublicUrl(path).data.publicUrl : ''; } catch (_) {}
       this._stageApprovalState = { order, outputId: output.id, kind };
       inner = `
-        <p class="stage-approval-title">Revisa la imagen y aprueba para continuar</p>
-        <div class="stage-image-wrap">${url ? `<img class="stage-image" src="${this.escapeHtmlSafe(url)}" alt="Imagen generada">` : '<p class="studio-skeleton-hint">La imagen no tiene URL resolvible.</p>'}</div>
-        <textarea class="stage-ajustes" rows="2" placeholder="Ajustes opcionales para la siguiente etapa…"></textarea>
+        <p class="stage-approval-title">${__('Revisa la imagen y aprueba para continuar')}</p>
+        <div class="stage-image-wrap">${url ? `<img class="stage-image" src="${this.escapeHtmlSafe(url)}" alt="${__('Imagen generada')}">` : `<p class="studio-skeleton-hint">${__('La imagen no tiene URL resolvible.')}</p>`}</div>
+        <textarea class="stage-ajustes" rows="2" placeholder="${__('Ajustes opcionales para la siguiente etapa…')}"></textarea>
         <div class="stage-actions">
-          <button type="button" class="studio-btn-producir" data-stage-action="approve">Aprobar y continuar</button>
-          <button type="button" class="pmodal-toolpill" data-stage-action="regenerate">Regenerar imagen</button>
+          <button type="button" class="studio-btn-producir" data-stage-action="approve">${__('Aprobar y continuar')}</button>
+          <button type="button" class="pmodal-toolpill" data-stage-action="regenerate">${__('Regenerar imagen')}</button>
         </div>
         <p class="stage-approval-msg" aria-live="polite"></p>`;
     } else {
@@ -277,18 +277,18 @@ class StudioView extends BaseView {
         return `
           <label class="stage-variant" data-variant="${i}">
             <input type="radio" name="guionVariant" value="${i}"${i === 0 ? ' checked' : ''}>
-            <div class="stage-variant-head"><b>${this.escapeHtmlSafe(v.titulo || ('Variante ' + (i + 1)))}</b>${v.tono ? ` · <span>${this.escapeHtmlSafe(v.tono)}</span>` : ''}</div>
-            ${v.gancho ? `<div class="stage-variant-hook">Gancho: ${this.escapeHtmlSafe(v.gancho)}</div>` : ''}
+            <div class="stage-variant-head"><b>${this.escapeHtmlSafe(v.titulo || __('Variante {n}', { n: i + 1 }))}</b>${v.tono ? ` · <span>${this.escapeHtmlSafe(v.tono)}</span>` : ''}</div>
+            ${v.gancho ? `<div class="stage-variant-hook">${__('Gancho:')} ${this.escapeHtmlSafe(v.gancho)}</div>` : ''}
             <ol class="stage-variant-scenes">${escenas}</ol>
           </label>`;
       }).join('');
       inner = `
-        <p class="stage-approval-title">Elige la variante de guion para continuar</p>
-        <div class="stage-variants">${cards || '<p class="studio-skeleton-hint">El guion no devolvió variantes legibles.</p>'}</div>
-        <textarea class="stage-ajustes" rows="2" placeholder="Ajustes opcionales para la siguiente etapa (ej: enfatiza el producto en la escena 2)…"></textarea>
+        <p class="stage-approval-title">${__('Elige la variante de guion para continuar')}</p>
+        <div class="stage-variants">${cards || `<p class="studio-skeleton-hint">${__('El guion no devolvió variantes legibles.')}</p>`}</div>
+        <textarea class="stage-ajustes" rows="2" placeholder="${__('Ajustes opcionales para la siguiente etapa (ej: enfatiza el producto en la escena 2)…')}"></textarea>
         <div class="stage-actions">
-          <button type="button" class="studio-btn-producir" data-stage-action="approve">Aprobar y continuar</button>
-          <button type="button" class="pmodal-toolpill" data-stage-action="regenerate">Regenerar guion</button>
+          <button type="button" class="studio-btn-producir" data-stage-action="approve">${__('Aprobar y continuar')}</button>
+          <button type="button" class="pmodal-toolpill" data-stage-action="regenerate">${__('Regenerar guion')}</button>
         </div>
         <p class="stage-approval-msg" aria-live="polite"></p>`;
     }
@@ -330,7 +330,7 @@ class StudioView extends BaseView {
     btns.forEach(b => { b.disabled = true; });
     try {
       const token = await this._studioAccessToken();
-      if (!token) { setMsg('No hay sesión activa.'); btns.forEach(b => b.disabled = false); return; }
+      if (!token) { setMsg(__('No hay sesión activa.')); btns.forEach(b => b.disabled = false); return; }
       const edits = st.kind === 'image'
         ? { approved: true, ajustes: sel.ajustes }
         : { variante_elegida: sel.idx, variante: (st.variantes || [])[sel.idx] || null, ajustes: sel.ajustes };
@@ -344,14 +344,14 @@ class StudioView extends BaseView {
         context: seq.contextBody,
         cost: (this.selectedFlow && this.selectedFlow.token_cost) || 5
       };
-      setMsg(action === 'regenerate' ? 'Regenerando…' : 'Aprobando…');
+      setMsg(action === 'regenerate' ? __('Regenerando…') : __('Aprobando…'));
       const res = await fetch('/.netlify/functions/api-flow-stage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(bodyReq)
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) { setMsg('Error: ' + (data.error || res.status)); btns.forEach(b => b.disabled = false); return; }
+      if (!res.ok || !data.ok) { setMsg(__('Error:') + ' ' + (data.error || res.status)); btns.forEach(b => b.disabled = false); return; }
       if (action === 'regenerate') {
         // El webhook del guion se redisparó: volver a esperar el nuevo output.
         this._enterStageWait(seq.runId, st.order);
@@ -359,12 +359,12 @@ class StudioView extends BaseView {
       }
       // approve / edit
       const r = data.data || {};
-      if (r.done) { this._renderStageStub(st.order, { name: 'Final' }); return; }
+      if (r.done) { this._renderStageStub(st.order, { name: __('Final') }); return; }
       const next = r.next_module;
       if (next) { this._enterStageWait(seq.runId, next.step_order); }
-      else { setMsg('Etapa aprobada.'); }
+      else { setMsg(__('Etapa aprobada.')); }
     } catch (e) {
-      setMsg('Error: ' + (e && e.message || e));
+      setMsg(__('Error:') + ' ' + (e && e.message || e));
       btns.forEach(b => b.disabled = false);
     }
   }
@@ -428,7 +428,7 @@ class StudioView extends BaseView {
       const card = document.createElement('div');
       card.className = 'living-masonry-item studio-append-skeleton';
       card.setAttribute('role', 'status');
-      card.setAttribute('aria-label', 'Generando producción');
+      card.setAttribute('aria-label', __('Generando producción'));
       card.innerHTML = '<div class="studio-skeleton-card" style="' + this._skeletonCardStyle() + '"><div class="living-history-skeleton"></div></div>';
       content.prepend(card);
     } catch (_) {}
@@ -453,7 +453,7 @@ class StudioView extends BaseView {
     const MAX_ATTEMPTS = 90;
     if (attempt >= MAX_ATTEMPTS) {
       this._removeAppendSkeleton();
-      this._notify('La producción está tardando más de lo normal. Aparecerá en el historial cuando esté lista.');
+      this._notify(__('La producción está tardando más de lo normal. Aparecerá en el historial cuando esté lista.'));
       return;
     }
     const delay = attempt < burst.length ? burst[attempt] : TAIL_MS;
@@ -467,7 +467,7 @@ class StudioView extends BaseView {
       }
       if (await this._isRunFailed(runId)) {
         this._removeAppendSkeleton();
-        this._notify('La producción falló. Intenta de nuevo.');
+        this._notify(__('La producción falló. Intenta de nuevo.'));
         return;
       }
       this._pollActiveRunNewOutputs(runId, baseline, attempt + 1);
@@ -528,40 +528,40 @@ class StudioView extends BaseView {
             <div id="livingHistoryContent" class="studio-canvas-living"></div>
           </div>
           <div class="studio-automated-wrap" id="studioAutomatedWrap" style="display: none;">
-            <button type="button" class="studio-back-flows studio-back-flows--automated" id="studioBackFlowsAutomated"><i class="fas fa-arrow-left"></i> Elegir otro flujo</button>
+            <button type="button" class="studio-back-flows studio-back-flows--automated" id="studioBackFlowsAutomated"><i class="fas fa-arrow-left"></i> ${__('Elegir otro flujo')}</button>
             <div class="studio-automation-shell">
               <div class="studio-automation-main">
                 <div class="studio-schedule-form-wrap" id="studioScheduleFormWrap">
                   <form class="studio-schedule-form" id="studioScheduleForm"></form>
                 </div>
               </div>
-              <aside class="studio-automation-summary" id="studioAutomationSummary" aria-label="Resumen de programación">
+              <aside class="studio-automation-summary" id="studioAutomationSummary" aria-label="${__('Resumen de programación')}">
                 <div class="studio-summary-body">
                   <header class="studio-summary-header">
-                    <h2 class="studio-summary-title">Resumen</h2>
+                    <h2 class="studio-summary-title">${__('Resumen')}</h2>
                   </header>
                   <div class="studio-summary-section">
-                    <span class="studio-summary-label">Ejecución</span>
+                    <span class="studio-summary-label">${__('Ejecución')}</span>
                     <p class="studio-summary-value" id="studioSummaryFreq">—</p>
                     <span class="studio-summary-hint" id="studioSummaryTz"></span>
                   </div>
                   <div class="studio-summary-section">
-                    <span class="studio-summary-label">Producciones por ejecución</span>
+                    <span class="studio-summary-label">${__('Producciones por ejecución')}</span>
                     <p class="studio-summary-value" id="studioSummaryCount">—</p>
                   </div>
                   <div class="studio-summary-section">
-                    <span class="studio-summary-label">Formato</span>
+                    <span class="studio-summary-label">${__('Formato')}</span>
                     <p class="studio-summary-value" id="studioSummaryFormat">—</p>
                   </div>
                   <div class="studio-summary-section studio-summary-section--cost">
-                    <span class="studio-summary-label">Costo por ejecución</span>
+                    <span class="studio-summary-label">${__('Costo por ejecución')}</span>
                     <p class="studio-summary-value studio-summary-cost" id="studioSummaryCost">—</p>
                     <span class="studio-summary-hint" id="studioSummaryCostHint"></span>
                   </div>
                 </div>
                 <footer class="studio-summary-footer">
-                  <button type="button" class="studio-automation-btn-primary" id="studioScheduleActivate">Activar</button>
-                  <button type="button" class="studio-automation-btn-secondary" id="studioScheduleDraft">Borrador</button>
+                  <button type="button" class="studio-automation-btn-primary" id="studioScheduleActivate">${__('Activar')}</button>
+                  <button type="button" class="studio-automation-btn-secondary" id="studioScheduleDraft">${__('Borrador')}</button>
                 </footer>
               </aside>
             </div>
@@ -569,11 +569,11 @@ class StudioView extends BaseView {
           <footer class="studio-footer">
             <div class="studio-footer-credits">
               <div class="studio-credits-icon"><i class="fas fa-coins"></i></div>
-              <span class="studio-credits-text" id="studioCreditsText">0 créditos restantes</span>
+              <span class="studio-credits-text" id="studioCreditsText">${__('{n} créditos restantes', { n: 0 })}</span>
               <span class="studio-credits-cost" id="studioCreditsCost"></span>
             </div>
             <button type="button" class="studio-btn-producir" id="studioProducirBtn" disabled>
-              Producir
+              ${__('Producir')}
             </button>
           </footer>
         </main>
@@ -581,7 +581,7 @@ class StudioView extends BaseView {
         <aside class="studio-sidebar-creative" id="studioSidebar">
           <div class="studio-sidebar-content">
             <div class="studio-flow-form-wrap" id="studioFlowFormWrap">
-              <button type="button" class="studio-back-flows" id="studioBackFlows"><i class="fas fa-arrow-left"></i> Elegir otro flujo</button>
+              <button type="button" class="studio-back-flows" id="studioBackFlows"><i class="fas fa-arrow-left"></i> ${__('Elegir otro flujo')}</button>
               <h3 class="studio-form-title" id="studioFormTitle"></h3>
               <form class="studio-flow-form" id="studioFlowForm"></form>
             </div>
@@ -763,11 +763,11 @@ class StudioView extends BaseView {
     const costEl = document.getElementById('studioCreditsCost');
     if (textEl) {
       const n = this.credits.available;
-      textEl.textContent = `${n.toLocaleString('es')} créditos restantes`;
+      textEl.textContent = `${__('{n} créditos restantes', { n: n.toLocaleString('es') })}`;
     }
     if (costEl) {
       if (this.selectedFlow && this.selectedFlow.token_cost != null) {
-        costEl.textContent = `${this.selectedFlow.token_cost} créditos esta producción`;
+        costEl.textContent = `${__('{n} créditos esta producción', { n: this.selectedFlow.token_cost })}`;
         costEl.style.display = '';
       } else {
         costEl.textContent = '';
@@ -875,25 +875,29 @@ class StudioView extends BaseView {
       // Studio: el canvas se scopea a un solo run (modelo Shakker).
       lm.runScoped = true;
       lm.filterRunId = activeRun;
+      // Canvas en GRID (CSS grid auto-fit), NO masonry justificado: con una sola
+      // produccion no la queremos chica en la esquina. El layout lo hace el CSS
+      // de studio.css; desactivamos applyJustifiedLayout para no pelear inline-styles.
+      lm.disableJustified = true;
       // Studio scope: empty state propio (mantiene dot-pattern de fondo).
       // Run activo sin outputs todavia → SKELETON de carga (simula el producto que
       // viene en camino). Se mantiene hasta que el output del run aparece y lo
       // reemplaza (el poll persistente sigue trayendo el output aunque tarde).
       lm.renderEmptyState = () => (this.livingManager && this.livingManager.filterRunId)
         ? `
-        <div class="studio-skeleton" role="status" aria-live="polite" aria-label="Generando producción">
+        <div class="studio-skeleton" role="status" aria-live="polite" aria-label="${__('Generando producción')}">
           <div class="studio-skeleton-grid">
             <div class="studio-skeleton-card" style="${this._skeletonCardStyle()}"><div class="living-history-skeleton"></div></div>
           </div>
-          <p class="studio-skeleton-label">Generando tu producción…</p>
-          <p class="studio-skeleton-hint">Esto puede tardar un momento. Tu resultado aparecerá aquí en cuanto esté listo.</p>
+          <p class="studio-skeleton-label">${__('Generando tu producción…')}</p>
+          <p class="studio-skeleton-hint">${__('Esto puede tardar un momento. Tu resultado aparecerá aquí en cuanto esté listo.')}</p>
         </div>
       `
         : this.emptyState({
           noDots: true,
           icon: 'fa-wand-magic-sparkles',
-          title: 'Empieza una nueva producción',
-          subtitle: 'Llena el formulario de la derecha y pulsa Producir. Verás aquí los resultados de este run.',
+          title: __('Empieza una nueva producción'),
+          subtitle: __('Llena el formulario de la derecha y pulsa Producir. Verás aquí los resultados de este run.'),
         });
       this.livingManager = lm;
       this._livingScopedFlowName = flowName;
@@ -939,51 +943,51 @@ class StudioView extends BaseView {
               <video id="pmodalVideo" controls playsinline preload="metadata" hidden aria-label="Production video"></video>
               <canvas class="pmodal-edit-canvas" id="pmodalEditCanvas" hidden></canvas>
             </div>
-            <div class="production-modal-toolbar" role="toolbar" aria-label="Acciones sobre la produccion">
-              <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="fas fa-pen"></i><span>Editar</span></button>
-              <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale"><i class="fas fa-expand-alt"></i><span>Mejorar 4K</span></button>
-              <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background"><i class="fas fa-cut"></i><span>Sin fondo</span></button>
-              <button type="button" class="pmodal-toolpill" data-tool="change-ratio" data-kie-model="nano-banana-pro" aria-haspopup="true" aria-expanded="false"><i class="fas fa-crop-simple"></i><span>Cambiar ratio</span></button>
-              <button type="button" class="pmodal-toolpill" data-tool="variations"><i class="fas fa-arrows-rotate"></i><span>Variar</span></button>
-              <button type="button" class="pmodal-toolpill" data-tool="animate"><i class="fas fa-film"></i><span>Animar</span></button>
+            <div class="production-modal-toolbar" role="toolbar" aria-label="${__('Acciones sobre la produccion')}">
+              <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="fas fa-pen"></i><span>${__('Editar')}</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale"><i class="fas fa-expand-alt"></i><span>${__('Mejorar 4K')}</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background"><i class="fas fa-cut"></i><span>${__('Sin fondo')}</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="change-ratio" data-kie-model="nano-banana-pro" aria-haspopup="true" aria-expanded="false"><i class="fas fa-crop-simple"></i><span>${__('Cambiar ratio')}</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="variations"><i class="fas fa-arrows-rotate"></i><span>${__('Variar')}</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="animate"><i class="fas fa-film"></i><span>${__('Animar')}</span></button>
             </div>
             <div class="pmodal-edit-overlay" id="pmodalEditOverlay" hidden aria-hidden="true">
-              <div class="pmodal-edit-toolbar" role="toolbar" aria-label="Herramientas de edicion">
-                <button type="button" class="pmodal-edit-tool is-active" data-edit-tool="brush" title="Pincel" aria-label="Pincel"><i class="fas fa-paintbrush"></i></button>
-                <button type="button" class="pmodal-edit-tool" data-edit-tool="eraser" title="Borrador" aria-label="Borrador"><i class="fas fa-eraser"></i></button>
-                <label class="pmodal-edit-size"><i class="fas fa-circle" aria-hidden="true"></i><input type="range" id="pmodalEditBrushSize" min="10" max="200" value="60" aria-label="Tamano del pincel"></label>
-                <button type="button" class="pmodal-edit-tool" data-edit-action="clear" title="Limpiar mascara" aria-label="Limpiar mascara"><i class="fas fa-trash"></i></button>
+              <div class="pmodal-edit-toolbar" role="toolbar" aria-label="${__('Herramientas de edicion')}">
+                <button type="button" class="pmodal-edit-tool is-active" data-edit-tool="brush" title="${__('Pincel')}" aria-label="${__('Pincel')}"><i class="fas fa-paintbrush"></i></button>
+                <button type="button" class="pmodal-edit-tool" data-edit-tool="eraser" title="${__('Borrador')}" aria-label="${__('Borrador')}"><i class="fas fa-eraser"></i></button>
+                <label class="pmodal-edit-size"><i class="fas fa-circle" aria-hidden="true"></i><input type="range" id="pmodalEditBrushSize" min="10" max="200" value="60" aria-label="${__('Tamano del pincel')}"></label>
+                <button type="button" class="pmodal-edit-tool" data-edit-action="clear" title="${__('Limpiar mascara')}" aria-label="${__('Limpiar mascara')}"><i class="fas fa-trash"></i></button>
               </div>
               <div class="pmodal-edit-panel pmodal-edit-director">
                 <div class="pmodal-edit-director-content">
-                  <textarea id="pmodalEditPrompt" class="pmodal-edit-prompt pmodal-edit-director-input" rows="3" placeholder="Tu idea en texto — describe que cambiar en la zona pintada. La IA generara el prompt final." autocomplete="off" aria-label="Describe el cambio"></textarea>
+                  <textarea id="pmodalEditPrompt" class="pmodal-edit-prompt pmodal-edit-director-input" rows="3" placeholder="${__('Tu idea en texto — describe que cambiar en la zona pintada. La IA generara el prompt final.')}" autocomplete="off" aria-label="${__('Describe el cambio')}"></textarea>
                 </div>
                 <div class="pmodal-edit-attachments" id="pmodalEditAttachments" hidden></div>
                 <div class="pmodal-edit-picker" id="pmodalEditPicker" hidden></div>
                 <input type="file" id="pmodalEditFileInput" accept="image/jpeg,image/png,image/webp,image/jpg" style="display:none;" aria-hidden="true">
                 <div class="pmodal-edit-director-controls">
-                  <button type="button" class="pmodal-edit-add-btn" id="pmodalEditAddBtn" data-edit-action="add-attachment" aria-label="Adjuntar imagen o producto" hidden><i class="fas fa-plus" aria-hidden="true"></i></button>
-                  <div class="pmodal-edit-mode-pills" role="tablist" aria-label="Modo de edicion">
-                    <button type="button" class="pmodal-edit-mode-pill is-active" role="tab" aria-selected="true" data-edit-mode="remove"><i class="fas fa-eraser" aria-hidden="true"></i><span>Eliminar</span></button>
-                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="replace"><i class="fas fa-arrows-rotate" aria-hidden="true"></i><span>Reemplazar</span></button>
-                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="fix-product"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>Corregir producto</span></button>
-                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="change-product"><i class="fas fa-box" aria-hidden="true"></i><span>Cambiar producto</span></button>
+                  <button type="button" class="pmodal-edit-add-btn" id="pmodalEditAddBtn" data-edit-action="add-attachment" aria-label="${__('Adjuntar imagen o producto')}" hidden><i class="fas fa-plus" aria-hidden="true"></i></button>
+                  <div class="pmodal-edit-mode-pills" role="tablist" aria-label="${__('Modo de edicion')}">
+                    <button type="button" class="pmodal-edit-mode-pill is-active" role="tab" aria-selected="true" data-edit-mode="remove"><i class="fas fa-eraser" aria-hidden="true"></i><span>${__('Eliminar')}</span></button>
+                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="replace"><i class="fas fa-arrows-rotate" aria-hidden="true"></i><span>${__('Reemplazar')}</span></button>
+                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="fix-product"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>${__('Corregir producto')}</span></button>
+                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="change-product"><i class="fas fa-box" aria-hidden="true"></i><span>${__('Cambiar producto')}</span></button>
                   </div>
                   <div class="pmodal-edit-actions">
-                    <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" data-edit-action="cancel">Cancelar</button>
-                    <button type="button" class="pmodal-edit-btn pmodal-edit-btn--accent" data-edit-action="apply"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>APLICAR</span></button>
+                    <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" data-edit-action="cancel">${__('Cancelar')}</button>
+                    <button type="button" class="pmodal-edit-btn pmodal-edit-btn--accent" data-edit-action="apply"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>${__('APLICAR')}</span></button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <aside class="production-modal-side" aria-label="Detalles de la produccion">
+          <aside class="production-modal-side" aria-label="${__('Detalles de la produccion')}">
             <header class="pmodal-side-header">
-              <button type="button" class="pmodal-close" data-action="modal-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+              <button type="button" class="pmodal-close" data-action="modal-close" aria-label="${__('Cerrar')}"><i class="fas fa-times"></i></button>
             </header>
-            <nav class="pmodal-tabs" role="tablist" aria-label="Vistas de produccion">
-              <button type="button" class="pmodal-tab is-active" role="tab" aria-selected="true" data-tab="output">Resultado</button>
-              <button type="button" class="pmodal-tab" role="tab" aria-selected="false" data-tab="input">Briefing</button>
+            <nav class="pmodal-tabs" role="tablist" aria-label="${__('Vistas de produccion')}">
+              <button type="button" class="pmodal-tab is-active" role="tab" aria-selected="true" data-tab="output">${__('Resultado')}</button>
+              <button type="button" class="pmodal-tab" role="tab" aria-selected="false" data-tab="input">${__('Briefing')}</button>
             </nav>
             <div class="pmodal-scroll" id="pmodalScroll">
               <div class="pmodal-pane pmodal-pane--output is-active" data-pane="output" role="tabpanel">
@@ -1006,22 +1010,22 @@ class StudioView extends BaseView {
             </div>
             <div class="pmodal-cta-grid">
               <button type="button" class="pmodal-cta pmodal-cta--accent" data-action="animate"><i class="fas fa-film"></i><span>Animate</span></button>
-              <button type="button" class="pmodal-cta pmodal-cta--outline" data-action="publish" disabled title="Proximamente"><i class="fas fa-upload"></i><span>Publish</span></button>
+              <button type="button" class="pmodal-cta pmodal-cta--outline" data-action="publish" disabled title="${__('Proximamente')}"><i class="fas fa-upload"></i><span>Publish</span></button>
             </div>
             <div class="pmodal-secondary-grid">
               <button type="button" class="pmodal-secondary" data-action="open-in"><i class="fas fa-external-link-alt"></i><span>Open in</span></button>
-              <button type="button" class="pmodal-secondary" data-action="reference" disabled title="Proximamente"><i class="fas fa-bookmark"></i><span>Reference</span></button>
+              <button type="button" class="pmodal-secondary" data-action="reference" disabled title="${__('Proximamente')}"><i class="fas fa-bookmark"></i><span>Reference</span></button>
             </div>
             <footer class="pmodal-footer">
               <button type="button" class="pmodal-footer-download" data-action="download"><i class="fas fa-download"></i><span>Download</span></button>
               <div class="pmodal-footer-icons">
-                <button type="button" class="pmodal-icon-btn" data-action="like" aria-pressed="false" aria-label="Me gusta"><i class="fas fa-heart"></i></button>
+                <button type="button" class="pmodal-icon-btn" data-action="like" aria-pressed="false" aria-label="${__('Me gusta')}"><i class="fas fa-heart"></i></button>
                 <div class="pmodal-kebab-wrap">
-                  <button type="button" class="pmodal-icon-btn" data-action="kebab" aria-expanded="false" aria-label="Mas"><i class="fas fa-bars"></i></button>
+                  <button type="button" class="pmodal-icon-btn" data-action="kebab" aria-expanded="false" aria-label="${__('Mas')}"><i class="fas fa-bars"></i></button>
                   <div class="pmodal-kebab-menu" role="menu" hidden>
-                    <button type="button" role="menuitem" data-action="copy-prompt"><i class="fas fa-copy"></i> Copiar prompt</button>
-                    <button type="button" role="menuitem" data-action="copy-url"><i class="fas fa-link"></i> Copiar enlace</button>
-                    <button type="button" role="menuitem" class="pmodal-kebab-danger" data-action="delete"><i class="fas fa-trash"></i> Eliminar produccion</button>
+                    <button type="button" role="menuitem" data-action="copy-prompt"><i class="fas fa-copy"></i> ${__('Copiar prompt')}</button>
+                    <button type="button" role="menuitem" data-action="copy-url"><i class="fas fa-link"></i> ${__('Copiar enlace')}</button>
+                    <button type="button" role="menuitem" class="pmodal-kebab-danger" data-action="delete"><i class="fas fa-trash"></i> ${__('Eliminar produccion')}</button>
                   </div>
                 </div>
               </div>
@@ -1054,10 +1058,10 @@ class StudioView extends BaseView {
       const entityIdx = fields.findIndex(f => (f.key || f.name) === 'entity_id');
       const tipoField = {
         key: 'tipo_entidad',
-        label: 'Tipo de entidad',
+        label: __('Tipo de entidad'),
         input_type: 'select',
         required: true,
-        options: [{ value: 'productos', label: 'Productos' }, { value: 'servicio', label: 'Servicio' }],
+        options: [{ value: 'productos', label: __('Productos') }, { value: 'servicio', label: __('Servicio') }],
         defaultValue: 'productos'
       };
       fields = [...fields.slice(0, entityIdx), tipoField, ...fields.slice(entityIdx)];
@@ -1065,10 +1069,10 @@ class StudioView extends BaseView {
     fields = fields.map(f => {
       const key = f.key || f.name;
       if (key === 'campaign_id' && (f.input_type === 'campaign_selector' || f.type === 'campaign_selector')) {
-        return { ...f, input_type: 'select', options: f.options && f.options.length ? f.options : [{ value: '', label: 'Selecciona campaña...' }] };
+        return { ...f, input_type: 'select', options: f.options && f.options.length ? f.options : [{ value: '', label: __('Selecciona campaña...') }] };
       }
       if (key === 'audience_id' && (f.input_type === 'audience_selector' || f.type === 'audience_selector')) {
-        return { ...f, input_type: 'select', options: f.options && f.options.length ? f.options : [{ value: '', label: 'Selecciona audiencia...' }] };
+        return { ...f, input_type: 'select', options: f.options && f.options.length ? f.options : [{ value: '', label: __('Selecciona audiencia...') }] };
       }
       if (key === 'production_count' && (f.input_type === 'number' || f.type === 'number')) {
         return { ...f, input_type: 'num_stepper', step: f.step != null ? f.step : 1, min: f.min != null ? f.min : 1, max: f.max != null ? f.max : 10, defaultValue: f.defaultValue != null ? f.defaultValue : 1 };
@@ -1076,7 +1080,7 @@ class StudioView extends BaseView {
       return f;
     });
     if (fields.length === 0) {
-      formEl.innerHTML = '<p class="studio-form-empty">Este flujo no tiene campos de programación definidos.</p>';
+      formEl.innerHTML = '<p class="studio-form-empty">' + __('Este flujo no tiene campos de programación definidos.') + '</p>';
       return;
     }
     const Registry = window.InputRegistry;
@@ -1119,8 +1123,8 @@ class StudioView extends BaseView {
       );
     };
     const weekdays = [
-      { value: '0', label: 'Dom' }, { value: '1', label: 'Lun' }, { value: '2', label: 'Mar' },
-      { value: '3', label: 'Mié' }, { value: '4', label: 'Jue' }, { value: '5', label: 'Vie' }, { value: '6', label: 'Sáb' }
+      { value: '0', label: __('Dom') }, { value: '1', label: __('Lun') }, { value: '2', label: __('Mar') },
+      { value: '3', label: __('Mié') }, { value: '4', label: __('Jue') }, { value: '5', label: __('Vie') }, { value: '6', label: __('Sáb') }
     ];
     const weekdayCheckboxes = weekdays.map(d => (
       '<label class="studio-weekday-check"><input type="checkbox" data-schedule-key="schedule_dow" data-dow="' + d.value + '"><span>' + this.escapeHtml(d.label) + '</span></label>'
@@ -1130,43 +1134,43 @@ class StudioView extends BaseView {
     )).join('');
     return (
       '<div class="studio-programacion-widget" id="' + prefix + '-widget">' +
-      '<select class="modern-input input-dropdown-select studio-programacion-select" id="' + prefix + '-type" data-schedule-key="schedule_type" aria-label="Tipo de programación">' +
-      '<option value="por_dia">Día</option>' +
-      '<option value="por_horas">Hora</option>' +
-      '<option value="por_semana">Semanal</option>' +
-      '<option value="personalizado">Personalizado</option>' +
+      '<select class="modern-input input-dropdown-select studio-programacion-select" id="' + prefix + '-type" data-schedule-key="schedule_type" aria-label="' + __('Tipo de programación') + '">' +
+      '<option value="por_dia">' + __('Día') + '</option>' +
+      '<option value="por_horas">' + __('Hora') + '</option>' +
+      '<option value="por_semana">' + __('Semanal') + '</option>' +
+      '<option value="personalizado">' + __('Personalizado') + '</option>' +
       '</select>' +
       '<input type="hidden" name="cron_expression" id="studio-schedule-cron_expression" value="0 */1 * * *">' +
       '<div class="schedule-panel" data-panel="por_horas">' +
-      stepper('schedule_hours_interval', 1, 24, 1, 1, 'Cada', 'horas') +
-      stepper('schedule_minutes_at', 0, 59, 1, 0, 'En el minuto', '') +
+      stepper('schedule_hours_interval', 1, 24, 1, 1, __('Cada'), __('horas')) +
+      stepper('schedule_minutes_at', 0, 59, 1, 0, __('En el minuto'), '') +
       '</div>' +
       '<div class="schedule-panel" data-panel="por_dia" style="display:none">' +
-      stepper('schedule_days_interval', 1, 31, 1, 1, 'Cada', 'días') +
-      stepper('schedule_hour_at', 0, 23, 1, 6, 'A la hora', '') +
-      stepper('schedule_minute_at', 0, 59, 1, 6, 'En el minuto', '') +
+      stepper('schedule_days_interval', 1, 31, 1, 1, __('Cada'), __('días')) +
+      stepper('schedule_hour_at', 0, 23, 1, 6, __('A la hora'), '') +
+      stepper('schedule_minute_at', 0, 59, 1, 6, __('En el minuto'), '') +
       '</div>' +
       '<div class="schedule-panel" data-panel="por_semana" style="display:none">' +
-      stepper('schedule_weeks_interval', 1, 4, 1, 1, 'Cada', 'semanas') +
-      '<div class="studio-programacion-row"><span class="studio-programacion-label">Días de la semana</span><div class="studio-weekdays">' + weekdayCheckboxes + '</div></div>' +
-      stepper('schedule_week_hour', 0, 23, 1, 9, 'A la hora', '') +
-      stepper('schedule_week_minute', 0, 59, 1, 0, 'En el minuto', '') +
+      stepper('schedule_weeks_interval', 1, 4, 1, 1, __('Cada'), __('semanas')) +
+      '<div class="studio-programacion-row"><span class="studio-programacion-label">' + __('Días de la semana') + '</span><div class="studio-weekdays">' + weekdayCheckboxes + '</div></div>' +
+      stepper('schedule_week_hour', 0, 23, 1, 9, __('A la hora'), '') +
+      stepper('schedule_week_minute', 0, 59, 1, 0, __('En el minuto'), '') +
       '</div>' +
       '<div class="schedule-panel schedule-panel--personalizado" data-panel="personalizado" style="display:none">' +
-      '<div class="studio-programacion-section"><span class="studio-programacion-section-title">Por horas</span>' +
-      stepper('schedule_custom_hours_interval', 1, 24, 1, 1, 'Cada', 'horas') +
-      stepper('schedule_custom_minutes_at', 0, 59, 1, 0, 'En el minuto', '') +
+      '<div class="studio-programacion-section"><span class="studio-programacion-section-title">' + __('Por horas') + '</span>' +
+      stepper('schedule_custom_hours_interval', 1, 24, 1, 1, __('Cada'), __('horas')) +
+      stepper('schedule_custom_minutes_at', 0, 59, 1, 0, __('En el minuto'), '') +
       '</div>' +
-      '<div class="studio-programacion-section"><span class="studio-programacion-section-title">Por día</span>' +
-      stepper('schedule_custom_days_interval', 1, 31, 1, 1, 'Cada', 'días') +
-      stepper('schedule_custom_hour_at', 0, 23, 1, 6, 'A la hora', '') +
-      stepper('schedule_custom_minute_at', 0, 59, 1, 6, 'En el minuto', '') +
+      '<div class="studio-programacion-section"><span class="studio-programacion-section-title">' + __('Por día') + '</span>' +
+      stepper('schedule_custom_days_interval', 1, 31, 1, 1, __('Cada'), __('días')) +
+      stepper('schedule_custom_hour_at', 0, 23, 1, 6, __('A la hora'), '') +
+      stepper('schedule_custom_minute_at', 0, 59, 1, 6, __('En el minuto'), '') +
       '</div>' +
-      '<div class="studio-programacion-section"><span class="studio-programacion-section-title">Por semana</span>' +
-      stepper('schedule_custom_weeks_interval', 1, 4, 1, 1, 'Cada', 'semanas') +
-      '<div class="studio-programacion-row"><span class="studio-programacion-label">Días de la semana</span><div class="studio-weekdays">' + weekdayCheckboxesCustom + '</div></div>' +
-      stepper('schedule_custom_week_hour', 0, 23, 1, 9, 'A la hora', '') +
-      stepper('schedule_custom_week_minute', 0, 59, 1, 0, 'En el minuto', '') +
+      '<div class="studio-programacion-section"><span class="studio-programacion-section-title">' + __('Por semana') + '</span>' +
+      stepper('schedule_custom_weeks_interval', 1, 4, 1, 1, __('Cada'), __('semanas')) +
+      '<div class="studio-programacion-row"><span class="studio-programacion-label">' + __('Días de la semana') + '</span><div class="studio-weekdays">' + weekdayCheckboxesCustom + '</div></div>' +
+      stepper('schedule_custom_week_hour', 0, 23, 1, 9, __('A la hora'), '') +
+      stepper('schedule_custom_week_minute', 0, 59, 1, 0, __('En el minuto'), '') +
       '</div></div></div>'
     );
   }
@@ -1302,16 +1306,16 @@ class StudioView extends BaseView {
     if (tipoEntidad === 'productos') {
       // id en el contenedor visible (para que <label for> apunte a un control focusable y no al hidden)
       return (
-        '<div class="image-selector-carousel" id="' + id + '" tabindex="0" role="group" aria-label="Entidad" data-media-source="products" data-selection-mode="multiple" data-key="entity_id" data-field-name="' + name + '">' +
-        '<div class="image-selector-carousel-track image-selector-carousel-track--empty" data-empty-msg="Selecciona producto(s)..."></div>' +
+        '<div class="image-selector-carousel" id="' + id + '" tabindex="0" role="group" aria-label="' + __('Entidad') + '" data-media-source="products" data-selection-mode="multiple" data-key="entity_id" data-field-name="' + name + '">' +
+        '<div class="image-selector-carousel-track image-selector-carousel-track--empty" data-empty-msg="' + __('Selecciona producto(s)...') + '"></div>' +
         '<input type="hidden" id="studio-schedule-entity_id_value" name="' + name + '" value="">' +
         '</div>'
       );
     }
     return (
       '<div class="input-dropdown-wrap">' +
-      '<select class="modern-input input-dropdown-select" id="' + id + '" name="' + name + '" aria-label="Entidad">' +
-      '<option value="">Selecciona un servicio...</option>' +
+      '<select class="modern-input input-dropdown-select" id="' + id + '" name="' + name + '" aria-label="' + __('Entidad') + '">' +
+      '<option value="">' + __('Selecciona un servicio...') + '</option>' +
       '</select>' +
       '</div>'
     );
@@ -1369,9 +1373,9 @@ class StudioView extends BaseView {
       return section;
     };
 
-    const freqCard = makeCard('Frecuencia', 'studio-schedule-card--frequency');
-    const ctxCard = makeCard('Contexto de producción', 'studio-schedule-card--context');
-    const specsCard = makeCard('Especificaciones', 'studio-schedule-card--specs');
+    const freqCard = makeCard(__('Frecuencia'), 'studio-schedule-card--frequency');
+    const ctxCard = makeCard(__('Contexto de producción'), 'studio-schedule-card--context');
+    const specsCard = makeCard(__('Especificaciones'), 'studio-schedule-card--specs');
 
     const freqBody = freqCard.querySelector('.studio-schedule-card-body');
     const ctxBody = ctxCard.querySelector('.studio-schedule-card-body');
@@ -1426,23 +1430,23 @@ class StudioView extends BaseView {
     const parts = cron.trim().split(/\s+/);
     if (parts.length < 5) return cron;
     const [min, hour, dom, , dow] = parts;
-    const dowNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const dowNames = [__('Dom'), __('Lun'), __('Mar'), __('Mié'), __('Jue'), __('Vie'), __('Sáb')];
     const pad = (s) => String(parseInt(s, 10) || 0).padStart(2, '0');
 
     if (dow !== '*' && dow.length > 0) {
       const days = dow.split(',').map(d => dowNames[parseInt(d, 10)] || d).join(', ');
-      return `${days} a las ${pad(hour)}:${pad(min)}`;
+      return `${__('{days} a las {time}', { days, time: `${pad(hour)}:${pad(min)}` })}`;
     }
     if (dom.startsWith('*/')) {
       const n = dom.slice(2);
-      return `Cada ${n} ${n === '1' ? 'día' : 'días'} a las ${pad(hour)}:${pad(min)}`;
+      return `${__('Cada {n} {unit} a las {time}', { n, unit: n === '1' ? __('día') : __('días'), time: `${pad(hour)}:${pad(min)}` })}`;
     }
     if (hour.startsWith('*/')) {
       const n = hour.slice(2);
-      return `Cada ${n} ${n === '1' ? 'hora' : 'horas'} (min ${pad(min)})`;
+      return `${__('Cada {n} {unit} (min {min})', { n, unit: n === '1' ? __('hora') : __('horas'), min: pad(min) })}`;
     }
     if (hour !== '*' && dom === '*') {
-      return `Diariamente a las ${pad(hour)}:${pad(min)}`;
+      return `${__('Diariamente a las {time}', { time: `${pad(hour)}:${pad(min)}` })}`;
     }
     return cron;
   }
@@ -1467,17 +1471,17 @@ class StudioView extends BaseView {
     if (tzEl) {
       try {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
-        tzEl.textContent = `Zona horaria: ${tz}`;
+        tzEl.textContent = `${__('Zona horaria: {tz}', { tz })}`;
       } catch (_) { tzEl.textContent = ''; }
     }
     if (countSummary) countSummary.textContent = String(count);
     if (formatSummary) formatSummary.textContent = (ratioEl?.value || '—');
     if (costEl) {
-      costEl.textContent = totalCost > 0 ? `${totalCost.toLocaleString('es')} créditos` : '—';
+      costEl.textContent = totalCost > 0 ? `${__('{n} créditos', { n: totalCost.toLocaleString('es') })}` : '—';
     }
     if (costHintEl) {
       costHintEl.textContent = tokenCost > 0
-        ? `${count} × ${tokenCost} créditos / imagen`
+        ? `${__('{count} × {cost} créditos / imagen', { count, cost: tokenCost })}`
         : '';
     }
   }
@@ -1498,7 +1502,7 @@ class StudioView extends BaseView {
   /** Inserta un flow_schedules con el estado pedido (active | draft). */
   async _saveSchedule(status) {
     if (!this.supabase || !this.selectedFlow) {
-      this._notify('No hay flujo seleccionado.');
+      this._notify(__('No hay flujo seleccionado.'));
       return;
     }
     const formEl = document.getElementById('studioScheduleForm');
@@ -1512,7 +1516,7 @@ class StudioView extends BaseView {
     });
 
     const cron = data.cron_expression || document.getElementById('studio-schedule-cron_expression')?.value || '';
-    if (!cron) { this._notify('Programación inválida.'); return; }
+    if (!cron) { this._notify(__('Programación inválida.')); return; }
 
     const entityVal = document.getElementById('studio-schedule-entity_id_value')?.value || data.entity_id || '';
     const entityIds = entityVal ? entityVal.split(',').filter(Boolean) : null;
@@ -1549,10 +1553,10 @@ class StudioView extends BaseView {
       const { error } = await this.supabase.from('flow_schedules').insert(insert).select('id').single();
       if (error) {
         console.error('[Studio] _saveSchedule:', error);
-        this._notify(`Error al ${status === 'active' ? 'activar' : 'guardar borrador'}: ${error.message}`);
+        this._notify(`${__('Error al {action}: {message}', { action: status === 'active' ? __('activar') : __('guardar borrador'), message: error.message })}`);
         return;
       }
-      this._notify(status === 'active' ? 'Programación activada' : 'Borrador guardado');
+      this._notify(status === 'active' ? __('Programación activada') : __('Borrador guardado'));
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -1568,7 +1572,7 @@ class StudioView extends BaseView {
     const schema = flow.input_schema || {};
     const fields = Array.isArray(schema) ? schema : (schema.fields || schema.inputs || []);
     if (!Array.isArray(fields) || fields.length === 0) {
-      formEl.innerHTML = '<p class="studio-form-empty">Este flujo no requiere datos adicionales.</p>';
+      formEl.innerHTML = '<p class="studio-form-empty">' + __('Este flujo no requiere datos adicionales.') + '</p>';
       return;
     }
 
@@ -1675,9 +1679,9 @@ class StudioView extends BaseView {
       hidden.value = list.join(',');
       wrap._colorsInit = false;
       wrap.innerHTML = list.map(hex =>
-        `<div class="color-swatch" style="background:${hex};" data-hex="${hex}"><button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button></div>`
+        `<div class="color-swatch" style="background:${hex};" data-hex="${hex}"><button type="button" class="color-delete-btn" title="${__('Eliminar')}" aria-label="${__('Eliminar color')}">×</button></div>`
       ).join('') + (list.length < max
-        ? '<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>'
+        ? `<button type="button" class="color-swatch-add-btn" title="${__('Agregar color')}" aria-label="${__('Agregar color')}"><span>+</span></button>`
         : '');
     });
     if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
@@ -1867,7 +1871,7 @@ class StudioView extends BaseView {
       track.removeAttribute('data-empty-msg');
 
       if (products.length === 0) {
-        track.innerHTML = '<span class="image-selector-empty-msg">No hay productos en esta marca.</span>';
+        track.innerHTML = '<span class="image-selector-empty-msg">' + __('No hay productos en esta marca.') + '</span>';
         if (hiddenInput) hiddenInput.value = isMultiple ? '[]' : '';
         return;
       }
@@ -1876,7 +1880,7 @@ class StudioView extends BaseView {
 
       track.innerHTML = products.map(product => {
         const mainImage = product.images && product.images.length > 0 ? product.images[0].image_url : null;
-        const nombre = product.nombre_producto || 'Producto';
+        const nombre = product.nombre_producto || __('Producto');
         const imgHtml = mainImage
           ? `<img src="${escapeHtml(mainImage)}" alt="${escapeHtml(nombre)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling && (this.nextElementSibling.style.display='flex');">`
           : '';
@@ -2064,7 +2068,7 @@ class StudioView extends BaseView {
     if (type === 'select') {
       const options = field.options || [];
       const opts = options.map(o => `<option value="${this.escapeHtml(String(o.value ?? o))}">${this.escapeHtml(String(o.label ?? o))}</option>`).join('');
-      return `<div class="studio-field"><label for="studio-${name}">${this.escapeHtml(label)}</label><select id="studio-${name}" name="${this.escapeHtml(name)}" ${required ? 'required' : ''}><option value="">Seleccionar...</option>${opts}</select></div>`;
+      return `<div class="studio-field"><label for="studio-${name}">${this.escapeHtml(label)}</label><select id="studio-${name}" name="${this.escapeHtml(name)}" ${required ? 'required' : ''}><option value="">${__('Seleccionar...')}</option>${opts}</select></div>`;
     }
     return `<div class="studio-field"><label for="studio-${name}">${this.escapeHtml(label)}</label><input type="text" id="studio-${name}" name="${this.escapeHtml(name)}" placeholder="${this.escapeHtml(placeholder)}" ${required ? 'required' : ''} /></div>`;
   }
@@ -2124,8 +2128,8 @@ class StudioView extends BaseView {
       const min = parseInt(f.min_selections, 10) || 0;
       const max = parseInt(f.max_selections, 10) || 0;
       const label = f.label || key;
-      if (min && n < min) return `"${label}": selecciona ${min === max ? '' : 'al menos '}${min} ${min === 1 ? 'elemento' : 'elementos'} (llevas ${n}).`;
-      if (max && n > max) return `"${label}": máximo ${max} ${max === 1 ? 'elemento' : 'elementos'} (llevas ${n}).`;
+      if (min && n < min) return `${__('"{label}": selecciona {prefix}{min} {unit} (llevas {n}).', { label, prefix: min === max ? '' : __('al menos '), min, unit: min === 1 ? __('elemento') : __('elementos'), n })}`;
+      if (max && n > max) return `${__('"{label}": máximo {max} {unit} (llevas {n}).', { label, max, unit: max === 1 ? __('elemento') : __('elementos'), n })}`;
     }
     return null;
   }
@@ -2194,13 +2198,13 @@ class StudioView extends BaseView {
     if (!this.selectedFlow || !this.selectedFlow.webhook_url) return;
     const cost = this.selectedFlow.token_cost ?? 1;
     if (this.credits.available < cost) {
-      this._notify('Créditos insuficientes para esta producción.');
+      this._notify(__('Créditos insuficientes para esta producción.'));
       return;
     }
 
     const Service = window.FlowWebhookService;
     if (!Service || typeof Service.executeWebhook !== 'function') {
-      this._notify('Servicio de ejecución no disponible. Recarga la página.');
+      this._notify(__('Servicio de ejecución no disponible. Recarga la página.'));
       return;
     }
 
@@ -2251,7 +2255,7 @@ class StudioView extends BaseView {
           });
         if (appendErr) {
           console.error('Studio deduct_credits_for_run:', appendErr);
-          this._notify('No se pudo reservar créditos. Intenta de nuevo.');
+          this._notify(__('No se pudo reservar créditos. Intenta de nuevo.'));
           return;
         }
         if (dr?.success === true && dr?.run_id) {
@@ -2264,8 +2268,8 @@ class StudioView extends BaseView {
           this._activeRunId = null;
         } else {
           this._notify(dr?.error_message === 'insufficient_credits'
-            ? 'Créditos insuficientes para esta producción.'
-            : (dr?.error_message || 'Error al reservar créditos.'));
+            ? __('Créditos insuficientes para esta producción.')
+            : (dr?.error_message || __('Error al reservar créditos.')));
           return;
         }
       }
@@ -2284,15 +2288,15 @@ class StudioView extends BaseView {
           });
         if (rpcError) {
           console.error('Studio deduct RPC:', rpcError);
-          this._notify('No se pudo reservar créditos. Intenta de nuevo.');
+          this._notify(__('No se pudo reservar créditos. Intenta de nuevo.'));
           return;
         }
         const success = deductResult?.success === true;
         runId = deductResult?.run_id;
         if (!success || !runId) {
           const msg = deductResult?.error_message === 'insufficient_credits'
-            ? 'Créditos insuficientes para esta producción.'
-            : (deductResult?.error_message || 'Error al reservar créditos.');
+            ? __('Créditos insuficientes para esta producción.')
+            : (deductResult?.error_message || __('Error al reservar créditos.'));
           this._notify(msg);
           return;
         }
@@ -2305,7 +2309,7 @@ class StudioView extends BaseView {
       window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
       // Skeleton INMEDIATO (antes del webhook) para feedback al instante: si no,
       // el tramo deduct->contexto->webhook deja el canvas sin senal y parece roto.
-      if (sequential) { this._activeRunId = runId; this._renderStageSkeleton(1, 'Generando guion…'); }
+      if (sequential) { this._activeRunId = runId; this._renderStageSkeleton(1, __('Generando guion…')); }
       else if (isAppend) this._showAppendSkeleton();
       else { try { await this.setActiveRun(runId); } catch (_) {} }
 
@@ -2380,13 +2384,13 @@ class StudioView extends BaseView {
         if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
           await window.appNavigation.loadCreditsFromDb(this.organizationId);
         }
-        const detail = res.error || res.statusText || `Código ${res.status}`;
+        const detail = res.error || res.statusText || `${__('Código {status}', { status: res.status })}`;
         if (res.status === 400) {
-          this._notify('Solicitud incorrecta: ' + detail + '. Revisa los datos del formulario.');
+          this._notify(__('Solicitud incorrecta: {detail}. Revisa los datos del formulario.', { detail }));
         } else if (res.status >= 500) {
-          this._notify('Error del servidor del flujo. Intenta más tarde o contacta al administrador.');
+          this._notify(__('Error del servidor del flujo. Intenta más tarde o contacta al administrador.'));
         } else {
-          this._notify('Error en la producción: ' + detail);
+          this._notify(__('Error en la producción: {detail}', { detail }));
         }
         return;
       }
@@ -2461,15 +2465,15 @@ class StudioView extends BaseView {
 
   _messageForProducirError(e) {
     if (e.name === 'AbortError') {
-      return 'Tiempo de espera agotado. El servidor no respondió a tiempo.';
+      return __('Tiempo de espera agotado. El servidor no respondió a tiempo.');
     }
     if (e.name === 'TypeError' && e.cause) {
-      return 'Error de conexión. Comprueba tu red e intenta de nuevo.';
+      return __('Error de conexión. Comprueba tu red e intenta de nuevo.');
     }
     if (e.message && typeof e.message === 'string') {
       return e.message;
     }
-    return 'Error al producir. Intenta de nuevo.';
+    return __('Error al producir. Intenta de nuevo.');
   }
 
   async onLeave() {

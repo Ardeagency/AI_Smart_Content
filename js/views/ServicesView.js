@@ -269,7 +269,7 @@ class ServicesView extends BaseView {
       const { id: _id, created_at: _c, updated_at: _u, ...rest } = service;
       const copyData = {
         ...rest,
-        nombre_servicio: (service.nombre_servicio || 'Servicio').trim() + ' (copia)',
+        nombre_servicio: (service.nombre_servicio || __('Servicio')).trim() + ' ' + __('(copia)'),
       };
       const { error: insertError } = await this.supabase.from('services').insert(copyData);
       if (insertError) throw insertError;
@@ -375,8 +375,8 @@ class ServicesView extends BaseView {
       backBtn.type = 'button';
       backBtn.className = 'attach-product-back';
       backBtn.hidden = true;
-      backBtn.setAttribute('aria-label', 'Volver');
-      backBtn.innerHTML = '<i class="fas fa-arrow-left" aria-hidden="true"></i><span>Volver</span>';
+      backBtn.setAttribute('aria-label', __('Volver'));
+      backBtn.innerHTML = `<i class="fas fa-arrow-left" aria-hidden="true"></i><span>${__('Volver')}</span>`;
       backBtn.addEventListener('click', () => {
         const currentStep = wizard?.getAttribute('data-step');
         const target = stepConfig[currentStep]?.backTo || 'picker';
@@ -473,7 +473,7 @@ class ServicesView extends BaseView {
           <i class="fas ${iconClass}" aria-hidden="true"></i>
           <span class="attach-product-file-name">${this.escapeHtml(f.name)}</span>
           <span class="attach-product-file-size">${sizeStr}</span>
-          <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="Quitar archivo"><i class="fas fa-times" aria-hidden="true"></i></button>
+          <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar archivo')}"><i class="fas fa-times" aria-hidden="true"></i></button>
         </li>`;
       }).join('');
     };
@@ -532,8 +532,8 @@ class ServicesView extends BaseView {
         .insert({
           organization_id: this.organizationId,
           entity_id: entityId,
-          nombre_servicio: 'Procesando ficha...',
-          descripcion_servicio: 'Vera esta leyendo la pagina y armando la ficha del servicio.',
+          nombre_servicio: __('Procesando ficha...'),
+          descripcion_servicio: __('Vera está leyendo la página y armando la ficha del servicio.'),
           url_servicio: url,
         })
         .select('id')
@@ -541,10 +541,10 @@ class ServicesView extends BaseView {
       if (insertError || !created?.id) throw insertError || new Error('No se pudo crear el servicio');
       serviceId = created.id;
 
-      setHint(`Leyendo ${hostname || 'la pagina'} y extrayendo datos del servicio...`);
+      setHint(__('Leyendo {host} y extrayendo datos del servicio...', { host: hostname || __('la página') }));
       const { data: sessionData } = await this.supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
-      if (!accessToken) throw new Error('No hay sesion activa');
+      if (!accessToken) throw new Error(__('No hay sesión activa'));
 
       const resp = await fetch('/.netlify/functions/api-services-generate-fiche', {
         method: 'POST',
@@ -561,19 +561,22 @@ class ServicesView extends BaseView {
         const errMsg = result.error || `HTTP ${resp.status}`;
         const detail = result.detail ? ` (${result.detail})` : '';
         if (resp.status === 402) {
-          this._showNotification(`Creditos insuficientes. Necesitas ${result.credits_needed?.toFixed?.(4) || '?'} creditos`, 'error');
+          this._showNotification(__('Créditos insuficientes. Necesitas {n} créditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
         } else {
-          this._showNotification(`Error generando ficha: ${errMsg}${detail}`, 'error');
+          this._showNotification(__('Error generando ficha: {err}', { err: `${errMsg}${detail}` }), 'error');
         }
         throw new Error(errMsg);
       }
 
-      setHint(`Ficha generada (costo: ${result.credits_charged.toFixed(4)} creditos). Recargando listado...`);
+      setHint(__('Ficha generada (costo: {n} créditos). Recargando listado...', { n: result.credits_charged.toFixed(4) }));
       this._invalidateCache();
       window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
       modalHandle?.close();
       this._showNotification(
-        `Ficha de servicio generada${result.scraped?.brand ? ' (' + result.scraped.brand + ')' : ''} · ${result.credits_charged.toFixed(4)} creditos`,
+        __('Ficha de servicio generada{brand} · {n} créditos', {
+          brand: result.scraped?.brand ? ' (' + result.scraped.brand + ')' : '',
+          n: result.credits_charged.toFixed(4),
+        }),
         'success'
       );
       await this._loadData();
@@ -604,18 +607,18 @@ class ServicesView extends BaseView {
         .insert({
           organization_id: this.organizationId,
           entity_id: entityId,
-          nombre_servicio: files?.length ? `Servicio pendiente (${files.length} archivo${files.length === 1 ? '' : 's'})` : 'Servicio pendiente',
-          descripcion_servicio: 'Vera procesara los archivos para completar la ficha automaticamente cuando se cablee la extraccion server-side.',
+          nombre_servicio: files?.length ? __('Servicio pendiente ({n} archivo(s))', { n: files.length }) : __('Servicio pendiente'),
+          descripcion_servicio: __('Vera procesará los archivos para completar la ficha automáticamente cuando se cablee la extracción server-side.'),
         });
       if (error) throw error;
       this._invalidateCache();
       modalHandle?.close();
       await this._loadData();
       this._renderServices();
-      this._showNotification('Servicio guardado para procesamiento posterior', 'info');
+      this._showNotification(__('Servicio guardado para procesamiento posterior'), 'info');
     } catch (err) {
       console.error('ServicesView _createPendingService:', err);
-      this._showNotification(err?.message || 'No se pudo crear el servicio', 'error');
+      this._showNotification(err?.message || __('No se pudo crear el servicio'), 'error');
       modalHandle?.close();
     }
   }

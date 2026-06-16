@@ -155,12 +155,12 @@
       body.innerHTML = `
         <div class="insight-page" style="text-align:center; padding-top:4rem;">
           <h2 style="margin:0 0 0.5rem; font-size:1.5rem; color:var(--text-primary);">${__('Sin organización activa')}</h2>
-          <p style="color:var(--text-secondary);">Selecciona una marca desde el menú para empezar.</p>
+          <p style="color:var(--text-secondary);">${__('Selecciona una marca desde el menú para empezar.')}</p>
         </div>`;
     },
 
     _buildMyBrandsErrorHtml(err) {
-      const msg = this._esc(err?.message || String(err) || 'Error desconocido');
+      const msg = this._esc(err?.message || String(err) || __('Error desconocido'));
       return `
         <div class="insight-page" style="text-align:center; padding-top:4rem;">
           <h2 style="margin:0 0 0.5rem; font-size:1.25rem; color:var(--text-primary);">${__('No se pudo cargar el dashboard')}</h2>
@@ -507,7 +507,7 @@
               <span class="mb-tpt-sent mb-tpt-sent--${sc}">${this._sentLabel(p.sentiment_text)}</span>
               ${topics.map((t) => `<span class="mb-tag">${this._esc(this._capWords(t))}</span>`).join('')}
             </div>
-            <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="Abrir perfil"><i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}</div>
+            <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="${__('Abrir perfil')}"><i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}</div>
           </div>`;
       }).join('');
       return `
@@ -610,18 +610,18 @@
             <div class="mb-hier-stat">
               <span class="mb-hier-stat-cap">${__('Más usado')}</span>
               <span class="mb-hier-stat-val">${this._esc(this._capWords(mostUsed.name))}</span>
-              <span class="mb-hier-stat-sub">${mostUsed.used} posts</span>
+              <span class="mb-hier-stat-sub">${__('{n} posts', { n: mostUsed.used })}</span>
             </div>
             <div class="mb-hier-stat mb-hier-stat--eff">
               <span class="mb-hier-stat-cap">${__('Más efectivo')}</span>
               <span class="mb-hier-stat-val">${this._esc(this._capWords(mostEff.name))}</span>
-              <span class="mb-hier-stat-sub">${this._compactNum(Math.round(mostEff.avg))} eng/post</span>
+              <span class="mb-hier-stat-sub">${__('{n} eng/post', { n: this._compactNum(Math.round(mostEff.avg)) })}</span>
             </div>
           </div>
           <div class="mb-donut-wrap">
             <div class="mb-donut">
               <canvas id="${canvasId}"></canvas>
-              <div class="mb-donut-center"><span class="mb-donut-center-val">${total}</span><span class="mb-donut-center-cap">posts</span></div>
+              <div class="mb-donut-center"><span class="mb-donut-center-val">${total}</span><span class="mb-donut-center-cap">${__('posts')}</span></div>
             </div>
             <div class="mb-donut-legend">${legend}</div>
           </div>
@@ -652,7 +652,7 @@
               responsive: true, maintainAspectRatio: false, cutout: '66%',
               plugins: {
                 legend: { display: false },
-                tooltip: { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10, callbacks: { label: (c) => ` ${c.label}: ${c.parsed} posts` } },
+                tooltip: { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10, callbacks: { label: (c) => ' ' + __('{label}: {n} posts', { label: c.label, n: c.parsed }) } },
               },
             },
           }));
@@ -674,16 +674,16 @@
       const analisis = `
         <div class="mb-long-card">
           <div class="mb-card-title">${__('Análisis de comentarios')}</div>
-          <div class="mb-cmt-total">${this._compactNum(c.total)} <small>comentarios analizados</small></div>
+          <div class="mb-cmt-total">${this._compactNum(c.total)} <small>${__('comentarios analizados')}</small></div>
           <div class="mb-cmt-sent">
             <span class="mb-cmt-seg mb-cmt-seg--pos" style="width:${pct(pos)}%"></span>
             <span class="mb-cmt-seg mb-cmt-seg--neu" style="width:${pct(neu)}%"></span>
             <span class="mb-cmt-seg mb-cmt-seg--neg" style="width:${pct(neg)}%"></span>
           </div>
           <div class="mb-cmt-legend">
-            <span class="mb-cmt-leg mb-cmt-leg--pos">${pct(pos)}% positivo</span>
-            <span class="mb-cmt-leg mb-cmt-leg--neu">${pct(neu)}% neutro</span>
-            <span class="mb-cmt-leg mb-cmt-leg--neg">${pct(neg)}% negativo</span>
+            <span class="mb-cmt-leg mb-cmt-leg--pos">${__('{n}% positivo', { n: pct(pos) })}</span>
+            <span class="mb-cmt-leg mb-cmt-leg--neu">${__('{n}% neutro', { n: pct(neu) })}</span>
+            <span class="mb-cmt-leg mb-cmt-leg--neg">${__('{n}% negativo', { n: pct(neg) })}</span>
           </div>
           ${emos ? `<div class="mb-cmt-emos"><span class="mb-beh-label">${__('Emociones top')}</span><div class="mb-cmt-emo-list">${emos}</div></div>` : ''}
         </div>`;
@@ -727,7 +727,7 @@
           <section class="mb-section mb-section--wide">
             <div class="mb-chart-card">
               <div class="mb-card-title">${__('Que te impulsa y que te frena')}</div>
-              <div class="mb-causal-empty" style="margin:0;">No hay contenido propio analizado en esta ventana. Amplia el rango (prueba Todo el periodo).</div>
+              <div class="mb-causal-empty" style="margin:0;">${__('No hay contenido propio analizado en esta ventana. Amplia el rango (prueba Todo el periodo).')}</div>
             </div>
           </section>`;
       }
@@ -798,7 +798,7 @@
               <div class="mb-long-card-title">${__('Patron de horas de publicacion')}</div>
               ${this._buildPostingHeatmap(L.hours?.data)}
             </div>
-            ${card('mbLongSentiment', 'Actividad de sentimientos')}
+            ${card('mbLongSentiment', __('Actividad de sentimientos'))}
           </div>`}
         </section>`;
     },
@@ -812,13 +812,13 @@
         const d = Number(r.day_of_week), h = Number(r.hour_of_day), c = Number(r.posts_count) || 0;
         if (d >= 0 && d < 7 && h >= 0 && h < 24) { m[d][h] += c; if (m[d][h] > max) max = m[d][h]; }
       });
-      if (!max) return `<div class="mb-causal-empty" style="margin:0;">Sin datos de horario aun.</div>`;
+      if (!max) return `<div class="mb-causal-empty" style="margin:0;">${__('Sin datos de horario aun.')}</div>`;
       const dayName = [__('Dom'), __('Lun'), __('Mar'), __('Mie'), __('Jue'), __('Vie'), __('Sab')];
       const order = [1, 2, 3, 4, 5, 6, 0];
       const bucket = (v) => { if (v <= 0) return 0; const r = v / max; if (r <= 0.25) return 1; if (r <= 0.5) return 2; if (r <= 0.75) return 3; return 4; };
       const rowsHtml = order.map((d) => {
         const cells = m[d].map((v, h) => {
-          const t = `${dayName[d]} ${h}:00 · ${v} ${v === 1 ? 'post' : 'posts'}`;
+          const t = `${dayName[d]} ${h}:00 · ${v} ${v === 1 ? __('post') : __('posts')}`;
           const cls = `mb-heat-cell mb-heat-cell--l${bucket(v)}${v > 0 ? ' mb-heat-cell--click' : ''}`;
           const attrs = v > 0 ? ` data-mb-hours-modal data-hour="${h}" role="button" tabindex="0"` : '';
           return `<span class="${cls}" title="${t}"${attrs}></span>`;
@@ -828,10 +828,10 @@
       return `
         <div class="mb-heat">
           <div class="mb-heat-legend">
-            <span><i class="mb-heat-dot mb-heat-dot--l1"></i> Bajo</span>
-            <span><i class="mb-heat-dot mb-heat-dot--l2"></i> Medio</span>
-            <span><i class="mb-heat-dot mb-heat-dot--l3"></i> Alto</span>
-            <span><i class="mb-heat-dot mb-heat-dot--l4"></i> Mejor</span>
+            <span><i class="mb-heat-dot mb-heat-dot--l1"></i> ${__('Bajo')}</span>
+            <span><i class="mb-heat-dot mb-heat-dot--l2"></i> ${__('Medio')}</span>
+            <span><i class="mb-heat-dot mb-heat-dot--l3"></i> ${__('Alto')}</span>
+            <span><i class="mb-heat-dot mb-heat-dot--l4"></i> ${__('Mejor')}</span>
           </div>
           <div class="mb-heat-grid">${rowsHtml}</div>
           <div class="mb-heat-axis"><span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>11p</span></div>
@@ -872,10 +872,10 @@
           ctx.setLineDash([]);
           ctx.font = '700 9.5px ui-sans-serif, system-ui, sans-serif';
           ctx.textBaseline = 'top'; ctx.textAlign = 'left';
-          ctx.fillStyle = 'rgba(107,207,127,0.65)'; ctx.fillText('EXPLOTALO', ca.left + 6, ca.top + 5);
-          ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(212,209,216,0.38)'; ctx.fillText('TU FORMULA', ca.right - 6, ca.top + 5);
-          ctx.textBaseline = 'bottom'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(212,209,216,0.3)'; ctx.fillText('IGNORA', ca.left + 6, ca.bottom - 5);
-          ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(224,160,69,0.6)'; ctx.fillText('REVISA', ca.right - 6, ca.bottom - 5);
+          ctx.fillStyle = 'rgba(107,207,127,0.65)'; ctx.fillText(__('EXPLOTALO'), ca.left + 6, ca.top + 5);
+          ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(212,209,216,0.38)'; ctx.fillText(__('TU FORMULA'), ca.right - 6, ca.top + 5);
+          ctx.textBaseline = 'bottom'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(212,209,216,0.3)'; ctx.fillText(__('IGNORA'), ca.left + 6, ca.bottom - 5);
+          ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(224,160,69,0.6)'; ctx.fillText(__('REVISA'), ca.right - 6, ca.bottom - 5);
           ctx.restore();
         },
         afterDatasetsDraw(chart) {
@@ -911,13 +911,13 @@
                 backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10,
                 callbacks: {
                   title: () => null,
-                  label: (c) => { const p = points[c.dataIndex]; return `${p.label}: ${Math.round(p.x)}% de uso · ${p.y >= 0 ? '+' : ''}${p.y}% rendimiento${p.orphan ? ' · huerfano' : ''}`; },
+                  label: (c) => { const p = points[c.dataIndex]; return __('{label}: {use}% de uso · {sign}{perf}% rendimiento', { label: p.label, use: Math.round(p.x), sign: p.y >= 0 ? '+' : '', perf: p.y }) + (p.orphan ? ' · ' + __('huerfano') : ''); },
                 },
               },
             },
             scales: {
-              x: { min: 0, max: xMax, grid: { color: GRID }, border: { display: false }, title: { display: true, text: '% de uso', color: TICK, font: { size: 10 } }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => v + '%', maxTicksLimit: 6 } },
-              y: { min: yMin, max: yMax, grid: { color: GRID }, border: { display: false }, title: { display: true, text: 'Rendimiento vs promedio', color: TICK, font: { size: 10 } }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => (v > 0 ? '+' : '') + v + '%', maxTicksLimit: 6 } },
+              x: { min: 0, max: xMax, grid: { color: GRID }, border: { display: false }, title: { display: true, text: __('% de uso'), color: TICK, font: { size: 10 } }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => v + '%', maxTicksLimit: 6 } },
+              y: { min: yMin, max: yMax, grid: { color: GRID }, border: { display: false }, title: { display: true, text: __('Rendimiento vs promedio'), color: TICK, font: { size: 10 } }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => (v > 0 ? '+' : '') + v + '%', maxTicksLimit: 6 } },
             },
           },
           plugins: [quad],
@@ -1412,7 +1412,7 @@
       const lift   = Math.round(Number(i.lift_pct) || 0);
       const absLift = Math.abs(lift);
       const value  = i.dimension === 'horario'
-        ? `las ${String(parseInt(i.value, 10) || 0).padStart(2, '0')}:00`
+        ? __('las {h}:00', { h: String(parseInt(i.value, 10) || 0).padStart(2, '0') })
         : this._causalValueLabel(i.dimension, i.value);
       const posRatio = Number.isFinite(Number(i.pos_ratio)) ? Number(i.pos_ratio) : null;
       const n      = Number(i.post_count) || 0;
@@ -1421,15 +1421,15 @@
       const headline = `${isUp ? meta.headUp : meta.headDown}: ${value}`;
       const sent = this._tpSentimentPhrase(posRatio);
       const say = isUp
-        ? `Cuando publicas asi, la gente interactua (likes, comentarios, compartidos) un <b>${absLift}% mas</b> que de costumbre${sent ? ` — ${sent}` : ''}.`
-        : `Cuando publicas asi, la gente interactua un <b>${absLift}% menos</b> que de costumbre${sent ? ` — ${sent}` : ''}.`;
+        ? __('Cuando publicas asi, la gente interactua (likes, comentarios, compartidos) un <b>{p}% mas</b> que de costumbre', { p: absLift }) + (sent ? ` — ${sent}` : '') + '.'
+        : __('Cuando publicas asi, la gente interactua un <b>{p}% menos</b> que de costumbre', { p: absLift }) + (sent ? ` — ${sent}` : '') + '.';
 
       // Visual: numero grande comparativo + pictograma de reaccion.
       const filled = posRatio != null ? Math.round(posRatio * 10) : null;
       const picto = filled != null
         ? `<div class="mb-tp-picto">
              ${this._pictograph10(filled)}
-             <span class="mb-tp-picto-cap"><b>${filled} de cada 10</b> reaccionan bien</span>
+             <span class="mb-tp-picto-cap">${__('<b>{n} de cada 10</b> reaccionan bien', { n: filled })}</span>
            </div>`
         : '';
 
@@ -1448,12 +1448,12 @@
           <div class="mb-tp-viz">
             <div class="mb-tp-big mb-tp-big--${isUp ? 'up' : 'down'}">
               <span class="mb-tp-big-num">${isUp ? '↑' : '↓'} ${absLift}%</span>
-              <span class="mb-tp-big-cap">${isUp ? 'mejor' : 'peor'} que de costumbre</span>
+              <span class="mb-tp-big-cap">${isUp ? __('mejor que de costumbre') : __('peor que de costumbre')}</span>
             </div>
             ${picto}
           </div>
           <div class="mb-tp-foot">
-            <span class="mb-tp-evidence">Lo vimos en ${n} ${n === 1 ? 'publicacion' : 'publicaciones'} tuyas</span>
+            <span class="mb-tp-evidence">${n === 1 ? __('Lo vimos en {n} publicacion tuya', { n }) : __('Lo vimos en {n} publicaciones tuyas', { n })}</span>
             <span class="mb-tp-action">${this._esc(isUp ? meta.actUp : meta.actDown)} <i class="fas fa-arrow-right"></i></span>
           </div>
         </article>`;
@@ -1463,10 +1463,10 @@
     _tpSentimentPhrase(posRatio) {
       if (posRatio == null) return '';
       const p = Math.round(posRatio * 100);
-      if (p >= 70) return 'a casi todos les gusta';
-      if (p >= 50) return 'a la mayoria le gusta';
-      if (p >= 30) return 'aunque a varios no les convence';
-      return 'pero a muchos no les convence';
+      if (p >= 70) return __('a casi todos les gusta');
+      if (p >= 50) return __('a la mayoria le gusta');
+      if (p >= 30) return __('aunque a varios no les convence');
+      return __('pero a muchos no les convence');
     },
 
     /** Pictograma de 10 puntos: X llenos = X de cada 10 (legible sin saber leer datos). */
@@ -1489,10 +1489,10 @@
       }[a.status] || { color: '#8a8a8e', label: a.status };
       const days = Number(a.days_since);
       const headline = a.status === 'dormido'
-        ? `Llevas <strong>${this._daysHuman(days)}</strong> sin publicar`
-        : `Tu ultima publicacion fue hace <strong>${this._daysHuman(days)}</strong>`;
+        ? __('Llevas <strong>{d}</strong> sin publicar', { d: this._daysHuman(days) })
+        : __('Tu ultima publicacion fue hace <strong>{d}</strong>', { d: this._daysHuman(days) });
       const nets = (Array.isArray(a.networks) ? a.networks : []).map((n) =>
-        `<span class="mb-actb-net">${this._esc(this._prettyPlatform(n.network))} · ${Number(n.posts)} ${Number(n.posts) === 1 ? 'post' : 'posts'} · hace ${this._daysHuman(Number(n.days_since))}</span>`).join('');
+        `<span class="mb-actb-net">${this._esc(this._prettyPlatform(n.network))} · ${__('{c} {posts} · hace {d}', { c: Number(n.posts), posts: Number(n.posts) === 1 ? __('post') : __('posts'), d: this._daysHuman(Number(n.days_since)) })}</span>`).join('');
       return `
         <div class="mb-actb">
           <div class="mb-actb-status">
@@ -1517,14 +1517,14 @@
       }[a.status] || { color: '#8a8a8e', label: a.status };
       const days = Number(a.days_since);
       const headline = a.status === 'dormido'
-        ? `Llevas <strong>${this._daysHuman(days)}</strong> sin publicar`
-        : `Tu ultima publicacion fue hace <strong>${this._daysHuman(days)}</strong>`;
+        ? __('Llevas <strong>{d}</strong> sin publicar', { d: this._daysHuman(days) })
+        : __('Tu ultima publicacion fue hace <strong>{d}</strong>', { d: this._daysHuman(days) });
 
       const nets = (Array.isArray(a.networks) ? a.networks : []).map((n) => `
         <div class="mb-act-net">
           <span class="mb-act-net-name">${this._esc(this._prettyPlatform(n.network))}</span>
-          <span class="mb-act-net-posts">${Number(n.posts)} ${Number(n.posts) === 1 ? 'post' : 'posts'}</span>
-          <span class="mb-act-net-since">hace ${this._daysHuman(Number(n.days_since))}</span>
+          <span class="mb-act-net-posts">${Number(n.posts)} ${Number(n.posts) === 1 ? __('post') : __('posts')}</span>
+          <span class="mb-act-net-since">${__('hace {d}', { d: this._daysHuman(Number(n.days_since)) })}</span>
         </div>`).join('');
 
       return `
@@ -1561,8 +1561,8 @@
 
     _daysHuman(d) {
       const n = Number(d) || 0;
-      if (n < 60) return `${n} dias`;
-      return `${n} dias (${Math.round(n / 30)} meses)`;
+      if (n < 60) return __('{n} dias', { n });
+      return __('{n} dias ({m} meses)', { n, m: Math.round(n / 30) });
     },
 
     /* ── Pilares narrativos: de que hablas + temas huerfanos ──────────── */
@@ -1592,7 +1592,7 @@
           ? `<div class="mb-stage-conn"><span>${share}% de tu contenido</span></div>`
           : '';
         return `
-          <div class="mb-stage mb-stage--${v.k}" data-feat-detail data-dim="pillar" data-value="${this._esc(r.pillar)}" data-title="Pilar: ${this._esc(r.pillar)}" role="button" tabindex="0">
+          <div class="mb-stage mb-stage--${v.k}" data-feat-detail data-dim="pillar" data-value="${this._esc(r.pillar)}" data-title="${__('Pilar: {p}', { p: this._esc(r.pillar) })}" role="button" tabindex="0">
             <span class="mb-stage-icon"><i class="fas ${v.icon}"></i></span>
             <div class="mb-stage-main">
               <span class="mb-stage-name">${this._esc(r.pillar)}</span>
@@ -1614,18 +1614,18 @@
           <div class="mb-stageflow">
             <div class="mb-stageflow-head">
               <span class="mb-stageflow-title">${__('Pilares de contenido')}</span>
-              <span class="mb-stageflow-count">${ranked.length} ${ranked.length === 1 ? 'pilar' : 'pilares'}</span>
+              <span class="mb-stageflow-count">${ranked.length === 1 ? __('{n} pilar', { n: ranked.length }) : __('{n} pilares', { n: ranked.length })}</span>
             </div>
             <div class="mb-stageflow-list">${stageRows}</div>
             <div class="mb-stageflow-foot">
               <div class="mb-stageflow-foot-label">${__('Resumen')}</div>
               <div class="mb-stageflow-stats">
                 <div class="mb-stageflow-stat"><span class="mb-stageflow-stat-val">${ranked.length}</span><span class="mb-stageflow-stat-cap">${__('Pilares')}</span></div>
-                <div class="mb-stageflow-stat"><span class="mb-stageflow-stat-val">${rindeShare}%</span><span class="mb-stageflow-stat-cap">Rinde +</span></div>
-                <div class="mb-stageflow-stat${toOptimize ? ' mb-stageflow-stat--warn' : ' mb-stageflow-stat--ok'}"><span class="mb-stageflow-stat-val">${toOptimize}</span><span class="mb-stageflow-stat-cap">A optimizar</span></div>
+                <div class="mb-stageflow-stat"><span class="mb-stageflow-stat-val">${rindeShare}%</span><span class="mb-stageflow-stat-cap">${__('Rinde +')}</span></div>
+                <div class="mb-stageflow-stat${toOptimize ? ' mb-stageflow-stat--warn' : ' mb-stageflow-stat--ok'}"><span class="mb-stageflow-stat-val">${toOptimize}</span><span class="mb-stageflow-stat-cap">${__('A optimizar')}</span></div>
               </div>
               <div class="mb-stageflow-bar"><span style="width:${Math.min(100, Math.max(2, rindeShare))}%;"></span></div>
-              <div class="mb-stageflow-foot-meta"><span>Prioridad: ${priorityLabel}</span><span>${rindeShare}% rinde</span></div>
+              <div class="mb-stageflow-foot-meta"><span>${__('Prioridad: {p}', { p: priorityLabel })}</span><span>${__('{n}% rinde', { n: rindeShare })}</span></div>
             </div>
           </div>
         </section>`;
@@ -1639,10 +1639,10 @@
       return `
         <div class="mb-pil-row${orphan ? ' mb-pil-row--orphan' : ''} mb-pil-row--clickable"
              data-feat-detail data-dim="pillar" data-value="${this._esc(r.pillar)}"
-             data-title="Pilar: ${this._esc(r.pillar)}" role="button" tabindex="0">
+             data-title="${__('Pilar: {p}', { p: this._esc(r.pillar) })}" role="button" tabindex="0">
           <div class="mb-pil-name">
             <span class="mb-pil-pillar">${this._esc(r.pillar)}</span>
-            ${orphan ? `<span class="mb-pil-orphan-badge">Huerfano · explotalo</span>` : ''}
+            ${orphan ? `<span class="mb-pil-orphan-badge">${__('Huerfano · explotalo')}</span>` : ''}
           </div>
           <div class="mb-pil-share">
             <div class="mb-pil-bar"><span style="width:${share}%;"></span></div>
@@ -1697,7 +1697,7 @@
                 <span class="mb-swot-col-count">${vulnerabilidades.length}</span>
               </div>
               ${vulnerabilidades.length === 0
-                ? `<div class="mb-swot-empty">Sin vulnerabilidades activas. ✓</div>`
+                ? `<div class="mb-swot-empty">${__('Sin vulnerabilidades activas. ✓')}</div>`
                 : `<ul class="mb-swot-list">${vulnerabilidades.map(v => this._buildSwotItem(v, 'neg')).join('')}</ul>`
               }
             </div>
@@ -1741,24 +1741,24 @@
       const topic = (featured.topic?.data || [])[0];
       if (topic?.topic) {
         out.push({
-          label:  `Tema "${topic.topic}"`,
-          tag:    `${this._compactNum(topic.total_engagement)} eng`,
+          label:  __('Tema "{s}"', { s: topic.topic }),
+          tag:    __('{n} eng', { n: this._compactNum(topic.total_engagement) }),
           detail: __('Tu tema más exitoso en la ventana — {n} posts.', { n: topic.usage_count }),
         });
       }
       const tone = (featured.tones?.data || [])[0];
       if (tone?.tone_name) {
         out.push({
-          label:  `Tono "${tone.tone_name}"`,
-          tag:    `${this._compactNum(tone.total_engagement)} eng`,
+          label:  __('Tono "{s}"', { s: tone.tone_name }),
+          tag:    __('{n} eng', { n: this._compactNum(tone.total_engagement) }),
           detail: __('Tu tono más efectivo — {n} posts conectan con tu audiencia.', { n: tone.posts_count }),
         });
       }
       const hour = (featured.hour?.data || [])[0];
       if (hour?.hour != null) {
         out.push({
-          label:  `Horario ${String(hour.hour).padStart(2, '0')}:00`,
-          tag:    `${this._compactNum(hour.avg_engagement_per_post)} eng/post`,
+          label:  __('Horario {h}:00', { h: String(hour.hour).padStart(2, '0') }),
+          tag:    __('{n} eng/post', { n: this._compactNum(hour.avg_engagement_per_post) }),
           detail: __('Tu micro-momento ganador del día — {n} publicaciones lo confirman.', { n: hour.posts_count }),
         });
       }
@@ -1768,7 +1768,7 @@
       for (const w of winners.slice(0, 2)) {
         out.push({
           label:  w.nombre_campana,
-          tag:    `${this._compactNum(w.conversions)} conv`,
+          tag:    __('{n} conv', { n: this._compactNum(w.conversions) }),
           detail: w.description || __('Campaña convirtiendo a ${amount}/conv.', { amount: Math.round(w.cost_per_conv || 0).toLocaleString((window.i18n && window.i18n.getLocale() === 'en') ? 'en-US' : 'es-CO') }),
         });
       }
@@ -1790,7 +1790,7 @@
       );
       for (const v of sortedVulns.slice(0, 4)) {
         out.push({
-          label:    v.title || 'Vulnerabilidad detectada',
+          label:    v.title || __('Vulnerabilidad detectada'),
           tag:      v.severity || 'medium',
           severity: v.severity,
           detail:   v.description || '',
@@ -1802,7 +1802,7 @@
         for (const g of health.top_gaps.slice(0, 3)) {
           out.push({
             label:  g.label,
-            tag:    `−${Number(g.max_lift || 0).toFixed(0)} pts`,
+            tag:    __('−{n} pts', { n: Number(g.max_lift || 0).toFixed(0) }),
             detail: g.gap_description || '',
           });
         }
@@ -1813,7 +1813,7 @@
       for (const b of burners.slice(0, 2)) {
         out.push({
           label:  b.nombre_campana,
-          tag:    `${fmt.money(b.spend)} gasto`,
+          tag:    __('{n} gasto', { n: fmt.money(b.spend) }),
           detail: b.description || __('Inversión sin conversiones medibles en la ventana.'),
         });
       }
@@ -1839,46 +1839,46 @@
       const pool = [
         (topic && topic.topic) && {
           kind: 'topic', label: __('Tema ganador'), headline: topic.topic,
-          metricPrimary: `${fmt.int(topic.usage_count)} posts`,
-          metricSecondary: `${this._compactNum(topic.total_engagement)} engagement`,
+          metricPrimary: __('{n} posts', { n: fmt.int(topic.usage_count) }),
+          metricSecondary: __('{n} engagement', { n: this._compactNum(topic.total_engagement) }),
           dim: 'topic', value: topic.topic,
         },
         (tone && tone.tone_name) && {
           kind: 'tone', label: __('Tono efectivo'), headline: tone.tone_name,
-          metricPrimary: `${fmt.int(tone.posts_count)} posts`,
-          metricSecondary: `${this._compactNum(tone.total_engagement)} engagement`,
+          metricPrimary: __('{n} posts', { n: fmt.int(tone.posts_count) }),
+          metricSecondary: __('{n} engagement', { n: this._compactNum(tone.total_engagement) }),
           dim: 'tone', value: tone.tone_name,
         },
         (hour && hour.hour != null) && {
           kind: 'hour', label: __('Horario estrella'), headline: `${String(hour.hour).padStart(2, '0')}:00`,
-          metricPrimary: `${fmt.int(hour.posts_count)} posts publicados`,
-          metricSecondary: `${this._compactNum(hour.avg_engagement_per_post)} eng/post`,
+          metricPrimary: __('{n} posts publicados', { n: fmt.int(hour.posts_count) }),
+          metricSecondary: __('{n} eng/post', { n: this._compactNum(hour.avg_engagement_per_post) }),
           dim: 'hour', value: String(hour.hour),
         },
         (hashtag && hashtag.hashtag) && {
           kind: 'hashtag', label: __('Hashtag dominante'), headline: `#${hashtag.hashtag}`,
-          metricPrimary: `${fmt.int(hashtag.usage_count)} usos`,
-          metricSecondary: `${this._compactNum(hashtag.total_engagement)} engagement`,
+          metricPrimary: __('{n} usos', { n: fmt.int(hashtag.usage_count) }),
+          metricSecondary: __('{n} engagement', { n: this._compactNum(hashtag.total_engagement) }),
           dim: 'hashtag', value: hashtag.hashtag,
         },
         // ── Backups (rellenan huecos de las primarias) ──
         (sentiment && sentiment.dominant_label && Number(sentiment.dominant_count) > 0) && {
           kind: 'sentiment', label: __('Sentimiento del público'), headline: sentiment.dominant_label,
           metricPrimary: `${fmt.int(sentiment.dominant_count)} ${__('comentarios')}`,
-          metricSecondary: `${Math.round(Number(sentiment.dominant_ratio || 0) * 100)}% del total`,
+          metricSecondary: __('{n}% del total', { n: Math.round(Number(sentiment.dominant_ratio || 0) * 100) }),
           dim: 'sentiment', value: sentiment.dominant,
         },
         (growth && growth.engagement_growth_percent != null) && {
           kind: 'growth', label: __('Crecimiento'),
           headline: `${growth.engagement_growth_percent >= 0 ? '+' : ''}${Math.round(growth.engagement_growth_percent)}%`,
-          metricPrimary: 'engagement',
-          metricSecondary: `${fmt.int(growth.start_posts)} → ${fmt.int(growth.end_posts)} posts`,
+          metricPrimary: __('engagement'),
+          metricSecondary: __('{a} → {b} posts', { a: fmt.int(growth.start_posts), b: fmt.int(growth.end_posts) }),
           dim: 'growth', value: '',
         },
         (profile && profile.brand_name) && {
           kind: 'profile', label: __('Cuenta lider'), headline: profile.brand_name,
-          metricPrimary: `${fmt.int(profile.total_posts)} posts`,
-          metricSecondary: `${this._compactNum(profile.total_engagement)} engagement`,
+          metricPrimary: __('{n} posts', { n: fmt.int(profile.total_posts) }),
+          metricSecondary: __('{n} engagement', { n: this._compactNum(profile.total_engagement) }),
           dim: 'profile', value: '',
         },
       ].filter(Boolean);
@@ -1923,7 +1923,7 @@
               <div class="mb-feat-metric-primary">${this._esc(opts.metricPrimary || '')}</div>
               <div class="mb-feat-metric-secondary">${this._esc(opts.metricSecondary || '')}</div>
             </div>
-            ${clickable ? `<div class="mb-feat-detail-hint">Ver detalles <i class="fas fa-arrow-right"></i></div>` : ''}
+            ${clickable ? `<div class="mb-feat-detail-hint">${__('Ver detalles')} <i class="fas fa-arrow-right"></i></div>` : ''}
           ` : `
             <div class="mb-feat-empty">${this._esc(opts.emptyHint)}</div>
           `}
@@ -1948,7 +1948,7 @@
       // Mi Marca = fecha (calendario de rango) + plataforma. (Campañas no aplica:
       // post_patterns no tiene dimension de campaña.)
       const cur = (f.platforms && f.platforms[0]) || '';
-      const platOptions = [['', 'Todas'], ['instagram', 'Instagram'], ['facebook', 'Facebook']];
+      const platOptions = [['', __('Todas')], ['instagram', 'Instagram'], ['facebook', 'Facebook']];
       return `
         <header class="living-history-filters mb-filters-bar" id="mbFilters">
           ${this._mbFechaControl()}
@@ -2012,7 +2012,7 @@
         const col = on ? colorAt(N <= 1 ? 0 : i / (N - 1)) : 'rgba(255,255,255,0.08)';
         segs += `<path d="M${x1} ${y1} A${r} ${r} 0 0 1 ${x2} ${y2}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" fill="none"/>`;
       }
-      return `<svg class="mb-health-gauge-svg" viewBox="0 0 200 116" role="img" aria-label="Salud ${Math.round(sc)} de 100">${segs}</svg>`;
+      return `<svg class="mb-health-gauge-svg" viewBox="0 0 200 116" role="img" aria-label="${__('Salud {n} de 100', { n: Math.round(sc) })}">${segs}</svg>`;
     },
 
     _buildHealthGauge(h) {
@@ -2035,8 +2035,8 @@
       const target = Number(h.target);
       const gap    = Number(h.gap);
       const objetivo = Number.isFinite(target)
-        ? `Objetivo de tu segmento: <strong>${target}</strong>${gap > 0 ? ` · te faltan <strong>${gap}</strong> pts` : ' · objetivo alcanzado ✓'}`
-        : `Saludable para tu segmento: <strong>${band.p50}–${band.p75}</strong>`;
+        ? __('Objetivo de tu segmento: <strong>{t}</strong>', { t: target }) + (gap > 0 ? __(' · te faltan <strong>{g}</strong> pts', { g: gap }) : __(' · objetivo alcanzado ✓'))
+        : __('Saludable para tu segmento: <strong>{lo}–{hi}</strong>', { lo: band.p50, hi: band.p75 });
 
       // Sidebar vertical (solo en Mi Marca): gauge centrado + componentes +
       // alertas (componentes en zona baja) + tareas (el plan de salud).
@@ -2121,7 +2121,7 @@
               const pts = Number(t.impact_pts) > 0 ? Math.round(Number(t.impact_pts)) : null;
               return `
               <li class="mb-hc-task">
-                <span class="mb-hc-task-pts${pts ? '' : ' mb-hc-task-pts--empty'}">${pts ? `+${pts}<small>pts</small>` : ''}</span>
+                <span class="mb-hc-task-pts${pts ? '' : ' mb-hc-task-pts--empty'}">${pts ? `+${pts}<small>${__('pts')}</small>` : ''}</span>
                 <span class="mb-hc-task-rail"><span class="mb-hc-task-node">${i + 1}</span></span>
                 <div class="mb-hc-task-body">
                   <span class="mb-hc-task-label">${this._esc(t.label || '')}</span>
@@ -2161,7 +2161,7 @@
       const bgPath  = `M ${startX} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
 
       return `
-        <svg class="mb-gauge-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" aria-label="Salud ${score}/100">
+        <svg class="mb-gauge-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" aria-label="${__('Salud {n} de 100', { n: score })}">
           <!-- Background arc -->
           <path d="${bgPath}" stroke="rgba(255,255,255,0.08)" stroke-width="14" stroke-linecap="round" fill="none"/>
 
@@ -2254,14 +2254,14 @@
         dr.className = 'mb-detail-drawer';
         dr.setAttribute('role', 'dialog');
         dr.setAttribute('aria-modal', 'true');
-        dr.setAttribute('aria-label', 'Detalle de publicaciones');
+        dr.setAttribute('aria-label', __('Detalle de publicaciones'));
         dr.innerHTML = `
           <header class="mb-detail-head">
             <div class="mb-detail-head-text">
               <span class="mb-detail-title" id="mbDetailTitle">${__('Detalles')}</span>
               <span class="mb-detail-sub" id="mbDetailSub"></span>
             </div>
-            <button class="mb-detail-close" id="mbDetailClose" type="button" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+            <button class="mb-detail-close" id="mbDetailClose" type="button" aria-label="${__('Cerrar')}"><i class="fas fa-times"></i></button>
           </header>
           <div class="mb-detail-body" id="mbDetailBody"></div>`;
         document.body.appendChild(ov);
@@ -2279,8 +2279,8 @@
       const titleEl = document.getElementById('mbDetailTitle');
       const subEl   = document.getElementById('mbDetailSub');
       const bodyEl  = document.getElementById('mbDetailBody');
-      if (titleEl) titleEl.textContent = title || 'Detalles';
-      if (subEl)   subEl.textContent = 'Cargando…';
+      if (titleEl) titleEl.textContent = title || __('Detalles');
+      if (subEl)   subEl.textContent = __('Cargando…');
       if (bodyEl)  bodyEl.innerHTML = `<div class="mb-detail-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
 
       ov.classList.add('active');
@@ -2303,12 +2303,12 @@
         });
         if (error) throw error;
         const posts = Array.isArray(data) ? data : [];
-        if (subEl) subEl.textContent = `${posts.length} ${posts.length === 1 ? 'publicacion' : 'publicaciones'}`;
+        if (subEl) subEl.textContent = posts.length === 1 ? __('{n} publicacion', { n: posts.length }) : __('{n} publicaciones', { n: posts.length });
         this._renderDetailPosts(bodyEl, posts);
       } catch (e) {
         console.error('[detail] load failed:', e?.message || e);
         if (subEl) subEl.textContent = '';
-        if (bodyEl) bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-triangle-exclamation"></i><p>No se pudieron cargar las publicaciones.</p></div>`;
+        if (bodyEl) bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-triangle-exclamation"></i><p>${__('No se pudieron cargar las publicaciones.')}</p></div>`;
       }
     },
 
@@ -2324,7 +2324,7 @@
     _renderDetailPosts(bodyEl, posts) {
       if (!bodyEl) return;
       if (!posts.length) {
-        bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-inbox"></i><p>Sin publicaciones en esta ventana.</p></div>`;
+        bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-inbox"></i><p>${__('Sin publicaciones en esta ventana.')}</p></div>`;
         return;
       }
       bodyEl.innerHTML = `<ul class="mb-detail-list">${posts.map((p) => this._detailPostHtml(p)).join('')}</ul>`;
@@ -2338,7 +2338,7 @@
       const net  = this._prettyPlatform(p.network);
       const date = this._detailDate(p.captured_at);
       const sent = this._detailSentiment(p.sentiment_text);
-      const content = this._esc(String(p.content || '').slice(0, 240)) || '<span class="mb-detail-post-empty">(sin texto)</span>';
+      const content = this._esc(String(p.content || '').slice(0, 240)) || `<span class="mb-detail-post-empty">${__('(sin texto)')}</span>`;
       return `
         <li class="mb-detail-post">
           <div class="mb-detail-post-top">
@@ -2351,7 +2351,7 @@
             <span class="mb-detail-post-metric"><i class="fas fa-heart"></i> ${this._compactNum(likes)}</span>
             <span class="mb-detail-post-metric"><i class="fas fa-comment"></i> ${this._compactNum(comments)}</span>
             <span class="mb-detail-post-metric"><i class="fas fa-retweet"></i> ${this._compactNum(shares)}</span>
-            <span class="mb-detail-post-eng">${this._compactNum(p.engagement_total)} eng</span>
+            <span class="mb-detail-post-eng">${__('{n} eng', { n: this._compactNum(p.engagement_total) })}</span>
           </div>
         </li>`;
     },

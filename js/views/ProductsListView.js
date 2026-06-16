@@ -221,7 +221,7 @@ class ProductsListView extends BaseView {
     try {
       const entityId = await this._ensureEntityId();
       if (!entityId) {
-        alert('No se pudo obtener una identidad para vincular el producto.');
+        alert(__('No se pudo obtener una identidad para vincular el producto.'));
         return;
       }
       const { data, error } = await this.supabase
@@ -242,7 +242,7 @@ class ProductsListView extends BaseView {
       this._navigateToProductDetail(entityId, data.id);
     } catch (e) {
       console.error('ProductsListView _onAddProduct:', e);
-      alert(e?.message || 'Error al crear el producto');
+      alert(e?.message || __('Error al crear el producto'));
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -540,8 +540,8 @@ class ProductsListView extends BaseView {
       backBtn.type = 'button';
       backBtn.className = 'attach-product-back';
       backBtn.hidden = true;
-      backBtn.setAttribute('aria-label', 'Volver');
-      backBtn.innerHTML = '<i class="fas fa-arrow-left" aria-hidden="true"></i><span>Volver</span>';
+      backBtn.setAttribute('aria-label', __('Volver'));
+      backBtn.innerHTML = `<i class="fas fa-arrow-left" aria-hidden="true"></i><span>${this.escapeHtml(__('Volver'))}</span>`;
       backBtn.addEventListener('click', () => {
         const currentStep = wizard?.getAttribute('data-step');
         const target = stepConfig[currentStep]?.backTo || 'picker';
@@ -554,8 +554,8 @@ class ProductsListView extends BaseView {
 
     const stepConfig = {
       picker:  { title: __('Adjuntar producto'),          icon: null,            back: false, backTo: null     },
-      url:     { title: 'URL del producto',           icon: 'fa-link',       back: true,  backTo: 'picker' },
-      attach:  { title: 'Adjuntar archivos',          icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
+      url:     { title: __('URL del producto'),           icon: 'fa-link',       back: true,  backTo: 'picker' },
+      attach:  { title: __('Adjuntar archivos'),          icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
       loading: { title: __('Creando ficha del producto'), icon: null,            back: false, backTo: null     },
     };
 
@@ -708,7 +708,7 @@ class ProductsListView extends BaseView {
         });
       } else {
         // Solo archivos doc, sin fotos: placeholder hasta que cableemos extraccion server-side.
-        if (hint) hint.textContent = `Guardando ${docFiles.length} archivo${docFiles.length === 1 ? '' : 's'} para procesamiento. Te redirigimos al detalle.`;
+        if (hint) hint.textContent = __('Guardando {n} archivo(s) para procesamiento. Te redirigimos al detalle.', { n: docFiles.length });
         await this._createPendingProduct({
           files: docFiles.map((f) => ({ name: f.name, size: f.size, type: f.type })),
           modalHandle: handle,
@@ -760,7 +760,7 @@ class ProductsListView extends BaseView {
         const { error: uploadError } = await this.supabase.storage
           .from('product-images')
           .upload(fileName, file, { contentType: file.type, cacheControl: '3600', upsert: false });
-        if (uploadError) throw new Error(`Error subiendo "${file.name}": ${uploadError.message}`);
+        if (uploadError) throw new Error(__('Error subiendo "{file}": {msg}', { file: file.name, msg: uploadError.message }));
         const { data: { publicUrl } } = this.supabase.storage.from('product-images').getPublicUrl(fileName);
         imageUrls.push(publicUrl);
       }
@@ -873,12 +873,18 @@ class ProductsListView extends BaseView {
       this._showNotification(__('Ficha generada · imagenes no se vincularon: {err}', { err: result.images.error }), 'error');
     } else {
       const sourceLabel = result.source === 'url'
-        ? `desde URL${result.scraped?.brand ? ' (' + result.scraped.brand + ')' : ''}`
-        : 'desde fotos';
+        ? (result.scraped?.brand
+            ? __('desde URL ({brand})', { brand: result.scraped.brand })
+            : __('desde URL'))
+        : __('desde fotos');
       const variantCount = result.variants?.inserted || 0;
-      const variantStr = variantCount > 0 ? ` · ${variantCount} variante${variantCount === 1 ? '' : 's'}` : '';
+      const variantStr = variantCount > 0 ? ` · ${__('{n} variante(s)', { n: variantCount })}` : '';
       this._showNotification(
-        `Ficha generada ${sourceLabel} · ${result.credits_charged.toFixed(4)} creditos · ${imgCount} foto${imgCount === 1 ? '' : 's'}${variantStr}`,
+        __('Ficha generada {source} · {credits} creditos · {n} foto(s)', {
+          source: sourceLabel,
+          credits: result.credits_charged.toFixed(4),
+          n: imgCount,
+        }) + variantStr,
         'success'
       );
     }

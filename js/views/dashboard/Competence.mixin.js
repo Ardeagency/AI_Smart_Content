@@ -216,14 +216,14 @@
 
       const curPlat = (f.platforms && f.platforms[0]) || '';
       const platOptions = [
-        ['', 'Todas'], ['instagram', 'Instagram'], ['facebook', 'Facebook'],
+        ['', __('Todas')], ['instagram', 'Instagram'], ['facebook', 'Facebook'],
         ['tiktok', 'TikTok'], ['x', 'X'], ['youtube', 'YouTube'],
       ];
 
       return `
         <header class="living-history-filters mb-filters-bar" id="compFilters">
           ${this._compFechaControl()}
-          ${this._buildFilterMenu({ label: 'Plataforma', value: curPlat, key: 'platform', options: platOptions })}
+          ${this._buildFilterMenu({ label: __('Plataforma'), value: curPlat, key: 'platform', options: platOptions })}
           <div class="living-filter">
             <label class="living-filter-label" for="compFilterPerfil">${__('Perfil')}</label>
             <select class="living-filter-select" id="compFilterPerfil" data-comp-filter="entityId">${perfilOpts}</select>
@@ -266,7 +266,7 @@
       const pct = Math.round((c - p) / Math.abs(p) * 100);
       if (pct === 0) return `<span class="comp-kpi-delta is-flat">0%</span>`;
       const up = pct > 0;
-      return `<span class="comp-kpi-delta ${up ? 'is-up' : 'is-down'}" title="vs periodo previo">${up ? '▲' : '▼'} ${Math.abs(pct)}%</span>`;
+      return `<span class="comp-kpi-delta ${up ? 'is-up' : 'is-down'}" title="${__('vs periodo previo')}">${up ? '▲' : '▼'} ${Math.abs(pct)}%</span>`;
     },
 
     /* ── 1. El campo de batalla: panorámica + ranking de rivales ──────── */
@@ -294,9 +294,9 @@
               <span class="comp-rank-brand">${this._esc(r.entity_name)}</span>
               <span class="comp-rank-tipo" style="--ct:${tipo.color};">${tipo.label}</span>
             </div>
-            <span class="comp-rank-posts">${fmt.int(r.total_posts)} posts</span>
-            <span class="comp-rank-eng">${this._compactNum(r.total_engagement)} eng</span>
-            <span class="comp-rank-avg">${this._compactNum(r.avg_engagement_per_post)}/post</span>
+            <span class="comp-rank-posts">${__('{n} posts', { n: fmt.int(r.total_posts) })}</span>
+            <span class="comp-rank-eng">${__('{n} eng', { n: this._compactNum(r.total_engagement) })}</span>
+            <span class="comp-rank-avg">${__('{n}/post', { n: this._compactNum(r.avg_engagement_per_post) })}</span>
           </div>`;
       }).join('');
 
@@ -354,10 +354,10 @@
           <span class="comp-bench-val${cWin ? ' is-win' : ''}">${cv}</span>
         </div>`;
       const rows = [
-        row('Engagement por post', this._compactNum(bAvg), this._compactNum(cAvg), bAvg > cAvg, cAvg > bAvg),
-        row('% posts positivos', `${posPctB}%`, `${posPctC}%`, posPctB > posPctC, posPctC > posPctB),
-        row('Engagement total', this._compactNum(bEng), this._compactNum(cEng), false, false),
-        row('Posts publicados', fmt.int(bP), fmt.int(cP), false, false),
+        row(__('Engagement por post'), this._compactNum(bAvg), this._compactNum(cAvg), bAvg > cAvg, cAvg > bAvg),
+        row(__('% posts positivos'), `${posPctB}%`, `${posPctC}%`, posPctB > posPctC, posPctC > posPctB),
+        row(__('Engagement total'), this._compactNum(bEng), this._compactNum(cEng), false, false),
+        row(__('Posts publicados'), fmt.int(bP), fmt.int(cP), false, false),
       ].join('');
 
       // Share of voice por rival (% del engagement del set competitivo).
@@ -460,16 +460,16 @@
         <article class="comp-voice-card comp-clickable" data-comp-entity="${this._esc(v.entity_id)}" data-comp-name="${this._esc(v.entity_name)}" role="button" tabindex="0">
           <div class="comp-voice-head">
             <span class="comp-voice-name">${this._esc(v.entity_name)}</span>
-            <span class="comp-voice-meta">${fmt.int(v.total_comments)} comentarios · <b style="color:var(--dash-neg,#b3796f);">${negPct}% neg</b> · ${posPct}% pos</span>
+            <span class="comp-voice-meta">${__('{n} comentarios', { n: fmt.int(v.total_comments) })} · <b style="color:var(--dash-neg,#b3796f);">${__('{n}% neg', { n: negPct })}</b> · ${__('{n}% pos', { n: posPct })}</span>
           </div>
           ${negs.length ? `
             <div class="comp-voice-block comp-voice-block--neg">
-              <span class="comp-voice-label"><i class="fas fa-triangle-exclamation"></i> Se quejan de</span>
+              <span class="comp-voice-label"><i class="fas fa-triangle-exclamation"></i> ${__('Se quejan de')}</span>
               <ul class="comp-voice-list">${negs.map(quote).join('')}</ul>
             </div>` : ''}
           ${poss.length ? `
             <div class="comp-voice-block comp-voice-block--pos">
-              <span class="comp-voice-label"><i class="fas fa-heart"></i> Aman</span>
+              <span class="comp-voice-label"><i class="fas fa-heart"></i> ${__('Aman')}</span>
               <ul class="comp-voice-list">${poss.map(quote).join('')}</ul>
             </div>` : ''}
         </article>`;
@@ -506,9 +506,9 @@
 
     _compTipoMeta(tipo) {
       return {
-        competidor_directo:   { label: 'Directo',   color: '#b3796f' },
-        competidor_indirecto: { label: 'Indirecto', color: '#9c8e6b' },
-        referencia_cultural:  { label: 'Referencia', color: '#8a8a8e' },
+        competidor_directo:   { label: __('Directo'),   color: '#b3796f' },
+        competidor_indirecto: { label: __('Indirecto'), color: '#9c8e6b' },
+        referencia_cultural:  { label: __('Referencia'), color: '#8a8a8e' },
       }[tipo] || { label: tipo || '—', color: '#8a8a8e' };
     },
 
@@ -548,8 +548,8 @@
       const titleEl = document.getElementById('mbDetailTitle');
       const subEl   = document.getElementById('mbDetailSub');
       const bodyEl  = document.getElementById('mbDetailBody');
-      if (titleEl) titleEl.textContent = name || 'Rival';
-      if (subEl)   subEl.textContent = 'Cargando…';
+      if (titleEl) titleEl.textContent = name || __('Rival');
+      if (subEl)   subEl.textContent = __('Cargando…');
       if (bodyEl)  bodyEl.innerHTML = `<div class="mb-detail-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
       ov.classList.add('active'); dr.classList.add('active');
       document.body.style.overflow = 'hidden';
@@ -566,7 +566,7 @@
       } catch (e) {
         console.error('[comp detail] load failed:', e?.message || e);
         if (subEl) subEl.textContent = '';
-        if (bodyEl) bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-triangle-exclamation"></i><p>No se pudieron cargar las publicaciones.</p></div>`;
+        if (bodyEl) bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-triangle-exclamation"></i><p>${__('No se pudieron cargar las publicaciones.')}</p></div>`;
       }
     },
   });

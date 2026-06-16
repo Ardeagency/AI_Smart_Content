@@ -192,8 +192,8 @@ class PlacesView extends BaseView {
       if (!entityId) { this._showNotification(__('No se pudo obtener una identidad para vincular el lugar'), 'error'); return; }
       const { error } = await this.supabase.from('brand_places').insert({
         entity_id: entityId,
-        nombre_lugar: 'Nuevo lugar',
-        descripcion_lugar: 'Pendiente de descripcion.',
+        nombre_lugar: __('Nuevo lugar'),
+        descripcion_lugar: __('Pendiente de descripción.'),
         place_type: 'otro',
       });
       if (error) throw error;
@@ -424,7 +424,7 @@ class PlacesView extends BaseView {
       backBtn.className = 'attach-product-back';
       backBtn.hidden = true;
       backBtn.setAttribute('aria-label', __('Volver'));
-      backBtn.innerHTML = '<i class="fas fa-arrow-left" aria-hidden="true"></i><span>Volver</span>';
+      backBtn.innerHTML = `<i class="fas fa-arrow-left" aria-hidden="true"></i><span>${__('Volver')}</span>`;
       backBtn.addEventListener('click', () => {
         const currentStep = wizard?.getAttribute('data-step');
         const target = stepConfig[currentStep]?.backTo || 'picker';
@@ -437,7 +437,7 @@ class PlacesView extends BaseView {
 
     const stepConfig = {
       picker:  { title: __('Adjuntar lugar'),           icon: null,            back: false, backTo: null     },
-      url:     { title: 'URL del lugar',            icon: 'fa-link',       back: true,  backTo: 'picker' },
+      url:     { title: __('URL del lugar'),            icon: 'fa-link',       back: true,  backTo: 'picker' },
       attach:  { title: __('Adjuntar fotos y archivos'),icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
       loading: { title: __('Creando ficha del lugar'),  icon: null,            back: false, backTo: null     },
     };
@@ -507,7 +507,7 @@ class PlacesView extends BaseView {
           modalHandle: handle, hintEl: hint
         });
       } else {
-        if (hint) hint.textContent = `Guardando ${docFiles.length} archivo${docFiles.length === 1 ? '' : 's'} para procesamiento.`;
+        if (hint) hint.textContent = __('Guardando {n} archivo(s) para procesamiento.', { n: docFiles.length });
         await this._createPendingPlace({
           files: docFiles.map((f) => ({ name: f.name, size: f.size, type: f.type })),
           modalHandle: handle,
@@ -586,8 +586,8 @@ class PlacesView extends BaseView {
         .from('brand_places')
         .insert({
           entity_id: entityId,
-          nombre_lugar: 'Procesando ficha...',
-          descripcion_lugar: 'Vera esta analizando las fotos del lugar.',
+          nombre_lugar: __('Procesando ficha...'),
+          descripcion_lugar: __('Vera está analizando las fotos del lugar.'),
           place_type: 'otro',
           ...(placeholderMeta ? { contact_info: placeholderMeta } : {})  // reusamos contact_info jsonb para guardar metadata temporal
         })
@@ -643,8 +643,8 @@ class PlacesView extends BaseView {
         .from('brand_places')
         .insert({
           entity_id: entityId,
-          nombre_lugar: 'Procesando ficha...',
-          descripcion_lugar: 'Vera esta leyendo la pagina del lugar.',
+          nombre_lugar: __('Procesando ficha...'),
+          descripcion_lugar: __('Vera está leyendo la página del lugar.'),
           place_type: 'otro',
           url_lugar: url,
         })

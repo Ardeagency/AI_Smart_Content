@@ -25,10 +25,10 @@ class DemoEntryView extends (window.BaseView || class {}) {
       <div class="demo-entry">
         <div class="demo-entry__card">
           <img src="/recursos/logos/logo-02.svg" alt="AI Smart Content" class="demo-entry__logo" width="180" height="72" decoding="async">
-          <h1 class="demo-entry__title">Preparando tu preview</h1>
-          <p class="demo-entry__status" id="demoEntryStatus">Conectando con la plataforma…</p>
+          <h1 class="demo-entry__title">${window.__('Preparando tu preview')}</h1>
+          <p class="demo-entry__status" id="demoEntryStatus">${window.__('Conectando con la plataforma…')}</p>
           <div class="demo-entry__spinner" aria-hidden="true"></div>
-          <p class="demo-entry__hint">Vas a explorar <strong>IGNIS</strong>, una marca de demostración. Podrás navegar y conversar con Vera — los cambios están deshabilitados.</p>
+          <p class="demo-entry__hint">${window.__('Vas a explorar <strong>IGNIS</strong>, una marca de demostración. Podrás navegar y conversar con Vera — los cambios están deshabilitados.')}</p>
         </div>
       </div>
     `;
@@ -45,7 +45,7 @@ class DemoEntryView extends (window.BaseView || class {}) {
       : window.supabase;
 
     if (!supabase) {
-      this._setStatus('No se pudo cargar Supabase. Recarga la página.');
+      this._setStatus(window.__('No se pudo cargar Supabase. Recarga la página.'));
       return;
     }
 
@@ -53,20 +53,20 @@ class DemoEntryView extends (window.BaseView || class {}) {
     try {
       const { data: { user: existing } } = await supabase.auth.getUser();
       if (existing && existing.is_anonymous !== true) {
-        this._setStatus('Ya tienes sesión iniciada. Redirigiendo…');
+        this._setStatus(window.__('Ya tienes sesión iniciada. Redirigiendo…'));
         if (window.router) window.router.navigate('/home', true);
         return;
       }
     } catch (_) { /* continue with anon flow */ }
 
-    this._setStatus('Creando sesión anónima…');
+    this._setStatus(window.__('Creando sesión anónima…'));
 
     let session = null;
     if (typeof supabase.auth.signInAnonymously === 'function') {
       const { data, error } = await supabase.auth.signInAnonymously();
       if (error) {
         console.error('[DemoEntry] signInAnonymously failed', error);
-        this._setStatus('No pudimos abrir el preview. Intenta de nuevo.');
+        this._setStatus(window.__('No pudimos abrir el preview. Intenta de nuevo.'));
         return;
       }
       session = data.session;
@@ -82,7 +82,7 @@ class DemoEntryView extends (window.BaseView || class {}) {
         });
         const data = await resp.json();
         if (!resp.ok || !data.access_token) {
-          this._setStatus('Anon auth no disponible en este entorno.');
+          this._setStatus(window.__('Anon auth no disponible en este entorno.'));
           return;
         }
         await supabase.auth.setSession({
@@ -92,13 +92,13 @@ class DemoEntryView extends (window.BaseView || class {}) {
         session = (await supabase.auth.getSession()).data.session;
       } catch (e) {
         console.error('[DemoEntry] fallback signup failed', e);
-        this._setStatus('No pudimos abrir el preview.');
+        this._setStatus(window.__('No pudimos abrir el preview.'));
         return;
       }
     }
 
     if (!session) {
-      this._setStatus('Sesión no se inicializó. Recarga la página.');
+      this._setStatus(window.__('Sesión no se inicializó. Recarga la página.'));
       return;
     }
 
@@ -115,7 +115,7 @@ class DemoEntryView extends (window.BaseView || class {}) {
     // (no currentUser.id yet), the capabilities check fails, and the router
     // redirects /vera → /vera in a loop until Chrome's navigation-throttle
     // kicks in. Force a sequential load here.
-    this._setStatus('Cargando tu perfil…');
+    this._setStatus(window.__('Cargando tu perfil…'));
     try {
       if (window.authService && typeof window.authService.loadUserData === 'function') {
         await window.authService.loadUserData(session.user.id);
@@ -135,7 +135,7 @@ class DemoEntryView extends (window.BaseView || class {}) {
       }
     } catch (_) {}
 
-    this._setStatus('Listo. Abriendo la plataforma…');
+    this._setStatus(window.__('Listo. Abriendo la plataforma…'));
 
     // Landing del demo: Dashboard (vista general analítica de IGNIS).
     // Ruta: /org/:orgIdShort/:orgNameSlug/dashboard. Cap requerida

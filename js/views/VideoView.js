@@ -114,13 +114,13 @@ class VideoView extends BaseView {
         <div class="video-layout">
           <div class="video-content-row">
             <main class="video-main">
-              <section class="video-canvas video-canva-view" id="videoCanvaView" aria-label="Canvas — producción">
+              <section class="video-canvas video-canva-view" id="videoCanvaView" aria-label="${window.__('Canvas — producción')}">
 
-                <div class="video-model-picker-wrap" id="videoModelPicker" role="radiogroup" aria-label="Elige tu modelo de video">
+                <div class="video-model-picker-wrap" id="videoModelPicker" role="radiogroup" aria-label="${window.__('Elige tu modelo de video')}">
                   <div class="video-model-picker">
-                    <p class="video-model-picker__eyebrow">Paso 1 · Decisión</p>
-                    <h3 class="video-model-picker__title">Elige tu modelo de video</h3>
-                    <p class="video-model-picker__hint">Define primero qué quieres producir. Cada modelo tiene su propio set de controles.</p>
+                    <p class="video-model-picker__eyebrow">${window.__('Paso 1 · Decisión')}</p>
+                    <h3 class="video-model-picker__title">${window.__('Elige tu modelo de video')}</h3>
+                    <p class="video-model-picker__hint">${window.__('Define primero qué quieres producir. Cada modelo tiene su propio set de controles.')}</p>
                     <div class="video-model-picker__grid">
                       <button type="button" class="video-model-card" data-model="kling" role="radio" aria-checked="false">
                         <div class="video-model-card__top">
@@ -131,11 +131,11 @@ class VideoView extends BaseView {
                         </div>
                         <div class="video-model-card__body">
                           <h4 class="video-model-card__title">Kling 3.0</h4>
-                          <p class="video-model-card__desc">Generar un clip de video corto</p>
+                          <p class="video-model-card__desc">${window.__('Generar un clip de video corto')}</p>
                         </div>
                         <div class="video-model-card__footer">
-                          <span class="video-model-card__cost"><strong>25</strong> <span>créditos</span></span>
-                          <span class="video-model-card__badge is-active">Activo</span>
+                          <span class="video-model-card__cost"><strong>25</strong> <span>${window.__('créditos')}</span></span>
+                          <span class="video-model-card__badge is-active">${window.__('Activo')}</span>
                         </div>
                       </button>
                       <button type="button" class="video-model-card" data-model="seedance" role="radio" aria-checked="false">
@@ -147,10 +147,10 @@ class VideoView extends BaseView {
                         </div>
                         <div class="video-model-card__body">
                           <h4 class="video-model-card__title">Seedance 2.0</h4>
-                          <p class="video-model-card__desc">Crear secuencias de video</p>
+                          <p class="video-model-card__desc">${window.__('Crear secuencias de video')}</p>
                         </div>
                         <div class="video-model-card__footer">
-                          <span class="video-model-card__cost"><strong>60</strong> <span>créditos</span></span>
+                          <span class="video-model-card__cost"><strong>60</strong> <span>${window.__('créditos')}</span></span>
                           <span class="video-model-card__badge is-beta">Beta</span>
                         </div>
                       </button>
@@ -161,8 +161,8 @@ class VideoView extends BaseView {
                 <div class="video-canvas-idle" id="videoCanvasIdle">
                   <div class="video-canvas-idle-content">
                     <p class="video-canvas-idle__eyebrow">Stand by</p>
-                    <h3 class="video-canvas-idle__title">Listo para producir</h3>
-                    <p class="video-canvas-idle__hint">Describe tu visión en el Director Console. La IA traducirá tu brief a un prompt con la voz de la marca.</p>
+                    <h3 class="video-canvas-idle__title">${window.__('Listo para producir')}</h3>
+                    <p class="video-canvas-idle__hint">${window.__('Describe tu visión en el Director Console. La IA traducirá tu brief a un prompt con la voz de la marca.')}</p>
                   </div>
                 </div>
 
@@ -177,14 +177,14 @@ class VideoView extends BaseView {
                   <div class="video-result-card">
                     <div class="video-result-card-header">
                       <span class="video-result-output-badge">OUTPUT</span>
-                      <h2 class="video-result-title">Video generado</h2>
+                      <h2 class="video-result-title">${window.__('Video generado')}</h2>
                     </div>
                     <div class="video-result-player-wrap">
                       <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
                     </div>
                     <div class="video-result-actions">
                       <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
-                        <i class="fas fa-download"></i> Descargar
+                        <i class="fas fa-download"></i> ${window.__('Descargar')}
                       </a>
                     </div>
                   </div>
@@ -200,8 +200,8 @@ class VideoView extends BaseView {
                 <div class="video-productions-panel video-productions-panel-inline" id="videoProductionsPanel" aria-hidden="true" style="display: none;">
                   <div class="video-productions-panel-card">
                     <div class="video-productions-panel-header">
-                      <h3 class="video-prompt-panel-title">Productions</h3>
-                      <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+                      <h3 class="video-prompt-panel-title">${window.__('Producciones')}</h3>
+                      <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="${window.__('Cerrar')}"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="video-productions-gallery" id="videoProductionsGallery"></div>
                   </div>
@@ -209,7 +209,7 @@ class VideoView extends BaseView {
 
               </section>
 
-              <section class="video-director-console-zone video-prompt-wrap video-main-director" id="videoFooterControl" data-for-model="kling" aria-label="Director Console Kling — adjuntos y prompt">
+              <section class="video-director-console-zone video-prompt-wrap video-main-director" id="videoFooterControl" data-for-model="kling" aria-label="${window.__('Director Console Kling — adjuntos y prompt')}">
                 <div class="video-prompt-footer-card video-prompt-footer-card-center">
                   <div class="video-prompt-footer-card-inner video-director-console">
 
@@ -219,38 +219,38 @@ class VideoView extends BaseView {
                       <textarea
                         id="videoPromptInput"
                         class="video-director-brief-input"
-                        placeholder="Tu idea en texto — no es el prompt final. La IA generará el prompt con la voz de la marca."
+                        placeholder="${window.__('Tu idea en texto — no es el prompt final. La IA generará el prompt con la voz de la marca.')}"
                         rows="1"
                         autocomplete="off"
-                        aria-label="Tu idea (la IA genera el prompt final)"
+                        aria-label="${window.__('Tu idea (la IA genera el prompt final)')}"
                       ></textarea>
-                      <p class="video-field-help video-prompt-timeout-hint" id="videoPromptTimeoutHint" style="display: none;" role="status">Prompt largo: para evitar timeout (524), usa modo Estándar, duración 5s, una imagen de referencia, o acorta el texto.</p>
+                      <p class="video-field-help video-prompt-timeout-hint" id="videoPromptTimeoutHint" style="display: none;" role="status">${window.__('Prompt largo: para evitar timeout (524), usa modo Estándar, duración 5s, una imagen de referencia, o acorta el texto.')}</p>
                     </div>
                     <div class="video-director-attachments-row">
                       <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
-                      <div class="video-director-variables-row" id="videoDirectorVariables" aria-label="Variables de cinematografía"></div>
+                      <div class="video-director-variables-row" id="videoDirectorVariables" aria-label="${window.__('Variables de cinematografía')}"></div>
                     </div>
                     <div class="video-director-controls">
-                      <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
-                      <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
+                      <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="${window.__('Añadir imagen o video')}"><i class="fas fa-plus"></i></button>
+                      <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-sound active" id="videoSound" title="${window.__('Sonido')}" aria-pressed="true"><i class="fas fa-volume-up"></i><span>${window.__('Sonido')}</span></button>
                       <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
                       <div class="video-prompt-mode-wrap">
-                        <select id="videoMode" class="video-director-select" aria-label="Modo (Estándar reduce riesgo de timeout)">
-                          <option value="std" selected>Estándar</option>
+                        <select id="videoMode" class="video-director-select" aria-label="${window.__('Modo (Estándar reduce riesgo de timeout)')}">
+                          <option value="std" selected>${window.__('Estándar')}</option>
                           <option value="pro">Pro</option>
                         </select>
                         <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                       </div>
                       <div class="video-prompt-aspect-wrap">
-                        <select id="videoAspectRatio" class="video-director-select" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
+                        <select id="videoAspectRatio" class="video-director-select" aria-label="${window.__('Formato')}"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
                         <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                       </div>
                       <div class="video-prompt-duration-wrap">
-                        <select id="videoDuration" class="video-director-select" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
+                        <select id="videoDuration" class="video-director-select" aria-label="${window.__('Duración')}"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
                         <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                       </div>
-                      <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="Generar prompt" data-state="prompt"><i class="fas fa-wand-magic-sparkles"></i><span id="videoPromptSendLabel">PROMPT</span></button>
-                      <button type="button" class="video-director-btn-regenerate" id="videoRegeneratePromptBtn" aria-label="Volver a producir prompt" style="display: none;"><i class="fas fa-rotate-right"></i><span>Re-prompt</span></button>
+                      <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="${window.__('Generar prompt')}" data-state="prompt"><i class="fas fa-wand-magic-sparkles"></i><span id="videoPromptSendLabel">PROMPT</span></button>
+                      <button type="button" class="video-director-btn-regenerate" id="videoRegeneratePromptBtn" aria-label="${window.__('Volver a producir prompt')}" style="display: none;"><i class="fas fa-rotate-right"></i><span>Re-prompt</span></button>
                     </div>
                     <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">
                       <h4 class="video-storyboard-title">Storyboard</h4>
@@ -261,7 +261,7 @@ class VideoView extends BaseView {
                 </div>
               </section>
 
-              <section class="video-director-console-zone video-prompt-wrap video-main-director" id="seedanceFooterControl" data-for-model="seedance" aria-label="Director Console Seedance — secuencia narrativa" hidden>
+              <section class="video-director-console-zone video-prompt-wrap video-main-director" id="seedanceFooterControl" data-for-model="seedance" aria-label="${window.__('Director Console Seedance — secuencia narrativa')}" hidden>
                 <div class="video-prompt-footer-card video-prompt-footer-card-center">
                   <div class="video-prompt-footer-card-inner video-director-console">
 
@@ -271,10 +271,10 @@ class VideoView extends BaseView {
                       <textarea
                         id="seedancePromptInput"
                         class="video-director-brief-input video-director-brief-input-large"
-                        placeholder="Storyboard: describe la secuencia completa — apertura, desarrollo y cierre. Seedance produce el arco entero en una sola pasada."
+                        placeholder="${window.__('Storyboard: describe la secuencia completa — apertura, desarrollo y cierre. Seedance produce el arco entero en una sola pasada.')}"
                         rows="3"
                         autocomplete="off"
-                        aria-label="Storyboard narrativo (Seedance lo cocina con OpenAI)"
+                        aria-label="${window.__('Storyboard narrativo (Seedance lo cocina con OpenAI)')}"
                       ></textarea>
                     </div>
                     <div class="video-director-attachments-row">
@@ -282,11 +282,11 @@ class VideoView extends BaseView {
                     </div>
 
                     <div class="video-director-controls">
-                      <button type="button" class="video-director-btn-add" id="seedancePromptAdd" aria-label="Añadir referencia visual"><i class="fas fa-plus"></i></button>
-                      <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceGenAudioToggle" title="Generar audio" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Audio</span></button>
-                      <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceWebSearchToggle" title="Búsqueda online" aria-pressed="false"><i class="fas fa-globe"></i><span>Web</span></button>
+                      <button type="button" class="video-director-btn-add" id="seedancePromptAdd" aria-label="${window.__('Añadir referencia visual')}"><i class="fas fa-plus"></i></button>
+                      <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceGenAudioToggle" title="${window.__('Generar audio')}" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Audio</span></button>
+                      <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceWebSearchToggle" title="${window.__('Búsqueda online')}" aria-pressed="false"><i class="fas fa-globe"></i><span>Web</span></button>
                       <div class="video-prompt-aspect-wrap">
-                        <select id="seedanceResolution" class="video-director-select" aria-label="Resolución">
+                        <select id="seedanceResolution" class="video-director-select" aria-label="${window.__('Resolución')}">
                           <option value="480p">480p</option>
                           <option value="720p" selected>720p</option>
                           <option value="1080p">1080p</option>
@@ -294,22 +294,22 @@ class VideoView extends BaseView {
                         <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                       </div>
                       <div class="video-prompt-aspect-wrap">
-                        <select id="seedanceAspectRatio" class="video-director-select" aria-label="Aspect ratio">
+                        <select id="seedanceAspectRatio" class="video-director-select" aria-label="${window.__('Relación de aspecto')}">
                           <option value="16:9" selected>16:9</option>
                           <option value="9:16">9:16</option>
                           <option value="1:1">1:1</option>
                           <option value="4:3">4:3</option>
                           <option value="3:4">3:4</option>
                           <option value="21:9">21:9 cinemascope</option>
-                          <option value="adaptive">Adaptive</option>
+                          <option value="adaptive">${window.__('Adaptable')}</option>
                         </select>
                         <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                       </div>
                       <div class="video-prompt-duration-wrap seedance-duration-wrap">
-                        <input type="number" id="seedanceDuration" class="video-director-select seedance-duration-input" min="4" max="15" step="1" value="5" aria-label="Duración en segundos">
+                        <input type="number" id="seedanceDuration" class="video-director-select seedance-duration-input" min="4" max="15" step="1" value="5" aria-label="${window.__('Duración en segundos')}">
                         <span class="seedance-duration-unit">s</span>
                       </div>
-                      <button type="button" class="video-director-btn-generate" id="seedancePromptSend" aria-label="Generar prompt" data-state="prompt"><i class="fas fa-wand-magic-sparkles"></i><span>PROMPT</span></button>
+                      <button type="button" class="video-director-btn-generate" id="seedancePromptSend" aria-label="${window.__('Generar prompt')}" data-state="prompt"><i class="fas fa-wand-magic-sparkles"></i><span>PROMPT</span></button>
                     </div>
 
                   </div>
@@ -317,74 +317,74 @@ class VideoView extends BaseView {
               </section>
             </main>
 
-            <aside class="video-sidebar-console" data-for-model="kling" aria-label="Sidebar Kling — configuraciones predefinidas">
+            <aside class="video-sidebar-console" data-for-model="kling" aria-label="${window.__('Sidebar Kling — configuraciones predefinidas')}">
               <div class="video-prompt-footer-card video-sidebar-card">
                 <div class="video-prompt-footer-card-inner video-sidebar-inner">
 
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
                       <span class="video-sidebar-section-num">01</span>
-                      <h3 class="video-section-label">Production Context</h3>
+                      <h3 class="video-section-label">${window.__('Contexto de producción')}</h3>
                       <div class="video-sidebar-section-actions">
-                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCtxAiBtn" aria-label="Auto-detectar contexto" title="Auto-detectar contexto desde campaña activa"><i class="fas fa-wand-magic-sparkles"></i></button>
+                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCtxAiBtn" aria-label="${window.__('Auto-detectar contexto')}" title="${window.__('Auto-detectar contexto desde campaña activa')}"><i class="fas fa-wand-magic-sparkles"></i></button>
                       </div>
                     </div>
-                    <p class="video-sidebar-section-hint">A qué campaña pertenece este video, a quién le habla, y qué productos o piezas debe respetar la IA al producirlo.</p>
+                    <p class="video-sidebar-section-hint">${window.__('A qué campaña pertenece este video, a quién le habla, y qué productos o piezas debe respetar la IA al producirlo.')}</p>
                     <div class="video-escenas-block">
                       <div class="video-escenas-header">
-                        <h4 class="video-prompt-panel-title">Scenes</h4>
-                        <button type="button" class="video-escenas-all-btn" id="videoProductionsBtn" aria-label="All production">All</button>
+                        <h4 class="video-prompt-panel-title">${window.__('Escenas')}</h4>
+                        <button type="button" class="video-escenas-all-btn" id="videoProductionsBtn" aria-label="${window.__('Todas las producciones')}">${window.__('Todas')}</button>
                       </div>
                       <div class="video-escenas-carousel-wrap">
                         <div class="video-escenas-carousel" id="videoEscenasCarousel"></div>
                       </div>
                     </div>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">¿De qué trata?</h4>
-                      <select id="videoCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Concepto de campaña" data-conceptual="1">
-                        <option value="">— Sin definir</option>
-                        <option value="Brand awareness">Brand awareness · presentar la marca</option>
-                        <option value="Product launch">Lanzamiento de producto</option>
-                        <option value="Lifestyle storytelling">Lifestyle · contar una historia</option>
-                        <option value="Educational">Educativo · enseñar o explicar</option>
-                        <option value="Sale / promo">Promoción · oferta o descuento</option>
-                        <option value="Testimonial">Testimonial · clientes reales</option>
-                        <option value="Reactivation">Reactivación · clientes dormidos</option>
-                        <option value="Seasonal moment">Momento estacional · fecha clave</option>
-                        <option value="Behind the scenes">Behind the scenes · cercanía marca</option>
+                      <h4 class="video-prompt-panel-title">${window.__('¿De qué trata?')}</h4>
+                      <select id="videoCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="${window.__('Concepto de campaña')}" data-conceptual="1">
+                        <option value="">${window.__('— Sin definir')}</option>
+                        <option value="Brand awareness">${window.__('Brand awareness · presentar la marca')}</option>
+                        <option value="Product launch">${window.__('Lanzamiento de producto')}</option>
+                        <option value="Lifestyle storytelling">${window.__('Lifestyle · contar una historia')}</option>
+                        <option value="Educational">${window.__('Educativo · enseñar o explicar')}</option>
+                        <option value="Sale / promo">${window.__('Promoción · oferta o descuento')}</option>
+                        <option value="Testimonial">${window.__('Testimonial · clientes reales')}</option>
+                        <option value="Reactivation">${window.__('Reactivación · clientes dormidos')}</option>
+                        <option value="Seasonal moment">${window.__('Momento estacional · fecha clave')}</option>
+                        <option value="Behind the scenes">${window.__('Behind the scenes · cercanía marca')}</option>
                       </select>
                     </div>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">¿A quién le habla?</h4>
-                      <select id="videoAudienceSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Audiencia conceptual" data-conceptual="1">
-                        <option value="">— Sin definir</option>
-                        <option value="Young professionals 25-35">Profesionales jóvenes (25–35)</option>
-                        <option value="Established professionals 35-50">Profesionales establecidos (35–50)</option>
-                        <option value="Aspirational youth 18-28">Aspiracionales jóvenes (18–28)</option>
-                        <option value="Mass market">Mercado masivo</option>
-                        <option value="Premium / luxury audience">Premium · audiencia de lujo</option>
-                        <option value="Niche enthusiasts">Nicho · entusiastas de la categoría</option>
-                        <option value="Decision makers B2B">Decision makers · B2B</option>
-                        <option value="Existing customers">Clientes existentes</option>
-                        <option value="Parents / families">Padres y familias</option>
+                      <h4 class="video-prompt-panel-title">${window.__('¿A quién le habla?')}</h4>
+                      <select id="videoAudienceSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="${window.__('Audiencia conceptual')}" data-conceptual="1">
+                        <option value="">${window.__('— Sin definir')}</option>
+                        <option value="Young professionals 25-35">${window.__('Profesionales jóvenes (25–35)')}</option>
+                        <option value="Established professionals 35-50">${window.__('Profesionales establecidos (35–50)')}</option>
+                        <option value="Aspirational youth 18-28">${window.__('Aspiracionales jóvenes (18–28)')}</option>
+                        <option value="Mass market">${window.__('Mercado masivo')}</option>
+                        <option value="Premium / luxury audience">${window.__('Premium · audiencia de lujo')}</option>
+                        <option value="Niche enthusiasts">${window.__('Nicho · entusiastas de la categoría')}</option>
+                        <option value="Decision makers B2B">${window.__('Decision makers · B2B')}</option>
+                        <option value="Existing customers">${window.__('Clientes existentes')}</option>
+                        <option value="Parents / families">${window.__('Padres y familias')}</option>
                       </select>
                     </div>
                     <div class="video-left-block video-asset-stack-block" id="videoAssetStackBlock">
-                      <h4 class="video-prompt-panel-title">Asset Stack</h4>
-                      <p class="video-field-help video-asset-stack-help" id="videoAssetStackHelp">Product = reference lock (el video no debe cambiar el producto)</p>
+                      <h4 class="video-prompt-panel-title">${window.__('Stack de activos')}</h4>
+                      <p class="video-field-help video-asset-stack-help" id="videoAssetStackHelp">${window.__('Producto = bloqueo de referencia (el video no debe cambiar el producto)')}</p>
                       <div class="video-asset-scope-wrap">
-                        <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="Scope">
-                          <option value="product">Product</option>
-                          <option value="service">Service</option>
-                          <option value="brand_world">Brand World</option>
-                          <option value="collection">Collection</option>
+                        <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="${window.__('Alcance')}">
+                          <option value="product">${window.__('Producto')}</option>
+                          <option value="service">${window.__('Servicio')}</option>
+                          <option value="brand_world">${window.__('Mundo de marca')}</option>
+                          <option value="collection">${window.__('Colección')}</option>
                         </select>
                       </div>
                       <div class="video-asset-products-carousel-wrap" id="videoAssetProductsCarouselWrap">
                         <div class="video-asset-products-carousel" id="videoAssetProductsCarousel"></div>
                       </div>
-                      <select id="videoAssetSelect" class="video-prompt-db-select video-asset-select video-asset-select-other" aria-label="Asset" style="display: none;">
-                        <option value="">— None</option>
+                      <select id="videoAssetSelect" class="video-prompt-db-select video-asset-select video-asset-select-other" aria-label="${window.__('Activo')}" style="display: none;">
+                        <option value="">${window.__('— Ninguno')}</option>
                       </select>
                     </div>
                   </div>
@@ -392,16 +392,16 @@ class VideoView extends BaseView {
                   <div class="video-sidebar-section video-sidebar-cine video-cinematography-panel">
                     <div class="video-sidebar-section-header">
                       <span class="video-sidebar-section-num">02</span>
-                      <h3 class="video-section-label">Cinematography</h3>
+                      <h3 class="video-section-label">${window.__('Cinematografía')}</h3>
                       <div class="video-sidebar-section-actions">
-                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCineResetBtn" aria-label="Restablecer cinematografía" title="Restablecer todos los valores"><i class="fas fa-rotate-left"></i></button>
+                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCineResetBtn" aria-label="${window.__('Restablecer cinematografía')}" title="${window.__('Restablecer todos los valores')}"><i class="fas fa-rotate-left"></i></button>
                       </div>
                     </div>
-                    <p class="video-sidebar-section-hint">Define el lenguaje visual: cámara, movimiento, luz y mood. Si no sabes por dónde empezar, elige un Production Preset.</p>
+                    <p class="video-sidebar-section-hint">${window.__('Define el lenguaje visual: cámara, movimiento, luz y mood. Si no sabes por dónde empezar, elige un Production Preset.')}</p>
                     <div class="video-cine-preset-wrap">
-                      <label class="video-cine-label">Production Preset</label>
-                      <select id="videoCinePreset" class="video-cine-select" aria-label="Production Preset">
-                        <option value="">None</option>
+                      <label class="video-cine-label">${window.__('Production Preset')}</label>
+                      <select id="videoCinePreset" class="video-cine-select" aria-label="${window.__('Production Preset')}">
+                        <option value="">${window.__('Ninguno')}</option>
                         <option value="product-launch">Product Launch</option>
                         <option value="luxury-hero">Luxury Hero</option>
                         <option value="social-performance">Social Performance</option>
@@ -411,126 +411,126 @@ class VideoView extends BaseView {
                       </select>
                     </div>
                     <div class="video-cine-selected-tags" id="videoCineSelectedTags" aria-live="polite"></div>
-                    <div class="video-cine-tabs" role="tablist" aria-label="Categoría de dirección">
-                      <button type="button" class="video-cine-tab is-active" role="tab" aria-selected="true" data-tab="movement"><i class="fas fa-arrows-up-down-left-right" aria-hidden="true"></i><span>Movimiento</span></button>
-                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="lighting"><i class="fas fa-lightbulb" aria-hidden="true"></i><span>Luz</span></button>
+                    <div class="video-cine-tabs" role="tablist" aria-label="${window.__('Categoría de dirección')}">
+                      <button type="button" class="video-cine-tab is-active" role="tab" aria-selected="true" data-tab="movement"><i class="fas fa-arrows-up-down-left-right" aria-hidden="true"></i><span>${window.__('Movimiento')}</span></button>
+                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="lighting"><i class="fas fa-lightbulb" aria-hidden="true"></i><span>${window.__('Luz')}</span></button>
                       <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="mood"><i class="fas fa-palette" aria-hidden="true"></i><span>Mood</span></button>
-                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="camera"><i class="fas fa-sliders" aria-hidden="true"></i><span>Avanzado</span></button>
+                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="camera"><i class="fas fa-sliders" aria-hidden="true"></i><span>${window.__('Avanzado')}</span></button>
                     </div>
                     <div class="video-cine-panels">
                       <div class="video-cine-panel is-active" data-panel="movement" role="tabpanel">
-                        <p class="video-cine-block-hint">Cómo se mueve la cámara. Determina el ritmo y la sensación.</p>
-                        <div class="video-cine-row"><label class="video-cine-label">Tipo de movimiento</label><select id="videoCineMovement" class="video-cine-select"></select></div>
+                        <p class="video-cine-block-hint">${window.__('Cómo se mueve la cámara. Determina el ritmo y la sensación.')}</p>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Tipo de movimiento')}</label><select id="videoCineMovement" class="video-cine-select"></select></div>
                         <div class="video-cine-row-pair">
-                          <div class="video-cine-row"><label class="video-cine-label">Velocidad</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">Intensidad</label><select id="videoCineMotionIntensity" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Velocidad')}</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Intensidad')}</label><select id="videoCineMotionIntensity" class="video-cine-select"></select></div>
                         </div>
                       </div>
                       <div class="video-cine-panel" data-panel="lighting" role="tabpanel" hidden>
-                        <p class="video-cine-block-hint">La iluminación dicta la emoción: suave para algo cálido, contrastada para drama.</p>
-                        <div class="video-cine-row"><label class="video-cine-label">Tipo de luz</label><select id="videoCineLightType" class="video-cine-select"></select></div>
+                        <p class="video-cine-block-hint">${window.__('La iluminación dicta la emoción: suave para algo cálido, contrastada para drama.')}</p>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Tipo de luz')}</label><select id="videoCineLightType" class="video-cine-select"></select></div>
                         <div class="video-cine-row-pair">
-                          <div class="video-cine-row"><label class="video-cine-label">Contraste</label><select id="videoCineContrast" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">Temperatura</label><select id="videoCineTemperature" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Contraste')}</label><select id="videoCineContrast" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Temperatura')}</label><select id="videoCineTemperature" class="video-cine-select"></select></div>
                         </div>
                       </div>
                       <div class="video-cine-panel" data-panel="mood" role="tabpanel" hidden>
-                        <p class="video-cine-block-hint">La paleta y la energía emocional. Define si se siente premium, vibrante o dramático.</p>
-                        <div class="video-cine-row"><label class="video-cine-label">Tono</label><select id="videoCineTone" class="video-cine-select"></select></div>
+                        <p class="video-cine-block-hint">${window.__('La paleta y la energía emocional. Define si se siente premium, vibrante o dramático.')}</p>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Tono')}</label><select id="videoCineTone" class="video-cine-select"></select></div>
                         <div class="video-cine-row-pair">
                           <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="videoCineColorGrade" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">Energía</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Energía')}</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
                         </div>
                       </div>
                       <div class="video-cine-panel" data-panel="camera" role="tabpanel" hidden>
-                        <p class="video-cine-block-hint">Controles granulares para usuarios con experiencia. Si lo dejas vacío, la IA elige por ti.</p>
-                        <div class="video-cine-row"><label class="video-cine-label">Tipo de toma</label><select id="videoCineShotType" class="video-cine-select"></select></div>
-                        <div class="video-cine-row"><label class="video-cine-label">Lente</label><select id="videoCineLens" class="video-cine-select"></select></div>
-                        <div class="video-cine-row"><label class="video-cine-label">Encuadre</label><select id="videoCineFraming" class="video-cine-select"></select></div>
+                        <p class="video-cine-block-hint">${window.__('Controles granulares para usuarios con experiencia. Si lo dejas vacío, la IA elige por ti.')}</p>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Tipo de toma')}</label><select id="videoCineShotType" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Lente')}</label><select id="videoCineLens" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Encuadre')}</label><select id="videoCineFraming" class="video-cine-select"></select></div>
                       </div>
                     </div>
                   </div>
 
                 </div>
               </div>
-              <button type="button" class="video-sidebar-help" id="videoSidebarHelpBtn" aria-label="Ayuda creativa" title="Ayuda creativa">?</button>
-              <div class="video-sidebar-help-popover" id="videoSidebarHelpPopover" role="dialog" aria-label="Ayuda creativa">
-                <h4>¿Cómo usar este panel?</h4>
-                <p><strong>Production Context</strong> conecta el video a la campaña, audiencia y productos que la IA debe respetar al producirlo.</p>
-                <p><strong>Cinematography</strong> define el lenguaje visual. Si no sabes por dónde empezar, elige un <em>Production Preset</em> y la IA llenará el resto.</p>
-                <p>Cada control alimenta el prompt final. No tienes que llenarlos todos — entre más completes, más fiel será el resultado a tu intención.</p>
+              <button type="button" class="video-sidebar-help" id="videoSidebarHelpBtn" aria-label="${window.__('Ayuda creativa')}" title="${window.__('Ayuda creativa')}">?</button>
+              <div class="video-sidebar-help-popover" id="videoSidebarHelpPopover" role="dialog" aria-label="${window.__('Ayuda creativa')}">
+                <h4>${window.__('¿Cómo usar este panel?')}</h4>
+                <p><strong>${window.__('Contexto de producción')}</strong> ${window.__('conecta el video a la campaña, audiencia y productos que la IA debe respetar al producirlo.')}</p>
+                <p><strong>${window.__('Cinematografía')}</strong> ${window.__('define el lenguaje visual. Si no sabes por dónde empezar, elige un')} <em>Production Preset</em> ${window.__('y la IA llenará el resto.')}</p>
+                <p>${window.__('Cada control alimenta el prompt final. No tienes que llenarlos todos — entre más completes, más fiel será el resultado a tu intención.')}</p>
               </div>
             </aside>
 
-            <aside class="video-sidebar-console" data-for-model="seedance" aria-label="Sidebar Seedance — secuencias narrativas" hidden>
+            <aside class="video-sidebar-console" data-for-model="seedance" aria-label="${window.__('Sidebar Seedance — secuencias narrativas')}" hidden>
               <div class="video-prompt-footer-card video-sidebar-card">
                 <div class="video-prompt-footer-card-inner video-sidebar-inner">
 
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">Production Context</h3>
+                      <h3 class="video-section-label">${window.__('Contexto de producción')}</h3>
                     </div>
-                    <p class="video-sidebar-section-hint">Tipo de campaña conceptual, audiencia y productos que la secuencia debe respetar.</p>
+                    <p class="video-sidebar-section-hint">${window.__('Tipo de campaña conceptual, audiencia y productos que la secuencia debe respetar.')}</p>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">¿De qué trata?</h4>
-                      <select id="seedanceCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Concepto de campaña" data-conceptual="1">
-                        <option value="">— Sin definir</option>
-                        <option value="Brand awareness">Brand awareness · presentar la marca</option>
-                        <option value="Product launch">Lanzamiento de producto</option>
-                        <option value="Lifestyle storytelling">Lifestyle · contar una historia</option>
-                        <option value="Educational">Educativo · enseñar o explicar</option>
-                        <option value="Sale / promo">Promoción · oferta o descuento</option>
-                        <option value="Testimonial">Testimonial · clientes reales</option>
-                        <option value="Reactivation">Reactivación · clientes dormidos</option>
-                        <option value="Seasonal moment">Momento estacional · fecha clave</option>
-                        <option value="Behind the scenes">Behind the scenes · cercanía marca</option>
+                      <h4 class="video-prompt-panel-title">${window.__('¿De qué trata?')}</h4>
+                      <select id="seedanceCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="${window.__('Concepto de campaña')}" data-conceptual="1">
+                        <option value="">${window.__('— Sin definir')}</option>
+                        <option value="Brand awareness">${window.__('Brand awareness · presentar la marca')}</option>
+                        <option value="Product launch">${window.__('Lanzamiento de producto')}</option>
+                        <option value="Lifestyle storytelling">${window.__('Lifestyle · contar una historia')}</option>
+                        <option value="Educational">${window.__('Educativo · enseñar o explicar')}</option>
+                        <option value="Sale / promo">${window.__('Promoción · oferta o descuento')}</option>
+                        <option value="Testimonial">${window.__('Testimonial · clientes reales')}</option>
+                        <option value="Reactivation">${window.__('Reactivación · clientes dormidos')}</option>
+                        <option value="Seasonal moment">${window.__('Momento estacional · fecha clave')}</option>
+                        <option value="Behind the scenes">${window.__('Behind the scenes · cercanía marca')}</option>
                       </select>
                     </div>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">¿A quién le habla?</h4>
-                      <select id="seedanceAudienceSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Audiencia conceptual" data-conceptual="1">
-                        <option value="">— Sin definir</option>
-                        <option value="Young professionals 25-35">Profesionales jóvenes (25–35)</option>
-                        <option value="Established professionals 35-50">Profesionales establecidos (35–50)</option>
-                        <option value="Aspirational youth 18-28">Aspiracionales jóvenes (18–28)</option>
-                        <option value="Mass market">Mercado masivo</option>
-                        <option value="Premium / luxury audience">Premium · audiencia de lujo</option>
-                        <option value="Niche enthusiasts">Nicho · entusiastas de la categoría</option>
-                        <option value="Decision makers B2B">Decision makers · B2B</option>
-                        <option value="Existing customers">Clientes existentes</option>
-                        <option value="Parents / families">Padres y familias</option>
+                      <h4 class="video-prompt-panel-title">${window.__('¿A quién le habla?')}</h4>
+                      <select id="seedanceAudienceSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="${window.__('Audiencia conceptual')}" data-conceptual="1">
+                        <option value="">${window.__('— Sin definir')}</option>
+                        <option value="Young professionals 25-35">${window.__('Profesionales jóvenes (25–35)')}</option>
+                        <option value="Established professionals 35-50">${window.__('Profesionales establecidos (35–50)')}</option>
+                        <option value="Aspirational youth 18-28">${window.__('Aspiracionales jóvenes (18–28)')}</option>
+                        <option value="Mass market">${window.__('Mercado masivo')}</option>
+                        <option value="Premium / luxury audience">${window.__('Premium · audiencia de lujo')}</option>
+                        <option value="Niche enthusiasts">${window.__('Nicho · entusiastas de la categoría')}</option>
+                        <option value="Decision makers B2B">${window.__('Decision makers · B2B')}</option>
+                        <option value="Existing customers">${window.__('Clientes existentes')}</option>
+                        <option value="Parents / families">${window.__('Padres y familias')}</option>
                       </select>
                     </div>
                   </div>
 
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">Frames Clave</h3>
+                      <h3 class="video-section-label">${window.__('Frames Clave')}</h3>
                     </div>
-                    <p class="video-sidebar-section-hint">Ancla el inicio y/o final de la secuencia con una imagen. La IA construirá el arco narrativo entre ambas.</p>
+                    <p class="video-sidebar-section-hint">${window.__('Ancla el inicio y/o final de la secuencia con una imagen. La IA construirá el arco narrativo entre ambas.')}</p>
                     <div class="seedance-frames-grid">
                       <button type="button" class="seedance-frame-slot" data-frame="first" id="seedanceFirstFrameSlot">
                         <i class="fas fa-image" aria-hidden="true"></i>
                         <span class="seedance-frame-slot-label">First Frame</span>
-                        <span class="seedance-frame-slot-hint">Click para subir</span>
+                        <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
                       </button>
                       <button type="button" class="seedance-frame-slot" data-frame="last" id="seedanceLastFrameSlot">
                         <i class="fas fa-image" aria-hidden="true"></i>
                         <span class="seedance-frame-slot-label">Last Frame</span>
-                        <span class="seedance-frame-slot-hint">Click para subir</span>
+                        <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
                       </button>
                     </div>
                   </div>
 
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">Referencias Multimodales</h3>
+                      <h3 class="video-section-label">${window.__('Referencias Multimodales')}</h3>
                     </div>
-                    <p class="video-sidebar-section-hint">Imágenes, videos y audios que la IA usa como inspiración. Mutuamente excluyentes con Frames Clave.</p>
+                    <p class="video-sidebar-section-hint">${window.__('Imágenes, videos y audios que la IA usa como inspiración. Mutuamente excluyentes con Frames Clave.')}</p>
 
                     <div class="seedance-ref-group">
                       <div class="seedance-ref-group-header">
-                        <h4 class="video-prompt-panel-title">Imágenes <span class="seedance-ref-limit" id="seedanceRefImgCount">0 / 9</span></h4>
+                        <h4 class="video-prompt-panel-title">${window.__('Imágenes')} <span class="seedance-ref-limit" id="seedanceRefImgCount">0 / 9</span></h4>
                         <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefImg"><i class="fas fa-plus" aria-hidden="true"></i></button>
                       </div>
                       <div class="seedance-ref-list" id="seedanceRefImgList" aria-live="polite"></div>
@@ -538,7 +538,7 @@ class VideoView extends BaseView {
 
                     <div class="seedance-ref-group">
                       <div class="seedance-ref-group-header">
-                        <h4 class="video-prompt-panel-title">Videos <span class="seedance-ref-limit" id="seedanceRefVidCount">0 / 3 · ≤15s</span></h4>
+                        <h4 class="video-prompt-panel-title">${window.__('Videos')} <span class="seedance-ref-limit" id="seedanceRefVidCount">0 / 3 · ≤15s</span></h4>
                         <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefVid"><i class="fas fa-plus" aria-hidden="true"></i></button>
                       </div>
                       <div class="seedance-ref-list" id="seedanceRefVidList" aria-live="polite"></div>
@@ -546,7 +546,7 @@ class VideoView extends BaseView {
 
                     <div class="seedance-ref-group">
                       <div class="seedance-ref-group-header">
-                        <h4 class="video-prompt-panel-title">Audios <span class="seedance-ref-limit" id="seedanceRefAudCount">0 / 3 · ≤15s</span></h4>
+                        <h4 class="video-prompt-panel-title">${window.__('Audios')} <span class="seedance-ref-limit" id="seedanceRefAudCount">0 / 3 · ≤15s</span></h4>
                         <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefAud"><i class="fas fa-plus" aria-hidden="true"></i></button>
                       </div>
                       <div class="seedance-ref-list" id="seedanceRefAudList" aria-live="polite"></div>
@@ -555,52 +555,52 @@ class VideoView extends BaseView {
 
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">Audio & Atmósfera</h3>
+                      <h3 class="video-section-label">${window.__('Audio & Atmósfera')}</h3>
                     </div>
-                    <p class="video-sidebar-section-hint">Seedance puede generar el audio de la secuencia. Activar aumenta el costo de créditos.</p>
+                    <p class="video-sidebar-section-hint">${window.__('Seedance puede generar el audio de la secuencia. Activar aumenta el costo de créditos.')}</p>
                     <label class="seedance-toggle-row">
                       <input type="checkbox" id="seedanceGenerateAudio">
                       <span class="seedance-toggle-track" aria-hidden="true"><span class="seedance-toggle-thumb"></span></span>
-                      <span class="seedance-toggle-label">Generar audio</span>
+                      <span class="seedance-toggle-label">${window.__('Generar audio')}</span>
                     </label>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">Tipo de sonido</h4>
+                      <h4 class="video-prompt-panel-title">${window.__('Tipo de sonido')}</h4>
                       <div class="seedance-audio-tiles">
-                        <button type="button" class="seedance-audio-tile" data-audio-type="ambient"><i class="fas fa-wind" aria-hidden="true"></i><span>Diegético</span></button>
-                        <button type="button" class="seedance-audio-tile" data-audio-type="music"><i class="fas fa-music" aria-hidden="true"></i><span>Música</span></button>
-                        <button type="button" class="seedance-audio-tile" data-audio-type="voice"><i class="fas fa-microphone" aria-hidden="true"></i><span>Voz</span></button>
-                        <button type="button" class="seedance-audio-tile" data-audio-type="silence"><i class="fas fa-volume-xmark" aria-hidden="true"></i><span>Silencio</span></button>
+                        <button type="button" class="seedance-audio-tile" data-audio-type="ambient"><i class="fas fa-wind" aria-hidden="true"></i><span>${window.__('Diegético')}</span></button>
+                        <button type="button" class="seedance-audio-tile" data-audio-type="music"><i class="fas fa-music" aria-hidden="true"></i><span>${window.__('Música')}</span></button>
+                        <button type="button" class="seedance-audio-tile" data-audio-type="voice"><i class="fas fa-microphone" aria-hidden="true"></i><span>${window.__('Voz')}</span></button>
+                        <button type="button" class="seedance-audio-tile" data-audio-type="silence"><i class="fas fa-volume-xmark" aria-hidden="true"></i><span>${window.__('Silencio')}</span></button>
                       </div>
                     </div>
                   </div>
 
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">Pacing & Narrativa</h3>
+                      <h3 class="video-section-label">${window.__('Pacing & Narrativa')}</h3>
                     </div>
-                    <p class="video-sidebar-section-hint">Cómo fluye la historia: ritmo, evolución emocional y estilo de transición entre tomas.</p>
-                    <div class="video-cine-row"><label class="video-cine-label">Ritmo global</label>
+                    <p class="video-sidebar-section-hint">${window.__('Cómo fluye la historia: ritmo, evolución emocional y estilo de transición entre tomas.')}</p>
+                    <div class="video-cine-row"><label class="video-cine-label">${window.__('Ritmo global')}</label>
                       <select id="seedancePacing" class="video-cine-select">
-                        <option value="">— Auto</option>
-                        <option value="Slow contemplative">Lento contemplativo</option>
-                        <option value="Balanced">Equilibrado</option>
-                        <option value="Fast dynamic">Rápido dinámico</option>
+                        <option value="">${window.__('— Auto')}</option>
+                        <option value="Slow contemplative">${window.__('Lento contemplativo')}</option>
+                        <option value="Balanced">${window.__('Equilibrado')}</option>
+                        <option value="Fast dynamic">${window.__('Rápido dinámico')}</option>
                       </select>
                     </div>
-                    <div class="video-cine-row"><label class="video-cine-label">Arco emocional</label>
+                    <div class="video-cine-row"><label class="video-cine-label">${window.__('Arco emocional')}</label>
                       <select id="seedanceArc" class="video-cine-select">
-                        <option value="">— Auto</option>
-                        <option value="Continuous">Continuo</option>
+                        <option value="">${window.__('— Auto')}</option>
+                        <option value="Continuous">${window.__('Continuo')}</option>
                         <option value="Crescendo">Crescendo</option>
                         <option value="Decrescendo">Decrescendo</option>
-                        <option value="Climax at end">Climax al final</option>
+                        <option value="Climax at end">${window.__('Climax al final')}</option>
                       </select>
                     </div>
-                    <div class="video-cine-row"><label class="video-cine-label">Transiciones</label>
+                    <div class="video-cine-row"><label class="video-cine-label">${window.__('Transiciones')}</label>
                       <select id="seedanceTransitions" class="video-cine-select">
-                        <option value="">— Auto</option>
-                        <option value="Hard cuts">Cortes secos</option>
-                        <option value="Soft fades">Fundidos suaves</option>
+                        <option value="">${window.__('— Auto')}</option>
+                        <option value="Hard cuts">${window.__('Cortes secos')}</option>
+                        <option value="Soft fades">${window.__('Fundidos suaves')}</option>
                         <option value="Match cuts">Match cuts</option>
                         <option value="Whip pans">Whip pans</option>
                         <option value="Morph">Morph / dissolve</option>
@@ -610,40 +610,40 @@ class VideoView extends BaseView {
 
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">Estilo Visual</h3>
+                      <h3 class="video-section-label">${window.__('Estilo Visual')}</h3>
                     </div>
-                    <p class="video-sidebar-section-hint">Mood narrativo y nivel de realismo de la secuencia completa.</p>
-                    <div class="video-cine-row"><label class="video-cine-label">Mood narrativo</label>
+                    <p class="video-sidebar-section-hint">${window.__('Mood narrativo y nivel de realismo de la secuencia completa.')}</p>
+                    <div class="video-cine-row"><label class="video-cine-label">${window.__('Mood narrativo')}</label>
                       <select id="seedanceMood" class="video-cine-select">
-                        <option value="">— Auto</option>
-                        <option value="Cinematic">Cinematográfico</option>
-                        <option value="Documentary">Documental</option>
+                        <option value="">${window.__('— Auto')}</option>
+                        <option value="Cinematic">${window.__('Cinematográfico')}</option>
+                        <option value="Documentary">${window.__('Documental')}</option>
                         <option value="Editorial">Editorial</option>
                         <option value="Music video">Music video</option>
-                        <option value="Dreamlike">Sueño / Onírico</option>
-                        <option value="Commercial bright">Comercial luminoso</option>
+                        <option value="Dreamlike">${window.__('Sueño / Onírico')}</option>
+                        <option value="Commercial bright">${window.__('Comercial luminoso')}</option>
                       </select>
                     </div>
-                    <div class="video-cine-row"><label class="video-cine-label">Realismo</label>
+                    <div class="video-cine-row"><label class="video-cine-label">${window.__('Realismo')}</label>
                       <select id="seedanceRealism" class="video-cine-select">
-                        <option value="">— Auto</option>
-                        <option value="Realistic">Realista</option>
-                        <option value="Stylized">Estilizado</option>
-                        <option value="Hyperreal">Hiperreal</option>
+                        <option value="">${window.__('— Auto')}</option>
+                        <option value="Realistic">${window.__('Realista')}</option>
+                        <option value="Stylized">${window.__('Estilizado')}</option>
+                        <option value="Hyperreal">${window.__('Hiperreal')}</option>
                         <option value="Surreal">Surreal</option>
-                        <option value="3D animated">3D animado</option>
+                        <option value="3D animated">${window.__('3D animado')}</option>
                       </select>
                     </div>
                   </div>
 
                 </div>
               </div>
-              <button type="button" class="video-sidebar-help" id="seedanceSidebarHelpBtn" aria-label="Ayuda Seedance" title="Ayuda Seedance">?</button>
-              <div class="video-sidebar-help-popover" id="seedanceSidebarHelpPopover" role="dialog" aria-label="Ayuda Seedance">
-                <h4>Seedance 2.0 — secuencias narrativas</h4>
-                <p><strong>Frames Clave</strong>: una imagen de inicio + una de cierre. La IA construye el arco entre ambas.</p>
-                <p><strong>Referencias Multimodales</strong>: imágenes para estilo, videos para movimiento, audios para vibe. Hasta 9/3/3 respectivamente.</p>
-                <p><strong>Audio</strong>: a diferencia de Kling, Seedance genera el audio. Activarlo cuesta créditos extra pero da un video listo para publicar.</p>
+              <button type="button" class="video-sidebar-help" id="seedanceSidebarHelpBtn" aria-label="${window.__('Ayuda Seedance')}" title="${window.__('Ayuda Seedance')}">?</button>
+              <div class="video-sidebar-help-popover" id="seedanceSidebarHelpPopover" role="dialog" aria-label="${window.__('Ayuda Seedance')}">
+                <h4>${window.__('Seedance 2.0 — secuencias narrativas')}</h4>
+                <p><strong>${window.__('Frames Clave')}</strong>${window.__(': una imagen de inicio + una de cierre. La IA construye el arco entre ambas.')}</p>
+                <p><strong>${window.__('Referencias Multimodales')}</strong>${window.__(': imágenes para estilo, videos para movimiento, audios para vibe. Hasta 9/3/3 respectivamente.')}</p>
+                <p><strong>Audio</strong>${window.__(': a diferencia de Kling, Seedance genera el audio. Activarlo cuesta créditos extra pero da un video listo para publicar.')}</p>
               </div>
             </aside>
           </div>
@@ -660,7 +660,7 @@ class VideoView extends BaseView {
     if (labelEl) labelEl.textContent = 'PROMPT';
     if (this.sendBtn) {
       this.sendBtn.setAttribute('data-state', 'prompt');
-      this.sendBtn.setAttribute('aria-label', 'Generar prompt');
+      this.sendBtn.setAttribute('aria-label', window.__('Generar prompt'));
       const icon = this.sendBtn.querySelector('i');
       if (icon) icon.className = 'fas fa-wand-magic-sparkles';
     }
@@ -738,7 +738,7 @@ class VideoView extends BaseView {
       seedanceSend.dataset.boundSeedancePlaceholder = '1';
       seedanceSend.addEventListener('click', (e) => {
         e.preventDefault();
-        alert('Backend de Seedance 2.0 en construcción. La UI está lista; cuando conectemos el endpoint kie-video-seedance este botón cocinará el storyboard con OpenAI y generará la secuencia.');
+        alert(window.__('Backend de Seedance 2.0 en construcción. La UI está lista; cuando conectemos el endpoint kie-video-seedance este botón cocinará el storyboard con OpenAI y generará la secuencia.'));
       });
     }
     // Seedance: toggle Audio + Web search (solo UI state, sin wiring backend aún)
@@ -800,7 +800,7 @@ class VideoView extends BaseView {
       resetCineBtn.dataset.boundReset = '1';
       resetCineBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        if (!confirm('¿Restablecer todos los valores de Cinematography?')) return;
+        if (!confirm(window.__('¿Restablecer todos los valores de Cinematografía?'))) return;
         const keys = ['shotType','lens','framing','cameraMovement','motionSpeed','motionIntensity','lightType','contrastLevel','temperature','tone','colorGrade','colorTemp','energyLevel'];
         keys.forEach((k) => { if (this.cinematography) this.cinematography[k] = ''; });
         if (this.cinematography) this.cinematography.preset = '';
@@ -820,7 +820,7 @@ class VideoView extends BaseView {
       ctxAiBtn.dataset.boundCtxAi = '1';
       ctxAiBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        alert('Auto-detección de contexto: próximamente. Por ahora completa Campaign / Audience / Asset Stack manualmente.');
+        alert(window.__('Auto-detección de contexto: próximamente. Por ahora completa Campaign / Audience / Asset Stack manualmente.'));
       });
     }
 
@@ -994,9 +994,9 @@ class VideoView extends BaseView {
 
   getAssetListByScope() {
     const scope = this.assetScope || 'product';
-    if (scope === 'product') return (this.dbData.products || []).map((p) => ({ id: p.id, name: p.nombre_producto || 'Product', type: 'product' }));
-    if (scope === 'service') return (this.dbData.services || []).map((s) => ({ id: s.id, name: s.nombre_servicio || 'Service', type: 'service' }));
-    if (scope === 'brand_world') return (this.dbData.entities || []).map((e) => ({ id: e.id, name: e.name || 'Entity', type: 'entity' }));
+    if (scope === 'product') return (this.dbData.products || []).map((p) => ({ id: p.id, name: p.nombre_producto || window.__('Producto'), type: 'product' }));
+    if (scope === 'service') return (this.dbData.services || []).map((s) => ({ id: s.id, name: s.nombre_servicio || window.__('Servicio'), type: 'service' }));
+    if (scope === 'brand_world') return (this.dbData.entities || []).map((e) => ({ id: e.id, name: e.name || window.__('Entidad'), type: 'entity' }));
     return [];
   }
 
@@ -1006,7 +1006,7 @@ class VideoView extends BaseView {
     const items = this.getAssetListByScope();
     const current = select.value || this.selectedAssetId;
     const options = items.map((item) => `<option value="${String(item.id)}">${(item.name || '').slice(0, 50)}</option>`).join('');
-    select.innerHTML = '<option value="">— None</option>' + options;
+    select.innerHTML = `<option value="">${window.__('— Ninguno')}</option>` + options;
     if (current && items.some((i) => String(i.id) === current)) select.value = current;
     else this.selectedAssetId = '';
   }
@@ -1017,7 +1017,7 @@ class VideoView extends BaseView {
     if (!carousel) return;
     const products = (this.dbData.products || []).filter((p) => Array.isArray(p.image_urls) && p.image_urls.length > 0);
     if (products.length === 0) {
-      carousel.innerHTML = '<p class="video-asset-products-empty">No hay productos con imágenes.</p>';
+      carousel.innerHTML = `<p class="video-asset-products-empty">${window.__('No hay productos con imágenes.')}</p>`;
       return;
     }
     carousel.innerHTML = products.map((p) => {
@@ -1025,7 +1025,7 @@ class VideoView extends BaseView {
       const selected = String(this.selectedAssetId) === String(id);
       const imgUrl = (p.image_urls[0] || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       return `
-        <div class="video-asset-product-item ${selected ? 'is-selected' : ''}" data-id="${id}" role="button" tabindex="0" aria-pressed="${selected}" aria-label="Seleccionar producto">
+        <div class="video-asset-product-item ${selected ? 'is-selected' : ''}" data-id="${id}" role="button" tabindex="0" aria-pressed="${selected}" aria-label="${window.__('Seleccionar producto')}">
           <div class="video-asset-product-thumb-wrap"><img class="video-asset-product-thumb" src="${imgUrl}" alt="" loading="lazy"></div>
         </div>
       `;
@@ -1058,8 +1058,8 @@ class VideoView extends BaseView {
     this.storyboardScenes = scenes;
     container.innerHTML = scenes.map((s, i) => `
       <div class="video-storyboard-scene" data-index="${i}">
-        <span class="video-storyboard-scene-label">SCENE ${String(i + 1).padStart(2, '0')}</span>
-        <input type="text" class="video-storyboard-scene-brief" placeholder="Mini brief" value="${(s.brief || '').replace(/"/g, '&quot;')}" data-index="${i}">
+        <span class="video-storyboard-scene-label">${window.__('ESCENA')} ${String(i + 1).padStart(2, '0')}</span>
+        <input type="text" class="video-storyboard-scene-brief" placeholder="${window.__('Mini brief')}" value="${(s.brief || '').replace(/"/g, '&quot;')}" data-index="${i}">
         <select class="video-storyboard-scene-duration" data-index="${i}"><option value="5" ${s.duration === '5' ? 'selected' : ''}>5s</option><option value="10" ${s.duration === '10' ? 'selected' : ''}>10s</option></select>
       </div>
     `).join('');
@@ -1188,7 +1188,7 @@ class VideoView extends BaseView {
     const carousel = this.container.querySelector('#videoEscenasCarousel');
     if (!carousel) return;
     if (this.videoProductions.length === 0) {
-      carousel.innerHTML = '<p class="video-escenas-empty">Aún no hay producciones. Las producciones de tus flows aparecerán aquí.</p>';
+      carousel.innerHTML = `<p class="video-escenas-empty">${window.__('Aún no hay producciones. Las producciones de tus flows aparecerán aquí.')}</p>`;
       return;
     }
     carousel.innerHTML = this.videoProductions.map((p) => {
@@ -1200,7 +1200,7 @@ class VideoView extends BaseView {
         ? `<img class="video-escena-thumb video-escena-thumb-img" src="${mediaUrl}" alt="" loading="lazy" decoding="async">`
         : `<video class="video-escena-thumb" src="${mediaUrl}" preload="metadata" muted playsinline crossorigin="anonymous"></video>`;
       return `
-        <div class="video-escena-item ${selected ? 'is-selected' : ''}" data-id="${id}" role="button" tabindex="0" aria-pressed="${selected}" aria-label="Seleccionar como escena">
+        <div class="video-escena-item ${selected ? 'is-selected' : ''}" data-id="${id}" role="button" tabindex="0" aria-pressed="${selected}" aria-label="${window.__('Seleccionar como escena')}">
           <div class="video-escena-thumb-wrap">${thumbContent}</div>
         </div>
       `;
@@ -1227,7 +1227,7 @@ class VideoView extends BaseView {
     const gallery = this.container.querySelector('#videoProductionsGallery');
     if (!gallery) return;
     if (this.videoProductions.length === 0) {
-      gallery.innerHTML = '<p class="video-productions-empty">Aún no hay producciones. Las producciones de tus flows aparecerán aquí.</p>';
+      gallery.innerHTML = `<p class="video-productions-empty">${window.__('Aún no hay producciones. Las producciones de tus flows aparecerán aquí.')}</p>`;
       return;
     }
     gallery.innerHTML = this.videoProductions.map((p) => {
@@ -1239,7 +1239,7 @@ class VideoView extends BaseView {
         ? `<img class="video-production-thumb video-production-thumb-img" src="${mediaUrl}" alt="" loading="lazy" decoding="async">`
         : `<video class="video-production-thumb" src="${mediaUrl}" preload="metadata" muted playsinline crossorigin="anonymous"></video>`;
       return `
-        <div class="video-production-item ${selected ? 'is-selected' : ''}" data-id="${id}" role="button" tabindex="0" aria-pressed="${selected}" aria-label="Seleccionar producción">
+        <div class="video-production-item ${selected ? 'is-selected' : ''}" data-id="${id}" role="button" tabindex="0" aria-pressed="${selected}" aria-label="${window.__('Seleccionar producción')}">
           <div class="video-production-thumb-wrap">${thumbContent}</div>
         </div>
       `;
@@ -1313,7 +1313,7 @@ class VideoView extends BaseView {
     const fill = (id, values, current) => {
       const el = this.container.querySelector(id);
       if (!el) return;
-      el.innerHTML = '<option value="">— Ninguno</option>' + values.map((v) => `<option value="${v}" ${v === current ? 'selected' : ''}>${v}</option>`).join('');
+      el.innerHTML = `<option value="">${window.__('— Ninguno')}</option>` + values.map((v) => `<option value="${v}" ${v === current ? 'selected' : ''}>${v}</option>`).join('');
     };
     fill('#videoCineShotType', opts.shotType, this.cinematography.shotType);
     fill('#videoCineLens', opts.lens, this.cinematography.lens);
@@ -1409,57 +1409,57 @@ class VideoView extends BaseView {
     // qué hace el efecto en lenguaje claro para usuarios sin experiencia.
     const VALUE_DESCRIPTIONS = {
       // Camera movement
-      'Static': 'La cámara permanece fija. Ideal para tomas limpias y producto en primer plano.',
-      'Slow Push In': 'La cámara se acerca lentamente al sujeto. Crea tensión y resalta un punto focal.',
-      'Slow Pull Out': 'La cámara se aleja lentamente. Revela el entorno y da contexto al sujeto.',
-      'Dolly Left': 'La cámara se desplaza hacia la izquierda manteniendo al sujeto centrado.',
-      'Dolly Right': 'La cámara se desplaza hacia la derecha. Sensación de exploración lateral.',
-      'Orbit': 'La cámara gira alrededor del sujeto en arco. Cinematográfico y dramático.',
-      '360° Rotation': 'Rotación completa alrededor del sujeto. Muestra el producto desde todos los ángulos.',
-      'Handheld': 'Movimiento de mano natural con pulso humano. Documental, auténtico, cercano.',
-      'Tracking': 'La cámara sigue al sujeto en movimiento. Mantiene foco mientras hay acción.',
-      'FPV': 'Punto de vista en primera persona. Inmersivo y dinámico (estilo dron o GoPro).',
+      'Static': window.__('La cámara permanece fija. Ideal para tomas limpias y producto en primer plano.'),
+      'Slow Push In': window.__('La cámara se acerca lentamente al sujeto. Crea tensión y resalta un punto focal.'),
+      'Slow Pull Out': window.__('La cámara se aleja lentamente. Revela el entorno y da contexto al sujeto.'),
+      'Dolly Left': window.__('La cámara se desplaza hacia la izquierda manteniendo al sujeto centrado.'),
+      'Dolly Right': window.__('La cámara se desplaza hacia la derecha. Sensación de exploración lateral.'),
+      'Orbit': window.__('La cámara gira alrededor del sujeto en arco. Cinematográfico y dramático.'),
+      '360° Rotation': window.__('Rotación completa alrededor del sujeto. Muestra el producto desde todos los ángulos.'),
+      'Handheld': window.__('Movimiento de mano natural con pulso humano. Documental, auténtico, cercano.'),
+      'Tracking': window.__('La cámara sigue al sujeto en movimiento. Mantiene foco mientras hay acción.'),
+      'FPV': window.__('Punto de vista en primera persona. Inmersivo y dinámico (estilo dron o GoPro).'),
 
       // Motion speed / intensity
-      'Subtle': 'Movimiento muy leve, casi imperceptible. Premium y elegante.',
-      'Moderate': 'Movimiento controlado y constante. Balance entre energía y calma.',
-      'Dynamic': 'Movimiento marcado y enérgico. Llama la atención.',
-      'Aggressive': 'Movimiento intenso y rápido. Máxima energía visual.',
+      'Subtle': window.__('Movimiento muy leve, casi imperceptible. Premium y elegante.'),
+      'Moderate': window.__('Movimiento controlado y constante. Balance entre energía y calma.'),
+      'Dynamic': window.__('Movimiento marcado y enérgico. Llama la atención.'),
+      'Aggressive': window.__('Movimiento intenso y rápido. Máxima energía visual.'),
 
       // Lighting type
-      'Soft diffused': 'Luz suave y envolvente, sin sombras duras. Sensación cálida y limpia.',
-      'Hard contrast': 'Luces fuertes y sombras marcadas. Dramatismo visual.',
-      'Rim light': 'Luz que recorta el contorno del sujeto. Premium, lo separa del fondo.',
-      'Backlit silhouette': 'Sujeto a contraluz, silueta negra contra luz. Misterio, drama.',
-      'Studio commercial': 'Iluminación de estudio profesional. Limpia, pareja, comercial clásico.',
-      'Natural daylight': 'Luz natural de día. Auténtico, lifestyle, accesible.',
-      'Dramatic spotlight': 'Foco concentrado sobre el sujeto. Aislamiento y protagonismo total.',
+      'Soft diffused': window.__('Luz suave y envolvente, sin sombras duras. Sensación cálida y limpia.'),
+      'Hard contrast': window.__('Luces fuertes y sombras marcadas. Dramatismo visual.'),
+      'Rim light': window.__('Luz que recorta el contorno del sujeto. Premium, lo separa del fondo.'),
+      'Backlit silhouette': window.__('Sujeto a contraluz, silueta negra contra luz. Misterio, drama.'),
+      'Studio commercial': window.__('Iluminación de estudio profesional. Limpia, pareja, comercial clásico.'),
+      'Natural daylight': window.__('Luz natural de día. Auténtico, lifestyle, accesible.'),
+      'Dramatic spotlight': window.__('Foco concentrado sobre el sujeto. Aislamiento y protagonismo total.'),
 
       // Contrast
-      'Low': 'Contraste bajo. Tonos planos y suaves, look documental o vintage.',
-      'Medium': 'Contraste balanceado. Look natural y versátil.',
-      'High': 'Contraste alto. Imagen punchy y vibrante.',
-      'Ultra contrast': 'Contraste extremo. Look gráfico, casi de moda editorial.',
+      'Low': window.__('Contraste bajo. Tonos planos y suaves, look documental o vintage.'),
+      'Medium': window.__('Contraste balanceado. Look natural y versátil.'),
+      'High': window.__('Contraste alto. Imagen punchy y vibrante.'),
+      'Ultra contrast': window.__('Contraste extremo. Look gráfico, casi de moda editorial.'),
 
       // Temperature
-      'Neutral': 'Temperatura neutra. Colores reales sin tinte cálido ni frío.',
-      'Warm': 'Tonos cálidos (amarillos, naranjas). Acogedor, dorado, premium.',
-      'Cold': 'Tonos fríos (azules). Tecnológico, sereno, sofisticado.',
+      'Neutral': window.__('Temperatura neutra. Colores reales sin tinte cálido ni frío.'),
+      'Warm': window.__('Tonos cálidos (amarillos, naranjas). Acogedor, dorado, premium.'),
+      'Cold': window.__('Tonos fríos (azules). Tecnológico, sereno, sofisticado.'),
 
       // Tone / Mood
-      'Clean commercial': 'Look comercial clásico. Limpio, claro, vende sin distracciones.',
-      'Cinematic dramatic': 'Look de cine con paleta rica y tensión. Storytelling potente.',
-      'Hyperreal product': 'Producto hiperdetallado, casi macro. Saca lo mejor del objeto.',
-      'Minimal luxury': 'Estética minimal premium. Pocos elementos, mucho aire, lujo callado.',
-      'Dark premium': 'Paleta oscura y elegante. Producto de gama alta nocturno.',
-      'Bright energetic': 'Colores vivos y luminosos. Joven, social, juvenil.',
-      'Editorial fashion': 'Estética de revista de moda. Sofisticado y aspiracional.',
-      'Documentary': 'Look auténtico y crudo. Sin filtros, real, humano.',
+      'Clean commercial': window.__('Look comercial clásico. Limpio, claro, vende sin distracciones.'),
+      'Cinematic dramatic': window.__('Look de cine con paleta rica y tensión. Storytelling potente.'),
+      'Hyperreal product': window.__('Producto hiperdetallado, casi macro. Saca lo mejor del objeto.'),
+      'Minimal luxury': window.__('Estética minimal premium. Pocos elementos, mucho aire, lujo callado.'),
+      'Dark premium': window.__('Paleta oscura y elegante. Producto de gama alta nocturno.'),
+      'Bright energetic': window.__('Colores vivos y luminosos. Joven, social, juvenil.'),
+      'Editorial fashion': window.__('Estética de revista de moda. Sofisticado y aspiracional.'),
+      'Documentary': window.__('Look auténtico y crudo. Sin filtros, real, humano.'),
 
       // Color grade / temp / energy
-      'High saturation': 'Colores muy saturados. Vibrante y llamativo.',
-      'Muted tones': 'Tonos apagados y elegantes. Premium discreto.',
-      'Peak': 'Energía visual máxima. Cortes rápidos, vivos, alta intensidad.'
+      'High saturation': window.__('Colores muy saturados. Vibrante y llamativo.'),
+      'Muted tones': window.__('Tonos apagados y elegantes. Premium discreto.'),
+      'Peak': window.__('Energía visual máxima. Cortes rápidos, vivos, alta intensidad.')
     };
 
     // Mapping de iconos por VALOR — para que el usuario sin experiencia vea el
@@ -1632,8 +1632,8 @@ class VideoView extends BaseView {
       return;
     }
     el.style.display = 'flex';
-    el.innerHTML = '<span class="video-cine-selected-label">Selected Style:</span>' + tags.map((t) =>
-      `<span class="video-cine-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}<button type="button" class="video-cine-tag-remove" aria-label="Remove ${t.key}">&times;</button></span>`
+    el.innerHTML = `<span class="video-cine-selected-label">${window.__('Estilo seleccionado:')}</span>` + tags.map((t) =>
+      `<span class="video-cine-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}<button type="button" class="video-cine-tag-remove" aria-label="${window.__('Quitar {key}', { key: t.key })}">&times;</button></span>`
     ).join('');
     el.querySelectorAll('.video-cine-tag-remove').forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -1804,8 +1804,8 @@ class VideoView extends BaseView {
     }
     el.style.display = 'flex';
     el.className = 'video-director-variables-row video-cine-selected-tags';
-    el.innerHTML = '<span class="video-cine-selected-label">Variables:</span>' + tags.map((t) =>
-      `<span class="video-cine-tag video-director-variable-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}<button type="button" class="video-cine-tag-remove" aria-label="Quitar ${t.key}">&times;</button></span>`
+    el.innerHTML = `<span class="video-cine-selected-label">${window.__('Variables:')}</span>` + tags.map((t) =>
+      `<span class="video-cine-tag video-director-variable-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}<button type="button" class="video-cine-tag-remove" aria-label="${window.__('Quitar {key}', { key: t.key })}">&times;</button></span>`
     ).join('');
     el.querySelectorAll('.video-cine-tag-remove').forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -1913,7 +1913,7 @@ class VideoView extends BaseView {
     // Si solo hay video(s): primer video como elemento de video
     if (videos.length > 0 && images.length === 0) {
       if (videos.length > 1 && typeof window.showToast === 'function') {
-        window.showToast('Se usará solo el primer video — Kling permite uno por elemento.', { type: 'info', duration: 4000 });
+        window.showToast(window.__('Se usará solo el primer video — Kling permite uno por elemento.'), { type: 'info', duration: 4000 });
       }
       await this.uploadAndAddKlingElement({ name: autoName('video'), description: '', videoFile: videos[0] });
       return;
@@ -1922,19 +1922,19 @@ class VideoView extends BaseView {
     // Si hay imágenes (con o sin videos): usar imágenes, ignorar videos
     if (images.length > 0) {
       if (videos.length > 0 && typeof window.showToast === 'function') {
-        window.showToast('Solo se subieron las imágenes — para usar video, súbelo sin imágenes.', { type: 'info', duration: 4000 });
+        window.showToast(window.__('Solo se subieron las imágenes — para usar video, súbelo sin imágenes.'), { type: 'info', duration: 4000 });
       }
       // Truncar a 4 imágenes máximo (límite de Kling por elemento)
       const usable = images.slice(0, 4);
       if (images.length > 4 && typeof window.showToast === 'function') {
-        window.showToast(`Se usan las primeras 4 imágenes (subiste ${images.length}). Las restantes se ignoran.`, { type: 'info', duration: 5000 });
+        window.showToast(window.__('Se usan las primeras 4 imágenes (subiste {count}). Las restantes se ignoran.', { count: images.length }), { type: 'info', duration: 5000 });
       }
       await this.uploadAndAddKlingElement({ name: autoName('imagen'), description: '', imageFiles: usable });
       return;
     }
 
     // Ningún tipo reconocido
-    const msg = 'Formato no soportado. Sube imágenes JPG/PNG o video MP4/MOV.';
+    const msg = window.__('Formato no soportado. Sube imágenes JPG/PNG o video MP4/MOV.');
     if (typeof window.showToast === 'function') {
       window.showToast(msg, { type: 'warning', duration: 5000 });
     } else if (window.alert) {
@@ -1944,12 +1944,12 @@ class VideoView extends BaseView {
 
   async uploadAndAddKlingElement({ name, description, imageFiles, videoFile }) {
     if (!this.supabase || !this.supabase.storage) {
-      if (window.alert) window.alert('No se puede subir: sesión o almacenamiento no disponible.');
+      if (window.alert) window.alert(window.__('No se puede subir: sesión o almacenamiento no disponible.'));
       return;
     }
     const { data: { user } } = await this.supabase.auth.getUser();
     if (!user) {
-      if (window.alert) window.alert('Inicia sesión para subir elementos.');
+      if (window.alert) window.alert(window.__('Inicia sesión para subir elementos.'));
       return;
     }
     const bucket = 'production-outputs';
@@ -1996,7 +1996,7 @@ class VideoView extends BaseView {
       this.renderKlingElementsList();
     } catch (err) {
       console.error('Error subiendo elemento kling:', err);
-      if (window.alert) window.alert('Error al subir: ' + (err.message || 'vuelve a intentarlo.'));
+      if (window.alert) window.alert(window.__('Error al subir: ') + (err.message || window.__('vuelve a intentarlo.')));
     }
   }
 
@@ -2019,21 +2019,21 @@ class VideoView extends BaseView {
             const safe = String(url).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             return `<span class="video-kling-element-thumb-wrap">
               <img src="${safe}" alt="" class="video-kling-element-thumb" loading="lazy">
-              <button type="button" class="video-kling-element-remove-thumb" data-element-index="${idx}" data-url-index="${urlIdx}" aria-label="Quitar esta imagen">&times;</button>
+              <button type="button" class="video-kling-element-remove-thumb" data-element-index="${idx}" data-url-index="${urlIdx}" aria-label="${window.__('Quitar esta imagen')}">&times;</button>
             </span>`;
           }).join('')
         : '';
       const thumbsContainer = thumbnails ? `<span class="video-kling-element-thumbs">${thumbnails}</span>` : '';
       const hasVideo = (el.element_input_video_urls || []).length > 0;
       const videoLabel = hasVideo ? `<span class="video-kling-element-video-label">@${el.name}</span>` : '';
-      const productPinBtn = isProduct ? `<button type="button" class="video-kling-element-pin-chip" data-element-index="${idx}" aria-label="${productPinned ? 'Desanclar producto (dejar solo como imagen de referencia)' : 'Anclar producto (usar como kling_element en el prompt)'}" title="${productPinned ? 'Desanclar' : 'Anclar como elemento de referencia'}"><i class="fas fa-thumbtack${productPinned ? ' video-kling-pin-active' : ''}"></i></button>` : '';
+      const productPinBtn = isProduct ? `<button type="button" class="video-kling-element-pin-chip" data-element-index="${idx}" aria-label="${productPinned ? window.__('Desanclar producto (dejar solo como imagen de referencia)') : window.__('Anclar producto (usar como kling_element en el prompt)')}" title="${productPinned ? window.__('Desanclar') : window.__('Anclar como elemento de referencia')}"><i class="fas fa-thumbtack${productPinned ? ' video-kling-pin-active' : ''}"></i></button>` : '';
       return `
       <span class="video-kling-element-chip" data-index="${idx}">
         ${thumbsContainer}
         ${!thumbsContainer ? `@${el.name}` : ''}
         ${videoLabel}
         ${productPinBtn}
-        <button type="button" class="video-kling-element-remove" aria-label="Quitar elemento ${el.name}">&times;</button>
+        <button type="button" class="video-kling-element-remove" aria-label="${window.__('Quitar elemento {name}', { name: el.name })}">&times;</button>
       </span>
     `;
     }).join('');
@@ -2147,13 +2147,13 @@ class VideoView extends BaseView {
     const safeTaskId = (taskId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32) || Date.now();
     const storagePath = `kie-videos/${user.id}/${safeTaskId}.${ext}`;
 
-    this.showStatus('Descargando y guardando en tu cuenta…', true);
+    this.showStatus(window.__('Descargando y guardando en tu cuenta…'), true);
     try {
       const proxyUrl = `${VideoView.KIE_VIDEO_DOWNLOAD_API}?videoUrl=${encodeURIComponent(kieVideoUrl)}`;
       const res = await fetch(proxyUrl);
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || `Descarga fallida: ${res.status}`);
+        throw new Error(errData.error || window.__('Descarga fallida: {status}', { status: res.status }));
       }
       const blob = await res.blob();
       const contentType = res.headers.get('content-type') || 'video/mp4';
@@ -2191,14 +2191,14 @@ class VideoView extends BaseView {
     if (generated) generated.style.display = 'block';
     if (body) {
       body.innerHTML = `
-        <p><strong>Visual Direction</strong><br>${visual}</p>
-        <p><strong>Camera Plan</strong><br>${c.shotType || '—'} / ${c.lens || '—'} / ${c.framing || '—'}</p>
-        <p><strong>Motion Plan</strong><br>${motion}</p>
-        <p><strong>Lighting Plan</strong><br>${lighting}</p>
-        ${brief ? `<p><strong>Director Brief</strong><br>${brief.slice(0, 200)}${brief.length > 200 ? '…' : ''}</p>` : ''}
+        <p><strong>${window.__('Dirección visual')}</strong><br>${visual}</p>
+        <p><strong>${window.__('Plan de cámara')}</strong><br>${c.shotType || '—'} / ${c.lens || '—'} / ${c.framing || '—'}</p>
+        <p><strong>${window.__('Plan de movimiento')}</strong><br>${motion}</p>
+        <p><strong>${window.__('Plan de iluminación')}</strong><br>${lighting}</p>
+        ${brief ? `<p><strong>${window.__('Director Brief')}</strong><br>${brief.slice(0, 200)}${brief.length > 200 ? '…' : ''}</p>` : ''}
       `;
     }
-    if (scoreEl) scoreEl.textContent = 'Brand Lock Score: 94%';
+    if (scoreEl) scoreEl.textContent = window.__('Brand Lock Score: 94%');
     this.promptPreviewCollapsed = false;
     const content = this.container.querySelector('#videoPromptPreviewContent');
     const toggle = this.container.querySelector('#videoPromptPreviewToggle');
@@ -2319,7 +2319,7 @@ class VideoView extends BaseView {
     const regenerateBtn = this.container.querySelector('#videoRegeneratePromptBtn');
     if (sendBtn) sendBtn.disabled = true;
     if (regenerateBtn) regenerateBtn.disabled = true;
-    this.showStatus('Generando prompt cinematográfico con IA…', true);
+    this.showStatus(window.__('Generando prompt cinematográfico con IA…'), true);
 
     const idea = (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : '';
     const sceneElements = (this.klingElements || []).filter((el) => el._fromProductionQueue).map((el) => ({
@@ -2361,7 +2361,7 @@ class VideoView extends BaseView {
       const data = await res.json();
 
       if (!res.ok) {
-        this.showError(data.error || 'Error al generar el prompt');
+        this.showError(data.error || window.__('Error al generar el prompt'));
         return;
       }
       // Acumular tokens del cine-prompt para cobrar al disparar el video.
@@ -2407,10 +2407,10 @@ class VideoView extends BaseView {
           metadata: { source: 'openai-cine-prompt', has_cinematography: true }
         });
       } else {
-        this.showError('No se recibió prompt');
+        this.showError(window.__('No se recibió prompt'));
       }
     } catch (err) {
-      this.showError(err.message || 'Error de conexión');
+      this.showError(err.message || window.__('Error de conexión'));
     } finally {
       if (sendBtn) sendBtn.disabled = false;
       if (regenerateBtn) regenerateBtn.disabled = false;
@@ -2425,13 +2425,13 @@ class VideoView extends BaseView {
     const regenerateBtn = this.container.querySelector('#videoRegeneratePromptBtn');
     if (sendBtn) {
       sendBtn.setAttribute('data-state', hasPrompt ? 'production' : 'prompt');
-      sendBtn.setAttribute('aria-label', hasPrompt ? 'Generar video (producción)' : 'Generar prompt');
+      sendBtn.setAttribute('aria-label', hasPrompt ? window.__('Generar video (producción)') : window.__('Generar prompt'));
       const icon = sendBtn.querySelector('i');
       if (icon) {
         icon.className = hasPrompt ? 'fas fa-play' : 'fas fa-wand-magic-sparkles';
       }
     }
-    if (labelEl) labelEl.textContent = hasPrompt ? 'PRODUCCIÓN' : 'PROMPT';
+    if (labelEl) labelEl.textContent = hasPrompt ? window.__('PRODUCCIÓN') : 'PROMPT';
     if (regenerateBtn) regenerateBtn.style.display = hasPrompt ? '' : 'none';
   }
 
@@ -2447,18 +2447,18 @@ class VideoView extends BaseView {
 
   async startGeneration() {
     if (!this.hasGeneratedPrompt) {
-      this.showError('Genera primero el prompt con el botón PROMPT.');
+      this.showError(window.__('Genera primero el prompt con el botón PROMPT.'));
       return;
     }
     const promptText = (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : '';
     if (!promptText) {
-      this.showError('No hay prompt. Usa "Volver a producir" para regenerar el prompt.');
+      this.showError(window.__('No hay prompt. Usa "Volver a producir" para regenerar el prompt.'));
       return;
     }
 
     const VIDEO_CREDITS_REQUIRED = 25;
     if (!this.organizationId) {
-      this.showError('Selecciona una organización para producir videos.');
+      this.showError(window.__('Selecciona una organización para producir videos.'));
       return;
     }
     if (this.supabase) {
@@ -2470,7 +2470,7 @@ class VideoView extends BaseView {
       if (!error && data != null) {
         const available = data.credits_available ?? 0;
         if (available < VIDEO_CREDITS_REQUIRED) {
-          this.showError(`Tu organización no tiene créditos suficientes. Necesitas al menos ${VIDEO_CREDITS_REQUIRED} créditos para producir un video.`);
+          this.showError(window.__('Tu organización no tiene créditos suficientes. Necesitas al menos {required} créditos para producir un video.', { required: VIDEO_CREDITS_REQUIRED }));
           return;
         }
       }
@@ -2479,7 +2479,7 @@ class VideoView extends BaseView {
     const modeEl = this.container.querySelector('#videoMode');
     const mode = modeEl && modeEl.value === 'pro' ? 'pro' : 'std';
     if (this.sendBtn) this.sendBtn.disabled = true;
-    this.showStatus('Creando tarea de generación…', true);
+    this.showStatus(window.__('Creando tarea de generación…'), true);
 
     const durationEl = this.container.querySelector('#videoDuration');
     const aspectEl = this.container.querySelector('#videoAspectRatio');
@@ -2569,7 +2569,7 @@ class VideoView extends BaseView {
         createData = await createRes.json();
       } catch (parseErr) {
         console.error('[Video] POST', createUrl, ': respuesta no es JSON (p. ej. 404 devuelve HTML). Status:', createRes.status, 'parseErr:', parseErr);
-        this.showError('El servidor respondió con ' + createRes.status + '. ¿Están desplegadas las funciones kling-video-create / kling-video-status en Netlify?');
+        this.showError(window.__('El servidor respondió con {status}. ¿Están desplegadas las funciones kling-video-create / kling-video-status en Netlify?', { status: createRes.status }));
         if (this.sendBtn) this.sendBtn.disabled = false;
         return;
       }
@@ -2581,7 +2581,7 @@ class VideoView extends BaseView {
         if (createRes.status === 422 && createData.kieBody) {
           console.warn('[Video] 422 KIE (validación):', createData.kieBody);
         }
-        const serverMsg = (createData.kieBody && (createData.kieBody.msg || createData.kieBody.message)) || createData.error || createData.failMsg || 'Error al crear la tarea';
+        const serverMsg = (createData.kieBody && (createData.kieBody.msg || createData.kieBody.message)) || createData.error || createData.failMsg || window.__('Error al crear la tarea');
         this.showError(serverMsg);
         if (this.sendBtn) this.sendBtn.disabled = false;
         return;
@@ -2590,7 +2590,7 @@ class VideoView extends BaseView {
       const taskId = createData.taskId;
       if (!taskId) {
         console.warn('[Video] POST ok pero sin taskId en body:', createData);
-        this.showError('No se recibió taskId del servidor');
+        this.showError(window.__('No se recibió taskId del servidor'));
         if (this.sendBtn) this.sendBtn.disabled = false;
         return;
       }
@@ -2623,11 +2623,11 @@ class VideoView extends BaseView {
         }
       });
 
-      this.showStatus('Generando video (Kling 3.0). Esto puede tardar unos minutos…', true);
+      this.showStatus(window.__('Generando video (Kling 3.0). Esto puede tardar unos minutos…'), true);
       await this.pollTask(taskId);
     } catch (err) {
       console.error('[Video] Error en startGeneration:', err);
-      this.showError(err.message || 'Error de conexión');
+      this.showError(err.message || window.__('Error de conexión'));
     } finally {
       if (this.sendBtn) this.sendBtn.disabled = false;
     }
@@ -2652,7 +2652,7 @@ class VideoView extends BaseView {
     const poll = async () => {
       if (Date.now() - pollStartedAt > VideoView.POLL_MAX_DURATION_MS) {
         this.stopPolling();
-        this.showError('La generación superó el tiempo máximo de espera (12 min). Comprueba el estado en KIE o reintenta con un prompt más corto.');
+        this.showError(window.__('La generación superó el tiempo máximo de espera (12 min). Comprueba el estado en KIE o reintenta con un prompt más corto.'));
         if (this._lastKieOutputId) {
           await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'Timeout de polling (12 min)' });
           this._lastKieOutputId = null;
@@ -2671,7 +2671,7 @@ class VideoView extends BaseView {
         } catch (parseErr) {
           console.error('[Video] GET', statusUrl, ': respuesta no es JSON. Status:', res.status, '→ ¿función desplegada?', parseErr);
           this.stopPolling();
-          this.showError('El servidor respondió ' + res.status + ' (respuesta no JSON). Revisa que kling-video-status esté desplegada en Netlify.');
+          this.showError(window.__('El servidor respondió {status} (respuesta no JSON). Revisa que kling-video-status esté desplegada en Netlify.', { status: res.status }));
           if (this._lastKieOutputId) {
             await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'Status ' + res.status });
             this._lastKieOutputId = null;
@@ -2682,7 +2682,7 @@ class VideoView extends BaseView {
         if (!res.ok) {
           console.warn('[Video] GET', statusUrl, 'error:', res.status, data);
           this.stopPolling();
-          this.showError(data.error || 'Error al consultar el estado');
+          this.showError(data.error || window.__('Error al consultar el estado'));
           if (this._lastKieOutputId) {
             await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: data.error || 'Error al consultar el estado' });
             this._lastKieOutputId = null;
@@ -2758,21 +2758,21 @@ class VideoView extends BaseView {
                   this._lastKieOutputId = null;
                 }
               } else {
-                this.showError('No se pudo guardar el video en tu cuenta');
+                this.showError(window.__('No se pudo guardar el video en tu cuenta'));
                 if (this._lastKieOutputId) {
                   await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'No se pudo guardar el video en tu cuenta' });
                   this._lastKieOutputId = null;
                 }
               }
             } catch (err) {
-              this.showError(err.message || 'Error al descargar o guardar el video');
+              this.showError(err.message || window.__('Error al descargar o guardar el video'));
               if (this._lastKieOutputId) {
                 await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: err.message || 'Error al descargar o guardar el video' });
                 this._lastKieOutputId = null;
               }
             }
           } else {
-            this.showError('No se encontró URL del video en la respuesta');
+            this.showError(window.__('No se encontró URL del video en la respuesta'));
             if (this._lastKieOutputId) {
               await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'No se encontró URL del video en la respuesta' });
               this._lastKieOutputId = null;
@@ -2782,10 +2782,10 @@ class VideoView extends BaseView {
         }
         if (state === 'fail') {
           this.stopPolling();
-          const rawMsg = data.data?.failMsg || data.data?.failCode || 'La generación falló';
+          const rawMsg = data.data?.failMsg || data.data?.failCode || window.__('La generación falló');
           const is524 = String(data.data?.failCode || '') === '524' || /timeout/i.test(rawMsg);
           const msg = is524
-            ? 'La generación tardó demasiado en KIE (error 524). Prueba: modo Estándar, duración 5s, una sola imagen de referencia, o acorta el prompt.'
+            ? window.__('La generación tardó demasiado en KIE (error 524). Prueba: modo Estándar, duración 5s, una sola imagen de referencia, o acorta el prompt.')
             : rawMsg;
           this.showError(msg);
           if (this._lastKieOutputId) {
@@ -2795,10 +2795,10 @@ class VideoView extends BaseView {
           return;
         }
 
-        this.showStatus('Generando video (Kling 3.0). Esto puede tardar unos minutos…', true);
+        this.showStatus(window.__('Generando video (Kling 3.0). Esto puede tardar unos minutos…'), true);
       } catch (err) {
         this.stopPolling();
-        this.showError(err.message || 'Error al consultar el estado');
+        this.showError(err.message || window.__('Error al consultar el estado'));
         if (this._lastKieOutputId) {
           await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: err.message || 'Error al consultar el estado' });
           this._lastKieOutputId = null;

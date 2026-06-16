@@ -107,7 +107,7 @@ class BrandOrganizationView extends BaseView {
         <!-- Visual de marca -->
         <div class="brand-card card-concept">
                 <div class="card-header">
-                <h2 class="card-title">Visual de marca</h2>
+                <h2 class="card-title">${__('Visual de marca')}</h2>
                 </div>
                 <div class="card-content">
                 <!-- Brand Colors -->
@@ -131,7 +131,7 @@ class BrandOrganizationView extends BaseView {
         <!-- Archivos de identidad -->
         <div class="brand-card card-identity">
             <div class="card-header">
-                <h2 class="card-title">Archivos de identidad</h2>
+                <h2 class="card-title">${__('Archivos de identidad')}</h2>
             </div>
             <div class="card-content">
                 <!-- Lista (reescrita por renderIdentityFiles) -->
@@ -142,7 +142,7 @@ class BrandOrganizationView extends BaseView {
                 <input type="file" id="identityFileInput" class="brand-file-input" multiple
                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.md,.odt,.odp,.ods,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.ms-excel,text/plain,text/markdown">
                 <button type="button" class="file-upload-btn identity-upload-btn" id="identityUploadBtn">
-                    <i class="fas fa-plus" aria-hidden="true"></i> Subir archivo
+                    <i class="fas fa-plus" aria-hidden="true"></i> ${__('Subir archivo')}
                 </button>
             </div>
         </div>
@@ -159,7 +159,7 @@ class BrandOrganizationView extends BaseView {
                 <input type="file" id="assetsFileInput" class="brand-file-input" multiple
                        accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,video/mp4,video/quicktime,video/webm,.ai,.eps,.psd">
                 <button type="button" class="file-upload-btn assets-upload-btn" id="assetsUploadBtn">
-                    <i class="fas fa-plus" aria-hidden="true"></i> Subir archivo
+                    <i class="fas fa-plus" aria-hidden="true"></i> ${__('Subir archivo')}
                 </button>
             </div>
         </div>
@@ -670,7 +670,7 @@ class BrandOrganizationView extends BaseView {
 
     const logoUrl = String(this.brandContainerData?.logo_url || '').trim();
     if (logoUrl) {
-      inner.innerHTML = `<img src="${this.escapeHtml(logoUrl)}" alt="Logo organización" class="brand-corner-logo-img" loading="lazy">`;
+      inner.innerHTML = `<img src="${this.escapeHtml(logoUrl)}" alt="${__('Logo organización')}" class="brand-corner-logo-img" loading="lazy">`;
       btn.classList.add('has-logo');
     } else {
       inner.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i>';
@@ -828,13 +828,13 @@ class BrandOrganizationView extends BaseView {
       const colorId = color.id;
       return `
         <div class="color-swatch" style="background: ${hex};" data-color-id="${colorId}">
-          <button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button>
+          <button type="button" class="color-delete-btn" title="${__('Eliminar')}" aria-label="${__('Eliminar color')}">×</button>
         </div>
       `;
     }).join('');
 
     const addBtnHtml = colors.length < MAX_COLORS
-      ? `<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>`
+      ? `<button type="button" class="color-swatch-add-btn" title="${__('Agregar color')}" aria-label="${__('Agregar color')}"><span>+</span></button>`
       : '';
 
     container.innerHTML = swatchesHtml + addBtnHtml;
@@ -893,7 +893,7 @@ class BrandOrganizationView extends BaseView {
     container.classList.remove('identity-files--empty');
 
     container.innerHTML = identityAssets.map((asset) => {
-      const fileName = asset.file_name || 'Archivo identidad';
+      const fileName = asset.file_name || __('Archivo identidad');
       const fileUrl = String(asset.file_url || '').trim();
       const { icon, variant } = this.getIdentityDocumentIcon(fileName, asset.file_type);
       return `
@@ -903,8 +903,8 @@ class BrandOrganizationView extends BaseView {
             <div class="identity-file-name">${this.escapeHtml(fileName)}</div>
           </div>
           <div class="assets-file-actions">
-            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="Abrir archivo identidad"><i class="fas fa-external-link-alt"></i></a>` : ''}
-            <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="Eliminar archivo identidad">
+            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir archivo identidad')}"><i class="fas fa-external-link-alt"></i></a>` : ''}
+            <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="${__('Eliminar archivo identidad')}">
               <i class="fas fa-trash-alt"></i>
             </button>
           </div>
@@ -971,8 +971,8 @@ class BrandOrganizationView extends BaseView {
           <div class="asset-card-media-wrap">
             ${preview}
             <div class="asset-card-actions">
-              ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="Abrir asset"><i class="fas fa-external-link-alt"></i></a>` : ''}
-              <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="Eliminar asset">
+              ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir asset')}"><i class="fas fa-external-link-alt"></i></a>` : ''}
+              <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="${__('Eliminar asset')}">
                 <i class="fas fa-trash-alt"></i>
               </button>
             </div>
@@ -984,13 +984,13 @@ class BrandOrganizationView extends BaseView {
 
     container.innerHTML = `
       <div class="assets-carousel" data-carousel-root>
-        <button type="button" class="assets-carousel-arrow assets-carousel-arrow--prev" aria-label="Anterior" data-carousel-prev>
+        <button type="button" class="assets-carousel-arrow assets-carousel-arrow--prev" aria-label="${__('Anterior')}" data-carousel-prev>
           <i class="fas fa-chevron-left" aria-hidden="true"></i>
         </button>
         <div class="assets-carousel-track" data-carousel-track>
           ${cards}
         </div>
-        <button type="button" class="assets-carousel-arrow assets-carousel-arrow--next" aria-label="Siguiente" data-carousel-next>
+        <button type="button" class="assets-carousel-arrow assets-carousel-arrow--next" aria-label="${__('Siguiente')}" data-carousel-next>
           <i class="fas fa-chevron-right" aria-hidden="true"></i>
         </button>
       </div>
@@ -1122,7 +1122,7 @@ class BrandOrganizationView extends BaseView {
             : ''
           }
           <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="fas fa-image"></i></div>
-          <input type="file" accept="image/*" class="info-logo-input" title="Subir logo">
+          <input type="file" accept="image/*" class="info-logo-input" title="${__('Subir logo')}">
         </div>
       </div>
     `;
@@ -1263,7 +1263,7 @@ class BrandOrganizationView extends BaseView {
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'editable-tag-input';
-    input.placeholder = '+ Agregar';
+    input.placeholder = __('+ Agregar');
     input.style.minWidth = '80px';
     input.style.flex = '1';
 

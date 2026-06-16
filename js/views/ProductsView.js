@@ -42,7 +42,7 @@ class ProductsView extends BaseView {
                             </div>
                             <button class="products-btn-new btn-add-product" id="addProductBtn">
                                 <i class="fas fa-plus"></i>
-                                <span>Nuevo Producto</span>
+                                <span>${__('Nuevo Producto')}</span>
                             </button>
                         </div>
                     </header>
@@ -52,11 +52,11 @@ class ProductsView extends BaseView {
                     <!-- Empty State -->
                     <div class="empty-state" id="emptyState" style="display: none;">
                         <i class="fas fa-box-open"></i>
-                        <h3>No hay productos</h3>
+                        <h3>${__('No hay productos')}</h3>
                         <p>${__('Aún no has creado ningún producto')}</p>
                         <button class="btn-primary" onclick="document.getElementById('addProductBtn').click()">
                             <i class="fas fa-plus"></i>
-                            Crear Primer Producto
+                            ${__('Crear Primer Producto')}
                         </button>
                     </div>
 
@@ -122,7 +122,7 @@ class ProductsView extends BaseView {
         <div class="product-view">
           <div class="product-view-loading">
             <i class="fas fa-spinner"></i>
-            <span>Cargando producto...</span>
+            <span>${__('Cargando producto...')}</span>
           </div>
         </div>
       `;
@@ -134,7 +134,7 @@ class ProductsView extends BaseView {
         this.container.querySelector('.product-view').innerHTML = `
           <div class="product-view-error">
             <h2>${__('Error de conexión')}</h2>
-            <p>No se pudo conectar al servicio.</p>
+            <p>${__('No se pudo conectar al servicio.')}</p>
           </div>
         `;
         return;
@@ -164,10 +164,10 @@ class ProductsView extends BaseView {
       if (!product) {
         this.container.querySelector('.product-view').innerHTML = `
           <div class="product-view-error">
-            <h2>Producto no encontrado</h2>
-            <p>El producto solicitado no existe o no tienes acceso.</p>
+            <h2>${__('Producto no encontrado')}</h2>
+            <p>${__('El producto solicitado no existe o no tienes acceso.')}</p>
             <a href="${orgId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/products') : (orgId ? `/org/${orgId}/products` : '/products')}" class="product-view-back" data-router-link>
-              <i class="fas fa-arrow-left"></i> Volver a Productos
+              <i class="fas fa-arrow-left"></i> ${__('Volver a Productos')}
             </a>
           </div>
         `;
@@ -273,9 +273,9 @@ class ProductsView extends BaseView {
       return `
       <div class="product-view-thumb-wrap" data-index="${i}" data-image-id="${img.id}">
         <div class="product-view-thumb ${i === 0 ? 'active' : ''}" role="button" tabindex="0">
-          <img src="${img.image_url}" alt="Miniatura ${i + 1}" loading="lazy">
-          <button type="button" class="product-view-thumb-delete" title="Eliminar foto" aria-label="Eliminar foto" data-image-id="${img.id}"><i class="fas fa-times"></i></button>
-          ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="Establecer como principal" data-image-id="${img.id}"><i class="fas fa-star"></i></button>` : ''}
+          <img src="${img.image_url}" alt="${__('Miniatura {n}', { n: i + 1 })}" loading="lazy">
+          <button type="button" class="product-view-thumb-delete" title="${__('Eliminar foto')}" aria-label="${__('Eliminar foto')}" data-image-id="${img.id}"><i class="fas fa-times"></i></button>
+          ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="${__('Establecer como principal')}" data-image-id="${img.id}"><i class="fas fa-star"></i></button>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -306,7 +306,7 @@ class ProductsView extends BaseView {
       <div class="product-view-sheet-section">
         <h3 class="product-view-sheet-title">${this.escapeHtml(title)}</h3>
         ${hint ? `<p class="product-view-sheet-hint">${this.escapeHtml(hint)}</p>` : ''}
-        <textarea class="product-view-textarea product-view-editable" data-field="${field}" rows="3" placeholder="Opcional">${this.escapeHtml(String(value ?? ''))}</textarea>
+        <textarea class="product-view-textarea product-view-editable" data-field="${field}" rows="3" placeholder="${this.escapeHtml(__('Opcional'))}">${this.escapeHtml(String(value ?? ''))}</textarea>
       </div>
     `;
 
@@ -314,7 +314,7 @@ class ProductsView extends BaseView {
     return `
       <div class="product-view"${bgStyleAttr}>
         <a href="${backUrl}" class="product-view-back back-to-products-btn" data-back-url="${backUrl}" data-router-link>
-          <i class="fas fa-arrow-left"></i> Volver a Identities
+          <i class="fas fa-arrow-left"></i> ${__('Volver a Identities')}
         </a>
         <div class="product-view-grid">
           <div class="product-view-gallery">
@@ -327,25 +327,25 @@ class ProductsView extends BaseView {
             <div class="product-view-main-wrap">
               ${mainImage
                 ? `<img id="productViewMainImage" src="${mainImage}" alt="${this.escapeHtml(product.nombre_producto || '')}" loading="lazy" decoding="async">`
-                : `<div class="product-view-loading" style="min-height: 200px;"><i class="fas fa-image"></i><span>Sin imagen</span></div>`
+                : `<div class="product-view-loading" style="min-height: 200px;"><i class="fas fa-image"></i><span>${__('Sin imagen')}</span></div>`
               }
             </div>
           </div>
           <div class="product-view-info">
             <div class="product-view-sheet-row product-view-title-row">
               <label class="product-view-sheet-label">${__('Nombre del producto')}</label>
-              <input type="text" class="product-view-input product-view-title-input" data-field="nombre_producto" value="${this.escapeHtml(product.nombre_producto || '')}" placeholder="Nombre del producto">
+              <input type="text" class="product-view-input product-view-title-input" data-field="nombre_producto" value="${this.escapeHtml(product.nombre_producto || '')}" placeholder="${this.escapeHtml(__('Nombre del producto'))}">
             </div>
             <div class="product-view-sheet">
-              ${rowSelect('Tipo de producto', 'tipo_producto', tipoOptionsHtml)}
-              ${rowInput('Precio', 'precio_producto', precio, 'number', '0')}
-              ${rowSelect('Moneda', 'moneda', monedaOptionsHtml)}
-              ${rowInput('URL producto', 'url_producto', v('url_producto'), 'url', 'https://')}
+              ${rowSelect(__('Tipo de producto'), 'tipo_producto', tipoOptionsHtml)}
+              ${rowInput(__('Precio'), 'precio_producto', precio, 'number', '0')}
+              ${rowSelect(__('Moneda'), 'moneda', monedaOptionsHtml)}
+              ${rowInput(__('URL producto'), 'url_producto', v('url_producto'), 'url', 'https://')}
             </div>
             ${sectionTextarea(__('Descripción'), 'descripcion_producto', v('descripcion_producto'), __('Resumen general del producto. Lo primero que Vera lee antes de generar.'))}
             ${sectionTextarea(__('Beneficios principales (uno por línea)'), 'beneficios_principales', vArr('beneficios_principales'), __('Resultados o promesas para el cliente: qué consigue al usarlo.'))}
             ${sectionTextarea(__('Diferenciadores (uno por línea)'), 'diferenciadores', vArr('diferenciadores'), __('Qué lo separa del mercado o de productos similares.'))}
-            ${sectionTextarea('Casos de uso', 'casos_de_uso', vArr('casos_de_uso'), 'Momentos, contextos o escenarios concretos donde se usa.')}
+            ${sectionTextarea(__('Casos de uso'), 'casos_de_uso', vArr('casos_de_uso'), __('Momentos, contextos o escenarios concretos donde se usa.'))}
             ${sectionTextarea(__('Materiales / composición'), 'materiales_composicion', vArr('materiales_composicion'), __('De qué está hecho: ingredientes, materiales, ratios.'))}
             ${sectionTextarea(__('Características visuales (una por línea)'), 'caracteristicas_visuales', vArr('caracteristicas_visuales'), __('Lo que Vera necesita ver para representarlo: textura, acabado, color base, formato.'))}
             ${this.getProductVariantsHTML(variants || [])}
@@ -360,7 +360,7 @@ class ProductsView extends BaseView {
    */
   async removeProductImage(imageId) {
     if (!this.supabase || !this.productId) return;
-    if (!confirm('¿Eliminar esta foto del producto?')) return;
+    if (!confirm(__('¿Eliminar esta foto del producto?'))) return;
     try {
       const { data: image, error: fetchError } = await this.supabase
         .from('product_images')
@@ -469,7 +469,7 @@ class ProductsView extends BaseView {
           .upload(fileName, file, { contentType: file.type, cacheControl: '3600', upsert: false });
         if (uploadError) {
           console.error('Supabase storage upload error:', uploadError);
-          const msg = uploadError.message || 'Error al subir archivo';
+          const msg = uploadError.message || __('Error al subir archivo');
           this.showNotification(msg.length > 80 ? msg.slice(0, 80) + '…' : msg, 'error');
           return;
         }
@@ -493,7 +493,7 @@ class ProductsView extends BaseView {
           });
         if (insertError) {
           console.error('Supabase product_images insert error:', insertError);
-          const msg = insertError.message || 'Error al guardar la imagen en la base de datos';
+          const msg = insertError.message || __('Error al guardar la imagen en la base de datos');
           this.showNotification(msg.length > 80 ? msg.slice(0, 80) + '…' : msg, 'error');
           return;
         }
@@ -503,7 +503,7 @@ class ProductsView extends BaseView {
       this.showNotification(__('{n} foto(s) añadida(s)', { n: toUpload.length }), 'success');
     } catch (err) {
       console.error('Error subiendo imágenes:', err);
-      const msg = (err && err.message) ? err.message : 'Error al subir fotos';
+      const msg = (err && err.message) ? err.message : __('Error al subir fotos');
       this.showNotification(msg.length > 80 ? msg.slice(0, 80) + '…' : msg, 'error');
     }
   }
@@ -552,7 +552,7 @@ class ProductsView extends BaseView {
     if (mainImage) {
       if (mainImgRef) {
         mainImgRef.src = mainImage;
-        mainImgRef.alt = (this.productData && this.productData.nombre_producto) || 'Producto';
+        mainImgRef.alt = (this.productData && this.productData.nombre_producto) || __('Producto');
         mainImgRef.style.display = '';
         placeholderEl?.remove();
       } else {
@@ -560,7 +560,7 @@ class ProductsView extends BaseView {
         const img = document.createElement('img');
         img.id = 'productViewMainImage';
         img.src = mainImage;
-        img.alt = (this.productData && this.productData.nombre_producto) || 'Producto';
+        img.alt = (this.productData && this.productData.nombre_producto) || __('Producto');
         mainWrapRef.appendChild(img);
       }
     } else {
@@ -571,7 +571,7 @@ class ProductsView extends BaseView {
         const placeholder = document.createElement('div');
         placeholder.className = 'product-view-loading';
         placeholder.style.minHeight = '200px';
-        placeholder.innerHTML = '<i class="fas fa-image"></i><span>Sin imagen</span>';
+        placeholder.innerHTML = `<i class="fas fa-image"></i><span>${this.escapeHtml(__('Sin imagen'))}</span>`;
         mainWrapRef.appendChild(placeholder);
       }
     }
@@ -582,9 +582,9 @@ class ProductsView extends BaseView {
       return `
       <div class="product-view-thumb-wrap" data-index="${i}" data-image-id="${img.id}">
         <div class="product-view-thumb ${i === 0 ? 'active' : ''}" role="button" tabindex="0">
-          <img src="${img.image_url}" alt="Miniatura ${i + 1}" loading="lazy">
-          <button type="button" class="product-view-thumb-delete" title="Eliminar foto" aria-label="Eliminar foto" data-image-id="${img.id}"><i class="fas fa-times"></i></button>
-          ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="Establecer como principal" data-image-id="${img.id}"><i class="fas fa-star"></i></button>` : ''}
+          <img src="${img.image_url}" alt="${__('Miniatura {n}', { n: i + 1 })}" loading="lazy">
+          <button type="button" class="product-view-thumb-delete" title="${__('Eliminar foto')}" aria-label="${__('Eliminar foto')}" data-image-id="${img.id}"><i class="fas fa-times"></i></button>
+          ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="${__('Establecer como principal')}" data-image-id="${img.id}"><i class="fas fa-star"></i></button>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -611,7 +611,7 @@ class ProductsView extends BaseView {
           hintEl = document.createElement('span');
           hintEl.className = 'product-view-max-hint';
           hintEl.setAttribute('aria-live', 'polite');
-          hintEl.textContent = `Máx. ${MAX_PRODUCT_IMAGES} imágenes`;
+          hintEl.textContent = __('Máx. {n} imágenes', { n: MAX_PRODUCT_IMAGES });
           thumbWrap.appendChild(hintEl);
         }
       } else if (hintEl) hintEl.remove();
@@ -637,7 +637,7 @@ class ProductsView extends BaseView {
       if (thumb && img && mainImg) {
         thumb.onclick = () => {
           mainImg.src = img.image_url;
-          mainImg.alt = (this.productData && this.productData.nombre_producto) || `Imagen ${index + 1}`;
+          mainImg.alt = (this.productData && this.productData.nombre_producto) || __('Imagen {n}', { n: index + 1 });
           thumbs.forEach(w => w.querySelector('.product-view-thumb')?.classList.remove('active'));
           thumb.classList.add('active');
         };
@@ -715,7 +715,7 @@ class ProductsView extends BaseView {
             <p class="product-view-sheet-hint">${__('Versiones específicas del producto (tamaño, color, edición). Cada variante puede tener su propio contexto narrativo para Vera.')}</p>
           </div>
           <button type="button" class="product-view-variant-add-btn" id="addVariantBtn">
-            <i class="fas fa-plus"></i> Añadir variante
+            <i class="fas fa-plus"></i> ${__('Añadir variante')}
           </button>
         </div>
         <div class="product-view-variants-list" id="productVariantsList">${cards}</div>
@@ -750,9 +750,9 @@ class ProductsView extends BaseView {
               ? `<img src="${this.escapeHtml(img)}" alt="${this.escapeHtml(name)}" loading="lazy" decoding="async">`
               : `<i class="fas fa-cube"></i>`}
           </div>
-          <input type="text" class="product-view-variant-name" data-variant-id="${id}" data-variant-field="variant_name" value="${this.escapeHtml(name)}" placeholder="Nombre de la variante">
-          <button type="button" class="product-view-variant-toggle" aria-label="Expandir"><i class="fas fa-chevron-down"></i></button>
-          <button type="button" class="product-view-variant-delete" aria-label="Eliminar variante"><i class="fas fa-times"></i></button>
+          <input type="text" class="product-view-variant-name" data-variant-id="${id}" data-variant-field="variant_name" value="${this.escapeHtml(name)}" placeholder="${this.escapeHtml(__('Nombre de la variante'))}">
+          <button type="button" class="product-view-variant-toggle" aria-label="${__('Expandir')}"><i class="fas fa-chevron-down"></i></button>
+          <button type="button" class="product-view-variant-delete" aria-label="${__('Eliminar variante')}"><i class="fas fa-times"></i></button>
         </div>
         <div class="product-view-variant-body">
           <div class="product-view-variant-grid">
@@ -772,25 +772,25 @@ class ProductsView extends BaseView {
 
           <div class="product-view-sheet-section">
             <h4 class="product-view-sheet-subtitle">${__('Descripción de la variante')}</h4>
-            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="descripcion_variante" rows="2" placeholder="Qué hace única a esta variante">${this.escapeHtml(variant.descripcion_variante || '')}</textarea>
+            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="descripcion_variante" rows="2" placeholder="${this.escapeHtml(__('Qué hace única a esta variante'))}">${this.escapeHtml(variant.descripcion_variante || '')}</textarea>
           </div>
 
           <div class="product-view-sheet-section">
             <h4 class="product-view-sheet-subtitle">${__('Notas para Vera')}</h4>
             <p class="product-view-sheet-hint">${__('Contexto libre que no encaje en otros campos. Tono, asociaciones, lo idiosincrático.')}</p>
-            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="notas_contenido" rows="2" placeholder="Notas libres">${this.escapeHtml(variant.notas_contenido || '')}</textarea>
+            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="notas_contenido" rows="2" placeholder="${this.escapeHtml(__('Notas libres'))}">${this.escapeHtml(variant.notas_contenido || '')}</textarea>
           </div>
 
           <div class="product-view-sheet-section">
             <h4 class="product-view-sheet-subtitle">${__('Beneficios adicionales (uno por línea)')}</h4>
-            <p class="product-view-sheet-hint">Lo que esta variante suma sobre los beneficios del producto.</p>
-            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="beneficios_adicionales" rows="2" placeholder="Opcional">${this.escapeHtml(arrToText(variant.beneficios_adicionales))}</textarea>
+            <p class="product-view-sheet-hint">${__('Lo que esta variante suma sobre los beneficios del producto.')}</p>
+            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="beneficios_adicionales" rows="2" placeholder="${this.escapeHtml(__('Opcional'))}">${this.escapeHtml(arrToText(variant.beneficios_adicionales))}</textarea>
           </div>
 
           <div class="product-view-sheet-section">
             <h4 class="product-view-sheet-subtitle">${__('Características visuales (una por línea)')}</h4>
             <p class="product-view-sheet-hint">${__('Lo visual específico de esta variante: color, acabado, packaging.')}</p>
-            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="caracteristicas_visuales" rows="2" placeholder="Opcional">${this.escapeHtml(arrToText(variant.caracteristicas_visuales))}</textarea>
+            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="caracteristicas_visuales" rows="2" placeholder="${this.escapeHtml(__('Opcional'))}">${this.escapeHtml(arrToText(variant.caracteristicas_visuales))}</textarea>
           </div>
 
           <div class="product-view-sheet-row">
@@ -803,11 +803,11 @@ class ProductsView extends BaseView {
             <div class="product-view-variant-grid">
               <div class="product-view-sheet-row">
                 <span class="product-view-sheet-label">SKU</span>
-                <input type="text" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="sku" value="${this.escapeHtml(variant.sku || '')}" placeholder="Opcional">
+                <input type="text" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="sku" value="${this.escapeHtml(variant.sku || '')}" placeholder="${this.escapeHtml(__('Opcional'))}">
               </div>
               <div class="product-view-sheet-row">
                 <span class="product-view-sheet-label">${__('Barcode')}</span>
-                <input type="text" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="barcode" value="${this.escapeHtml(variant.barcode || '')}" placeholder="Opcional">
+                <input type="text" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="barcode" value="${this.escapeHtml(variant.barcode || '')}" placeholder="${this.escapeHtml(__('Opcional'))}">
               </div>
               <div class="product-view-sheet-row">
                 <span class="product-view-sheet-label">Stock</span>
@@ -846,8 +846,8 @@ class ProductsView extends BaseView {
                 <input type="number" step="1" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="position" value="${numVal(variant.position)}" placeholder="1">
               </div>
               <div class="product-view-sheet-row product-view-checkrow">
-                <label><input type="checkbox" data-variant-id="${id}" data-variant-field="disponible" ${variant.disponible !== false ? 'checked' : ''}> Disponible</label>
-                <label><input type="checkbox" data-variant-id="${id}" data-variant-field="is_active" ${variant.is_active !== false ? 'checked' : ''}> Activa</label>
+                <label><input type="checkbox" data-variant-id="${id}" data-variant-field="disponible" ${variant.disponible !== false ? 'checked' : ''}> ${__('Disponible')}</label>
+                <label><input type="checkbox" data-variant-id="${id}" data-variant-field="is_active" ${variant.is_active !== false ? 'checked' : ''}> ${__('Activa')}</label>
               </div>
             </div>
           </details>
@@ -872,7 +872,7 @@ class ProductsView extends BaseView {
         .insert({
           product_id: this.productId,
           organization_id: orgId,
-          variant_name: 'Nueva variante',
+          variant_name: __('Nueva variante'),
           moneda: this.productData.moneda || 'USD',
           is_active: true,
           disponible: true,
@@ -898,7 +898,7 @@ class ProductsView extends BaseView {
    */
   async deleteVariant(variantId) {
     if (!this.supabase || !variantId) return;
-    if (!confirm('¿Eliminar esta variante? Se borrarán también sus imágenes y valores de opción asociados.')) return;
+    if (!confirm(__('¿Eliminar esta variante? Se borrarán también sus imágenes y valores de opción asociados.'))) return;
     try {
       const { error } = await this.supabase.from('product_variants').delete().eq('id', variantId);
       if (error) throw error;

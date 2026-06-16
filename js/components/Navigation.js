@@ -19,12 +19,12 @@ const SIDEBAR_USER_CONFIG = {
       navIconClass: 'nav-icon-img--vera-logo',
       requireCap: 'vera.chat'
     },
-    { type: 'section', label: 'Workspace' },
-    { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard', requireCap: 'insights.view' },
+    { type: 'section', label: 'Espacio de trabajo' },
+    { type: 'page', id: 'dashboard', label: 'Tablero', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard', requireCap: 'insights.view' },
     {
       type: 'page',
       id: 'brand-organization',
-      label: 'Identity',
+      label: 'Identidad',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Brands.svg',
       route: 'brand',
@@ -33,7 +33,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'container',
       id: 'brand-storage',
-      label: 'Storage',
+      label: 'Almacenamiento',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/file-storage.svg',
       children: [],
@@ -42,7 +42,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'products',
-      label: 'Products',
+      label: 'Productos',
       icon: 'fa-box',
       iconSrc: '/recursos/icons/Identities.svg',
       route: 'products',
@@ -51,7 +51,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'services',
-      label: 'Services',
+      label: 'Servicios',
       icon: 'fa-briefcase',
       iconSrc: '/recursos/icons/Service.svg',
       route: 'services',
@@ -60,7 +60,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'places',
-      label: 'Sets',
+      label: 'Escenarios',
       icon: 'fa-map-marker-alt',
       iconSrc: '/recursos/icons/Places.svg',
       route: 'places',
@@ -69,7 +69,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'characters',
-      label: 'Characters',
+      label: 'Personajes',
       icon: 'fa-users',
       iconSrc: '/recursos/icons/Characters.svg',
       route: 'characters',
@@ -78,18 +78,18 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'monitoring',
-      label: 'Monitoring',
+      label: 'Monitoreo',
       icon: 'fa-satellite-dish',
       iconSrc: '/recursos/icons/monitoring.svg',
       route: 'monitoring',
       requireCap: 'monitoring.view'
     },
-    { type: 'section', label: 'Create' },
-    { type: 'page', id: 'production', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production', requireCap: 'production.create' },
+    { type: 'section', label: 'Crear' },
+    { type: 'page', id: 'production', label: 'Producción', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production', requireCap: 'production.create' },
     {
       type: 'page',
       id: 'tasks',
-      label: 'Tasks',
+      label: 'Tareas',
       icon: 'fa-list-check',
       iconSrc: '/recursos/icons/task.svg',
       route: 'tasks',
@@ -99,7 +99,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'container',
       id: 'catalog',
-      label: 'Flows',
+      label: 'Flujos',
       icon: 'fa-th-large',
       iconSrc: '/recursos/icons/flows.svg',
       children: [], // Se rellenan con content_categories (schema 218-224) en render
@@ -111,6 +111,13 @@ const SIDEBAR_USER_CONFIG = {
   ]
 };
 
+/* i18n-keep — los labels de navegación se renderizan vía __(item.label) (clave
+   dinámica), por lo que scripts/i18n-extract.mjs no puede verlos. Se listan aquí
+   como literales para que el extractor los capture y NO los marque huérfanos en
+   --prune. Mantener sincronizado con SIDEBAR_USER_CONFIG.main[].label:
+   __('Espacio de trabajo') __('Tablero') __('Identidad') __('Almacenamiento')
+   __('Productos') __('Servicios') __('Escenarios') __('Personajes')
+   __('Monitoreo') __('Crear') __('Producción') __('Tareas') __('Flujos') */
 const SIDEBAR_USER_EXPANDED_KEY = 'sidebarUserExpanded';
 
 /** Versión en query de iconos del sidebar (SVG/PNG); subir si el navegador/CDN sirve assets viejos sin tocar el JS. */
