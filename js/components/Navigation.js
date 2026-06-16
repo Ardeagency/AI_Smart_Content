@@ -2069,6 +2069,9 @@ class Navigation {
       <header class="app-header with-sidebar" id="appHeader">
         <div class="header-content">
           <div class="header-left">
+            <button type="button" class="header-hamburger" id="headerHamburger" aria-label="${__('Abrir menú')}" aria-controls="sideNavigation" aria-expanded="false">
+              <i class="fas fa-bars"></i>
+            </button>
             <h1 class="header-title" id="headerTitle">PRODUCTION</h1>
           </div>
           <div class="header-right">
@@ -2234,6 +2237,9 @@ class Navigation {
       <header class="app-header with-sidebar" id="appHeader">
         <div class="header-content">
           <div class="header-left">
+            <button type="button" class="header-hamburger" id="headerHamburger" aria-label="${__('Abrir menú')}" aria-controls="sideNavigation" aria-expanded="false">
+              <i class="fas fa-bars"></i>
+            </button>
             <h1 class="header-title" id="headerTitle">DEVELOPER</h1>
           </div>
           <div class="header-right">
@@ -2477,6 +2483,12 @@ class Navigation {
           this.toggleSidebarCollapse();
         }
       });
+    }
+
+    // Hamburger del header (móvil): abre/cierra el drawer sobre el contenido.
+    const headerHamburger = document.getElementById('headerHamburger');
+    if (headerHamburger) {
+      headerHamburger.addEventListener('click', () => this.toggleMobileNav());
     }
 
     // Overlay
@@ -3030,6 +3042,7 @@ class Navigation {
     sidebar?.classList.toggle('mobile-open', this.isNavOpen);
     overlay?.classList.toggle('active', this.isNavOpen);
     document.body.classList.toggle('nav-open', this.isNavOpen);
+    document.getElementById('headerHamburger')?.setAttribute('aria-expanded', String(this.isNavOpen));
   }
 
   /**
@@ -3044,6 +3057,7 @@ class Navigation {
     sidebar?.classList.remove('mobile-open');
     overlay?.classList.remove('active');
     document.body.classList.remove('nav-open');
+    document.getElementById('headerHamburger')?.setAttribute('aria-expanded', 'false');
   }
 
   /**

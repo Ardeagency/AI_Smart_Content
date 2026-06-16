@@ -1722,11 +1722,13 @@ body.sidebar-collapsed .main-header,
     }
     
     .side-navigation {
-        width: var(--nav-width);
+        /* Drawer móvil: hasta ~70% de la pantalla, sobre el contenido. */
+        width: min(70vw, 320px);
         transform: translateX(-100%);
         transition: var(--nav-transition);
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
     }
-    
+
     .side-navigation.active {
         transform: translateX(0);
     }
@@ -2039,9 +2041,10 @@ body.sidebar-collapsed .app-header.with-sidebar {
     transition: var(--transition);
 }
 
-/* Visible cuando hay sidebar (desktop y móvil) para colapsar/abrir */
+/* Solo móvil: en escritorio el sidebar es persistente, no hace falta el burger.
+   El bloque @media (max-width:768px) lo pone en display:flex. */
 .app-header.with-sidebar .header-hamburger {
-    display: flex;
+    display: none;
 }
 
 .app-header .header-hamburger:hover {
@@ -2762,8 +2765,9 @@ body.subnav-in-header .app-header .header-production-slot {
    ========================================= */
 
 @media (max-width: 768px) {
-    /* Header hamburger visible */
-    .app-header .header-hamburger {
+    /* Header hamburger visible (misma especificidad que la regla de escritorio
+       .app-header.with-sidebar para ganar dentro del media query). */
+    .app-header.with-sidebar .header-hamburger {
         display: flex;
     }
 
@@ -4263,4 +4267,21 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
 .nav-mode-developer .nav-link.active::before,
 .nav-mode-developer .nav-main-link.active::before {
   background: var(--dev-gradient-dynamic-vertical, var(--dev-gradient-dynamic, transparent));
+}
+
+/* =========================================
+   DRAWER MÓVIL — orden de apilamiento explícito
+   Va al final a propósito: gana por orden de fuente sobre reglas previas de
+   .nav-overlay/.side-navigation que tenían z-index conflictivos (drawer 850 y
+   overlay 800 quedaban DEBAJO del header z-index:900). Stack correcto en móvil:
+   contenido < header (900) < scrim (1001) < drawer (1002).
+   ========================================= */
+@media (max-width: 768px) {
+    .nav-overlay,
+    .nav-overlay.active {
+        z-index: 1001;
+    }
+    .side-navigation {
+        z-index: 1002;
+    }
 }
