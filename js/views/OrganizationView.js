@@ -150,13 +150,11 @@ class OrganizationView extends BaseView {
     <!-- ── Facturación ──────────────────────────────────── -->
     <div class="tab-content" id="billingTab" role="tabpanel">
       <section class="org-section">
-        <div class="org-section-head">
-          <div>
-            <h2>${__('Suscripción activa')}</h2>
-            <p class="org-section-desc">${__('Estado de tu plan y próximo cobro.')}</p>
-          </div>
-        </div>
         <div class="org-billing-summary" id="orgBillingSummary"><p class="org-placeholder">${__('Cargando…')}</p></div>
+      </section>
+
+      <section class="org-section">
+        <div class="org-billing-limits" id="orgBillingLimits"></div>
       </section>
 
       <section class="org-section">
@@ -917,7 +915,7 @@ class OrganizationView extends BaseView {
   async _loadBilling() {
     if (!this.supabase || !this.orgId) return;
     try {
-      const [{ data: subRows }, { data: stripeInvs }, { data: wompiTxs }, { data: planRow }] = await Promise.all([
+      const [{ data: subRows }, { data: stripeInvs }, { data: wompiTxs }, planRow, caps, usageToday] = await Promise.all([
         this.supabase.from('subscriptions')
           .select('id,plan_id,status,current_period_start,current_period_end,cancel_at_period_end,canceled_at,provider,next_charge_at,stripe_subscription_id,wompi_last_transaction_id')
           .eq('organization_id', this.orgId).order('updated_at', { ascending: false }).limit(1),
@@ -929,11 +927,15 @@ class OrganizationView extends BaseView {
           .eq('organization_id', this.orgId).eq('status', 'APPROVED').order('created_at', { ascending: false }).limit(50),
         // plan en uso (puede ser distinto del de la sub si está en trial / sin sub)
         this._billingPlan(),
+        this.supabase.from('org_claude_caps').select('*').eq('organization_id', this.orgId).maybeSingle().then((r) => r.data).catch(() => null),
+        this.supabase.from('v_org_claude_usage_today').select('*').eq('organization_id', this.orgId).maybeSingle().then((r) => r.data).catch(() => null),
       ]);
       this.billingSub      = (subRows && subRows[0]) || null;
       this.billingInvoices = stripeInvs || [];
       this.billingWompiTxs = wompiTxs   || [];
       this.billingPlanRow  = planRow    || null;
+      this.billingCaps     = caps       || null;
+      this.billingUsageToday = usageToday || null;
     } catch (e) {
       console.warn('[organization] _loadBilling error:', e?.message || e);
     }
@@ -981,74 +983,138 @@ class OrganizationView extends BaseView {
       : '';
     const upgradeBtn = `<a href="${this.escapeHtml(this._plansHref())}" class="btn btn-primary"><i class="fas fa-arrow-up"></i> ${__('Ver planes')}</a>`;
 
-    summary.innerHTML = `
-      ${banner}
-      <div class="org-billing-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
-        <div><span class="org-section-desc">${__('Plan')}</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(planName)}</strong></div>
-        <div><span class="org-section-desc">${__('Estado')}</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(statusLabel)}</strong></div>
-        <div><span class="org-section-desc">${__('Próximo cobro')}</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(nextRenewStr)}</strong></div>
-        <div><span class="org-section-desc">${__('Pasarela')}</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(providerLabel)}</strong></div>
-      </div>
-      <div class="org-form-actions" style="margin-top:1.25rem;display:flex;gap:.5rem;flex-wrap:wrap;">
-        ${upgradeBtn} ${stripePortalBtn} ${cancelBtn} ${reactivateBtn}
-      </div>
-    `;
+    const limits = this.querySelector('#orgBillingLimits');
 
-    // Listado unificado de invoices (Stripe + Wompi)
+    // Pagos unificados (Stripe + Wompi) — para "último pago" y el historial.
     const stripeRows = (this.billingInvoices || []).map((inv) => ({
-      key:      inv.invoice_id,
-      provider: 'stripe',
-      date:     inv.paid_at || inv.created_at,
-      amount:   (inv.amount_paid_cents || 0) / 100,
+      key: inv.invoice_id, provider: 'stripe',
+      date: inv.paid_at || inv.created_at,
+      amount: (inv.amount_paid_cents || 0) / 100,
       currency: (inv.currency || 'usd').toUpperCase(),
-      status:   inv.status,
-      desc:     __('Período {periodo}', { periodo: this._fmtPeriod(inv.period_start, inv.period_end) }),
-      url:      inv.hosted_invoice_url || inv.invoice_pdf || null,
+      status: inv.status,
+      desc: __('Período {periodo}', { periodo: this._fmtPeriod(inv.period_start, inv.period_end) }),
+      url: inv.hosted_invoice_url || inv.invoice_pdf || null,
     }));
     const wompiRows = (this.billingWompiTxs || []).map((tx) => ({
-      key:      tx.transaction_id,
-      provider: 'wompi',
-      date:     tx.finalized_at || tx.created_at,
-      amount:   (tx.amount_in_cents || 0) / 100,
+      key: tx.transaction_id, provider: 'wompi',
+      date: tx.finalized_at || tx.created_at,
+      amount: (tx.amount_in_cents || 0) / 100,
       currency: tx.currency || 'COP',
-      status:   tx.status,
-      desc:     tx.target === 'subscription' ? __('Suscripción') : __('Paquete de créditos'),
-      url:      null,
+      status: tx.status,
+      desc: tx.target === 'subscription' ? __('Suscripción') : __('Paquete de créditos'),
+      url: null,
     }));
     const all = [...stripeRows, ...wompiRows].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const lastPaid = all[0] || null;
+
+    const statusTone = (past_due || canceled) ? 'warn' : sub ? 'ok' : 'muted';
+    const card = (label, emoji, accent, value, sub2, pill) => `
+      <div class="org-bill-card">
+        <div class="org-bill-card-top">
+          <span class="org-bill-chip" style="background:${accent}29;color:${accent}">${emoji}</span>
+          <span class="org-bill-card-label">${this.escapeHtml(label)}</span>
+        </div>
+        <div class="org-bill-card-val">
+          <span class="org-bill-card-value">${this.escapeHtml(value)}</span>
+          ${pill ? `<span class="org-bill-pill org-bill-pill--${pill.tone}">${this.escapeHtml(pill.text)}</span>` : ''}
+        </div>
+        <span class="org-bill-card-sub">${this.escapeHtml(sub2)}</span>
+      </div>`;
+    const nextSub = canceled ? __('La suscripción termina pronto') : (lastPaid ? this._fmtMoney(lastPaid.amount, lastPaid.currency) : '—');
+
+    summary.innerHTML = `
+      ${banner}
+      <div class="org-bill-cards">
+        ${card(__('Plan actual'), '💳', '#7c3aed', planName, providerLabel, { text: statusLabel, tone: statusTone })}
+        ${card(__('Próximo pago'), '📅', '#06b6d4', nextRenewStr, nextSub)}
+        ${card(__('Último pago'), '✅', '#22c55e', lastPaid ? this._fmtDate(lastPaid.date) : '—', lastPaid ? this._fmtMoney(lastPaid.amount, lastPaid.currency) : __('sin pagos aún'))}
+      </div>
+      <div class="org-bill-actions">${upgradeBtn} ${stripePortalBtn} ${cancelBtn} ${reactivateBtn}</div>
+    `;
+
+    if (limits) this._renderBillingLimits(limits);
 
     if (all.length === 0) {
       list.innerHTML = `<p class="org-placeholder">${__('Sin facturas todavía. Las verás aquí después de tu primer pago.')}</p>`;
-      return;
+    } else {
+      const paidPill = (s) => {
+        const ok = ['paid', 'APPROVED', 'succeeded'].includes(s);
+        return `<span class="org-bill-pill org-bill-pill--${ok ? 'ok' : 'muted'}">${this.escapeHtml(ok ? __('Pagado') : (s || '—'))}</span>`;
+      };
+      list.innerHTML = `
+        <div class="org-bill-table">
+          <div class="org-bill-trow org-bill-trow--head">
+            <span>${__('Fecha')}</span><span>${__('Concepto')}</span>
+            <span class="org-bill-right">${__('Monto')}</span><span>${__('Estado')}</span><span></span>
+          </div>
+          ${all.map((r) => `
+            <div class="org-bill-trow">
+              <span class="org-bill-date">${this.escapeHtml(this._fmtDate(r.date))}</span>
+              <span class="org-bill-desc">${this.escapeHtml(r.desc || '—')} <em>· ${r.provider === 'wompi' ? 'Wompi' : 'Stripe'}</em></span>
+              <span class="org-bill-right org-bill-amount">${this.escapeHtml(this._fmtMoney(r.amount, r.currency))}</span>
+              <span>${paidPill(r.status)}</span>
+              <span class="org-bill-right">${r.url ? `<a href="${this.escapeHtml(r.url)}" target="_blank" rel="noopener" class="org-bill-pdf">PDF ↗</a>` : '—'}</span>
+            </div>`).join('')}
+        </div>`;
     }
 
-    list.innerHTML = `
-      <table class="org-billing-table" style="width:100%;border-collapse:collapse;font-size:.9rem;">
-        <thead><tr style="text-align:left;color:#9ca3af;border-bottom:1px solid #242424;">
-          <th style="padding:.5rem .25rem;">${__('Fecha')}</th>
-          <th style="padding:.5rem .25rem;">${__('Concepto')}</th>
-          <th style="padding:.5rem .25rem;">${__('Pasarela')}</th>
-          <th style="padding:.5rem .25rem;text-align:right;">${__('Monto')}</th>
-          <th style="padding:.5rem .25rem;text-align:right;">${__('Acción')}</th>
-        </tr></thead>
-        <tbody>${all.map((r) => `
-          <tr style="border-bottom:1px solid #1f1f1f;">
-            <td style="padding:.5rem .25rem;">${this.escapeHtml(this._fmtDate(r.date))}</td>
-            <td style="padding:.5rem .25rem;">${this.escapeHtml(r.desc || '—')}</td>
-            <td style="padding:.5rem .25rem;">${r.provider === 'wompi' ? 'Wompi' : 'Stripe'}</td>
-            <td style="padding:.5rem .25rem;text-align:right;font-variant-numeric:tabular-nums;">${this._fmtMoney(r.amount, r.currency)}</td>
-            <td style="padding:.5rem .25rem;text-align:right;">${r.url ? `<a href="${this.escapeHtml(r.url)}" target="_blank" rel="noopener" class="btn btn-link">${__('Ver')}</a>` : '—'}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    `;
-
-    this.querySelector('#orgBillingPortalBtn')?.addEventListener('click', () => {
-      window.billingService?.openCustomerPortal();
-    });
-
+    this.querySelector('#orgBillingPortalBtn')?.addEventListener('click', () => { window.billingService?.openCustomerPortal(); });
     this.querySelector('#orgBillingCancelBtn')?.addEventListener('click', () => this._cancelSubscription(false));
     this.querySelector('#orgBillingReactivateBtn')?.addEventListener('click', () => this._cancelSubscription(true));
+    this.querySelector('#orgCapsForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveCaps(); });
+  }
+
+  _renderBillingLimits(el) {
+    const caps = this.billingCaps || {};
+    const today = this.billingUsageToday || {};
+    const canEdit = this.isOwner || this.canManageMembers;
+    const dailyCap = caps.daily_usd_cap;
+    const usedToday = today.cost_usd_today ?? today.usd ?? null;
+    const pct = (dailyCap && usedToday != null) ? Math.min(100, Math.round((usedToday / dailyCap) * 100)) : 0;
+    const warnPct = caps.warn_threshold != null ? Math.round(caps.warn_threshold * 100) : '';
+    const todayStr = (usedToday != null ? this._fmtMoney(usedToday, 'USD') : '$0.00') + (dailyCap ? ' / ' + this._fmtMoney(dailyCap, 'USD') : '');
+    el.innerHTML = `
+      <div class="org-bill-limits-head">
+        <h3 class="org-uchart-title">${__('Límites de uso automático')}</h3>
+        <p class="org-uchart-desc">${__('Topes de consumo del agente. Al alcanzar el umbral de aviso te notificamos; al llegar al cap se pausan las operaciones automáticas.')}</p>
+      </div>
+      <form id="orgCapsForm" class="org-bill-limits-form">
+        <div class="org-bill-fields">
+          <div class="org-bill-field"><label for="capsDaily">${__('Cap diario (USD)')}</label><input type="number" min="0" step="0.01" id="capsDaily" class="form-input" placeholder="${__('ej. 10')}" value="${dailyCap ?? ''}"></div>
+          <div class="org-bill-field"><label for="capsMonthly">${__('Cap mensual (USD)')}</label><input type="number" min="0" step="0.01" id="capsMonthly" class="form-input" placeholder="${__('ej. 200')}" value="${caps.monthly_usd_cap ?? ''}"></div>
+          <div class="org-bill-field"><label for="capsWarn">${__('Umbral de aviso (%)')}</label><input type="number" min="0" max="100" step="1" id="capsWarn" class="form-input" placeholder="${__('ej. 80')}" value="${warnPct}"></div>
+        </div>
+        <div class="org-bill-today">
+          <div class="org-bill-today-row"><span>${__('Consumo automático de hoy')}</span><strong>${this.escapeHtml(todayStr)}</strong></div>
+          <div class="org-bill-today-track"><span class="org-bill-today-fill" style="width:${pct}%"></span></div>
+        </div>
+        <div class="org-bill-limits-actions">
+          <button type="submit" class="btn btn-primary" id="orgCapsSubmit"${canEdit ? '' : ' disabled'}><i class="fas fa-save"></i> ${__('Guardar límites')}</button>
+        </div>
+      </form>`;
+    if (!canEdit) el.querySelectorAll('input').forEach((i) => { i.disabled = true; });
+  }
+
+  async _saveCaps() {
+    const btn = this.querySelector('#orgCapsSubmit');
+    const num = (sel) => { const v = this.querySelector(sel)?.value; if (v === '' || v == null) return null; const n = Number(v); return isNaN(n) ? null : n; };
+    const payload = {
+      organization_id: this.orgId,
+      daily_usd_cap: num('#capsDaily'),
+      monthly_usd_cap: num('#capsMonthly'),
+      warn_threshold: (() => { const v = num('#capsWarn'); return v == null ? null : v / 100; })(),
+    };
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${__('Guardando…')}`; }
+    try {
+      const { error } = await this.supabase.from('org_claude_caps').upsert(payload, { onConflict: 'organization_id' });
+      if (error) throw error;
+      this.billingCaps = { ...(this.billingCaps || {}), ...payload };
+      this._toast(__('Límites actualizados'));
+    } catch (e) {
+      alert(e.message || __('No se pudo guardar los límites.'));
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-save"></i> ${__('Guardar límites')}`; }
+    }
   }
 
   async _cancelSubscription(undo) {

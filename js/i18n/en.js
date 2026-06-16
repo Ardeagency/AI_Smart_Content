@@ -2355,5 +2355,14 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Identidades": "Identities",
   "Actores": "Characters",
   "Ver todas": "View all",
-  "Rango": "Range"
+  "Rango": "Range",
+  "Próximo pago": "Next payment",
+  "Último pago": "Last payment",
+  "sin pagos aún": "no payments yet",
+  "La suscripción termina pronto": "Subscription ends soon",
+  "Pagado": "Paid",
+  "Límites de uso automático": "Automatic usage limits",
+  "Topes de consumo del agente. Al alcanzar el umbral de aviso te notificamos; al llegar al cap se pausan las operaciones automáticas.": "Agent spending caps. We notify you when the warning threshold is reached; once the cap is hit, automatic operations are paused.",
+  "Consumo automático de hoy": "Automatic usage today",
+  "Límites actualizados": "Limits updated"
 }/* I18N:END */;
