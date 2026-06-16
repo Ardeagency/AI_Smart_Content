@@ -243,7 +243,7 @@ class OrganizationView extends BaseView {
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>${__('Scrapers (Apify, últimos 30 días)')}</h2>
+            <h2>${__('Scrapers (últimos 30 días)')}</h2>
             <p class="org-section-desc">${__('Costo y volumen real de las extracciones que ejecutó Vera para esta organización. Cada run trae datos públicos de Meta/TikTok/IG/etc. para alimentar sensores y briefs.')}</p>
           </div>
         </div>
@@ -1290,7 +1290,7 @@ class OrganizationView extends BaseView {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { data } = await this.supabase
       .from('apify_runs')
-      .select('run_id, platform, handle, apify_actor_id, status, started_at, finished_at, usage_usd, items_count, charged_credits, error')
+      .select('run_id, platform, handle, status, started_at, finished_at, usage_usd, items_count, charged_credits, error')
       .eq('organization_id', this.orgId).gte('created_at', since)
       .order('started_at', { ascending: false }).limit(50);
     this.apifyRuns = data || [];
@@ -1535,7 +1535,7 @@ class OrganizationView extends BaseView {
       apEl.innerHTML = `
         ${this._engineStatHTML(__('Runs'), s.runs.toLocaleString('es'), 'fa-bolt')}
         ${this._engineStatHTML(__('Items extraídos'), s.items.toLocaleString('es'), 'fa-database')}
-        ${this._engineStatHTML(__('Gastado en Apify'), `$${s.usd.toFixed(2)}`, 'fa-dollar-sign', 'cost')}
+        ${this._engineStatHTML(__('Gastado en scrapers'), `$${s.usd.toFixed(2)}`, 'fa-dollar-sign', 'cost')}
       `;
     }
 

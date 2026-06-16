@@ -14,7 +14,7 @@
  * Datos: TendenciasDataService (RPCs dashboard_tendencias_*). Reusa helpers
  * compartidos del prototype (_esc, _compactNum, _prettyPlatform).
  *
- * Nota: los scrapers estan en pausa (control de costo Apify). El dashboard lee
+ * Nota: los scrapers estan en pausa (control de costo). El dashboard lee
  * la data actual y deja cada seccion con un estado vacio honesto que se
  * encendera solo cuando los sensores se reactiven.
  */

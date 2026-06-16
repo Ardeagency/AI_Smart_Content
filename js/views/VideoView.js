@@ -738,7 +738,7 @@ class VideoView extends BaseView {
       seedanceSend.dataset.boundSeedancePlaceholder = '1';
       seedanceSend.addEventListener('click', (e) => {
         e.preventDefault();
-        alert(window.__('Backend de Seedance 2.0 en construcción. La UI está lista; cuando conectemos el endpoint kie-video-seedance este botón cocinará el storyboard con OpenAI y generará la secuencia.'));
+        alert(window.__('Backend de Seedance 2.0 en construcción. La UI está lista; cuando conectemos el backend este botón cocinará el storyboard con OpenAI y generará la secuencia.'));
       });
     }
     // Seedance: toggle Audio + Web search (solo UI state, sin wiring backend aún)
@@ -2569,7 +2569,7 @@ class VideoView extends BaseView {
         createData = await createRes.json();
       } catch (parseErr) {
         console.error('[Video] POST', createUrl, ': respuesta no es JSON (p. ej. 404 devuelve HTML). Status:', createRes.status, 'parseErr:', parseErr);
-        this.showError(window.__('El servidor respondió con {status}. ¿Están desplegadas las funciones kling-video-create / kling-video-status en Netlify?', { status: createRes.status }));
+        this.showError(window.__('El servicio de video no respondió correctamente (estado {status}). Intenta de nuevo en unos minutos.', { status: createRes.status }));
         if (this.sendBtn) this.sendBtn.disabled = false;
         return;
       }
@@ -2671,7 +2671,7 @@ class VideoView extends BaseView {
         } catch (parseErr) {
           console.error('[Video] GET', statusUrl, ': respuesta no es JSON. Status:', res.status, '→ ¿función desplegada?', parseErr);
           this.stopPolling();
-          this.showError(window.__('El servidor respondió {status} (respuesta no JSON). Revisa que kling-video-status esté desplegada en Netlify.', { status: res.status }));
+          this.showError(window.__('El servicio de video no respondió correctamente (estado {status}). Intenta de nuevo en unos minutos.', { status: res.status }));
           if (this._lastKieOutputId) {
             await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'Status ' + res.status });
             this._lastKieOutputId = null;
