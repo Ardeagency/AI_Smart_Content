@@ -868,6 +868,7 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "En el diálogo de Facebook, en el paso <em>\"Elige qué páginas conectar\"</em>, asegúrate de seleccionar al menos una página antes de continuar.": "In the Facebook dialog, on the <em>\"Choose which pages to connect\"</em> step, make sure you select at least one page before continuing.",
   "En el minuto": "At minute",
   "En la web": "On the web",
+  "Integraciones": "Integrations",
   "En los últimos 7 días": "In the last 7 days",
   "En pausa": "Paused",
   "En proceso": "In progress",

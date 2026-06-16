@@ -190,7 +190,7 @@
 
     return `
       <section class="info-section info-section-connect" aria-labelledby="infoConnectHeading">
-        <h3 class="info-section-title" id="infoConnectHeading">${__('En la web')}</h3>
+        <h3 class="info-section-title" id="infoConnectHeading">${__('Integraciones')}</h3>
         <ul class="info-connect-list" role="list">${items}</ul>
       </section>`;
     },
