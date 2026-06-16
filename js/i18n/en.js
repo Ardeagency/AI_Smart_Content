@@ -2348,5 +2348,12 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Sin consumo de créditos registrado en este período.": "No credit usage recorded in this period.",
   "Consumo diario por fuente": "Daily consumption by source",
   "Créditos consumidos por día, apilados por área de la plataforma.": "Credits used per day, stacked by platform area.",
-  "Consumo por fuente · {d} días": "Consumption by source · {d} days"
+  "Consumo por fuente · {d} días": "Consumption by source · {d} days",
+  "Centro de control": "Control center",
+  "Vista general de las entidades y la producción de tu organización. Pulsa una tarjeta para gestionarla.": "Overview of your organization's entities and production. Click a card to manage it.",
+  "Workspaces de datos aislados (audiencias, campañas, integraciones y contenido). La provisión inicial la gestiona el equipo de plataforma.": "Isolated data workspaces (audiences, campaigns, integrations and content). Initial provisioning is handled by the platform team.",
+  "Identidades": "Identities",
+  "Actores": "Characters",
+  "Ver todas": "View all",
+  "Rango": "Range"
 }/* I18N:END */;

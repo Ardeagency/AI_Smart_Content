@@ -32,6 +32,10 @@ class OrganizationView extends BaseView {
     // Sub-marcas (read-only)
     this.brandContainers = [];
 
+    // Centro de control (conteos por entidad)
+    this.controlStats = null;
+    this.prodRange = 7;
+
     // Uso (consumo de créditos)
     this.usageRange = 30;
     this.usage = null;
@@ -72,6 +76,17 @@ class OrganizationView extends BaseView {
 
     <!-- ── General ──────────────────────────────────────── -->
     <div class="tab-content active" id="generalTab" role="tabpanel">
+      <section class="org-section">
+        <div class="org-section-head">
+          <div>
+            <h2>${__('Centro de control')}</h2>
+            <p class="org-section-desc">${__('Vista general de las entidades y la producción de tu organización. Pulsa una tarjeta para gestionarla.')}</p>
+          </div>
+        </div>
+        <div class="org-ctrl-stats" id="orgCtrlStats"><p class="org-placeholder">${__('Cargando…')}</p></div>
+      </section>
+
+      <div class="org-general-config">
       <section class="org-section org-section-form">
         <h2>${__('Datos regionales')}</h2>
         <p class="org-section-desc">${__('Estos valores afectan reportes, scheduling y formato de fechas/idioma del workspace.')}</p>
@@ -102,13 +117,13 @@ class OrganizationView extends BaseView {
         <div class="org-section-head">
           <div>
             <h2>${__('Marcas gestionadas')}</h2>
-            <p class="org-section-desc">${__('Cada <strong>marca gestionada</strong> es un workspace de datos aislado dentro de tu organización: tiene sus propias audiencias, campañas, integraciones (Meta, Shopify, etc.), sensores de monitoreo y producción de contenido. Sirve para que una agencia o equipo opere varias marcas/regiones bajo una misma cuenta, sin que se mezclen datos entre ellas.')}</p>
-            <p class="org-section-desc">${__('<strong>Provisión gestionada:</strong> cada marca requiere configuración inicial del equipo de plataforma (mapeo de fuentes, conexión de cuentas, calibrado de Vera). Por eso no se crean desde la app — son un servicio adicional con costo por marca activa.')}</p>
+            <p class="org-section-desc">${__('Workspaces de datos aislados (audiencias, campañas, integraciones y contenido). La provisión inicial la gestiona el equipo de plataforma.')}</p>
           </div>
-          <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nueva%20marca%20gestionada&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20una%20nueva%20marca%20gestionada%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-primary" id="orgRequestBrandBtn"><i class="fas fa-paper-plane"></i> ${__('Solicitar nueva marca')}</a>
+          <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nueva%20marca%20gestionada&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20una%20nueva%20marca%20gestionada%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-secondary btn-sm" id="orgRequestBrandBtn"><i class="fas fa-paper-plane"></i> ${__('Solicitar nueva marca')}</a>
         </div>
         <div class="org-subbrands-list" id="orgSubbrandsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
+      </div>
     </div>
 
     <!-- ── Miembros ─────────────────────────────────────── -->
@@ -398,6 +413,7 @@ class OrganizationView extends BaseView {
         this._loadMembers(),
         this._loadInvitations(),
         this._loadBrandContainers(),
+        this._loadControlStats(),
         this._loadUsage(),
         this._loadNotifications(),
         this._loadAuditLog(),
@@ -406,6 +422,7 @@ class OrganizationView extends BaseView {
 
       this._renderHeaderStatus();
       this._renderGeneral();
+      this._renderControlStats();
       this._renderSubbrands();
       this._renderMembers();
       this._renderInvitations();
@@ -785,6 +802,69 @@ class OrganizationView extends BaseView {
       .select('id, nombre_marca, created_at')
       .eq('organization_id', this.orgId).order('created_at', { ascending: true });
     this.brandContainers = data || [];
+  }
+
+  // ── Centro de control: conteos por entidad ──
+  // brand_entities/products/services son org-scope directos; brand_places
+  // (escenarios) y brand_characters (actores) cuelgan de entity_id; producciones
+  // = flow_runs en el rango. Conteos con head:true (no traen filas).
+  async _loadControlStats() {
+    const sb = this.supabase, org = this.orgId;
+    const days = this.prodRange || 7;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const cnt = (q) => q.then((r) => r.count || 0).catch(() => 0);
+    try {
+      const [ents, products, services, productions] = await Promise.all([
+        sb.from('brand_entities').select('id').eq('organization_id', org),
+        cnt(sb.from('products').select('*', { count: 'exact', head: true }).eq('organization_id', org)),
+        cnt(sb.from('services').select('*', { count: 'exact', head: true }).eq('organization_id', org)),
+        cnt(sb.from('flow_runs').select('*', { count: 'exact', head: true }).eq('organization_id', org).gte('created_at', since)),
+      ]);
+      const entIds = (ents.data || []).map((e) => e.id);
+      let places = 0, characters = 0;
+      if (entIds.length) {
+        [places, characters] = await Promise.all([
+          cnt(sb.from('brand_places').select('*', { count: 'exact', head: true }).in('entity_id', entIds)),
+          cnt(sb.from('brand_characters').select('*', { count: 'exact', head: true }).in('entity_id', entIds)),
+        ]);
+      }
+      this.controlStats = { identities: entIds.length, products, services, places, characters, productions, days };
+    } catch (e) {
+      console.warn('OrganizationView _loadControlStats:', e?.message || e);
+      this.controlStats = { identities: 0, products: 0, services: 0, places: 0, characters: 0, productions: 0, days };
+    }
+  }
+
+  _renderControlStats() {
+    const el = this.querySelector('#orgCtrlStats');
+    if (!el) return;
+    const s = this.controlStats || { identities: 0, products: 0, services: 0, places: 0, characters: 0, productions: 0, days: this.prodRange };
+    const fmt = (n) => Number(n || 0).toLocaleString('es');
+    const card = (route, emoji, accent, value, label, extra = '') => `
+      <div class="org-ctrl-card" role="button" tabindex="0" data-route="${route}">
+        <div class="org-ctrl-top">
+          <span class="org-ctrl-chip" style="background:${accent}29;color:${accent}">${emoji}</span>
+          ${extra}
+        </div>
+        <span class="org-ctrl-num">${fmt(value)}</span>
+        <span class="org-ctrl-label">${label}</span>
+        <span class="org-ctrl-link" style="color:${accent}">${__('Ver todas')} →</span>
+      </div>`;
+    const prodFilter = `
+      <span class="org-ctrl-spacer"></span>
+      <select class="org-prod-range" title="${__('Rango')}">
+        <option value="7"${s.days === 7 ? ' selected' : ''}>${__('7 días')}</option>
+        <option value="30"${s.days === 30 ? ' selected' : ''}>${__('30 días')}</option>
+        <option value="90"${s.days === 90 ? ' selected' : ''}>${__('90 días')}</option>
+      </select>`;
+    el.innerHTML =
+      card('/identities', '🪪', '#06b6d4', s.identities, __('Identidades')) +
+      card('/products',   '📦', '#7c3aed', s.products,   __('Productos')) +
+      card('/services',   '🛠️', '#22c55e', s.services,   __('Servicios')) +
+      card('/places',     '🏞️', '#f59e0b', s.places,     __('Escenarios')) +
+      card('/characters', '🎭', '#ef4444', s.characters, __('Actores')) +
+      card('/brand-storage', '🏢', '#3b82f6', this.brandContainers.length, __('Marcas gestionadas')) +
+      card('/production', '🎬', '#ec4899', s.productions, __('Producciones'), prodFilter);
   }
 
   // ── Uso: consumo de créditos por día y por área (fuente) ──
@@ -1352,6 +1432,31 @@ class OrganizationView extends BaseView {
 
     this.querySelector('#orgGeneralForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveGeneral(); });
     this.querySelector('#orgInviteBtn')?.addEventListener('click', () => this._openInviteModal());
+
+    this.querySelector('#orgCtrlStats')?.addEventListener('click', (e) => {
+      if (e.target.closest('.org-prod-range')) return;
+      const card = e.target.closest('.org-ctrl-card[data-route]');
+      if (!card) return;
+      const prefix = (this.orgId && typeof window.getOrgPathPrefix === 'function')
+        ? window.getOrgPathPrefix(this.orgId, this.org?.name || '') : '';
+      window.router?.navigate((prefix || '') + card.dataset.route);
+    });
+    this.querySelector('#orgCtrlStats')?.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const card = e.target.closest('.org-ctrl-card[data-route]');
+      if (!card) return;
+      e.preventDefault();
+      const prefix = (this.orgId && typeof window.getOrgPathPrefix === 'function')
+        ? window.getOrgPathPrefix(this.orgId, this.org?.name || '') : '';
+      window.router?.navigate((prefix || '') + card.dataset.route);
+    });
+    this.querySelector('#orgCtrlStats')?.addEventListener('change', async (e) => {
+      const sel = e.target.closest('.org-prod-range');
+      if (!sel) return;
+      this.prodRange = Number(sel.value);
+      await this._loadControlStats();
+      this._renderControlStats();
+    });
 
     this.querySelector('#orgUsageRange')?.addEventListener('click', async (e) => {
       const pill = e.target.closest('.org-range-pill');
