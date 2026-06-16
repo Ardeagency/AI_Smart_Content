@@ -2019,14 +2019,22 @@ h1.brand-name-large[contenteditable="true"]:hover,
         top: 0;
         min-height: calc(100vh - 48px);
         overflow-y: auto;
+        overflow-x: hidden; /* red de seguridad contra desbordes laterales */
     }
     .brand-corner-bottom-left {
         position: relative;
+        /* CLAVE: resetear los offsets de la base absoluta (bottom/left). En
+           position:relative un `left:2.5rem` empuja el bloque a la derecha y
+           desborda; inset:auto lo devuelve al flujo normal. */
+        inset: auto;
         padding: 1.5rem;
         max-width: 100%;
     }
     .brand-cards-zone {
         position: relative;
+        /* Igual que el corner: resetear top/right/bottom de la base absoluta,
+           que en relative desplazaban la zona y causaban overflow horizontal. */
+        inset: auto;
         width: 100%;
         padding: 1rem;
         /* En escritorio va a z-index:1010 para tapar el header; en móvil el
