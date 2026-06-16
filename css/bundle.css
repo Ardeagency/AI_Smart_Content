@@ -95,6 +95,14 @@
     --font-size-2xl: 1.5rem;
     --font-size-3xl: 2rem;
     --font-size-4xl: 2.5rem;
+    /* Tipografía fluida (clamp): escala suave móvil→escritorio sin media queries.
+       Anclada en rem (respeta zoom / WCAG 1.4.4). Fórmula Smashing: vw + rem.
+       Usar para títulos/heros de vista; NO para body. Mín ~360px, máx ~1280px+. */
+    --fs-hero: clamp(1.75rem, 2.27vw + 1.5rem, 3rem);     /* 28 → 48px */
+    --fs-display: clamp(1.5rem, 1.95vw + 1.06rem, 2.5rem);/* 24 → 40px */
+    --fs-h1: clamp(1.375rem, 1.3vw + 1.08rem, 2rem);      /* 22 → 32px */
+    --fs-h2: clamp(1.25rem, 0.82vw + 1.06rem, 1.75rem);   /* 20 → 28px */
+    --fs-h3: clamp(1.0625rem, 0.43vw + 0.96rem, 1.375rem);/* 17 → 22px */
     --color-success: #00d614;
     --color-success-light: rgba(0, 214, 20, 0.15);
     --color-success-bg: rgba(0, 214, 20, 0.1);
@@ -520,6 +528,54 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 @keyframes modalIn {
     from { opacity: 0; transform: translateY(-12px) scale(0.98); }
     to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ========== TIPOGRAFÍA FLUIDA — utilidades opt-in ==========
+   Reemplazan font-size fijos en títulos/heros. Una clase, sin media queries. */
+.u-fs-hero    { font-size: var(--fs-hero);    line-height: 1.1;  }
+.u-fs-display { font-size: var(--fs-display); line-height: 1.15; }
+.u-fs-h1      { font-size: var(--fs-h1);      line-height: 1.2;  }
+.u-fs-h2      { font-size: var(--fs-h2);      line-height: 1.25; }
+.u-fs-h3      { font-size: var(--fs-h3);      line-height: 1.3;  }
+/* Evita que palabras largas (URLs, nombres) desborden contenedores estrechos. */
+.u-balance    { text-wrap: balance; }
+.u-truncate   { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ========== MODALES / PREVIEWS — bottom-sheet en móvil ==========
+   En pantallas chicas el diálogo centrado se vuelve hoja inferior a ancho
+   completo: más alcanzable con el pulgar y sin recortes. Afecta a TODOS los
+   modales que usan el sistema base .modal/.modal-content. */
+@media (max-width: 600px) {
+    .modal { padding: 0; align-items: flex-end; }
+    .modal-content,
+    .modal-content--sm,
+    .modal-content--lg {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92vh;
+        border-radius: var(--glass-radius) var(--glass-radius) 0 0;
+        border-bottom: none;
+        animation: sheetUp 0.28s var(--ease-out, ease-out);
+    }
+    .modal-header { padding: 1rem 1.15rem; }
+    .modal-body   { padding: 1.15rem; }
+    .modal-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        padding: 0.85rem 1.15rem;
+        padding-bottom: max(0.85rem, env(safe-area-inset-bottom));
+    }
+    .modal-footer > .btn,
+    .modal-footer > button { width: 100%; }
+}
+@keyframes sheetUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .modal-content,
+    .modal-content--sm,
+    .modal-content--lg { animation: none; }
 }
 
 .close-btn,

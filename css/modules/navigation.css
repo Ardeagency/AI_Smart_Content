@@ -2054,6 +2054,11 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-weight: 500;
     color: var(--text-primary);
     margin: 0;
+    /* Nunca desbordar el header: títulos/rutas largas se truncan con elipsis. */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Slot de filtros de Production: segunda fila del header, oculto por defecto */
@@ -2760,6 +2765,16 @@ body.subnav-in-header .app-header .header-production-slot {
     /* Header hamburger visible */
     .app-header .header-hamburger {
         display: flex;
+    }
+
+    /* Touch targets: mínimo 44x44px (Apple HIG) para botones de acción del header. */
+    .app-header .header-hamburger,
+    .app-header .user-menu-btn,
+    .app-header .nav-sidebar-toggle,
+    .app-header .header-right > button,
+    .app-header .header-actions > button {
+        min-width: 44px;
+        min-height: 44px;
     }
 
     /* Header ocupa todo el ancho */
