@@ -11,6 +11,7 @@
 - 🔲 **Botón humano "actualizar ficha / publicar" (write gateado, SEO/GEO).** Los scopes de escritura ya se piden, pero **el botón y su backend NO existen** en ninguna integración. Vera propone → el usuario aplica. Pendiente en ML, Shopify, Amazon, YouTube, Google Ads, Meta, X, TikTok. Ver `project_integration_write_policy`.
 - 🔲 **Selector de cuenta por marca.** En integraciones multi-cuenta (Google Ads, ad accounts de Meta) NO debe jalarse todo lo accesible; el usuario elige qué cuenta es de la marca (patrón page-picker de Meta). Hoy Google Ads jala TODO. Ver `feedback_no_auto_pull_all_accounts`.
 - 🔲 **Webhooks / sync en vivo.** Salvo Shopify (que sí registra webhooks), las demás hacen pull bajo demanda; falta push en vivo (ML, X, TikTok).
+- ✅ **Normalización de métricas por plataforma (2026-06-16).** `ai-engine/src/lib/platform-metrics.js` traduce campos nativos→canónicos (extensible por red); `brand_posts` separa interacción (`engagement_total`) de alcance (`reach_total`) y calcula `engagement_rate` (columnas generadas). Tasas comparables IG~4%/TikTok~5%/X~0.5%. **Follow-up 🔲:** que los ~100 RPCs de dashboard adopten `engagement_rate`/`reach_total` (ej. salud por plataforma conectada); enrutar el scraper por el mismo módulo (hoy hardcodea canónico).
 - 🔒 **Verificaciones / App Reviews de producción** (detalle por plataforma abajo).
 - 🔒 **Seguridad — rotar secretos que se vieron en chat:** ML Secret Key, X (Bearer + OAuth2 secret) y **TikTok (Client Secret de Production Y de Sandbox)** deben regenerarse una vez validado todo.
 
