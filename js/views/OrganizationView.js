@@ -50,7 +50,6 @@ class OrganizationView extends BaseView {
     this.monitoringTriggers = [];
 
     // AI Engine
-    this.serverStatus = null;
     this.apifyRuns = [];
     this.apifyStats30d = { runs: 0, items: 0, usd: 0, byPlatform: {} };
     this.trendJobs30d = { runs: 0, signals: 0, briefs: 0, usd: 0 };
@@ -241,12 +240,6 @@ class OrganizationView extends BaseView {
 
     <!-- ── AI Engine ────────────────────────────────────── -->
     <div class="tab-content" id="engineTab" role="tabpanel">
-      <section class="org-section">
-        <h2>${__('Servidor AI Engine')}</h2>
-        <p class="org-section-desc">${__('Servidor dedicado donde Vera procesa los scrapers, sensores y agentes para esta organización. Se aprovisiona en Hetzner Cloud y se suspende automáticamente tras inactividad para ahorrar costos.')}</p>
-        <div class="org-engine-server" id="orgEngineServer"><p class="org-placeholder">${__('Cargando…')}</p></div>
-      </section>
-
       <section class="org-section">
         <div class="org-section-head">
           <div>
@@ -591,7 +584,6 @@ class OrganizationView extends BaseView {
         this._loadVeraHealth(),
         this._loadNotifications(),
         this._loadAuditLog(),
-        this._loadEngineServer(),
         this._loadApifyRuns(),
         this._loadTrendJobs(),
         this._loadMfa(),
@@ -1294,14 +1286,6 @@ class OrganizationView extends BaseView {
     this.auditLog = data || [];
   }
 
-  async _loadEngineServer() {
-    try {
-      const { data } = await this.supabase
-        .rpc('get_org_server_status', { p_org: this.orgId }).maybeSingle();
-      this.serverStatus = data || null;
-    } catch (_) { /* vista opcional */ }
-  }
-
   async _loadApifyRuns() {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { data } = await this.supabase
@@ -1544,54 +1528,6 @@ class OrganizationView extends BaseView {
   }
 
   _renderEngine() {
-    // Server status
-    const srv = this.querySelector('#orgEngineServer');
-    if (srv) {
-      if (!this.serverStatus) {
-        srv.innerHTML = `
-          <div class="org-server-card">
-            <div class="org-server-row">
-              <span class="org-server-label">${__('Estado')}</span>
-              <span class="org-status-pill org-status-pill--archived">${__('Sin servidor dedicado')}</span>
-            </div>
-            <p class="org-server-hint">${__('Esta organización aún no tiene un AI Engine aprovisionado. Vera usa la infraestructura compartida hasta que se asigne uno dedicado.')}</p>
-          </div>`;
-      } else {
-        const s = this.serverStatus;
-        const sleeping = !!s.sleeping;
-        const stateClass = sleeping ? 'archived' : (s.status === 'ready' || s.status === 'active' ? 'active' : 'archived');
-        const stateLabel = sleeping ? __('Suspendido') : (s.status || '—');
-        const lastActivity = s.last_activity_at ? new Date(s.last_activity_at).toLocaleString('es') : '—';
-        const inactive = s.inactive_days != null ? __('{dias} días sin actividad', { dias: Number(s.inactive_days).toFixed(0) }) : '';
-        srv.innerHTML = `
-          <div class="org-server-card">
-            <div class="org-server-grid">
-              <div class="org-server-row">
-                <span class="org-server-label">${__('Estado')}</span>
-                <span class="org-status-pill org-status-pill--${stateClass}">${this.escapeHtml(stateLabel)}</span>
-              </div>
-              <div class="org-server-row">
-                <span class="org-server-label">${__('Tipo de servidor')}</span>
-                <span class="org-server-value">${this.escapeHtml(s.server_type || '—')}</span>
-              </div>
-              <div class="org-server-row">
-                <span class="org-server-label">${__('Hetzner ID')}</span>
-                <code class="org-server-mono">${this.escapeHtml(s.hetzner_server_id || '—')}</code>
-              </div>
-              <div class="org-server-row">
-                <span class="org-server-label">${__('Última actividad')}</span>
-                <span class="org-server-value">${this.escapeHtml(lastActivity)}${inactive ? ' · ' + this.escapeHtml(inactive) : ''}</span>
-              </div>
-              <div class="org-server-row">
-                <span class="org-server-label">${__('Snapshot disponible')}</span>
-                <span class="org-server-value">${s.has_snapshot ? __('Sí') : __('No')}</span>
-              </div>
-            </div>
-            <p class="org-server-hint"><i class="fas fa-info-circle"></i> ${__('El servidor se reactiva automáticamente cuando Vera necesita ejecutar una tarea; mientras tanto no genera costo de cómputo.')}</p>
-          </div>`;
-      }
-    }
-
     // Apify stats
     const apEl = this.querySelector('#orgScrapersStats');
     if (apEl) {
