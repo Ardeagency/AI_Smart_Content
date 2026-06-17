@@ -1111,9 +1111,30 @@ class Navigation {
     return sb?.rpc ? sb : null;
   }
 
+  /** En /dev/* las notificaciones son del DESARROLLADOR (developer_notifications),
+   *  no de la org. Fuera de /dev usamos las notificaciones de org. */
+  _isDevContext() {
+    return (window.location.pathname || '').startsWith('/dev');
+  }
+
+  _currentUserId() {
+    return window.authService?.getCurrentUser?.()?.id || null;
+  }
+
   async _orgNotificationsCount() {
     const sb = await this._supabase();
     if (!sb) return 0;
+    if (this._isDevContext()) {
+      const uid = this._currentUserId();
+      if (!uid) return 0;
+      const { count, error } = await sb
+        .from('developer_notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('recipient_user_id', uid)
+        .eq('is_read', false);
+      if (error) { console.warn('[notifs] dev count error:', error.message); return 0; }
+      return Number(count) || 0;
+    }
     const { data, error } = await sb.rpc('my_unread_org_notifications_count', {
       p_org_id: this.currentOrgId || null,
     });
@@ -1124,6 +1145,21 @@ class Navigation {
   async _orgNotificationsList(state = 'unread', limit = 50) {
     const sb = await this._supabase();
     if (!sb) return [];
+    if (this._isDevContext()) {
+      const uid = this._currentUserId();
+      if (!uid) return [];
+      let q = sb
+        .from('developer_notifications')
+        .select('id, title, message, severity, flow_id, is_read, read_at, created_at')
+        .eq('recipient_user_id', uid)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (state === 'unread') q = q.eq('is_read', false);
+      else if (state === 'read') q = q.eq('is_read', true);
+      const { data, error } = await q;
+      if (error) { console.warn('[notifs] dev list error:', error.message); return []; }
+      return (data || []).map((n) => this._normalizeDevNotification(n));
+    }
     const { data, error } = await sb.rpc('list_my_org_notifications', {
       p_org_id: this.currentOrgId || null,
       p_state:  state,
@@ -1137,11 +1173,45 @@ class Navigation {
   async _orgNotificationsMark(id, state) {
     const sb = await this._supabase();
     if (!sb || !id) return false;
+    if (this._isDevContext()) {
+      const patch = { is_read: state !== 'unread' };
+      if (state !== 'unread') patch.read_at = new Date().toISOString();
+      const { error } = await sb.from('developer_notifications').update(patch).eq('id', id);
+      if (error) { console.warn('[notifs] dev mark error:', error.message); return false; }
+      return true;
+    }
     const { error } = await sb.rpc('mark_org_notification_state', {
       p_notification_id: id, p_state: state,
     });
     if (error) { console.warn('[notifs] mark error:', error.message); return false; }
     return true;
+  }
+
+  /** Mapea una fila de developer_notifications al modelo de tarjeta de notificación. */
+  _normalizeDevNotification(n) {
+    if (!n) return n;
+    return {
+      id:          n.id,
+      title:       n.title || '',
+      body:        n.message || '',
+      message:     n.message || '',
+      severity:    n.severity || 'info',
+      type:        'developer',
+      status:      'pending',
+      is_read:     !!n.is_read,
+      created_at:  n.created_at,
+      label:       '',
+      summary:     '',
+      subject:     null,
+      outputs:     [],
+      checklist:   [],
+      actions:     [],
+      vera:        null,
+      checklist_progress: {},
+      link_to:     n.flow_id ? this.getDevUrl('/dev/builder') : '',
+      action_label: n.flow_id ? __('Ver flujo') : '',
+      metadata:    {},
+    };
   }
 
   _normalizeOrgNotification(n) {
@@ -2244,7 +2314,6 @@ class Navigation {
           </div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
-              ${this.getHeaderActivityButtonGroupHTML()}
               ${this.getHeaderNotificationsButtonGroupHTML()}
               <button class="user-menu-btn" id="userMenuBtn" aria-label="${__('Menú de usuario')}">
                 <i class="fas fa-chevron-down"></i>
