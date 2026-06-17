@@ -11721,7 +11721,12 @@
 /* ============================================================
    Orgs - Lista de organizaciones
    ============================================================ */
-/* ───── Galería de organizaciones (reusa .team-list / .team-card) ───── */
+/* ───── Galería de organizaciones (mismo lenguaje image-led que flows/products) ───── */
+.dev-org-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--spacing-md);
+}
 .dev-org-grid-state {
   grid-column: 1 / -1;
   text-align: center;
@@ -11731,62 +11736,144 @@
 
 .dev-org-card {
   position: relative;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
 }
 .dev-org-card:hover {
+  transform: translateY(-3px);
   border-color: var(--dev-rank-accent, var(--accent-warm));
-  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
-/* Logo de marca en la cabecera de la card (mismo tamaño que .team-avatar) */
-.dev-org-card-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-divider);
-  flex-shrink: 0;
+.dev-org-card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: linear-gradient(160deg, #1a1b1f 0%, #0e0f12 100%);
 }
-.dev-org-card-logo--placeholder {
-  display: inline-flex;
+.dev-org-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dev-org-card:hover .dev-org-card-img { transform: scale(1.04); }
+.dev-org-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  font-size: 1.1rem;
+  font-size: 2.5rem;
 }
 
-/* La identidad ocupa el espacio libre; las acciones quedan a la derecha */
-.dev-org-card .team-identity {
-  flex: 1;
-  min-width: 0;
+.dev-org-card-gradient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.55) 28%,
+    rgba(0, 0, 0, 0.05) 58%,
+    transparent 78%
+  );
 }
-.dev-org-card .team-name { word-break: break-word; }
 
 .dev-org-card-actions {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
   display: flex;
-  gap: 4px;
-  flex-shrink: 0;
+  gap: 0.3rem;
+  z-index: 4;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-.dev-org-card-body {
-  justify-content: flex-start;
-  gap: 8px;
+.dev-org-card:hover .dev-org-card-actions,
+.dev-org-card:focus-within .dev-org-card-actions {
+  opacity: 1;
+  transform: translateY(0);
 }
-
-.dev-org-stat {
+.dev-org-card-icon-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.6875rem;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: rgba(20, 21, 23, 0.72);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
-.dev-org-stat-label {
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.dev-org-card-icon-btn:hover { background: rgba(255, 255, 255, 0.16); transform: scale(1.08); }
+.dev-org-card-icon-btn--danger:hover { background: rgba(220, 53, 69, 0.85); border-color: rgba(220, 53, 69, 0.9); }
+
+.dev-org-card-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.85rem 0.9rem 0.9rem;
+  color: #fff;
+  z-index: 2;
+  pointer-events: none;
 }
-.dev-org-stat code {
-  color: var(--text-primary);
+.dev-org-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.dev-org-card-subtitle {
+  display: block;
   font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 2px;
+}
+.dev-org-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+}
+.dev-org-card-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.dev-org-card-pill i { font-size: 0.6rem; opacity: 0.85; }
+.dev-org-card-pill--plan {
+  background: color-mix(in srgb, var(--dev-rank-accent, var(--accent-warm)) 30%, transparent);
+  color: #fff;
 }
 
 .dev-lead-empty-cell {

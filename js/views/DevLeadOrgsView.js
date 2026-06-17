@@ -36,7 +36,7 @@ class DevLeadOrgsView extends DevBaseView {
         </header>
 
         <section class="dev-lead-content">
-          <div class="team-list dev-org-grid" id="orgsGrid">
+          <div class="dev-org-grid" id="orgsGrid">
             <div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
           </div>
         </section>
@@ -180,31 +180,30 @@ class DevLeadOrgsView extends DevBaseView {
       : '—';
     const ownerShort = org.owner_user_id ? org.owner_user_id.slice(0, 8) + '…' : '—';
     const name = this.escapeHtml(org.name || '—');
-    const logo = org.logo_url
-      ? `<img src="${this.escapeHtml(org.logo_url)}" alt="${name}" class="dev-org-card-logo" onerror="this.style.display='none'">`
-      : `<span class="dev-org-card-logo dev-org-card-logo--placeholder"><i class="fas fa-building"></i></span>`;
+    const media = org.logo_url
+      ? `<img src="${this.escapeHtml(org.logo_url)}" alt="${name}" class="dev-org-card-img" loading="lazy" onerror="this.outerHTML='&lt;div class=&quot;dev-org-card-placeholder&quot;&gt;&lt;i class=&quot;fas fa-building&quot;&gt;&lt;/i&gt;&lt;/div&gt;'">`
+      : `<div class="dev-org-card-placeholder"><i class="fas fa-building"></i></div>`;
 
     return `
-      <article class="team-card dev-org-card" data-id="${id}">
-        <header class="team-card-head">
-          ${logo}
-          <div class="team-identity">
-            <strong class="team-name">${name}</strong>
-            ${org.brand_name_oficial ? `<span class="team-email">${this.escapeHtml(org.brand_name_oficial)}</span>` : ''}
-          </div>
+      <article class="dev-org-card" data-id="${id}">
+        <div class="dev-org-card-media">
+          ${media}
+          <div class="dev-org-card-gradient" aria-hidden="true"></div>
           <div class="dev-org-card-actions">
-            <button type="button" class="btn-icon" data-action="edit" data-id="${id}" title="Editar"><i class="fas fa-edit"></i></button>
-            <button type="button" class="btn-icon btn-icon--danger" data-action="delete" data-id="${id}" title="Eliminar"><i class="fas fa-trash"></i></button>
+            <button type="button" class="dev-org-card-icon-btn" data-action="edit" data-id="${id}" title="Editar" aria-label="Editar"><i class="fas fa-edit"></i></button>
+            <button type="button" class="dev-org-card-icon-btn dev-org-card-icon-btn--danger" data-action="delete" data-id="${id}" title="Eliminar" aria-label="Eliminar"><i class="fas fa-trash"></i></button>
           </div>
-        </header>
-        <div class="team-card-body dev-org-card-body">
-          <span class="team-badge team-badge--role">${planLabel}</span>
-          <div class="dev-org-stat"><span class="dev-org-stat-label">Créditos</span><code>${creditsLabel}</code></div>
-          <div class="dev-org-stat"><span class="dev-org-stat-label">Owner</span><code title="${this.escapeHtml(org.owner_user_id || '')}">${this.escapeHtml(ownerShort)}</code></div>
+          <div class="dev-org-card-info">
+            <h3 class="dev-org-card-title">${name}</h3>
+            ${org.brand_name_oficial ? `<span class="dev-org-card-subtitle">${this.escapeHtml(org.brand_name_oficial)}</span>` : ''}
+            <div class="dev-org-card-meta">
+              <span class="dev-org-card-pill dev-org-card-pill--plan">${planLabel}</span>
+              <span class="dev-org-card-pill"><i class="fas fa-bolt"></i> ${creditsLabel}</span>
+              <span class="dev-org-card-pill"><i class="fas fa-clock"></i> ${created}</span>
+              <span class="dev-org-card-pill" title="${this.escapeHtml(org.owner_user_id || '')}"><i class="fas fa-user"></i> ${this.escapeHtml(ownerShort)}</span>
+            </div>
+          </div>
         </div>
-        <footer class="team-card-foot">
-          <span class="team-meta"><i class="fas fa-clock"></i> ${created}</span>
-        </footer>
       </article>
     `;
   }
