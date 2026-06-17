@@ -14482,6 +14482,11 @@
 
 .team-modal-spacer { flex: 1; }
 
+/* Cancelar (.provision-back-btn) reutilizado en el footer: radio 8px estandar */
+.team-modal-foot .provision-back-btn {
+  border-radius: var(--radius-sm);
+}
+
 .team-modal-btn-danger {
   display: inline-flex;
   align-items: center;
