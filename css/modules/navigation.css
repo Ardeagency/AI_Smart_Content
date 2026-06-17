@@ -4285,3 +4285,71 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
         z-index: 1002;
     }
 }
+
+/* =========================================================================
+   GLASS NOIR — rediseño del sidebar org/ (2026-06-17)
+   Override scopeado a .nav-mode-user (no afecta el sidebar dev).
+   Solo capa visual: profundidad glass neutra + estado activo en pastilla
+   translúcida elevada. El acento sigue saliendo del degradado dinámico de
+   marca (--brand-gradient-dynamic*), nunca como relleno saturado.
+   ========================================================================= */
+.side-navigation.nav-mode-user {
+    background: linear-gradient(180deg, #16181c 0%, #0a0b0d 100%);
+    border-right: 1px solid #20242b;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* items de nav como pastillas */
+.side-navigation.nav-mode-user .nav-link {
+    border-radius: 9px;
+    transition: background .16s ease, box-shadow .16s ease, color .16s ease;
+}
+
+.side-navigation.nav-mode-user .nav-link:hover {
+    background: rgba(255, 255, 255, 0.045);
+}
+
+/* estado activo = pastilla glass elevada (sin layout shift: el ring es box-shadow) */
+.side-navigation.nav-mode-user .nav-link.active {
+    color: #ffffff;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.028));
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 2px 9px rgba(0, 0, 0, 0.40);
+}
+
+/* el filo 2px del degradado dinámico de marca por encima de la pastilla */
+.side-navigation.nav-mode-user .nav-link.active::before {
+    width: 2px;
+    border-radius: 0 2px 2px 0;
+    z-index: 1;
+}
+
+/* botón Vera primario: pastilla glass sutil */
+.side-navigation.nav-mode-user .nav-link--primary {
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+}
+
+.side-navigation.nav-mode-user .nav-link--primary:hover {
+    background: rgba(255, 255, 255, 0.075);
+}
+
+/* submenú: enlaces redondeados + activo en pastilla translúcida */
+.side-navigation.nav-mode-user .nav-submenu-link {
+    border-radius: 7px;
+}
+
+.side-navigation.nav-mode-user .nav-submenu-link.active {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* divisores del pie un punto más fríos, en sintonía con el panel glass */
+.side-navigation.nav-mode-user .nav-system-stats,
+.side-navigation.nav-mode-user .nav-brand-footer {
+    border-top-color: #1e2229;
+}
