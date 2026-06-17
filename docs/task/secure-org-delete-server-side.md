@@ -1,27 +1,29 @@
-# Deuda: endurecer el borrado de organizaciones en server-side
+# Borrado seguro de organizaciones
 
-## Contexto
-`DevLeadOrgsView` (botón eliminar org) ahora exige, en el cliente:
-1. Advertencia crítica.
-2. Contraseña del usuario (`auth.signInWithPassword`).
-3. Código de verificación enviado al correo (`auth.signInWithOtp` + `auth.verifyOtp` type `email`).
+## Estado: enforcement server-side HECHO (2026-06-17)
 
-## Problema
-Es una **barrera de UX en el cliente**. El borrado real sigue siendo un
-`UPDATE organizations SET deleted_at` directo con la sesión del usuario, así que
-un dev con acceso a consola/anon key + sesión válida puede evadir el modal y
-borrar sin verificar.
+El hueco de bypass quedó cerrado. Migración en `SQL/secure_org_delete.sql`
+(SQL/ gitignored), aplicada vía Management API.
 
-## Acción pendiente (garantía dura)
-- Mover el borrado a un **RPC `SECURITY DEFINER`** o **Edge Function** que:
-  - Exija reautenticación reciente (AAL/`auth.jwt()` con timestamp, o nonce de
-    `reauthenticate()` validado en el server).
-  - Bloquee el `UPDATE deleted_at` directo desde el cliente vía **RLS**
-    (revocar update de `deleted_at` al rol autenticado; solo el RPC lo aplica).
-- Opcional: registrar el borrado en `user_audit_log` (ya existe baseline de
-  seguridad P0) con quién/cuándo/IP.
+### Lo que se hizo
+- **RPC `soft_delete_organization(p_org_id)`** (`SECURITY DEFINER`): única vía de
+  soft-delete. Exige `is_lead()` server-side, marca `deleted_at`, audita en
+  `user_audit_log` (`action = organization.soft_delete`).
+- **Trigger `trg_guard_org_soft_delete`**: bloquea cualquier `UPDATE` directo de
+  `deleted_at` que no venga del RPC (verificado: `BLOCKED_OK`). Ya no es evadible
+  desde consola/anon key.
+- **Cliente** (`DevLeadOrgsView`): el gate de UX (advertencia crítica + contraseña
+  via `signInWithPassword` + código por correo via `signInWithOtp`/`verifyOtp`)
+  ahora llama al RPC en vez del `UPDATE` directo.
 
-## Dependencia de configuración
-El código de verificación llega por correo solo si la plantilla de email de
-Supabase (OTP/Magic Link) incluye `{{ .Token }}`. Verificar la plantilla del
-proyecto; si solo trae el magic link, el usuario no verá el código de 6 dígitos.
+## Residual (opcional, menor)
+
+1. **Reautenticación criptográfica en el server**: el RPC confía en que el cliente
+   reautenticó (password + OTP). Una prueba dura de "reauth reciente" requeriría
+   MFA/AAL (`auth.jwt()->>'aal' = 'aal2'`) o un nonce de `reauthenticate()` validado
+   server-side. Hoy no hay MFA configurado para devs. Defensa actual: rol Lead +
+   path único + auditoría.
+
+2. **Plantilla de email Supabase**: el código de 6 dígitos llega solo si la
+   plantilla (OTP/Magic Link) incluye `{{ .Token }}`. Verificar la config del
+   proyecto; si solo trae el magic link, el usuario no verá el código.

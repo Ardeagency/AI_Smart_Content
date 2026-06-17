@@ -410,11 +410,9 @@ class DevLeadOrgsView extends DevBaseView {
       const { error: otpErr } = await this.supabase.auth.verifyOtp({ email: this._delEmail, token: code, type: 'email' });
       if (otpErr) throw new Error('Código de verificación inválido o expirado.');
 
-      // 3) Soft delete.
-      const { error: delErr } = await this.supabase
-        .from('organizations')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', org.id);
+      // 3) Soft delete vía RPC server-side (Lead-only, auditado). El UPDATE
+      //    directo de deleted_at está bloqueado por trigger; esta es la única vía.
+      const { error: delErr } = await this.supabase.rpc('soft_delete_organization', { p_org_id: org.id });
       if (delErr) throw delErr;
 
       this.showNotification(`Organización "${org.name}" eliminada.`, 'success');
