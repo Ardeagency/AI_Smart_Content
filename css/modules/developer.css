@@ -11876,6 +11876,48 @@
   color: #fff;
 }
 
+/* Créditos como barra de progreso */
+.dev-org-card-credits {
+  margin-top: 8px;
+}
+.dev-org-card-credits-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.dev-org-card-credits-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.dev-org-card-credits-label i { font-size: 0.6rem; opacity: 0.85; }
+.dev-org-card-credits-value {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.dev-org-card-credits-track {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+.dev-org-card-credits-track span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--dev-rank-accent, var(--accent-warm));
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .dev-lead-empty-cell {
   text-align: center;
   padding: var(--spacing-2xl) !important;

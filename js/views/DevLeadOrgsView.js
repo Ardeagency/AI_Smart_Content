@@ -172,13 +172,13 @@ class DevLeadOrgsView extends DevBaseView {
     const sub = this.activeSubscription(org.subscriptions);
     const planLabel = sub ? this.escapeHtml((sub.plans && sub.plans.name) || 'Sin plan') : 'Sin plan';
     const credits = org.organization_credits;
-    const creditsLabel = credits
-      ? `${Math.round(credits.credits_available ?? 0)}/${credits.credits_total ?? 0}`
-      : '—';
+    const cAvail = credits ? Math.round(credits.credits_available ?? 0) : 0;
+    const cTotal = credits ? Math.round(credits.credits_total ?? 0) : 0;
+    const cPct = cTotal > 0 ? Math.min(100, Math.max(0, Math.round((cAvail / cTotal) * 100))) : 0;
+    const creditsLabel = credits ? `${cAvail.toLocaleString('es')} / ${cTotal.toLocaleString('es')}` : 'Sin creditos';
     const created = org.created_at
       ? new Date(org.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })
       : '—';
-    const ownerShort = org.owner_user_id ? org.owner_user_id.slice(0, 8) + '…' : '—';
     const name = this.escapeHtml(org.name || '—');
     const media = org.logo_url
       ? `<img src="${this.escapeHtml(org.logo_url)}" alt="${name}" class="dev-org-card-img" loading="lazy" onerror="this.outerHTML='&lt;div class=&quot;dev-org-card-placeholder&quot;&gt;&lt;i class=&quot;fas fa-building&quot;&gt;&lt;/i&gt;&lt;/div&gt;'">`
@@ -198,9 +198,14 @@ class DevLeadOrgsView extends DevBaseView {
             ${org.brand_name_oficial ? `<span class="dev-org-card-subtitle">${this.escapeHtml(org.brand_name_oficial)}</span>` : ''}
             <div class="dev-org-card-meta">
               <span class="dev-org-card-pill dev-org-card-pill--plan">${planLabel}</span>
-              <span class="dev-org-card-pill"><i class="fas fa-bolt"></i> ${creditsLabel}</span>
               <span class="dev-org-card-pill"><i class="fas fa-clock"></i> ${created}</span>
-              <span class="dev-org-card-pill" title="${this.escapeHtml(org.owner_user_id || '')}"><i class="fas fa-user"></i> ${this.escapeHtml(ownerShort)}</span>
+            </div>
+            <div class="dev-org-card-credits">
+              <div class="dev-org-card-credits-head">
+                <span class="dev-org-card-credits-label"><i class="fas fa-bolt"></i> Creditos</span>
+                <span class="dev-org-card-credits-value">${creditsLabel}</span>
+              </div>
+              <div class="dev-org-card-credits-track"><span style="width:${cPct}%"></span></div>
             </div>
           </div>
         </div>
