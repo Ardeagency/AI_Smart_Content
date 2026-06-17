@@ -47,25 +47,10 @@ class DevLeadBillingView extends DevBaseView {
 
         <section class="dev-lead-content" id="tabPanePlans">
           <div class="dev-lead-toolbar">
-            <button type="button" class="btn btn-secondary" id="plansRefresh" title="Refrescar"><i class="fas fa-sync-alt"></i></button>
             <span class="dev-lead-hint"><i class="fas fa-info-circle"></i> Editar el precio aqui solo toca BD. Crear/archivar el Stripe Price + actualizar <code>stripe_price_id_*</code> es manual (auto-sync en Fase 3).</span>
           </div>
-          <div class="dev-table-container">
-            <table class="dev-table" id="plansTable">
-              <thead>
-                <tr>
-                  <th>Orden</th>
-                  <th>Plan</th>
-                  <th>$/mes</th>
-                  <th>Creditos/mes</th>
-                  <th>Storage</th>
-                  <th>Activo</th>
-                  <th>Popular</th>
-                  <th class="dev-lead-actions">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="plansBody"><tr><td colspan="8" class="dev-lead-empty-cell"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr></tbody>
-            </table>
+          <div class="dev-plan-grid" id="plansGrid">
+            <div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
           </div>
         </section>
 
@@ -118,11 +103,10 @@ class DevLeadBillingView extends DevBaseView {
     document.querySelectorAll('.dev-lead-tab').forEach(t => {
       t.addEventListener('click', () => this.switchTab(t.getAttribute('data-tab')));
     });
-    document.getElementById('plansRefresh')?.addEventListener('click', () => this.loadPlans());
     document.getElementById('packagesRefresh')?.addEventListener('click', () => this.loadPackages());
     document.getElementById('packagesCreate')?.addEventListener('click', () => this.openCreatePackageModal());
 
-    document.getElementById('plansBody')?.addEventListener('click', (e) => {
+    document.getElementById('plansGrid')?.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const id = btn.getAttribute('data-id');
@@ -158,8 +142,8 @@ class DevLeadBillingView extends DevBaseView {
   // ─── Plans tab ─────────────────────────────────────────────────────
 
   async loadPlans() {
-    const tbody = document.getElementById('plansBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="dev-lead-empty-cell"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
+    const grid = document.getElementById('plansGrid');
+    if (grid) grid.innerHTML = '<div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -172,37 +156,52 @@ class DevLeadBillingView extends DevBaseView {
       this.renderPlansRows();
     } catch (err) {
       console.error('loadPlans:', err);
-      if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="dev-lead-empty-cell">Error: ${this._escape(err?.message || 'fallo al cargar')}</td></tr>`;
+      if (grid) grid.innerHTML = `<div class="dev-org-grid-state">Error: ${this._escape(err?.message || 'fallo al cargar')}</div>`;
     }
   }
 
   renderPlansRows() {
-    const tbody = document.getElementById('plansBody');
-    if (!tbody) return;
+    const grid = document.getElementById('plansGrid');
+    if (!grid) return;
     if (this.plans.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="dev-lead-empty-cell">Sin planes</td></tr>';
+      grid.innerHTML = '<div class="dev-org-grid-state">Sin planes</div>';
       return;
     }
-    tbody.innerHTML = this.plans.map(p => `
-      <tr>
-        <td>${p.display_order}</td>
-        <td>
-          <strong>${this._escape(p.name)}</strong>
-          <div class="dev-lead-row-sub">${this._escape(p.id)}</div>
-        </td>
-        <td>$${Number(p.price_usd_month).toFixed(2)}</td>
-        <td>${p.credits_monthly.toLocaleString('en-US')}</td>
-        <td>${this._formatStorage(p.storage_mb)}</td>
-        <td>${this._badge(p.is_active, 'Activo', 'Inactivo')}</td>
-        <td>${p.is_popular ? '<i class="fas fa-star" style="color:var(--accent-warm,#e09145)"></i>' : ''}</td>
-        <td class="dev-lead-actions">
-          <button type="button" class="btn btn-xs btn-secondary" data-action="edit-plan" data-id="${this._escape(p.id)}" title="Editar"><i class="fas fa-edit"></i></button>
-          <button type="button" class="btn btn-xs" data-action="toggle-plan-active" data-id="${this._escape(p.id)}" title="${p.is_active ? 'Desactivar' : 'Activar'}">
-            <i class="fas fa-${p.is_active ? 'toggle-on' : 'toggle-off'}"></i>
+    grid.innerHTML = this.plans.map(p => this.renderPlanCard(p)).join('');
+  }
+
+  renderPlanCard(p) {
+    const id = this._escape(p.id);
+    const active = !!p.is_active;
+    const handles = p.max_handles ? `<li><i class="fas fa-at"></i> ${p.max_handles} handles</li>` : '';
+    return `
+      <article class="dev-plan-card${active ? '' : ' is-inactive'}${p.is_popular ? ' is-popular' : ''}">
+        ${p.is_popular ? '<span class="dev-plan-card-popular"><i class="fas fa-star"></i> Popular</span>' : ''}
+        <div class="dev-plan-card-head">
+          <div class="dev-plan-card-id-wrap">
+            <h3 class="dev-plan-card-name">${this._escape(p.name)}</h3>
+            <span class="dev-plan-card-id">${id}</span>
+          </div>
+          <span class="dev-lead-badge ${active ? 'dev-lead-badge--ok' : 'dev-lead-badge--muted'}">${active ? 'Activo' : 'Inactivo'}</span>
+        </div>
+        <div class="dev-plan-card-price">
+          <span class="dev-plan-card-amount">$${Number(p.price_usd_month).toFixed(2)}</span>
+          <span class="dev-plan-card-per">/mes</span>
+        </div>
+        ${p.description ? `<p class="dev-plan-card-desc">${this._escape(p.description)}</p>` : ''}
+        <ul class="dev-plan-card-specs">
+          <li><i class="fas fa-bolt"></i> ${p.credits_monthly.toLocaleString('en-US')} créditos/mes</li>
+          <li><i class="fas fa-database"></i> ${this._formatStorage(p.storage_mb)}</li>
+          ${handles}
+        </ul>
+        <div class="dev-plan-card-actions">
+          <button type="button" class="btn btn-secondary btn-sm" data-action="edit-plan" data-id="${id}"><i class="fas fa-edit"></i> Editar</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-action="toggle-plan-active" data-id="${id}" title="${active ? 'Desactivar' : 'Activar'}">
+            <i class="fas fa-${active ? 'toggle-on' : 'toggle-off'}"></i> ${active ? 'Desactivar' : 'Activar'}
           </button>
-        </td>
-      </tr>
-    `).join('');
+        </div>
+      </article>
+    `;
   }
 
   _planModalBody() {

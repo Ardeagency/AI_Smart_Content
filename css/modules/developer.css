@@ -12039,6 +12039,122 @@
   opacity: 0.6;
 }
 
+/* ───── Planes (pricing cards) ───── */
+.dev-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+.dev-plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.dev-plan-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--dev-rank-accent, var(--accent-warm));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+.dev-plan-card.is-inactive { opacity: 0.62; }
+.dev-plan-card.is-popular {
+  border-color: color-mix(in srgb, var(--dev-rank-accent, var(--accent-warm)) 55%, transparent);
+}
+.dev-plan-card-popular {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: color-mix(in srgb, var(--dev-rank-accent, var(--accent-warm)) 35%, transparent);
+}
+.dev-plan-card-popular i { font-size: 0.6rem; }
+.dev-plan-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.dev-plan-card-id-wrap { min-width: 0; }
+.dev-plan-card-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.dev-plan-card-id {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+}
+.dev-plan-card-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.dev-plan-card-amount {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+.dev-plan-card-per {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.dev-plan-card-desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dev-plan-card-specs {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-divider, #242424);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dev-plan-card-specs li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+.dev-plan-card-specs li i {
+  width: 16px;
+  text-align: center;
+  color: var(--dev-rank-accent, var(--accent-warm));
+  font-size: 0.75rem;
+}
+.dev-plan-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+.dev-plan-card-actions .btn { flex: 1; }
+
 .dev-lead-empty-cell {
   text-align: center;
   padding: var(--spacing-2xl) !important;
