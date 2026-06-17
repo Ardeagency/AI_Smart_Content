@@ -57,7 +57,6 @@ class DevLeadBillingView extends DevBaseView {
         <section class="dev-lead-content" id="tabPanePackages" style="display:none">
           <div class="dev-lead-toolbar">
             <button type="button" class="btn btn-primary" id="packagesCreate"><i class="fas fa-plus"></i> Nuevo paquete</button>
-            <button type="button" class="btn btn-secondary" id="packagesRefresh" title="Refrescar"><i class="fas fa-sync-alt"></i></button>
             <span class="dev-lead-hint"><i class="fas fa-info-circle"></i> Estos son los packs one-shot que el cliente compra en /credits (CreditsShopView). Editar precio aqui no resincroniza Stripe/Wompi.</span>
           </div>
           <div class="dev-table-container">
@@ -103,7 +102,6 @@ class DevLeadBillingView extends DevBaseView {
     document.querySelectorAll('.dev-lead-tab').forEach(t => {
       t.addEventListener('click', () => this.switchTab(t.getAttribute('data-tab')));
     });
-    document.getElementById('packagesRefresh')?.addEventListener('click', () => this.loadPackages());
     document.getElementById('packagesCreate')?.addEventListener('click', () => this.openCreatePackageModal());
 
     document.getElementById('plansGrid')?.addEventListener('click', (e) => {
