@@ -13439,10 +13439,9 @@
 }
 
 .team-page-header {
-  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
   margin-bottom: var(--spacing-xl);
 }
 
@@ -13465,32 +13464,6 @@
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.9375rem;
-}
-
-.team-cta {
-  position: absolute;
-  top: 0;
-  right: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.65rem 1.25rem;
-  background: var(--dev-gradient-dynamic,
-              var(--brand-gradient-dynamic,
-              linear-gradient(135deg, var(--accent-warm), var(--accent-warm))));
-  color: #fff;
-  border: none;
-  border-radius: 999px;
-  font: inherit;
-  font-weight: 500;
-  font-size: 0.875rem;
-  cursor: pointer;
-  text-decoration: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.team-cta:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* ───── Section ───── */
