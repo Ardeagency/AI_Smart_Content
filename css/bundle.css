@@ -664,6 +664,43 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 .form-input:disabled, .form-textarea:disabled { opacity: 0.5; cursor: not-allowed; }
 .form-textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
 
+/* .form-control: alias de buscador usado en varias vistas (orgs, vera-knowledge…).
+   Antes no tenia CSS y caia a la apariencia nativa del navegador (caja inset de
+   macOS). Comparte el lenguaje de .form-input. */
+.form-control {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    outline: none;
+    transition: var(--transition);
+}
+.form-control:focus { border-color: var(--accent-brand); box-shadow: 0 0 0 2px var(--accent-brand-soft); }
+.form-control::placeholder { color: var(--text-disabled); }
+.form-control:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Reset universal de inputs type="search": anula la apariencia nativa del
+   navegador (caja redondeada con sombra interna en WebKit/macOS) y oculta el
+   boton de cancelar/decoraciones nativas. Aplica a TODAS las paginas; las
+   vistas con buscador propio (.flow-toolbar-search, .webhooks-search) ya
+   definen su fondo/borde y solo se benefician del reset. */
+input[type="search"] {
+    -webkit-appearance: none;
+    appearance: none;
+}
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+}
+
 /* Select y contenedores tipo dropdown: efecto glass */
 .form-select {
     width: 100%;
