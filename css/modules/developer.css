@@ -13878,6 +13878,11 @@
   flex-direction: column;
   gap: var(--spacing-md);
 }
+/* display:flex sobreescribia el atributo [hidden]: la seccion seguia ocupando
+   espacio aun con conteo 0. Esto restaura el ocultado. */
+.team-section[hidden] {
+  display: none;
+}
 
 .team-section-title {
   display: flex;
