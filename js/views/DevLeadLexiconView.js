@@ -49,9 +49,6 @@ class DevLeadLexiconView extends DevBaseView {
               <i class="fas fa-fire"></i> Temas huérfanos
             </button>
           </div>
-          <button type="button" class="btn btn-secondary dev-flows-create-btn" id="lexRefreshBtn">
-            <i class="fas fa-sync-alt"></i> Actualizar
-          </button>
         </div>
         <p class="dev-header-subtitle dev-lexicon-hint">
           Vocabulario que el motor usa para clasificar contenido por dimensión (topic / mood / tone).
@@ -140,8 +137,6 @@ class DevLeadLexiconView extends DevBaseView {
     toggle?.querySelectorAll('.dev-scope-btn').forEach(btn => {
       btn.addEventListener('click', () => this.setTab(btn.dataset.tab));
     });
-    const refresh = document.getElementById('lexRefreshBtn');
-    if (refresh) refresh.addEventListener('click', () => this.refreshCurrentTab());
   }
 
   setupFilters() {

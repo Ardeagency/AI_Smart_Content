@@ -98,9 +98,6 @@ class DevFlowsView extends DevBaseView {
         <div class="dev-flows-scope-panel" data-scope="all" hidden>
           <div class="dev-flows-toolbar">
             <p class="dev-header-subtitle dev-flows-all-hint">Vista Lead: todos los flujos de la plataforma. Editar, probar, ver logs o eliminar cualquier flujo.</p>
-            <button type="button" class="btn btn-secondary" id="refreshAllFlowsBtn">
-              <i class="fas fa-sync-alt"></i> Actualizar
-            </button>
           </div>
           <div class="dev-flows-grid" id="allFlowsGrid"></div>
           <div class="dev-flows-empty" id="allFlowsEmpty" hidden>
@@ -136,8 +133,6 @@ class DevFlowsView extends DevBaseView {
       btn.addEventListener('click', () => this.setScope(btn.dataset.scope));
     });
 
-    const refreshBtn = document.getElementById('refreshAllFlowsBtn');
-    if (refreshBtn) refreshBtn.addEventListener('click', () => this.loadAllFlows(true));
   }
 
   /** Cambia el panel visible y carga la data del alcance bajo demanda. */

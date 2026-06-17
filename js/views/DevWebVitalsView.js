@@ -32,11 +32,6 @@ class DevWebVitalsView extends DevBaseView {
     return `
       <div class="dev-vitals-container">
         ${this._styles()}
-        <header class="dev-header">
-          <div class="dev-header-actions">
-            <button class="btn btn-secondary" id="vitalsRefresh"><i class="fas fa-sync-alt"></i> Actualizar</button>
-          </div>
-        </header>
 
         <div class="dev-vitals-toolbar">
           <div class="dev-vitals-filter">
@@ -84,10 +79,8 @@ class DevWebVitalsView extends DevBaseView {
   _bindEvents() {
     const range = this.container.querySelector('#vitalsRange');
     const route = this.container.querySelector('#vitalsRoute');
-    const refresh = this.container.querySelector('#vitalsRefresh');
     if (range) range.addEventListener('change', () => { this.days = parseInt(range.value, 10) || 30; this._load(); });
     if (route) route.addEventListener('change', () => { this.route = route.value || null; this._load(); });
-    if (refresh) refresh.addEventListener('click', () => this._load());
   }
 
   async _load() {

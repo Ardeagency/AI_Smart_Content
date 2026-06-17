@@ -129,7 +129,6 @@ class DevLeadVeraTrainingView extends DevBaseView {
             <p class="dev-header-subtitle vera-tab-hint">Todo lo que el vector global aprendió. Cada burbuja es una fuente con sus chunks embedidos.</p>
             <div class="dev-lead-toolbar" id="headerToolbar">
               <input type="search" id="veraKnowledgeSearch" class="form-control vera-knowledge-search" placeholder="Buscar por titulo o contenido..." autocomplete="off">
-              <button type="button" class="btn btn-secondary" id="veraKnowledgeRefresh" title="Refrescar"><i class="fas fa-sync-alt"></i></button>
             </div>
           </div>
           <div class="vera-knowledge-stats" id="veraKnowledgeStats" hidden>
@@ -190,7 +189,6 @@ class DevLeadVeraTrainingView extends DevBaseView {
     });
 
     // ----- Conocimientos -----
-    document.getElementById('veraKnowledgeRefresh')?.addEventListener('click', () => { this._knowledgeLoaded = false; this.loadKnowledge(); });
     document.getElementById('veraKnowledgeSearch')?.addEventListener('input', (e) => {
       this.renderBubbles((e.target?.value || '').trim().toLowerCase());
     });

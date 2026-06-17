@@ -31,10 +31,6 @@ class DevLogsView extends DevBaseView {
         <!-- Header -->
         <header class="dev-logs-header">
           <div class="dev-header-actions">
-            <button class="btn btn-secondary" id="refreshLogsBtn">
-              <i class="fas fa-sync-alt"></i>
-              Actualizar
-            </button>
             <button class="btn btn-secondary" id="clearFiltersBtn">
               <i class="fas fa-filter-circle-xmark"></i>
               Limpiar Filtros
@@ -521,10 +517,6 @@ class DevLogsView extends DevBaseView {
     }
 
     // Botones de header
-    const refreshBtn = document.getElementById('refreshLogsBtn');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => this.loadLogs());
-    }
 
     const clearFiltersBtn = document.getElementById('clearFiltersBtn');
     if (clearFiltersBtn) {
