@@ -32,7 +32,7 @@ class DevLeadTeamView extends DevBaseView {
 
   renderHTML() {
     return `
-      <div class="team-page">
+      <div class="dev-lead-container dev-lead-team">
         <header class="team-page-header">
           <a href="/dev/provisioning/users" class="btn btn-primary">
             <i class="fas fa-user-plus"></i> Crear usuario

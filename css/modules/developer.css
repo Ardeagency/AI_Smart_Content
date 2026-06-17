@@ -13835,29 +13835,8 @@
    /dev/lead/team — listado de developers + jobs pendientes
    Mismo lenguaje visual que /dev/provisioning (dot canvas).
    ============================================================ */
-.team-page {
-  position: relative;
-  isolation: isolate;
-  min-height: calc(100vh - 48px);
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: calc(48px + var(--spacing-lg)) var(--spacing-xl) var(--spacing-xl);
-}
-
-.team-page::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1.2px),
-    radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1.2px);
-  background-size: 22px 22px, 22px 22px;
-  background-position: 0 0, 11px 11px;
-  -webkit-mask-image: radial-gradient(circle at 50% 30%, #000 0%, rgba(0,0,0,0.5) 40%, transparent 75%);
-  mask-image: radial-gradient(circle at 50% 30%, #000 0%, rgba(0,0,0,0.5) 40%, transparent 75%);
-  pointer-events: none;
-  z-index: -1;
-}
+/* .team-page reemplazado por el shell comun .dev-lead-container (mismo padding,
+   max-width y fondo de puntos que el resto del portal dev). */
 
 .team-page-header {
   display: flex;
