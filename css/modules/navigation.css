@@ -4334,7 +4334,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     color: #ffffff;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.028));
     box-shadow:
-        0 0 26px -6px rgba(var(--brand-primary-rgb, 59, 91, 255), 0.24),
+        0 0 24px -8px rgba(var(--brand-primary-rgb, 59, 91, 255), 0.18),
         inset 0 0 0 1px rgba(255, 255, 255, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.08),
         0 2px 9px rgba(0, 0, 0, 0.45);
@@ -4367,6 +4367,25 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     flex-direction: column;
     gap: 10px;
     flex-shrink: 0;
+    position: relative;
+    isolation: isolate;
+}
+
+/* tinte del degradado dinámico sobre la tarjeta (como el Figma) */
+.side-navigation.nav-mode-user .nav-plan-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--brand-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed));
+    opacity: 0.10;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.side-navigation.nav-mode-user .nav-plan-card > * {
+    position: relative;
+    z-index: 1;
 }
 
 .side-navigation.nav-mode-user .nav-plan-card-top {
@@ -4390,10 +4409,42 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     border: 1px solid transparent;
 }
 
-.side-navigation.nav-mode-user .nav-plan-card-badge img {
+/* sparkle y bolt rellenos con el degradado dinámico (via mask) */
+.side-navigation.nav-mode-user .nav-plan-card-spark,
+.side-navigation.nav-mode-user .nav-plan-card-bolt {
+    display: inline-block;
+    flex-shrink: 0;
+    background: var(--brand-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed));
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-spark {
+    width: 16px;
+    height: 16px;
+    -webkit-mask-image: url('/recursos/icons/sparkle.svg');
+    mask-image: url('/recursos/icons/sparkle.svg');
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-bolt {
     width: 15px;
     height: 15px;
-    opacity: .9;
+    -webkit-mask-image: url('/recursos/icons/Planes.svg');
+    mask-image: url('/recursos/icons/Planes.svg');
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-cta {
+    gap: 8px;
+}
+
+/* el nombre de la org nunca debe quedar diminuto: piso de 20px,
+   respetando el tamaño adaptativo del JS cuando es mayor */
+.side-navigation:not(.collapsed).nav-mode-user .nav-org-title {
+    font-size: max(20px, var(--nav-org-title-size, 22px));
 }
 
 .side-navigation.nav-mode-user .nav-plan-card-meta {

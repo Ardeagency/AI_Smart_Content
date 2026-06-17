@@ -2184,7 +2184,7 @@ class Navigation {
         <div class="nav-plan-card" id="navPlanCard">
           <span class="nav-system-stats-value" id="navStorageValue" hidden>—</span>
           <div class="nav-plan-card-top">
-            <span class="nav-plan-card-badge" aria-hidden="true"><img src="${_navSidebarIconUrl('/recursos/icons/sparkle.svg')}" width="16" height="16" alt=""></span>
+            <span class="nav-plan-card-badge" aria-hidden="true"><span class="nav-plan-card-spark"></span></span>
             <span class="nav-plan-card-meta">
               <span class="nav-plan-card-label">${__('Plan actual')}</span>
               <span class="nav-plan-card-name" id="navPlanName">Starter</span>
@@ -2195,7 +2195,7 @@ class Navigation {
              class="nav-plan-card-cta"
              id="navUpgradeBtn"
              data-route="${this.getUserSidebarRoute('plans')}">
-            <span id="navUpgradeBtnLabel">${__('Mejorar plan')}</span>
+            <span class="nav-plan-card-bolt" aria-hidden="true"></span><span id="navUpgradeBtnLabel">${__('Mejorar plan')}</span>
           </a>
         </div>
 
