@@ -194,19 +194,45 @@
 .dev-logs-container,
 .dev-test-container,
 .dev-webhooks-container,
+.dev-vitals-container,
 .dev-lead-container {
   padding: 28px 32px;
   max-width: 1400px;
   margin: 0 auto;
-  background: var(--living-bg-deep, var(--bg-primary));
+  background: transparent;
   min-height: 100vh;
   position: relative;
+  isolation: isolate;
   z-index: 0;
 }
 
 /* El velo cinematográfico (fondo full-bleed fijo con --dev-gradient-dynamic)
    fue eliminado: el nuevo diseño usa el fondo opaco --bg-primary sin degradado
    dinámico. Los acentos de rango (bordes/pills/badges) se conservan intactos. */
+
+/* Fondo de puntos (mismo lenguaje que .team-page): patrón sutil enmascarado
+   detrás del contenido. Como el contenedor es transparente sobre #app-container
+   (#0b0b0b), los puntos quedan visibles. */
+.dev-dashboard-container::before,
+.dev-flows-container::before,
+.dev-logs-container::before,
+.dev-test-container::before,
+.dev-webhooks-container::before,
+.dev-vitals-container::before,
+.dev-lead-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1.2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1.2px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
+  -webkit-mask-image: radial-gradient(circle at 50% 30%, #000 0%, rgba(0,0,0,0.5) 40%, transparent 75%);
+  mask-image: radial-gradient(circle at 50% 30%, #000 0%, rgba(0,0,0,0.5) 40%, transparent 75%);
+  pointer-events: none;
+  z-index: -1;
+}
 
 /* Todas las vistas dev: acento sobrio (Organization-like) */
 .dev-dashboard-container,
