@@ -344,7 +344,7 @@ body {
     font-size: var(--font-size-base);
     font-weight: 600;
     line-height: 1.4;
-    border-radius: var(--glass-radius);
+    border-radius: var(--radius-sm);
     cursor: pointer;
     transition: var(--transition);
     white-space: nowrap;
@@ -409,7 +409,7 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     width: 36px;
     height: 36px;
     padding: 0;
-    border-radius: var(--glass-radius);
+    border-radius: var(--radius-sm);
     background: var(--glass-bg);
     color: var(--text-secondary);
     border: 1px solid var(--glass-border);
