@@ -2187,10 +2187,10 @@ class Navigation {
             <span class="nav-plan-card-badge" aria-hidden="true"><span class="nav-plan-card-spark"></span></span>
             <span class="nav-plan-card-meta">
               <span class="nav-plan-card-label">${__('Plan actual')}</span>
-              <span class="nav-plan-card-name" id="navPlanName">Starter</span>
+              <span class="nav-plan-card-name" id="navPlanName">—</span>
             </span>
           </div>
-          <p class="nav-plan-card-desc">${__('Mejora tu plan para desbloquear más capacidad y funciones.')}</p>
+          <p class="nav-plan-card-desc" id="navPlanDesc">${__('Mejora tu plan para desbloquear más capacidad y funciones.')}</p>
           <a href="${this.getUserSidebarRoute('plans')}"
              class="nav-plan-card-cta"
              id="navUpgradeBtn"
@@ -3430,15 +3430,26 @@ class Navigation {
 
         const curOrder = currentPlan ? (Number(currentPlan.display_order) || 0) : -Infinity;
         const next = plansList.find(p => (Number(p.display_order) || 0) > curOrder) || null;
-        return { next };
+        return { next, currentName: currentPlan?.name || null, entryName: plansList[0]?.name || null };
       };
 
-      const { next } = window.apiClient
+      const { next, currentName, entryName } = window.apiClient
         ? await window.apiClient.query(`nav:upgrade-target:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
         : await fetcher();
 
-      if (!next) { hide(); return; }
-      label.textContent = `Upgrade to ${next.name}`;
+      // Nombre del plan actual en la tarjeta (dinámico, no estático).
+      const nameEl = document.getElementById('navPlanName');
+      const descEl = document.getElementById('navPlanDesc');
+      if (nameEl) nameEl.textContent = currentName || 'Trial';
+
+      if (!next) {
+        // Ya está en el plan más alto → sin CTA de upgrade.
+        if (descEl) descEl.textContent = 'Estás en el plan más alto disponible.';
+        hide();
+        return;
+      }
+      if (descEl) descEl.textContent = `Sube a ${next.name} para desbloquear más capacidad y funciones.`;
+      label.textContent = `Mejorar a ${next.name}`;
       btn.hidden = false;
     } catch (e) {
       console.warn('Navigation: loadUpgradeTarget', e);
