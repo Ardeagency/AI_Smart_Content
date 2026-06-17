@@ -4492,6 +4492,11 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     background: rgba(255, 255, 255, 0.11);
 }
 
+/* respetar el atributo hidden (display:flex lo anulaba) cuando ya está en el tope */
+.side-navigation.nav-mode-user .nav-plan-card-cta[hidden] {
+    display: none;
+}
+
 /* ---- footer-links (Organización / Planes / Créditos) ---- */
 .side-navigation.nav-mode-user .nav-footer-links {
     display: flex;
