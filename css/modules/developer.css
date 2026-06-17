@@ -200,7 +200,9 @@
   max-width: 1400px;
   margin: 0 auto;
   background: transparent;
-  min-height: 100vh;
+  /* Descontamos el padding-top del #app-container (header fijo de 45px) para no
+     generar scroll innecesario cuando el contenido cabe en el viewport. */
+  min-height: calc(100vh - 45px);
   position: relative;
   isolation: isolate;
   z-index: 0;
