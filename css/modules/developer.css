@@ -270,6 +270,13 @@
   gap: 12px;
 }
 
+/* Cabeceras de TODAS las vistas Dev: se ocultan título, descripción e icono
+   (todo vive en .dev-header-content). Solo quedan los controles interactivos
+   (.dev-header-actions / .dev-lead-toolbar), que son hermanos, no hijos. */
+.dev-header-content {
+  display: none !important;
+}
+
 /* ==========================================
    Grid de estadísticas
    ========================================== */
