@@ -28,10 +28,6 @@ class DevLeadOrgsView extends DevBaseView {
     return `
       <div class="dev-lead-container dev-lead-orgs">
         <header class="dev-lead-header">
-          <div class="dev-header-content">
-            <h1 class="dev-header-title"><i class="fas fa-building"></i> Organizaciones</h1>
-            <p class="dev-header-subtitle">Lista y administra todas las organizaciones del sistema.</p>
-          </div>
           <div class="dev-lead-toolbar" id="headerToolbar">
             <input type="search" id="orgsSearch" class="form-control" placeholder="Buscar por nombre..." autocomplete="off">
             <button type="button" class="btn btn-secondary" id="orgsRefresh" title="Refrescar"><i class="fas fa-sync-alt"></i></button>

@@ -26,12 +26,6 @@ class DevLeadCategoriesView extends DevBaseView {
   renderHTML() {
     return `
       <div class="dev-lead-container dev-lead-categories">
-        <header class="dev-lead-header">
-          <div class="dev-header-content">
-            <h1 class="dev-header-title"><i class="fas fa-tags"></i> Categorías y subcategorías</h1>
-            <p class="dev-header-subtitle">Gestiona categorías y subcategorías para organizar los flujos</p>
-          </div>
-        </header>
 
         <div class="dev-lead-tabs">
           <button type="button" class="dev-lead-tab active" data-tab="categories">

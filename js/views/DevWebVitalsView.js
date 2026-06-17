@@ -33,10 +33,6 @@ class DevWebVitalsView extends DevBaseView {
       <div class="dev-vitals-container">
         ${this._styles()}
         <header class="dev-header">
-          <div class="dev-header-content">
-            <h1 class="dev-header-title"><i class="fas fa-gauge-high"></i> Web Vitals</h1>
-            <p class="dev-header-subtitle">Percentiles p75 / p95 de LCP, INP, CLS, FCP y TTFB sobre datos reales de usuarios.</p>
-          </div>
           <div class="dev-header-actions">
             <button class="btn btn-secondary" id="vitalsRefresh"><i class="fas fa-sync-alt"></i> Actualizar</button>
           </div>

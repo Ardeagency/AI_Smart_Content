@@ -37,12 +37,6 @@ class DevLeadBillingView extends DevBaseView {
   renderHTML() {
     return `
       <div class="dev-lead-container dev-lead-billing">
-        <header class="dev-lead-header">
-          <div class="dev-header-content">
-            <h1 class="dev-header-title"><i class="fas fa-credit-card"></i> Billing</h1>
-            <p class="dev-header-subtitle">Edita planes y paquetes de creditos del catalogo de la plataforma.</p>
-          </div>
-        </header>
 
         <div class="dev-lead-tabs">
           <button type="button" class="dev-lead-tab active" data-tab="plans"><i class="fas fa-tags"></i> Plans</button>

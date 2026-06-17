@@ -77,13 +77,6 @@ class DevTestView extends DevBaseView {
       <div class="dev-test-container">
         <!-- Header -->
         <header class="dev-test-header">
-          <div class="dev-header-content">
-            <h1 class="dev-header-title">
-              <i class="ph ph-flask"></i>
-              Test de Flujos
-            </h1>
-            <p class="dev-header-subtitle">Prueba y depura tus flujos de IA</p>
-          </div>
           <div class="dev-header-stats" id="testStats">
             <div class="stat-item">
               <span class="stat-value" id="statTotalRuns">0</span>

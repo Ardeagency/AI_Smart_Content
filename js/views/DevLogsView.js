@@ -30,13 +30,6 @@ class DevLogsView extends DevBaseView {
       <div class="dev-logs-container">
         <!-- Header -->
         <header class="dev-logs-header">
-          <div class="dev-header-content">
-            <h1 class="dev-header-title">
-              <i class="fas fa-terminal"></i>
-              Developer Logs
-            </h1>
-            <p class="dev-header-subtitle">Monitorea errores y eventos de tus flujos</p>
-          </div>
           <div class="dev-header-actions">
             <button class="btn btn-secondary" id="refreshLogsBtn">
               <i class="fas fa-sync-alt"></i>

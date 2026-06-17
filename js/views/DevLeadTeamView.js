@@ -34,8 +34,6 @@ class DevLeadTeamView extends DevBaseView {
     return `
       <div class="team-page">
         <header class="team-page-header">
-          <h1 class="team-page-title"><i class="fas fa-user-friends"></i> Equipo</h1>
-          <p class="team-page-subtitle">Desarrolladores activos en el portal /dev y provisioning en curso.</p>
           <a href="/dev/provisioning/users" class="team-cta">
             <i class="fas fa-user-plus"></i> Crear usuario
           </a>

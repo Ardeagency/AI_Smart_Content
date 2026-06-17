@@ -24,10 +24,6 @@ class DevLeadInputSchemasView extends DevBaseView {
     return `
       <div class="dev-lead-container dev-lead-input-schemas">
         <header class="dev-lead-header">
-          <div class="dev-header-content">
-            <h1 class="dev-header-title"><i class="fas fa-puzzle-piece"></i> Input Schemas</h1>
-            <p class="dev-header-subtitle">Configura los tipos de input disponibles en el Builder (ui_component_templates)</p>
-          </div>
           <div class="dev-lead-toolbar">
             <button type="button" class="btn btn-primary" id="addInputSchemaBtn">
               <i class="fas fa-plus"></i> Nuevo input

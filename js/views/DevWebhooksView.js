@@ -49,13 +49,6 @@ class DevWebhooksView extends DevBaseView {
       <div class="dev-webhooks-container">
         <!-- Header -->
         <header class="dev-webhooks-header">
-          <div class="dev-header-content">
-            <h1 class="dev-header-title">
-              <i class="ph ph-webhooks-logo"></i>
-              Webhooks Manager
-            </h1>
-            <p class="dev-header-subtitle">Gestiona las conexiones de tus flujos de IA</p>
-          </div>
           <div class="dev-header-actions">
             <label class="dev-webhooks-auto-refresh">
               <span>Auto-refresh salud:</span>

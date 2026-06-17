@@ -30,13 +30,6 @@ class DevDashboardView extends DevBaseView {
       <div class="dev-dashboard-container dev-dashboard-v2">
         <!-- Header -->
         <header class="dev-dashboard-header">
-          <div class="dev-header-content">
-            <h1 class="dev-header-title">
-              <i class="fas fa-gauge-high"></i>
-              <span id="devHeaderTitle">Dashboard</span>
-            </h1>
-            <p class="dev-header-subtitle" id="devHeaderSubtitle">Cargando vista…</p>
-          </div>
           <div class="dev-header-actions" id="devHeaderActions">
             <!-- botones inyectados según rol -->
           </div>
