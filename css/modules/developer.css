@@ -7012,7 +7012,7 @@
    ========================================== */
 
 .dev-test-container {
-  min-height: 100vh;
+  min-height: calc(100vh - 45px);
   padding: 24px;
   background: var(--living-bg-deep, var(--bg-primary));
 }
@@ -7025,7 +7025,7 @@
 
 /* Lead-only views (dev_role === 'lead') */
 .dev-lead-container {
-  min-height: 100vh;
+  min-height: calc(100vh - 45px);
   padding: 24px;
   background: var(--bg-primary);
   max-width: 1400px;
@@ -8786,9 +8786,8 @@
 
 /* El offset del sidebar lo aplica #app-container. */
 .dev-webhooks-container {
-  min-height: 100vh;
+  min-height: calc(100vh - 45px);
   padding: 24px;
-  padding-top: calc(48px + 24px);
   margin-left: 0;
   background: var(--living-bg-deep, var(--bg-primary));
 }
