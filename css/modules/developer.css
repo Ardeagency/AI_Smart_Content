@@ -7079,7 +7079,18 @@
 
 /* Toolbar y tabla Lead */
 .dev-lead-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-bottom: 16px;
+}
+
+/* El buscador crece pero queda acotado: no debe ocupar todo el ancho del header
+   (antes .form-control width:100% lo estiraba y empujaba los botones abajo). */
+.dev-lead-toolbar .form-control {
+  flex: 1 1 240px;
+  max-width: 360px;
 }
 
 .dev-lead-toolbar-inline {
