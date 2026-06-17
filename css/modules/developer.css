@@ -12154,6 +12154,10 @@
   margin-top: auto;
 }
 .dev-plan-card-actions .btn { flex: 1; }
+.dev-plan-card-del:hover:not(:disabled) {
+  color: var(--accent-danger, #dc3545);
+  border-color: color-mix(in srgb, var(--accent-danger, #dc3545) 50%, transparent);
+}
 
 .dev-lead-empty-cell {
   text-align: center;

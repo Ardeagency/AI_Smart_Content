@@ -59,23 +59,8 @@ class DevLeadBillingView extends DevBaseView {
             <button type="button" class="btn btn-primary" id="packagesCreate"><i class="fas fa-plus"></i> Nuevo paquete</button>
             <span class="dev-lead-hint"><i class="fas fa-info-circle"></i> Estos son los packs one-shot que el cliente compra en /credits (CreditsShopView). Editar precio aqui no resincroniza Stripe/Wompi.</span>
           </div>
-          <div class="dev-table-container">
-            <table class="dev-table" id="packagesTable">
-              <thead>
-                <tr>
-                  <th>Orden</th>
-                  <th>Paquete</th>
-                  <th>Creditos</th>
-                  <th>Bonus</th>
-                  <th>Precio USD</th>
-                  <th>$/credito efectivo</th>
-                  <th>Activo</th>
-                  <th>Popular</th>
-                  <th class="dev-lead-actions">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="packagesBody"><tr><td colspan="9" class="dev-lead-empty-cell"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr></tbody>
-            </table>
+          <div class="dev-plan-grid" id="packagesGrid">
+            <div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
           </div>
         </section>
 
@@ -112,7 +97,7 @@ class DevLeadBillingView extends DevBaseView {
       if (action === 'edit-plan') this.openEditPlanModal(id);
       else if (action === 'toggle-plan-active') this.togglePlanActive(id);
     });
-    document.getElementById('packagesBody')?.addEventListener('click', (e) => {
+    document.getElementById('packagesGrid')?.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const id = btn.getAttribute('data-id');
@@ -420,8 +405,8 @@ class DevLeadBillingView extends DevBaseView {
   // ─── Credit Packages tab ───────────────────────────────────────────
 
   async loadPackages() {
-    const tbody = document.getElementById('packagesBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="dev-lead-empty-cell"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
+    const grid = document.getElementById('packagesGrid');
+    if (grid) grid.innerHTML = '<div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -434,42 +419,56 @@ class DevLeadBillingView extends DevBaseView {
       this.renderPackagesRows();
     } catch (err) {
       console.error('loadPackages:', err);
-      if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="dev-lead-empty-cell">Error: ${this._escape(err?.message || 'fallo al cargar')}</td></tr>`;
+      if (grid) grid.innerHTML = `<div class="dev-org-grid-state">Error: ${this._escape(err?.message || 'fallo al cargar')}</div>`;
     }
   }
 
   renderPackagesRows() {
-    const tbody = document.getElementById('packagesBody');
-    if (!tbody) return;
+    const grid = document.getElementById('packagesGrid');
+    if (!grid) return;
     if (this.packages.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" class="dev-lead-empty-cell">Sin paquetes</td></tr>';
+      grid.innerHTML = '<div class="dev-org-grid-state">Sin paquetes</div>';
       return;
     }
-    tbody.innerHTML = this.packages.map(p => {
-      const total = p.credits + (p.bonus_credits || 0);
-      const perCred = total > 0 ? (Number(p.price_usd) / total) : 0;
-      return `
-      <tr>
-        <td>${p.display_order}</td>
-        <td>
-          <strong>${this._escape(p.name)}</strong>
-          <div class="dev-lead-row-sub">${this._escape(p.id)}</div>
-        </td>
-        <td>${p.credits.toLocaleString('en-US')}</td>
-        <td>${p.bonus_credits > 0 ? `+${p.bonus_credits.toLocaleString('en-US')}` : '—'}</td>
-        <td>$${Number(p.price_usd).toFixed(2)}</td>
-        <td>$${perCred.toFixed(3)}</td>
-        <td>${this._badge(p.is_active, 'Activo', 'Inactivo')}</td>
-        <td>${p.is_popular ? '<i class="fas fa-star" style="color:var(--accent-warm,#e09145)"></i>' : ''}</td>
-        <td class="dev-lead-actions">
-          <button type="button" class="btn btn-xs btn-secondary" data-action="edit-pack" data-id="${this._escape(p.id)}" title="Editar"><i class="fas fa-edit"></i></button>
-          <button type="button" class="btn btn-xs" data-action="toggle-pack-active" data-id="${this._escape(p.id)}" title="${p.is_active ? 'Desactivar' : 'Activar'}">
-            <i class="fas fa-${p.is_active ? 'toggle-on' : 'toggle-off'}"></i>
+    grid.innerHTML = this.packages.map(p => this.renderPackageCard(p)).join('');
+  }
+
+  renderPackageCard(p) {
+    const id = this._escape(p.id);
+    const active = !!p.is_active;
+    const total = p.credits + (p.bonus_credits || 0);
+    const perCred = total > 0 ? (Number(p.price_usd) / total) : 0;
+    const bonus = p.bonus_credits > 0
+      ? `<li><i class="fas fa-gift"></i> +${p.bonus_credits.toLocaleString('en-US')} bonus</li>`
+      : '';
+    return `
+      <article class="dev-plan-card${active ? '' : ' is-inactive'}${p.is_popular ? ' is-popular' : ''}">
+        ${p.is_popular ? '<span class="dev-plan-card-popular"><i class="fas fa-star"></i> Popular</span>' : ''}
+        <div class="dev-plan-card-head">
+          <div class="dev-plan-card-id-wrap">
+            <h3 class="dev-plan-card-name">${this._escape(p.name)}</h3>
+            <span class="dev-plan-card-id">${id}</span>
+          </div>
+          <span class="dev-lead-badge ${active ? 'dev-lead-badge--ok' : 'dev-lead-badge--muted'}">${active ? 'Activo' : 'Inactivo'}</span>
+        </div>
+        <div class="dev-plan-card-price">
+          <span class="dev-plan-card-amount">$${Number(p.price_usd).toFixed(2)}</span>
+          <span class="dev-plan-card-per">pago único</span>
+        </div>
+        <ul class="dev-plan-card-specs">
+          <li><i class="fas fa-bolt"></i> ${p.credits.toLocaleString('en-US')} créditos</li>
+          ${bonus}
+          <li><i class="fas fa-tag"></i> $${perCred.toFixed(3)} /crédito efectivo</li>
+        </ul>
+        <div class="dev-plan-card-actions">
+          <button type="button" class="btn btn-secondary btn-sm" data-action="edit-pack" data-id="${id}"><i class="fas fa-edit"></i> Editar</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-action="toggle-pack-active" data-id="${id}" title="${active ? 'Desactivar' : 'Activar'}">
+            <i class="fas fa-${active ? 'toggle-on' : 'toggle-off'}"></i>
           </button>
-          <button type="button" class="btn btn-xs btn-danger" data-action="delete-pack" data-id="${this._escape(p.id)}" title="Borrar"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>`;
-    }).join('');
+          <button type="button" class="btn btn-secondary btn-sm dev-plan-card-del" data-action="delete-pack" data-id="${id}" title="Borrar"><i class="fas fa-trash"></i></button>
+        </div>
+      </article>
+    `;
   }
 
   _packageModalBody(isCreate) {
