@@ -204,25 +204,9 @@
   z-index: 0;
 }
 
-/* Velo cinematográfico: gradiente de marca (DEVELOPER LEGEND rainbow) muy
-   atenuado, fijo al viewport, full-bleed detrás del contenido. Mismo lenguaje
-   que el dashboard de org/, adaptado al portal dev. */
-.dev-dashboard-container::before,
-.dev-flows-container::before,
-.dev-logs-container::before,
-.dev-test-container::before,
-.dev-webhooks-container::before,
-.dev-lead-container::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(120% 80% at 50% -10%, rgba(255, 255, 255, 0.04) 0%, transparent 55%),
-    var(--dev-gradient-dynamic, var(--brand-gradient-dynamic, var(--brand-gradient)));
-  opacity: 0.08;
-}
+/* El velo cinematográfico (fondo full-bleed fijo con --dev-gradient-dynamic)
+   fue eliminado: el nuevo diseño usa el fondo opaco --bg-primary sin degradado
+   dinámico. Los acentos de rango (bordes/pills/badges) se conservan intactos. */
 
 /* Todas las vistas dev: acento sobrio (Organization-like) */
 .dev-dashboard-container,
