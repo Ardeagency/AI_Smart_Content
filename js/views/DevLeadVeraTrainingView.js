@@ -449,7 +449,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
           `).join('')}
       </div>
     `;
-    const { close } = window.Modal.show({ title: group.title, body, className: 'modal-lg', onClose: () => { this._modalClose = null; } });
+    const { close } = window.Modal.show({ title: group.title, body, className: 'dev-lead-modal-content dev-lead-modal-wide', onClose: () => { this._modalClose = null; } });
     this._modalClose = close;
   }
 

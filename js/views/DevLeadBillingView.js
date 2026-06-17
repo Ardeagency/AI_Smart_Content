@@ -296,7 +296,7 @@ class DevLeadBillingView extends DevBaseView {
     const { modal, close } = window.Modal.show({
       title: `Editar plan: ${plan.name}`,
       body: this._planModalBody(),
-      className: 'dev-lead-modal-content dev-lead-modal-billing',
+      className: 'dev-lead-modal-content dev-lead-modal-wide',
       onClose: () => { this._modalClose = null; this._editingPlanId = null; }
     });
     this._modalClose = close;
@@ -532,7 +532,7 @@ class DevLeadBillingView extends DevBaseView {
     const { modal, close } = window.Modal.show({
       title: 'Nuevo paquete de creditos',
       body: this._packageModalBody(true),
-      className: 'dev-lead-modal-content dev-lead-modal-billing',
+      className: 'dev-lead-modal-content dev-lead-modal-wide',
       onClose: () => { this._modalClose = null; this._creatingPack = false; }
     });
     this._modalClose = close;
@@ -548,7 +548,7 @@ class DevLeadBillingView extends DevBaseView {
     const { modal, close } = window.Modal.show({
       title: `Editar paquete: ${pack.name}`,
       body: this._packageModalBody(false),
-      className: 'dev-lead-modal-content dev-lead-modal-billing',
+      className: 'dev-lead-modal-content dev-lead-modal-wide',
       onClose: () => { this._modalClose = null; this._editingPackId = null; }
     });
     this._modalClose = close;

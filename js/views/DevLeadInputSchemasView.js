@@ -170,7 +170,7 @@ class DevLeadInputSchemasView extends DevBaseView {
     const { modal, close } = window.Modal.show({
       title,
       body: this._modalBodyHtml(),
-      className: 'dev-lead-modal-wide-content',
+      className: 'dev-lead-modal-content dev-lead-modal-wide',
       onClose: () => { this._modalClose = null; }
     });
     this._modalClose = close;
