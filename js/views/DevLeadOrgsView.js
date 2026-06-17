@@ -195,7 +195,7 @@ class DevLeadOrgsView extends DevBaseView {
           </div>
           <div class="dev-org-card-info">
             <h3 class="dev-org-card-title">${name}</h3>
-            ${org.brand_name_oficial ? `<span class="dev-org-card-subtitle">${this.escapeHtml(org.brand_name_oficial)}</span>` : ''}
+            ${org.brand_slogan ? `<span class="dev-org-card-subtitle">${this.escapeHtml(org.brand_slogan)}</span>` : ''}
             <div class="dev-org-card-meta">
               <span class="dev-org-card-pill dev-org-card-pill--plan">${planLabel}</span>
               <span class="dev-org-card-pill"><i class="fas fa-clock"></i> ${created}</span>
