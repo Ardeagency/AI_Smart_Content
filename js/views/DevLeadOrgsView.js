@@ -36,22 +36,8 @@ class DevLeadOrgsView extends DevBaseView {
         </header>
 
         <section class="dev-lead-content">
-          <div class="dev-table-container">
-            <table class="dev-table" id="orgsTable">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Plan</th>
-                  <th>Creditos</th>
-                  <th>Owner</th>
-                  <th>Creada</th>
-                  <th class="dev-lead-actions">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="orgsBody">
-                <tr><td colspan="6" class="dev-lead-empty-cell"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>
-              </tbody>
-            </table>
+          <div class="team-list dev-org-grid" id="orgsGrid">
+            <div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
           </div>
         </section>
       </div>
@@ -110,7 +96,7 @@ class DevLeadOrgsView extends DevBaseView {
       this.renderRows((e.target?.value || '').trim().toLowerCase());
     });
 
-    document.getElementById('orgsBody')?.addEventListener('click', (e) => {
+    document.getElementById('orgsGrid')?.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const id = btn.getAttribute('data-id');
@@ -135,8 +121,8 @@ class DevLeadOrgsView extends DevBaseView {
   async loadOrgs() {
     if (this._loading) return;
     this._loading = true;
-    const tbody = document.getElementById('orgsBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="dev-lead-empty-cell"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
+    const grid = document.getElementById('orgsGrid');
+    if (grid) grid.innerHTML = '<div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
 
     try {
       if (!this.supabase) this.supabase = await this.getSupabaseClient();
@@ -166,56 +152,60 @@ class DevLeadOrgsView extends DevBaseView {
   }
 
   renderRows(filter) {
-    const tbody = document.getElementById('orgsBody');
-    if (!tbody) return;
+    const grid = document.getElementById('orgsGrid');
+    if (!grid) return;
     const filtered = filter
       ? this.orgs.filter(o => (o.name || '').toLowerCase().includes(filter)
         || (o.brand_name_oficial || '').toLowerCase().includes(filter))
       : this.orgs;
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="dev-lead-empty-cell">${filter ? 'Sin coincidencias.' : 'Aun no hay organizaciones.'}</td></tr>`;
+      grid.innerHTML = `<div class="dev-org-grid-state">${filter ? 'Sin coincidencias.' : 'Aun no hay organizaciones.'}</div>`;
       return;
     }
 
-    tbody.innerHTML = filtered.map(o => this.renderRow(o)).join('');
+    grid.innerHTML = filtered.map(o => this.renderRow(o)).join('');
   }
 
   renderRow(org) {
+    const id = this.escapeHtml(org.id);
     const sub = this.activeSubscription(org.subscriptions);
-    const planLabel = sub ? this.escapeHtml((sub.plans && sub.plans.name) || '—') : '<span class="text-muted">sin plan</span>';
+    const planLabel = sub ? this.escapeHtml((sub.plans && sub.plans.name) || 'Sin plan') : 'Sin plan';
     const credits = org.organization_credits;
     const creditsLabel = credits
-      ? `${credits.credits_available ?? 0}/${credits.credits_total ?? 0}`
+      ? `${Math.round(credits.credits_available ?? 0)}/${credits.credits_total ?? 0}`
       : '—';
     const created = org.created_at
       ? new Date(org.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })
       : '—';
-    const ownerShort = org.owner_user_id ? org.owner_user_id.slice(0, 8) + '...' : '—';
+    const ownerShort = org.owner_user_id ? org.owner_user_id.slice(0, 8) + '…' : '—';
+    const name = this.escapeHtml(org.name || '—');
     const logo = org.logo_url
-      ? `<img src="${this.escapeHtml(org.logo_url)}" alt="" class="dev-org-logo" onerror="this.style.display='none'">`
-      : `<span class="dev-org-logo dev-org-logo--placeholder"><i class="fas fa-building"></i></span>`;
+      ? `<img src="${this.escapeHtml(org.logo_url)}" alt="${name}" class="dev-org-card-logo" onerror="this.style.display='none'">`
+      : `<span class="dev-org-card-logo dev-org-card-logo--placeholder"><i class="fas fa-building"></i></span>`;
 
     return `
-      <tr class="dev-lead-file-row" data-id="${this.escapeHtml(org.id)}">
-        <td>
-          <div class="dev-org-cell">
-            ${logo}
-            <div class="dev-org-name">
-              <strong>${this.escapeHtml(org.name || '—')}</strong>
-              ${org.brand_name_oficial ? `<span class="text-muted">${this.escapeHtml(org.brand_name_oficial)}</span>` : ''}
-            </div>
+      <article class="team-card dev-org-card" data-id="${id}">
+        <header class="team-card-head">
+          ${logo}
+          <div class="team-identity">
+            <strong class="team-name">${name}</strong>
+            ${org.brand_name_oficial ? `<span class="team-email">${this.escapeHtml(org.brand_name_oficial)}</span>` : ''}
           </div>
-        </td>
-        <td>${planLabel}</td>
-        <td><code>${creditsLabel}</code></td>
-        <td><code title="${this.escapeHtml(org.owner_user_id || '')}">${this.escapeHtml(ownerShort)}</code></td>
-        <td>${created}</td>
-        <td class="dev-lead-actions">
-          <button type="button" class="btn-icon" data-action="edit" data-id="${this.escapeHtml(org.id)}" title="Editar"><i class="fas fa-edit"></i></button>
-          <button type="button" class="btn-icon btn-icon--danger" data-action="delete" data-id="${this.escapeHtml(org.id)}" title="Eliminar"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>
+          <div class="dev-org-card-actions">
+            <button type="button" class="btn-icon" data-action="edit" data-id="${id}" title="Editar"><i class="fas fa-edit"></i></button>
+            <button type="button" class="btn-icon btn-icon--danger" data-action="delete" data-id="${id}" title="Eliminar"><i class="fas fa-trash"></i></button>
+          </div>
+        </header>
+        <div class="team-card-body dev-org-card-body">
+          <span class="team-badge team-badge--role">${planLabel}</span>
+          <div class="dev-org-stat"><span class="dev-org-stat-label">Créditos</span><code>${creditsLabel}</code></div>
+          <div class="dev-org-stat"><span class="dev-org-stat-label">Owner</span><code title="${this.escapeHtml(org.owner_user_id || '')}">${this.escapeHtml(ownerShort)}</code></div>
+        </div>
+        <footer class="team-card-foot">
+          <span class="team-meta"><i class="fas fa-clock"></i> ${created}</span>
+        </footer>
+      </article>
     `;
   }
 
@@ -321,9 +311,9 @@ class DevLeadOrgsView extends DevBaseView {
   }
 
   renderError(message) {
-    const tbody = document.getElementById('orgsBody');
-    if (!tbody) return;
-    tbody.innerHTML = `<tr><td colspan="6" class="dev-lead-empty-cell"><i class="fas fa-triangle-exclamation"></i> ${this.escapeHtml(message)}</td></tr>`;
+    const grid = document.getElementById('orgsGrid');
+    if (!grid) return;
+    grid.innerHTML = `<div class="dev-org-grid-state"><i class="fas fa-triangle-exclamation"></i> ${this.escapeHtml(message)}</div>`;
   }
 
   escapeHtml(text) {

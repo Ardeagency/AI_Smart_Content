@@ -11701,40 +11701,71 @@
 /* ============================================================
    Orgs - Lista de organizaciones
    ============================================================ */
-.dev-org-cell {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.dev-org-logo {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.dev-org-logo--placeholder {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-secondary);
+/* ───── Galería de organizaciones (reusa .team-list / .team-card) ───── */
+.dev-org-grid-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--spacing-2xl);
   color: var(--text-muted);
 }
 
-.dev-org-name {
-  display: flex;
-  flex-direction: column;
+.dev-org-card {
+  position: relative;
+}
+.dev-org-card:hover {
+  border-color: var(--dev-rank-accent, var(--accent-warm));
+  transform: translateY(-2px);
+}
+
+/* Logo de marca en la cabecera de la card (mismo tamaño que .team-avatar) */
+.dev-org-card-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-divider);
+  flex-shrink: 0;
+}
+.dev-org-card-logo--placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+/* La identidad ocupa el espacio libre; las acciones quedan a la derecha */
+.dev-org-card .team-identity {
+  flex: 1;
   min-width: 0;
 }
+.dev-org-card .team-name { word-break: break-word; }
 
-.dev-org-name strong {
-  color: var(--text-primary);
-  font-weight: 600;
+.dev-org-card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
-.dev-org-name span {
+.dev-org-card-body {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.dev-org-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.6875rem;
+}
+.dev-org-stat-label {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.dev-org-stat code {
+  color: var(--text-primary);
   font-size: 0.75rem;
 }
 
