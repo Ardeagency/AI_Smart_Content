@@ -2181,17 +2181,36 @@ class Navigation {
 
         ${footerHTML ? `<div class="nav-footer" role="navigation" aria-label="${__('Administración organizacional')}">${footerHTML}</div>` : ''}
 
-        <div class="nav-system-stats">
-          <div class="nav-system-stats-row">
-            <span class="nav-system-stats-label">${__('Almacenamiento')}</span>
-            <span class="nav-system-stats-value" id="navStorageValue">—</span>
+        <div class="nav-plan-card" id="navPlanCard">
+          <span class="nav-system-stats-value" id="navStorageValue" hidden>—</span>
+          <div class="nav-plan-card-top">
+            <span class="nav-plan-card-badge" aria-hidden="true"><img src="${_navSidebarIconUrl('/recursos/icons/sparkle.svg')}" width="16" height="16" alt=""></span>
+            <span class="nav-plan-card-meta">
+              <span class="nav-plan-card-label">${__('Plan actual')}</span>
+              <span class="nav-plan-card-name" id="navPlanName">Starter</span>
+            </span>
           </div>
+          <p class="nav-plan-card-desc">${__('Mejora tu plan para desbloquear más capacidad y funciones.')}</p>
           <a href="${this.getUserSidebarRoute('plans')}"
-             class="nav-system-upgrade-btn"
+             class="nav-plan-card-cta"
              id="navUpgradeBtn"
-             data-route="${this.getUserSidebarRoute('plans')}"
-             hidden>
+             data-route="${this.getUserSidebarRoute('plans')}">
             <span id="navUpgradeBtnLabel">${__('Mejorar plan')}</span>
+          </a>
+        </div>
+
+        <div class="nav-footer-links" role="navigation" aria-label="${__('Atajos')}">
+          <a href="${this.getUserSidebarRoute('organization')}" class="nav-footer-link" data-route="${this.getUserSidebarRoute('organization')}">
+            <img src="${_navSidebarIconUrl('/recursos/icons/organization.svg')}" class="nav-icon nav-icon-img" width="16" height="16" alt="">
+            <span class="nav-text">${__('Organización')}</span>
+          </a>
+          <a href="${this.getUserSidebarRoute('plans')}" class="nav-footer-link" data-route="${this.getUserSidebarRoute('plans')}">
+            <img src="${_navSidebarIconUrl('/recursos/icons/Planes.svg')}" class="nav-icon nav-icon-img" width="16" height="16" alt="">
+            <span class="nav-text">${__('Planes')}</span>
+          </a>
+          <a href="${this.getUserSidebarRoute('credits')}" class="nav-footer-link" data-route="${this.getUserSidebarRoute('credits')}">
+            <img src="${_navSidebarIconUrl('/recursos/icons/credits.svg')}" class="nav-icon nav-icon-img" width="16" height="16" alt="">
+            <span class="nav-text">${__('Créditos')}</span>
           </a>
         </div>
 

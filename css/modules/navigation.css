@@ -4326,15 +4326,149 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     z-index: 1;
 }
 
-/* botón Vera primario: pastilla glass sutil */
-.side-navigation.nav-mode-user .nav-link--primary {
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
+/* botón Vera: el arco bajo el pill salía rojo (degradado de IGNIS) y parecía
+   error -> hairline glass neutro */
+.side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-link::after,
+.side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-main-link::after {
+    background: rgba(255, 255, 255, 0.10);
 }
 
-.side-navigation.nav-mode-user .nav-link--primary:hover {
-    background: rgba(255, 255, 255, 0.075);
+/* ---- tarjeta de plan (pie) ---- */
+.side-navigation.nav-mode-user .nav-plan-card {
+    margin: 4px 8px 0;
+    padding: 13px 13px 14px;
+    border-radius: 13px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+        #101216;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-badge {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-badge img {
+    width: 15px;
+    height: 15px;
+    opacity: .9;
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-meta {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    min-width: 0;
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-label {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-desc {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .16s ease;
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-cta:hover {
+    background: rgba(255, 255, 255, 0.11);
+}
+
+/* ---- footer-links (Organización / Planes / Créditos) ---- */
+.side-navigation.nav-mode-user .nav-footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 8px 6px;
+    margin-top: 4px;
+    border-top: 1px solid #1e2229;
+    flex-shrink: 0;
+}
+
+.side-navigation.nav-mode-user .nav-footer-link {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 7px 11px;
+    border-radius: 9px;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 13.5px;
+    text-decoration: none;
+    transition: background .16s ease, color .16s ease;
+}
+
+.side-navigation.nav-mode-user .nav-footer-link:hover {
+    background: rgba(255, 255, 255, 0.045);
+    color: #fff;
+}
+
+.side-navigation.nav-mode-user .nav-footer-link .nav-icon-img {
+    width: 16px;
+    height: 16px;
+    opacity: .72;
+    flex-shrink: 0;
+}
+
+/* colapsado: ocultar la tarjeta, footer-links como iconos */
+.side-navigation.collapsed.nav-mode-user .nav-plan-card {
+    display: none;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-footer-links {
+    align-items: center;
+    padding: 8px 0 6px;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-footer-link {
+    justify-content: center;
+    padding: 8px;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-footer-link .nav-text {
+    display: none;
 }
 
 /* submenú: enlaces redondeados + activo en pastilla translúcida */
