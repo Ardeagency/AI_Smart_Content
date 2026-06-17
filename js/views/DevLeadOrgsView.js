@@ -102,14 +102,14 @@ class DevLeadOrgsView extends DevBaseView {
       const id = btn.getAttribute('data-id');
       const action = btn.getAttribute('data-action');
       if (action === 'edit') this.openEditModal(id);
-      else if (action === 'delete') this.deleteOrg(id);
+      else if (action === 'delete') this.openDeleteModal(id);
     });
 
     try {
       this.supabase = await this.getSupabaseClient();
       if (this.supabase) {
         const { data: { user } } = await this.supabase.auth.getUser();
-        if (user) this.userId = user.id;
+        if (user) { this.userId = user.id; this.userEmail = user.email || null; }
       }
       await this.loadOrgs();
     } catch (err) {
@@ -295,22 +295,135 @@ class DevLeadOrgsView extends DevBaseView {
     }
   }
 
-  async deleteOrg(id) {
+  /**
+   * Eliminación segura de una org: advertencia crítica + doble verificación de
+   * identidad (contraseña + código de verificación enviado al correo del usuario).
+   *
+   * NOTA DE SEGURIDAD: esta es una barrera de UX en el cliente. El borrado real
+   * sigue siendo un UPDATE directo a `organizations`. Para una garantía dura
+   * (no evadible desde consola) la verificación debe moverse a un RPC/Edge
+   * Function server-side que exija reautenticación. Pendiente documentado.
+   */
+  async openDeleteModal(id) {
     const org = this.orgs.find(o => o.id === id);
     if (!org) return;
-    if (!confirm(`Eliminar (soft delete) la organizacion "${org.name}"?`)) return;
+    if (!this.supabase) this.supabase = await this.getSupabaseClient();
+    if (!this.supabase) { this.showNotification('Sin conexión.', 'error'); return; }
+
+    // Email del usuario actual (destino del código de verificación).
+    let email = this.userEmail || '';
     try {
-      if (!this.supabase) this.supabase = await this.getSupabaseClient();
-      const { error } = await this.supabase
+      const { data: { user } } = await this.supabase.auth.getUser();
+      email = user?.email || email;
+    } catch { /* noop */ }
+    if (!email) { this.showNotification('No se pudo determinar tu correo para verificar.', 'error'); return; }
+
+    this._delEmail = email;
+    this._delCodeSent = false;
+
+    const { modal, close } = window.Modal.show({
+      title: 'Eliminar organización',
+      body: this._deleteModalHtml(org, email),
+      className: 'dev-lead-modal-content org-delete-modal',
+      onClose: () => { this._delModalClose = null; this._delCodeSent = false; }
+    });
+    this._delModalClose = close;
+
+    modal.querySelector('#orgDelCancel')?.addEventListener('click', () => this._delModalClose && this._delModalClose());
+    modal.querySelector('#orgDelSendCode')?.addEventListener('click', () => this._sendDeleteCode(modal));
+    modal.querySelector('#orgDelConfirm')?.addEventListener('click', () => this._confirmDelete(modal, org));
+  }
+
+  _deleteModalHtml(org, email) {
+    const name = this.escapeHtml(org.name || '—');
+    const safeEmail = this.escapeHtml(email);
+    return `
+      <div class="org-delete-warn" role="alert">
+        <i class="fas fa-triangle-exclamation"></i>
+        <div>
+          <strong>Acción crítica e irreversible</strong>
+          <p>Vas a eliminar la organización <b>${name}</b> junto con sus marcas, contenido y datos asociados. Por la seguridad de nuestros usuarios, confirma tu identidad antes de continuar.</p>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="orgDelPassword">Tu contraseña <span class="form-required">*</span></label>
+        <input type="password" id="orgDelPassword" class="form-control" autocomplete="current-password" placeholder="Confirma tu contraseña">
+      </div>
+      <div class="form-group">
+        <label for="orgDelCode">Código de verificación por correo <span class="form-required">*</span></label>
+        <div class="org-delete-code-row">
+          <input type="text" id="orgDelCode" class="form-control" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Código de 6 dígitos" disabled>
+          <button type="button" class="btn btn-secondary" id="orgDelSendCode">Enviar código</button>
+        </div>
+        <p class="form-hint">Enviaremos un código a <b>${safeEmail}</b> para confirmar que eres tú.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="orgDelCancel">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="orgDelConfirm"><i class="fas fa-trash"></i> Eliminar definitivamente</button>
+      </div>
+    `;
+  }
+
+  async _sendDeleteCode(modal) {
+    const btn = modal.querySelector('#orgDelSendCode');
+    const codeInput = modal.querySelector('#orgDelCode');
+    if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
+    try {
+      const { error } = await this.supabase.auth.signInWithOtp({
+        email: this._delEmail,
+        options: { shouldCreateUser: false }
+      });
+      if (error) throw error;
+      this._delCodeSent = true;
+      if (codeInput) { codeInput.disabled = false; codeInput.focus(); }
+      this.showNotification('Código enviado a tu correo.', 'success');
+      // Cooldown de reenvío (45s).
+      let s = 45;
+      const tick = () => {
+        if (!btn) return;
+        if (s <= 0) { btn.disabled = false; btn.textContent = 'Reenviar código'; return; }
+        btn.textContent = `Reenviar (${s}s)`; s -= 1; setTimeout(tick, 1000);
+      };
+      tick();
+    } catch (err) {
+      console.error('_sendDeleteCode:', err);
+      if (btn) { btn.disabled = false; btn.textContent = 'Enviar código'; }
+      this.showNotification('No se pudo enviar el código: ' + (err?.message || 'error'), 'error');
+    }
+  }
+
+  async _confirmDelete(modal, org) {
+    const password = modal.querySelector('#orgDelPassword')?.value || '';
+    const code = (modal.querySelector('#orgDelCode')?.value || '').trim();
+    const btn = modal.querySelector('#orgDelConfirm');
+
+    if (!password) { this.showNotification('Ingresa tu contraseña.', 'warning'); return; }
+    if (!this._delCodeSent || !code) { this.showNotification('Solicita y escribe el código de verificación.', 'warning'); return; }
+
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando…'; }
+    try {
+      // 1) Verificar contraseña (antes del código, para no consumir el OTP si falla).
+      const { error: pwErr } = await this.supabase.auth.signInWithPassword({ email: this._delEmail, password });
+      if (pwErr) throw new Error('Contraseña incorrecta.');
+
+      // 2) Verificar el código de correo.
+      const { error: otpErr } = await this.supabase.auth.verifyOtp({ email: this._delEmail, token: code, type: 'email' });
+      if (otpErr) throw new Error('Código de verificación inválido o expirado.');
+
+      // 3) Soft delete.
+      const { error: delErr } = await this.supabase
         .from('organizations')
         .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id);
-      if (error) throw error;
-      this.showNotification('Organizacion eliminada (soft).', 'success');
+        .eq('id', org.id);
+      if (delErr) throw delErr;
+
+      this.showNotification(`Organización "${org.name}" eliminada.`, 'success');
+      if (this._delModalClose) this._delModalClose();
       await this.loadOrgs();
     } catch (err) {
-      console.error('deleteOrg:', err);
-      this.showNotification('Error: ' + (err?.message || 'fallo al eliminar'), 'error');
+      console.error('_confirmDelete:', err);
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-trash"></i> Eliminar definitivamente'; }
+      this.showNotification('Error: ' + (err?.message || 'no se pudo eliminar'), 'error');
     }
   }
 

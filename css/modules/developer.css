@@ -7370,6 +7370,51 @@
   background: var(--color-critical);
 }
 
+/* ───── Modal de eliminación segura de organización ───── */
+.org-delete-modal .btn-danger {
+  background: var(--accent-danger, #dc3545);
+  color: #fff;
+  border: 1px solid var(--accent-danger, #dc3545);
+}
+.org-delete-modal .btn-danger:hover:not(:disabled) {
+  background: var(--color-critical, #b02a37);
+  border-color: var(--color-critical, #b02a37);
+}
+.org-delete-warn {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent-danger, #dc3545) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-danger, #dc3545) 40%, transparent);
+}
+.org-delete-warn > i {
+  color: var(--accent-danger, #dc3545);
+  font-size: 1.25rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.org-delete-warn strong {
+  display: block;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+.org-delete-warn p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+.org-delete-code-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.org-delete-code-row .form-control { flex: 1; }
+.org-delete-code-row .btn { flex-shrink: 0; white-space: nowrap; }
+
 /* Referencias visuales: preview */
 .dev-lead-td-preview {
   width: 56px;
