@@ -7432,9 +7432,10 @@
   border-top: 1px solid var(--border-divider, #242424);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
-/* Botones del footer: pill; Guardar con gradiente de rango (como Team) */
+/* Botones del footer: radio 8px (estandar de la plataforma); Guardar con
+   gradiente de rango (como Team). */
 .dev-lead-modal-content .modal-footer .btn {
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   padding: 0.55rem 1.1rem;
 }
 .dev-lead-modal-content .modal-footer .btn-primary {
@@ -14374,6 +14375,9 @@
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   animation: team-modal-overlay-in 0.18s ease;
+  /* #modals-portal pone pointer-events:none y solo lo reactiva en > .modal;
+     este overlay no es .modal, asi que lo reactivamos explicitamente. */
+  pointer-events: auto;
 }
 
 /* hidden attr override (sino el display:flex de arriba lo gana) */
@@ -14485,7 +14489,7 @@
   padding: 0.55rem 0.9rem;
   background: transparent;
   border: 1px solid color-mix(in srgb, #ef4444 30%, transparent);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   color: #ef4444;
   font: inherit;
   font-size: 0.8125rem;
@@ -14507,7 +14511,7 @@
               var(--brand-gradient-dynamic,
               linear-gradient(135deg, var(--accent-warm), var(--accent-warm))));
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   color: #fff;
   font: inherit;
   font-weight: 500;

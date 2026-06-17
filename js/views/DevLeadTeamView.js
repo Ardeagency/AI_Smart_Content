@@ -68,9 +68,23 @@ class DevLeadTeamView extends DevBaseView {
       this.showError('Supabase no disponible.');
       return;
     }
+    // El overlay del modal nace dentro de .dev-lead-container (que tiene
+    // isolation:isolate y atrapa el stacking del position:fixed). Lo movemos a
+    // #modals-portal para que se superponga a toda la app, igual que el resto
+    // de modales del portal.
+    const portal = document.getElementById('modals-portal') || document.body;
+    const overlay = document.getElementById('teamEditOverlay');
+    if (overlay && overlay.parentElement !== portal) portal.appendChild(overlay);
+
     await Promise.all([this.loadTeam(), this.loadPending()]);
     this.renderTeam();
     this.renderPending();
+  }
+
+  /** El router llama destroy() al cambiar de ruta: quitamos el overlay portalizado. */
+  destroy() {
+    document.getElementById('teamEditOverlay')?.remove();
+    super.destroy();
   }
 
   async loadTeam() {
@@ -172,7 +186,7 @@ class DevLeadTeamView extends DevBaseView {
 
   closeEdit() {
     this.editing = null;
-    const overlay = this.container.querySelector('#teamEditOverlay');
+    const overlay = document.getElementById('teamEditOverlay');
     if (overlay) {
       overlay.innerHTML = '';
       overlay.hidden = true;
@@ -180,7 +194,7 @@ class DevLeadTeamView extends DevBaseView {
   }
 
   renderEditModal() {
-    const overlay = this.container.querySelector('#teamEditOverlay');
+    const overlay = document.getElementById('teamEditOverlay');
     if (!overlay || !this.editing) return;
     const m = this.editing;
     const rank = m.dev_rank || 'rookie';
@@ -241,7 +255,7 @@ class DevLeadTeamView extends DevBaseView {
   }
 
   wireEditModal() {
-    const overlay = this.container.querySelector('#teamEditOverlay');
+    const overlay = document.getElementById('teamEditOverlay');
     const form = overlay.querySelector('#teamEditForm');
     if (form) this.addEventListener(form, 'submit', (e) => this.handleEditSave(e));
 
@@ -331,7 +345,7 @@ class DevLeadTeamView extends DevBaseView {
   }
 
   setEditStatus(text, type) {
-    const el = this.container.querySelector('#teamEditStatus');
+    const el = document.getElementById('teamEditStatus');
     if (!el) return;
     el.textContent = text;
     el.className = 'provision-form-status';
