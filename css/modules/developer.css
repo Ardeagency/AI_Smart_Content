@@ -7029,11 +7029,11 @@
 }
 
 .dev-lead-content {
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider, #242424);
-  border-radius: var(--radius-md);
-  padding: 24px;
-  box-shadow: var(--dev-shell-shadow, 0 2px 12px rgba(0, 0, 0, 0.35));
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 .dev-lead-placeholder {
@@ -11702,14 +11702,6 @@
    Orgs - Lista de organizaciones
    ============================================================ */
 /* ───── Galería de organizaciones (reusa .team-list / .team-card) ───── */
-/* La galería no necesita el panel-shell: el contenedor va sin fondo/borde/sombra. */
-.dev-lead-orgs .dev-lead-content {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-}
-
 .dev-org-grid-state {
   grid-column: 1 / -1;
   text-align: center;
