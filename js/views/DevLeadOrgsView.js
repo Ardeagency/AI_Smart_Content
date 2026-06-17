@@ -30,7 +30,6 @@ class DevLeadOrgsView extends DevBaseView {
         <header class="dev-lead-header">
           <div class="dev-lead-toolbar" id="headerToolbar">
             <input type="search" id="orgsSearch" class="form-control" placeholder="Buscar por nombre..." autocomplete="off">
-            <button type="button" class="btn btn-secondary" id="orgsRefresh" title="Refrescar"><i class="fas fa-sync-alt"></i></button>
             <button type="button" class="btn btn-primary" id="orgsCreate"><i class="fas fa-plus"></i> Nueva organizacion</button>
           </div>
         </header>
@@ -89,7 +88,6 @@ class DevLeadOrgsView extends DevBaseView {
   }
 
   async init() {
-    document.getElementById('orgsRefresh')?.addEventListener('click', () => this.loadOrgs());
     document.getElementById('orgsCreate')?.addEventListener('click', () => this.openCreateModal());
 
     document.getElementById('orgsSearch')?.addEventListener('input', (e) => {

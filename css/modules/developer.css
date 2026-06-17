@@ -11969,6 +11969,76 @@
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ───── Variante horizontal (categorías): misma identidad, layout en fila ───── */
+.dev-org-grid--h {
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+}
+.dev-org-card--h {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+.dev-org-card-media--h {
+  width: 132px;
+  aspect-ratio: auto;
+  flex-shrink: 0;
+}
+.dev-org-card-h-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+}
+.dev-org-card-h-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.dev-org-card-h-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  word-break: break-word;
+}
+.dev-org-card-h-desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* En horizontal las acciones van en flujo (no overlay), visibles al hover */
+.dev-org-card-actions--h {
+  position: static;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+}
+/* Meta sobre el fondo de la card (no sobre imagen): pills sobrias */
+.dev-org-card-meta--h {
+  margin-top: auto;
+}
+.dev-org-card-meta--h .dev-org-card-pill {
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--border-divider, #242424);
+  color: var(--text-secondary);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.dev-org-card-meta--h .dev-org-card-pill--muted {
+  opacity: 0.6;
+}
+
 .dev-lead-empty-cell {
   text-align: center;
   padding: var(--spacing-2xl) !important;

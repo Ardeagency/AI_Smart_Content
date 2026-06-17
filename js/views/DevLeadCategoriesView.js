@@ -42,25 +42,7 @@ class DevLeadCategoriesView extends DevBaseView {
               <i class="fas fa-plus"></i> Nueva categoría
             </button>
           </div>
-          <div class="dev-table-container">
-            <table class="dev-table" id="categoriesTable">
-              <thead>
-                <tr>
-                  <th>Orden</th>
-                  <th>Nombre</th>
-                  <th>Descripción</th>
-                  <th>Portada</th>
-                  <th>Catálogo</th>
-                  <th class="dev-lead-actions">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="categoriesBody"></tbody>
-            </table>
-            <div class="dev-lead-empty" id="categoriesEmpty" hidden>
-              <i class="fas fa-folder"></i>
-              <p>No hay categorías. Crea la primera.</p>
-            </div>
-          </div>
+          <div class="dev-org-grid dev-org-grid--h" id="categoriesGrid"></div>
         </section>
 
         <section class="dev-lead-content dev-lead-subcategories-panel" id="subcategoriesPanel" hidden>
@@ -200,47 +182,56 @@ class DevLeadCategoriesView extends DevBaseView {
   }
 
   renderCategoriesTable() {
-    const tbody = document.getElementById('categoriesBody');
-    const empty = document.getElementById('categoriesEmpty');
-    if (!tbody) return;
+    const grid = document.getElementById('categoriesGrid');
+    if (!grid) return;
     if (this.categories.length === 0) {
-      tbody.innerHTML = '';
-      if (empty) empty.style.display = 'block';
+      grid.innerHTML = '<div class="dev-org-grid-state"><i class="fas fa-folder"></i> No hay categorías. Crea la primera.</div>';
       return;
     }
-    if (empty) empty.style.display = 'none';
-    tbody.innerHTML = this.categories.map(c => {
-      const visible = c.is_visible !== false;
-      return `
-      <tr data-id="${c.id}">
-        <td>${c.order_index != null ? c.order_index : '-'}</td>
-        <td>${this.escapeHtml(c.name)}</td>
-        <td>${this.escapeHtml((c.description || '').slice(0, 60))}${(c.description || '').length > 60 ? '…' : ''}</td>
-        <td>
-          ${c.cover_url
-            ? (c.cover_type === 'video'
-              ? '<span class="dev-lead-cover-chip"><i class="fas fa-video"></i> Video</span>'
-              : '<span class="dev-lead-cover-chip"><i class="fas fa-image"></i> Img</span>')
-            : '<span class="dev-lead-cover-chip dev-lead-cover-chip--empty">—</span>'}
-        </td>
-        <td><span class="dev-lead-badge ${visible ? 'dev-lead-badge--visible' : 'dev-lead-badge--hidden'}">${visible ? 'Visible' : 'Oculta'}</span></td>
-        <td class="dev-lead-actions">
-          <button type="button" class="btn-icon edit-category" title="Editar" data-id="${c.id}">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button type="button" class="btn-icon delete-category" title="Eliminar" data-id="${c.id}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-    }).join('');
+    grid.innerHTML = this.categories.map(c => this.renderCategoryCard(c)).join('');
     this.container.querySelectorAll('.edit-category').forEach(btn => {
       btn.addEventListener('click', () => this.openCategoryModal(btn.getAttribute('data-id')));
     });
     this.container.querySelectorAll('.delete-category').forEach(btn => {
       btn.addEventListener('click', () => this.deleteCategory(btn.getAttribute('data-id')));
     });
+  }
+
+  // Card horizontal estilo Organizaciones (misma identidad visual, layout en fila).
+  renderCategoryCard(c) {
+    const id = this.escapeHtml(c.id);
+    const name = this.escapeHtml(c.name || '—');
+    const desc = this.escapeHtml(c.description || '');
+    const visible = c.is_visible !== false;
+    const order = c.order_index != null ? c.order_index : '—';
+    let media;
+    if (c.cover_url) {
+      const url = this.escapeHtml(c.cover_url);
+      media = (c.cover_type || '').toLowerCase() === 'video'
+        ? `<video src="${url}" class="dev-org-card-img" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>`
+        : `<img src="${url}" class="dev-org-card-img" alt="${name}" loading="lazy" onerror="this.outerHTML='&lt;div class=&quot;dev-org-card-placeholder&quot;&gt;&lt;i class=&quot;fas fa-folder&quot;&gt;&lt;/i&gt;&lt;/div&gt;'">`;
+    } else {
+      media = `<div class="dev-org-card-placeholder"><i class="fas fa-folder"></i></div>`;
+    }
+    return `
+      <article class="dev-org-card dev-org-card--h" data-id="${id}">
+        <div class="dev-org-card-media dev-org-card-media--h">${media}</div>
+        <div class="dev-org-card-h-body">
+          <div class="dev-org-card-h-top">
+            <h3 class="dev-org-card-h-title">${name}</h3>
+            <div class="dev-org-card-actions dev-org-card-actions--h">
+              <button type="button" class="dev-org-card-icon-btn edit-category" data-id="${id}" title="Editar" aria-label="Editar"><i class="fas fa-edit"></i></button>
+              <button type="button" class="dev-org-card-icon-btn dev-org-card-icon-btn--danger delete-category" data-id="${id}" title="Eliminar" aria-label="Eliminar"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+          ${desc ? `<p class="dev-org-card-h-desc">${desc}</p>` : ''}
+          <div class="dev-org-card-meta dev-org-card-meta--h">
+            <span class="dev-org-card-pill"><i class="fas fa-sort"></i> Orden ${order}</span>
+            <span class="dev-org-card-pill ${visible ? '' : 'dev-org-card-pill--muted'}"><i class="fas fa-${visible ? 'eye' : 'eye-slash'}"></i> ${visible ? 'Visible' : 'Oculta'}</span>
+          </div>
+        </div>
+      </article>
+    `;
   }
 
   async loadSubcategories() {
