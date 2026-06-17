@@ -1435,6 +1435,9 @@ class VeraView extends (window.BaseView || class {}) {
             <i class="fas fa-magnifying-glass"></i><span>${__('Buscar chats')}</span>
           </button>
           <input type="text" class="vera-history-search-input" id="veraHistorySearchInput" placeholder="${__('Buscar…')}" hidden />
+          <button class="vera-history-search vera-history-gallery" id="veraGalleryBtn" title="${__('Archivos generados')}">
+            <i class="fas fa-folder-open"></i><span>${__('Archivos generados')}</span>
+          </button>
           <div class="vera-history-list" id="veraHistoryList"></div>
         </aside>
         <button class="vera-history-open" id="veraHistoryOpen" title="${__('Mostrar conversaciones')}" aria-label="${__('Mostrar conversaciones')}">
@@ -1506,6 +1509,23 @@ class VeraView extends (window.BaseView || class {}) {
           </div>
           <div class="vera-artifact-panel-body" id="veraArtifactBody"></div>
         </aside>
+        <div class="vera-gallery-overlay" id="veraGalleryOverlay" hidden>
+          <div class="vera-gallery-scrim" id="veraGalleryScrim"></div>
+          <div class="vera-gallery-modal" role="dialog" aria-modal="true" aria-label="${__('Archivos generados')}">
+            <div class="vera-gallery-head">
+              <div class="vera-gallery-head-title">
+                <i class="fas fa-folder-open"></i>
+                <span>${__('Archivos generados')}</span>
+                <span class="vera-gallery-count" id="veraGalleryCount"></span>
+              </div>
+              <div class="vera-gallery-head-actions">
+                <button class="vera-artifact-act" id="veraGalleryRefresh" title="${__('Actualizar')}"><i class="fas fa-rotate"></i></button>
+                <button class="vera-artifact-act vera-artifact-act--close" id="veraGalleryClose" title="${__('Cerrar')}"><i class="fas fa-times"></i></button>
+              </div>
+            </div>
+            <div class="vera-gallery-body" id="veraGalleryBody"></div>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -1555,6 +1575,9 @@ class VeraView extends (window.BaseView || class {}) {
 
     // Panel de artefactos (Canvas) — botones del header.
     this._bindArtifactPanel();
+
+    // Galería de archivos generados (vera_artifacts) — modal del sidebar.
+    this._bindGallery();
 
     // Historial de conversaciones (rail izquierdo, estilo ChatGPT).
     this.bindHistory();
@@ -2186,6 +2209,138 @@ class VeraView extends (window.BaseView || class {}) {
     const prev = i?.className;
     if (i) i.className = 'fas fa-check';
     setTimeout(() => { if (i && prev) i.className = prev; }, 1200);
+  }
+
+  /* ── Galería de archivos generados (vera_artifacts) ──────── */
+  _bindGallery() {
+    // Guard por elemento (igual que _bindArtifactPanel): seguro ante re-render.
+    const on = (id, fn) => {
+      const el = document.getElementById(id);
+      if (!el || el.__galBound) return;
+      el.__galBound = true;
+      el.addEventListener('click', fn);
+    };
+    on('veraGalleryBtn', () => this._openGallery());
+    on('veraGalleryClose', () => this._closeGallery());
+    on('veraGalleryScrim', () => this._closeGallery());
+    on('veraGalleryRefresh', () => this._loadArtifacts(true));
+  }
+
+  _openGallery() {
+    const ov = document.getElementById('veraGalleryOverlay');
+    if (!ov) return;
+    ov.hidden = false;
+    requestAnimationFrame(() => ov.classList.add('open'));
+    // Esc cierra: listener solo mientras está abierto (sin fugas entre remounts).
+    if (!this._galKeyHandler) this._galKeyHandler = (e) => { if (e.key === 'Escape') this._closeGallery(); };
+    document.addEventListener('keydown', this._galKeyHandler);
+    this._loadArtifacts();
+  }
+
+  _closeGallery() {
+    const ov = document.getElementById('veraGalleryOverlay');
+    if (!ov) return;
+    ov.classList.remove('open');
+    if (this._galKeyHandler) document.removeEventListener('keydown', this._galKeyHandler);
+    setTimeout(() => { if (!ov.classList.contains('open')) ov.hidden = true; }, 220);
+  }
+
+  async _loadArtifacts(force) {
+    const body = document.getElementById('veraGalleryBody');
+    const countEl = document.getElementById('veraGalleryCount');
+    if (!body) return;
+    if (!this.supabase || !this.aiState.organization_id) {
+      body.innerHTML = this._galleryMsg(__('Inicia sesión para ver tus archivos.'));
+      return;
+    }
+    // Skeleton solo si no hay nada pintado aún (sin parpadeo en refresh).
+    if (force || !body.dataset.loaded) {
+      body.innerHTML = `<div class="vera-gallery-grid">${'<div class="vera-gallery-card vera-gallery-card--skel"></div>'.repeat(6)}</div>`;
+    }
+    try {
+      const { data, error } = await this.supabase
+        .from('vera_artifacts')
+        .select('id,type,title,format,public_url,bytes,created_at')
+        .eq('organization_id', this.aiState.organization_id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      const list = data || [];
+      body.dataset.loaded = '1';
+      if (countEl) countEl.textContent = list.length ? String(list.length) : '';
+      this._renderGallery(list);
+    } catch (_) {
+      body.innerHTML = this._galleryMsg(__('No se pudieron cargar los archivos.'));
+    }
+  }
+
+  _renderGallery(list) {
+    const body = document.getElementById('veraGalleryBody');
+    if (!body) return;
+    if (!list.length) {
+      body.innerHTML = (window.BaseView && window.BaseView.emptyState)
+        ? window.BaseView.emptyState({
+            icon: 'fa-folder-open',
+            title: __('Aún no hay archivos'),
+            subtitle: __('Pídele a Vera un informe, una presentación o una tabla y aparecerá aquí para descargar.'),
+            compact: true,
+          })
+        : this._galleryMsg(__('Aún no hay archivos.'));
+      return;
+    }
+    const cards = list.map((a) => {
+      const ic = this._artifactIcon(a.format);
+      const fmt = String(a.format || '').toUpperCase();
+      const meta = [fmt, this._humanBytes(a.bytes), this._relTime(a.created_at)].filter(Boolean).join(' · ');
+      const url = a.public_url || '#';
+      const fmtClass = escapeHtml(String(a.format || 'file').toLowerCase());
+      return `
+        <a class="vera-gallery-card" href="${escapeHtml(url)}" target="_blank" rel="noopener" download
+           title="${escapeHtml(a.title || fmt)}">
+          <div class="vera-gallery-card-icon vera-gallery-card-icon--${fmtClass}"><i class="fas ${ic}"></i></div>
+          <div class="vera-gallery-card-meta">
+            <div class="vera-gallery-card-title">${escapeHtml(a.title || __('Sin título'))}</div>
+            <div class="vera-gallery-card-sub">${escapeHtml(meta)}</div>
+          </div>
+          <div class="vera-gallery-card-dl"><i class="fas fa-download"></i></div>
+        </a>`;
+    }).join('');
+    body.innerHTML = `<div class="vera-gallery-grid">${cards}</div>`;
+  }
+
+  _galleryMsg(msg) {
+    return `<div class="vera-gallery-msg">${escapeHtml(msg)}</div>`;
+  }
+
+  _artifactIcon(format) {
+    const f = String(format || '').toLowerCase();
+    if (f === 'pdf') return 'fa-file-pdf';
+    if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(f)) return 'fa-file-image';
+    if (f === 'xlsx' || f === 'csv') return 'fa-file-excel';
+    if (f === 'docx' || f === 'doc') return 'fa-file-word';
+    if (f === 'html') return 'fa-file-code';
+    return 'fa-file';
+  }
+
+  _humanBytes(n) {
+    n = Number(n) || 0;
+    if (!n) return '';
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  _relTime(iso) {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const diff = (Date.now() - d.getTime()) / 1000;
+      if (diff < 60) return 'hace un momento';
+      if (diff < 3600) return `hace ${Math.floor(diff / 60)} min`;
+      if (diff < 86400) return `hace ${Math.floor(diff / 3600)} h`;
+      if (diff < 604800) return `hace ${Math.floor(diff / 86400)} d`;
+      return d.toLocaleDateString();
+    } catch (_) { return ''; }
   }
 
   _isMobile() {

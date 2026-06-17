@@ -3630,6 +3630,101 @@
   }
 }
 
+/* ── Galería de archivos generados (vera_artifacts) ──────── */
+.vera-history-gallery:hover { background: var(--white-8); }
+.vera-history-gallery i { color: var(--text-muted); }
+
+.vera-gallery-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.vera-gallery-overlay[hidden] { display: none; }
+.vera-gallery-scrim {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.55);
+  opacity: 0; transition: opacity .2s ease;
+}
+.vera-gallery-overlay.open .vera-gallery-scrim { opacity: 1; }
+.vera-gallery-modal {
+  position: relative;
+  width: min(920px, 100%); max-height: 84vh;
+  display: flex; flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.5);
+  overflow: hidden;
+  transform: translateY(8px) scale(.99); opacity: 0;
+  transition: transform .22s cubic-bezier(0.33,0,0.2,1), opacity .22s ease;
+}
+.vera-gallery-overlay.open .vera-gallery-modal { transform: none; opacity: 1; }
+.vera-gallery-head {
+  flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 14px 14px 14px 18px;
+  border-bottom: 1px solid var(--glass-black-border, var(--border-divider));
+}
+.vera-gallery-head-title { display: inline-flex; align-items: center; gap: 10px; font-size: .95rem; font-weight: 600; color: var(--text-primary); }
+.vera-gallery-head-title > i { color: var(--text-muted); }
+.vera-gallery-count {
+  font-size: .72rem; font-weight: 600; color: var(--text-muted);
+  background: var(--white-8); padding: 2px 8px; border-radius: 999px;
+}
+.vera-gallery-head-actions { display: inline-flex; align-items: center; gap: 2px; }
+.vera-gallery-body {
+  flex: 1; min-height: 0; overflow: auto;
+  padding: 16px;
+  scrollbar-width: thin; scrollbar-color: var(--white-10) transparent;
+}
+.vera-gallery-body::-webkit-scrollbar { width: 8px; }
+.vera-gallery-body::-webkit-scrollbar-thumb { background: var(--white-10); border-radius: 4px; }
+.vera-gallery-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: 12px;
+}
+.vera-gallery-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; border-radius: 12px;
+  background: var(--white-8);
+  border: 1px solid var(--white-10);
+  text-decoration: none; color: inherit;
+  transition: background .14s ease, border-color .14s ease, transform .14s ease;
+}
+.vera-gallery-card:hover { background: var(--white-10); transform: translateY(-1px); }
+.vera-gallery-card-icon {
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.15rem; color: #fff;
+  background: linear-gradient(135deg, #5b5e66, #44464d);
+}
+.vera-gallery-card-icon--pdf  { background: linear-gradient(135deg,#e2574c,#b53124); }
+.vera-gallery-card-icon--png,
+.vera-gallery-card-icon--jpg,
+.vera-gallery-card-icon--jpeg,
+.vera-gallery-card-icon--webp { background: linear-gradient(135deg,#7c5cff,#5b3fd6); }
+.vera-gallery-card-icon--xlsx,
+.vera-gallery-card-icon--csv  { background: linear-gradient(135deg,#1f9d57,#157a42); }
+.vera-gallery-card-icon--docx,
+.vera-gallery-card-icon--doc  { background: linear-gradient(135deg,#2b7cd3,#1c5aa6); }
+.vera-gallery-card-meta { flex: 1; min-width: 0; }
+.vera-gallery-card-title { font-size: .86rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vera-gallery-card-sub { font-size: .72rem; color: var(--text-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vera-gallery-card-dl { flex: 0 0 auto; color: var(--text-muted); font-size: .85rem; opacity: 0; transition: opacity .14s ease; }
+.vera-gallery-card:hover .vera-gallery-card-dl { opacity: 1; }
+.vera-gallery-card--skel {
+  pointer-events: none; height: 68px;
+  background: linear-gradient(90deg, var(--white-8) 25%, var(--white-10) 37%, var(--white-8) 63%);
+  background-size: 400% 100%; animation: veraGalShimmer 1.3s ease infinite;
+}
+@keyframes veraGalShimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+.vera-gallery-msg { padding: 40px 16px; text-align: center; color: var(--text-muted); font-size: .88rem; }
+
+@media (max-width: 880px) {
+  .vera-gallery-overlay { padding: 0; }
+  .vera-gallery-modal { width: 100%; max-height: 100%; height: 100%; border-radius: 0; }
+  .vera-gallery-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Adjuntos en composer ───────────────────────────── */
 .gpt-attach-chips {
   display: flex;
