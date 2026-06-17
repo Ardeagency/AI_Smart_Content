@@ -7087,10 +7087,23 @@
 }
 
 /* El buscador crece pero queda acotado: no debe ocupar todo el ancho del header
-   (antes .form-control width:100% lo estiraba y empujaba los botones abajo). */
+   (antes .form-control width:100% lo estiraba y empujaba los botones abajo).
+   Comparte el diseño glass de los botones del toolbar y el radius reducido (8px)
+   igual a los botones +USER/+FLOW del sidebar dev. */
 .dev-lead-toolbar .form-control {
   flex: 1 1 240px;
   max-width: 360px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-sm);
+}
+
+/* Esquinas más sutiles en los botones del toolbar (.btn usa --glass-radius 14px;
+   aquí lo bajamos a --radius-sm 8px para igualar al sidebar dev). */
+.dev-lead-toolbar .btn {
+  border-radius: var(--radius-sm);
 }
 
 .dev-lead-toolbar-inline {
