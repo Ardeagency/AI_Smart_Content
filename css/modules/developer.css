@@ -7281,17 +7281,49 @@
    grandes). Esto unifica tamano, inputs, labels, checks, hints y footer sin
    importar el markup del body de cada vista (con o sin .form-control).
    ============================================================ */
+/* Contenedor: tarjeta solida (lenguaje del modal de Team), no glass */
 #modals-portal .dev-lead-modal-content {
   max-width: min(560px, calc(100vw - 40px));
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-radius: var(--radius-md);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 #modals-portal .dev-lead-modal-content.dev-lead-modal-wide {
   max-width: min(720px, calc(100vw - 40px));
+}
+
+/* Header: titulo + close circular, separado por divisor (como Team) */
+.dev-lead-modal-content .modal-header {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-divider);
+}
+.dev-lead-modal-content .modal-header h2,
+.dev-lead-modal-content .modal-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.dev-lead-modal-content .modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.dev-lead-modal-content .modal-close:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-divider);
 }
 
 .dev-lead-modal-content .modal-body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow-x: hidden;
 }
 .dev-lead-modal-content .form-group {
   display: flex;
@@ -7386,14 +7418,38 @@
   line-height: 1.4;
 }
 
-/* Footer unico */
+/* Footer: barra inferior bg-secondary a sangre (como Team). El footer vive
+   dentro de .modal-body (padding 1.5rem); lo sacamos a los bordes con margenes
+   negativos para que sea una barra completa. */
 .dev-lead-modal-content .modal-footer {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 4px;
-  padding-top: 14px;
+  margin: 6px -1.5rem -1.5rem;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-secondary);
   border-top: 1px solid var(--border-divider, #242424);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+/* Botones del footer: pill; Guardar con gradiente de rango (como Team) */
+.dev-lead-modal-content .modal-footer .btn {
+  border-radius: 999px;
+  padding: 0.55rem 1.1rem;
+}
+.dev-lead-modal-content .modal-footer .btn-primary {
+  background: var(--dev-gradient-dynamic,
+              var(--brand-gradient-dynamic,
+              linear-gradient(135deg, var(--accent-warm), var(--accent-warm))));
+  border: none;
+  color: #fff;
+}
+.dev-lead-modal-content .modal-footer .btn-primary:hover:not(:disabled) {
+  background: var(--dev-gradient-dynamic,
+              var(--brand-gradient-dynamic,
+              linear-gradient(135deg, var(--accent-warm), var(--accent-warm))));
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
 .dev-lead-empty {
