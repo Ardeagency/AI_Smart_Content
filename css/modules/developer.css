@@ -11702,6 +11702,14 @@
    Orgs - Lista de organizaciones
    ============================================================ */
 /* ───── Galería de organizaciones (reusa .team-list / .team-card) ───── */
+/* La galería no necesita el panel-shell: el contenedor va sin fondo/borde/sombra. */
+.dev-lead-orgs .dev-lead-content {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
 .dev-org-grid-state {
   grid-column: 1 / -1;
   text-align: center;
