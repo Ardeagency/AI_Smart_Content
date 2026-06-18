@@ -1691,8 +1691,13 @@ class DevLeadCreateOrgView extends DevBaseView {
     (bp.palette_extra || []).slice(0, 4).forEach((h, i) => { if (h) colors.push({ color_role: `accent_${i + 1}`, hex_value: h }); });
     this.approval = {
       logo,
-      name: this.form.name || '',
+      name: bp.brand_name || this.form.name || '',
       slogan: bp.tagline || '',
+      como_comunica: bp.como_comunica || '',
+      products_detected: Array.isArray(bp.products_detected) ? bp.products_detected : [],
+      services_detected: Array.isArray(bp.services_detected) ? bp.services_detected : [],
+      competitors_count: (status?.progress?.competitors?.competitors) || 0,
+      watchers_count: (status?.progress?.competitors?.watchers) || 0,
       nicho_core: bp.nicho_core || '',
       mercado_objetivo: bp.mercado_objetivo || [],
       idiomas_contenido: bp.idiomas_contenido || [],
@@ -1806,6 +1811,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     const toneOpts = this.TONES.map((t) => `<option value="${t.v}" ${a.tono_de_voz === t.v ? 'selected' : ''}>${this.escapeHtml(t.label)}</option>`).join('');
     return `
       <div class="provision-field createorg-field-full"><label for="apTono">Tono de voz</label><select id="apTono" class="form-control">${toneOpts}</select></div>
+      ${a.como_comunica ? `<div class="createorg-field-full createorg-insight"><span class="createorg-insight-tag"><i class="fas fa-eye"></i> Cómo comunica (visión)</span><p>${this.escapeHtml(a.como_comunica)}</p></div>` : ''}
       ${this._ta('Propuesta de valor', 'apPropuesta', a.propuesta_valor)}
       ${this._ta('Mision / vision', 'apMision', a.mision_vision)}
       ${this._csv('Pilares', 'apPilares', a.pilares)}
@@ -1847,7 +1853,10 @@ class DevLeadCreateOrgView extends DevBaseView {
           <li><b>Mercados:</b> ${this.escapeHtml((a.mercado_objetivo || []).join(', ') || '—')} · <b>Idiomas:</b> ${this.escapeHtml((a.idiomas_contenido || []).join(', ') || '—')}</li>
           <li><b>Tono:</b> ${this.escapeHtml(a.tono_de_voz || '—')}</li>
           <li><b>Colores:</b> ${(a.colors || []).length} · <b>Pilares:</b> ${(a.pilares || []).length} · <b>Tipografias:</b> ${[a.typography_primary, a.typography_secondary].filter(Boolean).length}</li>
+          <li><b>Productos detectados:</b> ${(a.products_detected || []).length} · <b>Servicios:</b> ${(a.services_detected || []).length}</li>
+          <li><b>Competencia:</b> ${a.competitors_count || 0} competidores · <b>Monitoreo:</b> ${a.watchers_count || 0} sitios</li>
         </ul>
+        ${(a.products_detected || []).length ? `<div class="createorg-insight" style="margin-top:10px"><span class="createorg-insight-tag"><i class="fas fa-box"></i> Productos detectados</span><p>${this.escapeHtml((a.products_detected || []).slice(0, 8).map((p) => p.name).filter(Boolean).join(' · '))}</p></div>` : ''}
         ${this._autoIntegrationsBlock()}
       </div>
     `;
