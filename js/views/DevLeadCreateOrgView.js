@@ -1816,6 +1816,8 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   _hex6(v) { return (/^#[0-9a-f]{6}$/i.test(v || '')) ? v : '#000000'; }
+  // Rol del color por POSICION: 1º primary, 2º secondary, resto accent_N.
+  _colorRole(i) { return i === 0 ? 'primary' : i === 1 ? 'secondary' : `accent_${i - 1}`; }
   _f(label, id, value, ph) {
     return `<div class="provision-field createorg-field-full"><label for="${id}">${this.escapeHtml(label)}</label><input id="${id}" class="form-control" value="${this.escapeHtml(value || '')}" placeholder="${this.escapeHtml(ph || '')}"></div>`;
   }
@@ -1922,7 +1924,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     const rows = (a.colors || []).map((c, i) => `
       <div class="createorg-color-row" data-color-idx="${i}">
         <input type="color" data-color-hex value="${this._hex6(c.hex_value)}">
-        <input type="text" class="form-control" data-color-role value="${this.escapeHtml(c.color_role || '')}" placeholder="rol (primary, secondary, accent...)">
+        <span class="createorg-color-role">${this.escapeHtml(this._colorRole(i))}</span>
         <button type="button" class="createorg-color-rm" data-color-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
       </div>`).join('');
     return `
@@ -2002,10 +2004,11 @@ class DevLeadCreateOrgView extends DevBaseView {
     else if (key === 'market') { a.nicho_core = g('apNicho'); a.mercado_objetivo = csv('apMercados'); a.idiomas_contenido = csv('apIdiomas'); a.locale = g('apLocale'); a.timezone = g('apTz'); }
     else if (key === 'voice') { a.tono_de_voz = g('apTono'); a.propuesta_valor = g('apPropuesta'); a.mision_vision = g('apMision'); a.pilares = csv('apPilares'); a.palabras_clave = csv('apClave'); a.palabras_prohibidas = csv('apProhibidas'); }
     else if (key === 'colors') {
-      a.colors = [...this.container.querySelectorAll('#apColors .createorg-color-row')].map((r) => ({
-        color_role: (r.querySelector('[data-color-role]')?.value || '').trim() || 'accent',
-        hex_value: (r.querySelector('[data-color-hex]')?.value || '').trim()
-      })).filter((c) => c.hex_value);
+      // El rol se asigna AUTOMATICAMENTE por posicion (1º primary, 2º secondary, resto accent_N).
+      a.colors = [...this.container.querySelectorAll('#apColors .createorg-color-row')]
+        .map((r) => (r.querySelector('[data-color-hex]')?.value || '').trim())
+        .filter(Boolean)
+        .map((hex, i) => ({ color_role: this._colorRole(i), hex_value: hex }));
     }
     else if (key === 'fonts') { a.typography_primary = g('apFont1'); a.typography_secondary = g('apFont2'); a.estetica = g('apEstetica'); }
     else if (key === 'products') {
