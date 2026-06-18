@@ -15682,25 +15682,23 @@
 .cons-aff-form { display: flex; flex-direction: column; gap: 0.6rem; }
 .cons-aff-form .btn { align-self: flex-start; }
 
-/* ─── Crear org: layout 2 columnas (izq formulario · der progreso vertical) ── */
+/* ─── Crear org: layout centrado (spacer · formulario · progreso a la derecha) ─ */
+/* Grid simetrico: la columna izquierda (vacia, 240px) balancea el progreso
+   (240px a la derecha) → el formulario del centro queda centrado en la pagina.
+   align-items:center + justify-content:center centran todo vertical y horiz. */
 .provision-page.createorg-split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: 240px minmax(0, 680px) 240px;
+  justify-content: center;
+  align-items: center;
   gap: var(--spacing-xl);
-  align-items: start;
-  max-width: 1180px;
+  max-width: none;
 }
-.createorg-col-left { min-width: 0; }
-/* El formulario se alinea arriba (no centrado vertical) en el layout de 2 cols */
+.createorg-col-left  { grid-column: 2; min-width: 0; }
+.createorg-col-right { grid-column: 3; }
 .createorg-split .provision-page-center {
-  justify-content: flex-start;
+  flex: none;
   min-height: 0;
-}
-.createorg-col-right {
-  position: sticky;
-  top: calc(48px + var(--spacing-lg));
-  border-left: 1px solid var(--border-divider, #242424);
-  padding-left: var(--spacing-lg);
 }
 .createorg-progress-head {
   display: block;

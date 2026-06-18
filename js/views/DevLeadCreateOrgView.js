@@ -83,12 +83,10 @@ class DevLeadCreateOrgView extends DevBaseView {
   // Steps activos dependen de method: si manual o si el scrape pre-llenó datos
   // se incluye un step 'brand' para revisar/editar la info detectada.
   getActiveSteps() {
-    const out = [];
-    if (this.standalone) out.push({ key: 'owner', label: 'Owner' });
-    out.push(
+    const out = [
       { key: 'identidad', label: 'Identidad' },
       { key: 'metodo',    label: 'Metodo' }
-    );
+    ];
     if (this.form.method === 'manual' || this.scraped_brand) {
       out.push({ key: 'brand', label: 'Marca' });
     }
@@ -96,7 +94,23 @@ class DevLeadCreateOrgView extends DevBaseView {
       { key: 'operacion', label: 'Operacion' },
       { key: 'revisar',   label: 'Revisar' }
     );
+    // Owner va AL FINAL: por defecto la org se crea a nombre del dev que la
+    // crea, y al final se conecta (opcionalmente) el owner real.
+    if (this.standalone) out.push({ key: 'owner', label: 'Owner' });
     return out;
+  }
+
+  _isLastStep(key) {
+    const s = this.getActiveSteps();
+    return s.length > 0 && s[s.length - 1].key === (key || this.currentStep);
+  }
+
+  // Footer Back + (Crear si es el ultimo paso, si no Siguiente).
+  _footerButtons() {
+    const main = this._isLastStep()
+      ? `<button type="button" class="createorg-submit-btn" data-action="create"><i class="fas fa-check"></i> Crear organizacion</button>`
+      : `<button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente"><i class="fas fa-arrow-right"></i></button>`;
+    return `<button type="button" class="provision-back-btn" data-action="back">Back</button>${main}`;
   }
 
   METHODS = [
@@ -209,7 +223,7 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   renderStepOwner() {
     const opts = this.consumers.length
-      ? '<option value="">— Sin owner (asignar despues) —</option>' +
+      ? '<option value="">— A mi nombre (dev) por ahora —</option>' +
         this.consumers.map((c) => {
           const sel = this.owner?.id === c.id ? 'selected' : '';
           const label = `${c.full_name || '(sin nombre)'} · ${c.email || ''}`;
@@ -220,21 +234,20 @@ class DevLeadCreateOrgView extends DevBaseView {
     return `
       <section class="provision-form-card createorg-card-wide">
         <header class="provision-form-head">
-          <span class="provision-form-eyebrow">Paso 1 · Owner</span>
-          <h2>Dueno de la organizacion</h2>
-          <p>Elige el usuario que quedara como owner. Solo se listan usuarios que NO son developers. Puedes dejarlo sin owner y asignarlo despues.</p>
+          <span class="provision-form-eyebrow">Paso final · Owner</span>
+          <h2>Conectar un owner</h2>
+          <p>Por defecto la organizacion queda a tu nombre (dev) hasta que se conecte un owner. Si quieres, elige ahora un usuario consumidor como owner. Solo se listan usuarios que NO son developers.</p>
         </header>
         <form id="createOrgOwnerForm" class="createorg-form-grid" novalidate>
           <div class="provision-field createorg-field-full">
-            <label for="orgOwnerSelect">Usuario owner</label>
+            <label for="orgOwnerSelect">Usuario owner (opcional)</label>
             <select id="orgOwnerSelect" class="form-control">${opts}</select>
           </div>
           <p class="provision-form-status createorg-field-full" id="createOrgStatus" role="status" aria-live="polite"></p>
         </form>
       </section>
       <footer class="provision-page-actions">
-        <button type="button" class="provision-back-btn" data-action="back">Back</button>
-        <button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente"><i class="fas fa-arrow-right"></i></button>
+        ${this._footerButtons()}
       </footer>
     `;
   }
@@ -639,8 +652,8 @@ class DevLeadCreateOrgView extends DevBaseView {
       </div>
     ` : `
       <div class="createorg-owner-empty">
-        <i class="fas fa-user-slash"></i>
-        <p>Sin owner asociado — la org se creara sin owner inicial.</p>
+        <i class="fas fa-user-clock"></i>
+        <p>Sin owner aun — la org se creara a tu nombre (dev). Conecta un owner en el ultimo paso.</p>
       </div>
     `;
 
@@ -714,10 +727,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       </section>
 
       <footer class="provision-page-actions">
-        <button type="button" class="provision-back-btn" data-action="back">Back</button>
-        <button type="button" class="createorg-submit-btn" data-action="create">
-          <i class="fas fa-check"></i> Crear organizacion
-        </button>
+        ${this._footerButtons()}
       </footer>
     `;
   }
@@ -745,13 +755,11 @@ class DevLeadCreateOrgView extends DevBaseView {
 
     if (this.jobId) {
       await this.loadJobOwner();
-      this.wireAll();
     } else {
-      // Entrada standalone "+ Org": arrancamos en el paso Owner.
-      this.currentStep = 'owner';
+      // Standalone "+ Org": arranca en Identidad; el owner es el ultimo paso.
       await this.loadConsumers();
-      this.goToStep('owner');
     }
+    this.wireAll();
   }
 
   async loadJobOwner() {
