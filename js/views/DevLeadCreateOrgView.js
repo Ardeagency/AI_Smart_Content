@@ -63,6 +63,12 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.scrapePollTimer = null;
     this.scrapeError = null;
     this.scraped_brand = false;     // true cuando un scrape exitoso pre-poblo form
+
+    // Standalone (entrada "+ Org" desde el sidebar, sin ?job): el lead elige
+    // un usuario existente como owner en un primer paso.
+    this.standalone = false;
+    this.consumers = [];            // usuarios no-developers para el selector de owner
+    this._creating = false;
   }
 
   async onEnter() {
@@ -77,10 +83,12 @@ class DevLeadCreateOrgView extends DevBaseView {
   // Steps activos dependen de method: si manual o si el scrape pre-llenó datos
   // se incluye un step 'brand' para revisar/editar la info detectada.
   getActiveSteps() {
-    const out = [
+    const out = [];
+    if (this.standalone) out.push({ key: 'owner', label: 'Owner' });
+    out.push(
       { key: 'identidad', label: 'Identidad' },
       { key: 'metodo',    label: 'Metodo' }
-    ];
+    );
     if (this.form.method === 'manual' || this.scraped_brand) {
       out.push({ key: 'brand', label: 'Marca' });
     }
@@ -180,12 +188,60 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   renderCurrentStep() {
     switch (this.currentStep) {
+      case 'owner':     return this.renderStepOwner();
       case 'identidad': return this.renderStepIdentidad();
       case 'metodo':    return this.renderStepMetodo();
       case 'brand':     return this.renderStepBrand();
       case 'operacion': return this.renderStepOperacion();
       case 'revisar':   return this.renderStepRevisar();
       default:          return '';
+    }
+  }
+
+  renderStepOwner() {
+    const opts = this.consumers.length
+      ? '<option value="">— Sin owner (asignar despues) —</option>' +
+        this.consumers.map((c) => {
+          const sel = this.owner?.id === c.id ? 'selected' : '';
+          const label = `${c.full_name || '(sin nombre)'} · ${c.email || ''}`;
+          return `<option value="${this.escapeHtml(c.id)}" ${sel}>${this.escapeHtml(label)}</option>`;
+        }).join('')
+      : '<option value="">No hay usuarios consumidores</option>';
+
+    return `
+      <section class="provision-form-card createorg-card-wide">
+        <header class="provision-form-head">
+          <span class="provision-form-eyebrow">Paso 1 · Owner</span>
+          <h2>Dueno de la organizacion</h2>
+          <p>Elige el usuario que quedara como owner. Solo se listan usuarios que NO son developers. Puedes dejarlo sin owner y asignarlo despues.</p>
+        </header>
+        <form id="createOrgOwnerForm" class="createorg-form-grid" novalidate>
+          <div class="provision-field createorg-field-full">
+            <label for="orgOwnerSelect">Usuario owner</label>
+            <select id="orgOwnerSelect" class="form-control">${opts}</select>
+          </div>
+          <p class="provision-form-status createorg-field-full" id="createOrgStatus" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+      <footer class="provision-page-actions">
+        <button type="button" class="provision-back-btn" data-action="back">Back</button>
+        <button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente"><i class="fas fa-arrow-right"></i></button>
+      </footer>
+    `;
+  }
+
+  async loadConsumers() {
+    try {
+      const { data, error } = await this.supabase
+        .from('profiles')
+        .select('id, email, full_name')
+        .or('is_developer.is.null,is_developer.eq.false')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      this.consumers = Array.isArray(data) ? data : [];
+    } catch (err) {
+      this.consumers = [];
+      this.showNotification(`No se pudieron cargar usuarios: ${err.message}`, 'error');
     }
   }
 
@@ -645,15 +701,12 @@ class DevLeadCreateOrgView extends DevBaseView {
           </div>
         </div>
 
-        <div class="createorg-pending-note">
-          <i class="fas fa-hourglass-half"></i>
-          Paso final pendiente — el insert real se cablea despues
-        </div>
+        <p class="provision-form-status" id="createOrgStatus" role="status" aria-live="polite"></p>
       </section>
 
       <footer class="provision-page-actions">
         <button type="button" class="provision-back-btn" data-action="back">Back</button>
-        <button type="button" class="createorg-submit-btn" disabled aria-disabled="true">
+        <button type="button" class="createorg-submit-btn" data-action="create">
           <i class="fas fa-check"></i> Crear organizacion
         </button>
       </footer>
@@ -679,8 +732,17 @@ class DevLeadCreateOrgView extends DevBaseView {
     }
     const params = new URLSearchParams(window.location.search);
     this.jobId = params.get('job') || null;
-    await this.loadJobOwner();
-    this.wireAll();
+    this.standalone = !this.jobId;
+
+    if (this.jobId) {
+      await this.loadJobOwner();
+      this.wireAll();
+    } else {
+      // Entrada standalone "+ Org": arrancamos en el paso Owner.
+      this.currentStep = 'owner';
+      await this.loadConsumers();
+      this.goToStep('owner');
+    }
   }
 
   async loadJobOwner() {
@@ -758,6 +820,19 @@ class DevLeadCreateOrgView extends DevBaseView {
     });
     const mfa = this.container.querySelector('#orgMfaRequired');
     if (mfa) this.addEventListener(mfa, 'change', () => this.syncForm());
+
+    // Owner step: selector de usuario
+    const ownerSel = this.container.querySelector('#orgOwnerSelect');
+    if (ownerSel) {
+      this.addEventListener(ownerSel, 'change', () => {
+        const id = ownerSel.value;
+        this.owner = id ? (this.consumers.find((c) => c.id === id) || null) : null;
+      });
+    }
+
+    // Revisar: boton Crear
+    const createBtn = this.container.querySelector('[data-action="create"]');
+    if (createBtn) this.addEventListener(createBtn, 'click', () => this.handleCreate());
 
     // Back / Next
     const backBtn = this.container.querySelector('[data-action="back"]');
@@ -957,9 +1032,10 @@ class DevLeadCreateOrgView extends DevBaseView {
     const steps = this.getActiveSteps();
     const idx = steps.findIndex((s) => s.key === this.currentStep);
     if (idx <= 0) {
-      // Primer paso → volver al wizard de provisioning
-      if (window.router) window.router.navigate('/dev/provisioning/users');
-      else window.location.href = '/dev/provisioning/users';
+      // Primer paso → standalone vuelve a Orgs; flujo owner_org vuelve al wizard.
+      const dest = this.standalone ? '/dev/lead/orgs' : '/dev/provisioning/users';
+      if (window.router) window.router.navigate(dest);
+      else window.location.href = dest;
       return;
     }
     this.goToStep(steps[idx - 1].key);
@@ -1109,6 +1185,60 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.scrapeStatus = null;
     // Avanza al Step Brand
     this.goToStep('brand');
+  }
+
+  // ─── Crear la organizacion (RPC transaccional admin_create_organization) ──
+  async handleCreate() {
+    if (this._creating) return;
+    const f = this.form;
+    if (!f.name) { this.setStatus('Falta el nombre de la organizacion.', 'error'); return; }
+
+    this._creating = true;
+    this.setStatus('', '');
+    const btn = this.container.querySelector('[data-action="create"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; }
+
+    // Logo: solo si ya es una URL publica. El archivo subido (data URL) se
+    // gestiona luego desde Brand para no inflar la fila.
+    const logoUrl = (f.logo_preview && /^https?:\/\//i.test(f.logo_preview)) ? f.logo_preview : null;
+
+    const payload = {
+      name: f.name,
+      brand_slogan: f.slogan || null,
+      logo_url: logoUrl,
+      owner_user_id: this.owner?.id || null,
+      locale: f.locale || 'es',
+      timezone: f.timezone || 'America/Bogota',
+      level_of_autonomy: f.level_of_autonomy || 'parcial',
+      mfa_required: !!f.mfa_required,
+      idiomas_contenido: f.idiomas_contenido || [],
+      mercado_objetivo: f.mercado_objetivo || [],
+      temas: f.temas || [],
+      propuesta_valor: f.propuesta_valor || null,
+      mision_vision: f.mision_vision || null,
+      palabras_clave: f.palabras_clave || [],
+      palabras_prohibidas: f.palabras_prohibidas || [],
+      primary_color: f.primary_color || null,
+      secondary_color: f.secondary_color || null,
+      typography_primary: f.typography_primary || null,
+      typography_secondary: f.typography_secondary || null,
+      pilares: f.pilares || [],
+      verbal_dna: { tone_of_voice: f.tone_of_voice || null, tagline: f.tagline || null },
+      visual_dna: { estetica: f.estetica || null }
+    };
+
+    try {
+      const { data, error } = await this.supabase.rpc('admin_create_organization', { p: payload });
+      if (error) throw error;
+      this.showNotification(`Organizacion "${f.name}" creada.`, 'success');
+      const dest = '/dev/lead/orgs';
+      if (window.router) window.router.navigate(dest);
+      else window.location.href = dest;
+    } catch (err) {
+      this._creating = false;
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Crear organizacion'; }
+      this.setStatus(err?.message || 'Error al crear la organizacion.', 'error');
+    }
   }
 
   validateStep(key) {

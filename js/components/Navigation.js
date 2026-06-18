@@ -208,6 +208,14 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   },
   {
     type: 'page',
+    id: 'admin-create-org',
+    label: '+ Org',
+    icon: 'fa-plus',
+    role_required: 'lead',
+    route: '/dev/provisioning/create-org'
+  },
+  {
+    type: 'page',
     id: 'admin-team',
     label: 'Team',
     icon: 'fa-users',
@@ -3034,6 +3042,7 @@ class Navigation {
       '/dev/webhooks': 'WEBHOOKS',
       '/dev/web-vitals': 'WEB VITALS',
       '/dev/provisioning/users': 'REGISTRAR USUARIO',
+      '/dev/provisioning/create-org': 'CREAR ORGANIZACIÓN',
       '/dev/lead/team': 'EQUIPO',
       '/dev/lead/consumers': 'CONSUMIDORES',
       '/dev/lead/categories': 'CATEGORÍAS',
