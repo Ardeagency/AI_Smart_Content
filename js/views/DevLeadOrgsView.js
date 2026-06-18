@@ -99,9 +99,9 @@ class DevLeadOrgsView extends DevBaseView {
       if (!btn) return;
       const id = btn.getAttribute('data-id');
       const action = btn.getAttribute('data-action');
-      if (action === 'edit') this.openEditModal(id);
+      if (action === 'enter') this.enterOrg(id);
+      else if (action === 'health') this.openHealthModal(id);
       else if (action === 'delete') this.openDeleteModal(id);
-      else if (action === 'provision') this.openProvisionModal(id);
     });
 
     try {
@@ -195,16 +195,12 @@ class DevLeadOrgsView extends DevBaseView {
       : '—';
     const name = this.escapeHtml(org.name || '—');
 
-    // Estado de Vera (org-server OpenClaw). Auto-creación eliminada: se provisiona por botón.
+    // Estado de Vera (org-server OpenClaw) — solo indicador (pill), sin botón.
     const agent = org._agent;
     const agentActive = agent && ['healthy', 'provisioning', 'starting'].includes(agent.status);
     const veraPill = agentActive
       ? `<span class="dev-org-card-pill dev-org-card-pill--vera-on" title="Vera ${this.escapeHtml(agent.status)}"><i class="fas fa-robot"></i> Vera ${this.escapeHtml(agent.status)}</span>`
       : `<span class="dev-org-card-pill dev-org-card-pill--vera-off" title="Sin agente Vera"><i class="fas fa-robot"></i> Sin Vera</span>`;
-    // Botón solo si NO tiene agente activo (evita doble-provisión accidental de VM de pago).
-    const provBtn = agentActive
-      ? ''
-      : `<button type="button" class="dev-org-card-icon-btn dev-org-card-icon-btn--vera" data-action="provision" data-id="${id}" title="Provisionar Vera" aria-label="Provisionar Vera"><i class="fas fa-robot"></i></button>`;
 
     const media = org.logo_url
       ? `<img src="${this.escapeHtml(org.logo_url)}" alt="${name}" class="dev-org-card-img" loading="lazy" onerror="this.outerHTML='&lt;div class=&quot;dev-org-card-placeholder&quot;&gt;&lt;i class=&quot;fas fa-building&quot;&gt;&lt;/i&gt;&lt;/div&gt;'">`
@@ -216,8 +212,8 @@ class DevLeadOrgsView extends DevBaseView {
           ${media}
           <div class="dev-org-card-gradient" aria-hidden="true"></div>
           <div class="dev-org-card-actions">
-            ${provBtn}
-            <button type="button" class="dev-org-card-icon-btn" data-action="edit" data-id="${id}" title="Editar" aria-label="Editar"><i class="fas fa-edit"></i></button>
+            <button type="button" class="dev-org-card-icon-btn" data-action="enter" data-id="${id}" title="Entrar como consumidor" aria-label="Entrar"><i class="fas fa-arrow-right-to-bracket"></i></button>
+            <button type="button" class="dev-org-card-icon-btn" data-action="health" data-id="${id}" title="Salud / Insight" aria-label="Salud"><i class="fas fa-heart-pulse"></i></button>
             <button type="button" class="dev-org-card-icon-btn dev-org-card-icon-btn--danger" data-action="delete" data-id="${id}" title="Eliminar" aria-label="Eliminar"><i class="fas fa-trash"></i></button>
           </div>
           <div class="dev-org-card-info">
@@ -244,52 +240,99 @@ class DevLeadOrgsView extends DevBaseView {
   // Provisión MANUAL de Vera (org-server OpenClaw). La auto-creación fue eliminada
   // por riesgosa: cada provisión levanta una VM Hetzner de pago + API key Anthropic
   // facturable por org. Por eso va con modal de confirmación explícito.
-  openProvisionModal(id) {
+  /** Entrar a la org como consumidor: navega a su dashboard (/org/.../dashboard). */
+  async enterOrg(id) {
     const org = this.orgs.find(o => o.id === id);
     if (!org) return;
-    const name = this.escapeHtml(org.name || '');
+    if (typeof window.getOrgPathPrefix !== 'function') {
+      this.showNotification('No se pudo construir la ruta de la organización.', 'error');
+      return;
+    }
+    const prefix = window.getOrgPathPrefix(org.id, org.name || '');
+    if (!prefix) {
+      this.showNotification('La organización no tiene nombre para construir la ruta.', 'warning');
+      return;
+    }
+    const url = `${prefix}/dashboard`;
+    if (window.router?.navigate) window.router.navigate(url);
+    else window.location.href = url;
+  }
 
+  /** Mini-dashboard de salud/insight de la marca (data sana + errores del ecosistema). */
+  async openHealthModal(id) {
+    const org = this.orgs.find(o => o.id === id);
+    if (!org) return;
     const { modal, close } = window.Modal.show({
-      title: 'Provisionar Vera',
-      className: 'dev-lead-modal-content',
+      title: `Salud · ${org.name || ''}`,
+      className: 'dev-lead-modal-content dev-lead-modal-wide org-health-modal',
       body: `
-        <div class="form-group">
-          <p>Vas a crear el equipo de IA <strong>Vera</strong> para <strong>${name}</strong>.</p>
-          <p class="form-hint" style="margin-top:8px">⚠️ Esto levanta una <strong>VM dedicada de pago</strong> (Hetzner) + API key de Anthropic facturable para esta organización. Tarda ~3-5 min en quedar lista.</p>
+        <div class="org-health-body" id="orgHealthBody">
+          <div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Analizando…</div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" id="provCancel">Cancelar</button>
-          <button type="button" class="btn btn-primary" id="provConfirm"><i class="fas fa-robot"></i> Provisionar Vera</button>
+          <button type="button" class="btn btn-secondary" id="orgHealthClose">Cerrar</button>
         </div>
       `,
     });
+    modal.querySelector('#orgHealthClose')?.addEventListener('click', () => close());
+    try {
+      if (!this.supabase) this.supabase = await this.getSupabaseClient();
+      const { data, error } = await this.supabase.rpc('org_health_summary', { p_org_id: id });
+      if (error) throw error;
+      const body = modal.querySelector('#orgHealthBody');
+      if (body) body.innerHTML = this._renderHealth(data || {});
+    } catch (err) {
+      console.error('org health:', err);
+      const body = modal.querySelector('#orgHealthBody');
+      if (body) body.innerHTML = `<div class="dev-org-grid-state"><i class="fas fa-triangle-exclamation"></i> ${this.escapeHtml(err?.message || 'No se pudo cargar la salud')}</div>`;
+    }
+  }
 
-    modal.querySelector('#provCancel')?.addEventListener('click', () => close());
-    modal.querySelector('#provConfirm')?.addEventListener('click', async () => {
-      const btn = modal.querySelector('#provConfirm');
-      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Provisionando...'; }
-      try {
-        if (!this.supabase) this.supabase = await this.getSupabaseClient();
-        const { data, error } = await this.supabase.functions.invoke('provision-org-agent', {
-          body: { organization_id: id },
-        });
-        if (error) {
-          let msg = error.message || 'Error al provisionar';
-          try { const ctx = await error.context?.json?.(); if (ctx?.error || ctx?.message) msg = ctx.error || ctx.message; } catch (_) {}
-          throw new Error(msg);
-        }
-        if (data?.already_provisioned) {
-          this.showNotification(data.message || 'La org ya tiene a Vera.', 'warning');
-        } else {
-          this.showNotification(data?.message || 'Provisión de Vera iniciada.', 'success');
-        }
-        close();
-        await this.loadOrgs();
-      } catch (err) {
-        this.showNotification(err?.message || 'Error al provisionar Vera', 'error');
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-robot"></i> Provisionar Vera'; }
-      }
-    });
+  _renderHealth(h) {
+    const num = (v) => Number(v || 0);
+    const products = num(h.products), entities = num(h.entities), services = num(h.services), containers = num(h.containers);
+    const runs7 = num(h.runs_7d), errors7 = num(h.runs_errors_7d), runsTotal = num(h.runs_total);
+    const hasData = (products + entities + services) > 0;
+    const lastAct = h.last_activity ? new Date(h.last_activity).toLocaleString('es') : '—';
+    const veraOk = !!h.vera_status && ['healthy', 'starting', 'provisioning'].includes(h.vera_status);
+
+    const issues = [];
+    if (!hasData) issues.push('Sin datos de marca cargados');
+    if (errors7 > 0) issues.push(`${errors7} error(es) en ejecuciones (7d)`);
+    if (!veraOk) issues.push('Vera no activa');
+    const healthy = issues.length === 0;
+
+    const stat = (label, value, ok, icon) => `
+      <div class="org-health-stat ${ok ? 'is-ok' : 'is-warn'}">
+        <span class="org-health-stat-icon"><i class="fas ${icon}"></i></span>
+        <span class="org-health-stat-value">${this.escapeHtml(String(value))}</span>
+        <span class="org-health-stat-label">${this.escapeHtml(label)}</span>
+      </div>`;
+
+    return `
+      <div class="org-health-verdict ${healthy ? 'is-ok' : 'is-warn'}">
+        <i class="fas ${healthy ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i>
+        <div>
+          <strong>${healthy ? 'Marca sana' : 'Requiere atención'}</strong>
+          <p>${healthy ? 'Datos presentes y sin errores recientes en el ecosistema.' : issues.map(i => this.escapeHtml(i)).join(' · ')}</p>
+        </div>
+      </div>
+      <h4 class="org-health-section-title">Datos de la marca</h4>
+      <div class="org-health-grid">
+        ${stat('Productos', products, products > 0, 'fa-box')}
+        ${stat('Entidades', entities, entities > 0, 'fa-shapes')}
+        ${stat('Servicios', services, services > 0, 'fa-screwdriver-wrench')}
+        ${stat('Sub-marcas', containers, true, 'fa-sitemap')}
+      </div>
+      <h4 class="org-health-section-title">Ecosistema</h4>
+      <div class="org-health-grid">
+        ${stat('Runs (7d)', runs7, true, 'fa-play')}
+        ${stat('Errores (7d)', errors7, errors7 === 0, 'fa-bug')}
+        ${stat('Runs totales', runsTotal, true, 'fa-database')}
+        ${stat('Vera', veraOk ? h.vera_status : 'off', veraOk, 'fa-robot')}
+      </div>
+      <p class="org-health-foot"><i class="fas fa-clock"></i> Última actividad: ${this.escapeHtml(lastAct)}</p>
+    `;
   }
 
   activeSubscription(subs) {
@@ -302,19 +345,6 @@ class DevLeadOrgsView extends DevBaseView {
     this._editingId = null;
     this._openModal('Nueva organizacion', true);
     this.setFormValues({});
-  }
-
-  openEditModal(id) {
-    const org = this.orgs.find(o => o.id === id);
-    if (!org) return;
-    this._editingId = id;
-    this._openModal(`Editar: ${org.name || ''}`, false);
-    this.setFormValues({
-      name: org.name || '',
-      brand_name_oficial: org.brand_name_oficial || '',
-      brand_slogan: org.brand_slogan || '',
-      logo_url: org.logo_url || ''
-    });
   }
 
   setFormValues(v) {

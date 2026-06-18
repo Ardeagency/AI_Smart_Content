@@ -88,16 +88,30 @@ async function _fetchUserOrgs() {
 
 async function resolveOrgIdFromShortAndSlug(shortId, nameSlug) {
   if (!shortId) return null;
-  try {
-    const list = await _fetchUserOrgs();
-    if (!list) return null;
-    const byShortId = list.filter((o) => getOrgShortId(o.id) === shortId);
+  const pick = (arr) => {
+    const byShortId = arr.filter((o) => getOrgShortId(o.id) === shortId);
     if (byShortId.length === 0) return null;
     if (nameSlug && nameSlug !== 'org') {
       const match = byShortId.find((o) => getOrgSlug(o.name) === nameSlug);
       if (match) return { id: match.id, name: match.name };
     }
     return { id: byShortId[0].id, name: byShortId[0].name };
+  };
+  try {
+    const list = await _fetchUserOrgs();
+    const own = list ? pick(list) : null;
+    if (own) return own;
+    // Fallback Lead: un desarrollador Lead puede entrar a CUALQUIER org del
+    // sistema (no solo las suyas), no solo a las que es owner/miembro.
+    if (window.authService?.isLead?.()) {
+      const sb = window.supabaseService ? await window.supabaseService.getClient() : window.supabase;
+      if (sb) {
+        const { data } = await sb.from('organizations').select('id, name').is('deleted_at', null).limit(1000);
+        const hit = pick(data || []);
+        if (hit) return hit;
+      }
+    }
+    return null;
   } catch (e) {
     console.warn('resolveOrgIdFromShortAndSlug:', e);
     return null;

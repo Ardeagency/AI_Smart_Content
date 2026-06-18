@@ -12149,6 +12149,65 @@
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ───── Mini-dashboard de salud (modal "Salud") ───── */
+.org-health-body { display: flex; flex-direction: column; gap: 14px; }
+.org-health-verdict {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+}
+.org-health-verdict > i { font-size: 1.4rem; flex-shrink: 0; }
+.org-health-verdict strong { display: block; color: var(--text-primary); }
+.org-health-verdict p { margin: 2px 0 0; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.4; }
+.org-health-verdict.is-ok {
+  background: color-mix(in srgb, #22c55e 12%, transparent);
+  border: 1px solid color-mix(in srgb, #22c55e 38%, transparent);
+}
+.org-health-verdict.is-ok > i { color: #22c55e; }
+.org-health-verdict.is-warn {
+  background: color-mix(in srgb, var(--accent-danger, #dc3545) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-danger, #dc3545) 38%, transparent);
+}
+.org-health-verdict.is-warn > i { color: var(--accent-danger, #dc3545); }
+
+.org-health-section-title {
+  margin: 4px 0 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.org-health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+.org-health-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: var(--radius-sm);
+}
+.org-health-stat-icon { font-size: 0.85rem; color: var(--text-muted); }
+.org-health-stat.is-ok .org-health-stat-icon { color: #22c55e; }
+.org-health-stat.is-warn .org-health-stat-icon { color: var(--accent-danger, #dc3545); }
+.org-health-stat-value { font-size: 1.25rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; }
+.org-health-stat-label { font-size: 0.6875rem; color: var(--text-secondary); }
+.org-health-foot {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* ───── Variante horizontal (categorías): misma identidad, layout en fila ───── */
 .dev-org-grid--h {
   grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
