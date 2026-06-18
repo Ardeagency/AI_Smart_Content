@@ -19,6 +19,13 @@ import {
 
 const arr = (v: unknown) => Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()).map((x) => (x as string).trim()) : [];
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "") || null;
+const hostnameOf = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return null; } };
+const normalizeUrl = (u: unknown) => {
+  if (!u || typeof u !== "string") return null;
+  let s = u.trim();
+  if (!/^https?:\/\//i.test(s)) s = "https://" + s;
+  try { return new URL(s).href; } catch { return null; }
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -114,6 +121,84 @@ Deno.serve(async (req) => {
         if (error) return errorResponse(error.message, 500);
       }
       await mergeContainerJson("visual_dna", { estetica: str(d.estetica) });
+      return jsonResponse({ ok: true, count: rows.length });
+    }
+
+    // ── LISTAR competidores (para la pagina de aprobacion) ──────────────
+    if (section === "competitors-list") {
+      const { data } = await service.from("intelligence_entities")
+        .select("id, name, domain, target_identifier, metadata")
+        .eq("organization_id", orgId)
+        .order("created_at", { ascending: true });
+      const competitors = (data || [])
+        .filter((e: { metadata?: { kind?: string } }) => e.metadata?.kind === "competitor")
+        .map((e: { id: string; name: string; domain: string; target_identifier: string; metadata?: { website?: string; instagram?: string } }) => ({
+          id: e.id,
+          name: e.name,
+          website: e.metadata?.website || "",
+          instagram: e.metadata?.instagram || (e.domain === "social" ? e.target_identifier : "") || "",
+        }));
+      return jsonResponse({ competitors });
+    }
+
+    // ── GUARDAR competidores (estrategia replace) ───────────────────────
+    if (section === "competitors") {
+      const incoming = Array.isArray(d.competitors) ? d.competitors : [];
+      const cids = await containerIds();
+      const containerId = cids[0] || null;
+      // Borrar competidores actuales + sus watchers (los del sitio propio quedan).
+      const { data: olds } = await service.from("intelligence_entities")
+        .select("id, metadata").eq("organization_id", orgId);
+      const compIds = (olds || []).filter((e: { metadata?: { kind?: string } }) => e.metadata?.kind === "competitor").map((e: { id: string }) => e.id);
+      if (compIds.length) {
+        await service.from("url_watchers").delete().in("entity_id", compIds);
+        await service.from("intelligence_entities").delete().in("id", compIds);
+      }
+      let count = 0;
+      for (const c of incoming) {
+        const name = str(c.name);
+        if (!name) continue;
+        const ig = (typeof c.instagram === "string" ? c.instagram : "").replace(/^@/, "").trim() || null;
+        const site = normalizeUrl(c.website);
+        const targetId = ig || (site ? hostnameOf(site) : null) || name;
+        const { data: ent } = await service.from("intelligence_entities").insert({
+          brand_container_id: containerId, organization_id: orgId, name,
+          domain: ig ? "social" : "web", target_identifier: targetId, is_active: true, scope: "brand",
+          metadata: { website: site, instagram: ig, kind: "competitor", discovered_by: "auto-builder" },
+        }).select("id").single();
+        count++;
+        if (site && ent) {
+          await service.from("url_watchers").insert({
+            url: site, label: name, entity_id: ent.id,
+            brand_container_id: containerId, organization_id: orgId, is_active: true, last_hash: "",
+          });
+        }
+      }
+      return jsonResponse({ ok: true, count });
+    }
+
+    // ── GUARDAR productos detectados (estrategia replace de auto_builder) ─
+    if (section === "products") {
+      const incoming = Array.isArray(d.products) ? d.products : [];
+      const cids = await containerIds();
+      const containerId = cids[0] || null;
+      await service.from("products").delete().eq("organization_id", orgId).eq("created_via", "auto_builder");
+      const rows = incoming
+        .map((p: { name?: string; description?: string; image?: string; price?: string; currency?: string }) => ({
+          organization_id: orgId,
+          brand_container_id: containerId,
+          tipo_producto: "otro",
+          nombre_producto: str(p.name) || "",
+          descripcion_producto: str(p.description) || str(p.name) || "—",
+          moneda: str(p.currency) || "COP",
+          created_via: "auto_builder",
+          metadata: { image: p.image || null, price: p.price || null, source: "url-scrape" },
+        }))
+        .filter((r: { nombre_producto: string }) => r.nombre_producto);
+      if (rows.length) {
+        const { error } = await service.from("products").insert(rows);
+        if (error) return errorResponse(error.message, 500);
+      }
       return jsonResponse({ ok: true, count: rows.length });
     }
 

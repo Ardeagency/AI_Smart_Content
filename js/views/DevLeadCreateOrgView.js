@@ -87,12 +87,14 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   // Paginas de aprobacion (orden jerarquico). La ultima es resumen/finalizar.
   APPROVAL_PAGES = [
-    { key: 'identity', label: 'Identidad' },
-    { key: 'market',   label: 'Mercado e idioma' },
-    { key: 'voice',    label: 'Voz y mensaje' },
-    { key: 'colors',   label: 'Colores' },
-    { key: 'fonts',    label: 'Tipografia' },
-    { key: 'review',   label: 'Listo' }
+    { key: 'identity',    label: 'Identidad' },
+    { key: 'market',      label: 'Mercado e idioma' },
+    { key: 'voice',       label: 'Voz y mensaje' },
+    { key: 'colors',      label: 'Colores' },
+    { key: 'fonts',       label: 'Tipografia' },
+    { key: 'products',    label: 'Productos' },
+    { key: 'competitors', label: 'Competencia' },
+    { key: 'review',      label: 'Listo' }
   ];
 
   async onEnter() {
@@ -1118,6 +1120,14 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.container.querySelectorAll('[data-color-rm]').forEach((b) => {
       this.addEventListener(b, 'click', () => this._apRemoveColor(parseInt(b.getAttribute('data-color-rm'), 10)));
     });
+    this.container.querySelectorAll('[data-prod-rm]').forEach((b) => {
+      this.addEventListener(b, 'click', () => this._apRemoveProduct(parseInt(b.getAttribute('data-prod-rm'), 10)));
+    });
+    this.container.querySelectorAll('[data-comp-rm]').forEach((b) => {
+      this.addEventListener(b, 'click', () => this._apRemoveComp(parseInt(b.getAttribute('data-comp-rm'), 10)));
+    });
+    const apAddComp = this.container.querySelector('[data-action="ap-add-comp"]');
+    if (apAddComp) this.addEventListener(apAddComp, 'click', () => this._apAddComp());
 
     // Back / Next
     const backBtn = this.container.querySelector('[data-action="back"]');
@@ -1712,11 +1722,28 @@ class DevLeadCreateOrgView extends DevBaseView {
       colors,
       typography_primary: bp.typography_primary || '',
       typography_secondary: bp.typography_secondary || '',
-      estetica: bp.estetica || ''
+      estetica: bp.estetica || '',
+      competitors: null   // se carga async desde intelligence_entities
     };
     this.approvalIdx = 0;
     this.autoPhase = 'approving';
     this._refreshAutoFull();
+    this._loadCompetitors();
+  }
+
+  async _loadCompetitors() {
+    try {
+      const { data } = await this.supabase.functions.invoke('admin-update-brand', {
+        body: { organization_id: this.autoOrgId, section: 'competitors-list' }
+      });
+      this.approval.competitors = Array.isArray(data?.competitors) ? data.competitors : [];
+    } catch (_) {
+      this.approval.competitors = [];
+    }
+    // Si el usuario esta en la pagina de competencia, refrescar.
+    if (this.autoPhase === 'approving' && this.APPROVAL_PAGES[this.approvalIdx]?.key === 'competitors') {
+      this._refreshAutoFull();
+    }
   }
 
   _refreshAutoFull() {
@@ -1744,6 +1771,8 @@ class DevLeadCreateOrgView extends DevBaseView {
       voice:    ['Voz y mensaje', 'El ADN verbal: tono, propuesta, pilares y palabras.'],
       colors:   ['Paleta de colores', 'Los colores detectados de la marca. Ajusta o agrega.'],
       fonts:    ['Tipografia y estetica', 'Las fuentes y el estilo visual.'],
+      products: ['Productos detectados', 'Lo que Vera encontro en el sitio. Quita lo que no sea un producto real; al avanzar se guardan.'],
+      competitors: ['Competencia y monitoreo', 'Los competidores que Vera identifico. Revisa, corrige o quita; al avanzar se actualiza el monitoreo.'],
       review:   ['Todo listo', 'Revisa el resumen y finaliza para dejar la marca creada.']
     }[key] || ['', ''];
   }
@@ -1760,6 +1789,8 @@ class DevLeadCreateOrgView extends DevBaseView {
       voice:    () => this._apVoice(),
       colors:   () => this._apColors(),
       fonts:    () => this._apFonts(),
+      products: () => this._apProducts(),
+      competitors: () => this._apCompetitors(),
       review:   () => this._apReview()
     }[page.key] || (() => ''))();
 
@@ -1843,6 +1874,40 @@ class DevLeadCreateOrgView extends DevBaseView {
       ${this._f('Estetica', 'apEstetica', a.estetica, 'Ej. minimalista, premium')}
     `;
   }
+  _apProducts() {
+    const items = this.approval.products_detected || [];
+    if (!items.length) {
+      return '<p class="cons-dim createorg-field-full">No se detectaron productos en el sitio. Si conectas tu tienda en el paso final, se importan completos.</p>';
+    }
+    const rows = items.map((p, i) => `
+      <div class="createorg-list-row" data-prod-idx="${i}">
+        ${p.image ? `<img src="${this.escapeHtml(p.image)}" class="createorg-list-thumb" onerror="this.outerHTML='<span class=&quot;createorg-list-thumb createorg-list-thumb--ph&quot;><i class=&quot;fas fa-box&quot;></i></span>'">` : '<span class="createorg-list-thumb createorg-list-thumb--ph"><i class="fas fa-box"></i></span>'}
+        <input type="text" class="form-control" data-prod-name value="${this.escapeHtml(p.name || '')}" placeholder="Nombre del producto">
+        <button type="button" class="createorg-color-rm" data-prod-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+      </div>`).join('');
+    return `<div class="createorg-field-full"><label>Productos (${items.length}) — al avanzar se guardan</label><div id="apProducts">${rows}</div></div>`;
+  }
+
+  _apCompetitors() {
+    const comps = this.approval.competitors;
+    if (comps === null) {
+      return '<div class="createorg-field-full" style="text-align:center;padding:24px"><i class="fas fa-circle-notch fa-spin"></i> Cargando competencia...</div>';
+    }
+    const rows = (comps || []).map((c, i) => `
+      <div class="createorg-comp-row" data-comp-idx="${i}">
+        <input type="text" class="form-control" data-comp-name value="${this.escapeHtml(c.name || '')}" placeholder="Nombre">
+        <input type="text" class="form-control" data-comp-web value="${this.escapeHtml(c.website || '')}" placeholder="sitio web (opcional)">
+        <button type="button" class="createorg-color-rm" data-comp-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+      </div>`).join('');
+    return `
+      <div class="createorg-field-full">
+        <label>Competidores (${(comps || []).length}) — se monitorea su sitio</label>
+        <div id="apComps">${rows || '<p class="cons-dim">Sin competidores. Agrega los que conozcas.</p>'}</div>
+        <button type="button" class="btn btn-secondary btn-sm" data-action="ap-add-comp"><i class="fas fa-plus"></i> Agregar competidor</button>
+      </div>
+    `;
+  }
+
   _apReview() {
     const a = this.approval;
     return `
@@ -1876,6 +1941,20 @@ class DevLeadCreateOrgView extends DevBaseView {
       })).filter((c) => c.hex_value);
     }
     else if (key === 'fonts') { a.typography_primary = g('apFont1'); a.typography_secondary = g('apFont2'); a.estetica = g('apEstetica'); }
+    else if (key === 'products') {
+      a.products_detected = [...this.container.querySelectorAll('#apProducts .createorg-list-row')].map((r) => {
+        const i = parseInt(r.getAttribute('data-prod-idx'), 10);
+        const orig = (a.products_detected || [])[i] || {};
+        return { ...orig, name: (r.querySelector('[data-prod-name]')?.value || '').trim() };
+      }).filter((p) => p.name);
+    }
+    else if (key === 'competitors') {
+      if (a.competitors === null) return;
+      a.competitors = [...this.container.querySelectorAll('#apComps .createorg-comp-row')].map((r) => ({
+        name: (r.querySelector('[data-comp-name]')?.value || '').trim(),
+        website: (r.querySelector('[data-comp-web]')?.value || '').trim()
+      })).filter((c) => c.name);
+    }
   }
 
   async _saveApprovalSection(key) {
@@ -1887,6 +1966,11 @@ class DevLeadCreateOrgView extends DevBaseView {
     else if (key === 'voice') data = { tono_de_voz: a.tono_de_voz, tagline: a.slogan, propuesta_valor: a.propuesta_valor, mision_vision: a.mision_vision, pilares: a.pilares, palabras_clave: a.palabras_clave, palabras_prohibidas: a.palabras_prohibidas };
     else if (key === 'colors') data = { colors: a.colors };
     else if (key === 'fonts') data = { fonts: [a.typography_primary && { font_usage: 'primary', font_family: a.typography_primary }, a.typography_secondary && { font_usage: 'secondary', font_family: a.typography_secondary }].filter(Boolean), estetica: a.estetica };
+    else if (key === 'products') data = { products: (a.products_detected || []).map((p) => ({ name: p.name, description: p.description || p.name, image: p.image || null, price: p.price || null, currency: p.currency || null })) };
+    else if (key === 'competitors') {
+      if (a.competitors === null) return { ok: true };
+      data = { competitors: a.competitors };
+    }
     const { data: res, error } = await this.supabase.functions.invoke('admin-update-brand', { body: { organization_id: this.autoOrgId, section: key, data } });
     if (error) {
       let msg = error.message || 'Error al guardar';
@@ -1933,6 +2017,21 @@ class DevLeadCreateOrgView extends DevBaseView {
   _apRemoveColor(i) {
     this._collectApproval('colors');
     this.approval.colors.splice(i, 1);
+    this._refreshAutoFull();
+  }
+  _apRemoveProduct(i) {
+    this._collectApproval('products');
+    (this.approval.products_detected || []).splice(i, 1);
+    this._refreshAutoFull();
+  }
+  _apRemoveComp(i) {
+    this._collectApproval('competitors');
+    (this.approval.competitors || []).splice(i, 1);
+    this._refreshAutoFull();
+  }
+  _apAddComp() {
+    this._collectApproval('competitors');
+    this.approval.competitors = [...(this.approval.competitors || []), { name: '', website: '' }];
     this._refreshAutoFull();
   }
 
