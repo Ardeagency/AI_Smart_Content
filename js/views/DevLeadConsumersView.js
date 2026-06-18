@@ -46,7 +46,6 @@ class DevLeadConsumersView extends DevBaseView {
             </div>
             <div class="cons-head-actions">
               <input type="search" id="consSearch" class="form-control" placeholder="Buscar por nombre, email u org..." autocomplete="off">
-              <button type="button" class="btn btn-secondary" id="consRefresh" title="Recargar"><i class="fas fa-rotate"></i></button>
               <a href="/dev/provisioning/users" class="btn btn-primary"><i class="fas fa-user-plus"></i> Crear usuario</a>
             </div>
           </div>
@@ -89,7 +88,6 @@ class DevLeadConsumersView extends DevBaseView {
     this.container.querySelector('#consSearch')?.addEventListener('input', (e) => {
       this.renderRows((e.target?.value || '').trim().toLowerCase());
     });
-    this.container.querySelector('#consRefresh')?.addEventListener('click', () => this.reload());
 
     await this.load();
     this.renderRows('');
@@ -121,14 +119,6 @@ class DevLeadConsumersView extends DevBaseView {
     } finally {
       this._loading = false;
     }
-  }
-
-  async reload() {
-    const body = this.container.querySelector('#consBody');
-    if (body) body.innerHTML = `<tr><td colspan="6" class="cons-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>`;
-    await this.load();
-    const filter = (this.container.querySelector('#consSearch')?.value || '').trim().toLowerCase();
-    this.renderRows(filter);
   }
 
   // ─── Render tabla ────────────────────────────────────────────────────
