@@ -4701,57 +4701,16 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     display: none !important;
 }
 
-/* DEVELOPER = título blanco prominente a la izquierda */
+/* DEVELOPER = pre-label en blanco (tamaño/posición originales, centrado) */
 .side-navigation.nav-mode-developer .nav-dev-title {
-    left: 16px;
-    right: 86px;            /* reserva espacio para el chip → nunca lo pisa */
-    top: 23px;
-    text-align: left;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: #ffffff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    color: rgba(255, 255, 255, 0.85);
 }
 
-/* RANK = chip premium a la derecha (texto blanco + punto del color del rank) */
-.side-navigation.nav-mode-developer .nav-dev-rank-block {
-    left: auto;
-    right: 16px;
-    top: 21px;
-    height: auto;
-    justify-content: flex-end;
-}
-
+/* RANK = grande otra vez (sin chip), en BLANCO; el color lo da el bloom */
 .side-navigation.nav-mode-developer .nav-dev-rank-value {
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    line-height: 1;
-    padding: 3px 10px 3px 8px;
-    border-radius: 20px;
-    text-transform: none;
     color: #ffffff;
     -webkit-text-fill-color: #ffffff;
-    background: rgba(255, 255, 255, 0.06);
-    -webkit-background-clip: border-box;
-    background-clip: border-box;
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.12),
-        0 0 14px -4px var(--dev-sidebar-active, rgba(124, 58, 237, 0.4));
-}
-
-.side-navigation.nav-mode-developer .nav-dev-rank-value::before {
-    content: '';
-    display: inline-block;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    margin-right: 5px;
-    vertical-align: middle;
-    background: var(--dev-rank-accent, #7c5cff);
+    background: none;
 }
 
 /* botones + : MISMO diseño que el botón Vera del org/ (pastilla glass
