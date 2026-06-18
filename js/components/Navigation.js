@@ -2161,6 +2161,7 @@ class Navigation {
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="${__('Navegación principal')}">
         <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
           <h2 class="nav-org-title" id="navOrgName">${__('Mi Organización')}</h2>
+          <span class="nav-org-plan" id="navOrgPlan" aria-label="${__('Plan de la organización')}"></span>
           <a href="${this.getUserSidebarRoute('credits')}" class="nav-org-credits" id="navOrgCreditsBlock" data-route="${this.getUserSidebarRoute('credits')}" aria-label="${__('Ir a créditos')}">
             <div class="nav-org-credits-row">
               <span class="nav-org-credits-label">${__('créditos')}</span>
@@ -3437,17 +3438,25 @@ class Navigation {
         ? await window.apiClient.query(`nav:upgrade-target:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
         : await fetcher();
 
-      // Nombre del plan actual en la tarjeta (dinámico, no estático).
+      // Plan actual (dinámico, real de la suscripción). Siempre visible como
+      // chip en el header de la org.
+      const planName = currentName || 'Trial';
+      const planBadge = document.getElementById('navOrgPlan');
+      if (planBadge) planBadge.textContent = planName;
+
+      const card = document.getElementById('navPlanCard');
       const nameEl = document.getElementById('navPlanName');
       const descEl = document.getElementById('navPlanDesc');
-      if (nameEl) nameEl.textContent = currentName || 'Trial';
 
       if (!next) {
-        // Ya está en el plan más alto → sin CTA de upgrade.
-        if (descEl) descEl.textContent = 'Estás en el plan más alto disponible.';
+        // Plan más alto: nada que mejorar → ocultar la tarjeta entera
+        // (el plan se ve en el header).
+        if (card) card.hidden = true;
         hide();
         return;
       }
+      if (card) card.hidden = false;
+      if (nameEl) nameEl.textContent = planName;
       if (descEl) descEl.textContent = `Sube a ${next.name} para desbloquear más capacidad y funciones.`;
       label.textContent = `Mejorar a ${next.name}`;
       btn.hidden = false;
