@@ -15707,6 +15707,11 @@
   margin: 0 auto;
 }
 @media (max-width: 560px) { .createorg-mode-grid { grid-template-columns: 1fr; } }
+.createorg-done-logo {
+  width: 72px; height: 72px; object-fit: contain; border-radius: 14px;
+  background: #fff; padding: 8px; margin: 0 auto 4px; display: block;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+}
 /* Ruta automatica: chips de integraciones */
 .createorg-integrations { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .createorg-intg-chip {

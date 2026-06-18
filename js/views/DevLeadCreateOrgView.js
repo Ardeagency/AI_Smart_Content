@@ -336,13 +336,16 @@ class DevLeadCreateOrgView extends DevBaseView {
 
     if (this.autoPhase === 'done') {
       const ap = prog.apply || {};
+      const head = ap.logo
+        ? `<img src="${this.escapeHtml(ap.logo)}" alt="logo" class="createorg-done-logo" onerror="this.style.display='none'">`
+        : `<span class="provision-verify-icon provision-verify-icon--success"><i class="fas fa-check"></i></span>`;
       return `
         <section class="provision-verify-card provision-final-card">
-          <span class="provision-verify-icon provision-verify-icon--success"><i class="fas fa-check"></i></span>
+          ${head}
           <h2>Organizacion creada y analizada</h2>
           <p>Vera investigo <strong>${this.escapeHtml(this.form.brand_url || '')}</strong> y lleno la base de la marca.</p>
           <p class="provision-verify-meta">
-            ${ap.colors != null ? `${ap.colors} colores · ` : ''}${ap.fonts != null ? `${ap.fonts} tipografias · ` : ''}${ap.pillars != null ? `${ap.pillars} pilares` : ''} guardados.
+            ${ap.logo ? 'logo · ' : ''}${ap.colors != null ? `${ap.colors} colores · ` : ''}${ap.fonts != null ? `${ap.fonts} tipografias · ` : ''}${ap.pillars != null ? `${ap.pillars} pilares` : ''} guardados.
           </p>
         </section>
         <footer class="provision-page-actions">
