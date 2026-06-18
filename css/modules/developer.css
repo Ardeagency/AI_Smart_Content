@@ -15712,6 +15712,10 @@
   background: #fff; padding: 8px; margin: 0 auto 4px; display: block;
   box-shadow: 0 4px 16px rgba(0,0,0,0.35);
 }
+.createorg-auto-intg {
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-divider, #242424);
+}
+.createorg-auto-intg-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
 /* Ruta automatica: chips de integraciones */
 .createorg-integrations { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .createorg-intg-chip {

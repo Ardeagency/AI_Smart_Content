@@ -74,6 +74,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     // Estado de la ruta automatica (shell → scrape → apply)
     this.autoPhase = null;          // null | 'creating' | 'scraping' | 'done' | 'error'
     this.autoOrgId = null;
+    this.autoContainerId = null;    // mercado (brand_container) del org nuevo — para conectar integraciones
     this.autoJobId = null;
     this.autoStatus = null;         // ultimo status del job de scrape
     this.autoError = null;
@@ -347,6 +348,7 @@ class DevLeadCreateOrgView extends DevBaseView {
           <p class="provision-verify-meta">
             ${ap.logo ? 'logo · ' : ''}${ap.colors != null ? `${ap.colors} colores · ` : ''}${ap.fonts != null ? `${ap.fonts} tipografias · ` : ''}${ap.pillars != null ? `${ap.pillars} pilares` : ''} guardados.
           </p>
+          ${this._autoIntegrationsBlock()}
         </section>
         <footer class="provision-page-actions">
           <button type="button" class="provision-back-btn" data-action="auto-reset">Crear otra</button>
@@ -1063,6 +1065,9 @@ class DevLeadCreateOrgView extends DevBaseView {
     if (autoGotoBtn) this.addEventListener(autoGotoBtn, 'click', () => {
       if (window.router) window.router.navigate('/dev/lead/orgs'); else window.location.href = '/dev/lead/orgs';
     });
+    this.container.querySelectorAll('[data-connect-intg]').forEach((b) => {
+      this.addEventListener(b, 'click', () => this.connectAutoIntegration(b.getAttribute('data-connect-intg')));
+    });
 
     // Back / Next
     const backBtn = this.container.querySelector('[data-action="back"]');
@@ -1501,6 +1506,12 @@ class DevLeadCreateOrgView extends DevBaseView {
       if (error) throw error;
       this.autoOrgId = orgId;
 
+      // Mercado (brand_container) del org nuevo — para conectar integraciones luego.
+      const { data: bc } = await this.supabase
+        .from('brand_containers').select('id')
+        .eq('organization_id', orgId).order('created_at', { ascending: true }).limit(1).maybeSingle();
+      this.autoContainerId = bc?.id || null;
+
       // 2. Arrancar el scrape con el org_id (ai-engine aplica el ADN al terminar).
       this.autoPhase = 'scraping';
       this._refreshAuto();
@@ -1551,6 +1562,57 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   stopAutoPoll() {
     if (this._autoTimer) { clearInterval(this._autoTimer); this._autoTimer = null; }
+  }
+
+  // Bloque de la pantalla de exito: conectar tiendas → el OAuth existente dispara
+  // el populator (importa productos). Solo providers con endpoint start hoy.
+  AUTO_INTG_ENDPOINTS = { shopify: '/api/integrations/shopify/start', mercadolibre: '/api/integrations/meli/start' };
+  AUTO_INTG_LABELS = { shopify: 'Shopify', mercadolibre: 'Mercado Libre', amazon: 'Amazon', woocommerce: 'WooCommerce' };
+
+  _autoIntegrationsBlock() {
+    const sel = this.autoIntegrations || [];
+    if (!sel.length || !this.autoContainerId) return '';
+    const supported = sel.filter((p) => this.AUTO_INTG_ENDPOINTS[p]);
+    const unsupported = sel.filter((p) => !this.AUTO_INTG_ENDPOINTS[p]);
+    const btns = supported.map((p) =>
+      `<button type="button" class="btn btn-secondary btn-sm" data-connect-intg="${p}"><i class="fas fa-link"></i> Conectar ${this.escapeHtml(this.AUTO_INTG_LABELS[p] || p)}</button>`
+    ).join('');
+    const note = unsupported.length
+      ? `<p class="provision-verify-meta" style="margin-top:6px">${unsupported.map((p) => this.escapeHtml(this.AUTO_INTG_LABELS[p] || p)).join(', ')}: conexion proximamente.</p>`
+      : '';
+    return `
+      <div class="createorg-auto-intg">
+        ${supported.length ? '<p class="provision-verify-meta">Conecta tu tienda para importar productos automaticamente:</p>' : ''}
+        ${btns ? `<div class="createorg-auto-intg-btns">${btns}</div>` : ''}
+        ${note}
+      </div>`;
+  }
+
+  async connectAutoIntegration(provider) {
+    const endpoint = this.AUTO_INTG_ENDPOINTS[provider];
+    if (!endpoint || !this.autoContainerId) return;
+    try {
+      const { data: { session } } = await this.supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) { this.showNotification('Sesion no valida.', 'error'); return; }
+
+      let shop = null;
+      if (provider === 'shopify') {
+        shop = (window.prompt('Dominio de tu tienda Shopify (ej. mitienda.myshopify.com):') || '').trim();
+        if (!shop) return;
+      }
+      const qs = new URLSearchParams({ brand_container_id: this.autoContainerId, return_to: '/dev/lead/orgs' });
+      if (shop) qs.set('shop', shop);
+      const res = await fetch(`${location.origin}${endpoint}?${qs.toString()}`, {
+        method: 'GET', headers: { Authorization: `Bearer ${token}` }
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.authorize_url) throw new Error(json?.error || `No se pudo iniciar OAuth (${res.status})`);
+      // Redirige al provider; al volver, el exchange encola el populator (importa productos).
+      window.location.href = json.authorize_url;
+    } catch (err) {
+      this.showNotification(err?.message || 'No se pudo conectar la integracion.', 'error');
+    }
   }
 
   _refreshAuto() {
