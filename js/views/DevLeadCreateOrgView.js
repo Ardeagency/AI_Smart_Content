@@ -93,6 +93,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     { key: 'colors',      label: 'Colores' },
     { key: 'fonts',       label: 'Tipografia' },
     { key: 'products',    label: 'Productos' },
+    { key: 'services',    label: 'Servicios' },
     { key: 'competitors', label: 'Competencia' },
     { key: 'vera',        label: 'Agente Vera' },
     { key: 'owner',       label: 'Owner y miembros' },
@@ -1142,6 +1143,9 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.container.querySelectorAll('[data-prod-rm]').forEach((b) => {
       this.addEventListener(b, 'click', () => this._apRemoveProduct(parseInt(b.getAttribute('data-prod-rm'), 10)));
     });
+    this.container.querySelectorAll('[data-svc-rm]').forEach((b) => {
+      this.addEventListener(b, 'click', () => this._apRemoveService(parseInt(b.getAttribute('data-svc-rm'), 10)));
+    });
     this.container.querySelectorAll('[data-comp-rm]').forEach((b) => {
       this.addEventListener(b, 'click', () => this._apRemoveComp(parseInt(b.getAttribute('data-comp-rm'), 10)));
     });
@@ -1935,6 +1939,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       colors:   ['Paleta de colores', 'Los colores detectados de la marca. Ajusta o agrega.'],
       fonts:    ['Tipografia y estetica', 'Las fuentes y el estilo visual.'],
       products: ['Productos detectados', 'Lo que Vera encontro en el sitio. Quita lo que no sea un producto real; al avanzar se guardan.'],
+      services: ['Servicios detectados', 'Los servicios que Vera identifico. Quita lo que no aplique; al avanzar se guardan y se enriquecen con IA.'],
       competitors: ['Competencia y monitoreo', 'Los competidores que Vera identifico. Revisa, corrige o quita; al avanzar se actualiza el monitoreo.'],
       vera:     ['Agente de Vera', 'Activa la automatizacion: crea el equipo de IA Vera para esta marca. Opcional — puedes hacerlo despues.'],
       owner:    ['Owner y miembros', 'Asigna un dueno y miembros a la organizacion. Opcional — por defecto queda a tu nombre (dev).'],
@@ -1956,6 +1961,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       colors:   () => this._apColors(),
       fonts:    () => this._apFonts(),
       products: () => this._apProducts(),
+      services:  () => this._apServices(),
       competitors: () => this._apCompetitors(),
       vera:     () => this._apVera(),
       owner:    () => this._apOwner(),
@@ -2060,6 +2066,20 @@ class DevLeadCreateOrgView extends DevBaseView {
         <button type="button" class="createorg-color-rm" data-prod-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
       </div>`).join('');
     return `<div class="createorg-field-full"><label>Productos (${items.length}) — al avanzar se guardan</label><div id="apProducts">${rows}</div></div>`;
+  }
+
+  _apServices() {
+    const items = this.approval.services_detected || [];
+    if (!items.length) {
+      return '<p class="cons-dim createorg-field-full">No se detectaron servicios en el sitio. Puedes agregarlos manualmente despues de crear la org.</p>';
+    }
+    const rows = items.map((s, i) => `
+      <div class="createorg-list-row" data-svc-idx="${i}">
+        <span class="createorg-list-thumb createorg-list-thumb--ph"><i class="fas fa-concierge-bell"></i></span>
+        <input type="text" class="form-control" data-svc-name value="${this.escapeHtml(s.name || '')}" placeholder="Nombre del servicio">
+        <button type="button" class="createorg-color-rm" data-svc-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+      </div>`).join('');
+    return `<div class="createorg-field-full"><label>Servicios (${items.length}) — al avanzar se guardan y enriquecen con IA</label><div id="apServices">${rows}</div></div>`;
   }
 
   _apCompetitors() {
@@ -2168,6 +2188,13 @@ class DevLeadCreateOrgView extends DevBaseView {
         return { ...orig, name: (r.querySelector('[data-prod-name]')?.value || '').trim() };
       }).filter((p) => p.name);
     }
+    else if (key === 'services') {
+      a.services_detected = [...this.container.querySelectorAll('#apServices .createorg-list-row')].map((r) => {
+        const i = parseInt(r.getAttribute('data-svc-idx'), 10);
+        const orig = (a.services_detected || [])[i] || {};
+        return { ...orig, name: (r.querySelector('[data-svc-name]')?.value || '').trim() };
+      }).filter((s) => s.name);
+    }
     else if (key === 'competitors') {
       if (a.competitors === null) return;
       a.competitors = [...this.container.querySelectorAll('#apComps .createorg-comp-row')].map((r) => ({
@@ -2194,6 +2221,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     else if (key === 'colors') data = { colors: a.colors };
     else if (key === 'fonts') data = { fonts: [a.typography_primary && { font_usage: 'primary', font_family: a.typography_primary }, a.typography_secondary && { font_usage: 'secondary', font_family: a.typography_secondary }].filter(Boolean), estetica: a.estetica };
     else if (key === 'products') data = { products: (a.products_detected || []).map((p) => ({ name: p.name, description: p.description || p.name, image: p.image || null, price: p.price || null, currency: p.currency || null, url: p.url || null })) };
+    else if (key === 'services') data = { services: (a.services_detected || []).map((s) => ({ name: s.name, description: s.description || s.name, price: s.price || null, currency: s.currency || null, url: s.url || null })) };
     else if (key === 'competitors') {
       if (a.competitors === null) return { ok: true };
       data = { competitors: a.competitors };
@@ -2254,6 +2282,11 @@ class DevLeadCreateOrgView extends DevBaseView {
   _apRemoveProduct(i) {
     this._collectApproval('products');
     (this.approval.products_detected || []).splice(i, 1);
+    this._refreshAutoFull();
+  }
+  _apRemoveService(i) {
+    this._collectApproval('services');
+    (this.approval.services_detected || []).splice(i, 1);
     this._refreshAutoFull();
   }
   _apRemoveComp(i) {

@@ -244,6 +244,60 @@ Deno.serve(async (req) => {
       return jsonResponse({ ok: true, count, images, enrichment_enqueued: productIds.length });
     }
 
+    // ── SERVICIOS (espejo de products) ──────────────────────────────────
+    if (section === "services") {
+      const incoming = Array.isArray(d.services) ? d.services : [];
+      // El servicio requiere entity_id → reusar/crear la misma brand_entity.
+      let entityId: string | null = null;
+      {
+        const { data: ent } = await service.from("brand_entities").select("id")
+          .eq("organization_id", orgId).order("created_at", { ascending: true }).limit(1).maybeSingle();
+        if (ent) entityId = (ent as { id: string }).id;
+        else {
+          const { data: created } = await service.from("brand_entities")
+            .insert({ organization_id: orgId, name: "Identity principal", entity_type: "other", description: null })
+            .select("id").single();
+          entityId = (created as { id: string } | null)?.id || null;
+        }
+      }
+      // En creacion el org es nuevo → limpiar servicios previos del org (re-aprobacion).
+      await service.from("services").delete().eq("organization_id", orgId);
+      let count = 0;
+      const serviceIds: string[] = [];
+      for (const s of incoming) {
+        const name = str(s?.name);
+        if (!name) continue;
+        const priceNum = Number(s?.price);
+        const { data: svc, error } = await service.from("services").insert({
+          organization_id: orgId,
+          entity_id: entityId,
+          nombre_servicio: name,
+          descripcion_servicio: str(s?.description) || name,
+          moneda: str(s?.currency) || "COP",
+          precio_base: Number.isFinite(priceNum) && priceNum > 0 ? priceNum : null,
+          url_servicio: str(s?.url) || null,
+        }).select("id").single();
+        if (error || !svc) continue;
+        count++;
+        serviceIds.push((svc as { id: string }).id);
+      }
+      // Enriquecer cada servicio con IA (Claude) en background: beneficios,
+      // diferenciadores, casos de uso, entregables, metodologia. Idempotente.
+      if (serviceIds.length) {
+        const jobs = serviceIds.map((sid, i) => ({
+          organization_id: orgId,
+          job_type: "mission",
+          priority: 6,
+          payload: { mission_type: "vera_enrich_service", service_id: sid, source_platform: "url-scrape" },
+          status: "queued",
+          run_after: new Date(Date.now() + i * 2000).toISOString(),
+        }));
+        const { error: enqErr } = await service.from("agent_queue_jobs").insert(jobs);
+        if (enqErr) console.warn("[services] enrichment enqueue:", enqErr.message);
+      }
+      return jsonResponse({ ok: true, count, enrichment_enqueued: serviceIds.length });
+    }
+
     // ── ASIGNAR owner + miembros (opcional) ─────────────────────────────
     if (section === "owner") {
       const VALID_MEMBER_ROLES = new Set(["admin", "editor", "creator", "vera_user", "viewer"]);
