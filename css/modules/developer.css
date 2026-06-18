@@ -15700,6 +15700,35 @@
   flex: none;
   min-height: 0;
 }
+/* Paso 1: 2 tarjetas de modo (manual / automatico) */
+.createorg-mode-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 560px;
+  margin: 0 auto;
+}
+@media (max-width: 560px) { .createorg-mode-grid { grid-template-columns: 1fr; } }
+/* Ruta automatica: chips de integraciones */
+.createorg-integrations { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.createorg-intg-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 10px; cursor: pointer;
+  background: var(--bg-secondary, rgba(255,255,255,0.05));
+  border: 1px solid var(--border-divider, #2a2a2a);
+  color: var(--text-secondary, rgba(255,255,255,0.75));
+  font-size: 0.82rem; font-weight: 600; transition: border-color .15s, background .15s, color .15s;
+}
+.createorg-intg-chip:hover { border-color: rgba(124,131,255,0.45); color: var(--text-primary, #fff); }
+.createorg-intg-chip.is-on {
+  border-color: rgba(124,131,255,0.6);
+  background: rgba(124,131,255,0.14);
+  color: #fff;
+}
+.createorg-intg-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%; font-size: 0.6rem;
+  background: rgba(255,255,255,0.08); color: var(--text-secondary, rgba(255,255,255,0.6));
+}
+.createorg-intg-chip.is-on .createorg-intg-mark { background: var(--indigo, #7C83FF); color: #fff; }
 .createorg-progress-head {
   display: block;
   font-size: 0.7rem;

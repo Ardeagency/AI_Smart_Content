@@ -21,7 +21,8 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.supabase = null;
     this.jobId = null;
     this.owner = null;
-    this.currentStep = 'identidad';
+    this.currentStep = 'mode';
+    this.creationMode = null;       // 'manual' | 'auto' — elegido en el paso 1
 
     this.form = {
       // Step 1 - Identidad basica
@@ -69,6 +70,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.standalone = false;
     this.consumers = [];            // usuarios no-developers para el selector de owner
     this._creating = false;
+    this.autoIntegrations = [];     // providers elegidos en la ruta automatica
   }
 
   async onEnter() {
@@ -83,20 +85,29 @@ class DevLeadCreateOrgView extends DevBaseView {
   // Steps activos dependen de method: si manual o si el scrape pre-llenó datos
   // se incluye un step 'brand' para revisar/editar la info detectada.
   getActiveSteps() {
-    const out = [
-      { key: 'identidad', label: 'Identidad' },
-      { key: 'metodo',    label: 'Metodo' }
-    ];
-    if (this.form.method === 'manual' || this.scraped_brand) {
-      out.push({ key: 'brand', label: 'Marca' });
+    // Paso 1 SIEMPRE: elegir modo (manual vs automatico) — rutas distintas.
+    const out = [{ key: 'mode', label: 'Modo' }];
+
+    if (this.creationMode === 'manual') {
+      out.push(
+        { key: 'identidad', label: 'Identidad' },
+        { key: 'metodo',    label: 'Metodo' }
+      );
+      if (this.form.method === 'manual' || this.scraped_brand) {
+        out.push({ key: 'brand', label: 'Marca' });
+      }
+      out.push(
+        { key: 'operacion', label: 'Operacion' },
+        { key: 'revisar',   label: 'Revisar' }
+      );
+    } else if (this.creationMode === 'auto') {
+      // Ruta automatica (en construccion — se define con el usuario).
+      out.push({ key: 'auto', label: 'Automatico' });
     }
-    out.push(
-      { key: 'operacion', label: 'Operacion' },
-      { key: 'revisar',   label: 'Revisar' }
-    );
+
     // Owner va AL FINAL: por defecto la org se crea a nombre del dev que la
     // crea, y al final se conecta (opcionalmente) el owner real.
-    if (this.standalone) out.push({ key: 'owner', label: 'Owner' });
+    if (this.standalone && this.creationMode) out.push({ key: 'owner', label: 'Owner' });
     return out;
   }
 
@@ -211,6 +222,8 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   renderCurrentStep() {
     switch (this.currentStep) {
+      case 'mode':      return this.renderStepMode();
+      case 'auto':      return this.renderStepAuto();
       case 'owner':     return this.renderStepOwner();
       case 'identidad': return this.renderStepIdentidad();
       case 'metodo':    return this.renderStepMetodo();
@@ -219,6 +232,117 @@ class DevLeadCreateOrgView extends DevBaseView {
       case 'revisar':   return this.renderStepRevisar();
       default:          return '';
     }
+  }
+
+  // ─── Paso 1: Modo de creacion (manual vs automatico) ─────────────────
+  renderStepMode() {
+    const modes = [
+      { v: 'manual', icon: 'fa-pen-to-square',       label: 'Crear manualmente',
+        hint: 'Tu llenas la identidad, el mercado y el brand DNA paso a paso.' },
+      { v: 'auto',   icon: 'fa-magic-wand-sparkles', label: 'Crear automaticamente',
+        hint: 'Das una fuente (URL/datos) y Vera investiga y arma la org sola.' }
+    ];
+    return `
+      <section class="provision-form-card createorg-card-wide">
+        <header class="provision-form-head">
+          <span class="provision-form-eyebrow">Paso 1 · Modo</span>
+          <h2>Como quieres crear la organizacion?</h2>
+          <p>Elige el camino. Manual y automatico siguen rutas completamente distintas.</p>
+        </header>
+        <div class="provision-type-grid createorg-mode-grid" role="radiogroup" aria-label="Modo de creacion">
+          ${modes.map((m) => {
+            const active = this.creationMode === m.v;
+            return `
+              <button type="button" class="provision-type-card ${active ? 'is-active' : ''}" data-mode="${m.v}" role="radio" aria-checked="${active ? 'true' : 'false'}">
+                <span class="provision-type-icon"><i class="fas ${m.icon}"></i></span>
+                <span class="provision-type-label">${this.escapeHtml(m.label)}</span>
+                <span class="provision-type-hint">${this.escapeHtml(m.hint)}</span>
+              </button>`;
+          }).join('')}
+        </div>
+      </section>
+      <footer class="provision-page-actions">
+        <button type="button" class="provision-back-btn" data-action="back">Back</button>
+        <button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente" ${this.creationMode ? '' : 'disabled'}><i class="fas fa-arrow-right"></i></button>
+      </footer>
+    `;
+  }
+
+  // Ruta automatica — Paso 2: fuente (URL) + integraciones.
+  // Con esto el pipeline (siguiente fase) scrapea la marca: nombre, colores,
+  // tipografias, ADN, logo, sistema de comunicacion (OpenAI), competencia,
+  // palabras/URLs a monitorear; y si conecta su tienda, importa productos.
+  AUTO_PROVIDERS = [
+    { v: 'shopify',      icon: 'fa-bag-shopping',  label: 'Shopify' },
+    { v: 'mercadolibre', icon: 'fa-store',         label: 'Mercado Libre' },
+    { v: 'amazon',       icon: 'fa-box',           label: 'Amazon' },
+    { v: 'woocommerce',  icon: 'fa-cart-shopping', label: 'WooCommerce' }
+  ];
+
+  renderStepAuto() {
+    const f = this.form;
+    const chips = this.AUTO_PROVIDERS.map((p) => {
+      const on = (this.autoIntegrations || []).includes(p.v);
+      return `
+        <button type="button" class="createorg-intg-chip ${on ? 'is-on' : ''}" data-intg="${p.v}" aria-pressed="${on ? 'true' : 'false'}">
+          <i class="fas ${p.icon}"></i> ${this.escapeHtml(p.label)}
+          <span class="createorg-intg-mark"><i class="fas ${on ? 'fa-check' : 'fa-plus'}"></i></span>
+        </button>`;
+    }).join('');
+
+    return `
+      <section class="provision-form-card createorg-card-wide">
+        <header class="provision-form-head">
+          <span class="provision-form-eyebrow">Paso 2 · Fuente</span>
+          <h2>Danos tu web y conecta tu tienda</h2>
+          <p>Con esto Vera investiga tu marca automaticamente: nombre, colores, tipografias, ADN, logo, sistema de comunicacion, competencia real y palabras/URLs a monitorear. Si conectas tu tienda, importa tus productos.</p>
+        </header>
+        <form id="createOrgAutoForm" class="createorg-form-grid" novalidate>
+          <div class="provision-field createorg-field-full">
+            <label for="autoUrl">URL de tu web <span style="color:#ef4444">*</span></label>
+            <input id="autoUrl" type="url" class="form-control" placeholder="https://tumarca.com" value="${this.escapeHtml(f.brand_url || '')}">
+            <small>De aqui sacamos identidad visual + verbal y la base del analisis.</small>
+          </div>
+          <div class="provision-field createorg-field-full">
+            <label>Conecta integraciones <span class="form-hint" style="font-weight:400">(opcional · importa productos)</span></label>
+            <div class="createorg-integrations">${chips}</div>
+            <small>La autorizacion OAuth se completa al crear la org (la tienda se vincula al mercado nuevo).</small>
+          </div>
+          <p class="provision-form-status createorg-field-full" id="createOrgStatus" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+      <footer class="provision-page-actions">
+        ${this._footerButtons()}
+      </footer>
+    `;
+  }
+
+  toggleAutoIntegration(v) {
+    const set = new Set(this.autoIntegrations || []);
+    set.has(v) ? set.delete(v) : set.add(v);
+    this.autoIntegrations = [...set];
+    const chip = this.container.querySelector(`[data-intg="${v}"]`);
+    if (chip) {
+      const on = set.has(v);
+      chip.classList.toggle('is-on', on);
+      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+      const mark = chip.querySelector('.createorg-intg-mark i');
+      if (mark) mark.className = `fas ${on ? 'fa-check' : 'fa-plus'}`;
+    }
+  }
+
+  selectCreationMode(v) {
+    this.creationMode = v;
+    this.container.querySelectorAll('.provision-type-card[data-mode]').forEach((c) => {
+      const active = c.getAttribute('data-mode') === v;
+      c.classList.toggle('is-active', active);
+      c.setAttribute('aria-checked', active ? 'true' : 'false');
+    });
+    const nextBtn = this.container.querySelector('[data-action="next"]');
+    if (nextBtn) nextBtn.disabled = false;
+    // El set de pasos cambio segun el modo → refrescar el progreso.
+    const ph = this.container.querySelector('.provision-page-progress');
+    if (ph) ph.innerHTML = this.renderProgress();
   }
 
   renderStepOwner() {
@@ -794,6 +918,18 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   wireAll() {
+    // Paso 1 - Modo (manual / automatico)
+    this.container.querySelectorAll('.provision-type-card[data-mode]').forEach((card) => {
+      this.addEventListener(card, 'click', () => this.selectCreationMode(card.getAttribute('data-mode')));
+    });
+
+    // Ruta automatica - URL + chips de integraciones
+    const autoUrl = this.container.querySelector('#autoUrl');
+    if (autoUrl) this.addEventListener(autoUrl, 'input', () => this.syncForm());
+    this.container.querySelectorAll('[data-intg]').forEach((chip) => {
+      this.addEventListener(chip, 'click', () => this.toggleAutoIntegration(chip.getAttribute('data-intg')));
+    });
+
     // Step 1 - Identidad basica
     ['orgName', 'orgSlogan'].forEach((id) => {
       const el = this.container.querySelector('#' + id);
@@ -862,6 +998,9 @@ class DevLeadCreateOrgView extends DevBaseView {
     if (this.currentStep === 'identidad') {
       f.name = get('orgName');
       f.slogan = get('orgSlogan');
+    }
+    if (this.currentStep === 'auto') {
+      f.brand_url = get('autoUrl');
     }
     if (this.currentStep === 'metodo') {
       const radio = this.container.querySelector('input[name="method"]:checked');
@@ -1205,6 +1344,11 @@ class DevLeadCreateOrgView extends DevBaseView {
   async handleCreate() {
     if (this._creating) return;
     const f = this.form;
+    // Ruta automatica: si no hay nombre, derivarlo del dominio de la URL.
+    if (this.creationMode === 'auto' && !f.name && f.brand_url) {
+      try { f.name = new URL(f.brand_url).hostname.replace(/^www\./, ''); }
+      catch (_) { f.name = f.brand_url; }
+    }
     if (!f.name) { this.setStatus('Falta el nombre de la organizacion.', 'error'); return; }
 
     this._creating = true;
@@ -1256,6 +1400,12 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   validateStep(key) {
+    if (key === 'mode') {
+      if (!this.creationMode) return 'Elige como crear la organizacion.';
+    }
+    if (key === 'auto') {
+      if (!this.form.brand_url) return 'Agrega la URL de tu web.';
+    }
     if (key === 'identidad') {
       if (!this.form.name) return 'El nombre es obligatorio.';
     }
