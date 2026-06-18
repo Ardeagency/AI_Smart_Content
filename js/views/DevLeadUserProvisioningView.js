@@ -31,7 +31,14 @@ class DevLeadUserProvisioningView extends DevBaseView {
     this.finalizing = false;
     this.finalized = false;
     this.finalizedResult = null;    // { auth_user_id, organization_id, user_type }
+    this._draft = null;             // { full_name, email } — borrador del paso 2 (sin password)
   }
+
+  // Progreso persistido en localStorage para sobrevivir a un refresh. Sin esto,
+  // refrescar en mitad del wizard pierde el job_id y deja un usuario creado en
+  // Supabase imposible de retomar (email duplicado). Nunca se guarda la password.
+  STORAGE_KEY = 'asc:provisioning-wizard';
+  STORAGE_TTL_MS = 12 * 60 * 60 * 1000; // 12h: estado mas viejo se descarta
 
   async onEnter() {
     await super.onEnter({ requireLead: true });
@@ -448,11 +455,155 @@ class DevLeadUserProvisioningView extends DevBaseView {
       this.showError('Supabase no disponible.');
       return;
     }
-    this.wireAll();
+    // Restaurar progreso tras un refresh. Si no hay nada que restaurar, wire normal.
+    const restored = await this.restoreState();
+    if (!restored) this.wireAll();
+  }
+
+  // ─── Persistencia del progreso (sobrevive refresh) ───────────────────
+
+  _persist() {
+    try {
+      const state = {
+        v: 1,
+        savedAt: Date.now(),
+        userType: this.userType,
+        currentStep: this.currentStep,
+        draft: this._draft || null,
+        job: this.activeJob || null,
+        finalized: this.finalized,
+        finalizedResult: this.finalizedResult || null
+      };
+      // Nada util que guardar todavia → no ensuciar el storage.
+      if (!state.userType && !state.job && !state.draft && !state.finalized) {
+        localStorage.removeItem(this.STORAGE_KEY);
+        return;
+      }
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
+    } catch (_) { /* storage no disponible/lleno: degradar silencioso */ }
+  }
+
+  _loadPersisted() {
+    try {
+      const raw = localStorage.getItem(this.STORAGE_KEY);
+      if (!raw) return null;
+      const s = JSON.parse(raw);
+      if (!s || s.v !== 1) return null;
+      if (s.savedAt && (Date.now() - s.savedAt) > this.STORAGE_TTL_MS) {
+        localStorage.removeItem(this.STORAGE_KEY);
+        return null;
+      }
+      return s;
+    } catch (_) { return null; }
+  }
+
+  _clearPersisted() {
+    try { localStorage.removeItem(this.STORAGE_KEY); } catch (_) {}
+  }
+
+  // Retoma el wizard desde el estado guardado. Re-valida el job contra el
+  // backend para saltar al paso correcto (puede haberse confirmado el email
+  // mientras la vista estaba cerrada). Devuelve true si restauro algo.
+  async restoreState() {
+    const s = this._loadPersisted();
+    if (!s) return false;
+
+    this.userType = s.userType || null;
+    this._draft = s.draft || null;
+
+    // Aviso solo cuando ya hay un usuario creado (job/finalizado): el wizard
+    // saltara a un paso avanzado y conviene explicar por que.
+    if ((s.job && s.job.id) || s.finalized) {
+      this.showNotification('Progreso restaurado: seguimos donde lo dejaste.', 'info');
+    }
+
+    // Caso ya finalizado (member/developer): mostrar la tarjeta de exito.
+    if (s.finalized) {
+      this.activeJob = s.job || null;
+      this.finalized = true;
+      this.finalizedResult = s.finalizedResult || null;
+      this.goToStep('final');
+      return true;
+    }
+
+    // Caso con job en curso: re-validar contra el backend.
+    if (s.job && s.job.id) {
+      this.activeJob = s.job;
+      let job = null;
+      try {
+        const { data } = await this.supabase.functions.invoke('provision-user-check', {
+          body: { job_id: s.job.id }
+        });
+        job = data && data.job ? data.job : null;
+      } catch (_) { /* sin red: confiamos en el estado guardado */ }
+
+      if (job) {
+        this.activeJob = { ...this.activeJob, status: job.status, auth_user_id: job.auth_user_id };
+
+        if (['completed', 'failed', 'cancelled'].includes(job.status)) {
+          // Estado terminal: nada que retomar, arrancar limpio.
+          this._clearPersisted();
+          this.activeJob = null;
+          this.userType = null;
+          this._draft = null;
+          return false;
+        }
+        if (['email_confirmed', 'finalizing'].includes(job.status)) {
+          if (this.userType === 'owner_org') { this._goToCreateOrg(); return true; }
+          this.goToStep('final');
+          return true;
+        }
+        // pending_email_confirmation
+        this.goToStep('verify');
+        return true;
+      }
+
+      // No se pudo validar (offline): retomar de forma conservadora en verify.
+      this.goToStep('verify');
+      return true;
+    }
+
+    // Sin job: restaurar tipo + borrador del paso 2.
+    if (s.currentStep === 'data' && this.userType) {
+      this.goToStep('data');
+      this._applyDraft();
+      return true;
+    }
+    if (this.userType) {
+      this.goToStep('type');
+      this._markTypeCard();
+      return true;
+    }
+    return false;
+  }
+
+  _goToCreateOrg() {
+    const target = '/dev/provisioning/create-org?job=' + encodeURIComponent(this.activeJob.id);
+    if (window.router) window.router.navigate(target);
+    else window.location.href = target;
+  }
+
+  _applyDraft() {
+    if (!this._draft) return;
+    const n = this.container.querySelector('#provisionFullName');
+    const e = this.container.querySelector('#provisionEmail');
+    if (n && this._draft.full_name) n.value = this._draft.full_name;
+    if (e && this._draft.email) e.value = this._draft.email;
+  }
+
+  _markTypeCard() {
+    this.container.querySelectorAll('.provision-type-card').forEach((c) => {
+      const active = c.getAttribute('data-user-type') === this.userType;
+      c.classList.toggle('is-active', active);
+      c.setAttribute('aria-checked', active ? 'true' : 'false');
+    });
+    const nextBtn = this.container.querySelector('[data-action="next"]');
+    if (nextBtn) nextBtn.disabled = !this.userType;
   }
 
   goToStep(stepKey) {
     this.currentStep = stepKey;
+    this._persist();
     const page = this.container.querySelector('.provision-page');
     if (!page) return;
     page.innerHTML = `
@@ -504,6 +655,22 @@ class DevLeadUserProvisioningView extends DevBaseView {
     const dataForm = this.container.querySelector('#provisionDataForm');
     if (dataForm) this.addEventListener(dataForm, 'submit', (e) => this.handleDataSubmit(e));
 
+    // Borrador del paso 2: persistir nombre/email mientras se escribe (sin password)
+    // para que un refresh no obligue a re-teclearlos.
+    const fullNameInput = this.container.querySelector('#provisionFullName');
+    const emailInput = this.container.querySelector('#provisionEmail');
+    if (fullNameInput || emailInput) {
+      const onDraft = () => {
+        this._draft = {
+          full_name: fullNameInput?.value || '',
+          email: emailInput?.value || ''
+        };
+        this._persist();
+      };
+      if (fullNameInput) this.addEventListener(fullNameInput, 'input', onDraft);
+      if (emailInput) this.addEventListener(emailInput, 'input', onDraft);
+    }
+
     const finalForm = this.container.querySelector('#provisionFinalForm');
     if (finalForm) this.addEventListener(finalForm, 'submit', (e) => this.handleFinalSubmit(e));
 
@@ -530,10 +697,13 @@ class DevLeadUserProvisioningView extends DevBaseView {
     // Re-render progress por si el label de 'final' cambia
     const progressHost = this.container.querySelector('.provision-page-progress');
     if (progressHost) progressHost.innerHTML = this.renderProgress();
+    this._persist();
   }
 
   handleBack() {
     if (this.currentStep === 'type') {
+      // Salir del wizard: descartar progreso guardado.
+      this._clearPersisted();
       if (window.router) window.router.navigate('/dev/dashboard');
       return;
     }
@@ -548,6 +718,8 @@ class DevLeadUserProvisioningView extends DevBaseView {
       if (!ok) return;
       this.stopPolling();
       this.activeJob = null;
+      this._draft = null;
+      this._clearPersisted();
       this.goToStep('data');
       return;
     }
@@ -558,6 +730,8 @@ class DevLeadUserProvisioningView extends DevBaseView {
       this.finalized = false;
       this.finalizing = false;
       this.finalizedResult = null;
+      this._draft = null;
+      this._clearPersisted();
       this.goToStep('type');
     }
   }
@@ -609,6 +783,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
         organization_id: data.organization_id,
         user_type: data.user_type
       };
+      this._persist();
       // Re-render: progress (todos done) + center (done card)
       const progress = this.container.querySelector('.provision-page-progress');
       if (progress) progress.innerHTML = this.renderProgress();
@@ -736,6 +911,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
       if (error || !data?.job) return;
       const job = data.job;
       this.activeJob = { ...this.activeJob, status: job.status };
+      this._persist();
 
       if (['email_confirmed', 'finalizing', 'completed'].includes(job.status)) {
         this.stopPolling();
