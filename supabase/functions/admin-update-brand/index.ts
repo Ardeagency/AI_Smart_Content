@@ -177,29 +177,40 @@ Deno.serve(async (req) => {
       return jsonResponse({ ok: true, count });
     }
 
-    // ── GUARDAR productos detectados (estrategia replace de auto_builder) ─
+    // ── GUARDAR productos detectados (replace de auto_builder) + sus imagenes ─
     if (section === "products") {
       const incoming = Array.isArray(d.products) ? d.products : [];
       const cids = await containerIds();
       const containerId = cids[0] || null;
       await service.from("products").delete().eq("organization_id", orgId).eq("created_via", "auto_builder");
-      const rows = incoming
-        .map((p: { name?: string; description?: string; image?: string; price?: string; currency?: string }) => ({
+      let count = 0, images = 0;
+      for (const p of incoming) {
+        const name = str(p?.name);
+        if (!name) continue;
+        const { data: prod, error } = await service.from("products").insert({
           organization_id: orgId,
           brand_container_id: containerId,
           tipo_producto: "otro",
-          nombre_producto: str(p.name) || "",
-          descripcion_producto: str(p.description) || str(p.name) || "—",
-          moneda: str(p.currency) || "COP",
+          nombre_producto: name,
+          descripcion_producto: str(p?.description) || name,
+          moneda: str(p?.currency) || "COP",
           created_via: "auto_builder",
-          metadata: { image: p.image || null, price: p.price || null, source: "url-scrape" },
-        }))
-        .filter((r: { nombre_producto: string }) => r.nombre_producto);
-      if (rows.length) {
-        const { error } = await service.from("products").insert(rows);
-        if (error) return errorResponse(error.message, 500);
+          metadata: { price: p?.price || null, source: "url-scrape" },
+        }).select("id").single();
+        if (error || !prod) continue;
+        count++;
+        // Imagen del producto → product_images (de donde lee el catalogo). La URL
+        // externa se muestra ya; download_status='pending' para bajarla a storage luego.
+        const img = (typeof p?.image === "string" && /^https?:\/\//i.test(p.image.trim())) ? p.image.trim() : null;
+        if (img) {
+          const { error: iErr } = await service.from("product_images").insert({
+            product_id: prod.id, image_url: img, image_type: "principal",
+            image_order: 0, external_platform: "url-scrape", download_status: "pending",
+          });
+          if (!iErr) images++;
+        }
       }
-      return jsonResponse({ ok: true, count: rows.length });
+      return jsonResponse({ ok: true, count, images });
     }
 
     // ── ASIGNAR owner + miembros (opcional) ─────────────────────────────
