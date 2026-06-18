@@ -182,6 +182,19 @@ Deno.serve(async (req) => {
       const incoming = Array.isArray(d.products) ? d.products : [];
       const cids = await containerIds();
       const containerId = cids[0] || null;
+      // El detalle de producto requiere entity_id → asegurar una brand_entity.
+      let entityId: string | null = null;
+      {
+        const { data: ent } = await service.from("brand_entities").select("id")
+          .eq("organization_id", orgId).order("created_at", { ascending: true }).limit(1).maybeSingle();
+        if (ent) entityId = (ent as { id: string }).id;
+        else {
+          const { data: created } = await service.from("brand_entities")
+            .insert({ organization_id: orgId, name: "Identity principal", entity_type: "other", description: null })
+            .select("id").single();
+          entityId = (created as { id: string } | null)?.id || null;
+        }
+      }
       await service.from("products").delete().eq("organization_id", orgId).eq("created_via", "auto_builder");
       let count = 0, images = 0;
       for (const p of incoming) {
@@ -190,6 +203,7 @@ Deno.serve(async (req) => {
         const { data: prod, error } = await service.from("products").insert({
           organization_id: orgId,
           brand_container_id: containerId,
+          entity_id: entityId,
           tipo_producto: "otro",
           nombre_producto: name,
           descripcion_producto: str(p?.description) || name,
@@ -233,6 +247,33 @@ Deno.serve(async (req) => {
         if (!error) count++;
       }
       return jsonResponse({ ok: true, members: count });
+    }
+
+    // ── PLAN de la org (ultimo paso) — crea subscription + creditos ─────
+    if (section === "plan") {
+      const planId = str(d.plan_id);
+      if (!planId) return jsonResponse({ ok: true, skipped: true }); // trial / sin plan
+      const { data: plan } = await service.from("plans")
+        .select("id, credits_monthly").eq("id", planId).eq("is_active", true).maybeSingle();
+      if (!plan) return errorResponse("Plan invalido", 400);
+      const now = new Date();
+      const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      // Org nueva: limpiar cualquier subscription previa y crear la activa.
+      await service.from("subscriptions").delete().eq("organization_id", orgId);
+      const { error: subErr } = await service.from("subscriptions").insert({
+        organization_id: orgId, plan_id: planId, status: "active",
+        current_period_start: now.toISOString(), current_period_end: end.toISOString(),
+        provider: "wompi", cancel_at_period_end: false,
+        metadata: { assigned_by: "auto-builder", admin_grant: true },
+      });
+      if (subErr) return errorResponse(subErr.message, 500);
+      // Creditos del plan
+      await service.from("organization_credits").upsert({
+        organization_id: orgId,
+        credits_available: plan.credits_monthly || 0,
+        credits_total: plan.credits_monthly || 0,
+      }, { onConflict: "organization_id" });
+      return jsonResponse({ ok: true, plan: planId });
     }
 
     return errorResponse(`Seccion desconocida: ${section}`, 400);
