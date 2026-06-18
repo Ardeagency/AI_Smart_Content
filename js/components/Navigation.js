@@ -169,6 +169,9 @@ const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" widt
 const SIDEBAR_DEVELOPER_CONFIG = [
   { type: 'section', label: 'Main' },
   { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
+  { type: 'page', id: 'admin-inputs', label: 'Inputs', icon: 'fa-sliders-h', iconSrc: '/recursos/icons/coding.svg', route: '/dev/lead/input-schemas' },
+  { type: 'page', id: 'admin-categorias', label: 'Categories', icon: 'fa-tags', iconSrc: '/recursos/icons/file-storage.svg', route: '/dev/lead/categories' },
+  { type: 'page', id: 'admin-lexicon', label: 'Lexicon', icon: 'fa-book', iconSrc: '/recursos/icons/book.svg', route: '/dev/lead/lexicon' },
   { type: 'section', label: 'Code' },
   { type: 'page', id: 'flows', label: 'My Flows', icon: 'fa-th-large', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
   {
@@ -211,33 +214,6 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     iconSrc: '/recursos/icons/Characters.svg',
     role_required: 'lead',
     route: '/dev/lead/team'
-  },
-  {
-    type: 'page',
-    id: 'admin-inputs',
-    label: 'Inputs',
-    icon: 'fa-sliders-h',
-    iconSrc: '/recursos/icons/coding.svg',
-    role_required: 'lead',
-    route: '/dev/lead/input-schemas'
-  },
-  {
-    type: 'page',
-    id: 'admin-categorias',
-    label: 'Categories',
-    icon: 'fa-tags',
-    iconSrc: '/recursos/icons/file-storage.svg',
-    role_required: 'lead',
-    route: '/dev/lead/categories'
-  },
-  {
-    type: 'page',
-    id: 'admin-lexicon',
-    label: 'Lexicon',
-    icon: 'fa-book',
-    iconSrc: '/recursos/icons/book.svg',
-    role_required: 'lead',
-    route: '/dev/lead/lexicon'
   },
   {
     type: 'page',
