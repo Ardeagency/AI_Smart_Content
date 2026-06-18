@@ -176,7 +176,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     id: 'operations',
     label: 'Operations',
     icon: 'fa-cogs',
-    iconSrc: '/recursos/icons/video.svg',
+    iconSrc: '/recursos/icons/monitoring.svg',
     children: [
       { label: 'Flow Tests', route: '/dev/test' },
       { label: 'Logs', route: '/dev/logs' },
@@ -208,7 +208,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     id: 'admin-team',
     label: 'Team',
     icon: 'fa-users',
-    iconSrc: '/recursos/icons/organization.svg',
+    iconSrc: '/recursos/icons/Characters.svg',
     role_required: 'lead',
     route: '/dev/lead/team'
   },
