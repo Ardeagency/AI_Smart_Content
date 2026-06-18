@@ -15811,6 +15811,26 @@
 .createorg-member-row .form-control { flex: 1; min-width: 0; }
 .createorg-member-row .createorg-member-role { flex: 0 0 130px; }
 .createorg-list-row .form-control, .createorg-comp-row .form-control { flex: 1; min-width: 0; }
+
+/* Tarjetas de plan (ultimo paso) */
+.createorg-plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.createorg-plan-card {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 18px 12px; border-radius: 12px; cursor: pointer;
+  background: var(--bg-secondary, rgba(255,255,255,0.04));
+  border: 1px solid var(--border-divider, #2a2a2a); color: var(--text-primary, #fff);
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.createorg-plan-card:hover { border-color: rgba(124,131,255,0.5); }
+.createorg-plan-card.is-sel { border-color: var(--indigo, #7C83FF); background: rgba(124,131,255,0.12); box-shadow: 0 0 0 1px var(--indigo, #7C83FF); }
+.createorg-plan-card strong { font-size: 0.95rem; }
+.createorg-plan-price { font-size: 0.82rem; color: var(--text-primary, #fff); font-weight: 600; }
+.createorg-plan-credits { font-size: 0.68rem; color: var(--text-secondary, rgba(255,255,255,0.55)); text-align: center; }
+.createorg-plan-badge {
+  position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+  font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  background: var(--indigo, #7C83FF); color: #fff; padding: 2px 8px; border-radius: 999px;
+}
 .createorg-list-thumb { width: 38px; height: 38px; border-radius: 8px; object-fit: cover; flex: 0 0 auto; background: var(--bg-secondary, rgba(255,255,255,0.05)); border: 1px solid var(--border-divider, #2a2a2a); }
 .createorg-list-thumb--ph { display: inline-flex; align-items: center; justify-content: center; color: var(--text-secondary, rgba(255,255,255,0.4)); font-size: 0.85rem; }
 #apProducts, #apComps { max-height: 360px; overflow-y: auto; padding-right: 4px; margin-bottom: 8px; }

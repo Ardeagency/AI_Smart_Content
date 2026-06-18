@@ -96,7 +96,8 @@ class DevLeadCreateOrgView extends DevBaseView {
     { key: 'competitors', label: 'Competencia' },
     { key: 'vera',        label: 'Agente Vera' },
     { key: 'owner',       label: 'Owner y miembros' },
-    { key: 'review',      label: 'Listo' }
+    { key: 'review',      label: 'Resumen' },
+    { key: 'plan',        label: 'Plan' }
   ];
 
   // Nichos REALES de mercado (en sync con el enum del backend brand-consolidator).
@@ -1163,6 +1164,9 @@ class DevLeadCreateOrgView extends DevBaseView {
     });
     const openBtn = this.container.querySelector('[data-action="ap-open"]');
     if (openBtn) this.addEventListener(openBtn, 'click', () => this._apOpenOrg());
+    this.container.querySelectorAll('[data-plan]').forEach((b) => {
+      this.addEventListener(b, 'click', () => this._apSelectPlan(b.getAttribute('data-plan')));
+    });
 
     // Back / Next
     const backBtn = this.container.querySelector('[data-action="back"]');
@@ -1800,13 +1804,15 @@ class DevLeadCreateOrgView extends DevBaseView {
       estetica: bp.estetica || '',
       competitors: null,  // se carga async desde intelligence_entities
       veraStatus: null, veraError: null,
-      ownerId: '', members: [], ownerConsumers: null
+      ownerId: '', members: [], ownerConsumers: null,
+      planId: '', plansList: null
     };
     this.approvalIdx = 0;
     this.autoPhase = 'approving';
     this._refreshAutoFull();
     this._loadCompetitors();
     this._loadOwnerConsumers();
+    this._loadPlans();
   }
 
   async _loadOwnerConsumers() {
@@ -1846,11 +1852,44 @@ class DevLeadCreateOrgView extends DevBaseView {
     this._refreshAutoFull();
   }
 
-  _apOpenOrg() {
+  async _apOpenOrg() {
+    // Ultimo paso (plan): asignar el plan elegido antes de abrir.
+    try { await this._saveApprovalSection('plan'); }
+    catch (e) { this.showNotification(e?.message || 'No se pudo asignar el plan', 'error'); return; }
     const prefix = (typeof window.getOrgPathPrefix === 'function') ? window.getOrgPathPrefix(this.autoOrgId, this.approval.name || 'org') : '';
     const dest = prefix ? `${prefix}/dashboard` : '/dev/lead/orgs';
     this.showNotification('Abriendo la organizacion en modo consumidor...', 'success');
     if (window.router) window.router.navigate(dest); else window.location.href = dest;
+  }
+
+  async _loadPlans() {
+    try {
+      const { data } = await this.supabase.from('plans')
+        .select('id, name, price_usd_month, credits_monthly, is_popular, display_order')
+        .eq('is_active', true).order('display_order', { ascending: true });
+      this.approval.plansList = Array.isArray(data) ? data : [];
+    } catch (_) { this.approval.plansList = []; }
+    if (this.autoPhase === 'approving' && this.APPROVAL_PAGES[this.approvalIdx]?.key === 'plan') this._refreshAutoFull();
+  }
+
+  _apSelectPlan(id) { this.approval.planId = id; this._refreshAutoFull(); }
+
+  _apPlan() {
+    const plans = this.approval.plansList;
+    if (plans === null) {
+      return '<div class="createorg-field-full" style="text-align:center;padding:24px"><i class="fas fa-circle-notch fa-spin"></i> Cargando planes...</div>';
+    }
+    const sel = this.approval.planId || '';
+    const card = (id, name, price, credits, popular) => `
+      <button type="button" class="createorg-plan-card ${sel === id ? 'is-sel' : ''}" data-plan="${this.escapeHtml(id)}">
+        ${popular ? '<span class="createorg-plan-badge">Popular</span>' : ''}
+        <strong>${this.escapeHtml(name)}</strong>
+        <span class="createorg-plan-price">${this.escapeHtml(price)}</span>
+        <span class="createorg-plan-credits">${this.escapeHtml(credits)}</span>
+      </button>`;
+    const trial = card('', 'Trial', 'Gratis', 'Capacidad limitada', false);
+    const planCards = plans.map((p) => card(p.id, p.name, `$${p.price_usd_month}/mes`, `${p.credits_monthly} creditos/mes`, p.is_popular)).join('');
+    return `<div class="createorg-field-full"><div class="createorg-plan-grid">${trial}${planCards}</div></div>`;
   }
 
   async _loadCompetitors() {
@@ -1899,7 +1938,8 @@ class DevLeadCreateOrgView extends DevBaseView {
       competitors: ['Competencia y monitoreo', 'Los competidores que Vera identifico. Revisa, corrige o quita; al avanzar se actualiza el monitoreo.'],
       vera:     ['Agente de Vera', 'Activa la automatizacion: crea el equipo de IA Vera para esta marca. Opcional — puedes hacerlo despues.'],
       owner:    ['Owner y miembros', 'Asigna un dueno y miembros a la organizacion. Opcional — por defecto queda a tu nombre (dev).'],
-      review:   ['Todo listo', 'Revisa el resumen y abre la org como consumidor para monitorear todo lo creado.']
+      review:   ['Resumen', 'Revisa todo lo creado antes del ultimo paso.'],
+      plan:     ['Plan de la organizacion', 'Elige el plan. Es el ultimo paso: al confirmar se crea la org en produccion y se abre.']
     }[key] || ['', ''];
   }
 
@@ -1919,7 +1959,8 @@ class DevLeadCreateOrgView extends DevBaseView {
       competitors: () => this._apCompetitors(),
       vera:     () => this._apVera(),
       owner:    () => this._apOwner(),
-      review:   () => this._apReview()
+      review:   () => this._apReview(),
+      plan:     () => this._apPlan()
     }[page.key] || (() => ''))();
 
     return `
@@ -2161,6 +2202,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     else if (key === 'owner') {
       data = { owner_user_id: a.ownerId || null, members: (a.members || []).filter((m) => m.user_id) };
     }
+    else if (key === 'plan') data = { plan_id: a.planId || null };
     const { data: res, error } = await this.supabase.functions.invoke('admin-update-brand', { body: { organization_id: this.autoOrgId, section: key, data } });
     if (error) {
       let msg = error.message || 'Error al guardar';
