@@ -94,6 +94,8 @@ class DevLeadCreateOrgView extends DevBaseView {
     { key: 'fonts',       label: 'Tipografia' },
     { key: 'products',    label: 'Productos' },
     { key: 'competitors', label: 'Competencia' },
+    { key: 'vera',        label: 'Agente Vera' },
+    { key: 'owner',       label: 'Owner y miembros' },
     { key: 'review',      label: 'Listo' }
   ];
 
@@ -1151,6 +1153,17 @@ class DevLeadCreateOrgView extends DevBaseView {
     const fbIntg = this.container.querySelector('[data-action="fallback-integrations"]');
     if (fbIntg) this.addEventListener(fbIntg, 'click', () => this._fallbackIntegrations());
 
+    // Pasos finales: Vera, owner/miembros, abrir org
+    const veraBtn = this.container.querySelector('[data-action="vera-provision"]');
+    if (veraBtn) this.addEventListener(veraBtn, 'click', () => this._veraProvision());
+    const addMember = this.container.querySelector('[data-action="owner-add-member"]');
+    if (addMember) this.addEventListener(addMember, 'click', () => this._apAddMember());
+    this.container.querySelectorAll('[data-member-rm]').forEach((b) => {
+      this.addEventListener(b, 'click', () => this._apRemoveMember(parseInt(b.getAttribute('data-member-rm'), 10)));
+    });
+    const openBtn = this.container.querySelector('[data-action="ap-open"]');
+    if (openBtn) this.addEventListener(openBtn, 'click', () => this._apOpenOrg());
+
     // Back / Next
     const backBtn = this.container.querySelector('[data-action="back"]');
     if (backBtn) this.addEventListener(backBtn, 'click', () => this.handleBack());
@@ -1785,12 +1798,59 @@ class DevLeadCreateOrgView extends DevBaseView {
       typography_primary: bp.typography_primary || '',
       typography_secondary: bp.typography_secondary || '',
       estetica: bp.estetica || '',
-      competitors: null   // se carga async desde intelligence_entities
+      competitors: null,  // se carga async desde intelligence_entities
+      veraStatus: null, veraError: null,
+      ownerId: '', members: [], ownerConsumers: null
     };
     this.approvalIdx = 0;
     this.autoPhase = 'approving';
     this._refreshAutoFull();
     this._loadCompetitors();
+    this._loadOwnerConsumers();
+  }
+
+  async _loadOwnerConsumers() {
+    try { await this.loadConsumers(); this.approval.ownerConsumers = this.consumers || []; }
+    catch (_) { this.approval.ownerConsumers = []; }
+    if (this.autoPhase === 'approving' && this.APPROVAL_PAGES[this.approvalIdx]?.key === 'owner') this._refreshAutoFull();
+  }
+
+  async _veraProvision() {
+    if (this.approval.veraStatus === 'provisioning') return;
+    this.approval.veraStatus = 'provisioning';
+    this.approval.veraError = null;
+    this._refreshAutoFull();
+    try {
+      const { data, error } = await this.supabase.functions.invoke('provision-org-agent', { body: { organization_id: this.autoOrgId } });
+      if (error || !data?.success && !data?.already_provisioned) {
+        let msg = error?.message || data?.error || 'No se pudo crear Vera';
+        try { const ctx = await error?.context?.json?.(); if (ctx?.error) msg = ctx.error; } catch (_) {}
+        throw new Error(msg);
+      }
+      this.approval.veraStatus = 'done';
+    } catch (err) {
+      this.approval.veraStatus = null;
+      this.approval.veraError = err?.message || 'No se pudo crear Vera';
+    }
+    this._refreshAutoFull();
+  }
+
+  _apAddMember() {
+    this._collectApproval('owner');
+    this.approval.members = [...(this.approval.members || []), { user_id: '', role: 'viewer' }];
+    this._refreshAutoFull();
+  }
+  _apRemoveMember(i) {
+    this._collectApproval('owner');
+    (this.approval.members || []).splice(i, 1);
+    this._refreshAutoFull();
+  }
+
+  _apOpenOrg() {
+    const prefix = (typeof window.getOrgPathPrefix === 'function') ? window.getOrgPathPrefix(this.autoOrgId, this.approval.name || 'org') : '';
+    const dest = prefix ? `${prefix}/dashboard` : '/dev/lead/orgs';
+    this.showNotification('Abriendo la organizacion en modo consumidor...', 'success');
+    if (window.router) window.router.navigate(dest); else window.location.href = dest;
   }
 
   async _loadCompetitors() {
@@ -1837,7 +1897,9 @@ class DevLeadCreateOrgView extends DevBaseView {
       fonts:    ['Tipografia y estetica', 'Las fuentes y el estilo visual.'],
       products: ['Productos detectados', 'Lo que Vera encontro en el sitio. Quita lo que no sea un producto real; al avanzar se guardan.'],
       competitors: ['Competencia y monitoreo', 'Los competidores que Vera identifico. Revisa, corrige o quita; al avanzar se actualiza el monitoreo.'],
-      review:   ['Todo listo', 'Revisa el resumen y finaliza para dejar la marca creada.']
+      vera:     ['Agente de Vera', 'Activa la automatizacion: crea el equipo de IA Vera para esta marca. Opcional — puedes hacerlo despues.'],
+      owner:    ['Owner y miembros', 'Asigna un dueno y miembros a la organizacion. Opcional — por defecto queda a tu nombre (dev).'],
+      review:   ['Todo listo', 'Revisa el resumen y abre la org como consumidor para monitorear todo lo creado.']
     }[key] || ['', ''];
   }
 
@@ -1855,6 +1917,8 @@ class DevLeadCreateOrgView extends DevBaseView {
       fonts:    () => this._apFonts(),
       products: () => this._apProducts(),
       competitors: () => this._apCompetitors(),
+      vera:     () => this._apVera(),
+      owner:    () => this._apOwner(),
       review:   () => this._apReview()
     }[page.key] || (() => ''))();
 
@@ -1875,7 +1939,7 @@ class DevLeadCreateOrgView extends DevBaseView {
           ? '<button type="button" class="provision-back-btn" data-action="ap-back">Back</button>'
           : '<button type="button" class="provision-back-btn" data-action="auto-goto-orgs">Salir</button>'}
         ${isLast
-          ? '<button type="button" class="createorg-submit-btn" data-action="ap-finish"><i class="fas fa-check"></i> Finalizar</button>'
+          ? '<button type="button" class="provision-back-btn" data-action="auto-goto-orgs">Organizaciones</button><button type="button" class="createorg-submit-btn" data-action="ap-open"><i class="fas fa-eye"></i> Abrir la org</button>'
           : '<button type="button" class="createorg-submit-btn" data-action="ap-next">Aceptar y seguir <i class="fas fa-arrow-right"></i></button>'}
       </footer>
     `;
@@ -1977,6 +2041,51 @@ class DevLeadCreateOrgView extends DevBaseView {
     `;
   }
 
+  _apVera() {
+    const st = this.approval.veraStatus;
+    if (st === 'done') {
+      return `<div class="createorg-field-full"><div class="createorg-insight"><span class="createorg-insight-tag"><i class="fas fa-robot"></i> Vera en camino</span><p>El agente se esta provisionando (VM dedicada, ~3-5 min). Cuando este healthy podra automatizar contenido, estrategia y monitoreo de la marca.</p></div></div>`;
+    }
+    return `
+      <div class="createorg-field-full">
+        <p class="provision-verify-meta">Crea el equipo de IA <strong>Vera</strong> para automatizar contenido, estrategia y monitoreo de esta marca.</p>
+        <button type="button" class="createorg-submit-btn" data-action="vera-provision" ${st === 'provisioning' ? 'disabled' : ''}>
+          ${st === 'provisioning' ? '<i class="fas fa-spinner fa-spin"></i> Provisionando...' : '<i class="fas fa-robot"></i> Crear agente de Vera'}
+        </button>
+        ${this.approval.veraError ? `<p class="provision-form-status is-error">${this.escapeHtml(this.approval.veraError)}</p>` : ''}
+        <small class="form-hint" style="display:block;margin-top:8px">⚠️ Levanta una VM dedicada de pago + API key Anthropic. Opcional — puedes crearla luego desde Organizaciones. Avanza para omitir.</small>
+      </div>
+    `;
+  }
+
+  _apOwner() {
+    const consumers = this.approval.ownerConsumers;
+    if (consumers === null) {
+      return '<div class="createorg-field-full" style="text-align:center;padding:24px"><i class="fas fa-circle-notch fa-spin"></i> Cargando usuarios...</div>';
+    }
+    const a = this.approval;
+    const ownerOpts = '<option value="">— A mi nombre (dev) por ahora —</option>' +
+      consumers.map((c) => `<option value="${this.escapeHtml(c.id)}" ${a.ownerId === c.id ? 'selected' : ''}>${this.escapeHtml((c.full_name || '(sin nombre)') + ' · ' + (c.email || ''))}</option>`).join('');
+    const roleList = ['viewer', 'vera_user', 'creator', 'editor', 'admin'];
+    const memberRows = (a.members || []).map((m, i) => {
+      const userOpts = '<option value="">— Selecciona —</option>' + consumers.map((c) => `<option value="${this.escapeHtml(c.id)}" ${m.user_id === c.id ? 'selected' : ''}>${this.escapeHtml(c.full_name || c.email || '')}</option>`).join('');
+      const roleOpts = roleList.map((r) => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r}</option>`).join('');
+      return `<div class="createorg-member-row" data-member-idx="${i}">
+        <select class="form-control" data-member-user>${userOpts}</select>
+        <select class="form-control createorg-member-role" data-member-role>${roleOpts}</select>
+        <button type="button" class="createorg-color-rm" data-member-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+      </div>`;
+    }).join('');
+    return `
+      <div class="provision-field createorg-field-full"><label for="apOwnerSel">Owner (opcional)</label><select id="apOwnerSel" class="form-control">${ownerOpts}</select></div>
+      <div class="createorg-field-full">
+        <label>Miembros (opcional)</label>
+        <div id="apMembers">${memberRows}</div>
+        ${consumers.length ? '<button type="button" class="btn btn-secondary btn-sm" data-action="owner-add-member"><i class="fas fa-plus"></i> Agregar miembro</button>' : '<p class="cons-dim">Aun no hay usuarios consumidores para afiliar.</p>'}
+      </div>
+    `;
+  }
+
   _apReview() {
     const a = this.approval;
     return `
@@ -2025,6 +2134,13 @@ class DevLeadCreateOrgView extends DevBaseView {
         website: (r.querySelector('[data-comp-web]')?.value || '').trim()
       })).filter((c) => c.name);
     }
+    else if (key === 'owner') {
+      a.ownerId = this.container.querySelector('#apOwnerSel')?.value || '';
+      a.members = [...this.container.querySelectorAll('#apMembers .createorg-member-row')].map((r) => ({
+        user_id: r.querySelector('[data-member-user]')?.value || '',
+        role: r.querySelector('[data-member-role]')?.value || 'viewer'
+      })).filter((m) => m.user_id);
+    }
   }
 
   async _saveApprovalSection(key) {
@@ -2040,6 +2156,10 @@ class DevLeadCreateOrgView extends DevBaseView {
     else if (key === 'competitors') {
       if (a.competitors === null) return { ok: true };
       data = { competitors: a.competitors };
+    }
+    else if (key === 'vera') return { ok: true }; // la provision es accion propia del paso
+    else if (key === 'owner') {
+      data = { owner_user_id: a.ownerId || null, members: (a.members || []).filter((m) => m.user_id) };
     }
     const { data: res, error } = await this.supabase.functions.invoke('admin-update-brand', { body: { organization_id: this.autoOrgId, section: key, data } });
     if (error) {

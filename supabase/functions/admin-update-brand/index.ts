@@ -202,6 +202,28 @@ Deno.serve(async (req) => {
       return jsonResponse({ ok: true, count: rows.length });
     }
 
+    // ── ASIGNAR owner + miembros (opcional) ─────────────────────────────
+    if (section === "owner") {
+      const VALID_MEMBER_ROLES = new Set(["admin", "editor", "creator", "vera_user", "viewer"]);
+      const ownerId = str(d.owner_user_id);
+      const members = Array.isArray(d.members) ? d.members : [];
+      if (ownerId) {
+        await service.from("organizations").update({ owner_user_id: ownerId }).eq("id", orgId);
+        await service.from("organization_members")
+          .upsert({ organization_id: orgId, user_id: ownerId, role: "owner" }, { onConflict: "organization_id,user_id" });
+      }
+      let count = 0;
+      for (const m of members) {
+        const uid = str(m?.user_id);
+        const role = (str(m?.role) || "viewer").toString();
+        if (!uid || !VALID_MEMBER_ROLES.has(role)) continue;
+        const { error } = await service.from("organization_members")
+          .upsert({ organization_id: orgId, user_id: uid, role }, { onConflict: "organization_id,user_id" });
+        if (!error) count++;
+      }
+      return jsonResponse({ ok: true, members: count });
+    }
+
     return errorResponse(`Seccion desconocida: ${section}`, 400);
   } catch (err) {
     if (err instanceof Response) return err;
