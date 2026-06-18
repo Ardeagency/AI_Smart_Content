@@ -4751,17 +4751,34 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     background: var(--dev-rank-accent, #7c5cff);
 }
 
-/* botones + : borde neutro sutil (antes el degradado de rank marcaba fuerte) */
+/* botones + : MISMO diseño que el botón Vera del org/ (pastilla glass
+   translúcida + borde COMPLETO del gradiente de rank via mask) */
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)) padding-box,
-        rgba(255, 255, 255, 0.10) border-box !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.025) 100%) !important;
+    border: 0 !important;
+    border-radius: var(--radius-sm) !important;
+    color: #e7e9ec !important;
 }
 
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link:hover,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link:hover {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)) padding-box,
-        rgba(255, 255, 255, 0.16) border-box !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.045) 100%) !important;
+    transform: none !important;
+}
+
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link::after,
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link::after {
+    display: block !important;
+    content: '' !important;
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-sm);
+    padding: 1px;
+    background: var(--dev-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
 }
