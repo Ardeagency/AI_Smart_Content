@@ -142,19 +142,19 @@ class DevLeadOrgsView extends DevBaseView {
       if (error) throw error;
       this.orgs = Array.isArray(orgs) ? orgs : [];
 
-      // Estado del agente Vera por org (best-effort: si RLS lo bloquea, degrada a "Sin Vera").
+      // Estado del agente Vera por org. openclaw_instances es service-only (RLS),
+      // así que vamos por el RPC list_org_vera_status (SECURITY DEFINER, solo Lead).
       try {
         const ids = this.orgs.map(o => o.id);
         if (ids.length) {
-          const { data: insts } = await this.supabase
-            .from('openclaw_instances')
-            .select('organization_id, status, sleeping')
-            .in('organization_id', ids);
+          const { data: insts, error: vErr } = await this.supabase
+            .rpc('list_org_vera_status', { p_org_ids: ids });
+          if (vErr) throw vErr;
           const byOrg = {};
           (insts || []).forEach(i => { byOrg[i.organization_id] = i; });
           this.orgs.forEach(o => { o._agent = byOrg[o.id] || null; });
         }
-      } catch (_) { /* sin acceso a openclaw_instances: se muestra "Sin Vera" */ }
+      } catch (e) { console.warn('[orgs] vera status:', e?.message || e); /* degrada a "Sin Vera" */ }
 
       this.renderRows('');
     } catch (err) {
