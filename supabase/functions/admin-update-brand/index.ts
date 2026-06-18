@@ -197,6 +197,7 @@ Deno.serve(async (req) => {
       }
       await service.from("products").delete().eq("organization_id", orgId).eq("created_via", "auto_builder");
       let count = 0, images = 0;
+      const productIds: string[] = [];
       for (const p of incoming) {
         const name = str(p?.name);
         if (!name) continue;
@@ -209,10 +210,11 @@ Deno.serve(async (req) => {
           descripcion_producto: str(p?.description) || name,
           moneda: str(p?.currency) || "COP",
           created_via: "auto_builder",
-          metadata: { price: p?.price || null, source: "url-scrape" },
+          metadata: { price: p?.price || null, source: "url-scrape", source_url: str(p?.url) },
         }).select("id").single();
         if (error || !prod) continue;
         count++;
+        productIds.push((prod as { id: string }).id);
         // Imagen del producto → product_images (de donde lee el catalogo). La URL
         // externa se muestra ya; download_status='pending' para bajarla a storage luego.
         const img = (typeof p?.image === "string" && /^https?:\/\//i.test(p.image.trim())) ? p.image.trim() : null;
@@ -224,7 +226,22 @@ Deno.serve(async (req) => {
           if (!iErr) images++;
         }
       }
-      return jsonResponse({ ok: true, count, images });
+      // Enriquecer cada producto con IA (Claude, EnrichmentPopulator) en background:
+      // beneficios, diferenciadores, casos de uso, caracteristicas visuales, materiales.
+      // Idempotente (skipea si ya estan llenos). Spacing 2s para suavizar al provider.
+      if (productIds.length) {
+        const jobs = productIds.map((pid, i) => ({
+          organization_id: orgId,
+          job_type: "mission",
+          priority: 6,
+          payload: { mission_type: "vera_enrich_product", product_id: pid, source_platform: "url-scrape" },
+          status: "queued",
+          run_after: new Date(Date.now() + i * 2000).toISOString(),
+        }));
+        const { error: enqErr } = await service.from("agent_queue_jobs").insert(jobs);
+        if (enqErr) console.warn("[products] enrichment enqueue:", enqErr.message);
+      }
+      return jsonResponse({ ok: true, count, images, enrichment_enqueued: productIds.length });
     }
 
     // ── ASIGNAR owner + miembros (opcional) ─────────────────────────────
