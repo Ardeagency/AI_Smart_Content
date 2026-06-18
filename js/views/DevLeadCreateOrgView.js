@@ -71,6 +71,13 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.consumers = [];            // usuarios no-developers para el selector de owner
     this._creating = false;
     this.autoIntegrations = [];     // providers elegidos en la ruta automatica
+    // Estado de la ruta automatica (shell → scrape → apply)
+    this.autoPhase = null;          // null | 'creating' | 'scraping' | 'done' | 'error'
+    this.autoOrgId = null;
+    this.autoJobId = null;
+    this.autoStatus = null;         // ultimo status del job de scrape
+    this.autoError = null;
+    this._autoTimer = null;
   }
 
   async onEnter() {
@@ -79,6 +86,7 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   async destroy() {
     this.stopScrapePolling();
+    this.stopAutoPoll();
     super.destroy?.();
   }
 
@@ -105,9 +113,10 @@ class DevLeadCreateOrgView extends DevBaseView {
       out.push({ key: 'auto', label: 'Automatico' });
     }
 
-    // Owner va AL FINAL: por defecto la org se crea a nombre del dev que la
-    // crea, y al final se conecta (opcionalmente) el owner real.
-    if (this.standalone && this.creationMode) out.push({ key: 'owner', label: 'Owner' });
+    // Owner va AL FINAL en la ruta MANUAL (por defecto la org se crea a nombre
+    // del dev; el owner se conecta opcionalmente al final). En la ruta auto el
+    // shell se crea temprano y el owner se asigna luego desde Orgs/Consumidores.
+    if (this.standalone && this.creationMode === 'manual') out.push({ key: 'owner', label: 'Owner' });
     return out;
   }
 
@@ -280,6 +289,7 @@ class DevLeadCreateOrgView extends DevBaseView {
   ];
 
   renderStepAuto() {
+    if (this.autoPhase) return this.renderAutoProgress();
     const f = this.form;
     const chips = this.AUTO_PROVIDERS.map((p) => {
       const on = (this.autoIntegrations || []).includes(p.v);
@@ -312,8 +322,65 @@ class DevLeadCreateOrgView extends DevBaseView {
         </form>
       </section>
       <footer class="provision-page-actions">
-        ${this._footerButtons()}
+        <button type="button" class="provision-back-btn" data-action="back">Back</button>
+        <button type="button" class="createorg-submit-btn" data-action="auto-create"><i class="fas fa-magic-wand-sparkles"></i> Crear y analizar</button>
       </footer>
+    `;
+  }
+
+  // Pantalla de progreso de la ruta automatica (shell → scrape → apply).
+  renderAutoProgress() {
+    const st = this.autoStatus || {};
+    const prog = st.progress || {};
+    const pages = prog.pages_crawled != null ? prog.pages_crawled : null;
+
+    if (this.autoPhase === 'done') {
+      const ap = prog.apply || {};
+      return `
+        <section class="provision-verify-card provision-final-card">
+          <span class="provision-verify-icon provision-verify-icon--success"><i class="fas fa-check"></i></span>
+          <h2>Organizacion creada y analizada</h2>
+          <p>Vera investigo <strong>${this.escapeHtml(this.form.brand_url || '')}</strong> y lleno la base de la marca.</p>
+          <p class="provision-verify-meta">
+            ${ap.colors != null ? `${ap.colors} colores · ` : ''}${ap.fonts != null ? `${ap.fonts} tipografias · ` : ''}${ap.pillars != null ? `${ap.pillars} pilares` : ''} guardados.
+          </p>
+        </section>
+        <footer class="provision-page-actions">
+          <button type="button" class="provision-back-btn" data-action="auto-reset">Crear otra</button>
+          <button type="button" class="createorg-submit-btn" data-action="auto-goto-orgs"><i class="fas fa-arrow-right"></i> Ver organizaciones</button>
+        </footer>
+      `;
+    }
+
+    if (this.autoPhase === 'error') {
+      return `
+        <section class="provision-verify-card">
+          <span class="provision-verify-icon" style="color:#ef6b6b"><i class="fas fa-triangle-exclamation"></i></span>
+          <h2>Algo fallo en el analisis</h2>
+          <p class="provision-verify-status">${this.escapeHtml(this.autoError || 'Error desconocido')}</p>
+          <p class="provision-verify-meta">${this.autoOrgId ? 'El shell de la org si se creo — puedes verla en Organizaciones y reintentar el analisis luego.' : ''}</p>
+        </section>
+        <footer class="provision-page-actions">
+          <button type="button" class="provision-back-btn" data-action="auto-reset">Volver</button>
+          ${this.autoOrgId ? '<button type="button" class="createorg-submit-btn" data-action="auto-goto-orgs"><i class="fas fa-arrow-right"></i> Ver organizaciones</button>' : ''}
+        </footer>
+      `;
+    }
+
+    // creating | scraping
+    const stageText = this.autoPhase === 'creating'
+      ? 'Creando la organizacion...'
+      : (st.stage || 'Analizando tu marca...');
+    return `
+      <section class="provision-verify-card">
+        <div class="provision-verify-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
+        <h2>Construyendo tu marca</h2>
+        <p class="provision-verify-status">${this.escapeHtml(stageText)}</p>
+        <p class="provision-verify-meta">
+          Vera navega tu sitio, detecta identidad visual y verbal, y lo guarda en la base.
+          ${pages != null ? `<br>${pages} paginas analizadas.` : ''}
+        </p>
+      </section>
     `;
   }
 
@@ -984,6 +1051,16 @@ class DevLeadCreateOrgView extends DevBaseView {
     const createBtn = this.container.querySelector('[data-action="create"]');
     if (createBtn) this.addEventListener(createBtn, 'click', () => this.handleCreate());
 
+    // Ruta automatica: crear+analizar, reset, ir a orgs
+    const autoCreateBtn = this.container.querySelector('[data-action="auto-create"]');
+    if (autoCreateBtn) this.addEventListener(autoCreateBtn, 'click', () => this.handleAutoCreate());
+    const autoResetBtn = this.container.querySelector('[data-action="auto-reset"]');
+    if (autoResetBtn) this.addEventListener(autoResetBtn, 'click', () => this.resetAuto());
+    const autoGotoBtn = this.container.querySelector('[data-action="auto-goto-orgs"]');
+    if (autoGotoBtn) this.addEventListener(autoGotoBtn, 'click', () => {
+      if (window.router) window.router.navigate('/dev/lead/orgs'); else window.location.href = '/dev/lead/orgs';
+    });
+
     // Back / Next
     const backBtn = this.container.querySelector('[data-action="back"]');
     if (backBtn) this.addEventListener(backBtn, 'click', () => this.handleBack());
@@ -1397,6 +1474,97 @@ class DevLeadCreateOrgView extends DevBaseView {
       if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Crear organizacion'; }
       this.setStatus(err?.message || 'Error al crear la organizacion.', 'error');
     }
+  }
+
+  // ─── Ruta automatica: shell → scrape → apply (en ai-engine) ──────────
+  async handleAutoCreate() {
+    if (this._creating) return;
+    this.syncForm();
+    const f = this.form;
+    if (!f.brand_url) { this.setStatus('Agrega la URL de tu web.', 'error'); return; }
+    if (!f.name) {
+      try { f.name = new URL(f.brand_url).hostname.replace(/^www\./, ''); }
+      catch (_) { f.name = f.brand_url; }
+    }
+
+    this._creating = true;
+    this.autoError = null;
+    this.autoPhase = 'creating';
+    this._refreshAuto();
+
+    try {
+      // 1. Shell de la org (por defecto a nombre del dev) → org_id.
+      const { data: orgId, error } = await this.supabase.rpc('admin_create_organization', { p: { name: f.name } });
+      if (error) throw error;
+      this.autoOrgId = orgId;
+
+      // 2. Arrancar el scrape con el org_id (ai-engine aplica el ADN al terminar).
+      this.autoPhase = 'scraping';
+      this._refreshAuto();
+      const res = await fetch('/api/brand-scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: f.brand_url, organization_id: orgId })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.job_id) throw new Error(data.error || `No se pudo iniciar el analisis (HTTP ${res.status})`);
+      this.autoJobId = data.job_id;
+      this._pollAuto();
+    } catch (err) {
+      this._creating = false;
+      this.autoPhase = 'error';
+      this.autoError = err?.message || String(err);
+      this._refreshAuto();
+    }
+  }
+
+  _pollAuto() {
+    this.stopAutoPoll();
+    this._autoTimer = setInterval(async () => {
+      if (!this.autoJobId) return;
+      try {
+        const res = await fetch(`/api/brand-scrape?job_id=${encodeURIComponent(this.autoJobId)}`);
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok) return;
+        this.autoStatus = d;
+        if (d.status === 'done') {
+          this.stopAutoPoll();
+          this._creating = false;
+          this.autoPhase = 'done';
+          this._refreshAuto();
+        } else if (d.status === 'failed' || d.status === 'cancelled') {
+          this.stopAutoPoll();
+          this._creating = false;
+          this.autoPhase = 'error';
+          this.autoError = d.error || 'El analisis fallo. La org se creo pero sin ADN.';
+          this._refreshAuto();
+        } else {
+          this.autoPhase = 'scraping';
+          this._refreshAuto();
+        }
+      } catch (_) { /* reintenta al siguiente tick */ }
+    }, 2500);
+  }
+
+  stopAutoPoll() {
+    if (this._autoTimer) { clearInterval(this._autoTimer); this._autoTimer = null; }
+  }
+
+  _refreshAuto() {
+    const center = this.container.querySelector('.provision-page-center');
+    if (center) { center.innerHTML = this.renderStepAuto(); this.wireAll(); }
+  }
+
+  resetAuto() {
+    this.stopAutoPoll();
+    this._creating = false;
+    this.autoPhase = null;
+    this.autoOrgId = null;
+    this.autoJobId = null;
+    this.autoStatus = null;
+    this.autoError = null;
+    this.form.brand_url = '';
+    this._refreshAuto();
   }
 
   validateStep(key) {
