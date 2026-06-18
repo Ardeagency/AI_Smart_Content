@@ -4604,3 +4604,85 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
 .side-navigation.nav-mode-user .nav-brand-footer {
     border-top-color: #1e2229;
 }
+
+/* =========================================================================
+   GLASS NOIR — sidebar dev/ (espejo del org; acento = gradiente de RANK).
+   Override scopeado a .nav-mode-developer. Usa --dev-gradient-dynamic* y
+   --dev-sidebar-active (rgba del rank) para el glow.
+   ========================================================================= */
+.side-navigation.nav-mode-developer {
+    border-right: 1px solid #272b31;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    isolation: isolate;
+}
+
+/* fondo glass (el overlay base ::before pintaba plano) */
+.side-navigation.nav-mode-developer::before {
+    background: linear-gradient(180deg, #141517 0%, #0b0b0b 100%);
+}
+
+/* bloom del gradiente de RANK hacia el header */
+.side-navigation.nav-mode-developer::after {
+    content: '';
+    position: absolute;
+    width: 380px;
+    height: 300px;
+    left: -70px;
+    top: -90px;
+    background: var(--dev-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed));
+    opacity: 0.22;
+    filter: blur(46px) saturate(1.35);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* items como pastillas glass */
+.side-navigation.nav-mode-developer .nav-link {
+    border-radius: 9px;
+}
+
+.side-navigation.nav-mode-developer .nav-link:hover {
+    background: rgba(255, 255, 255, 0.045);
+}
+
+/* activo = pastilla glass elevada + glow de rank + filo del degradado */
+.side-navigation.nav-mode-developer .nav-link.active {
+    color: #ffffff;
+    opacity: 1;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.028));
+    box-shadow:
+        0 0 24px -8px var(--dev-sidebar-active, rgba(124, 91, 255, 0.2)),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 2px 9px rgba(0, 0, 0, 0.45);
+}
+
+/* re-mostrar el filo (el dev lo tenía en display:none) con el gradiente de rank */
+.side-navigation.nav-mode-developer .nav-link.active::before {
+    display: block !important;
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--dev-gradient-dynamic-vertical, var(--dev-gradient-dynamic, linear-gradient(180deg, #00e7ff, #7c3aed)));
+    z-index: 1;
+}
+
+/* submenú: enlaces redondeados + activo en pastilla translúcida */
+.side-navigation.nav-mode-developer .nav-submenu-link {
+    border-radius: 7px;
+}
+
+.side-navigation.nav-mode-developer .nav-submenu-link.active {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* divisor del pie en sintonía con el panel glass */
+.side-navigation.nav-mode-developer .nav-brand-footer {
+    border-top-color: #1e2229;
+}
