@@ -370,6 +370,7 @@ class DevLeadCreateOrgView extends DevBaseView {
   // Pantalla de progreso de la ruta automatica (shell → scrape → apply).
   renderAutoProgress() {
     if (this.autoPhase === 'approving') return this.renderApprovalPage();
+    if (this.autoPhase === 'noContent') return this.renderNoContent();
 
     const st = this.autoStatus || {};
     const prog = st.progress || {};
@@ -1144,6 +1145,12 @@ class DevLeadCreateOrgView extends DevBaseView {
     const apAddComp = this.container.querySelector('[data-action="ap-add-comp"]');
     if (apAddComp) this.addEventListener(apAddComp, 'click', () => this._apAddComp());
 
+    // Fallback cuando el scrape no pudo obtener la marca
+    const fbManual = this.container.querySelector('[data-action="fallback-manual"]');
+    if (fbManual) this.addEventListener(fbManual, 'click', () => this._fallbackManual());
+    const fbIntg = this.container.querySelector('[data-action="fallback-integrations"]');
+    if (fbIntg) this.addEventListener(fbIntg, 'click', () => this._fallbackIntegrations());
+
     // Back / Next
     const backBtn = this.container.querySelector('[data-action="back"]');
     if (backBtn) this.addEventListener(backBtn, 'click', () => this.handleBack());
@@ -1619,12 +1626,15 @@ class DevLeadCreateOrgView extends DevBaseView {
         if (d.status === 'done') {
           this.stopAutoPoll();
           this._creating = false;
-          this._enterApproval(d);
+          // Si el sitio no dio contenido util (bloqueo/SPA vacia), ofrecer fallbacks.
+          if (this._scrapeYieldedNothing(d.brand_payload)) { this.autoPhase = 'noContent'; this._refreshAuto(); }
+          else this._enterApproval(d);
         } else if (d.status === 'failed' || d.status === 'cancelled') {
           this.stopAutoPoll();
           this._creating = false;
-          this.autoPhase = 'error';
-          this.autoError = d.error || 'El analisis fallo. La org se creo pero sin ADN.';
+          // No se pudo scrapear (plataforma que bloquea, URL inaccesible, etc.).
+          this.autoPhase = 'noContent';
+          this.autoError = d.error || null;
           this._refreshAuto();
         } else {
           this.autoPhase = 'scraping';
@@ -1692,6 +1702,43 @@ class DevLeadCreateOrgView extends DevBaseView {
   _refreshAuto() {
     const center = this.container.querySelector('.provision-page-center');
     if (center) { center.innerHTML = this.renderStepAuto(); this.wireAll(); }
+  }
+
+  // El scrape no dio nada util (sitio bloqueado / SPA vacia).
+  _scrapeYieldedNothing(bp) {
+    if (!bp) return true;
+    return !bp.brand_name && !bp.nicho_core && !bp.tono_de_voz && !bp.primary_color
+      && !(bp.products_detected && bp.products_detected.length);
+  }
+
+  renderNoContent() {
+    const url = this.escapeHtml(this.form.brand_url || 'tu sitio');
+    return `
+      <section class="provision-verify-card">
+        <span class="provision-verify-icon" style="color:#e0b250"><i class="fas fa-triangle-exclamation"></i></span>
+        <h2>No pudimos obtener tu marca</h2>
+        <p>La plataforma de <strong>${url}</strong> no permitio analizar el contenido automaticamente (algunos sitios bloquean el analisis). La organizacion ya se creo — puedes continuar de dos formas:</p>
+        <div class="createorg-fallback-opts">
+          <button type="button" class="createorg-fallback-opt" data-action="fallback-integrations">
+            <i class="fas fa-plug"></i>
+            <span><strong>Conectar integraciones</strong><small>Importa tus productos desde tu tienda (Shopify, Mercado Libre)</small></span>
+          </button>
+          <button type="button" class="createorg-fallback-opt" data-action="fallback-manual">
+            <i class="fas fa-pen-to-square"></i>
+            <span><strong>Llenar todo manualmente</strong><small>Defines identidad, ADN, colores y demas a mano</small></span>
+          </button>
+        </div>
+      </section>
+      <footer class="provision-page-actions">
+        <button type="button" class="provision-back-btn" data-action="auto-goto-orgs">Salir</button>
+      </footer>
+    `;
+  }
+
+  _fallbackManual() { this._enterApproval({}); }
+  _fallbackIntegrations() {
+    this.autoIntegrations = ['shopify', 'mercadolibre'];
+    this._enterApproval({});
   }
 
   resetAuto() {
