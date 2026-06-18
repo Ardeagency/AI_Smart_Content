@@ -12044,6 +12044,11 @@
 }
 .dev-org-card-icon-btn:hover { background: rgba(255, 255, 255, 0.16); transform: scale(1.08); }
 .dev-org-card-icon-btn--danger:hover { background: rgba(220, 53, 69, 0.85); border-color: rgba(220, 53, 69, 0.9); }
+/* Vera (org-server OpenClaw) — estado + provisión manual. Acento indigo discreto (monocromo). */
+.dev-org-card-icon-btn--vera:hover { background: rgba(124, 131, 255, 0.85); border-color: rgba(124, 131, 255, 0.9); }
+.dev-org-card-pill--vera-on { background: color-mix(in srgb, #7C83FF 28%, transparent); color: #fff; }
+.dev-org-card-pill--vera-on i { color: #c7caff; opacity: 1; }
+.dev-org-card-pill--vera-off { background: rgba(255, 255, 255, 0.10); color: rgba(255, 255, 255, 0.55); }
 
 .dev-org-card-info {
   position: absolute;

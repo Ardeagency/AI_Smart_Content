@@ -101,6 +101,7 @@ class DevLeadOrgsView extends DevBaseView {
       const action = btn.getAttribute('data-action');
       if (action === 'edit') this.openEditModal(id);
       else if (action === 'delete') this.openDeleteModal(id);
+      else if (action === 'provision') this.openProvisionModal(id);
     });
 
     try {
@@ -140,6 +141,21 @@ class DevLeadOrgsView extends DevBaseView {
 
       if (error) throw error;
       this.orgs = Array.isArray(orgs) ? orgs : [];
+
+      // Estado del agente Vera por org (best-effort: si RLS lo bloquea, degrada a "Sin Vera").
+      try {
+        const ids = this.orgs.map(o => o.id);
+        if (ids.length) {
+          const { data: insts } = await this.supabase
+            .from('openclaw_instances')
+            .select('organization_id, status, sleeping')
+            .in('organization_id', ids);
+          const byOrg = {};
+          (insts || []).forEach(i => { byOrg[i.organization_id] = i; });
+          this.orgs.forEach(o => { o._agent = byOrg[o.id] || null; });
+        }
+      } catch (_) { /* sin acceso a openclaw_instances: se muestra "Sin Vera" */ }
+
       this.renderRows('');
     } catch (err) {
       console.error('loadOrgs:', err);
@@ -178,6 +194,18 @@ class DevLeadOrgsView extends DevBaseView {
       ? new Date(org.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })
       : '—';
     const name = this.escapeHtml(org.name || '—');
+
+    // Estado de Vera (org-server OpenClaw). Auto-creación eliminada: se provisiona por botón.
+    const agent = org._agent;
+    const agentActive = agent && ['healthy', 'provisioning', 'starting'].includes(agent.status);
+    const veraPill = agentActive
+      ? `<span class="dev-org-card-pill dev-org-card-pill--vera-on" title="Vera ${this.escapeHtml(agent.status)}"><i class="fas fa-robot"></i> Vera ${this.escapeHtml(agent.status)}</span>`
+      : `<span class="dev-org-card-pill dev-org-card-pill--vera-off" title="Sin agente Vera"><i class="fas fa-robot"></i> Sin Vera</span>`;
+    // Botón solo si NO tiene agente activo (evita doble-provisión accidental de VM de pago).
+    const provBtn = agentActive
+      ? ''
+      : `<button type="button" class="dev-org-card-icon-btn dev-org-card-icon-btn--vera" data-action="provision" data-id="${id}" title="Provisionar Vera" aria-label="Provisionar Vera"><i class="fas fa-robot"></i></button>`;
+
     const media = org.logo_url
       ? `<img src="${this.escapeHtml(org.logo_url)}" alt="${name}" class="dev-org-card-img" loading="lazy" onerror="this.outerHTML='&lt;div class=&quot;dev-org-card-placeholder&quot;&gt;&lt;i class=&quot;fas fa-building&quot;&gt;&lt;/i&gt;&lt;/div&gt;'">`
       : `<div class="dev-org-card-placeholder"><i class="fas fa-building"></i></div>`;
@@ -188,6 +216,7 @@ class DevLeadOrgsView extends DevBaseView {
           ${media}
           <div class="dev-org-card-gradient" aria-hidden="true"></div>
           <div class="dev-org-card-actions">
+            ${provBtn}
             <button type="button" class="dev-org-card-icon-btn" data-action="edit" data-id="${id}" title="Editar" aria-label="Editar"><i class="fas fa-edit"></i></button>
             <button type="button" class="dev-org-card-icon-btn dev-org-card-icon-btn--danger" data-action="delete" data-id="${id}" title="Eliminar" aria-label="Eliminar"><i class="fas fa-trash"></i></button>
           </div>
@@ -197,6 +226,7 @@ class DevLeadOrgsView extends DevBaseView {
             <div class="dev-org-card-meta">
               <span class="dev-org-card-pill dev-org-card-pill--plan">${planLabel}</span>
               <span class="dev-org-card-pill"><i class="fas fa-clock"></i> ${created}</span>
+              ${veraPill}
             </div>
             <div class="dev-org-card-credits">
               <div class="dev-org-card-credits-head">
@@ -209,6 +239,57 @@ class DevLeadOrgsView extends DevBaseView {
         </div>
       </article>
     `;
+  }
+
+  // Provisión MANUAL de Vera (org-server OpenClaw). La auto-creación fue eliminada
+  // por riesgosa: cada provisión levanta una VM Hetzner de pago + API key Anthropic
+  // facturable por org. Por eso va con modal de confirmación explícito.
+  openProvisionModal(id) {
+    const org = this.orgs.find(o => o.id === id);
+    if (!org) return;
+    const name = this.escapeHtml(org.name || '');
+
+    const { modal, close } = window.Modal.show({
+      title: 'Provisionar Vera',
+      className: 'dev-lead-modal-content',
+      body: `
+        <div class="form-group">
+          <p>Vas a crear el equipo de IA <strong>Vera</strong> para <strong>${name}</strong>.</p>
+          <p class="form-hint" style="margin-top:8px">⚠️ Esto levanta una <strong>VM dedicada de pago</strong> (Hetzner) + API key de Anthropic facturable para esta organización. Tarda ~3-5 min en quedar lista.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="provCancel">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="provConfirm"><i class="fas fa-robot"></i> Provisionar Vera</button>
+        </div>
+      `,
+    });
+
+    modal.querySelector('#provCancel')?.addEventListener('click', () => close());
+    modal.querySelector('#provConfirm')?.addEventListener('click', async () => {
+      const btn = modal.querySelector('#provConfirm');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Provisionando...'; }
+      try {
+        if (!this.supabase) this.supabase = await this.getSupabaseClient();
+        const { data, error } = await this.supabase.functions.invoke('provision-org-agent', {
+          body: { organization_id: id },
+        });
+        if (error) {
+          let msg = error.message || 'Error al provisionar';
+          try { const ctx = await error.context?.json?.(); if (ctx?.error || ctx?.message) msg = ctx.error || ctx.message; } catch (_) {}
+          throw new Error(msg);
+        }
+        if (data?.already_provisioned) {
+          this.showNotification(data.message || 'La org ya tiene a Vera.', 'warning');
+        } else {
+          this.showNotification(data?.message || 'Provisión de Vera iniciada.', 'success');
+        }
+        close();
+        await this.loadOrgs();
+      } catch (err) {
+        this.showNotification(err?.message || 'Error al provisionar Vera', 'error');
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-robot"></i> Provisionar Vera'; }
+      }
+    });
   }
 
   activeSubscription(subs) {
