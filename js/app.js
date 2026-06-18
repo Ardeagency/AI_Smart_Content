@@ -479,6 +479,7 @@ class App {
     r.register('/dev/provisioning/users', this._lazy('DevLeadUserProvisioningView', [...devBase, '/js/views/DevLeadUserProvisioningView.js'], DEV_CSS), auth);
     r.register('/dev/provisioning/create-org', this._lazy('DevLeadCreateOrgView', [...devBase, '/js/views/DevLeadCreateOrgView.js'], DEV_CSS), auth);
     r.register('/dev/lead/team', this._lazy('DevLeadTeamView', [...devBase, '/js/views/DevLeadTeamView.js'], DEV_CSS), auth);
+    r.register('/dev/lead/consumers', this._lazy('DevLeadConsumersView', [...devBase, '/js/views/DevLeadConsumersView.js'], DEV_CSS), auth);
     r.register('/dev/lead/orgs', this._lazy('DevLeadOrgsView', [...devBase, '/js/views/DevLeadOrgsView.js'], DEV_CSS), auth);
     r.register('/dev/lead/categories', this._lazy('DevLeadCategoriesView', [...devBase, '/js/views/DevLeadCategoriesView.js'], DEV_CSS), auth);
     r.register('/dev/lead/input-schemas', this._lazy('DevLeadInputSchemasView', [...devBase, '/js/views/DevLeadInputSchemasView.js'], DEV_CSS), auth);

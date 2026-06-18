@@ -217,6 +217,15 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   },
   {
     type: 'page',
+    id: 'admin-consumers',
+    label: 'Consumidores',
+    icon: 'fa-user-group',
+    iconSrc: '/recursos/icons/user registration.svg',
+    role_required: 'lead',
+    route: '/dev/lead/consumers'
+  },
+  {
+    type: 'page',
     id: 'admin-billing',
     label: 'Billing',
     icon: 'fa-credit-card',
@@ -3026,6 +3035,7 @@ class Navigation {
       '/dev/web-vitals': 'WEB VITALS',
       '/dev/provisioning/users': 'REGISTRAR USUARIO',
       '/dev/lead/team': 'EQUIPO',
+      '/dev/lead/consumers': 'CONSUMIDORES',
       '/dev/lead/categories': 'CATEGORÍAS',
       '/dev/lead/input-schemas': 'INPUT SCHEMAS'
     };

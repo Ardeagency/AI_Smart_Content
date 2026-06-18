@@ -15571,3 +15571,113 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ─── Consumidores (tabla de usuarios no-developers) ─────────────────────── */
+.dev-lead-consumers .dev-lead-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.cons-head-title { display: flex; align-items: baseline; gap: 0.6rem; }
+.cons-head-title h1 { margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-primary, #fff); }
+.cons-count {
+  font-size: 0.78rem; font-weight: 600;
+  color: var(--text-secondary, rgba(255,255,255,0.6));
+  background: var(--bg-secondary, rgba(255,255,255,0.06));
+  border: 1px solid var(--border-divider, #242424);
+  padding: 1px 8px; border-radius: 999px;
+}
+.cons-head-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.cons-head-actions .form-control { min-width: 260px; }
+
+.cons-table-wrap {
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-secondary, rgba(255,255,255,0.03));
+}
+.cons-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.cons-table thead th {
+  text-align: left;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--text-secondary, rgba(255,255,255,0.5));
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-divider, #242424);
+  background: rgba(255,255,255,0.02);
+}
+.cons-table .cons-th-actions { text-align: right; }
+.cons-row td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border-divider, #1d1d1d); vertical-align: middle; }
+.cons-row:last-child td { border-bottom: none; }
+.cons-row:hover { background: rgba(255,255,255,0.025); }
+.cons-td-actions { text-align: right; white-space: nowrap; }
+.cons-state { text-align: center; padding: 2.2rem 1rem; color: var(--text-secondary, rgba(255,255,255,0.5)); }
+.cons-state--error { color: #ef6b6b; }
+.cons-dim { color: var(--text-secondary, rgba(255,255,255,0.45)); }
+
+.cons-user { display: flex; align-items: center; gap: 0.6rem; }
+.cons-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; color: #fff; flex: 0 0 auto;
+  background: linear-gradient(135deg, rgba(124,131,255,0.45), rgba(124,131,255,0.18));
+  border: 1px solid rgba(124,131,255,0.35);
+}
+.cons-user-id { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.cons-user-id strong { color: var(--text-primary, #fff); font-weight: 600; }
+.cons-user-id span { color: var(--text-secondary, rgba(255,255,255,0.5)); font-size: 0.74rem; }
+
+.cons-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.68rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--border-divider, #2a2a2a);
+  color: var(--text-secondary, rgba(255,255,255,0.7));
+  background: var(--bg-secondary, rgba(255,255,255,0.05));
+}
+.cons-badge i { font-size: 0.62rem; }
+.cons-badge--ok { color: #56d6a0; border-color: rgba(86,214,160,0.35); background: rgba(86,214,160,0.10); }
+.cons-badge--warn { color: #e0b250; border-color: rgba(224,178,80,0.30); background: rgba(224,178,80,0.10); }
+.cons-badge--aff.is-owner { color: #c7caff; border-color: rgba(124,131,255,0.40); background: rgba(124,131,255,0.14); }
+.cons-badge--aff.is-member { color: var(--text-secondary, rgba(255,255,255,0.7)); }
+.cons-badge--aff.is-none { color: rgba(255,255,255,0.4); }
+
+.cons-pill {
+  display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;
+  background: var(--bg-secondary, rgba(255,255,255,0.06)); color: var(--text-secondary, rgba(255,255,255,0.7));
+  border: 1px solid var(--border-divider, #2a2a2a);
+}
+.cons-orgs { display: flex; flex-wrap: wrap; gap: 4px; max-width: 320px; }
+.cons-org-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.7rem; padding: 2px 8px; border-radius: 999px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border-divider, #2a2a2a);
+  color: var(--text-primary, #fff);
+}
+.cons-org-chip em { font-style: normal; font-size: 0.62rem; color: var(--text-secondary, rgba(255,255,255,0.5)); }
+
+/* Modal de afiliacion (reusa el overlay .team-modal-overlay portalizado) */
+.cons-modal { width: min(460px, 92vw); }
+.cons-modal-section { margin-bottom: 1.1rem; }
+.cons-modal-section h4 {
+  margin: 0 0 0.5rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-secondary, rgba(255,255,255,0.5));
+}
+.cons-aff-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cons-aff-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 8px;
+  background: var(--bg-secondary, rgba(255,255,255,0.04)); border: 1px solid var(--border-divider, #242424);
+}
+.cons-aff-org { font-weight: 600; color: var(--text-primary, #fff); }
+.cons-aff-role { font-size: 0.7rem; color: var(--text-secondary, rgba(255,255,255,0.55)); }
+.cons-aff-item .cons-aff-remove, .cons-aff-item .cons-aff-lock { margin-left: auto; }
+.cons-aff-remove {
+  background: transparent; border: none; color: rgba(255,255,255,0.4); cursor: pointer;
+  width: 22px; height: 22px; border-radius: 6px; transition: background .15s, color .15s;
+}
+.cons-aff-remove:hover { background: rgba(220,53,69,0.85); color: #fff; }
+.cons-aff-lock { color: rgba(255,255,255,0.35); }
+.cons-aff-empty { color: var(--text-secondary, rgba(255,255,255,0.45)); font-size: 0.78rem; padding: 4px 0; }
+.cons-aff-form { display: flex; flex-direction: column; gap: 0.6rem; }
+.cons-aff-form .btn { align-self: flex-start; }
