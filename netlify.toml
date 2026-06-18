@@ -194,6 +194,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/brand-scrape"
+  to = "/.netlify/functions/api-brand-scrape"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/brand/analyze-posts"
   to = "/.netlify/functions/api-brand-analyze-posts"
   status = 200
