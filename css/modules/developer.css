@@ -15716,6 +15716,28 @@
   margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-divider, #242424);
 }
 .createorg-auto-intg-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+
+/* Checklist de carga en vivo */
+.createorg-loading-card { text-align: left; }
+.createorg-load-list { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.createorg-load-item { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-secondary, rgba(255,255,255,0.5)); transition: color .2s; }
+.createorg-load-item.is-done { color: var(--text-primary, #fff); }
+.createorg-load-item.is-active { color: var(--text-primary, #fff); font-weight: 600; }
+.createorg-load-mark { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; font-size: 0.8rem; }
+.createorg-load-item.is-done .createorg-load-mark { color: #56d6a0; }
+.createorg-load-item.is-active .createorg-load-mark { color: var(--indigo, #7C83FF); }
+.createorg-load-dot { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--border-divider, #2a2a2a); display: inline-block; }
+
+/* Aprobacion */
+.createorg-approval .createorg-form-grid { gap: 12px; }
+.createorg-color-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.createorg-color-row input[type="color"] { width: 42px; height: 38px; padding: 2px; border: 1px solid var(--border-divider, #2a2a2a); border-radius: 8px; background: transparent; cursor: pointer; flex: 0 0 auto; }
+.createorg-color-row .form-control { flex: 1; }
+.createorg-color-rm { background: transparent; border: 1px solid var(--border-divider, #2a2a2a); color: rgba(255,255,255,0.5); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; flex: 0 0 auto; }
+.createorg-color-rm:hover { background: rgba(220,53,69,0.85); color: #fff; border-color: transparent; }
+.createorg-review-summary { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.createorg-review-summary li { padding: 8px 12px; background: var(--bg-secondary, rgba(255,255,255,0.04)); border: 1px solid var(--border-divider, #242424); border-radius: 8px; font-size: 0.86rem; color: var(--text-secondary, rgba(255,255,255,0.7)); }
+.createorg-review-summary b { color: var(--text-primary, #fff); }
 /* Ruta automatica: chips de integraciones */
 .createorg-integrations { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .createorg-intg-chip {

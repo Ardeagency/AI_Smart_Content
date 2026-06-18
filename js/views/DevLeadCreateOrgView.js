@@ -79,7 +79,21 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.autoStatus = null;         // ultimo status del job de scrape
     this.autoError = null;
     this._autoTimer = null;
+    // Aprobacion (paginas editables tras el scrape)
+    this.approval = null;           // objeto editable cargado del brand_payload
+    this.approvalIdx = 0;
+    this._approvalSaving = false;
   }
+
+  // Paginas de aprobacion (orden jerarquico). La ultima es resumen/finalizar.
+  APPROVAL_PAGES = [
+    { key: 'identity', label: 'Identidad' },
+    { key: 'market',   label: 'Mercado e idioma' },
+    { key: 'voice',    label: 'Voz y mensaje' },
+    { key: 'colors',   label: 'Colores' },
+    { key: 'fonts',    label: 'Tipografia' },
+    { key: 'review',   label: 'Listo' }
+  ];
 
   async onEnter() {
     await super.onEnter({ requireLead: true });
@@ -206,8 +220,15 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   renderProgress() {
-    const steps = this.getActiveSteps();
-    const idx = steps.findIndex((s) => s.key === this.currentStep);
+    // Durante la aprobacion, el progreso de la derecha refleja las paginas de aprobacion.
+    let steps, idx;
+    if (this.currentStep === 'auto' && this.autoPhase === 'approving') {
+      steps = this.APPROVAL_PAGES;
+      idx = this.approvalIdx;
+    } else {
+      steps = this.getActiveSteps();
+      idx = steps.findIndex((s) => s.key === this.currentStep);
+    }
     return `
       <ol class="provision-progress" style="--provision-step-count: ${steps.length}" aria-label="Progreso del flujo">
         ${steps.map((s, i) => {
@@ -331,6 +352,8 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   // Pantalla de progreso de la ruta automatica (shell → scrape → apply).
   renderAutoProgress() {
+    if (this.autoPhase === 'approving') return this.renderApprovalPage();
+
     const st = this.autoStatus || {};
     const prog = st.progress || {};
     const pages = prog.pages_crawled != null ? prog.pages_crawled : null;
@@ -374,19 +397,31 @@ class DevLeadCreateOrgView extends DevBaseView {
       `;
     }
 
-    // creating | scraping
-    const stageText = this.autoPhase === 'creating'
-      ? 'Creando la organizacion...'
-      : (st.stage || 'Analizando tu marca...');
+    // creating | scraping → checklist en vivo de lo que se esta obteniendo
+    const phase = prog.phase || (this.autoPhase === 'creating' ? 'queued' : 'crawling');
+    const RANK = { queued: 0, crawling: 1, crawling_done: 2, extracting_done: 3, consolidating: 3, consolidating_done: 4, applied: 5, apply_failed: 5, competitors_seeded: 6, competitors_failed: 6 };
+    const rank = this.autoPhase === 'creating' ? 0 : (RANK[phase] != null ? RANK[phase] : 1);
+    const steps = [
+      { label: 'Creando la organizacion', done: 1 },
+      { label: 'Navegando tu sitio web', done: 2 },
+      { label: 'Analizando paginas y contenido', done: 3 },
+      { label: 'Obteniendo el ADN de la marca (IA)', done: 5 },
+      { label: 'Guardando identidad y descargando logo', done: 6 },
+      { label: 'Buscando la competencia real', done: 99 }
+    ];
+    const items = steps.map((s, i) => {
+      const prevDone = i === 0 ? 0 : steps[i - 1].done;
+      const state = rank >= s.done ? 'done' : (rank >= prevDone ? 'active' : 'pending');
+      const mark = state === 'done' ? '<i class="fas fa-check"></i>'
+        : state === 'active' ? '<i class="fas fa-circle-notch fa-spin"></i>'
+        : '<span class="createorg-load-dot"></span>';
+      return `<li class="createorg-load-item is-${state}"><span class="createorg-load-mark">${mark}</span><span>${this.escapeHtml(s.label)}</span></li>`;
+    }).join('');
     return `
-      <section class="provision-verify-card">
-        <div class="provision-verify-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
+      <section class="provision-verify-card createorg-loading-card">
         <h2>Construyendo tu marca</h2>
-        <p class="provision-verify-status">${this.escapeHtml(stageText)}</p>
-        <p class="provision-verify-meta">
-          Vera navega tu sitio, detecta identidad visual y verbal, y lo guarda en la base.
-          ${pages != null ? `<br>${pages} paginas analizadas.` : ''}
-        </p>
+        <p class="provision-verify-meta">${st.stage ? this.escapeHtml(st.stage) : 'Vera esta investigando tu sitio...'}${pages != null ? ` · ${pages} paginas` : ''}</p>
+        <ul class="createorg-load-list">${items}</ul>
       </section>
     `;
   }
@@ -1071,6 +1106,19 @@ class DevLeadCreateOrgView extends DevBaseView {
       this.addEventListener(b, 'click', () => this.connectAutoIntegration(b.getAttribute('data-connect-intg')));
     });
 
+    // Aprobacion
+    const apNext = this.container.querySelector('[data-action="ap-next"]');
+    if (apNext) this.addEventListener(apNext, 'click', () => this.handleApprovalNext());
+    const apBack = this.container.querySelector('[data-action="ap-back"]');
+    if (apBack) this.addEventListener(apBack, 'click', () => this.handleApprovalBack());
+    const apFinish = this.container.querySelector('[data-action="ap-finish"]');
+    if (apFinish) this.addEventListener(apFinish, 'click', () => this.handleApprovalFinish());
+    const apAddColor = this.container.querySelector('[data-action="ap-add-color"]');
+    if (apAddColor) this.addEventListener(apAddColor, 'click', () => this._apAddColor());
+    this.container.querySelectorAll('[data-color-rm]').forEach((b) => {
+      this.addEventListener(b, 'click', () => this._apRemoveColor(parseInt(b.getAttribute('data-color-rm'), 10)));
+    });
+
     // Back / Next
     const backBtn = this.container.querySelector('[data-action="back"]');
     if (backBtn) this.addEventListener(backBtn, 'click', () => this.handleBack());
@@ -1546,8 +1594,7 @@ class DevLeadCreateOrgView extends DevBaseView {
         if (d.status === 'done') {
           this.stopAutoPoll();
           this._creating = false;
-          this.autoPhase = 'done';
-          this._refreshAuto();
+          this._enterApproval(d);
         } else if (d.status === 'failed' || d.status === 'cancelled') {
           this.stopAutoPoll();
           this._creating = false;
@@ -1632,6 +1679,252 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.autoError = null;
     this.form.brand_url = '';
     this._refreshAuto();
+  }
+
+  // ─── Aprobacion: paginas editables (avanzar = aceptar) ──────────────
+  _enterApproval(status) {
+    const bp = (status && status.brand_payload) || {};
+    const logo = status?.progress?.apply?.logo || null;
+    const colors = [];
+    if (bp.primary_color)   colors.push({ color_role: 'primary',   hex_value: bp.primary_color });
+    if (bp.secondary_color) colors.push({ color_role: 'secondary', hex_value: bp.secondary_color });
+    (bp.palette_extra || []).slice(0, 4).forEach((h, i) => { if (h) colors.push({ color_role: `accent_${i + 1}`, hex_value: h }); });
+    this.approval = {
+      logo,
+      name: this.form.name || '',
+      slogan: bp.tagline || '',
+      nicho_core: bp.nicho_core || '',
+      mercado_objetivo: bp.mercado_objetivo || [],
+      idiomas_contenido: bp.idiomas_contenido || [],
+      locale: bp.locale || 'es',
+      timezone: bp.timezone || 'America/Bogota',
+      tono_de_voz: bp.tono_de_voz || '',
+      propuesta_valor: bp.propuesta_valor || '',
+      mision_vision: bp.mision_vision || '',
+      pilares: bp.pilares || [],
+      palabras_clave: bp.palabras_clave || [],
+      palabras_prohibidas: bp.palabras_prohibidas || [],
+      colors,
+      typography_primary: bp.typography_primary || '',
+      typography_secondary: bp.typography_secondary || '',
+      estetica: bp.estetica || ''
+    };
+    this.approvalIdx = 0;
+    this.autoPhase = 'approving';
+    this._refreshAutoFull();
+  }
+
+  _refreshAutoFull() {
+    const page = this.container.querySelector('.provision-page');
+    if (!page) { this._refreshAuto(); return; }
+    page.innerHTML = this.renderSplitBody();
+    this.wireAll();
+  }
+
+  _hex6(v) { return (/^#[0-9a-f]{6}$/i.test(v || '')) ? v : '#000000'; }
+  _f(label, id, value, ph) {
+    return `<div class="provision-field createorg-field-full"><label for="${id}">${this.escapeHtml(label)}</label><input id="${id}" class="form-control" value="${this.escapeHtml(value || '')}" placeholder="${this.escapeHtml(ph || '')}"></div>`;
+  }
+  _ta(label, id, value) {
+    return `<div class="provision-field createorg-field-full"><label for="${id}">${this.escapeHtml(label)}</label><textarea id="${id}" class="form-control" rows="3">${this.escapeHtml(value || '')}</textarea></div>`;
+  }
+  _csv(label, id, list, hint) {
+    return `<div class="provision-field createorg-field-full"><label for="${id}">${this.escapeHtml(label)}</label><input id="${id}" class="form-control" value="${this.escapeHtml((list || []).join(', '))}">${hint ? `<small>${this.escapeHtml(hint)}</small>` : ''}</div>`;
+  }
+
+  _apMeta(key) {
+    return {
+      identity: ['Confirma la identidad', 'Logo, nombre y slogan de la marca. Edita lo que haga falta y avanza para aceptar.'],
+      market:   ['Mercado e idioma', 'Donde y en que idioma opera la marca.'],
+      voice:    ['Voz y mensaje', 'El ADN verbal: tono, propuesta, pilares y palabras.'],
+      colors:   ['Paleta de colores', 'Los colores detectados de la marca. Ajusta o agrega.'],
+      fonts:    ['Tipografia y estetica', 'Las fuentes y el estilo visual.'],
+      review:   ['Todo listo', 'Revisa el resumen y finaliza para dejar la marca creada.']
+    }[key] || ['', ''];
+  }
+
+  renderApprovalPage() {
+    const idx = this.approvalIdx;
+    const page = this.APPROVAL_PAGES[idx];
+    const total = this.APPROVAL_PAGES.length;
+    const isLast = idx === total - 1;
+    const [title, hint] = this._apMeta(page.key);
+    const body = ({
+      identity: () => this._apIdentity(),
+      market:   () => this._apMarket(),
+      voice:    () => this._apVoice(),
+      colors:   () => this._apColors(),
+      fonts:    () => this._apFonts(),
+      review:   () => this._apReview()
+    }[page.key] || (() => ''))();
+
+    return `
+      <section class="provision-form-card createorg-card-wide createorg-approval">
+        <header class="provision-form-head">
+          <span class="provision-form-eyebrow">Revisar ${idx + 1} de ${total} · ${this.escapeHtml(page.label)}</span>
+          <h2>${this.escapeHtml(title)}</h2>
+          <p>${this.escapeHtml(hint)}</p>
+        </header>
+        <form id="approvalForm" class="createorg-form-grid" novalidate>
+          ${body}
+          <p class="provision-form-status createorg-field-full" id="createOrgStatus" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+      <footer class="provision-page-actions">
+        ${idx > 0
+          ? '<button type="button" class="provision-back-btn" data-action="ap-back">Back</button>'
+          : '<button type="button" class="provision-back-btn" data-action="auto-goto-orgs">Salir</button>'}
+        ${isLast
+          ? '<button type="button" class="createorg-submit-btn" data-action="ap-finish"><i class="fas fa-check"></i> Finalizar</button>'
+          : '<button type="button" class="createorg-submit-btn" data-action="ap-next">Aceptar y seguir <i class="fas fa-arrow-right"></i></button>'}
+      </footer>
+    `;
+  }
+
+  _apIdentity() {
+    const a = this.approval;
+    return `
+      ${a.logo ? `<div class="createorg-field-full" style="text-align:center"><img src="${this.escapeHtml(a.logo)}" class="createorg-done-logo" onerror="this.style.display='none'"></div>` : ''}
+      ${this._f('Nombre de la marca', 'apName', a.name, 'Ej. ACME')}
+      ${this._f('Slogan', 'apSlogan', a.slogan, 'Frase de marca')}
+    `;
+  }
+  _apMarket() {
+    const a = this.approval;
+    const localeOpts = [['es', 'Espanol'], ['en', 'English'], ['pt', 'Portugues']]
+      .map(([v, l]) => `<option value="${v}" ${a.locale === v ? 'selected' : ''}>${l}</option>`).join('');
+    return `
+      ${this._f('Nicho / categoria', 'apNicho', a.nicho_core)}
+      ${this._csv('Mercados objetivo (paises)', 'apMercados', a.mercado_objetivo, 'Separados por coma. Ej. CO, MX')}
+      ${this._csv('Idiomas de contenido', 'apIdiomas', a.idiomas_contenido, 'Ej. es, en')}
+      <div class="provision-field createorg-field-full"><label for="apLocale">Idioma principal</label><select id="apLocale" class="form-control">${localeOpts}</select></div>
+      ${this._f('Zona horaria', 'apTz', a.timezone)}
+    `;
+  }
+  _apVoice() {
+    const a = this.approval;
+    const toneOpts = this.TONES.map((t) => `<option value="${t.v}" ${a.tono_de_voz === t.v ? 'selected' : ''}>${this.escapeHtml(t.label)}</option>`).join('');
+    return `
+      <div class="provision-field createorg-field-full"><label for="apTono">Tono de voz</label><select id="apTono" class="form-control">${toneOpts}</select></div>
+      ${this._ta('Propuesta de valor', 'apPropuesta', a.propuesta_valor)}
+      ${this._ta('Mision / vision', 'apMision', a.mision_vision)}
+      ${this._csv('Pilares', 'apPilares', a.pilares)}
+      ${this._csv('Palabras clave', 'apClave', a.palabras_clave)}
+      ${this._csv('Palabras prohibidas', 'apProhibidas', a.palabras_prohibidas)}
+    `;
+  }
+  _apColors() {
+    const a = this.approval;
+    const rows = (a.colors || []).map((c, i) => `
+      <div class="createorg-color-row" data-color-idx="${i}">
+        <input type="color" data-color-hex value="${this._hex6(c.hex_value)}">
+        <input type="text" class="form-control" data-color-role value="${this.escapeHtml(c.color_role || '')}" placeholder="rol (primary, secondary, accent...)">
+        <button type="button" class="createorg-color-rm" data-color-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+      </div>`).join('');
+    return `
+      <div class="createorg-field-full">
+        <label>Paleta de la marca</label>
+        <div id="apColors">${rows || '<p class="cons-dim">Sin colores detectados.</p>'}</div>
+        <button type="button" class="btn btn-secondary btn-sm" data-action="ap-add-color"><i class="fas fa-plus"></i> Agregar color</button>
+      </div>
+    `;
+  }
+  _apFonts() {
+    const a = this.approval;
+    return `
+      ${this._f('Tipografia principal', 'apFont1', a.typography_primary, 'Ej. Inter')}
+      ${this._f('Tipografia secundaria', 'apFont2', a.typography_secondary, 'Ej. Lora')}
+      ${this._f('Estetica', 'apEstetica', a.estetica, 'Ej. minimalista, premium')}
+    `;
+  }
+  _apReview() {
+    const a = this.approval;
+    return `
+      <div class="createorg-field-full">
+        <ul class="createorg-review-summary">
+          <li><b>Marca:</b> ${this.escapeHtml(a.name || '—')}${a.slogan ? ` — ${this.escapeHtml(a.slogan)}` : ''}</li>
+          <li><b>Nicho:</b> ${this.escapeHtml(a.nicho_core || '—')}</li>
+          <li><b>Mercados:</b> ${this.escapeHtml((a.mercado_objetivo || []).join(', ') || '—')} · <b>Idiomas:</b> ${this.escapeHtml((a.idiomas_contenido || []).join(', ') || '—')}</li>
+          <li><b>Tono:</b> ${this.escapeHtml(a.tono_de_voz || '—')}</li>
+          <li><b>Colores:</b> ${(a.colors || []).length} · <b>Pilares:</b> ${(a.pilares || []).length} · <b>Tipografias:</b> ${[a.typography_primary, a.typography_secondary].filter(Boolean).length}</li>
+        </ul>
+        ${this._autoIntegrationsBlock()}
+      </div>
+    `;
+  }
+
+  _collectApproval(key) {
+    const a = this.approval;
+    const g = (id) => (this.container.querySelector('#' + id)?.value || '').trim();
+    const csv = (id) => g(id).split(',').map((s) => s.trim()).filter(Boolean);
+    if (key === 'identity') { a.name = g('apName'); a.slogan = g('apSlogan'); }
+    else if (key === 'market') { a.nicho_core = g('apNicho'); a.mercado_objetivo = csv('apMercados'); a.idiomas_contenido = csv('apIdiomas'); a.locale = g('apLocale'); a.timezone = g('apTz'); }
+    else if (key === 'voice') { a.tono_de_voz = g('apTono'); a.propuesta_valor = g('apPropuesta'); a.mision_vision = g('apMision'); a.pilares = csv('apPilares'); a.palabras_clave = csv('apClave'); a.palabras_prohibidas = csv('apProhibidas'); }
+    else if (key === 'colors') {
+      a.colors = [...this.container.querySelectorAll('#apColors .createorg-color-row')].map((r) => ({
+        color_role: (r.querySelector('[data-color-role]')?.value || '').trim() || 'accent',
+        hex_value: (r.querySelector('[data-color-hex]')?.value || '').trim()
+      })).filter((c) => c.hex_value);
+    }
+    else if (key === 'fonts') { a.typography_primary = g('apFont1'); a.typography_secondary = g('apFont2'); a.estetica = g('apEstetica'); }
+  }
+
+  async _saveApprovalSection(key) {
+    if (key === 'review') return { ok: true };
+    const a = this.approval;
+    let data = {};
+    if (key === 'identity') data = { name: a.name, slogan: a.slogan };
+    else if (key === 'market') data = { nicho_core: a.nicho_core, mercado_objetivo: a.mercado_objetivo, idiomas_contenido: a.idiomas_contenido, locale: a.locale, timezone: a.timezone };
+    else if (key === 'voice') data = { tono_de_voz: a.tono_de_voz, tagline: a.slogan, propuesta_valor: a.propuesta_valor, mision_vision: a.mision_vision, pilares: a.pilares, palabras_clave: a.palabras_clave, palabras_prohibidas: a.palabras_prohibidas };
+    else if (key === 'colors') data = { colors: a.colors };
+    else if (key === 'fonts') data = { fonts: [a.typography_primary && { font_usage: 'primary', font_family: a.typography_primary }, a.typography_secondary && { font_usage: 'secondary', font_family: a.typography_secondary }].filter(Boolean), estetica: a.estetica };
+    const { data: res, error } = await this.supabase.functions.invoke('admin-update-brand', { body: { organization_id: this.autoOrgId, section: key, data } });
+    if (error) {
+      let msg = error.message || 'Error al guardar';
+      try { const ctx = await error.context?.json?.(); if (ctx?.error) msg = ctx.error; } catch (_) {}
+      throw new Error(msg);
+    }
+    return res;
+  }
+
+  async handleApprovalNext() {
+    if (this._approvalSaving) return;
+    const key = this.APPROVAL_PAGES[this.approvalIdx].key;
+    this._collectApproval(key);
+    this._approvalSaving = true;
+    const btn = this.container.querySelector('[data-action="ap-next"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
+    try {
+      await this._saveApprovalSection(key);
+      this.approvalIdx++;
+      this._approvalSaving = false;
+      this._refreshAutoFull();
+    } catch (err) {
+      this._approvalSaving = false;
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Aceptar y seguir'; }
+      this.setStatus(err?.message || 'Error al guardar', 'error');
+    }
+  }
+
+  handleApprovalBack() {
+    if (this.approvalIdx > 0) { this.approvalIdx--; this._refreshAutoFull(); }
+  }
+
+  handleApprovalFinish() {
+    this.showNotification('Marca creada y aprobada.', 'success');
+    if (window.router) window.router.navigate('/dev/lead/orgs');
+    else window.location.href = '/dev/lead/orgs';
+  }
+
+  _apAddColor() {
+    this._collectApproval('colors');
+    this.approval.colors = [...(this.approval.colors || []), { color_role: 'accent', hex_value: '#000000' }];
+    this._refreshAutoFull();
+  }
+  _apRemoveColor(i) {
+    this._collectApproval('colors');
+    this.approval.colors.splice(i, 1);
+    this._refreshAutoFull();
   }
 
   validateStep(key) {

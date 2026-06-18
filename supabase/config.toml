@@ -27,3 +27,6 @@ verify_jwt = true
 
 [functions.admin-consumers]
 verify_jwt = true
+
+[functions.admin-update-brand]
+verify_jwt = true
