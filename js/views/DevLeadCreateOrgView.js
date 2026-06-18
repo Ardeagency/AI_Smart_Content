@@ -150,14 +150,23 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   renderHTML() {
     return `
-      <div class="provision-page">
-        <header class="provision-page-progress">
-          ${this.renderProgress()}
-        </header>
-        <div class="provision-page-center">
-          ${this.renderCurrentStep()}
-        </div>
+      <div class="provision-page createorg-split">
+        ${this.renderSplitBody()}
       </div>
+    `;
+  }
+
+  // Cuerpo en 2 columnas: izquierda los elementos para crear la org,
+  // derecha el progreso/pasos en vertical.
+  renderSplitBody() {
+    return `
+      <main class="createorg-col-left">
+        <div class="provision-page-center">${this.renderCurrentStep()}</div>
+      </main>
+      <aside class="createorg-col-right">
+        <span class="createorg-progress-head">Progreso</span>
+        <div class="provision-page-progress">${this.renderProgress()}</div>
+      </aside>
     `;
   }
 
@@ -769,10 +778,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.currentStep = stepKey;
     const page = this.container.querySelector('.provision-page');
     if (!page) return;
-    page.innerHTML = `
-      <header class="provision-page-progress">${this.renderProgress()}</header>
-      <div class="provision-page-center">${this.renderCurrentStep()}</div>
-    `;
+    page.innerHTML = this.renderSplitBody();
     this.wireAll();
     // Scroll up al cambiar de paso
     const center = this.container.querySelector('.provision-page-center');
