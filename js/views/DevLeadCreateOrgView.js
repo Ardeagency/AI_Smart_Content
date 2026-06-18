@@ -2193,7 +2193,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     else if (key === 'voice') data = { tono_de_voz: a.tono_de_voz, tagline: a.slogan, propuesta_valor: a.propuesta_valor, mision_vision: a.mision_vision, pilares: a.pilares, palabras_clave: a.palabras_clave, palabras_prohibidas: a.palabras_prohibidas };
     else if (key === 'colors') data = { colors: a.colors };
     else if (key === 'fonts') data = { fonts: [a.typography_primary && { font_usage: 'primary', font_family: a.typography_primary }, a.typography_secondary && { font_usage: 'secondary', font_family: a.typography_secondary }].filter(Boolean), estetica: a.estetica };
-    else if (key === 'products') data = { products: (a.products_detected || []).map((p) => ({ name: p.name, description: p.description || p.name, image: p.image || null, price: p.price || null, currency: p.currency || null })) };
+    else if (key === 'products') data = { products: (a.products_detected || []).map((p) => ({ name: p.name, description: p.description || p.name, image: p.image || null, price: p.price || null, currency: p.currency || null, url: p.url || null })) };
     else if (key === 'competitors') {
       if (a.competitors === null) return { ok: true };
       data = { competitors: a.competitors };
