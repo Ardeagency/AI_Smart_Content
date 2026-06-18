@@ -4701,16 +4701,32 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     display: none !important;
 }
 
-/* DEVELOPER = pre-label en blanco (tamaño/posición originales, centrado) */
-.side-navigation.nav-mode-developer .nav-dev-title {
-    color: rgba(255, 255, 255, 0.85);
+/* header dev más alto para el rank grande */
+.side-navigation.nav-mode-developer .nav-workspace-header,
+.side-navigation.nav-mode-developer .nav-dev-workspace-header {
+    height: 76px;
+    min-height: 76px;
 }
 
-/* RANK = grande otra vez (sin chip), en BLANCO; el color lo da el bloom */
+/* DEVELOPER = pre-label en blanco */
+.side-navigation.nav-mode-developer .nav-dev-title {
+    color: rgba(255, 255, 255, 0.85);
+    top: 16px;
+    font-size: 10.5px;
+}
+
+/* RANK = grande (sin chip), en BLANCO; el color lo da el bloom */
+.side-navigation.nav-mode-developer .nav-dev-rank-block {
+    top: 33px;
+    height: 32px;
+}
+
 .side-navigation.nav-mode-developer .nav-dev-rank-value {
     color: #ffffff;
     -webkit-text-fill-color: #ffffff;
     background: none;
+    font-size: 24px;
+    line-height: 32px;
 }
 
 /* botones + : MISMO diseño que el botón Vera del org/ (pastilla glass
