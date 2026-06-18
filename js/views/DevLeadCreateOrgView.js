@@ -337,6 +337,7 @@ class DevLeadCreateOrgView extends DevBaseView {
 
     if (this.autoPhase === 'done') {
       const ap = prog.apply || {};
+      const comp = prog.competitors || {};
       const head = ap.logo
         ? `<img src="${this.escapeHtml(ap.logo)}" alt="logo" class="createorg-done-logo" onerror="this.style.display='none'">`
         : `<span class="provision-verify-icon provision-verify-icon--success"><i class="fas fa-check"></i></span>`;
@@ -348,6 +349,7 @@ class DevLeadCreateOrgView extends DevBaseView {
           <p class="provision-verify-meta">
             ${ap.logo ? 'logo · ' : ''}${ap.colors != null ? `${ap.colors} colores · ` : ''}${ap.fonts != null ? `${ap.fonts} tipografias · ` : ''}${ap.pillars != null ? `${ap.pillars} pilares` : ''} guardados.
           </p>
+          ${comp.seeded ? `<p class="provision-verify-meta"><i class="fas fa-crosshairs"></i> ${comp.competitors || 0} competidores · ${comp.watchers || 0} sitios en monitoreo</p>` : ''}
           ${this._autoIntegrationsBlock()}
         </section>
         <footer class="provision-page-actions">
