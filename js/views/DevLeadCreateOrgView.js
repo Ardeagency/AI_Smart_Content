@@ -97,6 +97,21 @@ class DevLeadCreateOrgView extends DevBaseView {
     { key: 'review',      label: 'Listo' }
   ];
 
+  // Nichos REALES de mercado (en sync con el enum del backend brand-consolidator).
+  MARKET_NICHES = [
+    'snacks saludables', 'alimentos y bebidas', 'comida saludable', 'cafe', 'reposteria',
+    'bebidas energeticas', 'bebidas funcionales', 'suplementos y nutricion deportiva', 'vitaminas y suplementos',
+    'skincare', 'maquillaje', 'cuidado del cabello', 'perfumeria', 'cuidado personal e higiene',
+    'moda femenina', 'moda masculina', 'ropa deportiva', 'calzado', 'accesorios de moda', 'joyeria y relojeria',
+    'tecnologia y electronica', 'accesorios tecnologicos', 'software y apps', 'gaming',
+    'fitness y entrenamiento', 'bienestar y salud', 'salud (servicios medicos)',
+    'hogar y decoracion', 'muebles', 'electrodomesticos',
+    'educacion y cursos', 'consultoria y agencias', 'servicios financieros y fintech', 'turismo y viajes',
+    'mascotas', 'bebes y maternidad', 'automotriz', 'deportes y outdoor',
+    'libreria y papeleria', 'jugueteria', 'arte y manualidades', 'ecommerce y retail', 'restaurantes y food service',
+    'otro'
+  ];
+
   async onEnter() {
     await super.onEnter({ requireLead: true });
   }
@@ -1829,8 +1844,11 @@ class DevLeadCreateOrgView extends DevBaseView {
     const a = this.approval;
     const localeOpts = [['es', 'Espanol'], ['en', 'English'], ['pt', 'Portugues']]
       .map(([v, l]) => `<option value="${v}" ${a.locale === v ? 'selected' : ''}>${l}</option>`).join('');
+    const inList = this.MARKET_NICHES.includes(a.nicho_core);
+    const nichoOpts = (a.nicho_core && !inList ? `<option value="${this.escapeHtml(a.nicho_core)}" selected>${this.escapeHtml(a.nicho_core)} (detectado)</option>` : '')
+      + this.MARKET_NICHES.map((n) => `<option value="${this.escapeHtml(n)}" ${a.nicho_core === n ? 'selected' : ''}>${this.escapeHtml(n)}</option>`).join('');
     return `
-      ${this._f('Nicho / categoria', 'apNicho', a.nicho_core)}
+      <div class="provision-field createorg-field-full"><label for="apNicho">Nicho / categoria (mercado real)</label><select id="apNicho" class="form-control">${nichoOpts}</select></div>
       ${this._csv('Mercados objetivo (paises)', 'apMercados', a.mercado_objetivo, 'Separados por coma. Ej. CO, MX')}
       ${this._csv('Idiomas de contenido', 'apIdiomas', a.idiomas_contenido, 'Ej. es, en')}
       <div class="provision-field createorg-field-full"><label for="apLocale">Idioma principal</label><select id="apLocale" class="form-control">${localeOpts}</select></div>
@@ -1839,7 +1857,9 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
   _apVoice() {
     const a = this.approval;
-    const toneOpts = this.TONES.map((t) => `<option value="${t.v}" ${a.tono_de_voz === t.v ? 'selected' : ''}>${this.escapeHtml(t.label)}</option>`).join('');
+    const toneInList = this.TONES.some((t) => t.v === a.tono_de_voz);
+    const toneOpts = (a.tono_de_voz && !toneInList ? `<option value="${this.escapeHtml(a.tono_de_voz)}" selected>${this.escapeHtml(a.tono_de_voz)}</option>` : '')
+      + this.TONES.map((t) => `<option value="${t.v}" ${a.tono_de_voz === t.v ? 'selected' : ''}>${this.escapeHtml(t.label)}</option>`).join('');
     return `
       <div class="provision-field createorg-field-full"><label for="apTono">Tono de voz</label><select id="apTono" class="form-control">${toneOpts}</select></div>
       ${a.como_comunica ? `<div class="createorg-field-full createorg-insight"><span class="createorg-insight-tag"><i class="fas fa-eye"></i> Cómo comunica (visión)</span><p>${this.escapeHtml(a.como_comunica)}</p></div>` : ''}
