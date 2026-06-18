@@ -4621,17 +4621,17 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     background: linear-gradient(180deg, #141517 0%, #0b0b0b 100%);
 }
 
-/* bloom del gradiente de RANK hacia el header */
+/* bloom del gradiente de RANK concentrado en la esquina superior izquierda */
 .side-navigation.nav-mode-developer::after {
     content: '';
     position: absolute;
-    width: 380px;
-    height: 300px;
-    left: -70px;
-    top: -90px;
+    width: 220px;
+    height: 190px;
+    left: -80px;
+    top: -95px;
     background: var(--dev-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed));
-    opacity: 0.22;
-    filter: blur(46px) saturate(1.35);
+    opacity: 0.26;
+    filter: blur(44px) saturate(1.4);
     pointer-events: none;
     z-index: 0;
 }

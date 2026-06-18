@@ -235,6 +235,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     id: 'admin-lexicon',
     label: 'Lexicon',
     icon: 'fa-book',
+    iconSrc: '/recursos/icons/book.svg',
     role_required: 'lead',
     route: '/dev/lead/lexicon'
   },
