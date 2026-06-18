@@ -4760,3 +4760,35 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     mask-composite: exclude;
     pointer-events: none;
 }
+
+/* =========================================================================
+   Guía vertical del submenú (org/ y dev/) — línea tipo árbol a la izquierda.
+   ========================================================================= */
+.side-navigation.nav-mode-user .nav-submenu,
+.side-navigation.nav-mode-developer .nav-submenu {
+    position: relative;
+}
+
+.side-navigation.nav-mode-user .nav-submenu::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 3px;
+    bottom: 5px;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.12);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.side-navigation.nav-mode-developer .nav-submenu::before {
+    content: '';
+    position: absolute;
+    left: 22px;
+    top: 3px;
+    bottom: 5px;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.12);
+    pointer-events: none;
+    z-index: 1;
+}
