@@ -25,7 +25,10 @@ const {
 } = require('./lib/ai-shared');
 const { checkRateLimit } = require('./lib/rate-limiter');
 
-const X_AUTHORIZE_URL = 'https://twitter.com/i/oauth2/authorize';
+// Dominio actual de X. Usar twitter.com causa loop de login cuando la sesion
+// del usuario esta en x.com (cookies no compartidas entre dominios tras la
+// migracion). El authorize debe ir al MISMO dominio donde el usuario tiene sesion.
+const X_AUTHORIZE_URL = 'https://x.com/i/oauth2/authorize';
 const X_SCOPES = (process.env.X_OAUTH_SCOPES ||
   'tweet.read tweet.write users.read offline.access').trim();
 

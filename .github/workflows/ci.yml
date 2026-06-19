@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: vitest smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Run vitest
+        env:
+          AI_ENGINE_URL: https://api.aismartcontent.io
+          SUPABASE_URL: https://tsdpbqcwjckbfsdqacam.supabase.co
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          TEST_ORG_ID: a1000000-0000-0000-0000-000000000001
+        run: npm test

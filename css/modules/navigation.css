@@ -3310,8 +3310,8 @@ body.subnav-in-header .app-header .header-production-slot {
 
 /* Dev: acción primaria rápida */
 .nav-mode-developer .nav-dev-primary-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
     margin-bottom: 8px;
 }

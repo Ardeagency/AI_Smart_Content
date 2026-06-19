@@ -208,14 +208,6 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   },
   {
     type: 'page',
-    id: 'admin-create-org',
-    label: '+ Org',
-    icon: 'fa-plus',
-    role_required: 'lead',
-    route: '/dev/provisioning/create-org'
-  },
-  {
-    type: 'page',
     id: 'admin-team',
     label: 'Team',
     icon: 'fa-users',
@@ -2298,6 +2290,7 @@ class Navigation {
 
     const builderHref = this.getDevUrl('/dev/builder');
     const provisioningHref = this.getDevUrl('/dev/provisioning/users');
+    const createOrgHref = this.getDevUrl('/dev/provisioning/create-org');
     const devPrimaryActionsHTML = `
       <div class="nav-dev-primary-actions" role="group" aria-label="Acciones rápidas desarrollador">
         <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
@@ -2310,6 +2303,12 @@ class Navigation {
           <a href="${builderHref}" class="nav-link nav-main-link nav-link--primary" data-route="${builderHref}" data-tooltip="Nuevo Flow">
             <i class="fas fa-plus nav-icon" aria-hidden="true"></i>
             <span class="nav-text">FLOW</span>
+          </a>
+        </div>
+        <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
+          <a href="${createOrgHref}" class="nav-link nav-main-link nav-link--primary" data-route="${createOrgHref}" data-tooltip="Nueva Org">
+            <i class="fas fa-plus nav-icon" aria-hidden="true"></i>
+            <span class="nav-text">ORG</span>
           </a>
         </div>
       </div>
