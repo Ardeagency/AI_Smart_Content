@@ -3561,6 +3561,12 @@ body.subnav-in-header .app-header .header-production-slot {
 .side-navigation.collapsed.nav-mode-developer .nav-menu .nav-group {
     margin-bottom: 0;
 }
+/* En colapsado .nav-menu usa align-items:center → el label se encogía a ancho 0
+   y la línea (::before left/right) no se veía. Forzar ancho completo. */
+.side-navigation.collapsed.nav-mode-developer .nav-section-label {
+    align-self: stretch;
+    width: 100%;
+}
 
 /* =========================================
    ACTIVE STATE — Sidebar usuario: sin barra lateral; contraste por opacidad
@@ -4117,23 +4123,24 @@ body.subnav-in-header .app-header .header-production-slot {
   line-height: 1;
 }
 
-/* Colapsado: la card se vuelve transparente y deja solo los medallones (rail uniforme) */
+/* Colapsado: la card CONSERVA su contenedor (bg + borde), solo se angosta y
+   apila los medallones — misma identidad visual que en expandido. */
 .side-navigation.collapsed.nav-mode-developer .nav-dev-primary-actions {
   display: block;
-  padding: 0;
+  padding: 0 6px;
   margin-bottom: 8px;
 }
 .side-navigation.collapsed.nav-mode-developer .nav-dev-actions-card {
-  background: transparent;
-  border: none;
-  padding: 0;
-  gap: 4px;
-  align-items: center;
+  padding: 5px;
+  gap: 2px;
+  align-items: stretch;
 }
 .side-navigation.collapsed.nav-mode-developer .nav-dev-actions-card .nav-dev-action {
-  width: 40px;
+  width: 100%;
+  height: 34px;
+  min-height: 34px;
   justify-content: center;
-  padding: 5px 0;
+  padding: 0;
   gap: 0;
 }
 .side-navigation.collapsed.nav-mode-developer .nav-dev-action .nav-text {
