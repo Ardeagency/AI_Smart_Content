@@ -330,16 +330,36 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/brand-organization', brandViewLoader, auth);
     r.register('/brand-organization', brandViewLoader, auth);
 
-    // ── Org: Brand Storage — vista propia (galería + INFO sub-marcas) ──
-    const brandStorageViewLoader = this._lazy('BrandstorageView', [
-      ...brandSharedDeps,
-      '/js/views/BrandstorageView.js',
-      ...brandSharedMixins,
-      '/js/views/brandstorage/InfoPanel.mixin.js'
-    ]);
-    r.register('/org/:orgIdShort/:orgNameSlug/brand-storage', brandStorageViewLoader, auth);
-    r.register('/brand-storage', brandStorageViewLoader, auth);
-    r.register('/brandstorage', brandStorageViewLoader, auth);
+    // ── Org: Brand Storage — DESACTIVADO temporalmente durante la demo. ──
+    // Las conexiones de plataformas se hacen desde Identidad (brand-organization)
+    // via el panel INFO. Redirigimos brand-storage -> brand-organization.
+    // Para REACTIVAR: descomentar el loader + sus 3 r.register, y borrar el redirect.
+    // const brandStorageViewLoader = this._lazy('BrandstorageView', [
+    //   ...brandSharedDeps,
+    //   '/js/views/BrandstorageView.js',
+    //   ...brandSharedMixins,
+    //   '/js/views/brandstorage/InfoPanel.mixin.js'
+    // ]);
+    // r.register('/org/:orgIdShort/:orgNameSlug/brand-storage', brandStorageViewLoader, auth);
+    // r.register('/brand-storage', brandStorageViewLoader, auth);
+    // r.register('/brandstorage', brandStorageViewLoader, auth);
+    const redirectBrandStorageToBrand = class extends (window.BaseView || class {}) {
+      async onEnter() {
+        if (!window.router) return;
+        const p = this.routeParams || {};
+        const target = (p.orgIdShort && p.orgNameSlug)
+          ? `/org/${p.orgIdShort}/${p.orgNameSlug}/brand`
+          : '/brand-organization';
+        window.router.navigate(target, true);
+      }
+      async render() {
+        const c = document.getElementById('app-container');
+        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+      }
+    };
+    r.register('/org/:orgIdShort/:orgNameSlug/brand-storage', redirectBrandStorageToBrand, auth);
+    r.register('/brand-storage', redirectBrandStorageToBrand, auth);
+    r.register('/brandstorage', redirectBrandStorageToBrand, auth);
 
     // El mixin Canvas debe ir DESPUÉS de CommandCenterView.js (extiende su prototype).
     // command-center.css (108KB) sale del bundle global y se carga solo aqui:

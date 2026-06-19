@@ -213,9 +213,13 @@
       if (!btn || !window.router) return;
       btn.addEventListener('click', (e) => {
         e.preventDefault();
+        // Lleva a Identidad (brand-organization) y deja la señal para que la vista
+        // abra automaticamente el panel INFO, donde estan las conexiones de
+        // plataformas. (brand-storage esta desactivado durante la demo.)
+        try { localStorage.setItem('brands_open_info', '1'); } catch (_) {}
         const path = window.location.pathname || '';
         const base = path.startsWith('/org/') ? path.split('/').slice(0, 4).join('/') : '';
-        window.router.navigate(base ? `${base}/brand-storage` : '/brand-storage');
+        window.router.navigate(base ? `${base}/brand` : '/brand-organization');
       });
     },
 
