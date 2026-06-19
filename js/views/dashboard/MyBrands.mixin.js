@@ -60,6 +60,7 @@
         const data = await this._loadMyBrandsData();
         this._mbCampanasData = data;
         if (!this._shouldRepaint('my-brands', data)) return; // refresh silencioso sin cambios: no re-pintar
+        if (this._isMyBrandsEmpty(data)) { this._renderConnectPlatformsEmpty(body); return; }
         this._renderHeroCards?.(data); // alimenta las cards del hero
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
@@ -120,6 +121,7 @@
         this._mbCampanasData = data;
         this._renderHeroCards?.(data); // alimenta las cards del hero
         if (!onMyBrands || !body) return;
+        if (this._isMyBrandsEmpty(data)) { this._renderConnectPlatformsEmpty(body); return; }
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
         this._renderLongitudinalCharts(data);
@@ -160,6 +162,56 @@
             subtitle: __('Selecciona una marca desde el menú para empezar.'),
           })}
         </div>`;
+    },
+
+    /* El tablero se alimenta de brand_posts de las plataformas conectadas. Si no
+       hay NINGUNA señal de datos (ni salud, ni posts, ni actividad, ni recepción),
+       lo tratamos como "marca sin plataformas conectadas" y mostramos un empty
+       state propio (distinto al del resto de paginas) con CTA "Conectar
+       plataformas". Conservador: cualquier señal real de datos evita el empty. */
+    _isMyBrandsEmpty(data) {
+      if (!data) return true;
+      if (data.health?.data?.score != null) return false;
+      const hasArr = (b) => Array.isArray(b?.data) && b.data.length > 0;
+      return !(
+        hasArr(data.topPosts) ||
+        hasArr(data.comments) ||
+        hasArr(data.activity) ||
+        hasArr(data.longitudinal?.activity) ||
+        hasArr(data.postReception) ||
+        hasArr(data.whatWorks) ||
+        hasArr(data.pillars)
+      );
+    },
+
+    _renderConnectPlatformsEmpty(body) {
+      if (!body) return;
+      // Sin datos, las cards del plan del hero quedarian en shimmer infinito. Las
+      // vaciamos para que el empty state sea limpio (banner + tabs siguen visibles).
+      const heroCards = document.getElementById('dashHeroCards');
+      if (heroCards) heroCards.innerHTML = '';
+      body.innerHTML = `
+        <div class="insight-page">
+          ${this.emptyState({
+            icon: 'fa-circle-nodes',
+            title: __('Conecta tus plataformas'),
+            subtitle: __('El tablero analiza la salud de tu marca a partir de tus redes sociales. Conecta Instagram, TikTok, X u otras plataformas para empezar a ver métricas, audiencia y las recomendaciones de Vera.'),
+            primaryLabel: __('Conectar plataformas'),
+            primaryAction: 'connect-platforms',
+          })}
+        </div>`;
+      this._bindConnectPlatformsCta(body);
+    },
+
+    _bindConnectPlatformsCta(body) {
+      const btn = body && body.querySelector('[data-action="connect-platforms"]');
+      if (!btn || !window.router) return;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const path = window.location.pathname || '';
+        const base = path.startsWith('/org/') ? path.split('/').slice(0, 4).join('/') : '';
+        window.router.navigate(base ? `${base}/brand-storage` : '/brand-storage');
+      });
     },
 
     _buildMyBrandsErrorHtml(err) {
