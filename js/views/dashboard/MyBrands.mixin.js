@@ -171,17 +171,20 @@
        plataformas". Conservador: cualquier señal real de datos evita el empty. */
     _isMyBrandsEmpty(data) {
       if (!data) return true;
-      if (data.health?.data?.score != null) return false;
-      const hasArr = (b) => Array.isArray(b?.data) && b.data.length > 0;
-      return !(
-        hasArr(data.topPosts) ||
-        hasArr(data.comments) ||
-        hasArr(data.activity) ||
-        hasArr(data.longitudinal?.activity) ||
-        hasArr(data.postReception) ||
-        hasArr(data.whatWorks) ||
-        hasArr(data.pillars)
-      );
+      // OJO: NO usar health.score como señal de "hay datos". El RPC de salud
+      // FABRICA un score (ej. 18/100 "Crítico") a partir de ceros aunque no
+      // exista contenido — penaliza a una org recien creada por no publicar. La
+      // señal real es la EXISTENCIA DE POSTS. La serie de actividad puede venir
+      // rellena de periodos en cero, asi que sumamos posts_count en vez de mirar
+      // solo el length; topPosts/comments solo traen filas si hay contenido.
+      const rows = (b) => (Array.isArray(b?.data) ? b.data : []);
+      const sumPosts = (b) => rows(b).reduce((s, r) => s + (Number(r?.posts_count) || 0), 0);
+      const hasPosts =
+        sumPosts(data.longitudinal?.activity) > 0 ||
+        sumPosts(data.activity) > 0 ||
+        rows(data.topPosts).length > 0 ||
+        rows(data.comments).length > 0;
+      return !hasPosts;
     },
 
     _renderConnectPlatformsEmpty(body) {
