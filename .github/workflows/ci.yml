@@ -21,7 +21,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # 22 (LTS): @supabase/supabase-js requiere WebSocket global, que Node 20
+          # no trae nativo ("Node.js 20 detected without native WebSocket support").
+          node-version: 22
           cache: npm
 
       - name: Install
