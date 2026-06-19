@@ -2342,6 +2342,7 @@ class Navigation {
 
       <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
         <div class="nav-workspace-header nav-identity-section nav-dev-workspace-header">
+          <img src="${_navSidebarIconUrl('/recursos/favicons/favicon-02.svg')}" class="nav-dev-collapsed-logo" alt="" aria-hidden="true">
           <h2 class="nav-org-title nav-dev-title" id="navDevHeaderName">DEVELOPER</h2>
           <div class="nav-dev-rank-block" id="navDevRankBlock" aria-label="Rango del desarrollador">
             <div class="nav-dev-rank-row">

@@ -3985,17 +3985,25 @@ body.subnav-in-header .app-header .header-production-slot {
 .side-navigation.collapsed.nav-mode-developer .nav-dev-workspace-header {
   height: 60px;
   padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.side-navigation.collapsed.nav-mode-developer .nav-dev-title {
-  font-size: 0;
-  letter-spacing: 0;
+/* Colapsado: ocultar el texto DEVELOPER + rank (se recortaba como "GE") y
+   mostrar el favicon de marca centrado. */
+.side-navigation.collapsed.nav-mode-developer .nav-dev-title,
+.side-navigation.collapsed.nav-mode-developer .nav-dev-rank-block {
+  display: none !important;
 }
-.side-navigation.collapsed.nav-mode-developer .nav-dev-title::after {
-  content: 'D';
-  display: inline-block;
-  font-size: 16px;
-  letter-spacing: 0;
-  color: var(--sidebar-text-primary, var(--text-primary));
+
+/* Logo de marca en el header — solo visible en colapsado */
+.nav-dev-collapsed-logo {
+  display: none;
+}
+.side-navigation.collapsed.nav-mode-developer .nav-dev-collapsed-logo {
+  display: block;
+  width: 28px;
+  height: 28px;
 }
 
 /* ============================================================ *
