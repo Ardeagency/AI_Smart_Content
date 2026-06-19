@@ -1646,14 +1646,14 @@ class LivingManager {
     
     renderEmptyState() {
         // Empty state premium canonico (BaseView.emptyState, Figma 133:14). El CTA
-        // "Ir al Estudio" lo cablea setupEmptyStateCta tras inyectar el markup.
+        // "Explorar flujos" lo cablea setupEmptyStateCta tras inyectar el markup.
         if (window.BaseView && typeof window.BaseView.emptyState === 'function') {
             return window.BaseView.emptyState({
                 icon: 'fa-film',
                 title: 'Aún no hay producción',
-                subtitle: 'Cuando produzcas contenido desde el Estudio, tus imágenes, videos y textos aparecerán aquí listos para revisar, editar y publicar.',
-                primaryLabel: 'Ir al Estudio',
-                primaryAction: 'studio',
+                subtitle: 'Elige un flujo y produce tu primer contenido. Tus imágenes, videos y textos aparecerán aquí listos para revisar, editar y publicar.',
+                primaryLabel: 'Explorar flujos',
+                primaryAction: 'flows',
             });
         }
         return `
@@ -1678,18 +1678,19 @@ class LivingManager {
     }
 
     /**
-     * Configura el botón "Ir a Producción" del estado vacío (navega a Studio con contexto org si aplica)
+     * Configura el botón "Explorar flujos" del estado vacío (navega al catalogo
+     * de flujos con contexto org si aplica).
      */
     setupEmptyStateCta(container) {
         if (!container) return;
-        const cta = container.querySelector('[data-action="studio"], [data-living-empty-cta="studio"]');
+        const cta = container.querySelector('[data-action="flows"], [data-action="studio"], [data-living-empty-cta="studio"]');
         if (!cta || !window.router) return;
         cta.addEventListener('click', (e) => {
             e.preventDefault();
             const path = window.location.pathname || '';
             const base = path.startsWith('/org/') ? path.split('/').slice(0, 4).join('/') : '';
-            const studioPath = base ? `${base}/studio` : '/studio';
-            window.router.navigate(studioPath);
+            const flowsPath = base ? `${base}/studio/flows` : '/studio/flows';
+            window.router.navigate(flowsPath);
         });
     }
 
