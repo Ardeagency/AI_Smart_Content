@@ -1809,11 +1809,6 @@ class Navigation {
   }
 
   getUserDropdownHTML(settingsHref = '/home') {
-    // Si hay org activa, navegar a su configuración; si no, ir al onboarding de organización.
-    const orgHref = this.currentOrgId ? this.getUserSidebarRoute('organization') : '/create';
-    // Si hay org activa, mostrar la tienda de créditos de esa org.
-    const creditsHref = this.currentOrgId ? this.getUserSidebarRoute('credits') : '/credits';
-    const plansHref = this.currentOrgId ? this.getUserSidebarRoute('plans') : '/plans';
     return `
       <div class="user-dropdown glass-black" id="userDropdown">
         <div class="user-dropdown-header">
@@ -1824,18 +1819,6 @@ class Navigation {
         <a href="${settingsHref}" class="user-dropdown-item" data-route="${settingsHref}" id="userDropdownSettingsLink">
           <img src="/recursos/icons/settings.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
           <span>${__('Ajustes')}</span>
-        </a>
-        <a href="${orgHref}" class="user-dropdown-item" data-route="${orgHref}" id="userDropdownOrgLink">
-          <img src="/recursos/icons/confg organization.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
-          <span>${__('Organización')}</span>
-        </a>
-        <a href="${plansHref}" class="user-dropdown-item" data-route="${plansHref}" id="userDropdownPlansLink">
-          <img src="/recursos/icons/Planes.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
-          <span>${__('Planes')}</span>
-        </a>
-        <a href="${creditsHref}" class="user-dropdown-item" data-route="${creditsHref}" id="userDropdownCreditsLink">
-          <img src="/recursos/icons/credits.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
-          <span>${__('Créditos')}</span>
         </a>
         ${window.SwitchUserController?.hasImpersonation?.() ? `
         <div class="user-dropdown-divider"></div>
