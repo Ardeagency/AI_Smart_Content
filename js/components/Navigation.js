@@ -2036,9 +2036,9 @@ class Navigation {
           </div>
         </div>
         <div class="nav-item" id="navCommandCenterSingle" style="display:none">
-          <a href="#" class="nav-link nav-main-link" id="navCommandCenterSingleLink" data-route="" data-tooltip="Command Center">
+          <a href="#" class="nav-link nav-main-link" id="navCommandCenterSingleLink" data-route="" data-tooltip="${__('Estrategia')}">
             <img src="${commandCenterIconSrc}" class="nav-icon nav-icon-img" alt="" width="16" height="16">
-            <span class="nav-text">${__('Command Center')}</span>
+            <span class="nav-text">${__('Estrategia')}</span>
           </a>
         </div>`;
       }
@@ -3021,7 +3021,7 @@ class Navigation {
       '/brand-organization': 'MARCA',
       '/brand-storage': 'BRAND STORAGE',
       '/brandstorage': 'BRAND STORAGE',
-      '/command-center': 'COMMAND CENTER',
+      '/command-center': 'ESTRATEGIA',
       '/brands': 'IDENTITY',
       '/product-detail': 'PRODUCTO',
       '/products': 'PRODUCTOS',

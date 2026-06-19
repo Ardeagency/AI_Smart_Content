@@ -470,28 +470,37 @@ body.sidebar-collapsed .main-header,
    item left → x≈16-18px del sidebar left. Misma posición vertical garantizada.
    ========================================= */
 
-/* Sección labels: se vuelven línea divisoria en colapsado.
-   visibility:hidden mantiene la altura del label original (~28px),
-   y ::before pinta una línea fina centrada — los items siguientes no saltan. */
-.side-navigation.collapsed.nav-mode-user .nav-section-label {
+/* Secciones (org/): línea divisoria en AMBOS estados, igual que en dev/.
+   El texto se conserva en el DOM pero oculto; ::before pinta la línea. Misma
+   métrica en expandido y colapsado → la transición no salta. */
+.nav-mode-user .nav-section-label {
     display: block;
     position: relative;
-    visibility: hidden;
+    height: 1px;
+    margin: 10px 0;
+    padding: 0;
+    font-size: 0;
+    line-height: 0;
     color: transparent;
+    visibility: hidden;
     pointer-events: none;
     user-select: none;
 }
-
-.side-navigation.collapsed.nav-mode-user .nav-section-label::before {
+.nav-mode-user .nav-section-label::before {
     content: '';
     position: absolute;
-    left: 6px;
-    right: 6px;
-    top: 50%;
+    left: 10px;
+    right: 10px;
+    top: 0;
     height: 1px;
     background: var(--nav-border);
-    transform: translateY(-50%);
     visibility: visible;
+}
+/* Colapsado: .nav-menu usa align-items:center → estirar el label a ancho
+   completo para que la línea (::before left/right) se vea. */
+.side-navigation.collapsed.nav-mode-user .nav-section-label {
+    align-self: stretch;
+    width: 100%;
 }
 
 /* =========================================
