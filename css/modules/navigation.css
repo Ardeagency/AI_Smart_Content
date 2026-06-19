@@ -3526,11 +3526,28 @@ body.subnav-in-header .app-header .header-production-slot {
     padding: 22px 14px 6px;
 }
 
-/* En modos no-user (developer) el section-label sí se oculta del todo.
-   Para nav-mode-user, el bloque "COLAPSADO USER" más arriba lo convierte
-   en línea divisoria sin perder altura. */
-.side-navigation.collapsed:not(.nav-mode-user) .nav-section-label {
-    display: none;
+/* Colapsado dev: igual que org/ — el título de sección se vuelve línea
+   divisoria (visibility:hidden conserva altura, ::before pinta la línea),
+   así las divisiones MAIN/CODE/ADMIN siguen presentes en el rail. */
+.side-navigation.collapsed.nav-mode-developer .nav-section-label {
+    display: block;
+    position: relative;
+    visibility: hidden;
+    color: transparent;
+    pointer-events: none;
+    user-select: none;
+    padding: 12px 10px;
+}
+.side-navigation.collapsed.nav-mode-developer .nav-section-label::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 50%;
+    height: 1px;
+    background: var(--nav-border);
+    transform: translateY(-50%);
+    visibility: visible;
 }
 
 /* =========================================
