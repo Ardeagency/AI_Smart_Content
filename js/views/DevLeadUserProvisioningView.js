@@ -436,28 +436,41 @@ class DevLeadUserProvisioningView extends DevBaseView {
     `;
   }
 
+  // Destino del boton "Continuar" segun lo que se creo.
+  continueDestination() {
+    return this.finalizedResult?.user_type === 'developer'
+      ? '/dev/lead/team'
+      : '/dev/lead/consumers';
+  }
+
   renderStepFinalDone() {
     const email = this.activeJob?.email || '';
     const r = this.finalizedResult || {};
-    let detail = '';
-    if (r.user_type === 'member_org') {
-      detail = 'Afiliado a la organizacion seleccionada.';
+    let title = 'Usuario creado con exito';
+    let detail = `${email} ya puede iniciar sesion.`;
+    if (r.user_type === 'developer') {
+      title = 'Nuevo desarrollador creado con exito';
+      detail = `${email} ya puede entrar al portal /dev.`;
+    } else if (r.user_type === 'member_org') {
+      const orgName = (this.orgsList.find((o) => o.id === r.organization_id) || {}).name || 'la organizacion seleccionada';
+      title = 'Usuario afiliado con exito';
+      detail = `${email} quedo afiliado a ${orgName}. No se creo ninguna organizacion.`;
     } else if (r.user_type === 'consumer') {
-      detail = 'Consumidor creado. Aparece en Consumidores; puedes asignarle una organizacion cuando quieras.';
-    } else if (r.user_type === 'developer') {
-      detail = 'Permisos developer asignados. Ya puede entrar al portal /dev.';
+      title = 'Consumidor creado con exito';
+      detail = `${email} aparece en Consumidores; puedes asignarle una organizacion cuando quieras.`;
     }
     return `
       <section class="provision-verify-card provision-final-card">
         <span class="provision-verify-icon provision-verify-icon--success">
           <i class="fas fa-check"></i>
         </span>
-        <h2>Usuario creado</h2>
-        <p><strong>${this.escapeHtml(email)}</strong> ya puede iniciar sesion.</p>
+        <h2>${this.escapeHtml(title)}</h2>
         <p class="provision-verify-meta">${this.escapeHtml(detail)}</p>
       </section>
       <footer class="provision-page-actions">
-        <button type="button" class="provision-back-btn" data-action="back">Crear otro</button>
+        <button type="button" class="provision-next-btn provision-next-btn--wide" data-action="continue">
+          Continuar <i class="fas fa-arrow-right"></i>
+        </button>
       </footer>
     `;
   }
@@ -689,6 +702,10 @@ class DevLeadUserProvisioningView extends DevBaseView {
     const backBtn = this.container.querySelector('[data-action="back"]');
     if (backBtn) this.addEventListener(backBtn, 'click', () => this.handleBack());
 
+    // Continuar (pantalla de exito): sale a la seccion relevante.
+    const continueBtn = this.container.querySelector('[data-action="continue"]');
+    if (continueBtn) this.addEventListener(continueBtn, 'click', () => this.handleContinue());
+
     // Next: solo en step 'type' (en steps con form, el submit lo maneja el form)
     if (!dataForm && !finalForm) {
       const nextBtn = this.container.querySelector('[data-action="next"]');
@@ -709,6 +726,20 @@ class DevLeadUserProvisioningView extends DevBaseView {
     const progressHost = this.container.querySelector('.provision-page-progress');
     if (progressHost) progressHost.innerHTML = this.renderProgress();
     this._persist();
+  }
+
+  handleContinue() {
+    const dest = this.continueDestination();
+    this.activeJob = null;
+    this.userType = null;
+    this.finalized = false;
+    this.finalizing = false;
+    this.finalizedResult = null;
+    this.consumerAction = null;
+    this._draft = null;
+    this._clearPersisted();
+    if (window.router) window.router.navigate(dest);
+    else window.location.href = dest;
   }
 
   handleBack() {
