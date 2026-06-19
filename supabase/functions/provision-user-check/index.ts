@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
 
     const { data: job, error: jobErr } = await service
       .from("provisioning_jobs")
-      .select("id, auth_user_id, status, confirmed_at, error")
+      .select("id, auth_user_id, status, confirmed_at, error, payload")
       .eq("id", job_id)
       .maybeSingle();
 
@@ -46,6 +46,33 @@ Deno.serve(async (req) => {
 
       const confirmedAt = userData?.user?.email_confirmed_at ?? null;
       if (confirmedAt) {
+        // Al confirmar el email creamos YA el perfil del consumidor. Asi el
+        // usuario nunca queda a medias: existe en Consumidores aunque el Lead
+        // todavia no decida la organizacion (crear / afiliar / concluir). Para
+        // developers el perfil se crea en el paso de permisos (finalize), que
+        // necesita dev_role/dev_rank.
+        const account = (job.payload?.account ?? {}) as {
+          full_name?: string;
+          email?: string;
+          is_developer?: boolean;
+        };
+        if (account.is_developer !== true) {
+          const { error: profErr } = await service
+            .from("profiles")
+            .upsert({
+              id: job.auth_user_id,
+              email: account.email,
+              full_name: account.full_name ?? null,
+              role: "user",
+              default_view_mode: "user",
+              is_developer: false,
+              dev_role: null,
+              dev_rank: null,
+            }, { onConflict: "id" });
+          // No es fatal: si falla, el perfil se reintenta al finalizar/afiliar.
+          if (profErr) console.warn("profile upsert on confirm:", profErr.message);
+        }
+
         const { data: updated, error: updErr } = await service
           .from("provisioning_jobs")
           .update({ status: "email_confirmed", confirmed_at: confirmedAt })

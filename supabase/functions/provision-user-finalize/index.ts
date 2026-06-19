@@ -35,7 +35,9 @@ interface Step4Developer {
 
 interface Payload {
   job_id: string;
-  user_type: "member_org" | "owner_org" | "developer";
+  // "consumer" = usuario consumidor sin organizacion (opcion "Concluir"): solo
+  // crea/asegura el perfil y cierra el job. La afiliacion u org se hace aparte.
+  user_type: "consumer" | "member_org" | "owner_org" | "developer";
   member_org?: Step4MemberOrg;
   owner_org?: Step4OwnerOrg;
   developer?: Step4Developer;
@@ -51,7 +53,7 @@ Deno.serve(async (req) => {
 
     if (!body?.job_id) return errorResponse("job_id is required", 400);
     if (!body?.user_type) return errorResponse("user_type is required", 400);
-    if (!["member_org", "owner_org", "developer"].includes(body.user_type)) {
+    if (!["consumer", "member_org", "owner_org", "developer"].includes(body.user_type)) {
       return errorResponse(`user_type invalido: ${body.user_type}`, 400);
     }
 

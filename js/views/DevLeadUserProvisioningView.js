@@ -27,11 +27,15 @@ class DevLeadUserProvisioningView extends DevBaseView {
     this.POLL_INTERVAL_MS = 3000;
     this._submitting = false;
     // Step 4 state
-    this.orgsList = [];             // cache para member_org
+    this.orgsList = [];             // cache para afiliar
     this.finalizing = false;
     this.finalized = false;
     this.finalizedResult = null;    // { auth_user_id, organization_id, user_type }
     this._draft = null;             // { full_name, email } — borrador del paso 2 (sin password)
+    // Camino consumidor, paso final: null (eligiendo) | 'affiliate' (mostrando
+    // selector de org). 'create_org' redirige al wizard de org; 'conclude'
+    // finaliza directo, sin sub-render.
+    this.consumerAction = null;
   }
 
   // Progreso persistido en localStorage para sobrevivir a un refresh. Sin esto,
@@ -56,18 +60,16 @@ class DevLeadUserProvisioningView extends DevBaseView {
     { key: 'final',  label: null } // dinamico segun userType
   ];
 
+  // El tipo se reduce a Consumidor vs Developer. Para consumidores, la decision
+  // de organizacion (crear / afiliar / concluir) se toma DESPUES de verificar el
+  // email, no aqui — asi el usuario se crea siempre, incluso si se abandona el
+  // paso de org.
   USER_TYPES = [
     {
-      key: 'member_org',
-      label: 'Member Org',
+      key: 'consumer',
+      label: 'Consumidor',
       icon: 'fa-user',
-      hint: 'Se afilia a una organizacion existente con un rol asignado'
-    },
-    {
-      key: 'owner_org',
-      label: 'Owner Org',
-      icon: 'fa-crown',
-      hint: 'Crea una organizacion nueva y queda como owner'
+      hint: 'Cliente de la plataforma. Tras verificar el email eliges crear/afiliar org o concluir'
     },
     {
       key: 'developer',
@@ -81,9 +83,8 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
   getStepLabel(step) {
     if (step.key !== 'final') return step.label;
-    if (this.userType === 'member_org') return 'Afiliar';
-    if (this.userType === 'owner_org')  return 'Crear org';
-    if (this.userType === 'developer')  return 'Permisos';
+    if (this.userType === 'developer') return 'Permisos';
+    if (this.userType === 'consumer')  return 'Organizacion';
     return 'Configurar';
   }
 
@@ -263,12 +264,62 @@ class DevLeadUserProvisioningView extends DevBaseView {
     if (this.finalized)  return this.renderStepFinalDone();
     if (this.finalizing) return this.renderStepFinalSubmitting();
 
-    switch (this.userType) {
-      case 'member_org': return this.renderStepMemberOrg();
-      case 'owner_org':  return this.renderStepOwnerOrg();
-      case 'developer':  return this.renderStepDeveloper();
-      default:           return '';
+    if (this.userType === 'developer') return this.renderStepDeveloper();
+    if (this.userType === 'consumer') {
+      // Sub-estado: eligiendo accion vs afiliando a una org existente.
+      return this.consumerAction === 'affiliate'
+        ? this.renderStepMemberOrg()
+        : this.renderStepConsumerChoice();
     }
+    return '';
+  }
+
+  // Camino consumidor tras verificar el email: el perfil YA esta creado. El Lead
+  // decide que hacer con la organizacion.
+  renderStepConsumerChoice() {
+    const email = this.activeJob?.email || '';
+    const options = [
+      {
+        action: 'create_org',
+        icon: 'fa-crown',
+        title: 'Crear organizacion',
+        hint: 'Crear una marca desde cero. El usuario queda como owner.'
+      },
+      {
+        action: 'affiliate',
+        icon: 'fa-building-user',
+        title: 'Afiliar a una organizacion',
+        hint: 'Conectarlo a una organizacion existente con un rol.'
+      },
+      {
+        action: 'conclude',
+        icon: 'fa-check',
+        title: 'Concluir usuario',
+        hint: 'Dejarlo creado como consumidor y asignar org despues.'
+      }
+    ];
+    return `
+      <section class="provision-form-card">
+        <header class="provision-form-head">
+          <span class="provision-form-eyebrow">Paso 4 · Organizacion</span>
+          <h2>Usuario consumidor creado</h2>
+          <p><strong>${this.escapeHtml(email)}</strong> ya existe y puede iniciar sesion. Elige como continuar.</p>
+        </header>
+        <div class="provision-type-grid" role="radiogroup" aria-label="Accion de organizacion">
+          ${options.map((o) => `
+            <button type="button" class="provision-type-card" data-consumer-action="${o.action}" role="radio" aria-checked="false">
+              <span class="provision-type-icon"><i class="fas ${o.icon}"></i></span>
+              <span class="provision-type-label">${this.escapeHtml(o.title)}</span>
+              <span class="provision-type-hint">${this.escapeHtml(o.hint)}</span>
+            </button>
+          `).join('')}
+        </div>
+        <p class="provision-form-status" role="status" aria-live="polite" id="provisionFinalStatus"></p>
+      </section>
+      <footer class="provision-page-actions">
+        <button type="button" class="provision-back-btn" data-action="back">Crear otro</button>
+      </footer>
+    `;
   }
 
   renderStepMemberOrg() {
@@ -308,50 +359,14 @@ class DevLeadUserProvisioningView extends DevBaseView {
             <select id="provisionMemberRole" name="role" required>
               ${roleOpts}
             </select>
-            <small>Las capacidades se asignan automaticamente segun el rol. El rol 'owner' solo se crea con Owner Org.</small>
+            <small>Las capacidades se asignan automaticamente segun el rol. El rol 'owner' solo se crea al crear una organizacion nueva.</small>
           </div>
           <p class="provision-form-status" role="status" aria-live="polite" id="provisionFinalStatus"></p>
         </form>
       </section>
       <footer class="provision-page-actions">
+        <button type="button" class="provision-back-btn" data-action="back-to-choice">Atras</button>
         <button type="submit" form="provisionFinalForm" class="provision-next-btn" data-action="next" aria-label="Afiliar">
-          <i class="fas fa-arrow-right"></i>
-        </button>
-      </footer>
-    `;
-  }
-
-  renderStepOwnerOrg() {
-    return `
-      <section class="provision-form-card">
-        <header class="provision-form-head">
-          <span class="provision-form-eyebrow">Paso 4 · Crear org</span>
-          <h2>Nueva organizacion</h2>
-          <p>El usuario queda como owner. Los demas datos (plan, autonomia, integraciones) se editan despues.</p>
-        </header>
-        <form id="provisionFinalForm" class="provision-form" novalidate>
-          <div class="provision-field">
-            <label for="provisionOrgName">Nombre <span style="color:#ef4444">*</span></label>
-            <input id="provisionOrgName" name="name" type="text" placeholder="Ej. ACME Corp" maxlength="120" required>
-          </div>
-          <div class="provision-field">
-            <label for="provisionOrgBrandName">Nombre oficial de marca</label>
-            <input id="provisionOrgBrandName" name="brand_name_oficial" type="text" placeholder="Ej. ACME Brand SAS" maxlength="120">
-          </div>
-          <div class="provision-field">
-            <label for="provisionOrgSlogan">Slogan</label>
-            <input id="provisionOrgSlogan" name="brand_slogan" type="text" placeholder="Frase de marca" maxlength="200">
-          </div>
-          <div class="provision-field">
-            <label for="provisionOrgLogo">Logo URL</label>
-            <input id="provisionOrgLogo" name="logo_url" type="url" placeholder="https://...">
-            <small>PNG/JPG/SVG via URL publica. Tambien se puede subir despues desde Brand.</small>
-          </div>
-          <p class="provision-form-status" role="status" aria-live="polite" id="provisionFinalStatus"></p>
-        </form>
-      </section>
-      <footer class="provision-page-actions">
-        <button type="submit" form="provisionFinalForm" class="provision-next-btn" data-action="next" aria-label="Crear org">
           <i class="fas fa-arrow-right"></i>
         </button>
       </footer>
@@ -427,8 +442,8 @@ class DevLeadUserProvisioningView extends DevBaseView {
     let detail = '';
     if (r.user_type === 'member_org') {
       detail = 'Afiliado a la organizacion seleccionada.';
-    } else if (r.user_type === 'owner_org') {
-      detail = `Organizacion creada (id ${r.organization_id ? r.organization_id.slice(0,8) : '...'}). El usuario es owner.`;
+    } else if (r.user_type === 'consumer') {
+      detail = 'Consumidor creado. Aparece en Consumidores; puedes asignarle una organizacion cuando quieras.';
     } else if (r.user_type === 'developer') {
       detail = 'Permisos developer asignados. Ya puede entrar al portal /dev.';
     }
@@ -549,7 +564,6 @@ class DevLeadUserProvisioningView extends DevBaseView {
           return false;
         }
         if (['email_confirmed', 'finalizing'].includes(job.status)) {
-          if (this.userType === 'owner_org') { this._goToCreateOrg(); return true; }
           this.goToStep('final');
           return true;
         }
@@ -575,12 +589,6 @@ class DevLeadUserProvisioningView extends DevBaseView {
       return true;
     }
     return false;
-  }
-
-  _goToCreateOrg() {
-    const target = '/dev/provisioning/create-org?job=' + encodeURIComponent(this.activeJob.id);
-    if (window.router) window.router.navigate(target);
-    else window.location.href = target;
   }
 
   _applyDraft() {
@@ -615,18 +623,11 @@ class DevLeadUserProvisioningView extends DevBaseView {
     if (stepKey === 'verify') this.startPolling();
     else this.stopPolling();
 
-    // Entrada al step final: cargar orgs si es member_org
-    if (stepKey === 'final' && this.userType === 'member_org' && this.orgsList.length === 0) {
-      this.loadOrganizations().then(() => {
-        // Re-render del center para refrescar el <select>
-        if (this.currentStep === 'final' && !this.finalizing && !this.finalized) {
-          const center = this.container.querySelector('.provision-page-center');
-          if (center) {
-            center.innerHTML = this.renderCurrentStep();
-            this.wireAll();
-          }
-        }
-      });
+    // Al (re)entrar al paso final del consumidor, arrancar en la pantalla de
+    // eleccion (no en un sub-estado 'affiliate' viejo). Las orgs se cargan al
+    // elegir "Afiliar".
+    if (stepKey === 'final' && this.userType === 'consumer' && !this.finalized) {
+      this.consumerAction = null;
     }
   }
 
@@ -673,6 +674,16 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
     const finalForm = this.container.querySelector('#provisionFinalForm');
     if (finalForm) this.addEventListener(finalForm, 'submit', (e) => this.handleFinalSubmit(e));
+
+    // Camino consumidor: las 3 opciones tras verificar.
+    this.container.querySelectorAll('[data-consumer-action]').forEach((card) => {
+      this.addEventListener(card, 'click', () => this.selectConsumerAction(card.getAttribute('data-consumer-action')));
+    });
+    const backToChoice = this.container.querySelector('[data-action="back-to-choice"]');
+    if (backToChoice) this.addEventListener(backToChoice, 'click', () => {
+      this.consumerAction = null;
+      this.renderFinalCenter();
+    });
 
     // Back
     const backBtn = this.container.querySelector('[data-action="back"]');
@@ -738,35 +749,79 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
   // ─── Step 4: finalize backend ────────────────────────────────────────
 
+  // ─── Camino consumidor: 3 opciones tras verificar ────────────────────
+
+  selectConsumerAction(action) {
+    if (action === 'create_org') {
+      // El wizard de crear-org es un flow largo dedicado. Le pasamos el job;
+      // alli se crea la org con este usuario como owner y se cierra el job.
+      this.stopPolling();
+      const target = '/dev/provisioning/create-org?job=' + encodeURIComponent(this.activeJob.id);
+      if (window.router) window.router.navigate(target);
+      else window.location.href = target;
+      return;
+    }
+    if (action === 'affiliate') {
+      this.consumerAction = 'affiliate';
+      if (this.orgsList.length === 0) {
+        this.loadOrganizations().then(() => {
+          if (this.currentStep === 'final' && this.consumerAction === 'affiliate' && !this.finalized) {
+            this.renderFinalCenter();
+          }
+        });
+      }
+      this.renderFinalCenter();
+      return;
+    }
+    if (action === 'conclude') {
+      this.handleConclude();
+    }
+  }
+
+  // Re-render del centro del paso final + re-wire.
+  renderFinalCenter() {
+    const center = this.container.querySelector('.provision-page-center');
+    if (center) {
+      center.innerHTML = this.renderCurrentStep();
+      this.wireAll();
+    }
+  }
+
+  // "Concluir usuario": el perfil consumidor ya existe (se creo al confirmar el
+  // email); solo cerramos el job. user_type:'consumer' en finalize hace eso.
+  async handleConclude() {
+    if (this.finalizing) return;
+    await this.runFinalize({ job_id: this.activeJob?.id, user_type: 'consumer' });
+  }
+
   async handleFinalSubmit(e) {
     e.preventDefault();
     if (this.finalizing) return;
 
     const fd = new FormData(e.target);
-    const payload = { job_id: this.activeJob?.id, user_type: this.userType };
+    const payload = { job_id: this.activeJob?.id };
 
-    if (this.userType === 'member_org') {
+    if (this.userType === 'consumer' && this.consumerAction === 'affiliate') {
       const organization_id = (fd.get('organization_id') || '').toString();
       const role = (fd.get('role') || 'viewer').toString();
       if (!organization_id) return this.setFinalStatus('Selecciona una organizacion.', 'error');
+      payload.user_type = 'member_org';
       payload.member_org = { organization_id, role };
-    } else if (this.userType === 'owner_org') {
-      const name = (fd.get('name') || '').toString().trim();
-      if (!name) return this.setFinalStatus('El nombre de la organizacion es obligatorio.', 'error');
-      payload.owner_org = {
-        name,
-        brand_name_oficial: (fd.get('brand_name_oficial') || '').toString().trim() || null,
-        brand_slogan: (fd.get('brand_slogan') || '').toString().trim() || null,
-        logo_url: (fd.get('logo_url') || '').toString().trim() || null
-      };
     } else if (this.userType === 'developer') {
       const dev_role = (fd.get('dev_role') || '').toString();
       const dev_rank = (fd.get('dev_rank') || '').toString();
       if (!dev_role) return this.setFinalStatus('Elige un rol developer.', 'error');
       if (!dev_rank) return this.setFinalStatus('Elige un rango.', 'error');
+      payload.user_type = 'developer';
       payload.developer = { dev_role, dev_rank };
+    } else {
+      return;
     }
 
+    await this.runFinalize(payload);
+  }
+
+  async runFinalize(payload) {
     this.finalizing = true;
     // Re-render: muestra spinner submitting
     const center = this.container.querySelector('.provision-page-center');
@@ -915,13 +970,8 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
       if (['email_confirmed', 'finalizing', 'completed'].includes(job.status)) {
         this.stopPolling();
-        // owner_org tiene su pagina dedicada (crear org es un flow largo)
-        if (this.userType === 'owner_org') {
-          const target = '/dev/provisioning/create-org?job=' + encodeURIComponent(this.activeJob.id);
-          if (window.router) window.router.navigate(target);
-          else window.location.href = target;
-          return;
-        }
+        // El perfil consumidor ya quedo creado en provision-user-check al
+        // confirmar el email. El paso final ofrece crear/afiliar org o concluir.
         this.goToStep('final');
         return;
       }

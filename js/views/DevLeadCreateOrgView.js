@@ -1576,6 +1576,19 @@ class DevLeadCreateOrgView extends DevBaseView {
     try {
       const { data, error } = await this.supabase.rpc('admin_create_organization', { p: payload });
       if (error) throw error;
+
+      // Si venimos del wizard de provisioning (?job=), la org ya se creo con el
+      // usuario como owner. Cerramos el job de provisioning para que no quede
+      // pendiente ni reenvie aqui en bucle. El perfil ya existe (se creo al
+      // confirmar el email); user_type:'consumer' solo cierra el job.
+      if (this.jobId) {
+        try {
+          await this.supabase.functions.invoke('provision-user-finalize', {
+            body: { job_id: this.jobId, user_type: 'consumer' }
+          });
+        } catch (_) { /* la org ya quedo creada; el job se puede cerrar luego */ }
+      }
+
       this.showNotification(`Organizacion "${f.name}" creada.`, 'success');
       const dest = '/dev/lead/orgs';
       if (window.router) window.router.navigate(dest);
