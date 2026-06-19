@@ -4123,22 +4123,24 @@ body.subnav-in-header .app-header .header-production-slot {
   line-height: 1;
 }
 
-/* Colapsado: la card CONSERVA su contenedor (bg + borde), solo se angosta y
-   apila los medallones — misma identidad visual que en expandido. */
+/* Colapsado: la card CONSERVA su contenedor (bg + borde) pero con el MISMO
+   ancho que los pills de iconos (40px centrados), dejando margen lateral. */
 .side-navigation.collapsed.nav-mode-developer .nav-dev-primary-actions {
-  display: block;
-  padding: 0 6px;
+  display: flex;
+  justify-content: center;
+  padding: 0;
   margin-bottom: 8px;
 }
 .side-navigation.collapsed.nav-mode-developer .nav-dev-actions-card {
-  padding: 5px;
+  width: 40px;
+  padding: 4px;
   gap: 2px;
   align-items: stretch;
 }
 .side-navigation.collapsed.nav-mode-developer .nav-dev-actions-card .nav-dev-action {
   width: 100%;
-  height: 34px;
-  min-height: 34px;
+  height: 32px;
+  min-height: 32px;
   justify-content: center;
   padding: 0;
   gap: 0;
