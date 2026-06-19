@@ -1193,12 +1193,14 @@ class BrandOrganizationView extends BaseView {
     // Aplicar estilos sin transiciones usando función común de BaseView
     element.style.cursor = 'text';
     this.applyNoTransitionStyles(element);
-    
+
     element.setAttribute('contenteditable', 'true');
     element.classList.add('editable-field');
-    
-    // Agregar listeners para prevenir efectos hover usando función común
-    this.addNoHoverListeners(element);
+
+    // NOTA: NO se llama a addNoHoverListeners aquí. Esa maquinaria (forceFixedSize
+    // en mouseenter) re-aplicaba estilos inline al nombre —incluido width:100%—
+    // provocando un reflow/salto al pasar el cursor (bug historico). El "no hover"
+    // ya se resuelve por CSS (hover == estado normal); el JS solo causaba el brinco.
 
     element.addEventListener('blur', async () => {
       const value = element.textContent.trim();

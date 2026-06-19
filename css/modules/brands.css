@@ -401,33 +401,11 @@
     letter-spacing: -0.02em;
 }
 
-/* Eliminar hover del nombre de marca - REGLAS MÁS ESPECÍFICAS */
-.brand-name-large:hover,
-.brand-name-large.editable-field:hover,
-.brand-name-large[contenteditable="true"]:hover,
-h1.brand-name-large:hover,
-h1.brand-name-large.editable-field:hover,
-h1.brand-name-large[contenteditable="true"]:hover,
-.brand-name-row:hover .brand-name-large,
-.brand-main-info:hover .brand-name-large,
-.brand-corner-bottom-left:hover .brand-name-large {
-    background: transparent;
-    border-color: transparent;
-    padding: 0;
-    margin: 0;
-    transform: none;
-    box-shadow: none;
-    width: auto;
-    height: auto;
-    min-width: auto;
-    max-width: none;
-    min-height: auto;
-    max-height: none;
-    scale: 1;
-    font-size: inherit;
-    line-height: inherit;
-    letter-spacing: inherit;
-}
+/* NOTA: se elimino el bloque "Eliminar hover del nombre de marca" que reseteaba
+   padding/margin/width en :hover (y en .brand-main-info:hover / .brand-corner-bottom-left:hover).
+   Como el padding del editable pasaba de 2px→0 en hover, la caja cambiaba de alto
+   y el nombre/slogan/logo brincaban al pasar el cursor. El estado hover ahora es
+   identico al normal (sin reglas que muevan la caja), asi que no hay salto. */
 
 /* Status dot - sin animación para evitar problemas de rendimiento */
 .brand-status-indicator .status-dot {
