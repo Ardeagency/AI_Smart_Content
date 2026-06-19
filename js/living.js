@@ -1649,6 +1649,7 @@ class LivingManager {
         // "Explorar flujos" lo cablea setupEmptyStateCta tras inyectar el markup.
         if (window.BaseView && typeof window.BaseView.emptyState === 'function') {
             return window.BaseView.emptyState({
+                iconSrc: '/recursos/icons/Production.svg',
                 icon: 'fa-film',
                 title: 'Aún no hay producción',
                 subtitle: 'Elige un flujo y produce tu primer contenido. Tus imágenes, videos y textos aparecerán aquí listos para revisar, editar y publicar.',

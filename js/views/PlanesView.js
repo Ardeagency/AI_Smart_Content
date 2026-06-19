@@ -306,6 +306,7 @@ class PlanesView extends BaseView {
     if (!container) return;
     if (!this.plans.length) {
       container.innerHTML = this.emptyState({
+        iconSrc: '/recursos/icons/Planes.svg',
         icon: 'fa-bolt',
         title: window.__('No hay planes disponibles.'),
         subtitle: window.__('Aún no hay planes para mostrar. Vuelve más tarde o contáctanos si necesitas un plan a medida.'),

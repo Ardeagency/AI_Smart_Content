@@ -1162,6 +1162,7 @@ class FlowCatalogView extends BaseView {
     section.style.display = '';
     if (data.length === 0) {
       gallery.innerHTML = this.emptyState({
+        iconSrc: '/recursos/icons/flows.svg',
         icon: 'fa-wand-magic-sparkles',
         title: __('Tu catalogo de flows esta por encenderse'),
         subtitle: __('Los flows son recetas listas para producir contenido de tu marca: posts, historias, piezas de campaña. En cuanto se publiquen, apareceran aqui organizados por categoria.'),

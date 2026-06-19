@@ -72,6 +72,7 @@ class TasksView extends BaseView {
     ${this.emptyState({
       id: 'tasksEmpty',
       hidden: true,
+      iconSrc: '/recursos/icons/task.svg',
       icon: 'fa-calendar-alt',
       title: __('Aún no tienes tareas programadas.'),
       subtitle: __('Las tareas se crean al programar un flujo desde el Estudio. Cuando tengas alguna, aparecerán aquí y podrás asignarles entidad, campaña y audiencia.'),

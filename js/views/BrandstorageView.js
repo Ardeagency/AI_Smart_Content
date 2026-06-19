@@ -826,6 +826,7 @@ class BrandstorageView extends BaseView {
 
     if (!rows.length) {
       grid.innerHTML = this.emptyState({
+        iconSrc: '/recursos/icons/Brands.svg',
         icon: 'fa-building',
         title: __('No tienes marcas todavía.'),
         subtitle: __('Crea tu primera marca para que Vera construya su identidad: voz, estilo visual, mercados y entidades. Aparecerá aquí como base de todo tu contenido.'),
