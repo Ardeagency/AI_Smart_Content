@@ -157,6 +157,7 @@
       body.innerHTML = `
         <div class="insight-page">
           ${this.emptyState({
+            iconSrc: '/recursos/icons/dashboard.svg',
             icon: 'fa-building',
             title: __('Sin organización activa'),
             subtitle: __('Selecciona una marca desde el menú para empezar.'),
@@ -196,6 +197,7 @@
       body.innerHTML = `
         <div class="insight-page">
           ${this.emptyState({
+            iconSrc: '/recursos/icons/dashboard.svg',
             icon: 'fa-circle-nodes',
             title: __('Conecta tus plataformas'),
             subtitle: __('El tablero analiza la salud de tu marca a partir de tus redes sociales. Conecta Instagram, TikTok, X u otras plataformas para empezar a ver métricas, audiencia y las recomendaciones de Vera.'),
