@@ -3954,29 +3954,22 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 
 .dash-hero-title {
   margin: 0;
-  /* Escala cinematografica: mas grande, mayusculas y line-height casi solido.
-     Misma tipografia de la plataforma (Helvetica heredada) en todo el titulo. */
+  /* Escala cinematografica: mas grande, mayusculas, misma tipografia de la
+     plataforma (Helvetica heredada). line-height con aire para no recortar glifos
+     (acentos/descendentes) y permitir wrap de titulos largos sin cortes. */
   font-size: clamp(2.05rem, 4.6vw, 3.6rem);
-  line-height: 1.02;
+  line-height: 1.08;
   letter-spacing: -0.02em;
   text-transform: uppercase;
-  font-weight: 700;
+  font-weight: 800;
   color: #fff;
   text-wrap: balance;
-  /* Profundidad via drop-shadow (funciona con el texto recortado del sheen):
-     una sombra de contacto nitida + una ambiental difusa que lo "levanta" del fondo. */
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28)) drop-shadow(0 16px 36px rgba(0, 0, 0, 0.22));
+  /* Profundidad con text-shadow en capas (sin background-clip ni filter: la
+     combinacion de ambos hacia que la sombra se pintara como un RECTANGULO
+     detras del texto — el "corte" que se veia). */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 10px 30px rgba(0, 0, 0, 0.22);
 }
-/* Sheen monocromo: blanco solido arriba → blanco translucido abajo. Da el brillo
-   premium sin meter color (paleta monocroma de ARDE). */
-.dash-hero-title strong {
-  font-weight: 800;
-  background: linear-gradient(178deg, #ffffff 0%, #ffffff 42%, rgba(255, 255, 255, 0.68) 100%);
-  -webkit-background-clip: text;
-          background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
+.dash-hero-title strong { font-weight: 800; }
 .dash-hero-desc {
   margin: 0.7rem 0 0;
   /* Medida editorial corta + peso ligero + interlineado generoso = lectura premium. */

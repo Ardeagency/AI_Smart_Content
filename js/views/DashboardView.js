@@ -535,15 +535,15 @@ class DashboardView extends BaseView {
         desc: __('El pulso de tu marca: salud, campañas activas y cómo rinde tu contenido frente a tu audiencia.'),
       },
       'competence': {
-        strong: __('Competencia'),
+        strong: __('Monitoreo de competencia'),
         desc: __('El campo de batalla: qué publican tus competidores, la voz de su audiencia y sus vulnerabilidades.'),
       },
       'tendencies': {
-        strong: __('Tendencias'),
+        strong: __('Tendencias destacadas'),
         desc: __('El pulso del nicho: señales emergentes, océanos azules, léxico vivo y marcas que despuntan.'),
       },
       'strategy': {
-        strong: __('Estrategia'),
+        strong: __('Resultado de estrategia'),
         desc: __('Las recomendaciones de Vera: lecturas cruzadas de todas las señales y aprendizaje continuo.'),
       },
     };
