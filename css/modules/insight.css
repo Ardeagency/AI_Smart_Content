@@ -3052,11 +3052,13 @@
 .dash-report-btn {
   display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none;
   font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8);
-  background: rgba(11,11,11,0.72); border: 1px solid rgba(255,255,255,0.1);
+  background: var(--glass-black-bg, rgba(11,11,11,0.55)); border: 1px solid var(--glass-black-border, rgba(255,255,255,0.1));
   border-radius: 10px; padding: 0.5rem 0.85rem;
+  backdrop-filter: var(--glass-blur, blur(14px) saturate(120%));
+  -webkit-backdrop-filter: var(--glass-blur, blur(14px) saturate(120%));
   transition: background 0.15s ease, border-color 0.15s ease;
 }
-.dash-report-btn:hover { background: rgba(11,11,11,0.9); border-color: rgba(255,255,255,0.2); }
+.dash-report-btn:hover { background: rgba(11,11,11,0.66); border-color: rgba(255,255,255,0.2); }
 .dash-report-btn > i:first-child { color: var(--accent-brand, #FF6500); font-size: 0.8125rem; }
 .dash-report-caret { font-size: 0.625rem; opacity: 0.6; transition: transform 0.15s ease; }
 .dash-report-dd[open] .dash-report-caret { transform: rotate(180deg); }
@@ -3530,16 +3532,19 @@
   --dash-warn: #e0a045;
 }
 
-/* ── Filtros: glass-black con el mismo radio y color que el boton "Crear informe" ──
-   OJO: nada de backdrop-filter en .living-filter — crea un bloque contenedor
-   que (junto a su overflow:hidden) rompe el dropdown position:fixed del
-   calendario. El color dark translucido ya da el look glass-black. */
+/* ── Filtros: glass-black canonico (mismo recipe del sistema: --glass-black-* +
+   --glass-blur), igual que "Crear informe". El backdrop-filter YA es seguro: el
+   dropdown del calendario se portea a document.body al abrir (DateRangePicker),
+   asi que el blur de la pill no lo contiene/rompe. Antes era 0.72 sin blur → se
+   veia opaco y embarrado (el naranja se colaba); 0.55 + blur = glass-black real. */
 .insight-page .mb-filters-bar .living-filter {
-  background: rgba(11, 11, 11, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--glass-black-bg, rgba(11, 11, 11, 0.55));
+  border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   border-radius: 10px;
+  backdrop-filter: var(--glass-blur, blur(14px) saturate(120%));
+  -webkit-backdrop-filter: var(--glass-blur, blur(14px) saturate(120%));
 }
-.insight-page .mb-filters-bar .living-filter:hover { background: rgba(11, 11, 11, 0.8); }
+.insight-page .mb-filters-bar .living-filter:hover { background: rgba(11, 11, 11, 0.66); }
 .insight-page .mb-filters-bar .living-filter-label { border-right-color: rgba(255, 255, 255, 0.08); }
 .insight-page .mb-filters-bar .living-filter--disabled { opacity: 0.55; }
 .insight-page .mb-filters-bar .living-filter--disabled .living-filter-select { cursor: not-allowed; }
