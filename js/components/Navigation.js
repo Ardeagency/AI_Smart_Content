@@ -3574,7 +3574,8 @@ class Navigation {
         if (link) {
           link.setAttribute('href', href);
           link.setAttribute('data-route', href);
-          link.setAttribute('data-tooltip', rawName);
+          // El tooltip/colapsado debe decir "Estrategia", no el nombre del sub-brand.
+          link.setAttribute('data-tooltip', __('Estrategia'));
         }
         single.style.display = '';
       }

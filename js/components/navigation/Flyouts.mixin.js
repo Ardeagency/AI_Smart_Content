@@ -39,11 +39,12 @@
     const toggle = containerEl.querySelector('.nav-submenu-toggle');
     const label =
       containerEl.querySelector('.nav-brand-storage-page')?.dataset?.tooltip ||
+      containerEl.querySelector('.nav-flows-page')?.dataset?.tooltip ||
       toggle?.dataset?.tooltip ||
       __('Módulo');
     const iconEl =
-      containerEl.querySelector('.nav-brand-storage-head .nav-icon-img') ||
-      containerEl.querySelector('.nav-brand-storage-head .nav-icon') ||
+      containerEl.querySelector('.nav-brand-storage-head .nav-icon-img, .nav-flows-head .nav-icon-img') ||
+      containerEl.querySelector('.nav-brand-storage-head .nav-icon, .nav-flows-head .nav-icon') ||
       toggle?.querySelector('.nav-icon');
     const iconClass = iconEl ? (iconEl.className.baseVal || iconEl.className).replace(/\s*nav-icon\s*/, '').trim() : 'fas fa-folder';
     const links = submenu ? submenu.querySelectorAll('.nav-submenu-link') : [];
@@ -405,6 +406,7 @@
           if (!sidebar.classList.contains('collapsed')) return;
           if (el.classList.contains('nav-submenu-toggle')) return;
           if (el.classList.contains('nav-brand-storage-page')) return;
+          if (el.classList.contains('nav-flows-page')) return;
           const text = el.dataset.tooltip || '';
           tooltipEl.textContent = text;
           const rect = el.getBoundingClientRect();
