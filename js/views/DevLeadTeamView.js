@@ -110,7 +110,7 @@ class DevLeadTeamView extends DevBaseView {
   async loadPending() {
     const { data, error } = await this.supabase
       .from('provisioning_jobs')
-      .select('id, email, status, created_at, auth_user_id')
+      .select('id, email, status, created_at, auth_user_id, payload')
       .in('status', ['pending_email_confirmation', 'email_confirmed', 'finalizing'])
       .order('created_at', { ascending: false })
       .limit(20);
@@ -118,7 +118,12 @@ class DevLeadTeamView extends DevBaseView {
       this.pendingJobs = [];
       return;
     }
-    this.pendingJobs = data || [];
+    // Esta es la pagina de DEVELOPERS: solo mostramos provisioning de developers.
+    // El wizard tambien crea consumidores (is_developer:false) y sus jobs no
+    // deben contaminar el equipo dev — esos viven en Consumidores.
+    this.pendingJobs = (data || []).filter(
+      (j) => j?.payload?.account?.is_developer === true
+    );
   }
 
   renderTeam() {
