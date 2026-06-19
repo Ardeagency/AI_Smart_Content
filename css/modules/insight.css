@@ -3892,13 +3892,17 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 }
 /* Degradado dinamico de la plataforma: el mismo --brand-gradient-dynamic que
    OrgBrandTheme inyecta en :root desde los brand_colors de la org (135deg).
-   Fallback al degradado de marca estatico mientras JS lo pinta. */
+   Fallback NEUTRAL (gris oscuro), NO el arcoiris estatico: cuando la org no
+   tiene brand_colors, o durante el crossfade consumidor↔developer (donde el
+   router limpia --brand-gradient-dynamic antes del snapshot de la View
+   Transition), el hero se mantiene oscuro/monocromo en vez de flashear el
+   arcoiris chillon. */
 .dash-hero-grad {
   position: absolute;
   inset: 0;
   z-index: 0;
   border-radius: inherit;
-  background: var(--brand-gradient-dynamic, var(--brand-gradient, linear-gradient(135deg, #e63329 0%, #ff6500 100%)));
+  background: var(--brand-gradient-dynamic, linear-gradient(135deg, #1b1d24 0%, #15161c 55%, #0e0f13 100%));
 }
 /* Scrim de legibilidad: oscurece sutil arriba (titulo/tabs) y abajo (KPIs). */
 .dash-hero::after {
