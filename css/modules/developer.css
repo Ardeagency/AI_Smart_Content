@@ -15955,3 +15955,36 @@
   .createorg-split .provision-progress-item:not(:last-child)::after { display: none; }
   .createorg-split .provision-progress-label { text-align: center; }
 }
+
+/* ============================================================
+   Dev Dashboard — estado limpio (placeholder mientras se reconstruye)
+   ============================================================ */
+.dev-dashboard-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 40px 20px;
+}
+.dev-dashboard-empty-inner {
+  text-align: center;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.55));
+  max-width: 360px;
+}
+.dev-dashboard-empty-inner i {
+  font-size: 30px;
+  opacity: 0.4;
+  margin-bottom: 14px;
+  display: block;
+}
+.dev-dashboard-empty-inner h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  margin: 0 0 6px;
+}
+.dev-dashboard-empty-inner p {
+  font-size: 13px;
+  margin: 0;
+  opacity: 0.7;
+}
