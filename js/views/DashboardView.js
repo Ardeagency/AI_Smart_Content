@@ -473,11 +473,21 @@ class DashboardView extends BaseView {
         this._orgLogoUrl = String(data?.logo_url || '').trim() || null;
       }
       if (this._orgLogoUrl) {
+        // Anti-parpadeo: mantenemos el <img> oculto (y a opacidad 0) hasta
+        // tenerlo cargado Y tintado; recien ahi lo revelamos con un fade. Asi
+        // nunca se ve el logo a su color/opacidad por defecto (flash blanco).
+        const reveal = () => {
+          img.style.opacity = '0';
+          img.hidden = false;
+          // Un frame para que el degradado (OrgBrandTheme, post-render) ya este
+          // resuelto y el layout del <img> exista antes de medir/tintar.
+          requestAnimationFrame(() => this._tintHeroLogo());
+        };
+        img.onload = reveal;
+        img.onerror = () => { img.hidden = true; };
         img.src = this._orgLogoUrl;
-        img.hidden = false;
-        // El degradado lo inyecta OrgBrandTheme tras el render: esperamos un
-        // frame para que getComputedStyle ya tenga el valor resuelto.
-        requestAnimationFrame(() => this._tintHeroLogo());
+        // Imagen ya cacheada: onload no dispara → revelar a mano.
+        if (img.complete && img.naturalWidth) reveal();
       }
     } catch (_) { /* silencioso: la marca de agua es decorativa */ }
   }
