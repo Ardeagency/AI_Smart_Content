@@ -1981,19 +1981,19 @@
 .video-view-container .video-sidebar-section-num,
 .video-view-container .video-console-dot,
 .video-view-container .video-canvas-model-badge {
-    background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
 }
 .video-view-container .video-prompt-preview-score {
     margin-top: var(--spacing-sm);
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: transparent;
-    background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
     -webkit-background-clip: text;
     background-clip: text;
 }
 .video-view-container .video-asset-card-locks .fa-check {
-    background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2014,7 +2014,7 @@
     border-radius: inherit;
     z-index: 0;
     padding: 1px;
-    background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -2030,7 +2030,7 @@
     border: 2px solid transparent;
     background:
         linear-gradient(var(--black-40), var(--black-40)) padding-box,
-        var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+        var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138)) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -2040,7 +2040,7 @@
     border: 2px solid transparent;
     background:
         linear-gradient(var(--black-40), var(--black-40)) padding-box,
-        var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+        var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138)) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -2050,7 +2050,7 @@
     box-shadow: none;
     background:
         linear-gradient(var(--bg-secondary), var(--bg-secondary)) padding-box,
-        var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+        var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138)) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -2059,7 +2059,7 @@
     border: 1px solid transparent;
     background-image:
         linear-gradient(var(--brand-primary-brillo-strong, var(--brillo-active)), var(--brand-primary-brillo-strong, var(--brillo-active))) padding-box,
-        var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+        var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138)) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -4723,7 +4723,7 @@
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.04em;
-    background: var(--brand-gradient-dynamic, var(--brand-gradient, var(--color-info)));
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
     border: none;
     color: #fff;
     border-radius: var(--radius-sm);

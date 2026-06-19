@@ -449,7 +449,7 @@
 /* Toggles (ej. "Generar video"): el switch "on" usa el degradado dinámico de la
    marca en vez del cyan dev-primary. Scoped a Studio para no tocar el portal dev. */
 .studio-layout .modern-switch-wrapper input:checked ~ .modern-switch-track {
-  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
 }
 .studio-layout .modern-switch-wrapper input:focus-visible ~ .modern-switch-track {
   outline-color: var(--brand-primary, #ffffff);
@@ -775,7 +775,7 @@
   /* Degradado de marca solo como borde (sin animar background-position: a 200% se leía como “loading”) */
   background:
     linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.72)) padding-box,
-    var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+    var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138)) border-box;
   background-origin: border-box;
   background-clip: padding-box, border-box;
   background-size: 100% 100%, 100% 100%;
@@ -786,7 +786,7 @@
   width: 20px;
   height: 20px;
   border-radius: 4px;
-  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
 }
 
 .studio-automation-summary-next-run-text {
@@ -840,7 +840,7 @@
   z-index: -1;
   border-radius: 999px;
   pointer-events: none;
-  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
   filter: blur(22px);
   opacity: 0.55;
 }
@@ -893,7 +893,7 @@
 }
 
 .studio-weekday-check input:checked + span {
-  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
   color: #ffffff;
   border-radius: 999px;
   padding: 0.2rem 0.7rem;

@@ -4292,7 +4292,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     height: 190px;
     left: -80px;
     top: -95px;
-    background: var(--brand-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed));
+    background: var(--brand-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)));
     opacity: 0.26;
     filter: blur(44px) saturate(1.4);
     pointer-events: none;
@@ -4333,7 +4333,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     inset: 0;
     border-radius: var(--radius-sm);
     padding: 1px;
-    background: var(--brand-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed));
+    background: var(--brand-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
@@ -4363,7 +4363,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: var(--brand-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed));
+    background: var(--brand-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)));
     opacity: 0.10;
     pointer-events: none;
     z-index: 0;
@@ -4400,7 +4400,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
 .side-navigation.nav-mode-user .nav-plan-card-bolt {
     display: inline-block;
     flex-shrink: 0;
-    background: var(--brand-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed));
+    background: var(--brand-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)));
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
     -webkit-mask-position: center;
@@ -4503,7 +4503,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     /* badge premium: relleno oscuro + borde del degradado de marca + glow */
     background:
         linear-gradient(#15171c, #15171c) padding-box,
-        var(--brand-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed)) border-box;
+        var(--brand-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06))) border-box;
     border: 1px solid transparent;
     box-shadow: 0 0 14px -4px rgba(var(--brand-primary-rgb, 124, 58, 237), 0.45);
     pointer-events: none;
@@ -4609,7 +4609,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     height: 190px;
     left: -80px;
     top: -95px;
-    background: var(--dev-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed));
+    background: var(--dev-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)));
     opacity: 0.26;
     filter: blur(44px) saturate(1.4);
     pointer-events: none;
@@ -4654,7 +4654,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     bottom: 0;
     width: 3px;
     border-radius: 0 3px 3px 0;
-    background: var(--dev-gradient-dynamic-vertical, var(--dev-gradient-dynamic, linear-gradient(180deg, #00e7ff, #7c3aed)));
+    background: var(--dev-gradient-dynamic-vertical, var(--dev-gradient-dynamic, linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.06))));
     z-index: 1;
 }
 
@@ -4733,7 +4733,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     inset: 0;
     border-radius: var(--radius-sm);
     padding: 1px;
-    background: var(--dev-gradient-dynamic, linear-gradient(143deg, #00e7ff, #3b5bff, #7c3aed));
+    background: var(--dev-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;

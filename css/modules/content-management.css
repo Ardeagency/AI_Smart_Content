@@ -956,7 +956,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
   background-size: 200% 200%;
   opacity: 0.85;
 }

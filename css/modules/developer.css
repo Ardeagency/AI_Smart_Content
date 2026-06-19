@@ -2812,7 +2812,7 @@
   /* Tint dinámico: gradiente del rango del developer velado sobre oscuro */
   background:
     linear-gradient(0deg, rgba(11, 11, 11, 0.80), rgba(11, 11, 11, 0.80)),
-    var(--dev-gradient-dynamic, var(--brand-gradient));
+    var(--dev-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
   color: var(--text-primary);
   border-color: color-mix(in srgb, var(--dev-rank-accent, var(--accent-warm)) 40%, transparent);
   box-shadow: var(--shadow-card);
@@ -2822,7 +2822,7 @@
 .app-header.app-header--builder .builder-tab.active {
   background:
     linear-gradient(0deg, rgba(11, 11, 11, 0.80), rgba(11, 11, 11, 0.80)),
-    var(--dev-gradient-dynamic, var(--brand-gradient));
+    var(--dev-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
 }
 
 /* Tab Content */
