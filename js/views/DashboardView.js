@@ -450,6 +450,31 @@ class DashboardView extends BaseView {
     this._renderTab(this._activeTab);
     // KPIs del hero: se llenan en background (data de marca compartida).
     this._ensureHeroKpis();
+    // Marca de agua: logo de la org en la esquina inferior derecha del hero.
+    this._loadHeroLogo();
+  }
+
+  /* ── Marca de agua del hero ─────────────────────────────────────────
+     Logo de la org (organizations.logo_url) en la esquina inferior derecha
+     del hero, con opacidad baja. Si no hay logo, el <img> queda oculto. */
+  async _loadHeroLogo() {
+    const img = document.getElementById('dashHeroLogo');
+    if (!img || !this._supabase || !this._orgId) return;
+    try {
+      // Cache en instancia para no re-consultar al cambiar de tab.
+      if (this._orgLogoUrl === undefined) {
+        const { data } = await this._supabase
+          .from('organizations')
+          .select('logo_url')
+          .eq('id', this._orgId)
+          .maybeSingle();
+        this._orgLogoUrl = String(data?.logo_url || '').trim() || null;
+      }
+      if (this._orgLogoUrl) {
+        img.src = this._orgLogoUrl;
+        img.hidden = false;
+      }
+    } catch (_) { /* silencioso: la marca de agua es decorativa */ }
   }
 
   renderHTML() {
@@ -505,18 +530,17 @@ class DashboardView extends BaseView {
   // peso mixto + tabs sobre el degradado + cards del plan de accion.
   _buildHero(tabId) {
     const copy = DashboardView.HERO_COPY[tabId] || DashboardView.HERO_COPY['my-brands'];
-    const org  = window.currentOrgName || '';
-    const light = org ? ` <span class="dash-hero-title-light">${__('de {org}', { org: this._esc(org) })}</span>` : '';
     // Filtros TAB-AWARE en el banner: cada tab muestra los suyos aquí (no en el
     // cuerpo). El manejo de cambios se centraliza en _setupHeroFilters.
     const actions = `<div class="dash-hero-actions" id="dashHeroActions">${this._buildTabFiltersBar(tabId)}</div>`;
     return `
       <section class="dash-hero" id="dashHero" data-tab="${this._esc(tabId)}" aria-label="Resumen del dashboard">
         <div class="dash-hero-grad" aria-hidden="true"></div>
+        <img class="dash-hero-logo" id="dashHeroLogo" alt="" aria-hidden="true" hidden />
         <div class="dash-hero-inner">
           <div class="dash-hero-top">
             <div class="dash-hero-headings">
-              <h1 class="dash-hero-title" id="dashHeroTitle"><strong>${this._esc(copy.strong)}</strong>${light}</h1>
+              <h1 class="dash-hero-title" id="dashHeroTitle"><strong>${this._esc(copy.strong)}</strong></h1>
               <p class="dash-hero-desc" id="dashHeroDesc">${this._esc(copy.desc)}</p>
             </div>
           </div>
