@@ -3308,59 +3308,8 @@ body.subnav-in-header .app-header .header-production-slot {
     margin-bottom: 4px;
 }
 
-/* Dev: acción primaria rápida */
-.nav-mode-developer .nav-dev-primary-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-
-.nav-mode-developer .nav-dev-primary-actions .nav-item--primary {
-    margin-bottom: 0;
-}
-
-.nav-mode-developer .nav-dev-primary-actions .nav-link,
-.nav-mode-developer .nav-dev-primary-actions .nav-main-link {
-    justify-content: center;
-    text-align: center;
-    padding: 0 10px;
-    min-height: 30px;
-    height: 30px;
-    border-radius: 8px;
-    background: #141517 !important;
-    border: 1px solid #242424 !important;
-    box-shadow: none !important;
-    color: #D9D9D9 !important;
-    font-family: var(--font-family) !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    opacity: 1 !important;
-    transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.nav-mode-developer .nav-dev-primary-actions .nav-link:hover,
-.nav-mode-developer .nav-dev-primary-actions .nav-main-link:hover {
-    background: #1a1c20 !important;
-    border-color: #2e2e2e !important;
-    box-shadow: none !important;
-}
-
-/* Cuando estas en /dev/provisioning/users o /dev/builder el boton primario es
-   "donde estoy". Tint dinamico del rango como el resto, mas el borde acento del rank. */
-.nav-mode-developer .nav-dev-primary-actions .nav-link.active,
-.nav-mode-developer .nav-dev-primary-actions .nav-main-link.active {
-    background: var(--sidebar-active) !important;
-    border-color: var(--dev-rank-accent, #3a3a3a) !important;
-    box-shadow: none !important;
-}
-
-.nav-mode-developer .nav-dev-primary-actions .nav-link.active::before,
-.nav-mode-developer .nav-dev-primary-actions .nav-main-link.active::before {
-    display: none;
-}
+/* Dev: acciones rápidas — diseño card (ver bloque "Dev primary actions — card"
+   más abajo, que es el que gobierna el layout y estilo definitivo). */
 
 /* Vera — item primario user mode. Hereda el contrato base (.nav-mode-user .nav-link)
    y agrega chip color-cards con borde. Sin !important: la especificidad
@@ -4049,125 +3998,111 @@ body.subnav-in-header .app-header .header-production-slot {
   color: var(--sidebar-text-primary, var(--text-primary));
 }
 
-/* Primary actions dev (+Flow / +User): pills lado a lado tipo mockup Figma */
+/* ============================================================ *
+ * Dev primary actions — card (mockup Figma node 232:14)         *
+ * Contenedor único con filas icono+label; sin borde degradado. *
+ * ============================================================ */
 .nav-mode-developer .nav-dev-primary-actions {
-  display: flex !important;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-items: stretch;
-  justify-content: center;
-  gap: 8px;
-  grid-template-columns: none !important;
+  display: block;
   margin: 14px 0 12px;
   padding: 0 8px;
 }
 
-.nav-mode-developer .nav-dev-primary-actions .nav-item--primary {
-  flex: 0 0 auto;
-  min-width: 0;
+/* La card que agrupa las acciones */
+.nav-mode-developer .nav-dev-actions-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #141517;
+  border: 1px solid #242424;
+  border-radius: 14px;
+  padding: 6px;
 }
 
-/* Pill — mismo styling que el item Vera primary del user (pill 30px, fondo #141517) */
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary {
-  width: 100%;
+/* Fila de acción (icono + label) */
+.nav-mode-developer .nav-dev-actions-card .nav-dev-action {
   display: flex;
-  justify-content: center;
-  margin: 0;
-}
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link {
-  position: relative;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  max-width: 100%;
-  height: 30px;
-  min-height: 30px;
-  padding: 0 10px;
-  /* Borde-gradiente del rango (padding-box interior + border-box gradient) */
-  border: 1px solid transparent !important;
-  background:
-    linear-gradient(#141517, #141517) padding-box,
-    var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, linear-gradient(90deg, #242424, #242424))) border-box !important;
-  border-radius: 8px !important;
-  color: #D9D9D9 !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 1 !important;
+  height: auto;
+  min-height: 0;
+  padding: 7px 10px 7px 8px;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 10px;
   box-shadow: none !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  overflow: hidden;
-  transition: background 0.18s cubic-bezier(0.2, 0, 0, 1), transform 0.18s cubic-bezier(0.2, 0, 0, 1);
+  color: #D9D9D9 !important;
+  text-decoration: none;
+  opacity: 1 !important;
+  transition: background 0.15s ease;
 }
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link:hover,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link:hover {
-  background:
-    linear-gradient(#1a1c20, #1a1c20) padding-box,
-    var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, linear-gradient(90deg, #2e2e2e, #2e2e2e))) border-box !important;
-  transform: translateY(-1px);
+.nav-mode-developer .nav-dev-actions-card .nav-dev-action:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
 }
-/* Sin arco gradient bajo cada pill — limpio para mantener el foco en el header */
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link::after,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link::after {
-  display: none !important;
-  content: none !important;
+.nav-mode-developer .nav-dev-actions-card .nav-dev-action.active {
+  background: rgba(255, 255, 255, 0.07) !important;
 }
-/* Icono + dentro del pill — alineado vertical al texto */
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link .nav-icon,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link .nav-icon {
-  width: 11px;
-  height: 11px;
-  font-size: 11px;
-  line-height: 1;
-  color: #D9D9D9;
-  opacity: 1;
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link .nav-text,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link .nav-text {
-  font-family: var(--font-family);
-  font-size: 11px;
-  font-weight: 700;
-  color: #D9D9D9;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  line-height: 1;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-}
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link.active::before,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link.active::before {
+.nav-mode-developer .nav-dev-actions-card .nav-dev-action.active::before {
   display: none;
 }
 
-/* Colapsado: actions dev como botones 40x40 igual que items del menu (rail uniforme) */
-.side-navigation.collapsed.nav-mode-developer .nav-dev-primary-actions {
-  display: flex !important;
-  flex-direction: column;
+/* Medallón circular del icono */
+.nav-mode-developer .nav-dev-action .nav-dev-action-ico {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #D9D9D9;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.nav-mode-developer .nav-dev-action:hover .nav-dev-action-ico {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.nav-mode-developer .nav-dev-action .nav-dev-action-ico svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+/* Label de la acción — sentence case, no uppercase */
+.nav-mode-developer .nav-dev-actions-card .nav-dev-action .nav-text {
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #D9D9D9;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* Colapsado: la card se vuelve transparente y deja solo los medallones (rail uniforme) */
+.side-navigation.collapsed.nav-mode-developer .nav-dev-primary-actions {
+  display: block;
+  padding: 0;
   margin-bottom: 8px;
 }
-.side-navigation.collapsed.nav-mode-developer .nav-item--primary .nav-link,
-.side-navigation.collapsed.nav-mode-developer .nav-item--primary .nav-main-link {
-  width: 40px;
-  min-width: 40px;
-  height: 40px;
-  min-height: 40px;
+.side-navigation.collapsed.nav-mode-developer .nav-dev-actions-card {
+  background: transparent;
+  border: none;
   padding: 0;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  max-width: 40px;
+  gap: 4px;
+  align-items: center;
 }
-.side-navigation.collapsed.nav-mode-developer .nav-item--primary .nav-text {
+.side-navigation.collapsed.nav-mode-developer .nav-dev-actions-card .nav-dev-action {
+  width: 40px;
+  justify-content: center;
+  padding: 5px 0;
+  gap: 0;
+}
+.side-navigation.collapsed.nav-mode-developer .nav-dev-action .nav-text {
   display: none;
 }
 

@@ -163,6 +163,12 @@ function _formatNotificationDate(iso) {
 const SIDEBAR_TOGGLE_ICON_DESPLEGADO = `<svg class="nav-sidebar-toggle-icon" width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4.79167 0.624996L0.624999 4.79166L4.79167 8.95833M10.625 0.624996L6.45833 4.79166L10.625 8.95833" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M6.45833 0.624996L10.625 4.79166L6.45833 8.95833M0.624999 0.624996L4.79167 4.79166L0.625 8.95833" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
+/* Iconos contextuales de las acciones rápidas del sidebar dev (diseñados en Figma,
+   node 232:14 de la maqueta). Trazo 1.5, 24px, heredan currentColor. */
+const DEV_ACTION_ICON_USER = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="8.5" r="3.3" stroke="currentColor" stroke-width="1.5"/><path d="M6 18.8C6 15.4 8.7 13.4 12 13.4C15.3 13.4 18 15.4 18 18.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const DEV_ACTION_ICON_FLOW = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="5" cy="12" r="2.2" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="6.5" r="2.2" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="17.5" r="2.2" stroke="currentColor" stroke-width="1.5"/><path d="M7 11.1C11 9.4 11.5 6.5 15.8 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 12.9C11 14.6 11.5 17.5 15.8 17.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const DEV_ACTION_ICON_ORG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3.5 20.5H20.5M6 20.5V6.2C6 5.6 6.4 5.2 7 5.2H12C12.6 5.2 13 5.6 13 6.2V20.5M13 11H17.5C18.1 11 18.5 11.4 18.5 12V20.5M8.3 8.2H10.7M8.3 11H10.7M8.3 13.8H10.7M15.3 14H16.6M15.3 16.8H16.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 /**
  * Sidebar desarrollador — Build, Operations, Observability, Resources, Lead (solo lead).
  */
@@ -2293,22 +2299,18 @@ class Navigation {
     const createOrgHref = this.getDevUrl('/dev/provisioning/create-org');
     const devPrimaryActionsHTML = `
       <div class="nav-dev-primary-actions" role="group" aria-label="Acciones rápidas desarrollador">
-        <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
-          <a href="${provisioningHref}" class="nav-link nav-main-link nav-link--primary" data-route="${provisioningHref}" data-tooltip="Nuevo User">
-            <i class="fas fa-plus nav-icon" aria-hidden="true"></i>
-            <span class="nav-text">USER</span>
+        <div class="nav-dev-actions-card">
+          <a href="${provisioningHref}" class="nav-link nav-dev-action nav-lead-only" data-route="${provisioningHref}" data-tooltip="Nuevo usuario" style="display:none">
+            <span class="nav-dev-action-ico" aria-hidden="true">${DEV_ACTION_ICON_USER}</span>
+            <span class="nav-text">Nuevo usuario</span>
           </a>
-        </div>
-        <div class="nav-item nav-item--primary">
-          <a href="${builderHref}" class="nav-link nav-main-link nav-link--primary" data-route="${builderHref}" data-tooltip="Nuevo Flow">
-            <i class="fas fa-plus nav-icon" aria-hidden="true"></i>
-            <span class="nav-text">FLOW</span>
+          <a href="${builderHref}" class="nav-link nav-dev-action" data-route="${builderHref}" data-tooltip="Nuevo flujo">
+            <span class="nav-dev-action-ico" aria-hidden="true">${DEV_ACTION_ICON_FLOW}</span>
+            <span class="nav-text">Nuevo flujo</span>
           </a>
-        </div>
-        <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
-          <a href="${createOrgHref}" class="nav-link nav-main-link nav-link--primary" data-route="${createOrgHref}" data-tooltip="Nueva Org">
-            <i class="fas fa-plus nav-icon" aria-hidden="true"></i>
-            <span class="nav-text">ORG</span>
+          <a href="${createOrgHref}" class="nav-link nav-dev-action nav-lead-only" data-route="${createOrgHref}" data-tooltip="Nueva organización" style="display:none">
+            <span class="nav-dev-action-ico" aria-hidden="true">${DEV_ACTION_ICON_ORG}</span>
+            <span class="nav-text">Nueva organización</span>
           </a>
         </div>
       </div>
