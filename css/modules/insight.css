@@ -3954,10 +3954,12 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 
 .dash-hero-title {
   margin: 0;
-  /* Escala cinematografica: mas grande, tracking ceñido y line-height casi solido. */
-  font-size: clamp(2.15rem, 4.8vw, 3.75rem);
-  line-height: 1.0;
-  letter-spacing: -0.03em;
+  /* Escala cinematografica: mas grande, mayusculas y line-height casi solido.
+     Misma tipografia de la plataforma (Helvetica heredada) en todo el titulo. */
+  font-size: clamp(2.05rem, 4.6vw, 3.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
   font-weight: 700;
   color: #fff;
   text-wrap: balance;

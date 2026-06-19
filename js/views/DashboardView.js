@@ -531,20 +531,20 @@ class DashboardView extends BaseView {
   static get HERO_COPY() {
     return {
       'my-brands': {
-        strong: __('Analisis de la Marca'),
-        desc: __('El pulso de tu marca: salud, campanas activas y como rinde tu contenido frente a tu audiencia.'),
+        strong: __('Análisis de la Marca'),
+        desc: __('El pulso de tu marca: salud, campañas activas y cómo rinde tu contenido frente a tu audiencia.'),
       },
       'competence': {
         strong: __('Competencia'),
-        desc: __('El campo de batalla: que publican tus competidores, la voz de su audiencia y sus vulnerabilidades.'),
+        desc: __('El campo de batalla: qué publican tus competidores, la voz de su audiencia y sus vulnerabilidades.'),
       },
       'tendencies': {
         strong: __('Tendencias'),
-        desc: __('El pulso del nicho: senales emergentes, oceanos azules, lexico vivo y marcas que despuntan.'),
+        desc: __('El pulso del nicho: señales emergentes, océanos azules, léxico vivo y marcas que despuntan.'),
       },
       'strategy': {
         strong: __('Estrategia'),
-        desc: __('Las recomendaciones de Vera: lecturas cruzadas de todas las senales y aprendizaje continuo.'),
+        desc: __('Las recomendaciones de Vera: lecturas cruzadas de todas las señales y aprendizaje continuo.'),
       },
     };
   }
@@ -815,9 +815,7 @@ class DashboardView extends BaseView {
     }
     const title = document.getElementById('dashHeroTitle');
     if (title) {
-      const org = window.currentOrgName || '';
-      const light = org ? ` <span class="dash-hero-title-light">${__('de {org}', { org: this._esc(org) })}</span>` : '';
-      title.innerHTML = `<strong>${this._esc(copy.strong)}</strong>${light}`;
+      title.innerHTML = `<strong>${this._esc(copy.strong)}</strong>`;
     }
     const d = document.getElementById('dashHeroDesc');
     if (d) d.textContent = copy.desc;
