@@ -144,12 +144,12 @@
 .brand-hero-logo {
     position: absolute;
     z-index: 2;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: min(58vw, 760px);
-    max-height: 60vh;
+    right: clamp(1.5rem, 4vw, 3rem);
+    bottom: clamp(1.5rem, 4vw, 3rem);
+    width: min(42vw, 560px);
+    max-height: 50vh;
     object-fit: contain;
+    object-position: right bottom;
     pointer-events: none;
     user-select: none;
     opacity: 0; /* lo revela el JS tras tintar (anti-parpadeo) */
@@ -160,7 +160,7 @@
 /* En pantallas angostas (cards apiladas) achicamos la marca de agua para que
    no compita con el contenido. */
 @media (max-width: 900px) {
-    .brand-hero-logo { width: min(72vw, 460px); max-height: 42vh; top: 30%; }
+    .brand-hero-logo { width: min(60vw, 360px); max-height: 34vh; }
 }
 
 /* Brand Storage — mismo relleno que Organization (#app-container); sin 72vh que cortaba el fondo */
@@ -296,6 +296,13 @@
 .brand-corner-logo-btn:hover {
     background: rgba(255, 255, 255, 0.16);
     border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Con logo ya cargado, el circulo sobre el nombre se elimina: el logo se ve
+   como marca de agua gigante (.brand-hero-logo) en la esquina inferior derecha.
+   El circulo "+" solo queda como entrada de subida cuando AUN no hay logo. */
+.brand-corner-logo-btn.has-logo {
+    display: none;
 }
 
 .brand-corner-logo-inner {
