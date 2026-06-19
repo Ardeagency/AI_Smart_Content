@@ -4047,28 +4047,25 @@ body.subnav-in-header .app-header .header-production-slot {
   display: none;
 }
 
-/* Medallón circular del icono */
+/* Icono directo (sin medallón) — mismo lenguaje que el resto del nav */
 .nav-mode-developer .nav-dev-action .nav-dev-action-ico {
   flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  width: 22px;
+  height: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #D9D9D9;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  color: #C8C8CB;
+  transition: color 0.15s ease;
 }
-.nav-mode-developer .nav-dev-action:hover .nav-dev-action-ico {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.12);
+.nav-mode-developer .nav-dev-action:hover .nav-dev-action-ico,
+.nav-mode-developer .nav-dev-action.active .nav-dev-action-ico {
+  color: #FFFFFF;
 }
 .nav-mode-developer .nav-dev-action .nav-dev-action-ico svg {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 /* Label de la acción — sentence case, no uppercase */
