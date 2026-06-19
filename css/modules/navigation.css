@@ -410,24 +410,17 @@ body.sidebar-collapsed .main-header,
     margin-bottom: 0;
 }
 
-/* Active en collapsed: highlight sutil (sidebar usuario: sin barra, ver bloque .nav-mode-user) */
+/* Active en collapsed: fill cálido unificado (igual que org/ y que el head
+   de Identidad/Flujos), sin filo de degradado. */
 .side-navigation.collapsed:not(.nav-mode-user) .nav-link.active,
 .side-navigation.collapsed:not(.nav-mode-user) .nav-submenu-toggle.active {
-    background: var(--white-5);
+    background: var(--sidebar-active);
 }
 
 .side-navigation.collapsed:not(.nav-mode-user) .nav-link.active::before,
 .side-navigation.collapsed:not(.nav-mode-user) .nav-submenu-toggle.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 20px;
-    background: var(--brand-gradient-dynamic-vertical, rgba(255, 255, 255, 0.12));
-    border-radius: 0 2px 2px 0;
-    opacity: 0.9;
+    display: none !important;
+    content: none !important;
 }
 
 .side-navigation.nav-mode-user.collapsed .nav-link.active,
@@ -4318,15 +4311,12 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     background: rgba(255, 255, 255, 0.045);
 }
 
-/* estado activo = pastilla glass elevada (sin layout shift: el ring es box-shadow) */
+/* estado activo = fill cálido de marca (mismo resaltado que el head de
+   Identidad/Flujos → diseño unificado en todo el sidebar). */
 .side-navigation.nav-mode-user .nav-link.active {
     color: #ffffff;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.028));
-    box-shadow:
-        0 0 24px -8px rgba(var(--brand-primary-rgb, 59, 91, 255), 0.18),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08),
-        0 2px 9px rgba(0, 0, 0, 0.45);
+    background: var(--sidebar-active);
+    box-shadow: none;
 }
 
 /* el filo del degradado dinámico de marca por encima de la pastilla */
@@ -4641,30 +4631,19 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     color: var(--sidebar-text-primary);
 }
 
-/* activo = pastilla glass elevada + glow de rank + filo del degradado */
+/* activo = fill cálido del rank (mismo resaltado unificado que org/). */
 .side-navigation.nav-mode-developer .nav-link.active {
     color: #ffffff;
     opacity: 1;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.028));
-    box-shadow:
-        0 0 24px -8px var(--dev-sidebar-active, rgba(124, 91, 255, 0.2)),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08),
-        0 2px 9px rgba(0, 0, 0, 0.45);
+    background: var(--sidebar-active);
+    box-shadow: none;
 }
 
 /* re-mostrar el filo (el dev lo tenía en display:none) con el gradiente de rank */
+/* Sin filo de degradado en el activo: resaltado plano cálido unificado con org/. */
 .side-navigation.nav-mode-developer .nav-link.active::before {
-    display: block !important;
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    border-radius: 0 3px 3px 0;
-    background: var(--dev-gradient-dynamic-vertical, var(--dev-gradient-dynamic, linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.06))));
-    z-index: 1;
+    display: none !important;
+    content: none !important;
 }
 
 /* submenú: enlaces redondeados + activo en pastilla translúcida */
