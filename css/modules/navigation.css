@@ -3196,6 +3196,29 @@ body.subnav-in-header .app-header .header-production-slot {
     display: none;
 }
 
+/* Chevron del contenedor: cuando el contenedor está activo (un hijo lo está),
+   el resaltado va como CÍRCULO sobre la flecha, no como cuadro en todo el botón
+   (que se veía raro). Se anula el fill cuadrado heredado de .nav-submenu-toggle.active. */
+.nav-mode-user .nav-flows-expand-btn.active,
+.nav-mode-user .nav-brand-storage-expand-btn.active {
+    background: transparent;
+}
+.nav-mode-user .nav-flows-expand-btn .nav-chevron,
+.nav-mode-user .nav-brand-storage-expand-btn .nav-chevron {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.12s ease;
+}
+.nav-mode-user .nav-flows-expand-btn.active .nav-chevron,
+.nav-mode-user .nav-brand-storage-expand-btn.active .nav-chevron {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-primary);
+}
+
 .nav-item.has-submenu.nav-brand-storage-wrap.submenu-open .nav-submenu,
 .nav-item.has-submenu.nav-flows-wrap.submenu-open .nav-submenu {
     max-height: 480px;
@@ -4574,8 +4597,8 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
 
 .side-navigation.nav-mode-user .nav-submenu-link.active {
     color: #ffffff;
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    background: var(--sidebar-active);
+    box-shadow: none;
 }
 
 /* divisores del pie un punto más fríos, en sintonía con el panel glass */
@@ -4653,8 +4676,8 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
 
 .side-navigation.nav-mode-developer .nav-submenu-link.active {
     color: #ffffff;
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    background: var(--sidebar-active);
+    box-shadow: none;
 }
 
 /* divisor del pie en sintonía con el panel glass */
