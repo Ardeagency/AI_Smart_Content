@@ -69,12 +69,9 @@ class BrandOrganizationView extends BaseView {
     <div class="brand-dashboard-background">
         <div class="background-skeleton" id="backgroundSkeleton" aria-hidden="true"></div>
         <div class="background-gradient" id="backgroundGradient"></div>
-        <!-- Marca de agua gigante: logo de la org, color dinamico (blanco sobre
-             fondo oscuro / gris sobre fondo palido). Lo gestiona renderHeroWatermark. -->
-        <img class="brand-hero-logo" id="brandHeroLogo" alt="" aria-hidden="true" hidden />
     </div>
 
-    <!-- Footer: MARCA + Mercado -->
+    <!-- Footer: MARCA + Mercado. Logo editable a la izquierda; nombre + slogan en columna a su derecha. -->
     <div class="brand-corner-bottom-left">
         <div class="brand-main-info">
             <button type="button" class="brand-corner-logo-btn" id="brandCornerLogoBtn" aria-label="${__('Subir logo de organización')}">
@@ -83,12 +80,14 @@ class BrandOrganizationView extends BaseView {
                 </span>
                 <input type="file" id="brandCornerLogoInput" class="brand-corner-logo-input" accept="image/*">
             </button>
-            <div class="brand-name-row">
-                <h1 class="brand-name-large" id="brandNameLarge"></h1>
-                <div class="brand-status-indicator"><span class="status-dot"></span></div>
-            </div>
-            <div class="brand-slogan-row">
-                <div class="brand-slogan-input" id="brandSloganInput" role="textbox" contenteditable="true" data-placeholder="Slogan" aria-label="Slogan" spellcheck="true"></div>
+            <div class="brand-text-col">
+                <div class="brand-name-row">
+                    <h1 class="brand-name-large" id="brandNameLarge"></h1>
+                    <div class="brand-status-indicator"><span class="status-dot"></span></div>
+                </div>
+                <div class="brand-slogan-row">
+                    <div class="brand-slogan-input" id="brandSloganInput" role="textbox" contenteditable="true" data-placeholder="Slogan" aria-label="Slogan" spellcheck="true"></div>
+                </div>
             </div>
         </div>
         <div class="brand-market-row">
@@ -659,39 +658,10 @@ class BrandOrganizationView extends BaseView {
     if (!this.isActive) return;
     this.applyBrandBackgroundGradient();
     this.renderCornerLogoUploader();
-    this.renderHeroWatermark();
     this.renderBrandName();
     this.renderBrandSlogan();
     this.renderMarket();
     this.renderCards();
-  }
-
-  /* Marca de agua gigante del hero: el logo de la org, con color dinamico
-     (blanco sobre fondo oscuro / gris oscuro sobre fondo palido) segun la
-     luminancia del degradado de marca. Reutiliza BaseView.tintLogoByGradient.
-     Anti-parpadeo: se revela (con fade) solo tras cargar Y tintar. */
-  renderHeroWatermark() {
-    const img  = document.getElementById('brandHeroLogo');
-    const grad = document.getElementById('backgroundGradient');
-    if (!img || !grad) return;
-    const logoUrl = String(this.brandContainerData?.logo_url || '').trim();
-    if (!logoUrl) { img.hidden = true; return; }
-    if (img.dataset.src === logoUrl && !img.hidden) {
-      // Mismo logo ya montado: solo re-tintar (el degradado pudo cambiar).
-      this.tintLogoByGradient(img, grad, { paleOpacity: 0.22, whiteOpacity: 0.12 });
-      return;
-    }
-    img.dataset.src = logoUrl;
-    const reveal = () => {
-      img.style.opacity = '0';
-      img.hidden = false;
-      requestAnimationFrame(() =>
-        this.tintLogoByGradient(img, grad, { paleOpacity: 0.22, whiteOpacity: 0.12 }));
-    };
-    img.onload = reveal;
-    img.onerror = () => { img.hidden = true; };
-    img.src = logoUrl;
-    if (img.complete && img.naturalWidth) reveal();
   }
 
   renderCornerLogoUploader() {

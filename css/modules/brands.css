@@ -135,34 +135,6 @@
     opacity: 1;
 }
 
-/* ============================================
-   MARCA DE AGUA GIGANTE — logo de la org sobre el degradado
-   Color dinamico (blanco/gris) lo aplica BrandOrganizationView.renderHeroWatermark
-   via filter/opacity inline. z-index 2 → sobre el degradado (z1) y bajo todo el
-   contenido (corner z10, cards z1010), que viven fuera de este stacking context.
-   ============================================ */
-.brand-hero-logo {
-    position: absolute;
-    z-index: 2;
-    right: clamp(1.5rem, 4vw, 3rem);
-    bottom: clamp(1.5rem, 4vw, 3rem);
-    width: min(42vw, 560px);
-    max-height: 50vh;
-    object-fit: contain;
-    object-position: right bottom;
-    pointer-events: none;
-    user-select: none;
-    opacity: 0; /* lo revela el JS tras tintar (anti-parpadeo) */
-    filter: brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
-    transition: opacity 0.45s ease, filter 0.45s ease;
-}
-
-/* En pantallas angostas (cards apiladas) achicamos la marca de agua para que
-   no compita con el contenido. */
-@media (max-width: 900px) {
-    .brand-hero-logo { width: min(60vw, 360px); max-height: 34vh; }
-}
-
 /* Brand Storage — mismo relleno que Organization (#app-container); sin 72vh que cortaba el fondo */
 .brand-dashboard-container.brand-storage-standalone {
     position: absolute;
@@ -264,19 +236,32 @@
     min-width: 0;
 }
 
-/* Header: redes/web arriba; nombre de marca abajo, todo a la izquierda */
+/* Logo editable a la izquierda; nombre + slogan en una columna a su derecha. */
 .brand-main-info {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    flex-direction: row;
+    align-items: center;
+    gap: clamp(0.85rem, 1.5vw, 1.5rem);
     max-width: 100%;
     min-width: 0;
 }
 
+/* Columna de texto (nombre + slogan) a la derecha del logo. Su ancho lo marca
+   el nombre grande; el slogan hereda ese ancho y por eso ya NO se parte a media
+   palabra (el bug venia de que el slogan, como item flex suelto, colapsaba a
+   min-content). */
+.brand-text-col {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* el slogan toma el ancho de la columna (= ancho del nombre) */
+    gap: 0.1rem;
+    min-width: 0;
+}
+
 .brand-corner-logo-btn {
-    width: 64px;
-    height: 64px;
+    width: clamp(72px, 7vw, 104px);
+    height: clamp(72px, 7vw, 104px);
+    flex-shrink: 0;
     border-radius: 999px;
     border: 1px solid rgba(255, 255, 255, 0.26);
     background: rgba(255, 255, 255, 0.08);
@@ -296,13 +281,6 @@
 .brand-corner-logo-btn:hover {
     background: rgba(255, 255, 255, 0.16);
     border-color: rgba(255, 255, 255, 0.4);
-}
-
-/* Con logo ya cargado, el circulo sobre el nombre se elimina: el logo se ve
-   como marca de agua gigante (.brand-hero-logo) en la esquina inferior derecha.
-   El circulo "+" solo queda como entrada de subida cuando AUN no hay logo. */
-.brand-corner-logo-btn.has-logo {
-    display: none;
 }
 
 .brand-corner-logo-inner {
