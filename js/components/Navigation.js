@@ -22,15 +22,6 @@ const SIDEBAR_USER_CONFIG = {
     { type: 'section', label: 'Espacio de trabajo' },
     { type: 'page', id: 'dashboard', label: 'Tablero', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard', requireCap: 'insights.view' },
     {
-      type: 'page',
-      id: 'brand-organization',
-      label: 'Identidad',
-      icon: 'fa-layer-group',
-      iconSrc: '/recursos/icons/Brands.svg',
-      route: 'brand',
-      requireCap: 'brand.identity.edit'
-    },
-    {
       type: 'container',
       id: 'brand-storage',
       label: 'Almacenamiento',
@@ -40,40 +31,21 @@ const SIDEBAR_USER_CONFIG = {
       requireCap: 'brand.storage.manage'
     },
     {
-      type: 'page',
-      id: 'products',
-      label: 'Productos',
-      icon: 'fa-box',
-      iconSrc: '/recursos/icons/Identities.svg',
-      route: 'products',
-      requireCap: 'brand.identity.edit'
-    },
-    {
-      type: 'page',
-      id: 'services',
-      label: 'Servicios',
-      icon: 'fa-briefcase',
-      iconSrc: '/recursos/icons/Service.svg',
-      route: 'services',
-      requireCap: 'brand.identity.edit'
-    },
-    {
-      type: 'page',
-      id: 'places',
-      label: 'Escenarios',
-      icon: 'fa-map-marker-alt',
-      iconSrc: '/recursos/icons/Places.svg',
-      route: 'places',
-      requireCap: 'brand.identity.edit'
-    },
-    {
-      type: 'page',
-      id: 'characters',
-      label: 'Personajes',
-      icon: 'fa-users',
-      iconSrc: '/recursos/icons/Characters.svg',
-      route: 'characters',
-      requireCap: 'brand.identity.edit'
+      // Identidad = contenedor: el head abre la página de Identidad (ADN de marca)
+      // y agrupa los bloques que la componen (Productos/Servicios/Escenarios/Personajes).
+      type: 'container',
+      id: 'brand-organization',
+      label: 'Identidad',
+      icon: 'fa-layer-group',
+      iconSrc: '/recursos/icons/Brands.svg',
+      route: 'brand',
+      requireCap: 'brand.identity.edit',
+      children: [
+        { label: 'Productos', route: 'products' },
+        { label: 'Servicios', route: 'services' },
+        { label: 'Escenarios', route: 'places' },
+        { label: 'Personajes', route: 'characters' }
+      ]
     },
     {
       type: 'page',
@@ -2093,13 +2065,29 @@ class Navigation {
           }
         )
         .join('');
-      return `
-        <div class="nav-item has-submenu ${isOpen ? 'submenu-open' : ''}" data-container-id="${item.id}">
+      // Contenedor con `route` → dual-head (link a la página + chevron que
+      // despliega los hijos), reutilizando el patrón/clases de Flujos. Sin
+      // `route` → toggle simple.
+      const headHtml = item.route
+        ? `
+          <div class="nav-flows-head">
+            <a href="${full(item.route)}" class="nav-link nav-main-link nav-flows-page" data-route="${full(item.route)}" data-tooltip="${__(item.label)}">
+              ${iconHTML(item)}
+              <span class="nav-text">${__(item.label)}</span>
+            </a>
+            <button type="button" class="nav-submenu-toggle nav-flows-expand-btn" data-tooltip="${__(item.label)}" aria-expanded="${isOpen}" aria-controls="nav-sub-${item.id}">
+              <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
+            </button>
+          </div>`
+        : `
           <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${__(item.label)}" aria-expanded="${isOpen}" aria-controls="nav-sub-${item.id}">
             ${iconHTML(item)}
             <span class="nav-text">${__(item.label)}</span>
             <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
-          </button>
+          </button>`;
+      return `
+        <div class="nav-item has-submenu ${item.route ? 'nav-flows-wrap ' : ''}${isOpen ? 'submenu-open' : ''}" data-container-id="${item.id}">
+          ${headHtml}
           <div class="nav-submenu" id="nav-sub-${item.id}" role="group" aria-label="${__(item.label)}">
             ${children}
           </div>
