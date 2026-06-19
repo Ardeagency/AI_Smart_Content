@@ -3954,21 +3954,38 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 
 .dash-hero-title {
   margin: 0;
-  font-size: clamp(1.9rem, 4vw, 3rem);
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  /* Escala cinematografica: mas grande, tracking ceñido y line-height casi solido. */
+  font-size: clamp(2.15rem, 4.8vw, 3.75rem);
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  font-weight: 700;
   color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 4px 18px rgba(0, 0, 0, 0.45);
+  text-wrap: balance;
+  /* Profundidad via drop-shadow (funciona con el texto recortado del sheen):
+     una sombra de contacto nitida + una ambiental difusa que lo "levanta" del fondo. */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28)) drop-shadow(0 16px 36px rgba(0, 0, 0, 0.22));
 }
-.dash-hero-title strong { font-weight: 800; }
-.dash-hero-title-light { font-weight: 400; opacity: 0.92; }
+/* Sheen monocromo: blanco solido arriba → blanco translucido abajo. Da el brillo
+   premium sin meter color (paleta monocroma de ARDE). */
+.dash-hero-title strong {
+  font-weight: 800;
+  background: linear-gradient(178deg, #ffffff 0%, #ffffff 42%, rgba(255, 255, 255, 0.68) 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
 .dash-hero-desc {
-  margin: 0.5rem 0 0;
-  font-size: clamp(0.88rem, 1.1vw, 1rem);
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.9);
-  max-width: 70ch;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  margin: 0.7rem 0 0;
+  /* Medida editorial corta + peso ligero + interlineado generoso = lectura premium. */
+  font-size: clamp(0.92rem, 1.05vw, 1.075rem);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.005em;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 48ch;
+  text-wrap: pretty;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.3);
 }
 
 /* Tabs sobre el degradado: texto blanco translucido, activo = solido + underline. */
