@@ -4052,9 +4052,9 @@ body.subnav-in-header .app-header .header-production-slot {
 /* Primary actions dev (+Flow / +User): pills lado a lado tipo mockup Figma */
 .nav-mode-developer .nav-dev-primary-actions {
   display: flex !important;
-  flex-direction: row;
+  flex-direction: column;
   flex-wrap: nowrap;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   gap: 8px;
   grid-template-columns: none !important;
@@ -4063,7 +4063,7 @@ body.subnav-in-header .app-header .header-production-slot {
 }
 
 .nav-mode-developer .nav-dev-primary-actions .nav-item--primary {
-  flex: 1 1 0;
+  flex: 0 0 auto;
   min-width: 0;
 }
 
