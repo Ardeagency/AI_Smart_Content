@@ -305,7 +305,11 @@ class PlanesView extends BaseView {
     const container = this.container?.querySelector('#planesList');
     if (!container) return;
     if (!this.plans.length) {
-      container.innerHTML = `<div class="planes-empty">${window.__('No hay planes disponibles.')}</div>`;
+      container.innerHTML = this.emptyState({
+        icon: 'fa-bolt',
+        title: window.__('No hay planes disponibles.'),
+        subtitle: window.__('Aún no hay planes para mostrar. Vuelve más tarde o contáctanos si necesitas un plan a medida.'),
+      });
       return;
     }
     container.innerHTML = this.plans.map((plan) => this._planCardHtml(plan)).join('');

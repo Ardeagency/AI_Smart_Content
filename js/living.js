@@ -1197,6 +1197,7 @@ class LivingManager {
 
         if (allItems.length === 0) {
             container.innerHTML = this.renderEmptyState();
+            this.setupEmptyStateCta(container);
             return;
         }
 
@@ -1245,7 +1246,9 @@ class LivingManager {
         container.innerHTML = gridHtml;
 
         const grid = container.querySelector('.living-masonry-grid') || container;
-        if (window.applyJustifiedLayout) window.applyJustifiedLayout(grid);
+        // Studio usa CSS grid (disableJustified); el resto, masonry justificado.
+        if (window.applyJustifiedLayout && !this.disableJustified) window.applyJustifiedLayout(grid);
+        if (this.disableJustified) grid.classList.add('living-masonry-grid--css-grid');
         this.setupHistoryCardListeners(container);
         this.setupHistoryFilters();
         this.setupHistoryInfiniteScroll();
@@ -1642,6 +1645,17 @@ class LivingManager {
     }
     
     renderEmptyState() {
+        // Empty state premium canonico (BaseView.emptyState, Figma 133:14). El CTA
+        // "Ir al Estudio" lo cablea setupEmptyStateCta tras inyectar el markup.
+        if (window.BaseView && typeof window.BaseView.emptyState === 'function') {
+            return window.BaseView.emptyState({
+                icon: 'fa-film',
+                title: 'Aún no hay producción',
+                subtitle: 'Cuando produzcas contenido desde el Estudio, tus imágenes, videos y textos aparecerán aquí listos para revisar, editar y publicar.',
+                primaryLabel: 'Ir al Estudio',
+                primaryAction: 'studio',
+            });
+        }
         return `
             <div class="living-history-empty">
                 <p class="living-history-empty-message">No hay producción</p>
@@ -1668,7 +1682,7 @@ class LivingManager {
      */
     setupEmptyStateCta(container) {
         if (!container) return;
-        const cta = container.querySelector('[data-living-empty-cta="studio"]');
+        const cta = container.querySelector('[data-action="studio"], [data-living-empty-cta="studio"]');
         if (!cta || !window.router) return;
         cta.addEventListener('click', (e) => {
             e.preventDefault();

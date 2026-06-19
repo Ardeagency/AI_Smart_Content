@@ -35,11 +35,13 @@ class ExecutionHistoryView extends BaseView {
     <div class="exec-grid" id="execGrid">
       ${ExecutionHistoryView.skeletonGrid(8, 'lg')}
     </div>
-    <div class="exec-empty" id="execEmpty" style="display: none;">
-      <div class="exec-empty-icon"><i class="fas fa-clock-rotate-left"></i></div>
-      <p>${__('Aun no tienes sesiones de produccion manual.')}</p>
-      <p class="exec-empty-hint">${__('Cada vez que produces un flujo desde el Estudio se crea una sesion. Aqui podras reabrirla y seguir generando dentro del mismo run.')}</p>
-    </div>
+    ${this.emptyState({
+      id: 'execEmpty',
+      hidden: true,
+      icon: 'fa-clock-rotate-left',
+      title: __('Aun no tienes sesiones de produccion manual.'),
+      subtitle: __('Cada vez que produces un flujo desde el Estudio se crea una sesion. Aqui podras reabrirla y seguir generando dentro del mismo run.'),
+    })}
   </div>
 </div>`;
   }
@@ -203,7 +205,7 @@ class ExecutionHistoryView extends BaseView {
     if (!grid) return;
     if (!runs || !runs.length) {
       grid.innerHTML = '';
-      if (empty) empty.style.display = 'block';
+      if (empty) empty.style.display = 'flex';
       return;
     }
     if (empty) empty.style.display = 'none';

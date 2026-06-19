@@ -69,11 +69,13 @@ class TasksView extends BaseView {
     <div class="tasks-cards-grid" id="tasksGrid">
       ${this.skeletonGrid(6, 'lg')}
     </div>
-    <div class="tasks-empty" id="tasksEmpty" style="display: none;">
-      <div class="tasks-empty-icon"><i class="fas fa-calendar-alt"></i></div>
-      <p>${__('Aún no tienes tareas programadas.')}</p>
-      <p class="tasks-empty-hint">${__('Las tareas se crean al programar un flujo desde el Estudio. Cuando tengas alguna, aparecerán aquí y podrás asignarles entidad, campaña y audiencia.')}</p>
-    </div>
+    ${this.emptyState({
+      id: 'tasksEmpty',
+      hidden: true,
+      icon: 'fa-calendar-alt',
+      title: __('Aún no tienes tareas programadas.'),
+      subtitle: __('Las tareas se crean al programar un flujo desde el Estudio. Cuando tengas alguna, aparecerán aquí y podrás asignarles entidad, campaña y audiencia.'),
+    })}
 
     <div class="tasks-load-more-wrap" id="tasksLoadMoreWrap" style="display: none;">
       <button type="button" class="btn tasks-load-more" id="tasksLoadMoreBtn">${__('Load More Tasks')}</button>
@@ -711,7 +713,7 @@ class TasksView extends BaseView {
 
     if (!filtered.length) {
       grid.innerHTML = '';
-      if (empty) empty.style.display = 'block';
+      if (empty) empty.style.display = 'flex';
       if (loadMoreWrap) loadMoreWrap.style.display = 'none';
       return;
     }
@@ -867,7 +869,7 @@ class TasksView extends BaseView {
         return this.renderTasksList();
       }
       grid.innerHTML = '';
-      if (empty) empty.style.display = 'block';
+      if (empty) empty.style.display = 'flex';
       return;
     }
     if (empty) empty.style.display = 'none';

@@ -147,3 +147,16 @@
 .empty-state--compact .ple-title { margin-top: 12px; font-size: 0.9rem; }
 .empty-state--compact .ple-subtitle { margin-top: 5px; font-size: 0.78rem; }
 .empty-state--compact .ple-actions { margin-top: 14px; }
+
+/* ── Empty state inyectado DENTRO de un contenedor de tarjetas (grid/flex) ──
+   Varios listados reemplazan el innerHTML del propio grid por el empty state.
+   Sin esto, el .empty-state caeria en una sola celda/columna. Forzar que ocupe
+   toda la fila (grid-column en grids; width 100% + flex-basis en contenedores
+   flex-wrap) lo deja centrado a lo ancho como en el resto de la plataforma. */
+.planes-plans > .empty-state,
+.brand-storage-grid > .empty-state,
+.flow-catalog-saved-grid > .empty-state {
+  grid-column: 1 / -1;
+  flex: 1 1 100%;
+  width: 100%;
+}

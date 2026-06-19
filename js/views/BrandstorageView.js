@@ -825,7 +825,11 @@ class BrandstorageView extends BaseView {
     if (countEl) countEl.textContent = String(rows.length);
 
     if (!rows.length) {
-      grid.innerHTML = `<div class="brand-storage-empty">${__('No tienes marcas todavía.')}</div>`;
+      grid.innerHTML = this.emptyState({
+        icon: 'fa-building',
+        title: __('No tienes marcas todavía.'),
+        subtitle: __('Crea tu primera marca para que Vera construya su identidad: voz, estilo visual, mercados y entidades. Aparecerá aquí como base de todo tu contenido.'),
+      });
       return;
     }
 

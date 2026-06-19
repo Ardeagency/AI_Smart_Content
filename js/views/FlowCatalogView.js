@@ -1143,12 +1143,11 @@ class FlowCatalogView extends BaseView {
     if (!grid) return;
     const saved = this.flows.filter(f => this.savedFlowIds.has(f.id));
     if (!saved.length) {
-      grid.innerHTML = `
-        <div class="flow-catalog-empty flow-catalog-empty--teach" aria-live="polite">
-          <i class="fas fa-bookmark flow-catalog-empty-icon" aria-hidden="true"></i>
-          <p class="flow-catalog-empty-title">${__('Aun no has guardado flujos')}</p>
-          <p class="flow-catalog-empty-sub">${__('Explora el catalogo y toca el icono de guardar en los flujos que mas uses. Apareceran aqui para acceso rapido.')}</p>
-        </div>`;
+      grid.innerHTML = this.emptyState({
+        icon: 'fa-bookmark',
+        title: __('Aun no has guardado flujos'),
+        subtitle: __('Explora el catalogo y toca el icono de guardar en los flujos que mas uses. Apareceran aqui para acceso rapido.'),
+      });
       return;
     }
     grid.innerHTML = saved.map(f => this.renderFlowCard(f)).join('');
@@ -1162,12 +1161,11 @@ class FlowCatalogView extends BaseView {
     const data = this.getFlowsByCategoryAndSubcategory();
     section.style.display = '';
     if (data.length === 0) {
-      gallery.innerHTML = `
-        <div class="flow-catalog-empty flow-catalog-empty--teach" aria-live="polite">
-          <i class="fas fa-wand-magic-sparkles flow-catalog-empty-icon" aria-hidden="true"></i>
-          <p class="flow-catalog-empty-title">${__('Tu catalogo de flows esta por encenderse')}</p>
-          <p class="flow-catalog-empty-sub">${__('Los flows son recetas listas para producir contenido de tu marca: posts, historias, piezas de campaña. En cuanto se publiquen, apareceran aqui organizados por categoria.')}</p>
-        </div>`;
+      gallery.innerHTML = this.emptyState({
+        icon: 'fa-wand-magic-sparkles',
+        title: __('Tu catalogo de flows esta por encenderse'),
+        subtitle: __('Los flows son recetas listas para producir contenido de tu marca: posts, historias, piezas de campaña. En cuanto se publiquen, apareceran aqui organizados por categoria.'),
+      });
       return;
     }
     gallery.innerHTML = data.map(({ category, rows }) => `

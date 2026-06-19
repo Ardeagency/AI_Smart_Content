@@ -153,9 +153,12 @@
 
     _renderEmptyOrgState(body) {
       body.innerHTML = `
-        <div class="insight-page" style="text-align:center; padding-top:4rem;">
-          <h2 style="margin:0 0 0.5rem; font-size:1.5rem; color:var(--text-primary);">${__('Sin organización activa')}</h2>
-          <p style="color:var(--text-secondary);">${__('Selecciona una marca desde el menú para empezar.')}</p>
+        <div class="insight-page">
+          ${this.emptyState({
+            icon: 'fa-building',
+            title: __('Sin organización activa'),
+            subtitle: __('Selecciona una marca desde el menú para empezar.'),
+          })}
         </div>`;
     },
 
