@@ -135,6 +135,34 @@
     opacity: 1;
 }
 
+/* ============================================
+   MARCA DE AGUA GIGANTE — logo de la org sobre el degradado
+   Color dinamico (blanco/gris) lo aplica BrandOrganizationView.renderHeroWatermark
+   via filter/opacity inline. z-index 2 → sobre el degradado (z1) y bajo todo el
+   contenido (corner z10, cards z1010), que viven fuera de este stacking context.
+   ============================================ */
+.brand-hero-logo {
+    position: absolute;
+    z-index: 2;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(58vw, 760px);
+    max-height: 60vh;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0; /* lo revela el JS tras tintar (anti-parpadeo) */
+    filter: brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+    transition: opacity 0.45s ease, filter 0.45s ease;
+}
+
+/* En pantallas angostas (cards apiladas) achicamos la marca de agua para que
+   no compita con el contenido. */
+@media (max-width: 900px) {
+    .brand-hero-logo { width: min(72vw, 460px); max-height: 42vh; top: 30%; }
+}
+
 /* Brand Storage — mismo relleno que Organization (#app-container); sin 72vh que cortaba el fondo */
 .brand-dashboard-container.brand-storage-standalone {
     position: absolute;

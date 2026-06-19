@@ -1080,6 +1080,123 @@ class BaseView {
     this.liveUnsubscribe();
     this.stopLivePoll();
   }
+
+  /* ── Logo dinamico sobre degradado (compartido) ─────────────────────
+     Tinta un <img> (logo / marca de agua) en BLANCO sobre fondo oscuro o en
+     GRIS oscuro sobre fondo palido, leyendo la luminancia del degradado de
+     `gradEl` justo bajo el logo. Asi el logo nunca desaparece contra su fondo.
+     Lo usan el hero del Dashboard y el de BrandOrganization.
+     opts: { relX, relY, threshold=0.5, whiteOpacity=0.16, paleOpacity=0.30 }.
+     Si relX/relY no se pasan, se infieren de la posicion real del <img>. */
+  tintLogoByGradient(imgEl, gradEl, opts = {}) {
+    if (!imgEl || !gradEl) return;
+    const { threshold = 0.5, whiteOpacity = 0.16, paleOpacity = 0.30 } = opts;
+    let relX = opts.relX, relY = opts.relY;
+    if (relX == null || relY == null) {
+      relX = 0.9; relY = 0.18; // fallback: esquina sup. derecha
+      try {
+        const hr = gradEl.getBoundingClientRect();
+        const lr = imgEl.getBoundingClientRect();
+        if (hr.width > 0 && hr.height > 0 && lr.width > 0) {
+          relX = Math.min(1, Math.max(0, (lr.left + lr.width / 2 - hr.left) / hr.width));
+          relY = Math.min(1, Math.max(0, (lr.top + lr.height / 2 - hr.top) / hr.height));
+        }
+      } catch (_) {}
+    }
+    const lum = this._sampleGradientLuminance(gradEl, relX, relY);
+    // lum en [0,1]; null si no se pudo medir → asumimos oscuro (default blanco).
+    const isPale = lum != null && lum > threshold;
+    if (isPale) {
+      // Gris oscuro visible (no negro): brightness(0)=negro, invert(0.42)≈#6b6b6b.
+      imgEl.style.filter = 'brightness(0) invert(0.42) drop-shadow(0 1px 4px rgba(255,255,255,0.45))';
+      imgEl.style.opacity = String(paleOpacity);
+    } else {
+      imgEl.style.filter = 'brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,0.35))';
+      imgEl.style.opacity = String(whiteOpacity);
+    }
+  }
+
+  /* Parsea el background-image (primer degradado resuelto) de `el`, interpola
+     el color del stop en (relX, relY) y devuelve su luminancia relativa (WCAG,
+     0..1). Devuelve null si no hay degradado parseable. Maneja fondos con
+     varias capas de gradiente: usa SOLO la primera (capa superior visible). */
+  _sampleGradientLuminance(el, relX, relY) {
+    try {
+      const bg = getComputedStyle(el).backgroundImage || '';
+      // Extrae el primer linear-gradient(...) con parentesis balanceados
+      // (rgb()/rgba() anidan parentesis → no se puede con un regex simple).
+      const start = bg.toLowerCase().indexOf('linear-gradient(');
+      if (start === -1) return null;
+      let i = start + 'linear-gradient('.length;
+      let depth = 1, inner = '';
+      for (; i < bg.length && depth > 0; i++) {
+        const ch = bg[i];
+        if (ch === '(') depth++;
+        else if (ch === ')') { depth--; if (depth === 0) break; }
+        inner += ch;
+      }
+      // Angulo (default 180deg = to bottom si no se especifica).
+      let angle = 180;
+      const angM = inner.match(/^\s*(-?[\d.]+)deg/);
+      if (angM) angle = parseFloat(angM[1]);
+      // Stops: rgb()/rgba()/#hex con porcentaje opcional.
+      const stopRe = /(rgba?\([^)]*\)|#[0-9a-f]{3,8})\s*([\d.]+%)?/gi;
+      const stops = [];
+      let s;
+      while ((s = stopRe.exec(inner)) !== null) {
+        const rgb = this._parseColor(s[1]);
+        if (rgb) stops.push({ rgb, pos: s[2] ? parseFloat(s[2]) / 100 : null });
+      }
+      if (stops.length === 0) return null;
+      if (stops.length === 1) return this._relLuminance(stops[0].rgb);
+      // Normaliza posiciones faltantes (reparto uniforme).
+      if (stops[0].pos == null) stops[0].pos = 0;
+      if (stops[stops.length - 1].pos == null) stops[stops.length - 1].pos = 1;
+      for (let k = 1; k < stops.length - 1; k++) {
+        if (stops[k].pos == null) stops[k].pos = k / (stops.length - 1);
+      }
+
+      // Proyeccion del punto (relX,relY) sobre el eje del gradiente CSS.
+      // CSS: 0deg = hacia arriba, 90deg = derecha.
+      const a = (angle * Math.PI) / 180;
+      const dx = Math.sin(a);
+      const dy = -Math.cos(a);
+      const px = relX - 0.5;
+      const py = relY - 0.5;
+      const halfLen = (Math.abs(dx) + Math.abs(dy)) / 2;
+      let t = halfLen > 0 ? (px * dx + py * dy) / (2 * halfLen) + 0.5 : 0.5;
+      t = Math.min(1, Math.max(0, t));
+
+      // Interpola entre los dos stops que rodean t.
+      let lo = stops[0], hi = stops[stops.length - 1];
+      for (let k = 0; k < stops.length - 1; k++) {
+        if (t >= stops[k].pos && t <= stops[k + 1].pos) { lo = stops[k]; hi = stops[k + 1]; break; }
+      }
+      const span = hi.pos - lo.pos || 1;
+      const f = Math.min(1, Math.max(0, (t - lo.pos) / span));
+      const rgb = [0, 1, 2].map((c) => lo.rgb[c] + (hi.rgb[c] - lo.rgb[c]) * f);
+      return this._relLuminance(rgb);
+    } catch (_) { return null; }
+  }
+
+  _parseColor(str) {
+    const rgbM = str.match(/rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/i);
+    if (rgbM) return [parseFloat(rgbM[1]), parseFloat(rgbM[2]), parseFloat(rgbM[3])];
+    let h = str.replace(/^#/, '');
+    if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+    if (h.length >= 6) {
+      return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+    }
+    return null;
+  }
+
+  _relLuminance(rgb) {
+    const lin = rgb.map((v) => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+  }
 }
 
 // Hacer disponible globalmente

@@ -492,112 +492,12 @@ class DashboardView extends BaseView {
     } catch (_) { /* silencioso: la marca de agua es decorativa */ }
   }
 
-  /* Tinta el logo del hero segun la luminancia del degradado JUSTO bajo el
-     logo (esquina sup. derecha). Lee el degradado resuelto (getComputedStyle)
-     e interpola el color del stop en esa posicion — funciona con cualquier
-     marca y con el fallback oscuro. */
+  /* Tinta el logo del hero segun la luminancia del degradado bajo el logo.
+     Logica compartida en BaseView.tintLogoByGradient (blanco/gris dinamico). */
   _tintHeroLogo() {
     const img  = document.getElementById('dashHeroLogo');
     const grad = document.getElementById('dashHero')?.querySelector('.dash-hero-grad');
-    if (!img || !grad) return;
-    // Posicion relativa del logo dentro del hero (esquina sup. derecha).
-    let relX = 0.9, relY = 0.18;
-    try {
-      const hr = grad.getBoundingClientRect();
-      const lr = img.getBoundingClientRect();
-      if (hr.width > 0 && hr.height > 0) {
-        relX = Math.min(1, Math.max(0, (lr.left + lr.width / 2 - hr.left) / hr.width));
-        relY = Math.min(1, Math.max(0, (lr.top + lr.height / 2 - hr.top) / hr.height));
-      }
-    } catch (_) {}
-
-    const lum = this._sampleGradientLuminance(grad, relX, relY);
-    // lum en [0,1]; null si no se pudo medir → asumimos oscuro (default blanco).
-    // Umbral 0.5 ≈ punto de cruce de contraste: por debajo gana el blanco, por
-    // encima gana el gris oscuro. Cubre el caso "fondo palido come al blanco".
-    const isPale = lum != null && lum > 0.5;
-    if (isPale) {
-      // Gris oscuro visible (no negro): brightness(0)=negro, invert(0.42)≈#6b6b6b.
-      img.style.filter = 'brightness(0) invert(0.42) drop-shadow(0 1px 4px rgba(255,255,255,0.45))';
-      img.style.opacity = '0.30';
-    } else {
-      img.style.filter = 'brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,0.35))';
-      img.style.opacity = '0.16';
-    }
-  }
-
-  /* Parsea el background-image (gradiente resuelto) de `el`, interpola el color
-     del stop en (relX, relY) y devuelve su luminancia relativa (WCAG, 0..1).
-     Devuelve null si no hay gradiente parseable. */
-  _sampleGradientLuminance(el, relX, relY) {
-    try {
-      const bg = getComputedStyle(el).backgroundImage || '';
-      const m = bg.match(/linear-gradient\(([^]*)\)/i);
-      if (!m) return null;
-      const inner = m[1];
-      // Angulo (default 180deg = to bottom si no se especifica).
-      let angle = 180;
-      const angM = inner.match(/^\s*(-?[\d.]+)deg/);
-      if (angM) angle = parseFloat(angM[1]);
-      // Stops: rgb()/rgba()/#hex con porcentaje opcional.
-      const stopRe = /(rgba?\([^)]*\)|#[0-9a-f]{3,8})\s*([\d.]+%)?/gi;
-      const stops = [];
-      let s;
-      while ((s = stopRe.exec(inner)) !== null) {
-        const rgb = this._parseColor(s[1]);
-        if (rgb) stops.push({ rgb, pos: s[2] ? parseFloat(s[2]) / 100 : null });
-      }
-      if (stops.length === 0) return null;
-      if (stops.length === 1) return this._relLuminance(stops[0].rgb);
-      // Normaliza posiciones faltantes (reparto uniforme).
-      if (stops[0].pos == null) stops[0].pos = 0;
-      if (stops[stops.length - 1].pos == null) stops[stops.length - 1].pos = 1;
-      for (let i = 1; i < stops.length - 1; i++) {
-        if (stops[i].pos == null) stops[i].pos = i / (stops.length - 1);
-      }
-
-      // Proyeccion del punto (relX,relY) sobre el eje del gradiente CSS.
-      // CSS: 0deg = hacia arriba, 90deg = derecha. Vector direccion:
-      const a = (angle * Math.PI) / 180;
-      const dx = Math.sin(a);
-      const dy = -Math.cos(a);
-      // Punto centrado en [-0.5,0.5]; longitud del eje (normalizada) para que
-      // las esquinas mapeen a 0..1: |sin|+|cos| en espacio unitario.
-      const px = relX - 0.5;
-      const py = relY - 0.5;
-      const halfLen = (Math.abs(dx) + Math.abs(dy)) / 2;
-      let t = halfLen > 0 ? (px * dx + py * dy) / (2 * halfLen) + 0.5 : 0.5;
-      t = Math.min(1, Math.max(0, t));
-
-      // Interpola entre los dos stops que rodean t.
-      let lo = stops[0], hi = stops[stops.length - 1];
-      for (let i = 0; i < stops.length - 1; i++) {
-        if (t >= stops[i].pos && t <= stops[i + 1].pos) { lo = stops[i]; hi = stops[i + 1]; break; }
-      }
-      const span = hi.pos - lo.pos || 1;
-      const f = Math.min(1, Math.max(0, (t - lo.pos) / span));
-      const rgb = [0, 1, 2].map((k) => lo.rgb[k] + (hi.rgb[k] - lo.rgb[k]) * f);
-      return this._relLuminance(rgb);
-    } catch (_) { return null; }
-  }
-
-  _parseColor(str) {
-    const rgbM = str.match(/rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/i);
-    if (rgbM) return [parseFloat(rgbM[1]), parseFloat(rgbM[2]), parseFloat(rgbM[3])];
-    let h = str.replace(/^#/, '');
-    if (h.length === 3) h = h.split('').map((c) => c + c).join('');
-    if (h.length >= 6) {
-      return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-    }
-    return null;
-  }
-
-  _relLuminance(rgb) {
-    const lin = rgb.map((v) => {
-      const c = v / 255;
-      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+    this.tintLogoByGradient(img, grad);
   }
 
   renderHTML() {
