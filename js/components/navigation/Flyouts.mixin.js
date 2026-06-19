@@ -37,29 +37,11 @@
     flyout.style.maxHeight = '';
     const submenu = containerEl.querySelector('.nav-submenu');
     const toggle = containerEl.querySelector('.nav-submenu-toggle');
-    const label =
-      containerEl.querySelector('.nav-brand-storage-page')?.dataset?.tooltip ||
-      containerEl.querySelector('.nav-flows-page')?.dataset?.tooltip ||
-      toggle?.dataset?.tooltip ||
-      __('Módulo');
-    const iconEl =
-      containerEl.querySelector('.nav-brand-storage-head .nav-icon-img, .nav-flows-head .nav-icon-img') ||
-      containerEl.querySelector('.nav-brand-storage-head .nav-icon, .nav-flows-head .nav-icon') ||
-      toggle?.querySelector('.nav-icon');
-    const iconClass = iconEl ? (iconEl.className.baseVal || iconEl.className).replace(/\s*nav-icon\s*/, '').trim() : 'fas fa-folder';
     const links = submenu ? submenu.querySelectorAll('.nav-submenu-link') : [];
     const currentPath = window.location.pathname;
+    // Ocultar cualquier tooltip de colapsado que haya quedado al abrir el flyout.
+    document.getElementById('navTooltip')?.classList.remove('show');
 
-    const isImgIcon = iconEl && String(iconEl.tagName).toUpperCase() === 'IMG';
-    const iconHeaderInner = isImgIcon
-      ? `<img src="${_escapeHtml(iconEl.getAttribute('src') || '')}" class="nav-flyout-header-img" alt="" width="16" height="16">`
-      : `<i class="${iconClass}"></i>`;
-
-    const headerHtml = `
-      <div class="nav-flyout-header">
-        <span class="nav-flyout-header-icon">${iconHeaderInner}</span>
-        <span class="nav-flyout-header-label">${_escapeHtml(String(label))}</span>
-      </div>`;
     let bodyHtml = '<div class="nav-flyout-body"><div class="nav-flyout-list">';
     links.forEach((a) => {
       const route = a.dataset.route || '';
@@ -76,7 +58,6 @@
     flyout.innerHTML = `
       <div class="nav-flyout-bridge" aria-hidden="true"></div>
       <div class="nav-flyout-inner">
-        ${headerHtml}
         ${bodyHtml}
       </div>`;
     flyout.classList.add('open');
@@ -402,11 +383,16 @@
       el.setAttribute('data-tip-bound', '1');
       el.addEventListener('mouseenter', () => {
         clearTimeout(hideTimeout);
+        clearTimeout(showTimeout);
+        // Al cambiar de item, ocultar al instante el tooltip anterior (evita que
+        // quede pegado encima del flyout del item con submenu).
+        tooltipEl.classList.remove('show');
+        // Items con flyout/submenu no muestran tooltip.
+        if (el.classList.contains('nav-submenu-toggle')) return;
+        if (el.classList.contains('nav-brand-storage-page')) return;
+        if (el.classList.contains('nav-flows-page')) return;
         showTimeout = setTimeout(() => {
           if (!sidebar.classList.contains('collapsed')) return;
-          if (el.classList.contains('nav-submenu-toggle')) return;
-          if (el.classList.contains('nav-brand-storage-page')) return;
-          if (el.classList.contains('nav-flows-page')) return;
           const text = el.dataset.tooltip || '';
           tooltipEl.textContent = text;
           const rect = el.getBoundingClientRect();
