@@ -31,6 +31,10 @@ jobs:
         env:
           AI_ENGINE_URL: https://api.aismartcontent.io
           SUPABASE_URL: https://tsdpbqcwjckbfsdqacam.supabase.co
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          # anon key = clave PUBLICA (va embebida en el SPA, la sirve abiertamente
+          # /.netlify/functions/supabase-config). No es secreto; los tests RLS verifican
+          # justamente que con ella un anonimo NO pueda leer datos protegidos.
+          # Se deja inline para que el CI no dependa de un secret que nunca se configuro.
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZHBicWN3amNrYmZzZHFhY2FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4NzM2NTAsImV4cCI6MjA3ODQ0OTY1MH0.gKIIdn-HXeV6cpdlHBp_mNeDumO2rLR2wF62-1OHQt0' }}
           TEST_ORG_ID: a1000000-0000-0000-0000-000000000001
         run: npm test
