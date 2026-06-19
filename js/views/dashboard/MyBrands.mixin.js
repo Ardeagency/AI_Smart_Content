@@ -154,8 +154,10 @@
     },
 
     _renderEmptyOrgState(body) {
+      if (!body) return;
+      if (body.querySelector('[data-mb-empty="no-org"]')) return; // idempotente (ver _renderConnectPlatformsEmpty)
       body.innerHTML = `
-        <div class="insight-page">
+        <div class="insight-page" data-mb-empty="no-org">
           ${this.emptyState({
             iconSrc: '/recursos/icons/dashboard.svg',
             icon: 'fa-building',
@@ -190,12 +192,17 @@
 
     _renderConnectPlatformsEmpty(body) {
       if (!body) return;
+      // Idempotente: el auto-refresh (60s) re-entra aqui porque la firma de datos
+      // cambia (los RPC traen computed_at: now()). Si el empty YA esta en pantalla
+      // no reconstruimos el DOM — evita el repintado del spotlight (mask-image) y
+      // el parpadeo/lag periodico. Chequeo por DOM real (robusto ante cambio de tab).
+      if (body.querySelector('[data-mb-empty="connect"]')) return;
       // Sin datos, las cards del plan del hero quedarian en shimmer infinito. Las
       // vaciamos para que el empty state sea limpio (banner + tabs siguen visibles).
       const heroCards = document.getElementById('dashHeroCards');
       if (heroCards) heroCards.innerHTML = '';
       body.innerHTML = `
-        <div class="insight-page">
+        <div class="insight-page" data-mb-empty="connect">
           ${this.emptyState({
             iconSrc: '/recursos/icons/dashboard.svg',
             icon: 'fa-circle-nodes',
