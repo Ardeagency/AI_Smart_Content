@@ -3379,9 +3379,8 @@ body.subnav-in-header .app-header .header-production-slot {
     display: none;
 }
 
-.side-navigation.collapsed.nav-mode-developer .nav-dev-primary-actions {
-    display: none;
-}
+/* (regla obsoleta eliminada: la card de acciones ahora se muestra en colapsado,
+   ver bloque "Dev primary actions — card" más abajo) */
 
 /* =========================================
    VERA PILL — diseño Group 101 (expandido)
@@ -4139,6 +4138,9 @@ body.subnav-in-header .app-header .header-production-slot {
 }
 .side-navigation.collapsed.nav-mode-developer .nav-dev-actions-card .nav-dev-action {
   width: 100%;
+  /* .nav-link colapsado fija min-width:40px → desbordaba el contenido de la
+     card (28px) empujando el icono a la derecha. Reset a 0 para centrar. */
+  min-width: 0;
   height: 32px;
   min-height: 32px;
   justify-content: center;
