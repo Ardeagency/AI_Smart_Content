@@ -3517,37 +3517,49 @@ body.subnav-in-header .app-header .header-production-slot {
     user-select: none;
 }
 
-/* Dev: section labels mas refinados (mas aire arriba, tracking abierto) */
+/* Dev: las secciones MAIN/CODE/ADMIN son una LÍNEA divisoria en AMBOS estados
+   (expandido y colapsado), para que la transición no salte. El texto se
+   conserva en el DOM pero oculto; ::before pinta la línea. Misma métrica en
+   los dos estados → sin parpadeos ni desplazamientos. */
 .nav-mode-developer .nav-section-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    color: rgba(255, 255, 255, 0.35);
-    padding: 22px 14px 6px;
-}
-
-/* Colapsado dev: igual que org/ — el título de sección se vuelve línea
-   divisoria (visibility:hidden conserva altura, ::before pinta la línea),
-   así las divisiones MAIN/CODE/ADMIN siguen presentes en el rail. */
-.side-navigation.collapsed.nav-mode-developer .nav-section-label {
     display: block;
     position: relative;
-    visibility: hidden;
+    height: 1px;
+    margin: 10px 0;
+    padding: 0;
+    font-size: 0;
+    line-height: 0;
     color: transparent;
+    visibility: hidden;
     pointer-events: none;
     user-select: none;
-    padding: 12px 10px;
 }
-.side-navigation.collapsed.nav-mode-developer .nav-section-label::before {
+.nav-mode-developer .nav-section-label::before {
     content: '';
     position: absolute;
-    left: 8px;
-    right: 8px;
-    top: 50%;
+    left: 10px;
+    right: 10px;
+    top: 0;
     height: 1px;
     background: var(--nav-border);
-    transform: translateY(-50%);
     visibility: visible;
+}
+/* Primera sección (MAIN, justo bajo la card de acciones): sin línea para no
+   duplicar separadores; solo aporta el espacio superior. */
+.nav-mode-developer .nav-dev-primary-actions + .nav-section-label::before {
+    display: none;
+}
+
+/* Colapsado dev: ritmo de items igual al expandido (antes 40px alto + 6px de
+   margen = demasiado aire). Ahora 34px sin margen extra → transición sin saltos. */
+.side-navigation.collapsed.nav-mode-developer .nav-link,
+.side-navigation.collapsed.nav-mode-developer .nav-submenu-toggle {
+    height: 34px;
+    min-height: 34px;
+}
+.side-navigation.collapsed.nav-mode-developer .nav-menu .nav-item,
+.side-navigation.collapsed.nav-mode-developer .nav-menu .nav-group {
+    margin-bottom: 0;
 }
 
 /* =========================================
