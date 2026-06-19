@@ -258,44 +258,66 @@
     min-width: 0;
 }
 
+/* Contenedor del logo: SIN borde y NO circular, para mostrar el logo completo
+   sea cual sea su forma (alto/ancho/cuadrado). Alto fijo + ancho automatico:
+   la caja se adapta a la proporcion del logo; object-fit: contain garantiza que
+   nunca se recorta. min-width mantiene un cuadrado clickeable para el estado "+". */
 .brand-corner-logo-btn {
-    width: clamp(72px, 7vw, 104px);
-    height: clamp(72px, 7vw, 104px);
+    height: clamp(84px, 8vw, 124px);
+    width: auto;
+    min-width: clamp(84px, 8vw, 124px);
+    max-width: 320px; /* tope para logos extremadamente anchos */
     flex-shrink: 0;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.26);
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     color: rgba(255, 255, 255, 0.92);
     cursor: pointer;
-    transition: var(--transition);
     padding: 0;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
-.brand-corner-logo-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.4);
+/* Lapiz de editar del contenedor del logo: SIEMPRE visible, sin hover.
+   Badge en la esquina superior derecha, mayormente fuera de la caja para no
+   tapar el logo. */
+.brand-corner-logo-btn::after {
+    content: "\f304"; /* fa-pen */
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", FontAwesome;
+    font-weight: 900;
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.45);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 10px;
+    line-height: 1;
+    pointer-events: none;
 }
 
 .brand-corner-logo-inner {
-    width: 100%;
     height: 100%;
+    width: auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
+    font-size: 1.5rem; /* el "+" del estado vacio, mas visible */
 }
 
 .brand-corner-logo-img {
-    width: 100%;
     height: 100%;
-    object-fit: cover;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain; /* muestra el logo completo, nunca lo recorta */
     display: block;
 }
 
@@ -327,6 +349,10 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: pre-wrap;
+    /* Se ajusta a su texto en una sola linea (max-content) hasta el ancho de la
+       columna (max-width:100%), donde recien envuelve entre palabras. Asi NO se
+       parte a media palabra y el lapiz queda pegado al texto. */
+    width: max-content;
     max-width: 100%;
     min-width: 0;
     border: 0;
@@ -2510,6 +2536,23 @@ h1.brand-name-large[contenteditable="true"]:hover,
 #infoPanelContent .editable-inline-title:focus::after,
 #infoPanelContent .editable-inline-subtitle:focus::after {
     opacity: 0;
+}
+
+/* Hero de la org: el lapiz de EDITAR del nombre y del slogan SIEMPRE visible
+   (no depende de hover/focus) y SIN efecto hover en el elemento. Solo aplica a
+   estos dos; el panel INFO conserva su comportamiento por hover. */
+.brand-name-large[contenteditable="true"]::after,
+.brand-slogan-input[contenteditable="true"]::after,
+.brand-name-large[contenteditable="true"]:hover::after,
+.brand-slogan-input[contenteditable="true"]:hover::after,
+.brand-name-large[contenteditable="true"]:focus::after,
+.brand-slogan-input[contenteditable="true"]:focus::after {
+    opacity: 0.6;
+}
+
+.brand-name-large[contenteditable="true"]:hover,
+.brand-slogan-input[contenteditable="true"]:hover {
+    background: transparent;
 }
 
 #infoPanelContent .brand-storage-info-dates {
