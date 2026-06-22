@@ -44,8 +44,11 @@ class DevDashboardView extends DevBaseView {
 
         <!-- Atención -->
         <section class="dev-cmd-block" aria-label="Atención">
-          <div class="dev-section-header"><h2 class="dev-cmd-h2">Atención</h2></div>
-          <div class="dev-attention-row" id="cmdAttention">${this._skeletonAttention()}</div>
+          <div class="dev-section-header">
+            <h2 class="dev-cmd-h2"><i class="fas fa-triangle-exclamation dev-att-h2ic"></i> Atención</h2>
+            <span class="dev-att-count" id="cmdAttCount" hidden></span>
+          </div>
+          <div class="dev-att-list" id="cmdAttention">${this._skeletonAttention()}</div>
         </section>
 
         <!-- Indicadores -->
@@ -258,58 +261,65 @@ class DevDashboardView extends DevBaseView {
   renderAttention(att, sig, fin) {
     const el = document.getElementById('cmdAttention');
     if (!el) return;
-    const cards = [];
+    const rows = [];
 
     const lowCredits = att?.low_credits_orgs?.count || 0;
-    if (lowCredits > 0) cards.push(this.attCard('crit', 'fa-coins',
+    if (lowCredits > 0) rows.push(this.attRow('crit',
       `${lowCredits} ${lowCredits === 1 ? 'org' : 'orgs'} con créditos por agotar`,
-      'Saldo bajo el 10%', 'Cargar créditos', '/dev/lead/billing'));
+      'Saldo bajo el 10% del total', 'Otorgar créditos', '/dev/lead/billing'));
 
     const scrDown = sig?.scrapers_down?.count || 0;
     if (scrDown > 0) {
       const names = (sig.scrapers_down.preview || []).map(p => p.sensor_type).slice(0, 3).join(', ');
-      cards.push(this.attCard('warn', 'fa-spider',
+      rows.push(this.attRow('crit',
         `${scrDown} ${scrDown === 1 ? 'scraper caído' : 'scrapers caídos'}`,
-        names || 'última corrida falló', 'Revisar', '/dev/logs'));
+        names ? `${names} · última corrida falló` : 'última corrida falló', 'Revisar', '/dev/logs'));
     }
 
     const tokExp = sig?.tokens_expiring?.count || 0;
     if (tokExp > 0) {
       const p0 = (sig.tokens_expiring.preview || [])[0];
       const who = p0 ? `${p0.platform}${p0.account ? ' · ' + p0.account : ''}` : '';
-      cards.push(this.attCard('warn', 'fa-key',
-        `${tokExp} ${tokExp === 1 ? 'token por expirar' : 'tokens por expirar'}`,
-        who || 'próximos 7 días', 'Reconectar', '/dev/lead/orgs'));
+      rows.push(this.attRow('warn',
+        `Token por expirar${tokExp > 1 ? ` · ${tokExp} integraciones` : (who ? ` · ${who}` : '')}`,
+        'Dejará de publicar al expirar', 'Reconectar', '/dev/lead/orgs'));
     }
 
     const critErr = att?.critical_errors_24h?.count || 0;
-    if (critErr > 0) cards.push(this.attCard('crit', 'fa-triangle-exclamation',
+    if (critErr > 0) rows.push(this.attRow('crit',
       `${critErr} ${critErr === 1 ? 'error crítico' : 'errores críticos'} · 24h`,
       'Revisa los logs del motor', 'Ver logs', '/dev/logs'));
 
-    if (sig?.queue?.saturated) cards.push(this.attCard('warn', 'fa-layer-group',
-      'Cola de generación saturada', `${sig.queue.backlog} jobs en cola`, 'Ver cola', '/dev/logs'));
+    if (sig?.queue?.saturated) rows.push(this.attRow('warn',
+      'Cola de generación saturada', `${sig.queue.backlog} jobs en espera`, 'Ver cola', '/dev/logs'));
 
     const provFail = att?.provisioning_failures_24h?.count || 0;
-    if (provFail > 0) cards.push(this.attCard('crit', 'fa-server',
+    if (provFail > 0) rows.push(this.attRow('crit',
       `${provFail} fallo(s) de provisioning · 24h`, 'Veras sin desplegar', 'Ver orgs', '/dev/lead/orgs'));
 
-    if (!cards.length) {
+    // Pill de conteo junto al título.
+    const pill = document.getElementById('cmdAttCount');
+    if (pill) {
+      if (rows.length) { pill.hidden = false; pill.textContent = `${rows.length} ${rows.length === 1 ? 'requiere' : 'requieren'} acción`; }
+      else pill.hidden = true;
+    }
+
+    if (!rows.length) {
       el.innerHTML = `<div class="dev-attention-empty"><i class="fas fa-circle-check"></i> Todo en orden — nada requiere tu atención.</div>`;
       return;
     }
-    el.innerHTML = cards.join('');
+    el.innerHTML = rows.join('');
   }
 
-  attCard(tone, icon, title, sub, cta, href) {
+  attRow(tone, title, sub, cta, href) {
     return `
-      <div class="dev-att-card tone-${tone}">
-        <span class="dev-att-ic"><i class="fas ${icon}"></i></span>
+      <div class="dev-att-row tone-${tone}">
+        <span class="dev-att-dot"></span>
         <div class="dev-att-body">
           <div class="dev-att-title">${this.escapeHtml(title)}</div>
           <div class="dev-att-sub">${this.escapeHtml(sub)}</div>
         </div>
-        <a class="dev-att-cta" href="${href}">${this.escapeHtml(cta)}</a>
+        <a class="dev-att-cta" href="${href}">${this.escapeHtml(cta)} <i class="fas fa-arrow-right"></i></a>
       </div>`;
   }
 
@@ -323,7 +333,6 @@ class DevDashboardView extends DevBaseView {
       <div class="dev-gauge">
         ${this.svgGauge(g.value)}
         <div class="dev-gauge-label">${this.escapeHtml(g.label)}</div>
-        <div class="dev-gauge-detail">${this.escapeHtml(g.detail || '')}</div>
       </div>`).join('');
   }
 
