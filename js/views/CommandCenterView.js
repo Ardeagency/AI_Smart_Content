@@ -128,7 +128,8 @@ class CommandCenterView extends BaseView {
         <div class="cc-canvas-world" id="ccCanvasWorld"></div>
         <div class="cc-canvas-empty" id="ccCanvasEmpty" style="display:none;">
           <i class="fas fa-diagram-project"></i>
-          <p>Sin audiencias ni campanas todavia. Crea una audiencia o conecta una integracion (Meta, Google).</p>
+          <p class="cc-canvas-empty-title">Centro de estrategia</p>
+          <p>Vera construye estrategias de campana usando nodos guia para analizar y producir. Esta pagina es tu centro de monitoreo para visualizar las estrategias creadas.</p>
         </div>
 
         <!-- Minimapa flotante (esquina inferior izquierda), estilo n8n/React Flow -->

@@ -568,7 +568,13 @@
   color: var(--text-muted, rgba(212, 209, 216, 0.6));
 }
 .cc-canvas-empty i { font-size: 2rem; opacity: 0.5; }
-.cc-canvas-empty p { max-width: 360px; font-size: 0.9rem; line-height: 1.5; margin: 0; }
+.cc-canvas-empty-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  margin: 0;
+}
+.cc-canvas-empty p { max-width: 420px; font-size: 0.9rem; line-height: 1.5; margin: 0; }
 
 /* ── Nodos: premium dark gradient + glow inferior por tipo ──────────── */
 /* Vars por tipo: --cc-grad-end (fin del gradiente), --cc-glow-1 (profundo),
