@@ -131,6 +131,10 @@ class App {
       // evitarlo. En rutas auth, Navigation.render() reemplaza esta clase
       // por has-sidebar/has-header-only con su propio reset.
       const PUBLIC_FIRST_PAINT = new Set(['/', '/login', '/signin', '/cambiar-contrasena', '/demo']);
+      if (window.SECRET_SIGNUP) {
+        PUBLIC_FIRST_PAINT.add(window.SECRET_SIGNUP.base);
+        PUBLIC_FIRST_PAINT.add(window.SECRET_SIGNUP.continue);
+      }
       const initialPath = window.location.pathname || '/';
       if (PUBLIC_FIRST_PAINT.has(initialPath)) {
         document.body.classList.add('no-nav');
@@ -216,6 +220,21 @@ class App {
     // ── /demo: signup anónimo + redirect a IGNIS en modo read-only ──
     // Los RLS bloquean writes y data sensible para JWT.is_anonymous=true.
     r.register('/demo', window.DemoEntryView, pub);
+
+    // ── Sign up secreto (self-service) ──
+    // El "secreto" es la URL: ruta NO enlazada en ningún sitio. Para ROTAR el
+    // acceso basta cambiar SIGNUP_SECRET_SLUG (los enlaces viejos dejan de
+    // funcionar). El usuario crea su propia cuenta + organización (queda owner).
+    // base = wizard; continue = destino del enlace de confirmación del email.
+    const SIGNUP_SECRET_SLUG = 'onyx-7h3k9p';
+    window.SECRET_SIGNUP = {
+      slug: SIGNUP_SECRET_SLUG,
+      base: `/registro/${SIGNUP_SECRET_SLUG}`,
+      continue: `/registro/${SIGNUP_SECRET_SLUG}/continuar`,
+    };
+    const SIGNUP_CSS = [{ href: '/css/modules/secret-signup.css', append: true }];
+    r.register(window.SECRET_SIGNUP.base, this._lazy('SecretSignupView', ['/js/views/SecretSignupView.js'], SIGNUP_CSS), pub);
+    r.register(window.SECRET_SIGNUP.continue, this._lazy('SecretSignupContinueView', ['/js/views/SecretSignupContinueView.js'], SIGNUP_CSS), pub);
 
     // ── Públicas (lazy) ──
     r.register('/cambiar-contrasena', this._lazy('CambiarContrasenaView', ['/js/views/CambiarContrasenaView.js']), pub);
