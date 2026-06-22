@@ -125,6 +125,8 @@ class SecretSignupView extends (window.BaseView || class {}) {
       case 'auto-source': return this.renderStepAutoSource();
       case 'auto-progress': return this.renderStepAutoProgress();
       case 'auto-approval': return this.renderStepAutoApproval();
+      case 'vera-provision': return this.renderStepVeraProvision();
+      case 'creating-org': return this.renderStepCreatingOrg();
       default: return this.renderStepCuenta();
     }
   }
@@ -359,7 +361,8 @@ class SecretSignupView extends (window.BaseView || class {}) {
   }
 
   renderStepBrandDone() {
-    const label = this._brandMode === 'auto' ? this._t('Crear automáticamente') : this._t('Manualmente');
+    // Camino manual (placeholder por construir). El automático ya no pasa por
+    // aquí: va Vera → "creando organización" → dashboard con mini tutorial.
     return `
       <div class="ssup-verify">
         <div class="ssup-verify-icon" aria-hidden="true">
@@ -368,7 +371,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
           </svg>
         </div>
         <h1>${this._t('¡Vamos a crear tu marca!')}</h1>
-        <p>${this._t('Elegiste')} <strong>${this.escapeHtml(label)}</strong>. ${this._preview ? this._t('(Siguiente paso del flujo por construir.)') : ''}</p>
+        <p>${this._t('Elegiste')} <strong>${this._t('Manualmente')}</strong>. ${this._preview ? this._t('(Flujo manual por construir.)') : ''}</p>
         <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-block" data-action="back-create-brand">${this._t('Volver')}</button>
       </div>
     `;
@@ -494,7 +497,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
       <div class="ssup-ap-actions">
         ${idx > 0 ? `<button type="button" class="ssup-btn ssup-btn-ghost" data-action="ap-back">← ${this._t('Atrás')}</button>` : `<button type="button" class="ssup-btn ssup-btn-ghost" data-action="back-create-brand">← ${this._t('Atrás')}</button>`}
         ${isLast
-          ? `<button type="button" class="ssup-btn ssup-btn-primary" data-action="ap-finish">${this._t('Finalizar')}</button>`
+          ? `<button type="button" class="ssup-btn ssup-btn-primary" data-action="ap-finish"><i class="fas fa-circle-check"></i> ${this._t('Terminar mi marca')}</button>`
           : `<button type="button" class="ssup-btn ssup-btn-primary" data-action="ap-next">${this._t('Aceptar y seguir')} →</button>`}
       </div>
     `;
@@ -648,7 +651,81 @@ class SecretSignupView extends (window.BaseView || class {}) {
     if (this._apIdx < this.AUTO_APPROVAL_PAGES.length - 1) { this._apIdx++; this._goto('auto-approval'); }
   }
   _apBack() { this._apCollect(); if (this._apIdx > 0) { this._apIdx--; this._goto('auto-approval'); } }
-  _apFinish() { this._apCollect(); this._brandMode = 'auto'; this._goto('brand_done'); }
+
+  // "Terminar mi marca": aquí SIEMPRE se provisiona Vera — una org nunca queda
+  // sin su Vera. En preview se simula; en real dispara provision-org-agent.
+  _apFinish() {
+    this._apCollect();
+    this._brandMode = 'auto';
+    this._runVeraProvision();
+  }
+
+  renderStepVeraProvision() {
+    return `
+      <div class="ssup-verify">
+        <div class="ssup-spinner" aria-hidden="true"></div>
+        <h1>${this._t('Creando tu Vera')}</h1>
+        <p>${this._t('Estamos activando el equipo de IA de tu marca. Toda organización tiene su Vera para automatizar contenido, estrategia y monitoreo.')}</p>
+        <p class="ssup-hint">${this._t('Esto puede tardar unos minutos. No cierres esta ventana.')}</p>
+      </div>
+    `;
+  }
+
+  async _runVeraProvision() {
+    this._goto('vera-provision');
+    if (this._preview) {
+      if (this._autoSimTimer) clearTimeout(this._autoSimTimer);
+      this._autoSimTimer = setTimeout(() => { this._autoSimTimer = null; this._runCreatingOrg(); }, 2600);
+      return;
+    }
+    // Real: provisionar Vera para la org recién creada (org nunca sin Vera).
+    try {
+      const { error } = await this.supabase.functions.invoke('provision-org-agent', {
+        body: { organization_id: this._autoOrgId },
+      });
+      if (error) throw error;
+    } catch (err) {
+      // No bloquea el cierre: Vera puede reintentarse luego.
+      this._veraError = (err && err.message) ? err.message : String(err);
+    }
+    this._runCreatingOrg();
+  }
+
+  renderStepCreatingOrg() {
+    return `
+      <div class="ssup-verify">
+        <div class="ssup-spinner" aria-hidden="true"></div>
+        <h1>${this._t('Creando tu organización')}</h1>
+        <p>${this._t('Dejando todo listo y abriendo tu espacio de trabajo…')}</p>
+      </div>
+    `;
+  }
+
+  _runCreatingOrg() {
+    this._goto('creating-org');
+    if (this._autoSimTimer) clearTimeout(this._autoSimTimer);
+    this._autoSimTimer = setTimeout(() => { this._autoSimTimer = null; this._finishToDashboard(); }, 2200);
+  }
+
+  // Marca/ org lista → al dashboard principal, activando el mini tutorial.
+  _finishToDashboard() {
+    try { localStorage.setItem('asc:onboardingTour', '1'); } catch (_) {}
+    if (this._preview) {
+      // Demo: el dashboard real necesita sesión/org; usamos la vitrina IGNIS
+      // (crea sesión y aterriza en el dashboard) para mostrar el tutorial.
+      if (window.router) window.router.navigate('/demo', true);
+      else window.location.href = '/demo';
+      return;
+    }
+    let target = '/home';
+    (async () => {
+      try {
+        const { data: { user } } = await this.supabase.auth.getUser();
+        if (user && window.authService?.getDefaultUserRoute) target = await window.authService.getDefaultUserRoute(user.id);
+      } catch (_) {}
+      if (window.router) window.router.navigate(target, true); else window.location.href = target;
+    })();
+  }
 
   _googleIcon() {
     return `<svg class="ssup-oauth-ico" viewBox="0 0 18 18" aria-hidden="true" width="18" height="18">

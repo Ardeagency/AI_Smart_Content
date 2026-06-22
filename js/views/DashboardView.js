@@ -78,6 +78,8 @@ class DashboardView extends BaseView {
       await window.appNavigation.render();
     }
     await this._initDataLayer();
+    // Mini tutorial para usuarios recién creados (flag dejado por el signup).
+    try { window.OnboardingTour && window.OnboardingTour.maybeStart(); } catch (_) {}
   }
 
   async _initDataLayer() {
