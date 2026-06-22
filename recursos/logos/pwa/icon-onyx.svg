@@ -1,5 +1,5 @@
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-  <!-- AI Smart Content · App icon "Onyx" (rounded) — 100% vectorial, reemplaza la versión con PNG incrustado -->
+  <!-- AI Smart Content · App icon "Onyx" — 100% vectorial, full-bleed (iOS/Android aplican su propia máscara) -->
   <defs>
     <linearGradient id="bg" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#1c1c20"/>
@@ -14,13 +14,9 @@
       <stop offset=".75" stop-color="#0018ee"/>
       <stop offset=".9" stop-color="#640091"/>
     </linearGradient>
-    <clipPath id="squircle"><rect width="1024" height="1024" rx="230"/></clipPath>
   </defs>
-  <g clip-path="url(#squircle)">
-    <rect width="1024" height="1024" fill="url(#bg)"/>
-    <rect x="2" y="2" width="1020" height="1020" rx="228" fill="none" stroke="#ffffff" stroke-opacity=".06" stroke-width="3"/>
-    <path transform="translate(160,160) scale(22)" fill="#ffffff" fill-rule="evenodd"
-          d="M5.29 5.29 H26.71 V26.71 H5.29 Z M16 8.36 A7.64 7.64 0 1 0 16 23.64 A7.64 7.64 0 1 0 16 8.36 Z"/>
-    <rect x="160" y="482" width="704" height="60" rx="6" fill="url(#spectrum)"/>
-  </g>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <path transform="translate(160,160) scale(22)" fill="#ffffff" fill-rule="evenodd"
+        d="M5.29 5.29 H26.71 V26.71 H5.29 Z M16 8.36 A7.64 7.64 0 1 0 16 23.64 A7.64 7.64 0 1 0 16 8.36 Z"/>
+  <rect x="160" y="482" width="704" height="60" rx="6" fill="url(#spectrum)"/>
 </svg>
