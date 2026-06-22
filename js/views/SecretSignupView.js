@@ -16,7 +16,9 @@
  *   affiliate       — token de invitación + clave de verificación.
  *   affiliate_done  — solicitud enviada (la org debe aceptar al invitado).
  *   plans           — versión pública de planes para crear la org.
- *   plans_done      — confirmación (en preview).
+ *   pay             — pasarela de pagos (Wompi/Stripe; apagada en demo).
+ *   create-brand    — "Crea tu marca": automáticamente / manualmente.
+ *   brand_done      — confirmación del modo elegido (placeholder).
  */
 class SecretSignupView extends (window.BaseView || class {}) {
   constructor() {
@@ -33,6 +35,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
     this._sessionEmail = '';
     this._plans = null;
     this._selectedPlan = null;
+    this._brandMode = null;
     this._preview = !!(window.SECRET_SIGNUP && window.SECRET_SIGNUP.preview);
   }
 
@@ -111,7 +114,9 @@ class SecretSignupView extends (window.BaseView || class {}) {
       case 'affiliate': return this.renderStepAffiliate();
       case 'affiliate_done': return this.renderStepAffiliateDone();
       case 'plans': return this.renderStepPlans();
-      case 'plans_done': return this.renderStepPlansDone();
+      case 'pay': return this.renderStepPay();
+      case 'create-brand': return this.renderStepCreateBrand();
+      case 'brand_done': return this.renderStepBrandDone();
       default: return this.renderStepCuenta();
     }
   }
@@ -285,8 +290,68 @@ class SecretSignupView extends (window.BaseView || class {}) {
     return out;
   }
 
-  renderStepPlansDone() {
+  renderStepPay() {
     const p = (this._plans || []).find((x) => x.id === this._selectedPlan) || {};
+    const price = Number(p.price_usd_month || 0);
+    const gateways = [
+      { v: 'wompi', icon: 'fa-credit-card', label: this._t('Wompi'), hint: this._t('Tarjeta · PSE · Nequi (Colombia)') },
+      { v: 'stripe', icon: 'fa-globe', label: this._t('Tarjeta internacional'), hint: this._t('Visa · Mastercard · Amex') },
+    ];
+    return `
+      <header class="ssup-head">
+        <h1>${this._t('Confirma tu plan')}</h1>
+        <p>${this._t('Plan')} <strong>${this.escapeHtml(p.name || '')}</strong> · $${price.toLocaleString('en-US')}/${this._t('mes')}</p>
+      </header>
+      <div class="ssup-pay-summary">
+        <span>${this._t('Total hoy')}</span>
+        <strong>$${price.toLocaleString('en-US')} <small>USD/${this._t('mes')}</small></strong>
+      </div>
+      <div class="ssup-pay-methods" role="radiogroup" aria-label="${this._t('Método de pago')}">
+        ${gateways.map((g, i) => `
+          <label class="ssup-pay-method">
+            <input type="radio" name="ssup_gateway" value="${g.v}" ${i === 0 ? 'checked' : ''}>
+            <span class="ssup-pay-card">
+              <i class="fas ${g.icon}"></i>
+              <span><strong>${this.escapeHtml(g.label)}</strong><small>${this.escapeHtml(g.hint)}</small></span>
+            </span>
+          </label>
+        `).join('')}
+      </div>
+      ${this._preview ? `<p class="ssup-pay-note"><i class="fas fa-circle-info"></i> ${this._t('Pasarela en modo demo — no se realiza ningún cobro.')}</p>` : ''}
+      <p class="ssup-status" id="ssupStatus" role="status" aria-live="polite"></p>
+      <button type="button" class="ssup-btn ssup-btn-primary ssup-btn-block" data-action="pay">
+        ${this._preview ? this._t('Pagar y continuar (demo)') : this._t('Pagar y continuar')}
+      </button>
+      <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-block" data-action="back-plans">${this._t('Ver otros planes')}</button>
+    `;
+  }
+
+  renderStepCreateBrand() {
+    const cards = [
+      { mode: 'auto', icon: 'fa-wand-magic-sparkles', title: this._t('Crear automáticamente'),
+        hint: this._t('Danos tu sitio o redes y Vera investiga y arma tu marca sola.') },
+      { mode: 'manual', icon: 'fa-pen-to-square', title: this._t('Manualmente'),
+        hint: this._t('Tú defines la identidad, el mercado y el ADN paso a paso.') },
+    ];
+    return `
+      <header class="ssup-head ssup-head--center">
+        <h1>${this._t('Crea tu marca')}</h1>
+        <p>${this._t('Elige cómo quieres construir tu marca.')}</p>
+      </header>
+      <div class="ssup-choice">
+        ${cards.map((c) => `
+          <button type="button" class="ssup-choice-card" data-brand-mode="${c.mode}">
+            <span class="ssup-choice-ico"><i class="fas ${c.icon}"></i></span>
+            <strong>${this.escapeHtml(c.title)}</strong>
+            <small>${this.escapeHtml(c.hint)}</small>
+          </button>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  renderStepBrandDone() {
+    const label = this._brandMode === 'auto' ? this._t('Crear automáticamente') : this._t('Manualmente');
     return `
       <div class="ssup-verify">
         <div class="ssup-verify-icon" aria-hidden="true">
@@ -294,9 +359,9 @@ class SecretSignupView extends (window.BaseView || class {}) {
             <path d="M20 6L9 17l-5-5"></path>
           </svg>
         </div>
-        <h1>${this._t('Plan seleccionado')}</h1>
-        <p>${this._t('Elegiste el plan')} <strong>${this.escapeHtml(p.name || this._selectedPlan || '')}</strong>. ${this._preview ? this._t('En modo real, aquí continuarías al pago y la creación de tu organización.') : ''}</p>
-        <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-block" data-action="back-plans">${this._t('Ver otros planes')}</button>
+        <h1>${this._t('¡Vamos a crear tu marca!')}</h1>
+        <p>${this._t('Elegiste')} <strong>${this.escapeHtml(label)}</strong>. ${this._preview ? this._t('(Siguiente paso del flujo por construir.)') : ''}</p>
+        <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-block" data-action="back-create-brand">${this._t('Volver')}</button>
       </div>
     `;
   }
@@ -349,12 +414,17 @@ class SecretSignupView extends (window.BaseView || class {}) {
     this.querySelectorAll('[data-plan]').forEach((b) => {
       this.addEventListener(b, 'click', () => this._handlePlan(b.getAttribute('data-plan')));
     });
+    this.querySelectorAll('[data-brand-mode]').forEach((b) => {
+      this.addEventListener(b, 'click', () => this._handleBrandMode(b.getAttribute('data-brand-mode')));
+    });
 
     const map = {
       'verified-demo': () => this._goto('choice'),
       'back-cuenta': () => this._goto('cuenta'),
       'back-choice': () => this._goto('choice'),
       'back-plans': () => this._goto('plans'),
+      'pay': () => this._handlePay(),
+      'back-create-brand': () => this._goto('create-brand'),
     };
     Object.entries(map).forEach(([action, fn]) => {
       const el = this.querySelector(`[data-action="${action}"]`);
@@ -367,7 +437,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
     // Algunos pasos cambian el ancho de la card → re-render del card completo.
     const card = this.querySelector('#ssupCard');
     if (card) {
-      card.classList.toggle('ssup-card--wide', step === 'plans' || step === 'choice');
+      card.classList.toggle('ssup-card--wide', step === 'plans' || step === 'choice' || step === 'create-brand');
     }
     const body = this.querySelector('#ssupBody');
     if (body) { body.innerHTML = this.renderStep(); this.wire(); }
@@ -474,7 +544,22 @@ class SecretSignupView extends (window.BaseView || class {}) {
 
   _handlePlan(planId) {
     this._selectedPlan = planId;
-    this._goto('plans_done');
+    this._goto('pay');
+  }
+
+  _handlePay() {
+    // Preview: pasarela apagada, solo avanzamos. En real, aquí se lanza el
+    // checkout (Stripe/Wompi vía functions/api-billing-*) antes de continuar.
+    if (!this._preview) {
+      this._setStatus(this._t('Pasarela de pagos pendiente de cablear.'), 'error');
+      return;
+    }
+    this._goto('create-brand');
+  }
+
+  _handleBrandMode(mode) {
+    this._brandMode = mode;
+    this._goto('brand_done');
   }
 
   async _loadPlans() {
