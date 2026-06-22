@@ -231,6 +231,9 @@ class App {
       slug: SIGNUP_SECRET_SLUG,
       base: `/registro/${SIGNUP_SECRET_SLUG}`,
       continue: `/registro/${SIGNUP_SECRET_SLUG}/continuar`,
+      // PREVIEW: modo navegable sin crear usuarios ni tocar el backend (para
+      // revisar el flujo). Poner en false para activar el alta real.
+      preview: true,
     };
     const SIGNUP_CSS = [{ href: '/css/modules/secret-signup.css', append: true }];
     r.register(window.SECRET_SIGNUP.base, this._lazy('SecretSignupView', ['/js/views/SecretSignupView.js'], SIGNUP_CSS), pub);

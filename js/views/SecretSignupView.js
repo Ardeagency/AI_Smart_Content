@@ -1,30 +1,29 @@
 /**
- * SecretSignupView — Sign up secreto self-service.
+ * SecretSignupView — Sign up secreto self-service (prototipo de flujo).
  *
  * Ruta NO enlazada (el "secreto" es la URL): window.SECRET_SIGNUP.base.
- * Permite que un usuario cree SU PROPIA cuenta sin un Lead. Reusa el shell del
- * login (video de fondo + card glass + footer).
+ * Reusa el shell del login (video de fondo + card glass + footer).
  *
- * Flujo (2 pantallas, sin pasos):
- *   1. Cuenta    — Continuar con Google / Facebook, o nombre + correo + contraseña.
- *   2. Verificar — pantalla "revisa tu correo" (solo para el alta por email).
+ * MODO PREVIEW (window.SECRET_SIGNUP.preview === true):
+ *   No crea usuarios ni llama al backend — solo navega las pantallas para
+ *   revisar el flujo sin generar errores. Poner preview:false (en app.js) para
+ *   activar el alta real (signUp / OAuth / finalize).
  *
- * - Email/password: supabase.auth.signUp() nativo. Crea el usuario sin confirmar,
- *   envía el email de confirmación y guarda en user_metadata.pending_org los
- *   datos por defecto de la organización. El emailRedirectTo apunta a la página
- *   de continuación, que tras confirmar invoca signup-self-finalize y crea la org.
- * - Google/Facebook: supabase.auth.signInWithOAuth() con redirectTo a la página
- *   de continuación (el email del proveedor ya viene verificado).
- *
- * La organización se crea con un nombre por defecto (el del usuario); se refina
- * después dentro de la plataforma.
+ * Pantallas:
+ *   cuenta          — Google / Facebook, o nombre + correo + contraseña.
+ *   verify          — "verifica tu correo" (espera de confirmación).
+ *   choice          — 2 cards: Crear una marca nueva / Afiliarme a una marca.
+ *   affiliate       — token de invitación + clave de verificación.
+ *   affiliate_done  — solicitud enviada (la org debe aceptar al invitado).
+ *   plans           — versión pública de planes para crear la org.
+ *   plans_done      — confirmación (en preview).
  */
 class SecretSignupView extends (window.BaseView || class {}) {
   constructor() {
     super();
     this.templatePath = null;
     this.supabase = null;
-    this.step = 'cuenta';           // 'cuenta' | 'verify'
+    this.step = 'cuenta';
     this._submitting = false;
     this._resendCooldownUntil = 0;
     this._cooldownTimer = null;
@@ -32,18 +31,19 @@ class SecretSignupView extends (window.BaseView || class {}) {
     this.createdEmail = '';
     this._hasSession = false;
     this._sessionEmail = '';
+    this._plans = null;
+    this._selectedPlan = null;
+    this._preview = !!(window.SECRET_SIGNUP && window.SECRET_SIGNUP.preview);
   }
 
   async updateHeader() { /* pagina publica: sin header */ }
 
-  // Corre ANTES de renderHTML: detectamos sesión aquí para que el banner ya
-  // aparezca en el primer pintado (no redirigimos: es una página de registro).
   async onEnter() {
     await super.onEnter?.();
     try {
       this.supabase = window.supabase
         || (window.supabaseService && (await window.supabaseService.getClient()));
-      if (this.supabase) {
+      if (this.supabase && !this._preview) {
         const { data: { user } } = await this.supabase.auth.getUser();
         if (user && user.is_anonymous !== true) {
           this._hasSession = true;
@@ -59,33 +59,28 @@ class SecretSignupView extends (window.BaseView || class {}) {
     return (window.SECRET_SIGNUP && window.SECRET_SIGNUP.continue) || '/registro/continuar';
   }
 
-  // Datos por defecto de la organización (ya no se piden en el alta).
   _defaultPendingOrg() {
     const name = this.form.full_name || (this.form.email || '').split('@')[0] || '';
-    return {
-      name,
-      brand_name_oficial: name,
-      level_of_autonomy: 'parcial',
-      idiomas_contenido: ['es'],
-      mercado_objetivo: [],
-    };
+    return { name, brand_name_oficial: name, level_of_autonomy: 'parcial', idiomas_contenido: ['es'], mercado_objetivo: [] };
   }
 
   // ─── Render ──────────────────────────────────────────────────────────
 
   renderHTML() {
     const year = new Date().getFullYear();
+    const wide = (this.step === 'plans' || this.step === 'choice') ? ' ssup-card--wide' : '';
     return `
       <div class="signin-container signin-container--hero ssup-scope">
         <video class="signin-hero-video" autoplay muted loop playsinline preload="auto"
                poster="https://res.cloudinary.com/dmruwjuxn/image/upload/v1779481981/__8_kejphv.jpg">
           <source src="https://res.cloudinary.com/dmruwjuxn/video/upload/v1779651061/Home_banner_kjnlcm.mp4" type="video/mp4">
         </video>
-        <div class="signin-card ssup-card">
+        <div class="signin-card ssup-card${wide}" id="ssupCard">
           <div class="signin-brand">
             <img src="/recursos/logos/logo-02.svg" alt="AI Smart Content" class="signin-brand-logo" width="180" height="72" decoding="async">
           </div>
-          ${this._hasSession ? `
+          ${this._preview ? `<div class="ssup-demo-badge">${this._t('Modo demo · no se crean cuentas')}</div>` : ''}
+          ${(this._hasSession && this.step === 'cuenta') ? `
             <div class="ssup-banner" id="ssupBanner">
               <span>${this._t('Ya tienes una sesión iniciada como')} <strong>${this.escapeHtml(this._sessionEmail)}</strong>.</span>
               <button type="button" class="ssup-banner-btn" id="ssupEnter">${this._t('Iniciar sesión')}</button>
@@ -110,7 +105,15 @@ class SecretSignupView extends (window.BaseView || class {}) {
   }
 
   renderStep() {
-    return this.step === 'verify' ? this.renderStepVerify() : this.renderStepCuenta();
+    switch (this.step) {
+      case 'verify': return this.renderStepVerify();
+      case 'choice': return this.renderStepChoice();
+      case 'affiliate': return this.renderStepAffiliate();
+      case 'affiliate_done': return this.renderStepAffiliateDone();
+      case 'plans': return this.renderStepPlans();
+      case 'plans_done': return this.renderStepPlansDone();
+      default: return this.renderStepCuenta();
+    }
   }
 
   renderStepCuenta() {
@@ -120,7 +123,6 @@ class SecretSignupView extends (window.BaseView || class {}) {
         <h1>${this._t('Crea tu cuenta')}</h1>
         <p>${this._t('Empieza con tu proveedor favorito o con tu correo.')}</p>
       </header>
-
       <div class="ssup-oauth">
         <button type="button" class="ssup-oauth-btn" data-oauth="google">
           ${this._googleIcon()}<span>${this._t('Continuar con Google')}</span>
@@ -129,21 +131,19 @@ class SecretSignupView extends (window.BaseView || class {}) {
           ${this._facebookIcon()}<span>${this._t('Continuar con Facebook')}</span>
         </button>
       </div>
-
       <div class="ssup-divider"><span>${this._t('o')}</span></div>
-
       <form id="ssupCuentaForm" class="ssup-form" novalidate autocomplete="on">
         <div class="ssup-field">
           <label for="ssupName">${this._t('Nombre completo')}</label>
-          <input class="form-input" id="ssupName" name="full_name" type="text" placeholder="${this._t('Ej. María García')}" autocomplete="name" value="${this.escapeHtml(f.full_name)}" required>
+          <input class="form-input" id="ssupName" name="full_name" type="text" placeholder="${this._t('Ej. María García')}" autocomplete="name" value="${this.escapeHtml(f.full_name)}">
         </div>
         <div class="ssup-field">
           <label for="ssupEmail">${this._t('Correo electrónico')}</label>
-          <input class="form-input" id="ssupEmail" name="email" type="email" placeholder="tu@correo.com" autocomplete="email" value="${this.escapeHtml(f.email)}" required>
+          <input class="form-input" id="ssupEmail" name="email" type="email" placeholder="tu@correo.com" autocomplete="email" value="${this.escapeHtml(f.email)}">
         </div>
         <div class="ssup-field">
           <label for="ssupPass">${this._t('Contraseña')}</label>
-          <input class="form-input" id="ssupPass" name="password" type="password" placeholder="${this._t('Mínimo 8 caracteres')}" autocomplete="new-password" minlength="8" value="${this.escapeHtml(f.password)}" required>
+          <input class="form-input" id="ssupPass" name="password" type="password" placeholder="${this._t('Mínimo 8 caracteres')}" autocomplete="new-password" minlength="8" value="${this.escapeHtml(f.password)}">
         </div>
         <p class="ssup-status" id="ssupStatus" role="status" aria-live="polite"></p>
         <button type="submit" class="ssup-btn ssup-btn-primary ssup-btn-block" data-action="create">${this._t('Crear cuenta')}</button>
@@ -160,11 +160,143 @@ class SecretSignupView extends (window.BaseView || class {}) {
           </svg>
         </div>
         <h1>${this._t('Verifica tu correo')}</h1>
-        <p>${this._t('Te enviamos un enlace de confirmación a')} <strong>${this.escapeHtml(this.createdEmail)}</strong>. ${this._t('Ábrelo para activar tu cuenta y entrar.')}</p>
+        <p>${this._t('Te enviamos un enlace de confirmación a')} <strong>${this.escapeHtml(this.createdEmail || 'tu correo')}</strong>. ${this._t('Ábrelo para activar tu cuenta y continuar.')}</p>
         <p class="ssup-hint">${this._t('¿No te llega? Revisa spam o promociones.')}</p>
-        <button type="button" class="ssup-btn ssup-btn-primary ssup-btn-block" id="ssupResend">${this._t('Reenviar correo')}</button>
+        ${this._preview
+          ? `<button type="button" class="ssup-btn ssup-btn-primary ssup-btn-block" data-action="verified-demo">${this._t('Ya verifiqué (demo)')}</button>`
+          : `<button type="button" class="ssup-btn ssup-btn-primary ssup-btn-block" id="ssupResend">${this._t('Reenviar correo')}</button>`}
         <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-block" data-action="back-cuenta">${this._t('Volver')}</button>
         <p class="ssup-status" id="ssupStatus" role="status" aria-live="polite"></p>
+      </div>
+    `;
+  }
+
+  renderStepChoice() {
+    const cards = [
+      { action: 'create-brand', icon: 'fa-crown', title: this._t('Crear una marca nueva'),
+        hint: this._t('Empieza tu propia organización desde cero. Quedas como owner.') },
+      { action: 'affiliate', icon: 'fa-user-plus', title: this._t('Afiliarme a una marca'),
+        hint: this._t('Únete a una organización existente con un token de invitación.') },
+    ];
+    return `
+      <header class="ssup-head ssup-head--center">
+        <h1>${this._t('¿Cómo quieres empezar?')}</h1>
+        <p>${this._t('Crea tu propia marca o únete a una que ya existe.')}</p>
+      </header>
+      <div class="ssup-choice">
+        ${cards.map((c) => `
+          <button type="button" class="ssup-choice-card" data-choice="${c.action}">
+            <span class="ssup-choice-ico"><i class="fas ${c.icon}"></i></span>
+            <strong>${this.escapeHtml(c.title)}</strong>
+            <small>${this.escapeHtml(c.hint)}</small>
+          </button>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  renderStepAffiliate() {
+    return `
+      <header class="ssup-head">
+        <h1>${this._t('Afiliarme a una marca')}</h1>
+        <p>${this._t('Pide a la organización su token de invitación y su clave de verificación.')}</p>
+      </header>
+      <form id="ssupAffiliateForm" class="ssup-form" novalidate>
+        <div class="ssup-field">
+          <label for="ssupInviteToken">${this._t('Token de invitación')}</label>
+          <input class="form-input" id="ssupInviteToken" type="text" placeholder="${this._t('Ej. INV-7K2F-9XQ4')}" autocomplete="off">
+        </div>
+        <div class="ssup-field">
+          <label for="ssupInviteKey">${this._t('Clave de verificación')}</label>
+          <input class="form-input" id="ssupInviteKey" type="text" placeholder="${this._t('Ej. 6 dígitos')}" autocomplete="off">
+        </div>
+        <p class="ssup-hint">${this._t('Al enviar, la organización recibirá una notificación y deberá aceptarte.')}</p>
+        <p class="ssup-status" id="ssupStatus" role="status" aria-live="polite"></p>
+        <button type="submit" class="ssup-btn ssup-btn-primary ssup-btn-block" data-action="affiliate-submit">${this._t('Solicitar acceso')}</button>
+        <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-block" data-action="back-choice">${this._t('Volver')}</button>
+      </form>
+    `;
+  }
+
+  renderStepAffiliateDone() {
+    return `
+      <div class="ssup-verify">
+        <div class="ssup-verify-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
+          </svg>
+        </div>
+        <h1>${this._t('Solicitud enviada')}</h1>
+        <p>${this._t('Enviamos tu solicitud a la organización. Cuando un administrador te acepte, recibirás acceso y te avisaremos por correo.')}</p>
+        <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-block" data-action="back-choice">${this._t('Volver')}</button>
+      </div>
+    `;
+  }
+
+  renderStepPlans() {
+    const plans = this._plans;
+    if (!plans) {
+      return `
+        <header class="ssup-head ssup-head--center"><h1>${this._t('Elige tu plan')}</h1></header>
+        <div class="ssup-plans-loading"><div class="ssup-spinner"></div></div>
+      `;
+    }
+    return `
+      <header class="ssup-head ssup-head--center">
+        <h1>${this._t('Elige tu plan')}</h1>
+        <p>${this._t('Con qué plan quieres crear tu organización. Podrás cambiarlo después.')}</p>
+      </header>
+      <div class="ssup-plans">
+        ${plans.map((p) => this._planCard(p)).join('')}
+      </div>
+      <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-block" data-action="back-choice">${this._t('Volver')}</button>
+    `;
+  }
+
+  _planCard(p) {
+    const price = Number(p.price_usd_month || 0);
+    const feats = this._planFeatures(p);
+    return `
+      <div class="ssup-plan ${p.is_popular ? 'is-popular' : ''}">
+        ${p.is_popular ? `<span class="ssup-plan-tag">${this._t('Popular')}</span>` : ''}
+        <h3 class="ssup-plan-name">${this.escapeHtml(p.name)}</h3>
+        <div class="ssup-plan-price"><span>$${price.toLocaleString('en-US')}</span><small>/${this._t('mes')}</small></div>
+        <p class="ssup-plan-desc">${this.escapeHtml(p.description || '')}</p>
+        <ul class="ssup-plan-feats">
+          ${feats.map((t) => `<li><i class="fas fa-check"></i> ${this.escapeHtml(t)}</li>`).join('')}
+        </ul>
+        <button type="button" class="ssup-btn ssup-btn-primary ssup-btn-block" data-plan="${this.escapeHtml(p.id)}">${this._t('Elegir')} ${this.escapeHtml(p.name)}</button>
+      </div>
+    `;
+  }
+
+  _planFeatures(p) {
+    const out = [];
+    if (p.credits_monthly != null) out.push(`${Number(p.credits_monthly).toLocaleString('en-US')} ${this._t('créditos / mes')}`);
+    if (p.max_handles != null) out.push(`${p.max_handles} ${this._t('cuentas conectables')}`);
+    const f = p.features || {};
+    if (f.team_seats) out.push(`${f.team_seats} ${this._t('miembros de equipo')}`);
+    if (f.vera_full) out.push(this._t('Vera completo'));
+    else if (f.vera_basic) out.push(this._t('Vera básico'));
+    if (f.sub_brands) out.push(this._t('Sub-marcas'));
+    if (f.custom_domain) out.push(this._t('Dominio propio'));
+    if (f.insights) out.push(this._t('Insights'));
+    if (f.video || f.studio) out.push(this._t('Studio + Video'));
+    return out;
+  }
+
+  renderStepPlansDone() {
+    const p = (this._plans || []).find((x) => x.id === this._selectedPlan) || {};
+    return `
+      <div class="ssup-verify">
+        <div class="ssup-verify-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"></path>
+          </svg>
+        </div>
+        <h1>${this._t('Plan seleccionado')}</h1>
+        <p>${this._t('Elegiste el plan')} <strong>${this.escapeHtml(p.name || this._selectedPlan || '')}</strong>. ${this._preview ? this._t('En modo real, aquí continuarías al pago y la creación de tu organización.') : ''}</p>
+        <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-block" data-action="back-plans">${this._t('Ver otros planes')}</button>
       </div>
     `;
   }
@@ -189,7 +321,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
   async init() {
     this.supabase = this.supabase || window.supabase
       || (window.supabaseService && (await window.supabaseService.getClient()));
-    if (!this.supabase) {
+    if (!this.supabase && !this._preview) {
       this._setStatus(this._t('No se pudo cargar Supabase. Recarga la página.'), 'error');
       return;
     }
@@ -198,8 +330,52 @@ class SecretSignupView extends (window.BaseView || class {}) {
     if (enter) this.addEventListener(enter, 'click', () => this._handleEnter());
   }
 
-  // El usuario ya tiene sesión: lo llevamos a su cuenta (no cerramos sesión aquí;
-  // si decide crear una nueva, _handleCreate/_handleOAuth cierran la actual).
+  wire() {
+    this.querySelectorAll('[data-oauth]').forEach((btn) => {
+      this.addEventListener(btn, 'click', () => this._handleOAuth(btn.getAttribute('data-oauth')));
+    });
+    const cuentaForm = this.querySelector('#ssupCuentaForm');
+    if (cuentaForm) this.addEventListener(cuentaForm, 'submit', (e) => { e.preventDefault(); this._handleCreate(); });
+
+    const resend = this.querySelector('#ssupResend');
+    if (resend) this.addEventListener(resend, 'click', () => this._handleResend());
+
+    const affForm = this.querySelector('#ssupAffiliateForm');
+    if (affForm) this.addEventListener(affForm, 'submit', (e) => { e.preventDefault(); this._handleAffiliate(); });
+
+    this.querySelectorAll('[data-choice]').forEach((c) => {
+      this.addEventListener(c, 'click', () => this._handleChoice(c.getAttribute('data-choice')));
+    });
+    this.querySelectorAll('[data-plan]').forEach((b) => {
+      this.addEventListener(b, 'click', () => this._handlePlan(b.getAttribute('data-plan')));
+    });
+
+    const map = {
+      'verified-demo': () => this._goto('choice'),
+      'back-cuenta': () => this._goto('cuenta'),
+      'back-choice': () => this._goto('choice'),
+      'back-plans': () => this._goto('plans'),
+    };
+    Object.entries(map).forEach(([action, fn]) => {
+      const el = this.querySelector(`[data-action="${action}"]`);
+      if (el) this.addEventListener(el, 'click', fn);
+    });
+  }
+
+  _goto(step) {
+    this.step = step;
+    // Algunos pasos cambian el ancho de la card → re-render del card completo.
+    const card = this.querySelector('#ssupCard');
+    if (card) {
+      card.classList.toggle('ssup-card--wide', step === 'plans' || step === 'choice');
+    }
+    const body = this.querySelector('#ssupBody');
+    if (body) { body.innerHTML = this.renderStep(); this.wire(); }
+    if (step === 'plans' && !this._plans) this._loadPlans();
+    const card2 = this.querySelector('#ssupCard');
+    card2?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+  }
+
   async _handleEnter() {
     let target = '/home';
     try {
@@ -210,27 +386,6 @@ class SecretSignupView extends (window.BaseView || class {}) {
     } catch (_) {}
     if (window.router) window.router.navigate(target, true);
     else window.location.href = target;
-  }
-
-  wire() {
-    this.querySelectorAll('[data-oauth]').forEach((btn) => {
-      this.addEventListener(btn, 'click', () => this._handleOAuth(btn.getAttribute('data-oauth')));
-    });
-
-    const cuentaForm = this.querySelector('#ssupCuentaForm');
-    if (cuentaForm) this.addEventListener(cuentaForm, 'submit', (e) => { e.preventDefault(); this._handleCreate(); });
-
-    const resend = this.querySelector('#ssupResend');
-    if (resend) this.addEventListener(resend, 'click', () => this._handleResend());
-
-    const back = this.querySelector('[data-action="back-cuenta"]');
-    if (back) this.addEventListener(back, 'click', () => this._goto('cuenta'));
-  }
-
-  _goto(step) {
-    this.step = step;
-    const body = this.querySelector('#ssupBody');
-    if (body) { body.innerHTML = this.renderStep(); this.wire(); }
   }
 
   _captureCuenta() {
@@ -247,26 +402,17 @@ class SecretSignupView extends (window.BaseView || class {}) {
     return true;
   }
 
-  async _ensureSignedOut() {
-    if (!this._hasSession) return;
-    try { await this.supabase.auth.signOut(); } catch (_) {}
-    this._hasSession = false;
-    const banner = this.querySelector('#ssupBanner');
-    if (banner) banner.remove();
-  }
-
   async _handleOAuth(provider) {
+    // Preview: no autenticamos, solo avanzamos al siguiente paso.
+    if (this._preview) { this._goto('choice'); return; }
     if (this._submitting) return;
     this._submitting = true;
-    this._setStatus('', '');
-    await this._ensureSignedOut();
     try {
       const { error } = await this.supabase.auth.signInWithOAuth({
         provider,
         options: { redirectTo: `${window.location.origin}${this._continuePath()}` },
       });
       if (error) throw error;
-      // signInWithOAuth redirige al proveedor; no hay más que hacer aquí.
     } catch (err) {
       this._submitting = false;
       this._setStatus((err && err.message) ? err.message : String(err), 'error');
@@ -274,15 +420,20 @@ class SecretSignupView extends (window.BaseView || class {}) {
   }
 
   async _handleCreate() {
-    if (this._submitting) return;
     this._captureCuenta();
-    if (!this._validateCuenta()) return;
 
+    // Preview: no creamos usuario; pasamos a "verifica tu correo".
+    if (this._preview) {
+      this.createdEmail = this.form.email || 'tucorreo@ejemplo.com';
+      this._goto('verify');
+      return;
+    }
+
+    if (this._submitting) return;
+    if (!this._validateCuenta()) return;
     this._submitting = true;
     this._setSubmitting(true);
     this._setStatus(this._t('Creando tu cuenta y enviando el correo…'), '');
-
-    await this._ensureSignedOut();
 
     const f = this.form;
     try {
@@ -295,14 +446,8 @@ class SecretSignupView extends (window.BaseView || class {}) {
         },
       });
       if (error) throw error;
-
       this.createdEmail = f.email;
-
-      if (data && data.session) {
-        // Confirmación deshabilitada: ir directo a continuar.
-        if (window.router) window.router.navigate(this._continuePath(), true);
-        return;
-      }
+      if (data && data.session) { if (window.router) window.router.navigate(this._continuePath(), true); return; }
       this._submitting = false;
       this._goto('verify');
     } catch (err) {
@@ -312,14 +457,60 @@ class SecretSignupView extends (window.BaseView || class {}) {
     }
   }
 
+  _handleChoice(choice) {
+    if (choice === 'affiliate') this._goto('affiliate');
+    else this._goto('plans');
+  }
+
+  _handleAffiliate() {
+    const token = (this.querySelector('#ssupInviteToken')?.value || '').trim();
+    const key = (this.querySelector('#ssupInviteKey')?.value || '').trim();
+    if (!this._preview) {
+      // Backend de afiliación aún no existe — se cablea después.
+      if (!token || !key) { this._setStatus(this._t('Ingresa el token y la clave.'), 'error'); return; }
+    }
+    this._goto('affiliate_done');
+  }
+
+  _handlePlan(planId) {
+    this._selectedPlan = planId;
+    this._goto('plans_done');
+  }
+
+  async _loadPlans() {
+    let plans = null;
+    try {
+      if (this.supabase) {
+        const { data } = await this.supabase
+          .from('plans')
+          .select('id,name,description,price_usd_month,credits_monthly,max_handles,features,is_popular,display_order')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+        if (Array.isArray(data) && data.length) plans = data;
+      }
+    } catch (_) { /* fallback abajo */ }
+    this._plans = plans || this._fallbackPlans();
+    if (this.step === 'plans') {
+      const body = this.querySelector('#ssupBody');
+      if (body) { body.innerHTML = this.renderStep(); this.wire(); }
+    }
+  }
+
+  _fallbackPlans() {
+    return [
+      { id: 'creator', name: 'Creator', description: 'Solo / freelance que produce contenido de marca.', price_usd_month: 79, credits_monthly: 800, max_handles: 3, features: { vera_basic: true, studio: true, video: true }, is_popular: false },
+      { id: 'team', name: 'Team', description: 'Equipos de marketing pequeños. Vera completo + colaboración.', price_usd_month: 179, credits_monthly: 2500, max_handles: 10, features: { vera_full: true, team_seats: 10, insights: true, brand_kits: 3 }, is_popular: true },
+      { id: 'agency', name: 'Agency', description: 'Agencias gestionando múltiples marcas.', price_usd_month: 499, credits_monthly: 8000, max_handles: 25, features: { vera_full: true, sub_brands: true, team_seats: 25, custom_domain: true }, is_popular: false },
+    ];
+  }
+
   async _handleResend() {
     if (Date.now() < this._resendCooldownUntil) return;
     const email = this.createdEmail;
     if (!email) return;
     try {
       const { error } = await this.supabase.auth.resend({
-        type: 'signup',
-        email,
+        type: 'signup', email,
         options: { emailRedirectTo: `${window.location.origin}${this._continuePath()}` },
       });
       if (error) { this._setStatus(error.message, 'error'); return; }
