@@ -36,6 +36,11 @@ class SecretSignupView extends (window.BaseView || class {}) {
     this._plans = null;
     this._selectedPlan = null;
     this._brandMode = null;
+    // Sub-flujo "Crear automáticamente" (motor reusado del modo dev, páginas propias).
+    this._auto = { url: '', integrations: [] };
+    this._approval = null;
+    this._apIdx = 0;
+    this._autoSimTimer = null;
     this._preview = !!(window.SECRET_SIGNUP && window.SECRET_SIGNUP.preview);
   }
 
@@ -117,6 +122,9 @@ class SecretSignupView extends (window.BaseView || class {}) {
       case 'pay': return this.renderStepPay();
       case 'create-brand': return this.renderStepCreateBrand();
       case 'brand_done': return this.renderStepBrandDone();
+      case 'auto-source': return this.renderStepAutoSource();
+      case 'auto-progress': return this.renderStepAutoProgress();
+      case 'auto-approval': return this.renderStepAutoApproval();
       default: return this.renderStepCuenta();
     }
   }
@@ -366,6 +374,282 @@ class SecretSignupView extends (window.BaseView || class {}) {
     `;
   }
 
+  // ─── Sub-flujo "Crear automáticamente" (motor reusado, páginas propias) ──
+  // Adaptado al contexto público: sin páginas de plan (ya elegido), owner (eres
+  // tú) ni Vera (acción admin/billable). En preview se simula el análisis con
+  // datos de ejemplo; en real se cablearía a /api/brand-scrape + admin-update-brand.
+
+  AUTO_PROVIDERS = [
+    { v: 'shopify', icon: 'fa-bag-shopping', label: 'Shopify' },
+    { v: 'mercadolibre', icon: 'fa-store', label: 'Mercado Libre' },
+    { v: 'amazon', icon: 'fa-box', label: 'Amazon' },
+    { v: 'woocommerce', icon: 'fa-cart-shopping', label: 'WooCommerce' },
+  ];
+
+  AUTO_APPROVAL_PAGES = [
+    { key: 'identity', label: this._t('Identidad') },
+    { key: 'market', label: this._t('Mercado e idioma') },
+    { key: 'voice', label: this._t('Voz y mensaje') },
+    { key: 'colors', label: this._t('Colores') },
+    { key: 'fonts', label: this._t('Tipografía') },
+    { key: 'products', label: this._t('Productos') },
+    { key: 'services', label: this._t('Servicios') },
+    { key: 'competitors', label: this._t('Competencia') },
+    { key: 'review', label: this._t('Resumen') },
+  ];
+
+  renderStepAutoSource() {
+    const a = this._auto;
+    const chips = this.AUTO_PROVIDERS.map((p) => {
+      const on = (a.integrations || []).includes(p.v);
+      return `<button type="button" class="ssup-intg ${on ? 'is-on' : ''}" data-intg="${p.v}" aria-pressed="${on}">
+        <i class="fas ${p.icon}"></i> ${this.escapeHtml(p.label)} <span class="ssup-intg-mark"><i class="fas ${on ? 'fa-check' : 'fa-plus'}"></i></span>
+      </button>`;
+    }).join('');
+    return `
+      <header class="ssup-head">
+        <h1>${this._t('Crear automáticamente')}</h1>
+        <p>${this._t('Danos tu web y Vera investiga tu marca: nombre, colores, tipografías, ADN, productos y competencia.')}</p>
+      </header>
+      <form id="ssupAutoForm" class="ssup-form" novalidate>
+        <div class="ssup-field">
+          <label for="ssupAutoUrl">${this._t('URL de tu web')}</label>
+          <input class="form-input" id="ssupAutoUrl" type="url" placeholder="https://tumarca.com" value="${this.escapeHtml(a.url)}">
+          <small>${this._t('De aquí sacamos tu identidad visual y verbal.')}</small>
+        </div>
+        <div class="ssup-field">
+          <label>${this._t('Conecta tu tienda')} <span class="ssup-opt">(${this._t('opcional · importa productos')})</span></label>
+          <div class="ssup-intgs">${chips}</div>
+        </div>
+        <p class="ssup-status" id="ssupStatus" role="status" aria-live="polite"></p>
+        <button type="submit" class="ssup-btn ssup-btn-primary ssup-btn-block" data-action="auto-create"><i class="fas fa-wand-magic-sparkles"></i> ${this._t('Crear y analizar')}</button>
+        <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-block" data-action="back-create-brand">${this._t('Volver')}</button>
+      </form>
+    `;
+  }
+
+  renderStepAutoProgress() {
+    const steps = [
+      this._t('Creando tu organización'),
+      this._t('Navegando tu sitio web'),
+      this._t('Analizando páginas y contenido'),
+      this._t('Obteniendo el ADN de la marca (IA)'),
+      this._t('Guardando identidad y logo'),
+      this._t('Buscando tu competencia'),
+    ];
+    const done = this._autoSimStep || 0;
+    const items = steps.map((s, i) => {
+      const state = i < done ? 'done' : (i === done ? 'active' : 'pending');
+      const mark = state === 'done' ? '<i class="fas fa-check"></i>'
+        : state === 'active' ? '<i class="fas fa-circle-notch fa-spin"></i>'
+        : '<span class="ssup-load-dot"></span>';
+      return `<li class="ssup-load-item is-${state}"><span class="ssup-load-mark">${mark}</span><span>${this.escapeHtml(s)}</span></li>`;
+    }).join('');
+    return `
+      <header class="ssup-head ssup-head--center">
+        <h1>${this._t('Construyendo tu marca')}</h1>
+        <p>${this._t('Vera está investigando')} ${this.escapeHtml(this._auto.url || '')}…</p>
+      </header>
+      <ul class="ssup-load-list">${items}</ul>
+    `;
+  }
+
+  renderStepAutoApproval() {
+    const pages = this.AUTO_APPROVAL_PAGES;
+    const idx = this._apIdx;
+    const page = pages[idx];
+    const total = pages.length;
+    const isLast = idx === total - 1;
+    const a = this._approval || {};
+    const body = ({
+      identity: () => `${a.logo ? `<div class="ssup-ap-logo"><img src="${this.escapeHtml(a.logo)}" alt="logo" onerror="this.style.display='none'"></div>` : ''}
+        ${this._ssF(this._t('Nombre de la marca'), 'apName', a.name)}
+        ${this._ssF(this._t('Slogan'), 'apSlogan', a.slogan)}`,
+      market: () => `${this._ssF(this._t('Nicho / categoría'), 'apNicho', a.nicho_core)}
+        ${this._ssCSV(this._t('Mercados objetivo (países)'), 'apMercados', a.mercado_objetivo, 'CO, MX')}
+        ${this._ssCSV(this._t('Idiomas de contenido'), 'apIdiomas', a.idiomas_contenido, 'es, en')}`,
+      voice: () => `${this._ssF(this._t('Tono de voz'), 'apTono', a.tono_de_voz)}
+        ${this._ssTA(this._t('Propuesta de valor'), 'apProp', a.propuesta_valor)}
+        ${this._ssTA(this._t('Misión / visión'), 'apMision', a.mision_vision)}
+        ${this._ssCSV(this._t('Pilares'), 'apPilares', a.pilares)}
+        ${this._ssCSV(this._t('Palabras clave'), 'apClave', a.palabras_clave)}
+        ${this._ssCSV(this._t('Palabras prohibidas'), 'apProh', a.palabras_prohibidas)}`,
+      colors: () => this._apColorsBody(),
+      fonts: () => `${this._ssF(this._t('Tipografía principal'), 'apFont1', a.typography_primary)}
+        ${this._ssF(this._t('Tipografía secundaria'), 'apFont2', a.typography_secondary)}
+        ${this._ssF(this._t('Estética'), 'apEstetica', a.estetica)}`,
+      products: () => this._apListBody('products', this._t('Productos'), 'fa-box'),
+      services: () => this._apListBody('services', this._t('Servicios'), 'fa-concierge-bell'),
+      competitors: () => this._apCompBody(),
+      review: () => this._apReviewBody(),
+    }[page.key] || (() => ''))();
+
+    return `
+      <header class="ssup-head">
+        <span class="ssup-eyebrow">${this._t('Revisar')} ${idx + 1}/${total} · ${this.escapeHtml(page.label)}</span>
+        <h1>${this.escapeHtml(page.label)}</h1>
+        <p>${this._t('Vera lo detectó. Edita lo que quieras y avanza para aceptar.')}</p>
+      </header>
+      <form id="ssupApForm" class="ssup-form" novalidate>${body}</form>
+      <div class="ssup-ap-actions">
+        ${idx > 0 ? `<button type="button" class="ssup-btn ssup-btn-ghost" data-action="ap-back">← ${this._t('Atrás')}</button>` : `<button type="button" class="ssup-btn ssup-btn-ghost" data-action="back-create-brand">← ${this._t('Atrás')}</button>`}
+        ${isLast
+          ? `<button type="button" class="ssup-btn ssup-btn-primary" data-action="ap-finish">${this._t('Finalizar')}</button>`
+          : `<button type="button" class="ssup-btn ssup-btn-primary" data-action="ap-next">${this._t('Aceptar y seguir')} →</button>`}
+      </div>
+    `;
+  }
+
+  _ssF(label, id, val, ph) {
+    return `<div class="ssup-field"><label for="${id}">${this.escapeHtml(label)}</label><input class="form-input" id="${id}" value="${this.escapeHtml(val || '')}" placeholder="${this.escapeHtml(ph || '')}"></div>`;
+  }
+  _ssTA(label, id, val) {
+    return `<div class="ssup-field"><label for="${id}">${this.escapeHtml(label)}</label><textarea class="form-input" id="${id}" rows="2">${this.escapeHtml(val || '')}</textarea></div>`;
+  }
+  _ssCSV(label, id, list, ph) {
+    return `<div class="ssup-field"><label for="${id}">${this.escapeHtml(label)}</label><input class="form-input" id="${id}" value="${this.escapeHtml((list || []).join(', '))}" placeholder="${this.escapeHtml(ph || '')}"></div>`;
+  }
+
+  _apColorsBody() {
+    const rows = (this._approval.colors || []).map((c, i) => `
+      <div class="ssup-color-row" data-color-idx="${i}">
+        <input type="color" data-color-hex value="${/^#[0-9a-f]{6}$/i.test(c.hex) ? c.hex : '#000000'}">
+        <span class="ssup-color-role">${this.escapeHtml(c.role || ('color ' + (i + 1)))}</span>
+        <button type="button" class="ssup-row-rm" data-color-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+      </div>`).join('');
+    return `<div class="ssup-field"><label>${this._t('Paleta de la marca')}</label>
+      <div id="ssupColors">${rows || `<p class="ssup-hint">${this._t('Sin colores detectados.')}</p>`}</div>
+      <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-sm" data-action="ap-add-color"><i class="fas fa-plus"></i> ${this._t('Agregar color')}</button></div>`;
+  }
+
+  _apListBody(kind, label, icon) {
+    const items = this._approval[kind] || [];
+    const attr = kind === 'products' ? 'data-prod' : 'data-svc';
+    if (!items.length) return `<p class="ssup-hint">${this._t('No se detectaron')} ${label.toLowerCase()}.</p>`;
+    const rows = items.map((it, i) => `
+      <div class="ssup-list-row" data-${kind}-idx="${i}">
+        <span class="ssup-list-thumb"><i class="fas ${icon}"></i></span>
+        <input class="form-input" ${attr}-name value="${this.escapeHtml(it.name || '')}" placeholder="${this.escapeHtml(label)}">
+        <button type="button" class="ssup-row-rm" data-${kind}-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+      </div>`).join('');
+    return `<div class="ssup-field"><label>${this.escapeHtml(label)} (${items.length})</label><div id="ssup${kind}">${rows}</div></div>`;
+  }
+
+  _apCompBody() {
+    const rows = (this._approval.competitors || []).map((c, i) => `
+      <div class="ssup-list-row" data-comp-idx="${i}">
+        <input class="form-input" data-comp-name value="${this.escapeHtml(c.name || '')}" placeholder="${this._t('Nombre')}">
+        <input class="form-input" data-comp-web value="${this.escapeHtml(c.website || '')}" placeholder="${this._t('sitio web')}">
+        <button type="button" class="ssup-row-rm" data-comp-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+      </div>`).join('');
+    return `<div class="ssup-field"><label>${this._t('Competidores')} (${(this._approval.competitors || []).length})</label>
+      <div id="ssupComps">${rows || `<p class="ssup-hint">${this._t('Sin competidores.')}</p>`}</div>
+      <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-sm" data-action="ap-add-comp"><i class="fas fa-plus"></i> ${this._t('Agregar competidor')}</button></div>`;
+  }
+
+  _apReviewBody() {
+    const a = this._approval;
+    return `<ul class="ssup-review-list">
+      <li><b>${this._t('Marca')}:</b> ${this.escapeHtml(a.name || '—')}${a.slogan ? ' — ' + this.escapeHtml(a.slogan) : ''}</li>
+      <li><b>${this._t('Nicho')}:</b> ${this.escapeHtml(a.nicho_core || '—')}</li>
+      <li><b>${this._t('Mercados')}:</b> ${this.escapeHtml((a.mercado_objetivo || []).join(', ') || '—')} · <b>${this._t('Idiomas')}:</b> ${this.escapeHtml((a.idiomas_contenido || []).join(', ') || '—')}</li>
+      <li><b>${this._t('Tono')}:</b> ${this.escapeHtml(a.tono_de_voz || '—')}</li>
+      <li><b>${this._t('Colores')}:</b> ${(a.colors || []).length} · <b>${this._t('Pilares')}:</b> ${(a.pilares || []).length}</li>
+      <li><b>${this._t('Productos')}:</b> ${(a.products || []).length} · <b>${this._t('Servicios')}:</b> ${(a.services || []).length} · <b>${this._t('Competencia')}:</b> ${(a.competitors || []).length}</li>
+    </ul>`;
+  }
+
+  _toggleIntg(v) {
+    const set = new Set(this._auto.integrations || []);
+    set.has(v) ? set.delete(v) : set.add(v);
+    this._auto.integrations = [...set];
+    const chip = this.querySelector(`[data-intg="${v}"]`);
+    if (chip) {
+      const on = set.has(v);
+      chip.classList.toggle('is-on', on);
+      chip.setAttribute('aria-pressed', String(on));
+      const m = chip.querySelector('.ssup-intg-mark i');
+      if (m) m.className = `fas ${on ? 'fa-check' : 'fa-plus'}`;
+    }
+  }
+
+  _handleAutoCreate() {
+    this._auto.url = (this.querySelector('#ssupAutoUrl')?.value || '').trim();
+    if (!this._preview && !this._auto.url) { this._setStatus(this._t('Agrega la URL de tu web.'), 'error'); return; }
+    if (this._preview) { this._runAutoSim(); return; }
+    // En real: aquí se crea el shell (admin_create_organization) y se lanza
+    // /api/brand-scrape con organization_id, luego polling → _enterApproval(payload).
+    this._setStatus(this._t('Motor de análisis pendiente de cablear fuera de demo.'), 'error');
+  }
+
+  // Preview: simula el análisis avanzando el checklist y entra a la aprobación.
+  _runAutoSim() {
+    this._autoSimStep = 0;
+    this._goto('auto-progress');
+    const tick = () => {
+      this._autoSimStep = (this._autoSimStep || 0) + 1;
+      const body = this.querySelector('#ssupBody');
+      if (body && this.step === 'auto-progress') body.innerHTML = this.renderStep();
+      if (this._autoSimStep >= 6) {
+        clearInterval(this._autoSimTimer); this._autoSimTimer = null;
+        this._enterApproval(this._mockBrand());
+      }
+    };
+    if (this._autoSimTimer) clearInterval(this._autoSimTimer);
+    this._autoSimTimer = setInterval(tick, 700);
+  }
+
+  _mockBrand() {
+    let host = (this._auto.url || '').replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0] || 'tumarca.com';
+    const base = host.split('.')[0] || 'Tu Marca';
+    const name = base.charAt(0).toUpperCase() + base.slice(1);
+    return {
+      logo: null, name, slogan: this._t('Tu marca, potenciada por IA'),
+      nicho_core: this._t('alimentos y bebidas'),
+      mercado_objetivo: ['CO'], idiomas_contenido: ['es'], locale: 'es', timezone: 'America/Bogota',
+      tono_de_voz: this._t('amigable'),
+      propuesta_valor: this._t('Productos pensados para tu día a día, con calidad e identidad.'),
+      mision_vision: this._t('Construir una marca cercana que crece con su comunidad.'),
+      pilares: [this._t('calidad'), this._t('innovación'), this._t('comunidad')],
+      palabras_clave: [this._t('natural'), this._t('premium'), this._t('local')],
+      palabras_prohibidas: [this._t('barato')],
+      colors: [{ role: 'primary', hex: '#1a1a1a' }, { role: 'secondary', hex: '#f5f5f5' }, { role: 'accent_1', hex: '#7c83ff' }],
+      typography_primary: 'Inter', typography_secondary: 'Lora', estetica: this._t('minimalista, premium'),
+      products: [{ name: this._t('Producto 1') }, { name: this._t('Producto 2') }],
+      services: [],
+      competitors: [{ name: this._t('Competidor A'), website: 'competidor-a.com' }],
+    };
+  }
+
+  _enterApproval(brand) {
+    this._approval = brand;
+    this._apIdx = 0;
+    this._goto('auto-approval');
+  }
+
+  _apCollect() {
+    const a = this._approval; if (!a) return;
+    const g = (id) => (this.querySelector('#' + id)?.value || '').trim();
+    const csv = (id) => g(id).split(',').map((s) => s.trim()).filter(Boolean);
+    const key = this.AUTO_APPROVAL_PAGES[this._apIdx]?.key;
+    if (key === 'identity') { a.name = g('apName'); a.slogan = g('apSlogan'); }
+    else if (key === 'market') { a.nicho_core = g('apNicho'); a.mercado_objetivo = csv('apMercados'); a.idiomas_contenido = csv('apIdiomas'); }
+    else if (key === 'voice') { a.tono_de_voz = g('apTono'); a.propuesta_valor = g('apProp'); a.mision_vision = g('apMision'); a.pilares = csv('apPilares'); a.palabras_clave = csv('apClave'); a.palabras_prohibidas = csv('apProh'); }
+    else if (key === 'colors') { a.colors = [...this.querySelectorAll('#ssupColors .ssup-color-row')].map((r, i) => ({ role: a.colors?.[i]?.role || ('accent_' + i), hex: r.querySelector('[data-color-hex]')?.value || '#000000' })); }
+    else if (key === 'fonts') { a.typography_primary = g('apFont1'); a.typography_secondary = g('apFont2'); a.estetica = g('apEstetica'); }
+    else if (key === 'products') { a.products = [...this.querySelectorAll('#ssupproducts .ssup-list-row')].map((r) => ({ name: (r.querySelector('[data-prod-name]')?.value || '').trim() })).filter((p) => p.name); }
+    else if (key === 'services') { a.services = [...this.querySelectorAll('#ssupservices .ssup-list-row')].map((r) => ({ name: (r.querySelector('[data-svc-name]')?.value || '').trim() })).filter((s) => s.name); }
+    else if (key === 'competitors') { a.competitors = [...this.querySelectorAll('#ssupComps .ssup-list-row')].map((r) => ({ name: (r.querySelector('[data-comp-name]')?.value || '').trim(), website: (r.querySelector('[data-comp-web]')?.value || '').trim() })).filter((c) => c.name); }
+  }
+
+  _apNext() {
+    this._apCollect();
+    // En real, aquí se guardaría la sección con admin-update-brand(section,data).
+    if (this._apIdx < this.AUTO_APPROVAL_PAGES.length - 1) { this._apIdx++; this._goto('auto-approval'); }
+  }
+  _apBack() { this._apCollect(); if (this._apIdx > 0) { this._apIdx--; this._goto('auto-approval'); } }
+  _apFinish() { this._apCollect(); this._brandMode = 'auto'; this._goto('brand_done'); }
+
   _googleIcon() {
     return `<svg class="ssup-oauth-ico" viewBox="0 0 18 18" aria-hidden="true" width="18" height="18">
       <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>
@@ -418,6 +702,25 @@ class SecretSignupView extends (window.BaseView || class {}) {
       this.addEventListener(b, 'click', () => this._handleBrandMode(b.getAttribute('data-brand-mode')));
     });
 
+    // Sub-flujo automático
+    const autoForm = this.querySelector('#ssupAutoForm');
+    if (autoForm) this.addEventListener(autoForm, 'submit', (e) => { e.preventDefault(); this._handleAutoCreate(); });
+    this.querySelectorAll('[data-intg]').forEach((c) => {
+      this.addEventListener(c, 'click', () => this._toggleIntg(c.getAttribute('data-intg')));
+    });
+    this.querySelectorAll('[data-color-rm]').forEach((b) => {
+      this.addEventListener(b, 'click', () => { this._apCollect(); this._approval.colors.splice(parseInt(b.getAttribute('data-color-rm'), 10), 1); this._goto('auto-approval'); });
+    });
+    this.querySelectorAll('[data-prod-rm]').forEach((b) => {
+      this.addEventListener(b, 'click', () => { this._apCollect(); this._approval.products.splice(parseInt(b.getAttribute('data-prod-rm'), 10), 1); this._goto('auto-approval'); });
+    });
+    this.querySelectorAll('[data-svc-rm]').forEach((b) => {
+      this.addEventListener(b, 'click', () => { this._apCollect(); this._approval.services.splice(parseInt(b.getAttribute('data-svc-rm'), 10), 1); this._goto('auto-approval'); });
+    });
+    this.querySelectorAll('[data-comp-rm]').forEach((b) => {
+      this.addEventListener(b, 'click', () => { this._apCollect(); this._approval.competitors.splice(parseInt(b.getAttribute('data-comp-rm'), 10), 1); this._goto('auto-approval'); });
+    });
+
     const map = {
       'verified-demo': () => this._goto('choice'),
       'back-cuenta': () => this._goto('cuenta'),
@@ -425,6 +728,11 @@ class SecretSignupView extends (window.BaseView || class {}) {
       'back-plans': () => this._goto('plans'),
       'pay': () => this._handlePay(),
       'back-create-brand': () => this._goto('create-brand'),
+      'ap-next': () => this._apNext(),
+      'ap-back': () => this._apBack(),
+      'ap-finish': () => this._apFinish(),
+      'ap-add-color': () => { this._apCollect(); this._approval.colors = [...(this._approval.colors || []), { role: 'accent', hex: '#7c83ff' }]; this._goto('auto-approval'); },
+      'ap-add-comp': () => { this._apCollect(); this._approval.competitors = [...(this._approval.competitors || []), { name: '', website: '' }]; this._goto('auto-approval'); },
     };
     Object.entries(map).forEach(([action, fn]) => {
       const el = this.querySelector(`[data-action="${action}"]`);
@@ -559,6 +867,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
 
   _handleBrandMode(mode) {
     this._brandMode = mode;
+    if (mode === 'auto') { this._goto('auto-source'); return; }
     this._goto('brand_done');
   }
 
@@ -636,6 +945,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
 
   destroy() {
     if (this._cooldownTimer) { clearInterval(this._cooldownTimer); this._cooldownTimer = null; }
+    if (this._autoSimTimer) { clearInterval(this._autoSimTimer); this._autoSimTimer = null; }
     super.destroy?.();
   }
 }
