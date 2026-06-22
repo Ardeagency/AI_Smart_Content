@@ -42,9 +42,28 @@ class SecretSignupView extends (window.BaseView || class {}) {
       level_of_autonomy: 'parcial',
     };
     this.createdEmail = '';
+    this._hasSession = false;
+    this._sessionEmail = '';
   }
 
   async updateHeader() { /* pagina publica: sin header */ }
+
+  // Corre ANTES de renderHTML: detectamos sesión aquí para que el banner ya
+  // aparezca en el primer pintado (no redirigimos: es una página de registro).
+  async onEnter() {
+    await super.onEnter?.();
+    try {
+      this.supabase = window.supabase
+        || (window.supabaseService && (await window.supabaseService.getClient()));
+      if (this.supabase) {
+        const { data: { user } } = await this.supabase.auth.getUser();
+        if (user && user.is_anonymous !== true) {
+          this._hasSession = true;
+          this._sessionEmail = user.email || '';
+        }
+      }
+    } catch (_) { /* seguir con el registro */ }
+  }
 
   STEPS = [
     { key: 'cuenta', label: 'Cuenta' },
@@ -69,6 +88,12 @@ class SecretSignupView extends (window.BaseView || class {}) {
           <div class="ssup-brand">
             <img src="/recursos/logos/logo-02.svg" alt="AI Smart Content" class="ssup-brand-logo" width="170" height="64" decoding="async">
           </div>
+          ${this._hasSession ? `
+            <div class="ssup-banner" id="ssupBanner">
+              <span>${this._t('Tienes sesión iniciada como')} <strong>${this.escapeHtml(this._sessionEmail)}</strong>. ${this._t('Para crear una cuenta nueva cerraremos esta sesión.')}</span>
+              <button type="button" class="ssup-banner-btn" id="ssupLogout">${this._t('Cerrar sesión')}</button>
+            </div>
+          ` : ''}
           <div class="ssup-body" id="ssupBody">
             ${this.renderStep()}
           </div>
@@ -257,15 +282,19 @@ class SecretSignupView extends (window.BaseView || class {}) {
       this._setStatus(this._t('No se pudo cargar Supabase. Recarga la página.'), 'error');
       return;
     }
-    // Si ya hay sesión real, no tiene sentido registrarse otra vez.
-    try {
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (user && user.is_anonymous !== true) {
-        if (window.router) window.router.navigate('/home', true);
-        return;
-      }
-    } catch (_) { /* seguir con el registro */ }
+    // No redirigimos aunque haya sesión: es una página de registro. El banner
+    // (pintado vía onEnter) ofrece cerrar sesión.
     this.wire();
+    const logout = this.querySelector('#ssupLogout');
+    if (logout) this.addEventListener(logout, 'click', () => this._handleLogout());
+  }
+
+  async _handleLogout() {
+    try { await this.supabase.auth.signOut(); } catch (_) {}
+    this._hasSession = false;
+    this._sessionEmail = '';
+    const banner = this.querySelector('#ssupBanner');
+    if (banner) banner.remove();
   }
 
   wire() {
@@ -336,6 +365,15 @@ class SecretSignupView extends (window.BaseView || class {}) {
     this._submitting = true;
     this._setSubmitting(true);
     this._setStatus(this._t('Creando tu cuenta y enviando el correo…'), '');
+
+    // Si había una sesión activa, cerrarla antes de registrar para no mezclar
+    // estados (el signUp dejaría una sesión nueva por encima de la vieja).
+    if (this._hasSession) {
+      try { await this.supabase.auth.signOut(); } catch (_) {}
+      this._hasSession = false;
+      const banner = this.querySelector('#ssupBanner');
+      if (banner) banner.remove();
+    }
 
     const f = this.form;
     const cont = (window.SECRET_SIGNUP && window.SECRET_SIGNUP.continue) || '/registro/continuar';
