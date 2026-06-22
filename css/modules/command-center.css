@@ -10,8 +10,11 @@
 .cc-page {
   min-height: calc(100vh - var(--app-header-height, 45.8px));
   padding: 15px;
-  max-width: 1280px;
-  margin: 0 auto;
+  /* Full-width: el canvas de nodos + toolbar + rail deben usar todo el ancho
+     util bajo el header. Un max-width + margin:auto dejaba vacios a los lados
+     (bug recurrente del contenedor raiz de pagina). */
+  width: 100%;
+  margin: 0;
   padding-top: 15px;
   box-sizing: border-box;
   /* Misma familia cromática que el shell, sin “cristal” encima */
@@ -432,7 +435,12 @@
    viewport SIN scroll. height fijo en vez de min-height para que el alto
    se cierre exactamente al espacio disponible bajo el header del shell. */
 .cc-page:has(#ccTwoCol) {
-  max-width: 1800px;
+  /* Full-width real: el mapa de nodos usa TODO el ancho util bajo el header.
+     Sin max-width ni centrado para que no queden vacios a los lados en
+     monitores anchos. */
+  width: 100%;
+  max-width: none;
+  margin: 0;
   padding: 12px 20px;
   display: flex;
   flex-direction: column;
@@ -440,8 +448,6 @@
   min-height: 0;
   overflow: hidden;
 }
-
-/* En viewports muy anchos (>1900px) seguimos centrado con 1800px */
 
 /* ════════════════════════════════════════════════════════════════════
    CANVAS v6 — lienzo de nodos (audiencias ↔ campanas)
@@ -562,7 +568,13 @@
   color: var(--text-muted, rgba(212, 209, 216, 0.6));
 }
 .cc-canvas-empty i { font-size: 2rem; opacity: 0.5; }
-.cc-canvas-empty p { max-width: 360px; font-size: 0.9rem; line-height: 1.5; margin: 0; }
+.cc-canvas-empty-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  margin: 0;
+}
+.cc-canvas-empty p { max-width: 420px; font-size: 0.9rem; line-height: 1.5; margin: 0; }
 
 /* ── Nodos: premium dark gradient + glow inferior por tipo ──────────── */
 /* Vars por tipo: --cc-grad-end (fin del gradiente), --cc-glow-1 (profundo),
