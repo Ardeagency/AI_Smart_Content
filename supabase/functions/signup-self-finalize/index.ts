@@ -84,13 +84,11 @@ Deno.serve(async (req) => {
     }
 
     const pending = (meta.pending_org ?? {}) as PendingOrg;
-    const name = (pending.name || "").trim();
-    if (!name) {
-      return errorResponse(
-        "No hay datos de organizacion pendientes (pending_org.name)",
-        400,
-      );
-    }
+    // Nombre de la org: el de pending_org si vino del alta por email; si no
+    // (p.ej. alta por Google/Facebook), se deriva del usuario.
+    const fullName = (meta.full_name as string) || (meta.name as string) || "";
+    const emailLocal = (user.email || "").split("@")[0] || "";
+    const name = (pending.name || fullName || emailLocal || "Mi organizacion").trim();
     const autonomy = pending.level_of_autonomy &&
         VALID_AUTONOMY.has(pending.level_of_autonomy)
       ? pending.level_of_autonomy
@@ -102,7 +100,7 @@ Deno.serve(async (req) => {
       .upsert({
         id: uid,
         email: user.email,
-        full_name: (meta.full_name as string) ?? null,
+        full_name: fullName || null,
         role: "user",
         default_view_mode: "user",
         is_developer: false,
