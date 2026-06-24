@@ -254,11 +254,15 @@ class TasksView extends BaseView {
     this._liveReady = true;
 
     this._liveSnapshot = async () => {
-      const schedules = await this._fetchSchedules(this.userId);
-      const { data: runs } = await this.supabase
+      const orgId = this.organizationId || null;
+      const schedules = await this._fetchSchedules(this.userId, orgId);
+      let runsQ = this.supabase
         .from('flow_runs')
         .select('id, status, created_at')
-        .eq('user_id', this.userId)
+        .eq('user_id', this.userId);
+      // Aislamiento por org activa también en el snapshot live del calendario.
+      if (orgId) runsQ = runsQ.eq('organization_id', orgId);
+      const { data: runs } = await runsQ
         .order('created_at', { ascending: false })
         .limit(50);
       return { schedules, runs: runs || [] };
@@ -333,9 +337,11 @@ class TasksView extends BaseView {
     if (!this.supabase || !this.userId) return [];
     const userId = this.userId;
     try {
-      const fetcher = () => this._fetchSchedules(userId);
+      const orgId = this.organizationId || null;
+      const fetcher = () => this._fetchSchedules(userId, orgId);
+      // Cache por org: sin esto el calendario de una org se mostraria en otra.
       this.schedules = window.apiClient
-        ? await window.apiClient.query(`tasks:schedules:${userId}`, fetcher, { ttl: 30 * 1000, staleWhileRevalidate: true })
+        ? await window.apiClient.query(`tasks:schedules:${orgId || userId}`, fetcher, { ttl: 30 * 1000, staleWhileRevalidate: true })
         : await fetcher();
       return this.schedules;
     } catch (e) {
@@ -345,11 +351,15 @@ class TasksView extends BaseView {
   }
 
   /** Implementación real (separada para que apiClient pueda envolverla). Errores propagan al caller. */
-  async _fetchSchedules(userId) {
-    const { data, error } = await this.supabase
+  async _fetchSchedules(userId, orgId = null) {
+    let q = this.supabase
       .from('flow_schedules')
       .select('id, user_id, flow_id, brand_id, cron_expression, status, job_name, created_at, entity_ids, campaign_ids, audience_ids, production_count, aspect_ratio, production_specifications')
-      .eq('user_id', userId)
+      .eq('user_id', userId);
+    // Aislamiento por org activa: flow_schedules tiene organization_id; sin este
+    // filtro un usuario multi-org ve las tareas de TODAS sus orgs en cada workspace.
+    if (orgId) q = q.eq('organization_id', orgId);
+    const { data, error } = await q
       .order('created_at', { ascending: false });
     if (error) throw error;
     const schedules = data || [];

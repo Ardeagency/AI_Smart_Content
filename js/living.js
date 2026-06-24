@@ -233,18 +233,28 @@ class LivingManager {
 
     async loadProjectData() {
         if (!this.supabase || !this.userId) { this.projectData = null; return; }
+        // La marca SIEMPRE se resuelve dentro de la org activa de la URL, nunca
+        // "la más reciente del usuario": un usuario multi-org (ej. dueño de IGNIS
+        // y WAKEUP) heredaria la marca de otra org y las producciones/tareas se
+        // cruzarian entre workspaces. La org activa la publica el router en
+        // window.currentOrgId (resuelta desde /org/{shortId}/{slug}).
+        const activeOrgId = this.organizationId || window.currentOrgId || this.routeParams?.orgId || null;
+        if (activeOrgId) this.organizationId = activeOrgId;
         try {
             const fetcher = async () => {
-                const { data, error } = await this.supabase
-                    .from('brand_containers').select('*')
-                    .eq('user_id', this.userId)
-                    .order('created_at', { ascending: false })
+                let q = this.supabase.from('brand_containers').select('*');
+                // Scope duro a la org activa; solo rutas legacy sin /org/ caen al usuario.
+                q = activeOrgId ? q.eq('organization_id', activeOrgId) : q.eq('user_id', this.userId);
+                const { data, error } = await q
+                    .order('created_at', { ascending: true })
                     .limit(1).maybeSingle();
                 if (error) throw error;
                 return data;
             };
+            // Cache por org (no por usuario) para no arrastrar la marca de otra org.
+            const cacheKey = `living:project:${activeOrgId || this.userId}`;
             this.projectData = window.apiClient
-                ? await window.apiClient.query(`living:project:${this.userId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+                ? await window.apiClient.query(cacheKey, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
                 : await fetcher();
         } catch (error) {
             console.error('❌ Error cargando datos del proyecto:', error);
