@@ -527,16 +527,20 @@ class FlowCatalogView extends BaseView {
     if (!this.supabase || !this.userId) return;
     try {
       const fetcher = async () => {
-        const { data, error } = await this.supabase
+        let q = this.supabase
           .from('flow_runs')
           .select('flow_id')
-          .eq('user_id', this.userId)
+          .eq('user_id', this.userId);
+        // "Usados recientemente" debe reflejar solo la org activa, no la actividad
+        // del usuario en otras orgs.
+        if (this.organizationId) q = q.eq('organization_id', this.organizationId);
+        const { data, error } = await q
           .order('created_at', { ascending: false })
           .limit(50);
         return !error && data ? data : [];
       };
       const data = window.apiClient
-        ? await window.apiClient.query(`flow:recent_runs:${this.userId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+        ? await window.apiClient.query(`flow:recent_runs:${this.organizationId || this.userId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
         : await fetcher();
       if (data) {
         const seen = new Set();

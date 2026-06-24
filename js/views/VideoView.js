@@ -1134,8 +1134,12 @@ class VideoView extends BaseView {
         return { ...o, media_url, isVideo, isImage };
       };
 
-      // Origen 1: runs_outputs (linkeados a flow_runs del usuario)
-      const { data: runs } = await this.supabase.from('flow_runs').select('id').eq('user_id', user.id);
+      // Origen 1: runs_outputs (linkeados a flow_runs de la org activa).
+      // Sin el filtro de organization_id, un usuario multi-org veria los videos
+      // de todas sus orgs mezclados en cualquier workspace.
+      let runsQ = this.supabase.from('flow_runs').select('id').eq('user_id', user.id);
+      if (this.organizationId) runsQ = runsQ.eq('organization_id', this.organizationId);
+      const { data: runs } = await runsQ;
       const runIds = (runs || []).map((r) => r.id).filter(Boolean);
       let fromRuns = [];
       if (runIds.length > 0) {
