@@ -81,7 +81,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
       <div class="signin-container signin-container--hero ssup-scope">
         <video class="signin-hero-video" autoplay muted loop playsinline preload="auto"
                poster="https://res.cloudinary.com/dmruwjuxn/image/upload/v1779481981/__8_kejphv.jpg">
-          <source src="https://res.cloudinary.com/dmruwjuxn/video/upload/v1779651061/Home_banner_kjnlcm.mp4" type="video/mp4">
+          <source src="https://tsdpbqcwjckbfsdqacam.supabase.co/storage/v1/object/public/web-assets/home-banner.mp4" type="video/mp4">
         </video>
         <div class="signin-card ssup-card${wide}" id="ssupCard">
           <div class="signin-brand">
