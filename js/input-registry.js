@@ -1496,24 +1496,28 @@
     if (!v || typeof v !== 'object') v = {};
     var type = (v.type === 'radial') ? 'radial' : 'linear';
     var angle = (v.angle != null && !isNaN(Number(v.angle))) ? Number(v.angle) : 135;
-    var stops = Array.isArray(v.stops) ? v.stops.map(normalizeHex) : [];
-    if (stops.length < 2) {
-      var opt = [];
-      if (f && Array.isArray(f.options)) {
-        opt = f.options.map(function (o) { return typeof o === 'string' ? o : (o && (o.value || o.hex)); })
-          .filter(Boolean).map(normalizeHex);
-      }
-      if (opt.length >= 2) {
-        stops = opt;
-      } else {
-        // Sin opciones: derivar del degradado de la ORG ACTIVA, no de un color de
-        // marca hardcodeado (antes el rojo de IGNIS #e02020 se filtraba a todas las
-        // orgs). Si la org no tiene colores cargados, neutro oscuro.
-        var brand = (window.OrgBrandTheme && typeof window.OrgBrandTheme.getLastBrandHexes === 'function')
-          ? (window.OrgBrandTheme.getLastBrandHexes() || []) : [];
-        brand = brand.map(normalizeHex).filter(Boolean);
-        stops = (brand.length >= 2) ? brand.slice(0, 2)
-          : (brand.length === 1 ? [brand[0], '#0b0b0b'] : ['#2a2a2a', '#0b0b0b']);
+    // AISLAMIENTO DE MARCA: el degradado por defecto SIEMPRE refleja la ORG ACTIVA,
+    // por encima de cualquier default horneado en el flujo (que puede traer el color
+    // de OTRA marca — p.ej. el rojo de IGNIS #e02020 filtrandose a WAKEUP). Esto solo
+    // fija el valor inicial del formulario; el usuario puede cambiarlo.
+    var brand = (window.OrgBrandTheme && typeof window.OrgBrandTheme.getLastBrandHexes === 'function')
+      ? (window.OrgBrandTheme.getLastBrandHexes() || []).map(normalizeHex).filter(Boolean) : [];
+    var stops;
+    if (brand.length >= 2) {
+      stops = brand.slice(0, 4);
+    } else if (brand.length === 1) {
+      stops = [brand[0], '#0b0b0b'];
+    } else {
+      // La org activa no tiene colores cargados: recien ahi usar lo que defina el
+      // flujo (v.stops/options) y, en ultimo caso, neutro oscuro (nunca un color de marca).
+      stops = Array.isArray(v.stops) ? v.stops.map(normalizeHex).filter(Boolean) : [];
+      if (stops.length < 2) {
+        var opt = [];
+        if (f && Array.isArray(f.options)) {
+          opt = f.options.map(function (o) { return typeof o === 'string' ? o : (o && (o.value || o.hex)); })
+            .filter(Boolean).map(normalizeHex);
+        }
+        stops = (opt.length >= 2) ? opt : ['#2a2a2a', '#0b0b0b'];
       }
     }
     return { type: type, angle: angle, stops: stops.slice(0, 4) };

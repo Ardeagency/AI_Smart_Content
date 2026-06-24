@@ -1169,6 +1169,7 @@ class DevTestView extends DevBaseView {
     const to = from + pageSize - 1;
 
     try {
+      // isolation-safe: vista /dev/* solo developers (diagnóstico de runs, cross-org intencional)
       const { data, error, count } = await this.supabase
         .from('flow_runs')
         .select(`
@@ -1456,6 +1457,7 @@ class DevTestView extends DevBaseView {
     
     try {
       // Get all runs for this flow
+      // isolation-safe: vista /dev/* solo developers (stats por flow, cross-org intencional)
       const { data: runs, error } = await this.supabase
         .from('flow_runs')
         .select('status, webhook_response_code, created_at')

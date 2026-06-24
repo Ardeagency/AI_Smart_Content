@@ -2214,10 +2214,13 @@
     if (!this._supabase) return;
     if (!this._prodData) this._prodData = {};
     try {
-      const { data: prods } = await this._supabase
+      let prodQ = this._supabase
         .from('runs_outputs')
         .select('id, output_type, published_at')
-        .eq(col, id)
+        .eq(col, id);
+      // Aislamiento por org activa (no basta el brief_id/campaign_id ni RLS).
+      if (this._organizationId) prodQ = prodQ.eq('organization_id', this._organizationId);
+      const { data: prods } = await prodQ
         .order('created_at', { ascending: false })
         .limit(6);
       const list = Array.isArray(prods) ? prods : [];

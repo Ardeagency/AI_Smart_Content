@@ -1911,24 +1911,30 @@ class FlowCatalogView extends BaseView {
     return { media_url, isVideo };
   }
 
-  // Ultimas PRODUCCIONES de ESTE flow (flow_runs por flow_id), sin filtrar por
-  // usuario ni por fecha — las mas recientes que existan. El scope de visibilidad
-  // lo da RLS (org del usuario).
+  // Ultimas PRODUCCIONES de ESTE flow (flow_runs por flow_id) DE LA ORG ACTIVA.
+  // NO basta con RLS: un usuario dueño de varias orgs pasa RLS para todas, así que
+  // sin filtrar por organization_id se filtran producciones de otra org (p.ej. las
+  // de IGNIS apareciendo en WAKEUP). content_flows es catálogo global compartido,
+  // pero sus runs/producciones son por org.
   async loadFlowRuns(flowId, limit = 2) {
     if (!this.supabase || !flowId) return [];
     try {
-      let { data: runs, error } = await this.supabase
+      let q1 = this.supabase
         .from('flow_runs')
         .select('id, created_at, status')
-        .eq('flow_id', flowId)
+        .eq('flow_id', flowId);
+      if (this.organizationId) q1 = q1.eq('organization_id', this.organizationId);
+      let { data: runs, error } = await q1
         .order('created_at', { ascending: false })
         .limit(8);
       if (error) {
         // status puede no existir en algun entorno → reintento minimo
-        const r2 = await this.supabase
+        let q2 = this.supabase
           .from('flow_runs')
           .select('id, created_at')
-          .eq('flow_id', flowId)
+          .eq('flow_id', flowId);
+        if (this.organizationId) q2 = q2.eq('organization_id', this.organizationId);
+        const r2 = await q2
           .order('created_at', { ascending: false })
           .limit(8);
         runs = r2.data; error = r2.error;

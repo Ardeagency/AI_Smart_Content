@@ -6,7 +6,8 @@
   "description": "AI Smart Content — frontend SPA + Netlify Functions (smoke tests against Supabase + ai-engine)",
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "audit:isolation": "node scripts/audit-org-isolation.mjs"
   },
   "dependencies": {
     "@netlify/functions": "^2.8.0",

@@ -203,11 +203,15 @@ class ProductsView extends BaseView {
    */
   async loadProductForDetail(productId) {
     if (!this.supabase || !productId) return null;
-      const { data, error } = await this.supabase
-        .from('products')
-        .select('*')
-      .eq('id', productId)
-        .single();
+    let q = this.supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId);
+    // Aislamiento: aunque el id es único, acotar a la org activa evita resolver un
+    // producto de otra org del mismo usuario (RLS permite todas sus orgs).
+    const orgId = this.organizationId || window.currentOrgId || null;
+    if (orgId) q = q.eq('organization_id', orgId);
+    const { data, error } = await q.single();
     if (error) return null;
     return data;
   }
@@ -231,11 +235,13 @@ class ProductsView extends BaseView {
    */
   async loadEntityName(entityId) {
     if (!this.supabase || !entityId) return '';
-    const { data, error } = await this.supabase
+    let q = this.supabase
       .from('brand_entities')
       .select('name')
-      .eq('id', entityId)
-      .single();
+      .eq('id', entityId);
+    const orgId = this.organizationId || window.currentOrgId || null;
+    if (orgId) q = q.eq('organization_id', orgId);
+    const { data, error } = await q.single();
     if (error || !data) return '';
     return data.name || '';
   }
