@@ -1657,28 +1657,10 @@ class VideoView extends BaseView {
   async getBrandContainerId() {
     if (!this.supabase) return null;
     try {
-      if (this.organizationId) {
-        const { data } = await this.supabase
-          .from('brand_containers')
-          .select('id')
-          .eq('organization_id', this.organizationId)
-          .order('created_at', { ascending: true })
-          .limit(1)
-          .maybeSingle();
-        if (data?.id) return data.id;
-      }
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (user?.id) {
-        const { data } = await this.supabase
-          .from('brand_containers')
-          .select('id')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (data?.id) return data.id;
-      }
-      return null;
+      // Regla central de aislamiento: marca dentro de la org activa, sin fallback
+      // cross-org a user_id (ver js/org-url.js resolveActiveBrandContainerId).
+      const uid = this.userId || (await this.supabase.auth.getUser())?.data?.user?.id || null;
+      return await window.resolveActiveBrandContainerId(this.supabase, this.organizationId, uid);
     } catch (e) {
       console.error('VideoView getBrandContainerId:', e);
       return null;

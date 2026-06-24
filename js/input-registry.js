@@ -1503,7 +1503,18 @@
         opt = f.options.map(function (o) { return typeof o === 'string' ? o : (o && (o.value || o.hex)); })
           .filter(Boolean).map(normalizeHex);
       }
-      stops = (opt.length >= 2 ? opt : ['#e02020', '#0b0b0b']);
+      if (opt.length >= 2) {
+        stops = opt;
+      } else {
+        // Sin opciones: derivar del degradado de la ORG ACTIVA, no de un color de
+        // marca hardcodeado (antes el rojo de IGNIS #e02020 se filtraba a todas las
+        // orgs). Si la org no tiene colores cargados, neutro oscuro.
+        var brand = (window.OrgBrandTheme && typeof window.OrgBrandTheme.getLastBrandHexes === 'function')
+          ? (window.OrgBrandTheme.getLastBrandHexes() || []) : [];
+        brand = brand.map(normalizeHex).filter(Boolean);
+        stops = (brand.length >= 2) ? brand.slice(0, 2)
+          : (brand.length === 1 ? [brand[0], '#0b0b0b'] : ['#2a2a2a', '#0b0b0b']);
+      }
     }
     return { type: type, angle: angle, stops: stops.slice(0, 4) };
   }

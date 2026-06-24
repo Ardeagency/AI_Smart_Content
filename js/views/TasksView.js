@@ -305,27 +305,9 @@ class TasksView extends BaseView {
   async getBrandContainerId() {
     if (!this.supabase) return null;
     try {
-      if (this.organizationId) {
-        const { data, error } = await this.supabase
-          .from('brand_containers')
-          .select('id')
-          .eq('organization_id', this.organizationId)
-          .order('created_at', { ascending: true })
-          .limit(1)
-          .maybeSingle();
-        if (!error && data?.id) return data.id;
-      }
-      if (this.userId) {
-        const { data, error } = await this.supabase
-          .from('brand_containers')
-          .select('id')
-          .eq('user_id', this.userId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (!error && data?.id) return data.id;
-      }
-      return null;
+      // Regla central de aislamiento: marca dentro de la org activa, sin fallback
+      // cross-org a user_id (ver js/org-url.js resolveActiveBrandContainerId).
+      return await window.resolveActiveBrandContainerId(this.supabase, this.organizationId, this.userId);
     } catch (e) {
       console.error('TasksView getBrandContainerId:', e);
       return null;

@@ -1702,31 +1702,9 @@ class StudioView extends BaseView {
     if (!this.supabase) return null;
     try {
       const cacheKey = `studio:bc_id:org=${this.organizationId || ''}:user=${this.userId || ''}`;
-      const fetcher = async () => {
-        // 1) Marca de la organización (cuando la org tiene brand_containers con organization_id)
-        if (this.organizationId) {
-          const { data: byOrg, error: errOrg } = await this.supabase
-            .from('brand_containers')
-            .select('id')
-            .eq('organization_id', this.organizationId)
-            .order('created_at', { ascending: true })
-            .limit(1)
-            .maybeSingle();
-          if (!errOrg && byOrg && byOrg.id) return byOrg.id;
-        }
-        // 2) Fallback: marca del usuario (user_id), como en products.js
-        if (this.userId) {
-          const { data: byUser, error: errUser } = await this.supabase
-            .from('brand_containers')
-            .select('id')
-            .eq('user_id', this.userId)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          if (!errUser && byUser && byUser.id) return byUser.id;
-        }
-        return null;
-      };
+      // Regla central de aislamiento: la marca SIEMPRE se resuelve dentro de la org
+      // activa, sin fallback cross-org a user_id (ver js/org-url.js).
+      const fetcher = () => window.resolveActiveBrandContainerId(this.supabase, this.organizationId, this.userId);
       return window.apiClient
         ? await window.apiClient.query(cacheKey, fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
         : await fetcher();

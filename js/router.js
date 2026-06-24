@@ -308,6 +308,18 @@ class Router {
         }
       }
 
+      // Aislamiento: al CAMBIAR de org, soltar los caches por-marca/por-usuario para
+      // que ninguna vista reutilice la marca/escenas/tareas de la org anterior.
+      // (Los caches ya namespaceados por org se refrescan solos; esto cubre los
+      // que se cachean por brand_container o por user.)
+      if (window.apiClient && window._lastOrgForCaches !== window.currentOrgId) {
+        window._lastOrgForCaches = window.currentOrgId;
+        try {
+          window.apiClient.invalidate((k) =>
+            /(bc_id|:project:|recent_runs|tasks:schedules|theme:colors|:likes:|brand_container)/i.test(k));
+        } catch (_) { /* noop */ }
+      }
+
       // Tema de marca: solo 1 vez al entrar a la org (evita flasheo al navegar entre production, products, etc.)
       if (window.OrgBrandTheme) {
         const appliedId = window._orgBrandThemeAppliedId;

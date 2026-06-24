@@ -148,10 +148,56 @@ function getCommandCenterPath(orgPathPrefix, container) {
   return prefix ? `${prefix}/${tail}` : `/${tail}`;
 }
 
+/**
+ * REGLA DE AISLAMIENTO MULTI-ORG (fuente única de verdad).
+ *
+ * La "marca activa" (brand_containers.id) SIEMPRE se resuelve DENTRO de la org
+ * activa. Si hay org activa, NUNCA se cae a `user_id`: un usuario dueño de varias
+ * orgs (ej. IGNIS + WAKEUP) veria la marca/colores/escenas de otra org. Si la org
+ * no tiene brand_container, devuelve null (mejor vacío que cruzado).
+ *
+ * Toda vista debe resolver la marca con esta función (directa o vía su wrapper
+ * cacheado). Prohibido `.from('brand_containers').eq('user_id', …)` como forma de
+ * elegir la marca activa cuando hay org en la URL.
+ *
+ * @param {object} supabase - cliente supabase
+ * @param {string|null} orgId - org activa; default window.currentOrgId
+ * @param {string|null} userId - solo se usa en rutas legacy SIN /org/ (sin org activa)
+ * @returns {Promise<string|null>} brand_container_id o null
+ */
+async function resolveActiveBrandContainerId(supabase, orgId, userId) {
+  if (!supabase || typeof supabase.from !== 'function') return null;
+  const oid = orgId || (typeof window !== 'undefined' ? window.currentOrgId : null) || null;
+  try {
+    if (oid) {
+      const { data, error } = await supabase
+        .from('brand_containers').select('id')
+        .eq('organization_id', oid)
+        .order('created_at', { ascending: true })
+        .limit(1).maybeSingle();
+      // Con org activa NO hay fallback a user_id (evita fuga cross-org).
+      return (!error && data && data.id) ? data.id : null;
+    }
+    // Solo cuando NO hay org en la URL (rutas legacy): marca del usuario.
+    if (userId) {
+      const { data, error } = await supabase
+        .from('brand_containers').select('id')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1).maybeSingle();
+      return (!error && data && data.id) ? data.id : null;
+    }
+  } catch (e) {
+    console.warn('resolveActiveBrandContainerId:', e);
+  }
+  return null;
+}
+
 window.getOrgShortId = getOrgShortId;
 window.getOrgSlug = getOrgSlug;
 window.getOrgPathPrefix = getOrgPathPrefix;
 window.resolveOrgIdFromShortAndSlug = resolveOrgIdFromShortAndSlug;
 window.clearOrgResolverCache = clearOrgResolverCache;
 window.getBrandContainerShortId = getBrandContainerShortId;
+window.resolveActiveBrandContainerId = resolveActiveBrandContainerId;
 window.getCommandCenterPath = getCommandCenterPath;
