@@ -161,6 +161,69 @@
     });
   }
 
+  // ─── Lista inline (dentro del dropdown del header, estilo Google) ────────
+  // En vez de abrir un modal, el bloque "Cambiar usuario" se expande dentro
+  // del #userDropdown y muestra las cuentas a las que el lead puede entrar.
+
+  async function renderInline(host) {
+    if (!host) return;
+    if (!isLead()) {
+      host.innerHTML = `<div class="udsu-empty">Solo leads pueden cambiar de usuario.</div>`;
+      return;
+    }
+    const supa = getSupabase();
+    if (!supa) {
+      host.innerHTML = `<div class="udsu-empty">Supabase no disponible.</div>`;
+      return;
+    }
+
+    host.innerHTML = `<div class="udsu-loading"><i class="fas fa-circle-notch fa-spin"></i> Cargando cuentas...</div>`;
+
+    try {
+      const me = window.authService?.currentUser?.id;
+      const { data, error } = await supa
+        .from('profiles')
+        .select('id, email, full_name, dev_role, dev_rank')
+        .eq('is_developer', true)
+        .order('full_name', { ascending: true });
+      if (error) throw error;
+      const others = (data || []).filter((p) => p.id !== me);
+
+      if (others.length === 0) {
+        host.innerHTML = `<div class="udsu-empty"><i class="fas fa-user-slash"></i> No hay otras cuentas.</div>`;
+        return;
+      }
+
+      host.innerHTML = `
+        <div class="udsu-list">
+          ${others.map((d) => {
+            const rank = d.dev_rank || 'rookie';
+            const initials = (d.full_name || d.email || '?')
+              .split(/\s+/).slice(0, 2).map((w) => w[0] || '').join('').toUpperCase();
+            return `
+              <button type="button" class="udsu-row" data-target-id="${escapeHtml(d.id)}">
+                <span class="udsu-avatar" data-rank="${escapeHtml(rank)}">${escapeHtml(initials)}</span>
+                <span class="udsu-info">
+                  <strong>${escapeHtml(d.full_name || '(sin nombre)')}</strong>
+                  <span>${escapeHtml(d.email)}</span>
+                </span>
+              </button>`;
+          }).join('')}
+          <p class="udsu-status" id="switchUserStatus" role="status" aria-live="polite"></p>
+        </div>`;
+
+      host.querySelectorAll('[data-target-id]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          switchTo(btn.getAttribute('data-target-id'));
+        });
+      });
+    } catch (err) {
+      host.innerHTML = `<div class="udsu-empty">Error: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
   // ─── Switch ────────────────────────────────────────────────────────────
 
   async function switchTo(targetId) {
@@ -268,6 +331,7 @@
   window.SwitchUserController = {
     open,
     close,
+    renderInline,
     returnToLead,
     isLead,
     hasImpersonation

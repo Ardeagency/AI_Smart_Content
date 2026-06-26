@@ -2422,6 +2422,121 @@ body.subnav-in-header .app-header .header-production-slot {
     background-clip: text;
 }
 
+/* ── "Cambiar usuario" — selector de cuentas inline (estilo Google) ──────
+   Se expande dentro del #userDropdown en vez de abrir un modal. */
+.user-dropdown-switchuser #switchUserBtn {
+    width: 100%;
+}
+
+/* Chevron empujado a la derecha; rota al expandir */
+.user-dropdown-chevron {
+    margin-left: auto;
+    font-size: 11px !important;
+    width: auto !important;
+    color: rgba(255, 255, 255, 0.45);
+    transition: transform 0.18s ease, color 0.18s ease;
+}
+.user-dropdown-switchuser #switchUserBtn[aria-expanded="true"] .user-dropdown-chevron {
+    transform: rotate(180deg);
+    color: var(--glass-black-text, #fff);
+}
+
+.user-dropdown-switchuser-panel {
+    max-height: 264px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.user-dropdown-switchuser-panel[hidden] { display: none; }
+
+.udsu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px 8px 6px;
+}
+
+.udsu-loading,
+.udsu-empty {
+    padding: 14px 16px;
+    text-align: center;
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.55);
+}
+.udsu-empty i,
+.udsu-loading i { margin-right: 6px; opacity: 0.7; }
+
+.udsu-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.udsu-row:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.udsu-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 11px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.udsu-avatar[data-rank="legend"]  { background: linear-gradient(135deg, #900090, #ff0000); border-color: transparent; }
+.udsu-avatar[data-rank="master"]  { background: linear-gradient(135deg, #5b00ea, #900090); border-color: transparent; }
+.udsu-avatar[data-rank="expert"]  { background: linear-gradient(135deg, #0018ee, #5b00ea); border-color: transparent; }
+.udsu-avatar[data-rank="builder"] { background: linear-gradient(135deg, #00e7ff, #0018ee); border-color: transparent; }
+.udsu-avatar[data-rank="junior"]  { background: linear-gradient(135deg, #00d614, #00e7ff); border-color: transparent; }
+.udsu-avatar[data-rank="rookie"]  { background: linear-gradient(135deg, #9acc00, #00d614); border-color: transparent; }
+
+.udsu-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+.udsu-info strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--glass-black-text, #fff);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.udsu-info span {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.55);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.udsu-status {
+    margin: 4px 10px 0;
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.6);
+    min-height: 0;
+}
+.udsu-status.is-error { color: var(--color-error, #ff6b6b); }
+
 /* Settings Modal (header dropdown) */
 #modals-portal .modal.user-settings-modal .modal-overlay {
     background: rgba(0, 0, 0, 0.32);

@@ -1829,10 +1829,14 @@ class Navigation {
         ` : ''}
         ${window.SwitchUserController?.isLead?.() ? `
         <div class="user-dropdown-divider"></div>
-        <button class="user-dropdown-item" id="switchUserBtn">
-          <i class="fas fa-user-tag"></i>
-          <span>${__('Cambiar usuario')}</span>
-        </button>
+        <div class="user-dropdown-switchuser" id="userDropdownSwitchUser">
+          <button class="user-dropdown-item" id="switchUserBtn" aria-expanded="false" aria-controls="switchUserInline">
+            <i class="fas fa-user-tag"></i>
+            <span>${__('Cambiar usuario')}</span>
+            <i class="fas fa-chevron-down user-dropdown-chevron" aria-hidden="true"></i>
+          </button>
+          <div class="user-dropdown-switchuser-panel" id="switchUserInline" hidden></div>
+        </div>
         ` : ''}
         <button class="user-dropdown-item" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i>
@@ -2595,6 +2599,10 @@ class Navigation {
       if (!userDropdown._closeOnActionBound) {
         userDropdown._closeOnActionBound = true;
         const closeOnAction = (e) => {
+          // El bloque "Cambiar usuario" se expande inline: no cerrar el
+          // dropdown al alternarlo ni al cargar la lista. Elegir una cuenta
+          // navega por sí solo (recarga), así que tampoco hace falta cerrarlo.
+          if (e.target.closest('#userDropdownSwitchUser')) return;
           const actionable = e.target.closest('a, button, input[type="radio"], label');
           if (actionable && userDropdown.contains(actionable)) {
             requestAnimationFrame(() => userDropdown.classList.remove('active'));
@@ -2610,11 +2618,30 @@ class Navigation {
       logoutBtn.addEventListener('click', () => this.handleLogout());
     }
 
-    // Cambiar usuario (impersonacion temporal, solo lead)
+    // Cambiar usuario (impersonacion temporal, solo lead).
+    // Se expande INLINE dentro del dropdown (estilo selector de cuentas de
+    // Google), no abre un modal. El bloque #userDropdownSwitchUser está
+    // exento del cierre automático del dropdown (ver closeOnAction).
     const switchBtn = document.getElementById('switchUserBtn');
     if (switchBtn) {
-      switchBtn.addEventListener('click', () => {
-        window.SwitchUserController?.open?.();
+      switchBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const panel = document.getElementById('switchUserInline');
+        if (!panel) return;
+        const willExpand = switchBtn.getAttribute('aria-expanded') !== 'true';
+        switchBtn.setAttribute('aria-expanded', String(willExpand));
+        panel.hidden = !willExpand;
+        if (willExpand) {
+          window.SwitchUserController?.renderInline?.(panel);
+        }
+        // Reposicionar el dropdown: al expandir/colapsar cambia su altura y
+        // podría salirse del viewport.
+        const dd = document.getElementById('userDropdown');
+        const menuBtn = document.getElementById('userMenuBtn');
+        if (dd && menuBtn) {
+          requestAnimationFrame(() => this.positionUserDropdown(menuBtn, dd));
+        }
       });
     }
 
