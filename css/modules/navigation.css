@@ -2400,26 +2400,14 @@ body.subnav-in-header .app-header .header-production-slot {
     font-weight: 500;
 }
 
-.user-dropdown-mode-toggle i {
-    background: var(--accent-brand, #00e7ff);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-}
-
-/* Destino developer → gradiente del rank (set por DevRankTheme) */
-.user-dropdown-mode-toggle[data-target="developer"] i {
-    background: var(--dev-gradient-dynamic, var(--accent-brand, #00e7ff));
-    -webkit-background-clip: text;
-    background-clip: text;
-}
-
-/* Destino organización → gradiente de la marca activa (set por OrgBrandTheme) */
-.user-dropdown-mode-toggle[data-target="user"] i {
-    background: var(--brand-gradient-dynamic, var(--accent-brand, #00e7ff));
-    -webkit-background-clip: text;
-    background-clip: text;
+/* Iconos monoline inline (square-terminal, building, switch-account) del set
+   de "Iconos" de Figma. currentColor → heredan el color del item (blanco) y su
+   hover, igual que los <i> de FontAwesome del resto del dropdown. */
+.user-dropdown-item-svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: inline-block;
 }
 
 /* ── "Cambiar usuario" — selector de cuentas inline (estilo Google) ──────

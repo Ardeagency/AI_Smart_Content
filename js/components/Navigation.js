@@ -1831,7 +1831,7 @@ class Navigation {
         <div class="user-dropdown-divider"></div>
         <div class="user-dropdown-switchuser" id="userDropdownSwitchUser">
           <button class="user-dropdown-item" id="switchUserBtn" aria-expanded="false" aria-controls="switchUserInline">
-            <i class="fas fa-user-tag"></i>
+            <svg class="user-dropdown-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.5" cy="7" r="3.25"/><path d="M3 19v-.5a5.5 5.5 0 0 1 5.5-5.5 5.5 5.5 0 0 1 2.3.5"/><path d="M14 15.5h5.5l-2-2M19.5 20.5H14l2 2"/></svg>
             <span>${__('Cambiar usuario')}</span>
             <i class="fas fa-chevron-down user-dropdown-chevron" aria-hidden="true"></i>
           </button>
@@ -3211,10 +3211,15 @@ class Navigation {
     const label = target === 'developer'
       ? __('Consola del desarrollador')
       : __('Vista de organización');
-    const iconClass = target === 'developer' ? 'fa-terminal' : 'fa-building';
+    // Iconos monoline propios (Figma "Iconos"): square-terminal para la consola
+    // del desarrollador, building para la vista de organización. currentColor
+    // → heredan el color del item (blanco) + hover, como el resto del dropdown.
+    const ICON_TERMINAL = '<svg class="user-dropdown-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5 10 12l-2.5 2.5M12.5 15h4"/></svg>';
+    const ICON_BUILDING = '<svg class="user-dropdown-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.25" y="2.75" width="15.5" height="18.5" rx="2.25"/><path d="M9.75 21.25v-3.5h4.5v3.5"/><path d="M8.5 7h.01M12 7h.01M15.5 7h.01M8.5 10.75h.01M12 10.75h.01M15.5 10.75h.01M8.5 14.5h.01M15.5 14.5h.01"/></svg>';
+    const iconSvg = target === 'developer' ? ICON_TERMINAL : ICON_BUILDING;
     const html = `
       <button type="button" class="user-dropdown-item user-dropdown-mode-toggle" id="userDropdownModeSwitcher" data-target="${target}">
-        <i class="fas ${iconClass}"></i>
+        ${iconSvg}
         <span>${label}</span>
       </button>
       <div class="user-dropdown-divider"></div>`;
