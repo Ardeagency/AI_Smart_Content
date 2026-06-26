@@ -3164,25 +3164,32 @@ class Navigation {
   }
 
   /**
-   * Inyectar en #userDropdown los checkboxes Consumidor / Desarrollador (solo para usuarios con is_developer)
+   * Inyectar en #userDropdown el botón único de alternancia de contexto
+   * (solo para usuarios con is_developer).
+   *
+   * Reemplaza los antiguos radios Consumidor/Desarrollador (que tenían un bug
+   * de estado al depender del evento `change` del checkbox). Ahora es un solo
+   * botón cuya etiqueta y acción dependen del contexto actual:
+   *   · En modo desarrollador (/dev) → "Vista de organización": entra a la
+   *     última organización a la que entró el dev (selectedOrganizationId).
+   *   · En modo organización  (/org) → "Consola del desarrollador": va a /dev.
    */
   injectDeveloperModeSwitcher() {
     const dropdown = document.getElementById('userDropdown');
     if (!dropdown || document.getElementById('userDropdownModeSwitcher')) return;
 
     const currentMode = window.authService?.getUserMode() || 'user';
+    // El botón siempre ofrece el contexto OPUESTO al actual.
+    const target = currentMode === 'developer' ? 'user' : 'developer';
+    const label = target === 'developer'
+      ? __('Consola del desarrollador')
+      : __('Vista de organización');
+    const iconClass = target === 'developer' ? 'fa-terminal' : 'fa-building';
     const html = `
-      <div class="user-dropdown-mode-switcher" id="userDropdownModeSwitcher">
-        <div class="user-dropdown-mode-label">${__('Ver como')}</div>
-        <label class="user-dropdown-mode-option">
-          <input type="radio" name="viewMode" value="user" ${currentMode === 'user' ? 'checked' : ''} id="viewModeUser">
-          <span>${__('Consumidor')}</span>
-        </label>
-        <label class="user-dropdown-mode-option">
-          <input type="radio" name="viewMode" value="developer" ${currentMode === 'developer' ? 'checked' : ''} id="viewModeDeveloper">
-          <span>${__('Desarrollador')}</span>
-        </label>
-      </div>
+      <button type="button" class="user-dropdown-item user-dropdown-mode-toggle" id="userDropdownModeSwitcher" data-target="${target}">
+        <i class="fas ${iconClass}"></i>
+        <span>${label}</span>
+      </button>
       <div class="user-dropdown-divider"></div>`;
     const firstDivider = dropdown.querySelector('.user-dropdown-divider');
     if (firstDivider) {
@@ -3193,42 +3200,41 @@ class Navigation {
   }
 
   /**
-   * Configurar listeners del switcher Consumidor / Desarrollador.
+   * Configurar el listener del botón único de alternancia de contexto.
    *
-   * Diseño:
+   * Diseño (heredado del switcher anterior, sin la lógica de radios):
    * - setUserMode actualiza this.userMode + localStorage de forma síncrona;
    *   solo el persist a Supabase es async → lo lanzamos fire-and-forget para
    *   no bloquear la navegación (era la causa original de 200-800ms de
-   *   latencia entre el click del radio y el cambio de página).
+   *   latencia entre el click y el cambio de página).
    * - Para modo dev: navegamos directo a /dev/dashboard.
    * - Para modo user: resolvemos la org URL inline con `getDefaultUserRoute`
-   *   y navegamos directo a /org/.../dashboard. NO pasamos por /home como
+   *   (que usa selectedOrganizationId = última org a la que entró el dev) y
+   *   navegamos directo a /org/.../dashboard. NO pasamos por /home como
    *   intermedio porque su view paintea "Redirigiendo..." en modo home (sin
    *   sidebar) y el flash se ve raro al regresar al sidebar de la org.
-   * - Deshabilitamos ambos radios + flag _modeSwitchInFlight hasta el
-   *   próximo routechange (failsafe 4s) para impedir double-fire / carrera.
+   * - Deshabilitamos el botón + flag _modeSwitchInFlight hasta el próximo
+   *   routechange (failsafe 4s) para impedir double-fire / carrera.
    */
   setupDeveloperModeSwitcherListeners() {
-    const userRadio = document.getElementById('viewModeUser');
-    const devRadio = document.getElementById('viewModeDeveloper');
-    if (!userRadio || !devRadio) return;
+    const btn = document.getElementById('userDropdownModeSwitcher');
+    if (!btn) return;
 
-    const switchMode = async (mode) => {
+    btn.addEventListener('click', async () => {
       if (this._modeSwitchInFlight) return;
       this._modeSwitchInFlight = true;
-      userRadio.disabled = true;
-      devRadio.disabled = true;
+      btn.disabled = true;
 
       const release = () => {
         this._modeSwitchInFlight = false;
-        const u = document.getElementById('viewModeUser');
-        const d = document.getElementById('viewModeDeveloper');
-        if (u) u.disabled = false;
-        if (d) d.disabled = false;
+        const b = document.getElementById('userDropdownModeSwitcher');
+        if (b) b.disabled = false;
       };
       window.addEventListener('routechange', release, { once: true });
       // Failsafe por si el routechange no se dispara (ruta misma vista, error, etc.)
       setTimeout(release, 4000);
+
+      const mode = btn.dataset.target;
 
       if (window.authService) {
         // setUserMode actualiza memoria + localStorage síncronos; el await es
@@ -3263,10 +3269,7 @@ class Navigation {
       // Cerrar el dropdown para feedback inmediato (la nueva nav lo destruirá igual).
       const ud = document.getElementById('userDropdown');
       if (ud) ud.classList.remove('active');
-    };
-
-    userRadio.addEventListener('change', () => { if (userRadio.checked) switchMode('user'); });
-    devRadio.addEventListener('change', () => { if (devRadio.checked) switchMode('developer'); });
+    });
   }
 
   /**

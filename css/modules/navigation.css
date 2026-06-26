@@ -2391,85 +2391,35 @@ body.subnav-in-header .app-header .header-production-slot {
     color: var(--color-error);
 }
 
-/* Switcher Consumidor / Desarrollador (solo para usuarios con is_developer) */
-.user-dropdown-mode-switcher {
-    padding: 12px 16px;
-}
-
-.user-dropdown-mode-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 8px;
-}
-
-.user-dropdown-mode-option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 0;
-    cursor: pointer;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.9);
-    transition: var(--transition);
-}
-
-.user-dropdown-mode-option:hover {
-    color: var(--glass-black-text);
-}
-
-/* Custom radio: appearance:none nos permite pintar el relleno con un
-   degradado dinámico (accent-color solo soporta colores sólidos). El fill
-   lee la variable de tema activa: --brand-gradient-dynamic en modo org
-   (set por OrgBrandTheme) y --dev-gradient-dynamic en modo dev (set por
-   DevRankTheme). Así el check del switcher refleja siempre la identidad
-   del contexto actual — gradiente de la marca cuando estás en org/, del
-   rank cuando estás en dev/. */
-.user-dropdown-mode-option input[type="radio"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    margin: 0;
-    flex-shrink: 0;
-    border: 1.5px solid rgba(255, 255, 255, 0.25);
-    border-radius: 50%;
-    background: transparent;
-    position: relative;
-    cursor: pointer;
-    transition: border-color 0.18s ease;
-}
-
-.user-dropdown-mode-option input[type="radio"]:hover {
-    border-color: rgba(255, 255, 255, 0.45);
-}
-
-.user-dropdown-mode-option input[type="radio"]:checked {
-    border-color: rgba(255, 255, 255, 0.7);
-}
-
-.user-dropdown-mode-option input[type="radio"]:checked::before {
-    content: '';
-    position: absolute;
-    inset: 3px;
-    border-radius: 50%;
-    background: var(--accent-brand, #00e7ff);
-}
-
-/* Consumidor (value="user") → gradiente de la organización activa */
-.user-dropdown-mode-option input[type="radio"][value="user"]:checked::before {
-    background: var(--brand-gradient-dynamic, var(--accent-brand, #00e7ff));
-}
-
-/* Desarrollador (value="developer") → gradiente del rank del developer */
-.user-dropdown-mode-option input[type="radio"][value="developer"]:checked::before {
-    background: var(--dev-gradient-dynamic, var(--accent-brand, #00e7ff));
-}
-
-.user-dropdown-mode-option input[type="radio"]:checked + span {
-    color: var(--glass-black-text);
+/* Botón único de alternancia de contexto (solo para usuarios con is_developer).
+   Reusa .user-dropdown-item para layout/hover; el icono lleva el degradado
+   dinámico del contexto DESTINO: gradiente del rank del developer cuando
+   ofrece la "Consola del desarrollador", gradiente de la marca activa cuando
+   ofrece la "Vista de organización". */
+.user-dropdown-mode-toggle {
     font-weight: 500;
+}
+
+.user-dropdown-mode-toggle i {
+    background: var(--accent-brand, #00e7ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+/* Destino developer → gradiente del rank (set por DevRankTheme) */
+.user-dropdown-mode-toggle[data-target="developer"] i {
+    background: var(--dev-gradient-dynamic, var(--accent-brand, #00e7ff));
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+/* Destino organización → gradiente de la marca activa (set por OrgBrandTheme) */
+.user-dropdown-mode-toggle[data-target="user"] i {
+    background: var(--brand-gradient-dynamic, var(--accent-brand, #00e7ff));
+    -webkit-background-clip: text;
+    background-clip: text;
 }
 
 /* Settings Modal (header dropdown) */
