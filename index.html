@@ -118,7 +118,7 @@
         }
         #app-splash .app-splash-bar {
             position: relative;
-            width: min(200px, 44vw);
+            width: min(220px, 46vw);
             height: 2px;
             border-radius: 2px;
             overflow: hidden;
@@ -126,14 +126,18 @@
             opacity: 0;
             animation: appSplashFadeIn 0.6s ease 0.35s forwards;
         }
+        /* Segmento que se desliza = gradiente de marca de la plataforma (el
+           espectro completo de AI Smart Content). Hardcodeado porque el splash
+           pinta antes de bundle.css, donde se define --brand-gradient. */
         #app-splash .app-splash-bar::before {
             content: '';
             position: absolute;
             top: 0;
             bottom: 0;
             left: 0;
-            width: 40%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+            width: 45%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
             animation: appSplashSlide 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
         @keyframes appSplashLogoIn {
@@ -143,8 +147,8 @@
             to { opacity: 1; }
         }
         @keyframes appSplashSlide {
-            0%   { transform: translateX(-120%); }
-            100% { transform: translateX(320%); }
+            0%   { transform: translateX(-110%); }
+            100% { transform: translateX(240%); }
         }
         @media (prefers-reduced-motion: reduce) {
             #app-splash .app-splash-logo { animation: none; opacity: 1; transform: none; }
