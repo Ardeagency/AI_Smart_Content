@@ -548,6 +548,9 @@ class App {
    * Mostrar error de inicialización
    */
   showInitError(error) {
+    // El splash de arranque no emite routechange en este camino: quitarlo a mano
+    // para que la pantalla de error sea visible y no quede atrapada detrás.
+    if (typeof window.__appSplashDismiss === 'function') window.__appSplashDismiss();
     const container = document.getElementById('app-container');
     if (container) {
       container.innerHTML = `

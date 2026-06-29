@@ -23,6 +23,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AI Smart">
     <link rel="apple-touch-icon" sizes="180x180" href="/recursos/logos/pwa/logo-app-180.png">
+    <!-- Splash de arranque: precargar el wordmark para que aparezca en la primera pintura
+         (sin parpadeo). Es el logo que se ve mientras la app resuelve auth + ruta. -->
+    <link rel="preload" as="image" href="/recursos/logos/logo-03.svg">
     <!-- Open Graph -->
     <meta property="og:site_name" content="AI Smart Content">
     <meta property="og:locale" content="es_CO">
@@ -83,6 +86,69 @@
         }
         #app-container, #navigation-container {
             background: #0b0b0b;
+        }
+        /* ===== Splash de arranque =====
+           Cubre TODO (header + contenido + barra de progreso) mientras la app
+           resuelve sesión y ruta. Evita ver el header a medio pintar, el
+           "Redirigiendo..." y el fondo dinámico sin cargar. Vive en el critical
+           CSS para que anime desde la primera pintura, antes de bundle.css. */
+        #app-splash {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            background: #0b0b0b;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+        #app-splash.app-splash--hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #app-splash .app-splash-logo {
+            width: min(280px, 56vw);
+            height: auto;
+            opacity: 0;
+            transform: translateY(8px) scale(0.985);
+            animation: appSplashLogoIn 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+        #app-splash .app-splash-bar {
+            position: relative;
+            width: min(200px, 44vw);
+            height: 2px;
+            border-radius: 2px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.08);
+            opacity: 0;
+            animation: appSplashFadeIn 0.6s ease 0.35s forwards;
+        }
+        #app-splash .app-splash-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 40%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+            animation: appSplashSlide 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        @keyframes appSplashLogoIn {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes appSplashFadeIn {
+            to { opacity: 1; }
+        }
+        @keyframes appSplashSlide {
+            0%   { transform: translateX(-120%); }
+            100% { transform: translateX(320%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #app-splash .app-splash-logo { animation: none; opacity: 1; transform: none; }
+            #app-splash .app-splash-bar::before { animation-duration: 2.2s; }
         }
         #modals-portal {
             position: fixed;
@@ -163,6 +229,46 @@
     </style>
 </head>
 <body>
+    <!-- Splash de arranque: tapa el header a medio pintar + "Redirigiendo..." +
+         fondo dinámico sin cargar durante el boot frío. Se descarta solo cuando
+         la app aterriza en una vista real (no en una de redirección). -->
+    <div id="app-splash" role="status" aria-live="polite" aria-label="Cargando AI Smart Content">
+      <img src="/recursos/logos/logo-03.svg" alt="AI Smart Content" class="app-splash-logo" width="280" height="29">
+      <div class="app-splash-bar" aria-hidden="true"></div>
+    </div>
+    <script>
+      // Descarte del splash. El router emite 'routechange' al terminar de pintar
+      // cada vista, incluida la cadena de redirección de arranque
+      // ('/' -> '/home' -> '/org/.../dashboard'). Mantenemos el splash sobre las
+      // vistas de redirección y lo quitamos al llegar a la primera vista real.
+      (function () {
+        var REDIRECT_PATHS = { '/': 1, '/home': 1, '/hogar': 1 };
+        var splash = document.getElementById('app-splash');
+        if (!splash) return;
+        var done = false;
+        function dismiss() {
+          if (done) return;
+          done = true;
+          window.removeEventListener('routechange', onRoute);
+          splash.classList.add('app-splash--hide');
+          var remove = function () { if (splash && splash.parentNode) splash.parentNode.removeChild(splash); };
+          splash.addEventListener('transitionend', remove, { once: true });
+          // Failsafe por si transitionend no dispara (tab en background, etc.).
+          setTimeout(remove, 800);
+        }
+        function onRoute(e) {
+          var p = (e && e.detail && e.detail.path) || window.location.pathname || '/';
+          if (p.length > 1 && p.charAt(p.length - 1) === '/') p = p.slice(0, -1);
+          if (!REDIRECT_PATHS[p]) dismiss();
+        }
+        // Exponer para que el bootstrap lo llame si pinta una pantalla de error.
+        window.__appSplashDismiss = dismiss;
+        window.addEventListener('routechange', onRoute);
+        // Failsafe absoluto: nunca dejar al usuario atrapado tras el splash.
+        setTimeout(dismiss, 10000);
+      })();
+    </script>
+
     <!-- Fallback para usuarios con JavaScript deshabilitado. La app es una
          SPA y no funciona sin JS; este mensaje es la única forma de
          comunicarlo si el bundle no se ejecuta. -->
