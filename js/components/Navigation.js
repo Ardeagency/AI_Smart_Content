@@ -3205,7 +3205,14 @@ class Navigation {
     const dropdown = document.getElementById('userDropdown');
     if (!dropdown || document.getElementById('userDropdownModeSwitcher')) return;
 
-    const currentMode = window.authService?.getUserMode() || 'user';
+    // El contexto actual se deriva de la RUTA visible, no del modo persistido
+    // (getUserMode): un developer puede estar dentro de una org (/org/...) con
+    // su default_view_mode='developer' guardado, y el botón debe ofrecer "ir a
+    // la consola del dev", no "ir a la org" donde ya está. Las rutas dev empiezan
+    // por /dev; cualquier otra es vista de organización.
+    const path = window.location.pathname || '';
+    const inDevView = path === '/dev' || path.startsWith('/dev/');
+    const currentMode = inDevView ? 'developer' : 'user';
     // El botón siempre ofrece el contexto OPUESTO al actual.
     const target = currentMode === 'developer' ? 'user' : 'developer';
     const label = target === 'developer'
