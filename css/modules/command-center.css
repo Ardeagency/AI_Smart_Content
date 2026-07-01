@@ -900,9 +900,12 @@
 
 /* ── Sidebar de Estrategias (izquierda, colapsable — patron historial Vera) ── */
 /* Fondo: degradado dinamico de la marca (--brand-gradient-dynamic-vertical)
-   bajo un velo glass-black frosted (mismo recipe que .glass-black: veil
-   rgba(11,11,11,0.55) translucido + blur 24 / saturate 140). El velo deja
-   pasar el blur del canvas (efecto glass) y el ::before tinta con la marca. */
+   bajo un velo glass-black frosted (recipe de .glass-black: blur 24 / saturate
+   140 + veil oscuro; ::before tinta con la marca).
+   NOTA: el backdrop-filter NO desenfoca los nodos porque .cc-canvas-world esta
+   en su propia capa GPU (will-change:transform) — Chrome no incluye capas
+   compositadas aparte en el backdrop. Por eso el velo va a 0.82 (no 0.55): asi
+   el panel se lee frosteado/opaco y no transparente sobre los nodos nitidos. */
 .cc-strat-panel {
   position: absolute;
   top: 14px; left: 14px; bottom: 14px;
@@ -910,7 +913,7 @@
   z-index: 8;
   display: flex;
   flex-direction: column;
-  background: rgba(11, 11, 11, 0.55);
+  background: rgba(11, 11, 11, 0.82);
   border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
@@ -926,7 +929,7 @@
   inset: 0;
   z-index: -1;
   background: var(--brand-gradient-dynamic-vertical, var(--brand-gradient-dynamic, transparent));
-  opacity: 0.32;
+  opacity: 0.4;
   pointer-events: none;
   border-radius: inherit;
 }
@@ -1086,7 +1089,7 @@
   z-index: 7;
   width: 38px; height: 38px;
   border-radius: 12px;
-  background: rgba(11, 11, 11, 0.55);
+  background: rgba(11, 11, 11, 0.82);
   border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(24px) saturate(140%);
@@ -1111,7 +1114,7 @@
   align-items: stretch;
   border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
-  background: rgba(11, 11, 11, 0.55);
+  background: rgba(11, 11, 11, 0.82);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   overflow: hidden;
   backdrop-filter: blur(24px) saturate(140%);
@@ -1124,7 +1127,7 @@
   inset: 0;
   z-index: -1;
   background: var(--brand-gradient-dynamic-vertical, var(--brand-gradient-dynamic, transparent));
-  opacity: 0.32;
+  opacity: 0.4;
   pointer-events: none;
   border-radius: inherit;
 }
