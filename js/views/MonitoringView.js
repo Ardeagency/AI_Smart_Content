@@ -565,6 +565,21 @@ class MonitoringView extends BaseView {
     return Math.abs(h);
   }
 
+  // Etiquetas cortas de rol para las burbujas (las largas no caben bien).
+  static ROLE_SHORT = {
+    competidor_directo:   'Competencia directa',
+    competidor_indirecto: 'Competencia indirecta',
+    referencia_cultural:  'Referente',
+    aliado:               'Aliado',
+    owned_media:          'Propio',
+  };
+
+  /** Etiqueta corta del rol para mostrar dentro de la burbuja. */
+  _roleLabel(tipo) {
+    if (!tipo) return '';
+    return MonitoringView.ROLE_SHORT[tipo] || MonitoringView.ENTITY_TIPOS.find(t => t.value === tipo)?.label || '';
+  }
+
   /** Degradado de la marca (mismos colores que el resto de la app). Lee las CSS
       vars que setea OrgBrandTheme; cae al primario, y si no, a un cálido. */
   _brandGradientStops() {
@@ -673,6 +688,15 @@ class MonitoringView extends BaseView {
           name.textContent = b.it.title || '';
           labels.appendChild(icon); labels.appendChild(name);
           b.iconEl = icon; b.nameEl = name;
+          // Rol como etiqueta debajo del nombre (solo perfiles con rol).
+          const roleTxt = this._roleLabel(b.it.tipo);
+          if (roleTxt) {
+            const roleEl = document.createElement('span');
+            roleEl.className = 'mn-bub-role' + (colId === 'paused' ? ' is-dim' : '');
+            roleEl.textContent = roleTxt;
+            labels.appendChild(roleEl);
+            b.roleEl = roleEl;
+          }
         });
       }
       const world = { stage, canvas, ctx: canvas.getContext('2d'), bodies, W: 0, H: 0, DPR: 1, hover: null, colId };
@@ -681,12 +705,28 @@ class MonitoringView extends BaseView {
     });
 
     this._layoutBubbles();
+    this._presettleBubbles();   // asienta la física ANTES de pintar → sin caída
     this._bubbleSleep = 0;
     this._wakeBubbles();
 
     if (!this._bubbleResizeBound) {
-      this._bubbleResizeBound = () => { this._layoutBubbles(); this._wakeBubbles(); };
+      this._bubbleResizeBound = () => { this._layoutBubbles(); this._presettleBubbles(); this._wakeBubbles(); };
       window.addEventListener('resize', this._bubbleResizeBound);
+    }
+  }
+
+  /** Corre la física a convergencia en silencio (sin pintar) y congela, para que
+      las burbujas aparezcan YA apiladas — sin la animación de caída. */
+  _presettleBubbles() {
+    for (const w of (this._bubbleWorlds || [])) {
+      if (w.mode === 'float') continue; // las flotantes no caen
+      for (let i = 0; i < 600; i++) {
+        this._stepBubbles(w);
+        if (!w._overlap && (w._still || 0) > 3) break; // ya asentó
+      }
+      w.frozen = true; w._still = 99;
+      for (const b of w.bodies) { b.rDraw = b.r; b._px = b.x; b._py = b.y; }
+      this._drawBubbles(w); // pinta ya asentado (canvas + etiquetas), sin salto
     }
   }
 
@@ -712,22 +752,30 @@ class MonitoringView extends BaseView {
     });
   }
 
-  /** Coloca el icono (arriba) y el nombre (abajo) DENTRO de la burbuja.
-      y = centro vertical (permite el bob); alpha = opacidad (profundidad). */
+  /** Coloca icono (arriba), nombre (medio) y rol (debajo del nombre) DENTRO de la
+      burbuja. y = centro vertical (permite el bob); alpha = opacidad (profundidad). */
   _positionLabel(b, r, y, alpha) {
     const cy = (y == null) ? b.y : y;
+    const hasRole = !!b.roleEl;
     if (b.iconEl) {
       b.iconEl.style.left = b.x + 'px';
-      b.iconEl.style.top = (cy - r * 0.26) + 'px';
-      b.iconEl.style.fontSize = Math.max(11, r * 0.46) + 'px';
+      b.iconEl.style.top = (cy - r * (hasRole ? 0.40 : 0.26)) + 'px';
+      b.iconEl.style.fontSize = Math.max(11, r * (hasRole ? 0.40 : 0.46)) + 'px';
       if (alpha != null) b.iconEl.style.opacity = alpha;
     }
     if (b.nameEl) {
       b.nameEl.style.left = b.x + 'px';
-      b.nameEl.style.top = (cy + r * 0.34) + 'px';
+      b.nameEl.style.top = (cy + r * (hasRole ? 0.10 : 0.34)) + 'px';
       b.nameEl.style.fontSize = Math.max(7.5, Math.min(12, r * 0.26)) + 'px';
       b.nameEl.style.maxWidth = (r * 1.7) + 'px';
       if (alpha != null) b.nameEl.style.opacity = alpha;
+    }
+    if (b.roleEl) {
+      b.roleEl.style.left = b.x + 'px';
+      b.roleEl.style.top = (cy + r * 0.48) + 'px';
+      b.roleEl.style.fontSize = Math.max(6.5, Math.min(9, r * 0.17)) + 'px';
+      b.roleEl.style.maxWidth = (r * 1.8) + 'px';
+      if (alpha != null) b.roleEl.style.opacity = alpha;
     }
   }
 
@@ -1130,13 +1178,13 @@ class MonitoringView extends BaseView {
       const ang = (this._hash(e.id) % 360) * Math.PI / 180;
       const why = `${tipoLabel(e.metadata?.tipo)}${platform ? __(' en {p}', { p: this._platformName(platform) }) : ''}. ${__('Lo encontramos cerca de tu competencia.')}`;
       return {
-        it: { id: e.id, title: e.name || '—', platform, why, color: null },
+        it: { id: e.id, title: e.name || '—', platform, why, color: null, tipo: e.metadata?.tipo || null },
         r, rDraw: r, x: 0, y: 0, vx: Math.cos(ang) * SPEED, vy: Math.sin(ang) * SPEED, idx: 0, seeded: false,
         _phase: (this._hash(e.id) % 628) / 100, // fase del bob orgánico
       };
     });
 
-    // Etiquetas (icono + nombre dentro), igual que las otras burbujas.
+    // Etiquetas (icono + nombre + rol dentro), igual que las otras burbujas.
     if (labels) {
       labels.innerHTML = '';
       bodies.forEach((b) => {
@@ -1149,6 +1197,14 @@ class MonitoringView extends BaseView {
         name.textContent = b.it.title;
         labels.appendChild(icon); labels.appendChild(name);
         b.iconEl = icon; b.nameEl = name;
+        const roleTxt = this._roleLabel(b.it.tipo);
+        if (roleTxt) {
+          const roleEl = document.createElement('span');
+          roleEl.className = 'mn-bub-role';
+          roleEl.textContent = roleTxt;
+          labels.appendChild(roleEl);
+          b.roleEl = roleEl;
+        }
       });
     }
 

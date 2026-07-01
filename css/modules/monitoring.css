@@ -408,6 +408,15 @@
   z-index: 2;
 }
 .mn-bub-name.is-dim { color: rgba(255, 255, 255, 0.5); }
+/* Rol debajo del nombre: texto pequeño y sutil (no compite con el nombre). */
+.mn-bub-role {
+  position: absolute; transform: translate(-50%, 0);
+  font-weight: 600; letter-spacing: 0.02em; line-height: 1.15;
+  color: rgba(255, 255, 255, 0.6); text-align: center;
+  white-space: normal; word-break: break-word;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); z-index: 2;
+}
+.mn-bub-role.is-dim { color: rgba(255, 255, 255, 0.32); }
 .mn-bub-empty {
   position: absolute;
   inset: 0;
