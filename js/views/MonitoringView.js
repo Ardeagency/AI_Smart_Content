@@ -44,6 +44,13 @@ class MonitoringView extends BaseView {
     ];
   }
 
+  // Paleta para personalizar el color de una burbuja (opcional; el default es
+  // el degradado de la marca). '' = volver al color de marca.
+  static PALETTE = [
+    '#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#eab308',
+    '#14b8a6', '#ef4444', '#8b5cf6', '#06b6d4', '#f43f5e', '#84cc16',
+  ];
+
   // Plataforma → icono (Font Awesome, ya cargado globalmente en la app).
   static PLATFORM_ICON = {
     instagram:        'fab fa-instagram',
@@ -258,6 +265,8 @@ class MonitoringView extends BaseView {
         impact: Number(impactByEntity[e.id]) || 0,
         // Señales captadas: fallback de tamaño cuando aún no hay impacto medido.
         dataCount: sigs.length,
+        // Color personalizado (text[]; usamos el 1er color). null = degradado de marca.
+        color: (Array.isArray(e.color) && e.color[0]) ? e.color[0] : null,
       });
     });
     pages.forEach(w => {
@@ -556,6 +565,13 @@ class MonitoringView extends BaseView {
     return ['#e09145', '#f6b26b'];
   }
 
+  /** Stops de la burbuja: color personalizado si existe (→ gradiente derivado),
+      si no el degradado de la marca. */
+  _bubbleStops(item) {
+    if (item && item.color) return [item.color, this._lighten(item.color, 0.28)];
+    return this._brandStops || ['#e09145', '#f6b26b'];
+  }
+
   /** Aclara un hex mezclándolo hacia blanco (para el 2º stop si falta). */
   _lighten(hex, amt) {
     const h = hex.replace('#', '');
@@ -660,8 +676,6 @@ class MonitoringView extends BaseView {
     ctx.clearRect(0, 0, w.W, w.H);
     const pulse = w.colId === 'news';
     const dimmed = w.colId === 'paused';
-    const stops = this._brandStops || ['#e09145', '#f6b26b'];
-    const c0 = stops[0], c1 = stops[1] || stops[0];
     // Dibuja la hovered al final (encima).
     const order = w.bodies.slice().sort((a, b) => (a === w.hover ? 1 : 0) - (b === w.hover ? 1 : 0));
     for (const b of order) {
@@ -670,7 +684,11 @@ class MonitoringView extends BaseView {
       b.rDraw += (target - b.rDraw) * 0.25;
       const r = b.rDraw;
 
-      // Gradiente de marca diagonal (mismo para todas las burbujas).
+      // Color: personalizado si el usuario lo definió, si no el degradado de marca.
+      const stops = this._bubbleStops(b.it);
+      const c0 = stops[0], c1 = stops[1] || stops[0];
+
+      // Gradiente diagonal.
       const grad = ctx.createLinearGradient(b.x - r, b.y - r, b.x + r, b.y + r);
       grad.addColorStop(0, dimmed ? this._hexA(c0, 0.5) : c0);
       grad.addColorStop(1, dimmed ? this._hexA(c1, 0.5) : c1);
@@ -772,7 +790,7 @@ class MonitoringView extends BaseView {
     const model = this._model;
     const containerName = (id) => (model?.containers || []).find(c => c.id === id)?.nombre_marca || null;
     const isProfile = item.kind === 'profile';
-    const stops = this._brandStops || ['#e09145', '#f6b26b'];
+    const stops = this._bubbleStops(item);
     const brand = isProfile ? containerName(item.containerId) : null;
     const typeLabel = isProfile ? __('Marca / perfil') : __('Página web');
     const meta = `${typeLabel}${brand ? ' · ' + this._esc(brand) : ''}`;
@@ -792,6 +810,19 @@ class MonitoringView extends BaseView {
     const starBtn = isProfile ? `
       <button class="mn-bubpop-star${item.highlighted ? ' is-on' : ''}" data-bact="toggle-highlight" title="${__('Destacar')}"><i class="fas fa-star"></i></button>` : '';
 
+    // Personalización de color (opcional). Default = degradado de marca (chip "Marca").
+    const brandStops = this._brandStops || ['#e09145', '#f6b26b'];
+    const colorSection = isProfile ? `
+      <div class="mn-bubpop-label">${__('Color de la burbuja')}</div>
+      <div class="mn-bubpop-colors">
+        <button class="mn-swatch mn-swatch--brand${!item.color ? ' is-on' : ''}" data-color=""
+                title="${__('Usar color de la marca')}"
+                style="background:linear-gradient(135deg, ${brandStops[0]}, ${brandStops[1] || brandStops[0]})"></button>
+        ${MonitoringView.PALETTE.map(c => `
+          <button class="mn-swatch${(item.color === c) ? ' is-on' : ''}" style="background:${c}"
+                  data-color="${c}" title="${c}"></button>`).join('')}
+      </div>` : '';
+
     const pop = document.createElement('div');
     pop.className = 'mn-bubpop';
     pop.innerHTML = `
@@ -807,6 +838,7 @@ class MonitoringView extends BaseView {
       </div>
       <div class="mn-bubpop-meta">${meta}</div>
       ${impactLine}
+      ${colorSection}
       <div class="mn-bubpop-acts">${veraActs}</div>
       <div class="mn-bubpop-foot">
         <label class="mn-onoff mn-onoff--sm" title="${item.isActive ? __('Pausar') : __('Activar')}">
@@ -830,6 +862,8 @@ class MonitoringView extends BaseView {
 
     // Wiring.
     pop.addEventListener('click', (e) => e.stopPropagation());
+    pop.querySelectorAll('.mn-swatch').forEach(sw =>
+      sw.addEventListener('click', () => this._setBubbleColor(item, sw.dataset.color)));
     pop.querySelectorAll('[data-bact]').forEach(el =>
       el.addEventListener('click', (e) => this._onBubbleAction(el.dataset.bact, item, e)));
 
@@ -867,6 +901,24 @@ class MonitoringView extends BaseView {
       case 'vera-comparar':
       case 'vera-inspirar':   return this._goToVera(action, item.id);
     }
+  }
+
+  /** Personaliza el color de una burbuja (o la devuelve al degradado de marca
+      con color vacío). Optimista en el canvas + persiste; sincroniza la firma
+      live para no re-asentar las burbujas (el color no cambia posición). */
+  async _setBubbleColor(item, color) {
+    const next = color || null; // '' (chip Marca) → null = degradado de marca
+    const prev = item.color;
+    if (next === prev) return;
+    item.color = next; // el modelo vivo → el canvas lo toma al instante
+    if (this._bubPop) this._bubPop.querySelectorAll('.mn-swatch').forEach(sw =>
+      sw.classList.toggle('is-on', (sw.dataset.color || null) === next));
+    this._wakeBubbles();
+    const { error } = await this._service.updateEntity(item.id, { color: next });
+    if (error) { item.color = prev; this._wakeBubbles(); alert(__('No se pudo guardar el color:') + ' ' + error.message); return; }
+    const row = (this._data?.entities?.data || []).find(r => r.id === item.id);
+    if (row) row.color = next ? [next] : null;
+    if (this._liveSig) this._liveSig['monitoring'] = this._dataSignature(this._data);
   }
 
   /** Formatea un número grande de forma compacta (1.2K, 3.4M) para el impacto. */
