@@ -1025,15 +1025,10 @@ class MonitoringView extends BaseView {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       if (!dragging) { this._openBubbleDetail(b.it); return; } // fue un clic
-      // fue un arrastre → soltar
       document.body.classList.remove('mn-dragging');
-      if (this._dragGhost) { this._dragGhost.remove(); this._dragGhost = null; }
       const targetCol = this._dropTargetCol(ev.clientX, ev.clientY);
       this._clearDropTargets();
-      b._dragging = false;
-      this._drag = null;
-      this._requestBubbleDraw();
-      this._applyBubbleDrop(b.it, targetCol);
+      this._resolveBubbleDrop(w, b, targetCol); // planea al destino real y aplica
     };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
@@ -1074,22 +1069,69 @@ class MonitoringView extends BaseView {
     document.querySelectorAll('.mn-col--drop').forEach((c) => c.classList.remove('mn-col--drop'));
   }
 
-  /** Aplica el cambio de estado al soltar. Solo "En pausa" es un estado real
-      (is_active); las demás columnas se calculan → soltar fuera de pausa
-      significa REACTIVAR. */
-  async _applyBubbleDrop(item, targetCol) {
-    if (!targetCol) return;                       // soltó fuera → nada
+  /** Predice en qué columna caerá el item tras (des)activarlo, para que el
+      fantasma vuele hacia allí (continuidad visual). */
+  _predictColumn(item, willBeActive) {
+    if (!willBeActive) return 'paused';
+    const raw = { ...(item.raw || {}), is_active: true };
+    const st = item.kind === 'page'
+      ? this._estadoPagina(raw, item.lastAt)
+      : this._estadoPerfil(raw, item.lastAt);
+    return this._columnOf({ status: st });
+  }
+
+  /** Resuelve el soltado: SIEMPRE hace planear el fantasma hasta la columna
+      final real (aunque no sea donde lo soltó), luego aplica el cambio. Así el
+      usuario ENTIENDE a dónde fue la burbuja en vez de verla "teletransportarse". */
+  async _resolveBubbleDrop(w, b, targetCol) {
+    const item = b.it;
+    const ghost = this._dragGhost;
     const toPaused = targetCol === 'paused';
     const isPaused = !item.isActive;
-    if (toPaused === isPaused) return;            // mismo estado efectivo → nada
+    const change = !!targetCol && (toPaused !== isPaused);
+    // Columna final: si cambia estado, la que le corresponde; si no, vuelve a la suya.
+    const destCol = change ? this._predictColumn(item, !toPaused) : this._columnOf(item);
+
+    await this._glideGhostTo(ghost, destCol);     // vuela visiblemente al destino
+    if (ghost) ghost.remove();
+    this._dragGhost = null;
+    b._dragging = false;
+    this._drag = null;
+
+    if (!change) { this._requestBubbleDraw(); return; } // volvió a su lugar
+
     const nextActive = !toPaused;
     const svc = item.kind === 'page'
       ? this._service.updateWatcher(item.id, { is_active: nextActive })
       : this._service.updateEntity(item.id, { is_active: nextActive });
     const { error } = await svc;
-    if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); return; }
-    delete this._bubblePos[item.id];             // que re-asiente en su nueva columna
+    if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); this._requestBubbleDraw(); return; }
+    delete this._bubblePos[item.id];              // que re-asiente en su nueva columna
+    this._pulseColumn(destCol);                   // destello en la columna destino
     await this._refresh();
+  }
+
+  /** Anima el fantasma hasta el área de apilado de la columna destino. */
+  _glideGhostTo(ghost, destCol) {
+    return new Promise((resolve) => {
+      const colEl = destCol && document.querySelector(`.mn-cols .mn-col--${destCol}`);
+      if (!ghost || !colEl) { resolve(); return; }
+      const r = colEl.getBoundingClientRect();
+      const tx = r.left + r.width / 2;
+      const ty = r.bottom - 70; // donde se apilan (abajo)
+      ghost.style.transition = 'transform 0.36s cubic-bezier(.2,.75,.3,1), opacity 0.36s ease';
+      void ghost.offsetWidth;   // fuerza reflow para que la transición aplique
+      ghost.style.transform = `translate3d(${tx}px, ${ty}px, 0) translate(-50%, -50%) scale(0.86)`;
+      ghost.style.opacity = '0.85';
+      setTimeout(resolve, 360);
+    });
+  }
+
+  _pulseColumn(col) {
+    const el = col && document.querySelector(`.mn-cols .mn-col--${col}`);
+    if (!el) return;
+    el.classList.add('mn-col--flash');
+    setTimeout(() => el.classList.remove('mn-col--flash'), 750);
   }
 
   _hexA(hex, a) {

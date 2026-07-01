@@ -500,6 +500,13 @@ body.mn-dragging, body.mn-dragging * { cursor: grabbing !important; }
               0 0 0 3px color-mix(in srgb, var(--brand-primary, #6366f1) 10%, transparent);
   background: rgba(255, 255, 255, 0.03);
 }
+/* Destello de la columna donde ATERRIZA la burbuja (confirma dónde fue). */
+.mn-col.mn-col--flash { animation: mn-col-flash 0.75s ease-out; }
+@keyframes mn-col-flash {
+  0%   { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--brand-primary, #6366f1) 55%, transparent),
+                     inset 0 0 34px color-mix(in srgb, var(--brand-primary, #6366f1) 14%, transparent); }
+  100% { box-shadow: inset 0 0 0 0 transparent, inset 0 0 34px transparent; }
+}
 
 /* ════════════════════════════════════════════════════════════
    PANEL DE DETALLE (estilo Flows) al seleccionar una burbuja
