@@ -479,6 +479,7 @@ class MonitoringView extends BaseView {
     this._stopBubbles();
     if (this._tab === 'suggestions') {
       el.innerHTML = this._buildSuggestionsTab(this._model);
+      this._initFloatBubbles(this._model);
     } else {
       const kind = this._tab === 'urls' ? 'page' : 'profile';
       el.innerHTML = this._buildBoard(this._model, kind);
@@ -687,6 +688,8 @@ class MonitoringView extends BaseView {
   }
 
   _stepBubbles(w) {
+    // Sugerencias: burbujas flotantes (sin gravedad).
+    if (w.mode === 'float') return this._stepFloat(w);
     // Mundo congelado (ya asentado) y sin hover → no tocar nada. Esto evita el
     // micro-rebote perpetuo de la gravedad contra el piso (el "baile").
     if (w.frozen && !w.hover) { w._overlap = false; return 0; }
@@ -1023,7 +1026,8 @@ class MonitoringView extends BaseView {
     return String(Math.round(n));
   }
 
-  /* ── Tab de sugerencias del sistema (propuestas, sin el banner rosa) ── */
+  /* ── Tab de sugerencias: burbujas que FLOTAN por la página; al hacer hover
+        la burbuja se detiene y muestra "Seguir" / "Descartar". ── */
   _buildSuggestionsTab(model) {
     const props = model.propuestas;
     if (!props.length) {
@@ -1034,33 +1038,187 @@ class MonitoringView extends BaseView {
         subtitle: __('Cuando detectemos perfiles o páginas cerca de tu competencia, aparecerán aquí.'),
       });
     }
-    const tipoLabel = (t) => MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || __('Perfil');
-    const cards = props.map((e) => {
-      const platform = e.metadata?.platform || '';
-      const icon = MonitoringView.PLATFORM_ICON[platform] || 'fas fa-hashtag';
-      const why = `${tipoLabel(e.metadata?.tipo)}${platform ? __(' en {p}', { p: this._platformName(platform) }) : ''}. ${__('Lo encontramos cerca de tu competencia.')}`;
-      return `
-        <article class="mn-sug-card" data-id="${this._esc(e.id)}">
-          <div class="mn-sug-avatar"><i class="${icon}"></i></div>
-          <div class="mn-sug-main">
-            <div class="mn-sug-name">${this._esc(e.name || '—')}</div>
-            <div class="mn-sug-why">${this._esc(why)}</div>
-          </div>
-          <div class="mn-sug-actions">
-            <button type="button" class="mn-btn-primary" data-action="prop-follow" data-id="${this._esc(e.id)}">
-              <i class="fas fa-plus"></i> ${__('Seguir')}
-            </button>
-            <button type="button" class="mn-btn-secondary" data-action="prop-dismiss" data-id="${this._esc(e.id)}">
-              ${__('Descartar')}
-            </button>
-          </div>
-        </article>`;
-    }).join('');
     return `
-      <div class="mn-suggestions">
-        <p class="mn-sug-intro">${__('Tú decides: súmalos a tu vigilancia o descártalos.')}</p>
-        <div class="mn-sug-grid">${cards}</div>
+      <div class="mn-suggestions-float">
+        <p class="mn-sug-intro">${__('Flotan las sugerencias que encontramos. Pasa el mouse sobre una para decidir.')}</p>
+        <div class="mn-float" data-float="1">
+          <canvas></canvas>
+          <div class="mn-bub-labels"></div>
+        </div>
       </div>`;
+  }
+
+  /** Mundo de burbujas FLOTANTES (sin gravedad) para las sugerencias. */
+  _initFloatBubbles(model) {
+    const cont = document.getElementById('mnContent');
+    const stage = cont && cont.querySelector('.mn-float');
+    const props = (model && model.propuestas) || [];
+    if (!stage || !props.length) return;
+    const canvas = stage.querySelector('canvas');
+    const labels = stage.querySelector('.mn-bub-labels');
+    if (!canvas) return;
+
+    this._brandStops = this._brandGradientStops(); // degradado de marca para el dibujo
+    const tipoLabel = (t) => MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || __('Perfil');
+    const SPEED = 0.35;
+    const bodies = props.map((e) => {
+      const platform = e.metadata?.platform || '';
+      const r = 44 + (this._hash(e.id) % 16); // 44–59, ligera variación
+      const ang = (this._hash(e.id) % 360) * Math.PI / 180;
+      const why = `${tipoLabel(e.metadata?.tipo)}${platform ? __(' en {p}', { p: this._platformName(platform) }) : ''}. ${__('Lo encontramos cerca de tu competencia.')}`;
+      return {
+        it: { id: e.id, title: e.name || '—', platform, why, color: null },
+        r, rDraw: r, x: 0, y: 0, vx: Math.cos(ang) * SPEED, vy: Math.sin(ang) * SPEED, idx: 0, seeded: false,
+      };
+    });
+
+    // Etiquetas (icono + nombre dentro), igual que las otras burbujas.
+    if (labels) {
+      labels.innerHTML = '';
+      bodies.forEach((b) => {
+        const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'fas fa-hashtag';
+        const icon = document.createElement('span');
+        icon.className = 'mn-bub-icon';
+        icon.innerHTML = `<i class="${iconCls}"></i>`;
+        const name = document.createElement('span');
+        name.className = 'mn-bub-name';
+        name.textContent = b.it.title;
+        labels.appendChild(icon); labels.appendChild(name);
+        b.iconEl = icon; b.nameEl = name;
+      });
+    }
+
+    const world = { stage, canvas, ctx: canvas.getContext('2d'), bodies, W: 0, H: 0, DPR: 1, mode: 'float', hoverFloat: null, colId: null };
+    this._wireFloatCanvas(world);
+    this._bubbleWorlds = [world];
+
+    // Sembrar posiciones dispersas por todo el lienzo.
+    this._layoutFloat(world);
+    this._wakeBubbles();
+    if (!this._bubbleResizeBound) {
+      this._bubbleResizeBound = () => { this._layoutFloat(world); this._wakeBubbles(); };
+      window.addEventListener('resize', this._bubbleResizeBound);
+    }
+  }
+
+  _layoutFloat(w) {
+    const rect = w.canvas.getBoundingClientRect();
+    w.DPR = Math.min(window.devicePixelRatio || 1, 2);
+    w.W = Math.max(1, rect.width); w.H = Math.max(1, rect.height);
+    w.canvas.width = w.W * w.DPR; w.canvas.height = w.H * w.DPR;
+    w.ctx.setTransform(w.DPR, 0, 0, w.DPR, 0, 0);
+    w.bodies.forEach((b, i) => {
+      if (!b.seeded) {
+        // rejilla dispersa determinista
+        const cols = Math.max(1, Math.floor(w.W / 160));
+        const col = i % cols, row = Math.floor(i / cols);
+        b.x = Math.min(w.W - b.r, Math.max(b.r, (col + 0.5) * (w.W / cols) + (this._hash(b.it.id) % 40 - 20)));
+        b.y = Math.min(w.H - b.r, Math.max(b.r, 70 + row * 150 + (this._hash(b.it.id + 'y') % 40 - 20)));
+        b.seeded = true;
+      } else {
+        b.x = Math.max(b.r, Math.min(w.W - b.r, b.x));
+        b.y = Math.max(b.r, Math.min(w.H - b.r, b.y));
+      }
+      this._positionLabel(b, b.r);
+    });
+  }
+
+  _stepFloat(w) {
+    const SPEED = 0.35;
+    const H = w.hoverFloat;
+    for (const b of w.bodies) {
+      if (b === H) continue;
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < b.r) { b.x = b.r; b.vx = Math.abs(b.vx); }
+      else if (b.x > w.W - b.r) { b.x = w.W - b.r; b.vx = -Math.abs(b.vx); }
+      if (b.y < b.r) { b.y = b.r; b.vy = Math.abs(b.vy); }
+      else if (b.y > w.H - b.r) { b.y = w.H - b.r; b.vy = -Math.abs(b.vy); }
+    }
+    // Colisión sin solape + rebote entre burbujas (la hovered no se mueve).
+    for (let it = 0; it < 4; it++) {
+      for (let i = 0; i < w.bodies.length; i++) {
+        for (let j = i + 1; j < w.bodies.length; j++) {
+          const a = w.bodies[i], b = w.bodies[j];
+          let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+          if (d < 0.01) { dx = (j - i) || 1; dy = 0.3; d = Math.hypot(dx, dy); }
+          const min = a.r + b.r + 1;
+          if (d < min) {
+            const nx = dx / d, ny = dy / d, ov = (min - d);
+            if (a === H) { b.x += nx * ov; b.y += ny * ov; }
+            else if (b === H) { a.x -= nx * ov; a.y -= ny * ov; }
+            else { a.x -= nx * ov / 2; a.y -= ny * ov / 2; b.x += nx * ov / 2; b.y += ny * ov / 2; }
+            // intercambio de la componente normal de la velocidad (rebote elástico)
+            const p = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+            if (p < 0) { a.vx += p * nx; a.vy += p * ny; b.vx -= p * nx; b.vy -= p * ny; }
+          }
+        }
+      }
+    }
+    // Mantener rapidez ~constante para que la deriva no se apague.
+    for (const b of w.bodies) {
+      if (b === H) continue;
+      const s = Math.hypot(b.vx, b.vy) || 1;
+      b.vx = b.vx / s * SPEED; b.vy = b.vy / s * SPEED;
+    }
+    let ke = 0; for (const b of w.bodies) ke += b.vx * b.vx + b.vy * b.vy;
+    return ke;
+  }
+
+  _wireFloatCanvas(w) {
+    const canvas = w.canvas;
+    const pos = (e) => { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+    const hit = (p) => { for (const b of w.bodies) if (Math.hypot(b.x - p.x, b.y - p.y) < b.r) return b; return null; };
+    canvas.addEventListener('mousemove', (e) => {
+      const b = hit(pos(e));
+      canvas.style.cursor = b ? 'pointer' : 'default';
+      if (b) { if (w.hoverFloat !== b) this._showFloatActions(w, b); }
+      // Sobre zona vacía del canvas (nunca sobre la tarjeta, que va por encima
+      // y captura el mouse) → soltar la burbuja congelada.
+      else if (w.hoverFloat) this._hideFloatActions(w);
+    });
+    // Salir del canvas → soltar, salvo que el cursor esté entrando a la tarjeta.
+    canvas.addEventListener('mouseleave', (e) => {
+      if (w.hoverFloat && !(w.overlay && w.overlay.contains(e.relatedTarget))) this._hideFloatActions(w);
+    });
+  }
+
+  _showFloatActions(w, b) {
+    w.hoverFloat = b; // congela esta burbuja mientras se decide
+    let overlay = w.overlay;
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'mn-float-actions';
+      w.stage.appendChild(overlay);
+      overlay.addEventListener('mouseleave', () => this._hideFloatActions(w));
+      overlay.addEventListener('click', async (ev) => {
+        const btn = ev.target.closest('[data-fact]');
+        if (!btn) return;
+        ev.stopPropagation();
+        const id = w._hoverId;
+        this._hideFloatActions(w);
+        if (btn.dataset.fact === 'follow') await this._propFollow(id);
+        else await this._propDismiss(id);
+      });
+      w.overlay = overlay;
+    }
+    w._hoverId = b.it.id;
+    overlay.innerHTML = `
+      <div class="mn-float-name">${this._esc(b.it.title)}</div>
+      <div class="mn-float-why">${this._esc(b.it.why)}</div>
+      <div class="mn-float-btns">
+        <button class="mn-float-btn mn-float-btn--yes" data-fact="follow"><i class="fas fa-plus"></i> ${__('Seguir')}</button>
+        <button class="mn-float-btn mn-float-btn--no" data-fact="dismiss">${__('Descartar')}</button>
+      </div>`;
+    overlay.style.left = b.x + 'px';
+    overlay.style.top = b.y + 'px';
+    overlay.style.display = 'flex';
+    this._wakeBubbles();
+  }
+
+  _hideFloatActions(w) {
+    w.hoverFloat = null; w._hoverId = null;
+    if (w.overlay) w.overlay.style.display = 'none';
+    this._wakeBubbles();
   }
 
   /* ══════════════════════════════════════════════════════════
