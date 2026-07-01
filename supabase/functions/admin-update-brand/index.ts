@@ -127,16 +127,18 @@ Deno.serve(async (req) => {
     // ── LISTAR competidores (para la pagina de aprobacion) ──────────────
     if (section === "competitors-list") {
       const { data } = await service.from("intelligence_entities")
-        .select("id, name, domain, target_identifier, metadata")
+        .select("id, name, domain, target_identifier, metadata, relevance")
         .eq("organization_id", orgId)
         .order("created_at", { ascending: true });
       const competitors = (data || [])
         .filter((e: { metadata?: { kind?: string } }) => e.metadata?.kind === "competitor")
-        .map((e: { id: string; name: string; domain: string; target_identifier: string; metadata?: { website?: string; instagram?: string } }) => ({
+        .map((e: { id: string; name: string; domain: string; target_identifier: string; relevance?: string; metadata?: { website?: string; instagram?: string; tipo?: string } }) => ({
           id: e.id,
           name: e.name,
           website: e.metadata?.website || "",
           instagram: e.metadata?.instagram || (e.domain === "social" ? e.target_identifier : "") || "",
+          role: e.metadata?.tipo || "competidor_directo",  // rol dentro del monitoreo
+          relevance: e.relevance || "",                     // por qué es competencia
         }));
       return jsonResponse({ competitors });
     }
@@ -161,10 +163,17 @@ Deno.serve(async (req) => {
         const ig = (typeof c.instagram === "string" ? c.instagram : "").replace(/^@/, "").trim() || null;
         const site = normalizeUrl(c.website);
         const targetId = ig || (site ? hostnameOf(site) : null) || name;
+        // Rol dentro del monitoreo (Vera los identifica como competencia directa) +
+        // relevancia: el porqué de estar aquí. Passthrough si el builder mandó una
+        // razón; si no, un default honesto y editable.
+        const role = str(c.role || c.tipo) || "competidor_directo";
+        const relevance = str(c.relevance || c.reason || c.why) ||
+          `Identificado por Vera al construir tu marca, como competencia en tu categoría. Ajusta el porqué con lo que específicamente lo hace tu competencia (comunicación, propuesta, precio, audiencia).`;
         const { data: ent } = await service.from("intelligence_entities").insert({
           brand_container_id: containerId, organization_id: orgId, name,
           domain: ig ? "social" : "web", target_identifier: targetId, is_active: true, scope: "brand",
-          metadata: { website: site, instagram: ig, kind: "competitor", discovered_by: "auto-builder" },
+          relevance,
+          metadata: { website: site, instagram: ig, kind: "competitor", tipo: role, discovered_by: "auto-builder" },
         }).select("id").single();
         count++;
         if (site && ent) {
