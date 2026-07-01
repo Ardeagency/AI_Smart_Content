@@ -705,28 +705,34 @@ class MonitoringView extends BaseView {
     });
 
     this._layoutBubbles();
-    this._presettleBubbles();   // asienta la física ANTES de pintar → sin caída
+    this._presettleBubbles();   // asienta la física en silencio → sin caída visible
     this._bubbleSleep = 0;
-    this._wakeBubbles();
+    // Arranca el loop SIN descongelar (worlds quedan frozen tras presettle) → el
+    // 1er frame ya pinta asentado, sin re-correr física ni caída.
+    if (!this._bubbleRAF) { this._bubbleAwakeFrames = 0; this._bubbleRAF = requestAnimationFrame(() => this._bubbleLoop()); }
 
     if (!this._bubbleResizeBound) {
-      this._bubbleResizeBound = () => { this._layoutBubbles(); this._presettleBubbles(); this._wakeBubbles(); };
+      this._bubbleResizeBound = () => {
+        this._layoutBubbles(); this._presettleBubbles();
+        if (!this._bubbleRAF) { this._bubbleRAF = requestAnimationFrame(() => this._bubbleLoop()); }
+      };
       window.addEventListener('resize', this._bubbleResizeBound);
     }
   }
 
-  /** Corre la física a convergencia en silencio (sin pintar) y congela, para que
-      las burbujas aparezcan YA apiladas — sin la animación de caída. */
+  /** Corre la física a convergencia EN SILENCIO (sin pintar) y congela, para que
+      el 1er frame del loop ya muestre las burbujas apiladas — sin animar la caída.
+      NO pinta aquí (eso lo hace el loop) para no duplicar el render. */
   _presettleBubbles() {
     for (const w of (this._bubbleWorlds || [])) {
       if (w.mode === 'float') continue; // las flotantes no caen
+      w.frozen = false; w._still = 0;
       for (let i = 0; i < 600; i++) {
         this._stepBubbles(w);
-        if (!w._overlap && (w._still || 0) > 3) break; // ya asentó
+        if (w.frozen || (!w._overlap && (w._still || 0) > 4)) break; // ya asentó
       }
       w.frozen = true; w._still = 99;
       for (const b of w.bodies) { b.rDraw = b.r; b._px = b.x; b._py = b.y; }
-      this._drawBubbles(w); // pinta ya asentado (canvas + etiquetas), sin salto
     }
   }
 
