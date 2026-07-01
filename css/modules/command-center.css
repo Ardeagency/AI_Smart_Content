@@ -622,7 +622,7 @@
 .cc-node--readonly { width: 248px; }
 .cc-node--identity { width: 208px; }
 .cc-node--readonly.cc-node--expanded { width: 340px; z-index: 4; }
-.cc-node:hover { border-color: rgba(255, 255, 255, 0.2); }
+.cc-node:hover { border-color: color-mix(in srgb, var(--brand-primary, #ffffff) 40%, transparent); }
 .cc-node.cc-node--dragging { box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6); z-index: 5; }
 .cc-node--drop-target { border-color: rgba(255, 255, 255, 0.55); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3), 0 6px 22px rgba(0, 0, 0, 0.45); }
 .cc-node--featured { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4), 0 6px 22px rgba(0, 0, 0, 0.45); }
@@ -2755,9 +2755,10 @@
 /* ── Nodo seleccionado ─────────────────────────────────────────────── */
 /* Nodo seleccionado: el ring blanco se reemplaza por un contorno con el
    degradado dinamico de la marca (::after enmascarado, sigue el border-radius).
-   El !important en box-shadow neutraliza los rings blancos por-tipo. */
-.cc-node--selected { border-color: transparent !important; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5) !important; }
-.cc-node--selected::after {
+   Especificidad (0,2,0) + orden tardio para ganar a los rings blancos por-tipo
+   (.cc-node--anchor/campaign-v2/prem.cc-node--selected) que tambien usan !important. */
+.cc-node.cc-node--selected { border-color: transparent !important; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5) !important; }
+.cc-node.cc-node--selected::after {
   content: '';
   position: absolute;
   inset: 0;
