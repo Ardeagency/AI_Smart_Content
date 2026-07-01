@@ -565,12 +565,12 @@ class MonitoringView extends BaseView {
     return Math.abs(h);
   }
 
-  // Etiquetas cortas de rol para las burbujas (las largas no caben bien).
+  // Rol en UNA palabra para la etiqueta de la burbuja.
   static ROLE_SHORT = {
-    competidor_directo:   'Competencia directa',
-    competidor_indirecto: 'Competencia indirecta',
+    competidor_directo:   'Competencia',
+    competidor_indirecto: 'Competencia',
     referencia_cultural:  'Referente',
-    aliado:               'Aliado',
+    aliado:               'Socio',
     owned_media:          'Propio',
   };
 
