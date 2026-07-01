@@ -448,7 +448,7 @@ class MonitoringView extends BaseView {
     return [
       { id: 'news',   label: __('Con novedad'), hint: __('Cambios recientes'),  emptyIcon: 'fa-bell',         emptyText: __('Sin novedades por ahora') },
       { id: 'calm',   label: __('Al día'),      hint: __('Activo y tranquilo'), emptyIcon: 'fa-circle-check', emptyText: __('Nada por aquí todavía') },
-      { id: 'silent', label: __('Sin señales'), hint: __('Callados hace rato'), emptyIcon: 'fa-moon',         emptyText: __('Nada callado por ahora') },
+      { id: 'silent', label: __('Activados'),   hint: __('Activos, sin señal reciente'), emptyIcon: 'fa-moon', emptyText: __('Nada activo sin señal') },
       { id: 'paused', label: __('En pausa'),    hint: __('Desactivados'),       emptyIcon: 'fa-circle-pause', emptyText: __('Nada en pausa') },
     ];
   }
