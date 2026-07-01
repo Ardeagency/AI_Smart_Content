@@ -663,21 +663,34 @@ class MonitoringView extends BaseView {
   }
 
   _stepBubbles(w) {
-    const G = 0.5, FR = 0.985, REST = 0.16;
+    const G = 0.32, FR = 0.985, REST = 0.16;
     for (const b of w.bodies) { b.vy += G; b.vx *= FR; b.vy *= FR; b.x += b.vx; b.y += b.vy; }
     // Radio efectivo = el que se está dibujando (incluye el hover), para que una
     // burbuja agrandada empuje a las vecinas y NUNCA se solapen ni se tapen.
     const rad = (b) => b.rDraw || b.r;
-    // Varias iteraciones del solver → separación dura (cuerpos sólidos).
-    for (let it = 0; it < 6; it++) {
+    // Iteraciones del solver escaladas al nº de cuerpos + sobre-relajación → los
+    // packs densos (muchas/grandes burbujas) convergen sin solape.
+    const SOR = 1.5; // factor de sobre-relajación
+    const iters = Math.min(44, 16 + w.bodies.length * 2);
+    for (let it = 0; it < iters; it++) {
       for (let i = 0; i < w.bodies.length; i++) {
         for (let j = i + 1; j < w.bodies.length; j++) {
           const a = w.bodies[i], b = w.bodies[j];
           let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-          if (d < 0.01) { dx = (j - i) || 1; dy = 0.1; d = Math.hypot(dx, dy); } // centros coincidentes → separar
+          if (d < 0.01) { dx = (j - i) || 1; dy = -0.6; d = Math.hypot(dx, dy); } // centros coincidentes → separar
           const min = rad(a) + rad(b) + 1; // +1px de aire para que no se toquen
           if (d < min) {
-            const ov = (min - d) / 2, nx = dx / d, ny = dy / d;
+            let nx = dx / d, ny = dy / d;
+            // Contacto casi horizontal: cuando no caben a lo ancho, sesgar la
+            // normal hacia lo vertical para que APILEN (pirámide) en vez de
+            // encimarse contra las paredes. Amplifica la asimetría de altura ya
+            // existente; si están perfectamente niveladas, decide por índice.
+            if (Math.abs(ny) < 0.26) {
+              const dir = ny !== 0 ? Math.sign(ny) : (((j - i) % 2) ? 1 : -1);
+              ny = dir * 0.26;
+              nx = Math.sign(dx || 1) * Math.sqrt(1 - ny * ny);
+            }
+            const ov = (min - d) / 2 * SOR;
             a.x -= nx * ov; a.y -= ny * ov; b.x += nx * ov; b.y += ny * ov;
             const rv = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
             if (rv < 0) { a.vx -= rv * nx * REST; a.vy -= rv * ny * REST; b.vx += rv * nx * REST; b.vy += rv * ny * REST; }
@@ -693,6 +706,19 @@ class MonitoringView extends BaseView {
         if (b.y < r) { b.y = r; } // techo (por si una grande empuja hacia arriba)
       }
     }
+    // ¿Queda algún solape? La corrección por posición no genera velocidad, así
+    // que el loop NO debe dormirse mientras haya solape (si no, congela burbujas
+    // encimadas). Se marca en el mundo para que _bubbleLoop lo mantenga vivo.
+    let overlap = false;
+    for (let i = 0; i < w.bodies.length && !overlap; i++) {
+      for (let j = i + 1; j < w.bodies.length; j++) {
+        const a = w.bodies[i], b = w.bodies[j];
+        const min = rad(a) + rad(b);
+        if (Math.hypot(b.x - a.x, b.y - a.y) < min - 0.6) { overlap = true; break; }
+      }
+    }
+    w._overlap = overlap;
+
     // Energía cinética (para dormir el loop cuando todo asienta).
     let ke = 0;
     for (const b of w.bodies) ke += b.vx * b.vx + b.vy * b.vy;
@@ -757,6 +783,7 @@ class MonitoringView extends BaseView {
 
   _bubbleLoop() {
     this._bubbleT = (this._bubbleT || 0) + 1;
+    this._bubbleAwakeFrames = (this._bubbleAwakeFrames || 0) + 1;
     let maxKE = 0, animating = false;
     for (const w of (this._bubbleWorlds || [])) {
       const ke = this._stepBubbles(w);
@@ -765,6 +792,9 @@ class MonitoringView extends BaseView {
       // ¿alguna burbuja aún animando su tamaño (hover)?
       for (const b of w.bodies) if (Math.abs(b.rDraw - b.r * (b === w.hover ? 1.16 : 1)) > 0.3) animating = true;
       if (w.hover) animating = true;
+      // No dormir mientras se estén separando — pero con tope de seguridad para
+      // que un pack imposible (demasiadas burbujas gigantes) no corra infinito.
+      if (w._overlap && this._bubbleAwakeFrames < 900) animating = true;
     }
     const hasPulse = (this._bubbleWorlds || []).some(w => w.colId === 'news' && w.bodies.length);
     if (maxKE < 0.05 && !animating && !hasPulse) {
@@ -777,7 +807,7 @@ class MonitoringView extends BaseView {
 
   _wakeBubbles() {
     this._bubbleSleep = 0;
-    if (!this._bubbleRAF) this._bubbleRAF = requestAnimationFrame(() => this._bubbleLoop());
+    if (!this._bubbleRAF) { this._bubbleAwakeFrames = 0; this._bubbleRAF = requestAnimationFrame(() => this._bubbleLoop()); }
   }
 
   _stopBubbles() {
