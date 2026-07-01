@@ -793,9 +793,10 @@ class MonitoringView extends BaseView {
       b.rDraw += (target - b.rDraw) * 0.22;
       const r = b.rDraw;
       const bx = b.x;
-      const by = b.y + (isFloat ? Math.sin(this._bubbleT * 0.018 + (b._phase || 0)) * 3 : 0); // bob orgánico
+      // Bob orgánico, salvo la burbuja activa (para que los botones queden fijos).
+      const by = b.y + ((isFloat && !isHover) ? Math.sin(this._bubbleT * 0.018 + (b._phase || 0)) * 3 : 0);
 
-      // Color: personalizado si el usuario lo definió, si no el degradado de marca.
+      // Degradado de la marca (diagonal). c0→c1.
       const stops = this._bubbleStops(b.it);
       const c0 = stops[0], c1 = stops[1] || stops[0];
       const grad = ctx.createLinearGradient(bx - r, by - r, bx + r, by + r);
@@ -804,37 +805,43 @@ class MonitoringView extends BaseView {
 
       // Profundidad: las burbujas chicas, un poco más tenues (parallax sutil).
       const tDepth = (isFloat && rMax > rMin) ? (b.r - rMin) / (rMax - rMin) : 1;
-      const depthA = isHover ? 1 : (isFloat ? (0.72 + 0.28 * tDepth) : 1);
+      const depthA = isHover ? 1 : (isFloat ? (0.74 + 0.26 * tDepth) : 1);
 
       ctx.save();
-      ctx.globalAlpha = depthA;
 
       // Sombra suave que ATERRIZA la burbuja (premium, en vez de bloom neón).
       ctx.save();
+      ctx.globalAlpha = depthA;
       ctx.shadowColor = 'rgba(0,0,0,0.5)';
-      ctx.shadowBlur = isFloat ? 22 : 13;
-      ctx.shadowOffsetY = isFloat ? 9 : 5;
+      ctx.shadowBlur = isFloat ? 24 : 13;
+      ctx.shadowOffsetY = isFloat ? 10 : 5;
       ctx.fillStyle = dimmed ? '#141416' : '#17171a';
       ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
       ctx.restore();
 
       // Glow ceñido y tenue del color (no un bloom que se ve neón/amateur).
-      const glowA = dimmed ? 0.04 : (isHover ? 0.20 : 0.09);
-      const g = ctx.createRadialGradient(bx, by, r * 0.78, bx, by, r * 1.26);
+      ctx.globalAlpha = depthA;
+      const glowA = dimmed ? 0.04 : (isHover ? 0.18 : 0.08);
+      const g = ctx.createRadialGradient(bx, by, r * 0.8, bx, by, r * 1.24);
       g.addColorStop(0, this._hexA(c0, glowA));
       g.addColorStop(1, this._hexA(c0, 0));
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by, r * 1.26, 0, 7); ctx.fill();
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by, r * 1.24, 0, 7); ctx.fill();
 
-      // Tinte de marca con luz arriba (da dimensión al relleno oscuro).
-      const tint = ctx.createRadialGradient(bx, by - r * 0.5, r * 0.15, bx, by, r);
-      tint.addColorStop(0, this._hexA(c0, dimmed ? 0.05 : 0.13));
-      tint.addColorStop(1, this._hexA(c0, 0));
-      ctx.fillStyle = tint; ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
+      // RELLENO con el degradado de marca visible (sobre la base oscura).
+      ctx.globalAlpha = depthA * (dimmed ? 0.10 : 0.26);
+      ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
 
-      // Borde fino con el degradado de marca.
-      let lw = isHover ? 2.6 : 2;
-      if (pulse && !isHover) lw = 2 + Math.sin(this._bubbleT * 0.05 + bx) * 0.7;
-      ctx.globalAlpha = depthA * (isHover ? 1 : 0.9);
+      // Luz suave arriba (glassy, da dimensión).
+      const gloss = ctx.createRadialGradient(bx, by - r * 0.55, r * 0.1, bx, by - r * 0.2, r * 0.9);
+      gloss.addColorStop(0, this._hexA('#ffffff', dimmed ? 0.03 : 0.07));
+      gloss.addColorStop(1, this._hexA('#ffffff', 0));
+      ctx.globalAlpha = depthA; ctx.fillStyle = gloss;
+      ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
+
+      // Borde con el degradado de marca (prominente).
+      let lw = isHover ? 3 : 2.6;
+      if (pulse && !isHover) lw = 2.4 + Math.sin(this._bubbleT * 0.05 + bx) * 0.8;
+      ctx.globalAlpha = depthA * (isHover ? 1 : 0.92);
       ctx.lineWidth = lw; ctx.strokeStyle = grad;
       ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.stroke();
       ctx.restore();
@@ -1088,7 +1095,7 @@ class MonitoringView extends BaseView {
     const SPEED = 0.22; // deriva calmada (premium)
     const bodies = props.map((e) => {
       const platform = e.metadata?.platform || '';
-      const r = 40 + (this._hash(e.id) % 26); // 40–65: rango amplio → profundidad
+      const r = 58 + (this._hash(e.id) % 34); // 58–91: más grandes, con profundidad
       const ang = (this._hash(e.id) % 360) * Math.PI / 180;
       const why = `${tipoLabel(e.metadata?.tipo)}${platform ? __(' en {p}', { p: this._platformName(platform) }) : ''}. ${__('Lo encontramos cerca de tu competencia.')}`;
       return {
@@ -1158,13 +1165,14 @@ class MonitoringView extends BaseView {
   _stepFloat(w) {
     const SPEED = 0.22;
     const H = w.hoverFloat;
+    const BTN_PAD = 48; // banda inferior reservada para los botones bajo la burbuja
     for (const b of w.bodies) {
       if (b === H) continue;
       b.x += b.vx; b.y += b.vy;
       if (b.x < b.r) { b.x = b.r; b.vx = Math.abs(b.vx); }
       else if (b.x > w.W - b.r) { b.x = w.W - b.r; b.vx = -Math.abs(b.vx); }
       if (b.y < b.r) { b.y = b.r; b.vy = Math.abs(b.vy); }
-      else if (b.y > w.H - b.r) { b.y = w.H - b.r; b.vy = -Math.abs(b.vy); }
+      else if (b.y > w.H - b.r - BTN_PAD) { b.y = w.H - b.r - BTN_PAD; b.vy = -Math.abs(b.vy); }
     }
     // Colisión sin solape + rebote entre burbujas (la hovered no se mueve).
     for (let it = 0; it < 4; it++) {
@@ -1203,25 +1211,25 @@ class MonitoringView extends BaseView {
     canvas.addEventListener('mousemove', (e) => {
       const b = hit(pos(e));
       canvas.style.cursor = b ? 'pointer' : 'default';
-      if (b) { if (w.hoverFloat !== b) this._showFloatActions(w, b); }
-      // Sobre zona vacía del canvas (nunca sobre la tarjeta, que va por encima
-      // y captura el mouse) → soltar la burbuja congelada.
-      else if (w.hoverFloat) this._hideFloatActions(w);
+      if (b) { this._cancelHideFloat(w); if (w.hoverFloat !== b) this._showFloatActions(w, b); }
+      else if (w.hoverFloat) this._scheduleHideFloat(w); // zona vacía → soltar (con margen)
     });
-    // Salir del canvas → soltar, salvo que el cursor esté entrando a la tarjeta.
-    canvas.addEventListener('mouseleave', (e) => {
-      if (w.hoverFloat && !(w.overlay && w.overlay.contains(e.relatedTarget))) this._hideFloatActions(w);
-    });
+    canvas.addEventListener('mouseleave', () => { if (w.hoverFloat) this._scheduleHideFloat(w); });
   }
 
+  /** Muestra los dos botones (Seguir / Descartar) DEBAJO de la burbuja y la
+      congela mientras se decide. Sin panel. */
   _showFloatActions(w, b) {
-    w.hoverFloat = b; // congela esta burbuja mientras se decide
+    this._cancelHideFloat(w);
+    w.hoverFloat = b;
     let overlay = w.overlay;
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.className = 'mn-float-actions';
       w.stage.appendChild(overlay);
-      overlay.addEventListener('mouseleave', () => this._hideFloatActions(w));
+      // Puente de hover: mantener vivo mientras el cursor esté sobre los botones.
+      overlay.addEventListener('mouseenter', () => this._cancelHideFloat(w));
+      overlay.addEventListener('mouseleave', () => this._scheduleHideFloat(w));
       overlay.addEventListener('click', async (ev) => {
         const btn = ev.target.closest('[data-fact]');
         if (!btn) return;
@@ -1235,23 +1243,23 @@ class MonitoringView extends BaseView {
     }
     w._hoverId = b.it.id;
     overlay.innerHTML = `
-      <div class="mn-float-name">${this._esc(b.it.title)}</div>
-      <div class="mn-float-why">${this._esc(b.it.why)}</div>
-      <div class="mn-float-btns">
-        <button class="mn-float-btn mn-float-btn--yes" data-fact="follow"><i class="fas fa-plus"></i> ${__('Seguir')}</button>
-        <button class="mn-float-btn mn-float-btn--no" data-fact="dismiss">${__('Descartar')}</button>
-      </div>`;
-    overlay.style.left = b.x + 'px';
-    overlay.style.top = b.y + 'px';
-    overlay.style.display = 'flex';
+      <button class="mn-float-btn mn-float-btn--yes" data-fact="follow"><i class="fas fa-plus"></i> ${__('Seguir')}</button>
+      <button class="mn-float-btn mn-float-btn--no" data-fact="dismiss">${__('Descartar')}</button>`;
+    overlay.style.left = Math.max(96, Math.min(w.W - 96, b.x)) + 'px';
+    overlay.style.top = (b.y + b.r + 12) + 'px';
+    overlay.classList.add('show');
     this._wakeBubbles();
   }
 
   _hideFloatActions(w) {
+    this._cancelHideFloat(w);
     w.hoverFloat = null; w._hoverId = null;
-    if (w.overlay) w.overlay.style.display = 'none';
+    if (w.overlay) w.overlay.classList.remove('show');
     this._wakeBubbles();
   }
+
+  _scheduleHideFloat(w) { this._cancelHideFloat(w); w._hideT = setTimeout(() => this._hideFloatActions(w), 130); }
+  _cancelHideFloat(w) { if (w._hideT) { clearTimeout(w._hideT); w._hideT = null; } }
 
   /* ══════════════════════════════════════════════════════════
      EVENTOS
