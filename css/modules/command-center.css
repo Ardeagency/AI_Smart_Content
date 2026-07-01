@@ -1,10 +1,7 @@
-/* Command Center — superficies sólidas (sin glass / sin capas translúcidas) */
-
-#commandCenterPage,
-#commandCenterPage * {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
+/* Command Center — los sidebars usan glass-black frosted (degradado de marca +
+   blur). El reset "backdrop-filter:none" global que habia aqui (#commandCenterPage *)
+   mataba el blur de TODO descendiente por especificidad (1,0,0 > .clase 0,1,0):
+   por eso el glass no se aplicaba y el fondo se veia nitido. Eliminado a proposito. */
 
 /* Rellena el alto útil bajo el header fijo (evita “hueco” bajo el contenido cuando el padre no da altura al %). */
 .cc-page {
@@ -900,12 +897,11 @@
 
 /* ── Sidebar de Estrategias (izquierda, colapsable — patron historial Vera) ── */
 /* Fondo: degradado dinamico de la marca (--brand-gradient-dynamic-vertical)
-   bajo un velo glass-black frosted (recipe de .glass-black: blur 24 / saturate
-   140 + veil oscuro; ::before tinta con la marca).
-   NOTA: el backdrop-filter NO desenfoca los nodos porque .cc-canvas-world esta
-   en su propia capa GPU (will-change:transform) — Chrome no incluye capas
-   compositadas aparte en el backdrop. Por eso el velo va a 0.82 (no 0.55): asi
-   el panel se lee frosteado/opaco y no transparente sobre los nodos nitidos. */
+   bajo un velo glass-black frosted (recipe EXACTO de .glass-black: veil
+   rgba(11,11,11,0.55) + blur 24 / saturate 140; ::before tinta con la marca).
+   El backdrop-filter SI desenfoca los nodos del canvas (verificado). Antes no
+   funcionaba por un reset global "#commandCenterPage * { backdrop-filter:none }"
+   que ganaba por especificidad — ya eliminado al inicio de este archivo. */
 .cc-strat-panel {
   position: absolute;
   top: 14px; left: 14px; bottom: 14px;
@@ -913,7 +909,7 @@
   z-index: 8;
   display: flex;
   flex-direction: column;
-  background: rgba(11, 11, 11, 0.82);
+  background: rgba(11, 11, 11, 0.55);
   border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
@@ -929,7 +925,7 @@
   inset: 0;
   z-index: -1;
   background: var(--brand-gradient-dynamic-vertical, var(--brand-gradient-dynamic, transparent));
-  opacity: 0.4;
+  opacity: 0.35;
   pointer-events: none;
   border-radius: inherit;
 }
@@ -1063,7 +1059,7 @@
   align-items: stretch;
   border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
-  background: rgba(11, 11, 11, 0.82);
+  background: rgba(11, 11, 11, 0.55);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   overflow: hidden;
   backdrop-filter: blur(24px) saturate(140%);
@@ -1076,7 +1072,7 @@
   inset: 0;
   z-index: -1;
   background: var(--brand-gradient-dynamic-vertical, var(--brand-gradient-dynamic, transparent));
-  opacity: 0.4;
+  opacity: 0.35;
   pointer-events: none;
   border-radius: inherit;
 }
