@@ -1001,16 +1001,21 @@ class MonitoringView extends BaseView {
       (mueve un "fantasma" entre columnas para cambiar su estado). */
   _beginBubbleInteraction(w, b, e) {
     const startX = e.clientX, startY = e.clientY;
+    // Offset de agarre: mantiene la burbuja bajo el punto EXACTO donde se agarró
+    // (nada de saltos al cursor).
+    const rect = w.canvas.getBoundingClientRect();
+    const grabDX = e.clientX - (rect.left + b.x);
+    const grabDY = e.clientY - (rect.top + b.y);
     let dragging = false;
     const onMove = (ev) => {
       if (!dragging) {
         if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < 6) return;
         dragging = true;
-        this._drag = { w, b };
+        this._drag = { w, b, grabDX, grabDY };
         b._dragging = true;
         w.hover = null;
         document.body.classList.add('mn-dragging');
-        this._dragGhost = this._makeDragGhost(b, ev.clientX, ev.clientY);
+        this._dragGhost = this._makeDragGhost(b);
         this._requestBubbleDraw(); // oculta la burbuja en su canvas
       }
       this._moveDragGhost(ev.clientX, ev.clientY);
@@ -1034,20 +1039,24 @@ class MonitoringView extends BaseView {
     document.addEventListener('mouseup', onUp);
   }
 
-  _makeDragGhost(b, x, y) {
+  _makeDragGhost(b) {
     const g = document.createElement('div');
     g.className = 'mn-drag-ghost';
     const d = Math.round(b.rDraw * 2);
-    const stops = this._bubbleStops(b.it);
     const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'fas fa-hashtag';
     g.style.width = g.style.height = d + 'px';
-    g.style.setProperty('--g', this._gradientCss(stops));
+    // Borde con degradado que RESPETA el border-radius (padding-box + border-box).
+    g.style.setProperty('--g', this._gradientCss(this._bubbleStops(b.it)));
     g.innerHTML = `<i class="${iconCls}"></i><span>${this._esc(b.it.title || '')}</span>`;
     document.body.appendChild(g);
-    g.style.left = x + 'px'; g.style.top = y + 'px';
     return g;
   }
-  _moveDragGhost(x, y) { if (this._dragGhost) { this._dragGhost.style.left = x + 'px'; this._dragGhost.style.top = y + 'px'; } }
+  /** Mueve el fantasma con transform (solo compositor, sin reflow → sin latencia). */
+  _moveDragGhost(x, y) {
+    if (!this._dragGhost || !this._drag) return;
+    const gx = x - this._drag.grabDX, gy = y - this._drag.grabDY;
+    this._dragGhost.style.transform = `translate3d(${gx}px, ${gy}px, 0) translate(-50%, -50%)`;
+  }
 
   _dropTargetCol(x, y) {
     const el = document.elementFromPoint(x, y);
