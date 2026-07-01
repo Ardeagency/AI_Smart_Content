@@ -442,23 +442,17 @@
 .mn-float canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 @media (max-width: 1100px) { .mn-float { min-height: 420px; } }
 
-/* Dos botones que aparecen DEBAJO de la burbuja al hacer hover (sin panel). */
+/* Dos botones (del design system) que aparecen DEBAJO de la burbuja al hover. */
 .mn-float-actions {
   position: absolute; transform: translate(-50%, 0); z-index: 6;
   display: none; gap: 8px; align-items: center;
   opacity: 0; transition: opacity 0.14s ease;
 }
 .mn-float-actions.show { display: flex; opacity: 1; }
-.mn-float-btn {
-  padding: 8px 15px; border-radius: 9px; font-size: 12.5px; font-weight: 600;
-  cursor: pointer; border: 1px solid transparent; white-space: nowrap; transition: all 0.15s ease;
-  display: inline-flex; align-items: center; gap: 6px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+.mn-float-actions .mn-btn-primary,
+.mn-float-actions .mn-btn-secondary {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5); white-space: nowrap;
 }
-.mn-float-btn--yes { background: #ff5400; color: #fff; }
-.mn-float-btn--yes:hover { background: #e64a00; }
-.mn-float-btn--no { background: rgba(28, 28, 32, 0.96); border-color: rgba(255, 255, 255, 0.14); color: rgba(255, 255, 255, 0.75); }
-.mn-float-btn--no:hover { background: rgba(40, 40, 46, 0.98); color: #fff; }
 
 /* ── Popover al hacer clic en una burbuja: color + acciones ── */
 .mn-bubpop {

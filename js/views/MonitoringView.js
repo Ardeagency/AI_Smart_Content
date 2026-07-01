@@ -575,6 +575,15 @@ class MonitoringView extends BaseView {
     return this._brandStops || ['#e09145', '#f6b26b'];
   }
 
+  /** Color sólido de las cards (--bg-card) para el relleno de las burbujas. */
+  _readCardColor() {
+    try {
+      const v = (getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '').trim();
+      if (/^#[0-9a-fA-F]{3,8}$/.test(v)) return v;
+    } catch (_) {}
+    return '#141517';
+  }
+
   /** Aclara un hex mezclándolo hacia blanco (para el 2º stop si falta). */
   _lighten(hex, amt) {
     const h = hex.replace('#', '');
@@ -589,6 +598,7 @@ class MonitoringView extends BaseView {
 
     // Degradado de la marca (una sola lectura por render) para pintar las burbujas.
     this._brandStops = this._brandGradientStops();
+    this._cardColor = this._readCardColor();
 
     // Escala de tamaño compartida por todo el board (comparables entre columnas).
     // Métrica principal = impacto social (engagement de audiencia). Si el board
@@ -807,40 +817,22 @@ class MonitoringView extends BaseView {
       const tDepth = (isFloat && rMax > rMin) ? (b.r - rMin) / (rMax - rMin) : 1;
       const depthA = isHover ? 1 : (isFloat ? (0.74 + 0.26 * tDepth) : 1);
 
-      ctx.save();
+      const card = this._cardColor || '#141517';
 
-      // Sombra suave que ATERRIZA la burbuja (premium, en vez de bloom neón).
+      // Sombra suave que ATERRIZA la burbuja + relleno SÓLIDO (color de las cards).
       ctx.save();
       ctx.globalAlpha = depthA;
       ctx.shadowColor = 'rgba(0,0,0,0.5)';
       ctx.shadowBlur = isFloat ? 24 : 13;
       ctx.shadowOffsetY = isFloat ? 10 : 5;
-      ctx.fillStyle = dimmed ? '#141416' : '#17171a';
+      ctx.fillStyle = dimmed ? '#101012' : card;
       ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
       ctx.restore();
 
-      // Glow ceñido y tenue del color (no un bloom que se ve neón/amateur).
-      ctx.globalAlpha = depthA;
-      const glowA = dimmed ? 0.04 : (isHover ? 0.18 : 0.08);
-      const g = ctx.createRadialGradient(bx, by, r * 0.8, bx, by, r * 1.24);
-      g.addColorStop(0, this._hexA(c0, glowA));
-      g.addColorStop(1, this._hexA(c0, 0));
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by, r * 1.24, 0, 7); ctx.fill();
-
-      // RELLENO con el degradado de marca visible (sobre la base oscura).
-      ctx.globalAlpha = depthA * (dimmed ? 0.10 : 0.26);
-      ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
-
-      // Luz suave arriba (glassy, da dimensión).
-      const gloss = ctx.createRadialGradient(bx, by - r * 0.55, r * 0.1, bx, by - r * 0.2, r * 0.9);
-      gloss.addColorStop(0, this._hexA('#ffffff', dimmed ? 0.03 : 0.07));
-      gloss.addColorStop(1, this._hexA('#ffffff', 0));
-      ctx.globalAlpha = depthA; ctx.fillStyle = gloss;
-      ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
-
-      // Borde con el degradado de marca (prominente).
+      // Borde con el degradado de la marca (único color de la burbuja).
       let lw = isHover ? 3 : 2.6;
       if (pulse && !isHover) lw = 2.4 + Math.sin(this._bubbleT * 0.05 + bx) * 0.8;
+      ctx.save();
       ctx.globalAlpha = depthA * (isHover ? 1 : 0.92);
       ctx.lineWidth = lw; ctx.strokeStyle = grad;
       ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.stroke();
@@ -1091,6 +1083,7 @@ class MonitoringView extends BaseView {
     if (!canvas) return;
 
     this._brandStops = this._brandGradientStops(); // degradado de marca para el dibujo
+    this._cardColor = this._readCardColor();
     const tipoLabel = (t) => MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || __('Perfil');
     const SPEED = 0.22; // deriva calmada (premium)
     const bodies = props.map((e) => {
@@ -1243,8 +1236,8 @@ class MonitoringView extends BaseView {
     }
     w._hoverId = b.it.id;
     overlay.innerHTML = `
-      <button class="mn-float-btn mn-float-btn--yes" data-fact="follow"><i class="fas fa-plus"></i> ${__('Seguir')}</button>
-      <button class="mn-float-btn mn-float-btn--no" data-fact="dismiss">${__('Descartar')}</button>`;
+      <button type="button" class="mn-btn-primary" data-fact="follow"><i class="fas fa-plus"></i> ${__('Seguir')}</button>
+      <button type="button" class="mn-btn-secondary" data-fact="dismiss">${__('Descartar')}</button>`;
     overlay.style.left = Math.max(96, Math.min(w.W - 96, b.x)) + 'px';
     overlay.style.top = (b.y + b.r + 12) + 'px';
     overlay.classList.add('show');
