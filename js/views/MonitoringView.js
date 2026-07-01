@@ -559,17 +559,34 @@ class MonitoringView extends BaseView {
       const cs = getComputedStyle(document.documentElement);
       const grad = (cs.getPropertyValue('--brand-gradient-dynamic') ||
                     cs.getPropertyValue('--brand-gradient') || '').trim();
-      const hexes = (grad.match(/#[0-9a-fA-F]{6,8}/g) || []).map(h => h.slice(0, 7));
-      if (hexes.length >= 2) return hexes.slice(0, 2);
+      // El degradado dinámico usa rgba()/rgb() (no hex). Extraer TODOS los stops
+      // de color en orden para replicar EXACTO el degradado de la plataforma.
+      const cols = grad ? (grad.match(/rgba?\([^)]*\)|#[0-9a-fA-F]{3,8}/g) || []) : [];
+      if (cols.length >= 2) return cols;
+      if (cols.length === 1) return [cols[0], this._lighten(this._toHex(cols[0]), 0.28)];
       const primary = (cs.getPropertyValue('--brand-primary') || '').trim();
       if (/^#[0-9a-fA-F]{6}/.test(primary)) return [primary.slice(0, 7), this._lighten(primary.slice(0, 7), 0.28)];
-      if (hexes.length === 1) return [hexes[0], this._lighten(hexes[0], 0.28)];
     } catch (_) {}
     return ['#e09145', '#f6b26b'];
   }
 
+  /** Convierte rgb()/rgba() o #hex a #rrggbb (para _lighten). */
+  _toHex(col) {
+    if (!col) return '#888888';
+    if (col[0] === '#') return col.slice(0, 7);
+    const m = col.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+    if (!m) return '#888888';
+    return '#' + [m[1], m[2], m[3]].map(x => (+x).toString(16).padStart(2, '0')).join('');
+  }
+
+  /** CSS linear-gradient con todos los stops (para avatar/chip del popover). */
+  _gradientCss(stops, angle = 135) {
+    const s = (stops && stops.length ? stops : ['#e09145', '#f6b26b']);
+    return `linear-gradient(${angle}deg, ${s.join(', ')})`;
+  }
+
   /** Stops de la burbuja: color personalizado si existe (→ gradiente derivado),
-      si no el degradado de la marca. */
+      si no el degradado dinámico de la marca (array de colores). */
   _bubbleStops(item) {
     if (item && item.color) return [item.color, this._lighten(item.color, 0.28)];
     return this._brandStops || ['#e09145', '#f6b26b'];
@@ -806,12 +823,11 @@ class MonitoringView extends BaseView {
       // Bob orgánico, salvo la burbuja activa (para que los botones queden fijos).
       const by = b.y + ((isFloat && !isHover) ? Math.sin(this._bubbleT * 0.018 + (b._phase || 0)) * 3 : 0);
 
-      // Degradado de la marca (diagonal). c0→c1.
+      // Degradado dinámico de la marca (todos sus stops, mismo que la plataforma).
       const stops = this._bubbleStops(b.it);
-      const c0 = stops[0], c1 = stops[1] || stops[0];
       const grad = ctx.createLinearGradient(bx - r, by - r, bx + r, by + r);
-      grad.addColorStop(0, dimmed ? this._hexA(c0, 0.5) : c0);
-      grad.addColorStop(1, dimmed ? this._hexA(c1, 0.5) : c1);
+      const nS = stops.length;
+      stops.forEach((col, i) => grad.addColorStop(nS === 1 ? 0 : i / (nS - 1), col));
 
       // Profundidad: las burbujas chicas, un poco más tenues (parallax sutil).
       const tDepth = (isFloat && rMax > rMin) ? (b.r - rMin) / (rMax - rMin) : 1;
@@ -833,7 +849,7 @@ class MonitoringView extends BaseView {
       let lw = isHover ? 3 : 2.6;
       if (pulse && !isHover) lw = 2.4 + Math.sin(this._bubbleT * 0.05 + bx) * 0.8;
       ctx.save();
-      ctx.globalAlpha = depthA * (isHover ? 1 : 0.92);
+      ctx.globalAlpha = depthA * (isHover ? 1 : 0.92) * (dimmed ? 0.5 : 1);
       ctx.lineWidth = lw; ctx.strokeStyle = grad;
       ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.stroke();
       ctx.restore();
@@ -932,13 +948,12 @@ class MonitoringView extends BaseView {
       <button class="mn-bubpop-star${item.highlighted ? ' is-on' : ''}" data-bact="toggle-highlight" title="${__('Destacar')}"><i class="fas fa-star"></i></button>` : '';
 
     // Personalización de color (opcional). Default = degradado de marca (chip "Marca").
-    const brandStops = this._brandStops || ['#e09145', '#f6b26b'];
     const colorSection = isProfile ? `
       <div class="mn-bubpop-label">${__('Color de la burbuja')}</div>
       <div class="mn-bubpop-colors">
         <button class="mn-swatch mn-swatch--brand${!item.color ? ' is-on' : ''}" data-color=""
                 title="${__('Usar color de la marca')}"
-                style="background:linear-gradient(135deg, ${brandStops[0]}, ${brandStops[1] || brandStops[0]})"></button>
+                style="background:${this._gradientCss(this._brandStops)}"></button>
         ${MonitoringView.PALETTE.map(c => `
           <button class="mn-swatch${(item.color === c) ? ' is-on' : ''}" style="background:${c}"
                   data-color="${c}" title="${c}"></button>`).join('')}
@@ -948,7 +963,7 @@ class MonitoringView extends BaseView {
     pop.className = 'mn-bubpop';
     pop.innerHTML = `
       <div class="mn-bubpop-head">
-        <div class="mn-bubpop-avatar" style="border-image:linear-gradient(135deg, ${stops[0]}, ${stops[1] || stops[0]}) 1; box-shadow:0 0 0 3px ${this._hexA(stops[0], 0.14)}">
+        <div class="mn-bubpop-avatar" style="border-image:${this._gradientCss(stops)} 1; box-shadow:0 0 0 3px rgba(255,255,255,0.08)">
           ${this._esc((item.title || '—').charAt(0).toUpperCase())}
         </div>
         <div class="mn-bubpop-id">
