@@ -2006,6 +2006,7 @@
       this._hydrateStrategies().then(() => {
         // Sidebar de estrategias: pintar la lista una vez resuelta la activa.
         this._renderStrategyPanel();
+        this._renderStrategyHeaderName();
         // F2-prep.2: placements ANTES de los demas hydrates (necesita
         // la strategy activa pero deben aplicarse positions antes de
         // que _renderCanvas corra)
@@ -2031,6 +2032,8 @@
       this._installLibSearch();
       // Sidebar de estrategias (izquierda): colapsar/abrir + switch/create
       this._installStrategyPanel();
+      // Nombre de la estrategia activa (editable) en el header
+      this._installStrategyNameEditor();
       // F1.9: context menu (right-click) sobre canvas
       this._installCanvasContextMenu();
       // F1.10: listener de texto en stickies (delegado, no depende de strategy)
@@ -2506,8 +2509,9 @@
     await this._hydrateRemoteGroups();
     // Sprint 1: re-subscribe realtime para la nueva strategy
     this._installRealtimeSubs();
-    // Re-render del sidebar de estrategias (debe reflejar la nueva activa)
+    // Re-render del sidebar de estrategias + nombre en header (nueva activa)
     if (typeof this._renderStrategyPanel === 'function') this._renderStrategyPanel();
+    if (typeof this._renderStrategyHeaderName === 'function') this._renderStrategyHeaderName();
     this._renderCanvas();
   };
 
@@ -4450,6 +4454,63 @@
     });
 
     this._renderStrategyPanel();
+  };
+
+  /* ── Nombre de la estrategia activa en el header (editable inline) ──── */
+
+  /** Refleja el nombre de la estrategia activa en el input del header. */
+  P._renderStrategyHeaderName = function () {
+    const input = document.getElementById('ccStratNameInput');
+    if (!input) return;
+    // No pisar el valor mientras el usuario esta editando (foco).
+    if (document.activeElement === input) return;
+    const active = (this._strategies || []).find((s) => String(s.id) === String(this._strategyId));
+    input.value = active?.name || '';
+  };
+
+  /** Cablea el input del nombre (1 vez): guarda en Enter/blur, revierte en Esc. */
+  P._installStrategyNameEditor = function () {
+    if (this._ccStratNameWired) return;
+    const input = document.getElementById('ccStratNameInput');
+    if (!input) return;
+    this._ccStratNameWired = true;
+
+    const activeName = () => (this._strategies || [])
+      .find((s) => String(s.id) === String(this._strategyId))?.name || '';
+    const commit = () => {
+      const val = (input.value || '').trim();
+      if (!val) { input.value = activeName(); return; } // no permitir nombre vacio
+      if (val === activeName()) return;
+      this._renameActiveStrategy(val);
+    };
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter')  { e.preventDefault(); input.blur(); }
+      else if (e.key === 'Escape') { input.value = activeName(); input.blur(); }
+    });
+    input.addEventListener('blur', commit);
+    this._renderStrategyHeaderName();
+  };
+
+  /** Renombra la estrategia activa (BD + estado local + re-render lista/header). */
+  P._renameActiveStrategy = async function (name) {
+    const id = this._strategyId;
+    if (!this._supabase || !id) return;
+    const clean = String(name || '').trim().slice(0, 120);
+    if (!clean) return;
+    try {
+      const { error } = await this._supabase
+        .from('canvas_strategies')
+        .update({ name: clean })
+        .eq('id', id);
+      if (error) { console.error('[CC] rename strategy:', error.message || error); return; }
+      const s = (this._strategies || []).find((x) => String(x.id) === String(id));
+      if (s) s.name = clean;
+      if (this._strategy && String(this._strategy.id) === String(id)) this._strategy.name = clean;
+      if (typeof this._renderStrategyPanel === 'function') this._renderStrategyPanel();
+      this._renderStrategyHeaderName();
+    } catch (e) {
+      console.error('[CC] rename strategy exception:', e);
+    }
   };
 
   P._flushRemoteView = async function () {

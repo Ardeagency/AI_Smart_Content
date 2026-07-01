@@ -103,6 +103,15 @@ class CommandCenterView extends BaseView {
     <div class="cc-canvas-wrap">
       <div class="cc-canvas-toolbar">
         <div class="cc-canvas-toolbar-group">
+          <!-- Nombre de la estrategia activa: editable inline (sin borde ni fondo),
+               con lapiz que indica que se puede editar. Vive a la izquierda de los
+               botones de crear. Render/listeners en CanvasStore. -->
+          <label class="cc-strat-name" id="ccStratName" title="${__('Editar nombre de la estrategia')}">
+            <input class="cc-strat-name-input" id="ccStratNameInput" type="text" spellcheck="false"
+                   aria-label="${__('Nombre de la estrategia')}" placeholder="${__('Estrategia')}" />
+            <i class="fas fa-pen cc-strat-name-pen" aria-hidden="true"></i>
+          </label>
+          <span class="cc-toolbar-divider" aria-hidden="true"></span>
           <button class="cc-canvas-btn cc-canvas-btn--primary" id="ccBtnCreateAudience" type="button" title="${__('Crear Objetivo de Audiencia')}">
             <i class="fas fa-user-plus"></i><span>${__('Objetivo de Audiencia')}</span>
           </button>
