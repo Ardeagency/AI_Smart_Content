@@ -897,6 +897,190 @@
 .cc-edge-disconnect:hover { background: rgba(225, 87, 96, 0.2); color: var(--cc-real); border-color: var(--cc-real); }
 
 /* ── Mini-dashboard (patron Studio/Video) ──────────────────────────── */
+
+/* ── Sidebar de Estrategias (izquierda, colapsable — patron historial Vera) ── */
+.cc-strat-panel {
+  position: absolute;
+  top: 14px; left: 14px; bottom: 14px;
+  width: 244px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  transition: transform .26s cubic-bezier(0.33, 0, 0.2, 1), opacity .2s ease;
+}
+.cc-canvas.cc-strat-collapsed .cc-strat-panel {
+  transform: translateX(calc(-100% - 24px));
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cc-strat-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 12px 10px 11px 14px;
+  border-bottom: 1px solid var(--border-divider, #242424);
+}
+.cc-strat-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.cc-strat-title i { font-size: .78rem; opacity: .8; }
+
+.cc-strat-collapse,
+.cc-strat-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: .8rem;
+  transition: background .15s ease, color .15s ease;
+}
+.cc-strat-collapse:hover,
+.cc-strat-open:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary, #fff); }
+
+.cc-strat-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+.cc-strat-list::-webkit-scrollbar { width: 5px; }
+.cc-strat-list::-webkit-scrollbar-track { background: transparent; }
+.cc-strat-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+
+.cc-strategy-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--text-primary, #fff);
+  padding: 9px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: .88rem;
+  line-height: 1.3;
+  transition: background .14s ease, color .14s ease;
+}
+.cc-strategy-item:hover { background: rgba(255, 255, 255, 0.05); }
+.cc-strategy-item.is-active { background: rgba(255, 255, 255, 0.08); font-weight: 500; }
+/* Acento de marca en la estrategia activa */
+.cc-strategy-item.is-active::before {
+  content: '';
+  position: absolute;
+  left: 2px; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 16px;
+  border-radius: 3px;
+  background: var(--brand-gradient-dynamic-vertical, var(--brand-primary, #7C83FF));
+}
+.cc-strategy-item-ic {
+  flex: 0 0 auto;
+  width: 16px;
+  text-align: center;
+  font-size: .82rem;
+  color: var(--text-muted);
+}
+.cc-strategy-item.is-active .cc-strategy-item-ic { color: var(--text-primary, #fff); }
+.cc-strategy-item-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cc-strategy-item-sub {
+  flex: 0 0 auto;
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.cc-strategy-check { flex: 0 0 auto; font-size: .72rem; color: var(--text-muted); }
+
+.cc-strategy-create {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 9px 10px;
+  border: 1px dashed var(--border-divider, #242424);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-secondary, #d4d1d8);
+  font-size: .84rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .14s ease, color .14s ease, border-color .14s ease;
+}
+.cc-strategy-create:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary, #fff);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.cc-strategy-create i { font-size: .78rem; }
+
+.cc-strat-empty {
+  color: var(--text-muted);
+  font-size: .8rem;
+  line-height: 1.5;
+  padding: 24px 14px;
+  text-align: center;
+}
+
+/* Boton flotante para reabrir el panel cuando esta colapsado (arriba a la izq). */
+.cc-strat-open {
+  position: absolute;
+  top: 14px; left: 14px;
+  z-index: 7;
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+  display: none;
+}
+.cc-canvas.cc-strat-collapsed .cc-strat-open { display: inline-flex; }
+
+/* Minimapa: cuando el panel de estrategias esta abierto, se corre a su derecha
+   para no quedar tapado (el panel es full-height a la izquierda). */
+.cc-minimap-float { transition: left .26s cubic-bezier(0.33, 0, 0.2, 1); }
+.cc-canvas:not(.cc-strat-collapsed) .cc-minimap-float { left: 272px; }
+
 /* ── Panel flotante tipo Figma: rail de iconos + panel de datos ─────── */
 .cc-floating-panel {
   position: absolute;

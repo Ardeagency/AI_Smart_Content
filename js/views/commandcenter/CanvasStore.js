@@ -2004,6 +2004,8 @@
       // _hydrateStrategies trae la lista + setea this._strategyId a la default.
       // Los demas hydrates leen this._strategyId, asi que esto debe ir primero.
       this._hydrateStrategies().then(() => {
+        // Sidebar de estrategias: pintar la lista una vez resuelta la activa.
+        this._renderStrategyPanel();
         // F2-prep.2: placements ANTES de los demas hydrates (necesita
         // la strategy activa pero deben aplicarse positions antes de
         // que _renderCanvas corra)
@@ -2027,6 +2029,8 @@
       });
       // F1.8: search en sidebar (input+clear listeners en ccPanelBody)
       this._installLibSearch();
+      // Sidebar de estrategias (izquierda): colapsar/abrir + switch/create
+      this._installStrategyPanel();
       // F1.9: context menu (right-click) sobre canvas
       this._installCanvasContextMenu();
       // F1.10: listener de texto en stickies (delegado, no depende de strategy)
@@ -2502,8 +2506,8 @@
     await this._hydrateRemoteGroups();
     // Sprint 1: re-subscribe realtime para la nueva strategy
     this._installRealtimeSubs();
-    // Re-render del sidebar (Estrategias section debe reflejar nueva activa)
-    if (typeof this._renderLibrary === 'function') this._renderLibrary();
+    // Re-render del sidebar de estrategias (debe reflejar la nueva activa)
+    if (typeof this._renderStrategyPanel === 'function') this._renderStrategyPanel();
     this._renderCanvas();
   };
 
@@ -3828,9 +3832,10 @@
   // tal cual con las nuevas secciones.
   // ------------------------------------------------------------------
 
+  // Estrategias YA NO vive en el rail: tiene su propio sidebar izquierdo
+  // (tipo historial, patron de Vera). Ver _renderStrategyPanel / _installStrategyPanel.
   P._librarySections = function () {
     return [
-      { key: 'estrategias', label: 'Estrategias', icon: 'fa-layer-group' },
       { key: 'nodos',       label: 'Nodos',       icon: 'fa-circle-nodes' },
       { key: 'dashboard',   label: 'Dashboard',   icon: 'fa-chart-pie' },
     ];
@@ -3841,9 +3846,6 @@
   };
 
   P._libItemsFor = function (key) {
-    if (key === 'estrategias') {
-      return Array.isArray(this._strategies) ? this._strategies : [];
-    }
     if (key === 'dashboard') {
       // Cuenta de pending insights se muestra como badge en el rail
       return Array.isArray(this._veraInsights) ? this._veraInsights : [];
@@ -4121,24 +4123,6 @@
   };
 
   P._libBodyHTML = function (key) {
-    if (key === 'estrategias') {
-      const items = Array.isArray(this._strategies) ? this._strategies : [];
-      const active = this._strategyId;
-      if (!items.length) return '<div class="cc-lib-empty">Sin estrategias todavia.</div>';
-      const rows = items.map((s) => {
-        const isActive = String(s.id) === String(active);
-        return `<button type="button" class="cc-lib-item cc-strategy-item ${isActive ? 'is-active' : ''}" data-strategy-id="${this.escapeHtml(String(s.id))}" title="${this.escapeHtml(s.name)}">
-          <i class="fas ${this.escapeHtml(s.icon || 'fa-diagram-project')} cc-lib-item-ic"></i>
-          <span class="cc-lib-item-name">${this.escapeHtml(s.name)}</span>
-          ${s.is_default ? '<span class="cc-lib-item-sub">default</span>' : ''}
-          ${isActive ? '<i class="fas fa-check cc-strategy-check"></i>' : ''}
-        </button>`;
-      }).join('');
-      return `${rows}
-        <button type="button" class="cc-strategy-create" data-strategy-action="create">
-          <i class="fas fa-plus"></i> Nueva estrategia
-        </button>`;
-    }
     if (key === 'nodos') {
       // Drill-down style (n8n): vista A = catalogo de tipos como cards;
       // click en uno → vista B = lista de instancias + boton back arriba.
@@ -4379,24 +4363,8 @@
       };
       body.addEventListener('click', this._ccNodosClick);
     }
-    // F2: handlers para Estrategias (switch + create)
-    if (!this._ccStrategyClick) {
-      this._ccStrategyClick = (e) => {
-        const item = e.target.closest('.cc-strategy-item[data-strategy-id]');
-        if (item) {
-          e.preventDefault(); e.stopPropagation();
-          const id = item.getAttribute('data-strategy-id');
-          if (id && id !== this._strategyId) this._switchStrategy(id);
-          return;
-        }
-        const create = e.target.closest('.cc-strategy-create');
-        if (create) {
-          e.preventDefault(); e.stopPropagation();
-          this._createStrategyQuick();
-        }
-      };
-      body.addEventListener('click', this._ccStrategyClick);
-    }
+    // Estrategias (switch + create) se manejan en su propio sidebar izquierdo:
+    // ver _installStrategyPanel. Ya no viven en ccPanelBody.
   };
 
   /** Crea una nueva estrategia con nombre incremental + la activa. */
@@ -4422,12 +4390,83 @@
         .single();
       if (error) { console.error('[CC] create strategy:', error.message || error); return; }
       this._strategies = [...(this._strategies || []), row];
-      // re-render sidebar + switch
-      if (typeof this._renderLibrary === 'function') this._renderLibrary();
+      // re-render sidebar de estrategias + switch
+      if (typeof this._renderStrategyPanel === 'function') this._renderStrategyPanel();
       await this._switchStrategy(row.id);
     } catch (e) {
       console.error('[CC] create strategy exception:', e);
     }
+  };
+
+  // ------------------------------------------------------------------
+  // Sidebar de Estrategias (izquierda, tipo historial — patron de Vera)
+  //
+  // Estrategias salio del rail derecho (Nodos/Dashboard) y vive ahora en su
+  // propio panel colapsable a la izquierda del canvas. Lista tipo historial:
+  // 1 item por estrategia (la activa con acento de marca) + "Nueva estrategia".
+  // ------------------------------------------------------------------
+
+  /** Pinta la lista de estrategias en #ccStratList. Reusa el markup
+      cc-strategy-item (mismo estilo que tenia en el rail). */
+  P._renderStrategyPanel = function () {
+    const list = document.getElementById('ccStratList');
+    if (!list) return;
+    const items  = Array.isArray(this._strategies) ? this._strategies : [];
+    const active = this._strategyId;
+    const rows = items.map((s) => {
+      const isActive = String(s.id) === String(active);
+      return `<button type="button" class="cc-strategy-item ${isActive ? 'is-active' : ''}" data-strategy-id="${this.escapeHtml(String(s.id))}" title="${this.escapeHtml(s.name)}">
+        <i class="fas ${this.escapeHtml(s.icon || 'fa-diagram-project')} cc-strategy-item-ic"></i>
+        <span class="cc-strategy-item-name">${this.escapeHtml(s.name)}</span>
+        ${s.is_default ? `<span class="cc-strategy-item-sub">${__('default')}</span>` : ''}
+        ${isActive ? '<i class="fas fa-check cc-strategy-check"></i>' : ''}
+      </button>`;
+    }).join('');
+    const empty = items.length ? '' : `<div class="cc-strat-empty">${__('Sin estrategias todavia.')}</div>`;
+    list.innerHTML = `${empty}${rows}
+      <button type="button" class="cc-strategy-create" data-strategy-action="create">
+        <i class="fas fa-plus"></i> ${__('Nueva estrategia')}
+      </button>`;
+  };
+
+  /** Cablea el sidebar de estrategias (1 vez por vista): colapsar/abrir con
+      persistencia + delegacion de click para switch/create. */
+  P._installStrategyPanel = function () {
+    if (this._ccStratWired) return;
+    const list   = document.getElementById('ccStratList');
+    const canvas = document.getElementById('ccCanvas');
+    if (!list || !canvas) return;
+    this._ccStratWired = true;
+
+    // Estado colapsado persistido (independiente de la preferencia global).
+    let collapsed = false;
+    try { collapsed = localStorage.getItem('cc:strat:collapsed') === 'true'; } catch (_) { /* noop */ }
+    canvas.classList.toggle('cc-strat-collapsed', collapsed);
+
+    const setCollapsed = (v) => {
+      canvas.classList.toggle('cc-strat-collapsed', v);
+      try { localStorage.setItem('cc:strat:collapsed', v ? 'true' : 'false'); } catch (_) { /* noop */ }
+    };
+    document.getElementById('ccStratCollapse')?.addEventListener('click', () => setCollapsed(true));
+    document.getElementById('ccStratOpen')?.addEventListener('click', () => setCollapsed(false));
+
+    // Switch de estrategia / crear (delegado sobre la lista).
+    list.addEventListener('click', (e) => {
+      const item = e.target.closest('.cc-strategy-item[data-strategy-id]');
+      if (item) {
+        e.preventDefault(); e.stopPropagation();
+        const id = item.getAttribute('data-strategy-id');
+        if (id && id !== this._strategyId) this._switchStrategy(id);
+        return;
+      }
+      const create = e.target.closest('.cc-strategy-create');
+      if (create) {
+        e.preventDefault(); e.stopPropagation();
+        this._createStrategyQuick();
+      }
+    });
+
+    this._renderStrategyPanel();
   };
 
   P._flushRemoteView = async function () {
