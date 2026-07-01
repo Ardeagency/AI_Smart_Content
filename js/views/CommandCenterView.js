@@ -121,6 +121,14 @@ class CommandCenterView extends BaseView {
               <button type="button" role="menuitem" data-scope="selection"><i class="fas fa-bullseye"></i> ${__('Seleccionado')}</button>
             </div>
           </div>
+          <!-- Anotaciones del lienzo (viven solo dentro de la estrategia): se crean
+               desde el header, ya no como tipos de nodo en la seccion Nodos. -->
+          <button class="cc-canvas-btn" id="ccBtnCreateNote" type="button" title="${__('Crear nota (anotacion del lienzo)')}">
+            <i class="fas fa-note-sticky"></i><span>${__('Crear nota')}</span>
+          </button>
+          <button class="cc-canvas-btn" id="ccBtnCreateGroup" type="button" title="${__('Crear grupo (frame para agrupar nodos)')}">
+            <i class="fas fa-object-group"></i><span>${__('Crear grupo')}</span>
+          </button>
         </div>
         <div class="cc-canvas-toolbar-group">
           <button class="cc-canvas-btn" id="ccBtnRelayout" type="button" title="${__('Reorganizar nodos')}">
@@ -461,6 +469,18 @@ class CommandCenterView extends BaseView {
   _setupEventListeners() {
     document.getElementById('ccBtnCreateCampaign')?.addEventListener('click', () => this._createAndEdit('campaign'));
     document.getElementById('ccBtnCreateAudience')?.addEventListener('click', () => this._createAndEdit('audience'));
+
+    // Anotaciones desde el header: crean la nota/grupo en el centro visible del
+    // canvas (las funciones del mixin esperan coords de cliente y las convierten
+    // a coords de mundo internamente).
+    const createAtCanvasCenter = (fnName) => {
+      const canvas = document.getElementById('ccCanvas');
+      if (!canvas || typeof this[fnName] !== 'function') return;
+      const r = canvas.getBoundingClientRect();
+      this[fnName](r.left + r.width / 2, r.top + r.height / 2);
+    };
+    document.getElementById('ccBtnCreateNote')?.addEventListener('click', () => createAtCanvasCenter('_createStickyAt'));
+    document.getElementById('ccBtnCreateGroup')?.addEventListener('click', () => createAtCanvasCenter('_createGroupAt'));
 
     // Editar/eliminar nodos del canvas se maneja en _setupCanvasListeners (mixin).
     // El modal editor fue eliminado; el flujo de edicion se definira aparte.

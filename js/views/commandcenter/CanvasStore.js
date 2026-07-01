@@ -4106,8 +4106,8 @@
     const cAud  = (this._audiences || []).length;
     const cCamp = (this._campaigns || []).filter((c) => c.last_synced_at).length;
     const cConc = (this._campaigns || []).filter((c) => !c.last_synced_at).length;
-    const cStk  = (this._stickies || []).length;
-    const cGrp  = (this._groups || []).length;
+    // Nota (sticky) y Grupo se crean desde botones del header (son anotaciones
+    // que viven SOLO dentro de la estrategia), ya no como tipos de nodo aqui.
     return [
       { id: 'objetivo-campana',   name: 'Objetivo de Campana',   icon: 'fa-bullseye',        group: 'Objetivos',    count: cConc, type: 'concept',       desc: 'Ancla de la estrategia; define el proposito al que apunta todo el flujo' },
       { id: 'objetivo-audiencia', name: 'Objetivo de Audiencia', icon: 'fa-users',           group: 'Objetivos',    count: cAud,  type: 'audience',      desc: 'El segmento humano que esta estrategia quiere alcanzar' },
@@ -4117,8 +4117,6 @@
       { id: 'lugar',              name: 'Lugar',                 icon: 'fa-map-pin',         group: 'Identidades',                type: 'place',         desc: 'Locaciones fisicas de la marca' },
       { id: 'flow',               name: 'Flow',                  icon: 'fa-diagram-project', group: 'Identidades',                type: 'flow',          desc: 'Flujos de contenido del Studio' },
       { id: 'brief',              name: 'Brief',                 icon: 'fa-file-lines',      group: 'Identidades',                type: 'brief',         desc: 'Briefs creativos guardados' },
-      { id: 'sticky',             name: 'Nota',                  icon: 'fa-note-sticky',     group: 'Anotaciones',  count: cStk,  type: 'sticky',        desc: 'Anotaciones libres del lienzo (clic derecho en el canvas)' },
-      { id: 'grupo',              name: 'Grupo',                 icon: 'fa-object-group',    group: 'Anotaciones',  count: cGrp,  type: 'group',         desc: 'Frames para agrupar nodos por tematica (clic derecho en el canvas)' },
     ];
   };
 
