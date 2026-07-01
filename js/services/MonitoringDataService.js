@@ -122,6 +122,7 @@ class MonitoringDataService {
       scope:             payload.scope || 'brand',
       is_active:         payload.is_active !== false,
       color:             Array.isArray(payload.color) ? payload.color : (payload.color ? [payload.color] : null),
+      relevance:         payload.relevance != null ? (String(payload.relevance).trim() || null) : null,
       metadata: {
         tipo:     payload.tipo     || 'competidor_directo',
         platform: payload.platform || null,
@@ -146,6 +147,10 @@ class MonitoringDataService {
     // color: normalizamos a text[] (array) para soportar degradado a futuro.
     if (patch.color !== undefined) {
       updates.color = Array.isArray(patch.color) ? patch.color : (patch.color ? [patch.color] : null);
+    }
+    // relevance: el porqué de estar en el monitoreo (texto libre).
+    if (patch.relevance !== undefined) {
+      updates.relevance = patch.relevance ? String(patch.relevance).trim() || null : null;
     }
     if (patch.tipo !== undefined || patch.platform !== undefined || patch.metadata !== undefined) {
       // Merge metadata: leer actual y combinar

@@ -21,14 +21,25 @@ class MonitoringView extends BaseView {
 
   static cacheable = true;
 
+  // Rol del perfil dentro del monitoreo.
   static get ENTITY_TIPOS() {
     return [
-      { value: 'competidor_directo',   label: __('Competidor directo') },
-      { value: 'competidor_indirecto', label: __('Competidor indirecto') },
-      { value: 'referencia_cultural',  label: __('Referencia / inspiración') },
+      { value: 'competidor_directo',   label: __('Competencia directa') },
+      { value: 'competidor_indirecto', label: __('Competencia indirecta') },
+      { value: 'referencia_cultural',  label: __('Referente / inspiración') },
+      { value: 'aliado',               label: __('Aliado') },
       { value: 'owned_media',          label: __('Algo mío') },
     ];
   }
+
+  // Guía de relevancia según el rol: qué "por qué" pedirle al usuario.
+  static RELEVANCE_HINT = {
+    competidor_directo:   'Qué lo hace tu competencia directa: mismo público, mismo producto, te disputa las mismas ventas…',
+    competidor_indirecto: 'Por qué compite indirectamente: resuelve la misma necesidad de otra forma, roza tu público…',
+    referencia_cultural:  'Qué te llama la atención para usarlo de referente: su comunicación, engagement, estrategia, propuestas de marketing…',
+    aliado:               'Por qué es un aliado: colaboración, audiencia complementaria, co-marketing, valores compartidos…',
+    owned_media:          'Qué es y qué buscas medir de este perfil propio.',
+  };
 
   static get PLATFORMS() {
     return [
@@ -262,6 +273,8 @@ class MonitoringView extends BaseView {
         hasNews: recent(lastAt),
         containerId: e.brand_container_id || null,
         status: this._estadoPerfil(e, lastAt),
+        tipo: e.metadata?.tipo || null,          // rol dentro del monitoreo
+        relevance: e.relevance || null,          // el porqué de estar aquí
         // Impacto social (engagement de audiencia acumulado) → tamaño de burbuja.
         impact: Number(impactByEntity[e.id]) || 0,
         // Señales captadas: fallback de tamaño cuando aún no hay impacto medido.
@@ -929,8 +942,17 @@ class MonitoringView extends BaseView {
     const isProfile = item.kind === 'profile';
     const stops = this._bubbleStops(item);
     const brand = isProfile ? containerName(item.containerId) : null;
-    const typeLabel = isProfile ? __('Marca / perfil') : __('Página web');
-    const meta = `${typeLabel}${brand ? ' · ' + this._esc(brand) : ''}`;
+    // Rol dentro del monitoreo (competencia, referente, aliado…).
+    const roleLabel = isProfile
+      ? (MonitoringView.ENTITY_TIPOS.find(t => t.value === item.tipo)?.label || __('Perfil'))
+      : __('Página web');
+    const meta = `${roleLabel}${brand ? ' · ' + this._esc(brand) : ''}`;
+    // Relevancia: el porqué de estar en el monitoreo (o un llamado a definirlo).
+    const relLine = isProfile
+      ? (item.relevance
+          ? `<div class="mn-bubpop-rel">${this._esc(item.relevance)}</div>`
+          : `<div class="mn-bubpop-rel mn-bubpop-rel--empty" data-bact="edit">${__('+ Añade por qué lo monitoreas')}</div>`)
+      : '';
     // Línea de impacto social (lo que dimensiona la burbuja).
     const impactLine = isProfile
       ? `<div class="mn-bubpop-meta"><i class="fas fa-fire" style="opacity:.6"></i> ${item.impact > 0
@@ -974,6 +996,7 @@ class MonitoringView extends BaseView {
       </div>
       <div class="mn-bubpop-meta">${meta}</div>
       ${impactLine}
+      ${relLine}
       ${colorSection}
       <div class="mn-bubpop-acts">${veraActs}</div>
       <div class="mn-bubpop-foot">
@@ -1350,22 +1373,27 @@ class MonitoringView extends BaseView {
     return base + '?q=' + encodeURIComponent(prompt);
   }
 
+  /** Contexto de relevancia que anteponemos a los prompts de Vera. */
+  _relevanceContext(e) {
+    return e.relevance ? `Contexto de por qué lo monitoreamos: ${e.relevance}\n\n` : '';
+  }
+
   _promptAnalizar(e) {
     const platform = e.metadata?.platform || 'su plataforma';
     const handle = e.target_identifier ? ' (' + e.target_identifier + ')' : '';
     const tipo = (e.metadata?.tipo || 'perfil monitoreado').replace(/_/g, ' ');
-    return `Analiza el perfil "${e.name}"${handle} en ${platform}. Es un ${tipo} que estamos monitoreando. Quiero un análisis estructurado: posicionamiento, audiencia objetivo, patrones de contenido recientes, tono de voz y oportunidades concretas que ves desde mi marca.`;
+    return `${this._relevanceContext(e)}Analiza el perfil "${e.name}"${handle} en ${platform}. Es un ${tipo} que estamos monitoreando. Quiero un análisis estructurado: posicionamiento, audiencia objetivo, patrones de contenido recientes, tono de voz y oportunidades concretas que ves desde mi marca${e.relevance ? ', tomando en cuenta el contexto de arriba' : ''}.`;
   }
 
   _promptComparar(e) {
     const orgName = window.currentOrgName || 'mi marca';
     const platform = e.metadata?.platform ? ' en ' + e.metadata.platform : '';
-    return `Compara "${e.name}"${platform} con ${orgName}. Devuélveme cuatro bloques: 1) qué hace mejor que yo, 2) qué hago mejor yo, 3) en qué somos similares, 4) oportunidades concretas para diferenciarme en los próximos 90 días.`;
+    return `${this._relevanceContext(e)}Compara "${e.name}"${platform} con ${orgName}. Devuélveme cuatro bloques: 1) qué hace mejor que yo, 2) qué hago mejor yo, 3) en qué somos similares, 4) oportunidades concretas para diferenciarme en los próximos 90 días.`;
   }
 
   _promptInspirarme(e) {
     const orgName = window.currentOrgName || 'mi marca';
-    return `Mostrame 5 ideas de contenido accionables que puedo aprender del perfil "${e.name}", adaptadas a la voz y audiencia de ${orgName}. Para cada idea: formato sugerido, gancho de copy (1 línea) y la métrica esperada que debería mover.`;
+    return `${this._relevanceContext(e)}Mostrame 5 ideas de contenido accionables que puedo aprender del perfil "${e.name}", adaptadas a la voz y audiencia de ${orgName}. Para cada idea: formato sugerido, gancho de copy (1 línea) y la métrica esperada que debería mover.`;
   }
 
   _goToVera(action, id) {
@@ -1415,6 +1443,10 @@ class MonitoringView extends BaseView {
           <label>${__('Usuario o enlace')}
             <input name="target_identifier" value="" placeholder="@usuario">
           </label>
+          <label>${__('Relevancia — ¿por qué lo monitoreas?')}
+            <textarea name="relevance" rows="3" data-relevance placeholder="${this._esc(MonitoringView.RELEVANCE_HINT.competidor_directo)}"></textarea>
+            <small>${__('El contexto clave del perfil. Alimenta el análisis de Vera y el tuyo.')}</small>
+          </label>
           <details class="mn-advanced">
             <summary>${__('Opciones avanzadas')}</summary>
             <div class="mn-advanced-body">
@@ -1456,6 +1488,12 @@ class MonitoringView extends BaseView {
       modal.querySelector('[data-pane="page"]').hidden    = kind !== 'page';
     }));
     modal.querySelector('[data-action="close-modal"]')?.addEventListener('click', () => close());
+    // El placeholder de relevancia se adapta al rol elegido.
+    const tipoSel = modal.querySelector('[name="tipo"]');
+    const relArea = modal.querySelector('[data-relevance]');
+    tipoSel?.addEventListener('change', () => {
+      if (relArea) relArea.placeholder = MonitoringView.RELEVANCE_HINT[tipoSel.value] || '';
+    });
     modal.querySelector('[data-action="create-submit"]')?.addEventListener('click', async () => {
       const root = modal.querySelector('#mnCreateForm');
       const val = (n) => root.querySelector(`[name="${n}"]`)?.value?.trim() || '';
@@ -1469,6 +1507,7 @@ class MonitoringView extends BaseView {
           brand_container_id: val('brand_container_id') || null,
           tipo: val('tipo'),
           platform: val('platform') || null,
+          relevance: val('relevance') || null,
           is_active: true,
         });
         if (error) { alert(__('Error:') + ' ' + error.message); return; }
@@ -1512,6 +1551,10 @@ class MonitoringView extends BaseView {
         <label>${__('Usuario o enlace')}
           <input name="target_identifier" value="${this._esc(e.target_identifier || '')}" placeholder="@usuario">
         </label>
+        <label>${__('Relevancia — ¿por qué lo monitoreas?')}
+          <textarea name="relevance" rows="3" data-relevance placeholder="${this._esc(MonitoringView.RELEVANCE_HINT[tipo] || '')}">${this._esc(e.relevance || '')}</textarea>
+          <small>${__('El contexto clave del perfil. Alimenta el análisis de Vera y el tuyo.')}</small>
+        </label>
         <details class="mn-advanced">
           <summary>${__('Opciones avanzadas')}</summary>
           <div class="mn-advanced-body">
@@ -1538,6 +1581,11 @@ class MonitoringView extends BaseView {
 
     const { modal, close } = window.Modal.show({ title: __('Editar'), body, className: 'mn-modal-content' });
     modal.querySelector('[data-action="close-modal"]')?.addEventListener('click', () => close());
+    const tipoSel = modal.querySelector('[name="tipo"]');
+    const relArea = modal.querySelector('[data-relevance]');
+    tipoSel?.addEventListener('change', () => {
+      if (relArea && !relArea.value.trim()) relArea.placeholder = MonitoringView.RELEVANCE_HINT[tipoSel.value] || '';
+    });
     modal.querySelector('#mnEntityForm').addEventListener('submit', async (ev) => {
       ev.preventDefault();
       const fd = new FormData(ev.target);
@@ -1548,6 +1596,7 @@ class MonitoringView extends BaseView {
         brand_container_id: fd.get('brand_container_id') || null,
         tipo:              fd.get('tipo'),
         platform:          fd.get('platform') || null,
+        relevance:         fd.get('relevance')?.trim() || null,
         is_active:         fd.get('is_active') === 'on',
       };
       const { error } = await this._service.updateEntity(id, payload);
