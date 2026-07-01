@@ -469,6 +469,98 @@
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5); white-space: nowrap;
 }
 
+/* ════════════════════════════════════════════════════════════
+   ARRASTRE de burbujas entre columnas (cambia estado)
+   ════════════════════════════════════════════════════════════ */
+body.mn-dragging, body.mn-dragging * { cursor: grabbing !important; }
+.mn-drag-ghost {
+  position: fixed; z-index: 2000; transform: translate(-50%, -50%);
+  border-radius: 50%; background: #141517;
+  border: 2.6px solid transparent; border-image: var(--g) 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  pointer-events: none; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6);
+  color: #fff; font-size: 11px; font-weight: 600; text-align: center; padding: 6px;
+}
+.mn-drag-ghost i { font-size: 18px; }
+.mn-drag-ghost span {
+  max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+/* Columna resaltada como destino de soltado. */
+.mn-col.mn-col--drop {
+  border-color: color-mix(in srgb, var(--brand-primary, #6366f1) 55%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary, #6366f1) 30%, transparent),
+              0 0 0 3px color-mix(in srgb, var(--brand-primary, #6366f1) 10%, transparent);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ════════════════════════════════════════════════════════════
+   PANEL DE DETALLE (estilo Flows) al seleccionar una burbuja
+   ════════════════════════════════════════════════════════════ */
+.mn-detail-modal { width: min(640px, 94vw); max-width: 640px; padding: 0 !important; overflow: hidden; }
+.mn-detail { position: relative; }
+.mn-detail-bg {
+  position: absolute; top: 0; left: 0; right: 0; height: 150px; opacity: 0.28;
+  filter: saturate(1.1) blur(2px);
+}
+.mn-detail-scrim {
+  position: absolute; top: 0; left: 0; right: 0; height: 150px;
+  background: linear-gradient(180deg, rgba(20, 20, 24, 0.2), var(--bg-card, #141517) 96%);
+}
+.mn-detail-content { position: relative; padding: 26px 26px 22px; display: flex; flex-direction: column; gap: 16px; }
+.mn-detail-head { display: flex; align-items: center; gap: 14px; }
+.mn-detail-avatar {
+  width: 58px; height: 58px; border-radius: 50%; flex-shrink: 0;
+  background: #17171a; border: 2.6px solid transparent;
+  display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.mn-detail-id { flex: 1; min-width: 0; }
+.mn-detail-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--brand-primary, #8a8aff) 70%, #fff);
+}
+.mn-detail-title { margin: 2px 0 0; font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+.mn-detail-sub { font-size: 13px; color: rgba(255, 255, 255, 0.5); margin-top: 2px; }
+.mn-detail-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.mn-det-meta-item {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255, 255, 255, 0.62);
+}
+.mn-det-meta-item i { font-size: 11px; opacity: 0.7; }
+.mn-detail-actions { display: flex; gap: 8px; align-items: stretch; }
+.mn-det-cta {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 16px; border-radius: 11px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  background: color-mix(in srgb, var(--brand-primary, #6366f1) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-primary, #6366f1) 34%, transparent);
+  color: #fff; text-decoration: none; transition: all 0.15s ease;
+}
+.mn-det-cta:hover { background: color-mix(in srgb, var(--brand-primary, #6366f1) 28%, transparent); }
+.mn-det-icon-btn {
+  width: 44px; border-radius: 11px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8); font-size: 14px; transition: all 0.15s ease;
+}
+.mn-det-icon-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.mn-detail-section { display: flex; flex-direction: column; gap: 8px; }
+.mn-det-section-title {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+.mn-det-relevance {
+  margin: 0; font-size: 13px; line-height: 1.55; color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 2px solid color-mix(in srgb, var(--brand-primary, #6366f1) 55%, transparent);
+  border-radius: 9px; padding: 12px 14px;
+}
+.mn-det-relevance--empty { color: rgba(255, 255, 255, 0.4); font-style: italic; border-left-style: dashed; }
+.mn-detail-foot {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.mn-btn-danger { color: #fca5a5 !important; border-color: rgba(239, 68, 68, 0.25) !important; }
+.mn-btn-danger:hover { background: rgba(239, 68, 68, 0.12) !important; color: #fecaca !important; }
+
 /* ── Popover al hacer clic en una burbuja: color + acciones ── */
 .mn-bubpop {
   position: fixed;

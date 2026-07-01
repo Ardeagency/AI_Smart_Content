@@ -763,6 +763,7 @@ class MonitoringView extends BaseView {
   _positionLabel(b, r, y, alpha) {
     const cy = (y == null) ? b.y : y;
     const hasRole = !!b.roleEl;
+    if (b.iconEl && b.iconEl.style.display === 'none') { b.iconEl.style.display = ''; if (b.nameEl) b.nameEl.style.display = ''; if (b.roleEl) b.roleEl.style.display = ''; }
     if (b.iconEl) {
       b.iconEl.style.left = b.x + 'px';
       b.iconEl.style.top = (cy - r * (hasRole ? 0.40 : 0.26)) + 'px';
@@ -882,6 +883,13 @@ class MonitoringView extends BaseView {
     if (isFloat) for (const b of w.bodies) { rMin = Math.min(rMin, b.r); rMax = Math.max(rMax, b.r); }
 
     for (const b of order) {
+      // Si se está arrastrando, no la dibujamos aquí (la muestra el "fantasma").
+      if (b._dragging) {
+        if (b.iconEl) b.iconEl.style.display = 'none';
+        if (b.nameEl) b.nameEl.style.display = 'none';
+        if (b.roleEl) b.roleEl.style.display = 'none';
+        continue;
+      }
       const isHover = b === hoverKey;
       const target = b.r * (isHover ? (isFloat ? 1.06 : 1.16) : 1);
       b.rDraw += (target - b.rDraw) * 0.22;
@@ -969,16 +977,110 @@ class MonitoringView extends BaseView {
     const pos = (e) => { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
     const hit = (p) => { for (const b of w.bodies) if (Math.hypot(b.x - p.x, b.y - p.y) < b.rDraw) return b; return null; };
     canvas.addEventListener('mousemove', (e) => {
+      if (this._drag) return; // durante arrastre, el hover no aplica
       const b = hit(pos(e));
-      canvas.style.cursor = b ? 'pointer' : 'default';
+      canvas.style.cursor = b ? 'grab' : 'default';
       if (w.hover !== b) { w.hover = b; this._wakeBubbles(); }
     });
-    canvas.addEventListener('mouseleave', () => { if (w.hover) { w.hover = null; this._wakeBubbles(); } });
-    canvas.addEventListener('click', (e) => {
+    canvas.addEventListener('mouseleave', () => { if (!this._drag && w.hover) { w.hover = null; this._wakeBubbles(); } });
+    canvas.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
       const b = hit(pos(e));
-      if (b) { this._openBubblePop(b.it, e.clientX, e.clientY); e.stopPropagation(); }
-      else this._closeBubblePop();
+      if (!b) return;
+      e.preventDefault();
+      this._beginBubbleInteraction(w, b, e);
     });
+  }
+
+  /** Arranca el loop para UN redibujo sin descongelar (worlds siguen frozen). */
+  _requestBubbleDraw() {
+    if (!this._bubbleRAF) { this._bubbleSleep = 0; this._bubbleRAF = requestAnimationFrame(() => this._bubbleLoop()); }
+  }
+
+  /** mousedown sobre una burbuja: distingue clic (abre detalle) de arrastre
+      (mueve un "fantasma" entre columnas para cambiar su estado). */
+  _beginBubbleInteraction(w, b, e) {
+    const startX = e.clientX, startY = e.clientY;
+    let dragging = false;
+    const onMove = (ev) => {
+      if (!dragging) {
+        if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < 6) return;
+        dragging = true;
+        this._drag = { w, b };
+        b._dragging = true;
+        w.hover = null;
+        document.body.classList.add('mn-dragging');
+        this._dragGhost = this._makeDragGhost(b, ev.clientX, ev.clientY);
+        this._requestBubbleDraw(); // oculta la burbuja en su canvas
+      }
+      this._moveDragGhost(ev.clientX, ev.clientY);
+      this._highlightDropTarget(ev.clientX, ev.clientY);
+    };
+    const onUp = (ev) => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      if (!dragging) { this._openBubbleDetail(b.it); return; } // fue un clic
+      // fue un arrastre → soltar
+      document.body.classList.remove('mn-dragging');
+      if (this._dragGhost) { this._dragGhost.remove(); this._dragGhost = null; }
+      const targetCol = this._dropTargetCol(ev.clientX, ev.clientY);
+      this._clearDropTargets();
+      b._dragging = false;
+      this._drag = null;
+      this._requestBubbleDraw();
+      this._applyBubbleDrop(b.it, targetCol);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  _makeDragGhost(b, x, y) {
+    const g = document.createElement('div');
+    g.className = 'mn-drag-ghost';
+    const d = Math.round(b.rDraw * 2);
+    const stops = this._bubbleStops(b.it);
+    const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'fas fa-hashtag';
+    g.style.width = g.style.height = d + 'px';
+    g.style.setProperty('--g', this._gradientCss(stops));
+    g.innerHTML = `<i class="${iconCls}"></i><span>${this._esc(b.it.title || '')}</span>`;
+    document.body.appendChild(g);
+    g.style.left = x + 'px'; g.style.top = y + 'px';
+    return g;
+  }
+  _moveDragGhost(x, y) { if (this._dragGhost) { this._dragGhost.style.left = x + 'px'; this._dragGhost.style.top = y + 'px'; } }
+
+  _dropTargetCol(x, y) {
+    const el = document.elementFromPoint(x, y);
+    const col = el && el.closest && el.closest('.mn-col');
+    if (!col) return null;
+    return (col.className.match(/mn-col--(news|calm|silent|paused)/) || [])[1] || null;
+  }
+  _highlightDropTarget(x, y) {
+    this._clearDropTargets();
+    const el = document.elementFromPoint(x, y);
+    const col = el && el.closest && el.closest('.mn-col');
+    if (col) col.classList.add('mn-col--drop');
+  }
+  _clearDropTargets() {
+    document.querySelectorAll('.mn-col--drop').forEach((c) => c.classList.remove('mn-col--drop'));
+  }
+
+  /** Aplica el cambio de estado al soltar. Solo "En pausa" es un estado real
+      (is_active); las demás columnas se calculan → soltar fuera de pausa
+      significa REACTIVAR. */
+  async _applyBubbleDrop(item, targetCol) {
+    if (!targetCol) return;                       // soltó fuera → nada
+    const toPaused = targetCol === 'paused';
+    const isPaused = !item.isActive;
+    if (toPaused === isPaused) return;            // mismo estado efectivo → nada
+    const nextActive = !toPaused;
+    const svc = item.kind === 'page'
+      ? this._service.updateWatcher(item.id, { is_active: nextActive })
+      : this._service.updateEntity(item.id, { is_active: nextActive });
+    const { error } = await svc;
+    if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); return; }
+    delete this._bubblePos[item.id];             // que re-asiente en su nueva columna
+    await this._refresh();
   }
 
   _hexA(hex, a) {
@@ -986,6 +1088,82 @@ class MonitoringView extends BaseView {
     const v = h.length === 3 ? h.split('').map(x => x + x).join('') : h;
     const r = parseInt(v.slice(0, 2), 16), g = parseInt(v.slice(2, 4), 16), b = parseInt(v.slice(4, 6), 16);
     return `rgba(${r || 0},${g || 0},${b || 0},${a})`;
+  }
+
+  /* ── Panel de detalle (estilo Flows) al seleccionar una burbuja ── */
+  _openBubbleDetail(item) {
+    if (!window.Modal || typeof window.Modal.show !== 'function') { return this._openBubblePop(item, 0, 0); }
+    const isProfile = item.kind === 'profile';
+    const stops = this._bubbleStops(item);
+    const gradCss = this._gradientCss(stops);
+    const brand = isProfile ? ((this._model?.containers || []).find(c => c.id === item.containerId)?.nombre_marca || null) : null;
+    const roleLabel = isProfile ? this._roleLabel(item.tipo) : __('Página web');
+    const platIcon = MonitoringView.PLATFORM_ICON[item.platform] || 'fas fa-hashtag';
+
+    const meta = [];
+    if (isProfile) meta.push(`<span class="mn-det-meta-item"><i class="fas fa-fire"></i>${item.impact > 0 ? __('{n} interacciones (90 d)', { n: this._compact(item.impact) }) : __('Sin impacto medido')}</span>`);
+    else meta.push(`<span class="mn-det-meta-item"><i class="fas fa-arrows-rotate"></i>${item.dataCount} ${__('cambios')}</span>`);
+    if (item.platform) meta.push(`<span class="mn-det-meta-item"><i class="${platIcon}"></i>${this._esc(this._platformName(item.platform))}</span>`);
+    if (item.lastAt) meta.push(`<span class="mn-det-meta-item"><i class="fas fa-clock"></i>${this._relativeTime(item.lastAt)}</span>`);
+    if (brand) meta.push(`<span class="mn-det-meta-item"><i class="fas fa-tag"></i>${this._esc(brand)}</span>`);
+    meta.push(`<span class="mn-det-meta-item"><i class="fas fa-signal"></i>${this._esc(item.status?.text || '')}</span>`);
+
+    const veraActs = isProfile ? `
+      <button type="button" class="mn-det-cta" data-bact="vera-analizar"><i class="fas fa-wand-magic-sparkles"></i><span>${__('Analizar con Vera')}</span></button>
+      <button type="button" class="mn-det-icon-btn" data-bact="vera-comparar" title="${__('Comparar con mi marca')}"><i class="fas fa-code-compare"></i></button>
+      <button type="button" class="mn-det-icon-btn" data-bact="vera-inspirar" title="${__('Pedir ideas')}"><i class="fas fa-lightbulb"></i></button>` : `
+      <a class="mn-det-cta" href="${this._esc(item.url)}" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i><span>${__('Abrir página')}</span></a>`;
+
+    const relevance = isProfile ? `
+      <div class="mn-det-section">
+        <div class="mn-det-section-title">${__('Relevancia — ¿por qué lo monitoreamos?')}</div>
+        <p class="mn-det-relevance${item.relevance ? '' : ' mn-det-relevance--empty'}">${item.relevance ? this._esc(item.relevance) : __('Sin definir. Edita el perfil para añadir por qué lo sigues.')}</p>
+      </div>` : '';
+
+    const colorSection = isProfile ? `
+      <div class="mn-det-section">
+        <div class="mn-det-section-title">${__('Color de la burbuja')}</div>
+        <div class="mn-bubpop-colors">
+          <button class="mn-swatch mn-swatch--brand${!item.color ? ' is-on' : ''}" data-color="" title="${__('Usar color de la marca')}" style="background:${gradCss}"></button>
+          ${MonitoringView.PALETTE.map(c => `<button class="mn-swatch${item.color === c ? ' is-on' : ''}" style="background:${c}" data-color="${c}"></button>`).join('')}
+        </div>
+      </div>` : '';
+
+    const body = document.createElement('div');
+    body.className = 'mn-detail';
+    body.innerHTML = `
+      <div class="mn-detail-bg" aria-hidden="true" style="background:${gradCss}"></div>
+      <div class="mn-detail-scrim" aria-hidden="true"></div>
+      <div class="mn-detail-content">
+        <div class="mn-detail-head">
+          <div class="mn-detail-avatar" style="border-image:${gradCss} 1"><i class="${platIcon}"></i></div>
+          <div class="mn-detail-id">
+            ${roleLabel ? `<span class="mn-detail-eyebrow">${this._esc(roleLabel)}</span>` : ''}
+            <h2 class="mn-detail-title">${this._esc(item.title)}</h2>
+            ${item.subtitle ? `<div class="mn-detail-sub">${this._esc(item.subtitle)}</div>` : ''}
+          </div>
+          <label class="mn-onoff" title="${item.isActive ? __('Pausar') : __('Activar')}">
+            <input type="checkbox" ${item.isActive ? 'checked' : ''} data-bact="toggle-active"><span class="mn-onoff-track"></span>
+          </label>
+        </div>
+        <div class="mn-detail-meta">${meta.join('')}</div>
+        <div class="mn-detail-actions">${veraActs}</div>
+        ${relevance}
+        ${colorSection}
+        <div class="mn-detail-foot">
+          <button type="button" class="mn-btn-secondary" data-bact="edit"><i class="fas fa-pen"></i> ${__('Editar')}</button>
+          ${isProfile ? `<button type="button" class="mn-btn-secondary" data-bact="toggle-highlight"><i class="fas fa-star"></i> ${item.highlighted ? __('Quitar destacado') : __('Destacar')}</button>` : ''}
+          <span style="flex:1"></span>
+          <button type="button" class="mn-btn-secondary mn-btn-danger" data-bact="delete"><i class="fas fa-trash"></i> ${__('Dejar de seguir')}</button>
+        </div>
+      </div>`;
+
+    const { modal, close } = window.Modal.show({ title: '', body, className: 'mn-detail-modal' });
+    modal.querySelectorAll('.mn-swatch').forEach((sw) => sw.addEventListener('click', () => {
+      this._setBubbleColor(item, sw.dataset.color);
+      modal.querySelectorAll('.mn-swatch').forEach((s) => s.classList.toggle('is-on', (s.dataset.color || '') === (sw.dataset.color || '')));
+    }));
+    modal.querySelectorAll('[data-bact]').forEach((el) => el.addEventListener('click', (e) => this._onBubbleAction(el.dataset.bact, item, e, close)));
   }
 
   /* ── Popover al hacer clic en una burbuja: identidad + impacto + acciones ── */
@@ -1094,7 +1272,8 @@ class MonitoringView extends BaseView {
     if (this._bubPopEsc) { document.removeEventListener('keydown', this._bubPopEsc); this._bubPopEsc = null; }
   }
 
-  async _onBubbleAction(action, item, e) {
+  async _onBubbleAction(action, item, e, closeFn) {
+    const close = closeFn || (() => this._closeBubblePop());
     if (action === 'toggle-active') {
       const checked = e.target.checked;
       const svc = item.kind === 'page'
@@ -1102,10 +1281,10 @@ class MonitoringView extends BaseView {
         : this._service.updateEntity(item.id, { is_active: checked });
       const { error } = await svc;
       if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); e.target.checked = !checked; return; }
-      this._closeBubblePop(); await this._refresh();
+      close(); await this._refresh();
       return;
     }
-    this._closeBubblePop();
+    close();
     switch (action) {
       case 'edit':            return item.kind === 'page' ? this._openWatcherModal(item.id) : this._openEntityModal(item.id);
       case 'delete':          return item.kind === 'page' ? this._confirmDeleteWatcher(item.id) : this._confirmDeleteEntity(item.id);
