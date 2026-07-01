@@ -44,6 +44,12 @@ class MonitoringView extends BaseView {
     ];
   }
 
+  // Paleta para personalizar el color de un perfil (borde de la burbuja).
+  static PALETTE = [
+    '#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#eab308',
+    '#14b8a6', '#ef4444', '#8b5cf6', '#06b6d4', '#f43f5e', '#84cc16',
+  ];
+
   // Plataforma → icono (Font Awesome, ya cargado globalmente en la app).
   static PLATFORM_ICON = {
     instagram:        'fab fa-instagram',
@@ -194,6 +200,8 @@ class MonitoringView extends BaseView {
 
   onLeave() {
     this.clearSubnavFromHeader();
+    this._stopBubbles();
+    if (this._bubbleResizeBound) { window.removeEventListener('resize', this._bubbleResizeBound); this._bubbleResizeBound = null; }
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -251,12 +259,17 @@ class MonitoringView extends BaseView {
         hasNews: recent(lastAt),
         containerId: e.brand_container_id || null,
         status: this._estadoPerfil(e, lastAt),
+        // Tamaño de la burbuja ∝ cuánto dato genera (señales captadas).
+        dataCount: sigs.length,
+        // Color personalizado del perfil (text[]; por ahora usamos el 1er color).
+        color: (Array.isArray(e.color) && e.color[0]) ? e.color[0] : null,
       });
     });
     pages.forEach(w => {
       let hostname = w.url;
       try { hostname = new URL(w.url).hostname.replace(/^www\./, ''); } catch (_) {}
-      const wsigs = (sigByUrl.get(w.url) || []).slice(0, 3);
+      const allWsigs = sigByUrl.get(w.url) || [];
+      const wsigs = allWsigs.slice(0, 3);
       const lastAt = wsigs[0]?.captured_at || null;
       items.push({
         kind: 'page', raw: w, id: w.id,
@@ -270,6 +283,8 @@ class MonitoringView extends BaseView {
         hasNews: recent(lastAt) && (Date.now() - new Date(lastAt).getTime()) < 24 * 60 * 60 * 1000,
         feed: wsigs,
         status: this._estadoPagina(w, lastAt),
+        dataCount: allWsigs.length,
+        color: null, // las páginas no tienen color personalizable (aún)
       });
     });
 
@@ -456,9 +471,14 @@ class MonitoringView extends BaseView {
   _renderContent() {
     const el = document.getElementById('mnContent');
     if (!el || !this._model) return;
-    if (this._tab === 'suggestions')  el.innerHTML = this._buildSuggestionsTab(this._model);
-    else if (this._tab === 'urls')    el.innerHTML = this._buildBoard(this._model, 'page');
-    else                              el.innerHTML = this._buildBoard(this._model, 'profile');
+    this._stopBubbles();
+    if (this._tab === 'suggestions') {
+      el.innerHTML = this._buildSuggestionsTab(this._model);
+    } else {
+      const kind = this._tab === 'urls' ? 'page' : 'profile';
+      el.innerHTML = this._buildBoard(this._model, kind);
+      this._initBubbles(kind);
+    }
   }
 
   _switchTab(tab) {
@@ -472,10 +492,10 @@ class MonitoringView extends BaseView {
     this._renderContent();
   }
 
-  /* ── Board kanban por estado, filtrado por kind (profile|page) ── */
+  /* ── Board de burbujas por estado, filtrado por kind (profile|page).
+        Cada columna es un "frasco" con gravedad: las burbujas caen y se apilan.
+        Tamaño ∝ dato generado · color (borde) = identidad personalizable. ── */
   _buildBoard(model, kind) {
-    const { containers } = model;
-    const containerName = (id) => containers.find(c => c.id === id)?.nombre_marca || null;
     const items = model.items.filter(i => i.kind === kind);
 
     if (!items.length) {
@@ -492,6 +512,10 @@ class MonitoringView extends BaseView {
 
     const buckets = { news: [], calm: [], silent: [], paused: [] };
     items.forEach(i => buckets[this._columnOf(i)].push(i));
+    // Sembrar las grandes primero (caen antes → tienden a quedar abajo/estables).
+    Object.values(buckets).forEach(b => b.sort((a, z) => (z.dataCount || 0) - (a.dataCount || 0)));
+    this._bubbleBuckets = buckets;
+
     const column = (c) => {
       const list = buckets[c.id];
       return `
@@ -502,14 +526,335 @@ class MonitoringView extends BaseView {
             <span class="mn-col-count">${list.length}</span>
           </header>
           <p class="mn-col-hint">${c.hint}</p>
-          <div class="mn-col-body">
-            ${list.length
-              ? list.map(i => this._buildCard(i, containerName, c.id)).join('')
-              : this.emptyState({ compact: true, icon: c.emptyIcon, title: c.emptyText })}
+          <div class="mn-bubbles" data-col="${c.id}">
+            <canvas></canvas>
+            ${list.length ? '' : `<div class="mn-bub-empty"><i class="fas ${c.emptyIcon}"></i><span>${c.emptyText}</span></div>`}
           </div>
         </section>`;
     };
-    return `<div class="mn-cols">${MonitoringView.COLUMNS.map(column).join('')}</div>`;
+    return `<div class="mn-cols mn-cols--bubbles">${MonitoringView.COLUMNS.map(column).join('')}</div>`;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     MOTOR DE BURBUJAS — física por columna (gravedad + colisión)
+  ══════════════════════════════════════════════════════════ */
+  _hash(str) {
+    let h = 5381;
+    for (let i = 0; i < String(str).length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+
+  /** Color de la burbuja: personalizado si existe, si no uno estable por id. */
+  _bubbleColor(item) {
+    if (item.color) return item.color;
+    return MonitoringView.PALETTE[this._hash(item.id) % MonitoringView.PALETTE.length];
+  }
+
+  _initBubbles(kind) {
+    const cont = document.getElementById('mnContent');
+    if (!cont || !this._bubbleBuckets) return;
+
+    // Escala de tamaño compartida por todo el board (comparables entre columnas).
+    const all = Object.values(this._bubbleBuckets).flat();
+    const maxData = Math.max(1, ...all.map(i => i.dataCount || 0));
+    const MINR = 22, MAXR = 46;
+    const radiusFor = (d) => MINR + (MAXR - MINR) * Math.sqrt(d || 0) / Math.sqrt(maxData);
+
+    this._bubbleWorlds = [];
+    cont.querySelectorAll('.mn-bubbles').forEach((stage) => {
+      const canvas = stage.querySelector('canvas');
+      const colId  = stage.dataset.col;
+      const items  = this._bubbleBuckets[colId] || [];
+      if (!canvas || !items.length) return;
+      const bodies = items.map((it, idx) => {
+        const r = radiusFor(it.dataCount);
+        return { it, r, rDraw: r, x: 0, y: -80 - idx * 24, vx: 0, vy: 0, seeded: false, idx };
+      });
+      const world = { stage, canvas, ctx: canvas.getContext('2d'), bodies, W: 0, H: 0, DPR: 1, hover: null, colId };
+      this._wireBubbleCanvas(world);
+      this._bubbleWorlds.push(world);
+    });
+
+    this._layoutBubbles();
+    this._bubbleSleep = 0;
+    this._wakeBubbles();
+
+    if (!this._bubbleResizeBound) {
+      this._bubbleResizeBound = () => { this._layoutBubbles(); this._wakeBubbles(); };
+      window.addEventListener('resize', this._bubbleResizeBound);
+    }
+  }
+
+  _layoutBubbles() {
+    (this._bubbleWorlds || []).forEach((w) => {
+      const rect = w.canvas.getBoundingClientRect();
+      w.DPR = Math.min(window.devicePixelRatio || 1, 2);
+      w.W = Math.max(1, rect.width); w.H = Math.max(1, rect.height);
+      w.canvas.width = w.W * w.DPR; w.canvas.height = w.H * w.DPR;
+      w.ctx.setTransform(w.DPR, 0, 0, w.DPR, 0, 0);
+      w.bodies.forEach((b) => {
+        if (!b.seeded) {
+          b.x = Math.max(b.r, Math.min(w.W - b.r, w.W * 0.15 + this._hash(b.it.id) % Math.max(1, Math.floor(w.W * 0.7))));
+          b.y = -b.r - b.idx * 22;
+          b.seeded = true;
+        } else {
+          b.x = Math.max(b.r, Math.min(w.W - b.r, b.x));
+        }
+      });
+    });
+  }
+
+  _stepBubbles(w) {
+    const G = 0.5, FR = 0.985, REST = 0.16;
+    for (const b of w.bodies) { b.vy += G; b.vx *= FR; b.vy *= FR; b.x += b.vx; b.y += b.vy; }
+    for (let it = 0; it < 2; it++) {
+      for (let i = 0; i < w.bodies.length; i++) {
+        for (let j = i + 1; j < w.bodies.length; j++) {
+          const a = w.bodies[i], b = w.bodies[j];
+          let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.01;
+          const min = a.r + b.r;
+          if (d < min) {
+            const ov = (min - d) / 2, nx = dx / d, ny = dy / d;
+            a.x -= nx * ov; a.y -= ny * ov; b.x += nx * ov; b.y += ny * ov;
+            const rv = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+            if (rv < 0) { a.vx -= rv * nx * REST; a.vy -= rv * ny * REST; b.vx += rv * nx * REST; b.vy += rv * ny * REST; }
+          }
+        }
+      }
+      for (const b of w.bodies) {
+        if (b.x < b.r) { b.x = b.r; b.vx *= -REST; }
+        if (b.x > w.W - b.r) { b.x = w.W - b.r; b.vx *= -REST; }
+        if (b.y > w.H - b.r) { b.y = w.H - b.r; b.vy *= -REST; }
+      }
+    }
+    // Energía cinética (para dormir el loop cuando todo asienta).
+    let ke = 0;
+    for (const b of w.bodies) ke += b.vx * b.vx + b.vy * b.vy;
+    return ke;
+  }
+
+  _drawBubbles(w) {
+    const { ctx } = w;
+    ctx.clearRect(0, 0, w.W, w.H);
+    const pulse = w.colId === 'news';
+    const dimmed = w.colId === 'paused';
+    // Dibuja la hovered al final (encima).
+    const order = w.bodies.slice().sort((a, b) => (a === w.hover ? 1 : 0) - (b === w.hover ? 1 : 0));
+    for (const b of order) {
+      const isHover = b === w.hover;
+      const target = b.r * (isHover ? 1.16 : 1);
+      b.rDraw += (target - b.rDraw) * 0.25;
+      const r = b.rDraw;
+      const col = this._bubbleColor(b.it);
+
+      // Halo del color propio.
+      const g = ctx.createRadialGradient(b.x, b.y, r * 0.6, b.x, b.y, r * 1.55);
+      g.addColorStop(0, this._hexA(col, dimmed ? 0.05 : (isHover ? 0.22 : 0.13)));
+      g.addColorStop(1, this._hexA(col, 0));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, b.y, r * 1.55, 0, 7); ctx.fill();
+
+      // Relleno sólido oscuro (color de las cards).
+      ctx.fillStyle = dimmed ? '#141416' : '#17171a';
+      ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); ctx.fill();
+
+      // Borde de color (personalizable) — pulso suave en "Con novedad".
+      let lw = isHover ? 3 : 2.4;
+      if (pulse && !isHover) lw = 2.4 + Math.sin(this._bubbleT * 0.05 + b.x) * 0.9;
+      ctx.lineWidth = lw; ctx.strokeStyle = dimmed ? this._hexA(col, 0.42) : col;
+      ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); ctx.stroke();
+
+      // Inicial.
+      ctx.fillStyle = dimmed ? 'rgba(255,255,255,.45)' : '#f4f4f5';
+      ctx.font = `700 ${Math.max(12, r * 0.6)}px -apple-system,Inter,sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText((b.it.title || '—').charAt(0).toUpperCase(), b.x, b.y - (r > 34 ? r * 0.14 : 0));
+
+      // Nombre dentro si la burbuja es grande (o al hacer hover).
+      if (r > 32 || isHover) {
+        ctx.fillStyle = this._hexA('#ffffff', dimmed ? 0.4 : 0.72);
+        ctx.font = '500 9.5px -apple-system,Inter,sans-serif';
+        ctx.fillText(this._truncate(b.it.title || '', 12), b.x, b.y + r * 0.52);
+      }
+    }
+  }
+
+  _bubbleLoop() {
+    this._bubbleT = (this._bubbleT || 0) + 1;
+    let maxKE = 0, animating = false;
+    for (const w of (this._bubbleWorlds || [])) {
+      const ke = this._stepBubbles(w);
+      this._drawBubbles(w);
+      maxKE = Math.max(maxKE, ke);
+      // ¿alguna burbuja aún animando su tamaño (hover)?
+      for (const b of w.bodies) if (Math.abs(b.rDraw - b.r * (b === w.hover ? 1.16 : 1)) > 0.3) animating = true;
+      if (w.hover) animating = true;
+    }
+    const hasPulse = (this._bubbleWorlds || []).some(w => w.colId === 'news' && w.bodies.length);
+    if (maxKE < 0.05 && !animating && !hasPulse) {
+      if (++this._bubbleSleep > 20) { this._bubbleRAF = null; return; } // dormir
+    } else {
+      this._bubbleSleep = 0;
+    }
+    this._bubbleRAF = requestAnimationFrame(() => this._bubbleLoop());
+  }
+
+  _wakeBubbles() {
+    this._bubbleSleep = 0;
+    if (!this._bubbleRAF) this._bubbleRAF = requestAnimationFrame(() => this._bubbleLoop());
+  }
+
+  _stopBubbles() {
+    if (this._bubbleRAF) { cancelAnimationFrame(this._bubbleRAF); this._bubbleRAF = null; }
+    this._bubbleWorlds = [];
+    this._closeBubblePop();
+  }
+
+  _wireBubbleCanvas(w) {
+    const canvas = w.canvas;
+    const pos = (e) => { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+    const hit = (p) => { for (const b of w.bodies) if (Math.hypot(b.x - p.x, b.y - p.y) < b.rDraw) return b; return null; };
+    canvas.addEventListener('mousemove', (e) => {
+      const b = hit(pos(e));
+      canvas.style.cursor = b ? 'pointer' : 'default';
+      if (w.hover !== b) { w.hover = b; this._wakeBubbles(); }
+    });
+    canvas.addEventListener('mouseleave', () => { if (w.hover) { w.hover = null; this._wakeBubbles(); } });
+    canvas.addEventListener('click', (e) => {
+      const b = hit(pos(e));
+      if (b) { this._openBubblePop(b.it, e.clientX, e.clientY); e.stopPropagation(); }
+      else this._closeBubblePop();
+    });
+  }
+
+  _hexA(hex, a) {
+    const h = String(hex).replace('#', '');
+    const v = h.length === 3 ? h.split('').map(x => x + x).join('') : h;
+    const r = parseInt(v.slice(0, 2), 16), g = parseInt(v.slice(2, 4), 16), b = parseInt(v.slice(4, 6), 16);
+    return `rgba(${r || 0},${g || 0},${b || 0},${a})`;
+  }
+  _truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+  /* ── Popover al hacer clic en una burbuja: color + acciones ── */
+  _openBubblePop(item, cx, cy) {
+    this._closeBubblePop();
+    const model = this._model;
+    const containerName = (id) => (model?.containers || []).find(c => c.id === id)?.nombre_marca || null;
+    const isProfile = item.kind === 'profile';
+    const col = this._bubbleColor(item);
+    const brand = isProfile ? containerName(item.containerId) : null;
+    const typeLabel = isProfile ? __('Marca / perfil') : __('Página web');
+    const meta = `${typeLabel}${brand ? ' · ' + this._esc(brand) : ''} · ${item.dataCount} ${__('señales')}`;
+
+    const swatches = isProfile ? `
+      <div class="mn-bubpop-colors">
+        ${MonitoringView.PALETTE.map(c => `
+          <button class="mn-swatch${(item.color === c) ? ' is-on' : ''}" style="background:${c}"
+                  data-color="${c}" title="${c}"></button>`).join('')}
+      </div>` : '';
+
+    const veraActs = isProfile ? `
+      <button class="mn-bubpop-act" data-bact="vera-analizar"><i class="fas fa-wand-magic-sparkles"></i> ${__('Analizar')}</button>
+      <button class="mn-bubpop-act" data-bact="vera-comparar"><i class="fas fa-code-compare"></i> ${__('Comparar')}</button>
+      <button class="mn-bubpop-act" data-bact="vera-inspirar"><i class="fas fa-lightbulb"></i> ${__('Ideas')}</button>` : `
+      <a class="mn-bubpop-act" href="${this._esc(item.url)}" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i> ${__('Abrir página')}</a>`;
+
+    const starBtn = isProfile ? `
+      <button class="mn-bubpop-star${item.highlighted ? ' is-on' : ''}" data-bact="toggle-highlight" title="${__('Destacar')}"><i class="fas fa-star"></i></button>` : '';
+
+    const pop = document.createElement('div');
+    pop.className = 'mn-bubpop';
+    pop.innerHTML = `
+      <div class="mn-bubpop-head">
+        <div class="mn-bubpop-avatar" style="border-color:${col}; box-shadow:0 0 0 3px ${this._hexA(col, 0.14)}">
+          ${this._esc((item.title || '—').charAt(0).toUpperCase())}
+        </div>
+        <div class="mn-bubpop-id">
+          <div class="mn-bubpop-name">${this._esc(item.title)}</div>
+          <div class="mn-bubpop-sub">${item.subtitle ? this._esc(item.subtitle) : ''}</div>
+        </div>
+        ${starBtn}
+      </div>
+      <div class="mn-bubpop-meta">${meta}</div>
+      ${isProfile ? `<div class="mn-bubpop-label">${__('Color del perfil')}</div>${swatches}` : ''}
+      <div class="mn-bubpop-acts">${veraActs}</div>
+      <div class="mn-bubpop-foot">
+        <label class="mn-onoff mn-onoff--sm" title="${item.isActive ? __('Pausar') : __('Activar')}">
+          <input type="checkbox" ${item.isActive ? 'checked' : ''} data-bact="toggle-active">
+          <span class="mn-onoff-track"></span>
+        </label>
+        <span class="mn-bubpop-foot-spacer"></span>
+        <button class="mn-btn-icon" data-bact="edit" title="${__('Editar')}"><i class="fas fa-pen"></i></button>
+        <button class="mn-btn-icon mn-btn-icon--danger" data-bact="delete" title="${__('Dejar de seguir')}"><i class="fas fa-trash"></i></button>
+      </div>`;
+    document.body.appendChild(pop);
+    this._bubPop = pop;
+
+    // Posicionar cerca del cursor, sin salirse de la ventana.
+    const pw = 244, ph = pop.offsetHeight || 220;
+    let x = cx + 14, y = cy - 10;
+    if (x + pw > window.innerWidth) x = cx - pw - 14;
+    if (y + ph > window.innerHeight) y = window.innerHeight - ph - 10;
+    pop.style.left = Math.max(8, x) + 'px';
+    pop.style.top = Math.max(8, y) + 'px';
+
+    // Wiring.
+    pop.addEventListener('click', (e) => e.stopPropagation());
+    pop.querySelectorAll('.mn-swatch').forEach(sw =>
+      sw.addEventListener('click', () => this._setBubbleColor(item, sw.dataset.color)));
+    pop.querySelectorAll('[data-bact]').forEach(el =>
+      el.addEventListener('click', (e) => this._onBubbleAction(el.dataset.bact, item, e)));
+
+    if (!this._bubPopOutside) {
+      this._bubPopOutside = () => this._closeBubblePop();
+      setTimeout(() => document.addEventListener('click', this._bubPopOutside), 0);
+      this._bubPopEsc = (e) => { if (e.key === 'Escape') this._closeBubblePop(); };
+      document.addEventListener('keydown', this._bubPopEsc);
+    }
+  }
+
+  _closeBubblePop() {
+    if (this._bubPop) { this._bubPop.remove(); this._bubPop = null; }
+    if (this._bubPopOutside) { document.removeEventListener('click', this._bubPopOutside); this._bubPopOutside = null; }
+    if (this._bubPopEsc) { document.removeEventListener('keydown', this._bubPopEsc); this._bubPopEsc = null; }
+  }
+
+  async _onBubbleAction(action, item, e) {
+    if (action === 'toggle-active') {
+      const checked = e.target.checked;
+      const svc = item.kind === 'page'
+        ? this._service.updateWatcher(item.id, { is_active: checked })
+        : this._service.updateEntity(item.id, { is_active: checked });
+      const { error } = await svc;
+      if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); e.target.checked = !checked; return; }
+      this._closeBubblePop(); await this._refresh();
+      return;
+    }
+    this._closeBubblePop();
+    switch (action) {
+      case 'edit':            return item.kind === 'page' ? this._openWatcherModal(item.id) : this._openEntityModal(item.id);
+      case 'delete':          return item.kind === 'page' ? this._confirmDeleteWatcher(item.id) : this._confirmDeleteEntity(item.id);
+      case 'toggle-highlight':return this._toggleHighlight(item.id);
+      case 'vera-analizar':
+      case 'vera-comparar':
+      case 'vera-inspirar':   return this._goToVera(action, item.id);
+    }
+  }
+
+  /** Personaliza el color: optimista en el canvas (sin re-asentar) + persiste. */
+  async _setBubbleColor(item, color) {
+    const prev = item.color;
+    item.color = color; // el modelo vivo → el canvas lo toma al instante
+    // reflejar el "seleccionado" en los swatches abiertos
+    if (this._bubPop) this._bubPop.querySelectorAll('.mn-swatch').forEach(sw =>
+      sw.classList.toggle('is-on', sw.dataset.color === color));
+    this._wakeBubbles();
+    const { error } = await this._service.updateEntity(item.id, { color: [color] });
+    if (error) { item.color = prev; this._wakeBubbles(); alert(__('No se pudo guardar el color:') + ' ' + error.message); return; }
+    // Sincronizar el dato local + la firma live para que el polling/realtime NO
+    // re-asiente las burbujas (el color no cambia posición, solo el borde).
+    const row = (this._data?.entities?.data || []).find(r => r.id === item.id);
+    if (row) row.color = [color];
+    if (this._liveSig) this._liveSig['monitoring'] = this._dataSignature(this._data);
   }
 
   /* ── Tab de sugerencias del sistema (propuestas, sin el banner rosa) ── */
@@ -550,62 +895,6 @@ class MonitoringView extends BaseView {
         <p class="mn-sug-intro">${__('Tú decides: súmalos a tu vigilancia o descártalos.')}</p>
         <div class="mn-sug-grid">${cards}</div>
       </div>`;
-  }
-
-  /** Tarjeta compacta. La columna ya comunica el estado, así que la tarjeta no
-      lo repite: solo identidad + tipo + acciones. En la columna "Con novedad"
-      añadimos cuándo fue el último movimiento. */
-  _buildCard(item, containerName, colId) {
-    const icon = MonitoringView.PLATFORM_ICON[item.platform] || 'fas fa-hashtag';
-    const typeLabel = item.kind === 'page' ? __('Página web') : __('Marca / perfil');
-    const brand = item.kind === 'profile' ? containerName(item.containerId) : null;
-    const when = (colId === 'news' && item.lastAt) ? ' · ' + this._relativeTime(item.lastAt) : '';
-    const meta = `${typeLabel}${brand ? ' · ' + this._esc(brand) : ''}${when}`;
-
-    const star = item.kind === 'profile' ? `
-      <button class="mn-star${item.highlighted ? ' is-on' : ''}" data-action="toggle-highlight" data-id="${this._esc(item.id)}"
-              title="${item.highlighted ? __('Quitar destacado') : __('Destacar')}" aria-pressed="${item.highlighted}">
-        <i class="fas fa-star"></i>
-      </button>` : '';
-
-    // Acciones compactas (solo iconos) para no saturar las columnas.
-    const actions = item.kind === 'profile' ? `
-      <div class="mn-acts">
-        <button class="mn-act" data-action="vera-analizar" data-id="${this._esc(item.id)}" title="${__('Analizar con Vera')}"><i class="fas fa-wand-magic-sparkles"></i></button>
-        <button class="mn-act" data-action="vera-comparar" data-id="${this._esc(item.id)}" title="${__('Comparar con mi marca')}"><i class="fas fa-code-compare"></i></button>
-        <button class="mn-act" data-action="vera-inspirar" data-id="${this._esc(item.id)}" title="${__('Pedir ideas')}"><i class="fas fa-lightbulb"></i></button>
-      </div>` : `
-      <div class="mn-acts">
-        <a class="mn-act" href="${this._esc(item.url)}" target="_blank" rel="noopener" title="${__('Abrir página')}"><i class="fas fa-arrow-up-right-from-square"></i></a>
-      </div>`;
-
-    const toggleAction = item.kind === 'page' ? 'toggle-watcher' : 'toggle-entity';
-    const editAction   = item.kind === 'page' ? 'edit-watcher'   : 'edit-entity';
-    const delAction    = item.kind === 'page' ? 'delete-watcher' : 'delete-entity';
-
-    return `
-      <article class="mn-card${item.highlighted ? ' mn-card--star' : ''}${!item.isActive ? ' mn-card--off' : ''}" data-id="${this._esc(item.id)}">
-        <div class="mn-card-head">
-          <div class="mn-card-avatar mn-card-avatar--${item.kind}"><i class="${icon}"></i></div>
-          <div class="mn-card-id">
-            <div class="mn-card-title">${this._esc(item.title)}</div>
-            ${item.subtitle ? `<div class="mn-card-sub">${this._esc(item.subtitle)}</div>` : ''}
-          </div>
-          ${star}
-        </div>
-        <div class="mn-card-metaline">${meta}</div>
-        <div class="mn-card-foot">
-          ${actions}
-          <div class="mn-card-foot-right">
-            <label class="mn-onoff mn-onoff--sm" title="${item.isActive ? __('Pausar') : __('Activar')}">
-              <input type="checkbox" ${item.isActive ? 'checked' : ''} data-action="${toggleAction}" data-id="${this._esc(item.id)}">
-              <span class="mn-onoff-track"></span>
-            </label>
-            <button class="mn-btn-icon" data-action="${editAction}" data-id="${this._esc(item.id)}" title="${__('Editar')}"><i class="fas fa-pen"></i></button>
-            <button class="mn-btn-icon mn-btn-icon--danger" data-action="${delAction}" data-id="${this._esc(item.id)}" title="${__('Dejar de seguir')}"><i class="fas fa-trash"></i></button>
-          </div>
-        </div>
-      </article>`;
   }
 
   /* ══════════════════════════════════════════════════════════

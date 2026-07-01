@@ -108,6 +108,7 @@ class MonitoringDataService {
       domain:            payload.domain || 'social',
       scope:             payload.scope || 'brand',
       is_active:         payload.is_active !== false,
+      color:             Array.isArray(payload.color) ? payload.color : (payload.color ? [payload.color] : null),
       metadata: {
         tipo:     payload.tipo     || 'competidor_directo',
         platform: payload.platform || null,
@@ -129,6 +130,10 @@ class MonitoringDataService {
     ['name', 'target_identifier', 'domain', 'scope', 'is_active', 'brand_container_id'].forEach(k => {
       if (patch[k] !== undefined) updates[k] = patch[k];
     });
+    // color: normalizamos a text[] (array) para soportar degradado a futuro.
+    if (patch.color !== undefined) {
+      updates.color = Array.isArray(patch.color) ? patch.color : (patch.color ? [patch.color] : null);
+    }
     if (patch.tipo !== undefined || patch.platform !== undefined || patch.metadata !== undefined) {
       // Merge metadata: leer actual y combinar
       const { data: cur } = await this.sb
