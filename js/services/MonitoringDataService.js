@@ -86,12 +86,25 @@ class MonitoringDataService {
       }
     }
 
+    // Impacto social por entidad: agrega el engagement de los posts de
+    // competidor (brand_posts) por entity_id vía RPC. Dimensiona las burbujas
+    // (más interacción de audiencia = burbuja más grande). Ventana amplia
+    // (90d) para captar señal aunque la publicación sea esporádica.
+    const impactByEntity = {};
+    try {
+      const { data } = await this.sb.rpc('monitoring_entity_impact', {
+        p_org_id: this.orgId, p_window_d: 90,
+      });
+      (data || []).forEach(r => { if (r.entity_id) impactByEntity[r.entity_id] = Number(r.impact) || 0; });
+    } catch (_) { /* si el RPC falla, las burbujas caen al fallback por señales */ }
+
     return {
       containers:  u(containers),
       entities:    u(entities),
       triggers:    u(triggers),
       watchers:    u(watchers),
       signals,
+      impactByEntity,
     };
   }
 
