@@ -672,18 +672,22 @@ class MonitoringView extends BaseView {
     });
   }
 
-  /** Coloca el icono (arriba) y el nombre (abajo) DENTRO de la burbuja. */
-  _positionLabel(b, r) {
+  /** Coloca el icono (arriba) y el nombre (abajo) DENTRO de la burbuja.
+      y = centro vertical (permite el bob); alpha = opacidad (profundidad). */
+  _positionLabel(b, r, y, alpha) {
+    const cy = (y == null) ? b.y : y;
     if (b.iconEl) {
       b.iconEl.style.left = b.x + 'px';
-      b.iconEl.style.top = (b.y - r * 0.26) + 'px';
+      b.iconEl.style.top = (cy - r * 0.26) + 'px';
       b.iconEl.style.fontSize = Math.max(11, r * 0.46) + 'px';
+      if (alpha != null) b.iconEl.style.opacity = alpha;
     }
     if (b.nameEl) {
       b.nameEl.style.left = b.x + 'px';
-      b.nameEl.style.top = (b.y + r * 0.34) + 'px';
+      b.nameEl.style.top = (cy + r * 0.34) + 'px';
       b.nameEl.style.fontSize = Math.max(7.5, Math.min(12, r * 0.26)) + 'px';
       b.nameEl.style.maxWidth = (r * 1.7) + 'px';
+      if (alpha != null) b.nameEl.style.opacity = alpha;
     }
   }
 
@@ -773,49 +777,70 @@ class MonitoringView extends BaseView {
   _drawBubbles(w) {
     const { ctx } = w;
     ctx.clearRect(0, 0, w.W, w.H);
+    const isFloat = w.mode === 'float';
     const pulse = w.colId === 'news';
     const dimmed = w.colId === 'paused';
-    // Dibuja la hovered al final (encima).
-    const order = w.bodies.slice().sort((a, b) => (a === w.hover ? 1 : 0) - (b === w.hover ? 1 : 0));
+    const hoverKey = isFloat ? w.hoverFloat : w.hover;
+    // La burbuja activa se dibuja al final (encima).
+    const order = w.bodies.slice().sort((a, b) => (a === hoverKey ? 1 : 0) - (b === hoverKey ? 1 : 0));
+    // Rango de radios para el efecto de profundidad (solo flotantes).
+    let rMin = Infinity, rMax = 0;
+    if (isFloat) for (const b of w.bodies) { rMin = Math.min(rMin, b.r); rMax = Math.max(rMax, b.r); }
+
     for (const b of order) {
-      const isHover = b === w.hover;
-      const target = b.r * (isHover ? 1.16 : 1);
-      b.rDraw += (target - b.rDraw) * 0.25;
+      const isHover = b === hoverKey;
+      const target = b.r * (isHover ? (isFloat ? 1.06 : 1.16) : 1);
+      b.rDraw += (target - b.rDraw) * 0.22;
       const r = b.rDraw;
+      const bx = b.x;
+      const by = b.y + (isFloat ? Math.sin(this._bubbleT * 0.018 + (b._phase || 0)) * 3 : 0); // bob orgánico
 
       // Color: personalizado si el usuario lo definió, si no el degradado de marca.
       const stops = this._bubbleStops(b.it);
       const c0 = stops[0], c1 = stops[1] || stops[0];
-
-      // Gradiente diagonal.
-      const grad = ctx.createLinearGradient(b.x - r, b.y - r, b.x + r, b.y + r);
+      const grad = ctx.createLinearGradient(bx - r, by - r, bx + r, by + r);
       grad.addColorStop(0, dimmed ? this._hexA(c0, 0.5) : c0);
       grad.addColorStop(1, dimmed ? this._hexA(c1, 0.5) : c1);
 
-      // Halo del color de marca.
-      const g = ctx.createRadialGradient(b.x, b.y, r * 0.6, b.x, b.y, r * 1.55);
-      g.addColorStop(0, this._hexA(c0, dimmed ? 0.05 : (isHover ? 0.24 : 0.14)));
-      g.addColorStop(1, this._hexA(c0, 0));
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, b.y, r * 1.55, 0, 7); ctx.fill();
+      // Profundidad: las burbujas chicas, un poco más tenues (parallax sutil).
+      const tDepth = (isFloat && rMax > rMin) ? (b.r - rMin) / (rMax - rMin) : 1;
+      const depthA = isHover ? 1 : (isFloat ? (0.72 + 0.28 * tDepth) : 1);
 
-      // Relleno sólido oscuro (color de las cards) + tenue tinte de marca.
-      ctx.fillStyle = dimmed ? '#141416' : '#17171a';
-      ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); ctx.fill();
       ctx.save();
-      ctx.globalAlpha = dimmed ? 0.05 : 0.10;
-      ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); ctx.fill();
+      ctx.globalAlpha = depthA;
+
+      // Sombra suave que ATERRIZA la burbuja (premium, en vez de bloom neón).
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = isFloat ? 22 : 13;
+      ctx.shadowOffsetY = isFloat ? 9 : 5;
+      ctx.fillStyle = dimmed ? '#141416' : '#17171a';
+      ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
       ctx.restore();
 
-      // Borde con el degradado de marca — pulso suave en "Con novedad".
-      let lw = isHover ? 3.2 : 2.6;
-      if (pulse && !isHover) lw = 2.6 + Math.sin(this._bubbleT * 0.05 + b.x) * 0.9;
-      ctx.lineWidth = lw; ctx.strokeStyle = grad;
-      ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); ctx.stroke();
+      // Glow ceñido y tenue del color (no un bloom que se ve neón/amateur).
+      const glowA = dimmed ? 0.04 : (isHover ? 0.20 : 0.09);
+      const g = ctx.createRadialGradient(bx, by, r * 0.78, bx, by, r * 1.26);
+      g.addColorStop(0, this._hexA(c0, glowA));
+      g.addColorStop(1, this._hexA(c0, 0));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by, r * 1.26, 0, 7); ctx.fill();
 
-      // Icono de plataforma (arriba) + nombre completo (abajo) — DOM overlay,
-      // ambos DENTRO de la burbuja.
-      this._positionLabel(b, r);
-      // Persistir la posición para que un re-render no las haga caer de nuevo.
+      // Tinte de marca con luz arriba (da dimensión al relleno oscuro).
+      const tint = ctx.createRadialGradient(bx, by - r * 0.5, r * 0.15, bx, by, r);
+      tint.addColorStop(0, this._hexA(c0, dimmed ? 0.05 : 0.13));
+      tint.addColorStop(1, this._hexA(c0, 0));
+      ctx.fillStyle = tint; ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
+
+      // Borde fino con el degradado de marca.
+      let lw = isHover ? 2.6 : 2;
+      if (pulse && !isHover) lw = 2 + Math.sin(this._bubbleT * 0.05 + bx) * 0.7;
+      ctx.globalAlpha = depthA * (isHover ? 1 : 0.9);
+      ctx.lineWidth = lw; ctx.strokeStyle = grad;
+      ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.stroke();
+      ctx.restore();
+
+      // Icono + nombre DENTRO (DOM overlay); siguen el bob y la profundidad.
+      this._positionLabel(b, r, by, isFloat ? depthA : null);
       this._bubblePos[b.it.id] = { x: b.x, y: b.y };
     }
   }
@@ -1060,15 +1085,16 @@ class MonitoringView extends BaseView {
 
     this._brandStops = this._brandGradientStops(); // degradado de marca para el dibujo
     const tipoLabel = (t) => MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || __('Perfil');
-    const SPEED = 0.35;
+    const SPEED = 0.22; // deriva calmada (premium)
     const bodies = props.map((e) => {
       const platform = e.metadata?.platform || '';
-      const r = 44 + (this._hash(e.id) % 16); // 44–59, ligera variación
+      const r = 40 + (this._hash(e.id) % 26); // 40–65: rango amplio → profundidad
       const ang = (this._hash(e.id) % 360) * Math.PI / 180;
       const why = `${tipoLabel(e.metadata?.tipo)}${platform ? __(' en {p}', { p: this._platformName(platform) }) : ''}. ${__('Lo encontramos cerca de tu competencia.')}`;
       return {
         it: { id: e.id, title: e.name || '—', platform, why, color: null },
         r, rDraw: r, x: 0, y: 0, vx: Math.cos(ang) * SPEED, vy: Math.sin(ang) * SPEED, idx: 0, seeded: false,
+        _phase: (this._hash(e.id) % 628) / 100, // fase del bob orgánico
       };
     });
 
@@ -1107,13 +1133,19 @@ class MonitoringView extends BaseView {
     w.W = Math.max(1, rect.width); w.H = Math.max(1, rect.height);
     w.canvas.width = w.W * w.DPR; w.canvas.height = w.H * w.DPR;
     w.ctx.setTransform(w.DPR, 0, 0, w.DPR, 0, 0);
+    // Rejilla que llena TODO el lienzo (ancho y alto) con jitter determinista,
+    // para que no se amontonen en una esquina.
+    const n = w.bodies.length;
+    const cols = Math.max(1, Math.round(Math.sqrt(n * w.W / Math.max(1, w.H))));
+    const rows = Math.max(1, Math.ceil(n / cols));
+    const cellW = w.W / cols, cellH = w.H / rows;
     w.bodies.forEach((b, i) => {
       if (!b.seeded) {
-        // rejilla dispersa determinista
-        const cols = Math.max(1, Math.floor(w.W / 160));
         const col = i % cols, row = Math.floor(i / cols);
-        b.x = Math.min(w.W - b.r, Math.max(b.r, (col + 0.5) * (w.W / cols) + (this._hash(b.it.id) % 40 - 20)));
-        b.y = Math.min(w.H - b.r, Math.max(b.r, 70 + row * 150 + (this._hash(b.it.id + 'y') % 40 - 20)));
+        const jx = (this._hash(b.it.id) % 100 / 100 - 0.5) * cellW * 0.5;
+        const jy = (this._hash(b.it.id + 'y') % 100 / 100 - 0.5) * cellH * 0.5;
+        b.x = Math.min(w.W - b.r, Math.max(b.r, (col + 0.5) * cellW + jx));
+        b.y = Math.min(w.H - b.r, Math.max(b.r, (row + 0.5) * cellH + jy));
         b.seeded = true;
       } else {
         b.x = Math.max(b.r, Math.min(w.W - b.r, b.x));
@@ -1124,7 +1156,7 @@ class MonitoringView extends BaseView {
   }
 
   _stepFloat(w) {
-    const SPEED = 0.35;
+    const SPEED = 0.22;
     const H = w.hoverFloat;
     for (const b of w.bodies) {
       if (b === H) continue;
