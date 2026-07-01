@@ -74,6 +74,7 @@ class MonitoringView extends BaseView {
     this._data     = null;
     this._model    = null;
     this._bound    = false;
+    this._bubblePos = {}; // id → {x,y} — persiste posiciones entre re-renders
   }
 
   async onEnter() {
@@ -607,7 +608,15 @@ class MonitoringView extends BaseView {
       if (!canvas || !items.length) return;
       const bodies = items.map((it, idx) => {
         const r = radiusFor(it);
-        return { it, r, rDraw: r, x: 0, y: -80 - idx * 24, vx: 0, vy: 0, seeded: false, idx };
+        // Si ya teníamos posición para esta burbuja (re-render por polling/live),
+        // la restauramos ya asentada → NO vuelve a caer desde arriba.
+        const saved = this._bubblePos[it.id];
+        return {
+          it, r, rDraw: r,
+          x: saved ? saved.x : 0,
+          y: saved ? saved.y : (-80 - idx * 24),
+          vx: 0, vy: 0, seeded: !!saved, idx,
+        };
       });
       // Overlay DOM: icono de plataforma (dentro) + nombre completo (debajo).
       const labels = stage.querySelector('.mn-bub-labels');
@@ -653,16 +662,35 @@ class MonitoringView extends BaseView {
           b.y = -b.r - b.idx * 22;
           b.seeded = true;
         } else {
+          // Restaurada: clamp por si la columna cambió de tamaño.
           b.x = Math.max(b.r, Math.min(w.W - b.r, b.x));
+          b.y = Math.max(b.r, Math.min(w.H - b.r - 6, b.y));
         }
-        // Posición inicial de las etiquetas (evita el parpadeo en 0,0).
-        if (b.iconEl) { b.iconEl.style.left = b.x + 'px'; b.iconEl.style.top = b.y + 'px'; b.iconEl.style.fontSize = Math.max(12, b.r * 0.62) + 'px'; }
-        if (b.nameEl) { b.nameEl.style.left = b.x + 'px'; b.nameEl.style.top = (b.y + b.r + 4) + 'px'; b.nameEl.style.maxWidth = Math.max(64, b.r * 2.4) + 'px'; }
+        this._positionLabel(b, b.r); // posición inicial (evita parpadeo en 0,0)
       });
     });
   }
 
+  /** Coloca el icono (arriba) y el nombre (abajo) DENTRO de la burbuja. */
+  _positionLabel(b, r) {
+    if (b.iconEl) {
+      b.iconEl.style.left = b.x + 'px';
+      b.iconEl.style.top = (b.y - r * 0.26) + 'px';
+      b.iconEl.style.fontSize = Math.max(11, r * 0.46) + 'px';
+    }
+    if (b.nameEl) {
+      b.nameEl.style.left = b.x + 'px';
+      b.nameEl.style.top = (b.y + r * 0.34) + 'px';
+      b.nameEl.style.fontSize = Math.max(7.5, Math.min(12, r * 0.26)) + 'px';
+      b.nameEl.style.maxWidth = (r * 1.7) + 'px';
+    }
+  }
+
   _stepBubbles(w) {
+    // Mundo congelado (ya asentado) y sin hover → no tocar nada. Esto evita el
+    // micro-rebote perpetuo de la gravedad contra el piso (el "baile").
+    if (w.frozen && !w.hover) { w._overlap = false; return 0; }
+
     const G = 0.32, FR = 0.985, REST = 0.16;
     for (const b of w.bodies) { b.vy += G; b.vx *= FR; b.vy *= FR; b.x += b.vx; b.y += b.vy; }
     // Radio efectivo = el que se está dibujando (incluye el hover), para que una
@@ -697,7 +725,7 @@ class MonitoringView extends BaseView {
           }
         }
       }
-      const floorPad = 30; // reserva para el nombre que va debajo de la burbuja
+      const floorPad = 6; // el nombre ahora va DENTRO → solo un respiro mínimo
       for (const b of w.bodies) {
         const r = rad(b);
         if (b.x < r) { b.x = r; b.vx *= -REST; }
@@ -718,6 +746,20 @@ class MonitoringView extends BaseView {
       }
     }
     w._overlap = overlap;
+
+    // ¿Se sigue moviendo? Medimos el desplazamiento real de posición (no la
+    // velocidad, que por el rebote nunca llega a 0). Si el mundo quedó quieto y
+    // sin solape por varios frames → lo CONGELAMOS (no más "baile").
+    let moved = 0;
+    for (const b of w.bodies) {
+      moved = Math.max(moved, Math.abs(b.x - (b._px != null ? b._px : b.x)) + Math.abs(b.y - (b._py != null ? b._py : b.y)));
+      b._px = b.x; b._py = b.y;
+    }
+    if (!overlap && moved < 0.4) {
+      if ((w._still = (w._still || 0) + 1) > 12) w.frozen = true;
+    } else {
+      w._still = 0;
+    }
 
     // Energía cinética (para dormir el loop cuando todo asienta).
     let ke = 0;
@@ -767,17 +809,11 @@ class MonitoringView extends BaseView {
       ctx.lineWidth = lw; ctx.strokeStyle = grad;
       ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); ctx.stroke();
 
-      // Icono de plataforma (dentro) + nombre completo (debajo) — DOM overlay.
-      if (b.iconEl) {
-        b.iconEl.style.left = b.x + 'px';
-        b.iconEl.style.top = b.y + 'px';
-        b.iconEl.style.fontSize = Math.max(12, r * 0.62) + 'px';
-      }
-      if (b.nameEl) {
-        b.nameEl.style.left = b.x + 'px';
-        b.nameEl.style.top = (b.y + r + 4) + 'px';
-        b.nameEl.style.maxWidth = Math.max(64, r * 2.4) + 'px';
-      }
+      // Icono de plataforma (arriba) + nombre completo (abajo) — DOM overlay,
+      // ambos DENTRO de la burbuja.
+      this._positionLabel(b, r);
+      // Persistir la posición para que un re-render no las haga caer de nuevo.
+      this._bubblePos[b.it.id] = { x: b.x, y: b.y };
     }
   }
 
@@ -807,6 +843,8 @@ class MonitoringView extends BaseView {
 
   _wakeBubbles() {
     this._bubbleSleep = 0;
+    // Descongelar: al interactuar (hover/resize/color) la física vuelve a correr.
+    (this._bubbleWorlds || []).forEach((w) => { w.frozen = false; w._still = 0; });
     if (!this._bubbleRAF) { this._bubbleAwakeFrames = 0; this._bubbleRAF = requestAnimationFrame(() => this._bubbleLoop()); }
   }
 
