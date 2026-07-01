@@ -533,6 +533,7 @@ class MonitoringView extends BaseView {
           <p class="mn-col-hint">${c.hint}</p>
           <div class="mn-bubbles" data-col="${c.id}">
             <canvas></canvas>
+            <div class="mn-bub-labels"></div>
             ${list.length ? '' : `<div class="mn-bub-empty"><i class="fas ${c.emptyIcon}"></i><span>${c.emptyText}</span></div>`}
           </div>
         </section>`;
@@ -608,6 +609,22 @@ class MonitoringView extends BaseView {
         const r = radiusFor(it);
         return { it, r, rDraw: r, x: 0, y: -80 - idx * 24, vx: 0, vy: 0, seeded: false, idx };
       });
+      // Overlay DOM: icono de plataforma (dentro) + nombre completo (debajo).
+      const labels = stage.querySelector('.mn-bub-labels');
+      if (labels) {
+        labels.innerHTML = '';
+        bodies.forEach((b) => {
+          const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'fas fa-hashtag';
+          const icon = document.createElement('span');
+          icon.className = 'mn-bub-icon' + (colId === 'paused' ? ' is-dim' : '');
+          icon.innerHTML = `<i class="${iconCls}"></i>`;
+          const name = document.createElement('span');
+          name.className = 'mn-bub-name' + (colId === 'paused' ? ' is-dim' : '');
+          name.textContent = b.it.title || '';
+          labels.appendChild(icon); labels.appendChild(name);
+          b.iconEl = icon; b.nameEl = name;
+        });
+      }
       const world = { stage, canvas, ctx: canvas.getContext('2d'), bodies, W: 0, H: 0, DPR: 1, hover: null, colId };
       this._wireBubbleCanvas(world);
       this._bubbleWorlds.push(world);
@@ -638,6 +655,9 @@ class MonitoringView extends BaseView {
         } else {
           b.x = Math.max(b.r, Math.min(w.W - b.r, b.x));
         }
+        // Posición inicial de las etiquetas (evita el parpadeo en 0,0).
+        if (b.iconEl) { b.iconEl.style.left = b.x + 'px'; b.iconEl.style.top = b.y + 'px'; b.iconEl.style.fontSize = Math.max(12, b.r * 0.62) + 'px'; }
+        if (b.nameEl) { b.nameEl.style.left = b.x + 'px'; b.nameEl.style.top = (b.y + b.r + 4) + 'px'; b.nameEl.style.maxWidth = Math.max(64, b.r * 2.4) + 'px'; }
       });
     });
   }
@@ -645,12 +665,17 @@ class MonitoringView extends BaseView {
   _stepBubbles(w) {
     const G = 0.5, FR = 0.985, REST = 0.16;
     for (const b of w.bodies) { b.vy += G; b.vx *= FR; b.vy *= FR; b.x += b.vx; b.y += b.vy; }
-    for (let it = 0; it < 2; it++) {
+    // Radio efectivo = el que se está dibujando (incluye el hover), para que una
+    // burbuja agrandada empuje a las vecinas y NUNCA se solapen ni se tapen.
+    const rad = (b) => b.rDraw || b.r;
+    // Varias iteraciones del solver → separación dura (cuerpos sólidos).
+    for (let it = 0; it < 6; it++) {
       for (let i = 0; i < w.bodies.length; i++) {
         for (let j = i + 1; j < w.bodies.length; j++) {
           const a = w.bodies[i], b = w.bodies[j];
-          let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.01;
-          const min = a.r + b.r;
+          let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+          if (d < 0.01) { dx = (j - i) || 1; dy = 0.1; d = Math.hypot(dx, dy); } // centros coincidentes → separar
+          const min = rad(a) + rad(b) + 1; // +1px de aire para que no se toquen
           if (d < min) {
             const ov = (min - d) / 2, nx = dx / d, ny = dy / d;
             a.x -= nx * ov; a.y -= ny * ov; b.x += nx * ov; b.y += ny * ov;
@@ -659,10 +684,13 @@ class MonitoringView extends BaseView {
           }
         }
       }
+      const floorPad = 30; // reserva para el nombre que va debajo de la burbuja
       for (const b of w.bodies) {
-        if (b.x < b.r) { b.x = b.r; b.vx *= -REST; }
-        if (b.x > w.W - b.r) { b.x = w.W - b.r; b.vx *= -REST; }
-        if (b.y > w.H - b.r) { b.y = w.H - b.r; b.vy *= -REST; }
+        const r = rad(b);
+        if (b.x < r) { b.x = r; b.vx *= -REST; }
+        if (b.x > w.W - r) { b.x = w.W - r; b.vx *= -REST; }
+        if (b.y > w.H - r - floorPad) { b.y = w.H - r - floorPad; b.vy *= -REST; }
+        if (b.y < r) { b.y = r; } // techo (por si una grande empuja hacia arriba)
       }
     }
     // Energía cinética (para dormir el loop cuando todo asienta).
@@ -713,17 +741,16 @@ class MonitoringView extends BaseView {
       ctx.lineWidth = lw; ctx.strokeStyle = grad;
       ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, 7); ctx.stroke();
 
-      // Inicial.
-      ctx.fillStyle = dimmed ? 'rgba(255,255,255,.45)' : '#f4f4f5';
-      ctx.font = `700 ${Math.max(12, r * 0.58)}px -apple-system,Inter,sans-serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText((b.it.title || '—').charAt(0).toUpperCase(), b.x, b.y - (r > 36 ? r * 0.14 : 0));
-
-      // Nombre dentro si la burbuja es grande (o al hacer hover).
-      if (r > 36 || isHover) {
-        ctx.fillStyle = this._hexA('#ffffff', dimmed ? 0.4 : 0.72);
-        ctx.font = '500 9.5px -apple-system,Inter,sans-serif';
-        ctx.fillText(this._truncate(b.it.title || '', 12), b.x, b.y + r * 0.54);
+      // Icono de plataforma (dentro) + nombre completo (debajo) — DOM overlay.
+      if (b.iconEl) {
+        b.iconEl.style.left = b.x + 'px';
+        b.iconEl.style.top = b.y + 'px';
+        b.iconEl.style.fontSize = Math.max(12, r * 0.62) + 'px';
+      }
+      if (b.nameEl) {
+        b.nameEl.style.left = b.x + 'px';
+        b.nameEl.style.top = (b.y + r + 4) + 'px';
+        b.nameEl.style.maxWidth = Math.max(64, r * 2.4) + 'px';
       }
     }
   }
@@ -782,7 +809,6 @@ class MonitoringView extends BaseView {
     const r = parseInt(v.slice(0, 2), 16), g = parseInt(v.slice(2, 4), 16), b = parseInt(v.slice(4, 6), 16);
     return `rgba(${r || 0},${g || 0},${b || 0},${a})`;
   }
-  _truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
 
   /* ── Popover al hacer clic en una burbuja: identidad + impacto + acciones ── */
   _openBubblePop(item, cx, cy) {
