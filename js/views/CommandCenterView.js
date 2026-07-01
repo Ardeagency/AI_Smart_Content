@@ -82,6 +82,15 @@ class CommandCenterView extends BaseView {
     if (window.appNavigation && !window.appNavigation.initialized) {
       await window.appNavigation.render();
     }
+    // Vista inmersiva (como Vera): al entrar se colapsa el sidebar global de
+    // navegacion para dar todo el ancho al canvas. Recuerda el estado previo y
+    // lo restaura en onLeave() — no toca la preferencia global del usuario.
+    try { window.appNavigation?.collapseForImmersive?.(); } catch (_) { /* noop */ }
+  }
+
+  // Al salir del Command Center restauramos el sidebar global de navegacion.
+  onLeave() {
+    try { window.appNavigation?.restoreFromImmersive?.(); } catch (_) { /* noop */ }
   }
 
   /* ── HTML skeleton ────────────────────────────────────────────────── */
@@ -136,6 +145,22 @@ class CommandCenterView extends BaseView {
         <div class="cc-minimap-float" id="ccMinimapWrap" style="display:none;">
           <canvas id="ccMinimap" class="cc-minimap" width="220" height="140"></canvas>
         </div>
+
+        <!-- Sidebar de Estrategias (izquierda, colapsable — patron del historial
+             de Vera). Lista tipo historial: cada estrategia es un item; la activa
+             lleva acento de marca. Render/listeners en CanvasStore. -->
+        <aside class="cc-strat-panel" id="ccStratPanel" aria-label="${__('Estrategias')}">
+          <div class="cc-strat-head">
+            <span class="cc-strat-title"><i class="fas fa-layer-group"></i> ${__('Estrategias')}</span>
+            <button class="cc-strat-collapse" id="ccStratCollapse" type="button" title="${__('Ocultar')}" aria-label="${__('Ocultar')}">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+          </div>
+          <div class="cc-strat-list" id="ccStratList"></div>
+        </aside>
+        <button class="cc-strat-open" id="ccStratOpen" type="button" title="${__('Mostrar estrategias')}" aria-label="${__('Mostrar estrategias')}">
+          <i class="fas fa-layer-group"></i>
+        </button>
 
         <!-- Panel flotante = biblioteca tipo Figma: rail de iconos (siempre
              visible, sin texto) + panel de datos que se abre al seleccionar
