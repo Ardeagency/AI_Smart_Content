@@ -146,21 +146,19 @@ class CommandCenterView extends BaseView {
           <canvas id="ccMinimap" class="cc-minimap" width="220" height="140"></canvas>
         </div>
 
-        <!-- Sidebar de Estrategias (izquierda, colapsable — patron del historial
-             de Vera). Lista tipo historial: cada estrategia es un item; la activa
-             lleva acento de marca. Render/listeners en CanvasStore. -->
+        <!-- Sidebar de Estrategias (izquierda, SIEMPRE abierto — no colapsable).
+             Lista tipo historial: cada estrategia es un item; la activa lleva
+             acento de marca. El boton "Nueva estrategia" vive en el header.
+             Render/listeners en CanvasStore. -->
         <aside class="cc-strat-panel" id="ccStratPanel" aria-label="${__('Estrategias')}">
           <div class="cc-strat-head">
             <span class="cc-strat-title"><i class="fas fa-layer-group"></i> ${__('Estrategias')}</span>
-            <button class="cc-strat-collapse" id="ccStratCollapse" type="button" title="${__('Ocultar')}" aria-label="${__('Ocultar')}">
-              <i class="fas fa-chevron-left"></i>
+            <button class="cc-canvas-btn cc-strat-new" id="ccStratNew" type="button" title="${__('Nueva estrategia')}">
+              <i class="fas fa-plus"></i><span>${__('Nueva')}</span>
             </button>
           </div>
           <div class="cc-strat-list" id="ccStratList"></div>
         </aside>
-        <button class="cc-strat-open" id="ccStratOpen" type="button" title="${__('Mostrar estrategias')}" aria-label="${__('Mostrar estrategias')}">
-          <i class="fas fa-layer-group"></i>
-        </button>
 
         <!-- Panel flotante = biblioteca tipo Figma: rail de iconos (siempre
              visible, sin texto) + panel de datos que se abre al seleccionar

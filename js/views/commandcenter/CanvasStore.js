@@ -4423,46 +4423,31 @@
       </button>`;
     }).join('');
     const empty = items.length ? '' : `<div class="cc-strat-empty">${__('Sin estrategias todavia.')}</div>`;
-    list.innerHTML = `${empty}${rows}
-      <button type="button" class="cc-strategy-create" data-strategy-action="create">
-        <i class="fas fa-plus"></i> ${__('Nueva estrategia')}
-      </button>`;
+    list.innerHTML = `${empty}${rows}`;
   };
 
-  /** Cablea el sidebar de estrategias (1 vez por vista): colapsar/abrir con
-      persistencia + delegacion de click para switch/create. */
+  /** Cablea el sidebar de estrategias (1 vez por vista). Panel SIEMPRE abierto
+      (no colapsable). Boton "Nueva estrategia" en el header + delegacion de
+      click en la lista para cambiar de estrategia. */
   P._installStrategyPanel = function () {
     if (this._ccStratWired) return;
-    const list   = document.getElementById('ccStratList');
-    const canvas = document.getElementById('ccCanvas');
-    if (!list || !canvas) return;
+    const list = document.getElementById('ccStratList');
+    if (!list) return;
     this._ccStratWired = true;
 
-    // Estado colapsado persistido (independiente de la preferencia global).
-    let collapsed = false;
-    try { collapsed = localStorage.getItem('cc:strat:collapsed') === 'true'; } catch (_) { /* noop */ }
-    canvas.classList.toggle('cc-strat-collapsed', collapsed);
+    // Boton "Nueva estrategia" (header).
+    document.getElementById('ccStratNew')?.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      this._createStrategyQuick();
+    });
 
-    const setCollapsed = (v) => {
-      canvas.classList.toggle('cc-strat-collapsed', v);
-      try { localStorage.setItem('cc:strat:collapsed', v ? 'true' : 'false'); } catch (_) { /* noop */ }
-    };
-    document.getElementById('ccStratCollapse')?.addEventListener('click', () => setCollapsed(true));
-    document.getElementById('ccStratOpen')?.addEventListener('click', () => setCollapsed(false));
-
-    // Switch de estrategia / crear (delegado sobre la lista).
+    // Switch de estrategia (delegado sobre la lista).
     list.addEventListener('click', (e) => {
       const item = e.target.closest('.cc-strategy-item[data-strategy-id]');
       if (item) {
         e.preventDefault(); e.stopPropagation();
         const id = item.getAttribute('data-strategy-id');
         if (id && id !== this._strategyId) this._switchStrategy(id);
-        return;
-      }
-      const create = e.target.closest('.cc-strategy-create');
-      if (create) {
-        e.preventDefault(); e.stopPropagation();
-        this._createStrategyQuick();
       }
     });
 
@@ -5066,39 +5051,23 @@
   // Convive con el sidebar izquierdo sin solaparse.
   // ------------------------------------------------------------------
 
+  // El inspector YA NO es un aside separado (#ccInspector): sus opciones
+  // editables se renderizan DENTRO del panel flotante derecho (#ccPanelBody),
+  // en modo mutuamente excluyente con las secciones Nodos/Dashboard del rail.
+  // Al seleccionar un nodo, el panel derecho abre el inspector; al deseleccionar
+  // (o cerrar con la X del panel), vuelve a la libreria.
   P._installInspector = function () {
-    if (document.getElementById('ccInspector')) return;
-    const aside = document.createElement('aside');
-    aside.id = 'ccInspector';
-    aside.className = 'cc-inspector';
-    aside.setAttribute('role', 'complementary');
-    aside.setAttribute('aria-hidden', 'true');
-    aside.innerHTML = `
-      <header class="cc-inspector-head">
-        <span class="cc-inspector-title">Inspector</span>
-        <button type="button" class="cc-inspector-close" aria-label="Cerrar inspector"><i class="fas fa-times"></i></button>
-      </header>
-      <div class="cc-inspector-body"></div>
-    `;
-    document.body.appendChild(aside);
+    if (this._inspectorWired) return;
+    const host = document.getElementById('ccPanelBody');
+    if (!host) return;
+    this._inspectorWired = true;
 
-    // X: limpia seleccion (que ya cierra el inspector via emit)
-    aside.querySelector('.cc-inspector-close').addEventListener('click', () => {
-      this._ensureStore();
-      this._store.clearSelection();
-      this._selectedKey = null; this._selected = null;
-      this._renderSelection();
-      if (this._focusSet) this._clearFocus();
-      this._renderInspector();
-    });
-
-    // Delegacion del inspector. Convive con: (a) color de group + size/text
-    // legacy (.cc-insp-input[data-insp-field] -> _scheduleInspectorSave) y
-    // (b) el form rico de audiencia/campana que REUSA el pipeline de los nodos
-    // (.cc-field[data-field] -> _queueFieldSave, tags, flags, eliminar). El
-    // contenedor del form lleva [data-field-host] + data-type/data-id.
+    // Delegacion del inspector sobre #ccPanelBody. Convive con las demas
+    // delegaciones del body (nodos/search) porque cada una matchea selectores
+    // distintos. El cierre lo maneja #ccPanelToggle (X del panel) que limpia
+    // la seleccion (ver _panelClick en Canvas.mixin).
     const hostOf = (el) => el.closest('[data-field-host]');
-    aside.addEventListener('click', (e) => {
+    host.addEventListener('click', (e) => {
       const colorBtn = e.target.closest('.cc-insp-color-btn[data-color]');
       if (colorBtn) {
         const color = colorBtn.getAttribute('data-color');
@@ -5116,8 +5085,8 @@
       }
       const toggle = e.target.closest('.cc-node-toggle[data-toggle]');
       if (toggle) {
-        const host = hostOf(toggle);
-        if (host) this._toggleAudienceFlag(host.getAttribute('data-id'), toggle.getAttribute('data-toggle'), host);
+        const h = hostOf(toggle);
+        if (h) this._toggleAudienceFlag(h.getAttribute('data-id'), toggle.getAttribute('data-toggle'), h);
         return;
       }
       const del = e.target.closest('.cc-insp-delete[data-del-type]');
@@ -5137,21 +5106,21 @@
       }
       const fieldEl = e.target.closest('[data-field]');
       if (!fieldEl) return;
-      const host = hostOf(fieldEl);
-      if (!host) return;
-      this._queueFieldSave(host, fieldEl, e.type === 'change');
+      const h = hostOf(fieldEl);
+      if (!h) return;
+      this._queueFieldSave(h, fieldEl, e.type === 'change');
       // Live-sync del nombre visible en el nodo compacto (evita que la tarjeta
       // muestre el nombre viejo mientras editas en el inspector).
       const fld = fieldEl.getAttribute('data-field');
       if (fld === 'name' || fld === 'nombre_campana') {
-        const pfx = host.getAttribute('data-type') === 'audience' ? 'aud' : 'camp';
-        const nameEl = document.querySelector(`.cc-node[data-node-key="${pfx}:${host.getAttribute('data-id')}"] .cc-node-name`);
+        const pfx = h.getAttribute('data-type') === 'audience' ? 'aud' : 'camp';
+        const nameEl = document.querySelector(`.cc-node[data-node-key="${pfx}:${h.getAttribute('data-id')}"] .cc-node-name`);
         if (nameEl) nameEl.textContent = (fieldEl.value || '').trim() || 'Sin nombre';
       }
     };
-    aside.addEventListener('input', onEdit);
-    aside.addEventListener('change', onEdit);
-    aside.addEventListener('keydown', (e) => {
+    host.addEventListener('input', onEdit);
+    host.addEventListener('change', onEdit);
+    host.addEventListener('keydown', (e) => {
       const input = e.target.closest('.cc-tag-input');
       if (!input) return;
       if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); this._addTag(input); }
@@ -5163,29 +5132,38 @@
     });
   };
 
+  /** Sale del modo inspector y devuelve el panel derecho a la libreria
+      (seccion activa o cerrado). */
   P._closeInspectorVisually = function () {
-    const aside = document.getElementById('ccInspector');
-    if (!aside) return;
-    aside.classList.remove('is-open');
-    aside.setAttribute('aria-hidden', 'true');
+    if (!this._inspecting) return;
+    this._inspecting = false;
+    if (typeof this._renderLibrary === 'function') this._renderLibrary();
   };
 
-  /** Lee store.selection y decide open + contenido. */
+  /** Lee store.selection y decide si el panel derecho muestra el inspector del
+      nodo (single-selection) o vuelve a la libreria. */
   P._renderInspector = function () {
-    const aside = document.getElementById('ccInspector');
-    if (!aside) return;
+    const panel = document.getElementById('ccSidebar');
+    const body  = document.getElementById('ccPanelBody');
+    const title = document.getElementById('ccPanelTitle');
+    if (!panel || !body) return;
     this._ensureStore();
     const set = this._store.selectionSet;
     const sel = this._store.selection;
     if (!sel || set.size !== 1) { this._closeInspectorVisually(); return; }
-    const titleEl = aside.querySelector('.cc-inspector-title');
-    const bodyEl  = aside.querySelector('.cc-inspector-body');
     const built = this._buildInspectorContent(sel.key, sel.descriptor || {});
     if (!built) { this._closeInspectorVisually(); return; }
-    if (titleEl) titleEl.innerHTML = built.title;
-    if (bodyEl)  bodyEl.innerHTML  = built.body;
-    aside.classList.add('is-open');
-    aside.setAttribute('aria-hidden', 'false');
+    // Modo inspector: el panel derecho abre las opciones editables del nodo,
+    // mutuamente excluyente con las secciones del rail (activeSection = null).
+    this._inspecting = true;
+    this._activeSection = null;
+    try { localStorage.setItem('cc:panel:active', ''); } catch (_) { /* noop */ }
+    if (title) title.innerHTML = built.title;
+    body.innerHTML = built.body;
+    panel.classList.add('cc-fp-open');
+    panel.querySelectorAll('.cc-rail-btn.is-active').forEach((b) => {
+      b.classList.remove('is-active'); b.setAttribute('aria-selected', 'false');
+    });
   };
 
   P._buildInspectorContent = function (key, desc) {

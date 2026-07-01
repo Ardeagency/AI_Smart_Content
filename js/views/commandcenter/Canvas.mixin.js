@@ -901,7 +901,18 @@
       this._panelClick = (e) => {
         const railSec = e.target.closest('[data-rail-sec]');
         if (railSec) { this._setActiveSection(railSec.getAttribute('data-rail-sec')); return; }
-        if (e.target.closest('#ccPanelToggle')) { this._activeSection = null; this._renderLibrary(); return; }
+        if (e.target.closest('#ccPanelToggle')) {
+          // Si el panel esta mostrando el inspector de un nodo, la X limpia la
+          // seleccion (que a su vez cierra el inspector via _renderSelection).
+          if (this._inspecting) {
+            this._inspecting = false;
+            try { this._store?.clearSelection(); } catch (_) { /* noop */ }
+            this._selectedKey = null; this._selected = null;
+            if (this._focusSet) this._clearFocus();
+            if (typeof this._renderSelection === 'function') this._renderSelection();
+          }
+          this._activeSection = null; this._renderLibrary(); return;
+        }
         // Click (sin drag) en una campana del sidebar → enfoca su flujo en el canvas.
         const campItem = e.target.closest('.cc-lib-item[data-lib-type="campaigns"]');
         if (campItem) { this._focusCampaignFromSidebar(campItem.getAttribute('data-lib-id')); return; }
@@ -1522,6 +1533,10 @@
   };
 
   P._renderLibrary = function () {
+    // Mientras el panel derecho muestra el inspector de un nodo, no re-pintamos
+    // la libreria (clobbearia el contenido editable). El inspector se cierra
+    // primero (this._inspecting = false) y recien ahi se llama a _renderLibrary.
+    if (this._inspecting) return;
     const rail    = document.getElementById('ccPanelRail');
     const body    = document.getElementById('ccPanelBody');
     const panel   = document.getElementById('ccSidebar');
@@ -1632,8 +1647,17 @@
     }
   };
 
-  /** Selecciona una seccion (toggle: re-click colapsa el panel de datos). */
+  /** Selecciona una seccion (toggle: re-click colapsa el panel de datos).
+      Abrir una seccion del rail des-selecciona el nodo: el panel derecho es
+      seccion O inspector, no ambos. */
   P._setActiveSection = function (key) {
+    if (this._inspecting) {
+      this._inspecting = false;
+      try { this._store?.clearSelection(); } catch (_) { /* noop */ }
+      this._selectedKey = null; this._selected = null;
+      if (this._focusSet) this._clearFocus();
+      if (typeof this._renderSelection === 'function') this._renderSelection();
+    }
     this._activeSection = (this._activeSection === key) ? null : key;
     try { localStorage.setItem('cc:panel:active', this._activeSection || ''); } catch (_) { /* noop */ }
     this._renderLibrary();
