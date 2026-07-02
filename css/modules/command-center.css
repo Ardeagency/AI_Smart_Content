@@ -2155,6 +2155,12 @@
 /* Brief: puertos TIPADOS abajo con etiqueta (patron n8n AI Agent: main in/out
    + sub-puertos por tipo). El `left` inline (25/50/75%) posiciona cada uno.
    Punteado sin conectar (opacidad baja), lleno cuando is-connected. */
+/* Ancho minimo: las 3 etiquetas (PRODUCTO*/ESCENARIO/PERSONAJE) necesitan
+   espacio para no encimarse — el nodo compacto era demasiado angosto. */
+.cc-node--identity[data-identity-type="briefs"] {
+  min-width: 250px;
+  padding-bottom: 6px; /* aire para las etiquetas bajo el borde */
+}
 .cc-node--identity[data-identity-type="briefs"] .cc-node-port--sub {
   right: auto !important; top: auto !important; bottom: -7px !important;
   transform: translateX(-50%) !important;
