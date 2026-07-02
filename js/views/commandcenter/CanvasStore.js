@@ -2191,25 +2191,27 @@
       });
     });
 
-    // FASE 2: medir DOM y dibujar paths en screen coords (relative al canvas)
+    // FASE 2: medir DOM y dibujar paths en coords de MUNDO (el SVG de edges
+    // comparte el transform del world — ver _applyCanvasTransform en el mixin).
     if (!linkages.length) return;
     const canvas = document.getElementById('ccCanvas');
     if (!canvas) return;
     const canvasRect = canvas.getBoundingClientRect();
     const NS = 'http://www.w3.org/2000/svg';
+    const sc = this._canvasScale || 1;
+    const pn = this._canvasPan || { x: 0, y: 0 };
+    const toWorld = (cx, cy) => ({ x: (cx - canvasRect.left - pn.x) / sc, y: (cy - canvasRect.top - pn.y) / sc });
     linkages.forEach((link) => {
       const fr = link.from.getBoundingClientRect();
       const tr = link.to.getBoundingClientRect();
-      const fromX = (fr.left + fr.width / 2) - canvasRect.left;
-      const fromY = fr.bottom - canvasRect.top;
-      const toX   = (tr.left + tr.width / 2) - canvasRect.left;
-      const toY   = tr.top - canvasRect.top;
+      const f = toWorld(fr.left + fr.width / 2, fr.bottom);
+      const t = toWorld(tr.left + tr.width / 2, tr.top);
       const path = document.createElementNS(NS, 'path');
       path.setAttribute('class', 'cc-satellite-edge');
-      const dy = toY - fromY;
-      const cy1 = fromY + dy * 0.45;
-      const cy2 = toY - dy * 0.45;
-      path.setAttribute('d', `M ${fromX} ${fromY} C ${fromX} ${cy1}, ${toX} ${cy2}, ${toX} ${toY}`);
+      const dy = t.y - f.y;
+      const cy1 = f.y + dy * 0.45;
+      const cy2 = t.y - dy * 0.45;
+      path.setAttribute('d', `M ${f.x} ${f.y} C ${f.x} ${cy1}, ${t.x} ${cy2}, ${t.x} ${t.y}`);
       svg.appendChild(path);
     });
   };
@@ -2320,20 +2322,22 @@
       if (!canvas) return;
       const canvasRect = canvas.getBoundingClientRect();
       const NS = 'http://www.w3.org/2000/svg';
+      // Coords de MUNDO (el SVG comparte el transform del world).
+      const sc = this._canvasScale || 1;
+      const pn = this._canvasPan || { x: 0, y: 0 };
+      const toWorld = (cx, cy) => ({ x: (cx - canvasRect.left - pn.x) / sc, y: (cy - canvasRect.top - pn.y) / sc });
       linkages.forEach((link) => {
         const fr = link.from.getBoundingClientRect();
         const tr = link.to.getBoundingClientRect();
-        const fromX = (fr.left + fr.width / 2) - canvasRect.left;
-        const fromY = fr.bottom - canvasRect.top;
-        const toX   = (tr.left + tr.width / 2) - canvasRect.left;
-        const toY   = tr.top - canvasRect.top;
+        const f = toWorld(fr.left + fr.width / 2, fr.bottom);
+        const t = toWorld(tr.left + tr.width / 2, tr.top);
         const path = document.createElementNS(NS, 'path');
         path.setAttribute('class', 'cc-prod-sat-edge');
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke', 'rgba(106,163,255,.4)');
         path.setAttribute('stroke-dasharray', '4 4');
-        const dy = toY - fromY;
-        path.setAttribute('d', `M ${fromX} ${fromY} C ${fromX} ${fromY + dy * 0.45}, ${toX} ${toY - dy * 0.45}, ${toX} ${toY}`);
+        const dy = t.y - f.y;
+        path.setAttribute('d', `M ${f.x} ${f.y} C ${f.x} ${f.y + dy * 0.45}, ${t.x} ${t.y - dy * 0.45}, ${t.x} ${t.y}`);
         svg.appendChild(path);
       });
     } catch (e) { /* nunca romper el render core */ }
@@ -2869,11 +2873,15 @@
       world.appendChild(div);
     });
 
-    // Conexion bezier al target si existe en placements
+    // Conexion bezier al target si existe en placements — en coords de MUNDO
+    // (el SVG de edges comparte el transform del world).
     const canvas = document.getElementById('ccCanvas');
     if (!canvas) return;
     const canvasRect = canvas.getBoundingClientRect();
     const NS = 'http://www.w3.org/2000/svg';
+    const sc = this._canvasScale || 1;
+    const pn = this._canvasPan || { x: 0, y: 0 };
+    const toWorld = (cx, cy) => ({ x: (cx - canvasRect.left - pn.x) / sc, y: (cy - canvasRect.top - pn.y) / sc });
     insights.forEach((insight) => {
       const targetKey = this._veraInsightTargetKey(insight);
       if (!targetKey) return;
@@ -2882,16 +2890,14 @@
       if (!targetEl || !sourceEl) return;
       const sr = sourceEl.getBoundingClientRect();
       const tr = targetEl.getBoundingClientRect();
-      const fromX = (sr.right) - canvasRect.left;
-      const fromY = (sr.top + sr.height / 2) - canvasRect.top;
-      const toX   = (tr.left) - canvasRect.left;
-      const toY   = (tr.top + tr.height / 2) - canvasRect.top;
+      const f = toWorld(sr.right, sr.top + sr.height / 2);
+      const t = toWorld(tr.left, tr.top + tr.height / 2);
       const path = document.createElementNS(NS, 'path');
       path.setAttribute('class', 'cc-vera-edge');
-      const dx = toX - fromX;
-      const cx1 = fromX + dx * 0.5;
-      const cx2 = toX - dx * 0.5;
-      path.setAttribute('d', `M ${fromX} ${fromY} C ${cx1} ${fromY}, ${cx2} ${toY}, ${toX} ${toY}`);
+      const dx = t.x - f.x;
+      const cx1 = f.x + dx * 0.5;
+      const cx2 = t.x - dx * 0.5;
+      path.setAttribute('d', `M ${f.x} ${f.y} C ${cx1} ${f.y}, ${cx2} ${t.y}, ${t.x} ${t.y}`);
       svg.appendChild(path);
     });
   };

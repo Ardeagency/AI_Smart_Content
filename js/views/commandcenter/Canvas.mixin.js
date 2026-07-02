@@ -201,6 +201,7 @@
     }).join('');
 
     this._applyCanvasTransform();
+    this._anchorCacheW = {}; // full re-render: anclas cacheadas quedan invalidas
     this._renderEdges();
   };
 
@@ -400,8 +401,17 @@
     if (!world) return;
     const s = this._canvasScale || 1;
     const p = this._canvasPan || { x: 0, y: 0 };
-    world.style.transform = `translate(${p.x}px, ${p.y}px) scale(${s})`;
+    const tf = `translate(${p.x}px, ${p.y}px) scale(${s})`;
+    world.style.transform = tf;
     world.style.transformOrigin = '0 0';
+    // Arquitectura n8n/Vue Flow: el SVG de edges comparte EXACTAMENTE el mismo
+    // transform que el mundo y sus paths viven en coordenadas de MUNDO. Pan y
+    // zoom mueven las lineas gratis (un solo CSS transform), sin recalcular.
+    const edges = document.getElementById('ccCanvasEdges');
+    if (edges) { edges.style.transform = tf; edges.style.transformOrigin = '0 0'; }
+    // Compensacion de zoom (patron n8n): grosor de linea ~constante en pantalla.
+    const canvas = document.getElementById('ccCanvas');
+    if (canvas) canvas.style.setProperty('--cc-zoom-comp', String(Math.min(2.4, Math.max(0.5, 1 / s))));
     this._updateLOD();
     this._cullNodes();
     this._drawMinimap();
@@ -428,6 +438,7 @@
     const MARGIN = 320, NW = 360, NH = 760;
     const vx0 = (-p.x) / s - MARGIN, vy0 = (-p.y) / s - MARGIN;
     const vx1 = (r.width - p.x) / s + MARGIN, vy1 = (r.height - p.y) / s + MARGIN;
+    let revealed = false;
     world.querySelectorAll('.cc-node').forEach((n) => {
       const key = n.getAttribute('data-node-key');
       const pos = this._positions[key];
@@ -435,8 +446,15 @@
       const visible = pos.x < vx1 && pos.x + NW > vx0 && pos.y < vy1 && pos.y + NH > vy0;
       const keep = visible || key === this._selectedKey ||
         (this._focusSet && this._focusSet.has(key)) || n.classList.contains('cc-node--dragging');
-      n.style.display = keep ? '' : 'none';
+      const next = keep ? '' : 'none';
+      if (n.style.display !== next) {
+        if (next === '') revealed = true; // nodo re-entra al viewport
+        n.style.display = next;
+      }
     });
+    // Un nodo revelado pudo moverse (remoto) mientras estaba culled y su arista
+    // usa la ancla cacheada → refrescar geometria (rAF-batched, solo al toggle).
+    if (revealed) this._scheduleEdges?.();
   };
 
   P._setZoom = function (scale, anchor) {
@@ -455,57 +473,99 @@
       this._canvasPan = { x: ax - wx * next, y: ay - wy * next };
     }
     this._canvasScale = next;
+    // Solo transform: los edges viven en coords de mundo y siguen el zoom solos.
     this._applyCanvasTransform();
-    this._renderEdges();
   };
 
   // ------------------------------------------------------------------
-  // Aristas (SVG overlay en coords de viewport)
+  // Aristas (SVG en coords de MUNDO — comparte el transform del world)
   // ------------------------------------------------------------------
   P._bezier = function (x1, y1, x2, y2) {
     const dx = Math.max(40, Math.abs(x2 - x1) * 0.45);
     return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
   };
 
-  /** Centro de un puerto en coords relativas al viewport del canvas.
-      canvasRect: rect del canvas ya leido (cache por frame). Si se omite, se lee
-      aqui — pero en el loop de aristas SIEMPRE se pasa para evitar leer el mismo
-      getBoundingClientRect una vez por arista (layout thrashing). */
+  /** Path de una arista (patron n8n): bezier normal, pero si la conexion de
+      FLUJO va "hacia atras" (target a la izquierda del source) se rutea por
+      DEBAJO con dos cubicas para no atravesar los nodos. */
+  P._edgePath = function (from, to, isProduction) {
+    if (isProduction && to.x < from.x - 30) {
+      const my = Math.max(from.y, to.y) + 130;
+      const mx = (from.x + to.x) / 2;
+      return `M ${from.x} ${from.y} C ${from.x + 80} ${from.y}, ${from.x + 80} ${my}, ${mx} ${my} ` +
+             `C ${to.x - 80} ${my}, ${to.x - 80} ${to.y}, ${to.x} ${to.y}`;
+    }
+    return this._bezier(from.x, from.y, to.x, to.y);
+  };
+
+  /** Convierte un punto en coords de cliente a coords de MUNDO usando el
+      canvasRect cacheado del frame (evita re-leer getBoundingClientRect). */
+  P._clientToWorld = function (clientX, clientY, canvasRect) {
+    const cr = canvasRect || document.getElementById('ccCanvas')?.getBoundingClientRect();
+    if (!cr) return { x: clientX, y: clientY };
+    const s = this._canvasScale || 1;
+    const p = this._canvasPan || { x: 0, y: 0 };
+    return { x: (clientX - cr.left - p.x) / s, y: (clientY - cr.top - p.y) / s };
+  };
+
+  /** Centro de un puerto en coords de MUNDO. */
   P._portCenter = function (nodeKey, portSel, canvasRect) {
     const node = document.querySelector(`.cc-node[data-node-key="${cssEsc(nodeKey)}"]`);
     if (!node) return null;
     if (node.style.display === 'none' || node.offsetParent === null) return null; // nodo culled
-    const cr = canvasRect || document.getElementById('ccCanvas')?.getBoundingClientRect();
-    if (!cr) return null;
     const port = node.querySelector(portSel) || node;
     const pr = port.getBoundingClientRect();
-    return { x: pr.left + pr.width / 2 - cr.left, y: pr.top + pr.height / 2 - cr.top };
+    return this._clientToWorld(pr.left + pr.width / 2, pr.top + pr.height / 2, canvasRect);
   };
 
-  /** Ancla de arista por POSICION (rework 2026-06-11): entre los puertos VISIBLES
-      del nodo, el mas cercano al nodo `towardKey`. Direccion-agnostico → el cable
-      sale por el lado que mira al otro nodo, sirva cual sea el layout. */
-  P._portAnchor = function (nodeKey, towardKey, canvasRect) {
+  /** Ancla de arista en coords de MUNDO (rediseno n8n 2026-07-02).
+      - role 'from' → prefiere el puerto de SALIDA (out/br/bl); role 'to' →
+        prefiere el de ENTRADA (in). Igual que n8n: main-out derecha, main-in
+        izquierda. Los adjuntos (sin role o sin ese puerto) caen al puerto
+        VISIBLE mas cercano al otro nodo (comportamiento previo).
+      - Cachea el resultado por nodo para que las aristas de nodos CULLED
+        (display:none fuera de viewport) sigan dibujandose donde corresponde
+        (n8n tambien dibuja edges de nodos fuera de pantalla). */
+  P._portAnchor = function (nodeKey, towardKey, canvasRect, role) {
+    if (!this._anchorCacheW) this._anchorCacheW = {};
+    const cacheKey = `${nodeKey}|${role || ''}|${towardKey || ''}`;
     const node = document.querySelector(`.cc-node[data-node-key="${cssEsc(nodeKey)}"]`);
-    if (!node) return null;
-    if (node.style.display === 'none' || node.offsetParent === null) return null;
-    const cr = canvasRect || document.getElementById('ccCanvas')?.getBoundingClientRect();
-    if (!cr) return null;
-    const center = (el) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2 - cr.left, y: r.top + r.height / 2 - cr.top }; };
+    if (!node || node.style.display === 'none' || node.offsetParent === null) {
+      // Culled → ultima ancla conocida; sin cache, aproximar desde la posicion
+      // de mundo (el edge existe aunque el nodo este fuera de pantalla; se
+      // ajusta exacto cuando el nodo se revela — ver _cullNodes).
+      if (this._anchorCacheW[cacheKey]) return this._anchorCacheW[cacheKey];
+      const pos = this._positions && this._positions[nodeKey];
+      return pos ? { x: pos.x + 134, y: pos.y + 48 } : null;
+    }
+    const centerW = (el) => {
+      const r = el.getBoundingClientRect();
+      return this._clientToWorld(r.left + r.width / 2, r.top + r.height / 2, canvasRect);
+    };
+    const finish = (pt) => { if (pt) this._anchorCacheW[cacheKey] = pt; return pt; };
+
+    // 1) Semantica n8n: from→out, to→in (solo si el puerto existe y es visible).
+    if (role) {
+      const sel = role === 'from' ? '[data-port="out"], [data-port="br"], [data-port="bl"]' : '[data-port="in"]';
+      const pref = node.querySelector(sel);
+      if (pref && pref.offsetParent !== null) return finish(centerW(pref));
+    }
+
+    // 2) Fallback: puerto visible mas cercano al otro nodo.
     let tx = null, ty = null;
     const toward = document.querySelector(`.cc-node[data-node-key="${cssEsc(towardKey)}"]`);
-    if (toward) { const tc = center(toward); tx = tc.x; ty = tc.y; }
+    if (toward && toward.offsetParent !== null) { const tc = centerW(toward); tx = tc.x; ty = tc.y; }
     const ports = node.querySelectorAll('.cc-node-port');
-    if (!ports.length) return center(node);
+    if (!ports.length) return finish(centerW(node));
     let best = null, bestD = Infinity;
     ports.forEach((p) => {
       if (p.offsetParent === null) return; // puerto oculto (display:none)
-      const c = center(p);
+      const c = centerW(p);
       if (tx == null) { if (!best) best = c; return; }
       const d = (c.x - tx) ** 2 + (c.y - ty) ** 2;
       if (d < bestD) { bestD = d; best = c; }
     });
-    return best || center(node);
+    return finish(best || centerW(node));
   };
 
   /** Cables monocromos: sin color de tipo (rediseno monocromo). */
@@ -517,7 +577,7 @@
   P._zoomToFit = function () {
     const canvas = document.getElementById('ccCanvas');
     const nodes = this._canvasNodes();
-    if (!canvas || !nodes.length) { this._canvasScale = 1; this._canvasPan = { x: 0, y: 0 }; this._applyCanvasTransform(); this._renderEdges(); return; }
+    if (!canvas || !nodes.length) { this._canvasScale = 1; this._canvasPan = { x: 0, y: 0 }; this._applyCanvasTransform(); return; }
     this._loadPositions();
     const NW = 268, NH = 220;
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -538,8 +598,8 @@
       x: (r.width - (x1 - x0) * s) / 2 - x0 * s,
       y: (r.height - (y1 - y0) * s) / 2 - y0 * s,
     };
+    // Solo transform: los edges (coords de mundo) siguen el encuadre solos.
     this._applyCanvasTransform();
-    this._renderEdges();
   };
 
   /** Redibujo agrupado a un frame. Durante arrastre/paneo solo actualiza la
@@ -562,15 +622,16 @@
     // Fase 1 — LECTURA: calcular geometria de todas las aristas sin escribir nada.
     // Fase 2 — ESCRITURA: aplicar todos los setAttribute juntos. Separar lectura
     // de escritura evita el forced synchronous layout (reflow) por-arista que
-    // generaba jank en arrastre/paneo con muchos nodos conectados.
+    // generaba jank en arrastre con muchos nodos conectados.
     const updates = [];
     groups.forEach((g) => {
-      const from = this._portAnchor(g.getAttribute('data-edge-from'), g.getAttribute('data-edge-to'), cr);
-      const to   = this._portAnchor(g.getAttribute('data-edge-to'), g.getAttribute('data-edge-from'), cr);
+      const isProd = g.classList.contains('cc-edge--production');
+      const from = this._portAnchor(g.getAttribute('data-edge-from'), g.getAttribute('data-edge-to'), cr, isProd ? 'from' : null);
+      const to   = this._portAnchor(g.getAttribute('data-edge-to'), g.getAttribute('data-edge-from'), cr, isProd ? 'to' : null);
       if (!from || !to) return;
       updates.push({
         g,
-        d: this._bezier(from.x, from.y, to.x, to.y),
+        d: this._edgePath(from, to, isProd),
         mx: (from.x + to.x) / 2 - 12,
         my: (from.y + to.y) / 2 - 12,
       });
@@ -587,9 +648,19 @@
     const canvas = document.getElementById('ccCanvas');
     if (!svg || !canvas) return;
     const r = canvas.getBoundingClientRect();
-    svg.setAttribute('width', String(r.width));
-    svg.setAttribute('height', String(r.height));
-    svg.setAttribute('viewBox', `0 0 ${r.width} ${r.height}`);
+    // Coords de MUNDO: sin viewBox ni width/height (overflow:visible en CSS);
+    // el SVG comparte el transform del world (ver _applyCanvasTransform).
+    svg.removeAttribute('viewBox');
+    svg.removeAttribute('width');
+    svg.removeAttribute('height');
+
+    // Punta de flecha (patron n8n: solo en el flujo principal). markerUnits =
+    // strokeWidth → hereda la compensacion de zoom del stroke.
+    if (!svg.querySelector('#ccEdgeArrow')) {
+      const defs = document.createElementNS(NS, 'defs');
+      defs.innerHTML = `<marker id="ccEdgeArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 0 1 L 9 5 L 0 9 z" class="cc-edge-arrow-head"></path></marker>`;
+      svg.prepend(defs);
+    }
 
     // limpiar conexiones previas (mantener defs/preview)
     Array.from(svg.querySelectorAll('.cc-edge')).forEach((n) => n.remove());
@@ -607,12 +678,16 @@
       return false; // campaign-concept / campaign-real / etc = flujo
     };
     this._allLinks().forEach((link) => {
-      const from = this._portAnchor(link.from, link.to);
-      const to   = this._portAnchor(link.to, link.from);
+      const isIngredient = _isAttach(link.from) || _isAttach(link.to);
+      const isProd = !isIngredient;
+      // Flujo principal: semantica n8n (sale por OUT, entra por IN). Adjuntos:
+      // puerto mas cercano (cuelgan por abajo/arriba segun layout).
+      const from = this._portAnchor(link.from, link.to, r, isProd ? 'from' : null);
+      const to   = this._portAnchor(link.to, link.from, r, isProd ? 'to' : null);
       if (!from || !to) return;
 
       const color = this._nodeTypeColor(link.from);
-      const isIngredient = _isAttach(link.from) || _isAttach(link.to);
+      const d = this._edgePath(from, to, isProd);
 
       const g = document.createElementNS(NS, 'g');
       g.setAttribute('class', `cc-edge ${isIngredient ? 'cc-edge--ingredient' : 'cc-edge--production'} ${link.persona ? 'cc-edge--persona' : 'cc-edge--free'}`);
@@ -620,16 +695,17 @@
       g.setAttribute('data-edge-to', link.to);
 
       const hit = document.createElementNS(NS, 'path');
-      hit.setAttribute('d', this._bezier(from.x, from.y, to.x, to.y));
+      hit.setAttribute('d', d);
       hit.setAttribute('class', 'cc-edge-hit');
       hit.setAttribute('fill', 'none');
       g.appendChild(hit);
 
       const path = document.createElementNS(NS, 'path');
-      path.setAttribute('d', this._bezier(from.x, from.y, to.x, to.y));
+      path.setAttribute('d', d);
       path.setAttribute('class', 'cc-edge-path');
       path.setAttribute('fill', 'none');
       path.setAttribute('stroke', color);
+      if (isProd) path.setAttribute('marker-end', 'url(#ccEdgeArrow)');
       g.appendChild(path);
 
       const midX = (from.x + to.x) / 2;
@@ -1202,22 +1278,18 @@
     const canvas = document.getElementById('ccCanvas');
     canvas?.classList.add('cc-canvas--panning');
     this._didPan = false;
-    const edgesSvg = document.getElementById('ccCanvasEdges');
     const onMove = (ev) => {
       const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) this._didPan = true;
       this._canvasPan = { x: p0.x + dx, y: p0.y + dy };
-      // Durante el pan NO recalculamos edges (caro): los movemos con el mismo
-      // delta que el mundo (solo translate) para que sigan visibles y alineados.
+      // Los edges viven en coords de MUNDO y comparten el transform del world:
+      // el pan es un solo CSS transform, nada que recalcular (patron n8n).
       this._applyCanvasTransform();
-      if (edgesSvg) edgesSvg.style.transform = `translate(${dx}px, ${dy}px)`;
     };
     const onUp = () => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       canvas?.classList.remove('cc-canvas--panning');
-      if (edgesSvg) edgesSvg.style.transform = ''; // reset del translate temporal
-      this._renderEdges(); // recalcula posiciones exactas al asentar
     };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
@@ -1277,8 +1349,8 @@
 
     const cr = canvas.getBoundingClientRect();
     const pr = port.getBoundingClientRect();
-    const startX = pr.left + pr.width / 2 - cr.left;
-    const startY = pr.top + pr.height / 2 - cr.top;
+    // Preview en coords de MUNDO (el SVG comparte el transform del world).
+    const start = this._clientToWorld(pr.left + pr.width / 2, pr.top + pr.height / 2, cr);
 
     const preview = document.createElementNS(NS, 'path');
     preview.setAttribute('class', 'cc-edge-path cc-edge-path--preview');
@@ -1288,7 +1360,8 @@
     canvas.classList.add('cc-canvas--connecting');
 
     const onMove = (ev) => {
-      preview.setAttribute('d', this._bezier(startX, startY, ev.clientX - cr.left, ev.clientY - cr.top));
+      const m = this._clientToWorld(ev.clientX, ev.clientY, cr);
+      preview.setAttribute('d', this._bezier(start.x, start.y, m.x, m.y));
       canvas.querySelectorAll('.cc-node').forEach((n) => n.classList.remove('cc-node--drop-target'));
       const target = this._nodeAt(ev.clientX, ev.clientY, fromKey);
       if (target) target.classList.add('cc-node--drop-target');
@@ -1606,8 +1679,8 @@
       const cr = canvas.getBoundingClientRect();
       const s = this._canvasScale || 1;
       this._canvasPan = { x: cr.width / 2 - wx * s, y: cr.height / 2 - wy * s };
+      // Solo pan: los edges (coords de mundo) siguen el transform solos.
       this._applyCanvasTransform();
-      this._renderEdges();
     };
     this._drawMinimap();
   };
