@@ -77,9 +77,32 @@ Es "identificar todo el tráfico de ellos para entender qué hacen y qué no hac
 
 ---
 
-## Dashboard #3 — TENDENCIAS
+## Dashboard #3 — TENDENCIAS (escuchar el mercado)
 
-*(pendiente — contexto por dictar)*
+**Objetivo DISTINTO a #1 y #2:** no mirar la marca ni los perfiles — **escuchar el
+MERCADO de la marca**. Es la capa de inteligencia de demanda del nicho entero:
+**el SEO y GEO que prometemos.**
+
+**Qué hace el sistema:** analiza el nicho y busca **toda la red que rodea el
+mercado de la marca**:
+1. **Buscar los productos en línea** (dónde y cómo aparece la categoría).
+2. **Palabras clave desde la demanda real**: identificarlas a base de los
+   términos de búsqueda MÁS UTILIZADOS en línea (el lenguaje que la gente
+   de verdad teclea — no el que la marca cree).
+3. **Noticias y tendencias** del nicho.
+4. **Perfiles de audiencias + patrones conductuales** del público del nicho.
+5. **Lo que al público del nicho le interesa** — para utilizarlo.
+
+**Qué entrega:** palabras clave, frases y términos de búsqueda, opiniones,
+patrones, y señales de tráfico de demanda ("este producto tiene muchísimo
+tráfico de audiencia").
+
+**La tríada de lentes queda así:**
+- #1 Mi Marca → mirar hacia ADENTRO (la marca misma).
+- #2 Monitoreos → mirar a los PERFILES (competidores se supervisan, referencias
+  se aprenden).
+- #3 Tendencias → mirar el MERCADO entero (demanda, búsqueda, noticias,
+  conducta del nicho) = dónde vive la demanda antes de decidir contenido/pauta.
 
 ## Dashboard #4 — (pendiente nombre)
 
