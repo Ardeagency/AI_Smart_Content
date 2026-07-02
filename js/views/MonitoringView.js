@@ -57,9 +57,11 @@ class MonitoringView extends BaseView {
 
   // Paleta para personalizar el color de una burbuja (opcional; el default es
   // el degradado de la marca). '' = volver al color de marca.
+  // Sincronizada con TasksView.PALETTE: 10 tonos en orden espectral, todos
+  // distinguibles entre sí a tamaño swatch (sin pares casi-idénticos).
   static PALETTE = [
-    '#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#eab308',
-    '#14b8a6', '#ef4444', '#8b5cf6', '#06b6d4', '#f43f5e', '#84cc16',
+    '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e',
+    '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899',
   ];
 
   // Plataforma → icono (Font Awesome, ya cargado globalmente en la app).

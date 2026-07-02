@@ -10,9 +10,11 @@ class TasksView extends BaseView {
   // paleta que las burbujas de Monitoreo). '' = volver al estilo neutro.
   // flow_schedules.color es text[] para soportar degradados a futuro; hoy
   // se usa un solo color (color[0]).
+  // 10 tonos curados en orden espectral: cada uno distinguible del resto a
+  // tamaño swatch (sin pares casi-idénticos como violeta/violeta o rojo/rosa).
   static PALETTE = [
-    '#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#eab308',
-    '#14b8a6', '#ef4444', '#8b5cf6', '#06b6d4', '#f43f5e', '#84cc16',
+    '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e',
+    '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899',
   ];
 
   constructor() {
