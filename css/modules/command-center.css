@@ -654,8 +654,8 @@
 .cc-canvas--focusing .cc-edge { opacity: 0.12; }
 .cc-canvas--focusing .cc-edge--in-focus { opacity: 1; }
 
-/* Performance: oculta los edges durante el pan (se redibujan al asentar). */
-.cc-canvas--panning .cc-canvas-edges { visibility: hidden; }
+/* Durante el pan los edges NO se ocultan: se trasladan con el mundo (mismo delta)
+   via transform en _beginPan, y se recalculan al soltar. Mantenerlos visibles. */
 
 /* Level-of-detail: al alejar mucho solo se aligera el glow y la sombra
    (cambios sutiles). NO ocultamos el cuerpo/acciones del nodo: hacerlo
