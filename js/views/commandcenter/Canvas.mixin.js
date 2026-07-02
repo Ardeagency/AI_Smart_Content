@@ -485,15 +485,22 @@
     return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
   };
 
-  /** Path de una arista (patron n8n): bezier normal, pero si la conexion de
-      FLUJO va "hacia atras" (target a la izquierda del source) se rutea por
-      DEBAJO con dos cubicas para no atravesar los nodos. */
+  /** Path de una arista (patron n8n):
+      - Flujo: bezier horizontal; si va "hacia atras" (target a la izquierda),
+        se rutea por DEBAJO con dos cubicas para no atravesar los nodos.
+      - Adjuntos predominantemente VERTICALES (cuelgan del brief/trigger):
+        tangentes verticales (como los no-main de n8n y los satelites) — la
+        tangente horizontal les generaba ganchos y cruces feos. */
   P._edgePath = function (from, to, isProduction) {
     if (isProduction && to.x < from.x - 30) {
       const my = Math.max(from.y, to.y) + 130;
       const mx = (from.x + to.x) / 2;
       return `M ${from.x} ${from.y} C ${from.x + 80} ${from.y}, ${from.x + 80} ${my}, ${mx} ${my} ` +
              `C ${to.x - 80} ${my}, ${to.x - 80} ${to.y}, ${to.x} ${to.y}`;
+    }
+    if (!isProduction && Math.abs(to.y - from.y) > Math.abs(to.x - from.x)) {
+      const dy = Math.max(40, Math.abs(to.y - from.y) * 0.45) * (to.y > from.y ? 1 : -1);
+      return `M ${from.x} ${from.y} C ${from.x} ${from.y + dy}, ${to.x} ${to.y - dy}, ${to.x} ${to.y}`;
     }
     return this._bezier(from.x, from.y, to.x, to.y);
   };
@@ -674,7 +681,8 @@
       if (!el) return false;
       const t = el.getAttribute('data-type');
       if (t === 'audience' || t === 'group') return true;
-      if (t === 'identity') return el.getAttribute('data-identity-type') !== 'brief';
+      // identityType usa el prefijo PLURAL de las keys ('briefs:<id>').
+      if (t === 'identity') return el.getAttribute('data-identity-type') !== 'briefs';
       return false; // campaign-concept / campaign-real / etc = flujo
     };
     this._allLinks().forEach((link) => {
