@@ -4395,7 +4395,73 @@
     ];
   };
 
+  /* ── Presupuesto de marketing del mercado (brand_container) ──────────
+     Total editable + asignado (suma de los objetivos: budget_total, o
+     budget_daily × dias del rango). La asignacion contra un techo comun es
+     la decision de CMO que antes no existia. */
+  P._marketingBudgetAssigned = function () {
+    const days = (a, b) => {
+      const da = a ? new Date(a) : null, db = b ? new Date(b) : null;
+      if (!da || !db || !(db > da)) return 30; // sin rango: mensualiza
+      return Math.max(1, Math.round((db - da) / 864e5));
+    };
+    return (this._campaigns || []).filter((c) => !c.last_synced_at).reduce((sum, c) => {
+      const total = Number(c.budget_total);
+      if (Number.isFinite(total) && total > 0) return sum + total;
+      const daily = Number(c.budget_daily);
+      if (Number.isFinite(daily) && daily > 0) return sum + daily * days(c.starts_at, c.ends_at);
+      return sum;
+    }, 0);
+  };
+
+  P._renderStrategyBudget = function () {
+    const host = document.getElementById('ccStratBudget');
+    if (!host) return;
+    // No clobberear mientras el usuario edita el total.
+    if (document.activeElement && document.activeElement.id === 'ccBudgetInput') return;
+    const row = this._containerRow || {};
+    const total = Number(row.marketing_budget) || 0;
+    const cur = row.marketing_budget_currency || 'COP';
+    const assigned = this._marketingBudgetAssigned();
+    const pct = total > 0 ? Math.min(100, Math.round((assigned / total) * 100)) : 0;
+    const over = total > 0 && assigned > total;
+    const fmt = (n) => Math.round(n).toLocaleString('es-CO');
+    host.innerHTML = `
+      <div class="cc-strat-budget-title">${__('Presupuesto de marketing')}</div>
+      <div class="cc-strat-budget-row" title="${__('Presupuesto total del mercado (editable)')}">
+        <span class="cc-strat-budget-cur">${this.escapeHtml(cur)}</span>
+        <input class="cc-strat-budget-input" id="ccBudgetInput" type="text" inputmode="numeric"
+               value="${total ? fmt(total) : ''}" placeholder="${__('Definir total')}" />
+        <i class="fas fa-pen cc-strat-budget-pen" aria-hidden="true"></i>
+      </div>
+      <div class="cc-strat-budget-bar ${over ? 'is-over' : ''}"><span style="width:${pct}%"></span></div>
+      <div class="cc-strat-budget-sub ${over ? 'is-over' : ''}">${__('Asignado en objetivos')}: ${this.escapeHtml(cur)} ${fmt(assigned)}${total ? ` · ${pct}%` : ''}${over ? ' ⚠' : ''}</div>`;
+    const input = document.getElementById('ccBudgetInput');
+    if (input) {
+      const commit = async () => {
+        const raw = String(input.value || '').replace(/[^\d]/g, '');
+        const val = raw ? Number(raw) : null;
+        if (!this._supabase || !this._containerRow?.id) return;
+        if ((Number(this._containerRow.marketing_budget) || null) === val) { this._renderStrategyBudget(); return; }
+        this._containerRow.marketing_budget = val;
+        try {
+          const { error } = await this._supabase.from('brand_containers')
+            .update({ marketing_budget: val, updated_at: new Date().toISOString() })
+            .eq('id', this._containerRow.id);
+          if (error) throw error;
+        } catch (e) { console.error('[CC] save marketing_budget:', e?.message || e); }
+        this._renderStrategyBudget();
+      };
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+        else if (e.key === 'Escape') { input.value = total ? fmt(total) : ''; input.blur(); }
+      });
+      input.addEventListener('blur', commit);
+    }
+  };
+
   P._renderStrategySteps = function () {
+    this._renderStrategyBudget();
     const host = document.getElementById('ccStratSteps');
     if (!host) return;
     const steps = this._strategySequence();
@@ -5269,12 +5335,12 @@
             ['pinterest_ads', 'Pinterest'], ['organic', 'Organico'], ['internal', 'Interno'],
           ])}
           ${this._fieldText('Objetivo', 'str', 'platform_objective', c.platform_objective, { placeholder: 'OUTCOME_LEADS, PURCHASE…' })}
-          ${this._fieldText('CTA', 'str', 'cta', c.cta)}
-          ${this._fieldText('CTA URL', 'str', 'cta_url', c.cta_url, { inputType: 'url', placeholder: 'https://…' })}
           ${this._fieldText('Presupuesto/dia', 'num', 'budget_daily', c.budget_daily, { inputType: 'number', dataType: 'number' })}
+          ${this._fieldText(__('Presupuesto total'), 'num', 'budget_total', c.budget_total, { inputType: 'number', dataType: 'number' })}
           ${this._fieldText('Moneda', 'str', 'budget_currency', c.budget_currency || 'USD')}
           ${this._fieldText('Inicio', 'date', 'starts_at', c.starts_at ? String(c.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${this._fieldText('Fin', 'date', 'ends_at', c.ends_at ? String(c.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
+          <div class="cc-insp-hint">${__('El Objetivo es la parte TECNICA (plataformas, presupuesto, fechas). La direccion creativa — que decir y que producir — vive en el Brief.')}</div>
           <button type="button" class="cc-insp-delete" data-del-type="campaign-concept" data-del-id="${eid}"><i class="fas fa-trash"></i> Eliminar campana</button>
         </div>
       `,
@@ -5358,6 +5424,7 @@
           ${this._fieldTags(__('Oferta principal'), 'oferta_principal', b.oferta_principal)}
           ${this._fieldTags(__('Tono'), 'tono_modificador', b.tono_modificador)}
           ${this._fieldTags(__('Contexto temporal'), 'contexto_temporal', b.contexto_temporal)}
+          ${this._fieldTags(__('Plan de produccion'), 'plan_produccion', b.plan_produccion)}
           ${this._fieldText('CTA', 'str', 'cta', b.cta)}
           ${this._fieldText('CTA URL', 'str', 'cta_url', b.cta_url, { inputType: 'url', placeholder: 'https://…' })}
           ${this._fieldArea(__('Descripcion interna'), 'str', 'descripcion_interna', b.descripcion_interna, { rows: 2 })}
@@ -5375,7 +5442,7 @@
     try {
       const { data } = await this._supabase
         .from('campaign_briefs')
-        .select('id, nombre, descripcion_interna, objetivo_comercial, objetivos_estrategicos, angulos_venta, oferta_principal, tono_modificador, contexto_temporal, cta, cta_url, status, is_conceptual_only')
+        .select('id, nombre, descripcion_interna, objetivo_comercial, objetivos_estrategicos, angulos_venta, oferta_principal, tono_modificador, contexto_temporal, plan_produccion, cta, cta_url, status, is_conceptual_only')
         .eq('id', id)
         .maybeSingle();
       if (!this._briefRows) this._briefRows = {};

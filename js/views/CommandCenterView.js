@@ -175,6 +175,10 @@ class CommandCenterView extends BaseView {
             </button>
           </div>
           <div class="cc-strat-list" id="ccStratList"></div>
+          <!-- Presupuesto de marketing del MERCADO (brand_container): total
+               editable + cuanto esta asignado en objetivos. La asignacion es
+               la decision de CMO — sin techo comun no hay gobierno 60/40. -->
+          <div class="cc-strat-budget" id="ccStratBudget"></div>
           <!-- Secuencia estrategica: los pasos del marketing profesional
                (SOSTAC) derivados del estado REAL de la BD. Vera cubre el
                diagnostico; el resto se completa construyendo en el canvas. -->
@@ -338,7 +342,7 @@ class CommandCenterView extends BaseView {
     try {
       const { data } = await supabase
         .from('brand_containers')
-        .select('id, nombre_marca, created_at')
+        .select('id, nombre_marca, created_at, marketing_budget, marketing_budget_currency')
         .eq('organization_id', this._organizationId)
         .order('created_at', { ascending: false });
       const containers = Array.isArray(data) ? data : [];

@@ -1138,6 +1138,77 @@
   text-align: center;
 }
 
+/* ── Presupuesto de marketing (mercado / brand_container) ─────────────── */
+.cc-strat-budget {
+  flex: 0 0 auto;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--border-divider, #242424);
+}
+.cc-strat-budget-title {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 2px 2px 6px;
+}
+.cc-strat-budget-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 2px;
+  cursor: text;
+}
+.cc-strat-budget-cur {
+  flex: 0 0 auto;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--text-muted);
+}
+.cc-strat-budget-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary, #fff);
+  font-family: inherit;
+  font-size: .98rem;
+  font-weight: 600;
+  padding: 2px 0;
+  outline: none;
+}
+.cc-strat-budget-input::placeholder { color: var(--text-muted); font-weight: 500; }
+.cc-strat-budget-pen {
+  flex: 0 0 auto;
+  font-size: .68rem;
+  color: var(--text-muted);
+  opacity: .55;
+  transition: opacity .15s ease;
+}
+.cc-strat-budget-row:hover .cc-strat-budget-pen { opacity: 1; }
+.cc-strat-budget-bar {
+  height: 4px;
+  margin: 7px 2px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.cc-strat-budget-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--brand-gradient-dynamic, var(--brand-primary, #c9cdd3));
+  transition: width .3s ease;
+}
+.cc-strat-budget-bar.is-over > span { background: #e15760; }
+.cc-strat-budget-sub {
+  font-size: .72rem;
+  color: var(--text-muted);
+  padding: 0 2px;
+}
+.cc-strat-budget-sub.is-over { color: #e15760; }
+
 /* ── Secuencia estrategica (stepper SOSTAC en el sidebar) ─────────────── */
 .cc-strat-steps {
   flex: 0 0 auto;
