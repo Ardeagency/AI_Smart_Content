@@ -1165,6 +1165,109 @@ class MonitoringView extends BaseView {
     return 'fa-circle-dot';
   }
 
+  /** Media id de Instagram → shortcode (para linkear al post original). */
+  _igShortcode(id) {
+    try {
+      const abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+      let n = BigInt(String(id).split('_')[0]); let s = '';
+      if (n <= 0n) return '';
+      while (n > 0n) { s = abc[Number(n % 64n)] + s; n = n / 64n; }
+      return s;
+    } catch (_) { return ''; }
+  }
+
+  /** URL al post ORIGINAL. Usa permalink si existe; si no, lo reconstruye por
+      red + post_id + handle (X/TikTok/YouTube directo; Instagram vía shortcode). */
+  _postUrl(post) {
+    if (post.permalink) return post.permalink;
+    const net = (post.network || '').toLowerCase();
+    const handle = (post.profile_handle || '').replace(/^@/, '');
+    const pid = post.post_id;
+    if (net === 'instagram' && pid) { const sc = this._igShortcode(pid); return sc ? `https://www.instagram.com/p/${sc}/` : (handle ? `https://www.instagram.com/${handle}/` : null); }
+    if ((net === 'twitter' || net === 'x') && handle && pid) return `https://x.com/${handle}/status/${pid}`;
+    if (net === 'tiktok' && handle && pid) return `https://www.tiktok.com/@${handle}/video/${pid}`;
+    if (net === 'youtube' && pid) return `https://www.youtube.com/watch?v=${pid}`;
+    if (net === 'facebook' && handle && pid) return `https://www.facebook.com/${handle}/posts/${pid}`;
+    if (handle) {
+      if (net === 'twitter' || net === 'x') return `https://x.com/${handle}`;
+      if (net === 'tiktok') return `https://www.tiktok.com/@${handle}`;
+      if (net === 'instagram') return `https://www.instagram.com/${handle}/`;
+      if (net === 'youtube') return `https://www.youtube.com/@${handle}`;
+    }
+    return null;
+  }
+
+  /** Thumbnail del post desde media_assets (varias formas posibles). */
+  _postThumb(post) {
+    const m = post.media_assets;
+    if (!m || typeof m !== 'object') return null;
+    return m.display_url || m.cover_image || m.thumbnail_url || m.main_image_url ||
+      (Array.isArray(m.thumbnails) && m.thumbnails[0]) || (Array.isArray(m.images) && m.images[0]) ||
+      (Array.isArray(m.media_urls) && m.media_urls[0]) || null;
+  }
+
+  /** Card de un post capturado, enlazado al original (abre en nueva pestaña). */
+  _renderPostCard(post) {
+    const url = this._postUrl(post);
+    const thumb = this._postThumb(post);
+    const netIcon = MonitoringView.PLATFORM_ICON[post.network] || 'fas fa-hashtag';
+    const snippet = this._esc((post.content || '').replace(/\s+/g, ' ').trim().slice(0, 100)) || __('(sin texto)');
+    const eng = this._compact(post.engagement_total || 0);
+    const when = this._relativeTime(post.captured_at);
+    const media = thumb
+      ? `<span class="mn-post-thumb"><img src="${this._esc(thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('mn-post-thumb--err');this.remove();"><i class="${netIcon}"></i></span>`
+      : `<span class="mn-post-thumb mn-post-thumb--err"><i class="${netIcon}"></i></span>`;
+    const inner = `${media}
+      <div class="mn-post-b">
+        <div class="mn-post-snippet">${snippet}</div>
+        <div class="mn-post-meta"><span><i class="fas fa-fire"></i>${eng}</span><span>${when}</span></div>
+      </div>
+      ${url ? '<i class="fas fa-arrow-up-right-from-square mn-post-ext"></i>' : ''}`;
+    return url
+      ? `<a class="mn-post" href="${this._esc(url)}" target="_blank" rel="noopener">${inner}</a>`
+      : `<div class="mn-post mn-post--nolink">${inner}</div>`;
+  }
+
+  /** Guarda un campo editado inline y refleja el cambio en la burbuja sin re-render. */
+  async _saveDetailField(item, field, value) {
+    let error;
+    if (item.kind === 'page') {
+      if (field !== 'name') return true;                 // las páginas solo editan el nombre
+      ({ error } = await this._service.updateWatcher(item.id, { label: value }));
+    } else {
+      const patch = {}; patch[field] = value;
+      ({ error } = await this._service.updateEntity(item.id, patch));
+    }
+    if (error) { alert(__('No se pudo guardar:') + ' ' + error.message); return false; }
+    if (field === 'name') item.title = value;
+    if (field === 'tipo') item.tipo = value;
+    if (field === 'relevance') item.relevance = value || null;
+    const row = item.kind === 'page'
+      ? (this._data?.watchers?.data || []).find((r) => r.id === item.id)
+      : (this._data?.entities?.data || []).find((r) => r.id === item.id);
+    if (row) {
+      if (field === 'name') { if (item.kind === 'page') row.label = value; else row.name = value; }
+      if (field === 'relevance') row.relevance = value || null;
+      if (field === 'tipo') row.metadata = { ...(row.metadata || {}), tipo: value };
+    }
+    if (this._liveSig) this._liveSig['monitoring'] = this._dataSignature(this._data);
+    this._updateBubbleLabels(item);
+    return true;
+  }
+
+  /** Actualiza la etiqueta de una burbuja (nombre/rol) tras un edit inline. */
+  _updateBubbleLabels(item) {
+    for (const w of (this._bubbleWorlds || [])) {
+      const b = (w.bodies || []).find((x) => x.it.id === item.id);
+      if (!b) continue;
+      if (b.nameEl) b.nameEl.textContent = item.title || '';
+      const roleTxt = this._roleLabel(item.tipo);
+      if (b.roleEl) b.roleEl.textContent = roleTxt;
+      this._requestBubbleDraw();
+      break;
+    }
+  }
+
   /* ── Panel de detalle (landscape estilo Flows) al seleccionar una burbuja ── */
   _openBubbleDetail(item) {
     if (!window.Modal || typeof window.Modal.show !== 'function') { return this._openBubblePop(item, 0, 0); }
@@ -1183,39 +1286,46 @@ class MonitoringView extends BaseView {
     if (item.lastAt) meta.push(`<span class="mn-det-meta-item"><i class="fas fa-clock"></i>${this._relativeTime(item.lastAt)}</span>`);
     if (brand) meta.push(`<span class="mn-det-meta-item"><i class="fas fa-tag"></i>${this._esc(brand)}</span>`);
 
-    // Columna izquierda: actividad reciente (señales del perfil / cambios de la URL).
-    const sigs = isProfile
-      ? (this._data?.signals?.data || []).filter((s) => s.entity_id === item.id).slice(0, 8)
-      : (item.feed || []).slice(0, 8);
-    const activityHtml = sigs.length ? sigs.map((s) => `
-      <div class="mn-det-act">
-        <span class="mn-det-act-icon"><i class="fas ${this._signalIcon(s)}"></i></span>
-        <div class="mn-det-act-b">
-          <div class="mn-det-act-t">${this._esc(this._signalLabel(s))}</div>
-          <div class="mn-det-act-w">${this._relativeTime(s.captured_at)}</div>
-        </div>
-      </div>`).join('') : `<div class="mn-det-act-empty"><i class="fas fa-moon"></i><span>${__('Sin actividad reciente')}</span></div>`;
+    // ── COLUMNA IZQUIERDA: TODO el contenido capturado del perfil (posts) con
+    //    link al original. Se carga async (perfiles); las páginas muestran cambios.
+    const leftTitle = isProfile ? __('Contenido capturado') : __('Cambios detectados');
+    const leftInner = isProfile
+      ? `<div class="mn-post mn-post--skel"></div><div class="mn-post mn-post--skel"></div><div class="mn-post mn-post--skel"></div>`
+      : ((item.feed || []).length
+          ? (item.feed || []).slice(0, 12).map((f) => `<div class="mn-det-act"><span class="mn-det-act-icon"><i class="fas fa-arrows-rotate"></i></span><div class="mn-det-act-b"><div class="mn-det-act-t">${__('Cambio detectado')}</div><div class="mn-det-act-w">${this._relativeTime(f.captured_at)}</div></div></div>`).join('')
+          : `<div class="mn-det-act-empty"><i class="fas fa-moon"></i><span>${__('Sin cambios detectados aún')}</span></div>`);
 
-    const veraActs = isProfile ? `
-      <button type="button" class="mn-det-cta" data-bact="vera-analizar"><i class="fas fa-wand-magic-sparkles"></i><span>${__('Analizar con Vera')}</span></button>
-      <button type="button" class="mn-det-icon-btn" data-bact="vera-comparar" title="${__('Comparar con mi marca')}"><i class="fas fa-code-compare"></i></button>
-      <button type="button" class="mn-det-icon-btn" data-bact="vera-inspirar" title="${__('Pedir ideas')}"><i class="fas fa-lightbulb"></i></button>` : `
-      <a class="mn-det-cta" href="${this._esc(item.url)}" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i><span>${__('Abrir página')}</span></a>`;
-
-    const relevance = isProfile ? `
-      <div class="mn-det-section">
+    // ── COLUMNA DERECHA (arriba): editable inline. (abajo): atajos de Vera.
+    const roleOpts = MonitoringView.ENTITY_TIPOS.map((o) => `<option value="${o.value}"${o.value === item.tipo ? ' selected' : ''}>${this._esc(o.label)}</option>`).join('');
+    const editable = isProfile ? `
+      <div class="mn-detail-editrow">
+        <label class="mn-detail-field">
+          <span class="mn-det-section-title">${__('Rol')}</span>
+          <select class="mn-detail-select" data-edit="tipo">${roleOpts}</select>
+        </label>
+      </div>
+      <div class="mn-detail-section">
         <div class="mn-det-section-title">${__('Relevancia — ¿por qué lo monitoreamos?')}</div>
-        <p class="mn-det-relevance${item.relevance ? '' : ' mn-det-relevance--empty'}">${item.relevance ? this._esc(item.relevance) : __('Sin definir. Edita el perfil para añadir por qué lo sigues.')}</p>
-      </div>` : '';
-
-    const colorSection = isProfile ? `
-      <div class="mn-det-section">
+        <textarea class="mn-detail-input mn-detail-rel" data-edit="relevance" rows="3" placeholder="${this._esc(MonitoringView.RELEVANCE_HINT[item.tipo] || '')}">${this._esc(item.relevance || '')}</textarea>
+      </div>
+      <div class="mn-detail-section">
         <div class="mn-det-section-title">${__('Color de la burbuja')}</div>
         <div class="mn-bubpop-colors">
           <button class="mn-swatch mn-swatch--brand${!item.color ? ' is-on' : ''}" data-color="" title="${__('Usar color de la marca')}" style="background:${gradCss}"></button>
           ${MonitoringView.PALETTE.map(c => `<button class="mn-swatch${item.color === c ? ' is-on' : ''}" style="background:${c}" data-color="${c}"></button>`).join('')}
         </div>
-      </div>` : '';
+      </div>
+      <div class="mn-detail-section mn-detail-vera">
+        <div class="mn-det-section-title">${__('Consultar con Vera')}</div>
+        <div class="mn-vera-shortcuts">
+          <button type="button" data-bact="vera-analizar"><i class="fas fa-wand-magic-sparkles"></i><span>${__('Analizar')}</span></button>
+          <button type="button" data-bact="vera-comparar"><i class="fas fa-code-compare"></i><span>${__('Comparar')}</span></button>
+          <button type="button" data-bact="vera-inspirar"><i class="fas fa-lightbulb"></i><span>${__('Pedir ideas')}</span></button>
+        </div>
+      </div>` : `
+      <div class="mn-detail-actions">
+        <a class="mn-det-cta" href="${this._esc(item.url)}" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i><span>${__('Abrir página')}</span></a>
+      </div>`;
 
     const body = document.createElement('div');
     body.className = 'mn-detail';
@@ -1224,31 +1334,25 @@ class MonitoringView extends BaseView {
       <div class="mn-detail-scrim" aria-hidden="true"></div>
       <div class="mn-detail-grid">
         <aside class="mn-detail-col mn-detail-col--activity">
-          <h3 class="mn-det-section-title">${__('Actividad reciente')}</h3>
-          <div class="mn-detail-activity">${activityHtml}</div>
+          <h3 class="mn-det-section-title">${leftTitle}</h3>
+          <div class="mn-detail-posts" data-posts>${leftInner}</div>
         </aside>
         <div class="mn-detail-col mn-detail-col--info">
           <div class="mn-detail-headrow">
             <div class="mn-detail-avatar" style="background:${borderCss}"><i class="${platIcon}"></i></div>
             <div class="mn-detail-idcol">
-              ${roleLabel ? `<span class="mn-detail-eyebrow">${this._esc(roleLabel)}</span>` : ''}
-              <h2 class="mn-detail-title">${this._esc(item.title)}</h2>
+              <span class="mn-detail-eyebrow" data-role-eyebrow>${this._esc(roleLabel)}</span>
+              <input class="mn-detail-name" data-edit="name" value="${this._esc(item.title)}" aria-label="${__('Nombre')}">
               ${item.subtitle ? `<div class="mn-detail-sub">${this._esc(item.subtitle)}</div>` : ''}
             </div>
-          </div>
-          <div class="mn-detail-meta">${meta.join('')}</div>
-          <div class="mn-detail-actions">
-            ${veraActs}
             <label class="mn-detail-switch" title="${item.isActive ? __('Pausar') : __('Activar')}">
               <input type="checkbox" ${item.isActive ? 'checked' : ''} data-bact="toggle-active">
               <span class="mn-onoff-track"></span>
-              <span class="mn-detail-switch-label">${item.isActive ? __('Activo') : __('En pausa')}</span>
             </label>
           </div>
-          ${relevance}
-          ${colorSection}
+          <div class="mn-detail-meta">${meta.join('')}</div>
+          ${editable}
           <div class="mn-detail-foot">
-            <button type="button" class="mn-btn-secondary" data-bact="edit"><i class="fas fa-pen"></i> ${__('Editar')}</button>
             ${isProfile ? `<button type="button" class="mn-btn-secondary" data-bact="toggle-highlight"><i class="fas fa-star"></i> ${item.highlighted ? __('Quitar destacado') : __('Destacar')}</button>` : ''}
             <span style="flex:1"></span>
             <button type="button" class="mn-btn-secondary mn-btn-danger" data-bact="delete"><i class="fas fa-trash"></i> ${__('Dejar de seguir')}</button>
@@ -1257,6 +1361,31 @@ class MonitoringView extends BaseView {
       </div>`;
 
     const { modal, close } = window.Modal.show({ title: '', body, className: 'mn-detail-modal' });
+
+    // Carga async del contenido capturado (perfiles).
+    if (isProfile) {
+      this._service.loadEntityPosts(item.id, 30).then(({ data }) => {
+        const host = modal.querySelector('[data-posts]');
+        if (!host) return;
+        host.innerHTML = (data && data.length)
+          ? data.map((p) => this._renderPostCard(p)).join('')
+          : `<div class="mn-det-act-empty"><i class="fas fa-inbox"></i><span>${__('Aún no hemos capturado contenido de este perfil.')}</span></div>`;
+      }).catch(() => {});
+    }
+
+    // Edición inline: nombre, rol, relevancia.
+    const nameEl = modal.querySelector('[data-edit="name"]');
+    nameEl?.addEventListener('change', () => { const val = nameEl.value.trim(); if (val) this._saveDetailField(item, 'name', val); else nameEl.value = item.title || ''; });
+    const roleEl = modal.querySelector('[data-edit="tipo"]');
+    roleEl?.addEventListener('change', async () => {
+      await this._saveDetailField(item, 'tipo', roleEl.value);
+      const eb = modal.querySelector('[data-role-eyebrow]'); if (eb) eb.textContent = this._roleLabel(roleEl.value);
+      const rel = modal.querySelector('[data-edit="relevance"]'); if (rel && !rel.value.trim()) rel.placeholder = MonitoringView.RELEVANCE_HINT[roleEl.value] || '';
+    });
+    const relEl = modal.querySelector('[data-edit="relevance"]');
+    relEl?.addEventListener('change', () => this._saveDetailField(item, 'relevance', relEl.value.trim()));
+
+    // Color + acciones (Vera, borrar, destacar, toggle activo).
     modal.querySelectorAll('.mn-swatch').forEach((sw) => sw.addEventListener('click', () => {
       this._setBubbleColor(item, sw.dataset.color);
       modal.querySelectorAll('.mn-swatch').forEach((s) => s.classList.toggle('is-on', (s.dataset.color || '') === (sw.dataset.color || '')));

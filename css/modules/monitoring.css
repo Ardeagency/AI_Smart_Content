@@ -639,10 +639,79 @@ body.mn-dragging, body.mn-dragging * { cursor: grabbing !important; }
 }
 .mn-btn-danger { color: #fca5a5 !important; border-color: rgba(239, 68, 68, 0.25) !important; }
 .mn-btn-danger:hover { background: rgba(239, 68, 68, 0.12) !important; color: #fecaca !important; }
-/* En pantallas angostas, el detalle se apila (info arriba, actividad abajo). */
+/* ── Columna izquierda: contenido capturado (posts con link al original) ── */
+.mn-detail-posts {
+  display: flex; flex-direction: column; gap: 8px;
+  max-height: 470px; overflow-y: auto; padding-right: 4px; margin-right: -4px;
+}
+.mn-detail-posts::-webkit-scrollbar { width: 6px; }
+.mn-detail-posts::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 999px; }
+.mn-post {
+  display: flex; align-items: center; gap: 10px; padding: 8px; position: relative;
+  text-decoration: none; background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-divider, #242424); border-radius: 10px;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+a.mn-post:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(255, 255, 255, 0.16); transform: translateY(-1px); }
+.mn-post-thumb {
+  width: 46px; height: 46px; border-radius: 8px; flex-shrink: 0; overflow: hidden;
+  background: rgba(255, 255, 255, 0.06); display: flex; align-items: center; justify-content: center;
+  color: rgba(255, 255, 255, 0.5); font-size: 16px;
+}
+.mn-post-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mn-post-thumb i { display: none; }
+.mn-post-thumb--err i { display: block; }
+.mn-post-b { flex: 1; min-width: 0; }
+.mn-post-snippet {
+  font-size: 12.5px; color: rgba(255, 255, 255, 0.85); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.mn-post-meta { display: flex; gap: 12px; margin-top: 4px; font-size: 11px; color: rgba(255, 255, 255, 0.45); }
+.mn-post-meta i { margin-right: 3px; opacity: 0.7; }
+.mn-post-ext { color: rgba(255, 255, 255, 0.3); font-size: 11px; flex-shrink: 0; align-self: flex-start; }
+a.mn-post:hover .mn-post-ext { color: rgba(255, 255, 255, 0.7); }
+.mn-post--skel {
+  height: 62px; border-color: transparent;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+  background-size: 200% 100%; animation: mn-skel 1.3s ease-in-out infinite;
+}
+@keyframes mn-skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── Columna derecha: campos editables inline ── */
+.mn-detail-name {
+  width: 100%; margin: 3px 0 0 -6px; padding: 2px 6px;
+  background: transparent; border: 1px solid transparent; border-radius: 8px;
+  font-size: clamp(1.5rem, 2.4vw, 1.95rem); font-weight: 700; color: #fff;
+  letter-spacing: -0.02em; line-height: 1.05; font-family: inherit; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+.mn-detail-name:hover { background: rgba(255, 255, 255, 0.04); }
+.mn-detail-name:focus { outline: none; background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.16); text-shadow: none; }
+.mn-detail-editrow { display: flex; gap: 12px; flex-wrap: wrap; }
+.mn-detail-field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px; }
+.mn-detail-select, .mn-detail-input {
+  width: 100%; padding: 9px 11px; background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; font-size: 13px; font-family: inherit;
+}
+.mn-detail-rel { resize: vertical; min-height: 62px; line-height: 1.45; }
+.mn-detail-select:focus, .mn-detail-input:focus { outline: none; border-color: rgba(255, 255, 255, 0.28); background: rgba(255, 255, 255, 0.06); }
+
+/* ── Atajos de Vera (columna derecha, abajo) ── */
+.mn-vera-shortcuts { display: flex; gap: 8px; flex-wrap: wrap; }
+.mn-vera-shortcuts button {
+  flex: 1; min-width: 108px; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 12px; border-radius: 10px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  background: color-mix(in srgb, var(--brand-primary, #6366f1) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-primary, #6366f1) 28%, transparent);
+  color: #fff; transition: all 0.15s ease;
+}
+.mn-vera-shortcuts button:hover { background: color-mix(in srgb, var(--brand-primary, #6366f1) 24%, transparent); }
+.mn-vera-shortcuts button i { font-size: 12px; }
+
+/* En pantallas angostas, el detalle se apila (info arriba, contenido abajo). */
 @media (max-width: 720px) {
   .mn-detail-grid { grid-template-columns: 1fr; }
   .mn-detail-col--info { padding-right: 0; order: -1; }
+  .mn-detail-posts { max-height: 300px; }
 }
 
 /* ── Popover al hacer clic en una burbuja: color + acciones ── */

@@ -108,6 +108,23 @@ class MonitoringDataService {
     };
   }
 
+  /** Todo el contenido capturado de un perfil (brand_posts), para el panel de
+      detalle. Trae lo necesario para reconstruir el link al post original. */
+  async loadEntityPosts(entityId, limit = 30) {
+    if (!this.sb || !entityId) return { data: [], error: null };
+    try {
+      const { data, error } = await this.sb
+        .from('brand_posts')
+        .select('id, network, profile_handle, content, engagement_total, reach_total, captured_at, permalink, post_id, media_assets')
+        .eq('entity_id', entityId)
+        .order('captured_at', { ascending: false })
+        .limit(limit);
+      return { data: data || [], error: error || null };
+    } catch (e) {
+      return { data: [], error: e };
+    }
+  }
+
   /* ══════════════════════════════════════════════════════════
      intelligence_entities — Perfiles
   ══════════════════════════════════════════════════════════ */
