@@ -109,8 +109,13 @@
     (this._campaigns || []).forEach((c) => { if (c.persona_id) push(`aud:${c.persona_id}`, `camp:${c.id}`, true); });
     // audience_segments: N audiencias por campana (relacion real, dedupe con persona_id por la clave from->to)
     (this._segments || []).forEach((s) => { if (s.persona_id && s.campaign_id) push(`aud:${s.persona_id}`, `camp:${s.campaign_id}`, true); });
-    // campaigns.brief_id: campana -> brief (si el brief esta colocado en el canvas)
-    (this._campaigns || []).forEach((c) => { if (c.brief_id) push(`camp:${c.id}`, `briefs:${c.brief_id}`, false); });
+    // campaigns.brief_id — direccion segun rol en el flujo (lectura n8n izq→der):
+    // objetivo (concepto) ALIMENTA al brief; el brief ALIMENTA a la campana real.
+    (this._campaigns || []).forEach((c) => {
+      if (!c.brief_id) return;
+      if (c.last_synced_at) push(`briefs:${c.brief_id}`, `camp:${c.id}`, false);
+      else push(`camp:${c.id}`, `briefs:${c.brief_id}`, false);
+    });
     // campaign_brief_entities: entidad -> brief (mapa entity_id -> nodo colocado)
     (this._briefEntities || []).forEach((be) => {
       const nodeKey = this._entByEntityId && this._entByEntityId[be.entity_id];
@@ -310,12 +315,27 @@
     const labels = { products: __('Producto'), services: __('Servicio'), places: __('Lugar'), characters: __('Personaje'), flows: 'Flow', briefs: 'Brief' };
     const icons  = { products: 'fa-box', services: 'fa-tag', places: 'fa-map-pin', characters: 'fa-masks-theater', flows: 'fa-diagram-project', briefs: 'fa-file-lines' };
     const t = n.identityType;
+    // Brief = nodo con puertos TIPADOS (patron n8n AI Agent: main in/out +
+    // sub-puertos abajo con etiqueta). Estado conectado por tipo desde
+    // campaign_brief_entities (via _entByEntityId).
+    let briefPorts = '';
+    if (t === 'briefs') {
+      const entTypes = new Set();
+      (this._briefEntities || []).forEach((be) => {
+        if (String(be.brief_id) !== String(n.id)) return;
+        const k = this._entByEntityId && this._entByEntityId[be.entity_id];
+        if (k) entTypes.add(k.split(':')[0]);
+      });
+      const on = (...ts) => (ts.some((x) => entTypes.has(x)) ? 'is-connected' : '');
+      briefPorts = `
+      <span class="cc-node-port cc-node-port--sub ${on('products', 'services')}" data-port="ent-product" data-lbl="${__('Producto')} *" style="left:25%" title="${__('Producto / Servicio del brief (hero) — requerido')}"></span>
+      <span class="cc-node-port cc-node-port--sub ${on('places')}" data-port="ent-place" data-lbl="${__('Escenario')}" style="left:50%" title="${__('Escenario (lugar) del brief')}"></span>
+      <span class="cc-node-port cc-node-port--sub ${on('characters')}" data-port="ent-character" data-lbl="${__('Personaje')}" style="left:75%" title="${__('Personaje del brief')}"></span>`;
+    }
     return `
     <div class="cc-node cc-node--identity" data-node-key="${n.key}" data-type="identity" data-identity-type="${this.escapeHtml(t)}" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
-      ${t === 'briefs'
-        ? '<span class="cc-node-port cc-node-port--bl" data-port="bl" title="Identidades"></span><span class="cc-node-port cc-node-port--br" data-port="br" title="Identidades"></span>'
-        : ''}
+      ${briefPorts}
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon"><i class="fas ${icons[t] || 'fa-cube'}"></i></span>
         <span class="cc-node-title">${this.escapeHtml(labels[t] || 'Identity')}</span>
@@ -553,9 +573,23 @@
 
     // 1) Semantica n8n: from→out, to→in (solo si el puerto existe y es visible).
     if (role) {
-      const sel = role === 'from' ? '[data-port="out"], [data-port="br"], [data-port="bl"]' : '[data-port="in"]';
+      const sel = role === 'from' ? '[data-port="out"]' : '[data-port="in"]';
       const pref = node.querySelector(sel);
       if (pref && pref.offsetParent !== null) return finish(centerW(pref));
+    }
+
+    // 1b) Puertos TIPADOS del brief (patron n8n sub-nodos): un adjunto ancla en
+    // el puerto de SU tipo (producto/servicio → ent-product, lugar → ent-place,
+    // personaje → ent-character), no en el mas cercano.
+    if (!role && nodeKey.startsWith('briefs:') && towardKey) {
+      const m = towardKey.split(':')[0];
+      const sel = (m === 'products' || m === 'services') ? '[data-port="ent-product"]'
+        : m === 'places' ? '[data-port="ent-place"]'
+        : m === 'characters' ? '[data-port="ent-character"]' : null;
+      if (sel) {
+        const p = node.querySelector(sel);
+        if (p && p.offsetParent !== null) return finish(centerW(p));
+      }
     }
 
     // 2) Fallback: puerto visible mas cercano al otro nodo.
@@ -1370,6 +1404,15 @@
     // Preview en coords de MUNDO (el SVG comparte el transform del world).
     const start = this._clientToWorld(pr.left + pr.width / 2, pr.top + pr.height / 2, cr);
 
+    // Validacion tipada (patron n8n isValidConnection): los sub-puertos del
+    // brief solo aceptan/emiten conexiones de su tipo.
+    const PORT_ACCEPT = {
+      'ent-product': /^(products|services):/,
+      'ent-place': /^places:/,
+      'ent-character': /^characters:/,
+    };
+    const originAccept = PORT_ACCEPT[port.getAttribute('data-port') || ''] || null;
+
     // Snap magnetico (patron n8n, connection-radius): snapshot de los puertos
     // visibles al iniciar el drag (el canvas no se mueve durante la conexion)
     // → cada mousemove es pura matematica, sin layout thrashing.
@@ -1378,8 +1421,11 @@
     canvas.querySelectorAll('.cc-node').forEach((n) => {
       const k = n.getAttribute('data-node-key');
       if (k === fromKey || n.offsetParent === null) return;
+      if (originAccept && !originAccept.test(k)) return; // origen tipado: solo su tipo
       n.querySelectorAll('.cc-node-port').forEach((p) => {
         if (p.offsetParent === null) return;
+        const pa = PORT_ACCEPT[p.getAttribute('data-port') || ''];
+        if (pa && !pa.test(fromKey)) return; // destino tipado: el origen debe matchear
         const r2 = p.getBoundingClientRect();
         snapPorts.push({ key: k, node: n, cx: r2.left + r2.width / 2, cy: r2.top + r2.height / 2 });
       });
@@ -1404,7 +1450,9 @@
     const showTimer = setTimeout(() => { try { preview.classList.add('is-on'); } catch (_) {} }, 300);
 
     const resolveTarget = (ev) => {
-      const direct = this._nodeAt(ev.clientX, ev.clientY, fromKey);
+      let direct = this._nodeAt(ev.clientX, ev.clientY, fromKey);
+      // Origen tipado: solo nodos del tipo aceptado son destino valido.
+      if (direct && originAccept && !originAccept.test(direct.getAttribute('data-node-key') || '')) direct = null;
       const near = direct ? null : nearestPort(ev.clientX, ev.clientY);
       return { direct, near, el: direct || (near && near.node) || null };
     };

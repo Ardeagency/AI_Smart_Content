@@ -2079,12 +2079,28 @@
   top: 50% !important; left: -7px !important; right: auto !important; transform: translateY(-50%) !important; opacity: 1 !important;
 }
 
-/* Brief: puertos abajo (igual que el trigger) → identidades. */
-.cc-node--identity[data-identity-type="briefs"] .cc-node-port--bl {
-  left: 33% !important; right: auto !important; top: auto !important; bottom: -7px !important; transform: translateX(-50%) !important;
+/* Brief: puertos TIPADOS abajo con etiqueta (patron n8n AI Agent: main in/out
+   + sub-puertos por tipo). El `left` inline (25/50/75%) posiciona cada uno.
+   Punteado sin conectar (opacidad baja), lleno cuando is-connected. */
+.cc-node--identity[data-identity-type="briefs"] .cc-node-port--sub {
+  right: auto !important; top: auto !important; bottom: -7px !important;
+  transform: translateX(-50%) !important;
+  opacity: 0.5;
 }
-.cc-node--identity[data-identity-type="briefs"] .cc-node-port--br {
-  left: 67% !important; right: auto !important; top: auto !important; bottom: -7px !important; transform: translateX(-50%) !important;
+.cc-node--identity[data-identity-type="briefs"] .cc-node-port--sub.is-connected { opacity: 1; }
+/* Etiqueta bajo el puerto (como n8n bajo sus handles de sub-nodo). */
+.cc-node-port--sub::after {
+  content: attr(data-lbl);
+  position: absolute;
+  top: 15px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* Anotaciones (sticky/group): sin puertos. */
