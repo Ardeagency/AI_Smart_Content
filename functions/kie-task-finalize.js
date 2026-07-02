@@ -35,7 +35,8 @@ const {
   corsHeaders,
   getSupabaseEnv,
   requireAuth,
-  checkBodySize
+  checkBodySize,
+  assertOrgMember
 } = require('./lib/ai-shared');
 
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
@@ -145,6 +146,13 @@ exports.handler = async (event) => {
   let env;
   try { env = getSupabaseEnv(); }
   catch (e) { return fail(event, 500, e.message); }
+
+  // El caller debe pertenecer a la org a la que se le cobran los creditos.
+  try {
+    await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId, userId: user.id });
+  } catch (e) {
+    return fail(event, e.statusCode || 403, e.message || 'No autorizado para esta organizacion');
+  }
 
   // Leer creditsConsumed REAL de KIE (post-success).
   let info;

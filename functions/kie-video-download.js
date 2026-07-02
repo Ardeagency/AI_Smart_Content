@@ -6,6 +6,8 @@
  * SEGURIDAD: solo se permiten URLs de dominios KIE autorizados para evitar SSRF.
  */
 
+const { requireAuth } = require('./lib/ai-shared');
+
 const BROWSER_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
@@ -41,7 +43,7 @@ function corsHeaders(contentType = 'application/json') {
   return {
     'Content-Type': contentType,
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, OPTIONS'
   };
 }
@@ -119,6 +121,17 @@ exports.handler = async (event, context) => {
       statusCode: 405,
       headers: corsHeaders(),
       body: JSON.stringify({ error: 'Método no permitido' })
+    };
+  }
+
+  // Auth: sin sesión no hay proxy (evita que terceros usen la function como
+  // proxy anónimo de descarga y quemen ancho de banda/invocaciones).
+  const user = await requireAuth(event);
+  if (!user) {
+    return {
+      statusCode: 401,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: 'No autorizado. Se requiere sesión activa.' })
     };
   }
 

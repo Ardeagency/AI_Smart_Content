@@ -2136,7 +2136,10 @@ class VideoView extends BaseView {
     this.showStatus(window.__('Descargando y guardando en tu cuenta…'), true);
     try {
       const proxyUrl = `${VideoView.KIE_VIDEO_DOWNLOAD_API}?videoUrl=${encodeURIComponent(kieVideoUrl)}`;
-      const res = await fetch(proxyUrl);
+      const { data: { session } } = await this.supabase.auth.getSession();
+      const res = await fetch(proxyUrl, {
+        headers: { Authorization: `Bearer ${session?.access_token || ''}` }
+      });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || window.__('Descarga fallida: {status}', { status: res.status }));
@@ -2339,9 +2342,15 @@ class VideoView extends BaseView {
     };
 
     try {
+      // El endpoint exige sesión + membresía de la org (proxy de OpenAI).
+      const { data: { session } } = await this.supabase.auth.getSession();
+      payload.organization_id = this.organizationId;
       const res = await fetch('/.netlify/functions/openai-cine-prompt', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token || ''}`
+        },
         body: JSON.stringify(payload)
       });
       const data = await res.json();

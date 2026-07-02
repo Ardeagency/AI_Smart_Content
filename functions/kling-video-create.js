@@ -6,7 +6,7 @@
  */
 
 const shared = require('./lib/kie-video-shared');
-const { getSupabaseEnv, ensureBalanceAtLeast } = require('./lib/ai-shared');
+const { getSupabaseEnv, ensureBalanceAtLeast, assertOrgMember } = require('./lib/ai-shared');
 
 // Pre-check estimado para no disparar KIE sin saldo. Cobro real en
 // kie-task-finalize tras success (lee creditsConsumed de KIE).
@@ -59,6 +59,13 @@ exports.handler = async (event) => {
   let env;
   try { env = getSupabaseEnv(); }
   catch (e) { return { statusCode: 500, headers: shared.corsHeaders(event), body: JSON.stringify({ error: e.message }) }; }
+
+  // El caller debe pertenecer a la org que paga (evita consumo cross-tenant).
+  try {
+    await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId, userId: user.id });
+  } catch (e) {
+    return { statusCode: e.statusCode || 403, headers: shared.corsHeaders(event), body: JSON.stringify({ error: e.message || 'No autorizado para esta organización' }) };
+  }
 
   // Pre-check balance: no disparamos KIE Kling sin saldo. Cobro real en
   // kie-task-finalize tras success (lee creditsConsumed real de KIE).

@@ -3267,7 +3267,11 @@ class VeraView extends (window.BaseView || class {}) {
     //    fueron sacados antes y se reinyectan crudos como srcdoc del iframe).
     html = window.DOMPurify.sanitize(html, {
       ADD_TAGS: ['pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
-      ADD_ATTR: ['class', 'onclick', 'target', 'rel']
+      // OJO: NUNCA permitir 'onclick' aquí. Los botones interactivos de Vera
+      // (pills/approve/confirm/artifact) se inyectan DESPUÉS de sanitizar
+      // (pasos 6-8), así que permitir onclick solo habilitaría XSS vía
+      // markdown generado por el modelo (prompt injection).
+      ADD_ATTR: ['class', 'target', 'rel']
     });
 
     // 5b. marked emite <table> SIN clase; el estilo de la app vive en

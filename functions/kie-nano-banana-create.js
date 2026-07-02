@@ -4,7 +4,11 @@
  * Doc: modelo nano-banana-pro, input.prompt + input.image_input (URLs).
  */
 
-const { requireAuth, getSupabaseEnv, acquireKieSlot } = require('./lib/ai-shared');
+const { requireAuth, getSupabaseEnv, acquireKieSlot, assertOrgMember, ensureBalanceAtLeast, checkBodySize } = require('./lib/ai-shared');
+
+// Pre-check estimado: nano-banana-pro + refinado OpenAI. Igual patrón que los
+// endpoints hermanos (kie-image-*): no quemamos OpenAI ni KIE sin saldo.
+const MIN_BALANCE_NANO_CRED = Number(process.env.MIN_BALANCE_NANO_CRED || 2);
 
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
 const CREATE_PATH = '/api/v1/jobs/createTask';
@@ -93,6 +97,9 @@ exports.handler = async (event) => {
     return { statusCode: 405, headers: c, body: JSON.stringify({ error: 'Método no permitido' }) };
   }
 
+  const tooBig = checkBodySize(event, 1024 * 1024);
+  if (tooBig) return tooBig;
+
   const user = await requireAuth(event);
   if (!user) {
     return {
@@ -121,6 +128,7 @@ exports.handler = async (event) => {
   const imageUrl = (body.image_url || '').trim();
   const prompt = (body.prompt || '').trim();
   const correction = (body.correction || '').trim();
+  const organizationId = String(body.organization_id || '').trim();
   const technicalParams = body.technical_params && typeof body.technical_params === 'object' ? body.technical_params : {};
   const metadata = body.metadata && typeof body.metadata === 'object' ? body.metadata : {};
 
@@ -129,6 +137,34 @@ exports.handler = async (event) => {
   }
   if (!correction) {
     return { statusCode: 400, headers: c, body: JSON.stringify({ error: 'La corrección es requerida' }) };
+  }
+  if (!organizationId) {
+    return { statusCode: 400, headers: c, body: JSON.stringify({ error: 'organization_id requerido' }) };
+  }
+
+  // Autorización + saldo ANTES de gastar OpenAI/KIE (mismo patrón que kie-image-*).
+  let env;
+  try { env = getSupabaseEnv(); }
+  catch (e) { return { statusCode: 500, headers: c, body: JSON.stringify({ error: e.message }) }; }
+
+  try {
+    await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId, userId: user.id });
+  } catch (e) {
+    return { statusCode: e.statusCode || 403, headers: c, body: JSON.stringify({ error: e.message || 'No autorizado para esta organización' }) };
+  }
+
+  const balance = await ensureBalanceAtLeast({ env, organizationId, minCredits: MIN_BALANCE_NANO_CRED });
+  if (!balance.ok) {
+    return {
+      statusCode: 402,
+      headers: c,
+      body: JSON.stringify({
+        error: 'Créditos insuficientes para esta edición',
+        balance: balance.balance,
+        required: balance.required || MIN_BALANCE_NANO_CRED,
+        reason: balance.reason
+      })
+    };
   }
 
   try {
@@ -158,9 +194,7 @@ exports.handler = async (event) => {
     }
 
     // FEAT-036: governor de tasa KIE (20 createTask/10s POR CUENTA; 429 = job perdido).
-    let kieEnv = null;
-    try { kieEnv = getSupabaseEnv(); } catch (_) { /* fail-open */ }
-    const slot = await acquireKieSlot({ env: kieEnv });
+    const slot = await acquireKieSlot({ env });
     if (!slot.ok) {
       return { statusCode: 429, headers: c, body: JSON.stringify({ error: 'KIE saturado, reintenta en unos segundos', retryAfterMs: slot.retryAfterMs }) };
     }

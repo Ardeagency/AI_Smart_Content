@@ -11,7 +11,7 @@
  * Respuesta: { prompt: string } o { multi_prompts: string[] } — siempre en inglés.
  */
 
-const { requireAuth } = require('./lib/ai-shared');
+const { requireAuth, getSupabaseEnv, assertOrgMember } = require('./lib/ai-shared');
 
 const ALLOWED_ORIGINS = new Set([
   'https://aismartcontent.io', 'https://www.aismartcontent.io',
@@ -171,6 +171,19 @@ exports.handler = async (event, context) => {
       headers: corsHeaders(event),
       body: JSON.stringify({ error: 'Body JSON inválido' })
     };
+  }
+
+  // El prompt cinematográfico consume OpenAI: exigimos org y membresía para
+  // que el proxy no sea utilizable fuera del contexto de una organización propia.
+  const organizationId = String(body.organization_id || '').trim();
+  if (!organizationId) {
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'organization_id requerido' }) };
+  }
+  try {
+    const env = getSupabaseEnv();
+    await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId, userId: user.id });
+  } catch (e) {
+    return { statusCode: e.statusCode || 403, headers: corsHeaders(event), body: JSON.stringify({ error: e.message || 'No autorizado para esta organización' }) };
   }
 
   const idea = (body.idea || body.director_brief || '').trim();

@@ -15,6 +15,10 @@
  */
 
 const shared = require('./lib/kie-video-shared');
+const { getSupabaseEnv, ensureBalanceAtLeast, assertOrgMember } = require('./lib/ai-shared');
+
+// Mismo pre-check estimado que kling-video-create (ruta principal).
+const MIN_BALANCE_VIDEO_CRED = Number(process.env.MIN_BALANCE_VIDEO_CRED || 9);
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -50,6 +54,31 @@ exports.handler = async (event) => {
       if (body.action !== 'createTask') {
         return { statusCode: 400, headers: shared.corsHeaders(event), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
+
+      // Mismos guards que kling-video-create: sin esto, esta ruta de
+      // compatibilidad era un bypass del pre-check de saldo y de la
+      // membresía de la organización.
+      const organizationId = String(body.organization_id || '').trim();
+      if (!organizationId) {
+        return { statusCode: 400, headers: shared.corsHeaders(event), body: JSON.stringify({ error: 'organization_id requerido' }) };
+      }
+      let env;
+      try { env = getSupabaseEnv(); }
+      catch (e) { return { statusCode: 500, headers: shared.corsHeaders(event), body: JSON.stringify({ error: e.message }) }; }
+      try {
+        await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId, userId: user.id });
+      } catch (e) {
+        return { statusCode: e.statusCode || 403, headers: shared.corsHeaders(event), body: JSON.stringify({ error: e.message || 'No autorizado para esta organización' }) };
+      }
+      const balance = await ensureBalanceAtLeast({ env, organizationId, minCredits: MIN_BALANCE_VIDEO_CRED });
+      if (!balance.ok) {
+        return {
+          statusCode: 402,
+          headers: shared.corsHeaders(event),
+          body: JSON.stringify({ error: 'Creditos insuficientes para iniciar el video', balance: balance.balance, required: balance.required || MIN_BALANCE_VIDEO_CRED, reason: balance.reason })
+        };
+      }
+
       return await shared.handleCreate(body, headers, event);
     }
 

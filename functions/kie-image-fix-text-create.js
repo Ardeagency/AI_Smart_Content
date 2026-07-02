@@ -28,6 +28,7 @@ const {
   checkBodySize,
   validateExternalUrl,
   ensureBalanceAtLeast,
+  assertOrgMember,
   acquireKieSlot
 } = require('./lib/ai-shared');
 
@@ -229,6 +230,13 @@ exports.handler = async (event) => {
   catch (e) { return fail(event, 500, e.message); }
 
   // Pre-check balance: no quemamos OpenAI Vision ni KIE sin saldo.
+  // El caller debe pertenecer a la org que paga (evita consumo cross-tenant).
+  try {
+    await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId, userId: user.id });
+  } catch (e) {
+    return fail(event, e.statusCode || 403, e.message || 'No autorizado para esta organizacion');
+  }
+
   const balance = await ensureBalanceAtLeast({ env, organizationId, minCredits: MIN_BALANCE_FIX_TEXT_CRED });
   if (!balance.ok) {
     return fail(event, 402, 'Creditos insuficientes para mejorar los textos', {
