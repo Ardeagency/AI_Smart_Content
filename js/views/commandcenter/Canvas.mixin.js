@@ -127,15 +127,25 @@
   };
 
   /** Lista normalizada de nodos del canvas: audiencias + campanas (en canvas)
-      + identities colocadas. */
+      + identities colocadas.
+      SCOPE POR ESTRATEGIA (2026-07-02): conceptos y audiencias solo se
+      renderizan si tienen placement en la estrategia ACTIVA (igual que
+      identities/reales) o si se crearon en esta sesion. Antes aparecian en
+      TODAS las estrategias y los lienzos se mezclaban. Pre-hydrate
+      (placements aun null) se muestra todo para no parpadear en vacio. */
   P._canvasNodes = function () {
     this._loadOnCanvas();
     this._loadPlaced();
-    const auds = (this._audiences || []).map((a) => ({
-      key: `aud:${a.id}`, type: 'audience', id: a.id, row: a,
-    }));
+    const pm = this._canvasNodePlacements; // Map por estrategia (CanvasStore)
+    const fresh = this._sessionCreated;
+    const inStrategy = (key) => !pm || pm.has(key) || (fresh && fresh.has(key));
+    const auds = (this._audiences || [])
+      .filter((a) => inStrategy(`aud:${a.id}`))
+      .map((a) => ({
+        key: `aud:${a.id}`, type: 'audience', id: a.id, row: a,
+      }));
     const camps = (this._campaigns || [])
-      .filter((c) => (c.last_synced_at ? this._realOnCanvas(c) : true))
+      .filter((c) => (c.last_synced_at ? this._realOnCanvas(c) : inStrategy(`camp:${c.id}`)))
       .map((c) => ({
         key: `camp:${c.id}`, type: c.last_synced_at ? 'campaign-real' : 'campaign-concept',
         id: c.id, row: c,
@@ -403,7 +413,7 @@
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon cc-node-icon--anchor"><i class="fas fa-bullseye"></i></span>
         <div class="cc-node-head-text">
-          <span class="cc-node-title">Campana</span>
+          <span class="cc-node-title">${__('Objetivo')}</span>
           <span class="cc-node-name" title="${this.escapeHtml(c.nombre_campana || '')}">${this.escapeHtml(c.nombre_campana || 'Sin nombre')}</span>
         </div>
         <span class="cc-node-status cc-node-status--${this.escapeHtml(c.status || 'draft')}" title="${this.escapeHtml(statusLabel || 'Borrador')}"></span>

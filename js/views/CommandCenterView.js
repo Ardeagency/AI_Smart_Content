@@ -554,7 +554,15 @@ class CommandCenterView extends BaseView {
       } else {
         this._campaigns = [data, ...(this._campaigns || [])];
       }
+      // Scope por estrategia: marcar como creado-en-sesion (visible aunque el
+      // placement aun no persista) y escribir el placement de inmediato.
+      const key = isAudience ? `aud:${data.id}` : `camp:${data.id}`;
+      if (!this._sessionCreated) this._sessionCreated = new Set();
+      this._sessionCreated.add(key);
       this._renderCanvas();
+      const pos = this._positions && this._positions[key];
+      if (pos && this._store) this._store.setNodePosition(key, pos.x, pos.y);
+      if (typeof this._persistPlacementPosition === 'function') this._persistPlacementPosition(key);
       this._renderMiniDash();
       // El nodo queda creado con nombre por defecto. El flujo de edicion
       // (renombrar / completar campos) se definira aparte.

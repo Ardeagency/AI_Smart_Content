@@ -2622,6 +2622,21 @@
       this._store.persistPlaced();
       this._ccSuspendPlacementWrite = false;
 
+      // Backfill de nombres de briefs colocados: si la libreria aun no cargo,
+      // el nodo mostraba el label generico 'Brief' en vez del nombre real.
+      const missingBriefs = placed.filter((p) => p.type === 'briefs' && !p.name).map((p) => p.id);
+      if (missingBriefs.length) {
+        try {
+          const { data: bnames } = await this._supabase
+            .from('campaign_briefs').select('id, nombre').in('id', missingBriefs);
+          (bnames || []).forEach((b) => {
+            const entry = placed.find((p) => p.type === 'briefs' && String(p.id) === String(b.id));
+            if (entry && b.nombre) entry.name = b.nombre;
+          });
+          this._store.persistPlaced();
+        } catch (_) { /* noop */ }
+      }
+
       this._renderCanvas();
     } catch (e) {
       console.warn('[CC] hydrate placements exception:', e);
