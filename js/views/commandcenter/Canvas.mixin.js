@@ -594,9 +594,17 @@
     // limpiar conexiones previas (mantener defs/preview)
     Array.from(svg.querySelectorAll('.cc-edge')).forEach((n) => n.remove());
 
-    const _typeOfNode = (key) => {
+    // Punteado = ADJUNTOS que cuelgan del flujo (productos/servicios/lugares/
+    // personajes/flows, audiencias, grupos). Solido = FLUJO principal por puertos
+    // izq/der (objetivo <-> brief <-> campana). El brief es ancla de flujo (aunque
+    // es data-type=identity), por eso se excluye del set de adjuntos.
+    const _isAttach = (key) => {
       const el = document.querySelector(`.cc-node[data-node-key="${cssEsc(key)}"]`);
-      return el ? el.getAttribute('data-type') : '';
+      if (!el) return false;
+      const t = el.getAttribute('data-type');
+      if (t === 'audience' || t === 'group') return true;
+      if (t === 'identity') return el.getAttribute('data-identity-type') !== 'brief';
+      return false; // campaign-concept / campaign-real / etc = flujo
     };
     this._allLinks().forEach((link) => {
       const from = this._portAnchor(link.from, link.to);
@@ -604,9 +612,7 @@
       if (!from || !to) return;
 
       const color = this._nodeTypeColor(link.from);
-      // Ingrediente (audiencia/entidades <-> trigger) = punteado; produccion = solido.
-      const _ing = (t) => t === 'audience' || t === 'identity';
-      const isIngredient = _ing(_typeOfNode(link.from)) || _ing(_typeOfNode(link.to));
+      const isIngredient = _isAttach(link.from) || _isAttach(link.to);
 
       const g = document.createElementNS(NS, 'g');
       g.setAttribute('class', `cc-edge ${isIngredient ? 'cc-edge--ingredient' : 'cc-edge--production'} ${link.persona ? 'cc-edge--persona' : 'cc-edge--free'}`);
@@ -901,7 +907,18 @@
       this._panelClick = (e) => {
         const railSec = e.target.closest('[data-rail-sec]');
         if (railSec) { this._setActiveSection(railSec.getAttribute('data-rail-sec')); return; }
-        if (e.target.closest('#ccPanelToggle')) { this._activeSection = null; this._renderLibrary(); return; }
+        if (e.target.closest('#ccPanelToggle')) {
+          // Si el panel esta mostrando el inspector de un nodo, la X limpia la
+          // seleccion (que a su vez cierra el inspector via _renderSelection).
+          if (this._inspecting) {
+            this._inspecting = false;
+            try { this._store?.clearSelection(); } catch (_) { /* noop */ }
+            this._selectedKey = null; this._selected = null;
+            if (this._focusSet) this._clearFocus();
+            if (typeof this._renderSelection === 'function') this._renderSelection();
+          }
+          this._activeSection = null; this._renderLibrary(); return;
+        }
         // Click (sin drag) en una campana del sidebar → enfoca su flujo en el canvas.
         const campItem = e.target.closest('.cc-lib-item[data-lib-type="campaigns"]');
         if (campItem) { this._focusCampaignFromSidebar(campItem.getAttribute('data-lib-id')); return; }
@@ -1185,17 +1202,22 @@
     const canvas = document.getElementById('ccCanvas');
     canvas?.classList.add('cc-canvas--panning');
     this._didPan = false;
+    const edgesSvg = document.getElementById('ccCanvasEdges');
     const onMove = (ev) => {
-      if (Math.abs(ev.clientX - start.x) > 3 || Math.abs(ev.clientY - start.y) > 3) this._didPan = true;
-      this._canvasPan = { x: p0.x + (ev.clientX - start.x), y: p0.y + (ev.clientY - start.y) };
-      // Durante el pan: solo transform + culling (edges ocultos por CSS, sin recalcular).
+      const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) this._didPan = true;
+      this._canvasPan = { x: p0.x + dx, y: p0.y + dy };
+      // Durante el pan NO recalculamos edges (caro): los movemos con el mismo
+      // delta que el mundo (solo translate) para que sigan visibles y alineados.
       this._applyCanvasTransform();
+      if (edgesSvg) edgesSvg.style.transform = `translate(${dx}px, ${dy}px)`;
     };
     const onUp = () => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       canvas?.classList.remove('cc-canvas--panning');
-      this._renderEdges(); // redibuja edges (saltando nodos culled) al asentar
+      if (edgesSvg) edgesSvg.style.transform = ''; // reset del translate temporal
+      this._renderEdges(); // recalcula posiciones exactas al asentar
     };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
@@ -1522,6 +1544,10 @@
   };
 
   P._renderLibrary = function () {
+    // Mientras el panel derecho muestra el inspector de un nodo, no re-pintamos
+    // la libreria (clobbearia el contenido editable). El inspector se cierra
+    // primero (this._inspecting = false) y recien ahi se llama a _renderLibrary.
+    if (this._inspecting) return;
     const rail    = document.getElementById('ccPanelRail');
     const body    = document.getElementById('ccPanelBody');
     const panel   = document.getElementById('ccSidebar');
@@ -1632,8 +1658,17 @@
     }
   };
 
-  /** Selecciona una seccion (toggle: re-click colapsa el panel de datos). */
+  /** Selecciona una seccion (toggle: re-click colapsa el panel de datos).
+      Abrir una seccion del rail des-selecciona el nodo: el panel derecho es
+      seccion O inspector, no ambos. */
   P._setActiveSection = function (key) {
+    if (this._inspecting) {
+      this._inspecting = false;
+      try { this._store?.clearSelection(); } catch (_) { /* noop */ }
+      this._selectedKey = null; this._selected = null;
+      if (this._focusSet) this._clearFocus();
+      if (typeof this._renderSelection === 'function') this._renderSelection();
+    }
     this._activeSection = (this._activeSection === key) ? null : key;
     try { localStorage.setItem('cc:panel:active', this._activeSection || ''); } catch (_) { /* noop */ }
     this._renderLibrary();
