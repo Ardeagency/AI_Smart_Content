@@ -1,49 +1,48 @@
-/* ARDE sentinel — aviso ntfy cuando alguien llega al login de la consola.
-   Solo corre en rutas públicas de entrada (/, /login, /signin, /demo); nunca dentro de la app.
-   Filtro de bots + gate humano + auto-exclusión ARDE (geo Rionegro/Llanogrande, bypass ?test=1).
-   Apertura → ntfy + email info@ardeagency.com; al ocultar la pestaña → tiempo activo. */
+/* ARDE sentinel — aviso ntfy + correo cuando una persona INICIA SESION en la consola.
+   Un solo aviso por sesion de navegador (nada de ruido mientras navega la app).
+   Filtro de bots + auto-exclusion ARDE (geo Rionegro/Llanogrande, bypass ?test=1).
+   El "quien" sale de la sesion propia de la app (user_session: email + nombre). */
 (function(){
   try{
-    var path=location.pathname.replace(/\/+$/,'')||'/';
-    if(['/','/login','/signin','/demo'].indexOf(path)===-1) return;
     var ARDE_SELF=false;try{fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(d){if(/rionegro|llanogrande/i.test((d.city||'')+' '+(d.region||''))&&!/[?&]test=1/i.test(location.search))ARDE_SELF=true;}).catch(function(){});}catch(e){}
     var TOPIC='https://ntfy.sh/arde-cotizaciones-7k2pqz9x';
     var MAILHOOK='https://ardeagency.app.n8n.cloud/webhook/ab4e8466-76f0-4cd6-817c-5fe7da2384e0';
-    var LABEL='Login Consola AISC', KEY='aisclogin';
+    var LABEL='Consola AISC', KEY='aisclogin';
     var ua=navigator.userAgent||'';
     var isBot = navigator.webdriver===true
       || /bot\b|crawl|spider|slurp|bingbot|yandex|baidu|duckduckbot|headless|phantom|puppeteer|playwright|python-|curl\/|wget|libwww|httpclient|okhttp|go-http|java\/|facebookexternalhit|embedly|telegrambot|whatsapp|discordbot|slackbot|twitterbot|linkedinbot|googlebot|applebot|lighthouse|pingdom|uptimerobot|datadog|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|gptbot|ccbot|claudebot|amazonbot|zgrab|censys|shodan|expanse|netcraft|httpx|nmap|masscan|paloalto|internetmeasurement/i.test(ua)||(function(){var m=ua.match(/Chrome\/(\d+)/);return !!m&&+m[1]<90;})();
     if(isBot) return;
-    /* ntfy.sh rechaza publicaciones anonimas con header Email (400) — el correo lo hace un flujo n8n que vigila el topic */
+    /* ntfy.sh rechaza publicaciones anonimas con header Email (400) — el correo lo hace el flujo n8n (MAILHOOK) */
     function post(title,tags,body,mail){if(ARDE_SELF)return; try{ fetch(TOPIC,{method:'POST',keepalive:true,headers:{'Title':title,'Tags':tags},body:body}); }catch(e){ try{navigator.sendBeacon(TOPIC,body);}catch(e2){} } if(mail){try{ fetch(MAILHOOK,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title,body:body})}); }catch(e3){}} }
-    var interacted=false;
-    ['scroll','mousemove','touchstart','keydown','pointerdown'].forEach(function(ev){window.addEventListener(ev,function(){interacted=true;},{passive:true});});
-    var vis=0,lastV=Date.now();
-    function vtick(){ if(document.visibilityState==='visible')vis+=Date.now()-lastV; lastV=Date.now(); }
-    setInterval(vtick,1000);
-    var openSent=false;
-    function maybeOpen(){
-      if(openSent)return; vtick();
-      if((interacted && vis>=2500) || vis>=9000){
-        openSent=true;
-        var visits=0;
-        try{ visits=parseInt(localStorage.getItem('arde_v_'+KEY)||'0',10)||0;
-          if(!sessionStorage.getItem('arde_s_'+KEY)){ sessionStorage.setItem('arde_s_'+KEY,'1'); visits+=1; localStorage.setItem('arde_v_'+KEY,String(visits)); }
-        }catch(e){}
-        var rep=visits>=2?(' (visita #'+visits+', repetida)'):'';
-        function openPing(loc){ post('ARDE - Entraron: '+LABEL,(visits>=2?'fire,eyes':'eyes'),
-          'Entraron: '+LABEL+' ['+path+']'+rep+'\n'+loc+'\nLlego desde: '+(document.referrer||'enlace directo')+'\nDispositivo: '+ua.slice(0,90),true); }
-        fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(d){if(/rionegro|llanogrande/i.test((d.city||'')+' '+(d.region||''))&&!/[?&]test=1/i.test(location.search))ARDE_SELF=true;
-          openPing('Ubicacion: '+(d.city||'?')+', '+(d.region||'')+' '+(d.country_name||'?')+' (IP '+(d.ip||'?')+')');
-        }).catch(function(){ openPing('Ubicacion: no disponible'); });
-      }
+    function currentUser(){
+      try{
+        var raw=localStorage.getItem('user_session')||sessionStorage.getItem('user_session');
+        if(raw){var s=JSON.parse(raw); if(s&&s.email)return {email:s.email,name:s.full_name||''};}
+      }catch(e){}
+      try{
+        for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);
+          if(/^sb-.*-auth-token$/.test(k)){var t=JSON.parse(localStorage.getItem(k));
+            var u=(t&&(t.user||(t.currentSession&&t.currentSession.user)))||null;
+            if(u&&u.email)return {email:u.email,name:(u.user_metadata&&u.user_metadata.full_name)||''};}}
+      }catch(e){}
+      return null;
     }
-    var gi=setInterval(function(){ maybeOpen(); if(openSent)clearInterval(gi); },1000);
-    var sentH=false;
-    function fmt(ms){var s=Math.round(ms/1000),m=Math.floor(s/60);return m+'m '+(s%60)+'s';}
-    function sendH(){ if(sentH)return; sentH=true; vtick(); if(!openSent)return;
-      post('ARDE - Sesion login: '+LABEL,'hourglass','Estuvo en '+LABEL+' ['+path+']\nTiempo activo: '+fmt(vis)); }
-    document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden')sendH(); });
-    window.addEventListener('pagehide',sendH);
+    var pinged=false;
+    try{ pinged=!!sessionStorage.getItem('arde_s_'+KEY); }catch(e){}
+    var gi=setInterval(function(){
+      if(pinged){clearInterval(gi);return;}
+      var u=currentUser(); if(!u)return;
+      pinged=true; clearInterval(gi);
+      try{ sessionStorage.setItem('arde_s_'+KEY,'1'); }catch(e){}
+      var visits=0;
+      try{ visits=(parseInt(localStorage.getItem('arde_v_'+KEY)||'0',10)||0)+1; localStorage.setItem('arde_v_'+KEY,String(visits)); }catch(e){}
+      var quien=(u.name?u.name+' — ':'')+u.email;
+      var rep=visits>=2?(' (sesion #'+visits+' en este navegador)'):'';
+      function ping(loc){ post('ARDE - Sesion iniciada: '+LABEL,'unlock,bust_in_silhouette',
+        'Inicio sesion en la consola: '+quien+rep+'\n'+loc+'\nLlego desde: '+(document.referrer||'enlace directo')+'\nDispositivo: '+ua.slice(0,90),true); }
+      fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(d){if(/rionegro|llanogrande/i.test((d.city||'')+' '+(d.region||''))&&!/[?&]test=1/i.test(location.search))ARDE_SELF=true;
+        ping('Ubicacion: '+(d.city||'?')+', '+(d.region||'')+' '+(d.country_name||'?')+' (IP '+(d.ip||'?')+')');
+      }).catch(function(){ ping('Ubicacion: no disponible'); });
+    },1500);
   }catch(e){}
 })();
