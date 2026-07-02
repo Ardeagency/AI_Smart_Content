@@ -25,9 +25,9 @@ class SignInView extends BaseView {
     const year = new Date().getFullYear();
     return `
       <div class="signin-container signin-container--hero">
-        <video class="signin-hero-video" autoplay muted loop playsinline preload="auto"
+        <video class="signin-hero-video" autoplay muted loop playsinline preload="metadata"
                poster="https://res.cloudinary.com/dmruwjuxn/image/upload/v1779481981/__8_kejphv.jpg">
-          <source src="https://tsdpbqcwjckbfsdqacam.supabase.co/storage/v1/object/public/web-assets/home-banner.mp4" type="video/mp4">
+          <source src="https://tsdpbqcwjckbfsdqacam.supabase.co/storage/v1/object/public/web-assets/home-banner-web.mp4" type="video/mp4">
         </video>
         <div class="signin-card">
           <div class="signin-brand">

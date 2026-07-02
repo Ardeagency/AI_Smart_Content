@@ -153,3 +153,9 @@ docs/SEGURIDAD_RLS_MAPA_PAGINAS.md
 
 # Supabase CLI runtime metadata (linked-project, cli cache)
 supabase/.temp/
+
+# Copias accidentales de Finder ("archivo 2.js"): basura que reaparece al
+# duplicar/pegar. Solo código — hay assets legítimos con " 2" en el nombre.
+* 2.js
+* 2.css
+* 2.html
