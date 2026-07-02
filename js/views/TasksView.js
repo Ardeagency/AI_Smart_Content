@@ -43,7 +43,7 @@ class TasksView extends BaseView {
           <button type="button" class="tasks-viewtoggle-btn" data-view="calendar" aria-label="${__('Vista de calendario')}"><i class="fas fa-calendar-alt"></i> ${__('Calendario')}</button>
         </div>
         <a class="btn btn-primary tasks-create-btn" id="tasksCreateNewBtn" href="#">
-          <i class="fas fa-plus"></i> ${__('Create New Task')}
+          <i class="fas fa-plus"></i> ${__('Crear tarea')}
         </a>
       </div>
     </div>

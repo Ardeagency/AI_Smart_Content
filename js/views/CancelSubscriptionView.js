@@ -53,7 +53,7 @@ class CancelSubscriptionView extends BaseView {
       this.supabase = window.supabase;
     }
     if (!this.supabase) {
-      this.showError('Supabase no disponible.');
+      this.showError(__('Supabase no disponible.'));
       return;
     }
     await this._loadContext();
@@ -96,12 +96,12 @@ class CancelSubscriptionView extends BaseView {
     return `
       <div class="cancel-page">
         <div class="cancel-card">
-          <h1>No tienes suscripción activa</h1>
+          <h1>${__('No tienes suscripción activa')}</h1>
           <p>${this.subscription?.status === 'cancelled'
-              ? 'Tu suscripción ya está cancelada.'
-              : 'Esta organización no tiene una suscripción activa que cancelar.'}</p>
+              ? __('Tu suscripción ya está cancelada.')
+              : __('Esta organización no tiene una suscripción activa que cancelar.')}</p>
           <a href="${this._plansRoute()}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Volver a planes
+            <i class="fas fa-arrow-left"></i> ${__('Volver a planes')}
           </a>
         </div>
       </div>
@@ -117,49 +117,51 @@ class CancelSubscriptionView extends BaseView {
       <div class="cancel-page">
         <div class="cancel-card">
           <a href="${this._plansRoute()}" class="cancel-back">
-            <i class="fas fa-arrow-left"></i> Volver
+            <i class="fas fa-arrow-left"></i> ${__('Volver')}
           </a>
 
-          <h1>Cancelar suscripción</h1>
+          <h1>${__('Cancelar suscripción')}</h1>
           <p class="cancel-lead">
-            Vas a cancelar el plan <strong>${this.escapeHtml(this.plan?.name || this.subscription.plan_id)}</strong>
-            de <strong>${this.escapeHtml(this.org?.name || '')}</strong>.
+            ${__('Vas a cancelar el plan <strong>{plan}</strong> de <strong>{org}</strong>.', {
+              plan: this.escapeHtml(this.plan?.name || this.subscription.plan_id),
+              org: this.escapeHtml(this.org?.name || ''),
+            })}
           </p>
 
           <div class="cancel-facts">
-            <h3>Esto es lo que pasa al cancelar</h3>
+            <h3>${__('Esto es lo que pasa al cancelar')}</h3>
             <ul>
-              <li><i class="fas fa-circle-info"></i> Tu plan sigue activo hasta el <strong>${renewal}</strong> — usa los créditos que tienes.</li>
-              <li><i class="fas fa-circle-info"></i> No se hará el siguiente cargo a tu tarjeta.</li>
-              <li><i class="fas fa-circle-info"></i> Tus ${this.creditsAvailable.toLocaleString('es')} créditos disponibles se mantienen hasta el final del periodo.</li>
-              <li><i class="fas fa-circle-info"></i> Después del ${renewal} pasarás al plan Free (50 cr/mes, outputs con marca de agua).</li>
-              <li><i class="fas fa-circle-info"></i> Puedes reactivar en cualquier momento desde la página de planes.</li>
+              <li><i class="fas fa-circle-info"></i> ${__('Tu plan sigue activo hasta el <strong>{date}</strong> — usa los créditos que tienes.', { date: renewal })}</li>
+              <li><i class="fas fa-circle-info"></i> ${__('No se hará el siguiente cargo a tu tarjeta.')}</li>
+              <li><i class="fas fa-circle-info"></i> ${__('Tus {n} créditos disponibles se mantienen hasta el final del periodo.', { n: this.creditsAvailable.toLocaleString('es') })}</li>
+              <li><i class="fas fa-circle-info"></i> ${__('Después del {date} pasarás al plan Free (50 cr/mes, outputs con marca de agua).', { date: renewal })}</li>
+              <li><i class="fas fa-circle-info"></i> ${__('Puedes reactivar en cualquier momento desde la página de planes.')}</li>
             </ul>
           </div>
 
           <details class="cancel-survey">
-            <summary>¿Por qué cancelas? (opcional, ayuda a mejorar el producto)</summary>
+            <summary>${__('¿Por qué cancelas? (opcional, ayuda a mejorar el producto)')}</summary>
             <div class="cancel-survey-options">
-              ${['Muy caro', 'No lo uso lo suficiente', 'Falta una feature', 'Encontré una alternativa', 'Cambió mi proyecto', 'Otro'].map((r) => `
+              ${[__('Muy caro'), __('No lo uso lo suficiente'), __('Falta una feature'), __('Encontré una alternativa'), __('Cambió mi proyecto'), __('Otro')].map((r) => `
                 <label class="cancel-survey-option">
                   <input type="radio" name="cancel_reason" value="${this.escapeHtml(r)}"> ${this.escapeHtml(r)}
                 </label>
               `).join('')}
-              <textarea id="cancelComment" rows="3" placeholder="Comentario adicional (opcional)"></textarea>
+              <textarea id="cancelComment" rows="3" placeholder="${__('Comentario adicional (opcional)')}"></textarea>
             </div>
           </details>
 
           <div class="cancel-actions">
             <button type="button" class="btn btn-secondary" id="cancelKeep">
-              Conservar mi suscripción
+              ${__('Conservar mi suscripción')}
             </button>
             <button type="button" class="btn btn-danger" id="cancelConfirm">
-              <i class="fas fa-circle-xmark"></i> Cancelar suscripción
+              <i class="fas fa-circle-xmark"></i> ${__('Cancelar suscripción')}
             </button>
           </div>
 
           <p class="cancel-fineprint">
-            Recibirás un email de confirmación. Si tienes problemas con esto, escríbenos a soporte; no requerimos llamada telefónica.
+            ${__('Recibirás un email de confirmación. Si tienes problemas con esto, escríbenos a soporte; no requerimos llamada telefónica.')}
           </p>
 
           <div id="cancelStatus" class="cancel-status" role="status" aria-live="polite"></div>
@@ -186,7 +188,7 @@ class CancelSubscriptionView extends BaseView {
     const comment = root.querySelector('#cancelComment')?.value?.trim() || null;
     const status = root.querySelector('#cancelStatus');
     const btn = root.querySelector('#cancelConfirm');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelando…'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${__('Cancelando…')}`; }
 
     try {
       const { data, error } = await this.supabase.functions.invoke('cancel-subscription', {
@@ -197,19 +199,19 @@ class CancelSubscriptionView extends BaseView {
           comment,
         },
       });
-      if (error) throw new Error(error.message || 'No se pudo cancelar');
+      if (error) throw new Error(error.message || __('No se pudo cancelar'));
 
       if (status) {
         status.className = 'cancel-status is-success';
-        status.innerHTML = '<i class="fas fa-circle-check"></i> Cancelación confirmada. Te enviamos un email con los detalles.';
+        status.innerHTML = `<i class="fas fa-circle-check"></i> ${__('Cancelación confirmada. Te enviamos un email con los detalles.')}`;
       }
       setTimeout(() => window.router?.navigate(this._plansRoute(), true), 2000);
     } catch (e) {
       if (status) {
         status.className = 'cancel-status is-error';
-        status.textContent = `Error: ${e.message}`;
+        status.textContent = `${__('Error')}: ${e.message}`;
       }
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-circle-xmark"></i> Cancelar suscripción'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-circle-xmark"></i> ${__('Cancelar suscripción')}`; }
       this.cancelling = false;
     }
   }

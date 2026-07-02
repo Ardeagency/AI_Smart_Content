@@ -15,6 +15,10 @@
 
   // Legal y contacto viven en la landing aismartcontent.io (Framer).
   // Los links salen del SPA, así que abren en una pestaña nueva.
+  /* Los títulos/labels se traducen al render vía __(col.title)/__(l.label)
+     (clave dinámica). i18n-keep — literales para scripts/i18n-extract.mjs:
+     __('Legal') __('Privacidad') __('Términos') __('Eliminación de datos')
+     __('Contacto') __('Contactar con ventas') */
   const FOOTER_COLS = [
     {
       title: 'Legal',
@@ -50,7 +54,7 @@
     const dropdownHTML = NAV_LINKS.length === 0 ? '' : `
           <div class="public-nav-dropdown" id="publicNavDropdown">
             <button type="button" class="landing-header-link public-nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true">
-              Saber más
+              ${__('Saber más')}
               <svg class="public-nav-dropdown-caret" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
                 <path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -65,12 +69,12 @@
         <a href="/login" class="landing-header-brand" aria-label="AI Smart Content Home" data-href="/login">
           <img src="/recursos/logos/logo-03.svg" alt="AI Smart Content" class="landing-header-logo" width="180" height="36" decoding="async">
         </a>
-        <button class="public-header-toggle" id="publicHeaderToggle" aria-label="Abrir menú" aria-expanded="false">
+        <button class="public-header-toggle" id="publicHeaderToggle" aria-label="${__('Abrir menú')}" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
-        <nav class="landing-header-nav public-header-nav" aria-label="Navegación principal">
+        <nav class="landing-header-nav public-header-nav" aria-label="${__('Navegación principal')}">
           ${dropdownHTML}
-          <a href="/login" class="public-nav-access public-nav-access--glow" data-href="/login">Acceder</a>
+          <a href="/login" class="public-nav-access public-nav-access--glow" data-href="/login">${__('Acceder')}</a>
         </nav>
       </header>
     `;
@@ -79,11 +83,11 @@
   function buildFooterHTML() {
     const cols = FOOTER_COLS.map(col => `
       <div class="landing-footer-col public-footer-col">
-        <h3 class="landing-footer-col-title">${col.title}</h3>
+        <h3 class="landing-footer-col-title">${__(col.title)}</h3>
         <ul class="landing-footer-links">
           ${col.links.map(l => l.external
-            ? `<li><a href="${l.href}" class="landing-footer-link" target="_blank" rel="noopener">${l.label}</a></li>`
-            : `<li><a href="${l.href}" class="landing-footer-link" data-href="${l.href}">${l.label}</a></li>`).join('')}
+            ? `<li><a href="${l.href}" class="landing-footer-link" target="_blank" rel="noopener">${__(l.label)}</a></li>`
+            : `<li><a href="${l.href}" class="landing-footer-link" data-href="${l.href}">${__(l.label)}</a></li>`).join('')}
         </ul>
       </div>
     `).join('');
@@ -95,19 +99,19 @@
             <a href="/login" class="landing-footer-brand-link" aria-label="AI Smart Content Home" data-href="/login">
               <img src="/recursos/assets/assets-16.svg" alt="AI Smart Content" class="landing-footer-bar-logo" loading="lazy" decoding="async" width="200" height="48">
             </a>
-            <p class="landing-footer-tagline">Inteligencia operativa de marca: menos latencia entre el mercado y tu contenido.</p>
+            <p class="landing-footer-tagline">${__('Inteligencia operativa de marca: menos latencia entre el mercado y tu contenido.')}</p>
           </div>
           ${cols}
         </div>
         <div class="landing-footer-bottom">
           <div class="landing-footer-bottom-inner">
-            <span class="landing-footer-copy">© 2026 AI S-MART CONTENT by Arde Agency S.A.S. Todos los derechos reservados.</span>
+            <span class="landing-footer-copy">${__('© 2026 AI S-MART CONTENT by Arde Agency S.A.S. Todos los derechos reservados.')}</span>
             <p class="landing-footer-credit">
-              <a href="https://aismartcontent.io/privacy-policy" class="landing-footer-credit-link" target="_blank" rel="noopener">Privacidad</a>
+              <a href="https://aismartcontent.io/privacy-policy" class="landing-footer-credit-link" target="_blank" rel="noopener">${__('Privacidad')}</a>
               &nbsp;·&nbsp;
-              <a href="https://aismartcontent.io/terms-and-conditions" class="landing-footer-credit-link" target="_blank" rel="noopener">Términos</a>
+              <a href="https://aismartcontent.io/terms-and-conditions" class="landing-footer-credit-link" target="_blank" rel="noopener">${__('Términos')}</a>
               &nbsp;·&nbsp;
-              <a href="https://aismartcontent.io/contact" class="landing-footer-credit-link" target="_blank" rel="noopener">Contacto</a>
+              <a href="https://aismartcontent.io/contact" class="landing-footer-credit-link" target="_blank" rel="noopener">${__('Contacto')}</a>
             </p>
           </div>
         </div>

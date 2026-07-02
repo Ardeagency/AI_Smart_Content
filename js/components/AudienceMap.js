@@ -97,7 +97,7 @@
   function renderListFallback(container, distribution) {
     const total = Object.values(distribution).reduce((s, v) => s + (Number(v) || 0), 0);
     if (total === 0) {
-      container.innerHTML = `<div class="cc-map-empty">Sin datos geográficos todavía.</div>`;
+      container.innerHTML = `<div class="cc-map-empty">${__('Sin datos geográficos todavía.')}</div>`;
       return;
     }
     const entries = Object.entries(distribution)
@@ -107,7 +107,7 @@
       .slice(0, 10);
 
     container.innerHTML = `
-      <div class="cc-map-fallback" role="list" aria-label="Distribución por país">
+      <div class="cc-map-fallback" role="list" aria-label="${__('Distribución por país')}">
         ${entries.map(({ cc, v }) => {
           const pct = Math.round((v / total) * 100);
           return `
@@ -194,7 +194,7 @@
     const [br, bg, bb] = hexToRgb(baseHex);
     const [brandHue, brandSat] = rgbToHsl(br, bg, bb);
 
-    container.innerHTML = `<canvas class="cc-map-canvas" aria-label="Mapa de distribución de audiencia por país"></canvas>`;
+    container.innerHTML = `<canvas class="cc-map-canvas" aria-label="${__('Mapa de distribución de audiencia por país')}"></canvas>`;
     const canvas = container.querySelector('canvas');
     const ctx = canvas.getContext('2d');
 
@@ -219,7 +219,7 @@
       data: {
         labels: data.map(d => d.feature.properties.name),
         datasets: [{
-          label: 'Audience',
+          label: __('Audiencia'),
           data,
           backgroundColor: (ctx) => fillFor(ctx.dataset.data[ctx.dataIndex]?.value),
           borderColor: 'rgba(255,255,255,0.12)',

@@ -85,7 +85,7 @@
     modal.className = 'color-editor-modal';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
-    modal.setAttribute('aria-label', 'Editor de color');
+    modal.setAttribute('aria-label', __('Editor de color'));
 
     const panel = document.createElement('div');
     panel.className = 'color-editor-panel';
@@ -95,7 +95,7 @@
 
     const hueRing = document.createElement('div');
     hueRing.className = 'color-editor-hue-ring';
-    hueRing.setAttribute('aria-label', 'Rueda de tono');
+    hueRing.setAttribute('aria-label', __('Rueda de tono'));
 
     const slArea = document.createElement('div');
     slArea.className = 'color-editor-sl-area';
@@ -103,7 +103,7 @@
     const slHandle = document.createElement('div');
     slHandle.className = 'color-editor-sl-handle';
     slHandle.setAttribute('role', 'slider');
-    slHandle.setAttribute('aria-label', 'Saturación y luminosidad');
+    slHandle.setAttribute('aria-label', __('Saturación y luminosidad'));
     slHandle.setAttribute('aria-valuemin', '0');
     slHandle.setAttribute('aria-valuemax', '100');
     slHandle.setAttribute('tabindex', '0');
@@ -114,7 +114,7 @@
     const hueHandle = document.createElement('div');
     hueHandle.className = 'color-editor-hue-handle';
     hueHandle.setAttribute('role', 'slider');
-    hueHandle.setAttribute('aria-label', 'Matiz (hue)');
+    hueHandle.setAttribute('aria-label', __('Matiz (hue)'));
     hueHandle.setAttribute('aria-valuemin', '0');
     hueHandle.setAttribute('aria-valuemax', '359');
     hueHandle.setAttribute('tabindex', '0');
@@ -139,11 +139,11 @@
     const applyBtn = document.createElement('button');
     applyBtn.type = 'button';
     applyBtn.className = 'color-editor-btn color-editor-btn-apply';
-    applyBtn.textContent = 'Aplicar';
+    applyBtn.textContent = __('Aplicar');
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
     cancelBtn.className = 'color-editor-btn color-editor-btn-cancel';
-    cancelBtn.textContent = 'Cerrar';
+    cancelBtn.textContent = __('Cerrar');
 
     // ─── State sync (rAF throttled) ───────────────────────────────────
     let rafPending = false;

@@ -2,10 +2,10 @@
  * DateRangePicker — selector de rango de fechas reutilizable.
  *
  * Rediseño v2 (estilo referencia): panel de 2 columnas —
- *   - Sidebar de presets (Today / Yesterday / Last 7 days / … / Custom).
+ *   - Sidebar de presets (Hoy / Ayer / Últimos 7 días / … / Personalizado).
  *   - Columna principal: dos inputs MM/DD/YYYY (inicio → fin) con hint de
- *     formato + calendario de un mes (semana en domingo, etiquetas en inglés)
- *     con seleccion de rango.
+ *     formato + calendario de un mes (semana en domingo; etiquetas via __(),
+ *     español como clave) con seleccion de rango.
  * Tema oscuro adaptado al dashboard, acento = --brand-primary.
  *
  * Scopeado por atributos data-drp (no ids) para permitir varias instancias.
@@ -21,8 +21,8 @@ class DateRangePicker {
     this.from = opts.from ? new Date(opts.from) : null;
     this.to   = opts.to   ? new Date(opts.to)   : null;
     this.onChange = typeof opts.onChange === 'function' ? opts.onChange : () => {};
-    this.allLabel = opts.allLabel || 'Todo el periodo';
-    this.label = opts.label || 'Fecha';
+    this.allLabel = opts.allLabel || __('Todo el periodo');
+    this.label = opts.label || __('Fecha');
     const base = this.to || this.from || new Date();
     this._month = base.getMonth();
     this._year  = base.getFullYear();
@@ -32,15 +32,15 @@ class DateRangePicker {
 
   static get PRESETS() {
     return [
-      { k: 'today',     label: 'Today' },
-      { k: 'yesterday', label: 'Yesterday' },
-      { k: '7d',        label: 'Last 7 days' },
-      { k: '30d',       label: 'Last 30 days' },
-      { k: '2m',        label: 'Last 2 months' },
-      { k: '3m',        label: 'Last 3 months' },
-      { k: '6m',        label: 'Last 6 months' },
-      { k: '12m',       label: 'Last 12 months' },
-      { k: 'custom',    label: 'Custom' },
+      { k: 'today',     label: __('Hoy') },
+      { k: 'yesterday', label: __('Ayer') },
+      { k: '7d',        label: __('Últimos 7 días') },
+      { k: '30d',       label: __('Últimos 30 días') },
+      { k: '2m',        label: __('Últimos 2 meses') },
+      { k: '3m',        label: __('Últimos 3 meses') },
+      { k: '6m',        label: __('Últimos 6 meses') },
+      { k: '12m',       label: __('Últimos 12 meses') },
+      { k: 'custom',    label: __('Personalizado') },
     ];
   }
 
@@ -126,16 +126,16 @@ class DateRangePicker {
             </div>
             <div class="drp2-cal">
               <div class="drp2-nav">
-                <button type="button" class="drp2-nav-btn" data-drp-prev aria-label="Mes anterior"><i class="fas fa-chevron-left"></i></button>
+                <button type="button" class="drp2-nav-btn" data-drp-prev aria-label="${__('Mes anterior')}"><i class="fas fa-chevron-left"></i></button>
                 <span class="drp2-monthyear" data-drp-monthyear></span>
-                <button type="button" class="drp2-nav-btn" data-drp-next aria-label="Mes siguiente"><i class="fas fa-chevron-right"></i></button>
+                <button type="button" class="drp2-nav-btn" data-drp-next aria-label="${__('Mes siguiente')}"><i class="fas fa-chevron-right"></i></button>
               </div>
               <div class="drp2-weekdays">
-                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                <span>${__('Do')}</span><span>${__('Lu')}</span><span>${__('Ma')}</span><span>${__('Mi')}</span><span>${__('Ju')}</span><span>${__('Vi')}</span><span>${__('Sá')}</span>
               </div>
               <div class="living-date-grid drp2-grid" data-drp-grid></div>
               <div class="drp2-footer">
-                <button type="button" class="drp2-clear" data-drp-clear>Limpiar (todo el periodo)</button>
+                <button type="button" class="drp2-clear" data-drp-clear>${__('Limpiar (todo el periodo)')}</button>
               </div>
             </div>
           </div>
@@ -269,7 +269,7 @@ class DateRangePicker {
 
   _renderCalendar() {
     if (!this._gridEl || !this._monthYearEl) return;
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNames = [__('Enero'), __('Febrero'), __('Marzo'), __('Abril'), __('Mayo'), __('Junio'), __('Julio'), __('Agosto'), __('Septiembre'), __('Octubre'), __('Noviembre'), __('Diciembre')];
     this._monthYearEl.textContent = `${monthNames[this._month]} ${this._year}`;
     const first = new Date(this._year, this._month, 1);
     const startPad = first.getDay(); // Domingo = 0

@@ -76,7 +76,7 @@ class CreditsShopView extends BaseView {
     await this.loadUsage();
     this.renderEverything();
     this.bindEvents();
-    this.updateHeaderContext('Créditos', null, this.org?.name || null);
+    this.updateHeaderContext(__('Créditos'), null, this.org?.name || null);
   }
 
   // ─── data ─────────────────────────────────────────────────────────────
@@ -263,8 +263,8 @@ class CreditsShopView extends BaseView {
     return `
       <div class="credits-page">
         <header class="credits-page-header">
-          <h1>Créditos</h1>
-          <p class="credits-page-subtitle">Saldo, consumo y configuración para ${this.escapeHtml(this.org?.name || 'tu organización')}.</p>
+          <h1>${__('Créditos')}</h1>
+          <p class="credits-page-subtitle">${__('Saldo, consumo y configuración para {org}.', { org: this.escapeHtml(this.org?.name || __('tu organización')) })}</p>
         </header>
 
         <div class="credits-top-row">
@@ -274,7 +274,7 @@ class CreditsShopView extends BaseView {
 
         <section class="credits-card credits-chart-card">
           <div class="credits-card-header">
-            <h2><i class="fas fa-chart-column"></i> Consumo</h2>
+            <h2><i class="fas fa-chart-column"></i> ${__('Consumo')}</h2>
             <div class="credits-range-toggle" role="group">
               <button type="button" class="credits-range-btn" data-range="7">7d</button>
               <button type="button" class="credits-range-btn is-active" data-range="30">30d</button>
@@ -286,9 +286,9 @@ class CreditsShopView extends BaseView {
 
         <section class="credits-card credits-prefs-card">
           <div class="credits-card-header">
-            <h2><i class="fas fa-bell"></i> Alertas y auto-recarga</h2>
-            <span class="credits-stripe-badge" title="Auto-recarga requiere Stripe">
-              <i class="fas fa-info-circle"></i> Auto-recarga: pendiente conectar Stripe
+            <h2><i class="fas fa-bell"></i> ${__('Alertas y auto-recarga')}</h2>
+            <span class="credits-stripe-badge" title="${__('Auto-recarga requiere Stripe')}">
+              <i class="fas fa-info-circle"></i> ${__('Auto-recarga: pendiente conectar Stripe')}
             </span>
           </div>
           <div id="creditsPrefs">${this.skeletonRows(2)}</div>
@@ -296,9 +296,9 @@ class CreditsShopView extends BaseView {
 
         <section class="credits-card">
           <div class="credits-card-header">
-            <h2><i class="fas fa-users"></i> Por miembro del equipo</h2>
+            <h2><i class="fas fa-users"></i> ${__('Por miembro del equipo')}</h2>
             <button type="button" class="btn btn-secondary btn-sm" id="creditsExportCsv">
-              <i class="fas fa-file-csv"></i> Exportar CSV
+              <i class="fas fa-file-csv"></i> ${__('Exportar CSV')}
             </button>
           </div>
           <div id="creditsByMember">${this.skeletonRows(3)}</div>
@@ -306,26 +306,26 @@ class CreditsShopView extends BaseView {
 
         <section class="credits-card">
           <div class="credits-card-header">
-            <h2><i class="fas fa-clock-rotate-left"></i> Historial de consumo</h2>
+            <h2><i class="fas fa-clock-rotate-left"></i> ${__('Historial de consumo')}</h2>
           </div>
           <div id="creditsRecent"></div>
         </section>
 
         <section class="credits-card credits-packs-card">
           <div class="credits-card-header">
-            <h2><i class="fas fa-cart-plus"></i> Comprar créditos extra</h2>
-            <span class="credits-packs-hint">Pago único · Los créditos se suman a tu saldo · Expira a los 12 meses</span>
+            <h2><i class="fas fa-cart-plus"></i> ${__('Comprar créditos extra')}</h2>
+            <span class="credits-packs-hint">${__('Pago único · Los créditos se suman a tu saldo · Expira a los 12 meses')}</span>
           </div>
           <div id="creditsPacks"></div>
         </section>
 
         <footer class="credits-page-footer">
           <a href="#" id="creditsInvoicesLink" class="credits-footer-link">
-            <i class="fas fa-receipt"></i> Ver facturas y recibos
+            <i class="fas fa-receipt"></i> ${__('Ver facturas y recibos')}
           </a>
           <span class="credits-footer-sep">·</span>
           <a href="#" id="creditsContactSupport" class="credits-footer-link">
-            <i class="fas fa-life-ring"></i> Contactar soporte para facturación empresarial
+            <i class="fas fa-life-ring"></i> ${__('Contactar soporte para facturación empresarial')}
           </a>
         </footer>
       </div>
@@ -351,7 +351,7 @@ class CreditsShopView extends BaseView {
 
     el.innerHTML = `
       <div class="credits-balance-head">
-        <span class="credits-balance-label">Créditos disponibles</span>
+        <span class="credits-balance-label">${__('Créditos disponibles')}</span>
       </div>
       <div class="credits-balance-value">
         ${this.creditsAvailable.toLocaleString('es')}
@@ -361,18 +361,18 @@ class CreditsShopView extends BaseView {
         <div class="credits-progress-fill ${pct > 90 ? 'is-critical' : pct > 75 ? 'is-warning' : ''}" style="width: ${pct}%"></div>
       </div>
       <div class="credits-balance-meta">
-        <div><strong>${Math.round(pct)}%</strong> consumido</div>
-        <div><strong>${burn.toFixed(1)}</strong> cr/día (últimos ${this.timeRange}d)</div>
+        <div><strong>${Math.round(pct)}%</strong> ${__('consumido')}</div>
+        <div><strong>${burn.toFixed(1)}</strong> ${__('cr/día (últimos {n}d)', { n: this.timeRange })}</div>
       </div>
       ${warning ? `
         <div class="credits-runout-warning">
           <i class="fas fa-triangle-exclamation"></i>
-          <span>A tu ritmo actual te quedas sin créditos el <strong>${this._fmtDate(warning.runout)}</strong> — ${warning.daysEarly} días antes de la renovación.</span>
+          <span>${__('A tu ritmo actual te quedas sin créditos el <strong>{date}</strong> — {days} días antes de la renovación.', { date: this._fmtDate(warning.runout), days: warning.daysEarly })}</span>
         </div>
       ` : ''}
       <div class="credits-balance-actions">
         <button type="button" class="btn btn-primary" id="creditsBuyMore">
-          <i class="fas fa-plus"></i> Comprar créditos
+          <i class="fas fa-plus"></i> ${__('Comprar créditos')}
         </button>
       </div>
     `;
@@ -386,10 +386,10 @@ class CreditsShopView extends BaseView {
     if (!this.subscription || !this.plan) {
       el.innerHTML = `
         <div class="credits-plan-empty">
-          <h3>Sin plan activo</h3>
-          <p>Actualmente no tienes una suscripción. Activa un plan para recibir créditos mensuales automáticamente.</p>
+          <h3>${__('Sin plan activo')}</h3>
+          <p>${__('Actualmente no tienes una suscripción. Activa un plan para recibir créditos mensuales automáticamente.')}</p>
           <a href="${plansRoute}" class="btn btn-primary">
-            <i class="fas fa-arrow-right"></i> Ver planes
+            <i class="fas fa-arrow-right"></i> ${__('Ver planes')}
           </a>
         </div>
       `;
@@ -399,15 +399,15 @@ class CreditsShopView extends BaseView {
     const renewal = this.renewalDate;
     el.innerHTML = `
       <div class="credits-plan-head">
-        <span class="credits-plan-label">Plan actual</span>
-        ${this.subscription.status === 'active' ? '<span class="credits-plan-status is-active">Activo</span>' : `<span class="credits-plan-status">${this.escapeHtml(this.subscription.status || '')}</span>`}
+        <span class="credits-plan-label">${__('Plan actual')}</span>
+        ${this.subscription.status === 'active' ? `<span class="credits-plan-status is-active">${__('Activo')}</span>` : `<span class="credits-plan-status">${this.escapeHtml(this.subscription.status || '')}</span>`}
       </div>
       <div class="credits-plan-name">${this.escapeHtml(this.plan.name)}</div>
-      <div class="credits-plan-price">$${this.plan.price_usd_month}/mes · ${this.plan.credits_monthly?.toLocaleString('es')} créditos/mes</div>
-      ${renewal ? `<div class="credits-plan-renewal">Renueva el <strong>${this._fmtDate(renewal)}</strong></div>` : ''}
+      <div class="credits-plan-price">${__('{price}/mes · {credits} créditos/mes', { price: '$' + this.plan.price_usd_month, credits: this.plan.credits_monthly?.toLocaleString('es') })}</div>
+      ${renewal ? `<div class="credits-plan-renewal">${__('Renueva el <strong>{date}</strong>', { date: this._fmtDate(renewal) })}</div>` : ''}
       <div class="credits-plan-actions">
-        <a href="${plansRoute}" class="btn btn-secondary">Cambiar plan</a>
-        <a href="${plansRoute}/cancel" class="btn btn-text" id="creditsCancelLink">Cancelar suscripción</a>
+        <a href="${plansRoute}" class="btn btn-secondary">${__('Cambiar plan')}</a>
+        <a href="${plansRoute}/cancel" class="btn btn-text" id="creditsCancelLink">${__('Cancelar suscripción')}</a>
       </div>
     `;
   }
@@ -416,7 +416,7 @@ class CreditsShopView extends BaseView {
     const el = this.querySelector('#creditsChart');
     if (!el) return;
     if (!this.usage30d.length) {
-      el.innerHTML = `<div class="credits-empty">Sin consumo en los últimos ${this.timeRange} días.</div>`;
+      el.innerHTML = `<div class="credits-empty">${__('Sin consumo en los últimos {n} días.', { n: this.timeRange })}</div>`;
       return;
     }
 
@@ -487,24 +487,24 @@ class CreditsShopView extends BaseView {
         <div class="credits-pref-row">
           <label class="credits-pref-label">
             <input type="checkbox" id="prefEmail" ${p.email_alerts ? 'checked' : ''}>
-            <span>Recibir alertas por email cuando el saldo baje</span>
+            <span>${__('Recibir alertas por email cuando el saldo baje')}</span>
           </label>
           <div class="credits-pref-detail">
-            Alertar al <input type="number" id="prefPct1" min="1" max="99" value="${p.low_balance_pct_1}" class="credits-pref-input">% y al
-            <input type="number" id="prefPct2" min="1" max="99" value="${p.low_balance_pct_2}" class="credits-pref-input">% del saldo
+            ${__('Alertar al')} <input type="number" id="prefPct1" min="1" max="99" value="${p.low_balance_pct_1}" class="credits-pref-input">${__('% y al')}
+            <input type="number" id="prefPct2" min="1" max="99" value="${p.low_balance_pct_2}" class="credits-pref-input">${__('% del saldo')}
           </div>
         </div>
 
         <div class="credits-pref-row">
           <label class="credits-pref-label">
             <input type="checkbox" id="prefAutoRecharge" ${p.auto_recharge_enabled ? 'checked' : ''}>
-            <span>Auto-recarga cuando el saldo baje</span>
+            <span>${__('Auto-recarga cuando el saldo baje')}</span>
           </label>
           <div class="credits-pref-detail">
-            Comprar al
+            ${__('Comprar al')}
             <input type="number" id="prefAutoPct" min="1" max="50" value="${p.auto_recharge_at_pct}" class="credits-pref-input">%:
             <select id="prefAutoPack" class="credits-pref-input">
-              <option value="">Seleccionar paquete…</option>
+              <option value="">${__('Seleccionar paquete…')}</option>
               ${packOptions}
             </select>
           </div>
@@ -512,7 +512,7 @@ class CreditsShopView extends BaseView {
 
         <div class="credits-pref-actions">
           <button type="button" class="btn btn-primary btn-sm" id="prefSave">
-            <i class="fas fa-check"></i> Guardar preferencias
+            <i class="fas fa-check"></i> ${__('Guardar preferencias')}
           </button>
           <span id="prefStatus" class="credits-pref-status"></span>
         </div>
@@ -524,7 +524,7 @@ class CreditsShopView extends BaseView {
     const el = this.querySelector('#creditsByMember');
     if (!el) return;
     if (!this.usageByMember.length) {
-      el.innerHTML = `<div class="credits-empty">Sin consumo del equipo en los últimos ${this.timeRange} días.</div>`;
+      el.innerHTML = `<div class="credits-empty">${__('Sin consumo del equipo en los últimos {n} días.', { n: this.timeRange })}</div>`;
       return;
     }
     const total = this.usageByMember.reduce((a, m) => a + m.used, 0);
@@ -532,17 +532,17 @@ class CreditsShopView extends BaseView {
       <table class="credits-table">
         <thead>
           <tr>
-            <th>Miembro</th>
-            <th>Créditos usados</th>
-            <th>% del total</th>
-            <th>Eventos</th>
-            <th>Última actividad</th>
+            <th>${__('Miembro')}</th>
+            <th>${__('Créditos usados')}</th>
+            <th>${__('% del total')}</th>
+            <th>${__('Eventos')}</th>
+            <th>${__('Última actividad')}</th>
           </tr>
         </thead>
         <tbody>
           ${this.usageByMember.map((m) => {
             const pct = total > 0 ? (m.used / total * 100) : 0;
-            const userLabel = m.user_id === 'system' ? 'Sistema (background)' : `${m.user_id.slice(0, 8)}…`;
+            const userLabel = m.user_id === 'system' ? __('Sistema (background)') : `${m.user_id.slice(0, 8)}…`;
             return `
               <tr>
                 <td>${this.escapeHtml(userLabel)}</td>
@@ -562,17 +562,17 @@ class CreditsShopView extends BaseView {
     const el = this.querySelector('#creditsRecent');
     if (!el) return;
     if (!this.recentEvents.length) {
-      el.innerHTML = `<div class="credits-empty">Sin movimientos recientes.</div>`;
+      el.innerHTML = `<div class="credits-empty">${__('Sin movimientos recientes.')}</div>`;
       return;
     }
     el.innerHTML = `
       <table class="credits-table">
         <thead>
           <tr>
-            <th>Fecha</th>
-            <th>Tipo</th>
+            <th>${__('Fecha')}</th>
+            <th>${__('Tipo')}</th>
             <th>Δ</th>
-            <th>Detalle</th>
+            <th>${__('Detalle')}</th>
           </tr>
         </thead>
         <tbody>
@@ -594,11 +594,11 @@ class CreditsShopView extends BaseView {
       </table>
       <div class="credits-recent-pager">
         <button type="button" class="btn btn-text" id="recentPrev" ${this.recentPage === 0 ? 'disabled' : ''}>
-          <i class="fas fa-arrow-left"></i> Anterior
+          <i class="fas fa-arrow-left"></i> ${__('Anterior')}
         </button>
-        <span>Página ${this.recentPage + 1}</span>
+        <span>${__('Página {n}', { n: this.recentPage + 1 })}</span>
         <button type="button" class="btn btn-text" id="recentNext" ${this.recentEvents.length < this.RECENT_PAGE_SIZE ? 'disabled' : ''}>
-          Siguiente <i class="fas fa-arrow-right"></i>
+          ${__('Siguiente')} <i class="fas fa-arrow-right"></i>
         </button>
       </div>
     `;
@@ -608,7 +608,7 @@ class CreditsShopView extends BaseView {
     const el = this.querySelector('#creditsPacks');
     if (!el) return;
     if (!this.packages.length) {
-      el.innerHTML = `<div class="credits-empty">No hay paquetes disponibles.</div>`;
+      el.innerHTML = `<div class="credits-empty">${__('No hay paquetes disponibles.')}</div>`;
       return;
     }
     el.innerHTML = `
@@ -617,15 +617,15 @@ class CreditsShopView extends BaseView {
           const total = p.credits + p.bonus;
           return `
             <div class="credits-pack-card ${p.popular ? 'is-popular' : ''}" data-pack-id="${p.id}">
-              ${p.popular ? '<span class="credits-pack-badge">Recomendado</span>' : ''}
+              ${p.popular ? `<span class="credits-pack-badge">${__('Recomendado')}</span>` : ''}
               <div class="credits-pack-name">${this.escapeHtml(p.name)}</div>
-              <div class="credits-pack-credits">${p.credits.toLocaleString('es')}<small>créditos</small></div>
-              ${p.bonus > 0 ? `<div class="credits-pack-bonus">+${p.bonus.toLocaleString('es')} bonus</div>` : ''}
+              <div class="credits-pack-credits">${p.credits.toLocaleString('es')}<small>${__('créditos')}</small></div>
+              ${p.bonus > 0 ? `<div class="credits-pack-bonus">+${p.bonus.toLocaleString('es')} ${__('bonus')}</div>` : ''}
               <div class="credits-pack-price">$${p.price}</div>
               <button type="button" class="btn btn-primary credits-pack-buy" data-pack-id="${p.id}">
-                <i class="fas fa-cart-plus"></i> Comprar
+                <i class="fas fa-cart-plus"></i> ${__('Comprar')}
               </button>
-              <div class="credits-pack-note">Total: ${total.toLocaleString('es')} cr · Expira en 12 meses</div>
+              <div class="credits-pack-note">${__('Total: {n} cr · Expira en 12 meses', { n: total.toLocaleString('es') })}</div>
             </div>
           `;
         }).join('')}
@@ -683,7 +683,7 @@ class CreditsShopView extends BaseView {
     const packId = e.currentTarget.getAttribute('data-pack-id');
     if (!packId) return;
     if (!window.billingService) {
-      const msg = 'Billing service no disponible. Recarga la página.';
+      const msg = __('Billing service no disponible. Recarga la página.');
       this.showNotification?.(msg, 'error') || alert(msg);
       return;
     }
@@ -729,12 +729,12 @@ class CreditsShopView extends BaseView {
       auto_recharge_at_pct: parseInt(root.querySelector('#prefAutoPct')?.value, 10) || 10,
       auto_recharge_pack_id: root.querySelector('#prefAutoPack')?.value || null,
     };
-    if (status) { status.textContent = 'Guardando…'; status.className = 'credits-pref-status'; }
+    if (status) { status.textContent = __('Guardando…'); status.className = 'credits-pref-status'; }
     const { error } = await this.supabase
       .from('credit_alert_prefs')
       .upsert(payload, { onConflict: 'organization_id' });
     if (status) {
-      status.textContent = error ? `Error: ${error.message}` : 'Guardado.';
+      status.textContent = error ? `${__('Error')}: ${error.message}` : __('Guardado.');
       status.className = `credits-pref-status ${error ? 'is-error' : 'is-success'}`;
       setTimeout(() => { status.textContent = ''; }, 3000);
     }
@@ -766,16 +766,16 @@ class CreditsShopView extends BaseView {
     if (!d) return '';
     const ts = new Date(d).getTime();
     const diff = Date.now() - ts;
-    if (diff < 3600000) return `hace ${Math.floor(diff / 60000)} min`;
-    if (diff < 86400000) return `hace ${Math.floor(diff / 3600000)} h`;
-    if (diff < 7 * 86400000) return `hace ${Math.floor(diff / 86400000)} d`;
+    if (diff < 3600000) return __('hace {n} min', { n: Math.floor(diff / 60000) });
+    if (diff < 86400000) return __('hace {n} h', { n: Math.floor(diff / 3600000) });
+    if (diff < 7 * 86400000) return __('hace {n} d', { n: Math.floor(diff / 86400000) });
     return this._fmtDate(d);
   }
 
   _areaLabel(area) {
     const labels = {
       studio: 'Studio', video: 'Video', vera: 'Vera',
-      production: 'Production', background: 'Background', system: 'Sistema',
+      production: __('Producción'), background: __('Segundo plano'), system: __('Sistema'),
     };
     return labels[area] || area;
   }

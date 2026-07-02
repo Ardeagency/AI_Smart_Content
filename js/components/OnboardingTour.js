@@ -13,6 +13,13 @@
   const FLAG = 'asc:onboardingTour';
   const STYLE_ID = 'asc-onb-style';
 
+  /* Los títulos/cuerpos se traducen al render con __(s.title)/__(s.body) (clave
+     dinámica), así el tour respeta el idioma activo aunque este módulo cargue
+     antes que I18n. i18n-keep — literales para scripts/i18n-extract.mjs:
+     __('¡Bienvenida a tu marca!') __('Este es tu panel principal. Desde aquí ves el estado de tu marca y todo lo que tu equipo de IA está haciendo por ti.')
+     __('Vera, tu equipo de marketing') __('Vera ya está activa: investiga, propone contenido y vigila a tu competencia. La encuentras en el menú lateral para conversar con ella.')
+     __('Crea contenido') __('En Studio y Producción generas piezas (imágenes, video y copy) con la identidad de tu marca ya cargada.')
+     __('Mide y mejora') __('En Dashboard y Monitoreo ves tu rendimiento y el sentimiento de tu audiencia para decidir mejor.') */
   const STEPS = [
     { icon: '🎉', title: '¡Bienvenida a tu marca!', body: 'Este es tu panel principal. Desde aquí ves el estado de tu marca y todo lo que tu equipo de IA está haciendo por ti.' },
     { icon: '🧠', title: 'Vera, tu equipo de marketing', body: 'Vera ya está activa: investiga, propone contenido y vigila a tu competencia. La encuentras en el menú lateral para conversar con ella.' },
@@ -76,12 +83,12 @@
       ov.innerHTML = `
         <div class="asc-onb-card">
           <div class="asc-onb-emoji" aria-hidden="true">${s.icon}</div>
-          <h2>${esc(s.title)}</h2>
-          <p>${esc(s.body)}</p>
+          <h2>${esc(__(s.title))}</h2>
+          <p>${esc(__(s.body))}</p>
           <div class="asc-onb-dots">${STEPS.map((_, k) => `<span class="asc-onb-dot ${k === i ? 'is-on' : ''}"></span>`).join('')}</div>
           <div class="asc-onb-actions">
-            <button type="button" class="asc-onb-skip" data-onb="skip">${last ? '' : 'Saltar'}</button>
-            <button type="button" class="asc-onb-next" data-onb="next">${last ? 'Empezar' : 'Siguiente'}</button>
+            <button type="button" class="asc-onb-skip" data-onb="skip">${last ? '' : __('Saltar')}</button>
+            <button type="button" class="asc-onb-next" data-onb="next">${last ? __('Empezar') : __('Siguiente')}</button>
           </div>
         </div>`;
       ov.querySelector('[data-onb="next"]').onclick = () => { if (last) close(); else { i++; render(); } };
