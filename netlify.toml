@@ -5,12 +5,14 @@
 # Netlify Configuration for AI Smart Content (SPA)
 
 [build]
-  # Cache busting automático: reemplaza el placeholder __BUILD_ID__ por el SHA del
-  # commit que está siendo deployado. Cada deploy genera un cache key único en
-  # los `?v=...` de index.html, css/bundle.css y js/app.js, sin intervención manual.
-  # COMMIT_REF lo expone Netlify; en local sin build, el placeholder permanece y
-  # js/app.js cae a Date.now() en runtime para que tampoco haya cache stale en dev.
-  command = "sed -i \"s/__BUILD_ID__/$COMMIT_REF/g\" index.html css/bundle.css js/app.js js/utils/lazy-nav.js js/components/DevSidebarEnhancements.js sw.js"
+  # 1) build-minify: aplana los @import de css/bundle.css (24 requests secuenciales
+  #    render-blocking → 1 archivo) y minifica CSS + JS en sitio (whitespace+syntax,
+  #    sin renombrar identificadores: los scripts comparten globals). Ver scripts/build-minify.mjs.
+  # 2) sed: cache busting — reemplaza __BUILD_ID__ por el SHA del commit deployado.
+  #    COMMIT_REF lo expone Netlify; en local sin build, el placeholder permanece y
+  #    js/app.js cae a Date.now() en runtime para que tampoco haya cache stale en dev.
+  #    (Los placeholders viven en string literals: sobreviven a la minificación.)
+  command = "node scripts/build-minify.mjs && sed -i \"s/__BUILD_ID__/$COMMIT_REF/g\" index.html css/bundle.css js/app.js js/utils/lazy-nav.js js/components/DevSidebarEnhancements.js sw.js"
   publish = "."
 
 [functions]

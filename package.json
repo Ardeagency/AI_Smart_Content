@@ -9,7 +9,8 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "lint:ci": "eslint . --max-warnings 632",
-    "audit:isolation": "node scripts/audit-org-isolation.mjs"
+    "audit:isolation": "node scripts/audit-org-isolation.mjs",
+    "build:minify": "node scripts/build-minify.mjs"
   },
   "dependencies": {
     "@netlify/functions": "^2.8.0",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "esbuild": "^0.25.0",
     "@supabase/supabase-js": "^2.45.0",
     "eslint": "^10.6.0",
     "vitest": "^2.1.0"
