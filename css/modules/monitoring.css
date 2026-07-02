@@ -177,9 +177,10 @@
   background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.6);
 }
 .mn-tab.is-active .mn-tab-count { background: rgba(255, 255, 255, 0.14); color: #fff; }
-/* Acento de marca (warm) cuando hay sugerencias nuevas — NO rosa */
+/* Acento de MARCA (adapta por org) cuando hay sugerencias nuevas — sin naranja legacy. */
 .mn-tab--accent:not(.is-active) .mn-tab-count {
-  background: rgba(224, 145, 69, 0.18); color: #e0a045;
+  background: color-mix(in srgb, var(--brand-primary, #6366f1) 20%, transparent);
+  color: color-mix(in srgb, var(--brand-primary, #6366f1) 72%, #fff);
 }
 
 /* Area de contenido del tab activo: ocupa el alto restante del board.
