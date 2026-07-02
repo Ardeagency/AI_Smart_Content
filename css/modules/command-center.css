@@ -587,7 +587,13 @@
      asi que el z-index interno de cada nodo no compite con el SVG; hay que
      elevar el world entero. Queda debajo de minimapa (6) y panel (8). */
   z-index: 2;
+  /* CRITICO para el hover de las lineas: el world cubre TODO el canvas por
+     encima del SVG de edges; sin esto intercepta el mouse y el hover/click
+     jamas llega a .cc-edge-hit (el boton de desconectar era inalcanzable).
+     Los hijos directos (nodos, satelites, cards) re-activan sus eventos. */
+  pointer-events: none;
 }
+.cc-canvas-world > * { pointer-events: auto; }
 
 .cc-canvas-edges {
   position: absolute;
