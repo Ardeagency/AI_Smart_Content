@@ -4417,8 +4417,6 @@
   P._renderStrategyBudget = function () {
     const host = document.getElementById('ccStratBudget');
     if (!host) return;
-    // No clobberear mientras el usuario edita el total.
-    if (document.activeElement && document.activeElement.id === 'ccBudgetInput') return;
     const row = this._containerRow || {};
     const total = Number(row.marketing_budget) || 0;
     const cur = row.marketing_budget_currency || 'COP';
@@ -4426,38 +4424,17 @@
     const pct = total > 0 ? Math.min(100, Math.round((assigned / total) * 100)) : 0;
     const over = total > 0 && assigned > total;
     const fmt = (n) => Math.round(n).toLocaleString('es-CO');
+    // SOLO LECTURA: el techo se DEFINE en la ficha de la marca (INFO de Brand
+    // Storage / Brand Organization). El Command Center lo lee y muestra cuanto
+    // esta repartido entre los objetivos.
     host.innerHTML = `
       <div class="cc-strat-budget-title">${__('Presupuesto de marketing')}</div>
-      <div class="cc-strat-budget-row" title="${__('Presupuesto total del mercado (editable)')}">
+      <div class="cc-strat-budget-row" title="${__('Definido en la ficha de la marca (Brand Storage → INFO)')}">
         <span class="cc-strat-budget-cur">${this.escapeHtml(cur)}</span>
-        <input class="cc-strat-budget-input" id="ccBudgetInput" type="text" inputmode="numeric"
-               value="${total ? fmt(total) : ''}" placeholder="${__('Definir total')}" />
-        <i class="fas fa-pen cc-strat-budget-pen" aria-hidden="true"></i>
+        <span class="cc-strat-budget-total">${total ? fmt(total) : __('Sin definir')}</span>
       </div>
       <div class="cc-strat-budget-bar ${over ? 'is-over' : ''}"><span style="width:${pct}%"></span></div>
       <div class="cc-strat-budget-sub ${over ? 'is-over' : ''}">${__('Asignado en objetivos')}: ${this.escapeHtml(cur)} ${fmt(assigned)}${total ? ` · ${pct}%` : ''}${over ? ' ⚠' : ''}</div>`;
-    const input = document.getElementById('ccBudgetInput');
-    if (input) {
-      const commit = async () => {
-        const raw = String(input.value || '').replace(/[^\d]/g, '');
-        const val = raw ? Number(raw) : null;
-        if (!this._supabase || !this._containerRow?.id) return;
-        if ((Number(this._containerRow.marketing_budget) || null) === val) { this._renderStrategyBudget(); return; }
-        this._containerRow.marketing_budget = val;
-        try {
-          const { error } = await this._supabase.from('brand_containers')
-            .update({ marketing_budget: val, updated_at: new Date().toISOString() })
-            .eq('id', this._containerRow.id);
-          if (error) throw error;
-        } catch (e) { console.error('[CC] save marketing_budget:', e?.message || e); }
-        this._renderStrategyBudget();
-      };
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-        else if (e.key === 'Escape') { input.value = total ? fmt(total) : ''; input.blur(); }
-      });
-      input.addEventListener('blur', commit);
-    }
   };
 
   P._renderStrategySteps = function () {

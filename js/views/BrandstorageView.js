@@ -314,7 +314,7 @@ class BrandstorageView extends BaseView {
 
       const { data: containerRows, error: containersError } = await this.supabase
         .from('brand_containers')
-        .select('id, nombre_marca, creative_brief, idiomas_contenido, mercado_objetivo, nicho_core, sub_nichos, arquetipo, propuesta_valor, mision_vision, verbal_dna, visual_dna, palabras_clave, palabras_prohibidas, objetivos_estrategicos, updated_at, created_at')
+        .select('id, nombre_marca, creative_brief, idiomas_contenido, mercado_objetivo, nicho_core, sub_nichos, arquetipo, propuesta_valor, mision_vision, verbal_dna, visual_dna, palabras_clave, palabras_prohibidas, objetivos_estrategicos, marketing_budget, marketing_budget_currency, updated_at, created_at')
         .eq('organization_id', orgId)
         .order('created_at', { ascending: false });
       if (containersError) {

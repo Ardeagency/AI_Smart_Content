@@ -1678,6 +1678,7 @@
               ${this.renderIdentitySection(brandContainer)}
               </div>
           </section>
+          ${this.renderMarketingBudgetSectionHtml()}
           ${this.renderInfoAssetsSectionHtml()}
         </div>
         <aside class="info-panel-grid__secondary" aria-labelledby="infoBrandSchemaHeading">
@@ -1701,6 +1702,71 @@
       });
     }
     this.setupInfoBrandFieldEditors(container);
+    this.setupMarketingBudgetEditors(container);
+    },
+
+  /* ── Presupuesto de marketing (brand_containers.marketing_budget) ─────
+     El techo que la marca establece para sus campanas. Se DEFINE aqui (INFO);
+     el Command Center lo lee y reparte entre objetivos. */
+  _budgetContainerRow() {
+    return this.brandContainerData ||
+      (Array.isArray(this.brandContainers) && this.brandContainers[0]) || null;
+  },
+
+  renderMarketingBudgetSectionHtml() {
+    const bc = this._budgetContainerRow();
+    if (!bc) return '';
+    const total = Number(bc.marketing_budget) || 0;
+    const cur = bc.marketing_budget_currency || 'COP';
+    const fmt = (n) => Math.round(n).toLocaleString('es-CO');
+    return `
+      <section class="info-section info-section-budget" aria-labelledby="infoBudgetHeading">
+        <h3 class="info-section-title" id="infoBudgetHeading">${__('Presupuesto de marketing')}</h3>
+        <p class="info-budget-lead">${__('Techo que la marca establece para sus campañas. El Command Center reparte este total entre los objetivos de campaña.')}</p>
+        <div class="info-budget-row">
+          <input id="infoMarketingBudgetCur" class="info-budget-cur" type="text" maxlength="4"
+                 value="${this.escapeHtml(cur)}" aria-label="${__('Moneda')}" spellcheck="false" />
+          <input id="infoMarketingBudget" class="info-budget-amount" type="text" inputmode="numeric"
+                 value="${total ? fmt(total) : ''}" placeholder="${__('Definir total')}"
+                 aria-label="${__('Presupuesto total de marketing')}" />
+          <i class="fas fa-pen info-budget-pen" aria-hidden="true"></i>
+        </div>
+      </section>`;
+    },
+
+  setupMarketingBudgetEditors(container) {
+    const amount = container.querySelector('#infoMarketingBudget');
+    const cur = container.querySelector('#infoMarketingBudgetCur');
+    if (!amount || amount.dataset.bound === '1') return;
+    amount.dataset.bound = '1';
+    const fmt = (n) => Math.round(n).toLocaleString('es-CO');
+    const commit = async () => {
+      const bc = this._budgetContainerRow();
+      if (!bc || !this.supabase) return;
+      const raw = String(amount.value || '').replace(/[^\d]/g, '');
+      const val = raw ? Number(raw) : null;
+      const curVal = String(cur?.value || '').trim().toUpperCase() || 'COP';
+      if ((Number(bc.marketing_budget) || null) === val && (bc.marketing_budget_currency || 'COP') === curVal) return;
+      try {
+        const { error } = await this.supabase
+          .from('brand_containers')
+          .update({ marketing_budget: val, marketing_budget_currency: curVal, updated_at: new Date().toISOString() })
+          .eq('id', bc.id);
+        if (error) throw error;
+        bc.marketing_budget = val;
+        bc.marketing_budget_currency = curVal;
+        amount.value = val ? fmt(val) : '';
+        if (cur) cur.value = curVal;
+      } catch (e) {
+        console.error('InfoPanel saveMarketingBudget:', e?.message || e);
+        alert(__('Error al guardar el presupuesto de marketing.'));
+      }
+    };
+    [amount, cur].forEach((el) => {
+      if (!el) return;
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+      el.addEventListener('blur', commit);
+    });
     },
 
     /**

@@ -2157,6 +2157,59 @@
     color: inherit;
 }
 
+/* ── Presupuesto de marketing (INFO): techo de la marca para campañas ── */
+#infoPanelContent .info-section-budget { margin-top: 1.25rem; }
+#infoPanelContent .info-budget-lead {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: -0.4rem 0 0.75rem;
+}
+#infoPanelContent .info-budget-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 340px;
+    padding: 9px 12px;
+    border: 1px solid var(--border-divider, #242424);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+}
+#infoPanelContent .info-budget-cur {
+    flex: 0 0 52px;
+    width: 52px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    outline: none;
+}
+#infoPanelContent .info-budget-amount {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-primary, #fff);
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 600;
+    outline: none;
+}
+#infoPanelContent .info-budget-amount::placeholder { color: var(--text-muted); font-weight: 500; }
+#infoPanelContent .info-budget-pen {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    opacity: 0.55;
+    transition: opacity 0.15s ease;
+}
+#infoPanelContent .info-budget-row:hover .info-budget-pen,
+#infoPanelContent .info-budget-row:focus-within .info-budget-pen { opacity: 1; }
+
 /* Panel INFO org: puente a Brand Storage si hay una sola sub-marca */
 .info-single-subbrand-bridge {
     margin-bottom: 1.25rem;
