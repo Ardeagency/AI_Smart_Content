@@ -1268,6 +1268,42 @@ class MonitoringView extends BaseView {
     }
   }
 
+  /** Recurrencia de posteo (posts/semana) estimada de los posts cargados. */
+  _recurrenceFromPosts(posts) {
+    if (!posts || posts.length < 2) return null;
+    const t = posts.map((p) => new Date(p.captured_at).getTime()).filter((x) => x).sort((a, b) => a - b);
+    if (t.length < 2) return null;
+    const spanDays = (t[t.length - 1] - t[0]) / 86400000;
+    if (spanDays < 0.5) return null;
+    return (t.length - 1) / spanDays * 7; // por semana
+  }
+
+  /** Mini-dashboard del perfil: lo que hay que saber y punto (patrones básicos). */
+  _renderEntityDashboard(a, perWeek) {
+    const total = (a && a.total_posts) || 0;
+    if (!a || total === 0) {
+      return `<div class="mn-det-act-empty"><i class="fas fa-chart-simple"></i><span>${__('Aún sin datos para analizar')}</span></div>`;
+    }
+    const level = total >= 60 ? { t: __('Señal rica'), c: 'high' } : total >= 20 ? { t: __('Señal moderada'), c: 'mid' } : { t: __('Señal limitada'), c: 'low' };
+    const hour = (a.peak_posting_hour != null) ? `${String(a.peak_posting_hour).padStart(2, '0')}:00` : '—';
+    const rec = perWeek ? (perWeek >= 1 ? `${perWeek.toFixed(perWeek < 3 ? 1 : 0)}/sem` : `${(perWeek * 4.33).toFixed(1)}/mes`) : '—';
+    const stat = (icon, label, val) => `<div class="mn-dash-stat"><span class="mn-dash-stat-ic"><i class="fas ${icon}"></i></span><div class="mn-dash-stat-b"><div class="mn-dash-stat-v">${val}</div><div class="mn-dash-stat-l">${label}</div></div></div>`;
+    const topics = Object.entries(a.topic_distribution || {}).sort((x, y) => y[1] - x[1]).slice(0, 5);
+    const topicsHtml = topics.length ? topics.map(([t]) => `<span class="mn-dash-chip">${this._esc(t)}</span>`).join('') : `<span class="mn-dash-chip mn-dash-chip--empty">${__('sin temas')}</span>`;
+    return `
+      <div class="mn-dash-level mn-dash-level--${level.c}"><i class="fas fa-signal"></i>${level.t}</div>
+      ${stat('fa-layer-group', __('Publicaciones obtenidas'), total)}
+      ${stat('fa-fire', __('Engagement producido'), this._compact(a.total_engagement || 0))}
+      ${stat('fa-chart-line', __('Promedio por post'), this._compact(a.avg_engagement_per_post || 0))}
+      ${stat('fa-clock', __('Hora que más publica'), hour)}
+      ${stat('fa-repeat', __('Recurrencia de posteo'), rec)}
+      ${stat('fa-comment', __('Tono dominante'), this._esc(a.dominant_tone || '—'))}
+      <div class="mn-dash-topics">
+        <div class="mn-det-section-title">${__('Temas identificados')}</div>
+        <div class="mn-dash-chips">${topicsHtml}</div>
+      </div>`;
+  }
+
   /* ── Panel de detalle (landscape estilo Flows) al seleccionar una burbuja ── */
   _openBubbleDetail(item) {
     if (!window.Modal || typeof window.Modal.show !== 'function') { return this._openBubblePop(item, 0, 0); }
@@ -1332,7 +1368,7 @@ class MonitoringView extends BaseView {
     body.innerHTML = `
       <div class="mn-detail-bg" aria-hidden="true" style="background:${gradCss}"></div>
       <div class="mn-detail-scrim" aria-hidden="true"></div>
-      <div class="mn-detail-grid">
+      <div class="mn-detail-grid${isProfile ? ' mn-detail-grid--3' : ''}">
         <aside class="mn-detail-col mn-detail-col--activity">
           <h3 class="mn-det-section-title">${leftTitle}</h3>
           <div class="mn-detail-posts" data-posts>${leftInner}</div>
@@ -1342,7 +1378,10 @@ class MonitoringView extends BaseView {
             <div class="mn-detail-avatar" style="background:${borderCss}"><i class="${platIcon}"></i></div>
             <div class="mn-detail-idcol">
               <span class="mn-detail-eyebrow" data-role-eyebrow>${this._esc(roleLabel)}</span>
-              <input class="mn-detail-name" data-edit="name" value="${this._esc(item.title)}" aria-label="${__('Nombre')}">
+              <div class="mn-detail-name-wrap">
+                <input class="mn-detail-name" data-edit="name" value="${this._esc(item.title)}" aria-label="${__('Nombre')}">
+                <i class="fas fa-pen mn-detail-name-pen" aria-hidden="true"></i>
+              </div>
               ${item.subtitle ? `<div class="mn-detail-sub">${this._esc(item.subtitle)}</div>` : ''}
             </div>
             <label class="mn-detail-switch" title="${item.isActive ? __('Pausar') : __('Activar')}">
@@ -1358,18 +1397,31 @@ class MonitoringView extends BaseView {
             <button type="button" class="mn-btn-secondary mn-btn-danger" data-bact="delete"><i class="fas fa-trash"></i> ${__('Dejar de seguir')}</button>
           </div>
         </div>
+        ${isProfile ? `<aside class="mn-detail-col mn-detail-col--dash">
+          <h3 class="mn-det-section-title">${__('Lo que hay que saber')}</h3>
+          <div class="mn-detail-dash" data-dashboard>
+            <div class="mn-post mn-post--skel" style="height:44px"></div>
+            <div class="mn-post mn-post--skel" style="height:44px"></div>
+            <div class="mn-post mn-post--skel" style="height:44px"></div>
+          </div>
+        </aside>` : ''}
       </div>`;
 
-    const { modal, close } = window.Modal.show({ title: '', body, className: 'mn-detail-modal' });
+    const { modal, close } = window.Modal.show({ title: '', body, className: isProfile ? 'mn-detail-modal mn-detail-modal--wide' : 'mn-detail-modal' });
 
-    // Carga async del contenido capturado (perfiles).
+    // Carga async: contenido capturado (izquierda) + mini-análisis (derecha).
     if (isProfile) {
-      this._service.loadEntityPosts(item.id, 30).then(({ data }) => {
+      Promise.all([
+        this._service.loadEntityPosts(item.id, 30),
+        this._service.loadEntityAnalysis(item.id),
+      ]).then(([postsRes, analysisRes]) => {
+        const posts = (postsRes && postsRes.data) || [];
         const host = modal.querySelector('[data-posts]');
-        if (!host) return;
-        host.innerHTML = (data && data.length)
-          ? data.map((p) => this._renderPostCard(p)).join('')
+        if (host) host.innerHTML = posts.length
+          ? posts.map((p) => this._renderPostCard(p)).join('')
           : `<div class="mn-det-act-empty"><i class="fas fa-inbox"></i><span>${__('Aún no hemos capturado contenido de este perfil.')}</span></div>`;
+        const dash = modal.querySelector('[data-dashboard]');
+        if (dash) dash.innerHTML = this._renderEntityDashboard((analysisRes && analysisRes.data) || null, this._recurrenceFromPosts(posts));
       }).catch(() => {});
     }
 

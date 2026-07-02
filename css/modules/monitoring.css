@@ -707,10 +707,58 @@ a.mn-post:hover .mn-post-ext { color: rgba(255, 255, 255, 0.7); }
 .mn-vera-shortcuts button:hover { background: color-mix(in srgb, var(--brand-primary, #6366f1) 24%, transparent); }
 .mn-vera-shortcuts button i { font-size: 12px; }
 
-/* En pantallas angostas, el detalle se apila (info arriba, contenido abajo). */
+/* Modal más ancho + 3 columnas cuando hay mini-dashboard (perfiles). */
+.modal-content.mn-detail-modal--wide {
+  width: min(1140px, 95vw) !important; max-width: min(1140px, 95vw) !important;
+}
+.mn-detail-grid--3 { grid-template-columns: 250px minmax(0, 1fr) 252px; }
+
+/* Lápiz de "editable" en el nombre. */
+.mn-detail-name-wrap { position: relative; }
+.mn-detail-name-wrap .mn-detail-name { padding-right: 28px; }
+.mn-detail-name-pen {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  font-size: 12px; color: rgba(255, 255, 255, 0.28); pointer-events: none; transition: color 0.15s ease;
+}
+.mn-detail-name:hover ~ .mn-detail-name-pen,
+.mn-detail-name:focus ~ .mn-detail-name-pen { color: rgba(255, 255, 255, 0.68); }
+
+/* ── Mini-dashboard (columna derecha): lo que hay que saber del perfil ── */
+.mn-detail-dash { display: flex; flex-direction: column; gap: 8px; }
+.mn-dash-level {
+  display: inline-flex; align-items: center; gap: 7px; align-self: flex-start;
+  padding: 5px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; margin-bottom: 2px;
+}
+.mn-dash-level i { font-size: 10px; }
+.mn-dash-level--high { background: rgba(34, 197, 94, 0.14); color: #4ade80; }
+.mn-dash-level--mid  { background: rgba(234, 179, 8, 0.14); color: #eab308; }
+.mn-dash-level--low  { background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.55); }
+.mn-dash-stat {
+  display: flex; align-items: center; gap: 10px; padding: 9px 11px;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-divider, #242424); border-radius: 10px;
+}
+.mn-dash-stat-ic {
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
+  background: color-mix(in srgb, var(--brand-primary, #6366f1) 14%, transparent);
+  color: color-mix(in srgb, var(--brand-primary, #8a8aff) 80%, #fff);
+}
+.mn-dash-stat-b { min-width: 0; }
+.mn-dash-stat-v { font-size: 15px; font-weight: 700; color: #fff; line-height: 1.1; }
+.mn-dash-stat-l { font-size: 10.5px; color: rgba(255, 255, 255, 0.5); margin-top: 1px; }
+.mn-dash-topics { margin-top: 4px; display: flex; flex-direction: column; gap: 7px; }
+.mn-dash-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.mn-dash-chip {
+  font-size: 11px; padding: 3px 9px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.72); border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.mn-dash-chip--empty { opacity: 0.5; }
+
+/* En pantallas angostas el detalle se apila. */
+@media (max-width: 980px) { .mn-detail-grid--3 { grid-template-columns: 1fr; } }
 @media (max-width: 720px) {
   .mn-detail-grid { grid-template-columns: 1fr; }
-  .mn-detail-col--info { padding-right: 0; order: -1; }
+  .mn-detail-col--info { padding-right: 0; }
   .mn-detail-posts { max-height: 300px; }
 }
 

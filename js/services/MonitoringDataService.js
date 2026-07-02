@@ -125,6 +125,20 @@ class MonitoringDataService {
     }
   }
 
+  /** Mini-análisis del perfil (RPC dashboard_competencia_actor_details):
+      total posts, engagement, hora pico, tono dominante, distribución de temas. */
+  async loadEntityAnalysis(entityId) {
+    if (!this.sb || !this.orgId || !entityId) return { data: null, error: null };
+    try {
+      const { data, error } = await this.sb.rpc('dashboard_competencia_actor_details', {
+        p_org_id: this.orgId, p_entity_id: entityId,
+      });
+      return { data: data || null, error: error || null };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  }
+
   /* ══════════════════════════════════════════════════════════
      intelligence_entities — Perfiles
   ══════════════════════════════════════════════════════════ */
