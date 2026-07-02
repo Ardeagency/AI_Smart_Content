@@ -1751,6 +1751,8 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Producciones": "Productions",
   "Producciones generadas": "Generated productions",
   "Producciones por ejecución": "Productions per run",
+  "Color en el calendario": "Calendar color",
+  "Sin color (neutro)": "No color (neutral)",
   "Produce más de esto": "Produce more of this",
   "Producir": "Produce",
   "Production Preset": "Production Preset",

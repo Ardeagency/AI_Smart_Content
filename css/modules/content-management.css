@@ -650,9 +650,9 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   display: inline-block;
 }
 
-.cal2-legend-dot--active { background: var(--status-gradient-active); }
+.cal2-legend-dot--active { background: #22c55e; }
 .cal2-legend-dot--paused { background: var(--text-tertiary); }
-.cal2-legend-dot--draft  { background: var(--status-gradient-draft); }
+.cal2-legend-dot--draft  { background: #eab308; }
 
 .cal2-empty {
   color: var(--text-secondary);
@@ -763,7 +763,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .cal2-event:hover {
   transform: translateY(-1px);
   filter: brightness(1.07);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--ev-ring, inset 0 0 0 1px rgba(255, 255, 255, 0.08)), 0 6px 18px rgba(0, 0, 0, 0.4);
   z-index: 4;
 }
 
@@ -819,20 +819,42 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .cal2-bub--more { background: rgba(255, 255, 255, 0.22); color: #fff; font-weight: 700; }
 .cal2-bub--ph { background: rgba(255, 255, 255, 0.12); }
 
-/* Fondos por estado: consume los tokens reutilizables de status-cards.css
-   (gradientes de marca con baja saturacion). Single source of truth. */
-.cal2-event--draft  { background: var(--status-gradient-draft); }
-.cal2-event--active { background: var(--status-gradient-active); }
-.cal2-event--draft .cal2-event-name,
-.cal2-event--active .cal2-event-name { color: var(--status-text-strong); }
-.cal2-event--draft .cal2-event-when,
-.cal2-event--active .cal2-event-when { color: var(--status-text-soft); }
-
-.cal2-event--paused {
-  background: var(--status-fill-paused);
+/* Cards neutras (monocromo): el estado ya NO pinta el fondo — se señala con
+   un punto junto a la hora. El color del fondo lo pone el USUARIO por tarea
+   (flow_schedules.color, text[] → --ev-c1/--ev-c2; array para soportar
+   degradados a futuro, hoy c1=c2). Sin color = pill translúcido + hairline. */
+.cal2-event {
+  --ev-ring: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: var(--ev-ring);
 }
-.cal2-event--paused .cal2-event-name { color: #e2e2e8; }
-.cal2-event--paused .cal2-event-when { color: #b6b6be; }
+.cal2-event .cal2-event-name { color: #e2e2e8; }
+.cal2-event .cal2-event-when { color: #b6b6be; }
+.cal2-event--paused { opacity: 0.68; }
+
+/* Punto de estado (activa/pausada/borrador) dentro de la card */
+.cal2-event-statusdot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+  background: var(--text-tertiary, #87868B);
+}
+.cal2-event-statusdot--active { background: #22c55e; }
+.cal2-event-statusdot--draft  { background: #eab308; }
+
+/* Color personalizado: tinte del color del usuario sobre base oscura +
+   hairline del mismo color. Legible con texto claro en toda la paleta. */
+.cal2-event--custom {
+  --ev-ring: inset 0 0 0 1px color-mix(in srgb, var(--ev-c1) 42%, transparent);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--ev-c1) 30%, #131316) 0%,
+    color-mix(in srgb, var(--ev-c2) 30%, #131316) 100%);
+  box-shadow: var(--ev-ring);
+}
+.cal2-event--custom .cal2-event-name { color: #f4f4f6; }
 
 /* Linea de "ahora" */
 .cal2-now {
@@ -1423,6 +1445,36 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   color: var(--text-primary);
 }
 .task-detail-field--specs { flex: 1; }
+
+/* Swatches de color de la tarea (mismo lenguaje que las burbujas de
+   Monitoreo: .mn-swatch). Chip "sin color" = volver al estilo neutro. */
+.task-detail-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.task-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  padding: 0;
+  transition: transform 0.12s ease;
+}
+.task-swatch:hover { transform: scale(1.15); }
+.task-swatch.is-on { border-color: #fff; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2); }
+.task-swatch--none {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.task-swatch--none.is-on { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.25); }
+
 .task-detail-textarea {
   width: 100%;
   min-height: 100px;

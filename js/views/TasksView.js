@@ -6,6 +6,15 @@ class TasksView extends BaseView {
   static cacheable = true;
   static get documentTitle() { return __('Tareas programadas'); }
 
+  // Paleta para personalizar el color de una tarea en el calendario (misma
+  // paleta que las burbujas de Monitoreo). '' = volver al estilo neutro.
+  // flow_schedules.color es text[] para soportar degradados a futuro; hoy
+  // se usa un solo color (color[0]).
+  static PALETTE = [
+    '#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#eab308',
+    '#14b8a6', '#ef4444', '#8b5cf6', '#06b6d4', '#f43f5e', '#84cc16',
+  ];
+
   constructor() {
     super();
     this.templatePath = null;
@@ -159,6 +168,10 @@ class TasksView extends BaseView {
                 <option value="16:9">16:9</option>
                 <option value="4:5">4:5</option>
               </select>
+            </div>
+            <div class="task-detail-field">
+              <label class="task-detail-label">${__('Color en el calendario')}</label>
+              <div class="task-detail-colors" id="taskDetailColorSwatches" role="group" aria-label="${__('Color en el calendario')}"></div>
             </div>
             <div class="task-detail-field">
               <label class="task-detail-label">${__('Producciones por ejecución')}</label>
@@ -336,7 +349,7 @@ class TasksView extends BaseView {
   async _fetchSchedules(userId, orgId = null) {
     let q = this.supabase
       .from('flow_schedules')
-      .select('id, user_id, flow_id, brand_id, cron_expression, status, job_name, created_at, entity_ids, campaign_ids, audience_ids, production_count, aspect_ratio, production_specifications')
+      .select('id, user_id, flow_id, brand_id, cron_expression, status, job_name, created_at, entity_ids, campaign_ids, audience_ids, production_count, aspect_ratio, production_specifications, color')
       .eq('user_id', userId);
     // Aislamiento por org activa: flow_schedules tiene organization_id; sin este
     // filtro un usuario multi-org ve las tareas de TODAS sus orgs en cada workspace.
@@ -427,9 +440,12 @@ class TasksView extends BaseView {
     }
   }
 
-  /** Invalida cache de schedules tras CRUD desde esta vista. */
+  /** Invalida cache de schedules tras CRUD desde esta vista. La clave del
+      cache es por org activa (loadSchedules usa orgId || userId); se invalida
+      también la clave por userId para cubrir el caso sin org. */
   _invalidateSchedulesCache() {
     if (window.apiClient && this.userId) {
+      if (this.organizationId) window.apiClient.invalidate(`tasks:schedules:${this.organizationId}`);
       window.apiClient.invalidate(`tasks:schedules:${this.userId}`);
     }
   }
@@ -439,7 +455,7 @@ class TasksView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('flow_schedules')
-        .select('id, user_id, flow_id, brand_id, cron_expression, status, job_name, created_at, entity_ids, campaign_ids, audience_ids, metadata_config, production_count, aspect_ratio, production_specifications')
+        .select('id, user_id, flow_id, brand_id, cron_expression, status, job_name, created_at, entity_ids, campaign_ids, audience_ids, metadata_config, production_count, aspect_ratio, production_specifications, color')
         .eq('id', id)
         .eq('user_id', this.userId)
         .single();
@@ -1111,6 +1127,13 @@ class TasksView extends BaseView {
     return status === 'active' ? 'active' : status === 'draft' ? 'draft' : 'paused';
   }
 
+  /** Colores personalizados del schedule (flow_schedules.color, text[]).
+      Solo acepta hex válidos: el valor viene de DB y se inyecta en style. */
+  _scheduleColors(s) {
+    const arr = Array.isArray(s?.color) ? s.color : [];
+    return arr.filter(c => typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c));
+  }
+
   /** Asigna lanes (columnas) a eventos solapados de un mismo dia. Devuelve laneCount por evento. */
   _layoutDayEvents(events, eventH) {
     events.sort((a, b) => a.top - b.top || a.min - b.min);
@@ -1245,11 +1268,15 @@ class TasksView extends BaseView {
         const width = `calc(${widthPct}% - ${gap + 3}px)`;
         const title = `${s.job_name || __('Sin nombre')} · ${timeStr} · ${freq}`;
         const bubbles = this._eventBubbles(s);
-        return `<div class="cal2-event cal2-event--${sc}" data-task-id="${s.id}" role="button" tabindex="0" title="${this.escapeHtml(title)}"
-                  style="top:${e.top}px;height:${EVENT_H}px;left:${left};width:${width}">
+        // Color personalizado por tarea (array → soporta degradado a futuro;
+        // hoy c1=c2 salvo que existan dos colores guardados).
+        const cols = this._scheduleColors(s);
+        const colorStyle = cols.length ? `--ev-c1:${cols[0]};--ev-c2:${cols[1] || cols[0]};` : '';
+        return `<div class="cal2-event cal2-event--${sc}${cols.length ? ' cal2-event--custom' : ''}" data-task-id="${s.id}" role="button" tabindex="0" title="${this.escapeHtml(title)}"
+                  style="top:${e.top}px;height:${EVENT_H}px;left:${left};width:${width};${colorStyle}">
           <div class="cal2-event-main">
             <span class="cal2-event-name">${this.escapeHtml(s.job_name || __('Sin nombre'))}</span>
-            <span class="cal2-event-when">${timeStr} · ${this.escapeHtml(freq)}</span>
+            <span class="cal2-event-when"><span class="cal2-event-statusdot cal2-event-statusdot--${sc}"></span>${timeStr} · ${this.escapeHtml(freq)}</span>
           </div>
           ${bubbles}
         </div>`;
@@ -1411,6 +1438,8 @@ class TasksView extends BaseView {
     if (productionInput) productionInput.value = String(task.production_count ?? 1);
     if (specsText) specsText.value = task.production_specifications || '';
 
+    this._renderColorSwatches(task);
+
     const toggleBtn = document.getElementById('taskDetailToggleActiveBtn');
     const toggleLabel = document.getElementById('taskDetailToggleActiveLabel');
     if (toggleBtn) {
@@ -1433,6 +1462,47 @@ class TasksView extends BaseView {
 
     const saveBtn = document.getElementById('taskDetailSaveBtn');
     if (saveBtn) saveBtn.onclick = () => this.saveTaskDetail(task);
+  }
+
+  /** Swatches de color de la tarea (mismo patrón que las burbujas de
+      Monitoreo): chip neutro (default) + paleta. Guarda al click. */
+  _renderColorSwatches(task) {
+    const wrap = document.getElementById('taskDetailColorSwatches');
+    if (!wrap) return;
+    const current = this._scheduleColors(task)[0] || '';
+    wrap.innerHTML = [
+      `<button type="button" class="task-swatch task-swatch--none${current ? '' : ' is-on'}" data-color="" title="${__('Sin color (neutro)')}" aria-label="${__('Sin color (neutro)')}"><i class="fas fa-ban"></i></button>`,
+      ...TasksView.PALETTE.map(c =>
+        `<button type="button" class="task-swatch${current === c ? ' is-on' : ''}" style="background:${c}" data-color="${c}" title="${c}" aria-label="${c}"></button>`)
+    ].join('');
+    wrap.querySelectorAll('.task-swatch').forEach(sw => {
+      sw.onclick = () => this._setTaskColor(task, sw.dataset.color || '');
+    });
+  }
+
+  /** Persiste el color de la tarea (optimista). Update directo a la tabla:
+      la columna color NO participa en las RPC de schedules. */
+  async _setTaskColor(task, color) {
+    const next = color ? [color] : null;
+    const prev = task.color || null;
+    if ((color || '') === (this._scheduleColors(task)[0] || '')) return;
+    task.color = next;
+    this._renderColorSwatches(task);
+    const { error } = await this.supabase
+      .from('flow_schedules')
+      .update({ color: next })
+      .eq('id', task.id)
+      .eq('user_id', this.userId);
+    if (error) {
+      task.color = prev;
+      this._renderColorSwatches(task);
+      alert(__('No se pudo guardar el color:') + ' ' + error.message);
+      return;
+    }
+    // El calendario (lista cacheada) debe reflejarlo al volver.
+    const row = (this.schedules || []).find(r => r.id === task.id);
+    if (row) row.color = next;
+    this._invalidateSchedulesCache();
   }
 
   /** Carga runs de este task (flow + brand + user) y pinta Dashboard + Runs en paralelo. */
