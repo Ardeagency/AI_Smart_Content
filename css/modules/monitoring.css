@@ -723,36 +723,91 @@ a.mn-post:hover .mn-post-ext { color: rgba(255, 255, 255, 0.7); }
 .mn-detail-name:hover ~ .mn-detail-name-pen,
 .mn-detail-name:focus ~ .mn-detail-name-pen { color: rgba(255, 255, 255, 0.68); }
 
-/* ── Mini-dashboard (columna derecha): lo que hay que saber del perfil ── */
-.mn-detail-dash { display: flex; flex-direction: column; gap: 8px; }
+/* ══════════════════════════════════════════════════════════
+   MINI-DASHBOARD PREMIUM — lectura estratégica del perfil
+   ══════════════════════════════════════════════════════════ */
+.mn-detail-dash { display: flex; flex-direction: column; gap: 12px; }
+
+/* Lectura estratégica (interpretación en 1 línea). */
+.mn-dash-read {
+  padding: 12px 13px; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 3px solid var(--brand-primary, #6366f1);
+}
+.mn-dash-read--high { border-left-color: #22c55e; }
+.mn-dash-read--mid  { border-left-color: #eab308; }
+.mn-dash-read--low  { border-left-color: rgba(255, 255, 255, 0.3); }
+.mn-dash-read-top { margin-bottom: 8px; }
 .mn-dash-level {
-  display: inline-flex; align-items: center; gap: 7px; align-self: flex-start;
-  padding: 5px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; margin-bottom: 2px;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.02em;
 }
-.mn-dash-level i { font-size: 10px; }
-.mn-dash-level--high { background: rgba(34, 197, 94, 0.14); color: #4ade80; }
-.mn-dash-level--mid  { background: rgba(234, 179, 8, 0.14); color: #eab308; }
-.mn-dash-level--low  { background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.55); }
-.mn-dash-stat {
-  display: flex; align-items: center; gap: 10px; padding: 9px 11px;
-  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-divider, #242424); border-radius: 10px;
+.mn-dash-level i { font-size: 9px; }
+.mn-dash-level--high { background: rgba(34, 197, 94, 0.16); color: #4ade80; }
+.mn-dash-level--mid  { background: rgba(234, 179, 8, 0.16); color: #eab308; }
+.mn-dash-level--low  { background: rgba(255, 255, 255, 0.07); color: rgba(255, 255, 255, 0.6); }
+.mn-dash-read-txt { margin: 0; font-size: 12.5px; line-height: 1.5; color: rgba(255, 255, 255, 0.82); }
+
+/* Métrica héroe: el engagement total, grande. */
+.mn-dash-hero {
+  padding: 14px 15px; border-radius: 12px; text-align: left;
+  background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--brand-primary, #6366f1) 16%, transparent), transparent 70%),
+              rgba(255, 255, 255, 0.02);
+  border: 1px solid color-mix(in srgb, var(--brand-primary, #6366f1) 22%, transparent);
 }
-.mn-dash-stat-ic {
-  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; font-size: 12px;
-  background: color-mix(in srgb, var(--brand-primary, #6366f1) 14%, transparent);
-  color: color-mix(in srgb, var(--brand-primary, #8a8aff) 80%, #fff);
+.mn-dash-hero-v {
+  font-size: 34px; font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+  color: #fff; font-variant-numeric: tabular-nums;
 }
-.mn-dash-stat-b { min-width: 0; }
-.mn-dash-stat-v { font-size: 15px; font-weight: 700; color: #fff; line-height: 1.1; }
-.mn-dash-stat-l { font-size: 10.5px; color: rgba(255, 255, 255, 0.5); margin-top: 1px; }
-.mn-dash-topics { margin-top: 4px; display: flex; flex-direction: column; gap: 7px; }
-.mn-dash-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-.mn-dash-chip {
-  font-size: 11px; padding: 3px 9px; border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.72); border: 1px solid rgba(255, 255, 255, 0.08);
+.mn-dash-hero-l { margin-top: 6px; font-size: 11.5px; color: rgba(255, 255, 255, 0.6); line-height: 1.35; }
+.mn-dash-hero-l i { color: #f97316; margin-right: 5px; opacity: 0.85; }
+
+/* KPIs secundarios en rejilla 2×2. */
+.mn-dash-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mn-kpi {
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-divider, #242424);
 }
-.mn-dash-chip--empty { opacity: 0.5; }
+.mn-kpi-v { font-size: 18px; font-weight: 700; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; }
+.mn-kpi-u { font-size: 11px; font-weight: 600; color: rgba(255, 255, 255, 0.45); margin-left: 2px; }
+.mn-kpi-l { margin-top: 4px; font-size: 10.5px; color: rgba(255, 255, 255, 0.5); }
+
+/* Bloques de análisis (voz, temas). */
+.mn-dash-block {
+  padding: 12px 13px; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025); border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.mn-dash-h {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+.mn-dash-h i { font-size: 11px; color: color-mix(in srgb, var(--brand-primary, #8a8aff) 75%, #fff); }
+.mn-dash-block--pending { opacity: 0.75; }
+.mn-dash-pending { margin: 0; font-size: 11.5px; line-height: 1.5; color: rgba(255, 255, 255, 0.42); }
+
+/* Barra de sentimiento. */
+.mn-voz-bar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, 0.06); }
+.mn-voz-seg--pos { background: #22c55e; }
+.mn-voz-seg--neu { background: rgba(255, 255, 255, 0.28); }
+.mn-voz-seg--neg { background: #ef4444; }
+.mn-voz-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: rgba(255, 255, 255, 0.6); }
+.mn-voz-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.mn-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.mn-dot--pos { background: #22c55e; } .mn-dot--neu { background: rgba(255, 255, 255, 0.35); } .mn-dot--neg { background: #ef4444; }
+
+/* Ranking de temas con barras. */
+.mn-temas { display: flex; flex-direction: column; gap: 8px; }
+.mn-tema { display: flex; align-items: center; gap: 10px; }
+.mn-tema-n { flex: 0 0 40%; font-size: 12px; color: rgba(255, 255, 255, 0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mn-tema-bar { flex: 1; height: 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
+.mn-tema-bar i { display: block; height: 100%; border-radius: 999px; background: var(--brand-gradient-dynamic, linear-gradient(90deg, #6366f1, #a855f7)); }
+
+/* Tono dominante. */
+.mn-dash-tone { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 0; }
+.mn-dash-tone-v { font-size: 13px; font-weight: 600; color: #fff; text-transform: capitalize; }
 
 /* En pantallas angostas el detalle se apila. */
 @media (max-width: 980px) { .mn-detail-grid--3 { grid-template-columns: 1fr; } }

@@ -1278,30 +1278,96 @@ class MonitoringView extends BaseView {
     return (t.length - 1) / spanDays * 7; // por semana
   }
 
-  /** Mini-dashboard del perfil: lo que hay que saber y punto (patrones básicos). */
+  /** Buckets de sentimiento (pos/neu/neg) desde la distribución cruda. */
+  _sentimentBuckets(dist) {
+    let pos = 0, neu = 0, neg = 0;
+    for (const [k, n] of Object.entries(dist || {})) {
+      const key = String(k || '').toLowerCase(); const c = Number(n) || 0;
+      if (/pos|positiv/.test(key)) pos += c;
+      else if (/neg|negativ/.test(key)) neg += c;
+      else neu += c;
+    }
+    return { pos, neu, neg, total: pos + neu + neg };
+  }
+
+  /** Lectura ESTRATÉGICA del perfil (interpretación, no solo números). */
+  _strategicRead(a, perWeek) {
+    const avg = a.avg_engagement_per_post || 0;
+    const total = a.total_posts || 0;
+    const freq = perWeek || 0;
+    if (avg >= 150000 && freq && freq < 5) return __('Alto impacto por post: publica poco pero cada pieza genera muchísima interacción. Estúdialo por CALIDAD, no por volumen.');
+    if (avg >= 150000) return __('Máquina de engagement: publica seguido y con altísimo impacto. Referente fuerte a vigilar de cerca.');
+    if (freq >= 7) return __('Estrategia de volumen: publica muy seguido para no perder presencia. Mira su consistencia, no cada post.');
+    if (avg >= 20000 && total >= 40) return __('Presencia sólida y constante, con buen retorno por publicación.');
+    if (total >= 40) return __('Historial amplio disponible: hay material suficiente para leer sus patrones.');
+    return __('Actividad moderada; el análisis se afina a medida que capturamos más contenido.');
+  }
+
+  /** Mini-dashboard PREMIUM: lectura estratégica + héroe + KPIs + señal de voz/temas. */
   _renderEntityDashboard(a, perWeek) {
     const total = (a && a.total_posts) || 0;
     if (!a || total === 0) {
-      return `<div class="mn-det-act-empty"><i class="fas fa-chart-simple"></i><span>${__('Aún sin datos para analizar')}</span></div>`;
+      return `<div class="mn-det-act-empty"><i class="fas fa-chart-simple"></i><span>${__('Aún sin contenido capturado para analizar. En cuanto entren posts, verás aquí sus patrones.')}</span></div>`;
     }
     const level = total >= 60 ? { t: __('Señal rica'), c: 'high' } : total >= 20 ? { t: __('Señal moderada'), c: 'mid' } : { t: __('Señal limitada'), c: 'low' };
     const hour = (a.peak_posting_hour != null) ? `${String(a.peak_posting_hour).padStart(2, '0')}:00` : '—';
-    const rec = perWeek ? (perWeek >= 1 ? `${perWeek.toFixed(perWeek < 3 ? 1 : 0)}/sem` : `${(perWeek * 4.33).toFixed(1)}/mes`) : '—';
-    const stat = (icon, label, val) => `<div class="mn-dash-stat"><span class="mn-dash-stat-ic"><i class="fas ${icon}"></i></span><div class="mn-dash-stat-b"><div class="mn-dash-stat-v">${val}</div><div class="mn-dash-stat-l">${label}</div></div></div>`;
+    const rec = perWeek ? (perWeek >= 1 ? `${perWeek.toFixed(perWeek < 3 ? 1 : 0)}` : `${(perWeek * 4.33).toFixed(1)}`) : '—';
+    const recUnit = perWeek && perWeek < 1 ? __('/mes') : __('/sem');
+
+    const kpi = (val, label, unit) => `<div class="mn-kpi"><div class="mn-kpi-v">${val}${unit ? `<span class="mn-kpi-u">${unit}</span>` : ''}</div><div class="mn-kpi-l">${label}</div></div>`;
+
+    // Voz: barra de sentimiento (si hay data).
+    const sb = this._sentimentBuckets(a.sentiment_distribution);
+    const seg = (n, cls) => sb.total ? `<span class="mn-voz-seg mn-voz-seg--${cls}" style="width:${(n / sb.total * 100).toFixed(1)}%"></span>` : '';
+    const vozHtml = sb.total ? `
+      <div class="mn-dash-block">
+        <div class="mn-dash-h"><i class="fas fa-heart-pulse"></i>${__('Sentimiento de su audiencia')}</div>
+        <div class="mn-voz-bar">${seg(sb.pos, 'pos')}${seg(sb.neu, 'neu')}${seg(sb.neg, 'neg')}</div>
+        <div class="mn-voz-legend">
+          <span><i class="mn-dot mn-dot--pos"></i>${Math.round(sb.pos / sb.total * 100)}% ${__('positivo')}</span>
+          <span><i class="mn-dot mn-dot--neu"></i>${Math.round(sb.neu / sb.total * 100)}%</span>
+          <span><i class="mn-dot mn-dot--neg"></i>${Math.round(sb.neg / sb.total * 100)}% ${__('negativo')}</span>
+        </div>
+      </div>` : '';
+
+    // Temas: ranking con barras (si hay data).
     const topics = Object.entries(a.topic_distribution || {}).sort((x, y) => y[1] - x[1]).slice(0, 5);
-    const topicsHtml = topics.length ? topics.map(([t]) => `<span class="mn-dash-chip">${this._esc(t)}</span>`).join('') : `<span class="mn-dash-chip mn-dash-chip--empty">${__('sin temas')}</span>`;
+    const maxT = topics[0] ? topics[0][1] : 1;
+    const topicsHtml = topics.length ? `
+      <div class="mn-dash-block">
+        <div class="mn-dash-h"><i class="fas fa-hashtag"></i>${__('Sobre qué habla')}</div>
+        <div class="mn-temas">
+          ${topics.map(([t, c]) => `<div class="mn-tema"><span class="mn-tema-n">${this._esc(t)}</span><span class="mn-tema-bar"><i style="width:${Math.max(8, c / maxT * 100)}%"></i></span></div>`).join('')}
+        </div>
+      </div>` : (a.dominant_tone ? '' : `
+      <div class="mn-dash-block mn-dash-block--pending">
+        <div class="mn-dash-h"><i class="fas fa-hashtag"></i>${__('Temas y tono')}</div>
+        <p class="mn-dash-pending">${__('Se activan cuando el análisis de contenido procese sus publicaciones.')}</p>
+      </div>`);
+
+    const toneHtml = a.dominant_tone ? `<div class="mn-dash-tone"><span class="mn-det-section-title">${__('Tono dominante')}</span><span class="mn-dash-tone-v">${this._esc(a.dominant_tone)}</span></div>` : '';
+
     return `
-      <div class="mn-dash-level mn-dash-level--${level.c}"><i class="fas fa-signal"></i>${level.t}</div>
-      ${stat('fa-layer-group', __('Publicaciones obtenidas'), total)}
-      ${stat('fa-fire', __('Engagement producido'), this._compact(a.total_engagement || 0))}
-      ${stat('fa-chart-line', __('Promedio por post'), this._compact(a.avg_engagement_per_post || 0))}
-      ${stat('fa-clock', __('Hora que más publica'), hour)}
-      ${stat('fa-repeat', __('Recurrencia de posteo'), rec)}
-      ${stat('fa-comment', __('Tono dominante'), this._esc(a.dominant_tone || '—'))}
-      <div class="mn-dash-topics">
-        <div class="mn-det-section-title">${__('Temas identificados')}</div>
-        <div class="mn-dash-chips">${topicsHtml}</div>
-      </div>`;
+      <div class="mn-dash-read mn-dash-read--${level.c}">
+        <div class="mn-dash-read-top"><span class="mn-dash-level mn-dash-level--${level.c}"><i class="fas fa-signal"></i>${level.t}</span></div>
+        <p class="mn-dash-read-txt">${this._strategicRead(a, perWeek)}</p>
+      </div>
+
+      <div class="mn-dash-hero">
+        <div class="mn-dash-hero-v">${this._compact(a.total_engagement || 0)}</div>
+        <div class="mn-dash-hero-l"><i class="fas fa-fire"></i>${__('interacciones que ha generado su contenido')}</div>
+      </div>
+
+      <div class="mn-dash-kpis">
+        ${kpi(total, __('Publicaciones'))}
+        ${kpi(this._compact(a.avg_engagement_per_post || 0), __('Prom. / post'))}
+        ${kpi(rec, __('Ritmo'), recUnit)}
+        ${kpi(hour, __('Hora pico'))}
+      </div>
+
+      ${vozHtml}
+      ${topicsHtml}
+      ${toneHtml}`;
   }
 
   /* ── Panel de detalle (landscape estilo Flows) al seleccionar una burbuja ── */
