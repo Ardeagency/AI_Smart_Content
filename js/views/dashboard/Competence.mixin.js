@@ -64,9 +64,46 @@
       const C = (n) => this._compactNum(Number(n) || 0);
       const byEng = (a, b) => Number(b.total_engagement) - Number(a.total_engagement);
 
-      // 1. FÓRMULA DEL NICHO: el rival líder por engagement + ranking.
+      // ── GUARD GLOBAL (doctrina de renderizado: toda narrativa lleva min_n) ──
+      // Sin al menos 1 rival con actividad real (≥3 posts y engagement > 0) NO se
+      // fabrican narrativas de rivalidad: "X domina tu nicho — 0 engagement" o
+      // "te superan (101 vs 0)" desde ceros destruyen la credibilidad del panel.
+      // En su lugar: UNA card de estado honesta (qué está configurado, por qué no
+      // hay señal aún, qué hacer).
+      const activeRivals = top.filter((r) => Number(r.total_posts) >= 3 && Number(r.total_engagement) > 0);
+      if (!activeRivals.length) {
+        const n = top.length;
+        return {
+          funciona: {
+            title: n
+              ? __('{n} perfiles monitoreados — aún sin señal en esta ventana', { n })
+              : __('Aún no monitoreas perfiles'),
+            metric: `${n}`,
+            metricSub: n
+              ? __('los sensores están capturando — amplía el rango o vuelve en 24-48h')
+              : __('agrega competidores y referencias en Monitoreo'),
+            impact: 'medio', earlySignal: true,
+            detail: {
+              color: 'vigila', category: __('Estado del monitoreo'), title: __('Tu radar competitivo'),
+              findings: top.slice(0, 6).map((r) => ({
+                key: 'rival', severity: 20,
+                label: __('{r} — configurado, sin actividad capturada en la ventana', { r: r.entity_name }),
+              })),
+              sections: [{
+                h: __('¿Por qué no hay datos?'),
+                b: n
+                  ? __('Tus perfiles están configurados pero los sensores aún no capturan actividad en el rango elegido. Los primeros datos suelen aparecer en 24-48h desde la configuración; también puedes ampliar el rango de fechas (prueba "Todo el periodo").')
+                  : __('Este panel se enciende cuando monitoreas perfiles: agrega a tus competidores (para vigilarlos) y a tus referentes (para aprender de ellos) desde Monitoreo.'),
+              }],
+            },
+          },
+          oportunidad: null, resta: null, riesgo: null,
+        };
+      }
+
+      // 1. FÓRMULA DEL NICHO: el rival líder por engagement + ranking (solo rivales activos).
       let funciona = null;
-      const leader = [...top].sort(byEng)[0];
+      const leader = [...activeRivals].sort(byEng)[0];
       if (leader) {
         funciona = {
           title: __('{r} domina tu nicho', { r: leader.entity_name }),
@@ -110,8 +147,15 @@
       }
 
       // 3. TE ESTÁN GANANDO: brecha vs competencia (benchmark).
+      // Guard (doctrina): esta card solo existe si la competencia DE VERDAD te
+      // supera con datos reales de ambos lados. Antes se generaba incluso con
+      // competencia en cero ("te superan 101 vs 0" cuando el 101 era la marca).
       let resta = null;
-      if (bench && bench.brand && bench.competencia) {
+      const benchOk = bench && bench.brand && bench.competencia
+        && Number(bench.competencia.posts) >= 3
+        && Number(bench.brand.posts) >= 1
+        && Number(bench.competencia.avg_engagement_per_post) > Number(bench.brand.avg_engagement_per_post);
+      if (benchOk) {
         const youAvg = Number(bench.brand.avg_engagement_per_post) || 0;
         const compAvg = Number(bench.competencia.avg_engagement_per_post) || 0;
         const gap = youAvg > 0 ? Math.round(compAvg / youAvg) : null;
@@ -132,8 +176,10 @@
       }
 
       // 4. AMENAZA: el rival que más domina la atención del nicho.
+      // Guard: solo rivales con actividad real; jamás "tu mayor amenaza — 0 engagement".
       let riesgo = null;
-      const threat = [...(risk.length ? risk : top)].sort(byEng)[0];
+      const threatPool = (risk.length ? risk : activeRivals).filter((r) => Number(r.total_engagement) > 0);
+      const threat = [...threatPool].sort(byEng)[0];
       if (threat) {
         riesgo = {
           title: __('{r} es tu mayor amenaza', { r: threat.entity_name }),
@@ -141,7 +187,7 @@
           impact: 'alto', earlySignal: false,
           detail: {
             color: 'vigila', category: __('Amenaza'), title: __('Amenazas competitivas'),
-            findings: [...(risk.length ? risk : top)].sort(byEng).slice(0, 5).map((r) => ({
+            findings: [...threatPool].sort(byEng).slice(0, 5).map((r) => ({
               key: 'rival', n: Number(r.total_engagement) || 0, severity: 55,
               label: r.description || __('{r} domina la conversación', { r: r.entity_name }),
             })),
@@ -275,6 +321,32 @@
       const kpis = k || {};
       const prev = kPrev || {};
       const sentMap = { positive: __('Positivo'), negative: __('Negativo'), neutral: __('Neutro') };
+
+      // ── Doctrina de renderizado: null ≠ 0. Si ningún perfil tiene actividad
+      // capturada, NO se pintan KPIs en cero ni un ranking de ceros (ausencia de
+      // ingesta ≠ medición). Un solo empty state con la causa + los perfiles
+      // configurados como evidencia de que el radar existe.
+      const hasActivity = list.some((r) => Number(r.total_posts) > 0 || Number(r.total_engagement) > 0);
+      if (!hasActivity) {
+        const chips = list.map((r) => {
+          const tipo = this._compTipoMeta(r.tipo);
+          return `<span class="comp-rank-tipo" style="--ct:${tipo.color};margin:2px 6px 2px 0;display:inline-block;">${this._esc(r.entity_name)} · ${tipo.label}</span>`;
+        }).join('');
+        return `
+        <section class="mb-section">
+          <div class="mb-section-head">
+            <span class="mb-section-title">${__('El campo de batalla')}</span>
+            <span class="mb-section-hint">${__('Quién domina la conversación de tu nicho')}</span>
+          </div>
+          <div class="mb-causal-empty">
+            ${list.length
+              ? __('Tus {n} perfiles monitoreados están configurados, pero los sensores aún no capturan actividad en esta ventana. Los primeros datos suelen aparecer en 24-48h — o amplía el rango de fechas (prueba "Todo el periodo").', { n: list.length })
+              : __('Aún no monitoreas perfiles. Agrega a tus competidores y referentes en Monitoreo para ver quién domina tu nicho.')}
+          </div>
+          ${chips ? `<div style="margin-top:.6rem;">${chips}</div>` : ''}
+        </section>`;
+      }
+
       const compCur = kpis.active_competitors ?? kpis.total_competitors;
       const compPrev = prev.active_competitors ?? prev.total_competitors;
       const kpiCards = `
@@ -325,7 +397,11 @@
       const bAvg = num(b.avg_engagement_per_post), cAvg = num(c.avg_engagement_per_post);
       const bP = num(b.posts), cP = num(c.posts);
       const bPos = num(b.positive_posts), cPos = num(c.positive_posts);
-      if (bP === 0 && cP === 0) return '';
+      // Doctrina: una comparación exige AMBOS lados con actividad. Antes el guard
+      // era (bP===0 && cP===0), y con un solo lado activo se colaba la tabla
+      // "101 vs 0" y el share-of-voice "Mi Marca 100% / Competencia 0%" — una
+      // comparación fabricada. El campo de batalla ya explica la causa del vacío.
+      if (bP === 0 || cP === 0) return '';
 
       // Headline = engagement por post (metrica justa, normalizada por volumen).
       let headline = __('Aun no hay suficiente actividad para comparar engagement por post.');
