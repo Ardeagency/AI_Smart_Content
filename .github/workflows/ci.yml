@@ -11,6 +11,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: eslint (ratchet)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      # Ratchet: la deuda existente son warnings con tope fijo (--max-warnings
+      # en lint:ci). Si un cambio AGREGA violaciones, el job falla; si las
+      # reduce, bajar el tope en package.json. Errores duros siempre bloquean.
+      - name: Lint
+        run: npm run lint:ci
+
   smoke:
     name: vitest smoke
     runs-on: ubuntu-latest

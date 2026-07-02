@@ -7,6 +7,8 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:ci": "eslint . --max-warnings 632",
     "audit:isolation": "node scripts/audit-org-isolation.mjs"
   },
   "dependencies": {
@@ -14,7 +16,9 @@
     "stripe": "^17.5.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@supabase/supabase-js": "^2.45.0",
+    "eslint": "^10.6.0",
     "vitest": "^2.1.0"
   }
 }

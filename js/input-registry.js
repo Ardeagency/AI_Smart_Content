@@ -664,7 +664,7 @@
           var cLbl = escapeHtml(c.label || c.title || 'Tab ' + (i + 1));
           return '<button type="button" class="input-tab-btn' + (i === 0 ? ' active' : '') + '" data-tab-key="' + cKey + '"' + (isPreview ? ' tabindex="-1"' : '') + '>' + cLbl + '</button>';
         }).join('');
-        var panelsHtml = tabChildren.map(function (c, i) {
+        var tabPanelsHtml = tabChildren.map(function (c, i) {
           var cKey = escapeHtml(c.key || ('tab_' + i));
           var cChildren = (Array.isArray(c.children) ? c.children : []).map(renderGrandchild(c.key || ('tab_' + i))).join('');
           return '<div class="input-tab-panel' + (i === 0 ? ' active' : '') + '" data-tab-key="' + cKey + '">' + cChildren + '</div>';
@@ -673,7 +673,7 @@
           ((label || veraSwitch) ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span>' + veraSwitch + '</div>' : '') +
           veraPanel +
           '<div class="input-tabs-header" role="tablist">' + tabsHtml + '</div>' +
-          '<div class="input-tabs-body">' + panelsHtml + '</div>' +
+          '<div class="input-tabs-body">' + tabPanelsHtml + '</div>' +
           '</div>';
       }
       // Fallback: si no hay sub-containers, mostrar como flat con un mensaje

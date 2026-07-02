@@ -21,7 +21,6 @@
     'check-square': 'check-circle',
     hash: 'squares-four',
     sliders: 'sliders',
-    'toggle-left': 'sliders',
     flag: 'globe',
     palette: 'image',
     crop: 'image',
@@ -611,8 +610,6 @@
       ...baseSchema,
       input_type: baseSchema.input_type || baseSchema.type || 'text',
       ui: {
-        width: 'full',
-        hidden: false,
         ...defaultUi,
         width: defaultUi.width != null ? defaultUi.width : 'full',
         hidden: defaultUi.hidden != null ? defaultUi.hidden : false
