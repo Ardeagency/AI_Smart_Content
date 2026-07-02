@@ -1148,12 +1148,30 @@ class MonitoringView extends BaseView {
     return `rgba(${r || 0},${g || 0},${b || 0},${a})`;
   }
 
-  /* ── Panel de detalle (estilo Flows) al seleccionar una burbuja ── */
+  _signalLabel(s) {
+    const t = s.signal_type || '';
+    if (t === 'url_change') return __('Cambio en la página');
+    if (t === 'post') return __('Nueva publicación');
+    if (/threat|crisis/i.test(t)) return __('Señal de riesgo');
+    if (/mention/i.test(t)) return __('Mención');
+    return t ? t.replace(/_/g, ' ') : __('Novedad');
+  }
+  _signalIcon(s) {
+    const t = s.signal_type || '';
+    if (t === 'url_change') return 'fa-arrows-rotate';
+    if (t === 'post') return 'fa-image';
+    if (/threat|crisis/i.test(t)) return 'fa-triangle-exclamation';
+    if (/mention/i.test(t)) return 'fa-at';
+    return 'fa-circle-dot';
+  }
+
+  /* ── Panel de detalle (landscape estilo Flows) al seleccionar una burbuja ── */
   _openBubbleDetail(item) {
     if (!window.Modal || typeof window.Modal.show !== 'function') { return this._openBubblePop(item, 0, 0); }
     const isProfile = item.kind === 'profile';
     const stops = this._bubbleStops(item);
     const gradCss = this._gradientCss(stops);
+    const borderCss = `linear-gradient(#17171a,#17171a) padding-box, ${gradCss} border-box`;
     const brand = isProfile ? ((this._model?.containers || []).find(c => c.id === item.containerId)?.nombre_marca || null) : null;
     const roleLabel = isProfile ? this._roleLabel(item.tipo) : __('Página web');
     const platIcon = MonitoringView.PLATFORM_ICON[item.platform] || 'fas fa-hashtag';
@@ -1164,7 +1182,19 @@ class MonitoringView extends BaseView {
     if (item.platform) meta.push(`<span class="mn-det-meta-item"><i class="${platIcon}"></i>${this._esc(this._platformName(item.platform))}</span>`);
     if (item.lastAt) meta.push(`<span class="mn-det-meta-item"><i class="fas fa-clock"></i>${this._relativeTime(item.lastAt)}</span>`);
     if (brand) meta.push(`<span class="mn-det-meta-item"><i class="fas fa-tag"></i>${this._esc(brand)}</span>`);
-    meta.push(`<span class="mn-det-meta-item"><i class="fas fa-signal"></i>${this._esc(item.status?.text || '')}</span>`);
+
+    // Columna izquierda: actividad reciente (señales del perfil / cambios de la URL).
+    const sigs = isProfile
+      ? (this._data?.signals?.data || []).filter((s) => s.entity_id === item.id).slice(0, 8)
+      : (item.feed || []).slice(0, 8);
+    const activityHtml = sigs.length ? sigs.map((s) => `
+      <div class="mn-det-act">
+        <span class="mn-det-act-icon"><i class="fas ${this._signalIcon(s)}"></i></span>
+        <div class="mn-det-act-b">
+          <div class="mn-det-act-t">${this._esc(this._signalLabel(s))}</div>
+          <div class="mn-det-act-w">${this._relativeTime(s.captured_at)}</div>
+        </div>
+      </div>`).join('') : `<div class="mn-det-act-empty"><i class="fas fa-moon"></i><span>${__('Sin actividad reciente')}</span></div>`;
 
     const veraActs = isProfile ? `
       <button type="button" class="mn-det-cta" data-bact="vera-analizar"><i class="fas fa-wand-magic-sparkles"></i><span>${__('Analizar con Vera')}</span></button>
@@ -1192,27 +1222,37 @@ class MonitoringView extends BaseView {
     body.innerHTML = `
       <div class="mn-detail-bg" aria-hidden="true" style="background:${gradCss}"></div>
       <div class="mn-detail-scrim" aria-hidden="true"></div>
-      <div class="mn-detail-content">
-        <div class="mn-detail-head">
-          <div class="mn-detail-avatar" style="border-image:${gradCss} 1"><i class="${platIcon}"></i></div>
-          <div class="mn-detail-id">
-            ${roleLabel ? `<span class="mn-detail-eyebrow">${this._esc(roleLabel)}</span>` : ''}
-            <h2 class="mn-detail-title">${this._esc(item.title)}</h2>
-            ${item.subtitle ? `<div class="mn-detail-sub">${this._esc(item.subtitle)}</div>` : ''}
+      <div class="mn-detail-grid">
+        <aside class="mn-detail-col mn-detail-col--activity">
+          <h3 class="mn-det-section-title">${__('Actividad reciente')}</h3>
+          <div class="mn-detail-activity">${activityHtml}</div>
+        </aside>
+        <div class="mn-detail-col mn-detail-col--info">
+          <div class="mn-detail-headrow">
+            <div class="mn-detail-avatar" style="background:${borderCss}"><i class="${platIcon}"></i></div>
+            <div class="mn-detail-idcol">
+              ${roleLabel ? `<span class="mn-detail-eyebrow">${this._esc(roleLabel)}</span>` : ''}
+              <h2 class="mn-detail-title">${this._esc(item.title)}</h2>
+              ${item.subtitle ? `<div class="mn-detail-sub">${this._esc(item.subtitle)}</div>` : ''}
+            </div>
           </div>
-          <label class="mn-onoff" title="${item.isActive ? __('Pausar') : __('Activar')}">
-            <input type="checkbox" ${item.isActive ? 'checked' : ''} data-bact="toggle-active"><span class="mn-onoff-track"></span>
-          </label>
-        </div>
-        <div class="mn-detail-meta">${meta.join('')}</div>
-        <div class="mn-detail-actions">${veraActs}</div>
-        ${relevance}
-        ${colorSection}
-        <div class="mn-detail-foot">
-          <button type="button" class="mn-btn-secondary" data-bact="edit"><i class="fas fa-pen"></i> ${__('Editar')}</button>
-          ${isProfile ? `<button type="button" class="mn-btn-secondary" data-bact="toggle-highlight"><i class="fas fa-star"></i> ${item.highlighted ? __('Quitar destacado') : __('Destacar')}</button>` : ''}
-          <span style="flex:1"></span>
-          <button type="button" class="mn-btn-secondary mn-btn-danger" data-bact="delete"><i class="fas fa-trash"></i> ${__('Dejar de seguir')}</button>
+          <div class="mn-detail-meta">${meta.join('')}</div>
+          <div class="mn-detail-actions">
+            ${veraActs}
+            <label class="mn-detail-switch" title="${item.isActive ? __('Pausar') : __('Activar')}">
+              <input type="checkbox" ${item.isActive ? 'checked' : ''} data-bact="toggle-active">
+              <span class="mn-onoff-track"></span>
+              <span class="mn-detail-switch-label">${item.isActive ? __('Activo') : __('En pausa')}</span>
+            </label>
+          </div>
+          ${relevance}
+          ${colorSection}
+          <div class="mn-detail-foot">
+            <button type="button" class="mn-btn-secondary" data-bact="edit"><i class="fas fa-pen"></i> ${__('Editar')}</button>
+            ${isProfile ? `<button type="button" class="mn-btn-secondary" data-bact="toggle-highlight"><i class="fas fa-star"></i> ${item.highlighted ? __('Quitar destacado') : __('Destacar')}</button>` : ''}
+            <span style="flex:1"></span>
+            <button type="button" class="mn-btn-secondary mn-btn-danger" data-bact="delete"><i class="fas fa-trash"></i> ${__('Dejar de seguir')}</button>
+          </div>
         </div>
       </div>`;
 
