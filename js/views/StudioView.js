@@ -1600,11 +1600,19 @@ class StudioView extends BaseView {
       el.addEventListener('change', () => this.updateCreditsDisplay());
     });
 
-    // Poblar carruseles, selectores de enfoque y colores por defecto desde la marca
-    setTimeout(() => {
-      this.populateImageSelectorCarousels();
-      this.populateFocusSelectorAccordions();
-      this.populateColoresFromBrand();
+    // Poblar carruseles, selectores de enfoque y colores por defecto desde la marca.
+    // Si hay una sesion reabierta (?run=ID), al final se restaura el snapshot de
+    // runs_inputs de esa corrida: un reintento debe reproducir la produccion
+    // original, no disparar el formulario en blanco.
+    setTimeout(async () => {
+      try {
+        await this.populateImageSelectorCarousels();
+        this.populateFocusSelectorAccordions();
+        await this.populateColoresFromBrand();
+        await this._restoreFormFromRunSnapshot();
+      } catch (e) {
+        console.warn('[Studio] populate/restore form:', e);
+      }
     }, 0);
   }
 
@@ -1893,6 +1901,148 @@ class StudioView extends BaseView {
     });
   }
 
+  /**
+   * Sesión reabierta (?run=ID): restaura el formulario con el último snapshot de
+   * runs_inputs de ese run. Sin esto, un reintento re-renderiza el form con
+   * defaults y dispara el webhook con image_selector vacío / aspect_ratio y
+   * degradado por defecto (bug 2026-07-02: n8n recibió producto vacío y la IA
+   * inventó un producto falso).
+   */
+  async _restoreFormFromRunSnapshot() {
+    const runId = this._activeRunId;
+    const formEl = document.getElementById('studioFlowForm');
+    if (!runId || !formEl || !this.supabase) return;
+    let snap = null;
+    try {
+      const { data, error } = await this.supabase
+        .from('runs_inputs')
+        .select('input_data, created_at')
+        .eq('run_id', runId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (error || !data || data.length === 0) return;
+      snap = data[0].input_data;
+    } catch (_) { return; }
+    if (!snap || typeof snap !== 'object' || Array.isArray(snap)) return;
+
+    const esc = (s) => (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/"/g, '\\"');
+    for (const [name, val] of Object.entries(snap)) {
+      if (val == null) continue;
+      const el = formEl.querySelector(`[name="${esc(name)}"]`);
+      if (!el) continue;
+
+      // Carrusel de imágenes (productos/referencias): el snapshot guarda el
+      // producto enriquecido (objeto con .id) o el id crudo; re-click de las cards
+      // sincroniza hidden + estado visual con los handlers reales.
+      const carousel = el.closest('.image-selector-carousel');
+      if (carousel) {
+        const items = Array.isArray(val) ? val : [val];
+        const ids = items
+          .map(p => (p && typeof p === 'object') ? (p.id || p.entity_id) : p)
+          .filter(id => typeof id === 'string' && id);
+        ids.forEach(id => {
+          const card = carousel.querySelector(`.image-selector-card[data-product-id="${esc(id)}"]`);
+          if (card) card.click();
+        });
+        continue;
+      }
+
+      // Aspect ratio: click en la card (el handler sincroniza hidden + selected).
+      if (el.classList.contains('aspect-ratio-value')) {
+        const grid = el.parentElement && el.parentElement.querySelector('.aspect-ratio-grid');
+        const card = grid && grid.querySelector(`.aspect-ratio-card[data-value="${esc(String(val))}"]`);
+        if (card) card.click(); else el.value = String(val);
+        continue;
+      }
+
+      // Degradado de fondo.
+      if (el.classList.contains('input-gradient-value')) {
+        this._restoreGradientControl(el, val);
+        continue;
+      }
+
+      // Colores: hidden CSV + swatches (mismo patrón que populateColoresFromBrand).
+      if (el.classList.contains('input-colors-value')) {
+        const hexes = Array.isArray(val) ? val : String(val).split(',').map(s => s.trim()).filter(Boolean);
+        if (hexes.length === 0) continue;
+        const wrap = el.nextElementSibling;
+        el.value = hexes.join(',');
+        if (wrap && wrap.classList.contains('input-colors-wrap')) {
+          const max = Math.max(1, Math.min(12, parseInt(wrap.getAttribute('data-colors-max'), 10) || 6));
+          const list = hexes.slice(0, max);
+          el.value = list.join(',');
+          wrap._colorsInit = false;
+          wrap.innerHTML = list.map(hex =>
+            `<div class="color-swatch" style="background:${hex};" data-hex="${hex}"><button type="button" class="color-delete-btn" title="${__('Eliminar')}" aria-label="${__('Eliminar color')}">×</button></div>`
+          ).join('') + (list.length < max
+            ? `<button type="button" class="color-swatch-add-btn" title="${__('Agregar color')}" aria-label="${__('Agregar color')}"><span>+</span></button>`
+            : '');
+          if (window.InputRegistry && window.InputRegistry.initColorsPicker) window.InputRegistry.initColorsPicker(formEl);
+        }
+        continue;
+      }
+
+      // Radios (choice chips): marcar el del valor guardado.
+      if (el.type === 'radio') {
+        const radio = formEl.querySelector(`input[type="radio"][name="${esc(name)}"][value="${esc(String(val))}"]`);
+        if (radio) radio.checked = true;
+        continue;
+      }
+
+      // Controles nativos.
+      if (el.type === 'checkbox') { el.checked = val === true || val === 'true'; continue; }
+      if (el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+        el.value = (typeof val === 'object') ? JSON.stringify(val) : String(val);
+      }
+    }
+    this.updateCreditsDisplay();
+  }
+
+  /**
+   * Restaura el picker de degradado desde {type, angle, stops}. Actualiza hidden,
+   * botones de tipo, ángulo, swatches y preview. Los listeners de tipo/ángulo del
+   * init original siguen vivos y re-leen el DOM al interactuar (sync()), así que
+   * el estado queda coherente; los botones de borrar de los swatches restaurados
+   * quedan inertes hasta el siguiente re-render (limitación menor conocida).
+   */
+  _restoreGradientControl(hidden, val) {
+    let g = val;
+    if (typeof g === 'string') { try { g = JSON.parse(g); } catch (_) { return; } }
+    if (!g || !Array.isArray(g.stops) || g.stops.length === 0) return;
+    hidden.value = JSON.stringify(g);
+    const parent = hidden.parentElement;
+    const box = parent && (parent.querySelector('.input-gradient[data-gradient-key]')
+      || (hidden.nextElementSibling && hidden.nextElementSibling.classList && hidden.nextElementSibling.classList.contains('input-gradient') ? hidden.nextElementSibling : null));
+    if (!box) return;
+    const type = g.type === 'radial' ? 'radial' : 'linear';
+    const angle = typeof g.angle === 'number' ? g.angle : 135;
+    box.querySelectorAll('.input-gradient-type-btn').forEach(b =>
+      b.classList.toggle('active', b.getAttribute('data-type') === type));
+    const angleWrap = box.querySelector('.input-gradient-angle-wrap');
+    if (angleWrap) angleWrap.style.display = type === 'radial' ? 'none' : '';
+    const angleInput = box.querySelector('.input-gradient-angle');
+    const angleVal = box.querySelector('.input-gradient-angle-val');
+    if (angleInput) { angleInput.value = angle; if (angleVal) angleVal.textContent = angle + '°'; }
+    const stopsWrap = box.querySelector('.input-gradient-stops');
+    if (stopsWrap) {
+      const max = parseInt(box.getAttribute('data-gradient-max'), 10) || 4;
+      const list = g.stops.slice(0, max);
+      stopsWrap.innerHTML = list.map(hex =>
+        `<div class="color-swatch" style="background:${hex};" data-hex="${hex}"><button type="button" class="color-delete-btn" title="${__('Eliminar')}" aria-label="${__('Eliminar color')}">×</button></div>`
+      ).join('') + (list.length < max
+        ? `<button type="button" class="color-swatch-add-btn" title="${__('Agregar color')}" aria-label="${__('Agregar color')}"><span>+</span></button>`
+        : '');
+    }
+    const preview = box.querySelector('.input-gradient-preview');
+    if (preview) {
+      const n = g.stops.length;
+      const parts = g.stops.map((h, i) => `${h} ${n <= 1 ? 100 : Math.round((i / (n - 1)) * 100)}%`);
+      preview.style.background = type === 'radial'
+        ? `radial-gradient(circle at 50% 50%, ${parts.join(', ')})`
+        : `linear-gradient(${angle}deg, ${parts.join(', ')})`;
+    }
+  }
+
   async loadBrandData(brandContainerId) {
     if (!this.supabase || !brandContainerId) return null;
     try {
@@ -2099,10 +2249,19 @@ class StudioView extends BaseView {
       const type = (f.input_type || f.type || '').toLowerCase();
       if (type !== 'image_selector') continue;
       const mode = f.image_selection_mode || f.selection_mode || (f.data_type === 'array' ? 'multiple' : 'single');
-      if (mode !== 'multiple') continue;
       const key = f.key || f.name;
       const val = payload[key];
       const n = Array.isArray(val) ? val.length : (val ? 1 : 0);
+      // Requerido vacio bloquea SIEMPRE (single o multiple). El hidden del carrusel
+      // no dispara la validacion nativa del browser, y un reintento con el form
+      // re-renderizado mandaba image_selector:"" al webhook (produccion inventada).
+      // Los selectores de PRODUCTO son requeridos por defecto salvo opt-out explicito.
+      const required = f.required === true || f.is_required === true
+        || (this._isProductSelectorField(f) && f.required !== false && f.optional !== true);
+      if (required && n === 0) {
+        return `${__('"{label}": selecciona al menos un elemento antes de producir.', { label: f.label || key })}`;
+      }
+      if (mode !== 'multiple') continue;
       const min = parseInt(f.min_selections, 10) || 0;
       const max = parseInt(f.max_selections, 10) || 0;
       const label = f.label || key;

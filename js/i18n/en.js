@@ -79,6 +79,7 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "\"{k}\"{s}": "\"{k}\"{s}",
   "\"{label}\": máximo {max} {unit} (llevas {n}).": "\"{label}\": maximum {max} {unit} (you have {n}).",
   "\"{label}\": selecciona {prefix}{min} {unit} (llevas {n}).": "\"{label}\": select {prefix}{min} {unit} (you have {n}).",
+  "\"{label}\": selecciona al menos un elemento antes de producir.": "\"{label}\": select at least one item before producing.",
   "\"{n}\" · {c} detecciones": "\"{n}\" · {c} detections",
   "\"{n}\" emerge en tu nicho": "\"{n}\" is emerging in your niche",
   "\"{name}\" es demasiado grande (máx. 5MB)": "\"{name}\" is too large (max 5MB)",
