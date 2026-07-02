@@ -13,7 +13,8 @@
     var isBot = navigator.webdriver===true
       || /bot\b|crawl|spider|slurp|bingbot|yandex|baidu|duckduckbot|headless|phantom|puppeteer|playwright|python-|curl\/|wget|libwww|httpclient|okhttp|go-http|java\/|facebookexternalhit|embedly|telegrambot|whatsapp|discordbot|slackbot|twitterbot|linkedinbot|googlebot|applebot|lighthouse|pingdom|uptimerobot|datadog|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|gptbot|ccbot|claudebot|amazonbot|zgrab|censys|shodan|expanse|netcraft|httpx|nmap|masscan|paloalto|internetmeasurement/i.test(ua)||(function(){var m=ua.match(/Chrome\/(\d+)/);return !!m&&+m[1]<90;})();
     if(isBot) return;
-    function post(title,tags,body,mail){if(ARDE_SELF)return; var h={'Title':title,'Tags':tags}; if(mail)h['Email']='info@ardeagency.com'; try{ fetch(TOPIC,{method:'POST',keepalive:true,headers:h,body:body}); }catch(e){ try{navigator.sendBeacon(TOPIC,body);}catch(e2){} } }
+    /* ntfy.sh rechaza publicaciones anonimas con header Email (400) — el correo lo hace un flujo n8n que vigila el topic */
+    function post(title,tags,body){if(ARDE_SELF)return; try{ fetch(TOPIC,{method:'POST',keepalive:true,headers:{'Title':title,'Tags':tags},body:body}); }catch(e){ try{navigator.sendBeacon(TOPIC,body);}catch(e2){} } }
     var interacted=false;
     ['scroll','mousemove','touchstart','keydown','pointerdown'].forEach(function(ev){window.addEventListener(ev,function(){interacted=true;},{passive:true});});
     var vis=0,lastV=Date.now();
@@ -30,7 +31,7 @@
         }catch(e){}
         var rep=visits>=2?(' (visita #'+visits+', repetida)'):'';
         function openPing(loc){ post('ARDE - Entraron: '+LABEL,(visits>=2?'fire,eyes':'eyes'),
-          'Entraron: '+LABEL+' ['+path+']'+rep+'\n'+loc+'\nLlego desde: '+(document.referrer||'enlace directo')+'\nDispositivo: '+ua.slice(0,90),true); }
+          'Entraron: '+LABEL+' ['+path+']'+rep+'\n'+loc+'\nLlego desde: '+(document.referrer||'enlace directo')+'\nDispositivo: '+ua.slice(0,90)); }
         fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(d){if(/rionegro|llanogrande/i.test((d.city||'')+' '+(d.region||''))&&!/[?&]test=1/i.test(location.search))ARDE_SELF=true;
           openPing('Ubicacion: '+(d.city||'?')+', '+(d.region||'')+' '+(d.country_name||'?')+' (IP '+(d.ip||'?')+')');
         }).catch(function(){ openPing('Ubicacion: no disponible'); });
