@@ -175,6 +175,10 @@ class CommandCenterView extends BaseView {
             </button>
           </div>
           <div class="cc-strat-list" id="ccStratList"></div>
+          <!-- Secuencia estrategica: los pasos del marketing profesional
+               (SOSTAC) derivados del estado REAL de la BD. Vera cubre el
+               diagnostico; el resto se completa construyendo en el canvas. -->
+          <div class="cc-strat-steps" id="ccStratSteps"></div>
         </aside>
 
         <!-- Panel flotante = biblioteca tipo Figma: rail de iconos (siempre

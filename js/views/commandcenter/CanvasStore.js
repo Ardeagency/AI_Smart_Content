@@ -2404,12 +2404,14 @@
   }
 
   // Wrap _renderEdges: tras un re-render completo de edges, tambien los satelites
+  // + la secuencia estrategica (los vinculos determinan el estado de los pasos).
   const _mixinRenderEdges = P._renderEdges;
   if (typeof _mixinRenderEdges === 'function') {
     P._renderEdges = function () {
       const r = _mixinRenderEdges.apply(this, arguments);
       this._renderCampaignSatellites();
       this._renderProductionSatellites();
+      if (typeof this._renderStrategySteps === 'function') this._renderStrategySteps();
       return r;
     };
   }
@@ -4311,6 +4313,7 @@
     }).join('');
     const empty = items.length ? '' : `<div class="cc-strat-empty">${__('Sin estrategias todavia.')}</div>`;
     list.innerHTML = `${empty}${rows}`;
+    if (typeof this._renderStrategySteps === 'function') this._renderStrategySteps();
   };
 
   /** Cablea el sidebar de estrategias (1 vez por vista). Panel SIEMPRE abierto
@@ -4339,6 +4342,56 @@
     });
 
     this._renderStrategyPanel();
+  };
+
+  /* ── Secuencia estrategica (SOSTAC operativo) ────────────────────────
+     Los pasos que un equipo de marketing profesional completa, derivados del
+     estado REAL de la BD. El diagnostico (situacion/mercado/competencia) lo
+     cubre Vera ANTES de la estrategia (strategic_frame) — por eso aparece
+     siempre hecho y firmado por ella, sin nodo en el canvas. */
+  P._strategySequence = function () {
+    const concepts = (this._campaigns || []).filter((c) => !c.last_synced_at);
+    const reals    = (this._campaigns || []).filter((c) => !!c.last_synced_at);
+    const concept  = concepts[0] || null;
+
+    const objDone = !!concept && !!(concept.platform_objective || concept.budget_daily || concept.budget_total);
+    const audDone = !!concept && (!!concept.persona_id ||
+      (this._segments || []).some((s) => String(s.campaign_id) === String(concept.id)));
+    const briefId = concept && concept.brief_id;
+    const briefHero = !!briefId && (this._briefEntities || []).some(
+      (be) => String(be.brief_id) === String(briefId) && be.is_hero);
+    const realLinked = reals.find((r) => briefId && String(r.brief_id) === String(briefId));
+    const ctrlDone = !!(realLinked && (realLinked.metrics_cached_at || realLinked.cached_impressions));
+
+    const st = (done, partial) => (done ? 'done' : partial ? 'partial' : 'pending');
+    return [
+      { label: __('Diagnostico de mercado'), state: 'done', vera: true,
+        hint: __('Vera analiza mercado, competencia y demanda continuamente (strategic frame) antes de crear la estrategia') },
+      { label: __('Objetivo de campana'), state: st(objDone, !!concept),
+        hint: __('Crea el Objetivo y define plataforma, objetivo y presupuesto (media plan)') },
+      { label: __('Audiencia'), state: st(audDone, false),
+        hint: __('Conecta un Objetivo de Audiencia a la campana (STP)') },
+      { label: __('Brief estrategico'), state: st(!!briefId && briefHero, !!briefId),
+        hint: __('Vincula el brief con su producto hero; define objetivo comercial, angulos y oferta en el inspector') },
+      { label: __('Campana en plataforma'), state: st(!!realLinked, reals.length > 0),
+        hint: __('La campana real (Meta/Google) conectada al brief que la alimenta') },
+      { label: __('Control y aprendizaje'), state: st(ctrlDone, false),
+        hint: __('Metricas sincronizadas; Vera mide resultados y aprende (outcomes)') },
+    ];
+  };
+
+  P._renderStrategySteps = function () {
+    const host = document.getElementById('ccStratSteps');
+    if (!host) return;
+    const steps = this._strategySequence();
+    const icon = { done: 'fa-check', partial: 'fa-minus' };
+    host.innerHTML = `<div class="cc-strat-steps-title">${__('Secuencia estrategica')}</div>` +
+      steps.map((s) => `
+      <div class="cc-strat-step is-${s.state}" title="${this.escapeHtml(s.hint)}">
+        <span class="cc-strat-step-dot">${s.state !== 'pending' ? `<i class="fas ${icon[s.state]}"></i>` : ''}</span>
+        <span class="cc-strat-step-label">${this.escapeHtml(s.label)}</span>
+        ${s.vera ? '<span class="cc-strat-step-vera">VERA</span>' : ''}
+      </div>`).join('');
   };
 
   /* ── Nombre de la estrategia activa en el header (editable inline) ──── */
@@ -5035,9 +5088,10 @@
       // Live-sync del nombre visible en el nodo compacto (evita que la tarjeta
       // muestre el nombre viejo mientras editas en el inspector).
       const fld = fieldEl.getAttribute('data-field');
-      if (fld === 'name' || fld === 'nombre_campana') {
-        const pfx = h.getAttribute('data-type') === 'audience' ? 'aud' : 'camp';
-        const nameEl = document.querySelector(`.cc-node[data-node-key="${pfx}:${h.getAttribute('data-id')}"] .cc-node-name`);
+      if (fld === 'name' || fld === 'nombre_campana' || fld === 'nombre') {
+        const t = h.getAttribute('data-type');
+        const pfx = t === 'audience' ? 'aud' : t === 'brief' ? 'briefs' : 'camp';
+        const nameEl = document.querySelector(`.cc-node[data-node-key="${pfx}:${h.getAttribute('data-id')}"] .cc-node-name, .cc-node[data-node-key="${pfx}:${h.getAttribute('data-id')}"] .cc-node-realname`);
         if (nameEl) nameEl.textContent = (fieldEl.value || '').trim() || 'Sin nombre';
       }
     };
@@ -5260,7 +5314,68 @@
     };
   };
 
+  // ── Inspector: BRIEF (marketing brief completo, editable) ────────────
+  // El brief es el documento estrategico (objetivo comercial + angulos +
+  // oferta + tono), no una referencia: se edita AQUI, en el centro de
+  // estrategia. Fila completa se carga on-demand desde campaign_briefs.
+  P._inspectorBrief = function (id) {
+    if (!this._briefRows) this._briefRows = {};
+    const b = this._briefRows[String(id)];
+    if (!b) {
+      this._fetchBriefRow(id);
+      return {
+        title: '<i class="fas fa-file-lines"></i> Brief',
+        body: '<div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando brief…</div>',
+      };
+    }
+    const eid = this.escapeHtml(String(id));
+    return {
+      title: `<i class="fas fa-file-lines"></i> ${this.escapeHtml(b.nombre || 'Brief')}`,
+      body: `
+        <div class="cc-insp-form" data-field-host data-type="brief" data-id="${eid}">
+          ${this._fieldText(__('Nombre'), 'str', 'nombre', b.nombre, { placeholder: __('Nombre del brief') })}
+          ${this._fieldSelect(__('Estado'), 'status', b.status || 'draft', [
+            ['draft', __('Borrador')], ['active', __('Activo')], ['archived', __('Archivado')],
+          ])}
+          ${this._fieldArea(__('Objetivo comercial'), 'str', 'objetivo_comercial', b.objetivo_comercial, { rows: 3, placeholder: __('Que debe lograr comercialmente esta estrategia…') })}
+          ${this._fieldTags(__('Objetivos estrategicos'), 'objetivos_estrategicos', b.objetivos_estrategicos)}
+          ${this._fieldTags(__('Angulos de venta'), 'angulos_venta', b.angulos_venta)}
+          ${this._fieldTags(__('Oferta principal'), 'oferta_principal', b.oferta_principal)}
+          ${this._fieldTags(__('Tono'), 'tono_modificador', b.tono_modificador)}
+          ${this._fieldTags(__('Contexto temporal'), 'contexto_temporal', b.contexto_temporal)}
+          ${this._fieldText('CTA', 'str', 'cta', b.cta)}
+          ${this._fieldText('CTA URL', 'str', 'cta_url', b.cta_url, { inputType: 'url', placeholder: 'https://…' })}
+          ${this._fieldArea(__('Descripcion interna'), 'str', 'descripcion_interna', b.descripcion_interna, { rows: 2 })}
+          <div class="cc-insp-hint">${__('El brief es el documento estrategico: objetivo comercial + angulos + oferta. El producto hero, escenario y personaje se conectan en sus puertos del nodo.')}</div>
+        </div>
+      `,
+    };
+  };
+
+  P._fetchBriefRow = async function (id) {
+    if (!this._supabase || !id) return;
+    if (!this._briefFetching) this._briefFetching = {};
+    if (this._briefFetching[id]) return;
+    this._briefFetching[id] = true;
+    try {
+      const { data } = await this._supabase
+        .from('campaign_briefs')
+        .select('id, nombre, descripcion_interna, objetivo_comercial, objetivos_estrategicos, angulos_venta, oferta_principal, tono_modificador, contexto_temporal, cta, cta_url, status, is_conceptual_only')
+        .eq('id', id)
+        .maybeSingle();
+      if (!this._briefRows) this._briefRows = {};
+      this._briefRows[String(id)] = data || { id, nombre: 'Brief' };
+    } catch (e) {
+      console.warn('[CC] fetch brief row:', e?.message || e);
+    } finally {
+      this._briefFetching[id] = false;
+      // Si el brief sigue seleccionado, re-pinta el inspector con la fila real.
+      if (typeof this._renderInspector === 'function') this._renderInspector();
+    }
+  };
+
   P._inspectorIdentity = function (type, id) {
+    if (type === 'briefs') return this._inspectorBrief(id);
     const labels = { products: 'Producto', services: 'Servicio', places: 'Lugar', characters: 'Personaje', flows: 'Flow', briefs: 'Brief' };
     const icons  = { products: 'fa-box', services: 'fa-tag', places: 'fa-map-pin', characters: 'fa-masks-theater', flows: 'fa-diagram-project', briefs: 'fa-file-lines' };
     const placed = (this._placed || []).find((p) => p.type === type && String(p.id) === String(id));

@@ -1138,6 +1138,79 @@
   text-align: center;
 }
 
+/* ── Secuencia estrategica (stepper SOSTAC en el sidebar) ─────────────── */
+.cc-strat-steps {
+  flex: 0 0 auto;
+  padding: 10px 12px 14px;
+  border-top: 1px solid var(--border-divider, #242424);
+}
+.cc-strat-steps-title {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 2px 2px 8px;
+}
+.cc-strat-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 2px;
+  font-size: .78rem;
+  color: var(--text-muted);
+  cursor: default;
+}
+/* Conector vertical entre pasos */
+.cc-strat-step + .cc-strat-step::before {
+  content: '';
+  position: absolute;
+  left: 8px; top: -7px;
+  width: 1px; height: 10px;
+  background: var(--border-divider, #242424);
+}
+.cc-strat-step-dot {
+  flex: 0 0 auto;
+  width: 17px; height: 17px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-divider, #2e2e2e);
+  background: transparent;
+  font-size: .52rem;
+  color: #0b0b0b;
+}
+.cc-strat-step.is-done { color: var(--text-primary, #fff); }
+.cc-strat-step.is-done .cc-strat-step-dot {
+  border-color: transparent;
+  background: var(--brand-gradient-dynamic, var(--brand-primary, #c9cdd3));
+  color: #fff;
+}
+.cc-strat-step.is-partial { color: var(--text-secondary, #d4d1d8); }
+.cc-strat-step.is-partial .cc-strat-step-dot {
+  border-color: color-mix(in srgb, var(--brand-primary, #c9cdd3) 55%, transparent);
+  color: var(--text-secondary, #d4d1d8);
+  background: transparent;
+}
+.cc-strat-step-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cc-strat-step-vera {
+  flex: 0 0 auto;
+  font-size: .56rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-divider, #242424);
+  padding: 1.5px 5px;
+  border-radius: 6px;
+}
+
 /* ── Panel flotante tipo Figma: rail de iconos + panel de datos ─────── */
 /* Mismo tratamiento que el sidebar de estrategias: degradado de marca bajo
    velo glass-black frosted (ver .cc-strat-panel). */

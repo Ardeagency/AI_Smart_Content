@@ -1195,9 +1195,11 @@
   P._persistField = async function (type, id, field, val, indicatorEl) {
     if (!this._supabase || !id || !field) return;
     const isAudience = type === 'audience';
-    const table = isAudience ? 'audience_personas' : 'campaigns';
-    const arr = isAudience ? this._audiences : this._campaigns;
-    const row = (arr || []).find((x) => String(x.id) === String(id));
+    const isBrief = type === 'brief';
+    const table = isAudience ? 'audience_personas' : isBrief ? 'campaign_briefs' : 'campaigns';
+    const row = isBrief
+      ? (this._briefRows && this._briefRows[String(id)])
+      : ((isAudience ? this._audiences : this._campaigns) || []).find((x) => String(x.id) === String(id));
     if (row) row[field] = val;
     if (indicatorEl) indicatorEl.classList.add('cc-field--saving');
     try {
@@ -1275,7 +1277,8 @@
     if (!this._supabase) return;
     const field = fieldEl.getAttribute('data-field');
     const isAudience = type === 'audience';
-    const table = isAudience ? 'audience_personas' : 'campaigns';
+    const isBrief = type === 'brief';
+    const table = isAudience ? 'audience_personas' : isBrief ? 'campaign_briefs' : 'campaigns';
     const dataType = fieldEl.getAttribute('data-type');
     const multi    = fieldEl.getAttribute('data-multi');
     let val = fieldEl.value;
@@ -1295,14 +1298,26 @@
     }
 
     // Nombre obligatorio: no persistir vacio.
-    const nameField = isAudience ? 'name' : 'nombre_campana';
+    const nameField = isAudience ? 'name' : isBrief ? 'nombre' : 'nombre_campana';
     if (field === nameField && !val) { fieldEl.classList.add('cc-field--invalid'); return; }
     fieldEl.classList.remove('cc-field--invalid');
 
     // Estado local + payload.
-    const arr = isAudience ? this._audiences : this._campaigns;
-    const row = (arr || []).find((x) => String(x.id) === String(id));
-    if (row) row[field] = val;
+    if (isBrief) {
+      const b = this._briefRows && this._briefRows[String(id)];
+      if (b) b[field] = val;
+      // Live-sync del nombre en el nodo del canvas + lista de colocados.
+      if (field === 'nombre') {
+        const placed = (this._placed || []).find((p) => p.type === 'briefs' && String(p.id) === String(id));
+        if (placed) placed.name = val || 'Brief';
+        const nameEl = document.querySelector(`.cc-node[data-node-key="briefs:${cssEsc(String(id))}"] .cc-node-realname`);
+        if (nameEl) nameEl.textContent = val || 'Brief';
+      }
+    } else {
+      const arr = isAudience ? this._audiences : this._campaigns;
+      const row = (arr || []).find((x) => String(x.id) === String(id));
+      if (row) row[field] = val;
+    }
 
     fieldEl.classList.add('cc-field--saving');
     try {
