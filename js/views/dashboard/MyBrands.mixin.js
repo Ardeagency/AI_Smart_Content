@@ -252,7 +252,6 @@
         <div class="insight-page mb-dash" id="mbPage">
           <div class="mb-layout">
             <div class="mb-layout-main">
-              ${this._buildActionPlanSection(data, insights)}
               ${this._buildLongitudinalSection(data)}
               ${this._buildTopPostsSection(data?.topPosts?.data)}
               ${this._buildReceptionSection(data?.postReception?.data)}
@@ -840,37 +839,16 @@
        (no por perfil monitoreado). Charts Chart.js: historial de actividad,
        tendencia de engagement + crecimiento (doble eje), patron de horas y sentimientos. */
     _buildLongitudinalSection(data) {
-      const L = data?.longitudinal || {};
-      const act = Array.isArray(L.activity?.data) ? L.activity.data : [];
-      if (!act.length) { if (shouldHideEmpty()) return ''; }
-      const card = (id, title) => `
-        <div class="mb-long-card">
-          <div class="mb-long-card-title">${title}</div>
-          <div class="mb-long-canvas"><canvas id="${id}"></canvas></div>
-        </div>`;
+      // Mi Marca V2 — Sprint 1 (docs/DASHBOARDS-V2-MIMARCA-REBUILD.md): esta
+      // sección concentraba las cards descriptivas sin veredicto (historial de
+      // actividad, tendencia de engagement, heatmap de horas, actividad de
+      // sentimientos, chips de alertas). Se retiran de la UI — sus RPCs siguen
+      // vivos para Vera y como historial; los charts se auto-desactivan por el
+      // guard de canvas inexistente. Queda solo el banner de recencia (pulso),
+      // que la Salud V2 absorberá dentro de su relato.
       return `
         <section class="mb-section mb-section--wide mb-long">
           ${this._buildActivityBanner(data?.activity?.data)}
-          ${this._buildHealthAlerts(data?.health?.data?.components)}
-          ${!act.length ? `<div class="mb-causal-empty">${__('Aun no hay suficiente historial. Amplia el rango (prueba Todo el periodo).')}</div>` : `
-          <div class="mb-long-grid">
-            <div class="mb-long-card mb-long-card--wide mb-long-card--clickable" data-mb-activity-modal role="button" tabindex="0" aria-label="${__('Ver historial de actividad en detalle')}">
-              <div class="mb-long-card-head">
-                <div class="mb-long-card-title">${__('Historial de actividad')}</div>
-                <span class="mb-long-card-expand"><i class="fas fa-up-right-and-down-left-from-center"></i> ${__('Ver detalle')}</span>
-              </div>
-              <div class="mb-long-canvas"><canvas id="mbLongActivity"></canvas></div>
-            </div>
-            <div class="mb-long-card mb-long-card--wide">
-              <div class="mb-long-card-title">${__('Tendencia de engagement y crecimiento')}</div>
-              <div class="mb-long-canvas"><canvas id="mbLongEngGrowth"></canvas></div>
-            </div>
-            <div class="mb-long-card">
-              <div class="mb-long-card-title">${__('Patron de horas de publicacion')}</div>
-              ${this._buildPostingHeatmap(L.hours?.data)}
-            </div>
-            ${card('mbLongSentiment', __('Actividad de sentimientos'))}
-          </div>`}
         </section>`;
     },
 
