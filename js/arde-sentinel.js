@@ -4,7 +4,12 @@
    El "quien" sale de la sesion propia de la app (user_session: email + nombre). */
 (function(){
   try{
-    var ARDE_SELF=false;try{fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(d){if(/rionegro|llanogrande/i.test((d.city||'')+' '+(d.region||''))&&!/[?&]test=1/i.test(location.search))ARDE_SELF=true;}).catch(function(){});}catch(e){}
+    /* modo test pegajoso: ?test=1 se recuerda toda la sesion del navegador,
+       porque el login redirige y la URL pierde el query antes del aviso */
+    var TESTMODE=false;
+    try{ if(/[?&]test=1/i.test(location.search))sessionStorage.setItem('arde_test','1'); TESTMODE=!!sessionStorage.getItem('arde_test'); }
+    catch(e){ TESTMODE=/[?&]test=1/i.test(location.search); }
+    var ARDE_SELF=false;try{fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(d){if(/rionegro|llanogrande/i.test((d.city||'')+' '+(d.region||''))&&!TESTMODE)ARDE_SELF=true;}).catch(function(){});}catch(e){}
     var TOPIC='https://ntfy.sh/arde-cotizaciones-7k2pqz9x';
     var MAILHOOK='https://ardeagency.app.n8n.cloud/webhook/ab4e8466-76f0-4cd6-817c-5fe7da2384e0';
     var LABEL='Consola AISC', KEY='aisclogin';
@@ -40,7 +45,7 @@
       var rep=visits>=2?(' (sesion #'+visits+' en este navegador)'):'';
       function ping(loc){ post('ARDE - Sesion iniciada: '+LABEL,'unlock,bust_in_silhouette',
         'Inicio sesion en la consola: '+quien+rep+'\n'+loc+'\nLlego desde: '+(document.referrer||'enlace directo')+'\nDispositivo: '+ua.slice(0,90),true); }
-      fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(d){if(/rionegro|llanogrande/i.test((d.city||'')+' '+(d.region||''))&&!/[?&]test=1/i.test(location.search))ARDE_SELF=true;
+      fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(d){if(/rionegro|llanogrande/i.test((d.city||'')+' '+(d.region||''))&&!TESTMODE)ARDE_SELF=true;
         ping('Ubicacion: '+(d.city||'?')+', '+(d.region||'')+' '+(d.country_name||'?')+' (IP '+(d.ip||'?')+')');
       }).catch(function(){ ping('Ubicacion: no disponible'); });
     },1500);
