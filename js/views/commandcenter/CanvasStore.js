@@ -29,6 +29,25 @@
  * placed/freeLinks) se comparten por referencia con la vista para que el
  * codigo existente que lee `this._positions[key]` siga funcionando sin
  * cambios. Las mutaciones se hacen IN PLACE; jamas se reasignan estas refs.
+ *
+ * ══════════════════════════════════════════════════════════════════════
+ * REGLA DE EXTENSIÓN (refactor 2026-07-02 — leer antes de tocar):
+ *
+ * 1. Cada método del prototype tiene UNA sola definición en este archivo.
+ *    Para agregar comportamiento a un método definido AQUÍ, edita esa
+ *    definición — NUNCA lo envuelvas con const _orig = P.x; P.x = ...
+ * 2. La única envoltura permitida es UNA capa sobre un método del MIXIN
+ *    (Canvas.mixin.js), con el saved-var `_mixinNombreDelMetodo`:
+ *      const _mixinRenderCanvas = P._renderCanvas;   // viene del mixin
+ *      P._renderCanvas = function () { ...antes... _mixinRenderCanvas.apply(this, arguments); ...después... };
+ *    Si el método ya tiene su wrap _mixin*, agrega tu lógica DENTRO de ese
+ *    wrap. Jamás wrap sobre wrap: eso creó las 3 generaciones (_orig/_f2/
+ *    _f10/_f12) que este refactor desarmó.
+ * 3. Excepción: destroy es una cadena de 3 niveles intencional
+ *    (CanvasStore → Canvas.mixin → BaseView) — cada archivo limpia lo suyo.
+ * 4. Todo listener/timer/subscripción que agregues debe tener su teardown
+ *    en el destroy de ESTE archivo.
+ * ══════════════════════════════════════════════════════════════════════
  */
 (function () {
   'use strict';
@@ -914,7 +933,16 @@
   };
 
   // F1.2: _addLink dispatchea como command (undoable). Rama persona_id BD live.
+  // F2: valida _canConnect ANTES de todo (bloqueo silencioso de pares inválidos);
+  // el par aud→camp pasa la regla (tipos distintos), así que la rama persona_id
+  // no necesita excepción. Antes esto vivía en un wrap (_f2RulesAddLink) — hoy
+  // es parte de la única definición del método.
   P._addLink = function (fromKey, toKey) {
+    if (!this._canConnect(fromKey, toKey)) {
+      console.info('[CC] conexion bloqueada:', fromKey, '→', toKey,
+        '(regla:', this._typeFromKey(fromKey), '→', this._typeFromKey(toKey), 'no permitida)');
+      return;
+    }
     if (fromKey && fromKey.startsWith('aud:') && toKey && toKey.startsWith('camp:')) {
       this._connectCampaignToPersona(toKey.slice(5), fromKey.slice(4));
       return;
@@ -926,8 +954,16 @@
 
   // F1.2: _addIdentityToCanvas dispatchea placed-add con extras + pos.
   // El link al nodo de drop (si lo hay) se rutea por _addLink (otro command).
+  // F2 / F2-prep.2 (antes wraps _f2p*): enriquece imageUrl desde libCache
+  // ANTES del dispatch, y al final persiste imageUrl en el placed entry +
+  // INSERT en canvas_node_placements de la estrategia activa.
   P._addIdentityToCanvas = function (lib, clientX, clientY) {
     if (!lib || !lib.type || !lib.id) return;
+    // F2: preview visual — tomar imageUrl del libCache si existe
+    if (this._libCache && this._libCache[lib.type]) {
+      const found = this._libCache[lib.type].find((it) => String(it.id) === String(lib.id));
+      if (found && found.imageUrl && !lib.imageUrl) lib.imageUrl = found.imageUrl;
+    }
     this._ensureStore();
     const w = this._worldPointFromClient(clientX, clientY);
     const pos = { x: Math.max(0, w.x - 110), y: Math.max(0, w.y - 20) };
@@ -938,19 +974,36 @@
     this._renderCanvas();
     this._renderLibrary();
     if (toKey && toKey !== key) this._addLink(key, toKey);
+    // F2: imageUrl al placed entry para que sobreviva re-renders
+    if (lib.imageUrl) {
+      const entry = (this._placed || []).find((p) => p.type === lib.type && String(p.id) === String(lib.id));
+      if (entry && !entry.imageUrl) {
+        entry.imageUrl = lib.imageUrl;
+        if (this._store && typeof this._store.persistPlaced === 'function') this._store.persistPlaced();
+      }
+    }
+    // F2-prep.2: write-through a canvas_node_placements
+    const placedPos = this._positions[`${lib.type}:${lib.id}`];
+    const singular = ({ products: 'product', services: 'service', places: 'place', characters: 'character', flows: 'flow', briefs: 'brief' })[lib.type] || lib.type;
+    if (placedPos) this._insertPlacement(singular, lib.id, placedPos.x, placedPos.y);
   };
 
   // F1.2: _removeIdentityFromCanvas dispatchea (captura snapshot internamente).
+  // F2-prep.2 (antes wrap): DELETE del placement remoto ANTES del dispatch visual.
   P._removeIdentityFromCanvas = function (type, id) {
+    const singular = ({ products: 'product', services: 'service', places: 'place', characters: 'character', flows: 'flow', briefs: 'brief' })[type] || type;
+    this._deletePlacement(singular, id);
     this._ensureStore();
     this._store.dispatch(this._commands.removePlaced(type, id));
     this._renderCanvas();
     this._renderLibrary();
   };
 
-  // F1.2: _addRealToCanvas dispatchea on-canvas-add + pos. Si cayo sobre
-  // audiencia, _connectCampaignToPersona (BD) corre FUERA del historial.
-  P._addRealToCanvas = function (campId, clientX, clientY) {
+  // F1.2: núcleo visual de _addRealToCanvas — dispatchea on-canvas-add + pos.
+  // Si cayó sobre audiencia, _connectCampaignToPersona (BD) corre FUERA del
+  // historial. NO llamar directo: usar _addRealToCanvas (que además persiste
+  // el placement remoto).
+  P._addRealToCanvasVisual = function (campId, clientX, clientY) {
     const c = (this._campaigns || []).find((x) => String(x.id) === String(campId) && x.last_synced_at);
     if (!c) return;
     this._ensureStore();
@@ -975,9 +1028,21 @@
     this._renderCampaigns();
   };
 
+  // Método público: visual + write-through a canvas_node_placements
+  // (F2-prep.2, antes wrap _f2pAddRealToCanvas). El insert corre tras
+  // CUALQUIER salida del núcleo — misma semántica que tenía el wrap.
+  P._addRealToCanvas = function (campId, clientX, clientY) {
+    const r = this._addRealToCanvasVisual(campId, clientX, clientY);
+    const pos = this._positions[`camp:${campId}`];
+    if (pos) this._insertPlacement('campaign', campId, pos.x, pos.y);
+    return r;
+  };
+
   // F1.2: _removeRealFromCanvas dispatchea visual (undoable). El disconnect
   // de persona_id (si lo habia) corre FUERA del historial (BD live).
+  // F2-prep.2 (antes wrap): DELETE del placement remoto ANTES de todo.
   P._removeRealFromCanvas = function (campId) {
+    this._deletePlacement('campaign', campId);
     this._ensureStore();
     const c = (this._campaigns || []).find((x) => String(x.id) === String(campId));
     this._store.dispatch(this._commands.removeOnCanvas(campId));
@@ -1064,83 +1129,21 @@
     return true;
   };
 
-  // Override _addLink: bloquea silenciosamente si la conexion no es valida.
-  // _connectCampaignToPersona (persona_id en BD) sigue siendo el unico caso
-  // hardcoded del mixin — ese link aud→camp YA esta en CC_CONNECTION_RULES
-  // (audience → campaign-concept / campaign-real), asi que no necesita
-  // excepcion. Si el usuario arrastra al reves (camp→aud), tambien pasa
-  // porque la regla es bidireccional.
-  const _f2RulesAddLink = P._addLink;
-  if (typeof _f2RulesAddLink === 'function') {
-    P._addLink = function (fromKey, toKey) {
-      if (!this._canConnect(fromKey, toKey)) {
-        console.info('[CC] conexion bloqueada:', fromKey, '→', toKey,
-          '(regla:', this._typeFromKey(fromKey), '→', this._typeFromKey(toKey), 'no permitida)');
-        return;
-      }
-      return _f2RulesAddLink.apply(this, arguments);
-    };
-  }
-
-  // F2-prep.2: wraps de add/remove para INSERT/DELETE canvas_node_placements
-  // en la estrategia activa. Encadenados sobre los wraps de F1.2 que ya
-  // gestionan localStorage + commands. Stickies y groups no entran aqui;
-  // tienen sus propias tablas.
-  const _f2pAddRealToCanvas = P._addRealToCanvas;
-  if (typeof _f2pAddRealToCanvas === 'function') {
-    P._addRealToCanvas = function (campId /*, clientX, clientY */) {
-      const r = _f2pAddRealToCanvas.apply(this, arguments);
-      const pos = this._positions[`camp:${campId}`];
-      if (pos) this._insertPlacement('campaign', campId, pos.x, pos.y);
-      return r;
-    };
-  }
-  const _f2pRemoveRealFromCanvas = P._removeRealFromCanvas;
-  if (typeof _f2pRemoveRealFromCanvas === 'function') {
-    P._removeRealFromCanvas = function (campId) {
-      this._deletePlacement('campaign', campId);
-      return _f2pRemoveRealFromCanvas.apply(this, arguments);
-    };
-  }
-  const _f2pAddIdentityToCanvas = P._addIdentityToCanvas;
-  if (typeof _f2pAddIdentityToCanvas === 'function') {
-    P._addIdentityToCanvas = function (lib /*, clientX, clientY */) {
-      // F2: enriquecer lib con imageUrl desde libCache (si existe) para que
-      // el nodo en canvas tenga el preview visual (products/flows).
-      if (lib && lib.type && lib.id && this._libCache && this._libCache[lib.type]) {
-        const found = this._libCache[lib.type].find((it) => String(it.id) === String(lib.id));
-        if (found && found.imageUrl && !lib.imageUrl) lib.imageUrl = found.imageUrl;
-      }
-      const r = _f2pAddIdentityToCanvas.apply(this, arguments);
-      // Post: anadir imageUrl al placed entry para que sobreviva re-renders
-      if (lib && lib.imageUrl) {
-        const entry = (this._placed || []).find((p) => p.type === lib.type && String(p.id) === String(lib.id));
-        if (entry && !entry.imageUrl) {
-          entry.imageUrl = lib.imageUrl;
-          if (this._store && typeof this._store.persistPlaced === 'function') this._store.persistPlaced();
-        }
-      }
-      if (lib && lib.type && lib.id != null) {
-        const pos = this._positions[`${lib.type}:${lib.id}`];
-        const singular = ({ products: 'product', services: 'service', places: 'place', characters: 'character', flows: 'flow', briefs: 'brief' })[lib.type] || lib.type;
-        if (pos) this._insertPlacement(singular, lib.id, pos.x, pos.y);
-      }
-      return r;
-    };
-  }
+  // (Los antiguos wraps _f2RulesAddLink y _f2p* de esta sección se fusionaron
+  //  en las definiciones planas de arriba — cada método tiene UNA definición.)
 
   // F2: override _nodeIdentityHTML con design premium minimalista.
   // - Products: card con imagen como pieza visual principal + caption sutil
   // - Flows: card oscuro con ports tipados + form preview (placeholders)
   // - Otros tipos: legacy
-  const _f2IdentityHTML = P._nodeIdentityHTML;
-  if (typeof _f2IdentityHTML === 'function') {
+  const _mixinNodeIdentityHTML = P._nodeIdentityHTML;
+  if (typeof _mixinNodeIdentityHTML === 'function') {
     P._nodeIdentityHTML = function (n, pos) {
       const t = n.identityType;
       const r = n.row || {};
       if (t === 'products') return this._renderProductNode(n, pos, r);
       if (t === 'flows')    return this._renderFlowNode(n, pos, r);
-      return _f2IdentityHTML.apply(this, arguments);
+      return _mixinNodeIdentityHTML.apply(this, arguments);
     };
   }
 
@@ -1257,16 +1260,10 @@
       <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
     </div>`;
   };
-  const _f2pRemoveIdentityFromCanvas = P._removeIdentityFromCanvas;
-  if (typeof _f2pRemoveIdentityFromCanvas === 'function') {
-    P._removeIdentityFromCanvas = function (type, id) {
-      const singular = ({ products: 'product', services: 'service', places: 'place', characters: 'character', flows: 'flow', briefs: 'brief' })[type] || type;
-      this._deletePlacement(singular, id);
-      return _f2pRemoveIdentityFromCanvas.apply(this, arguments);
-    };
-  }
+  // (El DELETE del placement remoto al quitar una identity vive dentro de
+  //  _removeIdentityFromCanvas — antes era el wrap _f2pRemoveIdentityFromCanvas.)
 
-  // F1.2 + F1.3: wrap _beginNodeDrag con soporte para group-drag.
+  // F1.2 + F1.3: _beginNodeDrag con soporte para group-drag.
   //
   // - Si el nodo arrastrado esta en el selectionSet del store y la
   //   seleccion tiene >1 elementos → group drag: aplicamos el mismo
@@ -1274,6 +1271,10 @@
   //   de undo para todo el grupo).
   // - Si no, comportamiento single-drag F1.2 con mergeable move-node.
   P._beginNodeDrag = function (e, nodeEl) {
+    // F1.11 (antes wrap _f10BeginNodeDrag): los groups tienen su propio drag
+    // con captura espacial de children — ruteo antes de todo.
+    const ccDragType = nodeEl && nodeEl.getAttribute('data-type');
+    if (ccDragType === 'group') { this._beginGroupDrag(e, nodeEl); return; }
     e.preventDefault(); e.stopPropagation();
     this._ensureStore();
     this._didDrag = false;
@@ -1992,10 +1993,10 @@
 
   // Wrap _setupCanvasListeners para instalar atajos + multi-select + hidratar
   // edges desde BD despues del setup original.
-  const _origSetupCanvasListeners = P._setupCanvasListeners;
-  if (typeof _origSetupCanvasListeners === 'function') {
+  const _mixinSetupCanvasListeners = P._setupCanvasListeners;
+  if (typeof _mixinSetupCanvasListeners === 'function') {
     P._setupCanvasListeners = function () {
-      const r = _origSetupCanvasListeners.apply(this, arguments);
+      const r = _mixinSetupCanvasListeners.apply(this, arguments);
       this._ensureStore();
       this._installCanvasShortcuts();
       this._installMultiSelect();
@@ -2028,8 +2029,8 @@
         this._hydrateVeraInsights();
         this._installVeraInsightListeners();
       });
-      // F1.8: search en sidebar (input+clear listeners en ccPanelBody)
-      this._installLibSearch();
+      // Handlers delegados del panel lateral (Dashboard Vera + drill Nodos)
+      this._installPanelHandlers();
       // Sidebar de estrategias (izquierda): colapsar/abrir + switch/create
       this._installStrategyPanel();
       // Nombre de la estrategia activa (editable) en el header
@@ -2372,10 +2373,10 @@
   };
 
   // Wrap _renderCanvas para tambien renderear satelites + vera_states + Vera Insights
-  const _f12RenderCanvas = P._renderCanvas;
-  if (typeof _f12RenderCanvas === 'function') {
+  const _mixinRenderCanvas = P._renderCanvas;
+  if (typeof _mixinRenderCanvas === 'function') {
     P._renderCanvas = function () {
-      const r = _f12RenderCanvas.apply(this, arguments);
+      const r = _mixinRenderCanvas.apply(this, arguments);
       this._renderCampaignSatellites();
       this._renderProductionSatellites();
       // Sprint 1: aplicar vera_state al DOM (las clases se pierden en re-render)
@@ -2388,10 +2389,10 @@
 
   // Wrap _scheduleEdges/_updateEdgeGeometry: cuando se actualizan edges
   // (drag/pan), re-rendereamos satelites para que viajen con el padre.
-  const _f12UpdateEdgeGeometry = P._updateEdgeGeometry;
-  if (typeof _f12UpdateEdgeGeometry === 'function') {
+  const _mixinUpdateEdgeGeometry = P._updateEdgeGeometry;
+  if (typeof _mixinUpdateEdgeGeometry === 'function') {
     P._updateEdgeGeometry = function () {
-      const r = _f12UpdateEdgeGeometry.apply(this, arguments);
+      const r = _mixinUpdateEdgeGeometry.apply(this, arguments);
       this._renderCampaignSatellites();
       this._renderProductionSatellites();
       return r;
@@ -2399,10 +2400,10 @@
   }
 
   // Wrap _renderEdges: tras un re-render completo de edges, tambien los satelites
-  const _f12RenderEdges = P._renderEdges;
-  if (typeof _f12RenderEdges === 'function') {
+  const _mixinRenderEdges = P._renderEdges;
+  if (typeof _mixinRenderEdges === 'function') {
     P._renderEdges = function () {
-      const r = _f12RenderEdges.apply(this, arguments);
+      const r = _mixinRenderEdges.apply(this, arguments);
       this._renderCampaignSatellites();
       this._renderProductionSatellites();
       return r;
@@ -3518,104 +3519,11 @@
     }, 1500);
   };
 
-  // ------------------------------------------------------------------
-  // F1.8: search en sidebar por seccion
-  //
-  // Inyecta un input arriba del body del panel cuando una seccion esta
-  // activa. La query vive en this._libSearchQuery por seccion (se preserva
-  // al cambiar entre secciones). Filtrado es in-place via class toggle
-  // (.cc-lib-item--hidden) — no re-renderea el body, asi preserva scroll.
-  // Debounce 200ms en input event para no thrashear con cada tecla.
-  // ------------------------------------------------------------------
-
-  const _origLibBodyHTML = P._libBodyHTML;
-  P._libBodyHTML = function (key) {
-    const items = this._libItemsFor(key);
-    const query = (this._libSearchQuery && this._libSearchQuery[key]) || '';
-    const qEsc = this.escapeHtml(query);
-    const kEsc = this.escapeHtml(key);
-    const clearBtn = query
-      ? `<button type="button" class="cc-lib-search-clear" data-cc-search-clear="${kEsc}" aria-label="Limpiar busqueda"><i class="fas fa-times"></i></button>`
-      : '';
-    const searchHTML = `<div class="cc-lib-search" data-cc-search-zone="${kEsc}">
-      <i class="fas fa-magnifying-glass cc-lib-search-ic"></i>
-      <input type="text" class="cc-lib-search-input" data-cc-search-key="${kEsc}" placeholder="Buscar..." value="${qEsc}" autocomplete="off" spellcheck="false" />
-      ${clearBtn}
-    </div>`;
-
-    // Estados que no listan items: mostrar search + el estado.
-    if (items === undefined) return searchHTML + '<div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div>';
-    if (!items.length) return searchHTML + '<div class="cc-lib-empty">Sin elementos.</div>';
-
-    // Pre-filtrar en HTML para que el initial render coincida con la query
-    // guardada (no flash de items que luego se ocultan).
-    const q = query.trim().toLowerCase();
-    const icon = this._libIcon(key);
-    let visibleCount = 0;
-    const itemsHTML = items.map((it) => {
-      const matches = !q
-        || String(it.name || '').toLowerCase().includes(q)
-        || String(it.sub  || '').toLowerCase().includes(q);
-      if (matches) visibleCount++;
-      const hiddenClass = matches ? '' : ' cc-lib-item--hidden';
-      const subHTML = it.sub ? `<span class="cc-lib-item-sub">${this.escapeHtml(it.sub)}</span>` : '';
-      return `<div class="cc-lib-item${hiddenClass}" draggable="true" data-lib-type="${kEsc}" data-lib-id="${this.escapeHtml(String(it.id))}" ${it.camp ? `data-camp-id="${this.escapeHtml(String(it.id))}"` : ''} title="${this.escapeHtml(it.name)}${it.camp ? ' — arrastra al canvas' : ''}">
-        <i class="fas ${icon} cc-lib-item-ic"></i>
-        <span class="cc-lib-item-name">${this.escapeHtml(it.name)}</span>
-        ${subHTML}
-      </div>`;
-    }).join('');
-    const noresults = (q && visibleCount === 0)
-      ? '<div class="cc-lib-noresults">Sin resultados</div>'
-      : '';
-    return searchHTML + itemsHTML + noresults;
-  };
-
-  /**
-   * Aplica el filtro in-place: toggle .cc-lib-item--hidden + clear button +
-   * "Sin resultados". NO re-renderea el body (preserva scroll).
-   */
-  P._applyLibSearchFilter = function (key) {
-    const body = document.getElementById('ccPanelBody');
-    if (!body || this._activeSection !== key) return;
-    const q = ((this._libSearchQuery && this._libSearchQuery[key]) || '').trim().toLowerCase();
-    let visible = 0;
-    body.querySelectorAll('.cc-lib-item').forEach((el) => {
-      const name = (el.querySelector('.cc-lib-item-name')?.textContent || '').toLowerCase();
-      const sub  = (el.querySelector('.cc-lib-item-sub')?.textContent  || '').toLowerCase();
-      const matches = !q || name.includes(q) || sub.includes(q);
-      el.classList.toggle('cc-lib-item--hidden', !matches);
-      if (matches) visible++;
-    });
-    // Clear button: aparece cuando hay query
-    const zone = body.querySelector('.cc-lib-search');
-    if (zone) {
-      const existing = zone.querySelector('.cc-lib-search-clear');
-      if (q && !existing) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'cc-lib-search-clear';
-        btn.setAttribute('data-cc-search-clear', key);
-        btn.setAttribute('aria-label', 'Limpiar busqueda');
-        btn.innerHTML = '<i class="fas fa-times"></i>';
-        zone.appendChild(btn);
-      } else if (!q && existing) {
-        existing.remove();
-      }
-    }
-    // No-results placeholder
-    let noresEl = body.querySelector('.cc-lib-noresults');
-    if (q && visible === 0) {
-      if (!noresEl) {
-        noresEl = document.createElement('div');
-        noresEl.className = 'cc-lib-noresults';
-        noresEl.textContent = 'Sin resultados';
-        body.appendChild(noresEl);
-      }
-    } else if (noresEl) {
-      noresEl.remove();
-    }
-  };
+  // (F1.8 "search en sidebar" ELIMINADO 2026-07-02: su _libBodyHTML fue
+  //  pisado por la versión F2 de más abajo — que solo renderiza 'nodos' y
+  //  'dashboard' y nunca emite el input .cc-lib-search — así que el buscador
+  //  llevaba muerto desde el rediseño del sidebar. Si se quiere buscar en el
+  //  drill-down de Nodos, recuperar de git y adaptarlo a _nodosInstancesHTML.)
 
   // ------------------------------------------------------------------
   // F1.9: context menu (right-click)
@@ -3859,11 +3767,11 @@
 
   // F2: wrap _fetchLibrary para enriquecer products/services/places/flows
   // con datos visuales (imagen + tipo) usados por _nodosInstancesHTML.
-  const _f2OrigFetchLibrary = P._fetchLibrary;
-  if (typeof _f2OrigFetchLibrary === 'function') {
+  const _mixinFetchLibrary = P._fetchLibrary;
+  if (typeof _mixinFetchLibrary === 'function') {
     P._fetchLibrary = async function (key) {
       if (!['products', 'services', 'places', 'characters', 'flows'].includes(key)) {
-        return _f2OrigFetchLibrary.apply(this, arguments);
+        return _mixinFetchLibrary.apply(this, arguments);
       }
       if (this._libCache[key] || (this._libFetching && this._libFetching[key])) return;
       if (!this._supabase) { this._libCache[key] = []; if (typeof this._fillLibSection === 'function') this._fillLibSection(key); return; }
@@ -4261,42 +4169,13 @@
     return '<div class="cc-lib-empty">Sin elementos.</div>';
   };
 
-  /** Instala listeners de input/click sobre ccPanelBody (1 vez por vista). */
-  P._installLibSearch = function () {
+  /** Instala los handlers delegados del panel lateral (ccPanelBody), 1 vez
+   *  por vista: Dashboard de Vera (aprobar/rechazar/focus) y drill-down de
+   *  Nodos. (Antes _installLibSearch; la búsqueda F1.8 se eliminó por muerta
+   *  — ver la nota en la sección F1.8.) */
+  P._installPanelHandlers = function () {
     const body = document.getElementById('ccPanelBody');
     if (!body) return;
-    if (!this._ccLibSearchInput) {
-      this._ccLibSearchInput = (e) => {
-        const input = e.target.closest('.cc-lib-search-input');
-        if (!input) return;
-        const key = input.getAttribute('data-cc-search-key');
-        if (!key) return;
-        if (!this._libSearchQuery) this._libSearchQuery = {};
-        if (this._libSearchTimer) clearTimeout(this._libSearchTimer);
-        const val = input.value;
-        this._libSearchTimer = setTimeout(() => {
-          this._libSearchTimer = null;
-          this._libSearchQuery[key] = val;
-          this._applyLibSearchFilter(key);
-        }, 200);
-      };
-      body.addEventListener('input', this._ccLibSearchInput);
-    }
-    if (!this._ccLibSearchClear) {
-      this._ccLibSearchClear = (e) => {
-        const clear = e.target.closest('.cc-lib-search-clear');
-        if (!clear) return;
-        e.preventDefault(); e.stopPropagation();
-        const key = clear.getAttribute('data-cc-search-clear');
-        if (!key) return;
-        if (this._libSearchQuery) this._libSearchQuery[key] = '';
-        const input = body.querySelector(`.cc-lib-search-input[data-cc-search-key="${ccCssEsc(key)}"]`);
-        if (input) input.value = '';
-        this._applyLibSearchFilter(key);
-        if (input) input.focus();
-      };
-      body.addEventListener('click', this._ccLibSearchClear);
-    }
     // Sprint 2: handler Dashboard — botones Aprobar/Rechazar.
     // Si la insight referencia a un nodo del canvas (target_table+target_id),
     // click en el cuerpo de la card centra el viewport en ese nodo.
@@ -4553,28 +4432,34 @@
   // Drag handle: la cabecera (.cc-sticky-head con data-drag-handle).
   // ------------------------------------------------------------------
 
-  // Wrap _canvasNodes para incluir stickies en el listado base
-  const _origCanvasNodes = P._canvasNodes;
-  if (typeof _origCanvasNodes === 'function') {
-    P._canvasNodes = function () {
-      const base = _origCanvasNodes.apply(this, arguments);
-      const stickies = (this._stickies || []).map((s) => ({
-        key: `sticky:${s.id}`, type: 'sticky', id: s.id, row: s,
-      }));
-      return base.concat(stickies);
-    };
-  }
+  // COMPOSICIÓN FINAL de _canvasNodes — ÚNICA redefinición sobre el mixin.
+  // Orden explícito: base del mixin + stickies (F1.10) al final + groups
+  // (F1.11) prepend (renderean primero → quedan detrás de todos los nodos).
+  // Antes esto eran DOS wraps generacionales apilados (_origCanvasNodes ←
+  // _f10CanvasNodes); ahora la secuencia completa se lee en un solo lugar.
+  // (_nodeGroupHTML/_beginGroupDrag se definen más abajo en este archivo;
+  // a runtime ya existen porque todo el IIFE corre antes del primer render.)
+  const _mixinCanvasNodes = P._canvasNodes;
+  P._canvasNodes = function () {
+    const base = _mixinCanvasNodes.apply(this, arguments);
+    const stickies = (this._stickies || []).map((s) => ({
+      key: `sticky:${s.id}`, type: 'sticky', id: s.id, row: s,
+    }));
+    const lst = base.concat(stickies);
+    if (!this._groups || !this._groups.length) return lst;
+    const groups = this._groups.map((g) => ({ key: `group:${g.id}`, type: 'group', id: g.id, row: g }));
+    return groups.concat(lst);
+  };
 
-  // Wrap _nodeCampaignHTML: el render itera nodos y delega los tipos no-
-  // audience/no-identity a _nodeCampaignHTML como fallback. Interceptamos
-  // ese fallback y enrutamos sticky a su propio renderer.
-  const _origNodeCampaignHTML = P._nodeCampaignHTML;
-  if (typeof _origNodeCampaignHTML === 'function') {
-    P._nodeCampaignHTML = function (n, pos) {
-      if (n && n.type === 'sticky') return this._nodeStickyHTML(n, pos);
-      return _origNodeCampaignHTML.apply(this, arguments);
-    };
-  }
+  // COMPOSICIÓN FINAL de _nodeCampaignHTML — router de tipos especiales.
+  // El render del mixin delega los tipos no-audience/no-identity aquí como
+  // fallback: group → sticky → render de campaña del mixin.
+  const _mixinNodeCampaignHTML = P._nodeCampaignHTML;
+  P._nodeCampaignHTML = function (n, pos) {
+    if (n && n.type === 'group') return this._nodeGroupHTML(n, pos);
+    if (n && n.type === 'sticky') return this._nodeStickyHTML(n, pos);
+    return _mixinNodeCampaignHTML.apply(this, arguments);
+  };
 
   P._nodeStickyHTML = function (n, pos) {
     const s = n.row || {};
@@ -4772,26 +4657,9 @@
   // Groups van PRIMERO en _canvasNodes → renderean detras de nodos.
   // ------------------------------------------------------------------
 
-  // Wrap _canvasNodes para prepend groups (sobre el wrap F1.10)
-  const _f10CanvasNodes = P._canvasNodes;
-  if (typeof _f10CanvasNodes === 'function') {
-    P._canvasNodes = function () {
-      const lst = _f10CanvasNodes.apply(this, arguments);
-      if (!this._groups || !this._groups.length) return lst;
-      const groups = this._groups.map((g) => ({ key: `group:${g.id}`, type: 'group', id: g.id, row: g }));
-      return groups.concat(lst); // groups primero → renderean detras
-    };
-  }
-
-  // Wrap _nodeCampaignHTML para enrutar group → _nodeGroupHTML (chained sobre F1.10)
-  const _f10NodeCampaignHTML = P._nodeCampaignHTML;
-  if (typeof _f10NodeCampaignHTML === 'function') {
-    P._nodeCampaignHTML = function (n, pos) {
-      if (n && n.type === 'group') return this._nodeGroupHTML(n, pos);
-      return _f10NodeCampaignHTML.apply(this, arguments);
-    };
-  }
-
+  // (El listado y el render de groups viven en la COMPOSICIÓN FINAL de
+  //  _canvasNodes/_nodeCampaignHTML, en la sección de stickies — un solo
+  //  sitio de redefinición, sin wraps encadenados.)
   P._nodeGroupHTML = function (n, pos) {
     const g = n.row || {};
     const w = Number.isFinite(g.width)  && g.width  > 80 ? g.width  : 400;
@@ -4974,17 +4842,7 @@
   };
 
   // ── Group drag con children por contencion espacial ─────────────────
-  // Wrap _beginNodeDrag (sobre el wrap F1.2+F1.3+F1.10 si lo hay) para
-  // detectar type=group y delegar al group-drag con captura espacial.
-  const _f10BeginNodeDrag = P._beginNodeDrag;
-  if (typeof _f10BeginNodeDrag === 'function') {
-    P._beginNodeDrag = function (e, nodeEl) {
-      const type = nodeEl && nodeEl.getAttribute('data-type');
-      if (type === 'group') { this._beginGroupDrag(e, nodeEl); return; }
-      return _f10BeginNodeDrag.apply(this, arguments);
-    };
-  }
-
+  // (El ruteo type=group vive al tope de _beginNodeDrag — única definición.)
   P._beginGroupDrag = function (e, nodeEl) {
     e.preventDefault(); e.stopPropagation();
     this._ensureStore();
@@ -5519,10 +5377,10 @@
   // Sync viewport: cuando el view setea zoom/pan, espejar al store para
   // que F1.7 pueda persistirlo en canvas_views sin re-cablear todo. No
   // cambia comportamiento existente; solo añade un observador delgado.
-  const _origApplyCanvasTransform = P._applyCanvasTransform;
-  if (typeof _origApplyCanvasTransform === 'function') {
+  const _mixinApplyCanvasTransform = P._applyCanvasTransform;
+  if (typeof _mixinApplyCanvasTransform === 'function') {
     P._applyCanvasTransform = function () {
-      const r = _origApplyCanvasTransform.apply(this, arguments);
+      const r = _mixinApplyCanvasTransform.apply(this, arguments);
       if (this._store && (Number.isFinite(this._canvasScale) || this._canvasPan)) {
         this._store.setViewport({
           x: this._canvasPan?.x, y: this._canvasPan?.y, scale: this._canvasScale,
@@ -5535,10 +5393,10 @@
   // Sync seleccion: espejo desde _selectNode al store. F1.3: tambien
   // re-renderiza el set multi (en caso de venir de un multi-set previo
   // que el mixin no conoce, manteniendo el class en sync).
-  const _origSelectNode = P._selectNode;
-  if (typeof _origSelectNode === 'function') {
+  const _mixinSelectNode = P._selectNode;
+  if (typeof _mixinSelectNode === 'function') {
     P._selectNode = function (nodeEl) {
-      const r = _origSelectNode.apply(this, arguments);
+      const r = _mixinSelectNode.apply(this, arguments);
       this._ensureStore();
       if (this._selectedKey) {
         this._store.setSelection({ key: this._selectedKey, descriptor: this._selected });
@@ -5552,7 +5410,7 @@
 
   // Cleanup: liberar listeners del store + atajos de teclado + multi-select
   // capture-phase al destruir la vista.
-  const _origDestroy = P.destroy;
+  const _mixinDestroy = P.destroy;
   P.destroy = function () {
     if (this._ccKeyHandler) {
       document.removeEventListener('keydown', this._ccKeyHandler);
@@ -5585,16 +5443,15 @@
       this._ccViewportSub = null;
     }
     this._ccViewHydratedFor = null;
-    // F1.8: limpiar timers + listeners de search sidebar
-    if (this._libSearchTimer) { clearTimeout(this._libSearchTimer); this._libSearchTimer = null; }
+    // Panel lateral: desmontar handlers delegados (Dashboard Vera + Nodos)
     const panelBody = document.getElementById('ccPanelBody');
-    if (panelBody && this._ccLibSearchInput) {
-      panelBody.removeEventListener('input', this._ccLibSearchInput);
-      this._ccLibSearchInput = null;
+    if (panelBody && this._ccDashClick) {
+      panelBody.removeEventListener('click', this._ccDashClick);
+      this._ccDashClick = null;
     }
-    if (panelBody && this._ccLibSearchClear) {
-      panelBody.removeEventListener('click', this._ccLibSearchClear);
-      this._ccLibSearchClear = null;
+    if (panelBody && this._ccNodosClick) {
+      panelBody.removeEventListener('click', this._ccNodosClick);
+      this._ccNodosClick = null;
     }
     // F1.9: cerrar context menu pendiente + desmontar listeners
     if (this._ccCtxOpen) { try { this._ccCtxOpen.remove(); } catch (_) {} this._ccCtxOpen = null; }
@@ -5680,6 +5537,6 @@
       // listeners por si alguien externo se suscribio durante el ciclo.
       this._store._listeners = Object.create(null);
     }
-    if (typeof _origDestroy === 'function') _origDestroy.apply(this, arguments);
+    if (typeof _mixinDestroy === 'function') _mixinDestroy.apply(this, arguments);
   };
 })();
