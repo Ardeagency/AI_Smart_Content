@@ -632,8 +632,8 @@
       updates.push({
         g,
         d: this._edgePath(from, to, isProd),
-        mx: (from.x + to.x) / 2 - 12,
-        my: (from.y + to.y) / 2 - 12,
+        mx: (from.x + to.x) / 2 - 28,
+        my: (from.y + to.y) / 2 - 13,
       });
     });
     updates.forEach(({ g, d, mx, my }) => {
@@ -711,14 +711,24 @@
       const midX = (from.x + to.x) / 2;
       const midY = (from.y + to.y) / 2;
       const fo = document.createElementNS(NS, 'foreignObject');
-      fo.setAttribute('x', String(midX - 12));
-      fo.setAttribute('y', String(midY - 12));
-      fo.setAttribute('width', '24');
-      fo.setAttribute('height', '24');
+      fo.setAttribute('x', String(midX - 28));
+      fo.setAttribute('y', String(midY - 13));
+      fo.setAttribute('width', '56');
+      fo.setAttribute('height', '26');
       fo.setAttribute('class', 'cc-edge-action');
-      fo.innerHTML = `<button type="button" class="cc-edge-disconnect" title="Quitar conexion" aria-label="Quitar conexion"><i class="fas fa-times"></i></button>`;
+      // Toolbar del edge (patron n8n): "+" abre la paleta de Nodos para
+      // agregar algo al flujo; "x" desconecta. Visible en hover con gracia.
+      fo.innerHTML = `<div class="cc-edge-actions-row">
+        <button type="button" class="cc-edge-add" title="Agregar nodo (abre la paleta)" aria-label="Agregar nodo"><i class="fas fa-plus"></i></button>
+        <button type="button" class="cc-edge-disconnect" title="Quitar conexion" aria-label="Quitar conexion"><i class="fas fa-times"></i></button>
+      </div>`;
       const btn = fo.querySelector('.cc-edge-disconnect');
       if (btn) btn.onclick = (e) => { e.stopPropagation(); this._removeLink(link.from, link.to); };
+      const addBtn = fo.querySelector('.cc-edge-add');
+      if (addBtn) addBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (this._activeSection !== 'nodos' && typeof this._setActiveSection === 'function') this._setActiveSection('nodos');
+      };
       g.appendChild(fo);
 
       svg.appendChild(g);
@@ -1352,28 +1362,65 @@
     // Preview en coords de MUNDO (el SVG comparte el transform del world).
     const start = this._clientToWorld(pr.left + pr.width / 2, pr.top + pr.height / 2, cr);
 
+    // Snap magnetico (patron n8n, connection-radius): snapshot de los puertos
+    // visibles al iniciar el drag (el canvas no se mueve durante la conexion)
+    // → cada mousemove es pura matematica, sin layout thrashing.
+    const SNAP = 60; // px de pantalla
+    const snapPorts = [];
+    canvas.querySelectorAll('.cc-node').forEach((n) => {
+      const k = n.getAttribute('data-node-key');
+      if (k === fromKey || n.offsetParent === null) return;
+      n.querySelectorAll('.cc-node-port').forEach((p) => {
+        if (p.offsetParent === null) return;
+        const r2 = p.getBoundingClientRect();
+        snapPorts.push({ key: k, node: n, cx: r2.left + r2.width / 2, cy: r2.top + r2.height / 2 });
+      });
+    });
+    const nearestPort = (x, y) => {
+      let best = null, bd = SNAP * SNAP;
+      for (const sp of snapPorts) {
+        const d = (sp.cx - x) ** 2 + (sp.cy - y) ** 2;
+        if (d < bd) { bd = d; best = sp; }
+      }
+      return best;
+    };
+
     const preview = document.createElementNS(NS, 'path');
     preview.setAttribute('class', 'cc-edge-path cc-edge-path--preview');
     preview.setAttribute('fill', 'none');
     preview.setAttribute('stroke', this._nodeTypeColor(fromKey)); // preview = color del origen
     svg.appendChild(preview);
     canvas.classList.add('cc-canvas--connecting');
+    // Anti-parpadeo (patron n8n): la linea aparece a los 300ms — un click
+    // rapido sobre el puerto no flashea un cable.
+    const showTimer = setTimeout(() => { try { preview.classList.add('is-on'); } catch (_) {} }, 300);
+
+    const resolveTarget = (ev) => {
+      const direct = this._nodeAt(ev.clientX, ev.clientY, fromKey);
+      const near = direct ? null : nearestPort(ev.clientX, ev.clientY);
+      return { direct, near, el: direct || (near && near.node) || null };
+    };
 
     const onMove = (ev) => {
-      const m = this._clientToWorld(ev.clientX, ev.clientY, cr);
-      preview.setAttribute('d', this._bezier(start.x, start.y, m.x, m.y));
-      canvas.querySelectorAll('.cc-node').forEach((n) => n.classList.remove('cc-node--drop-target'));
-      const target = this._nodeAt(ev.clientX, ev.clientY, fromKey);
-      if (target) target.classList.add('cc-node--drop-target');
+      const t = resolveTarget(ev);
+      canvas.querySelectorAll('.cc-node--drop-target').forEach((n) => n.classList.remove('cc-node--drop-target'));
+      if (t.el) t.el.classList.add('cc-node--drop-target');
+      // Endpoint: pegado al puerto (snap) o al ancla IN del nodo bajo el cursor.
+      let end;
+      if (t.near) end = this._clientToWorld(t.near.cx, t.near.cy, cr);
+      else if (t.direct) end = this._portAnchor(t.direct.getAttribute('data-node-key'), fromKey, cr, 'to') || this._clientToWorld(ev.clientX, ev.clientY, cr);
+      else end = this._clientToWorld(ev.clientX, ev.clientY, cr);
+      preview.setAttribute('d', this._bezier(start.x, start.y, end.x, end.y));
     };
     const onUp = (ev) => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       canvas.classList.remove('cc-canvas--connecting');
-      canvas.querySelectorAll('.cc-node').forEach((n) => n.classList.remove('cc-node--drop-target'));
+      canvas.querySelectorAll('.cc-node--drop-target').forEach((n) => n.classList.remove('cc-node--drop-target'));
+      clearTimeout(showTimer);
       preview.remove();
-      const target = this._nodeAt(ev.clientX, ev.clientY, fromKey);
-      const toKey = target && target.getAttribute('data-node-key');
+      const t = resolveTarget(ev);
+      const toKey = (t.direct && t.direct.getAttribute('data-node-key')) || (t.near && t.near.key);
       if (toKey && toKey !== fromKey) this._addLink(fromKey, toKey);
     };
     document.addEventListener('mousemove', onMove);

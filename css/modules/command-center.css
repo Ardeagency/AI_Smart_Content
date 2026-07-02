@@ -927,7 +927,10 @@
   opacity: 0.85;
   transition: stroke 0.15s ease;
 }
-.cc-edge-path--preview { stroke: rgba(255, 255, 255, 0.55); stroke-width: calc(1.5px * var(--cc-zoom-comp, 1)); stroke-dasharray: 4 4; opacity: 0.7; pointer-events: none; }
+/* Preview de conexion: nace invisible y aparece a los 300ms (clase is-on desde
+   JS, patron n8n) — un click rapido sobre el puerto no flashea un cable. */
+.cc-edge-path--preview { stroke: rgba(255, 255, 255, 0.55); stroke-width: calc(1.5px * var(--cc-zoom-comp, 1)); stroke-dasharray: 4 4; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }
+.cc-edge-path--preview.is-on { opacity: 0.7; }
 .cc-edge-hit { stroke: transparent; stroke-width: calc(18px * var(--cc-zoom-comp, 1)); pointer-events: stroke; cursor: pointer; }
 .cc-edge-arrow-head { fill: rgba(255, 255, 255, 0.45); }
 /* Ingrediente (audiencia/entidades <-> trigger): PUNTEADO. Produccion: SOLIDO. */
@@ -938,6 +941,19 @@
 .cc-edge:hover .cc-edge-arrow-head { fill: rgba(255, 255, 255, 0.9); }
 .cc-edge { pointer-events: auto; }
 .cc-edge-action { overflow: visible; }
+/* Toolbar del edge (patron n8n): fila "+ / x" centrada, contra-escalada para
+   mantener tamano usable en pantalla a cualquier zoom. */
+.cc-edge-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  transform: scale(var(--cc-zoom-comp, 1));
+  transform-origin: center;
+}
+.cc-edge-add,
 .cc-edge-disconnect {
   width: 22px; height: 22px;
   display: grid; place-items: center;
@@ -946,13 +962,14 @@
   background: var(--bg-card, #141517);
   color: var(--text-muted);
   cursor: pointer; font-size: 0.62rem;
-  opacity: 0; transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
-  /* Contra-escala (patron n8n): el boton vive dentro del SVG escalado por el
-     zoom; esto lo mantiene a tamano usable en pantalla a cualquier zoom. */
-  transform: scale(var(--cc-zoom-comp, 1));
-  transform-origin: center;
+  /* Gracia de hover (patron n8n): al salir, la toolbar tarda 450ms en
+     desvanecerse — da tiempo de llegar del cable al boton sin que se esconda. */
+  opacity: 0;
+  transition: opacity 0.15s ease 0.45s, color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
-.cc-edge:hover .cc-edge-disconnect { opacity: 1; }
+.cc-edge:hover .cc-edge-add,
+.cc-edge:hover .cc-edge-disconnect { opacity: 1; transition-delay: 0s; }
+.cc-edge-add:hover { background: rgba(255, 255, 255, 0.12); color: var(--text-primary, #fff); border-color: rgba(255, 255, 255, 0.25); }
 .cc-edge-disconnect:hover { background: rgba(225, 87, 96, 0.2); color: var(--cc-real); border-color: var(--cc-real); }
 
 /* ── Mini-dashboard (patron Studio/Video) ──────────────────────────── */
