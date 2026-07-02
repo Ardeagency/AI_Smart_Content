@@ -30,6 +30,7 @@
 @import url('modules/products.css?v=__BUILD_ID__');
 @import url('modules/products-list.css?v=__BUILD_ID__');
 @import url('modules/empty-state.css?v=__BUILD_ID__');
+@import url('modules/error-state.css?v=__BUILD_ID__');
 @import url('modules/services.css?v=__BUILD_ID__');
 /* command-center.css: route-split — se carga via app.js _loadCss solo en /command-center (ver commandCenterLoader). */
 @import url('modules/organization.css?v=__BUILD_ID__');

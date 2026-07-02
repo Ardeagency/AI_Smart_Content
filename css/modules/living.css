@@ -550,6 +550,33 @@ body.production-filters-in-header .living-container > .living-history-section {
     height: 100%;
 }
 
+/* Placeholder para videos aun no hidratados (preload="none" + data-src):
+   antes el tile era un rectangulo negro hasta el hover. Lavado suave + glifo
+   play que desaparecen solos cuando el hover inyecta el src (quita data-src). */
+.history-video-card-thumbnail-wrap:has(> video[data-src])::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(120% 90% at 50% 8%, rgba(255, 255, 255, 0.05), transparent 62%),
+        linear-gradient(165deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
+    pointer-events: none;
+}
+.history-video-card-thumbnail-wrap:has(> video[data-src])::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 38px;
+    height: 38px;
+    translate: -50% -50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolygon points='10 8 16 12 10 16 10 8'/%3E%3C/svg%3E") center / contain no-repeat;
+    pointer-events: none;
+}
+
 /* Acciones: Descargar + Copiar prompt (esquina superior derecha) */
 /* ============================================
    Card overlay — checkbox + columna de botones + kebab

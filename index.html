@@ -348,6 +348,9 @@
     <!-- ErrorLogger temprano para capturar crashes del bootstrap (window.error + unhandledrejection).
          No depende de Supabase: si aún no está disponible, buffea en LS y flushea cuando llegue. -->
     <script src="js/services/ErrorLogger.js?v=__BUILD_ID__" defer></script>
+    <!-- ErrorHandler: define window.errorHandler (toast + estado de error con retry).
+         BaseView.render y router.js lo invocan tras un guard `if` que antes nunca pasaba. -->
+    <script src="js/services/ErrorHandler.js?v=__BUILD_ID__" defer></script>
     <!-- PageMeta: título dinámico "{Org} | {Section}". Debe ir ANTES de router.js
          para registrar el listener `routechange` antes del primer dispatch. -->
     <script src="js/utils/PageMeta.js?v=__BUILD_ID__" defer></script>

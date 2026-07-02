@@ -78,17 +78,24 @@ class BaseView {
         window.errorLogger.capture(error, { source: 'BaseView.render', view: this.constructor.name });
       }
       if (window.errorHandler) {
-        window.errorHandler.handle(error, { view: this.constructor.name });
-      }
-      this.container.innerHTML = `
-        <div class="error-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; padding: 2rem; text-align: center;">
-          <div class="error-icon" style="font-size: 3rem; color: var(--accent-warm, #e09145); margin-bottom: 1rem;">
-            <i class="fas fa-exclamation-triangle"></i>
+        // Sin toast: el estado de error ocupa la vista completa y ya es visible.
+        // errorLogger ya capturó arriba; logged:true evita doble telemetría.
+        window.errorHandler.sectionError(this.container, {
+          error,
+          logged: true,
+          source: this.constructor.name,
+          title: window.__ ? window.__('No se pudo cargar esta vista') : 'No se pudo cargar esta vista',
+          message: window.__ ? window.__('Algo salió mal al preparar la página.') : 'Algo salió mal al preparar la página.',
+          onRetry: () => this.render(),
+        });
+      } else {
+        this.container.innerHTML = `
+          <div class="section-error" role="alert">
+            <div class="section-error-title">Error</div>
+            <p class="section-error-msg">${this.escapeHtml(error.message)}</p>
           </div>
-          <h2 style="color: var(--text-primary, #ecebda); margin-bottom: 1rem;">Error</h2>
-          <p style="color: var(--text-secondary, #a0a0a0);">Error al cargar la vista: ${error.message}</p>
-        </div>
-      `;
+        `;
+      }
     }
   }
 
