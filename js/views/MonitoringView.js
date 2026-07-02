@@ -443,13 +443,14 @@ class MonitoringView extends BaseView {
       </section>`;
   }
 
-  /* ── Columnas "Lo que sigo" — kanban limpio por estado ── */
+  /* ── Columnas "Lo que sigo" — jerarquía lógica: de menos a más actividad
+        (En pausa → Activados → Al día → Con novedad). ── */
   static get COLUMNS() {
     return [
-      { id: 'news',   label: __('Con novedad'), hint: __('Cambios recientes'),  emptyIcon: 'fa-bell',         emptyText: __('Sin novedades por ahora') },
-      { id: 'calm',   label: __('Al día'),      hint: __('Activo y tranquilo'), emptyIcon: 'fa-circle-check', emptyText: __('Nada por aquí todavía') },
-      { id: 'silent', label: __('Activados'),   hint: __('Activos, sin señal reciente'), emptyIcon: 'fa-moon', emptyText: __('Nada activo sin señal') },
       { id: 'paused', label: __('En pausa'),    hint: __('Desactivados'),       emptyIcon: 'fa-circle-pause', emptyText: __('Nada en pausa') },
+      { id: 'silent', label: __('Activados'),   hint: __('Activos, sin señal reciente'), emptyIcon: 'fa-moon', emptyText: __('Nada activo sin señal') },
+      { id: 'calm',   label: __('Al día'),      hint: __('Activo y tranquilo'), emptyIcon: 'fa-circle-check', emptyText: __('Nada por aquí todavía') },
+      { id: 'news',   label: __('Con novedad'), hint: __('Cambios recientes'),  emptyIcon: 'fa-bell',         emptyText: __('Sin novedades por ahora') },
     ];
   }
 
@@ -1095,17 +1096,23 @@ class MonitoringView extends BaseView {
     await this._glideGhostTo(ghost, destCol);     // vuela visiblemente al destino
     if (ghost) ghost.remove();
     this._dragGhost = null;
-    b._dragging = false;
     this._drag = null;
 
-    if (!change) { this._requestBubbleDraw(); return; } // volvió a su lugar
+    if (!change) {
+      b._dragging = false;                        // volvió a su lugar → redibujar
+      this._requestBubbleDraw();
+      return;
+    }
 
+    // CAMBIO de estado: la burbuja se queda OCULTA hasta el refresh. Si la
+    // desocultáramos ahora, el loop (que no duerme si hay pulso) la redibujaría
+    // un instante en su columna vieja antes de saltar a la nueva.
     const nextActive = !toPaused;
     const svc = item.kind === 'page'
       ? this._service.updateWatcher(item.id, { is_active: nextActive })
       : this._service.updateEntity(item.id, { is_active: nextActive });
     const { error } = await svc;
-    if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); this._requestBubbleDraw(); return; }
+    if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); b._dragging = false; this._requestBubbleDraw(); return; }
     delete this._bubblePos[item.id];              // que re-asiente en su nueva columna
     this._pulseColumn(destCol);                   // destello en la columna destino
     await this._refresh();
