@@ -2308,6 +2308,10 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .task-detail-wrapper {
   position: relative;
   isolation: isolate;
+  /* Recorta el ::before del hero-blur: va escalado 1.15 para esconder los
+     bordes suaves del blur, y sin esto sobresale por abajo (franja borrosa
+     + área de scroll fantasma: el overflow de un transform SÍ scrollea). */
+  overflow: hidden;
   max-width: none !important;
   margin: 0 !important;
   padding: calc(48px + 20px) 28px 28px !important;
