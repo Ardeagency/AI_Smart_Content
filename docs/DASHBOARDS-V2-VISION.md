@@ -104,6 +104,52 @@ tráfico de audiencia").
 - #3 Tendencias → mirar el MERCADO entero (demanda, búsqueda, noticias,
   conducta del nicho) = dónde vive la demanda antes de decidir contenido/pauta.
 
-## Dashboard #4 — (pendiente nombre)
+## Dashboard #4 — ESTRATEGIA (la cocina; es Vera)
 
-*(pendiente — contexto por dictar)*
+**La fórmula: 1+2+3 = 6.** Estrategia analiza TODO — la síntesis vale más que la
+suma de las partes. **Mientras #1-#3 muestran lo que se OBTUVO, Estrategia es el
+que COCINA el plato fuerte.**
+
+**Qué NO es:** números ni lógica estática. Nada de "lo que pasó" — eso vive en
+los otros tres.
+
+**Qué ES — Vera como equipo de marketing completo** (community manager + marketer
++ diseñador gráfico + productor audiovisual). Lo que ella entiende primero de:
+- lo que VE de la marca (#1 Mi Marca),
+- lo que ANALIZA de los monitoreados (#2 Monitoreos),
+- lo que APRENDE de tendencias (#3 Tendencias).
+
+**Sus entregas:**
+1. **El plato fuerte**: "tienes que hacer X para conseguir más likes / comentarios
+   / ventas / seguidores" — propuestas, no reportes.
+2. **Predice y planifica**: plan mensual y semanal.
+3. **Producciones listas con evidencia triangulada**: "hice estas producciones
+   para que las publiques porque notamos esto y aquello; a la marca le beneficia
+   muchísimo seguir este objetivo porque a nuestra audiencia le interesa más eso
+   — **demostrado en nuestra actividad (#1), en nuestros monitoreados (#2) y en
+   nuestras tendencias (#3)**".
+4. **Copy con palabras clave** (las keywords vienen de la demanda real de #3 —
+   el ancla de intención).
+5. **RINDE CUENTAS y aprende en público**: "el post que hicimos no obtuvo la
+   reacción esperada — estamos aprendiendo, hicimos una corrección en su copy
+   para que el algoritmo realice estas acciones". Admite el error + muestra la
+   corrección.
+6. **Directivas del ecosistema comercial**: "en nuestro ecosistema comercial
+   debemos hacer esto, por esto, esto y aquello".
+
+---
+
+# LA ARQUITECTURA COMPLETA: 3 recolectan, 1 cocina
+
+| # | Dashboard | Lente | Rol |
+|---|-----------|-------|-----|
+| 1 | **Mi Marca** | Hacia adentro | Autodiagnóstico: qué me funciona, débiles, voz de MI audiencia, capa comercial (ventas/reseñas/recompra) |
+| 2 | **Monitoreos** | Hacia los perfiles | Competidor→supervisar/opacar · Referencia→aprender/potenciar |
+| 3 | **Tendencias** | Hacia el mercado | Escuchar el nicho: demanda de búsqueda real, noticias, patrones = SEO/GEO |
+| 4 | **Estrategia** | Síntesis (1+2+3=6) | **Vera cocina**: propone, produce, predice, planifica, rinde cuentas |
+
+**Convergencia con la north star:** el dictado de Estrategia ES "La Apuesta que
+Rinde Cuentas" (task #10): plato fuerte + evidencia triangulada de 3 fuentes +
+predicción + rendición de cuentas ("no obtuvo la reacción esperada → corregimos").
+El tab Estrategia actual (Action Cards) es el embrión; los gaps mapeados en task
+#10 son la lista de construcción.
