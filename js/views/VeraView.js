@@ -3652,42 +3652,8 @@ class VeraView extends (window.BaseView || class {}) {
     document.getElementById('gptTyping')?.remove();
   }
 
-  /**
-   * Reproduce un chime de dos tonos usando Web Audio API.
-   * No requiere archivos de audio — sintetizado en el navegador.
-   * Solo suena si el tiempo de espera fue suficientemente largo (tareas en background).
-   */
-  _playNotificationSound() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-      const playTone = (freq, startAt, duration, gainValue) => {
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.type      = 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + startAt);
-
-        gain.gain.setValueAtTime(0, ctx.currentTime + startAt);
-        gain.gain.linearRampToValueAtTime(gainValue, ctx.currentTime + startAt + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startAt + duration);
-
-        osc.start(ctx.currentTime + startAt);
-        osc.stop(ctx.currentTime + startAt + duration);
-      };
-
-      // Chime de dos tonos — ascendente: Do5 → Mi5
-      playTone(523.25, 0,    0.35, 0.25);  // Do5
-      playTone(659.25, 0.18, 0.45, 0.20);  // Mi5
-
-      // Cerrar el contexto después de que termine
-      setTimeout(() => ctx.close().catch(() => {}), 900);
-    } catch (_) {
-      // Web Audio no disponible — ignorar silenciosamente
-    }
-  }
+  /* _playNotificationSound() vive ahora en BaseView (chime canonico de la
+     plataforma, compartido con Studio); VeraView lo hereda tal cual. */
 
   /**
    * Solicita permiso de notificaciones del navegador (llamar una vez al iniciar).

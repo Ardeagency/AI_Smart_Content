@@ -1204,6 +1204,43 @@ class BaseView {
     });
     return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
   }
+
+  /**
+   * Chime de dos tonos (Do5 → Mi5) con Web Audio API — el sonido canonico de
+   * "tarea larga terminada" de la plataforma (nacio en el chat de Vera; Studio
+   * lo usa al llegar la produccion). Sintetizado: no requiere archivos.
+   */
+  _playNotificationSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      const playTone = (freq, startAt, duration, gainValue) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type      = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startAt);
+
+        gain.gain.setValueAtTime(0, ctx.currentTime + startAt);
+        gain.gain.linearRampToValueAtTime(gainValue, ctx.currentTime + startAt + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startAt + duration);
+
+        osc.start(ctx.currentTime + startAt);
+        osc.stop(ctx.currentTime + startAt + duration);
+      };
+
+      // Chime de dos tonos — ascendente: Do5 → Mi5
+      playTone(523.25, 0,    0.35, 0.25);  // Do5
+      playTone(659.25, 0.18, 0.45, 0.20);  // Mi5
+
+      // Cerrar el contexto después de que termine
+      setTimeout(() => ctx.close().catch(() => {}), 900);
+    } catch (_) {
+      // Web Audio no disponible — ignorar silenciosamente
+    }
+  }
 }
 
 // Hacer disponible globalmente

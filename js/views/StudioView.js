@@ -87,6 +87,7 @@ class StudioView extends BaseView {
           }
           await this.livingManager.setActiveRun(runId);
         } catch (_) {}
+        this._playNotificationSound(); // mismo chime que el chat de Vera
         return; // output cargado → fin del poll
       }
       // ¿El backend marcó el run como fallido? Avisar ya, sin esperar el tope.
@@ -240,7 +241,7 @@ class StudioView extends BaseView {
     setTimeout(async () => {
       if (this._activeRunId !== runId) return;
       const out = await this._fetchStageOutput(runId, order);
-      if (out) { this._renderStageApproval(order, out); return; }
+      if (out) { this._renderStageApproval(order, out); this._playNotificationSound(); return; }
       if (attempt + 1 >= MAX) { this._renderRunErrorState(runId); return; }
       this._pollStageOutput(runId, order, attempt + 1);
     }, delay);
@@ -466,6 +467,7 @@ class StudioView extends BaseView {
       if (count > baseline) {
         try { await this.livingManager.setActiveRun(runId); } catch (_) {}
         this._removeAppendSkeleton();
+        this._playNotificationSound(); // mismo chime que el chat de Vera
         return;
       }
       if (await this._isRunFailed(runId)) {
