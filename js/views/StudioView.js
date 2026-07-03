@@ -430,7 +430,10 @@ class StudioView extends BaseView {
       card.setAttribute('role', 'status');
       card.setAttribute('aria-label', __('Generando producción'));
       card.innerHTML = '<div class="studio-skeleton-card" style="' + this._skeletonCardStyle() + '"><div class="living-history-skeleton"></div></div>';
-      content.prepend(card);
+      // DENTRO del grid masonry (no como hermano en el content): asi participa
+      // del layout centrado del canvas en vez de quedar arriba a la izquierda.
+      const grid = content.querySelector('.living-masonry-grid') || content;
+      grid.prepend(card);
     } catch (_) {}
   }
 
