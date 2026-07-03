@@ -2053,6 +2053,33 @@ class MonitoringView extends BaseView {
     return { kind: 'page', platform: 'web', handle: null, name: prettify(host.split('.')[0]) || host, hostname: host, url };
   }
 
+  /**
+   * Pide a la function de OpenAI que clasifique el perfil contra el contexto
+   * de la org (rol + relevancia). Best-effort: null ante cualquier fallo y el
+   * usuario clasifica a mano.
+   */
+  async _classifyProfile(det) {
+    try {
+      const { data: sessionData } = await this._supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) return null;
+      const resp = await fetch('/.netlify/functions/api-monitoring-classify-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({
+          organization_id: this._orgId,
+          url: det.url,
+          platform: det.platform,
+          handle: det.handle,
+          name: det.name,
+        }),
+      });
+      const result = await resp.json().catch(() => null);
+      if (!resp.ok || !result?.ok) return null;
+      return result;
+    } catch (_) { return null; }
+  }
+
   _showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -2082,7 +2109,7 @@ class MonitoringView extends BaseView {
     const tipoOpts = MonitoringView.ENTITY_TIPOS
       .map(o => `<option value="${o.value}"${o.value === 'competidor_directo' ? ' selected' : ''}>${o.label}</option>`).join('');
     const containerOpts = [
-      `<option value="">${__('— Sin marca —')}</option>`,
+      `<option value="">${__('— Sin mercado —')}</option>`,
       ...containers.map(c => `<option value="${this._esc(c.id)}">${this._esc(c.nombre_marca)}</option>`),
     ].join('');
 
@@ -2118,6 +2145,10 @@ class MonitoringView extends BaseView {
             </div>
             <span class="mn-follow-detected-badge"><i class="fas fa-check" aria-hidden="true"></i> ${__('Detectado')}</span>
           </div>
+          <p class="mn-follow-ai-note" data-ai-note hidden>
+            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+            ${__('Rol y relevancia sugeridos por IA según tu marca — edítalos si no encajan.')}
+          </p>
           <label>${__('Rol — ¿qué es para tu marca?')}
             <select name="tipo">${tipoOpts}</select>
           </label>
@@ -2128,7 +2159,7 @@ class MonitoringView extends BaseView {
           <details class="mn-advanced">
             <summary>${__('Opciones avanzadas')}</summary>
             <div class="mn-advanced-body">
-              <label>${__('Marca asociada')}<select name="brand_container_id">${containerOpts}</select></label>
+              <label>${__('Mercado asociado')}<select name="brand_container_id">${containerOpts}</select></label>
               <label>${__('Usuario o enlace')}<input name="target_identifier" value="" placeholder="@usuario"></label>
             </div>
           </details>
@@ -2202,11 +2233,11 @@ class MonitoringView extends BaseView {
       try { focusable?.focus(); } catch (_) {}
     };
 
-    // Checklist de carga: los pasos se van marcando en secuencia y muestran
-    // el dato detectado. La detección es local; la secuencia es percepción.
-    const playChecklist = async (det) => {
+    // Checklist de carga: los 3 primeros pasos son detección local (la
+    // secuencia es percepción); el 4º espera la clasificación real de la IA.
+    const playChecklist = async (det, classifyPromise = null) => {
       const list = root.querySelector('[data-checklist]');
-      if (!list) return;
+      if (!list) return null;
       const platLabel = MonitoringView.PLATFORMS.find(p => p.value === det.platform)?.label || det.platform;
       const steps = [
         { label: __('Leyendo la URL'),               result: det.hostname },
@@ -2215,6 +2246,7 @@ class MonitoringView extends BaseView {
           ? { label: __('Detectando el nombre del perfil'),      result: det.name }
           : { label: __('Preparando la vigilancia de la página'), result: det.name },
       ];
+      if (classifyPromise) steps.push({ label: __('Analizando relevancia para tu marca'), promise: classifyPromise });
       list.innerHTML = steps.map((s, i) => `
         <li class="mn-follow-check" data-check-idx="${i}">
           <span class="mn-follow-check-dot"><span class="mn-follow-check-spinner"></span><i class="fas fa-check" aria-hidden="true"></i></span>
@@ -2222,16 +2254,29 @@ class MonitoringView extends BaseView {
           <span class="mn-follow-check-result"></span>
         </li>`).join('');
       const wait = (ms) => new Promise(r => setTimeout(r, ms));
+      let classification = null;
       for (let i = 0; i < steps.length; i++) {
         const li = list.querySelector(`[data-check-idx="${i}"]`);
         li?.classList.add('is-active');
-        await wait(480 + Math.random() * 280);
+        if (steps[i].promise) {
+          // Paso real: espera la IA (cap 20s para no colgar el wizard).
+          classification = await Promise.race([
+            steps[i].promise,
+            wait(20000).then(() => null),
+          ]);
+          steps[i].result = classification
+            ? (MonitoringView.ENTITY_TIPOS.find(t => t.value === classification.tipo)?.label || '')
+            : __('Clasifícalo tú');
+        } else {
+          await wait(480 + Math.random() * 280);
+        }
         li?.classList.remove('is-active');
         li?.classList.add('is-done');
         const res = li?.querySelector('.mn-follow-check-result');
         if (res && steps[i].result) res.textContent = steps[i].result;
       }
       await wait(360);
+      return classification;
     };
 
     const urlInput = root.querySelector('.mn-follow-url');
@@ -2246,7 +2291,10 @@ class MonitoringView extends BaseView {
       }
       detected = det;
       goToStep('loading');
-      await playChecklist(det);
+      // La clasificación IA (rol + relevancia) corre en paralelo al checklist;
+      // el 4º ítem del checklist la espera.
+      const classifyPromise = det.kind === 'profile' ? this._classifyProfile(det) : null;
+      const classification = await playChecklist(det, classifyPromise);
 
       if (det.kind === 'profile') {
         const iconEl = root.querySelector('[data-detected-icon]');
@@ -2259,6 +2307,17 @@ class MonitoringView extends BaseView {
         if (nameEl) nameEl.value = det.name;
         const tidEl = root.querySelector('[name="target_identifier"]');
         if (tidEl) tidEl.value = det.handle ? `@${det.handle}` : det.url;
+        if (classification) {
+          const tipoEl = root.querySelector('[name="tipo"]');
+          if (tipoEl && MonitoringView.ENTITY_TIPOS.some(t => t.value === classification.tipo)) {
+            tipoEl.value = classification.tipo;
+            tipoEl.dispatchEvent(new Event('change'));
+          }
+          const relEl = root.querySelector('[data-relevance]');
+          if (relEl && classification.relevance) relEl.value = classification.relevance;
+          const noteEl = root.querySelector('[data-ai-note]');
+          if (noteEl) noteEl.hidden = false;
+        }
         goToStep('confirm');
       } else {
         const urlEl = root.querySelector('[data-detected-page-url]');
@@ -2325,7 +2384,7 @@ class MonitoringView extends BaseView {
     const platOpts = MonitoringView.PLATFORMS
       .map(o => `<option value="${o.value}"${o.value === platform ? ' selected' : ''}>${o.label}</option>`).join('');
     const containerOpts = [
-      `<option value="">— Sin marca —</option>`,
+      `<option value="">${__('— Sin mercado —')}</option>`,
       ...containers.map(c => `<option value="${this._esc(c.id)}"${c.id === e.brand_container_id ? ' selected' : ''}>${this._esc(c.nombre_marca)}</option>`),
     ].join('');
 
@@ -2348,7 +2407,7 @@ class MonitoringView extends BaseView {
         <details class="mn-advanced">
           <summary>${__('Opciones avanzadas')}</summary>
           <div class="mn-advanced-body">
-            <label>${__('Marca asociada')}<select name="brand_container_id">${containerOpts}</select></label>
+            <label>${__('Mercado asociado')}<select name="brand_container_id">${containerOpts}</select></label>
             <label>${__('Tipo de dato')}
               <select name="domain">
                 <option value="social"    ${e.domain === 'social'    ? 'selected' : ''}>${__('Redes sociales')}</option>
