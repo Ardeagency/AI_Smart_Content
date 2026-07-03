@@ -4098,12 +4098,14 @@
       { id: 'objetivo-audiencia', name: 'Objetivo de Audiencia', icon: 'fa-users',           group: 'Objetivos',    count: cAud,  type: 'audience',      desc: 'El segmento humano que esta estrategia quiere alcanzar' },
       { id: 'campana-real',       name: 'Campana',               icon: 'fa-bullhorn',        group: 'Realidad',     count: cCamp, type: 'campaign-real', desc: 'Campanas sincronizadas desde Meta, Google u otra plataforma' },
       // Plantillas de ejecucion (jerarquia v2): cards CREADORAS — click crea
-      // el nodo en el canvas (no drill). Neutrales al objetivo; lo especifico
-      // de plataforma vive en metadata (guardrail: no clonar Ads Manager).
-      { id: 'exec-meta',    name: __('Campana de Meta'),           icon: 'fa-bullhorn',   group: __('Ejecucion'), create: 'campaign:meta_facebook',    desc: __('Plantilla de ejecucion: campana → conjuntos → anuncios en Meta') },
-      { id: 'exec-google',  name: __('Campana de Google Ads'),     icon: 'fa-magnifying-glass-dollar', group: __('Ejecucion'), create: 'campaign:google_ads', desc: __('Plantilla de ejecucion para Google Ads') },
-      { id: 'exec-tiktok',  name: __('Campana de TikTok'),         icon: 'fa-music',      group: __('Ejecucion'), create: 'campaign:tiktok_ads',       desc: __('Plantilla de ejecucion para TikTok Ads') },
-      { id: 'exec-x',       name: __('Campana de X'),              icon: 'fa-hashtag',    group: __('Ejecucion'), create: 'campaign:x_ads',            desc: __('Plantilla de ejecucion para X Ads') },
+      // el nodo en el canvas (no drill). PROTOTIPO campana → conjunto →
+      // creativo que persona+Vera arman aqui para crear los de produccion
+      // real. Neutrales al objetivo; lo especifico de plataforma vive en
+      // metadata (guardrail: no clonar Ads Manager).
+      { id: 'exec-meta',    name: __('Campana de Meta'),           icon: 'fa-bullhorn',   group: __('Ejecucion'), create: 'campaign:meta_facebook',    desc: __('Prototipo campana → conjuntos → creativos para crear la real en Meta') },
+      { id: 'exec-google',  name: __('Campana de Google Ads'),     icon: 'fa-magnifying-glass-dollar', group: __('Ejecucion'), create: 'campaign:google_ads', desc: __('Prototipo de ejecucion para Google Ads') },
+      { id: 'exec-tiktok',  name: __('Campana de TikTok'),         icon: 'fa-music',      group: __('Ejecucion'), create: 'campaign:tiktok_ads',       desc: __('Prototipo de ejecucion para TikTok Ads') },
+      { id: 'exec-x',       name: __('Campana de X'),              icon: 'fa-hashtag',    group: __('Ejecucion'), create: 'campaign:x_ads',            desc: __('Prototipo de ejecucion para X Ads') },
       { id: 'exec-shopify', name: __('Optimizacion de Shopify'),   icon: 'fa-store',      group: __('Ejecucion'), create: 'stopt:shopify',             desc: __('SEO estacional de la ficha de producto en Shopify') },
       { id: 'exec-meli',    name: __('Optimizacion de Mercado Libre'), icon: 'fa-handshake', group: __('Ejecucion'), create: 'stopt:mercadolibre',     desc: __('SEO estacional de la publicacion en Mercado Libre') },
       { id: 'producto',           name: 'Producto',              icon: 'fa-box',             group: 'Identidades',                type: 'product',       desc: 'Productos del catalogo de la marca' },
@@ -4464,7 +4466,7 @@
     const adset = (this._adsets || []).find((x) => String(x.id) === String(adsetId));
     if (!adset) return;
     const siblings = (this._ads || []).filter((a) => String(a.adset_id) === String(adsetId));
-    const nombre = this._nextExecName(__('Anuncio'), siblings.map((x) => x.nombre));
+    const nombre = this._nextExecName(__('Creativo'), siblings.map((x) => x.nombre));
     let createdBy = null;
     try { const { data: { user } } = await this._supabase.auth.getUser(); createdBy = user?.id || null; } catch (_) { /* noop */ }
     try {
@@ -5578,8 +5580,8 @@
           ${this._fieldText(__('Inicio'), 'date', 'starts_at', a.starts_at ? String(a.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${this._fieldText(__('Fin'), 'date', 'ends_at', a.ends_at ? String(a.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${a.external_adset_id ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Conjunto real')}</span><span class="cc-insp-value">${this.escapeHtml(a.external_adset_id)}</span></div>` : ''}
-          <div class="cc-insp-hint">${__('Plantilla que Vera llena y el humano aprueba. El detalle fino de puja/ubicaciones vive en la plataforma.')}</div>
-          <button type="button" class="cc-insp-add" data-exec-add="ad" data-exec-parent="${eid}"><i class="fas fa-plus"></i> ${__('Agregar Anuncio')}</button>
+          <div class="cc-insp-hint">${__('Prototipo que tu y Vera arman dentro de la plataforma; de aqui se crean los conjuntos de produccion real. El detalle fino de puja/ubicaciones vive en la plataforma.')}</div>
+          <button type="button" class="cc-insp-add" data-exec-add="ad" data-exec-parent="${eid}"><i class="fas fa-plus"></i> ${__('Agregar Creativo')}</button>
           <button type="button" class="cc-insp-delete" data-del-type="adset" data-del-id="${eid}"><i class="fas fa-trash"></i> ${__('Eliminar conjunto')}</button>
         </div>
       `,
@@ -5588,7 +5590,7 @@
 
   P._inspectorAd = function (id) {
     const a = (this._ads || []).find((x) => String(x.id) === String(id));
-    if (!a) return { title: `<i class="fas fa-rectangle-ad"></i> ${__('Anuncio')}`, body: `<div class="cc-insp-empty">${__('No encontrado.')}</div>` };
+    if (!a) return { title: `<i class="fas fa-photo-film"></i> ${__('Creativo')}`, body: `<div class="cc-insp-empty">${__('No encontrado.')}</div>` };
     const eid = this.escapeHtml(String(id));
     // Picker de creativo: producciones reales (runs_outputs) de la marca.
     const opts = this._adCreativeOpts;
@@ -5596,7 +5598,7 @@
     const creativeOpts = [['', __('Sin creativo')], ...((opts || []).map((o) => [String(o.id), o.label]))];
     const adset = (this._adsets || []).find((s) => String(s.id) === String(a.adset_id));
     return {
-      title: `<i class="fas fa-rectangle-ad"></i> ${this.escapeHtml(a.nombre || __('Anuncio'))}`,
+      title: `<i class="fas fa-photo-film"></i> ${this.escapeHtml(a.nombre || __('Creativo'))}`,
       body: `
         <div class="cc-insp-form" data-field-host data-type="ad" data-id="${eid}">
           ${this._fieldText(__('Nombre'), 'str', 'nombre', a.nombre, { placeholder: '[TIPO][N°] - [objetivo]' })}
@@ -5612,9 +5614,9 @@
           ${this._fieldText(__('Descripcion'), 'str', 'descripcion', a.descripcion)}
           ${this._fieldText('CTA', 'str', 'cta', a.cta, { placeholder: __('Ej: Mas informacion') })}
           ${this._fieldText('CTA URL', 'str', 'cta_url', a.cta_url, { inputType: 'url', placeholder: 'https://…' })}
-          ${a.external_ad_id ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Anuncio real')}</span><span class="cc-insp-value">${this.escapeHtml(a.external_ad_id)}</span></div>` : ''}
-          <div class="cc-insp-hint">${__('El creativo sale de las producciones del Studio. Cada texto editable debe llevar al menos un ancla de intencion — el algoritmo LEE el texto.')}</div>
-          <button type="button" class="cc-insp-delete" data-del-type="ad" data-del-id="${eid}"><i class="fas fa-trash"></i> ${__('Eliminar anuncio')}</button>
+          ${a.external_ad_id ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Anuncio real (plataforma)')}</span><span class="cc-insp-value">${this.escapeHtml(a.external_ad_id)}</span></div>` : ''}
+          <div class="cc-insp-hint">${__('Prototipo del anuncio: la pieza sale de las producciones del Studio y de aqui se crea el real en la plataforma. Cada texto editable debe llevar al menos un ancla de intencion — el algoritmo LEE el texto.')}</div>
+          <button type="button" class="cc-insp-delete" data-del-type="ad" data-del-id="${eid}"><i class="fas fa-trash"></i> ${__('Eliminar creativo')}</button>
         </div>
       `,
     };

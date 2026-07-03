@@ -480,7 +480,7 @@
     const chips = [
       a.optimizacion ? `<span class="cc-node-chip">${this.escapeHtml(a.optimizacion)}</span>` : '',
       personaName ? `<span class="cc-node-chip cc-node-chip--link" title="${this.escapeHtml(personaName)}"><i class="fas fa-users"></i></span>` : '',
-      adCount ? `<span class="cc-node-chip">${adCount} ${adCount === 1 ? __('anuncio') : __('anuncios')}</span>` : '',
+      adCount ? `<span class="cc-node-chip">${adCount} ${adCount === 1 ? __('creativo') : __('creativos')}</span>` : '',
       a.external_adset_id ? `<span class="cc-node-chip cc-node-chip--real" title="${__('Vinculado a la plataforma')}"><i class="fas fa-plug"></i></span>` : '',
     ].join('');
     return `
@@ -511,9 +511,9 @@
     <div class="cc-node cc-node--ad cc-node--mini" data-node-key="${n.key}" data-type="ad" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in" data-port="in" title="${__('Conjunto')}"></span>
       <div class="cc-node-head" data-drag-handle>
-        <span class="cc-node-icon cc-node-icon--ad"><i class="fas fa-rectangle-ad"></i></span>
+        <span class="cc-node-icon cc-node-icon--ad"><i class="fas fa-photo-film"></i></span>
         <div class="cc-node-head-text">
-          <span class="cc-node-title">${__('Anuncio')}</span>
+          <span class="cc-node-title">${__('Creativo')}</span>
           <span class="cc-node-name" title="${this.escapeHtml(a.nombre || '')}">${this.escapeHtml(a.nombre || __('Sin nombre'))}</span>
         </div>
         <span class="cc-node-status cc-node-status--${this.escapeHtml(a.status || 'draft')}" title="${this.escapeHtml(statusLabel || __('Borrador'))}"></span>

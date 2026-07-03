@@ -7,14 +7,16 @@
 ## 1. Visión
 
 El Command Center deja de terminar en el Brief. Después del Brief viene la **ejecución**:
-plantillas de 3 niveles que Vera llena, el humano aprueba y el engine ejecuta, conectadas
-a lo REAL (campaña sincronizada de la plataforma + producciones de `runs_outputs`).
+un **PROTOTIPO de 3 niveles — Campaña > Conjunto > Creativo** — que la persona y Vera arman
+DENTRO de la plataforma, y del cual se crean los de **producción real** (campaña sincronizada
+de la plataforma + producciones de `runs_outputs`). Vera llena, el humano aprueba, el engine
+ejecuta.
 
 ```
-Objetivo (técnico) → Audiencia → Brief (creativo) → PLANTILLA DE EJECUCIÓN
+Objetivo (técnico) → Audiencia → Brief (creativo) → PLANTILLA DE EJECUCIÓN (prototipo)
                                                       ├─ Campaña de {Meta|Google|TikTok|X}
                                                       │    └─ Conjunto de Anuncios (1..n)
-                                                      │         └─ Anuncio (1..n)
+                                                      │         └─ Creativo (1..n)
                                                       └─ Optimización de {Shopify|Mercado Libre}
 ```
 
@@ -50,7 +52,11 @@ con `created_via='command_center'`.
 | metadata | jsonb default '{}' | campos por plataforma |
 | created_at / updated_at | timestamptz | |
 
-### Nivel 3 — `campaign_ads` (NUEVA)
+### Nivel 3 — Creativo: `campaign_ads` (NUEVA)
+> En UI el nodo se llama **Creativo** (vocabulario AISC: el corazón del nivel 3 es la pieza
+> producida, no el "Anuncio" de Ads Manager). La tabla conserva el nombre `campaign_ads` y el
+> `node_type` interno es `'ad'`; el anuncio REAL de la plataforma es lo que se crea a partir
+> de este prototipo (`external_ad_id`).
 | Columna | Tipo | Notas |
 |---|---|---|
 | id / organization_id / brand_container_id / created_by | | ídem |
