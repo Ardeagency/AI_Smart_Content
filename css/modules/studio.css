@@ -106,58 +106,99 @@
 }
 .studio-canvas-living > .empty-state { flex: 1; }
 
-/* ── Canvas en GRID (no masonry justificado) ──────────────────────────────
-   LivingManager corre con disableJustified en Studio: en vez de filas
-   justificadas (que con 1 item lo dejan chico en la esquina) usamos un CSS grid
-   de columnas auto-fit. Con UNA produccion auto-fit colapsa los tracks vacios
-   y ocupa el ancho completo; con varias fluye en columnas. Los items preservan
-   el aspect del media (sin recorte). */
+/* ── Canvas INTRÍNSECO (no masonry justificado, no grid) ──────────────────
+   LivingManager corre con disableJustified en Studio: cada card abraza su
+   media a proporción natural con tope de altura. Nada de tracks de grid que
+   estiran la card a la fila más alta (dejaba áreas negras bajo el media) ni
+   auto-fit que agiganta un output único a todo el ancho del canvas. Las
+   cards fluyen en filas y se envuelven. */
 .living-masonry-grid--css-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
   gap: 14px;
-  align-content: start;
   overflow: visible;
 }
 .living-masonry-grid--css-grid .living-masonry-item {
+  flex: 0 1 auto;
   width: auto;
   height: auto;
+  max-width: 100%;
   aspect-ratio: auto;
-  flex: initial;
 }
 .living-masonry-grid--css-grid .living-masonry-item > figure {
   position: static;
+  width: auto;
+  height: auto;
 }
 .living-masonry-grid--css-grid .living-masonry-item img,
 .living-masonry-grid--css-grid .living-masonry-item video {
   position: static;
-  width: 100%;
+  display: block;
+  width: auto;
   height: auto;
+  max-width: 100%;
+  max-height: min(64vh, 680px);
   object-fit: contain;
 }
-/* Skeleton de carga (append): mantiene un slot con aspecto mientras llega el media. */
-.living-masonry-grid--css-grid .living-masonry-item:has(> .living-history-skeleton) {
+/* Mientras la imagen carga (aún sin dimensiones) o el video no tiene metadata
+   (preload=none), la card reserva un slot 4:5 para no colapsar a cero. */
+.living-masonry-grid--css-grid .living-masonry-item:has(img:not(.is-loaded)),
+.living-masonry-grid--css-grid .living-masonry-item:has(video) {
+  width: clamp(220px, 26vw, 320px);
+  aspect-ratio: 4 / 5;
+}
+.living-masonry-grid--css-grid .living-masonry-item:has(img:not(.is-loaded)) > figure,
+.living-masonry-grid--css-grid .living-masonry-item:has(video) > figure {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.living-masonry-grid--css-grid .living-masonry-item:has(img:not(.is-loaded)) img,
+.living-masonry-grid--css-grid .living-masonry-item:has(video) video {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+}
+/* Skeleton de carga (append) y card de edición pendiente: mantienen un slot
+   con aspecto mientras llega el media (su contenido interno es absoluto). */
+.living-masonry-grid--css-grid .living-masonry-item:has(> .living-history-skeleton),
+.living-masonry-grid--css-grid .living-masonry-item.pending-edit-card {
+  width: clamp(220px, 26vw, 320px);
   aspect-ratio: 4 / 5;
 }
 
 /* ========== Skeleton de carga (run activo esperando su output) ========== */
 /* Se muestra mientras el run corre y persiste hasta que el output real lo
-   reemplaza. Reutiliza el shimmer .living-history-skeleton (living.css). */
+   reemplaza. Reutiliza el shimmer .living-history-skeleton (living.css).
+   Centrado en el canvas (mismo trato que el empty state premium): el canvas
+   y el living se flexionan para que el skeleton llene el alto y centre. */
+.studio-canvas-empty:has(.studio-skeleton) { display: flex; }
+.studio-canvas-living:has(> .studio-skeleton) {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.studio-canvas-living > .studio-skeleton { flex: 1; }
 .studio-skeleton {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: var(--spacing-sm, 8px);
   width: 100%;
   min-height: 320px;
   padding: var(--spacing-lg, 24px);
+  text-align: center;
 }
 .studio-skeleton-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
 }
 /* El tamano/proporcion del card se fija inline desde _skeletonCardStyle()
