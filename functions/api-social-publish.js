@@ -273,7 +273,10 @@ exports.handler = async (event) => {
   const meta = output.metadata || {};
   let mediaUrl = meta.public_url || meta.url || meta.output_url || null;
   if (!mediaUrl && output.storage_path) {
-    mediaUrl = publicStorageUrl(env.url, 'production-outputs', output.storage_path);
+    // R2 (media.aismartcontent.io): storage_path ya es URL completa
+    mediaUrl = /^https?:\/\//.test(output.storage_path)
+      ? output.storage_path
+      : publicStorageUrl(env.url, 'production-outputs', output.storage_path);
   }
   if (!mediaUrl) return { statusCode: 422, headers: corsHeaders(event), body: JSON.stringify({ error: 'La produccion no tiene archivo publicable' }) };
 

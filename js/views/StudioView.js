@@ -257,7 +257,8 @@ class StudioView extends BaseView {
     if (kind === 'image') {
       const path = payload.storage_path || output.storage_path || '';
       let url = '';
-      try { url = path ? this.supabase.storage.from('production-outputs').getPublicUrl(path).data.publicUrl : ''; } catch (_) {}
+      if (/^https?:\/\//.test(path)) url = path; // media.aismartcontent.io (R2): URL completa
+      else { try { url = path ? this.supabase.storage.from('production-outputs').getPublicUrl(path).data.publicUrl : ''; } catch (_) {} }
       this._stageApprovalState = { order, outputId: output.id, kind };
       inner = `
         <p class="stage-approval-title">${__('Revisa la imagen y aprueba para continuar')}</p>

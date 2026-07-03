@@ -1884,6 +1884,8 @@ class FlowCatalogView extends BaseView {
   // ---- helpers de runs (columna izquierda del modal) ----
 
   getPublicUrlFromStorage(bucket, filePath) {
+    // R2 (media.aismartcontent.io): storage_path puede ser URL completa -> pass-through
+    if (typeof filePath === 'string' && /^(https?:|\/\/)/i.test(filePath.trim())) return filePath.trim();
     if (!this.supabase?.storage?.from || !bucket || typeof filePath !== 'string' || !filePath.trim()) return null;
     try {
       let path = filePath.trim();

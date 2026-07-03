@@ -1,16 +1,16 @@
 /**
- * Netlify Function: persiste un output de kie.ai DIRECTO a Supabase Storage
- * desde el server. Evita el limite de response body de Netlify (6MB en base64)
- * para imagenes grandes — particularmente upscale a 4K (5-15MB).
+ * Netlify Function: persiste un output de kie.ai en R2 (media.aismartcontent.io).
  *
  * Flujo:
  *   1. Auth requireAuth.
- *   2. Descarga la URL de kie con UA correcto (mismos retries que kie-video-download).
- *   3. Upload directo a Supabase Storage via REST con service key.
- *   4. Devuelve { storage_path, public_url, bytes, content_type }.
+ *   2. Ordena al worker de ingesta (aisc-media-ingest) que descargue la URL de
+ *      kie y la guarde en R2 — los bytes NUNCA pasan por Netlify, asi que no hay
+ *      limite de tamaño ni timeout por archivos grandes (4K, video).
+ *   3. Devuelve { storage_path, public_url } — ambos son la URL publica completa
+ *      en media.aismartcontent.io; el frontend la inserta tal cual en
+ *      system_ai_outputs.storage_path (los lectores hacen pass-through de http).
  *
- * Reemplaza al combo browser-side (download via proxy → upload via supabase-js)
- * para archivos grandes. Es agnostico del tipo de output (edit/upscale/remove-bg).
+ * production-inputs (mascaras de edicion) sigue en Supabase Storage.
  */
 
 const {
@@ -55,16 +55,47 @@ function fail(event, status, error, extra = {}) {
 
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
-function inferExt(contentType, fallbackUrl) {
-  const map = { 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
-  if (contentType && map[contentType]) return map[contentType];
+function inferExt(kind, fallbackUrl) {
   try {
     const u = new URL(fallbackUrl);
     const last = u.pathname.split('/').pop() || '';
     const ext = last.split('.').pop()?.toLowerCase();
-    if (ext && ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) return ext === 'jpeg' ? 'jpg' : ext;
+    if (ext && ['png', 'jpg', 'jpeg', 'webp', 'gif', 'mp4', 'webm', 'mov'].includes(ext)) return ext === 'jpeg' ? 'jpg' : ext;
   } catch (_) { /* noop */ }
-  return 'png';
+  return kind === 'video' ? 'mp4' : 'png';
+}
+
+/** Ingesta via worker R2: el worker descarga source_url y lo guarda; con retries. */
+async function r2IngestByUrl({ sourceUrl, path, maxAttempts = 3 }) {
+  const base = process.env.R2_INGEST_URL;
+  const key = process.env.R2_INGEST_KEY;
+  if (!base || !key) throw new Error('R2_INGEST_URL / R2_INGEST_KEY no configuradas');
+  let lastErr = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const res = await fetch(`${base}/url`, {
+        method: 'POST',
+        headers: { 'x-ingest-key': key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source_url: sourceUrl, path })
+      });
+      if (res.ok) {
+        const j = await res.json();
+        if (!j.url) throw new Error('worker sin url en respuesta');
+        return j; // { url, path }
+      }
+      lastErr = new Error(`worker ingest HTTP ${res.status}`);
+      if ([429, 502, 503, 504].includes(res.status) && attempt < maxAttempts) {
+        await sleep(Math.min(500 * Math.pow(2, attempt - 1), 8000));
+        continue;
+      }
+      throw lastErr;
+    } catch (err) {
+      lastErr = err;
+      if (attempt < maxAttempts) { await sleep(Math.min(500 * Math.pow(2, attempt - 1), 8000)); continue; }
+      throw lastErr;
+    }
+  }
+  throw lastErr || new Error('Ingesta fallida');
 }
 
 async function downloadBinary(url, maxAttempts = 3) {
@@ -167,52 +198,58 @@ exports.handler = async (event) => {
   if (!ALLOWED_BUCKETS.has(bucket)) return fail(event, 400, 'bucket no permitido');
   if (!taskId) return fail(event, 400, 'task_id requerido');
 
-  let env;
-  try { env = getSupabaseEnv(); }
-  catch (e) { return fail(event, 500, e.message); }
-
-  let download;
-  try {
-    download = await downloadBinary(kieUrl);
-  } catch (e) {
-    return fail(event, 502, `No se pudo descargar de kie: ${e.message}`);
-  }
-
-  // Path por tipo: image-edits / image-upscales / image-remove-bg / image-variations
+  // Path por tipo: image-edits / image-upscales / image-remove-bg / image-variations / kie-videos
   const folderMap = {
     edit: 'image-edits',
     upscale: 'image-upscales',
     'remove-bg': 'image-remove-bg',
     reframe: 'image-reframes',
-    variations: 'image-variations'
+    variations: 'image-variations',
+    video: 'kie-videos'
   };
   const folder = folderMap[kind] || 'image-edits';
   const safeTaskId = taskId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || String(Date.now());
-  const ext = inferExt(download.contentType, kieUrl);
+  const ext = inferExt(kind, kieUrl);
   const storagePath = `${folder}/${user.id}/${safeTaskId}.${ext}`;
 
-  let publicUrl;
+  // production-inputs (mascaras) sigue viviendo en Supabase Storage
+  if (bucket === 'production-inputs') {
+    let env;
+    try { env = getSupabaseEnv(); }
+    catch (e) { return fail(event, 500, e.message); }
+    let download;
+    try { download = await downloadBinary(kieUrl); }
+    catch (e) { return fail(event, 502, `No se pudo descargar de kie: ${e.message}`); }
+    let publicUrl;
+    try {
+      publicUrl = await uploadToStorage({ env, bucket, path: storagePath, buffer: download.buffer, contentType: download.contentType });
+    } catch (e) {
+      return fail(event, 500, `No se pudo subir a Storage: ${e.message}`);
+    }
+    return {
+      statusCode: 200,
+      headers: c,
+      body: JSON.stringify({ storage_path: storagePath, public_url: publicUrl, bytes: download.buffer.byteLength, content_type: download.contentType, bucket })
+    };
+  }
+
+  // Producciones -> R2 via worker de ingesta (bytes no pasan por Netlify)
+  let ingested;
   try {
-    publicUrl = await uploadToStorage({
-      env,
-      bucket,
-      path: storagePath,
-      buffer: download.buffer,
-      contentType: download.contentType
-    });
+    ingested = await r2IngestByUrl({ sourceUrl: kieUrl, path: storagePath });
   } catch (e) {
-    return fail(event, 500, `No se pudo subir a Storage: ${e.message}`);
+    return fail(event, 502, `No se pudo persistir en R2: ${e.message}`);
   }
 
   return {
     statusCode: 200,
     headers: c,
     body: JSON.stringify({
-      storage_path: storagePath,
-      public_url: publicUrl,
-      bytes: download.buffer.byteLength,
-      content_type: download.contentType,
-      bucket
+      // URL completa en ambos campos: los lectores hacen pass-through de http
+      storage_path: ingested.url,
+      public_url: ingested.url,
+      content_type: null,
+      bucket: 'r2:aisc-media'
     })
   };
 };

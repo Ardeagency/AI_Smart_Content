@@ -1099,6 +1099,8 @@ class VideoView extends BaseView {
   }
 
   getPublicUrlFromStorage(bucketName, filePath) {
+    // R2 (media.aismartcontent.io): storage_path puede ser URL completa -> pass-through
+    if (typeof filePath === 'string' && /^(https?:|\/\/)/i.test(filePath.trim())) return filePath.trim();
     if (!this.supabase?.storage?.from || !bucketName || typeof filePath !== 'string' || !filePath.trim()) return null;
     try {
       let path = filePath.trim();
@@ -2119,40 +2121,30 @@ class VideoView extends BaseView {
   }
 
   /**
-   * Descarga el video desde la URL de KIE (vía proxy para evitar CORS) y lo sube a Supabase.
+   * Persiste el video de KIE en R2 (media.aismartcontent.io) via kie-output-persist:
+   * el worker de ingesta lo descarga server-side — el video ya no pasa por el
+   * browser ni por Supabase Storage. Devuelve URLs completas (los lectores hacen
+   * pass-through cuando storage_path empieza con http).
    * @param {string} kieVideoUrl - URL del video devuelta por KIE (resultUrls[0])
    * @param {string} taskId - ID de la tarea KIE (para nombre de archivo)
    * @returns {{ publicUrl: string, storagePath: string } | null}
    */
   async downloadAndUploadKieVideo(kieVideoUrl, taskId) {
-    if (!this.supabase?.storage) return null;
-    const { data: { user } } = await this.supabase.auth.getUser();
-    if (!user?.id) return null;
-    const bucket = 'production-outputs';
-    const ext = (kieVideoUrl.split('.').pop() || 'mp4').split('?')[0].toLowerCase() || 'mp4';
-    const safeTaskId = (taskId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32) || Date.now();
-    const storagePath = `kie-videos/${user.id}/${safeTaskId}.${ext}`;
+    const { data: { session } } = await this.supabase.auth.getSession();
+    if (!session?.access_token) return null;
 
-    this.showStatus(window.__('Descargando y guardando en tu cuenta…'), true);
+    this.showStatus(window.__('Guardando en tu cuenta…'), true);
     try {
-      const proxyUrl = `${VideoView.KIE_VIDEO_DOWNLOAD_API}?videoUrl=${encodeURIComponent(kieVideoUrl)}`;
-      const { data: { session } } = await this.supabase.auth.getSession();
-      const res = await fetch(proxyUrl, {
-        headers: { Authorization: `Bearer ${session?.access_token || ''}` }
+      const res = await fetch('/.netlify/functions/kie-output-persist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ kie_url: kieVideoUrl, task_id: taskId, kind: 'video' })
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || window.__('Descarga fallida: {status}', { status: res.status }));
+        throw new Error(data.error || window.__('Descarga fallida: {status}', { status: res.status }));
       }
-      const blob = await res.blob();
-      const contentType = res.headers.get('content-type') || 'video/mp4';
-      const { error } = await this.supabase.storage.from(bucket).upload(storagePath, blob, {
-        contentType,
-        upsert: true
-      });
-      if (error) throw error;
-      const { data: urlData } = this.supabase.storage.from(bucket).getPublicUrl(storagePath);
-      return { publicUrl: urlData?.publicUrl || null, storagePath };
+      return { publicUrl: data.public_url || null, storagePath: data.storage_path };
     } catch (err) {
       console.error('VideoView downloadAndUploadKieVideo:', err);
       throw err;

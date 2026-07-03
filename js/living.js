@@ -5709,6 +5709,8 @@ class LivingManager {
     }
 
     getPublicUrlFromStorage(bucketName, filePath) {
+        // R2 (media.aismartcontent.io): storage_path puede ser URL completa -> pass-through
+        if (typeof filePath === 'string' && /^(https?:|\/\/)/i.test(filePath.trim())) return filePath.trim();
         // Validar parámetros antes de hacer la llamada
         if (!this.supabase || !bucketName || !filePath) {
             return null;

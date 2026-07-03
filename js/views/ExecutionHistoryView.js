@@ -384,6 +384,8 @@ class ExecutionHistoryView extends BaseView {
 
   /** Resuelve URL publica de un objeto en Storage (replica de living.js). */
   getPublicUrlFromStorage(bucketName, filePath) {
+    // R2 (media.aismartcontent.io): storage_path puede ser URL completa -> pass-through
+    if (typeof filePath === 'string' && /^(https?:|\/\/)/i.test(filePath.trim())) return filePath.trim();
     if (!this.supabase || !bucketName || !filePath) return null;
     if (!this.supabase.storage || typeof this.supabase.storage.from !== 'function') return null;
     if (typeof filePath !== 'string' || filePath.trim() === '') return null;
