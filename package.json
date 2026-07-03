@@ -2,7 +2,6 @@
   "name": "ai-smart-content",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "description": "AI Smart Content — frontend SPA + Netlify Functions (smoke tests against Supabase + ai-engine)",
   "scripts": {
     "test": "vitest run",
