@@ -2034,15 +2034,13 @@ class StudioView extends BaseView {
         : '');
     }
     const preview = box.querySelector('.input-gradient-preview');
-    const n = g.stops.length;
-    const parts = g.stops.map((h, i) => `${h} ${n <= 1 ? 100 : Math.round((i / (n - 1)) * 100)}%`);
     if (preview) {
+      const n = g.stops.length;
+      const parts = g.stops.map((h, i) => `${h} ${n <= 1 ? 100 : Math.round((i / (n - 1)) * 100)}%`);
       preview.style.background = type === 'radial'
         ? `radial-gradient(circle at 50% 50%, ${parts.join(', ')})`
         : `linear-gradient(${angle}deg, ${parts.join(', ')})`;
     }
-    const angleTrack = box.querySelector('.input-gradient-angle-track');
-    if (angleTrack) angleTrack.style.background = `linear-gradient(90deg, ${parts.join(', ')})`;
   }
 
   async loadBrandData(brandContainerId) {

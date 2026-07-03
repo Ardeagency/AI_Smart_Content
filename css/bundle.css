@@ -37,6 +37,10 @@
 /* developer.css (351KB): route-split — se carga solo en /dev/* via app.js _loadCss.
    dev-shared.css queda global: clases de developer.css que usa codigo no-dev. */
 @import url('modules/dev-shared.css?v=__BUILD_ID__');
+/* input-components.css: componentes de formulario de input-registry.js
+   (aspect_ratio, chips, sliders, etc.) — global; antes solo en developer.css
+   y los formularios de Studio quedaban sin estilo fuera de /dev/*. */
+@import url('modules/input-components.css?v=__BUILD_ID__');
 @import url('modules/payment-modal.css?v=__BUILD_ID__');
 @import url('modules/video.css?v=__BUILD_ID__');
 /* insight.css: route-split via app.js _loadCss (dashboardLoader + monitoringLoader). */

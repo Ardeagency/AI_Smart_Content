@@ -1080,15 +1080,17 @@
     flex: 1;
     min-width: 140px;
 }
-/* Track del angulo pintado con el degradado dinamico actual (el background lo
-   inyecta input-registry y lo actualiza sync() al cambiar paradas). Mismo
-   patron que .input-color-slider: range transparente sobre track + thumb blanco. */
+/* Track del angulo pintado con el DEGRADADO DINAMICO DE MARCA de la plataforma
+   (--brand-gradient-dynamic, colores de la org activa via OrgBrandTheme), el
+   mismo que usan barras y acentos en toda la app. Mismo patron que
+   .input-color-slider: range transparente sobre track + thumb blanco. */
 .input-gradient-angle-track {
     flex: 1;
     position: relative;
     height: 12px;
     border-radius: 6px;
     border: 1px solid var(--white-8, rgba(255, 255, 255, 0.08));
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
 }
 .input-gradient-angle {
     -webkit-appearance: none;

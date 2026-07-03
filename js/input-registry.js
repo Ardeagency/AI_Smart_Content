@@ -1551,9 +1551,6 @@
       ? '<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>'
       : '';
     var angleStyle = g.type === 'radial' ? ' style="display:none;"' : '';
-    // Track del slider de angulo pintado con las paradas actuales (siempre
-    // horizontal para que se lea como track); sync() lo mantiene en vivo.
-    var trackCss = gradientToCss({ type: 'linear', angle: 90, stops: g.stops });
     return '<input type="hidden" class="input-gradient-value" name="' + escapeHtml(a.name) + '" id="' + escapeHtml(a.id) + '" value="' + escapeHtml(jsonStr) + '">' +
       '<div class="input-gradient" data-gradient-key="' + escapeHtml(f.key || '') + '" data-gradient-max="' + max + '" role="group" aria-label="' + escapeHtml(f.label || 'Degradado') + '">' +
         '<div class="input-gradient-preview" style="background:' + css + ';" aria-hidden="true"></div>' +
@@ -1564,7 +1561,7 @@
             '<button type="button" class="input-gradient-type-btn' + (g.type === 'radial' ? ' active' : '') + '" data-type="radial">Radial</button>' +
           '</div>' +
           '<div class="input-gradient-angle-wrap"' + angleStyle + '>' +
-            '<div class="input-gradient-angle-track" style="background:' + trackCss + ';">' +
+            '<div class="input-gradient-angle-track">' +
               '<input type="range" class="input-gradient-angle" min="0" max="360" step="5" value="' + g.angle + '" aria-label="Angulo del degradado">' +
             '</div>' +
             '<span class="input-gradient-angle-val">' + g.angle + '°</span>' +
@@ -2466,7 +2463,6 @@
       var stopsWrap = box.querySelector('.input-gradient-stops');
       var preview = box.querySelector('.input-gradient-preview');
       var angleWrap = box.querySelector('.input-gradient-angle-wrap');
-      var angleTrack = box.querySelector('.input-gradient-angle-track');
       var angleInput = box.querySelector('.input-gradient-angle');
       var angleVal = box.querySelector('.input-gradient-angle-val');
 
@@ -2488,7 +2484,6 @@
         var g = readState();
         hidden.value = JSON.stringify(g);
         if (preview) preview.style.background = cssOf(g);
-        if (angleTrack) angleTrack.style.background = cssOf({ type: 'linear', angle: 90, stops: g.stops });
         if (hidden.dispatchEvent) hidden.dispatchEvent(new Event('change', { bubbles: true }));
       }
       function refreshAddBtn() {
