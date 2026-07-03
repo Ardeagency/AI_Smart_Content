@@ -8,7 +8,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "lint:ci": "eslint . --max-warnings 632",
+    "lint:ci": "eslint . --max-warnings 630",
     "audit:isolation": "node scripts/audit-org-isolation.mjs",
     "build:minify": "node scripts/build-minify.mjs"
   },

@@ -518,7 +518,7 @@
       '</div>';
   }
   /** Preview en canvas del Builder: bloque tipo acordeón para selectores de enfoque (solo scope_picker). */
-  function previewFocusSelectorAccordion(f) {
+  function _previewFocusSelectorAccordion(f) {
     var label = f.label || 'Enfoque de la producción';
     return (
       '<div class="preview-focus-selector">' +
@@ -719,7 +719,7 @@
    * brand, campaign, product, audience, entity. La vista (StudioView) rellena el acordeón con datos
    * de la organización y actualiza el hidden con el payload (completo o filtrado).
    */
-  function formFocusSelectorAccordion(f, opts) {
+  function _formFocusSelectorAccordion(f, opts) {
     var a = formAttrs(f, opts || {});
     var focusType = f.context_selector_type || getInputType(f) || 'brand_selector';
     var label = getContextSelectorLabel(focusType);
@@ -885,7 +885,6 @@
     var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
     var optsList = f.options || [];
     var name = a.name;
-    var idBase = a.id;
     var html = optsList.map(function (o, i) {
       var v = escapeHtml(String(optVal(o)));
       var lbl = escapeHtml(optLabel(o));
@@ -1406,7 +1405,7 @@
     { value: '#06b6d4', label: 'Cian' }, { value: '#3b82f6', label: 'Azul' }, { value: '#8b5cf6', label: 'Violeta' },
     { value: '#ec4899', label: 'Rosa' }, { value: '#78716c', label: 'Marrón' }, { value: '#64748b', label: 'Gris' }
   ];
-  function getColorsOptionsForField(f) {
+  function _getColorsOptionsForField(f) {
     var opts = f.options && f.options.length ? f.options : DEFAULT_COLOR_PALETTE;
     return opts.map(function (o) {
       var val = (o.value != null ? o.value : o).toString().trim();

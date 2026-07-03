@@ -1205,7 +1205,7 @@ class StudioView extends BaseView {
       if (el.type === 'number') return clamp(parseInt(el.value, 10), parseInt(el.min, 10), parseInt(el.max, 10));
       return (el.value || '').trim();
     };
-    const setVal = (key, value) => {
+    const _setVal = (key, value) => {
       const el = widgetEl.querySelector('[data-schedule-key="' + key + '"]');
       if (el && el.type === 'number') el.value = value;
     };
@@ -1851,7 +1851,6 @@ class StudioView extends BaseView {
     carousels.forEach(carousel => {
       const track = carousel.querySelector('.image-selector-carousel-track');
       const hiddenInput = carousel.querySelector('input[type="hidden"]');
-      const fieldName = carousel.getAttribute('data-field-name') || (hiddenInput && hiddenInput.getAttribute('name'));
       const isMultiple = carousel.getAttribute('data-selection-mode') === 'multiple';
 
       if (!track) return;
@@ -1915,7 +1914,7 @@ class StudioView extends BaseView {
     const runId = this._activeRunId;
     const formEl = document.getElementById('studioFlowForm');
     if (!runId || !formEl || !this.supabase) return;
-    let snap = null;
+    let snap;
     try {
       const { data, error } = await this.supabase
         .from('runs_inputs')

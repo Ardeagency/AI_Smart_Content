@@ -1055,7 +1055,7 @@ class LivingManager {
                 } catch (_) {}
             }
             const outputType = (item.output_type || '').toLowerCase();
-            let contentType = 'image';
+            let contentType;
             if (outputType.includes('video') || outputType.includes('reel') || outputType.includes('clip')) contentType = 'video';
             else if (outputType.includes('image') || outputType.includes('img') || resolvedUrl) contentType = 'image';
             else contentType = 'text';
@@ -1088,7 +1088,7 @@ class LivingManager {
                 } catch (_) {}
             }
             const outputType = (item.output_type || '').toLowerCase();
-            let contentType = 'image';
+            let contentType;
             if (outputType.includes('video') || outputType.includes('reel') || outputType.includes('clip')) contentType = 'video';
             else if (outputType.includes('image') || outputType.includes('img') || resolvedUrl) contentType = 'image';
             else contentType = 'text';
