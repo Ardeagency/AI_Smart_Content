@@ -79,6 +79,18 @@
         });
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
-    else start();
+    // Sonda de capacidad: solo reescribimos si la zona tiene transformaciones
+    // activas. Evita pasar por 404/503 (y chocar con los onerror propios de
+    // las vistas, que pintan placeholder antes de que el fallback actue).
+    function probe() {
+        const t = new Image();
+        t.onload = function () {
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+            else start();
+        };
+        // onerror: transformaciones no disponibles -> no tocar nada, todo sirve original
+        t.src = HOST + 'cdn-cgi/image/width=8/assets/probe.png';
+    }
+
+    probe();
 })();
