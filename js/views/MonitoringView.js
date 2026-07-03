@@ -1997,39 +1997,129 @@ class MonitoringView extends BaseView {
   /* ══════════════════════════════════════════════════════════
      MODALES
   ══════════════════════════════════════════════════════════ */
-  /** Crear: el usuario elige primero qué quiere seguir (marca/perfil o página). */
+  /**
+   * Analiza una URL y deduce qué es: un perfil social (plataforma + handle +
+   * nombre legible) o una página web genérica (→ url_watcher).
+   * Devuelve null si el texto no es una URL válida.
+   */
+  _detectFromUrl(raw) {
+    let url = String(raw || '').trim();
+    if (!url) return null;
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    let u;
+    try {
+      u = new URL(url);
+      if (!/^https?:$/.test(u.protocol)) return null;
+    } catch (_) { return null; }
+
+    const host = u.hostname.replace(/^www\./i, '').toLowerCase();
+    if (!host.includes('.')) return null;
+    const segs = u.pathname.split('/').filter(Boolean).map((s) => { try { return decodeURIComponent(s); } catch (_) { return s; } });
+    const clean = (s) => (s || '').replace(/^@/, '').trim() || null;
+    // "@red.bull_co" → "Red Bull Co"
+    const prettify = (h) => {
+      const base = (h || '').replace(/^@/, '').replace(/[._\-+]+/g, ' ').replace(/\s+/g, ' ').trim();
+      return base ? base.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : null;
+    };
+
+    let platform = null, handle = null;
+    if (host === 'instagram.com' || host === 'instagr.am') {
+      platform = 'instagram';
+      if (segs[0] && !['p', 'reel', 'reels', 'stories', 'explore', 'tv', 'accounts'].includes(segs[0])) handle = clean(segs[0]);
+    } else if (host === 'facebook.com' || host === 'fb.com' || host === 'm.facebook.com') {
+      platform = 'facebook';
+      if (segs[0] === 'profile.php')    handle = clean(u.searchParams.get('id'));
+      else if (segs[0] === 'pages')     handle = clean(segs[1]);
+      else if (segs[0] && !['watch', 'groups', 'events', 'marketplace', 'share', 'reel'].includes(segs[0])) handle = clean(segs[0]);
+    } else if (host === 'tiktok.com' || host === 'vm.tiktok.com') {
+      platform = 'tiktok';
+      if ((segs[0] || '').startsWith('@')) handle = clean(segs[0]);
+    } else if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtu.be') {
+      platform = 'youtube';
+      if ((segs[0] || '').startsWith('@'))                     handle = clean(segs[0]);
+      else if (['channel', 'c', 'user'].includes(segs[0]))     handle = clean(segs[1]);
+    } else if (host === 'x.com' || host === 'twitter.com' || host === 'mobile.twitter.com') {
+      platform = 'twitter';
+      if (segs[0] && !['i', 'home', 'search', 'hashtag', 'intent', 'explore'].includes(segs[0])) handle = clean(segs[0]);
+    } else if (host === 'linkedin.com') {
+      platform = 'linkedin';
+      if (['company', 'in', 'school', 'showcase'].includes(segs[0])) handle = clean(segs[1]);
+    }
+
+    if (platform) {
+      const name = prettify(handle) || prettify(host.split('.')[0]) || host;
+      return { kind: 'profile', platform, handle, name, hostname: host, url };
+    }
+    return { kind: 'page', platform: 'web', handle: null, name: prettify(host.split('.')[0]) || host, hostname: host, url };
+  }
+
+  _showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.style.cssText = `
+      position: fixed;
+      top: 80px;
+      right: 2rem;
+      padding: 0.75rem 1.1rem;
+      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      z-index: 10000;
+      font-size: 0.85rem;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 2800);
+  }
+
+  /**
+   * Crear: el usuario pega una URL, detectamos plataforma + nombre con un
+   * checklist de carga, y luego confirma rol + relevancia (wizard 3 pasos).
+   */
   _openCreateModal() {
     const containers = this._data.containers.data || [];
     const tipoOpts = MonitoringView.ENTITY_TIPOS
       .map(o => `<option value="${o.value}"${o.value === 'competidor_directo' ? ' selected' : ''}>${o.label}</option>`).join('');
-    const platOpts = MonitoringView.PLATFORMS
-      .map(o => `<option value="${o.value}">${o.label}</option>`).join('');
     const containerOpts = [
       `<option value="">${__('— Sin marca —')}</option>`,
       ...containers.map(c => `<option value="${this._esc(c.id)}">${this._esc(c.nombre_marca)}</option>`),
     ].join('');
 
     const body = `
-      <div class="mn-form" id="mnCreateForm">
-        <div class="mn-kindpick">
-          <button type="button" class="mn-kind is-active" data-kind="profile">
-            <i class="fas fa-user-group"></i> ${__('Una marca o perfil')}
-          </button>
-          <button type="button" class="mn-kind" data-kind="page">
-            <i class="fas fa-globe"></i> ${__('Una página web')}
-          </button>
-        </div>
-
-        <div data-pane="profile">
-          <label>${__('¿A quién quieres seguir?')}
-            <input name="name" value="" placeholder="${__('Ej. Red Bull')}">
+      <div class="mn-follow-wizard" data-step="url">
+        <!-- Paso 1: URL -->
+        <section class="mn-follow-step" data-panel="url">
+          <p class="mn-follow-intro">${__('Pega el enlace del perfil o la página que quieres vigilar. Detectamos la plataforma y el nombre automáticamente.')}</p>
+          <label class="mn-follow-field">
+            <span class="mn-follow-field-label">${__('Enlace')}</span>
+            <input type="url" class="mn-follow-url" placeholder="https://instagram.com/marca" autocomplete="off" spellcheck="false">
           </label>
-          <div class="mn-form-grid">
-            <label>${__('¿Qué es?')}<select name="tipo">${tipoOpts}</select></label>
-            <label>${__('Plataforma')}<select name="platform">${platOpts}</select></label>
+          <button type="button" class="mn-follow-submit" data-action="analyze">
+            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+            <span>${__('Detectar automáticamente')}</span>
+          </button>
+        </section>
+
+        <!-- Paso 2: checklist de detección -->
+        <section class="mn-follow-step" data-panel="loading" hidden>
+          <ul class="mn-follow-checklist" data-checklist></ul>
+        </section>
+
+        <!-- Paso 3a: perfil detectado → rol + relevancia -->
+        <section class="mn-follow-step mn-form mn-follow-form" data-panel="confirm" hidden>
+          <div class="mn-follow-detected">
+            <span class="mn-follow-detected-icon" data-detected-icon><i class="fas fa-globe"></i></span>
+            <div class="mn-follow-detected-info">
+              <input class="mn-follow-name" name="name" value="" aria-label="${__('Nombre')}">
+              <span class="mn-follow-detected-meta">
+                <span data-detected-platform></span><span data-detected-handle></span>
+              </span>
+            </div>
+            <span class="mn-follow-detected-badge"><i class="fas fa-check" aria-hidden="true"></i> ${__('Detectado')}</span>
           </div>
-          <label>${__('Usuario o enlace')}
-            <input name="target_identifier" value="" placeholder="@usuario">
+          <label>${__('Rol — ¿qué es para tu marca?')}
+            <select name="tipo">${tipoOpts}</select>
           </label>
           <label>${__('Relevancia — ¿por qué lo monitoreas?')}
             <textarea name="relevance" rows="3" data-relevance placeholder="${this._esc(MonitoringView.RELEVANCE_HINT.competidor_directo)}"></textarea>
@@ -2039,74 +2129,186 @@ class MonitoringView extends BaseView {
             <summary>${__('Opciones avanzadas')}</summary>
             <div class="mn-advanced-body">
               <label>${__('Marca asociada')}<select name="brand_container_id">${containerOpts}</select></label>
-              <label>${__('Tipo de dato')}
-                <select name="domain">
-                  <option value="social" selected>${__('Redes sociales')}</option>
-                  <option value="analytics">${__('Analítica')}</option>
-                  <option value="web">${__('Sitio web')}</option>
-                </select>
-              </label>
-              <small>${__('Para fuentes técnicas puedes usar identificadores como {meta} o {ga4} en el campo "Usuario o enlace".', { meta: '<code>meta:1234</code>', ga4: '<code>ga4:5678</code>' })}</small>
+              <label>${__('Usuario o enlace')}<input name="target_identifier" value="" placeholder="@usuario"></label>
             </div>
           </details>
-        </div>
+          <footer class="mn-modal-foot">
+            <button type="button" class="mn-btn-secondary" data-action="close-modal">${__('Cancelar')}</button>
+            <button type="button" class="mn-btn-primary" data-action="create-entity">${__('Empezar a seguir')}</button>
+          </footer>
+        </section>
 
-        <div data-pane="page" hidden>
-          <label>${__('Dirección de la página')}
-            <input name="url" type="url" value="" placeholder="https://ejemplo.com/pagina-a-vigilar">
-            <small>${__('Te avisamos cuando esa página cambie.')}</small>
-          </label>
-          <label>${__('Nombre (opcional)')}
-            <input name="label" value="" placeholder="${__('Ej. Precios de Competidor X')}">
-          </label>
-        </div>
-
-        <footer class="mn-modal-foot">
-          <button type="button" class="mn-btn-secondary" data-action="close-modal">${__('Cancelar')}</button>
-          <button type="button" class="mn-btn-primary" data-action="create-submit">${__('Empezar a seguir')}</button>
-        </footer>
+        <!-- Paso 3b: página web genérica → watcher -->
+        <section class="mn-follow-step mn-form mn-follow-form" data-panel="page" hidden>
+          <div class="mn-follow-detected">
+            <span class="mn-follow-detected-icon" data-detected-icon-page><i class="fas fa-globe"></i></span>
+            <div class="mn-follow-detected-info">
+              <input class="mn-follow-name" name="label" value="" aria-label="${__('Nombre (opcional)')}">
+              <span class="mn-follow-detected-meta"><span data-detected-page-url></span></span>
+            </div>
+            <span class="mn-follow-detected-badge"><i class="fas fa-check" aria-hidden="true"></i> ${__('Detectado')}</span>
+          </div>
+          <small class="mn-follow-page-hint">${__('Te avisamos cuando esa página cambie.')}</small>
+          <footer class="mn-modal-foot">
+            <button type="button" class="mn-btn-secondary" data-action="close-modal">${__('Cancelar')}</button>
+            <button type="button" class="mn-btn-primary" data-action="create-watcher">${__('Empezar a vigilar')}</button>
+          </footer>
+        </section>
       </div>`;
 
-    const { modal, close } = window.Modal.show({ title: __('Seguir algo nuevo'), body, className: 'mn-modal-content' });
-    let kind = 'profile';
-    modal.querySelectorAll('[data-kind]').forEach(b => b.addEventListener('click', () => {
-      kind = b.dataset.kind;
-      modal.querySelectorAll('[data-kind]').forEach(x => x.classList.toggle('is-active', x === b));
-      modal.querySelector('[data-pane="profile"]').hidden = kind !== 'profile';
-      modal.querySelector('[data-pane="page"]').hidden    = kind !== 'page';
-    }));
-    modal.querySelector('[data-action="close-modal"]')?.addEventListener('click', () => close());
+    const handle = window.Modal.show({ title: __('Seguir algo nuevo'), body, className: 'mn-follow-modal' });
+    if (!handle) return;
+    const { modal, close } = handle;
+    const root = modal.querySelector('.mn-follow-wizard');
+    let detected = null;
+
+    // Botón "Volver" inyectado en el header, junto al título (patrón del modal de productos).
+    const header = modal.querySelector('.modal-header');
+    const titleEl = header?.querySelector('h3');
+    let backBtn = null;
+    if (header && titleEl) {
+      const headerLeft = document.createElement('div');
+      headerLeft.className = 'mn-follow-header-left';
+      backBtn = document.createElement('button');
+      backBtn.type = 'button';
+      backBtn.className = 'mn-follow-back';
+      backBtn.hidden = true;
+      backBtn.setAttribute('aria-label', __('Volver'));
+      backBtn.innerHTML = `<i class="fas fa-arrow-left" aria-hidden="true"></i><span>${this._esc(__('Volver'))}</span>`;
+      backBtn.addEventListener('click', () => {
+        const cur = root?.getAttribute('data-step');
+        goToStep(stepConfig[cur]?.backTo || 'url');
+      });
+      header.insertBefore(headerLeft, header.firstChild);
+      headerLeft.appendChild(backBtn);
+      headerLeft.appendChild(titleEl);
+    }
+
+    const stepConfig = {
+      url:     { title: __('Seguir algo nuevo'),   back: false, backTo: null  },
+      loading: { title: __('Analizando el enlace'), back: false, backTo: null  },
+      confirm: { title: __('Confirma el perfil'),  back: true,  backTo: 'url' },
+      page:    { title: __('Vigilar página web'),  back: true,  backTo: 'url' },
+    };
+
+    const goToStep = (step) => {
+      if (!root) return;
+      root.setAttribute('data-step', step);
+      root.querySelectorAll('[data-panel]').forEach((p) => { p.hidden = p.getAttribute('data-panel') !== step; });
+      const cfg = stepConfig[step];
+      if (cfg && titleEl) titleEl.textContent = cfg.title;
+      if (backBtn) backBtn.hidden = !(cfg && cfg.back);
+      const focusable = root.querySelector(`[data-panel="${step}"] input, [data-panel="${step}"] select`);
+      try { focusable?.focus(); } catch (_) {}
+    };
+
+    // Checklist de carga: los pasos se van marcando en secuencia y muestran
+    // el dato detectado. La detección es local; la secuencia es percepción.
+    const playChecklist = async (det) => {
+      const list = root.querySelector('[data-checklist]');
+      if (!list) return;
+      const platLabel = MonitoringView.PLATFORMS.find(p => p.value === det.platform)?.label || det.platform;
+      const steps = [
+        { label: __('Leyendo la URL'),               result: det.hostname },
+        { label: __('Identificando la plataforma'),  result: platLabel },
+        det.kind === 'profile'
+          ? { label: __('Detectando el nombre del perfil'),      result: det.name }
+          : { label: __('Preparando la vigilancia de la página'), result: det.name },
+      ];
+      list.innerHTML = steps.map((s, i) => `
+        <li class="mn-follow-check" data-check-idx="${i}">
+          <span class="mn-follow-check-dot"><span class="mn-follow-check-spinner"></span><i class="fas fa-check" aria-hidden="true"></i></span>
+          <span class="mn-follow-check-label">${this._esc(s.label)}</span>
+          <span class="mn-follow-check-result"></span>
+        </li>`).join('');
+      const wait = (ms) => new Promise(r => setTimeout(r, ms));
+      for (let i = 0; i < steps.length; i++) {
+        const li = list.querySelector(`[data-check-idx="${i}"]`);
+        li?.classList.add('is-active');
+        await wait(480 + Math.random() * 280);
+        li?.classList.remove('is-active');
+        li?.classList.add('is-done');
+        const res = li?.querySelector('.mn-follow-check-result');
+        if (res && steps[i].result) res.textContent = steps[i].result;
+      }
+      await wait(360);
+    };
+
+    const urlInput = root.querySelector('.mn-follow-url');
+    const analyze = async () => {
+      const det = this._detectFromUrl(urlInput?.value);
+      if (!det) {
+        urlInput?.focus();
+        this._showNotification?.(__('La URL no es válida'), 'error');
+        urlInput?.classList.add('is-invalid');
+        setTimeout(() => urlInput?.classList.remove('is-invalid'), 1200);
+        return;
+      }
+      detected = det;
+      goToStep('loading');
+      await playChecklist(det);
+
+      if (det.kind === 'profile') {
+        const iconEl = root.querySelector('[data-detected-icon]');
+        if (iconEl) iconEl.innerHTML = `<i class="${MonitoringView.PLATFORM_ICON[det.platform] || 'fas fa-globe'}" aria-hidden="true"></i>`;
+        const platEl = root.querySelector('[data-detected-platform]');
+        if (platEl) platEl.textContent = MonitoringView.PLATFORMS.find(p => p.value === det.platform)?.label || det.platform;
+        const handleEl = root.querySelector('[data-detected-handle]');
+        if (handleEl) handleEl.textContent = det.handle ? `@${det.handle}` : det.hostname;
+        const nameEl = root.querySelector('[data-panel="confirm"] [name="name"]');
+        if (nameEl) nameEl.value = det.name;
+        const tidEl = root.querySelector('[name="target_identifier"]');
+        if (tidEl) tidEl.value = det.handle ? `@${det.handle}` : det.url;
+        goToStep('confirm');
+      } else {
+        const urlEl = root.querySelector('[data-detected-page-url]');
+        if (urlEl) urlEl.textContent = det.url.replace(/^https?:\/\//, '');
+        const labelEl = root.querySelector('[data-panel="page"] [name="label"]');
+        if (labelEl) labelEl.value = det.name;
+        goToStep('page');
+      }
+    };
+    root.querySelector('[data-action="analyze"]')?.addEventListener('click', analyze);
+    urlInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); analyze(); } });
+
+    root.querySelectorAll('[data-action="close-modal"]').forEach(b => b.addEventListener('click', () => close()));
+
     // El placeholder de relevancia se adapta al rol elegido.
-    const tipoSel = modal.querySelector('[name="tipo"]');
-    const relArea = modal.querySelector('[data-relevance]');
+    const tipoSel = root.querySelector('[name="tipo"]');
+    const relArea = root.querySelector('[data-relevance]');
     tipoSel?.addEventListener('change', () => {
       if (relArea) relArea.placeholder = MonitoringView.RELEVANCE_HINT[tipoSel.value] || '';
     });
-    modal.querySelector('[data-action="create-submit"]')?.addEventListener('click', async () => {
-      const root = modal.querySelector('#mnCreateForm');
-      const val = (n) => root.querySelector(`[name="${n}"]`)?.value?.trim() || '';
-      if (kind === 'profile') {
-        const name = val('name');
-        if (!name) { alert(__('Escribe un nombre.')); return; }
-        const { error } = await this._service.createEntity({
-          name,
-          target_identifier: val('target_identifier') || null,
-          domain: val('domain') || 'social',
-          brand_container_id: val('brand_container_id') || null,
-          tipo: val('tipo'),
-          platform: val('platform') || null,
-          relevance: val('relevance') || null,
-          is_active: true,
-        });
-        if (error) { alert(__('Error:') + ' ' + error.message); return; }
-      } else {
-        const url = val('url');
-        if (!url) { alert(__('Escribe la dirección de la página.')); return; }
-        const { error } = await this._service.createWatcher({
-          url, label: val('label') || null, is_active: true,
-        });
-        if (error) { alert(__('Error:') + ' ' + error.message); return; }
-      }
+
+    root.querySelector('[data-action="create-entity"]')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      const val = (n) => root.querySelector(`[data-panel="confirm"] [name="${n}"], [name="${n}"]`)?.value?.trim() || '';
+      const name = val('name');
+      if (!name) { this._showNotification?.(__('Escribe un nombre.'), 'error'); return; }
+      btn.disabled = true;
+      const { error } = await this._service.createEntity({
+        name,
+        target_identifier: val('target_identifier') || null,
+        domain: 'social',
+        brand_container_id: val('brand_container_id') || null,
+        tipo: val('tipo'),
+        platform: detected?.platform || null,
+        relevance: val('relevance') || null,
+        is_active: true,
+        metadata: detected?.url ? { source_url: detected.url } : {},
+      });
+      if (error) { btn.disabled = false; this._showNotification?.(__('Error:') + ' ' + error.message, 'error'); return; }
+      close();
+      await this._refresh();
+    });
+
+    root.querySelector('[data-action="create-watcher"]')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      if (!detected?.url) { goToStep('url'); return; }
+      btn.disabled = true;
+      const label = root.querySelector('[data-panel="page"] [name="label"]')?.value?.trim() || null;
+      const { error } = await this._service.createWatcher({ url: detected.url, label, is_active: true });
+      if (error) { btn.disabled = false; this._showNotification?.(__('Error:') + ' ' + error.message, 'error'); return; }
       close();
       await this._refresh();
     });

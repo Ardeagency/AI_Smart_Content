@@ -997,6 +997,257 @@ a.mn-post:hover .mn-post-ext { color: rgba(255, 255, 255, 0.7); }
   padding: 0 12px 12px; display: flex; flex-direction: column; gap: 12px;
 }
 
+/* ════════════════════════════════════════════════════════════
+   MODAL "SEGUIR ALGO NUEVO" — wizard cinematográfico
+   (URL → checklist de detección → rol + relevancia)
+   ════════════════════════════════════════════════════════════ */
+
+/* Backdrop: negro profundo + blur, fade-in lento. */
+.modal:has(.mn-follow-modal) > .modal-overlay {
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.75) 100%);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  animation: mnFollowOverlayIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mnFollowOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Contenedor flotante: gradiente oscuro + sheen + sombra multicapa. */
+.mn-follow-modal.modal-content {
+  max-width: min(560px, calc(100vw - 2rem));
+  width: 100%;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0) 50%),
+    linear-gradient(180deg, #18191b 0%, #131416 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 16px 40px -12px rgba(0, 0, 0, 0.6),
+    0 32px 80px -16px rgba(0, 0, 0, 0.5);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  animation: mnFollowModalIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mnFollowModalIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.mn-follow-modal .modal-header {
+  padding: 1.3rem 1.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mn-follow-modal .modal-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.mn-follow-modal .modal-body { padding: 1.6rem; }
+
+.mn-follow-modal .modal-close {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mn-follow-modal .modal-close:hover {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Header: botón Volver junto al título. */
+.mn-follow-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mn-follow-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px; font-weight: 500; cursor: pointer;
+  transition: all 0.2s ease;
+}
+.mn-follow-back:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.mn-follow-back i { font-size: 10px; }
+
+/* Pasos del wizard: [hidden] gana, y cada paso anima al aparecer. */
+.mn-follow-step[hidden] { display: none !important; }
+.mn-follow-step:not([hidden]) {
+  animation: mnFollowStepIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes mnFollowStepIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Paso 1: URL */
+.mn-follow-intro {
+  margin: 0 0 1.2rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+}
+.mn-follow-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
+.mn-follow-field-label {
+  font-size: 12px; font-weight: 500; color: rgba(255, 255, 255, 0.7);
+}
+.mn-follow-url {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: #fff; font-size: 14px; font-family: inherit;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.mn-follow-url:focus {
+  outline: none;
+  border-color: rgba(124, 131, 255, 0.55);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(124, 131, 255, 0.12);
+}
+.mn-follow-url.is-invalid {
+  border-color: rgba(239, 68, 68, 0.6);
+  animation: mnFollowShake 0.35s ease;
+}
+@keyframes mnFollowShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+.mn-follow-submit {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff; font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+.mn-follow-submit:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+.mn-follow-submit i { font-size: 12px; color: #7C83FF; }
+
+/* Paso 2: checklist de detección */
+.mn-follow-checklist {
+  list-style: none; margin: 0; padding: 0.4rem 0;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.mn-follow-check {
+  display: flex; align-items: center; gap: 12px;
+  opacity: 0.35;
+  transition: opacity 0.35s ease;
+}
+.mn-follow-check.is-active,
+.mn-follow-check.is-done { opacity: 1; }
+.mn-follow-check-dot {
+  position: relative;
+  width: 24px; height: 24px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.mn-follow-check-dot i {
+  font-size: 10px; color: #7C83FF;
+  opacity: 0; transform: scale(0.4);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mn-follow-check-spinner {
+  position: absolute; inset: 3px;
+  border-radius: 50%;
+  border: 2px solid rgba(124, 131, 255, 0.18);
+  border-top-color: #7C83FF;
+  opacity: 0;
+  animation: mnFollowSpin 0.7s linear infinite;
+}
+@keyframes mnFollowSpin { to { transform: rotate(360deg); } }
+.mn-follow-check.is-active .mn-follow-check-spinner { opacity: 1; }
+.mn-follow-check.is-done .mn-follow-check-spinner { opacity: 0; animation: none; }
+.mn-follow-check.is-done .mn-follow-check-dot {
+  background: rgba(124, 131, 255, 0.1);
+  border-color: rgba(124, 131, 255, 0.35);
+}
+.mn-follow-check.is-done .mn-follow-check-dot i { opacity: 1; transform: scale(1); }
+.mn-follow-check-label {
+  font-size: 13px; font-weight: 500; color: rgba(255, 255, 255, 0.85);
+}
+.mn-follow-check-result {
+  margin-left: auto;
+  font-size: 12px; color: rgba(255, 255, 255, 0.45);
+  max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Paso 3: card de resultado detectado */
+.mn-follow-form { padding: 0; }
+.mn-follow-detected {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.028) 0%, rgba(255,255,255,0.005) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.mn-follow-detected-icon {
+  width: 42px; height: 42px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 11px; font-size: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.9);
+}
+.mn-follow-detected-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.mn-follow-name {
+  padding: 2px 6px; margin-left: -6px;
+  background: transparent; border: 1px solid transparent; border-radius: 6px;
+  color: #fff; font-size: 15px; font-weight: 600; font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.mn-follow-name:hover { border-color: rgba(255, 255, 255, 0.12); }
+.mn-follow-name:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(124, 131, 255, 0.5);
+}
+.mn-follow-detected-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: rgba(255, 255, 255, 0.45);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mn-follow-detected-meta > span:empty { display: none; }
+.mn-follow-detected-meta > span + span:not(:empty)::before {
+  content: '·'; margin-right: 8px; color: rgba(255, 255, 255, 0.25);
+}
+.mn-follow-detected-badge {
+  display: inline-flex; align-items: center; gap: 5px; flex: none;
+  padding: 4px 9px; border-radius: 999px;
+  background: rgba(124, 131, 255, 0.1);
+  border: 1px solid rgba(124, 131, 255, 0.3);
+  color: #a5aaff; font-size: 10.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.mn-follow-detected-badge i { font-size: 9px; }
+.mn-follow-page-hint {
+  font-size: 11px; color: rgba(255, 255, 255, 0.4); line-height: 1.5;
+}
+.mn-follow-form.mn-form .mn-modal-foot { margin: 4px -1.6rem -1.6rem; padding: 14px 1.6rem; }
+
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .mn-form-grid { grid-template-columns: 1fr; }
