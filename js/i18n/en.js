@@ -2023,7 +2023,7 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Rol — ¿qué es para tu marca?": "Role — what is it to your brand?",
   "Rol actualizado": "Role updated",
   "Rol de este conjunto dentro de la campana": "",
-  "Rol y relevancia sugeridos por IA según tu marca — edítalos si no encajan.": "Role and relevance suggested by AI based on your brand — edit them if they do not fit.",
+  "Rol y relevancia sugeridos por Vera según tu marca — edítalos si no encajan.": "Role and relevance suggested by Vera based on your brand — edit them if they do not fit.",
   "Roles y acceso al workspace.": "Roles and workspace access.",
   "Ropa": "Clothing",
   "Rotación completa alrededor del sujeto. Muestra el producto desde todos los ángulos.": "Full rotation around the subject. Shows the product from every angle.",

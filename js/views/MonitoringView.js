@@ -2147,7 +2147,7 @@ class MonitoringView extends BaseView {
           </div>
           <p class="mn-follow-ai-note" data-ai-note hidden>
             <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-            ${__('Rol y relevancia sugeridos por IA según tu marca — edítalos si no encajan.')}
+            ${__('Rol y relevancia sugeridos por Vera según tu marca — edítalos si no encajan.')}
           </p>
           <label>${__('Rol — ¿qué es para tu marca?')}
             <select name="tipo">${tipoOpts}</select>
