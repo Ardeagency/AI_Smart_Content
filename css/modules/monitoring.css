@@ -1260,6 +1260,24 @@ a.mn-post:hover .mn-post-ext { color: rgba(255, 255, 255, 0.7); }
 .mn-follow-ai-note i { color: #fff; font-size: 11px; margin-top: 2px; flex: none; }
 .mn-follow-form.mn-form .mn-modal-foot { margin: 4px -1.6rem -1.6rem; padding: 14px 1.6rem; }
 
+/* Confirmación destructiva (reemplaza confirm() nativo) */
+.mn-follow-modal--confirm.modal-content { max-width: min(440px, calc(100vw - 2rem)); }
+.mn-follow-confirm-msg {
+  margin: 0 0 1.2rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.9rem; line-height: 1.6;
+}
+.mn-follow-confirm .mn-modal-foot { margin: 0 -1.6rem -1.6rem; padding: 14px 1.6rem; }
+.mn-btn-danger {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #fca5a5 !important;
+}
+.mn-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.6) !important;
+}
+
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .mn-form-grid { grid-template-columns: 1fr; }

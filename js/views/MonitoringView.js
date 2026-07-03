@@ -1114,7 +1114,7 @@ class MonitoringView extends BaseView {
       ? this._service.updateWatcher(item.id, { is_active: nextActive })
       : this._service.updateEntity(item.id, { is_active: nextActive });
     const { error } = await svc;
-    if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); b._dragging = false; this._requestBubbleDraw(); return; }
+    if (error) { this._showNotification(__('No se pudo cambiar:') + ' ' + error.message, 'error'); b._dragging = false; this._requestBubbleDraw(); return; }
     delete this._bubblePos[item.id];              // que re-asiente en su nueva columna
     this._pulseColumn(destCol);                   // destello en la columna destino
     await this._refresh();
@@ -1240,7 +1240,7 @@ class MonitoringView extends BaseView {
       const patch = {}; patch[field] = value;
       ({ error } = await this._service.updateEntity(item.id, patch));
     }
-    if (error) { alert(__('No se pudo guardar:') + ' ' + error.message); return false; }
+    if (error) { this._showNotification(__('No se pudo guardar:') + ' ' + error.message, 'error'); return false; }
     if (field === 'name') item.title = value;
     if (field === 'tipo') item.tipo = value;
     if (field === 'relevance') item.relevance = value || null;
@@ -1627,7 +1627,7 @@ class MonitoringView extends BaseView {
         ? this._service.updateWatcher(item.id, { is_active: checked })
         : this._service.updateEntity(item.id, { is_active: checked });
       const { error } = await svc;
-      if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); e.target.checked = !checked; return; }
+      if (error) { this._showNotification(__('No se pudo cambiar:') + ' ' + error.message, 'error'); e.target.checked = !checked; return; }
       close(); await this._refresh();
       return;
     }
@@ -1654,7 +1654,7 @@ class MonitoringView extends BaseView {
       sw.classList.toggle('is-on', (sw.dataset.color || null) === next));
     this._wakeBubbles();
     const { error } = await this._service.updateEntity(item.id, { color: next });
-    if (error) { item.color = prev; this._wakeBubbles(); alert(__('No se pudo guardar el color:') + ' ' + error.message); return; }
+    if (error) { item.color = prev; this._wakeBubbles(); this._showNotification(__('No se pudo guardar el color:') + ' ' + error.message, 'error'); return; }
     const row = (this._data?.entities?.data || []).find(r => r.id === item.id);
     if (row) row.color = next ? [next] : null;
     if (this._liveSig) this._liveSig['monitoring'] = this._dataSignature(this._data);
@@ -1914,27 +1914,27 @@ class MonitoringView extends BaseView {
     const ent = e.target.closest('[data-action="toggle-entity"]');
     if (ent) {
       const { error } = await this._service.updateEntity(ent.dataset.id, { is_active: ent.checked });
-      if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); ent.checked = !ent.checked; }
+      if (error) { this._showNotification(__('No se pudo cambiar:') + ' ' + error.message, 'error'); ent.checked = !ent.checked; }
       else await this._refresh();
       return;
     }
     const w = e.target.closest('[data-action="toggle-watcher"]');
     if (w) {
       const { error } = await this._service.updateWatcher(w.dataset.id, { is_active: w.checked });
-      if (error) { alert(__('No se pudo cambiar:') + ' ' + error.message); w.checked = !w.checked; }
+      if (error) { this._showNotification(__('No se pudo cambiar:') + ' ' + error.message, 'error'); w.checked = !w.checked; }
       else await this._refresh();
     }
   }
 
   async _propFollow(id) {
     const { error } = await this._service.updateEntity(id, { is_active: true });
-    if (error) { alert(__('No se pudo seguir:') + ' ' + error.message); return; }
+    if (error) { this._showNotification(__('No se pudo seguir:') + ' ' + error.message, 'error'); return; }
     await this._refresh();
   }
 
   async _propDismiss(id) {
     const { error } = await this._service.updateEntity(id, { metadata: { dismissed: true } });
-    if (error) { alert(__('No se pudo descartar:') + ' ' + error.message); return; }
+    if (error) { this._showNotification(__('No se pudo descartar:') + ' ' + error.message, 'error'); return; }
     await this._refresh();
   }
 
@@ -1943,7 +1943,7 @@ class MonitoringView extends BaseView {
     if (!entity) return;
     const next = !(entity.metadata?.highlighted === true);
     const { error } = await this._service.updateEntity(id, { metadata: { highlighted: next } });
-    if (error) { alert(__('Error:') + ' ' + error.message); return; }
+    if (error) { this._showNotification(__('Error:') + ' ' + error.message, 'error'); return; }
     await this._refresh();
   }
 
@@ -2449,18 +2449,49 @@ class MonitoringView extends BaseView {
         is_active:         fd.get('is_active') === 'on',
       };
       const { error } = await this._service.updateEntity(id, payload);
-      if (error) { alert(__('Error:') + ' ' + error.message); return; }
+      if (error) { this._showNotification(__('Error:') + ' ' + error.message, 'error'); return; }
       close();
       await this._refresh();
+    });
+  }
+
+  /** Confirmación destructiva con el modal propio (nada de confirm() nativo). */
+  _confirmDialog({ title, message, confirmLabel }) {
+    return new Promise((resolve) => {
+      const body = `
+        <div class="mn-follow-confirm">
+          <p class="mn-follow-confirm-msg">${this._esc(message)}</p>
+          <footer class="mn-modal-foot">
+            <button type="button" class="mn-btn-secondary" data-action="cancel">${__('Cancelar')}</button>
+            <button type="button" class="mn-btn-primary mn-btn-danger" data-action="confirm">${this._esc(confirmLabel || __('Eliminar'))}</button>
+          </footer>
+        </div>`;
+      const handle = window.Modal.show({ title, body, className: 'mn-follow-modal mn-follow-modal--confirm' });
+      if (!handle) { resolve(window.confirm(message)); return; }
+      const { modal, close } = handle;
+      let settled = false;
+      const settle = (val) => { if (settled) return; settled = true; resolve(val); };
+      modal.querySelector('[data-action="cancel"]')?.addEventListener('click', () => { settle(false); close(); });
+      modal.querySelector('[data-action="confirm"]')?.addEventListener('click', () => { settle(true); close(); });
+      // Cierre por X u overlay = cancelar.
+      const closeBtn = modal.querySelector('.modal-close');
+      closeBtn?.addEventListener('click', () => settle(false));
+      modal.querySelector('.modal-overlay')?.addEventListener('click', () => settle(false));
     });
   }
 
   async _confirmDeleteEntity(id) {
     const e = (this._data.entities.data || []).find(x => x.id === id);
     if (!e) return;
-    if (!confirm(__('¿Dejar de seguir a "{name}"?', { name: e.name }) + '\n' + __('Esta acción no se puede deshacer.'))) return;
+    const okDelete = await this._confirmDialog({
+      title: __('¿Dejar de seguir a "{name}"?', { name: e.name }),
+      message: __('Se elimina el perfil y toda su huella de vigilancia (sensores, señales y publicaciones capturadas). Esta acción no se puede deshacer.'),
+      confirmLabel: __('Dejar de seguir'),
+    });
+    if (!okDelete) return;
     const { error } = await this._service.deleteEntity(id);
-    if (error) { alert(__('Error:') + ' ' + error.message); return; }
+    if (error) { this._showNotification(__('Error:') + ' ' + error.message, 'error'); return; }
+    this._showNotification(__('Dejaste de seguir a "{name}"', { name: e.name }), 'success');
     await this._refresh();
   }
 
@@ -2516,9 +2547,9 @@ class MonitoringView extends BaseView {
         label:     fd.get('label')?.trim() || null,
         is_active: fd.get('is_active') === 'on',
       };
-      if (!payload.url) { alert(__('La dirección es obligatoria.')); return; }
+      if (!payload.url) { this._showNotification(__('La dirección es obligatoria.'), 'error'); return; }
       const { error } = await this._service.updateWatcher(id, payload);
-      if (error) { alert(__('Error:') + ' ' + error.message); return; }
+      if (error) { this._showNotification(__('Error:') + ' ' + error.message, 'error'); return; }
       close();
       await this._refresh();
     });
@@ -2527,9 +2558,14 @@ class MonitoringView extends BaseView {
   async _confirmDeleteWatcher(id) {
     const w = (this._data.watchers.data || []).find(x => x.id === id);
     if (!w) return;
-    if (!confirm(__('¿Dejar de vigilar "{name}"?', { name: w.label || w.url }) + '\n' + __('Esta acción no se puede deshacer.'))) return;
+    const okDelete = await this._confirmDialog({
+      title: __('¿Dejar de vigilar "{name}"?', { name: w.label || w.url }),
+      message: __('Esta acción no se puede deshacer.'),
+      confirmLabel: __('Dejar de vigilar'),
+    });
+    if (!okDelete) return;
     const { error } = await this._service.deleteWatcher(id);
-    if (error) { alert(__('Error:') + ' ' + error.message); return; }
+    if (error) { this._showNotification(__('Error:') + ' ' + error.message, 'error'); return; }
     await this._refresh();
   }
 
