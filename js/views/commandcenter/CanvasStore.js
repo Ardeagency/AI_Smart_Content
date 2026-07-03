@@ -1104,6 +1104,9 @@
     if (key.startsWith('aud:'))    return 'audience';
     if (key.startsWith('sticky:')) return 'sticky';
     if (key.startsWith('group:'))  return 'group';
+    if (key.startsWith('adset:'))  return 'adset';
+    if (key.startsWith('ad:'))     return 'ad';
+    if (key.startsWith('stopt:'))  return 'store_optimization';
     if (key.startsWith('camp:')) {
       const id = key.slice(5);
       const c = (this._campaigns || []).find((x) => String(x.id) === String(id));
@@ -1705,6 +1708,18 @@
         stickyItems.push({ id: key.slice(7), key });
       } else if (key.startsWith('group:')) {
         groupItems.push({ id: key.slice(6), key });
+      } else if (key.startsWith('adset:')) {
+        const id = key.slice(6);
+        const row = (this._adsets || []).find((a) => String(a.id) === String(id));
+        if (row) bdItems.push({ type: 'adset', id, key, name: row.nombre || 'Sin nombre' });
+      } else if (key.startsWith('ad:')) {
+        const id = key.slice(3);
+        const row = (this._ads || []).find((a) => String(a.id) === String(id));
+        if (row) bdItems.push({ type: 'ad', id, key, name: row.nombre || 'Sin nombre' });
+      } else if (key.startsWith('stopt:')) {
+        const id = key.slice(6);
+        const row = (this._storeOpts || []).find((s) => String(s.id) === String(id));
+        if (row) bdItems.push({ type: 'store_optimization', id, key, name: row.nombre || 'Sin nombre' });
       } else {
         const colon = key.indexOf(':');
         if (colon > 0) {
@@ -1749,7 +1764,8 @@
     // BD destructivo: DELETE en supabase + limpieza local
     for (const item of bdItems) {
       try {
-        const table = item.type === 'audience' ? 'audience_personas' : 'campaigns';
+        const tables = { audience: 'audience_personas', adset: 'campaign_adsets', ad: 'campaign_ads', store_optimization: 'store_optimizations' };
+        const table = tables[item.type] || 'campaigns';
         const { error } = await this._supabase.from(table).delete().eq('id', item.id);
         if (error) {
           console.error('[CC] BD delete error:', error.message || error);
@@ -1757,8 +1773,31 @@
         }
         if (item.type === 'audience') {
           this._audiences = (this._audiences || []).filter((a) => String(a.id) !== String(item.id));
+        } else if (item.type === 'adset') {
+          // CASCADE: los anuncios hijos caen en BD; limpiar tambien local + placements
+          const deadAds = (this._ads || []).filter((a) => String(a.adset_id) === String(item.id));
+          this._ads = (this._ads || []).filter((a) => String(a.adset_id) !== String(item.id));
+          this._adsets = (this._adsets || []).filter((a) => String(a.id) !== String(item.id));
+          this._deletePlacement('adset', item.id);
+          deadAds.forEach((a) => { this._deletePlacement('ad', a.id); delete this._positions[`ad:${a.id}`]; });
+        } else if (item.type === 'ad') {
+          this._ads = (this._ads || []).filter((a) => String(a.id) !== String(item.id));
+          this._deletePlacement('ad', item.id);
+        } else if (item.type === 'store_optimization') {
+          this._storeOpts = (this._storeOpts || []).filter((s) => String(s.id) !== String(item.id));
+          this._deletePlacement('store_optimization', item.id);
         } else {
           this._campaigns = (this._campaigns || []).filter((c) => String(c.id) !== String(item.id));
+          // CASCADE: conjuntos + anuncios de la campana caen en BD → limpiar local
+          const deadSets = (this._adsets || []).filter((a) => String(a.campaign_id) === String(item.id));
+          if (deadSets.length) {
+            const deadSetIds = new Set(deadSets.map((a) => String(a.id)));
+            const deadAds = (this._ads || []).filter((a) => deadSetIds.has(String(a.adset_id)));
+            this._adsets = (this._adsets || []).filter((a) => !deadSetIds.has(String(a.id)));
+            this._ads = (this._ads || []).filter((a) => !deadSetIds.has(String(a.adset_id)));
+            deadSets.forEach((a) => { this._deletePlacement('adset', a.id); delete this._positions[`adset:${a.id}`]; });
+            deadAds.forEach((a) => { this._deletePlacement('ad', a.id); delete this._positions[`ad:${a.id}`]; });
+          }
         }
         // limpiar posicion + free-edges tocando al nodo borrado
         delete this._positions[item.key];
@@ -2541,7 +2580,7 @@
 
   // Mapping bidireccional entre key-prefix frontend y node_type BD
   P._keyFromPlacement = function (type, id) {
-    const map = { audience: 'aud', campaign: 'camp', product: 'products', service: 'services', place: 'places', character: 'characters', flow: 'flows', brief: 'briefs' };
+    const map = { audience: 'aud', campaign: 'camp', product: 'products', service: 'services', place: 'places', character: 'characters', flow: 'flows', brief: 'briefs', adset: 'adset', ad: 'ad', store_optimization: 'stopt' };
     return `${map[type] || type}:${id}`;
   };
   P._typeAndIdFromKey = function (key) {
@@ -2550,7 +2589,7 @@
     if (colon < 0) return null;
     const prefix = key.slice(0, colon);
     const id = key.slice(colon + 1);
-    const map = { aud: 'audience', camp: 'campaign', products: 'product', services: 'service', places: 'place', characters: 'character', flows: 'flow', briefs: 'brief' };
+    const map = { aud: 'audience', camp: 'campaign', products: 'product', services: 'service', places: 'place', characters: 'character', flows: 'flow', briefs: 'brief', adset: 'adset', ad: 'ad', stopt: 'store_optimization' };
     if (!map[prefix]) return null; // sticky/group/group:... van por otras tablas
     return { node_type: map[prefix], node_id: id };
   };
@@ -2603,8 +2642,10 @@
           const id = key.slice(5);
           const c = (this._campaigns || []).find((x) => String(x.id) === id);
           if (c && c.last_synced_at) onCanvas.add(id);
-        } else if (!key.startsWith('aud:') && !key.startsWith('sticky:') && !key.startsWith('group:')) {
-          // identity prefix
+        } else if (!key.startsWith('aud:') && !key.startsWith('sticky:') && !key.startsWith('group:')
+                   && !key.startsWith('adset:') && !key.startsWith('ad:') && !key.startsWith('stopt:')) {
+          // identity prefix (adset/ad/stopt se resuelven desde sus arrays del
+          // bundle — como camp/aud — no desde _placed)
           const colon = key.indexOf(':');
           if (colon > 0) {
             const type = key.slice(0, colon);
@@ -3427,9 +3468,18 @@
     }
   };
 
+  /** Normaliza key frontend → {type: node_type BD, id}. Los prefijos crudos
+      (camp/aud/briefs) producian edges sucias en BD (saneadas 2026-07-03);
+      siempre persistir el node_type canonico. */
+  P._edgeEndpoint = function (key) {
+    const ti = this._typeAndIdFromKey(key);
+    if (ti) return { type: ti.node_type, id: ti.node_id };
+    return ccParseKey(key); // sticky/group u otros: prefijo tal cual
+  };
+
   P._insertEdgeRemote = async function (fromKey, toKey) {
     if (!this._supabase || !this._containerRow?.id || !this._organizationId || !this._strategyId) return;
-    const f = ccParseKey(fromKey), t = ccParseKey(toKey);
+    const f = this._edgeEndpoint(fromKey), t = this._edgeEndpoint(toKey);
     if (!f || !t) return;
     try {
       const { error } = await this._supabase.from('canvas_edges').insert({
@@ -3451,7 +3501,7 @@
 
   P._deleteEdgeRemote = async function (fromKey, toKey) {
     if (!this._supabase || !this._strategyId) return;
-    const f = ccParseKey(fromKey), t = ccParseKey(toKey);
+    const f = this._edgeEndpoint(fromKey), t = this._edgeEndpoint(toKey);
     if (!f || !t) return;
     try {
       // Borrar ambas direcciones — nuestro dedup cliente trata A→B == B→A
@@ -4047,6 +4097,15 @@
       { id: 'objetivo-campana',   name: 'Objetivo de Campana',   icon: 'fa-bullseye',        group: 'Objetivos',    count: cConc, type: 'concept',       desc: 'Ancla de la estrategia; define el proposito al que apunta todo el flujo' },
       { id: 'objetivo-audiencia', name: 'Objetivo de Audiencia', icon: 'fa-users',           group: 'Objetivos',    count: cAud,  type: 'audience',      desc: 'El segmento humano que esta estrategia quiere alcanzar' },
       { id: 'campana-real',       name: 'Campana',               icon: 'fa-bullhorn',        group: 'Realidad',     count: cCamp, type: 'campaign-real', desc: 'Campanas sincronizadas desde Meta, Google u otra plataforma' },
+      // Plantillas de ejecucion (jerarquia v2): cards CREADORAS — click crea
+      // el nodo en el canvas (no drill). Neutrales al objetivo; lo especifico
+      // de plataforma vive en metadata (guardrail: no clonar Ads Manager).
+      { id: 'exec-meta',    name: __('Campana de Meta'),           icon: 'fa-bullhorn',   group: __('Ejecucion'), create: 'campaign:meta_facebook',    desc: __('Plantilla de ejecucion: campana → conjuntos → anuncios en Meta') },
+      { id: 'exec-google',  name: __('Campana de Google Ads'),     icon: 'fa-magnifying-glass-dollar', group: __('Ejecucion'), create: 'campaign:google_ads', desc: __('Plantilla de ejecucion para Google Ads') },
+      { id: 'exec-tiktok',  name: __('Campana de TikTok'),         icon: 'fa-music',      group: __('Ejecucion'), create: 'campaign:tiktok_ads',       desc: __('Plantilla de ejecucion para TikTok Ads') },
+      { id: 'exec-x',       name: __('Campana de X'),              icon: 'fa-hashtag',    group: __('Ejecucion'), create: 'campaign:x_ads',            desc: __('Plantilla de ejecucion para X Ads') },
+      { id: 'exec-shopify', name: __('Optimizacion de Shopify'),   icon: 'fa-store',      group: __('Ejecucion'), create: 'stopt:shopify',             desc: __('SEO estacional de la ficha de producto en Shopify') },
+      { id: 'exec-meli',    name: __('Optimizacion de Mercado Libre'), icon: 'fa-handshake', group: __('Ejecucion'), create: 'stopt:mercadolibre',     desc: __('SEO estacional de la publicacion en Mercado Libre') },
       { id: 'producto',           name: 'Producto',              icon: 'fa-box',             group: 'Identidades',                type: 'product',       desc: 'Productos del catalogo de la marca' },
       { id: 'servicio',           name: 'Servicio',              icon: 'fa-tag',             group: 'Identidades',                type: 'service',       desc: 'Servicios que ofrece la marca' },
       { id: 'lugar',              name: 'Lugar',                 icon: 'fa-map-pin',         group: 'Identidades',                type: 'place',         desc: 'Locaciones fisicas de la marca' },
@@ -4081,13 +4140,18 @@
         html.push(`<div class="cc-lib-group">${this.escapeHtml(gname)}</div>`);
         arr.forEach((it) => {
           const count = Number.isFinite(it.count) ? `<span class="cc-nodo-card-count">${it.count}</span>` : '';
-          html.push(`<button type="button" class="cc-nodo-card" data-nodo-drill="${this.escapeHtml(it.id)}" title="${this.escapeHtml(it.name)}">
+          // Card creadora (Ejecucion): click CREA el nodo; icono + en vez de flecha.
+          const action = it.create
+            ? `data-nodo-create="${this.escapeHtml(it.create)}"`
+            : `data-nodo-drill="${this.escapeHtml(it.id)}"`;
+          const arrow = it.create ? 'fa-plus' : 'fa-arrow-right';
+          html.push(`<button type="button" class="cc-nodo-card${it.create ? ' cc-nodo-card--create' : ''}" ${action} title="${this.escapeHtml(it.name)}">
             <span class="cc-nodo-card-icon"><i class="fas ${this.escapeHtml(it.icon)}"></i></span>
             <span class="cc-nodo-card-text">
               <span class="cc-nodo-card-title">${this.escapeHtml(it.name)}${count}</span>
               <span class="cc-nodo-card-desc">${this.escapeHtml(it.desc || '')}</span>
             </span>
-            <i class="fas fa-arrow-right cc-nodo-card-arrow"></i>
+            <i class="fas ${arrow} cc-nodo-card-arrow"></i>
           </button>`);
         });
       });
@@ -4254,6 +4318,13 @@
           }
           return;
         }
+        // Crear plantilla de ejecucion (jerarquia v2): click crea el nodo.
+        const create = e.target.closest('[data-nodo-create]');
+        if (create) {
+          e.preventDefault(); e.stopPropagation();
+          this._createExecutionNode(create.getAttribute('data-nodo-create'));
+          return;
+        }
         // Drill: entra a vista B
         const drill = e.target.closest('[data-nodo-drill]');
         if (drill) {
@@ -4269,6 +4340,150 @@
     }
     // Estrategias (switch + create) se manejan en su propio sidebar izquierdo:
     // ver _installStrategyPanel. Ya no viven en ccPanelBody.
+  };
+
+  // ------------------------------------------------------------------
+  // Plantillas de ejecucion (jerarquia v2, fase roja)
+  //
+  // Campana (campaigns, concepto con platform preseteada) → Conjunto de
+  // Anuncios (campaign_adsets) → Anuncio (campaign_ads); y Optimizacion de
+  // tienda (store_optimizations, Shopify/Mercado Libre). Vera llena, el
+  // humano aprueba, el engine ejecuta. Spec:
+  // docs/COMMAND-CENTER-PLANTILLAS-EJECUCION.md
+  // ------------------------------------------------------------------
+
+  /** Nombre incremental "Prefijo (N)" dentro de una lista de nombres. */
+  P._nextExecName = function (prefix, names) {
+    const re = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\((\\d+)\\)$`);
+    let maxN = 0;
+    (names || []).forEach((n) => {
+      const m = re.exec(String(n || '').trim());
+      if (m) maxN = Math.max(maxN, parseInt(m[1], 10) || 0);
+    });
+    return `${prefix} (${maxN + 1})`;
+  };
+
+  /** Punto world del centro del viewport (para soltar nodos creados). */
+  P._viewportCenterWorld = function () {
+    const canvas = document.getElementById('ccCanvas');
+    if (!canvas || typeof this._worldPointFromClient !== 'function') return { x: 400, y: 200 };
+    const r = canvas.getBoundingClientRect();
+    return this._worldPointFromClient(r.left + r.width / 2, r.top + r.height / 2);
+  };
+
+  /** Post-creacion comun: state local + placement + seleccion (abre inspector). */
+  P._afterExecCreate = async function (key, nodeType, id, x, y) {
+    if (!this._sessionCreated) this._sessionCreated = new Set();
+    this._sessionCreated.add(key);
+    this._positions[key] = { x: Math.max(0, x), y: Math.max(0, y) };
+    this._savePositions();
+    if (this._store) this._store.setNodePosition(key, this._positions[key].x, this._positions[key].y);
+    await this._insertPlacement(nodeType, id, this._positions[key].x, this._positions[key].y);
+    this._renderCanvas();
+    if (typeof this._renderMiniDash === 'function') this._renderMiniDash();
+    if (this._store && typeof this._store.setSelection === 'function') {
+      this._store.setSelection({ key, descriptor: {} });
+    }
+  };
+
+  /** Card creadora de la paleta: 'campaign:<platform>' | 'stopt:<platform>'. */
+  P._createExecutionNode = async function (spec) {
+    if (!this._supabase || !this._containerRow?.id || !this._organizationId || !spec) return;
+    const [kind, platform] = String(spec).split(':');
+    let createdBy = null;
+    try { const { data: { user } } = await this._supabase.auth.getUser(); createdBy = user?.id || null; } catch (_) { /* noop */ }
+    const c = this._viewportCenterWorld();
+    try {
+      if (kind === 'campaign') {
+        const platName = { meta_facebook: 'Meta', google_ads: 'Google Ads', tiktok_ads: 'TikTok', x_ads: 'X' }[platform] || platform;
+        const nombre = this._nextExecName(`${__('Campana de')} ${platName}`, (this._campaigns || []).map((x) => x.nombre_campana));
+        const { data, error } = await this._supabase.from('campaigns').insert({
+          organization_id: this._organizationId,
+          brand_container_id: this._containerRow.id,
+          nombre_campana: nombre,
+          platform,
+          status: 'draft',
+          created_by: createdBy,
+          created_via: 'command_center',
+        }).select().single();
+        if (error) throw error;
+        this._campaigns = [data, ...(this._campaigns || [])];
+        await this._afterExecCreate(`camp:${data.id}`, 'campaign', data.id, c.x - 130, c.y - 40);
+      } else if (kind === 'stopt') {
+        const platName = { shopify: 'Shopify', mercadolibre: 'Mercado Libre' }[platform] || platform;
+        const nombre = this._nextExecName(`${__('Optimizacion de')} ${platName}`, (this._storeOpts || []).map((x) => x.nombre));
+        const { data, error } = await this._supabase.from('store_optimizations').insert({
+          organization_id: this._organizationId,
+          brand_container_id: this._containerRow.id,
+          platform,
+          nombre,
+          status: 'draft',
+          created_by: createdBy,
+        }).select().single();
+        if (error) throw error;
+        this._storeOpts = [data, ...(this._storeOpts || [])];
+        await this._afterExecCreate(`stopt:${data.id}`, 'store_optimization', data.id, c.x - 130, c.y - 40);
+      }
+    } catch (e) {
+      console.error('[CC] create execution node:', e?.message || e);
+    }
+  };
+
+  /** "+ Conjunto" desde el inspector de una campana plantilla. */
+  P._createAdsetFor = async function (campaignId) {
+    if (!this._supabase || !this._containerRow?.id || !campaignId) return;
+    const camp = (this._campaigns || []).find((x) => String(x.id) === String(campaignId));
+    if (!camp) return;
+    const siblings = (this._adsets || []).filter((a) => String(a.campaign_id) === String(campaignId));
+    const nombre = this._nextExecName(__('Conjunto de Anuncios'), siblings.map((x) => x.nombre));
+    let createdBy = null;
+    try { const { data: { user } } = await this._supabase.auth.getUser(); createdBy = user?.id || null; } catch (_) { /* noop */ }
+    try {
+      const { data, error } = await this._supabase.from('campaign_adsets').insert({
+        organization_id: this._organizationId,
+        brand_container_id: this._containerRow.id,
+        campaign_id: campaignId,
+        nombre,
+        budget_currency: camp.budget_currency || null,
+        status: 'draft',
+        position: siblings.length,
+        created_by: createdBy,
+      }).select().single();
+      if (error) throw error;
+      this._adsets = [...(this._adsets || []), data];
+      const p = this._positions[`camp:${campaignId}`] || this._viewportCenterWorld();
+      await this._afterExecCreate(`adset:${data.id}`, 'adset', data.id, p.x + 320, p.y + 120 + siblings.length * 150);
+    } catch (e) {
+      console.error('[CC] create adset:', e?.message || e);
+    }
+  };
+
+  /** "+ Anuncio" desde el inspector de un conjunto. */
+  P._createAdFor = async function (adsetId) {
+    if (!this._supabase || !this._containerRow?.id || !adsetId) return;
+    const adset = (this._adsets || []).find((x) => String(x.id) === String(adsetId));
+    if (!adset) return;
+    const siblings = (this._ads || []).filter((a) => String(a.adset_id) === String(adsetId));
+    const nombre = this._nextExecName(__('Anuncio'), siblings.map((x) => x.nombre));
+    let createdBy = null;
+    try { const { data: { user } } = await this._supabase.auth.getUser(); createdBy = user?.id || null; } catch (_) { /* noop */ }
+    try {
+      const { data, error } = await this._supabase.from('campaign_ads').insert({
+        organization_id: this._organizationId,
+        brand_container_id: this._containerRow.id,
+        adset_id: adsetId,
+        nombre,
+        status: 'draft',
+        position: siblings.length,
+        created_by: createdBy,
+      }).select().single();
+      if (error) throw error;
+      this._ads = [...(this._ads || []), data];
+      const p = this._positions[`adset:${adsetId}`] || this._viewportCenterWorld();
+      await this._afterExecCreate(`ad:${data.id}`, 'ad', data.id, p.x + 300, p.y + siblings.length * 140);
+    } catch (e) {
+      console.error('[CC] create ad:', e?.message || e);
+    }
   };
 
   /** Crea una nueva estrategia con nombre incremental + la activa. */
@@ -5123,6 +5338,15 @@
         if (h) this._toggleAudienceFlag(h.getAttribute('data-id'), toggle.getAttribute('data-toggle'), h);
         return;
       }
+      const add = e.target.closest('.cc-insp-add[data-exec-add]');
+      if (add) {
+        e.preventDefault();
+        const kind = add.getAttribute('data-exec-add');
+        const parent = add.getAttribute('data-exec-parent');
+        if (kind === 'adset') this._createAdsetFor(parent);
+        else if (kind === 'ad') this._createAdFor(parent);
+        return;
+      }
       const del = e.target.closest('.cc-insp-delete[data-del-type]');
       if (del) {
         e.preventDefault();
@@ -5148,7 +5372,7 @@
       const fld = fieldEl.getAttribute('data-field');
       if (fld === 'name' || fld === 'nombre_campana' || fld === 'nombre') {
         const t = h.getAttribute('data-type');
-        const pfx = t === 'audience' ? 'aud' : t === 'brief' ? 'briefs' : 'camp';
+        const pfx = ({ audience: 'aud', brief: 'briefs', adset: 'adset', ad: 'ad', store_optimization: 'stopt' })[t] || 'camp';
         const nameEl = document.querySelector(`.cc-node[data-node-key="${pfx}:${h.getAttribute('data-id')}"] .cc-node-name, .cc-node[data-node-key="${pfx}:${h.getAttribute('data-id')}"] .cc-node-realname`);
         if (nameEl) nameEl.textContent = (fieldEl.value || '').trim() || 'Sin nombre';
       }
@@ -5207,6 +5431,9 @@
     if (key.startsWith('camp:'))   return this._inspectorCampaign(key.slice(5));
     if (key.startsWith('sticky:')) return this._inspectorSticky(key.slice(7));
     if (key.startsWith('group:'))  return this._inspectorGroup(key.slice(6));
+    if (key.startsWith('adset:'))  return this._inspectorAdset(key.slice(6));
+    if (key.startsWith('ad:'))     return this._inspectorAd(key.slice(3));
+    if (key.startsWith('stopt:'))  return this._inspectorStoreOpt(key.slice(6));
     const colon = key.indexOf(':');
     if (colon > 0) return this._inspectorIdentity(key.slice(0, colon), key.slice(colon + 1));
     return null;
@@ -5308,7 +5535,7 @@
           ])}
           ${this._fieldSelect('Plataforma', 'platform', c.platform || '', [
             ['', 'Sin definir'], ['meta_facebook', 'Facebook'], ['meta_instagram', 'Instagram'],
-            ['google_ads', 'Google Ads'], ['tiktok_ads', 'TikTok'], ['linkedin_ads', 'LinkedIn'],
+            ['google_ads', 'Google Ads'], ['tiktok_ads', 'TikTok'], ['x_ads', 'X'], ['linkedin_ads', 'LinkedIn'],
             ['pinterest_ads', 'Pinterest'], ['organic', 'Organico'], ['internal', 'Interno'],
           ])}
           ${this._fieldText('Objetivo', 'str', 'platform_objective', c.platform_objective, { placeholder: 'OUTCOME_LEADS, PURCHASE…' })}
@@ -5318,7 +5545,138 @@
           ${this._fieldText('Inicio', 'date', 'starts_at', c.starts_at ? String(c.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${this._fieldText('Fin', 'date', 'ends_at', c.ends_at ? String(c.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           <div class="cc-insp-hint">${__('El Objetivo es la parte TECNICA (plataformas, presupuesto, fechas). La direccion creativa — que decir y que producir — vive en el Brief.')}</div>
+          <button type="button" class="cc-insp-add" data-exec-add="adset" data-exec-parent="${eid}"><i class="fas fa-plus"></i> ${__('Agregar Conjunto de Anuncios')}</button>
           <button type="button" class="cc-insp-delete" data-del-type="campaign-concept" data-del-id="${eid}"><i class="fas fa-trash"></i> Eliminar campana</button>
+        </div>
+      `,
+    };
+  };
+
+  // ── Inspectores: plantillas de ejecucion (jerarquia v2) ──────────────
+  // Solo campos de ESTRATEGIA/orquestacion (guardrail: no clonar Ads Manager).
+  P._inspectorAdset = function (id) {
+    const a = (this._adsets || []).find((x) => String(x.id) === String(id));
+    if (!a) return { title: `<i class="fas fa-layer-group"></i> ${__('Conjunto de Anuncios')}`, body: `<div class="cc-insp-empty">${__('No encontrado.')}</div>` };
+    const eid = this.escapeHtml(String(id));
+    const personaOpts = [['', __('Sin audiencia')], ...(this._audiences || []).map((p) => [String(p.id), p.name || __('Sin nombre')])];
+    const camp = (this._campaigns || []).find((c) => String(c.id) === String(a.campaign_id));
+    return {
+      title: `<i class="fas fa-layer-group"></i> ${this.escapeHtml(a.nombre || __('Conjunto de Anuncios'))}`,
+      body: `
+        <div class="cc-insp-form" data-field-host data-type="adset" data-id="${eid}">
+          ${this._fieldText(__('Nombre'), 'str', 'nombre', a.nombre, { placeholder: __('Nombre del conjunto') })}
+          ${camp ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="fas fa-bullhorn"></i> ${this.escapeHtml(camp.nombre_campana || __('Campana'))}</span></div>` : ''}
+          ${this._fieldSelect(__('Estado'), 'status', a.status || 'draft', [
+            ['draft', __('Borrador')], ['approved', __('Aprobado')], ['live', __('En pauta')], ['done', __('Finalizado')],
+          ])}
+          ${this._fieldText(__('Optimizacion'), 'str', 'optimizacion', a.optimizacion, { placeholder: __('Hacia que optimiza: leads, alcance, compras…') })}
+          ${this._fieldSelect(__('Audiencia'), 'persona_id', a.persona_id ? String(a.persona_id) : '', personaOpts)}
+          ${this._fieldArea(__('Descripcion'), 'str', 'descripcion', a.descripcion, { rows: 2, placeholder: __('Rol de este conjunto dentro de la campana') })}
+          ${this._fieldText(__('Presupuesto/dia'), 'num', 'budget_daily', a.budget_daily, { inputType: 'number', dataType: 'number' })}
+          ${this._fieldText(__('Presupuesto total'), 'num', 'budget_total', a.budget_total, { inputType: 'number', dataType: 'number' })}
+          ${this._fieldText(__('Moneda'), 'str', 'budget_currency', a.budget_currency || '')}
+          ${this._fieldText(__('Inicio'), 'date', 'starts_at', a.starts_at ? String(a.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
+          ${this._fieldText(__('Fin'), 'date', 'ends_at', a.ends_at ? String(a.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
+          ${a.external_adset_id ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Conjunto real')}</span><span class="cc-insp-value">${this.escapeHtml(a.external_adset_id)}</span></div>` : ''}
+          <div class="cc-insp-hint">${__('Plantilla que Vera llena y el humano aprueba. El detalle fino de puja/ubicaciones vive en la plataforma.')}</div>
+          <button type="button" class="cc-insp-add" data-exec-add="ad" data-exec-parent="${eid}"><i class="fas fa-plus"></i> ${__('Agregar Anuncio')}</button>
+          <button type="button" class="cc-insp-delete" data-del-type="adset" data-del-id="${eid}"><i class="fas fa-trash"></i> ${__('Eliminar conjunto')}</button>
+        </div>
+      `,
+    };
+  };
+
+  P._inspectorAd = function (id) {
+    const a = (this._ads || []).find((x) => String(x.id) === String(id));
+    if (!a) return { title: `<i class="fas fa-rectangle-ad"></i> ${__('Anuncio')}`, body: `<div class="cc-insp-empty">${__('No encontrado.')}</div>` };
+    const eid = this.escapeHtml(String(id));
+    // Picker de creativo: producciones reales (runs_outputs) de la marca.
+    const opts = this._adCreativeOpts;
+    if (opts === undefined) this._fetchAdCreativeOpts();
+    const creativeOpts = [['', __('Sin creativo')], ...((opts || []).map((o) => [String(o.id), o.label]))];
+    const adset = (this._adsets || []).find((s) => String(s.id) === String(a.adset_id));
+    return {
+      title: `<i class="fas fa-rectangle-ad"></i> ${this.escapeHtml(a.nombre || __('Anuncio'))}`,
+      body: `
+        <div class="cc-insp-form" data-field-host data-type="ad" data-id="${eid}">
+          ${this._fieldText(__('Nombre'), 'str', 'nombre', a.nombre, { placeholder: '[TIPO][N°] - [objetivo]' })}
+          ${adset ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="fas fa-layer-group"></i> ${this.escapeHtml(adset.nombre || __('Conjunto'))}</span></div>` : ''}
+          ${this._fieldSelect(__('Estado'), 'status', a.status || 'draft', [
+            ['draft', __('Borrador')], ['approved', __('Aprobado')], ['live', __('En pauta')], ['done', __('Finalizado')],
+          ])}
+          ${opts === undefined
+            ? `<div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> ${__('Cargando producciones…')}</div>`
+            : this._fieldSelect(__('Creativo (produccion)'), 'output_id', a.output_id ? String(a.output_id) : '', creativeOpts)}
+          ${this._fieldArea(__('Texto principal'), 'str', 'texto_principal', a.texto_principal, { rows: 3, placeholder: __('Copy del anuncio — ancla al menos 1 palabra de intencion') })}
+          ${this._fieldText(__('Titulo'), 'str', 'titulo', a.titulo)}
+          ${this._fieldText(__('Descripcion'), 'str', 'descripcion', a.descripcion)}
+          ${this._fieldText('CTA', 'str', 'cta', a.cta, { placeholder: __('Ej: Mas informacion') })}
+          ${this._fieldText('CTA URL', 'str', 'cta_url', a.cta_url, { inputType: 'url', placeholder: 'https://…' })}
+          ${a.external_ad_id ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Anuncio real')}</span><span class="cc-insp-value">${this.escapeHtml(a.external_ad_id)}</span></div>` : ''}
+          <div class="cc-insp-hint">${__('El creativo sale de las producciones del Studio. Cada texto editable debe llevar al menos un ancla de intencion — el algoritmo LEE el texto.')}</div>
+          <button type="button" class="cc-insp-delete" data-del-type="ad" data-del-id="${eid}"><i class="fas fa-trash"></i> ${__('Eliminar anuncio')}</button>
+        </div>
+      `,
+    };
+  };
+
+  /** Producciones de la marca para el picker de creativo (lazy + cache). */
+  P._fetchAdCreativeOpts = async function () {
+    if (!this._supabase || !this._containerRow?.id) return;
+    if (this._adCreativeOptsFetching) return;
+    this._adCreativeOptsFetching = true;
+    try {
+      const { data } = await this._supabase
+        .from('runs_outputs')
+        .select('id, output_type, created_at, generated_copy')
+        .eq('brand_container_id', this._containerRow.id)
+        .order('created_at', { ascending: false })
+        .limit(40);
+      this._adCreativeOpts = (data || []).map((o) => {
+        const d = o.created_at ? String(o.created_at).slice(0, 10) : '';
+        const snip = String(o.generated_copy || '').trim().slice(0, 40);
+        return { id: o.id, label: `${o.output_type || 'output'} · ${d}${snip ? ` · ${snip}` : ''}` };
+      });
+    } catch (e) {
+      console.warn('[CC] fetch ad creatives:', e?.message || e);
+      this._adCreativeOpts = [];
+    } finally {
+      this._adCreativeOptsFetching = false;
+      if (typeof this._renderInspector === 'function') this._renderInspector();
+    }
+  };
+
+  P._inspectorStoreOpt = function (id) {
+    const s = (this._storeOpts || []).find((x) => String(x.id) === String(id));
+    if (!s) return { title: `<i class="fas fa-store"></i> ${__('Optimizacion de tienda')}`, body: `<div class="cc-insp-empty">${__('No encontrada.')}</div>` };
+    const eid = this.escapeHtml(String(id));
+    const platLabel = { shopify: 'Shopify', mercadolibre: 'Mercado Libre', amazon: 'Amazon' }[s.platform] || (s.platform || '—');
+    // Picker de producto interno (lazy via libCache, mismo patron que la paleta).
+    const prodCache = this._libCache && this._libCache.products;
+    if (prodCache === undefined && typeof this._fetchLibrary === 'function') {
+      this._fetchLibrary('products').then(() => { if (typeof this._renderInspector === 'function') this._renderInspector(); }).catch(() => {});
+    }
+    const prodOpts = [['', __('Sin producto')], ...((prodCache || []).map((p) => [String(p.id), p.name || __('Sin nombre')]))];
+    const applied = s.status === 'applied';
+    return {
+      title: `<i class="fas fa-store"></i> ${this.escapeHtml(s.nombre || __('Optimizacion de tienda'))}`,
+      body: `
+        <div class="cc-insp-form" data-field-host data-type="store_optimization" data-id="${eid}">
+          <div class="cc-insp-meta"><span class="cc-insp-label">${__('Plataforma')}</span><span class="cc-insp-value">${this.escapeHtml(platLabel)}</span></div>
+          ${this._fieldText(__('Nombre'), 'str', 'nombre', s.nombre, { placeholder: __('Ej: SEO temporada Dia de Madres') })}
+          ${this._fieldSelect(__('Estado'), 'status', s.status || 'draft', applied
+            ? [['applied', __('Aplicado')]]
+            : [['draft', __('Borrador')], ['approved', __('Aprobado')]])}
+          ${this._fieldSelect(__('Producto'), 'product_id', s.product_id ? String(s.product_id) : '', prodOpts)}
+          ${this._fieldText(__('Listing externo'), 'str', 'external_product_id', s.external_product_id, { placeholder: __('ID del producto en la plataforma') })}
+          ${this._fieldText(__('Titulo SEO'), 'str', 'seo_titulo', s.seo_titulo)}
+          ${this._fieldArea(__('Descripcion SEO'), 'str', 'seo_descripcion', s.seo_descripcion, { rows: 3 })}
+          ${this._fieldTags(__('Keywords'), 'seo_keywords', s.seo_keywords)}
+          ${this._fieldText(__('Inicio ventana'), 'date', 'starts_at', s.starts_at ? String(s.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
+          ${this._fieldText(__('Fin ventana'), 'date', 'ends_at', s.ends_at ? String(s.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
+          ${applied ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Aplicado')}</span><span class="cc-insp-value">${this.escapeHtml(String(s.applied_at || '').slice(0, 10))}</span></div>` : ''}
+          <div class="cc-insp-hint">${__('El write-back a la tienda se ejecuta con el boton humano "actualizar ficha" (nunca autonomo). Aprobar deja la propuesta lista para aplicar.')}</div>
+          <button type="button" class="cc-insp-delete" data-del-type="store_optimization" data-del-id="${eid}"><i class="fas fa-trash"></i> ${__('Eliminar optimizacion')}</button>
         </div>
       `,
     };

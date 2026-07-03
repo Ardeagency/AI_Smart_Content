@@ -2778,6 +2778,27 @@
   transition: background 0.15s ease;
 }
 .cc-insp-delete:hover { background: rgba(225, 87, 96, 0.16); }
+
+/* ── Plantillas de ejecucion (jerarquia v2): Conjunto / Anuncio / Tienda ── */
+.cc-insp-add {
+  margin-top: 4px; width: 100%; padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06); color: var(--text-primary, #e8eaed);
+  cursor: pointer; font-size: 0.74rem; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.cc-insp-add:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.22); }
+.cc-nodo-card--create .cc-nodo-card-arrow { color: var(--cc-accent); }
+.cc-node--adset .cc-node-icon,
+.cc-node--ad .cc-node-icon,
+.cc-node--stopt .cc-node-icon { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); }
+.cc-node-chip--real { color: #3cd264; border-color: rgba(60, 210, 100, 0.28); }
+.cc-node-chip--warn { color: #f4b942; border-color: rgba(244, 185, 66, 0.28); }
+.cc-node-status--approved { background: #e8eaed; box-shadow: 0 0 6px rgba(255, 255, 255, 0.35); }
+.cc-node-status--live { background: #3cd264; box-shadow: 0 0 7px rgba(60, 210, 100, 0.45); }
+.cc-node-status--done { background: rgba(255, 255, 255, 0.3); }
+.cc-node-status--applied { background: #3cd264; box-shadow: 0 0 7px rgba(60, 210, 100, 0.45); }
 .cc-insp-row > .cc-insp-input { flex: 1; min-width: 0; }
 .cc-insp-row-sep { color: var(--text-muted); font-size: 0.7rem; display: flex; align-items: center; }
 .cc-insp-colors { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }

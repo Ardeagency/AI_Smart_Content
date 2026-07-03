@@ -121,6 +121,19 @@
       const nodeKey = this._entByEntityId && this._entByEntityId[be.entity_id];
       if (nodeKey && be.brief_id) push(nodeKey, `briefs:${be.brief_id}`, false);
     });
+    // Plantillas de ejecucion (jerarquia v2): aristas semanticas por FK.
+    // campana -> conjunto -> anuncio; audiencia -> conjunto (persona del set).
+    (this._adsets || []).forEach((a) => {
+      if (a.campaign_id) push(`camp:${a.campaign_id}`, `adset:${a.id}`, false);
+      if (a.persona_id)  push(`aud:${a.persona_id}`, `adset:${a.id}`, true);
+    });
+    (this._ads || []).forEach((a) => {
+      if (a.adset_id) push(`adset:${a.adset_id}`, `ad:${a.id}`, false);
+    });
+    // Optimizacion de tienda: producto (si esta colocado) -> optimizacion.
+    (this._storeOpts || []).forEach((s) => {
+      if (s.product_id) push(`products:${s.product_id}`, `stopt:${s.id}`, false);
+    });
     // libres
     (this._links || []).forEach((l) => push(l.from, l.to, false));
     return out;
@@ -153,11 +166,23 @@
     const ids = (this._placed || []).map((p) => ({
       key: `${p.type}:${p.id}`, type: 'identity', identityType: p.type, id: p.id, row: p,
     }));
-    return [...auds, ...camps, ...ids];
+    // Plantillas de ejecucion (jerarquia v2): conjuntos, anuncios y
+    // optimizaciones de tienda. Mismo scope que conceptos: placement en la
+    // estrategia activa o creado en esta sesion.
+    const adsets = (this._adsets || [])
+      .filter((a) => inStrategy(`adset:${a.id}`))
+      .map((a) => ({ key: `adset:${a.id}`, type: 'adset', id: a.id, row: a }));
+    const ads = (this._ads || [])
+      .filter((a) => inStrategy(`ad:${a.id}`))
+      .map((a) => ({ key: `ad:${a.id}`, type: 'ad', id: a.id, row: a }));
+    const sopts = (this._storeOpts || [])
+      .filter((s) => inStrategy(`stopt:${s.id}`))
+      .map((s) => ({ key: `stopt:${s.id}`, type: 'stopt', id: s.id, row: s }));
+    return [...auds, ...camps, ...ids, ...adsets, ...ads, ...sopts];
   };
 
   /** Posicion de un nodo; si falta, calcula auto-layout por columnas y la fija. */
-  P._posFor = function (node, audIdx, campIdx, idIdx) {
+  P._posFor = function (node, audIdx, campIdx, idIdx, execIdx) {
     const pos = this._positions[node.key];
     if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) return pos;
     // Layout default en ARBOL (rework 2026-06-11): trigger arriba; audiencia +
@@ -169,6 +194,19 @@
     if (node.type === 'campaign-concept')      { x = 360 + campIdx * 380; y = TOP; }
     else if (node.type === 'campaign-real')    { x = 1180; y = TOP + 300 + campIdx * 180; }
     else if (node.type === 'audience')         { x = 40 + audIdx * 300; y = TOP + 280; }
+    else if (node.type === 'adset') {
+      // Conjunto: debajo/derecha de su campana padre si esta en el canvas.
+      const p = this._positions[`camp:${node.row?.campaign_id}`];
+      if (p) { x = p.x + 320; y = p.y + 120 + (Number(node.row?.position) || 0) * 150; }
+      else   { x = 760 + (execIdx || 0) * 300; y = TOP + 220; }
+    }
+    else if (node.type === 'ad') {
+      // Anuncio: a la derecha de su conjunto padre.
+      const p = this._positions[`adset:${node.row?.adset_id}`];
+      if (p) { x = p.x + 300; y = p.y + (Number(node.row?.position) || 0) * 140; }
+      else   { x = 1060 + (execIdx || 0) * 300; y = TOP + 220; }
+    }
+    else if (node.type === 'stopt')            { x = 40 + (execIdx || 0) * 300; y = TOP + 760; }
     else if (node.type === 'identity' && isProdId) { x = 800 + idIdx * 300; y = TOP + 60; }
     else                                       { x = 40 + idIdx * 300; y = TOP + 520; }
     const next = { x, y };
@@ -206,12 +244,18 @@
     }
     if (empty) empty.style.display = 'none';
 
-    let audIdx = 0, campIdx = 0, idIdx = 0;
+    let audIdx = 0, campIdx = 0, idIdx = 0, execIdx = 0;
     world.innerHTML = nodes.map((n) => {
-      const pos = this._posFor(n, audIdx, campIdx, idIdx);
-      if (n.type === 'audience') audIdx++; else if (n.type === 'identity') idIdx++; else campIdx++;
+      const pos = this._posFor(n, audIdx, campIdx, idIdx, execIdx);
+      if (n.type === 'audience') audIdx++;
+      else if (n.type === 'identity') idIdx++;
+      else if (n.type === 'adset' || n.type === 'ad' || n.type === 'stopt') execIdx++;
+      else campIdx++;
       if (n.type === 'audience') return this._nodeAudienceHTML(n, pos);
       if (n.type === 'identity') return this._nodeIdentityHTML(n, pos);
+      if (n.type === 'adset')    return this._nodeAdsetHTML(n, pos);
+      if (n.type === 'ad')       return this._nodeAdHTML(n, pos);
+      if (n.type === 'stopt')    return this._nodeStoreOptHTML(n, pos);
       return this._nodeCampaignHTML(n, pos);
     }).join('');
 
@@ -366,7 +410,7 @@
     const isReal = n.type === 'campaign-real';
     const collapsed = this._collapsed && this._collapsed.has(n.key);
     const linked = !!c.persona_id;
-    const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: 'Organico', internal: 'Interno' };
+    const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', x_ads: 'X', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: 'Organico', internal: 'Interno' };
     const linkedName = linked ? ((this._audiences || []).find((a) => String(a.id) === String(c.persona_id))?.name || 'Audiencia vinculada') : '';
 
     if (isReal) {
@@ -420,6 +464,90 @@
       </div>
       ${chipsC ? `<div class="cc-node-body cc-node-body--mini"><div class="cc-node-chips">${chipsC}</div></div>` : ''}
       <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
+    </div>`;
+  };
+
+  /* ── Plantillas de ejecucion (jerarquia v2): Conjunto / Anuncio / Tienda ─
+     Nodos de orquestacion que Vera llena, el humano aprueba y el engine
+     ejecuta. Solo campos de estrategia (guardrail: no clonar Ads Manager). */
+  P._nodeAdsetHTML = function (n, pos) {
+    const a = n.row || {};
+    const statusLabel = { draft: __('Borrador'), approved: __('Aprobado'), live: __('En pauta'), done: __('Finalizado') }[a.status] || '';
+    const personaName = a.persona_id
+      ? ((this._audiences || []).find((x) => String(x.id) === String(a.persona_id))?.name || __('Audiencia'))
+      : '';
+    const adCount = (this._ads || []).filter((x) => String(x.adset_id) === String(n.id)).length;
+    const chips = [
+      a.optimizacion ? `<span class="cc-node-chip">${this.escapeHtml(a.optimizacion)}</span>` : '',
+      personaName ? `<span class="cc-node-chip cc-node-chip--link" title="${this.escapeHtml(personaName)}"><i class="fas fa-users"></i></span>` : '',
+      adCount ? `<span class="cc-node-chip">${adCount} ${adCount === 1 ? __('anuncio') : __('anuncios')}</span>` : '',
+      a.external_adset_id ? `<span class="cc-node-chip cc-node-chip--real" title="${__('Vinculado a la plataforma')}"><i class="fas fa-plug"></i></span>` : '',
+    ].join('');
+    return `
+    <div class="cc-node cc-node--adset cc-node--mini" data-node-key="${n.key}" data-type="adset" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+      <span class="cc-node-port cc-node-port--in" data-port="in" title="${__('Campana')}"></span>
+      <div class="cc-node-head" data-drag-handle>
+        <span class="cc-node-icon cc-node-icon--adset"><i class="fas fa-layer-group"></i></span>
+        <div class="cc-node-head-text">
+          <span class="cc-node-title">${__('Conjunto de Anuncios')}</span>
+          <span class="cc-node-name" title="${this.escapeHtml(a.nombre || '')}">${this.escapeHtml(a.nombre || __('Sin nombre'))}</span>
+        </div>
+        <span class="cc-node-status cc-node-status--${this.escapeHtml(a.status || 'draft')}" title="${this.escapeHtml(statusLabel || __('Borrador'))}"></span>
+      </div>
+      ${chips ? `<div class="cc-node-body cc-node-body--mini"><div class="cc-node-chips">${chips}</div></div>` : ''}
+      <span class="cc-node-port cc-node-port--out" data-port="out" title="${__('Arrastra para conectar')}"></span>
+    </div>`;
+  };
+
+  P._nodeAdHTML = function (n, pos) {
+    const a = n.row || {};
+    const statusLabel = { draft: __('Borrador'), approved: __('Aprobado'), live: __('En pauta'), done: __('Finalizado') }[a.status] || '';
+    const chips = [
+      a.output_id ? `<span class="cc-node-chip cc-node-chip--link" title="${__('Creativo vinculado')}"><i class="fas fa-photo-film"></i></span>` : `<span class="cc-node-chip cc-node-chip--warn" title="${__('Sin creativo')}"><i class="fas fa-photo-film"></i> ?</span>`,
+      a.cta ? `<span class="cc-node-chip">${this.escapeHtml(a.cta)}</span>` : '',
+      a.external_ad_id ? `<span class="cc-node-chip cc-node-chip--real" title="${__('Vinculado a la plataforma')}"><i class="fas fa-plug"></i></span>` : '',
+    ].join('');
+    return `
+    <div class="cc-node cc-node--ad cc-node--mini" data-node-key="${n.key}" data-type="ad" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+      <span class="cc-node-port cc-node-port--in" data-port="in" title="${__('Conjunto')}"></span>
+      <div class="cc-node-head" data-drag-handle>
+        <span class="cc-node-icon cc-node-icon--ad"><i class="fas fa-rectangle-ad"></i></span>
+        <div class="cc-node-head-text">
+          <span class="cc-node-title">${__('Anuncio')}</span>
+          <span class="cc-node-name" title="${this.escapeHtml(a.nombre || '')}">${this.escapeHtml(a.nombre || __('Sin nombre'))}</span>
+        </div>
+        <span class="cc-node-status cc-node-status--${this.escapeHtml(a.status || 'draft')}" title="${this.escapeHtml(statusLabel || __('Borrador'))}"></span>
+      </div>
+      ${chips ? `<div class="cc-node-body cc-node-body--mini"><div class="cc-node-chips">${chips}</div></div>` : ''}
+      <span class="cc-node-port cc-node-port--out" data-port="out" title="${__('Arrastra para conectar')}"></span>
+    </div>`;
+  };
+
+  P._nodeStoreOptHTML = function (n, pos) {
+    const s = n.row || {};
+    const platLabel = { shopify: 'Shopify', mercadolibre: 'Mercado Libre', amazon: 'Amazon' }[s.platform] || (s.platform || '');
+    const statusLabel = { draft: __('Borrador'), approved: __('Aprobado'), applied: __('Aplicado') }[s.status] || '';
+    const window_ = (s.starts_at || s.ends_at)
+      ? `${s.starts_at ? String(s.starts_at).slice(5, 10) : '…'} → ${s.ends_at ? String(s.ends_at).slice(5, 10) : '…'}`
+      : '';
+    const chips = [
+      platLabel ? `<span class="cc-node-chip">${this.escapeHtml(platLabel)}</span>` : '',
+      window_ ? `<span class="cc-node-chip">${this.escapeHtml(window_)}</span>` : '',
+      s.status === 'applied' ? `<span class="cc-node-chip cc-node-chip--real"><i class="fas fa-check"></i> ${__('Aplicado')}</span>` : '',
+    ].join('');
+    return `
+    <div class="cc-node cc-node--stopt cc-node--mini" data-node-key="${n.key}" data-type="store_optimization" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+      <span class="cc-node-port cc-node-port--in" data-port="in" title="${__('Producto')}"></span>
+      <div class="cc-node-head" data-drag-handle>
+        <span class="cc-node-icon cc-node-icon--stopt"><i class="fas fa-store"></i></span>
+        <div class="cc-node-head-text">
+          <span class="cc-node-title">${__('Optimizacion de tienda')}</span>
+          <span class="cc-node-name" title="${this.escapeHtml(s.nombre || '')}">${this.escapeHtml(s.nombre || __('Sin nombre'))}</span>
+        </div>
+        <span class="cc-node-status cc-node-status--${this.escapeHtml(s.status || 'draft')}" title="${this.escapeHtml(statusLabel || __('Borrador'))}"></span>
+      </div>
+      ${chips ? `<div class="cc-node-body cc-node-body--mini"><div class="cc-node-chips">${chips}</div></div>` : ''}
+      <span class="cc-node-port cc-node-port--out" data-port="out" title="${__('Arrastra para conectar')}"></span>
     </div>`;
   };
 
@@ -1206,10 +1334,12 @@
     if (!this._supabase || !id || !field) return;
     const isAudience = type === 'audience';
     const isBrief = type === 'brief';
-    const table = isAudience ? 'audience_personas' : isBrief ? 'campaign_briefs' : 'campaigns';
+    const execTables = { adset: 'campaign_adsets', ad: 'campaign_ads', store_optimization: 'store_optimizations' };
+    const execArrs   = { adset: this._adsets, ad: this._ads, store_optimization: this._storeOpts };
+    const table = execTables[type] || (isAudience ? 'audience_personas' : isBrief ? 'campaign_briefs' : 'campaigns');
     const row = isBrief
       ? (this._briefRows && this._briefRows[String(id)])
-      : ((isAudience ? this._audiences : this._campaigns) || []).find((x) => String(x.id) === String(id));
+      : ((execTables[type] ? execArrs[type] : (isAudience ? this._audiences : this._campaigns)) || []).find((x) => String(x.id) === String(id));
     if (row) row[field] = val;
     if (indicatorEl) indicatorEl.classList.add('cc-field--saving');
     try {
@@ -1288,7 +1418,8 @@
     const field = fieldEl.getAttribute('data-field');
     const isAudience = type === 'audience';
     const isBrief = type === 'brief';
-    const table = isAudience ? 'audience_personas' : isBrief ? 'campaign_briefs' : 'campaigns';
+    const execTables = { adset: 'campaign_adsets', ad: 'campaign_ads', store_optimization: 'store_optimizations' };
+    const table = execTables[type] || (isAudience ? 'audience_personas' : isBrief ? 'campaign_briefs' : 'campaigns');
     const dataType = fieldEl.getAttribute('data-type');
     const multi    = fieldEl.getAttribute('data-multi');
     let val = fieldEl.value;
@@ -1308,7 +1439,7 @@
     }
 
     // Nombre obligatorio: no persistir vacio.
-    const nameField = isAudience ? 'name' : isBrief ? 'nombre' : 'nombre_campana';
+    const nameField = isAudience ? 'name' : (isBrief || execTables[type]) ? 'nombre' : 'nombre_campana';
     if (field === nameField && !val) { fieldEl.classList.add('cc-field--invalid'); return; }
     fieldEl.classList.remove('cc-field--invalid');
 
@@ -1324,7 +1455,8 @@
         if (nameEl) nameEl.textContent = val || 'Brief';
       }
     } else {
-      const arr = isAudience ? this._audiences : this._campaigns;
+      const execArrs = { adset: this._adsets, ad: this._ads, store_optimization: this._storeOpts };
+      const arr = execTables[type] ? execArrs[type] : (isAudience ? this._audiences : this._campaigns);
       const row = (arr || []).find((x) => String(x.id) === String(id));
       if (row) row[field] = val;
     }

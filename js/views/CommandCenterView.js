@@ -17,6 +17,9 @@ class CommandCenterView extends BaseView {
     this._segments        = [];   // audience_segments
     this._campaigns       = [];   // campaigns (con cached metrics)
     this._integrations    = [];   // brand_integrations (sync status)
+    this._adsets          = [];   // campaign_adsets (plantillas de ejecucion, nivel 2)
+    this._ads             = [];   // campaign_ads (plantillas de ejecucion, nivel 3)
+    this._storeOpts       = [];   // store_optimizations (Shopify / Mercado Libre)
     this._supabase        = null;
 
     // Canvas (v6): Command Center es un canvas de nodos audiencias↔campanas.
@@ -242,7 +245,7 @@ class CommandCenterView extends BaseView {
      scopeadas por brand_container. Compartido por _loadData (cacheado) y el
      refresh en vivo (fresco). */
   async _fetchCcBundle(supabase, bid) {
-    const [audRes, segRes, campRes, intRes] = await Promise.all([
+    const [audRes, segRes, campRes, intRes, adsetRes, adRes, soRes] = await Promise.all([
       supabase
         .from('audience_personas')
         .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, target_age_min, target_age_max, target_genders, is_liked, is_featured, is_active, real_age_distribution, real_gender_distribution, real_location_distribution, real_interests, updated_at')
@@ -263,12 +266,30 @@ class CommandCenterView extends BaseView {
         .select('id, platform, external_account_name, is_active, last_sync_at, updated_at')
         .eq('brand_container_id', bid)
         .order('platform', { ascending: true }),
+      supabase
+        .from('campaign_adsets')
+        .select('id, campaign_id, nombre, descripcion, optimizacion, persona_id, budget_daily, budget_total, budget_currency, starts_at, ends_at, external_adset_id, status, position, updated_at')
+        .eq('brand_container_id', bid)
+        .order('position', { ascending: true }),
+      supabase
+        .from('campaign_ads')
+        .select('id, adset_id, nombre, output_id, texto_principal, titulo, descripcion, cta, cta_url, external_ad_id, status, position, updated_at')
+        .eq('brand_container_id', bid)
+        .order('position', { ascending: true }),
+      supabase
+        .from('store_optimizations')
+        .select('id, platform, integration_id, nombre, descripcion, product_id, external_product_id, seo_titulo, seo_descripcion, seo_keywords, starts_at, ends_at, status, applied_at, updated_at')
+        .eq('brand_container_id', bid)
+        .order('updated_at', { ascending: false }),
     ]);
     return {
       audiences:    !audRes.error  && Array.isArray(audRes.data)  ? audRes.data  : [],
       segments:     !segRes.error  && Array.isArray(segRes.data)  ? segRes.data  : [],
       campaigns:    !campRes.error && Array.isArray(campRes.data) ? campRes.data : [],
       integrations: !intRes.error  && Array.isArray(intRes.data)  ? intRes.data  : [],
+      adsets:       !adsetRes.error && Array.isArray(adsetRes.data) ? adsetRes.data : [],
+      ads:          !adRes.error   && Array.isArray(adRes.data)   ? adRes.data   : [],
+      storeOpts:    !soRes.error   && Array.isArray(soRes.data)   ? soRes.data   : [],
     };
   }
 
@@ -284,6 +305,7 @@ class CommandCenterView extends BaseView {
     const snapshot = () => ({
       campaigns: this._campaigns, audiences: this._audiences,
       segments: this._segments, integrations: this._integrations,
+      adsets: this._adsets, ads: this._ads, storeOpts: this._storeOpts,
     });
     if (!this._liveSig) this._liveSig = {};
     this._liveSig['cc'] = this._dataSignature(snapshot());
@@ -294,6 +316,7 @@ class CommandCenterView extends BaseView {
         const bundle = await this._fetchCcBundle(this._supabase, bid);
         this._audiences = bundle.audiences; this._segments = bundle.segments;
         this._campaigns = bundle.campaigns; this._integrations = bundle.integrations;
+        this._adsets = bundle.adsets; this._ads = bundle.ads; this._storeOpts = bundle.storeOpts;
         return bundle;
       },
       () => { this._renderCampaigns(); this._renderMiniDash?.(); });
@@ -304,6 +327,9 @@ class CommandCenterView extends BaseView {
       { name: 'aud',  table: 'audience_personas', filter: f, onChange: () => this._liveTick() },
       { name: 'seg',  table: 'audience_segments', filter: f, onChange: () => this._liveTick() },
       { name: 'int',  table: 'brand_integrations',filter: f, onChange: () => this._liveTick() },
+      { name: 'adset', table: 'campaign_adsets',    filter: f, onChange: () => this._liveTick() },
+      { name: 'cad',   table: 'campaign_ads',       filter: f, onChange: () => this._liveTick() },
+      { name: 'sopt',  table: 'store_optimizations',filter: f, onChange: () => this._liveTick() },
     ]);
     this.startLivePoll(60000, () => this._liveTick());
   }
@@ -380,12 +406,18 @@ class CommandCenterView extends BaseView {
       this._segments     = bundle.segments;
       this._campaigns    = bundle.campaigns;
       this._integrations = bundle.integrations;
+      this._adsets       = bundle.adsets;
+      this._ads          = bundle.ads;
+      this._storeOpts    = bundle.storeOpts;
     } catch (e) {
       console.warn('CommandCenterView: fetch', e);
       this._audiences = [];
       this._segments  = [];
       this._campaigns = [];
       this._integrations = [];
+      this._adsets = [];
+      this._ads = [];
+      this._storeOpts = [];
     }
 
     const twoCol = document.getElementById('ccTwoCol');
@@ -415,7 +447,7 @@ class CommandCenterView extends BaseView {
     if (empty) empty.style.display = 'none';
 
     const statusClass = { active: 'cc-badge--green', conceptual: 'cc-badge--blue', draft: 'cc-badge--gray', paused: 'cc-badge--yellow', ended: 'cc-badge--red', archived: 'cc-badge--gray' };
-    const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: __('Orgánico'), internal: __('Interno') };
+    const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', x_ads: 'X', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: __('Orgánico'), internal: __('Interno') };
     // Label de "Resultados" según el objetivo real de la campaña (Meta/Google).
     // Si no podemos inferir el tipo, default a "resultados" (genérico).
     const resultLabel = (obj) => {
@@ -584,6 +616,37 @@ class CommandCenterView extends BaseView {
     const isAudience = entityType === 'audience';
     const isConcept  = entityType === 'campaign-concept';
 
+    // Plantillas de ejecucion (jerarquia v2): borrado directo + placement.
+    const execTables = { adset: 'campaign_adsets', ad: 'campaign_ads', store_optimization: 'store_optimizations' };
+    if (execTables[entityType]) {
+      try {
+        const { error } = await this._supabase.from(execTables[entityType]).delete().eq('id', entityId);
+        if (error) throw error;
+        if (entityType === 'adset') {
+          // CASCADE en BD: los anuncios hijos caen con el conjunto.
+          const deadAds = (this._ads || []).filter((a) => String(a.adset_id) === String(entityId));
+          this._ads = (this._ads || []).filter((a) => String(a.adset_id) !== String(entityId));
+          this._adsets = (this._adsets || []).filter((a) => String(a.id) !== String(entityId));
+          if (typeof this._deletePlacement === 'function') {
+            this._deletePlacement('adset', entityId);
+            deadAds.forEach((a) => this._deletePlacement('ad', a.id));
+          }
+        } else if (entityType === 'ad') {
+          this._ads = (this._ads || []).filter((a) => String(a.id) !== String(entityId));
+          if (typeof this._deletePlacement === 'function') this._deletePlacement('ad', entityId);
+        } else {
+          this._storeOpts = (this._storeOpts || []).filter((s) => String(s.id) !== String(entityId));
+          if (typeof this._deletePlacement === 'function') this._deletePlacement('store_optimization', entityId);
+        }
+        if (this._store && typeof this._store.clearSelection === 'function') this._store.clearSelection();
+        this._renderCanvas();
+        this._renderMiniDash();
+      } catch (e) {
+        console.error('CommandCenterView delete exec:', e?.message || e);
+      }
+      return;
+    }
+
     if (!isAudience && !isConcept) return;
 
     // Sin confirm: borrado directo (la accion viene del trash button = intent claro)
@@ -604,6 +667,14 @@ class CommandCenterView extends BaseView {
       } else {
         // isConcept
         this._campaigns = (this._campaigns || []).filter(c => String(c.id) !== String(entityId));
+        // CASCADE en BD: conjuntos + anuncios de la campana caen tambien
+        const deadSetIds = new Set((this._adsets || []).filter((a) => String(a.campaign_id) === String(entityId)).map((a) => String(a.id)));
+        if (deadSetIds.size) {
+          (this._adsets || []).filter((a) => deadSetIds.has(String(a.id))).forEach((a) => this._deletePlacement?.('adset', a.id));
+          (this._ads || []).filter((a) => deadSetIds.has(String(a.adset_id))).forEach((a) => this._deletePlacement?.('ad', a.id));
+          this._adsets = (this._adsets || []).filter((a) => !deadSetIds.has(String(a.id)));
+          this._ads = (this._ads || []).filter((a) => !deadSetIds.has(String(a.adset_id)));
+        }
         this._renderCampaigns();
       }
       this._renderCanvas();
