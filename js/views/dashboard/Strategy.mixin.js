@@ -85,7 +85,6 @@
       const inProd = Array.isArray(master.in_production) ? master.in_production : [];
       return `
         <div class="insight-page mb-dash" id="stratPage">
-          ${this._buildStratHeader(master, proposed.length)}
           ${this._buildStratPending(proposed)}
           ${this._buildStratInProduction(inProd)}
         </div>`;
@@ -183,24 +182,6 @@
           </div>
           ${this._reportDropdown()}
         </header>`;
-    },
-
-    _buildStratHeader(master, pendingCount) {
-      const ls = master.learning_stats || {};
-      const rate = Number.isFinite(Number(ls.approval_rate)) ? `${Math.round(Number(ls.approval_rate))}%` : '—';
-      return `
-        <section class="strat-header">
-          <div class="strat-header-main">
-            <span class="strat-header-title">${__('Estrategia de Vera')}</span>
-            <span class="strat-header-sub">${__('Recomendaciones que cruzan tu marca, tu competencia y lo que te funciona — para que apruebes, ajustes o descartes.')}</span>
-          </div>
-          <div class="strat-stats">
-            <div class="strat-stat"><span class="strat-stat-val">${fmt.int(pendingCount)}</span><span class="strat-stat-lbl">${__('Pendientes')}</span></div>
-            <div class="strat-stat"><span class="strat-stat-val">${fmt.int((master.in_production || []).length)}</span><span class="strat-stat-lbl">${__('En producción')}</span></div>
-            <div class="strat-stat"><span class="strat-stat-val">${rate}</span><span class="strat-stat-lbl">${__('Tasa de aprobación')}</span></div>
-            <div class="strat-stat"><span class="strat-stat-val">${fmt.int(ls.total_proposals)}</span><span class="strat-stat-lbl">${__('Propuestas totales')}</span></div>
-          </div>
-        </section>`;
     },
 
     _buildStratPending(list) {

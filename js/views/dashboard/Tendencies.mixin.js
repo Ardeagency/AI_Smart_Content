@@ -100,7 +100,6 @@
     _buildTendenciasHtml(data) {
       return `
         <div class="insight-page mb-dash" id="tendPage">
-          ${this._buildTendPulse(data?.kpis?.data, data?.pulse?.data)}
           ${this._buildTendSignals(data?.signals?.data)}
           ${this._buildTendGaps(data?.gaps?.data)}
           ${this._buildTendLexicon(data?.lexicon?.data)}
@@ -247,46 +246,7 @@
       if (el) this._tendDatePicker.mount(el);
     },
 
-    /* ── 1. Pulso del nicho: KPIs vivos + clima de sentimiento ────────── */
-    _buildTendPulse(kpisWrap, pulse) {
-      const k = (kpisWrap && kpisWrap.kpis) ? kpisWrap.kpis : {};
-      const sent = (pulse && pulse.sentiment_breakdown) ? pulse.sentiment_breakdown : null;
-      const kpiCards = `
-        <div class="comp-kpis">
-          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.topicsTracked)}</span><span class="comp-kpi-lbl">${__('Señales rastreadas')}</span></div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.velocityLast24h)}</span><span class="comp-kpi-lbl">${__('Velocidad 24h')}</span></div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.lexiconApproved)}</span><span class="comp-kpi-lbl">${__('Palabras aprendidas')}</span></div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(k.emergingBrandsPending)}</span><span class="comp-kpi-lbl">${__('Marcas emergentes')}</span></div>
-        </div>`;
-      let climate = '';
-      if (sent && Number(sent.total) > 0) {
-        const total = Number(sent.total) || 1;
-        const pos = Math.round((Number(sent.positivo) || 0) / total * 100);
-        const neg = Math.round((Number(sent.negativo) || 0) / total * 100);
-        const neu = Math.max(0, 100 - pos - neg);
-        climate = `
-          <div class="tend-climate">
-            <span class="tend-climate-label">${__('Clima del nicho')}</span>
-            <div class="tend-climate-bar">
-              <span class="tend-climate-seg" style="width:${pos}%;background:var(--dash-pos,#6e9f81);" title="${__('Positivo {n}%', { n: pos })}"></span>
-              <span class="tend-climate-seg" style="width:${neu}%;background:rgba(255,255,255,0.14);" title="${__('Neutro {n}%', { n: neu })}"></span>
-              <span class="tend-climate-seg" style="width:${neg}%;background:var(--dash-neg,#b3796f);" title="${__('Negativo {n}%', { n: neg })}"></span>
-            </div>
-            <span class="tend-climate-legend">${__('{pos}% positivo · {neu}% neutro · {neg}% negativo · {total} señales', { pos: `<b style="color:var(--dash-pos,#6e9f81);">${pos}%</b>`, neu, neg: `<b style="color:var(--dash-neg,#b3796f);">${neg}%</b>`, total: fmt.int(sent.total) })}</span>
-          </div>`;
-      }
-      return `
-        <section class="mb-section">
-          <div class="mb-section-head">
-            <span class="mb-section-title">${__('Pulso del nicho')}</span>
-            <span class="mb-section-hint">${__('Lo que se mueve afuera — la mirada externa de Vera')}</span>
-          </div>
-          ${kpiCards}
-          ${climate}
-        </section>`;
-    },
-
-    /* ── 2. Señales emergentes: keywords con velocidad (filtradas) ─────── */
+    /* ── Señales emergentes: keywords con velocidad (filtradas) ─────── */
     _buildTendSignals(signals) {
       const raw = Array.isArray(signals?.top_velocity) ? signals.top_velocity : [];
       const srcFilter = this._tendFilters?.source || '';
