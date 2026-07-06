@@ -345,11 +345,8 @@
     },
 
     /* ── 1. El campo de batalla: panorámica + ranking de rivales ──────── */
-    _buildBattlefield(k, top, kPrev) {
+    _buildBattlefield(_k, top, _kPrev) {
       const list = Array.isArray(top) ? top : [];
-      const kpis = k || {};
-      const prev = kPrev || {};
-      const sentMap = { positive: __('Positivo'), negative: __('Negativo'), neutral: __('Neutro') };
 
       // ── Doctrina de renderizado: null ≠ 0. Si ningún perfil tiene actividad
       // capturada, NO se pintan KPIs en cero ni un ranking de ceros (ausencia de
@@ -376,16 +373,6 @@
         </section>`;
       }
 
-      const compCur = kpis.active_competitors ?? kpis.total_competitors;
-      const compPrev = prev.active_competitors ?? prev.total_competitors;
-      const kpiCards = `
-        <div class="comp-kpis">
-          <div class="comp-kpi"><span class="comp-kpi-val">${fmt.int(compCur)}</span><span class="comp-kpi-lbl">${__('Rivales activos')}</span>${this._kpiDelta(compCur, compPrev)}</div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${this._compactNum(kpis.total_engagement)}</span><span class="comp-kpi-lbl">${__('Engagement del nicho')}</span>${this._kpiDelta(kpis.total_engagement, prev.total_engagement)}</div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${this._esc(this._prettyPlatform(kpis.dominant_platform))}</span><span class="comp-kpi-lbl">${__('Plataforma dominante')}</span></div>
-          <div class="comp-kpi"><span class="comp-kpi-val">${this._esc(sentMap[kpis.dominant_sentiment] || kpis.dominant_sentiment || '—')}</span><span class="comp-kpi-lbl">${__('Sentimiento dominante')}</span></div>
-        </div>`;
-
       const rows = list.map((r, i) => {
         const tipo = this._compTipoMeta(r.tipo);
         return `
@@ -407,7 +394,6 @@
             <span class="mb-section-title">${__('El campo de batalla')}</span>
             <span class="mb-section-hint">${__('Quién domina la conversación de tu nicho')}</span>
           </div>
-          ${kpiCards}
           ${list.length ? `<div class="comp-rank">${rows}</div>` : `<div class="mb-causal-empty">${__('Sin rivales con actividad en la ventana.')}</div>`}
         </section>`;
     },

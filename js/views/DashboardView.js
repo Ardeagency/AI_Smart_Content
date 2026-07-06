@@ -619,7 +619,7 @@ class DashboardView extends BaseView {
   static get TABS() {
     return [
       { id: 'my-brands',  label: __('Mi Marca')    },
-      { id: 'competence', label: __('Competencia') },
+      { id: 'competence', label: __('Monitoreo')   },
       { id: 'tendencies', label: __('Tendencias')  },
       { id: 'strategy',   label: __('Estrategia')  },
     ];
