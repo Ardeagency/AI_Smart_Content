@@ -66,7 +66,6 @@
         this._bindMyBrandsHandlers(body);
         this._renderLongitudinalCharts(data);
         this._renderPillarsBubble(data);
-        this._renderToneTopicDonuts(data);
       } catch (e) {
         console.error('[MyBrands] loadAll failed:', e);
         if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
@@ -170,7 +169,6 @@
         this._bindMyBrandsHandlers(body);
         this._renderLongitudinalCharts(data);
         this._renderPillarsBubble(data);
-        this._renderToneTopicDonuts(data);
       } catch (e) {
         if (onMyBrands && body) body.innerHTML = this._buildMyBrandsErrorHtml(e);
       }
@@ -298,7 +296,6 @@
             <div class="mb-layout-main">
               ${this._buildLongitudinalSection(data)}
               ${this._buildReceptionSection(data?.postReception?.data)}
-              ${this._buildToneTopicSection(data?.featured)}
               ${this._buildCommentsSection(data?.comments?.data)}
               ${this._buildLeverageSection(insights)}
               ${this._buildTopPostsSection(data?.topPosts?.data)}
@@ -679,103 +676,6 @@
           </div>
         </section>`;
     },
-
-    /* ── Tonos + Temas: misma estructura (jerarquia + mas usado + mas efectivo) ── */
-    _buildToneTopicSection(featured) {
-      const f = featured || {};
-      const tones = (Array.isArray(f.tones?.data) ? f.tones.data : []).map((r) => ({
-        name: r.tone_name, used: Number(r.posts_count) || 0, eng: Number(r.total_engagement) || 0,
-      }));
-      const topics = (Array.isArray(f.topics?.data) ? f.topics.data : []).map((r) => ({
-        name: r.topic_name, used: Number(r.usage_count) || 0, eng: Number(r.total_engagement) || 0,
-      }));
-      const toneCard = this._buildHierarchyCard(__('Tonos'), tones, 'mbToneDonut');
-      const topicCard = this._buildHierarchyCard(__('Temas'), topics, 'mbTopicDonut');
-      if (!toneCard && !topicCard) return '';
-      return `
-        <section class="mb-section mb-section--wide">
-          <div class="mb-long-grid">${toneCard}${topicCard}</div>
-        </section>`;
-    },
-
-    /** Paleta de segmentos para donas (consistente entre leyenda y chart). */
-    _palette() { return ['#6bcf7f', '#5b9bd5', '#e0a045', '#a78bfa', '#e06464', '#22d3ee', '#f472b6']; },
-
-    /** Card jerarquia (tonos/temas): mas usado + mas efectivo + dona + leyenda. */
-    _buildHierarchyCard(title, items, canvasId) {
-      const list = (Array.isArray(items) ? items : []).filter((x) => x.name && x.used > 0);
-      if (!list.length) return '';
-      const withAvg = list.map((x) => ({ ...x, avg: x.used > 0 ? x.eng / x.used : 0 }));
-      const mostUsed = [...withAvg].sort((a, b) => b.used - a.used)[0];
-      const mostEff  = [...withAvg].sort((a, b) => b.avg - a.avg)[0];
-      const ranked = [...withAvg].sort((a, b) => b.used - a.used).slice(0, 6);
-      const total = ranked.reduce((s, x) => s + x.used, 0) || 0;
-      const PAL = this._palette();
-      const legend = ranked.map((x, i) => `
-        <div class="mb-donut-leg">
-          <span class="mb-donut-dot" style="background:${PAL[i % PAL.length]}"></span>
-          <span class="mb-donut-leg-name">${this._esc(this._capWords(x.name))}</span>
-          <span class="mb-donut-leg-val">${x.used}</span>
-        </div>`).join('');
-      return `
-        <div class="mb-long-card">
-          <div class="mb-card-title">${this._esc(title)}</div>
-          <div class="mb-hier-stats">
-            <div class="mb-hier-stat">
-              <span class="mb-hier-stat-cap">${__('Más usado')}</span>
-              <span class="mb-hier-stat-val">${this._esc(this._capWords(mostUsed.name))}</span>
-              <span class="mb-hier-stat-sub">${__('{n} posts', { n: mostUsed.used })}</span>
-            </div>
-            <div class="mb-hier-stat mb-hier-stat--eff">
-              <span class="mb-hier-stat-cap">${__('Más efectivo')}</span>
-              <span class="mb-hier-stat-val">${this._esc(this._capWords(mostEff.name))}</span>
-              <span class="mb-hier-stat-sub">${__('{n} eng/post', { n: this._compactNum(Math.round(mostEff.avg)) })}</span>
-            </div>
-          </div>
-          <div class="mb-donut-wrap">
-            <div class="mb-donut">
-              <canvas id="${canvasId}"></canvas>
-              <div class="mb-donut-center"><span class="mb-donut-center-val">${total}</span><span class="mb-donut-center-cap">${__('posts')}</span></div>
-            </div>
-            <div class="mb-donut-legend">${legend}</div>
-          </div>
-        </div>`;
-    },
-
-    /** Pinta las donas de Tonos y Temas (Chart.js doughnut). */
-    async _renderToneTopicDonuts(data) {
-      try { await this._ensureChartJs(); } catch (_) { /* noop */ }
-      const Chart = window.Chart; if (!Chart) return;
-      const PAL = this._palette();
-      const f = data?.featured || {};
-      const draw = (id, rows, nameKey, usedKey) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const list = (Array.isArray(rows) ? rows : []).map((r) => ({ name: r[nameKey], used: Number(r[usedKey]) || 0 }))
-          .filter((x) => x.name && x.used > 0).sort((a, b) => b.used - a.used).slice(0, 6);
-        if (!list.length) return;
-        try {
-          this._reg(new Chart(el.getContext('2d'), {
-            type: 'doughnut',
-            data: { labels: list.map((x) => this._capWords(x.name)), datasets: [{
-              data: list.map((x) => x.used),
-              backgroundColor: list.map((_, i) => PAL[i % PAL.length]),
-              borderColor: '#141517', borderWidth: 2, hoverOffset: 4,
-            }] },
-            options: {
-              responsive: true, maintainAspectRatio: false, cutout: '66%',
-              plugins: {
-                legend: { display: false },
-                tooltip: { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10, callbacks: { label: (c) => ' ' + __('{label}: {n} posts', { label: c.label, n: c.parsed }) } },
-              },
-            },
-          }));
-        } catch (e) { console.warn('[donut]', id, e?.message); }
-      };
-      draw('mbToneDonut', f.tones?.data, 'tone_name', 'posts_count');
-      draw('mbTopicDonut', f.topics?.data, 'topic_name', 'usage_count');
-    },
-
 
     /* ── Analisis de comentarios + comentarios de alto impacto ── */
     _buildCommentsSection(c) {
