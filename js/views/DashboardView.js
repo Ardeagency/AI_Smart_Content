@@ -495,7 +495,17 @@ class DashboardView extends BaseView {
         if (p === 'twitter') p = 'x';
         set.add(p);
       });
-      this._heroIntegrations = [...set];
+      // Meta: la fila 'facebook' es la conexion de Meta, que enlaza la Pagina de
+      // Facebook Y su cuenta de Instagram vinculada (NO existe una fila 'instagram'
+      // propia). Si Meta esta activo, mostramos ambas burbujas — el usuario espera
+      // ver Instagram, no solo Facebook.
+      if (set.has('facebook')) set.add('instagram');
+      // Orden de presentacion estable: sociales primero, luego marketplaces/web.
+      const ORDER = ['instagram', 'facebook', 'tiktok', 'x', 'youtube', 'linkedin', 'mercadolibre', 'shopify', 'google'];
+      this._heroIntegrations = [...set].sort((a, b) => {
+        const ia = ORDER.indexOf(a), ib = ORDER.indexOf(b);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      });
     } catch (_) { /* silencioso: las burbujas son informativas */ }
     return this._heroIntegrations;
   }
