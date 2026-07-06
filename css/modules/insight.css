@@ -3046,6 +3046,34 @@
 }
 
 /* Dropdown "Crear informe" (barra de filtros, derecha) */
+/* ── Burbujas de integraciones activas en la barra de filtros del hero ──────
+   Circulos translucidos con el icono de la plataforma en BLANCO (doctrina
+   monocroma: sin colores de marca). La burbuja "+" (borde punteado = agregar)
+   lleva a Identidad/INFO para conectar otra plataforma. */
+.dash-integ { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dash-integ-bubble {
+  width: 30px; height: 30px; flex: 0 0 auto; padding: 0; margin: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff; font-size: 0.82rem; line-height: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+.dash-integ-bubble i { color: #fff; }
+button.dash-integ-add {
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.38);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+button.dash-integ-add:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.65);
+  transform: translateY(-1px);
+}
+button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 2px; }
+
 .dash-report-dd { margin-left: auto; position: relative; }
 .dash-report-dd > summary { list-style: none; }
 .dash-report-dd > summary::-webkit-details-marker { display: none; }

@@ -208,6 +208,7 @@
             <label class="living-filter-label" for="tendFilterSource">${__('Tendencia')}</label>
             <select class="living-filter-select" id="tendFilterSource" data-tend-filter="source">${srcOpts}</select>
           </div>
+          ${this._buildIntegrationBubbles()}
           ${this._reportDropdown()}
         </header>`;
     },
@@ -275,7 +276,7 @@
             <span class="tend-signal-kw">${this._esc(s.keyword)}</span>
             <span class="tend-signal-meta">
               <span class="tend-signal-src">${this._esc(this._prettyPlatform(s.source))}</span>
-              ${Number.isFinite(vel) ? `<span class="tend-signal-vel"><i class="fas fa-bolt"></i> ${vel.toFixed(0)}</span>` : ''}
+              ${Number.isFinite(vel) ? `<span class="tend-signal-vel"><i class="aisc-ico aisc-ico--zap"></i> ${vel.toFixed(0)}</span>` : ''}
               ${sm ? `<span class="tend-signal-sent" style="color:${sm.color};">${__(sm.label)}</span>` : ''}
             </span>
           </div>`;
@@ -368,7 +369,7 @@
         </div>`).join('');
       const words = approved.map(w => `<span class="tend-word">${this._esc(w.word)}<span class="tend-word-dim">${this._esc(this._tendDimLabel(w.dimension))}</span></span>`).join('');
       const pendNote = pending.length
-        ? `<div class="tend-lex-note"><i class="fas fa-hourglass-half"></i> ${__('{n} palabra(s) nuevas esperando tu revisión en el Léxico.', { n: fmt.int(pending.length) })}</div>`
+        ? `<div class="tend-lex-note"><i class="aisc-ico aisc-ico--hourglass"></i> ${__('{n} palabra(s) nuevas esperando tu revisión en el Léxico.', { n: fmt.int(pending.length) })}</div>`
         : '';
       return `
         <section class="mb-section">
@@ -412,7 +413,7 @@
             </div>
             <div class="tend-brand-meta">
               ${b.niche ? `<span class="tend-brand-niche">${this._esc(b.niche)}</span>` : ''}
-              ${geos.length ? `<span class="tend-brand-geo"><i class="fas fa-location-dot"></i> ${this._esc(geos.slice(0, 3).join(', '))}</span>` : ''}
+              ${geos.length ? `<span class="tend-brand-geo"><i class="aisc-ico aisc-ico--places"></i> ${this._esc(geos.slice(0, 3).join(', '))}</span>` : ''}
               ${Number(b.best_rank_position) > 0 ? `<span class="tend-brand-rank">${__('mejor posición #{n}', { n: fmt.int(b.best_rank_position) })}</span>` : ''}
             </div>
           </article>`;

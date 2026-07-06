@@ -302,6 +302,7 @@
             <label class="living-filter-label" for="compFilterPerfil">${__('Perfil')}</label>
             <select class="living-filter-select" id="compFilterPerfil" data-comp-filter="entityId">${perfilOpts}</select>
           </div>
+          ${this._buildIntegrationBubbles()}
           ${this._reportDropdown()}
         </header>`;
     },

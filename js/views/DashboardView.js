@@ -182,7 +182,7 @@ class DashboardView extends BaseView {
     ];
     return `
       <details class="dash-report-dd">
-        <summary class="dash-report-btn"><i class="fas fa-file-circle-plus"></i><span>${__('Crear informe')}</span><i class="fas fa-chevron-down dash-report-caret"></i></summary>
+        <summary class="dash-report-btn"><i class="aisc-ico aisc-ico--document"></i><span>${__('Crear informe')}</span><i class="aisc-ico dash-report-caret aisc-ico--chevron-down"></i></summary>
         <div class="dash-report-menu">
           ${opts.map((o) => `<button type="button" class="dash-report-item" data-report="${o.k}">${o.label}</button>`).join('')}
         </div>
@@ -202,7 +202,7 @@ class DashboardView extends BaseView {
           <span class="living-filter-label">${this._esc(label)}</span>
           <span class="living-filter-menu-value">
             <span data-filter-menu-text>${this._esc(curLabel)}</span>
-            <i class="fas fa-chevron-down living-filter-menu-caret" aria-hidden="true"></i>
+            <i class="aisc-ico living-filter-menu-caret aisc-ico--chevron-down" aria-hidden="true"></i>
           </span>
         </summary>
         <div class="living-filter-menu">
@@ -461,6 +461,62 @@ class DashboardView extends BaseView {
     this._ensureHeroKpis();
     // Marca de agua: logo de la org en la esquina inferior derecha del hero.
     this._loadHeroLogo();
+    // Burbujas de integraciones activas en la barra de filtros (async → repinta).
+    this._ensureHeroIntegrations().then(() => this._renderHeroActions());
+  }
+
+  /* ── Integraciones activas del hero ─────────────────────────────────
+     Plataformas sociales conectadas de la org (brand_integrations.is_active de
+     sus brand_containers), como burbujas en la barra de filtros. Cache en la
+     instancia. Devuelve un array de claves normalizadas (instagram/facebook/…). */
+  async _ensureHeroIntegrations() {
+    if (this._heroIntegrations !== undefined) return this._heroIntegrations;
+    this._heroIntegrations = []; // valor por defecto (guard de "en vuelo"/sin datos)
+    if (!this._supabase || !this._orgId) return this._heroIntegrations;
+    try {
+      let ids = (this._campanasService?.containers || []).map((c) => c.id).filter(Boolean);
+      if (!ids.length) {
+        const { data: cs } = await this._supabase
+          .from('brand_containers').select('id').eq('organization_id', this._orgId);
+        ids = (cs || []).map((c) => c.id).filter(Boolean);
+      }
+      if (!ids.length) return this._heroIntegrations;
+      const { data } = await this._supabase
+        .from('brand_integrations')
+        .select('platform')
+        .in('brand_container_id', ids)
+        .eq('is_active', true);
+      // Solo plataformas SOCIALES (las de contenido); normaliza twitter→x. Ignora
+      // integraciones web (google/shopify/meta-pixel) que no son "plataformas".
+      const NORM = { instagram: 'instagram', facebook: 'facebook', tiktok: 'tiktok', x: 'x', twitter: 'x', youtube: 'youtube', linkedin: 'linkedin' };
+      const set = new Set();
+      (data || []).forEach((r) => { const k = NORM[String(r.platform || '').toLowerCase()]; if (k) set.add(k); });
+      this._heroIntegrations = [...set];
+    } catch (_) { /* silencioso: las burbujas son informativas */ }
+    return this._heroIntegrations;
+  }
+
+  /* Burbujas de plataformas integradas + burbuja "+" para agregar otra (lleva a
+     Identidad/INFO). Se inyecta en la barra de filtros de cada tab. */
+  _buildIntegrationBubbles() {
+    const list = Array.isArray(this._heroIntegrations) ? this._heroIntegrations : [];
+    const META = {
+      instagram: { icon: 'fa-instagram', label: 'Instagram' },
+      facebook:  { icon: 'fa-facebook',  label: 'Facebook' },
+      tiktok:    { icon: 'fa-tiktok',    label: 'TikTok' },
+      x:         { icon: 'fa-x-twitter', label: 'X' },
+      youtube:   { icon: 'fa-youtube',   label: 'YouTube' },
+      linkedin:  { icon: 'fa-linkedin',  label: 'LinkedIn' },
+    };
+    const bubbles = list.map((p) => {
+      const m = META[p]; if (!m) return '';
+      return `<span class="dash-integ-bubble" title="${this._esc(m.label)}" aria-label="${this._esc(m.label)}"><i class="fab ${m.icon}"></i></span>`;
+    }).join('');
+    return `
+      <div class="dash-integ" role="group" aria-label="${__('Integraciones activas')}">
+        ${bubbles}
+        <button type="button" class="dash-integ-bubble dash-integ-add" data-action="add-integration" title="${__('Agregar integración')}" aria-label="${__('Agregar integración')}"><i class="fas fa-plus"></i></button>
+      </div>`;
   }
 
   /* ── Marca de agua del hero ─────────────────────────────────────────
@@ -729,7 +785,7 @@ class DashboardView extends BaseView {
       <div class="plan-detail-sec">
         <div class="plan-detail-h">${this._esc(__('Comentarios señalados'))}</div>
         <div class="plan-detail-evidence" data-plan-evidence>
-          <div class="plan-ev-loading"><i class="fas fa-circle-notch fa-spin"></i> ${this._esc(__('Cargando evidencia…'))}</div>
+          <div class="plan-ev-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> ${this._esc(__('Cargando evidencia…'))}</div>
         </div>
       </div>` : '';
     const body = `
@@ -907,6 +963,18 @@ class DashboardView extends BaseView {
     });
 
     hero.addEventListener('click', (e) => {
+      // Burbuja "+" de integraciones: lleva a Identidad con el panel INFO abierto
+      // (donde se conectan/agregan plataformas). Mismo destino que el CTA de
+      // "Conectar plataformas" del empty state de Mi Marca.
+      if (e.target.closest('[data-action="add-integration"]')) {
+        e.preventDefault();
+        if (!window.router) return;
+        try { localStorage.setItem('brands_open_info', '1'); } catch (_) {}
+        const path = window.location.pathname || '';
+        const base = path.startsWith('/org/') ? path.split('/').slice(0, 4).join('/') : '';
+        window.router.navigate(base ? `${base}/brand` : '/brand-organization');
+        return;
+      }
       const sel = this._handleFilterMenuClick(e);
       if (sel && sel.key === 'platform') route({ platforms: sel.value ? [sel.value] : null });
     });

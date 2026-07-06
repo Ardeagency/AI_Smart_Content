@@ -577,7 +577,7 @@
               <span class="mb-tpt-sent mb-tpt-sent--${sc}">${this._sentLabel(p.sentiment_text)}</span>
               ${topics.map((t) => `<span class="mb-tag">${this._esc(this._capWords(t))}</span>`).join('')}
             </div>
-            <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="${__('Abrir perfil')}"><i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}</div>
+            <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="${__('Abrir perfil')}"><i class="aisc-ico aisc-ico--external-link"></i></a>` : ''}</div>
           </div>`;
       }).join('');
       return `
@@ -623,7 +623,7 @@
               </div>
             </div>
             <div class="mb-rcp-score mb-rcp-score--${cls}">${this._esc(scoreStr)}</div>
-            ${r.permalink ? `<a class="mb-rcp-link" href="${this._esc(r.permalink)}" target="_blank" rel="noopener" aria-label="${__('Abrir publicación')}"><i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}
+            ${r.permalink ? `<a class="mb-rcp-link" href="${this._esc(r.permalink)}" target="_blank" rel="noopener" aria-label="${__('Abrir publicación')}"><i class="aisc-ico aisc-ico--external-link"></i></a>` : ''}
           </div>`;
       };
       return `
@@ -764,7 +764,7 @@
             <p class="mb-cmt-item-text">${this._esc(t.content || '')}</p>
             <div class="mb-cmt-item-meta">
               <span class="mb-cmt-author">@${this._esc(String(t.author || '').replace(/^@/, ''))}</span>
-              <span class="mb-cmt-eng"><i class="fas fa-heart"></i> ${this._compactNum(t.likes)}${Number(t.replies) ? ` · <i class="fas fa-reply"></i> ${this._compactNum(t.replies)}` : ''}</span>
+              <span class="mb-cmt-eng"><i class="aisc-ico aisc-ico--likes"></i> ${this._compactNum(t.likes)}${Number(t.replies) ? ` · <i class="fas fa-reply"></i> ${this._compactNum(t.replies)}` : ''}</span>
             </div>
           </div>
         </div>`).join('');
@@ -1165,16 +1165,16 @@
       const body = `
         <div class="mb-actm">
           <div class="mb-actm-nav">
-            <button class="mb-actm-navbtn" data-mb-act-prev type="button" aria-label="${__('Anterior')}"><i class="fas fa-chevron-left"></i></button>
+            <button class="mb-actm-navbtn" data-mb-act-prev type="button" aria-label="${__('Anterior')}"><i class="aisc-ico aisc-ico--chevron-left"></i></button>
             <div class="mb-actm-nav-info">
               <div class="mb-actm-period" data-mb-act-label></div>
               <div class="mb-actm-sub" data-mb-act-sub></div>
             </div>
-            <button class="mb-actm-navbtn" data-mb-act-next type="button" aria-label="${__('Siguiente')}"><i class="fas fa-chevron-right"></i></button>
+            <button class="mb-actm-navbtn" data-mb-act-next type="button" aria-label="${__('Siguiente')}"><i class="aisc-ico aisc-ico--chevron-right"></i></button>
           </div>
           <div class="mb-actm-stats" data-mb-act-stats></div>
           <div class="mb-actm-content">
-            <div class="mb-actm-content-title"><i class="fas fa-newspaper"></i> ${__('Contenido del periodo')}</div>
+            <div class="mb-actm-content-title"><i class="aisc-ico aisc-ico--feed"></i> ${__('Contenido del periodo')}</div>
             <div class="mb-actm-content-body" data-mb-act-content></div>
           </div>
         </div>`;
@@ -1211,7 +1211,7 @@
         if (!contentEl) return;
         if (postsCache.has(i)) { renderPosts(postsCache.get(i)); return; }
         const token = ++reqToken;
-        contentEl.innerHTML = `<div class="mb-actm-content-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+        contentEl.innerHTML = `<div class="mb-actm-content-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i></div>`;
         this._loadActivityPeriodPosts(i, act).then((posts) => {
           if (token !== reqToken) return;
           postsCache.set(i, posts);
@@ -1298,7 +1298,7 @@
             <span class="mb-tpt-sent mb-tpt-sent--${sc}">${this._sentLabel(p.sentiment_text)}</span>
             ${topics.map((t) => `<span class="mb-tag">${this._esc(this._capWords(t))}</span>`).join('')}
           </div>
-          <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="${__('Abrir publicacion')}"><i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}</div>
+          <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="${__('Abrir publicacion')}"><i class="aisc-ico aisc-ico--external-link"></i></a>` : ''}</div>
         </div>`;
     },
 
@@ -1353,16 +1353,16 @@
       const body = `
         <div class="mb-actm">
           <div class="mb-actm-nav">
-            <button class="mb-actm-navbtn" data-mb-hr-prev type="button" aria-label="${__('Anterior')}"><i class="fas fa-chevron-left"></i></button>
+            <button class="mb-actm-navbtn" data-mb-hr-prev type="button" aria-label="${__('Anterior')}"><i class="aisc-ico aisc-ico--chevron-left"></i></button>
             <div class="mb-actm-nav-info">
               <div class="mb-actm-period" data-mb-hr-label>${this._esc(headLabel)}</div>
               <div class="mb-actm-sub" data-mb-hr-sub></div>
             </div>
-            <button class="mb-actm-navbtn" data-mb-hr-next type="button" aria-label="${__('Siguiente')}"><i class="fas fa-chevron-right"></i></button>
+            <button class="mb-actm-navbtn" data-mb-hr-next type="button" aria-label="${__('Siguiente')}"><i class="aisc-ico aisc-ico--chevron-right"></i></button>
           </div>
           <div class="mb-actm-content" style="border-top:none;padding-top:0">
             <div class="mb-actm-content-body" data-mb-hr-content>
-              <div class="mb-actm-content-loading"><i class="fas fa-circle-notch fa-spin"></i></div>
+              <div class="mb-actm-content-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i></div>
             </div>
           </div>
         </div>`;
@@ -1502,7 +1502,7 @@
           </div>
           <div class="mb-tp-foot">
             <span class="mb-tp-evidence">${n === 1 ? __('Lo vimos en {n} publicacion tuya', { n }) : __('Lo vimos en {n} publicaciones tuyas', { n })}</span>
-            <span class="mb-tp-action">${this._esc(isUp ? meta.actUp : meta.actDown)} <i class="fas fa-arrow-right"></i></span>
+            <span class="mb-tp-action">${this._esc(isUp ? meta.actUp : meta.actDown)} <i class="aisc-ico aisc-ico--arrow-right"></i></span>
           </div>
         </article>`;
     },
@@ -1971,7 +1971,7 @@
               <div class="mb-feat-metric-primary">${this._esc(opts.metricPrimary || '')}</div>
               <div class="mb-feat-metric-secondary">${this._esc(opts.metricSecondary || '')}</div>
             </div>
-            ${clickable ? `<div class="mb-feat-detail-hint">${__('Ver detalles')} <i class="fas fa-arrow-right"></i></div>` : ''}
+            ${clickable ? `<div class="mb-feat-detail-hint">${__('Ver detalles')} <i class="aisc-ico aisc-ico--arrow-right"></i></div>` : ''}
           ` : `
             <div class="mb-feat-empty">${this._esc(opts.emptyHint)}</div>
           `}
@@ -2001,6 +2001,7 @@
         <header class="living-history-filters mb-filters-bar" id="mbFilters">
           ${this._mbFechaControl()}
           ${this._buildFilterMenu({ label: __('Plataforma'), value: cur, key: 'platform', options: platOptions })}
+          ${this._buildIntegrationBubbles()}
           ${this._reportDropdown()}
         </header>`;
     },
@@ -2115,7 +2116,7 @@
       const chips = list.map((c) => {
         const sc = Math.round(Number(c.score) || 0);
         const crit = sc < 40;
-        return `<span class="mb-alert-chip${crit ? ' mb-alert-chip--crit' : ''}"><i class="fas fa-triangle-exclamation"></i> ${this._esc(c.label || c.key)} ${sc}</span>`;
+        return `<span class="mb-alert-chip${crit ? ' mb-alert-chip--crit' : ''}"><i class="aisc-ico aisc-ico--alert-warning"></i> ${this._esc(c.label || c.key)} ${sc}</span>`;
       }).join('');
       return `
         <div class="mb-body-alerts">
@@ -2309,7 +2310,7 @@
               <span class="mb-detail-title" id="mbDetailTitle">${__('Detalles')}</span>
               <span class="mb-detail-sub" id="mbDetailSub"></span>
             </div>
-            <button class="mb-detail-close" id="mbDetailClose" type="button" aria-label="${__('Cerrar')}"><i class="fas fa-times"></i></button>
+            <button class="mb-detail-close" id="mbDetailClose" type="button" aria-label="${__('Cerrar')}"><i class="aisc-ico aisc-ico--close"></i></button>
           </header>
           <div class="mb-detail-body" id="mbDetailBody"></div>`;
         document.body.appendChild(ov);
@@ -2329,7 +2330,7 @@
       const bodyEl  = document.getElementById('mbDetailBody');
       if (titleEl) titleEl.textContent = title || __('Detalles');
       if (subEl)   subEl.textContent = __('Cargando…');
-      if (bodyEl)  bodyEl.innerHTML = `<div class="mb-detail-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+      if (bodyEl)  bodyEl.innerHTML = `<div class="mb-detail-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i></div>`;
 
       ov.classList.add('active');
       dr.classList.add('active');
@@ -2356,7 +2357,7 @@
       } catch (e) {
         console.error('[detail] load failed:', e?.message || e);
         if (subEl) subEl.textContent = '';
-        if (bodyEl) bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-triangle-exclamation"></i><p>${__('No se pudieron cargar las publicaciones.')}</p></div>`;
+        if (bodyEl) bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="aisc-ico aisc-ico--alert-warning"></i><p>${__('No se pudieron cargar las publicaciones.')}</p></div>`;
       }
     },
 
@@ -2372,7 +2373,7 @@
     _renderDetailPosts(bodyEl, posts) {
       if (!bodyEl) return;
       if (!posts.length) {
-        bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-inbox"></i><p>${__('Sin publicaciones en esta ventana.')}</p></div>`;
+        bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="aisc-ico aisc-ico--inbox"></i><p>${__('Sin publicaciones en esta ventana.')}</p></div>`;
         return;
       }
       bodyEl.innerHTML = `<ul class="mb-detail-list">${posts.map((p) => this._detailPostHtml(p)).join('')}</ul>`;
@@ -2396,9 +2397,9 @@
           </div>
           <p class="mb-detail-post-content">${content}</p>
           <div class="mb-detail-post-foot">
-            <span class="mb-detail-post-metric"><i class="fas fa-heart"></i> ${this._compactNum(likes)}</span>
-            <span class="mb-detail-post-metric"><i class="fas fa-comment"></i> ${this._compactNum(comments)}</span>
-            <span class="mb-detail-post-metric"><i class="fas fa-retweet"></i> ${this._compactNum(shares)}</span>
+            <span class="mb-detail-post-metric"><i class="aisc-ico aisc-ico--likes"></i> ${this._compactNum(likes)}</span>
+            <span class="mb-detail-post-metric"><i class="aisc-ico aisc-ico--comments"></i> ${this._compactNum(comments)}</span>
+            <span class="mb-detail-post-metric"><i class="aisc-ico aisc-ico--refresh"></i> ${this._compactNum(shares)}</span>
             <span class="mb-detail-post-eng">${__('{n} eng', { n: this._compactNum(p.engagement_total) })}</span>
           </div>
         </li>`;

@@ -180,6 +180,7 @@
             <label class="living-filter-label" for="stratFilterStatus">${__('Estrategia')}</label>
             <select class="living-filter-select" id="stratFilterStatus" data-strat-filter="status">${statusOpts}</select>
           </div>
+          ${this._buildIntegrationBubbles()}
           ${this._reportDropdown()}
         </header>`;
     },
@@ -221,7 +222,7 @@
           </div>
           ${r.description ? `<p class="strat-card-desc">${this._esc(r.description)}</p>` : ''}
           ${chips ? `<div class="strat-card-chips">${chips}</div>` : ''}
-          ${r.copy_seed ? `<div class="strat-card-copy"><i class="fas fa-quote-left"></i> ${this._esc(r.copy_seed)}</div>` : ''}
+          ${r.copy_seed ? `<div class="strat-card-copy"><i class="aisc-ico aisc-ico--quote"></i> ${this._esc(r.copy_seed)}</div>` : ''}
           ${status === 'proposed' ? `
           <div class="strat-card-actions">
             <button type="button" class="strat-btn strat-btn--approve" data-rec-action="approve">${__('Aprobar')}</button>
