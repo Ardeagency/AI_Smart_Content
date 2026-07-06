@@ -2252,8 +2252,9 @@
         x:            { label: 'X',         icon: 'fab fa-x-twitter' },
         youtube:      { label: 'YouTube',   icon: 'fab fa-youtube' },
         linkedin:     { label: 'LinkedIn',  icon: 'fab fa-linkedin' },
-        mercadolibre: { label: 'Mercado Libre', iconSrc: '/recursos/icons/store.svg' },
-        shopify:      { label: 'Shopify',   iconSrc: '/recursos/icons/store.svg' },
+        google:       { label: 'Google',    icon: 'fab fa-google' },
+        mercadolibre: { label: 'Mercado Libre', iconSrc: '/recursos/icons/mercadolibre.svg' },
+        shopify:      { label: 'Shopify',   icon: 'fab fa-shopify' },
         amazon:       { label: 'Amazon',    iconSrc: '/recursos/icons/store.svg' },
       };
       return M[n] || { label: this._capWords ? this._capWords(n) : n, iconSrc: '/recursos/icons/store.svg' };

@@ -523,8 +523,9 @@ class DashboardView extends BaseView {
       x:            { icon: 'fab fa-x-twitter', label: 'X' },
       youtube:      { icon: 'fab fa-youtube',   label: 'YouTube' },
       linkedin:     { icon: 'fab fa-linkedin',  label: 'LinkedIn' },
-      shopify:      { iconSrc: '/recursos/icons/store.svg', label: 'Shopify' },
-      mercadolibre: { iconSrc: '/recursos/icons/store.svg', label: 'Mercado Libre' },
+      google:       { icon: 'fab fa-google',    label: 'Google' },
+      shopify:      { icon: 'fab fa-shopify',   label: 'Shopify' },
+      mercadolibre: { iconSrc: '/recursos/icons/mercadolibre.svg', label: 'Mercado Libre' },
     };
     const bubbles = list.map((p) => {
       // Fallback para plataformas sin mapeo: icono genérico de tienda + su nombre.
