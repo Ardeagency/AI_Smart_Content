@@ -2108,7 +2108,7 @@
       return `<svg class="mb-health-gauge-svg" viewBox="0 0 200 116" role="img" aria-label="${__('Salud {n} de 100', { n: Math.round(sc) })}">${segs}</svg>`;
     },
 
-    _buildHealthGauge(h) {
+    _buildHealthGauge(h, platformPerf) {
       if (!h || h.score == null) {
         if (shouldHideEmpty()) return '';
         return this._buildHealthEmpty();
