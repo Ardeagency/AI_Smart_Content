@@ -2601,6 +2601,42 @@
 .mb-health-objetivo { font-size: 0.8125rem; color: var(--text-secondary, rgba(212,209,216,0.82)); font-variant-numeric: tabular-nums; margin-bottom: 0.35rem; }
 .mb-health-objetivo strong { color: var(--text-primary, #D4D1D8); font-weight: 600; }
 
+/* Rendimiento por plataforma (dentro de la card de Salud) — redes con barra
+   relativa (engagement/post) + marketplaces con reputacion (fila sin barra). */
+.mb-pp { margin-top: 0.9rem; }
+.mb-pp-title { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); margin-bottom: 0.5rem; }
+.mb-pp-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0; }
+.mb-pp-row + .mb-pp-row { border-top: 1px solid rgba(255,255,255,0.05); }
+.mb-pp-ic {
+  width: 30px; height: 30px; flex: 0 0 auto; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+  color: #fff; font-size: 0.8rem;
+}
+.mb-pp-ic i { color: #fff; }
+.mb-pp-ic img { width: 15px; height: 15px; object-fit: contain; filter: brightness(0) invert(1); }
+.mb-pp-main { flex: 1 1 auto; min-width: 0; }
+.mb-pp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.mb-pp-name { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); }
+.mb-pp-best { font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #6bcf7f; border: 1px solid rgba(107,207,127,0.4); border-radius: 4px; padding: 1px 5px; margin-left: 4px; vertical-align: middle; }
+.mb-pp-val { font-size: 0.75rem; font-weight: 700; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mb-pp-val small { font-size: 0.625rem; font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.5)); margin-left: 3px; }
+.mb-pp-bar { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; margin-top: 0.35rem; overflow: hidden; }
+.mb-pp-bar > span { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, rgba(255,255,255,0.35), rgba(255,255,255,0.62)); }
+.mb-pp-rep { font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.mb-pp-rep small { font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.5)); }
+.mb-pp-sub { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.5)); margin-top: 2px; }
+
+/* Card de diagnostico (2da card del aside): dimensiones + tareas + pilares.
+   Separacion de la card de Salud + espaciado interno entre bloques. */
+.mb-diag-card { margin-top: 0.9rem; }
+.mb-diag-card .mb-hc-comps { margin-top: 0.4rem; }
+.mb-diag-card .mb-health-tasks { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.07); }
+/* Los pilares vienen envueltos en su propia card (.mb-stageflow) — dentro del
+   diag card se le quita el chrome para que sea una subseccion, no card-en-card. */
+.mb-diag-card .mb-section { gap: 0; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.07); }
+.mb-diag-card .mb-stageflow { background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; }
+
 /* Componentes (barras) */
 .mb-hc-comps { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem 1.5rem; }
 .mb-hc-comp { min-width: 0; }

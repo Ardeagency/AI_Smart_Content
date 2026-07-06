@@ -76,13 +76,57 @@
 
     async _loadMyBrandsData() {
       const f = this._mbFilters || { windowDays: 30, brandContainerId: null };
-      return this._campanasService.loadAll({
-        dateFromIso: f.dateFrom || null,
-        dateToIso:   f.dateTo   || null,
-        windowDays:  f.windowDays,
-        brandIds:    f.brandContainerId ? [f.brandContainerId] : null,
-        platforms:   f.platforms || null,
+      const [data, platformPerf] = await Promise.all([
+        this._campanasService.loadAll({
+          dateFromIso: f.dateFrom || null,
+          dateToIso:   f.dateTo   || null,
+          windowDays:  f.windowDays,
+          brandIds:    f.brandContainerId ? [f.brandContainerId] : null,
+          platforms:   f.platforms || null,
+        }),
+        this._loadPlatformPerf().catch(() => null),
+      ]);
+      if (data) data.platformPerf = platformPerf;
+      return data;
+    },
+
+    /* Rendimiento por plataforma para la card de Salud ("cual rinde mejor"):
+       - Redes sociales: engagement/post de TUS posts propios, por red.
+       - Marketplaces (Mercado Libre, etc.): reputacion del vendedor (metrica
+         distinta a engagement — no se mezcla en la misma escala). */
+    async _loadPlatformPerf() {
+      if (!this._supabase || !this._orgId) return null;
+      let ids = (this._campanasService?.containers || []).map((c) => c.id).filter(Boolean);
+      if (!ids.length) {
+        const { data: cs } = await this._supabase.from('brand_containers').select('id').eq('organization_id', this._orgId);
+        ids = (cs || []).map((c) => c.id).filter(Boolean);
+      }
+      if (!ids.length) return null;
+      const [postsRes, integRes] = await Promise.all([
+        this._supabase.from('brand_posts')
+          .select('network, engagement_total, sentiment_score')
+          .in('brand_container_id', ids).eq('post_source', 'own').limit(5000),
+        this._supabase.from('brand_integrations')
+          .select('platform, is_active, rep:metadata->seller_reputation_level, power:metadata->power_seller_status')
+          .in('brand_container_id', ids).eq('is_active', true),
+      ]);
+      const agg = {};
+      (postsRes.data || []).forEach((p) => {
+        const n = String(p.network || '').toLowerCase(); if (!n) return;
+        if (!agg[n]) agg[n] = { posts: 0, eng: 0, sentSum: 0, sentN: 0 };
+        agg[n].posts++; agg[n].eng += Number(p.engagement_total) || 0;
+        if (p.sentiment_score != null) { agg[n].sentSum += Number(p.sentiment_score); agg[n].sentN++; }
       });
+      const social = Object.keys(agg).map((n) => ({
+        network: n, posts: agg[n].posts,
+        engPerPost: Math.round(agg[n].eng / agg[n].posts),
+        sentiment: agg[n].sentN ? agg[n].sentSum / agg[n].sentN : null,
+      })).sort((a, b) => b.engPerPost - a.engPerPost);
+      const MKT = new Set(['mercadolibre', 'shopify', 'amazon']);
+      const marketplaces = (integRes.data || [])
+        .filter((r) => MKT.has(String(r.platform || '').toLowerCase()))
+        .map((r) => ({ platform: String(r.platform).toLowerCase(), reputation: r.rep || null, power: r.power || null }));
+      return { social, marketplaces };
     },
 
     /* ── Filtros: estado persistido en localStorage ──────────── */
@@ -260,8 +304,8 @@
               ${this._buildTopPostsSection(data?.topPosts?.data)}
             </div>
             <aside class="mb-layout-aside">
-              ${this._buildHealthGauge(data?.health?.data)}
-              ${this._buildPillarsSection(data?.pillars?.data)}
+              ${this._buildHealthGauge(data?.health?.data, data?.platformPerf)}
+              ${this._buildBrandDiagnosisCard(data?.health?.data, data?.pillars?.data)}
             </aside>
           </div>
         </div>`;
@@ -2087,8 +2131,9 @@
         ? __('Objetivo de tu segmento: <strong>{t}</strong>', { t: target }) + (gap > 0 ? __(' · te faltan <strong>{g}</strong> pts', { g: gap }) : __(' · objetivo alcanzado ✓'))
         : __('Saludable para tu segmento: <strong>{lo}–{hi}</strong>', { lo: band.p50, hi: band.p75 });
 
-      // Sidebar vertical (solo en Mi Marca): gauge centrado + componentes +
-      // alertas (componentes en zona baja) + tareas (el plan de salud).
+      // Card "Salud de tu marca": salud GLOBAL (gauge + objetivo) + rendimiento
+      // POR PLATAFORMA (cual rinde mejor). El diagnostico (dimensiones + tareas +
+      // pilares) vive ahora en su propia card (_buildBrandDiagnosisCard).
       return `
         <section class="mb-health-card mb-health-card--aside">
           <span class="mb-hero-label">${__('Salud de tu marca')}</span>
@@ -2101,9 +2146,106 @@
             </div>
           </div>
           <span class="mb-health-objetivo">${objetivo}</span>
-          ${this._buildHealthComponents(h.components)}
-          ${this._buildHealthTasks(h.tasks)}
+          ${this._buildPlatformPerf(platformPerf)}
         </section>`;
+    },
+
+    /* Card "Como mejorar tu salud": el diagnostico accionable — dimensiones
+       (humanizadas) + tareas para subir + pilares de contenido. Separado de la
+       salud global para que la card de Salud responda "que tan bien estas y por
+       plataforma", y esta responda "que hacer para mejorar". */
+    _buildBrandDiagnosisCard(h, pillarsRows) {
+      const comps   = this._buildHealthComponents(h && h.components);
+      const tasks   = this._buildHealthTasks(h && h.tasks);
+      const pillars = this._buildPillarsSection(pillarsRows);
+      if (!comps && !tasks && !pillars) return '';
+      return `
+        <section class="mb-health-card mb-health-card--aside mb-diag-card">
+          <span class="mb-hero-label">${__('Cómo mejorar tu salud')}</span>
+          ${comps}
+          ${tasks}
+          ${pillars}
+        </section>`;
+    },
+
+    /* ── Rendimiento por plataforma (dentro de la card de Salud) ─────────
+       Redes: engagement/post (barra relativa al mejor + tag "mejor"). Marketplaces:
+       reputacion del vendedor (metrica distinta, fila aparte, sin barra). */
+    _platPerfMeta(net) {
+      const n = String(net || '').toLowerCase();
+      const M = {
+        instagram:    { label: 'Instagram', icon: 'fab fa-instagram' },
+        facebook:     { label: 'Facebook',  icon: 'fab fa-facebook' },
+        tiktok:       { label: 'TikTok',    icon: 'fab fa-tiktok' },
+        x:            { label: 'X',         icon: 'fab fa-x-twitter' },
+        youtube:      { label: 'YouTube',   icon: 'fab fa-youtube' },
+        linkedin:     { label: 'LinkedIn',  icon: 'fab fa-linkedin' },
+        mercadolibre: { label: 'Mercado Libre', iconSrc: '/recursos/icons/store.svg' },
+        shopify:      { label: 'Shopify',   iconSrc: '/recursos/icons/store.svg' },
+        amazon:       { label: 'Amazon',    iconSrc: '/recursos/icons/store.svg' },
+      };
+      return M[n] || { label: this._capWords ? this._capWords(n) : n, iconSrc: '/recursos/icons/store.svg' };
+    },
+    /** Traduce el seller_reputation_level de Mercado Libre a lenguaje plano. */
+    _meliRepMeta(rep) {
+      const R = {
+        '5_green':       { label: __('Verde'),       sub: __('excelente'), color: '#6bcf7f' },
+        '4_light_green': { label: __('Verde claro'), sub: __('buena'),     color: '#9ccc65' },
+        '3_yellow':      { label: __('Amarilla'),    sub: __('regular'),   color: '#e0a045' },
+        '2_orange':      { label: __('Naranja'),     sub: __('baja'),      color: '#e08545' },
+        '1_red':         { label: __('Roja'),        sub: __('crítica'),   color: '#e06464' },
+      };
+      return R[String(rep || '').toLowerCase()] || null;
+    },
+    _platIconHtml(m) {
+      return m.iconSrc
+        ? `<img src="${this._esc(m.iconSrc)}" alt="" aria-hidden="true">`
+        : `<i class="${this._esc(m.icon)}"></i>`;
+    },
+    _buildPlatformPerf(pp) {
+      const social = Array.isArray(pp && pp.social) ? pp.social.filter((s) => s.posts > 0) : [];
+      const mkts   = Array.isArray(pp && pp.marketplaces) ? pp.marketplaces : [];
+      if (!social.length && !mkts.length) return '';
+      const max = Math.max(1, ...social.map((s) => s.engPerPost));
+      const socialRows = social.map((s, i) => {
+        const m = this._platPerfMeta(s.network);
+        const w = Math.max(4, Math.round(s.engPerPost / max * 100));
+        const best = i === 0 && social.length > 1 && s.engPerPost > 0;
+        return `
+          <div class="mb-pp-row">
+            <span class="mb-pp-ic">${this._platIconHtml(m)}</span>
+            <div class="mb-pp-main">
+              <div class="mb-pp-head">
+                <span class="mb-pp-name">${this._esc(m.label)}${best ? ` <span class="mb-pp-best">${__('mejor')}</span>` : ''}</span>
+                <span class="mb-pp-val">${this._compactNum(s.engPerPost)}<small>${__('eng/post')}</small></span>
+              </div>
+              <div class="mb-pp-bar"><span style="width:${w}%"></span></div>
+            </div>
+          </div>`;
+      }).join('');
+      const mktRows = mkts.map((mk) => {
+        const m = this._platPerfMeta(mk.platform);
+        const rep = this._meliRepMeta(mk.reputation);
+        const repHtml = rep
+          ? `<span class="mb-pp-rep" style="color:${rep.color}"><i class="fas fa-circle" style="font-size:0.5rem"></i> ${this._esc(rep.label)} <small>${this._esc(rep.sub)}</small></span>`
+          : `<span class="mb-pp-rep">${__('Conectado')}</span>`;
+        return `
+          <div class="mb-pp-row mb-pp-row--mkt">
+            <span class="mb-pp-ic">${this._platIconHtml(m)}</span>
+            <div class="mb-pp-main">
+              <div class="mb-pp-head">
+                <span class="mb-pp-name">${this._esc(m.label)}</span>
+                ${repHtml}
+              </div>
+              <div class="mb-pp-sub">${__('Reputación de vendedor')}</div>
+            </div>
+          </div>`;
+      }).join('');
+      return `
+        <div class="mb-pp">
+          <div class="mb-pp-title">${__('Rendimiento por plataforma')}</div>
+          ${socialRows}${mktRows}
+        </div>`;
     },
 
     /* Alertas: componentes de salud en zona baja (<50) como chips. Viven en el
@@ -2136,6 +2278,19 @@
       return 'fa-chart-simple';
     },
 
+    /* Etiqueta en lenguaje plano por dimension (el nombre tecnico del RPC no lo
+       entiende un usuario normal). Mapea por key; cae al label del RPC si es una
+       key nueva. El detalle de cada componente ya explica el numero. */
+    _humanCompLabel(c) {
+      const map = {
+        cadencia:   __('Publicas seguido'),
+        coherencia: __('Suenas como tu marca'),
+        alineacion: __('Repites lo que funciona'),
+        resonancia: __('Le gusta a tu público'),
+        trends:     __('Aprovechas lo que sube'),
+      };
+      return map[String(c.key || '').toLowerCase()] || c.label || c.key;
+    },
     _buildHealthComponents(components) {
       const list = Array.isArray(components) ? components : [];
       if (!list.length) return '';
@@ -2148,7 +2303,7 @@
             <span class="mb-hc-comp-icon"><i class="fas ${this._healthCompIcon(c)}"></i></span>
             <div class="mb-hc-comp-main">
               <div class="mb-hc-comp-head">
-                <span class="mb-hc-comp-label">${this._esc(c.label || c.key)}</span>
+                <span class="mb-hc-comp-label">${this._esc(this._humanCompLabel(c))}</span>
                 <span class="mb-hc-comp-score mb-hc-comp-score--${lvl}">${sc}</span>
               </div>
               <div class="mb-hc-ticks" style="--pct:${sc}%;--c:${lvlColor[lvl]}"></div>
