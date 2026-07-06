@@ -2622,7 +2622,7 @@
 .mb-pp-val { font-size: 0.75rem; font-weight: 700; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .mb-pp-val small { font-size: 0.625rem; font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.5)); margin-left: 3px; }
 .mb-pp-bar { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; margin-top: 0.35rem; overflow: hidden; }
-.mb-pp-bar > span { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, rgba(255,255,255,0.35), rgba(255,255,255,0.62)); }
+.mb-pp-bar > span { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, rgba(var(--brand-primary-rgb, 255,101,0), 0.45), var(--brand-primary, #FF6500)); }
 .mb-pp-rep { font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .mb-pp-rep small { font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.5)); }
 .mb-pp-sub { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.5)); margin-top: 2px; }
