@@ -239,6 +239,11 @@
     },
 
     _buildCompetenciaHtml(data) {
+      // Sin perfiles monitoreados NO se pintan las secciones a medio-vacio (cada
+      // una con su propio texto "aun no..."). Un solo empty state premium de la
+      // plataforma, con CTA a Monitoreo. El resto del panel se enciende solo
+      // cuando hay perfiles que vigilar.
+      if (this._isCompetenceEmpty(data)) return this._buildCompetenceEmptyState();
       return `
         <div class="insight-page mb-dash" id="compPage">
           ${this._buildBattlefield(data?.kpis?.data, data?.top?.data, data?.kpisPrev?.data)}
@@ -246,6 +251,29 @@
           ${this._buildWinningFormula(data?.intelligence?.data)}
           ${this._buildAudienceVoice(data?.voice?.data)}
           ${this._buildRivalRisk(data?.risk?.data)}
+        </div>`;
+    },
+
+    /* Competencia vacia = no hay NINGUN perfil monitoreado (sin actores). Sin
+       perfiles, las tres secciones quedarian vacias; en su lugar mostramos el
+       empty state unificado. (Si hay perfiles pero aun sin actividad, el panel
+       se pinta normal: _buildBattlefield explica el caso 24-48h con chips.) */
+    _isCompetenceEmpty(data) {
+      const top = Array.isArray(data?.top?.data) ? data.top.data : [];
+      return top.length === 0;
+    },
+
+    _buildCompetenceEmptyState() {
+      return `
+        <div class="insight-page" data-comp-empty="monitoring">
+          ${this.emptyState({
+            iconSrc: '/recursos/icons/monitoring.svg',
+            icon: 'fa-crosshairs',
+            title: __('Aún no monitoreas perfiles'),
+            subtitle: __('Este panel se enciende cuando monitoreas perfiles: agrega a tus competidores (para vigilarlos) y a tus referentes (para aprender de ellos) desde Monitoreo. Verás quién domina tu nicho, de qué se queja su audiencia y dónde son vulnerables.'),
+            primaryLabel: __('Ir a Monitoreo'),
+            primaryAction: 'comp-go-monitoring',
+          })}
         </div>`;
     },
 
@@ -540,12 +568,12 @@
           </div>
           ${negs.length ? `
             <div class="comp-voice-block comp-voice-block--neg">
-              <span class="comp-voice-label"><i class="fas fa-triangle-exclamation"></i> ${__('Se quejan de')}</span>
+              <span class="comp-voice-label"><i class="aisc-ico aisc-ico--alert-warning"></i> ${__('Se quejan de')}</span>
               <ul class="comp-voice-list">${negs.map(quote).join('')}</ul>
             </div>` : ''}
           ${poss.length ? `
             <div class="comp-voice-block comp-voice-block--pos">
-              <span class="comp-voice-label"><i class="fas fa-heart"></i> ${__('Aman')}</span>
+              <span class="comp-voice-label"><i class="aisc-ico aisc-ico--likes"></i> ${__('Aman')}</span>
               <ul class="comp-voice-list">${poss.map(quote).join('')}</ul>
             </div>` : ''}
         </article>`;
@@ -604,6 +632,15 @@
           if (sel.key === 'platform') this._onCompFilterChange({ platforms: sel.value ? [sel.value] : null });
           return;
         }
+        // CTA del empty state: ir a Monitoreo (donde se agregan perfiles).
+        const goMon = e.target.closest('[data-action="comp-go-monitoring"]');
+        if (goMon && window.router) {
+          e.preventDefault();
+          const path = window.location.pathname || '';
+          const base = path.startsWith('/org/') ? path.split('/').slice(0, 4).join('/') : '';
+          window.router.navigate(base ? `${base}/monitoring` : '/monitoring');
+          return;
+        }
         const el = e.target.closest('[data-comp-entity]');
         if (!el) return;
         this._openCompetitorDetail(el.dataset.compEntity, el.dataset.compName);
@@ -626,7 +663,7 @@
       const bodyEl  = document.getElementById('mbDetailBody');
       if (titleEl) titleEl.textContent = name || __('Rival');
       if (subEl)   subEl.textContent = __('Cargando…');
-      if (bodyEl)  bodyEl.innerHTML = `<div class="mb-detail-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+      if (bodyEl)  bodyEl.innerHTML = `<div class="mb-detail-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i></div>`;
       ov.classList.add('active'); dr.classList.add('active');
       document.body.style.overflow = 'hidden';
       if (this._detailEscHandler) document.addEventListener('keydown', this._detailEscHandler);
@@ -642,7 +679,7 @@
       } catch (e) {
         console.error('[comp detail] load failed:', e?.message || e);
         if (subEl) subEl.textContent = '';
-        if (bodyEl) bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="fas fa-triangle-exclamation"></i><p>${__('No se pudieron cargar las publicaciones.')}</p></div>`;
+        if (bodyEl) bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="aisc-ico aisc-ico--alert-warning"></i><p>${__('No se pudieron cargar las publicaciones.')}</p></div>`;
       }
     },
   });
