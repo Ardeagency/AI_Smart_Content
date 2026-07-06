@@ -2285,7 +2285,7 @@
       const map = {
         cadencia:   __('Constancia de publicación'),
         coherencia: __('Coherencia con tu ADN'),
-        alineacion: __('Alineación a tu fórmula'),
+        alineacion: __('Uso de tu fórmula ganadora'),
         resonancia: __('Resonancia con tu audiencia'),
         trends:     __('Aprovechamiento de tendencias'),
       };
@@ -2305,9 +2305,19 @@
           ? __('Publicas {a} veces/semana · tu categoría ~{b}', { a: nums[0], b: nums[1] })
           : (c.detail || '');
       }
+      // Alineacion: recupera la combinacion concreta (ej. "alegre + behind_scenes")
+      // del detalle del RPC y limpia snake_case. Deja claro que es RENDIMIENTO
+      // (la receta que mas te rinde), distinto de la Coherencia con tu ADN (IDENTIDAD).
+      if (key === 'alineacion') {
+        const raw = (String(c.detail || '').match(/\(([^)]+)\)/) || [])[1];
+        const combo = raw ? raw.replace(/_/g, ' ').trim() : '';
+        return combo
+          ? __('{n}% usa tu combinación de mayor rendimiento ({c})', { n, c: combo })
+          : __('{n}% usa la combinación que mejor te rinde', { n });
+      }
       const T = {
-        coherencia: __('{n}% de tu contenido tiene coherencia con tu ADN', { n }),
-        alineacion: __('{n}% de tu contenido aplica tu fórmula ganadora', { n }),
+        // Coherencia = IDENTIDAD/voz (suena a tu marca), no rendimiento.
+        coherencia: __('{n}% de tu contenido mantiene tu identidad y tono de marca', { n }),
         resonancia: __('{n}% de tu audiencia responde en positivo', { n }),
         trends:     __('{n}% de aprovechamiento de las tendencias de tu nicho', { n }),
       };
