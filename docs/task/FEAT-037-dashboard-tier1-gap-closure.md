@@ -92,8 +92,20 @@ Agency).
 6. Mi Marca enriquecido (`kpis_strip`, `platform_health`, `comment_risk`,
    `featured_platform`, `featured_campaign_ad`, `featured_profile_details`,
    `alert_score`).
-7. Cleanup: `DROP` de las 5 RPCs legacy monoliticas + el overload viejo de
-   `dashboard_mimarca_health` (sin `p_platforms`) tras confirmar 0 refs.
+7. [x] **Cleanup DROP** [HECHO 2026-07-06]. Dropeadas 10 funciones tras verificar
+   **0 refs en frontend (`js/`+`functions/`) + ai-engine (prod, `src/`) + cuerpos
+   de funciones/vistas de BD**:
+   - 5 monoliticas: `dashboard_mi_marca`, `_mi_marca_v2`, `_competencia`,
+     `_estrategia`, `_tendencias`.
+   - overload viejo de `dashboard_mimarca_health` (5-arg, sin `p_platforms`) — el
+     frontend (`CampanasDataService.js:129`) llama la nueva (6-arg con `p_platforms`);
+     resuelto el bug latente de ambiguedad de overload. La nueva se conserva.
+   - 4 superseded brand_container-scoped (reemplazadas por las org-scoped):
+     `dashboard_audience_demand`, `_targeted_trends`, `_market_intelligence`,
+     `_brand_health`.
+   Backup de las 11 definiciones (por si hay que restaurar) en
+   `~/.claude/arde-tools/supabase/backups/feat037-dropped-rpcs-2026-07-06.sql`.
+   Inventario `dashboard_*`: 84 → 74 en BD; huerfanas-a-cablear 25 → 21.
 
 ### Fase 3 — Capacidades de plataforma
 8. Export PDF/CSV (reusar pipeline HTML deck -> PDF documentado en memoria).
