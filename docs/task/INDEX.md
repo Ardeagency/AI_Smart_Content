@@ -80,6 +80,7 @@ BUG-004, SPRINT-FRONTEND-100)
 | [OPS-003](./OPS-003-supabase-cli-migrations.md) | Existe `supabase/migrations/.gitkeep` pero no el baseline. Falta `supabase link` + `supabase db dump` -> baseline.sql. |
 | [OPS-005](./OPS-005-secrets-backup-strategy.md) | Backup del `.env` de ai-engine: decidir A (Supabase Vault) / B (1Password) / C (archivo cifrado) e implementar. Hoy solo `.env`. |
 | [DATA-001](./DATA-001-configure-competitor-entities.md) | 22 `intelligence_entities` pero `competitor_ads`/`retail_prices`/`visual_references` siguen en 0. Configurar competidores reales con dominio/target valido (depende en parte de OPS-006). Requiere input del usuario sobre que marcas. |
+| [DATA-002](./DATA-002-own-posts-hashtags-not-extracted.md) | Posts propios no capturan `hashtags` (0/250 en toda org; solo competidores via Apify). La ingesta own (Netlify api-brand-sync-meta + sensor meta_posts ai-engine) no parsea `#tags` del texto. Bloquea `dashboard_estrategia_hashtags` para own → widget de Mi Marca quedaria muerto. Descubierto en FEAT-037 #5. |
 
 ## 🟢 Low — falta construir (infra, no verificable desde el repo)
 
