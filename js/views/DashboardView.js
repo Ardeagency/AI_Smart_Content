@@ -486,11 +486,15 @@ class DashboardView extends BaseView {
         .select('platform')
         .in('brand_container_id', ids)
         .eq('is_active', true);
-      // Solo plataformas SOCIALES (las de contenido); normaliza twitter→x. Ignora
-      // integraciones web (google/shopify/meta-pixel) que no son "plataformas".
-      const NORM = { instagram: 'instagram', facebook: 'facebook', tiktok: 'tiktok', x: 'x', twitter: 'x', youtube: 'youtube', linkedin: 'linkedin' };
+      // TODAS las integraciones activas (sociales + marketplaces: Mercado Libre,
+      // Shopify, etc.), no solo las sociales. Normaliza twitter→x y deduplica.
       const set = new Set();
-      (data || []).forEach((r) => { const k = NORM[String(r.platform || '').toLowerCase()]; if (k) set.add(k); });
+      (data || []).forEach((r) => {
+        let p = String(r.platform || '').toLowerCase().trim();
+        if (!p) return;
+        if (p === 'twitter') p = 'x';
+        set.add(p);
+      });
       this._heroIntegrations = [...set];
     } catch (_) { /* silencioso: las burbujas son informativas */ }
     return this._heroIntegrations;
@@ -500,17 +504,25 @@ class DashboardView extends BaseView {
      Identidad/INFO). Se inyecta en la barra de filtros de cada tab. */
   _buildIntegrationBubbles() {
     const list = Array.isArray(this._heroIntegrations) ? this._heroIntegrations : [];
+    // Sociales → icono de marca de FontAwesome (en el subset). Marketplaces/web
+    // (Mercado Libre, Shopify) → SVG de /recursos/icons (FA no trae esos glifos).
     const META = {
-      instagram: { icon: 'fa-instagram', label: 'Instagram' },
-      facebook:  { icon: 'fa-facebook',  label: 'Facebook' },
-      tiktok:    { icon: 'fa-tiktok',    label: 'TikTok' },
-      x:         { icon: 'fa-x-twitter', label: 'X' },
-      youtube:   { icon: 'fa-youtube',   label: 'YouTube' },
-      linkedin:  { icon: 'fa-linkedin',  label: 'LinkedIn' },
+      instagram:    { icon: 'fab fa-instagram', label: 'Instagram' },
+      facebook:     { icon: 'fab fa-facebook',  label: 'Facebook' },
+      tiktok:       { icon: 'fab fa-tiktok',    label: 'TikTok' },
+      x:            { icon: 'fab fa-x-twitter', label: 'X' },
+      youtube:      { icon: 'fab fa-youtube',   label: 'YouTube' },
+      linkedin:     { icon: 'fab fa-linkedin',  label: 'LinkedIn' },
+      shopify:      { iconSrc: '/recursos/icons/store.svg', label: 'Shopify' },
+      mercadolibre: { iconSrc: '/recursos/icons/store.svg', label: 'Mercado Libre' },
     };
     const bubbles = list.map((p) => {
-      const m = META[p]; if (!m) return '';
-      return `<span class="dash-integ-bubble" title="${this._esc(m.label)}" aria-label="${this._esc(m.label)}"><i class="fab ${m.icon}"></i></span>`;
+      // Fallback para plataformas sin mapeo: icono genérico de tienda + su nombre.
+      const m = META[p] || { iconSrc: '/recursos/icons/store.svg', label: this._capitalize ? this._capitalize(p) : p };
+      const inner = m.iconSrc
+        ? `<img src="${this._esc(m.iconSrc)}" alt="" aria-hidden="true">`
+        : `<i class="${this._esc(m.icon)}"></i>`;
+      return `<span class="dash-integ-bubble" title="${this._esc(m.label)}" aria-label="${this._esc(m.label)}">${inner}</span>`;
     }).join('');
     return `
       <div class="dash-integ" role="group" aria-label="${__('Integraciones activas')}">
