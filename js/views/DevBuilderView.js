@@ -716,6 +716,13 @@ class DevBuilderView extends DevBaseView {
     this.applyTabLayout('settings');
     // Fase 2A: productividad (auto-save, undo/redo, Cmd+K, Issues)
     if (typeof this.initProductivity === 'function') this.initProductivity();
+
+    // FEAT-034: si se llegó con ?test=1 (desde "Probar" en Mis Flujos), abrir el
+    // modal de prueba una vez el flujo está cargado y la UI montada.
+    if (this.autoOpenTest && typeof this.showTestModal === 'function') {
+      this.autoOpenTest = false;
+      this.showTestModal();
+    }
   }
 
   /**
@@ -763,6 +770,11 @@ class DevBuilderView extends DevBaseView {
         window.history.replaceState({}, '', url.pathname + url.search);
       }
     }
+
+    // FEAT-034: "Probar flujo" desde la card de Mis Flujos abre el builder con
+    // ?test=1 → auto-abrir el modal de prueba (reusa el runner real del builder,
+    // no un stub aparte). Solo tras cargar el flujo (requiere webhook configurado).
+    this.autoOpenTest = urlParams.get('test') === '1' && !!this.flowId;
   }
 
   async loadCategories() {

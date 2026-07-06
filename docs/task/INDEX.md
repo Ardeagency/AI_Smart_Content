@@ -4,7 +4,17 @@ Ordenado por severity desc. Cuando se cierra una tarea: eliminar el archivo Y la
 linea aqui. Las que solo esperan accion humana viven en
 [`PENDING-HUMAN-VERIFICATION.md`](./PENDING-HUMAN-VERIFICATION.md).
 
-**Ultima actualizacion: 2026-06-03** — barrido de cierre. Se eliminaron 3 tareas
+**Ultima actualizacion: 2026-07-03** — reconciliacion de reorganizacion documental.
+Se indexaron 5 tareas de junio que existian en `docs/task/` pero faltaban en este
+INDEX (FEAT-037-tag-productions, FEAT-038, FEAT-040, AUDIT-i18n-mobile; +FEAT-041
+CERRADA → movida a `docs/archive/`). Se documentaron 2 colisiones de numero:
+**FEAT-037 (×3)** = `centro-de-mando-dev-deploy` (probable cerrada) + `dashboard-tier1-gap-closure`
+(en curso) + `tag-productions-to-strategy` (Fase 2 pendiente); **FEAT-036 (×2)** =
+`kie-rate-governor` + `billing-console` (ambas activas). Renumerar es riesgoso
+(cambia identidad/historial) → se deja la colision documentada, no renumerada. Los
+4 docs de referencia se movieron a `docs/task/reference/`.
+
+**2026-06-03** — barrido de cierre. Se eliminaron 3 tareas
 (FEAT-035 roles/permisos: enums confirmados en BD; FEAT-035 flows-market: rediseño
 entregado; AUDIT-005: deuda DB aplicada en lo sustantivo — seguridad + indices),
 se indexo FEAT-037 (dashboard Tier-1, en curso) y BUG-005 (residuo de AUDIT-005:
@@ -42,22 +52,28 @@ BUG-004, SPRINT-FRONTEND-100)
 | [FEAT-022](./FEAT-022-rbac-granular.md) | RBAC formal owner/admin/editor/viewer: matriz de permisos + audit de RLS policies + UI + transfer ownership. Hoy solo hay selector de rol suelto. |
 | [FEAT-018](./FEAT-018-notifications-rich-model.md) | Modelo rico de notifs: render ya existe (`Navigation.js:944`), pero falta backfill SQL de `metadata.label` (solo 2 de ~50 filas lo tienen) + backend que escriba metadata al crear. |
 | [FEAT-031](./FEAT-031-dev-portal-iteration-2026-05-22.md) | Backend ai-engine: B1 endpoint `POST /api/vera/train` (vectoriza file/prompt/image en `ai_global_vectors`); B2 extender edge function `provision-user-start` para guardar `new_brand_name_oficial`/`slogan`/`logo_url`. Frontend ya cablea ambos. |
-| [FEAT-037](./FEAT-037-dashboard-tier1-gap-closure.md) | Dashboard Tier-1 gap closure: ~33 RPCs `dashboard_*` huerfanas + capacidades de plataforma (frescura, deltas, export, alertas). **Fase 1 EN CURSO** (commit 21f032c4: benchmark Mi Marca vs Competencia cableado). Falta Fases 2-3 + verificacion humana. |
+| [FEAT-037](./FEAT-037-dashboard-tier1-gap-closure.md) | Dashboard Tier-1 gap closure: ~33 RPCs `dashboard_*` huerfanas + capacidades de plataforma (frescura, deltas, export, alertas). **Fase 1 EN CURSO** (commit 21f032c4: benchmark Mi Marca vs Competencia cableado). Falta Fases 2-3 + verificacion humana. ⚠ Colision de numero FEAT-037 (ver encabezado). |
+| [FEAT-037-tag](./FEAT-037-tag-productions-to-strategy.md) | Taguear producciones al contexto de estrategia (`flow_runs`=fuente de verdad; `runs_outputs` hereda). **Fase 1 desplegada** (2026-06-24). Falta Fase 2: capturar brief/campaign en el disparo (Studio form / Vera tool / scheduled). Desbloquea FEAT-038. ⚠ Colision FEAT-037. |
+| [FEAT-038](./FEAT-038-production-satellites-canvas.md) | Satelites de produccion/publicacion en canvas. PENDIENTE — bloqueado por FEAT-037-tag (necesita el tagging de producciones a estrategia). |
+
+<!-- FEAT-040 CERRADA 2026-07-06: comentarios propios verificados en prod (87 filas source=meta_api en brand_post_comments); D (reception) cableado — RPC dashboard_brand_post_reception existe en BD y la consume CampanasDataService. Ver "Resueltas 2026-07-06". -->
+<!-- FEAT-018-related: reception RPC ya vive; ver seccion Medium. -->
 
 ## 🟡 Medium — falta construir
 
 | ID | Que falta EXACTAMENTE |
 |---|---|
 | [PERF-001](./PERF-001-cleanup-optimization.md) | Limpieza+optimizacion. HECHO en rama `perf/cleanup-optimization` (perf glass/animaciones, 3 bugs runtime, -825 lineas muertas, command-center.css route-split + infra `_loadCss`). PENDIENTE QA visual: route-split del resto del CSS (developer.css 351KB con class-moves + mapa de inyeccion verificado), consolidar escapeHtml (seguridad), `.card` glass->solido, keyframes, z-index tokens, dividir monolitos. |
-| [FEAT-034](./FEAT-034-dev-flows-test-button.md) | `DevFlowsView.js:396` `testFlow()` es stub (console.log + toast "en desarrollo"); cablear corrida real en modo test (coordinar con FEAT-033). |
 | [FEAT-036](./FEAT-036-billing-console.md) | Billing console `/dev/lead/billing`. Fase 1 cerrada (Plans CRUD BD + Credit Packages CRUD completo sobre `credit_packages`). Pendiente Fase 2 (Subscriptions + Usage history) y Fase 3 (auto-sync Stripe/Wompi al editar precio). |
-| [FEAT-028](./FEAT-028-modal-migration.md) | Migrar ~17 modales custom restantes a `window.Modal` (1 migrado + validado). 3-5 por sesion. |
+| [FEAT-028](./FEAT-028-modal-migration.md) | Migracion de modales a `window.Modal`. **Ad-hoc de bajo riesgo = HECHO** (12 migrados). Lo que resta son SOLO los diferidos-con-justificacion: persistentes-toggle en tooling dev core (DevWebhooks/DevTest/DevBuilder), Settings/Navigation chrome global — ya tienen role/aria-modal/ESC, refactor de lifecycle de alto blast radius que el doc marca "NO migrar a ciegas". Requiere sesion dedicada CON validacion en browser, no es limpieza mecanica. Decision pendiente: cerrar alcance a "ad-hoc" y borrar, o agendar sesion browser. |
 | [FEAT-029](./FEAT-029-brand-creative-brief-rebalance.md) | Fase 1 cerrada (caps + IGNIS limpiado). Falta Fase 2b (validacion server-side de hard caps en `InfoPanel.mixin.js` saveBrandContainerFieldById + generador de brief con LLM cheap) y Fase 3 (schema redesign formal). No urgente. |
 | [FEAT-025](./FEAT-025-mercadolibre-api-publica-fiche.md) | **BLOQUEADA-EXTERNO** (verificado 2026-05-27): la API de ML ya no es publica, devuelve 403 `PA_UNAUTHORIZED` sin token. Requiere registrar app ML + OAuth, o seguir con scrape HTML + headless. Decision de producto pendiente. |
 | [FEAT-030](./FEAT-030-n8n-flow-output-semantics.md) | BD ya parchada (2026-05-23); falta tocar el flow IGNIS en n8n: renombrar `copys`->`scene_prompt` y agregar `post_copy`/`post_hashtags`. Owner: equipo n8n (herramienta externa). |
 | [FEAT-032](./FEAT-032-comfyui-flows-publishing.md) | Build del comfy-kie-adapter: `parser.js` + `resolver.js` + `orchestrator.js` + executors en ai-engine + POC con flow IGNIS. Discovery cerrado 2026-05-23. |
 | [FEAT-033](./FEAT-033-comfy-flow-bridge.md) | Puente orquestacion ComfyUI ai-engine<->content-flows: migracion tabla `comfy_flow_jobs` + `comfy-flow-runner.service.js` + pool de N workers en content-flows. Diseño aprobado 2026-05-25. |
 | [FEAT-012](./FEAT-012-user-provisioning-end-to-end.md) | Provisioning end-to-end: requiere decision de producto (invitation-only vs autoservicio) + email sender (Resend). 3 endpoints hardcoded inexistentes en `DevLeadUserProvisioningView`. |
+| [FEAT-040](./FEAT-040-own-post-comments-collection.md) | Comentarios de posts propios: automatico y validado; segun el doc "solo falta D" (verificacion). Casi cerrada — confirmar y borrar. |
+| [AUDIT-i18n](./AUDIT-i18n-mobile-2026-06-16.md) | Auditoria de i18n y responsive movil del frontend. Referencia/diagnostico; no accionable como una sola tarea. |
 | [OPS-006](./OPS-006-meta-ad-library-diagnostico.md) | Decidir path A (Meta App Review) / B (Apify) / C (pausar). `meta_ad_library_sync` activo pero `competitor_ads` vacia. Decision estrategica. |
 | [OPS-012](./OPS-012-lexicon-review-admin.md) | `DevLeadLexiconView.js` es shell ("Proximamente"). Falta UI `/dev/lexicon` (review de `dimension_lexicon`, 215 filas) + crear tabla `enrich_lexicon_proposal` (no existe en BD). |
 | [OPS-010](./OPS-010-ci-gates-staging.md) | `netlify.toml` no tiene gate `npm test` (solo cache-buster); `.github/workflows/ci.yml` corre tests en PR/push pero no bloquea el deploy. Falta gate en build + branch staging + Supabase staging separado. |
@@ -71,7 +87,6 @@ BUG-004, SPRINT-FRONTEND-100)
 |---|---|
 | [OPS-001](./OPS-001-hetzner-snapshots.md) | Configurar snapshots semanales del CCX33 en consola Hetzner. |
 | [OPS-002](./OPS-002-uptime-monitor-external.md) | Uptime monitor externo (Better Stack / UptimeRobot). |
-| [BUG-005](./BUG-005-semantic-search-vector-index-unused.md) | `ai_brand_vectors_embedding_idx` nunca escaneado (69 filas, 2 RPCs). Verificar si es "indice dormido por corpus chico" (esperado) o busqueda semantica de Vera cayendo siempre al fallback ILIKE (bug). Residuo de AUDIT-005. |
 
 ---
 
@@ -80,10 +95,46 @@ BUG-004, SPRINT-FRONTEND-100)
 Documentos de auditoria/discovery/diagnostico que informan trabajo pendiente; se
 conservan como referencia, no se ejecutan directamente.
 
-- [AUDIT-003](./AUDIT-003-enterprise-readiness-2026-05-12.md) — gap analysis enterprise readiness (roadmap/decisiones).
-- [AUDIT-004](./AUDIT-004-premium-saas-tier1-brands-2026-05-13.md) — premium SaaS Tier-1 (Fase A/B/C + costos).
-- [FEAT-032-DISCOVERY-PFA-vs-SAUL](./FEAT-032-DISCOVERY-PFA-vs-SAUL.md) — discovery PFA vs workflow Saul (soporte de FEAT-032).
-- [FEAT-032-INFORME-DIRECTOR-CREATIVO](./FEAT-032-INFORME-DIRECTOR-CREATIVO.md) — diagnostico de 14 obstaculos ComfyUI (soporte de FEAT-032/033).
+- [AUDIT-003](./reference/AUDIT-003-enterprise-readiness-2026-05-12.md) — gap analysis enterprise readiness (roadmap/decisiones).
+- [AUDIT-004](./reference/AUDIT-004-premium-saas-tier1-brands-2026-05-13.md) — premium SaaS Tier-1 (Fase A/B/C + costos).
+- [FEAT-032-DISCOVERY-PFA-vs-SAUL](./reference/FEAT-032-DISCOVERY-PFA-vs-SAUL.md) — discovery PFA vs workflow Saul (soporte de FEAT-032).
+- [FEAT-032-INFORME-DIRECTOR-CREATIVO](./reference/FEAT-032-INFORME-DIRECTOR-CREATIVO.md) — diagnostico de 14 obstaculos ComfyUI (soporte de FEAT-032/033).
+
+---
+
+## Resueltas / reclasificadas 2026-07-06 (barrido deuda "grupo verde")
+
+- **FEAT-040 (comentarios posts propios)** — CERRADA y borrada. Verificado en prod:
+  `brand_post_comments` tiene 87 filas `source='meta_api'` (recoleccion automatica
+  por el sensor `meta_posts` de ai-engine + sync Netlify). Componente D (recepcion):
+  la RPC `dashboard_brand_post_reception` EXISTE en BD y la consume
+  `CampanasDataService.js` con los params del spec (`p_min_comments`, etc.); las RPCs
+  `dashboard_brand_comment_risk` y `dashboard_mimarca_comments` tambien existen. Nada
+  pendiente de codigo.
+
+- **FEAT-034 (boton "Probar flujo")** — CERRADA y borrada. `testFlow()` en
+  `DevFlowsView.js` ya no es stub: navega a `/dev/builder?flow={id}&test=1` y el
+  builder auto-abre su modal de prueba real (`showTestModal`, runner contra
+  `webhook_url_test`). Se reusa el runner existente en vez de un segundo camino de
+  ejecucion. Sin TODO/console.log restantes. `checkUrlParams()` lee `test=1` →
+  `autoOpenTest`; `init()` dispara el modal tras cargar el flujo.
+
+- **BUG-005 (indice vectorial dormido)** — RESUELTA (root cause distinto al
+  hipotetizado). Causa real: el indice era `ivfflat vector_cosine_ops` pero las 2
+  RPCs (`match_ai_brand_vectors*`) ordenaban por `<->` (L2), no `<=>` (coseno) → el
+  planner NUNCA podia usar el indice (opclass ≠ operador), independiente del tamaño
+  del corpus. Ademas `lists=100` sobre 147 filas estaba mal dimensionado. FIX
+  aplicado: migrado a `hnsw vector_cosine_ops` (autoajustado, apto para corpus chico)
+  + alineadas ambas RPCs a `<=>`. Embeddings OpenAI 1536 normalizados → ranking
+  identico, sin cambio de comportamiento. (`track_functions=none` explica el
+  `pg_stat_user_functions` vacio; no era evidencia de "nunca se llama".)
+
+- **Limpieza:** borrados 2 duplicados de Finder huerfanos (gitignored, no trackeados,
+  sin referencias): `js/components/ColorPickerModal 2.js`, `js/views/CreditsShopView 2.js`.
+
+- **FEAT-028 (modales)** — reclasificada al estado real: los ad-hoc de bajo riesgo
+  estan migrados; lo que resta son solo los diferidos-con-justificacion (alto riesgo,
+  requieren browser). No es "grupo verde". Ver linea en Medium.
 
 ---
 

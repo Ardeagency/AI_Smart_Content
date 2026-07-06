@@ -453,12 +453,15 @@ class DevFlowsView extends DevBaseView {
   }
 
   /**
-   * Probar un flujo (ejecutar en modo test)
+   * Probar un flujo: abre el builder en modo prueba (?test=1). El builder ya
+   * tiene el runner real de test (modal + webhook_url_test); reusarlo evita un
+   * segundo camino de ejecución paralelo. FEAT-034.
    */
   async testFlow(flowId) {
-    // TODO: Implementar prueba de flujo
-    console.log('Testing flow:', flowId);
-    this.showNotification('Funcionalidad de prueba en desarrollo', 'info');
+    if (!flowId) return;
+    if (window.router) {
+      window.router.navigate(`/dev/builder?flow=${flowId}&test=1`);
+    }
   }
 
   /**
