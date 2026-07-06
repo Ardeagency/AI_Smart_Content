@@ -424,29 +424,33 @@
         const hasSent = r.positive_sentiment_ratio != null;
         const y = hasSent ? Math.round(Number(r.positive_sentiment_ratio) * 100) : 50;
         return {
-          x: Math.round(sov * 10) / 10,
+          // Escala log: piso 0.1% para que los rivales con SoV negligible se
+          // agrupen a la izquierda sin caerse del eje. `sov` guarda el real.
+          x: Math.max(0.1, Math.round(sov * 100) / 100),
+          sov: Math.round(sov * 10) / 10,
           y,
-          r: 8 + Math.sqrt(eng / maxEng) * 26,   // area ~ engagement
+          r: 6 + Math.sqrt(eng / maxEng) * 18,   // area ~ engagement (chicas = menos solape)
           color: PAL[i % PAL.length],
           label: r.entity_name,
           tipo: this._compTipoMeta(r.tipo).label,
           eng, posts: Number(r.total_posts) || 0, hasSent,
         };
       });
-      const xMax = Math.max(10, Math.ceil(Math.max(...points.map((p) => p.x)) * 1.25));
-      // Linea de referencia: 50% = frontera neutra de sentimiento.
+      // Linea de referencia: 50% = frontera neutra de sentimiento. Las etiquetas
+      // van al centro-horizontal (zona vacia entre el cluster izq. y el lider der.).
       const neutralLine = {
         id: 'sovNeutral',
         beforeDatasetsDraw(chart) {
           const { ctx, chartArea: ca, scales } = chart; if (!ca) return;
           const yMid = scales.y.getPixelForValue(50);
+          const xLbl = ca.left + (ca.right - ca.left) * 0.42;
           ctx.save();
           ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
           ctx.beginPath(); ctx.moveTo(ca.left, yMid); ctx.lineTo(ca.right, yMid); ctx.stroke();
           ctx.setLineDash([]);
-          ctx.font = '700 9.5px ui-sans-serif, system-ui, sans-serif'; ctx.textBaseline = 'bottom';
-          ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(107,207,127,0.6)'; ctx.fillText(__('SENTIMIENTO POSITIVO'), ca.left + 6, yMid - 4);
-          ctx.textBaseline = 'top'; ctx.fillStyle = 'rgba(224,100,100,0.6)'; ctx.fillText(__('SENTIMIENTO NEGATIVO'), ca.left + 6, yMid + 4);
+          ctx.font = '700 9.5px ui-sans-serif, system-ui, sans-serif'; ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(107,207,127,0.5)'; ctx.fillText(__('SENTIMIENTO POSITIVO'), xLbl, yMid - 5);
+          ctx.textBaseline = 'top'; ctx.fillStyle = 'rgba(224,100,100,0.5)'; ctx.fillText(__('SENTIMIENTO NEGATIVO'), xLbl, yMid + 5);
           ctx.restore();
         },
       };
@@ -455,6 +459,7 @@
           type: 'bubble',
           data: { datasets: [{
             data: points,
+            clip: false,   // que las burbujas de los extremos (Red Bull ~100%) no se corten
             backgroundColor: (c) => points[c.dataIndex].color + '80',
             borderColor: (c) => points[c.dataIndex].color,
             borderWidth: 1.5,
@@ -462,7 +467,7 @@
           }] },
           options: {
             responsive: true, maintainAspectRatio: false,
-            layout: { padding: { top: 8, right: 14, bottom: 2, left: 2 } },
+            layout: { padding: { top: 18, right: 34, bottom: 4, left: 12 } },
             plugins: {
               legend: { display: false },
               tooltip: {
@@ -472,13 +477,21 @@
                   label: (c) => {
                     const p = points[c.dataIndex];
                     const sent = p.hasSent ? __('{n}% positivo', { n: p.y }) : __('sin datos de sentimiento');
-                    return `${p.tipo} · ${__('{n}% del nicho', { n: p.x })} · ${this._compactNum(p.eng)} eng · ${sent}`;
+                    return `${p.tipo} · ${__('{n}% del nicho', { n: p.sov })} · ${this._compactNum(p.eng)} eng · ${sent}`;
                   },
                 },
               },
             },
             scales: {
-              x: { min: 0, max: xMax, grid: { color: GRID }, border: { display: false }, title: { display: true, text: __('Share of voice (% del engagement del nicho)'), color: TICK, font: { size: 10 } }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => v + '%', maxTicksLimit: 6 } },
+              // Escala log: con un lider aplastante (Red Bull ~99% SoV) la lineal
+              // amontonaba todo a la izquierda. Ticks solo en potencias limpias.
+              x: {
+                type: 'logarithmic', min: 0.08, max: 100,
+                grid: { color: GRID }, border: { display: false },
+                title: { display: true, text: __('Share of voice (% del engagement del nicho · escala log)'), color: TICK, font: { size: 10 } },
+                afterBuildTicks: (axis) => { axis.ticks = [0.1, 1, 10, 100].map((value) => ({ value })); },
+                ticks: { color: TICK, font: { size: 9 }, callback: (v) => v + '%' },
+              },
               y: { min: 0, max: 100, grid: { color: GRID }, border: { display: false }, title: { display: true, text: __('Sentimiento positivo'), color: TICK, font: { size: 10 } }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => v + '%', maxTicksLimit: 6 } },
             },
           },
