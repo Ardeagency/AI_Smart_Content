@@ -253,11 +253,11 @@
           <div class="mb-layout">
             <div class="mb-layout-main">
               ${this._buildLongitudinalSection(data)}
-              ${this._buildTopPostsSection(data?.topPosts?.data)}
               ${this._buildReceptionSection(data?.postReception?.data)}
               ${this._buildToneTopicSection(data?.featured)}
               ${this._buildCommentsSection(data?.comments?.data)}
               ${this._buildLeverageSection(insights)}
+              ${this._buildTopPostsSection(data?.topPosts?.data)}
             </div>
             <aside class="mb-layout-aside">
               ${this._buildHealthGauge(data?.health?.data)}

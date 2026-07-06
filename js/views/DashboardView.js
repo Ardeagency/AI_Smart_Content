@@ -120,7 +120,14 @@ class DashboardView extends BaseView {
 
     this._subscribeRealtime();
     await this._ensureFreshness();
-    this._startAutoRefresh();
+    // Auto-refresh periodico (polling cada 60s) DESACTIVADO a proposito.
+    // Recargaba toda la data en un timer ciego y, como los RPC devuelven
+    // timestamps volatiles (computed_at: now()), la firma de datos cambiaba en
+    // cada tick y forzaba un rebuild completo de innerHTML + destruccion/recreacion
+    // de charts => parpadeo visible aunque nada cambiara. La data ahora se refresca
+    // solo por eventos reales (realtime, ver _subscribeRealtime), al entrar al tab,
+    // cambiar filtros o navegar. Ese es el patron profesional: refrescar por evento
+    // genuino, no por reloj. Para reactivar: this._startAutoRefresh();
   }
 
   /* ── Frescura de datos ──────────────────────────────────────────────
