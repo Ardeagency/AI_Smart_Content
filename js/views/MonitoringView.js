@@ -64,16 +64,6 @@ class MonitoringView extends BaseView {
     '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899',
   ];
 
-  // Color por ROL del perfil (borde de la burbuja cuando no hay color custom).
-  // Deja leer de un vistazo qué es cada quien sin abrir el popover.
-  static ROLE_COLOR = {
-    competidor_directo:   '#e06464', // rojo — te disputa las ventas
-    competidor_indirecto: '#e0a045', // ámbar — compite de lado
-    referencia_cultural:  '#5b9bd5', // azul — referente / inspiración
-    aliado:               '#6bcf7f', // verde — aliado
-    owned_media:          '#a78bfa', // violeta — algo mío
-  };
-
   // Plataforma → icono (Font Awesome, ya cargado globalmente en la app).
   static PLATFORM_ICON = {
     instagram:        'fab fa-instagram',
@@ -460,7 +450,7 @@ class MonitoringView extends BaseView {
   static get COLUMNS() {
     return [
       { id: 'paused', label: __('En pausa'),    hint: __('Desactivados'),       emptyIcon: 'aisc-ico aisc-ico--pause', emptyText: __('Nada en pausa') },
-      { id: 'silent', label: __('Sin señal'),   hint: __('Activos pero callados hace rato'), emptyIcon: 'aisc-ico aisc-ico--moon', emptyText: __('Nada activo sin señal') },
+      { id: 'silent', label: __('Activados'),   hint: __('Activos, sin señal reciente'), emptyIcon: 'aisc-ico aisc-ico--moon', emptyText: __('Nada activo sin señal') },
       { id: 'calm',   label: __('Al día'),      hint: __('Activo y tranquilo'), emptyIcon: 'aisc-ico aisc-ico--check', emptyText: __('Nada por aquí todavía') },
       { id: 'news',   label: __('Con novedad'), hint: __('Cambios recientes'),  emptyIcon: 'aisc-ico aisc-ico--notification',         emptyText: __('Sin novedades por ahora') },
     ];
@@ -626,13 +616,10 @@ class MonitoringView extends BaseView {
     return `linear-gradient(${angle}deg, ${s.join(', ')})`;
   }
 
-  /** Stops de la burbuja: 1) color personalizado del usuario si existe, 2) color
-      por ROL (competidor/aliado/referente/propio) para leer de un vistazo qué es
-      cada perfil, 3) degradado de marca como último recurso (páginas / sin rol). */
+  /** Stops de la burbuja: color personalizado si existe (→ gradiente derivado),
+      si no el degradado dinámico de la marca (array de colores). */
   _bubbleStops(item) {
     if (item && item.color) return [item.color, this._lighten(item.color, 0.28)];
-    const rc = item && MonitoringView.ROLE_COLOR[item.tipo];
-    if (rc) return [rc, this._lighten(rc, 0.28)];
     return this._brandStops || ['#e09145', '#f6b26b'];
   }
 
@@ -662,25 +649,15 @@ class MonitoringView extends BaseView {
     this._cardColor = this._readCardColor();
 
     // Escala de tamaño compartida por todo el board (comparables entre columnas).
-    // Semántica ÚNICA: relevancia = impacto social (engagement 90d) PONDERADO por
-    // recencia de señal. Una cuenta grande pero inactiva se encoge (no domina el
-    // board por historia vieja), igual que "Salud por plataforma". Sin el cascadeo
-    // antiguo impacto→señales→uniforme, que hacía que el tamaño significara cosas
-    // distintas según los datos disponibles.
+    // Métrica principal = impacto social (engagement de audiencia). Si el board
+    // aún no tiene impacto medido, cae a señales captadas; si tampoco, uniforme.
     const all = Object.values(this._bubbleBuckets).flat();
-    const now = Date.now(), DAY = 86400000;
-    const recencyFactor = (it) => {
-      if (!it.lastAt) return 0.3;                       // sin señal fechada: peso bajo
-      const d = (now - new Date(it.lastAt).getTime()) / DAY;
-      if (d <= 7)  return 1;
-      if (d >= 60) return 0.2;
-      return 1 - ((d - 7) / 53) * 0.8;                  // decae de 1.0 (7d) a 0.2 (60d)
-    };
-    const metric = (i) => (Number(i.impact) || 0) * recencyFactor(i);
-    const maxData = Math.max(0, ...all.map(metric));
+    let metric = (i) => (i.impact || 0);
+    let maxData = Math.max(0, ...all.map(metric));
+    if (maxData <= 0) { metric = (i) => (i.dataCount || 0); maxData = Math.max(0, ...all.map(metric)); }
+    const uniform = maxData <= 0;
     const MINR = 30, MAXR = 66;
-    // Sin señal medible para nadie: tamaño uniforme (honesto: no hay con qué medir).
-    const radiusFor = (it) => maxData <= 0 ? 38 : MINR + (MAXR - MINR) * Math.sqrt(metric(it)) / Math.sqrt(maxData);
+    const radiusFor = (it) => uniform ? 40 : MINR + (MAXR - MINR) * Math.sqrt(metric(it)) / Math.sqrt(maxData);
 
     this._bubbleWorlds = [];
     cont.querySelectorAll('.mn-bubbles').forEach((stage) => {
