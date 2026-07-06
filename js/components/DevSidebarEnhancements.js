@@ -42,22 +42,22 @@
     const lead = isLead();
     const all = [
       // Navegación principal
-      { id: 'go-dashboard', label: 'Dashboard',     hint: '/dev/dashboard',           icon: 'fa-chart-line',    group: 'Navegación', action: () => navigate('/dev/dashboard') },
-      { id: 'go-flows',     label: 'Mis flujos',    hint: '/dev/flows',               icon: 'fa-th-large',      group: 'Navegación', action: () => navigate('/dev/flows') },
-      { id: 'go-tests',     label: 'Flow Tests',    hint: '/dev/test',                icon: 'fa-flask',         group: 'Navegación', action: () => navigate('/dev/test') },
-      { id: 'go-logs',      label: 'Logs',          hint: '/dev/logs',                icon: 'fa-terminal',      group: 'Navegación', action: () => navigate('/dev/logs') },
-      { id: 'go-webhooks',  label: 'Webhooks',      hint: '/dev/webhooks',            icon: 'fa-bolt',          group: 'Navegación', action: () => navigate('/dev/webhooks') },
-      { id: 'go-vitals',    label: 'Web Vitals',    hint: '/dev/web-vitals',          icon: 'fa-gauge',         group: 'Navegación', action: () => navigate('/dev/web-vitals') },
-      { id: 'go-training',  label: 'Entrenamiento (LLM)', hint: '/dev/lead/vera-training', icon: 'fa-brain',   group: 'Navegación', action: () => navigate('/dev/lead/vera-training'), requiresLead: true },
+      { id: 'go-dashboard', label: 'Dashboard',     hint: '/dev/dashboard',           icon: 'aisc-ico aisc-ico--growth',    group: 'Navegación', action: () => navigate('/dev/dashboard') },
+      { id: 'go-flows',     label: 'Mis flujos',    hint: '/dev/flows',               icon: 'aisc-ico aisc-ico--grid',      group: 'Navegación', action: () => navigate('/dev/flows') },
+      { id: 'go-tests',     label: 'Flow Tests',    hint: '/dev/test',                icon: 'aisc-ico aisc-ico--flask',         group: 'Navegación', action: () => navigate('/dev/test') },
+      { id: 'go-logs',      label: 'Logs',          hint: '/dev/logs',                icon: 'aisc-ico aisc-ico--consola-desarrollador',      group: 'Navegación', action: () => navigate('/dev/logs') },
+      { id: 'go-webhooks',  label: 'Webhooks',      hint: '/dev/webhooks',            icon: 'aisc-ico aisc-ico--zap',          group: 'Navegación', action: () => navigate('/dev/webhooks') },
+      { id: 'go-vitals',    label: 'Web Vitals',    hint: '/dev/web-vitals',          icon: 'aisc-ico aisc-ico--dashboard',         group: 'Navegación', action: () => navigate('/dev/web-vitals') },
+      { id: 'go-training',  label: 'Entrenamiento (LLM)', hint: '/dev/lead/vera-training', icon: 'aisc-ico aisc-ico--memory',   group: 'Navegación', action: () => navigate('/dev/lead/vera-training'), requiresLead: true },
       // Acciones rápidas
-      { id: 'new-flow',     label: 'Nuevo flujo',   hint: 'Crear · /dev/builder',     icon: 'fa-plus',          group: 'Acciones',   action: () => navigate('/dev/builder') },
-      { id: 'new-user',     label: 'Nuevo usuario', hint: 'Provisioning · Lead',      icon: 'fa-user-plus',     group: 'Acciones',   action: () => navigate('/dev/provisioning/users'), requiresLead: true },
+      { id: 'new-flow',     label: 'Nuevo flujo',   hint: 'Crear · /dev/builder',     icon: 'aisc-ico aisc-ico--add',          group: 'Acciones',   action: () => navigate('/dev/builder') },
+      { id: 'new-user',     label: 'Nuevo usuario', hint: 'Provisioning · Lead',      icon: 'aisc-ico aisc-ico--user-registration',     group: 'Acciones',   action: () => navigate('/dev/provisioning/users'), requiresLead: true },
       // Admin (lead)
-      { id: 'go-orgs',       label: 'Organizaciones', hint: '/dev/lead/orgs',          icon: 'fa-building',     group: 'Admin',      action: () => navigate('/dev/lead/orgs'),          requiresLead: true },
-      { id: 'go-team',       label: 'Team',           hint: '/dev/lead/team',          icon: 'fa-users',        group: 'Admin',      action: () => navigate('/dev/lead/team'),          requiresLead: true },
-      { id: 'go-inputs',     label: 'Inputs',         hint: '/dev/lead/input-schemas', icon: 'fa-sliders-h',    group: 'Admin',      action: () => navigate('/dev/lead/input-schemas'), requiresLead: true },
-      { id: 'go-categories', label: 'Categories',     hint: '/dev/lead/categories',    icon: 'fa-tags',         group: 'Admin',      action: () => navigate('/dev/lead/categories'),    requiresLead: true },
-      { id: 'go-lexicon',    label: 'Lexicon',        hint: '/dev/lead/lexicon',       icon: 'fa-book',         group: 'Admin',      action: () => navigate('/dev/lead/lexicon'),       requiresLead: true },
+      { id: 'go-orgs',       label: 'Organizaciones', hint: '/dev/lead/orgs',          icon: 'aisc-ico aisc-ico--organization',     group: 'Admin',      action: () => navigate('/dev/lead/orgs'),          requiresLead: true },
+      { id: 'go-team',       label: 'Team',           hint: '/dev/lead/team',          icon: 'aisc-ico aisc-ico--audience',        group: 'Admin',      action: () => navigate('/dev/lead/team'),          requiresLead: true },
+      { id: 'go-inputs',     label: 'Inputs',         hint: '/dev/lead/input-schemas', icon: 'aisc-ico aisc-ico--filter',    group: 'Admin',      action: () => navigate('/dev/lead/input-schemas'), requiresLead: true },
+      { id: 'go-categories', label: 'Categories',     hint: '/dev/lead/categories',    icon: 'aisc-ico aisc-ico--tag',         group: 'Admin',      action: () => navigate('/dev/lead/categories'),    requiresLead: true },
+      { id: 'go-lexicon',    label: 'Lexicon',        hint: '/dev/lead/lexicon',       icon: 'aisc-ico aisc-ico--book',         group: 'Admin',      action: () => navigate('/dev/lead/lexicon'),       requiresLead: true },
     ];
     return all.filter(c => !c.requiresLead || lead);
   }

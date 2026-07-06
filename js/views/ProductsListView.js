@@ -45,7 +45,7 @@ class ProductsListView extends BaseView {
   ${this.emptyState({
     id: 'productsListEmpty',
     hidden: true,
-    icon: 'fa-box-open',
+    icon: 'aisc-ico aisc-ico--product',
     iconSrc: '/recursos/icons/Identities.svg',
     title: __('Crea tu primer producto'),
     subtitle: __('Sube fotos o una URL y Vera arma la ficha: beneficios, diferenciadores y caracteristicas. Apareceran aqui como base para tus producciones.'),
@@ -554,8 +554,8 @@ class ProductsListView extends BaseView {
 
     const stepConfig = {
       picker:  { title: __('Adjuntar producto'),          icon: null,            back: false, backTo: null     },
-      url:     { title: __('URL del producto'),           icon: 'fa-link',       back: true,  backTo: 'picker' },
-      attach:  { title: __('Adjuntar archivos'),          icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
+      url:     { title: __('URL del producto'),           icon: 'aisc-ico aisc-ico--link',       back: true,  backTo: 'picker' },
+      attach:  { title: __('Adjuntar archivos'),          icon: 'aisc-ico aisc-ico--paperclip',  back: true,  backTo: 'picker' },
       loading: { title: __('Creando ficha del producto'), icon: null,            back: false, backTo: null     },
     };
 
@@ -585,7 +585,7 @@ class ProductsListView extends BaseView {
     const urlInput = root.querySelector('.attach-product-url-input');
 
     // Wiring generico de dropzones, scopeado a un grupo (un panel puede tener varios grupos).
-    const wireDropzone = (groupEl, iconClass = 'fa-file') => {
+    const wireDropzone = (groupEl, iconClass = 'aisc-ico aisc-ico--document') => {
       if (!groupEl) return { input: null, list: null };
       const dropzone = groupEl.querySelector('.attach-product-dropzone');
       const input = groupEl.querySelector('input[type="file"]');
@@ -650,8 +650,8 @@ class ProductsListView extends BaseView {
     };
 
     const attachPanel = root.querySelector('[data-panel="attach"]');
-    const photos = wireDropzone(attachPanel?.querySelector('[data-group="photos"]'), 'fa-image');
-    const docs = wireDropzone(attachPanel?.querySelector('[data-group="files"]'), 'fa-file');
+    const photos = wireDropzone(attachPanel?.querySelector('[data-group="photos"]'), 'aisc-ico aisc-ico--image');
+    const docs = wireDropzone(attachPanel?.querySelector('[data-group="files"]'), 'aisc-ico aisc-ico--document');
 
     root.querySelector('[data-action="submit-url"]')?.addEventListener('click', async (e) => {
       const submitBtn = e.currentTarget;

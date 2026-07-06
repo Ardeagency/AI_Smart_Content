@@ -567,12 +567,12 @@ class DevLogsView extends DevBaseView {
 
   getSeverityIcon(severity) {
     const icons = {
-      'info': 'fa-info-circle',
-      'warning': 'fa-exclamation-triangle',
-      'error': 'fa-times-circle',
+      'info': 'aisc-ico aisc-ico--alert-info',
+      'warning': 'aisc-ico aisc-ico--alert-warning',
+      'error': 'aisc-ico aisc-ico--close',
       'critical': 'fa-skull-crossbones'
     };
-    return icons[severity] || 'fa-circle';
+    return icons[severity] || 'aisc-ico aisc-ico--circle';
   }
 
   capitalize(str) {

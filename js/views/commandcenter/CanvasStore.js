@@ -1066,7 +1066,7 @@
     if (nodeEl) {
       nodeEl.classList.toggle('cc-node--collapsed', next);
       const ic = nodeEl.querySelector('.cc-node-collapse i');
-      if (ic) ic.className = `fas fa-${next ? 'chevron-down' : 'chevron-up'}`;
+      if (ic) ic.className = `aisc-ico aisc-ico--chevron-${next ? 'down' : 'up'}`;
     }
     this._renderEdges();
   };
@@ -2513,7 +2513,7 @@
         name: 'Estrategia general',
         description: 'Estrategia creada automaticamente al introducir el modelo de estrategias',
         color: 'blue',
-        icon: 'fa-diagram-project',
+        icon: 'aisc-ico aisc-ico--flows',
         is_default: true,
       };
       if (user?.id) insert.created_by = user.id;
@@ -2866,14 +2866,14 @@
       publish_post: 'Publicar Post',
     };
     const icons = {
-      update_persona: 'fa-users-gear',
-      create_audience: 'fa-users',
-      create_brief: 'fa-file-circle-plus',
-      create_campaign: 'fa-bullhorn',
-      pause_campaign: 'fa-pause',
-      iterate_creative: 'fa-rotate',
-      link_brief_to_campaign: 'fa-link',
-      publish_post: 'fa-paper-plane',
+      update_persona: 'aisc-ico aisc-ico--audience',
+      create_audience: 'aisc-ico aisc-ico--audience',
+      create_brief: 'aisc-ico aisc-ico--document',
+      create_campaign: 'aisc-ico aisc-ico--campaign',
+      pause_campaign: 'aisc-ico aisc-ico--pause',
+      iterate_creative: 'aisc-ico aisc-ico--refresh',
+      link_brief_to_campaign: 'aisc-ico aisc-ico--link',
+      publish_post: 'aisc-ico aisc-ico--send',
     };
 
     insights.forEach((insight, i) => {
@@ -2881,7 +2881,7 @@
       const y = startY + i * (CARD_H + CARD_GAP);
       const confidence = Math.round((Number(insight.vera_confidence) || 0) * 100);
       const actionLabel = labels[insight.action_type] || insight.action_type;
-      const icon = icons[insight.action_type] || 'fa-bolt';
+      const icon = icons[insight.action_type] || 'aisc-ico aisc-ico--zap';
       const reasoning = String(insight.vera_reasoning || '').slice(0, 200);
       const reasoningTrunc = (insight.vera_reasoning || '').length > 200 ? '…' : '';
       // expires_at relativo
@@ -3726,20 +3726,20 @@
     // canvas-only types: identity (cualquier subtipo) + campana real
     const canvasOnly = type === 'identity' || type === 'campaign-real';
     const items = [
-      { action: 'duplicate', icon: 'fa-clone',           label: size > 1 ? 'Duplicar seleccion' : 'Duplicar', kbd: M + 'D' },
-      { action: 'copy',      icon: 'fa-copy',            label: size > 1 ? 'Copiar seleccion'   : 'Copiar',   kbd: M + 'C' },
+      { action: 'duplicate', icon: 'aisc-ico aisc-ico--copy',           label: size > 1 ? 'Duplicar seleccion' : 'Duplicar', kbd: M + 'D' },
+      { action: 'copy',      icon: 'aisc-ico aisc-ico--copy',            label: size > 1 ? 'Copiar seleccion'   : 'Copiar',   kbd: M + 'C' },
     ];
     if (size <= 1 && type !== 'sticky' && type !== 'group') {
-      items.push({ action: 'collapse', icon: isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up', label: isCollapsed ? 'Expandir' : 'Colapsar' });
+      items.push({ action: 'collapse', icon: isCollapsed ? 'aisc-ico aisc-ico--chevron-down' : 'aisc-ico aisc-ico--chevron-up', label: isCollapsed ? 'Expandir' : 'Colapsar' });
     }
     if (canvasOnly) {
-      items.push({ action: 'uncanvas', icon: 'fa-eye-slash', label: size > 1 ? 'Quitar del lienzo' : 'Quitar del lienzo' });
+      items.push({ action: 'uncanvas', icon: 'aisc-ico aisc-ico--eye-off', label: size > 1 ? 'Quitar del lienzo' : 'Quitar del lienzo' });
     }
     items.push({ sep: true });
-    items.push({ action: 'delete', icon: 'fa-trash', label: size > 1 ? 'Borrar seleccion' : 'Borrar', kbd: 'Del', danger: true });
+    items.push({ action: 'delete', icon: 'aisc-ico aisc-ico--delete', label: size > 1 ? 'Borrar seleccion' : 'Borrar', kbd: 'Del', danger: true });
     items.push({ sep: true });
     if (size <= 1) {
-      items.push({ action: 'props', icon: 'fa-sliders', label: 'Propiedades' });
+      items.push({ action: 'props', icon: 'aisc-ico aisc-ico--filter', label: 'Propiedades' });
     }
     return items;
   };
@@ -3748,10 +3748,10 @@
   P._ccCtxItemsForCanvas = function (e, M) {
     const hasClip = !!(this._ccClipboard && this._ccClipboard.items && this._ccClipboard.items.length);
     return [
-      { action: 'paste',  icon: 'fa-paste',        label: 'Pegar',        kbd: M + 'V', disabled: !hasClip },
+      { action: 'paste',  icon: 'aisc-ico aisc-ico--copy',        label: 'Pegar',        kbd: M + 'V', disabled: !hasClip },
       { sep: true },
-      { action: 'sticky', icon: 'fa-note-sticky',  label: 'Agregar nota' },
-      { action: 'group',  icon: 'fa-object-group', label: 'Agregar grupo' },
+      { action: 'sticky', icon: 'aisc-ico aisc-ico--brief',  label: 'Agregar nota' },
+      { action: 'group',  icon: 'aisc-ico aisc-ico--layers', label: 'Agregar grupo' },
     ];
   };
 
@@ -3821,13 +3821,13 @@
   // (tipo historial, patron de Vera). Ver _renderStrategyPanel / _installStrategyPanel.
   P._librarySections = function () {
     return [
-      { key: 'nodos',       label: 'Nodos',       icon: 'fa-circle-nodes' },
-      { key: 'dashboard',   label: 'Dashboard',   icon: 'fa-chart-pie' },
+      { key: 'nodos',       label: 'Nodos',       icon: 'aisc-ico aisc-ico--flows' },
+      { key: 'dashboard',   label: 'Dashboard',   icon: 'aisc-ico aisc-ico--chart-pie' },
     ];
   };
 
   P._libIcon = function (key) {
-    return (this._librarySections().find((s) => s.key === key) || {}).icon || 'fa-circle';
+    return (this._librarySections().find((s) => s.key === key) || {}).icon || 'aisc-ico aisc-ico--circle';
   };
 
   P._libItemsFor = function (key) {
@@ -4048,11 +4048,11 @@
           return `<div class="cc-nodo-sublist"><div class="cc-nodo-empty">${this.escapeHtml(emptyMsg)}</div></div>`;
         }
         const fallbackIcon = ({
-          product: 'fa-box',
-          service: 'fa-tag',
-          place: 'fa-map-pin',
-          character: 'fa-masks-theater',
-          flow: 'fa-diagram-project',
+          product: 'aisc-ico aisc-ico--product',
+          service: 'aisc-ico aisc-ico--tag',
+          place: 'aisc-ico aisc-ico--places',
+          character: 'aisc-ico aisc-ico--characters',
+          flow: 'aisc-ico aisc-ico--flows',
         })[t];
         const itemsHTML = instances.map((it) => {
           const thumb = it.imageUrl
@@ -4094,25 +4094,25 @@
     // Nota (sticky) y Grupo se crean desde botones del header (son anotaciones
     // que viven SOLO dentro de la estrategia), ya no como tipos de nodo aqui.
     return [
-      { id: 'objetivo-campana',   name: 'Objetivo de Campana',   icon: 'fa-bullseye',        group: 'Objetivos',    count: cConc, type: 'concept',       desc: 'Ancla de la estrategia; define el proposito al que apunta todo el flujo' },
-      { id: 'objetivo-audiencia', name: 'Objetivo de Audiencia', icon: 'fa-users',           group: 'Objetivos',    count: cAud,  type: 'audience',      desc: 'El segmento humano que esta estrategia quiere alcanzar' },
-      { id: 'campana-real',       name: 'Campana',               icon: 'fa-bullhorn',        group: 'Realidad',     count: cCamp, type: 'campaign-real', desc: 'Campanas sincronizadas desde Meta, Google u otra plataforma' },
+      { id: 'objetivo-campana',   name: 'Objetivo de Campana',   icon: 'aisc-ico aisc-ico--goal',        group: 'Objetivos',    count: cConc, type: 'concept',       desc: 'Ancla de la estrategia; define el proposito al que apunta todo el flujo' },
+      { id: 'objetivo-audiencia', name: 'Objetivo de Audiencia', icon: 'aisc-ico aisc-ico--audience',           group: 'Objetivos',    count: cAud,  type: 'audience',      desc: 'El segmento humano que esta estrategia quiere alcanzar' },
+      { id: 'campana-real',       name: 'Campana',               icon: 'aisc-ico aisc-ico--campaign',        group: 'Realidad',     count: cCamp, type: 'campaign-real', desc: 'Campanas sincronizadas desde Meta, Google u otra plataforma' },
       // Plantillas de ejecucion (jerarquia v2): cards CREADORAS — click crea
       // el nodo en el canvas (no drill). PROTOTIPO campana → conjunto →
       // creativo que persona+Vera arman aqui para crear los de produccion
       // real. Neutrales al objetivo; lo especifico de plataforma vive en
       // metadata (guardrail: no clonar Ads Manager).
-      { id: 'exec-meta',    name: __('Campana de Meta'),           icon: 'fa-bullhorn',   group: __('Ejecucion'), create: 'campaign:meta_facebook',    desc: __('Prototipo campana → conjuntos → creativos para crear la real en Meta') },
-      { id: 'exec-google',  name: __('Campana de Google Ads'),     icon: 'fa-magnifying-glass-dollar', group: __('Ejecucion'), create: 'campaign:google_ads', desc: __('Prototipo de ejecucion para Google Ads') },
-      { id: 'exec-tiktok',  name: __('Campana de TikTok'),         icon: 'fa-music',      group: __('Ejecucion'), create: 'campaign:tiktok_ads',       desc: __('Prototipo de ejecucion para TikTok Ads') },
-      { id: 'exec-x',       name: __('Campana de X'),              icon: 'fa-hashtag',    group: __('Ejecucion'), create: 'campaign:x_ads',            desc: __('Prototipo de ejecucion para X Ads') },
-      { id: 'exec-shopify', name: __('Optimizacion de Shopify'),   icon: 'fa-store',      group: __('Ejecucion'), create: 'stopt:shopify',             desc: __('SEO estacional de la ficha de producto en Shopify') },
+      { id: 'exec-meta',    name: __('Campana de Meta'),           icon: 'aisc-ico aisc-ico--campaign',   group: __('Ejecucion'), create: 'campaign:meta_facebook',    desc: __('Prototipo campana → conjuntos → creativos para crear la real en Meta') },
+      { id: 'exec-google',  name: __('Campana de Google Ads'),     icon: 'aisc-ico aisc-ico--search', group: __('Ejecucion'), create: 'campaign:google_ads', desc: __('Prototipo de ejecucion para Google Ads') },
+      { id: 'exec-tiktok',  name: __('Campana de TikTok'),         icon: 'aisc-ico aisc-ico--music',      group: __('Ejecucion'), create: 'campaign:tiktok_ads',       desc: __('Prototipo de ejecucion para TikTok Ads') },
+      { id: 'exec-x',       name: __('Campana de X'),              icon: 'aisc-ico aisc-ico--tag',    group: __('Ejecucion'), create: 'campaign:x_ads',            desc: __('Prototipo de ejecucion para X Ads') },
+      { id: 'exec-shopify', name: __('Optimizacion de Shopify'),   icon: 'aisc-ico aisc-ico--store',      group: __('Ejecucion'), create: 'stopt:shopify',             desc: __('SEO estacional de la ficha de producto en Shopify') },
       { id: 'exec-meli',    name: __('Optimizacion de Mercado Libre'), icon: 'fa-handshake', group: __('Ejecucion'), create: 'stopt:mercadolibre',     desc: __('SEO estacional de la publicacion en Mercado Libre') },
-      { id: 'producto',           name: 'Producto',              icon: 'fa-box',             group: 'Identidades',                type: 'product',       desc: 'Productos del catalogo de la marca' },
-      { id: 'servicio',           name: 'Servicio',              icon: 'fa-tag',             group: 'Identidades',                type: 'service',       desc: 'Servicios que ofrece la marca' },
-      { id: 'lugar',              name: 'Lugar',                 icon: 'fa-map-pin',         group: 'Identidades',                type: 'place',         desc: 'Locaciones fisicas de la marca' },
-      { id: 'flow',               name: 'Flow',                  icon: 'fa-diagram-project', group: 'Identidades',                type: 'flow',          desc: 'Flujos de contenido del Studio' },
-      { id: 'brief',              name: 'Brief',                 icon: 'fa-file-lines',      group: 'Identidades',                type: 'brief',         desc: 'Briefs creativos guardados' },
+      { id: 'producto',           name: 'Producto',              icon: 'aisc-ico aisc-ico--product',             group: 'Identidades',                type: 'product',       desc: 'Productos del catalogo de la marca' },
+      { id: 'servicio',           name: 'Servicio',              icon: 'aisc-ico aisc-ico--tag',             group: 'Identidades',                type: 'service',       desc: 'Servicios que ofrece la marca' },
+      { id: 'lugar',              name: 'Lugar',                 icon: 'aisc-ico aisc-ico--places',         group: 'Identidades',                type: 'place',         desc: 'Locaciones fisicas de la marca' },
+      { id: 'flow',               name: 'Flow',                  icon: 'aisc-ico aisc-ico--flows', group: 'Identidades',                type: 'flow',          desc: 'Flujos de contenido del Studio' },
+      { id: 'brief',              name: 'Brief',                 icon: 'aisc-ico aisc-ico--document',      group: 'Identidades',                type: 'brief',         desc: 'Briefs creativos guardados' },
     ];
   };
 
@@ -4146,7 +4146,7 @@
           const action = it.create
             ? `data-nodo-create="${this.escapeHtml(it.create)}"`
             : `data-nodo-drill="${this.escapeHtml(it.id)}"`;
-          const arrow = it.create ? 'fa-plus' : 'fa-arrow-right';
+          const arrow = it.create ? 'aisc-ico aisc-ico--add' : 'aisc-ico aisc-ico--arrow-right';
           html.push(`<button type="button" class="cc-nodo-card${it.create ? ' cc-nodo-card--create' : ''}" ${action} title="${this.escapeHtml(it.name)}">
             <span class="cc-nodo-card-icon"><i class="fas ${this.escapeHtml(it.icon)}"></i></span>
             <span class="cc-nodo-card-text">
@@ -4175,17 +4175,17 @@
         modify_segment: 'Modificar Segmento',
       };
       const icons = {
-        update_persona: 'fa-users-gear',
-        create_audience: 'fa-users',
-        create_brief: 'fa-file-circle-plus',
-        create_campaign: 'fa-bullhorn',
-        pause_campaign: 'fa-pause',
-        resume_campaign: 'fa-play',
-        launch_campaign: 'fa-rocket',
-        iterate_creative: 'fa-rotate',
-        link_brief_to_campaign: 'fa-link',
-        publish_post: 'fa-paper-plane',
-        modify_segment: 'fa-bullseye',
+        update_persona: 'aisc-ico aisc-ico--audience',
+        create_audience: 'aisc-ico aisc-ico--audience',
+        create_brief: 'aisc-ico aisc-ico--document',
+        create_campaign: 'aisc-ico aisc-ico--campaign',
+        pause_campaign: 'aisc-ico aisc-ico--pause',
+        resume_campaign: 'aisc-ico aisc-ico--play',
+        launch_campaign: 'aisc-ico aisc-ico--growth',
+        iterate_creative: 'aisc-ico aisc-ico--refresh',
+        link_brief_to_campaign: 'aisc-ico aisc-ico--link',
+        publish_post: 'aisc-ico aisc-ico--send',
+        modify_segment: 'aisc-ico aisc-ico--goal',
       };
       // AUTONOMIA PARCIAL: Vera puede HACER cualquier cosa dentro de la
       // plataforma (BD, generacion de assets) sin pedir aprobacion.
@@ -4216,7 +4216,7 @@
       const cards = external.map((it) => {
         const confidence = Math.round((Number(it.vera_confidence) || 0) * 100);
         const actionLabel = labels[it.action_type] || it.action_type;
-        const icon = icons[it.action_type] || 'fa-bolt';
+        const icon = icons[it.action_type] || 'aisc-ico aisc-ico--zap';
         const created = it.created_at ? this._humanDelta(it.created_at) : '';
         const priority = it.priority || 0;
         const prClass = priority >= 8 ? ' cc-dash-card--high' : '';
@@ -4500,7 +4500,7 @@
         brand_container_id: this._containerRow.id,
         name: `Estrategia ${nextN}`,
         color: 'blue',
-        icon: 'fa-diagram-project',
+        icon: 'aisc-ico aisc-ico--flows',
         is_default: false,
       };
       if (user?.id) insert.created_by = user.id;
@@ -4537,7 +4537,7 @@
     const rows = items.map((s) => {
       const isActive = String(s.id) === String(active);
       return `<button type="button" class="cc-strategy-item ${isActive ? 'is-active' : ''}" data-strategy-id="${this.escapeHtml(String(s.id))}" title="${this.escapeHtml(s.name)}">
-        <i class="fas ${this.escapeHtml(s.icon || 'fa-diagram-project')} cc-strategy-item-ic"></i>
+        <i class="fas ${this.escapeHtml(s.icon || 'aisc-ico aisc-ico--flows')} cc-strategy-item-ic"></i>
         <span class="cc-strategy-item-name">${this.escapeHtml(s.name)}</span>
         ${s.is_default ? `<span class="cc-strategy-item-sub">${__('default')}</span>` : ''}
         ${isActive ? '<i class="aisc-ico cc-strategy-check aisc-ico--check"></i>' : ''}
@@ -4659,7 +4659,7 @@
     const host = document.getElementById('ccStratSteps');
     if (!host) return;
     const steps = this._strategySequence();
-    const icon = { done: 'fa-check', partial: 'fa-minus' };
+    const icon = { done: 'aisc-ico aisc-ico--check', partial: 'aisc-ico aisc-ico--minus' };
     host.innerHTML = `<div class="cc-strat-steps-title">${__('Secuencia estrategica')}</div>` +
       steps.map((s) => `
       <div class="cc-strat-step is-${s.state}" title="${this.escapeHtml(s.hint)}">
@@ -5796,12 +5796,12 @@
   P._inspectorIdentity = function (type, id) {
     if (type === 'briefs') return this._inspectorBrief(id);
     const labels = { products: 'Producto', services: 'Servicio', places: 'Lugar', characters: 'Personaje', flows: 'Flow', briefs: 'Brief' };
-    const icons  = { products: 'fa-box', services: 'fa-tag', places: 'fa-map-pin', characters: 'fa-masks-theater', flows: 'fa-diagram-project', briefs: 'fa-file-lines' };
+    const icons  = { products: 'aisc-ico aisc-ico--product', services: 'aisc-ico aisc-ico--tag', places: 'aisc-ico aisc-ico--places', characters: 'aisc-ico aisc-ico--characters', flows: 'aisc-ico aisc-ico--flows', briefs: 'aisc-ico aisc-ico--document' };
     const placed = (this._placed || []).find((p) => p.type === type && String(p.id) === String(id));
     const name = (placed && placed.name) || labels[type] || 'Identidad';
     const sub  = (placed && placed.sub)  || '';
     return {
-      title: `<i class="fas ${icons[type] || 'fa-circle'}"></i> ${this.escapeHtml(name)}`,
+      title: `<i class="fas ${icons[type] || 'aisc-ico aisc-ico--circle'}"></i> ${this.escapeHtml(name)}`,
       body: `
         <div class="cc-insp-meta">
           <span class="cc-insp-label">Tipo</span>

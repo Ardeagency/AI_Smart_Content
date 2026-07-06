@@ -58,7 +58,7 @@
     /**
      * @param {object} o
      * @param {string} [o.label]                — texto del botón
-     * @param {string} [o.icon]                 — clase FA o Phosphor (ej. 'fas fa-plus')
+     * @param {string} [o.icon]                 — clase FA o Phosphor (ej. 'aisc-ico aisc-ico--add')
      * @param {'primary'|'secondary'|'icon'} [o.variant='primary']
      * @param {'sm'|'md'|'lg'} [o.size='md']
      * @param {'button'|'submit'|'reset'} [o.type='button']

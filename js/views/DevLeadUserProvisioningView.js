@@ -68,13 +68,13 @@ class DevLeadUserProvisioningView extends DevBaseView {
     {
       key: 'consumer',
       label: 'Consumidor',
-      icon: 'fa-user',
+      icon: 'aisc-ico aisc-ico--audience',
       hint: 'Cliente de la plataforma. Tras verificar el email eliges crear/afiliar org o concluir'
     },
     {
       key: 'developer',
       label: 'Developer',
-      icon: 'fa-code',
+      icon: 'aisc-ico aisc-ico--coding',
       hint: 'Acceso al portal /dev'
     }
   ];
@@ -287,13 +287,13 @@ class DevLeadUserProvisioningView extends DevBaseView {
       },
       {
         action: 'affiliate',
-        icon: 'fa-building-user',
+        icon: 'aisc-ico aisc-ico--organization',
         title: 'Afiliar a una organizacion',
         hint: 'Conectarlo a una organizacion existente con un rol.'
       },
       {
         action: 'conclude',
-        icon: 'fa-check',
+        icon: 'aisc-ico aisc-ico--check',
         title: 'Concluir usuario',
         hint: 'Dejarlo creado como consumidor y asignar org despues.'
       }

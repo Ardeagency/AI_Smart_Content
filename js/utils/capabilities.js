@@ -42,11 +42,11 @@ window.OrgCapabilities = (() => {
   ];
 
   const AREAS = {
-    content:  { label: 'Contenido',        icon: 'fa-pen-fancy' },
-    vera:     { label: 'Vera (asistente)', icon: 'fa-robot' },
-    brand:    { label: 'Brand',            icon: 'fa-palette' },
-    insights: { label: 'Insights',         icon: 'fa-chart-line' },
-    admin:    { label: 'Admin sensible',   icon: 'fa-shield-halved' },
+    content:  { label: 'Contenido',        icon: 'aisc-ico aisc-ico--edit' },
+    vera:     { label: 'Vera (asistente)', icon: 'aisc-ico aisc-ico--bot' },
+    brand:    { label: 'Brand',            icon: 'aisc-ico aisc-ico--palette' },
+    insights: { label: 'Insights',         icon: 'aisc-ico aisc-ico--growth' },
+    admin:    { label: 'Admin sensible',   icon: 'aisc-ico aisc-ico--shield' },
   };
 
   // Helper: lista con todas las capabilities como objeto {key: bool}.

@@ -38,7 +38,7 @@ class ExecutionHistoryView extends BaseView {
     ${this.emptyState({
       id: 'execEmpty',
       hidden: true,
-      icon: 'fa-clock-rotate-left',
+      icon: 'aisc-ico aisc-ico--history',
       title: __('Aun no tienes sesiones de produccion manual.'),
       subtitle: __('Cada vez que produces un flujo desde el Estudio se crea una sesion. Aqui podras reabrirla y seguir generando dentro del mismo run.'),
     })}

@@ -367,7 +367,7 @@
   P._nodeIdentityHTML = function (n, pos) {
     const r = n.row || {};
     const labels = { products: __('Producto'), services: __('Servicio'), places: __('Lugar'), characters: __('Personaje'), flows: 'Flow', briefs: 'Brief' };
-    const icons  = { products: 'fa-box', services: 'fa-tag', places: 'fa-map-pin', characters: 'fa-masks-theater', flows: 'fa-diagram-project', briefs: 'fa-file-lines' };
+    const icons  = { products: 'aisc-ico aisc-ico--product', services: 'aisc-ico aisc-ico--tag', places: 'aisc-ico aisc-ico--places', characters: 'aisc-ico aisc-ico--characters', flows: 'aisc-ico aisc-ico--flows', briefs: 'aisc-ico aisc-ico--document' };
     const t = n.identityType;
     // Brief = nodo con puertos TIPADOS (patron n8n AI Agent: main in/out +
     // sub-puertos abajo con etiqueta). Estado conectado por tipo desde
@@ -391,7 +391,7 @@
       <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
       ${briefPorts}
       <div class="cc-node-head" data-drag-handle>
-        <span class="cc-node-icon"><i class="fas ${icons[t] || 'fa-cube'}"></i></span>
+        <span class="cc-node-icon"><i class="fas ${icons[t] || 'aisc-ico aisc-ico--product'}"></i></span>
         <span class="cc-node-title">${this.escapeHtml(labels[t] || 'Identity')}</span>
         <div class="cc-node-actions">
           <button type="button" class="cc-node-act cc-node-uncanvas" title="Quitar del canvas"><i class="aisc-ico aisc-ico--eye-off"></i></button>
@@ -1396,7 +1396,7 @@
     if (collapsed) this._collapsed.delete(key); else this._collapsed.add(key);
     nodeEl.classList.toggle('cc-node--collapsed', !collapsed);
     const ic = nodeEl.querySelector('.cc-node-collapse i');
-    if (ic) ic.className = `fas fa-${!collapsed ? 'chevron-down' : 'chevron-up'}`;
+    if (ic) ic.className = `aisc-ico aisc-ico--chevron-${!collapsed ? 'down' : 'up'}`;
     this._renderEdges();
   };
 
@@ -1846,18 +1846,18 @@
   /** Definicion de secciones (orden + icono + label). */
   P._librarySections = function () {
     return [
-      { key: 'audiences', label: 'Objetivos de Audiencia', icon: 'fa-users' },
-      { key: 'campaigns', label: 'Campanas',               icon: 'fa-bullhorn' },
-      { key: 'concepts',  label: 'Objetivos de Campana',   icon: 'fa-lightbulb' },
-      { key: 'products',  label: 'Productos',           icon: 'fa-box' },
-      { key: 'services',  label: 'Servicios',           icon: 'fa-tag' },
-      { key: 'places',    label: 'Lugares',             icon: 'fa-map-pin' },
-      { key: 'characters', label: 'Personajes',         icon: 'fa-masks-theater' },
-      { key: 'flows',     label: 'My Flows',            icon: 'fa-diagram-project' },
-      { key: 'briefs',    label: 'Briefs',              icon: 'fa-file-lines' },
+      { key: 'audiences', label: 'Objetivos de Audiencia', icon: 'aisc-ico aisc-ico--audience' },
+      { key: 'campaigns', label: 'Campanas',               icon: 'aisc-ico aisc-ico--campaign' },
+      { key: 'concepts',  label: 'Objetivos de Campana',   icon: 'aisc-ico aisc-ico--idea' },
+      { key: 'products',  label: 'Productos',           icon: 'aisc-ico aisc-ico--product' },
+      { key: 'services',  label: 'Servicios',           icon: 'aisc-ico aisc-ico--tag' },
+      { key: 'places',    label: 'Lugares',             icon: 'aisc-ico aisc-ico--places' },
+      { key: 'characters', label: 'Personajes',         icon: 'aisc-ico aisc-ico--characters' },
+      { key: 'flows',     label: 'My Flows',            icon: 'aisc-ico aisc-ico--flows' },
+      { key: 'briefs',    label: 'Briefs',              icon: 'aisc-ico aisc-ico--document' },
     ];
   };
-  P._libIcon = function (key) { return (this._librarySections().find((s) => s.key === key) || {}).icon || 'fa-circle'; };
+  P._libIcon = function (key) { return (this._librarySections().find((s) => s.key === key) || {}).icon || 'aisc-ico aisc-ico--circle'; };
 
   /** Items de una seccion. Locales (sincronos) o lazy (cache; undefined = sin cargar). */
   P._libItemsFor = function (key) {
@@ -1902,7 +1902,7 @@
     // Panel de datos: visible solo si hay seccion activa.
     if (panel) panel.classList.toggle('cc-fp-open', !!active);
     if (active) {
-      const s = secs.find((x) => x.key === active) || { label: 'Biblioteca', icon: 'fa-sliders' };
+      const s = secs.find((x) => x.key === active) || { label: 'Biblioteca', icon: 'aisc-ico aisc-ico--filter' };
       if (titleEl) titleEl.innerHTML = `<i class="fas ${s.icon}"></i> ${this.escapeHtml(s.label)}`;
       body.innerHTML = this._libBodyHTML(active);
       if (this._libItemsFor(active) === undefined) this._fetchLibrary(active);

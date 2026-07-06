@@ -268,7 +268,7 @@
         <div class="insight-page" data-comp-empty="monitoring">
           ${this.emptyState({
             iconSrc: '/recursos/icons/monitoring.svg',
-            icon: 'fa-crosshairs',
+            icon: 'aisc-ico aisc-ico--goal',
             title: __('Aún no monitoreas perfiles'),
             subtitle: __('Este panel se enciende cuando monitoreas perfiles: agrega a tus competidores (para vigilarlos) y a tus referentes (para aprender de ellos) desde Monitoreo. Verás quién domina tu nicho, de qué se queja su audiencia y dónde son vulnerables.'),
             primaryLabel: __('Ir a Monitoreo'),

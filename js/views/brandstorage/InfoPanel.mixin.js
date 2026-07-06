@@ -120,7 +120,7 @@
       {
         key: 'mercadolibre',
         label: 'Mercado Libre',
-        iconClass: 'fas fa-store',
+        iconClass: 'aisc-ico aisc-ico--store',
         connected: mOk,
         oauthProvider: 'mercadolibre',
         actionHref: meliUrl || dashboardHref,

@@ -204,7 +204,7 @@
         <div class="insight-page" data-mb-empty="no-org">
           ${this.emptyState({
             iconSrc: '/recursos/icons/dashboard.svg',
-            icon: 'fa-building',
+            icon: 'aisc-ico aisc-ico--organization',
             title: __('Sin organización activa'),
             subtitle: __('Selecciona una marca desde el menú para empezar.'),
           })}
@@ -249,7 +249,7 @@
         <div class="insight-page" data-mb-empty="connect">
           ${this.emptyState({
             iconSrc: '/recursos/icons/dashboard.svg',
-            icon: 'fa-circle-nodes',
+            icon: 'aisc-ico aisc-ico--flows',
             title: __('Conecta tus plataformas'),
             subtitle: __('El tablero analiza la salud de tu marca a partir de tus redes sociales. Conecta Instagram, TikTok, X u otras plataformas para empezar a ver métricas, audiencia y las recomendaciones de Vera.'),
             primaryLabel: __('Conectar plataformas'),
@@ -546,7 +546,7 @@
       if (n === 'x' || n.includes('twit')) return 'fa-x-twitter';
       if (n.includes('you'))   return 'fa-youtube';
       if (n.includes('link'))  return 'fa-linkedin';
-      return 'fa-hashtag';
+      return 'aisc-ico aisc-ico--tag';
     },
     /** Clase de sentimiento POS/NEU/NEG. */
     _sentClass(s) {
@@ -591,11 +591,11 @@
       // Interacciones sociales primero (likes/comentarios/guardados/compartidos),
       // alcance pasivo (vistas/reproducciones) al final.
       const rows = [
-        { i: 'fa-heart',    v: n(m.likes),    c: '#e06464', show: true },
-        { i: 'fa-comment',  v: n(m.comments), c: '#5b9bd5', show: true },
-        { i: 'fa-bookmark', v: n(m.saved),    c: '#e0a045', show: n(m.saved) > 0 },
-        { i: 'fa-retweet',  v: n(m.shares),   c: '#6bcf7f', show: n(m.shares) > 0 },
-        { i: isVideo ? 'fa-play' : 'fa-eye', v: views, c: '#a78bfa', show: views > 0 },
+        { i: 'aisc-ico aisc-ico--likes',    v: n(m.likes),    c: '#e06464', show: true },
+        { i: 'aisc-ico aisc-ico--comments',  v: n(m.comments), c: '#5b9bd5', show: true },
+        { i: 'aisc-ico aisc-ico--bookmark', v: n(m.saved),    c: '#e0a045', show: n(m.saved) > 0 },
+        { i: 'aisc-ico aisc-ico--refresh',  v: n(m.shares),   c: '#6bcf7f', show: n(m.shares) > 0 },
+        { i: isVideo ? 'aisc-ico aisc-ico--play' : 'aisc-ico aisc-ico--eye', v: views, c: '#a78bfa', show: views > 0 },
       ].filter((r) => r.show);
       return rows.map((r) => `<span class="mb-tpt-metric"><i class="fas ${r.i}" style="color:${r.c}"></i> ${this._compactNum(r.v)}</span>`).join('');
     },
@@ -1669,9 +1669,9 @@
       const verdictOf = (r) => {
         const share = Number(r.share_pct) || 0, lift = Number(r.lift_pct) || 0;
         if (r.is_orphan || (lift > 0 && share < avg * 0.6)) return { k: 'explota', rank: 0, label: __('Explotalo'), icon: 'fa-gem', say: (ls, s) => __('Rinde {ls} pero es solo el {s}% de tu contenido — produce mas de esto.', { ls, s }) };
-        if (lift < 0 && share >= avg) return { k: 'revisa', rank: 1, label: __('Revisa'), icon: 'fa-triangle-exclamation', say: (ls, s) => __('Es el {s}% de tu contenido pero rinde {ls} — replantealo o reducelo.', { ls, s }) };
-        if (lift >= 0) return { k: 'formula', rank: 2, label: __('Tu formula'), icon: 'fa-circle-check', say: (ls, s) => __('Rinde {ls} y ya es el {s}% de lo que publicas — mantenlo.', { ls, s }) };
-        return { k: 'flojo', rank: 3, label: __('Bajo perfil'), icon: 'fa-circle-minus', say: (ls, s) => __('Poco uso ({s}%) y rinde {ls} — baja prioridad.', { ls, s }) };
+        if (lift < 0 && share >= avg) return { k: 'revisa', rank: 1, label: __('Revisa'), icon: 'aisc-ico aisc-ico--alert-warning', say: (ls, s) => __('Es el {s}% de tu contenido pero rinde {ls} — replantealo o reducelo.', { ls, s }) };
+        if (lift >= 0) return { k: 'formula', rank: 2, label: __('Tu formula'), icon: 'aisc-ico aisc-ico--check', say: (ls, s) => __('Rinde {ls} y ya es el {s}% de lo que publicas — mantenlo.', { ls, s }) };
+        return { k: 'flojo', rank: 3, label: __('Bajo perfil'), icon: 'aisc-ico aisc-ico--minus', say: (ls, s) => __('Poco uso ({s}%) y rinde {ls} — baja prioridad.', { ls, s }) };
       };
       const ranked = list.map((r) => ({ r, v: verdictOf(r) }))
         .sort((a, b) => a.v.rank - b.v.rank || Math.abs(Number(b.r.lift_pct) || 0) - Math.abs(Number(a.r.lift_pct) || 0));
@@ -2227,7 +2227,7 @@
         const m = this._platPerfMeta(mk.platform);
         const rep = this._meliRepMeta(mk.reputation);
         const repHtml = rep
-          ? `<span class="mb-pp-rep" style="color:${rep.color}"><i class="fas fa-circle" style="font-size:0.5rem"></i> ${this._esc(rep.label)} <small>${this._esc(rep.sub)}</small></span>`
+          ? `<span class="mb-pp-rep" style="color:${rep.color}"><i class="aisc-ico aisc-ico--circle" style="font-size:0.5rem"></i> ${this._esc(rep.label)} <small>${this._esc(rep.sub)}</small></span>`
           : `<span class="mb-pp-rep">${__('Conectado')}</span>`;
         return `
           <div class="mb-pp-row mb-pp-row--mkt">
@@ -2270,12 +2270,12 @@
     /** Icono por componente de salud (match por keyword en key/label). */
     _healthCompIcon(c) {
       const s = `${c.key || ''} ${c.label || ''}`.toLowerCase();
-      if (/caden|frecuen|public/.test(s)) return 'fa-calendar-day';
-      if (/coheren|tono|voz/.test(s))     return 'fa-comment-dots';
-      if (/aline|formula|fórmula/.test(s)) return 'fa-bullseye';
-      if (/resonan|social|audien/.test(s)) return 'fa-heart';
-      if (/tendenc|trend/.test(s))        return 'fa-arrow-trend-up';
-      return 'fa-chart-simple';
+      if (/caden|frecuen|public/.test(s)) return 'aisc-ico aisc-ico--calendar';
+      if (/coheren|tono|voz/.test(s))     return 'aisc-ico aisc-ico--comments';
+      if (/aline|formula|fórmula/.test(s)) return 'aisc-ico aisc-ico--goal';
+      if (/resonan|social|audien/.test(s)) return 'aisc-ico aisc-ico--likes';
+      if (/tendenc|trend/.test(s))        return 'aisc-ico aisc-ico--growth';
+      return 'aisc-ico aisc-ico--chart-bar';
     },
 
     /* Etiqueta por dimension: profesional/premium pero clara (el nombre tecnico

@@ -584,7 +584,7 @@ class CreditsShopView extends BaseView {
             return `
               <tr>
                 <td>${this._fmtDateTime(r.created_at)}</td>
-                <td><i class="fas ${cost?.icon || 'fa-coins'}"></i> ${this.escapeHtml(cost?.label || r.kind)}</td>
+                <td><i class="fas ${cost?.icon || 'aisc-ico aisc-ico--credits'}"></i> ${this.escapeHtml(cost?.label || r.kind)}</td>
                 <td class="${cls}">${delta > 0 ? '+' : ''}${delta.toFixed(2)}</td>
                 <td>${this.escapeHtml(String(detail).slice(0, 60))}</td>
               </tr>

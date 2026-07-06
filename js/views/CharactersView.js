@@ -56,7 +56,7 @@ class CharactersView extends BaseView {
   ${this.emptyState({
     id: 'charactersListEmpty',
     hidden: true,
-    icon: 'fa-users',
+    icon: 'aisc-ico aisc-ico--audience',
     iconSrc: '/recursos/icons/Characters.svg',
     title: __('Crea tu primer personaje'),
     subtitle: __('Sube fotos de referencia y Vera arma la ficha: rasgos, vestuario y rol. Apareceran aqui listos para protagonizar tus producciones.'),
@@ -378,7 +378,7 @@ class CharactersView extends BaseView {
       });
     };
 
-    const photos = this._wireDropzone(root.querySelector('[data-group="photos"]'), 'fa-image');
+    const photos = this._wireDropzone(root.querySelector('[data-group="photos"]'), 'aisc-ico aisc-ico--image');
 
     root.querySelector('[data-action="submit-attach"]')?.addEventListener('click', async (e) => {
       const submitBtn = e.currentTarget;
@@ -396,7 +396,7 @@ class CharactersView extends BaseView {
     });
   }
 
-  _wireDropzone(groupEl, iconClass = 'fa-file') {
+  _wireDropzone(groupEl, iconClass = 'aisc-ico aisc-ico--document') {
     if (!groupEl) return { input: null, list: null };
     const dropzone = groupEl.querySelector('.attach-product-dropzone');
     const input = groupEl.querySelector('input[type="file"]');

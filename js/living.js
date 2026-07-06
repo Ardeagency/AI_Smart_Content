@@ -1660,7 +1660,7 @@ class LivingManager {
         if (window.BaseView && typeof window.BaseView.emptyState === 'function') {
             return window.BaseView.emptyState({
                 iconSrc: '/recursos/icons/Production.svg',
-                icon: 'fa-film',
+                icon: 'aisc-ico aisc-ico--film',
                 title: 'Aún no hay producción',
                 subtitle: 'Elige un flujo y produce tu primer contenido. Tus imágenes, videos y textos aparecerán aquí listos para revisar, editar y publicar.',
                 primaryLabel: 'Explorar flujos',
@@ -1783,7 +1783,7 @@ class LivingManager {
                     actionEl.setAttribute('aria-pressed', selected ? 'false' : 'true');
                     const icon = actionEl.querySelector('i');
                     if (icon) {
-                        icon.className = (!selected ? 'fas fa-check-circle' : 'fas fa-circle');
+                        icon.className = (!selected ? 'aisc-ico aisc-ico--check' : 'aisc-ico aisc-ico--circle');
                     }
                     if (card) card.classList.toggle('is-selected', !selected);
                     this._updateSelectionBar();
@@ -2055,7 +2055,7 @@ class LivingManager {
             btn.classList.remove('is-selected');
             btn.setAttribute('aria-pressed', 'false');
             const icon = btn.querySelector('i');
-            if (icon) icon.className = 'fas fa-circle';
+            if (icon) icon.className = 'aisc-ico aisc-ico--circle';
         });
         document.querySelectorAll('.history-image-card.is-selected, .history-video-card.is-selected').forEach(c => c.classList.remove('is-selected'));
         this._updateSelectionBar();
@@ -2167,7 +2167,7 @@ class LivingManager {
             const liked = this.likedOutputs.has(outputId);
             likeBtn.setAttribute('aria-pressed', liked ? 'true' : 'false');
             const ic = likeBtn.querySelector('i');
-            if (ic) ic.className = 'fas fa-heart';
+            if (ic) ic.className = 'aisc-ico aisc-ico--likes';
             likeBtn.classList.toggle('is-liked', liked);
         }
 
@@ -4957,14 +4957,14 @@ class LivingManager {
                         btn.setAttribute('aria-pressed', nowLiked ? 'true' : 'false');
                         btn.classList.toggle('is-liked', nowLiked);
                         const ic = btn.querySelector('i');
-                        if (ic) ic.className = 'fas fa-heart';
+                        if (ic) ic.className = 'aisc-ico aisc-ico--likes';
                         // Sincronizar también el corazón del overlay de la card en la grilla.
                         const cardLike = document.querySelector(`.history-image-card[data-output-id="${CSS.escape(state.outputId || '')}"] .card-action--like, .history-video-card[data-output-id="${CSS.escape(state.outputId || '')}"] .card-action--like`);
                         if (cardLike) {
                             cardLike.classList.toggle('is-liked', nowLiked);
                             cardLike.setAttribute('aria-pressed', nowLiked ? 'true' : 'false');
                             const cardIcon = cardLike.querySelector('i');
-                            if (cardIcon) cardIcon.className = 'fas fa-heart';
+                            if (cardIcon) cardIcon.className = 'aisc-ico aisc-ico--likes';
                         }
                         break;
                     }
@@ -5072,7 +5072,7 @@ class LivingManager {
                 if (!txt) return;
                 const expanded = txt.classList.toggle('is-expanded');
                 promptToggle.querySelector('span').textContent = expanded ? 'Show less' : 'See all';
-                promptToggle.querySelector('i').className = expanded ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+                promptToggle.querySelector('i').className = expanded ? 'aisc-ico aisc-ico--chevron-up' : 'aisc-ico aisc-ico--chevron-down';
             });
         }
 
@@ -5310,8 +5310,8 @@ class LivingManager {
         // 1️⃣ Estado del Estudio
         if (this.section3Data.studioStatus) {
             const status = this.section3Data.studioStatus;
-            const statusIcon = status.status === 'active' ? 'fas fa-circle' : 
-                             status.status === 'paused' ? 'fas fa-pause-circle' : 
+            const statusIcon = status.status === 'active' ? 'aisc-ico aisc-ico--circle' : 
+                             status.status === 'paused' ? 'aisc-ico aisc-ico--pause' : 
                              'fas fa-stop-circle';
             const statusColor = status.status === 'active' ? '#4ade80' : 
                                status.status === 'paused' ? '#fbbf24' : 
@@ -5335,7 +5335,7 @@ class LivingManager {
                 title: 'Entidad Dominante',
                 value: this.section3Data.topEntity.entity_name,
                 label: `${this.section3Data.topEntity.total_productions} producciones`,
-                icon: 'fas fa-star',
+                icon: 'aisc-ico aisc-ico--star',
                 subtitle: this.section3Data.topEntity.entity_type
             });
         }
@@ -5344,9 +5344,9 @@ class LivingManager {
         if (this.section3Data.formatDistribution && this.section3Data.formatDistribution.formats) {
             const topFormat = this.section3Data.formatDistribution.formats[0];
             if (topFormat) {
-                const formatIcon = topFormat.type === 'image' ? 'fas fa-image' :
-                                 topFormat.type === 'video' ? 'fas fa-video' :
-                                 'fas fa-file-alt';
+                const formatIcon = topFormat.type === 'image' ? 'aisc-ico aisc-ico--image' :
+                                 topFormat.type === 'video' ? 'aisc-ico aisc-ico--video' :
+                                 'aisc-ico aisc-ico--document';
                 
                 highlights.push({
                     title: 'Formato Preferido',
@@ -5365,7 +5365,7 @@ class LivingManager {
                 title: 'Eficiencia',
                 value: eff.efficiency_percentage ? `${eff.efficiency_percentage}%` : '0%',
                 label: `${eff.total_outputs} outputs / ${eff.total_runs} runs`,
-                icon: 'fas fa-chart-line'
+                icon: 'aisc-ico aisc-ico--growth'
             });
         }
         
@@ -5376,7 +5376,7 @@ class LivingManager {
                 title: 'Campaña Activa',
                 value: campaign.campaign_name || 'Campaña sin nombre',
                 label: `${campaign.total_productions} producciones`,
-                icon: 'fas fa-bullhorn',
+                icon: 'aisc-ico aisc-ico--campaign',
                 subtitle: campaign.last_production ? 
                     `Última: ${new Date(campaign.last_production).toLocaleDateString('es-ES')}` : 
                     null
@@ -5391,7 +5391,7 @@ class LivingManager {
                     title: 'Ejecutado',
                     value: this.flowRuns.length,
                     label: 'flujos procesados',
-                    icon: 'fas fa-project-diagram'
+                    icon: 'aisc-ico aisc-ico--flows'
                 });
             }
             
@@ -5401,7 +5401,7 @@ class LivingManager {
                     title: 'Productos',
                     value: this.products.length,
                     label: 'en tu marca',
-                    icon: 'fas fa-box'
+                    icon: 'aisc-ico aisc-ico--product'
                 });
             }
             
@@ -5412,7 +5412,7 @@ class LivingManager {
                     title: 'Producido',
                     value: totalProductions,
                     label: 'renders generados',
-                    icon: 'fas fa-images'
+                    icon: 'aisc-ico aisc-ico--gallery'
                 });
             }
         }

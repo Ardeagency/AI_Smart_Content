@@ -73,8 +73,8 @@ class MonitoringView extends BaseView {
     twitter:          'fab fa-x-twitter',
     x:                'fab fa-x-twitter',
     linkedin:         'fab fa-linkedin-in',
-    google_analytics: 'fas fa-chart-line',
-    web:              'fas fa-globe',
+    google_analytics: 'aisc-ico aisc-ico--growth',
+    web:              'aisc-ico aisc-ico--globe',
   };
 
   constructor() {
@@ -325,21 +325,21 @@ class MonitoringView extends BaseView {
 
   /* ── Estado en lenguaje humano ── */
   _estadoPerfil(e, lastAt) {
-    if (e.is_active === false) return { tone: 'paused', icon: 'fa-circle-pause', text: __('En pausa') };
+    if (e.is_active === false) return { tone: 'paused', icon: 'aisc-ico aisc-ico--pause', text: __('En pausa') };
     if ((e.metadata?.consecutive_empty_runs || 0) >= 3)
-      return { tone: 'stale', icon: 'fa-moon', text: __('Callado hace rato') };
+      return { tone: 'stale', icon: 'aisc-ico aisc-ico--moon', text: __('Callado hace rato') };
     if (lastAt && (Date.now() - new Date(lastAt).getTime()) < 7 * 24 * 60 * 60 * 1000)
-      return { tone: 'fresh', icon: 'fa-circle-check', text: __('Al día · novedad {rel}', { rel: this._relativeTime(lastAt) }) };
-    return { tone: 'quiet', icon: 'fa-circle-check', text: __('Tranquilo · sin novedades por ahora') };
+      return { tone: 'fresh', icon: 'aisc-ico aisc-ico--check', text: __('Al día · novedad {rel}', { rel: this._relativeTime(lastAt) }) };
+    return { tone: 'quiet', icon: 'aisc-ico aisc-ico--check', text: __('Tranquilo · sin novedades por ahora') };
   }
 
   _estadoPagina(w, lastAt) {
-    if (w.is_active === false) return { tone: 'paused', icon: 'fa-circle-pause', text: __('En pausa') };
+    if (w.is_active === false) return { tone: 'paused', icon: 'aisc-ico aisc-ico--pause', text: __('En pausa') };
     if (lastAt && (Date.now() - new Date(lastAt).getTime()) < 24 * 60 * 60 * 1000)
-      return { tone: 'changed', icon: 'fa-bolt', text: __('Cambio detectado · {rel}', { rel: this._relativeTime(lastAt) }) };
+      return { tone: 'changed', icon: 'aisc-ico aisc-ico--zap', text: __('Cambio detectado · {rel}', { rel: this._relativeTime(lastAt) }) };
     if (w.last_checked_at)
-      return { tone: 'quiet', icon: 'fa-circle-check', text: __('Sin cambios · revisado {rel}', { rel: this._relativeTime(w.last_checked_at) }) };
-    return { tone: 'new', icon: 'fa-hourglass-start', text: __('Empezando a vigilar…') };
+      return { tone: 'quiet', icon: 'aisc-ico aisc-ico--check', text: __('Sin cambios · revisado {rel}', { rel: this._relativeTime(w.last_checked_at) }) };
+    return { tone: 'new', icon: 'aisc-ico aisc-ico--hourglass', text: __('Empezando a vigilar…') };
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -378,8 +378,8 @@ class MonitoringView extends BaseView {
     const { counts } = model;
     const algoVigilado = counts.siguiendo > 0;
     const estado = algoVigilado
-      ? { label: __('Todo en marcha'), sub: __('Vigilancia activa'), color: 'green', icon: 'fa-circle-check' }
-      : { label: __('En reposo'),      sub: __('Nada activo aún'),   color: 'teal',  icon: 'fa-pause' };
+      ? { label: __('Todo en marcha'), sub: __('Vigilancia activa'), color: 'green', icon: 'aisc-ico aisc-ico--check' }
+      : { label: __('En reposo'),      sub: __('Nada activo aún'),   color: 'teal',  icon: 'aisc-ico aisc-ico--pause' };
 
     const tile = (color, icon, value, label, sub, pulse) => `
       <div class="mb-kpi-card mb-kpi--${color}${pulse ? ' mn-kpi--pulse' : ''}">
@@ -397,9 +397,9 @@ class MonitoringView extends BaseView {
         <p class="mn-hero-sub">${__('Lo revisamos solos cada cierto tiempo. Tú solo prende, apaga, y mira qué encontramos.')}</p>
       </div>
       <div class="mb-kpi-strip mn-pulse">
-        ${tile('blue',   'fa-binoculars',   counts.siguiendo,  __('Siguiendo'),        __('Marcas y páginas activas'))}
-        ${tile('orange', 'fa-bolt',         counts.novedades,  __('Con novedades'),    __('En los últimos 7 días'))}
-        ${tile('pink',   'fa-wand-magic-sparkles', counts.propuestas, __('Propuestas nuevas'), __('Por revisar'), counts.propuestas > 0)}
+        ${tile('blue',   'aisc-ico aisc-ico--monitoring',   counts.siguiendo,  __('Siguiendo'),        __('Marcas y páginas activas'))}
+        ${tile('orange', 'aisc-ico aisc-ico--zap',         counts.novedades,  __('Con novedades'),    __('En los últimos 7 días'))}
+        ${tile('pink',   'aisc-ico aisc-ico--sparkle', counts.propuestas, __('Propuestas nuevas'), __('Por revisar'), counts.propuestas > 0)}
         ${tile(estado.color, estado.icon,   estado.label,      __('Estado'),           estado.sub)}
       </div>`;
   }
@@ -412,7 +412,7 @@ class MonitoringView extends BaseView {
       MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || __('Perfil');
     const cards = props.map(e => {
       const platform = e.metadata?.platform || '';
-      const icon = MonitoringView.PLATFORM_ICON[platform] || 'fas fa-hashtag';
+      const icon = MonitoringView.PLATFORM_ICON[platform] || 'aisc-ico aisc-ico--tag';
       const why = `${tipoLabel(e.metadata?.tipo)}${platform ? __(' en {p}', { p: this._platformName(platform) }) : ''}. ${__('Lo encontramos cerca de tu competencia.')}`;
       return `
         <div class="mn-prop" data-id="${this._esc(e.id)}">
@@ -449,10 +449,10 @@ class MonitoringView extends BaseView {
         (En pausa → Activados → Al día → Con novedad). ── */
   static get COLUMNS() {
     return [
-      { id: 'paused', label: __('En pausa'),    hint: __('Desactivados'),       emptyIcon: 'fa-circle-pause', emptyText: __('Nada en pausa') },
-      { id: 'silent', label: __('Activados'),   hint: __('Activos, sin señal reciente'), emptyIcon: 'fa-moon', emptyText: __('Nada activo sin señal') },
-      { id: 'calm',   label: __('Al día'),      hint: __('Activo y tranquilo'), emptyIcon: 'fa-circle-check', emptyText: __('Nada por aquí todavía') },
-      { id: 'news',   label: __('Con novedad'), hint: __('Cambios recientes'),  emptyIcon: 'fa-bell',         emptyText: __('Sin novedades por ahora') },
+      { id: 'paused', label: __('En pausa'),    hint: __('Desactivados'),       emptyIcon: 'aisc-ico aisc-ico--pause', emptyText: __('Nada en pausa') },
+      { id: 'silent', label: __('Activados'),   hint: __('Activos, sin señal reciente'), emptyIcon: 'aisc-ico aisc-ico--moon', emptyText: __('Nada activo sin señal') },
+      { id: 'calm',   label: __('Al día'),      hint: __('Activo y tranquilo'), emptyIcon: 'aisc-ico aisc-ico--check', emptyText: __('Nada por aquí todavía') },
+      { id: 'news',   label: __('Con novedad'), hint: __('Cambios recientes'),  emptyIcon: 'aisc-ico aisc-ico--notification',         emptyText: __('Sin novedades por ahora') },
     ];
   }
 
@@ -524,7 +524,7 @@ class MonitoringView extends BaseView {
       const isPage = kind === 'page';
       return this.emptyState({
         fill: true,
-        icon: isPage ? 'fa-globe' : 'fa-binoculars',
+        icon: isPage ? 'aisc-ico aisc-ico--globe' : 'aisc-ico aisc-ico--monitoring',
         title: isPage ? __('Aún no monitoreas ninguna URL.') : __('Aún no sigues a ninguna marca o perfil.'),
         subtitle: __('Agrega el primero y nosotros nos encargamos del resto.'),
         primaryLabel: __('Seguir algo nuevo'),
@@ -682,7 +682,7 @@ class MonitoringView extends BaseView {
       if (labels) {
         labels.innerHTML = '';
         bodies.forEach((b) => {
-          const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'fas fa-hashtag';
+          const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'aisc-ico aisc-ico--tag';
           const icon = document.createElement('span');
           icon.className = 'mn-bub-icon' + (colId === 'paused' ? ' is-dim' : '');
           icon.innerHTML = `<i class="${iconCls}"></i>`;
@@ -1041,7 +1041,7 @@ class MonitoringView extends BaseView {
     const g = document.createElement('div');
     g.className = 'mn-drag-ghost';
     const d = Math.round(b.rDraw * 2);
-    const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'fas fa-hashtag';
+    const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'aisc-ico aisc-ico--tag';
     g.style.width = g.style.height = d + 'px';
     // Borde con degradado que RESPETA el border-radius (padding-box + border-box).
     g.style.setProperty('--g', this._gradientCss(this._bubbleStops(b.it)));
@@ -1160,11 +1160,11 @@ class MonitoringView extends BaseView {
   }
   _signalIcon(s) {
     const t = s.signal_type || '';
-    if (t === 'url_change') return 'fa-arrows-rotate';
-    if (t === 'post') return 'fa-image';
-    if (/threat|crisis/i.test(t)) return 'fa-triangle-exclamation';
-    if (/mention/i.test(t)) return 'fa-at';
-    return 'fa-circle-dot';
+    if (t === 'url_change') return 'aisc-ico aisc-ico--refresh';
+    if (t === 'post') return 'aisc-ico aisc-ico--image';
+    if (/threat|crisis/i.test(t)) return 'aisc-ico aisc-ico--alert-warning';
+    if (/mention/i.test(t)) return 'aisc-ico aisc-ico--mail';
+    return 'aisc-ico aisc-ico--circle';
   }
 
   /** Media id de Instagram → shortcode (para linkear al post original). */
@@ -1212,7 +1212,7 @@ class MonitoringView extends BaseView {
   _renderPostCard(post) {
     const url = this._postUrl(post);
     const thumb = this._postThumb(post);
-    const netIcon = MonitoringView.PLATFORM_ICON[post.network] || 'fas fa-hashtag';
+    const netIcon = MonitoringView.PLATFORM_ICON[post.network] || 'aisc-ico aisc-ico--tag';
     const snippet = this._esc((post.content || '').replace(/\s+/g, ' ').trim().slice(0, 100)) || __('(sin texto)');
     const eng = this._compact(post.engagement_total || 0);
     const when = this._relativeTime(post.captured_at);
@@ -1381,7 +1381,7 @@ class MonitoringView extends BaseView {
     const borderCss = `linear-gradient(#17171a,#17171a) padding-box, ${gradCss} border-box`;
     const brand = isProfile ? ((this._model?.containers || []).find(c => c.id === item.containerId)?.nombre_marca || null) : null;
     const roleLabel = isProfile ? this._roleLabel(item.tipo) : __('Página web');
-    const platIcon = MonitoringView.PLATFORM_ICON[item.platform] || 'fas fa-hashtag';
+    const platIcon = MonitoringView.PLATFORM_ICON[item.platform] || 'aisc-ico aisc-ico--tag';
 
     const meta = [];
     if (isProfile) meta.push(`<span class="mn-det-meta-item"><i class="aisc-ico aisc-ico--fire"></i>${item.impact > 0 ? __('{n} interacciones (90 d)', { n: this._compact(item.impact) }) : __('Sin impacto medido')}</span>`);
@@ -1675,7 +1675,7 @@ class MonitoringView extends BaseView {
     if (!props.length) {
       return this.emptyState({
         fill: true,
-        icon: 'fa-wand-magic-sparkles',
+        icon: 'aisc-ico aisc-ico--sparkle',
         title: __('No hay sugerencias nuevas por ahora.'),
         subtitle: __('Cuando detectemos perfiles o páginas cerca de tu competencia, aparecerán aquí.'),
       });
@@ -1720,7 +1720,7 @@ class MonitoringView extends BaseView {
     if (labels) {
       labels.innerHTML = '';
       bodies.forEach((b) => {
-        const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'fas fa-hashtag';
+        const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'aisc-ico aisc-ico--tag';
         const icon = document.createElement('span');
         icon.className = 'mn-bub-icon';
         icon.innerHTML = `<i class="${iconCls}"></i>`;
@@ -2298,7 +2298,7 @@ class MonitoringView extends BaseView {
 
       if (det.kind === 'profile') {
         const iconEl = root.querySelector('[data-detected-icon]');
-        if (iconEl) iconEl.innerHTML = `<i class="${MonitoringView.PLATFORM_ICON[det.platform] || 'fas fa-globe'}" aria-hidden="true"></i>`;
+        if (iconEl) iconEl.innerHTML = `<i class="${MonitoringView.PLATFORM_ICON[det.platform] || 'aisc-ico aisc-ico--globe'}" aria-hidden="true"></i>`;
         const platEl = root.querySelector('[data-detected-platform]');
         if (platEl) platEl.textContent = MonitoringView.PLATFORMS.find(p => p.value === det.platform)?.label || det.platform;
         const handleEl = root.querySelector('[data-detected-handle]');

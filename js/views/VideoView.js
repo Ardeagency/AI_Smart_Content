@@ -662,7 +662,7 @@ class VideoView extends BaseView {
       this.sendBtn.setAttribute('data-state', 'prompt');
       this.sendBtn.setAttribute('aria-label', window.__('Generar prompt'));
       const icon = this.sendBtn.querySelector('i');
-      if (icon) icon.className = 'fas fa-wand-magic-sparkles';
+      if (icon) icon.className = 'aisc-ico aisc-ico--sparkle';
     }
     if (regenBtn) regenBtn.style.display = 'none';
     this.hasGeneratedPrompt = false;
@@ -1396,19 +1396,19 @@ class VideoView extends BaseView {
   enhanceCinematographyWithTiles() {
     // Fallback por categoría — solo aplica si no hay icono específico por valor
     const FALLBACK_ICONS = {
-      shotType: 'fa-video',
-      lens: 'fa-camera-retro',
-      framing: 'fa-crop',
-      cameraMovement: 'fa-arrows-up-down-left-right',
-      motionSpeed: 'fa-gauge-high',
-      motionIntensity: 'fa-bolt',
-      lightType: 'fa-lightbulb',
-      contrastLevel: 'fa-circle-half-stroke',
+      shotType: 'aisc-ico aisc-ico--video',
+      lens: 'aisc-ico aisc-ico--camera',
+      framing: 'aisc-ico aisc-ico--crop',
+      cameraMovement: 'aisc-ico aisc-ico--move',
+      motionSpeed: 'aisc-ico aisc-ico--dashboard',
+      motionIntensity: 'aisc-ico aisc-ico--zap',
+      lightType: 'aisc-ico aisc-ico--idea',
+      contrastLevel: 'aisc-ico aisc-ico--moon',
       temperature: 'fa-temperature-three-quarters',
-      tone: 'fa-palette',
-      colorGrade: 'fa-paintbrush',
-      colorTemp: 'fa-droplet',
-      energyLevel: 'fa-fire-flame-curved'
+      tone: 'aisc-ico aisc-ico--palette',
+      colorGrade: 'aisc-ico aisc-ico--palette',
+      colorTemp: 'aisc-ico aisc-ico--palette',
+      energyLevel: 'aisc-ico aisc-ico--fire'
     };
 
     // Descripciones por VALOR — al hover sobre cada tile, tooltip explica
@@ -1473,58 +1473,58 @@ class VideoView extends BaseView {
     const VALUE_ICONS = {
       // Camera movement
       'Static': 'fa-square',
-      'Slow Push In': 'fa-down-left-and-up-right-to-center',
-      'Slow Pull Out': 'fa-up-right-and-down-left-from-center',
-      'Dolly Left': 'fa-arrow-left',
-      'Dolly Right': 'fa-arrow-right',
-      'Orbit': 'fa-rotate',
-      '360° Rotation': 'fa-arrows-spin',
-      'Handheld': 'fa-hand',
+      'Slow Push In': 'aisc-ico aisc-ico--minimize',
+      'Slow Pull Out': 'aisc-ico aisc-ico--expand',
+      'Dolly Left': 'aisc-ico aisc-ico--arrow-left',
+      'Dolly Right': 'aisc-ico aisc-ico--arrow-right',
+      'Orbit': 'aisc-ico aisc-ico--refresh',
+      '360° Rotation': 'aisc-ico aisc-ico--refresh',
+      'Handheld': 'aisc-ico aisc-ico--help',
       'Tracking': 'fa-route',
       'FPV': 'fa-helicopter',
 
       // Motion speed / intensity (escala visual)
-      'Subtle': 'fa-circle',
-      'Moderate': 'fa-circle-dot',
-      'Dynamic': 'fa-bolt',
-      'Aggressive': 'fa-fire',
+      'Subtle': 'aisc-ico aisc-ico--circle',
+      'Moderate': 'aisc-ico aisc-ico--circle',
+      'Dynamic': 'aisc-ico aisc-ico--zap',
+      'Aggressive': 'aisc-ico aisc-ico--fire',
 
       // Lighting type
-      'Soft diffused': 'fa-cloud',
+      'Soft diffused': 'aisc-ico aisc-ico--cloud',
       'Hard contrast': 'fa-mountain-sun',
-      'Rim light': 'fa-circle-half-stroke',
-      'Backlit silhouette': 'fa-user-secret',
-      'Studio commercial': 'fa-store',
-      'Natural daylight': 'fa-sun',
-      'Dramatic spotlight': 'fa-bullseye',
+      'Rim light': 'aisc-ico aisc-ico--moon',
+      'Backlit silhouette': 'aisc-ico aisc-ico--user-slash',
+      'Studio commercial': 'aisc-ico aisc-ico--store',
+      'Natural daylight': 'aisc-ico aisc-ico--sun',
+      'Dramatic spotlight': 'aisc-ico aisc-ico--goal',
 
       // Contrast
-      'Low': 'fa-circle-notch',
-      'Medium': 'fa-circle-half-stroke',
-      'High': 'fa-circle',
+      'Low': 'aisc-ico aisc-ico--loader',
+      'Medium': 'aisc-ico aisc-ico--moon',
+      'High': 'aisc-ico aisc-ico--circle',
       'Ultra contrast': 'fa-circle-radiation',
 
       // Temperature
-      'Neutral': 'fa-circle',
-      'Warm': 'fa-fire',
+      'Neutral': 'aisc-ico aisc-ico--circle',
+      'Warm': 'aisc-ico aisc-ico--fire',
       'Cold': 'fa-snowflake',
 
       // Tone / Mood
-      'Clean commercial': 'fa-broom',
-      'Cinematic dramatic': 'fa-masks-theater',
-      'Hyperreal product': 'fa-cube',
+      'Clean commercial': 'aisc-ico aisc-ico--eraser',
+      'Cinematic dramatic': 'aisc-ico aisc-ico--characters',
+      'Hyperreal product': 'aisc-ico aisc-ico--product',
       'Minimal luxury': 'fa-gem',
-      'Dark premium': 'fa-moon',
-      'Bright energetic': 'fa-bolt',
-      'Editorial fashion': 'fa-book-open',
-      'Documentary': 'fa-camera',
+      'Dark premium': 'aisc-ico aisc-ico--moon',
+      'Bright energetic': 'aisc-ico aisc-ico--zap',
+      'Editorial fashion': 'aisc-ico aisc-ico--book',
+      'Documentary': 'aisc-ico aisc-ico--camera',
 
       // Color grade / temp
-      'High saturation': 'fa-droplet',
-      'Muted tones': 'fa-circle',
+      'High saturation': 'aisc-ico aisc-ico--palette',
+      'Muted tones': 'aisc-ico aisc-ico--circle',
 
       // Energy level
-      'Peak': 'fa-fire'
+      'Peak': 'aisc-ico aisc-ico--fire'
     };
 
     // SVG animados que comunican el movimiento de cámara visualmente.
@@ -1562,7 +1562,7 @@ class VideoView extends BaseView {
         row.appendChild(grid);
         sel.classList.add('video-cine-select-hidden');
       }
-      const fallbackIcon = FALLBACK_ICONS[key] || 'fa-circle';
+      const fallbackIcon = FALLBACK_ICONS[key] || 'aisc-ico aisc-ico--circle';
       const renderTiles = () => {
         const options = Array.from(sel.options).filter((o) => o.value);
         const current = sel.value;
@@ -2415,7 +2415,7 @@ class VideoView extends BaseView {
       sendBtn.setAttribute('aria-label', hasPrompt ? window.__('Generar video (producción)') : window.__('Generar prompt'));
       const icon = sendBtn.querySelector('i');
       if (icon) {
-        icon.className = hasPrompt ? 'fas fa-play' : 'fas fa-wand-magic-sparkles';
+        icon.className = hasPrompt ? 'aisc-ico aisc-ico--play' : 'aisc-ico aisc-ico--sparkle';
       }
     }
     if (labelEl) labelEl.textContent = hasPrompt ? window.__('PRODUCCIÓN') : 'PROMPT';

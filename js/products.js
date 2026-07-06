@@ -38,26 +38,26 @@ if (typeof window.ProductsManager === 'undefined') {
     // Mapeo completo de todas las categorías posibles
     getCategoryMap() {
         return {
-            'todos': { label: 'Todos', icon: 'fa-th' },
+            'todos': { label: 'Todos', icon: 'aisc-ico aisc-ico--grid' },
             'bebida': { label: 'Bebidas', icon: 'fa-glass-water' },
             'bebida_alcoholica': { label: 'Bebidas Alcohólicas', icon: 'fa-wine-glass' },
-            'agua': { label: 'Agua', icon: 'fa-droplet' },
-            'energetica': { label: 'Bebidas Energéticas', icon: 'fa-bolt' },
+            'agua': { label: 'Agua', icon: 'aisc-ico aisc-ico--palette' },
+            'energetica': { label: 'Bebidas Energéticas', icon: 'aisc-ico aisc-ico--zap' },
             'alimento': { label: 'Alimentos', icon: 'fa-utensils' },
             'snack': { label: 'Snacks', icon: 'fa-cookie' },
             'suplemento_alimenticio': { label: 'Suplementos', icon: 'fa-pills' },
-            'cosmetico': { label: 'Cosméticos', icon: 'fa-palette' },
+            'cosmetico': { label: 'Cosméticos', icon: 'aisc-ico aisc-ico--palette' },
             'skincare': { label: 'Skincare', icon: 'fa-spa' },
-            'maquillaje': { label: 'Maquillaje', icon: 'fa-paintbrush' },
+            'maquillaje': { label: 'Maquillaje', icon: 'aisc-ico aisc-ico--palette' },
             'perfume': { label: 'Perfumes', icon: 'fa-spray-can' },
-            'cuidado_cabello': { label: 'Cuidado del Cabello', icon: 'fa-scissors' },
+            'cuidado_cabello': { label: 'Cuidado del Cabello', icon: 'aisc-ico aisc-ico--scissors' },
             'app': { label: 'Apps/Software', icon: 'fa-mobile-screen' },
-            'electronico': { label: 'Electrónicos', icon: 'fa-laptop' },
+            'electronico': { label: 'Electrónicos', icon: 'aisc-ico aisc-ico--laptop' },
             'smartphone': { label: 'Smartphones', icon: 'fa-mobile-screen-button' },
             'ropa': { label: 'Ropa', icon: 'fa-shirt' },
             'calzado': { label: 'Calzado', icon: 'fa-shoe-prints' },
-            'accesorio_moda': { label: 'Accesorios de Moda', icon: 'fa-bag-shopping' },
-            'otro': { label: 'Otros', icon: 'fa-box' }
+            'accesorio_moda': { label: 'Accesorios de Moda', icon: 'aisc-ico aisc-ico--cart' },
+            'otro': { label: 'Otros', icon: 'aisc-ico aisc-ico--product' }
         };
     }
 

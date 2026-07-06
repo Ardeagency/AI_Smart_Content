@@ -929,12 +929,12 @@ class BrandOrganizationView extends BaseView {
   getIdentityDocumentIcon(fileName, fileType) {
     const ext = String(fileName || '').split('.').pop().toLowerCase();
     const mime = String(fileType || '').toLowerCase();
-    if (ext === 'pdf' || mime.includes('pdf')) return { icon: 'fas fa-file-pdf', variant: 'pdf' };
-    if (['doc', 'docx', 'odt', 'rtf'].includes(ext) || mime.includes('word')) return { icon: 'fas fa-file-word', variant: 'word' };
-    if (['ppt', 'pptx', 'odp'].includes(ext) || mime.includes('presentation')) return { icon: 'fas fa-file-powerpoint', variant: 'ppt' };
-    if (['xls', 'xlsx', 'ods'].includes(ext) || mime.includes('sheet')) return { icon: 'fas fa-file-excel', variant: 'excel' };
-    if (['txt', 'md'].includes(ext) || mime.startsWith('text/')) return { icon: 'fas fa-file-alt', variant: 'text' };
-    return { icon: 'fas fa-file', variant: 'generic' };
+    if (ext === 'pdf' || mime.includes('pdf')) return { icon: 'aisc-ico aisc-ico--document', variant: 'pdf' };
+    if (['doc', 'docx', 'odt', 'rtf'].includes(ext) || mime.includes('word')) return { icon: 'aisc-ico aisc-ico--document', variant: 'word' };
+    if (['ppt', 'pptx', 'odp'].includes(ext) || mime.includes('presentation')) return { icon: 'aisc-ico aisc-ico--document', variant: 'ppt' };
+    if (['xls', 'xlsx', 'ods'].includes(ext) || mime.includes('sheet')) return { icon: 'aisc-ico aisc-ico--document', variant: 'excel' };
+    if (['txt', 'md'].includes(ext) || mime.startsWith('text/')) return { icon: 'aisc-ico aisc-ico--document', variant: 'text' };
+    return { icon: 'aisc-ico aisc-ico--document', variant: 'generic' };
   }
 
   renderAssetsFiles() {

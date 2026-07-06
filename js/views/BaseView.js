@@ -505,7 +505,7 @@ class BaseView {
    * Diseño en Figma node 133:14.
    */
   static emptyState({
-    icon = 'fa-inbox', iconSrc = '', title = '', subtitle = '',
+    icon = 'aisc-ico aisc-ico--inbox', iconSrc = '', title = '', subtitle = '',
     primaryLabel = '', secondaryLabel = '', primaryAction = '', secondaryAction = '',
     id = '', hidden = false, fill = false, compact = false, noDots = false,
   } = {}) {
@@ -733,8 +733,8 @@ class BaseView {
       headerUserDropdown.classList.toggle('open', !isOpen);
       const icon = headerUserChevron.querySelector('i');
       if (icon) {
-        icon.classList.toggle('fa-chevron-up', !isOpen);
-        icon.classList.toggle('fa-chevron-down', isOpen);
+        icon.classList.toggle('aisc-ico--chevron-up', !isOpen);
+        icon.classList.toggle('aisc-ico--chevron-down', isOpen);
       }
     });
 
@@ -765,8 +765,8 @@ class BaseView {
           const chevron = document.getElementById('headerUserChevron');
           const icon = chevron?.querySelector('i');
           if (icon) {
-            icon.classList.remove('fa-chevron-up');
-            icon.classList.add('fa-chevron-down');
+            icon.classList.remove('aisc-ico--chevron-up');
+            icon.classList.add('aisc-ico--chevron-down');
           }
         }
       });

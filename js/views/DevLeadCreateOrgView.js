@@ -170,9 +170,9 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   METHODS = [
-    { v: 'manual', icon: 'fa-pen-to-square',   label: 'Manual',     hint: 'Lleno los datos a mano (descripcion, tono, paleta)' },
-    { v: 'url',    icon: 'fa-magic-wand-sparkles', label: 'Investigacion inteligente', hint: 'Vera escrapea una URL y detecta la identidad' },
-    { v: 'docs',   icon: 'fa-file-lines',      label: 'Documentacion oficial', hint: 'Subo brief, brandbook o presentaciones' }
+    { v: 'manual', icon: 'aisc-ico aisc-ico--edit',   label: 'Manual',     hint: 'Lleno los datos a mano (descripcion, tono, paleta)' },
+    { v: 'url',    icon: 'aisc-ico aisc-ico--sparkle', label: 'Investigacion inteligente', hint: 'Vera escrapea una URL y detecta la identidad' },
+    { v: 'docs',   icon: 'aisc-ico aisc-ico--document',      label: 'Documentacion oficial', hint: 'Subo brief, brandbook o presentaciones' }
   ];
 
   TONES = [
@@ -289,9 +289,9 @@ class DevLeadCreateOrgView extends DevBaseView {
   // ─── Paso 1: Modo de creacion (manual vs automatico) ─────────────────
   renderStepMode() {
     const modes = [
-      { v: 'manual', icon: 'fa-pen-to-square',       label: 'Crear manualmente',
+      { v: 'manual', icon: 'aisc-ico aisc-ico--edit',       label: 'Crear manualmente',
         hint: 'Tu llenas la identidad, el mercado y el brand DNA paso a paso.' },
-      { v: 'auto',   icon: 'fa-magic-wand-sparkles', label: 'Crear automaticamente',
+      { v: 'auto',   icon: 'aisc-ico aisc-ico--sparkle', label: 'Crear automaticamente',
         hint: 'Das una fuente (URL/datos) y Vera investiga y arma la org sola.' }
     ];
     return `
@@ -325,10 +325,10 @@ class DevLeadCreateOrgView extends DevBaseView {
   // tipografias, ADN, logo, sistema de comunicacion (OpenAI), competencia,
   // palabras/URLs a monitorear; y si conecta su tienda, importa productos.
   AUTO_PROVIDERS = [
-    { v: 'shopify',      icon: 'fa-bag-shopping',  label: 'Shopify' },
-    { v: 'mercadolibre', icon: 'fa-store',         label: 'Mercado Libre' },
-    { v: 'amazon',       icon: 'fa-box',           label: 'Amazon' },
-    { v: 'woocommerce',  icon: 'fa-cart-shopping', label: 'WooCommerce' }
+    { v: 'shopify',      icon: 'aisc-ico aisc-ico--cart',  label: 'Shopify' },
+    { v: 'mercadolibre', icon: 'aisc-ico aisc-ico--store',         label: 'Mercado Libre' },
+    { v: 'amazon',       icon: 'aisc-ico aisc-ico--product',           label: 'Amazon' },
+    { v: 'woocommerce',  icon: 'aisc-ico aisc-ico--cart', label: 'WooCommerce' }
   ];
 
   renderStepAuto() {
@@ -458,7 +458,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       chip.classList.toggle('is-on', on);
       chip.setAttribute('aria-pressed', on ? 'true' : 'false');
       const mark = chip.querySelector('.createorg-intg-mark i');
-      if (mark) mark.className = `fas ${on ? 'fa-check' : 'fa-plus'}`;
+      if (mark) mark.className = `fas ${on ? 'aisc-ico aisc-ico--check' : 'aisc-ico aisc-ico--add'}`;
     }
   }
 

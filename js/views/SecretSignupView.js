@@ -190,7 +190,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
     const cards = [
       { action: 'create-brand', icon: 'fa-crown', title: this._t('Crear una marca nueva'),
         hint: this._t('Empieza tu propia organización desde cero. Quedas como owner.') },
-      { action: 'affiliate', icon: 'fa-user-plus', title: this._t('Afiliarme a una marca'),
+      { action: 'affiliate', icon: 'aisc-ico aisc-ico--user-registration', title: this._t('Afiliarme a una marca'),
         hint: this._t('Únete a una organización existente con un token de invitación.') },
     ];
     return `
@@ -304,8 +304,8 @@ class SecretSignupView extends (window.BaseView || class {}) {
     const p = (this._plans || []).find((x) => x.id === this._selectedPlan) || {};
     const price = Number(p.price_usd_month || 0);
     const gateways = [
-      { v: 'wompi', icon: 'fa-credit-card', label: this._t('Wompi'), hint: this._t('Tarjeta · PSE · Nequi (Colombia)') },
-      { v: 'stripe', icon: 'fa-globe', label: this._t('Tarjeta internacional'), hint: this._t('Visa · Mastercard · Amex') },
+      { v: 'wompi', icon: 'aisc-ico aisc-ico--credit-card', label: this._t('Wompi'), hint: this._t('Tarjeta · PSE · Nequi (Colombia)') },
+      { v: 'stripe', icon: 'aisc-ico aisc-ico--globe', label: this._t('Tarjeta internacional'), hint: this._t('Visa · Mastercard · Amex') },
     ];
     return `
       <header class="ssup-head">
@@ -338,9 +338,9 @@ class SecretSignupView extends (window.BaseView || class {}) {
 
   renderStepCreateBrand() {
     const cards = [
-      { mode: 'auto', icon: 'fa-wand-magic-sparkles', title: this._t('Crear automáticamente'),
+      { mode: 'auto', icon: 'aisc-ico aisc-ico--sparkle', title: this._t('Crear automáticamente'),
         hint: this._t('Danos tu sitio o redes y Vera investiga y arma tu marca sola.') },
-      { mode: 'manual', icon: 'fa-pen-to-square', title: this._t('Manualmente'),
+      { mode: 'manual', icon: 'aisc-ico aisc-ico--edit', title: this._t('Manualmente'),
         hint: this._t('Tú defines la identidad, el mercado y el ADN paso a paso.') },
     ];
     return `
@@ -383,10 +383,10 @@ class SecretSignupView extends (window.BaseView || class {}) {
   // datos de ejemplo; en real se cablearía a /api/brand-scrape + admin-update-brand.
 
   AUTO_PROVIDERS = [
-    { v: 'shopify', icon: 'fa-bag-shopping', label: 'Shopify' },
-    { v: 'mercadolibre', icon: 'fa-store', label: 'Mercado Libre' },
-    { v: 'amazon', icon: 'fa-box', label: 'Amazon' },
-    { v: 'woocommerce', icon: 'fa-cart-shopping', label: 'WooCommerce' },
+    { v: 'shopify', icon: 'aisc-ico aisc-ico--cart', label: 'Shopify' },
+    { v: 'mercadolibre', icon: 'aisc-ico aisc-ico--store', label: 'Mercado Libre' },
+    { v: 'amazon', icon: 'aisc-ico aisc-ico--product', label: 'Amazon' },
+    { v: 'woocommerce', icon: 'aisc-ico aisc-ico--cart', label: 'WooCommerce' },
   ];
 
   AUTO_APPROVAL_PAGES = [
@@ -481,7 +481,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
       fonts: () => `${this._ssF(this._t('Tipografía principal'), 'apFont1', a.typography_primary)}
         ${this._ssF(this._t('Tipografía secundaria'), 'apFont2', a.typography_secondary)}
         ${this._ssF(this._t('Estética'), 'apEstetica', a.estetica)}`,
-      products: () => this._apListBody('products', this._t('Productos'), 'fa-box'),
+      products: () => this._apListBody('products', this._t('Productos'), 'aisc-ico aisc-ico--product'),
       services: () => this._apListBody('services', this._t('Servicios'), 'fa-concierge-bell'),
       competitors: () => this._apCompBody(),
       review: () => this._apReviewBody(),

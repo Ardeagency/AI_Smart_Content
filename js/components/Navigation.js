@@ -10,7 +10,7 @@ const SIDEBAR_USER_CONFIG = {
       type: 'page',
       id: 'vera',
       label: 'Vera',
-      icon: 'fa-brain',
+      icon: 'aisc-ico aisc-ico--memory',
       iconSrc: '/recursos/vera/Logoverablanco.svg',
       iconSrcCollapsed: '/recursos/vera/Vera.svg',
       route: 'vera',
@@ -20,12 +20,12 @@ const SIDEBAR_USER_CONFIG = {
       requireCap: 'vera.chat'
     },
     { type: 'section', label: 'Espacio de trabajo' },
-    { type: 'page', id: 'dashboard', label: 'Tablero', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard', requireCap: 'insights.view' },
+    { type: 'page', id: 'dashboard', label: 'Tablero', icon: 'aisc-ico aisc-ico--growth', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard', requireCap: 'insights.view' },
     {
       type: 'container',
       id: 'brand-storage',
       label: 'Almacenamiento',
-      icon: 'fa-layer-group',
+      icon: 'aisc-ico aisc-ico--layers',
       iconSrc: '/recursos/icons/file-storage.svg',
       children: [],
       requireCap: 'brand.storage.manage'
@@ -36,7 +36,7 @@ const SIDEBAR_USER_CONFIG = {
       type: 'container',
       id: 'brand-organization',
       label: 'Identidad',
-      icon: 'fa-layer-group',
+      icon: 'aisc-ico aisc-ico--layers',
       iconSrc: '/recursos/icons/Brands.svg',
       route: 'brand',
       requireCap: 'brand.identity.edit',
@@ -51,28 +51,28 @@ const SIDEBAR_USER_CONFIG = {
       type: 'page',
       id: 'monitoring',
       label: 'Monitoreo',
-      icon: 'fa-satellite-dish',
+      icon: 'aisc-ico aisc-ico--monitoring',
       iconSrc: '/recursos/icons/monitoring.svg',
       route: 'monitoring',
       requireCap: 'monitoring.view'
     },
     { type: 'section', label: 'Crear' },
-    { type: 'page', id: 'production', label: 'Producción', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production', requireCap: 'production.create' },
+    { type: 'page', id: 'production', label: 'Producción', icon: 'aisc-ico aisc-ico--growth', iconSrc: '/recursos/icons/Production.svg', route: 'production', requireCap: 'production.create' },
     {
       type: 'page',
       id: 'tasks',
       label: 'Tareas',
-      icon: 'fa-list-check',
+      icon: 'aisc-ico aisc-ico--task',
       iconSrc: '/recursos/icons/task.svg',
       route: 'tasks',
       requireCap: 'production.create'
     },
-    { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video', requireCap: 'video.create' },
+    { type: 'page', id: 'video', label: 'Video', icon: 'aisc-ico aisc-ico--play', iconSrc: '/recursos/icons/video.svg', route: 'video', requireCap: 'video.create' },
     {
       type: 'container',
       id: 'catalog',
       label: 'Flujos',
-      icon: 'fa-th-large',
+      icon: 'aisc-ico aisc-ico--grid',
       iconSrc: '/recursos/icons/flows.svg',
       children: [], // Se rellenan con content_categories (schema 218-224) en render
       requireCap: 'studio.create'
@@ -147,17 +147,17 @@ const DEV_ACTION_ICON_ORG = `<svg width="20" height="20" viewBox="0 0 24 24" fil
  */
 const SIDEBAR_DEVELOPER_CONFIG = [
   { type: 'section', label: 'Main' },
-  { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
-  { type: 'page', id: 'admin-inputs', label: 'Inputs', icon: 'fa-sliders-h', iconSrc: '/recursos/icons/coding.svg', route: '/dev/lead/input-schemas' },
-  { type: 'page', id: 'admin-categorias', label: 'Categories', icon: 'fa-tags', iconSrc: '/recursos/icons/file-storage.svg', route: '/dev/lead/categories' },
-  { type: 'page', id: 'admin-lexicon', label: 'Lexicon', icon: 'fa-book', iconSrc: '/recursos/icons/book.svg', route: '/dev/lead/lexicon' },
+  { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'aisc-ico aisc-ico--growth', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
+  { type: 'page', id: 'admin-inputs', label: 'Inputs', icon: 'aisc-ico aisc-ico--filter', iconSrc: '/recursos/icons/coding.svg', route: '/dev/lead/input-schemas' },
+  { type: 'page', id: 'admin-categorias', label: 'Categories', icon: 'aisc-ico aisc-ico--tag', iconSrc: '/recursos/icons/file-storage.svg', route: '/dev/lead/categories' },
+  { type: 'page', id: 'admin-lexicon', label: 'Lexicon', icon: 'aisc-ico aisc-ico--book', iconSrc: '/recursos/icons/book.svg', route: '/dev/lead/lexicon' },
   { type: 'section', label: 'Code' },
-  { type: 'page', id: 'flows', label: 'My Flows', icon: 'fa-th-large', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
+  { type: 'page', id: 'flows', label: 'My Flows', icon: 'aisc-ico aisc-ico--grid', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
   {
     type: 'container',
     id: 'operations',
     label: 'Operations',
-    icon: 'fa-cogs',
+    icon: 'aisc-ico aisc-ico--settings',
     iconSrc: '/recursos/icons/monitoring.svg',
     children: [
       { label: 'Flow Tests', route: '/dev/test' },
@@ -170,7 +170,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     type: 'page',
     id: 'llm-training',
     label: 'Entrenamiento',
-    icon: 'fa-brain',
+    icon: 'aisc-ico aisc-ico--memory',
     iconSrc: '/recursos/icons/memory.svg',
     role_required: 'lead',
     route: '/dev/lead/vera-training'
@@ -180,7 +180,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     type: 'page',
     id: 'admin-orgs',
     label: 'Organizaciones',
-    icon: 'fa-building',
+    icon: 'aisc-ico aisc-ico--organization',
     iconSrc: '/recursos/icons/organization.svg',
     role_required: 'lead',
     route: '/dev/lead/orgs'
@@ -189,7 +189,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     type: 'page',
     id: 'admin-team',
     label: 'Team',
-    icon: 'fa-users',
+    icon: 'aisc-ico aisc-ico--audience',
     iconSrc: '/recursos/icons/Characters.svg',
     role_required: 'lead',
     route: '/dev/lead/team'
@@ -198,7 +198,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     type: 'page',
     id: 'admin-consumers',
     label: 'Consumidores',
-    icon: 'fa-user-group',
+    icon: 'aisc-ico aisc-ico--audience',
     iconSrc: '/recursos/icons/user registration.svg',
     role_required: 'lead',
     route: '/dev/lead/consumers'
@@ -207,7 +207,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     type: 'page',
     id: 'admin-billing',
     label: 'Billing',
-    icon: 'fa-credit-card',
+    icon: 'aisc-ico aisc-ico--credit-card',
     iconSrc: '/recursos/icons/credits.svg',
     role_required: 'lead',
     route: '/dev/lead/billing'
@@ -621,7 +621,7 @@ class Navigation {
     body.innerHTML = `<div class="activity-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i></div>`;
     const sb = await this._supabase();
     const orgId = this.currentOrgId;
-    if (!sb || !orgId) { this._activityEmpty(body, 'fa-circle-info', 'Selecciona una marca para ver la actividad de Vera.'); return; }
+    if (!sb || !orgId) { this._activityEmpty(body, 'aisc-ico aisc-ico--alert-info', 'Selecciona una marca para ver la actividad de Vera.'); return; }
     try {
       if (tab === 'misiones') {
         const { data, error } = await sb
@@ -647,12 +647,12 @@ class Navigation {
       }
     } catch (e) {
       console.warn('[activity] load failed:', e?.message || e);
-      this._activityEmpty(body, 'fa-triangle-exclamation', 'No se pudo cargar la actividad.');
+      this._activityEmpty(body, 'aisc-ico aisc-ico--alert-warning', 'No se pudo cargar la actividad.');
     }
   }
 
   _renderActivityTasks(body, list) {
-    if (!list.length) { this._activityEmpty(body, 'fa-circle-check', 'Sin actividad reciente de Vera para esta marca.'); return; }
+    if (!list.length) { this._activityEmpty(body, 'aisc-ico aisc-ico--check', 'Sin actividad reciente de Vera para esta marca.'); return; }
     const byNewest = (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0);
     // Lo que necesita decision humana (pending) va primero, ordenado por prioridad; lo demas debajo.
     const pending = list.filter((t) => t.status === 'pending')
@@ -710,7 +710,7 @@ class Navigation {
   }
 
   _renderActivityMissions(body, list) {
-    if (!list.length) { this._activityEmpty(body, 'fa-robot', 'Vera aun no ha ejecutado misiones.'); return; }
+    if (!list.length) { this._activityEmpty(body, 'aisc-ico aisc-ico--bot', 'Vera aun no ha ejecutado misiones.'); return; }
     body.innerHTML = `<ol class="activity-list">${list.map((m) => this._activityMissionItemHtml(m)).join('')}</ol>`;
   }
 
@@ -740,33 +740,33 @@ class Navigation {
 
   _activityActionMeta(type) {
     const M = {
-      pause_campaign:             { title: 'Pausar campaña',             icon: 'fas fa-triangle-exclamation', color: '#e06464' },
-      resume_campaign:            { title: 'Reactivar campaña',          icon: 'fas fa-rocket',               color: '#4cb37a' },
-      launch_campaign:            { title: 'Lanzar campaña',             icon: 'fas fa-rocket',               color: '#a07bd0' },
-      create_brief:               { title: 'Crear brief de campaña',     icon: 'fas fa-list-check',           color: '#5b9bd5' },
-      update_brief:               { title: 'Actualizar brief',           icon: 'fas fa-list-check',           color: '#5b9bd5' },
-      update_persona:             { title: 'Actualizar persona',         icon: 'fas fa-users',                color: '#a07bd0' },
-      create_audience:            { title: 'Crear audiencia',            icon: 'fas fa-users',                color: '#3fb6a8' },
-      update_audience:            { title: 'Actualizar audiencia',       icon: 'fas fa-users',                color: '#3fb6a8' },
-      link_brief_to_campaign:     { title: 'Vincular brief a campaña',   icon: 'fas fa-link',                 color: '#4cb37a' },
-      link_campaign_to_persona:   { title: 'Vincular campaña a persona', icon: 'fas fa-link',                 color: '#4cb37a' },
-      link_segment_to_persona:    { title: 'Vincular audiencia a persona', icon: 'fas fa-link',               color: '#4cb37a' },
-      update_brand_container:     { title: 'Actualizar marca',           icon: 'fas fa-wand-magic-sparkles',  color: '#e09145' },
-      update_shopify_product_seo: { title: 'Optimizar SEO de producto',  icon: 'fas fa-magnifying-glass',     color: '#4cb37a' },
-      adjust_price:               { title: 'Ajustar precio',             icon: 'fas fa-tag',                  color: '#e06464' },
-      adjust_tone:                { title: 'Ajustar tono del contenido', icon: 'fas fa-wand-magic-sparkles',  color: '#00c7d6' },
+      pause_campaign:             { title: 'Pausar campaña',             icon: 'aisc-ico aisc-ico--alert-warning', color: '#e06464' },
+      resume_campaign:            { title: 'Reactivar campaña',          icon: 'aisc-ico aisc-ico--growth',               color: '#4cb37a' },
+      launch_campaign:            { title: 'Lanzar campaña',             icon: 'aisc-ico aisc-ico--growth',               color: '#a07bd0' },
+      create_brief:               { title: 'Crear brief de campaña',     icon: 'aisc-ico aisc-ico--task',           color: '#5b9bd5' },
+      update_brief:               { title: 'Actualizar brief',           icon: 'aisc-ico aisc-ico--task',           color: '#5b9bd5' },
+      update_persona:             { title: 'Actualizar persona',         icon: 'aisc-ico aisc-ico--audience',                color: '#a07bd0' },
+      create_audience:            { title: 'Crear audiencia',            icon: 'aisc-ico aisc-ico--audience',                color: '#3fb6a8' },
+      update_audience:            { title: 'Actualizar audiencia',       icon: 'aisc-ico aisc-ico--audience',                color: '#3fb6a8' },
+      link_brief_to_campaign:     { title: 'Vincular brief a campaña',   icon: 'aisc-ico aisc-ico--link',                 color: '#4cb37a' },
+      link_campaign_to_persona:   { title: 'Vincular campaña a persona', icon: 'aisc-ico aisc-ico--link',                 color: '#4cb37a' },
+      link_segment_to_persona:    { title: 'Vincular audiencia a persona', icon: 'aisc-ico aisc-ico--link',               color: '#4cb37a' },
+      update_brand_container:     { title: 'Actualizar marca',           icon: 'aisc-ico aisc-ico--sparkle',  color: '#e09145' },
+      update_shopify_product_seo: { title: 'Optimizar SEO de producto',  icon: 'aisc-ico aisc-ico--search',     color: '#4cb37a' },
+      adjust_price:               { title: 'Ajustar precio',             icon: 'aisc-ico aisc-ico--tag',                  color: '#e06464' },
+      adjust_tone:                { title: 'Ajustar tono del contenido', icon: 'aisc-ico aisc-ico--sparkle',  color: '#00c7d6' },
     };
-    return M[type] || { title: this._humanizeMission(type), icon: 'fas fa-bolt', color: '#87868b' };
+    return M[type] || { title: this._humanizeMission(type), icon: 'aisc-ico aisc-ico--zap', color: '#87868b' };
   }
 
   _activityMissionStatus(s) {
     const M = {
-      completed: { label: __('Completada'), kind: 'ok',   icon: 'fas fa-circle-check',           color: '#6bcf7f' },
+      completed: { label: __('Completada'), kind: 'ok',   icon: 'aisc-ico aisc-ico--check',           color: '#6bcf7f' },
       running:   { label: __('En curso'),   kind: 'run',  icon: 'fas fa-circle-notch fa-spin',   color: '#5b9bd5' },
-      pending:   { label: __('En cola'),    kind: 'wait', icon: 'fas fa-clock-rotate-left',      color: '#87868b' },
-      failed:    { label: __('Fallida'),    kind: 'fail', icon: 'fas fa-triangle-exclamation',   color: '#e06464' },
+      pending:   { label: __('En cola'),    kind: 'wait', icon: 'aisc-ico aisc-ico--history',      color: '#87868b' },
+      failed:    { label: __('Fallida'),    kind: 'fail', icon: 'aisc-ico aisc-ico--alert-warning',   color: '#e06464' },
     };
-    return M[s] || { label: s || '—', kind: 'wait', icon: 'fas fa-robot', color: '#87868b' };
+    return M[s] || { label: s || '—', kind: 'wait', icon: 'aisc-ico aisc-ico--bot', color: '#87868b' };
   }
 
   _humanizeMission(t) {

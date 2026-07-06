@@ -50,7 +50,7 @@ class PlacesView extends BaseView {
   ${this.emptyState({
     id: 'placesListEmpty',
     hidden: true,
-    icon: 'fa-map-marker-alt',
+    icon: 'aisc-ico aisc-ico--places',
     iconSrc: '/recursos/icons/Places.svg',
     title: __('Crea tu primer escenario'),
     subtitle: __('Sube fotos o una URL y Vera arma la ficha del lugar: ambiente, amenidades y caracteristicas visuales. Apareceran aqui como sets para tus producciones.'),
@@ -437,8 +437,8 @@ class PlacesView extends BaseView {
 
     const stepConfig = {
       picker:  { title: __('Adjuntar lugar'),           icon: null,            back: false, backTo: null     },
-      url:     { title: __('URL del lugar'),            icon: 'fa-link',       back: true,  backTo: 'picker' },
-      attach:  { title: __('Adjuntar fotos y archivos'),icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
+      url:     { title: __('URL del lugar'),            icon: 'aisc-ico aisc-ico--link',       back: true,  backTo: 'picker' },
+      attach:  { title: __('Adjuntar fotos y archivos'),icon: 'aisc-ico aisc-ico--paperclip',  back: true,  backTo: 'picker' },
       loading: { title: __('Creando ficha del lugar'),  icon: null,            back: false, backTo: null     },
     };
 
@@ -465,8 +465,8 @@ class PlacesView extends BaseView {
 
     const urlInput = root.querySelector('.attach-product-url-input');
     const attachPanel = root.querySelector('[data-panel="attach"]');
-    const photos = this._wireDropzone(attachPanel?.querySelector('[data-group="photos"]'), 'fa-image');
-    const docs = this._wireDropzone(attachPanel?.querySelector('[data-group="files"]'), 'fa-file');
+    const photos = this._wireDropzone(attachPanel?.querySelector('[data-group="photos"]'), 'aisc-ico aisc-ico--image');
+    const docs = this._wireDropzone(attachPanel?.querySelector('[data-group="files"]'), 'aisc-ico aisc-ico--document');
 
     root.querySelector('[data-action="submit-url"]')?.addEventListener('click', async (e) => {
       const submitBtn = e.currentTarget;
@@ -516,7 +516,7 @@ class PlacesView extends BaseView {
     });
   }
 
-  _wireDropzone(groupEl, iconClass = 'fa-file') {
+  _wireDropzone(groupEl, iconClass = 'aisc-ico aisc-ico--document') {
     if (!groupEl) return { input: null, list: null };
     const dropzone = groupEl.querySelector('.attach-product-dropzone');
     const input = groupEl.querySelector('input[type="file"]');

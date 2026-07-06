@@ -44,7 +44,7 @@ class ServicesView extends BaseView {
   ${this.emptyState({
     id: 'servicesEmpty',
     hidden: true,
-    icon: 'fa-briefcase',
+    icon: 'aisc-ico aisc-ico--brief',
     iconSrc: '/recursos/icons/Service.svg',
     title: __('Crea tu primer servicio'),
     subtitle: __('Sube fotos o una URL y Vera arma la ficha: entregables, metodologia y diferenciadores. Apareceran aqui para tus producciones.'),
@@ -389,8 +389,8 @@ class ServicesView extends BaseView {
 
     const stepConfig = {
       picker:  { title: __('Adjuntar servicio'),          icon: null,            back: false, backTo: null },
-      url:     { title: __('URL del servicio'),           icon: 'fa-link',       back: true,  backTo: 'picker' },
-      attach:  { title: __('Adjuntar archivos'),          icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
+      url:     { title: __('URL del servicio'),           icon: 'aisc-ico aisc-ico--link',       back: true,  backTo: 'picker' },
+      attach:  { title: __('Adjuntar archivos'),          icon: 'aisc-ico aisc-ico--paperclip',  back: true,  backTo: 'picker' },
       loading: { title: __('Creando ficha del servicio'), icon: null,            back: false, backTo: null },
     };
 
@@ -419,7 +419,7 @@ class ServicesView extends BaseView {
     const urlInput = root.querySelector('.attach-product-url-input');
     const attachPanel = root.querySelector('[data-panel="attach"]');
     const fileGroup = attachPanel?.querySelector('[data-group="files"]');
-    const docs = this._wireDropzone(fileGroup, 'fa-file');
+    const docs = this._wireDropzone(fileGroup, 'aisc-ico aisc-ico--document');
 
     root.querySelector('[data-action="submit-url"]')?.addEventListener('click', async (e) => {
       const submitBtn = e.currentTarget;
@@ -456,7 +456,7 @@ class ServicesView extends BaseView {
     });
   }
 
-  _wireDropzone(groupEl, iconClass = 'fa-file') {
+  _wireDropzone(groupEl, iconClass = 'aisc-ico aisc-ico--document') {
     if (!groupEl) return { input: null, list: null };
     const dropzone = groupEl.querySelector('.attach-product-dropzone');
     const input = groupEl.querySelector('input[type="file"]');

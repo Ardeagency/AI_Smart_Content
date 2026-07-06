@@ -635,11 +635,11 @@ class DevFlowsView extends DevBaseView {
 
   getOutputTypeIcon(type) {
     const t = (type || 'text').toLowerCase();
-    if (t === 'video') return 'fa-video';
-    if (t === 'image' || t === 'imagen') return 'fa-image';
-    if (t === 'audio') return 'fa-music';
-    if (t === 'document') return 'fa-file-alt';
-    if (t === 'mixed') return 'fa-layer-group';
+    if (t === 'video') return 'aisc-ico aisc-ico--video';
+    if (t === 'image' || t === 'imagen') return 'aisc-ico aisc-ico--image';
+    if (t === 'audio') return 'aisc-ico aisc-ico--music';
+    if (t === 'document') return 'aisc-ico aisc-ico--document';
+    if (t === 'mixed') return 'aisc-ico aisc-ico--layers';
     return 'fa-align-left';
   }
 

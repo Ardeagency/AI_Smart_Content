@@ -19,17 +19,17 @@ window.CreditCosts = (() => {
 
   // Fallback hardcoded por si la tabla aún no cargó (UX optimista).
   const FALLBACK = {
-    studio_image:          { label: 'Imagen Studio',          icon: 'fa-image',            area: 'studio',     credits: 10 },
-    studio_image_4k:       { label: 'Imagen Studio 4K',       icon: 'fa-image',            area: 'studio',     credits: 25 },
-    video_short:           { label: 'Video corto (10s)',      icon: 'fa-play',             area: 'video',      credits: 100 },
-    video_long:            { label: 'Video largo (30s)',      icon: 'fa-play',             area: 'video',      credits: 300 },
-    vera_chat:             { label: 'Vera chat',              icon: 'fa-robot',            area: 'vera',       credits: 1 },
-    vera_brief_generation: { label: 'Vera brief',             icon: 'fa-wand-magic',       area: 'vera',       credits: 5 },
-    vera_action:           { label: 'Vera acción autónoma',   icon: 'fa-wand-magic',       area: 'vera',       credits: 15 },
-    production_flow:       { label: 'Production flow',        icon: 'fa-diagram-project',  area: 'production', credits: 20 },
+    studio_image:          { label: 'Imagen Studio',          icon: 'aisc-ico aisc-ico--image',            area: 'studio',     credits: 10 },
+    studio_image_4k:       { label: 'Imagen Studio 4K',       icon: 'aisc-ico aisc-ico--image',            area: 'studio',     credits: 25 },
+    video_short:           { label: 'Video corto (10s)',      icon: 'aisc-ico aisc-ico--play',             area: 'video',      credits: 100 },
+    video_long:            { label: 'Video largo (30s)',      icon: 'aisc-ico aisc-ico--play',             area: 'video',      credits: 300 },
+    vera_chat:             { label: 'Vera chat',              icon: 'aisc-ico aisc-ico--bot',            area: 'vera',       credits: 1 },
+    vera_brief_generation: { label: 'Vera brief',             icon: 'aisc-ico aisc-ico--sparkle',       area: 'vera',       credits: 5 },
+    vera_action:           { label: 'Vera acción autónoma',   icon: 'aisc-ico aisc-ico--sparkle',       area: 'vera',       credits: 15 },
+    production_flow:       { label: 'Production flow',        icon: 'aisc-ico aisc-ico--flows',  area: 'production', credits: 20 },
     apify_scrape:          { label: 'Scraping de marca',      icon: 'fa-spider',           area: 'background', credits: 1 },
-    claude_describe:       { label: 'Análisis Claude',        icon: 'fa-magnifying-glass', area: 'background', credits: 1 },
-    migration_grant:       { label: 'Otorgación migración',   icon: 'fa-gift',             area: 'system',     credits: 0 },
+    claude_describe:       { label: 'Análisis Claude',        icon: 'aisc-ico aisc-ico--search', area: 'background', credits: 1 },
+    migration_grant:       { label: 'Otorgación migración',   icon: 'aisc-ico aisc-ico--gift',             area: 'system',     credits: 0 },
   };
 
   const AREA_COLORS = {
@@ -60,7 +60,7 @@ window.CreditCosts = (() => {
         (data || []).forEach((row) => {
           byKind[row.kind] = {
             label: row.label,
-            icon: row.icon || 'fa-coins',
+            icon: row.icon || 'aisc-ico aisc-ico--credits',
             area: row.area || 'background',
             credits: Number(row.credits_per_action) || 0,
           };
@@ -88,7 +88,7 @@ window.CreditCosts = (() => {
   function get(kind) {
     return getMapSync()[kind] || {
       label: kind,
-      icon: 'fa-coins',
+      icon: 'aisc-ico aisc-ico--credits',
       area: 'background',
       credits: 0,
     };

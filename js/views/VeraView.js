@@ -1829,7 +1829,7 @@ class VeraView extends (window.BaseView || class {}) {
     const sb = () => this.supabase;
     const defs = {
       product: {
-        label: __('Producto'), icon: 'fa-box',
+        label: __('Producto'), icon: 'aisc-ico aisc-ico--product',
         load: async () => {
           const { data } = await sb().from('products')
             .select('id, nombre_producto, tipo_producto')
@@ -1839,7 +1839,7 @@ class VeraView extends (window.BaseView || class {}) {
       },
       campaign: {
         // Campañas REALES = sincronizadas desde Meta/Google (last_synced_at no nulo).
-        label: __('Campaña'), icon: 'fa-bullhorn',
+        label: __('Campaña'), icon: 'aisc-ico aisc-ico--campaign',
         load: async () => {
           const { data } = await sb().from('campaigns')
             .select('id, nombre_campana, status')
@@ -1852,7 +1852,7 @@ class VeraView extends (window.BaseView || class {}) {
       campaign_objective: {
         // Campañas CONCEPTUALES = no sincronizadas (last_synced_at nulo); sirven
         // para dirigir la producción hacia un objetivo.
-        label: __('Objetivo de campaña'), icon: 'fa-bullseye',
+        label: __('Objetivo de campaña'), icon: 'aisc-ico aisc-ico--goal',
         load: async () => {
           const { data } = await sb().from('campaigns')
             .select('id, nombre_campana')
@@ -1862,7 +1862,7 @@ class VeraView extends (window.BaseView || class {}) {
         }
       },
       audience_objective: {
-        label: __('Objetivo de audiencia'), icon: 'fa-users',
+        label: __('Objetivo de audiencia'), icon: 'aisc-ico aisc-ico--audience',
         load: async () => {
           const { data } = await sb().from('audience_personas')
             .select('id, name, awareness_level')
@@ -1871,7 +1871,7 @@ class VeraView extends (window.BaseView || class {}) {
         }
       },
       brief: {
-        label: __('Brief'), icon: 'fa-clipboard',
+        label: __('Brief'), icon: 'aisc-ico aisc-ico--copy',
         load: async () => {
           const { data } = await sb().from('brand_containers')
             .select('id, nombre_marca, creative_brief')
@@ -1882,7 +1882,7 @@ class VeraView extends (window.BaseView || class {}) {
         }
       },
       service: {
-        label: __('Servicio'), icon: 'fa-briefcase',
+        label: __('Servicio'), icon: 'aisc-ico aisc-ico--brief',
         load: async () => {
           const { data } = await sb().from('services')
             .select('id, nombre_servicio')
@@ -1891,7 +1891,7 @@ class VeraView extends (window.BaseView || class {}) {
         }
       },
       place: {
-        label: __('Lugar'), icon: 'fa-map-pin',
+        label: __('Lugar'), icon: 'aisc-ico aisc-ico--places',
         load: async () => {
           // brand_places no tiene organization_id → se filtra por entity_id de la org.
           const { data: ents } = await sb().from('brand_entities')
@@ -1904,7 +1904,7 @@ class VeraView extends (window.BaseView || class {}) {
         }
       },
       character: {
-        label: __('Personaje'), icon: 'fa-masks-theater',
+        label: __('Personaje'), icon: 'aisc-ico aisc-ico--characters',
         load: async () => {
           // brand_characters no tiene organization_id → se filtra por entity_id de la org.
           const { data: ents } = await sb().from('brand_entities')
@@ -1926,9 +1926,9 @@ class VeraView extends (window.BaseView || class {}) {
   }
   _libKindIcon(kind) {
     return ({
-      product: 'fa-box', campaign: 'fa-bullhorn', campaign_objective: 'fa-bullseye',
-      audience_objective: 'fa-users', brief: 'fa-clipboard', service: 'fa-briefcase', place: 'fa-map-pin'
-    })[kind] || 'fa-layer-group';
+      product: 'aisc-ico aisc-ico--product', campaign: 'aisc-ico aisc-ico--campaign', campaign_objective: 'aisc-ico aisc-ico--goal',
+      audience_objective: 'aisc-ico aisc-ico--audience', brief: 'aisc-ico aisc-ico--copy', service: 'aisc-ico aisc-ico--brief', place: 'aisc-ico aisc-ico--places'
+    })[kind] || 'aisc-ico aisc-ico--layers';
   }
 
   // Picker de UN tipo (Producto, Campaña, etc.). La selección se acumula con la
@@ -2207,7 +2207,7 @@ class VeraView extends (window.BaseView || class {}) {
     if (!b) return;
     const i = b.querySelector('i');
     const prev = i?.className;
-    if (i) i.className = 'fas fa-check';
+    if (i) i.className = 'aisc-ico aisc-ico--check';
     setTimeout(() => { if (i && prev) i.className = prev; }, 1200);
   }
 
@@ -2280,7 +2280,7 @@ class VeraView extends (window.BaseView || class {}) {
     if (!list.length) {
       body.innerHTML = (window.BaseView && window.BaseView.emptyState)
         ? window.BaseView.emptyState({
-            icon: 'fa-folder-open',
+            icon: 'aisc-ico aisc-ico--folder',
             title: __('Aún no hay archivos'),
             subtitle: __('Pídele a Vera un informe, una presentación o una tabla y aparecerá aquí para descargar.'),
             compact: true,
@@ -2314,12 +2314,12 @@ class VeraView extends (window.BaseView || class {}) {
 
   _artifactIcon(format) {
     const f = String(format || '').toLowerCase();
-    if (f === 'pdf') return 'fa-file-pdf';
-    if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(f)) return 'fa-file-image';
-    if (f === 'xlsx' || f === 'csv') return 'fa-file-excel';
-    if (f === 'docx' || f === 'doc') return 'fa-file-word';
-    if (f === 'html') return 'fa-file-code';
-    return 'fa-file';
+    if (f === 'pdf') return 'aisc-ico aisc-ico--document';
+    if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(f)) return 'aisc-ico aisc-ico--image';
+    if (f === 'xlsx' || f === 'csv') return 'aisc-ico aisc-ico--document';
+    if (f === 'docx' || f === 'doc') return 'aisc-ico aisc-ico--document';
+    if (f === 'html') return 'aisc-ico aisc-ico--document';
+    return 'aisc-ico aisc-ico--document';
   }
 
   _humanBytes(n) {
@@ -3795,15 +3795,15 @@ class VeraView extends (window.BaseView || class {}) {
   /* ── Adjuntos: ícono visual por tipo ─────────────────── */
   _attachmentIconClass(type) {
     return ({
-      image: 'fa-image',
-      pdf: 'fa-file-pdf',
+      image: 'aisc-ico aisc-ico--image',
+      pdf: 'aisc-ico aisc-ico--document',
       audio: 'fa-file-audio',
-      video: 'fa-file-video',
-      word: 'fa-file-word',
-      spreadsheet: 'fa-file-excel',
-      text: 'fa-file-lines',
-      library: 'fa-layer-group'
-    })[type] || 'fa-file';
+      video: 'aisc-ico aisc-ico--video',
+      word: 'aisc-ico aisc-ico--document',
+      spreadsheet: 'aisc-ico aisc-ico--document',
+      text: 'aisc-ico aisc-ico--document',
+      library: 'aisc-ico aisc-ico--layers'
+    })[type] || 'aisc-ico aisc-ico--document';
   }
 
   /* ── Adjuntos: subir a Supabase Storage ─────────────── */

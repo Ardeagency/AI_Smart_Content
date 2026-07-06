@@ -735,11 +735,11 @@ class FlowCatalogView extends BaseView {
 
   getOutputTypeIcon(type) {
     const t = (type || 'text').toLowerCase();
-    if (t === 'video') return 'fa-video';
-    if (t === 'image' || t === 'imagen') return 'fa-image';
-    if (t === 'audio') return 'fa-music';
-    if (t === 'document') return 'fa-file-alt';
-    if (t === 'mixed') return 'fa-layer-group';
+    if (t === 'video') return 'aisc-ico aisc-ico--video';
+    if (t === 'image' || t === 'imagen') return 'aisc-ico aisc-ico--image';
+    if (t === 'audio') return 'aisc-ico aisc-ico--music';
+    if (t === 'document') return 'aisc-ico aisc-ico--document';
+    if (t === 'mixed') return 'aisc-ico aisc-ico--layers';
     return 'fa-align-left';
   }
 
@@ -1148,7 +1148,7 @@ class FlowCatalogView extends BaseView {
     const saved = this.flows.filter(f => this.savedFlowIds.has(f.id));
     if (!saved.length) {
       grid.innerHTML = this.emptyState({
-        icon: 'fa-bookmark',
+        icon: 'aisc-ico aisc-ico--bookmark',
         title: __('Aun no has guardado flujos'),
         subtitle: __('Explora el catalogo y toca el icono de guardar en los flujos que mas uses. Apareceran aqui para acceso rapido.'),
       });
@@ -1167,7 +1167,7 @@ class FlowCatalogView extends BaseView {
     if (data.length === 0) {
       gallery.innerHTML = this.emptyState({
         iconSrc: '/recursos/icons/flows.svg',
-        icon: 'fa-wand-magic-sparkles',
+        icon: 'aisc-ico aisc-ico--sparkle',
         title: __('Tu catalogo de flows esta por encenderse'),
         subtitle: __('Los flows son recetas listas para producir contenido de tu marca: posts, historias, piezas de campaña. En cuanto se publiquen, apareceran aqui organizados por categoria.'),
       });

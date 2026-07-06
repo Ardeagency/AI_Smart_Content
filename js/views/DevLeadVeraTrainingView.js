@@ -419,12 +419,12 @@ class DevLeadVeraTrainingView extends DevBaseView {
 
   iconForType(type) {
     const t = (type || '').toLowerCase();
-    if (t === 'image' || t === 'visual') return 'fa-image';
-    if (t === 'prompt' || t === 'text') return 'fa-pen-nib';
-    if (t === 'pdf') return 'fa-file-pdf';
-    if (t === 'md' || t === 'markdown') return 'fa-file-lines';
-    if (t === 'json') return 'fa-file-code';
-    return 'fa-file';
+    if (t === 'image' || t === 'visual') return 'aisc-ico aisc-ico--image';
+    if (t === 'prompt' || t === 'text') return 'aisc-ico aisc-ico--edit';
+    if (t === 'pdf') return 'aisc-ico aisc-ico--document';
+    if (t === 'md' || t === 'markdown') return 'aisc-ico aisc-ico--document';
+    if (t === 'json') return 'aisc-ico aisc-ico--document';
+    return 'aisc-ico aisc-ico--document';
   }
 
   openDetail(key) {

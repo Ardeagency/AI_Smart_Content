@@ -319,17 +319,17 @@ class DevLeadOrgsView extends DevBaseView {
       </div>
       <h4 class="org-health-section-title">Datos de la marca</h4>
       <div class="org-health-grid">
-        ${stat('Productos', products, products > 0, 'fa-box')}
+        ${stat('Productos', products, products > 0, 'aisc-ico aisc-ico--product')}
         ${stat('Entidades', entities, entities > 0, 'fa-shapes')}
-        ${stat('Servicios', services, services > 0, 'fa-screwdriver-wrench')}
-        ${stat('Sub-marcas', containers, true, 'fa-sitemap')}
+        ${stat('Servicios', services, services > 0, 'aisc-ico aisc-ico--settings')}
+        ${stat('Sub-marcas', containers, true, 'aisc-ico aisc-ico--flows')}
       </div>
       <h4 class="org-health-section-title">Ecosistema</h4>
       <div class="org-health-grid">
-        ${stat('Runs (7d)', runs7, true, 'fa-play')}
+        ${stat('Runs (7d)', runs7, true, 'aisc-ico aisc-ico--play')}
         ${stat('Errores (7d)', errors7, errors7 === 0, 'fa-bug')}
-        ${stat('Runs totales', runsTotal, true, 'fa-database')}
-        ${stat('Vera', veraOk ? h.vera_status : 'off', veraOk, 'fa-robot')}
+        ${stat('Runs totales', runsTotal, true, 'aisc-ico aisc-ico--database')}
+        ${stat('Vera', veraOk ? h.vera_status : 'off', veraOk, 'aisc-ico aisc-ico--bot')}
       </div>
       <p class="org-health-foot"><i class="aisc-ico aisc-ico--clock"></i> Última actividad: ${this.escapeHtml(lastAct)}</p>
     `;

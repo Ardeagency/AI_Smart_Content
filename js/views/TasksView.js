@@ -84,7 +84,7 @@ class TasksView extends BaseView {
       id: 'tasksEmpty',
       hidden: true,
       iconSrc: '/recursos/icons/task.svg',
-      icon: 'fa-calendar-alt',
+      icon: 'aisc-ico aisc-ico--calendar',
       title: __('Aún no tienes tareas programadas.'),
       subtitle: __('Las tareas se crean al programar un flujo desde el Estudio. Cuando tengas alguna, aparecerán aquí y podrás asignarles entidad, campaña y audiencia.'),
     })}
@@ -1448,10 +1448,10 @@ class TasksView extends BaseView {
       toggleBtn.onclick = () => this.toggleActive(task);
       const icon = toggleBtn.querySelector('i');
       if (task.is_active) {
-        if (icon) icon.className = 'fas fa-pause-circle';
+        if (icon) icon.className = 'aisc-ico aisc-ico--pause';
         if (toggleLabel) toggleLabel.textContent = __('Pausar');
       } else {
-        if (icon) icon.className = 'fas fa-play-circle';
+        if (icon) icon.className = 'aisc-ico aisc-ico--play';
         if (toggleLabel) toggleLabel.textContent = __('Activar');
       }
     }

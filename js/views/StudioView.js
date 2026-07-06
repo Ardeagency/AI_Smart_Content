@@ -901,7 +901,7 @@ class StudioView extends BaseView {
       `
         : this.emptyState({
           noDots: true,
-          icon: 'fa-wand-magic-sparkles',
+          icon: 'aisc-ico aisc-ico--sparkle',
           title: __('Empieza una nueva producción'),
           subtitle: __('Llena el formulario de la derecha y pulsa Producir. Verás aquí los resultados de este run.'),
         });

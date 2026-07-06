@@ -164,16 +164,16 @@ class PlanesView extends BaseView {
    */
   ctaForPlan(plan) {
     if (this.isCurrentPlan(plan)) {
-      return { label: window.__('Plan actual'), icon: 'fa-check', kind: 'current' };
+      return { label: window.__('Plan actual'), icon: 'aisc-ico aisc-ico--check', kind: 'current' };
     }
     if (!this._hasActiveSubscription() || !this.currentPlan) {
-      return { label: window.__('Iniciar prueba de 14 días'), icon: 'fa-arrow-right', kind: 'trial' };
+      return { label: window.__('Iniciar prueba de 14 días'), icon: 'aisc-ico aisc-ico--arrow-right', kind: 'trial' };
     }
     const cur = Number(this.currentPlan.display_order) || 0;
     const tgt = Number(plan.display_order) || 0;
-    if (tgt > cur) return { label: window.__('Mejorar a {nombre}', { nombre: plan.name }), icon: 'fa-arrow-up', kind: 'upgrade' };
-    if (tgt < cur) return { label: window.__('Bajar a {nombre}', { nombre: plan.name }), icon: 'fa-arrow-down', kind: 'downgrade' };
-    return { label: window.__('Cambiar a {nombre}', { nombre: plan.name }), icon: 'fa-exchange-alt', kind: 'switch' };
+    if (tgt > cur) return { label: window.__('Mejorar a {nombre}', { nombre: plan.name }), icon: 'aisc-ico aisc-ico--arrow-up', kind: 'upgrade' };
+    if (tgt < cur) return { label: window.__('Bajar a {nombre}', { nombre: plan.name }), icon: 'aisc-ico aisc-ico--arrow-down', kind: 'downgrade' };
+    return { label: window.__('Cambiar a {nombre}', { nombre: plan.name }), icon: 'aisc-ico aisc-ico--refresh', kind: 'switch' };
   }
 
   buildFeatureBullets(plan) {
@@ -252,7 +252,7 @@ class PlanesView extends BaseView {
     const credits = this.orgCredits;
     const creditsBlock = credits && Number(credits.credits_total) > 0
       ? this._usageMeter({
-          icon: 'fa-bolt',
+          icon: 'aisc-ico aisc-ico--zap',
           label: window.__('Créditos'),
           used: Number(credits.credits_total) - Number(credits.credits_available || 0),
           total: Number(credits.credits_total),
@@ -263,7 +263,7 @@ class PlanesView extends BaseView {
     const storage = this.orgStorage;
     const storageBlock = storage && Number(storage.max_mb) > 0
       ? this._usageMeter({
-          icon: 'fa-database',
+          icon: 'aisc-ico aisc-ico--database',
           label: window.__('Almacenamiento'),
           used: Number(storage.used_mb) || 0,
           total: Number(storage.max_mb) || 0,
@@ -307,7 +307,7 @@ class PlanesView extends BaseView {
     if (!this.plans.length) {
       container.innerHTML = this.emptyState({
         iconSrc: '/recursos/icons/Planes.svg',
-        icon: 'fa-bolt',
+        icon: 'aisc-ico aisc-ico--zap',
         title: window.__('No hay planes disponibles.'),
         subtitle: window.__('Aún no hay planes para mostrar. Vuelve más tarde o contáctanos si necesitas un plan a medida.'),
       });
