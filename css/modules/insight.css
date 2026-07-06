@@ -3946,11 +3946,22 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
   pointer-events: none;
   user-select: none;
   filter: brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
-  /* SIN transition en la base: el primer reveal aparece instantaneo en su
-     opacidad final (0.16). Un fade 0->0.16 se percibia como parpadeo. Las
-     transiciones se activan con .is-tinted (JS, post-reveal) para re-tintes
-     suaves (cambio de tema/tab), nunca en la aparicion inicial. */
+  /* Invisible por defecto (opacity:0). El logo NO aparece hasta que el JS lo
+     revela con la animacion de entrada .is-entering (abajo). */
 }
+/* Animacion de entrada del logo del hero — misma filosofia de fade-in que el
+   resto de la plataforma (imgFadeIn / viewFadeIn), adaptada a la opacidad
+   dinamica del logo. El keyframe declara SOLO `from` (opacity:0): el `to`
+   implicito es la opacidad propia del elemento, que el JS fija inline segun el
+   degradado (0.16 blanco / 0.30 palido) — asi la entrada respeta el tinte.
+   `backwards` aplica el estado `from` (opacity:0) desde el primer frame, ANTES
+   de que la animacion arranque: el logo nunca se pinta a alta opacidad, por lo
+   que es imposible que se vea el flash blanco. Entra suave (~0.55s) y se queda
+   en su opacidad final. */
+.dash-hero-logo.is-entering { animation: heroLogoIn 0.55s ease-out backwards; }
+@keyframes heroLogoIn { from { opacity: 0; } }
+/* Transiciones suaves para re-tintes POSTERIORES (cambio de tema/tab), nunca en
+   la aparicion inicial. */
 .dash-hero-logo.is-tinted { transition: opacity 0.3s ease, filter 0.3s ease; }
 
 .dash-hero-inner { position: relative; z-index: 1; }

@@ -489,12 +489,19 @@ class DashboardView extends BaseView {
         // desde ningun valor => cero flash. El re-tint del onload recoge el
         // degradado real de la marca (OrgBrandTheme aplica post-render).
         const reveal = () => {
-          if (img.dataset.revealed !== '1') { img.hidden = false; img.dataset.revealed = '1'; }
-          this._tintHeroLogo(); // mide el degradado y fija opacidad+filtro finales (instantaneo)
-          // Activar transiciones SOLO despues del primer reveal: asi la aparicion
-          // inicial es instantanea (sin fade) y los re-tintes posteriores (onload
-          // con el degradado real, cambios de tema) si animan suave.
-          requestAnimationFrame(() => img.classList.add('is-tinted'));
+          // Re-tint (2do onload con el degradado real ya aplicado): solo re-mide,
+          // no re-dispara la animacion de entrada.
+          if (img.dataset.revealed === '1') { this._tintHeroLogo(); return; }
+          img.hidden = false;
+          this._tintHeroLogo();            // fija opacidad+filtro finales inline
+          img.dataset.revealed = '1';
+          // Animacion de entrada: heroLogoIn (backwards) pinta opacity:0 desde el
+          // primer frame y sube suave hasta la opacidad final => sin flash y con
+          // entrada profesional. Se agrega en el MISMO tick (no rAF) para que
+          // funcione aunque el tab este en background.
+          img.classList.add('is-entering');
+          // Tras la entrada, habilitar transiciones para re-tintes posteriores.
+          img.addEventListener('animationend', () => img.classList.add('is-tinted'), { once: true });
         };
         img.onload = reveal;
         img.onerror = () => { img.hidden = true; };
