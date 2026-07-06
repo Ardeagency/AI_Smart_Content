@@ -2834,11 +2834,16 @@
 @media (max-width: 1100px) { .mb-plan-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .mb-plan-col {
   position: relative; overflow: hidden;
-  /* Mismo diseno que las burbujas de integraciones (.dash-integ-bubble):
-     blanco translucido 0.10 + borde 0.18 + sombra suave. Sin blur ni fondo
-     oscuro — deja translucir el degradado de la marca igual que las burbujas. */
-  background: rgba(255, 255, 255, 0.10);
+  /* Glass AHUMADO (no glass-black solido): las cards llevan texto de colores
+     (verde/azul/ambar/rojo) que debe leerse sobre el degradado DINAMICO del hero
+     (cualquier color de marca; el ambar sobre naranja se perdia). Un tinte oscuro
+     translucido + blur da el contraste sin perder la sensacion de vidrio. El borde
+     0.18 (mismo de las burbujas) mantiene la familia visual; las burbujas/filtros,
+     al llevar solo texto/icono blanco, se quedan en glass claro. */
+  background: rgba(14, 14, 16, 0.46);
   border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px) saturate(130%);
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
   border-radius: 14px;
   padding: 1rem 1.1rem 1.1rem;
   display: flex; flex-direction: column; gap: 0.25rem;
