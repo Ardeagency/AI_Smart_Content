@@ -2834,16 +2834,15 @@
 @media (max-width: 1100px) { .mb-plan-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .mb-plan-col {
   position: relative; overflow: hidden;
-  /* glass (claro) sobre el degradado del hero — no glass-black. Deja pasar el
-     degradado de la marca; el blur da la sensacion de vidrio. */
-  background: var(--glass-bg, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  /* Mismo diseno que las burbujas de integraciones (.dash-integ-bubble):
+     blanco translucido 0.10 + borde 0.18 + sombra suave. Sin blur ni fondo
+     oscuro — deja translucir el degradado de la marca igual que las burbujas. */
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 14px;
   padding: 1rem 1.1rem 1.1rem;
   display: flex; flex-direction: column; gap: 0.25rem;
-  box-shadow: var(--dash-elev);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
 }
 /* Tinte de tipo discreto: acento diagonal muy sutil sobre el glass (la identidad
    de color fuerte vive en la etiqueta y la metrica, no en el fondo). */
@@ -3085,13 +3084,12 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 .dash-report-btn {
   display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none;
   font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8);
-  background: var(--glass-bg, rgba(255,255,255,0.05)); border: 1px solid var(--glass-border, rgba(255,255,255,0.1));
+  background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18);
   border-radius: 10px; padding: 0.5rem 0.85rem;
-  backdrop-filter: var(--glass-blur, blur(14px) saturate(120%));
-  -webkit-backdrop-filter: var(--glass-blur, blur(14px) saturate(120%));
+  box-shadow: 0 1px 3px rgba(0,0,0,0.22);
   transition: background 0.15s ease, border-color 0.15s ease;
 }
-.dash-report-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
+.dash-report-btn:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.28); }
 .dash-report-btn > i:first-child { color: var(--accent-brand, #FF6500); font-size: 0.8125rem; }
 .dash-report-caret { font-size: 0.625rem; opacity: 0.6; transition: transform 0.15s ease; }
 .dash-report-dd[open] .dash-report-caret { transform: rotate(180deg); }
@@ -3565,18 +3563,15 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
   --dash-warn: #e0a045;
 }
 
-/* ── Filtros: glass (claro) canonico (--glass-* + --glass-blur), no glass-black.
-   El backdrop-filter YA es seguro: el dropdown del calendario se portea a
-   document.body al abrir (DateRangePicker), asi que el blur de la pill no lo
-   contiene/rompe. El degradado de la marca se transluce a traves del glass. */
+/* ── Filtros: mismo diseno que las burbujas de integraciones — blanco
+   translucido 0.10 + borde 0.18 + sombra suave. Sin fondo oscuro ni blur. */
 .insight-page .mb-filters-bar .living-filter {
-  background: var(--glass-bg, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 10px;
-  backdrop-filter: var(--glass-blur, blur(14px) saturate(120%));
-  -webkit-backdrop-filter: var(--glass-blur, blur(14px) saturate(120%));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
 }
-.insight-page .mb-filters-bar .living-filter:hover { background: rgba(255, 255, 255, 0.12); }
+.insight-page .mb-filters-bar .living-filter:hover { background: rgba(255, 255, 255, 0.16); }
 .insight-page .mb-filters-bar .living-filter-label { border-right-color: rgba(255, 255, 255, 0.08); }
 .insight-page .mb-filters-bar .living-filter--disabled { opacity: 0.55; }
 .insight-page .mb-filters-bar .living-filter--disabled .living-filter-select { cursor: not-allowed; }
@@ -4154,8 +4149,8 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .plan-ev-link:hover { text-decoration: underline; }
 .dash-hero-card-skeleton {
   min-height: 104px;
-  background: var(--glass-bg, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 14px;
   animation: dashHeroCardPulse 1.4s ease-in-out infinite;
 }
