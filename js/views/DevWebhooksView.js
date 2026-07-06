@@ -173,7 +173,7 @@ class DevWebhooksView extends DevBaseView {
 
         <!-- Empty State -->
         <div class="webhooks-empty" id="webhooksEmpty" hidden>
-          <i class="ph ph-webhooks-logo"></i>
+          <i class="aisc-ico aisc-ico--webhook"></i>
           <h3>Sin webhooks configurados</h3>
           <p>Configura webhooks para conectar tus flujos de IA</p>
           <button class="btn-primary" id="emptyAddBtn">
@@ -859,7 +859,7 @@ class DevWebhooksView extends DevBaseView {
           <div class="health-results-list">
             ${results.map(r => `
               <div class="health-result-item ${r.healthy ? 'success' : 'error'}">
-                <i class="ph ph-${r.healthy ? 'check-circle' : 'x-circle'}"></i>
+                <i class="aisc-ico ${r.healthy ? 'aisc-ico--check' : 'aisc-ico--close'}"></i>
                 <span>${r.name}</span>
               </div>
             `).join('')}
@@ -1059,7 +1059,7 @@ class DevWebhooksView extends DevBaseView {
         testResult.innerHTML = `
           <div class="test-result-item ${result.success ? 'success' : 'error'}">
             <div class="result-header">
-              <i class="ph ph-${result.success ? 'check-circle' : 'x-circle'}"></i>
+              <i class="aisc-ico ${result.success ? 'aisc-ico--check' : 'aisc-ico--close'}"></i>
               <span class="result-status">${result.success ? 'Conexión exitosa' : 'Error de conexión'}</span>
             </div>
             <div class="result-details">
@@ -1274,7 +1274,7 @@ class DevWebhooksView extends DevBaseView {
     const notification = document.createElement('div');
     notification.className = `webhooks-notification ${type}`;
     notification.innerHTML = `
-      <i class="ph ph-${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : type === 'warning' ? 'warning' : 'info'}"></i>
+      <i class="aisc-ico ${type === 'success' ? 'aisc-ico--check' : type === 'error' ? 'aisc-ico--close' : type === 'warning' ? 'aisc-ico--alert-warning' : 'aisc-ico--alert-info'}"></i>
       <span>${message}</span>
     `;
     

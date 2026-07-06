@@ -764,7 +764,7 @@
             <p class="mb-cmt-item-text">${this._esc(t.content || '')}</p>
             <div class="mb-cmt-item-meta">
               <span class="mb-cmt-author">@${this._esc(String(t.author || '').replace(/^@/, ''))}</span>
-              <span class="mb-cmt-eng"><i class="aisc-ico aisc-ico--likes"></i> ${this._compactNum(t.likes)}${Number(t.replies) ? ` · <i class="fas fa-reply"></i> ${this._compactNum(t.replies)}` : ''}</span>
+              <span class="mb-cmt-eng"><i class="aisc-ico aisc-ico--likes"></i> ${this._compactNum(t.likes)}${Number(t.replies) ? ` · <i class="aisc-ico aisc-ico--reply"></i> ${this._compactNum(t.replies)}` : ''}</span>
             </div>
           </div>
         </div>`).join('');

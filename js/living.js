@@ -1536,7 +1536,7 @@ class LivingManager {
         const selected = !!(outputId && this.selectedOutputs && this.selectedOutputs.has(outputId));
         return `
             <button type="button" class="card-select ${selected ? 'is-selected' : ''}" data-action="select" data-output-id="${safeId}" title="Seleccionar" aria-label="Seleccionar producción" aria-pressed="${selected ? 'true' : 'false'}">
-                <i class="${selected ? 'fas fa-check-circle' : 'fas fa-circle'}" aria-hidden="true"></i>
+                <i class="aisc-ico ${selected ? 'aisc-ico--check' : 'aisc-ico--circle'}" aria-hidden="true"></i>
             </button>
             <div class="card-overlay-actions">
                 <button type="button" class="card-action card-action--like ${liked ? 'is-liked' : ''}" data-action="like" data-output-id="${safeId}" title="Me gusta" aria-label="Me gusta" aria-pressed="${liked ? 'true' : 'false'}">

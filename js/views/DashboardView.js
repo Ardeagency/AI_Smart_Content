@@ -537,7 +537,7 @@ class DashboardView extends BaseView {
     return `
       <div class="dash-integ" role="group" aria-label="${__('Integraciones activas')}">
         ${bubbles}
-        <button type="button" class="dash-integ-bubble dash-integ-add" data-action="add-integration" title="${__('Agregar integración')}" aria-label="${__('Agregar integración')}"><i class="fas fa-plus"></i></button>
+        <button type="button" class="dash-integ-bubble dash-integ-add" data-action="add-integration" title="${__('Agregar integración')}" aria-label="${__('Agregar integración')}"><i class="aisc-ico aisc-ico--add"></i></button>
       </div>`;
   }
 

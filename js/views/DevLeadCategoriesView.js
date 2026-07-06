@@ -227,7 +227,7 @@ class DevLeadCategoriesView extends DevBaseView {
           ${desc ? `<p class="dev-org-card-h-desc">${desc}</p>` : ''}
           <div class="dev-org-card-meta dev-org-card-meta--h">
             <span class="dev-org-card-pill"><i class="aisc-ico aisc-ico--sort"></i> Orden ${order}</span>
-            <span class="dev-org-card-pill ${visible ? '' : 'dev-org-card-pill--muted'}"><i class="fas fa-${visible ? 'eye' : 'eye-slash'}"></i> ${visible ? 'Visible' : 'Oculta'}</span>
+            <span class="dev-org-card-pill ${visible ? '' : 'dev-org-card-pill--muted'}"><i class="aisc-ico ${visible ? 'aisc-ico--eye' : 'aisc-ico--eye-off'}"></i> ${visible ? 'Visible' : 'Oculta'}</span>
           </div>
         </div>
       </article>

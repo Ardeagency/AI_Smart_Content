@@ -1423,7 +1423,7 @@ class MonitoringView extends BaseView {
         <div class="mn-det-section-title">${__('Consultar con Vera')}</div>
         <div class="mn-vera-shortcuts">
           <button type="button" data-bact="vera-analizar"><i class="aisc-ico aisc-ico--sparkle"></i><span>${__('Analizar')}</span></button>
-          <button type="button" data-bact="vera-comparar"><i class="fas fa-code-compare"></i><span>${__('Comparar')}</span></button>
+          <button type="button" data-bact="vera-comparar"><i class="aisc-ico aisc-ico--code-compare"></i><span>${__('Comparar')}</span></button>
           <button type="button" data-bact="vera-inspirar"><i class="aisc-ico aisc-ico--idea"></i><span>${__('Pedir ideas')}</span></button>
         </div>
       </div>` : `
@@ -1541,7 +1541,7 @@ class MonitoringView extends BaseView {
 
     const veraActs = isProfile ? `
       <button class="mn-bubpop-act" data-bact="vera-analizar"><i class="aisc-ico aisc-ico--sparkle"></i> ${__('Analizar')}</button>
-      <button class="mn-bubpop-act" data-bact="vera-comparar"><i class="fas fa-code-compare"></i> ${__('Comparar')}</button>
+      <button class="mn-bubpop-act" data-bact="vera-comparar"><i class="aisc-ico aisc-ico--code-compare"></i> ${__('Comparar')}</button>
       <button class="mn-bubpop-act" data-bact="vera-inspirar"><i class="aisc-ico aisc-ico--idea"></i> ${__('Ideas')}</button>` : `
       <a class="mn-bubpop-act" href="${this._esc(item.url)}" target="_blank" rel="noopener"><i class="aisc-ico aisc-ico--external-link"></i> ${__('Abrir página')}</a>`;
 

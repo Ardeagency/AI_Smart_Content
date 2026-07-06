@@ -1180,7 +1180,7 @@ class OrganizationView extends BaseView {
     if (!el || !this.org) return;
     const archived = !!this.org.deleted_at;
     el.innerHTML = archived
-      ? `<span class="org-status-pill org-status-pill--archived"><i class="fas fa-archive"></i> ${__('Archivada')}</span>`
+      ? `<span class="org-status-pill org-status-pill--archived"><i class="aisc-ico aisc-ico--archive"></i> ${__('Archivada')}</span>`
       : `<span class="org-status-pill org-status-pill--active">${__('Activa')}</span>`;
   }
 

@@ -19,11 +19,13 @@
 .aisc-ico--alert-info{--_aisc-i:url("/recursos/icons/alert-info.svg")}
 .aisc-ico--alert-success{--_aisc-i:url("/recursos/icons/alert-success.svg")}
 .aisc-ico--alert-warning{--_aisc-i:url("/recursos/icons/alert-warning.svg")}
+.aisc-ico--archive{--_aisc-i:url("/recursos/icons/archive.svg")}
 .aisc-ico--arrow-down{--_aisc-i:url("/recursos/icons/arrow-down.svg")}
 .aisc-ico--arrow-left{--_aisc-i:url("/recursos/icons/arrow-left.svg")}
 .aisc-ico--arrow-right{--_aisc-i:url("/recursos/icons/arrow-right.svg")}
 .aisc-ico--arrow-up{--_aisc-i:url("/recursos/icons/arrow-up.svg")}
 .aisc-ico--audience{--_aisc-i:url("/recursos/icons/audience.svg")}
+.aisc-ico--ban{--_aisc-i:url("/recursos/icons/ban.svg")}
 .aisc-ico--book{--_aisc-i:url("/recursos/icons/book.svg")}
 .aisc-ico--bookmark{--_aisc-i:url("/recursos/icons/bookmark.svg")}
 .aisc-ico--bot{--_aisc-i:url("/recursos/icons/bot.svg")}
@@ -42,10 +44,13 @@
 .aisc-ico--circle{--_aisc-i:url("/recursos/icons/circle.svg")}
 .aisc-ico--clock{--_aisc-i:url("/recursos/icons/clock.svg")}
 .aisc-ico--close{--_aisc-i:url("/recursos/icons/close.svg")}
+.aisc-ico--cloud{--_aisc-i:url("/recursos/icons/cloud.svg")}
+.aisc-ico--code-compare{--_aisc-i:url("/recursos/icons/code-compare.svg")}
 .aisc-ico--coding{--_aisc-i:url("/recursos/icons/coding.svg")}
 .aisc-ico--colapsado{--_aisc-i:url("/recursos/icons/colapsado.svg")}
 .aisc-ico--commandcenter{--_aisc-i:url("/recursos/icons/commandcenter.svg")}
 .aisc-ico--comments{--_aisc-i:url("/recursos/icons/comments.svg")}
+.aisc-ico--compass{--_aisc-i:url("/recursos/icons/compass.svg")}
 .aisc-ico--confg-organization{--_aisc-i:url("/recursos/icons/confg organization.svg")}
 .aisc-ico--consola-desarrollador{--_aisc-i:url("/recursos/icons/consola-desarrollador.svg")}
 .aisc-ico--copy{--_aisc-i:url("/recursos/icons/copy.svg")}
@@ -71,6 +76,7 @@
 .aisc-ico--film{--_aisc-i:url("/recursos/icons/film.svg")}
 .aisc-ico--filter{--_aisc-i:url("/recursos/icons/filter.svg")}
 .aisc-ico--fire{--_aisc-i:url("/recursos/icons/fire.svg")}
+.aisc-ico--flag{--_aisc-i:url("/recursos/icons/flag.svg")}
 .aisc-ico--flask{--_aisc-i:url("/recursos/icons/flask.svg")}
 .aisc-ico--flows{--_aisc-i:url("/recursos/icons/flows.svg")}
 .aisc-ico--folder{--_aisc-i:url("/recursos/icons/folder.svg")}
@@ -104,6 +110,7 @@
 .aisc-ico--mail{--_aisc-i:url("/recursos/icons/mail.svg")}
 .aisc-ico--memory{--_aisc-i:url("/recursos/icons/memory.svg")}
 .aisc-ico--menu{--_aisc-i:url("/recursos/icons/menu.svg")}
+.aisc-ico--microphone{--_aisc-i:url("/recursos/icons/microphone.svg")}
 .aisc-ico--minimize{--_aisc-i:url("/recursos/icons/minimize.svg")}
 .aisc-ico--minus{--_aisc-i:url("/recursos/icons/minus.svg")}
 .aisc-ico--monitoring{--_aisc-i:url("/recursos/icons/monitoring.svg")}
@@ -123,6 +130,7 @@
 .aisc-ico--quote{--_aisc-i:url("/recursos/icons/quote.svg")}
 .aisc-ico--receipt{--_aisc-i:url("/recursos/icons/receipt.svg")}
 .aisc-ico--refresh{--_aisc-i:url("/recursos/icons/refresh.svg")}
+.aisc-ico--reply{--_aisc-i:url("/recursos/icons/reply.svg")}
 .aisc-ico--runs{--_aisc-i:url("/recursos/icons/runs.svg")}
 .aisc-ico--save{--_aisc-i:url("/recursos/icons/save.svg")}
 .aisc-ico--scissors{--_aisc-i:url("/recursos/icons/scissors.svg")}
@@ -140,6 +148,10 @@
 .aisc-ico--sun{--_aisc-i:url("/recursos/icons/sun.svg")}
 .aisc-ico--tag{--_aisc-i:url("/recursos/icons/tag.svg")}
 .aisc-ico--task{--_aisc-i:url("/recursos/icons/task.svg")}
+.aisc-ico--text{--_aisc-i:url("/recursos/icons/text.svg")}
+.aisc-ico--textbox{--_aisc-i:url("/recursos/icons/textbox.svg")}
+.aisc-ico--toggle-off{--_aisc-i:url("/recursos/icons/toggle-off.svg")}
+.aisc-ico--toggle-on{--_aisc-i:url("/recursos/icons/toggle-on.svg")}
 .aisc-ico--upload{--_aisc-i:url("/recursos/icons/upload.svg")}
 .aisc-ico--user-registration{--_aisc-i:url("/recursos/icons/user registration.svg")}
 .aisc-ico--user-slash{--_aisc-i:url("/recursos/icons/user-slash.svg")}
@@ -147,6 +159,8 @@
 .aisc-ico--views{--_aisc-i:url("/recursos/icons/views.svg")}
 .aisc-ico--vista-organizacion{--_aisc-i:url("/recursos/icons/vista-organizacion.svg")}
 .aisc-ico--volume{--_aisc-i:url("/recursos/icons/volume.svg")}
+.aisc-ico--webhook{--_aisc-i:url("/recursos/icons/webhook.svg")}
+.aisc-ico--wind{--_aisc-i:url("/recursos/icons/wind.svg")}
 .aisc-ico--zap{--_aisc-i:url("/recursos/icons/zap.svg")}
 /* spin: preserva animacion cuando el <i> traia fa-spin/ph-spin (self-contained) */
 .aisc-ico.fa-spin,.aisc-ico.ph-spin,.aisc-ico.aisc-spin{animation:aisc-spin 1s linear infinite}

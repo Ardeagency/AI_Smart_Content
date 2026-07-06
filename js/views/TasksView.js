@@ -1473,7 +1473,7 @@ class TasksView extends BaseView {
     if (!wrap) return;
     const current = this._scheduleColors(task)[0] || '';
     wrap.innerHTML = [
-      `<button type="button" class="task-swatch task-swatch--none${current ? '' : ' is-on'}" data-color="" title="${__('Sin color (neutro)')}" aria-label="${__('Sin color (neutro)')}"><i class="fas fa-ban"></i></button>`,
+      `<button type="button" class="task-swatch task-swatch--none${current ? '' : ' is-on'}" data-color="" title="${__('Sin color (neutro)')}" aria-label="${__('Sin color (neutro)')}"><i class="aisc-ico aisc-ico--ban"></i></button>`,
       ...TasksView.PALETTE.map(c =>
         `<button type="button" class="task-swatch${current === c ? ' is-on' : ''}" style="background:${c}" data-color="${c}" title="${c}" aria-label="${c}"></button>`)
     ].join('');

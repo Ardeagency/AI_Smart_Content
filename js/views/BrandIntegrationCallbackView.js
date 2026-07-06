@@ -225,7 +225,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
     const safeReturn = this._safeInternalPath(returnTo);
     wrap.innerHTML = `
       <div class="bic-error">
-        <i class="fas fa-flag"></i>
+        <i class="aisc-ico aisc-ico--flag"></i>
         <h2>${window.__('No se encontraron páginas')}</h2>
         <p>
           ${window.__('Tu cuenta de Facebook no devolvió ninguna Página. Puede ocurrir si no seleccionaste ninguna en el paso de autorización de Meta.')}

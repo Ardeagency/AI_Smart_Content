@@ -406,7 +406,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
     const chips = this.AUTO_PROVIDERS.map((p) => {
       const on = (a.integrations || []).includes(p.v);
       return `<button type="button" class="ssup-intg ${on ? 'is-on' : ''}" data-intg="${p.v}" aria-pressed="${on}">
-        <i class="fas ${p.icon}"></i> ${this.escapeHtml(p.label)} <span class="ssup-intg-mark"><i class="fas ${on ? 'fa-check' : 'fa-plus'}"></i></span>
+        <i class="fas ${p.icon}"></i> ${this.escapeHtml(p.label)} <span class="ssup-intg-mark"><i class="aisc-ico ${on ? 'aisc-ico--check' : 'aisc-ico--add'}"></i></span>
       </button>`;
     }).join('');
     return `
@@ -572,7 +572,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
       chip.classList.toggle('is-on', on);
       chip.setAttribute('aria-pressed', String(on));
       const m = chip.querySelector('.ssup-intg-mark i');
-      if (m) m.className = `fas ${on ? 'fa-check' : 'fa-plus'}`;
+      if (m) m.className = `aisc-ico ${on ? 'aisc-ico--check' : 'aisc-ico--add'}`;
     }
   }
 

@@ -180,7 +180,7 @@ class DevLeadBillingView extends DevBaseView {
         <div class="dev-plan-card-actions">
           <button type="button" class="btn btn-secondary btn-sm" data-action="edit-plan" data-id="${id}"><i class="aisc-ico aisc-ico--edit"></i> Editar</button>
           <button type="button" class="btn btn-secondary btn-sm" data-action="toggle-plan-active" data-id="${id}" title="${active ? 'Desactivar' : 'Activar'}">
-            <i class="fas fa-${active ? 'toggle-on' : 'toggle-off'}"></i> ${active ? 'Desactivar' : 'Activar'}
+            <i class="aisc-ico ${active ? 'aisc-ico--toggle-on' : 'aisc-ico--toggle-off'}"></i> ${active ? 'Desactivar' : 'Activar'}
           </button>
         </div>
       </article>
@@ -463,7 +463,7 @@ class DevLeadBillingView extends DevBaseView {
         <div class="dev-plan-card-actions">
           <button type="button" class="btn btn-secondary btn-sm" data-action="edit-pack" data-id="${id}"><i class="aisc-ico aisc-ico--edit"></i> Editar</button>
           <button type="button" class="btn btn-secondary btn-sm" data-action="toggle-pack-active" data-id="${id}" title="${active ? 'Desactivar' : 'Activar'}">
-            <i class="fas fa-${active ? 'toggle-on' : 'toggle-off'}"></i>
+            <i class="aisc-ico ${active ? 'aisc-ico--toggle-on' : 'aisc-ico--toggle-off'}"></i>
           </button>
           <button type="button" class="btn btn-secondary btn-sm dev-plan-card-del" data-action="delete-pack" data-id="${id}" title="Borrar"><i class="aisc-ico aisc-ico--delete"></i></button>
         </div>

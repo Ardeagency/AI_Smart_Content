@@ -119,7 +119,7 @@ class DevBuilderView extends DevBaseView {
             <i class="aisc-ico aisc-ico--layers"></i> Módulos
           </button>
           <button class="builder-tab" data-tab="inputs">
-            <i class="ph ph-textbox"></i> Inputs
+            <i class="aisc-ico aisc-ico--textbox"></i> Inputs
           </button>
           <button class="builder-tab" data-tab="ficha">
             <i class="aisc-ico aisc-ico--credit-card"></i> Ficha del Flujo
@@ -1815,7 +1815,7 @@ class DevBuilderView extends DevBaseView {
     const notification = document.createElement('div');
     notification.className = `builder-notification ${type}`;
     notification.innerHTML = `
-      <i class="ph ph-${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : type === 'warning' ? 'warning' : 'info'}"></i>
+      <i class="aisc-ico ${type === 'success' ? 'aisc-ico--check' : type === 'error' ? 'aisc-ico--close' : type === 'warning' ? 'aisc-ico--alert-warning' : 'aisc-ico--alert-info'}"></i>
       <span>${message}</span>
     `;
     

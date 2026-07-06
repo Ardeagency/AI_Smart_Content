@@ -97,7 +97,7 @@ class ProductionView extends BaseView {
                     <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="aisc-ico aisc-ico--edit"></i><span>${__('Editar')}</span></button>
                     <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale"><i class="aisc-ico aisc-ico--expand"></i><span>${__('Mejorar 4K')}</span></button>
                     <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background"><i class="aisc-ico aisc-ico--scissors"></i><span>${__('Sin fondo')}</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="fix-text" data-kie-model="nano-banana-pro"><i class="fas fa-font"></i><span>${__('Mejorar texto')}</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="fix-text" data-kie-model="nano-banana-pro"><i class="aisc-ico aisc-ico--text"></i><span>${__('Mejorar texto')}</span></button>
                     <button type="button" class="pmodal-toolpill" data-tool="change-ratio" data-kie-model="nano-banana-pro" aria-haspopup="true" aria-expanded="false"><i class="aisc-ico aisc-ico--crop"></i><span>${__('Cambiar ratio')}</span></button>
                 </div>
 

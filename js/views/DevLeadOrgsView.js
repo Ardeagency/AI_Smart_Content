@@ -311,7 +311,7 @@ class DevLeadOrgsView extends DevBaseView {
 
     return `
       <div class="org-health-verdict ${healthy ? 'is-ok' : 'is-warn'}">
-        <i class="fas ${healthy ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i>
+        <i class="aisc-ico ${healthy ? 'aisc-ico--check' : 'aisc-ico--alert-warning'}"></i>
         <div>
           <strong>${healthy ? 'Marca sana' : 'Requiere atención'}</strong>
           <p>${healthy ? 'Datos presentes y sin errores recientes en el ecosistema.' : issues.map(i => this.escapeHtml(i)).join(' · ')}</p>

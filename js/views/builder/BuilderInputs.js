@@ -1660,7 +1660,7 @@
     const generalPanel = `
       <div class="property-group">
         <div class="property-group-head">
-          <h4><i class="ph ph-textbox"></i> Etiquetas</h4>
+          <h4><i class="aisc-ico aisc-ico--textbox"></i> Etiquetas</h4>
         </div>
         <div class="property-field">
           <label for="propLabel">Título del input</label>
@@ -1824,7 +1824,7 @@
 
       <div class="property-group">
         <div class="property-group-head">
-          <h4><i class="ph ph-cloud"></i> Datos</h4>
+          <h4><i class="aisc-ico aisc-ico--cloud"></i> Datos</h4>
         </div>
         <div class="property-field">
           <label for="propDataType">data_type</label>

@@ -2351,7 +2351,7 @@
             action = `<button class="cc-prod-publish-btn" data-output-id="${p.id}" style="margin-top:6px;width:100%;padding:4px 0;border:1px solid rgba(255,255,255,0.22);border-radius:6px;background:rgba(255,255,255,0.10);color:#e8eaed;font-size:10px;cursor:pointer;">Publicar</button>`;
           }
           div.style.height = action ? `${SH + 28}px` : `${SH}px`;
-          div.innerHTML = `<div style="display:flex;align-items:center;gap:6px;"><i class="fas ${isVideo ? 'fa-film' : 'fa-image'}" style="color:#cfd3d8;"></i><span>${isVideo ? 'Video' : 'Imagen'}</span></div><div style="margin-top:6px;">${badge}</div>${action}`;
+          div.innerHTML = `<div style="display:flex;align-items:center;gap:6px;"><i class="aisc-ico ${isVideo ? 'aisc-ico--film' : 'aisc-ico--image'}" style="color:#cfd3d8;"></i><span>${isVideo ? 'Video' : 'Imagen'}</span></div><div style="margin-top:6px;">${badge}</div>${action}`;
           world.appendChild(div);
           linkages.push({ from: parentEl, to: div });
         });

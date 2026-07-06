@@ -126,7 +126,7 @@ class DevTestView extends DevBaseView {
 
             <!-- Selector de Ambiente -->
             <section class="config-section">
-              <h3><i class="ph ph-cloud"></i> Ambiente</h3>
+              <h3><i class="aisc-ico aisc-ico--cloud"></i> Ambiente</h3>
               <div class="environment-toggle">
                 <button class="env-btn active" data-env="test" id="envTestBtn">
                   <i class="aisc-ico aisc-ico--flask"></i>
@@ -181,7 +181,7 @@ class DevTestView extends DevBaseView {
             <!-- Tabs -->
             <div class="test-tabs">
               <button class="test-tab active" data-tab="inputs">
-                <i class="ph ph-textbox"></i>
+                <i class="aisc-ico aisc-ico--textbox"></i>
                 Inputs
               </button>
               <button class="test-tab" data-tab="response">
@@ -1987,7 +1987,7 @@ if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
     const notification = document.createElement('div');
     notification.className = `dev-test-notification ${type}`;
     notification.innerHTML = `
-      <i class="ph ph-${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : type === 'warning' ? 'warning' : 'info'}"></i>
+      <i class="aisc-ico ${type === 'success' ? 'aisc-ico--check' : type === 'error' ? 'aisc-ico--close' : type === 'warning' ? 'aisc-ico--alert-warning' : 'aisc-ico--alert-info'}"></i>
       <span>${message}</span>
     `;
     

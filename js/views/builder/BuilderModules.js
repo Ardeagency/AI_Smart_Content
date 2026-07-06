@@ -43,7 +43,7 @@
       const badges = [];
       if (m.next_module_id && idToIndex.has(m.next_module_id) && idToIndex.get(m.next_module_id) !== i + 1) {
         const target = mods[idToIndex.get(m.next_module_id)];
-        badges.push(`<span class="module-node-badge module-node-badge--jump" title="Salta a: ${this.escapeHtml(target.name || '')}"><i class="ph ph-arrow-bend-up-right"></i> →${idToIndex.get(m.next_module_id) + 1}</span>`);
+        badges.push(`<span class="module-node-badge module-node-badge--jump" title="Salta a: ${this.escapeHtml(target.name || '')}"><i class="aisc-ico aisc-ico--reply"></i> →${idToIndex.get(m.next_module_id) + 1}</span>`);
       }
       if (m.routing_rules) {
         badges.push(`<span class="module-node-badge module-node-badge--routing" title="Tiene routing condicional"><i class="aisc-ico aisc-ico--git-branch"></i></span>`);

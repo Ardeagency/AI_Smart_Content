@@ -1721,7 +1721,7 @@ class FlowCatalogView extends BaseView {
       btn.type = 'button';
       btn.className = `flow-catalog-row-nav flow-catalog-row-nav--${dir}`;
       btn.setAttribute('aria-label', dir === 'left' ? __('Anterior') : __('Siguiente'));
-      btn.innerHTML = `<i class="fas fa-chevron-${dir}"></i>`;
+      btn.innerHTML = `<i class="aisc-ico aisc-ico--chevron-${dir}"></i>`;
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const delta = rowScrollEl.clientWidth * 0.85 * (dir === 'left' ? -1 : 1);

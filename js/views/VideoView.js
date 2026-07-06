@@ -566,9 +566,9 @@ class VideoView extends BaseView {
                     <div class="video-left-block">
                       <h4 class="video-prompt-panel-title">${window.__('Tipo de sonido')}</h4>
                       <div class="seedance-audio-tiles">
-                        <button type="button" class="seedance-audio-tile" data-audio-type="ambient"><i class="fas fa-wind" aria-hidden="true"></i><span>${window.__('Diegético')}</span></button>
+                        <button type="button" class="seedance-audio-tile" data-audio-type="ambient"><i class="aisc-ico aisc-ico--wind" aria-hidden="true"></i><span>${window.__('Diegético')}</span></button>
                         <button type="button" class="seedance-audio-tile" data-audio-type="music"><i class="aisc-ico aisc-ico--music" aria-hidden="true"></i><span>${window.__('Música')}</span></button>
-                        <button type="button" class="seedance-audio-tile" data-audio-type="voice"><i class="fas fa-microphone" aria-hidden="true"></i><span>${window.__('Voz')}</span></button>
+                        <button type="button" class="seedance-audio-tile" data-audio-type="voice"><i class="aisc-ico aisc-ico--microphone" aria-hidden="true"></i><span>${window.__('Voz')}</span></button>
                         <button type="button" class="seedance-audio-tile" data-audio-type="silence"><i class="aisc-ico aisc-ico--volume" aria-hidden="true"></i><span>${window.__('Silencio')}</span></button>
                       </div>
                     </div>
@@ -2014,7 +2014,7 @@ class VideoView extends BaseView {
       const thumbsContainer = thumbnails ? `<span class="video-kling-element-thumbs">${thumbnails}</span>` : '';
       const hasVideo = (el.element_input_video_urls || []).length > 0;
       const videoLabel = hasVideo ? `<span class="video-kling-element-video-label">@${el.name}</span>` : '';
-      const productPinBtn = isProduct ? `<button type="button" class="video-kling-element-pin-chip" data-element-index="${idx}" aria-label="${productPinned ? window.__('Desanclar producto (dejar solo como imagen de referencia)') : window.__('Anclar producto (usar como kling_element en el prompt)')}" title="${productPinned ? window.__('Desanclar') : window.__('Anclar como elemento de referencia')}"><i class="fas fa-thumbtack${productPinned ? ' video-kling-pin-active' : ''}"></i></button>` : '';
+      const productPinBtn = isProduct ? `<button type="button" class="video-kling-element-pin-chip" data-element-index="${idx}" aria-label="${productPinned ? window.__('Desanclar producto (dejar solo como imagen de referencia)') : window.__('Anclar producto (usar como kling_element en el prompt)')}" title="${productPinned ? window.__('Desanclar') : window.__('Anclar como elemento de referencia')}"><i class="aisc-ico aisc-ico--bookmark${productPinned ? ' video-kling-pin-active' : ''}"></i></button>` : '';
       return `
       <span class="video-kling-element-chip" data-index="${idx}">
         ${thumbsContainer}

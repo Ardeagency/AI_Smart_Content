@@ -18,7 +18,7 @@ class CreateView extends BaseView {
         <h1 class="create-title">${__('Crear Contenido')}</h1>
         <div class="create-mode-selector">
             <button class="mode-btn active" data-mode="guided" id="guidedModeBtn">
-                <i class="fas fa-compass"></i>
+                <i class="aisc-ico aisc-ico--compass"></i>
                 ${__('Guiado')}
             </button>
             <button class="mode-btn" data-mode="pro" id="proModeBtn">

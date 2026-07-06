@@ -339,7 +339,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       return `
         <button type="button" class="createorg-intg-chip ${on ? 'is-on' : ''}" data-intg="${p.v}" aria-pressed="${on ? 'true' : 'false'}">
           <i class="fas ${p.icon}"></i> ${this.escapeHtml(p.label)}
-          <span class="createorg-intg-mark"><i class="fas ${on ? 'fa-check' : 'fa-plus'}"></i></span>
+          <span class="createorg-intg-mark"><i class="aisc-ico ${on ? 'aisc-ico--check' : 'aisc-ico--add'}"></i></span>
         </button>`;
     }).join('');
 
