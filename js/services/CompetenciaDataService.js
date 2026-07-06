@@ -102,6 +102,28 @@ class CompetenciaDataService {
     if (error) throw error;
     return Array.isArray(data) ? data : [];
   }
+
+  /**
+   * Drill-down de perfil de UN rival (FEAT-037 Fase 2 #4): actividad por periodo,
+   * distribuciones de su contenido y sus mejores horas. On-demand, no cacheado.
+   * Cada RPC falla de forma aislada (Promise.allSettled) → el drawer degrada por
+   * seccion en vez de romperse entero.
+   */
+  async loadActorProfile(entityId, from, to) {
+    if (!this.sb || !this.orgId || !entityId) return null;
+    const org = this.orgId, ids = [entityId];
+    const [act, dist, hours] = await Promise.allSettled([
+      this.sb.rpc('dashboard_competencia_activity_history', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: ids }),
+      this.sb.rpc('dashboard_competencia_distributions',    { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: ids }),
+      this.sb.rpc('dashboard_competencia_posting_hours',    { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: ids }),
+    ]);
+    const val = (s) => (s.status === 'fulfilled' && !s.value?.error) ? s.value.data : null;
+    return {
+      activity:      Array.isArray(val(act))   ? val(act)   : [],
+      distributions: val(dist) || null,
+      postingHours:  Array.isArray(val(hours)) ? val(hours) : [],
+    };
+  }
 }
 
 window.CompetenciaDataService = CompetenciaDataService;

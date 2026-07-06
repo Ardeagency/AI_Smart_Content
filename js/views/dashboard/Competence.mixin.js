@@ -670,18 +670,108 @@
       if (this._detailEscHandler) document.addEventListener('keydown', this._detailEscHandler);
       try {
         const win = this._compData?.window || {};
-        const rows = await this._competenciaService.loadActorPosts(entityId, win.from, win.to, 30);
+        // Perfil completo del rival: posts + actividad + distribuciones + horas
+        // (en paralelo). El perfil degrada por seccion; los posts mandan el subtitulo.
+        const [rows, profile] = await Promise.all([
+          this._competenciaService.loadActorPosts(entityId, win.from, win.to, 30),
+          this._competenciaService.loadActorProfile(entityId, win.from, win.to),
+        ]);
         const posts = rows.map((r) => ({
           network: r.network, content: r.content_preview, captured_at: r.captured_at,
           engagement_total: r.engagement_total, metrics: r.metrics, sentiment_text: r.sentiment_text,
         }));
         if (subEl) subEl.textContent = __('{n} {pub}', { n: posts.length, pub: posts.length === 1 ? __('publicacion') : __('publicaciones') });
-        this._renderDetailPosts(bodyEl, posts);
+        this._renderCompetitorProfile(bodyEl, profile, posts);
       } catch (e) {
         console.error('[comp detail] load failed:', e?.message || e);
         if (subEl) subEl.textContent = '';
         if (bodyEl) bodyEl.innerHTML = `<div class="mb-detail-empty"><i class="aisc-ico aisc-ico--alert-warning"></i><p>${__('No se pudieron cargar las publicaciones.')}</p></div>`;
       }
+    },
+
+    /* FEAT-037: perfil de rival en el drawer = distribuciones + mejores horas +
+       actividad reciente + publicaciones. Cada seccion se omite si no hay dato. */
+    _renderCompetitorProfile(bodyEl, profile, posts) {
+      if (!bodyEl) return;
+      const p = profile || {};
+      const sections = [];
+
+      const distHtml = this._compDistHtml(p.distributions);
+      if (distHtml) sections.push(distHtml);
+
+      const hours = Array.isArray(p.postingHours) ? p.postingHours : [];
+      if (hours.length) {
+        sections.push(
+          `<section class="comp-prof-sec"><h4 class="comp-prof-h">${__('Cuando publica')}</h4>${this._buildPostingHeatmap(hours)}</section>`
+        );
+      }
+
+      const actHtml = this._compActivityHtml(p.activity);
+      if (actHtml) sections.push(actHtml);
+
+      const postsHtml = posts && posts.length
+        ? `<ul class="mb-detail-list">${posts.map((x) => this._detailPostHtml(x)).join('')}</ul>`
+        : `<div class="mb-detail-empty"><i class="aisc-ico aisc-ico--inbox"></i><p>${__('Sin publicaciones en esta ventana.')}</p></div>`;
+      sections.push(`<section class="comp-prof-sec"><h4 class="comp-prof-h">${__('Publicaciones')}</h4>${postsHtml}</section>`);
+
+      bodyEl.innerHTML = sections.join('');
+    },
+
+    /* Etiqueta legible de sentimiento (POSITIVE/POS/positive → Positivo). */
+    _compSentLabel(s) {
+      const u = String(s || '').toUpperCase();
+      if (u.startsWith('POS')) return __('Positivo');
+      if (u.startsWith('NEG')) return __('Negativo');
+      if (u.startsWith('NEU')) return __('Neutro');
+      return '';
+    },
+
+    /* Barras de distribucion (monocromo) para plataforma / sentimiento / tono. */
+    _compDistHtml(dist) {
+      if (!dist || typeof dist !== 'object') return '';
+      const cats = [
+        { key: 'platform',  title: __('Por plataforma'),  fmt: (k) => this._prettyPlatform(k) },
+        { key: 'sentiment', title: __('Por sentimiento'), fmt: (k) => this._compSentLabel(k) || k },
+        { key: 'tone',      title: __('Por tono'),         fmt: (k) => k },
+      ];
+      const blocks = cats.map((c) => {
+        const obj = dist[c.key];
+        if (!obj || typeof obj !== 'object') return '';
+        const entries = Object.entries(obj)
+          .map(([k, v]) => [k, Number(v) || 0])
+          .filter(([k, v]) => v > 0 && k !== 'unknown' && k !== 'sin_tono')
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5);
+        if (!entries.length) return '';
+        const max = entries[0][1] || 1;
+        const rows = entries.map(([k, v]) => `
+          <div class="comp-dist-row">
+            <span class="comp-dist-lbl">${this._esc(String(c.fmt(k)))}</span>
+            <span class="comp-dist-bar"><span style="width:${Math.max(6, Math.round((v / max) * 100))}%"></span></span>
+            <span class="comp-dist-val">${this._compactNum(v)}</span>
+          </div>`).join('');
+        return `<div class="comp-dist-group"><span class="comp-dist-title">${c.title}</span>${rows}</div>`;
+      }).filter(Boolean);
+      if (!blocks.length) return '';
+      return `<section class="comp-prof-sec"><h4 class="comp-prof-h">${__('Como se reparte su contenido')}</h4><div class="comp-dist">${blocks.join('')}</div></section>`;
+    },
+
+    /* Actividad reciente por periodo (posts + engagement + sentimiento dominante). */
+    _compActivityHtml(activity) {
+      const list = Array.isArray(activity) ? activity.slice(-8) : [];
+      if (!list.length) return '';
+      const rows = list.map((r) => {
+        const dom = this._compSentLabel(r.dominant_sentiment);
+        const n = Number(r.posts_count) || 0;
+        return `
+          <div class="comp-act-row">
+            <span class="comp-act-lbl">${this._esc(String(r.period_label || ''))}</span>
+            <span class="comp-act-posts">${this._compactNum(n)} ${n === 1 ? __('post') : __('posts')}</span>
+            <span class="comp-act-eng">${this._compactNum(r.total_engagement)} ${__('eng')}</span>
+            ${dom ? `<span class="comp-act-sent">${this._esc(dom)}</span>` : ''}
+          </div>`;
+      }).join('');
+      return `<section class="comp-prof-sec"><h4 class="comp-prof-h">${__('Actividad reciente')}</h4><div class="comp-act">${rows}</div></section>`;
     },
   });
 })();

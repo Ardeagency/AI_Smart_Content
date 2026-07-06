@@ -4332,3 +4332,29 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .mb-as-quote-net { color: var(--text-muted, rgba(212,209,216,0.5)); display: inline-flex; align-items: center; gap: 0.3rem; }
 .mb-as-quote-net i { font-size: 0.7rem; }
 @media (max-width: 640px) { .mb-as-grid { grid-template-columns: 1fr; } }
+
+/* ── FEAT-037: perfil de rival en el drawer (Competencia drill-down) ──────────
+   Distribuciones + actividad reciente + mejores horas. Monocromo: barras y
+   acentos en blanco translucido, sin color. */
+.comp-prof-sec { padding: 0.9rem 0 0; border-top: 1px solid rgba(255,255,255,0.06); }
+.comp-prof-sec:first-child { border-top: 0; padding-top: 0; }
+.comp-prof-h { margin: 0 0 0.7rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
+
+.comp-dist { display: flex; flex-direction: column; gap: 0.9rem; }
+.comp-dist-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.comp-dist-title { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary, rgba(212,209,216,0.85)); }
+.comp-dist-row { display: grid; grid-template-columns: minmax(0, 0.85fr) 1fr auto; align-items: center; gap: 0.55rem; }
+.comp-dist-lbl { font-size: 0.78rem; color: var(--text-secondary, rgba(212,209,216,0.8)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comp-dist-bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.comp-dist-bar span { display: block; height: 100%; background: rgba(255,255,255,0.8); border-radius: 3px; }
+.comp-dist-val { font-size: 0.72rem; color: var(--text-muted, rgba(212,209,216,0.5)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.comp-act { display: flex; flex-direction: column; gap: 0.35rem; }
+.comp-act-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 0.7rem; font-size: 0.78rem; }
+.comp-act-lbl { color: var(--text-secondary, rgba(212,209,216,0.85)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comp-act-posts, .comp-act-eng { color: var(--text-muted, rgba(212,209,216,0.55)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.comp-act-sent { font-size: 0.7rem; color: var(--text-muted, rgba(212,209,216,0.5)); white-space: nowrap; }
+@media (max-width: 640px) {
+  .comp-act-row { grid-template-columns: 1fr auto; row-gap: 0.15rem; }
+  .comp-act-eng, .comp-act-sent { grid-column: 2; }
+}

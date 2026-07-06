@@ -75,12 +75,25 @@ Agency).
    Tendencias usa KPIs de velocidad (ya temporales) → no aplica delta.
 
 ### Fase 2 — Profundidad (cablear resto de huerfanas)
-4. Drill-down de competidor completo (`top_posts`, `distributions`,
-   `posting_hours`, `activity_history`, `actor_details`).
-5. Tab Estrategia con `topics/hashtags/platform_comparison/sentiments_by_brand`.
-6. Mi Marca enriquecido (`kpis_strip`, `engagement_trend`, `posting_hours`,
-   `top_highlighted_posts`, `sentiment_activity`).
-7. Cleanup: `DROP` de las 5 RPCs legacy monoliticas tras confirmar 0 refs.
+4. [x] **Drill-down de competidor completo** [HECHO 2026-07-06]. El drawer de
+   detalle de rival (`_openCompetitorDetail` en `Competence.mixin.js`) pasó de
+   "lista de posts" a **perfil**: distribuciones (plataforma/sentimiento/tono,
+   `dashboard_competencia_distributions`), mejores horas (`_posting_hours`,
+   reusa `_buildPostingHeatmap`), actividad reciente (`_activity_history`) +
+   posts. Service: `CompetenciaDataService.loadActorProfile()` (3 RPCs en
+   `Promise.allSettled`, degrada por sección). CSS monocromo `comp-prof-*`/
+   `comp-dist-*`/`comp-act-*` en `insight.css`. `top_posts` NO se dobló: ya lo
+   cubre `dashboard_competencia_actor_posts` (loadActorPosts) en el mismo drawer.
+   Verificado contra datos IGNIS (Red Bull 190 posts, etc.; `tone` viene en 0 →
+   el bloque se omite solo). **Falta QA visual en browser** (PENDING-HUMAN).
+   Pendientes de este item como superficies APARTE (no drill-down): `featured`
+   (rival destacado, card en el tab) y `search` (buscador de competidores).
+5. Tab Estrategia con `hashtags/platform_comparison/sentiments_by_brand`.
+6. Mi Marca enriquecido (`kpis_strip`, `platform_health`, `comment_risk`,
+   `featured_platform`, `featured_campaign_ad`, `featured_profile_details`,
+   `alert_score`).
+7. Cleanup: `DROP` de las 5 RPCs legacy monoliticas + el overload viejo de
+   `dashboard_mimarca_health` (sin `p_platforms`) tras confirmar 0 refs.
 
 ### Fase 3 — Capacidades de plataforma
 8. Export PDF/CSV (reusar pipeline HTML deck -> PDF documentado en memoria).
