@@ -844,12 +844,11 @@
       // actividad, tendencia de engagement, heatmap de horas, actividad de
       // sentimientos, chips de alertas). Se retiran de la UI — sus RPCs siguen
       // vivos para Vera y como historial; los charts se auto-desactivan por el
-      // guard de canvas inexistente. Queda solo el banner de recencia (pulso),
-      // que la Salud V2 absorberá dentro de su relato.
-      return `
-        <section class="mb-section mb-section--wide mb-long">
-          ${this._buildActivityBanner(data?.activity?.data)}
-        </section>`;
+      // guard de canvas inexistente.
+      // El banner de recencia ("Activo · Tu ultima publicacion fue hace N dias")
+      // tambien se retira por pedido del usuario; _buildActivityBanner queda vivo
+      // por si se reutiliza, pero ya no se pinta. La seccion no renderiza nada.
+      return '';
     },
 
     /** Heatmap dia-de-semana x hora (intensidad = posts), estilo calendario. */
