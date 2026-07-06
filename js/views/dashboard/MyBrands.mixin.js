@@ -2161,7 +2161,7 @@
       if (!comps && !tasks && !pillars) return '';
       return `
         <section class="mb-health-card mb-health-card--aside mb-diag-card">
-          <span class="mb-hero-label">${__('Cómo mejorar tu salud')}</span>
+          <span class="mb-hero-label">${__('Optimización')}</span>
           ${comps}
           ${tasks}
           ${pillars}
@@ -2278,18 +2278,40 @@
       return 'fa-chart-simple';
     },
 
-    /* Etiqueta en lenguaje plano por dimension (el nombre tecnico del RPC no lo
-       entiende un usuario normal). Mapea por key; cae al label del RPC si es una
-       key nueva. El detalle de cada componente ya explica el numero. */
+    /* Etiqueta por dimension: profesional/premium pero clara (el nombre tecnico
+       del RPC no lo entiende un usuario; el casual perdia seriedad). Mapea por
+       key; cae al label del RPC si es una key nueva. */
     _humanCompLabel(c) {
       const map = {
-        cadencia:   __('Publicas seguido'),
-        coherencia: __('Suenas como tu marca'),
-        alineacion: __('Repites lo que funciona'),
-        resonancia: __('Le gusta a tu público'),
-        trends:     __('Aprovechas lo que sube'),
+        cadencia:   __('Constancia de publicación'),
+        coherencia: __('Coherencia con tu ADN'),
+        alineacion: __('Alineación a tu fórmula'),
+        resonancia: __('Resonancia con tu audiencia'),
+        trends:     __('Aprovechamiento de tendencias'),
       };
       return map[String(c.key || '').toLowerCase()] || c.label || c.key;
+    },
+
+    /* Detalle por dimension en tono profesional/premium (el del RPC era casual:
+       "52% de tu contenido suena a tu marca"). Reusa los numeros que muestra el
+       RPC (parseados de su detalle) para no cambiar el dato, solo el lenguaje.
+       Cae al detalle original si es una key nueva o no se pudo parsear. */
+    _premiumCompDetail(c) {
+      const key = String(c.key || '').toLowerCase();
+      const nums = (String(c.detail || '').match(/[\d.]+/g) || []).map(Number);
+      const n = nums.length ? nums[0] : Math.round(Number(c.score) || 0);
+      if (key === 'cadencia') {
+        return nums.length >= 2
+          ? __('Publicas {a} veces/semana · tu categoría ~{b}', { a: nums[0], b: nums[1] })
+          : (c.detail || '');
+      }
+      const T = {
+        coherencia: __('{n}% de tu contenido tiene coherencia con tu ADN', { n }),
+        alineacion: __('{n}% de tu contenido aplica tu fórmula ganadora', { n }),
+        resonancia: __('{n}% de tu audiencia responde en positivo', { n }),
+        trends:     __('{n}% de aprovechamiento de las tendencias de tu nicho', { n }),
+      };
+      return T[key] || c.detail || '';
     },
     _buildHealthComponents(components) {
       const list = Array.isArray(components) ? components : [];
@@ -2307,7 +2329,7 @@
                 <span class="mb-hc-comp-score mb-hc-comp-score--${lvl}">${sc}</span>
               </div>
               <div class="mb-hc-ticks" style="--pct:${sc}%;--c:${lvlColor[lvl]}"></div>
-              <div class="mb-hc-comp-detail">${this._esc(c.detail || '')}</div>
+              <div class="mb-hc-comp-detail">${this._esc(this._premiumCompDetail(c))}</div>
             </div>
           </div>`;
       }).join('')}</div>`;
