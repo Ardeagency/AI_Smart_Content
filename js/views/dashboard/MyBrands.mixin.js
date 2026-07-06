@@ -299,7 +299,7 @@
               ${this._buildLongitudinalSection(data)}
               ${this._buildReceptionSection(data?.postReception?.data)}
               ${this._buildToneTopicSection(data?.featured)}
-              ${this._buildCommentsSection(data?.comments?.data)}
+              ${this._buildCommentsSection(data)}
               ${this._buildLeverageSection(insights)}
               ${this._buildTopPostsSection(data?.topPosts?.data)}
             </div>
@@ -777,17 +777,88 @@
     },
 
 
-    /* ── Analisis de comentarios + comentarios de alto impacto ── */
-    _buildCommentsSection(c) {
+    /** Etiqueta legible de plataforma a partir del network crudo. */
+    _platformLabel(net) {
+      const n = String(net || '').toLowerCase();
+      if (n.includes('insta')) return 'Instagram';
+      if (n.includes('face'))  return 'Facebook';
+      if (n.includes('tik'))   return 'TikTok';
+      if (n === 'x' || n.includes('twit')) return 'X';
+      if (n.includes('you'))   return 'YouTube';
+      if (n.includes('link'))  return 'LinkedIn';
+      return this._capWords(n) || '—';
+    },
+
+    /* ── Sentimientos de la audiencia: sentimiento de comentarios + plataforma
+       con mejor recepcion + comentario con mas likes + temas favoritos ── */
+    _buildCommentsSection(data) {
+      const c = data?.comments?.data;
       if (!c || !Number(c.total)) return '';
       const pos = Number(c.pos) || 0, neu = Number(c.neu) || 0, neg = Number(c.neg) || 0;
       const known = (pos + neu + neg) || 1;
       const pct = (n) => Math.round(n / known * 100);
       const emos = (Array.isArray(c.top_emotions) ? c.top_emotions : []).slice(0, 4)
         .map((e) => `<span class="mb-cmt-emo">${this._esc(this._capWords(e.emotion))} <small>${this._compactNum(e.count)}</small></span>`).join('');
-      const analisis = `
+
+      // ── Widget 1: plataforma con mejor recepcion (promedio del reception_score
+      // por red, escala -100..+100 = sentimiento de los comentarios).
+      const recRows = Array.isArray(data?.postReception?.data) ? data.postReception.data : [];
+      const byNet = {};
+      recRows.forEach((r) => {
+        const s = Number(r.reception_score);
+        if (!r.network || !Number.isFinite(s)) return;
+        (byNet[r.network] = byNet[r.network] || []).push(s);
+      });
+      const bestNet = Object.entries(byNet)
+        .map(([net, arr]) => ({ net, score: arr.reduce((a, b) => a + b, 0) / arr.length, n: arr.length }))
+        .sort((a, b) => b.score - a.score)[0];
+      const recBlock = bestNet ? `
+        <div class="mb-as-stat">
+          <span class="mb-as-cap">${__('Plataforma con mejor recepción')}</span>
+          <span class="mb-as-plat"><i class="fab ${this._platformIcon(bestNet.net)}"></i>${this._esc(this._platformLabel(bestNet.net))}</span>
+          <span class="mb-as-sub mb-cmt-leg--${bestNet.score > 10 ? 'pos' : bestNet.score < -10 ? 'neg' : 'neu'}">${bestNet.score > 0 ? '+' : ''}${Math.round(bestNet.score)} ${__('de recepción')}</span>
+        </div>` : '';
+
+      // ── Widget 2: comentario con mas likes.
+      const tops = Array.isArray(c.top) ? c.top : [];
+      const topLiked = [...tops].sort((a, b) => (Number(b.likes) || 0) - (Number(a.likes) || 0))[0];
+      const likeBlock = (topLiked && (Number(topLiked.likes) || 0) > 0) ? `
+        <div class="mb-as-comment">
+          <span class="mb-as-cap">${__('Comentario con más likes')}</span>
+          <p class="mb-as-quote"><span class="mb-cmt-dot mb-cmt-dot--${this._sentClass(topLiked.sentiment)}"></span>${this._esc(topLiked.content || '')}</p>
+          <div class="mb-as-quote-meta">
+            <span class="mb-cmt-author">@${this._esc(String(topLiked.author || 'anonimo').replace(/^@/, ''))}</span>
+            <span class="mb-cmt-eng"><i class="aisc-ico aisc-ico--likes"></i> ${this._compactNum(topLiked.likes)}</span>
+            ${topLiked.network ? `<span class="mb-as-quote-net"><i class="fab ${this._platformIcon(topLiked.network)}"></i> ${this._esc(this._platformLabel(topLiked.network))}</span>` : ''}
+          </div>
+        </div>` : '';
+
+      // ── Widget 3: temas favoritos = los que mas enganchan a tu audiencia
+      // (por engagement promedio del tema).
+      const topicRows = (Array.isArray(data?.featured?.topics?.data) ? data.featured.topics.data : [])
+        .filter((t) => t.topic_name && Number(t.usage_count) > 0);
+      const favTopics = [...topicRows]
+        .sort((a, b) => (Number(b.avg_engagement) || 0) - (Number(a.avg_engagement) || 0)
+          || (Number(b.total_engagement) || 0) - (Number(a.total_engagement) || 0))
+        .slice(0, 3);
+      const maxFav = favTopics.length ? Math.max(1, ...favTopics.map((t) => Number(t.avg_engagement) || 0)) : 1;
+      const favBlock = favTopics.length ? `
+        <div class="mb-as-stat mb-as-stat--topics">
+          <span class="mb-as-cap">${__('Temas favoritos')}</span>
+          <div class="mb-as-topics">${favTopics.map((t) => `
+            <div class="mb-as-topic">
+              <span class="mb-as-topic-name">${this._esc(this._capWords(t.topic_name))}</span>
+              <span class="mb-as-topic-bar"><span style="width:${Math.max(6, Math.round((Number(t.avg_engagement) || 0) / maxFav * 100))}%"></span></span>
+              <span class="mb-as-topic-val">${this._compactNum(Math.round(Number(t.avg_engagement) || 0))} <small>${__('eng/post')}</small></span>
+            </div>`).join('')}</div>
+        </div>` : '';
+
+      const extras = (recBlock || likeBlock || favBlock) ? `
+        <div class="mb-as-grid">${recBlock}${favBlock}${likeBlock}</div>` : '';
+
+      const card = `
         <div class="mb-long-card">
-          <div class="mb-card-title">${__('Análisis de comentarios')}</div>
+          <div class="mb-card-title">${__('Sentimientos de la audiencia')}</div>
           <div class="mb-cmt-total">${this._compactNum(c.total)} <small>${__('comentarios analizados')}</small></div>
           <div class="mb-cmt-sent">
             <span class="mb-cmt-seg mb-cmt-seg--pos" style="width:${pct(pos)}%"></span>
@@ -800,10 +871,11 @@
             <span class="mb-cmt-leg mb-cmt-leg--neg">${__('{n}% negativo', { n: pct(neg) })}</span>
           </div>
           ${emos ? `<div class="mb-cmt-emos"><span class="mb-beh-label">${__('Emociones top')}</span><div class="mb-cmt-emo-list">${emos}</div></div>` : ''}
+          ${extras}
         </div>`;
       return `
         <section class="mb-section mb-section--wide">
-          <div class="mb-long-grid mb-long-grid--single">${analisis}</div>
+          <div class="mb-long-grid mb-long-grid--single">${card}</div>
         </section>`;
     },
 
