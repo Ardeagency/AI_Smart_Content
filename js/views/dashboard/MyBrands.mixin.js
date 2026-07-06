@@ -104,7 +104,7 @@
       if (!ids.length) return null;
       const [postsRes, integRes] = await Promise.all([
         this._supabase.from('brand_posts')
-          .select('network, engagement_total, sentiment_score')
+          .select('network, engagement_total, sentiment_score, captured_at')
           .in('brand_container_id', ids).eq('post_source', 'own').limit(5000),
         this._supabase.from('brand_integrations')
           .select('platform, is_active, rep:metadata->seller_reputation_level, power:metadata->power_seller_status')
@@ -113,15 +113,31 @@
       const agg = {};
       (postsRes.data || []).forEach((p) => {
         const n = String(p.network || '').toLowerCase(); if (!n) return;
-        if (!agg[n]) agg[n] = { posts: 0, eng: 0, sentSum: 0, sentN: 0 };
+        if (!agg[n]) agg[n] = { posts: 0, eng: 0, sentSum: 0, sentN: 0, lastAt: null };
         agg[n].posts++; agg[n].eng += Number(p.engagement_total) || 0;
         if (p.sentiment_score != null) { agg[n].sentSum += Number(p.sentiment_score); agg[n].sentN++; }
+        const t = p.captured_at ? Date.parse(p.captured_at) : NaN;
+        if (Number.isFinite(t) && (agg[n].lastAt == null || t > agg[n].lastAt)) agg[n].lastAt = t;
       });
+      const now = Date.now();
       const social = Object.keys(agg).map((n) => ({
         network: n, posts: agg[n].posts,
         engPerPost: Math.round(agg[n].eng / agg[n].posts),
         sentiment: agg[n].sentN ? agg[n].sentSum / agg[n].sentN : null,
-      })).sort((a, b) => b.engPerPost - a.engPerPost);
+        lastAt: agg[n].lastAt,
+        daysSince: agg[n].lastAt != null ? Math.floor((now - agg[n].lastAt) / 86400000) : null,
+      }));
+      // Salud de la red = engagement (produce interaccion) PONDERADO por actividad
+      // (sigue publicando). Una cuenta con buen eng/post pero inactiva 6 semanas
+      // NO esta sana: la recencia gatea el veredicto. recency: 0..1 decae de <=7d
+      // (1.0) a >=45d (~0.1). health mezcla 50/50 eng normalizado + recencia.
+      const maxEng = Math.max(1, ...social.map((s) => s.engPerPost));
+      social.forEach((s) => {
+        const d = s.daysSince;
+        s.recency = d == null ? 0.15 : d <= 7 ? 1 : d >= 45 ? 0.1 : 1 - ((d - 7) / 38) * 0.9;
+        s.health = Math.round(((s.engPerPost / maxEng) * 0.5 + s.recency * 0.5) * 100);
+      });
+      social.sort((a, b) => b.health - a.health || b.engPerPost - a.engPerPost);
       const MKT = new Set(['mercadolibre', 'shopify', 'amazon']);
       const marketplaces = (integRes.data || [])
         .filter((r) => MKT.has(String(r.platform || '').toLowerCase()))
@@ -2258,24 +2274,55 @@
         ? `<img src="${this._esc(m.iconSrc)}" alt="" aria-hidden="true">`
         : `<i class="${this._esc(m.icon)}"></i>`;
     },
+    /** Estado de actividad de una red segun dias desde la ultima publicacion. */
+    _platActivity(daysSince) {
+      if (daysSince == null) return { key: 'unknown', label: __('Sin fecha'), stale: true };
+      if (daysSince <= 10) return { key: 'active', label: __('Activa'), stale: false };
+      if (daysSince <= 25) return { key: 'low', label: __('Poca actividad'), stale: false };
+      if (daysSince <= 45) return { key: 'idle', label: __('Inactiva'), stale: true };
+      return { key: 'dormant', label: __('Sin publicar'), stale: true };
+    },
+    /** "hace 3 dias" / "hace 6 semanas" / "hace 2 meses". */
+    _daysAgoLabel(days) {
+      if (days == null) return '';
+      if (days <= 0) return __('hoy');
+      if (days === 1) return __('ayer');
+      if (days < 21) return __('hace {n} días', { n: days });
+      if (days < 60) return __('hace {n} semanas', { n: Math.round(days / 7) });
+      return __('hace {n} meses', { n: Math.round(days / 30) });
+    },
     _buildPlatformPerf(pp) {
       const social = Array.isArray(pp && pp.social) ? pp.social.filter((s) => s.posts > 0) : [];
       const mkts   = Array.isArray(pp && pp.marketplaces) ? pp.marketplaces : [];
       if (!social.length && !mkts.length) return '';
       const max = Math.max(1, ...social.map((s) => s.engPerPost));
-      const socialRows = social.map((s, i) => {
+      // "Mejor" honesto: la red mas sana (health) SOLO si esta activa. Una red top
+      // en eng/post pero inactiva no se corona; se marca con su estado real.
+      const bestNet = social.length > 1
+        ? social.find((s) => s.engPerPost > 0 && !this._platActivity(s.daysSince).stale)?.network
+        : null;
+      const socialRows = social.map((s) => {
         const m = this._platPerfMeta(s.network);
         const w = Math.max(4, Math.round(s.engPerPost / max * 100));
-        const best = i === 0 && social.length > 1 && s.engPerPost > 0;
+        const act = this._platActivity(s.daysSince);
+        const isBest = s.network === bestNet;
+        const badge = isBest
+          ? `<span class="mb-pp-best">${__('mejor')}</span>`
+          : act.stale ? `<span class="mb-pp-flag">${this._esc(act.label)}</span>` : '';
+        const ago = this._daysAgoLabel(s.daysSince);
         return `
-          <div class="mb-pp-row">
+          <div class="mb-pp-row${act.stale ? ' mb-pp-row--stale' : ''}">
             <span class="mb-pp-ic">${this._platIconHtml(m)}</span>
             <div class="mb-pp-main">
               <div class="mb-pp-head">
-                <span class="mb-pp-name">${this._esc(m.label)}${best ? ` <span class="mb-pp-best">${__('mejor')}</span>` : ''}</span>
+                <span class="mb-pp-name">${this._esc(m.label)}${badge}</span>
                 <span class="mb-pp-val">${this._compactNum(s.engPerPost)}<small>${__('eng/post')}</small></span>
               </div>
-              <div class="mb-pp-bar"><span style="width:${w}%"></span></div>
+              <div class="mb-pp-bar mb-pp-bar--${act.stale ? 'stale' : act.key}"><span style="width:${w}%"></span></div>
+              <div class="mb-pp-meta">
+                <span class="mb-pp-act mb-pp-act--${act.key}"><i class="aisc-ico aisc-ico--circle"></i> ${this._esc(act.label)}</span>
+                ${ago ? `<span class="mb-pp-ago">${__('última publicación')} ${this._esc(ago)}</span>` : ''}
+              </div>
             </div>
           </div>`;
       }).join('');

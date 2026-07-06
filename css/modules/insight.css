@@ -2627,6 +2627,20 @@
 .mb-pp-rep small { font-weight: 500; color: var(--text-muted, rgba(212,209,216,0.5)); }
 .mb-pp-sub { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.5)); margin-top: 2px; }
 
+/* Salud por plataforma: engagement ponderado por actividad (recencia). */
+.mb-pp-flag { font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #e0a045; border: 1px solid rgba(224,160,69,0.4); border-radius: 4px; padding: 1px 5px; margin-left: 4px; vertical-align: middle; }
+.mb-pp-row--stale { opacity: 0.72; }
+.mb-pp-bar--active > span { background: linear-gradient(90deg, rgba(107,207,127,0.4), #6bcf7f); }
+.mb-pp-bar--low > span { background: linear-gradient(90deg, rgba(224,160,69,0.4), #e0a045); }
+.mb-pp-bar--stale > span { background: rgba(255,255,255,0.18); }
+.mb-pp-meta { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.3rem; flex-wrap: wrap; }
+.mb-pp-act { display: inline-flex; align-items: center; gap: 4px; font-size: 0.6875rem; font-weight: 600; }
+.mb-pp-act i { font-size: 0.4rem; }
+.mb-pp-act--active { color: #6bcf7f; }
+.mb-pp-act--low { color: #e0a045; }
+.mb-pp-act--idle, .mb-pp-act--dormant, .mb-pp-act--unknown { color: #e06464; }
+.mb-pp-ago { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.5)); }
+
 /* Card de diagnostico (2da card del aside): dimensiones + tareas + pilares.
    Separacion de la card de Salud + espaciado interno entre bloques. */
 .mb-diag-card { margin-top: 0.9rem; }
