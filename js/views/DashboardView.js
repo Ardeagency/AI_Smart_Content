@@ -490,7 +490,11 @@ class DashboardView extends BaseView {
         // degradado real de la marca (OrgBrandTheme aplica post-render).
         const reveal = () => {
           if (img.dataset.revealed !== '1') { img.hidden = false; img.dataset.revealed = '1'; }
-          this._tintHeroLogo(); // mide el degradado y fija opacidad+filtro finales
+          this._tintHeroLogo(); // mide el degradado y fija opacidad+filtro finales (instantaneo)
+          // Activar transiciones SOLO despues del primer reveal: asi la aparicion
+          // inicial es instantanea (sin fade) y los re-tintes posteriores (onload
+          // con el degradado real, cambios de tema) si animan suave.
+          requestAnimationFrame(() => img.classList.add('is-tinted'));
         };
         img.onload = reveal;
         img.onerror = () => { img.hidden = true; };
@@ -568,7 +572,7 @@ class DashboardView extends BaseView {
     return `
       <section class="dash-hero" id="dashHero" data-tab="${this._esc(tabId)}" aria-label="Resumen del dashboard">
         <div class="dash-hero-grad" aria-hidden="true"></div>
-        <img class="dash-hero-logo" id="dashHeroLogo" alt="" aria-hidden="true" hidden />
+        <img class="dash-hero-logo" id="dashHeroLogo" alt="" aria-hidden="true" hidden style="opacity:0" />
         <div class="dash-hero-inner">
           <div class="dash-hero-top">
             <div class="dash-hero-headings">

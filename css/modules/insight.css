@@ -3946,8 +3946,12 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
   pointer-events: none;
   user-select: none;
   filter: brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
-  transition: opacity 0.3s ease, filter 0.3s ease;
+  /* SIN transition en la base: el primer reveal aparece instantaneo en su
+     opacidad final (0.16). Un fade 0->0.16 se percibia como parpadeo. Las
+     transiciones se activan con .is-tinted (JS, post-reveal) para re-tintes
+     suaves (cambio de tema/tab), nunca en la aparicion inicial. */
 }
+.dash-hero-logo.is-tinted { transition: opacity 0.3s ease, filter 0.3s ease; }
 
 .dash-hero-inner { position: relative; z-index: 1; }
 
