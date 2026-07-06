@@ -45,6 +45,7 @@
         if (!this._shouldRepaint('competence', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildCompetenciaHtml(data);
         this._bindCompetenceHandlers(body);
+        this._renderSovBubble(data);
       } catch (e) {
         console.error('[Competence] load failed:', e);
         if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
@@ -373,29 +374,126 @@
         </section>`;
       }
 
-      const rows = list.map((r, i) => {
+      // Solo rivales con engagement medible entran al mapa de burbujas (x=share
+      // of voice, y=sentimiento, tamaño=engagement). Los de 0 eng no tienen
+      // posicion util; se listan aparte como "sin actividad medida".
+      const plotted = list.filter((r) => Number(r.total_engagement) > 0);
+      const silent = list.filter((r) => Number(r.total_engagement) <= 0);
+      const silentChips = silent.map((r) => {
         const tipo = this._compTipoMeta(r.tipo);
-        return `
-          <div class="comp-rank-row comp-clickable" data-comp-entity="${this._esc(r.entity_id)}" data-comp-name="${this._esc(r.entity_name)}" role="button" tabindex="0">
-            <span class="comp-rank-pos">${i + 1}</span>
-            <div class="comp-rank-name">
-              <span class="comp-rank-brand">${this._esc(r.entity_name)}</span>
-              <span class="comp-rank-tipo" style="--ct:${tipo.color};">${tipo.label}</span>
-            </div>
-            <span class="comp-rank-posts">${__('{n} posts', { n: fmt.int(r.total_posts) })}</span>
-            <span class="comp-rank-eng">${__('{n} eng', { n: this._compactNum(r.total_engagement) })}</span>
-            <span class="comp-rank-avg">${__('{n}/post', { n: this._compactNum(r.avg_engagement_per_post) })}</span>
-          </div>`;
+        return `<span class="comp-rank-tipo" style="--ct:${tipo.color};margin:2px 6px 2px 0;display:inline-block;">${this._esc(r.entity_name)} · ${tipo.label}</span>`;
       }).join('');
 
       return `
         <section class="mb-section">
           <div class="mb-section-head">
             <span class="mb-section-title">${__('El campo de batalla')}</span>
-            <span class="mb-section-hint">${__('Quién domina la conversación de tu nicho')}</span>
+            <span class="mb-section-hint">${__('Share of voice vs. sentimiento — tamaño = engagement del rival')}</span>
           </div>
-          ${list.length ? `<div class="comp-rank">${rows}</div>` : `<div class="mb-causal-empty">${__('Sin rivales con actividad en la ventana.')}</div>`}
+          ${plotted.length
+            ? `<div class="comp-sov">
+                 <div class="comp-sov-canvas"><canvas id="compSovBubble"></canvas></div>
+                 <div class="comp-sov-legend" id="compSovLegend"></div>
+               </div>`
+            : `<div class="mb-causal-empty">${__('Sin rivales con actividad en la ventana.')}</div>`}
+          ${silentChips ? `<div class="comp-sov-silent"><span class="mb-beh-label">${__('Sin actividad medida en esta ventana')}</span><div>${silentChips}</div></div>` : ''}
         </section>`;
+    },
+
+    /* ── Mapa de burbujas Share of Voice vs. Sentimiento (Chart.js) ──────────
+       x = % del engagement del nicho (que tan fuerte suena el rival),
+       y = % de sentimiento positivo de su audiencia,
+       tamaño = engagement absoluto. Cada rival un color; leyenda debajo. */
+    async _renderSovBubble(data) {
+      const el = document.getElementById('compSovBubble');
+      if (!el) return;
+      this._destroyCharts(); // limpia el chart anterior en re-render (evita fuga)
+      const list = (Array.isArray(data?.top?.data) ? data.top.data : [])
+        .filter((r) => Number(r.total_engagement) > 0)
+        .sort((a, b) => Number(b.total_engagement) - Number(a.total_engagement));
+      if (!list.length) return;
+      try { await this._ensureChartJs(); } catch (_) { /* noop */ }
+      const Chart = window.Chart; if (!Chart) return;
+      const TICK = 'rgba(212,209,216,0.5)', GRID = 'rgba(255,255,255,0.06)';
+      const PAL = ['#6bcf7f', '#5b9bd5', '#e0a045', '#a78bfa', '#e06464', '#22d3ee', '#f472b6', '#c4b5a0'];
+      const totalEng = list.reduce((s, r) => s + (Number(r.total_engagement) || 0), 0) || 1;
+      const maxEng = Math.max(...list.map((r) => Number(r.total_engagement) || 0), 1);
+      const points = list.map((r, i) => {
+        const eng = Number(r.total_engagement) || 0;
+        const sov = eng / totalEng * 100;
+        const hasSent = r.positive_sentiment_ratio != null;
+        const y = hasSent ? Math.round(Number(r.positive_sentiment_ratio) * 100) : 50;
+        return {
+          x: Math.round(sov * 10) / 10,
+          y,
+          r: 8 + Math.sqrt(eng / maxEng) * 26,   // area ~ engagement
+          color: PAL[i % PAL.length],
+          label: r.entity_name,
+          tipo: this._compTipoMeta(r.tipo).label,
+          eng, posts: Number(r.total_posts) || 0, hasSent,
+        };
+      });
+      const xMax = Math.max(10, Math.ceil(Math.max(...points.map((p) => p.x)) * 1.25));
+      // Linea de referencia: 50% = frontera neutra de sentimiento.
+      const neutralLine = {
+        id: 'sovNeutral',
+        beforeDatasetsDraw(chart) {
+          const { ctx, chartArea: ca, scales } = chart; if (!ca) return;
+          const yMid = scales.y.getPixelForValue(50);
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+          ctx.beginPath(); ctx.moveTo(ca.left, yMid); ctx.lineTo(ca.right, yMid); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = '700 9.5px ui-sans-serif, system-ui, sans-serif'; ctx.textBaseline = 'bottom';
+          ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(107,207,127,0.6)'; ctx.fillText(__('SENTIMIENTO POSITIVO'), ca.left + 6, yMid - 4);
+          ctx.textBaseline = 'top'; ctx.fillStyle = 'rgba(224,100,100,0.6)'; ctx.fillText(__('SENTIMIENTO NEGATIVO'), ca.left + 6, yMid + 4);
+          ctx.restore();
+        },
+      };
+      try {
+        this._reg(new Chart(el.getContext('2d'), {
+          type: 'bubble',
+          data: { datasets: [{
+            data: points,
+            backgroundColor: (c) => points[c.dataIndex].color + '80',
+            borderColor: (c) => points[c.dataIndex].color,
+            borderWidth: 1.5,
+            hoverBackgroundColor: (c) => points[c.dataIndex].color,
+          }] },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            layout: { padding: { top: 8, right: 14, bottom: 2, left: 2 } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10,
+                callbacks: {
+                  title: (items) => points[items[0].dataIndex].label,
+                  label: (c) => {
+                    const p = points[c.dataIndex];
+                    const sent = p.hasSent ? __('{n}% positivo', { n: p.y }) : __('sin datos de sentimiento');
+                    return `${p.tipo} · ${__('{n}% del nicho', { n: p.x })} · ${this._compactNum(p.eng)} eng · ${sent}`;
+                  },
+                },
+              },
+            },
+            scales: {
+              x: { min: 0, max: xMax, grid: { color: GRID }, border: { display: false }, title: { display: true, text: __('Share of voice (% del engagement del nicho)'), color: TICK, font: { size: 10 } }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => v + '%', maxTicksLimit: 6 } },
+              y: { min: 0, max: 100, grid: { color: GRID }, border: { display: false }, title: { display: true, text: __('Sentimiento positivo'), color: TICK, font: { size: 10 } }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => v + '%', maxTicksLimit: 6 } },
+            },
+          },
+          plugins: [neutralLine],
+        }));
+      } catch (e) { console.warn('[sov bubble]', e?.message); }
+      // Leyenda color -> rival (los nombres largos y solapados no caben en el canvas).
+      const legend = document.getElementById('compSovLegend');
+      if (legend) {
+        legend.innerHTML = points.map((p) => `
+          <span class="comp-sov-leg">
+            <span class="comp-sov-dot" style="background:${p.color}"></span>
+            ${this._esc(p.label)}
+          </span>`).join('');
+      }
     },
 
     /* ── 1a. Mi Marca vs Competencia: benchmark head-to-head + share-of-voice ──
