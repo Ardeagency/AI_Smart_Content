@@ -22,7 +22,7 @@ class ServicesView extends BaseView {
   <div class="services-header">
     <div class="services-header-actions">
       <button type="button" class="services-add-btn" id="servicesAttachBtn" aria-label="${__('Adjuntar servicio desde URL o archivos')}">
-        <i class="fas fa-paperclip" aria-hidden="true"></i>
+        <i class="aisc-ico aisc-ico--paperclip" aria-hidden="true"></i>
         <span>${__('Adjuntar servicio')}</span>
       </button>
       <button type="button" class="services-add-btn" id="servicesAddBtn" aria-label="${__('Agregar servicio')}">
@@ -208,8 +208,8 @@ class ServicesView extends BaseView {
       return `
         <article class="service-card" data-service-id="${s.id}">
           <div class="service-card-actions">
-            <button type="button" class="glass service-card-action" data-action="duplicate" title="${__('Duplicar servicio')}" aria-label="${__('Duplicar servicio')}"><i class="fas fa-copy" aria-hidden="true"></i></button>
-            <button type="button" class="glass service-card-action service-card-action--danger" data-action="delete" title="${__('Eliminar servicio')}" aria-label="${__('Eliminar servicio')}"><i class="fas fa-trash" aria-hidden="true"></i></button>
+            <button type="button" class="glass service-card-action" data-action="duplicate" title="${__('Duplicar servicio')}" aria-label="${__('Duplicar servicio')}"><i class="aisc-ico aisc-ico--copy" aria-hidden="true"></i></button>
+            <button type="button" class="glass service-card-action service-card-action--danger" data-action="delete" title="${__('Eliminar servicio')}" aria-label="${__('Eliminar servicio')}"><i class="aisc-ico aisc-ico--delete" aria-hidden="true"></i></button>
           </div>
           <div class="service-card-head">
             <h3 class="service-card-title">${name}</h3>
@@ -217,7 +217,7 @@ class ServicesView extends BaseView {
           </div>
           ${s.descripcion_servicio ? `<p class="service-card-desc">${this.escapeHtml(s.descripcion_servicio)}</p>` : `<p class="service-card-desc service-card-desc-empty">${__('Sin descripcion todavia.')}</p>`}
           <div class="service-card-meta">
-            ${s.duracion_estimada ? `<span class="service-card-duration"><i class="fas fa-clock" aria-hidden="true"></i> ${this.escapeHtml(s.duracion_estimada)}</span>` : ''}
+            ${s.duracion_estimada ? `<span class="service-card-duration"><i class="aisc-ico aisc-ico--clock" aria-hidden="true"></i> ${this.escapeHtml(s.duracion_estimada)}</span>` : ''}
           </div>
           ${tags.length ? `<div class="service-card-tags">${tags.map((t) => `<span class="service-card-tag">${this.escapeHtml(t)}</span>`).join('')}</div>` : ''}
         </article>
@@ -299,20 +299,20 @@ class ServicesView extends BaseView {
           <div class="attach-product-options">
             <button type="button" class="attach-product-option" data-go="url" aria-label="${__('Adjuntar servicio por URL')}">
               <div class="attach-product-option-head">
-                <span class="attach-product-option-icon"><i class="fas fa-link" aria-hidden="true"></i></span>
+                <span class="attach-product-option-icon"><i class="aisc-ico aisc-ico--link" aria-hidden="true"></i></span>
                 <h4 class="attach-product-option-title">${__('URL del servicio')}</h4>
               </div>
               <p class="attach-product-option-desc">${__('Pega el enlace de la pagina del servicio. Vera leera la URL y armara la ficha con descripcion, beneficios, entregables y metodologia detectados.')}</p>
-              <span class="attach-product-option-cta">${__('Continuar')} <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+              <span class="attach-product-option-cta">${__('Continuar')} <i class="aisc-ico aisc-ico--arrow-right" aria-hidden="true"></i></span>
             </button>
 
             <button type="button" class="attach-product-option" data-go="attach" aria-label="${__('Adjuntar archivos del servicio')}">
               <div class="attach-product-option-head">
-                <span class="attach-product-option-icon"><i class="fas fa-paperclip" aria-hidden="true"></i></span>
+                <span class="attach-product-option-icon"><i class="aisc-ico aisc-ico--paperclip" aria-hidden="true"></i></span>
                 <h4 class="attach-product-option-title">${__('Adjuntar archivos')}</h4>
               </div>
               <p class="attach-product-option-desc">${__('Subi PDFs, brochures, fichas tecnicas o catalogos del servicio. Vera analizara el contenido y construira la ficha estructurada.')}</p>
-              <span class="attach-product-option-cta">${__('Continuar')} <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+              <span class="attach-product-option-cta">${__('Continuar')} <i class="aisc-ico aisc-ico--arrow-right" aria-hidden="true"></i></span>
             </button>
           </div>
         </section>
@@ -323,7 +323,7 @@ class ServicesView extends BaseView {
             <input type="url" class="attach-product-url-input" placeholder="https://..." autocomplete="off" />
           </label>
           <button type="button" class="attach-product-submit" data-action="submit-url">
-            <i class="fas fa-magic" aria-hidden="true"></i>
+            <i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>
             <span>${__('Analizar URL con Vera')}</span>
           </button>
         </section>
@@ -333,14 +333,14 @@ class ServicesView extends BaseView {
             <span class="attach-product-field-label">${__('Archivos del servicio')}</span>
             <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="${__('Subir archivos del servicio')}">
               <input type="file" class="attach-product-file-input" multiple accept=".pdf,.doc,.docx,.txt,.md" hidden />
-              <i class="fas fa-paperclip" aria-hidden="true"></i>
+              <i class="aisc-ico aisc-ico--paperclip" aria-hidden="true"></i>
               <span class="attach-product-dropzone-text">${__('Arrastra archivos o hace click para elegirlos')}</span>
               <span class="attach-product-dropzone-hint">PDF, DOC, DOCX, TXT, MD</span>
             </div>
             <ul class="attach-product-file-list" hidden></ul>
           </div>
           <button type="button" class="attach-product-submit" data-action="submit-files">
-            <i class="fas fa-magic" aria-hidden="true"></i>
+            <i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>
             <span>${__('Analizar con Vera')}</span>
           </button>
         </section>
@@ -376,7 +376,7 @@ class ServicesView extends BaseView {
       backBtn.className = 'attach-product-back';
       backBtn.hidden = true;
       backBtn.setAttribute('aria-label', __('Volver'));
-      backBtn.innerHTML = `<i class="fas fa-arrow-left" aria-hidden="true"></i><span>${__('Volver')}</span>`;
+      backBtn.innerHTML = `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${__('Volver')}</span>`;
       backBtn.addEventListener('click', () => {
         const currentStep = wizard?.getAttribute('data-step');
         const target = stepConfig[currentStep]?.backTo || 'picker';
@@ -473,7 +473,7 @@ class ServicesView extends BaseView {
           <i class="fas ${iconClass}" aria-hidden="true"></i>
           <span class="attach-product-file-name">${this.escapeHtml(f.name)}</span>
           <span class="attach-product-file-size">${sizeStr}</span>
-          <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar archivo')}"><i class="fas fa-times" aria-hidden="true"></i></button>
+          <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar archivo')}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
         </li>`;
       }).join('');
     };

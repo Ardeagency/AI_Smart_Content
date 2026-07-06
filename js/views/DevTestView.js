@@ -99,13 +99,13 @@ class DevTestView extends DevBaseView {
           <aside class="test-config-panel">
             <!-- Selector de Flujo -->
             <section class="config-section">
-              <h3><i class="ph ph-tree-structure"></i> Flujo</h3>
+              <h3><i class="aisc-ico aisc-ico--flows"></i> Flujo</h3>
               <div class="flow-selector">
                 <select id="flowSelector" class="flow-select">
                   <option value="">Seleccionar flujo...</option>
                 </select>
                 <button class="btn-icon" id="refreshFlowsBtn" title="Actualizar">
-                  <i class="ph ph-arrows-clockwise"></i>
+                  <i class="aisc-ico aisc-ico--refresh"></i>
                 </button>
               </div>
               <div class="flow-info" id="flowInfo" hidden>
@@ -129,11 +129,11 @@ class DevTestView extends DevBaseView {
               <h3><i class="ph ph-cloud"></i> Ambiente</h3>
               <div class="environment-toggle">
                 <button class="env-btn active" data-env="test" id="envTestBtn">
-                  <i class="ph ph-flask"></i>
+                  <i class="aisc-ico aisc-ico--flask"></i>
                   Test
                 </button>
                 <button class="env-btn" data-env="prod" id="envProdBtn">
-                  <i class="ph ph-globe"></i>
+                  <i class="aisc-ico aisc-ico--globe"></i>
                   Producción
                 </button>
               </div>
@@ -145,7 +145,7 @@ class DevTestView extends DevBaseView {
 
             <!-- Opciones de ejecución -->
             <section class="config-section">
-              <h3><i class="ph ph-sliders"></i> Ejecución</h3>
+              <h3><i class="aisc-ico aisc-ico--filter"></i> Ejecución</h3>
               <div class="form-field">
                 <label for="testTimeoutSec">Timeout (seg)</label>
                 <input type="number" id="testTimeoutSec" min="5" max="300" value="120" title="Tiempo máximo de espera por petición">
@@ -163,9 +163,9 @@ class DevTestView extends DevBaseView {
             <!-- Test Cases Guardados -->
             <section class="config-section">
               <h3>
-                <i class="ph ph-folder-simple"></i> Test Cases
+                <i class="aisc-ico aisc-ico--folder"></i> Test Cases
                 <button class="btn-icon-ghost" id="saveTestCaseBtn" title="Guardar configuración actual">
-                  <i class="ph ph-plus"></i>
+                  <i class="aisc-ico aisc-ico--add"></i>
                 </button>
               </h3>
               <div class="test-cases-list" id="testCasesList">
@@ -185,12 +185,12 @@ class DevTestView extends DevBaseView {
                 Inputs
               </button>
               <button class="test-tab" data-tab="response">
-                <i class="ph ph-code"></i>
+                <i class="aisc-ico aisc-ico--coding"></i>
                 Respuesta
                 <span class="tab-badge" id="responseBadge" hidden></span>
               </button>
               <button class="test-tab" data-tab="logs">
-                <i class="ph ph-list-bullets"></i>
+                <i class="aisc-ico aisc-ico--menu"></i>
                 Logs
                 <span class="tab-badge" id="logsBadge" hidden></span>
               </button>
@@ -199,7 +199,7 @@ class DevTestView extends DevBaseView {
             <!-- Tab: Inputs -->
             <div class="test-tab-content active" id="tabInputs">
               <div class="inputs-empty" id="inputsEmpty">
-                <i class="ph ph-hand-pointing"></i>
+                <i class="aisc-ico aisc-ico--cursor-click"></i>
                 <h4>Selecciona un flujo</h4>
                 <p>Elige un flujo para ver sus campos de entrada</p>
               </div>
@@ -209,11 +209,11 @@ class DevTestView extends DevBaseView {
                 </div>
                 <div class="form-actions">
                   <button class="btn-secondary" id="clearInputsBtn">
-                    <i class="ph ph-eraser"></i>
+                    <i class="aisc-ico aisc-ico--eraser"></i>
                     Limpiar
                   </button>
                   <button class="btn-primary btn-run" id="runTestBtn" disabled>
-                    <i class="ph ph-play"></i>
+                    <i class="aisc-ico aisc-ico--play"></i>
                     <span>Ejecutar Test</span>
                   </button>
                 </div>
@@ -223,7 +223,7 @@ class DevTestView extends DevBaseView {
             <!-- Tab: Respuesta -->
             <div class="test-tab-content" id="tabResponse">
               <div class="response-empty" id="responseEmpty">
-                <i class="ph ph-brackets-curly"></i>
+                <i class="aisc-ico aisc-ico--coding"></i>
                 <h4>Sin respuesta</h4>
                 <p>Ejecuta un test para ver la respuesta</p>
               </div>
@@ -234,15 +234,15 @@ class DevTestView extends DevBaseView {
                     <span class="status-text"></span>
                   </div>
                   <div class="response-time" id="responseTime">
-                    <i class="ph ph-timer"></i>
+                    <i class="aisc-ico aisc-ico--clock"></i>
                     <span>0ms</span>
                   </div>
                   <div class="response-actions">
                     <button class="btn-icon-ghost" id="copyResponseBtn" title="Copiar">
-                      <i class="ph ph-copy"></i>
+                      <i class="aisc-ico aisc-ico--copy"></i>
                     </button>
                     <button class="btn-icon-ghost" id="expandResponseBtn" title="Expandir">
-                      <i class="ph ph-arrows-out"></i>
+                      <i class="aisc-ico aisc-ico--expand"></i>
                     </button>
                   </div>
                 </div>
@@ -264,13 +264,13 @@ class DevTestView extends DevBaseView {
                   </select>
                 </div>
                 <button class="btn-small" id="clearLogsBtn">
-                  <i class="ph ph-trash"></i>
+                  <i class="aisc-ico aisc-ico--delete"></i>
                   Limpiar
                 </button>
               </div>
               <div class="logs-list" id="logsList">
                 <div class="logs-empty">
-                  <i class="ph ph-note"></i>
+                  <i class="aisc-ico aisc-ico--brief"></i>
                   <p>Sin logs registrados</p>
                 </div>
               </div>
@@ -291,19 +291,19 @@ class DevTestView extends DevBaseView {
           <!-- Panel Derecho: Historial -->
           <aside class="test-history-panel">
             <div class="history-header">
-              <h3><i class="ph ph-clock-counter-clockwise"></i> Historial</h3>
+              <h3><i class="aisc-ico aisc-ico--history"></i> Historial</h3>
               <button class="btn-icon-ghost" id="refreshHistoryBtn" title="Actualizar">
-                <i class="ph ph-arrows-clockwise"></i>
+                <i class="aisc-ico aisc-ico--refresh"></i>
               </button>
             </div>
             <div class="history-list" id="historyList"></div>
             <div class="history-pagination" id="historyPagination" hidden>
               <button type="button" class="btn-icon-ghost" id="historyPrevBtn" title="Página anterior" disabled>
-                <i class="ph ph-caret-left"></i>
+                <i class="aisc-ico aisc-ico--chevron-left"></i>
               </button>
               <span class="history-page-info" id="historyPageInfo"></span>
               <button type="button" class="btn-icon-ghost" id="historyNextBtn" title="Página siguiente">
-                <i class="ph ph-caret-right"></i>
+                <i class="aisc-ico aisc-ico--chevron-right"></i>
               </button>
             </div>
           </aside>
@@ -315,7 +315,7 @@ class DevTestView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-sm">
           <div class="modal-header">
-            <h3><i class="ph ph-floppy-disk"></i> Guardar Test Case</h3>
+            <h3><i class="aisc-ico aisc-ico--save"></i> Guardar Test Case</h3>
             <button class="modal-close" id="closeSaveModal">&times;</button>
           </div>
           <div class="modal-body">
@@ -340,7 +340,7 @@ class DevTestView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-lg">
           <div class="modal-header">
-            <h3><i class="ph ph-info"></i> Detalle de Ejecución</h3>
+            <h3><i class="aisc-ico aisc-ico--alert-info"></i> Detalle de Ejecución</h3>
             <button class="modal-close" id="closeRunModal">&times;</button>
           </div>
           <div class="modal-body" id="runDetailBody">
@@ -354,7 +354,7 @@ class DevTestView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-xl">
           <div class="modal-header">
-            <h3><i class="ph ph-code"></i> Respuesta Completa</h3>
+            <h3><i class="aisc-ico aisc-ico--coding"></i> Respuesta Completa</h3>
             <button class="modal-close" id="closeExpandModal">&times;</button>
           </div>
           <div class="modal-body">
@@ -599,7 +599,7 @@ class DevTestView extends DevBaseView {
     if (fields.length === 0) {
       if (empty) {
         empty.innerHTML = `
-          <i class="ph ph-warning"></i>
+          <i class="aisc-ico aisc-ico--alert-warning"></i>
           <h4>Sin campos definidos</h4>
           <p>Este flujo no tiene campos de entrada configurados</p>
           <a href="/dev/builder?id=${this.selectedFlow.id}" class="btn-link">Configurar en Builder</a>
@@ -1037,10 +1037,10 @@ class DevTestView extends DevBaseView {
     
     if (running) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> <span>Ejecutando...</span>';
+      btn.innerHTML = '<i class="aisc-ico ph-spin aisc-ico--loader"></i> <span>Ejecutando...</span>';
     } else {
       btn.disabled = false;
-      btn.innerHTML = '<i class="ph ph-play"></i> <span>Ejecutar Test</span>';
+      btn.innerHTML = '<i class="aisc-ico aisc-ico--play"></i> <span>Ejecutar Test</span>';
     }
   }
 
@@ -1066,7 +1066,7 @@ class DevTestView extends DevBaseView {
     
     // Time
     if (timeEl) {
-      timeEl.innerHTML = `<i class="ph ph-timer"></i> <span>${this.elapsedTime}ms</span>`;
+      timeEl.innerHTML = `<i class="aisc-ico aisc-ico--clock"></i> <span>${this.elapsedTime}ms</span>`;
     }
     
     // Body
@@ -1123,7 +1123,7 @@ class DevTestView extends DevBaseView {
     if (filtered.length === 0) {
       container.innerHTML = `
         <div class="logs-empty">
-          <i class="ph ph-note"></i>
+          <i class="aisc-ico aisc-ico--brief"></i>
           <p>Sin logs registrados</p>
         </div>
       `;
@@ -1232,7 +1232,7 @@ class DevTestView extends DevBaseView {
     if (runs.length === 0) {
       container.innerHTML = `
         <div class="history-empty">
-          <i class="ph ph-clock"></i>
+          <i class="aisc-ico aisc-ico--clock"></i>
           <p>Sin ejecuciones previas</p>
         </div>
       `;
@@ -1258,7 +1258,7 @@ class DevTestView extends DevBaseView {
             <div class="history-status-text">${this.getStatusLabel(run.status)}</div>
           </div>
           <button class="btn-icon-ghost view-run-btn" title="Ver detalles">
-            <i class="ph ph-arrow-right"></i>
+            <i class="aisc-ico aisc-ico--arrow-right"></i>
           </button>
         </div>
       `;
@@ -1404,7 +1404,7 @@ class DevTestView extends DevBaseView {
         
         <div class="detail-actions">
           <button class="btn-secondary" id="rerunTestBtn">
-            <i class="ph ph-arrow-counter-clockwise"></i>
+            <i class="aisc-ico aisc-ico--refresh"></i>
             Re-ejecutar con estos inputs
           </button>
         </div>
@@ -1557,10 +1557,10 @@ class DevTestView extends DevBaseView {
         </div>
         <div class="test-case-actions">
           <button class="btn-icon-ghost load-test-case" title="Cargar">
-            <i class="ph ph-download"></i>
+            <i class="aisc-ico aisc-ico--dowload"></i>
           </button>
           <button class="btn-icon-ghost delete-test-case" title="Eliminar">
-            <i class="ph ph-trash"></i>
+            <i class="aisc-ico aisc-ico--delete"></i>
           </button>
         </div>
       </div>

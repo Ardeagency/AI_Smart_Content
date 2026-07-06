@@ -282,7 +282,7 @@
     const saveBtn = this.querySelector('#btnSaveDraft') || this.querySelector('#btnUpdateFlow');
     if (saveBtn) {
       saveBtn.disabled = true;
-      saveBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Guardando...';
+      saveBtn.innerHTML = '<i class="aisc-ico ph-spin aisc-ico--loader"></i> Guardando...';
     }
     
     try {
@@ -364,8 +364,8 @@
       if (saveBtn) {
         saveBtn.disabled = false;
         saveBtn.innerHTML = saveBtn.id === 'btnUpdateFlow'
-          ? '<i class="ph ph-pencil-simple"></i> Actualizar flujo'
-          : '<i class="ph ph-floppy-disk"></i> Guardar flujo';
+          ? '<i class="aisc-ico aisc-ico--edit"></i> Actualizar flujo'
+          : '<i class="aisc-ico aisc-ico--save"></i> Guardar flujo';
       }
     }
   };
@@ -729,7 +729,7 @@
     
     if (runBtn) {
       runBtn.disabled = true;
-      runBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Ejecutando...';
+      runBtn.innerHTML = '<i class="aisc-ico ph-spin aisc-ico--loader"></i> Ejecutando...';
     }
     
     try {
@@ -811,7 +811,7 @@
     } finally {
       if (runBtn) {
         runBtn.disabled = false;
-        runBtn.innerHTML = '<i class="ph ph-play"></i> Ejecutar';
+        runBtn.innerHTML = '<i class="aisc-ico aisc-ico--play"></i> Ejecutar';
       }
     }
   };

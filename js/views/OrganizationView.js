@@ -107,7 +107,7 @@ class OrganizationView extends BaseView {
           </div>
           <div class="org-form-actions">
             <button type="submit" class="btn btn-primary" id="orgGeneralSubmit">
-              <i class="fas fa-save"></i> ${__('Guardar')}
+              <i class="aisc-ico aisc-ico--save"></i> ${__('Guardar')}
             </button>
           </div>
         </form>
@@ -119,7 +119,7 @@ class OrganizationView extends BaseView {
             <h2>${__('Marcas gestionadas')}</h2>
             <p class="org-section-desc">${__('Workspaces de datos aislados (audiencias, campañas, integraciones y contenido). La provisión inicial la gestiona el equipo de plataforma.')}</p>
           </div>
-          <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nueva%20marca%20gestionada&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20una%20nueva%20marca%20gestionada%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-secondary btn-sm" id="orgRequestBrandBtn"><i class="fas fa-paper-plane"></i> ${__('Solicitar nueva marca')}</a>
+          <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nueva%20marca%20gestionada&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20una%20nueva%20marca%20gestionada%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-secondary btn-sm" id="orgRequestBrandBtn"><i class="aisc-ico aisc-ico--send"></i> ${__('Solicitar nueva marca')}</a>
         </div>
         <div class="org-subbrands-list" id="orgSubbrandsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
@@ -135,7 +135,7 @@ class OrganizationView extends BaseView {
             <p class="org-section-desc">${__('Roles y acceso al workspace.')}</p>
           </div>
           <button type="button" class="btn btn-primary" id="orgInviteBtn">
-            <i class="fas fa-user-plus"></i> ${__('Invitar')}
+            <i class="aisc-ico aisc-ico--user-registration"></i> ${__('Invitar')}
           </button>
         </div>
         <div class="org-members-list" id="orgMembersList"></div>
@@ -248,7 +248,7 @@ class OrganizationView extends BaseView {
             <p class="org-section-desc">${__('Dispositivos donde tu cuenta tiene sesión abierta. Cierra cualquier sesión que no reconozcas.')}</p>
           </div>
           <button type="button" class="btn btn-secondary" id="orgSessionsRevokeAllBtn">
-            <i class="fas fa-sign-out-alt"></i> ${__('Cerrar todas las otras sesiones')}
+            <i class="aisc-ico aisc-ico--logout"></i> ${__('Cerrar todas las otras sesiones')}
           </button>
         </div>
         <div class="org-sessions-list" id="orgSessionsList">
@@ -466,13 +466,13 @@ class OrganizationView extends BaseView {
       if (verified.length === 0) {
         personal.innerHTML = `
           <div class="org-mfa-status org-mfa-status--off">
-            <i class="fas fa-shield-alt"></i>
+            <i class="aisc-ico aisc-ico--shield"></i>
             <div>
               <strong>${__('2FA no activa')}</strong>
               <p>${__('Tu cuenta usa solo email + contraseña. Activa la autenticación de 2 pasos para una capa extra de seguridad.')}</p>
             </div>
             <button type="button" class="btn btn-primary" id="orgMfaEnrollBtn">
-              <i class="fas fa-lock"></i> ${__('Activar 2FA')}
+              <i class="aisc-ico aisc-ico--lock"></i> ${__('Activar 2FA')}
             </button>
           </div>
         `;
@@ -481,13 +481,13 @@ class OrganizationView extends BaseView {
         const created = f.created_at ? new Date(f.created_at).toLocaleDateString() : '—';
         personal.innerHTML = `
           <div class="org-mfa-status org-mfa-status--on">
-            <i class="fas fa-shield-halved"></i>
+            <i class="aisc-ico aisc-ico--shield"></i>
             <div>
               <strong>${__('2FA activa')}</strong>
               <p>${__('Factor TOTP enrolado el {fecha}. En tu próximo login se te pedirá el código de 6 dígitos.', { fecha: this.escapeHtml(created) })}</p>
             </div>
             <button type="button" class="btn btn-secondary" data-factor-id="${this.escapeHtml(f.id)}" id="orgMfaUnenrollBtn">
-              <i class="fas fa-trash"></i> ${__('Desactivar')}
+              <i class="aisc-ico aisc-ico--delete"></i> ${__('Desactivar')}
             </button>
           </div>
         `;
@@ -732,7 +732,7 @@ class OrganizationView extends BaseView {
 
     wrap.innerHTML = `
       <div class="org-session-card">
-        <i class="fas fa-laptop"></i>
+        <i class="aisc-ico aisc-ico--laptop"></i>
         <div class="org-session-info">
           <strong>${__('Esta sesión')} <span class="org-session-badge">${__('actual')}</span></strong>
           <p>${this.escapeHtml(ua.slice(0, 120))}</p>
@@ -972,16 +972,16 @@ class OrganizationView extends BaseView {
       : '';
 
     const stripePortalBtn = sub?.provider === 'stripe'
-      ? `<button type="button" class="btn btn-secondary" id="orgBillingPortalBtn"><i class="fas fa-external-link-alt"></i> ${__('Gestionar suscripción')}</button>`
+      ? `<button type="button" class="btn btn-secondary" id="orgBillingPortalBtn"><i class="aisc-ico aisc-ico--external-link"></i> ${__('Gestionar suscripción')}</button>`
       : '';
     const hasActiveSub = sub && ['active','trial','past_due'].includes(sub.status);
     const cancelBtn = hasActiveSub && !sub.cancel_at_period_end
-      ? `<button type="button" class="btn btn-secondary" id="orgBillingCancelBtn"><i class="fas fa-times"></i> ${__('Cancelar suscripción')}</button>`
+      ? `<button type="button" class="btn btn-secondary" id="orgBillingCancelBtn"><i class="aisc-ico aisc-ico--close"></i> ${__('Cancelar suscripción')}</button>`
       : '';
     const reactivateBtn = hasActiveSub && sub.cancel_at_period_end
-      ? `<button type="button" class="btn btn-secondary" id="orgBillingReactivateBtn"><i class="fas fa-undo"></i> ${__('Reactivar suscripción')}</button>`
+      ? `<button type="button" class="btn btn-secondary" id="orgBillingReactivateBtn"><i class="aisc-ico aisc-ico--refresh"></i> ${__('Reactivar suscripción')}</button>`
       : '';
-    const upgradeBtn = `<a href="${this.escapeHtml(this._plansHref())}" class="btn btn-primary"><i class="fas fa-arrow-up"></i> ${__('Ver planes')}</a>`;
+    const upgradeBtn = `<a href="${this.escapeHtml(this._plansHref())}" class="btn btn-primary"><i class="aisc-ico aisc-ico--arrow-up"></i> ${__('Ver planes')}</a>`;
 
     const limits = this.querySelector('#orgBillingLimits');
 
@@ -1089,7 +1089,7 @@ class OrganizationView extends BaseView {
           <div class="org-bill-today-track"><span class="org-bill-today-fill" style="width:${pct}%"></span></div>
         </div>
         <div class="org-bill-limits-actions">
-          <button type="submit" class="btn btn-primary" id="orgCapsSubmit"${canEdit ? '' : ' disabled'}><i class="fas fa-save"></i> ${__('Guardar límites')}</button>
+          <button type="submit" class="btn btn-primary" id="orgCapsSubmit"${canEdit ? '' : ' disabled'}><i class="aisc-ico aisc-ico--save"></i> ${__('Guardar límites')}</button>
         </div>
       </form>`;
     if (!canEdit) el.querySelectorAll('input').forEach((i) => { i.disabled = true; });
@@ -1104,7 +1104,7 @@ class OrganizationView extends BaseView {
       monthly_usd_cap: num('#capsMonthly'),
       warn_threshold: (() => { const v = num('#capsWarn'); return v == null ? null : v / 100; })(),
     };
-    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${__('Guardando…')}`; }
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Guardando…')}`; }
     try {
       const { error } = await this.supabase.from('org_claude_caps').upsert(payload, { onConflict: 'organization_id' });
       if (error) throw error;
@@ -1113,7 +1113,7 @@ class OrganizationView extends BaseView {
     } catch (e) {
       alert(e.message || __('No se pudo guardar los límites.'));
     } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-save"></i> ${__('Guardar límites')}`; }
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="aisc-ico aisc-ico--save"></i> ${__('Guardar límites')}`; }
     }
   }
 
@@ -1212,7 +1212,7 @@ class OrganizationView extends BaseView {
             <span class="org-subbrand-name">${this.escapeHtml(b.nombre_marca || __('Marca'))}</span>
             <span class="org-subbrand-meta">${__('Activa desde {fecha}', { fecha: this.escapeHtml(since) })}</span>
           </div>
-          <span class="org-subbrand-lock" title="${__('Provisión gestionada por el equipo de plataforma')}"><i class="fas fa-lock"></i> ${__('Gestionada por plataforma')}</span>
+          <span class="org-subbrand-lock" title="${__('Provisión gestionada por el equipo de plataforma')}"><i class="aisc-ico aisc-ico--lock"></i> ${__('Gestionada por plataforma')}</span>
         </div>`;
     }).join('');
   }
@@ -1240,7 +1240,7 @@ class OrganizationView extends BaseView {
            </select>`
         : `<span class="org-member-role org-role-${(roleLabel || 'member').toLowerCase()}">${this.escapeHtml(roleLabel)}</span>`;
       const removeBtn = canRemove
-        ? `<button type="button" class="btn btn-ghost btn-sm org-member-remove" data-member-id="${this.escapeHtml(m.id)}" title="${__('Quitar')}"><i class="fas fa-times"></i></button>`
+        ? `<button type="button" class="btn btn-ghost btn-sm org-member-remove" data-member-id="${this.escapeHtml(m.id)}" title="${__('Quitar')}"><i class="aisc-ico aisc-ico--close"></i></button>`
         : '';
       return `
         <div class="org-member-row" data-member-id="${this.escapeHtml(m.id)}">
@@ -1564,7 +1564,7 @@ class OrganizationView extends BaseView {
       timezone: this.querySelector('#orgTimezone')?.value || 'UTC',
       locale: this.querySelector('#orgLocale')?.value || 'es',
     };
-    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${__('Guardando…')}`; }
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Guardando…')}`; }
     try {
       const { error } = await this.supabase.from('organizations').update(payload).eq('id', this.orgId);
       if (error) throw error;
@@ -1573,7 +1573,7 @@ class OrganizationView extends BaseView {
     } catch (e) {
       alert(e.message || __('No se pudo guardar.'));
     } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-save"></i> ${__('Guardar')}`; }
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="aisc-ico aisc-ico--save"></i> ${__('Guardar')}`; }
     }
   }
 

@@ -29,17 +29,17 @@ class DevLeadCategoriesView extends DevBaseView {
 
         <div class="dev-lead-tabs">
           <button type="button" class="dev-lead-tab active" data-tab="categories">
-            <i class="fas fa-folder"></i> Categorías
+            <i class="aisc-ico aisc-ico--folder"></i> Categorías
           </button>
           <button type="button" class="dev-lead-tab" data-tab="subcategories">
-            <i class="fas fa-folder-open"></i> Subcategorías
+            <i class="aisc-ico aisc-ico--folder"></i> Subcategorías
           </button>
         </div>
 
         <section class="dev-lead-content dev-lead-categories-panel" id="categoriesPanel">
           <div class="dev-lead-toolbar">
             <button type="button" class="btn btn-primary" id="addCategoryBtn">
-              <i class="fas fa-plus"></i> Nueva categoría
+              <i class="aisc-ico aisc-ico--add"></i> Nueva categoría
             </button>
           </div>
           <div class="dev-org-grid dev-org-grid--h" id="categoriesGrid"></div>
@@ -48,7 +48,7 @@ class DevLeadCategoriesView extends DevBaseView {
         <section class="dev-lead-content dev-lead-subcategories-panel" id="subcategoriesPanel" hidden>
           <div class="dev-lead-toolbar">
             <button type="button" class="btn btn-primary" id="addSubcategoryBtn">
-              <i class="fas fa-plus"></i> Nueva subcategoría
+              <i class="aisc-ico aisc-ico--add"></i> Nueva subcategoría
             </button>
           </div>
           <div class="dev-table-container">
@@ -64,7 +64,7 @@ class DevLeadCategoriesView extends DevBaseView {
               <tbody id="subcategoriesBody"></tbody>
             </table>
             <div class="dev-lead-empty" id="subcategoriesEmpty" hidden>
-              <i class="fas fa-folder-open"></i>
+              <i class="aisc-ico aisc-ico--folder"></i>
               <p>No hay subcategorías. Crea la primera.</p>
             </div>
           </div>
@@ -105,7 +105,7 @@ class DevLeadCategoriesView extends DevBaseView {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" id="categoryModalCancel">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="categoryModalSave"><i class="fas fa-save"></i> Guardar</button>
+        <button type="button" class="btn btn-primary" id="categoryModalSave"><i class="aisc-ico aisc-ico--save"></i> Guardar</button>
       </div>
     `;
   }
@@ -127,7 +127,7 @@ class DevLeadCategoriesView extends DevBaseView {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" id="subcategoryModalCancel">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="subcategoryModalSave"><i class="fas fa-save"></i> Guardar</button>
+        <button type="button" class="btn btn-primary" id="subcategoryModalSave"><i class="aisc-ico aisc-ico--save"></i> Guardar</button>
       </div>
     `;
   }
@@ -185,7 +185,7 @@ class DevLeadCategoriesView extends DevBaseView {
     const grid = document.getElementById('categoriesGrid');
     if (!grid) return;
     if (this.categories.length === 0) {
-      grid.innerHTML = '<div class="dev-org-grid-state"><i class="fas fa-folder"></i> No hay categorías. Crea la primera.</div>';
+      grid.innerHTML = '<div class="dev-org-grid-state"><i class="aisc-ico aisc-ico--folder"></i> No hay categorías. Crea la primera.</div>';
       return;
     }
     grid.innerHTML = this.categories.map(c => this.renderCategoryCard(c)).join('');
@@ -211,7 +211,7 @@ class DevLeadCategoriesView extends DevBaseView {
         ? `<video src="${url}" class="dev-org-card-img" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>`
         : `<img src="${url}" class="dev-org-card-img" alt="${name}" loading="lazy" onerror="this.outerHTML='&lt;div class=&quot;dev-org-card-placeholder&quot;&gt;&lt;i class=&quot;fas fa-folder&quot;&gt;&lt;/i&gt;&lt;/div&gt;'">`;
     } else {
-      media = `<div class="dev-org-card-placeholder"><i class="fas fa-folder"></i></div>`;
+      media = `<div class="dev-org-card-placeholder"><i class="aisc-ico aisc-ico--folder"></i></div>`;
     }
     return `
       <article class="dev-org-card dev-org-card--h" data-id="${id}">
@@ -220,13 +220,13 @@ class DevLeadCategoriesView extends DevBaseView {
           <div class="dev-org-card-h-top">
             <h3 class="dev-org-card-h-title">${name}</h3>
             <div class="dev-org-card-actions dev-org-card-actions--h">
-              <button type="button" class="dev-org-card-icon-btn edit-category" data-id="${id}" title="Editar" aria-label="Editar"><i class="fas fa-edit"></i></button>
-              <button type="button" class="dev-org-card-icon-btn dev-org-card-icon-btn--danger delete-category" data-id="${id}" title="Eliminar" aria-label="Eliminar"><i class="fas fa-trash"></i></button>
+              <button type="button" class="dev-org-card-icon-btn edit-category" data-id="${id}" title="Editar" aria-label="Editar"><i class="aisc-ico aisc-ico--edit"></i></button>
+              <button type="button" class="dev-org-card-icon-btn dev-org-card-icon-btn--danger delete-category" data-id="${id}" title="Eliminar" aria-label="Eliminar"><i class="aisc-ico aisc-ico--delete"></i></button>
             </div>
           </div>
           ${desc ? `<p class="dev-org-card-h-desc">${desc}</p>` : ''}
           <div class="dev-org-card-meta dev-org-card-meta--h">
-            <span class="dev-org-card-pill"><i class="fas fa-sort"></i> Orden ${order}</span>
+            <span class="dev-org-card-pill"><i class="aisc-ico aisc-ico--sort"></i> Orden ${order}</span>
             <span class="dev-org-card-pill ${visible ? '' : 'dev-org-card-pill--muted'}"><i class="fas fa-${visible ? 'eye' : 'eye-slash'}"></i> ${visible ? 'Visible' : 'Oculta'}</span>
           </div>
         </div>
@@ -265,10 +265,10 @@ class DevLeadCategoriesView extends DevBaseView {
         <td>${this.escapeHtml((s.description || '').slice(0, 60))}${(s.description || '').length > 60 ? '…' : ''}</td>
         <td class="dev-lead-actions">
           <button type="button" class="btn-icon edit-subcategory" title="Editar" data-id="${s.id}">
-            <i class="fas fa-edit"></i>
+            <i class="aisc-ico aisc-ico--edit"></i>
           </button>
           <button type="button" class="btn-icon delete-subcategory" title="Eliminar" data-id="${s.id}">
-            <i class="fas fa-trash"></i>
+            <i class="aisc-ico aisc-ico--delete"></i>
           </button>
         </td>
       </tr>

@@ -53,10 +53,10 @@
               </section>
               <section data-section="security" class="is-hidden">
                 <div class="form-group">
-                  <button type="button" class="btn btn-primary" id="settingsSecurityChangePassword"><i class="fas fa-key"></i> ${__('Cambiar contraseña')}</button>
+                  <button type="button" class="btn btn-primary" id="settingsSecurityChangePassword"><i class="aisc-ico aisc-ico--key"></i> ${__('Cambiar contraseña')}</button>
                 </div>
                 <div class="form-group">
-                  <button type="button" class="btn btn-secondary" id="settingsSecurityEditEmail"><i class="fas fa-envelope"></i> ${__('Editar correo')}</button>
+                  <button type="button" class="btn btn-secondary" id="settingsSecurityEditEmail"><i class="aisc-ico aisc-ico--mail"></i> ${__('Editar correo')}</button>
                 </div>
               </section>
             </div>

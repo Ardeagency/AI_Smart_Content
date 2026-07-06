@@ -50,11 +50,11 @@ class TasksView extends BaseView {
       </div>
       <div class="tasks-header-actions">
         <div class="tasks-viewtoggle" id="tasksViewToggle" role="tablist" aria-label="${__('Vista')}">
-          <button type="button" class="tasks-viewtoggle-btn active" data-view="list" aria-label="${__('Vista de lista')}"><i class="fas fa-th-large"></i> ${__('Lista')}</button>
-          <button type="button" class="tasks-viewtoggle-btn" data-view="calendar" aria-label="${__('Vista de calendario')}"><i class="fas fa-calendar-alt"></i> ${__('Calendario')}</button>
+          <button type="button" class="tasks-viewtoggle-btn active" data-view="list" aria-label="${__('Vista de lista')}"><i class="aisc-ico aisc-ico--grid"></i> ${__('Lista')}</button>
+          <button type="button" class="tasks-viewtoggle-btn" data-view="calendar" aria-label="${__('Vista de calendario')}"><i class="aisc-ico aisc-ico--calendar"></i> ${__('Calendario')}</button>
         </div>
         <a class="btn btn-primary tasks-create-btn" id="tasksCreateNewBtn" href="#">
-          <i class="fas fa-plus"></i> ${__('Crear tarea')}
+          <i class="aisc-ico aisc-ico--add"></i> ${__('Crear tarea')}
         </a>
       </div>
     </div>
@@ -100,7 +100,7 @@ class TasksView extends BaseView {
       <header class="task-detail-header">
         <div class="task-detail-header-left">
           <a class="btn btn-ghost task-detail-back" id="backToTasksBtn">
-            <i class="fas fa-arrow-left"></i> ${__('Volver')}
+            <i class="aisc-ico aisc-ico--arrow-left"></i> ${__('Volver')}
           </a>
           <div class="task-detail-title-block">
             <h1 class="task-detail-title" id="taskDetailTitle">—</h1>
@@ -108,10 +108,10 @@ class TasksView extends BaseView {
           </div>
         </div>
         <div class="task-detail-header-right">
-          <button type="button" class="btn btn-ghost" id="taskDetailToggleActiveBtn" title="${__('Activar o pausar')}"><i class="fas fa-pause-circle"></i> <span id="taskDetailToggleActiveLabel">${__('Pausar')}</span></button>
-          <button type="button" class="btn btn-ghost" id="taskDetailDuplicateBtn"><i class="fas fa-copy"></i> ${__('Duplicar')}</button>
-          <button type="button" class="btn btn-ghost task-detail-danger" id="taskDetailDeleteBtn"><i class="fas fa-trash-alt"></i> ${__('Eliminar')}</button>
-          <button type="button" class="btn btn-primary" id="taskDetailSaveBtn"><i class="fas fa-save"></i> ${__('Guardar')}</button>
+          <button type="button" class="btn btn-ghost" id="taskDetailToggleActiveBtn" title="${__('Activar o pausar')}"><i class="aisc-ico aisc-ico--pause"></i> <span id="taskDetailToggleActiveLabel">${__('Pausar')}</span></button>
+          <button type="button" class="btn btn-ghost" id="taskDetailDuplicateBtn"><i class="aisc-ico aisc-ico--copy"></i> ${__('Duplicar')}</button>
+          <button type="button" class="btn btn-ghost task-detail-danger" id="taskDetailDeleteBtn"><i class="aisc-ico aisc-ico--delete"></i> ${__('Eliminar')}</button>
+          <button type="button" class="btn btn-primary" id="taskDetailSaveBtn"><i class="aisc-ico aisc-ico--save"></i> ${__('Guardar')}</button>
         </div>
       </header>
 
@@ -913,7 +913,7 @@ class TasksView extends BaseView {
                       : status ? status.charAt(0).toUpperCase() + status.slice(1) : '—';
     const thumb = r.flow_image_url
       ? `<img class="tasks-history-thumb" src="${this.escapeHtml(r.flow_image_url)}" alt="" loading="lazy">`
-      : `<span class="tasks-history-thumb tasks-history-thumb--placeholder"><i class="fas fa-project-diagram"></i></span>`;
+      : `<span class="tasks-history-thumb tasks-history-thumb--placeholder"><i class="aisc-ico aisc-ico--flows"></i></span>`;
     const { rel, abs } = this._formatRunDateParts(r.created_at);
     const cost = r.tokens_consumed != null ? `${Number(r.tokens_consumed).toLocaleString('es')}` : '—';
 
@@ -994,7 +994,7 @@ class TasksView extends BaseView {
                       : __('PAUSADA');
     const coverHtml = t.flow_image_url
       ? `<div class="task-card-cover"><img src="${this.escapeHtml(t.flow_image_url)}" alt="" loading="lazy"></div>`
-      : `<div class="task-card-cover task-card-cover-placeholder"><i class="fas fa-project-diagram"></i></div>`;
+      : `<div class="task-card-cover task-card-cover-placeholder"><i class="aisc-ico aisc-ico--flows"></i></div>`;
     const productImages = t.entity_image_urls || [];
     const productCount = productImages.length;
     const maxAvatars = 6;
@@ -1006,7 +1006,7 @@ class TasksView extends BaseView {
           ${avatarUrls.map((url, i) => `<div class="task-card-avatar" style="z-index: ${10 + i};"><img src="${this.escapeHtml(url)}" alt="" loading="lazy"></div>`).join('')}
           ${extraCount ? `<div class="task-card-avatar task-card-avatar-extra" style="z-index: 5;">+${extraCount}</div>` : ''}
         </div>`
-      : `<div class="task-card-avatars product-count-1"><div class="task-card-avatar task-card-avatar-placeholder"><i class="fas fa-box"></i></div></div>`;
+      : `<div class="task-card-avatars product-count-1"><div class="task-card-avatar task-card-avatar-placeholder"><i class="aisc-ico aisc-ico--product"></i></div></div>`;
     return `
       <article class="task-card" data-task-id="${t.id}" role="button" tabindex="0">
         <div class="task-card-inner">
@@ -1178,7 +1178,7 @@ class TasksView extends BaseView {
     } else if (eids.length) {
       const n = Math.min(eids.length, max);
       html = Array.from({ length: n }).map(() =>
-        `<span class="cal2-bub cal2-bub--ph"><i class="fas fa-box"></i></span>`
+        `<span class="cal2-bub cal2-bub--ph"><i class="aisc-ico aisc-ico--product"></i></span>`
       ).join('');
       const extra = eids.length > max ? eids.length - max : 0;
       if (extra) html += `<span class="cal2-bub cal2-bub--more">+${extra}</span>`;
@@ -1300,9 +1300,9 @@ class TasksView extends BaseView {
             <span class="cal2-month">${monthLabel}</span>
             <span class="cal2-week">/ ${weekLabel}</span>
             <div class="cal2-navgroup">
-              <button type="button" class="cal2-nav" id="calPrev" aria-label="${__('Semana anterior')}"><i class="fas fa-chevron-left"></i></button>
+              <button type="button" class="cal2-nav" id="calPrev" aria-label="${__('Semana anterior')}"><i class="aisc-ico aisc-ico--chevron-left"></i></button>
               <button type="button" class="cal2-today" id="calToday">${__('Hoy')}</button>
-              <button type="button" class="cal2-nav" id="calNext" aria-label="${__('Semana siguiente')}"><i class="fas fa-chevron-right"></i></button>
+              <button type="button" class="cal2-nav" id="calNext" aria-label="${__('Semana siguiente')}"><i class="aisc-ico aisc-ico--chevron-right"></i></button>
             </div>
           </div>
           <div class="cal2-toolbar-right">

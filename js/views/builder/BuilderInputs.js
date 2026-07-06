@@ -366,7 +366,7 @@
     if (!activeBucket || activeBucket.total === 0) {
       container.innerHTML = `
         <div class="components-empty">
-          <i class="ph ph-folder-simple"></i>
+          <i class="aisc-ico aisc-ico--folder"></i>
           <p>Sin componentes en esta sección.</p>
         </div>
       `;
@@ -451,7 +451,7 @@
       if (!emptyMsg) {
         emptyMsg = document.createElement('div');
         emptyMsg.className = 'components-search-empty components-empty';
-        emptyMsg.innerHTML = '<i class="ph ph-magnifying-glass"></i><p>Sin resultados</p>';
+        emptyMsg.innerHTML = '<i class="aisc-ico aisc-ico--search"></i><p>Sin resultados</p>';
         emptyMsg.hidden = true;
         container.appendChild(emptyMsg);
       }
@@ -754,14 +754,14 @@
         const overlay = document.createElement('div');
         overlay.className = 'canvas-field-overlay';
         overlay.innerHTML = `
-          <span class="canvas-field-grip" title="Arrastra para reordenar"><i class="ph ph-dots-six-vertical"></i></span>
+          <span class="canvas-field-grip" title="Arrastra para reordenar"><i class="aisc-ico aisc-ico--more"></i></span>
           <span class="canvas-field-meta">
             <span class="canvas-field-meta-label">${this.escapeHtml(field.label || field.key || '')}</span>
             <span class="canvas-field-meta-type">${this.escapeHtml(typeLbl)}</span>
           </span>
           <span class="canvas-field-actions">
-            <button type="button" class="field-action-btn duplicate-field" title="Duplicar" aria-label="Duplicar"><i class="ph ph-copy"></i></button>
-            <button type="button" class="field-action-btn delete-field" title="Eliminar" aria-label="Eliminar"><i class="ph ph-trash"></i></button>
+            <button type="button" class="field-action-btn duplicate-field" title="Duplicar" aria-label="Duplicar"><i class="aisc-ico aisc-ico--copy"></i></button>
+            <button type="button" class="field-action-btn delete-field" title="Eliminar" aria-label="Eliminar"><i class="aisc-ico aisc-ico--delete"></i></button>
           </span>
         `;
         el.prepend(overlay);
@@ -795,14 +795,14 @@
     return `
       <div class="canvas-field ${isSelected ? 'selected' : ''}" data-index="${index}" draggable="true">
         <div class="canvas-field-overlay">
-          <span class="canvas-field-grip"><i class="ph ph-dots-six-vertical"></i></span>
+          <span class="canvas-field-grip"><i class="aisc-ico aisc-ico--more"></i></span>
           <span class="canvas-field-meta">
             <span class="canvas-field-meta-label">${this.escapeHtml(field.label || field.key || '')}</span>
             <span class="canvas-field-meta-type">${this.escapeHtml(typeLbl)}</span>
           </span>
           <span class="canvas-field-actions">
-            <button type="button" class="field-action-btn duplicate-field" title="Duplicar"><i class="ph ph-copy"></i></button>
-            <button type="button" class="field-action-btn delete-field" title="Eliminar"><i class="ph ph-trash"></i></button>
+            <button type="button" class="field-action-btn duplicate-field" title="Duplicar"><i class="aisc-ico aisc-ico--copy"></i></button>
+            <button type="button" class="field-action-btn delete-field" title="Eliminar"><i class="aisc-ico aisc-ico--delete"></i></button>
           </span>
         </div>
         <div class="canvas-field-preview">${inputPreview}</div>
@@ -1522,7 +1522,7 @@
       stylesPanel = `
         <div class="property-group">
           <div class="property-group-head">
-            <h4><i class="ph ph-list-bullets"></i> Alineación</h4>
+            <h4><i class="aisc-ico aisc-ico--menu"></i> Alineación</h4>
           </div>
           <div class="property-field">
             <label>Alineación del texto</label>
@@ -1538,7 +1538,7 @@
       stylesPanel = `
         <div class="property-group">
           <div class="property-group-head">
-            <h4><i class="ph ph-sliders"></i> Espaciado</h4>
+            <h4><i class="aisc-ico aisc-ico--filter"></i> Espaciado</h4>
           </div>
           <div class="property-field">
             <label>Espaciado vertical</label>
@@ -1558,7 +1558,7 @@
     const configPanel = `
       <div class="property-group property-group--mono">
         <div class="property-group-head">
-          <h4><i class="ph ph-hand-pointing"></i> Identificador</h4>
+          <h4><i class="aisc-ico aisc-ico--cursor-click"></i> Identificador</h4>
         </div>
         <div class="property-field">
           <label for="propKey">Variable key (referencia)</label>
@@ -1571,7 +1571,7 @@
       </div>
       <div class="property-group">
         <div class="property-group-head">
-          <h4><i class="ph ph-cardholder"></i> Tipo</h4>
+          <h4><i class="aisc-ico aisc-ico--credit-card"></i> Tipo</h4>
         </div>
         <div class="property-field">
           <label>Tipo estructural</label>
@@ -1635,7 +1635,7 @@
     if (this.selectedFieldIndex === null || !this.getCanvasFields()[this.selectedFieldIndex]) {
       panel.innerHTML = `
         <div class="properties-empty">
-          <i class="ph ph-cursor-click"></i>
+          <i class="aisc-ico aisc-ico--cursor-click"></i>
           <p>Selecciona un campo para editar sus propiedades</p>
         </div>
       `;
@@ -1679,7 +1679,7 @@
 
       <div class="property-group">
         <div class="property-group-head">
-          <h4><i class="ph ph-check-circle"></i> Comportamiento</h4>
+          <h4><i class="aisc-ico aisc-ico--check"></i> Comportamiento</h4>
         </div>
         <div class="property-toggle">
           <label>
@@ -1695,7 +1695,7 @@
     const stylesPanel = `
       <div class="property-group">
         <div class="property-group-head">
-          <h4><i class="ph ph-squares-four"></i> Layout</h4>
+          <h4><i class="aisc-ico aisc-ico--grid"></i> Layout</h4>
         </div>
         <div class="property-field">
           <label>Ancho del control</label>
@@ -1718,7 +1718,7 @@
       ${isContainer ? `
       <div class="property-group">
         <div class="property-group-head">
-          <h4><i class="ph ph-stack"></i> Variante del contenedor</h4>
+          <h4><i class="aisc-ico aisc-ico--layers"></i> Variante del contenedor</h4>
         </div>
         <div class="property-field">
           <label>Cómo se agrupan los inputs anidados</label>
@@ -1744,7 +1744,7 @@
       ${isRange ? `
       <div class="property-group">
         <div class="property-group-head">
-          <h4><i class="ph ph-sliders-horizontal"></i> Variante del slider</h4>
+          <h4><i class="aisc-ico aisc-ico--filter"></i> Variante del slider</h4>
         </div>
         <div class="property-field">
           <label>Estilo visual del slider</label>
@@ -1773,7 +1773,7 @@
     const configPanel = `
       <div class="property-group property-group--mono">
         <div class="property-group-head">
-          <h4><i class="ph ph-hand-pointing"></i> Identificador</h4>
+          <h4><i class="aisc-ico aisc-ico--cursor-click"></i> Identificador</h4>
         </div>
         <div class="property-field">
           <label for="propKey">Variable key</label>
@@ -1787,7 +1787,7 @@
 
       <div class="property-group">
         <div class="property-group-head">
-          <h4><i class="ph ph-cardholder"></i> Tipo de control</h4>
+          <h4><i class="aisc-ico aisc-ico--credit-card"></i> Tipo de control</h4>
         </div>
         <div class="property-field">
           <label for="propInputType">Input type</label>
@@ -1809,7 +1809,7 @@
       ${isScopePicker ? `
       <div class="property-group property-group--vera">
         <div class="property-group-head">
-          <h4><i class="ph ph-sparkle"></i> Modo Vera</h4>
+          <h4><i class="aisc-ico aisc-ico--sparkle"></i> Modo Vera</h4>
           <span class="property-group-badge">LLM</span>
         </div>
         <div class="property-field">
@@ -1881,10 +1881,10 @@
           </div>
         </div>
         <div class="properties-header-actions">
-          <button type="button" class="prop-action-btn" data-prop-action="move-up" title="Mover arriba" aria-label="Mover arriba" ${canMoveUp ? '' : 'disabled'}><i class="ph ph-caret-up"></i></button>
-          <button type="button" class="prop-action-btn" data-prop-action="move-down" title="Mover abajo" aria-label="Mover abajo" ${canMoveDown ? '' : 'disabled'}><i class="ph ph-caret-down"></i></button>
-          <button type="button" class="prop-action-btn" data-prop-action="duplicate" title="Duplicar" aria-label="Duplicar"><i class="ph ph-copy"></i></button>
-          <button type="button" class="prop-action-btn prop-action-btn--danger" data-prop-action="delete" title="Eliminar" aria-label="Eliminar"><i class="ph ph-trash"></i></button>
+          <button type="button" class="prop-action-btn" data-prop-action="move-up" title="Mover arriba" aria-label="Mover arriba" ${canMoveUp ? '' : 'disabled'}><i class="aisc-ico aisc-ico--chevron-up"></i></button>
+          <button type="button" class="prop-action-btn" data-prop-action="move-down" title="Mover abajo" aria-label="Mover abajo" ${canMoveDown ? '' : 'disabled'}><i class="aisc-ico aisc-ico--chevron-down"></i></button>
+          <button type="button" class="prop-action-btn" data-prop-action="duplicate" title="Duplicar" aria-label="Duplicar"><i class="aisc-ico aisc-ico--copy"></i></button>
+          <button type="button" class="prop-action-btn prop-action-btn--danger" data-prop-action="delete" title="Eliminar" aria-label="Eliminar"><i class="aisc-ico aisc-ico--delete"></i></button>
         </div>
       </div>
     `;
@@ -2360,7 +2360,7 @@
               ${(field.options || []).length === 0 ? `
                 <div class="option-row" data-index="0">
                   <input type="text" class="option-single" placeholder="ej. Bajo" data-index="0">
-                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="aisc-ico aisc-ico--close"></i></button>
                 </div>
               ` : (field.options || []).map((opt, i) => {
                 const v = opt && (opt.value !== undefined ? opt.value : opt.label !== undefined ? opt.label : opt);
@@ -2368,12 +2368,12 @@
                 return `
                 <div class="option-row" data-index="${i}">
                   <input type="text" class="option-single" placeholder="etiqueta" data-index="${i}" value="${escapeProp(str)}">
-                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="aisc-ico aisc-ico--close"></i></button>
                 </div>
               `; }).join('')}
             </div>
             <button type="button" class="btn-small btn-add-options" id="addOptionBtnSlider">
-              <i class="ph ph-plus"></i> Opciones
+              <i class="aisc-ico aisc-ico--add"></i> Opciones
             </button>
             `}
           </div>
@@ -2426,12 +2426,12 @@
                 <div class="option-row option-row--color" data-index="${i}">
                   <input type="text" class="option-color-hex" placeholder="#hex" value="${escapeProp(v)}" data-index="${i}" maxlength="7">
                   <input type="text" class="option-label" placeholder="Etiqueta" value="${escapeProp(lbl)}" data-index="${i}">
-                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="aisc-ico aisc-ico--close"></i></button>
                 </div>`;
               }).join('')}
             </div>
             <button type="button" class="btn-small btn-add-options" id="addOptionBtnColores">
-              <i class="ph ph-plus"></i> Añadir color
+              <i class="aisc-ico aisc-ico--add"></i> Añadir color
             </button>
           </div>
         `;
@@ -2459,19 +2459,19 @@
               ${options.length === 0 ? `
                 <div class="option-row" data-index="0">
                   <input type="text" class="option-single" placeholder="ej. Identidad de marca" data-index="0">
-                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="aisc-ico aisc-ico--close"></i></button>
                 </div>
               ` : options.map((opt, i) => {
                 const str = escapeProp(optVal(opt) != null ? String(optVal(opt)) : '');
                 return `
                 <div class="option-row" data-index="${i}">
                   <input type="text" class="option-single" placeholder="ej. Identidad de marca" data-index="${i}" value="${str}">
-                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="aisc-ico aisc-ico--close"></i></button>
                 </div>
               `; }).join('')}
             </div>
             <button type="button" class="btn-small btn-add-options" id="addOptionBtn">
-              <i class="ph ph-plus"></i> Opciones
+              <i class="aisc-ico aisc-ico--add"></i> Opciones
             </button>
           </div>
         `;
@@ -2511,19 +2511,19 @@
               ${options.length === 0 ? `
                 <div class="option-row" data-index="0">
                   <input type="text" class="option-single" placeholder="ej. rubia" data-index="0">
-                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="aisc-ico aisc-ico--close"></i></button>
                 </div>
               ` : options.map((opt, i) => {
                 const str = escapeProp(optVal(opt) != null ? String(optVal(opt)) : '');
                 return `
                 <div class="option-row" data-index="${i}">
                   <input type="text" class="option-single" placeholder="ej. rubia" data-index="${i}" value="${str}">
-                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="aisc-ico aisc-ico--close"></i></button>
                 </div>
               `; }).join('')}
             </div>
             <button type="button" class="btn-small btn-add-options" id="addOptionBtn">
-              <i class="ph ph-plus"></i> Opciones
+              <i class="aisc-ico aisc-ico--add"></i> Opciones
             </button>
           </div>
         `;
@@ -3409,7 +3409,7 @@
     if (fields.length === 0) {
       return `
         <div class="preview-empty">
-          <i class="ph ph-warning"></i>
+          <i class="aisc-ico aisc-ico--alert-warning"></i>
           <p>No hay campos definidos</p>
         </div>
       `;
@@ -3444,7 +3444,7 @@
         </div>
         <div class="preview-actions position-${submitPosition}">
           <button class="btn-primary preview-submit">
-            <i class="ph ph-sparkle"></i>
+            <i class="aisc-ico aisc-ico--sparkle"></i>
             ${submitText}
           </button>
         </div>

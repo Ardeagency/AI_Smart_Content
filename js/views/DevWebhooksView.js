@@ -59,24 +59,24 @@ class DevWebhooksView extends DevBaseView {
               </select>
             </label>
             <button class="btn-secondary" id="bulkHealthCheckBtn">
-              <i class="ph ph-heartbeat"></i>
+              <i class="aisc-ico aisc-ico--monitoring"></i>
               Health Check Global
             </button>
             <button class="btn-primary" id="addWebhookBtn">
-              <i class="ph ph-plus"></i>
+              <i class="aisc-ico aisc-ico--add"></i>
               Configurar Nuevo
             </button>
           </div>
         </header>
         <p class="dev-webhooks-monitoring-note" id="monitoringNote">
-          <i class="ph ph-info"></i> El health check verifica conectividad (HTTP 2xx). Para alertas 24/7 se requiere un servicio en el servidor.
+          <i class="aisc-ico aisc-ico--alert-info"></i> El health check verifica conectividad (HTTP 2xx). Para alertas 24/7 se requiere un servicio en el servidor.
         </p>
 
         <!-- Stats Overview -->
         <div class="webhooks-stats-grid">
           <div class="webhook-stat-card">
             <div class="stat-icon total">
-              <i class="ph ph-link"></i>
+              <i class="aisc-ico aisc-ico--link"></i>
             </div>
             <div class="stat-info">
               <span class="stat-value" id="statTotal">0</span>
@@ -85,7 +85,7 @@ class DevWebhooksView extends DevBaseView {
           </div>
           <div class="webhook-stat-card">
             <div class="stat-icon healthy">
-              <i class="ph ph-check-circle"></i>
+              <i class="aisc-ico aisc-ico--check"></i>
             </div>
             <div class="stat-info">
               <span class="stat-value" id="statHealthy">0</span>
@@ -94,7 +94,7 @@ class DevWebhooksView extends DevBaseView {
           </div>
           <div class="webhook-stat-card">
             <div class="stat-icon unhealthy">
-              <i class="ph ph-warning-circle"></i>
+              <i class="aisc-ico aisc-ico--alert-warning"></i>
             </div>
             <div class="stat-info">
               <span class="stat-value" id="statUnhealthy">0</span>
@@ -103,7 +103,7 @@ class DevWebhooksView extends DevBaseView {
           </div>
           <div class="webhook-stat-card">
             <div class="stat-icon unconfigured">
-              <i class="ph ph-question"></i>
+              <i class="aisc-ico aisc-ico--help"></i>
             </div>
             <div class="stat-info">
               <span class="stat-value" id="statUnconfigured">0</span>
@@ -116,25 +116,25 @@ class DevWebhooksView extends DevBaseView {
         <div class="webhooks-toolbar">
           <div class="webhooks-filters">
             <button class="filter-btn active" data-filter="all">
-              <i class="ph ph-squares-four"></i>
+              <i class="aisc-ico aisc-ico--grid"></i>
               Todos
             </button>
             <button class="filter-btn" data-filter="healthy">
-              <i class="ph ph-check-circle"></i>
+              <i class="aisc-ico aisc-ico--check"></i>
               Saludables
             </button>
             <button class="filter-btn" data-filter="unhealthy">
-              <i class="ph ph-warning"></i>
+              <i class="aisc-ico aisc-ico--alert-warning"></i>
               Con Problemas
             </button>
             <button class="filter-btn" data-filter="unconfigured">
-              <i class="ph ph-question"></i>
+              <i class="aisc-ico aisc-ico--help"></i>
               Sin Configurar
             </button>
           </div>
           <div class="webhooks-search-area">
             <div class="webhooks-search">
-              <i class="ph ph-magnifying-glass"></i>
+              <i class="aisc-ico aisc-ico--search"></i>
               <input type="text" id="webhookSearchInput" placeholder="Buscar por nombre o URL...">
             </div>
             <select id="platformFilterSelect" class="platform-filter">
@@ -162,7 +162,7 @@ class DevWebhooksView extends DevBaseView {
               <tr class="loading-row">
                 <td colspan="7">
                   <div class="table-loading">
-                    <i class="ph ph-spinner ph-spin"></i>
+                    <i class="aisc-ico ph-spin aisc-ico--loader"></i>
                     <span>Cargando webhooks...</span>
                   </div>
                 </td>
@@ -177,7 +177,7 @@ class DevWebhooksView extends DevBaseView {
           <h3>Sin webhooks configurados</h3>
           <p>Configura webhooks para conectar tus flujos de IA</p>
           <button class="btn-primary" id="emptyAddBtn">
-            <i class="ph ph-plus"></i>
+            <i class="aisc-ico aisc-ico--add"></i>
             Configurar Primer Webhook
           </button>
         </div>
@@ -189,7 +189,7 @@ class DevWebhooksView extends DevBaseView {
         <div class="modal-content modal-lg">
           <div class="modal-header">
             <h3 id="webhookModalTitle">
-              <i class="ph ph-gear"></i>
+              <i class="aisc-ico aisc-ico--settings"></i>
               Configurar Webhook
             </h3>
             <button class="modal-close" id="closeWebhookModal">&times;</button>
@@ -234,13 +234,13 @@ class DevWebhooksView extends DevBaseView {
                 
                 <div class="form-field webhook-url-field">
                   <label for="webhookUrlTest">
-                    <i class="ph ph-flask"></i>
+                    <i class="aisc-ico aisc-ico--flask"></i>
                     URL de Test
                   </label>
                   <div class="url-input-group">
                     <input type="url" id="webhookUrlTest" placeholder="https://tu-n8n.com/webhook-test/...">
                     <button type="button" class="btn-icon test-url-btn" data-env="test" title="Probar conexión">
-                      <i class="ph ph-play"></i>
+                      <i class="aisc-ico aisc-ico--play"></i>
                     </button>
                   </div>
                   <span class="field-help">URL para pruebas durante desarrollo</span>
@@ -248,13 +248,13 @@ class DevWebhooksView extends DevBaseView {
 
                 <div class="form-field webhook-url-field">
                   <label for="webhookUrlProd">
-                    <i class="ph ph-globe"></i>
+                    <i class="aisc-ico aisc-ico--globe"></i>
                     URL de Producción
                   </label>
                   <div class="url-input-group">
                     <input type="url" id="webhookUrlProd" placeholder="https://tu-n8n.com/webhook/...">
                     <button type="button" class="btn-icon test-url-btn" data-env="prod" title="Probar conexión">
-                      <i class="ph ph-play"></i>
+                      <i class="aisc-ico aisc-ico--play"></i>
                     </button>
                   </div>
                   <span class="field-help">URL para usuarios en producción</span>
@@ -293,7 +293,7 @@ class DevWebhooksView extends DevBaseView {
 
             <!-- Test Results -->
             <div class="test-results-panel" id="testResultsPanel" hidden>
-              <h4><i class="ph ph-terminal"></i> Resultado del Test</h4>
+              <h4><i class="aisc-ico aisc-ico--consola-desarrollador"></i> Resultado del Test</h4>
               <div class="test-result" id="testResult">
                 <!-- Resultado dinámico -->
               </div>
@@ -302,7 +302,7 @@ class DevWebhooksView extends DevBaseView {
           <div class="modal-footer">
             <button class="btn-secondary" id="cancelWebhookBtn">Cancelar</button>
             <button class="btn-primary" id="saveWebhookBtn">
-              <i class="ph ph-floppy-disk"></i>
+              <i class="aisc-ico aisc-ico--save"></i>
               Guardar
             </button>
           </div>
@@ -314,7 +314,7 @@ class DevWebhooksView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-md">
           <div class="modal-header">
-            <h3><i class="ph ph-heartbeat"></i> Health Check Global</h3>
+            <h3><i class="aisc-ico aisc-ico--monitoring"></i> Health Check Global</h3>
             <button class="modal-close" id="closeHealthModal">&times;</button>
           </div>
           <div class="modal-body">
@@ -339,7 +339,7 @@ class DevWebhooksView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-sm">
           <div class="modal-header">
-            <h3><i class="ph ph-warning"></i> Confirmar Eliminación</h3>
+            <h3><i class="aisc-ico aisc-ico--alert-warning"></i> Confirmar Eliminación</h3>
             <button class="modal-close" id="closeDeleteModal">&times;</button>
           </div>
           <div class="modal-body">
@@ -349,7 +349,7 @@ class DevWebhooksView extends DevBaseView {
           <div class="modal-footer">
             <button class="btn-secondary" id="cancelDeleteBtn">Cancelar</button>
             <button class="btn-danger" id="confirmDeleteBtn">
-              <i class="ph ph-trash"></i>
+              <i class="aisc-ico aisc-ico--delete"></i>
               Eliminar
             </button>
           </div>
@@ -589,7 +589,7 @@ class DevWebhooksView extends DevBaseView {
             ${hasTest ? `
               <span class="url-text" title="${tech.webhook_url_test}">${truncateUrl(tech.webhook_url_test)}</span>
               <button class="btn-icon-ghost-xs copy-url" data-url="${tech.webhook_url_test}" title="Copiar">
-                <i class="ph ph-copy"></i>
+                <i class="aisc-ico aisc-ico--copy"></i>
               </button>
             ` : '<span class="no-url">No configurado</span>'}
           </div>
@@ -599,7 +599,7 @@ class DevWebhooksView extends DevBaseView {
             ${hasProd ? `
               <span class="url-text" title="${tech.webhook_url_prod}">${truncateUrl(tech.webhook_url_prod)}</span>
               <button class="btn-icon-ghost-xs copy-url" data-url="${tech.webhook_url_prod}" title="Copiar">
-                <i class="ph ph-copy"></i>
+                <i class="aisc-ico aisc-ico--copy"></i>
               </button>
             ` : '<span class="no-url">No configurado</span>'}
           </div>
@@ -614,12 +614,12 @@ class DevWebhooksView extends DevBaseView {
         <td class="col-stats">
           <div class="stats-cell">
             <div class="stat-item">
-              <i class="ph ph-play"></i>
+              <i class="aisc-ico aisc-ico--play"></i>
               <span>${webhook.runCount} runs</span>
             </div>
             ${tech?.avg_execution_time_ms ? `
               <div class="stat-item">
-                <i class="ph ph-timer"></i>
+                <i class="aisc-ico aisc-ico--clock"></i>
                 <span>${tech.avg_execution_time_ms}ms</span>
               </div>
             ` : ''}
@@ -628,19 +628,19 @@ class DevWebhooksView extends DevBaseView {
         <td class="col-actions">
           <div class="actions-cell">
             <button class="btn-icon-ghost health-check-btn" data-flow-id="${webhook.flowId}" title="Health Check" ${!isConfigured ? 'disabled' : ''}>
-              <i class="ph ph-heartbeat"></i>
+              <i class="aisc-ico aisc-ico--monitoring"></i>
             </button>
             <button class="btn-icon-ghost edit-btn" data-flow-id="${webhook.flowId}" title="Editar">
-              <i class="ph ph-pencil"></i>
+              <i class="aisc-ico aisc-ico--edit"></i>
             </button>
             ${tech?.editor_url ? `
               <a href="${tech.editor_url}" target="_blank" class="btn-icon-ghost" title="Abrir en plataforma">
-                <i class="ph ph-arrow-square-out"></i>
+                <i class="aisc-ico aisc-ico--external-link"></i>
               </a>
             ` : ''}
             ${tech ? `
               <button class="btn-icon-ghost delete-btn" data-flow-id="${webhook.flowId}" title="Eliminar configuración">
-                <i class="ph ph-trash"></i>
+                <i class="aisc-ico aisc-ico--delete"></i>
               </button>
             ` : ''}
           </div>
@@ -848,11 +848,11 @@ class DevWebhooksView extends DevBaseView {
         resultsContainer.innerHTML = `
           <div class="health-summary">
             <div class="health-summary-item success">
-              <i class="ph ph-check-circle"></i>
+              <i class="aisc-ico aisc-ico--check"></i>
               <span>${healthyCount} saludables</span>
             </div>
             <div class="health-summary-item error">
-              <i class="ph ph-warning"></i>
+              <i class="aisc-ico aisc-ico--alert-warning"></i>
               <span>${unhealthyCount} con problemas</span>
             </div>
           </div>
@@ -881,8 +881,8 @@ class DevWebhooksView extends DevBaseView {
     // Título
     if (title) {
       title.innerHTML = webhook 
-        ? `<i class="ph ph-pencil"></i> Editar Webhook - ${webhook.flowName}`
-        : '<i class="ph ph-plus"></i> Configurar Nuevo Webhook';
+        ? `<i class="aisc-ico aisc-ico--edit"></i> Editar Webhook - ${webhook.flowName}`
+        : '<i class="aisc-ico aisc-ico--add"></i> Configurar Nuevo Webhook';
     }
     
     // Mostrar/ocultar selector de flujo
@@ -951,7 +951,7 @@ class DevWebhooksView extends DevBaseView {
     const saveBtn = this.querySelector('#saveWebhookBtn');
     if (saveBtn) {
       saveBtn.disabled = true;
-      saveBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Guardando...';
+      saveBtn.innerHTML = '<i class="aisc-ico ph-spin aisc-ico--loader"></i> Guardando...';
     }
     
     try {
@@ -1021,7 +1021,7 @@ class DevWebhooksView extends DevBaseView {
     } finally {
       if (saveBtn) {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="ph ph-floppy-disk"></i> Guardar';
+        saveBtn.innerHTML = '<i class="aisc-ico aisc-ico--save"></i> Guardar';
       }
     }
   }
@@ -1046,7 +1046,7 @@ class DevWebhooksView extends DevBaseView {
     if (testResult) {
       testResult.innerHTML = `
         <div class="test-loading">
-          <i class="ph ph-spinner ph-spin"></i>
+          <i class="aisc-ico ph-spin aisc-ico--loader"></i>
           <span>Probando conexión...</span>
         </div>
       `;
@@ -1074,7 +1074,7 @@ class DevWebhooksView extends DevBaseView {
       if (testResult) {
         testResult.innerHTML = `
           <div class="test-result-item error">
-            <i class="ph ph-x-circle"></i>
+            <i class="aisc-ico aisc-ico--close"></i>
             <span>Error: ${err.message}</span>
           </div>
         `;

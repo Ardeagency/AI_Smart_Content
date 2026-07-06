@@ -278,7 +278,7 @@ class PlanesView extends BaseView {
           <span class="planes-org-context-eyebrow">${hasActive ? window.__('Plan actual') : window.__('Sin plan activo para')}</span>
           <span class="planes-org-context-plan">${this.escapeHtml(orgName ? `${orgName} · ${planName}` : planName)}</span>
         </div>
-        ${renewLabel ? `<div class="planes-org-context-renew"><i class="fas fa-sync-alt"></i> ${window.__('Renueva el')} ${this.escapeHtml(renewLabel)}</div>` : ''}
+        ${renewLabel ? `<div class="planes-org-context-renew"><i class="aisc-ico aisc-ico--refresh"></i> ${window.__('Renueva el')} ${this.escapeHtml(renewLabel)}</div>` : ''}
       </div>
       ${(creditsBlock || storageBlock) ? `<div class="planes-org-context-usage">${creditsBlock}${storageBlock}</div>` : ''}
     `;
@@ -346,7 +346,7 @@ class PlanesView extends BaseView {
     // En la card del plan actual no renderizamos botón: queda un status footer
     // discreto en su lugar (el badge "Current plan" arriba ya identifica la card).
     const ctaBlock = current
-      ? `<div class="plan-card-current-status"><i class="fas fa-check-circle"></i> ${window.__('Estás en este plan')}</div>`
+      ? `<div class="plan-card-current-status"><i class="aisc-ico aisc-ico--check"></i> ${window.__('Estás en este plan')}</div>`
       : `<button type="button"
           class="btn btn-primary plan-card-cta plan-card-cta--${cta.kind}"
           data-plan="${plan.id}"

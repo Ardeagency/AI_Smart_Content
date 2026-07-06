@@ -690,7 +690,7 @@ class BrandstorageView extends BaseView {
       inner.innerHTML = `<img src="${this.escapeHtml(logoUrl)}" alt="${__('Logo organización')}" class="brand-corner-logo-img" loading="lazy">`;
       btn.classList.add('has-logo');
     } else {
-      inner.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i>';
+      inner.innerHTML = '<i class="aisc-ico aisc-ico--add" aria-hidden="true"></i>';
       btn.classList.remove('has-logo');
     }
 
@@ -880,7 +880,7 @@ class BrandstorageView extends BaseView {
       container.innerHTML = entities.map(e => {
         const places = (this.brandPlaces || []).filter(p => p.entity_id === e.id);
         const placesHtml = places.length
-          ? places.map(p => `<span class="entity-place-tag" title="${this.escapeHtml(p.address || '')}"><i class="fas fa-map-marker-alt"></i> ${this.escapeHtml(p.name)}</span>`).join('')
+          ? places.map(p => `<span class="entity-place-tag" title="${this.escapeHtml(p.address || '')}"><i class="aisc-ico aisc-ico--places"></i> ${this.escapeHtml(p.name)}</span>`).join('')
           : '';
         return `
           <div class="entity-row" data-entity-id="${e.id}">
@@ -890,7 +890,7 @@ class BrandstorageView extends BaseView {
               ${places.length ? `<div class="entity-places">${placesHtml}</div>` : ''}
             </div>
             ${e.price != null ? `<span class="entity-price">${e.price} ${this.escapeHtml(e.currency || 'USD')}</span>` : ''}
-            <button type="button" class="entity-add-place-btn btn btn-ghost btn-sm" data-entity-id="${e.id}" title="${__('Agregar lugar')}"><i class="fas fa-map-pin"></i></button>
+            <button type="button" class="entity-add-place-btn btn btn-ghost btn-sm" data-entity-id="${e.id}" title="${__('Agregar lugar')}"><i class="aisc-ico aisc-ico--places"></i></button>
             <button type="button" class="entity-delete-btn" data-entity-id="${e.id}" title="${__('Eliminar')}" aria-label="${__('Eliminar entidad')}">×</button>
           </div>
         `;
@@ -1103,7 +1103,7 @@ class BrandstorageView extends BaseView {
       const isImage = fileType.includes('image') || /\.(png|jpe?g|gif|webp|svg)$/i.test(fileName);
       const preview = isImage && fileUrl
         ? `<img src="${this.escapeHtml(fileUrl)}" alt="" class="identity-logo-preview" loading="lazy">`
-        : '<i class="fas fa-file asset-file-fallback-icon"></i>';
+        : '<i class="aisc-ico asset-file-fallback-icon aisc-ico--document"></i>';
       return `
         <div class="identity-file-item identity-file-item--logo" data-identity-asset-id="${asset.id}">
           <div class="assets-file-preview">${preview}</div>
@@ -1111,9 +1111,9 @@ class BrandstorageView extends BaseView {
             <div class="identity-file-name">${this.escapeHtml(fileName)}</div>
           </div>
           <div class="assets-file-actions">
-            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir archivo identidad')}"><i class="fas fa-external-link-alt"></i></a>` : ''}
+            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir archivo identidad')}"><i class="aisc-ico aisc-ico--external-link"></i></a>` : ''}
             <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="${__('Eliminar archivo identidad')}">
-              <i class="fas fa-trash-alt"></i>
+              <i class="aisc-ico aisc-ico--delete"></i>
             </button>
           </div>
         </div>
@@ -1159,7 +1159,7 @@ class BrandstorageView extends BaseView {
 
       const preview = isImage && fileUrl
         ? `<img src="${this.escapeHtml(fileUrl)}" alt="" class="asset-file-thumb" loading="lazy">`
-        : '<i class="fas fa-file asset-file-fallback-icon"></i>';
+        : '<i class="aisc-ico asset-file-fallback-icon aisc-ico--document"></i>';
 
       return `
         <div class="assets-file-item" data-asset-id="${asset.id}">
@@ -1169,9 +1169,9 @@ class BrandstorageView extends BaseView {
             ${dateText ? `<div class="identity-file-date">${dateText}</div>` : ''}
           </div>
           <div class="assets-file-actions">
-            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir asset')}"><i class="fas fa-external-link-alt"></i></a>` : ''}
+            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir asset')}"><i class="aisc-ico aisc-ico--external-link"></i></a>` : ''}
             <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="${__('Eliminar asset')}">
-              <i class="fas fa-trash-alt"></i>
+              <i class="aisc-ico aisc-ico--delete"></i>
             </button>
           </div>
         </div>
@@ -1398,7 +1398,7 @@ class BrandstorageView extends BaseView {
             ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview" loading="lazy" decoding="async" onerror="this.style.display='none';var p=this.nextElementSibling;if(p)p.classList.add('visible');">`
             : ''
           }
-          <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="fas fa-image"></i></div>
+          <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="aisc-ico aisc-ico--image"></i></div>
           <input type="file" accept="image/*" class="info-logo-input" title="${__('Subir logo')}">
         </div>
       </div>

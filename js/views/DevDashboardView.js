@@ -36,7 +36,7 @@ class DevDashboardView extends DevBaseView {
           <div class="dev-header-actions" id="devHeaderActions">
             <span class="dev-cmd-updated" id="cmdUpdated"></span>
             <button class="dev-cmd-refresh" id="cmdRefresh" title="Actualizar" aria-label="Actualizar">
-              <i class="fas fa-rotate"></i>
+              <i class="aisc-ico aisc-ico--refresh"></i>
             </button>
             <span class="dev-rank-pill" id="cmdRankPill" hidden></span>
           </div>
@@ -45,7 +45,7 @@ class DevDashboardView extends DevBaseView {
         <!-- Atención -->
         <section class="dev-cmd-block" aria-label="Atención">
           <div class="dev-section-header">
-            <h2 class="dev-cmd-h2"><i class="fas fa-triangle-exclamation dev-att-h2ic"></i> Atención</h2>
+            <h2 class="dev-cmd-h2"><i class="aisc-ico dev-att-h2ic aisc-ico--alert-warning"></i> Atención</h2>
             <span class="dev-att-count" id="cmdAttCount" hidden></span>
           </div>
           <div class="dev-att-list" id="cmdAttention">${this._skeletonAttention()}</div>
@@ -305,7 +305,7 @@ class DevDashboardView extends DevBaseView {
     }
 
     if (!rows.length) {
-      el.innerHTML = `<div class="dev-attention-empty"><i class="fas fa-circle-check"></i> Todo en orden — nada requiere tu atención.</div>`;
+      el.innerHTML = `<div class="dev-attention-empty"><i class="aisc-ico aisc-ico--check"></i> Todo en orden — nada requiere tu atención.</div>`;
       return;
     }
     el.innerHTML = rows.join('');
@@ -319,7 +319,7 @@ class DevDashboardView extends DevBaseView {
           <div class="dev-att-title">${this.escapeHtml(title)}</div>
           <div class="dev-att-sub">${this.escapeHtml(sub)}</div>
         </div>
-        <a class="dev-att-cta" href="${href}">${this.escapeHtml(cta)} <i class="fas fa-arrow-right"></i></a>
+        <a class="dev-att-cta" href="${href}">${this.escapeHtml(cta)} <i class="aisc-ico aisc-ico--arrow-right"></i></a>
       </div>`;
   }
 
@@ -622,8 +622,8 @@ class DevDashboardView extends DevBaseView {
   _skeletonAttention() { return `<div class="dev-attention-empty loading">Cargando alertas…</div>`; }
   _skeletonGauges() { return Array.from({ length: 5 }, () => `<div class="dev-gauge loading"><div class="dev-gauge-svg sk"></div></div>`).join(''); }
   _skeletonKpis() { return Array.from({ length: 6 }, () => `<div class="dev-kpi-card loading"><div class="dev-kpi-value">—</div></div>`).join(''); }
-  leadOnly() { return `<div class="dev-attention-empty"><i class="fas fa-lock"></i> Vista global — requiere rol lead.</div>`; }
-  noData(msg) { return `<div class="dev-nodata"><i class="fas fa-circle-info"></i> ${this.escapeHtml(msg)}</div>`; }
+  leadOnly() { return `<div class="dev-attention-empty"><i class="aisc-ico aisc-ico--lock"></i> Vista global — requiere rol lead.</div>`; }
+  noData(msg) { return `<div class="dev-nodata"><i class="aisc-ico aisc-ico--alert-info"></i> ${this.escapeHtml(msg)}</div>`; }
 
   // ──────────────────────────────────────────────────────────────────────
   // Formato

@@ -266,7 +266,7 @@ class ExecutionHistoryView extends BaseView {
             ? `<video class="exec-card-img exec-card-img--video${vis}" src="${this.escapeHtml(vsrc)}" muted loop playsinline preload="metadata" aria-hidden="true"></video>`
             : `<img class="exec-card-img${vis}" src="${this.escapeHtml(url)}" alt="" loading="lazy">`;
         }).join('')
-      : `<div class="exec-card-placeholder"><i class="fas fa-wand-magic-sparkles"></i></div>`;
+      : `<div class="exec-card-placeholder"><i class="aisc-ico aisc-ico--sparkle"></i></div>`;
 
     // Puntos indicadores del carrusel (solo si hay >1 imagen).
     const dots = multi
@@ -278,7 +278,7 @@ class ExecutionHistoryView extends BaseView {
         <div class="exec-card-media">
           ${media}
           <div class="exec-card-gradient" aria-hidden="true"></div>
-          <span class="exec-card-count"><i class="fas fa-layer-group"></i> ${count}</span>
+          <span class="exec-card-count"><i class="aisc-ico aisc-ico--layers"></i> ${count}</span>
           <span class="task-card-badge ${statusClass} exec-card-status">
             <span class="task-card-badge-dot"></span>${this.escapeHtml(statusLabel)}
           </span>
@@ -286,7 +286,7 @@ class ExecutionHistoryView extends BaseView {
           <div class="exec-card-info">
             <h3 class="exec-card-flow">${this.escapeHtml(r.flow_name)}</h3>
             <span class="exec-card-when">${this.escapeHtml(rel)}</span>
-            <span class="exec-card-resume"><i class="fas fa-arrow-right"></i> ${__('Continuar sesion')}</span>
+            <span class="exec-card-resume"><i class="aisc-ico aisc-ico--arrow-right"></i> ${__('Continuar sesion')}</span>
           </div>
         </div>
       </button>

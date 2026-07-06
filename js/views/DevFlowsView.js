@@ -37,14 +37,14 @@ class DevFlowsView extends DevBaseView {
           <!-- Toggle de alcance (solo Lead): Mis flujos / Todos los flujos -->
           <div class="dev-flows-scope-toggle" id="devFlowsScopeToggle" hidden>
             <button type="button" class="dev-scope-btn active" data-scope="mine">
-              <i class="fas fa-user"></i> Mis flujos
+              <i class="aisc-ico aisc-ico--audience"></i> Mis flujos
             </button>
             <button type="button" class="dev-scope-btn" data-scope="all">
-              <i class="fas fa-project-diagram"></i> Todos los flujos
+              <i class="aisc-ico aisc-ico--flows"></i> Todos los flujos
             </button>
           </div>
           <button class="btn btn-primary dev-flows-create-btn" id="createFlowBtn">
-            <i class="fas fa-plus"></i>
+            <i class="aisc-ico aisc-ico--add"></i>
             Nuevo Flujo
           </button>
         </div>
@@ -55,24 +55,24 @@ class DevFlowsView extends DevBaseView {
           <div class="dev-flows-toolbar">
             <div class="dev-flows-filters">
               <button class="dev-filter-btn active" data-filter="all">
-                <i class="fas fa-border-all"></i>
+                <i class="aisc-ico aisc-ico--grid"></i>
                 Todos
               </button>
               <button class="dev-filter-btn" data-filter="draft">
-                <i class="fas fa-file-alt"></i>
+                <i class="aisc-ico aisc-ico--document"></i>
                 Borradores
               </button>
               <button class="dev-filter-btn" data-filter="testing">
-                <i class="fas fa-flask"></i>
+                <i class="aisc-ico aisc-ico--flask"></i>
                 En Pruebas
               </button>
               <button class="dev-filter-btn" data-filter="published">
-                <i class="fas fa-globe"></i>
+                <i class="aisc-ico aisc-ico--globe"></i>
                 Publicados
               </button>
             </div>
             <div class="dev-flows-search">
-              <i class="fas fa-search"></i>
+              <i class="aisc-ico aisc-ico--search"></i>
               <input type="text" id="flowSearchInput" placeholder="Buscar flujos...">
             </div>
           </div>
@@ -83,12 +83,12 @@ class DevFlowsView extends DevBaseView {
           <!-- Estado vacío (se mostrará si no hay flujos) -->
           <div class="dev-flows-empty" id="devFlowsEmpty" hidden>
             <div class="dev-empty-icon">
-              <i class="fas fa-diagram-project"></i>
+              <i class="aisc-ico aisc-ico--flows"></i>
             </div>
             <h3>No tienes flujos creados</h3>
             <p>Crea tu primer flujo de IA para empezar a generar contenido automáticamente</p>
             <button class="btn btn-primary" id="createFlowEmptyBtn">
-              <i class="fas fa-plus"></i>
+              <i class="aisc-ico aisc-ico--add"></i>
               Crear mi primer flujo
             </button>
           </div>
@@ -102,7 +102,7 @@ class DevFlowsView extends DevBaseView {
           <div class="dev-flows-grid" id="allFlowsGrid"></div>
           <div class="dev-flows-empty" id="allFlowsEmpty" hidden>
             <div class="dev-empty-icon">
-              <i class="fas fa-diagram-project"></i>
+              <i class="aisc-ico aisc-ico--flows"></i>
             </div>
             <h3>No hay flujos en la plataforma</h3>
             <p>Cuando los desarrolladores creen flujos, aparecerán aquí.</p>
@@ -322,21 +322,21 @@ class DevFlowsView extends DevBaseView {
               <h3 class="flow-card-title">${name}</h3>
               <div class="flow-card-info-meta">
                 ${primaryTagHtml}
-                <span class="flow-card-info-credits" title="Créditos por ejecución"><i class="fas fa-bolt"></i>${cost}</span>
+                <span class="flow-card-info-credits" title="Créditos por ejecución"><i class="aisc-ico aisc-ico--zap"></i>${cost}</span>
               </div>
               <div class="flow-card-info-extra">
                 <span class="flow-card-info-pill">${outputTypeLabel}</span>
                 <span class="flow-card-info-pill">${executionLabel}</span>
                 <span class="flow-card-info-pill">v${version}</span>
-                ${ownerName ? `<span class="flow-card-info-pill flow-card-info-pill--owner"><i class="fas fa-user"></i> ${this.escapeHtml(ownerName)}</span>` : ''}
+                ${ownerName ? `<span class="flow-card-info-pill flow-card-info-pill--owner"><i class="aisc-ico aisc-ico--audience"></i> ${this.escapeHtml(ownerName)}</span>` : ''}
               </div>
             </div>
           </div>
           <div class="flow-card-footer flow-card-footer--dev">
-            <button type="button" class="flow-card-footer-btn edit" title="Editar flujo" data-action="edit" aria-label="Editar"><i class="fas fa-edit"></i></button>
-            <button type="button" class="flow-card-footer-btn test" title="Probar flujo" data-action="test" aria-label="Probar"><i class="fas fa-play"></i></button>
-            <button type="button" class="flow-card-footer-btn logs" title="Ver logs" data-action="logs" aria-label="Logs"><i class="fas fa-terminal"></i></button>
-            <button type="button" class="flow-card-footer-btn delete" title="Eliminar flujo" data-action="delete" aria-label="Eliminar"><i class="fas fa-trash"></i></button>
+            <button type="button" class="flow-card-footer-btn edit" title="Editar flujo" data-action="edit" aria-label="Editar"><i class="aisc-ico aisc-ico--edit"></i></button>
+            <button type="button" class="flow-card-footer-btn test" title="Probar flujo" data-action="test" aria-label="Probar"><i class="aisc-ico aisc-ico--play"></i></button>
+            <button type="button" class="flow-card-footer-btn logs" title="Ver logs" data-action="logs" aria-label="Logs"><i class="aisc-ico aisc-ico--consola-desarrollador"></i></button>
+            <button type="button" class="flow-card-footer-btn delete" title="Eliminar flujo" data-action="delete" aria-label="Eliminar"><i class="aisc-ico aisc-ico--delete"></i></button>
           </div>
         </article>
       </div>
@@ -524,7 +524,7 @@ class DevFlowsView extends DevBaseView {
     const confirmBtn = this._deleteConfirmBtn;
     if (confirmBtn) {
       confirmBtn.disabled = true;
-      confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+      confirmBtn.innerHTML = '<i class="aisc-ico fa-spin aisc-ico--loader"></i> Eliminando...';
     }
 
     try {

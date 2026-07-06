@@ -32,7 +32,7 @@ class DevLogsView extends DevBaseView {
         <header class="dev-logs-header">
           <div class="dev-header-actions">
             <button class="btn btn-secondary" id="clearFiltersBtn">
-              <i class="fas fa-filter-circle-xmark"></i>
+              <i class="aisc-ico aisc-ico--filter"></i>
               Limpiar Filtros
             </button>
           </div>
@@ -103,7 +103,7 @@ class DevLogsView extends DevBaseView {
         <!-- Estado vacío -->
         <div class="dev-logs-empty" id="logsEmpty" hidden>
           <div class="dev-empty-icon">
-            <i class="fas fa-check-circle"></i>
+            <i class="aisc-ico aisc-ico--check"></i>
           </div>
           <h3>Sin logs</h3>
           <p>No hay logs que coincidan con los filtros seleccionados</p>
@@ -334,7 +334,7 @@ class DevLogsView extends DevBaseView {
         </td>
         <td class="col-actions">
           <button class="log-action-btn" data-log-id="${log.id}" title="Ver detalles">
-            <i class="fas fa-eye"></i>
+            <i class="aisc-ico aisc-ico--eye"></i>
           </button>
         </td>
       </tr>
@@ -368,7 +368,7 @@ class DevLogsView extends DevBaseView {
     // Botón anterior
     html += `
       <button class="pagination-btn" data-page="${this.currentPage - 1}" ${this.currentPage === 1 ? 'disabled' : ''}>
-        <i class="fas fa-chevron-left"></i>
+        <i class="aisc-ico aisc-ico--chevron-left"></i>
       </button>
     `;
 
@@ -397,7 +397,7 @@ class DevLogsView extends DevBaseView {
     // Botón siguiente
     html += `
       <button class="pagination-btn" data-page="${this.currentPage + 1}" ${this.currentPage === totalPages ? 'disabled' : ''}>
-        <i class="fas fa-chevron-right"></i>
+        <i class="aisc-ico aisc-ico--chevron-right"></i>
       </button>
     `;
 
@@ -600,7 +600,7 @@ class DevLogsView extends DevBaseView {
       tbody.innerHTML = `
         <tr>
           <td colspan="7" class="dev-table-error">
-            <i class="fas fa-exclamation-triangle"></i>
+            <i class="aisc-ico aisc-ico--alert-warning"></i>
             Error cargando logs
           </td>
         </tr>

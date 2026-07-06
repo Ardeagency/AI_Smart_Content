@@ -274,7 +274,7 @@ class CreditsShopView extends BaseView {
 
         <section class="credits-card credits-chart-card">
           <div class="credits-card-header">
-            <h2><i class="fas fa-chart-column"></i> ${__('Consumo')}</h2>
+            <h2><i class="aisc-ico aisc-ico--chart-bar"></i> ${__('Consumo')}</h2>
             <div class="credits-range-toggle" role="group">
               <button type="button" class="credits-range-btn" data-range="7">7d</button>
               <button type="button" class="credits-range-btn is-active" data-range="30">30d</button>
@@ -286,9 +286,9 @@ class CreditsShopView extends BaseView {
 
         <section class="credits-card credits-prefs-card">
           <div class="credits-card-header">
-            <h2><i class="fas fa-bell"></i> ${__('Alertas y auto-recarga')}</h2>
+            <h2><i class="aisc-ico aisc-ico--notification"></i> ${__('Alertas y auto-recarga')}</h2>
             <span class="credits-stripe-badge" title="${__('Auto-recarga requiere Stripe')}">
-              <i class="fas fa-info-circle"></i> ${__('Auto-recarga: pendiente conectar Stripe')}
+              <i class="aisc-ico aisc-ico--alert-info"></i> ${__('Auto-recarga: pendiente conectar Stripe')}
             </span>
           </div>
           <div id="creditsPrefs">${this.skeletonRows(2)}</div>
@@ -296,9 +296,9 @@ class CreditsShopView extends BaseView {
 
         <section class="credits-card">
           <div class="credits-card-header">
-            <h2><i class="fas fa-users"></i> ${__('Por miembro del equipo')}</h2>
+            <h2><i class="aisc-ico aisc-ico--audience"></i> ${__('Por miembro del equipo')}</h2>
             <button type="button" class="btn btn-secondary btn-sm" id="creditsExportCsv">
-              <i class="fas fa-file-csv"></i> ${__('Exportar CSV')}
+              <i class="aisc-ico aisc-ico--document"></i> ${__('Exportar CSV')}
             </button>
           </div>
           <div id="creditsByMember">${this.skeletonRows(3)}</div>
@@ -306,14 +306,14 @@ class CreditsShopView extends BaseView {
 
         <section class="credits-card">
           <div class="credits-card-header">
-            <h2><i class="fas fa-clock-rotate-left"></i> ${__('Historial de consumo')}</h2>
+            <h2><i class="aisc-ico aisc-ico--history"></i> ${__('Historial de consumo')}</h2>
           </div>
           <div id="creditsRecent"></div>
         </section>
 
         <section class="credits-card credits-packs-card">
           <div class="credits-card-header">
-            <h2><i class="fas fa-cart-plus"></i> ${__('Comprar créditos extra')}</h2>
+            <h2><i class="aisc-ico aisc-ico--cart"></i> ${__('Comprar créditos extra')}</h2>
             <span class="credits-packs-hint">${__('Pago único · Los créditos se suman a tu saldo · Expira a los 12 meses')}</span>
           </div>
           <div id="creditsPacks"></div>
@@ -321,11 +321,11 @@ class CreditsShopView extends BaseView {
 
         <footer class="credits-page-footer">
           <a href="#" id="creditsInvoicesLink" class="credits-footer-link">
-            <i class="fas fa-receipt"></i> ${__('Ver facturas y recibos')}
+            <i class="aisc-ico aisc-ico--receipt"></i> ${__('Ver facturas y recibos')}
           </a>
           <span class="credits-footer-sep">·</span>
           <a href="#" id="creditsContactSupport" class="credits-footer-link">
-            <i class="fas fa-life-ring"></i> ${__('Contactar soporte para facturación empresarial')}
+            <i class="aisc-ico aisc-ico--help"></i> ${__('Contactar soporte para facturación empresarial')}
           </a>
         </footer>
       </div>
@@ -366,13 +366,13 @@ class CreditsShopView extends BaseView {
       </div>
       ${warning ? `
         <div class="credits-runout-warning">
-          <i class="fas fa-triangle-exclamation"></i>
+          <i class="aisc-ico aisc-ico--alert-warning"></i>
           <span>${__('A tu ritmo actual te quedas sin créditos el <strong>{date}</strong> — {days} días antes de la renovación.', { date: this._fmtDate(warning.runout), days: warning.daysEarly })}</span>
         </div>
       ` : ''}
       <div class="credits-balance-actions">
         <button type="button" class="btn btn-primary" id="creditsBuyMore">
-          <i class="fas fa-plus"></i> ${__('Comprar créditos')}
+          <i class="aisc-ico aisc-ico--add"></i> ${__('Comprar créditos')}
         </button>
       </div>
     `;
@@ -389,7 +389,7 @@ class CreditsShopView extends BaseView {
           <h3>${__('Sin plan activo')}</h3>
           <p>${__('Actualmente no tienes una suscripción. Activa un plan para recibir créditos mensuales automáticamente.')}</p>
           <a href="${plansRoute}" class="btn btn-primary">
-            <i class="fas fa-arrow-right"></i> ${__('Ver planes')}
+            <i class="aisc-ico aisc-ico--arrow-right"></i> ${__('Ver planes')}
           </a>
         </div>
       `;
@@ -512,7 +512,7 @@ class CreditsShopView extends BaseView {
 
         <div class="credits-pref-actions">
           <button type="button" class="btn btn-primary btn-sm" id="prefSave">
-            <i class="fas fa-check"></i> ${__('Guardar preferencias')}
+            <i class="aisc-ico aisc-ico--check"></i> ${__('Guardar preferencias')}
           </button>
           <span id="prefStatus" class="credits-pref-status"></span>
         </div>
@@ -594,11 +594,11 @@ class CreditsShopView extends BaseView {
       </table>
       <div class="credits-recent-pager">
         <button type="button" class="btn btn-text" id="recentPrev" ${this.recentPage === 0 ? 'disabled' : ''}>
-          <i class="fas fa-arrow-left"></i> ${__('Anterior')}
+          <i class="aisc-ico aisc-ico--arrow-left"></i> ${__('Anterior')}
         </button>
         <span>${__('Página {n}', { n: this.recentPage + 1 })}</span>
         <button type="button" class="btn btn-text" id="recentNext" ${this.recentEvents.length < this.RECENT_PAGE_SIZE ? 'disabled' : ''}>
-          ${__('Siguiente')} <i class="fas fa-arrow-right"></i>
+          ${__('Siguiente')} <i class="aisc-ico aisc-ico--arrow-right"></i>
         </button>
       </div>
     `;
@@ -623,7 +623,7 @@ class CreditsShopView extends BaseView {
               ${p.bonus > 0 ? `<div class="credits-pack-bonus">+${p.bonus.toLocaleString('es')} ${__('bonus')}</div>` : ''}
               <div class="credits-pack-price">$${p.price}</div>
               <button type="button" class="btn btn-primary credits-pack-buy" data-pack-id="${p.id}">
-                <i class="fas fa-cart-plus"></i> ${__('Comprar')}
+                <i class="aisc-ico aisc-ico--cart"></i> ${__('Comprar')}
               </button>
               <div class="credits-pack-note">${__('Total: {n} cr · Expira en 12 meses', { n: total.toLocaleString('es') })}</div>
             </div>

@@ -20,7 +20,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       <div class="page-content">
         <div id="bic-container" class="bic-wrap">
           <div class="bic-spinner">
-            <i class="fas fa-sync-alt fa-spin"></i>
+            <i class="aisc-ico fa-spin aisc-ico--refresh"></i>
             <p>${window.__('Conectando integración…')}</p>
           </div>
         </div>
@@ -180,7 +180,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
         </ul>
         <div class="bic-page-actions">
           <button id="bicConfirmBtn" class="bic-confirm-btn" disabled>
-            <i class="fas fa-check"></i> ${window.__('Conectar esta página')}
+            <i class="aisc-ico aisc-ico--check"></i> ${window.__('Conectar esta página')}
           </button>
         </div>
         <p class="bic-page-note">${window.__('Solo se conectará la página elegida. El resto quedará excluido.')}</p>
@@ -203,7 +203,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       if (!page) return;
 
       btn.disabled = true;
-      btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${window.__('Guardando…')}`;
+      btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${window.__('Guardando…')}`;
 
       try {
         await this._savePage(integId, page);
@@ -211,7 +211,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       } catch (err) {
         console.error('[BrandIntegrationCallback] save page error:', err);
         btn.disabled = false;
-        btn.innerHTML = `<i class="fas fa-check"></i> ${window.__('Conectar esta página')}`;
+        btn.innerHTML = `<i class="aisc-ico aisc-ico--check"></i> ${window.__('Conectar esta página')}`;
         alert(window.__('No se pudo guardar. Inténtalo de nuevo.'));
       }
     });
@@ -236,7 +236,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
           <li>${window.__('Si no eres Administrador de ninguna Página, primero crea una o pide acceso de administrador.')}</li>
         </ul>
         <button type="button" class="bic-confirm-btn" data-bic-back="1">
-          <i class="fas fa-arrow-left"></i> ${window.__('Volver')}
+          <i class="aisc-ico aisc-ico--arrow-left"></i> ${window.__('Volver')}
         </button>
       </div>`;
     wrap.querySelector('[data-bic-back="1"]')?.addEventListener('click', () => this._redirect(safeReturn));
@@ -279,11 +279,11 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       : 'Meta';
     wrap.innerHTML = `
       <div class="bic-success">
-        <div class="bic-success-check"><i class="fas fa-check"></i></div>
+        <div class="bic-success-check"><i class="aisc-ico aisc-ico--check"></i></div>
         <h2>${window.__('Integración conectada')}</h2>
         <p>${window.__('{label} se conectó correctamente a tu marca.', { label: this._esc(label) })}</p>
         <button type="button" class="bic-confirm-btn" data-bic-continue="1">
-          <i class="fas fa-arrow-right"></i> ${window.__('Continuar')}
+          <i class="aisc-ico aisc-ico--arrow-right"></i> ${window.__('Continuar')}
         </button>
       </div>`;
     wrap.querySelector('[data-bic-continue="1"]')?.addEventListener('click', () => {
@@ -299,11 +299,11 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
     if (!wrap) return;
     wrap.innerHTML = `
       <div class="bic-error">
-        <i class="fas fa-exclamation-triangle"></i>
+        <i class="aisc-ico aisc-ico--alert-warning"></i>
         <h2>${window.__('Error al conectar')}</h2>
         <p>${this._esc(msg)}</p>
         <button type="button" class="bic-confirm-btn" data-bic-back="1">
-          <i class="fas fa-arrow-left"></i> ${window.__('Volver a Marcas')}
+          <i class="aisc-ico aisc-ico--arrow-left"></i> ${window.__('Volver a Marcas')}
         </button>
       </div>`;
     wrap.querySelector('[data-bic-back="1"]')?.addEventListener('click', () => this._redirect('/brands'));

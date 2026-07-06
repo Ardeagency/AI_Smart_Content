@@ -251,7 +251,7 @@
 
     const footerHtml = configHref
       ? `<div class="nav-flyout-footer">
-          <a href="${configHref}" class="nav-flyout-cta nav-flyout-cta-link" data-route="${configHref}">Configuración <i class="fas fa-chevron-right"></i></a>
+          <a href="${configHref}" class="nav-flyout-cta nav-flyout-cta-link" data-route="${configHref}">Configuración <i class="aisc-ico aisc-ico--chevron-right"></i></a>
         </div>`
       : '';
 
@@ -259,7 +259,7 @@
       <div class="notifications-dropdown-inner">
         <div class="notifications-dropdown-head user-dropdown-header">
           <div class="notifications-dropdown-head-row">
-            <i class="fas fa-bell" aria-hidden="true"></i>
+            <i class="aisc-ico aisc-ico--notification" aria-hidden="true"></i>
             <span>Notificaciones</span>
           </div>
         </div>
@@ -305,7 +305,7 @@
 
     const footerHtml = configHref
       ? `<div class="nav-flyout-footer">
-          <a href="${configHref}" class="nav-flyout-cta nav-flyout-cta-link" data-route="${configHref}">Configuración <i class="fas fa-chevron-right"></i></a>
+          <a href="${configHref}" class="nav-flyout-cta nav-flyout-cta-link" data-route="${configHref}">Configuración <i class="aisc-ico aisc-ico--chevron-right"></i></a>
         </div>`
       : '';
 
@@ -313,7 +313,7 @@
       <div class="nav-flyout-bridge" aria-hidden="true"></div>
       <div class="nav-flyout-inner">
         <div class="nav-flyout-header">
-          <span class="nav-flyout-header-icon"><i class="fas fa-bell"></i></span>
+          <span class="nav-flyout-header-icon"><i class="aisc-ico aisc-ico--notification"></i></span>
           <span class="nav-flyout-header-label">Notificaciones</span>
         </div>
         <div class="nav-flyout-body nav-flyout-notifications-body">${bodyHtml}</div>

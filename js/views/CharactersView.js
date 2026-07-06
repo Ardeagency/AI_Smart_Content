@@ -34,7 +34,7 @@ class CharactersView extends BaseView {
   <div class="products-list-header">
     <div class="products-list-header-actions">
       <button type="button" class="products-list-add-btn" id="charactersListAttachBtn" aria-label="${__('Adjuntar personaje desde fotos')}">
-        <i class="fas fa-paperclip" aria-hidden="true"></i>
+        <i class="aisc-ico aisc-ico--paperclip" aria-hidden="true"></i>
         <span>${__('Adjuntar personaje')}</span>
       </button>
       <button type="button" class="products-list-add-btn" id="charactersListAddBtn" aria-label="${__('Agregar personaje')}">
@@ -259,11 +259,11 @@ class CharactersView extends BaseView {
         <article class="history-image-card product-list-card" data-character-id="${c.id}" role="button" tabindex="0" aria-label="${safeName}">
           ${imageUrl
             ? `<img src="${this.escapeHtml(imageUrl)}" alt="${safeName}" loading="lazy" onerror="this.parentNode.classList.add('product-list-card-broken'); this.outerHTML='<div class=&quot;product-list-card-placeholder&quot;><i class=&quot;fas fa-user&quot; aria-hidden=&quot;true&quot;></i></div>';">`
-            : `<div class="product-list-card-placeholder"><i class="fas fa-user" aria-hidden="true"></i></div>`
+            : `<div class="product-list-card-placeholder"><i class="aisc-ico aisc-ico--audience" aria-hidden="true"></i></div>`
           }
           <div class="product-list-card-actions">
-            <button type="button" class="glass product-list-card-action" data-action="duplicate" title="${__('Duplicar personaje')}" aria-label="${__('Duplicar personaje')}"><i class="fas fa-copy" aria-hidden="true"></i></button>
-            <button type="button" class="glass product-list-card-action product-list-card-action--danger" data-action="delete" title="${__('Eliminar personaje')}" aria-label="${__('Eliminar personaje')}"><i class="fas fa-trash" aria-hidden="true"></i></button>
+            <button type="button" class="glass product-list-card-action" data-action="duplicate" title="${__('Duplicar personaje')}" aria-label="${__('Duplicar personaje')}"><i class="aisc-ico aisc-ico--copy" aria-hidden="true"></i></button>
+            <button type="button" class="glass product-list-card-action product-list-card-action--danger" data-action="delete" title="${__('Eliminar personaje')}" aria-label="${__('Eliminar personaje')}"><i class="aisc-ico aisc-ico--delete" aria-hidden="true"></i></button>
           </div>
           <div class="history-card-flow-name">${safeName}</div>
         </article>
@@ -343,14 +343,14 @@ class CharactersView extends BaseView {
             <span class="attach-product-field-label">${__('Fotos del personaje')}</span>
             <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="${__('Subir fotos del personaje')}">
               <input type="file" class="attach-product-photos-input" multiple accept="image/jpeg,image/png,image/webp,image/jpg" hidden />
-              <i class="fas fa-image" aria-hidden="true"></i>
+              <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
               <span class="attach-product-dropzone-text">${__('Arrastra fotos o hace click para elegirlas')}</span>
               <span class="attach-product-dropzone-hint">${__('JPG, PNG, WebP · max 10 imagenes · 25MB c/u')}</span>
             </div>
             <ul class="attach-product-file-list" hidden></ul>
           </div>
           <button type="button" class="attach-product-submit" data-action="submit-attach">
-            <i class="fas fa-magic" aria-hidden="true"></i>
+            <i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>
             <span>${__('Analizar con Vera')}</span>
           </button>
         </section>
@@ -413,7 +413,7 @@ class CharactersView extends BaseView {
           <i class="fas ${iconClass}" aria-hidden="true"></i>
           <span class="attach-product-file-name">${this.escapeHtml(f.name)}</span>
           <span class="attach-product-file-size">${sizeStr}</span>
-          <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar')}"><i class="fas fa-times" aria-hidden="true"></i></button>
+          <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar')}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
         </li>`;
       }).join('');
     };

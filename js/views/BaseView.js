@@ -377,7 +377,7 @@ class BaseView {
         <div class="header-content">
             <!-- ICONO TOGGLE SIDEBAR -->
             <button class="header-sidebar-toggle" id="headerSidebarToggle" aria-label="Toggle sidebar">
-                <i class="fas fa-bars"></i>
+                <i class="aisc-ico aisc-ico--menu"></i>
             </button>
             
             <!-- ZONA IZQUIERDA: CONTEXTO -->
@@ -395,18 +395,18 @@ class BaseView {
             <div class="header-right">
                 <div class="header-user" id="headerUser">
                     <button class="header-user-chevron" id="headerUserChevron" aria-label="Menú de usuario">
-                        <i class="fas fa-chevron-down"></i>
+                        <i class="aisc-ico aisc-ico--chevron-down"></i>
                     </button>
                 </div>
                 
                 <!-- Dropdown de usuario -->
                 <div class="header-user-dropdown" id="headerUserDropdown">
                     <div class="header-user-dropdown-item" data-action="profile">
-                        <i class="fas fa-user"></i>
+                        <i class="aisc-ico aisc-ico--audience"></i>
                         <span>Perfil</span>
                     </div>
                     <div class="header-user-dropdown-item header-user-logout" id="headerUserLogout" data-action="logout">
-                        <i class="fas fa-sign-out-alt"></i>
+                        <i class="aisc-ico aisc-ico--logout"></i>
                         <span>Cerrar sesión</span>
                     </div>
                 </div>
@@ -575,7 +575,7 @@ class BaseView {
         toggleButton.className = 'header-sidebar-toggle';
         toggleButton.id = 'headerSidebarToggle';
         toggleButton.setAttribute('aria-label', 'Toggle sidebar');
-        toggleButton.innerHTML = '<i class="fas fa-bars"></i>';
+        toggleButton.innerHTML = '<i class="aisc-ico aisc-ico--menu"></i>';
         headerContent.insertBefore(toggleButton, headerContent.firstChild);
       }
     }
@@ -671,7 +671,7 @@ class BaseView {
       toggleButton.className = 'header-sidebar-toggle';
       toggleButton.id = 'headerSidebarToggle';
       toggleButton.setAttribute('aria-label', 'Toggle sidebar');
-      toggleButton.innerHTML = '<i class="fas fa-bars"></i>';
+      toggleButton.innerHTML = '<i class="aisc-ico aisc-ico--menu"></i>';
       const headerContent = existingHeader.querySelector('.header-content');
       if (headerContent) {
         headerContent.insertBefore(toggleButton, headerContent.firstChild);
@@ -685,18 +685,18 @@ class BaseView {
     headerRight.innerHTML = `
       <div class="header-user" id="headerUser">
         <button class="header-user-chevron" id="headerUserChevron" aria-label="Menú de usuario">
-          <i class="fas fa-chevron-down"></i>
+          <i class="aisc-ico aisc-ico--chevron-down"></i>
         </button>
       </div>
       
       <!-- Dropdown de usuario -->
       <div class="header-user-dropdown" id="headerUserDropdown">
         <div class="header-user-dropdown-item" data-action="profile">
-          <i class="fas fa-user"></i>
+          <i class="aisc-ico aisc-ico--audience"></i>
           <span>Perfil</span>
         </div>
         <div class="header-user-dropdown-item header-user-logout" id="headerUserLogout" data-action="logout">
-          <i class="fas fa-sign-out-alt"></i>
+          <i class="aisc-ico aisc-ico--logout"></i>
           <span>Cerrar sesión</span>
         </div>
       </div>

@@ -127,7 +127,7 @@ class VideoView extends BaseView {
                           <div class="video-model-card__logo-wrap">
                             <img class="video-model-card__logo" src="/recursos/logos/plataformas/kling.svg" alt="Kling" loading="lazy">
                           </div>
-                          <span class="video-model-card__check" aria-hidden="true"><i class="fas fa-check"></i></span>
+                          <span class="video-model-card__check" aria-hidden="true"><i class="aisc-ico aisc-ico--check"></i></span>
                         </div>
                         <div class="video-model-card__body">
                           <h4 class="video-model-card__title">Kling 3.0</h4>
@@ -143,7 +143,7 @@ class VideoView extends BaseView {
                           <div class="video-model-card__logo-wrap">
                             <img class="video-model-card__logo" src="/recursos/logos/plataformas/seedance-bytedance.svg" alt="Seedance" loading="lazy">
                           </div>
-                          <span class="video-model-card__check" aria-hidden="true"><i class="fas fa-check"></i></span>
+                          <span class="video-model-card__check" aria-hidden="true"><i class="aisc-ico aisc-ico--check"></i></span>
                         </div>
                         <div class="video-model-card__body">
                           <h4 class="video-model-card__title">Seedance 2.0</h4>
@@ -184,7 +184,7 @@ class VideoView extends BaseView {
                     </div>
                     <div class="video-result-actions">
                       <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
-                        <i class="fas fa-download"></i> ${window.__('Descargar')}
+                        <i class="aisc-ico aisc-ico--dowload"></i> ${window.__('Descargar')}
                       </a>
                     </div>
                   </div>
@@ -192,7 +192,7 @@ class VideoView extends BaseView {
 
                 <div class="video-error-area" id="videoErrorArea" style="display: none;">
                   <div class="video-error-card">
-                    <div class="video-error-icon-wrap"><i class="fas fa-triangle-exclamation"></i></div>
+                    <div class="video-error-icon-wrap"><i class="aisc-ico aisc-ico--alert-warning"></i></div>
                     <p class="video-error-text" id="videoErrorText">—</p>
                   </div>
                 </div>
@@ -201,7 +201,7 @@ class VideoView extends BaseView {
                   <div class="video-productions-panel-card">
                     <div class="video-productions-panel-header">
                       <h3 class="video-prompt-panel-title">${window.__('Producciones')}</h3>
-                      <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="${window.__('Cerrar')}"><i class="fas fa-times"></i></button>
+                      <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="${window.__('Cerrar')}"><i class="aisc-ico aisc-ico--close"></i></button>
                     </div>
                     <div class="video-productions-gallery" id="videoProductionsGallery"></div>
                   </div>
@@ -231,26 +231,26 @@ class VideoView extends BaseView {
                       <div class="video-director-variables-row" id="videoDirectorVariables" aria-label="${window.__('Variables de cinematografía')}"></div>
                     </div>
                     <div class="video-director-controls">
-                      <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="${window.__('Añadir imagen o video')}"><i class="fas fa-plus"></i></button>
-                      <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-sound active" id="videoSound" title="${window.__('Sonido')}" aria-pressed="true"><i class="fas fa-volume-up"></i><span>${window.__('Sonido')}</span></button>
-                      <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
+                      <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="${window.__('Añadir imagen o video')}"><i class="aisc-ico aisc-ico--add"></i></button>
+                      <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-sound active" id="videoSound" title="${window.__('Sonido')}" aria-pressed="true"><i class="aisc-ico aisc-ico--volume"></i><span>${window.__('Sonido')}</span></button>
+                      <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="aisc-ico aisc-ico--film"></i><span>Multi Shot</span></button>
                       <div class="video-prompt-mode-wrap">
                         <select id="videoMode" class="video-director-select" aria-label="${window.__('Modo (Estándar reduce riesgo de timeout)')}">
                           <option value="std" selected>${window.__('Estándar')}</option>
                           <option value="pro">Pro</option>
                         </select>
-                        <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                        <i class="aisc-ico video-prompt-aspect-chevron aisc-ico--chevron-down" aria-hidden="true"></i>
                       </div>
                       <div class="video-prompt-aspect-wrap">
                         <select id="videoAspectRatio" class="video-director-select" aria-label="${window.__('Formato')}"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
-                        <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                        <i class="aisc-ico video-prompt-aspect-chevron aisc-ico--chevron-down" aria-hidden="true"></i>
                       </div>
                       <div class="video-prompt-duration-wrap">
                         <select id="videoDuration" class="video-director-select" aria-label="${window.__('Duración')}"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
-                        <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                        <i class="aisc-ico video-prompt-aspect-chevron aisc-ico--chevron-down" aria-hidden="true"></i>
                       </div>
-                      <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="${window.__('Generar prompt')}" data-state="prompt"><i class="fas fa-wand-magic-sparkles"></i><span id="videoPromptSendLabel">PROMPT</span></button>
-                      <button type="button" class="video-director-btn-regenerate" id="videoRegeneratePromptBtn" aria-label="${window.__('Volver a producir prompt')}" style="display: none;"><i class="fas fa-rotate-right"></i><span>Re-prompt</span></button>
+                      <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="${window.__('Generar prompt')}" data-state="prompt"><i class="aisc-ico aisc-ico--sparkle"></i><span id="videoPromptSendLabel">PROMPT</span></button>
+                      <button type="button" class="video-director-btn-regenerate" id="videoRegeneratePromptBtn" aria-label="${window.__('Volver a producir prompt')}" style="display: none;"><i class="aisc-ico aisc-ico--refresh"></i><span>Re-prompt</span></button>
                     </div>
                     <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">
                       <h4 class="video-storyboard-title">Storyboard</h4>
@@ -282,16 +282,16 @@ class VideoView extends BaseView {
                     </div>
 
                     <div class="video-director-controls">
-                      <button type="button" class="video-director-btn-add" id="seedancePromptAdd" aria-label="${window.__('Añadir referencia visual')}"><i class="fas fa-plus"></i></button>
-                      <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceGenAudioToggle" title="${window.__('Generar audio')}" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Audio</span></button>
-                      <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceWebSearchToggle" title="${window.__('Búsqueda online')}" aria-pressed="false"><i class="fas fa-globe"></i><span>Web</span></button>
+                      <button type="button" class="video-director-btn-add" id="seedancePromptAdd" aria-label="${window.__('Añadir referencia visual')}"><i class="aisc-ico aisc-ico--add"></i></button>
+                      <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceGenAudioToggle" title="${window.__('Generar audio')}" aria-pressed="true"><i class="aisc-ico aisc-ico--volume"></i><span>Audio</span></button>
+                      <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceWebSearchToggle" title="${window.__('Búsqueda online')}" aria-pressed="false"><i class="aisc-ico aisc-ico--globe"></i><span>Web</span></button>
                       <div class="video-prompt-aspect-wrap">
                         <select id="seedanceResolution" class="video-director-select" aria-label="${window.__('Resolución')}">
                           <option value="480p">480p</option>
                           <option value="720p" selected>720p</option>
                           <option value="1080p">1080p</option>
                         </select>
-                        <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                        <i class="aisc-ico video-prompt-aspect-chevron aisc-ico--chevron-down" aria-hidden="true"></i>
                       </div>
                       <div class="video-prompt-aspect-wrap">
                         <select id="seedanceAspectRatio" class="video-director-select" aria-label="${window.__('Relación de aspecto')}">
@@ -303,13 +303,13 @@ class VideoView extends BaseView {
                           <option value="21:9">21:9 cinemascope</option>
                           <option value="adaptive">${window.__('Adaptable')}</option>
                         </select>
-                        <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                        <i class="aisc-ico video-prompt-aspect-chevron aisc-ico--chevron-down" aria-hidden="true"></i>
                       </div>
                       <div class="video-prompt-duration-wrap seedance-duration-wrap">
                         <input type="number" id="seedanceDuration" class="video-director-select seedance-duration-input" min="4" max="15" step="1" value="5" aria-label="${window.__('Duración en segundos')}">
                         <span class="seedance-duration-unit">s</span>
                       </div>
-                      <button type="button" class="video-director-btn-generate" id="seedancePromptSend" aria-label="${window.__('Generar prompt')}" data-state="prompt"><i class="fas fa-wand-magic-sparkles"></i><span>PROMPT</span></button>
+                      <button type="button" class="video-director-btn-generate" id="seedancePromptSend" aria-label="${window.__('Generar prompt')}" data-state="prompt"><i class="aisc-ico aisc-ico--sparkle"></i><span>PROMPT</span></button>
                     </div>
 
                   </div>
@@ -326,7 +326,7 @@ class VideoView extends BaseView {
                       <span class="video-sidebar-section-num">01</span>
                       <h3 class="video-section-label">${window.__('Contexto de producción')}</h3>
                       <div class="video-sidebar-section-actions">
-                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCtxAiBtn" aria-label="${window.__('Auto-detectar contexto')}" title="${window.__('Auto-detectar contexto desde campaña activa')}"><i class="fas fa-wand-magic-sparkles"></i></button>
+                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCtxAiBtn" aria-label="${window.__('Auto-detectar contexto')}" title="${window.__('Auto-detectar contexto desde campaña activa')}"><i class="aisc-ico aisc-ico--sparkle"></i></button>
                       </div>
                     </div>
                     <p class="video-sidebar-section-hint">${window.__('A qué campaña pertenece este video, a quién le habla, y qué productos o piezas debe respetar la IA al producirlo.')}</p>
@@ -394,7 +394,7 @@ class VideoView extends BaseView {
                       <span class="video-sidebar-section-num">02</span>
                       <h3 class="video-section-label">${window.__('Cinematografía')}</h3>
                       <div class="video-sidebar-section-actions">
-                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCineResetBtn" aria-label="${window.__('Restablecer cinematografía')}" title="${window.__('Restablecer todos los valores')}"><i class="fas fa-rotate-left"></i></button>
+                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCineResetBtn" aria-label="${window.__('Restablecer cinematografía')}" title="${window.__('Restablecer todos los valores')}"><i class="aisc-ico aisc-ico--refresh"></i></button>
                       </div>
                     </div>
                     <p class="video-sidebar-section-hint">${window.__('Define el lenguaje visual: cámara, movimiento, luz y mood. Si no sabes por dónde empezar, elige un Production Preset.')}</p>
@@ -412,10 +412,10 @@ class VideoView extends BaseView {
                     </div>
                     <div class="video-cine-selected-tags" id="videoCineSelectedTags" aria-live="polite"></div>
                     <div class="video-cine-tabs" role="tablist" aria-label="${window.__('Categoría de dirección')}">
-                      <button type="button" class="video-cine-tab is-active" role="tab" aria-selected="true" data-tab="movement"><i class="fas fa-arrows-up-down-left-right" aria-hidden="true"></i><span>${window.__('Movimiento')}</span></button>
-                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="lighting"><i class="fas fa-lightbulb" aria-hidden="true"></i><span>${window.__('Luz')}</span></button>
-                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="mood"><i class="fas fa-palette" aria-hidden="true"></i><span>Mood</span></button>
-                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="camera"><i class="fas fa-sliders" aria-hidden="true"></i><span>${window.__('Avanzado')}</span></button>
+                      <button type="button" class="video-cine-tab is-active" role="tab" aria-selected="true" data-tab="movement"><i class="aisc-ico aisc-ico--move" aria-hidden="true"></i><span>${window.__('Movimiento')}</span></button>
+                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="lighting"><i class="aisc-ico aisc-ico--idea" aria-hidden="true"></i><span>${window.__('Luz')}</span></button>
+                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="mood"><i class="aisc-ico aisc-ico--palette" aria-hidden="true"></i><span>Mood</span></button>
+                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="camera"><i class="aisc-ico aisc-ico--filter" aria-hidden="true"></i><span>${window.__('Avanzado')}</span></button>
                     </div>
                     <div class="video-cine-panels">
                       <div class="video-cine-panel is-active" data-panel="movement" role="tabpanel">
@@ -510,12 +510,12 @@ class VideoView extends BaseView {
                     <p class="video-sidebar-section-hint">${window.__('Ancla el inicio y/o final de la secuencia con una imagen. La IA construirá el arco narrativo entre ambas.')}</p>
                     <div class="seedance-frames-grid">
                       <button type="button" class="seedance-frame-slot" data-frame="first" id="seedanceFirstFrameSlot">
-                        <i class="fas fa-image" aria-hidden="true"></i>
+                        <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
                         <span class="seedance-frame-slot-label">First Frame</span>
                         <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
                       </button>
                       <button type="button" class="seedance-frame-slot" data-frame="last" id="seedanceLastFrameSlot">
-                        <i class="fas fa-image" aria-hidden="true"></i>
+                        <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
                         <span class="seedance-frame-slot-label">Last Frame</span>
                         <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
                       </button>
@@ -531,7 +531,7 @@ class VideoView extends BaseView {
                     <div class="seedance-ref-group">
                       <div class="seedance-ref-group-header">
                         <h4 class="video-prompt-panel-title">${window.__('Imágenes')} <span class="seedance-ref-limit" id="seedanceRefImgCount">0 / 9</span></h4>
-                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefImg"><i class="fas fa-plus" aria-hidden="true"></i></button>
+                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefImg"><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
                       </div>
                       <div class="seedance-ref-list" id="seedanceRefImgList" aria-live="polite"></div>
                     </div>
@@ -539,7 +539,7 @@ class VideoView extends BaseView {
                     <div class="seedance-ref-group">
                       <div class="seedance-ref-group-header">
                         <h4 class="video-prompt-panel-title">${window.__('Videos')} <span class="seedance-ref-limit" id="seedanceRefVidCount">0 / 3 · ≤15s</span></h4>
-                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefVid"><i class="fas fa-plus" aria-hidden="true"></i></button>
+                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefVid"><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
                       </div>
                       <div class="seedance-ref-list" id="seedanceRefVidList" aria-live="polite"></div>
                     </div>
@@ -547,7 +547,7 @@ class VideoView extends BaseView {
                     <div class="seedance-ref-group">
                       <div class="seedance-ref-group-header">
                         <h4 class="video-prompt-panel-title">${window.__('Audios')} <span class="seedance-ref-limit" id="seedanceRefAudCount">0 / 3 · ≤15s</span></h4>
-                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefAud"><i class="fas fa-plus" aria-hidden="true"></i></button>
+                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefAud"><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
                       </div>
                       <div class="seedance-ref-list" id="seedanceRefAudList" aria-live="polite"></div>
                     </div>
@@ -567,9 +567,9 @@ class VideoView extends BaseView {
                       <h4 class="video-prompt-panel-title">${window.__('Tipo de sonido')}</h4>
                       <div class="seedance-audio-tiles">
                         <button type="button" class="seedance-audio-tile" data-audio-type="ambient"><i class="fas fa-wind" aria-hidden="true"></i><span>${window.__('Diegético')}</span></button>
-                        <button type="button" class="seedance-audio-tile" data-audio-type="music"><i class="fas fa-music" aria-hidden="true"></i><span>${window.__('Música')}</span></button>
+                        <button type="button" class="seedance-audio-tile" data-audio-type="music"><i class="aisc-ico aisc-ico--music" aria-hidden="true"></i><span>${window.__('Música')}</span></button>
                         <button type="button" class="seedance-audio-tile" data-audio-type="voice"><i class="fas fa-microphone" aria-hidden="true"></i><span>${window.__('Voz')}</span></button>
-                        <button type="button" class="seedance-audio-tile" data-audio-type="silence"><i class="fas fa-volume-xmark" aria-hidden="true"></i><span>${window.__('Silencio')}</span></button>
+                        <button type="button" class="seedance-audio-tile" data-audio-type="silence"><i class="aisc-ico aisc-ico--volume" aria-hidden="true"></i><span>${window.__('Silencio')}</span></button>
                       </div>
                     </div>
                   </div>

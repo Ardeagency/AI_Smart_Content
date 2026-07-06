@@ -1540,29 +1540,29 @@ class LivingManager {
             </button>
             <div class="card-overlay-actions">
                 <button type="button" class="card-action card-action--like ${liked ? 'is-liked' : ''}" data-action="like" data-output-id="${safeId}" title="Me gusta" aria-label="Me gusta" aria-pressed="${liked ? 'true' : 'false'}">
-                    <i class="fas fa-heart" aria-hidden="true"></i>
+                    <i class="aisc-ico aisc-ico--likes" aria-hidden="true"></i>
                 </button>
                 <button type="button" class="card-action" data-action="copy-prompt" data-prompt="${promptSafe}" title="Copiar prompt" aria-label="Copiar prompt">
-                    <i class="fas fa-copy" aria-hidden="true"></i>
+                    <i class="aisc-ico aisc-ico--copy" aria-hidden="true"></i>
                 </button>
                 <button type="button" class="card-action" data-action="download" data-url="${safeUrl}" title="Descargar" aria-label="Descargar">
-                    <i class="fas fa-download" aria-hidden="true"></i>
+                    <i class="aisc-ico aisc-ico--dowload" aria-hidden="true"></i>
                 </button>
                 <div class="card-kebab-wrap">
                     <button type="button" class="card-action card-action--kebab" data-action="kebab" title="Más acciones" aria-label="Más acciones" aria-expanded="false">
-                        <i class="fas fa-bars" aria-hidden="true"></i>
+                        <i class="aisc-ico aisc-ico--menu" aria-hidden="true"></i>
                     </button>
                     <div class="card-kebab-menu" role="menu" hidden>
                         <button type="button" role="menuitem" data-action="share" data-url="${safeUrl}">
-                            <i class="fas fa-link" aria-hidden="true"></i>
+                            <i class="aisc-ico aisc-ico--link" aria-hidden="true"></i>
                             <span>Compartir enlace</span>
                         </button>
                         <button type="button" role="menuitem" data-action="publish-meta">
-                            <i class="fas fa-upload" aria-hidden="true"></i>
+                            <i class="aisc-ico aisc-ico--upload" aria-hidden="true"></i>
                             <span>Publicar</span>
                         </button>
                         <button type="button" role="menuitem" class="card-kebab-menu-danger" data-action="delete" data-output-id="${safeId}">
-                            <i class="fas fa-trash" aria-hidden="true"></i>
+                            <i class="aisc-ico aisc-ico--delete" aria-hidden="true"></i>
                             <span>Eliminar producción</span>
                         </button>
                     </div>
@@ -1594,7 +1594,7 @@ class LivingManager {
                 ? `<video class="history-video-card-thumbnail" data-src="${this.escapeHtml(finalUrl)}" muted playsinline preload="none" crossorigin="anonymous" aria-label="Vista previa de video" onerror="var w=this.closest('.history-video-card-thumbnail-wrap'); if(w){ var d=document.createElement('div'); d.className='history-video-card-thumbnail'; d.style.cssText='background:#0F1115;display:flex;align-items:center;justify-content:center'; d.innerHTML='<i class=\\'fas fa-video\\' style=\\'font-size:2rem;color:var(--living-text-muted)\\'>\\x3c/i>'; w.innerHTML=''; w.appendChild(d); }"></video>`
                 : `<img src="${this.escapeHtml(finalUrl)}" alt="Vista previa de video" class="history-video-card-thumbnail" loading="${loadingAttr}" decoding="async" fetchpriority="${fetchAttr}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" />`)
             : `<div class="history-video-card-thumbnail history-video-card-thumbnail--empty" aria-hidden="true">
-                <i class="fas fa-video"></i>
+                <i class="aisc-ico aisc-ico--video"></i>
             </div>`;
         return `
             <article class="living-masonry-item history-video-card" role="listitem" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}" aria-label="${this.escapeHtml(flowName || 'Produccion de video')}">
@@ -1635,7 +1635,7 @@ class LivingManager {
                 <figure class="history-image-card-media">
                     ${finalUrl
                         ? `<img src="${this.escapeHtml(finalUrl)}" alt="${this.escapeHtml(flowName || 'Produccion')}" loading="${loadingAttr}" decoding="async" fetchpriority="${fetchAttr}" onerror="this.closest('figure').innerHTML='<div class=\\'history-image-card-fallback\\'><i class=\\'fas fa-image\\'></i></div>';" />`
-                        : `<div class="history-image-card-fallback" aria-hidden="true"><i class="fas fa-image"></i></div>`
+                        : `<div class="history-image-card-fallback" aria-hidden="true"><i class="aisc-ico aisc-ico--image"></i></div>`
                     }
                 </figure>
                 ${this._renderCardOverlay(output?.id, finalUrl, this.escapeHtml(promptSafe))}
@@ -1901,12 +1901,12 @@ class LivingManager {
                     <span class="selbar-count-text"></span>
                 </div>
                 <div class="selbar-actions">
-                    <button type="button" class="selbar-btn" data-action="bulk-download"><i class="fas fa-download"></i><span>Descargar</span></button>
-                    <button type="button" class="selbar-btn" data-action="bulk-publish"><i class="fas fa-upload"></i><span>Publicar todo</span></button>
-                    <button type="button" class="selbar-btn" data-action="add-campaign"><i class="fas fa-bullhorn"></i><span>Agregar a campaña</span></button>
-                    <button type="button" class="selbar-icon" data-action="bulk-like" aria-label="Me gusta"><i class="fas fa-heart"></i></button>
-                    <button type="button" class="selbar-icon selbar-icon--danger" data-action="bulk-delete" aria-label="Eliminar"><i class="fas fa-trash"></i></button>
-                    <button type="button" class="selbar-icon" data-action="clear-selection" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+                    <button type="button" class="selbar-btn" data-action="bulk-download"><i class="aisc-ico aisc-ico--dowload"></i><span>Descargar</span></button>
+                    <button type="button" class="selbar-btn" data-action="bulk-publish"><i class="aisc-ico aisc-ico--upload"></i><span>Publicar todo</span></button>
+                    <button type="button" class="selbar-btn" data-action="add-campaign"><i class="aisc-ico aisc-ico--campaign"></i><span>Agregar a campaña</span></button>
+                    <button type="button" class="selbar-icon" data-action="bulk-like" aria-label="Me gusta"><i class="aisc-ico aisc-ico--likes"></i></button>
+                    <button type="button" class="selbar-icon selbar-icon--danger" data-action="bulk-delete" aria-label="Eliminar"><i class="aisc-ico aisc-ico--delete"></i></button>
+                    <button type="button" class="selbar-icon" data-action="clear-selection" aria-label="Cerrar"><i class="aisc-ico aisc-ico--close"></i></button>
                 </div>`;
             document.body.appendChild(bar);
             bar.addEventListener('click', (e) => this._handleSelbarClick(e));
@@ -2005,7 +2005,7 @@ class LivingManager {
         const list = campaigns.length
             ? campaigns.map(c => `
                 <button type="button" class="campaign-picker-item" data-campaign-id="${this.escapeHtml(c.id)}">
-                    <i class="fas fa-bullhorn"></i>
+                    <i class="aisc-ico aisc-ico--campaign"></i>
                     <span class="campaign-picker-name">${this.escapeHtml(c.nombre_campana || 'Campaña')}</span>
                     ${c.status ? `<em class="campaign-picker-status">${this.escapeHtml(c.status)}</em>` : ''}
                 </button>`).join('')
@@ -2273,7 +2273,7 @@ class LivingManager {
                         <h2 class="publish-sheet-title">Publicar produccion</h2>
                         <p class="publish-sheet-sub">Selecciona los destinos para este contenido</p>
                     </div>
-                    <button type="button" class="publish-sheet-close" data-pub="close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+                    <button type="button" class="publish-sheet-close" data-pub="close" aria-label="Cerrar"><i class="aisc-ico aisc-ico--close"></i></button>
                 </header>
                 <div class="publish-sheet-body">
                     <div class="publish-preview">
@@ -2381,7 +2381,7 @@ class LivingManager {
         const thumb = sheet.querySelector('#publishThumb');
         if (thumb) {
             thumb.classList.toggle('is-video', !!st.isVideo);
-            if (st.isVideo) { thumb.style.backgroundImage = ''; thumb.innerHTML = '<i class="fas fa-play"></i>'; }
+            if (st.isVideo) { thumb.style.backgroundImage = ''; thumb.innerHTML = '<i class="aisc-ico aisc-ico--play"></i>'; }
             else { thumb.innerHTML = ''; thumb.style.backgroundImage = st.mediaUrl ? `url("${st.mediaUrl}")` : ''; }
         }
         sheet.querySelector('#publishFileName').textContent = this._publishCtx.fileName;
@@ -2565,13 +2565,13 @@ class LivingManager {
             const byPlat = {};
             (ok || []).forEach(r => { byPlat[r.platform] = (byPlat[r.platform] || 0) + 1; });
             links = Object.entries(byPlat).map(([p, n]) =>
-                `<span class="publish-result-link is-static"><i class="fas fa-check"></i> ${n} en ${labelMap[p] || p}</span>`).join('');
+                `<span class="publish-result-link is-static"><i class="aisc-ico aisc-ico--check"></i> ${n} en ${labelMap[p] || p}</span>`).join('');
         } else {
             links = (ok || []).map(r => {
                 const label = labelMap[r.platform] || r.platform;
                 return r.remote_url
-                    ? `<a class="publish-result-link" href="${this.escapeHtml(r.remote_url)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> Ver en ${label}</a>`
-                    : `<span class="publish-result-link is-static"><i class="fas fa-check"></i> Publicado en ${label}</span>`;
+                    ? `<a class="publish-result-link" href="${this.escapeHtml(r.remote_url)}" target="_blank" rel="noopener noreferrer"><i class="aisc-ico aisc-ico--external-link"></i> Ver en ${label}</a>`
+                    : `<span class="publish-result-link is-static"><i class="aisc-ico aisc-ico--check"></i> Publicado en ${label}</span>`;
             }).join('');
         }
         const failNote = (fail && fail.length)
@@ -2579,7 +2579,7 @@ class LivingManager {
             : '';
         if (body) body.innerHTML = `
             <div class="publish-result">
-                <div class="publish-result-check"><i class="fas fa-check"></i></div>
+                <div class="publish-result-check"><i class="aisc-ico aisc-ico--check"></i></div>
                 <h3 class="publish-result-title">${multi ? 'Producciones publicadas' : 'Produccion publicada'}</h3>
                 <div class="publish-result-links">${links}</div>
                 ${failNote}
@@ -2622,7 +2622,7 @@ class LivingManager {
                     <div class="pmodal-prompt-block-head">
                         <span class="pmodal-prompt-block-label">${this.escapeHtml(b.label)}</span>
                         <button type="button" class="pmodal-prompt-block-copy" data-action="copy-block" title="Copiar">
-                            <i class="fas fa-copy"></i>
+                            <i class="aisc-ico aisc-ico--copy"></i>
                         </button>
                     </div>
                     <div class="pmodal-prompt-block-value">${this.escapeHtml(b.value)}</div>
@@ -2844,7 +2844,7 @@ class LivingManager {
         if (noData && !promptText) {
             container.innerHTML = `
                 <div class="pmodal-input-empty">
-                    <i class="fas fa-inbox" aria-hidden="true"></i>
+                    <i class="aisc-ico aisc-ico--inbox" aria-hidden="true"></i>
                     <p>No quedo registrado el briefing de esta produccion.</p>
                     <p class="pmodal-input-empty-hint">Las producciones nuevas guardan automaticamente todo lo que usaste para crearlas.</p>
                 </div>`;
@@ -2916,11 +2916,11 @@ class LivingManager {
 
         const entityHtml = entityName
             ? `<section class="pmodal-section pmodal-input-entity">
-                <h3 class="pmodal-section-title"><i class="fas fa-cube"></i> ${this.escapeHtml(entityType || 'Entidad')}</h3>
+                <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--product"></i> ${this.escapeHtml(entityType || 'Entidad')}</h3>
                 <div class="pmodal-entity-card">
                     ${entityImg
                         ? `<img src="${this.escapeHtml(entityImg)}" alt="${this.escapeHtml(entityName)}" class="pmodal-entity-img" loading="lazy" decoding="async">`
-                        : `<div class="pmodal-entity-img pmodal-entity-img--empty" aria-hidden="true"><i class="fas fa-cube"></i></div>`
+                        : `<div class="pmodal-entity-img pmodal-entity-img--empty" aria-hidden="true"><i class="aisc-ico aisc-ico--product"></i></div>`
                     }
                     <div class="pmodal-entity-meta">
                         <p class="pmodal-entity-name">${this.escapeHtml(entityName)}</p>
@@ -2932,13 +2932,13 @@ class LivingManager {
 
         const identitiesHtml = identities.length
             ? `<section class="pmodal-section pmodal-input-identities">
-                <h3 class="pmodal-section-title"><i class="fas fa-fingerprint"></i> IDENTIDADES (${identities.length})</h3>
+                <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--key"></i> IDENTIDADES (${identities.length})</h3>
                 <div class="pmodal-refs-grid">
                     ${identities.map((it) => {
                         const nm = this.escapeHtml(it.name || it.entity_name || 'Identidad');
                         const im = it.image_url || it.preview || '';
                         return `<div class="pmodal-ref-thumb" title="${nm}" style="position:relative;">
-                            ${im ? `<img src="${this.escapeHtml(im)}" alt="${nm}" loading="lazy" decoding="async">` : `<div class="pmodal-entity-img pmodal-entity-img--empty" aria-hidden="true"><i class="fas fa-cube"></i></div>`}
+                            ${im ? `<img src="${this.escapeHtml(im)}" alt="${nm}" loading="lazy" decoding="async">` : `<div class="pmodal-entity-img pmodal-entity-img--empty" aria-hidden="true"><i class="aisc-ico aisc-ico--product"></i></div>`}
                         </div>`;
                     }).join('')}
                 </div>
@@ -2947,7 +2947,7 @@ class LivingManager {
 
         const refsHtml = refs.length
             ? `<section class="pmodal-section pmodal-input-refs">
-                <h3 class="pmodal-section-title"><i class="fas fa-image"></i> REFERENCIAS</h3>
+                <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--image"></i> REFERENCIAS</h3>
                 <div class="pmodal-refs-grid">
                     ${refs.map((url, i) => `
                         <a class="pmodal-ref-thumb" href="${this.escapeHtml(url)}" target="_blank" rel="noopener" aria-label="Referencia ${i+1}">
@@ -2960,14 +2960,14 @@ class LivingManager {
 
         const briefHtml = briefing
             ? `<section class="pmodal-section pmodal-input-brief">
-                <h3 class="pmodal-section-title"><i class="fas fa-quote-left"></i> INSTRUCCIONES</h3>
+                <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--quote"></i> INSTRUCCIONES</h3>
                 <p class="pmodal-input-brief-text">${this.escapeHtml(briefing)}</p>
             </section>`
             : '';
 
         const contextChips = [];
-        if (campaignName) contextChips.push(`<span class="pmodal-context-chip"><i class="fas fa-bullhorn"></i> ${this.escapeHtml(campaignName)}</span>`);
-        if (audienceName) contextChips.push(`<span class="pmodal-context-chip"><i class="fas fa-users"></i> ${this.escapeHtml(audienceName)}</span>`);
+        if (campaignName) contextChips.push(`<span class="pmodal-context-chip"><i class="aisc-ico aisc-ico--campaign"></i> ${this.escapeHtml(campaignName)}</span>`);
+        if (audienceName) contextChips.push(`<span class="pmodal-context-chip"><i class="aisc-ico aisc-ico--audience"></i> ${this.escapeHtml(audienceName)}</span>`);
         const contextHtml = contextChips.length
             ? `<section class="pmodal-section pmodal-input-context">
                 <div class="pmodal-context-chips">${contextChips.join('')}</div>
@@ -2976,19 +2976,19 @@ class LivingManager {
 
         const extrasHtml = extraRows
             ? `<section class="pmodal-section pmodal-input-extras">
-                <h3 class="pmodal-section-title"><i class="fas fa-list"></i> PARAMETROS</h3>
+                <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--menu"></i> PARAMETROS</h3>
                 <div class="pmodal-info-rows">${extraRows}</div>
             </section>`
             : '';
 
         const promptHtml = promptText
             ? `<section class="pmodal-section pmodal-input-prompt">
-                <h3 class="pmodal-section-title"><i class="fas fa-terminal"></i> PROMPT</h3>
+                <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--consola-desarrollador"></i> PROMPT</h3>
                 <p class="pmodal-input-brief-text" style="white-space:pre-wrap;">${this.escapeHtml(promptText)}</p>
             </section>`
             : '';
         container.innerHTML = entityHtml + identitiesHtml + promptHtml + contextHtml + refsHtml + briefHtml + extrasHtml
-            || `<div class="pmodal-input-empty"><i class="fas fa-inbox"></i><p>Sin inputs registrados.</p></div>`;
+            || `<div class="pmodal-input-empty"><i class="aisc-ico aisc-ico--inbox"></i><p>Sin inputs registrados.</p></div>`;
     }
 
     _safeParseJSON(v) {
@@ -3013,7 +3013,7 @@ class LivingManager {
                 || '';
             return `
                 <button type="button" class="pmodal-sibling" data-output-id="${this.escapeHtml(s.id)}" title="Abrir variante" aria-label="Variante de produccion">
-                    ${url ? `<img data-src="${this.escapeHtml(url)}" alt="" decoding="async" loading="lazy">` : `<i class="fas fa-image" aria-hidden="true"></i>`}
+                    ${url ? `<img data-src="${this.escapeHtml(url)}" alt="" decoding="async" loading="lazy">` : `<i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>`}
                 </button>
             `;
         }).join('');
@@ -3743,7 +3743,7 @@ class LivingManager {
                         <div class="pmodal-edit-attachment-thumb">${thumb ? `<img src="${this.escapeHtml(thumb)}" alt="">` : ''}</div>
                         <span class="pmodal-edit-attachment-label">${this.escapeHtml(prod.name)}</span>
                         <button type="button" class="pmodal-edit-attachment-remove" data-edit-attachment-remove="product" aria-label="Quitar producto">
-                            <i class="fas fa-times" aria-hidden="true"></i>
+                            <i class="aisc-ico aisc-ico--close" aria-hidden="true"></i>
                         </button>
                     </div>
                 `);
@@ -3755,7 +3755,7 @@ class LivingManager {
                     <div class="pmodal-edit-attachment-thumb"><img src="${this.escapeHtml(this._editReferenceImageUrl)}" alt=""></div>
                     <span class="pmodal-edit-attachment-label">Referencia</span>
                     <button type="button" class="pmodal-edit-attachment-remove" data-edit-attachment-remove="reference" aria-label="Quitar referencia">
-                        <i class="fas fa-times" aria-hidden="true"></i>
+                        <i class="aisc-ico aisc-ico--close" aria-hidden="true"></i>
                     </button>
                 </div>
             `);
@@ -4554,10 +4554,10 @@ class LivingManager {
                 </div>
                 <div class="pending-edit-card-overlay">
                     ${isError ? `
-                        <i class="fas fa-exclamation-triangle pending-edit-card-error-icon" aria-hidden="true"></i>
+                        <i class="aisc-ico pending-edit-card-error-icon aisc-ico--alert-warning" aria-hidden="true"></i>
                         <span class="pending-edit-card-label pending-edit-card-error-label">${errorMsg}</span>
                         <button type="button" class="pending-edit-card-dismiss" data-action="dismiss-pending" data-client-id="${this.escapeHtml(item._outputId)}" aria-label="Cerrar mensaje de error">
-                            <i class="fas fa-times" aria-hidden="true"></i> Cerrar
+                            <i class="aisc-ico aisc-ico--close" aria-hidden="true"></i> Cerrar
                         </button>
                     ` : `
                         <span class="pending-edit-card-spinner" aria-hidden="true"></span>
@@ -5115,10 +5115,10 @@ class LivingManager {
             const ctr = document.createElement('div');
             ctr.className = 'pmodal-zoom-controls';
             ctr.innerHTML = `
-                <button type="button" class="pmodal-zoom-btn" data-zoom="out" aria-label="Alejar"><i class="fas fa-minus"></i></button>
+                <button type="button" class="pmodal-zoom-btn" data-zoom="out" aria-label="Alejar"><i class="aisc-ico aisc-ico--minus"></i></button>
                 <span class="pmodal-zoom-level">100%</span>
-                <button type="button" class="pmodal-zoom-btn" data-zoom="in" aria-label="Acercar"><i class="fas fa-plus"></i></button>
-                <button type="button" class="pmodal-zoom-btn pmodal-zoom-reset" data-zoom="reset" aria-label="Ajustar"><i class="fas fa-compress"></i></button>`;
+                <button type="button" class="pmodal-zoom-btn" data-zoom="in" aria-label="Acercar"><i class="aisc-ico aisc-ico--add"></i></button>
+                <button type="button" class="pmodal-zoom-btn pmodal-zoom-reset" data-zoom="reset" aria-label="Ajustar"><i class="aisc-ico aisc-ico--minimize"></i></button>`;
             visual.appendChild(ctr);
             ctr.addEventListener('click', (e) => {
                 const b = e.target.closest('[data-zoom]'); if (!b) return;
@@ -5420,7 +5420,7 @@ class LivingManager {
         if (highlights.length === 0) {
             highlightsContent.innerHTML = `
                 <div style="text-align: center; padding: 2rem; color: var(--living-text-muted);">
-                    <i class="fas fa-chart-line" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                    <i class="aisc-ico aisc-ico--growth" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
                     <p>No hay datos destacados aún</p>
                 </div>
             `;
@@ -5461,7 +5461,7 @@ class LivingManager {
                 <div class="featured-card-visual">
                     ${finalImageUrl
                         ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
-                        : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
+                        : `<div class="featured-card-visual-placeholder"><i class="aisc-ico aisc-ico--image"></i></div>`
                     }
                         </div>
                 <div class="featured-card-prompt-overlay">
@@ -5469,7 +5469,7 @@ class LivingManager {
                     <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
                     </div>
                 <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
-                    <i class="fas fa-download"></i>
+                    <i class="aisc-ico aisc-ico--dowload"></i>
                 </button>
                 </div>
             `;

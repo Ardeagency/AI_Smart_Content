@@ -37,7 +37,7 @@
     mods.forEach((m, i) => {
       const name = (m.name || 'Módulo ' + (i + 1)).trim() || 'Módulo ' + (i + 1);
       const removeBtn = mods.length > 1
-        ? `<button type="button" class="module-node-remove" data-module-index="${i}" title="Quitar módulo" aria-label="Quitar módulo"><i class="ph ph-x"></i></button>`
+        ? `<button type="button" class="module-node-remove" data-module-index="${i}" title="Quitar módulo" aria-label="Quitar módulo"><i class="aisc-ico aisc-ico--close"></i></button>`
         : '';
       // Indicadores de routing no-lineal
       const badges = [];
@@ -46,10 +46,10 @@
         badges.push(`<span class="module-node-badge module-node-badge--jump" title="Salta a: ${this.escapeHtml(target.name || '')}"><i class="ph ph-arrow-bend-up-right"></i> →${idToIndex.get(m.next_module_id) + 1}</span>`);
       }
       if (m.routing_rules) {
-        badges.push(`<span class="module-node-badge module-node-badge--routing" title="Tiene routing condicional"><i class="ph ph-git-branch"></i></span>`);
+        badges.push(`<span class="module-node-badge module-node-badge--routing" title="Tiene routing condicional"><i class="aisc-ico aisc-ico--git-branch"></i></span>`);
       }
       if (m.is_human_approval_required) {
-        badges.push(`<span class="module-node-badge module-node-badge--approval" title="Requiere aprobación humana"><i class="ph ph-hand"></i></span>`);
+        badges.push(`<span class="module-node-badge module-node-badge--approval" title="Requiere aprobación humana"><i class="aisc-ico aisc-ico--help"></i></span>`);
       }
       parts.push(`
         <div class="module-node ${nodeTypeClass(i)}" data-module-index="${i}" title="Doble clic para editar">

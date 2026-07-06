@@ -22,11 +22,11 @@ class CreateView extends BaseView {
                 ${__('Guiado')}
             </button>
             <button class="mode-btn" data-mode="pro" id="proModeBtn">
-                <i class="fas fa-code"></i>
+                <i class="aisc-ico aisc-ico--coding"></i>
                 ${__('Experto')}
             </button>
             <button class="mode-btn" data-mode="templates" id="templatesModeBtn">
-                <i class="fas fa-layer-group"></i>
+                <i class="aisc-ico aisc-ico--layers"></i>
                 ${__('Plantillas')}
             </button>
         </div>
@@ -96,17 +96,17 @@ class CreateView extends BaseView {
     <div class="create-mode-content" id="templatesMode">
         <div class="templates-grid">
             <div class="template-card" data-template="carousel">
-                <i class="fas fa-images"></i>
+                <i class="aisc-ico aisc-ico--gallery"></i>
                 <h3>${__('Carrusel')}</h3>
                 <p>${__('Contenido en formato carrusel')}</p>
             </div>
             <div class="template-card" data-template="video">
-                <i class="fas fa-video"></i>
+                <i class="aisc-ico aisc-ico--video"></i>
                 <h3>${__('Video')}</h3>
                 <p>${__('Contenido en formato video')}</p>
             </div>
             <div class="template-card" data-template="product">
-                <i class="fas fa-box"></i>
+                <i class="aisc-ico aisc-ico--product"></i>
                 <h3>${__('Producto')}</h3>
                 <p>${__('Contenido de producto')}</p>
             </div>
@@ -116,7 +116,7 @@ class CreateView extends BaseView {
                 <p>${__('Contenido para publicidad')}</p>
             </div>
             <div class="template-card" data-template="email">
-                <i class="fas fa-envelope"></i>
+                <i class="aisc-ico aisc-ico--mail"></i>
                 <h3>Email</h3>
                 <p>${__('Contenido para email')}</p>
             </div>

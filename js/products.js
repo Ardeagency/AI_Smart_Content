@@ -420,7 +420,7 @@ if (typeof window.ProductsManager === 'undefined') {
                         aria-pressed="${isActive}"
                         title="${this.escapeHtml(cat.label)}">
                     <span class="products-filter-dropdown-label">${this.escapeHtml(cat.label)}</span>
-                    <i class="fas fa-chevron-down products-filter-dropdown-chevron" aria-hidden="true"></i>
+                    <i class="aisc-ico products-filter-dropdown-chevron aisc-ico--chevron-down" aria-hidden="true"></i>
                 </button>
             `;
         }).join('')
@@ -733,15 +733,15 @@ if (typeof window.ProductsManager === 'undefined') {
             <div class="product-card-image">
                 ${mainImage 
                     ? `<img src="${this.escapeHtml(mainImage)}" alt="${safeName}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-image\\'></i><span>Sin imagen</span></div>'">` 
-                    : `<div class="no-image"><i class="fas fa-image"></i><span>Sin imagen</span></div>`
+                    : `<div class="no-image"><i class="aisc-ico aisc-ico--image"></i><span>Sin imagen</span></div>`
                 }
             </div>
             <div class="product-card-actions">
                 <button type="button" class="product-card-delete" title="Eliminar" data-product-id="${product.id}">
-                    <i class="fas fa-trash-alt"></i>
+                    <i class="aisc-ico aisc-ico--delete"></i>
                 </button>
                 <button type="button" class="product-card-duplicate" title="Duplicar" data-product-id="${product.id}">
-                    <i class="fas fa-copy"></i>
+                    <i class="aisc-ico aisc-ico--copy"></i>
                 </button>
             </div>
             <div class="product-card-product-type">${tipoLabel}</div>
@@ -1026,12 +1026,12 @@ if (typeof window.ProductsManager === 'undefined') {
                                     <button type="button" class="btn-image-action ${isPrincipal ? 'active' : ''}" 
                                             onclick="productsManager.setImageAsPrincipal('${image.id}', '${productId}')" 
                                             title="${isPrincipal ? 'Imagen principal' : 'Marcar como principal'}">
-                                        <i class="fas fa-star"></i>
+                                        <i class="aisc-ico aisc-ico--star"></i>
                                     </button>
                                     <button type="button" class="btn-image-action" 
                                             onclick="productsManager.removeProductImage('${image.id}', '${productId}')" 
                                             title="Eliminar imagen">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="aisc-ico aisc-ico--delete"></i>
                         </button>
                                 </div>
                                 ${isPrincipal ? '<span class="image-badge">Principal</span>' : ''}
@@ -1040,12 +1040,12 @@ if (typeof window.ProductsManager === 'undefined') {
                         <div class="image-order-controls">
                             <button type="button" class="btn-order" onclick="productsManager.moveImageOrder('${image.id}', '${productId}', -1)" 
                                     ${index === 0 ? 'disabled' : ''} title="Mover arriba">
-                                <i class="fas fa-arrow-up"></i>
+                                <i class="aisc-ico aisc-ico--arrow-up"></i>
                             </button>
                             <span class="order-number">${index + 1}</span>
                             <button type="button" class="btn-order" onclick="productsManager.moveImageOrder('${image.id}', '${productId}', 1)" 
                                     ${index === sortedImages.length - 1 ? 'disabled' : ''} title="Mover abajo">
-                                <i class="fas fa-arrow-down"></i>
+                                <i class="aisc-ico aisc-ico--arrow-down"></i>
                             </button>
                         </div>
                     </div>
@@ -1064,7 +1064,7 @@ if (typeof window.ProductsManager === 'undefined') {
                          style="border: 2px dashed var(--border-divider); border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: var(--bg-secondary);">
                         <input type="file" id="${inputId}" accept="image/*" style="display: none;" 
                                onchange="productsManager.handleNewImageUpload(event, '${productId}')" multiple>
-                        <i class="fas fa-plus" style="font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 0.5rem;"></i>
+                        <i class="aisc-ico aisc-ico--add" style="font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 0.5rem;"></i>
                         <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Haz clic para agregar imagen</p>
                         <p style="color: var(--text-muted); font-size: 0.75rem; margin: 0.25rem 0 0 0;">Máximo 6 imágenes por producto · 5MB por imagen</p>
                     </div>

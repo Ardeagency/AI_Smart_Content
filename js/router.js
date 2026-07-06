@@ -838,7 +838,7 @@ class Router {
           text-align: center;
         ">
           <div class="error-icon" style="font-size: 3rem; color: var(--accent-warm, #e09145); margin-bottom: 1rem;">
-            <i class="fas fa-exclamation-triangle"></i>
+            <i class="aisc-ico aisc-ico--alert-warning"></i>
           </div>
           <h2 style="color: var(--text-primary, #ecebda); margin-bottom: 1rem;">${__('Error')}</h2>
           <p style="color: var(--text-secondary, #a0a0a0);">${message}</p>

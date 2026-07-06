@@ -205,7 +205,7 @@ class DevWebVitalsView extends DevBaseView {
   }
 
   _errorCard(msg) {
-    return `<div class="dev-vitals-error"><i class="fas fa-triangle-exclamation"></i> ${this.escapeHtml(msg)}</div>`;
+    return `<div class="dev-vitals-error"><i class="aisc-ico aisc-ico--alert-warning"></i> ${this.escapeHtml(msg)}</div>`;
   }
 
   _styles() {

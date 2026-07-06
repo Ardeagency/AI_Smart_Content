@@ -38,10 +38,10 @@ class DevLeadVeraTrainingView extends DevBaseView {
         <div class="dev-flows-topbar">
           <div class="dev-flows-scope-toggle" id="veraTabToggle">
             <button type="button" class="dev-scope-btn active" data-tab="train">
-              <i class="fas fa-bolt"></i> Entrenar
+              <i class="aisc-ico aisc-ico--zap"></i> Entrenar
             </button>
             <button type="button" class="dev-scope-btn" data-tab="knowledge">
-              <i class="fas fa-circle-nodes"></i> Conocimientos
+              <i class="aisc-ico aisc-ico--flows"></i> Conocimientos
             </button>
           </div>
         </div>
@@ -53,14 +53,14 @@ class DevLeadVeraTrainingView extends DevBaseView {
 
             <div class="vera-training-row">
               <label class="vera-training-label" for="veraTrainingFile">
-                <i class="fas fa-file-lines"></i>
+                <i class="aisc-ico aisc-ico--document"></i>
                 <span>Archivo</span>
                 <span class="vera-training-hint">txt, md, pdf, json</span>
               </label>
               <div class="vera-training-drop" data-drop="file">
                 <input type="file" id="veraTrainingFile" accept=".txt,.md,.pdf,.json,text/plain,text/markdown,application/pdf,application/json" hidden>
                 <button type="button" class="vera-training-drop-btn" data-trigger="file">
-                  <i class="fas fa-paperclip"></i>
+                  <i class="aisc-ico aisc-ico--paperclip"></i>
                   <span>Adjuntar archivo</span>
                 </button>
                 <div class="vera-training-drop-preview" id="veraTrainingFilePreview" hidden></div>
@@ -69,7 +69,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
 
             <div class="vera-training-row">
               <label class="vera-training-label" for="veraTrainingPrompt">
-                <i class="fas fa-pen-nib"></i>
+                <i class="aisc-ico aisc-ico--edit"></i>
                 <span>Prompt</span>
                 <span class="vera-training-hint">conocimiento en texto libre</span>
               </label>
@@ -83,14 +83,14 @@ class DevLeadVeraTrainingView extends DevBaseView {
 
             <div class="vera-training-row">
               <label class="vera-training-label" for="veraTrainingImage">
-                <i class="fas fa-image"></i>
+                <i class="aisc-ico aisc-ico--image"></i>
                 <span>Imagen de referencia</span>
                 <span class="vera-training-hint">OpenAI Vision describe el estilo</span>
               </label>
               <div class="vera-training-drop" data-drop="image">
                 <input type="file" id="veraTrainingImage" accept="image/jpeg,image/png,image/webp,image/jpg" hidden>
                 <button type="button" class="vera-training-drop-btn" data-trigger="image">
-                  <i class="fas fa-image"></i>
+                  <i class="aisc-ico aisc-ico--image"></i>
                   <span>Adjuntar imagen</span>
                 </button>
                 <div class="vera-training-drop-preview" id="veraTrainingImagePreview" hidden></div>
@@ -99,7 +99,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
 
             <div class="vera-training-row">
               <label class="vera-training-label" for="veraTrainingTitle">
-                <i class="fas fa-tag"></i>
+                <i class="aisc-ico aisc-ico--tag"></i>
                 <span>Titulo (opcional)</span>
                 <span class="vera-training-hint">para identificarlo en Conocimientos</span>
               </label>
@@ -114,10 +114,10 @@ class DevLeadVeraTrainingView extends DevBaseView {
 
             <footer class="vera-training-footer">
               <button type="button" class="btn btn-secondary" id="veraTrainingReset">
-                <i class="fas fa-rotate-left"></i> Limpiar
+                <i class="aisc-ico aisc-ico--refresh"></i> Limpiar
               </button>
               <button type="submit" class="btn btn-primary" id="veraTrainingSubmit">
-                <i class="fas fa-bolt"></i> Entrenar
+                <i class="aisc-ico aisc-ico--zap"></i> Entrenar
               </button>
             </footer>
           </form>
@@ -132,12 +132,12 @@ class DevLeadVeraTrainingView extends DevBaseView {
             </div>
           </div>
           <div class="vera-knowledge-stats" id="veraKnowledgeStats" hidden>
-            <span class="vera-knowledge-stat"><i class="fas fa-database"></i> <span id="statSources">0</span> fuentes</span>
-            <span class="vera-knowledge-stat"><i class="fas fa-puzzle-piece"></i> <span id="statChunks">0</span> chunks</span>
+            <span class="vera-knowledge-stat"><i class="aisc-ico aisc-ico--database"></i> <span id="statSources">0</span> fuentes</span>
+            <span class="vera-knowledge-stat"><i class="aisc-ico aisc-ico--puzzle"></i> <span id="statChunks">0</span> chunks</span>
           </div>
           <div class="vera-knowledge-bubbles" id="veraKnowledgeBubbles">
             <div class="vera-knowledge-loading">
-              <i class="fas fa-spinner fa-spin"></i> Cargando conocimientos...
+              <i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando conocimientos...
             </div>
           </div>
         </section>
@@ -227,7 +227,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
     const sizeKb = (file.size / 1024).toFixed(1);
     preview.hidden = false;
     preview.innerHTML = `
-      <i class="fas fa-file-lines"></i>
+      <i class="aisc-ico aisc-ico--document"></i>
       <span class="vera-training-preview-name">${this.escapeHtml(file.name)}</span>
       <span class="vera-training-preview-size">${sizeKb} KB</span>
       <button type="button" class="vera-training-preview-remove" aria-label="Quitar archivo">&times;</button>
@@ -280,7 +280,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
     this._submitting = true;
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrenando...';
+      submitBtn.innerHTML = '<i class="aisc-ico fa-spin aisc-ico--loader"></i> Entrenando...';
     }
 
     try {
@@ -299,7 +299,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
       this._submitting = false;
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-bolt"></i> Entrenar';
+        submitBtn.innerHTML = '<i class="aisc-ico aisc-ico--zap"></i> Entrenar';
       }
     }
   }
@@ -311,7 +311,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
     this._loading = true;
     const container = document.getElementById('veraKnowledgeBubbles');
     if (container) {
-      container.innerHTML = '<div class="vera-knowledge-loading"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+      container.innerHTML = '<div class="vera-knowledge-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando...</div>';
     }
 
     try {
@@ -377,7 +377,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
     if (groups.length === 0) {
       container.innerHTML = `
         <div class="vera-knowledge-empty">
-          <i class="fas fa-circle-nodes"></i>
+          <i class="aisc-ico aisc-ico--flows"></i>
           <p>El vector global esta vacio.</p>
           <p class="vera-knowledge-empty-hint">Usa la pestaña <strong>Entrenar</strong> para agregar conocimientos.</p>
         </div>
@@ -411,7 +411,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
         <h3 class="vera-bubble-title">${this.escapeHtml(group.title)}</h3>
         <p class="vera-bubble-preview">${this.escapeHtml(preview)}${preview.length >= 140 ? '...' : ''}</p>
         <footer class="vera-bubble-foot">
-          <span class="vera-bubble-date"><i class="far fa-clock"></i> ${date}</span>
+          <span class="vera-bubble-date"><i class="aisc-ico aisc-ico--clock"></i> ${date}</span>
         </footer>
       </article>
     `;
@@ -462,7 +462,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
     if (!container) return;
     container.innerHTML = `
       <div class="vera-knowledge-empty">
-        <i class="fas fa-triangle-exclamation"></i>
+        <i class="aisc-ico aisc-ico--alert-warning"></i>
         <p>${this.escapeHtml(message)}</p>
       </div>
     `;

@@ -618,7 +618,7 @@ class Navigation {
   async _loadActivity(tab) {
     const body = document.getElementById('activityBody');
     if (!body) return;
-    body.innerHTML = `<div class="activity-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+    body.innerHTML = `<div class="activity-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i></div>`;
     const sb = await this._supabase();
     const orgId = this.currentOrgId;
     if (!sb || !orgId) { this._activityEmpty(body, 'fa-circle-info', 'Selecciona una marca para ver la actividad de Vera.'); return; }
@@ -1042,10 +1042,10 @@ class Navigation {
   async _loadNotificationsFlyout() {
     const body = document.getElementById('notificationsFlyoutBody');
     if (!body) return;
-    body.innerHTML = `<div class="activity-loading"><i class="fas fa-circle-notch fa-spin"></i></div>`;
+    body.innerHTML = `<div class="activity-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i></div>`;
     const list = await this._orgNotificationsList('all', 100);
     if (!list.length) {
-      body.innerHTML = `<div class="activity-empty"><i class="fas fa-circle-info"></i><p>${__('No hay notificaciones')}</p></div>`;
+      body.innerHTML = `<div class="activity-empty"><i class="aisc-ico aisc-ico--alert-info"></i><p>${__('No hay notificaciones')}</p></div>`;
       return;
     }
     body.innerHTML = '<div class="notif-list">' +
@@ -1444,7 +1444,7 @@ class Navigation {
             <span class="notif-subject-type">${_escapeHtml(subjType)}</span>
             <span class="notif-subject-label">${_escapeHtml(subjLabel)}</span>
           </div>
-          ${subjUrl ? '<i class="fas fa-arrow-right notif-subject-arrow"></i>' : ''}
+          ${subjUrl ? '<i class="aisc-ico notif-subject-arrow aisc-ico--arrow-right"></i>' : ''}
         </div>`;
     }
 
@@ -1457,7 +1457,7 @@ class Navigation {
         const oLabel = o.label || o.id || '';
         const thumb = o.preview_url
           ? `<img src="${_escapeHtml(o.preview_url)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
-          : '<div class="notif-output-placeholder"><i class="fas fa-image"></i></div>';
+          : '<div class="notif-output-placeholder"><i class="aisc-ico aisc-ico--image"></i></div>';
         return `
           <button type="button" class="notif-output" data-output-url="${_escapeHtml(url)}" ${url ? '' : 'disabled'}>
             <div class="notif-output-thumb">${thumb}</div>
@@ -1469,7 +1469,7 @@ class Navigation {
       }).join('');
       outputsHtml = `
         <div class="notif-outputs">
-          <div class="notif-outputs-head"><i class="fas fa-wand-magic-sparkles"></i> ${__('Producciones generadas')}</div>
+          <div class="notif-outputs-head"><i class="aisc-ico aisc-ico--sparkle"></i> ${__('Producciones generadas')}</div>
           <div class="notif-outputs-grid">${items}</div>
         </div>`;
     }
@@ -1495,7 +1495,7 @@ class Navigation {
       checklistHtml = `
         <div class="notif-checklist">
           <div class="notif-checklist-head">
-            <span><i class="fas fa-clipboard"></i> ${__('Tareas a completar')}</span>
+            <span><i class="aisc-ico aisc-ico--copy"></i> ${__('Tareas a completar')}</span>
             <span class="notif-checklist-progress" data-progress>${__('{done} de {total}', { done: doneCount, total })}</span>
           </div>
           ${items}
@@ -1528,7 +1528,7 @@ class Navigation {
     const hasExpandable = !!(n.body || n.subject || n.outputs?.length || n.checklist?.length);
     const toggleBtnHtml = hasExpandable ? `
       <button type="button" class="notif-toggle" data-toggle-expand aria-label="${__('Expandir/colapsar')}">
-        <i class="fas fa-chevron-down notif-toggle-icon"></i>
+        <i class="aisc-ico notif-toggle-icon aisc-ico--chevron-down"></i>
       </button>` : '';
 
     const bodyHtml = n.body ? this._renderMarkdownLite(n.body) : '';
@@ -1823,7 +1823,7 @@ class Navigation {
         ${window.SwitchUserController?.hasImpersonation?.() ? `
         <div class="user-dropdown-divider"></div>
         <button class="user-dropdown-item user-dropdown-item--accent" id="returnLeadBtn">
-          <i class="fas fa-arrow-left"></i>
+          <i class="aisc-ico aisc-ico--arrow-left"></i>
           <span>${__('Volver a mi cuenta de Lead')}</span>
         </button>
         ` : ''}
@@ -1833,13 +1833,13 @@ class Navigation {
           <button class="user-dropdown-item" id="switchUserBtn" aria-expanded="false" aria-controls="switchUserInline">
             <svg class="user-dropdown-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.5" cy="7" r="3.25"/><path d="M3 19v-.5a5.5 5.5 0 0 1 5.5-5.5 5.5 5.5 0 0 1 2.3.5"/><path d="M14 15.5h5.5l-2-2M19.5 20.5H14l2 2"/></svg>
             <span>${__('Cambiar usuario')}</span>
-            <i class="fas fa-chevron-down user-dropdown-chevron" aria-hidden="true"></i>
+            <i class="aisc-ico user-dropdown-chevron aisc-ico--chevron-down" aria-hidden="true"></i>
           </button>
           <div class="user-dropdown-switchuser-panel" id="switchUserInline" hidden></div>
         </div>
         ` : ''}
         <button class="user-dropdown-item" id="logoutBtn">
-          <i class="fas fa-sign-out-alt"></i>
+          <i class="aisc-ico aisc-ico--logout"></i>
           <span>${__('Cerrar sesión')}</span>
         </button>
       </div>`;
@@ -1863,7 +1863,7 @@ class Navigation {
               ${this.getHeaderActivityButtonGroupHTML()}
               ${this.getHeaderNotificationsButtonGroupHTML()}
               <button class="user-menu-btn" id="userMenuBtn" aria-label="${__('Menú de usuario')}">
-                <i class="fas fa-chevron-down"></i>
+                <i class="aisc-ico aisc-ico--chevron-down"></i>
               </button>
               ${this.getUserDropdownHTML(settingsHref)}
             </div>
@@ -1987,7 +1987,7 @@ class Navigation {
               <span class="nav-text">${_escapeHtml(item.label)}</span>
             </a>
             <button type="button" class="nav-submenu-toggle nav-brand-storage-expand-btn" data-tooltip="Sub-marcas" aria-expanded="${isOpen}" aria-controls="nav-sub-brand-storage">
-              <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
+              <i class="aisc-ico nav-chevron aisc-ico--chevron-right" aria-hidden="true"></i>
             </button>
           </div>
           <div class="nav-submenu" id="nav-sub-brand-storage" role="group" aria-label="${_escapeHtml(__(item.label))}">
@@ -2031,7 +2031,7 @@ class Navigation {
               <span class="nav-text">${__(item.label)}</span>
             </a>
             <button type="button" class="nav-submenu-toggle nav-flows-expand-btn" data-tooltip="${__(item.label)}" aria-expanded="${isOpen}" aria-controls="nav-sub-catalog">
-              <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
+              <i class="aisc-ico nav-chevron aisc-ico--chevron-right" aria-hidden="true"></i>
             </button>
           </div>
           <div class="nav-submenu" id="nav-sub-catalog" role="group" aria-label="${__(item.label)}">
@@ -2063,14 +2063,14 @@ class Navigation {
               <span class="nav-text">${__(item.label)}</span>
             </a>
             <button type="button" class="nav-submenu-toggle nav-flows-expand-btn" data-tooltip="${__(item.label)}" aria-expanded="${isOpen}" aria-controls="nav-sub-${item.id}">
-              <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
+              <i class="aisc-ico nav-chevron aisc-ico--chevron-right" aria-hidden="true"></i>
             </button>
           </div>`
         : `
           <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${__(item.label)}" aria-expanded="${isOpen}" aria-controls="nav-sub-${item.id}">
             ${iconHTML(item)}
             <span class="nav-text">${__(item.label)}</span>
-            <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
+            <i class="aisc-ico nav-chevron aisc-ico--chevron-right" aria-hidden="true"></i>
           </button>`;
       return `
         <div class="nav-item has-submenu ${item.route ? 'nav-flows-wrap ' : ''}${isOpen ? 'submenu-open' : ''}" data-container-id="${item.id}">
@@ -2108,7 +2108,7 @@ class Navigation {
         <div class="header-content">
           <div class="header-left">
             <button type="button" class="header-hamburger" id="headerHamburger" aria-label="${__('Abrir menú')}" aria-controls="sideNavigation" aria-expanded="false">
-              <i class="fas fa-bars"></i>
+              <i class="aisc-ico aisc-ico--menu"></i>
             </button>
             <h1 class="header-title" id="headerTitle">PRODUCTION</h1>
           </div>
@@ -2117,7 +2117,7 @@ class Navigation {
               ${this.getHeaderActivityButtonGroupHTML()}
               ${this.getHeaderNotificationsButtonGroupHTML()}
               <button class="user-menu-btn" id="userMenuBtn" aria-label="${__('Menú de usuario')}">
-                <i class="fas fa-chevron-down"></i>
+                <i class="aisc-ico aisc-ico--chevron-down"></i>
               </button>
               ${this.getUserDropdownHTML('/home')}
             </div>
@@ -2262,7 +2262,7 @@ class Navigation {
           <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${__(item.label)}" aria-expanded="false" aria-controls="nav-dev-sub-${item.id}">
             ${iconHTML(item)}
             <span class="nav-text">${__(item.label)}</span>
-            <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
+            <i class="aisc-ico nav-chevron aisc-ico--chevron-right" aria-hidden="true"></i>
           </button>
           <div class="nav-submenu" id="nav-dev-sub-${item.id}" role="group" aria-label="${__(item.label)}">
             ${children}
@@ -2299,7 +2299,7 @@ class Navigation {
         <div class="header-content">
           <div class="header-left">
             <button type="button" class="header-hamburger" id="headerHamburger" aria-label="${__('Abrir menú')}" aria-controls="sideNavigation" aria-expanded="false">
-              <i class="fas fa-bars"></i>
+              <i class="aisc-ico aisc-ico--menu"></i>
             </button>
             <h1 class="header-title" id="headerTitle">DEVELOPER</h1>
           </div>
@@ -2307,7 +2307,7 @@ class Navigation {
             <div class="header-user-menu-wrap">
               ${this.getHeaderNotificationsButtonGroupHTML()}
               <button class="user-menu-btn" id="userMenuBtn" aria-label="${__('Menú de usuario')}">
-                <i class="fas fa-chevron-down"></i>
+                <i class="aisc-ico aisc-ico--chevron-down"></i>
               </button>
               ${this.getUserDropdownHTML('/home')}
             </div>
@@ -3671,7 +3671,7 @@ class Navigation {
             <span class="nav-org-option-name">${name}</span>
             <span class="nav-org-option-role">${org.role}</span>
           </div>
-          ${isActive ? '<i class="fas fa-check"></i>' : ''}
+          ${isActive ? '<i class="aisc-ico aisc-ico--check"></i>' : ''}
         </div>`;
       }).join('');
 
@@ -3693,7 +3693,7 @@ class Navigation {
       listEl.insertAdjacentHTML('beforeend', `
         <div class="nav-org-divider"></div>
         <div class="nav-org-option nav-org-create" data-action="create-org">
-          <i class="fas fa-plus"></i>
+          <i class="aisc-ico aisc-ico--add"></i>
           <span>${__('Crear nueva organización')}</span>
         </div>
       `);

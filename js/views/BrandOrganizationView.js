@@ -76,7 +76,7 @@ class BrandOrganizationView extends BaseView {
         <div class="brand-main-info">
             <button type="button" class="brand-corner-logo-btn" id="brandCornerLogoBtn" aria-label="${__('Subir logo de organización')}">
                 <span class="brand-corner-logo-inner" id="brandCornerLogoInner">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    <i class="aisc-ico aisc-ico--add" aria-hidden="true"></i>
                 </span>
                 <input type="file" id="brandCornerLogoInput" class="brand-corner-logo-input" accept="image/*">
             </button>
@@ -102,7 +102,7 @@ class BrandOrganizationView extends BaseView {
         <div class="brand-card card-info">
             <div class="card-header">
                 <h2 class="card-title">INFO</h2>
-                <span class="card-arrow"><i class="fas fa-arrow-right"></i></span>
+                <span class="card-arrow"><i class="aisc-ico aisc-ico--arrow-right"></i></span>
             </div>
         </div>
 
@@ -144,7 +144,7 @@ class BrandOrganizationView extends BaseView {
                 <input type="file" id="identityFileInput" class="brand-file-input" multiple
                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.md,.odt,.odp,.ods,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.ms-excel,text/plain,text/markdown">
                 <button type="button" class="file-upload-btn identity-upload-btn" id="identityUploadBtn">
-                    <i class="fas fa-plus" aria-hidden="true"></i> ${__('Subir archivo')}
+                    <i class="aisc-ico aisc-ico--add" aria-hidden="true"></i> ${__('Subir archivo')}
                 </button>
             </div>
         </div>
@@ -161,7 +161,7 @@ class BrandOrganizationView extends BaseView {
                 <input type="file" id="assetsFileInput" class="brand-file-input" multiple
                        accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,video/mp4,video/quicktime,video/webm,.ai,.eps,.psd">
                 <button type="button" class="file-upload-btn assets-upload-btn" id="assetsUploadBtn">
-                    <i class="fas fa-plus" aria-hidden="true"></i> ${__('Subir archivo')}
+                    <i class="aisc-ico aisc-ico--add" aria-hidden="true"></i> ${__('Subir archivo')}
                 </button>
             </div>
         </div>
@@ -675,7 +675,7 @@ class BrandOrganizationView extends BaseView {
       inner.innerHTML = `<img src="${this.escapeHtml(logoUrl)}" alt="${__('Logo organización')}" class="brand-corner-logo-img" loading="lazy">`;
       btn.classList.add('has-logo');
     } else {
-      inner.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i>';
+      inner.innerHTML = '<i class="aisc-ico aisc-ico--add" aria-hidden="true"></i>';
       btn.classList.remove('has-logo');
     }
 
@@ -905,9 +905,9 @@ class BrandOrganizationView extends BaseView {
             <div class="identity-file-name">${this.escapeHtml(fileName)}</div>
           </div>
           <div class="assets-file-actions">
-            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir archivo identidad')}"><i class="fas fa-external-link-alt"></i></a>` : ''}
+            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir archivo identidad')}"><i class="aisc-ico aisc-ico--external-link"></i></a>` : ''}
             <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="${__('Eliminar archivo identidad')}">
-              <i class="fas fa-trash-alt"></i>
+              <i class="aisc-ico aisc-ico--delete"></i>
             </button>
           </div>
         </div>
@@ -965,7 +965,7 @@ class BrandOrganizationView extends BaseView {
       } else if (isVideo && fileUrl) {
         preview = `<video class="asset-card-media" src="${this.escapeHtml(fileUrl)}" muted playsinline preload="metadata"></video>`;
       } else {
-        preview = '<div class="asset-card-fallback"><i class="fas fa-image"></i></div>';
+        preview = '<div class="asset-card-fallback"><i class="aisc-ico aisc-ico--image"></i></div>';
       }
 
       return `
@@ -973,9 +973,9 @@ class BrandOrganizationView extends BaseView {
           <div class="asset-card-media-wrap">
             ${preview}
             <div class="asset-card-actions">
-              ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir asset')}"><i class="fas fa-external-link-alt"></i></a>` : ''}
+              ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="${__('Abrir asset')}"><i class="aisc-ico aisc-ico--external-link"></i></a>` : ''}
               <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="${__('Eliminar asset')}">
-                <i class="fas fa-trash-alt"></i>
+                <i class="aisc-ico aisc-ico--delete"></i>
               </button>
             </div>
           </div>
@@ -987,13 +987,13 @@ class BrandOrganizationView extends BaseView {
     container.innerHTML = `
       <div class="assets-carousel" data-carousel-root>
         <button type="button" class="assets-carousel-arrow assets-carousel-arrow--prev" aria-label="${__('Anterior')}" data-carousel-prev>
-          <i class="fas fa-chevron-left" aria-hidden="true"></i>
+          <i class="aisc-ico aisc-ico--chevron-left" aria-hidden="true"></i>
         </button>
         <div class="assets-carousel-track" data-carousel-track>
           ${cards}
         </div>
         <button type="button" class="assets-carousel-arrow assets-carousel-arrow--next" aria-label="${__('Siguiente')}" data-carousel-next>
-          <i class="fas fa-chevron-right" aria-hidden="true"></i>
+          <i class="aisc-ico aisc-ico--chevron-right" aria-hidden="true"></i>
         </button>
       </div>
     `;
@@ -1123,7 +1123,7 @@ class BrandOrganizationView extends BaseView {
             ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview" loading="lazy" decoding="async" onerror="this.style.display='none';var p=this.nextElementSibling;if(p)p.classList.add('visible');">`
             : ''
           }
-          <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="fas fa-image"></i></div>
+          <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="aisc-ico aisc-ico--image"></i></div>
           <input type="file" accept="image/*" class="info-logo-input" title="${__('Subir logo')}">
         </div>
       </div>

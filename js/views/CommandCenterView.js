@@ -112,42 +112,42 @@ class CommandCenterView extends BaseView {
           <label class="cc-strat-name" id="ccStratName" title="${__('Editar nombre de la estrategia')}">
             <input class="cc-strat-name-input" id="ccStratNameInput" type="text" spellcheck="false"
                    aria-label="${__('Nombre de la estrategia')}" placeholder="${__('Estrategia')}" />
-            <i class="fas fa-pen cc-strat-name-pen" aria-hidden="true"></i>
+            <i class="aisc-ico cc-strat-name-pen aisc-ico--edit" aria-hidden="true"></i>
           </label>
           <span class="cc-toolbar-divider" aria-hidden="true"></span>
           <button class="cc-canvas-btn cc-canvas-btn--primary" id="ccBtnCreateAudience" type="button" title="${__('Crear Objetivo de Audiencia')}">
-            <i class="fas fa-user-plus"></i><span>${__('Objetivo de Audiencia')}</span>
+            <i class="aisc-ico aisc-ico--user-registration"></i><span>${__('Objetivo de Audiencia')}</span>
           </button>
           <button class="cc-canvas-btn cc-canvas-btn--primary cc-canvas-btn--anchor" id="ccBtnCreateCampaign" type="button" title="${__('Crear Objetivo de Campana (ancla de la estrategia)')}">
-            <i class="fas fa-bullseye"></i><span>${__('Objetivo de Campana')}</span>
+            <i class="aisc-ico aisc-ico--goal"></i><span>${__('Objetivo de Campana')}</span>
           </button>
           <div class="cc-report-dd" id="ccReportDD">
             <button class="cc-canvas-btn" id="ccBtnReport" type="button" title="${__('Crear informe con Vera (Claude)')}">
-              <i class="fas fa-file-lines"></i><span>${__('Crear informe')}</span><i class="fas fa-chevron-down cc-report-caret"></i>
+              <i class="aisc-ico aisc-ico--document"></i><span>${__('Crear informe')}</span><i class="aisc-ico cc-report-caret aisc-ico--chevron-down"></i>
             </button>
             <div class="cc-report-menu" id="ccReportMenu" role="menu" style="display:none;">
-              <button type="button" role="menuitem" data-scope="all"><i class="fas fa-layer-group"></i> ${__('Informar todo')}</button>
-              <button type="button" role="menuitem" data-scope="campaign"><i class="fas fa-bullhorn"></i> ${__('Campana seleccionada')}</button>
-              <button type="button" role="menuitem" data-scope="audience"><i class="fas fa-users"></i> ${__('Audiencia seleccionada')}</button>
-              <button type="button" role="menuitem" data-scope="ecosystem"><i class="fas fa-brain"></i> ${__('Aprendizaje del ecosistema')}</button>
-              <button type="button" role="menuitem" data-scope="selection"><i class="fas fa-bullseye"></i> ${__('Seleccionado')}</button>
+              <button type="button" role="menuitem" data-scope="all"><i class="aisc-ico aisc-ico--layers"></i> ${__('Informar todo')}</button>
+              <button type="button" role="menuitem" data-scope="campaign"><i class="aisc-ico aisc-ico--campaign"></i> ${__('Campana seleccionada')}</button>
+              <button type="button" role="menuitem" data-scope="audience"><i class="aisc-ico aisc-ico--audience"></i> ${__('Audiencia seleccionada')}</button>
+              <button type="button" role="menuitem" data-scope="ecosystem"><i class="aisc-ico aisc-ico--memory"></i> ${__('Aprendizaje del ecosistema')}</button>
+              <button type="button" role="menuitem" data-scope="selection"><i class="aisc-ico aisc-ico--goal"></i> ${__('Seleccionado')}</button>
             </div>
           </div>
           <!-- Anotaciones del lienzo (viven solo dentro de la estrategia): se crean
                desde el header, ya no como tipos de nodo en la seccion Nodos. -->
           <button class="cc-canvas-btn" id="ccBtnCreateNote" type="button" title="${__('Crear nota (anotacion del lienzo)')}">
-            <i class="fas fa-note-sticky"></i><span>${__('Crear nota')}</span>
+            <i class="aisc-ico aisc-ico--brief"></i><span>${__('Crear nota')}</span>
           </button>
           <button class="cc-canvas-btn" id="ccBtnCreateGroup" type="button" title="${__('Crear grupo (frame para agrupar nodos)')}">
-            <i class="fas fa-object-group"></i><span>${__('Crear grupo')}</span>
+            <i class="aisc-ico aisc-ico--layers"></i><span>${__('Crear grupo')}</span>
           </button>
         </div>
         <div class="cc-canvas-toolbar-group">
           <button class="cc-canvas-btn" id="ccBtnRelayout" type="button" title="${__('Reorganizar nodos')}">
-            <i class="fas fa-th"></i><span>${__('Reorganizar')}</span>
+            <i class="aisc-ico aisc-ico--grid"></i><span>${__('Reorganizar')}</span>
           </button>
           <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomOut" type="button" title="${__('Alejar')}" aria-label="${__('Alejar')}"><span class="cc-zoom-glyph">&minus;</span></button>
-          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomReset" type="button" title="${__('Centrar')}" aria-label="${__('Centrar zoom')}"><i class="fas fa-up-right-and-down-left-from-center"></i></button>
+          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomReset" type="button" title="${__('Centrar')}" aria-label="${__('Centrar zoom')}"><i class="aisc-ico aisc-ico--expand"></i></button>
           <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomIn" type="button" title="${__('Acercar')}" aria-label="${__('Acercar')}"><span class="cc-zoom-glyph">+</span></button>
         </div>
       </div>
@@ -156,7 +156,7 @@ class CommandCenterView extends BaseView {
         <svg class="cc-canvas-edges" id="ccCanvasEdges" aria-hidden="true"></svg>
         <div class="cc-canvas-world" id="ccCanvasWorld"></div>
         <div class="cc-canvas-empty" id="ccCanvasEmpty" style="display:none;">
-          <i class="fas fa-diagram-project"></i>
+          <i class="aisc-ico aisc-ico--flows"></i>
           <p class="cc-canvas-empty-title">${__('Centro de estrategia')}</p>
           <p>${__('Vera construye estrategias de campana usando nodos guia para analizar y producir. Esta pagina es tu centro de monitoreo para visualizar las estrategias creadas.')}</p>
         </div>
@@ -172,9 +172,9 @@ class CommandCenterView extends BaseView {
              Render/listeners en CanvasStore. -->
         <aside class="cc-strat-panel" id="ccStratPanel" aria-label="${__('Estrategias')}">
           <div class="cc-strat-head">
-            <span class="cc-strat-title"><i class="fas fa-layer-group"></i> ${__('Estrategias')}</span>
+            <span class="cc-strat-title"><i class="aisc-ico aisc-ico--layers"></i> ${__('Estrategias')}</span>
             <button class="cc-canvas-btn cc-strat-new" id="ccStratNew" type="button" title="${__('Nueva estrategia')}">
-              <i class="fas fa-plus"></i><span>${__('Nueva')}</span>
+              <i class="aisc-ico aisc-ico--add"></i><span>${__('Nueva')}</span>
             </button>
           </div>
           <div class="cc-strat-list" id="ccStratList"></div>
@@ -198,7 +198,7 @@ class CommandCenterView extends BaseView {
           <div class="cc-fp-panel" role="tabpanel" aria-labelledby="ccPanelTitle">
             <div class="cc-fp-head">
               <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="${__('Cerrar seccion')}" aria-label="${__('Cerrar seccion')}">
-                <i class="fas fa-times"></i>
+                <i class="aisc-ico aisc-ico--close"></i>
               </button>
               <span class="cc-fp-title" id="ccPanelTitle">${__('Biblioteca')}</span>
             </div>
@@ -215,11 +215,11 @@ class CommandCenterView extends BaseView {
   <div class="cc-report-backdrop" id="ccReportBackdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="ccReportTitle">
     <div class="cc-report-modal glass-black">
       <header class="cc-report-head">
-        <h3 class="cc-report-title" id="ccReportTitle"><i class="fas fa-file-lines"></i> ${__('Informe')}</h3>
+        <h3 class="cc-report-title" id="ccReportTitle"><i class="aisc-ico aisc-ico--document"></i> ${__('Informe')}</h3>
         <div class="cc-report-head-actions">
-          <button type="button" class="cc-report-act" id="ccReportCopy" title="${__('Copiar')}" aria-label="${__('Copiar')}"><i class="fas fa-copy"></i></button>
-          <button type="button" class="cc-report-act" id="ccReportDownload" title="${__('Descargar .md')}" aria-label="${__('Descargar')}"><i class="fas fa-download"></i></button>
-          <button type="button" class="cc-report-act" id="ccReportClose" title="${__('Cerrar')}" aria-label="${__('Cerrar')}"><i class="fas fa-times"></i></button>
+          <button type="button" class="cc-report-act" id="ccReportCopy" title="${__('Copiar')}" aria-label="${__('Copiar')}"><i class="aisc-ico aisc-ico--copy"></i></button>
+          <button type="button" class="cc-report-act" id="ccReportDownload" title="${__('Descargar .md')}" aria-label="${__('Descargar')}"><i class="aisc-ico aisc-ico--dowload"></i></button>
+          <button type="button" class="cc-report-act" id="ccReportClose" title="${__('Cerrar')}" aria-label="${__('Cerrar')}"><i class="aisc-ico aisc-ico--close"></i></button>
         </div>
       </header>
       <div class="cc-report-body" id="ccReportBody"></div>
@@ -692,7 +692,7 @@ class CommandCenterView extends BaseView {
     if (twoCol) twoCol.style.display = '';
     if (empty) {
       empty.style.display = 'flex';
-      empty.innerHTML = `<i class="fas fa-triangle-exclamation"></i><p>${this.escapeHtml(msg)}</p>`;
+      empty.innerHTML = `<i class="aisc-ico aisc-ico--alert-warning"></i><p>${this.escapeHtml(msg)}</p>`;
     }
   }
 }

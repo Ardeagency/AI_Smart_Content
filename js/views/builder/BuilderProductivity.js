@@ -338,7 +338,7 @@
     this._paletteResults = results;
     if (this._paletteSelectedIndex >= results.length) this._paletteSelectedIndex = 0;
     if (results.length === 0) {
-      list.innerHTML = `<div class="palette-empty"><i class="ph ph-magnifying-glass"></i> Sin resultados${q ? ' para "' + this.escapeHtml(q) + '"' : ''}.</div>`;
+      list.innerHTML = `<div class="palette-empty"><i class="aisc-ico aisc-ico--search"></i> Sin resultados${q ? ' para "' + this.escapeHtml(q) + '"' : ''}.</div>`;
       return;
     }
     list.innerHTML = results.map((r, i) => `
@@ -508,7 +508,7 @@
     if (!list) return;
     const items = this._issuesCache || [];
     if (items.length === 0) {
-      list.innerHTML = '<p class="issues-empty"><i class="ph ph-check-circle"></i> Sin problemas detectados.</p>';
+      list.innerHTML = '<p class="issues-empty"><i class="aisc-ico aisc-ico--check"></i> Sin problemas detectados.</p>';
       return;
     }
     list.innerHTML = items.map((it, i) => {

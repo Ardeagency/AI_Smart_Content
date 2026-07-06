@@ -43,10 +43,10 @@ class DevLeadLexiconView extends DevBaseView {
         <div class="dev-flows-topbar">
           <div class="dev-flows-scope-toggle" id="lexTabToggle">
             <button type="button" class="dev-scope-btn active" data-tab="lexicon">
-              <i class="fas fa-book"></i> Léxico
+              <i class="aisc-ico aisc-ico--book"></i> Léxico
             </button>
             <button type="button" class="dev-scope-btn" data-tab="orphans">
-              <i class="fas fa-fire"></i> Temas huérfanos
+              <i class="aisc-ico aisc-ico--fire"></i> Temas huérfanos
             </button>
           </div>
         </div>
@@ -60,20 +60,20 @@ class DevLeadLexiconView extends DevBaseView {
           <div class="dev-flows-toolbar">
             <div class="dev-flows-filters" id="lexStatusFilters">
               <button class="dev-filter-btn active" data-status="proposed">
-                <i class="fas fa-clock"></i> Propuestos <span class="lex-count" id="lexCountProposed">0</span>
+                <i class="aisc-ico aisc-ico--clock"></i> Propuestos <span class="lex-count" id="lexCountProposed">0</span>
               </button>
               <button class="dev-filter-btn" data-status="approved">
-                <i class="fas fa-check"></i> Aprobados <span class="lex-count" id="lexCountApproved">0</span>
+                <i class="aisc-ico aisc-ico--check"></i> Aprobados <span class="lex-count" id="lexCountApproved">0</span>
               </button>
               <button class="dev-filter-btn" data-status="rejected">
-                <i class="fas fa-times"></i> Rechazados <span class="lex-count" id="lexCountRejected">0</span>
+                <i class="aisc-ico aisc-ico--close"></i> Rechazados <span class="lex-count" id="lexCountRejected">0</span>
               </button>
               <button class="dev-filter-btn" data-status="all">
-                <i class="fas fa-border-all"></i> Todos
+                <i class="aisc-ico aisc-ico--grid"></i> Todos
               </button>
             </div>
             <div class="dev-flows-search">
-              <i class="fas fa-search"></i>
+              <i class="aisc-ico aisc-ico--search"></i>
               <input type="text" id="lexSearchInput" placeholder="Buscar palabra o dimensión...">
             </div>
           </div>
@@ -94,7 +94,7 @@ class DevLeadLexiconView extends DevBaseView {
               <tbody id="lexBody"></tbody>
             </table>
             <div class="dev-lead-empty" id="lexEmpty" hidden>
-              <i class="fas fa-book"></i>
+              <i class="aisc-ico aisc-ico--book"></i>
               <p>No hay palabras en este estado.</p>
             </div>
           </div>
@@ -115,7 +115,7 @@ class DevLeadLexiconView extends DevBaseView {
               <tbody id="orphanBody"></tbody>
             </table>
             <div class="dev-lead-empty" id="orphanEmpty" hidden>
-              <i class="fas fa-fire"></i>
+              <i class="aisc-ico aisc-ico--fire"></i>
               <p>No hay temas huérfanos.</p>
             </div>
           </div>
@@ -242,11 +242,11 @@ class DevLeadLexiconView extends DevBaseView {
     tbody.innerHTML = rows.map(w => {
       const conf = (w.detection_confidence != null) ? Number(w.detection_confidence).toFixed(2) : '—';
       const actions = (w.status === 'proposed')
-        ? `<button type="button" class="btn-icon lex-approve" title="Aprobar" data-id="${w.id}"><i class="fas fa-check"></i></button>
-           <button type="button" class="btn-icon lex-reject" title="Rechazar" data-id="${w.id}"><i class="fas fa-times"></i></button>`
+        ? `<button type="button" class="btn-icon lex-approve" title="Aprobar" data-id="${w.id}"><i class="aisc-ico aisc-ico--check"></i></button>
+           <button type="button" class="btn-icon lex-reject" title="Rechazar" data-id="${w.id}"><i class="aisc-ico aisc-ico--close"></i></button>`
         : (w.status === 'approved'
-            ? `<button type="button" class="btn-icon lex-reject" title="Rechazar" data-id="${w.id}"><i class="fas fa-times"></i></button>`
-            : `<button type="button" class="btn-icon lex-approve" title="Aprobar" data-id="${w.id}"><i class="fas fa-check"></i></button>`);
+            ? `<button type="button" class="btn-icon lex-reject" title="Rechazar" data-id="${w.id}"><i class="aisc-ico aisc-ico--close"></i></button>`
+            : `<button type="button" class="btn-icon lex-approve" title="Aprobar" data-id="${w.id}"><i class="aisc-ico aisc-ico--check"></i></button>`);
       return `
         <tr data-id="${w.id}">
           <td><strong>${this.escapeHtml(w.word || '—')}</strong></td>

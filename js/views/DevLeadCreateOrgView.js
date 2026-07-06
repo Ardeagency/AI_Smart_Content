@@ -164,8 +164,8 @@ class DevLeadCreateOrgView extends DevBaseView {
   // Footer Back + (Crear si es el ultimo paso, si no Siguiente).
   _footerButtons() {
     const main = this._isLastStep()
-      ? `<button type="button" class="createorg-submit-btn" data-action="create"><i class="fas fa-check"></i> Crear organizacion</button>`
-      : `<button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente"><i class="fas fa-arrow-right"></i></button>`;
+      ? `<button type="button" class="createorg-submit-btn" data-action="create"><i class="aisc-ico aisc-ico--check"></i> Crear organizacion</button>`
+      : `<button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente"><i class="aisc-ico aisc-ico--arrow-right"></i></button>`;
     return `<button type="button" class="provision-back-btn" data-action="back">Back</button>${main}`;
   }
 
@@ -257,11 +257,11 @@ class DevLeadCreateOrgView extends DevBaseView {
           if (i < idx) state = 'is-done';
           else if (i === idx) state = 'is-current';
           else state = 'is-pending';
-          const marker = (state === 'is-done') ? '<i class="fas fa-check"></i>' : String(i + 1);
+          const marker = (state === 'is-done') ? '<i class="aisc-ico aisc-ico--check"></i>' : String(i + 1);
           return `
             <li class="provision-progress-item ${state}" data-step="${s.key}">
               <span class="provision-progress-caret" aria-hidden="true">
-                <i class="fas fa-caret-down"></i>
+                <i class="aisc-ico aisc-ico--chevron-down"></i>
               </span>
               <span class="provision-progress-marker">${marker}</span>
               <span class="provision-progress-label">${this.escapeHtml(s.label)}</span>
@@ -315,7 +315,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       </section>
       <footer class="provision-page-actions">
         <button type="button" class="provision-back-btn" data-action="back">Back</button>
-        <button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente" ${this.creationMode ? '' : 'disabled'}><i class="fas fa-arrow-right"></i></button>
+        <button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente" ${this.creationMode ? '' : 'disabled'}><i class="aisc-ico aisc-ico--arrow-right"></i></button>
       </footer>
     `;
   }
@@ -366,7 +366,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       </section>
       <footer class="provision-page-actions">
         <button type="button" class="provision-back-btn" data-action="back">Back</button>
-        <button type="button" class="createorg-submit-btn" data-action="auto-create"><i class="fas fa-magic-wand-sparkles"></i> Crear y analizar</button>
+        <button type="button" class="createorg-submit-btn" data-action="auto-create"><i class="aisc-ico aisc-ico--sparkle"></i> Crear y analizar</button>
       </footer>
     `;
   }
@@ -385,7 +385,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       const comp = prog.competitors || {};
       const head = ap.logo
         ? `<img src="${this.escapeHtml(ap.logo)}" alt="logo" class="createorg-done-logo" onerror="this.style.display='none'">`
-        : `<span class="provision-verify-icon provision-verify-icon--success"><i class="fas fa-check"></i></span>`;
+        : `<span class="provision-verify-icon provision-verify-icon--success"><i class="aisc-ico aisc-ico--check"></i></span>`;
       return `
         <section class="provision-verify-card provision-final-card">
           ${head}
@@ -394,12 +394,12 @@ class DevLeadCreateOrgView extends DevBaseView {
           <p class="provision-verify-meta">
             ${ap.logo ? 'logo · ' : ''}${ap.colors != null ? `${ap.colors} colores · ` : ''}${ap.fonts != null ? `${ap.fonts} tipografias · ` : ''}${ap.pillars != null ? `${ap.pillars} pilares` : ''} guardados.
           </p>
-          ${comp.seeded ? `<p class="provision-verify-meta"><i class="fas fa-crosshairs"></i> ${comp.competitors || 0} competidores · ${comp.watchers || 0} sitios en monitoreo</p>` : ''}
+          ${comp.seeded ? `<p class="provision-verify-meta"><i class="aisc-ico aisc-ico--goal"></i> ${comp.competitors || 0} competidores · ${comp.watchers || 0} sitios en monitoreo</p>` : ''}
           ${this._autoIntegrationsBlock()}
         </section>
         <footer class="provision-page-actions">
           <button type="button" class="provision-back-btn" data-action="auto-reset">Crear otra</button>
-          <button type="button" class="createorg-submit-btn" data-action="auto-goto-orgs"><i class="fas fa-arrow-right"></i> Ver organizaciones</button>
+          <button type="button" class="createorg-submit-btn" data-action="auto-goto-orgs"><i class="aisc-ico aisc-ico--arrow-right"></i> Ver organizaciones</button>
         </footer>
       `;
     }
@@ -407,14 +407,14 @@ class DevLeadCreateOrgView extends DevBaseView {
     if (this.autoPhase === 'error') {
       return `
         <section class="provision-verify-card">
-          <span class="provision-verify-icon" style="color:#ef6b6b"><i class="fas fa-triangle-exclamation"></i></span>
+          <span class="provision-verify-icon" style="color:#ef6b6b"><i class="aisc-ico aisc-ico--alert-warning"></i></span>
           <h2>Algo fallo en el analisis</h2>
           <p class="provision-verify-status">${this.escapeHtml(this.autoError || 'Error desconocido')}</p>
           <p class="provision-verify-meta">${this.autoOrgId ? 'El shell de la org si se creo — puedes verla en Organizaciones y reintentar el analisis luego.' : ''}</p>
         </section>
         <footer class="provision-page-actions">
           <button type="button" class="provision-back-btn" data-action="auto-reset">Volver</button>
-          ${this.autoOrgId ? '<button type="button" class="createorg-submit-btn" data-action="auto-goto-orgs"><i class="fas fa-arrow-right"></i> Ver organizaciones</button>' : ''}
+          ${this.autoOrgId ? '<button type="button" class="createorg-submit-btn" data-action="auto-goto-orgs"><i class="aisc-ico aisc-ico--arrow-right"></i> Ver organizaciones</button>' : ''}
         </footer>
       `;
     }
@@ -434,8 +434,8 @@ class DevLeadCreateOrgView extends DevBaseView {
     const items = steps.map((s, i) => {
       const prevDone = i === 0 ? 0 : steps[i - 1].done;
       const state = rank >= s.done ? 'done' : (rank >= prevDone ? 'active' : 'pending');
-      const mark = state === 'done' ? '<i class="fas fa-check"></i>'
-        : state === 'active' ? '<i class="fas fa-circle-notch fa-spin"></i>'
+      const mark = state === 'done' ? '<i class="aisc-ico aisc-ico--check"></i>'
+        : state === 'active' ? '<i class="aisc-ico fa-spin aisc-ico--loader"></i>'
         : '<span class="createorg-load-dot"></span>';
       return `<li class="createorg-load-item is-${state}"><span class="createorg-load-mark">${mark}</span><span>${this.escapeHtml(s.label)}</span></li>`;
     }).join('');
@@ -538,8 +538,8 @@ class DevLeadCreateOrgView extends DevBaseView {
               <input type="file" id="orgLogoFile" accept="image/*" hidden>
               ${f.logo_preview
                 ? `<img src="${this.escapeHtml(f.logo_preview)}" alt="Logo" class="createorg-logo-img">
-                   <button type="button" class="createorg-logo-remove" data-action="logo-remove" aria-label="Quitar logo"><i class="fas fa-times"></i></button>`
-                : `<span class="createorg-logo-placeholder"><i class="fas fa-camera"></i></span>`}
+                   <button type="button" class="createorg-logo-remove" data-action="logo-remove" aria-label="Quitar logo"><i class="aisc-ico aisc-ico--close"></i></button>`
+                : `<span class="createorg-logo-placeholder"><i class="aisc-ico aisc-ico--camera"></i></span>`}
             </label>
             <span class="createorg-logo-caption">
               ${f.logo_file
@@ -567,7 +567,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       <footer class="provision-page-actions">
         <button type="button" class="provision-back-btn" data-action="back">Back</button>
         <button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente">
-          <i class="fas fa-arrow-right"></i>
+          <i class="aisc-ico aisc-ico--arrow-right"></i>
         </button>
       </footer>
     `;
@@ -604,7 +604,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       <footer class="provision-page-actions">
         <button type="button" class="provision-back-btn" data-action="back">Back</button>
         <button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente">
-          <i class="fas fa-arrow-right"></i>
+          <i class="aisc-ico aisc-ico--arrow-right"></i>
         </button>
       </footer>
     `;
@@ -617,7 +617,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     if (!m) {
       return `
         <div class="createorg-method-empty">
-          <i class="fas fa-arrow-up"></i>
+          <i class="aisc-ico aisc-ico--arrow-up"></i>
           Elige un metodo arriba para continuar.
         </div>
       `;
@@ -655,7 +655,7 @@ class DevLeadCreateOrgView extends DevBaseView {
 
     return `
       <div class="createorg-scrape-progress">
-        <div class="createorg-scrape-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
+        <div class="createorg-scrape-spinner"><i class="aisc-ico fa-spin aisc-ico--loader"></i></div>
         <strong class="createorg-scrape-stage">${this.escapeHtml(stageText)}</strong>
         <div class="createorg-scrape-bar"><span style="width:${cur.pct}%"></span></div>
         ${detailLines.map((l) => `<small>${this.escapeHtml(l)}</small>`).join('')}
@@ -667,7 +667,7 @@ class DevLeadCreateOrgView extends DevBaseView {
   renderScrapeError() {
     return `
       <div class="createorg-method-empty">
-        <i class="fas fa-triangle-exclamation" style="color:#ef4444"></i>
+        <i class="aisc-ico aisc-ico--alert-warning" style="color:#ef4444"></i>
         <strong>Error al analizar la fuente</strong>
         <small style="display:block;margin-top:4px">${this.escapeHtml(this.scrapeError || 'Error desconocido')}</small>
         <button type="button" class="provision-back-btn" style="margin-top:12px" data-action="scrape-reset">Reintentar</button>
@@ -707,7 +707,7 @@ class DevLeadCreateOrgView extends DevBaseView {
           <small>Codigos ISO de pais separados por coma.</small>
         </div>
         <p class="createorg-method-hint createorg-field-full" style="margin-top:6px">
-          <i class="fas fa-circle-info"></i>
+          <i class="aisc-ico aisc-ico--alert-info"></i>
           En el siguiente paso configuras todos los detalles de la marca (colores, tipografia, tono, temas, palabras).
         </p>
       </form>
@@ -717,7 +717,7 @@ class DevLeadCreateOrgView extends DevBaseView {
   renderStepBrand() {
     const f = this.form;
     const isScraped = this.scraped_brand;
-    const detectedBadge = '<span class="createorg-detected-badge" title="Detectado por el scraper"><i class="fas fa-magic-wand-sparkles"></i> auto</span>';
+    const detectedBadge = '<span class="createorg-detected-badge" title="Detectado por el scraper"><i class="aisc-ico aisc-ico--sparkle"></i> auto</span>';
     return `
       <section class="provision-form-card createorg-card-wide">
         <header class="provision-form-head">
@@ -801,7 +801,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       <footer class="provision-page-actions">
         <button type="button" class="provision-back-btn" data-action="back">Back</button>
         <button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente">
-          <i class="fas fa-arrow-right"></i>
+          <i class="aisc-ico aisc-ico--arrow-right"></i>
         </button>
       </footer>
     `;
@@ -817,7 +817,7 @@ class DevLeadCreateOrgView extends DevBaseView {
           <small>Vera escrapeara para inferir descripcion, tono, paleta y mas. Sitio web, Instagram, LinkedIn — funciona con cualquiera de esos.</small>
         </div>
         <div class="createorg-method-hint createorg-field-full">
-          <i class="fas fa-magic-wand-sparkles"></i>
+          <i class="aisc-ico aisc-ico--sparkle"></i>
           Auto-fill del scraper pendiente de implementacion. Por ahora solo guardamos la URL.
         </div>
       </form>
@@ -831,14 +831,14 @@ class DevLeadCreateOrgView extends DevBaseView {
           <label>Documentacion oficial</label>
           <label class="createorg-dropzone" for="orgBrandDocs">
             <input type="file" id="orgBrandDocs" multiple accept="application/pdf,image/*,.doc,.docx,.ppt,.pptx" hidden>
-            <i class="fas fa-cloud-upload-alt"></i>
+            <i class="aisc-ico aisc-ico--upload"></i>
             <strong>Adjuntar archivos</strong>
             <small>Brief, brandbook, presentaciones. PDF · DOCX · PPT · imagenes</small>
           </label>
           <ul class="createorg-files-list" id="orgFilesList"></ul>
         </div>
         <div class="createorg-method-hint createorg-field-full">
-          <i class="fas fa-magic-wand-sparkles"></i>
+          <i class="aisc-ico aisc-ico--sparkle"></i>
           Auto-fill del scraper pendiente. Por ahora guardamos los archivos para procesarlos despues.
         </div>
       </form>
@@ -884,7 +884,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       <footer class="provision-page-actions">
         <button type="button" class="provision-back-btn" data-action="back">Back</button>
         <button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente">
-          <i class="fas fa-arrow-right"></i>
+          <i class="aisc-ico aisc-ico--arrow-right"></i>
         </button>
       </footer>
     `;
@@ -1303,8 +1303,8 @@ class DevLeadCreateOrgView extends DevBaseView {
     const f = this.form;
     const circleHTML = f.logo_preview
       ? `<img src="${this.escapeHtml(f.logo_preview)}" alt="Logo" class="createorg-logo-img">
-         <button type="button" class="createorg-logo-remove" data-action="logo-remove" aria-label="Quitar logo"><i class="fas fa-times"></i></button>`
-      : `<span class="createorg-logo-placeholder"><i class="fas fa-camera"></i></span>`;
+         <button type="button" class="createorg-logo-remove" data-action="logo-remove" aria-label="Quitar logo"><i class="aisc-ico aisc-ico--close"></i></button>`
+      : `<span class="createorg-logo-placeholder"><i class="aisc-ico aisc-ico--camera"></i></span>`;
     const circle = wrap.querySelector('#orgLogoCircle');
     if (circle) {
       // Mantener el input file vivo, solo cambiar el contenido visual
@@ -1346,11 +1346,11 @@ class DevLeadCreateOrgView extends DevBaseView {
     }
     list.innerHTML = this.form.brand_docs.map((f, i) => `
       <li class="createorg-file-item">
-        <i class="fas fa-file"></i>
+        <i class="aisc-ico aisc-ico--document"></i>
         <span class="createorg-file-name">${this.escapeHtml(f.name)}</span>
         <span class="createorg-file-size">${this.formatSize(f.size)}</span>
         <button type="button" class="createorg-file-remove" data-remove="${i}" aria-label="Quitar">
-          <i class="fas fa-times"></i>
+          <i class="aisc-ico aisc-ico--close"></i>
         </button>
       </li>
     `).join('');
@@ -1542,7 +1542,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     this._creating = true;
     this.setStatus('', '');
     const btn = this.container.querySelector('[data-action="create"]');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="aisc-ico fa-spin aisc-ico--loader"></i> Creando...'; }
 
     // Logo: solo si ya es una URL publica. El archivo subido (data URL) se
     // gestiona luego desde Brand para no inflar la fila.
@@ -1595,7 +1595,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       else window.location.href = dest;
     } catch (err) {
       this._creating = false;
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Crear organizacion'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="aisc-ico aisc-ico--check"></i> Crear organizacion'; }
       this.setStatus(err?.message || 'Error al crear la organizacion.', 'error');
     }
   }
@@ -1693,7 +1693,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     const supported = sel.filter((p) => this.AUTO_INTG_ENDPOINTS[p]);
     const unsupported = sel.filter((p) => !this.AUTO_INTG_ENDPOINTS[p]);
     const btns = supported.map((p) =>
-      `<button type="button" class="btn btn-secondary btn-sm" data-connect-intg="${p}"><i class="fas fa-link"></i> Conectar ${this.escapeHtml(this.AUTO_INTG_LABELS[p] || p)}</button>`
+      `<button type="button" class="btn btn-secondary btn-sm" data-connect-intg="${p}"><i class="aisc-ico aisc-ico--link"></i> Conectar ${this.escapeHtml(this.AUTO_INTG_LABELS[p] || p)}</button>`
     ).join('');
     const note = unsupported.length
       ? `<p class="provision-verify-meta" style="margin-top:6px">${unsupported.map((p) => this.escapeHtml(this.AUTO_INTG_LABELS[p] || p)).join(', ')}: conexion proximamente.</p>`
@@ -1749,16 +1749,16 @@ class DevLeadCreateOrgView extends DevBaseView {
     const url = this.escapeHtml(this.form.brand_url || 'tu sitio');
     return `
       <section class="provision-verify-card">
-        <span class="provision-verify-icon" style="color:#e0b250"><i class="fas fa-triangle-exclamation"></i></span>
+        <span class="provision-verify-icon" style="color:#e0b250"><i class="aisc-ico aisc-ico--alert-warning"></i></span>
         <h2>No pudimos obtener tu marca</h2>
         <p>La plataforma de <strong>${url}</strong> no permitio analizar el contenido automaticamente (algunos sitios bloquean el analisis). La organizacion ya se creo — puedes continuar de dos formas:</p>
         <div class="createorg-fallback-opts">
           <button type="button" class="createorg-fallback-opt" data-action="fallback-integrations">
-            <i class="fas fa-plug"></i>
+            <i class="aisc-ico aisc-ico--plug"></i>
             <span><strong>Conectar integraciones</strong><small>Importa tus productos desde tu tienda (Shopify, Mercado Libre)</small></span>
           </button>
           <button type="button" class="createorg-fallback-opt" data-action="fallback-manual">
-            <i class="fas fa-pen-to-square"></i>
+            <i class="aisc-ico aisc-ico--edit"></i>
             <span><strong>Llenar todo manualmente</strong><small>Defines identidad, ADN, colores y demas a mano</small></span>
           </button>
         </div>
@@ -1894,7 +1894,7 @@ class DevLeadCreateOrgView extends DevBaseView {
   _apPlan() {
     const plans = this.approval.plansList;
     if (plans === null) {
-      return '<div class="createorg-field-full" style="text-align:center;padding:24px"><i class="fas fa-circle-notch fa-spin"></i> Cargando planes...</div>';
+      return '<div class="createorg-field-full" style="text-align:center;padding:24px"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando planes...</div>';
     }
     const sel = this.approval.planId || '';
     const card = (id, name, price, credits, popular) => `
@@ -1999,8 +1999,8 @@ class DevLeadCreateOrgView extends DevBaseView {
           ? '<button type="button" class="provision-back-btn" data-action="ap-back">Back</button>'
           : '<button type="button" class="provision-back-btn" data-action="auto-goto-orgs">Salir</button>'}
         ${isLast
-          ? '<button type="button" class="provision-back-btn" data-action="auto-goto-orgs">Organizaciones</button><button type="button" class="createorg-submit-btn" data-action="ap-open"><i class="fas fa-eye"></i> Abrir la org</button>'
-          : '<button type="button" class="createorg-submit-btn" data-action="ap-next">Aceptar y seguir <i class="fas fa-arrow-right"></i></button>'}
+          ? '<button type="button" class="provision-back-btn" data-action="auto-goto-orgs">Organizaciones</button><button type="button" class="createorg-submit-btn" data-action="ap-open"><i class="aisc-ico aisc-ico--eye"></i> Abrir la org</button>'
+          : '<button type="button" class="createorg-submit-btn" data-action="ap-next">Aceptar y seguir <i class="aisc-ico aisc-ico--arrow-right"></i></button>'}
       </footer>
     `;
   }
@@ -2035,7 +2035,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       + this.TONES.map((t) => `<option value="${t.v}" ${a.tono_de_voz === t.v ? 'selected' : ''}>${this.escapeHtml(t.label)}</option>`).join('');
     return `
       <div class="provision-field createorg-field-full"><label for="apTono">Tono de voz</label><select id="apTono" class="form-control">${toneOpts}</select></div>
-      ${a.como_comunica ? `<div class="createorg-field-full createorg-insight"><span class="createorg-insight-tag"><i class="fas fa-eye"></i> Cómo comunica (visión)</span><p>${this.escapeHtml(a.como_comunica)}</p></div>` : ''}
+      ${a.como_comunica ? `<div class="createorg-field-full createorg-insight"><span class="createorg-insight-tag"><i class="aisc-ico aisc-ico--eye"></i> Cómo comunica (visión)</span><p>${this.escapeHtml(a.como_comunica)}</p></div>` : ''}
       ${this._ta('Propuesta de valor', 'apPropuesta', a.propuesta_valor)}
       ${this._ta('Mision / vision', 'apMision', a.mision_vision)}
       ${this._csv('Pilares', 'apPilares', a.pilares)}
@@ -2049,13 +2049,13 @@ class DevLeadCreateOrgView extends DevBaseView {
       <div class="createorg-color-row" data-color-idx="${i}">
         <input type="color" data-color-hex value="${this._hex6(c.hex_value)}">
         <span class="createorg-color-role">${this.escapeHtml(this._colorRole(i))}</span>
-        <button type="button" class="createorg-color-rm" data-color-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+        <button type="button" class="createorg-color-rm" data-color-rm="${i}" aria-label="Quitar"><i class="aisc-ico aisc-ico--close"></i></button>
       </div>`).join('');
     return `
       <div class="createorg-field-full">
         <label>Paleta de la marca</label>
         <div id="apColors">${rows || '<p class="cons-dim">Sin colores detectados.</p>'}</div>
-        <button type="button" class="btn btn-secondary btn-sm" data-action="ap-add-color"><i class="fas fa-plus"></i> Agregar color</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-action="ap-add-color"><i class="aisc-ico aisc-ico--add"></i> Agregar color</button>
       </div>
     `;
   }
@@ -2074,9 +2074,9 @@ class DevLeadCreateOrgView extends DevBaseView {
     }
     const rows = items.map((p, i) => `
       <div class="createorg-list-row" data-prod-idx="${i}">
-        ${p.image ? `<img src="${this.escapeHtml(p.image)}" class="createorg-list-thumb" onerror="this.outerHTML='<span class=&quot;createorg-list-thumb createorg-list-thumb--ph&quot;><i class=&quot;fas fa-box&quot;></i></span>'">` : '<span class="createorg-list-thumb createorg-list-thumb--ph"><i class="fas fa-box"></i></span>'}
+        ${p.image ? `<img src="${this.escapeHtml(p.image)}" class="createorg-list-thumb" onerror="this.outerHTML='<span class=&quot;createorg-list-thumb createorg-list-thumb--ph&quot;><i class=&quot;fas fa-box&quot;></i></span>'">` : '<span class="createorg-list-thumb createorg-list-thumb--ph"><i class="aisc-ico aisc-ico--product"></i></span>'}
         <input type="text" class="form-control" data-prod-name value="${this.escapeHtml(p.name || '')}" placeholder="Nombre del producto">
-        <button type="button" class="createorg-color-rm" data-prod-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+        <button type="button" class="createorg-color-rm" data-prod-rm="${i}" aria-label="Quitar"><i class="aisc-ico aisc-ico--close"></i></button>
       </div>`).join('');
     return `<div class="createorg-field-full"><label>Productos (${items.length}) — al avanzar se guardan</label><div id="apProducts">${rows}</div></div>`;
   }
@@ -2090,7 +2090,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       <div class="createorg-list-row" data-svc-idx="${i}">
         <span class="createorg-list-thumb createorg-list-thumb--ph"><i class="fas fa-concierge-bell"></i></span>
         <input type="text" class="form-control" data-svc-name value="${this.escapeHtml(s.name || '')}" placeholder="Nombre del servicio">
-        <button type="button" class="createorg-color-rm" data-svc-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+        <button type="button" class="createorg-color-rm" data-svc-rm="${i}" aria-label="Quitar"><i class="aisc-ico aisc-ico--close"></i></button>
       </div>`).join('');
     return `<div class="createorg-field-full"><label>Servicios (${items.length}) — al avanzar se guardan y enriquecen con IA</label><div id="apServices">${rows}</div></div>`;
   }
@@ -2098,19 +2098,19 @@ class DevLeadCreateOrgView extends DevBaseView {
   _apCompetitors() {
     const comps = this.approval.competitors;
     if (comps === null) {
-      return '<div class="createorg-field-full" style="text-align:center;padding:24px"><i class="fas fa-circle-notch fa-spin"></i> Cargando competencia...</div>';
+      return '<div class="createorg-field-full" style="text-align:center;padding:24px"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando competencia...</div>';
     }
     const rows = (comps || []).map((c, i) => `
       <div class="createorg-comp-row" data-comp-idx="${i}">
         <input type="text" class="form-control" data-comp-name value="${this.escapeHtml(c.name || '')}" placeholder="Nombre">
         <input type="text" class="form-control" data-comp-web value="${this.escapeHtml(c.website || '')}" placeholder="sitio web (opcional)">
-        <button type="button" class="createorg-color-rm" data-comp-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+        <button type="button" class="createorg-color-rm" data-comp-rm="${i}" aria-label="Quitar"><i class="aisc-ico aisc-ico--close"></i></button>
       </div>`).join('');
     return `
       <div class="createorg-field-full">
         <label>Competidores (${(comps || []).length}) — se monitorea su sitio</label>
         <div id="apComps">${rows || '<p class="cons-dim">Sin competidores. Agrega los que conozcas.</p>'}</div>
-        <button type="button" class="btn btn-secondary btn-sm" data-action="ap-add-comp"><i class="fas fa-plus"></i> Agregar competidor</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-action="ap-add-comp"><i class="aisc-ico aisc-ico--add"></i> Agregar competidor</button>
       </div>
     `;
   }
@@ -2118,13 +2118,13 @@ class DevLeadCreateOrgView extends DevBaseView {
   _apVera() {
     const st = this.approval.veraStatus;
     if (st === 'done') {
-      return `<div class="createorg-field-full"><div class="createorg-insight"><span class="createorg-insight-tag"><i class="fas fa-robot"></i> Vera en camino</span><p>El agente se esta provisionando (VM dedicada, ~3-5 min). Cuando este healthy podra automatizar contenido, estrategia y monitoreo de la marca.</p></div></div>`;
+      return `<div class="createorg-field-full"><div class="createorg-insight"><span class="createorg-insight-tag"><i class="aisc-ico aisc-ico--bot"></i> Vera en camino</span><p>El agente se esta provisionando (VM dedicada, ~3-5 min). Cuando este healthy podra automatizar contenido, estrategia y monitoreo de la marca.</p></div></div>`;
     }
     return `
       <div class="createorg-field-full">
         <p class="provision-verify-meta">Crea el equipo de IA <strong>Vera</strong> para automatizar contenido, estrategia y monitoreo de esta marca.</p>
         <button type="button" class="createorg-submit-btn" data-action="vera-provision" ${st === 'provisioning' ? 'disabled' : ''}>
-          ${st === 'provisioning' ? '<i class="fas fa-spinner fa-spin"></i> Provisionando...' : '<i class="fas fa-robot"></i> Crear agente de Vera'}
+          ${st === 'provisioning' ? '<i class="aisc-ico fa-spin aisc-ico--loader"></i> Provisionando...' : '<i class="aisc-ico aisc-ico--bot"></i> Crear agente de Vera'}
         </button>
         ${this.approval.veraError ? `<p class="provision-form-status is-error">${this.escapeHtml(this.approval.veraError)}</p>` : ''}
         <small class="form-hint" style="display:block;margin-top:8px">⚠️ Levanta una VM dedicada de pago + API key Anthropic. Opcional — puedes crearla luego desde Organizaciones. Avanza para omitir.</small>
@@ -2135,7 +2135,7 @@ class DevLeadCreateOrgView extends DevBaseView {
   _apOwner() {
     const consumers = this.approval.ownerConsumers;
     if (consumers === null) {
-      return '<div class="createorg-field-full" style="text-align:center;padding:24px"><i class="fas fa-circle-notch fa-spin"></i> Cargando usuarios...</div>';
+      return '<div class="createorg-field-full" style="text-align:center;padding:24px"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando usuarios...</div>';
     }
     const a = this.approval;
     const ownerOpts = '<option value="">— A mi nombre (dev) por ahora —</option>' +
@@ -2147,7 +2147,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       return `<div class="createorg-member-row" data-member-idx="${i}">
         <select class="form-control" data-member-user>${userOpts}</select>
         <select class="form-control createorg-member-role" data-member-role>${roleOpts}</select>
-        <button type="button" class="createorg-color-rm" data-member-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+        <button type="button" class="createorg-color-rm" data-member-rm="${i}" aria-label="Quitar"><i class="aisc-ico aisc-ico--close"></i></button>
       </div>`;
     }).join('');
     return `
@@ -2155,7 +2155,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       <div class="createorg-field-full">
         <label>Miembros (opcional)</label>
         <div id="apMembers">${memberRows}</div>
-        ${consumers.length ? '<button type="button" class="btn btn-secondary btn-sm" data-action="owner-add-member"><i class="fas fa-plus"></i> Agregar miembro</button>' : '<p class="cons-dim">Aun no hay usuarios consumidores para afiliar.</p>'}
+        ${consumers.length ? '<button type="button" class="btn btn-secondary btn-sm" data-action="owner-add-member"><i class="aisc-ico aisc-ico--add"></i> Agregar miembro</button>' : '<p class="cons-dim">Aun no hay usuarios consumidores para afiliar.</p>'}
       </div>
     `;
   }
@@ -2173,7 +2173,7 @@ class DevLeadCreateOrgView extends DevBaseView {
           <li><b>Productos detectados:</b> ${(a.products_detected || []).length} · <b>Servicios:</b> ${(a.services_detected || []).length}</li>
           <li><b>Competencia:</b> ${a.competitors_count || 0} competidores · <b>Monitoreo:</b> ${a.watchers_count || 0} sitios</li>
         </ul>
-        ${(a.products_detected || []).length ? `<div class="createorg-insight" style="margin-top:10px"><span class="createorg-insight-tag"><i class="fas fa-box"></i> Productos detectados</span><p>${this.escapeHtml((a.products_detected || []).slice(0, 8).map((p) => p.name).filter(Boolean).join(' · '))}</p></div>` : ''}
+        ${(a.products_detected || []).length ? `<div class="createorg-insight" style="margin-top:10px"><span class="createorg-insight-tag"><i class="aisc-ico aisc-ico--product"></i> Productos detectados</span><p>${this.escapeHtml((a.products_detected || []).slice(0, 8).map((p) => p.name).filter(Boolean).join(' · '))}</p></div>` : ''}
         ${this._autoIntegrationsBlock()}
       </div>
     `;
@@ -2259,7 +2259,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     this._collectApproval(key);
     this._approvalSaving = true;
     const btn = this.container.querySelector('[data-action="ap-next"]');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="aisc-ico fa-spin aisc-ico--loader"></i> Guardando...'; }
     try {
       await this._saveApprovalSection(key);
       this.approvalIdx++;

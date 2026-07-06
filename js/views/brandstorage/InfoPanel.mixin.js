@@ -160,7 +160,7 @@
           ? `href="${row.actionHref}" target="_blank" rel="noopener noreferrer"`
           : `href="${row.actionHref}" data-route="${row.actionHref}"`;
         const linkedIcon = row.connected
-          ? `<span class="info-connect-linked" title="${__('Conectado')}" aria-hidden="true"><i class="fas fa-link"></i></span>`
+          ? `<span class="info-connect-linked" title="${__('Conectado')}" aria-hidden="true"><i class="aisc-ico aisc-ico--link"></i></span>`
           : '';
         const hint = row.hint
           ? `<span class="info-connect-hint">${this.escapeHtml(row.hint)}</span>`
@@ -338,13 +338,13 @@
 
     const items = rows.slice(0, 8).map((row) => `
       <li class="info-asset-row">
-        <div class="info-asset-preview"><span class="info-asset-icon" aria-hidden="true"><i class="fas fa-cube"></i></span></div>
+        <div class="info-asset-preview"><span class="info-asset-icon" aria-hidden="true"><i class="aisc-ico aisc-ico--product"></i></span></div>
         <div class="info-asset-main">
           <input type="text" class="info-brand-textarea" data-entity-id="${this.escapeHtml(String(row.id || ''))}" data-entity-field="name" value="${this.escapeHtml(String(row.name || ''))}" placeholder="${__('Nombre entidad')}">
           <textarea class="info-brand-textarea" data-entity-id="${this.escapeHtml(String(row.id || ''))}" data-entity-field="description" rows="2" spellcheck="true" placeholder="${__('Descripción de entidad')}">${this.escapeHtml(String(row.description || ''))}</textarea>
           <span class="info-asset-meta">${this.escapeHtml(row.entity_type || __('Sin tipo'))}</span>
         </div>
-        <span class="info-connect-external" aria-hidden="true"><i class="fas fa-file-alt"></i></span>
+        <span class="info-connect-external" aria-hidden="true"><i class="aisc-ico aisc-ico--document"></i></span>
       </li>
     `).join('');
 
@@ -374,7 +374,7 @@
               <div class="info-logo-container">
                 ${logoUrl
                   ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview" loading="lazy" decoding="async">`
-                  : '<div class="info-logo-placeholder visible"><i class="fas fa-image"></i></div>'}
+                  : '<div class="info-logo-placeholder visible"><i class="aisc-ico aisc-ico--image"></i></div>'}
               </div>
             </div>
             <div class="brand-storage-info-summary">
@@ -421,7 +421,7 @@
     if (header) {
       const closeBtn = document.createElement('button');
       closeBtn.className = 'info-close-btn';
-      closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+      closeBtn.innerHTML = '<i class="aisc-ico aisc-ico--close"></i>';
       closeBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1387,7 +1387,7 @@
       if (!existingClose) {
         const closeBtn = document.createElement('button');
         closeBtn.className = 'info-close-btn';
-        closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        closeBtn.innerHTML = '<i class="aisc-ico aisc-ico--close"></i>';
         closeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           this.closeInfoPanel();
@@ -1610,7 +1610,7 @@
         type.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(fname);
       const thumb = isImg
         ? `<img src="${url}" alt="" class="info-asset-thumb" loading="lazy" width="40" height="40">`
-        : `<span class="info-asset-icon" aria-hidden="true"><i class="fas fa-file"></i></span>`;
+        : `<span class="info-asset-icon" aria-hidden="true"><i class="aisc-ico aisc-ico--document"></i></span>`;
       const sizeKb =
         a.file_size != null && Number.isFinite(Number(a.file_size))
           ? `<span class="info-asset-meta">${Math.max(1, Math.round(Number(a.file_size) / 1024))} KB</span>`
@@ -1622,7 +1622,7 @@
             <span class="info-asset-name">${name}</span>
             ${sizeKb}
           </div>
-          <a class="info-connect-external" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="${__('Abrir archivo')}"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+          <a class="info-connect-external" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="${__('Abrir archivo')}"><i class="aisc-ico aisc-ico--external-link" aria-hidden="true"></i></a>
         </li>`;
     }).join('');
     return `
@@ -1729,7 +1729,7 @@
           <input id="infoMarketingBudget" class="info-budget-amount" type="text" inputmode="numeric"
                  value="${total ? fmt(total) : ''}" placeholder="${__('Definir total')}"
                  aria-label="${__('Presupuesto total de marketing')}" />
-          <i class="fas fa-pen info-budget-pen" aria-hidden="true"></i>
+          <i class="aisc-ico info-budget-pen aisc-ico--edit" aria-hidden="true"></i>
         </div>
       </section>`;
     },

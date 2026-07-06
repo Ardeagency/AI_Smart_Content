@@ -68,7 +68,7 @@
           </div>
           ${r.change_summary ? `<p class="version-summary">${this.escapeHtml(r.change_summary)}</p>` : ''}
           <div class="version-actions">
-            <button type="button" class="btn-small btn-ghost btn-version-restore" data-rev-id="${this.escapeHtml(r.id)}"><i class="ph ph-arrow-counter-clockwise"></i> Restaurar</button>
+            <button type="button" class="btn-small btn-ghost btn-version-restore" data-rev-id="${this.escapeHtml(r.id)}"><i class="aisc-ico aisc-ico--refresh"></i> Restaurar</button>
           </div>
         </div>
       `).join('');

@@ -101,14 +101,14 @@ class DateRangePicker {
   html() {
     const hasRange = !!(this.from || this.to);
     const presets = DateRangePicker.PRESETS
-      .map((p) => `<button type="button" class="drp2-preset" data-drp-preset="${p.k}"><i class="fas fa-check drp2-preset-check" aria-hidden="true"></i><span>${p.label}</span></button>`)
+      .map((p) => `<button type="button" class="drp2-preset" data-drp-preset="${p.k}"><i class="aisc-ico drp2-preset-check aisc-ico--check" aria-hidden="true"></i><span>${p.label}</span></button>`)
       .join('');
     return `
       <div class="living-filter living-filter-date" data-drp>
         <label class="living-filter-label">${this.label}</label>
         <div class="living-date-trigger" data-drp-trigger role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
           <span class="living-date-value${hasRange ? ' has-range' : ''}" data-drp-value>${this._triggerLabel()}</span>
-          <i class="fas fa-calendar-alt living-date-icon" aria-hidden="true"></i>
+          <i class="aisc-ico living-date-icon aisc-ico--calendar" aria-hidden="true"></i>
         </div>
         <div class="living-date-dropdown drp2" data-drp-dropdown aria-hidden="true">
           <div class="drp2-presets" data-drp-presets>${presets}</div>
@@ -118,7 +118,7 @@ class DateRangePicker {
                 <input type="text" class="drp2-input" data-drp-input="from" placeholder="MM/DD/YYYY" inputmode="numeric" autocomplete="off" spellcheck="false" />
                 <div class="drp2-hint" aria-hidden="true"><b>MM</b> / DD / YYYY</div>
               </div>
-              <i class="fas fa-arrow-right drp2-arrow" aria-hidden="true"></i>
+              <i class="aisc-ico drp2-arrow aisc-ico--arrow-right" aria-hidden="true"></i>
               <div class="drp2-input-wrap">
                 <input type="text" class="drp2-input" data-drp-input="to" placeholder="MM/DD/YYYY" inputmode="numeric" autocomplete="off" spellcheck="false" />
                 <div class="drp2-hint" aria-hidden="true"><b>MM</b> / DD / YYYY</div>
@@ -126,9 +126,9 @@ class DateRangePicker {
             </div>
             <div class="drp2-cal">
               <div class="drp2-nav">
-                <button type="button" class="drp2-nav-btn" data-drp-prev aria-label="${__('Mes anterior')}"><i class="fas fa-chevron-left"></i></button>
+                <button type="button" class="drp2-nav-btn" data-drp-prev aria-label="${__('Mes anterior')}"><i class="aisc-ico aisc-ico--chevron-left"></i></button>
                 <span class="drp2-monthyear" data-drp-monthyear></span>
-                <button type="button" class="drp2-nav-btn" data-drp-next aria-label="${__('Mes siguiente')}"><i class="fas fa-chevron-right"></i></button>
+                <button type="button" class="drp2-nav-btn" data-drp-next aria-label="${__('Mes siguiente')}"><i class="aisc-ico aisc-ico--chevron-right"></i></button>
               </div>
               <div class="drp2-weekdays">
                 <span>${__('Do')}</span><span>${__('Lu')}</span><span>${__('Ma')}</span><span>${__('Mi')}</span><span>${__('Ju')}</span><span>${__('Vi')}</span><span>${__('Sá')}</span>

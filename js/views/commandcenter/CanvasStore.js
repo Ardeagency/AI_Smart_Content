@@ -1200,13 +1200,13 @@
     }
     const img  = r.imageUrl
       ? `<img src="${this.escapeHtml(r.imageUrl)}" alt="" loading="lazy" />`
-      : '<div class="cc-prem-placeholder"><i class="fas fa-image"></i></div>';
+      : '<div class="cc-prem-placeholder"><i class="aisc-ico aisc-ico--image"></i></div>';
     return `
     <div class="cc-node cc-node--identity cc-node--prem cc-node--prem-product" data-node-key="${n.key}" data-type="identity" data-identity-type="products" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
       <div class="cc-prem-toolbar" data-drag-handle>
         <span class="cc-prem-tag">PRODUCTO</span>
-        <button type="button" class="cc-prem-x cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-times"></i></button>
+        <button type="button" class="cc-prem-x cc-node-uncanvas" title="Quitar del canvas"><i class="aisc-ico aisc-ico--close"></i></button>
       </div>
       <div class="cc-prem-image">${img}</div>
       <div class="cc-prem-caption">
@@ -1245,7 +1245,7 @@
       <div class="cc-prem-toolbar" data-drag-handle>
         <span class="cc-prem-dot"></span>
         <span class="cc-prem-title">${this.escapeHtml(name)}</span>
-        <button type="button" class="cc-prem-x cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-times"></i></button>
+        <button type="button" class="cc-prem-x cc-node-uncanvas" title="Quitar del canvas"><i class="aisc-ico aisc-ico--close"></i></button>
       </div>
       <div class="cc-prem-inner">
         <div class="cc-prem-ports">
@@ -2187,7 +2187,7 @@
         const asetName = (aset.name && String(aset.name).trim()) || '';
         const asetTitle = asetName || `${fmt(aset.impr)} impresiones`;
         adsetDiv.innerHTML = `
-          <span class="cc-satellite-icon"><i class="fas fa-layer-group"></i></span>
+          <span class="cc-satellite-icon"><i class="aisc-ico aisc-ico--layers"></i></span>
           <div class="cc-satellite-text">
             <span class="cc-satellite-type">Conjunto de anuncios</span>
             <span class="cc-satellite-name" title="${this.escapeHtml(asetTitle)}">${this.escapeHtml(asetTitle)}</span>
@@ -2216,12 +2216,12 @@
           const headline = ad.title || ad.body || ad.copy || '';
           const adName = (ad.name && String(ad.name).trim()) || 'Sin nombre';
           adDiv.innerHTML = `
-            <div class="cc-satellite-thumb"><i class="fas fa-image"></i></div>
+            <div class="cc-satellite-thumb"><i class="aisc-ico aisc-ico--image"></i></div>
             <div class="cc-satellite-body">
               <span class="cc-satellite-type">Anuncio</span>
               <span class="cc-satellite-name" title="${this.escapeHtml(adName)}">${this.escapeHtml(adName)}</span>
               ${headline ? `<span class="cc-satellite-headline">${this.escapeHtml(headline)}</span>` : ''}
-              <span class="cc-satellite-cta"><i class="fas fa-arrow-up-right-from-square"></i>&nbsp;Mas info</span>
+              <span class="cc-satellite-cta"><i class="aisc-ico aisc-ico--external-link"></i>&nbsp;Mas info</span>
               <span class="cc-satellite-sub" style="margin-top:2px;">${fmt(ad.impr)} impr</span>
             </div>`;
           world.appendChild(adDiv);
@@ -2921,10 +2921,10 @@
           ${impactItems ? `<div class="cc-vera-impacts">${impactItems}</div>` : ''}
         </div>
         <div class="cc-vera-foot">
-          ${expiresLabel ? `<span class="cc-vera-expires" title="Tiempo restante"><i class="fas fa-clock"></i> ${expiresLabel}</span>` : '<span></span>'}
+          ${expiresLabel ? `<span class="cc-vera-expires" title="Tiempo restante"><i class="aisc-ico aisc-ico--clock"></i> ${expiresLabel}</span>` : '<span></span>'}
           <div class="cc-vera-actions">
-            <button type="button" class="cc-vera-btn cc-vera-btn--reject" data-vera-action="reject" data-vera-id="${this.escapeHtml(String(insight.id))}" title="Rechazar"><i class="fas fa-xmark"></i></button>
-            <button type="button" class="cc-vera-btn cc-vera-btn--approve" data-vera-action="approve" data-vera-id="${this.escapeHtml(String(insight.id))}" title="Aprobar"><i class="fas fa-check"></i> Aprobar</button>
+            <button type="button" class="cc-vera-btn cc-vera-btn--reject" data-vera-action="reject" data-vera-id="${this.escapeHtml(String(insight.id))}" title="Rechazar"><i class="aisc-ico aisc-ico--close"></i></button>
+            <button type="button" class="cc-vera-btn cc-vera-btn--approve" data-vera-action="approve" data-vera-id="${this.escapeHtml(String(insight.id))}" title="Aprobar"><i class="aisc-ico aisc-ico--check"></i> Aprobar</button>
           </div>
         </div>
       `;
@@ -4030,7 +4030,7 @@
             }
           }).catch(() => {});
         }
-        return '<div class="cc-nodo-sublist"><div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div></div>';
+        return '<div class="cc-nodo-sublist"><div class="cc-lib-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando…</div></div>';
       }
       instances = (cached || []).map((it) => ({ ...it, libType: libKey }));
       // Render especial: thumbnail + nombre + tipo. Aplica a productos y
@@ -4126,7 +4126,7 @@
         const cur = items.find((it) => it.id === drillId);
         if (!cur) { this._nodosDrillType = null; return this._libBodyHTML('nodos'); }
         const back = `<button type="button" class="cc-nodo-back" data-nodo-back>
-          <i class="fas fa-arrow-left"></i>
+          <i class="aisc-ico aisc-ico--arrow-left"></i>
           <span>${this.escapeHtml(cur.name)}</span>
         </button>`;
         return back + this._nodosInstancesHTML(cur);
@@ -4207,7 +4207,7 @@
 
       if (external.length === 0) {
         return header + `<div class="cc-dash-empty">
-          <i class="fas fa-check-circle"></i>
+          <i class="aisc-ico aisc-ico--check"></i>
           <p>Sin acciones pendientes.</p>
           <p class="cc-dash-soon">Vera te avisa solo si necesita aprobacion para publicar, pausar o lanzar algo fuera de la plataforma.</p>
         </div>`;
@@ -4247,8 +4247,8 @@
           <div class="cc-dash-card-foot">
             <span class="cc-dash-meta">${this.escapeHtml(created)}${expiresLabel ? ` · ${this.escapeHtml(expiresLabel)}` : ''}</span>
             <div class="cc-dash-actions">
-              <button type="button" class="cc-dash-btn cc-dash-btn--reject" data-vera-action="reject" data-vera-id="${this.escapeHtml(String(it.id))}"><i class="fas fa-xmark"></i> Descartar</button>
-              <button type="button" class="cc-dash-btn cc-dash-btn--approve" data-vera-action="approve" data-vera-id="${this.escapeHtml(String(it.id))}"><i class="fas fa-check"></i> Aprobar</button>
+              <button type="button" class="cc-dash-btn cc-dash-btn--reject" data-vera-action="reject" data-vera-id="${this.escapeHtml(String(it.id))}"><i class="aisc-ico aisc-ico--close"></i> Descartar</button>
+              <button type="button" class="cc-dash-btn cc-dash-btn--approve" data-vera-action="approve" data-vera-id="${this.escapeHtml(String(it.id))}"><i class="aisc-ico aisc-ico--check"></i> Aprobar</button>
             </div>
           </div>
         </div>`;
@@ -4540,7 +4540,7 @@
         <i class="fas ${this.escapeHtml(s.icon || 'fa-diagram-project')} cc-strategy-item-ic"></i>
         <span class="cc-strategy-item-name">${this.escapeHtml(s.name)}</span>
         ${s.is_default ? `<span class="cc-strategy-item-sub">${__('default')}</span>` : ''}
-        ${isActive ? '<i class="fas fa-check cc-strategy-check"></i>' : ''}
+        ${isActive ? '<i class="aisc-ico cc-strategy-check aisc-ico--check"></i>' : ''}
       </button>`;
     }).join('');
     const empty = items.length ? '' : `<div class="cc-strat-empty">${__('Sin estrategias todavia.')}</div>`;
@@ -4803,7 +4803,7 @@
     const escId = this.escapeHtml(String(n.id));
     return `<div class="cc-node cc-node--sticky" data-node-key="${this.escapeHtml(n.key)}" data-type="sticky" data-id="${escId}" style="left:${pos.x}px;top:${pos.y}px;width:${w}px;height:${h}px;">
       <div class="cc-sticky-head" data-drag-handle>
-        <i class="fas fa-note-sticky"></i>
+        <i class="aisc-ico aisc-ico--brief"></i>
         <span>Nota</span>
       </div>
       <textarea class="cc-sticky-body" data-cc-sticky-content="${escId}" placeholder="Escribe una nota...">${this.escapeHtml(content)}</textarea>
@@ -5003,7 +5003,7 @@
     const escId = this.escapeHtml(String(n.id));
     return `<div class="cc-node cc-node--group cc-group--${color}" data-node-key="${this.escapeHtml(n.key)}" data-type="group" data-id="${escId}" style="left:${pos.x}px;top:${pos.y}px;width:${w}px;height:${h}px;">
       <div class="cc-group-head" data-drag-handle>
-        <i class="fas fa-object-group"></i>
+        <i class="aisc-ico aisc-ico--layers"></i>
         <input type="text" class="cc-group-title" data-cc-group-title="${escId}" placeholder="Sin titulo" value="${this.escapeHtml(title)}" autocomplete="off" spellcheck="false" />
       </div>
       <div class="cc-group-area"></div>
@@ -5444,11 +5444,11 @@
   // ── Inspector: audiencia (form completo editable) ────────────────────
   P._inspectorAudience = function (id) {
     const a = (this._audiences || []).find((x) => String(x.id) === String(id));
-    if (!a) return { title: '<i class="fas fa-users"></i> Audiencia', body: '<div class="cc-insp-empty">No encontrada.</div>' };
+    if (!a) return { title: '<i class="aisc-ico aisc-ico--audience"></i> Audiencia', body: '<div class="cc-insp-empty">No encontrada.</div>' };
     const eid = this.escapeHtml(String(id));
     const liked = !!a.is_liked, featured = !!a.is_featured, off = a.is_active === false;
     return {
-      title: `<i class="fas fa-users"></i> ${this.escapeHtml(a.name || 'Objetivo de Audiencia')}`,
+      title: `<i class="aisc-ico aisc-ico--audience"></i> ${this.escapeHtml(a.name || 'Objetivo de Audiencia')}`,
       body: `
         <div class="cc-insp-form" data-field-host data-type="audience" data-id="${eid}">
           ${this._fieldText('Nombre', 'str', 'name', a.name, { placeholder: 'Nombre de la audiencia' })}
@@ -5464,11 +5464,11 @@
           ${this._fieldTags('Objeciones', 'objeciones', a.objeciones)}
           ${this._fieldTags('Gatillos de compra', 'gatillos_compra', a.gatillos_compra)}
           <div class="cc-insp-flags">
-            <button type="button" class="cc-node-toggle cc-toggle-like ${liked ? 'is-on' : ''}" data-toggle="is_liked" title="Me gusta"><i class="fas fa-heart"></i></button>
-            <button type="button" class="cc-node-toggle cc-toggle-feature ${featured ? 'is-on' : ''}" data-toggle="is_featured" title="Destacar"><i class="fas fa-star"></i></button>
-            <button type="button" class="cc-node-toggle cc-toggle-power ${off ? 'is-off' : 'is-on'}" data-toggle="is_active" title="${off ? 'Encender' : 'Apagar'}"><i class="fas fa-lightbulb"></i></button>
+            <button type="button" class="cc-node-toggle cc-toggle-like ${liked ? 'is-on' : ''}" data-toggle="is_liked" title="Me gusta"><i class="aisc-ico aisc-ico--likes"></i></button>
+            <button type="button" class="cc-node-toggle cc-toggle-feature ${featured ? 'is-on' : ''}" data-toggle="is_featured" title="Destacar"><i class="aisc-ico aisc-ico--star"></i></button>
+            <button type="button" class="cc-node-toggle cc-toggle-power ${off ? 'is-off' : 'is-on'}" data-toggle="is_active" title="${off ? 'Encender' : 'Apagar'}"><i class="aisc-ico aisc-ico--idea"></i></button>
           </div>
-          <button type="button" class="cc-insp-delete" data-del-type="audience" data-del-id="${eid}"><i class="fas fa-trash"></i> Eliminar audiencia</button>
+          <button type="button" class="cc-insp-delete" data-del-type="audience" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> Eliminar audiencia</button>
         </div>
       `,
     };
@@ -5477,7 +5477,7 @@
   // ── Inspector: campana (real o conceptual) ───────────────────────────
   P._inspectorCampaign = function (id) {
     const row = (this._campaigns || []).find((c) => String(c.id) === String(id));
-    if (!row) return { title: '<i class="fas fa-bullhorn"></i> Campana', body: '<div class="cc-insp-empty">No encontrada.</div>' };
+    if (!row) return { title: '<i class="aisc-ico aisc-ico--campaign"></i> Campana', body: '<div class="cc-insp-empty">No encontrada.</div>' };
     const isReal = !!row.last_synced_at;
     const status = row.status || '—';
     const objetivo = row.objetivo_comercial || '';
@@ -5488,7 +5488,7 @@
       const conv = Number(row.cached_conversions) || 0;
       const roas = Number(row.cached_roas);
       return {
-        title: `<i class="fas fa-bullhorn"></i> ${this.escapeHtml(row.nombre_campana || 'Campana')}`,
+        title: `<i class="aisc-ico aisc-ico--campaign"></i> ${this.escapeHtml(row.nombre_campana || 'Campana')}`,
         body: `
           <div class="cc-insp-section">
             <span class="cc-insp-label">Plataforma</span>
@@ -5525,11 +5525,11 @@
     const c = row, eid = this.escapeHtml(String(id));
     const linkedName = c.persona_id ? ((this._audiences || []).find((x) => String(x.id) === String(c.persona_id))?.name || 'Audiencia vinculada') : '';
     return {
-      title: `<i class="fas fa-bullseye"></i> ${this.escapeHtml(c.nombre_campana || 'Objetivo de Campana')}`,
+      title: `<i class="aisc-ico aisc-ico--goal"></i> ${this.escapeHtml(c.nombre_campana || 'Objetivo de Campana')}`,
       body: `
         <div class="cc-insp-form" data-field-host data-type="campaign-concept" data-id="${eid}">
           ${this._fieldText('Nombre', 'str', 'nombre_campana', c.nombre_campana, { placeholder: 'Nombre de la campana' })}
-          ${linkedName ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="fas fa-link"></i> ${this.escapeHtml(linkedName)}</span></div>` : ''}
+          ${linkedName ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="aisc-ico aisc-ico--link"></i> ${this.escapeHtml(linkedName)}</span></div>` : ''}
           ${this._fieldArea('Descripcion interna', 'str', 'descripcion_interna', c.descripcion_interna, { rows: 3, placeholder: 'Objetivo del concepto' })}
           ${this._fieldSelect('Estado', 'status', c.status || 'draft', [
             ['draft', 'Borrador'], ['conceptual', 'Conceptual'], ['active', 'Activa'],
@@ -5547,8 +5547,8 @@
           ${this._fieldText('Inicio', 'date', 'starts_at', c.starts_at ? String(c.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${this._fieldText('Fin', 'date', 'ends_at', c.ends_at ? String(c.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           <div class="cc-insp-hint">${__('El Objetivo es la parte TECNICA (plataformas, presupuesto, fechas). La direccion creativa — que decir y que producir — vive en el Brief.')}</div>
-          <button type="button" class="cc-insp-add" data-exec-add="adset" data-exec-parent="${eid}"><i class="fas fa-plus"></i> ${__('Agregar Conjunto de Anuncios')}</button>
-          <button type="button" class="cc-insp-delete" data-del-type="campaign-concept" data-del-id="${eid}"><i class="fas fa-trash"></i> Eliminar campana</button>
+          <button type="button" class="cc-insp-add" data-exec-add="adset" data-exec-parent="${eid}"><i class="aisc-ico aisc-ico--add"></i> ${__('Agregar Conjunto de Anuncios')}</button>
+          <button type="button" class="cc-insp-delete" data-del-type="campaign-concept" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> Eliminar campana</button>
         </div>
       `,
     };
@@ -5558,16 +5558,16 @@
   // Solo campos de ESTRATEGIA/orquestacion (guardrail: no clonar Ads Manager).
   P._inspectorAdset = function (id) {
     const a = (this._adsets || []).find((x) => String(x.id) === String(id));
-    if (!a) return { title: `<i class="fas fa-layer-group"></i> ${__('Conjunto de Anuncios')}`, body: `<div class="cc-insp-empty">${__('No encontrado.')}</div>` };
+    if (!a) return { title: `<i class="aisc-ico aisc-ico--layers"></i> ${__('Conjunto de Anuncios')}`, body: `<div class="cc-insp-empty">${__('No encontrado.')}</div>` };
     const eid = this.escapeHtml(String(id));
     const personaOpts = [['', __('Sin audiencia')], ...(this._audiences || []).map((p) => [String(p.id), p.name || __('Sin nombre')])];
     const camp = (this._campaigns || []).find((c) => String(c.id) === String(a.campaign_id));
     return {
-      title: `<i class="fas fa-layer-group"></i> ${this.escapeHtml(a.nombre || __('Conjunto de Anuncios'))}`,
+      title: `<i class="aisc-ico aisc-ico--layers"></i> ${this.escapeHtml(a.nombre || __('Conjunto de Anuncios'))}`,
       body: `
         <div class="cc-insp-form" data-field-host data-type="adset" data-id="${eid}">
           ${this._fieldText(__('Nombre'), 'str', 'nombre', a.nombre, { placeholder: __('Nombre del conjunto') })}
-          ${camp ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="fas fa-bullhorn"></i> ${this.escapeHtml(camp.nombre_campana || __('Campana'))}</span></div>` : ''}
+          ${camp ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="aisc-ico aisc-ico--campaign"></i> ${this.escapeHtml(camp.nombre_campana || __('Campana'))}</span></div>` : ''}
           ${this._fieldSelect(__('Estado'), 'status', a.status || 'draft', [
             ['draft', __('Borrador')], ['approved', __('Aprobado')], ['live', __('En pauta')], ['done', __('Finalizado')],
           ])}
@@ -5581,8 +5581,8 @@
           ${this._fieldText(__('Fin'), 'date', 'ends_at', a.ends_at ? String(a.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${a.external_adset_id ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Conjunto real')}</span><span class="cc-insp-value">${this.escapeHtml(a.external_adset_id)}</span></div>` : ''}
           <div class="cc-insp-hint">${__('Prototipo que tu y Vera arman dentro de la plataforma; de aqui se crean los conjuntos de produccion real. El detalle fino de puja/ubicaciones vive en la plataforma.')}</div>
-          <button type="button" class="cc-insp-add" data-exec-add="ad" data-exec-parent="${eid}"><i class="fas fa-plus"></i> ${__('Agregar Creativo')}</button>
-          <button type="button" class="cc-insp-delete" data-del-type="adset" data-del-id="${eid}"><i class="fas fa-trash"></i> ${__('Eliminar conjunto')}</button>
+          <button type="button" class="cc-insp-add" data-exec-add="ad" data-exec-parent="${eid}"><i class="aisc-ico aisc-ico--add"></i> ${__('Agregar Creativo')}</button>
+          <button type="button" class="cc-insp-delete" data-del-type="adset" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> ${__('Eliminar conjunto')}</button>
         </div>
       `,
     };
@@ -5590,7 +5590,7 @@
 
   P._inspectorAd = function (id) {
     const a = (this._ads || []).find((x) => String(x.id) === String(id));
-    if (!a) return { title: `<i class="fas fa-photo-film"></i> ${__('Creativo')}`, body: `<div class="cc-insp-empty">${__('No encontrado.')}</div>` };
+    if (!a) return { title: `<i class="aisc-ico aisc-ico--image"></i> ${__('Creativo')}`, body: `<div class="cc-insp-empty">${__('No encontrado.')}</div>` };
     const eid = this.escapeHtml(String(id));
     // Picker de creativo: producciones reales (runs_outputs) de la marca.
     const opts = this._adCreativeOpts;
@@ -5598,16 +5598,16 @@
     const creativeOpts = [['', __('Sin creativo')], ...((opts || []).map((o) => [String(o.id), o.label]))];
     const adset = (this._adsets || []).find((s) => String(s.id) === String(a.adset_id));
     return {
-      title: `<i class="fas fa-photo-film"></i> ${this.escapeHtml(a.nombre || __('Creativo'))}`,
+      title: `<i class="aisc-ico aisc-ico--image"></i> ${this.escapeHtml(a.nombre || __('Creativo'))}`,
       body: `
         <div class="cc-insp-form" data-field-host data-type="ad" data-id="${eid}">
           ${this._fieldText(__('Nombre'), 'str', 'nombre', a.nombre, { placeholder: '[TIPO][N°] - [objetivo]' })}
-          ${adset ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="fas fa-layer-group"></i> ${this.escapeHtml(adset.nombre || __('Conjunto'))}</span></div>` : ''}
+          ${adset ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="aisc-ico aisc-ico--layers"></i> ${this.escapeHtml(adset.nombre || __('Conjunto'))}</span></div>` : ''}
           ${this._fieldSelect(__('Estado'), 'status', a.status || 'draft', [
             ['draft', __('Borrador')], ['approved', __('Aprobado')], ['live', __('En pauta')], ['done', __('Finalizado')],
           ])}
           ${opts === undefined
-            ? `<div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> ${__('Cargando producciones…')}</div>`
+            ? `<div class="cc-lib-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Cargando producciones…')}</div>`
             : this._fieldSelect(__('Creativo (produccion)'), 'output_id', a.output_id ? String(a.output_id) : '', creativeOpts)}
           ${this._fieldArea(__('Texto principal'), 'str', 'texto_principal', a.texto_principal, { rows: 3, placeholder: __('Copy del anuncio — ancla al menos 1 palabra de intencion') })}
           ${this._fieldText(__('Titulo'), 'str', 'titulo', a.titulo)}
@@ -5616,7 +5616,7 @@
           ${this._fieldText('CTA URL', 'str', 'cta_url', a.cta_url, { inputType: 'url', placeholder: 'https://…' })}
           ${a.external_ad_id ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Anuncio real (plataforma)')}</span><span class="cc-insp-value">${this.escapeHtml(a.external_ad_id)}</span></div>` : ''}
           <div class="cc-insp-hint">${__('Prototipo del anuncio: la pieza sale de las producciones del Studio y de aqui se crea el real en la plataforma. Cada texto editable debe llevar al menos un ancla de intencion — el algoritmo LEE el texto.')}</div>
-          <button type="button" class="cc-insp-delete" data-del-type="ad" data-del-id="${eid}"><i class="fas fa-trash"></i> ${__('Eliminar creativo')}</button>
+          <button type="button" class="cc-insp-delete" data-del-type="ad" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> ${__('Eliminar creativo')}</button>
         </div>
       `,
     };
@@ -5650,7 +5650,7 @@
 
   P._inspectorStoreOpt = function (id) {
     const s = (this._storeOpts || []).find((x) => String(x.id) === String(id));
-    if (!s) return { title: `<i class="fas fa-store"></i> ${__('Optimizacion de tienda')}`, body: `<div class="cc-insp-empty">${__('No encontrada.')}</div>` };
+    if (!s) return { title: `<i class="aisc-ico aisc-ico--store"></i> ${__('Optimizacion de tienda')}`, body: `<div class="cc-insp-empty">${__('No encontrada.')}</div>` };
     const eid = this.escapeHtml(String(id));
     const platLabel = { shopify: 'Shopify', mercadolibre: 'Mercado Libre', amazon: 'Amazon' }[s.platform] || (s.platform || '—');
     // Picker de producto interno (lazy via libCache, mismo patron que la paleta).
@@ -5661,7 +5661,7 @@
     const prodOpts = [['', __('Sin producto')], ...((prodCache || []).map((p) => [String(p.id), p.name || __('Sin nombre')]))];
     const applied = s.status === 'applied';
     return {
-      title: `<i class="fas fa-store"></i> ${this.escapeHtml(s.nombre || __('Optimizacion de tienda'))}`,
+      title: `<i class="aisc-ico aisc-ico--store"></i> ${this.escapeHtml(s.nombre || __('Optimizacion de tienda'))}`,
       body: `
         <div class="cc-insp-form" data-field-host data-type="store_optimization" data-id="${eid}">
           <div class="cc-insp-meta"><span class="cc-insp-label">${__('Plataforma')}</span><span class="cc-insp-value">${this.escapeHtml(platLabel)}</span></div>
@@ -5678,7 +5678,7 @@
           ${this._fieldText(__('Fin ventana'), 'date', 'ends_at', s.ends_at ? String(s.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${applied ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Aplicado')}</span><span class="cc-insp-value">${this.escapeHtml(String(s.applied_at || '').slice(0, 10))}</span></div>` : ''}
           <div class="cc-insp-hint">${__('El write-back a la tienda se ejecuta con el boton humano "actualizar ficha" (nunca autonomo). Aprobar deja la propuesta lista para aplicar.')}</div>
-          <button type="button" class="cc-insp-delete" data-del-type="store_optimization" data-del-id="${eid}"><i class="fas fa-trash"></i> ${__('Eliminar optimizacion')}</button>
+          <button type="button" class="cc-insp-delete" data-del-type="store_optimization" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> ${__('Eliminar optimizacion')}</button>
         </div>
       `,
     };
@@ -5686,9 +5686,9 @@
 
   P._inspectorSticky = function (id) {
     const s = (this._stickies || []).find((x) => String(x.id) === String(id));
-    if (!s) return { title: '<i class="fas fa-note-sticky"></i> Nota', body: '<div class="cc-insp-empty">No encontrada.</div>' };
+    if (!s) return { title: '<i class="aisc-ico aisc-ico--brief"></i> Nota', body: '<div class="cc-insp-empty">No encontrada.</div>' };
     return {
-      title: `<i class="fas fa-note-sticky"></i> Nota`,
+      title: `<i class="aisc-ico aisc-ico--brief"></i> Nota`,
       body: `
         <div class="cc-insp-section">
           <span class="cc-insp-label">Tamano (px)</span>
@@ -5705,7 +5705,7 @@
 
   P._inspectorGroup = function (id) {
     const g = (this._groups || []).find((x) => String(x.id) === String(id));
-    if (!g) return { title: '<i class="fas fa-object-group"></i> Grupo', body: '<div class="cc-insp-empty">No encontrado.</div>' };
+    if (!g) return { title: '<i class="aisc-ico aisc-ico--layers"></i> Grupo', body: '<div class="cc-insp-empty">No encontrado.</div>' };
     const cur = g.color || 'blue';
     const colors = ['blue','green','purple','orange','red','gray'];
     const colorBtns = colors.map((c) => {
@@ -5713,7 +5713,7 @@
       return `<button type="button" class="cc-insp-color-btn cc-insp-color-btn--${c}${on}" data-color="${c}" data-target-id="${this.escapeHtml(String(id))}" aria-label="${c}"></button>`;
     }).join('');
     return {
-      title: `<i class="fas fa-object-group"></i> ${this.escapeHtml(g.title || 'Grupo')}`,
+      title: `<i class="aisc-ico aisc-ico--layers"></i> ${this.escapeHtml(g.title || 'Grupo')}`,
       body: `
         <div class="cc-insp-section">
           <span class="cc-insp-label">Color</span>
@@ -5742,13 +5742,13 @@
     if (!b) {
       this._fetchBriefRow(id);
       return {
-        title: '<i class="fas fa-file-lines"></i> Brief',
-        body: '<div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando brief…</div>',
+        title: '<i class="aisc-ico aisc-ico--document"></i> Brief',
+        body: '<div class="cc-lib-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando brief…</div>',
       };
     }
     const eid = this.escapeHtml(String(id));
     return {
-      title: `<i class="fas fa-file-lines"></i> ${this.escapeHtml(b.nombre || 'Brief')}`,
+      title: `<i class="aisc-ico aisc-ico--document"></i> ${this.escapeHtml(b.nombre || 'Brief')}`,
       body: `
         <div class="cc-insp-form" data-field-host data-type="brief" data-id="${eid}">
           ${this._fieldText(__('Nombre'), 'str', 'nombre', b.nombre, { placeholder: __('Nombre del brief') })}

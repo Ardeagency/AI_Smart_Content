@@ -564,7 +564,7 @@ class App {
           text-align: center;
         ">
           <div class="error-icon" style="font-size: 4rem; color: var(--accent-warm, #e09145); margin-bottom: 1rem;">
-            <i class="fas fa-exclamation-triangle"></i>
+            <i class="aisc-ico aisc-ico--alert-warning"></i>
           </div>
           <h1 style="color: var(--text-primary, #ecebda); margin-bottom: 1rem;">Error de Inicialización</h1>
           <p style="color: var(--text-secondary, #a0a0a0); margin-bottom: 2rem;">

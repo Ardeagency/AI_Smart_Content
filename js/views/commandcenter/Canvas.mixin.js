@@ -351,7 +351,7 @@
     <div class="cc-node cc-node--audience cc-node--mini ${off ? 'cc-node--off' : ''} ${featured ? 'cc-node--featured' : ''}" data-node-key="${n.key}" data-type="audience" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
       <div class="cc-node-head" data-drag-handle>
-        <span class="cc-node-icon"><i class="fas fa-users"></i></span>
+        <span class="cc-node-icon"><i class="aisc-ico aisc-ico--audience"></i></span>
         <div class="cc-node-head-text">
           <span class="cc-node-title">Audiencia</span>
           <span class="cc-node-name" title="${this.escapeHtml(a.name || '')}">${this.escapeHtml(a.name || 'Sin nombre')}</span>
@@ -394,7 +394,7 @@
         <span class="cc-node-icon"><i class="fas ${icons[t] || 'fa-cube'}"></i></span>
         <span class="cc-node-title">${this.escapeHtml(labels[t] || 'Identity')}</span>
         <div class="cc-node-actions">
-          <button type="button" class="cc-node-act cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-eye-slash"></i></button>
+          <button type="button" class="cc-node-act cc-node-uncanvas" title="Quitar del canvas"><i class="aisc-ico aisc-ico--eye-off"></i></button>
         </div>
       </div>
       <div class="cc-node-body">
@@ -425,21 +425,21 @@
     <div class="cc-node cc-node--campaign cc-node--readonly cc-node--campaign-v2 ${expanded ? 'cc-node--expanded' : ''}" data-node-key="${n.key}" data-type="campaign-real" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Audiencia objetivo"></span>
       <div class="cc-node-head" data-drag-handle>
-        <span class="cc-node-icon cc-node-icon--camp cc-node-icon--hero"><i class="fas fa-bullhorn"></i></span>
+        <span class="cc-node-icon cc-node-icon--camp cc-node-icon--hero"><i class="aisc-ico aisc-ico--campaign"></i></span>
         <div class="cc-node-head-text">
           <span class="cc-node-title">Campana</span>
           <span class="cc-node-realname" title="${this.escapeHtml(c.nombre_campana || 'Campana')}">${this.escapeHtml(c.nombre_campana || 'Sin nombre')}</span>
         </div>
         <div class="cc-node-actions">
-          <span class="cc-node-sync ${synced ? 'is-synced' : ''}" title="${this.escapeHtml(syncTitle)}"><i class="fas fa-arrows-rotate"></i></span>
-          <button type="button" class="cc-node-act cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-eye-slash"></i></button>
+          <span class="cc-node-sync ${synced ? 'is-synced' : ''}" title="${this.escapeHtml(syncTitle)}"><i class="aisc-ico aisc-ico--refresh"></i></span>
+          <button type="button" class="cc-node-act cc-node-uncanvas" title="Quitar del canvas"><i class="aisc-ico aisc-ico--eye-off"></i></button>
         </div>
       </div>
       <div class="cc-node-body cc-node-body--lean">
         <div class="cc-node-pills">
           ${platLabel ? `<span class="cc-node-pill cc-node-pill--plat">${this.escapeHtml(platLabel)}</span>` : ''}
           ${c.status ? `<span class="cc-node-pill cc-node-pill--status cc-node-pill--${this.escapeHtml(c.status)}">${this.escapeHtml(c.status)}</span>` : ''}
-          ${linkedName ? `<span class="cc-node-pill cc-node-pill--linked" title="Objetivo de Audiencia: ${this.escapeHtml(linkedName)}"><i class="fas fa-link"></i></span>` : ''}
+          ${linkedName ? `<span class="cc-node-pill cc-node-pill--linked" title="Objetivo de Audiencia: ${this.escapeHtml(linkedName)}"><i class="aisc-ico aisc-ico--link"></i></span>` : ''}
         </div>
       </div>
       <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
@@ -450,12 +450,12 @@
     // en el inspector derecho al seleccionarlo.
     const statusLabel = { draft: 'Borrador', conceptual: 'Conceptual', active: 'Activa', paused: 'Pausada', ended: 'Finalizada', archived: 'Archivada' }[c.status] || '';
     const platLabelC = platformLabel[c.platform] || '';
-    const chipsC = `${statusLabel ? `<span class="cc-node-chip cc-node-chip--status cc-node-chip--${this.escapeHtml(c.status)}">${this.escapeHtml(statusLabel)}</span>` : ''}${platLabelC ? `<span class="cc-node-chip">${this.escapeHtml(platLabelC)}</span>` : ''}${linked ? `<span class="cc-node-chip cc-node-chip--link" title="Audiencia: ${this.escapeHtml(linkedName)}"><i class="fas fa-link"></i></span>` : ''}`;
+    const chipsC = `${statusLabel ? `<span class="cc-node-chip cc-node-chip--status cc-node-chip--${this.escapeHtml(c.status)}">${this.escapeHtml(statusLabel)}</span>` : ''}${platLabelC ? `<span class="cc-node-chip">${this.escapeHtml(platLabelC)}</span>` : ''}${linked ? `<span class="cc-node-chip cc-node-chip--link" title="Audiencia: ${this.escapeHtml(linkedName)}"><i class="aisc-ico aisc-ico--link"></i></span>` : ''}`;
     return `
     <div class="cc-node cc-node--campaign cc-node--anchor cc-node--mini" data-node-key="${n.key}" data-type="campaign-concept" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Audiencias"></span>
       <div class="cc-node-head" data-drag-handle>
-        <span class="cc-node-icon cc-node-icon--anchor"><i class="fas fa-bullseye"></i></span>
+        <span class="cc-node-icon cc-node-icon--anchor"><i class="aisc-ico aisc-ico--goal"></i></span>
         <div class="cc-node-head-text">
           <span class="cc-node-title">${__('Objetivo')}</span>
           <span class="cc-node-name" title="${this.escapeHtml(c.nombre_campana || '')}">${this.escapeHtml(c.nombre_campana || 'Sin nombre')}</span>
@@ -479,15 +479,15 @@
     const adCount = (this._ads || []).filter((x) => String(x.adset_id) === String(n.id)).length;
     const chips = [
       a.optimizacion ? `<span class="cc-node-chip">${this.escapeHtml(a.optimizacion)}</span>` : '',
-      personaName ? `<span class="cc-node-chip cc-node-chip--link" title="${this.escapeHtml(personaName)}"><i class="fas fa-users"></i></span>` : '',
+      personaName ? `<span class="cc-node-chip cc-node-chip--link" title="${this.escapeHtml(personaName)}"><i class="aisc-ico aisc-ico--audience"></i></span>` : '',
       adCount ? `<span class="cc-node-chip">${adCount} ${adCount === 1 ? __('creativo') : __('creativos')}</span>` : '',
-      a.external_adset_id ? `<span class="cc-node-chip cc-node-chip--real" title="${__('Vinculado a la plataforma')}"><i class="fas fa-plug"></i></span>` : '',
+      a.external_adset_id ? `<span class="cc-node-chip cc-node-chip--real" title="${__('Vinculado a la plataforma')}"><i class="aisc-ico aisc-ico--plug"></i></span>` : '',
     ].join('');
     return `
     <div class="cc-node cc-node--adset cc-node--mini" data-node-key="${n.key}" data-type="adset" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in" data-port="in" title="${__('Campana')}"></span>
       <div class="cc-node-head" data-drag-handle>
-        <span class="cc-node-icon cc-node-icon--adset"><i class="fas fa-layer-group"></i></span>
+        <span class="cc-node-icon cc-node-icon--adset"><i class="aisc-ico aisc-ico--layers"></i></span>
         <div class="cc-node-head-text">
           <span class="cc-node-title">${__('Conjunto de Anuncios')}</span>
           <span class="cc-node-name" title="${this.escapeHtml(a.nombre || '')}">${this.escapeHtml(a.nombre || __('Sin nombre'))}</span>
@@ -503,15 +503,15 @@
     const a = n.row || {};
     const statusLabel = { draft: __('Borrador'), approved: __('Aprobado'), live: __('En pauta'), done: __('Finalizado') }[a.status] || '';
     const chips = [
-      a.output_id ? `<span class="cc-node-chip cc-node-chip--link" title="${__('Creativo vinculado')}"><i class="fas fa-photo-film"></i></span>` : `<span class="cc-node-chip cc-node-chip--warn" title="${__('Sin creativo')}"><i class="fas fa-photo-film"></i> ?</span>`,
+      a.output_id ? `<span class="cc-node-chip cc-node-chip--link" title="${__('Creativo vinculado')}"><i class="aisc-ico aisc-ico--image"></i></span>` : `<span class="cc-node-chip cc-node-chip--warn" title="${__('Sin creativo')}"><i class="aisc-ico aisc-ico--image"></i> ?</span>`,
       a.cta ? `<span class="cc-node-chip">${this.escapeHtml(a.cta)}</span>` : '',
-      a.external_ad_id ? `<span class="cc-node-chip cc-node-chip--real" title="${__('Vinculado a la plataforma')}"><i class="fas fa-plug"></i></span>` : '',
+      a.external_ad_id ? `<span class="cc-node-chip cc-node-chip--real" title="${__('Vinculado a la plataforma')}"><i class="aisc-ico aisc-ico--plug"></i></span>` : '',
     ].join('');
     return `
     <div class="cc-node cc-node--ad cc-node--mini" data-node-key="${n.key}" data-type="ad" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in" data-port="in" title="${__('Conjunto')}"></span>
       <div class="cc-node-head" data-drag-handle>
-        <span class="cc-node-icon cc-node-icon--ad"><i class="fas fa-photo-film"></i></span>
+        <span class="cc-node-icon cc-node-icon--ad"><i class="aisc-ico aisc-ico--image"></i></span>
         <div class="cc-node-head-text">
           <span class="cc-node-title">${__('Creativo')}</span>
           <span class="cc-node-name" title="${this.escapeHtml(a.nombre || '')}">${this.escapeHtml(a.nombre || __('Sin nombre'))}</span>
@@ -533,13 +533,13 @@
     const chips = [
       platLabel ? `<span class="cc-node-chip">${this.escapeHtml(platLabel)}</span>` : '',
       window_ ? `<span class="cc-node-chip">${this.escapeHtml(window_)}</span>` : '',
-      s.status === 'applied' ? `<span class="cc-node-chip cc-node-chip--real"><i class="fas fa-check"></i> ${__('Aplicado')}</span>` : '',
+      s.status === 'applied' ? `<span class="cc-node-chip cc-node-chip--real"><i class="aisc-ico aisc-ico--check"></i> ${__('Aplicado')}</span>` : '',
     ].join('');
     return `
     <div class="cc-node cc-node--stopt cc-node--mini" data-node-key="${n.key}" data-type="store_optimization" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in" data-port="in" title="${__('Producto')}"></span>
       <div class="cc-node-head" data-drag-handle>
-        <span class="cc-node-icon cc-node-icon--stopt"><i class="fas fa-store"></i></span>
+        <span class="cc-node-icon cc-node-icon--stopt"><i class="aisc-ico aisc-ico--store"></i></span>
         <div class="cc-node-head-text">
           <span class="cc-node-title">${__('Optimizacion de tienda')}</span>
           <span class="cc-node-name" title="${this.escapeHtml(s.nombre || '')}">${this.escapeHtml(s.nombre || __('Sin nombre'))}</span>
@@ -899,8 +899,8 @@
       // Toolbar del edge (patron n8n): "+" abre la paleta de Nodos para
       // agregar algo al flujo; "x" desconecta. Visible en hover con gracia.
       fo.innerHTML = `<div class="cc-edge-actions-row">
-        <button type="button" class="cc-edge-add" title="Agregar nodo (abre la paleta)" aria-label="Agregar nodo"><i class="fas fa-plus"></i></button>
-        <button type="button" class="cc-edge-disconnect" title="Quitar conexion" aria-label="Quitar conexion"><i class="fas fa-times"></i></button>
+        <button type="button" class="cc-edge-add" title="Agregar nodo (abre la paleta)" aria-label="Agregar nodo"><i class="aisc-ico aisc-ico--add"></i></button>
+        <button type="button" class="cc-edge-disconnect" title="Quitar conexion" aria-label="Quitar conexion"><i class="aisc-ico aisc-ico--close"></i></button>
       </div>`;
       const btn = fo.querySelector('.cc-edge-disconnect');
       if (btn) btn.onclick = (e) => { e.stopPropagation(); this._removeLink(link.from, link.to); };
@@ -1913,7 +1913,7 @@
 
   P._libBodyHTML = function (key) {
     const items = this._libItemsFor(key);
-    if (items === undefined) return '<div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div>';
+    if (items === undefined) return '<div class="cc-lib-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando…</div>';
     if (!items.length) return '<div class="cc-lib-empty">Sin elementos.</div>';
     const icon = this._libIcon(key);
     return items.map((it) => `
@@ -2333,7 +2333,7 @@
     const body  = document.getElementById('ccReportBody');
     const titleEl = document.getElementById('ccReportTitle');
     const foot  = document.getElementById('ccReportFoot');
-    if (titleEl) titleEl.innerHTML = `<i class="fas fa-file-lines"></i> ${this.escapeHtml(titleByScope[scope] || 'Informe')}`;
+    if (titleEl) titleEl.innerHTML = `<i class="aisc-ico aisc-ico--document"></i> ${this.escapeHtml(titleByScope[scope] || 'Informe')}`;
     if (foot) foot.textContent = '';
 
     // Resolver seleccion para los scopes que la requieren.
@@ -2350,7 +2350,7 @@
     }
 
     this._openReport();
-    if (body) body.innerHTML = '<div class="cc-report-loading"><i class="fas fa-spinner fa-spin"></i> Vera esta redactando el informe…</div>';
+    if (body) body.innerHTML = '<div class="cc-report-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Vera esta redactando el informe…</div>';
 
     try {
       const { data: { session } } = await this._supabase.auth.getSession();
@@ -2374,7 +2374,7 @@
       if (foot) foot.innerHTML = `<span class="cc-report-cost">${json.credits_charged != null ? `${Number(json.credits_charged).toFixed(2)} creditos` : ''}</span>`;
     } catch (e) {
       console.error('generate report:', e);
-      if (body) body.innerHTML = `<div class="cc-report-error"><i class="fas fa-triangle-exclamation"></i> No se pudo generar el informe: ${this.escapeHtml(e?.message || 'error')}</div>`;
+      if (body) body.innerHTML = `<div class="cc-report-error"><i class="aisc-ico aisc-ico--alert-warning"></i> No se pudo generar el informe: ${this.escapeHtml(e?.message || 'error')}</div>`;
     }
   };
 

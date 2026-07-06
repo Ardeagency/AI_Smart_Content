@@ -101,7 +101,7 @@ class CancelSubscriptionView extends BaseView {
               ? __('Tu suscripción ya está cancelada.')
               : __('Esta organización no tiene una suscripción activa que cancelar.')}</p>
           <a href="${this._plansRoute()}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> ${__('Volver a planes')}
+            <i class="aisc-ico aisc-ico--arrow-left"></i> ${__('Volver a planes')}
           </a>
         </div>
       </div>
@@ -117,7 +117,7 @@ class CancelSubscriptionView extends BaseView {
       <div class="cancel-page">
         <div class="cancel-card">
           <a href="${this._plansRoute()}" class="cancel-back">
-            <i class="fas fa-arrow-left"></i> ${__('Volver')}
+            <i class="aisc-ico aisc-ico--arrow-left"></i> ${__('Volver')}
           </a>
 
           <h1>${__('Cancelar suscripción')}</h1>
@@ -131,11 +131,11 @@ class CancelSubscriptionView extends BaseView {
           <div class="cancel-facts">
             <h3>${__('Esto es lo que pasa al cancelar')}</h3>
             <ul>
-              <li><i class="fas fa-circle-info"></i> ${__('Tu plan sigue activo hasta el <strong>{date}</strong> — usa los créditos que tienes.', { date: renewal })}</li>
-              <li><i class="fas fa-circle-info"></i> ${__('No se hará el siguiente cargo a tu tarjeta.')}</li>
-              <li><i class="fas fa-circle-info"></i> ${__('Tus {n} créditos disponibles se mantienen hasta el final del periodo.', { n: this.creditsAvailable.toLocaleString('es') })}</li>
-              <li><i class="fas fa-circle-info"></i> ${__('Después del {date} pasarás al plan Free (50 cr/mes, outputs con marca de agua).', { date: renewal })}</li>
-              <li><i class="fas fa-circle-info"></i> ${__('Puedes reactivar en cualquier momento desde la página de planes.')}</li>
+              <li><i class="aisc-ico aisc-ico--alert-info"></i> ${__('Tu plan sigue activo hasta el <strong>{date}</strong> — usa los créditos que tienes.', { date: renewal })}</li>
+              <li><i class="aisc-ico aisc-ico--alert-info"></i> ${__('No se hará el siguiente cargo a tu tarjeta.')}</li>
+              <li><i class="aisc-ico aisc-ico--alert-info"></i> ${__('Tus {n} créditos disponibles se mantienen hasta el final del periodo.', { n: this.creditsAvailable.toLocaleString('es') })}</li>
+              <li><i class="aisc-ico aisc-ico--alert-info"></i> ${__('Después del {date} pasarás al plan Free (50 cr/mes, outputs con marca de agua).', { date: renewal })}</li>
+              <li><i class="aisc-ico aisc-ico--alert-info"></i> ${__('Puedes reactivar en cualquier momento desde la página de planes.')}</li>
             </ul>
           </div>
 
@@ -156,7 +156,7 @@ class CancelSubscriptionView extends BaseView {
               ${__('Conservar mi suscripción')}
             </button>
             <button type="button" class="btn btn-danger" id="cancelConfirm">
-              <i class="fas fa-circle-xmark"></i> ${__('Cancelar suscripción')}
+              <i class="aisc-ico aisc-ico--close"></i> ${__('Cancelar suscripción')}
             </button>
           </div>
 
@@ -188,7 +188,7 @@ class CancelSubscriptionView extends BaseView {
     const comment = root.querySelector('#cancelComment')?.value?.trim() || null;
     const status = root.querySelector('#cancelStatus');
     const btn = root.querySelector('#cancelConfirm');
-    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${__('Cancelando…')}`; }
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Cancelando…')}`; }
 
     try {
       const { data, error } = await this.supabase.functions.invoke('cancel-subscription', {
@@ -203,7 +203,7 @@ class CancelSubscriptionView extends BaseView {
 
       if (status) {
         status.className = 'cancel-status is-success';
-        status.innerHTML = `<i class="fas fa-circle-check"></i> ${__('Cancelación confirmada. Te enviamos un email con los detalles.')}`;
+        status.innerHTML = `<i class="aisc-ico aisc-ico--check"></i> ${__('Cancelación confirmada. Te enviamos un email con los detalles.')}`;
       }
       setTimeout(() => window.router?.navigate(this._plansRoute(), true), 2000);
     } catch (e) {
@@ -211,7 +211,7 @@ class CancelSubscriptionView extends BaseView {
         status.className = 'cancel-status is-error';
         status.textContent = `${__('Error')}: ${e.message}`;
       }
-      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-circle-xmark"></i> ${__('Cancelar suscripción')}`; }
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="aisc-ico aisc-ico--close"></i> ${__('Cancelar suscripción')}`; }
       this.cancelling = false;
     }
   }

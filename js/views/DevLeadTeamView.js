@@ -35,14 +35,14 @@ class DevLeadTeamView extends DevBaseView {
       <div class="dev-lead-container dev-lead-team">
         <header class="team-page-header">
           <a href="/dev/provisioning/users" class="btn btn-primary">
-            <i class="fas fa-user-plus"></i> Crear usuario
+            <i class="aisc-ico aisc-ico--user-registration"></i> Crear usuario
           </a>
         </header>
 
         <div class="team-page-body">
           <section class="team-section" id="teamPendingSection" hidden>
             <h2 class="team-section-title">
-              <i class="fas fa-hourglass-half"></i> Provisioning pendiente
+              <i class="aisc-ico aisc-ico--hourglass"></i> Provisioning pendiente
               <span class="team-section-count" id="teamPendingCount">0</span>
             </h2>
             <div class="team-pending-list" id="teamPendingList"></div>
@@ -50,7 +50,7 @@ class DevLeadTeamView extends DevBaseView {
 
           <section class="team-section">
             <h2 class="team-section-title">
-              <i class="fas fa-code"></i> Developers activos
+              <i class="aisc-ico aisc-ico--coding"></i> Developers activos
               <span class="team-section-count" id="teamCount">0</span>
             </h2>
             <div class="team-list" id="teamList"></div>
@@ -135,7 +135,7 @@ class DevLeadTeamView extends DevBaseView {
     if (this.team.length === 0) {
       host.innerHTML = `
         <div class="team-empty">
-          <i class="fas fa-user-slash"></i>
+          <i class="aisc-ico aisc-ico--user-slash"></i>
           <p>No hay developers todavia.</p>
         </div>
       `;
@@ -156,7 +156,7 @@ class DevLeadTeamView extends DevBaseView {
     const created = m.created_at ? new Date(m.created_at).toLocaleDateString() : '';
     return `
       <article class="team-card" data-rank="${this.escapeHtml(rank)}" data-edit-id="${this.escapeHtml(m.id)}" tabindex="0" role="button" aria-label="Editar ${this.escapeHtml(m.full_name || m.email)}">
-        <span class="team-card-edit"><i class="fas fa-pen"></i></span>
+        <span class="team-card-edit"><i class="aisc-ico aisc-ico--edit"></i></span>
         <header class="team-card-head">
           <div class="team-avatar" data-rank="${this.escapeHtml(rank)}">${this.escapeHtml(initials)}</div>
           <div class="team-identity">
@@ -174,7 +174,7 @@ class DevLeadTeamView extends DevBaseView {
           ${roleMeta.desc ? `<span class="team-role-desc">${this.escapeHtml(roleMeta.desc)}</span>` : ''}
         </div>
         <footer class="team-card-foot">
-          <span class="team-meta"><i class="fas fa-clock"></i> ${this.escapeHtml(created)}</span>
+          <span class="team-meta"><i class="aisc-ico aisc-ico--clock"></i> ${this.escapeHtml(created)}</span>
         </footer>
       </article>
     `;
@@ -227,7 +227,7 @@ class DevLeadTeamView extends DevBaseView {
             <span>${this.escapeHtml(m.email)}</span>
           </div>
           <button type="button" class="team-modal-close" data-action="close" aria-label="Cerrar">
-            <i class="fas fa-times"></i>
+            <i class="aisc-ico aisc-ico--close"></i>
           </button>
         </header>
 
@@ -245,12 +245,12 @@ class DevLeadTeamView extends DevBaseView {
 
         <footer class="team-modal-foot">
           <button type="button" class="team-modal-btn-danger" data-action="ban">
-            <i class="fas fa-user-slash"></i> Quitar acceso developer
+            <i class="aisc-ico aisc-ico--user-slash"></i> Quitar acceso developer
           </button>
           <div class="team-modal-spacer"></div>
           <button type="button" class="provision-back-btn" data-action="close">Cancelar</button>
           <button type="submit" form="teamEditForm" class="team-modal-btn-save">
-            <i class="fas fa-check"></i> Guardar
+            <i class="aisc-ico aisc-ico--check"></i> Guardar
           </button>
         </footer>
       </div>
@@ -378,10 +378,10 @@ class DevLeadTeamView extends DevBaseView {
         <span class="team-pending-date">${this.escapeHtml(new Date(j.created_at).toLocaleString())}</span>
         <div class="team-pending-actions">
           <button type="button" class="btn btn-secondary btn-sm" data-resume="${this.escapeHtml(j.id)}">
-            <i class="fas fa-arrow-right"></i> Reanudar
+            <i class="aisc-ico aisc-ico--arrow-right"></i> Reanudar
           </button>
           <button type="button" class="btn btn-danger btn-sm" data-cancel="${this.escapeHtml(j.id)}">
-            <i class="fas fa-times"></i> Cancelar
+            <i class="aisc-ico aisc-ico--close"></i> Cancelar
           </button>
         </div>
       </article>

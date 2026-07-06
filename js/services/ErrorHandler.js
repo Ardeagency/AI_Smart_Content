@@ -67,7 +67,7 @@
     var o = opts || {};
     return '' +
       '<div class="section-error" role="alert">' +
-        '<div class="section-error-icon" aria-hidden="true"><i class="fas fa-rotate-right"></i></div>' +
+        '<div class="section-error-icon" aria-hidden="true"><i class="aisc-ico aisc-ico--refresh"></i></div>' +
         '<div class="section-error-title">' + esc(o.title || t('No se pudo cargar')) + '</div>' +
         '<p class="section-error-msg">' + esc(o.message || t('Algo salió mal al traer los datos.')) + '</p>' +
         (o.retry === false ? '' :

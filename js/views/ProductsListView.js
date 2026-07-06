@@ -23,7 +23,7 @@ class ProductsListView extends BaseView {
   <div class="products-list-header">
     <div class="products-list-header-actions">
       <button type="button" class="products-list-add-btn" id="productsListAttachBtn" aria-label="${__('Adjuntar producto desde URL o archivos')}">
-        <i class="fas fa-paperclip" aria-hidden="true"></i>
+        <i class="aisc-ico aisc-ico--paperclip" aria-hidden="true"></i>
         <span>${__('Adjuntar producto')}</span>
       </button>
       <button type="button" class="products-list-add-btn" id="productsListAddBtn" aria-label="${__('Agregar producto')}">
@@ -407,11 +407,11 @@ class ProductsListView extends BaseView {
         <article class="history-image-card product-list-card" data-product-id="${p.id}" data-entity-id="${entityId}" role="button" tabindex="0" aria-label="${safeName}">
           ${imageUrl
             ? `<img src="${this.escapeHtml(imageUrl)}" alt="${safeName}" loading="lazy" onerror="this.parentNode.classList.add('product-list-card-broken'); this.outerHTML='<div class=&quot;product-list-card-placeholder&quot;><i class=&quot;fas fa-image&quot; aria-hidden=&quot;true&quot;></i></div>';">`
-            : `<div class="product-list-card-placeholder"><i class="fas fa-image" aria-hidden="true"></i></div>`
+            : `<div class="product-list-card-placeholder"><i class="aisc-ico aisc-ico--image" aria-hidden="true"></i></div>`
           }
           <div class="product-list-card-actions">
-            <button type="button" class="glass product-list-card-action" data-action="duplicate" title="${__('Duplicar producto')}" aria-label="${__('Duplicar producto')}"><i class="fas fa-copy" aria-hidden="true"></i></button>
-            <button type="button" class="glass product-list-card-action product-list-card-action--danger" data-action="delete" title="${__('Eliminar producto')}" aria-label="${__('Eliminar producto')}"><i class="fas fa-trash" aria-hidden="true"></i></button>
+            <button type="button" class="glass product-list-card-action" data-action="duplicate" title="${__('Duplicar producto')}" aria-label="${__('Duplicar producto')}"><i class="aisc-ico aisc-ico--copy" aria-hidden="true"></i></button>
+            <button type="button" class="glass product-list-card-action product-list-card-action--danger" data-action="delete" title="${__('Eliminar producto')}" aria-label="${__('Eliminar producto')}"><i class="aisc-ico aisc-ico--delete" aria-hidden="true"></i></button>
           </div>
           <div class="history-card-flow-name">${safeName}</div>
         </article>
@@ -448,20 +448,20 @@ class ProductsListView extends BaseView {
           <div class="attach-product-options">
             <button type="button" class="attach-product-option" data-go="url" aria-label="${__('Adjuntar producto por URL')}">
               <div class="attach-product-option-head">
-                <span class="attach-product-option-icon"><i class="fas fa-link" aria-hidden="true"></i></span>
+                <span class="attach-product-option-icon"><i class="aisc-ico aisc-ico--link" aria-hidden="true"></i></span>
                 <h4 class="attach-product-option-title">${__('URL del producto')}</h4>
               </div>
               <p class="attach-product-option-desc">${__('Pega el enlace de la pagina del producto. Vera leera la URL, extraera nombre, descripcion, precio, imagenes y caracteristicas, y armara la ficha automaticamente.')}</p>
-              <span class="attach-product-option-cta">${__('Continuar')} <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+              <span class="attach-product-option-cta">${__('Continuar')} <i class="aisc-ico aisc-ico--arrow-right" aria-hidden="true"></i></span>
             </button>
 
             <button type="button" class="attach-product-option" data-go="attach" aria-label="${__('Adjuntar archivos y fotos del producto')}">
               <div class="attach-product-option-head">
-                <span class="attach-product-option-icon"><i class="fas fa-paperclip" aria-hidden="true"></i></span>
+                <span class="attach-product-option-icon"><i class="aisc-ico aisc-ico--paperclip" aria-hidden="true"></i></span>
                 <h4 class="attach-product-option-title">${__('Adjuntar archivos')}</h4>
               </div>
               <p class="attach-product-option-desc">${__('Subi fotos del producto o archivos como PDFs, fichas tecnicas y catalogos. Vera analizara el contenido y construira la ficha automaticamente.')}</p>
-              <span class="attach-product-option-cta">${__('Continuar')} <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+              <span class="attach-product-option-cta">${__('Continuar')} <i class="aisc-ico aisc-ico--arrow-right" aria-hidden="true"></i></span>
             </button>
           </div>
         </section>
@@ -473,7 +473,7 @@ class ProductsListView extends BaseView {
             <input type="url" class="attach-product-url-input" placeholder="https://..." autocomplete="off" />
           </label>
           <button type="button" class="attach-product-submit" data-action="submit-url">
-            <i class="fas fa-magic" aria-hidden="true"></i>
+            <i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>
             <span>${__('Analizar URL con Vera')}</span>
           </button>
         </section>
@@ -484,7 +484,7 @@ class ProductsListView extends BaseView {
             <span class="attach-product-field-label">${__('Fotos del producto')}</span>
             <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="${__('Subir fotos del producto')}">
               <input type="file" class="attach-product-photos-input" multiple accept="image/jpeg,image/png,image/webp,image/jpg" hidden />
-              <i class="fas fa-image" aria-hidden="true"></i>
+              <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
               <span class="attach-product-dropzone-text">${__('Arrastra fotos o hace click para elegirlas')}</span>
               <span class="attach-product-dropzone-hint">${__('JPG, PNG, WebP · max 10 imagenes · 25MB c/u')}</span>
             </div>
@@ -495,7 +495,7 @@ class ProductsListView extends BaseView {
             <span class="attach-product-field-label">${__('Archivos del producto')}</span>
             <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="${__('Subir archivos del producto')}">
               <input type="file" class="attach-product-file-input" multiple accept=".pdf,.doc,.docx,.txt,.md" hidden />
-              <i class="fas fa-paperclip" aria-hidden="true"></i>
+              <i class="aisc-ico aisc-ico--paperclip" aria-hidden="true"></i>
               <span class="attach-product-dropzone-text">${__('Arrastra archivos o hace click para elegirlos')}</span>
               <span class="attach-product-dropzone-hint">PDF, DOC, DOCX, TXT, MD</span>
             </div>
@@ -503,7 +503,7 @@ class ProductsListView extends BaseView {
           </div>
 
           <button type="button" class="attach-product-submit" data-action="submit-attach">
-            <i class="fas fa-magic" aria-hidden="true"></i>
+            <i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>
             <span>${__('Analizar con Vera')}</span>
           </button>
         </section>
@@ -541,7 +541,7 @@ class ProductsListView extends BaseView {
       backBtn.className = 'attach-product-back';
       backBtn.hidden = true;
       backBtn.setAttribute('aria-label', __('Volver'));
-      backBtn.innerHTML = `<i class="fas fa-arrow-left" aria-hidden="true"></i><span>${this.escapeHtml(__('Volver'))}</span>`;
+      backBtn.innerHTML = `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${this.escapeHtml(__('Volver'))}</span>`;
       backBtn.addEventListener('click', () => {
         const currentStep = wizard?.getAttribute('data-step');
         const target = stepConfig[currentStep]?.backTo || 'picker';
@@ -604,7 +604,7 @@ class ProductsListView extends BaseView {
             <i class="fas ${iconClass}" aria-hidden="true"></i>
             <span class="attach-product-file-name">${this.escapeHtml(f.name)}</span>
             <span class="attach-product-file-size">${sizeStr}</span>
-            <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar archivo')}" title="${__('Quitar')}"><i class="fas fa-times" aria-hidden="true"></i></button>
+            <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar archivo')}" title="${__('Quitar')}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
           </li>`;
         }).join('');
       };

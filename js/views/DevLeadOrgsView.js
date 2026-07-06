@@ -30,13 +30,13 @@ class DevLeadOrgsView extends DevBaseView {
         <header class="dev-lead-header">
           <div class="dev-lead-toolbar" id="headerToolbar">
             <input type="search" id="orgsSearch" class="form-control" placeholder="Buscar por nombre..." autocomplete="off">
-            <button type="button" class="btn btn-primary" id="orgsCreate"><i class="fas fa-plus"></i> Nueva organizacion</button>
+            <button type="button" class="btn btn-primary" id="orgsCreate"><i class="aisc-ico aisc-ico--add"></i> Nueva organizacion</button>
           </div>
         </header>
 
         <section class="dev-lead-content">
           <div class="dev-org-grid" id="orgsGrid">
-            <div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
+            <div class="dev-org-grid-state"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando...</div>
           </div>
         </section>
       </div>
@@ -70,7 +70,7 @@ class DevLeadOrgsView extends DevBaseView {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" id="orgsModalCancel">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="orgsModalSave"><i class="fas fa-check"></i> Guardar</button>
+        <button type="button" class="btn btn-primary" id="orgsModalSave"><i class="aisc-ico aisc-ico--check"></i> Guardar</button>
       </div>
     `;
   }
@@ -121,7 +121,7 @@ class DevLeadOrgsView extends DevBaseView {
     if (this._loading) return;
     this._loading = true;
     const grid = document.getElementById('orgsGrid');
-    if (grid) grid.innerHTML = '<div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+    if (grid) grid.innerHTML = '<div class="dev-org-grid-state"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando...</div>';
 
     try {
       if (!this.supabase) this.supabase = await this.getSupabaseClient();
@@ -199,12 +199,12 @@ class DevLeadOrgsView extends DevBaseView {
     const agent = org._agent;
     const agentActive = agent && ['healthy', 'provisioning', 'starting'].includes(agent.status);
     const veraPill = agentActive
-      ? `<span class="dev-org-card-pill dev-org-card-pill--vera-on" title="Vera ${this.escapeHtml(agent.status)}"><i class="fas fa-robot"></i> Vera ${this.escapeHtml(agent.status)}</span>`
-      : `<span class="dev-org-card-pill dev-org-card-pill--vera-off" title="Sin agente Vera"><i class="fas fa-robot"></i> Sin Vera</span>`;
+      ? `<span class="dev-org-card-pill dev-org-card-pill--vera-on" title="Vera ${this.escapeHtml(agent.status)}"><i class="aisc-ico aisc-ico--bot"></i> Vera ${this.escapeHtml(agent.status)}</span>`
+      : `<span class="dev-org-card-pill dev-org-card-pill--vera-off" title="Sin agente Vera"><i class="aisc-ico aisc-ico--bot"></i> Sin Vera</span>`;
 
     const media = org.logo_url
       ? `<img src="${this.escapeHtml(org.logo_url)}" alt="${name}" class="dev-org-card-img" loading="lazy" onerror="this.outerHTML='&lt;div class=&quot;dev-org-card-placeholder&quot;&gt;&lt;i class=&quot;fas fa-building&quot;&gt;&lt;/i&gt;&lt;/div&gt;'">`
-      : `<div class="dev-org-card-placeholder"><i class="fas fa-building"></i></div>`;
+      : `<div class="dev-org-card-placeholder"><i class="aisc-ico aisc-ico--organization"></i></div>`;
 
     return `
       <article class="dev-org-card" data-id="${id}">
@@ -212,21 +212,21 @@ class DevLeadOrgsView extends DevBaseView {
           ${media}
           <div class="dev-org-card-gradient" aria-hidden="true"></div>
           <div class="dev-org-card-actions">
-            <button type="button" class="dev-org-card-icon-btn" data-action="enter" data-id="${id}" title="Entrar como consumidor" aria-label="Entrar"><i class="fas fa-arrow-right-to-bracket"></i></button>
-            <button type="button" class="dev-org-card-icon-btn" data-action="health" data-id="${id}" title="Salud / Insight" aria-label="Salud"><i class="fas fa-heart-pulse"></i></button>
-            <button type="button" class="dev-org-card-icon-btn dev-org-card-icon-btn--danger" data-action="delete" data-id="${id}" title="Eliminar" aria-label="Eliminar"><i class="fas fa-trash"></i></button>
+            <button type="button" class="dev-org-card-icon-btn" data-action="enter" data-id="${id}" title="Entrar como consumidor" aria-label="Entrar"><i class="aisc-ico aisc-ico--logout"></i></button>
+            <button type="button" class="dev-org-card-icon-btn" data-action="health" data-id="${id}" title="Salud / Insight" aria-label="Salud"><i class="aisc-ico aisc-ico--monitoring"></i></button>
+            <button type="button" class="dev-org-card-icon-btn dev-org-card-icon-btn--danger" data-action="delete" data-id="${id}" title="Eliminar" aria-label="Eliminar"><i class="aisc-ico aisc-ico--delete"></i></button>
           </div>
           <div class="dev-org-card-info">
             <h3 class="dev-org-card-title">${name}</h3>
             ${org.brand_slogan ? `<span class="dev-org-card-subtitle">${this.escapeHtml(org.brand_slogan)}</span>` : ''}
             <div class="dev-org-card-meta">
               <span class="dev-org-card-pill dev-org-card-pill--plan">${planLabel}</span>
-              <span class="dev-org-card-pill"><i class="fas fa-clock"></i> ${created}</span>
+              <span class="dev-org-card-pill"><i class="aisc-ico aisc-ico--clock"></i> ${created}</span>
               ${veraPill}
             </div>
             <div class="dev-org-card-credits">
               <div class="dev-org-card-credits-head">
-                <span class="dev-org-card-credits-label"><i class="fas fa-bolt"></i> Creditos</span>
+                <span class="dev-org-card-credits-label"><i class="aisc-ico aisc-ico--zap"></i> Creditos</span>
                 <span class="dev-org-card-credits-value">${creditsLabel}</span>
               </div>
               <div class="dev-org-card-credits-track"><span style="width:${cPct}%"></span></div>
@@ -267,7 +267,7 @@ class DevLeadOrgsView extends DevBaseView {
       className: 'dev-lead-modal-content dev-lead-modal-wide org-health-modal',
       body: `
         <div class="org-health-body" id="orgHealthBody">
-          <div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Analizando…</div>
+          <div class="dev-org-grid-state"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Analizando…</div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" id="orgHealthClose">Cerrar</button>
@@ -284,7 +284,7 @@ class DevLeadOrgsView extends DevBaseView {
     } catch (err) {
       console.error('org health:', err);
       const body = modal.querySelector('#orgHealthBody');
-      if (body) body.innerHTML = `<div class="dev-org-grid-state"><i class="fas fa-triangle-exclamation"></i> ${this.escapeHtml(err?.message || 'No se pudo cargar la salud')}</div>`;
+      if (body) body.innerHTML = `<div class="dev-org-grid-state"><i class="aisc-ico aisc-ico--alert-warning"></i> ${this.escapeHtml(err?.message || 'No se pudo cargar la salud')}</div>`;
     }
   }
 
@@ -331,7 +331,7 @@ class DevLeadOrgsView extends DevBaseView {
         ${stat('Runs totales', runsTotal, true, 'fa-database')}
         ${stat('Vera', veraOk ? h.vera_status : 'off', veraOk, 'fa-robot')}
       </div>
-      <p class="org-health-foot"><i class="fas fa-clock"></i> Última actividad: ${this.escapeHtml(lastAct)}</p>
+      <p class="org-health-foot"><i class="aisc-ico aisc-ico--clock"></i> Última actividad: ${this.escapeHtml(lastAct)}</p>
     `;
   }
 
@@ -373,7 +373,7 @@ class DevLeadOrgsView extends DevBaseView {
     };
 
     const saveBtn = document.getElementById('orgsModalSave');
-    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="aisc-ico fa-spin aisc-ico--loader"></i> Guardando...'; }
 
     try {
       if (!this.supabase) this.supabase = await this.getSupabaseClient();
@@ -400,7 +400,7 @@ class DevLeadOrgsView extends DevBaseView {
       console.error('saveOrg:', err);
       this.showNotification('Error: ' + (err?.message || 'fallo al guardar'), 'error');
     } finally {
-      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-check"></i> Guardar'; }
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="aisc-ico aisc-ico--check"></i> Guardar'; }
     }
   }
 
@@ -448,7 +448,7 @@ class DevLeadOrgsView extends DevBaseView {
     const safeEmail = this.escapeHtml(email);
     return `
       <div class="org-delete-warn" role="alert">
-        <i class="fas fa-triangle-exclamation"></i>
+        <i class="aisc-ico aisc-ico--alert-warning"></i>
         <div>
           <strong>Acción crítica e irreversible</strong>
           <p>Vas a eliminar la organización <b>${name}</b> junto con sus marcas, contenido y datos asociados. Por la seguridad de nuestros usuarios, confirma tu identidad antes de continuar.</p>
@@ -468,7 +468,7 @@ class DevLeadOrgsView extends DevBaseView {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" id="orgDelCancel">Cancelar</button>
-        <button type="button" class="btn btn-danger" id="orgDelConfirm"><i class="fas fa-trash"></i> Eliminar definitivamente</button>
+        <button type="button" class="btn btn-danger" id="orgDelConfirm"><i class="aisc-ico aisc-ico--delete"></i> Eliminar definitivamente</button>
       </div>
     `;
   }
@@ -509,7 +509,7 @@ class DevLeadOrgsView extends DevBaseView {
     if (!password) { this.showNotification('Ingresa tu contraseña.', 'warning'); return; }
     if (!this._delCodeSent || !code) { this.showNotification('Solicita y escribe el código de verificación.', 'warning'); return; }
 
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando…'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="aisc-ico fa-spin aisc-ico--loader"></i> Verificando…'; }
     try {
       // 1) Verificar contraseña (antes del código, para no consumir el OTP si falla).
       const { error: pwErr } = await this.supabase.auth.signInWithPassword({ email: this._delEmail, password });
@@ -529,7 +529,7 @@ class DevLeadOrgsView extends DevBaseView {
       await this.loadOrgs();
     } catch (err) {
       console.error('_confirmDelete:', err);
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-trash"></i> Eliminar definitivamente'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="aisc-ico aisc-ico--delete"></i> Eliminar definitivamente'; }
       this.showNotification('Error: ' + (err?.message || 'no se pudo eliminar'), 'error');
     }
   }
@@ -537,7 +537,7 @@ class DevLeadOrgsView extends DevBaseView {
   renderError(message) {
     const grid = document.getElementById('orgsGrid');
     if (!grid) return;
-    grid.innerHTML = `<div class="dev-org-grid-state"><i class="fas fa-triangle-exclamation"></i> ${this.escapeHtml(message)}</div>`;
+    grid.innerHTML = `<div class="dev-org-grid-state"><i class="aisc-ico aisc-ico--alert-warning"></i> ${this.escapeHtml(message)}</div>`;
   }
 
   escapeHtml(text) {

@@ -423,7 +423,7 @@ class MonitoringView extends BaseView {
           </div>
           <div class="mn-prop-actions">
             <button class="mn-prop-btn mn-prop-btn--yes" data-action="prop-follow" data-id="${this._esc(e.id)}">
-              <i class="fas fa-plus"></i> ${__('Seguir')}
+              <i class="aisc-ico aisc-ico--add"></i> ${__('Seguir')}
             </button>
             <button class="mn-prop-btn mn-prop-btn--no" data-action="prop-dismiss" data-id="${this._esc(e.id)}">
               ${__('Descartar')}
@@ -435,7 +435,7 @@ class MonitoringView extends BaseView {
     return `
       <section class="mn-prop-banner">
         <header class="mn-prop-head">
-          <div class="mn-prop-head-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+          <div class="mn-prop-head-icon"><i class="aisc-ico aisc-ico--sparkle"></i></div>
           <div>
             <h3 class="mn-prop-title">${props.length === 1 ? __('Encontramos {n} perfil que quizá quieras seguir', { n: props.length }) : __('Encontramos {n} perfiles que quizá quieras seguir', { n: props.length })}</h3>
             <p class="mn-prop-subtitle">${__('Tú decides: súmalos a tu vigilancia o descártalos.')}</p>
@@ -483,7 +483,7 @@ class MonitoringView extends BaseView {
       <div class="mn-toolbar">
         <nav class="mn-tabs" role="tablist">${nav}</nav>
         <button type="button" class="mn-btn-primary" data-action="new-item">
-          <i class="fas fa-plus"></i> ${__('Seguir algo nuevo')}
+          <i class="aisc-ico aisc-ico--add"></i> ${__('Seguir algo nuevo')}
         </button>
       </div>`;
   }
@@ -1222,9 +1222,9 @@ class MonitoringView extends BaseView {
     const inner = `${media}
       <div class="mn-post-b">
         <div class="mn-post-snippet">${snippet}</div>
-        <div class="mn-post-meta"><span><i class="fas fa-fire"></i>${eng}</span><span>${when}</span></div>
+        <div class="mn-post-meta"><span><i class="aisc-ico aisc-ico--fire"></i>${eng}</span><span>${when}</span></div>
       </div>
-      ${url ? '<i class="fas fa-arrow-up-right-from-square mn-post-ext"></i>' : ''}`;
+      ${url ? '<i class="aisc-ico mn-post-ext aisc-ico--external-link"></i>' : ''}`;
     return url
       ? `<a class="mn-post" href="${this._esc(url)}" target="_blank" rel="noopener">${inner}</a>`
       : `<div class="mn-post mn-post--nolink">${inner}</div>`;
@@ -1309,7 +1309,7 @@ class MonitoringView extends BaseView {
   _renderEntityDashboard(a, perWeek) {
     const total = (a && a.total_posts) || 0;
     if (!a || total === 0) {
-      return `<div class="mn-det-act-empty"><i class="fas fa-chart-simple"></i><span>${__('Aún sin contenido capturado para analizar. En cuanto entren posts, verás aquí sus patrones.')}</span></div>`;
+      return `<div class="mn-det-act-empty"><i class="aisc-ico aisc-ico--chart-bar"></i><span>${__('Aún sin contenido capturado para analizar. En cuanto entren posts, verás aquí sus patrones.')}</span></div>`;
     }
     const level = total >= 60 ? { t: __('Señal rica'), c: 'high' } : total >= 20 ? { t: __('Señal moderada'), c: 'mid' } : { t: __('Señal limitada'), c: 'low' };
     const hour = (a.peak_posting_hour != null) ? `${String(a.peak_posting_hour).padStart(2, '0')}:00` : '—';
@@ -1323,7 +1323,7 @@ class MonitoringView extends BaseView {
     const seg = (n, cls) => sb.total ? `<span class="mn-voz-seg mn-voz-seg--${cls}" style="width:${(n / sb.total * 100).toFixed(1)}%"></span>` : '';
     const vozHtml = sb.total ? `
       <div class="mn-dash-block">
-        <div class="mn-dash-h"><i class="fas fa-heart-pulse"></i>${__('Sentimiento de su audiencia')}</div>
+        <div class="mn-dash-h"><i class="aisc-ico aisc-ico--monitoring"></i>${__('Sentimiento de su audiencia')}</div>
         <div class="mn-voz-bar">${seg(sb.pos, 'pos')}${seg(sb.neu, 'neu')}${seg(sb.neg, 'neg')}</div>
         <div class="mn-voz-legend">
           <span><i class="mn-dot mn-dot--pos"></i>${Math.round(sb.pos / sb.total * 100)}% ${__('positivo')}</span>
@@ -1337,13 +1337,13 @@ class MonitoringView extends BaseView {
     const maxT = topics[0] ? topics[0][1] : 1;
     const topicsHtml = topics.length ? `
       <div class="mn-dash-block">
-        <div class="mn-dash-h"><i class="fas fa-hashtag"></i>${__('Sobre qué habla')}</div>
+        <div class="mn-dash-h"><i class="aisc-ico aisc-ico--tag"></i>${__('Sobre qué habla')}</div>
         <div class="mn-temas">
           ${topics.map(([t, c]) => `<div class="mn-tema"><span class="mn-tema-n">${this._esc(t)}</span><span class="mn-tema-bar"><i style="width:${Math.max(8, c / maxT * 100)}%"></i></span></div>`).join('')}
         </div>
       </div>` : (a.dominant_tone ? '' : `
       <div class="mn-dash-block mn-dash-block--pending">
-        <div class="mn-dash-h"><i class="fas fa-hashtag"></i>${__('Temas y tono')}</div>
+        <div class="mn-dash-h"><i class="aisc-ico aisc-ico--tag"></i>${__('Temas y tono')}</div>
         <p class="mn-dash-pending">${__('Se activan cuando el análisis de contenido procese sus publicaciones.')}</p>
       </div>`);
 
@@ -1351,13 +1351,13 @@ class MonitoringView extends BaseView {
 
     return `
       <div class="mn-dash-read mn-dash-read--${level.c}">
-        <div class="mn-dash-read-top"><span class="mn-dash-level mn-dash-level--${level.c}"><i class="fas fa-signal"></i>${level.t}</span></div>
+        <div class="mn-dash-read-top"><span class="mn-dash-level mn-dash-level--${level.c}"><i class="aisc-ico aisc-ico--monitoring"></i>${level.t}</span></div>
         <p class="mn-dash-read-txt">${this._strategicRead(a, perWeek)}</p>
       </div>
 
       <div class="mn-dash-hero">
         <div class="mn-dash-hero-v">${this._compact(a.total_engagement || 0)}</div>
-        <div class="mn-dash-hero-l"><i class="fas fa-fire"></i>${__('interacciones que ha generado su contenido')}</div>
+        <div class="mn-dash-hero-l"><i class="aisc-ico aisc-ico--fire"></i>${__('interacciones que ha generado su contenido')}</div>
       </div>
 
       <div class="mn-dash-kpis">
@@ -1384,11 +1384,11 @@ class MonitoringView extends BaseView {
     const platIcon = MonitoringView.PLATFORM_ICON[item.platform] || 'fas fa-hashtag';
 
     const meta = [];
-    if (isProfile) meta.push(`<span class="mn-det-meta-item"><i class="fas fa-fire"></i>${item.impact > 0 ? __('{n} interacciones (90 d)', { n: this._compact(item.impact) }) : __('Sin impacto medido')}</span>`);
-    else meta.push(`<span class="mn-det-meta-item"><i class="fas fa-arrows-rotate"></i>${item.dataCount} ${__('cambios')}</span>`);
+    if (isProfile) meta.push(`<span class="mn-det-meta-item"><i class="aisc-ico aisc-ico--fire"></i>${item.impact > 0 ? __('{n} interacciones (90 d)', { n: this._compact(item.impact) }) : __('Sin impacto medido')}</span>`);
+    else meta.push(`<span class="mn-det-meta-item"><i class="aisc-ico aisc-ico--refresh"></i>${item.dataCount} ${__('cambios')}</span>`);
     if (item.platform) meta.push(`<span class="mn-det-meta-item"><i class="${platIcon}"></i>${this._esc(this._platformName(item.platform))}</span>`);
-    if (item.lastAt) meta.push(`<span class="mn-det-meta-item"><i class="fas fa-clock"></i>${this._relativeTime(item.lastAt)}</span>`);
-    if (brand) meta.push(`<span class="mn-det-meta-item"><i class="fas fa-tag"></i>${this._esc(brand)}</span>`);
+    if (item.lastAt) meta.push(`<span class="mn-det-meta-item"><i class="aisc-ico aisc-ico--clock"></i>${this._relativeTime(item.lastAt)}</span>`);
+    if (brand) meta.push(`<span class="mn-det-meta-item"><i class="aisc-ico aisc-ico--tag"></i>${this._esc(brand)}</span>`);
 
     // ── COLUMNA IZQUIERDA: TODO el contenido capturado del perfil (posts) con
     //    link al original. Se carga async (perfiles); las páginas muestran cambios.
@@ -1396,8 +1396,8 @@ class MonitoringView extends BaseView {
     const leftInner = isProfile
       ? `<div class="mn-post mn-post--skel"></div><div class="mn-post mn-post--skel"></div><div class="mn-post mn-post--skel"></div>`
       : ((item.feed || []).length
-          ? (item.feed || []).slice(0, 12).map((f) => `<div class="mn-det-act"><span class="mn-det-act-icon"><i class="fas fa-arrows-rotate"></i></span><div class="mn-det-act-b"><div class="mn-det-act-t">${__('Cambio detectado')}</div><div class="mn-det-act-w">${this._relativeTime(f.captured_at)}</div></div></div>`).join('')
-          : `<div class="mn-det-act-empty"><i class="fas fa-moon"></i><span>${__('Sin cambios detectados aún')}</span></div>`);
+          ? (item.feed || []).slice(0, 12).map((f) => `<div class="mn-det-act"><span class="mn-det-act-icon"><i class="aisc-ico aisc-ico--refresh"></i></span><div class="mn-det-act-b"><div class="mn-det-act-t">${__('Cambio detectado')}</div><div class="mn-det-act-w">${this._relativeTime(f.captured_at)}</div></div></div>`).join('')
+          : `<div class="mn-det-act-empty"><i class="aisc-ico aisc-ico--moon"></i><span>${__('Sin cambios detectados aún')}</span></div>`);
 
     // ── COLUMNA DERECHA (arriba): editable inline. (abajo): atajos de Vera.
     const roleOpts = MonitoringView.ENTITY_TIPOS.map((o) => `<option value="${o.value}"${o.value === item.tipo ? ' selected' : ''}>${this._esc(o.label)}</option>`).join('');
@@ -1422,13 +1422,13 @@ class MonitoringView extends BaseView {
       <div class="mn-detail-section mn-detail-vera">
         <div class="mn-det-section-title">${__('Consultar con Vera')}</div>
         <div class="mn-vera-shortcuts">
-          <button type="button" data-bact="vera-analizar"><i class="fas fa-wand-magic-sparkles"></i><span>${__('Analizar')}</span></button>
+          <button type="button" data-bact="vera-analizar"><i class="aisc-ico aisc-ico--sparkle"></i><span>${__('Analizar')}</span></button>
           <button type="button" data-bact="vera-comparar"><i class="fas fa-code-compare"></i><span>${__('Comparar')}</span></button>
-          <button type="button" data-bact="vera-inspirar"><i class="fas fa-lightbulb"></i><span>${__('Pedir ideas')}</span></button>
+          <button type="button" data-bact="vera-inspirar"><i class="aisc-ico aisc-ico--idea"></i><span>${__('Pedir ideas')}</span></button>
         </div>
       </div>` : `
       <div class="mn-detail-actions">
-        <a class="mn-det-cta" href="${this._esc(item.url)}" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i><span>${__('Abrir página')}</span></a>
+        <a class="mn-det-cta" href="${this._esc(item.url)}" target="_blank" rel="noopener"><i class="aisc-ico aisc-ico--external-link"></i><span>${__('Abrir página')}</span></a>
       </div>`;
 
     const body = document.createElement('div');
@@ -1448,7 +1448,7 @@ class MonitoringView extends BaseView {
               <span class="mn-detail-eyebrow" data-role-eyebrow>${this._esc(roleLabel)}</span>
               <div class="mn-detail-name-wrap">
                 <input class="mn-detail-name" data-edit="name" value="${this._esc(item.title)}" aria-label="${__('Nombre')}">
-                <i class="fas fa-pen mn-detail-name-pen" aria-hidden="true"></i>
+                <i class="aisc-ico mn-detail-name-pen aisc-ico--edit" aria-hidden="true"></i>
               </div>
               ${item.subtitle ? `<div class="mn-detail-sub">${this._esc(item.subtitle)}</div>` : ''}
             </div>
@@ -1460,9 +1460,9 @@ class MonitoringView extends BaseView {
           <div class="mn-detail-meta">${meta.join('')}</div>
           ${editable}
           <div class="mn-detail-foot">
-            ${isProfile ? `<button type="button" class="mn-btn-secondary" data-bact="toggle-highlight"><i class="fas fa-star"></i> ${item.highlighted ? __('Quitar destacado') : __('Destacar')}</button>` : ''}
+            ${isProfile ? `<button type="button" class="mn-btn-secondary" data-bact="toggle-highlight"><i class="aisc-ico aisc-ico--star"></i> ${item.highlighted ? __('Quitar destacado') : __('Destacar')}</button>` : ''}
             <span style="flex:1"></span>
-            <button type="button" class="mn-btn-secondary mn-btn-danger" data-bact="delete"><i class="fas fa-trash"></i> ${__('Dejar de seguir')}</button>
+            <button type="button" class="mn-btn-secondary mn-btn-danger" data-bact="delete"><i class="aisc-ico aisc-ico--delete"></i> ${__('Dejar de seguir')}</button>
           </div>
         </div>
         ${isProfile ? `<aside class="mn-detail-col mn-detail-col--dash">
@@ -1487,7 +1487,7 @@ class MonitoringView extends BaseView {
         const host = modal.querySelector('[data-posts]');
         if (host) host.innerHTML = posts.length
           ? posts.map((p) => this._renderPostCard(p)).join('')
-          : `<div class="mn-det-act-empty"><i class="fas fa-inbox"></i><span>${__('Aún no hemos capturado contenido de este perfil.')}</span></div>`;
+          : `<div class="mn-det-act-empty"><i class="aisc-ico aisc-ico--inbox"></i><span>${__('Aún no hemos capturado contenido de este perfil.')}</span></div>`;
         const dash = modal.querySelector('[data-dashboard]');
         if (dash) dash.innerHTML = this._renderEntityDashboard((analysisRes && analysisRes.data) || null, this._recurrenceFromPosts(posts));
       }).catch(() => {});
@@ -1534,19 +1534,19 @@ class MonitoringView extends BaseView {
       : '';
     // Línea de impacto social (lo que dimensiona la burbuja).
     const impactLine = isProfile
-      ? `<div class="mn-bubpop-meta"><i class="fas fa-fire" style="opacity:.6"></i> ${item.impact > 0
+      ? `<div class="mn-bubpop-meta"><i class="aisc-ico aisc-ico--fire" style="opacity:.6"></i> ${item.impact > 0
             ? __('Impacto social: {n} interacciones (90 d)', { n: this._compact(item.impact) })
             : __('Sin impacto medido aún')}</div>`
-      : `<div class="mn-bubpop-meta"><i class="fas fa-arrows-rotate" style="opacity:.6"></i> ${item.dataCount} ${__('cambios detectados')}</div>`;
+      : `<div class="mn-bubpop-meta"><i class="aisc-ico aisc-ico--refresh" style="opacity:.6"></i> ${item.dataCount} ${__('cambios detectados')}</div>`;
 
     const veraActs = isProfile ? `
-      <button class="mn-bubpop-act" data-bact="vera-analizar"><i class="fas fa-wand-magic-sparkles"></i> ${__('Analizar')}</button>
+      <button class="mn-bubpop-act" data-bact="vera-analizar"><i class="aisc-ico aisc-ico--sparkle"></i> ${__('Analizar')}</button>
       <button class="mn-bubpop-act" data-bact="vera-comparar"><i class="fas fa-code-compare"></i> ${__('Comparar')}</button>
-      <button class="mn-bubpop-act" data-bact="vera-inspirar"><i class="fas fa-lightbulb"></i> ${__('Ideas')}</button>` : `
-      <a class="mn-bubpop-act" href="${this._esc(item.url)}" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i> ${__('Abrir página')}</a>`;
+      <button class="mn-bubpop-act" data-bact="vera-inspirar"><i class="aisc-ico aisc-ico--idea"></i> ${__('Ideas')}</button>` : `
+      <a class="mn-bubpop-act" href="${this._esc(item.url)}" target="_blank" rel="noopener"><i class="aisc-ico aisc-ico--external-link"></i> ${__('Abrir página')}</a>`;
 
     const starBtn = isProfile ? `
-      <button class="mn-bubpop-star${item.highlighted ? ' is-on' : ''}" data-bact="toggle-highlight" title="${__('Destacar')}"><i class="fas fa-star"></i></button>` : '';
+      <button class="mn-bubpop-star${item.highlighted ? ' is-on' : ''}" data-bact="toggle-highlight" title="${__('Destacar')}"><i class="aisc-ico aisc-ico--star"></i></button>` : '';
 
     // Personalización de color (opcional). Default = degradado de marca (chip "Marca").
     const colorSection = isProfile ? `
@@ -1584,8 +1584,8 @@ class MonitoringView extends BaseView {
           <span class="mn-onoff-track"></span>
         </label>
         <span class="mn-bubpop-foot-spacer"></span>
-        <button class="mn-btn-icon" data-bact="edit" title="${__('Editar')}"><i class="fas fa-pen"></i></button>
-        <button class="mn-btn-icon mn-btn-icon--danger" data-bact="delete" title="${__('Dejar de seguir')}"><i class="fas fa-trash"></i></button>
+        <button class="mn-btn-icon" data-bact="edit" title="${__('Editar')}"><i class="aisc-ico aisc-ico--edit"></i></button>
+        <button class="mn-btn-icon mn-btn-icon--danger" data-bact="delete" title="${__('Dejar de seguir')}"><i class="aisc-ico aisc-ico--delete"></i></button>
       </div>`;
     document.body.appendChild(pop);
     this._bubPop = pop;
@@ -1862,7 +1862,7 @@ class MonitoringView extends BaseView {
     }
     w._hoverId = b.it.id;
     overlay.innerHTML = `
-      <button type="button" class="mn-btn-primary" data-fact="follow"><i class="fas fa-plus"></i> ${__('Seguir')}</button>
+      <button type="button" class="mn-btn-primary" data-fact="follow"><i class="aisc-ico aisc-ico--add"></i> ${__('Seguir')}</button>
       <button type="button" class="mn-btn-secondary" data-fact="dismiss">${__('Descartar')}</button>`;
     overlay.style.left = Math.max(96, Math.min(w.W - 96, b.x)) + 'px';
     overlay.style.top = (b.y + b.r + 12) + 'px';
@@ -2123,7 +2123,7 @@ class MonitoringView extends BaseView {
             <input type="url" class="mn-follow-url" placeholder="https://instagram.com/marca" autocomplete="off" spellcheck="false">
           </label>
           <button type="button" class="mn-follow-submit" data-action="analyze">
-            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+            <i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>
             <span>${__('Detectar automáticamente')}</span>
           </button>
         </section>
@@ -2136,17 +2136,17 @@ class MonitoringView extends BaseView {
         <!-- Paso 3a: perfil detectado → rol + relevancia -->
         <section class="mn-follow-step mn-form mn-follow-form" data-panel="confirm" hidden>
           <div class="mn-follow-detected">
-            <span class="mn-follow-detected-icon" data-detected-icon><i class="fas fa-globe"></i></span>
+            <span class="mn-follow-detected-icon" data-detected-icon><i class="aisc-ico aisc-ico--globe"></i></span>
             <div class="mn-follow-detected-info">
               <input class="mn-follow-name" name="name" value="" aria-label="${__('Nombre')}">
               <span class="mn-follow-detected-meta">
                 <span data-detected-platform></span><span data-detected-handle></span>
               </span>
             </div>
-            <span class="mn-follow-detected-badge"><i class="fas fa-check" aria-hidden="true"></i> ${__('Detectado')}</span>
+            <span class="mn-follow-detected-badge"><i class="aisc-ico aisc-ico--check" aria-hidden="true"></i> ${__('Detectado')}</span>
           </div>
           <p class="mn-follow-ai-note" data-ai-note hidden>
-            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+            <i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>
             ${__('Rol y relevancia sugeridos por Vera según tu marca — edítalos si no encajan.')}
           </p>
           <label>${__('Rol — ¿qué es para tu marca?')}
@@ -2172,12 +2172,12 @@ class MonitoringView extends BaseView {
         <!-- Paso 3b: página web genérica → watcher -->
         <section class="mn-follow-step mn-form mn-follow-form" data-panel="page" hidden>
           <div class="mn-follow-detected">
-            <span class="mn-follow-detected-icon" data-detected-icon-page><i class="fas fa-globe"></i></span>
+            <span class="mn-follow-detected-icon" data-detected-icon-page><i class="aisc-ico aisc-ico--globe"></i></span>
             <div class="mn-follow-detected-info">
               <input class="mn-follow-name" name="label" value="" aria-label="${__('Nombre (opcional)')}">
               <span class="mn-follow-detected-meta"><span data-detected-page-url></span></span>
             </div>
-            <span class="mn-follow-detected-badge"><i class="fas fa-check" aria-hidden="true"></i> ${__('Detectado')}</span>
+            <span class="mn-follow-detected-badge"><i class="aisc-ico aisc-ico--check" aria-hidden="true"></i> ${__('Detectado')}</span>
           </div>
           <small class="mn-follow-page-hint">${__('Te avisamos cuando esa página cambie.')}</small>
           <footer class="mn-modal-foot">
@@ -2205,7 +2205,7 @@ class MonitoringView extends BaseView {
       backBtn.className = 'mn-follow-back';
       backBtn.hidden = true;
       backBtn.setAttribute('aria-label', __('Volver'));
-      backBtn.innerHTML = `<i class="fas fa-arrow-left" aria-hidden="true"></i><span>${this._esc(__('Volver'))}</span>`;
+      backBtn.innerHTML = `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${this._esc(__('Volver'))}</span>`;
       backBtn.addEventListener('click', () => {
         const cur = root?.getAttribute('data-step');
         goToStep(stepConfig[cur]?.backTo || 'url');
@@ -2249,7 +2249,7 @@ class MonitoringView extends BaseView {
       if (classifyPromise) steps.push({ label: __('Analizando relevancia para tu marca'), promise: classifyPromise });
       list.innerHTML = steps.map((s, i) => `
         <li class="mn-follow-check" data-check-idx="${i}">
-          <span class="mn-follow-check-dot"><span class="mn-follow-check-spinner"></span><i class="fas fa-check" aria-hidden="true"></i></span>
+          <span class="mn-follow-check-dot"><span class="mn-follow-check-spinner"></span><i class="aisc-ico aisc-ico--check" aria-hidden="true"></i></span>
           <span class="mn-follow-check-label">${this._esc(s.label)}</span>
           <span class="mn-follow-check-result"></span>
         </li>`).join('');

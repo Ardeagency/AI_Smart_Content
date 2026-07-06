@@ -157,7 +157,7 @@
 
     if (runBtn) {
       runBtn.disabled = true;
-      runBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Ejecutando...';
+      runBtn.innerHTML = '<i class="aisc-ico ph-spin aisc-ico--loader"></i> Ejecutando...';
     }
     if (resultSection) resultSection.hidden = false;
     if (statusEl) { statusEl.className = 'sandbox-status sandbox-status--running'; statusEl.textContent = 'corriendo…'; }
@@ -229,7 +229,7 @@
     } finally {
       if (runBtn) {
         runBtn.disabled = false;
-        runBtn.innerHTML = '<i class="ph ph-play"></i> Ejecutar';
+        runBtn.innerHTML = '<i class="aisc-ico aisc-ico--play"></i> Ejecutar';
       }
     }
   };
@@ -361,7 +361,7 @@
       return v.token.toLowerCase().includes(q) || v.label.toLowerCase().includes(q);
     });
     if (items.length === 0) {
-      list.innerHTML = `<p class="variables-empty"><i class="ph ph-info"></i> Sin variables disponibles${q ? ' para "' + this.escapeHtml(q) + '"' : ''}.</p>`;
+      list.innerHTML = `<p class="variables-empty"><i class="aisc-ico aisc-ico--alert-info"></i> Sin variables disponibles${q ? ' para "' + this.escapeHtml(q) + '"' : ''}.</p>`;
       return;
     }
     // Agrupar por source

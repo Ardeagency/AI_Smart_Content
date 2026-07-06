@@ -136,11 +136,11 @@ class DevLeadUserProvisioningView extends DevBaseView {
           else if (i < idx) state = 'is-done';
           else if (i === idx) state = 'is-current';
           else state = 'is-pending';
-          const marker = (state === 'is-done') ? '<i class="fas fa-check"></i>' : String(i + 1);
+          const marker = (state === 'is-done') ? '<i class="aisc-ico aisc-ico--check"></i>' : String(i + 1);
           return `
             <li class="provision-progress-item ${state}" data-step="${s.key}">
               <span class="provision-progress-caret" aria-hidden="true">
-                <i class="fas fa-caret-down"></i>
+                <i class="aisc-ico aisc-ico--chevron-down"></i>
               </span>
               <span class="provision-progress-marker">${marker}</span>
               <span class="provision-progress-label">${this.escapeHtml(this.getStepLabel(s))}</span>
@@ -189,7 +189,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
           aria-label="Siguiente"
           ${!this.userType ? 'disabled' : ''}
         >
-          <i class="fas fa-arrow-right"></i>
+          <i class="aisc-ico aisc-ico--arrow-right"></i>
         </button>
       </footer>
     `;
@@ -230,7 +230,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
           data-action="next"
           aria-label="Crear usuario y enviar verificacion"
         >
-          <i class="fas fa-arrow-right"></i>
+          <i class="aisc-ico aisc-ico--arrow-right"></i>
         </button>
       </footer>
     `;
@@ -241,11 +241,11 @@ class DevLeadUserProvisioningView extends DevBaseView {
     return `
       <section class="provision-verify-card">
         <span class="provision-verify-icon">
-          <i class="fas fa-envelope-open-text"></i>
+          <i class="aisc-ico aisc-ico--mail"></i>
         </span>
         <h2>Esperando confirmacion</h2>
         <p>Enviamos un email de verificacion a <strong>${this.escapeHtml(email)}</strong>.</p>
-        <div class="provision-verify-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
+        <div class="provision-verify-spinner"><i class="aisc-ico fa-spin aisc-ico--loader"></i></div>
         <p class="provision-verify-status" id="provisionVerifyStatus">
           ${this.escapeHtml(this.statusLabel(this.activeJob?.status || 'pending_email_confirmation'))}...
         </p>
@@ -367,7 +367,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
       <footer class="provision-page-actions">
         <button type="button" class="provision-back-btn" data-action="back-to-choice">Atras</button>
         <button type="submit" form="provisionFinalForm" class="provision-next-btn" data-action="next" aria-label="Afiliar">
-          <i class="fas fa-arrow-right"></i>
+          <i class="aisc-ico aisc-ico--arrow-right"></i>
         </button>
       </footer>
     `;
@@ -420,7 +420,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
       </section>
       <footer class="provision-page-actions">
         <button type="submit" form="provisionFinalForm" class="provision-next-btn" data-action="next" aria-label="Asignar permisos">
-          <i class="fas fa-arrow-right"></i>
+          <i class="aisc-ico aisc-ico--arrow-right"></i>
         </button>
       </footer>
     `;
@@ -429,7 +429,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
   renderStepFinalSubmitting() {
     return `
       <section class="provision-verify-card">
-        <div class="provision-verify-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
+        <div class="provision-verify-spinner"><i class="aisc-ico fa-spin aisc-ico--loader"></i></div>
         <h2>Finalizando...</h2>
         <p>Guardando perfil, organizacion y permisos.</p>
       </section>
@@ -462,14 +462,14 @@ class DevLeadUserProvisioningView extends DevBaseView {
     return `
       <section class="provision-verify-card provision-final-card">
         <span class="provision-verify-icon provision-verify-icon--success">
-          <i class="fas fa-check"></i>
+          <i class="aisc-ico aisc-ico--check"></i>
         </span>
         <h2>${this.escapeHtml(title)}</h2>
         <p class="provision-verify-meta">${this.escapeHtml(detail)}</p>
       </section>
       <footer class="provision-page-actions">
         <button type="button" class="provision-next-btn provision-next-btn--wide" data-action="continue">
-          Continuar <i class="fas fa-arrow-right"></i>
+          Continuar <i class="aisc-ico aisc-ico--arrow-right"></i>
         </button>
       </footer>
     `;

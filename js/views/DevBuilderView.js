@@ -113,34 +113,34 @@ class DevBuilderView extends DevBaseView {
       <header class="builder-tabs-header" id="builderTabsHeader">
         <div class="builder-tabs">
           <button class="builder-tab active" data-tab="settings">
-            <i class="ph ph-gear"></i> Configuración
+            <i class="aisc-ico aisc-ico--settings"></i> Configuración
           </button>
           <button class="builder-tab" data-tab="technical">
-            <i class="ph ph-stack"></i> Módulos
+            <i class="aisc-ico aisc-ico--layers"></i> Módulos
           </button>
           <button class="builder-tab" data-tab="inputs">
             <i class="ph ph-textbox"></i> Inputs
           </button>
           <button class="builder-tab" data-tab="ficha">
-            <i class="ph ph-cardholder"></i> Ficha del Flujo
+            <i class="aisc-ico aisc-ico--credit-card"></i> Ficha del Flujo
           </button>
         </div>
         <div class="builder-header-meta">
           <span class="flow-status-badge draft" id="flowStatusBadge">Borrador</span>
           <span class="builder-autosave-indicator" id="builderAutosaveIndicator" hidden></span>
           <button type="button" class="builder-issues-btn" id="builderIssuesBtn" title="Problemas detectados" aria-haspopup="dialog">
-            <i class="ph ph-warning"></i> <span class="builder-issues-label">Issues</span>
+            <i class="aisc-ico aisc-ico--alert-warning"></i> <span class="builder-issues-label">Issues</span>
             <span class="builder-issues-count" id="builderIssuesCount" hidden>0</span>
           </button>
           <button type="button" class="builder-versions-btn" id="builderVersionsBtn" title="Historial de versiones" aria-haspopup="dialog">
-            <i class="ph ph-clock-counter-clockwise"></i> <span class="builder-versions-label">Versiones</span>
+            <i class="aisc-ico aisc-ico--history"></i> <span class="builder-versions-label">Versiones</span>
           </button>
           <span class="builder-cost-badge" id="builderCostBadge" title="Coste estimado por ejecución"></span>
           <button type="button" class="builder-undo-btn" id="builderUndoBtn" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled>
-            <i class="ph ph-arrow-counter-clockwise"></i>
+            <i class="aisc-ico aisc-ico--refresh"></i>
           </button>
           <button type="button" class="builder-redo-btn" id="builderRedoBtn" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer" disabled>
-            <i class="ph ph-arrow-clockwise"></i>
+            <i class="aisc-ico aisc-ico--refresh"></i>
           </button>
         </div>
       </header>
@@ -154,7 +154,7 @@ class DevBuilderView extends DevBaseView {
             <div class="builder-sidebar-header builder-components-header">
               <h3 class="builder-components-title" id="componentsSectionTitle">Biblioteca</h3>
               <div class="builder-components-search-wrap">
-                <i class="ph ph-magnifying-glass builder-components-search-icon"></i>
+                <i class="aisc-ico builder-components-search-icon aisc-ico--search"></i>
                 <input type="text" class="builder-components-search" id="componentsSearchInput" placeholder="Buscar" aria-label="Buscar componentes">
               </div>
             </div>
@@ -171,12 +171,12 @@ class DevBuilderView extends DevBaseView {
               <div class="builder-config-section builder-config-section--cover">
                 <div class="flow-cover-container" id="flowImageUpload">
                   <div class="flow-cover-preview" id="flowImagePreview" title="Subir portada">
-                    <i class="ph ph-image"></i>
+                    <i class="aisc-ico aisc-ico--image"></i>
                     <span>Subir portada</span>
                   </div>
                   <div class="flow-cover-actions" aria-hidden="true">
-                    <button type="button" class="flow-cover-btn glass-black" id="removeImageBtn" title="Quitar portada" aria-label="Quitar portada" hidden><i class="ph ph-trash"></i></button>
-                    <button type="button" class="flow-cover-btn glass-black" id="changeCoverBtn" title="Cambiar portada" aria-label="Cambiar portada"><i class="ph ph-image"></i></button>
+                    <button type="button" class="flow-cover-btn glass-black" id="removeImageBtn" title="Quitar portada" aria-label="Quitar portada" hidden><i class="aisc-ico aisc-ico--delete"></i></button>
+                    <button type="button" class="flow-cover-btn glass-black" id="changeCoverBtn" title="Cambiar portada" aria-label="Cambiar portada"><i class="aisc-ico aisc-ico--image"></i></button>
                   </div>
                   <input type="file" id="flowImageInput" accept="image/*,video/*" hidden>
                 </div>
@@ -237,14 +237,14 @@ class DevBuilderView extends DevBaseView {
                   <label>Modelo de cobro</label>
                   <div class="pricing-mode-toggle" role="radiogroup" aria-label="Modelo de cobro">
                     <button type="button" class="pricing-mode-btn" data-pricing-mode="auto" role="radio" aria-checked="true">
-                      <i class="fas fa-bolt"></i>
+                      <i class="aisc-ico aisc-ico--zap"></i>
                       <div>
                         <strong>Automatico</strong>
                         <span>Cobra lo que reporte n8n cada run</span>
                       </div>
                     </button>
                     <button type="button" class="pricing-mode-btn" data-pricing-mode="fixed" role="radio" aria-checked="false">
-                      <i class="fas fa-lock"></i>
+                      <i class="aisc-ico aisc-ico--lock"></i>
                       <div>
                         <strong>Fijo</strong>
                         <span>Cobra siempre el mismo precio</span>
@@ -257,7 +257,7 @@ class DevBuilderView extends DevBaseView {
                   </div>
                   <div class="pricing-observed" id="pricingObservedBox" hidden>
                     <div class="pricing-observed-header">
-                      <i class="fas fa-chart-line"></i>
+                      <i class="aisc-ico aisc-ico--growth"></i>
                       <span>Uso real observado</span>
                       <span class="pricing-observed-runs" id="pricingObservedRuns">— runs</span>
                     </div>
@@ -280,7 +280,7 @@ class DevBuilderView extends DevBaseView {
                       </div>
                     </div>
                     <button type="button" class="pricing-observed-apply" id="pricingApplyAvgBtn" hidden>
-                      <i class="fas fa-magic"></i>
+                      <i class="aisc-ico aisc-ico--sparkle"></i>
                       Usar promedio como precio fijo
                     </button>
                   </div>
@@ -298,8 +298,8 @@ class DevBuilderView extends DevBaseView {
                     <div id="technicalModulesList" class="modules-node-map-wrap">
                       <div class="modules-node-map" id="modulesNodeMap"></div>
                       <div class="modules-node-map-actions">
-                        <button type="button" class="btn-small btn-primary-modules" id="technicalAddModuleBtn"><i class="ph ph-plus"></i> Añadir módulo</button>
-                        <button type="button" class="btn-small btn-ghost" id="technicalDetailsPanelBtn" title="Detalles técnicos"><i class="ph ph-wrench"></i> Detalles técnicos</button>
+                        <button type="button" class="btn-small btn-primary-modules" id="technicalAddModuleBtn"><i class="aisc-ico aisc-ico--add"></i> Añadir módulo</button>
+                        <button type="button" class="btn-small btn-ghost" id="technicalDetailsPanelBtn" title="Detalles técnicos"><i class="aisc-ico aisc-ico--settings"></i> Detalles técnicos</button>
                       </div>
                     </div>
                     <!-- Modal: editar nodo (doble clic en un nodo) -->
@@ -307,7 +307,7 @@ class DevBuilderView extends DevBaseView {
                       <div class="modal-content modal-module-node">
                         <div class="modal-header">
                           <h3 id="moduleNodeModalTitle">Editar módulo</h3>
-                          <button type="button" class="btn-icon btn-ghost modal-close" id="moduleNodeModalClose" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+                          <button type="button" class="btn-icon btn-ghost modal-close" id="moduleNodeModalClose" aria-label="Cerrar"><i class="aisc-ico aisc-ico--close"></i></button>
                         </div>
                         <div class="modal-body">
                           <input type="hidden" id="moduleNodeModalIndex" value="">
@@ -362,7 +362,7 @@ class DevBuilderView extends DevBaseView {
                           <!-- Outputs de módulos anteriores: drag a cualquier input/textarea para insertar la expression -->
                           <div class="module-drag-vars-panel" id="moduleNodeDragVarsPanel" hidden>
                             <div class="module-drag-vars-header">
-                              <i class="ph ph-tree-structure"></i>
+                              <i class="aisc-ico aisc-ico--flows"></i>
                               <span>Outputs disponibles</span>
                               <span class="module-drag-vars-hint">Arrastra a un campo</span>
                             </div>
@@ -370,10 +370,10 @@ class DevBuilderView extends DevBaseView {
                           </div>
                         </div>
                         <div class="modal-footer">
-                          <button type="button" class="btn-small btn-ghost" id="moduleNodeModalSandbox"><i class="ph ph-play"></i> Probar módulo</button>
+                          <button type="button" class="btn-small btn-ghost" id="moduleNodeModalSandbox"><i class="aisc-ico aisc-ico--play"></i> Probar módulo</button>
                           <div style="flex: 1;"></div>
                           <button type="button" class="btn-small btn-ghost" id="moduleNodeModalCancel">Cancelar</button>
-                          <button type="button" class="btn-small btn-primary-modules" id="moduleNodeModalSave"><i class="ph ph-check"></i> Guardar</button>
+                          <button type="button" class="btn-small btn-primary-modules" id="moduleNodeModalSave"><i class="aisc-ico aisc-ico--check"></i> Guardar</button>
                         </div>
                       </div>
                     </div>
@@ -383,8 +383,8 @@ class DevBuilderView extends DevBaseView {
               <!-- Panel derecho: dentro del tab, debajo del header y respetando footer -->
               <div class="builder-panel-right" id="technicalDetailsPanel">
               <div class="builder-panel-right-header">
-                <h4><i class="ph ph-wrench"></i> Detalles técnicos</h4>
-                <button type="button" class="btn-icon btn-ghost" id="technicalDetailsPanelClose" title="Cerrar"><i class="ph ph-x"></i></button>
+                <h4><i class="aisc-ico aisc-ico--settings"></i> Detalles técnicos</h4>
+                <button type="button" class="btn-icon btn-ghost" id="technicalDetailsPanelClose" title="Cerrar"><i class="aisc-ico aisc-ico--close"></i></button>
               </div>
               <div class="builder-panel-right-body">
                   <div class="settings-field">
@@ -432,8 +432,8 @@ class DevBuilderView extends DevBaseView {
                     <label for="techDetailsSignatureSecret">Signature secret (HMAC-SHA256)</label>
                     <div class="signature-secret-row">
                       <input type="text" id="techDetailsSignatureSecret" placeholder="Click «Generar» para crear un secret" readonly>
-                      <button type="button" class="btn-small btn-ghost" id="techDetailsSignatureGenerate" title="Generar nuevo secret"><i class="ph ph-arrows-clockwise"></i></button>
-                      <button type="button" class="btn-small btn-ghost" id="techDetailsSignatureCopy" title="Copiar secret"><i class="ph ph-copy"></i></button>
+                      <button type="button" class="btn-small btn-ghost" id="techDetailsSignatureGenerate" title="Generar nuevo secret"><i class="aisc-ico aisc-ico--refresh"></i></button>
+                      <button type="button" class="btn-small btn-ghost" id="techDetailsSignatureCopy" title="Copiar secret"><i class="aisc-ico aisc-ico--copy"></i></button>
                     </div>
                     <span class="field-help">Cada request al webhook incluirá el header <code>X-Flow-Signature: sha256=&lt;HMAC(secret, body)&gt;</code>. Verifica en tu endpoint para garantizar autenticidad.</span>
                 </div>
@@ -461,12 +461,12 @@ class DevBuilderView extends DevBaseView {
           <div class="builder-tab-content" id="tabInputs">
             <div class="builder-canvas" id="builderCanvas">
               <div class="canvas-empty-state" id="canvasEmptyState">
-                <i class="ph ph-plus-circle"></i>
+                <i class="aisc-ico aisc-ico--add"></i>
                 <h4>Arrastra componentes aquí</h4>
                 <p>Construye el formulario de entrada de tu flujo</p>
               </div>
               <div class="canvas-empty-state canvas-automated-state" id="canvasAutomatedState" hidden>
-                <i class="ph ph-robot"></i>
+                <i class="aisc-ico aisc-ico--bot"></i>
                 <h4>Flujo automatizado</h4>
                 <p>Este flujo se ejecuta automáticamente por el sistema (Cron/Trigger). No requiere intervención del usuario final, por lo que no tiene formulario de entrada.</p>
               </div>
@@ -480,13 +480,13 @@ class DevBuilderView extends DevBaseView {
           <div class="builder-tab-content" id="tabFicha">
             <div class="builder-ficha-wrapper" id="builderFichaWrapper">
               <section class="ficha-section ficha-section--card" aria-labelledby="fichaCardHeading">
-                <h3 id="fichaCardHeading" class="ficha-section-title"><i class="ph ph-cardholder"></i> Vista de la card</h3>
+                <h3 id="fichaCardHeading" class="ficha-section-title"><i class="aisc-ico aisc-ico--credit-card"></i> Vista de la card</h3>
                 <div class="ficha-flow-card-wrap" id="fichaFlowCardWrap">
                   <!-- Se rellena con renderFichaFlowCard() -->
                 </div>
               </section>
               <section class="ficha-section ficha-section--form" aria-labelledby="fichaFormHeading">
-                <h3 id="fichaFormHeading" class="ficha-section-title"><i class="ph ph-monitor-play"></i> Vista en el Studio</h3>
+                <h3 id="fichaFormHeading" class="ficha-section-title"><i class="aisc-ico aisc-ico--play"></i> Vista en el Studio</h3>
                 <div class="ficha-inputs-preview" id="fichaInputsPreview">
                   <p class="ficha-inputs-empty">Sin campos de entrada.</p>
                 </div>
@@ -498,11 +498,11 @@ class DevBuilderView extends DevBaseView {
         <!-- Panel derecho: Propiedades (oculto por defecto; solo visible en pestaña Inputs) -->
         <aside class="builder-sidebar builder-properties" hidden>
           <div class="builder-sidebar-header">
-            <h3><i class="ph ph-sliders-horizontal"></i> Propiedades</h3>
+            <h3><i class="aisc-ico aisc-ico--filter"></i> Propiedades</h3>
           </div>
           <div class="builder-properties-content" id="propertiesPanel">
             <div class="properties-empty">
-              <i class="ph ph-cursor-click"></i>
+              <i class="aisc-ico aisc-ico--cursor-click"></i>
               <p>Selecciona un campo para editar sus propiedades</p>
             </div>
           </div>
@@ -528,7 +528,7 @@ class DevBuilderView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-lg">
           <div class="modal-header">
-            <h3><i class="ph ph-play"></i> Probar Flujo</h3>
+            <h3><i class="aisc-ico aisc-ico--play"></i> Probar Flujo</h3>
             <button class="modal-close" id="closeTestModal">&times;</button>
           </div>
           <div class="modal-body">
@@ -545,7 +545,7 @@ class DevBuilderView extends DevBaseView {
           <div class="modal-footer">
             <button class="btn-builder-secondary" id="closeTestBtn">Cerrar</button>
             <button class="btn-builder-primary" id="runTestBtn">
-              <i class="ph ph-play"></i> Ejecutar
+              <i class="aisc-ico aisc-ico--play"></i> Ejecutar
             </button>
           </div>
         </div>
@@ -556,7 +556,7 @@ class DevBuilderView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-versions">
           <div class="modal-header">
-            <h3 id="versionsTitle"><i class="ph ph-clock-counter-clockwise"></i> Historial de versiones</h3>
+            <h3 id="versionsTitle"><i class="aisc-ico aisc-ico--history"></i> Historial de versiones</h3>
             <button type="button" class="modal-close" id="versionsClose" aria-label="Cerrar">&times;</button>
           </div>
           <div class="modal-body">
@@ -572,7 +572,7 @@ class DevBuilderView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-lg modal-sandbox">
           <div class="modal-header">
-            <h3 id="moduleSandboxTitle"><i class="ph ph-play"></i> Probar módulo aislado</h3>
+            <h3 id="moduleSandboxTitle"><i class="aisc-ico aisc-ico--play"></i> Probar módulo aislado</h3>
             <button type="button" class="modal-close" id="moduleSandboxClose" aria-label="Cerrar">&times;</button>
           </div>
           <div class="modal-body">
@@ -591,7 +591,7 @@ class DevBuilderView extends DevBaseView {
               <label for="sandboxInput" class="sandbox-section-label">Payload de entrada (JSON)</label>
               <textarea id="sandboxInput" class="property-json-editor sandbox-input" rows="8" placeholder='{"inputs": {"campo": "valor"}}'></textarea>
               <div class="sandbox-input-actions">
-                <button type="button" class="btn-small btn-ghost" id="sandboxFillFromInputs"><i class="ph ph-magic-wand"></i> Rellenar con defaults del schema</button>
+                <button type="button" class="btn-small btn-ghost" id="sandboxFillFromInputs"><i class="aisc-ico aisc-ico--sparkle"></i> Rellenar con defaults del schema</button>
                 <button type="button" class="btn-small btn-ghost" id="sandboxFillEmpty">Vaciar</button>
               </div>
             </div>
@@ -606,7 +606,7 @@ class DevBuilderView extends DevBaseView {
           </div>
           <div class="modal-footer">
             <button type="button" class="btn-small btn-ghost" id="sandboxCancelBtn">Cerrar</button>
-            <button type="button" class="btn-small btn-primary-modules" id="sandboxRunBtn"><i class="ph ph-play"></i> Ejecutar</button>
+            <button type="button" class="btn-small btn-primary-modules" id="sandboxRunBtn"><i class="aisc-ico aisc-ico--play"></i> Ejecutar</button>
           </div>
         </div>
       </div>
@@ -616,7 +616,7 @@ class DevBuilderView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-variables">
           <div class="modal-header">
-            <h3 id="variablesTitle"><i class="ph ph-brackets-curly"></i> Insertar variable</h3>
+            <h3 id="variablesTitle"><i class="aisc-ico aisc-ico--coding"></i> Insertar variable</h3>
             <button type="button" class="modal-close" id="variablesClose" aria-label="Cerrar">&times;</button>
           </div>
           <div class="modal-body">
@@ -631,7 +631,7 @@ class DevBuilderView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-command-palette">
           <div class="command-palette-input-wrap">
-            <i class="ph ph-magnifying-glass command-palette-icon"></i>
+            <i class="aisc-ico command-palette-icon aisc-ico--search"></i>
             <input type="text" class="command-palette-input" id="commandPaletteInput" placeholder="Buscar campo por label, key o tipo…" aria-label="Buscar campo">
             <span class="command-palette-hint">↑↓ navegar · Enter abrir · Esc cerrar</span>
           </div>
@@ -645,7 +645,7 @@ class DevBuilderView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-issues">
           <div class="modal-header">
-            <h3 id="issuesModalTitle"><i class="ph ph-warning"></i> Problemas detectados</h3>
+            <h3 id="issuesModalTitle"><i class="aisc-ico aisc-ico--alert-warning"></i> Problemas detectados</h3>
             <button type="button" class="modal-close" id="issuesModalClose" aria-label="Cerrar">&times;</button>
           </div>
           <div class="modal-body">
@@ -661,7 +661,7 @@ class DevBuilderView extends DevBaseView {
         <div class="modal-overlay"></div>
         <div class="modal-content modal-sm">
           <div class="modal-header">
-            <h3><i class="ph ph-warning"></i> Confirmar eliminación</h3>
+            <h3><i class="aisc-ico aisc-ico--alert-warning"></i> Confirmar eliminación</h3>
             <button class="modal-close" id="closeDeleteModal">&times;</button>
           </div>
           <div class="modal-body">
@@ -671,7 +671,7 @@ class DevBuilderView extends DevBaseView {
           <div class="modal-footer">
             <button class="btn-builder-secondary" id="cancelDeleteBtn">Cancelar</button>
             <button class="btn-builder-danger" id="confirmDeleteBtn">
-              <i class="ph ph-trash"></i> Eliminar
+              <i class="aisc-ico aisc-ico--delete"></i> Eliminar
             </button>
           </div>
         </div>
@@ -988,7 +988,7 @@ class DevBuilderView extends DevBaseView {
             <div class="studio-canvas-empty" id="fichaStudioCanvas"></div>
             <footer class="studio-footer">
               <div class="studio-footer-credits">
-                <div class="studio-credits-icon"><i class="fas fa-coins"></i></div>
+                <div class="studio-credits-icon"><i class="aisc-ico aisc-ico--credits"></i></div>
                 <span class="studio-credits-text">— creditos restantes</span>
                 <span class="studio-credits-cost">${cost} creditos esta produccion</span>
               </div>
@@ -1097,14 +1097,14 @@ class DevBuilderView extends DevBaseView {
             <div class="flow-card-gradient" aria-hidden="true"></div>
             <div class="flow-card-badges">${badges.join('')}</div>
             <div class="flow-card-actions">
-              <button type="button" class="flow-card-icon-btn flow-card-icon-like" data-action="like" title="Like" aria-label="Like" tabindex="-1"><i class="fas fa-heart"></i></button>
-              <button type="button" class="flow-card-icon-btn flow-card-icon-save" data-action="save" title="Guardar" aria-label="Guardar" tabindex="-1"><i class="fas fa-bookmark"></i></button>
+              <button type="button" class="flow-card-icon-btn flow-card-icon-like" data-action="like" title="Like" aria-label="Like" tabindex="-1"><i class="aisc-ico aisc-ico--likes"></i></button>
+              <button type="button" class="flow-card-icon-btn flow-card-icon-save" data-action="save" title="Guardar" aria-label="Guardar" tabindex="-1"><i class="aisc-ico aisc-ico--bookmark"></i></button>
             </div>
             <div class="flow-card-info">
               <h3 class="flow-card-title">${name}</h3>
               <div class="flow-card-info-meta">
                 ${primaryTagHtml}
-                <span class="flow-card-info-credits" title="Creditos por ejecucion"><i class="fas fa-bolt"></i>${cost}</span>
+                <span class="flow-card-info-credits" title="Creditos por ejecucion"><i class="aisc-ico aisc-ico--zap"></i>${cost}</span>
               </div>
               <div class="flow-card-info-extra">
                 <span class="flow-card-info-pill">${outputTypeLabel}</span>
@@ -1283,7 +1283,7 @@ class DevBuilderView extends DevBaseView {
           preview.innerHTML = `<img src="${url}" alt="Portada del flujo">`;
         }
       } else {
-        preview.innerHTML = '<i class="ph ph-image"></i><span>Subir portada</span>';
+        preview.innerHTML = '<i class="aisc-ico aisc-ico--image"></i><span>Subir portada</span>';
       }
     }
     
@@ -1775,7 +1775,7 @@ class DevBuilderView extends DevBaseView {
     if (this.inputSchema.length === 0) {
       return `
         <div class="test-empty">
-          <i class="ph ph-warning"></i>
+          <i class="aisc-ico aisc-ico--alert-warning"></i>
           <p>No hay campos definidos para probar</p>
         </div>
       `;

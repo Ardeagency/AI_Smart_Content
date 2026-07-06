@@ -81,11 +81,11 @@
             <p>Inicia sesion como otro developer. Tu cuenta de Lead queda guardada para volver.</p>
           </div>
           <button type="button" class="switchuser-modal-close" data-action="close" aria-label="Cerrar">
-            <i class="fas fa-times"></i>
+            <i class="aisc-ico aisc-ico--close"></i>
           </button>
         </header>
         <div class="switchuser-modal-body" id="switchUserList">
-          <div class="switchuser-loading"><i class="fas fa-circle-notch fa-spin"></i> Cargando developers...</div>
+          <div class="switchuser-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando developers...</div>
         </div>
         <footer class="switchuser-modal-foot">
           <p class="switchuser-modal-status" id="switchUserStatus" role="status" aria-live="polite"></p>
@@ -130,7 +130,7 @@
     if (devs.length === 0) {
       host.innerHTML = `
         <div class="switchuser-empty">
-          <i class="fas fa-user-slash"></i>
+          <i class="aisc-ico aisc-ico--user-slash"></i>
           <p>No hay otros developers para cambiarse.</p>
         </div>
       `;
@@ -151,7 +151,7 @@
             <span class="switchuser-tag">${escapeHtml((d.dev_role || '').toUpperCase())}</span>
             <span class="switchuser-tag" data-rank="${escapeHtml(rank)}">${escapeHtml(rank.toUpperCase())}</span>
           </span>
-          <i class="fas fa-arrow-right switchuser-arrow"></i>
+          <i class="aisc-ico switchuser-arrow aisc-ico--arrow-right"></i>
         </button>
       `;
     }).join('');
@@ -177,7 +177,7 @@
       return;
     }
 
-    host.innerHTML = `<div class="udsu-loading"><i class="fas fa-circle-notch fa-spin"></i> Cargando cuentas...</div>`;
+    host.innerHTML = `<div class="udsu-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando cuentas...</div>`;
 
     try {
       const me = window.authService?.currentUser?.id;
@@ -190,7 +190,7 @@
       const others = (data || []).filter((p) => p.id !== me);
 
       if (others.length === 0) {
-        host.innerHTML = `<div class="udsu-empty"><i class="fas fa-user-slash"></i> No hay otras cuentas.</div>`;
+        host.innerHTML = `<div class="udsu-empty"><i class="aisc-ico aisc-ico--user-slash"></i> No hay otras cuentas.</div>`;
         return;
       }
 
@@ -294,7 +294,7 @@
     const btn = document.getElementById('switchUserBannerBtn');
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Volviendo...';
+      btn.innerHTML = '<i class="aisc-ico fa-spin aisc-ico--loader"></i> Volviendo...';
     }
 
     try {

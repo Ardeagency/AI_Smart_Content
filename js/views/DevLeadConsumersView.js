@@ -46,7 +46,7 @@ class DevLeadConsumersView extends DevBaseView {
             </div>
             <div class="cons-head-actions">
               <input type="search" id="consSearch" class="form-control" placeholder="Buscar por nombre, email u org..." autocomplete="off">
-              <a href="/dev/provisioning/users" class="btn btn-primary"><i class="fas fa-user-plus"></i> Crear usuario</a>
+              <a href="/dev/provisioning/users" class="btn btn-primary"><i class="aisc-ico aisc-ico--user-registration"></i> Crear usuario</a>
             </div>
           </div>
         </header>
@@ -65,7 +65,7 @@ class DevLeadConsumersView extends DevBaseView {
                 </tr>
               </thead>
               <tbody id="consBody">
-                <tr><td colspan="6" class="cons-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>
+                <tr><td colspan="6" class="cons-state"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando...</td></tr>
               </tbody>
             </table>
           </div>
@@ -115,7 +115,7 @@ class DevLeadConsumersView extends DevBaseView {
     } catch (err) {
       this.consumers = [];
       const body = this.container.querySelector('#consBody');
-      if (body) body.innerHTML = `<tr><td colspan="6" class="cons-state cons-state--error"><i class="fas fa-triangle-exclamation"></i> ${this.escapeHtml(err?.message || 'Error al cargar')}</td></tr>`;
+      if (body) body.innerHTML = `<tr><td colspan="6" class="cons-state cons-state--error"><i class="aisc-ico aisc-ico--alert-warning"></i> ${this.escapeHtml(err?.message || 'Error al cargar')}</td></tr>`;
     } finally {
       this._loading = false;
     }
@@ -167,8 +167,8 @@ class DevLeadConsumersView extends DevBaseView {
     const email = this.escapeHtml(c.email || '—');
     const verified = !!c.form_verified;
     const verifyBadge = verified
-      ? `<span class="cons-badge cons-badge--ok"><i class="fas fa-circle-check"></i> Verificado</span>`
-      : `<span class="cons-badge cons-badge--warn"><i class="fas fa-hourglass-half"></i> Pendiente</span>`;
+      ? `<span class="cons-badge cons-badge--ok"><i class="aisc-ico aisc-ico--check"></i> Verificado</span>`
+      : `<span class="cons-badge cons-badge--warn"><i class="aisc-ico aisc-ico--hourglass"></i> Pendiente</span>`;
     const aff = this.affiliationState(c);
     const stateCell = `${verifyBadge} <span class="cons-badge cons-badge--aff cons-badge--${aff.cls}">${aff.label}</span>`;
 
@@ -202,7 +202,7 @@ class DevLeadConsumersView extends DevBaseView {
         <td><div class="cons-orgs">${orgs}</div></td>
         <td><span class="cons-dim">${this.escapeHtml(created)}</span></td>
         <td class="cons-td-actions">
-          <button type="button" class="btn btn-secondary btn-sm" data-affiliate="${id}"><i class="fas fa-building-user"></i> Afiliar</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-affiliate="${id}"><i class="aisc-ico aisc-ico--organization"></i> Afiliar</button>
         </td>
       </tr>
     `;
@@ -239,8 +239,8 @@ class DevLeadConsumersView extends DevBaseView {
             <span class="cons-aff-org">${this.escapeHtml(a.name)}</span>
             <span class="cons-aff-role">${this.escapeHtml(this.ROLE_LABEL[a.role] || a.role)}</span>
             ${a.role === 'owner'
-              ? '<span class="cons-aff-lock" title="Owner: se gestiona al crear/transferir la org"><i class="fas fa-lock"></i></span>'
-              : `<button type="button" class="cons-aff-remove" data-remove-org="${this.escapeHtml(a.organization_id)}" title="Quitar afiliacion"><i class="fas fa-times"></i></button>`}
+              ? '<span class="cons-aff-lock" title="Owner: se gestiona al crear/transferir la org"><i class="aisc-ico aisc-ico--lock"></i></span>'
+              : `<button type="button" class="cons-aff-remove" data-remove-org="${this.escapeHtml(a.organization_id)}" title="Quitar afiliacion"><i class="aisc-ico aisc-ico--close"></i></button>`}
           </li>`).join('')
       : '<li class="cons-aff-empty">Sin afiliaciones todavia.</li>';
 
@@ -257,7 +257,7 @@ class DevLeadConsumersView extends DevBaseView {
           <h3>${this.escapeHtml(c.full_name || '(sin nombre)')}</h3>
           <span>${this.escapeHtml(c.email || '')}</span>
         </div>
-        <button type="button" class="team-modal-close" data-action="close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+        <button type="button" class="team-modal-close" data-action="close" aria-label="Cerrar"><i class="aisc-ico aisc-ico--close"></i></button>
       </header>
 
       <div class="team-modal-body">
@@ -278,7 +278,7 @@ class DevLeadConsumersView extends DevBaseView {
                   <label for="consAffRole">Rol</label>
                   <select id="consAffRole" name="role" required>${roleOpts}</select>
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Afiliar</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="aisc-ico aisc-ico--add"></i> Afiliar</button>
               </form>`
             : '<p class="cons-dim">Ya esta en todas las organizaciones disponibles.</p>'}
           <p class="provision-form-status" id="consAffStatus" role="status" aria-live="polite"></p>

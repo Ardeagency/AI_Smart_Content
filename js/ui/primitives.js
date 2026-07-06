@@ -96,7 +96,7 @@
       const disAttr    = isDisabled ? (tag === 'button' ? 'disabled' : 'aria-disabled="true"') : '';
       const dataAttr   = _dataAttrs(dataset);
       const iconHtml   = loading
-        ? '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>'
+        ? '<i class="aisc-ico fa-spin aisc-ico--loader" aria-hidden="true"></i>'
         : (icon ? `<i class="${_esc(icon)}" aria-hidden="true"></i>` : '');
       const labelHtml  = label ? `<span class="btn-label">${_esc(label)}</span>` : '';
 

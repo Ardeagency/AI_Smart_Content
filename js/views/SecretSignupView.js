@@ -278,7 +278,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
         <div class="ssup-plan-price"><span>$${price.toLocaleString('en-US')}</span><small>/${this._t('mes')}</small></div>
         <p class="ssup-plan-desc">${this.escapeHtml(p.description || '')}</p>
         <ul class="ssup-plan-feats">
-          ${feats.map((t) => `<li><i class="fas fa-check"></i> ${this.escapeHtml(t)}</li>`).join('')}
+          ${feats.map((t) => `<li><i class="aisc-ico aisc-ico--check"></i> ${this.escapeHtml(t)}</li>`).join('')}
         </ul>
         <button type="button" class="ssup-btn ssup-btn-primary ssup-btn-block" data-plan="${this.escapeHtml(p.id)}">${this._t('Elegir')} ${this.escapeHtml(p.name)}</button>
       </div>
@@ -327,7 +327,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
           </label>
         `).join('')}
       </div>
-      ${this._preview ? `<p class="ssup-pay-note"><i class="fas fa-circle-info"></i> ${this._t('Pasarela en modo demo — no se realiza ningún cobro.')}</p>` : ''}
+      ${this._preview ? `<p class="ssup-pay-note"><i class="aisc-ico aisc-ico--alert-info"></i> ${this._t('Pasarela en modo demo — no se realiza ningún cobro.')}</p>` : ''}
       <p class="ssup-status" id="ssupStatus" role="status" aria-live="polite"></p>
       <button type="button" class="ssup-btn ssup-btn-primary ssup-btn-block" data-action="pay">
         ${this._preview ? this._t('Pagar y continuar (demo)') : this._t('Pagar y continuar')}
@@ -425,7 +425,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
           <div class="ssup-intgs">${chips}</div>
         </div>
         <p class="ssup-status" id="ssupStatus" role="status" aria-live="polite"></p>
-        <button type="submit" class="ssup-btn ssup-btn-primary ssup-btn-block" data-action="auto-create"><i class="fas fa-wand-magic-sparkles"></i> ${this._t('Crear y analizar')}</button>
+        <button type="submit" class="ssup-btn ssup-btn-primary ssup-btn-block" data-action="auto-create"><i class="aisc-ico aisc-ico--sparkle"></i> ${this._t('Crear y analizar')}</button>
         <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-block" data-action="back-create-brand">${this._t('Volver')}</button>
       </form>
     `;
@@ -443,8 +443,8 @@ class SecretSignupView extends (window.BaseView || class {}) {
     const done = this._autoSimStep || 0;
     const items = steps.map((s, i) => {
       const state = i < done ? 'done' : (i === done ? 'active' : 'pending');
-      const mark = state === 'done' ? '<i class="fas fa-check"></i>'
-        : state === 'active' ? '<i class="fas fa-circle-notch fa-spin"></i>'
+      const mark = state === 'done' ? '<i class="aisc-ico aisc-ico--check"></i>'
+        : state === 'active' ? '<i class="aisc-ico fa-spin aisc-ico--loader"></i>'
         : '<span class="ssup-load-dot"></span>';
       return `<li class="ssup-load-item is-${state}"><span class="ssup-load-mark">${mark}</span><span>${this.escapeHtml(s)}</span></li>`;
     }).join('');
@@ -497,7 +497,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
       <div class="ssup-ap-actions">
         ${idx > 0 ? `<button type="button" class="ssup-btn ssup-btn-ghost" data-action="ap-back">← ${this._t('Atrás')}</button>` : `<button type="button" class="ssup-btn ssup-btn-ghost" data-action="back-create-brand">← ${this._t('Atrás')}</button>`}
         ${isLast
-          ? `<button type="button" class="ssup-btn ssup-btn-primary" data-action="ap-finish"><i class="fas fa-circle-check"></i> ${this._t('Terminar mi marca')}</button>`
+          ? `<button type="button" class="ssup-btn ssup-btn-primary" data-action="ap-finish"><i class="aisc-ico aisc-ico--check"></i> ${this._t('Terminar mi marca')}</button>`
           : `<button type="button" class="ssup-btn ssup-btn-primary" data-action="ap-next">${this._t('Aceptar y seguir')} →</button>`}
       </div>
     `;
@@ -518,11 +518,11 @@ class SecretSignupView extends (window.BaseView || class {}) {
       <div class="ssup-color-row" data-color-idx="${i}">
         <input type="color" data-color-hex value="${/^#[0-9a-f]{6}$/i.test(c.hex) ? c.hex : '#000000'}">
         <span class="ssup-color-role">${this.escapeHtml(c.role || ('color ' + (i + 1)))}</span>
-        <button type="button" class="ssup-row-rm" data-color-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+        <button type="button" class="ssup-row-rm" data-color-rm="${i}" aria-label="Quitar"><i class="aisc-ico aisc-ico--close"></i></button>
       </div>`).join('');
     return `<div class="ssup-field"><label>${this._t('Paleta de la marca')}</label>
       <div id="ssupColors">${rows || `<p class="ssup-hint">${this._t('Sin colores detectados.')}</p>`}</div>
-      <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-sm" data-action="ap-add-color"><i class="fas fa-plus"></i> ${this._t('Agregar color')}</button></div>`;
+      <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-sm" data-action="ap-add-color"><i class="aisc-ico aisc-ico--add"></i> ${this._t('Agregar color')}</button></div>`;
   }
 
   _apListBody(kind, label, icon) {
@@ -533,7 +533,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
       <div class="ssup-list-row" data-${kind}-idx="${i}">
         <span class="ssup-list-thumb"><i class="fas ${icon}"></i></span>
         <input class="form-input" ${attr}-name value="${this.escapeHtml(it.name || '')}" placeholder="${this.escapeHtml(label)}">
-        <button type="button" class="ssup-row-rm" data-${kind}-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+        <button type="button" class="ssup-row-rm" data-${kind}-rm="${i}" aria-label="Quitar"><i class="aisc-ico aisc-ico--close"></i></button>
       </div>`).join('');
     return `<div class="ssup-field"><label>${this.escapeHtml(label)} (${items.length})</label><div id="ssup${kind}">${rows}</div></div>`;
   }
@@ -543,11 +543,11 @@ class SecretSignupView extends (window.BaseView || class {}) {
       <div class="ssup-list-row" data-comp-idx="${i}">
         <input class="form-input" data-comp-name value="${this.escapeHtml(c.name || '')}" placeholder="${this._t('Nombre')}">
         <input class="form-input" data-comp-web value="${this.escapeHtml(c.website || '')}" placeholder="${this._t('sitio web')}">
-        <button type="button" class="ssup-row-rm" data-comp-rm="${i}" aria-label="Quitar"><i class="fas fa-times"></i></button>
+        <button type="button" class="ssup-row-rm" data-comp-rm="${i}" aria-label="Quitar"><i class="aisc-ico aisc-ico--close"></i></button>
       </div>`).join('');
     return `<div class="ssup-field"><label>${this._t('Competidores')} (${(this._approval.competitors || []).length})</label>
       <div id="ssupComps">${rows || `<p class="ssup-hint">${this._t('Sin competidores.')}</p>`}</div>
-      <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-sm" data-action="ap-add-comp"><i class="fas fa-plus"></i> ${this._t('Agregar competidor')}</button></div>`;
+      <button type="button" class="ssup-btn ssup-btn-ghost ssup-btn-sm" data-action="ap-add-comp"><i class="aisc-ico aisc-ico--add"></i> ${this._t('Agregar competidor')}</button></div>`;
   }
 
   _apReviewBody() {

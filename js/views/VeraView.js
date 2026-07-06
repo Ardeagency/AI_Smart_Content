@@ -1425,23 +1425,23 @@ class VeraView extends (window.BaseView || class {}) {
         <aside class="vera-history" id="veraHistory" aria-label="${__('Conversaciones recientes')}">
           <div class="vera-history-head">
             <button class="vera-history-new" id="veraNewChat" title="${__('Nuevo chat')}">
-              <i class="fas fa-pen"></i><span>${__('Nuevo chat')}</span>
+              <i class="aisc-ico aisc-ico--edit"></i><span>${__('Nuevo chat')}</span>
             </button>
             <button class="vera-history-collapse" id="veraHistoryCollapse" title="${__('Ocultar')}" aria-label="${__('Ocultar')}">
-              <i class="fas fa-chevron-right"></i>
+              <i class="aisc-ico aisc-ico--chevron-right"></i>
             </button>
           </div>
           <button class="vera-history-search" id="veraHistorySearchBtn" title="${__('Buscar chats')}">
-            <i class="fas fa-magnifying-glass"></i><span>${__('Buscar chats')}</span>
+            <i class="aisc-ico aisc-ico--search"></i><span>${__('Buscar chats')}</span>
           </button>
           <input type="text" class="vera-history-search-input" id="veraHistorySearchInput" placeholder="${__('Buscar…')}" hidden />
           <button class="vera-history-search vera-history-gallery" id="veraGalleryBtn" title="${__('Archivos generados')}">
-            <i class="fas fa-folder-open"></i><span>${__('Archivos generados')}</span>
+            <i class="aisc-ico aisc-ico--folder"></i><span>${__('Archivos generados')}</span>
           </button>
           <div class="vera-history-list" id="veraHistoryList"></div>
         </aside>
         <button class="vera-history-open" id="veraHistoryOpen" title="${__('Mostrar conversaciones')}" aria-label="${__('Mostrar conversaciones')}">
-          <i class="fas fa-clock-rotate-left"></i>
+          <i class="aisc-ico aisc-ico--history"></i>
         </button>
         <div class="vera-history-scrim" id="veraHistoryScrim"></div>
         <div class="gpt-main" id="gptMain">
@@ -1461,26 +1461,26 @@ class VeraView extends (window.BaseView || class {}) {
                 <div class="gpt-composer-btns">
                   <div class="vera-plus-wrap">
                     <button class="gpt-composer-icon" id="veraPlus" title="${__('Adjuntar')}" aria-haspopup="true" aria-expanded="false">
-                      <i class="fas fa-plus"></i>
+                      <i class="aisc-ico aisc-ico--add"></i>
                     </button>
                     <div class="vera-plus-menu" id="veraPlusMenu" hidden role="menu">
                       <button class="vera-plus-item" id="veraMenuFiles" role="menuitem">
-                        <i class="fas fa-paperclip"></i><span>${__('Agregar archivos o fotos')}</span>
+                        <i class="aisc-ico aisc-ico--paperclip"></i><span>${__('Agregar archivos o fotos')}</span>
                       </button>
                       <div class="vera-plus-sep"></div>
-                      <button class="vera-plus-item" data-lib-type="product" role="menuitem"><i class="fas fa-box"></i><span>${__('Producto')}</span></button>
-                      <button class="vera-plus-item" data-lib-type="campaign" role="menuitem"><i class="fas fa-bullhorn"></i><span>${__('Campaña')}</span></button>
-                      <button class="vera-plus-item" data-lib-type="campaign_objective" role="menuitem"><i class="fas fa-bullseye"></i><span>${__('Objetivo de campaña')}</span></button>
-                      <button class="vera-plus-item" data-lib-type="audience_objective" role="menuitem"><i class="fas fa-users"></i><span>${__('Objetivo de audiencia')}</span></button>
-                      <button class="vera-plus-item" data-lib-type="brief" role="menuitem"><i class="fas fa-clipboard"></i><span>${__('Brief')}</span></button>
-                      <button class="vera-plus-item" data-lib-type="service" role="menuitem"><i class="fas fa-briefcase"></i><span>${__('Servicios')}</span></button>
-                      <button class="vera-plus-item" data-lib-type="place" role="menuitem"><i class="fas fa-map-pin"></i><span>${__('Lugares')}</span></button>
-                      <button class="vera-plus-item" data-lib-type="character" role="menuitem"><i class="fas fa-masks-theater"></i><span>${__('Personajes')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="product" role="menuitem"><i class="aisc-ico aisc-ico--product"></i><span>${__('Producto')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="campaign" role="menuitem"><i class="aisc-ico aisc-ico--campaign"></i><span>${__('Campaña')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="campaign_objective" role="menuitem"><i class="aisc-ico aisc-ico--goal"></i><span>${__('Objetivo de campaña')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="audience_objective" role="menuitem"><i class="aisc-ico aisc-ico--audience"></i><span>${__('Objetivo de audiencia')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="brief" role="menuitem"><i class="aisc-ico aisc-ico--copy"></i><span>${__('Brief')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="service" role="menuitem"><i class="aisc-ico aisc-ico--brief"></i><span>${__('Servicios')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="place" role="menuitem"><i class="aisc-ico aisc-ico--places"></i><span>${__('Lugares')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="character" role="menuitem"><i class="aisc-ico aisc-ico--characters"></i><span>${__('Personajes')}</span></button>
                     </div>
                   </div>
                 </div>
                 <button class="gpt-send-btn" id="veraSend" title="${__('Enviar')}" disabled>
-                  <i class="fas fa-arrow-up"></i>
+                  <i class="aisc-ico aisc-ico--arrow-up"></i>
                 </button>
               </div>
               <input type="file" id="veraFileInput" multiple hidden
@@ -1498,13 +1498,13 @@ class VeraView extends (window.BaseView || class {}) {
           <div class="vera-artifact-panel-head">
             <span class="vera-artifact-panel-title" id="veraArtifactTitle">${__('Artefacto')}</span>
             <div class="vera-artifact-panel-actions">
-              <button class="vera-artifact-act" id="veraArtifactView" data-view="preview" title="${__('Vista previa')}"><i class="fas fa-eye"></i></button>
-              <button class="vera-artifact-act" id="veraArtifactCode" title="${__('Ver código')}"><i class="fas fa-code"></i></button>
-              <button class="vera-artifact-act" id="veraArtifactCopy" title="${__('Copiar')}"><i class="fas fa-copy"></i></button>
-              <button class="vera-artifact-act" id="veraArtifactPdf" title="${__('Descargar como PDF')}"><i class="fas fa-file-pdf"></i></button>
-              <button class="vera-artifact-act" id="veraArtifactDownload" title="${__('Descargar HTML')}"><i class="fas fa-download"></i></button>
-              <button class="vera-artifact-act" id="veraArtifactFull" title="${__('Pantalla completa')}"><i class="fas fa-expand-alt"></i></button>
-              <button class="vera-artifact-act vera-artifact-act--close" id="veraArtifactClose" title="${__('Cerrar')}"><i class="fas fa-times"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactView" data-view="preview" title="${__('Vista previa')}"><i class="aisc-ico aisc-ico--eye"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactCode" title="${__('Ver código')}"><i class="aisc-ico aisc-ico--coding"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactCopy" title="${__('Copiar')}"><i class="aisc-ico aisc-ico--copy"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactPdf" title="${__('Descargar como PDF')}"><i class="aisc-ico aisc-ico--document"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactDownload" title="${__('Descargar HTML')}"><i class="aisc-ico aisc-ico--dowload"></i></button>
+              <button class="vera-artifact-act" id="veraArtifactFull" title="${__('Pantalla completa')}"><i class="aisc-ico aisc-ico--expand"></i></button>
+              <button class="vera-artifact-act vera-artifact-act--close" id="veraArtifactClose" title="${__('Cerrar')}"><i class="aisc-ico aisc-ico--close"></i></button>
             </div>
           </div>
           <div class="vera-artifact-panel-body" id="veraArtifactBody"></div>
@@ -1514,13 +1514,13 @@ class VeraView extends (window.BaseView || class {}) {
           <div class="vera-gallery-modal" role="dialog" aria-modal="true" aria-label="${__('Archivos generados')}">
             <div class="vera-gallery-head">
               <div class="vera-gallery-head-title">
-                <i class="fas fa-folder-open"></i>
+                <i class="aisc-ico aisc-ico--folder"></i>
                 <span>${__('Archivos generados')}</span>
                 <span class="vera-gallery-count" id="veraGalleryCount"></span>
               </div>
               <div class="vera-gallery-head-actions">
-                <button class="vera-artifact-act" id="veraGalleryRefresh" title="${__('Actualizar')}"><i class="fas fa-rotate"></i></button>
-                <button class="vera-artifact-act vera-artifact-act--close" id="veraGalleryClose" title="${__('Cerrar')}"><i class="fas fa-times"></i></button>
+                <button class="vera-artifact-act" id="veraGalleryRefresh" title="${__('Actualizar')}"><i class="aisc-ico aisc-ico--refresh"></i></button>
+                <button class="vera-artifact-act vera-artifact-act--close" id="veraGalleryClose" title="${__('Cerrar')}"><i class="aisc-ico aisc-ico--close"></i></button>
               </div>
             </div>
             <div class="vera-gallery-body" id="veraGalleryBody"></div>
@@ -1953,7 +1953,7 @@ class VeraView extends (window.BaseView || class {}) {
       <div class="vera-lib-panel" role="dialog" aria-label="${__('Adjuntar {tipo}', { tipo: escapeHtml(def.label) })}">
         <div class="vera-lib-head">
           <span class="vera-lib-title"><i class="fas ${def.icon}"></i> ${__('Adjuntar {tipo}', { tipo: escapeHtml(def.label) })}</span>
-          <button class="vera-lib-x" data-lib-close aria-label="${__('Cerrar')}"><i class="fas fa-times"></i></button>
+          <button class="vera-lib-x" data-lib-close aria-label="${__('Cerrar')}"><i class="aisc-ico aisc-ico--close"></i></button>
         </div>
         <input type="text" class="vera-lib-search" id="veraLibSearch" placeholder="${__('Buscar…')}" />
         <div class="vera-lib-list" id="veraLibList"></div>
@@ -1995,7 +1995,7 @@ class VeraView extends (window.BaseView || class {}) {
 
     const load = async () => {
       if (!this._libCache[typeKey]) {
-        listEl.innerHTML = `<div class="vera-lib-loading"><i class="fas fa-spinner fa-spin"></i> ${__('Cargando…')}</div>`;
+        listEl.innerHTML = `<div class="vera-lib-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Cargando…')}</div>`;
         try { this._libCache[typeKey] = await def.load(); }
         catch (_) { this._libCache[typeKey] = []; }
       }
@@ -2302,7 +2302,7 @@ class VeraView extends (window.BaseView || class {}) {
             <div class="vera-gallery-card-title">${escapeHtml(a.title || __('Sin título'))}</div>
             <div class="vera-gallery-card-sub">${escapeHtml(meta)}</div>
           </div>
-          <div class="vera-gallery-card-dl"><i class="fas fa-download"></i></div>
+          <div class="vera-gallery-card-dl"><i class="aisc-ico aisc-ico--dowload"></i></div>
         </a>`;
     }).join('');
     body.innerHTML = `<div class="vera-gallery-grid">${cards}</div>`;
@@ -3108,18 +3108,18 @@ class VeraView extends (window.BaseView || class {}) {
             </span>`;
           if (mode === 'multi') {
             return `<button type="button" class="vera-opt vera-opt--check" data-vera-value="${val}" aria-pressed="false">
-              <span class="vera-opt-check"><i class="fas fa-check"></i></span>${body}
+              <span class="vera-opt-check"><i class="aisc-ico aisc-ico--check"></i></span>${body}
             </button>`;
           }
           if (mode === 'rank') {
             return `<div class="vera-opt vera-opt--rank" draggable="true" data-vera-value="${val}">
               <span class="vera-opt-num vera-opt-rank-num">${i + 1}</span>${body}
-              <span class="vera-opt-grip" aria-hidden="true"><i class="fas fa-bars"></i></span>
+              <span class="vera-opt-grip" aria-hidden="true"><i class="aisc-ico aisc-ico--menu"></i></span>
             </div>`;
           }
           return `<button type="button" class="vera-opt" role="option" data-vera-send="${val}" data-idx="${i}">
             <span class="vera-opt-num">${i + 1}</span>${body}
-            <span class="vera-opt-arrow"><i class="fas fa-arrow-right"></i></span>
+            <span class="vera-opt-arrow"><i class="aisc-ico aisc-ico--arrow-right"></i></span>
           </button>`;
         };
 
@@ -3137,17 +3137,17 @@ class VeraView extends (window.BaseView || class {}) {
             <p class="vera-clarify-q">${esc(firstQ)}</p>
             <div class="vera-clarify-tools">
               ${multiPage ? `<div class="vera-clarify-pager">
-                <button type="button" class="vera-clarify-prev" aria-label="${__('Anterior')}"><i class="fas fa-chevron-left"></i></button>
+                <button type="button" class="vera-clarify-prev" aria-label="${__('Anterior')}"><i class="aisc-ico aisc-ico--chevron-left"></i></button>
                 <span class="vera-clarify-count">${__('{n} de {total}', { n: 1, total: pages.length })}</span>
-                <button type="button" class="vera-clarify-next" aria-label="${__('Siguiente')}"><i class="fas fa-chevron-right"></i></button>
+                <button type="button" class="vera-clarify-next" aria-label="${__('Siguiente')}"><i class="aisc-ico aisc-ico--chevron-right"></i></button>
               </div>` : ''}
-              <button type="button" class="vera-clarify-close" aria-label="${__('Cerrar')}"><i class="fas fa-times"></i></button>
+              <button type="button" class="vera-clarify-close" aria-label="${__('Cerrar')}"><i class="aisc-ico aisc-ico--close"></i></button>
             </div>
           </div>
           <div class="vera-clarify-pages">${pagesHtml}</div>
           <div class="vera-clarify-more">
             <button type="button" class="vera-clarify-morebtn" data-vera-more>
-              <span class="vera-opt-num vera-opt-num--pencil"><i class="fas fa-pen"></i></span>
+              <span class="vera-opt-num vera-opt-num--pencil"><i class="aisc-ico aisc-ico--edit"></i></span>
               <span class="vera-clarify-more-text">${__('Algo más')}</span>
             </button>
             <div class="vera-clarify-actions">
@@ -3378,7 +3378,7 @@ class VeraView extends (window.BaseView || class {}) {
           '<div class="vera-artifact-bar">' +
             '<span>' + barLabel + '</span>' +
             '<button type="button" class="vera-artifact-open" onclick="window._veraOpenArtifact && window._veraOpenArtifact(this)">' +
-              '<i class="fas fa-expand-alt"></i> ' + __('Abrir en panel') +
+              '<i class="aisc-ico aisc-ico--expand"></i> ' + __('Abrir en panel') +
             '</button>' +
           '</div>' +
           '<iframe class="' + frameClass + '" ' +
@@ -3871,7 +3871,7 @@ class VeraView extends (window.BaseView || class {}) {
       const icon = a.type === 'library' ? this._libKindIcon(a.kind) : this._attachmentIconClass(a.type);
       const stateClass = a.status === 'error' ? ' gpt-attach-chip--error'
                         : a.status === 'uploading' ? ' gpt-attach-chip--uploading' : '';
-      const spinner = a.status === 'uploading' ? '<i class="fas fa-spinner fa-spin"></i>' : '';
+      const spinner = a.status === 'uploading' ? '<i class="aisc-ico fa-spin aisc-ico--loader"></i>' : '';
       const errorTitle = a.status === 'error' ? ` title="${escapeHtml(a.error || __('Error'))}"` : '';
       return `
         <span class="gpt-attach-chip${stateClass}" data-att-id="${escapeHtml(a.id)}"${errorTitle}>
@@ -3879,7 +3879,7 @@ class VeraView extends (window.BaseView || class {}) {
           <span class="gpt-attach-chip-name">${escapeHtml(a.name)}</span>
           ${spinner}
           <button type="button" class="gpt-attach-chip-remove" data-remove-id="${escapeHtml(a.id)}" aria-label="${__('Quitar')}">
-            <i class="fas fa-times"></i>
+            <i class="aisc-ico aisc-ico--close"></i>
           </button>
         </span>`;
     }).join('');

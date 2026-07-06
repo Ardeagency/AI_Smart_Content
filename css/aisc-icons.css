@@ -1,0 +1,153 @@
+/* AISC icon system — reemplaza fuentes FA/Phosphor por los SVG propios de recursos/icons.
+   Tecnica CSS mask: hereda color (currentColor) y tamano (1em) como una fuente de iconos.
+   Generado por scripts; regenerar tras anadir iconos. NO editar a mano. */
+.aisc-ico{display:inline-block;width:1em;height:1em;vertical-align:-0.125em;flex:0 0 auto;
+  background-color:currentColor;-webkit-mask:var(--_aisc-i) center/contain no-repeat;mask:var(--_aisc-i) center/contain no-repeat}
+.aisc-ico--actividad{--_aisc-i:url("/recursos/icons/Actividad.svg")}
+.aisc-ico--brands{--_aisc-i:url("/recursos/icons/Brands.svg")}
+.aisc-ico--characters{--_aisc-i:url("/recursos/icons/Characters.svg")}
+.aisc-ico--flecha-landing-1-seccion-2{--_aisc-i:url("/recursos/icons/Flecha landing 1 - seccion 2.svg")}
+.aisc-ico--flecha-landing-2-seccion-2{--_aisc-i:url("/recursos/icons/Flecha landing 2 - seccion 2.svg")}
+.aisc-ico--icono-2{--_aisc-i:url("/recursos/icons/Icono 2.svg")}
+.aisc-ico--identities{--_aisc-i:url("/recursos/icons/Identities.svg")}
+.aisc-ico--places{--_aisc-i:url("/recursos/icons/Places.svg")}
+.aisc-ico--planes{--_aisc-i:url("/recursos/icons/Planes.svg")}
+.aisc-ico--production{--_aisc-i:url("/recursos/icons/Production.svg")}
+.aisc-ico--service{--_aisc-i:url("/recursos/icons/Service.svg")}
+.aisc-ico--add{--_aisc-i:url("/recursos/icons/add.svg")}
+.aisc-ico--alert-error{--_aisc-i:url("/recursos/icons/alert-error.svg")}
+.aisc-ico--alert-info{--_aisc-i:url("/recursos/icons/alert-info.svg")}
+.aisc-ico--alert-success{--_aisc-i:url("/recursos/icons/alert-success.svg")}
+.aisc-ico--alert-warning{--_aisc-i:url("/recursos/icons/alert-warning.svg")}
+.aisc-ico--arrow-down{--_aisc-i:url("/recursos/icons/arrow-down.svg")}
+.aisc-ico--arrow-left{--_aisc-i:url("/recursos/icons/arrow-left.svg")}
+.aisc-ico--arrow-right{--_aisc-i:url("/recursos/icons/arrow-right.svg")}
+.aisc-ico--arrow-up{--_aisc-i:url("/recursos/icons/arrow-up.svg")}
+.aisc-ico--audience{--_aisc-i:url("/recursos/icons/audience.svg")}
+.aisc-ico--book{--_aisc-i:url("/recursos/icons/book.svg")}
+.aisc-ico--bookmark{--_aisc-i:url("/recursos/icons/bookmark.svg")}
+.aisc-ico--bot{--_aisc-i:url("/recursos/icons/bot.svg")}
+.aisc-ico--brief{--_aisc-i:url("/recursos/icons/brief.svg")}
+.aisc-ico--calendar{--_aisc-i:url("/recursos/icons/calendar.svg")}
+.aisc-ico--camera{--_aisc-i:url("/recursos/icons/camera.svg")}
+.aisc-ico--campaign{--_aisc-i:url("/recursos/icons/campaign.svg")}
+.aisc-ico--cart{--_aisc-i:url("/recursos/icons/cart.svg")}
+.aisc-ico--chart-bar{--_aisc-i:url("/recursos/icons/chart-bar.svg")}
+.aisc-ico--chart-pie{--_aisc-i:url("/recursos/icons/chart-pie.svg")}
+.aisc-ico--check{--_aisc-i:url("/recursos/icons/check.svg")}
+.aisc-ico--chevron-down{--_aisc-i:url("/recursos/icons/chevron-down.svg")}
+.aisc-ico--chevron-left{--_aisc-i:url("/recursos/icons/chevron-left.svg")}
+.aisc-ico--chevron-right{--_aisc-i:url("/recursos/icons/chevron-right.svg")}
+.aisc-ico--chevron-up{--_aisc-i:url("/recursos/icons/chevron-up.svg")}
+.aisc-ico--circle{--_aisc-i:url("/recursos/icons/circle.svg")}
+.aisc-ico--clock{--_aisc-i:url("/recursos/icons/clock.svg")}
+.aisc-ico--close{--_aisc-i:url("/recursos/icons/close.svg")}
+.aisc-ico--coding{--_aisc-i:url("/recursos/icons/coding.svg")}
+.aisc-ico--colapsado{--_aisc-i:url("/recursos/icons/colapsado.svg")}
+.aisc-ico--commandcenter{--_aisc-i:url("/recursos/icons/commandcenter.svg")}
+.aisc-ico--comments{--_aisc-i:url("/recursos/icons/comments.svg")}
+.aisc-ico--confg-organization{--_aisc-i:url("/recursos/icons/confg organization.svg")}
+.aisc-ico--consola-desarrollador{--_aisc-i:url("/recursos/icons/consola-desarrollador.svg")}
+.aisc-ico--copy{--_aisc-i:url("/recursos/icons/copy.svg")}
+.aisc-ico--credit-card{--_aisc-i:url("/recursos/icons/credit-card.svg")}
+.aisc-ico--credits{--_aisc-i:url("/recursos/icons/credits.svg")}
+.aisc-ico--crop{--_aisc-i:url("/recursos/icons/crop.svg")}
+.aisc-ico--cuenta-cambiar{--_aisc-i:url("/recursos/icons/cuenta-cambiar.svg")}
+.aisc-ico--cursor-click{--_aisc-i:url("/recursos/icons/cursor-click.svg")}
+.aisc-ico--dashboard{--_aisc-i:url("/recursos/icons/dashboard.svg")}
+.aisc-ico--database{--_aisc-i:url("/recursos/icons/database.svg")}
+.aisc-ico--delete{--_aisc-i:url("/recursos/icons/delete.svg")}
+.aisc-ico--desplegado{--_aisc-i:url("/recursos/icons/desplegado.svg")}
+.aisc-ico--document{--_aisc-i:url("/recursos/icons/document.svg")}
+.aisc-ico--dowload{--_aisc-i:url("/recursos/icons/dowload.svg")}
+.aisc-ico--edit{--_aisc-i:url("/recursos/icons/edit.svg")}
+.aisc-ico--eraser{--_aisc-i:url("/recursos/icons/eraser.svg")}
+.aisc-ico--expand{--_aisc-i:url("/recursos/icons/expand.svg")}
+.aisc-ico--external-link{--_aisc-i:url("/recursos/icons/external-link.svg")}
+.aisc-ico--eye{--_aisc-i:url("/recursos/icons/eye.svg")}
+.aisc-ico--eye-off{--_aisc-i:url("/recursos/icons/eye-off.svg")}
+.aisc-ico--feed{--_aisc-i:url("/recursos/icons/feed.svg")}
+.aisc-ico--file-storage{--_aisc-i:url("/recursos/icons/file-storage.svg")}
+.aisc-ico--film{--_aisc-i:url("/recursos/icons/film.svg")}
+.aisc-ico--filter{--_aisc-i:url("/recursos/icons/filter.svg")}
+.aisc-ico--fire{--_aisc-i:url("/recursos/icons/fire.svg")}
+.aisc-ico--flask{--_aisc-i:url("/recursos/icons/flask.svg")}
+.aisc-ico--flows{--_aisc-i:url("/recursos/icons/flows.svg")}
+.aisc-ico--folder{--_aisc-i:url("/recursos/icons/folder.svg")}
+.aisc-ico--funnel{--_aisc-i:url("/recursos/icons/funnel.svg")}
+.aisc-ico--gallery{--_aisc-i:url("/recursos/icons/gallery.svg")}
+.aisc-ico--gift{--_aisc-i:url("/recursos/icons/gift.svg")}
+.aisc-ico--git-branch{--_aisc-i:url("/recursos/icons/git-branch.svg")}
+.aisc-ico--globe{--_aisc-i:url("/recursos/icons/globe.svg")}
+.aisc-ico--goal{--_aisc-i:url("/recursos/icons/goal.svg")}
+.aisc-ico--grid{--_aisc-i:url("/recursos/icons/grid.svg")}
+.aisc-ico--growth{--_aisc-i:url("/recursos/icons/growth.svg")}
+.aisc-ico--help{--_aisc-i:url("/recursos/icons/help.svg")}
+.aisc-ico--history{--_aisc-i:url("/recursos/icons/history.svg")}
+.aisc-ico--hourglass{--_aisc-i:url("/recursos/icons/hourglass.svg")}
+.aisc-ico--icono-1{--_aisc-i:url("/recursos/icons/icono 1.svg")}
+.aisc-ico--icono-3{--_aisc-i:url("/recursos/icons/icono 3.svg")}
+.aisc-ico--icono-4{--_aisc-i:url("/recursos/icons/icono 4.svg")}
+.aisc-ico--idea{--_aisc-i:url("/recursos/icons/idea.svg")}
+.aisc-ico--image{--_aisc-i:url("/recursos/icons/image.svg")}
+.aisc-ico--inbox{--_aisc-i:url("/recursos/icons/inbox.svg")}
+.aisc-ico--insight{--_aisc-i:url("/recursos/icons/insight.svg")}
+.aisc-ico--key{--_aisc-i:url("/recursos/icons/key.svg")}
+.aisc-ico--laptop{--_aisc-i:url("/recursos/icons/laptop.svg")}
+.aisc-ico--layers{--_aisc-i:url("/recursos/icons/layers.svg")}
+.aisc-ico--lead{--_aisc-i:url("/recursos/icons/lead.svg")}
+.aisc-ico--likes{--_aisc-i:url("/recursos/icons/likes.svg")}
+.aisc-ico--link{--_aisc-i:url("/recursos/icons/link.svg")}
+.aisc-ico--loader{--_aisc-i:url("/recursos/icons/loader.svg")}
+.aisc-ico--lock{--_aisc-i:url("/recursos/icons/lock.svg")}
+.aisc-ico--logout{--_aisc-i:url("/recursos/icons/logout.svg")}
+.aisc-ico--mail{--_aisc-i:url("/recursos/icons/mail.svg")}
+.aisc-ico--memory{--_aisc-i:url("/recursos/icons/memory.svg")}
+.aisc-ico--menu{--_aisc-i:url("/recursos/icons/menu.svg")}
+.aisc-ico--minimize{--_aisc-i:url("/recursos/icons/minimize.svg")}
+.aisc-ico--minus{--_aisc-i:url("/recursos/icons/minus.svg")}
+.aisc-ico--monitoring{--_aisc-i:url("/recursos/icons/monitoring.svg")}
+.aisc-ico--moon{--_aisc-i:url("/recursos/icons/moon.svg")}
+.aisc-ico--more{--_aisc-i:url("/recursos/icons/more.svg")}
+.aisc-ico--move{--_aisc-i:url("/recursos/icons/move.svg")}
+.aisc-ico--music{--_aisc-i:url("/recursos/icons/music.svg")}
+.aisc-ico--notification{--_aisc-i:url("/recursos/icons/notification.svg")}
+.aisc-ico--organization{--_aisc-i:url("/recursos/icons/organization.svg")}
+.aisc-ico--palette{--_aisc-i:url("/recursos/icons/palette.svg")}
+.aisc-ico--paperclip{--_aisc-i:url("/recursos/icons/paperclip.svg")}
+.aisc-ico--pause{--_aisc-i:url("/recursos/icons/pause.svg")}
+.aisc-ico--play{--_aisc-i:url("/recursos/icons/play.svg")}
+.aisc-ico--plug{--_aisc-i:url("/recursos/icons/plug.svg")}
+.aisc-ico--product{--_aisc-i:url("/recursos/icons/product.svg")}
+.aisc-ico--puzzle{--_aisc-i:url("/recursos/icons/puzzle.svg")}
+.aisc-ico--quote{--_aisc-i:url("/recursos/icons/quote.svg")}
+.aisc-ico--receipt{--_aisc-i:url("/recursos/icons/receipt.svg")}
+.aisc-ico--refresh{--_aisc-i:url("/recursos/icons/refresh.svg")}
+.aisc-ico--runs{--_aisc-i:url("/recursos/icons/runs.svg")}
+.aisc-ico--save{--_aisc-i:url("/recursos/icons/save.svg")}
+.aisc-ico--scissors{--_aisc-i:url("/recursos/icons/scissors.svg")}
+.aisc-ico--search{--_aisc-i:url("/recursos/icons/search.svg")}
+.aisc-ico--send{--_aisc-i:url("/recursos/icons/send.svg")}
+.aisc-ico--settings{--_aisc-i:url("/recursos/icons/settings.svg")}
+.aisc-ico--share{--_aisc-i:url("/recursos/icons/share.svg")}
+.aisc-ico--shield{--_aisc-i:url("/recursos/icons/shield.svg")}
+.aisc-ico--shipping{--_aisc-i:url("/recursos/icons/shipping.svg")}
+.aisc-ico--sort{--_aisc-i:url("/recursos/icons/sort.svg")}
+.aisc-ico--sparkle{--_aisc-i:url("/recursos/icons/sparkle.svg")}
+.aisc-ico--star{--_aisc-i:url("/recursos/icons/star.svg")}
+.aisc-ico--store{--_aisc-i:url("/recursos/icons/store.svg")}
+.aisc-ico--strategy{--_aisc-i:url("/recursos/icons/strategy.svg")}
+.aisc-ico--sun{--_aisc-i:url("/recursos/icons/sun.svg")}
+.aisc-ico--tag{--_aisc-i:url("/recursos/icons/tag.svg")}
+.aisc-ico--task{--_aisc-i:url("/recursos/icons/task.svg")}
+.aisc-ico--upload{--_aisc-i:url("/recursos/icons/upload.svg")}
+.aisc-ico--user-registration{--_aisc-i:url("/recursos/icons/user registration.svg")}
+.aisc-ico--user-slash{--_aisc-i:url("/recursos/icons/user-slash.svg")}
+.aisc-ico--video{--_aisc-i:url("/recursos/icons/video.svg")}
+.aisc-ico--views{--_aisc-i:url("/recursos/icons/views.svg")}
+.aisc-ico--vista-organizacion{--_aisc-i:url("/recursos/icons/vista-organizacion.svg")}
+.aisc-ico--volume{--_aisc-i:url("/recursos/icons/volume.svg")}
+.aisc-ico--zap{--_aisc-i:url("/recursos/icons/zap.svg")}
+/* spin: preserva animacion cuando el <i> traia fa-spin/ph-spin (self-contained) */
+.aisc-ico.fa-spin,.aisc-ico.ph-spin,.aisc-ico.aisc-spin{animation:aisc-spin 1s linear infinite}
+@keyframes aisc-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}

@@ -26,7 +26,7 @@ class DevLeadInputSchemasView extends DevBaseView {
         <header class="dev-lead-header">
           <div class="dev-lead-toolbar">
             <button type="button" class="btn btn-primary" id="addInputSchemaBtn">
-              <i class="fas fa-plus"></i> Nuevo input
+              <i class="aisc-ico aisc-ico--add"></i> Nuevo input
             </button>
           </div>
         </header>
@@ -47,7 +47,7 @@ class DevLeadInputSchemasView extends DevBaseView {
               <tbody id="inputSchemasBody"></tbody>
             </table>
             <div class="dev-lead-empty" id="inputSchemasEmpty" hidden>
-              <i class="fas fa-puzzle-piece"></i>
+              <i class="aisc-ico aisc-ico--puzzle"></i>
               <p>No hay plantillas de input. Crea la primera.</p>
             </div>
           </div>
@@ -103,7 +103,7 @@ class DevLeadInputSchemasView extends DevBaseView {
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" id="inputSchemaModalCancel">Cancelar</button>
         <button type="button" class="btn btn-primary" id="inputSchemaModalSave">
-          <i class="fas fa-save"></i> Guardar
+          <i class="aisc-ico aisc-ico--save"></i> Guardar
         </button>
       </div>
     `;
@@ -151,8 +151,8 @@ class DevLeadInputSchemasView extends DevBaseView {
         <td>${this.escapeHtml(t.icon_name || '-')}</td>
         <td>${t.is_active ? 'Sí' : 'No'}</td>
         <td class="dev-lead-actions">
-          <button type="button" class="btn-icon edit-input-schema" title="Editar" data-id="${t.id}"><i class="fas fa-edit"></i></button>
-          <button type="button" class="btn-icon delete-input-schema" title="Eliminar" data-id="${t.id}"><i class="fas fa-trash"></i></button>
+          <button type="button" class="btn-icon edit-input-schema" title="Editar" data-id="${t.id}"><i class="aisc-ico aisc-ico--edit"></i></button>
+          <button type="button" class="btn-icon delete-input-schema" title="Eliminar" data-id="${t.id}"><i class="aisc-ico aisc-ico--delete"></i></button>
         </td>
       </tr>
     `).join('');

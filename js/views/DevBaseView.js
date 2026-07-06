@@ -93,7 +93,7 @@ class DevBaseView extends BaseView {
     if (container) {
       container.innerHTML = `
         <div class="error-container">
-          <i class="fas fa-exclamation-triangle"></i>
+          <i class="aisc-ico aisc-ico--alert-warning"></i>
           <h2>Error</h2>
           <p>${this.escapeHtml(message)}</p>
           <button class="btn btn-primary" onclick="window.location.reload()">Recargar</button>

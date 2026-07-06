@@ -283,7 +283,7 @@
   function previewMultiSelectChips(f) {
     var opts = f.options && f.options.length ? f.options : [{ label: 'A' }, { label: 'B' }, { label: 'C' }];
     var items = opts.slice(0, 3).map(function (o, i) {
-      return '<span class="preview-chip' + (i < 2 ? ' preview-chip--multi-selected' : '') + '"><i class="ph ph-check"></i>' + escapeHtml(optLabel(o)) + '</span>';
+      return '<span class="preview-chip' + (i < 2 ? ' preview-chip--multi-selected' : '') + '"><i class="aisc-ico aisc-ico--check"></i>' + escapeHtml(optLabel(o)) + '</span>';
     }).join('');
     return '<div class="preview-chips preview-chips--multi">' + items + '</div>';
   }
@@ -296,7 +296,7 @@
   function previewStepper(f) {
     var val = f.defaultValue != null ? f.defaultValue : 0;
     var ph = escapeHtml(f.placeholder || '0');
-    return '<div class="preview-stepper"><input type="number" class="preview-input preview-stepper-input" value="' + escapeHtml(String(val)) + '" placeholder="' + ph + '" disabled><div class="preview-stepper-btns"><button type="button" class="preview-stepper-btn" disabled><i class="ph ph-caret-up"></i></button><button type="button" class="preview-stepper-btn" disabled><i class="ph ph-caret-down"></i></button></div></div>';
+    return '<div class="preview-stepper"><input type="number" class="preview-input preview-stepper-input" value="' + escapeHtml(String(val)) + '" placeholder="' + ph + '" disabled><div class="preview-stepper-btns"><button type="button" class="preview-stepper-btn" disabled><i class="aisc-ico aisc-ico--chevron-up"></i></button><button type="button" class="preview-stepper-btn" disabled><i class="aisc-ico aisc-ico--chevron-down"></i></button></div></div>';
   }
   /** Selection checkboxes: list of checkboxes (one per option) */
   function previewSelectionCheckboxes(f) {
@@ -330,7 +330,7 @@
   /** cron_schedule: programación de ejecución (solo flujos automated). Presets + expresión cron. */
   function previewCronSchedule(f) {
     var lb = escapeHtml(f.label || 'Programación');
-    return '<div class="preview-cron-schedule"><i class="ph ph-clock"></i><span>' + lb + '</span></div>';
+    return '<div class="preview-cron-schedule"><i class="aisc-ico aisc-ico--clock"></i><span>' + lb + '</span></div>';
   }
   function formCronSchedule(f, opts) {
     var a = formAttrs(f, opts || {});
@@ -523,7 +523,7 @@
     return (
       '<div class="preview-focus-selector">' +
         '<div class="preview-focus-selector-header">' +
-          '<i class="ph ph-caret-down"></i>' +
+          '<i class="aisc-ico aisc-ico--chevron-down"></i>' +
           '<span>' + escapeHtml(label) + '</span>' +
           '<span class="preview-focus-selector-badge">Que la IA decida</span>' +
         '</div>' +
@@ -564,7 +564,7 @@
         '<label class="scope-vera-toggle" title="Cuando está activado, Vera genera los valores usando el prompt predefinido">' +
           '<input type="checkbox" class="scope-vera-input" data-vera-key="' + key + '"' + (isPreview ? ' disabled' : '') + '>' +
           '<span class="scope-vera-track"><span class="scope-vera-thumb"></span></span>' +
-          '<span class="scope-vera-label"><i class="ph ph-sparkle"></i> Vera</span>' +
+          '<span class="scope-vera-label"><i class="aisc-ico aisc-ico--sparkle"></i> Vera</span>' +
         '</label>';
     }
     // Panel del prompt de Vera (visible cuando switch ON; el dev lo configura en builder).
@@ -576,7 +576,7 @@
     if (isScopePicker) {
       veraPanel =
         '<div class="scope-vera-panel" aria-hidden="true">' +
-          '<div class="scope-vera-panel-label"><i class="ph ph-sparkle"></i> Vera llenará estas variables siguiendo el prompt:</div>' +
+          '<div class="scope-vera-panel-label"><i class="aisc-ico aisc-ico--sparkle"></i> Vera llenará estas variables siguiendo el prompt:</div>' +
           '<div class="scope-vera-prompt">' + (veraPrompt || '<span class="scope-vera-prompt-empty">Sin prompt configurado. El dev debe definirlo en el builder.</span>') + '</div>' +
         '</div>';
     }
@@ -602,7 +602,7 @@
       return '<div class="input-container input-container--' + display + ' input-container--empty"' + typeAttr + ' data-container-key="' + key + '">' +
         ((label || veraSwitch) ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span>' + veraSwitch + '</div>' : '') +
         veraPanel +
-        '<div class="input-container-empty-msg"><i class="ph ph-rows"></i><span>Contenedor vacío — arrastra inputs aquí</span></div>' +
+        '<div class="input-container-empty-msg"><i class="aisc-ico aisc-ico--grid"></i><span>Contenedor vacío — arrastra inputs aquí</span></div>' +
         '</div>';
     }
 
@@ -634,7 +634,7 @@
           var cLbl = escapeHtml(c.label || c.title || 'Panel ' + (i + 1));
           var cChildren = (Array.isArray(c.children) ? c.children : []).map(renderGrandchild(c.key || ('panel_' + i))).join('');
           return '<details class="input-accordion-panel"' + (i === 0 ? ' open' : '') + '>' +
-            '<summary class="input-accordion-summary"><span>' + cLbl + '</span><i class="ph ph-caret-down"></i></summary>' +
+            '<summary class="input-accordion-summary"><span>' + cLbl + '</span><i class="aisc-ico aisc-ico--chevron-down"></i></summary>' +
             '<div class="input-accordion-body" data-container-key="' + cKey + '">' + cChildren + '</div>' +
             '</details>';
         }).join('');
@@ -646,7 +646,7 @@
       // Single accordion: todo el container colapsable
       var bodyChildren = children.map(renderChild).join('');
       return '<details class="input-container input-container--accordion"' + typeAttr + ' data-container-key="' + key + '" open>' +
-        '<summary class="input-accordion-summary"><span>' + (label || 'Sección') + '</span>' + veraSwitch + '<i class="ph ph-caret-down"></i></summary>' +
+        '<summary class="input-accordion-summary"><span>' + (label || 'Sección') + '</span>' + veraSwitch + '<i class="aisc-ico aisc-ico--chevron-down"></i></summary>' +
         (description ? '<p class="input-container-desc">' + description + '</p>' : '') +
         veraPanel +
         '<div class="input-accordion-body">' + bodyChildren + '</div>' +
@@ -905,7 +905,7 @@
       var vs = String(v);
       var lbl = escapeHtml(optLabel(o));
       var checked = defVal.indexOf(v) >= 0 || defVal.indexOf(vs) >= 0 ? ' checked' : '';
-      return '<label class="input-multi-chip"><input type="checkbox" name="' + name + '" value="' + escapeHtml(vs) + '"' + checked + a.disabled + '><i class="ph ph-check input-multi-chip-check"></i><span>' + lbl + '</span></label>';
+      return '<label class="input-multi-chip"><input type="checkbox" name="' + name + '" value="' + escapeHtml(vs) + '"' + checked + a.disabled + '><i class="aisc-ico input-multi-chip-check aisc-ico--check"></i><span>' + lbl + '</span></label>';
     }).join('');
     return '<div class="input-chips-wrap input-chips-wrap--multi" role="group">' + html + '</div>';
   }
@@ -1080,7 +1080,7 @@
     var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
     var optionsList = (Array.isArray(f.options) && f.options.length > 0) ? f.options : [];
     if (optionsList.length === 0) {
-      return '<div class="visual-grid-picker visual-grid-picker--empty"><i class="ph ph-squares-four"></i><span>Sin opciones configuradas. Edita las opciones del campo en el panel de propiedades.</span></div>';
+      return '<div class="visual-grid-picker visual-grid-picker--empty"><i class="aisc-ico aisc-ico--grid"></i><span>Sin opciones configuradas. Edita las opciones del campo en el panel de propiedades.</span></div>';
     }
     var selected = f.defaultValue != null ? String(f.defaultValue) : String(optVal(optionsList[0]));
     var cards = optionsList.map(function (o) {
@@ -1119,7 +1119,7 @@
     var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
     var optionsList = (Array.isArray(f.options) && f.options.length > 0) ? f.options : [];
     if (optionsList.length === 0) {
-      return '<div class="palette-picker palette-picker--empty"><i class="ph ph-palette"></i><span>Sin paletas configuradas. Define options con colors[] en el panel.</span></div>';
+      return '<div class="palette-picker palette-picker--empty"><i class="aisc-ico aisc-ico--palette"></i><span>Sin paletas configuradas. Define options con colors[] en el panel.</span></div>';
     }
     var selected = f.defaultValue != null ? String(f.defaultValue) : String(optVal(optionsList[0]));
     var cards = optionsList.map(function (o) {
@@ -1166,7 +1166,7 @@
     var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
     var optionsList = (Array.isArray(f.options) && f.options.length > 0) ? f.options : [];
     if (optionsList.length === 0) {
-      return '<div class="logo-picker logo-picker--empty"><i class="ph ph-globe"></i><span>Sin plataformas configuradas. Define options con logo:meta/instagram/tiktok/etc.</span></div>';
+      return '<div class="logo-picker logo-picker--empty"><i class="aisc-ico aisc-ico--globe"></i><span>Sin plataformas configuradas. Define options con logo:meta/instagram/tiktok/etc.</span></div>';
     }
     var selected = f.defaultValue != null ? String(f.defaultValue) : String(optVal(optionsList[0]));
     var cards = optionsList.map(function (o) {
@@ -1197,7 +1197,7 @@
     var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
     var optionsList = (Array.isArray(f.options) && f.options.length > 0) ? f.options : [];
     if (optionsList.length === 0) {
-      return '<div class="thumbnail-picker thumbnail-picker--empty"><i class="ph ph-image"></i><span>Sin thumbnails configurados. Define options con thumbnail (gradient o url).</span></div>';
+      return '<div class="thumbnail-picker thumbnail-picker--empty"><i class="aisc-ico aisc-ico--image"></i><span>Sin thumbnails configurados. Define options con thumbnail (gradient o url).</span></div>';
     }
     var selected = f.defaultValue != null ? String(f.defaultValue) : String(optVal(optionsList[0]));
     var cards = optionsList.map(function (o) {
@@ -1320,7 +1320,7 @@
     var ph = escapeHtml(f.placeholder || 'Añade tags...');
     var existing = Array.isArray(f.defaultValue) ? f.defaultValue : [];
     var tagsHtml = existing.map(function (tag) {
-      return '<span class="input-tag"><span class="input-tag-text">' + escapeHtml(String(tag)) + '</span><button type="button" class="input-tag-remove" aria-label="Quitar"><i class="ph ph-x"></i></button></span>';
+      return '<span class="input-tag"><span class="input-tag-text">' + escapeHtml(String(tag)) + '</span><button type="button" class="input-tag-remove" aria-label="Quitar"><i class="aisc-ico aisc-ico--close"></i></button></span>';
     }).join('');
     return '<div class="input-tags-wrap" data-name="' + escapeHtml(a.name) + '"><div class="input-tags-list">' + tagsHtml + '</div><input type="text" class="modern-input input-tags-input" placeholder="' + ph + '" data-tags-input' + a.disabled + '></div>';
   }
@@ -1333,7 +1333,7 @@
     var step = f.step != null ? f.step : 1;
     var val = f.defaultValue != null ? f.defaultValue : '';
     var unit = escapeHtml(f.unit || '');
-    return '<div class="input-stepper-wrap"><input type="number" class="modern-input input-stepper-input" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(String(val)) + '" min="' + min + '" max="' + max + '" step="' + step + '"' + a.disabled + a.required + '><div class="input-stepper-btns"><button type="button" class="input-stepper-btn" data-dir="up" tabindex="-1"' + a.disabled + '><i class="ph ph-caret-up"></i></button><button type="button" class="input-stepper-btn" data-dir="down" tabindex="-1"' + a.disabled + '><i class="ph ph-caret-down"></i></button></div>' + (unit ? '<span class="input-stepper-unit">' + unit + '</span>' : '') + '</div>';
+    return '<div class="input-stepper-wrap"><input type="number" class="modern-input input-stepper-input" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(String(val)) + '" min="' + min + '" max="' + max + '" step="' + step + '"' + a.disabled + a.required + '><div class="input-stepper-btns"><button type="button" class="input-stepper-btn" data-dir="up" tabindex="-1"' + a.disabled + '><i class="aisc-ico aisc-ico--chevron-up"></i></button><button type="button" class="input-stepper-btn" data-dir="down" tabindex="-1"' + a.disabled + '><i class="aisc-ico aisc-ico--chevron-down"></i></button></div>' + (unit ? '<span class="input-stepper-unit">' + unit + '</span>' : '') + '</div>';
   }
 
   /** Checkboxes (selección única): opciones, usuario elige una → variable = valor elegido (ej. cabello = "rubio"). No es boolean. */
@@ -1572,7 +1572,7 @@
 
   /** Placeholder para FILE_CONTAINER (upload) */
   function previewFile(f) {
-    return '<div class="preview-structural"><i class="ph ph-upload-simple"></i><span>' + escapeHtml(f.label || 'Subir archivo') + '</span></div>';
+    return '<div class="preview-structural"><i class="aisc-ico aisc-ico--upload"></i><span>' + escapeHtml(f.label || 'Subir archivo') + '</span></div>';
   }
   function formFile(f, opts) {
     var a = formAttrs(f, opts || {});
@@ -1588,7 +1588,7 @@
       '<label class="file-input-wrap" for="' + a.id + '">' +
         '<input type="file" class="file-input-native" id="' + a.id + '" name="' + a.name + '" accept="' + escapeHtml(accept) + '"' + (multi ? ' multiple' : '') + a.disabled + '>' +
         '<div class="file-input-zone" aria-hidden="true">' +
-          '<i class="ph ph-upload-simple file-input-icon"></i>' +
+          '<i class="aisc-ico file-input-icon aisc-ico--upload"></i>' +
           '<span class="file-input-hint">' + escapeHtml(hint) + '</span>' +
           '<span class="file-input-accept">' + escapeHtml(acceptLabel) + '</span>' +
         '</div>' +
@@ -1669,7 +1669,7 @@
     var count = 4;
     var cards = [];
     for (var i = 0; i < count; i++) {
-      cards.push('<div class="image-selector-card image-selector-card--preview"><div class="image-selector-card-placeholder"><i class="ph ph-image"></i></div><span class="image-selector-card-label">' + (source === 'products' ? 'Producto ' + (i + 1) : (source === 'references' ? 'Ref. ' + (i + 1) : 'Imagen')) + '</span></div>');
+      cards.push('<div class="image-selector-card image-selector-card--preview"><div class="image-selector-card-placeholder"><i class="aisc-ico aisc-ico--image"></i></div><span class="image-selector-card-label">' + (source === 'products' ? 'Producto ' + (i + 1) : (source === 'references' ? 'Ref. ' + (i + 1) : 'Imagen')) + '</span></div>');
     }
     return '<div class="image-selector-carousel image-selector-carousel--preview" data-media-source="' + escapeHtml(source) + '" data-selection-mode="' + (multi ? 'multiple' : 'single') + '"><div class="image-selector-carousel-label">' + escapeHtml(title) + '</div><div class="image-selector-carousel-track">' + cards.join('') + '</div></div>';
   }
@@ -1692,7 +1692,7 @@
     for (var i = 0; i < skeletonCount; i++) {
       skeletons.push(
         '<div class="image-selector-card image-selector-card--skeleton" aria-hidden="true">' +
-          '<div class="image-selector-card-placeholder"><i class="ph ph-image"></i></div>' +
+          '<div class="image-selector-card-placeholder"><i class="aisc-ico aisc-ico--image"></i></div>' +
           '<span class="image-selector-card-label">' + escapeHtml(placeholderLabel) + '</span>' +
         '</div>'
       );

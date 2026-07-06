@@ -534,7 +534,7 @@ class StudioView extends BaseView {
             <div id="livingHistoryContent" class="studio-canvas-living"></div>
           </div>
           <div class="studio-automated-wrap" id="studioAutomatedWrap" style="display: none;">
-            <button type="button" class="studio-back-flows studio-back-flows--automated" id="studioBackFlowsAutomated"><i class="fas fa-arrow-left"></i> ${__('Elegir otro flujo')}</button>
+            <button type="button" class="studio-back-flows studio-back-flows--automated" id="studioBackFlowsAutomated"><i class="aisc-ico aisc-ico--arrow-left"></i> ${__('Elegir otro flujo')}</button>
             <div class="studio-automation-shell">
               <div class="studio-automation-main">
                 <div class="studio-schedule-form-wrap" id="studioScheduleFormWrap">
@@ -574,7 +574,7 @@ class StudioView extends BaseView {
           </div>
           <footer class="studio-footer">
             <div class="studio-footer-credits">
-              <div class="studio-credits-icon"><i class="fas fa-coins"></i></div>
+              <div class="studio-credits-icon"><i class="aisc-ico aisc-ico--credits"></i></div>
               <span class="studio-credits-text" id="studioCreditsText">${__('{n} créditos restantes', { n: 0 })}</span>
               <span class="studio-credits-cost" id="studioCreditsCost"></span>
             </div>
@@ -587,7 +587,7 @@ class StudioView extends BaseView {
         <aside class="studio-sidebar-creative" id="studioSidebar">
           <div class="studio-sidebar-content">
             <div class="studio-flow-form-wrap" id="studioFlowFormWrap">
-              <button type="button" class="studio-back-flows" id="studioBackFlows"><i class="fas fa-arrow-left"></i> ${__('Elegir otro flujo')}</button>
+              <button type="button" class="studio-back-flows" id="studioBackFlows"><i class="aisc-ico aisc-ico--arrow-left"></i> ${__('Elegir otro flujo')}</button>
               <h3 class="studio-form-title" id="studioFormTitle"></h3>
               <form class="studio-flow-form" id="studioFlowForm"></form>
             </div>
@@ -950,19 +950,19 @@ class StudioView extends BaseView {
               <canvas class="pmodal-edit-canvas" id="pmodalEditCanvas" hidden></canvas>
             </div>
             <div class="production-modal-toolbar" role="toolbar" aria-label="${__('Acciones sobre la produccion')}">
-              <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="fas fa-pen"></i><span>${__('Editar')}</span></button>
-              <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale"><i class="fas fa-expand-alt"></i><span>${__('Mejorar 4K')}</span></button>
-              <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background"><i class="fas fa-cut"></i><span>${__('Sin fondo')}</span></button>
-              <button type="button" class="pmodal-toolpill" data-tool="change-ratio" data-kie-model="nano-banana-pro" aria-haspopup="true" aria-expanded="false"><i class="fas fa-crop-simple"></i><span>${__('Cambiar ratio')}</span></button>
-              <button type="button" class="pmodal-toolpill" data-tool="variations"><i class="fas fa-arrows-rotate"></i><span>${__('Variar')}</span></button>
-              <button type="button" class="pmodal-toolpill" data-tool="animate"><i class="fas fa-film"></i><span>${__('Animar')}</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="aisc-ico aisc-ico--edit"></i><span>${__('Editar')}</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale"><i class="aisc-ico aisc-ico--expand"></i><span>${__('Mejorar 4K')}</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background"><i class="aisc-ico aisc-ico--scissors"></i><span>${__('Sin fondo')}</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="change-ratio" data-kie-model="nano-banana-pro" aria-haspopup="true" aria-expanded="false"><i class="aisc-ico aisc-ico--crop"></i><span>${__('Cambiar ratio')}</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="variations"><i class="aisc-ico aisc-ico--refresh"></i><span>${__('Variar')}</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="animate"><i class="aisc-ico aisc-ico--film"></i><span>${__('Animar')}</span></button>
             </div>
             <div class="pmodal-edit-overlay" id="pmodalEditOverlay" hidden aria-hidden="true">
               <div class="pmodal-edit-toolbar" role="toolbar" aria-label="${__('Herramientas de edicion')}">
-                <button type="button" class="pmodal-edit-tool is-active" data-edit-tool="brush" title="${__('Pincel')}" aria-label="${__('Pincel')}"><i class="fas fa-paintbrush"></i></button>
-                <button type="button" class="pmodal-edit-tool" data-edit-tool="eraser" title="${__('Borrador')}" aria-label="${__('Borrador')}"><i class="fas fa-eraser"></i></button>
-                <label class="pmodal-edit-size"><i class="fas fa-circle" aria-hidden="true"></i><input type="range" id="pmodalEditBrushSize" min="10" max="200" value="60" aria-label="${__('Tamano del pincel')}"></label>
-                <button type="button" class="pmodal-edit-tool" data-edit-action="clear" title="${__('Limpiar mascara')}" aria-label="${__('Limpiar mascara')}"><i class="fas fa-trash"></i></button>
+                <button type="button" class="pmodal-edit-tool is-active" data-edit-tool="brush" title="${__('Pincel')}" aria-label="${__('Pincel')}"><i class="aisc-ico aisc-ico--palette"></i></button>
+                <button type="button" class="pmodal-edit-tool" data-edit-tool="eraser" title="${__('Borrador')}" aria-label="${__('Borrador')}"><i class="aisc-ico aisc-ico--eraser"></i></button>
+                <label class="pmodal-edit-size"><i class="aisc-ico aisc-ico--circle" aria-hidden="true"></i><input type="range" id="pmodalEditBrushSize" min="10" max="200" value="60" aria-label="${__('Tamano del pincel')}"></label>
+                <button type="button" class="pmodal-edit-tool" data-edit-action="clear" title="${__('Limpiar mascara')}" aria-label="${__('Limpiar mascara')}"><i class="aisc-ico aisc-ico--delete"></i></button>
               </div>
               <div class="pmodal-edit-panel pmodal-edit-director">
                 <div class="pmodal-edit-director-content">
@@ -972,16 +972,16 @@ class StudioView extends BaseView {
                 <div class="pmodal-edit-picker" id="pmodalEditPicker" hidden></div>
                 <input type="file" id="pmodalEditFileInput" accept="image/jpeg,image/png,image/webp,image/jpg" style="display:none;" aria-hidden="true">
                 <div class="pmodal-edit-director-controls">
-                  <button type="button" class="pmodal-edit-add-btn" id="pmodalEditAddBtn" data-edit-action="add-attachment" aria-label="${__('Adjuntar imagen o producto')}" hidden><i class="fas fa-plus" aria-hidden="true"></i></button>
+                  <button type="button" class="pmodal-edit-add-btn" id="pmodalEditAddBtn" data-edit-action="add-attachment" aria-label="${__('Adjuntar imagen o producto')}" hidden><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
                   <div class="pmodal-edit-mode-pills" role="tablist" aria-label="${__('Modo de edicion')}">
-                    <button type="button" class="pmodal-edit-mode-pill is-active" role="tab" aria-selected="true" data-edit-mode="remove"><i class="fas fa-eraser" aria-hidden="true"></i><span>${__('Eliminar')}</span></button>
-                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="replace"><i class="fas fa-arrows-rotate" aria-hidden="true"></i><span>${__('Reemplazar')}</span></button>
-                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="fix-product"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>${__('Corregir producto')}</span></button>
-                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="change-product"><i class="fas fa-box" aria-hidden="true"></i><span>${__('Cambiar producto')}</span></button>
+                    <button type="button" class="pmodal-edit-mode-pill is-active" role="tab" aria-selected="true" data-edit-mode="remove"><i class="aisc-ico aisc-ico--eraser" aria-hidden="true"></i><span>${__('Eliminar')}</span></button>
+                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="replace"><i class="aisc-ico aisc-ico--refresh" aria-hidden="true"></i><span>${__('Reemplazar')}</span></button>
+                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="fix-product"><i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i><span>${__('Corregir producto')}</span></button>
+                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="change-product"><i class="aisc-ico aisc-ico--product" aria-hidden="true"></i><span>${__('Cambiar producto')}</span></button>
                   </div>
                   <div class="pmodal-edit-actions">
                     <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" data-edit-action="cancel">${__('Cancelar')}</button>
-                    <button type="button" class="pmodal-edit-btn pmodal-edit-btn--accent" data-edit-action="apply"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>${__('APLICAR')}</span></button>
+                    <button type="button" class="pmodal-edit-btn pmodal-edit-btn--accent" data-edit-action="apply"><i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i><span>${__('APLICAR')}</span></button>
                   </div>
                 </div>
               </div>
@@ -989,7 +989,7 @@ class StudioView extends BaseView {
           </div>
           <aside class="production-modal-side" aria-label="${__('Detalles de la produccion')}">
             <header class="pmodal-side-header">
-              <button type="button" class="pmodal-close" data-action="modal-close" aria-label="${__('Cerrar')}"><i class="fas fa-times"></i></button>
+              <button type="button" class="pmodal-close" data-action="modal-close" aria-label="${__('Cerrar')}"><i class="aisc-ico aisc-ico--close"></i></button>
             </header>
             <nav class="pmodal-tabs" role="tablist" aria-label="${__('Vistas de produccion')}">
               <button type="button" class="pmodal-tab is-active" role="tab" aria-selected="true" data-tab="output">${__('Resultado')}</button>
@@ -1001,12 +1001,12 @@ class StudioView extends BaseView {
                 <section class="pmodal-section pmodal-prompt-section">
                   <div class="pmodal-prompt-blocks" id="pmodalPromptBlocks"></div>
                   <details class="pmodal-prompt-raw" id="pmodalPromptRaw" hidden>
-                    <summary><i class="fas fa-chevron-right pmodal-prompt-raw-caret"></i><span>Show generation details</span></summary>
+                    <summary><i class="aisc-ico pmodal-prompt-raw-caret aisc-ico--chevron-right"></i><span>Show generation details</span></summary>
                     <pre class="pmodal-prompt-raw-text" id="pmodalPromptRawText"></pre>
                   </details>
                 </section>
                 <section class="pmodal-section pmodal-info-section">
-                  <h3 class="pmodal-section-title"><i class="fas fa-circle-info"></i> INFORMATION</h3>
+                  <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--alert-info"></i> INFORMATION</h3>
                   <div class="pmodal-info-rows" id="pmodalInfoRows"></div>
                 </section>
               </div>
@@ -1015,23 +1015,23 @@ class StudioView extends BaseView {
               </div>
             </div>
             <div class="pmodal-cta-grid">
-              <button type="button" class="pmodal-cta pmodal-cta--accent" data-action="animate"><i class="fas fa-film"></i><span>Animate</span></button>
-              <button type="button" class="pmodal-cta pmodal-cta--outline" data-action="publish" disabled title="${__('Proximamente')}"><i class="fas fa-upload"></i><span>Publish</span></button>
+              <button type="button" class="pmodal-cta pmodal-cta--accent" data-action="animate"><i class="aisc-ico aisc-ico--film"></i><span>Animate</span></button>
+              <button type="button" class="pmodal-cta pmodal-cta--outline" data-action="publish" disabled title="${__('Proximamente')}"><i class="aisc-ico aisc-ico--upload"></i><span>Publish</span></button>
             </div>
             <div class="pmodal-secondary-grid">
-              <button type="button" class="pmodal-secondary" data-action="open-in"><i class="fas fa-external-link-alt"></i><span>Open in</span></button>
-              <button type="button" class="pmodal-secondary" data-action="reference" disabled title="${__('Proximamente')}"><i class="fas fa-bookmark"></i><span>Reference</span></button>
+              <button type="button" class="pmodal-secondary" data-action="open-in"><i class="aisc-ico aisc-ico--external-link"></i><span>Open in</span></button>
+              <button type="button" class="pmodal-secondary" data-action="reference" disabled title="${__('Proximamente')}"><i class="aisc-ico aisc-ico--bookmark"></i><span>Reference</span></button>
             </div>
             <footer class="pmodal-footer">
-              <button type="button" class="pmodal-footer-download" data-action="download"><i class="fas fa-download"></i><span>Download</span></button>
+              <button type="button" class="pmodal-footer-download" data-action="download"><i class="aisc-ico aisc-ico--dowload"></i><span>Download</span></button>
               <div class="pmodal-footer-icons">
-                <button type="button" class="pmodal-icon-btn" data-action="like" aria-pressed="false" aria-label="${__('Me gusta')}"><i class="fas fa-heart"></i></button>
+                <button type="button" class="pmodal-icon-btn" data-action="like" aria-pressed="false" aria-label="${__('Me gusta')}"><i class="aisc-ico aisc-ico--likes"></i></button>
                 <div class="pmodal-kebab-wrap">
-                  <button type="button" class="pmodal-icon-btn" data-action="kebab" aria-expanded="false" aria-label="${__('Mas')}"><i class="fas fa-bars"></i></button>
+                  <button type="button" class="pmodal-icon-btn" data-action="kebab" aria-expanded="false" aria-label="${__('Mas')}"><i class="aisc-ico aisc-ico--menu"></i></button>
                   <div class="pmodal-kebab-menu" role="menu" hidden>
-                    <button type="button" role="menuitem" data-action="copy-prompt"><i class="fas fa-copy"></i> ${__('Copiar prompt')}</button>
-                    <button type="button" role="menuitem" data-action="copy-url"><i class="fas fa-link"></i> ${__('Copiar enlace')}</button>
-                    <button type="button" role="menuitem" class="pmodal-kebab-danger" data-action="delete"><i class="fas fa-trash"></i> ${__('Eliminar produccion')}</button>
+                    <button type="button" role="menuitem" data-action="copy-prompt"><i class="aisc-ico aisc-ico--copy"></i> ${__('Copiar prompt')}</button>
+                    <button type="button" role="menuitem" data-action="copy-url"><i class="aisc-ico aisc-ico--link"></i> ${__('Copiar enlace')}</button>
+                    <button type="button" role="menuitem" class="pmodal-kebab-danger" data-action="delete"><i class="aisc-ico aisc-ico--delete"></i> ${__('Eliminar produccion')}</button>
                   </div>
                 </div>
               </div>
@@ -1121,8 +1121,8 @@ class StudioView extends BaseView {
         '<div class="input-stepper-wrap" data-schedule-stepper="' + key + '">' +
         '<input type="number" class="modern-input input-stepper-input" data-schedule-key="' + key + '" value="' + val + '" min="' + min + '" max="' + max + '" step="' + step + '">' +
         '<div class="input-stepper-btns">' +
-        '<button type="button" class="input-stepper-btn" data-dir="up" tabindex="-1"><i class="ph ph-caret-up"></i></button>' +
-        '<button type="button" class="input-stepper-btn" data-dir="down" tabindex="-1"><i class="ph ph-caret-down"></i></button>' +
+        '<button type="button" class="input-stepper-btn" data-dir="up" tabindex="-1"><i class="aisc-ico aisc-ico--chevron-up"></i></button>' +
+        '<button type="button" class="input-stepper-btn" data-dir="down" tabindex="-1"><i class="aisc-ico aisc-ico--chevron-down"></i></button>' +
         '</div>' +
         (unit ? '<span class="input-stepper-unit">' + this.escapeHtml(unit) + '</span>' : '') +
         '</div></div>'
@@ -1875,7 +1875,7 @@ class StudioView extends BaseView {
         const imgHtml = mainImage
           ? `<img src="${escapeHtml(mainImage)}" alt="${escapeHtml(nombre)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling && (this.nextElementSibling.style.display='flex');">`
           : '';
-        const noImageHtml = '<div class="image-selector-card-placeholder" style="' + (mainImage ? 'display:none;' : '') + '"><i class="ph ph-image"></i></div>';
+        const noImageHtml = '<div class="image-selector-card-placeholder" style="' + (mainImage ? 'display:none;' : '') + '"><i class="aisc-ico aisc-ico--image"></i></div>';
         return (
           '<div class="image-selector-card" data-product-id="' + escapeHtml(product.id) + '" role="button" tabindex="0">' +
           '<div class="image-selector-card-image">' + imgHtml + noImageHtml + '</div>' +

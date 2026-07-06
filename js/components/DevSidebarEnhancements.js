@@ -140,7 +140,7 @@
     paletteEl.innerHTML = `
       <div class="cmdpal" role="dialog" aria-modal="true" aria-label="Command Palette">
         <div class="cmdpal-input-row">
-          <i class="fas fa-magnifying-glass cmdpal-input-icon"></i>
+          <i class="aisc-ico cmdpal-input-icon aisc-ico--search"></i>
           <input type="text" class="cmdpal-input" placeholder="Buscar páginas, acciones..." autocomplete="off" spellcheck="false">
           <kbd class="cmdpal-kbd-hint">ESC</kbd>
         </div>

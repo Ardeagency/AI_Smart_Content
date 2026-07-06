@@ -39,34 +39,34 @@ class DevLeadBillingView extends DevBaseView {
       <div class="dev-lead-container dev-lead-billing">
 
         <div class="dev-lead-tabs">
-          <button type="button" class="dev-lead-tab active" data-tab="plans"><i class="fas fa-tags"></i> Plans</button>
-          <button type="button" class="dev-lead-tab" data-tab="packages"><i class="fas fa-coins"></i> Credit Packages</button>
-          <button type="button" class="dev-lead-tab" data-tab="subscriptions"><i class="fas fa-file-invoice-dollar"></i> Subscriptions</button>
-          <button type="button" class="dev-lead-tab" data-tab="usage"><i class="fas fa-chart-line"></i> Usage</button>
+          <button type="button" class="dev-lead-tab active" data-tab="plans"><i class="aisc-ico aisc-ico--tag"></i> Plans</button>
+          <button type="button" class="dev-lead-tab" data-tab="packages"><i class="aisc-ico aisc-ico--credits"></i> Credit Packages</button>
+          <button type="button" class="dev-lead-tab" data-tab="subscriptions"><i class="aisc-ico aisc-ico--receipt"></i> Subscriptions</button>
+          <button type="button" class="dev-lead-tab" data-tab="usage"><i class="aisc-ico aisc-ico--growth"></i> Usage</button>
         </div>
 
         <section class="dev-lead-content" id="tabPanePlans">
           <div class="dev-lead-toolbar">
-            <span class="dev-lead-hint"><i class="fas fa-info-circle"></i> Editar el precio aqui solo toca BD. Crear/archivar el Stripe Price + actualizar <code>stripe_price_id_*</code> es manual (auto-sync en Fase 3).</span>
+            <span class="dev-lead-hint"><i class="aisc-ico aisc-ico--alert-info"></i> Editar el precio aqui solo toca BD. Crear/archivar el Stripe Price + actualizar <code>stripe_price_id_*</code> es manual (auto-sync en Fase 3).</span>
           </div>
           <div class="dev-plan-grid" id="plansGrid">
-            <div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
+            <div class="dev-org-grid-state"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando...</div>
           </div>
         </section>
 
         <section class="dev-lead-content" id="tabPanePackages" style="display:none">
           <div class="dev-lead-toolbar">
-            <button type="button" class="btn btn-primary" id="packagesCreate"><i class="fas fa-plus"></i> Nuevo paquete</button>
-            <span class="dev-lead-hint"><i class="fas fa-info-circle"></i> Estos son los packs one-shot que el cliente compra en /credits (CreditsShopView). Editar precio aqui no resincroniza Stripe/Wompi.</span>
+            <button type="button" class="btn btn-primary" id="packagesCreate"><i class="aisc-ico aisc-ico--add"></i> Nuevo paquete</button>
+            <span class="dev-lead-hint"><i class="aisc-ico aisc-ico--alert-info"></i> Estos son los packs one-shot que el cliente compra en /credits (CreditsShopView). Editar precio aqui no resincroniza Stripe/Wompi.</span>
           </div>
           <div class="dev-plan-grid" id="packagesGrid">
-            <div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>
+            <div class="dev-org-grid-state"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando...</div>
           </div>
         </section>
 
         <section class="dev-lead-content" id="tabPaneSubscriptions" style="display:none">
           <div class="dev-lead-coming-soon">
-            <i class="fas fa-tools"></i>
+            <i class="aisc-ico aisc-ico--settings"></i>
             <h3>Subscriptions tab — Fase 2</h3>
             <p>Lista de subs activas + force migrate a otro plan (ej: business legacy → agency). Pendiente.</p>
           </div>
@@ -74,7 +74,7 @@ class DevLeadBillingView extends DevBaseView {
 
         <section class="dev-lead-content" id="tabPaneUsage" style="display:none">
           <div class="dev-lead-coming-soon">
-            <i class="fas fa-tools"></i>
+            <i class="aisc-ico aisc-ico--settings"></i>
             <h3>Usage history tab — Fase 2</h3>
             <p>Historial de credit_usage por org (consumos, grants, refunds). Pendiente.</p>
           </div>
@@ -126,7 +126,7 @@ class DevLeadBillingView extends DevBaseView {
 
   async loadPlans() {
     const grid = document.getElementById('plansGrid');
-    if (grid) grid.innerHTML = '<div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+    if (grid) grid.innerHTML = '<div class="dev-org-grid-state"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando...</div>';
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -156,10 +156,10 @@ class DevLeadBillingView extends DevBaseView {
   renderPlanCard(p) {
     const id = this._escape(p.id);
     const active = !!p.is_active;
-    const handles = p.max_handles ? `<li><i class="fas fa-at"></i> ${p.max_handles} handles</li>` : '';
+    const handles = p.max_handles ? `<li><i class="aisc-ico aisc-ico--mail"></i> ${p.max_handles} handles</li>` : '';
     return `
       <article class="dev-plan-card${active ? '' : ' is-inactive'}${p.is_popular ? ' is-popular' : ''}">
-        ${p.is_popular ? '<span class="dev-plan-card-popular"><i class="fas fa-star"></i> Popular</span>' : ''}
+        ${p.is_popular ? '<span class="dev-plan-card-popular"><i class="aisc-ico aisc-ico--star"></i> Popular</span>' : ''}
         <div class="dev-plan-card-head">
           <div class="dev-plan-card-id-wrap">
             <h3 class="dev-plan-card-name">${this._escape(p.name)}</h3>
@@ -173,12 +173,12 @@ class DevLeadBillingView extends DevBaseView {
         </div>
         ${p.description ? `<p class="dev-plan-card-desc">${this._escape(p.description)}</p>` : ''}
         <ul class="dev-plan-card-specs">
-          <li><i class="fas fa-bolt"></i> ${p.credits_monthly.toLocaleString('en-US')} créditos/mes</li>
-          <li><i class="fas fa-database"></i> ${this._formatStorage(p.storage_mb)}</li>
+          <li><i class="aisc-ico aisc-ico--zap"></i> ${p.credits_monthly.toLocaleString('en-US')} créditos/mes</li>
+          <li><i class="aisc-ico aisc-ico--database"></i> ${this._formatStorage(p.storage_mb)}</li>
           ${handles}
         </ul>
         <div class="dev-plan-card-actions">
-          <button type="button" class="btn btn-secondary btn-sm" data-action="edit-plan" data-id="${id}"><i class="fas fa-edit"></i> Editar</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-action="edit-plan" data-id="${id}"><i class="aisc-ico aisc-ico--edit"></i> Editar</button>
           <button type="button" class="btn btn-secondary btn-sm" data-action="toggle-plan-active" data-id="${id}" title="${active ? 'Desactivar' : 'Activar'}">
             <i class="fas fa-${active ? 'toggle-on' : 'toggle-off'}"></i> ${active ? 'Desactivar' : 'Activar'}
           </button>
@@ -284,7 +284,7 @@ class DevLeadBillingView extends DevBaseView {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" id="planModalCancel">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="planModalSave"><i class="fas fa-check"></i> Guardar</button>
+        <button type="button" class="btn btn-primary" id="planModalSave"><i class="aisc-ico aisc-ico--check"></i> Guardar</button>
       </div>
     `;
   }
@@ -368,7 +368,7 @@ class DevLeadBillingView extends DevBaseView {
       features
     };
     const btn = document.getElementById('planModalSave');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="aisc-ico fa-spin aisc-ico--loader"></i> Guardando...'; }
     try {
       const supabase = await this.getSupabase();
       const { error } = await supabase.from('plans').update(payload).eq('id', this._editingPlanId);
@@ -380,7 +380,7 @@ class DevLeadBillingView extends DevBaseView {
       console.error('savePlan:', err);
       this.showNotification('Error: ' + (err?.message || 'fallo al guardar'), 'error');
     } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Guardar'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="aisc-ico aisc-ico--check"></i> Guardar'; }
     }
   }
 
@@ -406,7 +406,7 @@ class DevLeadBillingView extends DevBaseView {
 
   async loadPackages() {
     const grid = document.getElementById('packagesGrid');
-    if (grid) grid.innerHTML = '<div class="dev-org-grid-state"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+    if (grid) grid.innerHTML = '<div class="dev-org-grid-state"><i class="aisc-ico fa-spin aisc-ico--loader"></i> Cargando...</div>';
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -439,11 +439,11 @@ class DevLeadBillingView extends DevBaseView {
     const total = p.credits + (p.bonus_credits || 0);
     const perCred = total > 0 ? (Number(p.price_usd) / total) : 0;
     const bonus = p.bonus_credits > 0
-      ? `<li><i class="fas fa-gift"></i> +${p.bonus_credits.toLocaleString('en-US')} bonus</li>`
+      ? `<li><i class="aisc-ico aisc-ico--gift"></i> +${p.bonus_credits.toLocaleString('en-US')} bonus</li>`
       : '';
     return `
       <article class="dev-plan-card${active ? '' : ' is-inactive'}${p.is_popular ? ' is-popular' : ''}">
-        ${p.is_popular ? '<span class="dev-plan-card-popular"><i class="fas fa-star"></i> Popular</span>' : ''}
+        ${p.is_popular ? '<span class="dev-plan-card-popular"><i class="aisc-ico aisc-ico--star"></i> Popular</span>' : ''}
         <div class="dev-plan-card-head">
           <div class="dev-plan-card-id-wrap">
             <h3 class="dev-plan-card-name">${this._escape(p.name)}</h3>
@@ -456,16 +456,16 @@ class DevLeadBillingView extends DevBaseView {
           <span class="dev-plan-card-per">pago único</span>
         </div>
         <ul class="dev-plan-card-specs">
-          <li><i class="fas fa-bolt"></i> ${p.credits.toLocaleString('en-US')} créditos</li>
+          <li><i class="aisc-ico aisc-ico--zap"></i> ${p.credits.toLocaleString('en-US')} créditos</li>
           ${bonus}
-          <li><i class="fas fa-tag"></i> $${perCred.toFixed(3)} /crédito efectivo</li>
+          <li><i class="aisc-ico aisc-ico--tag"></i> $${perCred.toFixed(3)} /crédito efectivo</li>
         </ul>
         <div class="dev-plan-card-actions">
-          <button type="button" class="btn btn-secondary btn-sm" data-action="edit-pack" data-id="${id}"><i class="fas fa-edit"></i> Editar</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-action="edit-pack" data-id="${id}"><i class="aisc-ico aisc-ico--edit"></i> Editar</button>
           <button type="button" class="btn btn-secondary btn-sm" data-action="toggle-pack-active" data-id="${id}" title="${active ? 'Desactivar' : 'Activar'}">
             <i class="fas fa-${active ? 'toggle-on' : 'toggle-off'}"></i>
           </button>
-          <button type="button" class="btn btn-secondary btn-sm dev-plan-card-del" data-action="delete-pack" data-id="${id}" title="Borrar"><i class="fas fa-trash"></i></button>
+          <button type="button" class="btn btn-secondary btn-sm dev-plan-card-del" data-action="delete-pack" data-id="${id}" title="Borrar"><i class="aisc-ico aisc-ico--delete"></i></button>
         </div>
       </article>
     `;
@@ -521,7 +521,7 @@ class DevLeadBillingView extends DevBaseView {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" id="packModalCancel">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="packModalSave"><i class="fas fa-check"></i> ${isCreate ? 'Crear' : 'Guardar'}</button>
+        <button type="button" class="btn btn-primary" id="packModalSave"><i class="aisc-ico aisc-ico--check"></i> ${isCreate ? 'Crear' : 'Guardar'}</button>
       </div>
     `;
   }
@@ -593,7 +593,7 @@ class DevLeadBillingView extends DevBaseView {
 
     const btn = document.getElementById('packModalSave');
     const wasCreate = this._creatingPack;
-    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${wasCreate ? 'Creando...' : 'Guardando...'}`; }
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${wasCreate ? 'Creando...' : 'Guardando...'}`; }
     try {
       const supabase = await this.getSupabase();
       if (wasCreate) {
@@ -612,7 +612,7 @@ class DevLeadBillingView extends DevBaseView {
       console.error('savePackage:', err);
       this.showNotification('Error: ' + (err?.message || 'fallo al guardar'), 'error');
     } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-check"></i> ${wasCreate ? 'Crear' : 'Guardar'}`; }
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="aisc-ico aisc-ico--check"></i> ${wasCreate ? 'Crear' : 'Guardar'}`; }
     }
   }
 

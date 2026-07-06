@@ -41,7 +41,7 @@ class ProductsView extends BaseView {
                                 </div>
                             </div>
                             <button class="products-btn-new btn-add-product" id="addProductBtn">
-                                <i class="fas fa-plus"></i>
+                                <i class="aisc-ico aisc-ico--add"></i>
                                 <span>${__('Nuevo Producto')}</span>
                             </button>
                         </div>
@@ -51,11 +51,11 @@ class ProductsView extends BaseView {
                 <div class="products-gallery" id="productsGallery">
                     <!-- Empty State -->
                     <div class="empty-state" id="emptyState" style="display: none;">
-                        <i class="fas fa-box-open"></i>
+                        <i class="aisc-ico aisc-ico--product"></i>
                         <h3>${__('No hay productos')}</h3>
                         <p>${__('Aún no has creado ningún producto')}</p>
                         <button class="btn-primary" onclick="document.getElementById('addProductBtn').click()">
-                            <i class="fas fa-plus"></i>
+                            <i class="aisc-ico aisc-ico--add"></i>
                             ${__('Crear Primer Producto')}
                         </button>
                     </div>
@@ -121,7 +121,7 @@ class ProductsView extends BaseView {
       this.container.innerHTML = `
         <div class="product-view">
           <div class="product-view-loading">
-            <i class="fas fa-spinner"></i>
+            <i class="aisc-ico aisc-ico--loader"></i>
             <span>${__('Cargando producto...')}</span>
           </div>
         </div>
@@ -167,7 +167,7 @@ class ProductsView extends BaseView {
             <h2>${__('Producto no encontrado')}</h2>
             <p>${__('El producto solicitado no existe o no tienes acceso.')}</p>
             <a href="${orgId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/products') : (orgId ? `/org/${orgId}/products` : '/products')}" class="product-view-back" data-router-link>
-              <i class="fas fa-arrow-left"></i> ${__('Volver a Productos')}
+              <i class="aisc-ico aisc-ico--arrow-left"></i> ${__('Volver a Productos')}
             </a>
           </div>
         `;
@@ -280,8 +280,8 @@ class ProductsView extends BaseView {
       <div class="product-view-thumb-wrap" data-index="${i}" data-image-id="${img.id}">
         <div class="product-view-thumb ${i === 0 ? 'active' : ''}" role="button" tabindex="0">
           <img src="${img.image_url}" alt="${__('Miniatura {n}', { n: i + 1 })}" loading="lazy">
-          <button type="button" class="product-view-thumb-delete" title="${__('Eliminar foto')}" aria-label="${__('Eliminar foto')}" data-image-id="${img.id}"><i class="fas fa-times"></i></button>
-          ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="${__('Establecer como principal')}" data-image-id="${img.id}"><i class="fas fa-star"></i></button>` : ''}
+          <button type="button" class="product-view-thumb-delete" title="${__('Eliminar foto')}" aria-label="${__('Eliminar foto')}" data-image-id="${img.id}"><i class="aisc-ico aisc-ico--close"></i></button>
+          ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="${__('Establecer como principal')}" data-image-id="${img.id}"><i class="aisc-ico aisc-ico--star"></i></button>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -320,20 +320,20 @@ class ProductsView extends BaseView {
     return `
       <div class="product-view"${bgStyleAttr}>
         <a href="${backUrl}" class="product-view-back back-to-products-btn" data-back-url="${backUrl}" data-router-link>
-          <i class="fas fa-arrow-left"></i> ${__('Volver a Identities')}
+          <i class="aisc-ico aisc-ico--arrow-left"></i> ${__('Volver a Identities')}
         </a>
         <div class="product-view-grid">
           <div class="product-view-gallery">
             <div class="product-view-thumbnails-wrap">
               <div class="product-view-thumbnails" id="productViewThumbnails" style="${thumbnails.length === 0 ? 'display: none;' : ''}">${thumbsHtml}</div>
               <input type="file" id="productViewImageUpload" accept="image/*" multiple style="position: absolute; width: 0; height: 0; opacity: 0; overflow: hidden; pointer-events: none;" aria-label="${__('Añadir fotos al producto')}">
-              <label for="productViewImageUpload" class="product-view-add-btn" id="productViewAddBtn" role="button" aria-label="${__('Añadir fotos')}" style="${thumbnails.length >= MAX_PRODUCT_IMAGES ? 'display: none;' : ''}"><i class="fas fa-plus"></i></label>
+              <label for="productViewImageUpload" class="product-view-add-btn" id="productViewAddBtn" role="button" aria-label="${__('Añadir fotos')}" style="${thumbnails.length >= MAX_PRODUCT_IMAGES ? 'display: none;' : ''}"><i class="aisc-ico aisc-ico--add"></i></label>
               ${thumbnails.length >= MAX_PRODUCT_IMAGES ? `<span class="product-view-max-hint" aria-live="polite">${__('Máx. {n} imágenes', { n: MAX_PRODUCT_IMAGES })}</span>` : ''}
             </div>
             <div class="product-view-main-wrap">
               ${mainImage
                 ? `<img id="productViewMainImage" src="${mainImage}" alt="${this.escapeHtml(product.nombre_producto || '')}" loading="lazy" decoding="async">`
-                : `<div class="product-view-loading" style="min-height: 200px;"><i class="fas fa-image"></i><span>${__('Sin imagen')}</span></div>`
+                : `<div class="product-view-loading" style="min-height: 200px;"><i class="aisc-ico aisc-ico--image"></i><span>${__('Sin imagen')}</span></div>`
               }
             </div>
           </div>
@@ -577,7 +577,7 @@ class ProductsView extends BaseView {
         const placeholder = document.createElement('div');
         placeholder.className = 'product-view-loading';
         placeholder.style.minHeight = '200px';
-        placeholder.innerHTML = `<i class="fas fa-image"></i><span>${this.escapeHtml(__('Sin imagen'))}</span>`;
+        placeholder.innerHTML = `<i class="aisc-ico aisc-ico--image"></i><span>${this.escapeHtml(__('Sin imagen'))}</span>`;
         mainWrapRef.appendChild(placeholder);
       }
     }
@@ -589,8 +589,8 @@ class ProductsView extends BaseView {
       <div class="product-view-thumb-wrap" data-index="${i}" data-image-id="${img.id}">
         <div class="product-view-thumb ${i === 0 ? 'active' : ''}" role="button" tabindex="0">
           <img src="${img.image_url}" alt="${__('Miniatura {n}', { n: i + 1 })}" loading="lazy">
-          <button type="button" class="product-view-thumb-delete" title="${__('Eliminar foto')}" aria-label="${__('Eliminar foto')}" data-image-id="${img.id}"><i class="fas fa-times"></i></button>
-          ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="${__('Establecer como principal')}" data-image-id="${img.id}"><i class="fas fa-star"></i></button>` : ''}
+          <button type="button" class="product-view-thumb-delete" title="${__('Eliminar foto')}" aria-label="${__('Eliminar foto')}" data-image-id="${img.id}"><i class="aisc-ico aisc-ico--close"></i></button>
+          ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="${__('Establecer como principal')}" data-image-id="${img.id}"><i class="aisc-ico aisc-ico--star"></i></button>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -721,7 +721,7 @@ class ProductsView extends BaseView {
             <p class="product-view-sheet-hint">${__('Versiones específicas del producto (tamaño, color, edición). Cada variante puede tener su propio contexto narrativo para Vera.')}</p>
           </div>
           <button type="button" class="product-view-variant-add-btn" id="addVariantBtn">
-            <i class="fas fa-plus"></i> ${__('Añadir variante')}
+            <i class="aisc-ico aisc-ico--add"></i> ${__('Añadir variante')}
           </button>
         </div>
         <div class="product-view-variants-list" id="productVariantsList">${cards}</div>
@@ -754,11 +754,11 @@ class ProductsView extends BaseView {
           <div class="product-view-variant-thumb">
             ${img
               ? `<img src="${this.escapeHtml(img)}" alt="${this.escapeHtml(name)}" loading="lazy" decoding="async">`
-              : `<i class="fas fa-cube"></i>`}
+              : `<i class="aisc-ico aisc-ico--product"></i>`}
           </div>
           <input type="text" class="product-view-variant-name" data-variant-id="${id}" data-variant-field="variant_name" value="${this.escapeHtml(name)}" placeholder="${this.escapeHtml(__('Nombre de la variante'))}">
-          <button type="button" class="product-view-variant-toggle" aria-label="${__('Expandir')}"><i class="fas fa-chevron-down"></i></button>
-          <button type="button" class="product-view-variant-delete" aria-label="${__('Eliminar variante')}"><i class="fas fa-times"></i></button>
+          <button type="button" class="product-view-variant-toggle" aria-label="${__('Expandir')}"><i class="aisc-ico aisc-ico--chevron-down"></i></button>
+          <button type="button" class="product-view-variant-delete" aria-label="${__('Eliminar variante')}"><i class="aisc-ico aisc-ico--close"></i></button>
         </div>
         <div class="product-view-variant-body">
           <div class="product-view-variant-grid">
