@@ -1519,7 +1519,7 @@ if (typeof window.ProductsManager === 'undefined') {
                 return;
             }
 
-            const { id, created_at, updated_at, ...rest } = product;
+            const { id: _id, created_at: _created_at, updated_at: _updated_at, ...rest } = product;
             const copyData = {
                 ...rest,
                 nombre_producto: (product.nombre_producto || 'Producto').trim() + ' (copia)'
