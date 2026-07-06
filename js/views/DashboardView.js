@@ -482,20 +482,20 @@ class DashboardView extends BaseView {
         this._orgLogoUrl = String(data?.logo_url || '').trim() || null;
       }
       if (this._orgLogoUrl) {
-        // Anti-parpadeo: mantenemos el <img> oculto (y a opacidad 0) hasta
-        // tenerlo cargado Y tintado; recien ahi lo revelamos con un fade. Asi
-        // nunca se ve el logo a su color/opacidad por defecto (flash blanco).
+        // Anti-parpadeo: el <img> arranca INVISIBLE (opacity:0 en CSS + hidden).
+        // Al revelarlo, unhide + tint en el MISMO tick (sin rAF intermedio): al
+        // salir de display:none con la opacidad final ya fijada, el navegador lo
+        // pinta directo en su estado final (0.16 blanco / 0.30 palido) sin animar
+        // desde ningun valor => cero flash. El re-tint del onload recoge el
+        // degradado real de la marca (OrgBrandTheme aplica post-render).
         const reveal = () => {
-          img.style.opacity = '0';
-          img.hidden = false;
-          // Un frame para que el degradado (OrgBrandTheme, post-render) ya este
-          // resuelto y el layout del <img> exista antes de medir/tintar.
-          requestAnimationFrame(() => this._tintHeroLogo());
+          if (img.dataset.revealed !== '1') { img.hidden = false; img.dataset.revealed = '1'; }
+          this._tintHeroLogo(); // mide el degradado y fija opacidad+filtro finales
         };
         img.onload = reveal;
         img.onerror = () => { img.hidden = true; };
         img.src = this._orgLogoUrl;
-        // Imagen ya cacheada: onload no dispara → revelar a mano.
+        // Imagen ya cacheada (tipico al refrescar): onload puede no disparar → revelar a mano.
         if (img.complete && img.naturalWidth) reveal();
       }
     } catch (_) { /* silencioso: la marca de agua es decorativa */ }
