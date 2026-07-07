@@ -268,13 +268,15 @@
        llega en r.terms + r.winner). Sin CTAs ni relevancia cruda. ──────────────── */
     _buildObservations(top) {
       const list = (Array.isArray(top) ? top : []).filter((r) => Number(r.total_engagement) > 0 || Number(r.total_posts) > 0);
+      // Card con el MISMO diseño que "Salud de tu marca" (mb-health-card--aside):
+      // titulo + descripcion DENTRO de la card, con acento superior y glow.
       const head = `
-          <div class="mb-section-head">
-            <span class="mb-section-title">${__('Observaciones')}</span>
-            <span class="mb-section-hint">${__('Lo más destacado de cada perfil')}</span>
+          <div class="comp-obs-head-in">
+            <span class="mb-hero-label">${__('Observaciones')}</span>
+            <span class="comp-obs-hint">${__('Lo más destacado de cada perfil')}</span>
           </div>`;
       if (!list.length) {
-        return `<section class="mb-section comp-obs-section">${head}<div class="comp-obs"><div class="mb-causal-empty">${__('Aún sin señales medibles en esta ventana.')}</div></div></section>`;
+        return `<section class="mb-health-card mb-health-card--aside comp-obs-card">${head}<div class="comp-obs"><div class="mb-causal-empty">${__('Aún sin señales medibles en esta ventana.')}</div></div></section>`;
       }
       const brandHex = this._readBrandHex();
       // Rol = seccion (competencia ≠ referente ≠ aliado); orden de secciones = prioridad
@@ -397,7 +399,7 @@
         ? `<div class="comp-obs-group"><div class="comp-obs-grouptitle">${g.title}</div>${g.list.map(card).join('')}</div>`
         : '')).join('');
 
-      return `<section class="mb-section comp-obs-section">${head}<div class="comp-obs">${sectionsHtml}</div></section>`;
+      return `<section class="mb-health-card mb-health-card--aside comp-obs-card">${head}<div class="comp-obs">${sectionsHtml}</div></section>`;
     },
 
     /* Competencia vacia = no hay NINGUN perfil monitoreado (sin actores). Sin

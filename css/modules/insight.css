@@ -3002,11 +3002,15 @@
 .comp-main { grid-template-columns: 1fr; }
 
 /* ── Panel lateral "Observaciones" (sidebar del tab Monitoreo) ────────────── */
-.comp-obs-section { margin: 0; }
-.comp-obs { background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424); border-radius: 14px; overflow: hidden; }
+/* Card de Observaciones = mismo diseño que Salud de tu marca (mb-health-card--aside:
+   acento superior + glow). El titulo/descripcion van DENTRO. La lista ya no es card. */
+.comp-obs-card { gap: 0.6rem; }
+.comp-obs-head-in { display: flex; flex-direction: column; gap: 0.25rem; }
+.comp-obs-hint { font-size: 0.8rem; line-height: 1.35; color: var(--text-secondary, rgba(212,209,216,0.5)); }
+.comp-obs { display: block; margin: 0 -1.2rem -1.2rem; }
 .comp-obs-group + .comp-obs-group { border-top: 1px solid var(--border-divider, #242424); }
-.comp-obs-grouptitle { padding: 0.7rem 0.95rem 0.35rem; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-tertiary, rgba(212,209,216,0.45)); }
-.comp-obs-item { padding: 0.7rem 0.95rem 0.8rem; border-top: 1px solid var(--border-divider, #242424); }
+.comp-obs-grouptitle { padding: 0.7rem 1.2rem 0.35rem; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-tertiary, rgba(212,209,216,0.45)); }
+.comp-obs-item { padding: 0.7rem 1.2rem 0.8rem; border-top: 1px solid var(--border-divider, #242424); }
 .comp-obs-grouptitle + .comp-obs-item { border-top: 0; }
 .comp-obs-head { display: flex; align-items: center; gap: 0.5rem; }
 .comp-obs-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
