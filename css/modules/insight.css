@@ -3216,10 +3216,11 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 /* Analisis longitudinal — grid de charts Chart.js */
 .mb-long-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
 .mb-long-grid--single { grid-template-columns: 1fr; }
-.mb-long-card { position: relative; overflow: hidden; background: var(--bg-card); border: 1px solid var(--border-divider); border-radius: 14px; padding: 0.9rem 1rem 0.75rem; box-shadow: var(--dash-elev); min-width: 0; }
+.mb-long-card { background: var(--bg-card); border: 1px solid var(--border-divider); border-radius: 14px; padding: 0.9rem 1rem 0.75rem; box-shadow: var(--dash-elev); min-width: 0; }
+.mb-long-card--crowned { position: relative; overflow: hidden; }
 /* Borde superior con el degradado dinamico de la marca, igual que la card de
-   Salud de tu marca (.mb-health-card--aside::before). Corona Tonos/Temas. */
-.mb-long-card::before {
+   Salud de tu marca (.mb-health-card--aside::before). Solo corona Tonos/Temas. */
+.mb-long-card--crowned::before {
   content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2.5px; pointer-events: none; z-index: 2;
   background: var(--brand-gradient-dynamic, linear-gradient(90deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.12)));
 }

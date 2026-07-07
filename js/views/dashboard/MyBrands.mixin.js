@@ -691,7 +691,7 @@
           <span class="mb-donut-leg-val">${x.used}</span>
         </div>`).join('');
       return `
-        <div class="mb-long-card">
+        <div class="mb-long-card mb-long-card--crowned">
           <div class="mb-card-title">${this._esc(title)}</div>
           <div class="mb-hier-stats">
             <div class="mb-hier-stat">
@@ -826,8 +826,28 @@
             </div>`).join('')}</div>
         </div>` : '';
 
-      const extras = (recBlock || likeBlock || favBlock) ? `
-        <div class="mb-as-grid">${recBlock}${favBlock}${likeBlock}</div>` : '';
+      // ── Widget 4: hashtags que funcionan = los de mayor eng/post (mirror de
+      // temas favoritos, mismo patron visual). FEAT-037 Fase 2 #5 (dato: DATA-002).
+      const hashtagRows = (Array.isArray(data?.featured?.hashtags?.data) ? data.featured.hashtags.data : [])
+        .filter((h) => h.hashtag && Number(h.usage_count) > 0);
+      const favHashtags = [...hashtagRows]
+        .sort((a, b) => (Number(b.avg_engagement_per_post) || 0) - (Number(a.avg_engagement_per_post) || 0)
+          || (Number(b.total_engagement) || 0) - (Number(a.total_engagement) || 0))
+        .slice(0, 3);
+      const maxHash = favHashtags.length ? Math.max(1, ...favHashtags.map((h) => Number(h.avg_engagement_per_post) || 0)) : 1;
+      const hashBlock = favHashtags.length ? `
+        <div class="mb-as-stat mb-as-stat--topics">
+          <span class="mb-as-cap">${__('Hashtags que funcionan')}</span>
+          <div class="mb-as-topics">${favHashtags.map((h) => `
+            <div class="mb-as-topic">
+              <span class="mb-as-topic-name">#${this._esc(String(h.hashtag).replace(/^#/, ''))}</span>
+              <span class="mb-as-topic-bar"><span style="width:${Math.max(6, Math.round((Number(h.avg_engagement_per_post) || 0) / maxHash * 100))}%"></span></span>
+              <span class="mb-as-topic-val">${this._compactNum(Math.round(Number(h.avg_engagement_per_post) || 0))} <small>${__('eng/post')}</small></span>
+            </div>`).join('')}</div>
+        </div>` : '';
+
+      const extras = (recBlock || likeBlock || favBlock || hashBlock) ? `
+        <div class="mb-as-grid">${recBlock}${favBlock}${hashBlock}${likeBlock}</div>` : '';
 
       const card = `
         <div class="mb-long-card">

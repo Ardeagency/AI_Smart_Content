@@ -47,6 +47,25 @@ async function getPageToken(userToken, pageId) {
   return data.access_token || userToken;
 }
 
+// Extrae hashtags del texto del post (deterministico, sin LLM). Formato consistente
+// con los de competidores (Apify): SIN el '#', case original, dedupe case-insensitive.
+// Alimenta dashboard_estrategia_hashtags para posts propios (DATA-002).
+function extractHashtags(text) {
+  if (!text || typeof text !== 'string') return [];
+  // Lookbehind negativo: el '#' NO debe ir precedido de letra/numero/_//&, para no
+  // cazar fragmentos de URL (x.com/#frag), entidades HTML (&#123) ni mid-word (C#).
+  const matches = text.match(/(?<![\p{L}\p{N}_/&])#[\p{L}\p{N}_]+/gu);
+  if (!matches) return [];
+  const out = [];
+  const seen = new Set();
+  for (const m of matches) {
+    const tag = m.slice(1); // quita el '#'
+    const key = tag.toLowerCase();
+    if (tag && !seen.has(key)) { seen.add(key); out.push(tag); }
+  }
+  return out;
+}
+
 // ── Facebook: posts ───────────────────────────────────────────────────────────
 
 async function fetchFbPosts(pageToken, pageId, since) {
@@ -448,7 +467,9 @@ async function upsertBrandPost(env, brandContainerId, postRow, postId) {
       url: env.url, serviceKey: env.serviceKey,
       path: 'brand_posts', method: 'PATCH',
       searchParams: { id: `eq.${existing[0].id}` },
-      body: [{ metrics: postRow.metrics, captured_at: postRow.captured_at, permalink: postRow.permalink }]
+      // hashtags: refresca posts propios existentes en cada sync (DATA-002). Deterministico
+      // desde el mismo caption -> idempotente. postRow.hashtags puede no venir (comentarios, etc.).
+      body: [{ metrics: postRow.metrics, captured_at: postRow.captured_at, permalink: postRow.permalink, ...(postRow.hashtags ? { hashtags: postRow.hashtags } : {}) }]
     }).catch(e => console.warn('[sync] upsert patch:', e.message));
     return existing[0].id;
   } else {
@@ -720,6 +741,7 @@ exports.handler = async (event) => {
           post_id:        post.id,
           permalink:      post.permalink_url || null,
           content:        post.message || post.story || '',
+          hashtags:       extractHashtags(post.message || post.story || ''),
           media_assets:   post.full_picture ? [{ type: post.attachments?.data?.[0]?.media_type || 'text', url: post.full_picture, permalink: post.permalink_url }] : [],
           metrics,
           sentiment:      {},
@@ -797,6 +819,7 @@ exports.handler = async (event) => {
             post_id:        m.id,
             permalink:      m.permalink || null,
             content:        m.caption || '',
+            hashtags:       extractHashtags(m.caption || ''),
             media_assets:   m.media_url ? [{ type: m.media_type?.toLowerCase(), url: m.media_url, permalink: m.permalink }] : [],
             metrics,
             sentiment:      {},
