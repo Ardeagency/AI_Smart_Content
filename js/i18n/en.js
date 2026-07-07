@@ -14,6 +14,12 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Perfiles por rol": "Profiles by role",
+  "Cómo se reparte tu monitoreo y el engagement del nicho entre roles": "How your monitoring and the niche engagement split across roles",
+  "perfil": "profile",
+  "perfiles": "profiles",
+  "{n} {w} · {p}% del engagement": "{n} {w} · {p}% of engagement",
+  "Sin perfiles aún": "No profiles yet",
   "Temas y hashtags del nicho": "Niche topics and hashtags",
   "Lo que más publica el conjunto de perfiles que monitoreas": "What the profiles you monitor post most",
   "Hashtags": "Hashtags",

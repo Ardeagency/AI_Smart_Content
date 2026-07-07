@@ -252,7 +252,7 @@
           <div class="mb-layout">
             <div class="mb-layout-main comp-main">
               ${this._buildBattlefield(data?.kpis?.data, data?.top?.data, data?.kpisPrev?.data)}
-              ${this._buildNicheContent(data?.nicheContent)}
+              ${this._buildRoleBreakdown(data?.top?.data)}
               ${this._buildWinningFormula(data?.intelligence?.data)}
             </div>
             <aside class="mb-layout-aside">
@@ -262,46 +262,49 @@
         </div>`;
     },
 
-    /* ── Temas y hashtags del nicho: charts de barras horizontales (estilo pill) del
-       contenido agregado de TODOS los perfiles monitoreados. Barras del color
-       dinámico de la marca. Datos de CompetenciaDataService._nicheContentAggregates
-       (texto de los posts, rules+math). Tonos NO: el campo tone está vacío -> pendiente
-       del clasificador. */
-    _buildNicheContent(nc) {
-      const temas = Array.isArray(nc?.temas) ? nc.temas : [];
-      const tags = Array.isArray(nc?.hashtags) ? nc.hashtags : [];
-      if (!temas.length && !tags.length) return '';
+    /* ── Perfiles por rol: composición del monitoreo (cuántos perfiles y cuánto
+       engagement del nicho por rol). Barra = cuántos perfiles; texto = % del
+       engagement del nicho. Barra del color dinámico de la marca. Sale de top.data. */
+    _buildRoleBreakdown(top) {
+      const list = (Array.isArray(top) ? top : []).filter((r) => Number(r.total_engagement) > 0 || Number(r.total_posts) > 0);
+      if (!list.length) return '';
       const brandHex = this._readBrandHex();
-      const bars = (items, kind) => {
-        if (!items.length) return `<div class="mb-causal-empty">${__('Sin datos en la ventana.')}</div>`;
-        const max = Math.max(...items.map((i) => i.count), 1);
-        return items.map((i) => {
-          const w = Math.max(6, Math.round(i.count / max * 100));
-          const label = kind === 'tag' ? `#${i.tag}` : i.term;
-          return `
-            <div class="comp-bar-row">
-              <span class="comp-bar-label" title="${this._esc(label)}">${this._esc(label)}</span>
-              <span class="comp-bar-track"><span class="comp-bar-fill" style="width:${w}%;background:${brandHex}"></span></span>
-              <span class="comp-bar-val">${i.count}</span>
-            </div>`;
-        }).join('');
-      };
+      const ROLES = [
+        { key: 'competidor_directo',   title: __('Competidores directos'),   color: '#b3796f' },
+        { key: 'competidor_indirecto', title: __('Competidores indirectos'), color: '#9c8e6b' },
+        { key: 'referencia_cultural',  title: __('Referencias'),             color: '#8a8a8e' },
+        { key: 'aliado',               title: __('Aliados'),                 color: '#6b9e78' },
+      ];
+      const totalEng = list.reduce((s, r) => s + (Number(r.total_engagement) || 0), 0) || 1;
+      const groups = ROLES.map((role) => ({ role, profs: list.filter((r) => r.tipo === role.key) }));
+      const maxCount = Math.max(...groups.map((g) => g.profs.length), 1);
+      const rows = groups.map(({ role, profs }) => {
+        const eng = profs.reduce((s, r) => s + (Number(r.total_engagement) || 0), 0);
+        const share = Math.round(eng / totalEng * 100);
+        const w = profs.length ? Math.max(8, Math.round(profs.length / maxCount * 100)) : 0;
+        const perfil = profs.length === 1 ? __('perfil') : __('perfiles');
+        const count = profs.length
+          ? __('{n} {w} · {p}% del engagement', { n: profs.length, w: perfil, p: share })
+          : __('Sin perfiles aún');
+        const names = profs.map((p) => this._esc(p.entity_name)).join(' · ');
+        return `
+          <div class="comp-role-row${profs.length ? '' : ' comp-role-row--empty'}">
+            <div class="comp-role-top">
+              <span class="comp-role-dot" style="background:${role.color}"></span>
+              <span class="comp-role-name">${role.title}</span>
+              <span class="comp-role-count">${count}</span>
+            </div>
+            <span class="comp-bar-track"><span class="comp-bar-fill" style="width:${w}%;background:${brandHex}"></span></span>
+            ${names ? `<div class="comp-role-list">${names}</div>` : ''}
+          </div>`;
+      }).join('');
       return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">${__('Temas y hashtags del nicho')}</span>
-            <span class="mb-section-hint">${__('Lo que más publica el conjunto de perfiles que monitoreas')}</span>
+            <span class="mb-section-title">${__('Perfiles por rol')}</span>
+            <span class="mb-section-hint">${__('Cómo se reparte tu monitoreo y el engagement del nicho entre roles')}</span>
           </div>
-          <div class="comp-content-grid">
-            <div class="comp-content-card">
-              <div class="comp-content-title">${__('Temas')}</div>
-              ${bars(temas, 'term')}
-            </div>
-            <div class="comp-content-card">
-              <div class="comp-content-title">${__('Hashtags')}</div>
-              ${bars(tags, 'tag')}
-            </div>
-          </div>
+          <div class="comp-roles">${rows}</div>
         </section>`;
     },
 
