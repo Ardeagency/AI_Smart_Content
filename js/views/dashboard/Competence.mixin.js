@@ -374,15 +374,9 @@
         </section>`;
       }
 
-      // Solo rivales con engagement medible entran al mapa de burbujas (x=share
-      // of voice, y=sentimiento, tamaño=engagement). Los de 0 eng no tienen
-      // posicion util; se listan aparte como "sin actividad medida".
+      // Solo perfiles con actividad medible entran al chart. Los de 0 posts y
+      // 0 engagement no se muestran (ni como chips) — no aportan senal.
       const plotted = list.filter((r) => Number(r.total_engagement) > 0 || Number(r.total_posts) > 0);
-      const silent = list.filter((r) => Number(r.total_engagement) <= 0 && Number(r.total_posts) <= 0);
-      const silentChips = silent.map((r) => {
-        const tipo = this._compTipoMeta(r.tipo);
-        return `<span class="comp-rank-tipo" style="--ct:${tipo.color};margin:2px 6px 2px 0;display:inline-block;">${this._esc(r.entity_name)} · ${tipo.label}</span>`;
-      }).join('');
 
       return `
         <section class="mb-section">
@@ -396,7 +390,6 @@
                  <div class="comp-sov-legend" id="compInfluenceLegend"></div>
                </div>`
             : `<div class="mb-causal-empty">${__('Sin rivales con actividad en la ventana.')}</div>`}
-          ${silentChips ? `<div class="comp-sov-silent"><span class="mb-beh-label">${__('Sin actividad medida en esta ventana')}</span><div>${silentChips}</div></div>` : ''}
         </section>`;
     },
 
