@@ -125,6 +125,7 @@ class CampanasDataService {
       optimizationInsights, alertScore,
       activityHistory, engagementTrend, sentimentActivity, postingHours,
       estrategiaTopics, topHighlightedPosts, comments, postReception, whatDrags, whatWins, opportunities,
+      estrategiaHashtags,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
@@ -241,6 +242,10 @@ class CampanasDataService {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to,
         p_brand_container_ids: bcids, p_min_posts: 2,
       }),
+      // Hashtags que funcionan (mirror de estrategia_topics): ranking por eng/post
+      // + sentimiento. Alimenta el widget "Hashtags que funcionan" en la card de
+      // Sentimientos de la audiencia. FEAT-037 Fase 2 #5 (desbloqueado por DATA-002).
+      this.sb.rpc('dashboard_estrategia_hashtags',        { ...featuredArgs, p_limit: 5 }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -262,6 +267,7 @@ class CampanasDataService {
         hour:     u(featuredHour),
         tones:    u(estrategiaTones),
         topics:   u(estrategiaTopics),
+        hashtags: u(estrategiaHashtags),
         sentiment: u(featuredSentiment),
         profile:   u(featuredProfile),
         growth:    u(featuredGrowth),

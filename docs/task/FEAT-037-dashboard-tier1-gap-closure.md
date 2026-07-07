@@ -88,7 +88,17 @@ Agency).
    el bloque se omite solo). **Falta QA visual en browser** (PENDING-HUMAN).
    Pendientes de este item como superficies APARTE (no drill-down): `featured`
    (rival destacado, card en el tab) y `search` (buscador de competidores).
-5. Tab Estrategia con `hashtags/platform_comparison/sentiments_by_brand`.
+5. **hashtags [HECHO 2026-07-07]** — widget "Hashtags que funcionan" en la card
+   "Sentimientos de la audiencia" de Mi Marca (mirror de "Temas favoritos", mismo
+   patron `mb-as-topic`). `CampanasDataService` cablea `dashboard_estrategia_hashtags`
+   (own). CLAVE: descubierto que own posts tenian 0 hashtags → se corrigio la ingesta
+   (Netlify + ai-engine) y se backfilleo 159 posts = **DATA-002 (resuelto)**. Verificado
+   IGNIS: brandsthatnourish, madeincolombia, branding, packagingdesign... con datos.
+   NOTA: el modelo mental del doc estaba desactualizado — topics/tones/hashtags viven
+   en **Mi Marca** (via CampanasDataService), no en el tab Estrategia (que es el plan
+   de recomendaciones). PENDIENTE de #5: `platform_comparison` (dato real IG vs FB,
+   necesita seccion nueva) y `sentiments_by_brand` (delgada en orgs de 1 marca). Falta
+   QA visual del widget de hashtags.
 6. Mi Marca enriquecido (`kpis_strip`, `platform_health`, `comment_risk`,
    `featured_platform`, `featured_campaign_ad`, `featured_profile_details`,
    `alert_score`).
