@@ -14,6 +14,12 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Competidores directos": "Direct competitors",
+  "Competidores indirectos": "Indirect competitors",
+  "Referencias": "References",
+  "Aliados": "Allies",
+  "Nacional": "National",
+  "Internacional": "International",
   "Observaciones": "Observations",
   "Lo más destacado de cada perfil": "The most notable of each profile",
   "Aún sin señales medibles en esta ventana.": "No measurable signals in this window yet.",

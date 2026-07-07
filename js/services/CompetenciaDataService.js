@@ -76,25 +76,27 @@ class CompetenciaDataService {
       // Share-of-voice por rival (ranking por % de engagement del set competitivo).
       this.sb.rpc('dashboard_competencia_comparison', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 8 }),
       this.sb.rpc('dashboard_competencia_kpis', { p_org_id: org, p_date_from: prevFrom, p_date_to: prevTo, p_entity_ids: entityIds, p_platforms: platforms }),
-      // Color + relevancia por perfil (intelligence_entities). El RPC top no los
-      // expone; los traemos aparte (RLS org-scoped): color -> barras de "Influencia
-      // digital" (o color de marca si no tiene); relevance -> contexto curado del
-      // panel lateral "Observaciones". Mismo criterio que MonitoringView (color[0]).
-      this.sb.from('intelligence_entities').select('id,color,relevance').eq('organization_id', org),
+      // Color + relevancia + rango por perfil (intelligence_entities). El RPC top no
+      // los expone; los traemos aparte (RLS org-scoped): color -> barras de "Influencia
+      // digital" (o color de marca si no tiene); relevance -> contexto curado y rango
+      // (metadata.rango = nacional|internacional) -> priorizacion del panel lateral
+      // "Observaciones". El rango se edita en otra pagina; aqui solo se consume.
+      this.sb.from('intelligence_entities').select('id,color,relevance,metadata').eq('organization_id', org),
     ]);
 
     const u = (s) => this._unwrap(s);
-    // Merge de color + relevancia sobre las filas del ranking (por entity_id).
+    // Merge de color + relevancia + rango sobre las filas del ranking (por entity_id).
     const topBlock = u(top);
     if (Array.isArray(topBlock.data)) {
       const rows = (entColors.status === 'fulfilled' && !entColors.value?.error) ? (entColors.value.data || []) : [];
       const metaById = new Map(rows.map((e) => [e.id, {
         color: (Array.isArray(e.color) && e.color[0]) ? e.color[0] : null,
         relevance: (typeof e.relevance === 'string' && e.relevance.trim()) ? e.relevance.trim() : null,
+        rango: (e.metadata && typeof e.metadata.rango === 'string' && e.metadata.rango.trim()) ? e.metadata.rango.trim().toLowerCase() : null,
       }]));
       topBlock.data = topBlock.data.map((r) => {
         const m = metaById.get(r.entity_id) || {};
-        return { ...r, color: m.color || null, relevance: m.relevance || null };
+        return { ...r, color: m.color || null, relevance: m.relevance || null, rango: m.rango || null };
       });
     }
     return {

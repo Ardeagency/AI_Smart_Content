@@ -282,6 +282,19 @@
       const totalEng = list.reduce((s, r) => s + (Number(r.total_engagement) || 0), 0) || 1;
       const maxEng = Math.max(...list.map((r) => Number(r.total_engagement) || 0), 1);
       const maxPosts = Math.max(...list.map((r) => Number(r.total_posts) || 0), 1);
+      // Rol = seccion (competencia ≠ referente ≠ aliado); orden de secciones = prioridad
+      // de rol (directo primero). Rango = etiqueta editable en otra pagina; nacional
+      // pesa mas que internacional dentro de cada rol.
+      const ROLE_ORDER = [
+        { key: 'competidor_directo',   title: __('Competidores directos') },
+        { key: 'competidor_indirecto', title: __('Competidores indirectos') },
+        { key: 'referencia_cultural',  title: __('Referencias') },
+        { key: 'aliado',               title: __('Aliados') },
+      ];
+      const RANGO = {
+        nacional:      { label: __('Nacional'),      rank: 2 },
+        internacional: { label: __('Internacional'), rank: 1 },
+      };
 
       const items = list.map((r) => {
         const rk = riskById.get(r.entity_id) || {};
@@ -307,32 +320,48 @@
         cand.push({ score: 100 + Math.round(eng / maxEng * 80), tone: 'neutral', ico: 'eye', text: __('{p} posts · {e} de engagement', { p: fmt.int(posts), e: this._compactNum(eng) }) });
         cand.sort((a, b) => b.score - a.score);
 
-        const roleBump = r.tipo === 'competidor_directo' ? 40 : r.tipo === 'competidor_indirecto' ? 20 : 0;
+        const rangoKey = typeof r.rango === 'string' ? r.rango.trim().toLowerCase() : '';
+        const rango = RANGO[rangoKey] || null;
         const raw = typeof r.color === 'string' ? r.color.trim() : '';
         return {
+          tipo: r.tipo,
           name: r.entity_name,
           color: /^#[0-9a-fA-F]{6,8}$/.test(raw) ? raw : brandHex,
-          role: this._compTipoMeta(r.tipo),
+          rango, rangoKey,
           signal: cand[0],
-          rank: cand[0].score + roleBump,
+          signalScore: cand[0].score,
           relevance: typeof r.relevance === 'string' ? r.relevance.trim() : '',
         };
-      }).sort((a, b) => b.rank - a.rank);
+      });
 
-      const rows = items.map((it) => `
+      // Prioridad DENTRO de cada rol: rango primero (nacional > internacional >
+      // sin rango), luego la señal viva. Así "directo + nacional" (sección de
+      // directos, arriba) queda en el tope global. Rango se edita en otra página.
+      const prio = (it) => (it.rango ? it.rango.rank : 0) * 100000 + it.signalScore;
+      const card = (it) => `
         <div class="comp-obs-item">
           <div class="comp-obs-head">
             <span class="comp-obs-dot" style="background:${it.color}"></span>
             <span class="comp-obs-name">${this._esc(it.name)}</span>
-            <span class="comp-obs-role" style="--ct:${it.role.color}">${this._esc(it.role.label)}</span>
+            ${it.rango ? `<span class="comp-obs-rango comp-obs-rango--${it.rangoKey}">${this._esc(it.rango.label)}</span>` : ''}
           </div>
           <div class="comp-obs-signal comp-obs-signal--${it.signal.tone}">
             <i class="aisc-ico aisc-ico--${it.signal.ico}"></i><span>${this._esc(it.signal.text)}</span>
           </div>
           ${it.relevance ? `<div class="comp-obs-rel">${this._esc(it.relevance)}</div>` : ''}
-        </div>`).join('');
+        </div>`;
 
-      return `<section class="mb-section comp-obs-section">${head}<div class="comp-obs">${rows}</div></section>`;
+      // Secciones por rol (competencia ≠ referente ≠ aliado), en orden de prioridad.
+      const known = new Set(ROLE_ORDER.map((s) => s.key));
+      const groupHtml = (title, group) => {
+        if (!group.length) return '';
+        group.sort((a, b) => prio(b) - prio(a));
+        return `<div class="comp-obs-group"><div class="comp-obs-grouptitle">${title}</div>${group.map(card).join('')}</div>`;
+      };
+      let sectionsHtml = ROLE_ORDER.map((sec) => groupHtml(sec.title, items.filter((it) => it.tipo === sec.key))).join('');
+      sectionsHtml += groupHtml(__('Otros'), items.filter((it) => !known.has(it.tipo)));
+
+      return `<section class="mb-section comp-obs-section">${head}<div class="comp-obs">${sectionsHtml}</div></section>`;
     },
 
     /* Competencia vacia = no hay NINGUN perfil monitoreado (sin actores). Sin

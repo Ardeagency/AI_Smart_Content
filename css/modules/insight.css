@@ -3004,12 +3004,16 @@
 /* ── Panel lateral "Observaciones" (sidebar del tab Monitoreo) ────────────── */
 .comp-obs-section { margin: 0; }
 .comp-obs { background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424); border-radius: 14px; overflow: hidden; }
-.comp-obs-item { padding: 0.85rem 0.95rem; border-top: 1px solid var(--border-divider, #242424); }
-.comp-obs-item:first-child { border-top: 0; }
+.comp-obs-group + .comp-obs-group { border-top: 1px solid var(--border-divider, #242424); }
+.comp-obs-grouptitle { padding: 0.7rem 0.95rem 0.35rem; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-tertiary, rgba(212,209,216,0.45)); }
+.comp-obs-item { padding: 0.7rem 0.95rem 0.8rem; border-top: 1px solid var(--border-divider, #242424); }
+.comp-obs-grouptitle + .comp-obs-item { border-top: 0; }
 .comp-obs-head { display: flex; align-items: center; gap: 0.5rem; }
 .comp-obs-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
 .comp-obs-name { font-size: 0.86rem; font-weight: 600; color: var(--text-primary, #e8e6ea); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.comp-obs-role { margin-left: auto; flex: 0 0 auto; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ct, #8a8a8e); border: 1px solid color-mix(in srgb, var(--ct, #8a8a8e) 45%, transparent); border-radius: 999px; padding: 0.1rem 0.45rem; }
+.comp-obs-rango { margin-left: auto; flex: 0 0 auto; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 999px; padding: 0.1rem 0.45rem; }
+.comp-obs-rango--nacional { color: #6bcf7f; border: 1px solid rgba(107,207,127,0.4); }
+.comp-obs-rango--internacional { color: #5b9bd5; border: 1px solid rgba(91,155,213,0.4); }
 .comp-obs-signal { display: flex; align-items: flex-start; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.8rem; line-height: 1.35; color: var(--text-secondary, rgba(212,209,216,0.85)); }
 .comp-obs-signal .aisc-ico { flex: 0 0 auto; width: 14px; height: 14px; margin-top: 1px; }
 .comp-obs-signal--opp { color: #e5897c; }
