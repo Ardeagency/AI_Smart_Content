@@ -99,6 +99,29 @@ class CompetenciaDataService {
         return { ...r, color: m.color || null, relevance: m.relevance || null, rango: m.rango || null };
       });
     }
+
+    // ── "De qué habla" cada perfil: términos recurrentes extraídos del TEXTO de
+    // sus posts (rules+math, sin LLM — topics/tone no están poblados para
+    // competidores). Fetch acotado a los perfiles del ranking + la ventana.
+    if (Array.isArray(topBlock.data) && topBlock.data.length) {
+      const ids = topBlock.data.map((r) => r.entity_id).filter(Boolean);
+      let posts = [];
+      try {
+        const { data } = await this.sb.from('brand_posts')
+          .select('entity_id,content')
+          .in('entity_id', ids)
+          .eq('is_competitor', true)
+          .not('content', 'is', null)
+          .gte('captured_at', from).lte('captured_at', to)
+          .order('engagement_total', { ascending: false, nullsFirst: false })
+          .limit(600);
+        posts = Array.isArray(data) ? data : [];
+      } catch (_) { /* términos son opcionales: si falla, no rompe el panel */ }
+      const nameById = {};
+      for (const r of topBlock.data) nameById[r.entity_id] = r.entity_name || '';
+      const termsById = this._topTermsByEntity(posts, nameById);
+      topBlock.data = topBlock.data.map((r) => ({ ...r, terms: termsById[r.entity_id] || [] }));
+    }
     return {
       window: { from, to },
       kpis:  u(kpis),
@@ -110,6 +133,47 @@ class CompetenciaDataService {
       shareOfVoice: u(sov),
       kpisPrev:     u(kpisPrev),
     };
+  }
+
+  /** "De qué habla" cada perfil: términos recurrentes desde el TEXTO de sus posts
+      (rules+math, sin LLM). Document-frequency (cuántos posts distintos mencionan
+      el término) sobre content + hashtags, filtrando stopwords/urls/mentions y
+      palabras < 4 letras; top 3 por entidad con df>=2. Aproxima el tema recurrente,
+      NO una clasificación semántica (para eso haría falta el clasificador). */
+  _topTermsByEntity(posts, nameById = {}) {
+    const STOP = new Set(('para como este esta esto pero porque tambien cuando donde desde sobre todo toda todos todas mucho mucha muchos muchas hasta entre antes cada solo segun estos estas esos esas otros otras otro otra mientras nuestro nuestra nuestros nuestras tiene tienen hacer hacen sido estan estar sera seran mas menos aqui alla ellos ellas quien quienes cual cuales nada algo muy sin con los las del una uno unos unas ' +
+      'this that with from have your they what when will would about which there their because just like more been were them then have does your youre dont into over more will your ' +
+      'http https www com net link bio post posts reel reels story stories nan null undefined video foto photo').split(/\s+/).filter(Boolean));
+    // Tokens del nombre de cada entidad -> se excluyen (una marca "habla de si misma"
+    // por su nombre; eso no es tema). Ej: Red Bull -> {red, bull, redbull}.
+    const ownTokens = {};
+    for (const [eid, name] of Object.entries(nameById)) {
+      const set = new Set();
+      const clean = String(name || '').toLowerCase().replace(/\([^)]*\)/g, ' ');
+      for (const w of clean.match(/[\p{L}]{3,}/gu) || []) set.add(w);
+      set.add(clean.replace(/[^\p{L}\p{N}]/gu, '')); // nombre pegado (redbull)
+      ownTokens[eid] = set;
+    }
+    const byEntity = {};
+    for (const p of posts || []) {
+      const eid = p.entity_id; if (!eid) continue;
+      const own = ownTokens[eid] || new Set();
+      const text = String(p.content || '').toLowerCase();
+      const seen = new Set();
+      for (const m of text.match(/#([\p{L}\p{N}_]{3,})/gu) || []) seen.add(m.slice(1).replace(/_/g, ''));
+      const cleaned = text.replace(/https?:\/\/\S+/g, ' ').replace(/[@#][\p{L}\p{N}_]+/gu, ' ');
+      for (const w of cleaned.match(/[\p{L}]{4,}/gu) || []) {
+        const t = w.toLowerCase();
+        if (!STOP.has(t)) seen.add(t);
+      }
+      const df = (byEntity[eid] = byEntity[eid] || {});
+      for (const t of seen) { if (!own.has(t)) df[t] = (df[t] || 0) + 1; }
+    }
+    const out = {};
+    for (const [eid, df] of Object.entries(byEntity)) {
+      out[eid] = Object.entries(df).filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t]) => t);
+    }
+    return out;
   }
 
   /** Drill-down: posts de UN rival (on-demand, no cacheado). */

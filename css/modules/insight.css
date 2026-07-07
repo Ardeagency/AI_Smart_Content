@@ -3020,6 +3020,8 @@
 .comp-obs-signal--pos { color: #6bcf7f; }
 .comp-obs-signal--strong { color: #d7d4db; }
 .comp-obs-signal--neutral { color: var(--text-secondary, rgba(212,209,216,0.7)); }
+.comp-obs-terms { margin-top: 0.4rem; font-size: 0.74rem; line-height: 1.35; color: var(--text-secondary, rgba(212,209,216,0.62)); }
+.comp-obs-terms-lbl { text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.58rem; font-weight: 700; color: var(--text-tertiary, rgba(212,209,216,0.4)); margin-right: 0.4rem; }
 .comp-obs-rel { margin-top: 0.4rem; font-size: 0.73rem; line-height: 1.4; color: var(--text-tertiary, rgba(212,209,216,0.5)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 /* Voz de su audiencia */

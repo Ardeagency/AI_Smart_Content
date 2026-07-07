@@ -350,6 +350,7 @@
           signal: cand[0],
           signalScore: cand[0].score,
           relevance: typeof r.relevance === 'string' ? r.relevance.trim() : '',
+          terms: Array.isArray(r.terms) ? r.terms.slice(0, 3) : [],
         };
       });
 
@@ -367,6 +368,7 @@
           <div class="comp-obs-signal comp-obs-signal--${it.signal.tone}">
             <i class="aisc-ico aisc-ico--${it.signal.ico}"></i><span>${this._esc(it.signal.text)}</span>
           </div>
+          ${it.terms.length ? `<div class="comp-obs-terms"><span class="comp-obs-terms-lbl">${__('Habla de')}</span> ${it.terms.map((t) => this._esc(t)).join(' · ')}</div>` : ''}
           ${it.relevance ? `<div class="comp-obs-rel">${this._esc(it.relevance)}</div>` : ''}
         </div>`;
 

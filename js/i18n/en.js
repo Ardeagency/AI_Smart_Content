@@ -14,6 +14,7 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Habla de": "Talks about",
   "{n}% de sentimiento negativo en su audiencia": "{n}% negative sentiment in their audience",
   "{n}% de su audiencia insatisfecha": "{n}% of their audience dissatisfied",
   "Referente de alcance: {n}% del engagement del nicho": "Reach reference: {n}% of the niche's engagement",
