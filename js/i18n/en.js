@@ -14,6 +14,13 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "{n}% de sentimiento negativo en su audiencia": "{n}% negative sentiment in their audience",
+  "{n}% de su audiencia insatisfecha": "{n}% of their audience dissatisfied",
+  "Referente de alcance: {n}% del engagement del nicho": "Reach reference: {n}% of the niche's engagement",
+  "Conecta fuerte con su audiencia: {n}% positivo": "Connects strongly with their audience: {n}% positive",
+  "Consistencia alta: {n} posts en la ventana": "High consistency: {n} posts in the window",
+  "Audiencia receptiva: {n}% positivo": "Receptive audience: {n}% positive",
+  "Alcance fuerte en el nicho": "Strong reach in the niche",
   "Referente de alcance: {n}% del engagement — estudia su fórmula": "Reach reference: {n}% of engagement — study their formula",
   "Conecta fuerte con su audiencia ({n}% positivo) — estudia cómo": "Connects strongly with their audience ({n}% positive) — study how",
   "Consistencia alta: {n} posts — patrón a estudiar": "High consistency: {n} posts — pattern to study",
