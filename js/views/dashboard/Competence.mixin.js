@@ -45,7 +45,7 @@
         if (!this._shouldRepaint('competence', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildCompetenciaHtml(data);
         this._bindCompetenceHandlers(body);
-        this._renderSovBubble(data);
+        this._renderInfluenceBars(data);
       } catch (e) {
         console.error('[Competence] load failed:', e);
         if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
@@ -362,7 +362,7 @@
         return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">${__('El campo de batalla')}</span>
+            <span class="mb-section-title">${__('Influencia digital')}</span>
             <span class="mb-section-hint">${__('Quién domina la conversación de tu nicho')}</span>
           </div>
           <div class="mb-causal-empty">
@@ -377,8 +377,8 @@
       // Solo rivales con engagement medible entran al mapa de burbujas (x=share
       // of voice, y=sentimiento, tamaño=engagement). Los de 0 eng no tienen
       // posicion util; se listan aparte como "sin actividad medida".
-      const plotted = list.filter((r) => Number(r.total_engagement) > 0);
-      const silent = list.filter((r) => Number(r.total_engagement) <= 0);
+      const plotted = list.filter((r) => Number(r.total_engagement) > 0 || Number(r.total_posts) > 0);
+      const silent = list.filter((r) => Number(r.total_engagement) <= 0 && Number(r.total_posts) <= 0);
       const silentChips = silent.map((r) => {
         const tipo = this._compTipoMeta(r.tipo);
         return `<span class="comp-rank-tipo" style="--ct:${tipo.color};margin:2px 6px 2px 0;display:inline-block;">${this._esc(r.entity_name)} · ${tipo.label}</span>`;
@@ -387,125 +387,132 @@
       return `
         <section class="mb-section">
           <div class="mb-section-head">
-            <span class="mb-section-title">${__('El campo de batalla')}</span>
-            <span class="mb-section-hint">${__('Share of voice vs. sentimiento — tamaño = engagement del rival')}</span>
+            <span class="mb-section-title">${__('Influencia digital')}</span>
+            <span class="mb-section-hint">${__('Contenido, sentimiento y engagement de cada perfil — fuerza relativa al líder del nicho')}</span>
           </div>
           ${plotted.length
             ? `<div class="comp-sov">
-                 <div class="comp-sov-canvas"><canvas id="compSovBubble"></canvas></div>
-                 <div class="comp-sov-legend" id="compSovLegend"></div>
+                 <div class="comp-sov-canvas"><canvas id="compInfluenceBars"></canvas></div>
+                 <div class="comp-sov-legend" id="compInfluenceLegend"></div>
                </div>`
             : `<div class="mb-causal-empty">${__('Sin rivales con actividad en la ventana.')}</div>`}
           ${silentChips ? `<div class="comp-sov-silent"><span class="mb-beh-label">${__('Sin actividad medida en esta ventana')}</span><div>${silentChips}</div></div>` : ''}
         </section>`;
     },
 
-    /* ── Mapa de burbujas Share of Voice vs. Sentimiento (Chart.js) ──────────
-       x = % del engagement del nicho (que tan fuerte suena el rival),
-       y = % de sentimiento positivo de su audiencia,
-       tamaño = engagement absoluto. Cada rival un color; leyenda debajo. */
-    async _renderSovBubble(data) {
-      const el = document.getElementById('compSovBubble');
+    /* ── Influencia digital: barras agrupadas por perfil (Chart.js) ──────────
+       Un grupo por perfil monitoreado; dentro, 3 barras — contenido (posts),
+       sentimiento (positivo de su audiencia) y engagement producido — en tonos
+       del color del perfil. Contenido y engagement se normalizan al líder del
+       nicho (0-100 = % del líder) para caber en un mismo eje; el sentimiento
+       ya es % absoluto. El tooltip guarda siempre el valor real. */
+    async _renderInfluenceBars(data) {
+      const el = document.getElementById('compInfluenceBars');
       if (!el) return;
       this._destroyCharts(); // limpia el chart anterior en re-render (evita fuga)
       const list = (Array.isArray(data?.top?.data) ? data.top.data : [])
-        .filter((r) => Number(r.total_engagement) > 0)
-        .sort((a, b) => Number(b.total_engagement) - Number(a.total_engagement));
+        .filter((r) => Number(r.total_engagement) > 0 || Number(r.total_posts) > 0)
+        .sort((a, b) => Number(b.total_engagement) - Number(a.total_engagement))
+        .slice(0, 8); // no saturar el eje con demasiados grupos
       if (!list.length) return;
       try { await this._ensureChartJs(); } catch (_) { /* noop */ }
       const Chart = window.Chart; if (!Chart) return;
       const TICK = 'rgba(212,209,216,0.5)', GRID = 'rgba(255,255,255,0.06)';
       const PAL = ['#6bcf7f', '#5b9bd5', '#e0a045', '#a78bfa', '#e06464', '#22d3ee', '#f472b6', '#c4b5a0'];
-      const totalEng = list.reduce((s, r) => s + (Number(r.total_engagement) || 0), 0) || 1;
+      const maxPosts = Math.max(...list.map((r) => Number(r.total_posts) || 0), 1);
       const maxEng = Math.max(...list.map((r) => Number(r.total_engagement) || 0), 1);
-      const points = list.map((r, i) => {
+      // Engagement se normaliza en LOG: con un líder aplastante (p.ej. Nike ~99%
+      // del engagement del nicho) la escala lineal deja a todos los demás en ~0 y
+      // sus barras desaparecen. Log comprime al líder y levanta a los pequeños
+      // manteniendo el orden. Contenido (posts, rango chico) va lineal — más fiel;
+      // sentimiento ya es % absoluto. 100 = líder del nicho en cada volumen.
+      const logScore = (v, max) => (max <= 0 ? 0 : Math.round(Math.log10(Number(v) + 1) / Math.log10(max + 1) * 100));
+      const profiles = list.map((r, i) => {
+        const posts = Number(r.total_posts) || 0;
         const eng = Number(r.total_engagement) || 0;
-        const sov = eng / totalEng * 100;
         const hasSent = r.positive_sentiment_ratio != null;
-        const y = hasSent ? Math.round(Number(r.positive_sentiment_ratio) * 100) : 50;
+        const sentPct = hasSent ? Math.round(Number(r.positive_sentiment_ratio) * 100) : null;
         return {
-          // Escala log: piso 0.1% para que los rivales con SoV negligible se
-          // agrupen a la izquierda sin caerse del eje. `sov` guarda el real.
-          x: Math.max(0.1, Math.round(sov * 100) / 100),
-          sov: Math.round(sov * 10) / 10,
-          y,
-          r: 6 + Math.sqrt(eng / maxEng) * 18,   // area ~ engagement (chicas = menos solape)
-          color: PAL[i % PAL.length],
-          label: r.entity_name,
+          name: r.entity_name,
           tipo: this._compTipoMeta(r.tipo).label,
-          eng, posts: Number(r.total_posts) || 0, hasSent,
+          color: PAL[i % PAL.length],
+          posts, eng, hasSent, sentPct,
+          contentScore: Math.round(posts / maxPosts * 100),
+          sentScore: sentPct == null ? 0 : sentPct,
+          engScore: logScore(eng, maxEng),
         };
       });
-      // Linea de referencia: 50% = frontera neutra de sentimiento. Las etiquetas
-      // van al centro-horizontal (zona vacia entre el cluster izq. y el lider der.).
-      const neutralLine = {
-        id: 'sovNeutral',
-        beforeDatasetsDraw(chart) {
-          const { ctx, chartArea: ca, scales } = chart; if (!ca) return;
-          const yMid = scales.y.getPixelForValue(50);
-          const xLbl = ca.left + (ca.right - ca.left) * 0.42;
-          ctx.save();
-          ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
-          ctx.beginPath(); ctx.moveTo(ca.left, yMid); ctx.lineTo(ca.right, yMid); ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.font = '700 9.5px ui-sans-serif, system-ui, sans-serif'; ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(107,207,127,0.5)'; ctx.fillText(__('SENTIMIENTO POSITIVO'), xLbl, yMid - 5);
-          ctx.textBaseline = 'top'; ctx.fillStyle = 'rgba(224,100,100,0.5)'; ctx.fillText(__('SENTIMIENTO NEGATIVO'), xLbl, yMid + 5);
-          ctx.restore();
-        },
-      };
+      // 3 métricas = 3 datasets; cada barra se colorea con el color del perfil
+      // (indexado por grupo) y una opacidad fija por métrica, así el color dice
+      // "qué perfil" y el tono dice "qué métrica".
+      const METRICS = [
+        { key: 'contentScore', label: __('Contenido'),   alpha: 'FF' },
+        { key: 'sentScore',    label: __('Sentimiento'), alpha: 'B0' },
+        { key: 'engScore',     label: __('Engagement'),  alpha: '66' },
+      ];
+      const labels = profiles.map((p) => p.name);
+      const datasets = METRICS.map((m) => ({
+        label: m.label,
+        data: profiles.map((p) => p[m.key]),
+        backgroundColor: profiles.map((p) => p.color + m.alpha),
+        borderColor: profiles.map((p) => p.color),
+        borderWidth: 1,
+        borderRadius: 3,
+        maxBarThickness: 22,
+        _metric: m.key,
+      }));
       try {
         this._reg(new Chart(el.getContext('2d'), {
-          type: 'bubble',
-          data: { datasets: [{
-            data: points,
-            clip: false,   // que las burbujas de los extremos (Red Bull ~100%) no se corten
-            backgroundColor: (c) => points[c.dataIndex].color + '80',
-            borderColor: (c) => points[c.dataIndex].color,
-            borderWidth: 1.5,
-            hoverBackgroundColor: (c) => points[c.dataIndex].color,
-          }] },
+          type: 'bar',
+          data: { labels, datasets },
           options: {
             responsive: true, maintainAspectRatio: false,
-            layout: { padding: { top: 18, right: 34, bottom: 4, left: 12 } },
+            layout: { padding: { top: 14, right: 16, bottom: 4, left: 8 } },
             plugins: {
               legend: { display: false },
               tooltip: {
                 backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10,
                 callbacks: {
-                  title: (items) => points[items[0].dataIndex].label,
+                  title: (items) => {
+                    const p = profiles[items[0].dataIndex];
+                    return `${p.name} · ${p.tipo}`;
+                  },
                   label: (c) => {
-                    const p = points[c.dataIndex];
-                    const sent = p.hasSent ? __('{n}% positivo', { n: p.y }) : __('sin datos de sentimiento');
-                    return `${p.tipo} · ${__('{n}% del nicho', { n: p.sov })} · ${this._compactNum(p.eng)} eng · ${sent}`;
+                    const p = profiles[c.dataIndex];
+                    const metric = c.dataset._metric;
+                    if (metric === 'contentScore') return `${__('Contenido')}: ${fmt.int(p.posts)} ${__('posts')}`;
+                    if (metric === 'sentScore') return p.hasSent ? `${__('Sentimiento')}: ${p.sentPct}% ${__('positivo')}` : `${__('Sentimiento')}: ${__('sin datos')}`;
+                    return `${__('Engagement')}: ${this._compactNum(p.eng)}`;
                   },
                 },
               },
             },
             scales: {
-              // Escala log: con un lider aplastante (Red Bull ~99% SoV) la lineal
-              // amontonaba todo a la izquierda. Ticks solo en potencias limpias.
-              x: {
-                type: 'logarithmic', min: 0.08, max: 100,
-                grid: { color: GRID }, border: { display: false },
-                title: { display: true, text: __('Share of voice (% del engagement del nicho · escala log)'), color: TICK, font: { size: 10 } },
-                afterBuildTicks: (axis) => { axis.ticks = [0.1, 1, 10, 100].map((value) => ({ value })); },
-                ticks: { color: TICK, font: { size: 9 }, callback: (v) => v + '%' },
+              x: { grid: { display: false }, border: { display: false }, ticks: { color: TICK, font: { size: 10 }, autoSkip: false, maxRotation: 30, minRotation: 0 } },
+              y: {
+                min: 0, max: 100, grid: { color: GRID }, border: { display: false },
+                title: { display: true, text: __('Índice comparativo (100 = líder del nicho)'), color: TICK, font: { size: 10 } },
+                ticks: { color: TICK, font: { size: 9 }, callback: (v) => v + '%', maxTicksLimit: 6 },
               },
-              y: { min: 0, max: 100, grid: { color: GRID }, border: { display: false }, title: { display: true, text: __('Sentimiento positivo'), color: TICK, font: { size: 10 } }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => v + '%', maxTicksLimit: 6 } },
             },
           },
-          plugins: [neutralLine],
         }));
-      } catch (e) { console.warn('[sov bubble]', e?.message); }
-      // Leyenda color -> rival (los nombres largos y solapados no caben en el canvas).
-      const legend = document.getElementById('compSovLegend');
+      } catch (e) { console.warn('[influence bars]', e?.message); }
+      // Doble leyenda: (1) qué opacidad = qué métrica (swatch neutro), (2) qué
+      // color = qué perfil. Los nombres largos no caben como ticks del eje.
+      const legend = document.getElementById('compInfluenceLegend');
       if (legend) {
-        legend.innerHTML = points.map((p) => `
+        const metricRow = METRICS.map((m) => `
+          <span class="comp-sov-leg">
+            <span class="comp-sov-swatch" style="background:rgba(154,160,166,${(parseInt(m.alpha, 16) / 255).toFixed(2)})"></span>
+            ${this._esc(m.label)}
+          </span>`).join('');
+        const profileRow = profiles.map((p) => `
           <span class="comp-sov-leg">
             <span class="comp-sov-dot" style="background:${p.color}"></span>
-            ${this._esc(p.label)}
+            ${this._esc(p.name)}
           </span>`).join('');
+        legend.innerHTML = `<div class="comp-sov-metrics">${metricRow}</div><div class="comp-sov-profiles">${profileRow}</div>`;
       }
     },
 
