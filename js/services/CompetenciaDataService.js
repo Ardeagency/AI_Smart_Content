@@ -108,7 +108,7 @@ class CompetenciaDataService {
       let posts = [];
       try {
         const { data } = await this.sb.from('brand_posts')
-          .select('entity_id,content,engagement_total,hashtags')
+          .select('id,entity_id,content,engagement_total,hashtags')
           .in('entity_id', ids)
           .eq('is_competitor', true)
           .not('content', 'is', null)
@@ -117,9 +117,27 @@ class CompetenciaDataService {
           .limit(600);
         posts = Array.isArray(data) ? data : [];
       } catch (_) { /* señales de contenido son opcionales: si falla, no rompe el panel */ }
+      // Sentimiento de los COMENTARIOS por post: permite cruzar el tema del copy con
+      // la reaccion real de la audiencia (tema con engagement alto Y comentarios
+      // positivos = "su audiencia se enfoca en X"). Acotado.
+      const postComments = {};
+      try {
+        const postIds = posts.map((p) => p.id).filter(Boolean);
+        if (postIds.length) {
+          const { data: cmts } = await this.sb.from('brand_post_comments')
+            .select('brand_post_id,sentiment')
+            .in('brand_post_id', postIds)
+            .not('sentiment', 'is', null)
+            .limit(5000);
+          for (const c of cmts || []) {
+            const m = (postComments[c.brand_post_id] = postComments[c.brand_post_id] || { pos: 0, total: 0 });
+            m.total += 1; if (/^pos/i.test(c.sentiment)) m.pos += 1;
+          }
+        }
+      } catch (_) { /* comentarios opcionales */ }
       const nameById = {};
       for (const r of topBlock.data) nameById[r.entity_id] = r.entity_name || '';
-      const insightById = this._contentInsightsByEntity(posts, nameById);
+      const insightById = this._contentInsightsByEntity(posts, nameById, postComments);
       // Opinion del publico: insights derivados de los COMENTARIOS (RPC voice, ya
       // cargado) — sentimiento + emocion de su audiencia. Se fusionan con los de
       // contenido en una sola lista rankeada.
@@ -156,7 +174,7 @@ class CompetenciaDataService {
       DISTINTIVIDAD (descarta terminos usados por >=40% de los perfiles = genericos tipo
       "disponible"/"nuevo"), stopwords ES/EN ampliadas, urls/mentions, palabras <4 letras
       y el nombre propio de la marca. */
-  _contentInsightsByEntity(posts, nameById = {}) {
+  _contentInsightsByEntity(posts, nameById = {}, postComments = {}) {
     const STOP = this._stopwords();
     const ownTokens = this._ownNameTokens(nameById);
     const byEntity = {};
@@ -165,10 +183,17 @@ class CompetenciaDataService {
       const eid = p.entity_id; if (!eid) continue;
       const own = ownTokens[eid] || new Set();
       const { terms, tags } = this._postTerms(p, own, STOP);
-      const e = (byEntity[eid] = byEntity[eid] || { df: {}, eng: {}, tagDf: {}, n: 0, engTotal: 0, engList: [] });
+      const e = (byEntity[eid] = byEntity[eid] || { df: {}, eng: {}, tagDf: {}, cpos: {}, ccnt: {}, n: 0, engTotal: 0, engList: [] });
       const eng = Number(p.engagement_total) || 0;
+      // Positividad de los comentarios de ESTE post (si tiene suficientes).
+      const cs = postComments[p.id];
+      const cpos = (cs && cs.total >= 3) ? cs.pos / cs.total : null;
       e.n += 1; e.engTotal += eng; e.engList.push(eng);
-      for (const t of terms) { e.df[t] = (e.df[t] || 0) + 1; e.eng[t] = (e.eng[t] || 0) + eng; (termEntities[t] = termEntities[t] || new Set()).add(eid); }
+      for (const t of terms) {
+        e.df[t] = (e.df[t] || 0) + 1; e.eng[t] = (e.eng[t] || 0) + eng;
+        (termEntities[t] = termEntities[t] || new Set()).add(eid);
+        if (cpos != null) { e.cpos[t] = (e.cpos[t] || 0) + cpos; e.ccnt[t] = (e.ccnt[t] || 0) + 1; }
+      }
       for (const t of tags) e.tagDf[t] = (e.tagDf[t] || 0) + 1;
     }
     // Un termino es GENERICO (no distintivo) si lo usan muchos perfiles.
@@ -188,11 +213,18 @@ class CompetenciaDataService {
       // Candidatos = terminos distintivos con soporte (df>=2), rankeados.
       const cands = Object.entries(e.df).filter(([t, df]) => df >= 2 && distinctive(t))
         .sort((a, b) => rankScore(b[0], b[1]) - rankScore(a[0], a[1]));
-      // winner — tema que dispara engagement (soporte >=3, lift>=2.0, distintivo).
+      // Tema que dispara engagement (soporte >=3, lift>=2.0, distintivo). Si ADEMAS
+      // sus posts tienen comentarios positivos -> "su audiencia se enfoca en X" (cruce
+      // copy x reaccion x engagement, la señal mas fuerte). Si no, solo "le rinde".
       if (baseAvg > 0) {
         let best = null;
         for (const [t, df] of cands) { if (df < 3) continue; const lift = (e.eng[t] / df) / baseAvg; if (lift >= 2.0 && (!best || lift > best.lift)) best = { term: t, lift: Math.round(lift * 10) / 10 }; }
-        if (best) ins.push({ kind: 'winner', term: best.term, lift: best.lift, score: Math.min(96, 40 + (best.lift - 2) * 12) });
+        if (best) {
+          const cc = e.ccnt[best.term] || 0;
+          const cp = cc ? e.cpos[best.term] / cc : null;
+          if (cc >= 2 && cp != null && cp >= 0.45) ins.push({ kind: 'audience_focus', term: best.term, lift: best.lift, pct: Math.round(cp * 100), score: Math.min(97, 52 + (best.lift - 2) * 10) });
+          else ins.push({ kind: 'winner', term: best.term, lift: best.lift, score: Math.min(96, 40 + (best.lift - 2) * 12) });
+        }
       }
       // focus — concentracion tematica (el tema mas repetido, distintivo).
       if (n >= 5 && cands.length) {

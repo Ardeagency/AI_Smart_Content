@@ -14,6 +14,7 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Su audiencia se enfoca en {t}: {x}x engagement y comentarios positivos": "Their audience focuses on {t}: {x}x engagement and positive comments",
   "Su audiencia reacciona con {e}: {p}% de comentarios negativos": "Their audience reacts with {e}: {p}% negative comments",
   "Su audiencia reacciona negativo: {p}% de sus comentarios": "Their audience reacts negatively: {p}% of comments",
   "Su audiencia lo respalda: {p}% de comentarios positivos": "Their audience backs them: {p}% positive comments",
