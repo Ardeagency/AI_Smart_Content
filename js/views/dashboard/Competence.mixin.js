@@ -418,7 +418,10 @@
       try { await this._ensureChartJs(); } catch (_) { /* noop */ }
       const Chart = window.Chart; if (!Chart) return;
       const TICK = 'rgba(212,209,216,0.5)', GRID = 'rgba(255,255,255,0.06)';
-      const PAL = ['#6bcf7f', '#5b9bd5', '#e0a045', '#a78bfa', '#e06464', '#22d3ee', '#f472b6', '#c4b5a0'];
+      // Color = el del perfil monitoreado (intelligence_entities.color[0], que
+      // llega como r.color); si no tiene, el color dinámico de la marca. NO paleta
+      // arbitraria. Mismo criterio que MonitoringView.
+      const brandHex = this._readBrandHex();
       const maxPosts = Math.max(...list.map((r) => Number(r.total_posts) || 0), 1);
       const maxEng = Math.max(...list.map((r) => Number(r.total_engagement) || 0), 1);
       // Engagement se normaliza en LOG: con un líder aplastante (p.ej. Nike ~99%
@@ -427,15 +430,16 @@
       // manteniendo el orden. Contenido (posts, rango chico) va lineal — más fiel;
       // sentimiento ya es % absoluto. 100 = líder del nicho en cada volumen.
       const logScore = (v, max) => (max <= 0 ? 0 : Math.round(Math.log10(Number(v) + 1) / Math.log10(max + 1) * 100));
-      const profiles = list.map((r, i) => {
+      const profiles = list.map((r) => {
         const posts = Number(r.total_posts) || 0;
         const eng = Number(r.total_engagement) || 0;
         const hasSent = r.positive_sentiment_ratio != null;
         const sentPct = hasSent ? Math.round(Number(r.positive_sentiment_ratio) * 100) : null;
+        const raw = typeof r.color === 'string' ? r.color.trim() : '';
         return {
           name: r.entity_name,
           tipo: this._compTipoMeta(r.tipo).label,
-          color: PAL[i % PAL.length],
+          color: /^#[0-9a-fA-F]{6,8}$/.test(raw) ? raw : brandHex,
           posts, eng, hasSent, sentPct,
           contentScore: Math.round(posts / maxPosts * 100),
           sentScore: sentPct == null ? 0 : sentPct,
@@ -498,22 +502,33 @@
           },
         }));
       } catch (e) { console.warn('[influence bars]', e?.message); }
-      // Doble leyenda: (1) qué opacidad = qué métrica (swatch neutro), (2) qué
-      // color = qué perfil. Los nombres largos no caben como ticks del eje.
+      // Leyenda color -> perfil (los nombres largos no caben como ticks del eje).
+      // Las 3 métricas ya se distinguen por opacidad y por el orden fijo dentro
+      // de cada grupo; su leyenda se quitó por redundante.
       const legend = document.getElementById('compInfluenceLegend');
       if (legend) {
-        const metricRow = METRICS.map((m) => `
-          <span class="comp-sov-leg">
-            <span class="comp-sov-swatch" style="background:rgba(154,160,166,${(parseInt(m.alpha, 16) / 255).toFixed(2)})"></span>
-            ${this._esc(m.label)}
-          </span>`).join('');
-        const profileRow = profiles.map((p) => `
+        legend.innerHTML = profiles.map((p) => `
           <span class="comp-sov-leg">
             <span class="comp-sov-dot" style="background:${p.color}"></span>
             ${this._esc(p.name)}
           </span>`).join('');
-        legend.innerHTML = `<div class="comp-sov-metrics">${metricRow}</div><div class="comp-sov-profiles">${profileRow}</div>`;
       }
+    },
+
+    /* Color dinámico de la marca: --brand-primary → último stop del gradient
+       dinámico → cálido por defecto. Fallback cuando el perfil no tiene color
+       propio. Mismo criterio que AudienceMap/MonitoringView. */
+    _readBrandHex() {
+      try {
+        const cs = getComputedStyle(document.documentElement);
+        const primary = (cs.getPropertyValue('--brand-primary') || '').trim();
+        if (/^#[0-9a-fA-F]{6,8}$/.test(primary)) return primary;
+        const grad = (cs.getPropertyValue('--brand-gradient-dynamic') ||
+                      cs.getPropertyValue('--brand-gradient') || '').trim();
+        const hexes = grad.match(/#[0-9a-fA-F]{6,8}/g);
+        if (hexes && hexes.length) return hexes[hexes.length - 1];
+      } catch (_) { /* noop */ }
+      return '#e09145';
     },
 
     /* ── 1a. Mi Marca vs Competencia: benchmark head-to-head + share-of-voice ──
