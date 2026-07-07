@@ -333,8 +333,39 @@
           default:        return '';
         }
       };
+      // DIVERSIDAD de observaciones. Cada señal pertenece a una familia; el panel
+      // evita repetir siempre la misma. (a) La primaria de cada perfil = mayor
+      // (score − penalización por familia ya usada en el panel) → no todas dicen
+      // "reacciona negativo". (b) La secundaria es de una familia DISTINTA a la
+      // primaria → nada de doble-negativo en una misma tarjeta.
+      const FAMILY = {
+        audience_focus: 'pos', opinion_pos: 'pos',
+        audience_reject: 'neg', opinion_neg: 'neg',
+        winner: 'content', focus: 'content', terms: 'content', hashtag: 'content',
+        viral: 'dist', even: 'dist',
+      };
+      const fam = (s) => FAMILY[s.kind] || s.kind;
+
+      // Orden final: secciones por rol, dentro por rango + engagement.
+      const known = new Set(ROLE_ORDER.map((s) => s.key));
+      const groups = ROLE_ORDER.map((s) => ({ title: s.title, list: items.filter((it) => it.tipo === s.key) }));
+      groups.push({ title: __('Otros'), list: items.filter((it) => !known.has(it.tipo)) });
+      for (const g of groups) g.list.sort((a, b) => prio(b) - prio(a));
+
+      const famUsed = {};
+      const PEN = 34;
+      for (const g of groups) for (const it of g.list) {
+        const ranked = it.insights || [];
+        if (!ranked.length) { it.chosen = []; continue; }
+        let primary = null, bestAdj = -Infinity;
+        for (const s of ranked) { const adj = s.score - PEN * (famUsed[fam(s)] || 0); if (adj > bestAdj) { bestAdj = adj; primary = s; } }
+        famUsed[fam(primary)] = (famUsed[fam(primary)] || 0) + 1;
+        const secondary = ranked.find((s) => s !== primary && fam(s) !== fam(primary)) || null;
+        it.chosen = [primary, secondary].filter(Boolean);
+      }
+
       const card = (it) => {
-        const top = it.insights.slice(0, 2);
+        const top = it.chosen || [];
         const primary = top[0]
           ? `<div class="comp-obs-signal comp-obs-signal--strong"><i class="aisc-ico aisc-ico--${ICO[top[0].kind] || 'eye'}"></i><span>${insightText(top[0])}</span></div>`
           : `<div class="comp-obs-terms">${__('{n} posts en la ventana', { n: fmt.int(it.posts) })}</div>`;
@@ -350,15 +381,9 @@
         </div>`;
       };
 
-      // Secciones por rol (competencia ≠ referente ≠ aliado), en orden de prioridad.
-      const known = new Set(ROLE_ORDER.map((s) => s.key));
-      const groupHtml = (title, group) => {
-        if (!group.length) return '';
-        group.sort((a, b) => prio(b) - prio(a));
-        return `<div class="comp-obs-group"><div class="comp-obs-grouptitle">${title}</div>${group.map(card).join('')}</div>`;
-      };
-      let sectionsHtml = ROLE_ORDER.map((sec) => groupHtml(sec.title, items.filter((it) => it.tipo === sec.key))).join('');
-      sectionsHtml += groupHtml(__('Otros'), items.filter((it) => !known.has(it.tipo)));
+      const sectionsHtml = groups.map((g) => (g.list.length
+        ? `<div class="comp-obs-group"><div class="comp-obs-grouptitle">${g.title}</div>${g.list.map(card).join('')}</div>`
+        : '')).join('');
 
       return `<section class="mb-section comp-obs-section">${head}<div class="comp-obs">${sectionsHtml}</div></section>`;
     },
