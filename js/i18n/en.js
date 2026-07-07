@@ -14,6 +14,14 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Referente de alcance: {n}% del engagement — estudia su fórmula": "Reach reference: {n}% of engagement — study their formula",
+  "Conecta fuerte con su audiencia ({n}% positivo) — estudia cómo": "Connects strongly with their audience ({n}% positive) — study how",
+  "Consistencia alta: {n} posts — patrón a estudiar": "High consistency: {n} posts — pattern to study",
+  "Hasta un referente tropieza ({n}% negativo) — observa cómo responde": "Even a reference stumbles ({n}% negative) — watch how they respond",
+  "Referente a estudiar: {p} posts · {e} de engagement": "Reference to study: {p} posts · {e} engagement",
+  "Audiencia receptiva ({n}% positivo) — buena para activación conjunta": "Receptive audience ({n}% positive) — good for joint activation",
+  "Alcance fuerte — potencial de amplificación": "Strong reach — amplification potential",
+  "Aliado: {p} posts · {e} — explora colaboración": "Ally: {p} posts · {e} — explore collaboration",
   "Competidores directos": "Direct competitors",
   "Competidores indirectos": "Indirect competitors",
   "Referencias": "References",

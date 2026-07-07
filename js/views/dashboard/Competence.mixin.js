@@ -307,17 +307,35 @@
         const isLeader = eng === maxEng;
         const isMostActive = posts === maxPosts && posts > 0;
 
-        // Candidatos de observación. Score alto = más notable/accionable. Se
-        // muestra el de mayor score; el orden del panel usa ese mismo score.
+        // Candidatos de observación SEGÚN EL ROL (doctrina: un referente NO es un
+        // competidor). Competidor -> señal para SUPERARLO (vulnerabilidad/dominancia);
+        // referente -> LECCIÓN (qué estudiar/adaptar, su relevancia dice qué); aliado
+        // -> COLABORACIÓN. Score alto = más notable; ordena dentro de cada sección.
+        const isCompetitor = r.tipo === 'competidor_directo' || r.tipo === 'competidor_indirecto';
+        const isReference = r.tipo === 'referencia_cultural';
+        const engLine = { score: 100 + Math.round(eng / maxEng * 80), tone: 'neutral', ico: 'eye' };
         const cand = [];
-        if (neg >= 25) cand.push({ score: 800 + neg * 4, tone: 'opp', ico: 'alert-warning', text: __('{n}% sentimiento negativo — ventana para capturar su audiencia', { n: neg }) });
-        else if (neg >= 10) cand.push({ score: 500 + neg * 4, tone: 'opp', ico: 'alert-warning', text: __('{n}% de su audiencia insatisfecha — munición de contenido', { n: neg }) });
-        if (aggr >= 30) cand.push({ score: 560 + aggr * 2, tone: 'opp', ico: 'flag', text: __('Tono confrontacional con su audiencia ({n}%)', { n: aggr }) });
-        if (sov >= 40) cand.push({ score: 520 + sov * 2, tone: 'strong', ico: 'arrow-up', text: __('Domina el nicho: {n}% del engagement', { n: sov }) });
-        else if (isLeader && sov >= 15) cand.push({ score: 460 + sov * 2, tone: 'strong', ico: 'arrow-up', text: __('Mayor engagement del nicho ({n}%)', { n: sov }) });
-        if (pos != null && pos >= 50) cand.push({ score: 380 + pos, tone: 'pos', ico: 'star', text: __('Audiencia muy receptiva: {n}% positivo', { n: pos }) });
-        if (isMostActive) cand.push({ score: 340 + Math.round(posts / maxPosts * 40), tone: 'neutral', ico: 'zap', text: __('El más activo: {n} posts en la ventana', { n: fmt.int(posts) }) });
-        cand.push({ score: 100 + Math.round(eng / maxEng * 80), tone: 'neutral', ico: 'eye', text: __('{p} posts · {e} de engagement', { p: fmt.int(posts), e: this._compactNum(eng) }) });
+        if (isCompetitor) {
+          if (neg >= 25) cand.push({ score: 800 + neg * 4, tone: 'opp', ico: 'alert-warning', text: __('{n}% sentimiento negativo — ventana para capturar su audiencia', { n: neg }) });
+          else if (neg >= 10) cand.push({ score: 500 + neg * 4, tone: 'opp', ico: 'alert-warning', text: __('{n}% de su audiencia insatisfecha — munición de contenido', { n: neg }) });
+          if (aggr >= 30) cand.push({ score: 560 + aggr * 2, tone: 'opp', ico: 'flag', text: __('Tono confrontacional con su audiencia ({n}%)', { n: aggr }) });
+          if (sov >= 40) cand.push({ score: 520 + sov * 2, tone: 'strong', ico: 'arrow-up', text: __('Domina el nicho: {n}% del engagement', { n: sov }) });
+          else if (isLeader && sov >= 15) cand.push({ score: 460 + sov * 2, tone: 'strong', ico: 'arrow-up', text: __('Mayor engagement del nicho ({n}%)', { n: sov }) });
+          if (pos != null && pos >= 50) cand.push({ score: 380 + pos, tone: 'pos', ico: 'star', text: __('Audiencia muy receptiva: {n}% positivo', { n: pos }) });
+          if (isMostActive) cand.push({ score: 340 + Math.round(posts / maxPosts * 40), tone: 'neutral', ico: 'zap', text: __('El más activo: {n} posts en la ventana', { n: fmt.int(posts) }) });
+          cand.push({ ...engLine, text: __('{p} posts · {e} de engagement', { p: fmt.int(posts), e: this._compactNum(eng) }) });
+        } else if (isReference) {
+          if (sov >= 40 || (isLeader && sov >= 15)) cand.push({ score: 520 + sov * 2, tone: 'strong', ico: 'arrow-up', text: __('Referente de alcance: {n}% del engagement — estudia su fórmula', { n: sov }) });
+          if (pos != null && pos >= 50) cand.push({ score: 420 + pos, tone: 'pos', ico: 'star', text: __('Conecta fuerte con su audiencia ({n}% positivo) — estudia cómo', { n: pos }) });
+          if (isMostActive) cand.push({ score: 340 + Math.round(posts / maxPosts * 40), tone: 'neutral', ico: 'zap', text: __('Consistencia alta: {n} posts — patrón a estudiar', { n: fmt.int(posts) }) });
+          if (neg >= 25) cand.push({ score: 300 + neg, tone: 'opp', ico: 'alert-warning', text: __('Hasta un referente tropieza ({n}% negativo) — observa cómo responde', { n: neg }) });
+          cand.push({ ...engLine, text: __('Referente a estudiar: {p} posts · {e} de engagement', { p: fmt.int(posts), e: this._compactNum(eng) }) });
+        } else {
+          // Aliado (u otros roles): lente de colaboración.
+          if (pos != null && pos >= 50) cand.push({ score: 420 + pos, tone: 'pos', ico: 'star', text: __('Audiencia receptiva ({n}% positivo) — buena para activación conjunta', { n: pos }) });
+          if (sov >= 40 || isLeader) cand.push({ score: 380 + sov, tone: 'strong', ico: 'arrow-up', text: __('Alcance fuerte — potencial de amplificación') });
+          cand.push({ ...engLine, text: __('Aliado: {p} posts · {e} — explora colaboración', { p: fmt.int(posts), e: this._compactNum(eng) }) });
+        }
         cand.sort((a, b) => b.score - a.score);
 
         const rangoKey = typeof r.rango === 'string' ? r.rango.trim().toLowerCase() : '';
