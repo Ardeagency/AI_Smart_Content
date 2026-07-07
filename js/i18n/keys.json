@@ -1,4 +1,13 @@
 [
+  "Su audiencia reacciona con {e}: {p}% de comentarios negativos",
+  "Su audiencia reacciona negativo: {p}% de sus comentarios",
+  "Su audiencia lo respalda: {p}% de comentarios positivos",
+  "alegría",
+  "enojo",
+  "rechazo",
+  "tristeza",
+  "miedo",
+  "sorpresa",
   "Concentra {p}% de sus posts en {t}",
   "Depende de virales: 1 post concentra {p}% de su engagement",
   "Alcance parejo: reparte el engagement entre sus posts, no depende de virales",

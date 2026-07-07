@@ -68,7 +68,7 @@ class CompetenciaDataService {
       this.sb.rpc('dashboard_competencia_kpis', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_platforms: platforms }),
       this.sb.rpc('dashboard_competencia_top',  { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 8, p_platforms: platforms }),
       this.sb.rpc('dashboard_competencia_risk', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 6, p_platforms: platforms }),
-      this.sb.rpc('dashboard_competencia_audience_voice', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 6, p_platforms: platforms }),
+      this.sb.rpc('dashboard_competencia_audience_voice', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 12, p_platforms: platforms }),
       this.sb.rpc('dashboard_competencia_intelligence', { p_org_id: org, p_window_d: windowD, p_platforms: platforms }),
       // Benchmark Mi Marca vs Competencia (head-to-head). p_brand_container_ids
       // null = todas las marcas propias de la org. Devuelve jsonb {brand, competencia}.
@@ -120,7 +120,16 @@ class CompetenciaDataService {
       const nameById = {};
       for (const r of topBlock.data) nameById[r.entity_id] = r.entity_name || '';
       const insightById = this._contentInsightsByEntity(posts, nameById);
-      topBlock.data = topBlock.data.map((r) => ({ ...r, insights: (insightById[r.entity_id] || {}).insights || [] }));
+      // Opinion del publico: insights derivados de los COMENTARIOS (RPC voice, ya
+      // cargado) — sentimiento + emocion de su audiencia. Se fusionan con los de
+      // contenido en una sola lista rankeada.
+      const voiceRows = (voice.status === 'fulfilled' && !voice.value?.error) ? (voice.value.data || []) : [];
+      const voiceById = new Map(voiceRows.map((v) => [v.entity_id, v]));
+      topBlock.data = topBlock.data.map((r) => {
+        const content = (insightById[r.entity_id] || {}).insights || [];
+        const opinion = this._voiceInsights(voiceById.get(r.entity_id));
+        return { ...r, insights: [...content, ...opinion].sort((a, b) => b.score - a.score) };
+      });
     }
     return {
       window: { from, to },
@@ -213,6 +222,26 @@ class CompetenciaDataService {
       ins.sort((a, b) => b.score - a.score);
       out[eid] = { insights: ins };
     }
+    return out;
+  }
+
+  /** Opinion del publico = insights desde los COMENTARIOS de su audiencia (RPC
+      dashboard_competencia_audience_voice). Detecta reception fuerte (audiencia
+      molesta = oportunidad, o audiencia entregada) + emocion dominante. Exige >=10
+      comentarios (evita ruido de muestras chicas). */
+  _voiceInsights(v) {
+    if (!v) return [];
+    const total = Number(v.total_comments) || 0;
+    if (total < 10) return [];
+    const pos = Math.round(Number(v.pos_ratio || 0) * 100);
+    const neg = Math.round(Number(v.neg_ratio || 0) * 100);
+    const emoRaw = String(v.top_neg_emotion || '').toLowerCase();
+    const emo = ['others', 'neutral', ''].includes(emoRaw) ? null : emoRaw;
+    // Con mucho comentario neutral, pos/neg absolutos son ~15-55%. Umbrales:
+    // negativo notable >=20%; positivo notable si >=50% Y domina 2.5x al negativo.
+    const out = [];
+    if (neg >= 20) out.push({ kind: 'opinion_neg', pct: neg, emotion: emo, score: 55 + Math.min(35, neg) });
+    else if (pos >= 50 && pos >= neg * 2.5) out.push({ kind: 'opinion_pos', pct: pos, score: 44 + Math.min(24, pos - 50) });
     return out;
   }
 

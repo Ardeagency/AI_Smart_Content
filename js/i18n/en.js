@@ -14,6 +14,15 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Su audiencia reacciona con {e}: {p}% de comentarios negativos": "Their audience reacts with {e}: {p}% negative comments",
+  "Su audiencia reacciona negativo: {p}% de sus comentarios": "Their audience reacts negatively: {p}% of comments",
+  "Su audiencia lo respalda: {p}% de comentarios positivos": "Their audience backs them: {p}% positive comments",
+  "alegría": "joy",
+  "enojo": "anger",
+  "rechazo": "disgust",
+  "tristeza": "sadness",
+  "miedo": "fear",
+  "sorpresa": "surprise",
   "Concentra {p}% de sus posts en {t}": "Concentrates {p}% of their posts on {t}",
   "Depende de virales: 1 post concentra {p}% de su engagement": "Relies on virals: 1 post holds {p}% of their engagement",
   "Alcance parejo: reparte el engagement entre sus posts, no depende de virales": "Even reach: spreads engagement across posts, not reliant on virals",

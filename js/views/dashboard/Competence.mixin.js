@@ -311,7 +311,8 @@
       // habla de). Perfiles distintos disparan detectores distintos -> el panel varía.
       // Orden dentro del rol: rango primero (nacional > internacional), luego engagement.
       const prio = (it) => (it.rango ? it.rango.rank : 0) * 1e9 + it.eng;
-      const ICO = { winner: 'arrow-up', focus: 'star', viral: 'fire', even: 'check', hashtag: 'flag', terms: 'eye' };
+      const ICO = { winner: 'arrow-up', focus: 'star', viral: 'fire', even: 'check', hashtag: 'flag', terms: 'eye', opinion_neg: 'alert-warning', opinion_pos: 'check' };
+      const EMO = { joy: __('alegría'), anger: __('enojo'), disgust: __('rechazo'), sadness: __('tristeza'), fear: __('miedo'), surprise: __('sorpresa') };
       const insightText = (s) => {
         const b = (x) => `<b>${this._esc(x)}</b>`;
         switch (s.kind) {
@@ -321,6 +322,10 @@
           case 'even':    return __('Alcance parejo: reparte el engagement entre sus posts, no depende de virales');
           case 'hashtag': return __('Firma con #{t} en {p}% de sus posts', { t: this._esc(s.tag), p: s.pct });
           case 'terms':   return __('Habla de {t}', { t: (s.terms || []).map((x) => this._esc(x)).join(' · ') });
+          case 'opinion_neg': return s.emotion && EMO[s.emotion]
+            ? __('Su audiencia reacciona con {e}: {p}% de comentarios negativos', { e: b(EMO[s.emotion]), p: s.pct })
+            : __('Su audiencia reacciona negativo: {p}% de sus comentarios', { p: s.pct });
+          case 'opinion_pos': return __('Su audiencia lo respalda: {p}% de comentarios positivos', { p: s.pct });
           default:        return '';
         }
       };
