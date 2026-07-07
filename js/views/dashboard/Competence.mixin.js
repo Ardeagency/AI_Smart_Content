@@ -255,19 +255,18 @@
               ${this._buildWinningFormula(data?.intelligence?.data)}
             </div>
             <aside class="mb-layout-aside">
-              ${this._buildObservations(data?.top?.data, data?.risk?.data)}
+              ${this._buildObservations(data?.top?.data)}
             </aside>
           </div>
         </div>`;
     },
 
-    /* ── Panel lateral "Observaciones": ranking de la señal más notable de cada
-       perfil AHORA (medida), con su relevancia curada como contexto. "Señal viva
-       primero": cada perfil muestra su observación más accionable y el orden = qué
-       tan notable/accionable es esa señal (rol como desempate leve). Reglas+math,
-       sin LLM. Reusa top (posts/eng/sentimiento/color/relevance) + risk (negativo/
-       tono) mergeados por entity_id. ─────────────────────────────────────────── */
-    _buildObservations(top, risk) {
+    /* ── Panel lateral "Observaciones": inteligencia de CONTENIDO por perfil,
+       agrupada por rol. Por perfil: "Le rinde" (el tema que dispara su engagement =
+       lo estrategico) + "Habla de" (temas recurrentes). Extraido del TEXTO de sus
+       posts (CompetenciaDataService._contentInsightsByEntity, rules+math sin LLM;
+       llega en r.terms + r.winner). Sin CTAs ni relevancia cruda. ──────────────── */
+    _buildObservations(top) {
       const list = (Array.isArray(top) ? top : []).filter((r) => Number(r.total_engagement) > 0 || Number(r.total_posts) > 0);
       const head = `
           <div class="mb-section-head">
@@ -278,10 +277,6 @@
         return `<section class="mb-section comp-obs-section">${head}<div class="comp-obs"><div class="mb-causal-empty">${__('Aún sin señales medibles en esta ventana.')}</div></div></section>`;
       }
       const brandHex = this._readBrandHex();
-      const riskById = new Map((Array.isArray(risk) ? risk : []).map((r) => [r.entity_id, r]));
-      const totalEng = list.reduce((s, r) => s + (Number(r.total_engagement) || 0), 0) || 1;
-      const maxEng = Math.max(...list.map((r) => Number(r.total_engagement) || 0), 1);
-      const maxPosts = Math.max(...list.map((r) => Number(r.total_posts) || 0), 1);
       // Rol = seccion (competencia ≠ referente ≠ aliado); orden de secciones = prioridad
       // de rol (directo primero). Rango = etiqueta editable en otra pagina; nacional
       // pesa mas que internacional dentro de cada rol.
@@ -297,80 +292,47 @@
       };
 
       const items = list.map((r) => {
-        const rk = riskById.get(r.entity_id) || {};
-        const eng = Number(r.total_engagement) || 0;
-        const posts = Number(r.total_posts) || 0;
-        const sov = Math.round(eng / totalEng * 100);
-        const pos = r.positive_sentiment_ratio != null ? Math.round(Number(r.positive_sentiment_ratio) * 100) : null;
-        const neg = Math.round(Number(rk.negative_sentiment_ratio || 0) * 100);
-        const aggr = Math.round(Number(rk.aggressive_tone_ratio || 0) * 100);
-        const isLeader = eng === maxEng;
-        const isMostActive = posts === maxPosts && posts > 0;
-
-        // Observaciones DESCRIPTIVAS: solo describen lo que destaca/el patrón del
-        // perfil — NO invitan a actuar (sin "estudia", "captura", "patrón a estudiar",
-        // etc.). El rol define QUÉ hecho es notable (vulnerabilidad en competidor,
-        // alcance en referente), no un CTA. Score alto = más notable; ordena la sección.
-        const isCompetitor = r.tipo === 'competidor_directo' || r.tipo === 'competidor_indirecto';
-        const isReference = r.tipo === 'referencia_cultural';
-        const engLine = { score: 100 + Math.round(eng / maxEng * 80), tone: 'neutral', ico: 'eye', text: __('{p} posts · {e} de engagement', { p: fmt.int(posts), e: this._compactNum(eng) }) };
-        const negLine = { score: (isCompetitor ? 800 : 300) + neg * 4, tone: 'opp', ico: 'alert-warning', text: __('{n}% de sentimiento negativo en su audiencia', { n: neg }) };
-        const cand = [];
-        if (isCompetitor) {
-          if (neg >= 25) cand.push(negLine);
-          else if (neg >= 10) cand.push({ score: 500 + neg * 4, tone: 'opp', ico: 'alert-warning', text: __('{n}% de su audiencia insatisfecha', { n: neg }) });
-          if (aggr >= 30) cand.push({ score: 560 + aggr * 2, tone: 'opp', ico: 'flag', text: __('Tono confrontacional con su audiencia ({n}%)', { n: aggr }) });
-          if (sov >= 40) cand.push({ score: 520 + sov * 2, tone: 'strong', ico: 'arrow-up', text: __('Domina el nicho: {n}% del engagement', { n: sov }) });
-          else if (isLeader && sov >= 15) cand.push({ score: 460 + sov * 2, tone: 'strong', ico: 'arrow-up', text: __('Mayor engagement del nicho ({n}%)', { n: sov }) });
-          if (pos != null && pos >= 50) cand.push({ score: 380 + pos, tone: 'pos', ico: 'star', text: __('Audiencia muy receptiva: {n}% positivo', { n: pos }) });
-          if (isMostActive) cand.push({ score: 340 + Math.round(posts / maxPosts * 40), tone: 'neutral', ico: 'zap', text: __('El más activo: {n} posts en la ventana', { n: fmt.int(posts) }) });
-          cand.push(engLine);
-        } else if (isReference) {
-          if (sov >= 40 || (isLeader && sov >= 15)) cand.push({ score: 520 + sov * 2, tone: 'strong', ico: 'arrow-up', text: __('Referente de alcance: {n}% del engagement del nicho', { n: sov }) });
-          if (pos != null && pos >= 50) cand.push({ score: 420 + pos, tone: 'pos', ico: 'star', text: __('Conecta fuerte con su audiencia: {n}% positivo', { n: pos }) });
-          if (isMostActive) cand.push({ score: 340 + Math.round(posts / maxPosts * 40), tone: 'neutral', ico: 'zap', text: __('Consistencia alta: {n} posts en la ventana', { n: fmt.int(posts) }) });
-          if (neg >= 25) cand.push(negLine);
-          cand.push(engLine);
-        } else {
-          // Aliado (u otros roles): mismos hechos descriptivos, sin CTA.
-          if (pos != null && pos >= 50) cand.push({ score: 420 + pos, tone: 'pos', ico: 'star', text: __('Audiencia receptiva: {n}% positivo', { n: pos }) });
-          if (sov >= 40 || isLeader) cand.push({ score: 380 + sov, tone: 'strong', ico: 'arrow-up', text: __('Alcance fuerte en el nicho') });
-          cand.push(engLine);
-        }
-        cand.sort((a, b) => b.score - a.score);
-
         const rangoKey = typeof r.rango === 'string' ? r.rango.trim().toLowerCase() : '';
-        const rango = RANGO[rangoKey] || null;
         const raw = typeof r.color === 'string' ? r.color.trim() : '';
+        const winner = (r.winner && r.winner.term && Number(r.winner.lift) >= 1.4) ? r.winner : null;
         return {
           tipo: r.tipo,
           name: r.entity_name,
           color: /^#[0-9a-fA-F]{6,8}$/.test(raw) ? raw : brandHex,
-          rango, rangoKey,
-          signal: cand[0],
-          signalScore: cand[0].score,
-          relevance: typeof r.relevance === 'string' ? r.relevance.trim() : '',
+          rango: RANGO[rangoKey] || null,
+          rangoKey,
           terms: Array.isArray(r.terms) ? r.terms.slice(0, 3) : [],
+          winner,
+          posts: Number(r.total_posts) || 0,
+          eng: Number(r.total_engagement) || 0,
         };
       });
 
-      // Prioridad DENTRO de cada rol: rango primero (nacional > internacional >
-      // sin rango), luego la señal viva. Así "directo + nacional" (sección de
-      // directos, arriba) queda en el tope global. Rango se edita en otra página.
-      const prio = (it) => (it.rango ? it.rango.rank : 0) * 100000 + it.signalScore;
-      const card = (it) => `
+      // Observaciones = inteligencia de CONTENIDO (desde el texto de sus posts):
+      // "Le rinde" = el tema que dispara su engagement (lo estrategico: no qué dicen,
+      // sino qué les FUNCIONA); "Habla de" = sus temas recurrentes (contexto). Sin
+      // CTAs, sin métricas obvias, sin relevancia cruda. Orden dentro del rol:
+      // rango primero (nacional > internacional), luego engagement.
+      const prio = (it) => (it.rango ? it.rango.rank : 0) * 1e9 + it.eng;
+      const card = (it) => {
+        const winLine = it.winner
+          ? `<div class="comp-obs-signal comp-obs-signal--strong"><i class="aisc-ico aisc-ico--arrow-up"></i><span>${__('Le rinde hablar de {t}: {x}x su engagement promedio', { t: `<b>${this._esc(it.winner.term)}</b>`, x: it.winner.lift })}</span></div>`
+          : '';
+        const termsLine = it.terms.length
+          ? `<div class="comp-obs-terms"><span class="comp-obs-terms-lbl">${__('Habla de')}</span> ${it.terms.map((t) => this._esc(t)).join(' · ')}</div>`
+          : '';
+        const fallback = (!winLine && !termsLine)
+          ? `<div class="comp-obs-terms">${__('{n} posts en la ventana', { n: fmt.int(it.posts) })}</div>` : '';
+        return `
         <div class="comp-obs-item">
           <div class="comp-obs-head">
             <span class="comp-obs-dot" style="background:${it.color}"></span>
             <span class="comp-obs-name">${this._esc(it.name)}</span>
             ${it.rango ? `<span class="comp-obs-rango comp-obs-rango--${it.rangoKey}">${this._esc(it.rango.label)}</span>` : ''}
           </div>
-          <div class="comp-obs-signal comp-obs-signal--${it.signal.tone}">
-            <i class="aisc-ico aisc-ico--${it.signal.ico}"></i><span>${this._esc(it.signal.text)}</span>
-          </div>
-          ${it.terms.length ? `<div class="comp-obs-terms"><span class="comp-obs-terms-lbl">${__('Habla de')}</span> ${it.terms.map((t) => this._esc(t)).join(' · ')}</div>` : ''}
-          ${it.relevance ? `<div class="comp-obs-rel">${this._esc(it.relevance)}</div>` : ''}
+          ${winLine}${termsLine}${fallback}
         </div>`;
+      };
 
       // Secciones por rol (competencia ≠ referente ≠ aliado), en orden de prioridad.
       const known = new Set(ROLE_ORDER.map((s) => s.key));

@@ -108,7 +108,7 @@ class CompetenciaDataService {
       let posts = [];
       try {
         const { data } = await this.sb.from('brand_posts')
-          .select('entity_id,content')
+          .select('entity_id,content,engagement_total')
           .in('entity_id', ids)
           .eq('is_competitor', true)
           .not('content', 'is', null)
@@ -116,11 +116,14 @@ class CompetenciaDataService {
           .order('engagement_total', { ascending: false, nullsFirst: false })
           .limit(600);
         posts = Array.isArray(data) ? data : [];
-      } catch (_) { /* términos son opcionales: si falla, no rompe el panel */ }
+      } catch (_) { /* señales de contenido son opcionales: si falla, no rompe el panel */ }
       const nameById = {};
       for (const r of topBlock.data) nameById[r.entity_id] = r.entity_name || '';
-      const termsById = this._topTermsByEntity(posts, nameById);
-      topBlock.data = topBlock.data.map((r) => ({ ...r, terms: termsById[r.entity_id] || [] }));
+      const insightById = this._contentInsightsByEntity(posts, nameById);
+      topBlock.data = topBlock.data.map((r) => {
+        const ins = insightById[r.entity_id] || {};
+        return { ...r, terms: ins.terms || [], winner: ins.winner || null };
+      });
     }
     return {
       window: { from, to },
@@ -135,45 +138,66 @@ class CompetenciaDataService {
     };
   }
 
-  /** "De qué habla" cada perfil: términos recurrentes desde el TEXTO de sus posts
-      (rules+math, sin LLM). Document-frequency (cuántos posts distintos mencionan
-      el término) sobre content + hashtags, filtrando stopwords/urls/mentions y
-      palabras < 4 letras; top 3 por entidad con df>=2. Aproxima el tema recurrente,
-      NO una clasificación semántica (para eso haría falta el clasificador). */
-  _topTermsByEntity(posts, nameById = {}) {
-    const STOP = new Set(('para como este esta esto pero porque tambien cuando donde desde sobre todo toda todos todas mucho mucha muchos muchas hasta entre antes cada solo segun estos estas esos esas otros otras otro otra mientras nuestro nuestra nuestros nuestras tiene tienen hacer hacen sido estan estar sera seran mas menos aqui alla ellos ellas quien quienes cual cuales nada algo muy sin con los las del una uno unos unas ' +
-      'this that with from have your they what when will would about which there their because just like more been were them then have does your youre dont into over more will your ' +
-      'http https www com net link bio post posts reel reels story stories nan null undefined video foto photo').split(/\s+/).filter(Boolean));
-    // Tokens del nombre de cada entidad -> se excluyen (una marca "habla de si misma"
-    // por su nombre; eso no es tema). Ej: Red Bull -> {red, bull, redbull}.
-    const ownTokens = {};
-    for (const [eid, name] of Object.entries(nameById)) {
-      const set = new Set();
-      const clean = String(name || '').toLowerCase().replace(/\([^)]*\)/g, ' ');
-      for (const w of clean.match(/[\p{L}]{3,}/gu) || []) set.add(w);
-      set.add(clean.replace(/[^\p{L}\p{N}]/gu, '')); // nombre pegado (redbull)
-      ownTokens[eid] = set;
-    }
+  /** Inteligencia de contenido por entidad desde el TEXTO de sus posts (rules+math,
+      sin LLM). Devuelve por entidad:
+        - `terms`: temas recurrentes (document-frequency sobre content+hashtags).
+        - `winner`: el tema que DISPARA su engagement — {term, lift} donde lift =
+          engagement promedio de sus posts con ese tema / su engagement promedio
+          general. Esto es lo estrategico: no que dicen, sino que les FUNCIONA.
+      Filtra stopwords ES/EN, urls, mentions, palabras <4 letras y el nombre propio
+      de la marca. winner exige >=3 posts de soporte y lift>=1.4 (evita ruido). */
+  _contentInsightsByEntity(posts, nameById = {}) {
+    const STOP = this._stopwords();
+    const ownTokens = this._ownNameTokens(nameById);
+    // Por entidad: lista de {terms:Set, eng} por post + acumulados.
     const byEntity = {};
     for (const p of posts || []) {
       const eid = p.entity_id; if (!eid) continue;
       const own = ownTokens[eid] || new Set();
       const text = String(p.content || '').toLowerCase();
       const seen = new Set();
-      for (const m of text.match(/#([\p{L}\p{N}_]{3,})/gu) || []) seen.add(m.slice(1).replace(/_/g, ''));
+      for (const m of text.match(/#([\p{L}\p{N}_]{3,})/gu) || []) { const t = m.slice(1).replace(/_/g, ''); if (!own.has(t)) seen.add(t); }
       const cleaned = text.replace(/https?:\/\/\S+/g, ' ').replace(/[@#][\p{L}\p{N}_]+/gu, ' ');
-      for (const w of cleaned.match(/[\p{L}]{4,}/gu) || []) {
-        const t = w.toLowerCase();
-        if (!STOP.has(t)) seen.add(t);
-      }
-      const df = (byEntity[eid] = byEntity[eid] || {});
-      for (const t of seen) { if (!own.has(t)) df[t] = (df[t] || 0) + 1; }
+      for (const w of cleaned.match(/[\p{L}]{4,}/gu) || []) { const t = w.toLowerCase(); if (!STOP.has(t) && !own.has(t)) seen.add(t); }
+      const e = (byEntity[eid] = byEntity[eid] || { df: {}, eng: {}, n: 0, engTotal: 0 });
+      const eng = Number(p.engagement_total) || 0;
+      e.n += 1; e.engTotal += eng;
+      for (const t of seen) { e.df[t] = (e.df[t] || 0) + 1; e.eng[t] = (e.eng[t] || 0) + eng; }
     }
     const out = {};
-    for (const [eid, df] of Object.entries(byEntity)) {
-      out[eid] = Object.entries(df).filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t]) => t);
+    for (const [eid, e] of Object.entries(byEntity)) {
+      const terms = Object.entries(e.df).filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t]) => t);
+      // winner = tema con mayor lift de engagement (soporte >=3 posts, lift>=1.4).
+      const baseAvg = e.n > 0 ? e.engTotal / e.n : 0;
+      let winner = null;
+      if (baseAvg > 0) {
+        for (const [t, df] of Object.entries(e.df)) {
+          if (df < 3) continue;
+          const lift = (e.eng[t] / df) / baseAvg;
+          if (lift >= 1.4 && (!winner || lift > winner.lift)) winner = { term: t, lift: Math.round(lift * 10) / 10 };
+        }
+      }
+      out[eid] = { terms, winner };
     }
     return out;
+  }
+
+  _ownNameTokens(nameById) {
+    const ownTokens = {};
+    for (const [eid, name] of Object.entries(nameById)) {
+      const set = new Set();
+      const clean = String(name || '').toLowerCase().replace(/\([^)]*\)/g, ' ');
+      for (const w of clean.match(/[\p{L}]{3,}/gu) || []) set.add(w);
+      set.add(clean.replace(/[^\p{L}\p{N}]/gu, ''));
+      ownTokens[eid] = set;
+    }
+    return ownTokens;
+  }
+
+  _stopwords() {
+    return new Set(('para como este esta esto pero porque tambien cuando donde desde sobre todo toda todos todas mucho mucha muchos muchas hasta entre antes cada solo segun estos estas esos esas otros otras otro otra mientras nuestro nuestra nuestros nuestras tiene tienen hacer hacen sido estan estar sera seran mas menos aqui alla ellos ellas quien quienes cual cuales nada algo muy sin con los las del una uno unos unas ' +
+      'this that with from have your they what when will would about which there their because just like more been were them then does youre dont into over only your ' +
+      'http https www com net link bio post posts reel reels story stories nan null undefined video foto photo').split(/\s+/).filter(Boolean));
   }
 
   /** Drill-down: posts de UN rival (on-demand, no cacheado). */

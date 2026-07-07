@@ -14,6 +14,8 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Le rinde hablar de {t}: {x}x su engagement promedio": "Talking about {t} pays off: {x}x their average engagement",
+  "{n} posts en la ventana": "{n} posts in the window",
   "Habla de": "Talks about",
   "{n}% de sentimiento negativo en su audiencia": "{n}% negative sentiment in their audience",
   "{n}% de su audiencia insatisfecha": "{n}% of their audience dissatisfied",
