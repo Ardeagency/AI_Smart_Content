@@ -255,7 +255,8 @@ class CompetenciaDataService {
         if (share >= 45) {
           let vt = null;
           for (const t of e.maxTerms || []) { if (distinctive(t) && (!vt || rankScore(t, e.df[t] || 1) > rankScore(vt, e.df[vt] || 1))) vt = t; }
-          ins.push({ kind: 'viral', pct: share, term: vt, score: share });
+          // Con tema (causal) mantiene su score alto; sin tema es "numero pelado" -> capado.
+          ins.push({ kind: 'viral', pct: share, term: vt, score: vt ? share : Math.min(share, 44) });
         } else if (share <= Math.ceil(100 / n) + 6) ins.push({ kind: 'even', score: 44 });
       }
       // hashtag firma.
@@ -292,8 +293,11 @@ class CompetenciaDataService {
     // Con mucho comentario neutral, pos/neg absolutos son ~15-55%. Umbrales:
     // negativo notable >=20%; positivo notable si >=50% Y domina 2.5x al negativo.
     const out = [];
-    if (neg >= 20) out.push({ kind: 'opinion_neg', pct: neg, emotion: emo, score: 55 + Math.min(35, neg) });
-    else if (pos >= 50 && pos >= neg * 2.5) out.push({ kind: 'opinion_pos', pct: pos, score: 44 + Math.min(24, pos - 50) });
+    // Score BAJO a proposito (~40-46): "numero pelado" SIN causa -> debe quedar por
+    // debajo de las señales causales/contenido (que dicen A QUE / DE QUE) y solo
+    // ganarle al fallback "habla de". El causal audience_reject (con tema) las supera.
+    if (neg >= 20) out.push({ kind: 'opinion_neg', pct: neg, emotion: emo, score: 40 + Math.min(6, neg - 20) });
+    else if (pos >= 50 && pos >= neg * 2.5) out.push({ kind: 'opinion_pos', pct: pos, score: 42 });
     return out;
   }
 

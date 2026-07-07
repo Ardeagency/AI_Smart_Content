@@ -360,7 +360,19 @@
         let primary = null, bestAdj = -Infinity;
         for (const s of ranked) { const adj = s.score - PEN * (famUsed[fam(s)] || 0); if (adj > bestAdj) { bestAdj = adj; primary = s; } }
         famUsed[fam(primary)] = (famUsed[fam(primary)] || 0) + 1;
-        const secondary = ranked.find((s) => s !== primary && fam(s) !== fam(primary)) || null;
+        let secondary = ranked.find((s) => s !== primary && fam(s) !== fam(primary)) || null;
+        // Dedup del TERMINO entre las 2 lineas: si la secundaria es "habla de", quita
+        // el tema que ya nombra la primaria (no repetir "tiendas" arriba y abajo).
+        if (secondary && secondary.kind === 'terms') {
+          const pterm = primary.term || primary.tag || null;
+          if (pterm) {
+            const pw = pterm.split(' ');
+            const filtered = (secondary.terms || []).filter((t) => t !== pterm && !pw.includes(t) && !t.split(' ').includes(pterm));
+            secondary = filtered.length
+              ? { ...secondary, terms: filtered }
+              : (ranked.find((s) => s !== primary && s !== secondary && fam(s) !== fam(primary)) || null);
+          }
+        }
         it.chosen = [primary, secondary].filter(Boolean);
       }
 
