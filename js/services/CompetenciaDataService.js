@@ -103,6 +103,7 @@ class CompetenciaDataService {
     // ── "De qué habla" cada perfil: términos recurrentes extraídos del TEXTO de
     // sus posts (rules+math, sin LLM — topics/tone no están poblados para
     // competidores). Fetch acotado a los perfiles del ranking + la ventana.
+    let nicheContent = { temas: [], hashtags: [] };
     if (Array.isArray(topBlock.data) && topBlock.data.length) {
       const ids = topBlock.data.map((r) => r.entity_id).filter(Boolean);
       let posts = [];
@@ -139,6 +140,7 @@ class CompetenciaDataService {
       } catch (_) { /* comentarios opcionales */ }
       const nameById = {};
       for (const r of topBlock.data) nameById[r.entity_id] = r.entity_name || '';
+      nicheContent = this._nicheContentAggregates(posts, nameById); // temas + hashtags del nicho
       const insightById = this._contentInsightsByEntity(posts, nameById, postComments);
       // Opinion del publico: insights derivados de los COMENTARIOS (RPC voice, ya
       // cargado) — sentimiento + emocion de su audiencia. Se fusionan con los de
@@ -161,6 +163,7 @@ class CompetenciaDataService {
       benchmark:    u(bench),
       shareOfVoice: u(sov),
       kpisPrev:     u(kpisPrev),
+      nicheContent,
     };
   }
 
@@ -338,7 +341,48 @@ class CompetenciaDataService {
       // genericos EN
       'this that with from have your they what when will would about which there their because just like more been were them then does youre dont into over only your ' +
       'watch first tonight team pick come want know love best good great make made time today week live full right going gonna cant wont need feel look thing things everyone everything people really still back down here where while also even much many some most very well through around every check follow link click swipe drop tag tags share comment comments ' +
+      // letra chica de sorteos/giveaways (aparecia como falso "tema")
+      'purchase necessary void prohibited sweepstakes eligible winner winners entry giveaway official rules odds sponsor enter selected residents apply restrictions ' +
       'http https www com net link bio post posts reel reels story stories nan null undefined video foto photo').split(/\s+/).filter(Boolean));
+  }
+
+  /** Agregados de contenido a NIVEL NICHO (todos los perfiles monitoreados juntos):
+      top temas (unigramas + bigramas del texto) y top hashtags (#... del texto).
+      Frecuencia por post (document-frequency), filtrando stopwords, urls/mentions,
+      palabras <4 letras y los nombres de TODAS las marcas. Para los charts de barras
+      "Temas y hashtags del nicho". rules+math sin LLM. */
+  _nicheContentAggregates(posts, nameById = {}) {
+    const STOP = this._stopwords();
+    const ownAll = new Set();
+    for (const s of Object.values(this._ownNameTokens(nameById))) for (const t of s) ownAll.add(t);
+    const temaDf = {}, tagDf = {};
+    for (const p of posts || []) {
+      const text = String(p.content || '').toLowerCase();
+      const tseen = new Set(), hseen = new Set();
+      for (const m of text.match(/#([\p{L}\p{N}_]{3,})/gu) || []) { const t = m.slice(1).replace(/_/g, ''); if (!ownAll.has(t)) hseen.add(t); }
+      const cleaned = text.replace(/https?:\/\/\S+/g, ' ').replace(/[@#][\p{L}\p{N}_]+/gu, ' ');
+      let prev = null;
+      for (const w of cleaned.match(/[\p{L}]{4,}/gu) || []) {
+        const t = w.toLowerCase();
+        const ok = !STOP.has(t) && !ownAll.has(t);
+        if (ok) { tseen.add(t); if (prev) tseen.add(prev + ' ' + t); }
+        prev = ok ? t : null;
+      }
+      for (const t of tseen) temaDf[t] = (temaDf[t] || 0) + 1;
+      for (const t of hseen) tagDf[t] = (tagDf[t] || 0) + 1;
+    }
+    // Temas: prefiere bigramas; dedup por palabra compartida (no "energy drink" + "drink").
+    const rankTema = (t, df) => df * (t.includes(' ') ? 1.8 : 1);
+    const temaSorted = Object.entries(temaDf).filter(([, n]) => n >= 3).sort((a, b) => rankTema(b[0], b[1]) - rankTema(a[0], a[1]));
+    const temas = [];
+    for (const [t, n] of temaSorted) {
+      if (temas.length >= 8) break;
+      const words = t.split(' ');
+      if (temas.some((x) => words.some((w) => x.term.split(' ').includes(w)))) continue;
+      temas.push({ term: t, count: n });
+    }
+    const hashtags = Object.entries(tagDf).filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t, n]) => ({ tag: t, count: n }));
+    return { temas, hashtags };
   }
 
   /** Drill-down: posts de UN rival (on-demand, no cacheado). */

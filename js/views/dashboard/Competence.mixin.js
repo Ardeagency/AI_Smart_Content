@@ -252,6 +252,7 @@
           <div class="mb-layout">
             <div class="mb-layout-main comp-main">
               ${this._buildBattlefield(data?.kpis?.data, data?.top?.data, data?.kpisPrev?.data)}
+              ${this._buildNicheContent(data?.nicheContent)}
               ${this._buildWinningFormula(data?.intelligence?.data)}
             </div>
             <aside class="mb-layout-aside">
@@ -259,6 +260,49 @@
             </aside>
           </div>
         </div>`;
+    },
+
+    /* ── Temas y hashtags del nicho: charts de barras horizontales (estilo pill) del
+       contenido agregado de TODOS los perfiles monitoreados. Barras del color
+       dinámico de la marca. Datos de CompetenciaDataService._nicheContentAggregates
+       (texto de los posts, rules+math). Tonos NO: el campo tone está vacío -> pendiente
+       del clasificador. */
+    _buildNicheContent(nc) {
+      const temas = Array.isArray(nc?.temas) ? nc.temas : [];
+      const tags = Array.isArray(nc?.hashtags) ? nc.hashtags : [];
+      if (!temas.length && !tags.length) return '';
+      const brandHex = this._readBrandHex();
+      const bars = (items, kind) => {
+        if (!items.length) return `<div class="mb-causal-empty">${__('Sin datos en la ventana.')}</div>`;
+        const max = Math.max(...items.map((i) => i.count), 1);
+        return items.map((i) => {
+          const w = Math.max(6, Math.round(i.count / max * 100));
+          const label = kind === 'tag' ? `#${i.tag}` : i.term;
+          return `
+            <div class="comp-bar-row">
+              <span class="comp-bar-label" title="${this._esc(label)}">${this._esc(label)}</span>
+              <span class="comp-bar-track"><span class="comp-bar-fill" style="width:${w}%;background:${brandHex}"></span></span>
+              <span class="comp-bar-val">${i.count}</span>
+            </div>`;
+        }).join('');
+      };
+      return `
+        <section class="mb-section">
+          <div class="mb-section-head">
+            <span class="mb-section-title">${__('Temas y hashtags del nicho')}</span>
+            <span class="mb-section-hint">${__('Lo que más publica el conjunto de perfiles que monitoreas')}</span>
+          </div>
+          <div class="comp-content-grid">
+            <div class="comp-content-card">
+              <div class="comp-content-title">${__('Temas')}</div>
+              ${bars(temas, 'term')}
+            </div>
+            <div class="comp-content-card">
+              <div class="comp-content-title">${__('Hashtags')}</div>
+              ${bars(tags, 'tag')}
+            </div>
+          </div>
+        </section>`;
     },
 
     /* ── Panel lateral "Observaciones": inteligencia de CONTENIDO por perfil,

@@ -14,6 +14,10 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Temas y hashtags del nicho": "Niche topics and hashtags",
+  "Lo que más publica el conjunto de perfiles que monitoreas": "What the profiles you monitor post most",
+  "Hashtags": "Hashtags",
+  "Sin datos en la ventana.": "No data in this window.",
   "Su audiencia reacciona negativo a sus posts sobre {t}": "Their audience reacts negatively to their posts about {t}",
   "Su post viral sobre {t} concentra {p}% de su engagement": "Their viral post about {t} holds {p}% of their engagement",
   "Su audiencia se enfoca en {t}: {x}x engagement y comentarios positivos": "Their audience focuses on {t}: {x}x engagement and positive comments",
