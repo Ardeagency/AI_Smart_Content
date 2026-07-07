@@ -137,50 +137,59 @@ class CompetenciaDataService {
 
   /** Inteligencia de contenido por entidad desde el TEXTO de sus posts (rules+math,
       sin LLM). Corre una LIBRERIA de detectores estrategicos y devuelve por entidad
-      `insights` = lista RANKEADA de señales estructuradas {kind, score, ...params}
-      (la vista las traduce). Distintos perfiles disparan distintos detectores -> el
-      panel varia en vez de repetir siempre lo mismo. Detectores:
-        - winner:  el tema que DISPARA su engagement (lift = avg con-tema / avg gral).
+      `insights` = lista RANKEADA de señales {kind, score, ...params} (la vista traduce).
+      Distintos perfiles disparan distintos detectores -> el panel varia. Detectores:
+        - winner:  el tema que DISPARA su engagement (lift = avg con-tema / avg gral, >=2x).
         - focus:   concentracion tematica (un tema en >=50% de sus posts).
-        - viral:   1 post concentra >=45% de su engagement (depende de virales).
-        - even:    engagement repartido parejo (alcance consistente).
-        - hashtag: hashtag firma (en >=45% de sus posts).
-        - terms:   temas recurrentes (contexto / fallback, score bajo).
-      Filtra stopwords ES/EN, urls, mentions, palabras <4 letras y el nombre propio. */
+        - viral:   1 post concentra >=45% de su engagement. even: reparto parejo.
+        - hashtag: hashtag firma (>=45% de sus posts). terms: temas recurrentes (fallback).
+      CALIDAD de terminos: unigramas + BIGRAMAS (frases, mas especificas); filtro de
+      DISTINTIVIDAD (descarta terminos usados por >=40% de los perfiles = genericos tipo
+      "disponible"/"nuevo"), stopwords ES/EN ampliadas, urls/mentions, palabras <4 letras
+      y el nombre propio de la marca. */
   _contentInsightsByEntity(posts, nameById = {}) {
     const STOP = this._stopwords();
     const ownTokens = this._ownNameTokens(nameById);
     const byEntity = {};
+    const termEntities = {}; // termino -> Set de entidades que lo usan (distintividad)
     for (const p of posts || []) {
       const eid = p.entity_id; if (!eid) continue;
       const own = ownTokens[eid] || new Set();
-      const text = String(p.content || '').toLowerCase();
-      const terms = new Set(), tags = new Set();
-      for (const m of text.match(/#([\p{L}\p{N}_]{3,})/gu) || []) { const t = m.slice(1).replace(/_/g, ''); if (!own.has(t)) { terms.add(t); tags.add(t); } }
-      for (const h of Array.isArray(p.hashtags) ? p.hashtags : []) { const t = String(h).toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''); if (t.length >= 3 && !own.has(t)) { terms.add(t); tags.add(t); } }
-      const cleaned = text.replace(/https?:\/\/\S+/g, ' ').replace(/[@#][\p{L}\p{N}_]+/gu, ' ');
-      for (const w of cleaned.match(/[\p{L}]{4,}/gu) || []) { const t = w.toLowerCase(); if (!STOP.has(t) && !own.has(t)) terms.add(t); }
+      const { terms, tags } = this._postTerms(p, own, STOP);
       const e = (byEntity[eid] = byEntity[eid] || { df: {}, eng: {}, tagDf: {}, n: 0, engTotal: 0, engList: [] });
       const eng = Number(p.engagement_total) || 0;
       e.n += 1; e.engTotal += eng; e.engList.push(eng);
-      for (const t of terms) { e.df[t] = (e.df[t] || 0) + 1; e.eng[t] = (e.eng[t] || 0) + eng; }
+      for (const t of terms) { e.df[t] = (e.df[t] || 0) + 1; e.eng[t] = (e.eng[t] || 0) + eng; (termEntities[t] = termEntities[t] || new Set()).add(eid); }
       for (const t of tags) e.tagDf[t] = (e.tagDf[t] || 0) + 1;
     }
+    // Un termino es GENERICO (no distintivo) si lo usan muchos perfiles.
+    const numEntities = Object.keys(byEntity).length;
+    const genericMin = Math.max(3, Math.ceil(numEntities * 0.4));
+    const distinctive = (t) => (termEntities[t]?.size || 1) < genericMin;
+    const isBigram = (t) => t.includes(' ');
+    // Ranking de un termino para "terms"/"focus": frecuencia en la entidad, con boost
+    // a bigramas (mas especificos) y a lo distintivo (poco compartido).
+    const rankScore = (t, df) => df * (isBigram(t) ? 1.8 : 1) * (2 / (termEntities[t]?.size || 1));
+
     const out = {};
     for (const [eid, e] of Object.entries(byEntity)) {
       const n = e.n; if (!n) { out[eid] = { insights: [] }; continue; }
       const baseAvg = e.engTotal / n;
       const ins = [];
-      // winner — tema que dispara engagement (soporte >=3 posts, lift>=1.5).
+      // Candidatos = terminos distintivos con soporte (df>=2), rankeados.
+      const cands = Object.entries(e.df).filter(([t, df]) => df >= 2 && distinctive(t))
+        .sort((a, b) => rankScore(b[0], b[1]) - rankScore(a[0], a[1]));
+      // winner — tema que dispara engagement (soporte >=3, lift>=2.0, distintivo).
       if (baseAvg > 0) {
         let best = null;
-        for (const [t, df] of Object.entries(e.df)) { if (df < 3) continue; const lift = (e.eng[t] / df) / baseAvg; if (lift >= 1.5 && (!best || lift > best.lift)) best = { term: t, lift: Math.round(lift * 10) / 10 }; }
-        if (best) ins.push({ kind: 'winner', term: best.term, lift: best.lift, score: Math.min(96, 34 + (best.lift - 1.5) * 12) });
+        for (const [t, df] of cands) { if (df < 3) continue; const lift = (e.eng[t] / df) / baseAvg; if (lift >= 2.0 && (!best || lift > best.lift)) best = { term: t, lift: Math.round(lift * 10) / 10 }; }
+        if (best) ins.push({ kind: 'winner', term: best.term, lift: best.lift, score: Math.min(96, 40 + (best.lift - 2) * 12) });
       }
-      // focus — concentracion tematica.
-      if (n >= 5) {
-        const topT = Object.entries(e.df).sort((a, b) => b[1] - a[1])[0];
-        if (topT) { const pct = Math.round(topT[1] / n * 100); if (pct >= 50) ins.push({ kind: 'focus', term: topT[0], pct, score: pct }); }
+      // focus — concentracion tematica (el tema mas repetido, distintivo).
+      if (n >= 5 && cands.length) {
+        const [t, df] = cands.reduce((m, c) => (c[1] > m[1] ? c : m), cands[0]);
+        const pct = Math.round(df / n * 100);
+        if (pct >= 50) ins.push({ kind: 'focus', term: t, pct, score: pct });
       }
       // viral vs even — distribucion del engagement.
       if (n >= 5 && e.engTotal > 0) {
@@ -189,15 +198,40 @@ class CompetenciaDataService {
         else if (share <= Math.ceil(100 / n) + 6) ins.push({ kind: 'even', score: 44 });
       }
       // hashtag firma.
-      const topTag = Object.entries(e.tagDf).sort((a, b) => b[1] - a[1])[0];
+      const topTag = Object.entries(e.tagDf).filter(([t]) => distinctive(t)).sort((a, b) => b[1] - a[1])[0];
       if (topTag && n >= 4) { const pct = Math.round(topTag[1] / n * 100); if (pct >= 45) ins.push({ kind: 'hashtag', tag: topTag[0], pct, score: pct - 3 }); }
-      // terms — contexto / fallback (score bajo, solo gana si nada mas dispara).
-      const terms = Object.entries(e.df).filter(([, x]) => x >= 2).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t]) => t);
+      // terms — hasta 3 temas recurrentes DISTINTOS (dedup: no repetir una palabra
+      // ya usada por otro termino, para no mostrar "goats goodbye" + "goats").
+      const terms = [];
+      for (const [t] of cands) {
+        if (terms.length >= 3) break;
+        const words = t.split(' ');
+        const dup = terms.some((x) => { const xw = x.split(' '); return words.some((w) => xw.includes(w)); });
+        if (!dup) terms.push(t);
+      }
       if (terms.length) ins.push({ kind: 'terms', terms, score: 12 });
       ins.sort((a, b) => b.score - a.score);
       out[eid] = { insights: ins };
     }
     return out;
+  }
+
+  /** Extrae de un post: unigramas (>=4 letras, no stopword/nombre-propio) + BIGRAMAS
+      (dos unigramas validos consecutivos, p.ej. "energy drink") + hashtags. */
+  _postTerms(p, own, STOP) {
+    const text = String(p.content || '').toLowerCase();
+    const terms = new Set(), tags = new Set();
+    for (const m of text.match(/#([\p{L}\p{N}_]{3,})/gu) || []) { const t = m.slice(1).replace(/_/g, ''); if (!own.has(t)) { terms.add(t); tags.add(t); } }
+    for (const h of Array.isArray(p.hashtags) ? p.hashtags : []) { const t = String(h).toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''); if (t.length >= 3 && !own.has(t)) { terms.add(t); tags.add(t); } }
+    const cleaned = text.replace(/https?:\/\/\S+/g, ' ').replace(/[@#][\p{L}\p{N}_]+/gu, ' ');
+    let prev = null;
+    for (const w of cleaned.match(/[\p{L}]{4,}/gu) || []) {
+      const t = w.toLowerCase();
+      const ok = !STOP.has(t) && !own.has(t);
+      if (ok) { terms.add(t); if (prev) terms.add(prev + ' ' + t); }
+      prev = ok ? t : null;
+    }
+    return { terms, tags };
   }
 
   _ownNameTokens(nameById) {
@@ -214,7 +248,11 @@ class CompetenciaDataService {
 
   _stopwords() {
     return new Set(('para como este esta esto pero porque tambien cuando donde desde sobre todo toda todos todas mucho mucha muchos muchas hasta entre antes cada solo segun estos estas esos esas otros otras otro otra mientras nuestro nuestra nuestros nuestras tiene tienen hacer hacen sido estan estar sera seran mas menos aqui alla ellos ellas quien quienes cual cuales nada algo muy sin con los las del una uno unos unas ' +
+      // genericos ES que se colaban como falsos "temas"
+      'finaliza finalizar disponible disponibles nuevo nueva nuevos nuevas gracias ahora mundo mejor mejores gran grande super siempre nunca cosa cosas gente vida dias parte forma tanto quiero quieres puedes puede pueden tienes hacer hecho vamos estamos somos tener decir dice viene sigue siguiente luego entonces mismo misma propio cualquier alguna algun general ademas aunque tener queremos hola bien aqui alli asi cada vez ver aca dale ganas quien fecha hora fotos todos manera parte sabes sabemos hacemos vamos vayan sean mira mirar ' +
+      // genericos EN
       'this that with from have your they what when will would about which there their because just like more been were them then does youre dont into over only your ' +
+      'watch first tonight team pick come want know love best good great make made time today week live full right going gonna cant wont need feel look thing things everyone everything people really still back down here where while also even much many some most very well through around every check follow link click swipe drop tag tags share comment comments ' +
       'http https www com net link bio post posts reel reels story stories nan null undefined video foto photo').split(/\s+/).filter(Boolean));
   }
 
