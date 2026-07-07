@@ -130,8 +130,10 @@ class CompetenciaDataService {
             .not('sentiment', 'is', null)
             .limit(5000);
           for (const c of cmts || []) {
-            const m = (postComments[c.brand_post_id] = postComments[c.brand_post_id] || { pos: 0, total: 0 });
-            m.total += 1; if (/^pos/i.test(c.sentiment)) m.pos += 1;
+            const m = (postComments[c.brand_post_id] = postComments[c.brand_post_id] || { pos: 0, neg: 0, total: 0 });
+            m.total += 1;
+            if (/^pos/i.test(c.sentiment)) m.pos += 1;
+            else if (/^neg/i.test(c.sentiment)) m.neg += 1;
           }
         }
       } catch (_) { /* comentarios opcionales */ }
@@ -183,16 +185,19 @@ class CompetenciaDataService {
       const eid = p.entity_id; if (!eid) continue;
       const own = ownTokens[eid] || new Set();
       const { terms, tags } = this._postTerms(p, own, STOP);
-      const e = (byEntity[eid] = byEntity[eid] || { df: {}, eng: {}, tagDf: {}, cpos: {}, ccnt: {}, n: 0, engTotal: 0, engList: [] });
+      const e = (byEntity[eid] = byEntity[eid] || { df: {}, eng: {}, tagDf: {}, cpos: {}, cneg: {}, ccnt: {}, n: 0, engTotal: 0, engList: [], maxEng: -1, maxTerms: null });
       const eng = Number(p.engagement_total) || 0;
-      // Positividad de los comentarios de ESTE post (si tiene suficientes).
+      // Sentimiento de los comentarios de ESTE post (si tiene suficientes).
       const cs = postComments[p.id];
-      const cpos = (cs && cs.total >= 3) ? cs.pos / cs.total : null;
+      const hasC = cs && cs.total >= 3;
+      const cpr = hasC ? cs.pos / cs.total : 0;
+      const cnr = hasC ? cs.neg / cs.total : 0;
       e.n += 1; e.engTotal += eng; e.engList.push(eng);
+      if (eng > e.maxEng) { e.maxEng = eng; e.maxTerms = terms; } // post top -> tema del viral
       for (const t of terms) {
         e.df[t] = (e.df[t] || 0) + 1; e.eng[t] = (e.eng[t] || 0) + eng;
         (termEntities[t] = termEntities[t] || new Set()).add(eid);
-        if (cpos != null) { e.cpos[t] = (e.cpos[t] || 0) + cpos; e.ccnt[t] = (e.ccnt[t] || 0) + 1; }
+        if (hasC) { e.cpos[t] = (e.cpos[t] || 0) + cpr; e.cneg[t] = (e.cneg[t] || 0) + cnr; e.ccnt[t] = (e.ccnt[t] || 0) + 1; }
       }
       for (const t of tags) e.tagDf[t] = (e.tagDf[t] || 0) + 1;
     }
@@ -232,11 +237,26 @@ class CompetenciaDataService {
         const pct = Math.round(df / n * 100);
         if (pct >= 50) ins.push({ kind: 'focus', term: t, pct, score: pct });
       }
-      // viral vs even — distribucion del engagement.
+      // audience_reject — el TEMA al que su audiencia reacciona negativo (explica el
+      // "por que", no solo el %). Tema con mayor negatividad de comentarios (>=2 posts).
+      {
+        let rej = null;
+        for (const [t, cc] of Object.entries(e.ccnt)) {
+          if (cc < 2 || !distinctive(t)) continue;
+          const nr = (e.cneg[t] || 0) / cc;
+          if (nr >= 0.25 && (!rej || nr > rej.nr)) rej = { term: t, nr };
+        }
+        if (rej) ins.push({ kind: 'audience_reject', term: rej.term, pct: Math.round(rej.nr * 100), score: 64 + Math.min(28, Math.round(rej.nr * 100)) });
+      }
+      // viral vs even — distribucion del engagement. El viral se ATA a su tema (de que
+      // era el post que exploto), para explicar y no solo dar el %.
       if (n >= 5 && e.engTotal > 0) {
         const share = Math.round(Math.max(...e.engList) / e.engTotal * 100);
-        if (share >= 45) ins.push({ kind: 'viral', pct: share, score: share });
-        else if (share <= Math.ceil(100 / n) + 6) ins.push({ kind: 'even', score: 44 });
+        if (share >= 45) {
+          let vt = null;
+          for (const t of e.maxTerms || []) { if (distinctive(t) && (!vt || rankScore(t, e.df[t] || 1) > rankScore(vt, e.df[vt] || 1))) vt = t; }
+          ins.push({ kind: 'viral', pct: share, term: vt, score: share });
+        } else if (share <= Math.ceil(100 / n) + 6) ins.push({ kind: 'even', score: 44 });
       }
       // hashtag firma.
       const topTag = Object.entries(e.tagDf).filter(([t]) => distinctive(t)).sort((a, b) => b[1] - a[1])[0];

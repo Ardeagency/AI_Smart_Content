@@ -311,15 +311,18 @@
       // habla de). Perfiles distintos disparan detectores distintos -> el panel varía.
       // Orden dentro del rol: rango primero (nacional > internacional), luego engagement.
       const prio = (it) => (it.rango ? it.rango.rank : 0) * 1e9 + it.eng;
-      const ICO = { audience_focus: 'star', winner: 'arrow-up', focus: 'star', viral: 'fire', even: 'check', hashtag: 'flag', terms: 'eye', opinion_neg: 'alert-warning', opinion_pos: 'check' };
+      const ICO = { audience_focus: 'star', audience_reject: 'alert-warning', winner: 'arrow-up', focus: 'star', viral: 'fire', even: 'check', hashtag: 'flag', terms: 'eye', opinion_neg: 'alert-warning', opinion_pos: 'check' };
       const EMO = { joy: __('alegría'), anger: __('enojo'), disgust: __('rechazo'), sadness: __('tristeza'), fear: __('miedo'), surprise: __('sorpresa') };
       const insightText = (s) => {
         const b = (x) => `<b>${this._esc(x)}</b>`;
         switch (s.kind) {
           case 'audience_focus': return __('Su audiencia se enfoca en {t}: {x}x engagement y comentarios positivos', { t: b(s.term), x: s.lift });
+          case 'audience_reject': return __('Su audiencia reacciona negativo a sus posts sobre {t}', { t: b(s.term) });
           case 'winner':  return __('Le rinde hablar de {t}: {x}x su engagement promedio', { t: b(s.term), x: s.lift });
           case 'focus':   return __('Concentra {p}% de sus posts en {t}', { p: s.pct, t: b(s.term) });
-          case 'viral':   return __('Depende de virales: 1 post concentra {p}% de su engagement', { p: s.pct });
+          case 'viral':   return s.term
+            ? __('Su post viral sobre {t} concentra {p}% de su engagement', { t: b(s.term), p: s.pct })
+            : __('Depende de virales: 1 post concentra {p}% de su engagement', { p: s.pct });
           case 'even':    return __('Alcance parejo: reparte el engagement entre sus posts, no depende de virales');
           case 'hashtag': return __('Firma con #{t} en {p}% de sus posts', { t: this._esc(s.tag), p: s.pct });
           case 'terms':   return __('Habla de {t}', { t: (s.terms || []).map((x) => this._esc(x)).join(' · ') });
