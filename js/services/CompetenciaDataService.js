@@ -76,20 +76,26 @@ class CompetenciaDataService {
       // Share-of-voice por rival (ranking por % de engagement del set competitivo).
       this.sb.rpc('dashboard_competencia_comparison', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 8 }),
       this.sb.rpc('dashboard_competencia_kpis', { p_org_id: org, p_date_from: prevFrom, p_date_to: prevTo, p_entity_ids: entityIds, p_platforms: platforms }),
-      // Color personalizado por perfil (intelligence_entities.color[]). El RPC top
-      // no lo expone; lo traemos aparte (RLS org-scoped) para que el chart de
-      // "Influencia digital" pinte cada barra con el color del perfil, o el de la
-      // marca si no tiene. Mismo criterio que MonitoringView (color[0]).
-      this.sb.from('intelligence_entities').select('id,color').eq('organization_id', org),
+      // Color + relevancia por perfil (intelligence_entities). El RPC top no los
+      // expone; los traemos aparte (RLS org-scoped): color -> barras de "Influencia
+      // digital" (o color de marca si no tiene); relevance -> contexto curado del
+      // panel lateral "Observaciones". Mismo criterio que MonitoringView (color[0]).
+      this.sb.from('intelligence_entities').select('id,color,relevance').eq('organization_id', org),
     ]);
 
     const u = (s) => this._unwrap(s);
-    // Merge del color de cada entidad sobre las filas del ranking (por entity_id).
+    // Merge de color + relevancia sobre las filas del ranking (por entity_id).
     const topBlock = u(top);
     if (Array.isArray(topBlock.data)) {
       const rows = (entColors.status === 'fulfilled' && !entColors.value?.error) ? (entColors.value.data || []) : [];
-      const colorById = new Map(rows.map((e) => [e.id, (Array.isArray(e.color) && e.color[0]) ? e.color[0] : null]));
-      topBlock.data = topBlock.data.map((r) => ({ ...r, color: colorById.get(r.entity_id) || null }));
+      const metaById = new Map(rows.map((e) => [e.id, {
+        color: (Array.isArray(e.color) && e.color[0]) ? e.color[0] : null,
+        relevance: (typeof e.relevance === 'string' && e.relevance.trim()) ? e.relevance.trim() : null,
+      }]));
+      topBlock.data = topBlock.data.map((r) => {
+        const m = metaById.get(r.entity_id) || {};
+        return { ...r, color: m.color || null, relevance: m.relevance || null };
+      });
     }
     return {
       window: { from, to },

@@ -14,6 +14,17 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Observaciones": "Observations",
+  "Lo más destacado de cada perfil": "The most notable of each profile",
+  "Aún sin señales medibles en esta ventana.": "No measurable signals in this window yet.",
+  "{n}% sentimiento negativo — ventana para capturar su audiencia": "{n}% negative sentiment — a window to capture their audience",
+  "{n}% de su audiencia insatisfecha — munición de contenido": "{n}% of their audience dissatisfied — content ammunition",
+  "Tono confrontacional con su audiencia ({n}%)": "Confrontational tone with their audience ({n}%)",
+  "Domina el nicho: {n}% del engagement": "Dominates the niche: {n}% of engagement",
+  "Mayor engagement del nicho ({n}%)": "Highest engagement in the niche ({n}%)",
+  "Audiencia muy receptiva: {n}% positivo": "Highly receptive audience: {n}% positive",
+  "El más activo: {n} posts en la ventana": "Most active: {n} posts in the window",
+  "{p} posts · {e} de engagement": "{p} posts · {e} engagement",
   " · {n} en revisión": " · {n} under review",
   " · objetivo alcanzado ✓": " · goal reached ✓",
   " · te faltan <strong>{g}</strong> pts": " · you're <strong>{g}</strong> pts short",

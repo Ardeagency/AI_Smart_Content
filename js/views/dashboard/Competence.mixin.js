@@ -245,11 +245,94 @@
       // plataforma, con CTA a Monitoreo. El resto del panel se enciende solo
       // cuando hay perfiles que vigilar.
       if (this._isCompetenceEmpty(data)) return this._buildCompetenceEmptyState();
+      // Layout 2 columnas (igual que Mi Marca): cuerpo ancho a la izquierda,
+      // panel "Observaciones" como sidebar sticky a la derecha.
       return `
         <div class="insight-page mb-dash" id="compPage">
-          ${this._buildBattlefield(data?.kpis?.data, data?.top?.data, data?.kpisPrev?.data)}
-          ${this._buildWinningFormula(data?.intelligence?.data)}
+          <div class="mb-layout">
+            <div class="mb-layout-main comp-main">
+              ${this._buildBattlefield(data?.kpis?.data, data?.top?.data, data?.kpisPrev?.data)}
+              ${this._buildWinningFormula(data?.intelligence?.data)}
+            </div>
+            <aside class="mb-layout-aside">
+              ${this._buildObservations(data?.top?.data, data?.risk?.data)}
+            </aside>
+          </div>
         </div>`;
+    },
+
+    /* ── Panel lateral "Observaciones": ranking de la señal más notable de cada
+       perfil AHORA (medida), con su relevancia curada como contexto. "Señal viva
+       primero": cada perfil muestra su observación más accionable y el orden = qué
+       tan notable/accionable es esa señal (rol como desempate leve). Reglas+math,
+       sin LLM. Reusa top (posts/eng/sentimiento/color/relevance) + risk (negativo/
+       tono) mergeados por entity_id. ─────────────────────────────────────────── */
+    _buildObservations(top, risk) {
+      const list = (Array.isArray(top) ? top : []).filter((r) => Number(r.total_engagement) > 0 || Number(r.total_posts) > 0);
+      const head = `
+          <div class="mb-section-head">
+            <span class="mb-section-title">${__('Observaciones')}</span>
+            <span class="mb-section-hint">${__('Lo más destacado de cada perfil')}</span>
+          </div>`;
+      if (!list.length) {
+        return `<section class="mb-section comp-obs-section">${head}<div class="comp-obs"><div class="mb-causal-empty">${__('Aún sin señales medibles en esta ventana.')}</div></div></section>`;
+      }
+      const brandHex = this._readBrandHex();
+      const riskById = new Map((Array.isArray(risk) ? risk : []).map((r) => [r.entity_id, r]));
+      const totalEng = list.reduce((s, r) => s + (Number(r.total_engagement) || 0), 0) || 1;
+      const maxEng = Math.max(...list.map((r) => Number(r.total_engagement) || 0), 1);
+      const maxPosts = Math.max(...list.map((r) => Number(r.total_posts) || 0), 1);
+
+      const items = list.map((r) => {
+        const rk = riskById.get(r.entity_id) || {};
+        const eng = Number(r.total_engagement) || 0;
+        const posts = Number(r.total_posts) || 0;
+        const sov = Math.round(eng / totalEng * 100);
+        const pos = r.positive_sentiment_ratio != null ? Math.round(Number(r.positive_sentiment_ratio) * 100) : null;
+        const neg = Math.round(Number(rk.negative_sentiment_ratio || 0) * 100);
+        const aggr = Math.round(Number(rk.aggressive_tone_ratio || 0) * 100);
+        const isLeader = eng === maxEng;
+        const isMostActive = posts === maxPosts && posts > 0;
+
+        // Candidatos de observación. Score alto = más notable/accionable. Se
+        // muestra el de mayor score; el orden del panel usa ese mismo score.
+        const cand = [];
+        if (neg >= 25) cand.push({ score: 800 + neg * 4, tone: 'opp', ico: 'alert-warning', text: __('{n}% sentimiento negativo — ventana para capturar su audiencia', { n: neg }) });
+        else if (neg >= 10) cand.push({ score: 500 + neg * 4, tone: 'opp', ico: 'alert-warning', text: __('{n}% de su audiencia insatisfecha — munición de contenido', { n: neg }) });
+        if (aggr >= 30) cand.push({ score: 560 + aggr * 2, tone: 'opp', ico: 'flag', text: __('Tono confrontacional con su audiencia ({n}%)', { n: aggr }) });
+        if (sov >= 40) cand.push({ score: 520 + sov * 2, tone: 'strong', ico: 'arrow-up', text: __('Domina el nicho: {n}% del engagement', { n: sov }) });
+        else if (isLeader && sov >= 15) cand.push({ score: 460 + sov * 2, tone: 'strong', ico: 'arrow-up', text: __('Mayor engagement del nicho ({n}%)', { n: sov }) });
+        if (pos != null && pos >= 50) cand.push({ score: 380 + pos, tone: 'pos', ico: 'star', text: __('Audiencia muy receptiva: {n}% positivo', { n: pos }) });
+        if (isMostActive) cand.push({ score: 340 + Math.round(posts / maxPosts * 40), tone: 'neutral', ico: 'zap', text: __('El más activo: {n} posts en la ventana', { n: fmt.int(posts) }) });
+        cand.push({ score: 100 + Math.round(eng / maxEng * 80), tone: 'neutral', ico: 'eye', text: __('{p} posts · {e} de engagement', { p: fmt.int(posts), e: this._compactNum(eng) }) });
+        cand.sort((a, b) => b.score - a.score);
+
+        const roleBump = r.tipo === 'competidor_directo' ? 40 : r.tipo === 'competidor_indirecto' ? 20 : 0;
+        const raw = typeof r.color === 'string' ? r.color.trim() : '';
+        return {
+          name: r.entity_name,
+          color: /^#[0-9a-fA-F]{6,8}$/.test(raw) ? raw : brandHex,
+          role: this._compTipoMeta(r.tipo),
+          signal: cand[0],
+          rank: cand[0].score + roleBump,
+          relevance: typeof r.relevance === 'string' ? r.relevance.trim() : '',
+        };
+      }).sort((a, b) => b.rank - a.rank);
+
+      const rows = items.map((it) => `
+        <div class="comp-obs-item">
+          <div class="comp-obs-head">
+            <span class="comp-obs-dot" style="background:${it.color}"></span>
+            <span class="comp-obs-name">${this._esc(it.name)}</span>
+            <span class="comp-obs-role" style="--ct:${it.role.color}">${this._esc(it.role.label)}</span>
+          </div>
+          <div class="comp-obs-signal comp-obs-signal--${it.signal.tone}">
+            <i class="aisc-ico aisc-ico--${it.signal.ico}"></i><span>${this._esc(it.signal.text)}</span>
+          </div>
+          ${it.relevance ? `<div class="comp-obs-rel">${this._esc(it.relevance)}</div>` : ''}
+        </div>`).join('');
+
+      return `<section class="mb-section comp-obs-section">${head}<div class="comp-obs">${rows}</div></section>`;
     },
 
     /* Competencia vacia = no hay NINGUN perfil monitoreado (sin actores). Sin
