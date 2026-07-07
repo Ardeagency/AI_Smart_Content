@@ -248,9 +248,7 @@
       return `
         <div class="insight-page mb-dash" id="compPage">
           ${this._buildBattlefield(data?.kpis?.data, data?.top?.data, data?.kpisPrev?.data)}
-          ${this._buildBenchmark(data?.benchmark?.data, data?.shareOfVoice?.data)}
           ${this._buildWinningFormula(data?.intelligence?.data)}
-          ${this._buildAudienceVoice(data?.voice?.data)}
           ${this._buildRivalRisk(data?.risk?.data)}
         </div>`;
     },
