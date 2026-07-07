@@ -294,35 +294,42 @@
       const items = list.map((r) => {
         const rangoKey = typeof r.rango === 'string' ? r.rango.trim().toLowerCase() : '';
         const raw = typeof r.color === 'string' ? r.color.trim() : '';
-        const winner = (r.winner && r.winner.term && Number(r.winner.lift) >= 1.4) ? r.winner : null;
         return {
           tipo: r.tipo,
           name: r.entity_name,
           color: /^#[0-9a-fA-F]{6,8}$/.test(raw) ? raw : brandHex,
           rango: RANGO[rangoKey] || null,
           rangoKey,
-          terms: Array.isArray(r.terms) ? r.terms.slice(0, 3) : [],
-          winner,
+          insights: Array.isArray(r.insights) ? r.insights : [],
           posts: Number(r.total_posts) || 0,
           eng: Number(r.total_engagement) || 0,
         };
       });
 
-      // Observaciones = inteligencia de CONTENIDO (desde el texto de sus posts):
-      // "Le rinde" = el tema que dispara su engagement (lo estrategico: no qué dicen,
-      // sino qué les FUNCIONA); "Habla de" = sus temas recurrentes (contexto). Sin
-      // CTAs, sin métricas obvias, sin relevancia cruda. Orden dentro del rol:
-      // rango primero (nacional > internacional), luego engagement.
+      // Cada perfil muestra sus 1-2 observaciones ESTRATEGICAS más notables, de una
+      // librería de detectores (le rinde / concentra / virales / parejo / hashtag /
+      // habla de). Perfiles distintos disparan detectores distintos -> el panel varía.
+      // Orden dentro del rol: rango primero (nacional > internacional), luego engagement.
       const prio = (it) => (it.rango ? it.rango.rank : 0) * 1e9 + it.eng;
+      const ICO = { winner: 'arrow-up', focus: 'star', viral: 'fire', even: 'check', hashtag: 'flag', terms: 'eye' };
+      const insightText = (s) => {
+        const b = (x) => `<b>${this._esc(x)}</b>`;
+        switch (s.kind) {
+          case 'winner':  return __('Le rinde hablar de {t}: {x}x su engagement promedio', { t: b(s.term), x: s.lift });
+          case 'focus':   return __('Concentra {p}% de sus posts en {t}', { p: s.pct, t: b(s.term) });
+          case 'viral':   return __('Depende de virales: 1 post concentra {p}% de su engagement', { p: s.pct });
+          case 'even':    return __('Alcance parejo: reparte el engagement entre sus posts, no depende de virales');
+          case 'hashtag': return __('Firma con #{t} en {p}% de sus posts', { t: this._esc(s.tag), p: s.pct });
+          case 'terms':   return __('Habla de {t}', { t: (s.terms || []).map((x) => this._esc(x)).join(' · ') });
+          default:        return '';
+        }
+      };
       const card = (it) => {
-        const winLine = it.winner
-          ? `<div class="comp-obs-signal comp-obs-signal--strong"><i class="aisc-ico aisc-ico--arrow-up"></i><span>${__('Le rinde hablar de {t}: {x}x su engagement promedio', { t: `<b>${this._esc(it.winner.term)}</b>`, x: it.winner.lift })}</span></div>`
-          : '';
-        const termsLine = it.terms.length
-          ? `<div class="comp-obs-terms"><span class="comp-obs-terms-lbl">${__('Habla de')}</span> ${it.terms.map((t) => this._esc(t)).join(' · ')}</div>`
-          : '';
-        const fallback = (!winLine && !termsLine)
-          ? `<div class="comp-obs-terms">${__('{n} posts en la ventana', { n: fmt.int(it.posts) })}</div>` : '';
+        const top = it.insights.slice(0, 2);
+        const primary = top[0]
+          ? `<div class="comp-obs-signal comp-obs-signal--strong"><i class="aisc-ico aisc-ico--${ICO[top[0].kind] || 'eye'}"></i><span>${insightText(top[0])}</span></div>`
+          : `<div class="comp-obs-terms">${__('{n} posts en la ventana', { n: fmt.int(it.posts) })}</div>`;
+        const secondary = top[1] ? `<div class="comp-obs-terms">${insightText(top[1])}</div>` : '';
         return `
         <div class="comp-obs-item">
           <div class="comp-obs-head">
@@ -330,7 +337,7 @@
             <span class="comp-obs-name">${this._esc(it.name)}</span>
             ${it.rango ? `<span class="comp-obs-rango comp-obs-rango--${it.rangoKey}">${this._esc(it.rango.label)}</span>` : ''}
           </div>
-          ${winLine}${termsLine}${fallback}
+          ${primary}${secondary}
         </div>`;
       };
 

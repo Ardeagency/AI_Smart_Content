@@ -14,6 +14,11 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Concentra {p}% de sus posts en {t}": "Concentrates {p}% of their posts on {t}",
+  "Depende de virales: 1 post concentra {p}% de su engagement": "Relies on virals: 1 post holds {p}% of their engagement",
+  "Alcance parejo: reparte el engagement entre sus posts, no depende de virales": "Even reach: spreads engagement across posts, not reliant on virals",
+  "Firma con #{t} en {p}% de sus posts": "Signs with #{t} in {p}% of their posts",
+  "Habla de {t}": "Talks about {t}",
   "Le rinde hablar de {t}: {x}x su engagement promedio": "Talking about {t} pays off: {x}x their average engagement",
   "{n} posts en la ventana": "{n} posts in the window",
   "Habla de": "Talks about",

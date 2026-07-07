@@ -1,4 +1,9 @@
 [
+  "Concentra {p}% de sus posts en {t}",
+  "Depende de virales: 1 post concentra {p}% de su engagement",
+  "Alcance parejo: reparte el engagement entre sus posts, no depende de virales",
+  "Firma con #{t} en {p}% de sus posts",
+  "Habla de {t}",
   "Le rinde hablar de {t}: {x}x su engagement promedio",
   "{n} posts en la ventana",
   "Habla de",

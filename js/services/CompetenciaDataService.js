@@ -108,7 +108,7 @@ class CompetenciaDataService {
       let posts = [];
       try {
         const { data } = await this.sb.from('brand_posts')
-          .select('entity_id,content,engagement_total')
+          .select('entity_id,content,engagement_total,hashtags')
           .in('entity_id', ids)
           .eq('is_competitor', true)
           .not('content', 'is', null)
@@ -120,10 +120,7 @@ class CompetenciaDataService {
       const nameById = {};
       for (const r of topBlock.data) nameById[r.entity_id] = r.entity_name || '';
       const insightById = this._contentInsightsByEntity(posts, nameById);
-      topBlock.data = topBlock.data.map((r) => {
-        const ins = insightById[r.entity_id] || {};
-        return { ...r, terms: ins.terms || [], winner: ins.winner || null };
-      });
+      topBlock.data = topBlock.data.map((r) => ({ ...r, insights: (insightById[r.entity_id] || {}).insights || [] }));
     }
     return {
       window: { from, to },
@@ -139,45 +136,66 @@ class CompetenciaDataService {
   }
 
   /** Inteligencia de contenido por entidad desde el TEXTO de sus posts (rules+math,
-      sin LLM). Devuelve por entidad:
-        - `terms`: temas recurrentes (document-frequency sobre content+hashtags).
-        - `winner`: el tema que DISPARA su engagement — {term, lift} donde lift =
-          engagement promedio de sus posts con ese tema / su engagement promedio
-          general. Esto es lo estrategico: no que dicen, sino que les FUNCIONA.
-      Filtra stopwords ES/EN, urls, mentions, palabras <4 letras y el nombre propio
-      de la marca. winner exige >=3 posts de soporte y lift>=1.4 (evita ruido). */
+      sin LLM). Corre una LIBRERIA de detectores estrategicos y devuelve por entidad
+      `insights` = lista RANKEADA de señales estructuradas {kind, score, ...params}
+      (la vista las traduce). Distintos perfiles disparan distintos detectores -> el
+      panel varia en vez de repetir siempre lo mismo. Detectores:
+        - winner:  el tema que DISPARA su engagement (lift = avg con-tema / avg gral).
+        - focus:   concentracion tematica (un tema en >=50% de sus posts).
+        - viral:   1 post concentra >=45% de su engagement (depende de virales).
+        - even:    engagement repartido parejo (alcance consistente).
+        - hashtag: hashtag firma (en >=45% de sus posts).
+        - terms:   temas recurrentes (contexto / fallback, score bajo).
+      Filtra stopwords ES/EN, urls, mentions, palabras <4 letras y el nombre propio. */
   _contentInsightsByEntity(posts, nameById = {}) {
     const STOP = this._stopwords();
     const ownTokens = this._ownNameTokens(nameById);
-    // Por entidad: lista de {terms:Set, eng} por post + acumulados.
     const byEntity = {};
     for (const p of posts || []) {
       const eid = p.entity_id; if (!eid) continue;
       const own = ownTokens[eid] || new Set();
       const text = String(p.content || '').toLowerCase();
-      const seen = new Set();
-      for (const m of text.match(/#([\p{L}\p{N}_]{3,})/gu) || []) { const t = m.slice(1).replace(/_/g, ''); if (!own.has(t)) seen.add(t); }
+      const terms = new Set(), tags = new Set();
+      for (const m of text.match(/#([\p{L}\p{N}_]{3,})/gu) || []) { const t = m.slice(1).replace(/_/g, ''); if (!own.has(t)) { terms.add(t); tags.add(t); } }
+      for (const h of Array.isArray(p.hashtags) ? p.hashtags : []) { const t = String(h).toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''); if (t.length >= 3 && !own.has(t)) { terms.add(t); tags.add(t); } }
       const cleaned = text.replace(/https?:\/\/\S+/g, ' ').replace(/[@#][\p{L}\p{N}_]+/gu, ' ');
-      for (const w of cleaned.match(/[\p{L}]{4,}/gu) || []) { const t = w.toLowerCase(); if (!STOP.has(t) && !own.has(t)) seen.add(t); }
-      const e = (byEntity[eid] = byEntity[eid] || { df: {}, eng: {}, n: 0, engTotal: 0 });
+      for (const w of cleaned.match(/[\p{L}]{4,}/gu) || []) { const t = w.toLowerCase(); if (!STOP.has(t) && !own.has(t)) terms.add(t); }
+      const e = (byEntity[eid] = byEntity[eid] || { df: {}, eng: {}, tagDf: {}, n: 0, engTotal: 0, engList: [] });
       const eng = Number(p.engagement_total) || 0;
-      e.n += 1; e.engTotal += eng;
-      for (const t of seen) { e.df[t] = (e.df[t] || 0) + 1; e.eng[t] = (e.eng[t] || 0) + eng; }
+      e.n += 1; e.engTotal += eng; e.engList.push(eng);
+      for (const t of terms) { e.df[t] = (e.df[t] || 0) + 1; e.eng[t] = (e.eng[t] || 0) + eng; }
+      for (const t of tags) e.tagDf[t] = (e.tagDf[t] || 0) + 1;
     }
     const out = {};
     for (const [eid, e] of Object.entries(byEntity)) {
-      const terms = Object.entries(e.df).filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t]) => t);
-      // winner = tema con mayor lift de engagement (soporte >=3 posts, lift>=1.4).
-      const baseAvg = e.n > 0 ? e.engTotal / e.n : 0;
-      let winner = null;
+      const n = e.n; if (!n) { out[eid] = { insights: [] }; continue; }
+      const baseAvg = e.engTotal / n;
+      const ins = [];
+      // winner — tema que dispara engagement (soporte >=3 posts, lift>=1.5).
       if (baseAvg > 0) {
-        for (const [t, df] of Object.entries(e.df)) {
-          if (df < 3) continue;
-          const lift = (e.eng[t] / df) / baseAvg;
-          if (lift >= 1.4 && (!winner || lift > winner.lift)) winner = { term: t, lift: Math.round(lift * 10) / 10 };
-        }
+        let best = null;
+        for (const [t, df] of Object.entries(e.df)) { if (df < 3) continue; const lift = (e.eng[t] / df) / baseAvg; if (lift >= 1.5 && (!best || lift > best.lift)) best = { term: t, lift: Math.round(lift * 10) / 10 }; }
+        if (best) ins.push({ kind: 'winner', term: best.term, lift: best.lift, score: Math.min(96, 34 + (best.lift - 1.5) * 12) });
       }
-      out[eid] = { terms, winner };
+      // focus — concentracion tematica.
+      if (n >= 5) {
+        const topT = Object.entries(e.df).sort((a, b) => b[1] - a[1])[0];
+        if (topT) { const pct = Math.round(topT[1] / n * 100); if (pct >= 50) ins.push({ kind: 'focus', term: topT[0], pct, score: pct }); }
+      }
+      // viral vs even — distribucion del engagement.
+      if (n >= 5 && e.engTotal > 0) {
+        const share = Math.round(Math.max(...e.engList) / e.engTotal * 100);
+        if (share >= 45) ins.push({ kind: 'viral', pct: share, score: share });
+        else if (share <= Math.ceil(100 / n) + 6) ins.push({ kind: 'even', score: 44 });
+      }
+      // hashtag firma.
+      const topTag = Object.entries(e.tagDf).sort((a, b) => b[1] - a[1])[0];
+      if (topTag && n >= 4) { const pct = Math.round(topTag[1] / n * 100); if (pct >= 45) ins.push({ kind: 'hashtag', tag: topTag[0], pct, score: pct - 3 }); }
+      // terms — contexto / fallback (score bajo, solo gana si nada mas dispara).
+      const terms = Object.entries(e.df).filter(([, x]) => x >= 2).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t]) => t);
+      if (terms.length) ins.push({ kind: 'terms', terms, score: 12 });
+      ins.sort((a, b) => b.score - a.score);
+      out[eid] = { insights: ins };
     }
     return out;
   }
