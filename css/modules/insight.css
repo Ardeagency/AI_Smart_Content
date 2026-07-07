@@ -3028,16 +3028,18 @@
 .comp-obs-terms-lbl { text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.58rem; font-weight: 700; color: var(--text-tertiary, rgba(212,209,216,0.4)); margin-right: 0.4rem; }
 .comp-obs-rel { margin-top: 0.4rem; font-size: 0.73rem; line-height: 1.4; color: var(--text-tertiary, rgba(212,209,216,0.5)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-/* ── Temas y hashtags del nicho: charts de barras horizontales (pill), color de marca */
-.comp-content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.comp-content-card { background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424); border-radius: 14px; padding: 1rem 1.1rem; }
-.comp-content-title { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-tertiary, rgba(212,209,216,0.45)); margin-bottom: 0.85rem; }
-.comp-bar-row { display: grid; grid-template-columns: minmax(64px, 36%) 1fr auto; align-items: center; gap: 0.6rem; padding: 0.3rem 0; }
-.comp-bar-label { font-size: 0.8rem; color: var(--text-secondary, rgba(212,209,216,0.85)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* ── Perfiles por rol: barras horizontales (pill), color de marca */
 .comp-bar-track { display: block; height: 8px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
 .comp-bar-fill { display: block; height: 100%; border-radius: 999px; min-width: 8px; }
-.comp-bar-val { font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--text-tertiary, rgba(212,209,216,0.5)); min-width: 1.4rem; text-align: right; }
-@media (max-width: 640px) { .comp-content-grid { grid-template-columns: 1fr; } }
+.comp-roles { background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424); border-radius: 14px; padding: 0.4rem 1.1rem; }
+.comp-role-row { padding: 0.85rem 0; border-top: 1px solid var(--border-divider, #242424); }
+.comp-role-row:first-child { border-top: 0; }
+.comp-role-row--empty { opacity: 0.5; }
+.comp-role-top { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.comp-role-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.comp-role-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary, #e8e6ea); }
+.comp-role-count { margin-left: auto; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--text-tertiary, rgba(212,209,216,0.55)); }
+.comp-role-list { margin-top: 0.45rem; font-size: 0.76rem; line-height: 1.4; color: var(--text-secondary, rgba(212,209,216,0.6)); }
 
 /* Voz de su audiencia */
 .comp-voice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0.85rem; }
@@ -3214,7 +3216,13 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 /* Analisis longitudinal — grid de charts Chart.js */
 .mb-long-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
 .mb-long-grid--single { grid-template-columns: 1fr; }
-.mb-long-card { background: var(--bg-card); border: 1px solid var(--border-divider); border-radius: 14px; padding: 0.9rem 1rem 0.75rem; box-shadow: var(--dash-elev); min-width: 0; }
+.mb-long-card { position: relative; overflow: hidden; background: var(--bg-card); border: 1px solid var(--border-divider); border-radius: 14px; padding: 0.9rem 1rem 0.75rem; box-shadow: var(--dash-elev); min-width: 0; }
+/* Borde superior con el degradado dinamico de la marca, igual que la card de
+   Salud de tu marca (.mb-health-card--aside::before). Corona Tonos/Temas. */
+.mb-long-card::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2.5px; pointer-events: none; z-index: 2;
+  background: var(--brand-gradient-dynamic, linear-gradient(90deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.12)));
+}
 .mb-long-card--wide { grid-column: 1 / -1; }
 .mb-long-card-title { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); margin-bottom: 0.65rem; }
 .mb-long-canvas { position: relative; height: 185px; }
