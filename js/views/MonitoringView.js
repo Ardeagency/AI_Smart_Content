@@ -1675,7 +1675,9 @@ class MonitoringView extends BaseView {
     if (!props.length) {
       return this.emptyState({
         fill: true,
-        icon: 'aisc-ico aisc-ico--sparkle',
+        // OJO: aisc-ico--sparkle es un icono de "rayos/sol" (8 lineas radiales) que
+        // se lee como un spinner de carga. Usamos "idea" (bombillo) = sugerencia.
+        icon: 'aisc-ico aisc-ico--idea',
         title: __('No hay sugerencias nuevas por ahora.'),
         subtitle: __('Cuando detectemos perfiles o páginas cerca de tu competencia, aparecerán aquí.'),
       });
