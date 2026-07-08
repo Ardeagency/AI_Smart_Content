@@ -4185,26 +4185,30 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
    kicker con punto de color → SUJETO grande (lo primero real) → evidencia
    (metrica, secundaria) → accion anclada al pie. Todo scopeado a .dash-hero-cards
    para no tocar las .mb-plan-* del cuerpo. */
-.dash-hero-cards .mb-plan-cat { display: inline-flex; align-items: center; gap: 0.4rem; }
+/* Estado en reposo MONOCROMO: sin tinte de color por nivel de riesgo (el color
+   solo aparece en el borde al hacer hover). Todos los textos en blanco. */
+.dash-hero-cards .mb-plan-col::after { background: none; }
+.dash-hero-cards .mb-plan-cat { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--text-primary, #D4D1D8); }
 .dash-hero-cards .mb-plan-cat::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
 /* El SUJETO lidera: mayor que la metrica, justo bajo el kicker. */
 .dash-hero-cards .mb-plan-title { margin-top: 0.15rem; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; color: var(--text-primary, #D4D1D8); }
 /* La metrica pasa a evidencia: peso por color, no por tamano. */
 .dash-hero-cards .mb-plan-metric { margin-top: 0.25rem; }
-.dash-hero-cards .mb-plan-metric-val { font-size: 1rem; }
+.dash-hero-cards .mb-plan-metric-val { font-size: 1rem; color: var(--text-primary, #D4D1D8); }
 .dash-hero-cards .mb-plan-col--vigila .mb-plan-metric-val { font-size: 0.9375rem; }
 /* Accion: imperativo al pie, anclado para que las 4 acciones queden alineadas. */
-.dash-hero-cards .mb-plan-action { margin-top: auto; padding-top: 0.55rem; display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; font-weight: 600; color: var(--text-muted, rgba(212,209,216,0.7)); }
+.dash-hero-cards .mb-plan-action { margin-top: auto; padding-top: 0.55rem; display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; font-weight: 600; color: var(--text-primary, #D4D1D8); }
 .dash-hero-cards .mb-plan-action-arrow { font-size: 0.8125rem; opacity: 0.7; transition: transform 0.18s ease; }
 .dash-hero-cards .mb-plan-col:hover .mb-plan-action-arrow { transform: translateX(3px); opacity: 1; }
-/* La accion hereda el color de la categoria (refuerza el codigo de color). */
-.dash-hero-cards .mb-plan-col--explota  .mb-plan-action { color: rgba(107,207,127,0.85); }
-.dash-hero-cards .mb-plan-col--optimiza .mb-plan-action { color: rgba(91,155,213,0.85); }
-.dash-hero-cards .mb-plan-col--elimina  .mb-plan-action { color: rgba(224,100,100,0.85); }
-.dash-hero-cards .mb-plan-col--vigila   .mb-plan-action { color: rgba(224,160,69,0.85); }
-/* Card clickable → abre el detalle consultor. */
-.dash-hero-cards .mb-plan-col.is-clickable { cursor: pointer; transition: border-color 0.18s ease, transform 0.18s ease; }
-.dash-hero-cards .mb-plan-col.is-clickable:hover { border-color: rgba(255,255,255,0.16); transform: translateY(-1px); }
+/* El nivel de riesgo ya NO se pinta en reposo: se revela como borde de color al
+   hacer hover sobre la card. Reposo monocromo → hover resalta el borde por tipo. */
+.dash-hero-cards .mb-plan-col { transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease; }
+.dash-hero-cards .mb-plan-col.is-clickable { cursor: pointer; }
+.dash-hero-cards .mb-plan-col:hover { transform: translateY(-1px); }
+.dash-hero-cards .mb-plan-col--explota:hover  { border-color: rgba(107,207,127,0.60); box-shadow: 0 0 0 1px rgba(107,207,127,0.35), 0 6px 20px rgba(0,0,0,0.28); }
+.dash-hero-cards .mb-plan-col--optimiza:hover { border-color: rgba(91,155,213,0.60);  box-shadow: 0 0 0 1px rgba(91,155,213,0.35),  0 6px 20px rgba(0,0,0,0.28); }
+.dash-hero-cards .mb-plan-col--elimina:hover  { border-color: rgba(224,100,100,0.60); box-shadow: 0 0 0 1px rgba(224,100,100,0.35), 0 6px 20px rgba(0,0,0,0.28); }
+.dash-hero-cards .mb-plan-col--vigila:hover   { border-color: rgba(224,160,69,0.60);  box-shadow: 0 0 0 1px rgba(224,160,69,0.35),  0 6px 20px rgba(0,0,0,0.28); }
 /* Pildora "señal temprana": guardrail de muestra chica (n<5). */
 .dash-hero-cards .mb-plan-early { align-self: flex-start; margin-top: 0.15rem; padding: 2px 8px; border-radius: 6px; font-size: 0.625rem; font-weight: 600; letter-spacing: 0.01em; }
 .dash-hero-cards .mb-plan-col--explota  .mb-plan-early { color: #6bcf7f; background: rgba(107,207,127,0.14); }
