@@ -14,24 +14,8 @@
   margin: 0;
   padding-top: 15px;
   box-sizing: border-box;
-  /* Transparente: el fondo radial de marca vive en #app-container (abajo) y se ve
-     a traves de la pagina, igual que en el dashboard y el chat de Vera. */
-  background: transparent;
-}
-
-/* Fondo del centro de Estrategia (Command Center) = mismo radial de marca que el
-   chat de Vera y el dashboard (Frame 98): marca clara -> marca oscura -> #141517
-   -> #000, anclado al viewport. --brand-color-light/-dark los publica OrgBrandTheme
-   por org; fallback naranja de referencia. */
-#app-container:has(> .cc-page) {
-  background-color: #000000;
-  background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    var(--brand-color-light, #F79E1B) 0%,
-    var(--brand-color-dark, #FF5F00) 30.29%,
-    #141517 74.04%,
-    #000000 100%);
-  background-attachment: fixed;
-  background-repeat: no-repeat;
+  /* Misma familia cromática que el shell, sin “cristal” encima */
+  background: var(--view-bg-base);
 }
 
 .cc-section {
