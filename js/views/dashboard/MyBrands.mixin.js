@@ -23,14 +23,11 @@
   /**
    * Feature flag: ocultar cards que no tienen datos.
    *
-   * Default FALSE en estado de creación del dashboard — todas las cards deben
-   * verse aunque estén vacías para que el equipo entienda el shape final.
-   *
-   * Para activar en producción: cambiar HIDE_EMPTY_DEFAULT a true.
-   * Para probar puntualmente sin redeploy: en la consola del navegador
-   *   window.MB_HIDE_EMPTY_CARDS = true; (luego re-renderizar tab)
+   * Default TRUE en producción — toda card sin datos se oculta (blanco total).
+   * Escape hatch de dev para VER el shape con todas las cards, sin redeploy:
+   *   window.MB_HIDE_EMPTY_CARDS = false; (luego re-renderizar tab)
    */
-  const HIDE_EMPTY_DEFAULT = false;
+  const HIDE_EMPTY_DEFAULT = true;
   const shouldHideEmpty = () =>
     (typeof window !== 'undefined' && typeof window.MB_HIDE_EMPTY_CARDS === 'boolean')
       ? window.MB_HIDE_EMPTY_CARDS

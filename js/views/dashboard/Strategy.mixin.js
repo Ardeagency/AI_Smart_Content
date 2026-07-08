@@ -192,13 +192,7 @@
         approved: { title: __('Recomendaciones aprobadas'),  hint: __('Las que aprobaste — en camino a producción'), empty: __('Aún no has aprobado recomendaciones.') },
         rejected: { title: __('Recomendaciones descartadas'), hint: __('Las que decidiste no ejecutar'), empty: __('No has descartado recomendaciones.') },
       }[status] || { title: __('Recomendaciones'), hint: '', empty: __('Sin recomendaciones.') };
-      if (!list.length) {
-        return `
-          <section class="mb-section">
-            <div class="mb-section-head"><span class="mb-section-title">${meta.title}</span></div>
-            <div class="mb-causal-empty">${meta.empty}</div>
-          </section>`;
-      }
+      if (!list.length) return ''; // card vacía → se oculta
       return `
         <section class="mb-section">
           <div class="mb-section-head">

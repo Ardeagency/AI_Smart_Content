@@ -261,13 +261,7 @@
           <span class="mb-section-title">${__('Señales emergentes del nicho')}</span>
           <span class="mb-section-hint">${__('Temas que aceleran afuera — ordenados por velocidad, filtrados por calidad')}</span>
         </div>`;
-      if (!list.length) {
-        return `
-          <section class="mb-section">
-            ${head}
-            <div class="mb-causal-empty">${__('Sin señales de calidad en esta ventana. El motor de tendencias fue recalibrado; las próximas corridas (cuando se reactiven los scrapers) poblarán esto con señales reales del nicho.')}</div>
-          </section>`;
-      }
+      if (!list.length) return ''; // card vacía → se oculta
       const chips = list.map((s) => {
         const sm = SENT[String(s.sentiment || '').toLowerCase()] || null;
         const vel = Number(s.velocity_score);
@@ -303,13 +297,7 @@
           <span class="mb-section-title">${__('Océanos azules')}</span>
           <span class="mb-section-hint">${__('El mercado lo pide y tu competencia no lo cubre — terreno libre para capturar')}</span>
         </div>`;
-      if (!list.length) {
-        return `
-          <section class="mb-section">
-            ${head}
-            <div class="mb-causal-empty">${__('Aún no hay señal de demanda suficiente para detectar océanos azules. Se enciende cuando los sensores de audiencia (Google Trends, noticias del nicho) vuelvan a correr.')}</div>
-          </section>`;
-      }
+      if (!list.length) return ''; // card vacía → se oculta
       const cards = list.map((g) => {
         const blue = g.is_blue_ocean === true || Number(g.competitor_post_count) === 0;
         const mb = g.market_breakdown || {};
@@ -355,13 +343,7 @@
           <span class="mb-section-title">${__('Léxico emergente del nicho')}</span>
           <span class="mb-section-hint">${__('Las palabras que Vera aprendió escuchando tu nicho — el idioma con el que debes hablarle')}</span>
         </div>`;
-      if (!approved.length && !byDim.length) {
-        return `
-          <section class="mb-section">
-            ${head}
-            <div class="mb-causal-empty">${__('Vera aún no ha consolidado vocabulario del nicho.')}</div>
-          </section>`;
-      }
+      if (!approved.length && !byDim.length) return ''; // card vacía → se oculta
       const dims = byDim.map(d => `
         <div class="tend-dim">
           <span class="tend-dim-name">${this._esc(this._tendDimLabel(d.dimension))}</span>
@@ -396,13 +378,7 @@
           <span class="mb-section-title">${__('Marcas emergentes')}</span>
           <span class="mb-section-hint">${__('Nuevos jugadores que Vera detectó entrando a tu nicho — vigílalos antes de que crezcan')}</span>
         </div>`;
-      if (!pending.length) {
-        return `
-          <section class="mb-section">
-            ${head}
-            <div class="mb-causal-empty">${__('Sin marcas emergentes pendientes. Vera avisará cuando un jugador nuevo aparezca repetidamente en tu nicho.')}</div>
-          </section>`;
-      }
+      if (!pending.length) return ''; // card vacía → se oculta
       const cards = pending.slice(0, 12).map((b) => {
         const geos = Array.isArray(b.detected_geos) ? b.detected_geos.filter(Boolean) : [];
         return `
@@ -434,13 +410,7 @@
           <span class="mb-section-title">${__('Sincronización con el mundo')}</span>
           <span class="mb-section-hint">${__('Festivos, efemérides y clima — para que tu contenido llegue cuando el mundo está mirando')}</span>
         </div>`;
-      if (!holidays.length && !history.length) {
-        return `
-          <section class="mb-section">
-            ${head}
-            <div class="mb-causal-empty">${__('Los sensores del mundo real (festivos, efemérides, clima) están en pausa. Se encenderán con la próxima activación de scrapers y te avisarán de fechas clave con anticipación.')}</div>
-          </section>`;
-      }
+      if (!holidays.length && !history.length) return ''; // card vacía → se oculta
       const holRows = holidays.slice(0, 8).map((h) => `
         <div class="tend-world-row">
           <span class="tend-world-when">${Number(h.days_until) >= 0 ? __('en {n} día(s)', { n: fmt.int(h.days_until) }) : '—'}</span>
