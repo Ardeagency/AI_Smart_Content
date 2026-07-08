@@ -1792,6 +1792,12 @@
         </div>`;
     },
 
+    /** Humaniza un valor crudo de BD (enum con guiones bajos) para mostrarlo:
+        "salud_nutricion" -> "salud nutricion". No capitaliza (se usa embebido). */
+    _humanTerm(s) {
+      return String(s || '').replace(/_/g, ' ').trim();
+    },
+
     /** Formatea el valor de la dimension para mostrar. */
     _causalValueLabel(dim, val) {
       if (dim === 'horario') return `${val}`;
@@ -1840,7 +1846,7 @@
           atencion:  __('necesita atención'),
           critico:   __('está en estado crítico'),
         }[verdict] || null;
-        const lc = (s) => this._esc(String(s || '').trim().toLowerCase());
+        const lc = (s) => this._esc(String(s || '').replace(/_/g, ' ').trim().toLowerCase());
         const parts = [];
         if (stateSay) parts.push(`<strong>${__('Tu marca')} ${stateSay}</strong>.`);
         if (virt[0] && virt[0].label) parts.push(__('Tu mayor fortaleza: {v}.', { v: lc(virt[0].label) }));
@@ -1856,7 +1862,7 @@
       if (h && h.score != null) chips.push(chip(__('Salud'), `${Math.round(Number(h.score))}/100`));
       if (h && h.own_posts != null) chips.push(chip(__('Posts propios'), fmt.int(h.own_posts)));
       const win = this._mbFilters && this._mbFilters.windowDays;
-      if (win) chips.push(chip(__('Ventana'), __('{n} días', { n: win })));
+      if (win) chips.push(chip(__('Ventana'), win >= 3650 ? __('Todo el historial') : __('{n} días', { n: win })));
       const evidence = chips.length ? `<div class="mb-verdict-evidence">${chips.join('')}</div>` : '';
 
       return `
@@ -1949,7 +1955,7 @@
       const topic = (featured.topic?.data || [])[0];
       if (topic?.topic) {
         out.push({
-          label:  __('Tema "{s}"', { s: topic.topic }),
+          label:  __('Tema "{s}"', { s: this._humanTerm(topic.topic) }),
           tag:    __('{n} eng', { n: this._compactNum(topic.total_engagement) }),
           detail: __('Tu tema más exitoso en la ventana — {n} posts.', { n: topic.usage_count }),
         });
@@ -1957,7 +1963,7 @@
       const tone = (featured.tones?.data || [])[0];
       if (tone?.tone_name) {
         out.push({
-          label:  __('Tono "{s}"', { s: tone.tone_name }),
+          label:  __('Tono "{s}"', { s: this._humanTerm(tone.tone_name) }),
           tag:    __('{n} eng', { n: this._compactNum(tone.total_engagement) }),
           detail: __('Tu tono más efectivo — {n} posts conectan con tu audiencia.', { n: tone.posts_count }),
         });
