@@ -2244,13 +2244,12 @@
   overflow: hidden;
 }
 
-/* Fondo del chat con la forma del Frame 98, PERO el color viene del DEGRADADO
-   DINAMICO de la marca: --brand-gradient-dynamic (linear-gradient con los colores
-   reales de brand_colors, lo construye OrgBrandTheme por org). Es la capa de color
-   de abajo; encima va una capa radial OSCURA que es transparente en el bloom de
-   arriba (deja ver el degradado) y se cierra a #141517 -> #000 hacia abajo/bordes
-   (la forma del sol del Frame). Asi respeta los colores de la marca, no un tono
-   inventado. z-index:-1 lo deja dentro del stacking context de .gpt-main
+/* Fondo del chat: el DEGRADADO DINAMICO de la marca (--brand-gradient-dynamic,
+   los colores reales de brand_colors via OrgBrandTheme) pintado como color, y
+   recortado a un DOMO tipo sol con una MASCARA radial anclada arriba-centro. Sin
+   velo oscuro encima (eso embarraba el tono): la marca se ve vivida en el domo y
+   se funde a transparente -> deja ver el fondo oscuro de la app hacia abajo/bordes,
+   igual que el Frame. z-index:-1 lo deja dentro del stacking context de .gpt-main
    (position:relative; z-index:1), sobre el fondo pero detras del contenido.
    Intensidad plena en la bienvenida; atenuado en conversacion. */
 .gpt-main::before {
@@ -2259,14 +2258,12 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(110.4% 110.4% at 50% -10.4%,
-      rgba(20, 21, 23, 0) 0%,
-      rgba(20, 21, 23, 0) 30.29%,
-      #141517 74.04%,
-      #000000 100%),
-    var(--brand-gradient-dynamic, linear-gradient(135deg, #F79E1B, #FF5F00));
-  opacity: 0.55;
+  background: var(--brand-gradient-dynamic, linear-gradient(135deg, #F79E1B, #FF5F00));
+  -webkit-mask-image: radial-gradient(95% 82% at 50% 2%,
+    #000 0%, #000 24%, rgba(0, 0, 0, 0.42) 48%, transparent 68%);
+  mask-image: radial-gradient(95% 82% at 50% 2%,
+    #000 0%, #000 24%, rgba(0, 0, 0, 0.42) 48%, transparent 68%);
+  opacity: 0.6;
 }
 /* En la bienvenida (home) el fondo va a intensidad plena, como en la referencia. */
 .gpt-main.is-welcome::before { opacity: 1; }
