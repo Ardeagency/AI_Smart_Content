@@ -2228,7 +2228,10 @@
   display: flex;
   width: 100%;
   height: calc(100dvh - var(--app-header-height, 45.8px));
-  background: var(--view-bg-base);
+  /* Viñeta cinematografica: oscurece bordes/esquinas y enfoca el centro. */
+  background:
+    radial-gradient(135% 100% at 50% 18%, transparent 45%, rgba(0, 0, 0, 0.55) 100%),
+    var(--view-bg-base);
   color: var(--text-primary);
   position: relative;
   overflow: hidden;
@@ -2269,6 +2272,20 @@
 }
 /* En la bienvenida (home) la luz sube un poco de intensidad, como en la referencia. */
 .gpt-main.is-welcome::before { opacity: 0.3; }
+
+/* Grano de pelicula: textura de ruido muy sutil sobre el fondo (atmosfera
+   cinematografica). z-index:-1 -> queda detras del contenido, no afecta lectura. */
+.gpt-main::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+}
 
 /* ===========================================================================
    VERA · HISTORIAL DE CONVERSACIONES (panel flotante derecho, estilo Studio/CC)
@@ -2614,7 +2631,7 @@
   margin-bottom: 22px;
   border-radius: 22px;
   background: radial-gradient(120% 120% at 50% 0%, rgba(255,255,255,0.06) 0%, transparent 70%);
-  animation: veraWelcomeIn 460ms cubic-bezier(0.33, 0, 0.2, 1) both;
+  animation: veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .gpt-welcome-mark img {
   width: 60px;
@@ -2628,21 +2645,32 @@
   letter-spacing: -0.02em;
   margin: 0;
   line-height: 1.1;
-  animation: veraWelcomeIn 460ms cubic-bezier(0.33, 0, 0.2, 1) 60ms both;
+  animation: veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) 140ms both;
 }
 .gpt-welcome--hero .gpt-welcome-subtitle {
   margin: 12px 0 0;
   font-size: 1.05rem;
   color: var(--text-muted);
-  animation: veraWelcomeIn 460ms cubic-bezier(0.33, 0, 0.2, 1) 120ms both;
+  animation: veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
 }
 @keyframes veraWelcomeIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* Revelado cinematografico: entra desde desenfocado + abajo + micro-escala
+   (focus-pull). Combinado con stagger da una sensacion filmica de "aparicion". */
+@keyframes veraCineIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes veraFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
 
 /* ── Logo Vera como wordmark (Vera-2.svg): SIN fondo ni caja, transparente ── */
 .gpt-welcome-mark--wordmark {
+  position: relative;
   width: auto;
   height: auto;
   padding: 0;
@@ -2650,10 +2678,22 @@
   background: none;
   margin-bottom: 20px;
 }
+/* Halo tenue de marca detras del logotipo. */
+.gpt-welcome-mark--wordmark::before {
+  content: '';
+  position: absolute;
+  inset: -60% -25%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(50% 60% at 50% 50%, rgba(var(--brand-primary-rgb, 255, 255, 255), 0.22), transparent 70%);
+  filter: blur(26px);
+}
 .gpt-welcome-mark--wordmark img {
   width: auto;
   height: 44px;
-  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 6px 26px rgba(0, 0, 0, 0.5));
+  /* Flotacion sutil (respiracion) para dar vida al logotipo. */
+  animation: veraFloat 6s ease-in-out 800ms infinite;
 }
 
 /* ── Saludo dinamico: barrido de luz (tinte de marca) cruzando el texto ── */
@@ -2670,8 +2710,8 @@
   -webkit-text-fill-color: transparent;
   color: transparent;
   animation:
-    veraWelcomeIn 460ms cubic-bezier(0.33, 0, 0.2, 1) 60ms both,
-    veraTitleSheen 6s ease-in-out 600ms infinite;
+    veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) 140ms both,
+    veraTitleSheen 6s ease-in-out 1000ms infinite;
 }
 @keyframes veraTitleSheen {
   0%   { background-position: 120% 0; }
@@ -2696,7 +2736,7 @@
   width: 100%;
   max-width: 768px;
   margin-top: 10px;
-  animation: veraWelcomeIn 460ms cubic-bezier(0.33, 0, 0.2, 1) 180ms both;
+  animation: veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) 420ms both;
 }
 .gpt-main:not(.is-welcome) .gpt-quick-suggest { display: none; }
 .gpt-quick-chip {
@@ -2722,16 +2762,15 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .gpt-welcome-title--anim {
-    animation: veraWelcomeIn 460ms cubic-bezier(0.33, 0, 0.2, 1) 60ms both;
+    animation: none;
     -webkit-text-fill-color: var(--text-primary);
     color: var(--text-primary);
   }
-  .gpt-quick-suggest { animation: none; }
-}
-@media (prefers-reduced-motion: reduce) {
   .gpt-welcome-mark,
+  .gpt-welcome-mark--wordmark img,
   .gpt-welcome--hero .gpt-welcome-title,
-  .gpt-welcome--hero .gpt-welcome-subtitle { animation: none; }
+  .gpt-welcome--hero .gpt-welcome-subtitle,
+  .gpt-quick-suggest { animation: none; }
 }
 @media (max-width: 768px) {
   .gpt-welcome--hero .gpt-welcome-title { font-size: 2rem; }
@@ -2754,6 +2793,10 @@
 }
 .gpt-main.is-welcome .gpt-composer-wrap {
   padding-top: 4px;
+  animation: veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) 340ms both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gpt-main.is-welcome .gpt-composer-wrap { animation: none; }
 }
 
 .gpt-quick-grid {
@@ -3205,13 +3248,17 @@
   /* Sombra tenida con el color dinamico de marca (--brand-primary-rgb, lo setea
      OrgBrandTheme). Fallback a blanco muy sutil si la org no tiene brand_colors. */
   box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 2px 12px rgba(0, 0, 0, 0.35),
+    0 24px 60px -24px rgba(0, 0, 0, 0.65),
     0 8px 40px -10px rgba(var(--brand-primary-rgb, 255, 255, 255), 0.28);
 }
 .gpt-composer:focus-within {
   border-color: rgba(var(--brand-primary-rgb, 255, 255, 255), 0.35);
   box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 2px 12px rgba(0, 0, 0, 0.35),
+    0 24px 60px -24px rgba(0, 0, 0, 0.65),
     0 10px 52px -8px rgba(var(--brand-primary-rgb, 255, 255, 255), 0.42);
 }
 
