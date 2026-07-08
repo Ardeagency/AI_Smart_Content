@@ -2863,6 +2863,20 @@ class Navigation {
         this.refreshVeraPulse();
       });
     }
+
+    // Sondeo ligero para que una notificacion recien creada por Vera (nuevo
+    // hilo iniciado por ella) se refleje pronto — badge de la campana + latido
+    // del boton Vera — aunque el usuario este quieto en una pagina. Solo con la
+    // pestaña visible, para no consultar en background. Navigation es singleton
+    // (vive toda la sesion), asi que el intervalo no fuga.
+    if (!this._notificationsPollAttached) {
+      this._notificationsPollAttached = true;
+      setInterval(() => {
+        if (document.hidden) return;
+        this.refreshNotificationsBadge();
+        this.refreshVeraPulse();
+      }, 60000);
+    }
   }
 
   /**
