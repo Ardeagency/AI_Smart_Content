@@ -2244,25 +2244,26 @@
   overflow: hidden;
 }
 
-/* Fondo del chat: el DEGRADADO DINAMICO de la marca (--brand-gradient-dynamic,
-   los colores reales de brand_colors via OrgBrandTheme) pintado como color, y
-   recortado a un DOMO tipo sol con una MASCARA radial anclada arriba-centro. Sin
-   velo oscuro encima (eso embarraba el tono): la marca se ve vivida en el domo y
-   se funde a transparente -> deja ver el fondo oscuro de la app hacia abajo/bordes,
-   igual que el Frame. z-index:-1 lo deja dentro del stacking context de .gpt-main
-   (position:relative; z-index:1), sobre el fondo pero detras del contenido.
-   Intensidad plena en la bienvenida; atenuado en conversacion. */
+/* Fondo del chat = radial exacto del Frame 98, 4 paradas:
+   color MAS CLARO de la marca (0%) -> color MAS OSCURO de la marca (30.29%)
+   -> #141517 (74.04%) -> #000000 (100%).
+   --brand-color-light / --brand-color-dark los publica OrgBrandTheme calculando el
+   color mas claro y mas oscuro de brand_colors por luminosidad (dinamico por org).
+   Fallback naranja de referencia (#F79E1B / #FF5F00) si la org no tiene brand_colors.
+   z-index:-1 lo deja dentro del stacking context de .gpt-main (position:relative;
+   z-index:1), sobre el fondo pero detras del contenido. Intensidad plena en la
+   bienvenida; atenuado en conversacion. */
 .gpt-main::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: var(--brand-gradient-dynamic, linear-gradient(135deg, #F79E1B, #FF5F00));
-  -webkit-mask-image: radial-gradient(95% 82% at 50% 2%,
-    #000 0%, #000 24%, rgba(0, 0, 0, 0.42) 48%, transparent 68%);
-  mask-image: radial-gradient(95% 82% at 50% 2%,
-    #000 0%, #000 24%, rgba(0, 0, 0, 0.42) 48%, transparent 68%);
+  background: radial-gradient(110.4% 110.4% at 50% -10.4%,
+    var(--brand-color-light, #F79E1B) 0%,
+    var(--brand-color-dark, #FF5F00) 30.29%,
+    #141517 74.04%,
+    #000000 100%);
   opacity: 0.6;
 }
 /* En la bienvenida (home) el fondo va a intensidad plena, como en la referencia. */

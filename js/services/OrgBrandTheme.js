@@ -86,6 +86,8 @@
     root.style.removeProperty('--brand-primary-brillo-strong');
     root.style.removeProperty('--brand-gradient-dynamic');
     root.style.removeProperty('--brand-gradient-dynamic-vertical');
+    root.style.removeProperty('--brand-color-light');
+    root.style.removeProperty('--brand-color-dark');
   }
 
   /**
@@ -129,6 +131,19 @@
         root.style.setProperty('--brand-primary-brillo-strong', hexToRgba(palette.primary, 0.18));
       }
     }
+
+    // Color mas claro y mas oscuro de la marca (por luminosidad HSL). Los usa el
+    // fondo radial del chat de Vera: nucleo = mas claro -> mas oscuro -> #141517 -> #000.
+    try {
+      const withL = hexes
+        .map((hx) => ({ hex: hx, l: (hexToHSL(hx) || {}).l }))
+        .filter((o) => typeof o.l === 'number' && !Number.isNaN(o.l));
+      if (withL.length) {
+        withL.sort((a, b) => a.l - b.l);
+        root.style.setProperty('--brand-color-dark', withL[0].hex);
+        root.style.setProperty('--brand-color-light', withL[withL.length - 1].hex);
+      }
+    } catch (e) { /* si falla, el CSS usa el fallback naranja de referencia */ }
   }
 
   window.OrgBrandTheme = {
