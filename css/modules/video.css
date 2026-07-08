@@ -3111,6 +3111,12 @@
   scrollbar-width: thin;
   scrollbar-color: var(--white-10) transparent;
 }
+/* El foco del composer ya se comunica con .gpt-composer:focus-within (borde
+   sutil). El outline naranja de la baseline a11y (*:focus-visible ->
+   --accent-brand) se ve mal encajonando el textarea, asi que lo anulamos solo
+   aqui. Specificity 0,0,2,0 gana a textarea:focus-visible (0,0,1,1). */
+.gpt-composer-textarea:focus,
+.gpt-composer-textarea:focus-visible { outline: none; }
 .gpt-composer-textarea::placeholder { color: var(--text-muted); }
 .gpt-composer-textarea::-webkit-scrollbar { width: 3px; }
 .gpt-composer-textarea::-webkit-scrollbar-thumb { background: var(--white-10); border-radius: 2px; }
