@@ -3489,7 +3489,8 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 .strat-stat-lbl { font-size: 0.5625rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
 
 /* Cards de recomendacion — carrusel horizontal premium */
-.strat-carousel { position: relative; }
+/* Canaletas laterales: las flechas viven FUERA de las cards, nunca tapan contenido */
+.strat-carousel { position: relative; padding-inline: 46px; }
 /* Flechas de navegacion (glass — permitido en botones) */
 .strat-nav {
   position: absolute; top: 50%; transform: translateY(-50%);
@@ -3503,10 +3504,15 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
   transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.14s ease;
 }
 .strat-nav i { font-size: 0.95rem; }
-.strat-nav--prev { left: -6px; }
-.strat-nav--next { right: -6px; }
+.strat-nav--prev { left: 0; }
+.strat-nav--next { right: 0; }
 .strat-nav:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.18); }
 .strat-nav:active { transform: translateY(-50%) scale(0.92); }
+/* En pantallas angostas: sin canaletas, swipe tactil (las flechas estorban) */
+@media (max-width: 680px) {
+  .strat-carousel { padding-inline: 0; }
+  .strat-nav { display: none; }
+}
 .strat-carousel.is-scrollable .strat-nav { opacity: 1; pointer-events: auto; }
 .strat-carousel.is-scrollable.at-start .strat-nav--prev { opacity: 0; pointer-events: none; }
 .strat-carousel.is-scrollable.at-end .strat-nav--next { opacity: 0; pointer-events: none; }
