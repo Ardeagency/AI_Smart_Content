@@ -2228,10 +2228,7 @@
   display: flex;
   width: 100%;
   height: calc(100dvh - var(--app-header-height, 45.8px));
-  /* Viñeta cinematografica: oscurece bordes/esquinas y enfoca el centro. */
-  background:
-    radial-gradient(135% 100% at 50% 18%, transparent 45%, rgba(0, 0, 0, 0.55) 100%),
-    var(--view-bg-base);
+  background: var(--view-bg-base);
   color: var(--text-primary);
   position: relative;
   overflow: hidden;
@@ -2247,39 +2244,27 @@
   overflow: hidden;
 }
 
-/* Luz ambiente del chat: BLOOM tipo "sol" anclado arriba-centro, tenido con el
-   color dinamico de marca (--brand-primary-rgb, lo setea OrgBrandTheme por org).
-   Tres capas: nucleo blanco-caliente + bloom de marca concentrado + halo ancho;
-   mascara vertical que cae a casi-negro abajo (encuadre cinematografico). z-index:-1
-   lo deja dentro del stacking context de .gpt-main (position:relative; z-index:1),
-   sobre el fondo pero detras del contenido. Fallback blanco si la org no tiene
-   brand_colors. La intensidad plena es para la bienvenida; en conversacion baja. */
+/* Fondo del chat = radial exacto del Frame 98 de Figma:
+   radial-gradient(95.36% 95.36% at 50% 4.64%, <marca> 0.96%, #141517 67.79%, #0B0B0B 100%)
+   El primer color es SIEMPRE el dinamico de marca (--brand-primary-rgb, lo setea
+   OrgBrandTheme por org); el naranja #FF8D28 es solo el fallback de referencia.
+   Sin nucleo blanco, sin saturate, sin blur: tono fiel al color de marca.
+   z-index:-1 lo deja dentro del stacking context de .gpt-main (position:relative;
+   z-index:1), sobre el fondo pero detras del contenido. Intensidad plena en la
+   bienvenida; atenuado en conversacion para no competir con la lectura. */
 .gpt-main::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 130%;
-  height: 90%;
+  inset: 0;
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(20% 16% at 50% 7%, rgba(255, 255, 255, 0.42) 0%, transparent 62%),
-    radial-gradient(46% 42% at 50% 6%,
-      rgba(var(--brand-primary-rgb, 255, 255, 255), 0.95) 0%,
-      rgba(var(--brand-primary-rgb, 255, 255, 255), 0.5) 26%,
-      rgba(var(--brand-primary-rgb, 255, 255, 255), 0.2) 46%,
-      transparent 66%),
-    radial-gradient(90% 70% at 50% 2%,
-      rgba(var(--brand-primary-rgb, 255, 255, 255), 0.32) 0%,
-      transparent 64%);
-  opacity: 0.4;
-  filter: blur(26px) saturate(1.18);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.82) 42%, transparent 84%);
-  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.82) 42%, transparent 84%);
+  background: radial-gradient(95.36% 95.36% at 50% 4.64%,
+    rgb(var(--brand-primary-rgb, 255, 141, 40)) 0.96%,
+    #141517 67.79%,
+    #0B0B0B 100%);
+  opacity: 0.55;
 }
-/* En la bienvenida (home) el bloom va a intensidad plena, como en la referencia. */
+/* En la bienvenida (home) el fondo va a intensidad plena, como en la referencia. */
 .gpt-main.is-welcome::before { opacity: 1; }
 
 /* Grano de pelicula: textura de ruido muy sutil sobre el fondo (atmosfera
