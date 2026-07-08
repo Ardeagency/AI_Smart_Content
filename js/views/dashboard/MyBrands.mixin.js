@@ -23,11 +23,14 @@
   /**
    * Feature flag: ocultar cards que no tienen datos.
    *
-   * Default TRUE en producción — toda card sin datos se oculta (blanco total).
-   * Escape hatch de dev para VER el shape con todas las cards, sin redeploy:
-   *   window.MB_HIDE_EMPTY_CARDS = false; (luego re-renderizar tab)
+   * Default FALSE en estado de creación del dashboard — todas las cards deben
+   * verse aunque estén vacías para que el equipo entienda el shape final.
+   *
+   * Para activar en producción: cambiar HIDE_EMPTY_DEFAULT a true.
+   * Para probar puntualmente sin redeploy: en la consola del navegador
+   *   window.MB_HIDE_EMPTY_CARDS = true; (luego re-renderizar tab)
    */
-  const HIDE_EMPTY_DEFAULT = true;
+  const HIDE_EMPTY_DEFAULT = false;
   const shouldHideEmpty = () =>
     (typeof window !== 'undefined' && typeof window.MB_HIDE_EMPTY_CARDS === 'boolean')
       ? window.MB_HIDE_EMPTY_CARDS
@@ -307,10 +310,8 @@
       // de salud dejo de ser hero del cuerpo y vive solo en el sidebar.
       return `
         <div class="insight-page mb-dash" id="mbPage">
-          ${this._buildVerdictBlock(data)}
           <div class="mb-layout">
             <div class="mb-layout-main">
-              ${this._buildSwotCard(data)}
               ${this._buildLongitudinalSection(data)}
               ${this._buildToneTopicSection(data?.featured)}
               ${this._buildCommentsSection(data)}
@@ -1792,85 +1793,11 @@
         </div>`;
     },
 
-    /** Humaniza un valor crudo de BD (enum con guiones bajos) para mostrarlo:
-        "salud_nutricion" -> "salud nutricion". No capitaliza (se usa embebido). */
-    _humanTerm(s) {
-      return String(s || '').replace(/_/g, ' ').trim();
-    },
-
     /** Formatea el valor de la dimension para mostrar. */
     _causalValueLabel(dim, val) {
       if (dim === 'horario') return `${val}`;
       const s = String(val || '').replace(/_/g, ' ');
       return s.charAt(0).toUpperCase() + s.slice(1);
-    },
-
-    /* ════════════════════════════════════════════════════════════════
-       Veredicto de marca (Bloque 1 del command center)
-       El juicio va PRIMERO y en voz de consultor: sintesis narrativa por
-       encima de los numeros. Reemplaza el "score 78/100" como titular. El
-       dato baja a evidencia (chips). LLM-ready: si Vera ya sintetizo el
-       veredicto (Fase 2) se usa tal cual; si no, se compone por reglas SOLO
-       con dato real (cero datos inventados). Sin tendencia hasta tener
-       comparacion periodo-vs-periodo real (Fase 2).
-       ════════════════════════════════════════════════════════════════ */
-    _buildVerdictBlock(data) {
-      const h = data?.health?.data || null;
-      const llm = data?.verdict?.narrative || data?.verdict?.text || null;
-
-      const virt = this._deriveVirtudes(data) || [];
-      const vuln = this._deriveVulnerabilidades(data) || [];
-      const insights = Array.isArray(data?.whatWorks?.data) ? data.whatWorks.data : [];
-      let moves = null;
-      try { moves = this._computeActionPlanItems(data, insights); } catch (_) { moves = null; }
-      const opp = moves && moves.optimiza ? moves.optimiza : null;
-
-      const hasSignal = (h && h.score != null && !h.insufficient_data) || virt.length > 0 || vuln.length > 0;
-      if (!llm && !hasSignal) {
-        if (shouldHideEmpty()) return '';
-        return `
-          <section class="mb-verdict mb-verdict--empty">
-            <span class="mb-verdict-kicker">${__('Veredicto de marca')}</span>
-            <p class="mb-verdict-lead">${__('Aún no hay señales suficientes para un veredicto. Conecta tus cuentas y publica en la ventana para que Vera lea tu marca.')}</p>
-          </section>`;
-      }
-
-      let bodyHtml;
-      if (llm) {
-        bodyHtml = `<p class="mb-verdict-lead">${this._esc(llm)}</p>`;
-      } else {
-        const verdict = (h && h.verdict) || null;
-        const stateSay = {
-          elite:     __('está en la élite de su segmento'),
-          saludable: __('está saludable para su segmento'),
-          atencion:  __('necesita atención'),
-          critico:   __('está en estado crítico'),
-        }[verdict] || null;
-        const lc = (s) => this._esc(String(s || '').replace(/_/g, ' ').trim().toLowerCase());
-        const parts = [];
-        if (stateSay) parts.push(`<strong>${__('Tu marca')} ${stateSay}</strong>.`);
-        if (virt[0] && virt[0].label) parts.push(__('Tu mayor fortaleza: {v}.', { v: lc(virt[0].label) }));
-        if (vuln[0] && vuln[0].label) parts.push(__('Tu mayor riesgo: {v}.', { v: lc(vuln[0].label) }));
-        if (opp && opp.title) parts.push(__('La jugada clara ahora: {o}.', { o: lc(opp.title) }));
-        if (!parts.length) parts.push(__('Vera está leyendo tu marca; aún componiendo el veredicto.'));
-        bodyHtml = `<p class="mb-verdict-lead">${parts.join(' ')}</p>`;
-      }
-
-      // Numeros subordinados: evidencia, no titular.
-      const chip = (label, val) => `<span class="mb-verdict-chip"><span class="mb-verdict-chip-label">${label}</span><span class="mb-verdict-chip-val">${val}</span></span>`;
-      const chips = [];
-      if (h && h.score != null) chips.push(chip(__('Salud'), `${Math.round(Number(h.score))}/100`));
-      if (h && h.own_posts != null) chips.push(chip(__('Posts propios'), fmt.int(h.own_posts)));
-      const win = this._mbFilters && this._mbFilters.windowDays;
-      if (win) chips.push(chip(__('Ventana'), win >= 3650 ? __('Todo el historial') : __('{n} días', { n: win })));
-      const evidence = chips.length ? `<div class="mb-verdict-evidence">${chips.join('')}</div>` : '';
-
-      return `
-        <section class="mb-verdict">
-          <span class="mb-verdict-kicker">${__('Veredicto de marca')}</span>
-          ${bodyHtml}
-          ${evidence}
-        </section>`;
     },
 
     /* ════════════════════════════════════════════════════════════════
@@ -1955,7 +1882,7 @@
       const topic = (featured.topic?.data || [])[0];
       if (topic?.topic) {
         out.push({
-          label:  __('Tema "{s}"', { s: this._humanTerm(topic.topic) }),
+          label:  __('Tema "{s}"', { s: topic.topic }),
           tag:    __('{n} eng', { n: this._compactNum(topic.total_engagement) }),
           detail: __('Tu tema más exitoso en la ventana — {n} posts.', { n: topic.usage_count }),
         });
@@ -1963,7 +1890,7 @@
       const tone = (featured.tones?.data || [])[0];
       if (tone?.tone_name) {
         out.push({
-          label:  __('Tono "{s}"', { s: this._humanTerm(tone.tone_name) }),
+          label:  __('Tono "{s}"', { s: tone.tone_name }),
           tag:    __('{n} eng', { n: this._compactNum(tone.total_engagement) }),
           detail: __('Tu tono más efectivo — {n} posts conectan con tu audiencia.', { n: tone.posts_count }),
         });

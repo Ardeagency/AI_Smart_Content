@@ -2342,43 +2342,6 @@
 .mb-swot-item-detail { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; margin: 0; }
 .mb-swot-empty { font-size: 0.8125rem; color: var(--text-muted); padding: 0.75rem; text-align: center; }
 
-/* ── Veredicto de marca (Bloque 1): voz de consultor, va PRIMERO ──────
-   El juicio arriba en serif (voz de Vera); los numeros bajan a evidencia
-   (chips). Reemplaza el "score 78/100" como titular del dashboard. */
-.mb-verdict {
-  position: relative;
-  background: linear-gradient(180deg, rgba(255,255,255,0.032), rgba(255,255,255,0) 55%), rgba(14,14,16,0.46);
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 16px;
-  padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2.25rem);
-  margin-bottom: 1rem;
-}
-.mb-verdict-kicker {
-  display: inline-block;
-  font-size: 0.625rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--text-muted, rgba(212,209,216,0.55));
-  margin-bottom: 0.8rem;
-}
-.mb-verdict-lead {
-  font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
-  font-size: clamp(1.125rem, 2.4vw, 1.5rem);
-  line-height: 1.45;
-  letter-spacing: -0.01em;
-  color: var(--text-primary, #D4D1D8);
-  margin: 0;
-  max-width: 64ch;
-}
-.mb-verdict-lead strong { font-weight: 700; color: #fff; }
-.mb-verdict--empty .mb-verdict-lead { font-size: 1.0625rem; color: var(--text-secondary, rgba(212,209,216,0.8)); }
-.mb-verdict-evidence { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.15rem; }
-.mb-verdict-chip {
-  display: inline-flex; align-items: baseline; gap: 0.4rem;
-  padding: 0.32rem 0.65rem; border-radius: 8px;
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-}
-.mb-verdict-chip-label { font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted, rgba(212,209,216,0.55)); }
-.mb-verdict-chip-val { font-size: 0.8125rem; font-weight: 700; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
-
 /* ── Filtros ──────────────────────────────────────────────────────── */
 .mb-filters-bar { margin: 0; gap: 0.6rem; }
 
