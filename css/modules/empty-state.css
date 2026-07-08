@@ -87,6 +87,14 @@
   color: var(--text-primary, #D4D1D8);
   opacity: 0.92;
 }
+/* Iconos del sistema aisc-ico son MASCARAS (no glyphs): ignoran font-size y se
+   escalan a su width/height. El width/height:100% de arriba (pensado para el glyph
+   de Font Awesome) los inflaba a 76px llenando el medallon y tocando los bordes.
+   Los fijamos a 30px (como .ple-medallion-img) y el flex del medallon los centra. */
+.ple-medallion i.aisc-ico {
+  width: 30px;
+  height: 30px;
+}
 .ple-medallion-img {
   width: 30px;
   height: 30px;
