@@ -2247,31 +2247,40 @@
   overflow: hidden;
 }
 
-/* Luz ambiente del chat: reusa el DEGRADADO DINAMICO de marca
-   (--brand-gradient-dynamic, el que OrgBrandTheme adapta por organizacion)
-   como fuente de luz, anclada ARRIBA-centro (no abajo). Muy difuminada + mascara
-   radial que la desvanece hacia abajo y a los lados: lee como resplandor, no como
-   banda. z-index:-1 la deja dentro del stacking context de .gpt-main (que ya es
-   position:relative; z-index:1), por encima del fondo pero detras del contenido.
-   Fallback azul/cian/violeta para orgs sin brand_colors. */
+/* Luz ambiente del chat: BLOOM tipo "sol" anclado arriba-centro, tenido con el
+   color dinamico de marca (--brand-primary-rgb, lo setea OrgBrandTheme por org).
+   Tres capas: nucleo blanco-caliente + bloom de marca concentrado + halo ancho;
+   mascara vertical que cae a casi-negro abajo (encuadre cinematografico). z-index:-1
+   lo deja dentro del stacking context de .gpt-main (position:relative; z-index:1),
+   sobre el fondo pero detras del contenido. Fallback blanco si la org no tiene
+   brand_colors. La intensidad plena es para la bienvenida; en conversacion baja. */
 .gpt-main::before {
   content: '';
   position: absolute;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 140%;
-  height: 60%;
+  width: 130%;
+  height: 90%;
   z-index: -1;
   pointer-events: none;
-  background: var(--brand-gradient-dynamic, linear-gradient(135deg, #3b82f6, #22d3ee, #8b5cf6));
-  opacity: 0.22;
-  filter: blur(64px) saturate(1.1);
-  -webkit-mask-image: radial-gradient(80% 100% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 75%);
-  mask-image: radial-gradient(80% 100% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 75%);
+  background:
+    radial-gradient(20% 16% at 50% 7%, rgba(255, 255, 255, 0.42) 0%, transparent 62%),
+    radial-gradient(46% 42% at 50% 6%,
+      rgba(var(--brand-primary-rgb, 255, 255, 255), 0.95) 0%,
+      rgba(var(--brand-primary-rgb, 255, 255, 255), 0.5) 26%,
+      rgba(var(--brand-primary-rgb, 255, 255, 255), 0.2) 46%,
+      transparent 66%),
+    radial-gradient(90% 70% at 50% 2%,
+      rgba(var(--brand-primary-rgb, 255, 255, 255), 0.32) 0%,
+      transparent 64%);
+  opacity: 0.4;
+  filter: blur(26px) saturate(1.18);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.82) 42%, transparent 84%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.82) 42%, transparent 84%);
 }
-/* En la bienvenida (home) la luz sube un poco de intensidad, como en la referencia. */
-.gpt-main.is-welcome::before { opacity: 0.3; }
+/* En la bienvenida (home) el bloom va a intensidad plena, como en la referencia. */
+.gpt-main.is-welcome::before { opacity: 1; }
 
 /* Grano de pelicula: textura de ruido muy sutil sobre el fondo (atmosfera
    cinematografica). z-index:-1 -> queda detras del contenido, no afecta lectura. */
@@ -2690,10 +2699,13 @@
 }
 .gpt-welcome-mark--wordmark img {
   width: auto;
-  height: 44px;
-  filter: drop-shadow(0 6px 26px rgba(0, 0, 0, 0.5));
+  height: 68px;
+  filter: drop-shadow(0 8px 30px rgba(0, 0, 0, 0.5));
   /* Flotacion sutil (respiracion) para dar vida al logotipo. */
   animation: veraFloat 6s ease-in-out 800ms infinite;
+}
+@media (max-width: 768px) {
+  .gpt-welcome-mark--wordmark img { height: 52px; }
 }
 
 /* ── Saludo dinamico: barrido de luz (tinte de marca) cruzando el texto ── */
