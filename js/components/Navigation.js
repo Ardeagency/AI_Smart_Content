@@ -16,6 +16,7 @@ const SIDEBAR_USER_CONFIG = {
       route: 'vera',
       primary: true,
       hideLabel: true,
+      navId: 'navVeraLink',
       navIconClass: 'nav-icon-img--vera-logo',
       requireCap: 'vera.chat'
     },
@@ -450,6 +451,9 @@ class Navigation {
     if (config.showHeader) {
       this.refreshNotificationsBadge();
       this.refreshActivityBadge();
+    }
+    if (config.showSidebar) {
+      this.refreshVeraPulse();
     }
     this.initialized = true;
     await Promise.allSettled(dataTasks);
@@ -1206,7 +1210,12 @@ class Navigation {
         : {},
       // Legacy compat
       message:      n.body || '',
-      link_to:      this._resolveActionUrl(n.action_url),
+      // Notificaciones de conversacion iniciada por Vera: redirigen al hilo
+      // (?c=<id>) usando el conversation_id del metadata, sin depender de que
+      // el action_url del backend traiga la ruta correcta.
+      link_to:      (md.conversation_id && (n.type === 'vera_message' || n.type === 'vera_conversation'))
+                      ? this._resolveActionUrl(`/vera?c=${md.conversation_id}`)
+                      : this._resolveActionUrl(n.action_url),
       action_label: n.action_label || '',
       metadata:     md,
     };
@@ -1780,6 +1789,26 @@ class Navigation {
           .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
       : 'org';
     return `/org/${shortId}/${slug}${path}`;
+  }
+
+  /**
+   * Latido del boton Vera del sidebar: si Vera INICIO una conversacion que el
+   * usuario aun no ha leido (notificacion type=vera_message sin leer), el boton
+   * pulsa con un brillo de marca para que el usuario entienda que ella le
+   * escribio. Se apaga cuando ya no quedan mensajes de Vera sin leer.
+   */
+  async refreshVeraPulse() {
+    const link = document.getElementById('navVeraLink');
+    if (!link) return;
+    try {
+      const unread = await this._orgNotificationsList('unread', 30);
+      const hasVeraMsg = Array.isArray(unread) && unread.some(
+        (n) => n && (n.type === 'vera_message' || n.type === 'vera_conversation')
+      );
+      link.classList.toggle('nav-link--vera-pulse', hasVeraMsg);
+    } catch (_) {
+      link.classList.remove('nav-link--vera-pulse');
+    }
   }
 
   async refreshNotificationsBadge() {
@@ -2829,7 +2858,10 @@ class Navigation {
 
     if (!this._notificationsUpdatedAttached) {
       this._notificationsUpdatedAttached = true;
-      document.addEventListener('notifications-updated', () => this.refreshNotificationsBadge());
+      document.addEventListener('notifications-updated', () => {
+        this.refreshNotificationsBadge();
+        this.refreshVeraPulse();
+      });
     }
   }
 
