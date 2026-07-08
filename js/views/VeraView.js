@@ -1195,6 +1195,8 @@ function buildEChartsOption(rawSpec) {
 // renderChartBlock() / renderButtonsBlock() / hook post-render Mermaid.
 
 const VERA_AVATAR_SRC = '/recursos/vera/Vera.svg';
+// Logotipo completo (wordmark) para el hero de bienvenida: transparente, sin caja.
+const VERA_WORDMARK_SRC = '/recursos/vera/Vera-2.svg';
 
 /** URL del chat: ai-engine externo o Netlify Function en el mismo origen */
 function getAiChatUrl() {
@@ -2491,6 +2493,86 @@ class VeraView extends (window.BaseView || class {}) {
   _setWelcomeMode(on) {
     const main = document.getElementById('gptMain');
     if (main) main.classList.toggle('is-welcome', !!on);
+    // Al salir de la bienvenida: parar la rotacion del subtitulo y quitar los chips.
+    if (!on) {
+      this._stopSubtitleRotation();
+      document.getElementById('veraQuickSuggest')?.remove();
+    }
+  }
+
+  // Saludo segun la hora local del usuario (mas "vivo" que un "Hola" fijo).
+  _timeGreeting() {
+    const h = new Date().getHours();
+    if (h < 12) return __('Buenos días');
+    if (h < 19) return __('Buenas tardes');
+    return __('Buenas noches');
+  }
+
+  // Frases que rota el subtitulo de bienvenida.
+  _welcomePhrases() {
+    return [
+      __('¿En qué puedo ayudarte hoy?'),
+      __('Puedo analizar tu marca y tu competencia.'),
+      __('Pídeme ideas de contenido o una campaña.'),
+      __('Dime qué quieres lograr y lo resolvemos.'),
+    ];
+  }
+
+  _startSubtitleRotation() {
+    this._stopSubtitleRotation();
+    const phrases = this._welcomePhrases();
+    if (phrases.length < 2) return;
+    let i = 0;
+    this._welcomeSubTimer = setInterval(() => {
+      const el = document.getElementById('veraWelcomeSub');
+      // Auto-limpieza si el subtitulo ya no esta en el DOM (salio de la bienvenida).
+      if (!el || !el.isConnected) { this._stopSubtitleRotation(); return; }
+      i = (i + 1) % phrases.length;
+      el.classList.add('is-swapping');
+      setTimeout(() => {
+        el.textContent = phrases[i];
+        el.classList.remove('is-swapping');
+      }, 260);
+    }, 3800);
+  }
+
+  _stopSubtitleRotation() {
+    if (this._welcomeSubTimer) {
+      clearInterval(this._welcomeSubTimer);
+      this._welcomeSubTimer = null;
+    }
+  }
+
+  // Opciones seleccionables debajo del input (composer). Al hacer clic, envian.
+  _renderQuickSuggestions() {
+    const wrap = document.getElementById('chatInputOverlay');
+    if (!wrap) return;
+    this._quickItems = [
+      { label: __('Analiza mi marca'), prompt: __('Analiza el estado de mi marca y dame los puntos clave.') },
+      { label: __('Ideas de contenido'), prompt: __('Dame 5 ideas de contenido para esta semana.') },
+      { label: __('¿Cómo va mi pauta?'), prompt: __('¿Cómo va el rendimiento de mis campañas activas?') },
+      { label: __('Analiza mi competencia'), prompt: __('Analiza a mis competidores y qué están haciendo.') },
+    ];
+    let box = document.getElementById('veraQuickSuggest');
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'gpt-quick-suggest';
+      box.id = 'veraQuickSuggest';
+      wrap.appendChild(box); // queda debajo del .gpt-composer
+    }
+    box.innerHTML = this._quickItems
+      .map((it, idx) => `<button type="button" class="gpt-quick-chip" data-idx="${idx}">${escapeHtml(it.label)}</button>`)
+      .join('');
+    if (!box.__bound) {
+      box.__bound = true;
+      box.addEventListener('click', (e) => {
+        const btn = e.target.closest('.gpt-quick-chip');
+        if (!btn) return;
+        const idx = Number(btn.getAttribute('data-idx'));
+        const item = (this._quickItems || [])[idx];
+        if (item) this.sendMessage(item.prompt.trim());
+      });
+    }
   }
 
   renderWelcome() {
@@ -2498,16 +2580,20 @@ class VeraView extends (window.BaseView || class {}) {
     if (!list) return;
     this._setWelcomeMode(true);
     const name = this._greetingName();
-    const greeting = name ? __('Hola, {nombre}', { nombre: escapeHtml(name) }) : __('Hola');
+    const salute = this._timeGreeting();
+    const greeting = name ? `${salute}, ${escapeHtml(name)}` : salute;
+    const phrases = this._welcomePhrases();
     list.innerHTML = `
       <div class="gpt-welcome gpt-welcome--hero">
-        <div class="gpt-welcome-mark">
-          <img src="${VERA_AVATAR_SRC}" alt="Vera" width="60" height="60" decoding="async" />
+        <div class="gpt-welcome-mark gpt-welcome-mark--wordmark">
+          <img src="${VERA_WORDMARK_SRC}" alt="Vera" height="44" decoding="async" />
         </div>
-        <h1 class="gpt-welcome-title">${greeting}</h1>
-        <p class="gpt-welcome-subtitle">${__('¿En qué puedo ayudarte hoy?')}</p>
+        <h1 class="gpt-welcome-title gpt-welcome-title--anim">${greeting}</h1>
+        <p class="gpt-welcome-subtitle" id="veraWelcomeSub">${escapeHtml(phrases[0])}</p>
       </div>
     `;
+    this._startSubtitleRotation();
+    this._renderQuickSuggestions();
   }
 
   _bindTaskEvents() {

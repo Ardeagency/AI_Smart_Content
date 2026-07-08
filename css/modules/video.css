@@ -2640,6 +2640,94 @@
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Logo Vera como wordmark (Vera-2.svg): SIN fondo ni caja, transparente ── */
+.gpt-welcome-mark--wordmark {
+  width: auto;
+  height: auto;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  margin-bottom: 20px;
+}
+.gpt-welcome-mark--wordmark img {
+  width: auto;
+  height: 44px;
+  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.45));
+}
+
+/* ── Saludo dinamico: barrido de luz (tinte de marca) cruzando el texto ── */
+.gpt-welcome-title--anim {
+  background: linear-gradient(100deg,
+    var(--text-primary) 0%,
+    var(--text-primary) 36%,
+    rgba(var(--brand-primary-rgb, 255, 255, 255), 0.98) 50%,
+    var(--text-primary) 64%,
+    var(--text-primary) 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation:
+    veraWelcomeIn 460ms cubic-bezier(0.33, 0, 0.2, 1) 60ms both,
+    veraTitleSheen 6s ease-in-out 600ms infinite;
+}
+@keyframes veraTitleSheen {
+  0%   { background-position: 120% 0; }
+  100% { background-position: -20% 0; }
+}
+
+/* Subtitulo rotatorio: fade + leve translate al intercambiar la frase (JS) */
+.gpt-welcome-subtitle {
+  transition: opacity 0.26s ease, transform 0.26s ease;
+}
+.gpt-welcome-subtitle.is-swapping {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+/* ── Opciones seleccionables debajo del input (solo en la bienvenida) ── */
+.gpt-quick-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 768px;
+  margin-top: 10px;
+  animation: veraWelcomeIn 460ms cubic-bezier(0.33, 0, 0.2, 1) 180ms both;
+}
+.gpt-main:not(.is-welcome) .gpt-quick-suggest { display: none; }
+.gpt-quick-chip {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.10));
+  background: var(--glass-bg, rgba(255, 255, 255, 0.04));
+  color: var(--text-secondary, #b8b8bd);
+  font-size: 0.875rem;
+  font-family: var(--font-family);
+  line-height: 1.2;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+}
+.gpt-quick-chip:hover {
+  background: var(--white-8, rgba(255, 255, 255, 0.08));
+  color: var(--text-primary);
+  border-color: rgba(var(--brand-primary-rgb, 255, 255, 255), 0.3);
+  transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gpt-welcome-title--anim {
+    animation: veraWelcomeIn 460ms cubic-bezier(0.33, 0, 0.2, 1) 60ms both;
+    -webkit-text-fill-color: var(--text-primary);
+    color: var(--text-primary);
+  }
+  .gpt-quick-suggest { animation: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .gpt-welcome-mark,
   .gpt-welcome--hero .gpt-welcome-title,
@@ -3113,11 +3201,18 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: border-color 0.15s;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.15s, box-shadow 0.2s;
+  /* Sombra tenida con el color dinamico de marca (--brand-primary-rgb, lo setea
+     OrgBrandTheme). Fallback a blanco muy sutil si la org no tiene brand_colors. */
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.35),
+    0 8px 40px -10px rgba(var(--brand-primary-rgb, 255, 255, 255), 0.28);
 }
 .gpt-composer:focus-within {
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(var(--brand-primary-rgb, 255, 255, 255), 0.35);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.35),
+    0 10px 52px -8px rgba(var(--brand-primary-rgb, 255, 255, 255), 0.42);
 }
 
 .gpt-composer-textarea {
@@ -6124,8 +6219,8 @@
     pointer-events: none;
     z-index: 0;
     background-image:
-        radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1.2px),
-        radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.2px);
+        radial-gradient(circle, rgba(255, 255, 255, 0.22) 1px, transparent 1.2px),
+        radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1.2px);
     background-size: 22px 22px, 22px 22px;
     background-position: 0 0, 11px 11px;
 }
@@ -6133,15 +6228,15 @@
 .gpt-layout::before {
     top: -100px;
     left: -100px;
-    -webkit-mask-image: radial-gradient(circle at 30% 30%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 60%);
-    mask-image: radial-gradient(circle at 30% 30%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 60%);
+    -webkit-mask-image: radial-gradient(circle at 30% 30%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+    mask-image: radial-gradient(circle at 30% 30%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
 }
 
 .gpt-layout::after {
     bottom: -100px;
     right: -100px;
-    -webkit-mask-image: radial-gradient(circle at 70% 70%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 60%);
-    mask-image: radial-gradient(circle at 70% 70%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 60%);
+    -webkit-mask-image: radial-gradient(circle at 70% 70%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+    mask-image: radial-gradient(circle at 70% 70%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
 }
 
 /* El contenido principal queda sobre los dots sin afectar interacción */
