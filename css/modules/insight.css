@@ -4008,13 +4008,15 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .insight-page.insight-page--hero { padding-top: 0; }
 
-/* Fondo del dashboard = mismo radial de marca que el chat de Vera (Frame 98):
-   marca clara (0%) -> marca oscura (30.29%) -> #141517 (74.04%) -> #000 (100%).
-   Va en el #app-container (el FONDO de la pagina, no el hero) y anclado al viewport
-   (background-attachment: fixed) para que la luz quede arriba mientras el contenido
-   scrollea, igual que el chat. --brand-color-light/-dark los publica OrgBrandTheme
-   por org; fallback naranja. El hero queda transparente para dejar ver este fondo. */
-#app-container:has(> .insight-page--hero) {
+/* Fondo del dashboard Y del centro de Monitoreo = mismo radial de marca que el
+   chat de Vera (Frame 98): marca clara (0%) -> marca oscura (30.29%) -> #141517
+   (74.04%) -> #000 (100%). Va en el #app-container (el FONDO de la pagina, no el
+   hero) y anclado al viewport (background-attachment: fixed) para que la luz quede
+   arriba mientras el contenido scrollea, igual que el chat. --brand-color-light/-dark
+   los publica OrgBrandTheme por org; fallback naranja. Las paginas (.dash-hero /
+   .monitoring-page) son transparentes para dejar ver este fondo. */
+#app-container:has(> .insight-page--hero),
+#app-container:has(> .monitoring-page) {
   background-color: #000000;
   background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
     var(--brand-color-light, #F79E1B) 0%,
