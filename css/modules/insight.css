@@ -4008,6 +4008,23 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .insight-page.insight-page--hero { padding-top: 0; }
 
+/* Fondo del dashboard = mismo radial de marca que el chat de Vera (Frame 98):
+   marca clara (0%) -> marca oscura (30.29%) -> #141517 (74.04%) -> #000 (100%).
+   Va en el #app-container (el FONDO de la pagina, no el hero) y anclado al viewport
+   (background-attachment: fixed) para que la luz quede arriba mientras el contenido
+   scrollea, igual que el chat. --brand-color-light/-dark los publica OrgBrandTheme
+   por org; fallback naranja. El hero queda transparente para dejar ver este fondo. */
+#app-container:has(> .insight-page--hero) {
+  background-color: #000000;
+  background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
+    var(--brand-color-light, #F79E1B) 0%,
+    var(--brand-color-dark, #FF5F00) 30.29%,
+    #141517 74.04%,
+    #000000 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
 .dash-hero {
   position: relative;
   /* Sin overflow:hidden → los dropdowns (date picker, Crear informe) pueden
@@ -4030,23 +4047,16 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
    router limpia --brand-gradient-dynamic antes del snapshot de la View
    Transition), el hero se mantiene oscuro/monocromo en vez de flashear el
    arcoiris chillon. */
-/* Mismo radial de marca que el chat de Vera (Frame 98): 4 paradas
-   color MAS CLARO de la marca (0%) -> MAS OSCURO (30.29%) -> #141517 (74.04%)
-   -> #000 (100%). --brand-color-light/-dark los publica OrgBrandTheme por org
-   (dinamico); fallback naranja de referencia. Las paradas #141517/#000 calzan con
-   los tokens de la pagina (card #141517 / fondo #0b0b0b), asi el hero se funde en
-   el fondo sin costura. Cubre todo el hero (inset:0) y hereda el redondeo. */
+/* El fondo radial de marca ahora vive en el #app-container (fondo de la pagina),
+   no en el hero. El hero queda TRANSPARENTE para dejarlo ver. Se mantiene el
+   elemento (inset:0) por si otras capas heredan su caja, pero sin color. */
 .dash-hero-grad {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    var(--brand-color-light, #F79E1B) 0%,
-    var(--brand-color-dark, #FF5F00) 30.29%,
-    #141517 74.04%,
-    #000000 100%);
+  background: transparent;
 }
 /* Marca de agua: logo de la org en la esquina SUPERIOR derecha del hero.
    Sobre el degradado pero debajo del contenido (z-index 0 < .dash-hero-inner).
