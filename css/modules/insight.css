@@ -4030,26 +4030,23 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
    router limpia --brand-gradient-dynamic antes del snapshot de la View
    Transition), el hero se mantiene oscuro/monocromo en vez de flashear el
    arcoiris chillon. */
-/* LUZ AMBIENTE (reusa el efecto del chat de Vera): en vez de rellenar el hero
-   con el degradado de marca a sangre (banda de color fuerte), lo usamos como
-   FUENTE DE LUZ anclada arriba-centro, muy difuminada + mascara radial que la
-   desvanece hacia abajo y los lados. Lee como resplandor, no como color. Asi la
-   seccion del hero queda sin color de fondo (hereda el fondo oscuro de la pagina)
-   y solo recibe un tinte de marca sutil desde arriba. Fallback neutral. */
+/* Mismo radial de marca que el chat de Vera (Frame 98): 4 paradas
+   color MAS CLARO de la marca (0%) -> MAS OSCURO (30.29%) -> #141517 (74.04%)
+   -> #000 (100%). --brand-color-light/-dark los publica OrgBrandTheme por org
+   (dinamico); fallback naranja de referencia. Las paradas #141517/#000 calzan con
+   los tokens de la pagina (card #141517 / fondo #0b0b0b), asi el hero se funde en
+   el fondo sin costura. Cubre todo el hero (inset:0) y hereda el redondeo. */
 .dash-hero-grad {
   position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 140%;
-  height: clamp(340px, 52vh, 620px);
+  inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: var(--brand-gradient-dynamic, linear-gradient(135deg, #3b82f6, #22d3ee, #8b5cf6));
-  opacity: 0.24;
-  filter: blur(64px) saturate(1.1);
-  -webkit-mask-image: radial-gradient(80% 100% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 75%);
-  mask-image: radial-gradient(80% 100% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 75%);
+  border-radius: inherit;
+  background: radial-gradient(110.4% 110.4% at 50% -10.4%,
+    var(--brand-color-light, #F79E1B) 0%,
+    var(--brand-color-dark, #FF5F00) 30.29%,
+    #141517 74.04%,
+    #000000 100%);
 }
 /* Marca de agua: logo de la org en la esquina SUPERIOR derecha del hero.
    Sobre el degradado pero debajo del contenido (z-index 0 < .dash-hero-inner).
