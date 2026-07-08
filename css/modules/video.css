@@ -2244,33 +2244,28 @@
   overflow: hidden;
 }
 
-/* Fondo del chat = radial del Frame 98 de Figma, pero el color es SIEMPRE el
-   dinamico de marca (--brand-primary-rgb, lo setea OrgBrandTheme por org), tal cual,
-   sin aclararlo hacia blanco (eso viraba el naranja a amarillo chillon) ni saturar.
-   El nucleo es el color de marca puro y la segunda parada el mismo color un poco
-   mas profundo (mezclado con el oscuro, NO con blanco), luego cae a #141517 -> #000.
-   Los hex #FF5F00/#141517 son solo fallback de referencia. z-index:-1 lo deja dentro
-   del stacking context de .gpt-main (position:relative; z-index:1), sobre el fondo
-   pero detras del contenido. Intensidad plena en la bienvenida; atenuado en chat. */
+/* Fondo del chat con la forma del Frame 98, PERO el color viene del DEGRADADO
+   DINAMICO de la marca: --brand-gradient-dynamic (linear-gradient con los colores
+   reales de brand_colors, lo construye OrgBrandTheme por org). Es la capa de color
+   de abajo; encima va una capa radial OSCURA que es transparente en el bloom de
+   arriba (deja ver el degradado) y se cierra a #141517 -> #000 hacia abajo/bordes
+   (la forma del sol del Frame). Asi respeta los colores de la marca, no un tono
+   inventado. z-index:-1 lo deja dentro del stacking context de .gpt-main
+   (position:relative; z-index:1), sobre el fondo pero detras del contenido.
+   Intensidad plena en la bienvenida; atenuado en conversacion. */
 .gpt-main::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  /* Fallback plano (sin color-mix): color de marca puro. */
-  background: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    rgb(var(--brand-primary-rgb, 255, 95, 0)) 0%,
-    rgb(var(--brand-primary-rgb, 255, 95, 0)) 30.29%,
-    #141517 74.04%,
-    #000000 100%);
-  /* Segunda parada = mismo color de marca, algo mas profundo (mezcla con el oscuro,
-     nunca con blanco): mantiene el TONO de la marca, solo baja luminosidad. */
-  background: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    rgb(var(--brand-primary-rgb, 255, 95, 0)) 0%,
-    color-mix(in srgb, rgb(var(--brand-primary-rgb, 255, 95, 0)) 85%, #141517) 30.29%,
-    #141517 74.04%,
-    #000000 100%);
+  background:
+    radial-gradient(110.4% 110.4% at 50% -10.4%,
+      rgba(20, 21, 23, 0) 0%,
+      rgba(20, 21, 23, 0) 30.29%,
+      #141517 74.04%,
+      #000000 100%),
+    var(--brand-gradient-dynamic, linear-gradient(135deg, #F79E1B, #FF5F00));
   opacity: 0.55;
 }
 /* En la bienvenida (home) el fondo va a intensidad plena, como en la referencia. */
