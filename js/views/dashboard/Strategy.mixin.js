@@ -39,6 +39,7 @@
         if (!this._shouldRepaint('strategy', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildStrategiaHtml(data);
         this._bindStrategyHandlers(body);
+        this._initStratCarousels(body);
       } catch (e) {
         console.error('[Strategy] load failed:', e);
         if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
@@ -199,7 +200,11 @@
             <span class="mb-section-title">${meta.title}</span>
             ${meta.hint ? `<span class="mb-section-hint">${meta.hint}</span>` : ''}
           </div>
-          <div class="strat-cards">${list.map(r => this._buildRecCard(r, status)).join('')}</div>
+          <div class="strat-carousel">
+            <button type="button" class="strat-nav strat-nav--prev" data-strat-scroll="-1" aria-label="${__('Anterior')}"><i class="aisc-ico aisc-ico--chevron-left"></i></button>
+            <div class="strat-cards">${list.map(r => this._buildRecCard(r, status)).join('')}</div>
+            <button type="button" class="strat-nav strat-nav--next" data-strat-scroll="1" aria-label="${__('Siguiente')}"><i class="aisc-ico aisc-ico--chevron-right"></i></button>
+          </div>
         </section>`;
     },
 
@@ -248,6 +253,16 @@
       if (!body || body.dataset.stratBound === '1') return;
       body.dataset.stratBound = '1';
       body.addEventListener('click', (e) => {
+        const nav = e.target.closest('[data-strat-scroll]');
+        if (nav) {
+          const track = nav.closest('.strat-carousel')?.querySelector('.strat-cards');
+          if (track) {
+            const card = track.querySelector('.strat-card');
+            const step = card ? card.getBoundingClientRect().width + 14 : track.clientWidth * 0.85;
+            track.scrollBy({ left: Number(nav.dataset.stratScroll) * step, behavior: 'smooth' });
+          }
+          return;
+        }
         const btn = e.target.closest('[data-rec-action]');
         if (!btn) return;
         const card = btn.closest('[data-rec-id]');
@@ -259,6 +274,28 @@
         if (el && el.dataset.stratFilter === 'status') {
           this._onStratFilterChange({ status: el.value || 'proposed' });
         }
+      });
+    },
+
+    // Estado de bordes del carrusel (oculta flecha al inicio/fin y ambas si no
+    // hay overflow). Se re-inicializa por elemento en cada render — el track es
+    // nuevo, asi que el listener/observer viejo se recoge con el nodo removido.
+    _initStratCarousels(scope) {
+      (scope || document).querySelectorAll('.strat-carousel').forEach((wrap) => {
+        if (wrap.dataset.carInit === '1') return;
+        wrap.dataset.carInit = '1';
+        const track = wrap.querySelector('.strat-cards');
+        if (!track) return;
+        const update = () => {
+          const max = track.scrollWidth - track.clientWidth;
+          const x = track.scrollLeft;
+          wrap.classList.toggle('is-scrollable', max > 4);
+          wrap.classList.toggle('at-start', x <= 2);
+          wrap.classList.toggle('at-end', x >= max - 2);
+        };
+        track.addEventListener('scroll', update, { passive: true });
+        if (typeof ResizeObserver === 'function') new ResizeObserver(update).observe(track);
+        update();
       });
     },
 
