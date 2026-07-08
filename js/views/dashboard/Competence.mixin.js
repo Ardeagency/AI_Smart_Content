@@ -13,7 +13,6 @@
   'use strict';
   if (typeof DashboardView === 'undefined') return;
 
-  const HIDE_EMPTY = false;
   const fmt = { int: (n) => (n == null ? '—' : Number(n).toLocaleString('es-CO')) };
 
   Object.assign(DashboardView.prototype, {
@@ -275,9 +274,7 @@
             <span class="mb-hero-label">${__('Observaciones')}</span>
             <span class="comp-obs-hint">${__('Lo más destacado de cada perfil')}</span>
           </div>`;
-      if (!list.length) {
-        return `<section class="mb-health-card mb-health-card--aside comp-obs-card">${head}<div class="comp-obs"><div class="mb-causal-empty">${__('Aún sin señales medibles en esta ventana.')}</div></div></section>`;
-      }
+      if (!list.length) return ''; // card vacía → se oculta
       const brandHex = this._readBrandHex();
       // Rol = seccion (competencia ≠ referente ≠ aliado); orden de secciones = prioridad
       // de rol (directo primero). Rango = etiqueta editable en otra pagina; nacional
@@ -501,42 +498,27 @@
       // ingesta ≠ medición). Un solo empty state con la causa + los perfiles
       // configurados como evidencia de que el radar existe.
       const hasActivity = list.some((r) => Number(r.total_posts) > 0 || Number(r.total_engagement) > 0);
-      if (!hasActivity) {
-        const chips = list.map((r) => {
-          const tipo = this._compTipoMeta(r.tipo);
-          return `<span class="comp-rank-tipo" style="--ct:${tipo.color};margin:2px 6px 2px 0;display:inline-block;">${this._esc(r.entity_name)} · ${tipo.label}</span>`;
-        }).join('');
-        return `
-        <section class="mb-section">
-          <div class="mb-section-head">
-            <span class="mb-section-title">${__('Influencia digital')}</span>
-            <span class="mb-section-hint">${__('Quién domina la conversación de tu nicho')}</span>
-          </div>
-          <div class="mb-causal-empty">
-            ${list.length
-              ? __('Tus {n} perfiles monitoreados están configurados, pero los sensores aún no capturan actividad en esta ventana. Los primeros datos suelen aparecer en 24-48h — o amplía el rango de fechas (prueba "Todo el periodo").', { n: list.length })
-              : __('Aún no monitoreas perfiles. Agrega a tus competidores y referentes en Monitoreo para ver quién domina tu nicho.')}
-          </div>
-          ${chips ? `<div style="margin-top:.6rem;">${chips}</div>` : ''}
-        </section>`;
-      }
+      if (!hasActivity) return ''; // card vacía → se oculta
 
       // Solo perfiles con actividad medible entran al chart. Los de 0 posts y
       // 0 engagement no se muestran (ni como chips) — no aportan senal.
       const plotted = list.filter((r) => Number(r.total_engagement) > 0 || Number(r.total_posts) > 0);
 
+      // El titulo + descripcion van DENTRO de la card (.comp-sov): el header deja
+      // de flotar arriba y queda como cabecera interna, con su regla fina como
+      // separador entre el header y el chart.
       return `
         <section class="mb-section">
-          <div class="mb-section-head">
-            <span class="mb-section-title">${__('Influencia digital')}</span>
-            <span class="mb-section-hint">${__('Contenido, sentimiento y engagement de cada perfil — fuerza relativa al líder del nicho')}</span>
+          <div class="comp-sov">
+            <div class="mb-section-head">
+              <span class="mb-section-title">${__('Influencia digital')}</span>
+              <span class="mb-section-hint">${__('Contenido, sentimiento y engagement de cada perfil — fuerza relativa al líder del nicho')}</span>
+            </div>
+            ${plotted.length
+              ? `<div class="comp-sov-canvas"><canvas id="compInfluenceBars"></canvas></div>
+                 <div class="comp-sov-legend" id="compInfluenceLegend"></div>`
+              : `<div class="mb-causal-empty">${__('Sin rivales con actividad en la ventana.')}</div>`}
           </div>
-          ${plotted.length
-            ? `<div class="comp-sov">
-                 <div class="comp-sov-canvas"><canvas id="compInfluenceBars"></canvas></div>
-                 <div class="comp-sov-legend" id="compInfluenceLegend"></div>
-               </div>`
-            : `<div class="mb-causal-empty">${__('Sin rivales con actividad en la ventana.')}</div>`}
         </section>`;
     },
 
@@ -773,7 +755,7 @@
     /* ── 1b. Qué les funciona: la fórmula ganadora del nicho ──────────── */
     _buildWinningFormula(intel) {
       const combos = Array.isArray(intel?.winning_combos) ? intel.winning_combos.slice(0, 6) : [];
-      if (!combos.length) { if (HIDE_EMPTY) return ''; return ''; }
+      if (!combos.length) return ''; // card vacía → se oculta
       const cap = (s) => { const t = String(s || '').replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); };
       const rows = combos.map((c) => `
         <div class="comp-combo-row">
@@ -802,7 +784,7 @@
     /* ── 2. La voz de su audiencia: pain points (el oro) ──────────────── */
     _buildAudienceVoice(voice) {
       const list = Array.isArray(voice) ? voice : [];
-      if (!list.length) { if (HIDE_EMPTY) return ''; }
+      if (!list.length) return ''; // card vacía → se oculta
       return `
         <section class="mb-section">
           <div class="mb-section-head">
@@ -842,7 +824,7 @@
     /* ── 3. Vulnerabilidades del rival ────────────────────────────────── */
     _buildRivalRisk(risk) {
       const list = (Array.isArray(risk) ? risk : []).filter(r => Number(r.negative_sentiment_ratio) > 0 || Number(r.flags_count) > 0 || Number(r.high_risk_posts) > 0);
-      if (!list.length) { if (HIDE_EMPTY) return ''; }
+      if (!list.length) return ''; // card vacía → se oculta
       const rows = list.map(r => {
         const neg = Math.round(Number(r.negative_sentiment_ratio || 0) * 100);
         return `

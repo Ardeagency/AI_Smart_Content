@@ -2992,6 +2992,9 @@
 
 /* Mapa de burbujas Share of Voice vs. Sentimiento */
 .comp-sov { background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424); border-radius: 14px; padding: 0.9rem 1rem 0.8rem; }
+/* Header (titulo + descripcion) DENTRO de la card: aire entre la regla fina del
+   header y el chart. */
+.comp-sov > .mb-section-head { margin-bottom: 0.85rem; }
 .comp-sov-canvas { position: relative; height: 340px; }
 .comp-sov-legend { display: flex; flex-wrap: wrap; gap: 0.35rem 0.9rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-divider, #242424); }
 .comp-sov-leg { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-secondary, rgba(212,209,216,0.82)); }
