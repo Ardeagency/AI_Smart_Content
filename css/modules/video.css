@@ -2244,31 +2244,31 @@
   overflow: hidden;
 }
 
-/* Fondo del chat = radial del Frame 98 de Figma:
-   radial-gradient(110.4% 110.4% at 50% -10.4%, #F79E1B 0%, #FF5F00 30.29%, #141517 74.04%, #000 100%)
-   Los DOS primeros colores son SIEMPRE el dinamico de marca (--brand-primary-rgb,
-   lo setea OrgBrandTheme por org): el nucleo es una version aclarada de la marca y
-   la segunda parada es la marca base, ambas derivadas con color-mix del MISMO color
-   -> se adapta a cualquier marca. Los hex #F79E1B/#FF5F00 son solo fallback de
-   referencia. z-index:-1 lo deja dentro del stacking context de .gpt-main
-   (position:relative; z-index:1), sobre el fondo pero detras del contenido.
-   Intensidad plena en la bienvenida; atenuado en conversacion. */
+/* Fondo del chat = radial del Frame 98 de Figma, pero el color es SIEMPRE el
+   dinamico de marca (--brand-primary-rgb, lo setea OrgBrandTheme por org), tal cual,
+   sin aclararlo hacia blanco (eso viraba el naranja a amarillo chillon) ni saturar.
+   El nucleo es el color de marca puro y la segunda parada el mismo color un poco
+   mas profundo (mezclado con el oscuro, NO con blanco), luego cae a #141517 -> #000.
+   Los hex #FF5F00/#141517 son solo fallback de referencia. z-index:-1 lo deja dentro
+   del stacking context de .gpt-main (position:relative; z-index:1), sobre el fondo
+   pero detras del contenido. Intensidad plena en la bienvenida; atenuado en chat. */
 .gpt-main::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  /* Fallback plano (sin color-mix): ambas paradas = color de marca base. */
+  /* Fallback plano (sin color-mix): color de marca puro. */
   background: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    rgb(var(--brand-primary-rgb, 247, 158, 27)) 0%,
+    rgb(var(--brand-primary-rgb, 255, 95, 0)) 0%,
     rgb(var(--brand-primary-rgb, 255, 95, 0)) 30.29%,
     #141517 74.04%,
     #000000 100%);
-  /* Con color-mix: nucleo aclarado + marca base (dos tonos de la misma marca). */
+  /* Segunda parada = mismo color de marca, algo mas profundo (mezcla con el oscuro,
+     nunca con blanco): mantiene el TONO de la marca, solo baja luminosidad. */
   background: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    color-mix(in srgb, rgb(var(--brand-primary-rgb, 247, 158, 27)) 82%, white) 0%,
-    rgb(var(--brand-primary-rgb, 255, 95, 0)) 30.29%,
+    rgb(var(--brand-primary-rgb, 255, 95, 0)) 0%,
+    color-mix(in srgb, rgb(var(--brand-primary-rgb, 255, 95, 0)) 85%, #141517) 30.29%,
     #141517 74.04%,
     #000000 100%);
   opacity: 0.55;
