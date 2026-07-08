@@ -739,7 +739,6 @@ class DashboardView extends BaseView {
       const metric = it.metric
         ? `<div class="mb-plan-metric"><span class="mb-plan-metric-val">${this._esc(it.metric)}</span>${it.metricSub ? `<span class="mb-plan-metric-sub">${this._esc(it.metricSub)}</span>` : ''}</div>`
         : '';
-      const pill = it.earlySignal ? `<span class="mb-plan-early">${__('Señal temprana')}</span>` : '';
       // CTA unificado en todas las cards del hero: siempre "Ver detalles" (el detalle
       // abre el modal consultor). Se ignora it.action/d.action a proposito.
       const action = __('Ver detalles');
@@ -750,7 +749,6 @@ class DashboardView extends BaseView {
           <div class="mb-plan-col-head"><span class="mb-plan-cat">${this._esc(d.label)}</span></div>
           ${it.title ? `<div class="mb-plan-title">${this._esc(it.title)}</div>` : ''}
           ${metric}
-          ${pill}
           <div class="mb-plan-action">${this._esc(action)}<span class="mb-plan-action-arrow">→</span></div>
         </div>`;
     });
