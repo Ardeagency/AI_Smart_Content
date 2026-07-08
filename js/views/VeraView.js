@@ -1713,7 +1713,7 @@ class VeraView extends (window.BaseView || class {}) {
     try {
       const { data, error } = await this.supabase
         .from('ai_conversations')
-        .select('id, title, updated_at, ai_messages(count)')
+        .select('id, title, updated_at, metadata, ai_messages(count)')
         .eq('organization_id', this.aiState.organization_id)
         .eq('user_id', this.userId)
         .order('updated_at', { ascending: false })
@@ -1763,8 +1763,15 @@ class VeraView extends (window.BaseView || class {}) {
       const title = this._convTitle(c);
       const safe = escapeHtml(title);
       const attr = safe.replace(/"/g, '&quot;');
-      const cls = c.id === active ? 'vera-history-item active' : 'vera-history-item';
-      html += `<button class="${cls}" data-conv-id="${c.id}" title="${attr}"><span class="vera-history-item-title">${safe}</span></button>`;
+      // Vera pudo INICIAR el hilo (metadata.initiated_by='vera'): lo marcamos para
+      // que el usuario vea que ella le escribió, no al revés.
+      const byVera = c?.metadata?.initiated_by === 'vera';
+      let cls = c.id === active ? 'vera-history-item active' : 'vera-history-item';
+      if (byVera) cls += ' vera-history-item--from-vera';
+      const badge = byVera
+        ? `<span class="vera-history-item-badge" title="${__('Vera te escribió')}">${__('Vera')}</span>`
+        : '';
+      html += `<button class="${cls}" data-conv-id="${c.id}" title="${attr}"><span class="vera-history-item-title">${safe}</span>${badge}</button>`;
     }
     list.innerHTML = html;
   }

@@ -2460,6 +2460,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Hilo que INICIO Vera: fila con badge de marca para que el usuario vea que
+   ella le escribio (no al reves). */
+.vera-history-item--from-vera {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vera-history-item--from-vera .vera-history-item-title { flex: 1 1 auto; min-width: 0; }
+.vera-history-item-badge {
+  flex: 0 0 auto;
+  font-size: .6rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: #fff;
+  line-height: 1.5;
+  background: var(--brand-gradient-dynamic-vertical, var(--brand-primary, #c0392b));
+}
 .vera-history-empty {
   color: var(--text-muted);
   font-size: .82rem;
