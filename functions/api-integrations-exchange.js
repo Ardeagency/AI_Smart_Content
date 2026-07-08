@@ -82,7 +82,7 @@ async function assertBrandContainerAccess({ env, accessToken, brandContainerId }
     if (!bc.organization_id) { throw Object.assign(new Error('No autorizado para esta marca'), { statusCode: 403 }); }
     await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId: bc.organization_id, userId: user.id });
   }
-  return { user, brand_container_id: brandContainerId };
+  return { user, bc, brand_container_id: brandContainerId };
 }
 
 // ── Bootstrap genérico (cualquier platform con populator registrado) ─────────
@@ -201,10 +201,14 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing brand_container_id in state' }) };
   }
 
-  let sessionUser;
+  let sessionUser, resolvedOrgId;
   try {
     const auth = await assertBrandContainerAccess({ env, accessToken, brandContainerId });
     sessionUser = auth.user;
+    // Fuente de verdad de la org: el brand_container, NO el state firmado.
+    // (Bug histórico: api-integrations-facebook-start no incluía organization_id
+    // en el state → el bootstrap de campañas/audiencias nunca se encolaba.)
+    resolvedOrgId = auth.bc?.organization_id || stateObj.organization_id || null;
   } catch (e) {
     return { statusCode: e.statusCode || 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
@@ -277,13 +281,13 @@ exports.handler = async (event) => {
         }
       });
       const gInteg = Array.isArray(gIntegRows) ? gIntegRows[0] : null;
-      if (gInteg?.id && stateObj.organization_id) {
+      if (gInteg?.id && resolvedOrgId) {
         try {
           await supabaseRest({
             url: env.url, serviceKey: env.serviceKey,
             path: 'agent_queue_jobs', method: 'POST',
             body: [{
-              organization_id: stateObj.organization_id,
+              organization_id: resolvedOrgId,
               job_type: 'mission', priority: 5,
               payload: {
                 mission_type:         'google_list_accounts',
@@ -404,13 +408,13 @@ exports.handler = async (event) => {
         }
       });
       const fbIntegId = Array.isArray(fbIntegRow) && fbIntegRow[0] ? fbIntegRow[0].id : null;
-      if (fbIntegId && stateObj.organization_id) {
+      if (fbIntegId && resolvedOrgId) {
         await enqueueIntegrationBootstrap({
           env,
           platform:         'facebook',
           integrationId:    fbIntegId,
           brandContainerId,
-          organizationId:   stateObj.organization_id,
+          organizationId:   resolvedOrgId,
         });
       }
     }
@@ -605,13 +609,13 @@ exports.handler = async (event) => {
       }
 
       // Encolar bootstrap (solo si NO es reconnection) usando el helper genérico
-      if (!isReconnection && shopifyIntegId && stateObj.organization_id) {
+      if (!isReconnection && shopifyIntegId && resolvedOrgId) {
         await enqueueIntegrationBootstrap({
           env,
           platform:         'shopify',
           integrationId:    shopifyIntegId,
           brandContainerId,
-          organizationId:   stateObj.organization_id,
+          organizationId:   resolvedOrgId,
           extras:           { shop_domain: stateObj.shop }
         });
       }
@@ -714,13 +718,13 @@ exports.handler = async (event) => {
       meliIntegId = Array.isArray(meliRow) && meliRow[0] ? meliRow[0].id : null;
 
       // Encolar bootstrap solo en conexión nueva (populator idempotente igual)
-      if (!isReconnection && meliIntegId && stateObj.organization_id) {
+      if (!isReconnection && meliIntegId && resolvedOrgId) {
         await enqueueIntegrationBootstrap({
           env,
           platform:         'mercadolibre',
           integrationId:    meliIntegId,
           brandContainerId,
-          organizationId:   stateObj.organization_id,
+          organizationId:   resolvedOrgId,
         });
       }
     }
@@ -808,10 +812,10 @@ exports.handler = async (event) => {
       });
       xIntegId = Array.isArray(xRow) && xRow[0] ? xRow[0].id : null;
 
-      if (!isReconnection && xIntegId && stateObj.organization_id) {
+      if (!isReconnection && xIntegId && resolvedOrgId) {
         await enqueueIntegrationBootstrap({
           env, platform: 'x', integrationId: xIntegId,
-          brandContainerId, organizationId: stateObj.organization_id,
+          brandContainerId, organizationId: resolvedOrgId,
         });
       }
     }
@@ -912,10 +916,10 @@ exports.handler = async (event) => {
       });
       tiktokIntegId = Array.isArray(tkRow) && tkRow[0] ? tkRow[0].id : null;
 
-      if (!isReconnection && tiktokIntegId && stateObj.organization_id) {
+      if (!isReconnection && tiktokIntegId && resolvedOrgId) {
         await enqueueIntegrationBootstrap({
           env, platform: 'tiktok', integrationId: tiktokIntegId,
-          brandContainerId, organizationId: stateObj.organization_id,
+          brandContainerId, organizationId: resolvedOrgId,
         });
       }
     }
@@ -940,7 +944,7 @@ exports.handler = async (event) => {
 
     // Audit log: registrar la conexión exitosa para que el admin de la org
     // vea quién conectó qué integración y cuándo (style Sprout Social).
-    if (stateObj.organization_id) {
+    if (resolvedOrgId) {
       const integId = platform === 'shopify' ? shopifyIntegId
         : platform === 'mercadolibre' ? meliIntegId
         : platform === 'x' ? xIntegId
@@ -950,7 +954,7 @@ exports.handler = async (event) => {
         env,
         event,
         user: sessionUser,
-        organizationId: stateObj.organization_id,
+        organizationId: resolvedOrgId,
         action: 'integration.connect',
         resourceType: 'brand_integrations',
         resourceId: integId,

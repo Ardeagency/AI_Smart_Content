@@ -43,7 +43,7 @@ async function assertBrandContainerAccess({ env, accessToken, brandContainerId }
     }
     await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId: bc.organization_id, userId: user.id });
   }
-  return { user };
+  return { user, bc };
 }
 
 exports.handler = async (event) => {
@@ -71,10 +71,11 @@ exports.handler = async (event) => {
   const returnTo = event.queryStringParameters?.return_to || '/home';
   if (!brandContainerId) return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
 
-  let user;
+  let user, bc;
   try {
     const auth = await assertBrandContainerAccess({ env, accessToken, brandContainerId });
     user = auth.user;
+    bc   = auth.bc;
   } catch (e) {
     return { statusCode: e.statusCode || 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
@@ -90,6 +91,7 @@ exports.handler = async (event) => {
     state = buildSignedState({
       platform: 'facebook',
       brand_container_id: brandContainerId,
+      organization_id: bc?.organization_id || null,
       return_to: returnTo,
       uid: user.id,
       iat: Date.now()
