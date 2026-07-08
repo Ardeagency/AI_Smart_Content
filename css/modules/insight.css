@@ -4038,8 +4038,11 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
    y solo recibe un tinte de marca sutil desde arriba. Fallback neutral. */
 .dash-hero-grad {
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: clamp(280px, 42vh, 480px);
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140%;
+  height: clamp(340px, 52vh, 620px);
   z-index: 0;
   pointer-events: none;
   background: var(--brand-gradient-dynamic, linear-gradient(135deg, #3b82f6, #22d3ee, #8b5cf6));
