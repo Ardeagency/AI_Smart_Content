@@ -594,9 +594,14 @@ class DashboardView extends BaseView {
   /* Tinta el logo del hero segun la luminancia del degradado bajo el logo.
      Logica compartida en BaseView.tintLogoByGradient (blanco/gris dinamico). */
   _tintHeroLogo() {
-    const img  = document.getElementById('dashHeroLogo');
-    const grad = document.getElementById('dashHero')?.querySelector('.dash-hero-grad');
-    this.tintLogoByGradient(img, grad);
+    const img = document.getElementById('dashHeroLogo');
+    if (!img) return;
+    // El hero ya no se rellena con el degradado de marca (solo luz ambiente): el
+    // fondo del hero es SIEMPRE oscuro, sin importar la paleta de la org. Por eso
+    // la marca de agua va siempre en blanco (antes se tintaba por la luminancia
+    // del degradado, que ahora ya no representa el fondo real).
+    img.style.filter = 'brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,0.35))';
+    img.style.opacity = '0.16';
   }
 
   renderHTML() {
