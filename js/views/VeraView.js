@@ -2582,17 +2582,14 @@ class VeraView extends (window.BaseView || class {}) {
     const name = this._greetingName();
     const salute = this._timeGreeting();
     const greeting = name ? `${salute}, ${escapeHtml(name)}` : salute;
-    const phrases = this._welcomePhrases();
     list.innerHTML = `
       <div class="gpt-welcome gpt-welcome--hero">
         <div class="gpt-welcome-mark gpt-welcome-mark--wordmark">
           <img src="${VERA_WORDMARK_SRC}" alt="Vera" height="44" decoding="async" />
         </div>
         <h1 class="gpt-welcome-title gpt-welcome-title--anim">${greeting}</h1>
-        <p class="gpt-welcome-subtitle" id="veraWelcomeSub">${escapeHtml(phrases[0])}</p>
       </div>
     `;
-    this._startSubtitleRotation();
     this._renderQuickSuggestions();
   }
 
