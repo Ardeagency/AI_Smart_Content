@@ -685,20 +685,23 @@
       return `<span class="mb-ptbl-sent"><span class="mb-ptbl-sent-dot" style="background:${color}"></span>${label} ${Math.round(p * 100)}%</span>`;
     },
 
-    /** Pill segmentado positivo/neutral/negativo + etiqueta dominante. */
+    /** Pill segmentado positivo/neutral/negativo + etiqueta del sentimiento DOMINANTE. */
     _sentimentPill(pos, neg) {
       const p = Math.max(0, Math.min(1, Number(pos) || 0));
       const n = Math.max(0, Math.min(1, Number(neg) || 0));
       const neu = Math.max(0, 1 - p - n);
       const tot = p + n + neu || 1;
       const seg = (v, c) => v > 0 ? `<span class="mb-ptbl-pill-seg" style="flex:${(v / tot).toFixed(4)};background:${c}"></span>` : '';
-      let label = __('Negativo'), lc = '#e06464';
-      if (p >= 0.6)       { label = __('Positivo'); lc = '#6bcf7f'; }
-      else if (p >= 0.35) { label = __('Neutral');  lc = '#e0a045'; }
+      // Etiqueta = sentimiento dominante (no solo el umbral de positivo): un post
+      // neutral no debe leerse como "Negativo".
+      let label, lc, pct;
+      if (p >= neu && p >= n)      { label = __('Positivo'); lc = '#6bcf7f'; pct = p; }
+      else if (n > neu && n > p)   { label = __('Negativo'); lc = '#e06464'; pct = n; }
+      else                         { label = __('Neutral');  lc = '#e0a045'; pct = neu; }
       return `
         <span class="mb-ptbl-pill-wrap">
           <span class="mb-ptbl-pill">${seg(p, '#6bcf7f')}${seg(neu, 'rgba(212,209,216,0.28)')}${seg(n, '#e06464')}</span>
-          <span class="mb-ptbl-pill-lbl" style="color:${lc}">${label} ${Math.round(p * 100)}%</span>
+          <span class="mb-ptbl-pill-lbl" style="color:${lc}">${label} ${Math.round(pct * 100)}%</span>
         </span>`;
     },
 
