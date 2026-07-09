@@ -2854,22 +2854,60 @@ class LivingManager {
         for (const sel of candidates) {
             if (!sel || typeof sel !== 'object') continue;
             const name = sel.nombre_producto || sel.nombre_servicio || sel.name || sel.product_name || '';
-            let image = sel.image_url || sel.hero_image_url || '';
-            if (!image && Array.isArray(sel.images) && sel.images.length) {
-                const sorted = [...sel.images].sort((a, b) => (a?.image_order ?? 99) - (b?.image_order ?? 99));
-                image = sorted[0]?.image_url || sorted[0]?.url || '';
-            }
+            const images = Array.isArray(sel.images)
+                ? [...sel.images]
+                    .sort((a, b) => (a?.image_order ?? 99) - (b?.image_order ?? 99))
+                    .map(x => x?.image_url || x?.url)
+                    .filter(Boolean)
+                : [];
+            const image = sel.image_url || sel.hero_image_url || images[0] || '';
             const rawCat = sel.tipo_producto || sel.tipo_servicio || sel.entity_type || '';
             const category = rawCat ? (String(rawCat).charAt(0).toUpperCase() + String(rawCat).slice(1)) : '';
-            if (name || image) return { name: name || 'Producto', image, category };
+            if (name || image || images.length) {
+                return { name: name || 'Producto', image, category, images: images.length ? images : (image ? [image] : []) };
+            }
         }
         return null;
+    }
+
+    /**
+     * En un run con VARIOS productos (batch de Studio) hay una fila runs_inputs
+     * por producto pero cada output corresponde a UNO. La verdad de cual producto
+     * uso este output esta en su reference_image_url, cuyo path lleva el product
+     * id: product-images/{marca}/{PRODUCT_ID}/{archivo}. Elegimos la fila de input
+     * cuyo image_selector coincide con ese producto; si no hay match (runs de un
+     * solo producto o legacy) caemos a la primera fila del run.
+     */
+    _selectInputRowForOutput(run, output) {
+        const rows = (this.flowInputs || []).filter(i => i?.run_id === run?.id);
+        if (rows.length <= 1) return rows[0] || null;
+        const productId = this._productIdFromProductImageUrl(output?.reference_image_url)
+            || output?.entity_id || null;
+        if (productId) {
+            const match = rows.find(r => {
+                const d = this._safeParseJSON(r.input_data) || r.input_data || {};
+                const sel = d.image_selector || {};
+                if (sel.id && String(sel.id) === String(productId)) return true;
+                if (sel.entity_id && String(sel.entity_id) === String(productId)) return true;
+                const imgs = Array.isArray(sel.images) ? sel.images : [];
+                return imgs.some(im => typeof im?.image_url === 'string' && im.image_url.includes(`/${productId}/`));
+            });
+            if (match) return match;
+        }
+        return rows[0];
+    }
+
+    /** Extrae el product id (uuid) del path product-images/{marca}/{id}/... */
+    _productIdFromProductImageUrl(url) {
+        if (!url || typeof url !== 'string') return null;
+        const m = url.match(/product-images\/[^/]+\/([0-9a-fA-F-]{36})\//);
+        return m ? m[1] : null;
     }
 
     _renderModalInput(run, output) {
         const container = document.getElementById('pmodalInputContent');
         if (!container) return;
-        const inputRow = (this.flowInputs || []).find(i => i?.run_id === run?.id);
+        const inputRow = this._selectInputRowForOutput(run, output);
         let data = this._safeParseJSON(inputRow?.input_data) || inputRow?.input_data || null;
 
         // El prompt tecnico (prompt_used del output) se muestra en el Briefing.
@@ -2958,19 +2996,27 @@ class LivingManager {
                 </div>`;
             }).join('');
 
+        const productImages = (productSel?.images && productSel.images.length)
+            ? productSel.images
+            : (entityImg ? [entityImg] : []);
         const entityHtml = entityName
             ? `<section class="pmodal-section pmodal-input-entity">
                 <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--product"></i> ${this.escapeHtml(entityType || 'Entidad')}</h3>
-                <div class="pmodal-entity-card">
-                    ${entityImg
-                        ? `<img src="${this.escapeHtml(entityImg)}" alt="${this.escapeHtml(entityName)}" class="pmodal-entity-img" loading="lazy" decoding="async">`
-                        : `<div class="pmodal-entity-img pmodal-entity-img--empty" aria-hidden="true"><i class="aisc-ico aisc-ico--product"></i></div>`
-                    }
-                    <div class="pmodal-entity-meta">
-                        <p class="pmodal-entity-name">${this.escapeHtml(entityName)}</p>
-                        ${(entityCategory || entityType) ? `<p class="pmodal-entity-type">${this.escapeHtml(entityCategory || entityType)}</p>` : ''}
-                    </div>
+                <div class="pmodal-entity-head">
+                    <p class="pmodal-entity-name">${this.escapeHtml(entityName)}</p>
+                    ${(entityCategory || entityType) ? `<p class="pmodal-entity-type">${this.escapeHtml(entityCategory || entityType)}</p>` : ''}
                 </div>
+                ${productImages.length
+                    ? `<div class="pmodal-entity-carousel" role="list">
+                        ${productImages.map((u, i) => `
+                            <a class="pmodal-entity-shot" role="listitem" href="${this.escapeHtml(u)}" target="_blank" rel="noopener" aria-label="${this.escapeHtml(entityName)} — imagen ${i + 1}">
+                                <img src="${this.escapeHtml(u)}" alt="" loading="lazy" decoding="async">
+                            </a>`).join('')}
+                    </div>`
+                    : `<div class="pmodal-entity-card">
+                        <div class="pmodal-entity-img pmodal-entity-img--empty" aria-hidden="true"><i class="aisc-ico aisc-ico--product"></i></div>
+                    </div>`
+                }
             </section>`
             : '';
 

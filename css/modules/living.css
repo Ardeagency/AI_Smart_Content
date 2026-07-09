@@ -1703,6 +1703,44 @@ body.production-filters-in-header .living-container > .living-history-section {
     letter-spacing: 0.04em;
 }
 
+/* PRODUCTO: cabecera nombre/categoria + carrusel horizontal de las imagenes
+   del producto usado (image_selector.images ordenadas por image_order). */
+.pmodal-entity-head { margin-bottom: 10px; }
+.pmodal-entity-head .pmodal-entity-name { white-space: normal; }
+.pmodal-entity-carousel {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+.pmodal-entity-carousel::-webkit-scrollbar { height: 6px; }
+.pmodal-entity-carousel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+}
+.pmodal-entity-shot {
+    flex: 0 0 auto;
+    width: 96px;
+    height: 96px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--pmodal-border);
+    scroll-snap-align: start;
+}
+.pmodal-entity-shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 200ms ease;
+}
+.pmodal-entity-shot:hover img { transform: scale(1.05); }
+
 .pmodal-context-chips {
     display: flex;
     flex-wrap: wrap;
