@@ -1740,6 +1740,18 @@ body.production-filters-in-header .living-container > .living-history-section {
     transition: transform 200ms ease;
 }
 .pmodal-entity-shot:hover img { transform: scale(1.05); }
+/* Imagen de referencia purgada (producto borrado o archivo 404): placeholder
+   en vez del icono roto del navegador. */
+.pmodal-entity-shot--broken {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: default;
+    pointer-events: none;
+}
+.pmodal-entity-shot--broken:hover img { transform: none; }
 
 .pmodal-context-chips {
     display: flex;

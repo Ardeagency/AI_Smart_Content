@@ -3010,7 +3010,7 @@ class LivingManager {
                     ? `<div class="pmodal-entity-carousel" role="list">
                         ${productImages.map((u, i) => `
                             <a class="pmodal-entity-shot" role="listitem" href="${this.escapeHtml(u)}" target="_blank" rel="noopener" aria-label="${this.escapeHtml(entityName)} — imagen ${i + 1}">
-                                <img src="${this.escapeHtml(u)}" alt="" loading="lazy" decoding="async">
+                                <img src="${this.escapeHtml(u)}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('pmodal-entity-shot--broken');this.parentElement.setAttribute('aria-disabled','true');this.parentElement.removeAttribute('href');this.parentElement.insertAdjacentHTML('beforeend','<i class=\\'aisc-ico aisc-ico--product\\'></i>');">
                             </a>`).join('')}
                     </div>`
                     : `<div class="pmodal-entity-card">
