@@ -350,7 +350,8 @@ class LivingManager {
             if (!targetRunIds.length) return;
 
             const { data, error } = await this.supabase
-                .from('runs_outputs').select('*')
+                .from('runs_outputs')
+                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, created_at, generated_hashtags, creative_rationale, models')
                 .in('run_id', targetRunIds)
                 .order('created_at', { ascending: false });
             if (error) throw error;
@@ -2830,6 +2831,41 @@ class LivingManager {
      * Cuando no hay runs_inputs (corrida pre-instrumentacion), muestra estado
      * vacio explicando como llenar el snapshot.
      */
+    /**
+     * Extrae el producto/servicio usado desde el input_data de un flow. El
+     * selector de Studio guarda el objeto COMPLETO anidado (tipicamente bajo
+     * `image_selector`), no al nivel raiz: el nombre en `nombre_producto`, las
+     * imagenes en `images[]` ordenadas por `image_order`, la categoria en
+     * `tipo_producto`. Por eso el Briefing no mostraba el producto aunque SI
+     * quedaba guardado. Devuelve { name, image, category } o null.
+     */
+    _extractProductSelector(data) {
+        if (!data || typeof data !== 'object') return null;
+        // Candidatos: la clave conocida image_selector primero, luego cualquier
+        // objeto anidado con forma de producto/servicio.
+        const candidates = [];
+        if (data.image_selector && typeof data.image_selector === 'object') candidates.push(data.image_selector);
+        for (const v of Object.values(data)) {
+            if (v && typeof v === 'object' && !Array.isArray(v) && v !== data.image_selector
+                && (v.nombre_producto || v.nombre_servicio || (Array.isArray(v.images) && v.images.length))) {
+                candidates.push(v);
+            }
+        }
+        for (const sel of candidates) {
+            if (!sel || typeof sel !== 'object') continue;
+            const name = sel.nombre_producto || sel.nombre_servicio || sel.name || sel.product_name || '';
+            let image = sel.image_url || sel.hero_image_url || '';
+            if (!image && Array.isArray(sel.images) && sel.images.length) {
+                const sorted = [...sel.images].sort((a, b) => (a?.image_order ?? 99) - (b?.image_order ?? 99));
+                image = sorted[0]?.image_url || sorted[0]?.url || '';
+            }
+            const rawCat = sel.tipo_producto || sel.tipo_servicio || sel.entity_type || '';
+            const category = rawCat ? (String(rawCat).charAt(0).toUpperCase() + String(rawCat).slice(1)) : '';
+            if (name || image) return { name: name || 'Producto', image, category };
+        }
+        return null;
+    }
+
     _renderModalInput(run, output) {
         const container = document.getElementById('pmodalInputContent');
         if (!container) return;
@@ -2853,9 +2889,17 @@ class LivingManager {
         if (noData) data = {};
 
         // 1) Entidad (producto / servicio / lugar)
-        const entityName = data.entity_name || data.product_name || data.service_name || data.place_name || '';
-        const entityImg = data.entity_image_url || data.product_image_url || data.image_url || '';
-        const entityType = data.entity_type || (entityName ? 'Entidad' : null);
+        // El producto usado puede venir denormalizado al nivel raiz (flows viejos)
+        // o anidado en el selector de imagenes (image_selector) que arman los flows
+        // de Studio: nombre en `nombre_producto`, imagenes en `images[]` ordenadas
+        // por `image_order`. Buscamos en ambos para no perder el producto.
+        const productSel = this._extractProductSelector(data);
+        const entityName = data.entity_name || data.product_name || data.service_name || data.place_name
+            || productSel?.name || '';
+        const entityImg = data.entity_image_url || data.product_image_url || data.image_url
+            || productSel?.image || '';
+        const entityType = data.entity_type || (productSel ? 'Producto' : (entityName ? 'Entidad' : null));
+        const entityCategory = productSel?.category || '';
 
         // 2) Referencias adjuntadas (imagenes / archivos)
         const refs = []
@@ -2924,7 +2968,7 @@ class LivingManager {
                     }
                     <div class="pmodal-entity-meta">
                         <p class="pmodal-entity-name">${this.escapeHtml(entityName)}</p>
-                        ${entityType ? `<p class="pmodal-entity-type">${this.escapeHtml(entityType)}</p>` : ''}
+                        ${(entityCategory || entityType) ? `<p class="pmodal-entity-type">${this.escapeHtml(entityCategory || entityType)}</p>` : ''}
                     </div>
                 </div>
             </section>`
