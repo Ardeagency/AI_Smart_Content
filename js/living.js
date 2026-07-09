@@ -2737,7 +2737,8 @@ class LivingManager {
         const models = Array.isArray(rawModels)
             ? rawModels.map(m => typeof m === 'string' ? m : (m?.name || m?.model || '')).filter(Boolean)
             : [];
-        const quality = tp.quality || meta.quality || meta.resolution_tier || (meta.is_4k ? '4k' : '');
+        const quality = tp.resolution || tp.quality || meta.quality || meta.resolution_tier || (meta.is_4k ? '4K' : '');
+        const aspect = tp.aspect_ratio || meta.aspect_ratio || '';
         const size = (() => {
             const w = tp.width || meta.width || meta.size_x;
             const h = tp.height || meta.height || meta.size_y;
@@ -2750,27 +2751,31 @@ class LivingManager {
             ? new Date(created).toLocaleString('es-CO', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
             : '';
         const flowName = this.getFlowName(run);
+        const kind = this._deriveProductionKind(output);
         // Campania y audiencia: nombres vienen de los joins de loadFlowRuns
         // (campaigns(nombre_campana), audience_personas(name)). Si el run no
-        // tiene campaign_id/persona_id, mostramos guion en vez de ocultar la fila,
-        // asi el usuario ve que el flujo no estaba ligado a ninguna.
-        const campaignName = run?.campaigns?.nombre_campana || (run?.campaign_id ? 'Sin nombre' : '—');
-        const audienceName = run?.audience_personas?.name || (run?.persona_id ? 'Sin nombre' : '—');
+        // estaba ligado a ninguna (campaign_id/persona_id null) NO se muestra la
+        // fila — nada de casillas en "—".
+        const campaignName = run?.campaigns?.nombre_campana || (run?.campaign_id ? 'Sin nombre' : '');
+        const audienceName = run?.audience_personas?.name || (run?.persona_id ? 'Sin nombre' : '');
 
         // Renderizado especial para modelos: chips en lugar de texto plano.
         const modelsHtml = models.length
             ? `<span class="pmodal-info-models">${models.map(m =>
                 `<span class="pmodal-model-chip">${this.escapeHtml(m)}</span>`
               ).join('')}</span>`
-            : '<span class="pmodal-info-value">—</span>';
+            : '';
 
+        // Solo filas con valor real. Nunca placeholders en "—".
         const rows = [
-            ['Flow', flowName || '—', null],
-            ['Campana', campaignName, null],
-            ['Audiencia', audienceName, null],
-            [models.length > 1 ? 'Modelos' : 'Modelo', null, modelsHtml],
-            quality ? ['Quality', String(quality), null] : null,
+            kind ? ['Tipo', kind, null] : null,
+            flowName ? ['Flow', flowName, null] : null,
+            campaignName ? ['Campana', campaignName, null] : null,
+            audienceName ? ['Audiencia', audienceName, null] : null,
+            aspect ? ['Formato', String(aspect), null] : null,
+            quality ? ['Resolucion', String(quality), null] : null,
             size ? ['Size', size, null] : null,
+            models.length ? [models.length > 1 ? 'Modelos' : 'Modelo', null, modelsHtml] : null,
             createdStr ? ['Created', createdStr, null] : null
         ].filter(Boolean);
 
@@ -2792,6 +2797,24 @@ class LivingManager {
         if (s.includes('image') || s.includes('img')) return 'Imagen';
         if (s.includes('text') || s.includes('copy')) return 'Texto';
         return t;
+    }
+
+    /**
+     * Tipo de produccion legible (Imagen / Video / Texto). output_type suele venir
+     * generico ("ai_content") en outputs de flow, asi que si no es explicito lo
+     * inferimos por la extension del archivo (storage_path / metadata.storage_path).
+     */
+    _deriveProductionKind(output) {
+        const t = String(output?.output_type || '').toLowerCase();
+        if (t.includes('video') || t.includes('reel') || t.includes('clip')) return 'Video';
+        if (t.includes('image') || t.includes('img')) return 'Imagen';
+        if (t.includes('text') || t.includes('copy')) return 'Texto';
+        const path = String(output?.storage_path
+            || this._safeParseJSON(output?.metadata)?.storage_path || '').toLowerCase();
+        if (/\.(mp4|webm|mov|m4v)(\?|$)/.test(path)) return 'Video';
+        if (/\.(jpg|jpeg|png|webp|gif|avif)(\?|$)/.test(path)) return 'Imagen';
+        if (path) return 'Imagen';
+        return output?.text_content || output?.generated_copy ? 'Texto' : '';
     }
 
     /**
