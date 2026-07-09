@@ -5996,12 +5996,24 @@ class LivingManager {
             .find(o => o?.id === id) || null;
     }
 
-    /** Token seguro para nombre de archivo: sin acentos, solo alfanumerico + guiones. */
-    _slug(str, maxLen = 60) {
+    /**
+     * Limpia un texto para nombre de archivo legible por humanos: quita acentos
+     * y caracteres invalidos de sistema de archivos, PRESERVANDO espacios y
+     * mayusculas naturales. maxLen recorta en un limite de palabra.
+     */
+    _cleanName(str, maxLen = 60) {
         if (!str) return '';
-        let s = String(str).normalize('NFD').replace(/[̀-ͯ]/g, '');
-        s = s.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-        if (maxLen && s.length > maxLen) s = s.slice(0, maxLen).replace(/-+$/, '');
+        let s = String(str)
+            .normalize('NFD').replace(/[̀-ͯ]/g, '')
+            .replace(/[\\/:*?"<>|]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        if (maxLen && s.length > maxLen) {
+            s = s.slice(0, maxLen);
+            const lastSpace = s.lastIndexOf(' ');
+            if (lastSpace > maxLen * 0.6) s = s.slice(0, lastSpace);
+            s = s.trim();
+        }
         return s;
     }
 
@@ -6020,18 +6032,19 @@ class LivingManager {
     }
 
     /**
-     * Nombre de descarga: Producto_Formato_Ratio_Resolucion_Flow_Fecha_AISC.ext
-     * (formato = tipo Imagen/Video). Omite los segmentos que no existan.
+     * Nombre de descarga legible: "Producto - Flow - Ratio Reso - Fecha - AISC.ext"
+     * Espacios reales, mayusculas naturales, flujo acortado a la parte antes del
+     * "/". Omite los segmentos que no existan.
      */
     _buildDownloadFilename(output, run, mediaUrl) {
         if (!output) return '';
         const tp = this._safeParseJSON(output?.technical_params) || {};
         const meta = this._safeParseJSON(output?.metadata) || {};
-        const product = this._slug(this._productNameForOutput(output, run), 50);
-        const kind = this._deriveProductionKind(output);
-        const ratio = this._slug(tp.aspect_ratio || meta.aspect_ratio || '');
-        const res = this._slug(tp.resolution || tp.quality || meta.quality || (meta.is_4k ? '4K' : ''));
-        const flow = this._slug(this.getFlowName(run) || '', 40);
+        const product = this._cleanName(this._productNameForOutput(output, run), 55);
+        const flow = this._cleanName(String(this.getFlowName(run) || '').split('/')[0], 40);
+        const ratio = String(tp.aspect_ratio || meta.aspect_ratio || '').replace(/:/g, 'x').replace(/\s+/g, '');
+        const res = this._cleanName(tp.resolution || tp.quality || meta.quality || (meta.is_4k ? '4K' : ''), 12);
+        const tech = [ratio, res].filter(Boolean).join(' ');
         const created = output?.created_at || run?.created_at;
         let date = '';
         if (created) {
@@ -6041,9 +6054,8 @@ class LivingManager {
             }
         }
         const ext = this.getDownloadExtension(mediaUrl || output?.storage_path || '');
-        const parts = [product, kind, ratio, res, flow, date].filter(Boolean);
-        const base = parts.length ? parts.join('_') : `produccion-${Date.now()}`;
-        return `${base}_AISC${ext}`;
+        const fields = [product, flow, tech, date, 'AISC'].filter(Boolean);
+        return `${fields.join(' - ')}${ext}`;
     }
 
     /**
