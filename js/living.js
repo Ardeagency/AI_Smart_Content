@@ -2191,7 +2191,9 @@ class LivingManager {
             mediaType: isVideo ? 'video' : 'image',
             fileName: (output?.storage_path ? String(output.storage_path).split('/').pop() : (isVideo ? 'video.mp4' : 'imagen.png')),
             caption: (output?.generated_copy || data?.prompt || ''),
-            brandContainerId: output?.brand_container_id || null
+            brandContainerId: output?.brand_container_id || null,
+            // Referencias para editar el copy (texto/CTA/hashtags) en su tabla.
+            output, run
         };
         this._bindModalListenersOnce(modal);
         this._resetModalZoom(); // cada apertura/variante arranca a 100% centrado
@@ -2606,42 +2608,132 @@ class LivingManager {
         const container = document.getElementById('pmodalPromptBlocks');
         if (!container) return;
 
-        // 1) Determinar la fuente. El "copy" estructurado vive en generated_copy
-        //    o como string en prompt_used. Si rawCopyOrPrompt viene null, fallback.
-        // Resultado = COPY (texto de marketing). El prompt tecnico va al Briefing.
-        const source = output?.generated_copy
-            || output?.text_content
-            || '';
-
+        // Resultado = COPY de marketing. Copy + CTA + hashtags viven en UNA sola
+        // zona editable y copiable como una unidad. El prompt tecnico va al Briefing.
+        const source = output?.generated_copy || output?.text_content || '';
         const blocks = this._parsePromptBlocks(source);
+        const copyPlain = blocks.map(b => b.value).join('\n\n').trim();
 
-        if (!blocks.length) {
-            container.innerHTML = `<p class="pmodal-prompt-empty">Sin copy registrado.</p>`;
-        } else {
-            container.innerHTML = blocks.map(b => `
-                <div class="pmodal-prompt-block">
-                    <div class="pmodal-prompt-block-head">
-                        <span class="pmodal-prompt-block-label">${this.escapeHtml(b.label)}</span>
-                        <button type="button" class="pmodal-prompt-block-copy" data-action="copy-block" title="Copiar">
-                            <i class="aisc-ico aisc-ico--copy"></i>
-                        </button>
-                    </div>
-                    <div class="pmodal-prompt-block-value">${this.escapeHtml(b.value)}</div>
-                </div>
-            `).join('');
-        }
-
-        // 1b) Hashtags generados como chips, debajo del copy.
+        const tp = this._safeParseJSON(output?.technical_params) || {};
+        const meta = this._safeParseJSON(output?.metadata) || {};
+        const cta = String(tp.cta || meta.cta || '').trim();
         const hashtags = this._normalizeHashtags(output?.generated_hashtags);
-        if (hashtags.length) {
-            container.insertAdjacentHTML('beforeend', `
-                <div class="pmodal-hashtags">
-                    ${hashtags.map(h => `<span class="pmodal-hashtag-chip">${this.escapeHtml(h)}</span>`).join('')}
-                </div>`);
+        const outputId = output?.id || this._modalState?.outputId || '';
+        const table = this._outputSourceTable(outputId);
+
+        // Estado del copy para copiar/editar/guardar (leido por los handlers).
+        this._modalCopy = { outputId, table, text: copyPlain, cta, hashtags };
+
+        // Ediciones (system_ai_outputs) sin copy: no mostramos la zona.
+        if (!(copyPlain || cta || hashtags.length) && table !== 'runs_outputs') {
+            container.innerHTML = '';
+            return;
         }
 
-        // El prompt tecnico crudo ya vive en el tab Briefing (seccion PROMPT);
-        // no lo duplicamos aqui con un disclosure "Show generation details".
+        const bodyView = (blocks.length > 1)
+            ? blocks.map(b => `
+                <div class="pmodal-copy-block">
+                    <span class="pmodal-copy-block-label">${this.escapeHtml(b.label)}</span>
+                    <div class="pmodal-copy-text">${this.escapeHtml(b.value)}</div>
+                </div>`).join('')
+            : `<div class="pmodal-copy-text">${copyPlain
+                ? this.escapeHtml(copyPlain)
+                : '<span class="pmodal-prompt-empty">Sin copy registrado.</span>'}</div>`;
+        const ctaView = cta
+            ? `<div class="pmodal-copy-cta"><span class="pmodal-copy-cta-label">CTA</span><span>${this.escapeHtml(cta)}</span></div>`
+            : '';
+        const hashView = hashtags.length
+            ? `<div class="pmodal-hashtags">${hashtags.map(h =>
+                `<span class="pmodal-hashtag-chip">${this.escapeHtml(h)}</span>`).join('')}</div>`
+            : '';
+
+        container.innerHTML = `
+            <div class="pmodal-copy-card" id="pmodalCopyCard">
+                <div class="pmodal-copy-head">
+                    <span class="pmodal-section-title"><i class="aisc-ico aisc-ico--quote"></i> COPY</span>
+                    <div class="pmodal-copy-actions">
+                        <button type="button" class="pmodal-copy-iconbtn" data-action="edit-copy" title="Editar" aria-label="Editar copy"><i class="aisc-ico aisc-ico--edit"></i></button>
+                        <button type="button" class="pmodal-copy-iconbtn" data-action="copy-copyzone" title="Copiar" aria-label="Copiar copy"><i class="aisc-ico aisc-ico--copy"></i></button>
+                    </div>
+                </div>
+                <div class="pmodal-copy-view" data-copy-view>
+                    ${bodyView}
+                    ${ctaView}
+                    ${hashView}
+                </div>
+                <div class="pmodal-copy-edit" data-copy-edit hidden>
+                    <label class="pmodal-copy-field-label">Copy</label>
+                    <textarea class="pmodal-copy-input" data-copy-field="text" rows="4" placeholder="Escribe el copy...">${this.escapeHtml(copyPlain)}</textarea>
+                    <label class="pmodal-copy-field-label">CTA</label>
+                    <input type="text" class="pmodal-copy-input" data-copy-field="cta" placeholder="Llamado a la accion" value="${this.escapeHtml(cta)}">
+                    <label class="pmodal-copy-field-label">Hashtags</label>
+                    <textarea class="pmodal-copy-input" data-copy-field="hashtags" rows="2" placeholder="#uno #dos #tres">${this.escapeHtml(hashtags.join(' '))}</textarea>
+                    <div class="pmodal-copy-edit-actions">
+                        <button type="button" class="pmodal-copy-btn" data-action="cancel-copy">Cancelar</button>
+                        <button type="button" class="pmodal-copy-btn pmodal-copy-btn--primary" data-action="save-copy">Guardar</button>
+                    </div>
+                </div>
+            </div>`;
+
+        // El prompt tecnico crudo ya vive en el tab Briefing (seccion PROMPT).
+    }
+
+    /** Tabla de origen de un output (runs_outputs por defecto; system_ai_outputs si esta ahi). */
+    _outputSourceTable(outputId) {
+        return (this.systemAiOutputs || []).some(o => o?.id === outputId)
+            ? 'system_ai_outputs' : 'runs_outputs';
+    }
+
+    /** Aplica un patch a la copia local del output en las 3 fuentes de historial. */
+    _patchLocalOutput(outputId, patch) {
+        const apply = arr => (arr || []).forEach(o => { if (o?.id === outputId) Object.assign(o, patch); });
+        apply(this.flowOutputs);
+        apply(this.latestGeneratedContent);
+        apply(this.systemAiOutputs);
+    }
+
+    /**
+     * Guarda la edicion del copy (texto + CTA + hashtags) del output abierto en
+     * su tabla de origen, parchea las caches locales y re-renderiza la zona en
+     * modo vista. CTA vive en technical_params.cta (merge, no reemplaza el resto).
+     */
+    async _saveModalCopy(modal, btn) {
+        const c = this._modalCopy;
+        const state = this._modalState || {};
+        if (!c || !c.outputId || !this.supabase) return;
+        const ed = modal.querySelector('#pmodalCopyCard [data-copy-edit]');
+        if (!ed) return;
+        const text = (ed.querySelector('[data-copy-field="text"]')?.value || '').trim();
+        const ctaVal = (ed.querySelector('[data-copy-field="cta"]')?.value || '').trim();
+        const hashtags = this._normalizeHashtags(ed.querySelector('[data-copy-field="hashtags"]')?.value || '');
+
+        if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+        const output = state.output || {};
+        const tp = this._safeParseJSON(output.technical_params) || {};
+        const newTp = { ...tp };
+        if (ctaVal) newTp.cta = ctaVal; else delete newTp.cta;
+        const update = { generated_copy: text, generated_hashtags: hashtags, technical_params: newTp };
+
+        try {
+            // eslint-disable-next-line no-restricted-syntax -- update puntual del copy; el resto del modal ya usa supabase directo (misma deuda)
+            const { error } = await this.supabase.from(c.table).update(update).eq('id', c.outputId);
+            if (error) throw error;
+        } catch (err) {
+            if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
+            if (typeof window.showToast === 'function') window.showToast('No se pudo guardar: ' + (err?.message || 'error'), { type: 'error' });
+            return;
+        }
+
+        this._patchLocalOutput(c.outputId, { generated_copy: text, generated_hashtags: hashtags, technical_params: newTp });
+        if (state.output) {
+            state.output.generated_copy = text;
+            state.output.generated_hashtags = hashtags;
+            state.output.technical_params = newTp;
+        }
+        state.caption = text || state.caption;
+        this._renderModalPrompt(text, state.output, null);
+        if (typeof window.showToast === 'function') window.showToast('Copy actualizado');
     }
 
     /**
@@ -2747,7 +2839,6 @@ class LivingManager {
         const flowName = this.getFlowName(run);
         const kind = this._deriveProductionKind(output);
         const language = this._humanizeLang(tp.language || meta.language || '');
-        const cta = tp.cta || meta.cta || '';
         const composition = tp.composition_mode || meta.composition_mode || '';
         const gradient = this._formatGradient(tp.background_gradient || meta.background_gradient);
         // Campania y audiencia: nombres vienen de los joins de loadFlowRuns
@@ -2776,7 +2867,6 @@ class LivingManager {
             composition ? ['Composicion', this._cap(composition), null] : null,
             gradient ? ['Fondo', null, gradient.html] : null,
             language ? ['Idioma', language, null] : null,
-            cta ? ['CTA', String(cta), null] : null,
             models.length ? [models.length > 1 ? 'Modelos' : 'Modelo', null, modelsHtml] : null,
             createdStr ? ['Created', createdStr, null] : null
         ].filter(Boolean);
@@ -5184,6 +5274,41 @@ class LivingManager {
                                 if (typeof window.showToast === 'function') window.showToast('Copiado');
                             } catch (_) {}
                         }
+                        break;
+                    }
+                    case 'copy-copyzone': {
+                        // Copia la zona completa como texto: copy + CTA + hashtags.
+                        const c = this._modalCopy || {};
+                        const parts = [];
+                        if (c.text) parts.push(c.text);
+                        if (c.cta) parts.push(c.cta);
+                        if (c.hashtags && c.hashtags.length) parts.push(c.hashtags.join(' '));
+                        const text = parts.join('\n\n');
+                        if (text && navigator.clipboard?.writeText) {
+                            try {
+                                await navigator.clipboard.writeText(text);
+                                if (typeof window.showToast === 'function') window.showToast('Copy copiado');
+                            } catch (_) {}
+                        }
+                        break;
+                    }
+                    case 'edit-copy': {
+                        const card = modal.querySelector('#pmodalCopyCard');
+                        card?.querySelector('[data-copy-view]')?.setAttribute('hidden', '');
+                        const ed = card?.querySelector('[data-copy-edit]');
+                        if (ed) { ed.hidden = false; ed.querySelector('[data-copy-field="text"]')?.focus(); }
+                        card?.classList.add('is-editing');
+                        break;
+                    }
+                    case 'cancel-copy': {
+                        // Re-render restaura la vista con los valores originales.
+                        if (this._modalState?.output) {
+                            this._renderModalPrompt(this._modalState.output.generated_copy, this._modalState.output, null);
+                        }
+                        break;
+                    }
+                    case 'save-copy': {
+                        await this._saveModalCopy(modal, btn);
                         break;
                     }
                     case 'kebab': {

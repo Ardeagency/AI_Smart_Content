@@ -1788,6 +1788,119 @@ body.production-filters-in-header .living-container > .living-history-section {
     flex-shrink: 0;
 }
 
+/* Zona de COPY: copy + CTA + hashtags como una unidad editable y copiable. */
+.pmodal-copy-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.pmodal-copy-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.pmodal-copy-head .pmodal-section-title { margin: 0; }
+.pmodal-copy-actions { display: flex; gap: 4px; }
+.pmodal-copy-iconbtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+.pmodal-copy-iconbtn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--pmodal-border);
+    color: var(--text-primary);
+}
+.pmodal-copy-iconbtn i { font-size: 0.9rem; }
+.pmodal-copy-view { display: flex; flex-direction: column; gap: 12px; }
+.pmodal-copy-text {
+    color: var(--text-primary);
+    font-size: 1.02rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+.pmodal-copy-block { display: flex; flex-direction: column; gap: 4px; }
+.pmodal-copy-block-label {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.pmodal-copy-cta {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    color: var(--text-secondary, var(--text-muted));
+    font-size: 0.92rem;
+}
+.pmodal-copy-cta-label {
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+}
+/* Edicion inline */
+.pmodal-copy-edit { display: flex; flex-direction: column; gap: 6px; }
+.pmodal-copy-field-label {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+}
+.pmodal-copy-input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--pmodal-bg-side);
+    border: 1px solid var(--pmodal-border);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.92rem;
+    line-height: 1.45;
+    font-family: inherit;
+    resize: vertical;
+}
+.pmodal-copy-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.28);
+}
+.pmodal-copy-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 6px;
+}
+.pmodal-copy-btn {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--pmodal-border);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 160ms ease, opacity 160ms ease;
+}
+.pmodal-copy-btn:hover { background: rgba(255, 255, 255, 0.06); }
+.pmodal-copy-btn--primary {
+    background: var(--text-primary);
+    color: #0a0a0c;
+    border-color: transparent;
+}
+.pmodal-copy-btn--primary:hover { opacity: 0.9; background: var(--text-primary); }
+.pmodal-copy-btn:disabled { opacity: 0.6; cursor: default; }
+
 /* Hashtags generados: chips debajo del copy en el tab Resultado. */
 .pmodal-hashtags {
     display: flex;
