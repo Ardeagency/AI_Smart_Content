@@ -251,6 +251,7 @@
           <div class="mb-layout">
             <div class="mb-layout-main comp-main">
               ${this._buildBattlefield(data?.kpis?.data, data?.top?.data, data?.kpisPrev?.data)}
+              ${this._buildCompetitorPatterns(data)}
               ${this._buildWinningFormula(data?.intelligence?.data)}
             </div>
             <aside class="mb-layout-aside">
@@ -490,6 +491,32 @@
     },
 
     /* ── 1. El campo de batalla: panorámica + ranking de rivales ──────── */
+    /* ── Tonos / Temas de la COMPETENCIA (solo competidores, no referentes ni
+       aliados). Reusa las tablas de patrones de Mi Marca (_buildPatternTable),
+       alimentadas por dashboard_monitoreo_tones/topics. ── */
+    _buildCompetitorPatterns(data) {
+      const map = (r, nameKey, usedKey) => ({
+        name: r[nameKey],
+        used: Number(r[usedKey]) || 0,
+        eng: Number(r.total_engagement) || 0,
+        likes: Number(r.total_likes) || 0,
+        comments: Number(r.total_comments) || 0,
+        pos: Number(r.pos_ratio) || 0,
+        neg: Number(r.neg_ratio) || 0,
+        trend: Array.isArray(r.trend) ? r.trend.map((v) => Number(v) || 0) : [],
+        topPosts: Array.isArray(r.top_posts) ? r.top_posts : [],
+      });
+      const tones  = (Array.isArray(data?.monitoreoTones?.data)  ? data.monitoreoTones.data  : []).map((r) => map(r, 'tone_name',  'posts_count'));
+      const topics = (Array.isArray(data?.monitoreoTopics?.data) ? data.monitoreoTopics.data : []).map((r) => map(r, 'topic_name', 'usage_count'));
+      const toneCard  = this._buildPatternTable(__('Tonos de la competencia'), __('Qué tono usan más tus competidores directos'), __('Tono'), tones);
+      const topicCard = this._buildPatternTable(__('Temas de la competencia'), __('Qué tema explota más tu competencia'),           __('Tema'), topics);
+      if (!toneCard && !topicCard) return '';
+      return `
+        <section class="mb-section mb-section--wide">
+          <div class="mb-long-grid mb-long-grid--single">${toneCard}${topicCard}</div>
+        </section>`;
+    },
+
     _buildBattlefield(_k, top, _kPrev) {
       const list = Array.isArray(top) ? top : [];
 
@@ -861,6 +888,7 @@
     _bindCompetenceHandlers(body) {
       if (!body || body.dataset.compBound === '1') return;
       body.dataset.compBound = '1';
+      this._bindPatternTableToggle(body);
       body.addEventListener('change', (e) => {
         const el = e.target.closest('[data-comp-filter]');
         if (!el) return;

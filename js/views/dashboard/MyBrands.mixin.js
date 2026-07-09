@@ -2628,6 +2628,7 @@
       // elemento (la delegacion sigue cubriendo el HTML reescrito).
       if (body.dataset.mbBound === '1') return;
       body.dataset.mbBound = '1';
+      this._bindPatternTableToggle(body);
 
       // Filtros tipo <select> (ventana / sub-marca). Plataforma es menu custom (click).
       body.addEventListener('change', (e) => {
@@ -2651,8 +2652,6 @@
         if (actCard) { if (!e.target.closest('canvas')) this._openActivityModal(); return; }
         const hourCell = e.target.closest('[data-mb-hours-modal]');
         if (hourCell) { this._openHoursModal(Number(hourCell.dataset.hour)); return; }
-        const ptblRow = e.target.closest('[data-ptbl-row]');
-        if (ptblRow && !e.target.closest('a')) { this._togglePatternRow(ptblRow); return; }
         const card = e.target.closest('[data-feat-detail]');
         if (!card) return;
         this._openFeaturedDetail(card.dataset.dim, card.dataset.value, card.dataset.title);
@@ -2662,12 +2661,27 @@
         if (e.target.closest('[data-mb-activity-modal]')) { e.preventDefault(); this._openActivityModal(); return; }
         const hourCell = e.target.closest('[data-mb-hours-modal]');
         if (hourCell) { e.preventDefault(); this._openHoursModal(Number(hourCell.dataset.hour)); return; }
-        const ptblRow = e.target.closest('[data-ptbl-row]');
-        if (ptblRow) { e.preventDefault(); this._togglePatternRow(ptblRow); return; }
         const card = e.target.closest('[data-feat-detail]');
         if (!card) return;
         e.preventDefault();
         this._openFeaturedDetail(card.dataset.dim, card.dataset.value, card.dataset.title);
+      });
+    },
+
+    /** Delegacion del toggle de filas expandibles de patrones (tonos/temas).
+     *  Se bindea UNA vez sobre el #insightTabBody compartido (guard ptblBound),
+     *  para que funcione tanto en Mi Marca como en Competencia sin doble-fire. */
+    _bindPatternTableToggle(body) {
+      if (!body || body.dataset.ptblBound === '1') return;
+      body.dataset.ptblBound = '1';
+      body.addEventListener('click', (e) => {
+        const row = e.target.closest('[data-ptbl-row]');
+        if (row && !e.target.closest('a')) this._togglePatternRow(row);
+      });
+      body.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const row = e.target.closest('[data-ptbl-row]');
+        if (row) { e.preventDefault(); this._togglePatternRow(row); }
       });
     },
 

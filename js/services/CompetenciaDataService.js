@@ -64,7 +64,7 @@ class CompetenciaDataService {
     const span = new Date(to).getTime() - new Date(from).getTime();
     const prevFrom = new Date(new Date(from).getTime() - span).toISOString();
     const prevTo = from;
-    const [kpis, top, risk, voice, intel, bench, sov, kpisPrev, entColors] = await Promise.allSettled([
+    const [kpis, top, risk, voice, intel, bench, sov, kpisPrev, entColors, monTones, monTopics] = await Promise.allSettled([
       this.sb.rpc('dashboard_competencia_kpis', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_platforms: platforms }),
       this.sb.rpc('dashboard_competencia_top',  { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 8, p_platforms: platforms }),
       this.sb.rpc('dashboard_competencia_risk', { p_org_id: org, p_date_from: from, p_date_to: to, p_entity_ids: entityIds, p_limit: 6, p_platforms: platforms }),
@@ -82,6 +82,10 @@ class CompetenciaDataService {
       // (metadata.rango = nacional|internacional) -> priorizacion del panel lateral
       // "Observaciones". El rango se edita en otra pagina; aqui solo se consume.
       this.sb.from('intelligence_entities').select('id,color,relevance,metadata').eq('organization_id', org),
+      // Tonos / Temas agregados de la COMPETENCIA (solo competidor_directo/indirecto,
+      // NO referentes ni aliados). Mismas tablas que Mi Marca, aplicadas a rivales.
+      this.sb.rpc('dashboard_monitoreo_tones',  { p_org_id: org, p_date_from: from, p_date_to: to, p_limit: 8 }),
+      this.sb.rpc('dashboard_monitoreo_topics', { p_org_id: org, p_date_from: from, p_date_to: to, p_limit: 8 }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -161,6 +165,8 @@ class CompetenciaDataService {
       benchmark:    u(bench),
       shareOfVoice: u(sov),
       kpisPrev:     u(kpisPrev),
+      monitoreoTones:  u(monTones),
+      monitoreoTopics: u(monTopics),
     };
   }
 
