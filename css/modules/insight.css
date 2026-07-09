@@ -4392,6 +4392,35 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .mb-donut-leg-val { font-size: 0.78rem; color: var(--text-secondary, rgba(212,209,216,0.7)); font-variant-numeric: tabular-nums; }
 @media (max-width: 480px) { .mb-donut-wrap { flex-direction: column; } }
 
+/* ── Tablas de patrones (Tonos / Temas) — reemplazan las donas ── */
+.mb-ptbl-head { margin-bottom: 0.85rem; }
+.mb-ptbl-head .mb-card-title { margin-bottom: 0.15rem; }
+.mb-ptbl-sub { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); }
+.mb-ptbl-scroll { overflow-x: auto; }
+.mb-ptbl { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.mb-ptbl thead th {
+  font-size: 0.625rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted, rgba(212,209,216,0.5)); text-align: left;
+  padding: 0 0.7rem 0.6rem; white-space: nowrap; border-bottom: 1px solid var(--border-divider);
+}
+.mb-ptbl tbody td {
+  padding: 0.62rem 0.7rem; border-bottom: 1px solid var(--border-divider);
+  font-size: 0.8rem; color: var(--text-secondary, rgba(212,209,216,0.72)); white-space: nowrap;
+}
+.mb-ptbl tbody tr:last-child td { border-bottom: none; }
+.mb-ptbl tbody tr:hover td { background: rgba(255,255,255,0.02); }
+.mb-ptbl td.mb-ptbl-num, .mb-ptbl th.mb-ptbl-num { text-align: right; }
+.mb-ptbl-name-cell { padding-left: 0.25rem !important; }
+.mb-ptbl-name { display: inline-flex; align-items: center; gap: 0.6rem; }
+.mb-ptbl-dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; }
+.mb-ptbl-name-txt { display: inline-flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.mb-ptbl-name-main { font-size: 0.82rem; font-weight: 700; color: var(--text-primary, #D4D1D8); }
+.mb-ptbl-name-sub { font-size: 0.625rem; color: var(--text-muted, rgba(212,209,216,0.5)); }
+.mb-ptbl-sent { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-secondary, rgba(212,209,216,0.75)); }
+.mb-ptbl-sent-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.mb-ptbl-points { font-weight: 800; color: var(--text-primary, #D4D1D8); }
+.mb-ptbl-points--top { color: #6bcf7f; }
+
 /* .mb-beh-label: label generico reusado por la seccion de comentarios ("Emociones top"). */
 .mb-beh-label { display: block; font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); margin-bottom: 0.45rem; }
 

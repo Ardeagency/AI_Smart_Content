@@ -63,7 +63,6 @@
         this._bindMyBrandsHandlers(body);
         this._renderLongitudinalCharts(data);
         this._renderPillarsBubble(data);
-        this._renderToneTopicDonuts(data);
       } catch (e) {
         console.error('[MyBrands] loadAll failed:', e);
         if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
@@ -183,7 +182,6 @@
         this._bindMyBrandsHandlers(body);
         this._renderLongitudinalCharts(data);
         this._renderPillarsBubble(data);
-        this._renderToneTopicDonuts(data);
       } catch (e) {
         if (onMyBrands && body) body.innerHTML = this._buildMyBrandsErrorHtml(e);
       }
@@ -650,100 +648,95 @@
         </section>`;
     },
 
-    /* ── Tonos + Temas: misma estructura (jerarquia + mas usado + mas efectivo) ── */
+    /* ── Tonos + Temas: tablas de patrones (reemplazan las donas) ── */
     _buildToneTopicSection(featured) {
       const f = featured || {};
-      const tones = (Array.isArray(f.tones?.data) ? f.tones.data : []).map((r) => ({
-        name: r.tone_name, used: Number(r.posts_count) || 0, eng: Number(r.total_engagement) || 0,
-      }));
-      const topics = (Array.isArray(f.topics?.data) ? f.topics.data : []).map((r) => ({
-        name: r.topic_name, used: Number(r.usage_count) || 0, eng: Number(r.total_engagement) || 0,
-      }));
-      const toneCard = this._buildHierarchyCard(__('Tonos'), tones, 'mbToneDonut');
-      const topicCard = this._buildHierarchyCard(__('Temas'), topics, 'mbTopicDonut');
+      const map = (r, nameKey, usedKey) => ({
+        name: r[nameKey],
+        used: Number(r[usedKey]) || 0,
+        eng: Number(r.total_engagement) || 0,
+        likes: Number(r.total_likes) || 0,
+        comments: Number(r.total_comments) || 0,
+        pos: Number(r.pos_ratio) || 0,
+      });
+      const tones  = (Array.isArray(f.tones?.data)  ? f.tones.data  : []).map((r) => map(r, 'tone_name',  'posts_count'));
+      const topics = (Array.isArray(f.topics?.data) ? f.topics.data : []).map((r) => map(r, 'topic_name', 'usage_count'));
+      const toneCard  = this._buildPatternTable(__('Tonos'), __('Qué tono produce mejor recepción y engagement'), __('Tono'), tones);
+      const topicCard = this._buildPatternTable(__('Temas'), __('Qué tema mueve más a tu público'),               __('Tema'), topics);
       if (!toneCard && !topicCard) return '';
       return `
         <section class="mb-section mb-section--wide">
-          <div class="mb-long-grid">${toneCard}${topicCard}</div>
+          <div class="mb-long-grid mb-long-grid--single">${toneCard}${topicCard}</div>
         </section>`;
     },
 
-    /** Paleta de segmentos para donas (consistente entre leyenda y chart). */
+    /** Paleta de dots (consistente con leyendas del resto del dashboard). */
     _palette() { return ['#6bcf7f', '#5b9bd5', '#e0a045', '#a78bfa', '#e06464', '#22d3ee', '#f472b6']; },
 
-    /** Card jerarquia (tonos/temas): mas usado + mas efectivo + dona + leyenda. */
-    _buildHierarchyCard(title, items, canvasId) {
+    /** Badge de sentimiento producido: dot de color + etiqueta + %. */
+    _sentimentBadge(pos) {
+      const p = Math.max(0, Math.min(1, Number(pos) || 0));
+      let label = __('Negativo'), color = '#e06464';
+      if (p >= 0.6)       { label = __('Positivo'); color = '#6bcf7f'; }
+      else if (p >= 0.35) { label = __('Neutral');  color = '#e0a045'; }
+      return `<span class="mb-ptbl-sent"><span class="mb-ptbl-sent-dot" style="background:${color}"></span>${label} ${Math.round(p * 100)}%</span>`;
+    },
+
+    /** Tabla de patrones (tonos/temas): fila por patrón, ranking por puntos. */
+    _buildPatternTable(title, subtitle, colLabel, items) {
       const list = (Array.isArray(items) ? items : []).filter((x) => x.name && x.used > 0);
       if (!list.length) return '';
       const withAvg = list.map((x) => ({ ...x, avg: x.used > 0 ? x.eng / x.used : 0 }));
-      const mostUsed = [...withAvg].sort((a, b) => b.used - a.used)[0];
-      const mostEff  = [...withAvg].sort((a, b) => b.avg - a.avg)[0];
-      const ranked = [...withAvg].sort((a, b) => b.used - a.used).slice(0, 6);
-      const total = ranked.reduce((s, x) => s + x.used, 0) || 0;
+      // Puntos = score estratégico 0–100 = 55% eficacia (eng/post) + 25% uso + 20% sentimiento,
+      // cada palanca normalizada contra el máximo del set. El #1 es la mejor apuesta.
+      const maxAvg  = Math.max(1, ...withAvg.map((x) => x.avg));
+      const maxUsed = Math.max(1, ...withAvg.map((x) => x.used));
+      const scored = withAvg.map((x) => ({
+        ...x,
+        points: Math.round(100 * (0.55 * (x.avg / maxAvg) + 0.25 * (x.used / maxUsed) + 0.20 * Math.max(0, Math.min(1, x.pos)))),
+      })).sort((a, b) => b.points - a.points).slice(0, 8);
       const PAL = this._palette();
-      const legend = ranked.map((x, i) => `
-        <div class="mb-donut-leg">
-          <span class="mb-donut-dot" style="background:${PAL[i % PAL.length]}"></span>
-          <span class="mb-donut-leg-name">${this._esc(this._capWords(x.name))}</span>
-          <span class="mb-donut-leg-val">${x.used}</span>
-        </div>`).join('');
+      const rows = scored.map((x, i) => `
+        <tr>
+          <td class="mb-ptbl-name-cell">
+            <span class="mb-ptbl-name">
+              <span class="mb-ptbl-dot" style="background:${PAL[i % PAL.length]}"></span>
+              <span class="mb-ptbl-name-txt">
+                <span class="mb-ptbl-name-main">${this._esc(this._capWords(x.name))}</span>
+                <span class="mb-ptbl-name-sub">${__('{n} eng/post', { n: this._compactNum(Math.round(x.avg)) })}</span>
+              </span>
+            </span>
+          </td>
+          <td>${this._sentimentBadge(x.pos)}</td>
+          <td class="mb-ptbl-num">${this._compactNum(x.eng)}</td>
+          <td class="mb-ptbl-num">${x.used}</td>
+          <td class="mb-ptbl-num">${this._compactNum(x.likes)}</td>
+          <td class="mb-ptbl-num">${this._compactNum(x.comments)}</td>
+          <td class="mb-ptbl-num mb-ptbl-points${i === 0 ? ' mb-ptbl-points--top' : ''}">${x.points}</td>
+        </tr>`).join('');
       return `
-        <div class="mb-long-card mb-long-card--crowned">
-          <div class="mb-card-title">${this._esc(title)}</div>
-          <div class="mb-hier-stats">
-            <div class="mb-hier-stat">
-              <span class="mb-hier-stat-cap">${__('Más usado')}</span>
-              <span class="mb-hier-stat-val">${this._esc(this._capWords(mostUsed.name))}</span>
-              <span class="mb-hier-stat-sub">${__('{n} posts', { n: mostUsed.used })}</span>
-            </div>
-            <div class="mb-hier-stat mb-hier-stat--eff">
-              <span class="mb-hier-stat-cap">${__('Más efectivo')}</span>
-              <span class="mb-hier-stat-val">${this._esc(this._capWords(mostEff.name))}</span>
-              <span class="mb-hier-stat-sub">${__('{n} eng/post', { n: this._compactNum(Math.round(mostEff.avg)) })}</span>
-            </div>
+        <div class="mb-long-card">
+          <div class="mb-ptbl-head">
+            <div class="mb-card-title">${this._esc(title)}</div>
+            <div class="mb-ptbl-sub">${this._esc(subtitle)}</div>
           </div>
-          <div class="mb-donut-wrap">
-            <div class="mb-donut">
-              <canvas id="${canvasId}"></canvas>
-              <div class="mb-donut-center"><span class="mb-donut-center-val">${total}</span><span class="mb-donut-center-cap">${__('posts')}</span></div>
-            </div>
-            <div class="mb-donut-legend">${legend}</div>
+          <div class="mb-ptbl-scroll">
+            <table class="mb-ptbl">
+              <thead>
+                <tr>
+                  <th>${this._esc(colLabel)}</th>
+                  <th>${__('Sentimiento producido')}</th>
+                  <th class="mb-ptbl-num">${__('Engagement generado')}</th>
+                  <th class="mb-ptbl-num">${__('Posts que lo usan')}</th>
+                  <th class="mb-ptbl-num">${__('Likes')}</th>
+                  <th class="mb-ptbl-num">${__('Comentarios')}</th>
+                  <th class="mb-ptbl-num">${__('Puntos')}</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
           </div>
         </div>`;
-    },
-
-    /** Pinta las donas de Tonos y Temas (Chart.js doughnut). */
-    async _renderToneTopicDonuts(data) {
-      try { await this._ensureChartJs(); } catch (_) { /* noop */ }
-      const Chart = window.Chart; if (!Chart) return;
-      const PAL = this._palette();
-      const f = data?.featured || {};
-      const draw = (id, rows, nameKey, usedKey) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const list = (Array.isArray(rows) ? rows : []).map((r) => ({ name: r[nameKey], used: Number(r[usedKey]) || 0 }))
-          .filter((x) => x.name && x.used > 0).sort((a, b) => b.used - a.used).slice(0, 6);
-        if (!list.length) return;
-        try {
-          this._reg(new Chart(el.getContext('2d'), {
-            type: 'doughnut',
-            data: { labels: list.map((x) => this._capWords(x.name)), datasets: [{
-              data: list.map((x) => x.used),
-              backgroundColor: list.map((_, i) => PAL[i % PAL.length]),
-              borderColor: '#141517', borderWidth: 2, hoverOffset: 4,
-            }] },
-            options: {
-              responsive: true, maintainAspectRatio: false, cutout: '66%',
-              plugins: {
-                legend: { display: false },
-                tooltip: { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10, callbacks: { label: (c) => ' ' + __('{label}: {n} posts', { label: c.label, n: c.parsed }) } },
-              },
-            },
-          }));
-        } catch (e) { console.warn('[donut]', id, e?.message); }
-      };
-      draw('mbToneDonut', f.tones?.data, 'tone_name', 'posts_count');
-      draw('mbTopicDonut', f.topics?.data, 'topic_name', 'usage_count');
     },
 
 
