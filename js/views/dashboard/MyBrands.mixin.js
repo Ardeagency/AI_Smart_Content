@@ -658,6 +658,7 @@
         likes: Number(r.total_likes) || 0,
         comments: Number(r.total_comments) || 0,
         pos: Number(r.pos_ratio) || 0,
+        topPosts: Array.isArray(r.top_posts) ? r.top_posts : [],
       });
       const tones  = (Array.isArray(f.tones?.data)  ? f.tones.data  : []).map((r) => map(r, 'tone_name',  'posts_count'));
       const topics = (Array.isArray(f.topics?.data) ? f.topics.data : []).map((r) => map(r, 'topic_name', 'usage_count'));
@@ -696,10 +697,14 @@
         points: Math.round(100 * (0.55 * (x.avg / maxAvg) + 0.25 * (x.used / maxUsed) + 0.20 * Math.max(0, Math.min(1, x.pos)))),
       })).sort((a, b) => b.points - a.points).slice(0, 8);
       const PAL = this._palette();
-      const rows = scored.map((x, i) => `
-        <tr>
+      const rows = scored.map((x, i) => {
+        const posts = Array.isArray(x.topPosts) ? x.topPosts.filter((p) => p && (p.content || p.permalink)) : [];
+        const expandable = posts.length > 0;
+        const main = `
+        <tr${expandable ? ` class="mb-ptbl-row" data-ptbl-row tabindex="0" role="button" aria-expanded="false"` : ''}>
           <td class="mb-ptbl-name-cell">
             <span class="mb-ptbl-name">
+              ${expandable ? '<span class="mb-ptbl-chev" aria-hidden="true">›</span>' : '<span class="mb-ptbl-chev mb-ptbl-chev--empty" aria-hidden="true"></span>'}
               <span class="mb-ptbl-dot" style="background:${PAL[i % PAL.length]}"></span>
               <span class="mb-ptbl-name-txt">
                 <span class="mb-ptbl-name-main">${this._esc(this._capWords(x.name))}</span>
@@ -713,7 +718,13 @@
           <td class="mb-ptbl-num">${this._compactNum(x.likes)}</td>
           <td class="mb-ptbl-num">${this._compactNum(x.comments)}</td>
           <td class="mb-ptbl-num mb-ptbl-points${i === 0 ? ' mb-ptbl-points--top' : ''}">${x.points}</td>
-        </tr>`).join('');
+        </tr>`;
+        const detail = expandable ? `
+        <tr class="mb-ptbl-detail" hidden>
+          <td colspan="7">${this._buildExamplePosts(posts)}</td>
+        </tr>` : '';
+        return main + detail;
+      }).join('');
       return `
         <div class="mb-long-card">
           <div class="mb-ptbl-head">
@@ -739,6 +750,42 @@
         </div>`;
     },
 
+
+    /** Badge de sentimiento a partir del texto crudo (POS/NEG/NEU) de un post. */
+    _sentTextBadge(txt) {
+      const t = String(txt || '').toUpperCase();
+      let label = __('Neutral'), color = '#e0a045';
+      if (t.startsWith('POS'))      { label = __('Positivo'); color = '#6bcf7f'; }
+      else if (t.startsWith('NEG')) { label = __('Negativo'); color = '#e06464'; }
+      return `<span class="mb-ex-sent"><span class="mb-ex-sent-dot" style="background:${color}"></span>${label}</span>`;
+    },
+
+    /** Fila expandida: posts de ejemplo que usaron ese tono/tema. */
+    _buildExamplePosts(posts) {
+      const cards = (Array.isArray(posts) ? posts : []).slice(0, 3).map((p) => {
+        const net = this._platformLabel(p.network);
+        const content = this._esc(String(p.content || '').trim()) || __('(sin texto)');
+        const likes = this._compactNum(Number(p.likes) || 0);
+        const comments = this._compactNum(Number(p.comments) || 0);
+        const eng = this._compactNum(Number(p.engagement) || 0);
+        const link = p.permalink
+          ? `<a class="mb-ex-link" href="${this._esc(p.permalink)}" target="_blank" rel="noopener noreferrer">${__('Ver post')} ↗</a>`
+          : '';
+        return `
+          <div class="mb-ex-post">
+            <div class="mb-ex-head">
+              <span class="mb-ex-net">${this._esc(net)}</span>
+              ${this._sentTextBadge(p.sentiment)}
+            </div>
+            <div class="mb-ex-content">${content}</div>
+            <div class="mb-ex-foot">
+              <span class="mb-ex-metrics">${__('{likes} likes · {comments} comentarios · {eng} eng', { likes, comments, eng })}</span>
+              ${link}
+            </div>
+          </div>`;
+      }).join('');
+      return `<div class="mb-ex-head-cap">${__('Posts de ejemplo con mejor recepción')}</div><div class="mb-ex-grid">${cards}</div>`;
+    },
 
     /** Etiqueta legible de plataforma a partir del network crudo. */
     _platformLabel(net) {
@@ -2530,6 +2577,8 @@
         if (actCard) { if (!e.target.closest('canvas')) this._openActivityModal(); return; }
         const hourCell = e.target.closest('[data-mb-hours-modal]');
         if (hourCell) { this._openHoursModal(Number(hourCell.dataset.hour)); return; }
+        const ptblRow = e.target.closest('[data-ptbl-row]');
+        if (ptblRow && !e.target.closest('a')) { this._togglePatternRow(ptblRow); return; }
         const card = e.target.closest('[data-feat-detail]');
         if (!card) return;
         this._openFeaturedDetail(card.dataset.dim, card.dataset.value, card.dataset.title);
@@ -2539,11 +2588,23 @@
         if (e.target.closest('[data-mb-activity-modal]')) { e.preventDefault(); this._openActivityModal(); return; }
         const hourCell = e.target.closest('[data-mb-hours-modal]');
         if (hourCell) { e.preventDefault(); this._openHoursModal(Number(hourCell.dataset.hour)); return; }
+        const ptblRow = e.target.closest('[data-ptbl-row]');
+        if (ptblRow) { e.preventDefault(); this._togglePatternRow(ptblRow); return; }
         const card = e.target.closest('[data-feat-detail]');
         if (!card) return;
         e.preventDefault();
         this._openFeaturedDetail(card.dataset.dim, card.dataset.value, card.dataset.title);
       });
+    },
+
+    /** Abre/cierra la fila de detalle (posts de ejemplo) de un tono/tema. */
+    _togglePatternRow(row) {
+      const detail = row.nextElementSibling;
+      if (!detail || !detail.classList.contains('mb-ptbl-detail')) return;
+      const willOpen = detail.hasAttribute('hidden');
+      if (willOpen) detail.removeAttribute('hidden'); else detail.setAttribute('hidden', '');
+      row.classList.toggle('is-open', willOpen);
+      row.setAttribute('aria-expanded', String(willOpen));
     },
 
     /* ════════════════════════════════════════════════════════════════

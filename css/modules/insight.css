@@ -4420,6 +4420,27 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .mb-ptbl-sent-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
 .mb-ptbl-points { font-weight: 800; color: var(--text-primary, #D4D1D8); }
 .mb-ptbl-points--top { color: #6bcf7f; }
+/* Filas expandibles */
+.mb-ptbl-row { cursor: pointer; }
+.mb-ptbl-row:hover td { background: rgba(255,255,255,0.03); }
+.mb-ptbl-row:focus-visible { outline: 2px solid var(--brand-primary, #5b9bd5); outline-offset: -2px; }
+.mb-ptbl-chev { display: inline-flex; width: 0.75rem; flex: 0 0 auto; color: var(--text-muted, rgba(212,209,216,0.45)); font-size: 0.9rem; line-height: 1; transition: transform 0.18s ease; }
+.mb-ptbl-row.is-open .mb-ptbl-chev { transform: rotate(90deg); color: var(--text-primary, #D4D1D8); }
+.mb-ptbl-chev--empty { visibility: hidden; }
+.mb-ptbl-detail > td { padding: 0 0.7rem 0.85rem !important; background: rgba(255,255,255,0.015); }
+.mb-ex-head-cap { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); padding: 0.7rem 0 0.6rem; }
+.mb-ex-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
+@media (max-width: 720px) { .mb-ex-grid { grid-template-columns: 1fr; } }
+.mb-ex-post { display: flex; flex-direction: column; gap: 0.45rem; padding: 0.7rem 0.8rem; border: 1px solid var(--border-divider); border-radius: 10px; background: var(--bg-card); min-width: 0; }
+.mb-ex-head { display: flex; align-items: center; gap: 0.5rem; }
+.mb-ex-net { font-size: 0.6875rem; font-weight: 700; color: var(--text-primary, #D4D1D8); }
+.mb-ex-sent { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.6875rem; color: var(--text-secondary, rgba(212,209,216,0.72)); }
+.mb-ex-sent-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.mb-ex-content { font-size: 0.75rem; line-height: 1.45; color: var(--text-secondary, rgba(212,209,216,0.78)); white-space: normal; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.mb-ex-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.4rem; margin-top: auto; }
+.mb-ex-metrics { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.5)); font-variant-numeric: tabular-nums; }
+.mb-ex-link { font-size: 0.6875rem; font-weight: 600; color: var(--brand-primary, #5b9bd5); white-space: nowrap; text-decoration: none; }
+.mb-ex-link:hover { text-decoration: underline; }
 
 /* .mb-beh-label: label generico reusado por la seccion de comentarios ("Emociones top"). */
 .mb-beh-label { display: block; font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); margin-bottom: 0.45rem; }
