@@ -1901,6 +1901,47 @@ body.production-filters-in-header .living-container > .living-history-section {
 .pmodal-copy-btn--primary:hover { opacity: 0.9; background: var(--text-primary); }
 .pmodal-copy-btn:disabled { opacity: 0.6; cursor: default; }
 
+/* EDICION: cabecera de linaje (tipo + miniatura del original) en el Briefing. */
+.pmodal-edit-lineage { display: flex; flex-direction: column; gap: 10px; }
+.pmodal-edit-kind {
+    align-self: flex-start;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--pmodal-border);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.pmodal-edit-origin-loading { color: var(--text-muted); font-size: 0.85rem; }
+.pmodal-edit-origin-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px;
+    background: var(--pmodal-bg-side);
+    border: 1px solid var(--pmodal-border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    transition: background 160ms ease, border-color 160ms ease;
+}
+.pmodal-edit-origin-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+.pmodal-edit-origin-btn img,
+.pmodal-edit-origin-btn .pmodal-entity-img--empty {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.pmodal-edit-origin-label { font-size: 0.88rem; color: var(--text-secondary, var(--text-primary)); }
+
 /* Hashtags generados: chips debajo del copy en el tab Resultado. */
 .pmodal-hashtags {
     display: flex;

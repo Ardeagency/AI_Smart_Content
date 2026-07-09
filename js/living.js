@@ -2989,6 +2989,128 @@ class LivingManager {
         if (scroll) scroll.scrollTo(0, 0);
     }
 
+    /** Seccion PRODUCTO reutilizable (card + carrusel horizontal con fallback). */
+    _productSectionHtml({ name, type, category, images }) {
+        const imgs = Array.isArray(images) ? images.filter(Boolean) : [];
+        const sub = category || type;
+        return `<section class="pmodal-section pmodal-input-entity">
+            <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--product"></i> ${this.escapeHtml(type || 'Entidad')}</h3>
+            <div class="pmodal-entity-head">
+                <p class="pmodal-entity-name">${this.escapeHtml(name || '')}</p>
+                ${sub ? `<p class="pmodal-entity-type">${this.escapeHtml(sub)}</p>` : ''}
+            </div>
+            ${imgs.length
+                ? `<div class="pmodal-entity-carousel" role="list">
+                    ${imgs.map((u, i) => `
+                        <a class="pmodal-entity-shot" role="listitem" href="${this.escapeHtml(u)}" target="_blank" rel="noopener" aria-label="${this.escapeHtml(name || '')} — imagen ${i + 1}">
+                            <img src="${this.escapeHtml(u)}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('pmodal-entity-shot--broken');this.parentElement.setAttribute('aria-disabled','true');this.parentElement.removeAttribute('href');this.parentElement.insertAdjacentHTML('beforeend','<i class=\\'aisc-ico aisc-ico--product\\'></i>');">
+                        </a>`).join('')}
+                </div>`
+                : `<div class="pmodal-entity-card"><div class="pmodal-entity-img pmodal-entity-img--empty" aria-hidden="true"><i class="aisc-ico aisc-ico--product"></i></div></div>`
+            }
+        </section>`;
+    }
+
+    /** Tipo de edicion (image_edit/upscale/remove_bg/fix_text) o null si no es edicion. */
+    _editKind(output) {
+        const meta = this._safeParseJSON(output?.metadata) || {};
+        const kind = String(meta.kind || '');
+        if (meta.source_output_id || /^image_(edit|upscale|remove_bg|fix_text)/.test(kind)) return kind || 'edit';
+        return null;
+    }
+
+    /** Etiqueta legible del tipo de edicion. */
+    _editKindLabel(kind) {
+        const map = {
+            image_edit: 'Editar', image_upscale: 'Mejorar 4K',
+            image_remove_bg: 'Sin fondo', image_fix_text: 'Mejorar texto', edit: 'Edicion'
+        };
+        return map[kind] || 'Edicion';
+    }
+
+    /** Busca un output por id en las caches locales; si no esta, lo consulta en BD. */
+    async _resolveOutputById(outputId) {
+        if (!outputId) return null;
+        const inCache = [...(this.flowOutputs || []), ...(this.latestGeneratedContent || []), ...(this.systemAiOutputs || [])]
+            .find(o => o?.id === outputId);
+        if (inCache) return inCache;
+        if (!this.supabase) return null;
+        for (const table of ['runs_outputs', 'system_ai_outputs']) {
+            try {
+                const { data } = await this.supabase.from(table) // eslint-disable-line no-restricted-syntax -- lookup puntual del output original de una edicion
+                    .select('id, run_id, output_type, storage_path, storage_object_id, reference_image_url, entity_id, metadata, technical_params, generated_copy')
+                    .eq('id', outputId).maybeSingle();
+                if (data) return data;
+            } catch (_) { /* noop */ }
+        }
+        return null;
+    }
+
+    /** Asegura que runs_inputs del run esten hidratados en this.flowInputs. */
+    async _ensureInputsForRun(runId) {
+        if (!runId) return;
+        const has = (this.flowInputs || []).some(i => i?.run_id === runId);
+        if (!has) { try { await this.loadFlowInputs({ reset: false, runIds: [runId] }); } catch (_) { /* noop */ } }
+    }
+
+    /**
+     * Briefing de una EDICION: cabecera con tipo + miniatura del output original
+     * (link para abrirlo) y el PRODUCTO heredado siguiendo source_output_id ->
+     * output original -> su producto (misma resolucion que un output de flujo).
+     */
+    async _renderEditBriefing(container, output, kind) {
+        const meta = this._safeParseJSON(output?.metadata) || {};
+        const sourceId = meta.source_output_id || null;
+        const label = this.escapeHtml(this._editKindLabel(kind));
+
+        container.innerHTML = `
+            <section class="pmodal-section pmodal-input-edit">
+                <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--edit"></i> EDICION</h3>
+                <div class="pmodal-edit-lineage">
+                    <span class="pmodal-edit-kind">${label}</span>
+                    <div class="pmodal-edit-origin" id="pmodalEditOrigin">
+                        <span class="pmodal-edit-origin-loading">Cargando original…</span>
+                    </div>
+                </div>
+            </section>
+            <div id="pmodalEditProduct"></div>`;
+
+        const source = sourceId ? await this._resolveOutputById(sourceId) : null;
+        // Si el modal cambio de output mientras resolviamos, abortar.
+        if (this._modalState?.outputId !== (output?.id || this._modalState?.outputId)) return;
+
+        const originEl = document.getElementById('pmodalEditOrigin');
+        if (originEl) {
+            if (source) {
+                const url = this.resolveOutputMediaUrl(source) || output?.reference_image_url || '';
+                originEl.innerHTML = `
+                    <button type="button" class="pmodal-edit-origin-btn" data-action="open-source" data-source-id="${this.escapeHtml(sourceId)}">
+                        ${url ? `<img src="${this.escapeHtml(url)}" alt="" loading="lazy" decoding="async">` : `<span class="pmodal-entity-img pmodal-entity-img--empty"><i class="aisc-ico aisc-ico--image"></i></span>`}
+                        <span class="pmodal-edit-origin-label">Ver produccion original</span>
+                    </button>`;
+            } else {
+                originEl.innerHTML = `<span class="pmodal-edit-origin-loading">Original no disponible</span>`;
+            }
+        }
+
+        const prodEl = document.getElementById('pmodalEditProduct');
+        if (prodEl && source) {
+            await this._ensureInputsForRun(source.run_id);
+            const inputRow = this._selectInputRowForOutput({ id: source.run_id }, source);
+            const data = this._safeParseJSON(inputRow?.input_data) || inputRow?.input_data || {};
+            const sel = this._extractProductSelector(data);
+            const name = data.entity_name || data.product_name || sel?.name || '';
+            if (name) {
+                prodEl.innerHTML = this._productSectionHtml({
+                    name,
+                    type: sel ? 'Producto' : (data.entity_type || 'Producto'),
+                    category: sel?.category || '',
+                    images: (sel?.images && sel.images.length) ? sel.images : []
+                });
+            }
+        }
+    }
+
     /**
      * Renderiza el tab Input: lo que el usuario adjunto al disparar la
      * produccion. Lee de this.flowInputs (cargado en loadFlowInputs).
@@ -3079,6 +3201,10 @@ class LivingManager {
     _renderModalInput(run, output) {
         const container = document.getElementById('pmodalInputContent');
         if (!container) return;
+        // Ediciones (upscale/sin fondo/editar/mejorar texto): Briefing propio con
+        // linaje al output original + producto heredado.
+        const editKind = this._editKind(output);
+        if (editKind) { this._renderEditBriefing(container, output, editKind); return; }
         const inputRow = this._selectInputRowForOutput(run, output);
         let data = this._safeParseJSON(inputRow?.input_data) || inputRow?.input_data || null;
 
@@ -3178,24 +3304,7 @@ class LivingManager {
             ? productSel.images
             : (entityImg ? [entityImg] : []);
         const entityHtml = entityName
-            ? `<section class="pmodal-section pmodal-input-entity">
-                <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--product"></i> ${this.escapeHtml(entityType || 'Entidad')}</h3>
-                <div class="pmodal-entity-head">
-                    <p class="pmodal-entity-name">${this.escapeHtml(entityName)}</p>
-                    ${(entityCategory || entityType) ? `<p class="pmodal-entity-type">${this.escapeHtml(entityCategory || entityType)}</p>` : ''}
-                </div>
-                ${productImages.length
-                    ? `<div class="pmodal-entity-carousel" role="list">
-                        ${productImages.map((u, i) => `
-                            <a class="pmodal-entity-shot" role="listitem" href="${this.escapeHtml(u)}" target="_blank" rel="noopener" aria-label="${this.escapeHtml(entityName)} — imagen ${i + 1}">
-                                <img src="${this.escapeHtml(u)}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('pmodal-entity-shot--broken');this.parentElement.setAttribute('aria-disabled','true');this.parentElement.removeAttribute('href');this.parentElement.insertAdjacentHTML('beforeend','<i class=\\'aisc-ico aisc-ico--product\\'></i>');">
-                            </a>`).join('')}
-                    </div>`
-                    : `<div class="pmodal-entity-card">
-                        <div class="pmodal-entity-img pmodal-entity-img--empty" aria-hidden="true"><i class="aisc-ico aisc-ico--product"></i></div>
-                    </div>`
-                }
-            </section>`
+            ? this._productSectionHtml({ name: entityName, type: entityType, category: entityCategory, images: productImages })
             : '';
 
         const identitiesHtml = identities.length
@@ -5309,6 +5418,20 @@ class LivingManager {
                     }
                     case 'save-copy': {
                         await this._saveModalCopy(modal, btn);
+                        break;
+                    }
+                    case 'open-source': {
+                        // Abre la produccion original de una edicion.
+                        const sourceId = btn.dataset.sourceId;
+                        const source = sourceId ? await this._resolveOutputById(sourceId) : null;
+                        if (source) {
+                            this.openProductionModal({
+                                item: { output: source, run: { id: source.run_id } },
+                                imageUrl: this.resolveOutputMediaUrl(source) || source.reference_image_url || ''
+                            });
+                        } else if (typeof window.showToast === 'function') {
+                            window.showToast('La produccion original no esta disponible');
+                        }
                         break;
                     }
                     case 'kebab': {
