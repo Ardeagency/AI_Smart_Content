@@ -351,7 +351,7 @@ class LivingManager {
 
             const { data, error } = await this.supabase
                 .from('runs_outputs')
-                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, created_at, generated_hashtags, creative_rationale, models')
+                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, created_at, generated_hashtags, creative_rationale, models, reference_image_url, entity_id')
                 .in('run_id', targetRunIds)
                 .order('created_at', { ascending: false });
             if (error) throw error;
@@ -636,7 +636,7 @@ class LivingManager {
 
             const { data: outputs, error: outputsError } = await this.supabase
                 .from('runs_outputs')
-                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, created_at, generated_hashtags, creative_rationale')
+                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, created_at, generated_hashtags, creative_rationale, reference_image_url, entity_id')
                 .in('run_id', runIds)
                 .order('created_at', { ascending: false })
                 .limit(this._historySourceBatchSize);
