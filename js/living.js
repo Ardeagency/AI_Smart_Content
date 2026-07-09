@@ -1801,7 +1801,12 @@ class LivingManager {
                     break;
                 }
                 case 'download': {
-                    if (actionEl.dataset.url) this.downloadImage(actionEl.dataset.url);
+                    if (actionEl.dataset.url) {
+                        const oid = actionEl.dataset.outputId || actionEl.closest('[data-output-id]')?.dataset.outputId || '';
+                        const o = this._cachedOutputById(oid);
+                        const r = o ? ((this.flowRuns || []).find(x => x?.id === o.run_id) || { id: o.run_id }) : null;
+                        this.downloadImage(actionEl.dataset.url, o ? this._buildDownloadFilename(o, r, actionEl.dataset.url) : undefined);
+                    }
                     break;
                 }
                 case 'kebab': {
@@ -1964,7 +1969,11 @@ class LivingManager {
         for (const id of ids) {
             const o = (this.flowOutputs || []).find(x => x?.id === id);
             const url = o ? this.resolveOutputMediaUrl(o) : null;
-            if (url) { this.downloadImage(url); n++; await new Promise(r => setTimeout(r, 350)); }
+            if (url) {
+                const run = (this.flowRuns || []).find(x => x?.id === o.run_id) || { id: o.run_id };
+                this.downloadImage(url, this._buildDownloadFilename(o, run, url));
+                n++; await new Promise(r => setTimeout(r, 350));
+            }
         }
         window.showToast?.(n ? `Descargando ${n} producción${n === 1 ? '' : 'es'}…` : 'Nada que descargar');
     }
@@ -5337,7 +5346,9 @@ class LivingManager {
                         break;
                     }
                     case 'download': {
-                        if (state.mediaUrl) this.downloadImage(state.mediaUrl);
+                        if (state.mediaUrl) {
+                            this.downloadImage(state.mediaUrl, this._buildDownloadFilename(state.output, state.run, state.mediaUrl));
+                        }
                         break;
                     }
                     case 'like': {
@@ -5978,14 +5989,71 @@ class LivingManager {
         return '.jpg';
     }
 
+    /** Busca un output ya cargado por id en las 3 fuentes del historial (sync). */
+    _cachedOutputById(id) {
+        if (!id) return null;
+        return [...(this.flowOutputs || []), ...(this.latestGeneratedContent || []), ...(this.systemAiOutputs || [])]
+            .find(o => o?.id === id) || null;
+    }
+
+    /** Token seguro para nombre de archivo: sin acentos, solo alfanumerico + guiones. */
+    _slug(str, maxLen = 60) {
+        if (!str) return '';
+        let s = String(str).normalize('NFD').replace(/[̀-ͯ]/g, '');
+        s = s.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        if (maxLen && s.length > maxLen) s = s.slice(0, maxLen).replace(/-+$/, '');
+        return s;
+    }
+
+    /** Nombre del producto de un output (para el nombre de descarga). Ediciones: el del original. */
+    _productNameForOutput(output, run) {
+        let o = output, r = run;
+        if (this._editKind(output)) {
+            const meta = this._safeParseJSON(output?.metadata) || {};
+            const src = this._cachedOutputById(meta.source_output_id);
+            if (src) { o = src; r = { id: src.run_id }; }
+        }
+        const inputRow = this._selectInputRowForOutput(r || { id: o?.run_id }, o);
+        const data = this._safeParseJSON(inputRow?.input_data) || inputRow?.input_data || {};
+        const sel = this._extractProductSelector(data);
+        return data.entity_name || data.product_name || sel?.name || '';
+    }
+
+    /**
+     * Nombre de descarga: Producto_Formato_Ratio_Resolucion_Flow_Fecha_AISC.ext
+     * (formato = tipo Imagen/Video). Omite los segmentos que no existan.
+     */
+    _buildDownloadFilename(output, run, mediaUrl) {
+        if (!output) return '';
+        const tp = this._safeParseJSON(output?.technical_params) || {};
+        const meta = this._safeParseJSON(output?.metadata) || {};
+        const product = this._slug(this._productNameForOutput(output, run), 50);
+        const kind = this._deriveProductionKind(output);
+        const ratio = this._slug(tp.aspect_ratio || meta.aspect_ratio || '');
+        const res = this._slug(tp.resolution || tp.quality || meta.quality || (meta.is_4k ? '4K' : ''));
+        const flow = this._slug(this.getFlowName(run) || '', 40);
+        const created = output?.created_at || run?.created_at;
+        let date = '';
+        if (created) {
+            const d = new Date(created);
+            if (!isNaN(d.getTime())) {
+                date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            }
+        }
+        const ext = this.getDownloadExtension(mediaUrl || output?.storage_path || '');
+        const parts = [product, kind, ratio, res, flow, date].filter(Boolean);
+        const base = parts.length ? parts.join('_') : `produccion-${Date.now()}`;
+        return `${base}_AISC${ext}`;
+    }
+
     /**
      * Descarga el archivo localmente (imagen o video). No abre en pestaña; fuerza descarga.
-     * Soporta jpg, png, webp, gif, mp4, mov, webm, etc.
+     * Soporta jpg, png, webp, gif, mp4, mov, webm, etc. `filenameOverride` fija el nombre.
      */
-    async downloadImage(imageUrl) {
+    async downloadImage(imageUrl, filenameOverride) {
         if (!imageUrl || !imageUrl.startsWith('http')) return;
         const ext = this.getDownloadExtension(imageUrl);
-        const filename = `production-${Date.now()}${ext}`;
+        const filename = filenameOverride || `production-${Date.now()}${ext}`;
         try {
             const response = await fetch(imageUrl, { mode: 'cors' });
             if (!response.ok) throw new Error(response.statusText);
