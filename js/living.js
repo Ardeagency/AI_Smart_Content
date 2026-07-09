@@ -351,7 +351,7 @@ class LivingManager {
 
             const { data, error } = await this.supabase
                 .from('runs_outputs')
-                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, created_at, generated_hashtags, creative_rationale, models, reference_image_url, entity_id')
+                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, technical_params, created_at, generated_hashtags, creative_rationale, models, reference_image_url, entity_id')
                 .in('run_id', targetRunIds)
                 .order('created_at', { ascending: false });
             if (error) throw error;
@@ -636,7 +636,7 @@ class LivingManager {
 
             const { data: outputs, error: outputsError } = await this.supabase
                 .from('runs_outputs')
-                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, created_at, generated_hashtags, creative_rationale, reference_image_url, entity_id')
+                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, technical_params, created_at, generated_hashtags, creative_rationale, reference_image_url, entity_id')
                 .in('run_id', runIds)
                 .order('created_at', { ascending: false })
                 .limit(this._historySourceBatchSize);
@@ -2631,6 +2631,15 @@ class LivingManager {
             `).join('');
         }
 
+        // 1b) Hashtags generados como chips, debajo del copy.
+        const hashtags = this._normalizeHashtags(output?.generated_hashtags);
+        if (hashtags.length) {
+            container.insertAdjacentHTML('beforeend', `
+                <div class="pmodal-hashtags">
+                    ${hashtags.map(h => `<span class="pmodal-hashtag-chip">${this.escapeHtml(h)}</span>`).join('')}
+                </div>`);
+        }
+
         // 2) Disclosure con el prompt técnico crudo (engineer-side).
         const raw = document.getElementById('pmodalPromptRaw');
         const rawText = document.getElementById('pmodalPromptRawText');
@@ -2752,6 +2761,10 @@ class LivingManager {
             : '';
         const flowName = this.getFlowName(run);
         const kind = this._deriveProductionKind(output);
+        const language = this._humanizeLang(tp.language || meta.language || '');
+        const cta = tp.cta || meta.cta || '';
+        const composition = tp.composition_mode || meta.composition_mode || '';
+        const gradient = this._formatGradient(tp.background_gradient || meta.background_gradient);
         // Campania y audiencia: nombres vienen de los joins de loadFlowRuns
         // (campaigns(nombre_campana), audience_personas(name)). Si el run no
         // estaba ligado a ninguna (campaign_id/persona_id null) NO se muestra la
@@ -2775,6 +2788,10 @@ class LivingManager {
             aspect ? ['Formato', String(aspect), null] : null,
             quality ? ['Resolucion', String(quality), null] : null,
             size ? ['Size', size, null] : null,
+            composition ? ['Composicion', this._cap(composition), null] : null,
+            gradient ? ['Fondo', null, gradient.html] : null,
+            language ? ['Idioma', language, null] : null,
+            cta ? ['CTA', String(cta), null] : null,
             models.length ? [models.length > 1 ? 'Modelos' : 'Modelo', null, modelsHtml] : null,
             createdStr ? ['Created', createdStr, null] : null
         ].filter(Boolean);
@@ -2815,6 +2832,63 @@ class LivingManager {
         if (/\.(jpg|jpeg|png|webp|gif|avif)(\?|$)/.test(path)) return 'Imagen';
         if (path) return 'Imagen';
         return output?.text_content || output?.generated_copy ? 'Texto' : '';
+    }
+
+    /** Codigo de idioma -> nombre legible. Fallback: el codigo en mayusculas. */
+    _humanizeLang(code) {
+        const c = String(code || '').trim().toLowerCase();
+        if (!c) return '';
+        const map = { es: 'Espanol', en: 'Ingles', pt: 'Portugues', fr: 'Frances', de: 'Aleman', it: 'Italiano' };
+        return map[c] || c.toUpperCase();
+    }
+
+    /** Capitaliza la primera letra. */
+    _cap(s) {
+        const str = String(s || '');
+        return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+    }
+
+    /**
+     * Formatea background_gradient (jsonb) a una fila con swatch + texto. Valida
+     * que los stops sean hex antes de inyectarlos en un style inline. Devuelve
+     * { html } o null.
+     */
+    _formatGradient(g) {
+        if (!g || typeof g !== 'object') return null;
+        const stops = Array.isArray(g.stops)
+            ? g.stops.filter(s => /^#[0-9a-fA-F]{3,8}$/.test(String(s)))
+            : [];
+        if (stops.length < 2) return null;
+        const isRadial = String(g.type || 'linear').toLowerCase() === 'radial';
+        const angle = Number.isFinite(+g.angle) ? Math.round(+g.angle) : 90;
+        const css = isRadial
+            ? `radial-gradient(circle, ${stops.join(', ')})`
+            : `linear-gradient(${angle}deg, ${stops.join(', ')})`;
+        const label = isRadial ? 'Radial' : `Lineal ${angle}°`;
+        const html = `<span class="pmodal-info-value pmodal-gradient-val">`
+            + `<span class="pmodal-gradient-swatch" style="background:${css}"></span>`
+            + `<span>${this.escapeHtml(label)} · ${stops.map(s => this.escapeHtml(s)).join(' → ')}</span>`
+            + `</span>`;
+        return { html };
+    }
+
+    /** Normaliza generated_hashtags (array o string) a ['#tag', ...]. */
+    _normalizeHashtags(raw) {
+        let arr = raw;
+        if (typeof arr === 'string') arr = this._safeParseJSON(arr) || arr.split(',');
+        if (!Array.isArray(arr)) return [];
+        return arr.map(h => {
+            const s = String(h || '').trim();
+            if (!s) return '';
+            return s.startsWith('#') ? s : `#${s}`;
+        }).filter(Boolean);
+    }
+
+    /** Markdown minimo y seguro: **negrita** y saltos de linea. Escapa primero. */
+    _lightMarkdown(text) {
+        return this.escapeHtml(String(text || ''))
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
     }
 
     /**
@@ -2936,9 +3010,12 @@ class LivingManager {
         // El prompt tecnico (prompt_used del output) se muestra en el Briefing.
         const promptText = (output?.prompt_used && String(output.prompt_used).trim() && String(output.prompt_used).trim().toLowerCase() !== 'completed')
             ? String(output.prompt_used) : '';
+        // Concepto creativo: razonamiento de la IA (verdad del producto + concepto
+        // de render), colapsable al final del Briefing.
+        const rationaleRaw = (typeof output?.creative_rationale === 'string') ? output.creative_rationale.trim() : '';
         const noData = !data || (typeof data === 'object' && Object.keys(data).length === 0);
 
-        if (noData && !promptText) {
+        if (noData && !promptText && !rationaleRaw) {
             container.innerHTML = `
                 <div class="pmodal-input-empty">
                     <i class="aisc-ico aisc-ico--inbox" aria-hidden="true"></i>
@@ -3100,7 +3177,18 @@ class LivingManager {
                 <p class="pmodal-input-brief-text" style="white-space:pre-wrap;">${this.escapeHtml(promptText)}</p>
             </section>`
             : '';
-        container.innerHTML = entityHtml + identitiesHtml + promptHtml + contextHtml + refsHtml + briefHtml + extrasHtml
+        const rationaleHtml = rationaleRaw
+            ? `<section class="pmodal-section pmodal-input-rationale">
+                <details class="pmodal-rationale">
+                    <summary class="pmodal-rationale-summary">
+                        <span class="pmodal-section-title"><i class="aisc-ico aisc-ico--sparkle"></i> CONCEPTO CREATIVO</span>
+                        <i class="aisc-ico aisc-ico--chevron-right pmodal-rationale-caret"></i>
+                    </summary>
+                    <div class="pmodal-rationale-body">${this._lightMarkdown(rationaleRaw)}</div>
+                </details>
+            </section>`
+            : '';
+        container.innerHTML = entityHtml + identitiesHtml + promptHtml + rationaleHtml + contextHtml + refsHtml + briefHtml + extrasHtml
             || `<div class="pmodal-input-empty"><i class="aisc-ico aisc-ico--inbox"></i><p>Sin inputs registrados.</p></div>`;
     }
 

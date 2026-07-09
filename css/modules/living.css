@@ -1772,6 +1772,70 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 .pmodal-context-chip i { font-size: 0.72rem; opacity: 0.8; }
 
+/* Info row de gradiente de fondo: swatch + texto de stops. */
+.pmodal-gradient-val {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-end;
+    text-align: right;
+}
+.pmodal-gradient-swatch {
+    width: 34px;
+    height: 16px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    flex-shrink: 0;
+}
+
+/* Hashtags generados: chips debajo del copy en el tab Resultado. */
+.pmodal-hashtags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+}
+.pmodal-hashtag-chip {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+/* Concepto creativo: seccion colapsable en el Briefing. */
+.pmodal-rationale { width: 100%; }
+.pmodal-rationale-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    list-style: none;
+    gap: 10px;
+}
+.pmodal-rationale-summary::-webkit-details-marker { display: none; }
+.pmodal-rationale-summary .pmodal-section-title { margin: 0; }
+.pmodal-rationale-caret {
+    font-size: 0.85rem;
+    opacity: 0.6;
+    transition: transform 180ms ease;
+    flex-shrink: 0;
+}
+.pmodal-rationale[open] .pmodal-rationale-caret { transform: rotate(90deg); }
+.pmodal-rationale-body {
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: var(--pmodal-bg-side);
+    border: 1px solid var(--pmodal-border);
+    border-radius: 10px;
+    color: var(--text-secondary, var(--text-muted));
+    font-size: 0.85rem;
+    line-height: 1.55;
+}
+.pmodal-rationale-body strong { color: var(--text-primary); font-weight: 600; }
+
 .pmodal-refs-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
