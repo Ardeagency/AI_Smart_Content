@@ -199,16 +199,9 @@ class ProductionView extends BaseView {
                         <!-- Strip de siblings (otros outputs del mismo run) -->
                         <div class="pmodal-siblings" id="pmodalSiblings" hidden></div>
 
-                        <!-- Prompt: bloques labeled Notion-style + disclosure de generation details -->
+                        <!-- Prompt: bloques labeled Notion-style. El prompt tecnico crudo vive en el tab Briefing. -->
                         <section class="pmodal-section pmodal-prompt-section">
                             <div class="pmodal-prompt-blocks" id="pmodalPromptBlocks"></div>
-                            <details class="pmodal-prompt-raw" id="pmodalPromptRaw" hidden>
-                                <summary>
-                                    <i class="aisc-ico pmodal-prompt-raw-caret aisc-ico--chevron-right"></i>
-                                    <span>Show generation details</span>
-                                </summary>
-                                <pre class="pmodal-prompt-raw-text" id="pmodalPromptRawText"></pre>
-                            </details>
                         </section>
 
                         <!-- Information rows -->

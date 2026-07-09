@@ -1000,10 +1000,6 @@ class StudioView extends BaseView {
                 <div class="pmodal-siblings" id="pmodalSiblings" hidden></div>
                 <section class="pmodal-section pmodal-prompt-section">
                   <div class="pmodal-prompt-blocks" id="pmodalPromptBlocks"></div>
-                  <details class="pmodal-prompt-raw" id="pmodalPromptRaw" hidden>
-                    <summary><i class="aisc-ico pmodal-prompt-raw-caret aisc-ico--chevron-right"></i><span>Show generation details</span></summary>
-                    <pre class="pmodal-prompt-raw-text" id="pmodalPromptRawText"></pre>
-                  </details>
                 </section>
                 <section class="pmodal-section pmodal-info-section">
                   <h3 class="pmodal-section-title"><i class="aisc-ico aisc-ico--alert-info"></i> INFORMATION</h3>

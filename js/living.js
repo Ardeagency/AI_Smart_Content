@@ -2599,8 +2599,8 @@ class LivingManager {
      *   - JSON string (incluso doblemente escapado) con campos
      *     {headline, subline, body, copy, typography_notes, ...} → 1 bloque
      *     por campo, label humanizado, value preservando saltos de línea.
-     * Adicionalmente puebla el disclosure "Show generation details" con el
-     * prompt técnico crudo (metadata.prompt_used) si existe.
+     * Debajo del copy anexa los hashtags generados como chips. El prompt
+     * técnico crudo NO se muestra aqui: vive en el tab Briefing (PROMPT).
      */
     _renderModalPrompt(rawCopyOrPrompt, output, run) {
         const container = document.getElementById('pmodalPromptBlocks');
@@ -2640,23 +2640,8 @@ class LivingManager {
                 </div>`);
         }
 
-        // 2) Disclosure con el prompt técnico crudo (engineer-side).
-        const raw = document.getElementById('pmodalPromptRaw');
-        const rawText = document.getElementById('pmodalPromptRawText');
-        const meta = this._safeParseJSON(output?.metadata) || {};
-        const technicalPrompt = (typeof meta.prompt_used === 'string' && meta.prompt_used)
-            || (typeof output?.prompt_used === 'string' && output.prompt_used.length > 200 ? output.prompt_used : '')
-            || '';
-        if (raw && rawText) {
-            if (technicalPrompt) {
-                raw.hidden = false;
-                rawText.textContent = technicalPrompt;
-                raw.open = false;
-            } else {
-                raw.hidden = true;
-                rawText.textContent = '';
-            }
-        }
+        // El prompt tecnico crudo ya vive en el tab Briefing (seccion PROMPT);
+        // no lo duplicamos aqui con un disclosure "Show generation details".
     }
 
     /**
@@ -3066,7 +3051,10 @@ class LivingManager {
             'briefing','brief','user_brief','instructions',
             'persona_id','persona_name','audience_id','audience_name','audience_ids',
             'campaign_id','campaign_ids','campaign_name','brief_id',
-            'identities','productos','referencias_estilo'
+            'identities','productos','referencias_estilo',
+            // aspect_ratio ya se muestra como "Formato" en el tab Resultado
+            // (INFORMATION); no lo duplicamos aqui en PARAMETROS.
+            'aspect_ratio'
         ]);
         // Plumbing del contexto del motor — jamas se muestra como parametro.
         const PLUMBING_KEYS = new Set([
