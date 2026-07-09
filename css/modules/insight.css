@@ -4404,8 +4404,9 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
   padding: 0 0.7rem 0.6rem; white-space: nowrap; border-bottom: 1px solid var(--border-divider);
 }
 .mb-ptbl tbody td {
-  padding: 0.62rem 0.7rem; border-bottom: 1px solid var(--border-divider);
+  padding: 0.85rem 0.7rem; border-bottom: 1px solid var(--border-divider);
   font-size: 0.8rem; color: var(--text-secondary, rgba(212,209,216,0.72)); white-space: nowrap;
+  vertical-align: middle;
 }
 .mb-ptbl tbody tr:last-child td { border-bottom: none; }
 .mb-ptbl tbody tr:hover td { background: rgba(255,255,255,0.02); }
@@ -4420,6 +4421,27 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .mb-ptbl-sent-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
 .mb-ptbl-points { font-weight: 800; color: var(--text-primary, #D4D1D8); }
 .mb-ptbl-points--top { color: #6bcf7f; }
+/* Flecha de impacto (vs promedio de marca) */
+.mb-ptbl-delta { display: inline-flex; align-items: center; gap: 0.15rem; font-size: 0.625rem; font-weight: 700; margin-left: 0.35rem; white-space: nowrap; }
+.mb-ptbl-delta.is-up { color: #6bcf7f; }
+.mb-ptbl-delta.is-down { color: #e06464; }
+.mb-ptbl-delta.is-flat { color: var(--text-muted, rgba(212,209,216,0.45)); font-weight: 600; }
+/* Pill segmentado de sentimiento */
+.mb-ptbl-pill-wrap { display: inline-flex; flex-direction: column; gap: 0.3rem; min-width: 128px; }
+.mb-ptbl-pill { display: flex; height: 7px; width: 118px; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,0.05); }
+.mb-ptbl-pill-seg { display: block; min-width: 2px; }
+.mb-ptbl-pill-lbl { font-size: 0.72rem; font-weight: 600; }
+/* Engagement + sparkline */
+.mb-ptbl-eng { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; }
+.mb-ptbl-eng-val { font-weight: 600; }
+.mb-ptbl-spark { display: block; opacity: 0.95; }
+.mb-ptbl-spark-empty { color: var(--text-muted, rgba(212,209,216,0.35)); font-size: 0.75rem; }
+/* Medidor de puntos */
+.mb-ptbl-points-cell { min-width: 92px; }
+.mb-ptbl-meter { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 0.28rem; }
+.mb-ptbl-meter-val { font-size: 0.95rem; font-weight: 800; color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+.mb-ptbl-meter-bar { width: 72px; height: 6px; border-radius: 4px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.mb-ptbl-meter-bar > span { display: block; height: 100%; border-radius: 4px; }
 /* Filas expandibles */
 .mb-ptbl-row { cursor: pointer; }
 .mb-ptbl-row:hover td { background: rgba(255,255,255,0.03); }

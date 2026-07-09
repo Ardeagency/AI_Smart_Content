@@ -658,6 +658,8 @@
         likes: Number(r.total_likes) || 0,
         comments: Number(r.total_comments) || 0,
         pos: Number(r.pos_ratio) || 0,
+        neg: Number(r.neg_ratio) || 0,
+        trend: Array.isArray(r.trend) ? r.trend.map((v) => Number(v) || 0) : [],
         topPosts: Array.isArray(r.top_posts) ? r.top_posts : [],
       });
       const tones  = (Array.isArray(f.tones?.data)  ? f.tones.data  : []).map((r) => map(r, 'tone_name',  'posts_count'));
@@ -683,6 +685,66 @@
       return `<span class="mb-ptbl-sent"><span class="mb-ptbl-sent-dot" style="background:${color}"></span>${label} ${Math.round(p * 100)}%</span>`;
     },
 
+    /** Pill segmentado positivo/neutral/negativo + etiqueta dominante. */
+    _sentimentPill(pos, neg) {
+      const p = Math.max(0, Math.min(1, Number(pos) || 0));
+      const n = Math.max(0, Math.min(1, Number(neg) || 0));
+      const neu = Math.max(0, 1 - p - n);
+      const tot = p + n + neu || 1;
+      const seg = (v, c) => v > 0 ? `<span class="mb-ptbl-pill-seg" style="flex:${(v / tot).toFixed(4)};background:${c}"></span>` : '';
+      let label = __('Negativo'), lc = '#e06464';
+      if (p >= 0.6)       { label = __('Positivo'); lc = '#6bcf7f'; }
+      else if (p >= 0.35) { label = __('Neutral');  lc = '#e0a045'; }
+      return `
+        <span class="mb-ptbl-pill-wrap">
+          <span class="mb-ptbl-pill">${seg(p, '#6bcf7f')}${seg(neu, 'rgba(212,209,216,0.28)')}${seg(n, '#e06464')}</span>
+          <span class="mb-ptbl-pill-lbl" style="color:${lc}">${label} ${Math.round(p * 100)}%</span>
+        </span>`;
+    },
+
+    /** Flecha de impacto vs promedio de la marca: verde sube / rojo baja + %. */
+    _impactArrow(avg, brandAvg) {
+      if (!brandAvg || !isFinite(brandAvg) || brandAvg <= 0) return '';
+      const pct = Math.round(((avg - brandAvg) / brandAvg) * 100);
+      if (Math.abs(pct) < 1) return `<span class="mb-ptbl-delta is-flat">→ ${__('en tu promedio')}</span>`;
+      const up = pct > 0;
+      return `<span class="mb-ptbl-delta ${up ? 'is-up' : 'is-down'}">${up ? '▲' : '▼'} ${up ? '+' : ''}${pct}%</span>`;
+    },
+
+    /** Sparkline SVG inline del engagement semanal (verde si sube, rojo si baja). */
+    _sparkline(pts) {
+      const xs = (Array.isArray(pts) ? pts : []).map((v) => Number(v) || 0);
+      if (xs.length < 2) return '<span class="mb-ptbl-spark-empty">—</span>';
+      const W = 72, H = 24, PAD = 2;
+      const min = Math.min(...xs), max = Math.max(...xs);
+      const span = max - min || 1;
+      const step = (W - PAD * 2) / (xs.length - 1);
+      const pointsAttr = xs.map((v, i) => {
+        const x = PAD + i * step;
+        const y = PAD + (1 - (v - min) / span) * (H - PAD * 2);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      const up = xs[xs.length - 1] >= xs[0];
+      const color = up ? '#6bcf7f' : '#e06464';
+      const areaPts = `${PAD},${H - PAD} ${pointsAttr} ${(PAD + (xs.length - 1) * step).toFixed(1)},${H - PAD}`;
+      return `
+        <svg class="mb-ptbl-spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="none" aria-hidden="true">
+          <polygon points="${areaPts}" fill="${color}" opacity="0.12"></polygon>
+          <polyline points="${pointsAttr}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+        </svg>`;
+    },
+
+    /** Medidor de puntos: barra 0-100 coloreada + valor. */
+    _puntosMeter(points) {
+      const v = Math.max(0, Math.min(100, Math.round(Number(points) || 0)));
+      const color = v >= 66 ? '#6bcf7f' : v >= 33 ? '#e0a045' : '#e06464';
+      return `
+        <span class="mb-ptbl-meter">
+          <span class="mb-ptbl-meter-val">${v}</span>
+          <span class="mb-ptbl-meter-bar"><span style="width:${v}%;background:${color}"></span></span>
+        </span>`;
+    },
+
     /** Tabla de patrones (tonos/temas): fila por patrón, ranking por puntos. */
     _buildPatternTable(title, subtitle, colLabel, items) {
       const list = (Array.isArray(items) ? items : []).filter((x) => x.name && x.used > 0);
@@ -696,6 +758,10 @@
         ...x,
         points: Math.round(100 * (0.55 * (x.avg / maxAvg) + 0.25 * (x.used / maxUsed) + 0.20 * Math.max(0, Math.min(1, x.pos)))),
       })).sort((a, b) => b.points - a.points).slice(0, 8);
+      // Promedio de la marca (eng/post) para la flecha de impacto: bajo = resta impacto.
+      const totalEng = withAvg.reduce((s, x) => s + x.eng, 0);
+      const totalUsed = withAvg.reduce((s, x) => s + x.used, 0);
+      const brandAvg = totalUsed > 0 ? totalEng / totalUsed : 0;
       const PAL = this._palette();
       const rows = scored.map((x, i) => {
         const posts = Array.isArray(x.topPosts) ? x.topPosts.filter((p) => p && (p.content || p.permalink)) : [];
@@ -708,16 +774,21 @@
               <span class="mb-ptbl-dot" style="background:${PAL[i % PAL.length]}"></span>
               <span class="mb-ptbl-name-txt">
                 <span class="mb-ptbl-name-main">${this._esc(this._capWords(x.name))}</span>
-                <span class="mb-ptbl-name-sub">${__('{n} eng/post', { n: this._compactNum(Math.round(x.avg)) })}</span>
+                <span class="mb-ptbl-name-sub">${__('{n} eng/post', { n: this._compactNum(Math.round(x.avg)) })} ${this._impactArrow(x.avg, brandAvg)}</span>
               </span>
             </span>
           </td>
-          <td>${this._sentimentBadge(x.pos)}</td>
-          <td class="mb-ptbl-num">${this._compactNum(x.eng)}</td>
+          <td>${this._sentimentPill(x.pos, x.neg)}</td>
+          <td class="mb-ptbl-num">
+            <span class="mb-ptbl-eng">
+              <span class="mb-ptbl-eng-val">${this._compactNum(x.eng)}</span>
+              ${this._sparkline(x.trend)}
+            </span>
+          </td>
           <td class="mb-ptbl-num">${x.used}</td>
           <td class="mb-ptbl-num">${this._compactNum(x.likes)}</td>
           <td class="mb-ptbl-num">${this._compactNum(x.comments)}</td>
-          <td class="mb-ptbl-num mb-ptbl-points${i === 0 ? ' mb-ptbl-points--top' : ''}">${x.points}</td>
+          <td class="mb-ptbl-num mb-ptbl-points-cell">${this._puntosMeter(x.points)}</td>
         </tr>`;
         const detail = expandable ? `
         <tr class="mb-ptbl-detail" hidden>
