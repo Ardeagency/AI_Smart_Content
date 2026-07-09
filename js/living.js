@@ -6032,9 +6032,10 @@ class LivingManager {
     }
 
     /**
-     * Nombre de descarga legible: "Producto - Flow - Ratio Reso - Fecha - AISC.ext"
+     * Nombre de descarga legible: "Producto - Flujo (Formato · Ratio · Resolucion · Fecha) AISC.ext"
      * Espacios reales, mayusculas naturales, flujo acortado a la parte antes del
-     * "/". Omite los segmentos que no existan.
+     * "/". Specs tecnicas entre parentesis separadas por " · " (el backslash NO es
+     * valido en nombres de archivo). Omite los segmentos que no existan.
      */
     _buildDownloadFilename(output, run, mediaUrl) {
         if (!output) return '';
@@ -6042,9 +6043,9 @@ class LivingManager {
         const meta = this._safeParseJSON(output?.metadata) || {};
         const product = this._cleanName(this._productNameForOutput(output, run), 55);
         const flow = this._cleanName(String(this.getFlowName(run) || '').split('/')[0], 40);
+        const kind = this._deriveProductionKind(output);
         const ratio = String(tp.aspect_ratio || meta.aspect_ratio || '').replace(/:/g, 'x').replace(/\s+/g, '');
         const res = this._cleanName(tp.resolution || tp.quality || meta.quality || (meta.is_4k ? '4K' : ''), 12);
-        const tech = [ratio, res].filter(Boolean).join(' ');
         const created = output?.created_at || run?.created_at;
         let date = '';
         if (created) {
@@ -6054,8 +6055,12 @@ class LivingManager {
             }
         }
         const ext = this.getDownloadExtension(mediaUrl || output?.storage_path || '');
-        const fields = [product, flow, tech, date, 'AISC'].filter(Boolean);
-        return `${fields.join(' - ')}${ext}`;
+        const head = [product, flow].filter(Boolean).join(' - ');
+        const specs = [kind, ratio, res, date].filter(Boolean).join(' · ');
+        let base = head;
+        if (specs) base += `${base ? ' ' : ''}(${specs})`;
+        base += `${base ? ' ' : ''}AISC`;
+        return `${base}${ext}`;
     }
 
     /**
