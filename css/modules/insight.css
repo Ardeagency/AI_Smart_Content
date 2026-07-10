@@ -4592,7 +4592,7 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .mb-bstat-verdict--low  { color: #e06464; }
 .mb-bstat-desc {
   margin: 0 0 1rem; font-size: 0.875rem; line-height: 1.55;
-  color: var(--text-muted, rgba(212,209,216,0.75)); max-width: 56ch;
+  color: var(--text-muted, rgba(212,209,216,0.75));
 }
 .mb-bstat-cta { display: flex; gap: 0.625rem; flex-wrap: wrap; }
 .mb-bstat-btn {
