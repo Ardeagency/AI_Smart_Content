@@ -322,6 +322,37 @@
         </div>`;
     },
 
+    /* Lectura de CMO CONSTRUCTIVA desde la clasificacion nueva de tonos/temas.
+       Fortaleza = lo que mas rinde (eng/post). Oportunidad = un GANADOR
+       infrautilizado (rinde sobre el promedio pero se usa poco) → palanca de
+       crecimiento sin fricción. Solo señala hacia adelante, nunca reprocha.
+       Rules+math, sin LLM (el LLM ya clasifico; aqui solo se lee). */
+    _cmoBrandRead(data) {
+      const f = data?.featured || {};
+      const items = [];
+      const add = (rows, nameKey, usedKey, kind) => {
+        (Array.isArray(rows) ? rows : []).forEach((r) => {
+          const used = Number(r[usedKey]) || 0;
+          const eng = Number(r.total_engagement) || 0;
+          if (!r[nameKey] || used < 2) return; // guard de muestra
+          items.push({ kind, name: r[nameKey], used, avg: used > 0 ? eng / used : 0, pos: Number(r.pos_ratio) || 0 });
+        });
+      };
+      add(f.tones?.data,  'tone_name',  'posts_count', __('tono'));
+      add(f.topics?.data, 'topic_name', 'usage_count', __('tema'));
+      if (!items.length) return null;
+      const totEng = items.reduce((s, x) => s + x.avg * x.used, 0);
+      const totUsed = items.reduce((s, x) => s + x.used, 0);
+      const baseAvg = totUsed ? totEng / totUsed : 0;
+      const strength = [...items].sort((a, b) => b.avg - a.avg)[0];
+      // Oportunidad = ganador (>=30% sobre el promedio) infrautilizado, distinto de la fortaleza.
+      const winner = items
+        .filter((x) => baseAvg > 0 && x.avg >= baseAvg * 1.3 && (!strength || x.name !== strength.name))
+        .sort((a, b) => a.used - b.used)[0] || null;
+      const opportunity = winner ? { ...winner, lift: Math.max(1, Math.round((winner.avg / baseAvg - 1) * 100)) } : null;
+      return { strength, opportunity, baseAvg };
+    },
+
     /* ── Estado de tu marca (banner ejecutivo sobre Tonos/Temas) ───────
        Reempaqueta la Salud (dashboard_mimarca_health) + Sentimiento
        (dashboard_mimarca_comments) YA cargados en una sola lectura de CMO:
@@ -350,12 +381,19 @@
       const weak   = sorted.length > 1 ? sorted[sorted.length - 1] : null;
       const weakLow = weak && (Number(weak.score) || 0) < 55;
 
-      const titleTail = weakLow
-        ? __('pero {w} te está frenando', { w: lcFirst(this._humanCompLabel(weak)) })
-        : __('y sostiene bien su ritmo');
-      const desc = (strong && weak && strong.key !== weak.key)
-        ? __('{s} es tu mayor fortaleza. {w} es donde más pierdes alcance — trabájalo esta semana y el resto sostiene la marca.', { s: this._humanCompLabel(strong), w: lcFirst(this._humanCompLabel(weak)) })
-        : __('El estado de tu identidad y tu ejecución, en una sola lectura.');
+      // Lectura de CMO desde la clasificacion NUEVA (tonos/temas): fortaleza +
+      // oportunidad, en tono de socio que impulsa — constructivo, nunca golpeador.
+      const cmo = this._cmoBrandRead(data);
+      const titleTail = cmo?.strength
+        ? __('y tu {k} "{n}" es lo que más conecta', { k: cmo.strength.kind, n: this._capWords(cmo.strength.name) })
+        : (weakLow ? __('con margen claro para crecer') : __('y sostiene bien su ritmo'));
+      const desc = cmo?.opportunity
+        ? __('Tu mayor oportunidad: tu {k} "{n}" rinde +{lift}% sobre tu promedio y todavía lo usas poco — dale más espacio y ganas alcance sin inventar nada nuevo.', { k: cmo.opportunity.kind, n: this._capWords(cmo.opportunity.name), lift: cmo.opportunity.lift })
+        : (cmo?.strength
+            ? __('Vas por buen camino: dobla la apuesta por lo que ya te conecta y mantén la constancia — ahí está tu crecimiento.')
+            : (strong && weak && strong.key !== weak.key
+                ? __('{s} es tu mayor fortaleza; {w} es tu siguiente palanca de crecimiento.', { s: this._humanCompLabel(strong), w: lcFirst(this._humanCompLabel(weak)) })
+                : __('El estado de tu identidad y tu ejecución, en una sola lectura.')));
 
       // Filas de prueba desde datos reales ya cargados.
       const rows = [];
