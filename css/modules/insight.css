@@ -4055,16 +4055,31 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
    .insight-page. Estas reglas viven en insight.css (que se recarga por ruta)
    en vez de navigation.css (que el service worker puede servir cacheado). */
 body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
-.insight-page.insight-page--hero { padding-top: 0; }
+/* Fondo radial de marca del dashboard = el mismo de siempre (Frame 98 del chat de
+   Vera: marca clara -> marca oscura -> #141517 -> gris oscuro de plataforma), pero
+   AHORA vive aqui, en la pagina que scrollea, en vez de fijo en #app-container. Se
+   dimensiona en unidades de viewport (110.4vw/110.4vh, misma escala que tenia
+   anclado al viewport) para verse identico, pero scrollea con el contenido. El negro
+   final (#000000) se reemplazo por --bg-primary (el gris oscuro de fondo de la
+   plataforma) para que el borde del degradado funda con el fondo de la pagina sin
+   costura. El hero (.dash-hero) sigue transparente para dejar ver este fondo. */
+.insight-page.insight-page--hero {
+  padding-top: 0;
+  background-color: var(--bg-primary, #0b0b0b);
+  background-image: radial-gradient(110.4vw 110.4vh at 50% -10.4vh,
+    var(--brand-color-light, #F79E1B) 0%,
+    var(--brand-color-dark, #FF5F00) 30.29%,
+    #141517 74.04%,
+    var(--bg-primary, #0b0b0b) 100%);
+  background-repeat: no-repeat;
+}
 
-/* Fondo del dashboard Y del centro de Monitoreo = mismo radial de marca que el
-   chat de Vera (Frame 98): marca clara (0%) -> marca oscura (30.29%) -> #141517
-   (74.04%) -> #000 (100%). Va en el #app-container (el FONDO de la pagina, no el
-   hero) y anclado al viewport (background-attachment: fixed) para que la luz quede
-   arriba mientras el contenido scrollea, igual que el chat. --brand-color-light/-dark
-   los publica OrgBrandTheme por org; fallback naranja. Las paginas (.dash-hero /
-   .monitoring-page) son transparentes para dejar ver este fondo. */
-#app-container:has(> .insight-page--hero),
+/* Monitoreo conserva el fondo radial de marca FIJO en #app-container (anclado al
+   viewport, no scrollea). El DASHBOARD movio este mismo degradado a la pagina que
+   scrollea (.insight-page--hero, mas abajo) para que la luz baje con el contenido
+   en vez de quedar pineada. --brand-color-light/-dark los publica OrgBrandTheme por
+   org; fallback naranja. El dashboard cae al fondo plano base de #app-container
+   (var(--bg-primary), el gris oscuro de plataforma). */
 #app-container:has(> .monitoring-page) {
   background-color: #000000;
   background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
