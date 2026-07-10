@@ -115,6 +115,14 @@ class CampanasDataService {
       .limit(8)
       .then(r => ({ data: r.data, error: r.error }));
 
+    // Brief de CMO (lo escribe el LLM en lote, cacheado en brand_cmo_brief).
+    const cmoBriefPromise = this.sb
+      .from('brand_cmo_brief')
+      .select('headline, body, verdict, generated_at')
+      .eq('organization_id', this.orgId)
+      .limit(1)
+      .then(r => ({ data: (r.data && r.data[0]) || null, error: r.error }));
+
     const [
       health,
       kpis, list, dailySeries, winnersVsBurners, briefVsOutcome,
@@ -126,6 +134,7 @@ class CampanasDataService {
       activityHistory, engagementTrend, sentimentActivity, postingHours,
       estrategiaTopics, topHighlightedPosts, comments, postReception, whatDrags, whatWins, opportunities,
       estrategiaHashtags,
+      cmoBrief,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_mimarca_health', {
         p_org_id: this.orgId, p_date_from: date_from, p_date_to: date_to, p_brand_container_ids: bcids, p_platforms: platforms,
@@ -246,6 +255,7 @@ class CampanasDataService {
       // + sentimiento. Alimenta el widget "Hashtags que funcionan" en la card de
       // Sentimientos de la audiencia. FEAT-037 Fase 2 #5 (desbloqueado por DATA-002).
       this.sb.rpc('dashboard_estrategia_hashtags',        { ...featuredArgs, p_limit: 5 }),
+      cmoBriefPromise,
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -255,6 +265,7 @@ class CampanasDataService {
       containers:       this.containers,
 
       health:           u(health),
+      cmoBrief:         u(cmoBrief),
       kpis:             u(kpis),
       list:             u(list),
       dailySeries:      u(dailySeries),

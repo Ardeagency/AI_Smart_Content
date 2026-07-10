@@ -363,6 +363,9 @@
     _buildBrandStatusHero(data) {
       const h = data?.health?.data;
       if (!h || h.score == null) return '';
+      // Brief de CMO escrito por LLM (cacheado). Si existe, es la lectura oficial;
+      // el template rule-based queda solo como fallback.
+      const brief = data?.cmoBrief?.data;
 
       const V = {
         elite:     { lvl: 'good', label: __('Élite') },
@@ -432,8 +435,11 @@
           <div class="mb-bstat">
             <div class="mb-bstat-lead">
               <span class="mb-bstat-kicker"><span class="mb-bstat-dot"></span>${__('Estado de tu marca')}</span>
-              <h3 class="mb-bstat-title">${__('Tu marca está')} <span class="mb-bstat-verdict mb-bstat-verdict--${vm.lvl}">${this._esc(vm.label)}</span> ${this._esc(titleTail)}.</h3>
-              <p class="mb-bstat-desc">${this._esc(desc)}</p>
+              ${brief && brief.headline
+                ? `<h3 class="mb-bstat-title">${this._esc(brief.headline)}</h3>
+                   <p class="mb-bstat-desc">${this._esc(brief.body || '')}</p>`
+                : `<h3 class="mb-bstat-title">${__('Tu marca está')} <span class="mb-bstat-verdict mb-bstat-verdict--${vm.lvl}">${this._esc(vm.label)}</span> ${this._esc(titleTail)}.</h3>
+                   <p class="mb-bstat-desc">${this._esc(desc)}</p>`}
               <div class="mb-bstat-cta">
                 <button type="button" class="mb-bstat-btn mb-bstat-btn--primary" data-mb-jump="diag"><i class="aisc-ico aisc-ico--goal"></i>${__('Ver plan para mejorar')}</button>
                 <button type="button" class="mb-bstat-btn mb-bstat-btn--ghost" data-mb-jump="health"><i class="aisc-ico aisc-ico--chart-bar"></i>${__('Salud por plataforma')}</button>
