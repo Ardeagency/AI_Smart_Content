@@ -4551,9 +4551,9 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
    Marca (verde/ambar/clay). Acento = --brand-primary dinamico (sin naranja
    legacy). _buildBrandStatusHero en MyBrands.mixin.js.
    ════════════════════════════════════════════════════════════════════ */
-.mb-bstat-section { margin-bottom: 0.25rem; }
+.mb-bstat-section { margin-bottom: 1rem; }
 .mb-bstat {
-  display: grid; grid-template-columns: 1.55fr 1fr; gap: 1.75rem; align-items: center;
+  display: grid; grid-template-columns: 1.6fr minmax(300px, 460px); gap: 2rem; align-items: center;
   padding: 1.5rem 1.625rem;
   background: linear-gradient(180deg, rgba(255,255,255,0.022), rgba(255,255,255,0) 60%), var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);

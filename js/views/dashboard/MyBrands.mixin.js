@@ -305,10 +305,10 @@
       // de salud dejo de ser hero del cuerpo y vive solo en el sidebar.
       return `
         <div class="insight-page mb-dash" id="mbPage">
+          ${this._buildBrandStatusHero(data)}
           <div class="mb-layout">
             <div class="mb-layout-main">
               ${this._buildLongitudinalSection(data)}
-              ${this._buildBrandStatusHero(data)}
               ${this._buildToneTopicSection(data?.featured)}
               ${this._buildCommentsSection(data)}
               ${this._buildLeverageSection(insights)}
