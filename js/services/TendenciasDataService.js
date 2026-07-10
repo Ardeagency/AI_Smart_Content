@@ -48,7 +48,7 @@ class TendenciasDataService {
     if (!this.sb || !this.orgId) return null;
     const org = this.orgId;
     const w = this.windowDays;
-    const [kpis, pulse, signals, gaps, lexicon, brands, world] = await Promise.allSettled([
+    const [kpis, pulse, signals, gaps, lexicon, brands, world, cmoBrief] = await Promise.allSettled([
       this.sb.rpc('dashboard_tendencias_kpis',              { p_org_id: org, p_window_d: w }),
       this.sb.rpc('dashboard_tendencias_market_pulse',      { p_org_id: org }),
       this.sb.rpc('dashboard_tendencias_niche_signals',     { p_org_id: org, p_window_d: w, p_limit: 40 }),
@@ -56,10 +56,13 @@ class TendenciasDataService {
       this.sb.rpc('dashboard_tendencias_lexicon_emergence', { p_org_id: org, p_limit: 30 }),
       this.sb.rpc('dashboard_tendencias_emerging_brands',   { p_org_id: org }),
       this.sb.rpc('dashboard_tendencias_real_world',        { p_org_id: org, p_lookahead_days: 60, p_limit_holidays: 10, p_limit_history: 6 }),
+      this.sb.from('brand_cmo_brief').select('headline, body').eq('organization_id', org).eq('scope', 'tendencias').limit(1)
+        .then(r => ({ data: (r.data && r.data[0]) || null, error: r.error })),
     ]);
     const u = (s) => this._unwrap(s);
     return {
       windowDays: w,
+      cmoBrief: u(cmoBrief),
       kpis:    u(kpis),
       pulse:   u(pulse),
       signals: u(signals),

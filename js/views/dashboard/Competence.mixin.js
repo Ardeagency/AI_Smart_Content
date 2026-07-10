@@ -247,6 +247,7 @@
        matematica de rivalidad). CTA reusa data-comp-entity (sin handler nuevo). */
     _buildCompetenceStatusHero(data) {
       if (this._isCompetenceEmpty(data)) return '';
+      const brief = data?.cmoBrief?.data;
       const top = Array.isArray(data?.top?.data) ? data.top.data : [];
       const activeRivals = top.filter((r) => Number(r.total_posts) >= 3 && Number(r.total_engagement) > 0);
       const cards = this._computeCompetitionCards(data);
@@ -333,8 +334,11 @@
           <div class="mb-bstat">
             <div class="mb-bstat-lead">
               <span class="mb-bstat-kicker"><span class="mb-bstat-dot"></span>${__('Estado competitivo')}</span>
-              <h3 class="mb-bstat-title">${titleHtml}</h3>
-              <p class="mb-bstat-desc">${this._esc(desc)}</p>
+              ${brief && brief.headline
+                ? `<h3 class="mb-bstat-title">${this._esc(brief.headline)}</h3>
+                   <p class="mb-bstat-desc">${this._esc(brief.body || '')}</p>`
+                : `<h3 class="mb-bstat-title">${titleHtml}</h3>
+                   <p class="mb-bstat-desc">${this._esc(desc)}</p>`}
               ${cta}
             </div>
             ${proof}

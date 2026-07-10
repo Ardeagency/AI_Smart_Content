@@ -117,6 +117,7 @@
        senal/gap/evento real (scrapers en pausa). Doctrina: cada ocasion = Category
        Entry Point; estar donde la gente busca (SEO/GEO) antes que la competencia. */
     _buildTendenciesStatusHero(data) {
+      const brief = data?.cmoBrief?.data;
       const cards = (typeof this._computeTendenciesCards === 'function')
         ? this._computeTendenciesCards(data) : {};
       const hasHot   = !!cards.funciona;
@@ -203,8 +204,11 @@
           <div class="mb-bstat">
             <div class="mb-bstat-lead">
               <span class="mb-bstat-kicker"><span class="mb-bstat-dot"></span>${__('Pulso del nicho')}</span>
-              <h3 class="mb-bstat-title">${__('Tu nicho esta')} <span class="mb-bstat-verdict mb-bstat-verdict--${lvl}">${this._esc(label)}</span>: ${this._esc(titleTail)}.</h3>
-              <p class="mb-bstat-desc">${this._esc(desc)}</p>
+              ${brief && brief.headline
+                ? `<h3 class="mb-bstat-title">${this._esc(brief.headline)}</h3>
+                   <p class="mb-bstat-desc">${this._esc(brief.body || '')}</p>`
+                : `<h3 class="mb-bstat-title">${__('Tu nicho esta')} <span class="mb-bstat-verdict mb-bstat-verdict--${lvl}">${this._esc(label)}</span>: ${this._esc(titleTail)}.</h3>
+                   <p class="mb-bstat-desc">${this._esc(desc)}</p>`}
             </div>
             ${proof}
           </div>

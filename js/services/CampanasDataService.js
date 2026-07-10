@@ -120,6 +120,7 @@ class CampanasDataService {
       .from('brand_cmo_brief')
       .select('headline, body, verdict, generated_at')
       .eq('organization_id', this.orgId)
+      .eq('scope', 'mi_marca')
       .limit(1)
       .then(r => ({ data: (r.data && r.data[0]) || null, error: r.error }));
 

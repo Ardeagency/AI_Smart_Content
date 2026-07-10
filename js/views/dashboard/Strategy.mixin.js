@@ -170,6 +170,7 @@
        ni en produccion (doctrina blanco total). Mismas clases/acento que el hero de
        Mi Marca. Color del veredicto = nivel de confianza de la mejor jugada. */
     _buildStrategyStatusHero(data) {
+      const brief    = data?.cmoBrief?.data;
       const proposed = Array.isArray(data?.proposed?.data) ? data.proposed.data : [];
       const master   = data?.master?.data || {};
       const inProd   = Array.isArray(master.in_production) ? master.in_production : [];
@@ -218,8 +219,11 @@
           <div class="mb-bstat">
             <div class="mb-bstat-lead">
               <span class="mb-bstat-kicker"><span class="mb-bstat-dot"></span>${__('Tu estrategia')}</span>
-              <h3 class="mb-bstat-title">${titleHtml}.</h3>
-              <p class="mb-bstat-desc">${this._esc(desc)}</p>
+              ${brief && brief.headline
+                ? `<h3 class="mb-bstat-title">${this._esc(brief.headline)}</h3>
+                   <p class="mb-bstat-desc">${this._esc(brief.body || '')}</p>`
+                : `<h3 class="mb-bstat-title">${titleHtml}.</h3>
+                   <p class="mb-bstat-desc">${this._esc(desc)}</p>`}
               ${cta}
             </div>
             ${proof}

@@ -43,12 +43,16 @@ class StrategiaDataService {
     if (!this.sb || !this.containerId) return null;
     const bc = this.containerId;
     const status = opts.status || 'proposed';
-    const [master, list] = await Promise.allSettled([
+    const [master, list, cmoBrief] = await Promise.allSettled([
       this.sb.rpc('dashboard_strategy_master', { p_brand_container_id: bc }),
       this.sb.rpc('dashboard_strategic_recommendations', { p_brand_container_id: bc, p_status: status }),
+      this.orgId
+        ? this.sb.from('brand_cmo_brief').select('headline, body').eq('organization_id', this.orgId).eq('scope', 'estrategia').limit(1)
+            .then(r => ({ data: (r.data && r.data[0]) || null, error: r.error }))
+        : Promise.resolve({ data: null, error: null }),
     ]);
     const u = (s) => this._unwrap(s);
-    return { containerId: bc, status, master: u(master), proposed: u(list) };
+    return { containerId: bc, status, master: u(master), proposed: u(list), cmoBrief: u(cmoBrief) };
   }
 
   async approve(recId) {
