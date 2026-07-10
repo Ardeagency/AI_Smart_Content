@@ -100,12 +100,115 @@
     _buildTendenciasHtml(data) {
       return `
         <div class="insight-page mb-dash" id="tendPage">
+          ${this._buildTendenciesStatusHero(data)}
           ${this._buildTendSignals(data?.signals?.data)}
           ${this._buildTendGaps(data?.gaps?.data)}
           ${this._buildTendLexicon(data?.lexicon?.data)}
           ${this._buildTendBrands(data?.brands?.data)}
           ${this._buildTendRealWorld(data?.world?.data)}
         </div>`;
+    },
+
+    /* ── Estado del nicho (banner ejecutivo sobre las secciones de Tendencias) ──
+       Reempaqueta lo que Vera ve AFUERA (senales con velocidad + oceanos azules
+       + calendario del mundo) YA cargado en una lectura de CMO: veredicto = pulso
+       del nicho + diagnostico dinamico + pruebas verificables. NO dispara RPC:
+       reusa _computeTendenciesCards. Se oculta en blanco total si no hay ninguna
+       senal/gap/evento real (scrapers en pausa). Doctrina: cada ocasion = Category
+       Entry Point; estar donde la gente busca (SEO/GEO) antes que la competencia. */
+    _buildTendenciesStatusHero(data) {
+      const cards = (typeof this._computeTendenciesCards === 'function')
+        ? this._computeTendenciesCards(data) : {};
+      const hasHot   = !!cards.funciona;
+      const hasBlue  = !!cards.oportunidad;
+      const hasEvent = !!cards.riesgo;
+      if (!hasHot && !hasBlue && !hasEvent) return '';
+
+      const signals = Array.isArray(data?.signals?.data?.top_velocity) ? data.signals.data.top_velocity : [];
+      const goodSignals = signals.filter((s) => Number(s.relevance_score) >= MIN_SIGNAL_RELEVANCE);
+      const hot = [...goodSignals].sort((a, b) => Number(b.velocity_score) - Number(a.velocity_score))[0] || null;
+
+      const gaps = Array.isArray(data?.gaps?.data?.gaps) ? data.gaps.data.gaps : [];
+      const realGaps = gaps.filter((g) => Number(g.market_signal_count) > 0);
+      const blueList = realGaps.filter((g) => g.is_blue_ocean === true || Number(g.competitor_post_count) === 0);
+      const totals = data?.gaps?.data?.totals || {};
+      const blueCount = blueList.length || (Number(totals.topics_with_zero_competitor_coverage) || 0);
+      const blue = [...blueList].sort((a, b) => Number(a.competitor_post_count || 0) - Number(b.competitor_post_count || 0))[0] || null;
+
+      const holidays = Array.isArray(data?.world?.data?.upcoming_holidays) ? data.world.data.upcoming_holidays : [];
+      const nextEv = [...holidays].sort((a, b) => Number(a.days_until) - Number(b.days_until))[0] || null;
+
+      const bySource = Array.isArray(data?.signals?.data?.by_source) ? data.signals.data.by_source : [];
+      const srcNames = bySource.slice(0, 3).map((s) => this._prettyPlatform(s.source)).filter(Boolean);
+      const srcTxt = srcNames.length
+        ? (srcNames.length === 1 ? srcNames[0] : srcNames.slice(0, -1).join(', ') + ' y ' + srcNames[srcNames.length - 1])
+        : '';
+
+      let lvl, label;
+      if (hasHot && hasBlue)      { lvl = 'good'; label = __('caliente'); }
+      else if (hasHot || hasBlue) { lvl = 'mid';  label = __('en movimiento'); }
+      else                        { lvl = 'low';  label = __('en calma'); }
+
+      let titleTail, desc;
+      if (hot && blue) {
+        titleTail = __('"{k}" acelera y "{t}" sigue sin dueno', { k: hot.keyword, t: blue.topic_label || blue.topic });
+        desc = __('"{k}" esta ganando velocidad{src} y "{t}" tiene demanda que ningun rival cubre. Cada ola nueva es un Category Entry Point: crea contenido optimizado para SEO y GEO ahora, mientras el tema esta caliente y el terreno libre — asi te encuentran el dia que la gente busca, antes que la competencia.', {
+          k: hot.keyword, t: blue.topic_label || blue.topic, src: srcTxt ? __(' (segun {s})', { s: srcTxt }) : '',
+        });
+      } else if (hot) {
+        titleTail = __('"{k}" esta acelerando afuera', { k: hot.keyword });
+        desc = __('"{k}" gana velocidad en tu nicho{src}. Es un Category Entry Point fresco: publica contenido optimizado para SEO y GEO mientras el tema esta caliente, para que te encuentren cuando la gente empiece a buscarlo.', {
+          k: hot.keyword, src: srcTxt ? __(' (segun {s})', { s: srcTxt }) : '',
+        });
+      } else if (blue) {
+        const zero = Number(blue.competitor_post_count) === 0;
+        titleTail = zero
+          ? __('"{t}" — nadie lo cubre todavia', { t: blue.topic_label || blue.topic })
+          : __('"{t}" esta subexplotado', { t: blue.topic_label || blue.topic });
+        desc = __('El mercado pide "{t}" y tu competencia casi no lo cubre. Es terreno libre: ocupalo con contenido optimizado para SEO y GEO y quedate con esa ocasion como Category Entry Point antes de que lo hagan ellos.', {
+          t: blue.topic_label || blue.topic,
+        });
+      } else {
+        titleTail = __('se acerca "{e}" en {d} dia(s)', { e: nextEv.event_name, d: Number(nextEv.days_until) || 0 });
+        desc = __('El nicho esta tranquilo, pero "{e}" se acerca. Cada fecha es un Category Entry Point: prepara contenido optimizado para SEO y GEO con anticipacion para llegar cuando el mundo este mirando.', {
+          e: nextEv.event_name,
+        });
+      }
+
+      const rows = [];
+      const push = (k, v, level) => rows.push(
+        `<div class="mb-bstat-row"><span class="mb-bstat-k">${this._esc(k)}</span><span class="mb-bstat-v mb-bstat-v--${level}">${v}</span></div>`
+      );
+      if (goodSignals.length) {
+        push(__('Senales emergentes'), `${fmt.int(goodSignals.length)}`, goodSignals.length >= 5 ? 'good' : 'mid');
+      }
+      if (blueCount > 0) {
+        push(__('Oceanos azules'), `${fmt.int(blueCount)}`, 'good');
+      }
+      if (hot && Number.isFinite(Number(hot.velocity_score))) {
+        push(__('Velocidad de la mas caliente'), `${this._compactNum(Number(hot.velocity_score))}<small> vel</small>`, 'good');
+      }
+      if (holidays.length) {
+        const d = Number(nextEv?.days_until);
+        push(__('Eventos proximos'), `${fmt.int(holidays.length)}`, Number.isFinite(d) && d <= 14 ? 'mid' : 'low');
+      }
+
+      const objetivo = __('Cada ocasion nueva es un Category Entry Point: estar presente donde la gente busca (SEO/GEO) el dia que lo busca es como se captura la demanda antes que la competencia.');
+      const proof = rows.length
+        ? `<div class="mb-bstat-proof">${rows.join('')}<div class="mb-bstat-obj">${objetivo}</div></div>`
+        : '';
+
+      return `
+        <section class="mb-section mb-bstat-section">
+          <div class="mb-bstat">
+            <div class="mb-bstat-lead">
+              <span class="mb-bstat-kicker"><span class="mb-bstat-dot"></span>${__('Pulso del nicho')}</span>
+              <h3 class="mb-bstat-title">${__('Tu nicho esta')} <span class="mb-bstat-verdict mb-bstat-verdict--${lvl}">${this._esc(label)}</span>: ${this._esc(titleTail)}.</h3>
+              <p class="mb-bstat-desc">${this._esc(desc)}</p>
+            </div>
+            ${proof}
+          </div>
+        </section>`;
     },
 
     /* ── Cards del hero en Tendencias: el PULSO del nicho. Tendencia caliente

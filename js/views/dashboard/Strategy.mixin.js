@@ -86,6 +86,7 @@
       const inProd = Array.isArray(master.in_production) ? master.in_production : [];
       return `
         <div class="insight-page mb-dash" id="stratPage">
+          ${this._buildStrategyStatusHero(data)}
           ${this._buildStratPending(proposed)}
           ${this._buildStratInProduction(inProd)}
         </div>`;
@@ -160,6 +161,70 @@
       }
 
       return { funciona, oportunidad, resta, riesgo };
+    },
+
+    /* ── La apuesta que rinde cuentas (banner ejecutivo del tab Estrategia) ──
+       Reempaqueta el pipeline de Vera YA cargado (proposed + master.in_production)
+       en una lectura de CMO: cual es tu mejor jugada, que espera tu decision y que
+       ya esta en marcha. NO dispara RPC nuevo. Se oculta si no hay nada por decidir
+       ni en produccion (doctrina blanco total). Mismas clases/acento que el hero de
+       Mi Marca. Color del veredicto = nivel de confianza de la mejor jugada. */
+    _buildStrategyStatusHero(data) {
+      const proposed = Array.isArray(data?.proposed?.data) ? data.proposed.data : [];
+      const master   = data?.master?.data || {};
+      const inProd   = Array.isArray(master.in_production) ? master.in_production : [];
+      if (!proposed.length && !inProd.length) return '';
+
+      const status = this._stratFilters?.status || 'proposed';
+
+      const rank = { alta: 3, media: 2, baja: 1 };
+      const top = [...proposed].sort((a, b) => (rank[b.confidence] || 0) - (rank[a.confidence] || 0))[0] || null;
+      const topConf = String(top?.confidence || '').toLowerCase();
+      const CONFLVL = { alta: 'good', media: 'mid', baja: 'low' };
+      const lvl = top ? (CONFLVL[topConf] || 'mid') : 'good';
+
+      const trunc = (s, n) => { const t = String(s || '').trim(); return t.length > n ? t.slice(0, n - 1).trimEnd() + '…' : t; };
+      let titleHtml, desc;
+      if (top) {
+        titleHtml = `${__('Tu apuesta mas fuerte es')} <span class="mb-bstat-verdict mb-bstat-verdict--${lvl}">${this._esc(top.title)}</span>`;
+        const seed = trunc(top.description, 150);
+        desc = (seed ? seed + ' ' : '')
+          + __('Vera ejecuta lo reversible y te informa; solo te pide el OK para lo que gasta o publica.');
+      } else {
+        titleHtml = `<span class="mb-bstat-verdict mb-bstat-verdict--good">${inProd.length === 1 ? __('1 estrategia en produccion') : __('{n} estrategias en produccion', { n: inProd.length })}</span>`;
+        desc = __('No tienes decisiones pendientes: Vera ya esta ejecutando lo aprobado. Mide su impacto en Mi Marca y ajusta el rumbo.');
+      }
+
+      const rows = [];
+      const pushRow = (label, val, rlvl) =>
+        rows.push(`<div class="mb-bstat-row"><span class="mb-bstat-k">${this._esc(label)}</span><span class="mb-bstat-v mb-bstat-v--${rlvl}">${fmt.int(val)}</span></div>`);
+      const queueLabel = { proposed: __('Por decidir'), approved: __('Aprobadas'), rejected: __('Descartadas') }[status] || __('En cola');
+      if (proposed.length) {
+        const qlvl = status === 'rejected' ? 'low' : status === 'approved' ? 'good' : 'mid';
+        pushRow(queueLabel, proposed.length, qlvl);
+        const alta = proposed.filter((r) => String(r.confidence || '').toLowerCase() === 'alta').length;
+        pushRow(__('De alta confianza'), alta, alta ? 'good' : 'mid');
+      }
+      pushRow(__('En produccion'), inProd.length, inProd.length ? 'good' : 'mid');
+      const proof = rows.length ? `<div class="mb-bstat-proof">${rows.join('')}</div>` : '';
+
+      const ctas = [];
+      if (proposed.length) ctas.push(`<button type="button" class="mb-bstat-btn mb-bstat-btn--primary" data-strat-jump="pending"><i class="aisc-ico aisc-ico--goal"></i>${__('Revisar recomendaciones')}</button>`);
+      if (inProd.length)   ctas.push(`<button type="button" class="mb-bstat-btn mb-bstat-btn--ghost" data-strat-jump="production"><i class="aisc-ico aisc-ico--chart-bar"></i>${__('Ver lo que ya corre')}</button>`);
+      const cta = ctas.length ? `<div class="mb-bstat-cta">${ctas.join('')}</div>` : '';
+
+      return `
+        <section class="mb-section mb-bstat-section">
+          <div class="mb-bstat">
+            <div class="mb-bstat-lead">
+              <span class="mb-bstat-kicker"><span class="mb-bstat-dot"></span>${__('Tu estrategia')}</span>
+              <h3 class="mb-bstat-title">${titleHtml}.</h3>
+              <p class="mb-bstat-desc">${this._esc(desc)}</p>
+              ${cta}
+            </div>
+            ${proof}
+          </div>
+        </section>`;
     },
 
     _buildStratFiltersBar() {
@@ -261,6 +326,13 @@
             const step = card ? card.getBoundingClientRect().width + 14 : track.clientWidth * 0.85;
             track.scrollBy({ left: Number(nav.dataset.stratScroll) * step, behavior: 'smooth' });
           }
+          return;
+        }
+        const jump = e.target.closest('[data-strat-jump]');
+        if (jump) {
+          const sel = jump.dataset.stratJump === 'production' ? '.strat-prod-list' : '.strat-carousel';
+          const t = body.querySelector(sel);
+          if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
           return;
         }
         const btn = e.target.closest('[data-rec-action]');
