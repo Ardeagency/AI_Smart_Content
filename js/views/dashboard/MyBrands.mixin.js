@@ -308,6 +308,7 @@
           <div class="mb-layout">
             <div class="mb-layout-main">
               ${this._buildLongitudinalSection(data)}
+              ${this._buildBrandStatusHero(data)}
               ${this._buildToneTopicSection(data?.featured)}
               ${this._buildCommentsSection(data)}
               ${this._buildLeverageSection(insights)}
@@ -319,6 +320,90 @@
             </aside>
           </div>
         </div>`;
+    },
+
+    /* ── Estado de tu marca (banner ejecutivo sobre Tonos/Temas) ───────
+       Reempaqueta la Salud (dashboard_mimarca_health) + Sentimiento
+       (dashboard_mimarca_comments) YA cargados en una sola lectura de CMO:
+       veredicto + diagnostico dinamico (fortaleza / lo que frena) + lista
+       de pruebas verificables. NO dispara RPC nuevo. Se oculta sin salud
+       (doctrina blanco total). Colores de nivel = misma escala que el resto
+       de Mi Marca; acento = --brand-primary (sin naranja legacy). */
+    _buildBrandStatusHero(data) {
+      const h = data?.health?.data;
+      if (!h || h.score == null) return '';
+
+      const V = {
+        elite:     { lvl: 'good', label: __('Élite') },
+        saludable: { lvl: 'good', label: __('Saludable') },
+        atencion:  { lvl: 'mid',  label: __('Atención') },
+        critico:   { lvl: 'low',  label: __('Crítico') },
+      };
+      const vm = V[String(h.verdict || '').toLowerCase()] || { lvl: 'mid', label: h.verdict || __('En seguimiento') };
+      const lcFirst = (s) => (s ? s.charAt(0).toLowerCase() + s.slice(1) : s);
+
+      const comps = (Array.isArray(h.components) ? h.components : []).filter((c) => c && c.score != null);
+      const byKey = {};
+      comps.forEach((c) => { byKey[String(c.key || '').toLowerCase()] = c; });
+      const sorted = [...comps].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+      const strong = sorted[0] || null;
+      const weak   = sorted.length > 1 ? sorted[sorted.length - 1] : null;
+      const weakLow = weak && (Number(weak.score) || 0) < 55;
+
+      const titleTail = weakLow
+        ? __('pero {w} te está frenando', { w: lcFirst(this._humanCompLabel(weak)) })
+        : __('y sostiene bien su ritmo');
+      const desc = (strong && weak && strong.key !== weak.key)
+        ? __('{s} es tu mayor fortaleza. {w} es donde más pierdes alcance — trabájalo esta semana y el resto sostiene la marca.', { s: this._humanCompLabel(strong), w: lcFirst(this._humanCompLabel(weak)) })
+        : __('El estado de tu identidad y tu ejecución, en una sola lectura.');
+
+      // Filas de prueba desde datos reales ya cargados.
+      const rows = [];
+      const pushComp = (label, score) => {
+        if (score == null) return;
+        const sc = Math.round(Number(score) || 0);
+        const lvl = sc >= 70 ? 'good' : sc >= 40 ? 'mid' : 'low';
+        rows.push(`<div class="mb-bstat-row"><span class="mb-bstat-k">${this._esc(label)}</span><span class="mb-bstat-v mb-bstat-v--${lvl}">${sc}<small> / 100</small></span></div>`);
+      };
+      if (byKey.coherencia) pushComp(__('Coherencia con tu ADN'), byKey.coherencia.score);
+      if (byKey.cadencia)   pushComp(__('Constancia de publicación'), byKey.cadencia.score);
+      if (byKey.trends)     pushComp(__('Aprovechamiento de tendencias'), byKey.trends.score);
+      const c = data?.comments?.data;
+      if (c && Number(c.total)) {
+        const pos = Number(c.pos) || 0, neu = Number(c.neu) || 0, neg = Number(c.neg) || 0;
+        const known = (pos + neu + neg) || 1;
+        const p = Math.round(pos / known * 100);
+        const lvl = p >= 60 ? 'good' : p >= 35 ? 'mid' : 'low';
+        rows.push(`<div class="mb-bstat-row"><span class="mb-bstat-k">${__('Sentimiento de audiencia')}</span><span class="mb-bstat-v mb-bstat-v--${lvl}">${p}%<small> pos</small></span></div>`);
+      } else if (byKey.resonancia) {
+        pushComp(__('Resonancia con tu audiencia'), byKey.resonancia.score);
+      }
+
+      // Objetivo del segmento: mismo calculo que la card de Salud.
+      const target = Number(h.target), gap = Number(h.gap), band = h.band || { p50: 65, p75: 80 };
+      const objetivo = Number.isFinite(target)
+        ? __('Objetivo de tu segmento: <strong>{t}</strong>', { t: target }) + (gap > 0 ? __(' · te faltan <strong>{g}</strong> pts', { g: Math.round(gap) }) : __(' · alcanzado ✓'))
+        : __('Saludable para tu segmento: <strong>{lo}–{hi}</strong>', { lo: band.p50, hi: band.p75 });
+
+      const proof = rows.length
+        ? `<div class="mb-bstat-proof">${rows.join('')}<div class="mb-bstat-obj">${objetivo}</div></div>`
+        : '';
+
+      return `
+        <section class="mb-section mb-bstat-section">
+          <div class="mb-bstat">
+            <div class="mb-bstat-lead">
+              <span class="mb-bstat-kicker"><span class="mb-bstat-dot"></span>${__('Estado de tu marca')}</span>
+              <h3 class="mb-bstat-title">${__('Tu marca está')} <span class="mb-bstat-verdict mb-bstat-verdict--${vm.lvl}">${this._esc(vm.label)}</span> ${this._esc(titleTail)}.</h3>
+              <p class="mb-bstat-desc">${this._esc(desc)}</p>
+              <div class="mb-bstat-cta">
+                <button type="button" class="mb-bstat-btn mb-bstat-btn--primary" data-mb-jump="diag"><i class="aisc-ico aisc-ico--goal"></i>${__('Ver plan para mejorar')}</button>
+                <button type="button" class="mb-bstat-btn mb-bstat-btn--ghost" data-mb-jump="health"><i class="aisc-ico aisc-ico--chart-bar"></i>${__('Salud por plataforma')}</button>
+              </div>
+            </div>
+            ${proof}
+          </div>
+        </section>`;
     },
 
     /* ── Plan de accion: Explota / Optimiza / Elimina / Vigila ─────────
@@ -2646,6 +2731,17 @@
         const sel = this._handleFilterMenuClick(e);
         if (sel) {
           if (sel.key === 'platform') this._onMbFilterChange({ platforms: sel.value ? [sel.value] : null });
+          return;
+        }
+        const jump = e.target.closest('[data-mb-jump]');
+        if (jump) {
+          const q = jump.dataset.mbJump === 'health' ? '.mb-health-card:not(.mb-diag-card)' : '.mb-diag-card';
+          const t = body.querySelector(q);
+          if (t) {
+            t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            t.classList.add('mb-flash');
+            setTimeout(() => t.classList.remove('mb-flash'), 1200);
+          }
           return;
         }
         const actCard = e.target.closest('[data-mb-activity-modal]');
