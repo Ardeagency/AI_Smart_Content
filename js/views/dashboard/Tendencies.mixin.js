@@ -426,18 +426,40 @@
       // Dedup SOLO por termino EXACTO (el mismo string aparece a la vez en rising y
       // top). NO se fusionan terminos distintos: "yogurt sin azucar" y "yogurt griego
       // sin azucar" son diferentes y ambos se conservan. Si un termino es rising, gana.
+      // Merge por termino EXACTO (el mismo string llega en rising y top). NO se
+      // fusionan terminos distintos ("yogurt sin azucar" != "yogurt griego sin azucar").
+      // interest = indice 0-100 de Google Trends (proxy de VOLUMEN = trafico); growth =
+      // % de crecimiento del termino en alza. Un termino puede tener ambos.
       const byTerm = new Map();
       raw.forEach((d) => {
         const key = String(d.discovered_term || '').trim().toLowerCase();
         if (!key) return;
-        const rising = String(d.commercial_intent || '') === 'high';
-        const prev = byTerm.get(key);
-        if (!prev || (rising && !prev.rising)) byTerm.set(key, { ...d, rising });
+        const rp = d.raw_payload || {};
+        const kind = String(rp.kind || '');
+        const score = Number(rp.score);
+        const e = byTerm.get(key) || {
+          term: d.discovered_term, seed: d.seed_keyword, geo: d.geo, interest: null, growth: null, rising: false,
+        };
+        if (kind === 'top' && Number.isFinite(score)) e.interest = e.interest == null ? score : Math.max(e.interest, score);
+        if (kind === 'rising') { e.rising = true; if (Number.isFinite(score)) e.growth = e.growth == null ? score : Math.max(e.growth, score); }
+        byTerm.set(key, e);
       });
-      const list = [...byTerm.values()]
-        .sort((a, b) => (Number(b.rising) - Number(a.rising)) || (Number(a.rank_position) - Number(b.rank_position)));
-      const rows = list.map((d) => {
-        const estado = d.rising
+      // Orden por INTERES desc = mas trafico primero (responde "cual me beneficia").
+      const list = [...byTerm.values()].sort((a, b) =>
+        (Number(b.interest ?? -1) - Number(a.interest ?? -1)) || (Number(b.growth ?? 0) - Number(a.growth ?? 0)));
+      const metricCell = (e) => {
+        if (e.interest != null) {
+          const w = Math.max(3, Math.min(100, e.interest));
+          return `<span class="tend-demand-metric"><span class="tend-demand-bar"><span style="width:${w}%"></span></span><span class="tend-demand-val">${e.interest}</span></span>`;
+        }
+        if (e.growth != null) {
+          const g = e.growth >= 5000 ? __('Explosivo') : `+${this._compactNum(e.growth)}%`;
+          return `<span class="tend-demand-growth">▲ ${g}</span>`;
+        }
+        return '<span class="tend-demand-val tend-demand-val--na">—</span>';
+      };
+      const rows = list.map((e) => {
+        const estado = e.rising
           ? `<span class="tend-demand-tag tend-demand-tag--rising"><i class="aisc-ico aisc-ico--zap"></i> ${__('En alza')}</span>`
           : `<span class="tend-demand-tag">${__('Demandado')}</span>`;
         return `
@@ -446,13 +468,14 @@
               <span class="mb-ptbl-name">
                 <span class="mb-ptbl-chev mb-ptbl-chev--empty" aria-hidden="true"></span>
                 <span class="mb-ptbl-name-txt">
-                  <span class="mb-ptbl-name-main">${this._esc(d.discovered_term)}</span>
-                  ${d.seed_keyword ? `<span class="mb-ptbl-name-sub">${__('vía {s}', { s: this._esc(d.seed_keyword) })}</span>` : ''}
+                  <span class="mb-ptbl-name-main">${this._esc(e.term)}</span>
+                  ${e.seed ? `<span class="mb-ptbl-name-sub">${__('vía {s}', { s: this._esc(e.seed) })}</span>` : ''}
                 </span>
               </span>
             </td>
+            <td class="mb-ptbl-num">${metricCell(e)}</td>
             <td>${estado}</td>
-            <td class="mb-ptbl-num">${this._esc(d.geo || '')}</td>
+            <td class="mb-ptbl-num">${this._esc(e.geo || '')}</td>
           </tr>`;
       }).join('');
       return `
@@ -461,13 +484,14 @@
             <div class="mb-long-card">
               <div class="mb-ptbl-head">
                 <div class="mb-card-title">${__('Demanda de búsqueda del nicho')}</div>
-                <div class="mb-ptbl-sub">${__('Lo que la gente busca alrededor de tu categoría (Google Trends) — intención real que puedes capturar con contenido')}</div>
+                <div class="mb-ptbl-sub">${__('Lo que la gente busca alrededor de tu categoría (Google Trends). El interés (0–100) es cuánto se busca — a más interés, más tráfico potencial para tu contenido.')}</div>
               </div>
               <div class="mb-ptbl-scroll">
                 <table class="mb-ptbl">
                   <thead>
                     <tr>
                       <th>${__('Término de búsqueda')}</th>
+                      <th class="mb-ptbl-num">${__('Interés')}</th>
                       <th>${__('Estado')}</th>
                       <th class="mb-ptbl-num">${__('Geo')}</th>
                     </tr>

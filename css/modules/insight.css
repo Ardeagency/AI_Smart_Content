@@ -2753,6 +2753,13 @@
 .tend-demand-tag { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted, rgba(212,209,216,0.55)); white-space: nowrap; }
 .tend-demand-tag--rising { color: #e0a045; }
 .tend-demand-tag i { font-size: 0.9em; }
+/* Interes 0-100 (proxy de trafico): barra relativa + numero. */
+.tend-demand-metric { display: inline-flex; align-items: center; gap: 0.5rem; justify-content: flex-end; }
+.tend-demand-bar { width: 60px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.tend-demand-bar > span { display: block; height: 100%; border-radius: 3px; background: rgba(255,255,255,0.5); }
+.tend-demand-val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.82rem; min-width: 1.8ch; text-align: right; }
+.tend-demand-val--na { opacity: 0.4; font-weight: 400; }
+.tend-demand-growth { color: #e0a045; font-weight: 700; font-size: 0.8rem; white-space: nowrap; }
 /* Pilares en el sidebar: header mas compacto */
 .mb-layout-aside .mb-section-head { padding-bottom: 0.5rem; }
 @media (max-width: 640px) { .mb-layout-main { grid-template-columns: 1fr; } }
