@@ -421,28 +421,62 @@
        (Google Trends via SerpApi). Señal limpia de nicho — intencion real, sin el
        ruido de referentes. rising = demanda que acelera; top = demanda establecida. */
     _buildTendDemand(demand) {
-      const list = (Array.isArray(demand?.top_high_intent) ? demand.top_high_intent : []).slice(0, 18);
-      if (!list.length) return ''; // sin data viva → se oculta
-      const head = `
-        <div class="mb-section-head">
-          <span class="mb-section-title">${__('Demanda de búsqueda del nicho')}</span>
-          <span class="mb-section-hint">${__('Lo que la gente busca alrededor de tu categoría (Google Trends) — intención real que puedes capturar con contenido')}</span>
-        </div>`;
-      const chips = list.map((d) => {
+      const raw = Array.isArray(demand?.top_high_intent) ? demand.top_high_intent : [];
+      if (!raw.length) return ''; // sin data viva → se oculta
+      // Dedup SOLO por termino EXACTO (el mismo string aparece a la vez en rising y
+      // top). NO se fusionan terminos distintos: "yogurt sin azucar" y "yogurt griego
+      // sin azucar" son diferentes y ambos se conservan. Si un termino es rising, gana.
+      const byTerm = new Map();
+      raw.forEach((d) => {
+        const key = String(d.discovered_term || '').trim().toLowerCase();
+        if (!key) return;
         const rising = String(d.commercial_intent || '') === 'high';
+        const prev = byTerm.get(key);
+        if (!prev || (rising && !prev.rising)) byTerm.set(key, { ...d, rising });
+      });
+      const list = [...byTerm.values()]
+        .sort((a, b) => (Number(b.rising) - Number(a.rising)) || (Number(a.rank_position) - Number(b.rank_position)));
+      const rows = list.map((d) => {
+        const estado = d.rising
+          ? `<span class="tend-demand-tag tend-demand-tag--rising"><i class="aisc-ico aisc-ico--zap"></i> ${__('En alza')}</span>`
+          : `<span class="tend-demand-tag">${__('Demandado')}</span>`;
         return `
-          <div class="tend-signal" title="${__('semilla: {s}', { s: this._esc(d.seed_keyword || '') })}">
-            <span class="tend-signal-kw">${this._esc(d.discovered_term)}</span>
-            <span class="tend-signal-meta">
-              ${rising ? `<span class="tend-signal-vel"><i class="aisc-ico aisc-ico--zap"></i> ${__('en alza')}</span>` : `<span class="tend-signal-src">${__('demandado')}</span>`}
-              ${d.geo && d.geo !== 'GLOBAL' ? `<span class="tend-signal-src">${this._esc(d.geo)}</span>` : ''}
-            </span>
-          </div>`;
+          <tr>
+            <td class="mb-ptbl-name-cell">
+              <span class="mb-ptbl-name">
+                <span class="mb-ptbl-chev mb-ptbl-chev--empty" aria-hidden="true"></span>
+                <span class="mb-ptbl-name-txt">
+                  <span class="mb-ptbl-name-main">${this._esc(d.discovered_term)}</span>
+                  ${d.seed_keyword ? `<span class="mb-ptbl-name-sub">${__('vía {s}', { s: this._esc(d.seed_keyword) })}</span>` : ''}
+                </span>
+              </span>
+            </td>
+            <td>${estado}</td>
+            <td class="mb-ptbl-num">${this._esc(d.geo || '')}</td>
+          </tr>`;
       }).join('');
       return `
-        <section class="mb-section">
-          ${head}
-          <div class="tend-signals">${chips}</div>
+        <section class="mb-section mb-section--wide">
+          <div class="mb-long-grid mb-long-grid--single">
+            <div class="mb-long-card">
+              <div class="mb-ptbl-head">
+                <div class="mb-card-title">${__('Demanda de búsqueda del nicho')}</div>
+                <div class="mb-ptbl-sub">${__('Lo que la gente busca alrededor de tu categoría (Google Trends) — intención real que puedes capturar con contenido')}</div>
+              </div>
+              <div class="mb-ptbl-scroll">
+                <table class="mb-ptbl">
+                  <thead>
+                    <tr>
+                      <th>${__('Término de búsqueda')}</th>
+                      <th>${__('Estado')}</th>
+                      <th class="mb-ptbl-num">${__('Geo')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </section>`;
     },
 

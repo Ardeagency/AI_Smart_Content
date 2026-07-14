@@ -2749,6 +2749,10 @@
 }
 .tend-fecha-tag--use  { background: rgba(110,159,129,0.16); color: #7fc99a; }
 .tend-fecha-tag--skip { background: rgba(255,255,255,0.05); color: var(--text-muted, rgba(212,209,216,0.55)); }
+/* Tabla "Demanda de busqueda": tag de estado (En alza / Demandado). */
+.tend-demand-tag { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted, rgba(212,209,216,0.55)); white-space: nowrap; }
+.tend-demand-tag--rising { color: #e0a045; }
+.tend-demand-tag i { font-size: 0.9em; }
 /* Pilares en el sidebar: header mas compacto */
 .mb-layout-aside .mb-section-head { padding-bottom: 0.5rem; }
 @media (max-width: 640px) { .mb-layout-main { grid-template-columns: 1fr; } }
