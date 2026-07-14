@@ -130,7 +130,7 @@ class CompetenciaDataService {
       let posts = [];
       try {
         const { data } = await this.sb.from('brand_posts')
-          .select('id,entity_id,content,engagement_total,hashtags,permalink,network,post_id,profile_handle')
+          .select('id,entity_id,content,engagement_total,hashtags,permalink,network,post_id,profile_handle,enrichment')
           .in('entity_id', ids)
           .eq('is_competitor', true)
           .not('content', 'is', null)
@@ -331,7 +331,7 @@ class CompetenciaDataService {
       const eng = Number(p.engagement_total) || 0;
       // Guardamos el post (con su set de terminos) para poder armar la EVIDENCIA de
       // cada observacion: que publicaciones la respaldan y con que comentarios.
-      e.posts.push({ id: p.id, content: p.content, url: this._postUrl(p.network, p.post_id, p.profile_handle, p.permalink), network: p.network || null, eng, terms });
+      e.posts.push({ id: p.id, content: p.content, url: this._postUrl(p.network, p.post_id, p.profile_handle, p.permalink), network: p.network || null, eng, terms, theme: (p.enrichment && p.enrichment.creative_theme) || null });
       // Sentimiento de los comentarios de ESTE post (si tiene suficientes).
       const cs = postComments[p.id];
       const hasC = cs && cs.total >= 3;
@@ -456,6 +456,22 @@ class CompetenciaDataService {
         return posts.length ? { posts } : null;
       };
       for (const s of ins) { const ev = evidenceFor(s); if (ev) s.evidence = ev; }
+      // creative_hook — el GANCHO CREATIVO del post que mas rinde (detector de tema del
+      // ai-engine, en enrichment.creative_theme): pop-culture, narrativa, formato. Lo que
+      // la marca propia debe APRENDER de su competencia (no la receta, la creatividad).
+      const themed = (e.posts || []).filter((p) => p.theme && Number(p.theme.confidence) >= 0.6
+        && p.theme.hook && !['producto', 'otro'].includes(p.theme.theme_type));
+      if (themed.length) {
+        const tp = themed.slice().sort((a, b) => b.eng - a.eng)[0];
+        const lift = baseAvg > 0 ? Math.round((tp.eng / baseAvg) * 10) / 10 : null;
+        ins.push({
+          kind: 'creative_hook', hook: tp.theme.hook, ttype: tp.theme.theme_type,
+          refs: Array.isArray(tp.theme.references) ? tp.theme.references : [], lift,
+          score: 66,
+          evidence: { posts: [{ content: tp.content, permalink: tp.url, network: tp.network, engagement: tp.eng, pos: 0, neg: 0, totalComments: 0, comments: [] }] },
+        });
+        ins.sort((a, b) => b.score - a.score);
+      }
       out[eid] = { insights: ins };
     }
     return out;

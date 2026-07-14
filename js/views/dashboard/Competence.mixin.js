@@ -383,7 +383,7 @@
       // habla de). Perfiles distintos disparan detectores distintos -> el panel varía.
       // Orden dentro del rol: rango primero (nacional > internacional), luego engagement.
       const prio = (it) => (it.rango ? it.rango.rank : 0) * 1e9 + it.eng;
-      const ICO = { audience_focus: 'star', audience_reject: 'alert-warning', winner: 'arrow-up', focus: 'star', viral: 'fire', even: 'check', hashtag: 'flag', terms: 'eye', opinion_neg: 'alert-warning', opinion_pos: 'check', demand_gap: 'store', product_request: 'gift', brand_love: 'sparkle' };
+      const ICO = { audience_focus: 'star', audience_reject: 'alert-warning', winner: 'arrow-up', focus: 'star', viral: 'fire', even: 'check', hashtag: 'flag', terms: 'eye', opinion_neg: 'alert-warning', opinion_pos: 'check', demand_gap: 'store', product_request: 'gift', brand_love: 'sparkle', creative_hook: 'zap' };
       const EMO = { joy: __('alegría'), anger: __('enojo'), disgust: __('rechazo'), sadness: __('tristeza'), fear: __('miedo'), surprise: __('sorpresa') };
       const insightText = (s) => {
         const b = (x) => `<b>${this._esc(x)}</b>`;
@@ -407,6 +407,12 @@
             ? __('Su audiencia pide {t}: producto que puedes ofrecer', { t: b(s.cue) })
             : __('Su audiencia pide mejoras de producto: oportunidad que puedes ofrecer');
           case 'brand_love': return __('Su audiencia lo adora y pide más: {n} comentarios de deseo y apoyo', { n: s.count });
+          case 'creative_hook': {
+            const ref = (s.refs || []).filter(Boolean).slice(0, 2).map((x) => this._esc(x)).join(', ');
+            return ref
+              ? __('Su contenido que más rinde: {h} ({r}) — la creatividad, no el producto, es lo que engancha', { h: b(s.hook), r: ref })
+              : __('Su contenido que más rinde: {h} — la creatividad, no el producto, es lo que engancha', { h: b(s.hook) });
+          }
           default:        return '';
         }
       };
@@ -421,6 +427,7 @@
         winner: 'content', focus: 'content', terms: 'content', hashtag: 'content',
         viral: 'dist', even: 'dist',
         demand_gap: 'opp_dist', product_request: 'opp_prod',
+        creative_hook: 'creative',
       };
       const fam = (s) => FAMILY[s.kind] || s.kind;
 

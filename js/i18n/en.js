@@ -34,6 +34,8 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Su audiencia pide {t}: producto que puedes ofrecer": "Their audience asks for {t}: a product you could offer",
   "Su audiencia pide mejoras de producto: oportunidad que puedes ofrecer": "Their audience asks for product improvements: an opportunity you could offer",
   "Su audiencia lo adora y pide más: {n} comentarios de deseo y apoyo": "Their audience adores it and wants more: {n} comments of desire and support",
+  "Su contenido que más rinde: {h} ({r}) — la creatividad, no el producto, es lo que engancha": "Their best-performing content: {h} ({r}) — it's the creativity, not the product, that hooks",
+  "Su contenido que más rinde: {h} — la creatividad, no el producto, es lo que engancha": "Their best-performing content: {h} — it's the creativity, not the product, that hooks",
   "alegría": "joy",
   "enojo": "anger",
   "rechazo": "disgust",
