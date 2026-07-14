@@ -392,34 +392,29 @@
         .filter(s => Number(s.relevance_score) >= MIN_SIGNAL_RELEVANCE)
         .filter(s => !srcFilter || s.source === srcFilter)
         .slice(0, 24);
-      const bySource = Array.isArray(signals?.by_source) ? signals.by_source : [];
-      const head = `
-        <div class="mb-section-head">
-          <span class="mb-section-title">${__('Señales emergentes del nicho')}</span>
-          <span class="mb-section-hint">${__('Temas que aceleran afuera — ordenados por velocidad, filtrados por calidad')}</span>
-        </div>`;
       if (!list.length) return ''; // card vacía → se oculta
-      const chips = list.map((s) => {
-        const sm = SENT[String(s.sentiment || '').toLowerCase()] || null;
-        const vel = Number(s.velocity_score);
+      const rows = list.map((s) => {
+        const vel = Number(s.velocity_score) || 0;
+        const men = Number(s.mentions_14d) || 0;
+        const sub = [this._prettyPlatform(s.source), men ? __('{n} menciones', { n: men }) : ''].filter(Boolean).join(' · ');
         return `
-          <div class="tend-signal" title="${__('relevancia {n}', { n: Number(s.relevance_score).toFixed(2) })}">
-            <span class="tend-signal-kw">${this._esc(s.keyword)}</span>
-            <span class="tend-signal-meta">
-              <span class="tend-signal-src">${this._esc(this._prettyPlatform(s.source))}</span>
-              ${Number.isFinite(vel) ? `<span class="tend-signal-vel"><i class="aisc-ico aisc-ico--zap"></i> ${vel.toFixed(0)}</span>` : ''}
-              ${sm ? `<span class="tend-signal-sent" style="color:${sm.color};">${__(sm.label)}</span>` : ''}
-            </span>
+          <div class="tend-sig-row">
+            <div class="tend-sig-row-txt">
+              <span class="tend-sig-row-name">${this._esc(s.keyword)}</span>
+              <span class="tend-sig-row-sub">${this._esc(sub)}</span>
+            </div>
+            <span class="tend-sig-row-vel"><i class="aisc-ico aisc-ico--zap"></i> ${vel.toFixed(0)}</span>
           </div>`;
       }).join('');
-      const srcLine = bySource.length
-        ? `<div class="tend-source-line">${bySource.slice(0, 6).map(s => `<span class="tend-source-pill">${this._esc(this._prettyPlatform(s.source))} · ${fmt.int(s.total)}</span>`).join('')}</div>`
-        : '';
       return `
         <section class="mb-section">
-          ${head}
-          <div class="tend-signals">${chips}</div>
-          ${srcLine}
+          <div class="mb-long-card">
+            <div class="mb-ptbl-head">
+              <div class="mb-card-title">${__('Señales emergentes del nicho')}</div>
+              <div class="mb-ptbl-sub">${__('Temas que aceleran afuera — ordenados por velocidad, filtrados por calidad')}</div>
+            </div>
+            <div class="tend-sig-list">${rows}</div>
+          </div>
         </section>`;
     },
 

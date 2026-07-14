@@ -2772,6 +2772,15 @@
 .tend-2col { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.25rem; align-items: start; }
 .tend-2col > .mb-section { margin-bottom: 0; }
 @media (max-width: 900px) { .tend-2col { grid-template-columns: 1fr; } }
+/* Señales emergentes: lista dentro de la card. */
+.tend-sig-list { display: flex; flex-direction: column; margin-top: 0.5rem; }
+.tend-sig-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border-divider, #242424); }
+.tend-sig-row:last-child { border-bottom: none; }
+.tend-sig-row-txt { min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.tend-sig-row-name { font-size: 0.9rem; font-weight: 600; color: var(--text-primary, #f2f2f4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tend-sig-row-sub { font-size: 0.74rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
+.tend-sig-row-vel { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; font-weight: 700; color: #e0a045; font-variant-numeric: tabular-nums; }
+.tend-sig-row-vel i { font-size: 0.9em; }
 /* Pilares en el sidebar: header mas compacto */
 .mb-layout-aside .mb-section-head { padding-bottom: 0.5rem; }
 @media (max-width: 640px) { .mb-layout-main { grid-template-columns: 1fr; } }
