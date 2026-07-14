@@ -14,7 +14,6 @@
   'use strict';
   if (typeof DashboardView === 'undefined') return;
 
-  const fmt = { int: (n) => (n == null ? '—' : Number(n).toLocaleString('es-CO')) };
   const CONF = {
     alta:  { label: __('Alta confianza'),  color: '#6e9f81' },
     media: { label: __('Media confianza'), color: '#9c8e6b' },
@@ -176,8 +175,6 @@
       const inProd   = Array.isArray(master.in_production) ? master.in_production : [];
       if (!proposed.length && !inProd.length) return '';
 
-      const status = this._stratFilters?.status || 'proposed';
-
       const rank = { alta: 3, media: 2, baja: 1 };
       const top = [...proposed].sort((a, b) => (rank[b.confidence] || 0) - (rank[a.confidence] || 0))[0] || null;
       const topConf = String(top?.confidence || '').toLowerCase();
@@ -196,24 +193,6 @@
         desc = __('No tienes decisiones pendientes: Vera ya esta ejecutando lo aprobado. Mide su impacto en Mi Marca y ajusta el rumbo.');
       }
 
-      const rows = [];
-      const pushRow = (label, val, rlvl) =>
-        rows.push(`<div class="mb-bstat-row"><span class="mb-bstat-k">${this._esc(label)}</span><span class="mb-bstat-v mb-bstat-v--${rlvl}">${fmt.int(val)}</span></div>`);
-      const queueLabel = { proposed: __('Por decidir'), approved: __('Aprobadas'), rejected: __('Descartadas') }[status] || __('En cola');
-      if (proposed.length) {
-        const qlvl = status === 'rejected' ? 'low' : status === 'approved' ? 'good' : 'mid';
-        pushRow(queueLabel, proposed.length, qlvl);
-        const alta = proposed.filter((r) => String(r.confidence || '').toLowerCase() === 'alta').length;
-        pushRow(__('De alta confianza'), alta, alta ? 'good' : 'mid');
-      }
-      pushRow(__('En produccion'), inProd.length, inProd.length ? 'good' : 'mid');
-      const proof = rows.length ? `<div class="mb-bstat-proof">${rows.join('')}</div>` : '';
-
-      const ctas = [];
-      if (proposed.length) ctas.push(`<button type="button" class="mb-bstat-btn mb-bstat-btn--primary" data-strat-jump="pending"><i class="aisc-ico aisc-ico--goal"></i>${__('Revisar recomendaciones')}</button>`);
-      if (inProd.length)   ctas.push(`<button type="button" class="mb-bstat-btn mb-bstat-btn--ghost" data-strat-jump="production"><i class="aisc-ico aisc-ico--chart-bar"></i>${__('Ver lo que ya corre')}</button>`);
-      const cta = ctas.length ? `<div class="mb-bstat-cta">${ctas.join('')}</div>` : '';
-
       return `
         <section class="mb-section mb-bstat-section">
           <div class="mb-bstat">
@@ -224,9 +203,7 @@
                    <p class="mb-bstat-desc">${this._esc(brief.body || '')}</p>`
                 : `<h3 class="mb-bstat-title">${titleHtml}.</h3>
                    <p class="mb-bstat-desc">${this._esc(desc)}</p>`}
-              ${cta}
             </div>
-            ${proof}
           </div>
         </section>`;
     },

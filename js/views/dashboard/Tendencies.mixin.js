@@ -132,8 +132,6 @@
       const gaps = Array.isArray(data?.gaps?.data?.gaps) ? data.gaps.data.gaps : [];
       const realGaps = gaps.filter((g) => Number(g.market_signal_count) > 0);
       const blueList = realGaps.filter((g) => g.is_blue_ocean === true || Number(g.competitor_post_count) === 0);
-      const totals = data?.gaps?.data?.totals || {};
-      const blueCount = blueList.length || (Number(totals.topics_with_zero_competitor_coverage) || 0);
       const blue = [...blueList].sort((a, b) => Number(a.competitor_post_count || 0) - Number(b.competitor_post_count || 0))[0] || null;
 
       const holidays = Array.isArray(data?.world?.data?.upcoming_holidays) ? data.world.data.upcoming_holidays : [];
@@ -176,29 +174,6 @@
         });
       }
 
-      const rows = [];
-      const push = (k, v, level) => rows.push(
-        `<div class="mb-bstat-row"><span class="mb-bstat-k">${this._esc(k)}</span><span class="mb-bstat-v mb-bstat-v--${level}">${v}</span></div>`
-      );
-      if (goodSignals.length) {
-        push(__('Senales emergentes'), `${fmt.int(goodSignals.length)}`, goodSignals.length >= 5 ? 'good' : 'mid');
-      }
-      if (blueCount > 0) {
-        push(__('Oceanos azules'), `${fmt.int(blueCount)}`, 'good');
-      }
-      if (hot && Number.isFinite(Number(hot.velocity_score))) {
-        push(__('Velocidad de la mas caliente'), `${this._compactNum(Number(hot.velocity_score))}<small> vel</small>`, 'good');
-      }
-      if (holidays.length) {
-        const d = Number(nextEv?.days_until);
-        push(__('Eventos proximos'), `${fmt.int(holidays.length)}`, Number.isFinite(d) && d <= 14 ? 'mid' : 'low');
-      }
-
-      const objetivo = __('Cada ocasion nueva es un Category Entry Point: estar presente donde la gente busca (SEO/GEO) el dia que lo busca es como se captura la demanda antes que la competencia.');
-      const proof = rows.length
-        ? `<div class="mb-bstat-proof">${rows.join('')}<div class="mb-bstat-obj">${objetivo}</div></div>`
-        : '';
-
       return `
         <section class="mb-section mb-bstat-section">
           <div class="mb-bstat">
@@ -210,7 +185,6 @@
                 : `<h3 class="mb-bstat-title">${__('Tu nicho esta')} <span class="mb-bstat-verdict mb-bstat-verdict--${lvl}">${this._esc(label)}</span>: ${this._esc(titleTail)}.</h3>
                    <p class="mb-bstat-desc">${this._esc(desc)}</p>`}
             </div>
-            ${proof}
           </div>
         </section>`;
     },

@@ -253,7 +253,6 @@
       const cards = this._computeCompetitionCards(data);
       if (!activeRivals.length || cards?.funciona?.earlySignal) return '';
 
-      const C = (n) => this._compactNum(Number(n) || 0);
       const byEng = (a, b) => Number(b.total_engagement) - Number(a.total_engagement);
 
       const bench = data?.benchmark?.data || null;
@@ -263,8 +262,6 @@
       const benchOk = b && c && bP > 0 && cP > 0;
       const bAvg = Number(b?.avg_engagement_per_post) || 0;
       const cAvg = Number(c?.avg_engagement_per_post) || 0;
-      const bEng = Number(b?.engagement) || 0, cEng = Number(c?.engagement) || 0;
-      const brandShare = benchOk && (bEng + cEng) > 0 ? Math.round(bEng / (bEng + cEng) * 100) : null;
       const posPctB = bP > 0 ? Math.round((Number(b.positive_posts) || 0) / bP * 100) : null;
       const posPctC = cP > 0 ? Math.round((Number(c.positive_posts) || 0) / cP * 100) : null;
       const sentDiff = (posPctB != null && posPctC != null) ? posPctB - posPctC : null;
@@ -298,37 +295,6 @@
         return '';
       }
 
-      const rows = [];
-      if (brandShare != null) {
-        const lvl = brandShare >= 50 ? 'good' : brandShare >= 25 ? 'mid' : 'low';
-        rows.push(`<div class="mb-bstat-row"><span class="mb-bstat-k">${__('Tu share of voice')}</span><span class="mb-bstat-v mb-bstat-v--${lvl}">${brandShare}%<small> del nicho</small></span></div>`);
-      }
-      if (benchOk && bAvg > 0 && cAvg > 0) {
-        const lvl = bAvg >= cAvg ? 'good' : (1 - bAvg / cAvg) >= 0.4 ? 'low' : 'mid';
-        rows.push(`<div class="mb-bstat-row"><span class="mb-bstat-k">${__('Tu engagement por post')}</span><span class="mb-bstat-v mb-bstat-v--${lvl}">${C(bAvg)}<small> vs ${C(cAvg)} rival</small></span></div>`);
-      }
-      if (sentDiff != null) {
-        const lvl = sentDiff > 0 ? 'good' : sentDiff < 0 ? 'low' : 'mid';
-        const sign = sentDiff > 0 ? '+' : '';
-        rows.push(`<div class="mb-bstat-row"><span class="mb-bstat-k">${__('Ventaja de sentimiento')}</span><span class="mb-bstat-v mb-bstat-v--${lvl}">${sign}${sentDiff}<small> pts pos</small></span></div>`);
-      }
-      const voice = Array.isArray(data?.voice?.data) ? data.voice.data : [];
-      const vulnCount = voice.filter((v) => Number(v.neg_ratio) > 0 && Number(v.total_comments) >= 20).length;
-      if (vulnCount > 0) {
-        rows.push(`<div class="mb-bstat-row"><span class="mb-bstat-k">${__('Rivales con publico insatisfecho')}</span><span class="mb-bstat-v mb-bstat-v--good">${vulnCount}<small> ${vulnCount === 1 ? __('perfil') : __('perfiles')}</small></span></div>`);
-      }
-
-      const objetivo = __('Un referente marca el techo; un competidor marca el piso — no compitas en su ruido, capitaliza el afecto de tu audiencia.');
-      const proof = rows.length
-        ? `<div class="mb-bstat-proof">${rows.join('')}<div class="mb-bstat-obj">${objetivo}</div></div>`
-        : '';
-
-      const cta = leader && leader.entity_id
-        ? `<div class="mb-bstat-cta">
-             <button type="button" class="mb-bstat-btn mb-bstat-btn--primary" data-comp-entity="${this._esc(leader.entity_id)}" data-comp-name="${this._esc(leader.entity_name)}"><i class="aisc-ico aisc-ico--eye"></i>${__('Estudiar al lider del nicho')}</button>
-           </div>`
-        : '';
-
       return `
         <section class="mb-section mb-bstat-section">
           <div class="mb-bstat">
@@ -339,9 +305,7 @@
                    <p class="mb-bstat-desc">${this._esc(brief.body || '')}</p>`
                 : `<h3 class="mb-bstat-title">${titleHtml}</h3>
                    <p class="mb-bstat-desc">${this._esc(desc)}</p>`}
-              ${cta}
             </div>
-            ${proof}
           </div>
         </section>`;
     },
