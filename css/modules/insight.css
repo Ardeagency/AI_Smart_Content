@@ -2713,9 +2713,14 @@
 /* ── Mi Marca: layout 2 columnas (cuerpo + sidebar de Salud) ──
    El cuerpo del dashboard va a la izquierda (ancho); la Salud de la marca
    vive como sidebar fijo a la derecha, mas angosto. Solo aplica al tab Mi Marca. */
-/* #mbPage a ancho completo: sin el margin/max-width que centra el resto de
-   .insight-page (solo Mi Marca; los otros tabs siguen centrados a 1280). */
-#mbPage { max-width: none; margin-left: 0; margin-right: 0; }
+/* Los 4 dashboards del tablero van a ancho completo: sin el margin/max-width
+   que centra el resto de .insight-page (que sigue a 1280 para vistas sueltas
+   como empty states). Antes solo Mi Marca (#mbPage) era full-width y los demas
+   quedaban angostos a 1280 — inconsistente. */
+#mbPage,
+#compPage,
+#tendPage,
+#stratPage { max-width: none; margin-left: 0; margin-right: 0; }
 
 .mb-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1.75rem; align-items: start; }
 /* Cuerpo principal = grid de 2 columnas. Las secciones "banner" (plan de accion,
