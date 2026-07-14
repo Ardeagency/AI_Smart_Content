@@ -447,21 +447,24 @@
       // Orden por INTERES desc = mas trafico primero (responde "cual me beneficia").
       const list = [...byTerm.values()].sort((a, b) =>
         (Number(b.interest ?? -1) - Number(a.interest ?? -1)) || (Number(b.growth ?? 0) - Number(a.growth ?? 0)));
+      // Interes = SOLO el volumen 0-100 (barra). Los emergentes sin volumen aun no
+      // tienen indice -> "—". El crecimiento va con la etiqueta "En alza" (abajo).
       const metricCell = (e) => {
         if (e.interest != null) {
           const w = Math.max(3, Math.min(100, e.interest));
           return `<span class="tend-demand-metric"><span class="tend-demand-bar"><span style="width:${w}%"></span></span><span class="tend-demand-val">${e.interest}</span></span>`;
         }
-        if (e.growth != null) {
-          const g = e.growth >= 5000 ? __('Explosivo') : `+${this._compactNum(e.growth)}%`;
-          return `<span class="tend-demand-growth">▲ ${g}</span>`;
-        }
-        return '<span class="tend-demand-val tend-demand-val--na">—</span>';
+        return '<span class="tend-demand-val tend-demand-val--na" title="' + __('Emergente: aún sin volumen de búsqueda medible') + '">—</span>';
       };
       const rows = list.map((e) => {
-        const estado = e.rising
-          ? `<span class="tend-demand-tag tend-demand-tag--rising"><i class="aisc-ico aisc-ico--zap"></i> ${__('En alza')}</span>`
-          : `<span class="tend-demand-tag">${__('Demandado')}</span>`;
+        let estado;
+        if (e.rising) {
+          // Crecimiento junto a "En alza": breakout (base minima) -> "Explosivo".
+          const g = e.growth == null ? '' : (e.growth >= 900 ? __('Explosivo') : `+${this._compactNum(e.growth)}%`);
+          estado = `<span class="tend-demand-tag tend-demand-tag--rising"><i class="aisc-ico aisc-ico--zap"></i> ${__('En alza')}${g ? ` · ${g}` : ''}</span>`;
+        } else {
+          estado = `<span class="tend-demand-tag">${__('Demandado')}</span>`;
+        }
         return `
           <tr>
             <td class="mb-ptbl-name-cell">
@@ -484,7 +487,7 @@
             <div class="mb-long-card">
               <div class="mb-ptbl-head">
                 <div class="mb-card-title">${__('Demanda de búsqueda del nicho')}</div>
-                <div class="mb-ptbl-sub">${__('Lo que la gente busca alrededor de tu categoría (Google Trends). El interés (0–100) es cuánto se busca — a más interés, más tráfico potencial para tu contenido.')}</div>
+                <div class="mb-ptbl-sub">${__('Lo que la gente busca alrededor de tu categoría (Google Trends). Interés (0–100) = volumen de búsqueda: a más interés, más tráfico. En alza = está creciendo; los emergentes (“Explosivo”) se disparan pero aún sin volumen medible.')}</div>
               </div>
               <div class="mb-ptbl-scroll">
                 <table class="mb-ptbl">
