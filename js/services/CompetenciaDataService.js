@@ -382,12 +382,21 @@ class CompetenciaDataService {
         const pct = Math.round(df / n * 100);
         if (pct >= 50) ins.push({ kind: 'focus', term: t, pct, score: pct });
       }
-      // audience_reject — el TEMA al que su audiencia reacciona negativo (explica el
-      // "por que", no solo el %). Tema con mayor negatividad de comentarios (>=2 posts).
+      // audience_reject — el TEMA al que su audiencia reacciona negativo. GATE DE
+      // ENGAGEMENT: como solo muestreamos ~10 comentarios por post (no todos), la
+      // reaccion REAL de la audiencia esta en las reacciones (engagement: likes +
+      // comentarios + guardados + vistas), no en 2-3 comentarios jocosos. Un tema
+      // solo es "rechazo" si sus posts RINDEN POR DEBAJO del promedio del perfil (la
+      // audiencia no los premia) Y ademas tienen comentarios negativos. Si el tema es
+      // un HIT (engagement >= promedio) NO es rechazo, por muchos comentarios sarcasticos
+      // que muestreemos (ej. un reel viral de 88k con chistes = a la gente le encanto).
       {
         let rej = null;
         for (const [t, cc] of Object.entries(e.ccnt)) {
           if (cc < 2 || !distinctive(t)) continue;
+          const termAvgEng = (e.df[t] || 0) ? (e.eng[t] || 0) / e.df[t] : 0;
+          // El tema debe SUBrendir (la audiencia no lo engancha) para ser rechazo real.
+          if (baseAvg > 0 && termAvgEng >= baseAvg * 0.9) continue;
           const nr = (e.cneg[t] || 0) / cc;
           if (nr >= 0.25 && (!rej || nr > rej.nr)) rej = { term: t, nr };
         }
