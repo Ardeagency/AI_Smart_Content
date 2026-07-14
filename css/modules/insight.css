@@ -2754,6 +2754,8 @@
 }
 .tend-fecha-tag--use  { background: rgba(110,159,129,0.16); color: #7fc99a; }
 .tend-fecha-tag--skip { background: rgba(255,255,255,0.05); color: var(--text-muted, rgba(212,209,216,0.55)); }
+.tend-fecha-globe { color: #5b9bd5; font-size: 0.82em; }
+.tend-fecha--intl .tend-fecha-date { border-color: rgba(91,155,213,0.4); }
 /* Tabla "Demanda de busqueda": tag de estado (En alza / Demandado). */
 /* ── Demanda de busqueda: bubble chart (tamaño ∝ interes 0-100) + leyenda. */
 .tend-bub-viz { padding: 1.1rem 0 0.4rem; display: flex; justify-content: center; }

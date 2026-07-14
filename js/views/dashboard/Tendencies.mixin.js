@@ -201,22 +201,24 @@
       if (!holidays.length) return '';
       const rows = [...holidays]
         .sort((a, b) => Number(a.days_until) - Number(b.days_until))
-        .slice(0, 8)
+        .slice(0, 10)
         .map((h) => {
           const rd = h.raw_data || {};
           const verdict = String(rd.verdict || '');
+          const intl = String(rd.scope || '') === 'international';
           const tag = verdict === 'utilizar'
             ? `<span class="tend-fecha-tag tend-fecha-tag--use">${__('Utilizar')}</span>`
             : verdict === 'descartar'
               ? `<span class="tend-fecha-tag tend-fecha-tag--skip">${__('Descartar')}</span>`
               : '';
           const reason = h.event_description || rd.reason || '';
+          const globe = intl ? `<i class="aisc-ico aisc-ico--places tend-fecha-globe" title="${__('Evento internacional')}"></i> ` : '';
           const [d, mon] = this._fmtEventDay(h.event_date);
           return `
-            <div class="tend-fecha${verdict === 'descartar' ? ' tend-fecha--muted' : ''}">
+            <div class="tend-fecha${verdict === 'descartar' ? ' tend-fecha--muted' : ''}${intl ? ' tend-fecha--intl' : ''}">
               <div class="tend-fecha-date"><span class="tend-fecha-day">${this._esc(d)}</span><span class="tend-fecha-mon">${this._esc(mon)}</span></div>
               <div class="tend-fecha-body">
-                <div class="tend-fecha-top"><span class="tend-fecha-name">${this._esc(h.event_name)}</span>${tag}</div>
+                <div class="tend-fecha-top"><span class="tend-fecha-name">${globe}${this._esc(h.event_name)}</span>${tag}</div>
                 ${reason ? `<span class="tend-fecha-reason">${this._esc(reason)}</span>` : ''}
               </div>
             </div>`;

@@ -57,7 +57,7 @@ class TendenciasDataService {
       this.sb.rpc('dashboard_tendencias_niche_signals',   { p_org_id: org, p_window_d: w, p_limit: 40 }),
       this.sb.rpc('dashboard_tendencias_content_gaps',    { p_org_id: org, p_window_d: w, p_limit: 16 }),
       this.sb.rpc('dashboard_tendencias_audience_demand', { p_org_id: org, p_window_d: w, p_limit: 50 }),
-      this.sb.rpc('dashboard_tendencias_real_world',      { p_org_id: org, p_lookahead_days: 60, p_limit_holidays: 10, p_limit_history: 6 }),
+      this.sb.rpc('dashboard_tendencias_real_world',      { p_org_id: org, p_lookahead_days: 90, p_limit_holidays: 16, p_limit_history: 6 }),
       this.sb.from('brand_cmo_brief').select('headline, body').eq('organization_id', org).eq('scope', 'tendencias').limit(1)
         .then(r => ({ data: (r.data && r.data[0]) || null, error: r.error })),
     ]);
