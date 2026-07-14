@@ -24,15 +24,6 @@
 
   const MIN_SIGNAL_RELEVANCE = 0.45; // filtra ruido pre-recalibracion del motor
   const fmt = { int: (n) => (n == null ? '—' : Number(n).toLocaleString('es-CO')) };
-  const SENT = {
-    positivo: { label: 'Positivo', color: '#6e9f81' },
-    positive: { label: 'Positivo', color: '#6e9f81' },
-    negativo: { label: 'Negativo', color: '#b3796f' },
-    negative: { label: 'Negativo', color: '#b3796f' },
-    neutro:   { label: 'Neutro',   color: '#8a8a8e' },
-    neutral:  { label: 'Neutro',   color: '#8a8a8e' },
-  };
-
   Object.assign(DashboardView.prototype, {
 
     async _renderTendencies(body) {
