@@ -447,64 +447,113 @@
       // Orden por INTERES desc = mas trafico primero (responde "cual me beneficia").
       const list = [...byTerm.values()].sort((a, b) =>
         (Number(b.interest ?? -1) - Number(a.interest ?? -1)) || (Number(b.growth ?? 0) - Number(a.growth ?? 0)));
-      // Interes = SOLO el volumen 0-100 (barra). Los emergentes sin volumen aun no
-      // tienen indice -> "—". El crecimiento va con la etiqueta "En alza" (abajo).
-      const metricCell = (e) => {
-        if (e.interest != null) {
-          const w = Math.max(3, Math.min(100, e.interest));
-          return `<span class="tend-demand-metric"><span class="tend-demand-bar"><span style="width:${w}%"></span></span><span class="tend-demand-val">${e.interest}</span></span>`;
-        }
-        return '<span class="tend-demand-val tend-demand-val--na" title="' + __('Emergente: aún sin volumen de búsqueda medible') + '">—</span>';
-      };
-      const rows = list.map((e) => {
-        let estado;
-        if (e.rising) {
-          // Crecimiento junto a "En alza": breakout (base minima) -> "Explosivo".
-          const g = e.growth == null ? '' : (e.growth >= 900 ? __('Explosivo') : `+${this._compactNum(e.growth)}%`);
-          estado = `<span class="tend-demand-tag tend-demand-tag--rising"><i class="aisc-ico aisc-ico--zap"></i> ${__('En alza')}${g ? ` · ${g}` : ''}</span>`;
-        } else {
-          estado = `<span class="tend-demand-tag">${__('Demandado')}</span>`;
-        }
-        return `
-          <tr>
-            <td class="mb-ptbl-name-cell">
-              <span class="mb-ptbl-name">
-                <span class="mb-ptbl-chev mb-ptbl-chev--empty" aria-hidden="true"></span>
-                <span class="mb-ptbl-name-txt">
-                  <span class="mb-ptbl-name-main">${this._esc(e.term)}</span>
-                  ${e.seed ? `<span class="mb-ptbl-name-sub">${__('vía {s}', { s: this._esc(e.seed) })}</span>` : ''}
-                </span>
-              </span>
-            </td>
-            <td class="mb-ptbl-num">${metricCell(e)}</td>
-            <td>${estado}</td>
-            <td class="mb-ptbl-num">${this._esc(e.geo || '')}</td>
-          </tr>`;
+      // Bubble chart: tamaño ∝ interes (volumen de busqueda). Top por interes.
+      const PAL = this._palette();
+      const bubbles = list.filter((e) => e.interest != null && e.interest > 0)
+        .slice(0, 7)
+        .map((e, i) => ({ ...e, color: PAL[i % PAL.length], r: Math.sqrt(e.interest) * 10 }));
+      const emerging = list.filter((e) => e.interest == null && e.rising).slice(0, 6);
+      if (!bubbles.length) return ''; // sin volumen medible → se oculta
+
+      this._packSiblings(bubbles);
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity, maxR = 0;
+      bubbles.forEach((b) => {
+        minX = Math.min(minX, b.x - b.r); minY = Math.min(minY, b.y - b.r);
+        maxX = Math.max(maxX, b.x + b.r); maxY = Math.max(maxY, b.y + b.r);
+        maxR = Math.max(maxR, b.r);
+      });
+      const pad = maxR * 0.06;
+      const vb = `${(minX - pad).toFixed(1)} ${(minY - pad).toFixed(1)} ${(maxX - minX + 2 * pad).toFixed(1)} ${(maxY - minY + 2 * pad).toFixed(1)}`;
+      const circles = bubbles.map((b) => {
+        const showVal = b.r >= maxR * 0.34;
+        return `<circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${b.r.toFixed(1)}" fill="${b.color}2e" stroke="${b.color}59" stroke-width="1"></circle>${
+          showVal ? `<text x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${b.color}" font-size="${(b.r * 0.5).toFixed(1)}" font-weight="700">${b.interest}</text>` : ''}`;
       }).join('');
+      const legend = bubbles.map((b) => {
+        const growth = b.rising ? (b.growth != null && b.growth >= 900 ? __('Explosivo') : (b.growth != null ? `+${this._compactNum(b.growth)}%` : __('en alza'))) : '';
+        return `
+          <div class="tend-bub-leg">
+            <span class="tend-bub-dot" style="background:${b.color}"></span>
+            <div class="tend-bub-leg-txt">
+              <span class="tend-bub-leg-name" style="color:${b.color}">${this._esc(b.term)}</span>
+              <span class="tend-bub-leg-val">${__('Interés {n}', { n: b.interest })}${growth ? ` · <span class="tend-bub-leg-rise">⚡ ${growth}</span>` : ''}</span>
+            </div>
+          </div>`;
+      }).join('');
+      const emergingLine = emerging.length
+        ? `<div class="tend-bub-emerging"><i class="aisc-ico aisc-ico--zap"></i> ${__('También en alza (emergentes)')}: ${emerging.map((e) => this._esc(e.term)).join(' · ')}</div>`
+        : '';
       return `
         <section class="mb-section mb-section--wide">
           <div class="mb-long-grid mb-long-grid--single">
-            <div class="mb-long-card">
+            <div class="mb-long-card tend-bub-card">
               <div class="mb-ptbl-head">
                 <div class="mb-card-title">${__('Demanda de búsqueda del nicho')}</div>
-                <div class="mb-ptbl-sub">${__('Lo que la gente busca alrededor de tu categoría (Google Trends). Interés (0–100) = volumen de búsqueda: a más interés, más tráfico. En alza = está creciendo; los emergentes (“Explosivo”) se disparan pero aún sin volumen medible.')}</div>
+                <div class="mb-ptbl-sub">${__('Lo que la gente busca alrededor de tu categoría (Google Trends). El tamaño de cada burbuja es el interés (0–100): a más grande, más volumen de búsqueda y más tráfico potencial para tu contenido.')}</div>
               </div>
-              <div class="mb-ptbl-scroll">
-                <table class="mb-ptbl">
-                  <thead>
-                    <tr>
-                      <th>${__('Término de búsqueda')}</th>
-                      <th class="mb-ptbl-num">${__('Interés')}</th>
-                      <th>${__('Estado')}</th>
-                      <th class="mb-ptbl-num">${__('Geo')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>${rows}</tbody>
-                </table>
+              <div class="tend-bub-viz">
+                <svg class="tend-bub-svg" viewBox="${vb}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${__('Demanda de búsqueda por término')}">${circles}</svg>
               </div>
+              <div class="tend-bub-legend">${legend}</div>
+              ${emergingLine}
             </div>
           </div>
         </section>`;
+    },
+
+    /* Circle packing (port compacto de d3.packSiblings): posiciona los circulos
+       {r} en x,y sin solaparse, agrupados alrededor del centro. */
+    _packSiblings(circles) {
+      const n = circles.length;
+      if (!n) return circles;
+      const place = (b, a, c) => {
+        const dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy;
+        if (d2) {
+          const a2 = (a.r + c.r) ** 2, b2 = (b.r + c.r) ** 2;
+          if (a2 > b2) {
+            const x = (d2 + b2 - a2) / (2 * d2), y = Math.sqrt(Math.max(0, b2 / d2 - x * x));
+            c.x = b.x - x * dx - y * dy; c.y = b.y - x * dy + y * dx;
+          } else {
+            const x = (d2 + a2 - b2) / (2 * d2), y = Math.sqrt(Math.max(0, a2 / d2 - x * x));
+            c.x = a.x + x * dx - y * dy; c.y = a.y + x * dy + y * dx;
+          }
+        } else { c.x = a.x + c.r; c.y = a.y; }
+      };
+      const intersects = (a, b) => {
+        const dr = a.r + b.r - 1e-6, dx = b.x - a.x, dy = b.y - a.y;
+        return dr > 0 && dr * dr > dx * dx + dy * dy;
+      };
+      const score = (node) => {
+        const a = node._, b = node.next._, ab = a.r + b.r;
+        const dx = (a.x * b.r + b.x * a.r) / ab, dy = (a.y * b.r + b.y * a.r) / ab;
+        return dx * dx + dy * dy;
+      };
+      const a0 = circles[0]; a0.x = 0; a0.y = 0;
+      if (n === 1) return circles;
+      const b0 = circles[1]; a0.x = -b0.r; b0.x = a0.r; b0.y = 0;
+      if (n === 2) return circles;
+      const c0 = circles[2]; place(b0, a0, c0);
+      let A = { _: a0 }, B = { _: b0 }, C = { _: c0 };
+      A.next = C.prev = B; B.next = A.prev = C; C.next = B.prev = A;
+      pack: for (let i = 3; i < n; ++i) {
+        const c = circles[i]; place(A._, B._, c);
+        let j = B.next, k = A.prev, sj = B._.r, sk = A._.r;
+        do {
+          if (sj <= sk) {
+            if (intersects(j._, c)) { B = j; A.next = B; B.prev = A; --i; continue pack; }
+            sj += j._.r; j = j.next;
+          } else {
+            if (intersects(k._, c)) { A = k; A.next = B; B.prev = A; --i; continue pack; }
+            sk += k._.r; k = k.prev;
+          }
+        } while (j !== k.next);
+        const node = { _: c, prev: A, next: B };
+        A.next = B.prev = node; B = node;
+        let best = score(A), cur = A, s;
+        while ((cur = cur.next) !== B) { if ((s = score(cur)) < best) { A = cur; best = s; } }
+        B = A.next;
+      }
+      return circles;
     },
 
     /* ── 3. Oceanos azules: el mercado habla / la competencia no cubre ── */

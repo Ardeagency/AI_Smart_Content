@@ -2750,16 +2750,19 @@
 .tend-fecha-tag--use  { background: rgba(110,159,129,0.16); color: #7fc99a; }
 .tend-fecha-tag--skip { background: rgba(255,255,255,0.05); color: var(--text-muted, rgba(212,209,216,0.55)); }
 /* Tabla "Demanda de busqueda": tag de estado (En alza / Demandado). */
-.tend-demand-tag { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted, rgba(212,209,216,0.55)); white-space: nowrap; }
-.tend-demand-tag--rising { color: #e0a045; }
-.tend-demand-tag i { font-size: 0.9em; }
-/* Interes 0-100 (proxy de trafico): barra relativa + numero. */
-.tend-demand-metric { display: inline-flex; align-items: center; gap: 0.5rem; justify-content: flex-end; }
-.tend-demand-bar { width: 60px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
-.tend-demand-bar > span { display: block; height: 100%; border-radius: 3px; background: rgba(255,255,255,0.5); }
-.tend-demand-val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.82rem; min-width: 1.8ch; text-align: right; }
-.tend-demand-val--na { opacity: 0.4; font-weight: 400; }
-.tend-demand-growth { color: #e0a045; font-weight: 700; font-size: 0.8rem; white-space: nowrap; }
+/* ── Demanda de busqueda: bubble chart (tamaño ∝ interes 0-100) + leyenda. */
+.tend-bub-viz { padding: 1.1rem 0 0.4rem; display: flex; justify-content: center; }
+.tend-bub-svg { width: 100%; max-width: 480px; height: 250px; overflow: visible; }
+.tend-bub-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem 1.5rem; padding-top: 0.85rem; margin-top: 0.5rem; border-top: 1px dashed var(--border-divider, #242424); }
+.tend-bub-leg { display: flex; align-items: flex-start; gap: 0.5rem; min-width: 0; }
+.tend-bub-dot { flex: 0 0 auto; width: 9px; height: 9px; border-radius: 50%; margin-top: 0.3rem; }
+.tend-bub-leg-txt { min-width: 0; display: flex; flex-direction: column; }
+.tend-bub-leg-name { font-size: 0.86rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tend-bub-leg-val { font-size: 0.74rem; color: var(--text-muted, rgba(212,209,216,0.6)); font-variant-numeric: tabular-nums; }
+.tend-bub-leg-rise { color: #e0a045; font-weight: 600; }
+.tend-bub-emerging { margin-top: 0.85rem; font-size: 0.76rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
+.tend-bub-emerging i { color: #e0a045; margin-right: 0.25rem; }
+@media (max-width: 560px) { .tend-bub-legend { grid-template-columns: 1fr; } }
 /* Pilares en el sidebar: header mas compacto */
 .mb-layout-aside .mb-section-head { padding-bottom: 0.5rem; }
 @media (max-width: 640px) { .mb-layout-main { grid-template-columns: 1fr; } }
