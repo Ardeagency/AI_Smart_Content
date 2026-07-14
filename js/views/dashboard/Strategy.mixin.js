@@ -197,7 +197,6 @@
         <section class="mb-section mb-bstat-section">
           <div class="mb-bstat">
             <div class="mb-bstat-lead">
-              <span class="mb-bstat-kicker"><span class="mb-bstat-dot"></span>${__('Tu estrategia')}</span>
               ${brief && brief.headline
                 ? `<h3 class="mb-bstat-title">${this._esc(brief.headline)}</h3>
                    <p class="mb-bstat-desc">${this._esc(brief.body || '')}</p>`
