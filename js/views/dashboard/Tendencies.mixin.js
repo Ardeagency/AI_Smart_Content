@@ -106,7 +106,6 @@
           ${this._buildTendGaps(data?.gaps?.data)}
           ${this._buildTendLexicon(data?.lexicon?.data)}
           ${this._buildTendBrands(data?.brands?.data)}
-          ${this._buildTendRealWorld(data?.world?.data)}
         </div>`;
     },
 
@@ -175,9 +174,23 @@
         });
       }
 
+      // Panel derecho "Proximas Fechas": festivos del mundo con su fecha exacta.
+      const upcoming = [...holidays]
+        .sort((a, b) => Number(a.days_until) - Number(b.days_until))
+        .slice(0, 6);
+      const datesPanel = upcoming.length ? `
+        <div class="mb-bstat-proof tend-dates">
+          <div class="tend-dates-title">${__('Próximas Fechas')}</div>
+          ${upcoming.map((h) => `
+            <div class="mb-bstat-row">
+              <span class="mb-bstat-k">${this._esc(h.event_name)}${h.geo ? ` <small class="tend-dates-geo">${this._esc(h.geo)}</small>` : ''}</span>
+              <span class="mb-bstat-v">${this._esc(this._fmtEventDate(h.event_date))}</span>
+            </div>`).join('')}
+        </div>` : '';
+
       return `
         <section class="mb-section mb-bstat-section">
-          <div class="mb-bstat">
+          <div class="mb-bstat${datesPanel ? ' mb-bstat--cols' : ''}">
             <div class="mb-bstat-lead">
               ${brief && brief.headline
                 ? `<h3 class="mb-bstat-title">${this._esc(brief.headline)}</h3>
@@ -185,8 +198,17 @@
                 : `<h3 class="mb-bstat-title">${__('Tu nicho esta')} <span class="mb-bstat-verdict mb-bstat-verdict--${lvl}">${this._esc(label)}</span>: ${this._esc(titleTail)}.</h3>
                    <p class="mb-bstat-desc">${this._esc(desc)}</p>`}
             </div>
+            ${datesPanel}
           </div>
         </section>`;
+    },
+
+    /* Fecha exacta de un festivo (event_date 'YYYY-MM-DD') en formato corto ES:
+       "20 jul". Parseo manual para no depender de zona horaria. */
+    _fmtEventDate(iso) {
+      const M = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+      return m ? `${Number(m[3])} ${M[Number(m[2]) - 1]}` : '';
     },
 
     /* ── Cards del hero en Tendencias: el PULSO del nicho. Tendencia caliente

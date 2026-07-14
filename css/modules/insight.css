@@ -4608,6 +4608,12 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
   box-shadow: none;
 }
 @media (max-width: 900px) { .mb-bstat { grid-template-columns: 1fr; gap: 1.125rem; padding: 0; } }
+/* Variante 2 columnas: lead a la izquierda + panel "Proximas Fechas" a la derecha.
+   Scopeada al hero de Tendencias (no afecta los otros heroes, que son block). */
+.mb-bstat--cols { display: grid; grid-template-columns: 1.6fr minmax(240px, 360px); gap: 1.75rem; align-items: start; }
+@media (max-width: 900px) { .mb-bstat--cols { grid-template-columns: 1fr; gap: 1rem; } }
+.tend-dates-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); padding: 0.5rem 0 0.35rem; }
+.tend-dates-geo { font-weight: 600; opacity: 0.5; font-size: 0.85em; }
 .mb-bstat-kicker {
   display: inline-flex; align-items: center; gap: 0.5rem;
   font-size: 0.625rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
