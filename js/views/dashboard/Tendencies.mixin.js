@@ -98,14 +98,22 @@
     },
 
     _buildTendenciasHtml(data) {
+      const aside = this._buildTendFechasCard(data?.world?.data);
+      const main = `
+        ${this._buildTendDemand(data?.demand?.data)}
+        ${this._buildTendSignals(data?.signals?.data)}
+        ${this._buildTendGaps(data?.gaps?.data)}
+        ${this._buildTendLexicon(data?.lexicon?.data)}
+        ${this._buildTendBrands(data?.brands?.data)}`;
+      // Con fechas -> layout 2 columnas (cuerpo + sidebar "Proximas Fechas", igual
+      // que Mi Marca/Competencia). Sin fechas -> cuerpo a ancho completo.
+      const body = aside
+        ? `<div class="mb-layout"><div class="tend-main">${main}</div><aside class="mb-layout-aside">${aside}</aside></div>`
+        : main;
       return `
         <div class="insight-page mb-dash" id="tendPage">
           ${this._buildTendenciesStatusHero(data)}
-          ${this._buildTendDemand(data?.demand?.data)}
-          ${this._buildTendSignals(data?.signals?.data)}
-          ${this._buildTendGaps(data?.gaps?.data)}
-          ${this._buildTendLexicon(data?.lexicon?.data)}
-          ${this._buildTendBrands(data?.brands?.data)}
+          ${body}
         </div>`;
     },
 
@@ -174,23 +182,9 @@
         });
       }
 
-      // Panel derecho "Proximas Fechas": festivos del mundo con su fecha exacta.
-      const upcoming = [...holidays]
-        .sort((a, b) => Number(a.days_until) - Number(b.days_until))
-        .slice(0, 6);
-      const datesPanel = upcoming.length ? `
-        <div class="mb-bstat-proof tend-dates">
-          <div class="tend-dates-title">${__('Próximas Fechas')}</div>
-          ${upcoming.map((h) => `
-            <div class="mb-bstat-row">
-              <span class="mb-bstat-k">${this._esc(h.event_name)}${h.geo ? ` <small class="tend-dates-geo">${this._esc(h.geo)}</small>` : ''}</span>
-              <span class="mb-bstat-v">${this._esc(this._fmtEventDate(h.event_date))}</span>
-            </div>`).join('')}
-        </div>` : '';
-
       return `
         <section class="mb-section mb-bstat-section">
-          <div class="mb-bstat${datesPanel ? ' mb-bstat--cols' : ''}">
+          <div class="mb-bstat">
             <div class="mb-bstat-lead">
               ${brief && brief.headline
                 ? `<h3 class="mb-bstat-title">${this._esc(brief.headline)}</h3>
@@ -198,17 +192,51 @@
                 : `<h3 class="mb-bstat-title">${__('Tu nicho esta')} <span class="mb-bstat-verdict mb-bstat-verdict--${lvl}">${this._esc(label)}</span>: ${this._esc(titleTail)}.</h3>
                    <p class="mb-bstat-desc">${this._esc(desc)}</p>`}
             </div>
-            ${datesPanel}
           </div>
         </section>`;
     },
 
-    /* Fecha exacta de un festivo (event_date 'YYYY-MM-DD') en formato corto ES:
-       "20 jul". Parseo manual para no depender de zona horaria. */
-    _fmtEventDate(iso) {
+    /* Dia y mes corto ES de un event_date 'YYYY-MM-DD' -> ['20','jul'].
+       Parseo manual para no depender de zona horaria. */
+    _fmtEventDay(iso) {
       const M = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
       const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
-      return m ? `${Number(m[3])} ${M[Number(m[2]) - 1]}` : '';
+      return m ? [String(Number(m[3])), M[Number(m[2]) - 1]] : ['', ''];
+    },
+
+    /* Card lateral "Proximas Fechas" (mismo diseño que Salud de tu marca /
+       Observaciones: mb-health-card--aside). Cada fecha con su dia exacto + tag
+       Utilizar/Descartar (juicio de conveniencia por marca, del collector). */
+    _buildTendFechasCard(world) {
+      const holidays = Array.isArray(world?.upcoming_holidays) ? world.upcoming_holidays : [];
+      if (!holidays.length) return '';
+      const rows = [...holidays]
+        .sort((a, b) => Number(a.days_until) - Number(b.days_until))
+        .slice(0, 8)
+        .map((h) => {
+          const rd = h.raw_data || {};
+          const verdict = String(rd.verdict || '');
+          const tag = verdict === 'utilizar'
+            ? `<span class="tend-fecha-tag tend-fecha-tag--use">${__('Utilizar')}</span>`
+            : verdict === 'descartar'
+              ? `<span class="tend-fecha-tag tend-fecha-tag--skip">${__('Descartar')}</span>`
+              : '';
+          const reason = h.event_description || rd.reason || '';
+          const [d, mon] = this._fmtEventDay(h.event_date);
+          return `
+            <div class="tend-fecha${verdict === 'descartar' ? ' tend-fecha--muted' : ''}">
+              <div class="tend-fecha-date"><span class="tend-fecha-day">${this._esc(d)}</span><span class="tend-fecha-mon">${this._esc(mon)}</span></div>
+              <div class="tend-fecha-body">
+                <div class="tend-fecha-top"><span class="tend-fecha-name">${this._esc(h.event_name)}</span>${tag}</div>
+                ${reason ? `<span class="tend-fecha-reason">${this._esc(reason)}</span>` : ''}
+              </div>
+            </div>`;
+        }).join('');
+      return `
+        <section class="mb-health-card mb-health-card--aside">
+          <span class="mb-hero-label">${__('Próximas Fechas')}</span>
+          <div class="tend-fechas">${rows}</div>
+        </section>`;
     },
 
     /* ── Cards del hero en Tendencias: el PULSO del nicho. Tendencia caliente

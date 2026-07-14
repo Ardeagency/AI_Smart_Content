@@ -2725,6 +2725,30 @@
 /* La barra de filtros vive dentro de la columna izquierda y ocupa su ancho completo. */
 .mb-layout-main > .mb-filters-bar { grid-column: 1 / -1; margin: 0; }
 .mb-layout-aside { min-width: 0; position: sticky; top: 1rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* ── Tendencias: cuerpo (single-column, secciones a ancho completo) + sidebar
+   "Proximas Fechas". Reusa .mb-layout (1fr + 340px) y .mb-health-card--aside. */
+.tend-main { min-width: 0; display: flex; flex-direction: column; gap: 1.25rem; }
+@media (max-width: 900px) { #tendPage .mb-layout { grid-template-columns: 1fr; } }
+.tend-fechas { display: flex; flex-direction: column; gap: 0.85rem; margin-top: 0.6rem; }
+.tend-fecha { display: flex; gap: 0.7rem; align-items: flex-start; }
+.tend-fecha--muted { opacity: 0.55; }
+.tend-fecha-date {
+  flex: 0 0 auto; width: 42px; padding: 0.3rem 0; text-align: center;
+  border: 1px solid var(--border-divider, #242424); border-radius: 9px; background: rgba(255,255,255,0.02);
+}
+.tend-fecha-day { display: block; font-size: 1.05rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.tend-fecha-mon { display: block; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin-top: 2px; }
+.tend-fecha-body { min-width: 0; flex: 1; }
+.tend-fecha-top { display: flex; align-items: center; gap: 0.45rem; justify-content: space-between; }
+.tend-fecha-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary, #f2f2f4); }
+.tend-fecha-reason { display: block; font-size: 0.72rem; color: var(--text-muted, rgba(212,209,216,0.6)); margin-top: 0.15rem; }
+.tend-fecha-tag {
+  flex: 0 0 auto; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 0.12rem 0.42rem; border-radius: 5px; white-space: nowrap;
+}
+.tend-fecha-tag--use  { background: rgba(110,159,129,0.16); color: #7fc99a; }
+.tend-fecha-tag--skip { background: rgba(255,255,255,0.05); color: var(--text-muted, rgba(212,209,216,0.55)); }
 /* Pilares en el sidebar: header mas compacto */
 .mb-layout-aside .mb-section-head { padding-bottom: 0.5rem; }
 @media (max-width: 640px) { .mb-layout-main { grid-template-columns: 1fr; } }
@@ -4608,12 +4632,6 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
   box-shadow: none;
 }
 @media (max-width: 900px) { .mb-bstat { grid-template-columns: 1fr; gap: 1.125rem; padding: 0; } }
-/* Variante 2 columnas: lead a la izquierda + panel "Proximas Fechas" a la derecha.
-   Scopeada al hero de Tendencias (no afecta los otros heroes, que son block). */
-.mb-bstat--cols { display: grid; grid-template-columns: 1.6fr minmax(240px, 360px); gap: 1.75rem; align-items: start; }
-@media (max-width: 900px) { .mb-bstat--cols { grid-template-columns: 1fr; gap: 1rem; } }
-.tend-dates-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.55)); padding: 0.5rem 0 0.35rem; }
-.tend-dates-geo { font-weight: 600; opacity: 0.5; font-size: 0.85em; }
 .mb-bstat-kicker {
   display: inline-flex; align-items: center; gap: 0.5rem;
   font-size: 0.625rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
