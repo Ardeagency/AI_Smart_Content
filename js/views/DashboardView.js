@@ -426,10 +426,20 @@ class DashboardView extends BaseView {
          orquestador conserva todo intacto. */
   _shouldRepaint(tab, data) {
     if (!this._renderSig) this._renderSig = {};
+    // Guard de tab activo: el body (#insightTabBody) es COMPARTIDO por los 4 tabs.
+    // Un render en vuelo (carga lenta o refresh silencioso) de un tab que el usuario
+    // YA abandono jamas debe pintar el body — sobrescribiria el cuerpo del tab actual.
+    if (tab !== this._activeTab) return false;
     const sig = this._dataSignature(data);
-    if (!this._silentRefresh) { this._renderSig[tab] = sig; return true; }
-    if (sig != null && this._renderSig[tab] === sig) return false;   // sin cambios reales
+    if (!this._silentRefresh) { this._renderSig[tab] = sig; this._bodyTab = tab; return true; }
+    // Saltar el repaint solo es seguro si el body YA muestra ESTE tab con la misma
+    // firma. Si el body tiene el cuerpo de otro tab (el usuario cambio de tab mientras
+    // un refresh silencioso estaba en vuelo), hay que pintar si o si — de lo contrario
+    // queda el body de otro tab bajo el hero/tab nuevo (bug: "estoy en Tendencias pero
+    // el tab dice Competencia").
+    if (this._bodyTab === tab && sig != null && this._renderSig[tab] === sig) return false; // sin cambios reales
     this._renderSig[tab] = sig;
+    this._bodyTab = tab;
     this._silentChanged = true;
     return true;
   }
@@ -1053,7 +1063,7 @@ class DashboardView extends BaseView {
     }
     // Skeleton inmediato: el usuario ve la silueta del layout mientras el
     // mixin fetchea data y reemplaza el HTML. Evita "salto" de empty a fresh.
-    if (!this._restoredFromCache && !this._silentRefresh) this._renderTabSkeleton(body);
+    if (!this._restoredFromCache && !this._silentRefresh) { this._renderTabSkeleton(body); this._bodyTab = tabId; }
     if (tabId === 'my-brands')  return this._renderMyBrands(body);
     if (tabId === 'competence') return this._renderCompetence(body);
     if (tabId === 'tendencies') return this._renderTendencies(body);
