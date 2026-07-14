@@ -114,7 +114,7 @@ class CompetenciaDataService {
       let posts = [];
       try {
         const { data } = await this.sb.from('brand_posts')
-          .select('id,entity_id,content,engagement_total,hashtags,permalink,network')
+          .select('id,entity_id,content,engagement_total,hashtags,permalink,network,post_id,profile_handle')
           .in('entity_id', ids)
           .eq('is_competitor', true)
           .not('content', 'is', null)
@@ -172,7 +172,7 @@ class CompetenciaDataService {
         const top = list.slice().sort((a, b) => (cnt(b) - cnt(a)) || ((b.engagement_total || 0) - (a.engagement_total || 0))).slice(0, 5);
         const out = top.map((p) => {
           const c = postComments[p.id] || { sPos: [], sNeg: [], pos: 0, neg: 0, total: 0 };
-          return { content: p.content, permalink: p.permalink || null, network: p.network || null, engagement: Number(p.engagement_total) || 0, pos: c.pos || 0, neg: c.neg || 0, totalComments: c.total || 0, comments: (pol === 'neg' ? c.sNeg : c.sPos).slice(0, 3) };
+          return { content: p.content, permalink: this._postUrl(p.network, p.post_id, p.profile_handle, p.permalink), network: p.network || null, engagement: Number(p.engagement_total) || 0, pos: c.pos || 0, neg: c.neg || 0, totalComments: c.total || 0, comments: (pol === 'neg' ? c.sNeg : c.sPos).slice(0, 3) };
         }).filter((p) => (p.content && p.content.trim()) || p.comments.length);
         return out.length ? { posts: out } : null;
       };
@@ -202,6 +202,34 @@ class CompetenciaDataService {
     };
   }
 
+  /** URL publica de un post. Los competidores NO guardan `permalink` (0% cobertura),
+      pero si `post_id` (100%) + red + handle. La reconstruimos por red:
+      - instagram: el post_id es el media pk numerico -> shortcode base64 -> /p/{sc}/
+        (verificado: pk 3939816185620865274 -> /p/DatCfJgRCD6/ = post real de @nike).
+      - tiktok/x/youtube/facebook: el post_id se usa directo en el patron de la red.
+      Devuelve null si no hay como armarla (la vista oculta el icono). */
+  _postUrl(net, postId, handle, permalink) {
+    if (permalink && /^https?:\/\//i.test(permalink)) return permalink;
+    const id = postId != null ? String(postId).trim() : '';
+    if (!id) return null;
+    const h = String(handle || '').trim().replace(/^@+/, '');
+    switch (String(net || '').toLowerCase()) {
+      case 'instagram': {
+        if (!/^\d+$/.test(id)) return null;
+        const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+        let n = BigInt(id), sc = '';
+        while (n > 0n) { sc = A[Number(n % 64n)] + sc; n /= 64n; }
+        return sc ? `https://www.instagram.com/p/${sc}/` : null;
+      }
+      case 'tiktok':   return h ? `https://www.tiktok.com/@${h}/video/${id}` : null;
+      case 'x':
+      case 'twitter':  return h ? `https://x.com/${h}/status/${id}` : `https://x.com/i/status/${id}`;
+      case 'youtube':  return `https://www.youtube.com/watch?v=${id}`;
+      case 'facebook': return h ? `https://www.facebook.com/${h}/posts/${id}` : `https://www.facebook.com/${id}`;
+      default:         return null;
+    }
+  }
+
   /** Inteligencia de contenido por entidad desde el TEXTO de sus posts (rules+math,
       sin LLM). Corre una LIBRERIA de detectores estrategicos y devuelve por entidad
       `insights` = lista RANKEADA de señales {kind, score, ...params} (la vista traduce).
@@ -227,7 +255,7 @@ class CompetenciaDataService {
       const eng = Number(p.engagement_total) || 0;
       // Guardamos el post (con su set de terminos) para poder armar la EVIDENCIA de
       // cada observacion: que publicaciones la respaldan y con que comentarios.
-      e.posts.push({ id: p.id, content: p.content, permalink: p.permalink || null, network: p.network || null, eng, terms });
+      e.posts.push({ id: p.id, content: p.content, url: this._postUrl(p.network, p.post_id, p.profile_handle, p.permalink), network: p.network || null, eng, terms });
       // Sentimiento de los comentarios de ESTE post (si tiene suficientes).
       const cs = postComments[p.id];
       const hasC = cs && cs.total >= 3;
@@ -335,7 +363,7 @@ class CompetenciaDataService {
           const c = postComments[p.id] || { sPos: [], sNeg: [], pos: 0, neg: 0, total: 0 };
           const cm = pol === 'neg' ? c.sNeg : pol === 'pos' ? c.sPos : [...c.sNeg, ...c.sPos];
           return {
-            content: p.content, permalink: p.permalink, network: p.network, engagement: p.eng,
+            content: p.content, permalink: p.url, network: p.network, engagement: p.eng,
             pos: c.pos || 0, neg: c.neg || 0, totalComments: c.total || 0,
             comments: cm.slice(0, 3),
           };

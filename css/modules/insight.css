@@ -3041,19 +3041,23 @@
 .comp-obs-evi-caret { width: 12px !important; height: 12px !important; margin: 2px 0 0 auto !important; flex: 0 0 auto; opacity: 0.55; transition: transform 0.18s ease, opacity 0.15s ease; }
 .comp-obs-evi[open] > summary .comp-obs-evi-caret { transform: rotate(180deg); opacity: 0.85; }
 .comp-obs-evi-sum:hover .comp-obs-evi-caret { opacity: 0.85; }
-.comp-obs-evi-body { margin: 0.55rem 0 0.15rem; padding-left: 0.55rem; border-left: 2px solid var(--border-divider, #2a2a2a); display: flex; flex-direction: column; gap: 0.6rem; }
-.comp-evi-post { display: flex; flex-direction: column; gap: 0.35rem; }
-.comp-evi-post-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-tertiary, rgba(212,209,216,0.5)); }
+.comp-obs-evi-body { margin: 0.6rem 0 0.2rem; display: flex; flex-direction: column; gap: 0.55rem; }
+/* Cada post = tarjeta propia, para que la division sea evidente */
+.comp-evi-post { display: flex; flex-direction: column; gap: 0.45rem; padding: 0.7rem 0.75rem; border-radius: 11px; background: var(--bg-elevated, rgba(255,255,255,0.028)); border: 1px solid var(--border-divider, #262626); }
+.comp-evi-post-top { display: flex; align-items: center; gap: 0.5rem; }
+.comp-evi-post-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.55rem; min-width: 0; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-tertiary, rgba(212,209,216,0.5)); }
 .comp-evi-post-meta .aisc-ico { width: 11px; height: 11px; margin-right: 0.15rem; vertical-align: -1px; }
-.comp-evi-net { color: var(--text-secondary, rgba(212,209,216,0.72)); }
+.comp-evi-net { color: var(--text-secondary, rgba(212,209,216,0.78)); font-weight: 700; }
 .comp-evi-eng, .comp-evi-cc { display: inline-flex; align-items: center; }
-.comp-evi-link { margin-left: auto; display: inline-flex; align-items: center; gap: 0.2rem; color: var(--brand-primary, #d7d4db); text-transform: none; letter-spacing: 0; font-size: 0.66rem; text-decoration: none; opacity: 0.85; }
-.comp-evi-link:hover { opacity: 1; text-decoration: underline; }
-.comp-evi-text { margin: 0; font-size: 0.76rem; line-height: 1.4; color: var(--text-secondary, rgba(212,209,216,0.82)); }
+/* Icono de redireccion al post real */
+.comp-evi-go { flex: 0 0 auto; margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 8px; color: var(--text-secondary, rgba(212,209,216,0.7)); background: rgba(255,255,255,0.04); border: 1px solid var(--border-divider, #2c2c2c); text-decoration: none; transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease; }
+.comp-evi-go .aisc-ico { width: 13px; height: 13px; }
+.comp-evi-go:hover { color: var(--brand-primary, #fff); background: rgba(255,255,255,0.08); border-color: var(--brand-primary, rgba(255,255,255,0.35)); }
+.comp-evi-text { margin: 0; font-size: 0.78rem; line-height: 1.45; color: var(--text-secondary, rgba(212,209,216,0.85)); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .comp-evi-text--empty { font-style: italic; color: var(--text-tertiary, rgba(212,209,216,0.45)); }
-.comp-evi-cmts { list-style: none; margin: 0.1rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
-.comp-evi-cmt { display: flex; align-items: flex-start; gap: 0.4rem; font-size: 0.72rem; line-height: 1.35; color: var(--text-secondary, rgba(212,209,216,0.7)); }
-.comp-evi-cmt-dot { flex: 0 0 auto; width: 6px; height: 6px; margin-top: 0.42rem; border-radius: 50%; background: var(--text-tertiary, rgba(212,209,216,0.4)); }
+.comp-evi-cmts { list-style: none; margin: 0.15rem 0 0; padding: 0.5rem 0 0; border-top: 1px dashed var(--border-divider, rgba(255,255,255,0.08)); display: flex; flex-direction: column; gap: 0.35rem; }
+.comp-evi-cmt { display: flex; align-items: flex-start; gap: 0.4rem; font-size: 0.72rem; line-height: 1.35; color: var(--text-secondary, rgba(212,209,216,0.72)); }
+.comp-evi-cmt-dot { flex: 0 0 auto; width: 6px; height: 6px; margin-top: 0.4rem; border-radius: 50%; background: var(--text-tertiary, rgba(212,209,216,0.4)); }
 .comp-evi-cmt--neg .comp-evi-cmt-dot { background: #e06464; }
 .comp-evi-cmt--pos .comp-evi-cmt-dot { background: #6bcf7f; }
 .comp-evi-cmt-body { min-width: 0; }

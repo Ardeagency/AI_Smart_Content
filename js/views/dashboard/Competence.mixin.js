@@ -462,19 +462,24 @@
             Number(p.engagement) ? `<span class="comp-evi-eng"><i class="aisc-ico aisc-ico--fire"></i>${fmt.int(p.engagement)}</span>` : '',
             Number(p.totalComments) ? `<span class="comp-evi-cc"><i class="aisc-ico aisc-ico--eye"></i>${__('{n} comentarios', { n: fmt.int(p.totalComments) })}</span>` : '',
           ].filter(Boolean).join('');
-          const body = p.content ? `<p class="comp-evi-text">${this._esc(trunc(p.content, 220))}</p>` : `<p class="comp-evi-text comp-evi-text--empty">${__('Publicación sin texto')}</p>`;
-          const link = p.permalink ? `<a class="comp-evi-link" href="${this._esc(p.permalink)}" target="_blank" rel="noopener"><i class="aisc-ico aisc-ico--external-link"></i>${__('Ver publicación')}</a>` : '';
+          const body = p.content ? `<p class="comp-evi-text">${this._esc(trunc(p.content, 200))}</p>` : `<p class="comp-evi-text comp-evi-text--empty">${__('Publicación sin texto')}</p>`;
+          const go = p.permalink
+            ? `<a class="comp-evi-go" href="${this._esc(p.permalink)}" target="_blank" rel="noopener" title="${__('Ver publicación')}" aria-label="${__('Ver publicación')}"><i class="aisc-ico aisc-ico--external-link"></i></a>`
+            : '';
           const cmts = (p.comments || []).map((c) => `
               <li class="comp-evi-cmt comp-evi-cmt--${sentClass(c.sentiment)}">
                 <span class="comp-evi-cmt-dot"></span>
-                <span class="comp-evi-cmt-body">${this._esc(trunc(c.text, 180))}${c.author ? ` <span class="comp-evi-cmt-author">— ${this._esc(c.author)}</span>` : ''}</span>
+                <span class="comp-evi-cmt-body">${this._esc(trunc(c.text, 160))}${c.author ? ` <span class="comp-evi-cmt-author">— ${this._esc(c.author)}</span>` : ''}</span>
               </li>`).join('');
           return `
-            <div class="comp-evi-post">
-              <div class="comp-evi-post-meta">${meta}${link}</div>
+            <article class="comp-evi-post">
+              <div class="comp-evi-post-top">
+                <div class="comp-evi-post-meta">${meta}</div>
+                ${go}
+              </div>
               ${body}
               ${cmts ? `<ul class="comp-evi-cmts">${cmts}</ul>` : ''}
-            </div>`;
+            </article>`;
         }).join('');
         return `<div class="comp-obs-evi-body">${postsHtml}</div>`;
       };
