@@ -106,6 +106,22 @@ class CompetenciaDataService {
       });
     }
 
+    // ── El campo de batalla es SOLO competidores ──────────────────────────
+    // Este tab muestra rivales, nunca referentes. Los referentes (y aliados) se
+    // monitorean para APRENDER, no para pintarlos como competencia: si se cuelan,
+    // un referente como Nike aparece de "lider del nicho", "amenaza" o barra de
+    // "Influencia digital" — falso. El RPC `top` devuelve todos los perfiles
+    // monitoreados con su `tipo`; aqui filtramos a competidor_directo/indirecto
+    // (excluimos referencia_cultural y aliado; conservamos tipo nulo/desconocido,
+    // que por defecto es competidor). El unico bloque con `tipo` es `top`, asi que
+    // derivamos de el los entity_id validos y recortamos el resto de bloques por id.
+    let competitorIds = null;
+    if (Array.isArray(topBlock.data)) {
+      const isRival = (t) => t !== 'referencia_cultural' && t !== 'aliado';
+      topBlock.data = topBlock.data.filter((r) => isRival(r.tipo));
+      competitorIds = new Set(topBlock.data.map((r) => r.entity_id));
+    }
+
     // ── "De qué habla" cada perfil: términos recurrentes extraídos del TEXTO de
     // sus posts (rules+math, sin LLM — topics/tone no están poblados para
     // competidores). Fetch acotado a los perfiles del ranking + la ventana.
@@ -186,15 +202,26 @@ class CompetenciaDataService {
         return { ...r, insights: [...content, ...opinion].sort((a, b) => b.score - a.score) };
       });
     }
+    // Recorta un bloque a los perfiles competidores (por entity_id). Se aplica a
+    // los bloques que llevan una fila por perfil (voice/risk/share-of-voice): sin
+    // esto, la card "Vulnerabilidad rival" o "Amenaza" podria nombrar a un referente.
+    const scopeToRivals = (block) => {
+      if (competitorIds && block && Array.isArray(block.data)) {
+        block.data = block.data.filter((r) => competitorIds.has(r.entity_id));
+        block.isEmpty = block.data.length === 0;
+      }
+      return block;
+    };
+
     return {
       window: { from, to },
       kpis:  u(kpis),
       top:   topBlock,
-      risk:  u(risk),
-      voice: u(voice),
+      risk:  scopeToRivals(u(risk)),
+      voice: scopeToRivals(u(voice)),
       intelligence: u(intel),
       benchmark:    u(bench),
-      shareOfVoice: u(sov),
+      shareOfVoice: scopeToRivals(u(sov)),
       kpisPrev:     u(kpisPrev),
       monitoreoTones:  u(monTones),
       monitoreoTopics: u(monTopics),
