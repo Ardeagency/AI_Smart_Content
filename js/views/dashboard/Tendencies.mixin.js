@@ -99,9 +99,15 @@
 
     _buildTendenciasHtml(data) {
       const aside = this._buildTendFechasCard(data?.world?.data);
+      // Demanda de busqueda (izq, mas ancho) + Señales emergentes (der). Si falta
+      // una, la otra ocupa la fila completa.
+      const demand = this._buildTendDemand(data?.demand?.data);
+      const signals = this._buildTendSignals(data?.signals?.data);
+      const topRow = (demand && signals)
+        ? `<div class="tend-2col">${demand}${signals}</div>`
+        : (demand || signals || '');
       const main = `
-        ${this._buildTendDemand(data?.demand?.data)}
-        ${this._buildTendSignals(data?.signals?.data)}
+        ${topRow}
         ${this._buildTendGaps(data?.gaps?.data)}
         ${this._buildTendLexicon(data?.lexicon?.data)}
         ${this._buildTendBrands(data?.brands?.data)}`;
@@ -489,19 +495,17 @@
         ? `<div class="tend-bub-emerging"><i class="aisc-ico aisc-ico--zap"></i> ${__('También en alza (emergentes)')}: ${emerging.map((e) => this._esc(e.term)).join(' · ')}</div>`
         : '';
       return `
-        <section class="mb-section mb-section--wide">
-          <div class="mb-long-grid mb-long-grid--single">
-            <div class="mb-long-card tend-bub-card">
-              <div class="mb-ptbl-head">
-                <div class="mb-card-title">${__('Demanda de búsqueda del nicho')}</div>
-                <div class="mb-ptbl-sub">${__('Lo que la gente busca alrededor de tu categoría (Google Trends). El tamaño de cada burbuja es el interés (0–100): a más grande, más volumen de búsqueda y más tráfico potencial para tu contenido.')}</div>
-              </div>
-              <div class="tend-bub-viz">
-                <svg class="tend-bub-svg" viewBox="${vb}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${__('Demanda de búsqueda por término')}">${circles}</svg>
-              </div>
-              <div class="tend-bub-legend">${legend}</div>
-              ${emergingLine}
+        <section class="mb-section">
+          <div class="mb-long-card tend-bub-card">
+            <div class="mb-ptbl-head">
+              <div class="mb-card-title">${__('Demanda de búsqueda del nicho')}</div>
+              <div class="mb-ptbl-sub">${__('Lo que la gente busca alrededor de tu categoría (Google Trends). El tamaño de cada burbuja es el interés (0–100): a más grande, más volumen de búsqueda y más tráfico potencial para tu contenido.')}</div>
             </div>
+            <div class="tend-bub-viz">
+              <svg class="tend-bub-svg" viewBox="${vb}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${__('Demanda de búsqueda por término')}">${circles}</svg>
+            </div>
+            <div class="tend-bub-legend">${legend}</div>
+            ${emergingLine}
           </div>
         </section>`;
     },

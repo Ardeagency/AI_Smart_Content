@@ -2763,6 +2763,10 @@
 .tend-bub-emerging { margin-top: 0.85rem; font-size: 0.76rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
 .tend-bub-emerging i { color: #e0a045; margin-right: 0.25rem; }
 @media (max-width: 560px) { .tend-bub-legend { grid-template-columns: 1fr; } }
+/* Demanda de busqueda (izq, mas ancho) + Señales emergentes (der) en 2 columnas. */
+.tend-2col { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.25rem; align-items: start; }
+.tend-2col > .mb-section { margin-bottom: 0; }
+@media (max-width: 900px) { .tend-2col { grid-template-columns: 1fr; } }
 /* Pilares en el sidebar: header mas compacto */
 .mb-layout-aside .mb-section-head { padding-bottom: 0.5rem; }
 @media (max-width: 640px) { .mb-layout-main { grid-template-columns: 1fr; } }
