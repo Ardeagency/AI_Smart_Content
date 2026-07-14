@@ -101,7 +101,6 @@
       return `
         <div class="insight-page mb-dash" id="tendPage">
           ${this._buildTendenciesStatusHero(data)}
-          ${this._buildTendKpis(data?.kpis?.data)}
           ${this._buildTendDemand(data?.demand?.data)}
           ${this._buildTendSignals(data?.signals?.data)}
           ${this._buildTendGaps(data?.gaps?.data)}
@@ -366,32 +365,6 @@
           <div class="tend-signals">${chips}</div>
           ${srcLine}
         </section>`;
-    },
-
-    /* ── Tira de KPIs de la lente externa: demanda, alza, competidores, calendario.
-       Todo de fuentes vivas y doctrina-limpias (nunca referentes). Se oculta sin señal. */
-    _buildTendKpis(kpis) {
-      const k = kpis?.kpis || null;
-      if (!k) return '';
-      const total = (Number(k.demandTerms) || 0) + (Number(k.risingDemand) || 0)
-                  + (Number(k.competitorSignals) || 0) + (Number(k.holidaysUpcoming) || 0);
-      if (!total) return ''; // sin señal viva → se oculta
-      const tile = (icon, value, label, sub) => `
-        <div class="mb-kpi-card">
-          <div class="mb-kpi-icon"><i class="aisc-ico aisc-ico--${icon}"></i></div>
-          <div class="mb-kpi-body">
-            <div class="mb-kpi-value">${fmt.int(value)}</div>
-            <div class="mb-kpi-label">${this._esc(label)}</div>
-            <div class="mb-kpi-sub">${this._esc(sub)}</div>
-          </div>
-        </div>`;
-      return `
-        <div class="mb-kpi-strip">
-          ${tile('chart-bar', k.demandTerms,       __('Términos en demanda'),      __('lo que se busca en tu categoría'))}
-          ${tile('zap',       k.risingDemand,      __('En alza'),                  __('búsquedas acelerando'))}
-          ${tile('eye',       k.competitorSignals, __('Señales de competidores'),  __('keywords que mueven tus rivales'))}
-          ${tile('goal',      k.holidaysUpcoming,  __('Fechas por venir'),         __('próximos 60 días'))}
-        </div>`;
     },
 
     /* ── Demanda de busqueda: lo que la gente BUSCA alrededor de tu categoria
