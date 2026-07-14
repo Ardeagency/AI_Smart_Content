@@ -448,26 +448,31 @@
       const list = [...byTerm.values()].sort((a, b) =>
         (Number(b.interest ?? -1) - Number(a.interest ?? -1)) || (Number(b.growth ?? 0) - Number(a.growth ?? 0)));
       // Bubble chart: tamaño ∝ interes (volumen de busqueda). Top por interes.
+      // Se empaqueta con el radio INFLADO (r + PAD) y se dibuja al radio real -> deja
+      // aire entre burbujas para que no se peguen.
       const PAL = this._palette();
+      const PAD_PACK = 8;
       const bubbles = list.filter((e) => e.interest != null && e.interest > 0)
         .slice(0, 7)
-        .map((e, i) => ({ ...e, color: PAL[i % PAL.length], r: Math.sqrt(e.interest) * 10 }));
+        .map((e, i) => {
+          const dr = Math.sqrt(e.interest) * 10;
+          return { ...e, color: PAL[i % PAL.length], drawR: dr, r: dr + PAD_PACK };
+        });
       const emerging = list.filter((e) => e.interest == null && e.rising).slice(0, 6);
       if (!bubbles.length) return ''; // sin volumen medible → se oculta
 
-      this._packSiblings(bubbles);
+      this._packSiblings(bubbles); // usa r (inflado) -> separa; dibujamos con drawR
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity, maxR = 0;
       bubbles.forEach((b) => {
         minX = Math.min(minX, b.x - b.r); minY = Math.min(minY, b.y - b.r);
         maxX = Math.max(maxX, b.x + b.r); maxY = Math.max(maxY, b.y + b.r);
-        maxR = Math.max(maxR, b.r);
+        maxR = Math.max(maxR, b.drawR);
       });
-      const pad = maxR * 0.06;
-      const vb = `${(minX - pad).toFixed(1)} ${(minY - pad).toFixed(1)} ${(maxX - minX + 2 * pad).toFixed(1)} ${(maxY - minY + 2 * pad).toFixed(1)}`;
+      const vb = `${minX.toFixed(1)} ${minY.toFixed(1)} ${(maxX - minX).toFixed(1)} ${(maxY - minY).toFixed(1)}`;
       const circles = bubbles.map((b) => {
-        const showVal = b.r >= maxR * 0.34;
-        return `<circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${b.r.toFixed(1)}" fill="${b.color}2e" stroke="${b.color}59" stroke-width="1"></circle>${
-          showVal ? `<text x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${b.color}" font-size="${(b.r * 0.5).toFixed(1)}" font-weight="700">${b.interest}</text>` : ''}`;
+        const showVal = b.drawR >= maxR * 0.34;
+        return `<circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${b.drawR.toFixed(1)}" fill="${b.color}2e" stroke="${b.color}b0" stroke-width="3"></circle>${
+          showVal ? `<text x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${b.color}" font-size="${(b.drawR * 0.5).toFixed(1)}" font-weight="700">${b.interest}</text>` : ''}`;
       }).join('');
       const legend = bubbles.map((b) => {
         const growth = b.rising ? (b.growth != null && b.growth >= 900 ? __('Explosivo') : (b.growth != null ? `+${this._compactNum(b.growth)}%` : __('en alza'))) : '';
