@@ -383,7 +383,7 @@
       // habla de). Perfiles distintos disparan detectores distintos -> el panel varía.
       // Orden dentro del rol: rango primero (nacional > internacional), luego engagement.
       const prio = (it) => (it.rango ? it.rango.rank : 0) * 1e9 + it.eng;
-      const ICO = { audience_focus: 'star', audience_reject: 'alert-warning', winner: 'arrow-up', focus: 'star', viral: 'fire', even: 'check', hashtag: 'flag', terms: 'eye', opinion_neg: 'alert-warning', opinion_pos: 'check' };
+      const ICO = { audience_focus: 'star', audience_reject: 'alert-warning', winner: 'arrow-up', focus: 'star', viral: 'fire', even: 'check', hashtag: 'flag', terms: 'eye', opinion_neg: 'alert-warning', opinion_pos: 'check', demand_gap: 'store', product_request: 'gift', brand_love: 'sparkle' };
       const EMO = { joy: __('alegría'), anger: __('enojo'), disgust: __('rechazo'), sadness: __('tristeza'), fear: __('miedo'), surprise: __('sorpresa') };
       const insightText = (s) => {
         const b = (x) => `<b>${this._esc(x)}</b>`;
@@ -402,6 +402,11 @@
             ? __('Su audiencia reacciona con {e}: {p}% de comentarios negativos', { e: b(EMO[s.emotion]), p: s.pct })
             : __('Su audiencia reacciona negativo: {p}% de sus comentarios', { p: s.pct });
           case 'opinion_pos': return __('Su audiencia lo respalda: {p}% de comentarios positivos', { p: s.pct });
+          case 'demand_gap': return __('Su audiencia busca el producto y no lo encuentra: hueco de distribución que puedes capitalizar');
+          case 'product_request': return s.cue
+            ? __('Su audiencia pide {t}: producto que puedes ofrecer', { t: b(s.cue) })
+            : __('Su audiencia pide mejoras de producto: oportunidad que puedes ofrecer');
+          case 'brand_love': return __('Su audiencia lo adora y pide más: {n} comentarios de deseo y apoyo', { n: s.count });
           default:        return '';
         }
       };
@@ -411,10 +416,11 @@
       // "reacciona negativo". (b) La secundaria es de una familia DISTINTA a la
       // primaria → nada de doble-negativo en una misma tarjeta.
       const FAMILY = {
-        audience_focus: 'pos', opinion_pos: 'pos',
+        audience_focus: 'pos', opinion_pos: 'pos', brand_love: 'pos',
         audience_reject: 'neg', opinion_neg: 'neg',
         winner: 'content', focus: 'content', terms: 'content', hashtag: 'content',
         viral: 'dist', even: 'dist',
+        demand_gap: 'opp_dist', product_request: 'opp_prod',
       };
       const fam = (s) => FAMILY[s.kind] || s.kind;
 

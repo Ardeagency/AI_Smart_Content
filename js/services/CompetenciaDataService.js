@@ -144,26 +144,40 @@ class CompetenciaDataService {
       // positivos = "su audiencia se enfoca en X"). Ademas guardamos una MUESTRA del
       // texto de comentarios pos/neg por post -> el panel de Observaciones se expande
       // y muestra la PRUEBA (posts + comentarios que respaldan cada observacion). Acotado.
-      const CMT_SAMPLE = 6; // comentarios guardados por post y por polaridad
+      const CMT_SAMPLE = 6; // comentarios guardados por post y por polaridad/señal
+      // Señales de demanda que el ai-engine clasifica por comentario (audience_signal):
+      // la audiencia del rival no se queja, PIDE (distribución) o DESEA (producto). Es
+      // inteligencia de oportunidad, no negatividad.
+      const OPP_SIGNALS = ['demanda_distribucion', 'peticion_producto', 'amor_marca'];
       const postComments = {};
       try {
         const postIds = posts.map((p) => p.id).filter(Boolean);
         if (postIds.length) {
           const { data: cmts } = await this.sb.from('brand_post_comments')
-            .select('brand_post_id,sentiment,content,author_display_name,author_handle')
+            .select('brand_post_id,sentiment,content,author_display_name,author_handle,audience_signal,audience_signal_cue')
             .in('brand_post_id', postIds)
             .not('sentiment', 'is', null)
             .limit(5000);
           for (const c of cmts || []) {
-            const m = (postComments[c.brand_post_id] = postComments[c.brand_post_id] || { pos: 0, neg: 0, total: 0, sPos: [], sNeg: [] });
+            const m = (postComments[c.brand_post_id] = postComments[c.brand_post_id] || { pos: 0, neg: 0, total: 0, sPos: [], sNeg: [], sigCount: {}, sig: {} });
             m.total += 1;
             const isPos = /^pos/i.test(c.sentiment), isNeg = /^neg/i.test(c.sentiment);
             if (isPos) m.pos += 1; else if (isNeg) m.neg += 1;
             const txt = String(c.content || '').trim();
+            const author = c.author_display_name || c.author_handle || '';
             if (txt) {
               const bucket = isNeg ? m.sNeg : isPos ? m.sPos : null;
               if (bucket && bucket.length < CMT_SAMPLE) {
-                bucket.push({ text: txt, author: c.author_display_name || c.author_handle || '', sentiment: isNeg ? 'negative' : 'positive' });
+                bucket.push({ text: txt, author, sentiment: isNeg ? 'negative' : 'positive' });
+              }
+            }
+            // Tally de la señal de demanda + muestra de comentarios que la respaldan.
+            const sg = c.audience_signal;
+            if (sg) {
+              m.sigCount[sg] = (m.sigCount[sg] || 0) + 1;
+              if (txt && OPP_SIGNALS.includes(sg)) {
+                const b = (m.sig[sg] = m.sig[sg] || []);
+                if (b.length < CMT_SAMPLE) b.push({ text: txt, author, sentiment: isNeg ? 'negative' : isPos ? 'positive' : 'neutral', cue: c.audience_signal_cue || null });
               }
             }
           }
@@ -192,6 +206,40 @@ class CompetenciaDataService {
         }).filter((p) => (p.content && p.content.trim()) || p.comments.length);
         return out.length ? { posts: out } : null;
       };
+      // Evidencia de una señal de demanda: los posts cuyos comentarios la disparan.
+      const signalEvidence = (eid, signal) => {
+        const has = (p) => { const c = postComments[p.id]; return c && c.sig && (c.sig[signal] || []).length; };
+        const list = (postsByEntity[eid] || []).filter(has);
+        if (!list.length) return null;
+        const cnt = (p) => { const c = postComments[p.id]; return (c && c.sig && c.sig[signal] || []).length; };
+        const top = list.slice().sort((a, b) => (cnt(b) - cnt(a)) || ((b.engagement_total || 0) - (a.engagement_total || 0))).slice(0, 5);
+        const out = top.map((p) => {
+          const c = postComments[p.id];
+          return { content: p.content, permalink: this._postUrl(p.network, p.post_id, p.profile_handle, p.permalink), network: p.network || null, engagement: Number(p.engagement_total) || 0, pos: c.pos || 0, neg: c.neg || 0, totalComments: c.total || 0, comments: (c.sig[signal] || []).slice(0, 3) };
+        }).filter((p) => (p.content && p.content.trim()) || p.comments.length);
+        return out.length ? { posts: out } : null;
+      };
+      // Insights de OPORTUNIDAD por entidad, agregando la señal de demanda de sus
+      // comentarios: hueco de distribución, petición de producto, amor de marca. Es lo
+      // que a la marca propia le conviene APRENDER de su competencia.
+      const SIG_OF_KIND = { demand_gap: 'demanda_distribucion', product_request: 'peticion_producto', brand_love: 'amor_marca' };
+      const demandInsights = (eid) => {
+        const agg = {}; const cues = {};
+        for (const p of (postsByEntity[eid] || [])) {
+          const c = postComments[p.id]; if (!c || !c.sigCount) continue;
+          for (const [k, v] of Object.entries(c.sigCount)) agg[k] = (agg[k] || 0) + v;
+          for (const cm of (c.sig.peticion_producto || [])) if (cm.cue) cues[cm.cue] = (cues[cm.cue] || 0) + 1;
+        }
+        const out = [];
+        if ((agg.demanda_distribucion || 0) >= 2) out.push({ kind: 'demand_gap', count: agg.demanda_distribucion, score: 70 });
+        if ((agg.peticion_producto || 0) >= 2) {
+          const cue = Object.entries(cues).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+          out.push({ kind: 'product_request', count: agg.peticion_producto, cue, score: 68 });
+        }
+        if ((agg.amor_marca || 0) >= 3) out.push({ kind: 'brand_love', count: agg.amor_marca, score: 55 });
+        for (const s of out) { const ev = signalEvidence(eid, SIG_OF_KIND[s.kind]); if (ev) s.evidence = ev; }
+        return out;
+      };
       topBlock.data = topBlock.data.map((r) => {
         const content = (insightById[r.entity_id] || {}).insights || [];
         const opinion = this._voiceInsights(voiceById.get(r.entity_id));
@@ -199,7 +247,8 @@ class CompetenciaDataService {
           const pol = s.kind === 'opinion_neg' ? 'neg' : s.kind === 'opinion_pos' ? 'pos' : null;
           if (pol) { const ev = opinionEvidence(r.entity_id, pol); if (ev) s.evidence = ev; }
         }
-        return { ...r, insights: [...content, ...opinion].sort((a, b) => b.score - a.score) };
+        const demand = demandInsights(r.entity_id);
+        return { ...r, insights: [...content, ...opinion, ...demand].sort((a, b) => b.score - a.score) };
       });
     }
     // Recorta un bloque a los perfiles competidores (por entity_id). Se aplica a
