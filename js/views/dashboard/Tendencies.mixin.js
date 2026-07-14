@@ -22,7 +22,6 @@
   'use strict';
   if (typeof DashboardView === 'undefined') return;
 
-  const MIN_SIGNAL_RELEVANCE = 0.45; // filtra ruido pre-recalibracion del motor
   const fmt = { int: (n) => (n == null ? '—' : Number(n).toLocaleString('es-CO')) };
   Object.assign(DashboardView.prototype, {
 
@@ -131,8 +130,7 @@
       if (!hasHot && !hasBlue && !hasEvent) return '';
 
       const signals = Array.isArray(data?.signals?.data?.top_velocity) ? data.signals.data.top_velocity : [];
-      const goodSignals = signals.filter((s) => Number(s.relevance_score) >= MIN_SIGNAL_RELEVANCE);
-      const hot = [...goodSignals].sort((a, b) => Number(b.velocity_score) - Number(a.velocity_score))[0] || null;
+      const hot = [...signals].sort((a, b) => Number(b.velocity_score) - Number(a.velocity_score))[0] || null;
 
       const gaps = Array.isArray(data?.gaps?.data?.gaps) ? data.gaps.data.gaps : [];
       const realGaps = gaps.filter((g) => Number(g.market_signal_count) > 0);
@@ -142,12 +140,6 @@
       const holidays = Array.isArray(data?.world?.data?.upcoming_holidays) ? data.world.data.upcoming_holidays : [];
       const nextEv = [...holidays].sort((a, b) => Number(a.days_until) - Number(b.days_until))[0] || null;
 
-      const bySource = Array.isArray(data?.signals?.data?.by_source) ? data.signals.data.by_source : [];
-      const srcNames = bySource.slice(0, 3).map((s) => this._prettyPlatform(s.source)).filter(Boolean);
-      const srcTxt = srcNames.length
-        ? (srcNames.length === 1 ? srcNames[0] : srcNames.slice(0, -1).join(', ') + ' y ' + srcNames[srcNames.length - 1])
-        : '';
-
       let lvl, label;
       if (hasHot && hasBlue)      { lvl = 'good'; label = __('caliente'); }
       else if (hasHot || hasBlue) { lvl = 'mid';  label = __('en movimiento'); }
@@ -155,14 +147,14 @@
 
       let titleTail, desc;
       if (hot && blue) {
-        titleTail = __('"{k}" acelera y "{t}" sigue sin dueno', { k: hot.keyword, t: blue.topic_label || blue.topic });
-        desc = __('"{k}" esta ganando velocidad{src} y "{t}" tiene demanda que ningun rival cubre. Cada ola nueva es un Category Entry Point: crea contenido optimizado para SEO y GEO ahora, mientras el tema esta caliente y el terreno libre — asi te encuentran el dia que la gente busca, antes que la competencia.', {
-          k: hot.keyword, t: blue.topic_label || blue.topic, src: srcTxt ? __(' (segun {s})', { s: srcTxt }) : '',
+        titleTail = __('"{k}" esta en tendencia y "{t}" sigue sin dueno', { k: hot.theme, t: blue.topic_label || blue.topic });
+        desc = __('"{k}" esta haciendo boom en tu nicho y "{t}" tiene demanda que ningun rival cubre. Cada momento es un Category Entry Point: crea contenido ahora, mientras el tema esta caliente y el terreno libre — asi capturas la ola antes que la competencia.', {
+          k: hot.theme, t: blue.topic_label || blue.topic,
         });
       } else if (hot) {
-        titleTail = __('"{k}" esta acelerando afuera', { k: hot.keyword });
-        desc = __('"{k}" gana velocidad en tu nicho{src}. Es un Category Entry Point fresco: publica contenido optimizado para SEO y GEO mientras el tema esta caliente, para que te encuentren cuando la gente empiece a buscarlo.', {
-          k: hot.keyword, src: srcTxt ? __(' (segun {s})', { s: srcTxt }) : '',
+        titleTail = __('"{k}" esta en tendencia en tu nicho', { k: hot.theme });
+        desc = __('"{k}" esta haciendo boom en tu nicho ahora. Es un momento fresco que tu audiencia esta viviendo: crea contenido para aprovecharlo mientras esta caliente.', {
+          k: hot.theme,
         });
       } else if (blue) {
         const zero = Number(blue.competitor_post_count) === 0;
@@ -250,15 +242,16 @@
       const hot = [...signals].sort((a, b) => Number(b.velocity_score) - Number(a.velocity_score))[0];
       if (hot) {
         funciona = {
-          title: __('"{k}" está acelerando en tu nicho', { k: hot.keyword }),
-          metric: C(hot.velocity_score), metricSub: __('velocidad — súbete a la ola'),
+          title: __('"{k}" está en tendencia en tu nicho', { k: hot.theme }),
+          metric: String(hot.momentum || '').toLowerCase() === 'alto' ? __('Alto') : __('Medio'),
+          metricSub: __('momento — aprovéchalo'),
           impact: 'alto', earlySignal: false,
-          detail: { color: 'explota', category: __('Tendencia caliente'), title: __('Señales emergentes'),
+          detail: { color: 'explota', category: __('En tendencia'), title: __('Señales en tendencia del nicho'),
             findings: [...signals].sort((a, b) => Number(b.velocity_score) - Number(a.velocity_score)).slice(0, 5).map((s) => ({
               key: 'tendencia', n: Number(s.velocity_score) || 0, severity: 50,
-              label: __('"{k}"{s}', { k: s.keyword, s: s.sentiment ? ` · ${s.sentiment}` : '' }),
+              label: this._esc(s.theme || ''),
             })),
-            sections: [{ h: __('¿Qué está emergiendo?'), b: __('Estas keywords están acelerando en tu nicho. Crea contenido sobre las de arriba mientras están calientes — el timing lo es todo.') }],
+            sections: [{ h: __('¿Qué está haciendo boom?'), b: __('Estos momentos están calientes en tu nicho ahora. Crea contenido para aprovecharlos mientras la audiencia los vive — el timing lo es todo.') }],
           },
         };
       }
@@ -377,32 +370,30 @@
 
     /* ── Señales emergentes: keywords con velocidad (filtradas) ─────── */
     _buildTendSignals(signals) {
-      const raw = Array.isArray(signals?.top_velocity) ? signals.top_velocity : [];
-      const srcFilter = this._tendFilters?.source || '';
-      const list = raw
-        .filter(s => Number(s.relevance_score) >= MIN_SIGNAL_RELEVANCE)
-        .filter(s => !srcFilter || s.source === srcFilter)
-        .slice(0, 24);
+      // Señales EN TENDENCIA del nicho: momentos/temas que hacen boom AHORA en la
+      // audiencia y que la marca puede aprovechar (Google Trends sintetizado por LLM).
+      const list = (Array.isArray(signals?.top_velocity) ? signals.top_velocity : []).slice(0, 12);
       if (!list.length) return ''; // card vacía → se oculta
       const rows = list.map((s) => {
-        const vel = Number(s.velocity_score) || 0;
-        const men = Number(s.mentions_14d) || 0;
-        const sub = [this._prettyPlatform(s.source), men ? __('{n} menciones', { n: men }) : ''].filter(Boolean).join(' · ');
+        const alto = String(s.momentum || '') === 'alto';
+        const tag = alto
+          ? `<span class="tend-sig-row-vel"><i class="aisc-ico aisc-ico--zap"></i> ${__('Alto')}</span>`
+          : `<span class="tend-sig-row-vel tend-sig-row-vel--mid">${__('Medio')}</span>`;
         return `
           <div class="tend-sig-row">
             <div class="tend-sig-row-txt">
-              <span class="tend-sig-row-name">${this._esc(s.keyword)}</span>
-              <span class="tend-sig-row-sub">${this._esc(sub)}</span>
+              <span class="tend-sig-row-name">${this._esc(s.theme)}</span>
+              ${s.why ? `<span class="tend-sig-row-sub">${this._esc(s.why)}</span>` : ''}
             </div>
-            <span class="tend-sig-row-vel"><i class="aisc-ico aisc-ico--zap"></i> ${vel.toFixed(0)}</span>
+            ${tag}
           </div>`;
       }).join('');
       return `
         <section class="mb-section">
           <div class="mb-long-card">
             <div class="mb-ptbl-head">
-              <div class="mb-card-title">${__('Señales emergentes del nicho')}</div>
-              <div class="mb-ptbl-sub">${__('Temas que aceleran afuera — ordenados por velocidad, filtrados por calidad')}</div>
+              <div class="mb-card-title">${__('Señales en tendencia del nicho')}</div>
+              <div class="mb-ptbl-sub">${__('Lo que está haciendo boom AHORA en tu nicho — momentos que tu audiencia vive y puedes aprovechar con contenido')}</div>
             </div>
             <div class="tend-sig-list">${rows}</div>
           </div>
