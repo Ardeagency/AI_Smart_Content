@@ -398,38 +398,6 @@
                 ? __('{s} es tu mayor fortaleza; {w} es tu siguiente palanca de crecimiento.', { s: this._humanCompLabel(strong), w: lcFirst(this._humanCompLabel(weak)) })
                 : __('El estado de tu identidad y tu ejecución, en una sola lectura.')));
 
-      // Filas de prueba desde datos reales ya cargados.
-      const rows = [];
-      const pushComp = (label, score) => {
-        if (score == null) return;
-        const sc = Math.round(Number(score) || 0);
-        const lvl = sc >= 70 ? 'good' : sc >= 40 ? 'mid' : 'low';
-        rows.push(`<div class="mb-bstat-row"><span class="mb-bstat-k">${this._esc(label)}</span><span class="mb-bstat-v mb-bstat-v--${lvl}">${sc}<small> / 100</small></span></div>`);
-      };
-      if (byKey.coherencia) pushComp(__('Coherencia con tu ADN'), byKey.coherencia.score);
-      if (byKey.cadencia)   pushComp(__('Constancia de publicación'), byKey.cadencia.score);
-      if (byKey.trends)     pushComp(__('Aprovechamiento de tendencias'), byKey.trends.score);
-      const c = data?.comments?.data;
-      if (c && Number(c.total)) {
-        const pos = Number(c.pos) || 0, neu = Number(c.neu) || 0, neg = Number(c.neg) || 0;
-        const known = (pos + neu + neg) || 1;
-        const p = Math.round(pos / known * 100);
-        const lvl = p >= 60 ? 'good' : p >= 35 ? 'mid' : 'low';
-        rows.push(`<div class="mb-bstat-row"><span class="mb-bstat-k">${__('Sentimiento de audiencia')}</span><span class="mb-bstat-v mb-bstat-v--${lvl}">${p}%<small> pos</small></span></div>`);
-      } else if (byKey.resonancia) {
-        pushComp(__('Resonancia con tu audiencia'), byKey.resonancia.score);
-      }
-
-      // Objetivo del segmento: mismo calculo que la card de Salud.
-      const target = Number(h.target), gap = Number(h.gap), band = h.band || { p50: 65, p75: 80 };
-      const objetivo = Number.isFinite(target)
-        ? __('Objetivo de tu segmento: <strong>{t}</strong>', { t: target }) + (gap > 0 ? __(' · te faltan <strong>{g}</strong> pts', { g: Math.round(gap) }) : __(' · alcanzado ✓'))
-        : __('Saludable para tu segmento: <strong>{lo}–{hi}</strong>', { lo: band.p50, hi: band.p75 });
-
-      const proof = rows.length
-        ? `<div class="mb-bstat-proof">${rows.join('')}<div class="mb-bstat-obj">${objetivo}</div></div>`
-        : '';
-
       return `
         <section class="mb-section mb-bstat-section">
           <div class="mb-bstat">
@@ -440,12 +408,7 @@
                    <p class="mb-bstat-desc">${this._esc(brief.body || '')}</p>`
                 : `<h3 class="mb-bstat-title">${__('Tu marca está')} <span class="mb-bstat-verdict mb-bstat-verdict--${vm.lvl}">${this._esc(vm.label)}</span> ${this._esc(titleTail)}.</h3>
                    <p class="mb-bstat-desc">${this._esc(desc)}</p>`}
-              <div class="mb-bstat-cta">
-                <button type="button" class="mb-bstat-btn mb-bstat-btn--primary" data-mb-jump="diag"><i class="aisc-ico aisc-ico--goal"></i>${__('Ver plan para mejorar')}</button>
-                <button type="button" class="mb-bstat-btn mb-bstat-btn--ghost" data-mb-jump="health"><i class="aisc-ico aisc-ico--chart-bar"></i>${__('Salud por plataforma')}</button>
-              </div>
             </div>
-            ${proof}
           </div>
         </section>`;
     },
