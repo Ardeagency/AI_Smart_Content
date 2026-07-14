@@ -448,12 +448,59 @@
         it.chosen = [primary, secondary].filter(Boolean);
       }
 
+      // Evidencia de una observacion: los posts que el sistema identifico + una muestra
+      // de comentarios de la audiencia. Es lo que se revela al expandir la observacion.
+      const NET = { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', x: 'X', twitter: 'X', youtube: 'YouTube', linkedin: 'LinkedIn' };
+      const trunc = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s; };
+      const sentClass = (s) => /^neg/i.test(s) ? 'neg' : /^pos/i.test(s) ? 'pos' : 'neu';
+      const evidenceHtml = (ev) => {
+        if (!ev || !Array.isArray(ev.posts) || !ev.posts.length) return '';
+        const postsHtml = ev.posts.map((p) => {
+          const net = p.network ? (NET[String(p.network).toLowerCase()] || p.network) : '';
+          const meta = [
+            net ? `<span class="comp-evi-net">${this._esc(net)}</span>` : '',
+            Number(p.engagement) ? `<span class="comp-evi-eng"><i class="aisc-ico aisc-ico--fire"></i>${fmt.int(p.engagement)}</span>` : '',
+            Number(p.totalComments) ? `<span class="comp-evi-cc"><i class="aisc-ico aisc-ico--eye"></i>${__('{n} comentarios', { n: fmt.int(p.totalComments) })}</span>` : '',
+          ].filter(Boolean).join('');
+          const body = p.content ? `<p class="comp-evi-text">${this._esc(trunc(p.content, 220))}</p>` : `<p class="comp-evi-text comp-evi-text--empty">${__('Publicación sin texto')}</p>`;
+          const link = p.permalink ? `<a class="comp-evi-link" href="${this._esc(p.permalink)}" target="_blank" rel="noopener"><i class="aisc-ico aisc-ico--external-link"></i>${__('Ver publicación')}</a>` : '';
+          const cmts = (p.comments || []).map((c) => `
+              <li class="comp-evi-cmt comp-evi-cmt--${sentClass(c.sentiment)}">
+                <span class="comp-evi-cmt-dot"></span>
+                <span class="comp-evi-cmt-body">${this._esc(trunc(c.text, 180))}${c.author ? ` <span class="comp-evi-cmt-author">— ${this._esc(c.author)}</span>` : ''}</span>
+              </li>`).join('');
+          return `
+            <div class="comp-evi-post">
+              <div class="comp-evi-post-meta">${meta}${link}</div>
+              ${body}
+              ${cmts ? `<ul class="comp-evi-cmts">${cmts}</ul>` : ''}
+            </div>`;
+        }).join('');
+        return `<div class="comp-obs-evi-body">${postsHtml}</div>`;
+      };
+      // Una linea de observacion: si trae evidencia se vuelve expandible (<details>),
+      // revelando los posts y comentarios que la respaldan. Sin evidencia queda plana.
+      const line = (s, strong) => {
+        const txt = insightText(s);
+        if (!txt) return '';
+        const cls = strong ? 'comp-obs-signal comp-obs-signal--strong' : 'comp-obs-terms';
+        const ico = strong ? `<i class="aisc-ico aisc-ico--${ICO[s.kind] || 'eye'}"></i>` : '';
+        if (!s.evidence || !s.evidence.posts || !s.evidence.posts.length) {
+          return `<div class="${cls}">${ico}<span>${txt}</span></div>`;
+        }
+        return `
+          <details class="comp-obs-evi">
+            <summary class="${cls} comp-obs-evi-sum">${ico}<span>${txt}</span><i class="aisc-ico aisc-ico--chevron-down comp-obs-evi-caret"></i></summary>
+            ${evidenceHtml(s.evidence)}
+          </details>`;
+      };
+
       const card = (it) => {
         const top = it.chosen || [];
         const primary = top[0]
-          ? `<div class="comp-obs-signal comp-obs-signal--strong"><i class="aisc-ico aisc-ico--${ICO[top[0].kind] || 'eye'}"></i><span>${insightText(top[0])}</span></div>`
+          ? line(top[0], true)
           : `<div class="comp-obs-terms">${__('{n} posts en la ventana', { n: fmt.int(it.posts) })}</div>`;
-        const secondary = top[1] ? `<div class="comp-obs-terms">${insightText(top[1])}</div>` : '';
+        const secondary = top[1] ? line(top[1], false) : '';
         return `
         <div class="comp-obs-item">
           <div class="comp-obs-head">

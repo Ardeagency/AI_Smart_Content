@@ -1973,6 +1973,7 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "publicaciones": "posts",
   "Publicaciones": "Posts",
   "Publicaciones a las": "Posts at",
+  "Publicación sin texto": "Post with no text",
   "Publicada": "Published",
   "Publicar": "Publish",
   "Puedes reactivar en cualquier momento desde la página de planes.": "You can reactivate anytime from the plans page.",

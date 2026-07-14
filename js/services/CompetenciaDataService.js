@@ -114,7 +114,7 @@ class CompetenciaDataService {
       let posts = [];
       try {
         const { data } = await this.sb.from('brand_posts')
-          .select('id,entity_id,content,engagement_total,hashtags')
+          .select('id,entity_id,content,engagement_total,hashtags,permalink,network')
           .in('entity_id', ids)
           .eq('is_competitor', true)
           .not('content', 'is', null)
@@ -125,21 +125,31 @@ class CompetenciaDataService {
       } catch (_) { /* señales de contenido son opcionales: si falla, no rompe el panel */ }
       // Sentimiento de los COMENTARIOS por post: permite cruzar el tema del copy con
       // la reaccion real de la audiencia (tema con engagement alto Y comentarios
-      // positivos = "su audiencia se enfoca en X"). Acotado.
+      // positivos = "su audiencia se enfoca en X"). Ademas guardamos una MUESTRA del
+      // texto de comentarios pos/neg por post -> el panel de Observaciones se expande
+      // y muestra la PRUEBA (posts + comentarios que respaldan cada observacion). Acotado.
+      const CMT_SAMPLE = 6; // comentarios guardados por post y por polaridad
       const postComments = {};
       try {
         const postIds = posts.map((p) => p.id).filter(Boolean);
         if (postIds.length) {
           const { data: cmts } = await this.sb.from('brand_post_comments')
-            .select('brand_post_id,sentiment')
+            .select('brand_post_id,sentiment,content,author_display_name,author_handle')
             .in('brand_post_id', postIds)
             .not('sentiment', 'is', null)
             .limit(5000);
           for (const c of cmts || []) {
-            const m = (postComments[c.brand_post_id] = postComments[c.brand_post_id] || { pos: 0, neg: 0, total: 0 });
+            const m = (postComments[c.brand_post_id] = postComments[c.brand_post_id] || { pos: 0, neg: 0, total: 0, sPos: [], sNeg: [] });
             m.total += 1;
-            if (/^pos/i.test(c.sentiment)) m.pos += 1;
-            else if (/^neg/i.test(c.sentiment)) m.neg += 1;
+            const isPos = /^pos/i.test(c.sentiment), isNeg = /^neg/i.test(c.sentiment);
+            if (isPos) m.pos += 1; else if (isNeg) m.neg += 1;
+            const txt = String(c.content || '').trim();
+            if (txt) {
+              const bucket = isNeg ? m.sNeg : isPos ? m.sPos : null;
+              if (bucket && bucket.length < CMT_SAMPLE) {
+                bucket.push({ text: txt, author: c.author_display_name || c.author_handle || '', sentiment: isNeg ? 'negative' : 'positive' });
+              }
+            }
           }
         }
       } catch (_) { /* comentarios opcionales */ }
@@ -151,9 +161,28 @@ class CompetenciaDataService {
       // contenido en una sola lista rankeada.
       const voiceRows = (voice.status === 'fulfilled' && !voice.value?.error) ? (voice.value.data || []) : [];
       const voiceById = new Map(voiceRows.map((v) => [v.entity_id, v]));
+      // Posts por entidad (para la evidencia de las opiniones del RPC voice, que no
+      // llevan tema): las publicaciones del perfil con comentarios de esa polaridad.
+      const postsByEntity = {};
+      for (const p of posts) { if (p.entity_id) (postsByEntity[p.entity_id] = postsByEntity[p.entity_id] || []).push(p); }
+      const opinionEvidence = (eid, pol) => {
+        const list = (postsByEntity[eid] || []).filter((p) => { const c = postComments[p.id]; return c && (pol === 'neg' ? c.sNeg.length : c.sPos.length); });
+        if (!list.length) return null;
+        const cnt = (p) => { const c = postComments[p.id]; return c ? (pol === 'neg' ? c.sNeg.length : c.sPos.length) : 0; };
+        const top = list.slice().sort((a, b) => (cnt(b) - cnt(a)) || ((b.engagement_total || 0) - (a.engagement_total || 0))).slice(0, 5);
+        const out = top.map((p) => {
+          const c = postComments[p.id] || { sPos: [], sNeg: [], pos: 0, neg: 0, total: 0 };
+          return { content: p.content, permalink: p.permalink || null, network: p.network || null, engagement: Number(p.engagement_total) || 0, pos: c.pos || 0, neg: c.neg || 0, totalComments: c.total || 0, comments: (pol === 'neg' ? c.sNeg : c.sPos).slice(0, 3) };
+        }).filter((p) => (p.content && p.content.trim()) || p.comments.length);
+        return out.length ? { posts: out } : null;
+      };
       topBlock.data = topBlock.data.map((r) => {
         const content = (insightById[r.entity_id] || {}).insights || [];
         const opinion = this._voiceInsights(voiceById.get(r.entity_id));
+        for (const s of opinion) {
+          const pol = s.kind === 'opinion_neg' ? 'neg' : s.kind === 'opinion_pos' ? 'pos' : null;
+          if (pol) { const ev = opinionEvidence(r.entity_id, pol); if (ev) s.evidence = ev; }
+        }
         return { ...r, insights: [...content, ...opinion].sort((a, b) => b.score - a.score) };
       });
     }
@@ -194,8 +223,11 @@ class CompetenciaDataService {
       const eid = p.entity_id; if (!eid) continue;
       const own = ownTokens[eid] || new Set();
       const { terms, tags } = this._postTerms(p, own, STOP);
-      const e = (byEntity[eid] = byEntity[eid] || { df: {}, eng: {}, tagDf: {}, cpos: {}, cneg: {}, ccnt: {}, n: 0, engTotal: 0, engList: [], maxEng: -1, maxTerms: null });
+      const e = (byEntity[eid] = byEntity[eid] || { df: {}, eng: {}, tagDf: {}, cpos: {}, cneg: {}, ccnt: {}, n: 0, engTotal: 0, engList: [], maxEng: -1, maxTerms: null, posts: [] });
       const eng = Number(p.engagement_total) || 0;
+      // Guardamos el post (con su set de terminos) para poder armar la EVIDENCIA de
+      // cada observacion: que publicaciones la respaldan y con que comentarios.
+      e.posts.push({ id: p.id, content: p.content, permalink: p.permalink || null, network: p.network || null, eng, terms });
       // Sentimiento de los comentarios de ESTE post (si tiene suficientes).
       const cs = postComments[p.id];
       const hasC = cs && cs.total >= 3;
@@ -282,6 +314,35 @@ class CompetenciaDataService {
       }
       if (terms.length) ins.push({ kind: 'terms', terms, score: 12 });
       ins.sort((a, b) => b.score - a.score);
+      // EVIDENCIA por señal: los posts (y sus comentarios) que la respaldan. Permite
+      // que el panel se expanda y muestre el "por que" — que publicaciones detecto el
+      // sistema y como reacciono la audiencia. Polaridad: rechazo/opinion_neg -> comentarios
+      // negativos; enfoque/respaldo -> positivos; el resto -> mezcla.
+      const polarityOf = (k) =>
+        (k === 'audience_reject' || k === 'opinion_neg') ? 'neg'
+        : (k === 'audience_focus' || k === 'opinion_pos') ? 'pos' : null;
+      const evidenceFor = (s) => {
+        const term = s.term || s.tag || (Array.isArray(s.terms) && s.terms[0]) || null;
+        const pol = polarityOf(s.kind);
+        let ps = e.posts;
+        if (term) ps = ps.filter((p) => p.terms && p.terms.has(term));
+        else if (pol) ps = ps.filter((p) => { const c = postComments[p.id]; return c && (pol === 'neg' ? c.sNeg.length : c.sPos.length); });
+        else return null;
+        if (!ps.length) return null;
+        const polCount = (p) => { const c = postComments[p.id]; if (!c) return 0; return pol === 'neg' ? c.sNeg.length : pol === 'pos' ? c.sPos.length : (c.sNeg.length + c.sPos.length); };
+        ps = ps.slice().sort((a, b) => (polCount(b) - polCount(a)) || (b.eng - a.eng)).slice(0, 5);
+        const posts = ps.map((p) => {
+          const c = postComments[p.id] || { sPos: [], sNeg: [], pos: 0, neg: 0, total: 0 };
+          const cm = pol === 'neg' ? c.sNeg : pol === 'pos' ? c.sPos : [...c.sNeg, ...c.sPos];
+          return {
+            content: p.content, permalink: p.permalink, network: p.network, engagement: p.eng,
+            pos: c.pos || 0, neg: c.neg || 0, totalComments: c.total || 0,
+            comments: cm.slice(0, 3),
+          };
+        }).filter((p) => (p.content && p.content.trim()) || p.comments.length);
+        return posts.length ? { posts } : null;
+      };
+      for (const s of ins) { const ev = evidenceFor(s); if (ev) s.evidence = ev; }
       out[eid] = { insights: ins };
     }
     return out;
