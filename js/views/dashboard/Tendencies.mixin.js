@@ -101,6 +101,7 @@
       return `
         <div class="insight-page mb-dash" id="tendPage">
           ${this._buildTendenciesStatusHero(data)}
+          ${this._buildTendDemand(data?.demand?.data)}
           ${this._buildTendSignals(data?.signals?.data)}
           ${this._buildTendGaps(data?.gaps?.data)}
           ${this._buildTendLexicon(data?.lexicon?.data)}
@@ -363,6 +364,35 @@
           ${head}
           <div class="tend-signals">${chips}</div>
           ${srcLine}
+        </section>`;
+    },
+
+    /* ── Demanda de busqueda: lo que la gente BUSCA alrededor de tu categoria
+       (Google Trends via SerpApi). Señal limpia de nicho — intencion real, sin el
+       ruido de referentes. rising = demanda que acelera; top = demanda establecida. */
+    _buildTendDemand(demand) {
+      const list = (Array.isArray(demand?.top_high_intent) ? demand.top_high_intent : []).slice(0, 18);
+      if (!list.length) return ''; // sin data viva → se oculta
+      const head = `
+        <div class="mb-section-head">
+          <span class="mb-section-title">${__('Demanda de búsqueda del nicho')}</span>
+          <span class="mb-section-hint">${__('Lo que la gente busca alrededor de tu categoría (Google Trends) — intención real que puedes capturar con contenido')}</span>
+        </div>`;
+      const chips = list.map((d) => {
+        const rising = String(d.commercial_intent || '') === 'high';
+        return `
+          <div class="tend-signal" title="${__('semilla: {s}', { s: this._esc(d.seed_keyword || '') })}">
+            <span class="tend-signal-kw">${this._esc(d.discovered_term)}</span>
+            <span class="tend-signal-meta">
+              ${rising ? `<span class="tend-signal-vel"><i class="aisc-ico aisc-ico--zap"></i> ${__('en alza')}</span>` : `<span class="tend-signal-src">${__('demandado')}</span>`}
+              ${d.geo && d.geo !== 'GLOBAL' ? `<span class="tend-signal-src">${this._esc(d.geo)}</span>` : ''}
+            </span>
+          </div>`;
+      }).join('');
+      return `
+        <section class="mb-section">
+          ${head}
+          <div class="tend-signals">${chips}</div>
         </section>`;
     },
 
