@@ -81,13 +81,110 @@
     async _renderVeraTabBody(body, scope) {
       if (!body) return true;
       await this._loadVeraReading(scope);
-      const band = this._buildVeraBandHtml(scope, { expanded: true });
+      const instrument = this._buildVeraInstrumentHtml(scope);
       body.innerHTML = `
         <div class="insight-page mb-dash vera-page">
-          ${band || this._veraEmptyStateHtml(scope)}
+          ${instrument || this._veraEmptyStateHtml(scope)}
         </div>`;
       this._bindVeraBand(body);
       return true;
+    },
+
+    /* ── INSTRUMENTO (no memo): acción arriba, estado de un vistazo,
+       narrativa como soporte expandible. Jerarquía:
+       1. headline de Vera  2. tiles de estado con delta  3. LA MOVIDA
+       (aprobable → dispara producción)  4. "El porqué" colapsable
+       5. watchlist. Lecturas viejas sin tiles/rec_id degradan solas. ── */
+    _buildVeraInstrumentHtml(scope) {
+      const res = this._veraReadings?.[scope];
+      const r = res?.reading;
+      if (!r || !r.headline) return '';
+      const esc = (s) => this._esc(s);
+      const when = res.created_at ? this._veraFmtDate(res.created_at) : '';
+      const stale = res.status === 'stale';
+      const ev = r.evidence || {};
+      const blocks = Array.isArray(r.narrative) ? r.narrative : [];
+
+      const tiles = blocks.filter((b) => b?.type === 'stat_tile');
+      const moves = blocks.filter((b) => b?.type === 'recommended_move');
+      const watch = blocks.filter((b) => b?.type === 'watchlist_item');
+      const why = blocks.filter((b) => !['stat_tile', 'recommended_move', 'watchlist_item'].includes(b?.type));
+
+      const tilesHtml = tiles.length ? `
+        <div class="vera-tiles">
+          ${tiles.map((t) => `
+            <div class="vera-tile">
+              <div class="vera-tile-label">${esc(t.label || '')}</div>
+              <div class="vera-tile-value">${esc(t.value || '')}</div>
+              ${t.delta ? `<div class="vera-tile-delta vera-tile-delta--${esc(t.direction || 'flat')}">${t.direction === 'down' ? '▼' : t.direction === 'up' ? '▲' : '·'} ${esc(t.delta)}</div>` : ''}
+              ${t.note ? `<div class="vera-tile-note">${esc(t.note)}</div>` : ''}
+            </div>`).join('')}
+        </div>` : '';
+
+      const movesHtml = moves.map((m) => this._veraMoveCardHtml(m, ev, res.reading_id)).join('');
+
+      const whyHtml = why.length ? `
+        <details class="vera-why">
+          <summary>${esc(__('El porqué — la lectura completa de Vera con evidencia'))}</summary>
+          <div class="vera-why-body">
+            ${why.map((b) => this._veraBlockHtml(b, ev, res.reading_id)).filter(Boolean).join('')}
+          </div>
+        </details>` : '';
+
+      const watchHtml = watch.length ? `
+        <div class="vera-watchrow">
+          <div class="vera-watchrow-title">${esc(__('Vera está vigilando'))}</div>
+          ${watch.map((b) => this._veraBlockHtml(b, ev, res.reading_id)).filter(Boolean).join('')}
+        </div>` : '';
+
+      const conf = r.meta?.data_confidence;
+      return `
+        <section class="mb-section vera-band-section" data-vera-scope="${esc(scope)}">
+          <div class="vera-band">
+            <div class="vera-band-head">
+              <span class="vera-dot" aria-hidden="true"></span>
+              <span class="vera-band-kicker">${esc(__('Lectura de Vera'))} — ${esc(SCOPE_LABEL[scope] ? SCOPE_LABEL[scope]() : scope)}</span>
+              ${stale ? `<span class="vera-chip vera-chip--stale">${esc(__('lectura del {d}', { d: when }))}</span>`
+                      : (when ? `<time class="vera-band-when">${esc(when)}</time>` : '')}
+            </div>
+            <h3 class="vera-band-headline">${esc(r.headline)}</h3>
+            ${conf ? `<div class="vera-band-conf">${esc(__('confianza de datos: {c}', { c: conf }))}${r.meta?.silence_ok ? ` · ${esc(__('semana quieta — lectura honesta'))}` : ''}</div>` : ''}
+            ${tilesHtml}
+            ${movesHtml}
+            ${whyHtml}
+            ${watchHtml}
+          </div>
+        </section>`;
+    },
+
+    /* LA MOVIDA como card accionable. Aprobar → approve_strategic_recommendation
+       (Loop V1 la lleva a producción). Sin rec_id (lecturas viejas) → sin botones. */
+    _veraMoveCardHtml(m, ev, readingId) {
+      const esc = (s) => this._esc(s);
+      const urg = URG[m.urgency] ? URG[m.urgency]() : (m.urgency || '');
+      const refs = (Array.isArray(m.evidence) ? m.evidence : []).filter((k) => k && ev[k]);
+      const evBtns = refs.map((k) => `<button type="button" class="vera-ev" data-vera-ev="${esc(readingId)}|${esc(k)}">${esc(__('ver prueba'))} ${esc(k)}</button>`).join(' ');
+      const b = m.brief || {};
+      const briefBits = [b.formato, b.canal].filter(Boolean).map((x) => `<span class="vera-move-chip">${esc(x)}</span>`).join('');
+      return `
+        <div class="vera-move-card" ${m.rec_id ? `data-vera-rec="${esc(m.rec_id)}"` : ''}>
+          <div class="vera-move-head">
+            <span class="vera-move-kicker">${esc(__('La movida'))}</span>
+            ${urg ? `<span class="vera-urg">${esc(urg)}</span>` : ''}
+            ${briefBits}
+            <span class="vera-move-ev">${evBtns}</span>
+          </div>
+          <h4 class="vera-move-action">${esc(m.action || '')}</h4>
+          <p class="vera-move-rationale">${esc(m.rationale || '')}</p>
+          ${b.copy_seed ? `<div class="vera-move-seed"><i class="aisc-ico aisc-ico--quote"></i> ${esc(b.copy_seed)}</div>` : ''}
+          ${m.rec_id ? `
+          <div class="vera-move-actions">
+            <button type="button" class="strat-btn strat-btn--approve" data-vera-rec-action="approve">${esc(__('Aprobar y producir'))}</button>
+            <button type="button" class="strat-btn" data-vera-rec-action="iterate">${esc(__('Ajustar'))}</button>
+            <button type="button" class="strat-btn strat-btn--reject" data-vera-rec-action="reject">${esc(__('Descartar'))}</button>
+          </div>
+          <div class="vera-move-done" hidden></div>` : ''}
+        </div>`;
     },
 
     _veraEmptyStateHtml(scope) {
@@ -236,8 +333,48 @@
         if (ev) {
           const [readingId, key] = String(ev.dataset.veraEv || '').split('|');
           if (readingId && key) this._openVeraEvidence(readingId, key, ev);
+          return;
+        }
+        const act = e.target.closest('[data-vera-rec-action]');
+        if (act) {
+          const card = act.closest('[data-vera-rec]');
+          if (card) this._resolveVeraMove(card.dataset.veraRec, act.dataset.veraRecAction, card);
         }
       });
+    },
+
+    /* Aprobar y producir / Ajustar / Descartar — mismas RPCs del flujo de
+       Estrategia (Loop V1: recommendation-producer lleva lo aprobado a
+       producción real). */
+    async _resolveVeraMove(recId, action, card) {
+      if (!recId || !this._supabase) return;
+      let feedback = '';
+      if (action === 'iterate') {
+        feedback = (window.prompt(__('¿Qué quieres ajustar de esta movida?')) || '').trim();
+        if (!feedback) return;
+      }
+      const btns = card.querySelector('.vera-move-actions');
+      if (btns) { btns.style.opacity = '0.5'; btns.style.pointerEvents = 'none'; }
+      try {
+        let rpc, params;
+        if (action === 'approve')      { rpc = 'approve_strategic_recommendation'; params = { p_rec_id: recId }; }
+        else if (action === 'reject')  { rpc = 'reject_strategic_recommendation';  params = { p_rec_id: recId, p_reason: '' }; }
+        else                           { rpc = 'iterate_strategic_recommendation'; params = { p_rec_id: recId, p_feedback: feedback }; }
+        const { error } = await this._supabase.rpc(rpc, params);
+        if (error) throw error;
+        const done = card.querySelector('.vera-move-done');
+        if (btns) btns.hidden = true;
+        if (done) {
+          done.hidden = false;
+          done.textContent = action === 'approve'
+            ? __('✓ Aprobada — Vera la lleva a producción. Síguela en Producción.')
+            : action === 'reject' ? __('Descartada.') : __('✓ Feedback enviado — Vera la va a iterar.');
+          done.className = 'vera-move-done' + (action === 'approve' ? ' vera-move-done--ok' : '');
+        }
+      } catch (e) {
+        console.error('[VeraReading] acción de movida falló:', e?.message || e);
+        if (btns) { btns.style.opacity = ''; btns.style.pointerEvents = ''; }
+      }
     },
 
     async _openVeraEvidence(readingId, key, btn) {
