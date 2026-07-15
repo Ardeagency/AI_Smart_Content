@@ -54,13 +54,17 @@
       this._renderMyBrandsSkeleton(body);
 
       try {
-        const data = await this._loadMyBrandsData();
+        const [data] = await Promise.all([
+          this._loadMyBrandsData(),
+          this._loadVeraReading?.('mi_marca'),   // lectura de Vera (null → fallback al hero actual)
+        ]);
         this._mbCampanasData = data;
         if (!this._shouldRepaint('my-brands', data)) return; // refresh silencioso sin cambios: no re-pintar
         if (this._isMyBrandsEmpty(data)) { this._renderConnectPlatformsEmpty(body); return; }
         this._renderHeroCards?.(data); // alimenta las cards del hero
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
+        this._bindVeraBand?.(body);
         this._renderLongitudinalCharts(data);
         this._renderPillarsBubble(data);
       } catch (e) {
@@ -173,13 +177,17 @@
       const body = document.getElementById('insightTabBody');
       if (onMyBrands && body) this._renderMyBrandsSkeleton(body);
       try {
-        const data = await this._loadMyBrandsData();
+        const [data] = await Promise.all([
+          this._loadMyBrandsData(),
+          this._loadVeraReading?.('mi_marca'),   // lectura de Vera (null → fallback al hero actual)
+        ]);
         this._mbCampanasData = data;
         this._renderHeroCards?.(data); // alimenta las cards del hero
         if (!onMyBrands || !body) return;
         if (this._isMyBrandsEmpty(data)) { this._renderConnectPlatformsEmpty(body); return; }
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
+        this._bindVeraBand?.(body);
         this._renderLongitudinalCharts(data);
         this._renderPillarsBubble(data);
       } catch (e) {
@@ -361,6 +369,10 @@
        (doctrina blanco total). Colores de nivel = misma escala que el resto
        de Mi Marca; acento = --brand-primary (sin naranja legacy). */
     _buildBrandStatusHero(data) {
+      // Lectura de Vera (vera_dashboard_readings): si existe, ES el banner —
+      // cmo_brief y el template rule-based quedan como fallback.
+      const vband = this._buildVeraBandHtml?.('mi_marca');
+      if (vband) return vband;
       const h = data?.health?.data;
       if (!h || h.score == null) return '';
       // Brief de CMO escrito por LLM (cacheado). Si existe, es la lectura oficial;

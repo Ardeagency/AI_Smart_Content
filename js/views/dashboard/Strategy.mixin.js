@@ -29,7 +29,10 @@
       this._restoreStratFilters();
       this._renderStratSkeleton(body);
       try {
-        const data = await this._strategiaService.loadAll({ status: this._stratFilters.status });
+        const [data] = await Promise.all([
+          this._strategiaService.loadAll({ status: this._stratFilters.status }),
+          this._loadVeraReading?.('estrategia'),   // lectura de Vera (null si no existe — fallback al hero actual)
+        ]);
         this._stratData = data;
         if (this._activeTab === 'strategy') {
           this._renderHeroCards();                             // cards del hero = pipeline de Vera
@@ -38,6 +41,7 @@
         if (!this._shouldRepaint('strategy', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildStrategiaHtml(data);
         this._bindStrategyHandlers(body);
+        this._bindVeraBand?.(body);
         this._initStratCarousels(body);
       } catch (e) {
         console.error('[Strategy] load failed:', e);
@@ -169,6 +173,10 @@
        ni en produccion (doctrina blanco total). Mismas clases/acento que el hero de
        Mi Marca. Color del veredicto = nivel de confianza de la mejor jugada. */
     _buildStrategyStatusHero(data) {
+      // Lectura de Vera (vera_dashboard_readings): si existe, ES el banner —
+      // el brief de cmo_brief y el template rule-based quedan como fallback.
+      const vband = this._buildVeraBandHtml?.('estrategia');
+      if (vband) return vband;
       const brief    = data?.cmoBrief?.data;
       const proposed = Array.isArray(data?.proposed?.data) ? data.proposed.data : [];
       const master   = data?.master?.data || {};

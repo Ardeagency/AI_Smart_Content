@@ -33,7 +33,10 @@
       this._renderTendSkeleton(body);
       try {
         this._tendenciasService.setWindow(this._tendFilters.windowDays);
-        const data = await this._tendenciasService.loadAll();
+        const [data] = await Promise.all([
+          this._tendenciasService.loadAll(),
+          this._loadVeraReading?.('tendencias'),   // lectura de Vera (null → fallback al hero actual)
+        ]);
         this._tendData = data;
         if (this._activeTab === 'tendencies') {
           this._renderHeroCards();                             // cards del hero = pulso del nicho
@@ -42,6 +45,7 @@
         if (!this._shouldRepaint('tendencies', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildTendenciasHtml(data);
         this._bindTendenciesHandlers(body);
+        this._bindVeraBand?.(body);
       } catch (e) {
         console.error('[Tendencies] load failed:', e);
         if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
@@ -121,6 +125,10 @@
        senal/gap/evento real (scrapers en pausa). Doctrina: cada ocasion = Category
        Entry Point; estar donde la gente busca (SEO/GEO) antes que la competencia. */
     _buildTendenciesStatusHero(data) {
+      // Lectura de Vera (vera_dashboard_readings): si existe, ES el banner —
+      // cmo_brief y el template rule-based quedan como fallback.
+      const vband = this._buildVeraBandHtml?.('tendencias');
+      if (vband) return vband;
       const brief = data?.cmoBrief?.data;
       const cards = (typeof this._computeTendenciesCards === 'function')
         ? this._computeTendenciesCards(data) : {};

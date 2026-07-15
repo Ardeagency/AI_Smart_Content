@@ -290,12 +290,14 @@ class App {
     const dashboardLoader = this._lazy('DashboardView', [
       '/js/components/AudienceMap.js',
       '/js/components/OnboardingTour.js',
+      '/js/services/VeraReadingService.js',
       '/js/views/DashboardView.js',
       '/js/views/dashboard/MyBrands.mixin.js',
       '/js/views/dashboard/Competence.mixin.js',
       '/js/views/dashboard/Tendencies.mixin.js',
       '/js/views/dashboard/Strategy.mixin.js',
-    ], ['/css/modules/insight.css']);
+      '/js/views/dashboard/VeraReading.mixin.js',
+    ], ['/css/modules/insight.css', '/css/modules/vera-reading.css']);
     r.register('/org/:orgIdShort/:orgNameSlug/dashboard', dashboardLoader, auth);
     r.register('/dashboard', dashboardLoader, auth);
 

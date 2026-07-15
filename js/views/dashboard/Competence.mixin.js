@@ -24,13 +24,16 @@
       this._restoreCompFilters();
       this._renderCompSkeleton(body);
       try {
-        const data = await this._competenciaService.loadAll({
-          dateFromIso: this._compFilters.dateFrom || null,
-          dateToIso:   this._compFilters.dateTo   || null,
-          windowDays: this._compFilters.windowDays,
-          entityId: this._compFilters.entityId,
-          platforms: this._compFilters.platforms || null,
-        });
+        const [data] = await Promise.all([
+          this._competenciaService.loadAll({
+            dateFromIso: this._compFilters.dateFrom || null,
+            dateToIso:   this._compFilters.dateTo   || null,
+            windowDays: this._compFilters.windowDays,
+            entityId: this._compFilters.entityId,
+            platforms: this._compFilters.platforms || null,
+          }),
+          this._loadVeraReading?.('monitoreo'),   // lectura de Vera (null → fallback al hero actual)
+        ]);
         this._compData = data;
         // Lista completa de perfiles para el dropdown (solo cuando NO hay foco
         // en un rival, asi no se pierden las demas opciones al filtrar).
@@ -44,6 +47,7 @@
         if (!this._shouldRepaint('competence', data)) return; // refresh silencioso sin cambios: no re-pintar
         body.innerHTML = this._buildCompetenciaHtml(data);
         this._bindCompetenceHandlers(body);
+        this._bindVeraBand?.(body);
         this._renderInfluenceBars(data);
       } catch (e) {
         console.error('[Competence] load failed:', e);
@@ -246,6 +250,10 @@
        real (doctrina blanco total). Reusa _computeCompetitionCards (misma
        matematica de rivalidad). CTA reusa data-comp-entity (sin handler nuevo). */
     _buildCompetenceStatusHero(data) {
+      // Lectura de Vera (vera_dashboard_readings): si existe, ES el banner —
+      // cmo_brief y el template rule-based quedan como fallback.
+      const vband = this._buildVeraBandHtml?.('monitoreo');
+      if (vband) return vband;
       if (this._isCompetenceEmpty(data)) return '';
       const brief = data?.cmoBrief?.data;
       const top = Array.isArray(data?.top?.data) ? data.top.data : [];
