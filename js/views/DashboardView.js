@@ -697,6 +697,11 @@ class DashboardView extends BaseView {
   // .dash-hero-cards para la jerarquia (sujeto primero + linea de accion al pie).
   // Sin el parrafo "why" largo ni el boton de expandir. Sin data → 4 shimmers.
   _buildHeroCards(data) {
+    // REDISEÑO VERA 2026-07: las 4 cards del hero se OCULTAN — la lectura de
+    // Vera (vera_dashboard_readings) es ahora el contenido del tab. El código
+    // de abajo queda intacto por si se reactivan.
+    return '';
+    // eslint-disable-next-line no-unreachable
     const skel = () => Array.from({ length: 4 }, () => `<div class="dash-hero-card-skeleton"></div>`).join('');
     // El hero es TAB-AWARE: en Competencia muestra las cards del campo de batalla
     // (fórmula del nicho / vulnerabilidad rival / te están ganando / amenaza), no
@@ -946,12 +951,16 @@ class DashboardView extends BaseView {
     });
   }
 
-  // Barra de filtros del tab activo (vive en el banner). Cada tab trae la suya.
-  _buildTabFiltersBar(tabId) {
-    if (tabId === 'competence') return typeof this._buildCompFiltersBar === 'function' ? this._buildCompFiltersBar() : '';
-    if (tabId === 'tendencies') return typeof this._buildTendFiltersBar === 'function' ? this._buildTendFiltersBar(this._tendData || null) : '';
-    if (tabId === 'strategy')   return typeof this._buildStratFiltersBar === 'function' ? this._buildStratFiltersBar() : '';
-    return typeof this._buildMbFiltersBar === 'function' ? this._buildMbFiltersBar(this._heroKpiData || null) : '';
+  // Barra del banner — REDISEÑO VERA 2026-07: se eliminan los filtros
+  // (Fecha/Plataforma/Perfil/Estrategia); quedan SOLO las burbujas de
+  // integraciones y el botón Crear informe. Los builders por tab
+  // (_buildMbFiltersBar, etc.) quedan intactos por si se reactivan.
+  _buildTabFiltersBar(_tabId) {
+    return `
+      <header class="living-history-filters mb-filters-bar">
+        ${typeof this._buildIntegrationBubbles === 'function' ? this._buildIntegrationBubbles() : ''}
+        ${typeof this._reportDropdown === 'function' ? this._reportDropdown() : ''}
+      </header>`;
   }
 
   // Re-renderiza la barra de filtros del banner para el tab activo y monta su date

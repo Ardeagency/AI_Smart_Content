@@ -48,6 +48,9 @@
     async _renderMyBrands(body) {
       if (!body) return;
       if (!this._orgId) { this._renderEmptyOrgState(body); return; }
+      // REDISEÑO VERA 2026-07: la lectura de Vera ES el tab. El pipeline
+      // legacy (filtros, cards, tablas) queda intacto abajo, oculto.
+      if (this._renderVeraTabBody) { await this._renderVeraTabBody(body, 'mi_marca'); return; }
 
       await this._ensureCampanasService();
       this._restoreMbFilters();

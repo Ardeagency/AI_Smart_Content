@@ -20,6 +20,8 @@
     async _renderCompetence(body) {
       if (!body) return;
       if (!this._orgId) { this._renderEmptyOrgState?.(body); return; }
+      // REDISEÑO VERA 2026-07: la lectura de Vera ES el tab (legacy oculto abajo).
+      if (this._renderVeraTabBody) { await this._renderVeraTabBody(body, 'monitoreo'); return; }
       await this._ensureCompetenciaService();
       this._restoreCompFilters();
       this._renderCompSkeleton(body);

@@ -28,6 +28,8 @@
     async _renderTendencies(body) {
       if (!body) return;
       if (!this._orgId) { this._renderEmptyOrgState?.(body); return; }
+      // REDISEÑO VERA 2026-07: la lectura de Vera ES el tab (legacy oculto abajo).
+      if (this._renderVeraTabBody) { await this._renderVeraTabBody(body, 'tendencias'); return; }
       await this._ensureTendenciasService();
       this._restoreTendFilters();
       this._renderTendSkeleton(body);

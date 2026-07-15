@@ -73,9 +73,42 @@
       }
     },
 
+    /* ── Cuerpo COMPLETO del tab (rediseño 2026-07: la lectura ES el tab) ──
+       Reemplaza todo el contenido legacy del tab. Devuelve true siempre:
+       lectura si existe, estado de espera si no. El código legacy de cada
+       mixin queda intacto (oculto) por si se reactiva. */
+
+    async _renderVeraTabBody(body, scope) {
+      if (!body) return true;
+      await this._loadVeraReading(scope);
+      const band = this._buildVeraBandHtml(scope, { expanded: true });
+      body.innerHTML = `
+        <div class="insight-page mb-dash vera-page">
+          ${band || this._veraEmptyStateHtml(scope)}
+        </div>`;
+      this._bindVeraBand(body);
+      return true;
+    },
+
+    _veraEmptyStateHtml(scope) {
+      const esc = (s) => this._esc(s);
+      const label = SCOPE_LABEL[scope] ? SCOPE_LABEL[scope]() : scope;
+      return `
+        <section class="mb-section vera-band-section">
+          <div class="vera-band vera-band--empty">
+            <div class="vera-band-head">
+              <span class="vera-dot" aria-hidden="true"></span>
+              <span class="vera-band-kicker">${esc(__('Lectura de Vera'))} — ${esc(label)}</span>
+            </div>
+            <h3 class="vera-band-headline">${esc(__('Vera está preparando tu lectura de {s}.', { s: label }))}</h3>
+            <p class="vera-empty-desc">${esc(__('Sus sensores están recopilando las señales de tu marca, tu competencia y tu nicho. En cuanto Vera termine su análisis, su lectura aparecerá aquí — con la evidencia para comprobarla.'))}</p>
+          </div>
+        </section>`;
+    },
+
     /* ── HTML de la franja (banner ejecutivo del tab) ─────────────────────── */
 
-    _buildVeraBandHtml(scope) {
+    _buildVeraBandHtml(scope, opts = {}) {
       const res = this._veraReadings?.[scope];
       const r = res?.reading;
       if (!r || !r.headline) return '';
@@ -98,9 +131,10 @@
             </div>
             <h3 class="vera-band-headline">${esc(r.headline)}</h3>
             ${conf ? `<div class="vera-band-conf">${esc(__('confianza de datos: {c}', { c: conf }))}${r.meta?.silence_ok ? ` · ${esc(__('semana quieta — lectura honesta'))}` : ''}</div>` : ''}
-            ${blocks ? `
-              <button type="button" class="vera-more" data-vera-toggle aria-expanded="false">${esc(__('Ver la lectura completa con evidencia'))} <i class="aisc-ico aisc-ico--chevron-down"></i></button>
-              <div class="vera-full" hidden>${blocks}</div>` : ''}
+            ${blocks ? (opts.expanded
+              ? `<div class="vera-full vera-full--open">${blocks}</div>`
+              : `<button type="button" class="vera-more" data-vera-toggle aria-expanded="false">${esc(__('Ver la lectura completa con evidencia'))} <i class="aisc-ico aisc-ico--chevron-down"></i></button>
+              <div class="vera-full" hidden>${blocks}</div>`) : ''}
           </div>
         </section>`;
     },
