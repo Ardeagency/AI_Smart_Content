@@ -46,6 +46,7 @@
       { id: 'go-flows',     label: 'Mis flujos',    hint: '/dev/flows',               icon: 'aisc-ico aisc-ico--grid',      group: 'Navegación', action: () => navigate('/dev/flows') },
       { id: 'go-tests',     label: 'Flow Tests',    hint: '/dev/test',                icon: 'aisc-ico aisc-ico--flask',         group: 'Navegación', action: () => navigate('/dev/test') },
       { id: 'go-logs',      label: 'Logs',          hint: '/dev/logs',                icon: 'aisc-ico aisc-ico--consola-desarrollador',      group: 'Navegación', action: () => navigate('/dev/logs') },
+      { id: 'go-costs',     label: 'Costos',        hint: '/dev/costs',               icon: 'aisc-ico aisc-ico--dashboard',         group: 'Navegación', action: () => navigate('/dev/costs') },
       { id: 'go-webhooks',  label: 'Webhooks',      hint: '/dev/webhooks',            icon: 'aisc-ico aisc-ico--zap',          group: 'Navegación', action: () => navigate('/dev/webhooks') },
       { id: 'go-vitals',    label: 'Web Vitals',    hint: '/dev/web-vitals',          icon: 'aisc-ico aisc-ico--dashboard',         group: 'Navegación', action: () => navigate('/dev/web-vitals') },
       { id: 'go-training',  label: 'Entrenamiento (LLM)', hint: '/dev/lead/vera-training', icon: 'aisc-ico aisc-ico--memory',   group: 'Navegación', action: () => navigate('/dev/lead/vera-training'), requiresLead: true },

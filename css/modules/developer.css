@@ -15217,3 +15217,39 @@
   .dev-cmd-header { flex-direction: column; }
   .dev-gauges { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── Calculador de costo real (DevCostView) ───────────────────────────────── */
+.dev-cost { padding: 1.5rem 1.75rem 4rem; max-width: 1100px; }
+.dev-cost-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.dev-cost-title { font-size: 1.5rem; font-weight: 800; margin: 0 0 0.25rem; }
+.dev-cost-sub { color: var(--text-secondary, #8a8a8e); font-size: 0.875rem; margin: 0; max-width: 60ch; }
+.dev-cost-sub code { background: rgba(255,255,255,0.06); padding: 0.05rem 0.35rem; border-radius: 4px; font-size: 0.85em; }
+.dev-cost-period { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.75rem; color: var(--text-secondary, #8a8a8e); }
+.dev-cost-period select { background: rgba(255,255,255,0.04); border: 1px solid var(--border-divider, #2a2a2e); color: var(--text-primary, #eee); border-radius: 8px; padding: 0.4rem 0.7rem; font-size: 0.85rem; }
+
+.dev-cost-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.dcost-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border-divider, #2a2a2e); border-radius: 14px; padding: 1.1rem 1.25rem; }
+.dcost-card--accent { border-color: color-mix(in srgb, var(--brand-primary, #6bcf7f) 45%, transparent); background: linear-gradient(160deg, color-mix(in srgb, var(--brand-primary, #6bcf7f) 10%, transparent), transparent 70%); }
+.dcost-k { font-size: 0.72rem; color: var(--text-secondary, #8a8a8e); text-transform: uppercase; letter-spacing: 0.05em; }
+.dcost-v { font-size: 2rem; font-weight: 800; margin: 0.25rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+.dcost-note { font-size: 0.72rem; color: var(--text-secondary, #77777c); }
+
+.dev-cost-block { margin-bottom: 2.25rem; }
+.dev-cost-block h2 { font-size: 1rem; font-weight: 700; margin: 0 0 0.75rem; display: flex; align-items: baseline; gap: 0.6rem; }
+.dcost-hint { font-size: 0.72rem; font-weight: 400; color: var(--text-secondary, #77777c); }
+.dcost-tablewrap { overflow-x: auto; border: 1px solid var(--border-divider, #2a2a2e); border-radius: 12px; }
+.dcost-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.dcost-table th { text-align: left; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary, #77777c); font-weight: 600; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--border-divider, #2a2a2e); white-space: nowrap; }
+.dcost-table td { padding: 0.65rem 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.04); font-variant-numeric: tabular-nums; }
+.dcost-table tr:last-child td { border-bottom: none; }
+.dcost-table .num { text-align: right; }
+.dcost-fn { font-weight: 600; }
+.dcost-prov { font-size: 0.72rem; color: var(--text-secondary, #8a8a8e); border: 1px solid var(--border-divider, #2a2a2e); border-radius: 99px; padding: 0.1rem 0.5rem; }
+.dcost-strong { font-weight: 700; }
+.dcost-dim { color: var(--text-secondary, #8a8a8e); }
+.dcost-pos { color: #6bcf7f; } .dcost-neg { color: #e06464; font-weight: 700; }
+.dcost-bar { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; min-width: 80px; }
+.dcost-bar i { display: block; height: 100%; border-radius: 3px; background: var(--brand-primary, #6bcf7f); }
+.dcost-pill { font-size: 0.68rem; font-weight: 700; padding: 0.12rem 0.55rem; border-radius: 99px; border: 1px solid currentColor; text-transform: uppercase; letter-spacing: 0.04em; }
+.dcost-pill.dcost-ok { color: #6bcf7f; } .dcost-pill.dcost-warn { color: #e0a045; } .dcost-pill.dcost-bad { color: #e06464; } .dcost-pill.dcost-dim { color: #77777c; }
+.dcost-empty { text-align: center; color: var(--text-secondary, #77777c); padding: 1.5rem; }

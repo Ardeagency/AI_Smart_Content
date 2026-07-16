@@ -163,6 +163,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     children: [
       { label: 'Flow Tests', route: '/dev/test' },
       { label: 'Logs', route: '/dev/logs' },
+      { label: 'Costos', route: '/dev/costs' },
       { label: 'Webhooks', route: '/dev/webhooks' },
       { label: 'Web Vitals', route: '/dev/web-vitals' }
     ]
@@ -3088,6 +3089,7 @@ class Navigation {
       '/dev/builder': 'BUILDER',
       '/dev/test': 'TEST DE FLUJOS',
       '/dev/logs': 'LOGS',
+      '/dev/costs': 'COSTOS',
       '/dev/webhooks': 'WEBHOOKS',
       '/dev/web-vitals': 'WEB VITALS',
       '/dev/provisioning/users': 'REGISTRAR USUARIO',
