@@ -80,6 +80,18 @@
 
     async _renderVeraTabBody(body, scope) {
       if (!body) return true;
+      // PROTOCOLO LIBERTAD: en Mi Marca, si Vera publicó su DIAGNÓSTICO libre
+      // (formato que ella eligió — HTML/JSON/texto), ese ES el dashboard.
+      if (scope === 'mi_marca') {
+        await this._loadVeraReading('diagnostico');
+        const free = this._buildVeraFreeHtml('diagnostico');
+        if (free) {
+          body.innerHTML = `<div class="insight-page mb-dash vera-page">${free}</div>`;
+          this._bindVeraBand(body);
+          this._mountVeraFreeFrames(body);
+          return true;
+        }
+      }
       await this._loadVeraReading(scope);
       const instrument = this._buildVeraInstrumentHtml(scope);
       body.innerHTML = `
@@ -88,6 +100,74 @@
         </div>`;
       this._bindVeraBand(body);
       return true;
+    },
+
+    /* ── FORMATO LIBRE: Vera diseñó esto — el frontend solo lo hospeda.
+       HTML → iframe sandbox (scripts aislados, sin acceso a la app/sesión:
+       libertad visual total con el cliente protegido). JSON → render
+       adaptativo de la estructura que ella haya inventado. Texto → prosa. ── */
+    _buildVeraFreeHtml(scope) {
+      const res = this._veraReadings?.[scope];
+      const r = res?.reading;
+      if (!r || !r.free || !r.content) return '';
+      const esc = (s) => this._esc(s);
+      const when = res.created_at ? this._veraFmtDate(res.created_at) : '';
+      const auto = String(res.trigger_kind || '').startsWith('auto');
+
+      let bodyHtml = '';
+      if (r.format === 'html') {
+        bodyHtml = `<iframe class="vera-free-frame" sandbox="allow-scripts" referrerpolicy="no-referrer" title="${esc(__('Diagnóstico de Vera'))}" data-vera-srcdoc></iframe>`;
+      } else if (r.format === 'json') {
+        let parsed = null;
+        try { parsed = JSON.parse(String(r.content).replace(/^```(?:json)?/m, '').replace(/```$/m, '')); } catch (_) {}
+        bodyHtml = parsed
+          ? `<div class="vera-free-json">${this._veraJsonHtml(parsed, 0)}</div>`
+          : `<pre class="vera-free-text">${esc(r.content)}</pre>`;
+      } else {
+        bodyHtml = `<div class="vera-free-text">${esc(r.content)}</div>`;
+      }
+
+      return `
+        <section class="mb-section vera-band-section" data-vera-scope="${esc(scope)}">
+          <div class="vera-band vera-band--free">
+            <div class="vera-band-head">
+              <span class="vera-dot" aria-hidden="true"></span>
+              <span class="vera-band-kicker">${esc(__('Diagnóstico de marca — hecho por Vera'))}${auto ? ` · ${esc(__('se activó sola'))}` : ''}</span>
+              ${when ? `<time class="vera-band-when">${esc(when)}</time>` : ''}
+            </div>
+            ${bodyHtml}
+          </div>
+        </section>`;
+    },
+
+    /* srcdoc se asigna por DOM (no por string HTML) para que el contenido de
+       Vera jamás se interprete en el documento padre. */
+    _mountVeraFreeFrames(body) {
+      const res = this._veraReadings?.diagnostico;
+      const content = res?.reading?.content;
+      if (!content) return;
+      body.querySelectorAll('iframe[data-vera-srcdoc]').forEach((f) => {
+        f.srcdoc = content;
+      });
+    },
+
+    _veraJsonHtml(v, depth) {
+      const esc = (s) => this._esc(s);
+      const label = (k) => esc(String(k).replace(/[_-]+/g, ' '));
+      if (v === null || v === undefined) return '<span class="vj-null">—</span>';
+      if (Array.isArray(v)) {
+        return `<ul class="vj-list">${v.map((x) => `<li>${this._veraJsonHtml(x, depth + 1)}</li>`).join('')}</ul>`;
+      }
+      if (typeof v === 'object') {
+        return Object.entries(v).map(([k, val]) => {
+          const isBlock = val && typeof val === 'object';
+          if (depth === 0) {
+            return `<section class="vj-section"><h4 class="vj-h">${label(k)}</h4>${this._veraJsonHtml(val, depth + 1)}</section>`;
+          }
+          return `<div class="vj-row${isBlock ? ' vj-row--block' : ''}"><span class="vj-k">${label(k)}</span><span class="vj-v">${this._veraJsonHtml(val, depth + 1)}</span></div>`;
+        }).join('');
+      }
+      return `<span class="vj-val">${esc(String(v))}</span>`;
     },
 
     /* ── INSTRUMENTO (no memo): acción arriba, estado de un vistazo,

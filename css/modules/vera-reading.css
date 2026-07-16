@@ -140,6 +140,32 @@
 }
 .vera-watchrow-title::before { content: '🔭 '; }
 
+/* ── FORMATO LIBRE (Protocolo Libertad): el dashboard que Vera diseñó ── */
+.vera-band--free { padding: 0; }
+.vera-band--free .vera-band-head { padding: 0 0 0.75rem; }
+.vera-free-frame {
+  display: block; width: 100%; min-height: 82vh;
+  border: 0; border-radius: 12px; background: transparent;
+  color-scheme: dark;
+}
+.vera-free-text {
+  white-space: pre-wrap; font-size: 0.9375rem; line-height: 1.65;
+  color: var(--text-primary, #e7e5eb); max-width: 84ch; margin: 0;
+}
+.vera-free-json .vj-section { margin: 0 0 1.5rem; }
+.vera-free-json .vj-h {
+  margin: 0 0 0.5rem; font-size: 1rem; font-weight: 750; text-transform: capitalize;
+  color: var(--brand-primary, #d4d1d8);
+  border-bottom: 1px solid var(--border-divider, #242424); padding-bottom: 0.375rem;
+}
+.vera-free-json .vj-row { display: flex; gap: 0.75rem; padding: 0.25rem 0; font-size: 0.875rem; }
+.vera-free-json .vj-row--block { flex-direction: column; gap: 0.125rem; }
+.vera-free-json .vj-k { color: var(--text-secondary, rgba(212,209,216,0.55)); text-transform: capitalize; min-width: 10rem; flex: none; }
+.vera-free-json .vj-v { color: var(--text-primary, #e7e5eb); }
+.vera-free-json .vj-list { margin: 0.25rem 0; padding-left: 1.125rem; }
+.vera-free-json .vj-list li { margin: 0.25rem 0; font-size: 0.875rem; }
+.vera-free-json .vj-null { color: var(--text-muted, rgba(212,209,216,0.5)); }
+
 /* Modo página completa (rediseño 2026-07: la lectura ES el tab).
    Sin caja: la lectura vive directo sobre el fondo de la página —
    100% sin color de fondo y sin bordes (decisión JC 2026-07-15). */
