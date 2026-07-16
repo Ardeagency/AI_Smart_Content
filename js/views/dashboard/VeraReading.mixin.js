@@ -82,22 +82,31 @@
       if (!body) return true;
       // PROTOCOLO LIBERTAD: en Mi Marca, si Vera publicó su DIAGNÓSTICO libre
       // (formato que ella eligió — HTML/JSON/texto), ese ES el dashboard.
+      const effectiveScope = scope === 'mi_marca' ? 'diagnostico' : scope;
       if (scope === 'mi_marca') {
         await this._loadVeraReading('diagnostico');
         const free = this._buildVeraFreeHtml('diagnostico');
         if (free) {
+          // Guarda anti-parpadeo: en refresh silencioso (polling/realtime) NO
+          // re-pintar si es la MISMA lectura — preserva el iframe de Vera vivo.
+          const sig = this._veraReadings?.diagnostico?.reading_id || this._veraReadings?.diagnostico?.created_at;
+          if (this._silentRefresh && body.dataset.veraSig && body.dataset.veraSig === String(sig)) return true;
           body.innerHTML = `<div class="insight-page mb-dash vera-page">${free}</div>`;
+          body.dataset.veraSig = String(sig);
           this._bindVeraBand(body);
           this._mountVeraFreeFrames(body);
           return true;
         }
       }
       await this._loadVeraReading(scope);
+      const sig = this._veraReadings?.[effectiveScope]?.reading_id || this._veraReadings?.[effectiveScope]?.created_at || '';
+      if (this._silentRefresh && body.dataset.veraSig && body.dataset.veraSig === String(sig)) return true;
       const instrument = this._buildVeraInstrumentHtml(scope);
       body.innerHTML = `
         <div class="insight-page mb-dash vera-page">
           ${instrument || this._veraEmptyStateHtml(scope)}
         </div>`;
+      body.dataset.veraSig = String(sig);
       this._bindVeraBand(body);
       return true;
     },

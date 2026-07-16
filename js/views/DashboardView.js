@@ -313,6 +313,24 @@ class DashboardView extends BaseView {
           this._onRealtimeChange(['my-brands', 'tendencies'], payload);
         },
       },
+      // PROTOCOLO LIBERTAD: cuando Vera publica una lectura/diagnóstico nuevo,
+      // el dashboard del cliente se actualiza SOLO. Mapea el scope de la fila
+      // a su tab; scope 'diagnostico' vive en Mi Marca.
+      {
+        name: 'vera', table: 'vera_dashboard_readings', filter: orgFilter,
+        onChange: (payload) => {
+          if ((payload?.new?.status || 'published') !== 'published') return;
+          const SCOPE_TAB = {
+            mi_marca: 'my-brands', diagnostico: 'my-brands',
+            monitoreo: 'competence', tendencias: 'tendencies', estrategia: 'strategy',
+          };
+          const tab = SCOPE_TAB[payload?.new?.scope];
+          if (!tab) return;
+          this._veraReadingService?.invalidate?.();
+          this._veraReadings = null;
+          this._onRealtimeChange([tab], payload);
+        },
+      },
     ]);
   }
 
