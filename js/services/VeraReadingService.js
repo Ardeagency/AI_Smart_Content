@@ -62,7 +62,10 @@ class VeraReadingService {
         p_scope: scope,
       });
       if (error) { console.warn('[VeraReading] rpc error:', error.message); return null; }
-      const res = data && data.reading && data.reading.headline ? data : null;
+      // Válida si trae headline (lectura estructurada) O es formato libre
+      // (diagnóstico que Vera diseñó a su manera — HTML/JSON, sin headline).
+      const r = data && data.reading;
+      const res = r && (r.headline || r.free) ? data : null;
       this._cache.set(key, { at: Date.now(), res });
       return res;
     } catch (e) {
