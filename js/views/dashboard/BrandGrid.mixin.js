@@ -101,10 +101,13 @@
       const dateTo = now.toISOString();
       const dateFrom = (days == null ? new Date('2015-01-01') : new Date(now.getTime() - days * 86400000)).toISOString();
       const p = { p_org_id: this._orgId, p_date_from: dateFrom, p_date_to: dateTo };
+      // rpc() devuelve un builder thenable (sin .catch nativo): Promise.resolve lo
+      // normaliza a Promise real antes de encadenar el fallback.
+      const call = (fn, params) => Promise.resolve(this._supabase.rpc(fn, params)).catch(() => ({ data: null }));
       const [h, a, i] = await Promise.all([
-        this._supabase.rpc('dashboard_mimarca_health', p).catch(() => ({ data: null })),
-        this._supabase.rpc('dashboard_mimarca_activity', p).catch(() => ({ data: null })),
-        this._supabase.rpc('dashboard_brand_engagement_trend', { ...p, p_post_source: 'own' }).catch(() => ({ data: null })),
+        call('dashboard_mimarca_health', p),
+        call('dashboard_mimarca_activity', p),
+        call('dashboard_brand_engagement_trend', { ...p, p_post_source: 'own' }),
       ]);
       return {
         health: h?.data || null,
