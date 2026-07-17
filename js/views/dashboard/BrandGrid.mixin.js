@@ -206,9 +206,11 @@
         label: NET_LABEL[n] || (n.charAt(0).toUpperCase() + n.slice(1)),
         data: series.map((b) => Number(b.networks?.[n] || 0)),
         backgroundColor: `rgba(${r},${g},${bl},${alphas[idx] != null ? alphas[idx] : 0.12})`,
-        borderRadius: 4,
+        borderRadius: 7,
         borderSkipped: false,
-        maxBarThickness: 34,
+        maxBarThickness: 30,
+        categoryPercentage: 0.6,
+        barPercentage: 0.92,
         stack: 'posts',
       }));
 
@@ -254,9 +256,15 @@
       const [accent] = this._gridBrandHexes();
       const [r, g, bl] = this._hexToRgb(accent);
       const max = Math.max(1, ...buckets.map((b) => b.v));
+      // CANDLESTICK / latido: cada barra FLOTA centrada en la línea media; su
+      // media-altura crece con el impacto (raíz → los latidos chicos siguen
+      // visibles y el pico no aplasta al resto). Intensidad = color.
+      const floatData = buckets.map((b) => {
+        const half = Math.max(0.02, 0.46 * Math.sqrt(b.v / max));
+        return [0.5 - half, 0.5 + half];
+      });
       const colors = buckets.map((b) => {
-        const t = b.v / max;                 // 0..1 intensidad
-        const a = 0.22 + 0.78 * t;            // latido: fuerte impacto = más vivo
+        const a = 0.32 + 0.68 * Math.sqrt(b.v / max);
         return `rgba(${r},${g},${bl},${a.toFixed(3)})`;
       });
       const TICK = 'rgba(255,255,255,0.5)';
@@ -265,22 +273,24 @@
         type: 'bar',
         data: { labels: buckets.map((b) => b.label), datasets: [{
           label: __('Impacto social'),
-          data: buckets.map((b) => Math.round(b.v)),
+          data: floatData,
           backgroundColor: colors,
-          borderRadius: 6,
+          borderRadius: 20,
           borderSkipped: false,
-          maxBarThickness: 18,
+          maxBarThickness: 15,
+          categoryPercentage: 0.7,
+          barPercentage: 0.8,
         }] },
         options: {
           responsive: true, maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
             tooltip: { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10,
-              callbacks: { label: (c) => `${__('Impacto')}: ${Number(c.raw).toLocaleString()}` } },
+              callbacks: { label: (c) => `${__('Impacto')}: ${Math.round(buckets[c.dataIndex].v).toLocaleString()}` } },
           },
           scales: {
-            x: { grid: { display: false }, ticks: { color: TICK, font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },
-            y: { grid: { display: false }, border: { display: false }, beginAtZero: true, ticks: { display: false } },
+            x: { grid: { display: false }, border: { display: false }, ticks: { color: TICK, font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },
+            y: { min: 0, max: 1, display: false, grid: { display: false }, border: { display: false } },
           },
         },
       }));
