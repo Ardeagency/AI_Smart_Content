@@ -270,9 +270,13 @@
         const half = Math.max(0.02, 0.46 * Math.sqrt(b.v / max));
         return [0.5 - half, 0.5 + half];
       });
+      // Dos tonos como el heart-rate de referencia: latido bajo = gris,
+      // latido alto = naranja de marca. Se interpola por intensidad.
       const colors = buckets.map((b) => {
-        const a = 0.32 + 0.68 * Math.sqrt(b.v / max);
-        return `rgba(${r},${g},${bl},${a.toFixed(3)})`;
+        const t = Math.sqrt(b.v / max);
+        const mix = (from, to) => Math.round(from + (to - from) * t);
+        const a = (0.45 + 0.55 * t).toFixed(3);
+        return `rgba(${mix(145, r)},${mix(145, g)},${mix(150, bl)},${a})`;
       });
       const TICK = 'rgba(255,255,255,0.5)';
 
@@ -284,9 +288,9 @@
           backgroundColor: colors,
           borderRadius: 20,
           borderSkipped: false,
-          maxBarThickness: 15,
-          categoryPercentage: 0.7,
-          barPercentage: 0.8,
+          maxBarThickness: 9,
+          categoryPercentage: 0.9,
+          barPercentage: 0.55,
         }] },
         options: {
           responsive: true, maintainAspectRatio: false,
