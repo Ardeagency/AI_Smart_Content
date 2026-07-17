@@ -95,11 +95,31 @@
       return (WINDOWS.find((w) => w.k === this._gridWindow) || WINDOWS[1]).days;
     },
 
+    /** Fecha del último post propio (cacheada) para anclar las ventanas. */
+    async _gridLastOwnPost() {
+      try {
+        if (!this._gridBcIds) {
+          const { data: cs } = await this._supabase.from('brand_containers').select('id').eq('organization_id', this._orgId);
+          this._gridBcIds = (cs || []).map((c) => c.id).filter(Boolean);
+        }
+        if (!this._gridBcIds.length) return null;
+        const { data } = await this._supabase.from('brand_posts')
+          .select('captured_at').in('brand_container_id', this._gridBcIds)
+          .eq('post_source', 'own').order('captured_at', { ascending: false }).limit(1);
+        return (data && data[0] && data[0].captured_at) ? new Date(data[0].captured_at) : null;
+      } catch (_) { return null; }
+    },
+
     async _loadBrandGridData() {
       const days = this._gridWindowDays();
+      // Ancla al último post propio: si la marca lleva días sin publicar, "Semana"
+      // (últimos 7 días) saldría vacía. Anclando, cada filtro muestra la data más
+      // reciente disponible en su granularidad.
       const now = new Date();
-      const dateTo = now.toISOString();
-      const dateFrom = (days == null ? new Date('2015-01-01') : new Date(now.getTime() - days * 86400000)).toISOString();
+      const last = await this._gridLastOwnPost();
+      const anchor = (last && last < now) ? last : now;
+      const dateTo = anchor.toISOString();
+      const dateFrom = (days == null ? new Date('2015-01-01') : new Date(anchor.getTime() - days * 86400000)).toISOString();
       const p = { p_org_id: this._orgId, p_date_from: dateFrom, p_date_to: dateTo };
       // rpc() devuelve un builder thenable (sin .catch nativo): Promise.resolve lo
       // normaliza a Promise real antes de encadenar el fallback.
