@@ -5,13 +5,12 @@
 
 .bgrid {
   display: grid;
-  /* Salud (arco compacto) + Tráfico (portrait) + Impacto Social (resto). */
-  grid-template-columns: minmax(0, 300px) minmax(0, 460px) minmax(0, 1fr);
+  /* Tráfico (portrait, incluye el arco de salud) + Impacto Social (resto). */
+  grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
   gap: 1.25rem;
   align-items: start;
   padding-top: 0.25rem;
 }
-@media (max-width: 1280px) { .bgrid { grid-template-columns: minmax(0, 300px) minmax(0, 1fr); } .bgrid-card--latidos { grid-column: 1 / -1; } }
 
 /* Card glass-black: dark translúcido con blur sobre el degradado de marca. */
 .bgrid-card.glass-black {

@@ -58,18 +58,12 @@
         <button type="button" class="bgrid-seg-btn${w.k === this._gridWindow ? ' is-active' : ''}" data-window="${w.k}" role="tab">${this._esc(w.label())}</button>`).join('');
       return `
         <div class="bgrid">
-          <section class="bgrid-card glass-black bgrid-card--salud">
-            <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>${this._esc(__('Salud de marca'))}</span>
-              <button type="button" class="bgrid-details-btn" data-salud-details aria-label="${this._esc(__('Ver detalles'))}" title="${this._esc(__('Ver detalles'))}"><i class="aisc-ico aisc-ico--chart-bar" aria-hidden="true"></i></button>
-            </header>
-            <div class="bgrid-salud-arc" id="bgridSaludArc"></div>
-          </section>
           <section class="bgrid-card glass-black bgrid-card--activity">
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--actividad" aria-hidden="true"></i>${this._esc(__('Tráfico'))}</span>
+              <button type="button" class="bgrid-details-btn" data-salud-details aria-label="${this._esc(__('Ver detalles de salud'))}" title="${this._esc(__('Ver detalles de salud'))}"><i class="aisc-ico aisc-ico--chart-bar" aria-hidden="true"></i></button>
             </header>
-            <div class="bgrid-status" id="bgridStatus"></div>
+            <div class="bgrid-salud-arc" id="bgridSaludArc"></div>
             <nav class="bgrid-seg" role="tablist" aria-label="${this._esc(__('Periodo'))}">${seg}</nav>
             <div class="bgrid-chart-wrap"><canvas id="bgridActivityChart"></canvas><div class="bgrid-empty" id="bgridActivityEmpty" hidden>${this._esc(__('Sin publicaciones en este periodo'))}</div></div>
             <footer class="bgrid-card-foot" id="bgridActivityFoot"></footer>
@@ -225,26 +219,15 @@
       document.addEventListener('keydown', function onEsc(ev) { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } });
     },
 
-    /* Estado (pill) del tráfico + footer. La salud vive en su propia card (arco). */
+    /* Footer del tráfico (última publicación / total). El pill de estado se eliminó. */
     _paintGridStatus(body, data) {
-      const host = body.querySelector('#bgridStatus');
-      if (!host) return;
-      const st = data.activity?.status || 'sin_datos';
-      const stLabel = (STATUS_LABEL[st] || STATUS_LABEL.sin_datos)();
-      host.innerHTML = `
-        <div class="bgrid-status-row">
-          <span class="bgrid-status-pill" data-status="${this._esc(st)}"><i class="bgrid-status-dot" aria-hidden="true"></i>${this._esc(stLabel)}</span>
-        </div>`;
-
-      // Footer: última publicación / total en el periodo.
       const foot = body.querySelector('#bgridActivityFoot');
-      if (foot) {
-        const total = Number(data.activity?.total || 0);
-        const days = data.activity?.days_since;
-        const last = (days == null) ? __('Sin publicaciones recientes')
-          : (days <= 0 ? __('Publicaste hoy') : __('Hace {n} días', { n: Math.round(days) }));
-        foot.innerHTML = `<span>${this._esc(__('{n} publicaciones', { n: total }))}</span><span class="bgrid-foot-sep">·</span><span>${this._esc(last)}</span>`;
-      }
+      if (!foot) return;
+      const total = Number(data.activity?.total || 0);
+      const days = data.activity?.days_since;
+      const last = (days == null) ? __('Sin publicaciones recientes')
+        : (days <= 0 ? __('Publicaste hoy') : __('Hace {n} días', { n: Math.round(days) }));
+      foot.innerHTML = `<span>${this._esc(__('{n} publicaciones', { n: total }))}</span><span class="bgrid-foot-sep">·</span><span>${this._esc(last)}</span>`;
     },
 
     /* Acento vivo de marca para los charts. NUNCA negro: los charts se pintan
