@@ -12,6 +12,34 @@
   padding-top: 0.25rem;
 }
 
+/* Columna izquierda: Tráfico + Campañas apiladas. */
+.bgrid-col { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+
+/* Card Campañas: superficie SÓLIDA por defecto de la plataforma (no glass). */
+.bgrid-card--campaigns {
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 16px;
+  padding: 1.1rem 1.25rem 1.25rem;
+  display: flex; flex-direction: column; gap: 0.85rem;
+  min-width: 0;
+}
+.bgrid-campaigns { display: flex; flex-direction: column; gap: 0.55rem; }
+.camp-row {
+  display: flex; align-items: center; gap: 0.85rem;
+  padding: 0.7rem 0.8rem; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.camp-gauge { width: 40px; height: 40px; flex: 0 0 auto; }
+.camp-gauge-num { font-size: 13px; font-weight: 700; fill: #fff; }
+.camp-body { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 0.12rem; }
+.camp-name { font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.camp-desc { font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.camp-badge { flex: 0 0 auto; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.01em; padding: 0.3rem 0.62rem; border-radius: 999px; white-space: nowrap; }
+.camp-badge[data-imp="alto"]  { color: #ff9090; background: rgba(255, 90, 90, 0.14); }
+.camp-badge[data-imp="medio"] { color: #f0b45e; background: rgba(240, 180, 94, 0.14); }
+.camp-badge[data-imp="bajo"]  { color: #7fd39a; background: rgba(120, 207, 127, 0.14); }
+
 /* Card glass-black: dark translúcido con blur sobre el degradado de marca. */
 .bgrid-card.glass-black {
   background: rgba(11, 11, 11, 0.55);

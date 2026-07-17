@@ -58,6 +58,7 @@
         <button type="button" class="bgrid-seg-btn${w.k === this._gridWindow ? ' is-active' : ''}" data-window="${w.k}" role="tab">${this._esc(w.label())}</button>`).join('');
       return `
         <div class="bgrid">
+          <div class="bgrid-col">
           <section class="bgrid-card glass-black bgrid-card--activity">
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--actividad" aria-hidden="true"></i>${this._esc(__('Tráfico'))}</span>
@@ -68,6 +69,13 @@
             <div class="bgrid-chart-wrap"><canvas id="bgridActivityChart"></canvas><div class="bgrid-empty" id="bgridActivityEmpty" hidden>${this._esc(__('Sin publicaciones en este periodo'))}</div></div>
             <footer class="bgrid-card-foot" id="bgridActivityFoot"></footer>
           </section>
+          <section class="bgrid-card bgrid-card--campaigns" id="bgridCampaignsCard" hidden>
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title bgrid-card-title--dark"><i class="aisc-ico aisc-ico--campaign" aria-hidden="true"></i>${this._esc(__('Campañas'))}</span>
+            </header>
+            <div class="bgrid-campaigns" id="bgridCampaigns"></div>
+          </section>
+          </div>
           <section class="bgrid-card glass-black bgrid-card--latidos">
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Interacciones'))}</span>
@@ -149,6 +157,85 @@
       this._destroyCharts();
       this._paintActivityChart(body, data);
       this._paintLatidosChart(body, data);
+      this._paintCampaigns(body);
+    },
+
+    /* Card Campañas: SOLO campañas activas. Superficie por defecto (no glass).
+       Cada fila: mini-gauge de rendimiento + nombre/objetivo + badge de impacto. */
+    async _paintCampaigns(body) {
+      const card = body.querySelector('#bgridCampaignsCard');
+      const host = body.querySelector('#bgridCampaigns');
+      if (!card || !host) return;
+      let rows = [];
+      try {
+        const { data } = await this._supabase.from('campaigns')
+          .select('nombre_campana, external_campaign_name, platform_objective, cached_ctr, cached_roas, cached_conversions, cached_clicks, cached_spend')
+          .eq('organization_id', this._orgId).eq('status', 'active')
+          .order('cached_spend', { ascending: false, nullsFirst: false });
+        rows = Array.isArray(data) ? data : [];
+      } catch (_) {}
+      if (!rows.length) { card.hidden = true; return; }
+      card.hidden = false;
+      const maxSpend = Math.max(1, ...rows.map((c) => Number(c.cached_spend) || 0));
+      host.innerHTML = rows.map((c) => this._campaignRowHtml(c, maxSpend)).join('');
+    },
+
+    /* Score de rendimiento (0-100), objetivo-aware: ventas usan ROAS+conversión,
+       el resto CTR. Metas: CTR 2%, ROAS 3x, conversión 5%. */
+    _campaignScore(c) {
+      const ctr = Number(c.cached_ctr) || 0;
+      const roas = c.cached_roas == null ? null : Number(c.cached_roas);
+      const conv = Number(c.cached_conversions) || 0;
+      const clicks = Number(c.cached_clicks) || 0;
+      const parts = [Math.min(100, ctr / 2 * 100)];
+      if (roas != null) {
+        parts.push(Math.min(100, roas / 3 * 100));
+        if (clicks > 0) parts.push(Math.min(100, (conv / clicks * 100) / 5 * 100));
+      }
+      return Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
+    },
+
+    _campaignRowHtml(c, maxSpend) {
+      const esc = (s) => this._esc(s);
+      const OBJ = { OUTCOME_SALES: __('Ventas'), OUTCOME_TRAFFIC: __('Tráfico'), OUTCOME_LEADS: __('Leads'),
+        OUTCOME_ENGAGEMENT: __('Interacción'), OUTCOME_AWARENESS: __('Reconocimiento'), OUTCOME_APP_PROMOTION: __('App') };
+      const objLabel = OBJ[c.platform_objective] || String(c.platform_objective || '').replace('OUTCOME_', '');
+      const score = this._campaignScore(c);
+      const ctr = Number(c.cached_ctr) || 0;
+      const roas = c.cached_roas == null ? null : Number(c.cached_roas);
+      const conv = Number(c.cached_conversions) || 0;
+      const clicks = Number(c.cached_clicks) || 0;
+      const fmtK = (n) => n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'k' : String(n);
+      const bits = [`CTR ${ctr.toFixed(1)}%`];
+      if (roas != null) bits.push(`ROAS ${roas.toFixed(1)}x`);
+      if (roas != null && conv > 0) bits.push(`${fmtK(conv)} conv`);
+      else if (clicks > 0) bits.push(`${fmtK(clicks)} clics`);
+      const desc = `${objLabel ? objLabel + ' · ' : ''}${bits.join(' · ')}`;
+      const ratio = (Number(c.cached_spend) || 0) / maxSpend;
+      const imp = ratio >= 0.5 ? 'alto' : ratio >= 0.15 ? 'medio' : 'bajo';
+      const impLabel = { alto: __('Alto impacto'), medio: __('Impacto medio'), bajo: __('Bajo impacto') }[imp];
+      const name = c.nombre_campana || c.external_campaign_name || __('Campaña');
+      return `
+        <div class="camp-row">
+          ${this._miniGauge(score)}
+          <div class="camp-body">
+            <div class="camp-name">${esc(name)}</div>
+            <div class="camp-desc">${esc(desc)}</div>
+          </div>
+          <span class="camp-badge" data-imp="${imp}">${esc(impLabel)}</span>
+        </div>`;
+    },
+
+    _miniGauge(score) {
+      const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
+      const R = 15.5, C = 2 * Math.PI * R, dash = C * s / 100;
+      const [accent] = this._gridBrandHexes();
+      return `
+        <svg class="camp-gauge" viewBox="0 0 40 40" aria-label="${s}">
+          <circle cx="20" cy="20" r="15.5" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="3.5"/>
+          <circle cx="20" cy="20" r="15.5" fill="none" stroke="${this._esc(accent)}" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 20 20)"/>
+          <text x="20" y="20" text-anchor="middle" dominant-baseline="central" class="camp-gauge-num">${s}</text>
+        </svg>`;
     },
 
     /* Arco (gauge) de salud de marca. Solo el arco + score; el desglose va al modal. */
