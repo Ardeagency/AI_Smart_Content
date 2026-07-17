@@ -1570,6 +1570,7 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Mejora tu plan para desbloquear más capacidad y funciones.": "Upgrade your plan to unlock more capacity and features.",
   "Mejorar 4K": "Upscale to 4K",
   "Mejorar a {nombre}": "Upgrade to {nombre}",
+  "Mejorar": "Upgrade",
   "Mejorar plan": "Upgrade",
   "Mejorar texto": "Improve text",
   "Mención": "Mention",

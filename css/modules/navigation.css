@@ -4444,29 +4444,43 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
 
 /* ---- tarjeta de plan (pie) ---- */
 .side-navigation.nav-mode-user .nav-plan-card {
-    margin: 4px 8px 0;
-    padding: 13px 13px 14px;
-    border-radius: 13px;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
-        #101216;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    margin: 6px 8px 0;
+    padding: 15px 15px 14px;
+    border-radius: 15px;
+    background: #0e0f12;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 18px;
+    min-height: 130px;
     flex-shrink: 0;
     position: relative;
     isolation: isolate;
+    overflow: hidden;
 }
 
-/* tinte del degradado dinámico sobre la tarjeta (como el Figma) */
+/* Capa 1: degradado dinamico de marca a plena saturacion (el "glow" de la card) */
 .side-navigation.nav-mode-user .nav-plan-card::before {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
     background: var(--brand-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)));
-    opacity: 0.30; /* saturacion del tinte de marca sobre la card (antes 0.10, se veia opaca) */
+    opacity: 0.62;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Capa 2: scrim oscuro en la esquina superior-izq (donde va el texto) que se
+   desvanece hacia la inferior-der (donde el color de marca brilla). Da el look
+   premium de la referencia: texto blanco legible + color vibrante al fondo. */
+.side-navigation.nav-mode-user .nav-plan-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(145deg, rgba(0, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0.26) 44%, rgba(0, 0, 0, 0) 80%);
     pointer-events: none;
     z-index: 0;
 }
@@ -4476,32 +4490,11 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     z-index: 1;
 }
 
-.side-navigation.nav-mode-user .nav-plan-card-top {
+.side-navigation.nav-mode-user .nav-plan-card-heading {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-/* icono de upgrade relleno con el color de marca solido (nitido a 17px; el
-   degradado dinamico termina en negro y oscurecia la punta de la flecha) */
-.side-navigation.nav-mode-user .nav-plan-card-bolt {
-    display: inline-block;
-    flex-shrink: 0;
-    background: var(--brand-primary, #FF5F00);
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
-    -webkit-mask-size: contain;
-    mask-size: contain;
-}
-
-.side-navigation.nav-mode-user .nav-plan-card-bolt {
-    width: 17px;
-    height: 17px;
-    -webkit-mask-image: url('/recursos/icons/arrow-up.svg');
-    mask-image: url('/recursos/icons/arrow-up.svg');
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
 
@@ -4511,55 +4504,72 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     font-size: max(20px, var(--nav-org-title-size, 22px));
 }
 
-.side-navigation.nav-mode-user .nav-plan-card-meta {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.25;
-    min-width: 0;
-}
-
-/* label = ahora es el TITULO ("Actualiza tu plan") */
-.side-navigation.nav-mode-user .nav-plan-card-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #fff;
-    letter-spacing: -0.01em;
-}
-
-/* name = plan SIGUIENTE, resaltado con el color de marca */
-.side-navigation.nav-mode-user .nav-plan-card-name {
-    font-size: 12.5px;
+/* TITULO ("ACTUALIZA TU PLAN") — blanco, mayusculas */
+.side-navigation.nav-mode-user .nav-plan-card-title {
+    font-size: 14px;
     font-weight: 700;
-    color: var(--brand-primary, #FF5F00);
+    line-height: 1.12;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: #fff;
 }
 
-.side-navigation.nav-mode-user .nav-plan-card-desc {
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.4;
-    color: rgba(255, 255, 255, 0.55);
+/* PLAN SIGUIENTE ("AGENCY") — el hero: blanco, mayusculas, grande */
+.side-navigation.nav-mode-user .nav-plan-card-name {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: #fff;
 }
 
-/* boton = icono de upgrade cuadrado (top-right de la card) */
+/* CTA estilo "↗ MEJORAR": flecha en cuadro fino + texto en mayusculas */
 .side-navigation.nav-mode-user .nav-plan-card-cta {
-    flex-shrink: 0;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
+    align-self: flex-start;
+    gap: 9px;
     padding: 0;
-    border-radius: 9px;
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
     color: #fff;
     text-decoration: none;
-    transition: background .16s ease, box-shadow .16s ease;
 }
 
-.side-navigation.nav-mode-user .nav-plan-card-cta:hover {
+.side-navigation.nav-mode-user .nav-plan-card-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.30);
+    transition: background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+/* la flecha = arrow-up girada 45deg (↗), rellena en blanco */
+.side-navigation.nav-mode-user .nav-plan-card-arrow::before {
+    content: '';
+    width: 15px;
+    height: 15px;
+    background: #fff;
+    -webkit-mask: url('/recursos/icons/arrow-up.svg') no-repeat center / contain;
+    mask: url('/recursos/icons/arrow-up.svg') no-repeat center / contain;
+    transform: rotate(45deg);
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-cta-text {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-cta:hover .nav-plan-card-arrow {
     background: rgba(255, 255, 255, 0.14);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.48);
+    transform: translate(1px, -1px);
 }
 
 /* respetar el atributo hidden (display:flex lo anulaba) cuando ya está en el tope.

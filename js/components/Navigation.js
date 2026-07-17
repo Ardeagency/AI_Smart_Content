@@ -2182,21 +2182,19 @@ class Navigation {
 
         <div class="nav-plan-card" id="navPlanCard">
           <span class="nav-system-stats-value" id="navStorageValue" hidden>—</span>
-          <div class="nav-plan-card-top">
-            <span class="nav-plan-card-meta">
-              <span class="nav-plan-card-label">${__('Actualiza tu plan')}</span>
-              <span class="nav-plan-card-name" id="navPlanName">—</span>
-            </span>
-            <a href="${this.getUserSidebarRoute('plans')}"
-               class="nav-plan-card-cta"
-               id="navUpgradeBtn"
-               data-route="${this.getUserSidebarRoute('plans')}"
-               aria-label="${__('Mejorar plan')}"
-               title="${__('Mejorar plan')}">
-              <span class="nav-plan-card-bolt" aria-hidden="true"></span>
-            </a>
+          <div class="nav-plan-card-heading">
+            <span class="nav-plan-card-title">${__('Actualiza tu plan')}</span>
+            <span class="nav-plan-card-name" id="navPlanName">—</span>
           </div>
-          <p class="nav-plan-card-desc" id="navPlanDesc">${__('Mejora tu plan para desbloquear más capacidad y funciones.')}</p>
+          <a href="${this.getUserSidebarRoute('plans')}"
+             class="nav-plan-card-cta"
+             id="navUpgradeBtn"
+             data-route="${this.getUserSidebarRoute('plans')}"
+             aria-label="${__('Mejorar plan')}"
+             title="${__('Mejorar plan')}">
+            <span class="nav-plan-card-arrow" aria-hidden="true"></span>
+            <span class="nav-plan-card-cta-text">${__('Mejorar')}</span>
+          </a>
         </div>
 
         <div class="nav-footer-links" role="navigation" aria-label="${__('Atajos')}">
@@ -3508,7 +3506,6 @@ class Navigation {
 
       const card = document.getElementById('navPlanCard');
       const nameEl = document.getElementById('navPlanName');
-      const descEl = document.getElementById('navPlanDesc');
 
       if (!next) {
         // Plan más alto: nada que mejorar → ocultar la tarjeta entera
@@ -3520,7 +3517,6 @@ class Navigation {
       if (card) card.hidden = false;
       // El titulo es estatico ("Actualiza tu plan"); el nombre = plan SIGUIENTE.
       if (nameEl) nameEl.textContent = next.name;
-      if (descEl) descEl.textContent = `Sube a ${next.name} para desbloquear más capacidad y funciones.`;
       btn.setAttribute('aria-label', `Mejorar a ${next.name}`);
       btn.setAttribute('title', `Mejorar a ${next.name}`);
       btn.hidden = false;
