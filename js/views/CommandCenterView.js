@@ -170,7 +170,7 @@ class CommandCenterView extends BaseView {
              Lista tipo historial: cada estrategia es un item; la activa lleva
              acento de marca. El boton "Nueva estrategia" vive en el header.
              Render/listeners en CanvasStore. -->
-        <aside class="cc-strat-panel" id="ccStratPanel" aria-label="${__('Estrategias')}">
+        <aside class="cc-strat-panel glass-black" id="ccStratPanel" aria-label="${__('Estrategias')}">
           <div class="cc-strat-head">
             <span class="cc-strat-title"><i class="aisc-ico aisc-ico--layers"></i> ${__('Estrategias')}</span>
             <button class="cc-canvas-btn cc-strat-new" id="ccStratNew" type="button" title="${__('Nueva estrategia')}">
@@ -193,7 +193,7 @@ class CommandCenterView extends BaseView {
              una seccion. Colapsado por defecto = solo el rail. -->
         <!-- El rail queda fijo a la derecha; el panel de datos abre a su
              izquierda. Orden DOM: panel (izq) primero, rail (der) ultimo. -->
-        <aside class="cc-floating-panel" id="ccSidebar">
+        <aside class="cc-floating-panel glass-black" id="ccSidebar">
           <!-- Panel de datos de la seccion activa (abre a la izquierda) -->
           <div class="cc-fp-panel" role="tabpanel" aria-labelledby="ccPanelTitle">
             <div class="cc-fp-head">

@@ -981,8 +981,10 @@
 /* ── Mini-dashboard (patron Studio/Video) ──────────────────────────── */
 
 /* ── Sidebar de Estrategias (izquierda, colapsable — patron historial Vera) ── */
-/* Fondo: degradado neutro de dos grises oscuros (como el sidebar de navegacion),
-   SIN el tinte dinamico de marca ni glass frosted (removidos a peticion). */
+/* Fondo: degradado neutro de dos grises oscuros (como el nav), TRANSLUCIDO bajo
+   el frost de .glass-black (la clase aporta blur 24/sat 140 + borde). SIN el
+   tinte dinamico de marca. El bg va con !important en la regla compuesta de
+   abajo para ganarle al `background !important` de .glass-black. */
 .cc-strat-panel {
   position: absolute;
   top: 14px; left: 14px; bottom: 14px;
@@ -990,8 +992,7 @@
   z-index: 8;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #141517 0%, #0b0b0b 100%);
-  border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
+  background: linear-gradient(180deg, rgba(20, 21, 23, 0.66) 0%, rgba(10, 10, 11, 0.74) 100%);
   border-radius: 14px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   overflow: hidden;
@@ -1257,18 +1258,25 @@
 
 /* ── Panel flotante tipo Figma: rail de iconos + panel de datos ─────── */
 /* Mismo tratamiento que el sidebar de estrategias: degradado neutro de dos
-   grises oscuros (como el nav), SIN tinte de marca ni glass frosted. */
+   grises oscuros (como el nav) TRANSLUCIDO bajo el frost de .glass-black. */
 .cc-floating-panel {
   position: absolute;
   top: 14px; right: 14px; bottom: 14px;   /* altura 100% (siempre, tambien colapsado) */
   z-index: 8;
   display: flex;            /* fila: rail | panel */
   align-items: stretch;
-  border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
-  background: linear-gradient(180deg, #141517 0%, #0b0b0b 100%);
+  background: linear-gradient(180deg, rgba(20, 21, 23, 0.66) 0%, rgba(10, 10, 11, 0.74) 100%);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   overflow: hidden;
+}
+
+/* .glass-black fija `background: rgba(11,11,11,0.55) !important`; lo sustituimos
+   por el degradado de dos grises (translucido, para no matar el frost) sin
+   perder el blur/borde que aporta la clase. */
+.cc-strat-panel.glass-black,
+.cc-floating-panel.glass-black {
+  background: linear-gradient(180deg, rgba(20, 21, 23, 0.66) 0%, rgba(10, 10, 11, 0.74) 100%) !important;
 }
 .cc-fp-rail { border-left-color: var(--border-divider, #242424) !important; }
 .cc-fp-head { border-bottom-color: var(--border-divider, #242424) !important; }
