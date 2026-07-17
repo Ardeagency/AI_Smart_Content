@@ -939,8 +939,8 @@ class DashboardView extends BaseView {
   _buildTabFiltersBar(_tabId) {
     return `
       <header class="living-history-filters mb-filters-bar">
-        ${typeof this._buildIntegrationBubbles === 'function' ? this._buildIntegrationBubbles() : ''}
         ${typeof this._reportDropdown === 'function' ? this._reportDropdown() : ''}
+        ${typeof this._buildIntegrationBubbles === 'function' ? this._buildIntegrationBubbles() : ''}
       </header>`;
   }
 

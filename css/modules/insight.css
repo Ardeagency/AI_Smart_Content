@@ -3265,7 +3265,7 @@ button.dash-integ-add:hover {
 }
 button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 2px; }
 
-.dash-report-dd { margin-left: auto; position: relative; }
+.dash-report-dd { position: relative; }
 .dash-report-dd > summary { list-style: none; }
 .dash-report-dd > summary::-webkit-details-marker { display: none; }
 .dash-report-btn {
@@ -3281,7 +3281,7 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 .dash-report-caret { font-size: 0.625rem; opacity: 0.6; transition: transform 0.15s ease; }
 .dash-report-dd[open] .dash-report-caret { transform: rotate(180deg); }
 .dash-report-menu {
-  position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; min-width: 230px;
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 60; min-width: 230px;
   background: linear-gradient(180deg, #222429 0%, #1B1D22 100%);
   border: 1px solid #34363A; border-radius: 12px; padding: 0.35rem;
   box-shadow: 0 14px 34px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 0.1rem;
