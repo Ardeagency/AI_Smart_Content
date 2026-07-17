@@ -60,7 +60,7 @@
         <div class="bgrid">
           <section class="bgrid-card glass-black bgrid-card--activity">
             <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--actividad" aria-hidden="true"></i>${this._esc(__('Actividad de publicación'))}</span>
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--actividad" aria-hidden="true"></i>${this._esc(__('Tráfico'))}</span>
             </header>
             <div class="bgrid-status" id="bgridStatus"></div>
             <nav class="bgrid-seg" role="tablist" aria-label="${this._esc(__('Periodo'))}">${seg}</nav>
@@ -69,7 +69,7 @@
           </section>
           <section class="bgrid-card glass-black bgrid-card--latidos">
             <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Latidos'))}</span>
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Impacto Social'))}</span>
             </header>
             <p class="bgrid-card-sub">${this._esc(__('El impacto social que producen tus redes'))}</p>
             <div class="bgrid-chart-wrap bgrid-chart-wrap--latidos"><canvas id="bgridLatidosChart"></canvas><div class="bgrid-empty" id="bgridLatidosEmpty" hidden>${this._esc(__('Sin señal de impacto en este periodo'))}</div></div>
@@ -168,10 +168,10 @@
             ${verdictLabel ? `<span class="bgrid-health-verdict">${this._esc(verdictLabel)}</span>` : ''}
           </div>`;
       host.innerHTML = `
+        ${bar}
         <div class="bgrid-status-row">
           <span class="bgrid-status-pill" data-status="${this._esc(st)}"><i class="bgrid-status-dot" aria-hidden="true"></i>${this._esc(stLabel)}</span>
-        </div>
-        ${bar}`;
+        </div>`;
 
       // Footer: última publicación / total en el periodo.
       const foot = body.querySelector('#bgridActivityFoot');
