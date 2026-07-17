@@ -193,14 +193,15 @@
             <span class="salud-ch-name">${esc(c.label)}</span>
             <span class="salud-ch-score" data-ok="${c.healthy ? '1' : '0'}">${clamp(c.score)}%</span>
           </div>
-          ${(c.metrics || []).map((m) => `
+          ${(c.metrics || []).map((m) => {
+            const on = Math.round(clamp(m.score) / 100 * 28);
+            const segs = Array.from({ length: 28 }, (_, i) => `<i class="salud-seg${i < on ? ' is-on' : ''}"></i>`).join('');
+            return `
             <div class="salud-metric">
               <div class="salud-metric-top"><span>${esc(m.label)}</span><span class="salud-metric-pct">${clamp(m.score)}%</span></div>
-              <div class="salud-metric-track">
-                <div class="salud-metric-fill" data-ok="${clamp(m.score) >= 70 ? '1' : '0'}" style="width:${clamp(m.score)}%"></div>
-                <i class="salud-metric-thresh" aria-hidden="true"></i>
-              </div>
-            </div>`).join('')}
+              <div class="salud-seg-bar" data-ok="${clamp(m.score) >= 70 ? '1' : '0'}">${segs}</div>
+            </div>`;
+          }).join('')}
         </div>`).join('');
       const overlay = document.createElement('div');
       overlay.className = 'salud-overlay';
@@ -210,7 +211,6 @@
             <span class="salud-modal-title">${esc(__('Salud por canal'))}</span>
             <button type="button" class="salud-modal-close" aria-label="${esc(__('Cerrar'))}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
           </div>
-          <div class="salud-modal-legend">${esc(__('Umbral sano: 70%'))}</div>
           <div class="salud-modal-body">${chans}</div>
         </div>`;
       document.body.appendChild(overlay);

@@ -87,14 +87,14 @@
 .salud-ch-score { font-size: 0.85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .salud-ch-score[data-ok="1"] { color: var(--brand-color-light, #F79E1B); }
 .salud-ch-score[data-ok="0"] { color: rgba(255, 255, 255, 0.5); }
-.salud-metric { display: flex; flex-direction: column; gap: 0.28rem; }
+.salud-metric { display: flex; flex-direction: column; gap: 0.35rem; }
 .salud-metric-top { display: flex; align-items: baseline; justify-content: space-between; font-size: 0.78rem; color: rgba(255, 255, 255, 0.7); }
 .salud-metric-pct { font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.55); }
-.salud-metric-track { position: relative; height: 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: visible; }
-.salud-metric-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
-.salud-metric-fill[data-ok="1"] { background: linear-gradient(90deg, var(--brand-color-dark, #FF5F00), var(--brand-color-light, #F79E1B)); }
-.salud-metric-fill[data-ok="0"] { background: rgba(255, 255, 255, 0.28); }
-.salud-metric-thresh { position: absolute; top: -2px; bottom: -2px; left: 70%; width: 2px; background: rgba(255, 255, 255, 0.35); border-radius: 2px; }
+/* Barra segmentada: ticks verticales que se llenan (estilo referencia). */
+.salud-seg-bar { display: flex; gap: 3px; height: 22px; align-items: stretch; }
+.salud-seg { flex: 1 1 0; min-width: 0; border-radius: 3px; background: rgba(255, 255, 255, 0.09); }
+.salud-seg-bar[data-ok="1"] .salud-seg.is-on { background: linear-gradient(180deg, var(--brand-color-light, #F79E1B), var(--brand-color-dark, #FF5F00)); }
+.salud-seg-bar[data-ok="0"] .salud-seg.is-on { background: rgba(255, 255, 255, 0.3); }
 @media (max-width: 900px) { .bgrid { grid-template-columns: 1fr; } .bgrid-card--latidos { grid-column: auto; } }
 .bgrid-card-title {
   display: inline-flex; align-items: center; gap: 0.55rem;
