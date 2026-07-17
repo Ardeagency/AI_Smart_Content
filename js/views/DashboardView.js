@@ -658,33 +658,9 @@ class DashboardView extends BaseView {
     ];
   }
 
-  // Copy del hero por tab: titulo (parte fuerte + parte ligera) + descripcion.
-  // El degradado del hero es el dinamico de la marca (--brand-gradient-dynamic).
-  static get HERO_COPY() {
-    return {
-      'my-brands': {
-        strong: __('El pulso de tu marca'),
-        desc: __('Salud, campañas activas y cómo rinde tu contenido frente a tu audiencia.'),
-      },
-      'competence': {
-        strong: __('El campo de batalla'),
-        desc: __('Qué publican tus competidores, la voz de su audiencia y dónde son vulnerables.'),
-      },
-      'tendencies': {
-        strong: __('Lo que se mueve en tu nicho'),
-        desc: __('Señales emergentes, océanos azules, léxico vivo y marcas que despuntan.'),
-      },
-      'strategy': {
-        strong: __('El siguiente movimiento'),
-        desc: __('Las recomendaciones de Vera: lecturas cruzadas de todas las señales y aprendizaje continuo.'),
-      },
-    };
-  }
-
-  // Hero estilo overview: degradado dinamico de la marca + titulo en
-  // peso mixto + tabs sobre el degradado + cards del plan de accion.
+  // Hero estilo overview: degradado dinamico de la marca + tabs sobre el
+  // degradado + cards del plan de accion.
   _buildHero(tabId) {
-    const copy = DashboardView.HERO_COPY[tabId] || DashboardView.HERO_COPY['my-brands'];
     // Filtros TAB-AWARE en el banner: cada tab muestra los suyos aquí (no en el
     // cuerpo). El manejo de cambios se centraliza en _setupHeroFilters.
     const actions = `<div class="dash-hero-actions" id="dashHeroActions">${this._buildTabFiltersBar(tabId)}</div>`;
@@ -693,12 +669,6 @@ class DashboardView extends BaseView {
         <div class="dash-hero-grad" aria-hidden="true"></div>
         <img class="dash-hero-logo" id="dashHeroLogo" alt="" aria-hidden="true" hidden style="opacity:0" />
         <div class="dash-hero-inner">
-          <div class="dash-hero-top">
-            <div class="dash-hero-headings">
-              <h1 class="dash-hero-title" id="dashHeroTitle"><strong>${this._esc(copy.strong)}</strong></h1>
-              <p class="dash-hero-desc" id="dashHeroDesc">${this._esc(copy.desc)}</p>
-            </div>
-          </div>
           <nav class="dash-hero-tabs" id="dashHeroTabs" role="tablist">
             ${DashboardView.TABS.map((t) => `
               <button class="dash-hero-tab${this._activeTab === t.id ? ' is-active' : ''}" role="tab" data-tab="${t.id}">${this._esc(t.label)}</button>`).join('')}
@@ -939,23 +909,16 @@ class DashboardView extends BaseView {
     }
   }
 
-  // Refresca titulo (peso mixto) + descripcion + el tab activo. data-tab solo
-  // controla la visibilidad de las acciones (el degradado es el dinamico de la
-  // marca, igual en los 4 tabs). Los KPIs son de marca: no cambian por tab.
+  // Refresca el tab activo. data-tab solo controla la visibilidad de las acciones
+  // (el degradado es el dinamico de la marca, igual en los 4 tabs). Los KPIs son
+  // de marca: no cambian por tab.
   _updateHero(tabId) {
-    const copy = DashboardView.HERO_COPY[tabId] || DashboardView.HERO_COPY['my-brands'];
     const hero = document.getElementById('dashHero');
     if (hero) {
       hero.dataset.tab = tabId;
       hero.querySelectorAll('.dash-hero-tab')
         .forEach((b) => b.classList.toggle('is-active', b.dataset.tab === tabId));
     }
-    const title = document.getElementById('dashHeroTitle');
-    if (title) {
-      title.innerHTML = `<strong>${this._esc(copy.strong)}</strong>`;
-    }
-    const d = document.getElementById('dashHeroDesc');
-    if (d) d.textContent = copy.desc;
   }
 
   /** Click handler de los tabs del hero (delegado, un solo listener). */

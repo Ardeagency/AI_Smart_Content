@@ -4260,47 +4260,13 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 
 .dash-hero-inner { position: relative; z-index: 1; }
 
-/* Fila superior: titulo+descripcion a la izquierda, filtros + Crear informe a
-   la derecha. Las acciones solo aplican a Mi Marca → ocultas en otros tabs. */
-.dash-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem 1.5rem; flex-wrap: wrap; }
-.dash-hero-headings { min-width: 0; }
+/* Acciones del banner: filtros + Crear informe. */
 .dash-hero-actions { flex-shrink: 0; position: relative; z-index: 5; margin-top: clamp(1.1rem, 2.5vw, 1.5rem); }
 /* Los filtros viven en el banner en TODOS los tabs (no solo Mi Marca). */
 /* La barra de filtros heredada (living-history-filters) sobre el degradado:
    alinea a la derecha y da legibilidad a labels claros. */
 .dash-hero-actions .mb-filters-bar { margin: 0; padding: 0; background: none; border: 0; flex-wrap: wrap; justify-content: flex-start; }
 .dash-hero-actions .living-filter-label { color: rgba(255, 255, 255, 0.85); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); }
-
-.dash-hero-title {
-  margin: 0;
-  /* Escala cinematografica: mas grande, mayusculas, misma tipografia de la
-     plataforma (Helvetica heredada). line-height con aire para no recortar glifos
-     (acentos/descendentes) y permitir wrap de titulos largos sin cortes. */
-  font-size: clamp(2.05rem, 4.6vw, 3.6rem);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  font-weight: 800;
-  color: #fff;
-  text-wrap: balance;
-  /* Profundidad con text-shadow en capas (sin background-clip ni filter: la
-     combinacion de ambos hacia que la sombra se pintara como un RECTANGULO
-     detras del texto — el "corte" que se veia). */
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 10px 30px rgba(0, 0, 0, 0.22);
-}
-.dash-hero-title strong { font-weight: 800; }
-.dash-hero-desc {
-  margin: 0.7rem 0 0;
-  /* Medida editorial corta + peso ligero + interlineado generoso = lectura premium. */
-  font-size: clamp(0.92rem, 1.05vw, 1.075rem);
-  font-weight: 400;
-  line-height: 1.6;
-  letter-spacing: 0.005em;
-  color: rgba(255, 255, 255, 0.82);
-  max-width: 48ch;
-  text-wrap: pretty;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.3);
-}
 
 /* Tabs sobre el degradado: texto blanco translucido, activo = solido + underline. */
 .dash-hero-tabs {
@@ -4437,7 +4403,6 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 @media (max-width: 560px) {
   .dash-hero { margin: 0 -15px 1.25rem; border-radius: 0 0 16px 16px; }
   .dash-hero-cards { grid-template-columns: 1fr; }
-  .dash-hero-desc { display: none; }
 }
 
 /* ════════════════════════════════════════════════════════════════════
