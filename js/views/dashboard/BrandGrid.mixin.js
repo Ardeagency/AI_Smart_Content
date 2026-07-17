@@ -58,6 +58,13 @@
         <button type="button" class="bgrid-seg-btn${w.k === this._gridWindow ? ' is-active' : ''}" data-window="${w.k}" role="tab">${this._esc(w.label())}</button>`).join('');
       return `
         <div class="bgrid">
+          <section class="bgrid-card glass-black bgrid-card--salud">
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>${this._esc(__('Salud de marca'))}</span>
+              <button type="button" class="bgrid-details-btn" data-salud-details aria-label="${this._esc(__('Ver detalles'))}" title="${this._esc(__('Ver detalles'))}"><i class="aisc-ico aisc-ico--chart-bar" aria-hidden="true"></i></button>
+            </header>
+            <div class="bgrid-salud-arc" id="bgridSaludArc"></div>
+          </section>
           <section class="bgrid-card glass-black bgrid-card--activity">
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--actividad" aria-hidden="true"></i>${this._esc(__('Tráfico'))}</span>
@@ -81,6 +88,7 @@
       if (body.dataset.bgridBound === '1') return;
       body.dataset.bgridBound = '1';
       body.addEventListener('click', (e) => {
+        if (e.target.closest('[data-salud-details]')) { this._openSaludDetails(this._gridHealth); return; }
         const btn = e.target.closest('[data-window]');
         if (!btn) return;
         const k = btn.dataset.window;
@@ -125,7 +133,7 @@
       // normaliza a Promise real antes de encadenar el fallback.
       const call = (fn, params) => Promise.resolve(this._supabase.rpc(fn, params)).catch(() => ({ data: null }));
       const [h, a, i] = await Promise.all([
-        call('dashboard_mimarca_health', p),
+        call('dashboard_mimarca_health_v2', p),
         call('dashboard_mimarca_activity', p),
         call('dashboard_brand_engagement_trend', { ...p, p_post_source: 'own' }),
       ]);
@@ -140,6 +148,8 @@
       let data;
       try { data = await this._loadBrandGridData(); }
       catch (e) { console.warn('[BrandGrid] load failed:', e); return; }
+      this._gridHealth = data.health || null;
+      this._paintSaludArc(body, data);
       this._paintGridStatus(body, data);
       try { await this._ensureChartJs(); } catch (_) {}
       this._destroyCharts();
@@ -147,28 +157,81 @@
       this._paintLatidosChart(body, data);
     },
 
-    /* Estado (pill) + barra de salud. */
+    /* Arco (gauge) de salud de marca. Solo el arco + score; el desglose va al modal. */
+    _paintSaludArc(body, data) {
+      const host = body.querySelector('#bgridSaludArc');
+      if (!host) return;
+      const h = data.health || {};
+      const score = (h.score == null) ? null : Math.round(Number(h.score));
+      const verdictLabel = { saludable: __('Saludable'), atencion: __('Atención'), critico: __('Crítico') }[h.verdict] || '';
+      if (score == null) {
+        host.innerHTML = `<div class="bgrid-arc-empty">${this._esc(__('Conecta tus plataformas para ver la salud de tu marca.'))}</div>`;
+        return;
+      }
+      const [accent] = this._gridBrandHexes();
+      const pct = Math.max(0, Math.min(100, score));
+      const R = 80, LEN = Math.PI * R;          // longitud del semicírculo
+      const dash = LEN * pct / 100;
+      host.innerHTML = `
+        <div class="bgrid-arc">
+          <svg class="bgrid-arc-svg" viewBox="0 0 200 118" role="img" aria-label="${this._esc(__('Salud'))} ${score}/100">
+            <defs><linearGradient id="bgridSaludGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="rgba(255,255,255,0.55)"/><stop offset="1" stop-color="${this._esc(accent)}"/>
+            </linearGradient></defs>
+            <path d="M 18 98 A 80 80 0 0 1 182 98" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="15" stroke-linecap="round"/>
+            <path d="M 18 98 A 80 80 0 0 1 182 98" fill="none" stroke="url(#bgridSaludGrad)" stroke-width="15" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${LEN.toFixed(1)}"/>
+          </svg>
+          <div class="bgrid-arc-center">
+            <span class="bgrid-arc-score">${score}<span class="bgrid-arc-max">/100</span></span>
+            ${verdictLabel ? `<span class="bgrid-arc-verdict" data-verdict="${this._esc(h.verdict || '')}">${this._esc(verdictLabel)}</span>` : ''}
+          </div>
+        </div>`;
+    },
+
+    /* Modal de desglose de salud por canal + métrica. */
+    _openSaludDetails(h) {
+      if (!h || !Array.isArray(h.channels) || !h.channels.length) return;
+      const esc = (s) => this._esc(s);
+      const clamp = (n) => Math.max(0, Math.min(100, Math.round(Number(n) || 0)));
+      const chans = h.channels.map((c) => `
+        <div class="salud-ch">
+          <div class="salud-ch-head">
+            <span class="salud-ch-name">${esc(c.label)}</span>
+            <span class="salud-ch-score" data-ok="${c.healthy ? '1' : '0'}">${clamp(c.score)}%</span>
+          </div>
+          ${(c.metrics || []).map((m) => `
+            <div class="salud-metric">
+              <div class="salud-metric-top"><span>${esc(m.label)}</span><span class="salud-metric-pct">${clamp(m.score)}%</span></div>
+              <div class="salud-metric-track">
+                <div class="salud-metric-fill" data-ok="${clamp(m.score) >= 70 ? '1' : '0'}" style="width:${clamp(m.score)}%"></div>
+                <i class="salud-metric-thresh" aria-hidden="true"></i>
+              </div>
+            </div>`).join('')}
+        </div>`).join('');
+      const overlay = document.createElement('div');
+      overlay.className = 'salud-overlay';
+      overlay.innerHTML = `
+        <div class="salud-modal" role="dialog" aria-modal="true">
+          <div class="salud-modal-head">
+            <span class="salud-modal-title">${esc(__('Salud por canal'))}</span>
+            <button type="button" class="salud-modal-close" aria-label="${esc(__('Cerrar'))}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
+          </div>
+          <div class="salud-modal-legend">${esc(__('Umbral sano: 70%'))}</div>
+          <div class="salud-modal-body">${chans}</div>
+        </div>`;
+      document.body.appendChild(overlay);
+      const close = () => overlay.remove();
+      overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.closest('.salud-modal-close')) close(); });
+      document.addEventListener('keydown', function onEsc(ev) { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } });
+    },
+
+    /* Estado (pill) del tráfico + footer. La salud vive en su propia card (arco). */
     _paintGridStatus(body, data) {
       const host = body.querySelector('#bgridStatus');
       if (!host) return;
-      const h = data.health || {};
       const st = data.activity?.status || 'sin_datos';
       const stLabel = (STATUS_LABEL[st] || STATUS_LABEL.sin_datos)();
-      const score = (h.score == null) ? null : Math.round(Number(h.score));
-      const verdictLabel = { saludable: __('Saludable'), atencion: __('Atención'), critico: __('Crítico') }[h.verdict] || '';
-      const bar = (score == null)
-        ? `<div class="bgrid-health-empty">${this._esc(__('Conecta tus plataformas para ver la salud de tu marca.'))}</div>`
-        : `
-          <div class="bgrid-health">
-            <div class="bgrid-health-top">
-              <span class="bgrid-health-label">${this._esc(__('Salud de tu marca'))}</span>
-              <span class="bgrid-health-score">${score}<span class="bgrid-health-max">/100</span></span>
-            </div>
-            <div class="bgrid-health-track"><div class="bgrid-health-fill" data-verdict="${this._esc(h.verdict || '')}" style="width:${Math.max(2, Math.min(100, score))}%"></div></div>
-            ${verdictLabel ? `<span class="bgrid-health-verdict">${this._esc(verdictLabel)}</span>` : ''}
-          </div>`;
       host.innerHTML = `
-        ${bar}
         <div class="bgrid-status-row">
           <span class="bgrid-status-pill" data-status="${this._esc(st)}"><i class="bgrid-status-dot" aria-hidden="true"></i>${this._esc(stLabel)}</span>
         </div>`;
