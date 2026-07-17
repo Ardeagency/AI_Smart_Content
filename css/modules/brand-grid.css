@@ -5,7 +5,8 @@
 
 .bgrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  /* Actividad = card portrait angosta (como la referencia); Latidos toma el resto. */
+  grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
   gap: 1.25rem;
   align-items: start;
   padding-top: 0.25rem;
