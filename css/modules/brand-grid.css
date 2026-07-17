@@ -94,6 +94,9 @@
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   text-align: center; font-size: 0.82rem; color: rgba(255, 255, 255, 0.45); padding: 1rem;
 }
+/* El atributo [hidden] (display:none del UA) lo pisaba .bgrid-empty{display:flex};
+   forzamos el ocultado cuando hay datos. */
+.bgrid-empty[hidden] { display: none; }
 
 .bgrid-card-foot {
   display: flex; align-items: center; gap: 0.5rem;
