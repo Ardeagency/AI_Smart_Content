@@ -84,18 +84,22 @@
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px; padding: 0.22rem; align-self: flex-start;
+  overflow: hidden;   /* el pill activo nunca se sale del contenedor */
+  max-width: 100%;
 }
 .bgrid-seg-btn {
   border: 0; background: transparent; cursor: pointer;
   font: inherit; font-size: 0.8rem; font-weight: 600;
   color: rgba(255, 255, 255, 0.6);
   padding: 0.4rem 0.95rem; border-radius: 999px;
+  white-space: nowrap;
   transition: color 0.15s ease, background 0.15s ease;
 }
 .bgrid-seg-btn:hover { color: rgba(255, 255, 255, 0.9); }
+/* Resaltado activo = blanco (el tono más claro), texto oscuro. */
 .bgrid-seg-btn.is-active {
   color: #0b0b0b;
-  background: linear-gradient(135deg, var(--brand-color-light, #F79E1B), var(--brand-color-dark, #FF5F00));
+  background: #ffffff;
 }
 
 /* ── Charts ── */
