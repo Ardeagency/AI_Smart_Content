@@ -4445,15 +4445,16 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
 /* ---- tarjeta de plan (pie) ---- */
 .side-navigation.nav-mode-user .nav-plan-card {
     margin: 6px 8px 0;
-    padding: 15px 15px 14px;
-    border-radius: 15px;
+    padding: 17px 17px 14px;
+    border-radius: 16px;
     background: #0e0f12;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 18px;
-    min-height: 130px;
+    gap: 20px;
+    min-height: 150px;
     flex-shrink: 0;
     position: relative;
     isolation: isolate;
@@ -4480,7 +4481,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(145deg, rgba(0, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0.26) 44%, rgba(0, 0, 0, 0) 80%);
+    background: linear-gradient(150deg, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.18) 52%, rgba(0, 0, 0, 0) 88%);
     pointer-events: none;
     z-index: 0;
 }
@@ -4493,7 +4494,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
 .side-navigation.nav-mode-user .nav-plan-card-heading {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 6px;
     min-width: 0;
 }
 
@@ -4504,54 +4505,56 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     font-size: max(20px, var(--nav-org-title-size, 22px));
 }
 
-/* TITULO ("ACTUALIZA TU PLAN") — blanco, mayusculas */
+/* KICKER editorial ("ACTUALIZA TU PLAN") — fino, tracked, mayusculas */
 .side-navigation.nav-mode-user .nav-plan-card-title {
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.12;
-    letter-spacing: 0.01em;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #fff;
+    color: rgba(255, 255, 255, 0.68);
 }
 
-/* PLAN SIGUIENTE ("AGENCY") — el hero: blanco, mayusculas, grande */
+/* HERO display (plan siguiente, "AGENCY") — grande, ceñido, editorial */
 .side-navigation.nav-mode-user .nav-plan-card-name {
-    font-size: 24px;
-    font-weight: 800;
-    line-height: 1.02;
-    letter-spacing: -0.01em;
+    font-size: 29px;
+    font-weight: 700;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
     text-transform: uppercase;
     color: #fff;
 }
 
-/* CTA estilo "↗ MEJORAR": flecha en cuadro fino + texto en mayusculas */
+/* CTA editorial: hairline arriba + flecha en cuadro fino + texto tracked */
 .side-navigation.nav-mode-user .nav-plan-card-cta {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    align-self: flex-start;
-    gap: 9px;
-    padding: 0;
+    align-self: stretch;
+    gap: 12px;
+    padding-top: 13px;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
     color: #fff;
     text-decoration: none;
 }
 
 .side-navigation.nav-mode-user .nav-plan-card-arrow {
     display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.30);
-    transition: background .16s ease, box-shadow .16s ease, transform .16s ease;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
 }
 
 /* la flecha = arrow-up girada 45deg (↗), rellena en blanco */
 .side-navigation.nav-mode-user .nav-plan-card-arrow::before {
     content: '';
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
     background: #fff;
     -webkit-mask: url('/recursos/icons/arrow-up.svg') no-repeat center / contain;
     mask: url('/recursos/icons/arrow-up.svg') no-repeat center / contain;
@@ -4559,17 +4562,17 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
 }
 
 .side-navigation.nav-mode-user .nav-plan-card-cta-text {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
-    letter-spacing: 0.09em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.92);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .side-navigation.nav-mode-user .nav-plan-card-cta:hover .nav-plan-card-arrow {
-    background: rgba(255, 255, 255, 0.14);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.48);
-    transform: translate(1px, -1px);
+    background: rgba(255, 255, 255, 0.10);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    transform: translate(1.5px, -1.5px);
 }
 
 /* respetar el atributo hidden (display:flex lo anulaba) cuando ya está en el tope.
