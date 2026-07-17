@@ -70,9 +70,9 @@
           </section>
           <section class="bgrid-card glass-black bgrid-card--latidos">
             <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Impacto Social'))}</span>
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Interacciones'))}</span>
             </header>
-            <p class="bgrid-card-sub">${this._esc(__('El impacto social que producen tus redes'))}</p>
+            <p class="bgrid-card-sub">${this._esc(__('Cuántas interacciones producen tus redes por periodo · toca una barra para ver ese día'))}</p>
             <div class="bgrid-chart-wrap bgrid-chart-wrap--latidos"><canvas id="bgridLatidosChart"></canvas><div class="bgrid-empty" id="bgridLatidosEmpty" hidden>${this._esc(__('Sin señal de impacto en este periodo'))}</div></div>
           </section>
         </div>`;
@@ -307,19 +307,21 @@
       }));
     },
 
-    /* Chart 2: Latidos — impacto social por periodo, intensidad = color. */
+    /* Chart 2: Interacciones — TOTAL de interacciones (likes+comentarios+
+       reproducciones+guardados+…) por periodo. Suma cruda (total_engagement),
+       no ponderada. Click en una barra → publicaciones de ese día. */
     _paintLatidosChart(body, data) {
       const Chart = window.Chart;
       const canvas = body.querySelector('#bgridLatidosChart');
       const empty = body.querySelector('#bgridLatidosEmpty');
       if (!Chart || !canvas) return;
 
-      // Sumar social_impact por periodo (filas = periodo × marca).
+      // Sumar total de interacciones por periodo (filas = periodo × marca).
       const byBucket = new Map();
       (data.impact || []).forEach((row) => {
         const key = row.period_start || row.period_label;
-        const prev = byBucket.get(key) || { label: row.period_label, v: 0 };
-        prev.v += Number(row.social_impact || 0);
+        const prev = byBucket.get(key) || { label: row.period_label, v: 0, start: row.period_start, end: row.period_end };
+        prev.v += Number(row.total_engagement || 0);
         byBucket.set(key, prev);
       });
       const buckets = Array.from(byBucket.entries()).sort((a, b) => String(a[0]).localeCompare(String(b[0]))).map(([, v]) => v);
@@ -349,7 +351,7 @@
       this._reg(new Chart(canvas, {
         type: 'bar',
         data: { labels: buckets.map((b) => b.label), datasets: [{
-          label: __('Impacto social'),
+          label: __('Interacciones'),
           data: floatData,
           backgroundColor: colors,
           borderRadius: 20,
@@ -360,10 +362,16 @@
         }] },
         options: {
           responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          onClick: (evt, els) => {
+            const idx = (els && els.length) ? els[0].index : null;
+            if (idx != null && buckets[idx]) this._openInteraccionesDay(buckets[idx]);
+          },
+          onHover: (evt, els) => { evt.native.target.style.cursor = (els && els.length) ? 'pointer' : 'default'; },
           plugins: {
             legend: { display: false },
             tooltip: { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10,
-              callbacks: { label: (c) => `${__('Impacto')}: ${Math.round(buckets[c.dataIndex].v).toLocaleString()}` } },
+              callbacks: { label: (c) => `${__('Interacciones')}: ${Math.round(buckets[c.dataIndex].v).toLocaleString()}` } },
           },
           scales: {
             x: { grid: { display: false }, border: { display: false }, ticks: { color: TICK, font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },
@@ -371,6 +379,51 @@
           },
         },
       }));
+    },
+
+    /* Drill-down: publicaciones del periodo clickeado, ordenadas por interacciones
+       (la primera = la que más produjo). */
+    async _openInteraccionesDay(bucket) {
+      const ids = this._gridBcIds || [];
+      if (!ids.length || !bucket) return;
+      let rows = [];
+      try {
+        let q = this._supabase.from('brand_posts')
+          .select('network, content, engagement_total, captured_at, profile_handle')
+          .in('brand_container_id', ids).eq('post_source', 'own')
+          .order('engagement_total', { ascending: false, nullsFirst: false }).limit(50);
+        if (bucket.start) q = q.gte('captured_at', bucket.start);
+        if (bucket.end) q = q.lt('captured_at', bucket.end);
+        const { data } = await q;
+        rows = Array.isArray(data) ? data : [];
+      } catch (_) {}
+      const esc = (s) => this._esc(s);
+      const fmtNet = (n) => NET_LABEL[String(n || '').toLowerCase()] || (n ? n.charAt(0).toUpperCase() + n.slice(1) : '—');
+      const body = rows.length
+        ? rows.map((p, i) => `
+            <div class="inter-post${i === 0 ? ' inter-post--top' : ''}">
+              <div class="inter-post-head">
+                <span class="inter-post-net">${esc(fmtNet(p.network))}</span>
+                ${i === 0 ? `<span class="inter-post-badge">${esc(__('Más interacciones'))}</span>` : ''}
+                <span class="inter-post-eng">${Number(p.engagement_total || 0).toLocaleString()}</span>
+              </div>
+              ${p.content ? `<div class="inter-post-snippet">${esc(String(p.content).slice(0, 160))}</div>` : ''}
+            </div>`).join('')
+        : `<div class="inter-empty">${esc(__('Sin publicaciones ese periodo'))}</div>`;
+      const overlay = document.createElement('div');
+      overlay.className = 'salud-overlay';
+      overlay.innerHTML = `
+        <div class="salud-modal" role="dialog" aria-modal="true">
+          <div class="salud-modal-head">
+            <span class="salud-modal-title">${esc(__('Interacciones'))} · ${esc(bucket.label || '')}</span>
+            <button type="button" class="salud-modal-close" aria-label="${esc(__('Cerrar'))}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
+          </div>
+          <div class="salud-modal-body">${body}</div>
+        </div>`;
+      document.body.appendChild(overlay);
+      const close = () => overlay.remove();
+      overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.closest('.salud-modal-close')) close(); });
+      document.addEventListener('keydown', function onEsc(ev) { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } });
     },
   });
 })();
