@@ -331,17 +331,20 @@
       const [accent] = this._gridBrandHexes();
       const [r, g, bl] = this._hexToRgb(accent);
       const max = Math.max(1, ...buckets.map((b) => b.v));
-      // CANDLESTICK / latido: cada barra FLOTA centrada en la línea media; su
-      // media-altura crece con el impacto (raíz → los latidos chicos siguen
-      // visibles y el pico no aplasta al resto). Intensidad = color.
+      // CANDLESTICK / latido: cada barra FLOTA centrada en la línea media. La
+      // altura usa escala LOGARÍTMICA: el rango real es enorme (un periodo puede
+      // tener 260x otro), y con raíz/lineal los periodos chicos quedan como
+      // puntitos. Log comprime el rango → todos los periodos se ven como barras
+      // con variación. Intensidad = color.
+      const norm = (v) => Math.log((v || 0) + 1) / Math.log(max + 1);
       const floatData = buckets.map((b) => {
-        const half = Math.max(0.02, 0.46 * Math.sqrt(b.v / max));
+        const half = Math.max(0.06, 0.46 * norm(b.v));
         return [0.5 - half, 0.5 + half];
       });
       // Dos tonos como el heart-rate de referencia: latido bajo = gris,
       // latido alto = naranja de marca. Se interpola por intensidad.
       const colors = buckets.map((b) => {
-        const t = Math.sqrt(b.v / max);
+        const t = norm(b.v);
         const mix = (from, to) => Math.round(from + (to - from) * t);
         const a = (0.45 + 0.55 * t).toFixed(3);
         return `rgba(${mix(145, r)},${mix(145, g)},${mix(150, bl)},${a})`;
