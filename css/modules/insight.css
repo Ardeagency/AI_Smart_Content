@@ -4163,7 +4163,7 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
   background-color: var(--bg-primary, #0b0b0b);
   background-image: radial-gradient(110.4vw 110.4vh at 50% -10.4vh,
     var(--brand-color-light, #F79E1B) 0%,
-    var(--brand-color-dark, #FF5F00) 30.29%,
+    var(--brand-color-mid, #FF5F00) 30.29%,
     #141517 74.04%,
     var(--bg-primary, #0b0b0b) 100%);
   background-repeat: no-repeat;
@@ -4179,7 +4179,7 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
   background-color: #000000;
   background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
     var(--brand-color-light, #F79E1B) 0%,
-    var(--brand-color-dark, #FF5F00) 30.29%,
+    var(--brand-color-mid, #FF5F00) 30.29%,
     #141517 74.04%,
     #000000 100%);
   background-attachment: fixed;

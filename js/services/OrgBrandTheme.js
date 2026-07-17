@@ -87,6 +87,7 @@
     root.style.removeProperty('--brand-gradient-dynamic');
     root.style.removeProperty('--brand-gradient-dynamic-vertical');
     root.style.removeProperty('--brand-color-light');
+    root.style.removeProperty('--brand-color-mid');
     root.style.removeProperty('--brand-color-dark');
   }
 
@@ -132,16 +133,25 @@
       }
     }
 
-    // Color mas claro y mas oscuro de la marca (por luminosidad HSL). Los usa el
-    // fondo radial del chat de Vera: nucleo = mas claro -> mas oscuro -> #141517 -> #000.
+    // Color mas claro, intermedio y mas oscuro de la marca (por luminosidad HSL).
+    // Los usa el fondo radial del dashboard y del chat de Vera:
+    //   nucleo = mas claro -> INTERMEDIO -> #141517 -> #000 (plataforma).
+    // El segundo stop (--brand-color-mid = 2do mas claro) es clave: si usaramos el
+    // mas oscuro y la marca tiene un negro puro (ej. WAKEUP), el radial saltaba de
+    // amarillo directo a negro y se comia el naranja. La cola #141517->plataforma
+    // ya aporta el oscuro, asi que el 2do stop debe ser el color de acento medio.
     try {
       const withL = hexes
         .map((hx) => ({ hex: hx, l: (hexToHSL(hx) || {}).l }))
         .filter((o) => typeof o.l === 'number' && !Number.isNaN(o.l));
       if (withL.length) {
-        withL.sort((a, b) => a.l - b.l);
-        root.style.setProperty('--brand-color-dark', withL[0].hex);
-        root.style.setProperty('--brand-color-light', withL[withL.length - 1].hex);
+        withL.sort((a, b) => a.l - b.l); // ascendente: mas oscuro primero
+        const lightest = withL[withL.length - 1].hex;
+        const darkest = withL[0].hex;
+        const mid = withL.length >= 2 ? withL[withL.length - 2].hex : lightest;
+        root.style.setProperty('--brand-color-dark', darkest);
+        root.style.setProperty('--brand-color-light', lightest);
+        root.style.setProperty('--brand-color-mid', mid);
       }
     } catch (e) { /* si falla, el CSS usa el fallback naranja de referencia */ }
   }

@@ -2235,7 +2235,7 @@
      --brand-color-light/-dark los publica OrgBrandTheme por org; fallback naranja. */
   background: radial-gradient(110.4% 110.4% at 50% -10.4%,
     var(--brand-color-light, #F79E1B) 0%,
-    var(--brand-color-dark, #FF5F00) 30.29%,
+    var(--brand-color-mid, #FF5F00) 30.29%,
     #141517 74.04%,
     #000000 100%);
   color: var(--text-primary);
