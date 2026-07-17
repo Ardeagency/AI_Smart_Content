@@ -116,16 +116,21 @@
 .salud-ch-head { display: flex; align-items: baseline; justify-content: space-between; }
 .salud-ch-name { font-size: 0.9rem; font-weight: 600; color: #fff; }
 .salud-ch-score { font-size: 0.85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.salud-ch-score[data-ok="1"] { color: var(--brand-color-light, #F79E1B); }
-.salud-ch-score[data-ok="0"] { color: rgba(255, 255, 255, 0.5); }
+.salud-ch-score[data-tier="exc"]     { color: #5fd39a; }
+.salud-ch-score[data-tier="buena"]   { color: #84cba0; }
+.salud-ch-score[data-tier="regular"] { color: #e6a94e; }
+.salud-ch-score[data-tier="baja"]    { color: #e77a7a; }
 .salud-metric { display: flex; flex-direction: column; gap: 0.35rem; }
 .salud-metric-top { display: flex; align-items: baseline; justify-content: space-between; font-size: 0.78rem; color: rgba(255, 255, 255, 0.7); }
 .salud-metric-pct { font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.55); }
 /* Barra segmentada: ticks verticales que se llenan (estilo referencia). */
 .salud-seg-bar { display: flex; gap: 3px; height: 22px; align-items: stretch; }
 .salud-seg { flex: 1 1 0; min-width: 0; border-radius: 3px; background: rgba(255, 255, 255, 0.09); }
-.salud-seg-bar[data-ok="1"] .salud-seg.is-on { background: linear-gradient(180deg, var(--brand-color-light, #F79E1B), var(--brand-color-dark, #FF5F00)); }
-.salud-seg-bar[data-ok="0"] .salud-seg.is-on { background: rgba(255, 255, 255, 0.3); }
+/* Color por tier de efectividad (misma lógica que Campañas): verde=sano, rojo=no. */
+.salud-seg-bar[data-tier="exc"] .salud-seg.is-on     { background: #46c98a; }
+.salud-seg-bar[data-tier="buena"] .salud-seg.is-on   { background: #84cba0; }
+.salud-seg-bar[data-tier="regular"] .salud-seg.is-on { background: #e6a94e; }
+.salud-seg-bar[data-tier="baja"] .salud-seg.is-on    { background: #e77a7a; }
 
 /* ── Drill-down de Interacciones (publicaciones del día) ── */
 .inter-post { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.7rem 0.85rem; border-radius: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); }

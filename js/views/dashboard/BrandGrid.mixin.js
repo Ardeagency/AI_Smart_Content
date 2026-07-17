@@ -252,33 +252,39 @@
         </svg>`;
     },
 
+    /* Tier de salud/rendimiento (misma lógica que Campañas): benchmark → nivel
+       con color semántico. Verde=bien, ámbar=regular, rojo=mal. */
+    _healthTier(score) {
+      const s = Number(score) || 0;
+      if (s >= 85) return { tier: 'exc', label: __('Excelente'), color: '#46c98a' };
+      if (s >= 70) return { tier: 'buena', label: __('Buena'), color: '#84cba0' };
+      if (s >= 40) return { tier: 'regular', label: __('Regular'), color: '#e6a94e' };
+      return { tier: 'baja', label: __('Baja'), color: '#e77a7a' };
+    },
+
     /* Arco (gauge) de salud de marca. Solo el arco + score; el desglose va al modal. */
     _paintSaludArc(body, data) {
       const host = body.querySelector('#bgridSaludArc');
       if (!host) return;
       const h = data.health || {};
       const score = (h.score == null) ? null : Math.round(Number(h.score));
-      const verdictLabel = { saludable: __('Saludable'), atencion: __('Atención'), critico: __('Crítico') }[h.verdict] || '';
       if (score == null) {
         host.innerHTML = `<div class="bgrid-arc-empty">${this._esc(__('Conecta tus plataformas para ver la salud de tu marca.'))}</div>`;
         return;
       }
-      const [accent] = this._gridBrandHexes();
+      const t = this._healthTier(score);
       const pct = Math.max(0, Math.min(100, score));
       const R = 80, LEN = Math.PI * R;          // longitud del semicírculo
       const dash = LEN * pct / 100;
       host.innerHTML = `
         <div class="bgrid-arc">
           <svg class="bgrid-arc-svg" viewBox="0 0 200 118" role="img" aria-label="${this._esc(__('Salud'))} ${score}/100">
-            <defs><linearGradient id="bgridSaludGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stop-color="rgba(255,255,255,0.55)"/><stop offset="1" stop-color="${this._esc(accent)}"/>
-            </linearGradient></defs>
             <path d="M 18 98 A 80 80 0 0 1 182 98" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="15" stroke-linecap="round"/>
-            <path d="M 18 98 A 80 80 0 0 1 182 98" fill="none" stroke="url(#bgridSaludGrad)" stroke-width="15" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${LEN.toFixed(1)}"/>
+            <path d="M 18 98 A 80 80 0 0 1 182 98" fill="none" stroke="${t.color}" stroke-width="15" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${LEN.toFixed(1)}"/>
           </svg>
           <div class="bgrid-arc-center">
             <span class="bgrid-arc-score">${score}<span class="bgrid-arc-max">/100</span></span>
-            ${verdictLabel ? `<span class="bgrid-arc-verdict" data-verdict="${this._esc(h.verdict || '')}">${this._esc(verdictLabel)}</span>` : ''}
+            <span class="bgrid-arc-verdict" style="color:${t.color}">${this._esc(t.label)}</span>
           </div>
         </div>`;
     },
@@ -292,7 +298,7 @@
         <div class="salud-ch">
           <div class="salud-ch-head">
             <span class="salud-ch-name">${esc(c.label)}</span>
-            <span class="salud-ch-score" data-ok="${c.healthy ? '1' : '0'}">${clamp(c.score)}%</span>
+            <span class="salud-ch-score" data-tier="${this._healthTier(c.score).tier}">${clamp(c.score)}%</span>
           </div>
           ${(c.metrics || []).map((m) => {
             const on = Math.round(clamp(m.score) / 100 * 28);
@@ -300,7 +306,7 @@
             return `
             <div class="salud-metric">
               <div class="salud-metric-top"><span>${esc(m.label)}</span><span class="salud-metric-pct">${clamp(m.score)}%</span></div>
-              <div class="salud-seg-bar" data-ok="${clamp(m.score) >= 70 ? '1' : '0'}">${segs}</div>
+              <div class="salud-seg-bar" data-tier="${this._healthTier(m.score).tier}">${segs}</div>
             </div>`;
           }).join('')}
         </div>`).join('');
