@@ -4156,6 +4156,10 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
    costura. El hero (.dash-hero) sigue transparente para dejar ver este fondo. */
 .insight-page.insight-page--hero {
   padding-top: 0;
+  /* Llena el alto del viewport aunque el cuerpo del tab esté vacío: #app-container
+     es min-height:100vh y para el hero su padding-top es 0, así el degradado cubre
+     toda la pantalla sin dejar ver el fondo plano de la plataforma debajo. */
+  min-height: 100vh;
   background-color: var(--bg-primary, #0b0b0b);
   background-image: radial-gradient(110.4vw 110.4vh at 50% -10.4vh,
     var(--brand-color-light, #F79E1B) 0%,
