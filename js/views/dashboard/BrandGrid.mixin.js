@@ -176,64 +176,78 @@
       } catch (_) {}
       if (!rows.length) { card.hidden = true; return; }
       card.hidden = false;
-      const maxSpend = Math.max(1, ...rows.map((c) => Number(c.cached_spend) || 0));
-      host.innerHTML = rows.map((c) => this._campaignRowHtml(c, maxSpend)).join('');
+      host.innerHTML = rows.map((c) => this._campaignRowHtml(c)).join('');
     },
 
-    /* Score de rendimiento (0-100), objetivo-aware: ventas usan ROAS+conversión,
-       el resto CTR. Metas: CTR 2%, ROAS 3x, conversión 5%. */
-    _campaignScore(c) {
+    /* Efectividad de la campaña segun su OBJETIVO y la KPI que de verdad importa,
+       contra benchmarks Meta 2025 (fuentes en research):
+         - Ventas    → ROAS   (sano 3-5; <2 no rentable)
+         - Leads     → CVR    (conversion/clicks)
+         - Trafico/  → CTR    (fuerte >1.5%; pobre <0.5%; mediana 2.19%)
+           default
+       Devuelve { score 0-100, tier, label }. Verde=efectiva, rojo=no. */
+    _campaignEffectiveness(c) {
+      const obj = String(c.platform_objective || '');
       const ctr = Number(c.cached_ctr) || 0;
       const roas = c.cached_roas == null ? null : Number(c.cached_roas);
       const conv = Number(c.cached_conversions) || 0;
       const clicks = Number(c.cached_clicks) || 0;
-      const parts = [Math.min(100, ctr / 2 * 100)];
-      if (roas != null) {
-        parts.push(Math.min(100, roas / 3 * 100));
-        if (clicks > 0) parts.push(Math.min(100, (conv / clicks * 100) / 5 * 100));
+      const cvr = clicks > 0 ? (conv / clicks * 100) : null;
+      let val, exc, buena, reg;
+      if (obj === 'OUTCOME_SALES' || (roas != null && roas > 0)) {
+        val = roas || 0; exc = 5; buena = 3; reg = 2;          // ROAS
+      } else if (obj === 'OUTCOME_LEADS' && cvr != null) {
+        val = cvr; exc = 8; buena = 4; reg = 2;                // CVR %
+      } else {
+        val = ctr; exc = 3; buena = 1.5; reg = 0.8;            // CTR %
       }
-      return Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
+      let tier, label;
+      if (val >= exc) { tier = 'exc'; label = __('Excelente'); }
+      else if (val >= buena) { tier = 'buena'; label = __('Buena'); }
+      else if (val >= reg) { tier = 'regular'; label = __('Regular'); }
+      else { tier = 'baja'; label = __('Baja'); }
+      const score = Math.round(Math.max(0, Math.min(100, val / exc * 100)));
+      return { score, tier, label };
     },
 
-    _campaignRowHtml(c, maxSpend) {
+    _campaignRowHtml(c) {
       const esc = (s) => this._esc(s);
       const OBJ = { OUTCOME_SALES: __('Ventas'), OUTCOME_TRAFFIC: __('Tráfico'), OUTCOME_LEADS: __('Leads'),
         OUTCOME_ENGAGEMENT: __('Interacción'), OUTCOME_AWARENESS: __('Reconocimiento'), OUTCOME_APP_PROMOTION: __('App') };
       const objLabel = OBJ[c.platform_objective] || String(c.platform_objective || '').replace('OUTCOME_', '');
-      const score = this._campaignScore(c);
+      const eff = this._campaignEffectiveness(c);
       const ctr = Number(c.cached_ctr) || 0;
       const roas = c.cached_roas == null ? null : Number(c.cached_roas);
       const conv = Number(c.cached_conversions) || 0;
       const clicks = Number(c.cached_clicks) || 0;
       const fmtK = (n) => n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'k' : String(n);
-      const bits = [`CTR ${ctr.toFixed(1)}%`];
+      const bits = [];
       if (roas != null) bits.push(`ROAS ${roas.toFixed(1)}x`);
+      bits.push(`CTR ${ctr.toFixed(1)}%`);
       if (roas != null && conv > 0) bits.push(`${fmtK(conv)} conv`);
       else if (clicks > 0) bits.push(`${fmtK(clicks)} clics`);
       const desc = `${objLabel ? objLabel + ' · ' : ''}${bits.join(' · ')}`;
-      const ratio = (Number(c.cached_spend) || 0) / maxSpend;
-      const imp = ratio >= 0.5 ? 'alto' : ratio >= 0.15 ? 'medio' : 'bajo';
-      const impLabel = { alto: __('Alto impacto'), medio: __('Impacto medio'), bajo: __('Bajo impacto') }[imp];
       const name = c.nombre_campana || c.external_campaign_name || __('Campaña');
       return `
         <div class="camp-row">
-          ${this._miniGauge(score)}
+          ${this._miniGauge(eff.score, eff.tier)}
           <div class="camp-body">
             <div class="camp-name">${esc(name)}</div>
             <div class="camp-desc">${esc(desc)}</div>
           </div>
-          <span class="camp-badge" data-imp="${imp}">${esc(impLabel)}</span>
+          <span class="camp-badge" data-tier="${eff.tier}">${esc(eff.label)}</span>
         </div>`;
     },
 
-    _miniGauge(score) {
+    _miniGauge(score, tier) {
       const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
       const R = 15.5, C = 2 * Math.PI * R, dash = C * s / 100;
-      const [accent] = this._gridBrandHexes();
+      const COL = { exc: '#46c98a', buena: '#84cba0', regular: '#e6a94e', baja: '#e77a7a' };
+      const col = COL[tier] || '#46c98a';
       return `
         <svg class="camp-gauge" viewBox="0 0 40 40" aria-label="${s}">
           <circle cx="20" cy="20" r="15.5" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="3.5"/>
-          <circle cx="20" cy="20" r="15.5" fill="none" stroke="${this._esc(accent)}" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 20 20)"/>
+          <circle cx="20" cy="20" r="15.5" fill="none" stroke="${col}" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 20 20)"/>
           <text x="20" y="20" text-anchor="middle" dominant-baseline="central" class="camp-gauge-num">${s}</text>
         </svg>`;
     },

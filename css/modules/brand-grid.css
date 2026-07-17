@@ -37,9 +37,11 @@
 .camp-name { font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .camp-desc { font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .camp-badge { flex: 0 0 auto; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.01em; padding: 0.3rem 0.62rem; border-radius: 999px; white-space: nowrap; }
-.camp-badge[data-imp="alto"]  { color: #ff9090; background: rgba(255, 90, 90, 0.14); }
-.camp-badge[data-imp="medio"] { color: #f0b45e; background: rgba(240, 180, 94, 0.14); }
-.camp-badge[data-imp="bajo"]  { color: #7fd39a; background: rgba(120, 207, 127, 0.14); }
+/* Efectividad: verde=efectiva, ámbar=regular, rojo=no rentable. */
+.camp-badge[data-tier="exc"]     { color: #5fd39a; background: rgba(80, 207, 140, 0.15); }
+.camp-badge[data-tier="buena"]   { color: #8fd3ad; background: rgba(120, 200, 150, 0.12); }
+.camp-badge[data-tier="regular"] { color: #f0b45e; background: rgba(240, 180, 94, 0.14); }
+.camp-badge[data-tier="baja"]    { color: #ff9090; background: rgba(255, 90, 90, 0.14); }
 
 /* Card glass-black: dark translúcido con blur sobre el degradado de marca. */
 .bgrid-card.glass-black {
