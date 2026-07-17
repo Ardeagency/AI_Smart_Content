@@ -4466,7 +4466,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     inset: 0;
     border-radius: inherit;
     background: var(--brand-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)));
-    opacity: 0.10;
+    opacity: 0.30; /* saturacion del tinte de marca sobre la card (antes 0.10, se veia opaca) */
     pointer-events: none;
     z-index: 0;
 }
@@ -4479,30 +4479,16 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
 .side-navigation.nav-mode-user .nav-plan-card-top {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
 }
 
-.side-navigation.nav-mode-user .nav-plan-card-badge {
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    /* anillo del degradado dinámico de marca (border-image via padding/border-box) */
-    background:
-        linear-gradient(#0f1115, #0f1115) padding-box,
-        var(--brand-gradient-dynamic, rgba(255, 255, 255, 0.18)) border-box;
-    border: 1px solid transparent;
-}
-
-/* sparkle y bolt rellenos con el degradado dinámico (via mask) */
-.side-navigation.nav-mode-user .nav-plan-card-spark,
+/* icono de upgrade relleno con el color de marca solido (nitido a 17px; el
+   degradado dinamico termina en negro y oscurecia la punta de la flecha) */
 .side-navigation.nav-mode-user .nav-plan-card-bolt {
     display: inline-block;
     flex-shrink: 0;
-    background: var(--brand-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)));
+    background: var(--brand-primary, #FF5F00);
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
     -webkit-mask-position: center;
@@ -4511,23 +4497,13 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     mask-size: contain;
 }
 
-.side-navigation.nav-mode-user .nav-plan-card-spark {
-    width: 16px;
-    height: 16px;
-    -webkit-mask-image: url('/recursos/icons/sparkle.svg');
-    mask-image: url('/recursos/icons/sparkle.svg');
-}
-
 .side-navigation.nav-mode-user .nav-plan-card-bolt {
-    width: 15px;
-    height: 15px;
-    -webkit-mask-image: url('/recursos/icons/Planes.svg');
-    mask-image: url('/recursos/icons/Planes.svg');
+    width: 17px;
+    height: 17px;
+    -webkit-mask-image: url('/recursos/icons/arrow-up.svg');
+    mask-image: url('/recursos/icons/arrow-up.svg');
 }
 
-.side-navigation.nav-mode-user .nav-plan-card-cta {
-    gap: 8px;
-}
 
 /* el nombre de la org nunca debe quedar diminuto: piso de 20px,
    respetando el tamaño adaptativo del JS cuando es mayor */
@@ -4542,15 +4518,19 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     min-width: 0;
 }
 
+/* label = ahora es el TITULO ("Actualiza tu plan") */
 .side-navigation.nav-mode-user .nav-plan-card-label {
-    font-size: 11.5px;
-    color: rgba(255, 255, 255, 0.55);
-}
-
-.side-navigation.nav-mode-user .nav-plan-card-name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: #fff;
+    letter-spacing: -0.01em;
+}
+
+/* name = plan SIGUIENTE, resaltado con el color de marca */
+.side-navigation.nav-mode-user .nav-plan-card-name {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--brand-primary, #FF5F00);
 }
 
 .side-navigation.nav-mode-user .nav-plan-card-desc {
@@ -4560,24 +4540,26 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     color: rgba(255, 255, 255, 0.55);
 }
 
+/* boton = icono de upgrade cuadrado (top-right de la card) */
 .side-navigation.nav-mode-user .nav-plan-card-cta {
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 36px;
-    padding: 0 12px;
+    width: 34px;
+    height: 34px;
+    padding: 0;
     border-radius: 9px;
-    background: rgba(255, 255, 255, 0.07);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
     color: #fff;
-    font-size: 13px;
-    font-weight: 600;
     text-decoration: none;
-    transition: background .16s ease;
+    transition: background .16s ease, box-shadow .16s ease;
 }
 
 .side-navigation.nav-mode-user .nav-plan-card-cta:hover {
-    background: rgba(255, 255, 255, 0.11);
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
 /* respetar el atributo hidden (display:flex lo anulaba) cuando ya está en el tope.

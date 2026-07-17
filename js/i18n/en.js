@@ -1873,6 +1873,7 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Pilares de contenido": "Content pillars",
   "Pincel": "Brush",
   "Plan actual": "Current plan",
+  "Actualiza tu plan": "Upgrade your plan",
   "Plan de cámara": "Camera plan",
   "Plan de iluminación": "Lighting plan",
   "Plan de la organización": "Organization plan",

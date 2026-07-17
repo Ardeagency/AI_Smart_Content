@@ -2183,19 +2183,20 @@ class Navigation {
         <div class="nav-plan-card" id="navPlanCard">
           <span class="nav-system-stats-value" id="navStorageValue" hidden>—</span>
           <div class="nav-plan-card-top">
-            <span class="nav-plan-card-badge" aria-hidden="true"><span class="nav-plan-card-spark"></span></span>
             <span class="nav-plan-card-meta">
-              <span class="nav-plan-card-label">${__('Plan actual')}</span>
+              <span class="nav-plan-card-label">${__('Actualiza tu plan')}</span>
               <span class="nav-plan-card-name" id="navPlanName">—</span>
             </span>
+            <a href="${this.getUserSidebarRoute('plans')}"
+               class="nav-plan-card-cta"
+               id="navUpgradeBtn"
+               data-route="${this.getUserSidebarRoute('plans')}"
+               aria-label="${__('Mejorar plan')}"
+               title="${__('Mejorar plan')}">
+              <span class="nav-plan-card-bolt" aria-hidden="true"></span>
+            </a>
           </div>
           <p class="nav-plan-card-desc" id="navPlanDesc">${__('Mejora tu plan para desbloquear más capacidad y funciones.')}</p>
-          <a href="${this.getUserSidebarRoute('plans')}"
-             class="nav-plan-card-cta"
-             id="navUpgradeBtn"
-             data-route="${this.getUserSidebarRoute('plans')}">
-            <span class="nav-plan-card-bolt" aria-hidden="true"></span><span id="navUpgradeBtnLabel">${__('Mejorar plan')}</span>
-          </a>
         </div>
 
         <div class="nav-footer-links" role="navigation" aria-label="${__('Atajos')}">
@@ -3449,8 +3450,7 @@ class Navigation {
    */
   async loadUpgradeTarget() {
     const btn = document.getElementById('navUpgradeBtn');
-    const label = document.getElementById('navUpgradeBtnLabel');
-    if (!btn || !label) return;
+    if (!btn) return;
     const hide = () => { btn.hidden = true; };
 
     const orgId = this.currentOrgId;
@@ -3518,9 +3518,11 @@ class Navigation {
         return;
       }
       if (card) card.hidden = false;
-      if (nameEl) nameEl.textContent = planName;
+      // El titulo es estatico ("Actualiza tu plan"); el nombre = plan SIGUIENTE.
+      if (nameEl) nameEl.textContent = next.name;
       if (descEl) descEl.textContent = `Sube a ${next.name} para desbloquear más capacidad y funciones.`;
-      label.textContent = `Mejorar a ${next.name}`;
+      btn.setAttribute('aria-label', `Mejorar a ${next.name}`);
+      btn.setAttribute('title', `Mejorar a ${next.name}`);
       btn.hidden = false;
     } catch (e) {
       console.warn('Navigation: loadUpgradeTarget', e);
