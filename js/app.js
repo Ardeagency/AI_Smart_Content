@@ -297,7 +297,8 @@ class App {
       '/js/views/dashboard/Tendencies.mixin.js',
       '/js/views/dashboard/Strategy.mixin.js',
       '/js/views/dashboard/VeraReading.mixin.js',
-    ], ['/css/modules/insight.css', '/css/modules/vera-reading.css']);
+      '/js/views/dashboard/BrandGrid.mixin.js',
+    ], ['/css/modules/insight.css', '/css/modules/vera-reading.css', '/css/modules/brand-grid.css']);
     r.register('/org/:orgIdShort/:orgNameSlug/dashboard', dashboardLoader, auth);
     r.register('/dashboard', dashboardLoader, auth);
 

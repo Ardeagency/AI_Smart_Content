@@ -1,0 +1,108 @@
+/* ════════════════════════════════════════════════════════════════════
+   BrandGrid — grid de cards de Mi Marca (rediseño 2026-07).
+   Cards glass-black sobre el degradado dinámico de marca del hero.
+   ════════════════════════════════════════════════════════════════════ */
+
+.bgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  padding-top: 0.25rem;
+}
+
+/* Card glass-black: dark translúcido con blur sobre el degradado de marca. */
+.bgrid-card.glass-black {
+  background: rgba(11, 11, 11, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.35rem 1.5rem 1.5rem;
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.bgrid-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.bgrid-card-title {
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  font-size: 1.02rem; font-weight: 600; color: #fff; letter-spacing: -0.01em;
+}
+.bgrid-card-title .aisc-ico { font-size: 1.05rem; color: #fff; opacity: 0.9; }
+.bgrid-card-sub { margin: -0.4rem 0 0; font-size: 0.82rem; color: rgba(255, 255, 255, 0.55); }
+
+/* ── Estado + salud ── */
+.bgrid-status { display: flex; flex-direction: column; gap: 0.85rem; }
+.bgrid-status-row { display: flex; align-items: center; gap: 0.5rem; }
+.bgrid-status-pill {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px; padding: 0.28rem 0.65rem;
+}
+.bgrid-status-dot { width: 7px; height: 7px; border-radius: 50%; background: #6bcf7f; flex: 0 0 auto; box-shadow: 0 0 0 3px rgba(107, 207, 127, 0.16); }
+.bgrid-status-pill[data-status="irregular"] .bgrid-status-dot { background: #e0c264; box-shadow: 0 0 0 3px rgba(224, 194, 100, 0.16); }
+.bgrid-status-pill[data-status="lento"] .bgrid-status-dot { background: #e0a464; box-shadow: 0 0 0 3px rgba(224, 164, 100, 0.16); }
+.bgrid-status-pill[data-status="dormido"] .bgrid-status-dot,
+.bgrid-status-pill[data-status="sin_datos"] .bgrid-status-dot { background: rgba(255, 255, 255, 0.35); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08); }
+
+.bgrid-health { display: flex; flex-direction: column; gap: 0.4rem; }
+.bgrid-health-top { display: flex; align-items: baseline; justify-content: space-between; }
+.bgrid-health-label { font-size: 0.78rem; color: rgba(255, 255, 255, 0.6); }
+.bgrid-health-score { font-size: 1.35rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.bgrid-health-max { font-size: 0.8rem; font-weight: 500; color: rgba(255, 255, 255, 0.4); }
+.bgrid-health-track { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.09); overflow: hidden; }
+.bgrid-health-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--brand-color-dark, #FF5F00), var(--brand-color-light, #F79E1B));
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bgrid-health-fill[data-verdict="critico"] { background: rgba(255, 255, 255, 0.35); }
+.bgrid-health-verdict { font-size: 0.72rem; font-weight: 600; color: rgba(255, 255, 255, 0.55); }
+.bgrid-health-empty { font-size: 0.82rem; color: rgba(255, 255, 255, 0.5); line-height: 1.5; }
+
+/* ── Segmented control Semana/Mes/Año/Todo ── */
+.bgrid-seg {
+  display: inline-flex; align-items: stretch; gap: 0.2rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px; padding: 0.22rem; align-self: flex-start;
+}
+.bgrid-seg-btn {
+  border: 0; background: transparent; cursor: pointer;
+  font: inherit; font-size: 0.8rem; font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.4rem 0.95rem; border-radius: 999px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.bgrid-seg-btn:hover { color: rgba(255, 255, 255, 0.9); }
+.bgrid-seg-btn.is-active {
+  color: #0b0b0b;
+  background: linear-gradient(135deg, var(--brand-color-light, #F79E1B), var(--brand-color-dark, #FF5F00));
+}
+
+/* ── Charts ── */
+.bgrid-chart-wrap { position: relative; width: 100%; height: 240px; }
+.bgrid-chart-wrap--latidos { height: 200px; }
+.bgrid-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+.bgrid-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  text-align: center; font-size: 0.82rem; color: rgba(255, 255, 255, 0.45); padding: 1rem;
+}
+
+.bgrid-card-foot {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.78rem; color: rgba(255, 255, 255, 0.55);
+  padding-top: 0.15rem;
+}
+.bgrid-foot-sep { opacity: 0.4; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .bgrid { grid-template-columns: 1fr; }
+}
