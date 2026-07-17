@@ -164,16 +164,23 @@
       }
     },
 
-    /* Colores de marca (degradado dinámico) para los charts. */
+    /* Acento vivo de marca para los charts. NUNCA negro: los charts se pintan
+       sobre el degradado oscuro, así que un tono oscuro se pierde. Priorizamos
+       las CSS vars de marca (las mismas que tiñen la barra de salud en naranja)
+       y descartamos hexes casi-negros de getLastBrandHexes. */
     _gridBrandHexes() {
-      let hexes = null;
-      try { hexes = window.OrgBrandTheme?.getLastBrandHexes?.(); } catch (_) {}
-      if (Array.isArray(hexes) && hexes.length) return hexes;
-      // Fallback: lee las CSS vars de marca; si no, naranja de plataforma.
+      const isVivid = (h) => { try { const [r, g, b] = this._hexToRgb(h); return (r + g + b) > 180; } catch (_) { return false; } };
       const cs = getComputedStyle(document.documentElement);
       const light = (cs.getPropertyValue('--brand-color-light') || '').trim();
       const dark = (cs.getPropertyValue('--brand-color-dark') || '').trim();
-      return [light || '#F79E1B', dark || '#FF5F00'];
+      // 1) var de marca viva; 2) hex vivo del tema dinámico; 3) naranja plataforma.
+      const candidates = [light, dark];
+      try {
+        const hexes = window.OrgBrandTheme?.getLastBrandHexes?.();
+        if (Array.isArray(hexes)) candidates.push(...hexes);
+      } catch (_) {}
+      const vivid = candidates.filter(Boolean).find(isVivid);
+      return [vivid || '#FF6A1A'];
     },
 
     _hexToRgb(hex) {
