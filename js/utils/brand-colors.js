@@ -112,15 +112,36 @@
   }
 
   /**
+   * Ordena los hex por luminancia HSL, del más claro al más oscuro.
+   * Esta es la ÚNICA jerarquía del degradado dinámico: sin esto el orden lo
+   * decidía el orden crudo de `brand_colors` en Postgres (sin ORDER BY), que es
+   * arbitrario e inestable. Con luminancia descendente el degradado siempre va
+   * claro → oscuro (ej. amarillo → naranja → negro), consistente en toda la app.
+   */
+  function sortHexesByLuminanceDesc(hexes) {
+    return (hexes || [])
+      .map((hex) => ({ hex, l: (hexToHSL(hex) || {}).l }))
+      .sort((a, b) => {
+        const la = typeof a.l === 'number' && !Number.isNaN(a.l) ? a.l : -1;
+        const lb = typeof b.l === 'number' && !Number.isNaN(b.l) ? b.l : -1;
+        return lb - la; // más claro primero
+      })
+      .map((o) => o.hex);
+  }
+
+  /**
    * Construye un linear-gradient() usando los colores de marca.
+   * Los colores se ordenan por luminancia (claro → oscuro) para dar una
+   * jerarquía visual estable; ver sortHexesByLuminanceDesc.
    * @param {string[]} hexes  Hasta 4 colores (#rrggbb)
    * @param {number}   angle  135 = fondo general, 180 = barras verticales
    */
   function buildBrandGradientCss(hexes, angle = 135) {
     if (!hexes || hexes.length === 0) return '';
+    const ordered = sortHexesByLuminanceDesc(hexes);
     const alpha = angle === 180 ? 1 : 0.88; // barras nav opacas; fondo algo transparente
-    const stops = hexes.map((hex, i) => {
-      const pct = hexes.length === 1 ? 100 : (i / (hexes.length - 1)) * 100;
+    const stops = ordered.map((hex, i) => {
+      const pct = ordered.length === 1 ? 100 : (i / (ordered.length - 1)) * 100;
       return `${hexToRgba(hex, alpha)} ${Math.round(pct)}%`;
     });
     return `linear-gradient(${angle}deg, ${stops.join(', ')})`;
@@ -132,6 +153,7 @@
     hslToHex,
     filterAndScoreBrandColors,
     getBrandUIPalette,
+    sortHexesByLuminanceDesc,
     buildBrandGradientCss
   };
 
