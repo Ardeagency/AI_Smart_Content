@@ -85,6 +85,7 @@
               <p class="bgrid-card-sub">${this._esc(__('Cuántas interacciones producen tus redes por periodo · toca una barra para ver ese día'))}</p>
               <div class="bgrid-chart-wrap bgrid-chart-wrap--latidos"><canvas id="bgridLatidosChart"></canvas><div class="bgrid-empty" id="bgridLatidosEmpty" hidden>${this._esc(__('Sin señal de impacto en este periodo'))}</div></div>
             </section>
+            <div class="bgrid-vd" id="bgridVD"></div>
           </div>
           <div class="bgrid-vera" id="bgridVera"></div>
         </div>`;
@@ -273,16 +274,45 @@
           .order('created_at', { ascending: false }).limit(1);
         reading = (data && data[0]) ? data[0].reading : null;
       } catch (_) {}
+      const vdHost = body.querySelector('#bgridVD');
       const all = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
-      // Observaciones van arriba de Interacciones (transparente); el resto full-width abajo.
-      const obs = [], rest = [];
-      all.forEach((c) => (c && c.type === 'observacion' ? obs : rest).push(c));
+      // Colocación por tipo: observacion arriba de Interacciones (transparente);
+      // virtudes+desventajas como PAR hermano bajo Interacciones; resto full-width.
+      const obs = [], virt = [], desv = [], rest = [];
+      all.forEach((c) => {
+        const t = c && c.type;
+        if (t === 'observacion') obs.push(c);
+        else if (t === 'virtudes') virt.push(c);
+        else if (t === 'desventajas') desv.push(c);
+        else rest.push(c);
+      });
       const obsItems = obs.map((c, i) => ({ card: c, key: 'obs' + i }));
+      const virtItems = virt.map((c, i) => ({ card: c, key: 'pos' + i }));
+      const desvItems = desv.map((c, i) => ({ card: c, key: 'neg' + i }));
       const restItems = rest.map((c, i) => ({ card: c, key: 'v' + i }));
       if (obsHost) obsHost.innerHTML = obsItems.map((x) => this._veraCardHtml(x.card, x.key, true)).join('');
+      if (vdHost) vdHost.innerHTML = this._veraDuoHtml(virtItems, desvItems);
       if (host) host.innerHTML = restItems.length ? `<div class="vera-cards">${restItems.map((x) => this._veraCardHtml(x.card, x.key)).join('')}</div>` : '';
       try { await this._ensureChartJs(); } catch (_) {}
-      this._paintVeraCharts(body, obsItems.concat(restItems));
+      this._paintVeraCharts(body, obsItems.concat(virtItems, desvItems, restItems));
+    },
+
+    /* Virtudes + Desventajas como PAR hermano: dos paneles lado a lado (verde/rojo). */
+    _veraDuoHtml(virtItems, desvItems) {
+      if (!virtItems.length && !desvItems.length) return '';
+      const esc = (s) => this._esc(s);
+      const panel = (items, side, label, icon) => {
+        if (!items.length) return '';
+        const content = items.map(({ card, key }) => {
+          const blocks = Array.isArray(card.blocks) ? card.blocks : (card.markdown ? [{ type: 'markdown', markdown: card.markdown }] : []);
+          return `
+            <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${icon}" aria-hidden="true"></i>${esc(label)}</span>
+            ${card.title ? `<h4 class="vera-card-title">${esc(card.title)}</h4>` : ''}
+            <div class="vera-card-body">${blocks.map((b, bi) => this._veraBlockHtml(b, key, bi)).join('')}</div>`;
+        }).join('');
+        return `<div class="vera-duo-panel" data-side="${side}">${content}</div>`;
+      };
+      return `<div class="vera-duo">${panel(virtItems, 'pos', __('Virtudes'), 'star')}${panel(desvItems, 'neg', __('Desventajas'), 'alert')}</div>`;
     },
 
     _veraCardHtml(card, key, bare) {
