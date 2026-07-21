@@ -83,6 +83,7 @@
             <p class="bgrid-card-sub">${this._esc(__('Cuántas interacciones producen tus redes por periodo · toca una barra para ver ese día'))}</p>
             <div class="bgrid-chart-wrap bgrid-chart-wrap--latidos"><canvas id="bgridLatidosChart"></canvas><div class="bgrid-empty" id="bgridLatidosEmpty" hidden>${this._esc(__('Sin señal de impacto en este periodo'))}</div></div>
           </section>
+          <div class="bgrid-vera" id="bgridVera"></div>
         </div>`;
     },
 
@@ -158,6 +159,7 @@
       this._paintActivityChart(body, data);
       this._paintLatidosChart(body, data);
       this._paintCampaigns(body);
+      this._renderVeraCards(body);
     },
 
     /* Card Campañas: SOLO campañas activas. Superficie por defecto (no glass).
@@ -250,6 +252,135 @@
           <circle cx="20" cy="20" r="15.5" fill="none" stroke="${col}" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 20 20)"/>
           <text x="20" y="20" text-anchor="middle" dominant-baseline="central" class="camp-gauge-num">${s}</text>
         </svg>`;
+    },
+
+    /* ══ Cards de Vera (schema cards.v2) ═══════════════════════════════════
+       Vera compone cards tipadas (observacion/virtudes/desventajas/audiencia/
+       algoritmo), cada una con bloques: markdown seguro y/o charts (solo datos,
+       los pintamos nosotros en estilo de marca). Cero HTML libre. ══════════ */
+    async _renderVeraCards(body) {
+      const host = body.querySelector('#bgridVera');
+      if (!host) return;
+      let reading = null;
+      try {
+        const { data } = await this._supabase.from('vera_dashboard_readings')
+          .select('reading, created_at')
+          .eq('organization_id', this._orgId).eq('scope', 'mi_marca').eq('status', 'published')
+          .order('created_at', { ascending: false }).limit(1);
+        reading = (data && data[0]) ? data[0].reading : null;
+      } catch (_) {}
+      const cards = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
+      if (!cards.length) { host.innerHTML = ''; return; }
+      host.innerHTML = `<div class="vera-cards">${cards.map((c, i) => this._veraCardHtml(c, i)).join('')}</div>`;
+      try { await this._ensureChartJs(); } catch (_) {}
+      this._paintVeraCharts(host, cards);
+    },
+
+    _veraCardHtml(card, idx) {
+      const META = {
+        observacion: { label: __('Observaciones'), icon: 'eye' },
+        virtudes:    { label: __('Virtudes'),      icon: 'star' },
+        desventajas: { label: __('Desventajas'),   icon: 'alert' },
+        audiencia:   { label: __('Audiencias'),    icon: 'audience' },
+        algoritmo:   { label: __('Tu Algoritmo'),  icon: 'compass' },
+      };
+      const m = META[card && card.type];
+      if (!m) return '';   // tipo desconocido → se ignora (forward-compatible)
+      const esc = (s) => this._esc(s);
+      const blocks = Array.isArray(card.blocks) ? card.blocks
+        : (card.markdown ? [{ type: 'markdown', markdown: card.markdown }] : []);
+      const inner = blocks.map((b, bi) => this._veraBlockHtml(b, idx, bi)).join('');
+      const tone = ['positive', 'neutral', 'warning', 'critical'].includes(card.tone) ? card.tone : 'neutral';
+      return `
+        <section class="vera-card" data-tone="${tone}">
+          <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${m.icon}" aria-hidden="true"></i>${esc(m.label)}</span>
+          ${card.title ? `<h3 class="vera-card-title">${esc(card.title)}</h3>` : ''}
+          <div class="vera-card-body">${inner}</div>
+        </section>`;
+    },
+
+    _veraBlockHtml(block, cardIdx, blockIdx) {
+      const t = block && block.type;
+      if (t === 'markdown') return `<div class="vera-md">${this._safeMarkdown(block.markdown)}</div>`;
+      if (t === 'chart') {
+        const title = block.title ? `<div class="vera-chart-title">${this._esc(block.title)}</div>` : '';
+        return `<div class="vera-chart">${title}<div class="vera-chart-wrap"><canvas id="veraChart-${cardIdx}-${blockIdx}"></canvas></div></div>`;
+      }
+      if (t === 'stat') {
+        const esc = (s) => this._esc(s);
+        return `<div class="vera-stat"><span class="vera-stat-value">${esc(block.value != null ? String(block.value) : '')}</span><span class="vera-stat-label">${esc(block.label || '')}</span></div>`;
+      }
+      return '';
+    },
+
+    /* Markdown ACOTADO y seguro: escapa HTML primero, luego aplica un subset
+       (títulos, negrita, itálica, código, links http/https, listas). Nunca deja
+       pasar HTML crudo — ese es el punto vs el HTML libre anterior. */
+    _safeMarkdown(md) {
+      let s = String(md == null ? '' : md);
+      s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return s.split(/\n{2,}/).map((blk) => {
+        const lines = blk.split('\n');
+        if (lines.every((l) => /^\s*-\s+/.test(l) || !l.trim()) && /-\s+/.test(blk)) {
+          return `<ul>${lines.filter((l) => l.trim()).map((l) => `<li>${this._mdInline(l.replace(/^\s*-\s+/, ''))}</li>`).join('')}</ul>`;
+        }
+        if (lines.every((l) => /^\s*\d+\.\s+/.test(l) || !l.trim()) && /\d+\.\s+/.test(blk)) {
+          return `<ol>${lines.filter((l) => l.trim()).map((l) => `<li>${this._mdInline(l.replace(/^\s*\d+\.\s+/, ''))}</li>`).join('')}</ol>`;
+        }
+        const h = blk.match(/^(#{1,3})\s+(.*)$/);
+        if (h) { const lvl = Math.min(4, h[1].length + 2); return `<h${lvl}>${this._mdInline(h[2])}</h${lvl}>`; }
+        return `<p>${lines.map((l) => this._mdInline(l)).join('<br>')}</p>`;
+      }).join('');
+    },
+
+    _mdInline(s) {
+      return String(s)
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    },
+
+    _paintVeraCharts(host, cards) {
+      const Chart = window.Chart;
+      if (!Chart) return;
+      const [accent] = this._gridBrandHexes();
+      const [r, g, bl] = this._hexToRgb(accent);
+      const palette = [1, 0.66, 0.42, 0.27, 0.17].map((a) => `rgba(${r},${g},${bl},${a})`);
+      const TICK = 'rgba(255,255,255,0.5)', GRID = 'rgba(255,255,255,0.06)';
+      const TT = { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10 };
+      cards.forEach((card, ci) => {
+        (Array.isArray(card.blocks) ? card.blocks : []).forEach((b, bi) => {
+          if (!b || b.type !== 'chart') return;
+          const canvas = host.querySelector(`#veraChart-${ci}-${bi}`);
+          if (!canvas) return;
+          const kind = ['bar', 'line', 'donut', 'area'].includes(b.kind) ? b.kind : 'bar';
+          const labels = Array.isArray(b.labels) ? b.labels : [];
+          const series = Array.isArray(b.series) ? b.series : [];
+          const yFmt = (v) => b.format === 'percent' ? v + '%' : v;
+          let cfg;
+          if (kind === 'donut') {
+            const values = (series[0] && Array.isArray(series[0].values)) ? series[0].values : [];
+            cfg = { type: 'doughnut', data: { labels, datasets: [{ data: values, backgroundColor: labels.map((_, i) => palette[i % palette.length]), borderColor: 'rgba(0,0,0,0.25)', borderWidth: 2 }] },
+              options: { responsive: true, maintainAspectRatio: false, cutout: '62%',
+                plugins: { legend: { position: 'right', labels: { color: TICK, boxWidth: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } }, tooltip: TT } } };
+          } else {
+            const isLine = (kind === 'line' || kind === 'area');
+            const datasets = series.map((sr, i) => ({
+              label: sr.name || '', data: Array.isArray(sr.values) ? sr.values : [],
+              backgroundColor: isLine ? `rgba(${r},${g},${bl},0.14)` : palette[i % palette.length],
+              borderColor: palette[i % palette.length], borderWidth: isLine ? 2 : 0,
+              fill: kind === 'area', tension: 0.35, borderRadius: isLine ? 0 : 6, maxBarThickness: 34, pointRadius: 0,
+            }));
+            cfg = { type: isLine ? 'line' : 'bar', data: { labels, datasets }, options: {
+              responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+              plugins: { legend: { display: series.length > 1, position: 'bottom', labels: { color: TICK, boxWidth: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } }, tooltip: TT },
+              scales: { x: { grid: { display: false }, ticks: { color: TICK, font: { size: 10 }, maxRotation: 0, autoSkip: true } },
+                y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, ticks: { color: TICK, font: { size: 10 }, maxTicksLimit: 5, callback: yFmt } } } } };
+          }
+          this._reg(new Chart(canvas, cfg));
+        });
+      });
     },
 
     /* Tier de salud/rendimiento (misma lógica que Campañas): benchmark → nivel
