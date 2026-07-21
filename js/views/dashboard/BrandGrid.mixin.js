@@ -517,7 +517,23 @@
         label: NET_LABEL[n] || (n.charAt(0).toUpperCase() + n.slice(1)),
         data: series.map((b) => Number(b.networks?.[n] || 0)),
         backgroundColor: `rgba(${r},${g},${bl},${alphas[idx] != null ? alphas[idx] : 0.12})`,
-        borderRadius: 7,
+        // Solo se redondean las esquinas SUPERIORES, y solo en el segmento que
+        // queda ARRIBA del stack (el ultimo dataset visible con valor > 0 en ese
+        // dia). El resto de segmentos van cuadrados para que el stack se vea como
+        // una sola barra continua con la punta redondeada.
+        borderRadius: (ctx) => {
+          const val = Number(ctx.raw != null ? ctx.raw : (ctx.dataset.data[ctx.dataIndex] || 0));
+          if (val <= 0) return 0;
+          const ch = ctx.chart;
+          let topIdx = -1;
+          for (let d = 0; d < ch.data.datasets.length; d++) {
+            if (!ch.isDatasetVisible(d)) continue;
+            if (Number(ch.data.datasets[d].data[ctx.dataIndex] || 0) > 0) topIdx = d;
+          }
+          return ctx.datasetIndex === topIdx
+            ? { topLeft: 7, topRight: 7, bottomLeft: 0, bottomRight: 0 }
+            : 0;
+        },
         borderSkipped: false,
         maxBarThickness: 30,
         categoryPercentage: 0.6,
