@@ -100,6 +100,8 @@
 
 /* Audiencia = simbiosis: viz (mapa + pirámide) izq, comentario der. Full-width. */
 .vera-cards .vera-card--audiencia { grid-column: 1 / -1; }
+/* Sin acento de color a la izquierda: borde uniforme. */
+.vera-card.vera-card--audiencia { border-left: 1px solid var(--border-divider, #242424); }
 .vera-card--audiencia .vera-aud-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
 .vera-aud-viz { display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
 .vera-aud-comment { min-width: 0; }
