@@ -118,6 +118,20 @@
 .vera-stat-value { font-size: 1.5rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
 .vera-stat-label { font-size: 0.82rem; color: rgba(255, 255, 255, 0.6); }
 
+/* Algoritmo = 100% Vera, multi-plataforma. Full-width para que la tabla respire. */
+.vera-cards .vera-card--algoritmo { grid-column: 1 / -1; }
+
+/* Bloque tabla: temas/tonos por plataforma + a quién te muestra el algoritmo. */
+.vera-table-wrap { overflow-x: auto; margin: 0 -0.25rem; }
+.vera-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.vera-table th { text-align: left; font-weight: 600; color: rgba(255, 255, 255, 0.5);
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--border-divider, #242424); white-space: nowrap; }
+.vera-table td { padding: 0.75rem 0.7rem; color: rgba(255, 255, 255, 0.78);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); vertical-align: top; line-height: 1.45; }
+.vera-table tr:last-child td { border-bottom: 0; }
+.vera-table .vera-td-lead { color: #fff; font-weight: 600; white-space: nowrap; }
+
 /* Card glass-black: dark translúcido con blur sobre el degradado de marca. */
 .bgrid-card.glass-black {
   background: rgba(11, 11, 11, 0.55);

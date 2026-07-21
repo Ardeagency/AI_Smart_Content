@@ -333,11 +333,26 @@
       const inner = blocks.map((b, bi) => this._veraBlockHtml(b, key, bi)).join('');
       const tone = ['positive', 'neutral', 'warning', 'critical'].includes(card.tone) ? card.tone : 'neutral';
       return `
-        <section class="vera-card${bare ? ' vera-card--bare' : ''}" data-tone="${tone}">
+        <section class="vera-card vera-card--${this._esc(card.type)}${bare ? ' vera-card--bare' : ''}" data-tone="${tone}">
           <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${m.icon}" aria-hidden="true"></i>${esc(m.label)}</span>
           ${card.title ? `<h3 class="vera-card-title">${esc(card.title)}</h3>` : ''}
           <div class="vera-card-body">${inner}</div>
         </section>`;
+    },
+
+    /* Bloque tabla: estructura JSON (columns + rows) → tabla estilizada.
+       Ej.: temas/tonos por plataforma y a quién te muestra el algoritmo. */
+    _veraTableHtml(block) {
+      const esc = (s) => this._esc(s);
+      const cols = Array.isArray(block.columns) ? block.columns : [];
+      const rows = Array.isArray(block.rows) ? block.rows : [];
+      const ttl = block.title ? `<div class="vera-chart-title">${esc(block.title)}</div>` : '';
+      const head = cols.length ? `<thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead>` : '';
+      const body = `<tbody>${rows.map((r) => {
+        const cells = Array.isArray(r) ? r : (Array.isArray(r.cells) ? r.cells : []);
+        return `<tr>${cells.map((cell, i) => `<td${i === 0 ? ' class="vera-td-lead"' : ''}>${this._mdInline(esc(String(cell == null ? '' : cell)))}</td>`).join('')}</tr>`;
+      }).join('')}</tbody>`;
+      return `<div class="vera-table-wrap">${ttl}<table class="vera-table">${head}${body}</table></div>`;
     },
 
     /* Audiencia: choropleth (arriba) + population pyramid (abajo) a la izquierda,
@@ -372,6 +387,7 @@
         const esc = (s) => this._esc(s);
         return `<div class="vera-stat"><span class="vera-stat-value">${esc(block.value != null ? String(block.value) : '')}</span><span class="vera-stat-label">${esc(block.label || '')}</span></div>`;
       }
+      if (t === 'table') return this._veraTableHtml(block);
       return '';
     },
 
