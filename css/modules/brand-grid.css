@@ -57,6 +57,12 @@
 .vera-card[data-tone="positive"] { border-left-color: #46c98a; }
 .vera-card[data-tone="warning"]  { border-left-color: #e6a94e; }
 .vera-card[data-tone="critical"] { border-left-color: #e77a7a; }
+/* Observaciones: arriba de Interacciones, SIN fondo ni bordes (flota sobre el degradado). */
+.bgrid-observacion { display: flex; flex-direction: column; gap: 1rem; }
+.bgrid-observacion:empty { display: none; }
+.vera-card.vera-card--bare { background: transparent; border: 0; border-radius: 0; padding: 0.15rem 0.25rem; }
+.vera-card--bare .vera-card-title { color: #fff; }
+.vera-card--bare .vera-md { color: rgba(255, 255, 255, 0.82); }
 .vera-card-kind { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.45); }
 .vera-card-kind .aisc-ico { font-size: 0.85rem; }
 .vera-card-title { margin: 0; font-size: 1.05rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }

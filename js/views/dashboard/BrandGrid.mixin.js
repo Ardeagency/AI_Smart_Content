@@ -76,13 +76,16 @@
             <div class="bgrid-campaigns" id="bgridCampaigns"></div>
           </section>
           </div>
-          <section class="bgrid-card glass-black bgrid-card--latidos">
-            <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Interacciones'))}</span>
-            </header>
-            <p class="bgrid-card-sub">${this._esc(__('Cuántas interacciones producen tus redes por periodo · toca una barra para ver ese día'))}</p>
-            <div class="bgrid-chart-wrap bgrid-chart-wrap--latidos"><canvas id="bgridLatidosChart"></canvas><div class="bgrid-empty" id="bgridLatidosEmpty" hidden>${this._esc(__('Sin señal de impacto en este periodo'))}</div></div>
-          </section>
+          <div class="bgrid-col">
+            <div class="bgrid-observacion" id="bgridObservacion"></div>
+            <section class="bgrid-card glass-black bgrid-card--latidos">
+              <header class="bgrid-card-head">
+                <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Interacciones'))}</span>
+              </header>
+              <p class="bgrid-card-sub">${this._esc(__('Cuántas interacciones producen tus redes por periodo · toca una barra para ver ese día'))}</p>
+              <div class="bgrid-chart-wrap bgrid-chart-wrap--latidos"><canvas id="bgridLatidosChart"></canvas><div class="bgrid-empty" id="bgridLatidosEmpty" hidden>${this._esc(__('Sin señal de impacto en este periodo'))}</div></div>
+            </section>
+          </div>
           <div class="bgrid-vera" id="bgridVera"></div>
         </div>`;
     },
@@ -259,8 +262,9 @@
        algoritmo), cada una con bloques: markdown seguro y/o charts (solo datos,
        los pintamos nosotros en estilo de marca). Cero HTML libre. ══════════ */
     async _renderVeraCards(body) {
+      const obsHost = body.querySelector('#bgridObservacion');
       const host = body.querySelector('#bgridVera');
-      if (!host) return;
+      if (!obsHost && !host) return;
       let reading = null;
       try {
         const { data } = await this._supabase.from('vera_dashboard_readings')
@@ -269,14 +273,19 @@
           .order('created_at', { ascending: false }).limit(1);
         reading = (data && data[0]) ? data[0].reading : null;
       } catch (_) {}
-      const cards = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
-      if (!cards.length) { host.innerHTML = ''; return; }
-      host.innerHTML = `<div class="vera-cards">${cards.map((c, i) => this._veraCardHtml(c, i)).join('')}</div>`;
+      const all = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
+      // Observaciones van arriba de Interacciones (transparente); el resto full-width abajo.
+      const obs = [], rest = [];
+      all.forEach((c) => (c && c.type === 'observacion' ? obs : rest).push(c));
+      const obsItems = obs.map((c, i) => ({ card: c, key: 'obs' + i }));
+      const restItems = rest.map((c, i) => ({ card: c, key: 'v' + i }));
+      if (obsHost) obsHost.innerHTML = obsItems.map((x) => this._veraCardHtml(x.card, x.key, true)).join('');
+      if (host) host.innerHTML = restItems.length ? `<div class="vera-cards">${restItems.map((x) => this._veraCardHtml(x.card, x.key)).join('')}</div>` : '';
       try { await this._ensureChartJs(); } catch (_) {}
-      this._paintVeraCharts(host, cards);
+      this._paintVeraCharts(body, obsItems.concat(restItems));
     },
 
-    _veraCardHtml(card, idx) {
+    _veraCardHtml(card, key, bare) {
       const META = {
         observacion: { label: __('Observaciones'), icon: 'eye' },
         virtudes:    { label: __('Virtudes'),      icon: 'star' },
@@ -289,10 +298,10 @@
       const esc = (s) => this._esc(s);
       const blocks = Array.isArray(card.blocks) ? card.blocks
         : (card.markdown ? [{ type: 'markdown', markdown: card.markdown }] : []);
-      const inner = blocks.map((b, bi) => this._veraBlockHtml(b, idx, bi)).join('');
+      const inner = blocks.map((b, bi) => this._veraBlockHtml(b, key, bi)).join('');
       const tone = ['positive', 'neutral', 'warning', 'critical'].includes(card.tone) ? card.tone : 'neutral';
       return `
-        <section class="vera-card" data-tone="${tone}">
+        <section class="vera-card${bare ? ' vera-card--bare' : ''}" data-tone="${tone}">
           <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${m.icon}" aria-hidden="true"></i>${esc(m.label)}</span>
           ${card.title ? `<h3 class="vera-card-title">${esc(card.title)}</h3>` : ''}
           <div class="vera-card-body">${inner}</div>
@@ -341,7 +350,7 @@
         .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
     },
 
-    _paintVeraCharts(host, cards) {
+    _paintVeraCharts(scope, items) {
       const Chart = window.Chart;
       if (!Chart) return;
       const [accent] = this._gridBrandHexes();
@@ -349,10 +358,10 @@
       const palette = [1, 0.66, 0.42, 0.27, 0.17].map((a) => `rgba(${r},${g},${bl},${a})`);
       const TICK = 'rgba(255,255,255,0.5)', GRID = 'rgba(255,255,255,0.06)';
       const TT = { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10 };
-      cards.forEach((card, ci) => {
+      items.forEach(({ card, key }) => {
         (Array.isArray(card.blocks) ? card.blocks : []).forEach((b, bi) => {
           if (!b || b.type !== 'chart') return;
-          const canvas = host.querySelector(`#veraChart-${ci}-${bi}`);
+          const canvas = scope.querySelector(`#veraChart-${key}-${bi}`);
           if (!canvas) return;
           const kind = ['bar', 'line', 'donut', 'area'].includes(b.kind) ? b.kind : 'bar';
           const labels = Array.isArray(b.labels) ? b.labels : [];
