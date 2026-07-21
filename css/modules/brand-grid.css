@@ -95,6 +95,23 @@
 .vera-chart-title { font-size: 0.78rem; color: rgba(255, 255, 255, 0.55); margin-bottom: 0.4rem; }
 .vera-chart-wrap { position: relative; width: 100%; height: 190px; }
 .vera-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+.vera-chart-wrap--pyramid { height: 210px; }
+.vera-chart-wrap--map { height: 230px; }
+
+/* Audiencia = simbiosis: viz (mapa + pirámide) izq, comentario der. Full-width. */
+.vera-cards .vera-card--audiencia { grid-column: 1 / -1; }
+.vera-card--audiencia .vera-aud-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.vera-aud-viz { display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
+.vera-aud-comment { min-width: 0; }
+@media (max-width: 760px) { .vera-card--audiencia .vera-aud-grid { grid-template-columns: 1fr; } }
+
+/* Fallback del choropleth: barras por país. */
+.vera-geo-bars { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.4rem 0; }
+.vera-geo-row { display: flex; align-items: center; gap: 0.6rem; }
+.vera-geo-name { flex: 0 0 34%; font-size: 0.8rem; color: rgba(255, 255, 255, 0.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vera-geo-track { flex: 1 1 auto; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.vera-geo-fill { height: 100%; border-radius: 999px; }
+.vera-geo-val { flex: 0 0 auto; font-size: 0.78rem; font-weight: 600; color: rgba(255, 255, 255, 0.6); font-variant-numeric: tabular-nums; }
 .vera-stat { display: flex; align-items: baseline; gap: 0.5rem; }
 .vera-stat-value { font-size: 1.5rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
 .vera-stat-label { font-size: 0.82rem; color: rgba(255, 255, 255, 0.6); }

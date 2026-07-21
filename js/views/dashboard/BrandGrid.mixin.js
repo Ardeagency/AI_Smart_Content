@@ -325,6 +325,8 @@
       };
       const m = META[card && card.type];
       if (!m) return '';   // tipo desconocido → se ignora (forward-compatible)
+      // Audiencia = simbiosis: viz (choropleth + pyramid) a la izquierda, comentario a la derecha.
+      if (card.type === 'audiencia' && !bare) return this._veraAudienciaHtml(card, key, m);
       const esc = (s) => this._esc(s);
       const blocks = Array.isArray(card.blocks) ? card.blocks
         : (card.markdown ? [{ type: 'markdown', markdown: card.markdown }] : []);
@@ -338,13 +340,34 @@
         </section>`;
     },
 
+    /* Audiencia: choropleth (arriba) + population pyramid (abajo) a la izquierda,
+       comentario de Vera (markdown) a la derecha. */
+    _veraAudienciaHtml(card, key, m) {
+      const esc = (s) => this._esc(s);
+      const blocks = Array.isArray(card.blocks) ? card.blocks : [];
+      const isViz = (b) => b && (b.type === 'choropleth' || b.type === 'pyramid');
+      const vizHtml = blocks.map((b, bi) => isViz(b) ? this._veraBlockHtml(b, key, bi) : '').join('');
+      const restHtml = blocks.map((b, bi) => (b && !isViz(b)) ? this._veraBlockHtml(b, key, bi) : '').join('');
+      const tone = ['positive', 'neutral', 'warning', 'critical'].includes(card.tone) ? card.tone : 'neutral';
+      return `
+        <section class="vera-card vera-card--audiencia" data-tone="${tone}">
+          <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${m.icon}" aria-hidden="true"></i>${esc(m.label)}</span>
+          ${card.title ? `<h3 class="vera-card-title">${esc(card.title)}</h3>` : ''}
+          <div class="vera-aud-grid">
+            <div class="vera-aud-viz">${vizHtml}</div>
+            <div class="vera-aud-comment vera-card-body">${restHtml}</div>
+          </div>
+        </section>`;
+    },
+
     _veraBlockHtml(block, cardIdx, blockIdx) {
       const t = block && block.type;
+      const cid = `veraChart-${cardIdx}-${blockIdx}`;
+      const ttl = (block && block.title) ? `<div class="vera-chart-title">${this._esc(block.title)}</div>` : '';
       if (t === 'markdown') return `<div class="vera-md">${this._safeMarkdown(block.markdown)}</div>`;
-      if (t === 'chart') {
-        const title = block.title ? `<div class="vera-chart-title">${this._esc(block.title)}</div>` : '';
-        return `<div class="vera-chart">${title}<div class="vera-chart-wrap"><canvas id="veraChart-${cardIdx}-${blockIdx}"></canvas></div></div>`;
-      }
+      if (t === 'chart') return `<div class="vera-chart">${ttl}<div class="vera-chart-wrap"><canvas id="${cid}"></canvas></div></div>`;
+      if (t === 'pyramid') return `<div class="vera-chart">${ttl}<div class="vera-chart-wrap vera-chart-wrap--pyramid"><canvas id="${cid}"></canvas></div></div>`;
+      if (t === 'choropleth') return `<div class="vera-chart vera-choropleth">${ttl}<div class="vera-chart-wrap vera-chart-wrap--map"><canvas id="${cid}"></canvas><div class="vera-geo-fallback" id="${cid}-fb" hidden></div></div></div>`;
       if (t === 'stat') {
         const esc = (s) => this._esc(s);
         return `<div class="vera-stat"><span class="vera-stat-value">${esc(block.value != null ? String(block.value) : '')}</span><span class="vera-stat-label">${esc(block.label || '')}</span></div>`;
@@ -390,9 +413,12 @@
       const TT = { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10 };
       items.forEach(({ card, key }) => {
         (Array.isArray(card.blocks) ? card.blocks : []).forEach((b, bi) => {
-          if (!b || b.type !== 'chart') return;
+          if (!b) return;
           const canvas = scope.querySelector(`#veraChart-${key}-${bi}`);
           if (!canvas) return;
+          if (b.type === 'pyramid') { this._paintPyramid(canvas, b); return; }
+          if (b.type === 'choropleth') { this._paintChoropleth(canvas, b, scope.querySelector(`#veraChart-${key}-${bi}-fb`)); return; }
+          if (b.type !== 'chart') return;
           const kind = ['bar', 'line', 'donut', 'area'].includes(b.kind) ? b.kind : 'bar';
           const labels = Array.isArray(b.labels) ? b.labels : [];
           const series = Array.isArray(b.series) ? b.series : [];
@@ -420,6 +446,99 @@
           this._reg(new Chart(canvas, cfg));
         });
       });
+    },
+
+    /* Population pyramid: barras horizontales espejadas (hombres izq / mujeres der)
+       por grupo de edad. Tall/vertical = grupos de edad apilados en el eje Y. */
+    _paintPyramid(canvas, block) {
+      const Chart = window.Chart;
+      if (!Chart || !canvas) return;
+      const [accent] = this._gridBrandHexes();
+      const [r, g, bl] = this._hexToRgb(accent);
+      const groups = Array.isArray(block.groups) ? block.groups : [];
+      const male = (Array.isArray(block.male) ? block.male : []).map((v) => -Math.abs(Number(v) || 0));
+      const female = (Array.isArray(block.female) ? block.female : []).map((v) => Math.abs(Number(v) || 0));
+      const TICK = 'rgba(255,255,255,0.5)', GRID = 'rgba(255,255,255,0.06)';
+      const TT = { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10 };
+      this._reg(new Chart(canvas, {
+        type: 'bar',
+        data: { labels: groups, datasets: [
+          { label: __('Hombres'), data: male, backgroundColor: `rgba(${r},${g},${bl},0.42)`, borderRadius: 4, maxBarThickness: 15 },
+          { label: __('Mujeres'), data: female, backgroundColor: `rgba(${r},${g},${bl},0.95)`, borderRadius: 4, maxBarThickness: 15 },
+        ] },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: TICK, boxWidth: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } },
+            tooltip: { ...TT, callbacks: { label: (c) => `${c.dataset.label}: ${Math.abs(c.raw)}%` } },
+          },
+          scales: {
+            x: { grid: { color: GRID }, border: { display: false }, ticks: { color: TICK, font: { size: 9 }, callback: (v) => Math.abs(v) + '%' } },
+            y: { grid: { display: false }, border: { display: false }, ticks: { color: TICK, font: { size: 11 } } },
+          },
+        },
+      }));
+    },
+
+    /* Carga perezosa de chartjs-chart-geo + topojson del mundo (una vez). */
+    async _ensureGeoChart() {
+      if (!window.ChartGeo) {
+        await this.loadScript('https://cdn.jsdelivr.net/npm/chartjs-chart-geo@4.3.4/build/index.umd.min.js', 'ChartGeo', 9000);
+        try { const G = window.ChartGeo; window.Chart.register(G.ChoroplethController, G.GeoFeature, G.ColorScale, G.ProjectionScale); } catch (_) {}
+      }
+      if (!this._geoTopo) {
+        this._geoTopo = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then((r) => r.json());
+      }
+    },
+
+    /* Choropleth de audiencia por país. Si la librería geo falla, cae a barras. */
+    async _paintChoropleth(canvas, block, fbEl) {
+      const A3_NUM = { MEX: '484', COL: '170', USA: '840', PER: '604', ESP: '724', ARG: '032', CHL: '152', BRA: '076', ECU: '218', VEN: '862', GTM: '320', BOL: '068', DOM: '214', HND: '340', PRY: '600', SLV: '222', NIC: '558', CRI: '188', PAN: '591', URY: '858', PRI: '630', CAN: '124', GBR: '826', FRA: '250', DEU: '276', ITA: '380' };
+      try {
+        await this._ensureGeoChart();
+        const G = window.ChartGeo, Chart = window.Chart;
+        if (!G || !this._geoTopo || !G.topojson) throw new Error('geo-unavailable');
+        const topo = this._geoTopo;
+        const features = G.topojson.feature(topo, topo.objects.countries).features;
+        const valByNum = {};
+        (Array.isArray(block.data) ? block.data : []).forEach((d) => { valByNum[String(A3_NUM[d.code] || d.code)] = Number(d.value) || 0; });
+        const nameByNum = {};
+        (Array.isArray(block.data) ? block.data : []).forEach((d) => { nameByNum[String(A3_NUM[d.code] || d.code)] = d.name || d.code; });
+        const [accent] = this._gridBrandHexes();
+        const [r, g, bl] = this._hexToRgb(accent);
+        const data = features.map((f) => ({ feature: f, value: valByNum[String(f.id)] != null ? valByNum[String(f.id)] : 0 }));
+        this._reg(new Chart(canvas, {
+          type: 'choropleth',
+          data: { labels: features.map((f) => f.properties && f.properties.name), datasets: [{ label: '', outline: features, data, borderColor: 'rgba(255,255,255,0.06)', borderWidth: 0.4 }] },
+          options: {
+            responsive: true, maintainAspectRatio: false, showOutline: true, showGraticule: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => { const num = String(c.raw.feature.id); return `${nameByNum[num] || (c.raw.feature.properties && c.raw.feature.properties.name)}: ${c.raw.value}%`; } } } },
+            scales: {
+              projection: { axis: 'x', projection: 'equalEarth' },
+              color: { axis: 'x', display: false, interpolate: (v) => `rgba(${r},${g},${bl},${(0.10 + 0.88 * (v || 0)).toFixed(3)})` },
+            },
+          },
+        }));
+        if (canvas) canvas.hidden = false;
+        if (fbEl) fbEl.hidden = true;
+      } catch (e) {
+        // Fallback robusto: barras por país (nunca queda roto).
+        if (canvas) canvas.hidden = true;
+        if (fbEl) { fbEl.hidden = false; fbEl.innerHTML = this._geoBarsHtml(block); }
+      }
+    },
+
+    _geoBarsHtml(block) {
+      const rows = (Array.isArray(block.data) ? block.data : []).slice().sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
+      if (!rows.length) return '';
+      const max = Math.max(1, ...rows.map((r) => Number(r.value) || 0));
+      const [accent] = this._gridBrandHexes();
+      return `<div class="vera-geo-bars">${rows.map((r) => `
+        <div class="vera-geo-row">
+          <span class="vera-geo-name">${this._esc(r.name || r.code || '')}</span>
+          <div class="vera-geo-track"><div class="vera-geo-fill" style="width:${Math.round((Number(r.value) || 0) / max * 100)}%;background:${this._esc(accent)}"></div></div>
+          <span class="vera-geo-val">${Number(r.value) || 0}%</span>
+        </div>`).join('')}</div>`;
     },
 
     /* Tier de salud/rendimiento (misma lógica que Campañas): benchmark → nivel
