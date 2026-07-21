@@ -65,15 +65,18 @@
 .vera-card--bare .vera-md { color: rgba(255, 255, 255, 0.82); }
 /* Virtudes + Desventajas: par hermano lado a lado (verde/rojo) con divisor. */
 .bgrid-vd:empty { display: none; }
+/* Contenedor externo = color de card, con padding; 2 columnas hermanas. */
 .vera-duo {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
-  background: var(--border-divider, #242424);
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
-  border-radius: 16px; overflow: hidden;
+  border-radius: 16px; padding: 1rem;
 }
-.vera-duo-panel { padding: 1.2rem 1.35rem 1.35rem; display: flex; flex-direction: column; gap: 0.5rem; background: var(--bg-card, #141517); min-width: 0; }
-.vera-duo-panel[data-side="pos"] { background: linear-gradient(180deg, rgba(70, 201, 138, 0.08), rgba(70, 201, 138, 0.02)); }
-.vera-duo-panel[data-side="neg"] { background: linear-gradient(180deg, rgba(231, 122, 122, 0.08), rgba(231, 122, 122, 0.02)); }
+.vera-duo-panel { padding: 1.2rem 1.35rem 1.35rem; display: flex; flex-direction: column; gap: 0.5rem; border-radius: 12px; min-width: 0; }
+/* Virtudes: SIN fondo, con bordes. */
+.vera-duo-panel[data-side="pos"] { background: transparent; border: 1px solid var(--border-divider, #242424); }
+/* Desventajas: fondo oscuro de la PLATAFORMA (más oscuro que la card), sin borde. */
+.vera-duo-panel[data-side="neg"] { background: var(--bg-primary, #0b0b0b); border: 1px solid transparent; }
 .vera-duo-panel[data-side="pos"] .vera-card-kind { color: #5fd39a; }
 .vera-duo-panel[data-side="neg"] .vera-card-kind { color: #e77a7a; }
 @media (max-width: 640px) { .vera-duo { grid-template-columns: 1fr; } }
