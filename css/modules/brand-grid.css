@@ -120,6 +120,8 @@
 
 /* Algoritmo = 100% Vera, multi-plataforma. Full-width para que la tabla respire. */
 .vera-cards .vera-card--algoritmo { grid-column: 1 / -1; }
+/* Sin acento de color a la izquierda: borde uniforme (igual que audiencia). */
+.vera-card.vera-card--algoritmo { border-left: 1px solid var(--border-divider, #242424); }
 
 /* Bloque tabla: temas/tonos por plataforma + a quién te muestra el algoritmo. */
 .vera-table-wrap { overflow-x: auto; margin: 0 -0.25rem; }
