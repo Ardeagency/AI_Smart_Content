@@ -65,16 +65,16 @@
 .vera-card--bare .vera-md { color: rgba(255, 255, 255, 0.82); }
 /* Virtudes + Desventajas: par hermano lado a lado (verde/rojo) con divisor. */
 .bgrid-vd:empty { display: none; }
-/* Contenedor externo = color de card, con padding; 2 columnas hermanas. */
+/* Contenedor externo = color de card, con padding generoso; 2 columnas hermanas. */
 .vera-duo {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.35rem;
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
-  border-radius: 16px; padding: 1rem;
+  border-radius: 18px; padding: 1.5rem;
 }
-.vera-duo-panel { padding: 1.2rem 1.35rem 1.35rem; display: flex; flex-direction: column; gap: 0.5rem; border-radius: 12px; min-width: 0; }
-/* Virtudes: SIN fondo, con bordes. */
-.vera-duo-panel[data-side="pos"] { background: transparent; border: 1px solid var(--border-divider, #242424); }
+.vera-duo-panel { padding: 1.55rem 1.65rem 1.75rem; display: flex; flex-direction: column; gap: 0.7rem; border-radius: 14px; min-width: 0; }
+/* Virtudes: SIN fondo, borde del color del fondo de la plataforma. */
+.vera-duo-panel[data-side="pos"] { background: transparent; border: 1px solid var(--bg-primary, #0b0b0b); }
 /* Desventajas: fondo oscuro de la PLATAFORMA (más oscuro que la card), sin borde. */
 .vera-duo-panel[data-side="neg"] { background: var(--bg-primary, #0b0b0b); border: 1px solid transparent; }
 .vera-duo-panel[data-side="pos"] .vera-card-kind { color: #5fd39a; }
