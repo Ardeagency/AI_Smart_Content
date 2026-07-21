@@ -87,6 +87,17 @@
             </section>
             <div class="bgrid-vd" id="bgridVD"></div>
           </div>
+          <div class="bgrid-col bgrid-col--prodstar">
+            <section class="bgrid-card glass-black bgrid-card--prodstar">
+              <header class="bgrid-card-head">
+                <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--star" aria-hidden="true"></i>${this._esc(__('Producto destacado'))}</span>
+              </header>
+              <p class="bgrid-card-sub">${this._esc(__('Cuál producto empujas más y cuáles estás olvidando'))}</p>
+              <div class="vera-prodstar" id="bgridProdStar" data-prodstar="1">
+                <div class="vera-prodstar-load">${this._esc(__('Cargando productos…'))}</div>
+              </div>
+            </section>
+          </div>
           <div class="bgrid-vera" id="bgridVera"></div>
         </div>`;
     },
@@ -163,6 +174,7 @@
       this._paintActivityChart(body, data);
       this._paintLatidosChart(body, data);
       this._paintCampaigns(body);
+      this._paintProductoEstrella(body);
       this._renderVeraCards(body);
     },
 
@@ -295,6 +307,8 @@
       if (host) host.innerHTML = restItems.length ? `<div class="vera-cards">${restItems.map((x) => this._veraCardHtml(x.card, x.key)).join('')}</div>` : '';
       try { await this._ensureChartJs(); } catch (_) {}
       this._paintVeraCharts(body, obsItems.concat(virtItems, desvItems, restItems));
+      // Bloque vivo: pide su propio dato al RPC, por eso va aparte de los charts.
+      this._paintProductoEstrella(body);
     },
 
     /* Virtudes + Desventajas como PAR hermano: dos paneles lado a lado (verde/rojo). */
@@ -388,7 +402,113 @@
         return `<div class="vera-stat"><span class="vera-stat-value">${esc(block.value != null ? String(block.value) : '')}</span><span class="vera-stat-label">${esc(block.label || '')}</span></div>`;
       }
       if (t === 'table') return this._veraTableHtml(block);
+      // Bloque VIVO: sin datos de Vera. Se pinta llamando al RPC (ver
+      // _paintProductoEstrella) para que cifras e imágenes sean autoritativas.
+      if (t === 'producto_estrella') {
+        return `<div class="vera-prodstar" id="${cid}" data-prodstar="1">${ttl}
+          <div class="vera-prodstar-load">${this._esc(__('Cargando productos…'))}</div>
+        </div>`;
+      }
       return '';
+    },
+
+    /* ══ Producto destacado ═════════════════════════════════════════════════
+       Ficha del producto estrella (imagen + señales) a la izquierda; a la
+       derecha la tabla de familias por presencia, con su cuadrante. Responde
+       "cuál es la estrella y cuáles se están olvidando".
+       El cuadrante sale del RPC: cruza cuánto empuja la marca el producto en su
+       contenido contra cuánto responde el público. NO incluye pauta pagada —
+       no existe vínculo producto↔campaña en el modelo. ═══════════════════ */
+    async _paintProductoEstrella(scope) {
+      // Idempotente: lo llaman el shell (panel fijo de la 3ª columna) y también
+      // _renderVeraCards (si Vera coloca el bloque). Sin este filtro, el panel
+      // fijo se pintaría dos veces.
+      const hosts = Array.from(scope.querySelectorAll('[data-prodstar]'))
+        .filter((h) => h.dataset.prodstarPainted !== '1');
+      if (!hosts.length) return;
+      hosts.forEach((h) => { h.dataset.prodstarPainted = '1'; });
+      let productos = [];
+      try {
+        if (!this._gridBcIds) {
+          const { data: cs } = await this._supabase.from('brand_containers').select('id').eq('organization_id', this._orgId);
+          this._gridBcIds = (cs || []).map((c) => c.id).filter(Boolean);
+        }
+        const bcId = (this._gridBcIds || [])[0];
+        if (bcId) {
+          const { data } = await Promise.resolve(
+            this._supabase.rpc('dashboard_producto_estrella', { p_brand_container_id: bcId })
+          ).catch(() => ({ data: null }));
+          productos = (data && Array.isArray(data.productos)) ? data.productos : [];
+        }
+      } catch (_) { productos = []; }
+
+      const esc = (s) => this._esc(s);
+      if (!productos.length) {
+        hosts.forEach((h) => {
+          const l = h.querySelector('.vera-prodstar-load');
+          if (l) l.textContent = __('Sin datos de producto en este periodo');
+        });
+        return;
+      }
+
+      const QUAD = {
+        estrella:    { label: __('Estrella'),    cls: 'is-star' },
+        olvidado:    { label: __('Olvidado'),    cls: 'is-forgotten' },
+        desperdicio: { label: __('Desperdicio'), cls: 'is-waste' },
+        cola:        { label: __('Cola'),        cls: 'is-tail' },
+      };
+      const hero = productos.find((p) => p.cuadrante === 'estrella') || productos[0];
+      const q = QUAD[hero.cuadrante] || QUAD.cola;
+      // La imagen viene del RPC (storage propio), no de Vera. Se escapa igual.
+      const img = hero.imagen_url
+        ? `<img class="vera-prodstar-img" src="${esc(hero.imagen_url)}" alt="${esc(hero.producto)}" loading="lazy">`
+        : `<div class="vera-prodstar-img vera-prodstar-img--empty" aria-hidden="true"></div>`;
+      const sig = (v, l) => `<div class="vera-prodstar-sig"><span>${esc(String(v))}</span><small>${esc(l)}</small></div>`;
+      const heroHtml = `
+        <div class="vera-prodstar-hero">
+          ${img}
+          <div class="vera-prodstar-meta">
+            <span class="vera-prodstar-badge ${q.cls}">${esc(q.label)}</span>
+            <h4 class="vera-prodstar-name">${esc(hero.producto)}</h4>
+            <div class="vera-prodstar-sigs">
+              ${sig((hero.share_of_voice_pct != null ? hero.share_of_voice_pct : 0) + '%', __('de tu contenido'))}
+              ${sig(hero.engagement_promedio != null ? hero.engagement_promedio : 0, __('interacción media'))}
+              ${sig(hero.menciones_publico != null ? hero.menciones_publico : 0, __('lo nombra el público'))}
+            </div>
+          </div>
+        </div>`;
+
+      const rows = productos.map((p) => {
+        const pq = QUAD[p.cuadrante] || QUAD.cola;
+        const dias = (p.dias_sin_mencion == null) ? '—' : `${p.dias_sin_mencion}d`;
+        // En la columna angosta se ocultan columnas por espacio: el detalle
+        // completo queda en el title para no perder el dato.
+        const tip = `${p.producto} · ${__('interacción media')} ${p.engagement_promedio != null ? p.engagement_promedio : 0} · ${__('sin mencionar')} ${dias}`;
+        return `<tr${p === hero ? ' class="is-hero"' : ''} title="${esc(tip)}">
+          <td class="vera-td-lead">${esc(p.producto)}</td>
+          <td>${esc(String(p.share_of_voice_pct != null ? p.share_of_voice_pct : 0))}%</td>
+          <td>${esc(String(p.engagement_promedio != null ? p.engagement_promedio : 0))}</td>
+          <td>${esc(dias)}</td>
+          <td><span class="vera-prodstar-badge ${pq.cls}">${esc(pq.label)}</span></td>
+        </tr>`;
+      }).join('');
+      const tableHtml = `
+        <div class="vera-prodstar-tablewrap">
+          <table class="vera-table vera-prodstar-table">
+            <thead><tr>
+              <th>${esc(__('Producto'))}</th><th>${esc(__('Presencia'))}</th>
+              <th>${esc(__('Interacción'))}</th><th>${esc(__('Sin mencionar'))}</th>
+              <th>${esc(__('Estado'))}</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+
+      hosts.forEach((h) => {
+        const l = h.querySelector('.vera-prodstar-load');
+        if (l) l.remove();
+        h.insertAdjacentHTML('beforeend', `<div class="vera-prodstar-grid">${heroHtml}${tableHtml}</div>`);
+      });
     },
 
     /* Markdown ACOTADO y seguro: escapa HTML primero, luego aplica un subset

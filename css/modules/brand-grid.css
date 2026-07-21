@@ -5,8 +5,9 @@
 
 .bgrid {
   display: grid;
-  /* Tráfico (portrait, incluye el arco de salud) + Impacto Social (resto). */
-  grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
+  /* Tráfico (portrait, con el arco de salud) + Interacciones/VD (resto) +
+     Producto destacado (columna angosta a la derecha). */
+  grid-template-columns: minmax(0, 480px) minmax(0, 1fr) minmax(0, 340px);
   gap: 1.25rem;
   align-items: start;
   padding-top: 0.25rem;
@@ -232,6 +233,13 @@
 .inter-post-eng { margin-left: auto; font-size: 0.85rem; font-weight: 700; color: var(--brand-color-light, #F79E1B); font-variant-numeric: tabular-nums; }
 .inter-post-snippet { font-size: 0.78rem; line-height: 1.4; color: rgba(255, 255, 255, 0.6); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .inter-empty { font-size: 0.85rem; color: rgba(255, 255, 255, 0.5); text-align: center; padding: 1.5rem 0.5rem; }
+/* Bajo 1280px la 3ª columna no cabe sin ahogar Interacciones: pasa a fila
+   propia a lo ancho, y ahí el panel vuelve a su layout de dos columnas. */
+@media (max-width: 1280px) {
+  .bgrid { grid-template-columns: minmax(0, 480px) minmax(0, 1fr); }
+  .bgrid-col--prodstar { grid-column: 1 / -1; }
+  .bgrid-card--prodstar .vera-prodstar-grid { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); }
+}
 @media (max-width: 900px) { .bgrid { grid-template-columns: 1fr; } .bgrid-card--latidos { grid-column: auto; } }
 .bgrid-card-title {
   display: inline-flex; align-items: center; gap: 0.55rem;
@@ -318,4 +326,80 @@
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .bgrid { grid-template-columns: 1fr; }
+}
+
+/* ── Producto destacado ─────────────────────────────────────────────────────
+   Ficha del estrella (imagen + señales) izq · tabla de familias der.
+   Misma estructura de dos columnas que Audiencia, para que lean como hermanas. */
+.vera-cards .vera-card--producto { grid-column: 1 / -1; }
+.vera-prodstar-load { font-size: 0.82rem; color: rgba(255, 255, 255, 0.4); padding: 0.4rem 0; }
+.vera-prodstar-grid { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 1.5rem; align-items: start; }
+.vera-prodstar-hero { display: flex; gap: 1rem; align-items: center; min-width: 0; }
+.vera-prodstar-img { width: 116px; height: 116px; object-fit: contain; border-radius: 12px; background: var(--bg-primary, #0b0b0b); border: 1px solid var(--border-divider, #242424); flex: 0 0 auto; }
+.vera-prodstar-img--empty { display: block; }
+.vera-prodstar-meta { display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; }
+.vera-prodstar-name { margin: 0; font-size: 1rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+.vera-prodstar-sigs { display: flex; gap: 1.1rem; flex-wrap: wrap; }
+.vera-prodstar-sig { display: flex; flex-direction: column; gap: 0.1rem; }
+.vera-prodstar-sig span { font-size: 1.02rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.vera-prodstar-sig small { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.42); }
+.vera-prodstar-tablewrap { overflow-x: auto; min-width: 0; }
+.vera-prodstar-table { width: 100%; }
+.vera-prodstar-table td { font-variant-numeric: tabular-nums; }
+.vera-prodstar-table tr.is-hero td { background: rgba(255, 255, 255, 0.03); }
+/* Estados: el olvidado se resalta en cian — es el cuadrante accionable. */
+.vera-prodstar-meta > .vera-prodstar-badge { align-self: flex-start; }
+.vera-prodstar-badge { display: inline-block; padding: 0.12rem 0.5rem; border-radius: 999px; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+.vera-prodstar-badge.is-star { background: rgba(255, 101, 0, 0.16); color: #ff8c3a; }
+.vera-prodstar-badge.is-forgotten { background: rgba(0, 231, 255, 0.14); color: #4fe3f5; }
+.vera-prodstar-badge.is-waste { background: rgba(255, 229, 0, 0.13); color: #e8d34a; }
+.vera-prodstar-badge.is-tail { background: rgba(255, 255, 255, 0.07); color: rgba(255, 255, 255, 0.5); }
+@media (max-width: 760px) { .vera-prodstar-grid { grid-template-columns: 1fr; } }
+
+/* En la columna angosta el panel se apila: ficha arriba, tabla abajo. */
+.bgrid-card--prodstar .vera-prodstar-grid { grid-template-columns: 1fr; gap: 1.1rem; }
+.bgrid-card--prodstar .vera-prodstar-hero { flex-direction: column; align-items: flex-start; text-align: left; }
+.bgrid-card--prodstar .vera-prodstar-img { width: 100%; height: 150px; }
+/* Señales en grilla: en flex la tercera quedaba huérfana y descolgada. */
+.bgrid-card--prodstar .vera-prodstar-sigs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem 0.9rem; width: 100%; }
+.bgrid-card--prodstar .vera-prodstar-table { font-size: 0.78rem; }
+/* Solo caben 3 columnas: Producto · Presencia · Estado. Interacción y días se
+   ocultan aquí (siguen en el title de la fila) — Estado es lo accionable. */
+.bgrid-card--prodstar .vera-prodstar-table th:nth-child(3),
+.bgrid-card--prodstar .vera-prodstar-table td:nth-child(3),
+.bgrid-card--prodstar .vera-prodstar-table th:nth-child(4),
+.bgrid-card--prodstar .vera-prodstar-table td:nth-child(4) { display: none; }
+.bgrid-card--prodstar .vera-prodstar-table th:nth-child(2),
+.bgrid-card--prodstar .vera-prodstar-table td:nth-child(2) { width: 4.6rem; }
+
+/* Tabla en columna angosta: anchos fijos para que el badge de Estado quepa
+   entero (antes se cortaba en "ESTREL…"). El nombre largo elide. */
+.bgrid-card--prodstar .vera-prodstar-table { table-layout: fixed; width: 100%; }
+.bgrid-card--prodstar .vera-prodstar-table th:nth-child(1),
+.bgrid-card--prodstar .vera-prodstar-table td:nth-child(1) { width: auto; max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bgrid-card--prodstar .vera-prodstar-table th:nth-child(2),
+.bgrid-card--prodstar .vera-prodstar-table td:nth-child(2) { width: 3.9rem; }
+.bgrid-card--prodstar .vera-prodstar-table th:nth-child(5),
+.bgrid-card--prodstar .vera-prodstar-table td:nth-child(5) { width: 5.2rem; padding-right: 0; }
+.bgrid-card--prodstar .vera-prodstar-badge { font-size: 0.56rem; padding: 0.1rem 0.4rem; }
+/* Encabezados: en 340px "PRESENCIA" y "ESTADO" se tocaban. */
+.bgrid-card--prodstar .vera-prodstar-table th { font-size: 0.58rem; letter-spacing: 0.02em; padding-right: 0.45rem; }
+
+/* Cuando la card pasa a FILA COMPLETA (<1280px) hay espacio de sobra: vuelve al
+   layout de dos columnas y reaparecen Interacción y "Sin mencionar".
+   Va al final y con `.bgrid` delante a propósito: las reglas de la columna
+   angosta están más abajo en el archivo y si no, ganarían por orden. */
+@media (max-width: 1280px) {
+  .bgrid .bgrid-card--prodstar .vera-prodstar-grid { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 1.5rem; }
+  .bgrid .bgrid-card--prodstar .vera-prodstar-hero { flex-direction: row; align-items: center; }
+  .bgrid .bgrid-card--prodstar .vera-prodstar-img { width: 150px; height: 150px; }
+  .bgrid .bgrid-card--prodstar .vera-prodstar-sigs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .bgrid .bgrid-card--prodstar .vera-prodstar-table { table-layout: auto; }
+  .bgrid .bgrid-card--prodstar .vera-prodstar-table th:nth-child(1),
+  .bgrid .bgrid-card--prodstar .vera-prodstar-table td:nth-child(1) { max-width: none; white-space: normal; }
+  .bgrid .bgrid-card--prodstar .vera-prodstar-table th:nth-child(3),
+  .bgrid .bgrid-card--prodstar .vera-prodstar-table td:nth-child(3),
+  .bgrid .bgrid-card--prodstar .vera-prodstar-table th:nth-child(4),
+  .bgrid .bgrid-card--prodstar .vera-prodstar-table td:nth-child(4) { display: table-cell; }
+  .bgrid .bgrid-card--prodstar .vera-prodstar-badge { font-size: 0.62rem; padding: 0.12rem 0.5rem; }
 }
