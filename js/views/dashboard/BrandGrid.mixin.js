@@ -87,17 +87,15 @@
             </section>
             <div class="bgrid-vd" id="bgridVD"></div>
           </div>
-          <div class="bgrid-col bgrid-col--prodstar">
-            <section class="bgrid-card glass-black bgrid-card--prodstar">
-              <header class="bgrid-card-head">
-                <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--star" aria-hidden="true"></i>${this._esc(__('Producto destacado'))}</span>
-              </header>
-              <p class="bgrid-card-sub">${this._esc(__('Cuál producto empujas más y cuáles estás olvidando'))}</p>
-              <div class="vera-prodstar" id="bgridProdStar" data-prodstar="1">
-                <div class="vera-prodstar-load">${this._esc(__('Cargando productos…'))}</div>
-              </div>
-            </section>
-          </div>
+          <section class="bgrid-card glass-black bgrid-card--prodstar">
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--star" aria-hidden="true"></i>${this._esc(__('Producto destacado'))}</span>
+            </header>
+            <p class="bgrid-card-sub">${this._esc(__('Cuál producto empujas más y cuáles estás olvidando'))}</p>
+            <div class="vera-prodstar" id="bgridProdStar" data-prodstar="1">
+              <div class="vera-prodstar-load">${this._esc(__('Cargando productos…'))}</div>
+            </div>
+          </section>
           <div class="bgrid-vera" id="bgridVera"></div>
         </div>`;
     },
@@ -420,29 +418,34 @@
        contenido contra cuánto responde el público. NO incluye pauta pagada —
        no existe vínculo producto↔campaña en el modelo. ═══════════════════ */
     async _paintProductoEstrella(scope) {
-      // Idempotente: lo llaman el shell (panel fijo de la 3ª columna) y también
-      // _renderVeraCards (si Vera coloca el bloque). Sin este filtro, el panel
-      // fijo se pintaría dos veces.
+      // Idempotente: lo llaman el shell y también _renderVeraCards (si Vera
+      // coloca el bloque). Sin este filtro el panel fijo se pintaría dos veces.
       const hosts = Array.from(scope.querySelectorAll('[data-prodstar]'))
         .filter((h) => h.dataset.prodstarPainted !== '1');
       if (!hosts.length) return;
       hosts.forEach((h) => { h.dataset.prodstarPainted = '1'; });
+
+      const esc = (s) => this._esc(s);
       let productos = [];
+      let fallo = null;
       try {
-        if (!this._gridBcIds) {
+        if (!this._gridBcIds || !this._gridBcIds.length) {
           const { data: cs } = await this._supabase.from('brand_containers').select('id').eq('organization_id', this._orgId);
           this._gridBcIds = (cs || []).map((c) => c.id).filter(Boolean);
         }
         const bcId = (this._gridBcIds || [])[0];
-        if (bcId) {
-          const { data } = await Promise.resolve(
-            this._supabase.rpc('dashboard_producto_estrella', { p_brand_container_id: bcId })
-          ).catch(() => ({ data: null }));
-          productos = (data && Array.isArray(data.productos)) ? data.productos : [];
+        if (!bcId) {
+          fallo = 'sin brand_container para la org';
+        } else {
+          // supabase-js devuelve {data,error}: el error NO llega como rechazo de
+          // promesa. Antes se perdía y la card decía "sin datos" sin explicar.
+          const res = await this._supabase.rpc('dashboard_producto_estrella', { p_brand_container_id: bcId });
+          if (res && res.error) fallo = res.error.message || String(res.error);
+          else productos = (res && res.data && Array.isArray(res.data.productos)) ? res.data.productos : [];
         }
-      } catch (_) { productos = []; }
+      } catch (e) { fallo = (e && e.message) ? e.message : String(e); }
+      if (fallo) console.warn('[ProductoEstrella] no se pudo cargar:', fallo);
 
-      const esc = (s) => this._esc(s);
       if (!productos.length) {
         hosts.forEach((h) => {
           const l = h.querySelector('.vera-prodstar-load');
@@ -457,13 +460,20 @@
         desperdicio: { label: __('Desperdicio'), cls: 'is-waste' },
         cola:        { label: __('Cola'),        cls: 'is-tail' },
       };
+      // Estrella = el que más empujas. El resto se ordena de MENOS a más usado:
+      // esa lista es la respuesta a "qué estoy olvidando".
       const hero = productos.find((p) => p.cuadrante === 'estrella') || productos[0];
+      const olvidados = productos.filter((p) => p !== hero)
+        .sort((a, b) => (a.share_of_voice_pct || 0) - (b.share_of_voice_pct || 0))
+        .slice(0, 6);
       const q = QUAD[hero.cuadrante] || QUAD.cola;
-      // La imagen viene del RPC (storage propio), no de Vera. Se escapa igual.
+      // La imagen la resuelve el RPC contra nuestro storage, nunca Vera: una URL
+      // emitida por el modelo sería una vía para inyectar destinos arbitrarios.
       const img = hero.imagen_url
         ? `<img class="vera-prodstar-img" src="${esc(hero.imagen_url)}" alt="${esc(hero.producto)}" loading="lazy">`
         : `<div class="vera-prodstar-img vera-prodstar-img--empty" aria-hidden="true"></div>`;
       const sig = (v, l) => `<div class="vera-prodstar-sig"><span>${esc(String(v))}</span><small>${esc(l)}</small></div>`;
+
       const heroHtml = `
         <div class="vera-prodstar-hero">
           ${img}
@@ -478,42 +488,29 @@
           </div>
         </div>`;
 
-      const rows = productos.map((p) => {
+      const items = olvidados.map((p) => {
         const pq = QUAD[p.cuadrante] || QUAD.cola;
         const dias = (p.dias_sin_mencion == null) ? '—' : `${p.dias_sin_mencion}d`;
-        // En la columna angosta se ocultan columnas por espacio: el detalle
-        // completo queda en el title para no perder el dato.
-        const tip = `${p.producto} · ${__('interacción media')} ${p.engagement_promedio != null ? p.engagement_promedio : 0} · ${__('sin mencionar')} ${dias}`;
-        return `<tr${p === hero ? ' class="is-hero"' : ''} title="${esc(tip)}">
-          <td class="vera-td-lead">${esc(p.producto)}</td>
-          <td>${esc(String(p.share_of_voice_pct != null ? p.share_of_voice_pct : 0))}%</td>
-          <td>${esc(String(p.engagement_promedio != null ? p.engagement_promedio : 0))}</td>
-          <td>${esc(dias)}</td>
-          <td><span class="vera-prodstar-badge ${pq.cls}">${esc(pq.label)}</span></td>
-        </tr>`;
+        return `<li class="vera-prodstar-item">
+            <span class="vera-prodstar-item-name">${esc(p.producto)}</span>
+            <span class="vera-prodstar-item-sov">${esc(String(p.share_of_voice_pct != null ? p.share_of_voice_pct : 0))}%</span>
+            <span class="vera-prodstar-item-days" title="${esc(__('sin mencionar'))}">${esc(dias)}</span>
+            <span class="vera-prodstar-badge ${pq.cls}">${esc(pq.label)}</span>
+          </li>`;
       }).join('');
-      const tableHtml = `
-        <div class="vera-prodstar-tablewrap">
-          <table class="vera-table vera-prodstar-table">
-            <thead><tr>
-              <th>${esc(__('Producto'))}</th><th>${esc(__('Presencia'))}</th>
-              <th>${esc(__('Interacción'))}</th><th>${esc(__('Sin mencionar'))}</th>
-              <th>${esc(__('Estado'))}</th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
+      const listaHtml = `
+        <div class="vera-prodstar-aside">
+          <div class="vera-prodstar-aside-title">${esc(__('Los que estás olvidando'))}</div>
+          <ul class="vera-prodstar-list">${items}</ul>
         </div>`;
 
       hosts.forEach((h) => {
         const l = h.querySelector('.vera-prodstar-load');
         if (l) l.remove();
-        h.insertAdjacentHTML('beforeend', `<div class="vera-prodstar-grid">${heroHtml}${tableHtml}</div>`);
+        h.insertAdjacentHTML('beforeend', `<div class="vera-prodstar-grid">${heroHtml}${listaHtml}</div>`);
       });
     },
 
-    /* Markdown ACOTADO y seguro: escapa HTML primero, luego aplica un subset
-       (títulos, negrita, itálica, código, links http/https, listas). Nunca deja
-       pasar HTML crudo — ese es el punto vs el HTML libre anterior. */
     _safeMarkdown(md) {
       let s = String(md == null ? '' : md);
       s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
