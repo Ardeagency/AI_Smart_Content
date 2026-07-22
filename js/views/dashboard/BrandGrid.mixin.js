@@ -310,6 +310,224 @@
       this._paintProductoEstrella(body);
     },
 
+    /* ══ Evidencia del producto ═══════════════════════════════════════════
+       El modal que abre cada cifra de la card: las publicaciones que la
+       componen, los comentarios que nombran el producto, el desglose de la
+       interacción y los hashtags. Sin esto la card es un veredicto sin pruebas.
+       Los datos salen del RPC dashboard_producto_detalle, que aplica la MISMA
+       regla de detección que la card. ═══════════════════════════════════════ */
+    async _openProductoEvidencia(prod, seccion, QUAD) {
+      if (!prod || !prod.producto) return;
+      const esc = (s) => this._esc(s);
+      const overlay = document.createElement('div');
+      overlay.className = 'salud-overlay';
+      overlay.innerHTML = `
+        <div class="salud-modal pev-modal" role="dialog" aria-modal="true">
+          <div class="salud-modal-head">
+            <span class="salud-modal-title">${esc(prod.producto)}</span>
+            <button type="button" class="salud-modal-close" aria-label="${esc(__('Cerrar'))}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
+          </div>
+          <div class="salud-modal-body pev-body"><div class="pev-load">${esc(__('Reuniendo la evidencia…'))}</div></div>
+        </div>`;
+      document.body.appendChild(overlay);
+      const close = () => overlay.remove();
+      overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.closest('.salud-modal-close')) close(); });
+      const onEsc = (ev) => { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } };
+      this.addEventListener(document, 'keydown', onEsc);
+
+      let det = null, fallo = null;
+      try {
+        const bcId = (this._gridBcIds || [])[0];
+        const res = await this._supabase.rpc('dashboard_producto_detalle', {
+          p_brand_container_id: bcId, p_familia: prod.producto,
+        });
+        if (res && res.error) fallo = res.error.message || String(res.error);
+        else det = res && res.data;
+      } catch (e) { fallo = (e && e.message) ? e.message : String(e); }
+
+      const body = overlay.querySelector('.pev-body');
+      if (!body) return;
+      if (fallo || !det) {
+        console.warn('[ProductoEvidencia]', fallo);
+        body.innerHTML = `<div class="pev-load">${esc(__('No se pudo reunir la evidencia'))}</div>`;
+        return;
+      }
+      overlay._det = det;
+      body.innerHTML = this._pevShellHtml(det, prod, QUAD);
+      this._pevPaintSeccion(overlay, seccion || 'publicaciones');
+      body.addEventListener('click', (e) => {
+        const t = e.target.closest('[data-pev-tab]');
+        if (t) this._pevPaintSeccion(overlay, t.dataset.pevTab);
+      });
+    },
+
+    _pevShellHtml(det, prod, QUAD) {
+      const esc = (s) => this._esc(s);
+      const r = det.resumen || {};
+      const q = (QUAD && (QUAD[prod.cuadrante] || QUAD.cola)) || null;
+      const tabs = [
+        { k: 'publicaciones', label: __('Publicaciones'), n: r.publicaciones },
+        { k: 'interacciones', label: __('Interacciones'), n: (r.interacciones || {}).total },
+        { k: 'menciones',     label: __('Menciones'),     n: r.menciones_publico },
+        { k: 'videos',        label: __('Videos'),        n: r.videos },
+        { k: 'visuales',      label: __('Sale en la foto'), n: r.apariciones_visuales },
+        { k: 'hashtags',      label: __('Hashtags'),      n: r.hashtags_distintos },
+      ];
+      return `
+        ${q ? `<span class="vera-prodstar-badge ${q.cls} pev-badge">${esc(q.label)}</span>` : ''}
+        <nav class="pev-tabs" role="tablist">
+          ${tabs.map((t) => `
+            <button type="button" class="pev-tab" data-pev-tab="${t.k}" role="tab">
+              ${esc(t.label)}<span>${esc(this._pevNum(t.n))}</span>
+            </button>`).join('')}
+        </nav>
+        <div class="pev-panel" id="pevPanel"></div>`;
+    },
+
+    _pevNum(n) {
+      const v = Number(n);
+      if (!isFinite(v)) return '—';
+      return v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace('.0', '') + 'k' : String(v);
+    },
+
+    _pevPaintSeccion(overlay, k) {
+      const det = overlay._det || {};
+      const panel = overlay.querySelector('#pevPanel');
+      if (!panel) return;
+      overlay.querySelectorAll('[data-pev-tab]').forEach((b) => b.classList.toggle('is-active', b.dataset.pevTab === k));
+      const posts = Array.isArray(det.publicaciones) ? det.publicaciones : [];
+      if (k === 'interacciones') { panel.innerHTML = this._pevInteraccionesHtml(det.resumen || {}); return; }
+      if (k === 'menciones')     { panel.innerHTML = this._pevMencionesHtml(det.menciones || []); return; }
+      if (k === 'hashtags')      { panel.innerHTML = this._pevHashtagsHtml(det.hashtags || []); return; }
+      if (k === 'videos')        { panel.innerHTML = this._pevPostsHtml(posts.filter((p) => p.es_video)); return; }
+      if (k === 'visuales') {
+        // Publicaciones donde el producto SE VE pero no se nombra. No cuentan
+        // para su presencia — el describer no distingue un pouch de otro — pero
+        // son evidencia util: ahi esta el producto sin que nadie lo diga.
+        const vis = Array.isArray(det.apariciones_visuales) ? det.apariciones_visuales : [];
+        panel.innerHTML = `<p class="pev-nota">${this._esc(__('El producto aparece en la imagen pero la publicación no lo nombra: no suma a su presencia.'))}</p>`
+          + this._pevPostsHtml(vis);
+        return;
+      }
+      panel.innerHTML = this._pevPostsHtml(posts);
+    },
+
+    /* Cada publicación con su miniatura, su copy y lo que movió. La etiqueta de
+       evidencia dice por qué esa publicación cuenta: la nombró en el texto, o el
+       producto solo aparece en la imagen. */
+    _pevPostsHtml(posts) {
+      if (!posts.length) return `<div class="pev-load">${this._esc(__('Sin publicaciones en esta vista'))}</div>`;
+      const esc = (s) => this._esc(s);
+      return `<ul class="pev-posts">${posts.map((p) => {
+        const fecha = p.fecha ? new Date(p.fecha).toLocaleDateString() : '';
+        const thumb = p.imagen
+          ? `<img class="pev-post-thumb" src="${esc(p.imagen)}" alt="" loading="lazy">`
+          : `<span class="pev-post-thumb pev-post-thumb--empty" aria-hidden="true"></span>`;
+        const cuerpo = `
+          <div class="pev-post-body">
+            <div class="pev-post-meta">
+              <span class="pev-post-red">${esc(NET_LABEL[p.red] || p.red || '')}</span>
+              <span class="pev-post-sep">·</span><span>${esc(fecha)}</span>
+              <span class="pev-post-ev" data-ev="${esc(p.evidencia || '')}">${esc(p.evidencia === 'imagen' ? __('solo en la imagen') : __('lo nombra el texto'))}</span>
+            </div>
+            <p class="pev-post-copy">${esc(p.copy || '')}</p>
+            <div class="pev-post-nums">
+              <span><strong>${esc(this._pevNum(p.interacciones))}</strong> ${esc(__('interacciones'))}</span>
+              <span>${esc(this._pevNum(p.likes))} ${esc(__('me gusta'))}</span>
+              <span>${esc(this._pevNum(p.comentarios))} ${esc(__('comentarios'))}</span>
+              <span>${esc(this._pevNum(p.compartidos))} ${esc(__('compartidos'))}</span>
+              ${Number(p.reproducciones) > 0 ? `<span>${esc(this._pevNum(p.reproducciones))} ${esc(__('reproducciones'))}</span>` : ''}
+            </div>
+          </div>`;
+        return `<li class="pev-post">
+            ${p.permalink ? `<a class="pev-post-link" href="${esc(p.permalink)}" target="_blank" rel="noopener">${thumb}</a>` : thumb}
+            ${cuerpo}
+          </li>`;
+      }).join('')}</ul>`;
+    },
+
+    /* El desglose que responde: ¿reaccionan mucho o poco, y reaccionan de verdad
+       o solo de paso? Un producto que solo junta likes gusta al pasar; uno que
+       se comenta, comparte y guarda mueve intención. */
+    _pevInteraccionesHtml(r) {
+      const esc = (s) => this._esc(s);
+      const i = r.interacciones || {};
+      const NIVEL = {
+        alto:     __('alta'), medio: __('media'),
+        bajo:     __('baja'), muy_bajo: __('muy baja'),
+      };
+      const LECTURA = {
+        alto:     __('Tu audiencia responde por encima de lo normal en redes de marca.'),
+        medio:    __('Respuesta en el rango normal de una marca de este tamaño.'),
+        bajo:     __('Responde poca gente para el tamaño de tu audiencia.'),
+        muy_bajo: __('Casi nadie de tu audiencia reacciona: la mayoría ve y sigue de largo.'),
+      };
+      const REACCION = {
+        activa: __('Reacción real: comentan, comparten y guardan, no solo dan me gusta.'),
+        tibia:  __('Reacción tibia: algo de conversación, pero la mayoría solo da me gusta.'),
+        pasiva: __('Reacción de compromiso: casi todo son me gusta, casi nadie comenta ni comparte.'),
+      };
+      const t = r.tendencia || {};
+      const varia = Number(t.variacion_pct);
+      const tendLect = !isFinite(varia) ? null
+        : varia >= 15 ? __('Va en subida: las publicaciones recientes mueven más que las primeras.')
+        : varia <= -15 ? __('Va en bajada: el público reacciona menos que antes a este producto — desgaste.')
+        : __('Estable: reacciona igual que al principio.');
+      const fila = (label, v, hint) => `
+        <div class="pev-int-row">
+          <span class="pev-int-label">${esc(label)}${hint ? `<small>${esc(hint)}</small>` : ''}</span>
+          <span class="pev-int-val">${esc(this._pevNum(v))}</span>
+        </div>`;
+      return `
+        <div class="pev-int-head">
+          <div class="pev-int-big">
+            <strong>${esc(r.tasa_interaccion_pct != null ? r.tasa_interaccion_pct + '%' : '—')}</strong>
+            <small>${esc(__('de tu audiencia reacciona a cada publicación'))}</small>
+          </div>
+          <div class="pev-int-read">
+            <p><strong>${esc(__('Respuesta {n}', { n: NIVEL[r.nivel_interaccion] || '—' }))}.</strong> ${esc(LECTURA[r.nivel_interaccion] || '')}</p>
+            ${r.nivel_reaccion ? `<p>${esc(REACCION[r.nivel_reaccion])}</p>` : ''}
+            ${tendLect ? `<p>${esc(tendLect)}</p>` : ''}
+          </div>
+        </div>
+        <div class="pev-int-grid">
+          ${fila(__('Interacciones totales'), i.total)}
+          ${fila(__('Me gusta'), i.likes, __('reacción de paso'))}
+          ${fila(__('Comentarios'), i.comentarios, __('conversación'))}
+          ${fila(__('Compartidos'), i.compartidos, __('te trae público nuevo'))}
+          ${fila(__('Guardados'), i.guardados, __('intención de compra'))}
+          ${fila(__('Reproducciones'), i.reproducciones, __('alcance de video'))}
+          ${fila(__('Audiencia'), r.seguidores)}
+        </div>`;
+    },
+
+    _pevMencionesHtml(items) {
+      if (!items.length) return `<div class="pev-load">${this._esc(__('Nadie ha nombrado este producto en los comentarios'))}</div>`;
+      const esc = (s) => this._esc(s);
+      return `<ul class="pev-menciones">${items.map((m) => `
+        <li class="pev-mencion">
+          <div class="pev-mencion-meta">
+            <span>${esc(m.autor ? '@' + m.autor : __('Anónimo'))}</span>
+            <span class="pev-post-sep">·</span>
+            <span>${esc(m.fecha ? new Date(m.fecha).toLocaleDateString() : '')}</span>
+            ${m.sentimiento ? `<span class="pev-sent" data-s="${esc(m.sentimiento)}">${esc(m.sentimiento)}</span>` : ''}
+          </div>
+          <p class="pev-mencion-txt">${esc(m.texto || '')}</p>
+        </li>`).join('')}</ul>`;
+    },
+
+    _pevHashtagsHtml(items) {
+      if (!items.length) return `<div class="pev-load">${this._esc(__('Sin hashtags en estas publicaciones'))}</div>`;
+      const esc = (s) => this._esc(s);
+      const max = Math.max(...items.map((h) => Number(h.n) || 0), 1);
+      return `<ul class="pev-tags">${items.map((h) => `
+        <li class="pev-tag">
+          <span class="pev-tag-name">#${esc(String(h.tag || '').replace(/^#/, ''))}</span>
+          <span class="pev-tag-bar"><i style="width:${Math.round((Number(h.n) || 0) / max * 100)}%"></i></span>
+          <span class="pev-tag-n">${esc(String(h.n))}</span>
+        </li>`).join('')}</ul>`;
+    },
+
     /* Producto destacado se para a la IZQUIERDA de Algoritmo (misma fila del
        grid de cards de Vera). Si Vera no publicó Algoritmo, se queda donde
        estaba: último bloque de la página, a su ancho acotado. */
@@ -537,6 +755,12 @@
       if (!deck || deck.dataset.bound === '1') return;
       deck.dataset.bound = '1';
       deck.addEventListener('click', (e) => {
+        const dr = e.target.closest('[data-drill]');
+        if (dr) {
+          const act = Number(deck.dataset.active || 0);
+          this._openProductoEvidencia((deck._productos || [])[act], dr.dataset.drill, deck._quad);
+          return;
+        }
         const el = e.target.closest('[data-i]');
         if (!el) return;
         this._prodDeckGoTo(deck, Number(el.dataset.i));
@@ -580,11 +804,14 @@
     _prodDeckInfoHtml(prod, QUAD) {
       if (!prod) return '';
       const esc = (s) => this._esc(s);
+      // Cada cifra abre la evidencia que la sustenta: un numero sin poder ver
+      // de donde sale es un numero que nadie audita — y que nadie cree.
+      const drill = (k) => ` data-drill="${k}" role="button" tabindex="0" title="${esc(__('Ver de dónde sale'))}"`;
       const q = (QUAD && (QUAD[prod.cuadrante] || QUAD.cola)) || { label: '', cls: 'is-tail' };
       const dias = (prod.dias_sin_mencion == null) ? null : Number(prod.dias_sin_mencion);
       const desde = (dias == null) ? __('Nunca lo has publicado')
         : (dias <= 0 ? __('Lo publicaste hoy') : __('Hace {n} días que no lo nombras', { n: dias }));
-      const sig = (v, l) => `<div class="pdeck-sig"><span>${esc(String(v))}</span><small>${esc(l)}</small></div>`;
+      const sig = (v, l, k) => `<div class="pdeck-sig${k ? ' is-drill' : ''}"${k ? drill(k) : ''}><span>${esc(String(v))}</span><small>${esc(l)}</small></div>`;
       // La foto es de una variante concreta: se dice cuál cuando no coincide con
       // el nombre de la familia.
       const foto = (prod.imagen_producto && prod.imagen_producto !== prod.producto) ? prod.imagen_producto : null;
@@ -600,8 +827,8 @@
         <h4 class="pdeck-name">${esc(prod.producto)}</h4>
         <p class="pdeck-sub">${esc(desde)}${Number(prod.n_productos) > 1 ? ' · ' + esc(__('{n} variantes', { n: prod.n_productos })) : ''}</p>
         <div class="pdeck-sigs">
-          ${sig(prod.engagement_promedio != null ? prod.engagement_promedio : 0, __('interacción media'))}
-          ${sig(prod.menciones_publico != null ? prod.menciones_publico : 0, __('lo nombra el público'))}
+          ${sig(prod.engagement_promedio != null ? prod.engagement_promedio : 0, __('interacción media'), 'interacciones')}
+          ${sig(prod.menciones_publico != null ? prod.menciones_publico : 0, __('lo nombra el público'), 'menciones')}
         </div>
         <div class="pdeck-score">
           <strong>${esc(String(prod.share_of_voice_pct != null ? prod.share_of_voice_pct : 0))}</strong><small>%</small>
@@ -609,8 +836,9 @@
         <div class="pdeck-score-label">${esc(__('de lo que hablas de producto'))}</div>
         ${veredicto ? `<p class="pdeck-porque">${esc(veredicto)}</p>` : ''}
         <p class="pdeck-foot">
-          ${esc(__('{n} publicaciones', { n: prod.posts != null ? prod.posts : 0 }))}
+          <span class="pdeck-link"${drill('publicaciones')}>${esc(__('{n} publicaciones', { n: prod.posts != null ? prod.posts : 0 }))}</span>
           ${prod.pct_contenido_total != null ? ' · ' + esc(__('{p}% de todo tu contenido', { p: prod.pct_contenido_total })) : ''}
+          ${' · '}<span class="pdeck-link"${drill('publicaciones')}>${esc(__('ver la evidencia'))}</span>
           ${foto ? `<br>${esc(__('En la foto: {v}', { v: foto }))}` : ''}
         </p>`;
     },
