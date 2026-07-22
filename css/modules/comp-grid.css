@@ -18,28 +18,38 @@
 .cgrid-col { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
 
 /* ── Qué hace cada perfil (tabla que llena Vera) ───────────────────────────
-   SIN glass: superficie de card de la plataforma. El glass se reserva para lo
-   que flota sobre el degradado del hero; esta es una tabla de lectura. */
+   SIN glass (eso se reserva para lo que flota sobre el degradado), pero
+   TAMPOCO gris plano: la superficie lleva un velo del color VIVO de la marca
+   —`--cgp-accent`, el mismo del hero y los charts, inyectado desde JS— que
+   entra por la esquina superior y se disuelve. Sin él, tanto gris apagaba la
+   card respecto del resto del tab. Fallback naranja de plataforma si la marca
+   aún no tiene color resuelto. */
 .cgrid-card--perfiles {
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider, #242424);
+  --cgp-accent: var(--brand-color-light, #FF6A1A);
+  --cgp-accent-rgb: 255, 106, 26;
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(var(--cgp-accent-rgb), 0.13) 0%, rgba(var(--cgp-accent-rgb), 0.04) 42%, transparent 72%),
+    var(--bg-card, #141517);
+  border: 1px solid rgba(var(--cgp-accent-rgb), 0.18);
   border-radius: 18px;
   padding: 1.35rem 1.5rem 1.5rem;
   display: flex; flex-direction: column; gap: 0.65rem;
   min-width: 0;
 }
+.cgrid-card--perfiles .bgrid-card-title > .aisc-ico { color: var(--cgp-accent); }
 .cgrid-perfiles { min-width: 0; }
 .cgp-table-wrap { overflow-x: auto; }
 .cgp-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 .cgp-table th {
   text-align: left; font-size: 0.64rem; font-weight: 700;
   letter-spacing: 0.06em; text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(var(--cgp-accent-rgb), 0.75);
   padding: 0 0.7rem 0.6rem 0; white-space: nowrap;
 }
 .cgp-table td {
   padding: 0.75rem 0.7rem 0.75rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  /* Los divisores toman el tinte de marca: en gris puro cortaban la card. */
+  border-top: 1px solid rgba(var(--cgp-accent-rgb), 0.12);
   vertical-align: top; color: rgba(255, 255, 255, 0.72); line-height: 1.5;
 }
 .cgp-perfil { min-width: 150px; }
@@ -51,15 +61,23 @@
   padding: 0.12rem 0.42rem; border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.16); color: rgba(255, 255, 255, 0.55);
 }
-/* Competidor y referente NO son lo mismo: el color lo recuerda de un vistazo. */
-.cgp-rol.is-dir { color: rgba(255, 255, 255, 0.85); border-color: rgba(255, 255, 255, 0.38); }
+/* Competidor y referente NO son lo mismo: el color lo recuerda de un vistazo.
+   El competidor directo va en color de marca — es contra quien se juega. */
+.cgp-rol.is-dir {
+  color: var(--cgp-accent);
+  border-color: rgba(var(--cgp-accent-rgb), 0.45);
+  background: rgba(var(--cgp-accent-rgb), 0.1);
+}
 .cgp-rol.is-ref { color: #8fd3ad; border-color: rgba(120, 200, 150, 0.4); }
 .cgp-rol.is-ali { color: #9db9e8; border-color: rgba(140, 175, 230, 0.4); }
+/* Los temas son lo que más se repite en la tabla: teñirlos con la marca es lo
+   que le devuelve energía sin ensuciar el texto de lectura. */
 .cgp-chip {
   display: inline-block; margin: 0 0.28rem 0.28rem 0;
   padding: 0.15rem 0.5rem; border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07); font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(var(--cgp-accent-rgb), 0.16);
+  border: 1px solid rgba(var(--cgp-accent-rgb), 0.22);
+  font-size: 0.72rem; color: rgba(255, 255, 255, 0.88);
 }
 .cgp-tono { font-style: italic; color: rgba(255, 255, 255, 0.62); min-width: 120px; }
 .cgp-aprend { min-width: 200px; }

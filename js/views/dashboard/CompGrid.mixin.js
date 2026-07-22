@@ -485,6 +485,15 @@
         reading = (data && data[0]) || null;
       } catch (_) {}
 
+      // Color VIVO de la marca activa (el mismo del degradado del hero y de los
+      // charts). Se expone como variable local para que el CSS lo use en el
+      // velo de la superficie, los chips y los acentos: sin él la card queda
+      // gris sobre gris y se apaga respecto del resto del tab.
+      const [accent] = this._gridBrandHexes();
+      const [ar, ag, ab] = this._hexToRgb(accent);
+      card.style.setProperty('--cgp-accent', accent);
+      card.style.setProperty('--cgp-accent-rgb', `${ar}, ${ag}, ${ab}`);
+
       const bloques = (reading?.reading?.narrative || [])
         .filter((b) => b && b.type === 'perfil_analisis' && b.perfil);
       if (!bloques.length) {
