@@ -22,78 +22,21 @@
   line-height: 1.55;
 }
 
-/* ── Card 1: Influencia digital (barras horizontales) ───────────────── */
-.cgrid-bars { display: flex; flex-direction: column; gap: 1.05rem; }
+/* ── Card 1: Influencia digital ──────────────────────────────────────────
+   Columnas verticales apiladas por red (una por marca), mismo instrumento
+   que Tráfico en Mi Marca pero con impacto social en el eje Y. La leyenda
+   la pinta Chart.js. */
+.cgrid-bars { display: flex; flex-direction: column; }
+.cgrid-chart-wrap { position: relative; width: 100%; height: 320px; }
+.cgrid-chart-wrap canvas { width: 100% !important; height: 100% !important; }
 
-/* La fila es un boton (abre el panel de la marca): se resetea la piel nativa. */
-.cgrid-bar-row {
-  display: flex; flex-direction: column; gap: 0.4rem; min-width: 0;
-  appearance: none; background: none; border: 0; padding: 0.35rem 0.4rem;
-  margin: -0.35rem -0.4rem; border-radius: 12px;
-  font: inherit; color: inherit; text-align: left; width: calc(100% + 0.8rem);
-  cursor: pointer; transition: background 0.18s ease;
-}
-.cgrid-bar-row:hover { background: rgba(255, 255, 255, 0.045); }
-.cgrid-bar-row:focus-visible { outline: 2px solid var(--brand-color-light, #FF6A1A); outline-offset: 2px; }
-
-.cgrid-bar-top { display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
-.cgrid-bar-name {
-  font-size: 0.88rem; font-weight: 600; color: rgba(255, 255, 255, 0.82);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.is-leader .cgrid-bar-name { color: #fff; font-weight: 700; }
-.cgrid-bar-net { flex: 0 0 auto; font-size: 0.68rem; color: rgba(255, 255, 255, 0.4); }
-/* Canales de la marca: la red se identifica por su icono, nunca por texto en
-   el nombre del perfil. El canal dominante va en acento de marca. */
-.cgrid-bar-nets { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 0.4rem; }
-.cgrid-bar-ico { font-size: 0.78rem; color: rgba(255, 255, 255, 0.38); }
-.cgrid-bar-ico.is-top { color: var(--brand-color-light, #FF6A1A); }
-.cgrid-bar-canales { margin-left: 0.5rem; color: rgba(255, 255, 255, 0.3); }
-.cgrid-bar-canales::before { content: "· "; }
-.cgrid-bar-tipo {
-  flex: 0 0 auto; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.05em;
-  text-transform: uppercase; padding: 0.16rem 0.44rem; border-radius: 999px;
-  color: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255, 255, 255, 0.14);
-}
-.cgrid-bar-tipo[data-tipo="competidor_directo"] { color: rgba(255, 255, 255, 0.8); border-color: rgba(255, 255, 255, 0.3); }
-.cgrid-bar-lead {
-  flex: 0 0 auto; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.05em;
-  text-transform: uppercase; padding: 0.16rem 0.5rem; border-radius: 999px;
-  color: var(--brand-color-light, #FF6A1A);
-  background: rgba(255, 106, 26, 0.14);
-}
-.cgrid-bar-val {
-  margin-left: auto; flex: 0 0 auto;
-  font-size: 0.92rem; font-weight: 700; color: #fff;
-  font-variant-numeric: tabular-nums;
-}
-
+/* Barra de progreso horizontal — la usa el desglose por red del panel. */
 .cgrid-bar-track {
   height: 10px; border-radius: 999px;
   background: rgba(255, 255, 255, 0.07);
   overflow: hidden;
 }
 .cgrid-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
-
-/* Barra APILADA por plataforma: el ancho total es el impacto de la marca y
-   cada segmento la tajada de una red. Las esquinas se redondean solo en los
-   extremos para que el conjunto se lea como una sola barra. */
-.cgrid-bar-stack {
-  display: flex; height: 100%; border-radius: 999px; overflow: hidden;
-  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.cgrid-bar-seg { display: block; height: 100%; min-width: 2px; }
-
-.cgrid-bar-sub { font-size: 0.7rem; color: rgba(255, 255, 255, 0.45); }
-
-/* Leyenda unica de la card (el tono por red es consistente en todas las barras). */
-.cgrid-legend {
-  display: flex; flex-wrap: wrap; gap: 0.35rem 1rem;
-  padding-top: 0.35rem; font-size: 0.72rem; color: rgba(255, 255, 255, 0.55);
-}
-.cgrid-legend:empty { display: none; }
-.cgrid-leg { display: inline-flex; align-items: center; gap: 0.35rem; }
-.cgrid-leg-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 
 /* ── Panel de marca (drill-down al hacer click en una barra) ─────────────── */
 .salud-modal.cgrid-panel { max-width: 860px; width: 92vw; }

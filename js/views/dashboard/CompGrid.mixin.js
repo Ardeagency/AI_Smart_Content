@@ -93,7 +93,7 @@
             <p class="bgrid-card-sub">${this._esc(__('Cuánta conversación genera cada competidor y en qué red la genera · toca una barra para ver todo lo recolectado'))}</p>
             <nav class="bgrid-seg" role="tablist" aria-label="${this._esc(__('Periodo'))}">${seg}</nav>
             <div class="cgrid-bars" id="cgridBars"><div class="cgrid-load">${this._esc(__('Cargando perfiles…'))}</div></div>
-            <div class="cgrid-legend" id="cgridLegend"></div>
+            <footer class="bgrid-card-foot" id="cgridBarsFoot"></footer>
           </section>
           <section class="bgrid-card glass-black cgrid-card--toppost">
             <header class="bgrid-card-head">
@@ -109,12 +109,8 @@
       if (body.dataset.cgridBound === '1') return;
       body.dataset.cgridBound = '1';
       body.addEventListener('click', (e) => {
-        const bar = e.target.closest('[data-brand]');
-        if (bar) {
-          const row = (this._cgridRows || [])[Number(bar.dataset.brand)];
-          if (row) this._openBrandPanel(row);
-          return;
-        }
+        // El drill-down por marca lo maneja el onClick del chart (Chart.js
+        // resuelve qué columna se tocó); aquí solo van los filtros.
         const btn = e.target.closest('[data-cwindow]');
         if (!btn) return;
         const k = btn.dataset.cwindow;
@@ -209,7 +205,7 @@
       try { data = await this._loadCompGridData(); }
       catch (e) { console.warn('[CompGrid] load failed:', e); return; }
       this._cgridData = data;
-      this._paintInfluenceBars(body, data);
+      await this._paintInfluenceBars(body, data);
       this._paintTopPost(body, data);
     },
 
@@ -218,7 +214,7 @@
        no seguidores: un perfil grande y callado no manda en la conversación.
        Bajo cada barra, el contexto que evita la lectura ingenua: por post,
        cuántos posts, y el tamaño de su audiencia. ═══════════════════════ */
-    _paintInfluenceBars(body, data) {
+    async _paintInfluenceBars(body, data) {
       const host = body.querySelector('#cgridBars');
       if (!host) return;
       const esc = (s) => this._esc(s);
@@ -255,7 +251,6 @@
       this._cgridRows = rows;
       const [accent] = this._gridBrandHexes();
       const [r, g, b] = this._hexToRgb(accent);
-      const max = Math.max(...rows.map((x) => x.eng));
       const C = (n) => this._compactNum(n);
 
       // Un tono por PLATAFORMA, igual en todas las barras: si el tono dependiera
@@ -275,65 +270,118 @@
       };
       this._cgridNetColor = (k) => `rgba(${r},${g},${b},${netAlpha(k)})`;
 
-      host.innerHTML = rows.map((x, i) => {
-        const pct = Math.max(2, Math.round(x.eng / max * 100));
-        const tipo = TIPO_LABEL[x.tipo] ? TIPO_LABEL[x.tipo]() : '';
-        // La barra se APILA por plataforma: el ancho total es el impacto de la
-        // marca; cada segmento, la tajada que aporta ese canal. Se lee de un
-        // vistazo dónde vive de verdad su influencia.
-        const segs = x.profiles
-          .filter((pr) => Number(pr.share_pct) > 0)
-          .map((pr) => {
-            const key = String(pr.platform || '').toLowerCase();
-            const w = Number(pr.share_pct) || 0;
-            const label = `${NET_LABEL[key] || key} · ${w}%`;
-            return `<span class="cgrid-bar-seg" style="width:${w}%;background:${this._cgridNetColor(key)}" title="${esc(label)}"></span>`;
-          }).join('');
-        // Los canales de la marca como iconos: la red se identifica sola, el
-        // nombre queda limpio. El canal dominante va resaltado.
-        const nets = x.platforms.map((pf) => {
-          const key = String(pf || '').toLowerCase();
-          const ico = PLATFORM_ICON[key];
-          const title = NET_LABEL[key] || key;
-          return ico
-            ? `<i class="cgrid-bar-ico ${esc(ico)}${key === x.topPlatform ? ' is-top' : ''}" title="${esc(title)}" aria-label="${esc(title)}"></i>`
-            : `<span class="cgrid-bar-net">${esc(title)}</span>`;
-        }).join('');
-        const bits = [
-          __('{n}/publicación', { n: C(x.perPost) }),
-          __('{n} publicaciones', { n: x.posts }),
-        ];
-        if (x.followers > 0) bits.push(__('{n} seguidores', { n: C(x.followers) }));
-        // Influencia normalizada: separa "grande" de "influyente".
-        if (x.per1k != null && x.per1k > 0) bits.push(__('{n} por cada 1.000 seguidores', { n: C(x.per1k) }));
-        const canales = x.platforms.length > 1
-          ? __('{n} canales unificados', { n: x.platforms.length }) : '';
-        return `
-          <button type="button" class="cgrid-bar-row${i === 0 ? ' is-leader' : ''}" data-brand="${esc(String(i))}" aria-label="${esc(__('Ver detalle de {b}', { b: x.name }))}">
-            <div class="cgrid-bar-top">
-              <span class="cgrid-bar-name">${esc(x.name)}</span>
-              <span class="cgrid-bar-nets">${nets}</span>
-              ${tipo ? `<span class="cgrid-bar-tipo" data-tipo="${esc(x.tipo)}">${esc(tipo)}</span>` : ''}
-              ${i === 0 ? `<span class="cgrid-bar-lead">${esc(__('Más influencia'))}</span>` : ''}
-              <span class="cgrid-bar-val">${esc(C(x.eng))}</span>
-            </div>
-            <div class="cgrid-bar-track">
-              <div class="cgrid-bar-stack" style="width:${pct}%">${segs}</div>
-            </div>
-            <div class="cgrid-bar-sub">${esc(bits.join(' · '))}${canales ? `<span class="cgrid-bar-canales">${esc(canales)}</span>` : ''}</div>
-          </button>`;
-      }).join('');
+      // Columnas verticales apiladas por red: una columna por marca, cada
+      // segmento la red que aporta ese impacto. Mismo instrumento que Tráfico
+      // en Mi Marca, pero el eje Y es impacto social en vez de publicaciones.
+      host.innerHTML = `<div class="cgrid-chart-wrap"><canvas id="cgridInfluenceChart"></canvas></div>`;
+      try { await this._ensureChartJs(); } catch (_) {}
+      this._paintInfluenceChart(host, rows, netOrder);
 
-      // Leyenda única de la card (no una por barra): el tono es consistente.
-      const legend = body.querySelector('#cgridLegend');
-      if (legend) {
-        legend.innerHTML = netOrder.map((key) => {
-          const ico = PLATFORM_ICON[key];
-          return `<span class="cgrid-leg">
-            <i class="cgrid-leg-dot" style="background:${this._cgridNetColor(key)}"></i>
-            ${ico ? `<i class="${esc(ico)}" aria-hidden="true"></i>` : ''}${esc(NET_LABEL[key] || key)}</span>`;
-        }).join('');
+      // Pie de la card: el contexto que las columnas no pueden llevar encima.
+      const foot = body.querySelector('#cgridBarsFoot');
+      if (foot) {
+        const totPosts = rows.reduce((s, x) => s + x.posts, 0);
+        const totEng = rows.reduce((s, x) => s + x.eng, 0);
+        const leader = rows[0];
+        foot.innerHTML = `
+          <span>${esc(__('{n} publicaciones', { n: totPosts }))}</span>
+          <span class="bgrid-foot-sep">·</span>
+          <span>${esc(__('{n} interacciones', { n: C(totEng) }))}</span>
+          <span class="bgrid-foot-sep">·</span>
+          <span>${esc(__('manda {b} en {p}', { b: leader.name, p: NET_LABEL[leader.topPlatform] || leader.topPlatform }))}</span>`;
       }
+    },
+
+    _paintInfluenceChart(host, rows, netOrder) {
+      const Chart = window.Chart;
+      const canvas = host.querySelector('#cgridInfluenceChart');
+      if (!Chart || !canvas) return;
+      const C = (n) => this._compactNum(Number(n) || 0);
+
+      // Impacto de cada marca en cada red (0 si no está en esa red).
+      const engOf = (row, net) => {
+        const p = row.profiles.find((x) => String(x.platform || '').toLowerCase() === net);
+        return p ? (Number(p.engagement) || 0) : 0;
+      };
+      const datasets = netOrder.map((net) => ({
+        label: NET_LABEL[net] || net,
+        data: rows.map((x) => engOf(x, net)),
+        backgroundColor: this._cgridNetColor(net),
+        // Solo el segmento superior del apilado lleva las esquinas redondeadas,
+        // para que la columna se lea como una sola pieza.
+        borderRadius: (ctx) => {
+          const val = Number(ctx.raw) || 0;
+          if (val <= 0) return 0;
+          const ch = ctx.chart;
+          let topIdx = -1;
+          for (let i = 0; i < ch.data.datasets.length; i++) {
+            if (!ch.isDatasetVisible(i)) continue;
+            if (Number(ch.data.datasets[i].data[ctx.dataIndex] || 0) > 0) topIdx = i;
+          }
+          return ctx.datasetIndex === topIdx ? { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 } : 0;
+        },
+        borderSkipped: false,
+        maxBarThickness: 54,
+        categoryPercentage: 0.62,
+        barPercentage: 0.9,
+        stack: 'impacto',
+      }));
+
+      const TICK = 'rgba(255,255,255,0.55)', GRID = 'rgba(255,255,255,0.06)';
+      try { this._cgridChart?.destroy(); } catch (_) {}
+      this._cgridChart = new Chart(canvas, {
+        type: 'bar',
+        data: { labels: rows.map((x) => x.name), datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          onClick: (evt, els) => {
+            const idx = (els && els.length) ? els[0].index : null;
+            if (idx != null && rows[idx]) this._openBrandPanel(rows[idx]);
+          },
+          onHover: (evt, els) => {
+            if (evt.native && evt.native.target) {
+              evt.native.target.style.cursor = (els && els.length) ? 'pointer' : 'default';
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: TICK, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } },
+            },
+            tooltip: {
+              backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1,
+              titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)',
+              footerColor: 'rgba(212,209,216,0.6)', padding: 10,
+              callbacks: {
+                // Una red con 0 en esa marca no aporta lectura: se omite.
+                label: (c) => (Number(c.raw) > 0 ? `${c.dataset.label}: ${C(c.raw)}` : null),
+                // El pie carga el contexto que no cabe en el eje.
+                footer: (items) => {
+                  const x = rows[items[0].dataIndex];
+                  if (!x) return '';
+                  const tipo = TIPO_LABEL[x.tipo] ? TIPO_LABEL[x.tipo]() : '';
+                  const l = [];
+                  if (tipo) l.push(__('Competidor {t}', { t: tipo.toLowerCase() }));
+                  l.push(__('{n} en total · {p} publicaciones', { n: C(x.eng), p: x.posts }));
+                  if (x.per1k != null && x.per1k > 0) {
+                    l.push(__('{n} por cada 1.000 seguidores', { n: C(x.per1k) }));
+                  }
+                  l.push(__('toca para ver todo lo recolectado'));
+                  return l.join('\n');
+                },
+              },
+            },
+          },
+          scales: {
+            x: { stacked: true, grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.8)', font: { size: 12, weight: '600' }, maxRotation: 0, autoSkip: false } },
+            y: {
+              stacked: true, grid: { color: GRID }, border: { display: false }, beginAtZero: true,
+              ticks: { color: TICK, font: { size: 10 }, maxTicksLimit: 5, callback: (v) => C(v) },
+            },
+          },
+        },
+      });
     },
 
     /* ══ Panel de marca (drill-down de una barra) ═══════════════════════════
