@@ -491,6 +491,9 @@
             <span class="pdeck-card-veil" aria-hidden="true"></span>
           </button>`;
       }).join('');
+      // Cada línea del bloque es una FAMILIA (Crema de Maní agrupa Crunchy,
+      // Natural, con Arequipe…), pero la carátula es la foto de UNA variante:
+      // hay que decir cuál o parece que el nombre no corresponde a la imagen.
 
       const dots = productos.map((prod, i) => `
         <button type="button" class="pdeck-dot" data-i="${i}" aria-label="${esc(prod.producto)}"></button>`).join('');
@@ -578,6 +581,9 @@
       const desde = (dias == null) ? __('Nunca lo has publicado')
         : (dias <= 0 ? __('Lo publicaste hoy') : __('Hace {n} días que no lo nombras', { n: dias }));
       const sig = (v, l) => `<div class="pdeck-sig"><span>${esc(String(v))}</span><small>${esc(l)}</small></div>`;
+      // La foto es de una variante concreta: se dice cuál cuando no coincide con
+      // el nombre de la familia.
+      const foto = (prod.imagen_producto && prod.imagen_producto !== prod.producto) ? prod.imagen_producto : null;
       return `
         <span class="vera-prodstar-badge ${q.cls}">${esc(q.label)}</span>
         <h4 class="pdeck-name">${esc(prod.producto)}</h4>
@@ -589,7 +595,12 @@
         <div class="pdeck-score">
           <strong>${esc(String(prod.share_of_voice_pct != null ? prod.share_of_voice_pct : 0))}</strong><small>%</small>
         </div>
-        <div class="pdeck-score-label">${esc(__('de tu contenido'))}</div>`;
+        <div class="pdeck-score-label">${esc(__('de lo que hablas de producto'))}</div>
+        <p class="pdeck-foot">
+          ${esc(__('{n} publicaciones', { n: prod.posts != null ? prod.posts : 0 }))}
+          ${prod.pct_contenido_total != null ? ' · ' + esc(__('{p}% de todo tu contenido', { p: prod.pct_contenido_total })) : ''}
+          ${foto ? `<br>${esc(__('En la foto: {v}', { v: foto }))}` : ''}
+        </p>`;
     },
 
     _safeMarkdown(md) {
