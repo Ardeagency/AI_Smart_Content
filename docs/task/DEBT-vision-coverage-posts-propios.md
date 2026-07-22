@@ -1,5 +1,10 @@
 # DEBT — Los posts PROPIOS entran sin archivo de media y sin descripcion visual
 
+> **RESUELTO 2026-07-22** (ai-engine `f1d1548`). La causa raiz no era el archivador
+> sino que **a Instagram nunca se le pedia la imagen**: los `fields` del Graph no
+> incluian `media_url`/`thumbnail_url`, asi que el post entraba con `image: null`
+> y no habia nada que archivar ni que describir. Ver "Arreglo" al final.
+
 **Fecha:** 2026-07-22 · **Detectado desde:** card "Producto destacado" (dashboard Mi Marca)
 **Org de referencia:** WAKEUP (`e2477719-…6060`) · brand_container `826ce6bb-…0bfd`
 
@@ -69,3 +74,38 @@ como **piso**, no como medida.
 
 Ver tambien: memoria `project_media_archive_thumbs_r2`,
 `project_meta_own_posts_ingestion`, `project_producto_estrella_rpc_v2`.
+
+
+## Arreglo (2026-07-22, ai-engine `f1d1548`)
+
+**Causa raiz:** en `src/tools/social.tools.js`, los `fields` que se le piden al
+Graph para los media de IG eran
+`id,caption,media_type,permalink,timestamp,like_count,comments_count` — **sin
+`media_url` ni `thumbnail_url`** — y el normalizador ponia `image: null` de forma
+literal. El archivador y el describer estaban bien: nunca recibieron una imagen.
+Facebook si traia `full_picture`, por eso su cobertura era menos mala.
+
+**Cambios:**
+
+1. `social.tools.js` — se piden `media_url`, `thumbnail_url` y
+   `children{media_url,thumbnail_url,media_type}`. En VIDEO/REEL la portada
+   describible es `thumbnail_url` (`media_url` es el mp4); en carrusel el padre no
+   trae `media_url`, se usa la primera pieza. Son campos baratos: no disparan
+   `total_time` como los insights (verificado: `usage.pct = 1`).
+2. `social-scraper.service.js` — `_rescueOwnThumb`: los posts propios YA guardados
+   sin copia en R2 se rescatan en el update de cada ciclo si su URL de CDN sigue
+   viva, y se mandan a describir. Tambien se guarda el carrusel completo
+   (`assets.images`).
+3. `python-analyzer/app/tasks/media_helpers.py` — `extract_image_urls` prefiere
+   `archived_url` (R2, permanente) sobre la URL del CDN en **toda** red.
+4. `python-analyzer/app/main.py` — un `image_extraction_error` viejo ya no deja al
+   post ciego para siempre si ahora existe copia archivada.
+
+**Verificado en vivo (WAKEUP, sensor `meta_posts` forzado):** IG devuelve imagen y
+las 7 piezas de un carrusel; los posts propios pasaron de **0** con `archived_url`
+a rescatarse por ciclo, y el describer genero descripciones que **si nombran el
+producto** ("crema de mani", "pouch amarillo WAKEUP") a $0.008 por medio.
+
+**Lo que sigue sin recuperarse:** los posts cuya URL de CDN ya expiro (el backfill
+dio 60 de 61 en 403). Cada ciclo rescata lo que siga vivo; el resto solo volveria
+con un re-scrape.
