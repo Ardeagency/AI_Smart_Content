@@ -106,9 +106,13 @@
             <div class="cgrid-bars" id="cgridBars"><div class="cgrid-load">${this._esc(__('Cargando perfiles…'))}</div></div>
             <footer class="bgrid-card-foot" id="cgridBarsFoot"></footer>
           </section>
-          <!-- Publicación destacada: SIN superficie ni encabezado — flota sobre
-               el degradado y deja que el contenido del rival hable solo. -->
+          <!-- Publicación destacada: SIN superficie — flota sobre el degradado
+               y deja que el contenido del rival hable solo. Solo título, sin
+               descripción: el contenido se explica a sí mismo. -->
           <section class="bgrid-card glass-black cgrid-card--toppost">
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Publicación con mayor Tráfico'))}</span>
+            </header>
             <div class="cgrid-post" id="cgridTopPost"><div class="cgrid-load">${this._esc(__('Buscando la publicación…'))}</div></div>
           </section>
         </div>`;
@@ -932,15 +936,19 @@
        franja inferior. Un 9:16 a secas recorta ese chrome y deja la pantalla de
        relacionados asomando. Alto = video vertical + el alto del chrome. */
     _cgridSizeEmbed(stage) {
-      const CHROME_PX = 108;   // encabezado de perfil + franja inferior
-      // El reproductor pide 325px de ancho mínimo. Se acota a 340 y se centra:
-      // a todo el ancho de la columna, un vertical daría ~930px de alto y
-      // empujaría las métricas fuera de la pantalla.
-      const disponible = stage.parentElement?.getBoundingClientRect().width
-        || stage.getBoundingClientRect().width || 340;
-      const w = Math.max(300, Math.min(340, Math.round(disponible)));
+      // El chrome del embed de TikTok: encabezado de perfil arriba, y abajo la
+      // franja "Mira más vídeos" + el handle + el copy + la pista de audio.
+      const CHROME_PX = 210;
+      // ANCHO COMPLETO de la columna. TikTok prioriza el alto para meter su
+      // footer, así que con el reproductor acotado a 340px el pie quedaba
+      // cortado. Dándole todo el ancho, el alto proporcional alcanza para que
+      // se vea entero — y así coincide con el ancho de la portada.
+      const w = Math.round(
+        stage.parentElement?.getBoundingClientRect().width
+        || stage.getBoundingClientRect().width || 340,
+      );
       stage.style.aspectRatio = 'auto';
-      stage.style.maxWidth = `${w}px`;
+      stage.style.maxWidth = '';
       stage.style.height = `${Math.round(w * 16 / 9) + CHROME_PX}px`;
     },
 
