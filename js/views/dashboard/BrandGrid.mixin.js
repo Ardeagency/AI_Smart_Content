@@ -542,16 +542,12 @@
       });
     },
 
-    /* El contenedor toma el FORMATO REAL de la foto (igual que la galería de
-       Producción): así la imagen se ve completa, sin recorte ni franjas negras.
-       El 4/5 del CSS solo reserva el hueco mientras carga (evita layout shift). */
+    /* Antes el contenedor adoptaba el formato natural de la foto: en un producto
+       en retrato eso disparaba la altura del bloque. Ahora la altura la fija el
+       CSS (franja de foto + panel) y la imagen la llena con cover — sin franjas
+       y sin que un formato vertical se coma la pantalla. */
     _prodstarFitStage(img) {
-      const apply = () => {
-        const stage = img.closest('.vera-prodstar-stage');
-        if (!stage || !img.naturalWidth || !img.naturalHeight) return;
-        stage.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
-        img.classList.add('is-loaded');
-      };
+      const apply = () => { img.classList.add('is-loaded'); };
       if (img.complete) apply();
       else {
         img.addEventListener('load', apply, { once: true });

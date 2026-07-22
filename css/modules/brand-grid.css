@@ -338,7 +338,7 @@
   grid-column: 1 / -1;
   justify-self: start;
   width: 100%;
-  max-width: 560px;
+  max-width: 480px;
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -364,13 +364,14 @@
    El padding-top deja respirar la foto por encima del panel. */
 .vera-prodstar-stage {
   position: relative; margin: 0; min-width: 0; width: 100%;
-  aspect-ratio: 4 / 5;
   border-radius: 28px;
   background: var(--media-container-bg, #0b0b0b);
   box-shadow: var(--media-container-shadow, 0 10px 34px rgba(0, 0, 0, 0.35));
   overflow: hidden;
   display: flex; flex-direction: column; justify-content: flex-end;
-  padding: 34% 0.85rem 0.85rem;
+  /* La franja superior de foto es fija en px: la altura del bloque no depende
+     del formato del producto (uno vertical disparaba el alto de la pagina). */
+  padding: 130px 0.7rem 0.7rem;
 }
 .vera-prodstar-img {
   position: absolute; inset: 0;
@@ -385,16 +386,16 @@
 .vera-prodstar-panel {
   position: relative; z-index: 1;
   border-radius: 14px;
-  padding: 1.15rem 1.25rem 1.25rem;
-  display: flex; flex-direction: column; gap: 1.1rem;
+  padding: 0.95rem 1rem 1rem;
+  display: flex; flex-direction: column; gap: 0.85rem;
   min-width: 0;
 }
 .vera-prodstar-meta { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
 .vera-prodstar-meta > .vera-prodstar-badge { align-self: flex-start; }
-.vera-prodstar-name { margin: 0; font-size: 1.3rem; font-weight: 700; color: #fff; letter-spacing: -0.015em; line-height: 1.15; }
+.vera-prodstar-name { margin: 0; font-size: 1.12rem; font-weight: 700; color: #fff; letter-spacing: -0.015em; line-height: 1.15; }
 .vera-prodstar-sigs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
 .vera-prodstar-sig { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
-.vera-prodstar-sig span { font-size: 1.05rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.vera-prodstar-sig span { font-size: 0.95rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
 .vera-prodstar-sig small { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.6); }
 @media (prefers-reduced-motion: reduce) {
   .vera-prodstar-img { transition: none; }
@@ -405,16 +406,16 @@
 .vera-prodstar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 /* Cada fila lleva la foto del producto: se reconoce por imagen, no por nombre.
    Sobre el glass los divisores van en blanco tenue, no en el gris de card. */
-.vera-prodstar-item { display: grid; grid-template-columns: 34px minmax(0, 1fr) 3.2rem 3.2rem 5.2rem; align-items: center; gap: 0.65rem; padding: 0.42rem 0; border-top: 1px solid rgba(255, 255, 255, 0.09); }
+.vera-prodstar-item { display: grid; grid-template-columns: 30px minmax(0, 1fr) 3rem 3rem 4.8rem; align-items: center; gap: 0.55rem; padding: 0.34rem 0; border-top: 1px solid rgba(255, 255, 255, 0.09); }
 .vera-prodstar-item:first-child { border-top: none; }
 .vera-prodstar-thumb {
-  width: 34px; height: 34px; display: block; object-fit: cover;
+  width: 30px; height: 30px; display: block; object-fit: cover;
   border-radius: 9px; background: var(--media-container-bg, #0b0b0b);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .vera-prodstar-thumb--empty { opacity: 0.5; }
-.vera-prodstar-item-name { font-size: 0.86rem; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vera-prodstar-item-sov, .vera-prodstar-item-days { font-size: 0.8rem; color: rgba(255, 255, 255, 0.55); font-variant-numeric: tabular-nums; text-align: right; }
+.vera-prodstar-item-name { font-size: 0.8rem; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vera-prodstar-item-sov, .vera-prodstar-item-days { font-size: 0.74rem; color: rgba(255, 255, 255, 0.55); font-variant-numeric: tabular-nums; text-align: right; }
 
 /* Estados: el olvidado en cian — es el cuadrante accionable. */
 .vera-prodstar-badge { display: inline-block; padding: 0.12rem 0.5rem; border-radius: 999px; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; text-align: center; }
@@ -426,7 +427,7 @@
 /* En pantallas estrechas la foto no puede quedar reducida a una franja: el
    panel se despega del formato de la imagen y esta pasa a fondo del bloque. */
 @media (max-width: 620px) {
-  .vera-prodstar-stage { aspect-ratio: auto !important; padding: 62% 0.6rem 0.6rem; }
+  .vera-prodstar-stage { padding: 110px 0.6rem 0.6rem; }
   .vera-prodstar-item { grid-template-columns: 30px minmax(0, 1fr) 3rem 5.2rem; }
   .vera-prodstar-thumb { width: 30px; height: 30px; }
   .vera-prodstar-item-days { display: none; }
