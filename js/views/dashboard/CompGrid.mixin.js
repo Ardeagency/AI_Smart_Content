@@ -90,9 +90,10 @@
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--chart-bar" aria-hidden="true"></i>${this._esc(__('Influencia digital'))}</span>
             </header>
-            <p class="bgrid-card-sub">${this._esc(__('Cuánta conversación genera cada competidor en el periodo · likes, comentarios, compartidos y guardados'))}</p>
+            <p class="bgrid-card-sub">${this._esc(__('Cuánta conversación genera cada competidor y en qué red la genera · toca una barra para ver todo lo recolectado'))}</p>
             <nav class="bgrid-seg" role="tablist" aria-label="${this._esc(__('Periodo'))}">${seg}</nav>
             <div class="cgrid-bars" id="cgridBars"><div class="cgrid-load">${this._esc(__('Cargando perfiles…'))}</div></div>
+            <div class="cgrid-legend" id="cgridLegend"></div>
           </section>
           <section class="bgrid-card glass-black cgrid-card--toppost">
             <header class="bgrid-card-head">
@@ -108,6 +109,12 @@
       if (body.dataset.cgridBound === '1') return;
       body.dataset.cgridBound = '1';
       body.addEventListener('click', (e) => {
+        const bar = e.target.closest('[data-brand]');
+        if (bar) {
+          const row = (this._cgridRows || [])[Number(bar.dataset.brand)];
+          if (row) this._openBrandPanel(row);
+          return;
+        }
         const btn = e.target.closest('[data-cwindow]');
         if (!btn) return;
         const k = btn.dataset.cwindow;
@@ -191,6 +198,9 @@
           p_entity_ids: ids, p_limit: 25,
         }),
       ]);
+      // El rango se guarda: el panel de detalle debe abrirse sobre EXACTAMENTE
+      // la misma ventana que se está viendo en la barra.
+      this._cgridRange = { from: dateFrom, to: dateTo };
       return { ids, brands, posts: Array.isArray(ps?.data) ? ps.data : [] };
     },
 
@@ -221,6 +231,8 @@
       // mismo actor (Instagram + TikTok + Facebook de Paranice = una barra).
       const rows = (data.brands || [])
         .map((r) => ({
+          key: r.brand_key,
+          entityIds: Array.isArray(r.entity_ids) ? r.entity_ids : [],
           name: r.brand_name || '—',
           tipo: r.tipo || '',
           platforms: Array.isArray(r.platforms) ? r.platforms : [],
@@ -240,17 +252,43 @@
         return;
       }
 
+      this._cgridRows = rows;
       const [accent] = this._gridBrandHexes();
       const [r, g, b] = this._hexToRgb(accent);
       const max = Math.max(...rows.map((x) => x.eng));
       const C = (n) => this._compactNum(n);
 
+      // Un tono por PLATAFORMA, igual en todas las barras: si el tono dependiera
+      // de la posición dentro de cada marca, el mismo color significaría redes
+      // distintas en cada fila y la leyenda mentiría. El orden lo fija el
+      // impacto agregado de la red en toda la card.
+      const netTotals = {};
+      rows.forEach((x) => x.profiles.forEach((p) => {
+        const k = String(p.platform || '').toLowerCase();
+        if (k) netTotals[k] = (netTotals[k] || 0) + (Number(p.engagement) || 0);
+      }));
+      const netOrder = Object.keys(netTotals).sort((a, c) => netTotals[c] - netTotals[a]);
+      const ALPHAS = [0.95, 0.68, 0.45, 0.3, 0.2, 0.14];
+      const netAlpha = (k) => {
+        const i = netOrder.indexOf(String(k || '').toLowerCase());
+        return ALPHAS[i] != null ? ALPHAS[i] : 0.12;
+      };
+      this._cgridNetColor = (k) => `rgba(${r},${g},${b},${netAlpha(k)})`;
+
       host.innerHTML = rows.map((x, i) => {
         const pct = Math.max(2, Math.round(x.eng / max * 100));
-        // El líder va en acento pleno; el resto se atenúa por posición para que
-        // la jerarquía se lea sin necesidad de comparar números.
-        const alpha = i === 0 ? 0.95 : Math.max(0.18, 0.62 - i * 0.07);
         const tipo = TIPO_LABEL[x.tipo] ? TIPO_LABEL[x.tipo]() : '';
+        // La barra se APILA por plataforma: el ancho total es el impacto de la
+        // marca; cada segmento, la tajada que aporta ese canal. Se lee de un
+        // vistazo dónde vive de verdad su influencia.
+        const segs = x.profiles
+          .filter((pr) => Number(pr.share_pct) > 0)
+          .map((pr) => {
+            const key = String(pr.platform || '').toLowerCase();
+            const w = Number(pr.share_pct) || 0;
+            const label = `${NET_LABEL[key] || key} · ${w}%`;
+            return `<span class="cgrid-bar-seg" style="width:${w}%;background:${this._cgridNetColor(key)}" title="${esc(label)}"></span>`;
+          }).join('');
         // Los canales de la marca como iconos: la red se identifica sola, el
         // nombre queda limpio. El canal dominante va resaltado.
         const nets = x.platforms.map((pf) => {
@@ -271,7 +309,7 @@
         const canales = x.platforms.length > 1
           ? __('{n} canales unificados', { n: x.platforms.length }) : '';
         return `
-          <div class="cgrid-bar-row${i === 0 ? ' is-leader' : ''}">
+          <button type="button" class="cgrid-bar-row${i === 0 ? ' is-leader' : ''}" data-brand="${esc(String(i))}" aria-label="${esc(__('Ver detalle de {b}', { b: x.name }))}">
             <div class="cgrid-bar-top">
               <span class="cgrid-bar-name">${esc(x.name)}</span>
               <span class="cgrid-bar-nets">${nets}</span>
@@ -280,11 +318,244 @@
               <span class="cgrid-bar-val">${esc(C(x.eng))}</span>
             </div>
             <div class="cgrid-bar-track">
-              <div class="cgrid-bar-fill" style="width:${pct}%;background:rgba(${r},${g},${b},${alpha})"></div>
+              <div class="cgrid-bar-stack" style="width:${pct}%">${segs}</div>
             </div>
             <div class="cgrid-bar-sub">${esc(bits.join(' · '))}${canales ? `<span class="cgrid-bar-canales">${esc(canales)}</span>` : ''}</div>
-          </div>`;
+          </button>`;
       }).join('');
+
+      // Leyenda única de la card (no una por barra): el tono es consistente.
+      const legend = body.querySelector('#cgridLegend');
+      if (legend) {
+        legend.innerHTML = netOrder.map((key) => {
+          const ico = PLATFORM_ICON[key];
+          return `<span class="cgrid-leg">
+            <i class="cgrid-leg-dot" style="background:${this._cgridNetColor(key)}"></i>
+            ${ico ? `<i class="${esc(ico)}" aria-hidden="true"></i>` : ''}${esc(NET_LABEL[key] || key)}</span>`;
+        }).join('');
+      }
+    },
+
+    /* ══ Panel de marca (drill-down de una barra) ═══════════════════════════
+       Todo lo recolectado de ese competidor en la ventana activa: totales de
+       interacción y alcance, desglose por red con su %, historial de actividad
+       por día (barras apiladas por plataforma) y las publicaciones. ═══════ */
+    async _openBrandPanel(row) {
+      const esc = (s) => this._esc(s);
+      const rng = this._cgridRange || {};
+      const overlay = document.createElement('div');
+      overlay.className = 'salud-overlay';
+      overlay.innerHTML = `
+        <div class="salud-modal cgrid-panel" role="dialog" aria-modal="true">
+          <div class="salud-modal-head">
+            <span class="salud-modal-title">${esc(row.name)}</span>
+            <button type="button" class="salud-modal-close" aria-label="${esc(__('Cerrar'))}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
+          </div>
+          <div class="salud-modal-body" id="cgridPanelBody">
+            <div class="cgrid-load">${esc(__('Reuniendo todo lo recolectado…'))}</div>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+      // El chart del panel NO se registra en _reg: el auto-refresh del tab
+      // destruye los charts registrados y dejaría el canvas del panel en blanco
+      // mientras el usuario lo tiene abierto. Ciclo de vida propio.
+      const close = () => {
+        try { this._cgpChart?.destroy(); } catch (_) {}
+        this._cgpChart = null;
+        overlay.remove();
+      };
+      overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.closest('.salud-modal-close')) close(); });
+      document.addEventListener('keydown', function onEsc(ev) { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } });
+
+      let d = null;
+      try {
+        const { data } = await this._supabase.rpc('dashboard_competencia_marca_detalle', {
+          p_org_id: this._orgId,
+          p_entity_ids: row.entityIds,
+          p_date_from: rng.from,
+          p_date_to: rng.to,
+          p_post_limit: 24,
+        });
+        d = data || null;
+      } catch (e) { console.warn('[CompGrid] detalle falló:', e); }
+
+      const host = overlay.querySelector('#cgridPanelBody');
+      if (!host) return;
+      if (!d || !d.totals || !Number(d.totals.posts)) {
+        host.innerHTML = `<div class="cgrid-empty">${esc(__('Sin publicaciones recolectadas de esta marca en el periodo.'))}</div>`;
+        return;
+      }
+      host.innerHTML = this._brandPanelHtml(row, d);
+      this._bindCgridMediaFallback(host);
+      try { await this._ensureChartJs(); } catch (_) {}
+      this._paintBrandDailyChart(host, d);
+    },
+
+    _brandPanelHtml(row, d) {
+      const esc = (s) => this._esc(s);
+      const C = (n) => this._compactNum(Number(n) || 0);
+      const t = d.totals || {};
+      const nets = Array.isArray(d.by_platform) ? d.by_platform : [];
+
+      const stat = (v, label, hint) => (Number(v) > 0 || label === __('publicaciones'))
+        ? `<div class="cgp-stat"><span class="cgp-stat-v">${esc(C(v))}</span><small>${esc(label)}</small>${hint ? `<em>${esc(hint)}</em>` : ''}</div>` : '';
+
+      // Interacción y alcance en filas separadas: mezclarlas invita a sumar
+      // reproducciones con likes, que no es la misma unidad.
+      const statsHtml = `
+        <div class="cgp-stats">
+          ${stat(t.posts, __('publicaciones'))}
+          ${stat(t.interacciones, __('interacciones'))}
+          ${stat(t.likes, __('me gusta'))}
+          ${stat(t.comments, __('comentarios'))}
+          ${stat(t.saves, __('guardados'))}
+          ${stat(t.shares, __('compartidos'))}
+        </div>
+        <div class="cgp-stats cgp-stats--reach">
+          ${stat(t.plays, __('reproducciones'))}
+          ${stat(t.views, __('visualizaciones'))}
+          ${stat(t.comentarios_recolectados, __('comentarios leídos'), __('disponibles para analizar'))}
+        </div>`;
+
+      // Desglose por red: dónde vive su influencia y dónde solo hace ruido.
+      const netsHtml = nets.length ? `
+        <div class="cgp-block">
+          <div class="cgp-block-title">${esc(__('Por plataforma'))}</div>
+          <div class="cgp-nets">
+            ${nets.map((n) => {
+              const key = String(n.platform || '').toLowerCase();
+              const ico = PLATFORM_ICON[key];
+              const share = Number(n.share_pct) || 0;
+              return `
+                <div class="cgp-net">
+                  <div class="cgp-net-head">
+                    ${ico ? `<i class="${esc(ico)}" aria-hidden="true"></i>` : ''}
+                    <span class="cgp-net-name">${esc(NET_LABEL[key] || key)}</span>
+                    <span class="cgp-net-handle">${esc(String(n.handle || '').replace(/^@+/, '') ? '@' + String(n.handle).replace(/^@+/, '') : '')}</span>
+                    <span class="cgp-net-share">${esc(String(share))}%</span>
+                  </div>
+                  <div class="cgrid-bar-track"><div class="cgrid-bar-fill" style="width:${Math.max(1, share)}%;background:${this._cgridNetColor ? this._cgridNetColor(key) : '#FF6A1A'}"></div></div>
+                  <div class="cgp-net-sub">${esc([
+                    __('{n} publicaciones', { n: n.posts }),
+                    __('{n} interacciones', { n: C(n.interacciones) }),
+                    Number(n.plays) > 0 ? __('{n} reproducciones', { n: C(n.plays) }) : null,
+                  ].filter(Boolean).join(' · '))}</div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>` : '';
+
+      const dailyHtml = `
+        <div class="cgp-block">
+          <div class="cgp-block-title">${esc(__('Historial de actividad'))}</div>
+          <div class="cgp-chart-wrap"><canvas id="cgpDailyChart"></canvas></div>
+        </div>`;
+
+      const posts = Array.isArray(d.posts) ? d.posts : [];
+      const postsHtml = posts.length ? `
+        <div class="cgp-block">
+          <div class="cgp-block-title">${esc(__('Publicaciones recolectadas'))} <span class="cgp-block-n">${esc(__('{n} de {t}', { n: posts.length, t: t.posts }))}</span></div>
+          <div class="cgp-posts">
+            ${posts.map((p) => this._cgpPostHtml(p)).join('')}
+          </div>
+        </div>` : '';
+
+      return statsHtml + netsHtml + dailyHtml + postsHtml;
+    },
+
+    _cgpPostHtml(p) {
+      const esc = (s) => this._esc(s);
+      const C = (n) => this._compactNum(Number(n) || 0);
+      const key = String(p.platform || '').toLowerCase();
+      const ico = PLATFORM_ICON[key];
+      const url = this._cgridPostUrl(key, p.post_id, p.handle, p.permalink);
+      const when = p.captured_at ? this._veraFmtDate(p.captured_at) : '';
+      const a = (p.media_assets && typeof p.media_assets === 'object') ? p.media_assets : {};
+      const first = (v) => (Array.isArray(v) && v.length ? v[0] : null);
+      const pick = (v) => (typeof v === 'string' && /^https?:\/\//i.test(v)) ? v : null;
+      const img = [a.display_url, a.main_image_url, a.cover_image, a.thumbnail_url,
+        first(a.thumbnails), first(a.images), first(a.media_urls)].map(pick).find(Boolean);
+      const bits = [
+        Number(p.likes) > 0 ? `♥ ${C(p.likes)}` : null,
+        Number(p.comments) > 0 ? `💬 ${C(p.comments)}` : null,
+        Number(p.saves) > 0 ? `🔖 ${C(p.saves)}` : null,
+        Number(p.plays) > 0 ? `▶ ${C(p.plays)}` : null,
+      ].filter(Boolean).join('  ');
+      return `
+        <${url ? 'a' : 'div'} class="cgp-post"${url ? ` href="${esc(url)}" target="_blank" rel="noopener noreferrer"` : ''}>
+          ${img
+            ? `<div class="cgp-post-thumb"><img data-cgrid-media src="${esc(img)}" alt="" loading="lazy"><span class="cgp-post-thumb-fb" data-cgrid-fb hidden></span></div>`
+            : `<div class="cgp-post-thumb cgp-post-thumb--empty" aria-hidden="true"></div>`}
+          <div class="cgp-post-body">
+            <div class="cgp-post-head">
+              ${ico ? `<i class="${esc(ico)}" aria-hidden="true"></i>` : ''}
+              <span class="cgp-post-when">${esc(when)}</span>
+              <span class="cgp-post-eng">${esc(C(p.interacciones))}</span>
+            </div>
+            ${p.content ? `<div class="cgp-post-copy">${esc(String(p.content).slice(0, 140))}</div>` : ''}
+            ${bits ? `<div class="cgp-post-bits">${esc(bits)}</div>` : ''}
+          </div>
+        </${url ? 'a' : 'div'}>`;
+    },
+
+    /* Historial de actividad: publicaciones por día APILADAS por red — el mismo
+       instrumento que Tráfico en Mi Marca, aplicado al competidor. */
+    _paintBrandDailyChart(scope, d) {
+      const Chart = window.Chart;
+      const canvas = scope.querySelector('#cgpDailyChart');
+      if (!Chart || !canvas) return;
+      const daily = Array.isArray(d.daily) ? d.daily : [];
+      if (!daily.length) return;
+
+      // Solo los últimos 30 días CON actividad: una ventana larga (o "Todo")
+      // produciría cientos de columnas de 1px ilegibles.
+      const days = [...new Set(daily.map((x) => x.date))].sort().slice(-30);
+      const nets = [...new Set(daily.map((x) => x.platform))];
+      const byKey = new Map(daily.map((x) => [`${x.date}|${x.platform}`, x]));
+      const fmtDay = (iso) => {
+        try {
+          return new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
+        } catch (_) { return iso; }
+      };
+
+      const datasets = nets.map((n) => ({
+        label: NET_LABEL[String(n).toLowerCase()] || n,
+        data: days.map((dd) => Number((byKey.get(`${dd}|${n}`) || {}).posts) || 0),
+        backgroundColor: this._cgridNetColor ? this._cgridNetColor(n) : 'rgba(255,106,26,0.8)',
+        borderRadius: (ctx) => {
+          const val = Number(ctx.raw) || 0;
+          if (val <= 0) return 0;
+          const ch = ctx.chart;
+          let topIdx = -1;
+          for (let i = 0; i < ch.data.datasets.length; i++) {
+            if (!ch.isDatasetVisible(i)) continue;
+            if (Number(ch.data.datasets[i].data[ctx.dataIndex] || 0) > 0) topIdx = i;
+          }
+          return ctx.datasetIndex === topIdx ? { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 } : 0;
+        },
+        borderSkipped: false,
+        maxBarThickness: 26,
+        stack: 'posts',
+      }));
+
+      const TICK = 'rgba(255,255,255,0.55)', GRID = 'rgba(255,255,255,0.06)';
+      try { this._cgpChart?.destroy(); } catch (_) {}
+      this._cgpChart = new Chart(canvas, {
+        type: 'bar',
+        data: { labels: days.map(fmtDay), datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'bottom', labels: { color: TICK, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } },
+            tooltip: { backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10 },
+          },
+          scales: {
+            x: { stacked: true, grid: { display: false }, ticks: { color: TICK, font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+            y: { stacked: true, grid: { color: GRID }, border: { display: false }, beginAtZero: true, ticks: { color: TICK, font: { size: 10 }, precision: 0, maxTicksLimit: 4 } },
+          },
+        },
+      });
     },
 
     /* ══ Card 2: la publicación que más movió ═══════════════════════════════

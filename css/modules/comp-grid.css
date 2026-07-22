@@ -25,7 +25,16 @@
 /* ── Card 1: Influencia digital (barras horizontales) ───────────────── */
 .cgrid-bars { display: flex; flex-direction: column; gap: 1.05rem; }
 
-.cgrid-bar-row { display: flex; flex-direction: column; gap: 0.4rem; min-width: 0; }
+/* La fila es un boton (abre el panel de la marca): se resetea la piel nativa. */
+.cgrid-bar-row {
+  display: flex; flex-direction: column; gap: 0.4rem; min-width: 0;
+  appearance: none; background: none; border: 0; padding: 0.35rem 0.4rem;
+  margin: -0.35rem -0.4rem; border-radius: 12px;
+  font: inherit; color: inherit; text-align: left; width: calc(100% + 0.8rem);
+  cursor: pointer; transition: background 0.18s ease;
+}
+.cgrid-bar-row:hover { background: rgba(255, 255, 255, 0.045); }
+.cgrid-bar-row:focus-visible { outline: 2px solid var(--brand-color-light, #FF6A1A); outline-offset: 2px; }
 
 .cgrid-bar-top { display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
 .cgrid-bar-name {
@@ -66,7 +75,80 @@
 }
 .cgrid-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
 
+/* Barra APILADA por plataforma: el ancho total es el impacto de la marca y
+   cada segmento la tajada de una red. Las esquinas se redondean solo en los
+   extremos para que el conjunto se lea como una sola barra. */
+.cgrid-bar-stack {
+  display: flex; height: 100%; border-radius: 999px; overflow: hidden;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cgrid-bar-seg { display: block; height: 100%; min-width: 2px; }
+
 .cgrid-bar-sub { font-size: 0.7rem; color: rgba(255, 255, 255, 0.45); }
+
+/* Leyenda unica de la card (el tono por red es consistente en todas las barras). */
+.cgrid-legend {
+  display: flex; flex-wrap: wrap; gap: 0.35rem 1rem;
+  padding-top: 0.35rem; font-size: 0.72rem; color: rgba(255, 255, 255, 0.55);
+}
+.cgrid-legend:empty { display: none; }
+.cgrid-leg { display: inline-flex; align-items: center; gap: 0.35rem; }
+.cgrid-leg-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+/* ── Panel de marca (drill-down al hacer click en una barra) ─────────────── */
+.salud-modal.cgrid-panel { max-width: 860px; width: 92vw; }
+.cgp-stats {
+  display: flex; flex-wrap: wrap; gap: 0.6rem 1.8rem;
+  padding-bottom: 1rem;
+}
+/* Alcance separado de interaccion: no son la misma unidad, no se suman. */
+.cgp-stats--reach {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 0.9rem; margin-top: -0.2rem;
+}
+.cgp-stat { display: flex; flex-direction: column; gap: 0.05rem; }
+.cgp-stat-v { font-size: 1.15rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.cgp-stat small { font-size: 0.68rem; color: rgba(255, 255, 255, 0.5); }
+.cgp-stat em { font-size: 0.62rem; font-style: normal; color: rgba(255, 255, 255, 0.3); }
+
+.cgp-block { padding-top: 1.3rem; border-top: 1px solid rgba(255, 255, 255, 0.07); margin-top: 1.1rem; }
+.cgp-block-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.85rem; }
+.cgp-block-n { font-weight: 400; letter-spacing: 0; text-transform: none; color: rgba(255, 255, 255, 0.32); }
+
+.cgp-nets { display: flex; flex-direction: column; gap: 0.9rem; }
+.cgp-net { display: flex; flex-direction: column; gap: 0.35rem; }
+.cgp-net-head { display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.82rem; }
+.cgp-net-head > i { color: rgba(255, 255, 255, 0.55); font-size: 0.85rem; }
+.cgp-net-name { font-weight: 600; color: rgba(255, 255, 255, 0.85); }
+.cgp-net-handle { color: rgba(255, 255, 255, 0.35); font-size: 0.72rem; }
+.cgp-net-share { margin-left: auto; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.cgp-net-sub { font-size: 0.7rem; color: rgba(255, 255, 255, 0.42); }
+
+.cgp-chart-wrap { position: relative; width: 100%; height: 210px; }
+.cgp-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+.cgp-posts { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.7rem; }
+.cgp-post {
+  display: flex; gap: 0.65rem; align-items: stretch;
+  padding: 0.55rem; border-radius: 12px; text-decoration: none;
+  background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.18s ease;
+}
+a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
+.cgp-post-thumb {
+  position: relative; flex: 0 0 auto; width: 54px; height: 54px;
+  border-radius: 9px; overflow: hidden; background: rgba(255, 255, 255, 0.06);
+}
+.cgp-post-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cgp-post-thumb-fb { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.06); }
+.cgp-post-body { min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; justify-content: center; }
+.cgp-post-head { display: flex; align-items: baseline; gap: 0.4rem; font-size: 0.68rem; color: rgba(255, 255, 255, 0.42); }
+.cgp-post-eng { margin-left: auto; font-weight: 700; color: #fff; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.cgp-post-copy {
+  font-size: 0.75rem; line-height: 1.4; color: rgba(255, 255, 255, 0.7);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.cgp-post-bits { font-size: 0.68rem; color: rgba(255, 255, 255, 0.4); }
 
 /* ── Card 2: la publicación que más movió ───────────────────────────── */
 .cgrid-post-card { display: flex; flex-direction: column; gap: 0.9rem; min-width: 0; }
