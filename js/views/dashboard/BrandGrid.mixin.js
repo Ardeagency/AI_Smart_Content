@@ -480,22 +480,16 @@
         : `<div class="vera-prodstar-img vera-prodstar-img--empty" aria-hidden="true"></div>`;
       const sig = (v, l) => `<div class="vera-prodstar-sig"><span>${esc(String(v))}</span><small>${esc(l)}</small></div>`;
 
-      // Escenario cinematográfico: la foto manda (a tamaño completo, con su
-      // propio formato como en la galería de Producción) y la ficha aparece
-      // encima al pasar el cursor.
-      const heroHtml = `
-        <figure class="vera-prodstar-stage" tabindex="0">
-          ${img}
-          <figcaption class="vera-prodstar-overlay">
-            <span class="vera-prodstar-badge ${q.cls}">${esc(q.label)}</span>
-            <h4 class="vera-prodstar-name">${esc(hero.producto)}</h4>
-            <div class="vera-prodstar-sigs">
-              ${sig((hero.share_of_voice_pct != null ? hero.share_of_voice_pct : 0) + '%', __('de tu contenido'))}
-              ${sig(hero.engagement_promedio != null ? hero.engagement_promedio : 0, __('interacción media'))}
-              ${sig(hero.menciones_publico != null ? hero.menciones_publico : 0, __('lo nombra el público'))}
-            </div>
-          </figcaption>
-        </figure>`;
+      const fichaHtml = `
+        <div class="vera-prodstar-meta">
+          <span class="vera-prodstar-badge ${q.cls}">${esc(q.label)}</span>
+          <h4 class="vera-prodstar-name">${esc(hero.producto)}</h4>
+          <div class="vera-prodstar-sigs">
+            ${sig((hero.share_of_voice_pct != null ? hero.share_of_voice_pct : 0) + '%', __('de tu contenido'))}
+            ${sig(hero.engagement_promedio != null ? hero.engagement_promedio : 0, __('interacción media'))}
+            ${sig(hero.menciones_publico != null ? hero.menciones_publico : 0, __('lo nombra el público'))}
+          </div>
+        </div>`;
 
       const items = olvidados.map((p) => {
         const pq = QUAD[p.cuadrante] || QUAD.cola;
@@ -517,10 +511,22 @@
           <ul class="vera-prodstar-list">${items}</ul>
         </div>`;
 
+      // La foto del producto es el LIENZO: encima, una sola card glass-black
+      // reúne la ficha de la estrella y la lista de los que se están olvidando.
+      // Sin hover — todo está a la vista desde el primer vistazo.
+      const stageHtml = `
+        <figure class="vera-prodstar-stage">
+          ${img}
+          <figcaption class="vera-prodstar-panel glass-black">
+            ${fichaHtml}
+            ${listaHtml}
+          </figcaption>
+        </figure>`;
+
       hosts.forEach((h) => {
         const l = h.querySelector('.vera-prodstar-load');
         if (l) l.remove();
-        h.insertAdjacentHTML('beforeend', `<div class="vera-prodstar-grid">${heroHtml}${listaHtml}</div>`);
+        h.insertAdjacentHTML('beforeend', `<div class="vera-prodstar-grid">${stageHtml}</div>`);
         h.querySelectorAll('[data-prodstar-fit]').forEach((el) => this._prodstarFitStage(el));
       });
     },
