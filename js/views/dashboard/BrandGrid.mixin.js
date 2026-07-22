@@ -328,6 +328,7 @@
       if (prodstar && host && host.contains(prodstar) && grid) grid.appendChild(prodstar);
       if (host) host.innerHTML = restItems.length ? `<div class="vera-cards">${restItems.map((x) => this._veraCardHtml(x.card, x.key)).join('')}</div>` : '';
       this._placeProdstarNextToAlgoritmo(body);
+      body.querySelectorAll('[data-panel-marca]').forEach((el) => this._vestirPanelDeMarca(el));
       try { await this._ensureChartJs(); } catch (_) {}
       this._paintVeraCharts(body, obsItems.concat(virtItems, desvItems, restItems));
       // Bloque vivo: pide su propio dato al RPC, por eso va aparte de los charts.
@@ -673,7 +674,7 @@
           ${card.title ? `<h3 class="vera-card-title">${esc(card.title)}</h3>` : ''}
           <div class="vera-aud-grid">
             <div class="vera-aud-viz">${vizHtml}</div>
-            <div class="vera-aud-comment vera-card-body">${restHtml}</div>
+            <div class="vera-aud-comment vera-card-body" data-panel-marca="1">${restHtml}</div>
           </div>
         </section>`;
     },
@@ -951,29 +952,37 @@
           if (b.type === 'pyramid') { this._paintPyramid(canvas, b); return; }
           if (b.type === 'choropleth') { this._paintChoropleth(canvas, b, scope.querySelector(`#veraChart-${key}-${bi}-fb`)); return; }
           if (b.type !== 'chart') return;
+          // Dentro de un panel del color de la marca, el acento de marca se
+          // volveria invisible: el chart se dibuja con la tinta del panel.
+          const enPanel = canvas.closest('[data-panel-marca][data-fondo]');
+          const tinta = enPanel ? (enPanel.dataset.fondo === 'claro' ? [17, 14, 10] : [255, 255, 255]) : null;
           const kind = ['bar', 'line', 'donut', 'area'].includes(b.kind) ? b.kind : 'bar';
           const labels = Array.isArray(b.labels) ? b.labels : [];
           const series = Array.isArray(b.series) ? b.series : [];
           const yFmt = (v) => b.format === 'percent' ? v + '%' : v;
+          const [cr, cg, cb] = tinta || [r, g, bl];
+          const paleta = tinta ? [0.92, 0.6, 0.38, 0.24, 0.15].map((a) => `rgba(${cr},${cg},${cb},${a})`) : palette;
+          const tick = tinta ? `rgba(${cr},${cg},${cb},0.62)` : TICK;
+          const grid = tinta ? `rgba(${cr},${cg},${cb},0.14)` : GRID;
           let cfg;
           if (kind === 'donut') {
             const values = (series[0] && Array.isArray(series[0].values)) ? series[0].values : [];
-            cfg = { type: 'doughnut', data: { labels, datasets: [{ data: values, backgroundColor: labels.map((_, i) => palette[i % palette.length]), borderColor: 'rgba(0,0,0,0.25)', borderWidth: 2 }] },
+            cfg = { type: 'doughnut', data: { labels, datasets: [{ data: values, backgroundColor: labels.map((_, i) => paleta[i % paleta.length]), borderColor: 'rgba(0,0,0,0.25)', borderWidth: 2 }] },
               options: { responsive: true, maintainAspectRatio: false, cutout: '62%',
-                plugins: { legend: { position: 'right', labels: { color: TICK, boxWidth: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } }, tooltip: TT } } };
+                plugins: { legend: { position: 'right', labels: { color: tick, boxWidth: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } }, tooltip: TT } } };
           } else {
             const isLine = (kind === 'line' || kind === 'area');
             const datasets = series.map((sr, i) => ({
               label: sr.name || '', data: Array.isArray(sr.values) ? sr.values : [],
-              backgroundColor: isLine ? `rgba(${r},${g},${bl},0.14)` : palette[i % palette.length],
-              borderColor: palette[i % palette.length], borderWidth: isLine ? 2 : 0,
+              backgroundColor: isLine ? `rgba(${cr},${cg},${cb},0.14)` : paleta[i % paleta.length],
+              borderColor: paleta[i % paleta.length], borderWidth: isLine ? 2 : 0,
               fill: kind === 'area', tension: 0.35, borderRadius: isLine ? 0 : 6, maxBarThickness: 34, pointRadius: 0,
             }));
             cfg = { type: isLine ? 'line' : 'bar', data: { labels, datasets }, options: {
               responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-              plugins: { legend: { display: series.length > 1, position: 'bottom', labels: { color: TICK, boxWidth: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } }, tooltip: TT },
-              scales: { x: { grid: { display: false }, ticks: { color: TICK, font: { size: 10 }, maxRotation: 0, autoSkip: true } },
-                y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, ticks: { color: TICK, font: { size: 10 }, maxTicksLimit: 5, callback: yFmt } } } } };
+              plugins: { legend: { display: series.length > 1, position: 'bottom', labels: { color: tick, boxWidth: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } }, tooltip: TT },
+              scales: { x: { grid: { display: false }, ticks: { color: tick, font: { size: 10 }, maxRotation: 0, autoSkip: true } },
+                y: { grid: { color: grid }, border: { display: false }, beginAtZero: true, ticks: { color: tick, font: { size: 10 }, maxTicksLimit: 5, callback: yFmt } } } } };
           }
           this._reg(new Chart(canvas, cfg));
         });
@@ -1178,6 +1187,32 @@
       } catch (_) {}
       const vivid = candidates.filter(Boolean).find(isVivid);
       return [vivid || '#FF6A1A'];
+    },
+
+    /* Luminancia relativa (WCAG) del color de marca: decide si sobre él va tinta
+       oscura o clara. Sin esto, una marca con color claro (amarillo, lima,
+       celeste) se queda con texto blanco ilegible sobre su propio color. */
+    _esColorClaro(hex) {
+      try {
+        const [r, g, b] = this._hexToRgb(hex);
+        const lin = (c) => { const x = c / 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+        return (0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)) > 0.42;
+      } catch (_) { return false; }
+    },
+
+    /* Pinta un panel con el color de la marca y le deja resuelto el juego de
+       tintas en variables, para que el CSS no tenga que saber de luminancias. */
+    _vestirPanelDeMarca(el) {
+      if (!el) return;
+      const [accent] = this._gridBrandHexes();
+      const claro = this._esColorClaro(accent);
+      const tinta = claro ? '17, 14, 10' : '255, 255, 255';
+      el.dataset.fondo = claro ? 'claro' : 'oscuro';
+      el.style.setProperty('--panel-bg', accent);
+      el.style.setProperty('--panel-fg', `rgb(${tinta})`);
+      el.style.setProperty('--panel-fg-soft', `rgba(${tinta}, 0.72)`);
+      el.style.setProperty('--panel-fg-faint', `rgba(${tinta}, 0.5)`);
+      el.style.setProperty('--panel-linea', `rgba(${tinta}, 0.16)`);
     },
 
     _hexToRgb(hex) {

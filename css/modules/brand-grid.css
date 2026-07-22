@@ -622,3 +622,30 @@
   .vera-card--algoritmo .vera-card-title { font-size: 1.4rem; }
   .vera-acto[data-tono="lectura"] .vera-md { font-size: 1rem; }
 }
+
+/* ── Audiencias: lo que Vera escribe va sobre el color de la marca ──────────
+   El panel toma el color vivo de la organizacion y la tinta la resuelve JS
+   segun su luminancia (--panel-fg y compañia): con una marca de color claro
+   —amarillo, lima, celeste— el texto blanco seria ilegible sobre su propio
+   color, asi que ahi la tinta se vuelve oscura sola. */
+.vera-aud-comment[data-panel-marca] {
+  background: var(--panel-bg, var(--brand-color-light, #F79E1B));
+  color: var(--panel-fg, #fff);
+  border-radius: 16px;
+  padding: 1.5rem 1.6rem;
+  align-self: start;
+}
+.vera-aud-comment[data-panel-marca] .vera-md,
+.vera-aud-comment[data-panel-marca] .vera-md p,
+.vera-aud-comment[data-panel-marca] .vera-md li { color: var(--panel-fg-soft, rgba(255, 255, 255, 0.78)); }
+.vera-aud-comment[data-panel-marca] .vera-md strong,
+.vera-aud-comment[data-panel-marca] .vera-stat-value { color: var(--panel-fg, #fff); }
+.vera-aud-comment[data-panel-marca] .vera-stat-label,
+.vera-aud-comment[data-panel-marca] .vera-chart-title { color: var(--panel-fg-faint, rgba(255, 255, 255, 0.6)); }
+.vera-aud-comment[data-panel-marca] .vera-md a { color: var(--panel-fg, #fff); text-decoration-color: var(--panel-linea); }
+.vera-aud-comment[data-panel-marca] .vera-md code {
+  background: var(--panel-linea, rgba(255, 255, 255, 0.12)); color: var(--panel-fg, #fff);
+}
+.vera-aud-comment[data-panel-marca] .vera-table th { color: var(--panel-fg-faint); border-color: var(--panel-linea); }
+.vera-aud-comment[data-panel-marca] .vera-table td { color: var(--panel-fg-soft); border-color: var(--panel-linea); }
+.vera-aud-comment[data-panel-marca] .vera-table .vera-td-lead { color: var(--panel-fg); }
