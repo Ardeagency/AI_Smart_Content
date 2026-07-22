@@ -108,7 +108,11 @@
       if (!ids.length) return null;
       const [postsRes, integRes] = await Promise.all([
         this._supabase.from('brand_posts')
-          .select('network, engagement_total, sentiment_score, captured_at')
+          // `sentiment_score` ya NO existe en brand_posts (se eliminó al
+          // desmontar el clasificador): pedirla devolvía 400 y tumbaba la
+          // consulta entera, así que ni siquiera llegaban los datos que sí
+          // existen. El agregado de sentimiento de abajo degrada solo a null.
+          .select('network, engagement_total, captured_at')
           .in('brand_container_id', ids).eq('post_source', 'own').limit(5000),
         this._supabase.from('brand_integrations')
           .select('platform, is_active, rep:metadata->seller_reputation_level, power:metadata->power_seller_status')

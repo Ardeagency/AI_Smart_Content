@@ -853,13 +853,22 @@
         }
         this._cgridFitMedia(el);
         if (el.tagName === 'VIDEO') {
+          // `loadedmetadata` es la señal REAL de que el video sirve: el
+          // navegador ya conoce duración y dimensiones, o sea que el servidor
+          // respondió y el reproductor es usable. Con preload="metadata" puede
+          // ser lo ÚNICO que llegue — `loadeddata`/`canplay` esperan datos del
+          // primer frame, que no se piden hasta que el usuario le da play.
+          el.addEventListener('loadedmetadata', succeed, { once: true });
           el.addEventListener('loadeddata', succeed, { once: true });
           el.addEventListener('canplay', succeed, { once: true });
-          // El error del elemento <video> (no el del <source>) sí es terminal.
+          // Único fallo terminal: el propio <video> agotó sus candidatos. NO se
+          // escucha el error del <source> — un candidato caído no dice nada del
+          // resultado final, y era lo que estaba tumbando videos que se veían
+          // perfectamente (aparecían un instante y luego el aviso los tapaba).
           el.addEventListener('error', fail, { once: true });
-          const src = el.querySelector('source');
-          // Un <source> caído solo condena al video si nada llegó a cargar.
-          if (src) src.addEventListener('error', () => setTimeout(fail, 1200), { once: true });
+          // readyState >= 1 (HAVE_METADATA) puede darse antes de bindear.
+          if (el.readyState >= 1) succeed();
+          else if (el.error) fail();
         } else {
           el.addEventListener('load', succeed, { once: true });
           el.addEventListener('error', fail, { once: true });
