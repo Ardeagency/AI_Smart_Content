@@ -14,6 +14,48 @@
 }
 @media (max-width: 1000px) { .cgrid { grid-template-columns: 1fr; } }
 
+/* Columna izquierda: Influencia + la lectura por perfil, apiladas. */
+.cgrid-col { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+
+/* ── Qué hace cada perfil (tabla que llena Vera) ─────────────────────────── */
+.cgrid-perfiles { min-width: 0; }
+.cgp-table-wrap { overflow-x: auto; }
+.cgp-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.cgp-table th {
+  text-align: left; font-size: 0.64rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+  padding: 0 0.7rem 0.6rem 0; white-space: nowrap;
+}
+.cgp-table td {
+  padding: 0.75rem 0.7rem 0.75rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  vertical-align: top; color: rgba(255, 255, 255, 0.72); line-height: 1.5;
+}
+.cgp-perfil { min-width: 150px; }
+.cgp-perfil-name { display: block; font-weight: 700; color: #fff; }
+.cgp-perfil-nets { display: inline-flex; gap: 0.35rem; margin-right: 0.4rem; font-size: 0.7rem; color: rgba(255, 255, 255, 0.35); }
+.cgp-rol {
+  display: inline-block; font-size: 0.58rem; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 0.12rem 0.42rem; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16); color: rgba(255, 255, 255, 0.55);
+}
+/* Competidor y referente NO son lo mismo: el color lo recuerda de un vistazo. */
+.cgp-rol.is-dir { color: rgba(255, 255, 255, 0.85); border-color: rgba(255, 255, 255, 0.38); }
+.cgp-rol.is-ref { color: #8fd3ad; border-color: rgba(120, 200, 150, 0.4); }
+.cgp-rol.is-ali { color: #9db9e8; border-color: rgba(140, 175, 230, 0.4); }
+.cgp-chip {
+  display: inline-block; margin: 0 0.28rem 0.28rem 0;
+  padding: 0.15rem 0.5rem; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07); font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+.cgp-tono { font-style: italic; color: rgba(255, 255, 255, 0.62); min-width: 120px; }
+.cgp-aprend { min-width: 200px; }
+.cgp-na { color: rgba(255, 255, 255, 0.25); }
+.cgp-firma { padding-top: 0.7rem; font-size: 0.68rem; color: rgba(255, 255, 255, 0.32); }
+
 .cgrid-load,
 .cgrid-empty {
   font-size: 0.84rem;

@@ -99,6 +99,7 @@
         <button type="button" class="bgrid-seg-btn${w.k === this._cgridWindow ? ' is-active' : ''}" data-cwindow="${w.k}" role="tab">${this._esc(w.label())}</button>`).join('');
       return `
         <div class="cgrid">
+          <div class="cgrid-col">
           <section class="bgrid-card glass-black cgrid-card--influencia">
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--chart-bar" aria-hidden="true"></i>${this._esc(__('Influencia digital'))}</span>
@@ -114,6 +115,17 @@
             <div class="cgrid-bars" id="cgridBars"><div class="cgrid-load">${this._esc(__('Cargando perfiles…'))}</div></div>
             <footer class="bgrid-card-foot" id="cgridBarsFoot"></footer>
           </section>
+          <!-- Lectura de Vera perfil por perfil. La escribe ella en su sesión
+               de dashboard (vera_dashboard_readings, scope monitoreo); aquí
+               solo se pinta. -->
+          <section class="bgrid-card glass-black cgrid-card--perfiles" id="cgridPerfilesCard" hidden>
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--eye" aria-hidden="true"></i>${this._esc(__('Qué hace cada perfil'))}</span>
+            </header>
+            <p class="bgrid-card-sub">${this._esc(__('Lo que Vera aprendió de cada uno: sus temas, su tono y qué te llevas de ahí'))}</p>
+            <div class="cgrid-perfiles" id="cgridPerfiles"></div>
+          </section>
+          </div>
           <!-- Publicación destacada: SIN superficie — flota sobre el degradado
                y deja que el contenido del rival hable solo. Solo título, sin
                descripción: el contenido se explica a sí mismo. -->
@@ -240,6 +252,7 @@
       this._cgridData = data;
       this._cgridLastData = data;   // el toggle de medida repinta sin recargar
       await this._paintInfluenceBars(body, data);
+      this._paintVeraPerfiles(body);
       this._paintTopPost(body, data);
     },
 
@@ -448,6 +461,90 @@
           },
         },
       });
+    },
+
+    /* ══ Qué hace cada perfil — la lectura de Vera ══════════════════════════
+       Vera escribe, en su sesión de dashboard (scope `monitoreo`), un bloque
+       `perfil_analisis` por cada perfil que estudió: sus temas, su tono, sus
+       formatos y qué se lleva la marca de ahí. Aquí solo se agrupan en una
+       tabla — el frontend no interpreta ni resume nada por su cuenta.
+       Todo texto va ESCAPADO: Vera lee contenido de internet y su salida se
+       trata como dato, nunca como markup. ══════════════════════════════════ */
+    async _paintVeraPerfiles(body) {
+      const card = body.querySelector('#cgridPerfilesCard');
+      const host = body.querySelector('#cgridPerfiles');
+      if (!card || !host) return;
+      const esc = (s) => this._esc(s);
+
+      let reading = null;
+      try {
+        const { data } = await this._supabase.from('vera_dashboard_readings')
+          .select('reading, created_at')
+          .eq('organization_id', this._orgId).eq('scope', 'monitoreo').eq('status', 'published')
+          .order('created_at', { ascending: false }).limit(1);
+        reading = (data && data[0]) || null;
+      } catch (_) {}
+
+      const bloques = (reading?.reading?.narrative || [])
+        .filter((b) => b && b.type === 'perfil_analisis' && b.perfil);
+      if (!bloques.length) {
+        // Sin lectura todavía: se dice qué falta, no se finge una tabla vacía.
+        card.hidden = false;
+        host.innerHTML = `<div class="cgrid-empty">${esc(
+          reading
+            ? __('Vera aún no ha estudiado los perfiles uno a uno. Aparecerán aquí en su próxima lectura de Competencia.')
+            : __('Vera todavía no ha escrito su lectura de Competencia. Cuando la haga, aquí verás qué publica cada perfil, con qué tono y qué te llevas de ahí.'),
+        )}</div>`;
+        return;
+      }
+      card.hidden = false;
+
+      const ROL = {
+        competidor_directo:   { label: __('Directo'),   cls: 'is-dir' },
+        competidor_indirecto: { label: __('Indirecto'), cls: 'is-ind' },
+        competidor:           { label: __('Competidor'), cls: 'is-dir' },
+        referente:            { label: __('Referente'), cls: 'is-ref' },
+        referencia_cultural:  { label: __('Referente'), cls: 'is-ref' },
+        aliado:               { label: __('Aliado'),    cls: 'is-ali' },
+      };
+      const chips = (v) => (Array.isArray(v) ? v : String(v || '').split(/[,;·]/))
+        .map((x) => String(x || '').trim()).filter(Boolean).slice(0, 5)
+        .map((x) => `<span class="cgp-chip">${esc(x)}</span>`).join('');
+
+      const filas = bloques.map((b) => {
+        const rol = ROL[String(b.rol || '').toLowerCase()] || null;
+        const nets = (Array.isArray(b.plataformas) ? b.plataformas : []).map((p) => {
+          const k = String(p || '').toLowerCase();
+          const ico = PLATFORM_ICON[k];
+          return ico ? `<i class="${esc(ico)}" title="${esc(NET_LABEL[k] || k)}" aria-hidden="true"></i>` : '';
+        }).join('');
+        return `
+          <tr>
+            <td class="cgp-perfil">
+              <span class="cgp-perfil-name">${esc(b.perfil)}</span>
+              ${nets ? `<span class="cgp-perfil-nets">${nets}</span>` : ''}
+              ${rol ? `<span class="cgp-rol ${rol.cls}">${esc(rol.label)}</span>` : ''}
+            </td>
+            <td>${chips(b.temas) || '<span class="cgp-na">—</span>'}</td>
+            <td class="cgp-tono">${esc(b.tono || '—')}</td>
+            <td class="cgp-aprend">${esc(b.aprendizaje || b.que_aprender || '—')}</td>
+          </tr>`;
+      }).join('');
+
+      const cuando = reading?.created_at ? this._veraFmtDate(reading.created_at) : '';
+      host.innerHTML = `
+        <div class="cgp-table-wrap">
+          <table class="cgp-table">
+            <thead><tr>
+              <th>${esc(__('Perfil'))}</th>
+              <th>${esc(__('De qué habla'))}</th>
+              <th>${esc(__('Tono'))}</th>
+              <th>${esc(__('Qué te llevas'))}</th>
+            </tr></thead>
+            <tbody>${filas}</tbody>
+          </table>
+        </div>
+        ${cuando ? `<div class="cgp-firma">${esc(__('Lectura de Vera · {d}', { d: cuando }))}</div>` : ''}`;
     },
 
     /* ══ Panel de marca (drill-down de una barra) ═══════════════════════════
