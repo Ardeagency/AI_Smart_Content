@@ -31,11 +31,6 @@
     x: 'X', twitter: 'X', youtube: 'YouTube', linkedin: 'LinkedIn',
   };
 
-  const STATUS_LABEL = {
-    activo: () => __('Activo'), irregular: () => __('Irregular'),
-    lento: () => __('Lento'), dormido: () => __('Dormido'), sin_datos: () => __('Sin datos'),
-  };
-
   Object.assign(DashboardView.prototype, {
 
     /* ── Entry point del grid de Mi Marca ── */
@@ -782,7 +777,10 @@
       document.body.appendChild(overlay);
       const close = () => overlay.remove();
       overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.closest('.salud-modal-close')) close(); });
-      document.addEventListener('keydown', function onEsc(ev) { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } });
+      // Registrado via BaseView para que muera con la vista; ademas se auto-quita
+      // al cerrar el modal (no deja un keydown vivo por cada apertura).
+      const onEsc = (ev) => { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } };
+      this.addEventListener(document, 'keydown', onEsc);
     },
 
     /* Footer del tráfico (última publicación / total). El pill de estado se eliminó. */
@@ -1008,7 +1006,10 @@
       document.body.appendChild(overlay);
       const close = () => overlay.remove();
       overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.closest('.salud-modal-close')) close(); });
-      document.addEventListener('keydown', function onEsc(ev) { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } });
+      // Registrado via BaseView para que muera con la vista; ademas se auto-quita
+      // al cerrar el modal (no deja un keydown vivo por cada apertura).
+      const onEsc = (ev) => { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } };
+      this.addEventListener(document, 'keydown', onEsc);
     },
   });
 })();
