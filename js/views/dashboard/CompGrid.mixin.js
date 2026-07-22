@@ -126,6 +126,10 @@
             <div class="cgrid-perfiles" id="cgridPerfiles"></div>
           </section>
           </div>
+          <!-- Columna derecha. Sin envolver, Observaciones caía en la siguiente
+               fila del grid — es decir, bajo "Qué hace cada perfil" — en vez de
+               debajo de la publicación destacada. -->
+          <div class="cgrid-col">
           <!-- Publicación destacada: SIN superficie — flota sobre el degradado
                y deja que el contenido del rival hable solo. Solo título, sin
                descripción: el contenido se explica a sí mismo. -->
@@ -144,6 +148,7 @@
             <p class="bgrid-card-sub">${this._esc(__('Lo más destacado de cada perfil en este periodo'))}</p>
             <div class="cgrid-obs" id="cgridObs"></div>
           </section>
+          </div>
         </div>`;
     },
 
