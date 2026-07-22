@@ -653,7 +653,7 @@
        como una audiencia accionable. El boton la guarda en la biblioteca de la
        org (audience_personas) para que la marca pueda pescar ahí también.
        Carrusel horizontal: son fichas para hojear y decidir, no una lista. ══ */
-    _paintVeraAudiencias(body, reading) {
+    async _paintVeraAudiencias(body, reading) {
       const card = body.querySelector('#cgridAudCard');
       const host = body.querySelector('#cgridAud');
       if (!card || !host) return;
@@ -665,10 +665,11 @@
       card.hidden = false;
       this._cgridAuds = auds;
 
-      // Las fichas se tiñen con el tono CLARO de la marca. Se resuelve aquí y
-      // no en CSS porque hay que garantizar que el texto oscuro siga siendo
-      // legible sobre ese color, sea cual sea la marca.
-      const [accentA] = this._gridBrandHexes();
+      // Las fichas se tiñen con el tono CLARO de la marca REAL (leído de
+      // brand_colors, no del fallback de plataforma). Se resuelve en JS porque
+      // hay que garantizar que el texto oscuro siga siendo legible sobre ese
+      // color, sea cual sea la marca.
+      const accentA = await this._cgridBrandHex();
       const [rr, gg, bb] = this._hexToRgb(accentA);
       card.style.setProperty('--cgp-accent', accentA);
       card.style.setProperty('--cgp-accent-rgb', `${rr}, ${gg}, ${bb}`);
@@ -695,6 +696,37 @@
             </button>
           </div>
         </article>`).join('');
+    },
+
+    /* Color de marca leído de la FUENTE DE VERDAD (`brand_colors` de la org).
+       `_gridBrandHexes` depende de CSS vars que suelen estar vacías y de que
+       OrgBrandTheme ya haya resuelto: cuando falla cae al naranja de
+       plataforma, y la card acaba pintada con un color que no es el de la
+       marca. Aquí se pregunta a la base y se cachea.
+       Devuelve el hex VIVO más claro — el negro corporativo no sirve como
+       superficie y el más claro es el que mejor tolera texto oscuro. */
+    async _cgridBrandHex() {
+      if (this._cgridBrandHexCache !== undefined) return this._cgridBrandHexCache;
+      let elegido = null;
+      try {
+        const { data } = await this._supabase.from('brand_colors')
+          .select('hex_value').eq('organization_id', this._orgId);
+        const lum = (h) => {
+          const [r, g, b] = this._hexToRgb(h);
+          const s = [r, g, b].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+          return 0.2126 * s[0] + 0.7152 * s[1] + 0.0722 * s[2];
+        };
+        const hexes = (data || []).map((r) => r.hex_value)
+          .filter((h) => typeof h === 'string' && /^#[0-9a-f]{3,8}$/i.test(h))
+          // Fuera los casi-negros: son el color de texto de la marca, no una
+          // superficie con la que teñir.
+          .filter((h) => { try { return lum(h) > 0.06; } catch (_) { return false; } })
+          .sort((a, b) => lum(b) - lum(a));
+        elegido = hexes[0] || null;
+      } catch (_) {}
+      // Sin color en la base, se conserva el camino anterior.
+      this._cgridBrandHexCache = elegido || this._gridBrandHexes()[0];
+      return this._cgridBrandHexCache;
     },
 
     /* Tono CLARO de la marca para la superficie de las fichas: el acento
