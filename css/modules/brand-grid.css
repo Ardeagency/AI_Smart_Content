@@ -374,18 +374,20 @@
 .pdeck:focus-visible { outline: 2px solid var(--brand-color-light, #F79E1B); outline-offset: 6px; border-radius: 18px; }
 
 /* Escenario de la pila: alto fijo, las carátulas se apilan en absoluto. */
-.pdeck-stage { position: relative; height: 250px; min-width: 0; perspective: 1000px; overflow: hidden; padding-left: 0.5rem; }
+.pdeck-stage { position: relative; height: 300px; min-width: 0; perspective: 1000px; overflow: hidden; }
 .pdeck-card {
   --d: 0;
-  position: absolute; top: 50%; right: 0;
-  width: 62%; aspect-ratio: 3 / 4;
+  /* La caratula se dimensiona por la ALTURA del escenario: atada al ancho,
+     desbordaba por arriba y abajo y el recorte del escenario la cortaba. */
+  position: absolute; top: 0; right: 6%;
+  height: 100%; width: auto; aspect-ratio: 3 / 4;
   margin: 0; padding: 0; border: 0; background: var(--media-container-bg, #0b0b0b);
   border-radius: 14px; overflow: hidden; cursor: pointer;
   /* Cada paso hacia atrás: se corre a la izquierda, encoge y pierde presencia. */
   transform:
-    translateY(-50%)
-    translateX(calc(min(var(--d), 4) * -21%))
+    translateX(calc(min(var(--d), 4) * -34%))
     scale(calc(1 - min(var(--d), 4) * 0.07));
+  transform-origin: center center;
   filter: blur(calc(min(var(--d), 4) * 1.1px)) brightness(calc(1 - min(var(--d), 4) * 0.13));
   opacity: calc(1 - min(var(--d), 4) * 0.16);
   box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55);
@@ -432,8 +434,8 @@
 }
 @media (max-width: 620px) {
   .pdeck { grid-template-columns: 1fr; gap: 0.6rem; }
-  .pdeck-stage { height: 210px; }
-  .pdeck-card { width: 46%; right: 50%; transform: translateY(-50%) translateX(calc(50% + min(var(--d), 4) * -21%)) scale(calc(1 - min(var(--d), 4) * 0.07)); }
+  .pdeck-stage { height: 235px; }
+  .pdeck-card { right: 50%; transform: translateX(calc(50% + min(var(--d), 4) * -34%)) scale(calc(1 - min(var(--d), 4) * 0.07)); }
   .pdeck-info { align-items: flex-start; }
 }
 
