@@ -665,6 +665,15 @@
       card.hidden = false;
       this._cgridAuds = auds;
 
+      // Las fichas se tiñen con el tono CLARO de la marca. Se resuelve aquí y
+      // no en CSS porque hay que garantizar que el texto oscuro siga siendo
+      // legible sobre ese color, sea cual sea la marca.
+      const [accentA] = this._gridBrandHexes();
+      const [rr, gg, bb] = this._hexToRgb(accentA);
+      card.style.setProperty('--cgp-accent', accentA);
+      card.style.setProperty('--cgp-accent-rgb', `${rr}, ${gg}, ${bb}`);
+      card.style.setProperty('--cga-surface', this._cgridBrandTint(accentA));
+
       const chips = (v, cls) => (Array.isArray(v) ? v : []).slice(0, 4)
         .map((x) => `<span class="cga-chip ${cls}">${esc(String(x))}</span>`).join('');
 
@@ -686,6 +695,35 @@
             </button>
           </div>
         </article>`).join('');
+    },
+
+    /* Tono CLARO de la marca para la superficie de las fichas: el acento
+       mezclado con blanco hasta que el texto oscuro se lea con holgura.
+       Se calcula en vez de fijarlo porque cada marca trae su propio color y una
+       mezcla fija dejaria ilegibles las marcas de color intenso. */
+    _cgridBrandTint(hex) {
+      // 8.5 y no 7: el umbral lo fija el texto SECUNDARIO de la ficha (opacidad
+      // 0.72), no el título. Con marcas oscuras —un azul intenso— un 7 dejaba
+      // ese texto en 3.5:1.
+      const CONTRASTE_MIN = 8.5;
+      const TEXTO = [16, 17, 20];
+      const lum = (c) => {
+        const s = c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+        return 0.2126 * s[0] + 0.7152 * s[1] + 0.0722 * s[2];
+      };
+      const ratio = (a, b) => {
+        const l1 = lum(a), l2 = lum(b);
+        return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+      };
+      let rgb;
+      try { rgb = this._hexToRgb(hex); } catch (_) { return '#eef0f3'; }
+      // Se aclara progresivamente hasta alcanzar el contraste; si el color ya
+      // es claro, apenas se toca y la marca se nota.
+      for (let mezcla = 0.5; mezcla <= 0.97; mezcla += 0.03) {
+        const c = rgb.map((v) => Math.round(v * (1 - mezcla) + 255 * mezcla));
+        if (ratio(TEXTO, c) >= CONTRASTE_MIN) return `rgb(${c.join(', ')})`;
+      }
+      return '#eef0f3';
     },
 
     /* Detalle completo de la audiencia. Es donde se decide si vale la pena

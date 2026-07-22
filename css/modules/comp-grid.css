@@ -70,7 +70,9 @@
   display: flex; flex-direction: column; justify-content: space-between;
   padding: 1.25rem 1.25rem 1.1rem;
   border-radius: 22px;
-  background: #eef0f3;
+  /* Tono claro de la MARCA (lo inyecta _cgridBrandTint garantizando que el
+     texto oscuro se lea); si aún no hay color resuelto, gris casi blanco. */
+  background: var(--cga-surface, #eef0f3);
   border: 0;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
@@ -84,9 +86,9 @@
 }
 /* Opacidades subidas: a 0.45 el texto secundario quedaba en 2.9:1 sobre la
    ficha clara — legible para quien mira, no para quien lee. */
-.cga-origen { font-size: 0.72rem; color: rgba(16, 17, 20, 0.62); }
+.cga-origen { font-size: 0.72rem; color: rgba(16, 17, 20, 0.72); }
 .cga-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-.cga-hint { font-size: 0.7rem; color: rgba(16, 17, 20, 0.62); }
+.cga-hint { font-size: 0.7rem; color: rgba(16, 17, 20, 0.72); }
 /* El "+" es un boton propio dentro de una card clicable: agrega sin abrir el
    detalle, por eso se distingue del resto de la ficha. */
 .cga-add {
@@ -162,38 +164,38 @@
    lee como una ficha. El color de la clasificacion va en el borde SUPERIOR:
    cruza el ancho de la card y se ve al hojear la lista, cosa que un filete
    lateral no consigue. */
+/* Superficie de card de la plataforma; lo unico que le pone color es el filete
+   superior con la clasificacion de Vera. */
 .cgo-item {
-  --cgo-tint: 90, 98, 112;
-  /* Gris casi blanco, no blanco puro: sobre el fondo oscuro el #fff resulta
-     chillon y roba la atencion al filete de clasificacion. */
-  background: #eef0f3;
+  --cgo-tint: 190, 195, 205;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
   border-radius: 12px;
   border-top: 4px solid rgb(var(--cgo-tint));
   padding: 0.85rem 1rem 0.9rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
 }
-/* Tonos elegidos para leerse sobre BLANCO (los claros del modo oscuro se
-   desvanecian): la clasificacion la decide Vera, el contraste lo garantiza el CSS. */
-.cgo-item.is-opp    { --cgo-tint: 17, 116, 77; }
-.cgo-item.is-threat { --cgo-tint: 190, 52, 46; }
-.cgo-item.is-warn   { --cgo-tint: 140, 92, 8; }
-.cgo-item.is-neu    { --cgo-tint: 90, 98, 112; }
+/* Tonos claros: vuelven a leerse sobre superficie oscura. */
+.cgo-item.is-opp    { --cgo-tint: 95, 211, 154; }
+.cgo-item.is-threat { --cgo-tint: 231, 122, 122; }
+.cgo-item.is-warn   { --cgo-tint: 230, 169, 78; }
+.cgo-item.is-neu    { --cgo-tint: 190, 195, 205; }
 
 .cgo-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem; }
-.cgo-perfil { font-size: 0.85rem; font-weight: 800; color: #101114; }
+.cgo-perfil { font-size: 0.85rem; font-weight: 700; color: #fff; }
 .cgo-rol,
 .cgo-sev,
 .cgo-prio {
   font-size: 0.58rem; font-weight: 700; letter-spacing: 0.05em;
   text-transform: uppercase; padding: 0.14rem 0.44rem; border-radius: 999px;
 }
-.cgo-rol { color: rgba(16, 17, 20, 0.68); border: 1px solid rgba(16, 17, 20, 0.2); }
-.cgo-sev { color: rgb(var(--cgo-tint)); background: rgba(var(--cgo-tint), 0.12); }
+.cgo-rol { color: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.18); }
+.cgo-sev { color: rgb(var(--cgo-tint)); background: rgba(var(--cgo-tint), 0.14); }
 /* La prioridad alta se marca; media y baja no necesitan etiqueta — el ORDEN de
-   la lista ya las coloca donde toca. */
-.cgo-prio { margin-left: auto; color: #fff; background: rgb(var(--cgo-tint)); }
-.cgo-titulo { margin: 0 0 0.25rem; font-size: 0.88rem; font-weight: 800; color: #101114; line-height: 1.35; }
-.cgo-txt { margin: 0; font-size: 0.82rem; line-height: 1.55; color: rgba(16, 17, 20, 0.72); }
+   la lista ya las coloca donde toca. El texto va OSCURO porque el chip solido
+   usa el tono claro de la clasificacion. */
+.cgo-prio { margin-left: auto; color: #101114; background: rgb(var(--cgo-tint)); }
+.cgo-titulo { margin: 0 0 0.25rem; font-size: 0.88rem; font-weight: 700; color: #fff; line-height: 1.35; }
+.cgo-txt { margin: 0; font-size: 0.82rem; line-height: 1.55; color: rgba(255, 255, 255, 0.75); }
 .cgrid-perfiles { min-width: 0; }
 .cgp-table-wrap { overflow-x: auto; }
 .cgp-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
