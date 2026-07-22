@@ -60,6 +60,14 @@
   // (referentes culturales, medios propios) no compiten por el mismo cliente.
   const COMPETIDOR_TIPOS = ['competidor_directo', 'competidor_indirecto'];
 
+  // ¿Se incrusta el reproductor de la red dentro de la card?
+  // TikTok: DESACTIVADO (decisión del equipo, 2026-07-22). Su reproductor
+  // impone un alto enorme —vertical más su propio footer— y al terminar deja
+  // en pantalla contenido de otras marcas. Mientras esté en false, sus posts
+  // muestran la portada y el play lleva a la publicación original.
+  // Reactivar = poner true; el resto del camino sigue montado.
+  const EMBED_HABILITADO = { tiktok: false, youtube: true };
+
   // Claves de metrics que SON interacción (respuesta del público).
   const INTERACTION_KEYS = ['likes', 'comments', 'shares', 'saves', 'reposts', 'retweets', 'quotes', 'bookmarks', 'replies'];
   // Claves que son ALCANCE (se muestran aparte, nunca suman al ranking).
@@ -753,6 +761,7 @@
       const media = this._cgridMediaHtml(full && full.media_assets, {
         network: net,
         postId:  full?.post_id || win.external_post_id,
+        postUrl: url,
       });
 
       // Copy colapsado ARRIBA de la media: es el contexto de qué se está
@@ -803,7 +812,7 @@
        fallback tipográfico — nunca un cuadro roto. */
     _cgridMediaHtml(ma, ctx) {
       const esc = (s) => this._esc(s);
-      const { network, postId } = ctx || {};
+      const { network, postId, postUrl } = ctx || {};
       const a = (ma && typeof ma === 'object') ? ma : {};
       const first = (v) => (Array.isArray(v) && v.length ? v[0] : null);
       const pick = (v) => (typeof v === 'string' && /^https?:\/\//i.test(v)) ? v
@@ -856,9 +865,14 @@
         // pida. Si el embed fallara, la portada y el enlace al original siguen
         // ahí debajo.
         const embed = esVideoNoIncrustable ? this._cgridEmbedUrl(network, postId) : null;
+        // Sin reproductor incrustable (o desactivado), el play abre la
+        // publicación en la red: mejor un botón que lleva a algún sitio que un
+        // icono decorativo que no hace nada.
         const play = embed
           ? `<button type="button" class="cgrid-media-play" data-cgrid-embed="${esc(embed)}" aria-label="${esc(__('Reproducir video'))}"><i class="fas fa-play" aria-hidden="true"></i></button>`
-          : (esVideoNoIncrustable ? `<span class="cgrid-media-play is-static" aria-hidden="true"><i class="fas fa-play"></i></span>` : '');
+          : (esVideoNoIncrustable && postUrl
+            ? `<a class="cgrid-media-play" href="${esc(postUrl)}" target="_blank" rel="noopener noreferrer" title="${esc(__('Ver el video en {r}', { r: NET_LABEL[String(network || '').toLowerCase()] || __('la red') }))}" aria-label="${esc(__('Ver el video en su red'))}"><i class="fas fa-play" aria-hidden="true"></i></a>`
+            : (esVideoNoIncrustable ? `<span class="cgrid-media-play is-static" aria-hidden="true"><i class="fas fa-play"></i></span>` : ''));
         return `<div class="cgrid-media">
           <img class="cgrid-media-el" data-cgrid-media src="${esc(img)}" alt="" loading="lazy">
           ${play}
@@ -874,8 +888,9 @@
        Instagram queda fuera a propósito: su oEmbed exige token de app de Meta. */
     _cgridEmbedUrl(network, postId) {
       const id = String(postId || '').trim();
-      if (!id) return null;
-      switch (String(network || '').toLowerCase()) {
+      const net = String(network || '').toLowerCase();
+      if (!id || EMBED_HABILITADO[net] === false) return null;
+      switch (net) {
         case 'tiktok':
           if (!/^\d+$/.test(id)) return null;
           return `https://www.tiktok.com/embed/v2/${id}`;
