@@ -338,7 +338,7 @@
   grid-column: 1 / -1;
   justify-self: start;
   width: 100%;
-  max-width: 980px;
+  max-width: 1100px;
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
   border-radius: 14px;
@@ -347,24 +347,70 @@
   display: flex; flex-direction: column; gap: 1rem; min-width: 0;
 }
 .vera-prodstar-load { font-size: 0.82rem; color: rgba(255, 255, 255, 0.4); padding: 0.4rem 0; }
-.vera-prodstar-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2rem; align-items: center; }
-/* Ficha: datos a la IZQUIERDA, imagen del producto a la derecha. */
-.vera-prodstar-hero { display: flex; gap: 1.25rem; align-items: center; justify-content: space-between; min-width: 0; }
-.vera-prodstar-img { width: 170px; height: 170px; object-fit: contain; border-radius: 16px; background: var(--bg-primary, #0b0b0b); border: 1px solid var(--border-divider, #242424); flex: 0 0 auto; }
-.vera-prodstar-img--empty { display: block; }
-.vera-prodstar-meta { display: flex; flex-direction: column; gap: 0.6rem; min-width: 0; }
-.vera-prodstar-meta > .vera-prodstar-badge { align-self: flex-start; }
-.vera-prodstar-name { margin: 0; font-size: 1.35rem; font-weight: 700; color: #fff; letter-spacing: -0.015em; line-height: 1.15; }
+.vera-prodstar-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 2.2rem; align-items: center; }
+
+/* ── Escenario: la foto del producto a tamaño completo ──────────────────────
+   Mismo comportamiento que la galería de Producción: el contenedor ADOPTA el
+   formato real de la imagen (aspect-ratio inyectado en JS al cargar) y el
+   media la llena al 100% — nunca se recorta ni quedan franjas.
+   El 4/5 de aquí es solo el hueco reservado mientras carga (anti-CLS). */
+.vera-prodstar-stage {
+  position: relative; margin: 0; min-width: 0; width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--media-container-radius, 16px);
+  background: var(--media-container-bg, #0b0b0b);
+  box-shadow: var(--media-container-shadow, 0 10px 34px rgba(0, 0, 0, 0.35));
+  overflow: hidden; cursor: pointer;
+  transition: box-shadow 0.3s ease, transform 0.35s var(--ease-out, ease);
+}
+.vera-prodstar-stage:hover { box-shadow: var(--media-container-shadow-hover, 0 18px 48px rgba(0, 0, 0, 0.5)); }
+.vera-prodstar-img {
+  width: 100%; height: 100%; display: block; object-fit: cover;
+  opacity: 0; transition: opacity 0.5s var(--ease-out, ease), transform 0.6s var(--ease-out, ease);
+}
+.vera-prodstar-img.is-loaded { opacity: 1; animation: none; }
+.vera-prodstar-stage:hover .vera-prodstar-img { transform: scale(1.03); }
+.vera-prodstar-img--empty { opacity: 1; background: var(--bg-primary, #0b0b0b); }
+
+/* Ficha en overlay: aparece sobre la foto al pasar el cursor (o al enfocar
+   con teclado). Sin hover disponible (táctil) se muestra siempre. */
+.vera-prodstar-overlay {
+  position: absolute; inset: auto 0 0 0;
+  display: flex; flex-direction: column; gap: 0.6rem;
+  padding: 1.6rem 1.4rem 1.25rem;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.55) 38%, rgba(0, 0, 0, 0.88) 100%);
+  opacity: 0; transform: translateY(10px);
+  transition: opacity 0.28s var(--ease-out, ease), transform 0.28s var(--ease-out, ease);
+  pointer-events: none;
+}
+.vera-prodstar-stage:hover .vera-prodstar-overlay,
+.vera-prodstar-stage:focus-visible .vera-prodstar-overlay { opacity: 1; transform: translateY(0); }
+.vera-prodstar-overlay > .vera-prodstar-badge { align-self: flex-start; }
+.vera-prodstar-name { margin: 0; font-size: 1.5rem; font-weight: 700; color: #fff; letter-spacing: -0.015em; line-height: 1.15; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5); }
 .vera-prodstar-sigs { display: flex; gap: 1.4rem; flex-wrap: wrap; }
 .vera-prodstar-sig { display: flex; flex-direction: column; gap: 0.1rem; }
 .vera-prodstar-sig span { font-size: 1.15rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
-.vera-prodstar-sig small { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.42); }
+.vera-prodstar-sig small { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.62); }
+@media (hover: none) {
+  .vera-prodstar-overlay { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vera-prodstar-img, .vera-prodstar-overlay { transition: none; }
+  .vera-prodstar-stage:hover .vera-prodstar-img { transform: none; }
+}
 
 .vera-prodstar-aside { min-width: 0; }
 .vera-prodstar-aside-title { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.45); margin-bottom: 0.7rem; }
 .vera-prodstar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.vera-prodstar-item { display: grid; grid-template-columns: minmax(0, 1fr) 3.4rem 3.4rem 5.6rem; align-items: center; gap: 0.6rem; padding: 0.55rem 0; border-top: 1px solid var(--border-divider, #242424); }
+/* Cada fila lleva la foto del producto: se reconoce por imagen, no por nombre. */
+.vera-prodstar-item { display: grid; grid-template-columns: 40px minmax(0, 1fr) 3.4rem 3.4rem 5.6rem; align-items: center; gap: 0.7rem; padding: 0.5rem 0; border-top: 1px solid var(--border-divider, #242424); }
 .vera-prodstar-item:first-child { border-top: none; }
+.vera-prodstar-thumb {
+  width: 40px; height: 40px; display: block; object-fit: cover;
+  border-radius: 10px; background: var(--media-container-bg, #0b0b0b);
+  border: 1px solid var(--border-divider, #242424);
+}
+.vera-prodstar-thumb--empty { opacity: 0.5; }
 .vera-prodstar-item-name { font-size: 0.86rem; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vera-prodstar-item-sov, .vera-prodstar-item-days { font-size: 0.8rem; color: rgba(255, 255, 255, 0.55); font-variant-numeric: tabular-nums; text-align: right; }
 
@@ -379,8 +425,7 @@
   .vera-prodstar-grid { grid-template-columns: 1fr; gap: 1.4rem; }
 }
 @media (max-width: 620px) {
-  .vera-prodstar-hero { flex-direction: column; align-items: flex-start; }
-  .vera-prodstar-img { width: 100%; height: 180px; }
-  .vera-prodstar-item { grid-template-columns: minmax(0, 1fr) 3rem 5.2rem; }
+  .vera-prodstar-item { grid-template-columns: 34px minmax(0, 1fr) 3rem 5.2rem; }
+  .vera-prodstar-thumb { width: 34px; height: 34px; }
   .vera-prodstar-item-days { display: none; }
 }

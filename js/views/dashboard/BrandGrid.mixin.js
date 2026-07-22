@@ -448,6 +448,10 @@
       } catch (e) { fallo = (e && e.message) ? e.message : String(e); }
       if (fallo) console.warn('[ProductoEstrella] no se pudo cargar:', fallo);
 
+      // Los que están en 0% no aportan lectura: si la marca nunca los nombró,
+      // no hay nada que "recuperar" — solo ensucian la lista. Se ocultan.
+      productos = productos.filter((p) => Number(p && p.share_of_voice_pct) > 0);
+
       if (!productos.length) {
         hosts.forEach((h) => {
           const l = h.querySelector('.vera-prodstar-load');
@@ -462,23 +466,27 @@
         desperdicio: { label: __('Desperdicio'), cls: 'is-waste' },
         cola:        { label: __('Cola'),        cls: 'is-tail' },
       };
-      // Estrella = el que más empujas. El resto se ordena de MENOS a más usado:
-      // esa lista es la respuesta a "qué estoy olvidando".
+      // Estrella = el que más empujas. El resto baja de MÁS a MENOS usado: se lee
+      // como un descenso — arriba lo que sostienes, abajo lo que ya soltaste.
       const hero = productos.find((p) => p.cuadrante === 'estrella') || productos[0];
       const olvidados = productos.filter((p) => p !== hero)
-        .sort((a, b) => (a.share_of_voice_pct || 0) - (b.share_of_voice_pct || 0))
+        .sort((a, b) => (b.share_of_voice_pct || 0) - (a.share_of_voice_pct || 0))
         .slice(0, 6);
       const q = QUAD[hero.cuadrante] || QUAD.cola;
       // La imagen la resuelve el RPC contra nuestro storage, nunca Vera: una URL
       // emitida por el modelo sería una vía para inyectar destinos arbitrarios.
       const img = hero.imagen_url
-        ? `<img class="vera-prodstar-img" src="${esc(hero.imagen_url)}" alt="${esc(hero.producto)}" loading="lazy">`
+        ? `<img class="vera-prodstar-img" src="${esc(hero.imagen_url)}" alt="${esc(hero.producto)}" loading="lazy" data-prodstar-fit="1">`
         : `<div class="vera-prodstar-img vera-prodstar-img--empty" aria-hidden="true"></div>`;
       const sig = (v, l) => `<div class="vera-prodstar-sig"><span>${esc(String(v))}</span><small>${esc(l)}</small></div>`;
 
+      // Escenario cinematográfico: la foto manda (a tamaño completo, con su
+      // propio formato como en la galería de Producción) y la ficha aparece
+      // encima al pasar el cursor.
       const heroHtml = `
-        <div class="vera-prodstar-hero">
-          <div class="vera-prodstar-meta">
+        <figure class="vera-prodstar-stage" tabindex="0">
+          ${img}
+          <figcaption class="vera-prodstar-overlay">
             <span class="vera-prodstar-badge ${q.cls}">${esc(q.label)}</span>
             <h4 class="vera-prodstar-name">${esc(hero.producto)}</h4>
             <div class="vera-prodstar-sigs">
@@ -486,14 +494,17 @@
               ${sig(hero.engagement_promedio != null ? hero.engagement_promedio : 0, __('interacción media'))}
               ${sig(hero.menciones_publico != null ? hero.menciones_publico : 0, __('lo nombra el público'))}
             </div>
-          </div>
-          ${img}
-        </div>`;
+          </figcaption>
+        </figure>`;
 
       const items = olvidados.map((p) => {
         const pq = QUAD[p.cuadrante] || QUAD.cola;
         const dias = (p.dias_sin_mencion == null) ? '—' : `${p.dias_sin_mencion}d`;
+        const thumb = p.imagen_url
+          ? `<img class="vera-prodstar-thumb" src="${esc(p.imagen_url)}" alt="" loading="lazy">`
+          : `<span class="vera-prodstar-thumb vera-prodstar-thumb--empty" aria-hidden="true"></span>`;
         return `<li class="vera-prodstar-item">
+            ${thumb}
             <span class="vera-prodstar-item-name">${esc(p.producto)}</span>
             <span class="vera-prodstar-item-sov">${esc(String(p.share_of_voice_pct != null ? p.share_of_voice_pct : 0))}%</span>
             <span class="vera-prodstar-item-days" title="${esc(__('sin mencionar'))}">${esc(dias)}</span>
@@ -510,7 +521,25 @@
         const l = h.querySelector('.vera-prodstar-load');
         if (l) l.remove();
         h.insertAdjacentHTML('beforeend', `<div class="vera-prodstar-grid">${heroHtml}${listaHtml}</div>`);
+        h.querySelectorAll('[data-prodstar-fit]').forEach((el) => this._prodstarFitStage(el));
       });
+    },
+
+    /* El contenedor toma el FORMATO REAL de la foto (igual que la galería de
+       Producción): así la imagen se ve completa, sin recorte ni franjas negras.
+       El 4/5 del CSS solo reserva el hueco mientras carga (evita layout shift). */
+    _prodstarFitStage(img) {
+      const apply = () => {
+        const stage = img.closest('.vera-prodstar-stage');
+        if (!stage || !img.naturalWidth || !img.naturalHeight) return;
+        stage.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+        img.classList.add('is-loaded');
+      };
+      if (img.complete) apply();
+      else {
+        img.addEventListener('load', apply, { once: true });
+        img.addEventListener('error', () => img.classList.add('is-loaded'), { once: true });
+      }
     },
 
     _safeMarkdown(md) {
