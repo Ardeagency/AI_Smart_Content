@@ -102,8 +102,16 @@
 .vera-cards .vera-card--audiencia { grid-column: 1 / -1; }
 /* Sin acento de color a la izquierda: borde uniforme. */
 .vera-card.vera-card--audiencia { border-left: 1px solid var(--border-divider, #242424); }
-.vera-card--audiencia .vera-aud-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
-.vera-aud-viz { display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
+/* stretch, no start: el panel que llena Vera crece con su texto y con `start`
+   la columna de los graficos se quedaba corta, dejando un hueco negro enorme
+   debajo. Ahora los graficos se estiran para acompañar ese alto. */
+.vera-card--audiencia .vera-aud-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 1.5rem; align-items: stretch; }
+.vera-aud-viz { display: flex; flex-direction: column; justify-content: center; gap: 1.1rem; min-width: 0; }
+/* Cada grafico toma su parte del alto disponible. El tope evita que un texto
+   muy largo estire el mapa hasta deformarlo; lo que sobre se reparte arriba y
+   abajo (justify-content: center), que se lee intencional y no roto. */
+.vera-aud-viz .vera-chart { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.vera-aud-viz .vera-chart-wrap { flex: 1 1 auto; height: auto; min-height: 190px; max-height: 340px; }
 .vera-aud-comment { min-width: 0; }
 @media (max-width: 760px) { .vera-card--audiencia .vera-aud-grid { grid-template-columns: 1fr; } }
 
