@@ -534,52 +534,95 @@
 }
 .pev-nota { margin: 0 0 0.6rem; font-size: 0.72rem; line-height: 1.45; color: rgba(255, 255, 255, 0.45); }
 
-/* ── Tu Algoritmo: la card con más contenido del tablero ────────────────────
-   Antes se leía como un documento de Word: todo gris, todo del mismo peso. La
-   tabla gana identidad (icono de red, temas como etiquetas) y el análisis se
-   separa en sus tres actos: qué pasa, qué arriesgas, qué hacer. */
-.vera-card--algoritmo { position: relative; overflow: hidden; }
-/* Un halo de marca en la esquina: la card deja de ser un rectángulo apagado
-   sin recurrir a bordes de colores. */
+/* ── Tu Algoritmo: pieza editorial ──────────────────────────────────────────
+   Aqui el valor es lo que Vera ESCRIBE. No se decora con cajas ni fichas — eso
+   es el lenguaje de Producto destacado y duplicarlo abarata las dos. Lo que
+   hace premium a una pagina de analisis es tipografia: jerarquia real, medida
+   de linea comoda, aire, y filetes finos en vez de recuadros. */
+.vera-card--algoritmo {
+  position: relative; overflow: hidden;
+  padding: 2rem 2.2rem 2.2rem;
+  gap: 0;
+}
+/* Un velo del color de la marca, apenas perceptible, para que la pagina no sea
+   un rectangulo plano. */
 .vera-card--algoritmo::before {
-  content: ''; position: absolute; top: -60%; right: -20%; width: 60%; height: 160%;
-  background: radial-gradient(closest-side, var(--brand-color-dark, #FF5F00) 0%, transparent 100%);
-  opacity: 0.13; pointer-events: none;
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 92% -10%, var(--brand-color-dark, #FF5F00) 0%, transparent 62%);
+  opacity: 0.14;
 }
 .vera-card--algoritmo > * { position: relative; }
-.vera-card--algoritmo .vera-card-kind { color: var(--brand-color-light, #F79E1B); }
-.vera-card--algoritmo .vera-card-title { font-size: 1.2rem; letter-spacing: -0.02em; }
 
-/* La fila entera se resalta al pasar: leer una tabla de 4 columnas sin guía es
-   perder el renglón. */
-.vera-card--algoritmo .vera-table tr { transition: background 0.15s ease; }
-.vera-card--algoritmo .vera-table tbody tr:hover { background: rgba(255, 255, 255, 0.035); }
-.vera-card--algoritmo .vera-table th { font-size: 0.62rem; letter-spacing: 0.07em; text-transform: uppercase; }
-.vera-table .vera-td-lead i { margin-right: 0.5rem; opacity: 0.9; font-size: 0.95rem; vertical-align: -1px; }
+/* Cabecera: versalita fina + filete, como el encabezado de una seccion impresa. */
+.vera-card--algoritmo .vera-card-kind {
+  color: var(--brand-color-light, #F79E1B);
+  letter-spacing: 0.14em; font-size: 0.6rem;
+  padding-bottom: 0.9rem; margin-bottom: 1.1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.vera-card--algoritmo .vera-card-title {
+  font-size: 1.75rem; line-height: 1.12; letter-spacing: -0.03em; font-weight: 700;
+  margin-bottom: 0.35rem; max-width: 22ch;
+}
+.vera-card--algoritmo .vera-chart-title,
+.vera-card--algoritmo > .vera-card-body > .vera-md:first-child > p:first-child {
+  font-size: 0.86rem; color: rgba(255, 255, 255, 0.45);
+}
+.vera-card--algoritmo .vera-card-body { gap: 1.6rem; }
+
+/* La matriz: sin recuadros. Filetes finos, encabezados en versalita, primera
+   columna en blanco pleno y filas altas — se lee como una tabla de informe. */
+.vera-card--algoritmo .vera-table-wrap { margin: 0.2rem 0 0; }
+.vera-card--algoritmo .vera-table { font-size: 0.86rem; }
+.vera-card--algoritmo .vera-table th {
+  font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35); font-weight: 600;
+  padding: 0 0.9rem 0.7rem; border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.vera-card--algoritmo .vera-table td {
+  padding: 1rem 0.9rem; vertical-align: top;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.66); line-height: 1.5;
+}
+.vera-card--algoritmo .vera-table tbody tr:last-child td { border-bottom: 0; }
+.vera-card--algoritmo .vera-table .vera-td-lead {
+  color: #fff; font-weight: 600; font-size: 0.92rem; letter-spacing: -0.01em;
+}
+.vera-table .vera-td-lead i { margin-right: 0.55rem; font-size: 1rem; vertical-align: -2px; }
 /* Cada red con su color: se reconocen sin leer. */
 .vera-table .vera-td-lead .fa-tiktok { color: #25f4ee; }
 .vera-table .vera-td-lead .fa-instagram { color: #e1306c; }
 .vera-table .vera-td-lead .fa-facebook { color: #1877f2; }
 .vera-table .vera-td-lead .fa-youtube { color: #ff0000; }
 .vera-table .vera-td-lead .fa-meta, .vera-table .vera-td-lead .fa-bullseye { color: var(--brand-color-light, #F79E1B); }
+.vera-td-sep { display: inline-block; padding: 0 0.4rem; color: rgba(255, 255, 255, 0.22); }
 
-.vera-td-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-.vera-chip {
-  display: inline-block; padding: 0.14rem 0.5rem; border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.07);
-  font-size: 0.72rem; color: rgba(255, 255, 255, 0.82); white-space: nowrap;
+/* El analisis. El primer parrafo es el hallazgo: entra como entradilla de
+   articulo — cuerpo mayor, medida corta y filete de marca al costado. */
+.vera-actos { display: flex; flex-direction: column; gap: 1.25rem; }
+.vera-acto { display: flex; gap: 0.85rem; }
+.vera-acto .vera-md { font-size: 0.88rem; line-height: 1.7; color: rgba(255, 255, 255, 0.68); max-width: 68ch; }
+.vera-acto .vera-md strong { color: #fff; font-weight: 600; }
+.vera-acto .aisc-ico { display: none; }
+.vera-acto[data-tono="lectura"] {
+  padding-left: 1.1rem; border-left: 2px solid var(--brand-color-light, #F79E1B);
 }
+.vera-acto[data-tono="lectura"] .vera-md {
+  font-size: 1.12rem; line-height: 1.5; letter-spacing: -0.015em;
+  color: rgba(255, 255, 255, 0.94); max-width: 46ch;
+}
+/* Riesgo y salida: se distinguen por un rotulo al margen, no por un recuadro
+   de color. Es lo que hace un informe: la etiqueta manda, el bloque no grita. */
+.vera-acto[data-tono="riesgo"], .vera-acto[data-tono="accion"] { padding-left: 1.1rem; border-left: 2px solid rgba(255, 255, 255, 0.14); }
+.vera-acto[data-tono="riesgo"] { border-left-color: #e77a7a; }
+.vera-acto[data-tono="accion"] { border-left-color: #46c98a; }
+.vera-acto[data-tono="riesgo"] .vera-md strong:first-child { color: #e77a7a; }
+.vera-acto[data-tono="accion"] .vera-md strong:first-child { color: #46c98a; }
+.vera-acto[data-tono="nota"] { padding-left: 1.1rem; border-left: 2px solid rgba(255, 255, 255, 0.1); }
 
-/* Los tres actos del análisis */
-.vera-actos { display: flex; flex-direction: column; gap: 0.7rem; margin-top: 0.3rem; }
-.vera-acto { display: flex; gap: 0.7rem; padding: 0.85rem 1rem; border-radius: 12px; background: rgba(255, 255, 255, 0.035); }
-.vera-acto .aisc-ico { flex: 0 0 auto; font-size: 0.95rem; margin-top: 0.15rem; opacity: 0.9; }
-.vera-acto .vera-md { font-size: 0.85rem; }
-/* El primer párrafo es el diagnóstico: pesa más que el resto. */
-.vera-acto[data-tono="lectura"] { background: rgba(255, 255, 255, 0.055); border-left: 3px solid var(--brand-color-light, #F79E1B); }
-.vera-acto[data-tono="lectura"] .vera-md { font-size: 0.92rem; color: rgba(255, 255, 255, 0.9); }
-.vera-acto[data-tono="riesgo"] { background: rgba(231, 122, 122, 0.09); border-left: 3px solid #e77a7a; }
-.vera-acto[data-tono="riesgo"] .aisc-ico { color: #e77a7a; }
-.vera-acto[data-tono="accion"] { background: rgba(70, 201, 138, 0.09); border-left: 3px solid #46c98a; }
-.vera-acto[data-tono="accion"] .aisc-ico { color: #46c98a; }
-.vera-acto[data-tono="nota"] { border-left: 3px solid rgba(255, 255, 255, 0.12); }
+@media (max-width: 900px) {
+  .vera-card--algoritmo { padding: 1.5rem 1.4rem 1.6rem; }
+  .vera-card--algoritmo .vera-card-title { font-size: 1.4rem; }
+  .vera-acto[data-tono="lectura"] .vera-md { font-size: 1rem; }
+}

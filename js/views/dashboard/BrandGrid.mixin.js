@@ -619,10 +619,10 @@
       const head = cols.length ? `<thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead>` : '';
       // Las celdas que enumeran ("Recetas · Nutrición infantil") se leen mejor
       // como etiquetas sueltas que como una frase con puntos medios.
-      const chips = (txt) => {
+      const enumerado = (txt) => {
         const partes = String(txt).split(/\s*[·|]\s*/).map((x) => x.trim()).filter(Boolean);
         if (partes.length < 2) return null;
-        return `<span class="vera-td-chips">${partes.map((x) => `<span class="vera-chip">${this._mdInline(esc(x))}</span>`).join('')}</span>`;
+        return partes.map((x) => this._mdInline(esc(x))).join('<span class="vera-td-sep">·</span>');
       };
       const body = `<tbody>${rows.map((r) => {
         const cells = Array.isArray(r) ? r : (Array.isArray(r.cells) ? r.cells : []);
@@ -632,7 +632,7 @@
             const ico = iconoDeRed(txt);
             return `<td class="vera-td-lead">${ico ? `<i class="${ico}" aria-hidden="true"></i>` : ''}${this._mdInline(esc(txt))}</td>`;
           }
-          return `<td>${chips(txt) || this._mdInline(esc(txt))}</td>`;
+          return `<td>${enumerado(txt) || this._mdInline(esc(txt))}</td>`;
         }).join('')}</tr>`;
       }).join('')}</tbody>`;
       return `<div class="vera-table-wrap">${ttl}<table class="vera-table">${head}${body}</table></div>`;
