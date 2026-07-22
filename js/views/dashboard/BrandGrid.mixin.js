@@ -84,12 +84,9 @@
           </div>
           <div class="bgrid-vera" id="bgridVera"></div>
           <!-- Producto destacado cierra la pagina: es el ultimo bloque, con
-               ancho acotado (no full-bleed) y superficie de card canonica. -->
-          <section class="bgrid-card bgrid-card--prodstar">
-            <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--star" aria-hidden="true"></i>${this._esc(__('Producto destacado'))}</span>
-            </header>
-            <p class="bgrid-card-sub">${this._esc(__('Cuál producto empujas más y cuáles estás olvidando'))}</p>
+               ancho acotado (no full-bleed). Sin cabecera ni superficie propia:
+               la foto y su panel glass se sostienen solos. -->
+          <section class="bgrid-card bgrid-card--prodstar" aria-label="${this._esc(__('Producto destacado'))}">
             <div class="vera-prodstar" id="bgridProdStar" data-prodstar="1">
               <div class="vera-prodstar-load">${this._esc(__('Cargando productos…'))}</div>
             </div>
