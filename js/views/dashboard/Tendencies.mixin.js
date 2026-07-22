@@ -69,7 +69,7 @@
        estaba. Misma fuente que la tool getUpcomingDates de Vera. */
     async _renderTendFechasOnly(body) {
       if (!body || !this._supabase || !this._orgId) return;
-      let world = null;
+      let world;   // sin valor inicial: el catch retorna, nunca se lee sin asignar
       try {
         const { data, error } = await this._supabase.rpc('dashboard_tendencias_real_world', {
           p_org_id: this._orgId, p_lookahead_days: 90, p_limit_holidays: 16, p_limit_history: 0,
