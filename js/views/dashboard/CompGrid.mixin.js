@@ -72,6 +72,11 @@
       if (!body) return true;
       if (!this._orgId) { this._renderEmptyOrgState?.(body); return true; }
       if (this._cgridWindow == null) this._cgridWindow = 'month';
+      // Por defecto la lectura NORMALIZADA: en impacto absoluto, una marca que
+      // mueve 50x mas aplasta a las demas contra el suelo del eje y el desglose
+      // por red se vuelve ilegible. "Por cada 1.000 seguidores" las pone en
+      // rango comparable — y es lo que de verdad mide influencia, no tamano.
+      if (this._cgridMetric == null) this._cgridMetric = 'per1k';
 
       if (!body.querySelector('.cgrid')) {
         body.innerHTML = this._buildCompGridShell();
@@ -91,7 +96,13 @@
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--chart-bar" aria-hidden="true"></i>${this._esc(__('Influencia digital'))}</span>
             </header>
             <p class="bgrid-card-sub">${this._esc(__('Cuánta conversación genera cada competidor y en qué red la genera · toca una barra para ver todo lo recolectado'))}</p>
-            <nav class="bgrid-seg" role="tablist" aria-label="${this._esc(__('Periodo'))}">${seg}</nav>
+            <div class="cgrid-controls">
+              <nav class="bgrid-seg" role="tablist" aria-label="${this._esc(__('Periodo'))}">${seg}</nav>
+              <nav class="bgrid-seg bgrid-seg--metric" role="tablist" aria-label="${this._esc(__('Medida'))}">
+                <button type="button" class="bgrid-seg-btn${this._cgridMetric === 'per1k' ? ' is-active' : ''}" data-cmetric="per1k" role="tab" title="${this._esc(__('Interacciones por cada 1.000 seguidores — comparable entre marcas de distinto tamaño'))}">${this._esc(__('Por audiencia'))}</button>
+                <button type="button" class="bgrid-seg-btn${this._cgridMetric === 'total' ? ' is-active' : ''}" data-cmetric="total" role="tab" title="${this._esc(__('Interacciones totales del periodo'))}">${this._esc(__('Total'))}</button>
+              </nav>
+            </div>
             <div class="cgrid-bars" id="cgridBars"><div class="cgrid-load">${this._esc(__('Cargando perfiles…'))}</div></div>
             <footer class="bgrid-card-foot" id="cgridBarsFoot"></footer>
           </section>
@@ -111,12 +122,24 @@
       body.addEventListener('click', (e) => {
         // El drill-down por marca lo maneja el onClick del chart (Chart.js
         // resuelve qué columna se tocó); aquí solo van los filtros.
+        const mb = e.target.closest('[data-cmetric]');
+        if (mb) {
+          const m = mb.dataset.cmetric;
+          if (!m || m === this._cgridMetric) return;
+          this._cgridMetric = m;
+          body.querySelectorAll('[data-cmetric]').forEach((x) => x.classList.toggle('is-active', x.dataset.cmetric === m));
+          // Cambiar de medida no cambia los datos: solo se repinta el chart.
+          if (this._cgridLastData) this._paintInfluenceBars(body, this._cgridLastData);
+          return;
+        }
         const btn = e.target.closest('[data-cwindow]');
         if (!btn) return;
         const k = btn.dataset.cwindow;
         if (!k || k === this._cgridWindow) return;
         this._cgridWindow = k;
-        body.querySelectorAll('.bgrid-seg-btn').forEach((b) => b.classList.toggle('is-active', b.dataset.cwindow === k));
+        // Solo los botones de PERIODO: ambos segmentados comparten
+        // .bgrid-seg-btn, y un selector por clase apagaría también el de medida.
+        body.querySelectorAll('[data-cwindow]').forEach((b) => b.classList.toggle('is-active', b.dataset.cwindow === k));
         this._cgridLoadAndPaint(body);
       });
     },
@@ -205,6 +228,7 @@
       try { data = await this._loadCompGridData(); }
       catch (e) { console.warn('[CompGrid] load failed:', e); return; }
       this._cgridData = data;
+      this._cgridLastData = data;   // el toggle de medida repinta sin recargar
       await this._paintInfluenceBars(body, data);
       this._paintTopPost(body, data);
     },
@@ -241,7 +265,11 @@
           topPlatform: String(r.top_platform || '').toLowerCase(),
         }))
         .filter((r) => r.eng > 0)
-        .sort((a, b) => b.eng - a.eng);
+        // El orden sigue a la medida activa: en "por audiencia" la que manda es
+        // la que mas conversacion saca de su gente, no la mas grande.
+        .sort((a, b) => (this._cgridMetric === 'per1k'
+          ? (b.per1k || 0) - (a.per1k || 0)
+          : b.eng - a.eng));
 
       if (!rows.length) {
         host.innerHTML = `<div class="cgrid-empty">${esc(__('Sin actividad capturada de tus competidores en este periodo. Prueba una ventana más amplia.'))}</div>`;
@@ -283,12 +311,17 @@
         const totPosts = rows.reduce((s, x) => s + x.posts, 0);
         const totEng = rows.reduce((s, x) => s + x.eng, 0);
         const leader = rows[0];
+        // En modo normalizado, una marca sin seguidores conocidos sale en cero
+        // y parecería muerta: se dice explícitamente en vez de dejarla mentir.
+        const sinFol = this._cgridMetric === 'per1k'
+          ? rows.filter((x) => !(x.followers > 0)).map((x) => x.name) : [];
         foot.innerHTML = `
           <span>${esc(__('{n} publicaciones', { n: totPosts }))}</span>
           <span class="bgrid-foot-sep">·</span>
           <span>${esc(__('{n} interacciones', { n: C(totEng) }))}</span>
           <span class="bgrid-foot-sep">·</span>
-          <span>${esc(__('manda {b} en {p}', { b: leader.name, p: NET_LABEL[leader.topPlatform] || leader.topPlatform }))}</span>`;
+          <span>${esc(__('manda {b} en {p}', { b: leader.name, p: NET_LABEL[leader.topPlatform] || leader.topPlatform }))}</span>
+          ${sinFol.length ? `<span class="cgrid-foot-warn">${esc(__('sin dato de seguidores: {l}', { l: sinFol.join(', ') }))}</span>` : ''}`;
       }
     },
 
@@ -297,11 +330,21 @@
       const canvas = host.querySelector('#cgridInfluenceChart');
       if (!Chart || !canvas) return;
       const C = (n) => this._compactNum(Number(n) || 0);
+      const per1k = this._cgridMetric === 'per1k';
 
       // Impacto de cada marca en cada red (0 si no está en esa red).
-      const engOf = (row, net) => {
+      const engRaw = (row, net) => {
         const p = row.profiles.find((x) => String(x.platform || '').toLowerCase() === net);
         return p ? (Number(p.engagement) || 0) : 0;
+      };
+      // Normalizado: cada segmento se divide entre los seguidores TOTALES de la
+      // marca, no entre los de su red. Con denominador común los segmentos
+      // siguen sumando el total normalizado de la marca — dividir cada red
+      // entre su propia audiencia daría una pila que no suma nada real.
+      const engOf = (row, net) => {
+        const v = engRaw(row, net);
+        if (!per1k) return v;
+        return row.followers > 0 ? Math.round(v * 1000 / row.followers) : 0;
       };
       const datasets = netOrder.map((net) => ({
         label: NET_LABEL[net] || net,
@@ -355,7 +398,16 @@
               footerColor: 'rgba(212,209,216,0.6)', padding: 10,
               callbacks: {
                 // Una red con 0 en esa marca no aporta lectura: se omite.
-                label: (c) => (Number(c.raw) > 0 ? `${c.dataset.label}: ${C(c.raw)}` : null),
+                // En modo normalizado se muestra también el valor crudo, para
+                // no perder de vista la magnitud real detrás del ratio.
+                label: (c) => {
+                  if (!(Number(c.raw) > 0)) return null;
+                  const x = rows[c.dataIndex];
+                  const net = netOrder[c.datasetIndex];
+                  return per1k
+                    ? `${c.dataset.label}: ${C(c.raw)} / 1k  (${C(engRaw(x, net))})`
+                    : `${c.dataset.label}: ${C(c.raw)}`;
+                },
                 // El pie carga el contexto que no cabe en el eje.
                 footer: (items) => {
                   const x = rows[items[0].dataIndex];
@@ -364,9 +416,8 @@
                   const l = [];
                   if (tipo) l.push(__('Competidor {t}', { t: tipo.toLowerCase() }));
                   l.push(__('{n} en total · {p} publicaciones', { n: C(x.eng), p: x.posts }));
-                  if (x.per1k != null && x.per1k > 0) {
-                    l.push(__('{n} por cada 1.000 seguidores', { n: C(x.per1k) }));
-                  }
+                  if (x.followers > 0) l.push(__('{n} seguidores', { n: C(x.followers) }));
+                  else if (per1k) l.push(__('sin dato de seguidores en este periodo'));
                   l.push(__('toca para ver todo lo recolectado'));
                   return l.join('\n');
                 },
@@ -378,6 +429,11 @@
             y: {
               stacked: true, grid: { color: GRID }, border: { display: false }, beginAtZero: true,
               ticks: { color: TICK, font: { size: 10 }, maxTicksLimit: 5, callback: (v) => C(v) },
+              title: {
+                display: true,
+                text: per1k ? __('interacciones por cada 1.000 seguidores') : __('interacciones'),
+                color: 'rgba(255,255,255,0.4)', font: { size: 10 },
+              },
             },
           },
         },
@@ -735,15 +791,35 @@
 
     _bindCgridMediaFallback(scope) {
       scope.querySelectorAll('[data-cgrid-media]').forEach((el) => {
+        const fb = el.parentElement && el.parentElement.querySelector('[data-cgrid-fb]');
+        let ok = false;                       // ¿el medio llegó a cargar?
         const fail = () => {
+          if (ok) return;                     // ya cargó: un error tardío no cuenta
           el.hidden = true;
-          const fb = el.parentElement && el.parentElement.querySelector('[data-cgrid-fb]');
           if (fb) fb.hidden = false;
         };
-        el.addEventListener('error', fail, { once: true });
-        // <video> no dispara 'error' en el elemento cuando falla el <source>.
-        const src = el.querySelector && el.querySelector('source');
-        if (src) src.addEventListener('error', fail, { once: true });
+        // Si el medio carga, el fallback queda descartado para siempre. Un
+        // <video> con varios candidatos puede emitir 'error' en un <source>
+        // y REPRODUCIR igual — sin esta guarda salía el aviso de "no
+        // disponible" encima de un video que se estaba viendo.
+        const succeed = () => {
+          ok = true;
+          el.hidden = false;
+          if (fb) fb.hidden = true;
+        };
+        if (el.tagName === 'VIDEO') {
+          el.addEventListener('loadeddata', succeed, { once: true });
+          el.addEventListener('canplay', succeed, { once: true });
+          // El error del elemento <video> (no el del <source>) sí es terminal.
+          el.addEventListener('error', fail, { once: true });
+          const src = el.querySelector('source');
+          // Un <source> caído solo condena al video si nada llegó a cargar.
+          if (src) src.addEventListener('error', () => setTimeout(fail, 1200), { once: true });
+        } else {
+          el.addEventListener('load', succeed, { once: true });
+          el.addEventListener('error', fail, { once: true });
+          if (el.complete && el.naturalWidth > 0) succeed();
+        }
       });
     },
 
