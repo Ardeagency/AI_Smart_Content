@@ -106,11 +106,9 @@
             <div class="cgrid-bars" id="cgridBars"><div class="cgrid-load">${this._esc(__('Cargando perfiles…'))}</div></div>
             <footer class="bgrid-card-foot" id="cgridBarsFoot"></footer>
           </section>
+          <!-- Publicación destacada: SIN superficie ni encabezado — flota sobre
+               el degradado y deja que el contenido del rival hable solo. -->
           <section class="bgrid-card glass-black cgrid-card--toppost">
-            <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('La publicación que más movió'))}</span>
-            </header>
-            <p class="bgrid-card-sub">${this._esc(__('El contenido de tu competencia con más respuesta del público en el periodo'))}</p>
             <div class="cgrid-post" id="cgridTopPost"><div class="cgrid-load">${this._esc(__('Buscando la publicación…'))}</div></div>
           </section>
         </div>`;
@@ -739,7 +737,21 @@
             </div>`).join('')}
         </div>` : '';
 
-      const media = this._cgridMediaHtml(full && full.media_assets, copy);
+      // El copy NO entra en el fallback de media: aparecería dos veces (dentro
+      // del recuadro y otra vez abajo). El fallback es solo el aviso.
+      const media = this._cgridMediaHtml(full && full.media_assets);
+
+      // Copy colapsado ARRIBA de la media: es el contexto de qué se está
+      // viendo, no una lectura. Una receta de 40 líneas empujaría la media y
+      // las métricas fuera de la pantalla.
+      const copyHtml = copy ? `
+        <details class="cgrid-post-copy-box">
+          <summary class="cgrid-post-copy-sum">
+            <span class="cgrid-post-copy-peek">${esc(copy.replace(/\s+/g, ' ').slice(0, 90))}${copy.length > 90 ? '…' : ''}</span>
+            <i class="aisc-ico aisc-ico--chevron-down" aria-hidden="true"></i>
+          </summary>
+          <p class="cgrid-post-copy">${esc(copy)}</p>
+        </details>` : '';
 
       host.innerHTML = `
         <article class="cgrid-post-card">
@@ -753,8 +765,8 @@
               <small>${esc(__('interacciones'))}</small>
             </div>
           </div>
+          ${copyHtml}
           ${media}
-          ${copy ? `<p class="cgrid-post-copy">${esc(copy.slice(0, 600))}${copy.length > 600 ? '…' : ''}</p>` : ''}
           <div class="cgrid-metrics">${metrics}</div>
           ${commentsHtml}
           ${url ? `<a class="cgrid-post-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(__('Ver publicación original'))} ↗</a>` : ''}
@@ -766,7 +778,7 @@
     /* Media del post. Las URLs de CDN de Instagram/TikTok van FIRMADAS y
        caducan: una preview vieja da 403. Por eso todo media se monta con
        fallback tipográfico — nunca un cuadro roto. */
-    _cgridMediaHtml(ma, copy) {
+    _cgridMediaHtml(ma) {
       const esc = (s) => this._esc(s);
       const a = (ma && typeof ma === 'object') ? ma : {};
       const first = (v) => (Array.isArray(v) && v.length ? v[0] : null);
@@ -776,6 +788,7 @@
       // capturar el post. Las URLs originales del CDN vienen firmadas y
       // caducan — la archivada no. Las demás quedan como respaldo para los
       // posts anteriores al archivado.
+      const archived = pick(a.archived_url);
       const img = [a.archived_url, a.display_url, a.main_image_url, a.cover_image, a.thumbnail_url,
         first(a.thumbnails), first(a.images), first(a.media_urls), first(a._legacy_array)]
         .map(pick).find(Boolean);
@@ -783,19 +796,26 @@
 
       // Mismo lenguaje que el resto de la plataforma para media caída (galería
       // de Producción, ficha de producto): glifo centrado sobre superficie
-      // neutra, nunca el icono roto del navegador.
+      // neutra, nunca el icono roto del navegador. Sin el copy: ya va arriba,
+      // repetirlo aquí lo mostraba dos veces.
       const fallback = `
         <div class="cgrid-media-fb" data-cgrid-fb hidden>
           <i class="fas fa-image cgrid-media-fb-ico" aria-hidden="true"></i>
           <span class="cgrid-media-fb-kicker">${esc(__('Vista previa no disponible'))}</span>
-          ${copy ? `<span class="cgrid-media-fb-copy">${esc(copy.slice(0, 140))}</span>` : ''}
         </div>`;
 
       if (video) {
+        // CASCADA REAL: el video del CDN caduca igual que la imagen, pero la
+        // copia archivada NO. Si el video muere se muestra la miniatura
+        // archivada en su lugar — recurrir al placeholder teniendo una imagen
+        // buena era tirar información. Solo si tampoco hay archivada se cae al
+        // aviso.
         return `<div class="cgrid-media">
-          <video class="cgrid-media-el" data-cgrid-media controls preload="metadata" playsinline${img ? ` poster="${esc(img)}"` : ''}>
+          <video class="cgrid-media-el" data-cgrid-media${archived ? ` data-cgrid-alt="${esc(archived)}"` : ''} controls preload="metadata" playsinline${img ? ` poster="${esc(img)}"` : ''}>
             <source src="${esc(video)}">
-          </video>${fallback}</div>`;
+          </video>
+          ${archived ? `<img class="cgrid-media-el cgrid-media-alt" data-cgrid-altimg src="${esc(archived)}" alt="" loading="lazy" hidden>` : ''}
+          ${fallback}</div>`;
       }
       if (img) {
         return `<div class="cgrid-media">
@@ -808,9 +828,13 @@
       scope.querySelectorAll('[data-cgrid-media]').forEach((el) => {
         const fb = el.parentElement && el.parentElement.querySelector('[data-cgrid-fb]');
         let ok = false;                       // ¿el medio llegó a cargar?
+        // Respaldo intermedio: la miniatura archivada, que no caduca. Antes de
+        // rendirse al aviso se intenta mostrarla.
+        const alt = el.parentElement && el.parentElement.querySelector('[data-cgrid-altimg]');
         const fail = () => {
           if (ok) return;                     // ya cargó: un error tardío no cuenta
           el.hidden = true;
+          if (alt && alt.hidden) { alt.hidden = false; return; }
           if (fb) fb.hidden = false;
         };
         // Si el medio carga, el fallback queda descartado para siempre. Un
@@ -822,6 +846,8 @@
           el.hidden = false;
           if (fb) fb.hidden = true;
         };
+        // Si el respaldo archivado tampoco carga, se cae al aviso.
+        if (alt) alt.addEventListener('error', () => { alt.hidden = true; if (fb) fb.hidden = false; }, { once: true });
         if (el.tagName === 'VIDEO') {
           el.addEventListener('loadeddata', succeed, { once: true });
           el.addEventListener('canplay', succeed, { once: true });
