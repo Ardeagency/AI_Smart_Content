@@ -1045,7 +1045,9 @@
           document.querySelectorAll('.cgrid-media[data-embedded="1"]')
             .forEach((s) => this._cgridSizeEmbed(s));
         };
-        window.addEventListener('resize', this._cgridEmbedResize);
+        // Via BaseView: un listener de resize crudo sobrevive al destroy() de
+        // la vista y sigue redimensionando embeds que ya no existen.
+        this.addEventListener(window, 'resize', this._cgridEmbedResize);
       }
       // Señal OPORTUNISTA de fin de reproducción: el reproductor emite
       // postMessage, pero su formato no es contrato público — si algún día
@@ -1094,8 +1096,10 @@
     _cgridBindEmbedMessages() {
       if (this._cgridEmbedMsgBound) return;
       this._cgridEmbedMsgBound = true;
-      window.addEventListener('message', (e) => {
-        let host = '';
+      this.addEventListener(window, 'message', (e) => {
+        // El origen se resuelve dentro del try: una URL invalida descarta el
+        // mensaje ahi mismo, sin dejar la variable a medio asignar.
+        let host;
         try { host = new URL(e.origin).hostname.replace(/^www\./, ''); } catch (_) { return; }
         if (host !== 'tiktok.com' && host !== 'youtube-nocookie.com' && host !== 'youtube.com') return;
         let d = e.data;
