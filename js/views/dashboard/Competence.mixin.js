@@ -20,7 +20,9 @@
     async _renderCompetence(body) {
       if (!body) return;
       if (!this._orgId) { this._renderEmptyOrgState?.(body); return; }
-      // REDISEÑO VERA 2026-07: la lectura de Vera ES el tab (legacy oculto abajo).
+      // REDISEÑO 2026-07: el tab es un GRID de cards (CompGrid.mixin), igual que
+      // Mi Marca. El pipeline legacy de abajo queda intacto por si se reactiva.
+      if (this._renderCompGrid) { await this._renderCompGrid(body); return; }
       if (this._renderVeraTabBody) { await this._renderVeraTabBody(body, 'monitoreo'); return; }
       await this._ensureCompetenciaService();
       this._restoreCompFilters();

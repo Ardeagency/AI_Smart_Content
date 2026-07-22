@@ -1,0 +1,136 @@
+/* ════════════════════════════════════════════════════════════════════
+   CompGrid — grid de cards del tab Competencia (rediseño 2026-07).
+   Mismo lenguaje que BrandGrid: cards glass-black sobre el degradado de
+   marca. Reusa .bgrid-card / .bgrid-card-head / .bgrid-seg de brand-grid.css.
+   ════════════════════════════════════════════════════════════════════ */
+
+.cgrid {
+  display: grid;
+  /* Influencia (barras, necesita ancho) + publicación destacada (portrait). */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+  gap: 1.25rem;
+  align-items: start;
+  padding-top: 0.25rem;
+}
+@media (max-width: 1000px) { .cgrid { grid-template-columns: 1fr; } }
+
+.cgrid-load,
+.cgrid-empty {
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 1.6rem 0.2rem;
+  line-height: 1.55;
+}
+
+/* ── Card 1: Influencia digital (barras horizontales) ───────────────── */
+.cgrid-bars { display: flex; flex-direction: column; gap: 1.05rem; }
+
+.cgrid-bar-row { display: flex; flex-direction: column; gap: 0.4rem; min-width: 0; }
+
+.cgrid-bar-top { display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
+.cgrid-bar-name {
+  font-size: 0.88rem; font-weight: 600; color: rgba(255, 255, 255, 0.82);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.is-leader .cgrid-bar-name { color: #fff; font-weight: 700; }
+.cgrid-bar-net { flex: 0 0 auto; font-size: 0.68rem; color: rgba(255, 255, 255, 0.4); }
+.cgrid-bar-tipo {
+  flex: 0 0 auto; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; padding: 0.16rem 0.44rem; border-radius: 999px;
+  color: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.cgrid-bar-tipo[data-tipo="competidor_directo"] { color: rgba(255, 255, 255, 0.8); border-color: rgba(255, 255, 255, 0.3); }
+.cgrid-bar-lead {
+  flex: 0 0 auto; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; padding: 0.16rem 0.5rem; border-radius: 999px;
+  color: var(--brand-color-light, #FF6A1A);
+  background: rgba(255, 106, 26, 0.14);
+}
+.cgrid-bar-val {
+  margin-left: auto; flex: 0 0 auto;
+  font-size: 0.92rem; font-weight: 700; color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.cgrid-bar-track {
+  height: 10px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.cgrid-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+
+.cgrid-bar-sub { font-size: 0.7rem; color: rgba(255, 255, 255, 0.45); }
+
+/* ── Card 2: la publicación que más movió ───────────────────────────── */
+.cgrid-post-card { display: flex; flex-direction: column; gap: 0.9rem; min-width: 0; }
+
+.cgrid-post-head { display: flex; align-items: flex-start; gap: 0.8rem; }
+.cgrid-post-who { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.cgrid-post-name {
+  font-size: 0.95rem; font-weight: 700; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cgrid-post-meta { font-size: 0.7rem; color: rgba(255, 255, 255, 0.45); }
+.cgrid-post-score { margin-left: auto; text-align: right; flex: 0 0 auto; }
+.cgrid-post-score-v {
+  display: block; font-size: 1.35rem; font-weight: 800; color: #fff;
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.cgrid-post-score small { font-size: 0.65rem; color: rgba(255, 255, 255, 0.45); }
+
+/* Media: la foto/video manda, con su propio formato acotado en alto. */
+.cgrid-media {
+  position: relative; border-radius: 14px; overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  min-height: 120px;
+}
+.cgrid-media-el {
+  display: block; width: 100%; max-height: 380px;
+  object-fit: cover; background: #000;
+}
+/* Fallback tipográfico cuando el CDN ya no sirve la media (URLs firmadas que
+   caducan). Nunca un cuadro roto: el copy sostiene la preview. */
+.cgrid-media-fb {
+  display: flex; flex-direction: column; gap: 0.5rem; justify-content: center;
+  padding: 1.6rem 1.4rem; min-height: 130px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+}
+.cgrid-media-fb-kicker {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: rgba(255, 255, 255, 0.4);
+}
+.cgrid-media-fb-copy { font-size: 0.9rem; line-height: 1.5; color: rgba(255, 255, 255, 0.75); }
+
+.cgrid-post-copy {
+  margin: 0; font-size: 0.85rem; line-height: 1.6;
+  color: rgba(255, 255, 255, 0.78);
+  white-space: pre-wrap; word-break: break-word;
+}
+
+.cgrid-metrics { display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem; }
+.cgrid-metric { display: flex; flex-direction: column; gap: 0.05rem; }
+.cgrid-metric-v { font-size: 0.95rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.cgrid-metric small { font-size: 0.65rem; color: rgba(255, 255, 255, 0.45); }
+
+.cgrid-comments {
+  display: flex; flex-direction: column; gap: 0.55rem;
+  padding-top: 0.9rem; border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.cgrid-comments-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); }
+.cgrid-comments-n { font-weight: 400; letter-spacing: 0; text-transform: none; color: rgba(255, 255, 255, 0.35); }
+.cgrid-comment {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem;
+  font-size: 0.8rem; line-height: 1.5;
+  padding-left: 0.6rem; border-left: 2px solid rgba(255, 255, 255, 0.12);
+}
+.cgrid-comment.is-pos { border-left-color: rgba(95, 211, 154, 0.6); }
+.cgrid-comment.is-neg { border-left-color: rgba(231, 122, 122, 0.6); }
+.cgrid-comment-who { font-weight: 600; color: rgba(255, 255, 255, 0.7); }
+.cgrid-comment-txt { color: rgba(255, 255, 255, 0.7); min-width: 0; word-break: break-word; }
+.cgrid-comment-likes { margin-left: auto; font-size: 0.7rem; color: rgba(255, 255, 255, 0.4); font-variant-numeric: tabular-nums; }
+
+.cgrid-post-link {
+  align-self: flex-start; font-size: 0.78rem; font-weight: 600;
+  color: var(--brand-color-light, #FF6A1A); text-decoration: none;
+}
+.cgrid-post-link:hover { text-decoration: underline; }
