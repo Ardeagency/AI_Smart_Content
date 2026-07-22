@@ -135,6 +135,15 @@
             </header>
             <div class="cgrid-post" id="cgridTopPost"><div class="cgrid-load">${this._esc(__('Buscando la publicación…'))}</div></div>
           </section>
+          <!-- Observaciones por perfil. Antes las armaba una RPC con reglas fijas;
+               ahora las escribe Vera en su lectura de Competencia. -->
+          <section class="bgrid-card cgrid-card--obs" id="cgridObsCard" hidden>
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--eye" aria-hidden="true"></i>${this._esc(__('Observaciones'))}</span>
+            </header>
+            <p class="bgrid-card-sub">${this._esc(__('Lo más destacado de cada perfil en este periodo'))}</p>
+            <div class="cgrid-obs" id="cgridObs"></div>
+          </section>
         </div>`;
     },
 
@@ -485,6 +494,10 @@
         reading = (data && data[0]) || null;
       } catch (_) {}
 
+      // Las dos cards viven de la MISMA lectura: se pinta aquí para no pedirla
+      // dos veces a la base.
+      this._paintVeraObservaciones(body, reading);
+
       // Color VIVO de la marca activa (el mismo del degradado del hero y de los
       // charts). Se expone como variable local para que el CSS lo use en el
       // velo de la superficie, los chips y los acentos: sin él la card queda
@@ -554,6 +567,59 @@
           </table>
         </div>
         ${cuando ? `<div class="cgp-firma">${esc(__('Lectura de Vera · {d}', { d: cuando }))}</div>` : ''}`;
+    },
+
+    /* ══ Observaciones por perfil — también de la lectura de Vera ═══════════
+       Lo más destacado de cada perfil en el periodo. Antes lo armaba una RPC
+       con reglas fijas; ahora lo escribe Vera (bloques `observacion_perfil`).
+       Se agrupan por ROL, como en la versión anterior: la prioridad de lectura
+       es competidor directo → indirecto → referente → aliado. ═════════════ */
+    _paintVeraObservaciones(body, reading) {
+      const card = body.querySelector('#cgridObsCard');
+      const host = body.querySelector('#cgridObs');
+      if (!card || !host) return;
+      const esc = (s) => this._esc(s);
+
+      const obs = (reading?.reading?.narrative || [])
+        .filter((b) => b && b.type === 'observacion_perfil' && b.perfil && b.observacion);
+      if (!obs.length) { card.hidden = true; return; }
+      card.hidden = false;
+
+      const [accent] = this._gridBrandHexes();
+      const [ar, ag, ab] = this._hexToRgb(accent);
+      card.style.setProperty('--cgp-accent', accent);
+      card.style.setProperty('--cgp-accent-rgb', `${ar}, ${ag}, ${ab}`);
+
+      // El orden de los grupos ES la prioridad de lectura, no alfabético.
+      const GRUPOS = [
+        { keys: ['competidor_directo', 'competidor'], title: __('Competidores directos') },
+        { keys: ['competidor_indirecto'],             title: __('Competidores indirectos') },
+        { keys: ['referente', 'referencia_cultural'], title: __('Referentes') },
+        { keys: ['aliado'],                           title: __('Aliados') },
+      ];
+      const SEV = { opportunity: 'is-opp', warning: 'is-warn', threat: 'is-threat', neutral: 'is-neu' };
+
+      const bloques = GRUPOS.map((g) => {
+        const items = obs.filter((o) => g.keys.includes(String(o.rol || '').toLowerCase()));
+        if (!items.length) return '';
+        return `
+          <div class="cgo-group">
+            <div class="cgo-group-title">${esc(g.title)}</div>
+            ${items.map((o) => `
+              <div class="cgo-item ${esc(SEV[String(o.severidad || '').toLowerCase()] || 'is-neu')}">
+                <div class="cgo-perfil">${esc(o.perfil)}</div>
+                <p class="cgo-txt">${esc(o.observacion)}</p>
+              </div>`).join('')}
+          </div>`;
+      }).join('');
+
+      // Un rol que Vera no use no debe dejar hueco; si nada encajó en los
+      // grupos conocidos, se listan sin agrupar antes que perderlas.
+      host.innerHTML = bloques || obs.map((o) => `
+        <div class="cgo-item is-neu">
+          <div class="cgo-perfil">${esc(o.perfil)}</div>
+          <p class="cgo-txt">${esc(o.observacion)}</p>
+        </div>`).join('');
     },
 
     /* ══ Panel de marca (drill-down de una barra) ═══════════════════════════

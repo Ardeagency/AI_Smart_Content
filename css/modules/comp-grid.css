@@ -37,6 +37,38 @@
   min-width: 0;
 }
 .cgrid-card--perfiles .bgrid-card-title > .aisc-ico { color: var(--cgp-accent); }
+
+/* Observaciones: misma superficie de card con velo de marca. */
+.cgrid-card--obs {
+  --cgp-accent: var(--brand-color-light, #FF6A1A);
+  --cgp-accent-rgb: 255, 106, 26;
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(var(--cgp-accent-rgb), 0.12) 0%, rgba(var(--cgp-accent-rgb), 0.04) 45%, transparent 75%),
+    var(--bg-card, #141517);
+  border: 1px solid rgba(var(--cgp-accent-rgb), 0.18);
+  border-radius: 18px;
+  padding: 1.35rem 1.5rem 1.5rem;
+  display: flex; flex-direction: column; gap: 0.65rem; min-width: 0;
+}
+.cgrid-card--obs .bgrid-card-title > .aisc-ico { color: var(--cgp-accent); }
+.cgrid-obs { display: flex; flex-direction: column; gap: 1.1rem; }
+/* El orden de los grupos ES la prioridad de lectura: directo antes que referente. */
+.cgo-group { display: flex; flex-direction: column; gap: 0.6rem; }
+.cgo-group-title {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: rgba(var(--cgp-accent-rgb), 0.75);
+}
+.cgo-item {
+  padding-left: 0.75rem;
+  border-left: 2px solid rgba(255, 255, 255, 0.14);
+}
+/* La severidad la marca el borde, no el texto: se ordena de un vistazo sin
+   que el color compita con la lectura. */
+.cgo-item.is-opp    { border-left-color: #5fd39a; }
+.cgo-item.is-warn   { border-left-color: #e6a94e; }
+.cgo-item.is-threat { border-left-color: #e77a7a; }
+.cgo-perfil { font-size: 0.82rem; font-weight: 700; color: #fff; margin-bottom: 0.15rem; }
+.cgo-txt { margin: 0; font-size: 0.82rem; line-height: 1.55; color: rgba(255, 255, 255, 0.72); }
 .cgrid-perfiles { min-width: 0; }
 .cgp-table-wrap { overflow-x: auto; }
 .cgp-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
