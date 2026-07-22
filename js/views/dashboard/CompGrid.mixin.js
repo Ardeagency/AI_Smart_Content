@@ -125,6 +125,15 @@
             <p class="bgrid-card-sub">${this._esc(__('Lo que Vera aprendió de cada uno: sus temas, su tono y qué te llevas de ahí'))}</p>
             <div class="cgrid-perfiles" id="cgridPerfiles"></div>
           </section>
+          <!-- Audiencias que pesca la competencia. Las identifica Vera; el
+               boton las guarda en la biblioteca de la org (audience_personas). -->
+          <section class="bgrid-card cgrid-card--aud" id="cgridAudCard" hidden>
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--audience" aria-hidden="true"></i>${this._esc(__('Audiencias'))}</span>
+            </header>
+            <p class="bgrid-card-sub">${this._esc(__('A quién está pescando tu competencia · agrégala a tu biblioteca para pescar ahí también'))}</p>
+            <div class="cgrid-aud" id="cgridAud"></div>
+          </section>
           </div>
           <!-- Columna derecha. Sin envolver, Observaciones caía en la siguiente
                fila del grid — es decir, bajo "Qué hace cada perfil" — en vez de
@@ -158,6 +167,8 @@
       body.addEventListener('click', (e) => {
         // El drill-down por marca lo maneja el onClick del chart (Chart.js
         // resuelve qué columna se tocó); aquí solo van los filtros.
+        const add = e.target.closest('[data-aud-add]');
+        if (add) { this._cgridAddAudiencia(add.dataset.audAdd, add); return; }
         const mb = e.target.closest('[data-cmetric]');
         if (mb) {
           const m = mb.dataset.cmetric;
@@ -499,9 +510,10 @@
         reading = (data && data[0]) || null;
       } catch (_) {}
 
-      // Las dos cards viven de la MISMA lectura: se pinta aquí para no pedirla
-      // dos veces a la base.
+      // Las cards de Vera viven de la MISMA lectura: se pintan aquí para no
+      // pedirla varias veces a la base.
       this._paintVeraObservaciones(body, reading);
+      this._paintVeraAudiencias(body, reading);
 
       // Color VIVO de la marca activa (el mismo del degradado del hero y de los
       // charts). Se expone como variable local para que el CSS lo use en el
@@ -631,6 +643,82 @@
             <p class="cgo-txt">${esc(o.observacion)}</p>
           </article>`;
       }).join('');
+    },
+
+    /* ══ Audiencias que pesca la competencia ════════════════════════════════
+       Vera identifica a QUIEN le esta hablando cada competidor y lo describe
+       como una audiencia accionable. El boton la guarda en la biblioteca de la
+       org (audience_personas) para que la marca pueda pescar ahí también.
+       Carrusel horizontal: son fichas para hojear y decidir, no una lista. ══ */
+    _paintVeraAudiencias(body, reading) {
+      const card = body.querySelector('#cgridAudCard');
+      const host = body.querySelector('#cgridAud');
+      if (!card || !host) return;
+      const esc = (s) => this._esc(s);
+
+      const auds = (reading?.reading?.narrative || [])
+        .filter((b) => b && b.type === 'audiencia_competidor' && b.nombre);
+      if (!auds.length) { card.hidden = true; return; }
+      card.hidden = false;
+      this._cgridAuds = auds;
+
+      const chips = (v, cls) => (Array.isArray(v) ? v : []).slice(0, 4)
+        .map((x) => `<span class="cga-chip ${cls}">${esc(String(x))}</span>`).join('');
+
+      host.innerHTML = auds.map((a, i) => `
+        <article class="cga-item" data-aud="${esc(String(i))}">
+          <div class="cga-top">
+            <span class="cga-quien">${esc(a.nombre)}</span>
+            ${a.perfil ? `<span class="cga-origen">${esc(__('la pesca {p}', { p: a.perfil }))}</span>` : ''}
+          </div>
+          ${a.descripcion ? `<p class="cga-desc">${esc(a.descripcion)}</p>` : ''}
+          ${a.dolores?.length ? `<div class="cga-bloque"><span class="cga-lbl">${esc(__('Le duele'))}</span>${chips(a.dolores, 'is-dolor')}</div>` : ''}
+          ${a.deseos?.length ? `<div class="cga-bloque"><span class="cga-lbl">${esc(__('Quiere'))}</span>${chips(a.deseos, 'is-deseo')}</div>` : ''}
+          ${a.gancho ? `<div class="cga-bloque"><span class="cga-lbl">${esc(__('Con qué la engancha'))}</span><span class="cga-gancho">${esc(a.gancho)}</span></div>` : ''}
+          <button type="button" class="cga-add" data-aud-add="${esc(String(i))}">
+            <i class="fas fa-plus" aria-hidden="true"></i> ${esc(__('Agregar a mi biblioteca'))}
+          </button>
+        </article>`).join('');
+    },
+
+    /* Guarda una audiencia de la competencia en la biblioteca de la org.
+       Se escribe en `audience_personas` — la misma biblioteca que usa el resto
+       de la plataforma — dejando registrado de qué competidor salió. */
+    async _cgridAddAudiencia(idx, btn) {
+      const a = (this._cgridAuds || [])[Number(idx)];
+      if (!a || !this._supabase) return;
+      const bcId = (this._gridBcIds || [])[0];
+      if (!bcId) return;
+
+      const original = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> ${this._esc(__('Guardando…'))}`;
+      try {
+        const { data: user } = await this._supabase.auth.getUser();
+        const { error } = await this._supabase.from('audience_personas').insert({
+          organization_id: this._orgId,
+          brand_container_id: bcId,
+          created_by: user?.user?.id || null,
+          name: String(a.nombre).slice(0, 160),
+          // Se deja constancia del origen: esta audiencia no la definió la
+          // marca, se le vio pescándola a un competidor.
+          description: [a.descripcion, a.perfil ? __('Detectada en {p}.', { p: a.perfil }) : null]
+            .filter(Boolean).join(' '),
+          dolores: Array.isArray(a.dolores) ? a.dolores : [],
+          deseos: Array.isArray(a.deseos) ? a.deseos : [],
+          gatillos_compra: a.gancho ? [a.gancho] : [],
+          created_via: 'competencia_vera',
+        });
+        if (error) throw error;
+        btn.classList.add('is-done');
+        btn.innerHTML = `<i class="fas fa-check" aria-hidden="true"></i> ${this._esc(__('En tu biblioteca'))}`;
+      } catch (e) {
+        console.warn('[CompGrid] no se pudo guardar la audiencia:', e?.message || e);
+        btn.disabled = false;
+        btn.innerHTML = original;
+        btn.classList.add('is-error');
+        setTimeout(() => btn.classList.remove('is-error'), 2200);
+      }
     },
 
     /* ══ Panel de marca (drill-down de una barra) ═══════════════════════════

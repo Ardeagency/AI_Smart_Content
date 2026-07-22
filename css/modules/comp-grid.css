@@ -38,6 +38,71 @@
 }
 .cgrid-card--perfiles .bgrid-card-title > .aisc-ico { color: var(--cgp-accent); }
 
+/* ── Audiencias que pesca la competencia ────────────────────────────────────
+   Carrusel HORIZONTAL: son fichas para hojear y decidir cual agregar, no una
+   lista que se lee de arriba abajo. */
+.cgrid-card--aud {
+  --cgp-accent: var(--brand-color-light, #FF6A1A);
+  --cgp-accent-rgb: 255, 106, 26;
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(var(--cgp-accent-rgb), 0.12) 0%, rgba(var(--cgp-accent-rgb), 0.04) 45%, transparent 75%),
+    var(--bg-card, #141517);
+  border: 1px solid rgba(var(--cgp-accent-rgb), 0.18);
+  border-radius: 18px;
+  padding: 1.35rem 1.5rem 1.5rem;
+  display: flex; flex-direction: column; gap: 0.65rem; min-width: 0;
+}
+.cgrid-card--aud .bgrid-card-title > .aisc-ico { color: var(--cgp-accent); }
+.cgrid-aud {
+  display: flex; gap: 0.85rem;
+  overflow-x: auto; padding-bottom: 0.4rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+.cgrid-aud::-webkit-scrollbar { height: 6px; }
+.cgrid-aud::-webkit-scrollbar-track { background: transparent; }
+.cgrid-aud::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: 999px; }
+.cga-item {
+  flex: 0 0 auto; width: 270px; scroll-snap-align: start;
+  display: flex; flex-direction: column; gap: 0.5rem;
+  padding: 0.9rem 1rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.cga-top { display: flex; flex-direction: column; gap: 0.1rem; }
+.cga-quien { font-size: 0.92rem; font-weight: 700; color: #fff; line-height: 1.3; }
+.cga-origen { font-size: 0.66rem; color: rgba(var(--cgp-accent-rgb), 0.85); }
+.cga-desc { margin: 0; font-size: 0.78rem; line-height: 1.5; color: rgba(255, 255, 255, 0.72); }
+.cga-bloque { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem; }
+.cga-lbl {
+  width: 100%; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: rgba(255, 255, 255, 0.38);
+}
+.cga-chip {
+  font-size: 0.7rem; padding: 0.12rem 0.45rem; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.82);
+}
+.cga-chip.is-dolor { background: rgba(231, 122, 122, 0.16); }
+.cga-chip.is-deseo { background: rgba(95, 211, 154, 0.16); }
+.cga-gancho { font-size: 0.76rem; font-style: italic; color: rgba(255, 255, 255, 0.75); }
+/* El boton cierra la ficha: es la accion, va al fondo y ocupa todo el ancho. */
+.cga-add {
+  margin-top: auto; appearance: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.5rem 0.7rem; border-radius: 10px;
+  font-size: 0.76rem; font-weight: 700;
+  color: var(--cgp-accent);
+  background: rgba(var(--cgp-accent-rgb), 0.12);
+  border: 1px solid rgba(var(--cgp-accent-rgb), 0.35);
+  transition: background 0.18s ease;
+}
+.cga-add:hover:not(:disabled) { background: rgba(var(--cgp-accent-rgb), 0.22); }
+.cga-add:disabled { cursor: default; opacity: 0.75; }
+.cga-add.is-done { color: #5fd39a; background: rgba(95, 211, 154, 0.14); border-color: rgba(95, 211, 154, 0.4); opacity: 1; }
+.cga-add.is-error { color: #e77a7a; border-color: rgba(231, 122, 122, 0.5); }
+
 /* Observaciones: el CONTENEDOR es neutro — el color lo pone cada observación
    segun como la clasifico Vera, y un velo de marca por debajo competiria con
    esa señal. */
@@ -68,7 +133,9 @@
    lateral no consigue. */
 .cgo-item {
   --cgo-tint: 90, 98, 112;
-  background: #fff;
+  /* Gris casi blanco, no blanco puro: sobre el fondo oscuro el #fff resulta
+     chillon y roba la atencion al filete de clasificacion. */
+  background: #eef0f3;
   border-radius: 12px;
   border-top: 4px solid rgb(var(--cgo-tint));
   padding: 0.85rem 1rem 0.9rem;
@@ -76,7 +143,7 @@
 }
 /* Tonos elegidos para leerse sobre BLANCO (los claros del modo oscuro se
    desvanecian): la clasificacion la decide Vera, el contraste lo garantiza el CSS. */
-.cgo-item.is-opp    { --cgo-tint: 22, 133, 89; }
+.cgo-item.is-opp    { --cgo-tint: 17, 116, 77; }
 .cgo-item.is-threat { --cgo-tint: 190, 52, 46; }
 .cgo-item.is-warn   { --cgo-tint: 140, 92, 8; }
 .cgo-item.is-neu    { --cgo-tint: 90, 98, 112; }
