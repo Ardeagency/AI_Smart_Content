@@ -1,6 +1,6 @@
 # DEBT — Los posts PROPIOS entran sin archivo de media y sin descripcion visual
 
-> **RESUELTO 2026-07-22** (ai-engine `f1d1548`). La causa raiz no era el archivador
+> **RESUELTO 2026-07-22** (ai-engine `f1d1548` IG/FB + `2d1b572` TikTok). La causa raiz no era el archivador
 > sino que **a Instagram nunca se le pedia la imagen**: los `fields` del Graph no
 > incluian `media_url`/`thumbnail_url`, asi que el post entraba con `image: null`
 > y no habia nada que archivar ni que describir. Ver "Arreglo" al final.
@@ -109,3 +109,34 @@ producto** ("crema de mani", "pouch amarillo WAKEUP") a $0.008 por medio.
 **Lo que sigue sin recuperarse:** los posts cuya URL de CDN ya expiro (el backfill
 dio 60 de 61 en 403). Cada ciclo rescata lo que siga vivo; el resto solo volveria
 con un re-scrape.
+
+
+## Segunda parte: TikTok (ai-engine `2d1b572`)
+
+TikTok entra por su propio populador, no por el scraper, y tenia **dos** huecos:
+
+- **No rescataba lo ya guardado:** un video existente hacia `skipped_existing++` y
+  `continue`. Nunca se refrescaban sus metricas ni se archivaba su portada.
+- **No describia NADA**, ni siquiera los videos nuevos: `triggerMediaAnalysis` era
+  un helper privado dentro de `social-scraper.service.js` y ningun populador podia
+  importarlo.
+
+**Cambios:** el disparo de descripcion sale a `src/services/media-analysis.service.js`
+(el scraper pasa a importarlo, misma funcion en un solo sitio); el populador rescata
+la portada de los videos ya guardados —el `cover_image_url` que devuelve la API es
+fresco, el guardado caduca— y manda a describir tanto los rescatados como los nuevos.
+
+**Verificado:** una corrida de `tiktok_sync_posts` rescato y describio **37 videos**.
+Los 20 restantes son mas viejos que la ventana que devuelve la API (`maxPages: 2`,
+`perPage: 20` = 40 videos); subir ese presupuesto los alcanzaria.
+
+## Estado final de la cobertura (WAKEUP)
+
+| red | posts | archivados | descritos |
+|---|---|---|---|
+| Instagram | 101 | 99 | 97 |
+| Facebook | 101 | 95 | 95 |
+| TikTok | 57 | 37 | 37 |
+
+Deteccion de producto: de **81 a 117** posts; los detectados **solo por la imagen**,
+de **24 a 60**. Costo total del rescate: **$1.49**.
