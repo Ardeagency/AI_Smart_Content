@@ -167,8 +167,11 @@
       body.addEventListener('click', (e) => {
         // El drill-down por marca lo maneja el onClick del chart (Chart.js
         // resuelve qué columna se tocó); aquí solo van los filtros.
+        // El "+" agrega sin abrir el detalle; el resto de la ficha lo abre.
         const add = e.target.closest('[data-aud-add]');
         if (add) { this._cgridAddAudiencia(add.dataset.audAdd, add); return; }
+        const abrir = e.target.closest('[data-aud-open]');
+        if (abrir) { this._openAudienciaModal(abrir.dataset.audOpen); return; }
         const mb = e.target.closest('[data-cmetric]');
         if (mb) {
           const m = mb.dataset.cmetric;
@@ -665,20 +668,65 @@
       const chips = (v, cls) => (Array.isArray(v) ? v : []).slice(0, 4)
         .map((x) => `<span class="cga-chip ${cls}">${esc(String(x))}</span>`).join('');
 
+      // La ficha muestra SOLO el nombre y de quién se aprendió: es un objeto
+      // para hojear y elegir. El detalle (dolores, deseos, gancho) vive en el
+      // modal — meterlo aquí convertía el carrusel en tres muros de texto.
       host.innerHTML = auds.map((a, i) => `
-        <article class="cga-item" data-aud="${esc(String(i))}">
+        <article class="cga-item" data-aud-open="${esc(String(i))}" role="button" tabindex="0"
+                 aria-label="${esc(__('Ver la audiencia {n}', { n: a.nombre }))}">
           <div class="cga-top">
-            <span class="cga-quien">${esc(a.nombre)}</span>
+            <h4 class="cga-quien">${esc(a.nombre)}</h4>
             ${a.perfil ? `<span class="cga-origen">${esc(__('la pesca {p}', { p: a.perfil }))}</span>` : ''}
           </div>
-          ${a.descripcion ? `<p class="cga-desc">${esc(a.descripcion)}</p>` : ''}
-          ${a.dolores?.length ? `<div class="cga-bloque"><span class="cga-lbl">${esc(__('Le duele'))}</span>${chips(a.dolores, 'is-dolor')}</div>` : ''}
-          ${a.deseos?.length ? `<div class="cga-bloque"><span class="cga-lbl">${esc(__('Quiere'))}</span>${chips(a.deseos, 'is-deseo')}</div>` : ''}
-          ${a.gancho ? `<div class="cga-bloque"><span class="cga-lbl">${esc(__('Con qué la engancha'))}</span><span class="cga-gancho">${esc(a.gancho)}</span></div>` : ''}
-          <button type="button" class="cga-add" data-aud-add="${esc(String(i))}">
-            <i class="fas fa-plus" aria-hidden="true"></i> ${esc(__('Agregar a mi biblioteca'))}
-          </button>
+          <div class="cga-foot">
+            <span class="cga-hint">${esc(__('Ver audiencia'))}</span>
+            <button type="button" class="cga-add" data-aud-add="${esc(String(i))}"
+                    title="${esc(__('Agregar a mi biblioteca'))}" aria-label="${esc(__('Agregar a mi biblioteca'))}">
+              <i class="fas fa-plus" aria-hidden="true"></i>
+            </button>
+          </div>
         </article>`).join('');
+    },
+
+    /* Detalle completo de la audiencia. Es donde se decide si vale la pena
+       adoptarla, así que lleva todo: a quién describe, qué le duele, qué
+       quiere, con qué la engancha el competidor — y el botón para agregarla. */
+    _openAudienciaModal(idx) {
+      const a = (this._cgridAuds || [])[Number(idx)];
+      if (!a) return;
+      const esc = (s) => this._esc(s);
+      const lista = (v, cls) => (Array.isArray(v) ? v : []).filter(Boolean)
+        .map((x) => `<li class="cgam-li ${cls}">${esc(String(x))}</li>`).join('');
+
+      const overlay = document.createElement('div');
+      overlay.className = 'salud-overlay';
+      overlay.innerHTML = `
+        <div class="salud-modal cgam-modal" role="dialog" aria-modal="true">
+          <div class="salud-modal-head">
+            <span class="salud-modal-title">${esc(a.nombre)}</span>
+            <button type="button" class="salud-modal-close" aria-label="${esc(__('Cerrar'))}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
+          </div>
+          <div class="salud-modal-body">
+            ${a.perfil ? `<div class="cgam-origen">${esc(__('Audiencia detectada en {p}', { p: a.perfil }))}</div>` : ''}
+            ${a.descripcion ? `<p class="cgam-desc">${esc(a.descripcion)}</p>` : ''}
+            <div class="cgam-cols">
+              ${a.dolores?.length ? `<div class="cgam-col"><div class="cgam-lbl">${esc(__('Le duele'))}</div><ul class="cgam-ul">${lista(a.dolores, 'is-dolor')}</ul></div>` : ''}
+              ${a.deseos?.length ? `<div class="cgam-col"><div class="cgam-lbl">${esc(__('Quiere'))}</div><ul class="cgam-ul">${lista(a.deseos, 'is-deseo')}</ul></div>` : ''}
+            </div>
+            ${a.gancho ? `<div class="cgam-gancho"><div class="cgam-lbl">${esc(__('Con qué la engancha'))}</div><p>${esc(a.gancho)}</p></div>` : ''}
+            <button type="button" class="cgam-add" data-aud-add="${esc(String(idx))}">
+              <i class="fas fa-plus" aria-hidden="true"></i> ${esc(__('Agregar a mi biblioteca'))}
+            </button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+      const close = () => overlay.remove();
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay || e.target.closest('.salud-modal-close')) { close(); return; }
+        const add = e.target.closest('[data-aud-add]');
+        if (add) this._cgridAddAudiencia(add.dataset.audAdd, add);
+      });
+      document.addEventListener('keydown', function onEsc(ev) { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } });
     },
 
     /* Guarda una audiencia de la competencia en la biblioteca de la org.
