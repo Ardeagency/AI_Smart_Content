@@ -386,14 +386,23 @@
   content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.45) 55%, rgba(0, 0, 0, 0.78) 100%);
 }
-/* Producto: entra por la esquina superior derecha y se sale del marco. */
+/* Producto: ocupa la mitad derecha del encabezado y se FUNDE con el fondo por
+   la izquierda y por abajo (máscara en degradado). Estas fotos son packshots
+   con fondo blanco: recortarlas contra el marco dejaba un bloque blanco pegado;
+   fundidas se leen como una portada. */
 .vera-prodstar-img {
-  position: absolute; top: -6%; right: -5%;
+  position: absolute; top: 0; right: 0;
   z-index: 1;
-  height: 232px; width: auto; max-width: 58%;
-  display: block; object-fit: contain;
-  border-radius: 12px;
-  filter: drop-shadow(-14px 22px 38px rgba(0, 0, 0, 0.6));
+  width: 54%; height: 218px;
+  display: block; object-fit: cover; object-position: center;
+  -webkit-mask-image:
+    linear-gradient(to left, #000 30%, transparent 96%),
+    linear-gradient(to top, transparent 2%, #000 46%);
+  mask-image:
+    linear-gradient(to left, #000 30%, transparent 96%),
+    linear-gradient(to top, transparent 2%, #000 46%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
   opacity: 0; transition: opacity 0.5s var(--ease-out, ease);
 }
 .vera-prodstar-img.is-loaded { opacity: 1; animation: none; }
@@ -402,7 +411,12 @@
 .vera-prodstar-body { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 1.1rem; }
 /* Titular y cifras van sobre el degradado (sin card), con la mitad derecha
    libre para que el producto respire. */
-.vera-prodstar-meta { display: flex; flex-direction: column; gap: 0.55rem; min-width: 0; max-width: 58%; padding: 0.35rem 0.25rem 0; }
+/* min-height = alto del encabezado: reserva el aire de la foto y planta el
+   titular abajo (si no, el panel glass subía y le comía el producto). */
+.vera-prodstar-meta {
+  display: flex; flex-direction: column; justify-content: flex-end; gap: 0.55rem;
+  min-width: 0; max-width: 60%; min-height: 190px; padding: 0 0.25rem 0;
+}
 .vera-prodstar-meta > .vera-prodstar-badge { align-self: flex-start; }
 .vera-prodstar-name { margin: 0; font-size: 1.55rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; line-height: 1.08; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45); }
 .vera-prodstar-sigs { display: flex; flex-wrap: wrap; gap: 1.1rem; margin-top: 0.35rem; }
@@ -449,9 +463,9 @@
 /* Estrecho: el producto se achica y el titular deja de competir con el. */
 @media (max-width: 620px) {
   .vera-prodstar-stage { padding: 1rem 0.8rem 0.8rem; }
-  .vera-prodstar-img { height: 168px; max-width: 52%; }
+  .vera-prodstar-img { height: 172px; width: 58%; }
   .vera-prodstar-name { font-size: 1.3rem; }
-  .vera-prodstar-meta { max-width: 62%; }
+  .vera-prodstar-meta { max-width: 64%; min-height: 148px; }
   .vera-prodstar-sigs { gap: 0.9rem; }
   .vera-prodstar-item { grid-template-columns: 30px minmax(0, 1fr) 3rem 5.2rem; }
   .vera-prodstar-item-days { display: none; }
