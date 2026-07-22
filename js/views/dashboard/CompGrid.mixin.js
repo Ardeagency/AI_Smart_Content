@@ -590,41 +590,47 @@
       if (!obs.length) { card.hidden = true; return; }
       card.hidden = false;
 
-      const [accent] = this._gridBrandHexes();
-      const [ar, ag, ab] = this._hexToRgb(accent);
-      card.style.setProperty('--cgp-accent', accent);
-      card.style.setProperty('--cgp-accent-rgb', `${ar}, ${ag}, ${ab}`);
+      // Un perfil puede tener VARIAS observaciones: ya no se agrupa por rol
+      // (eso obligaba a una por perfil y enterraba lo urgente bajo el orden de
+      // los roles). Manda la PRIORIDAD que asignó Vera; el rol queda como chip.
+      const PRIO = { alta: 0, media: 1, baja: 2 };
+      const orden = [...obs].sort((a, b) => {
+        const pa = PRIO[String(a.prioridad || '').toLowerCase()] ?? 1;
+        const pb = PRIO[String(b.prioridad || '').toLowerCase()] ?? 1;
+        return pa - pb;
+      });
 
-      // El orden de los grupos ES la prioridad de lectura, no alfabético.
-      const GRUPOS = [
-        { keys: ['competidor_directo', 'competidor'], title: __('Competidores directos') },
-        { keys: ['competidor_indirecto'],             title: __('Competidores indirectos') },
-        { keys: ['referente', 'referencia_cultural'], title: __('Referentes') },
-        { keys: ['aliado'],                           title: __('Aliados') },
-      ];
-      const SEV = { opportunity: 'is-opp', warning: 'is-warn', threat: 'is-threat', neutral: 'is-neu' };
+      const SEV = {
+        opportunity: { cls: 'is-opp',    label: __('Oportunidad') },
+        threat:      { cls: 'is-threat', label: __('Amenaza') },
+        warning:     { cls: 'is-warn',   label: __('Atención') },
+        neutral:     { cls: 'is-neu',    label: __('Contexto') },
+      };
+      const ROL = {
+        competidor_directo:   __('Directo'),
+        competidor:           __('Directo'),
+        competidor_indirecto: __('Indirecto'),
+        referente:            __('Referente'),
+        referencia_cultural:  __('Referente'),
+        aliado:               __('Aliado'),
+      };
 
-      const bloques = GRUPOS.map((g) => {
-        const items = obs.filter((o) => g.keys.includes(String(o.rol || '').toLowerCase()));
-        if (!items.length) return '';
+      host.innerHTML = orden.map((o) => {
+        const sev = SEV[String(o.severidad || '').toLowerCase()] || SEV.neutral;
+        const rol = ROL[String(o.rol || '').toLowerCase()] || '';
+        const prio = String(o.prioridad || '').toLowerCase();
         return `
-          <div class="cgo-group">
-            <div class="cgo-group-title">${esc(g.title)}</div>
-            ${items.map((o) => `
-              <div class="cgo-item ${esc(SEV[String(o.severidad || '').toLowerCase()] || 'is-neu')}">
-                <div class="cgo-perfil">${esc(o.perfil)}</div>
-                <p class="cgo-txt">${esc(o.observacion)}</p>
-              </div>`).join('')}
-          </div>`;
+          <article class="cgo-item ${esc(sev.cls)}">
+            <div class="cgo-head">
+              <span class="cgo-perfil">${esc(o.perfil)}</span>
+              ${rol ? `<span class="cgo-rol">${esc(rol)}</span>` : ''}
+              <span class="cgo-sev">${esc(sev.label)}</span>
+              ${prio === 'alta' ? `<span class="cgo-prio">${esc(__('Prioridad alta'))}</span>` : ''}
+            </div>
+            ${o.titulo ? `<h4 class="cgo-titulo">${esc(o.titulo)}</h4>` : ''}
+            <p class="cgo-txt">${esc(o.observacion)}</p>
+          </article>`;
       }).join('');
-
-      // Un rol que Vera no use no debe dejar hueco; si nada encajó en los
-      // grupos conocidos, se listan sin agrupar antes que perderlas.
-      host.innerHTML = bloques || obs.map((o) => `
-        <div class="cgo-item is-neu">
-          <div class="cgo-perfil">${esc(o.perfil)}</div>
-          <p class="cgo-txt">${esc(o.observacion)}</p>
-        </div>`).join('');
     },
 
     /* ══ Panel de marca (drill-down de una barra) ═══════════════════════════
