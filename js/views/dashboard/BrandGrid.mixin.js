@@ -87,7 +87,10 @@
             </section>
             <div class="bgrid-vd" id="bgridVD"></div>
           </div>
-          <section class="bgrid-card glass-black bgrid-card--prodstar">
+          <div class="bgrid-vera" id="bgridVera"></div>
+          <!-- Producto destacado cierra la pagina: es el ultimo bloque, con
+               ancho acotado (no full-bleed) y superficie de card canonica. -->
+          <section class="bgrid-card bgrid-card--prodstar">
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--star" aria-hidden="true"></i>${this._esc(__('Producto destacado'))}</span>
             </header>
@@ -96,7 +99,6 @@
               <div class="vera-prodstar-load">${this._esc(__('Cargando productos…'))}</div>
             </div>
           </section>
-          <div class="bgrid-vera" id="bgridVera"></div>
         </div>`;
     },
 
@@ -476,7 +478,6 @@
 
       const heroHtml = `
         <div class="vera-prodstar-hero">
-          ${img}
           <div class="vera-prodstar-meta">
             <span class="vera-prodstar-badge ${q.cls}">${esc(q.label)}</span>
             <h4 class="vera-prodstar-name">${esc(hero.producto)}</h4>
@@ -486,6 +487,7 @@
               ${sig(hero.menciones_publico != null ? hero.menciones_publico : 0, __('lo nombra el público'))}
             </div>
           </div>
+          ${img}
         </div>`;
 
       const items = olvidados.map((p) => {
