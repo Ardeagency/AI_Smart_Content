@@ -739,7 +739,10 @@
 
       // El copy NO entra en el fallback de media: aparecería dos veces (dentro
       // del recuadro y otra vez abajo). El fallback es solo el aviso.
-      const media = this._cgridMediaHtml(full && full.media_assets);
+      const media = this._cgridMediaHtml(full && full.media_assets, {
+        network: net,
+        postId:  full?.post_id || win.external_post_id,
+      });
 
       // Copy colapsado ARRIBA de la media: es el contexto de qué se está
       // viendo, no una lectura. Una receta de 40 líneas empujaría la media y
@@ -773,13 +776,18 @@
         </article>`;
 
       this._bindCgridMediaFallback(host);
+      // Facade: el reproductor del tercero no se pide hasta que se pulsa el play.
+      host.querySelectorAll('[data-cgrid-embed]').forEach((b) => {
+        b.addEventListener('click', () => this._cgridMountEmbed(b));
+      });
     },
 
     /* Media del post. Las URLs de CDN de Instagram/TikTok van FIRMADAS y
        caducan: una preview vieja da 403. Por eso todo media se monta con
        fallback tipográfico — nunca un cuadro roto. */
-    _cgridMediaHtml(ma) {
+    _cgridMediaHtml(ma, ctx) {
       const esc = (s) => this._esc(s);
+      const { network, postId } = ctx || {};
       const a = (ma && typeof ma === 'object') ? ma : {};
       const first = (v) => (Array.isArray(v) && v.length ? v[0] : null);
       const pick = (v) => (typeof v === 'string' && /^https?:\/\//i.test(v)) ? v
@@ -825,16 +833,61 @@
           ${fallback}</div>`;
       }
       if (img) {
-        // Video que no se puede incrustar: se muestra su portada con un
-        // distintivo de reproducción, y el enlace al original (que ya está al
-        // pie de la card) es el que sí lo abre. Antes se ofrecía un play que
-        // no llevaba a ninguna parte.
+        // FACADE: la red no publica el archivo, pero sí ofrece un reproductor
+        // incrustable (TikTok y YouTube, ambos sin credencial ni costo). Se
+        // pinta la portada con su botón de play y el iframe se monta SOLO al
+        // pulsarlo: cero peso y cero rastreo de terceros mientras nadie lo
+        // pida. Si el embed fallara, la portada y el enlace al original siguen
+        // ahí debajo.
+        const embed = esVideoNoIncrustable ? this._cgridEmbedUrl(network, postId) : null;
+        const play = embed
+          ? `<button type="button" class="cgrid-media-play" data-cgrid-embed="${esc(embed)}" aria-label="${esc(__('Reproducir video'))}"><i class="fas fa-play" aria-hidden="true"></i></button>`
+          : (esVideoNoIncrustable ? `<span class="cgrid-media-play is-static" aria-hidden="true"><i class="fas fa-play"></i></span>` : '');
         return `<div class="cgrid-media">
           <img class="cgrid-media-el" data-cgrid-media src="${esc(img)}" alt="" loading="lazy">
-          ${esVideoNoIncrustable ? `<span class="cgrid-media-play" aria-hidden="true"><i class="fas fa-play"></i></span>` : ''}
+          ${play}
           ${fallback}</div>`;
       }
       return `<div class="cgrid-media">${fallback.replace(' hidden', '')}</div>`;
+    },
+
+    /* Reproductor incrustable oficial de la red, cuando existe. Ambos son
+       públicos: sin credencial, sin app registrada y sin costo (verificado en
+       vivo: el iframe responde 200 y no manda X-Frame-Options ni
+       frame-ancestors, o sea que permite incrustarse desde nuestro dominio).
+       Instagram queda fuera a propósito: su oEmbed exige token de app de Meta. */
+    _cgridEmbedUrl(network, postId) {
+      const id = String(postId || '').trim();
+      if (!id) return null;
+      switch (String(network || '').toLowerCase()) {
+        case 'tiktok':
+          if (!/^\d+$/.test(id)) return null;
+          return `https://www.tiktok.com/embed/v2/${id}`;
+        case 'youtube':
+          // -nocookie: no deja cookies de seguimiento hasta que se reproduce.
+          return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}`;
+        default:
+          return null;
+      }
+    },
+
+    /* Monta el reproductor de la red en el hueco de la portada. Se llama solo
+       desde el click en el play — hasta entonces no se ha pedido nada a un
+       tercero. */
+    _cgridMountEmbed(btn) {
+      const stage = btn.closest('.cgrid-media');
+      const src = btn.dataset.cgridEmbed;
+      if (!stage || !src || stage.dataset.embedded === '1') return;
+      stage.dataset.embedded = '1';
+      // El reproductor de TikTok es vertical y necesita alto real para no
+      // salir recortado; se libera el max-width que impuso el ratio del poster.
+      stage.style.maxWidth = '';
+      stage.style.aspectRatio = '9 / 16';
+      stage.innerHTML = `
+        <iframe class="cgrid-media-embed" src="${this._esc(src)}"
+          title="${this._esc(__('Reproductor de la publicación'))}"
+          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen"
+          allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
     },
 
     /* ¿Esta URL es media que un <video> puede reproducir, o la página del post?

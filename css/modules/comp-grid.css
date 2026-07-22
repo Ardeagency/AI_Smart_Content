@@ -210,8 +210,10 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
 /* Respaldo archivado: ocupa el mismo hueco que el video que sustituye. */
 .cgrid-media-alt[hidden] { display: none; }
 
-/* Distintivo de "esto es un video" cuando la red no permite incrustarlo
-   (TikTok): la portada manda y el enlace al original es el que lo abre. */
+/* Play del FACADE: la red no publica el archivo pero si un reproductor
+   incrustable. Al pulsarlo se monta el iframe; hasta entonces no se ha pedido
+   nada a un tercero. `.is-static` = sin reproductor disponible (solo distintivo
+   de que el post es video; el enlace al original es el que lo abre). */
 .cgrid-media-play {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   width: 56px; height: 56px; border-radius: 50%;
@@ -220,8 +222,17 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
   border: 1.5px solid rgba(255, 255, 255, 0.5);
   color: #fff; font-size: 1.1rem; padding-left: 4px;
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  pointer-events: none;
+  appearance: none; cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease;
 }
+.cgrid-media-play:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+  background: rgba(0, 0, 0, 0.62);
+}
+.cgrid-media-play:focus-visible { outline: 2px solid var(--brand-color-light, #FF6A1A); outline-offset: 3px; }
+.cgrid-media-play.is-static { pointer-events: none; }
+
+.cgrid-media-embed { width: 100%; height: 100%; border: 0; display: block; }
 
 .cgrid-post-copy {
   margin: 0; font-size: 0.85rem; line-height: 1.6;
