@@ -847,7 +847,11 @@
           if (fb) fb.hidden = true;
         };
         // Si el respaldo archivado tampoco carga, se cae al aviso.
-        if (alt) alt.addEventListener('error', () => { alt.hidden = true; if (fb) fb.hidden = false; }, { once: true });
+        if (alt) {
+          alt.addEventListener('error', () => { alt.hidden = true; if (fb) fb.hidden = false; }, { once: true });
+          this._cgridFitMedia(alt);
+        }
+        this._cgridFitMedia(el);
         if (el.tagName === 'VIDEO') {
           el.addEventListener('loadeddata', succeed, { once: true });
           el.addEventListener('canplay', succeed, { once: true });
@@ -864,6 +868,36 @@
           if (el.complete) { if (el.naturalWidth > 0) succeed(); else fail(); }
         }
       });
+    },
+
+    /* El contenedor adopta el FORMATO REAL del medio: un reel vertical de
+       TikTok se ve vertical, un post cuadrado cuadrado y un video horizontal
+       horizontal. Con una caja de proporción fija, todo lo que no coincidía
+       salía recortado — justo la mitad de un 9:16.
+       El 4/5 del CSS solo reserva el hueco mientras carga (evita layout shift);
+       en cuanto se conocen las dimensiones reales se sustituye. */
+    _cgridFitMedia(el) {
+      if (!el) return;
+      const MAX_H = 600;   // debe coincidir con el max-height del CSS
+      const apply = (w, h) => {
+        if (!w || !h) return;
+        const stage = el.closest('.cgrid-media');
+        if (!stage) return;
+        stage.style.aspectRatio = `${w} / ${h}`;
+        // Acotar por ANCHO, no por alto: un max-height a secas rompería la
+        // proporción y devolvería las franjas que se quieren evitar. Limitando
+        // el ancho, el alto cae solo dentro del tope y el ratio se respeta.
+        stage.style.maxWidth = `${Math.round(MAX_H * (w / h))}px`;
+      };
+      if (el.tagName === 'VIDEO') {
+        const fromVideo = () => apply(el.videoWidth, el.videoHeight);
+        if (el.readyState >= 1) fromVideo();
+        else el.addEventListener('loadedmetadata', fromVideo, { once: true });
+        return;
+      }
+      const fromImg = () => apply(el.naturalWidth, el.naturalHeight);
+      if (el.complete) fromImg();
+      else el.addEventListener('load', fromImg, { once: true });
     },
 
     /* Los posts de competencia NO guardan permalink (0% de cobertura): la URL

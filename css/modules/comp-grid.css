@@ -171,15 +171,24 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
 }
 .cgrid-post-score small { font-size: 0.65rem; color: rgba(255, 255, 255, 0.45); }
 
-/* Media: la foto/video manda, con su propio formato acotado en alto. */
+/* Media: manda el formato REAL del post. El aspect-ratio de aquí solo reserva
+   el hueco mientras carga; _cgridFitMedia lo sustituye por el ratio verdadero
+   (un reel 9:16 se ve vertical, un post 1:1 cuadrado, un video 16:9 apaisado).
+   Antes la caja era de proporción fija y recortaba todo lo que no encajaba. */
 .cgrid-media {
   position: relative; border-radius: 14px; overflow: hidden;
   background: rgba(255, 255, 255, 0.04);
   min-height: 120px;
+  aspect-ratio: 4 / 5;
+  /* Un 9:16 a todo el ancho de la columna daría ~800px de alto y expulsaría
+     las métricas de la pantalla. El tope se aplica limitando el ANCHO desde JS
+     (max-width calculado con el ratio real), no con un max-height: eso último
+     romperia la proporción. Aquí solo queda el centrado. */
+  margin-inline: auto;
 }
 .cgrid-media-el {
-  display: block; width: 100%; max-height: 380px;
-  object-fit: cover; background: #000;
+  display: block; width: 100%; height: 100%;
+  object-fit: contain; background: #000;
 }
 /* `display:block` de la clase le gana a [hidden] por especificidad: sin esto,
    ocultar el medio caido por JS no surtia efecto y quedaban visibles el medio
