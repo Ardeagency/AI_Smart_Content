@@ -257,10 +257,14 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
   white-space: pre-wrap; word-break: break-word;
 }
 
-.cgrid-metrics { display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem; }
-.cgrid-metric { display: flex; flex-direction: column; gap: 0.05rem; }
-.cgrid-metric-v { font-size: 0.95rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
-.cgrid-metric small { font-size: 0.65rem; color: rgba(255, 255, 255, 0.45); }
+/* Metricas en una sola linea: icono + cifra. La etiqueta escrita ocupaba mas
+   que el propio dato y obligaba a dos lineas. */
+.cgrid-metrics { display: flex; flex-wrap: wrap; gap: 0.4rem 1.15rem; align-items: center; }
+.cgrid-metric { display: inline-flex; align-items: center; gap: 0.36rem; }
+.cgrid-metric > i { font-size: 0.72rem; color: rgba(255, 255, 255, 0.4); }
+.cgrid-metric-v { font-size: 0.9rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+/* El nombre de cada metrica viaja en .sr-only (definida en bundle.css): la
+   cifra se lee por el icono, pero un lector de pantalla necesita la palabra. */
 
 .cgrid-comments {
   display: flex; flex-direction: column; gap: 0.55rem;
@@ -279,8 +283,16 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
 .cgrid-comment-txt { color: rgba(255, 255, 255, 0.7); min-width: 0; word-break: break-word; }
 .cgrid-comment-likes { margin-left: auto; font-size: 0.7rem; color: rgba(255, 255, 255, 0.4); font-variant-numeric: tabular-nums; }
 
+/* Enlace al original como ICONO blanco: es una accion secundaria y en naranja
+   competia con el dato de interacciones por la atencion. */
 .cgrid-post-link {
-  align-self: flex-start; font-size: 0.78rem; font-weight: 600;
-  color: var(--brand-color-light, #FF6A1A); text-decoration: none;
+  align-self: flex-start;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 0.82rem; text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  transition: background 0.18s ease, border-color 0.18s ease;
 }
-.cgrid-post-link:hover { text-decoration: underline; }
+.cgrid-post-link:hover { background: rgba(255, 255, 255, 0.13); border-color: rgba(255, 255, 255, 0.34); }
+.cgrid-post-link:focus-visible { outline: 2px solid var(--brand-color-light, #FF6A1A); outline-offset: 2px; }

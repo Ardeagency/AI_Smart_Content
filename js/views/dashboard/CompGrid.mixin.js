@@ -711,14 +711,21 @@
       const C = (n) => this._compactNum(n);
       const reach = this._cgridReach(win);
 
-      const metric = (v, label) => (Number(v) > 0)
-        ? `<div class="cgrid-metric"><span class="cgrid-metric-v">${esc(C(Number(v)))}</span><small>${esc(label)}</small></div>` : '';
+      // Métricas como ICONO + cifra: la etiqueta escrita ocupaba más que el
+      // dato y hacía que cinco números pidieran dos líneas. El nombre de cada
+      // una sigue disponible en el tooltip y para lectores de pantalla.
+      const metric = (v, label, ico) => (Number(v) > 0)
+        ? `<div class="cgrid-metric" title="${esc(label)}">
+             <i class="${esc(ico)}" aria-hidden="true"></i>
+             <span class="cgrid-metric-v">${esc(C(Number(v)))}</span>
+             <span class="sr-only">${esc(label)}</span>
+           </div>` : '';
       const metrics = [
-        metric(m.likes, __('me gusta')),
-        metric(m.comments, __('comentarios')),
-        metric(m.saves != null ? m.saves : m.bookmarks, __('guardados')),
-        metric((Number(m.shares) || 0) + (Number(m.reposts) || 0) + (Number(m.retweets) || 0), __('compartidos')),
-        metric(reach, net === 'youtube' || net === 'x' ? __('vistas') : __('reproducciones')),
+        metric(m.likes, __('me gusta'), 'fas fa-heart'),
+        metric(m.comments, __('comentarios'), 'fas fa-comment'),
+        metric(m.saves != null ? m.saves : m.bookmarks, __('guardados'), 'fas fa-bookmark'),
+        metric((Number(m.shares) || 0) + (Number(m.reposts) || 0) + (Number(m.retweets) || 0), __('compartidos'), 'fas fa-share'),
+        metric(reach, net === 'youtube' || net === 'x' ? __('vistas') : __('reproducciones'), 'fas fa-play'),
       ].filter(Boolean).join('');
 
       const topComments = comments
@@ -756,8 +763,13 @@
           <p class="cgrid-post-copy">${esc(copy)}</p>
         </details>` : '';
 
+      // Orden: la publicación primero (es lo que se viene a ver), luego sus
+      // cifras, luego de quién es, el enlace al original y por último el copy
+      // completo — que es lo más largo y lo que menos se consulta de un vistazo.
       host.innerHTML = `
         <article class="cgrid-post-card">
+          ${media}
+          <div class="cgrid-metrics">${metrics}</div>
           <div class="cgrid-post-head">
             <div class="cgrid-post-who">
               <span class="cgrid-post-name">${esc(win.entity_name || '—')}</span>
@@ -768,11 +780,11 @@
               <small>${esc(__('interacciones'))}</small>
             </div>
           </div>
+          ${url ? `<a class="cgrid-post-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer"
+             title="${esc(__('Ver publicación original'))}" aria-label="${esc(__('Ver publicación original'))}">
+             <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>` : ''}
           ${copyHtml}
-          ${media}
-          <div class="cgrid-metrics">${metrics}</div>
           ${commentsHtml}
-          ${url ? `<a class="cgrid-post-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(__('Ver publicación original'))} ↗</a>` : ''}
         </article>`;
 
       this._bindCgridMediaFallback(host);
