@@ -234,6 +234,23 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
 
 .cgrid-media-embed { width: 100%; height: 100%; border: 0; display: block; }
 
+/* Cerrar el reproductor y volver a la portada. Al terminar, TikTok se queda en
+   su pantalla de "Videos relacionados" — contenido ajeno que no tiene por que
+   ocupar la card. */
+.cgrid-embed-close {
+  position: absolute; top: 8px; right: 8px; z-index: 2;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff; font-size: 0.78rem;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  appearance: none; cursor: pointer;
+  transition: background 0.18s ease;
+}
+.cgrid-embed-close:hover { background: rgba(0, 0, 0, 0.78); }
+.cgrid-embed-close:focus-visible { outline: 2px solid var(--brand-color-light, #FF6A1A); outline-offset: 2px; }
+
 .cgrid-post-copy {
   margin: 0; font-size: 0.85rem; line-height: 1.6;
   color: rgba(255, 255, 255, 0.78);

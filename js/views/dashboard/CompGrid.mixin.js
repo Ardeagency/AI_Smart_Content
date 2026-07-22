@@ -878,16 +878,97 @@
       const stage = btn.closest('.cgrid-media');
       const src = btn.dataset.cgridEmbed;
       if (!stage || !src || stage.dataset.embedded === '1') return;
+
+      // Se guarda la portada tal cual para poder VOLVER a ella. Al terminar el
+      // video, el reproductor de TikTok se queda en su pantalla de "Videos
+      // relacionados" — contenido de otros que no pintamos nosotros y que no
+      // tiene por qué ocupar la card. Cerrar devuelve la publicación.
+      if (!stage.dataset.posterHtml) stage.dataset.posterHtml = stage.innerHTML;
+      stage.dataset.posterRatio = stage.style.aspectRatio || '';
+      stage.dataset.posterMaxW = stage.style.maxWidth || '';
       stage.dataset.embedded = '1';
-      // El reproductor de TikTok es vertical y necesita alto real para no
-      // salir recortado; se libera el max-width que impuso el ratio del poster.
-      stage.style.maxWidth = '';
-      stage.style.aspectRatio = '9 / 16';
+
+      this._cgridSizeEmbed(stage);
       stage.innerHTML = `
         <iframe class="cgrid-media-embed" src="${this._esc(src)}"
           title="${this._esc(__('Reproductor de la publicación'))}"
           allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen"
-          allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+          allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        <button type="button" class="cgrid-embed-close" data-cgrid-embed-close
+          aria-label="${this._esc(__('Cerrar el reproductor'))}" title="${this._esc(__('Cerrar el reproductor'))}">
+          <i class="fas fa-xmark" aria-hidden="true"></i>
+        </button>`;
+
+      stage.querySelector('[data-cgrid-embed-close]')
+        ?.addEventListener('click', () => this._cgridUnmountEmbed(stage));
+
+      // El alto depende del ancho: si la ventana cambia, se recalcula.
+      if (!this._cgridEmbedResize) {
+        this._cgridEmbedResize = () => {
+          document.querySelectorAll('.cgrid-media[data-embedded="1"]')
+            .forEach((s) => this._cgridSizeEmbed(s));
+        };
+        window.addEventListener('resize', this._cgridEmbedResize);
+      }
+      // Señal OPORTUNISTA de fin de reproducción: el reproductor emite
+      // postMessage, pero su formato no es contrato público — si algún día
+      // deja de llegar, el botón de cerrar sigue siendo la vía fiable.
+      this._cgridBindEmbedMessages();
+    },
+
+    /* El embed de TikTok no es solo el video: lleva encabezado de perfil y una
+       franja inferior. Un 9:16 a secas recorta ese chrome y deja la pantalla de
+       relacionados asomando. Alto = video vertical + el alto del chrome. */
+    _cgridSizeEmbed(stage) {
+      const CHROME_PX = 108;   // encabezado de perfil + franja inferior
+      // El reproductor pide 325px de ancho mínimo. Se acota a 340 y se centra:
+      // a todo el ancho de la columna, un vertical daría ~930px de alto y
+      // empujaría las métricas fuera de la pantalla.
+      const disponible = stage.parentElement?.getBoundingClientRect().width
+        || stage.getBoundingClientRect().width || 340;
+      const w = Math.max(300, Math.min(340, Math.round(disponible)));
+      stage.style.aspectRatio = 'auto';
+      stage.style.maxWidth = `${w}px`;
+      stage.style.height = `${Math.round(w * 16 / 9) + CHROME_PX}px`;
+    },
+
+    /* Vuelve a la portada: el estado exacto de antes de reproducir. */
+    _cgridUnmountEmbed(stage) {
+      if (!stage || stage.dataset.embedded !== '1') return;
+      stage.innerHTML = stage.dataset.posterHtml || '';
+      stage.style.height = '';
+      stage.style.aspectRatio = stage.dataset.posterRatio || '';
+      stage.style.maxWidth = stage.dataset.posterMaxW || '';
+      delete stage.dataset.embedded;
+      // La portada vuelve a montarse: sus listeners hay que rehacerlos.
+      this._bindCgridMediaFallback(stage);
+      stage.querySelectorAll('[data-cgrid-embed]').forEach((b) => {
+        b.addEventListener('click', () => this._cgridMountEmbed(b));
+      });
+    },
+
+    /* Escucha mensajes del reproductor para cerrar solo cuando el video acaba.
+       Un único listener global, con el origen verificado. Todo lo que no
+       reconoce se ignora en silencio. */
+    _cgridBindEmbedMessages() {
+      if (this._cgridEmbedMsgBound) return;
+      this._cgridEmbedMsgBound = true;
+      window.addEventListener('message', (e) => {
+        let host = '';
+        try { host = new URL(e.origin).hostname.replace(/^www\./, ''); } catch (_) { return; }
+        if (host !== 'tiktok.com' && host !== 'youtube-nocookie.com' && host !== 'youtube.com') return;
+        let d = e.data;
+        if (typeof d === 'string') { try { d = JSON.parse(d); } catch (_) { return; } }
+        if (!d || typeof d !== 'object') return;
+        // TikTok: {type:'video-status', value:{...}} · YouTube: info.playerState 0 = ended
+        const acabo = d.type === 'onStateChange' ? d.info === 0
+          : (d.info && d.info.playerState === 0) ? true
+          : /end/i.test(String(d.type || '')) || /end/i.test(String(d.value && d.value.status || ''));
+        if (!acabo) return;
+        document.querySelectorAll('.cgrid-media[data-embedded="1"]').forEach((s) => {
+          if (s.querySelector('iframe')?.contentWindow === e.source) this._cgridUnmountEmbed(s);
+        });
+      });
     },
 
     /* ¿Esta URL es media que un <video> puede reproducir, o la página del post?
