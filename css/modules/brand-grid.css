@@ -396,10 +396,10 @@
   width: 54%; height: 218px;
   display: block; object-fit: cover; object-position: center;
   -webkit-mask-image:
-    linear-gradient(to left, #000 30%, transparent 96%),
+    linear-gradient(to left, #000 12%, transparent 96%),
     linear-gradient(to top, transparent 2%, #000 46%);
   mask-image:
-    linear-gradient(to left, #000 30%, transparent 96%),
+    linear-gradient(to left, #000 12%, transparent 96%),
     linear-gradient(to top, transparent 2%, #000 46%);
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
