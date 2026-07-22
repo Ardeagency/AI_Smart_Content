@@ -34,6 +34,13 @@
 }
 .is-leader .cgrid-bar-name { color: #fff; font-weight: 700; }
 .cgrid-bar-net { flex: 0 0 auto; font-size: 0.68rem; color: rgba(255, 255, 255, 0.4); }
+/* Canales de la marca: la red se identifica por su icono, nunca por texto en
+   el nombre del perfil. El canal dominante va en acento de marca. */
+.cgrid-bar-nets { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 0.4rem; }
+.cgrid-bar-ico { font-size: 0.78rem; color: rgba(255, 255, 255, 0.38); }
+.cgrid-bar-ico.is-top { color: var(--brand-color-light, #FF6A1A); }
+.cgrid-bar-canales { margin-left: 0.5rem; color: rgba(255, 255, 255, 0.3); }
+.cgrid-bar-canales::before { content: "· "; }
 .cgrid-bar-tipo {
   flex: 0 0 auto; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.05em;
   text-transform: uppercase; padding: 0.16rem 0.44rem; border-radius: 999px;

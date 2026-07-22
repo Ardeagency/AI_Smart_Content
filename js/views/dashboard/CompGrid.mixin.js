@@ -43,6 +43,19 @@
     competidor_indirecto: () => __('Indirecto'),
   };
 
+  // Plataforma → icono (Font Awesome, ya cargado globalmente). Misma tabla que
+  // MonitoringView.PLATFORM_ICON: la red se identifica por su icono, nunca
+  // repitiéndola en el nombre del perfil.
+  const PLATFORM_ICON = {
+    instagram: 'fab fa-instagram',
+    facebook:  'fab fa-facebook',
+    tiktok:    'fab fa-tiktok',
+    youtube:   'fab fa-youtube',
+    twitter:   'fab fa-x-twitter',
+    x:         'fab fa-x-twitter',
+    linkedin:  'fab fa-linkedin-in',
+  };
+
   // Solo estos tipos son COMPETENCIA. El resto de perfiles monitoreados
   // (referentes culturales, medios propios) no compiten por el mismo cliente.
   const COMPETIDOR_TIPOS = ['competidor_directo', 'competidor_indirecto'];
@@ -123,19 +136,28 @@
       return REACH_KEYS.reduce((mx, k) => Math.max(mx, Number(m[k]) || 0), 0);
     },
 
-    /* Perfiles COMPETIDORES de la org (cacheado). Se resuelve con la RPC del
-       ranking sobre todo el histórico: devuelve `tipo`, que es lo que permite
-       descartar referencias culturales y medios propios. */
+    /* MARCAS competidoras de la org (cacheado). `dashboard_competencia_marcas`
+       unifica los perfiles multi-plataforma de un mismo actor en UNA marca
+       (por nombre, handle o sitio web, transitivamente) y ya filtra por tipo:
+       las referencias culturales y los medios propios no entran. */
+    async _cgridBrands(dateFrom, dateTo) {
+      const { data } = await Promise.resolve(this._supabase.rpc('dashboard_competencia_marcas', {
+        p_org_id: this._orgId,
+        p_date_from: dateFrom,
+        p_date_to: dateTo,
+        p_tipos: COMPETIDOR_TIPOS,
+        p_limit: 50,
+      })).catch(() => ({ data: null }));
+      return Array.isArray(data) ? data : [];
+    },
+
+    /* Todos los entity_id competidores, para acotar la búsqueda del post
+       ganador. Se resuelve una vez sobre el histórico completo. */
     async _cgridEntityIds() {
       if (this._cgridEntities) return this._cgridEntities;
-      const { data } = await Promise.resolve(this._supabase.rpc('dashboard_competencia_top', {
-        p_org_id: this._orgId,
-        p_date_from: new Date('2015-01-01').toISOString(),
-        p_date_to: new Date().toISOString(),
-        p_limit: 100,
-      })).catch(() => ({ data: null }));
-      this._cgridEntities = (Array.isArray(data) ? data : [])
-        .filter((r) => COMPETIDOR_TIPOS.includes(String(r.tipo || '')));
+      const brands = await this._cgridBrands(
+        new Date('2015-01-01').toISOString(), new Date().toISOString());
+      this._cgridEntities = brands.flatMap((b) => (Array.isArray(b.entity_ids) ? b.entity_ids : []));
       return this._cgridEntities;
     },
 
@@ -152,9 +174,8 @@
     },
 
     async _loadCompGridData() {
-      const ents = await this._cgridEntityIds();
-      const ids = ents.map((e) => e.entity_id).filter(Boolean);
-      if (!ids.length) return { entities: [], top: [], posts: [] };
+      const ids = await this._cgridEntityIds();
+      if (!ids.length) return { ids: [], brands: [], posts: [] };
 
       const days = this._cgridWindowDays();
       const now = new Date();
@@ -162,17 +183,15 @@
       const anchor = (last && last < now) ? last : now;
       const dateTo = anchor.toISOString();
       const dateFrom = (days == null ? new Date('2015-01-01') : new Date(anchor.getTime() - days * 86400000)).toISOString();
-      const p = { p_org_id: this._orgId, p_date_from: dateFrom, p_date_to: dateTo, p_entity_ids: ids };
       const call = (fn, params) => Promise.resolve(this._supabase.rpc(fn, params)).catch(() => ({ data: null }));
-      const [t, ps] = await Promise.all([
-        call('dashboard_competencia_top', { ...p, p_limit: 100 }),
-        call('dashboard_competencia_top_posts', { ...p, p_limit: 25 }),
+      const [brands, ps] = await Promise.all([
+        this._cgridBrands(dateFrom, dateTo),
+        call('dashboard_competencia_top_posts', {
+          p_org_id: this._orgId, p_date_from: dateFrom, p_date_to: dateTo,
+          p_entity_ids: ids, p_limit: 25,
+        }),
       ]);
-      return {
-        entities: ents,
-        top: Array.isArray(t?.data) ? t.data : [],
-        posts: Array.isArray(ps?.data) ? ps.data : [],
-      };
+      return { ids, brands, posts: Array.isArray(ps?.data) ? ps.data : [] };
     },
 
     async _cgridLoadAndPaint(body) {
@@ -194,20 +213,24 @@
       if (!host) return;
       const esc = (s) => this._esc(s);
 
-      if (!data.entities.length) {
+      if (!data.ids.length) {
         host.innerHTML = `<div class="cgrid-empty">${esc(__('Aún no monitoreas competidores. Agrégalos en Monitoreo para ver quién manda en tu nicho.'))}</div>`;
         return;
       }
-      const rows = (data.top || [])
+      // Una fila por MARCA, no por perfil: la RPC ya unificó los canales de un
+      // mismo actor (Instagram + TikTok + Facebook de Paranice = una barra).
+      const rows = (data.brands || [])
         .map((r) => ({
-          name: r.entity_name || '—',
-          handle: r.handle || '',
+          name: r.brand_name || '—',
           tipo: r.tipo || '',
-          platform: String(r.platform || '').toLowerCase(),
-          followers: Number(r.followers) || 0,
+          platforms: Array.isArray(r.platforms) ? r.platforms : [],
+          profiles: Array.isArray(r.profiles) ? r.profiles : [],
+          followers: Number(r.followers_total) || 0,
           posts: Number(r.total_posts) || 0,
           eng: Number(r.total_engagement) || 0,
           perPost: Number(r.avg_engagement_per_post) || 0,
+          per1k: r.eng_per_1k_followers == null ? null : Number(r.eng_per_1k_followers),
+          topPlatform: String(r.top_platform || '').toLowerCase(),
         }))
         .filter((r) => r.eng > 0)
         .sort((a, b) => b.eng - a.eng);
@@ -227,18 +250,31 @@
         // El líder va en acento pleno; el resto se atenúa por posición para que
         // la jerarquía se lea sin necesidad de comparar números.
         const alpha = i === 0 ? 0.95 : Math.max(0.18, 0.62 - i * 0.07);
-        const net = NET_LABEL[x.platform] || (x.platform ? x.platform.charAt(0).toUpperCase() + x.platform.slice(1) : '');
         const tipo = TIPO_LABEL[x.tipo] ? TIPO_LABEL[x.tipo]() : '';
+        // Los canales de la marca como iconos: la red se identifica sola, el
+        // nombre queda limpio. El canal dominante va resaltado.
+        const nets = x.platforms.map((pf) => {
+          const key = String(pf || '').toLowerCase();
+          const ico = PLATFORM_ICON[key];
+          const title = NET_LABEL[key] || key;
+          return ico
+            ? `<i class="cgrid-bar-ico ${esc(ico)}${key === x.topPlatform ? ' is-top' : ''}" title="${esc(title)}" aria-label="${esc(title)}"></i>`
+            : `<span class="cgrid-bar-net">${esc(title)}</span>`;
+        }).join('');
         const bits = [
           __('{n}/publicación', { n: C(x.perPost) }),
           __('{n} publicaciones', { n: x.posts }),
         ];
         if (x.followers > 0) bits.push(__('{n} seguidores', { n: C(x.followers) }));
+        // Influencia normalizada: separa "grande" de "influyente".
+        if (x.per1k != null && x.per1k > 0) bits.push(__('{n} por cada 1.000 seguidores', { n: C(x.per1k) }));
+        const canales = x.platforms.length > 1
+          ? __('{n} canales unificados', { n: x.platforms.length }) : '';
         return `
           <div class="cgrid-bar-row${i === 0 ? ' is-leader' : ''}">
             <div class="cgrid-bar-top">
               <span class="cgrid-bar-name">${esc(x.name)}</span>
-              ${net ? `<span class="cgrid-bar-net">${esc(net)}</span>` : ''}
+              <span class="cgrid-bar-nets">${nets}</span>
               ${tipo ? `<span class="cgrid-bar-tipo" data-tipo="${esc(x.tipo)}">${esc(tipo)}</span>` : ''}
               ${i === 0 ? `<span class="cgrid-bar-lead">${esc(__('Más influencia'))}</span>` : ''}
               <span class="cgrid-bar-val">${esc(C(x.eng))}</span>
@@ -246,7 +282,7 @@
             <div class="cgrid-bar-track">
               <div class="cgrid-bar-fill" style="width:${pct}%;background:rgba(${r},${g},${b},${alpha})"></div>
             </div>
-            <div class="cgrid-bar-sub">${esc(bits.join(' · '))}</div>
+            <div class="cgrid-bar-sub">${esc(bits.join(' · '))}${canales ? `<span class="cgrid-bar-canales">${esc(canales)}</span>` : ''}</div>
           </div>`;
       }).join('');
     },
