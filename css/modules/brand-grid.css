@@ -533,3 +533,53 @@
   .pev-post-thumb { width: 48px; height: 48px; }
 }
 .pev-nota { margin: 0 0 0.6rem; font-size: 0.72rem; line-height: 1.45; color: rgba(255, 255, 255, 0.45); }
+
+/* ── Tu Algoritmo: la card con más contenido del tablero ────────────────────
+   Antes se leía como un documento de Word: todo gris, todo del mismo peso. La
+   tabla gana identidad (icono de red, temas como etiquetas) y el análisis se
+   separa en sus tres actos: qué pasa, qué arriesgas, qué hacer. */
+.vera-card--algoritmo { position: relative; overflow: hidden; }
+/* Un halo de marca en la esquina: la card deja de ser un rectángulo apagado
+   sin recurrir a bordes de colores. */
+.vera-card--algoritmo::before {
+  content: ''; position: absolute; top: -60%; right: -20%; width: 60%; height: 160%;
+  background: radial-gradient(closest-side, var(--brand-color-dark, #FF5F00) 0%, transparent 100%);
+  opacity: 0.13; pointer-events: none;
+}
+.vera-card--algoritmo > * { position: relative; }
+.vera-card--algoritmo .vera-card-kind { color: var(--brand-color-light, #F79E1B); }
+.vera-card--algoritmo .vera-card-title { font-size: 1.2rem; letter-spacing: -0.02em; }
+
+/* La fila entera se resalta al pasar: leer una tabla de 4 columnas sin guía es
+   perder el renglón. */
+.vera-card--algoritmo .vera-table tr { transition: background 0.15s ease; }
+.vera-card--algoritmo .vera-table tbody tr:hover { background: rgba(255, 255, 255, 0.035); }
+.vera-card--algoritmo .vera-table th { font-size: 0.62rem; letter-spacing: 0.07em; text-transform: uppercase; }
+.vera-table .vera-td-lead i { margin-right: 0.5rem; opacity: 0.9; font-size: 0.95rem; vertical-align: -1px; }
+/* Cada red con su color: se reconocen sin leer. */
+.vera-table .vera-td-lead .fa-tiktok { color: #25f4ee; }
+.vera-table .vera-td-lead .fa-instagram { color: #e1306c; }
+.vera-table .vera-td-lead .fa-facebook { color: #1877f2; }
+.vera-table .vera-td-lead .fa-youtube { color: #ff0000; }
+.vera-table .vera-td-lead .fa-meta, .vera-table .vera-td-lead .fa-bullseye { color: var(--brand-color-light, #F79E1B); }
+
+.vera-td-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.vera-chip {
+  display: inline-block; padding: 0.14rem 0.5rem; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 0.72rem; color: rgba(255, 255, 255, 0.82); white-space: nowrap;
+}
+
+/* Los tres actos del análisis */
+.vera-actos { display: flex; flex-direction: column; gap: 0.7rem; margin-top: 0.3rem; }
+.vera-acto { display: flex; gap: 0.7rem; padding: 0.85rem 1rem; border-radius: 12px; background: rgba(255, 255, 255, 0.035); }
+.vera-acto .aisc-ico { flex: 0 0 auto; font-size: 0.95rem; margin-top: 0.15rem; opacity: 0.9; }
+.vera-acto .vera-md { font-size: 0.85rem; }
+/* El primer párrafo es el diagnóstico: pesa más que el resto. */
+.vera-acto[data-tono="lectura"] { background: rgba(255, 255, 255, 0.055); border-left: 3px solid var(--brand-color-light, #F79E1B); }
+.vera-acto[data-tono="lectura"] .vera-md { font-size: 0.92rem; color: rgba(255, 255, 255, 0.9); }
+.vera-acto[data-tono="riesgo"] { background: rgba(231, 122, 122, 0.09); border-left: 3px solid #e77a7a; }
+.vera-acto[data-tono="riesgo"] .aisc-ico { color: #e77a7a; }
+.vera-acto[data-tono="accion"] { background: rgba(70, 201, 138, 0.09); border-left: 3px solid #46c98a; }
+.vera-acto[data-tono="accion"] .aisc-ico { color: #46c98a; }
+.vera-acto[data-tono="nota"] { border-left: 3px solid rgba(255, 255, 255, 0.12); }

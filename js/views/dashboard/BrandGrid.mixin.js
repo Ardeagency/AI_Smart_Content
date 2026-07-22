@@ -25,6 +25,26 @@
     { k: 'all',   days: null, label: () => __('Todo') },
   ];
 
+  // Icono de la red (Font Awesome, ya cargado). La plataforma se reconoce por su
+  // marca, no leyendo una palabra en gris.
+  const PLATFORM_ICON = {
+    tiktok:    'fab fa-tiktok',
+    instagram: 'fab fa-instagram',
+    facebook:  'fab fa-facebook',
+    youtube:   'fab fa-youtube',
+    x:         'fab fa-x-twitter',
+    twitter:   'fab fa-x-twitter',
+    linkedin:  'fab fa-linkedin-in',
+    ads:       'fas fa-bullseye',
+    meta:      'fab fa-meta',
+    google:    'fab fa-google',
+  };
+  const iconoDeRed = (txt) => {
+    const t = String(txt || '').toLowerCase();
+    const k = Object.keys(PLATFORM_ICON).find((x) => t.includes(x));
+    return k ? PLATFORM_ICON[k] : null;
+  };
+
   // Etiqueta legible por red.
   const NET_LABEL = {
     instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok',
@@ -577,7 +597,9 @@
       const esc = (s) => this._esc(s);
       const blocks = Array.isArray(card.blocks) ? card.blocks
         : (card.markdown ? [{ type: 'markdown', markdown: card.markdown }] : []);
-      const inner = blocks.map((b, bi) => this._veraBlockHtml(b, key, bi)).join('');
+      const esActo = card.type === 'algoritmo';
+      const inner = blocks.map((b, bi) => this._veraBlockHtml(
+        (esActo && b && b.type === 'markdown') ? { ...b, _actos: true } : b, key, bi)).join('');
       const tone = ['positive', 'neutral', 'warning', 'critical'].includes(card.tone) ? card.tone : 'neutral';
       return `
         <section class="vera-card vera-card--${this._esc(card.type)}${bare ? ' vera-card--bare' : ''}" data-tone="${tone}">
@@ -595,11 +617,45 @@
       const rows = Array.isArray(block.rows) ? block.rows : [];
       const ttl = block.title ? `<div class="vera-chart-title">${esc(block.title)}</div>` : '';
       const head = cols.length ? `<thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead>` : '';
+      // Las celdas que enumeran ("Recetas · Nutrición infantil") se leen mejor
+      // como etiquetas sueltas que como una frase con puntos medios.
+      const chips = (txt) => {
+        const partes = String(txt).split(/\s*[·|]\s*/).map((x) => x.trim()).filter(Boolean);
+        if (partes.length < 2) return null;
+        return `<span class="vera-td-chips">${partes.map((x) => `<span class="vera-chip">${this._mdInline(esc(x))}</span>`).join('')}</span>`;
+      };
       const body = `<tbody>${rows.map((r) => {
         const cells = Array.isArray(r) ? r : (Array.isArray(r.cells) ? r.cells : []);
-        return `<tr>${cells.map((cell, i) => `<td${i === 0 ? ' class="vera-td-lead"' : ''}>${this._mdInline(esc(String(cell == null ? '' : cell)))}</td>`).join('')}</tr>`;
+        return `<tr>${cells.map((cell, i) => {
+          const txt = String(cell == null ? '' : cell);
+          if (i === 0) {
+            const ico = iconoDeRed(txt);
+            return `<td class="vera-td-lead">${ico ? `<i class="${ico}" aria-hidden="true"></i>` : ''}${this._mdInline(esc(txt))}</td>`;
+          }
+          return `<td>${chips(txt) || this._mdInline(esc(txt))}</td>`;
+        }).join('')}</tr>`;
       }).join('')}</tbody>`;
       return `<div class="vera-table-wrap">${ttl}<table class="vera-table">${head}${body}</table></div>`;
+    },
+
+    /* Los párrafos de Vera que abren con un rótulo ("El riesgo:", "Qué hacer:")
+       son los tres actos de la lectura: diagnóstico, consecuencia y salida. Se
+       pintan como bloques con acento propio en vez de tres párrafos iguales que
+       se leen como un documento de Word. */
+    _veraActosHtml(md) {
+      const ACENTOS = [
+        { re: /^(el riesgo|riesgo|ojo|cuidado)\b/i,                          tono: 'riesgo',  icon: 'alert' },
+        { re: /^(qué hacer|que hacer|acción|accion|siguiente paso|hazlo)\b/i, tono: 'accion',  icon: 'compass' },
+      ];
+      const parrafos = String(md == null ? '' : md).split(/\n{2,}/).map((x) => x.trim()).filter(Boolean);
+      if (parrafos.length < 2) return null;
+      return `<div class="vera-actos">${parrafos.map((par, i) => {
+        const plano = par.replace(/[*_`#>]/g, '').trim();
+        const hit = ACENTOS.find((a) => a.re.test(plano));
+        const tono = hit ? hit.tono : (i === 0 ? 'lectura' : 'nota');
+        const ico = hit ? `<i class="aisc-ico aisc-ico--${hit.icon}" aria-hidden="true"></i>` : '';
+        return `<div class="vera-acto" data-tono="${tono}">${ico}<div class="vera-md">${this._safeMarkdown(par)}</div></div>`;
+      }).join('')}</div>`;
     },
 
     /* Audiencia: choropleth (arriba) + population pyramid (abajo) a la izquierda,
@@ -626,7 +682,14 @@
       const t = block && block.type;
       const cid = `veraChart-${cardIdx}-${blockIdx}`;
       const ttl = (block && block.title) ? `<div class="vera-chart-title">${this._esc(block.title)}</div>` : '';
-      if (t === 'markdown') return `<div class="vera-md">${this._safeMarkdown(block.markdown)}</div>`;
+      if (t === 'markdown') {
+        // En Tu Algoritmo el texto ES el análisis: se pinta como actos.
+        if (block._actos) {
+          const actos = this._veraActosHtml(block.markdown);
+          if (actos) return actos;
+        }
+        return `<div class="vera-md">${this._safeMarkdown(block.markdown)}</div>`;
+      }
       if (t === 'chart') return `<div class="vera-chart">${ttl}<div class="vera-chart-wrap"><canvas id="${cid}"></canvas></div></div>`;
       if (t === 'pyramid') return `<div class="vera-chart">${ttl}<div class="vera-chart-wrap vera-chart-wrap--pyramid"><canvas id="${cid}"></canvas></div></div>`;
       if (t === 'choropleth') return `<div class="vera-chart vera-choropleth">${ttl}<div class="vera-chart-wrap vera-chart-wrap--map"><canvas id="${cid}"></canvas><div class="vera-geo-fallback" id="${cid}-fb" hidden></div></div></div>`;
