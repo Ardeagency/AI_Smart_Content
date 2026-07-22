@@ -478,81 +478,45 @@
         cola:        { label: __('Cola'),        cls: 'is-tail' },
         ausente:     { label: __('Sin publicar'), cls: 'is-tail' },
       };
-      // Destacado = el que MÁS empujas (el RPC ya ordena por presencia), no el
-      // primero que salga 'estrella': la card promete "cuál empujas más" y su
-      // badge dice si eso le está rindiendo o es desperdicio. El resto baja de
-      // MÁS a MENOS usado — arriba lo que sostienes, abajo lo que ya soltaste.
-      const hero = productos[0];
-      const olvidados = productos.filter((p) => p !== hero)
-        .sort((a, b) => (b.share_of_voice_pct || 0) - (a.share_of_voice_pct || 0))
-        .slice(0, 6);
-      const q = QUAD[hero.cuadrante] || QUAD.cola;
-      // La imagen la resuelve el RPC contra nuestro storage, nunca Vera: una URL
-      // emitida por el modelo sería una vía para inyectar destinos arbitrarios.
-      // Dos usos de la MISMA foto: desenfocada al fondo (da atmósfera y el color
-      // del empaque) y completa al frente (contain: el producto nunca se corta).
-      const img = hero.imagen_url
-        ? `<img class="vera-prodstar-bg" src="${esc(hero.imagen_url)}" alt="" aria-hidden="true" loading="lazy">
-           <img class="vera-prodstar-img" src="${esc(hero.imagen_url)}" alt="${esc(hero.producto)}" loading="lazy" data-prodstar-fit="1">`
-        : `<div class="vera-prodstar-img vera-prodstar-img--empty" aria-hidden="true"></div>`;
-      const sig = (v, l) => `<div class="vera-prodstar-sig"><span>${esc(String(v))}</span><small>${esc(l)}</small></div>`;
-
-      const fichaHtml = `
-        <div class="vera-prodstar-meta">
-          <span class="vera-prodstar-badge ${q.cls}">${esc(q.label)}</span>
-          <h4 class="vera-prodstar-name">${esc(hero.producto)}</h4>
-          ${Number(hero.n_productos) > 1 ? `<span class="vera-prodstar-variants">${esc(__('{n} variantes en catálogo', { n: hero.n_productos }))}</span>` : ''}
-          <div class="vera-prodstar-sigs">
-            ${sig((hero.share_of_voice_pct != null ? hero.share_of_voice_pct : 0) + '%', __('de tu contenido'))}
-            ${sig(hero.engagement_promedio != null ? hero.engagement_promedio : 0, __('interacción media'))}
-            ${sig(hero.menciones_publico != null ? hero.menciones_publico : 0, __('lo nombra el público'))}
-          </div>
-        </div>`;
-
-      const items = olvidados.map((p) => {
-        const pq = QUAD[p.cuadrante] || QUAD.cola;
-        const dias = (p.dias_sin_mencion == null) ? '—' : `${p.dias_sin_mencion}d`;
-        const thumb = p.imagen_url
-          ? `<img class="vera-prodstar-thumb" src="${esc(p.imagen_url)}" alt="" loading="lazy">`
-          : `<span class="vera-prodstar-thumb vera-prodstar-thumb--empty" aria-hidden="true"></span>`;
-        return `<li class="vera-prodstar-item">
-            ${thumb}
-            <span class="vera-prodstar-item-name">${esc(p.producto)}</span>
-            <span class="vera-prodstar-item-sov">${esc(String(p.share_of_voice_pct != null ? p.share_of_voice_pct : 0))}%</span>
-            <span class="vera-prodstar-item-days" title="${esc(__('sin mencionar'))}">${esc(dias)}</span>
-            <span class="vera-prodstar-badge ${pq.cls}">${esc(pq.label)}</span>
-          </li>`;
+      // Carátulas: el catálogo se hojea como una pila de portadas. El frente es
+      // el producto que MÁS empujas (el RPC ordena por presencia); detrás, en
+      // profundidad, el resto — de más a menos publicado. La foto deja de ser un
+      // fondo recortado y pasa a ser la pieza, cada una en su propio marco.
+      const cards = productos.map((prod, i) => {
+        const media = prod.imagen_url
+          ? `<img src="${esc(prod.imagen_url)}" alt="" loading="lazy" data-prodstar-fit="1">`
+          : `<span class="pdeck-card-empty" aria-hidden="true"></span>`;
+        return `<button type="button" class="pdeck-card" data-i="${i}" tabindex="-1" aria-label="${esc(prod.producto)}">
+            ${media}
+            <span class="pdeck-card-veil" aria-hidden="true"></span>
+          </button>`;
       }).join('');
-      const listaHtml = `
-        <div class="vera-prodstar-aside">
-          <div class="vera-prodstar-aside-title">${esc(__('El resto de tu catálogo'))}</div>
-          <ul class="vera-prodstar-list">${items}</ul>
-        </div>`;
 
-      // Composición editorial: degradado de marca de fondo, el producto entra
-      // por la derecha sangrando el marco, el titular y las cifras a la
-      // izquierda, y los olvidados en una card glass al pie.
-      const stageHtml = `
-        <figure class="vera-prodstar-stage">
-          ${img}
-          <figcaption class="vera-prodstar-body">
-            ${fichaHtml}
-            <div class="vera-prodstar-panel glass-black">${listaHtml}</div>
-          </figcaption>
-        </figure>`;
+      const dots = productos.map((prod, i) => `
+        <button type="button" class="pdeck-dot" data-i="${i}" aria-label="${esc(prod.producto)}"></button>`).join('');
+
+      const deckHtml = `
+        <div class="pdeck" data-active="0">
+          <div class="pdeck-stage">${cards}</div>
+          <div class="pdeck-info" aria-live="polite"></div>
+          <nav class="pdeck-dots" aria-label="${esc(__('Productos'))}">${dots}</nav>
+        </div>`;
 
       hosts.forEach((h) => {
         const l = h.querySelector('.vera-prodstar-load');
         if (l) l.remove();
-        h.insertAdjacentHTML('beforeend', `<div class="vera-prodstar-grid">${stageHtml}</div>`);
+        h.insertAdjacentHTML('beforeend', deckHtml);
+        const deck = h.querySelector('.pdeck');
+        deck._productos = productos;
+        deck._quad = QUAD;
         h.querySelectorAll('[data-prodstar-fit]').forEach((el) => this._prodstarFitStage(el));
+        this._prodDeckBind(deck);
+        this._prodDeckGoTo(deck, 0);
       });
     },
 
-    /* Antes el contenedor adoptaba el formato natural de la foto: en un producto
-       en retrato eso disparaba la altura del bloque. Ahora la altura la fija el
-       CSS (franja de foto + panel) y la imagen la llena con cover — sin franjas
-       y sin que un formato vertical se coma la pantalla. */
+    /* La foto entra con fade cuando termina de cargar (el hueco ya está
+       reservado por el marco, así que no hay salto de layout). */
     _prodstarFitStage(img) {
       const apply = () => { img.classList.add('is-loaded'); };
       if (img.complete) apply();
@@ -560,6 +524,72 @@
         img.addEventListener('load', apply, { once: true });
         img.addEventListener('error', () => img.classList.add('is-loaded'), { once: true });
       }
+    },
+
+    _prodDeckBind(deck) {
+      if (!deck || deck.dataset.bound === '1') return;
+      deck.dataset.bound = '1';
+      deck.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-i]');
+        if (!el) return;
+        this._prodDeckGoTo(deck, Number(el.dataset.i));
+      });
+      // Teclado: el deck es un solo tab-stop y las flechas hojean (las carátulas
+      // llevan tabindex -1 para no meter N paradas en el recorrido).
+      deck.tabIndex = 0;
+      deck.addEventListener('keydown', (e) => {
+        const n = (deck._productos || []).length;
+        if (!n) return;
+        const cur = Number(deck.dataset.active || 0);
+        if (e.key === 'ArrowRight') { e.preventDefault(); this._prodDeckGoTo(deck, (cur + 1) % n); }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); this._prodDeckGoTo(deck, (cur - 1 + n) % n); }
+      });
+    },
+
+    /* Coloca la pila: distancia 0 = al frente; el resto retrocede hacia la
+       izquierda con escala, desenfoque y opacidad decrecientes. El orden es
+       circular, así que hojear siempre tiene a dónde ir. */
+    _prodDeckGoTo(deck, active) {
+      if (!deck) return;
+      const productos = deck._productos || [];
+      const n = productos.length;
+      if (!n) return;
+      const act = ((active % n) + n) % n;
+      deck.dataset.active = String(act);
+      deck.querySelectorAll('.pdeck-card').forEach((card, i) => {
+        const d = (i - act + n) % n;              // distancia hacia atrás en la pila
+        card.style.setProperty('--d', String(d));
+        card.style.zIndex = String(100 - d);
+        card.classList.toggle('is-front', d === 0);
+        card.setAttribute('aria-current', d === 0 ? 'true' : 'false');
+      });
+      deck.querySelectorAll('.pdeck-dot').forEach((dot, i) => {
+        dot.classList.toggle('is-active', i === act);
+      });
+      const info = deck.querySelector('.pdeck-info');
+      if (info) info.innerHTML = this._prodDeckInfoHtml(productos[act], deck._quad);
+    },
+
+    _prodDeckInfoHtml(prod, QUAD) {
+      if (!prod) return '';
+      const esc = (s) => this._esc(s);
+      const q = (QUAD && (QUAD[prod.cuadrante] || QUAD.cola)) || { label: '', cls: 'is-tail' };
+      const dias = (prod.dias_sin_mencion == null) ? null : Number(prod.dias_sin_mencion);
+      const desde = (dias == null) ? __('Nunca lo has publicado')
+        : (dias <= 0 ? __('Lo publicaste hoy') : __('Hace {n} días que no lo nombras', { n: dias }));
+      const sig = (v, l) => `<div class="pdeck-sig"><span>${esc(String(v))}</span><small>${esc(l)}</small></div>`;
+      return `
+        <span class="vera-prodstar-badge ${q.cls}">${esc(q.label)}</span>
+        <h4 class="pdeck-name">${esc(prod.producto)}</h4>
+        <p class="pdeck-sub">${esc(desde)}${Number(prod.n_productos) > 1 ? ' · ' + esc(__('{n} variantes', { n: prod.n_productos })) : ''}</p>
+        <div class="pdeck-sigs">
+          ${sig(prod.engagement_promedio != null ? prod.engagement_promedio : 0, __('interacción media'))}
+          ${sig(prod.menciones_publico != null ? prod.menciones_publico : 0, __('lo nombra el público'))}
+        </div>
+        <div class="pdeck-score">
+          <strong>${esc(String(prod.share_of_voice_pct != null ? prod.share_of_voice_pct : 0))}</strong><small>%</small>
+        </div>
+        <div class="pdeck-score-label">${esc(__('de tu contenido'))}</div>`;
     },
 
     _safeMarkdown(md) {

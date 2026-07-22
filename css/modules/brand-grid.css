@@ -356,103 +356,83 @@
 .vera-prodstar-load { font-size: 0.82rem; color: rgba(255, 255, 255, 0.4); padding: 0.4rem 0; }
 .vera-prodstar-grid { display: block; }
 
-/* ── Escenario editorial ────────────────────────────────────────────────────
-   Portada de marca: degradado del color de la marca al fondo, con la foto del
-   producto desenfocada encima para que el color sea el REAL del empaque. El
-   producto entra por la derecha sangrando el marco (recorte deliberado, no
-   accidente); a la izquierda el titular y las cifras; al pie, los olvidados en
-   una card glass. La altura la fija el contenido, nunca el formato de la foto. */
-.vera-prodstar-stage {
-  position: relative; margin: 0; min-width: 0; width: 100%;
-  border-radius: 28px;
-  background:
-    linear-gradient(150deg, var(--brand-color-dark, #FF5F00) 0%, rgba(11, 11, 11, 0) 58%),
-    var(--media-container-bg, #0b0b0b);
-  box-shadow: var(--media-container-shadow, 0 10px 34px rgba(0, 0, 0, 0.35));
-  overflow: hidden; isolation: isolate;
-  display: block;
-  padding: 1.25rem 1.15rem 1.15rem;
+/* ── Cover flow del catálogo ────────────────────────────────────────────────
+   El catálogo se hojea como una pila de carátulas: al frente el producto que
+   más empujas, detrás el resto en profundidad. Cada foto va en su propio marco
+   (los packshots con fondo blanco se leen como portada, no como recorte) y a la
+   derecha el panel con la lectura del que esté al frente. */
+.pdeck {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  gap: 1rem;
+  align-items: center;
+  padding: 0.35rem 0.25rem 0;
+  outline: none;
 }
-/* Textura: la foto ampliada y desenfocada tinta el degradado con el color real
-   del empaque. El scale evita que el blur deje cantos transparentes. */
-.vera-prodstar-bg {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; transform: scale(1.2);
-  filter: blur(46px) saturate(150%) brightness(0.55);
-  opacity: 0.55; z-index: 0;
-}
-/* Velo: asienta la mitad inferior para que la lista siempre tenga contraste. */
-.vera-prodstar-stage::after {
-  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.45) 55%, rgba(0, 0, 0, 0.78) 100%);
-}
-/* Producto: ocupa la mitad derecha del encabezado y se FUNDE con el fondo por
-   la izquierda y por abajo (máscara en degradado). Estas fotos son packshots
-   con fondo blanco: recortarlas contra el marco dejaba un bloque blanco pegado;
-   fundidas se leen como una portada. */
-.vera-prodstar-img {
-  position: absolute; top: 0; right: 0;
-  z-index: 1;
-  width: 54%; height: 218px;
-  display: block; object-fit: cover; object-position: center;
-  -webkit-mask-image:
-    linear-gradient(to left, #000 12%, transparent 96%),
-    linear-gradient(to top, transparent 2%, #000 46%);
-  mask-image:
-    linear-gradient(to left, #000 12%, transparent 96%),
-    linear-gradient(to top, transparent 2%, #000 46%);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-  opacity: 0; transition: opacity 0.5s var(--ease-out, ease);
-}
-.vera-prodstar-img.is-loaded { opacity: 1; animation: none; }
-.vera-prodstar-img--empty { display: none; }
+.pdeck:focus-visible { outline: 2px solid var(--brand-color-light, #F79E1B); outline-offset: 6px; border-radius: 18px; }
 
-.vera-prodstar-body { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 1.1rem; }
-/* Titular y cifras van sobre el degradado (sin card), con la mitad derecha
-   libre para que el producto respire. */
-/* min-height = alto del encabezado: reserva el aire de la foto y planta el
-   titular abajo (si no, el panel glass subía y le comía el producto). */
-.vera-prodstar-meta {
-  display: flex; flex-direction: column; justify-content: flex-end; gap: 0.55rem;
-  min-width: 0; max-width: 60%; min-height: 190px; padding: 0 0.25rem 0;
+/* Escenario de la pila: alto fijo, las carátulas se apilan en absoluto. */
+.pdeck-stage { position: relative; height: 250px; min-width: 0; perspective: 1000px; }
+.pdeck-card {
+  --d: 0;
+  position: absolute; top: 50%; right: 0;
+  width: 62%; aspect-ratio: 3 / 4;
+  margin: 0; padding: 0; border: 0; background: var(--media-container-bg, #0b0b0b);
+  border-radius: 14px; overflow: hidden; cursor: pointer;
+  /* Cada paso hacia atrás: se corre a la izquierda, encoge y pierde presencia. */
+  transform:
+    translateY(-50%)
+    translateX(calc(var(--d) * -26%))
+    scale(calc(1 - var(--d) * 0.08));
+  filter: blur(calc(var(--d) * 1.1px)) brightness(calc(1 - var(--d) * 0.13));
+  opacity: calc(1 - var(--d) * 0.16);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55);
+  transition: transform 0.45s var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+              filter 0.45s ease, opacity 0.45s ease, box-shadow 0.3s ease;
 }
-.vera-prodstar-meta > .vera-prodstar-badge { align-self: flex-start; }
-.vera-prodstar-name { margin: 0; font-size: 1.55rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; line-height: 1.08; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45); }
-.vera-prodstar-variants { font-size: 0.72rem; color: rgba(255, 255, 255, 0.6); margin-top: -0.2rem; }
-.vera-prodstar-sigs { display: flex; flex-wrap: wrap; gap: 1.1rem; margin-top: 0.35rem; }
+.pdeck-card img { width: 100%; height: 100%; display: block; object-fit: cover; opacity: 0; transition: opacity 0.5s var(--ease-out, ease); }
+.pdeck-card img.is-loaded { opacity: 1; animation: none; }
+.pdeck-card-empty { position: absolute; inset: 0; background: var(--bg-primary, #0b0b0b); }
+/* Velo: oscurece las de atrás para que el frente destaque sin recortarlas. */
+.pdeck-card-veil { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.35); opacity: calc(var(--d) * 0.5); transition: opacity 0.45s ease; pointer-events: none; }
+.pdeck-card.is-front { box-shadow: 0 24px 52px rgba(0, 0, 0, 0.65); }
+.pdeck-card.is-front .pdeck-card-veil { opacity: 0; }
+/* Las de atrás no reciben el cursor de "hojear" hasta que se pueden elegir. */
+.pdeck-card:not(.is-front):hover { filter: blur(0) brightness(0.92); opacity: 0.95; }
 
-/* Card glass-black al pie: los que se están olvidando.
-   La clase global .glass-black pone fondo/borde/blur; aquí solo el layout. */
-.vera-prodstar-panel {
-  position: relative; z-index: 2;
-  border-radius: 18px;
-  padding: 0.9rem 1rem 1rem;
-  display: flex; flex-direction: column; gap: 0.85rem;
-  min-width: 0;
+/* Panel: la lectura del producto que está al frente. */
+.pdeck-info { min-width: 0; display: flex; flex-direction: column; gap: 0.35rem; padding: 0.2rem 0.1rem; }
+.pdeck-info > .vera-prodstar-badge { align-self: flex-start; margin-bottom: 0.15rem; }
+.pdeck-name { margin: 0; font-size: 1.24rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; line-height: 1.12; }
+.pdeck-sub { margin: 0; font-size: 0.72rem; color: rgba(255, 255, 255, 0.5); }
+.pdeck-sigs { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem; }
+.pdeck-sig { display: flex; flex-direction: column; gap: 0.05rem; min-width: 0; }
+.pdeck-sig span { font-size: 0.98rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.pdeck-sig small { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.45); }
+/* Share of voice como cifra grande: es el número que ordena todo el bloque. */
+.pdeck-score { margin-top: 0.7rem; display: flex; align-items: baseline; gap: 0.1rem; line-height: 1; }
+.pdeck-score strong { font-size: 2.5rem; font-weight: 800; color: #fff; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.pdeck-score small { font-size: 1.1rem; font-weight: 700; color: rgba(255, 255, 255, 0.45); }
+.pdeck-score-label { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.45); }
+
+/* Puntos: cuántos productos hay y en cuál vas. */
+.pdeck-dots { grid-column: 1 / -1; display: flex; gap: 0.4rem; justify-content: center; padding-top: 0.9rem; }
+.pdeck-dot {
+  width: 6px; height: 6px; padding: 0; border: 0; border-radius: 999px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.22); transition: background 0.2s ease, width 0.25s ease;
 }
-.vera-prodstar-sig { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
-.vera-prodstar-sig span { font-size: 1.02rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
-.vera-prodstar-sig small { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.6); }
+.pdeck-dot.is-active { background: var(--brand-color-light, #F79E1B); width: 18px; }
+
 @media (prefers-reduced-motion: reduce) {
-  .vera-prodstar-img { transition: none; }
+  .pdeck-card, .pdeck-card img, .pdeck-card-veil, .pdeck-dot { transition: none; }
 }
-
-.vera-prodstar-aside { min-width: 0; }
-.vera-prodstar-aside-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.55rem; }
-.vera-prodstar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-/* Cada fila lleva la foto del producto: se reconoce por imagen, no por nombre.
-   Sobre el glass los divisores van en blanco tenue, no en el gris de card. */
-.vera-prodstar-item { display: grid; grid-template-columns: 30px minmax(0, 1fr) 3rem 3rem 4.8rem; align-items: center; gap: 0.55rem; padding: 0.34rem 0; border-top: 1px solid rgba(255, 255, 255, 0.09); }
-.vera-prodstar-item:first-child { border-top: none; }
-.vera-prodstar-thumb {
-  width: 30px; height: 30px; display: block; object-fit: cover;
-  border-radius: 9px; background: var(--media-container-bg, #0b0b0b);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+@media (max-width: 620px) {
+  .pdeck { grid-template-columns: 1fr; gap: 0.6rem; }
+  .pdeck-stage { height: 210px; }
+  .pdeck-card { width: 46%; right: 50%; transform: translateY(-50%) translateX(calc(50% + var(--d) * -26%)) scale(calc(1 - var(--d) * 0.08)); }
+  .pdeck-info { align-items: flex-start; }
 }
-.vera-prodstar-thumb--empty { opacity: 0.5; }
-.vera-prodstar-item-name { font-size: 0.8rem; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vera-prodstar-item-sov, .vera-prodstar-item-days { font-size: 0.74rem; color: rgba(255, 255, 255, 0.55); font-variant-numeric: tabular-nums; text-align: right; }
 
 /* Estados: el olvidado en cian — es el cuadrante accionable. */
 .vera-prodstar-badge { display: inline-block; padding: 0.12rem 0.5rem; border-radius: 999px; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; text-align: center; }
@@ -461,13 +441,3 @@
 .vera-prodstar-badge.is-waste { background: rgba(255, 229, 0, 0.13); color: #e8d34a; }
 .vera-prodstar-badge.is-tail { background: rgba(255, 255, 255, 0.07); color: rgba(255, 255, 255, 0.5); }
 
-/* Estrecho: el producto se achica y el titular deja de competir con el. */
-@media (max-width: 620px) {
-  .vera-prodstar-stage { padding: 1rem 0.8rem 0.8rem; }
-  .vera-prodstar-img { height: 172px; width: 58%; }
-  .vera-prodstar-name { font-size: 1.3rem; }
-  .vera-prodstar-meta { max-width: 64%; min-height: 148px; }
-  .vera-prodstar-sigs { gap: 0.9rem; }
-  .vera-prodstar-item { grid-template-columns: 30px minmax(0, 1fr) 3rem 5.2rem; }
-  .vera-prodstar-item-days { display: none; }
-}
