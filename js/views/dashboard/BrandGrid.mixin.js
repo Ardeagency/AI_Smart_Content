@@ -525,15 +525,15 @@
           <ul class="vera-prodstar-list">${items}</ul>
         </div>`;
 
-      // La foto del producto es el LIENZO: encima, una sola card glass-black
-      // reúne la ficha de la estrella y la lista de los que se están olvidando.
-      // Sin hover — todo está a la vista desde el primer vistazo.
+      // Composición editorial: degradado de marca de fondo, el producto entra
+      // por la derecha sangrando el marco, el titular y las cifras a la
+      // izquierda, y los olvidados en una card glass al pie.
       const stageHtml = `
         <figure class="vera-prodstar-stage">
           ${img}
-          <figcaption class="vera-prodstar-panel glass-black">
+          <figcaption class="vera-prodstar-body">
             ${fichaHtml}
-            ${listaHtml}
+            <div class="vera-prodstar-panel glass-black">${listaHtml}</div>
           </figcaption>
         </figure>`;
 
