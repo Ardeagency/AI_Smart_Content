@@ -240,10 +240,11 @@
 }
 @media (max-width: 900px) { .bgrid { grid-template-columns: 1fr; } .bgrid-card--latidos { grid-column: auto; } }
 .bgrid-card-title {
-  display: inline-flex; align-items: center; gap: 0.55rem;
-  font-size: 1.02rem; font-weight: 600; color: #fff; letter-spacing: -0.01em;
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
 }
-.bgrid-card-title .aisc-ico { font-size: 1.05rem; color: #fff; opacity: 0.9; }
+.bgrid-card-title .aisc-ico { font-size: 0.85rem; color: inherit; opacity: 1; }
 .bgrid-card-sub { margin: -0.4rem 0 0; font-size: 0.82rem; color: rgba(255, 255, 255, 0.55); }
 
 /* ── Estado + salud ── */
@@ -555,12 +556,7 @@
 .vera-card--algoritmo > * { position: relative; }
 
 /* Cabecera: versalita fina + filete, como el encabezado de una seccion impresa. */
-.vera-card--algoritmo .vera-card-kind {
-  color: var(--brand-color-light, #F79E1B);
-  letter-spacing: 0.14em; font-size: 0.6rem;
-  padding-bottom: 0.9rem; margin-bottom: 1.1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
+.vera-card--algoritmo .vera-card-kind { margin-bottom: 0.9rem; }
 .vera-card--algoritmo .vera-card-title {
   font-size: 1.75rem; line-height: 1.12; letter-spacing: -0.03em; font-weight: 700;
   margin-bottom: 0.35rem; max-width: 22ch;
