@@ -118,7 +118,7 @@
           <!-- Lectura de Vera perfil por perfil. La escribe ella en su sesión
                de dashboard (vera_dashboard_readings, scope monitoreo); aquí
                solo se pinta. -->
-          <section class="bgrid-card glass-black cgrid-card--perfiles" id="cgridPerfilesCard" hidden>
+          <section class="bgrid-card cgrid-card--perfiles" id="cgridPerfilesCard" hidden>
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--eye" aria-hidden="true"></i>${this._esc(__('Qué hace cada perfil'))}</span>
             </header>

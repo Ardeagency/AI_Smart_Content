@@ -17,7 +17,17 @@
 /* Columna izquierda: Influencia + la lectura por perfil, apiladas. */
 .cgrid-col { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
 
-/* ── Qué hace cada perfil (tabla que llena Vera) ─────────────────────────── */
+/* ── Qué hace cada perfil (tabla que llena Vera) ───────────────────────────
+   SIN glass: superficie de card de la plataforma. El glass se reserva para lo
+   que flota sobre el degradado del hero; esta es una tabla de lectura. */
+.cgrid-card--perfiles {
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 18px;
+  padding: 1.35rem 1.5rem 1.5rem;
+  display: flex; flex-direction: column; gap: 0.65rem;
+  min-width: 0;
+}
 .cgrid-perfiles { min-width: 0; }
 .cgp-table-wrap { overflow-x: auto; }
 .cgp-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
