@@ -476,10 +476,13 @@
         olvidado:    { label: __('Olvidado'),    cls: 'is-forgotten' },
         desperdicio: { label: __('Desperdicio'), cls: 'is-waste' },
         cola:        { label: __('Cola'),        cls: 'is-tail' },
+        ausente:     { label: __('Sin publicar'), cls: 'is-tail' },
       };
-      // Estrella = el que más empujas. El resto baja de MÁS a MENOS usado: se lee
-      // como un descenso — arriba lo que sostienes, abajo lo que ya soltaste.
-      const hero = productos.find((p) => p.cuadrante === 'estrella') || productos[0];
+      // Destacado = el que MÁS empujas (el RPC ya ordena por presencia), no el
+      // primero que salga 'estrella': la card promete "cuál empujas más" y su
+      // badge dice si eso le está rindiendo o es desperdicio. El resto baja de
+      // MÁS a MENOS usado — arriba lo que sostienes, abajo lo que ya soltaste.
+      const hero = productos[0];
       const olvidados = productos.filter((p) => p !== hero)
         .sort((a, b) => (b.share_of_voice_pct || 0) - (a.share_of_voice_pct || 0))
         .slice(0, 6);
@@ -498,6 +501,7 @@
         <div class="vera-prodstar-meta">
           <span class="vera-prodstar-badge ${q.cls}">${esc(q.label)}</span>
           <h4 class="vera-prodstar-name">${esc(hero.producto)}</h4>
+          ${Number(hero.n_productos) > 1 ? `<span class="vera-prodstar-variants">${esc(__('{n} variantes en catálogo', { n: hero.n_productos }))}</span>` : ''}
           <div class="vera-prodstar-sigs">
             ${sig((hero.share_of_voice_pct != null ? hero.share_of_voice_pct : 0) + '%', __('de tu contenido'))}
             ${sig(hero.engagement_promedio != null ? hero.engagement_promedio : 0, __('interacción media'))}
@@ -521,7 +525,7 @@
       }).join('');
       const listaHtml = `
         <div class="vera-prodstar-aside">
-          <div class="vera-prodstar-aside-title">${esc(__('Los que estás olvidando'))}</div>
+          <div class="vera-prodstar-aside-title">${esc(__('El resto de tu catálogo'))}</div>
           <ul class="vera-prodstar-list">${items}</ul>
         </div>`;
 

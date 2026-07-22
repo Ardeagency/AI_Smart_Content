@@ -419,6 +419,7 @@
 }
 .vera-prodstar-meta > .vera-prodstar-badge { align-self: flex-start; }
 .vera-prodstar-name { margin: 0; font-size: 1.55rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; line-height: 1.08; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45); }
+.vera-prodstar-variants { font-size: 0.72rem; color: rgba(255, 255, 255, 0.6); margin-top: -0.2rem; }
 .vera-prodstar-sigs { display: flex; flex-wrap: wrap; gap: 1.1rem; margin-top: 0.35rem; }
 
 /* Card glass-black al pie: los que se están olvidando.

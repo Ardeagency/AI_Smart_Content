@@ -469,7 +469,10 @@
         overlay.remove();
       };
       overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.closest('.salud-modal-close')) close(); });
-      document.addEventListener('keydown', function onEsc(ev) { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } });
+      // Registrado via BaseView para que muera con la vista; ademas se auto-quita
+      // al cerrar el modal (no deja un keydown vivo por cada apertura).
+      const onEsc = (ev) => { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); } };
+      this.addEventListener(document, 'keydown', onEsc);
 
       let d = null;
       try {
