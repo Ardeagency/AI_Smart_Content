@@ -88,7 +88,25 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
   border-radius: 9px; overflow: hidden; background: rgba(255, 255, 255, 0.06);
 }
 .cgp-post-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.cgp-post-thumb-fb { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.06); }
+/* `display:block` de la regla de arriba gana a [hidden] por especificidad: sin
+   esta regla el <img> roto seguia visible (icono roto del navegador) DEBAJO de
+   su propio placeholder. */
+.cgp-post-thumb img[hidden] { display: none; }
+/* Media caida = glifo centrado sobre superficie neutra. Mismo patron que
+   .history-image-card-fallback / .pmodal-entity-shot--broken /
+   .product-list-card-placeholder: la plataforma nunca muestra el icono roto
+   del navegador. Las URLs de CDN de competencia van firmadas y caducan, asi
+   que aqui es el estado NORMAL de una publicacion vieja, no una excepcion. */
+.cgp-post-thumb-fb,
+.cgp-post-thumb--empty {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--media-container-bg-fill, rgba(255, 255, 255, 0.06));
+  color: var(--text-muted, rgba(255, 255, 255, 0.3));
+  font-size: 1.05rem;
+}
+.cgp-post-thumb--empty { position: relative; }
+.cgp-post-thumb-fb[hidden] { display: none; }
 .cgp-post-body { min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; justify-content: center; }
 .cgp-post-head { display: flex; align-items: baseline; gap: 0.4rem; font-size: 0.68rem; color: rgba(255, 255, 255, 0.42); }
 .cgp-post-eng { margin-left: auto; font-weight: 700; color: #fff; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
@@ -136,6 +154,8 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
   padding: 1.6rem 1.4rem; min-height: 130px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
 }
+.cgrid-media-fb[hidden] { display: none; }
+.cgrid-media-fb-ico { font-size: 1.5rem; color: var(--text-muted, rgba(255, 255, 255, 0.28)); }
 .cgrid-media-fb-kicker {
   font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em;
   text-transform: uppercase; color: rgba(255, 255, 255, 0.4);

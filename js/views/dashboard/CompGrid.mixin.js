@@ -588,8 +588,11 @@
       return `
         <${url ? 'a' : 'div'} class="cgp-post"${url ? ` href="${esc(url)}" target="_blank" rel="noopener noreferrer"` : ''}>
           ${img
-            ? `<div class="cgp-post-thumb"><img data-cgrid-media src="${esc(img)}" alt="" loading="lazy"><span class="cgp-post-thumb-fb" data-cgrid-fb hidden></span></div>`
-            : `<div class="cgp-post-thumb cgp-post-thumb--empty" aria-hidden="true"></div>`}
+            ? `<div class="cgp-post-thumb">
+                 <img data-cgrid-media src="${esc(img)}" alt="" loading="lazy">
+                 <span class="cgp-post-thumb-fb" data-cgrid-fb hidden aria-hidden="true"><i class="fas fa-image"></i></span>
+               </div>`
+            : `<div class="cgp-post-thumb cgp-post-thumb--empty" aria-hidden="true"><i class="fas fa-image"></i></div>`}
           <div class="cgp-post-body">
             <div class="cgp-post-head">
               ${ico ? `<i class="${esc(ico)}" aria-hidden="true"></i>` : ''}
@@ -770,8 +773,12 @@
         .map(pick).find(Boolean);
       const video = pick(a.video_url);
 
+      // Mismo lenguaje que el resto de la plataforma para media caída (galería
+      // de Producción, ficha de producto): glifo centrado sobre superficie
+      // neutra, nunca el icono roto del navegador.
       const fallback = `
         <div class="cgrid-media-fb" data-cgrid-fb hidden>
+          <i class="fas fa-image cgrid-media-fb-ico" aria-hidden="true"></i>
           <span class="cgrid-media-fb-kicker">${esc(__('Vista previa no disponible'))}</span>
           ${copy ? `<span class="cgrid-media-fb-copy">${esc(copy.slice(0, 140))}</span>` : ''}
         </div>`;
@@ -818,7 +825,9 @@
         } else {
           el.addEventListener('load', succeed, { once: true });
           el.addEventListener('error', fail, { once: true });
-          if (el.complete && el.naturalWidth > 0) succeed();
+          // Puede haber resuelto ANTES de bindear (cache, o 403 inmediato):
+          // en ese caso ningún evento va a llegar y hay que decidir aquí.
+          if (el.complete) { if (el.naturalWidth > 0) succeed(); else fail(); }
         }
       });
     },
