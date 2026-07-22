@@ -296,11 +296,30 @@
       const restItems = rest.map((c, i) => ({ card: c, key: 'v' + i }));
       if (obsHost) obsHost.innerHTML = obsItems.map((x) => this._veraCardHtml(x.card, x.key, true)).join('');
       if (vdHost) vdHost.innerHTML = this._veraDuoHtml(virtItems, desvItems);
+      // Producto destacado vive en el shell, pero se COLOCA junto a Algoritmo.
+      // Se rescata antes de limpiar el host: ya está pintado y repintarlo
+      // costaría otra llamada al RPC.
+      const prodstar = body.querySelector('.bgrid-card--prodstar');
+      const grid = body.querySelector('.bgrid');
+      if (prodstar && host && host.contains(prodstar) && grid) grid.appendChild(prodstar);
       if (host) host.innerHTML = restItems.length ? `<div class="vera-cards">${restItems.map((x) => this._veraCardHtml(x.card, x.key)).join('')}</div>` : '';
+      this._placeProdstarNextToAlgoritmo(body);
       try { await this._ensureChartJs(); } catch (_) {}
       this._paintVeraCharts(body, obsItems.concat(virtItems, desvItems, restItems));
       // Bloque vivo: pide su propio dato al RPC, por eso va aparte de los charts.
       this._paintProductoEstrella(body);
+    },
+
+    /* Producto destacado se para a la IZQUIERDA de Algoritmo (misma fila del
+       grid de cards de Vera). Si Vera no publicó Algoritmo, se queda donde
+       estaba: último bloque de la página, a su ancho acotado. */
+    _placeProdstarNextToAlgoritmo(body) {
+      const prodstar = body.querySelector('.bgrid-card--prodstar');
+      const algo = body.querySelector('.vera-cards .vera-card--algoritmo');
+      if (!prodstar || !algo) return;
+      const cards = algo.parentElement;
+      cards.classList.add('has-prodstar');
+      cards.insertBefore(prodstar, algo);
     },
 
     /* Virtudes + Desventajas como PAR hermano: dos paneles lado a lado (verde/rojo). */
