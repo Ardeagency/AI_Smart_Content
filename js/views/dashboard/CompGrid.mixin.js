@@ -792,7 +792,14 @@
       const img = [a.archived_url, a.display_url, a.main_image_url, a.cover_image, a.thumbnail_url,
         first(a.thumbnails), first(a.images), first(a.media_urls), first(a._legacy_array)]
         .map(pick).find(Boolean);
-      const video = pick(a.video_url);
+      const rawVideo = pick(a.video_url);
+      // `video_url` NO siempre es un archivo reproducible. En TikTok el scraper
+      // guarda ahí la URL de la PÁGINA del post
+      // (https://www.tiktok.com/@marca/video/123): un <video> con eso recibe
+      // HTML, así que pinta sus controles y no arranca nunca — el reproductor
+      // parecía roto sin estarlo. Solo se monta <video> con media de verdad.
+      const video = this._cgridIsPlayable(rawVideo) ? rawVideo : null;
+      const esVideoNoIncrustable = Boolean(rawVideo) && !video;
 
       // Mismo lenguaje que el resto de la plataforma para media caída (galería
       // de Producción, ficha de producto): glifo centrado sobre superficie
@@ -818,10 +825,30 @@
           ${fallback}</div>`;
       }
       if (img) {
+        // Video que no se puede incrustar: se muestra su portada con un
+        // distintivo de reproducción, y el enlace al original (que ya está al
+        // pie de la card) es el que sí lo abre. Antes se ofrecía un play que
+        // no llevaba a ninguna parte.
         return `<div class="cgrid-media">
-          <img class="cgrid-media-el" data-cgrid-media src="${esc(img)}" alt="" loading="lazy">${fallback}</div>`;
+          <img class="cgrid-media-el" data-cgrid-media src="${esc(img)}" alt="" loading="lazy">
+          ${esVideoNoIncrustable ? `<span class="cgrid-media-play" aria-hidden="true"><i class="fas fa-play"></i></span>` : ''}
+          ${fallback}</div>`;
       }
       return `<div class="cgrid-media">${fallback.replace(' hidden', '')}</div>`;
+    },
+
+    /* ¿Esta URL es media que un <video> puede reproducir, o la página del post?
+       Los scrapers guardan una u otra según la red, y montarlas igual hacía que
+       TikTok mostrara un reproductor muerto. */
+    _cgridIsPlayable(u) {
+      if (!u) return false;
+      try {
+        const url = new URL(u);
+        const h = url.hostname.toLowerCase().replace(/^www\./, '');
+        // Páginas del post: devuelven HTML, jamás un stream.
+        if (/^(tiktok\.com|instagram\.com|facebook\.com|youtube\.com|youtu\.be|x\.com|twitter\.com)$/.test(h)) return false;
+        return /\.(mp4|m4v|webm|mov|m3u8)$/i.test(url.pathname);
+      } catch (_) { return false; }
     },
 
     _bindCgridMediaFallback(scope) {
