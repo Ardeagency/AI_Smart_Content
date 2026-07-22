@@ -415,7 +415,8 @@
 .pdeck-score strong { font-size: 2.5rem; font-weight: 800; color: #fff; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .pdeck-score small { font-size: 1.1rem; font-weight: 700; color: rgba(255, 255, 255, 0.45); }
 .pdeck-score-label { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.45); }
-.pdeck-foot { margin: 0.7rem 0 0; font-size: 0.68rem; line-height: 1.45; color: rgba(255, 255, 255, 0.4); }
+.pdeck-porque { margin: 0.55rem 0 0; font-size: 0.74rem; line-height: 1.4; color: rgba(255, 255, 255, 0.72); }
+.pdeck-foot { margin: 0.35rem 0 0; font-size: 0.68rem; line-height: 1.45; color: rgba(255, 255, 255, 0.4); }
 
 /* Puntos: cuántos productos hay y en cuál vas. */
 .pdeck-dots { grid-column: 1 / -1; display: flex; gap: 0.4rem; justify-content: center; padding-top: 0.9rem; }

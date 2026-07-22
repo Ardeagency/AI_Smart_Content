@@ -471,12 +471,16 @@
         return;
       }
 
+      // Etiquetas en lenguaje de negocio: quien lee esto decide presupuesto, no
+      // interpreta cuadrantes. "Desperdicio" no le dice a nadie qué hacer.
       const QUAD = {
-        estrella:    { label: __('Estrella'),    cls: 'is-star' },
-        olvidado:    { label: __('Olvidado'),    cls: 'is-forgotten' },
-        desperdicio: { label: __('Desperdicio'), cls: 'is-waste' },
-        cola:        { label: __('Cola'),        cls: 'is-tail' },
-        ausente:     { label: __('Sin publicar'), cls: 'is-tail' },
+        estrella:    { label: __('Apuesta ganadora'), cls: 'is-star' },
+        sostenido:   { label: __('En línea'),         cls: 'is-tail' },
+        desperdicio: { label: __('No te rinde'),      cls: 'is-waste' },
+        olvidado:    { label: __('Oportunidad'),      cls: 'is-forgotten' },
+        secundario:  { label: __('Secundario'),       cls: 'is-tail' },
+        cola:        { label: __('Sin tracción'),     cls: 'is-tail' },
+        ausente:     { label: __('Sin publicar'),     cls: 'is-tail' },
       };
       // Carátulas: el catálogo se hojea como una pila de portadas. El frente es
       // el producto que MÁS empujas (el RPC ordena por presencia); detrás, en
@@ -584,6 +588,13 @@
       // La foto es de una variante concreta: se dice cuál cuando no coincide con
       // el nombre de la familia.
       const foto = (prod.imagen_producto && prod.imagen_producto !== prod.producto) ? prod.imagen_producto : null;
+      // La etiqueta sin su razon es un veredicto sin argumento: se dice cuanto
+      // rinde este producto frente al contenido tipico de la marca.
+      const idx = Number(prod.indice_vs_marca);
+      const veredicto = (!isFinite(idx) || !idx) ? null
+        : idx >= 1.15 ? __('Rinde {x}x lo que rinde tu contenido típico', { x: idx.toFixed(1) })
+        : idx <= 0.85 ? __('Rinde {p}% de lo que rinde tu contenido típico', { p: Math.round(idx * 100) })
+        : __('Rinde como tu contenido típico');
       return `
         <span class="vera-prodstar-badge ${q.cls}">${esc(q.label)}</span>
         <h4 class="pdeck-name">${esc(prod.producto)}</h4>
@@ -596,6 +607,7 @@
           <strong>${esc(String(prod.share_of_voice_pct != null ? prod.share_of_voice_pct : 0))}</strong><small>%</small>
         </div>
         <div class="pdeck-score-label">${esc(__('de lo que hablas de producto'))}</div>
+        ${veredicto ? `<p class="pdeck-porque">${esc(veredicto)}</p>` : ''}
         <p class="pdeck-foot">
           ${esc(__('{n} publicaciones', { n: prod.posts != null ? prod.posts : 0 }))}
           ${prod.pct_contenido_total != null ? ' · ' + esc(__('{p}% de todo tu contenido', { p: prod.pct_contenido_total })) : ''}
