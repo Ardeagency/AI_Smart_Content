@@ -580,7 +580,8 @@
       const a = (p.media_assets && typeof p.media_assets === 'object') ? p.media_assets : {};
       const first = (v) => (Array.isArray(v) && v.length ? v[0] : null);
       const pick = (v) => (typeof v === 'string' && /^https?:\/\//i.test(v)) ? v : null;
-      const img = [a.display_url, a.main_image_url, a.cover_image, a.thumbnail_url,
+      // `archived_url` primero: copia permanente en R2 (ver _cgridMediaHtml).
+      const img = [a.archived_url, a.display_url, a.main_image_url, a.cover_image, a.thumbnail_url,
         first(a.thumbnails), first(a.images), first(a.media_urls)].map(pick).find(Boolean);
       const bits = [
         Number(p.likes) > 0 ? `♥ ${C(p.likes)}` : null,
@@ -771,7 +772,11 @@
       const first = (v) => (Array.isArray(v) && v.length ? v[0] : null);
       const pick = (v) => (typeof v === 'string' && /^https?:\/\//i.test(v)) ? v
         : (v && typeof v === 'object' && typeof v.url === 'string') ? v.url : null;
-      const img = [a.display_url, a.main_image_url, a.cover_image, a.thumbnail_url,
+      // `archived_url` PRIMERO: es la copia que ai-engine guardó en R2 al
+      // capturar el post. Las URLs originales del CDN vienen firmadas y
+      // caducan — la archivada no. Las demás quedan como respaldo para los
+      // posts anteriores al archivado.
+      const img = [a.archived_url, a.display_url, a.main_image_url, a.cover_image, a.thumbnail_url,
         first(a.thumbnails), first(a.images), first(a.media_urls), first(a._legacy_array)]
         .map(pick).find(Boolean);
       const video = pick(a.video_url);

@@ -1203,7 +1203,9 @@ class MonitoringView extends BaseView {
   _postThumb(post) {
     const m = post.media_assets;
     if (!m || typeof m !== 'object') return null;
-    return m.display_url || m.cover_image || m.thumbnail_url || m.main_image_url ||
+    // archived_url primero: la copia que ai-engine guarda en R2 al capturar el
+    // post. Las URLs del CDN de Instagram/TikTok vienen firmadas y caducan.
+    return m.archived_url || m.display_url || m.cover_image || m.thumbnail_url || m.main_image_url ||
       (Array.isArray(m.thumbnails) && m.thumbnails[0]) || (Array.isArray(m.images) && m.images[0]) ||
       (Array.isArray(m.media_urls) && m.media_urls[0]) || null;
   }
