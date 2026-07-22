@@ -29,7 +29,14 @@
       if (!body) return;
       if (!this._orgId) { this._renderEmptyOrgState?.(body); return; }
       // REDISEÑO VERA 2026-07: la lectura de Vera ES el tab (legacy oculto abajo).
-      if (this._renderVeraTabBody) { await this._renderVeraTabBody(body, 'tendencias'); return; }
+      // Mientras el cuerpo nuevo se diseña, "Próximas Fechas" es la ÚNICA pieza que
+      // se pinta: tiene fuente viva propia (real_world_signals, calendario del
+      // mercado) y no depende del pipeline legacy. Ver _renderTendFechasOnly.
+      if (this._renderVeraTabBody) {
+        await this._renderVeraTabBody(body, 'tendencias');
+        await this._renderTendFechasOnly(body);
+        return;
+      }
       await this._ensureTendenciasService();
       this._restoreTendFilters();
       this._renderTendSkeleton(body);
@@ -53,6 +60,32 @@
         if (this._silentRefresh) return; // fallo transitorio del polling: conservar la vista actual
         body.innerHTML = `<div class="insight-page" style="text-align:center;padding-top:4rem;color:var(--text-secondary);">${__('No se pudo cargar Tendencias.')} ${this._esc(e?.message || '')}</div>`;
       }
+    },
+
+    /* ── Próximas Fechas en solitario (mientras el tab está en rediseño) ──
+       Pinta SOLO la card del calendario dentro del cuerpo que dejó vacío
+       _renderVeraTabBody. Dispara un único RPC (no loadAll: las otras 4 secciones
+       no se muestran, no se pagan). Nunca lanza: si falla, el tab queda como
+       estaba. Misma fuente que la tool getUpcomingDates de Vera. */
+    async _renderTendFechasOnly(body) {
+      if (!body || !this._supabase || !this._orgId) return;
+      let world = null;
+      try {
+        const { data, error } = await this._supabase.rpc('dashboard_tendencias_real_world', {
+          p_org_id: this._orgId, p_lookahead_days: 90, p_limit_holidays: 16, p_limit_history: 0,
+        });
+        if (error) throw error;
+        world = data;
+      } catch (e) {
+        console.warn('[Tendencies] fechas load failed:', e?.message || e);
+        return;
+      }
+      const card = this._buildTendFechasCard(world);
+      if (!card) return;                       // sin fechas futuras → nada que mostrar
+      body.innerHTML = `
+        <div class="insight-page mb-dash" id="tendPage">
+          <div class="mb-layout-aside" style="max-width:340px;">${card}</div>
+        </div>`;
     },
 
     async _ensureTendenciasService() {
