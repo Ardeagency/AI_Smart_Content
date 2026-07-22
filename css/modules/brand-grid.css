@@ -342,8 +342,9 @@
   background: transparent;
   border: 0;
   box-shadow: none;
-  padding: 0;
-  display: flex; flex-direction: column; min-width: 0;
+  padding: 1.35rem 1.5rem 1.5rem;
+  margin-top: 0.25rem;
+  display: flex; flex-direction: column; gap: 1rem; min-width: 0;
 }
 /* Colocado junto a Algoritmo: ocupa la columna izquierda y Algoritmo deja de
    ser full-width para ponerse a su derecha. */
@@ -373,7 +374,7 @@
 .pdeck:focus-visible { outline: 2px solid var(--brand-color-light, #F79E1B); outline-offset: 6px; border-radius: 18px; }
 
 /* Escenario de la pila: alto fijo, las carátulas se apilan en absoluto. */
-.pdeck-stage { position: relative; height: 250px; min-width: 0; perspective: 1000px; }
+.pdeck-stage { position: relative; height: 250px; min-width: 0; perspective: 1000px; overflow: hidden; padding-left: 0.5rem; }
 .pdeck-card {
   --d: 0;
   position: absolute; top: 50%; right: 0;
@@ -383,10 +384,10 @@
   /* Cada paso hacia atrás: se corre a la izquierda, encoge y pierde presencia. */
   transform:
     translateY(-50%)
-    translateX(calc(var(--d) * -26%))
-    scale(calc(1 - var(--d) * 0.08));
-  filter: blur(calc(var(--d) * 1.1px)) brightness(calc(1 - var(--d) * 0.13));
-  opacity: calc(1 - var(--d) * 0.16);
+    translateX(calc(min(var(--d), 4) * -21%))
+    scale(calc(1 - min(var(--d), 4) * 0.07));
+  filter: blur(calc(min(var(--d), 4) * 1.1px)) brightness(calc(1 - min(var(--d), 4) * 0.13));
+  opacity: calc(1 - min(var(--d), 4) * 0.16);
   box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55);
   transition: transform 0.45s var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
               filter 0.45s ease, opacity 0.45s ease, box-shadow 0.3s ease;
@@ -432,7 +433,7 @@
 @media (max-width: 620px) {
   .pdeck { grid-template-columns: 1fr; gap: 0.6rem; }
   .pdeck-stage { height: 210px; }
-  .pdeck-card { width: 46%; right: 50%; transform: translateY(-50%) translateX(calc(50% + var(--d) * -26%)) scale(calc(1 - var(--d) * 0.08)); }
+  .pdeck-card { width: 46%; right: 50%; transform: translateY(-50%) translateX(calc(50% + min(var(--d), 4) * -21%)) scale(calc(1 - min(var(--d), 4) * 0.07)); }
   .pdeck-info { align-items: flex-start; }
 }
 
