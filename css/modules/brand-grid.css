@@ -356,36 +356,53 @@
 .vera-prodstar-load { font-size: 0.82rem; color: rgba(255, 255, 255, 0.4); padding: 0.4rem 0; }
 .vera-prodstar-grid { display: block; }
 
-/* ── Escenario: la foto del producto es el lienzo ───────────────────────────
-   El contenedor ADOPTA el formato real de la imagen (aspect-ratio inyectado en
-   JS al cargar, igual que la galería de Producción); el 4/5 de aquí solo
-   reserva el hueco mientras carga (anti-CLS). Encima va UNA card glass-black
-   con toda la lectura — sin hover, todo visible de entrada.
-   El padding-top deja respirar la foto por encima del panel. */
+/* ── Escenario: puesta en escena del producto ───────────────────────────────
+   Dos capas con la MISMA foto, como una portada de disco:
+     1. fondo desenfocado (cover) → aporta el color del empaque y profundidad;
+     2. el producto entero al frente (contain) → nunca se recorta ni se deforma.
+   Encima, la card glass-black con toda la lectura. La altura la fija el CSS
+   (franja de producto + panel), no el formato de la foto: un producto vertical
+   disparaba el alto del bloque. */
 .vera-prodstar-stage {
   position: relative; margin: 0; min-width: 0; width: 100%;
   border-radius: 28px;
   background: var(--media-container-bg, #0b0b0b);
   box-shadow: var(--media-container-shadow, 0 10px 34px rgba(0, 0, 0, 0.35));
-  overflow: hidden;
+  overflow: hidden; isolation: isolate;
   display: flex; flex-direction: column; justify-content: flex-end;
-  /* La franja superior de foto es fija en px: la altura del bloque no depende
-     del formato del producto (uno vertical disparaba el alto de la pagina). */
-  padding: 130px 0.7rem 0.7rem;
+  padding: 216px 0.7rem 0.7rem;
 }
+/* Fondo: la foto ampliada y desenfocada. El scale evita que el blur deje
+   bordes transparentes en los cantos. */
+.vera-prodstar-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; transform: scale(1.18);
+  filter: blur(30px) saturate(125%) brightness(0.5);
+  opacity: 0.9; z-index: 0;
+}
+/* Velo: asienta el fondo para que el texto del panel siempre tenga contraste. */
+.vera-prodstar-stage::after {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.15) 40%, rgba(0, 0, 0, 0.7) 100%);
+}
+/* Producto: completo, centrado en la franja superior, flotando con sombra. */
 .vera-prodstar-img {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%; display: block; object-fit: cover;
+  position: absolute; top: 1.1rem; left: 50%; transform: translateX(-50%);
+  z-index: 1;
+  height: 186px; width: auto; max-width: 72%;
+  display: block; object-fit: contain;
+  border-radius: 14px;
+  filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.55));
   opacity: 0; transition: opacity 0.5s var(--ease-out, ease);
 }
 .vera-prodstar-img.is-loaded { opacity: 1; animation: none; }
-.vera-prodstar-img--empty { opacity: 1; background: var(--bg-primary, #0b0b0b); }
+.vera-prodstar-img--empty { position: static; opacity: 1; height: 0; }
 
 /* Card glass-black sobre la foto: ficha de la estrella + los olvidados.
    La clase global .glass-black pone fondo/borde/blur; aquí solo el layout. */
 .vera-prodstar-panel {
-  position: relative; z-index: 1;
-  border-radius: 14px;
+  position: relative; z-index: 2;
+  border-radius: 18px;
   padding: 0.95rem 1rem 1rem;
   display: flex; flex-direction: column; gap: 0.85rem;
   min-width: 0;
@@ -427,7 +444,8 @@
 /* En pantallas estrechas la foto no puede quedar reducida a una franja: el
    panel se despega del formato de la imagen y esta pasa a fondo del bloque. */
 @media (max-width: 620px) {
-  .vera-prodstar-stage { padding: 110px 0.6rem 0.6rem; }
+  .vera-prodstar-stage { padding: 180px 0.6rem 0.6rem; }
+  .vera-prodstar-img { height: 154px; max-width: 78%; }
   .vera-prodstar-item { grid-template-columns: 30px minmax(0, 1fr) 3rem 5.2rem; }
   .vera-prodstar-thumb { width: 30px; height: 30px; }
   .vera-prodstar-item-days { display: none; }

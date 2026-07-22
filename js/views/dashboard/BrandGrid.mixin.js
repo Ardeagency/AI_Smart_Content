@@ -486,8 +486,11 @@
       const q = QUAD[hero.cuadrante] || QUAD.cola;
       // La imagen la resuelve el RPC contra nuestro storage, nunca Vera: una URL
       // emitida por el modelo sería una vía para inyectar destinos arbitrarios.
+      // Dos usos de la MISMA foto: desenfocada al fondo (da atmósfera y el color
+      // del empaque) y completa al frente (contain: el producto nunca se corta).
       const img = hero.imagen_url
-        ? `<img class="vera-prodstar-img" src="${esc(hero.imagen_url)}" alt="${esc(hero.producto)}" loading="lazy" data-prodstar-fit="1">`
+        ? `<img class="vera-prodstar-bg" src="${esc(hero.imagen_url)}" alt="" aria-hidden="true" loading="lazy">
+           <img class="vera-prodstar-img" src="${esc(hero.imagen_url)}" alt="${esc(hero.producto)}" loading="lazy" data-prodstar-fit="1">`
         : `<div class="vera-prodstar-img vera-prodstar-img--empty" aria-hidden="true"></div>`;
       const sig = (v, l) => `<div class="vera-prodstar-sig"><span>${esc(String(v))}</span><small>${esc(l)}</small></div>`;
 
