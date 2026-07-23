@@ -1248,7 +1248,17 @@
       // HTML, así que pinta sus controles y no arranca nunca — el reproductor
       // parecía roto sin estarlo. Solo se monta <video> con media de verdad.
       const video = this._cgridIsPlayable(rawVideo) ? rawVideo : null;
-      const esVideoNoIncrustable = Boolean(rawVideo) && !video;
+      // ¿La pieza ES un video, aunque no tengamos su archivo? Un post rescatado
+      // por API guarda SOLO la portada — el master de video no se archiva (pesa
+      // cientos de veces más y no aporta a la lectura), así que `video_url`
+      // viene vacío. Antes el play se decidía por "hay video_url que no puedo
+      // reproducir", y eso dejaba muda toda pieza sin archivo: un TikTok se
+      // veía como una foto, sin manera de llegar al video.
+      const net0 = String(network || '').toLowerCase();
+      const esVideoPost = Boolean(rawVideo)
+        || net0 === 'tiktok' || net0 === 'youtube'
+        || /video|reel|clip/i.test(String(a.media_type || ''));
+      const esVideoNoIncrustable = esVideoPost && !video;
 
       // Mismo lenguaje que el resto de la plataforma para media caída (galería
       // de Producción, ficha de producto): glifo centrado sobre superficie
@@ -1280,6 +1290,10 @@
         // pulsarlo: cero peso y cero rastreo de terceros mientras nadie lo
         // pida. Si el embed fallara, la portada y el enlace al original siguen
         // ahí debajo.
+        // Se pide por `esVideoPost`, no por "hay video_url que no puedo
+        // reproducir": ver la nota de esVideoPost arriba. `_cgridEmbedUrl` ya
+        // devuelve null para las redes con el embed apagado (TikTok hoy), y esas
+        // caen al enlace al original — que es justo lo que se decidió.
         const embed = esVideoNoIncrustable ? this._cgridEmbedUrl(network, postId) : null;
         // Sin reproductor incrustable (o desactivado), el play abre la
         // publicación en la red: mejor un botón que lleva a algún sitio que un
