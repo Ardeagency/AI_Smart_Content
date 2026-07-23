@@ -80,109 +80,98 @@
         return;
       }
       const card = this._buildTendFechasCard(world);
-      const perfiles = await this._buildTendPerfilesHtml();
-      if (!card && !perfiles) return;           // nada vivo que mostrar
+      const oceanos = await this._buildTendOceanosHtml();
+      if (!card && !oceanos) return;            // nada vivo que mostrar
       body.innerHTML = `
         <div class="insight-page mb-dash" id="tendPage">
           <div class="${card ? 'mb-layout' : ''}">
-            ${perfiles ? `<div class="tend-main">${perfiles}</div>` : (card ? '<div class="tend-main"></div>' : '')}
+            ${oceanos ? `<div class="tend-main">${oceanos}</div>` : (card ? '<div class="tend-main"></div>' : '')}
             ${card ? `<aside class="mb-layout-aside" style="max-width:340px;">${card}</aside>` : ''}
           </div>
         </div>`;
       this._bindTendCalendar(body);
-      this._bindTendPerfiles(body);
+      this._bindTendOceanos(body);
     },
 
-    /* ══ Perfiles recomendados ══════════════════════════════════════════════
-       Reemplaza a "Marcas emergentes", que colgaba del clasificador (muerto).
-       Los candidatos los detecta la tarea profile_radar desde fuentes VIVAS
-       —menciones en lo ya scrapeado + demanda de busqueda— y Vera decide cual
-       vale la pena vigilar. Aqui solo se muestran los que ella aprobo: el "+"
-       los manda a Monitoreo, la X los descarta para siempre. ══════════════ */
-    async _buildTendPerfilesHtml() {
+    /* ══ Oceanos azules ═════════════════════════════════════════════════════
+       Reemplaza a "Perfiles recomendados". Un oceano azul = el mercado BUSCA
+       algo (audience_demand_signals) que ni la marca ni su competencia cubren
+       (trend_topics). La tarea blue_ocean_radar detecta los gaps y Vera juzga
+       cual es real + escribe el angulo. Aqui se muestran los que aprobo: la X
+       lo descarta. Es inteligencia accionable, no un grafico. ══════════════ */
+    async _buildTendOceanosHtml() {
       let data;
       try {
-        const res = await this._supabase.rpc('dashboard_tendencias_recommended_profiles', {
+        const res = await this._supabase.rpc('dashboard_tendencias_blue_oceans', {
           p_org_id: this._orgId, p_limit: 12,
         });
         if (res.error) throw res.error;
         data = res.data;
       } catch (e) {
-        console.warn('[Tendencies] perfiles recomendados:', e?.message || e);
+        console.warn('[Tendencies] oceanos azules:', e?.message || e);
         return '';
       }
-      const perfiles = Array.isArray(data?.profiles) ? data.profiles : [];
-      if (!perfiles.length) return '';
-      this._tendPerfiles = perfiles;
+      const oceans = Array.isArray(data?.oceans) ? data.oceans : [];
+      if (!oceans.length) return '';
+      this._tendOceanos = oceans;
       const esc = (s) => this._esc(s);
+      const intentLabel = { alta: __('Alta demanda'), media: __('Demanda media'), baja: __('Demanda baja') };
 
-      const fichas = perfiles.map((p) => {
-        const nombre = p.display_name || (p.handle ? `@${p.handle}` : '—');
-        const handle = p.handle ? `@${p.handle}` : '';
-        const ev = p.evidence || {};
-        const quien = Array.isArray(ev.quien_lo_menciona) ? ev.quien_lo_menciona : [];
-        const prueba = p.discovery_source === 'mention'
-          ? (quien.length
-              ? __('lo menciona {p}', { p: quien.slice(0, 2).map((q) => esc(q)).join(', ') })
-              : __('mencionado en tu nicho'))
-          : __('la gente lo busca en Google');
+      const fichas = oceans.map((o) => {
+        const terms = Array.isArray(o.demand_terms) ? o.demand_terms.slice(0, 3) : [];
+        const chips = terms.map((t) => `<span class="tend-oc-chip">${esc(String(t))}</span>`).join('');
+        const intent = String(o.intent || 'media');
         return `
-          <article class="cga-item tend-perfil" data-perfil-id="${esc(p.id)}">
+          <article class="cga-item tend-oc" data-oc-id="${esc(o.id)}">
             <div class="cga-top">
-              <h4 class="cga-quien">${esc(nombre)}</h4>
-              ${handle ? `<span class="cga-origen">${esc(handle)}${p.platform ? ` · ${esc(this._prettyPlatform?.(p.platform) || p.platform)}` : ''}</span>` : ''}
-              ${p.motivo ? `<span class="tend-perfil-motivo">${esc(p.motivo)}</span>` : ''}
+              <span class="tend-oc-intent tend-oc-intent--${esc(intent)}">${esc(intentLabel[intent] || intentLabel.media)}</span>
+              <h4 class="cga-quien">${esc(o.gap_phrase)}</h4>
+              ${o.angle ? `<span class="tend-oc-angle">${esc(o.angle)}</span>` : ''}
+              ${chips ? `<div class="tend-oc-chips">${chips}</div>` : ''}
             </div>
             <div class="cga-foot">
-              <span class="cga-hint">${esc(prueba)}</span>
-              <span class="tend-perfil-acts">
-                <button type="button" class="cga-add tend-perfil-no" data-perfil-act="dismissed"
-                        title="${esc(__('No me interesa'))}" aria-label="${esc(__('Descartar {n}', { n: nombre }))}">
-                  <i class="aisc-ico aisc-ico--close" aria-hidden="true"></i>
-                </button>
-                <button type="button" class="cga-add" data-perfil-act="added"
-                        title="${esc(__('Monitorear este perfil'))}" aria-label="${esc(__('Monitorear {n}', { n: nombre }))}">
-                  <i class="fas fa-plus" aria-hidden="true"></i>
-                </button>
-              </span>
+              <span class="cga-hint">${esc(__('el mercado lo busca · nadie lo cubre'))}</span>
+              <button type="button" class="cga-add tend-oc-no" data-oc-act="dismissed"
+                      title="${esc(__('No me interesa'))}" aria-label="${esc(__('Descartar oceano'))}">
+                <i class="aisc-ico aisc-ico--close" aria-hidden="true"></i>
+              </button>
             </div>
           </article>`;
       }).join('');
 
       return `
-        <section class="cgrid-card--aud tend-perfiles" id="tendPerfilesCard">
-          <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--search" aria-hidden="true"></i>${esc(__('Perfiles recomendados'))}</span>
-          <p class="bgrid-card-sub">${esc(__('Cuentas que aparecen en tu nicho y aún no vigilas · agrégalas a Monitoreo'))}</p>
-          <div class="cgrid-aud" id="tendPerfilesList">${fichas}</div>
+        <section class="cgrid-card--aud tend-oceanos" id="tendOceanosCard">
+          <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--compass" aria-hidden="true"></i>${esc(__('Océanos azules'))}</span>
+          <p class="bgrid-card-sub">${esc(__('Lo que tu nicho busca y aún nadie responde · territorio abierto para tu marca'))}</p>
+          <div class="cgrid-aud" id="tendOceanosList">${fichas}</div>
         </section>`;
     },
 
-    _bindTendPerfiles(root) {
-      const card = root?.querySelector?.('#tendPerfilesCard');
+    _bindTendOceanos(root) {
+      const card = root?.querySelector?.('#tendOceanosCard');
       if (!card) return;
-      card.querySelectorAll('.tend-perfil').forEach((el) => this._vestirPanelDeMarca?.(el));
-      if (card._tendPerfBound) return;
-      card._tendPerfBound = true;
+      card.querySelectorAll('.tend-oc').forEach((el) => this._vestirPanelDeMarca?.(el));
+      if (card._tendOcBound) return;
+      card._tendOcBound = true;
       card.addEventListener('click', async (ev) => {
-        const btn = ev.target.closest('[data-perfil-act]');
+        const btn = ev.target.closest('[data-oc-act]');
         if (!btn) return;
-        const item = btn.closest('.tend-perfil');
-        const id = item?.dataset.perfilId;
+        const item = btn.closest('.tend-oc');
+        const id = item?.dataset.ocId;
         if (!id || btn.disabled) return;
-        const decision = btn.dataset.perfilAct;
         btn.disabled = true;
         try {
-          const { error } = await this._supabase.rpc('adopt_recommended_profile', {
-            p_id: id, p_decision: decision,
+          const { error } = await this._supabase.rpc('resolve_blue_ocean', {
+            p_id: id, p_decision: btn.dataset.ocAct,
           });
           if (error) throw error;
           item.classList.add('is-adoptada');
           setTimeout(() => {
             item.remove();
-            if (!card.querySelector('.tend-perfil')) card.remove();
+            if (!card.querySelector('.tend-oc')) card.remove();
           }, 280);
         } catch (e) {
-          console.warn('[Tendencies] no se pudo resolver el perfil:', e?.message || e);
+          console.warn('[Tendencies] no se pudo resolver el oceano:', e?.message || e);
           btn.disabled = false;
           btn.classList.add('is-error');
           setTimeout(() => btn.classList.remove('is-error'), 2200);

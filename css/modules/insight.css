@@ -2821,23 +2821,34 @@
   padding-top: 0.6rem; border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* ── Perfiles recomendados: reusa el carrusel de fichas de Competencia
-   (.cgrid-aud/.cga-*) porque es el mismo objeto — una recomendacion que se
-   adopta o se descarta. Solo cambia lo propio de este tab. */
-.tend-perfiles { margin-bottom: 1.25rem; }
-.tend-perfil { min-height: 200px; }
-.tend-perfil-motivo {
-  font-size: 0.78rem; line-height: 1.35; margin-top: 0.45rem;
+/* ── Oceanos azules: reusa el carrusel de fichas de Competencia (.cgrid-aud/
+   .cga-*) — cada ficha es una oportunidad accionable sobre el color de marca. */
+.tend-oceanos { margin-bottom: 1.25rem; }
+.tend-oc { min-height: 210px; }
+/* Etiqueta de demanda arriba, como eyebrow de la oportunidad. */
+.tend-oc-intent {
+  align-self: flex-start; font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; padding: 0.14rem 0.5rem; border-radius: 999px; margin-bottom: 0.5rem;
+  background: var(--panel-linea, rgba(16, 17, 20, 0.14)); color: var(--panel-fg, #101114);
+}
+.tend-oc-intent--alta { background: var(--panel-fg, #101114); color: var(--panel-bg, #fff); }
+.tend-oc-angle {
+  font-size: 0.8rem; line-height: 1.4; margin-top: 0.5rem;
   color: var(--panel-fg-soft, rgba(16, 17, 20, 0.72));
 }
-.tend-perfil-acts { display: inline-flex; align-items: center; gap: 0.4rem; }
-/* Descartar es la accion secundaria: mismo boton, en hueco. */
-.tend-perfil-no {
+.tend-oc-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.65rem; }
+.tend-oc-chip {
+  font-size: 0.66rem; padding: 0.14rem 0.45rem; border-radius: 6px;
+  background: var(--panel-linea, rgba(16, 17, 20, 0.12)); color: var(--panel-fg-soft, rgba(16, 17, 20, 0.72));
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+/* Descartar = accion secundaria, boton en hueco. */
+.tend-oc-no {
   width: 30px; height: 30px; font-size: 0.75rem;
   background: transparent; color: var(--panel-fg-soft, rgba(16, 17, 20, 0.72));
   border: 1px solid var(--panel-linea, rgba(16, 17, 20, 0.2));
 }
-.tend-perfil-no:hover:not(:disabled) { background: var(--panel-linea, rgba(16, 17, 20, 0.12)); }
+.tend-oc-no:hover:not(:disabled) { background: var(--panel-linea, rgba(16, 17, 20, 0.12)); }
 
 /* "Cuadro" del dia seleccionado: color SOLIDO de la marca, igual que el panel de
    Audiencias en Mi Marca. --panel-bg/--panel-fg los publica _vestirPanelDeMarca. */
