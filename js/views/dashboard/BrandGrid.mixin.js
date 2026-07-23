@@ -360,6 +360,7 @@
       if (host) host.innerHTML = `${audRecHtml}${restBlock}`;
       this._colocarCierreBajoAlgoritmo(body);
       this._bindVeraAudRec(host);
+      this._acentuarIntuicion(host);
       body.querySelectorAll('[data-panel-marca]').forEach((el) => this._vestirPanelDeMarca(el));
       try { await this._ensureChartJs(); } catch (_) {}
       this._paintVeraCharts(body, obsItems.concat(virtItems, desvItems, restItems));
@@ -636,6 +637,18 @@
       try {
         const [r, g, b] = this._hexToRgb(this._gridBrandHexes()[0]);
         duo.style.setProperty('--duo-acento', `rgba(${r}, ${g}, ${b}, 0.38)`);
+      } catch (_) {}
+    },
+
+    /* Intuicion: su acento es SIEMPRE el color solido de la marca (nunca un
+       morado suelto). Se publica como triplete r,g,b para que los bloques
+       (callout/quote) armen sus tintes con la opacidad que necesiten. */
+    _acentuarIntuicion(host) {
+      const card = host && host.querySelector('.vera-card--intuicion');
+      if (!card) return;
+      try {
+        const [r, g, b] = this._hexToRgb(this._gridBrandHexes()[0]);
+        card.style.setProperty('--intu-accent', `${r}, ${g}, ${b}`);
       } catch (_) {}
     },
 

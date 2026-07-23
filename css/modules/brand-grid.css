@@ -638,24 +638,26 @@
 .vera-td-sep { display: inline-block; padding: 0 0.4rem; color: rgba(255, 255, 255, 0.22); }
 
 /* ── Intuición: la lectura de Vera mas alla de lo obvio ─────────────────────
-   Full-width, debajo de Algoritmo. SIN filete de acento (como el resto de las
-   cards) y SIN forma impuesta: es un lienzo que Vera llena con los bloques que
-   quiera —veredicto, cifra, cita del post, comparacion, recomendacion— y la
-   card se adapta. El unico sello propio es el color del icono. */
+   Full-width, debajo de Algoritmo. SIN borde de acento (como el resto) y SIN
+   forma impuesta: es un lienzo que Vera llena con los bloques que quiera. El
+   unico sello es el acento, que es SIEMPRE el color solido de la marca —nunca
+   un morado suelto—. `--intu-accent` (triplete r,g,b) lo publica el JS desde el
+   color de marca; el fallback es el naranja de plataforma. */
 .vera-cards .vera-card--intuicion { grid-column: 1 / -1; }
 .vera-card--intuicion {
-  border-left: 1px solid var(--border-divider, #242424);
+  --intu-accent: 255, 106, 26;
+  border: 1px solid var(--border-divider, #242424);
   padding: 1.7rem 1.9rem 1.9rem;
   gap: 1.1rem;
 }
-.vera-card--intuicion .vera-card-kind { color: #b8a6ff; }
+.vera-card--intuicion .vera-card-kind { color: rgb(var(--intu-accent)); }
 .vera-card--intuicion .vera-card-title {
   font-size: 1.5rem; letter-spacing: -0.02em; line-height: 1.14; margin-bottom: 0.1rem;
 }
 .vera-card--intuicion .vera-card-body { gap: 1.15rem; }
 .vera-card--intuicion .vera-md { font-size: 0.9rem; line-height: 1.7; color: rgba(255, 255, 255, 0.74); max-width: 82ch; }
 .vera-card--intuicion .vera-md strong { color: #fff; font-weight: 600; }
-.vera-card--intuicion .vera-md a { color: #b8a6ff; }
+.vera-card--intuicion .vera-md a { color: rgb(var(--intu-accent)); }
 @media (max-width: 640px) {
   .vera-card--intuicion { padding: 1.4rem 1.35rem 1.5rem; }
   .vera-card--intuicion .vera-card-title { font-size: 1.3rem; }
@@ -663,17 +665,19 @@
 
 /* ── Bloques expresivos: le dan a Vera libertad para componer, no solo texto ──
    veredicto (callout), cita del contenido analizado (quote) y comparacion a
-   columnas (split). Sirven en cualquier card, pero nacen para Intuición. */
+   columnas (split). El acento por defecto es el color de marca; los tonos
+   semanticos (critical/warning/positive) solo cuando Vera los pide a proposito
+   —una alerta roja o un visto verde, jamas un color decorativo. */
 .vera-callout {
   display: flex; gap: 0.85rem; align-items: flex-start;
   padding: 1rem 1.15rem; border-radius: 12px;
-  background: rgba(124, 92, 255, 0.09);
-  border: 1px solid rgba(124, 92, 255, 0.22);
+  background: rgba(var(--intu-accent, 255, 106, 26), 0.09);
+  border: 1px solid rgba(var(--intu-accent, 255, 106, 26), 0.24);
 }
 .vera-callout[data-tone="critical"] { background: rgba(231, 122, 122, 0.09); border-color: rgba(231, 122, 122, 0.24); }
 .vera-callout[data-tone="warning"]  { background: rgba(230, 169, 78, 0.09); border-color: rgba(230, 169, 78, 0.24); }
 .vera-callout[data-tone="positive"] { background: rgba(70, 201, 138, 0.09); border-color: rgba(70, 201, 138, 0.24); }
-.vera-callout-ico { flex: 0 0 auto; font-size: 1.05rem; color: #b8a6ff; margin-top: 0.1rem; }
+.vera-callout-ico { flex: 0 0 auto; font-size: 1.05rem; color: rgb(var(--intu-accent, 255, 106, 26)); margin-top: 0.1rem; }
 .vera-callout[data-tone="critical"] .vera-callout-ico { color: #e77a7a; }
 .vera-callout[data-tone="warning"]  .vera-callout-ico { color: #e6a94e; }
 .vera-callout[data-tone="positive"] .vera-callout-ico { color: #46c98a; }
@@ -683,7 +687,7 @@
 
 .vera-quote {
   position: relative; padding: 0.2rem 0 0.2rem 1.1rem;
-  border-left: 3px solid rgba(184, 166, 255, 0.5);
+  border-left: 3px solid rgba(var(--intu-accent, 255, 106, 26), 0.55);
 }
 .vera-quote-text { font-size: 0.98rem; line-height: 1.5; color: rgba(255, 255, 255, 0.9); font-style: italic; }
 .vera-quote-source { display: block; margin-top: 0.4rem; font-size: 0.74rem; color: rgba(255, 255, 255, 0.45); font-style: normal; }
