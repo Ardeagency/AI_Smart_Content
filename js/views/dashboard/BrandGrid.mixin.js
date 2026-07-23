@@ -103,9 +103,10 @@
             <div class="bgrid-vd" id="bgridVD"></div>
           </div>
           <div class="bgrid-vera" id="bgridVera"></div>
-          <!-- Producto destacado cierra la pagina: es el ultimo bloque, con
-               ancho acotado (no full-bleed). Sin cabecera ni superficie propia:
-               la foto y su panel glass se sostienen solos. -->
+          <!-- Producto destacado + Publicacion destacada cierran la pagina como
+               PAR: se reubican debajo de Algoritmo (que va full-width) para que
+               la pagina termine con las dos piezas concretas — que empujas y
+               que te funciono — una al lado de la otra. -->
           <section class="bgrid-card bgrid-card--prodstar">
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--star" aria-hidden="true"></i>${this._esc(__('Producto destacado'))}</span>
@@ -114,6 +115,15 @@
             <div class="vera-prodstar" id="bgridProdStar" data-prodstar="1">
               <div class="vera-prodstar-load">${this._esc(__('Cargando productos…'))}</div>
             </div>
+          </section>
+          <!-- Misma pieza que en Competencia (clases .cgrid-post-*), pero sobre
+               tus propias publicaciones: la tuya que mas movio en el periodo. -->
+          <section class="bgrid-card glass-black bgrid-card--toppost">
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Publicación destacada'))}</span>
+            </header>
+            <p class="bgrid-card-sub">${this._esc(__('La tuya que más movió en el periodo'))}</p>
+            <div class="cgrid-post" id="bgridTopPost"><div class="cgrid-load">${this._esc(__('Buscando la publicación…'))}</div></div>
           </section>
         </div>`;
     },
@@ -152,16 +162,25 @@
       } catch (_) { return null; }
     },
 
-    async _loadBrandGridData() {
+    /* Rango de la ventana activa. Ancla al último post propio: si la marca lleva
+       días sin publicar, "Semana" (últimos 7 días) saldría vacía. Anclando, cada
+       filtro muestra la data más reciente disponible en su granularidad.
+       Lo comparten las RPCs del grid y la Publicación destacada, que lee
+       brand_posts directo: si cada una calculara su rango, la card podría
+       mostrar un post de fuera del periodo que pinta el resto de la página. */
+    async _gridRango() {
       const days = this._gridWindowDays();
-      // Ancla al último post propio: si la marca lleva días sin publicar, "Semana"
-      // (últimos 7 días) saldría vacía. Anclando, cada filtro muestra la data más
-      // reciente disponible en su granularidad.
       const now = new Date();
       const last = await this._gridLastOwnPost();
       const anchor = (last && last < now) ? last : now;
-      const dateTo = anchor.toISOString();
-      const dateFrom = (days == null ? new Date('2015-01-01') : new Date(anchor.getTime() - days * 86400000)).toISOString();
+      return {
+        dateTo: anchor.toISOString(),
+        dateFrom: (days == null ? new Date('2015-01-01') : new Date(anchor.getTime() - days * 86400000)).toISOString(),
+      };
+    },
+
+    async _loadBrandGridData() {
+      const { dateFrom, dateTo } = await this._gridRango();
       const p = { p_org_id: this._orgId, p_date_from: dateFrom, p_date_to: dateTo };
       // rpc() devuelve un builder thenable (sin .catch nativo): Promise.resolve lo
       // normaliza a Promise real antes de encadenar el fallback.
@@ -191,6 +210,7 @@
       this._paintLatidosChart(body, data);
       this._paintCampaigns(body);
       this._paintProductoEstrella(body);
+      this._paintTopPostPropio(body);
       this._renderVeraCards(body);
     },
 
@@ -323,19 +343,20 @@
         vdHost.innerHTML = this._veraDuoHtml(virtItems, desvItems);
         this._acentuarDuoConMarca(vdHost);
       }
-      // Producto destacado vive en el shell, pero se COLOCA junto a Algoritmo.
-      // Se rescata antes de limpiar el host: ya está pintado y repintarlo
-      // costaría otra llamada al RPC.
-      const prodstar = body.querySelector('.bgrid-card--prodstar');
+      // Producto destacado y Publicacion destacada viven en el shell, pero se
+      // COLOCAN debajo de Algoritmo. Se rescatan antes de limpiar el host: ya
+      // estan pintadas y repintarlas costaria otra ronda de consultas.
       const grid = body.querySelector('.bgrid');
-      if (prodstar && host && host.contains(prodstar) && grid) grid.appendChild(prodstar);
+      const cierre = [body.querySelector('.bgrid-card--prodstar'), body.querySelector('.bgrid-card--toppost')];
+      cierre.forEach((el) => { if (el && host && host.contains(el) && grid) grid.appendChild(el); });
       if (host) host.innerHTML = restItems.length ? `<div class="vera-cards">${restItems.map((x) => this._veraCardHtml(x.card, x.key)).join('')}</div>` : '';
-      this._placeProdstarNextToAlgoritmo(body);
+      this._colocarCierreBajoAlgoritmo(body);
       body.querySelectorAll('[data-panel-marca]').forEach((el) => this._vestirPanelDeMarca(el));
       try { await this._ensureChartJs(); } catch (_) {}
       this._paintVeraCharts(body, obsItems.concat(virtItems, desvItems, restItems));
-      // Bloque vivo: pide su propio dato al RPC, por eso va aparte de los charts.
+      // Bloques vivos: piden su propio dato, por eso van aparte de los charts.
       this._paintProductoEstrella(body);
+      this._paintTopPostPropio(body);
     },
 
     /* ══ Evidencia del producto ═══════════════════════════════════════════
@@ -556,19 +577,22 @@
         </li>`).join('')}</ul>`;
     },
 
-    /* Producto destacado se para a la IZQUIERDA de Algoritmo (misma fila del
-       grid de cards de Vera). Si Vera no publicó Algoritmo, se queda donde
-       estaba: último bloque de la página, a su ancho acotado. */
-    _placeProdstarNextToAlgoritmo(body) {
-      const prodstar = body.querySelector('.bgrid-card--prodstar');
+    /* Producto destacado + Publicacion destacada se paran DEBAJO de Algoritmo,
+       una en cada columna del grid de cards de Vera; Algoritmo se queda a todo
+       el ancho. Si Vera no publico Algoritmo, cada una se queda donde estaba:
+       ultimos bloques de la pagina, a su ancho acotado. */
+    _colocarCierreBajoAlgoritmo(body) {
       const algo = body.querySelector('.vera-cards .vera-card--algoritmo');
-      if (!prodstar || !algo) return;
+      if (!algo) return;
       const cards = algo.parentElement;
-      cards.classList.add('has-prodstar');
-      cards.insertBefore(prodstar, algo);
+      cards.classList.add('has-cierre');
+      // Se anexan al final del grid: Algoritmo ya ocupa la fila completa, asi
+      // que el par cae en la fila siguiente en el orden en que se agrega.
+      [body.querySelector('.bgrid-card--prodstar'), body.querySelector('.bgrid-card--toppost')]
+        .forEach((el) => { if (el) cards.appendChild(el); });
     },
 
-    /* Virtudes + Desventajas como PAR hermano: dos paneles lado a lado (verde/rojo). */
+    /* Fortalezas + Debilidades como PAR hermano: dos paneles lado a lado. */
     _veraDuoHtml(virtItems, desvItems) {
       if (!virtItems.length && !desvItems.length) return '';
       const esc = (s) => this._esc(s);
@@ -583,7 +607,7 @@
         }).join('');
         return `<div class="vera-duo-panel" data-side="${side}">${content}</div>`;
       };
-      return `<div class="vera-duo">${panel(virtItems, 'pos', __('Fortalezas'), 'star')}${panel(desvItems, 'neg', __('Debilidades'), 'alert')}</div>`;
+      return `<div class="vera-duo">${panel(virtItems, 'pos', __('Fortalezas'), 'star')}${panel(desvItems, 'neg', __('Debilidades'), 'alert-warning')}</div>`;
     },
 
     /* El borde de Fortalezas es el unico trazo del par: que lo ponga la marca
@@ -602,7 +626,7 @@
       const META = {
         observacion: { label: __('Observaciones'), icon: 'eye' },
         virtudes:    { label: __('Fortalezas'),    icon: 'star' },
-        desventajas: { label: __('Debilidades'),   icon: 'alert' },
+        desventajas: { label: __('Debilidades'),   icon: 'alert-warning' },
         audiencia:   { label: __('Audiencias'),    icon: 'audience' },
         algoritmo:   { label: __('Tu Algoritmo'),  icon: 'compass' },
       };
@@ -722,6 +746,133 @@
         </div>`;
       }
       return '';
+    },
+
+    /* ══ Publicacion destacada (propia) ══════════════════════════════════════
+       Misma pieza que "Publicación con mayor Tráfico" de Competencia — reusa
+       sus helpers y sus clases .cgrid-post-* (comp-grid.css entra en esta misma
+       ruta) — pero rankeando TUS publicaciones del periodo, no las del rival.
+
+       INTERACCION ≠ REPRODUCCION: ordena por likes+comentarios+compartidos+
+       guardados; vistas y reproducciones se muestran pero no rankean.
+       Lee brand_posts directo (post_source='own'); la RLS de la org ya cubre
+       al miembro. ════════════════════════════════════════════════════════ */
+    async _paintTopPostPropio(body) {
+      const host = body.querySelector('#bgridTopPost');
+      if (!host) return;
+      // Idempotente por ventana: lo llaman el ciclo de pintado y tambien
+      // _renderVeraCards al reubicar la card. Sin esto la consulta se repite.
+      const token = String(this._gridWindow || '');
+      if (host.dataset.tpWindow === token) return;
+      host.dataset.tpWindow = token;
+      const esc = (s) => this._esc(s);
+      const vacio = (txt) => { host.innerHTML = `<div class="cgrid-empty">${esc(txt)}</div>`; };
+
+      let win = null, comments = [];
+      try {
+        if (!this._gridBcIds) await this._gridLastOwnPost();   // resuelve y cachea los containers
+        if (!this._gridBcIds || !this._gridBcIds.length) { vacio(__('Sin publicaciones propias en este periodo.')); return; }
+        const { dateFrom, dateTo } = await this._gridRango();
+        // Se traen las 40 con mayor engagement_total y se re-rankean con la
+        // misma regla de Competencia: engagement_total puede venir nulo o
+        // incluir alcance segun la red, metrics es la fuente fiable.
+        const { data: rows } = await this._supabase.from('brand_posts')
+          .select('id, content, media_assets, permalink, post_id, profile_handle, network, captured_at, author_display_name, metrics, engagement_total')
+          .in('brand_container_id', this._gridBcIds)
+          .eq('post_source', 'own')
+          .gte('captured_at', dateFrom).lte('captured_at', dateTo)
+          .order('engagement_total', { ascending: false, nullsFirst: false }).limit(40);
+        const ranked = (rows || [])
+          .map((p) => ({ ...p, _inter: this._cgridInteractions(p) }))
+          .filter((p) => p._inter > 0)
+          .sort((a, b) => b._inter - a._inter);
+        win = ranked[0] || null;
+      } catch (e) { console.warn('[BrandGrid] top post propio:', e); }
+      if (!win) { vacio(__('Sin publicaciones propias con interacción en este periodo.')); return; }
+
+      try {
+        const { data: cs } = await this._supabase.from('brand_post_comments')
+          .select('author_handle, content, metrics, sentiment')
+          .eq('brand_post_id', win.id).limit(80);
+        comments = Array.isArray(cs) ? cs : [];
+      } catch (_) {}
+
+      const net = String(win.network || '').toLowerCase();
+      const netLabel = NET_LABEL[net] || (net ? net.charAt(0).toUpperCase() + net.slice(1) : '—');
+      const handle = String(win.profile_handle || '').replace(/^@+/, '');
+      const url = this._cgridPostUrl(net, win.post_id, handle, win.permalink);
+      const when = win.captured_at ? this._veraFmtDate(win.captured_at) : '';
+      const copy = String(win.content || '').trim();
+      const m = win.metrics || {};
+      const C = (n) => this._compactNum(n);
+      const reach = this._cgridReach(win);
+
+      const metric = (v, label, ico) => (Number(v) > 0)
+        ? `<div class="cgrid-metric" title="${esc(label)}">
+             <i class="${esc(ico)}" aria-hidden="true"></i>
+             <span class="cgrid-metric-v">${esc(C(Number(v)))}</span>
+             <span class="sr-only">${esc(label)}</span>
+           </div>` : '';
+      const metrics = [
+        metric(m.likes, __('me gusta'), 'fas fa-heart'),
+        metric(m.comments, __('comentarios'), 'fas fa-comment'),
+        metric(m.saves != null ? m.saves : m.bookmarks, __('guardados'), 'fas fa-bookmark'),
+        metric((Number(m.shares) || 0) + (Number(m.reposts) || 0) + (Number(m.retweets) || 0), __('compartidos'), 'fas fa-share'),
+        metric(reach, net === 'youtube' || net === 'x' ? __('vistas') : __('reproducciones'), 'fas fa-play'),
+      ].filter(Boolean).join('');
+
+      const SENT = { POS: 'pos', NEG: 'neg', NEU: 'neu' };
+      const topComments = comments
+        .map((c) => ({ ...c, _l: Number(c.metrics && c.metrics.likes) || 0 }))
+        .sort((a, b) => b._l - a._l)
+        .slice(0, 4);
+      const commentsHtml = topComments.length ? `
+        <div class="cgrid-comments">
+          <div class="cgrid-comments-title">${esc(__('Lo que dijo la gente'))}${comments.length ? ` <span class="cgrid-comments-n">${esc(__('{n} comentarios leídos', { n: comments.length }))}</span>` : ''}</div>
+          ${topComments.map((c) => `
+            <div class="cgrid-comment${c.sentiment ? ` is-${esc(SENT[String(c.sentiment).toUpperCase()] || 'neu')}` : ''}">
+              <span class="cgrid-comment-who">@${esc(String(c.author_handle || '').replace(/^@+/, ''))}</span>
+              <span class="cgrid-comment-txt">${esc(String(c.content || '').slice(0, 180))}</span>
+              ${c._l > 0 ? `<span class="cgrid-comment-likes">♥ ${esc(C(c._l))}</span>` : ''}
+            </div>`).join('')}
+        </div>` : '';
+
+      const media = this._cgridMediaHtml(win.media_assets, { network: net, postId: win.post_id, postUrl: url });
+      const copyHtml = copy ? `
+        <details class="cgrid-post-copy-box">
+          <summary class="cgrid-post-copy-sum">
+            <span class="cgrid-post-copy-peek">${esc(copy.replace(/\s+/g, ' ').slice(0, 90))}${copy.length > 90 ? '…' : ''}</span>
+            <i class="aisc-ico aisc-ico--chevron-down" aria-hidden="true"></i>
+          </summary>
+          <p class="cgrid-post-copy">${esc(copy)}</p>
+        </details>` : '';
+
+      host.innerHTML = `
+        <article class="cgrid-post-card">
+          ${media}
+          <div class="cgrid-metrics">${metrics}</div>
+          <div class="cgrid-post-head">
+            <div class="cgrid-post-who">
+              <span class="cgrid-post-name">${esc(win.author_display_name || __('Tu marca'))}</span>
+              <span class="cgrid-post-meta">${esc([handle ? '@' + handle : '', netLabel, when].filter(Boolean).join(' · '))}</span>
+            </div>
+            <div class="cgrid-post-score">
+              <span class="cgrid-post-score-v">${esc(C(win._inter))}</span>
+              <small>${esc(__('interacciones'))}</small>
+            </div>
+          </div>
+          ${url ? `<a class="cgrid-post-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer"
+             title="${esc(__('Ver publicación original'))}" aria-label="${esc(__('Ver publicación original'))}">
+             <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>` : ''}
+          ${copyHtml}
+          ${commentsHtml}
+        </article>`;
+
+      this._bindCgridMediaFallback(host);
+      // Facade: el reproductor del tercero no se pide hasta que se pulsa el play.
+      host.querySelectorAll('[data-cgrid-embed]').forEach((b) => {
+        b.addEventListener('click', () => this._cgridMountEmbed(b));
+      });
     },
 
     /* ══ Producto destacado ═════════════════════════════════════════════════

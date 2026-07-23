@@ -76,8 +76,9 @@
 /* Fortalezas: SIN fondo, borde con el acento dinamico de la marca (fallback al
    fondo de la plataforma si el tema aun no resolvio el color). */
 .vera-duo-panel[data-side="pos"] { background: transparent; border: 1px solid var(--duo-acento, var(--bg-primary, #0b0b0b)); }
-/* Debilidades: fondo oscuro de la PLATAFORMA (mas oscuro que la card), sin borde. */
-.vera-duo-panel[data-side="neg"] { background: var(--bg-primary, #0b0b0b); border: 1px solid transparent; }
+/* Debilidades: fondo oscuro de la PLATAFORMA (mas oscuro que la card), mismo
+   borde de marca que Fortalezas para que el par se lea como una sola pieza. */
+.vera-duo-panel[data-side="neg"] { background: var(--bg-primary, #0b0b0b); border: 1px solid var(--duo-acento, transparent); }
 .vera-duo-panel[data-side="pos"] .vera-card-kind { color: #5fd39a; }
 .vera-duo-panel[data-side="neg"] .vera-card-kind { color: #e77a7a; }
 @media (max-width: 640px) { .vera-duo { grid-template-columns: 1fr; } }
@@ -356,13 +357,24 @@
   margin-top: 0.25rem;
   display: flex; flex-direction: column; gap: 1rem; min-width: 0;
 }
-/* Colocado junto a Algoritmo: ocupa la columna izquierda y Algoritmo deja de
-   ser full-width para ponerse a su derecha. */
-.vera-cards .bgrid-card--prodstar { max-width: none; grid-column: 1; align-self: start; }
-.vera-cards.has-prodstar .vera-card--algoritmo { grid-column: 2; }
+/* Publicacion destacada propia: mismo bloque de cierre que Producto destacado.
+   Fuera del grid de Vera cierra la pagina con su ancho acotado. */
+.bgrid-card--toppost {
+  grid-column: 1 / -1;
+  justify-self: start;
+  width: 100%;
+  max-width: 480px;
+  min-width: 0;
+}
+/* Colocados DEBAJO de Algoritmo (que se queda full-width): el par cierra la
+   pagina, uno en cada columna del grid de cards de Vera. */
+.vera-cards .bgrid-card--prodstar,
+.vera-cards .bgrid-card--toppost { max-width: none; align-self: start; }
+.vera-cards .bgrid-card--prodstar { grid-column: 1; }
+.vera-cards .bgrid-card--toppost { grid-column: 2; }
 @media (max-width: 900px) {
   .vera-cards .bgrid-card--prodstar,
-  .vera-cards.has-prodstar .vera-card--algoritmo { grid-column: auto; }
+  .vera-cards .bgrid-card--toppost { grid-column: auto; }
 }
 .vera-prodstar-load { font-size: 0.82rem; color: rgba(255, 255, 255, 0.4); padding: 0.4rem 0; }
 .vera-prodstar-grid { display: block; }
