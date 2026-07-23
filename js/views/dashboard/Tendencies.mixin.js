@@ -300,7 +300,9 @@
         const iso = `${ym}-${String(d).padStart(2, '0')}`;
         const dayEvs = byDate.get(iso) || [];
         if (!dayEvs.length) {
-          cells += `<span class="tend-cal-day${iso === todayIso ? ' is-today' : ''}">${d}</span>`;
+          cells += iso === todayIso
+            ? `<span class="tend-cal-day is-today" data-panel-marca="1">${d}</span>`
+            : `<span class="tend-cal-day">${d}</span>`;
           continue;
         }
         const useful = dayEvs.some((e) => e.verdict !== 'descartar');
@@ -308,6 +310,7 @@
         if (iso === todayIso) cls.push('is-today');
         if (iso === this._tendCalSel) cls.push('is-sel');
         cells += `<button type="button" class="${cls.join(' ')}" data-tend-cal-day="${iso}"
+          ${iso === todayIso ? 'data-panel-marca="1"' : ''}
           title="${this._esc(dayEvs.map((e) => e.name).join(' · '))}">${d}</button>`;
       }
 
@@ -337,7 +340,7 @@
             </div>`;
         }).join('');
         detail = `
-          <div class="tend-cal-panel">
+          <div class="tend-cal-panel" data-panel-marca="1">
             <div class="tend-cal-panel-head">
               <span class="tend-cal-panel-day">${sd}</span>
               <span class="tend-cal-panel-dow">${DOW_LONG[dowIdx]}</span>
@@ -367,7 +370,11 @@
     /* Navegacion + seleccion del calendario (delegado en el contenedor). */
     _bindTendCalendar(root) {
       const card = root?.querySelector?.('#tendCalCard');
-      if (!card || card._tendCalBound) return;
+      if (!card) return;
+      // Color solido de la marca + tinta resuelta por luminancia: el mismo
+      // primitivo que viste el panel de Audiencias en Mi Marca.
+      card.querySelectorAll('[data-panel-marca]').forEach((el) => this._vestirPanelDeMarca?.(el));
+      if (card._tendCalBound) return;
       card._tendCalBound = true;
       card.addEventListener('click', (ev) => {
         const nav = ev.target.closest('[data-tend-cal-nav]');
