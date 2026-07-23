@@ -67,7 +67,7 @@
   // deja en pantalla "videos relacionados" de otras marcas. `player/v1` —el
   // `embed_link` que devuelve la propia API— es el reproductor pelado, sin
   // footer ni recirculación ajena.
-  const EMBED_HABILITADO = { tiktok: true, youtube: true, instagram: true, facebook: true };
+  const EMBED_HABILITADO = { tiktok: true, youtube: true, instagram: true, facebook: true, x: true, twitter: true };
 
   // Claves de metrics que SON interacción (respuesta del público).
   const INTERACTION_KEYS = ['likes', 'comments', 'shares', 'saves', 'reposts', 'retweets', 'quotes', 'bookmarks', 'replies'];
@@ -1309,14 +1309,18 @@
         // fallara, la portada y el enlace al original siguen ahí debajo.
         // Se pide por `esVideoPost`, no por "hay video_url que no puedo
         // reproducir": ver la nota de esVideoPost arriba.
-        const embed = esVideoNoIncrustable ? this._cgridEmbedUrl(network, postId, a, postUrl) : null;
-        // Sin reproductor incrustable, el play abre la publicación en la red:
-        // mejor un botón que lleva a algún sitio que un icono decorativo.
-        const play = embed
+        const embed = this._cgridEmbedUrl(network, postId, a, postUrl);
+        // Un post que NO es video también merece su embed: es la publicación
+        // real de la red, con su carrusel, su copy y sus cifras. Sin esto, una
+        // foto de un perfil monitoreado se quedaba en miniatura muda teniendo
+        // el reproductor nativo a un click. Video → play; lo demás → expandir.
+        const play = (embed && esVideoNoIncrustable)
           ? `<button type="button" class="cgrid-media-play" data-cgrid-embed="${esc(embed)}" aria-label="${esc(__('Reproducir video'))}"><i class="fas fa-play" aria-hidden="true"></i></button>`
-          : (esVideoNoIncrustable && postUrl
-            ? `<a class="cgrid-media-play" href="${esc(postUrl)}" target="_blank" rel="noopener noreferrer" title="${esc(__('Ver el video en {r}', { r: NET_LABEL[String(network || '').toLowerCase()] || __('la red') }))}" aria-label="${esc(__('Ver el video en su red'))}"><i class="fas fa-play" aria-hidden="true"></i></a>`
-            : (esVideoNoIncrustable ? `<span class="cgrid-media-play is-static" aria-hidden="true"><i class="fas fa-play"></i></span>` : ''));
+          : (embed
+            ? `<button type="button" class="cgrid-media-play cgrid-media-play--carrusel" data-cgrid-embed="${esc(embed)}" aria-label="${esc(__('Ver la publicación completa'))}" title="${esc(__('Ver la publicación completa'))}"><i class="fas fa-expand" aria-hidden="true"></i></button>`
+            : (esVideoNoIncrustable && postUrl
+              ? `<a class="cgrid-media-play" href="${esc(postUrl)}" target="_blank" rel="noopener noreferrer" title="${esc(__('Ver el video en {r}', { r: NET_LABEL[String(network || '').toLowerCase()] || __('la red') }))}" aria-label="${esc(__('Ver el video en su red'))}"><i class="fas fa-play" aria-hidden="true"></i></a>`
+              : (esVideoNoIncrustable ? `<span class="cgrid-media-play is-static" aria-hidden="true"><i class="fas fa-play"></i></span>` : '')));
         return `<div class="cgrid-media"${ratioFijo}>
           <img class="cgrid-media-el" data-cgrid-media src="${esc(img)}" alt="" loading="lazy">
           ${play}
@@ -1437,6 +1441,15 @@
         case 'facebook':
           if (!/^https?:\/\/(www\.)?facebook\.com\//i.test(link)) return null;
           return `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(link)}&show_text=false`;
+        case 'x':
+        case 'twitter':
+          // Widget oficial de X. A diferencia de los otros tres, NO se pudo
+          // verificar su contenido desde el servidor: devuelve un shell de
+          // ~400 bytes que se rellena por JS, así que curl no distingue un
+          // tweet vivo de uno borrado. Va con la misma red de seguridad que el
+          // resto — si el iframe queda vacío, la portada y el enlace al
+          // original siguen debajo.
+          return /^\d+$/.test(id) ? `https://platform.twitter.com/embed/Tweet.html?id=${id}&theme=dark` : null;
         default:
           return null;
       }
@@ -1514,6 +1527,9 @@
         // El plugin de Facebook va sin texto (show_text=false): la media más
         // una barra fina de acciones.
         : /facebook\.com\/plugins/.test(src) ? { ratio: 1, chrome: 120 }
+        // El widget de X es texto con media opcional: no tiene proporción
+        // propia, así que se le da un alto fijo razonable.
+        : /platform\.twitter\.com/.test(src) ? { ratio: 0, chrome: 560 }
         : { ratio: 16 / 9, chrome: 0 };
 
       const disponible = Math.round(
