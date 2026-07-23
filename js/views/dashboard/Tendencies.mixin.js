@@ -131,10 +131,16 @@
             </div>
             <div class="cga-foot">
               <span class="cga-hint">${esc(__('el mercado lo busca · nadie lo cubre'))}</span>
-              <button type="button" class="cga-add tend-oc-no" data-oc-act="dismissed"
-                      title="${esc(__('No me interesa'))}" aria-label="${esc(__('Descartar oceano'))}">
-                <i class="aisc-ico aisc-ico--close" aria-hidden="true"></i>
-              </button>
+              <span class="tend-oc-acts">
+                <button type="button" class="cga-add tend-oc-no" data-oc-act="dismissed"
+                        title="${esc(__('No me interesa'))}" aria-label="${esc(__('Descartar oceano'))}">
+                  <i class="aisc-ico aisc-ico--close" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="cga-add tend-oc-do" data-oc-act="work"
+                        title="${esc(__('Trabajarlo con Vera'))}" aria-label="${esc(__('Trabajar este oceano con Vera'))}">
+                  <i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>
+                </button>
+              </span>
             </div>
           </article>`;
       }).join('');
@@ -159,12 +165,17 @@
         const item = btn.closest('.tend-oc');
         const id = item?.dataset.ocId;
         if (!id || btn.disabled) return;
+        const accion = btn.dataset.ocAct;          // 'work' → a Vera · 'dismissed' → descartar
+        const oc = (this._tendOceanos || []).find((o) => String(o.id) === String(id));
         btn.disabled = true;
         try {
+          // 'work' marca el oceano como usado y salta a Vera con el brief cargado.
+          const decision = accion === 'work' ? 'used' : 'dismissed';
           const { error } = await this._supabase.rpc('resolve_blue_ocean', {
-            p_id: id, p_decision: btn.dataset.ocAct,
+            p_id: id, p_decision: decision,
           });
           if (error) throw error;
+          if (accion === 'work') { this._tendOceanoAVera(oc); return; }
           item.classList.add('is-adoptada');
           setTimeout(() => {
             item.remove();
@@ -177,6 +188,24 @@
           setTimeout(() => btn.classList.remove('is-error'), 2200);
         }
       });
+    },
+
+    /* "Trabajarlo" = abrir Vera con un brief del oceano precargado (patron
+       /vera?q=<prompt>, el mismo que usan las cards de Monitoreo). */
+    _tendOceanoAVera(oc) {
+      if (!oc) return;
+      const terms = Array.isArray(oc.demand_terms) ? oc.demand_terms.slice(0, 6) : [];
+      const prompt = [
+        __('Quiero trabajar este océano azul que detectaste en Tendencias: «{g}».', { g: oc.gap_phrase }),
+        oc.angle ? __('El ángulo: {a}.', { a: oc.angle }) : '',
+        terms.length ? __('El mercado lo busca así: {t}.', { t: terms.join(', ') }) : '',
+        __('Ayúdame a desarrollar contenido para capitalizarlo: ideas de posts, gancho y formato por plataforma.'),
+      ].filter(Boolean).join(' ');
+      const path = window.location.pathname || '';
+      const base = path.startsWith('/org/') ? path.split('/').slice(0, 4).join('/') : '';
+      const url = `${base ? `${base}/vera` : '/vera'}?q=${encodeURIComponent(prompt)}`;
+      if (window.router?.navigate) window.router.navigate(url);
+      else window.location.href = url;
     },
 
     async _ensureTendenciasService() {

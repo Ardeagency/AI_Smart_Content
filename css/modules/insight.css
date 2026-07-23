@@ -2842,6 +2842,7 @@
   background: var(--panel-linea, rgba(16, 17, 20, 0.12)); color: var(--panel-fg-soft, rgba(16, 17, 20, 0.72));
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
 }
+.tend-oc-acts { display: inline-flex; align-items: center; gap: 0.4rem; }
 /* Descartar = accion secundaria, boton en hueco. */
 .tend-oc-no {
   width: 30px; height: 30px; font-size: 0.75rem;
@@ -2849,6 +2850,9 @@
   border: 1px solid var(--panel-linea, rgba(16, 17, 20, 0.2));
 }
 .tend-oc-no:hover:not(:disabled) { background: var(--panel-linea, rgba(16, 17, 20, 0.12)); }
+/* Trabajarlo = accion PRIMARIA (invierte la tinta del panel, como el "+" de Audiencias). */
+.tend-oc-do { color: var(--panel-bg, #fff); background: var(--panel-fg, #101114); }
+.tend-oc-do:hover:not(:disabled) { transform: scale(1.08); }
 
 /* "Cuadro" del dia seleccionado: color SOLIDO de la marca, igual que el panel de
    Audiencias en Mi Marca. --panel-bg/--panel-fg los publica _vestirPanelDeMarca. */
