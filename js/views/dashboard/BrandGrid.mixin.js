@@ -597,12 +597,16 @@
       cards.classList.add('has-cierre');
       // Publicacion destacada a la DERECHA de Algoritmo: se inserta justo
       // despues en el DOM para que caiga en la columna 2 de su misma fila.
-      // Producto destacado va debajo, a lo ancho. El orden del DOM manda: el
-      // auto-flow del grid coloca por orden de aparicion.
+      // Debajo, a lo ancho y en este orden: Intuicion (si Vera la escribio),
+      // luego Producto destacado. El auto-flow del grid respeta el orden del DOM.
       const toppost = body.querySelector('.bgrid-card--toppost');
       const prodstar = body.querySelector('.bgrid-card--prodstar');
+      const intuicion = body.querySelector('.vera-cards .vera-card--intuicion');
       if (toppost) algo.insertAdjacentElement('afterend', toppost);
-      if (prodstar) (toppost || algo).insertAdjacentElement('afterend', prodstar);
+      // Intuicion queda donde la puso el render (es card de Vera en el grid);
+      // solo aseguramos que Producto destacado vaya al final, despues de ella.
+      if (intuicion) cards.appendChild(intuicion);
+      if (prodstar) cards.appendChild(prodstar);
     },
 
     /* Fortalezas + Debilidades como PAR hermano: dos paneles lado a lado. */
@@ -716,6 +720,7 @@
         desventajas: { label: __('Debilidades'),   icon: 'alert-warning' },
         audiencia:   { label: __('Audiencias'),    icon: 'audience' },
         algoritmo:   { label: __('Tu Algoritmo'),  icon: 'compass' },
+        intuicion:   { label: __('Intuición'),     icon: 'sparkle' },
       };
       const m = META[card && card.type];
       if (!m) return '';   // tipo desconocido → se ignora (forward-compatible)
