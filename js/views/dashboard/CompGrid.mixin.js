@@ -1127,31 +1127,10 @@
       } catch (_) {}
 
       const net = String(win.network || full?.network || '').toLowerCase();
-      const netLabel = NET_LABEL[net] || (net ? net.charAt(0).toUpperCase() + net.slice(1) : '—');
       const handle = (full?.profile_handle || win.profile_handle || '').replace(/^@+/, '');
       const url = this._cgridPostUrl(net, full?.post_id || win.external_post_id, handle, full?.permalink);
-      const when = win.captured_at ? this._veraFmtDate(win.captured_at) : '';
       const copy = String(full?.content || win.content_preview || '').trim();
-      const m = win.metrics || {};
       const C = (n) => this._compactNum(n);
-      const reach = this._cgridReach(win);
-
-      // Métricas como ICONO + cifra: la etiqueta escrita ocupaba más que el
-      // dato y hacía que cinco números pidieran dos líneas. El nombre de cada
-      // una sigue disponible en el tooltip y para lectores de pantalla.
-      const metric = (v, label, ico) => (Number(v) > 0)
-        ? `<div class="cgrid-metric" title="${esc(label)}">
-             <i class="${esc(ico)}" aria-hidden="true"></i>
-             <span class="cgrid-metric-v">${esc(C(Number(v)))}</span>
-             <span class="sr-only">${esc(label)}</span>
-           </div>` : '';
-      const metrics = [
-        metric(m.likes, __('me gusta'), 'fas fa-heart'),
-        metric(m.comments, __('comentarios'), 'fas fa-comment'),
-        metric(m.saves != null ? m.saves : m.bookmarks, __('guardados'), 'fas fa-bookmark'),
-        metric((Number(m.shares) || 0) + (Number(m.reposts) || 0) + (Number(m.retweets) || 0), __('compartidos'), 'fas fa-share'),
-        metric(reach, net === 'youtube' || net === 'x' ? __('vistas') : __('reproducciones'), 'fas fa-play'),
-      ].filter(Boolean).join('');
 
       const topComments = comments
         .map((c) => ({ ...c, _l: Number(c.metrics && c.metrics.likes) || 0 }))
@@ -1189,26 +1168,13 @@
           <p class="cgrid-post-copy">${esc(copy)}</p>
         </details>` : '';
 
-      // Orden: la publicación primero (es lo que se viene a ver), luego sus
-      // cifras, luego de quién es, el enlace al original y por último el copy
-      // completo — que es lo más largo y lo que menos se consulta de un vistazo.
+      // La publicación incrustada YA muestra de quién es, sus cifras y el
+      // enlace a la red: repetirlo debajo era decir dos veces lo mismo con
+      // tipografías distintas. Queda lo que el embed NO da — el copy completo,
+      // colapsado, y los comentarios que hemos cosechado y puntuado.
       host.innerHTML = `
         <article class="cgrid-post-card">
           ${media}
-          <div class="cgrid-metrics">${metrics}</div>
-          <div class="cgrid-post-head">
-            <div class="cgrid-post-who">
-              <span class="cgrid-post-name">${esc(win.entity_name || '—')}</span>
-              <span class="cgrid-post-meta">${esc([handle ? '@' + handle : '', netLabel, when].filter(Boolean).join(' · '))}</span>
-            </div>
-            <div class="cgrid-post-score">
-              <span class="cgrid-post-score-v">${esc(C(win._inter))}</span>
-              <small>${esc(__('interacciones'))}</small>
-            </div>
-          </div>
-          ${url ? `<a class="cgrid-post-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer"
-             title="${esc(__('Ver publicación original'))}" aria-label="${esc(__('Ver publicación original'))}">
-             <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>` : ''}
           ${copyHtml}
           ${commentsHtml}
         </article>`;
@@ -1544,17 +1510,18 @@
         : /platform\.twitter\.com/.test(src) ? { ratio: 0, chrome: 560 }
         : { ratio: 16 / 9, chrome: 0 };
 
-      const disponible = Math.round(
+      // ANCHO COMPLETO del contenedor: la publicación es la pieza principal de
+      // la card, no una miniatura. Antes se acotaba para que el alto no pasara
+      // de 600px, y eso dejaba un reel 9:16 encogido en el centro con espacio
+      // muerto a los lados. Ahora manda el contenedor y el alto sale de la
+      // proporción — la card crece con lo que muestra.
+      const w = Math.round(
         stage.parentElement?.getBoundingClientRect().width
         || stage.getBoundingClientRect().width || 340,
       );
-      // Mismo tope que la portada: un 9:16 a todo el ancho de la columna daría
-      // ~850px y expulsaría las métricas de la pantalla. Se acota por ANCHO
-      // para no deformar la proporción.
-      const MAX_H = 600;
-      const w = Math.min(disponible, Math.round((MAX_H - perfil.chrome) / perfil.ratio) || disponible);
       stage.style.aspectRatio = 'auto';
-      stage.style.maxWidth = `${w}px`;
+      stage.style.maxWidth = '100%';
+      stage.style.width = `${w}px`;
       stage.style.height = `${Math.round(w * perfil.ratio) + perfil.chrome}px`;
     },
 

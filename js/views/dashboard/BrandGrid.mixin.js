@@ -798,28 +798,10 @@
       } catch (_) {}
 
       const net = String(win.network || '').toLowerCase();
-      const netLabel = NET_LABEL[net] || (net ? net.charAt(0).toUpperCase() + net.slice(1) : '—');
       const handle = String(win.profile_handle || '').replace(/^@+/, '');
       const url = this._cgridPostUrl(net, win.post_id, handle, win.permalink);
-      const when = win.captured_at ? this._veraFmtDate(win.captured_at) : '';
       const copy = String(win.content || '').trim();
-      const m = win.metrics || {};
       const C = (n) => this._compactNum(n);
-      const reach = this._cgridReach(win);
-
-      const metric = (v, label, ico) => (Number(v) > 0)
-        ? `<div class="cgrid-metric" title="${esc(label)}">
-             <i class="${esc(ico)}" aria-hidden="true"></i>
-             <span class="cgrid-metric-v">${esc(C(Number(v)))}</span>
-             <span class="sr-only">${esc(label)}</span>
-           </div>` : '';
-      const metrics = [
-        metric(m.likes, __('me gusta'), 'fas fa-heart'),
-        metric(m.comments, __('comentarios'), 'fas fa-comment'),
-        metric(m.saves != null ? m.saves : m.bookmarks, __('guardados'), 'fas fa-bookmark'),
-        metric((Number(m.shares) || 0) + (Number(m.reposts) || 0) + (Number(m.retweets) || 0), __('compartidos'), 'fas fa-share'),
-        metric(reach, net === 'youtube' || net === 'x' ? __('vistas') : __('reproducciones'), 'fas fa-play'),
-      ].filter(Boolean).join('');
 
       const SENT = { POS: 'pos', NEG: 'neg', NEU: 'neu' };
       const topComments = comments
@@ -847,23 +829,12 @@
           <p class="cgrid-post-copy">${esc(copy)}</p>
         </details>` : '';
 
+      // La publicacion incrustada YA muestra de quien es, sus cifras y el
+      // enlace a la red. Debajo va solo lo que el embed no da: el copy completo
+      // colapsado y los comentarios cosechados.
       host.innerHTML = `
         <article class="cgrid-post-card">
           ${media}
-          <div class="cgrid-metrics">${metrics}</div>
-          <div class="cgrid-post-head">
-            <div class="cgrid-post-who">
-              <span class="cgrid-post-name">${esc(win.author_display_name || __('Tu marca'))}</span>
-              <span class="cgrid-post-meta">${esc([handle ? '@' + handle : '', netLabel, when].filter(Boolean).join(' · '))}</span>
-            </div>
-            <div class="cgrid-post-score">
-              <span class="cgrid-post-score-v">${esc(C(win._inter))}</span>
-              <small>${esc(__('interacciones'))}</small>
-            </div>
-          </div>
-          ${url ? `<a class="cgrid-post-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer"
-             title="${esc(__('Ver publicación original'))}" aria-label="${esc(__('Ver publicación original'))}">
-             <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>` : ''}
           ${copyHtml}
           ${commentsHtml}
         </article>`;
