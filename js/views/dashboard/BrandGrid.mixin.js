@@ -830,6 +830,42 @@
         return `<div class="vera-stat"><span class="vera-stat-value">${esc(block.value != null ? String(block.value) : '')}</span><span class="vera-stat-label">${esc(block.label || '')}</span></div>`;
       }
       if (t === 'table') return this._veraTableHtml(block);
+      // Veredicto destacado: el hallazgo en una caja, con tono.
+      if (t === 'callout') {
+        const esc = (s) => this._esc(s);
+        const tone = ['critical', 'warning', 'positive', 'neutral'].includes(block.tone) ? block.tone : 'neutral';
+        const ico = block.icon ? String(block.icon).replace(/[^a-z0-9-]/gi, '') : 'sparkle';
+        return `<div class="vera-callout" data-tone="${tone}">
+          <i class="aisc-ico aisc-ico--${ico} vera-callout-ico" aria-hidden="true"></i>
+          <div class="vera-callout-body">
+            ${block.title ? `<p class="vera-callout-title">${esc(block.title)}</p>` : ''}
+            ${block.markdown ? `<div class="vera-md">${this._safeMarkdown(block.markdown)}</div>` : ''}
+          </div>
+        </div>`;
+      }
+      // Cita textual: el copy o el comentario que Vera esta leyendo, como prueba.
+      if (t === 'quote') {
+        const esc = (s) => this._esc(s);
+        return `<figure class="vera-quote">
+          <blockquote class="vera-quote-text">${esc(block.text || '')}</blockquote>
+          ${block.source ? `<figcaption class="vera-quote-source">${esc(block.source)}</figcaption>` : ''}
+        </figure>`;
+      }
+      // Comparacion a columnas: lo que hiciste / lo que debia decir, senal / lo
+      // que esconde, etc. Cada columna con su tono opcional (pos/neg).
+      if (t === 'split') {
+        const cols = Array.isArray(block.columns) ? block.columns : [];
+        if (!cols.length) return '';
+        const esc = (s) => this._esc(s);
+        const inner = cols.map((c) => {
+          const side = ['pos', 'neg'].includes(c && c.side) ? c.side : '';
+          return `<div class="vera-split-col"${side ? ` data-side="${side}"` : ''}>
+            ${c && c.label ? `<div class="vera-split-label">${esc(c.label)}</div>` : ''}
+            ${c && c.markdown ? `<div class="vera-md">${this._safeMarkdown(c.markdown)}</div>` : ''}
+          </div>`;
+        }).join('');
+        return `<div class="vera-block-group">${ttl}<div class="vera-split">${inner}</div></div>`;
+      }
       // Bloque VIVO: sin datos de Vera. Se pinta llamando al RPC (ver
       // _paintProductoEstrella) para que cifras e imágenes sean autoritativas.
       if (t === 'producto_estrella') {
