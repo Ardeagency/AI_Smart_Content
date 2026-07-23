@@ -60,13 +60,14 @@
   // (referentes culturales, medios propios) no compiten por el mismo cliente.
   const COMPETIDOR_TIPOS = ['competidor_directo', 'competidor_indirecto'];
 
-  // ¿Se incrusta el reproductor de la red dentro de la card?
-  // TikTok: DESACTIVADO (decisión del equipo, 2026-07-22). Su reproductor
-  // impone un alto enorme —vertical más su propio footer— y al terminar deja
-  // en pantalla contenido de otras marcas. Mientras esté en false, sus posts
-  // muestran la portada y el play lleva a la publicación original.
-  // Reactivar = poner true; el resto del camino sigue montado.
-  const EMBED_HABILITADO = { tiktok: false, youtube: true };
+  // ¿Se incrusta el reproductor de la red dentro de la card? Los cuatro son
+  // públicos: sin credencial, sin app registrada y sin costo.
+  // TikTok se reactivó (2026-07-23) al cambiar de reproductor: se apagó el
+  // 2026-07-22 porque `/embed/v2/` arrastra su propio footer y al terminar
+  // deja en pantalla "videos relacionados" de otras marcas. `player/v1` —el
+  // `embed_link` que devuelve la propia API— es el reproductor pelado, sin
+  // footer ni recirculación ajena.
+  const EMBED_HABILITADO = { tiktok: true, youtube: true, instagram: true, facebook: true };
 
   // Claves de metrics que SON interacción (respuesta del público).
   const INTERACTION_KEYS = ['likes', 'comments', 'shares', 'saves', 'reposts', 'retweets', 'quotes', 'bookmarks', 'replies'];
@@ -893,6 +894,7 @@
       }
       host.innerHTML = this._brandPanelHtml(row, d);
       this._bindCgridMediaFallback(host);
+      this._bindCgridCarrusel(host);
       try { await this._ensureChartJs(); } catch (_) {}
       this._paintBrandDailyChart(host, d);
     },
@@ -1190,6 +1192,7 @@
         </article>`;
 
       this._bindCgridMediaFallback(host);
+      this._bindCgridCarrusel(host);
       // Facade: el reproductor del tercero no se pide hasta que se pulsa el play.
       host.querySelectorAll('[data-cgrid-embed]').forEach((b) => {
         b.addEventListener('click', () => this._cgridMountEmbed(b));
@@ -1270,13 +1273,28 @@
           <span class="cgrid-media-fb-kicker">${esc(__('Vista previa no disponible'))}</span>
         </div>`;
 
+      // FORMATO DECLARADO: la portada que da TikTok viene recortada por ellos a
+      // 300x400, así que deducir el ratio de la imagen pintaba un reel 9:16 casi
+      // cuadrado. Cuando el backfill guardó las dimensiones REALES del video,
+      // mandan ellas y se marca la caja para que `_cgridFitMedia` no las pise
+      // con las de la miniatura.
+      const W = Number(a.width) || 0, H = Number(a.height) || 0;
+      const ratioFijo = (W > 0 && H > 0)
+        ? ` data-ratio-fijo="1" style="aspect-ratio:${W} / ${H};max-width:${Math.round(600 * (W / H))}px"`
+        : '';
+
+      // Un carrusel se guardaba con UNA imagen y se leía como post simple. Con
+      // las piezas archivadas se pinta como lo que es: una tira deslizable.
+      const piezas = Array.isArray(a.items) ? a.items.filter((x) => x && typeof x.url === 'string') : [];
+      if (piezas.length > 1) return this._cgridCarruselHtml(piezas, { ratioFijo, fallback, network, postId, assets: a, postUrl });
+
       if (video) {
         // CASCADA REAL: el video del CDN caduca igual que la imagen, pero la
         // copia archivada NO. Si el video muere se muestra la miniatura
         // archivada en su lugar — recurrir al placeholder teniendo una imagen
         // buena era tirar información. Solo si tampoco hay archivada se cae al
         // aviso.
-        return `<div class="cgrid-media">
+        return `<div class="cgrid-media"${ratioFijo}>
           <video class="cgrid-media-el" data-cgrid-media${archived ? ` data-cgrid-alt="${esc(archived)}"` : ''} controls preload="metadata" playsinline${img ? ` poster="${esc(img)}"` : ''}>
             <source src="${esc(video)}">
           </video>
@@ -1285,25 +1303,21 @@
       }
       if (img) {
         // FACADE: la red no publica el archivo, pero sí ofrece un reproductor
-        // incrustable (TikTok y YouTube, ambos sin credencial ni costo). Se
-        // pinta la portada con su botón de play y el iframe se monta SOLO al
-        // pulsarlo: cero peso y cero rastreo de terceros mientras nadie lo
-        // pida. Si el embed fallara, la portada y el enlace al original siguen
-        // ahí debajo.
+        // incrustable (los cuatro, sin credencial ni costo). Se pinta la portada
+        // con su botón de play y el iframe se monta SOLO al pulsarlo: cero peso
+        // y cero rastreo de terceros mientras nadie lo pida. Si el embed
+        // fallara, la portada y el enlace al original siguen ahí debajo.
         // Se pide por `esVideoPost`, no por "hay video_url que no puedo
-        // reproducir": ver la nota de esVideoPost arriba. `_cgridEmbedUrl` ya
-        // devuelve null para las redes con el embed apagado (TikTok hoy), y esas
-        // caen al enlace al original — que es justo lo que se decidió.
-        const embed = esVideoNoIncrustable ? this._cgridEmbedUrl(network, postId) : null;
-        // Sin reproductor incrustable (o desactivado), el play abre la
-        // publicación en la red: mejor un botón que lleva a algún sitio que un
-        // icono decorativo que no hace nada.
+        // reproducir": ver la nota de esVideoPost arriba.
+        const embed = esVideoNoIncrustable ? this._cgridEmbedUrl(network, postId, a, postUrl) : null;
+        // Sin reproductor incrustable, el play abre la publicación en la red:
+        // mejor un botón que lleva a algún sitio que un icono decorativo.
         const play = embed
           ? `<button type="button" class="cgrid-media-play" data-cgrid-embed="${esc(embed)}" aria-label="${esc(__('Reproducir video'))}"><i class="fas fa-play" aria-hidden="true"></i></button>`
           : (esVideoNoIncrustable && postUrl
             ? `<a class="cgrid-media-play" href="${esc(postUrl)}" target="_blank" rel="noopener noreferrer" title="${esc(__('Ver el video en {r}', { r: NET_LABEL[String(network || '').toLowerCase()] || __('la red') }))}" aria-label="${esc(__('Ver el video en su red'))}"><i class="fas fa-play" aria-hidden="true"></i></a>`
             : (esVideoNoIncrustable ? `<span class="cgrid-media-play is-static" aria-hidden="true"><i class="fas fa-play"></i></span>` : ''));
-        return `<div class="cgrid-media">
+        return `<div class="cgrid-media"${ratioFijo}>
           <img class="cgrid-media-el" data-cgrid-media src="${esc(img)}" alt="" loading="lazy">
           ${play}
           ${fallback}</div>`;
@@ -1311,22 +1325,118 @@
       return `<div class="cgrid-media">${fallback.replace(' hidden', '')}</div>`;
     },
 
-    /* Reproductor incrustable oficial de la red, cuando existe. Ambos son
+    /* Carrusel: tira deslizable con scroll-snap. Sin librería y sin timers —
+       el desplazamiento lo hace el navegador y el JS solo mueve el foco y
+       sincroniza los puntos. Cada pieza YA está archivada en R2, así que la
+       tira no depende de URLs firmadas que caducan.
+       Una pieza de video muestra su póster con el distintivo de play: el
+       reproductor del post entero sigue siendo el embed de la red. */
+    _cgridCarruselHtml(piezas, ctx) {
+      const esc = (s) => this._esc(s);
+      const { ratioFijo, fallback, network, postId, assets, postUrl } = ctx;
+      const embed = this._cgridEmbedUrl(network, postId, assets, postUrl);
+      const slides = piezas.map((p, i) => `
+        <div class="cgrid-slide" data-cgrid-slide="${i}" role="group" aria-roledescription="${esc(__('diapositiva'))}"
+             aria-label="${esc(__('{n} de {t}', { n: i + 1, t: piezas.length }))}">
+          <img class="cgrid-media-el" data-cgrid-media src="${esc(p.url)}" alt="" loading="${i === 0 ? 'eager' : 'lazy'}">
+          ${p.type === 'video' ? `<span class="cgrid-slide-video" aria-hidden="true"><i class="fas fa-play"></i></span>` : ''}
+        </div>`).join('');
+      const puntos = piezas.map((_, i) => `
+        <button type="button" class="cgrid-dot${i === 0 ? ' is-active' : ''}" data-cgrid-goto="${i}"
+          aria-label="${esc(__('Ir a la pieza {n}', { n: i + 1 }))}"></button>`).join('');
+      return `
+        <div class="cgrid-media cgrid-media--carrusel"${ratioFijo} data-cgrid-carrusel>
+          <div class="cgrid-track" data-cgrid-track>${slides}</div>
+          <button type="button" class="cgrid-nav cgrid-nav--prev" data-cgrid-nav="-1" aria-label="${esc(__('Anterior'))}"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+          <button type="button" class="cgrid-nav cgrid-nav--next" data-cgrid-nav="1" aria-label="${esc(__('Siguiente'))}"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+          <span class="cgrid-contador" data-cgrid-contador>1/${piezas.length}</span>
+          ${embed ? `<button type="button" class="cgrid-media-play cgrid-media-play--carrusel" data-cgrid-embed="${esc(embed)}" aria-label="${esc(__('Ver la publicación completa'))}" title="${esc(__('Ver la publicación completa'))}"><i class="fas fa-expand" aria-hidden="true"></i></button>` : ''}
+          ${fallback}
+          <div class="cgrid-dots" data-cgrid-dots>${puntos}</div>
+        </div>`;
+    },
+
+    /* Los puntos, las flechas y el contador siguen al scroll real de la tira:
+       así el arrastre con el dedo y el click en la flecha cuentan lo mismo. */
+    _bindCgridCarrusel(scope) {
+      if (!scope) return;
+      // El propio scope puede SER el carrusel — al cerrar el reproductor se
+      // llama con la caja restaurada, y querySelectorAll nunca se incluye a sí
+      // mismo: sin esto la tira volvía sin flechas ni puntos.
+      const cajas = Array.from(scope.querySelectorAll('[data-cgrid-carrusel]'));
+      if (scope.matches?.('[data-cgrid-carrusel]')) cajas.unshift(scope);
+      cajas.forEach((car) => {
+        if (car.dataset.carruselBound === '1') return;
+        car.dataset.carruselBound = '1';
+        const track = car.querySelector('[data-cgrid-track]');
+        const dots = Array.from(car.querySelectorAll('[data-cgrid-goto]'));
+        const contador = car.querySelector('[data-cgrid-contador]');
+        if (!track || !dots.length) return;
+        const total = dots.length;
+        const indice = () => Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+        const sincronizar = () => {
+          const i = Math.max(0, Math.min(total - 1, indice()));
+          dots.forEach((d, n) => d.classList.toggle('is-active', n === i));
+          if (contador) contador.textContent = `${i + 1}/${total}`;
+          car.querySelector('.cgrid-nav--prev')?.toggleAttribute('disabled', i === 0);
+          car.querySelector('.cgrid-nav--next')?.toggleAttribute('disabled', i === total - 1);
+        };
+        const ir = (i) => track.scrollTo({ left: Math.max(0, Math.min(total - 1, i)) * track.clientWidth, behavior: 'smooth' });
+        this.addEventListener(track, 'scroll', () => {
+          // El scroll dispara decenas de veces por gesto; sincronizar en cada
+          // uno haría layout de más. Un frame basta para que se vea inmediato.
+          if (car._sincroPendiente) return;
+          car._sincroPendiente = requestAnimationFrame(() => { car._sincroPendiente = null; sincronizar(); });
+        });
+        this.addEventListener(car, 'click', (e) => {
+          const nav = e.target.closest('[data-cgrid-nav]');
+          if (nav) { e.preventDefault(); ir(indice() + Number(nav.dataset.cgridNav)); return; }
+          const goto = e.target.closest('[data-cgrid-goto]');
+          if (goto) { e.preventDefault(); ir(Number(goto.dataset.cgridGoto)); }
+        });
+        sincronizar();
+      });
+    },
+
+    /* Reproductor incrustable oficial de la red, cuando existe. Los cuatro son
        públicos: sin credencial, sin app registrada y sin costo (verificado en
-       vivo: el iframe responde 200 y no manda X-Frame-Options ni
-       frame-ancestors, o sea que permite incrustarse desde nuestro dominio).
-       Instagram queda fuera a propósito: su oEmbed exige token de app de Meta. */
-    _cgridEmbedUrl(network, postId) {
+       vivo: los cuatro responden 200 y ninguno manda X-Frame-Options ni
+       `frame-ancestors`, o sea que permiten incrustarse desde nuestro dominio).
+
+       Instagram entra por `/p/<shortcode>/embed/`, que es una PÁGINA pública y
+       no la oEmbed API — esa sí exige token de app de Meta, y es la que dejó a
+       Instagram fuera hasta ahora. El embed nativo resuelve además el carrusel
+       y el video sin que tengamos que reproducirlos nosotros.
+
+       `assets` trae lo que guardó el backfill: en TikTok el `embed_link` de su
+       propia API (el player pelado) y en IG/FB el permalink del que sale el
+       identificador público. */
+    _cgridEmbedUrl(network, postId, assets, postUrl) {
       const id = String(postId || '').trim();
       const net = String(network || '').toLowerCase();
-      if (!id || EMBED_HABILITADO[net] === false) return null;
+      if (EMBED_HABILITADO[net] === false) return null;
+      const a = (assets && typeof assets === 'object' && !Array.isArray(assets)) ? assets : {};
+      const link = String(a.permalink || postUrl || '');
       switch (net) {
-        case 'tiktok':
+        case 'tiktok': {
+          // `embed_link` viene de la API y ya apunta al player limpio; el
+          // armado a mano es el respaldo para posts sin ese dato.
+          if (typeof a.embed_link === 'string' && /^https:\/\/www\.tiktok\.com\/player\//.test(a.embed_link)) return a.embed_link;
           if (!/^\d+$/.test(id)) return null;
-          return `https://www.tiktok.com/embed/v2/${id}`;
+          return `https://www.tiktok.com/player/v1/${id}?music_info=1&description=0`;
+        }
         case 'youtube':
           // -nocookie: no deja cookies de seguimiento hasta que se reproduce.
-          return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}`;
+          return id ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}` : null;
+        case 'instagram': {
+          // El embed va por SHORTCODE (/p/DaWXd38Eeov/), no por el id numérico
+          // del Graph: son identificadores distintos y el numérico da 404.
+          const m = link.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+          return m ? `https://www.instagram.com/p/${m[1]}/embed/` : null;
+        }
+        case 'facebook':
+          if (!/^https?:\/\/(www\.)?facebook\.com\//i.test(link)) return null;
+          return `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(link)}&show_text=false`;
         default:
           return null;
       }
@@ -1348,6 +1458,9 @@
       stage.dataset.posterRatio = stage.style.aspectRatio || '';
       stage.dataset.posterMaxW = stage.style.maxWidth || '';
       stage.dataset.embedded = '1';
+      // El alto depende de QUÉ red se está montando y se calcula antes de
+      // insertar el iframe: sin esta pista no habría de dónde leer la red.
+      stage.dataset.embedSrc = src;
 
       this._cgridSizeEmbed(stage);
       stage.innerHTML = `
@@ -1379,24 +1492,42 @@
       this._cgridBindEmbedMessages();
     },
 
-    /* El embed de TikTok no es solo el video: lleva encabezado de perfil y una
-       franja inferior. Un 9:16 a secas recorta ese chrome y deja la pantalla de
-       relacionados asomando. Alto = video vertical + el alto del chrome. */
+    /* Cada red pide un alto distinto y ninguna lo negocia: el iframe no puede
+       medirse desde fuera (otro origen), así que el alto se calcula aquí a
+       partir del ancho disponible.
+
+       `ratio` es la proporción del contenido; `chrome` es lo que la red añade
+       por su cuenta (cabecera de perfil, copy, botones) y NO escala con el
+       ancho, por eso va aparte y en píxeles.
+
+       TikTok pasó a `player/v1`, que es el reproductor pelado: 9:16 exacto y
+       chrome 0. El `/embed/v2/` viejo necesitaba 210px extra para su footer —
+       ese footer es justo lo que llevó a apagarlo. */
     _cgridSizeEmbed(stage) {
-      // El chrome del embed de TikTok: encabezado de perfil arriba, y abajo la
-      // franja "Mira más vídeos" + el handle + el copy + la pista de audio.
-      const CHROME_PX = 210;
-      // ANCHO COMPLETO de la columna. TikTok prioriza el alto para meter su
-      // footer, así que con el reproductor acotado a 340px el pie quedaba
-      // cortado. Dándole todo el ancho, el alto proporcional alcanza para que
-      // se vea entero — y así coincide con el ancho de la portada.
-      const w = Math.round(
+      const src = String(stage.querySelector('iframe')?.getAttribute('src') || stage.dataset.embedSrc || '');
+      const perfil = /tiktok\.com\/player\//.test(src) ? { ratio: 16 / 9, chrome: 0 }
+        : /tiktok\.com\/embed\//.test(src) ? { ratio: 16 / 9, chrome: 210 }
+        : /youtube(-nocookie)?\.com/.test(src) ? { ratio: 9 / 16, chrome: 0 }
+        // El embed de Instagram monta la pieza en 1:1 y debajo cabecera de
+        // perfil, acciones y pie con el enlace: ~190px que no dependen del ancho.
+        : /instagram\.com/.test(src) ? { ratio: 1, chrome: 190 }
+        // El plugin de Facebook va sin texto (show_text=false): la media más
+        // una barra fina de acciones.
+        : /facebook\.com\/plugins/.test(src) ? { ratio: 1, chrome: 120 }
+        : { ratio: 16 / 9, chrome: 0 };
+
+      const disponible = Math.round(
         stage.parentElement?.getBoundingClientRect().width
         || stage.getBoundingClientRect().width || 340,
       );
+      // Mismo tope que la portada: un 9:16 a todo el ancho de la columna daría
+      // ~850px y expulsaría las métricas de la pantalla. Se acota por ANCHO
+      // para no deformar la proporción.
+      const MAX_H = 600;
+      const w = Math.min(disponible, Math.round((MAX_H - perfil.chrome) / perfil.ratio) || disponible);
       stage.style.aspectRatio = 'auto';
-      stage.style.maxWidth = '';
-      stage.style.height = `${Math.round(w * 16 / 9) + CHROME_PX}px`;
+      stage.style.maxWidth = `${w}px`;
+      stage.style.height = `${Math.round(w * perfil.ratio) + perfil.chrome}px`;
     },
 
     /* Vuelve a la portada: el estado exacto de antes de reproducir. */
@@ -1407,8 +1538,13 @@
       stage.style.aspectRatio = stage.dataset.posterRatio || '';
       stage.style.maxWidth = stage.dataset.posterMaxW || '';
       delete stage.dataset.embedded;
+      delete stage.dataset.embedSrc;
+      // La tira vuelve del innerHTML guardado: sin esto el bind se salta por
+      // la marca vieja y el carrusel restaurado se queda sin flechas.
+      delete stage.dataset.carruselBound;
       // La portada vuelve a montarse: sus listeners hay que rehacerlos.
       this._bindCgridMediaFallback(stage);
+      this._bindCgridCarrusel(stage);
       stage.querySelectorAll('[data-cgrid-embed]').forEach((b) => {
         b.addEventListener('click', () => this._cgridMountEmbed(b));
       });
@@ -1522,6 +1658,10 @@
         if (!w || !h) return;
         const stage = el.closest('.cgrid-media');
         if (!stage) return;
+        // El formato DECLARADO gana: TikTok recorta su portada a 300x400 y
+        // deducirlo de la miniatura devolvería el reel a casi cuadrado. Si el
+        // backfill guardó las dimensiones del video, no se tocan.
+        if (stage.dataset.ratioFijo === '1') return;
         stage.style.aspectRatio = `${w} / ${h}`;
         // Acotar por ANCHO, no por alto: un max-height a secas rompería la
         // proporción y devolvería las franjas que se quieren evitar. Limitando

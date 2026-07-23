@@ -14,6 +14,10 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Ver la publicación completa": "View the full post",
+  "Ir a la pieza {n}": "Go to item {n}",
+  "{n} de {t}": "{n} of {t}",
+  "diapositiva": "slide",
   "Debilidades": "Weaknesses",
   "Fortalezas": "Strengths",
   "Perfiles por rol": "Profiles by role",

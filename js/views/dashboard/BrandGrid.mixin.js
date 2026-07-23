@@ -869,6 +869,7 @@
         </article>`;
 
       this._bindCgridMediaFallback(host);
+      this._bindCgridCarrusel(host);
       // Facade: el reproductor del tercero no se pide hasta que se pulsa el play.
       host.querySelectorAll('[data-cgrid-embed]').forEach((b) => {
         b.addEventListener('click', () => this._cgridMountEmbed(b));
