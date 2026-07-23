@@ -2821,6 +2821,24 @@
   padding-top: 0.6rem; border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* ── Perfiles recomendados: reusa el carrusel de fichas de Competencia
+   (.cgrid-aud/.cga-*) porque es el mismo objeto — una recomendacion que se
+   adopta o se descarta. Solo cambia lo propio de este tab. */
+.tend-perfiles { margin-bottom: 1.25rem; }
+.tend-perfil { min-height: 200px; }
+.tend-perfil-motivo {
+  font-size: 0.78rem; line-height: 1.35; margin-top: 0.45rem;
+  color: var(--panel-fg-soft, rgba(16, 17, 20, 0.72));
+}
+.tend-perfil-acts { display: inline-flex; align-items: center; gap: 0.4rem; }
+/* Descartar es la accion secundaria: mismo boton, en hueco. */
+.tend-perfil-no {
+  width: 30px; height: 30px; font-size: 0.75rem;
+  background: transparent; color: var(--panel-fg-soft, rgba(16, 17, 20, 0.72));
+  border: 1px solid var(--panel-linea, rgba(16, 17, 20, 0.2));
+}
+.tend-perfil-no:hover:not(:disabled) { background: var(--panel-linea, rgba(16, 17, 20, 0.12)); }
+
 /* "Cuadro" del dia seleccionado: color SOLIDO de la marca, igual que el panel de
    Audiencias en Mi Marca. --panel-bg/--panel-fg los publica _vestirPanelDeMarca. */
 .tend-cal-panel {

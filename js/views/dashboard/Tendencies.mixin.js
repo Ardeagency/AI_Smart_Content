@@ -80,12 +80,114 @@
         return;
       }
       const card = this._buildTendFechasCard(world);
-      if (!card) return;                       // sin fechas futuras → nada que mostrar
+      const perfiles = await this._buildTendPerfilesHtml();
+      if (!card && !perfiles) return;           // nada vivo que mostrar
       body.innerHTML = `
         <div class="insight-page mb-dash" id="tendPage">
-          <div class="mb-layout-aside" style="max-width:340px;">${card}</div>
+          <div class="${card ? 'mb-layout' : ''}">
+            ${perfiles ? `<div class="tend-main">${perfiles}</div>` : (card ? '<div class="tend-main"></div>' : '')}
+            ${card ? `<aside class="mb-layout-aside" style="max-width:340px;">${card}</aside>` : ''}
+          </div>
         </div>`;
       this._bindTendCalendar(body);
+      this._bindTendPerfiles(body);
+    },
+
+    /* ══ Perfiles recomendados ══════════════════════════════════════════════
+       Reemplaza a "Marcas emergentes", que colgaba del clasificador (muerto).
+       Los candidatos los detecta la tarea profile_radar desde fuentes VIVAS
+       —menciones en lo ya scrapeado + demanda de busqueda— y Vera decide cual
+       vale la pena vigilar. Aqui solo se muestran los que ella aprobo: el "+"
+       los manda a Monitoreo, la X los descarta para siempre. ══════════════ */
+    async _buildTendPerfilesHtml() {
+      let data;
+      try {
+        const res = await this._supabase.rpc('dashboard_tendencias_recommended_profiles', {
+          p_org_id: this._orgId, p_limit: 12,
+        });
+        if (res.error) throw res.error;
+        data = res.data;
+      } catch (e) {
+        console.warn('[Tendencies] perfiles recomendados:', e?.message || e);
+        return '';
+      }
+      const perfiles = Array.isArray(data?.profiles) ? data.profiles : [];
+      if (!perfiles.length) return '';
+      this._tendPerfiles = perfiles;
+      const esc = (s) => this._esc(s);
+
+      const fichas = perfiles.map((p) => {
+        const nombre = p.display_name || (p.handle ? `@${p.handle}` : '—');
+        const handle = p.handle ? `@${p.handle}` : '';
+        const ev = p.evidence || {};
+        const quien = Array.isArray(ev.quien_lo_menciona) ? ev.quien_lo_menciona : [];
+        const prueba = p.discovery_source === 'mention'
+          ? (quien.length
+              ? __('lo menciona {p}', { p: quien.slice(0, 2).map((q) => esc(q)).join(', ') })
+              : __('mencionado en tu nicho'))
+          : __('la gente lo busca en Google');
+        return `
+          <article class="cga-item tend-perfil" data-perfil-id="${esc(p.id)}">
+            <div class="cga-top">
+              <h4 class="cga-quien">${esc(nombre)}</h4>
+              ${handle ? `<span class="cga-origen">${esc(handle)}${p.platform ? ` · ${esc(this._prettyPlatform?.(p.platform) || p.platform)}` : ''}</span>` : ''}
+              ${p.motivo ? `<span class="tend-perfil-motivo">${esc(p.motivo)}</span>` : ''}
+            </div>
+            <div class="cga-foot">
+              <span class="cga-hint">${esc(prueba)}</span>
+              <span class="tend-perfil-acts">
+                <button type="button" class="cga-add tend-perfil-no" data-perfil-act="dismissed"
+                        title="${esc(__('No me interesa'))}" aria-label="${esc(__('Descartar {n}', { n: nombre }))}">
+                  <i class="aisc-ico aisc-ico--close" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="cga-add" data-perfil-act="added"
+                        title="${esc(__('Monitorear este perfil'))}" aria-label="${esc(__('Monitorear {n}', { n: nombre }))}">
+                  <i class="fas fa-plus" aria-hidden="true"></i>
+                </button>
+              </span>
+            </div>
+          </article>`;
+      }).join('');
+
+      return `
+        <section class="cgrid-card--aud tend-perfiles" id="tendPerfilesCard">
+          <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--search" aria-hidden="true"></i>${esc(__('Perfiles recomendados'))}</span>
+          <p class="bgrid-card-sub">${esc(__('Cuentas que aparecen en tu nicho y aún no vigilas · agrégalas a Monitoreo'))}</p>
+          <div class="cgrid-aud" id="tendPerfilesList">${fichas}</div>
+        </section>`;
+    },
+
+    _bindTendPerfiles(root) {
+      const card = root?.querySelector?.('#tendPerfilesCard');
+      if (!card) return;
+      card.querySelectorAll('.tend-perfil').forEach((el) => this._vestirPanelDeMarca?.(el));
+      if (card._tendPerfBound) return;
+      card._tendPerfBound = true;
+      card.addEventListener('click', async (ev) => {
+        const btn = ev.target.closest('[data-perfil-act]');
+        if (!btn) return;
+        const item = btn.closest('.tend-perfil');
+        const id = item?.dataset.perfilId;
+        if (!id || btn.disabled) return;
+        const decision = btn.dataset.perfilAct;
+        btn.disabled = true;
+        try {
+          const { error } = await this._supabase.rpc('adopt_recommended_profile', {
+            p_id: id, p_decision: decision,
+          });
+          if (error) throw error;
+          item.classList.add('is-adoptada');
+          setTimeout(() => {
+            item.remove();
+            if (!card.querySelector('.tend-perfil')) card.remove();
+          }, 280);
+        } catch (e) {
+          console.warn('[Tendencies] no se pudo resolver el perfil:', e?.message || e);
+          btn.disabled = false;
+          btn.classList.add('is-error');
+          setTimeout(() => btn.classList.remove('is-error'), 2200);
+        }
+      });
     },
 
     async _ensureTendenciasService() {
