@@ -471,19 +471,32 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
 /* Cerrar el reproductor y volver a la portada. Al terminar, TikTok se queda en
    su pantalla de "Videos relacionados" — contenido ajeno que no tiene por que
    ocupar la card. */
-.cgrid-embed-close {
+/* La publicacion incrustada es la preview ENTERA: un solo estado, sin portada
+   debajo ni boton de cerrar que devuelva a otra cosa. El fondo va claro porque
+   Instagram y Facebook sirven su tarjeta en blanco y un fondo oscuro dejaba un
+   halo alrededor mientras carga. */
+.cgrid-media--embed {
+  aspect-ratio: auto;
+  background: transparent;
+  border-radius: 14px; overflow: hidden;
+  min-height: 0;
+}
+/* Enlace al original: el embed ya trae los suyos, pero quedan dentro del
+   iframe y con el estilo de la red. Este es el nuestro y va siempre. */
+.cgrid-embed-abrir {
   position: absolute; top: 8px; right: 8px; z-index: 2;
   width: 30px; height: 30px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.28);
-  color: #fff; font-size: 0.78rem;
+  color: #fff; font-size: 0.72rem; text-decoration: none;
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  appearance: none; cursor: pointer;
-  transition: background 0.18s ease;
+  opacity: 0; transition: opacity 0.18s ease, background 0.18s ease;
 }
-.cgrid-embed-close:hover { background: rgba(0, 0, 0, 0.78); }
-.cgrid-embed-close:focus-visible { outline: 2px solid var(--brand-color-light, #FF6A1A); outline-offset: 2px; }
+.cgrid-media--embed:hover .cgrid-embed-abrir,
+.cgrid-embed-abrir:focus-visible { opacity: 1; }
+.cgrid-embed-abrir:hover { background: rgba(0, 0, 0, 0.78); }
+.cgrid-embed-abrir:focus-visible { outline: 2px solid var(--brand-color-light, #FF6A1A); outline-offset: 2px; }
 
 .cgrid-post-copy {
   margin: 0; font-size: 0.85rem; line-height: 1.6;

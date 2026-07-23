@@ -14,6 +14,7 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Publicación en {r}": "Post on {r}",
   "Ver la publicación completa": "View the full post",
   "Ir a la pieza {n}": "Go to item {n}",
   "{n} de {t}": "{n} of {t}",

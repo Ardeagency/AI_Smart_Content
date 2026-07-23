@@ -916,6 +916,7 @@
       host.innerHTML = this._brandPanelHtml(row, d);
       this._bindCgridMediaFallback(host);
       this._bindCgridCarrusel(host);
+      this._bindCgridEmbeds(host);
       try { await this._ensureChartJs(); } catch (_) {}
       this._paintBrandDailyChart(host, d);
     },
@@ -1215,9 +1216,7 @@
       this._bindCgridMediaFallback(host);
       this._bindCgridCarrusel(host);
       // Facade: el reproductor del tercero no se pide hasta que se pulsa el play.
-      host.querySelectorAll('[data-cgrid-embed]').forEach((b) => {
-        b.addEventListener('click', () => this._cgridMountEmbed(b));
-      });
+      this._bindCgridEmbeds(host);
     },
 
     /* Array crudo [{url,type,permalink}] → objeto con las claves que espera el
@@ -1294,6 +1293,17 @@
           <span class="cgrid-media-fb-kicker">${esc(__('Vista previa no disponible'))}</span>
         </div>`;
 
+      // ── UN SOLO ESTADO ───────────────────────────────────────────────────
+      // Si la red publica un reproductor incrustable, ESE es la preview. Antes
+      // había dos: portada con play y, tras el click, el embed — dos lenguajes
+      // visuales distintos en la misma card, y el salto entre ellos se veía
+      // roto. Se queda el que muestra el contenido REAL: video que se
+      // reproduce, carrusel navegable, cifras vivas de la red.
+      // La portada archivada sigue siendo el camino cuando NO hay embed (X sin
+      // id numérico, redes sin reproductor, posts sin identificador público).
+      const embedDirecto = this._cgridEmbedUrl(network, postId, a, postUrl);
+      if (embedDirecto) return this._cgridEmbedHtml(embedDirecto, { network, postUrl });
+
       // FORMATO DECLARADO: la portada que da TikTok viene recortada por ellos a
       // 300x400, así que deducir el ratio de la imagen pintaba un reel 9:16 casi
       // cuadrado. Cuando el backfill guardó las dimensiones REALES del video,
@@ -1307,7 +1317,7 @@
       // Un carrusel se guardaba con UNA imagen y se leía como post simple. Con
       // las piezas archivadas se pinta como lo que es: una tira deslizable.
       const piezas = Array.isArray(a.items) ? a.items.filter((x) => x && typeof x.url === 'string') : [];
-      if (piezas.length > 1) return this._cgridCarruselHtml(piezas, { ratioFijo, fallback, network, postId, assets: a, postUrl });
+      if (piezas.length > 1) return this._cgridCarruselHtml(piezas, { ratioFijo, fallback });
 
       if (video) {
         // CASCADA REAL: el video del CDN caduca igual que la imagen, pero la
@@ -1323,31 +1333,64 @@
           ${fallback}</div>`;
       }
       if (img) {
-        // FACADE: la red no publica el archivo, pero sí ofrece un reproductor
-        // incrustable (los cuatro, sin credencial ni costo). Se pinta la portada
-        // con su botón de play y el iframe se monta SOLO al pulsarlo: cero peso
-        // y cero rastreo de terceros mientras nadie lo pida. Si el embed
-        // fallara, la portada y el enlace al original siguen ahí debajo.
-        // Se pide por `esVideoPost`, no por "hay video_url que no puedo
-        // reproducir": ver la nota de esVideoPost arriba.
-        const embed = this._cgridEmbedUrl(network, postId, a, postUrl);
-        // Un post que NO es video también merece su embed: es la publicación
-        // real de la red, con su carrusel, su copy y sus cifras. Sin esto, una
-        // foto de un perfil monitoreado se quedaba en miniatura muda teniendo
-        // el reproductor nativo a un click. Video → play; lo demás → expandir.
-        const play = (embed && esVideoNoIncrustable)
-          ? `<button type="button" class="cgrid-media-play" data-cgrid-embed="${esc(embed)}" aria-label="${esc(__('Reproducir video'))}"><i class="fas fa-play" aria-hidden="true"></i></button>`
-          : (embed
-            ? `<button type="button" class="cgrid-media-play cgrid-media-play--carrusel" data-cgrid-embed="${esc(embed)}" aria-label="${esc(__('Ver la publicación completa'))}" title="${esc(__('Ver la publicación completa'))}"><i class="fas fa-expand" aria-hidden="true"></i></button>`
-            : (esVideoNoIncrustable && postUrl
-              ? `<a class="cgrid-media-play" href="${esc(postUrl)}" target="_blank" rel="noopener noreferrer" title="${esc(__('Ver el video en {r}', { r: NET_LABEL[String(network || '').toLowerCase()] || __('la red') }))}" aria-label="${esc(__('Ver el video en su red'))}"><i class="fas fa-play" aria-hidden="true"></i></a>`
-              : (esVideoNoIncrustable ? `<span class="cgrid-media-play is-static" aria-hidden="true"><i class="fas fa-play"></i></span>` : '')));
+        // Aquí ya NO hay reproductor incrustable: si lo hubiera, la preview se
+        // habría resuelto arriba con el embed directo. Queda la portada, y el
+        // play lleva al original — mejor un botón que va a algún sitio que un
+        // icono decorativo que no hace nada.
+        const play = (esVideoNoIncrustable && postUrl)
+          ? `<a class="cgrid-media-play" href="${esc(postUrl)}" target="_blank" rel="noopener noreferrer" title="${esc(__('Ver el video en {r}', { r: NET_LABEL[String(network || '').toLowerCase()] || __('la red') }))}" aria-label="${esc(__('Ver el video en su red'))}"><i class="fas fa-play" aria-hidden="true"></i></a>`
+          : (esVideoNoIncrustable ? `<span class="cgrid-media-play is-static" aria-hidden="true"><i class="fas fa-play"></i></span>` : '');
         return `<div class="cgrid-media"${ratioFijo}>
           <img class="cgrid-media-el" data-cgrid-media src="${esc(img)}" alt="" loading="lazy">
           ${play}
           ${fallback}</div>`;
       }
       return `<div class="cgrid-media">${fallback.replace(' hidden', '')}</div>`;
+    },
+
+    /* La publicación real de la red, incrustada. Es el ÚNICO estado de la
+       preview cuando la red ofrece reproductor: el post se ve como es —video
+       reproduciéndose, carrusel navegable, cifras vivas— en vez de una foto fija
+       que había que pulsar para llegar al contenido.
+
+       `loading="lazy"`: el iframe no se pide hasta que la card entra en
+       pantalla. Es la contrapartida de haber quitado la fachada — antes el
+       tercero no se tocaba hasta el click; ahora se difiere por visibilidad, que
+       es lo más parecido sin volver a los dos estados.
+
+       El alto lo calcula `_cgridSizeEmbed` en el montaje: un iframe de otro
+       origen no se puede medir desde aquí, así que cada red lleva su proporción
+       y su chrome tabulados. */
+    _cgridEmbedHtml(src, ctx) {
+      const esc = (s) => this._esc(s);
+      const { network, postUrl } = ctx || {};
+      const red = NET_LABEL[String(network || '').toLowerCase()] || __('la red');
+      return `
+        <div class="cgrid-media cgrid-media--embed" data-cgrid-embed-directo data-embed-src="${esc(src)}">
+          <iframe class="cgrid-media-embed" src="${esc(src)}"
+            title="${esc(__('Publicación en {r}', { r: red }))}"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen"
+            allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          ${postUrl ? `<a class="cgrid-embed-abrir" href="${esc(postUrl)}" target="_blank" rel="noopener noreferrer"
+             title="${esc(__('Ver publicación original'))}" aria-label="${esc(__('Ver publicación original'))}"><i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>` : ''}
+        </div>`;
+    },
+
+    /* El alto de cada embed depende del ancho REAL de su columna, que solo se
+       conoce una vez montado en el DOM. Se recalcula al redimensionar. */
+    _bindCgridEmbeds(scope) {
+      if (!scope) return;
+      const cajas = Array.from(scope.querySelectorAll('[data-cgrid-embed-directo]'));
+      if (scope.matches?.('[data-cgrid-embed-directo]')) cajas.unshift(scope);
+      cajas.forEach((stage) => this._cgridSizeEmbed(stage));
+      if (!cajas.length || this._cgridEmbedResize) return;
+      this._cgridEmbedResize = () => {
+        document.querySelectorAll('[data-cgrid-embed-directo]')
+          .forEach((s) => this._cgridSizeEmbed(s));
+      };
+      // Via BaseView: un listener de resize crudo sobrevive al destroy() de la
+      // vista y seguiría redimensionando embeds que ya no existen.
+      this.addEventListener(window, 'resize', this._cgridEmbedResize);
     },
 
     /* Carrusel: tira deslizable con scroll-snap. Sin librería y sin timers —
@@ -1358,8 +1401,7 @@
        reproductor del post entero sigue siendo el embed de la red. */
     _cgridCarruselHtml(piezas, ctx) {
       const esc = (s) => this._esc(s);
-      const { ratioFijo, fallback, network, postId, assets, postUrl } = ctx;
-      const embed = this._cgridEmbedUrl(network, postId, assets, postUrl);
+      const { ratioFijo, fallback } = ctx;
       const slides = piezas.map((p, i) => `
         <div class="cgrid-slide" data-cgrid-slide="${i}" role="group" aria-roledescription="${esc(__('diapositiva'))}"
              aria-label="${esc(__('{n} de {t}', { n: i + 1, t: piezas.length }))}">
@@ -1375,7 +1417,6 @@
           <button type="button" class="cgrid-nav cgrid-nav--prev" data-cgrid-nav="-1" aria-label="${esc(__('Anterior'))}"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
           <button type="button" class="cgrid-nav cgrid-nav--next" data-cgrid-nav="1" aria-label="${esc(__('Siguiente'))}"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
           <span class="cgrid-contador" data-cgrid-contador>1/${piezas.length}</span>
-          ${embed ? `<button type="button" class="cgrid-media-play cgrid-media-play--carrusel" data-cgrid-embed="${esc(embed)}" aria-label="${esc(__('Ver la publicación completa'))}" title="${esc(__('Ver la publicación completa'))}"><i class="fas fa-expand" aria-hidden="true"></i></button>` : ''}
           ${fallback}
           <div class="cgrid-dots" data-cgrid-dots>${puntos}</div>
         </div>`;
@@ -1476,56 +1517,6 @@
       }
     },
 
-    /* Monta el reproductor de la red en el hueco de la portada. Se llama solo
-       desde el click en el play — hasta entonces no se ha pedido nada a un
-       tercero. */
-    _cgridMountEmbed(btn) {
-      const stage = btn.closest('.cgrid-media');
-      const src = btn.dataset.cgridEmbed;
-      if (!stage || !src || stage.dataset.embedded === '1') return;
-
-      // Se guarda la portada tal cual para poder VOLVER a ella. Al terminar el
-      // video, el reproductor de TikTok se queda en su pantalla de "Videos
-      // relacionados" — contenido de otros que no pintamos nosotros y que no
-      // tiene por qué ocupar la card. Cerrar devuelve la publicación.
-      if (!stage.dataset.posterHtml) stage.dataset.posterHtml = stage.innerHTML;
-      stage.dataset.posterRatio = stage.style.aspectRatio || '';
-      stage.dataset.posterMaxW = stage.style.maxWidth || '';
-      stage.dataset.embedded = '1';
-      // El alto depende de QUÉ red se está montando y se calcula antes de
-      // insertar el iframe: sin esta pista no habría de dónde leer la red.
-      stage.dataset.embedSrc = src;
-
-      this._cgridSizeEmbed(stage);
-      stage.innerHTML = `
-        <iframe class="cgrid-media-embed" src="${this._esc(src)}"
-          title="${this._esc(__('Reproductor de la publicación'))}"
-          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen"
-          allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-        <button type="button" class="cgrid-embed-close" data-cgrid-embed-close
-          aria-label="${this._esc(__('Cerrar el reproductor'))}" title="${this._esc(__('Cerrar el reproductor'))}">
-          <i class="fas fa-xmark" aria-hidden="true"></i>
-        </button>`;
-
-      stage.querySelector('[data-cgrid-embed-close]')
-        ?.addEventListener('click', () => this._cgridUnmountEmbed(stage));
-
-      // El alto depende del ancho: si la ventana cambia, se recalcula.
-      if (!this._cgridEmbedResize) {
-        this._cgridEmbedResize = () => {
-          document.querySelectorAll('.cgrid-media[data-embedded="1"]')
-            .forEach((s) => this._cgridSizeEmbed(s));
-        };
-        // Via BaseView: un listener de resize crudo sobrevive al destroy() de
-        // la vista y sigue redimensionando embeds que ya no existen.
-        this.addEventListener(window, 'resize', this._cgridEmbedResize);
-      }
-      // Señal OPORTUNISTA de fin de reproducción: el reproductor emite
-      // postMessage, pero su formato no es contrato público — si algún día
-      // deja de llegar, el botón de cerrar sigue siendo la vía fiable.
-      this._cgridBindEmbedMessages();
-    },
-
     /* Cada red pide un alto distinto y ninguna lo negocia: el iframe no puede
        medirse desde fuera (otro origen), así que el alto se calcula aquí a
        partir del ancho disponible.
@@ -1565,52 +1556,6 @@
       stage.style.aspectRatio = 'auto';
       stage.style.maxWidth = `${w}px`;
       stage.style.height = `${Math.round(w * perfil.ratio) + perfil.chrome}px`;
-    },
-
-    /* Vuelve a la portada: el estado exacto de antes de reproducir. */
-    _cgridUnmountEmbed(stage) {
-      if (!stage || stage.dataset.embedded !== '1') return;
-      stage.innerHTML = stage.dataset.posterHtml || '';
-      stage.style.height = '';
-      stage.style.aspectRatio = stage.dataset.posterRatio || '';
-      stage.style.maxWidth = stage.dataset.posterMaxW || '';
-      delete stage.dataset.embedded;
-      delete stage.dataset.embedSrc;
-      // La tira vuelve del innerHTML guardado: sin esto el bind se salta por
-      // la marca vieja y el carrusel restaurado se queda sin flechas.
-      delete stage.dataset.carruselBound;
-      // La portada vuelve a montarse: sus listeners hay que rehacerlos.
-      this._bindCgridMediaFallback(stage);
-      this._bindCgridCarrusel(stage);
-      stage.querySelectorAll('[data-cgrid-embed]').forEach((b) => {
-        b.addEventListener('click', () => this._cgridMountEmbed(b));
-      });
-    },
-
-    /* Escucha mensajes del reproductor para cerrar solo cuando el video acaba.
-       Un único listener global, con el origen verificado. Todo lo que no
-       reconoce se ignora en silencio. */
-    _cgridBindEmbedMessages() {
-      if (this._cgridEmbedMsgBound) return;
-      this._cgridEmbedMsgBound = true;
-      this.addEventListener(window, 'message', (e) => {
-        // El origen se resuelve dentro del try: una URL invalida descarta el
-        // mensaje ahi mismo, sin dejar la variable a medio asignar.
-        let host;
-        try { host = new URL(e.origin).hostname.replace(/^www\./, ''); } catch (_) { return; }
-        if (host !== 'tiktok.com' && host !== 'youtube-nocookie.com' && host !== 'youtube.com') return;
-        let d = e.data;
-        if (typeof d === 'string') { try { d = JSON.parse(d); } catch (_) { return; } }
-        if (!d || typeof d !== 'object') return;
-        // TikTok: {type:'video-status', value:{...}} · YouTube: info.playerState 0 = ended
-        const acabo = d.type === 'onStateChange' ? d.info === 0
-          : (d.info && d.info.playerState === 0) ? true
-          : /end/i.test(String(d.type || '')) || /end/i.test(String(d.value && d.value.status || ''));
-        if (!acabo) return;
-        document.querySelectorAll('.cgrid-media[data-embedded="1"]').forEach((s) => {
-          if (s.querySelector('iframe')?.contentWindow === e.source) this._cgridUnmountEmbed(s);
-        });
-      });
     },
 
     /* ¿Esta URL es media que un <video> puede reproducir, o la página del post?
