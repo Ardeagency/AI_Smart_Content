@@ -378,7 +378,9 @@
   /* Sin superficie (se le quito glass-black): flota sobre el degradado como
      Latidos. Sin el aire que daba el recuadro, el padding sobra. */
   padding: 0;
-  gap: 0.7rem;
+  /* Aire entre el titulo de la card y el preview: pegados se leian como una
+     sola pieza. */
+  gap: 1.1rem;
 }
 /* La publicacion se adapta a su columna: sin ancho fijo, llena la columna 2
    (junto a Algoritmo) y se reajusta con el viewport. El embed lee este ancho en
