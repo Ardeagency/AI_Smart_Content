@@ -128,10 +128,11 @@
 .vera-stat-value { font-size: 1.5rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
 .vera-stat-label { font-size: 0.82rem; color: rgba(255, 255, 255, 0.6); }
 
-/* Audiencias recomendadas: carrusel de fichas a lo ancho, abre el bloque Vera.
-   Reusa .cgrid-card--aud/.cga-*/.tend-oc-* (comp-grid + insight, ambos cargados
-   en esta ruta); el color de marca lo ponen las fichas via _vestirPanelDeMarca. */
-.vera-cards .vera-audrec { grid-column: 1 / -1; }
+/* Audiencias recomendadas: banda a lo ancho que abre el bloque Vera, FUERA del
+   grid de 2 columnas (por eso ocupa el 100%, como el carrusel de Audiencias en
+   Competencia). Reusa cgrid-card--aud/cga/tend-oc (comp-grid + insight, ambos
+   cargados en esta ruta); el color de marca lo ponen las fichas. */
+.bgrid-vera > .vera-audrec { margin-bottom: 1.25rem; }
 
 /* Algoritmo = 100% Vera, multi-plataforma. Full-width para que la tabla respire. */
 .vera-cards .vera-card--algoritmo { grid-column: 1 / -1; }

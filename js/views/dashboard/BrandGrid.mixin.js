@@ -351,9 +351,13 @@
       cierre.forEach((el) => { if (el && host && host.contains(el) && grid) grid.appendChild(el); });
       // Audiencias recomendadas ABREN el bloque de Vera (arriba de todo el resto,
       // Algoritmo incluido): es la accion — a quien hablarle — antes del analisis.
+      // Va como banda FULL-WIDTH propia, fuera del grid de 2 columnas: es el
+      // mismo carrusel que las Audiencias de Competencia, que tampoco vive en un
+      // grid. Meterla como celda con grid-column: 1/-1 la dejaba en media pagina.
       const audRecHtml = audRec.map((c) => this._veraAudRecHtml(c)).join('');
       const restHtml = restItems.map((x) => this._veraCardHtml(x.card, x.key)).join('');
-      if (host) host.innerHTML = (audRecHtml || restHtml) ? `<div class="vera-cards">${audRecHtml}${restHtml}</div>` : '';
+      const restBlock = restHtml ? `<div class="vera-cards">${restHtml}</div>` : '';
+      if (host) host.innerHTML = `${audRecHtml}${restBlock}`;
       this._colocarCierreBajoAlgoritmo(body);
       this._bindVeraAudRec(host);
       body.querySelectorAll('[data-panel-marca]').forEach((el) => this._vestirPanelDeMarca(el));
