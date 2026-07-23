@@ -365,7 +365,15 @@
   width: 100%;
   max-width: 480px;
   min-width: 0;
+  /* Sin superficie (se le quito glass-black): flota sobre el degradado como
+     Latidos. Sin el aire que daba el recuadro, el padding sobra. */
+  padding: 0;
+  gap: 0.7rem;
 }
+/* La publicacion es vertical y a 100% de la columna quedaba innecesariamente
+   enorme. Se acota el ancho del contenido: el embed lee este ancho y el alto
+   cae proporcional, asi la pieza es del tamano de un movil, no de media pagina. */
+.bgrid-card--toppost .cgrid-post-card { max-width: 300px; }
 /* Colocados DEBAJO de Algoritmo (que se queda full-width): el par cierra la
    pagina, uno en cada columna del grid de cards de Vera. */
 .vera-cards .bgrid-card--prodstar,

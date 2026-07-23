@@ -118,11 +118,10 @@
           </section>
           <!-- Misma pieza que en Competencia (clases .cgrid-post-*), pero sobre
                tus propias publicaciones: la tuya que mas movio en el periodo. -->
-          <section class="bgrid-card glass-black bgrid-card--toppost">
+          <section class="bgrid-card bgrid-card--toppost">
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Publicación destacada'))}</span>
             </header>
-            <p class="bgrid-card-sub">${this._esc(__('La tuya que más movió en el periodo'))}</p>
             <div class="cgrid-post" id="bgridTopPost"><div class="cgrid-load">${this._esc(__('Buscando la publicación…'))}</div></div>
           </section>
         </div>`;
