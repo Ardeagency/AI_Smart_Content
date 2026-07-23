@@ -380,10 +380,10 @@
   padding: 0;
   gap: 0.7rem;
 }
-/* La publicacion es vertical y a 100% de la columna quedaba innecesariamente
-   enorme. Se acota el ancho del contenido: el embed lee este ancho y el alto
-   cae proporcional, asi la pieza es del tamano de un movil, no de media pagina. */
-.bgrid-card--toppost .cgrid-post-card { max-width: 300px; }
+/* La publicacion llena su columna (la 2, junto a Algoritmo): ni el 300px que la
+   dejaba diminuta ni el 100% de pagina que la volvia enorme cuando iba a lo
+   ancho. El embed lee este ancho y el alto cae proporcional. */
+.bgrid-card--toppost .cgrid-post-card { max-width: 420px; }
 /* Publicacion destacada: columna 2, a la DERECHA de Algoritmo (misma fila).
    Producto destacado: debajo, a lo ancho. */
 .vera-cards .bgrid-card--prodstar,
