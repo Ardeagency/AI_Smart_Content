@@ -7,9 +7,8 @@
  *   1. Pulso del nicho     — KPIs vivos + clima de sentimiento del mercado
  *   2. Señales emergentes  — keywords con velocidad (filtradas por calidad)
  *   3. Oceanos azules      — el mercado habla / la competencia no cubre (gaps)
- *   4. Lexico emergente    — el idioma del nicho que Vera esta aprendiendo
- *   5. Marcas emergentes   — nuevos jugadores detectados entrando al nicho
- *   6. Sincronizacion mundo— festivos, efemerides y clima (sensores del mundo)
+ *   4. Marcas emergentes   — nuevos jugadores detectados entrando al nicho
+ *   5. Sincronizacion mundo— festivos, efemerides y clima (sensores del mundo)
  *
  * Datos: TendenciasDataService (RPCs dashboard_tendencias_*). Reusa helpers
  * compartidos del prototype (_esc, _compactNum, _prettyPlatform).
@@ -139,7 +138,6 @@
       const main = `
         ${topRow}
         ${this._buildTendGaps(data?.gaps?.data)}
-        ${this._buildTendLexicon(data?.lexicon?.data)}
         ${this._buildTendBrands(data?.brands?.data)}`;
       // Con fechas -> layout 2 columnas (cuerpo + sidebar "Proximas Fechas", igual
       // que Mi Marca/Competencia). Sin fechas -> cuerpo a ancho completo.
@@ -757,42 +755,6 @@
     },
 
     /* ── 4. Lexico emergente: el idioma del nicho que Vera aprende ─────── */
-    _buildTendLexicon(lex) {
-      const byDim = Array.isArray(lex?.by_dimension) ? lex.by_dimension : [];
-      const approved = Array.isArray(lex?.recent_approved) ? lex.recent_approved.slice(0, 24) : [];
-      const pending = Array.isArray(lex?.pending) ? lex.pending : [];
-      const head = `
-        <div class="mb-section-head">
-          <span class="mb-section-title">${__('Léxico emergente del nicho')}</span>
-          <span class="mb-section-hint">${__('Las palabras que Vera aprendió escuchando tu nicho — el idioma con el que debes hablarle')}</span>
-        </div>`;
-      if (!approved.length && !byDim.length) return ''; // card vacía → se oculta
-      const dims = byDim.map(d => `
-        <div class="tend-dim">
-          <span class="tend-dim-name">${this._esc(this._tendDimLabel(d.dimension))}</span>
-          <span class="tend-dim-counts">${__('{n} aprendidas', { n: `<b>${fmt.int(d.approved)}</b>` })}${Number(d.proposed) > 0 ? __(' · {n} en revisión', { n: fmt.int(d.proposed) }) : ''}</span>
-        </div>`).join('');
-      const words = approved.map(w => `<span class="tend-word">${this._esc(w.word)}<span class="tend-word-dim">${this._esc(this._tendDimLabel(w.dimension))}</span></span>`).join('');
-      const pendNote = pending.length
-        ? `<div class="tend-lex-note"><i class="aisc-ico aisc-ico--hourglass"></i> ${__('{n} palabra(s) nuevas esperando tu revisión en el Léxico.', { n: fmt.int(pending.length) })}</div>`
-        : '';
-      return `
-        <section class="mb-section">
-          ${head}
-          ${dims ? `<div class="tend-dims">${dims}</div>` : ''}
-          ${words ? `<div class="tend-words">${words}</div>` : ''}
-          ${pendNote}
-        </section>`;
-    },
-
-    _tendDimLabel(dim) {
-      return {
-        topic: __('Tema'), tone: __('Tono'), format: __('Formato'), mood: __('Ánimo'),
-        emotion: __('Emoción'), style: __('Estilo'), audience: __('Audiencia'),
-        cluster_candidate: __('Clúster nuevo'),
-      }[dim] || (dim ? String(dim).replace(/_/g, ' ') : '—');
-    },
-
     /* ── 5. Marcas emergentes: nuevos jugadores en el nicho ───────────── */
     _buildTendBrands(brands) {
       const pending = Array.isArray(brands?.pending) ? brands.pending : [];

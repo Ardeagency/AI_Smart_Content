@@ -19,7 +19,7 @@
  * pipeline en ai-engine y volver a llamarla aqui.
  *   - dashboard_tendencias_kpis           → tira de KPIs retirada por decision de producto
  *   - dashboard_tendencias_market_pulse   → lee MVs casi vacias (sus tablas-fuente murieron)
- *   - dashboard_tendencias_lexicon_emergence → dimension_lexicon congelado desde 2026-05-04
+ *   - dashboard_tendencias_lexicon_emergence → ELIMINADO 2026-07-23 junto con dimension_lexicon
  *   - dashboard_tendencias_emerging_brands   → emerging_brand_candidates congelado desde 2026-05-06
  */
 class TendenciasDataService {
@@ -62,7 +62,7 @@ class TendenciasDataService {
         .then(r => ({ data: (r.data && r.data[0]) || null, error: r.error })),
     ]);
     const u = (s) => this._unwrap(s);
-    // Secciones aun sin fuente viva (lexicon/brands) quedan undefined a proposito:
+    // Secciones aun sin fuente viva (brands) quedan undefined a proposito:
     // sus _buildTend*() se auto-ocultan cuando la data viene vacia.
     return {
       windowDays: w,

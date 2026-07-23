@@ -58,7 +58,7 @@
       { id: 'go-team',       label: 'Team',           hint: '/dev/lead/team',          icon: 'aisc-ico aisc-ico--audience',        group: 'Admin',      action: () => navigate('/dev/lead/team'),          requiresLead: true },
       { id: 'go-inputs',     label: 'Inputs',         hint: '/dev/lead/input-schemas', icon: 'aisc-ico aisc-ico--filter',    group: 'Admin',      action: () => navigate('/dev/lead/input-schemas'), requiresLead: true },
       { id: 'go-categories', label: 'Categories',     hint: '/dev/lead/categories',    icon: 'aisc-ico aisc-ico--tag',         group: 'Admin',      action: () => navigate('/dev/lead/categories'),    requiresLead: true },
-      { id: 'go-lexicon',    label: 'Lexicon',        hint: '/dev/lead/lexicon',       icon: 'aisc-ico aisc-ico--book',         group: 'Admin',      action: () => navigate('/dev/lead/lexicon'),       requiresLead: true },
+      { id: 'go-lexicon',    label: 'Temas huerfanos', hint: '/dev/lead/lexicon',       icon: 'aisc-ico aisc-ico--book',         group: 'Admin',      action: () => navigate('/dev/lead/lexicon'),       requiresLead: true },
     ];
     return all.filter(c => !c.requiresLead || lead);
   }

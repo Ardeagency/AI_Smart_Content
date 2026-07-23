@@ -151,7 +151,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'aisc-ico aisc-ico--growth', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
   { type: 'page', id: 'admin-inputs', label: 'Inputs', icon: 'aisc-ico aisc-ico--filter', iconSrc: '/recursos/icons/coding.svg', route: '/dev/lead/input-schemas' },
   { type: 'page', id: 'admin-categorias', label: 'Categories', icon: 'aisc-ico aisc-ico--tag', iconSrc: '/recursos/icons/file-storage.svg', route: '/dev/lead/categories' },
-  { type: 'page', id: 'admin-lexicon', label: 'Lexicon', icon: 'aisc-ico aisc-ico--book', iconSrc: '/recursos/icons/book.svg', route: '/dev/lead/lexicon' },
+  { type: 'page', id: 'admin-lexicon', label: 'Temas huerfanos', icon: 'aisc-ico aisc-ico--book', iconSrc: '/recursos/icons/book.svg', route: '/dev/lead/lexicon' },
   { type: 'section', label: 'Code' },
   { type: 'page', id: 'flows', label: 'My Flows', icon: 'aisc-ico aisc-ico--grid', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
   {
@@ -3082,7 +3082,7 @@ class Navigation {
       '/credits': __('CRÉDITOS'),
       '/plans': __('PLANES'),
       '/monitoring': __('VIGILANCIA'),
-      '/dev/lead/lexicon': 'LÉXICO',
+      '/dev/lead/lexicon': 'TEMAS HUÉRFANOS',
       '/dev/dashboard': 'DASHBOARD',
       '/dev/flows': 'MIS FLUJOS',
       '/dev/builder': 'BUILDER',
