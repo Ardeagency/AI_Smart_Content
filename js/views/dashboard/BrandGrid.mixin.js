@@ -319,7 +319,10 @@
       const desvItems = desv.map((c, i) => ({ card: c, key: 'neg' + i }));
       const restItems = rest.map((c, i) => ({ card: c, key: 'v' + i }));
       if (obsHost) obsHost.innerHTML = obsItems.map((x) => this._veraCardHtml(x.card, x.key, true)).join('');
-      if (vdHost) vdHost.innerHTML = this._veraDuoHtml(virtItems, desvItems);
+      if (vdHost) {
+        vdHost.innerHTML = this._veraDuoHtml(virtItems, desvItems);
+        this._acentuarDuoConMarca(vdHost);
+      }
       // Producto destacado vive en el shell, pero se COLOCA junto a Algoritmo.
       // Se rescata antes de limpiar el host: ya está pintado y repintarlo
       // costaría otra llamada al RPC.
@@ -581,6 +584,18 @@
         return `<div class="vera-duo-panel" data-side="${side}">${content}</div>`;
       };
       return `<div class="vera-duo">${panel(virtItems, 'pos', __('Fortalezas'), 'star')}${panel(desvItems, 'neg', __('Debilidades'), 'alert')}</div>`;
+    },
+
+    /* El borde de Fortalezas es el unico trazo del par: que lo ponga la marca
+       y no el negro del fondo. Alpha bajo para que siga siendo una linea, no
+       un marco de color. */
+    _acentuarDuoConMarca(host) {
+      const duo = host && host.querySelector('.vera-duo');
+      if (!duo) return;
+      try {
+        const [r, g, b] = this._hexToRgb(this._gridBrandHexes()[0]);
+        duo.style.setProperty('--duo-acento', `rgba(${r}, ${g}, ${b}, 0.38)`);
+      } catch (_) {}
     },
 
     _veraCardHtml(card, key, bare) {

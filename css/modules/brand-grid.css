@@ -63,7 +63,7 @@
 .vera-card.vera-card--bare { background: transparent; border: 0; border-radius: 0; padding: 0.15rem 0.25rem; }
 .vera-card--bare .vera-card-title { color: #fff; }
 .vera-card--bare .vera-md { color: rgba(255, 255, 255, 0.82); }
-/* Virtudes + Desventajas: par hermano lado a lado (verde/rojo) con divisor. */
+/* Fortalezas + Debilidades: par hermano lado a lado (verde/rojo) con divisor. */
 .bgrid-vd:empty { display: none; }
 /* Contenedor externo = color de card, con padding generoso; 2 columnas hermanas. */
 .vera-duo {
@@ -73,9 +73,10 @@
   border-radius: 18px; padding: 1.5rem;
 }
 .vera-duo-panel { padding: 1.55rem 1.65rem 1.75rem; display: flex; flex-direction: column; gap: 0.7rem; border-radius: 14px; min-width: 0; }
-/* Virtudes: SIN fondo, borde del color del fondo de la plataforma. */
-.vera-duo-panel[data-side="pos"] { background: transparent; border: 1px solid var(--bg-primary, #0b0b0b); }
-/* Desventajas: fondo oscuro de la PLATAFORMA (más oscuro que la card), sin borde. */
+/* Fortalezas: SIN fondo, borde con el acento dinamico de la marca (fallback al
+   fondo de la plataforma si el tema aun no resolvio el color). */
+.vera-duo-panel[data-side="pos"] { background: transparent; border: 1px solid var(--duo-acento, var(--bg-primary, #0b0b0b)); }
+/* Debilidades: fondo oscuro de la PLATAFORMA (mas oscuro que la card), sin borde. */
 .vera-duo-panel[data-side="neg"] { background: var(--bg-primary, #0b0b0b); border: 1px solid transparent; }
 .vera-duo-panel[data-side="pos"] .vera-card-kind { color: #5fd39a; }
 .vera-duo-panel[data-side="neg"] .vera-card-kind { color: #e77a7a; }
