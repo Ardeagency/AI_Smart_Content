@@ -308,33 +308,45 @@
         if (iso === todayIso) cls.push('is-today');
         if (iso === this._tendCalSel) cls.push('is-sel');
         cells += `<button type="button" class="${cls.join(' ')}" data-tend-cal-day="${iso}"
-          title="${this._esc(dayEvs.map((e) => e.name).join(' · '))}">${d}<span class="tend-cal-dot"></span></button>`;
+          title="${this._esc(dayEvs.map((e) => e.name).join(' · '))}">${d}</button>`;
       }
 
       const idx = months.indexOf(ym);
       const prevOk = idx > 0;
       const nextOk = idx >= 0 && idx < months.length - 1;
 
+      // Panel del dia seleccionado: fondo con el degradado dinamico de la marca
+      // (el "cuadro" del referente), dia grande + dia de la semana + eventos.
+      const DOW_LONG = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
       const sel = (byDate.get(this._tendCalSel) || []);
-      const detail = sel.length
-        ? sel.map((e) => {
-            const tag = e.verdict === 'utilizar'
-              ? `<span class="tend-fecha-tag tend-fecha-tag--use">${__('Utilizar')}</span>`
-              : e.verdict === 'descartar'
-                ? `<span class="tend-fecha-tag tend-fecha-tag--skip">${__('Descartar')}</span>`
-                : '';
-            const globe = e.intl ? `<i class="aisc-ico aisc-ico--places tend-fecha-globe" title="${__('Evento internacional')}"></i> ` : '';
-            const [dd, mon] = this._fmtEventDay(e.date);
-            return `
-              <div class="tend-fecha${e.verdict === 'descartar' ? ' tend-fecha--muted' : ''}${e.intl ? ' tend-fecha--intl' : ''}">
-                <div class="tend-fecha-date"><span class="tend-fecha-day">${this._esc(dd)}</span><span class="tend-fecha-mon">${this._esc(mon)}</span></div>
-                <div class="tend-fecha-body">
-                  <div class="tend-fecha-top"><span class="tend-fecha-name">${globe}${this._esc(e.name)}</span>${tag}</div>
-                  ${e.reason ? `<span class="tend-fecha-reason">${this._esc(e.reason)}</span>` : ''}
-                </div>
-              </div>`;
-          }).join('')
-        : `<p class="tend-cal-hint">${__('Sin fechas relevantes este mes.')}</p>`;
+      let detail;
+      if (sel.length) {
+        const [sy, sm, sd] = this._tendCalSel.split('-').map(Number);
+        const dowIdx = (new Date(Date.UTC(sy, sm - 1, sd)).getUTCDay() + 6) % 7;
+        const items = sel.map((e) => {
+          const tag = e.verdict === 'utilizar'
+            ? `<span class="tend-cal-tag tend-cal-tag--use">${__('Utilizar')}</span>`
+            : e.verdict === 'descartar'
+              ? `<span class="tend-cal-tag tend-cal-tag--skip">${__('Descartar')}</span>`
+              : '';
+          const globe = e.intl ? `<i class="aisc-ico aisc-ico--places tend-cal-globe" title="${__('Evento internacional')}"></i> ` : '';
+          return `
+            <div class="tend-cal-ev${e.verdict === 'descartar' ? ' is-muted' : ''}">
+              <div class="tend-cal-ev-top"><span class="tend-cal-ev-name">${globe}${this._esc(e.name)}</span>${tag}</div>
+              ${e.reason ? `<span class="tend-cal-ev-reason">${this._esc(e.reason)}</span>` : ''}
+            </div>`;
+        }).join('');
+        detail = `
+          <div class="tend-cal-panel">
+            <div class="tend-cal-panel-head">
+              <span class="tend-cal-panel-day">${sd}</span>
+              <span class="tend-cal-panel-dow">${DOW_LONG[dowIdx]}</span>
+            </div>
+            <div class="tend-cal-panel-evs">${items}</div>
+          </div>`;
+      } else {
+        detail = `<p class="tend-cal-hint">${__('Sin fechas relevantes este mes.')}</p>`;
+      }
 
       return `
         <section class="tend-cal-card" id="tendCalCard">
