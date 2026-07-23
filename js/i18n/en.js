@@ -14,6 +14,10 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Descartar audiencia": "Dismiss audience",
+  "el nicho la busca · encaja con tu marca": "the niche is looking for it · fits your brand",
+  "A quién deberías hablarle según lo que Vera aprendió de ti": "Who you should be talking to, based on what Vera learned about you",
+  "Audiencias recomendadas": "Recommended audiences",
   "Publicación en {r}": "Post on {r}",
   "Ver la publicación completa": "View the full post",
   "Ir a la pieza {n}": "Go to item {n}",

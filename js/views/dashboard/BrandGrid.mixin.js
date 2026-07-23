@@ -325,12 +325,13 @@
       const all = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
       // Colocación por tipo: observacion arriba de Interacciones (transparente);
       // virtudes+desventajas como PAR hermano bajo Interacciones; resto full-width.
-      const obs = [], virt = [], desv = [], rest = [];
+      const obs = [], virt = [], desv = [], audRec = [], rest = [];
       all.forEach((c) => {
         const t = c && c.type;
         if (t === 'observacion') obs.push(c);
         else if (t === 'virtudes') virt.push(c);
         else if (t === 'desventajas') desv.push(c);
+        else if (t === 'audiencias_recomendadas') audRec.push(c);
         else rest.push(c);
       });
       const obsItems = obs.map((c, i) => ({ card: c, key: 'obs' + i }));
@@ -348,8 +349,13 @@
       const grid = body.querySelector('.bgrid');
       const cierre = [body.querySelector('.bgrid-card--prodstar'), body.querySelector('.bgrid-card--toppost')];
       cierre.forEach((el) => { if (el && host && host.contains(el) && grid) grid.appendChild(el); });
-      if (host) host.innerHTML = restItems.length ? `<div class="vera-cards">${restItems.map((x) => this._veraCardHtml(x.card, x.key)).join('')}</div>` : '';
+      // Audiencias recomendadas ABREN el bloque de Vera (arriba de todo el resto,
+      // Algoritmo incluido): es la accion — a quien hablarle — antes del analisis.
+      const audRecHtml = audRec.map((c) => this._veraAudRecHtml(c)).join('');
+      const restHtml = restItems.map((x) => this._veraCardHtml(x.card, x.key)).join('');
+      if (host) host.innerHTML = (audRecHtml || restHtml) ? `<div class="vera-cards">${audRecHtml}${restHtml}</div>` : '';
       this._colocarCierreBajoAlgoritmo(body);
+      this._bindVeraAudRec(host);
       body.querySelectorAll('[data-panel-marca]').forEach((el) => this._vestirPanelDeMarca(el));
       try { await this._ensureChartJs(); } catch (_) {}
       this._paintVeraCharts(body, obsItems.concat(virtItems, desvItems, restItems));
@@ -623,6 +629,80 @@
         const [r, g, b] = this._hexToRgb(this._gridBrandHexes()[0]);
         duo.style.setProperty('--duo-acento', `rgba(${r}, ${g}, ${b}, 0.38)`);
       } catch (_) {}
+    },
+
+    /* ══ Audiencias recomendadas ═══════════════════════════════════════════
+       A quien deberia hablarle la marca segun lo que Vera aprendio de ella:
+       audiencias con demanda que encajan con su producto. Reusa el carrusel de
+       fichas de Oceanos Azules (clases cgrid-aud, cga y tend-oc) sobre el color
+       de marca — cada ficha es una recomendacion accionable, la X la descarta.
+       Es inteligencia de Vera, no un dato en vivo. ══════════════════════════ */
+    _veraAudRecHtml(card) {
+      const items = Array.isArray(card && card.items) ? card.items : [];
+      const esc = (s) => this._esc(s);
+      const descartadas = this._audRecDescartadas();
+      const vivas = items.filter((a) => a && a.id != null && !descartadas.has(String(a.id)));
+      if (!vivas.length) return '';
+      const priLabel = { alta: __('Alta demanda'), media: __('Demanda media'), baja: __('Demanda baja') };
+      const fichas = vivas.map((a) => {
+        const chips = (Array.isArray(a.interests) ? a.interests.slice(0, 3) : [])
+          .map((t) => `<span class="tend-oc-chip">${esc(String(t))}</span>`).join('');
+        const pri = ['alta', 'media', 'baja'].includes(a.priority) ? a.priority : 'media';
+        return `
+          <article class="cga-item tend-oc" data-audrec-id="${esc(a.id)}" data-panel-marca>
+            <div class="cga-top">
+              <span class="tend-oc-intent tend-oc-intent--${pri}">${esc(priLabel[pri] || priLabel.media)}</span>
+              <h4 class="cga-quien">${esc(a.name || '')}</h4>
+              ${a.rationale ? `<span class="tend-oc-angle">${esc(a.rationale)}</span>` : ''}
+              ${chips ? `<div class="tend-oc-chips">${chips}</div>` : ''}
+            </div>
+            <div class="cga-foot">
+              <span class="cga-hint">${esc(__('el nicho la busca · encaja con tu marca'))}</span>
+              <button type="button" class="cga-add tend-oc-no" data-audrec-dismiss
+                      title="${esc(__('No me interesa'))}" aria-label="${esc(__('Descartar audiencia'))}">
+                <i class="aisc-ico aisc-ico--close" aria-hidden="true"></i>
+              </button>
+            </div>
+          </article>`;
+      }).join('');
+      return `
+        <section class="cgrid-card--aud vera-audrec">
+          <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--audience" aria-hidden="true"></i>${esc(__('Audiencias recomendadas'))}</span>
+          <p class="bgrid-card-sub">${esc(__('A quién deberías hablarle según lo que Vera aprendió de ti'))}</p>
+          <div class="cgrid-aud">${fichas}</div>
+        </section>`;
+    },
+
+    /* IDs descartadas por el usuario, por org. Sin RPC de decisiones todavia:
+       se guardan localmente para que la X no reaparezca al recargar. Cuando
+       Vera exponga un store de decisiones, este es el punto de enganche. */
+    _audRecKey() { return `audrec:dismissed:${this._orgId || 'global'}`; },
+    _audRecDescartadas() {
+      if (this._audRecSet) return this._audRecSet;
+      let arr = [];
+      try { arr = JSON.parse(localStorage.getItem(this._audRecKey()) || '[]'); } catch (_) {}
+      this._audRecSet = new Set(Array.isArray(arr) ? arr.map(String) : []);
+      return this._audRecSet;
+    },
+    _bindVeraAudRec(host) {
+      const sec = host && host.querySelector('.vera-audrec');
+      if (!sec || sec._audRecBound) return;
+      sec._audRecBound = true;
+      sec.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('[data-audrec-dismiss]');
+        if (!btn) return;
+        const ficha = btn.closest('[data-audrec-id]');
+        const id = ficha && ficha.dataset.audrecId;
+        if (!id) return;
+        const set = this._audRecDescartadas();
+        set.add(String(id));
+        try { localStorage.setItem(this._audRecKey(), JSON.stringify([...set])); } catch (_) {}
+        ficha.classList.add('is-adoptada');
+        setTimeout(() => {
+          ficha.remove();
+          if (!sec.querySelector('.cga-item')) sec.remove();
+        }, 280);
+      });
     },
 
     _veraCardHtml(card, key, bare) {

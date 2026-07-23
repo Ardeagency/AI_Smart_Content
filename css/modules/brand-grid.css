@@ -128,6 +128,11 @@
 .vera-stat-value { font-size: 1.5rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
 .vera-stat-label { font-size: 0.82rem; color: rgba(255, 255, 255, 0.6); }
 
+/* Audiencias recomendadas: carrusel de fichas a lo ancho, abre el bloque Vera.
+   Reusa .cgrid-card--aud/.cga-*/.tend-oc-* (comp-grid + insight, ambos cargados
+   en esta ruta); el color de marca lo ponen las fichas via _vestirPanelDeMarca. */
+.vera-cards .vera-audrec { grid-column: 1 / -1; }
+
 /* Algoritmo = 100% Vera, multi-plataforma. Full-width para que la tabla respire. */
 .vera-cards .vera-card--algoritmo { grid-column: 1 / -1; }
 /* Con el cierre colocado, Algoritmo cede la columna 2 a Publicacion destacada
