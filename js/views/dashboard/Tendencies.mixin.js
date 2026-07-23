@@ -353,7 +353,7 @@
 
       return `
         <section class="tend-cal-card" id="tendCalCard">
-          <span class="mb-hero-label">${__('Próximas Fechas')}</span>
+          <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--calendar" aria-hidden="true"></i>${this._esc(__('Próximas Fechas'))}</span>
           <div class="tend-cal-nav">
             <button type="button" class="tend-cal-arrow" data-tend-cal-nav="-1" ${prevOk ? '' : 'disabled'}
               aria-label="${__('Mes anterior')}"><i class="aisc-ico aisc-ico--chevron-left"></i></button>

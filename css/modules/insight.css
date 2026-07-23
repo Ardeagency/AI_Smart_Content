@@ -2770,10 +2770,9 @@
   -webkit-backdrop-filter: blur(18px) saturate(160%);
   backdrop-filter: blur(18px) saturate(160%);
 }
-.tend-cal-card .mb-hero-label {
-  text-align: left; text-transform: uppercase; color: #7B7B7B;
-  font-size: 0.8125rem; letter-spacing: 0.04em;
-}
+/* El titulo usa .bgrid-card-title (la convencion de Mi Marca y Competencia:
+   eyebrow chico en versalitas + icono Lucide). Vive en brand-grid.css, que se
+   carga en el mismo loader del dashboard. */
 .tend-cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .tend-cal-title {
   font-size: 0.9rem; font-weight: 700; text-transform: capitalize;
