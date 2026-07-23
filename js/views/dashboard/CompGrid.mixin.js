@@ -1196,16 +1196,43 @@
       });
     },
 
+    /* Array crudo [{url,type,permalink}] → objeto con las claves que espera el
+       resolver. Se elige la primera entrada con imagen (un carrusel trae varias)
+       y, si el post es video, su URL va a `video_url` para que la cascada de
+       reproductor/portada/fallback funcione igual que con la forma normalizada.
+       NO inventa `archived_url`: esas filas nunca se archivaron en R2 y su URL
+       del CDN caduca — lo honesto es que caigan al aviso cuando expire. */
+    _cgridNormalizeMedia(ma, pick) {
+      if (!ma || typeof ma !== 'object') return {};
+      if (!Array.isArray(ma)) return ma;
+      const items = ma.filter((x) => x && typeof x === 'object' && pick(x));
+      if (!items.length) return {};
+      const esVideo = (x) => /video|reel|clip/i.test(String(x.type || x.media_type || ''));
+      const img = items.find((x) => !esVideo(x)) || items[0];
+      const vid = items.find(esVideo);
+      return {
+        display_url: pick(img),
+        video_url: vid ? pick(vid) : undefined,
+        permalink: img.permalink || (vid && vid.permalink) || undefined,
+      };
+    },
+
     /* Media del post. Las URLs de CDN de Instagram/TikTok van FIRMADAS y
        caducan: una preview vieja da 403. Por eso todo media se monta con
        fallback tipográfico — nunca un cuadro roto. */
     _cgridMediaHtml(ma, ctx) {
       const esc = (s) => this._esc(s);
       const { network, postId, postUrl } = ctx || {};
-      const a = (ma && typeof ma === 'object') ? ma : {};
       const first = (v) => (Array.isArray(v) && v.length ? v[0] : null);
       const pick = (v) => (typeof v === 'string' && /^https?:\/\//i.test(v)) ? v
         : (v && typeof v === 'object' && typeof v.url === 'string') ? v.url : null;
+      // `media_assets` tiene DOS formas en la base: el objeto normalizado
+      // ({archived_url, display_url, video_url…}) y el array crudo
+      // [{url, type, permalink}] que dejaron los writers de posts PROPIOS antes
+      // de normalizarse. La segunda no se leía nunca: `typeof [] === 'object'`,
+      // así que `a.display_url` salía undefined y la card caía al placeholder
+      // teniendo la URL a mano. Se normaliza aquí — es el único lector.
+      const a = this._cgridNormalizeMedia(ma, pick);
       // `archived_url` PRIMERO: es la copia que ai-engine guardó en R2 al
       // capturar el post. Las URLs originales del CDN vienen firmadas y
       // caducan — la archivada no. Las demás quedan como respaldo para los
