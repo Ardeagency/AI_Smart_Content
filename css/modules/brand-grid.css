@@ -130,6 +130,10 @@
 
 /* Algoritmo = 100% Vera, multi-plataforma. Full-width para que la tabla respire. */
 .vera-cards .vera-card--algoritmo { grid-column: 1 / -1; }
+/* Con el cierre colocado, Algoritmo cede la columna 2 a Publicacion destacada
+   y se queda con la 1. La tabla ya funciona a media pagina (asi convivia antes
+   con Producto destacado). */
+.vera-cards.has-cierre .vera-card--algoritmo { grid-column: 1; }
 /* Sin acento de color a la izquierda: borde uniforme (igual que audiencia). */
 .vera-card.vera-card--algoritmo { border-left: 1px solid var(--border-divider, #242424); }
 
@@ -374,12 +378,12 @@
    enorme. Se acota el ancho del contenido: el embed lee este ancho y el alto
    cae proporcional, asi la pieza es del tamano de un movil, no de media pagina. */
 .bgrid-card--toppost .cgrid-post-card { max-width: 300px; }
-/* Colocados DEBAJO de Algoritmo (que se queda full-width): el par cierra la
-   pagina, uno en cada columna del grid de cards de Vera. */
+/* Publicacion destacada: columna 2, a la DERECHA de Algoritmo (misma fila).
+   Producto destacado: debajo, a lo ancho. */
 .vera-cards .bgrid-card--prodstar,
 .vera-cards .bgrid-card--toppost { max-width: none; align-self: start; }
-.vera-cards .bgrid-card--prodstar { grid-column: 1; }
 .vera-cards .bgrid-card--toppost { grid-column: 2; }
+.vera-cards .bgrid-card--prodstar { grid-column: 1 / -1; }
 @media (max-width: 900px) {
   .vera-cards .bgrid-card--prodstar,
   .vera-cards .bgrid-card--toppost { grid-column: auto; }
