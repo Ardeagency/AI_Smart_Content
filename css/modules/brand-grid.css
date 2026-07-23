@@ -46,7 +46,7 @@
 /* ── Cards de Vera (schema cards.v2): markdown + charts que Vera compone ── */
 .bgrid-vera { grid-column: 1 / -1; }
 .vera-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
-@media (max-width: 900px) { .vera-cards { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .vera-cards, .vera-cards.has-cierre { grid-template-columns: 1fr; } }
 .vera-card {
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
@@ -136,9 +136,11 @@
 
 /* Algoritmo = 100% Vera, multi-plataforma. Full-width para que la tabla respire. */
 .vera-cards .vera-card--algoritmo { grid-column: 1 / -1; }
-/* Con el cierre colocado, Algoritmo cede la columna 2 a Publicacion destacada
-   y se queda con la 1. La tabla ya funciona a media pagina (asi convivia antes
-   con Producto destacado). */
+/* Con el cierre colocado, la fila Algoritmo | Publicacion deja de ser 50/50:
+   Algoritmo toma 1fr (todo lo que sobre) y la columna de Publicacion se fija al
+   ancho natural del preview. Asi la columna se AJUSTA a su contenido — no deja
+   espacio muerto ni obliga al preview a estirarse a media pagina. */
+.vera-cards.has-cierre { grid-template-columns: 1fr 360px; }
 .vera-cards.has-cierre .vera-card--algoritmo { grid-column: 1; }
 /* Sin acento de color a la izquierda: borde uniforme (igual que audiencia). */
 .vera-card.vera-card--algoritmo { border-left: 1px solid var(--border-divider, #242424); }
@@ -382,12 +384,10 @@
      sola pieza. */
   gap: 1.1rem;
 }
-/* La columna 2 ocupa el 50% de la pagina; dejar la publicacion al 100% de esa
-   columna disparaba un reel 9:16 a ~1600px de alto. Se pone un TECHO al ancho
-   natural de un reel: llena hasta ahi y se detiene, pero sigue siendo
-   responsivo (se encoge por debajo en pantallas angostas). El embed lee este
-   ancho en el montaje y en cada resize, y el alto cae proporcional. */
-.bgrid-card--toppost .cgrid-post-card { width: 100%; max-width: 360px; }
+/* La columna ya viene fijada al ancho del preview (grid 1fr 360px), asi que el
+   contenido solo la llena. El embed lee este ancho en el montaje y en cada
+   resize, y el alto cae proporcional a la forma del post. */
+.bgrid-card--toppost .cgrid-post-card { width: 100%; max-width: 100%; }
 /* Publicacion destacada: columna 2, a la DERECHA de Algoritmo (misma fila).
    Producto destacado: debajo, a lo ancho. */
 .vera-cards .bgrid-card--prodstar,
