@@ -86,6 +86,7 @@
         <div class="insight-page mb-dash" id="tendPage">
           <div class="mb-layout-aside" style="max-width:340px;">${card}</div>
         </div>`;
+      this._bindTendCalendar(body);
     },
 
     async _ensureTendenciasService() {
@@ -236,41 +237,143 @@
       return m ? [String(Number(m[3])), M[Number(m[2]) - 1]] : ['', ''];
     },
 
-    /* Card lateral "Proximas Fechas" (mismo diseño que Salud de tu marca /
-       Observaciones: mb-health-card--aside). Cada fecha con su dia exacto + tag
-       Utilizar/Descartar (juicio de conveniencia por marca, del collector). */
+    /* Card lateral "Proximas Fechas" = CALENDARIO de mes (glass-black, sin borde
+       de color dinamico). Los dias con evento se marcan con punto y son
+       clicables; el detalle del dia seleccionado se pinta bajo la grilla con su
+       tag Utilizar/Descartar (juicio de conveniencia por marca, del collector). */
     _buildTendFechasCard(world) {
       const holidays = Array.isArray(world?.upcoming_holidays) ? world.upcoming_holidays : [];
-      if (!holidays.length) return '';
-      const rows = [...holidays]
-        .sort((a, b) => Number(a.days_until) - Number(b.days_until))
-        .slice(0, 10)
+      const evs = holidays
         .map((h) => {
           const rd = h.raw_data || {};
-          const verdict = String(rd.verdict || '');
-          const intl = String(rd.scope || '') === 'international';
-          const tag = verdict === 'utilizar'
-            ? `<span class="tend-fecha-tag tend-fecha-tag--use">${__('Utilizar')}</span>`
-            : verdict === 'descartar'
-              ? `<span class="tend-fecha-tag tend-fecha-tag--skip">${__('Descartar')}</span>`
-              : '';
-          const reason = h.event_description || rd.reason || '';
-          const globe = intl ? `<i class="aisc-ico aisc-ico--places tend-fecha-globe" title="${__('Evento internacional')}"></i> ` : '';
-          const [d, mon] = this._fmtEventDay(h.event_date);
-          return `
-            <div class="tend-fecha${verdict === 'descartar' ? ' tend-fecha--muted' : ''}${intl ? ' tend-fecha--intl' : ''}">
-              <div class="tend-fecha-date"><span class="tend-fecha-day">${this._esc(d)}</span><span class="tend-fecha-mon">${this._esc(mon)}</span></div>
-              <div class="tend-fecha-body">
-                <div class="tend-fecha-top"><span class="tend-fecha-name">${globe}${this._esc(h.event_name)}</span>${tag}</div>
-                ${reason ? `<span class="tend-fecha-reason">${this._esc(reason)}</span>` : ''}
-              </div>
-            </div>`;
-        }).join('');
+          const iso = String(h.event_date || '').match(/^\d{4}-\d{2}-\d{2}/)?.[0] || '';
+          return {
+            date: iso,
+            name: String(h.event_name || ''),
+            reason: h.event_description || rd.reason || '',
+            verdict: String(rd.verdict || ''),
+            intl: String(rd.scope || '') === 'international',
+          };
+        })
+        .filter((e) => e.date)
+        .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+      if (!evs.length) return '';
+      this._tendCalEvents = evs;
+      // Mes visible: se conserva entre repintados si aun tiene sentido; si no,
+      // arranca en el mes del proximo evento.
+      const months = [...new Set(evs.map((e) => e.date.slice(0, 7)))];
+      if (!this._tendCalMonth || !months.includes(this._tendCalMonth)) this._tendCalMonth = months[0];
+      this._tendCalMonths = months;
+      this._syncTendCalSel();
+      return this._buildTendCalHtml();
+    },
+
+    /* El dia seleccionado siempre pertenece al mes visible y tiene evento. */
+    _syncTendCalSel() {
+      const evs = this._tendCalEvents || [];
+      const inMonth = evs.filter((e) => e.date.slice(0, 7) === this._tendCalMonth);
+      if (!inMonth.some((e) => e.date === this._tendCalSel)) {
+        this._tendCalSel = inMonth.length ? inMonth[0].date : null;
+      }
+    },
+
+    _buildTendCalHtml() {
+      const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      const DOW = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+      const evs = this._tendCalEvents || [];
+      const months = this._tendCalMonths || [];
+      const ym = this._tendCalMonth;
+      const [y, m] = ym.split('-').map(Number);
+
+      // Grilla del mes (parseo/aritmetica en UTC: sin corrimiento por zona horaria).
+      const firstDow = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7; // 0 = lunes
+      const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+      const byDate = new Map();
+      evs.forEach((e) => { if (!byDate.has(e.date)) byDate.set(e.date, []); byDate.get(e.date).push(e); });
+      const today = new Date();
+      const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+      let cells = '';
+      for (let i = 0; i < firstDow; i++) cells += '<span class="tend-cal-day is-empty"></span>';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const iso = `${ym}-${String(d).padStart(2, '0')}`;
+        const dayEvs = byDate.get(iso) || [];
+        if (!dayEvs.length) {
+          cells += `<span class="tend-cal-day${iso === todayIso ? ' is-today' : ''}">${d}</span>`;
+          continue;
+        }
+        const useful = dayEvs.some((e) => e.verdict !== 'descartar');
+        const cls = ['tend-cal-day', 'has-ev', useful ? 'is-use' : 'is-skip'];
+        if (iso === todayIso) cls.push('is-today');
+        if (iso === this._tendCalSel) cls.push('is-sel');
+        cells += `<button type="button" class="${cls.join(' ')}" data-tend-cal-day="${iso}"
+          title="${this._esc(dayEvs.map((e) => e.name).join(' · '))}">${d}<span class="tend-cal-dot"></span></button>`;
+      }
+
+      const idx = months.indexOf(ym);
+      const prevOk = idx > 0;
+      const nextOk = idx >= 0 && idx < months.length - 1;
+
+      const sel = (byDate.get(this._tendCalSel) || []);
+      const detail = sel.length
+        ? sel.map((e) => {
+            const tag = e.verdict === 'utilizar'
+              ? `<span class="tend-fecha-tag tend-fecha-tag--use">${__('Utilizar')}</span>`
+              : e.verdict === 'descartar'
+                ? `<span class="tend-fecha-tag tend-fecha-tag--skip">${__('Descartar')}</span>`
+                : '';
+            const globe = e.intl ? `<i class="aisc-ico aisc-ico--places tend-fecha-globe" title="${__('Evento internacional')}"></i> ` : '';
+            const [dd, mon] = this._fmtEventDay(e.date);
+            return `
+              <div class="tend-fecha${e.verdict === 'descartar' ? ' tend-fecha--muted' : ''}${e.intl ? ' tend-fecha--intl' : ''}">
+                <div class="tend-fecha-date"><span class="tend-fecha-day">${this._esc(dd)}</span><span class="tend-fecha-mon">${this._esc(mon)}</span></div>
+                <div class="tend-fecha-body">
+                  <div class="tend-fecha-top"><span class="tend-fecha-name">${globe}${this._esc(e.name)}</span>${tag}</div>
+                  ${e.reason ? `<span class="tend-fecha-reason">${this._esc(e.reason)}</span>` : ''}
+                </div>
+              </div>`;
+          }).join('')
+        : `<p class="tend-cal-hint">${__('Sin fechas relevantes este mes.')}</p>`;
+
       return `
-        <section class="mb-health-card mb-health-card--aside">
+        <section class="tend-cal-card" id="tendCalCard">
           <span class="mb-hero-label">${__('Próximas Fechas')}</span>
-          <div class="tend-fechas">${rows}</div>
+          <div class="tend-cal-nav">
+            <button type="button" class="tend-cal-arrow" data-tend-cal-nav="-1" ${prevOk ? '' : 'disabled'}
+              aria-label="${__('Mes anterior')}"><i class="aisc-ico aisc-ico--chevron-left"></i></button>
+            <span class="tend-cal-title">${MONTHS[m - 1]} ${y}</span>
+            <button type="button" class="tend-cal-arrow" data-tend-cal-nav="1" ${nextOk ? '' : 'disabled'}
+              aria-label="${__('Mes siguiente')}"><i class="aisc-ico aisc-ico--chevron-right"></i></button>
+          </div>
+          <div class="tend-cal-dow">${DOW.map((d) => `<span>${d}</span>`).join('')}</div>
+          <div class="tend-cal-grid">${cells}</div>
+          <div class="tend-cal-detail">${detail}</div>
         </section>`;
+    },
+
+    /* Navegacion + seleccion del calendario (delegado en el contenedor). */
+    _bindTendCalendar(root) {
+      const card = root?.querySelector?.('#tendCalCard');
+      if (!card || card._tendCalBound) return;
+      card._tendCalBound = true;
+      card.addEventListener('click', (ev) => {
+        const nav = ev.target.closest('[data-tend-cal-nav]');
+        const day = ev.target.closest('[data-tend-cal-day]');
+        if (!nav && !day) return;
+        if (nav) {
+          const months = this._tendCalMonths || [];
+          const next = months[months.indexOf(this._tendCalMonth) + Number(nav.dataset.tendCalNav)];
+          if (!next) return;
+          this._tendCalMonth = next;
+          this._syncTendCalSel();
+        } else {
+          this._tendCalSel = day.dataset.tendCalDay;
+        }
+        const host = card.parentElement;
+        card.outerHTML = this._buildTendCalHtml();
+        this._bindTendCalendar(host);
+      });
     },
 
     /* ── Cards del hero en Tendencias: el PULSO del nicho. Tendencia caliente
@@ -728,6 +831,7 @@
     },
 
     _bindTendenciesHandlers(body) {
+      this._bindTendCalendar(body);   // el calendario se re-pinta: bind por card, no por body
       if (!body || body.dataset.tendBound === '1') return;
       body.dataset.tendBound = '1';
       body.addEventListener('change', (e) => {

@@ -2756,6 +2756,71 @@
 .tend-fecha-tag--skip { background: rgba(255,255,255,0.05); color: var(--text-muted, rgba(212,209,216,0.55)); }
 .tend-fecha-globe { color: #5b9bd5; font-size: 0.82em; }
 .tend-fecha--intl .tend-fecha-date { border-color: rgba(91,155,213,0.4); }
+
+/* ── Proximas Fechas = calendario de mes. Card glass-black oficial (override de
+   header: el backdrop se "aplana" sobre el degradado grande del tablero), SIN
+   el borde superior de color dinamico de mb-health-card--aside. */
+.insight-page .tend-cal-card {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 0.85rem;
+  padding: 1.15rem 1.15rem 1.25rem;
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--glass-radius, 14px);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+}
+.tend-cal-card .mb-hero-label {
+  text-align: left; text-transform: uppercase; color: #7B7B7B;
+  font-size: 0.8125rem; letter-spacing: 0.04em;
+}
+.tend-cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.tend-cal-title {
+  font-size: 0.9rem; font-weight: 700; text-transform: capitalize;
+  color: var(--text-primary, #f2f2f4); letter-spacing: 0.01em;
+}
+.tend-cal-arrow {
+  flex: 0 0 auto; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary, #b8b6bd); cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
+}
+.tend-cal-arrow:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.22); }
+.tend-cal-arrow:disabled { opacity: 0.3; cursor: default; }
+.tend-cal-arrow i { font-size: 0.8rem; }
+.tend-cal-dow, .tend-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.tend-cal-dow span {
+  text-align: center; font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-muted, rgba(212,209,216,0.45)); padding-bottom: 0.15rem;
+}
+.tend-cal-day {
+  position: relative; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-variant-numeric: tabular-nums; border-radius: 8px;
+  border: 1px solid transparent; background: none; padding: 0;
+  color: var(--text-muted, rgba(212,209,216,0.5));
+}
+.tend-cal-day.is-empty { visibility: hidden; }
+.tend-cal-day.is-today { color: var(--text-primary, #f2f2f4); font-weight: 700; }
+.tend-cal-day.is-today::after {
+  content: ""; position: absolute; inset: 0; border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.2); pointer-events: none;
+}
+.tend-cal-day.has-ev {
+  cursor: pointer; font-weight: 700; color: var(--text-primary, #f2f2f4);
+  background: rgba(255, 255, 255, 0.05); transition: background 0.15s ease, border-color 0.15s ease;
+}
+.tend-cal-day.has-ev:hover { background: rgba(255, 255, 255, 0.1); }
+.tend-cal-day.is-sel { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.12); }
+.tend-cal-day.is-skip { color: var(--text-muted, rgba(212,209,216,0.55)); }
+.tend-cal-dot {
+  position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%; background: #7fc99a;
+}
+.tend-cal-day.is-skip .tend-cal-dot { background: rgba(212, 209, 216, 0.4); }
+.tend-cal-detail {
+  display: flex; flex-direction: column; gap: 0.85rem;
+  padding-top: 0.9rem; border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.tend-cal-hint { font-size: 0.76rem; color: var(--text-muted, rgba(212,209,216,0.55)); margin: 0; }
 /* Tabla "Demanda de busqueda": tag de estado (En alza / Demandado). */
 /* ── Demanda de busqueda: bubble chart (tamaño ∝ interes 0-100) + leyenda. */
 .tend-bub-viz { padding: 1.1rem 0 0.4rem; display: flex; justify-content: center; }
