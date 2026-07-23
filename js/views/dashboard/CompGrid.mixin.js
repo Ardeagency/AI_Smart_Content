@@ -660,21 +660,25 @@
       if (!card || !host) return;
       const esc = (s) => this._esc(s);
 
+      // Recomendar lo que la marca YA adopto es ruido: las audiencias que ya
+      // viven en la biblioteca de la org salen del carrusel.
+      const yaEnBiblioteca = await this._cgridAudienciasAdoptadas();
       const auds = (reading?.reading?.narrative || [])
-        .filter((b) => b && b.type === 'audiencia_competidor' && b.nombre);
+        .filter((b) => b && b.type === 'audiencia_competidor' && b.nombre)
+        .filter((b) => !yaEnBiblioteca.has(this._cgridAudKey(b.nombre)));
       if (!auds.length) { card.hidden = true; return; }
       card.hidden = false;
       this._cgridAuds = auds;
 
-      // Las fichas se tiñen con el tono CLARO de la marca REAL (leído de
-      // brand_colors, no del fallback de plataforma). Se resuelve en JS porque
-      // hay que garantizar que el texto oscuro siga siendo legible sobre ese
-      // color, sea cual sea la marca.
+      // Las fichas se tiñen con el color SOLIDO de la marca REAL (leído de
+      // brand_colors, no del fallback de plataforma) y la tinta la resuelve la
+      // luminancia — el mismo primitivo que viste Audiencias en Mi Marca y el
+      // calendario de Tendencias.
       const accentA = await this._cgridBrandHex();
       const [rr, gg, bb] = this._hexToRgb(accentA);
       card.style.setProperty('--cgp-accent', accentA);
       card.style.setProperty('--cgp-accent-rgb', `${rr}, ${gg}, ${bb}`);
-      card.style.setProperty('--cga-surface', this._cgridBrandTint(accentA));
+      this._vestirPanelDeMarca?.(host, accentA);
 
       const chips = (v, cls) => (Array.isArray(v) ? v : []).slice(0, 4)
         .map((x) => `<span class="cga-chip ${cls}">${esc(String(x))}</span>`).join('');
@@ -697,6 +701,31 @@
             </button>
           </div>
         </article>`).join('');
+    },
+
+    /* Clave de comparacion de audiencias: mismo nombre aunque cambien mayusculas,
+       tildes o espacios. Evita re-recomendar "Mamás que hornean" como si fuera
+       distinta de "mamas que hornean". */
+    _cgridAudKey(nombre) {
+      return String(nombre || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().replace(/\s+/g, ' ').trim();
+    },
+
+    /* Nombres de las audiencias que la org ya tiene en su biblioteca. Fail-soft:
+       si la consulta falla se devuelve vacio y se recomiendan todas (mejor de
+       mas que esconder recomendaciones por un error de red). */
+    async _cgridAudienciasAdoptadas() {
+      if (!this._supabase || !this._orgId) return new Set();
+      try {
+        const { data, error } = await this._supabase.from('audience_personas')
+          .select('name').eq('organization_id', this._orgId);
+        if (error) throw error;
+        return new Set((data || []).map((r) => this._cgridAudKey(r.name)));
+      } catch (e) {
+        console.warn('[CompGrid] no se pudo leer la biblioteca de audiencias:', e?.message || e);
+        return new Set();
+      }
     },
 
     /* Color de marca leído de la FUENTE DE VERDAD (`brand_colors` de la org).
@@ -728,35 +757,6 @@
       // Sin color en la base, se conserva el camino anterior.
       this._cgridBrandHexCache = elegido || this._gridBrandHexes()[0];
       return this._cgridBrandHexCache;
-    },
-
-    /* Tono CLARO de la marca para la superficie de las fichas: el acento
-       mezclado con blanco hasta que el texto oscuro se lea con holgura.
-       Se calcula en vez de fijarlo porque cada marca trae su propio color y una
-       mezcla fija dejaria ilegibles las marcas de color intenso. */
-    _cgridBrandTint(hex) {
-      // 8.5 y no 7: el umbral lo fija el texto SECUNDARIO de la ficha (opacidad
-      // 0.72), no el título. Con marcas oscuras —un azul intenso— un 7 dejaba
-      // ese texto en 3.5:1.
-      const CONTRASTE_MIN = 8.5;
-      const TEXTO = [16, 17, 20];
-      const lum = (c) => {
-        const s = c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
-        return 0.2126 * s[0] + 0.7152 * s[1] + 0.0722 * s[2];
-      };
-      const ratio = (a, b) => {
-        const l1 = lum(a), l2 = lum(b);
-        return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
-      };
-      let rgb;
-      try { rgb = this._hexToRgb(hex); } catch (_) { return '#eef0f3'; }
-      // Se aclara progresivamente hasta alcanzar el contraste; si el color ya
-      // es claro, apenas se toca y la marca se nota.
-      for (let mezcla = 0.5; mezcla <= 0.97; mezcla += 0.03) {
-        const c = rgb.map((v) => Math.round(v * (1 - mezcla) + 255 * mezcla));
-        if (ratio(TEXTO, c) >= CONTRASTE_MIN) return `rgb(${c.join(', ')})`;
-      }
-      return '#eef0f3';
     },
 
     /* Detalle completo de la audiencia. Es donde se decide si vale la pena
@@ -831,6 +831,10 @@
         if (error) throw error;
         btn.classList.add('is-done');
         btn.innerHTML = `<i class="fas fa-check" aria-hidden="true"></i> ${this._esc(__('En tu biblioteca'))}`;
+        // Ya es de la marca: deja de ser una recomendacion. Se cierra el modal
+        // (si vino de ahi) y la ficha se retira del carrusel.
+        btn.closest('.salud-overlay')?.remove();
+        setTimeout(() => this._cgridRetirarAudiencia(idx), btn.closest('.cga-item') ? 420 : 0);
       } catch (e) {
         console.warn('[CompGrid] no se pudo guardar la audiencia:', e?.message || e);
         btn.disabled = false;
@@ -838,6 +842,23 @@
         btn.classList.add('is-error');
         setTimeout(() => btn.classList.remove('is-error'), 2200);
       }
+    },
+
+    /* Retira del carrusel la ficha ya adoptada. No se reindexa nada: los
+       data-aud-* apuntan a posiciones de _cgridAuds, que no se toca. Si era la
+       ultima, la seccion entera se esconde (no hay nada que recomendar). */
+    _cgridRetirarAudiencia(idx) {
+      const host = document.getElementById('cgridAud');
+      const item = host?.querySelector(`.cga-item[data-aud-open="${idx}"]`);
+      if (!item) return;
+      item.classList.add('is-adoptada');
+      setTimeout(() => {
+        item.remove();
+        if (!host.querySelector('.cga-item')) {
+          const card = document.getElementById('cgridAudCard');
+          if (card) card.hidden = true;
+        }
+      }, 280);
     },
 
     /* ══ Panel de marca (drill-down de una barra) ═══════════════════════════

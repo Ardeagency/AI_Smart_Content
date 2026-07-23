@@ -1369,9 +1369,11 @@
 
     /* Pinta un panel con el color de la marca y le deja resuelto el juego de
        tintas en variables, para que el CSS no tenga que saber de luminancias. */
-    _vestirPanelDeMarca(el) {
+    _vestirPanelDeMarca(el, hexOverride) {
       if (!el) return;
-      const [accent] = this._gridBrandHexes();
+      // hexOverride: para quien ya resolvio el color por una via mejor (ej.
+      // CompGrid lo lee de brand_colors, no de las CSS vars).
+      const accent = hexOverride || this._gridBrandHexes()[0];
       const claro = this._esColorClaro(accent);
       const tinta = claro ? '17, 14, 10' : '255, 255, 255';
       el.dataset.fondo = claro ? 'claro' : 'oscuro';

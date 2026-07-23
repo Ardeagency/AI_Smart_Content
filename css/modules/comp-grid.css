@@ -70,38 +70,43 @@
   display: flex; flex-direction: column; justify-content: space-between;
   padding: 1.25rem 1.25rem 1.1rem;
   border-radius: 22px;
-  /* Tono claro de la MARCA (lo inyecta _cgridBrandTint garantizando que el
-     texto oscuro se lea); si aún no hay color resuelto, gris casi blanco. */
-  background: var(--cga-surface, #eef0f3);
+  /* Color SOLIDO de la marca; la tinta la resuelve _vestirPanelDeMarca por
+     luminancia (--panel-fg). Si aún no hay color resuelto, gris casi blanco. */
+  background: var(--panel-bg, #eef0f3);
+  color: var(--panel-fg, #101114);
   border: 0;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.26s ease;
 }
 .cga-item:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35); }
 .cga-item:focus-visible { outline: 2px solid var(--cgp-accent); outline-offset: 3px; }
+/* Adoptada: se va del carrusel (ya no es una recomendacion). */
+.cga-item.is-adoptada { opacity: 0; transform: scale(0.96); pointer-events: none; }
 .cga-top { display: flex; flex-direction: column; gap: 0.25rem; }
 .cga-quien {
   margin: 0; font-size: 1.22rem; font-weight: 800; line-height: 1.12;
-  letter-spacing: -0.02em; color: #101114;
+  letter-spacing: -0.02em; color: var(--panel-fg, #101114);
 }
 /* Opacidades subidas: a 0.45 el texto secundario quedaba en 2.9:1 sobre la
    ficha clara — legible para quien mira, no para quien lee. */
-.cga-origen { font-size: 0.72rem; color: rgba(16, 17, 20, 0.72); }
+.cga-origen { font-size: 0.72rem; color: var(--panel-fg-soft, rgba(16, 17, 20, 0.72)); }
 .cga-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-.cga-hint { font-size: 0.7rem; color: rgba(16, 17, 20, 0.72); }
+.cga-hint { font-size: 0.7rem; color: var(--panel-fg-soft, rgba(16, 17, 20, 0.72)); }
 /* El "+" es un boton propio dentro de una card clicable: agrega sin abrir el
-   detalle, por eso se distingue del resto de la ficha. */
+   detalle, por eso se distingue del resto de la ficha. Invierte la tinta del
+   panel para verse tanto sobre marca clara como sobre marca oscura. */
 .cga-add {
   flex: 0 0 auto; appearance: none; cursor: pointer;
   width: 38px; height: 38px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.9rem; color: #fff; background: #101114; border: 0;
+  font-size: 0.9rem; border: 0;
+  color: var(--panel-bg, #fff); background: var(--panel-fg, #101114);
   transition: transform 0.16s ease, background 0.16s ease;
 }
 .cga-add:hover:not(:disabled) { transform: scale(1.08); }
 .cga-add:disabled { cursor: default; }
-.cga-add.is-done { background: #11744d; }
-.cga-add.is-error { background: #be342e; }
+.cga-add.is-done { background: #11744d; color: #fff; }
+.cga-add.is-error { background: #be342e; color: #fff; }
 
 /* ── Modal de la audiencia ─────────────────────────────────────────────── */
 .cgam-origen { font-size: 0.72rem; color: var(--brand-color-light, #FF6A1A); margin-bottom: 0.5rem; }
