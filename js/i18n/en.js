@@ -14,6 +14,8 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Debilidades": "Weaknesses",
+  "Fortalezas": "Strengths",
   "Perfiles por rol": "Profiles by role",
   "Cómo se reparte tu monitoreo y el engagement del nicho entre roles": "How your monitoring and the niche engagement split across roles",
   "perfil": "profile",

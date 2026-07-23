@@ -580,14 +580,14 @@
         }).join('');
         return `<div class="vera-duo-panel" data-side="${side}">${content}</div>`;
       };
-      return `<div class="vera-duo">${panel(virtItems, 'pos', __('Virtudes'), 'star')}${panel(desvItems, 'neg', __('Desventajas'), 'alert')}</div>`;
+      return `<div class="vera-duo">${panel(virtItems, 'pos', __('Fortalezas'), 'star')}${panel(desvItems, 'neg', __('Debilidades'), 'alert')}</div>`;
     },
 
     _veraCardHtml(card, key, bare) {
       const META = {
         observacion: { label: __('Observaciones'), icon: 'eye' },
-        virtudes:    { label: __('Virtudes'),      icon: 'star' },
-        desventajas: { label: __('Desventajas'),   icon: 'alert' },
+        virtudes:    { label: __('Fortalezas'),    icon: 'star' },
+        desventajas: { label: __('Debilidades'),   icon: 'alert' },
         audiencia:   { label: __('Audiencias'),    icon: 'audience' },
         algoritmo:   { label: __('Tu Algoritmo'),  icon: 'compass' },
       };
