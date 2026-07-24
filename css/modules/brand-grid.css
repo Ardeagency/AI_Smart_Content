@@ -45,6 +45,10 @@
 
 /* ── Cards de Vera (schema cards.v2): markdown + charts que Vera compone ── */
 .bgrid-vera { grid-column: 1 / -1; }
+/* NIVEL 2 de la jerarquía: la Intuición lidera la lectura de Vera, a todo el
+   ancho, tras el veredicto de salud. :empty se colapsa (sin lectura, sin banda). */
+.bgrid-intuicion { grid-column: 1 / -1; }
+.bgrid-intuicion:empty { display: none; }
 .vera-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
 @media (max-width: 900px) { .vera-cards, .vera-cards.has-cierre { grid-template-columns: 1fr; } }
 .vera-card {

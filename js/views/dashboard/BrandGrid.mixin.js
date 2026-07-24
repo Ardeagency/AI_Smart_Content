@@ -102,6 +102,12 @@
             </section>
             <div class="bgrid-vd" id="bgridVD"></div>
           </div>
+          <!-- NIVEL 2 de la jerarquía (pirámide invertida): tras el veredicto de
+               salud, la LECTURA de Vera lidera el resto. La Intuición sube aquí
+               (antes cerraba la página) para que lo primero que "dice" Vera sea
+               su lectura del alma de la audiencia, no una tabla. Full-width,
+               encima de Algoritmo/Audiencias/piezas. -->
+          <div class="bgrid-intuicion" id="bgridIntuicion"></div>
           <div class="bgrid-vera" id="bgridVera"></div>
           <!-- Producto destacado + Publicacion destacada cierran la pagina como
                PAR: se reubican debajo de Algoritmo (que va full-width) para que
@@ -325,20 +331,30 @@
       const all = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
       // Colocación por tipo: observacion arriba de Interacciones (transparente);
       // virtudes+desventajas como PAR hermano bajo Interacciones; resto full-width.
-      const obs = [], virt = [], desv = [], audRec = [], rest = [];
+      const obs = [], virt = [], desv = [], audRec = [], intu = [], rest = [];
       all.forEach((c) => {
         const t = c && c.type;
         if (t === 'observacion') obs.push(c);
         else if (t === 'virtudes') virt.push(c);
         else if (t === 'desventajas') desv.push(c);
         else if (t === 'audiencias_recomendadas') audRec.push(c);
+        else if (t === 'intuicion') intu.push(c);   // NIVEL 2: se pinta aparte, arriba
         else rest.push(c);
       });
       const obsItems = obs.map((c, i) => ({ card: c, key: 'obs' + i }));
       const virtItems = virt.map((c, i) => ({ card: c, key: 'pos' + i }));
       const desvItems = desv.map((c, i) => ({ card: c, key: 'neg' + i }));
       const restItems = rest.map((c, i) => ({ card: c, key: 'v' + i }));
+      const intuItems = intu.map((c, i) => ({ card: c, key: 'intu' + i }));
       if (obsHost) obsHost.innerHTML = obsItems.map((x) => this._veraCardHtml(x.card, x.key, true)).join('');
+      // NIVEL 2 — la Intuición lidera la lectura de Vera (justo tras el veredicto
+      // de salud, encima de Algoritmo/Audiencias). Banda full-width propia.
+      const intuHost = body.querySelector('#bgridIntuicion');
+      if (intuHost) {
+        const intuHtml = intuItems.map((x) => this._veraCardHtml(x.card, x.key)).join('');
+        intuHost.innerHTML = intuHtml ? `<div class="vera-cards">${intuHtml}</div>` : '';
+        this._acentuarIntuicion(intuHost);
+      }
       if (vdHost) {
         vdHost.innerHTML = this._veraDuoHtml(virtItems, desvItems);
         this._acentuarDuoConMarca(vdHost);
@@ -360,10 +376,9 @@
       if (host) host.innerHTML = `${audRecHtml}${restBlock}`;
       this._colocarCierreBajoAlgoritmo(body);
       this._bindVeraAudRec(host);
-      this._acentuarIntuicion(host);
       body.querySelectorAll('[data-panel-marca]').forEach((el) => this._vestirPanelDeMarca(el));
       try { await this._ensureChartJs(); } catch (_) {}
-      this._paintVeraCharts(body, obsItems.concat(virtItems, desvItems, restItems));
+      this._paintVeraCharts(body, obsItems.concat(virtItems, desvItems, intuItems, restItems));
       // Bloques vivos: piden su propio dato, por eso van aparte de los charts.
       this._paintProductoEstrella(body);
       this._paintTopPostPropio(body);
@@ -598,15 +613,11 @@
       cards.classList.add('has-cierre');
       // Publicacion destacada a la DERECHA de Algoritmo: se inserta justo
       // despues en el DOM para que caiga en la columna 2 de su misma fila.
-      // Debajo, a lo ancho y en este orden: Intuicion (si Vera la escribio),
-      // luego Producto destacado. El auto-flow del grid respeta el orden del DOM.
+      // Debajo, Producto destacado. La Intuición YA NO cierra la página: subió al
+      // Nivel 2 (host #bgridIntuicion, arriba de todo el análisis de Vera).
       const toppost = body.querySelector('.bgrid-card--toppost');
       const prodstar = body.querySelector('.bgrid-card--prodstar');
-      const intuicion = body.querySelector('.vera-cards .vera-card--intuicion');
       if (toppost) algo.insertAdjacentElement('afterend', toppost);
-      // Intuicion queda donde la puso el render (es card de Vera en el grid);
-      // solo aseguramos que Producto destacado vaya al final, despues de ella.
-      if (intuicion) cards.appendChild(intuicion);
       if (prodstar) cards.appendChild(prodstar);
     },
 
