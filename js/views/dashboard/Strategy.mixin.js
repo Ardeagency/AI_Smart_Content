@@ -26,7 +26,11 @@
       if (!body) return;
       if (!this._orgId) { this._renderEmptyOrgState?.(body); return; }
       // REDISEÑO VERA 2026-07: la lectura de Vera ES el tab (legacy oculto abajo).
-      if (this._renderVeraTabBody) { await this._renderVeraTabBody(body, 'estrategia'); return; }
+      if (this._renderVeraTabBody) {
+        await this._renderVeraTabBody(body, 'estrategia');
+        await this._renderIntuicionUniversal?.(body);   // Intuición de Vera (misma que Mi Marca)
+        return;
+      }
       await this._ensureStrategiaService();
       this._restoreStratFilters();
       this._renderStratSkeleton(body);

@@ -34,6 +34,7 @@
       if (this._renderVeraTabBody) {
         await this._renderVeraTabBody(body, 'tendencias');
         await this._renderTendFechasOnly(body);
+        await this._renderIntuicionUniversal?.(body);   // Intuición de Vera (misma que Mi Marca)
         return;
       }
       await this._ensureTendenciasService();

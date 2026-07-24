@@ -90,6 +90,47 @@
       return true;
     },
 
+    /* ── Intuición de Vera, transversal a los 4 tabs ──────────────────────────
+       La Intuición ("ver más allá de lo obvio": el alma emocional de la
+       audiencia + el formato que la enamora) es UNA sola lectura de la marca,
+       no cambia según el tab. Vera la escribe en la lectura `mi_marca`
+       (schema cards.v2); aquí la reusamos tal cual para pintarla al pie de
+       Competencia, Tendencias y Estrategia. Mi Marca ya la coloca dentro de su
+       propio grid (BrandGrid), así que ese tab NO llama a esta función.
+       Reutiliza el mismo _veraCardHtml/_acentuarIntuicion/CSS de BrandGrid
+       (todos los mixins comparten prototype). Idempotente y nunca lanza: un
+       fallo aquí jamás tumba el tab. ─────────────────────────────────────── */
+    async _renderIntuicionUniversal(body) {
+      if (!body || !this._orgId || !this._supabase) return;
+      if (body.querySelector('.vera-intu-universal')) return;   // ya pintada en este render
+      let reading = null;
+      try {
+        const { data } = await this._supabase.from('vera_dashboard_readings')
+          .select('reading')
+          .eq('organization_id', this._orgId).eq('scope', 'mi_marca').eq('status', 'published')
+          .order('created_at', { ascending: false }).limit(1);
+        reading = (data && data[0]) ? data[0].reading : null;
+      } catch (_) { return; }
+      const cards = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
+      const intu = cards.find((c) => c && c.type === 'intuicion');
+      if (!intu || typeof this._veraCardHtml !== 'function') return;
+      // Se anida en la página del tab si existe (hereda ancho/padding); si el tab
+      // está en blanco, se crea una .insight-page mínima para no quedar al borde.
+      let page = body.querySelector('.insight-page');
+      if (!page) {
+        page = document.createElement('div');
+        page.className = 'insight-page';
+        body.appendChild(page);
+      }
+      const wrap = document.createElement('div');
+      wrap.className = 'vera-cards vera-intu-universal';
+      wrap.innerHTML = this._veraCardHtml(intu, 'intu', false);
+      page.appendChild(wrap);
+      try { this._acentuarIntuicion(wrap); } catch (_) {}
+      try { wrap.querySelectorAll('[data-panel-marca]').forEach((el) => this._vestirPanelDeMarca(el)); } catch (_) {}
+      try { await this._ensureChartJs(); this._paintVeraCharts(wrap, [{ card: intu, key: 'intu' }]); } catch (_) {}
+    },
+
     /* ── FORMATO LIBRE: Vera diseñó esto — el frontend solo lo hospeda.
        HTML → iframe sandbox (scripts aislados, sin acceso a la app/sesión:
        libertad visual total con el cliente protegido). JSON → render

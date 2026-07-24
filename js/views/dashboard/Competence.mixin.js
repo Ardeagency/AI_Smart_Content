@@ -22,7 +22,11 @@
       if (!this._orgId) { this._renderEmptyOrgState?.(body); return; }
       // REDISEÑO 2026-07: el tab es un GRID de cards (CompGrid.mixin), igual que
       // Mi Marca. El pipeline legacy de abajo queda intacto por si se reactiva.
-      if (this._renderCompGrid) { await this._renderCompGrid(body); return; }
+      if (this._renderCompGrid) {
+        await this._renderCompGrid(body);
+        await this._renderIntuicionUniversal?.(body);   // Intuición de Vera (misma que Mi Marca)
+        return;
+      }
       if (this._renderVeraTabBody) { await this._renderVeraTabBody(body, 'monitoreo'); return; }
       await this._ensureCompetenciaService();
       this._restoreCompFilters();
