@@ -127,16 +127,18 @@
               <p class="bgrid-card-sub">${this._esc(__('Cuántas interacciones producen tus redes por periodo · toca una barra para ver ese día'))}</p>
               <div class="bgrid-chart-wrap bgrid-chart-wrap--latidos"><canvas id="bgridLatidosChart"></canvas><div class="bgrid-empty" id="bgridLatidosEmpty" hidden>${this._esc(__('Sin señal de impacto en este periodo'))}</div></div>
             </section>
-            <div class="bgrid-vd" id="bgridVD"></div>
             <!-- NIVEL 2 de la jerarquía (pirámide invertida): tras el veredicto de
-                 salud, la LECTURA de Vera lidera el resto. La Intuición va primero
-                 (antes cerraba la página) para que lo primero que "dice" Vera sea
-                 su lectura del alma de la audiencia, no una tabla.
+                 salud, la LECTURA de Vera lidera el resto. La Intuición va JUSTO
+                 bajo Interacciones y ENCIMA de Fortalezas/Debilidades: se lee el
+                 pulso, e inmediatamente lo que ese pulso significa para el alma de
+                 la audiencia. Las fortalezas y debilidades vienen después, ya como
+                 desglose. (Antes cerraba la página; luego quedó bajo el par.)
                  VIVEN EN ESTA COLUMNA, no como filas full-width: si fueran filas
                  tendrían que esperar a que termine la columna más alta, y una
                  Observaciones con varios items las empujaba hacia abajo dejando
                  media página muerta a la derecha. Aquí fluyen junto al análisis. -->
             <div class="bgrid-intuicion" id="bgridIntuicion"></div>
+            <div class="bgrid-vd" id="bgridVD"></div>
             <div class="bgrid-vera" id="bgridVera"></div>
           </div>
           <div class="bgrid-col">
