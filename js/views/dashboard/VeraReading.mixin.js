@@ -103,13 +103,24 @@
     async _renderIntuicionUniversal(body) {
       if (!body || !this._orgId || !this._supabase) return;
       if (body.querySelector('.vera-intu-universal')) return;   // ya pintada en este render
+      /* La lectura mi_marca existe ahora en cuatro versiones, una por periodo del
+         filtro de Mi Marca. Estos tabs no tienen ese filtro, asi que se ancla al
+         periodo por defecto ('month'): sin anclar se traeria la ultima escrita,
+         que es la de un periodo cualquiera segun el orden en que Vera las
+         entrego. Respaldo a la mas reciente si ese periodo aun no existe. */
       let reading = null;
       try {
-        const { data } = await this._supabase.from('vera_dashboard_readings')
-          .select('reading')
+        const base = () => this._supabase.from('vera_dashboard_readings')
+          .select('reading, periodo')
           .eq('organization_id', this._orgId).eq('scope', 'mi_marca').eq('status', 'published')
           .order('created_at', { ascending: false }).limit(1);
-        reading = (data && data[0]) ? data[0].reading : null;
+        const { data } = await base().eq('periodo', 'month');
+        let fila = (data && data[0]) ? data[0] : null;
+        if (!fila) {
+          const { data: fallback } = await base();
+          fila = (fallback && fallback[0]) ? fallback[0] : null;
+        }
+        reading = fila ? fila.reading : null;
       } catch (_) { return; }
       const cards = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
       const intu = cards.find((c) => c && c.type === 'intuicion');
