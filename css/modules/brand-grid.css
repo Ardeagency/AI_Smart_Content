@@ -5,14 +5,16 @@
 
 .bgrid {
   display: grid;
-  /* Tráfico (portrait, incluye el arco de salud) + Impacto Social (resto). */
-  grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
+  /* Análisis de Vera (resto) + columna de Tráfico/Campañas/Observaciones a la
+     DERECHA (portrait, incluye el arco de salud). */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
   gap: 1.25rem;
   align-items: start;
   padding-top: 0.25rem;
 }
 
-/* Columna izquierda: Tráfico + Campañas apiladas. */
+/* Cada columna apila sus cards; la derecha lleva Tráfico, Campañas,
+   Observaciones y Publicación destacada. */
 .bgrid-col { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
 
 /* Campañas: el CONTENEDOR es transparente (sin color ni bordes); el color de
@@ -53,7 +55,7 @@
    veredicto de salud. :empty se colapsa (sin lectura, sin banda). */
 .bgrid-intuicion:empty { display: none; }
 .vera-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
-@media (max-width: 900px) { .vera-cards, .vera-cards.has-cierre { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .vera-cards { grid-template-columns: 1fr; } }
 .vera-card {
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
@@ -154,8 +156,6 @@
    Algoritmo toma 1fr (todo lo que sobre) y la columna de Publicacion se fija al
    ancho natural del preview. Asi la columna se AJUSTA a su contenido — no deja
    espacio muerto ni obliga al preview a estirarse a media pagina. */
-.vera-cards.has-cierre { grid-template-columns: 1fr 360px; }
-.vera-cards.has-cierre .vera-card--algoritmo { grid-column: 1; }
 /* Sin acento de color a la izquierda: borde uniforme (igual que audiencia). */
 .vera-card.vera-card--algoritmo { border-left: 1px solid var(--border-divider, #242424); }
 
@@ -383,35 +383,31 @@
   margin-top: 0.25rem;
   display: flex; flex-direction: column; gap: 1rem; min-width: 0;
 }
-/* Publicacion destacada propia: mismo bloque de cierre que Producto destacado.
-   Fuera del grid de Vera cierra la pagina con su ancho acotado. */
+/* Publicacion destacada propia: vive en la columna de Tráfico/Campañas/
+   Observaciones — el preview es vertical y encaja en sus 480px. */
 .bgrid-card--toppost {
-  grid-column: 1 / -1;
-  justify-self: start;
   width: 100%;
   max-width: 480px;
   min-width: 0;
   /* Sin superficie (se le quito glass-black): flota sobre el degradado como
      Latidos. Sin el aire que daba el recuadro, el padding sobra. */
   padding: 0;
+  /* OJO: el `gap` de abajo NO hacia nada sin esto. `.bgrid-card` a secas no es
+     flex (solo `.bgrid-card.glass-black` lo es), asi que el titulo quedaba
+     pegado al preview por mas gap que se le pusiera. */
+  display: flex;
+  flex-direction: column;
   /* Aire entre el titulo de la card y el preview: pegados se leian como una
      sola pieza. */
   gap: 1.1rem;
 }
-/* La columna ya viene fijada al ancho del preview (grid 1fr 360px), asi que el
-   contenido solo la llena. El embed lee este ancho en el montaje y en cada
-   resize, y el alto cae proporcional a la forma del post. */
+/* El contenido llena el ancho de la columna. El embed lo lee en el montaje y en
+   cada resize, y el alto cae proporcional a la forma del post. */
 .bgrid-card--toppost .cgrid-post-card { width: 100%; max-width: 100%; }
-/* Publicacion destacada: columna 2, a la DERECHA de Algoritmo (misma fila).
-   Producto destacado: debajo, a lo ancho. */
-.vera-cards .bgrid-card--prodstar,
-.vera-cards .bgrid-card--toppost { max-width: none; align-self: start; }
-.vera-cards .bgrid-card--toppost { grid-column: 2; }
-.vera-cards .bgrid-card--prodstar { grid-column: 1 / -1; }
-@media (max-width: 900px) {
-  .vera-cards .bgrid-card--prodstar,
-  .vera-cards .bgrid-card--toppost { grid-column: auto; }
-}
+/* Producto destacado cierra el bloque de Vera, a lo ancho. Publicacion
+   destacada ya no vive aqui: se mudo a la columna de Tráfico. */
+.vera-cards .bgrid-card--prodstar { max-width: none; align-self: start; grid-column: 1 / -1; }
+@media (max-width: 900px) { .vera-cards .bgrid-card--prodstar { grid-column: auto; } }
 .vera-prodstar-load { font-size: 0.82rem; color: rgba(255, 255, 255, 0.4); padding: 0.4rem 0; }
 .vera-prodstar-grid { display: block; }
 

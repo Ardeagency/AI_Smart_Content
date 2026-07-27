@@ -58,50 +58,64 @@
       if (!body) return true;
       if (!this._orgId) { this._renderEmptyOrgState?.(body); return true; }
       if (this._gridWindow == null) this._gridWindow = 'month';
+      this._gridBody = body;   // lo necesita el onChange del picker de fechas
 
       // Shell una sola vez (persistente entre refresh); los charts se repintan.
       if (!body.querySelector('.bgrid')) {
         body.innerHTML = this._buildBrandGridShell();
         this._bindBrandGrid(body);
+        // El picker necesita engancharse al DOM ya insertado (su dropdown se
+        // portalea a body y se ancla al trigger por getBoundingClientRect).
+        this._gridPicker()?.mount(body.querySelector('.bgrid-seg'));
       }
       await this._gridLoadAndPaint(body);
       return true;
     },
 
+    /* El DateRangePicker de la plataforma, reusado como quinto botón del filtro
+       de Tráfico. Se crea UNA vez y se conserva entre repintados: el shell solo
+       se construye la primera vez, pero la instancia guarda el rango elegido. */
+    _gridPicker() {
+      if (!this._gridDP && typeof window.DateRangePicker === 'function') {
+        const r = this._gridCustomRange || {};
+        this._gridDP = new window.DateRangePicker({
+          from: r.from || null,
+          to: r.to || null,
+          label: '',
+          allLabel: __('Personalizado'),
+          onChange: ({ from, to }) => {
+            if (!from && !to) {           // "Limpiar" vuelve al preset por defecto
+              this._gridWindow = 'month';
+              this._gridCustomRange = null;
+            } else {
+              this._gridWindow = 'custom';
+              this._gridCustomRange = { from, to };
+            }
+            const body = this._gridBody;
+            this._gridSyncSeg(body || document);
+            if (body) this._gridLoadAndPaint(body);
+          },
+        });
+      }
+      return this._gridDP;
+    },
+
+    /** Deja el pill activo acorde a la ventana vigente (presets y personalizado). */
+    _gridSyncSeg(root) {
+      if (!root || !root.querySelectorAll) return;
+      root.querySelectorAll('.bgrid-seg-btn').forEach((b) => {
+        b.classList.toggle('is-active', b.dataset.window === this._gridWindow);
+      });
+      const filtro = root.querySelector('.bgrid-seg [data-drp]');
+      if (filtro) filtro.classList.toggle('is-active', this._gridWindow === 'custom');
+    },
+
     _buildBrandGridShell() {
       const seg = WINDOWS.map((w) => `
-        <button type="button" class="bgrid-seg-btn${w.k === this._gridWindow ? ' is-active' : ''}" data-window="${w.k}" role="tab">${this._esc(w.label())}</button>`).join('');
+        <button type="button" class="bgrid-seg-btn${w.k === this._gridWindow ? ' is-active' : ''}" data-window="${w.k}" role="tab">${this._esc(w.label())}</button>`).join('')
+        + (this._gridPicker() ? this._gridPicker().html() : '');
       return `
         <div class="bgrid">
-          <div class="bgrid-col">
-          <section class="bgrid-card glass-black bgrid-card--activity">
-            <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--actividad" aria-hidden="true"></i>${this._esc(__('Tráfico'))}</span>
-              <button type="button" class="bgrid-details-btn" data-salud-details aria-label="${this._esc(__('Ver detalles de salud'))}" title="${this._esc(__('Ver detalles de salud'))}"><i class="aisc-ico aisc-ico--chart-bar" aria-hidden="true"></i></button>
-            </header>
-            <div class="bgrid-salud-arc" id="bgridSaludArc"></div>
-            <nav class="bgrid-seg" role="tablist" aria-label="${this._esc(__('Periodo'))}">${seg}</nav>
-            <div class="bgrid-chart-wrap"><canvas id="bgridActivityChart"></canvas><div class="bgrid-empty" id="bgridActivityEmpty" hidden>${this._esc(__('Sin publicaciones en este periodo'))}</div></div>
-            <footer class="bgrid-card-foot" id="bgridActivityFoot"></footer>
-          </section>
-          <section class="bgrid-card bgrid-card--campaigns" id="bgridCampaignsCard" hidden>
-            <header class="bgrid-card-head">
-              <span class="bgrid-card-title bgrid-card-title--dark"><i class="aisc-ico aisc-ico--campaign" aria-hidden="true"></i>${this._esc(__('Campañas'))}</span>
-            </header>
-            <div class="bgrid-campaigns" id="bgridCampaigns"></div>
-          </section>
-          <!-- Observaciones: MISMA plantilla que Competencia (.cgrid-card--obs /
-               .cgrid-obs / .cgo-item), no un volcado de bloques. Va DEBAJO de
-               Campañas: primero el pulso y la pauta, después la lectura de Vera
-               sobre lo que la marca está haciendo. -->
-          <section class="bgrid-card cgrid-card--obs" id="bgridObsCard" hidden>
-            <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--eye" aria-hidden="true"></i>${this._esc(__('Observaciones'))}</span>
-            </header>
-            <p class="bgrid-card-sub">${this._esc(__('Lo más destacado de tu marca en este periodo'))}</p>
-            <div class="cgrid-obs" id="bgridObservacion"></div>
-          </section>
-          </div>
           <div class="bgrid-col">
             <section class="bgrid-card glass-black bgrid-card--latidos">
               <header class="bgrid-card-head">
@@ -122,10 +136,48 @@
             <div class="bgrid-intuicion" id="bgridIntuicion"></div>
             <div class="bgrid-vera" id="bgridVera"></div>
           </div>
-          <!-- Producto destacado + Publicacion destacada cierran la pagina como
-               PAR: se reubican debajo de Algoritmo (que va full-width) para que
-               la pagina termine con las dos piezas concretas — que empujas y
-               que te funciono — una al lado de la otra. -->
+          <div class="bgrid-col">
+            <section class="bgrid-card glass-black bgrid-card--activity">
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--actividad" aria-hidden="true"></i>${this._esc(__('Tráfico'))}</span>
+              <button type="button" class="bgrid-details-btn" data-salud-details aria-label="${this._esc(__('Ver detalles de salud'))}" title="${this._esc(__('Ver detalles de salud'))}"><i class="aisc-ico aisc-ico--chart-bar" aria-hidden="true"></i></button>
+            </header>
+            <div class="bgrid-salud-arc" id="bgridSaludArc"></div>
+            <nav class="bgrid-seg" role="tablist" aria-label="${this._esc(__('Periodo'))}">${seg}</nav>
+            <div class="bgrid-chart-wrap"><canvas id="bgridActivityChart"></canvas><div class="bgrid-empty" id="bgridActivityEmpty" hidden>${this._esc(__('Sin publicaciones en este periodo'))}</div></div>
+            <footer class="bgrid-card-foot" id="bgridActivityFoot"></footer>
+            </section>
+            <section class="bgrid-card bgrid-card--campaigns" id="bgridCampaignsCard" hidden>
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title bgrid-card-title--dark"><i class="aisc-ico aisc-ico--campaign" aria-hidden="true"></i>${this._esc(__('Campañas'))}</span>
+            </header>
+            <div class="bgrid-campaigns" id="bgridCampaigns"></div>
+            </section>
+            <!-- Observaciones: MISMA plantilla que Competencia (.cgrid-card--obs /
+               .cgrid-obs / .cgo-item), no un volcado de bloques. Va DEBAJO de
+               Campañas: primero el pulso y la pauta, después la lectura de Vera
+               sobre lo que la marca está haciendo. -->
+            <section class="bgrid-card cgrid-card--obs" id="bgridObsCard" hidden>
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--eye" aria-hidden="true"></i>${this._esc(__('Observaciones'))}</span>
+            </header>
+            <p class="bgrid-card-sub">${this._esc(__('Lo más destacado de tu marca en este periodo'))}</p>
+            <div class="cgrid-obs" id="bgridObservacion"></div>
+            </section>
+            <!-- Misma pieza que en Competencia (clases .cgrid-post-*), pero sobre
+                 tus propias publicaciones: la tuya que mas movio en el periodo.
+                 Vive en ESTA columna (no bajo Algoritmo): el preview es vertical
+                 y encaja en el ancho de 480px, y suma alto donde hacia falta. -->
+            <section class="bgrid-card bgrid-card--toppost">
+              <header class="bgrid-card-head">
+                <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Publicación destacada'))}</span>
+              </header>
+              <div class="cgrid-post" id="bgridTopPost"><div class="cgrid-load">${this._esc(__('Buscando la publicación…'))}</div></div>
+            </section>
+          </div>
+          <!-- Producto destacado cierra el bloque de Vera: se reubica al final de
+               .vera-cards, debajo de Algoritmo. Publicacion destacada ya no lo
+               acompana — se mudo a la columna de Tráfico. -->
           <section class="bgrid-card bgrid-card--prodstar">
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--star" aria-hidden="true"></i>${this._esc(__('Producto destacado'))}</span>
@@ -134,14 +186,6 @@
             <div class="vera-prodstar" id="bgridProdStar" data-prodstar="1">
               <div class="vera-prodstar-load">${this._esc(__('Cargando productos…'))}</div>
             </div>
-          </section>
-          <!-- Misma pieza que en Competencia (clases .cgrid-post-*), pero sobre
-               tus propias publicaciones: la tuya que mas movio en el periodo. -->
-          <section class="bgrid-card bgrid-card--toppost">
-            <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Publicación destacada'))}</span>
-            </header>
-            <div class="cgrid-post" id="bgridTopPost"><div class="cgrid-load">${this._esc(__('Buscando la publicación…'))}</div></div>
           </section>
         </div>`;
     },
@@ -156,7 +200,8 @@
         const k = btn.dataset.window;
         if (!k || k === this._gridWindow) return;
         this._gridWindow = k;
-        body.querySelectorAll('.bgrid-seg-btn').forEach((b) => b.classList.toggle('is-active', b.dataset.window === k));
+        this._gridCustomRange = null;   // elegir un preset descarta el rango a mano
+        this._gridSyncSeg(body);
         this._gridLoadAndPaint(body);
       });
     },
@@ -187,6 +232,17 @@
        brand_posts directo: si cada una calculara su rango, la card podría
        mostrar un post de fuera del periodo que pinta el resto de la página. */
     async _gridRango() {
+      // Rango personalizado: manda tal cual, SIN anclar al último post — el
+      // usuario pidió esas fechas, no "los N días más recientes con data".
+      if (this._gridWindow === 'custom' && this._gridCustomRange) {
+        const { from, to } = this._gridCustomRange;
+        if (from || to) {
+          const desde = from ? new Date(from) : new Date('2015-01-01');
+          const hasta = to ? new Date(to) : new Date();
+          hasta.setHours(23, 59, 59, 999);   // el día final entra completo
+          return { dateFrom: desde.toISOString(), dateTo: hasta.toISOString() };
+        }
+      }
       const days = this._gridWindowDays();
       const now = new Date();
       const last = await this._gridLastOwnPost();
@@ -332,13 +388,27 @@
       const obsHost = body.querySelector('#bgridObservacion');
       const host = body.querySelector('#bgridVera');
       if (!obsHost && !host) return;
+      /* La lectura es POR PERIODO: Vera escribe una version por cada filtro
+         (Semana/Mes/Ano/Todo) y aqui se pide la del filtro activo. Antes habia
+         una sola lectura sin periodo y se mostraba igual bajo los cuatro
+         botones: solo era cierta en "Mes" —la ventana por defecto de sus
+         tools— y mentia en los otros tres.
+         Respaldo: si el periodo activo aun no tiene lectura propia (Vera no la
+         alcanzo a escribir, o es una lectura vieja sin periodo), se muestra la
+         mas reciente que haya en vez de dejar el tab en blanco. */
       let reading = null;
       try {
-        const { data } = await this._supabase.from('vera_dashboard_readings')
-          .select('reading, created_at')
+        const base = () => this._supabase.from('vera_dashboard_readings')
+          .select('reading, created_at, periodo')
           .eq('organization_id', this._orgId).eq('scope', 'mi_marca').eq('status', 'published')
           .order('created_at', { ascending: false }).limit(1);
-        reading = (data && data[0]) ? data[0].reading : null;
+        const { data } = await base().eq('periodo', this._gridWindow || 'month');
+        let fila = (data && data[0]) ? data[0] : null;
+        if (!fila) {
+          const { data: fallback } = await base();
+          fila = (fallback && fallback[0]) ? fallback[0] : null;
+        }
+        reading = fila ? fila.reading : null;
       } catch (_) {}
       const vdHost = body.querySelector('#bgridVD');
       const all = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
@@ -382,7 +452,7 @@
       // COLOCAN debajo de Algoritmo. Se rescatan antes de limpiar el host: ya
       // estan pintadas y repintarlas costaria otra ronda de consultas.
       const grid = body.querySelector('.bgrid');
-      const cierre = [body.querySelector('.bgrid-card--prodstar'), body.querySelector('.bgrid-card--toppost')];
+      const cierre = [body.querySelector('.bgrid-card--prodstar')];
       cierre.forEach((el) => { if (el && host && host.contains(el) && grid) grid.appendChild(el); });
       // Audiencias recomendadas ABREN el bloque de Vera (arriba de todo el resto,
       // Algoritmo incluido): es la accion — a quien hablarle — antes del analisis.
@@ -632,14 +702,12 @@
       const algo = body.querySelector('.vera-cards .vera-card--algoritmo');
       if (!algo) return;
       const cards = algo.parentElement;
-      cards.classList.add('has-cierre');
       // Publicacion destacada a la DERECHA de Algoritmo: se inserta justo
       // despues en el DOM para que caiga en la columna 2 de su misma fila.
       // Debajo, Producto destacado. La Intuición YA NO cierra la página: subió al
       // Nivel 2 (host #bgridIntuicion, arriba de todo el análisis de Vera).
-      const toppost = body.querySelector('.bgrid-card--toppost');
+      // Publicacion destacada YA NO baja aqui: vive en la columna de Tráfico.
       const prodstar = body.querySelector('.bgrid-card--prodstar');
-      if (toppost) algo.insertAdjacentElement('afterend', toppost);
       if (prodstar) cards.appendChild(prodstar);
     },
 
@@ -653,33 +721,37 @@
        contenido, y tocar el alto de la izquierda no la mueve. */
     _ajustarAltoObservaciones(body) {
       const host = body.querySelector('#bgridObservacion');
-      const cols = body.querySelectorAll('.bgrid > .bgrid-col');
-      if (!host || cols.length < 2) return;
+      const todas = [...body.querySelectorAll('.bgrid > .bgrid-col')];
+      // Por CONTENIDO, no por índice: las columnas se intercambiaron de lado y
+      // un [0]/[1] fijo dejaría el cálculo invertido en silencio.
+      const colObs = todas.find((c) => c.contains(host));
+      const colAnalisis = todas.find((c) => c !== colObs);
+      if (!host || !colObs || !colAnalisis) return;
       const ALTO_MINIMO = 240;
       const aplicar = () => {
         const card = host.closest('#bgridObsCard');
         host.style.maxHeight = 'none';
         if (!card || card.hidden) return;
-        // Lo que ocupa la columna izquierda SIN la lista (Tráfico + Campañas +
-        // el encabezado de la card), restado al alto de la columna derecha.
-        const sinLista = cols[0].getBoundingClientRect().height - host.getBoundingClientRect().height;
-        const libre = cols[1].getBoundingClientRect().height - sinLista;
+        // Lo que ocupa la columna de Observaciones SIN la lista (Tráfico +
+        // Campañas + el encabezado), restado al alto de la del análisis.
+        const sinLista = colObs.getBoundingClientRect().height - host.getBoundingClientRect().height;
+        const libre = colAnalisis.getBoundingClientRect().height - sinLista;
         if (libre > ALTO_MINIMO) host.style.maxHeight = `${Math.round(libre)}px`;
       };
       aplicar();
       if (this._obsResizeObs) this._obsResizeObs.disconnect();
       if (typeof ResizeObserver === 'function') {
         this._obsResizeObs = new ResizeObserver(() => aplicar());
-        this._obsResizeObs.observe(cols[1]);
+        this._obsResizeObs.observe(colAnalisis);
       }
-      // Pasadas de asentamiento: la columna derecha sigue creciendo después del
-      // primer cálculo. Sin esto el tope se congela en el alto que la columna
-      // tenía a medio pintar.
+      // Pasadas de asentamiento: la columna del análisis sigue creciendo después
+      // del primer cálculo. Sin esto el tope se congela en el alto que la
+      // columna tenía a medio pintar.
       requestAnimationFrame(() => aplicar());
       [600, 2000].forEach((ms) => setTimeout(aplicar, ms));
       // La foto de Publicación destacada es la que más tarda y la que más alto
       // suma: cada imagen que termina de cargar recalcula el tope.
-      cols[1].querySelectorAll('img').forEach((img) => {
+      colAnalisis.querySelectorAll('img').forEach((img) => {
         if (!img.complete) img.addEventListener('load', aplicar, { once: true });
       });
       if (this._obsResizeHandler) window.removeEventListener('resize', this._obsResizeHandler);
@@ -1050,7 +1122,8 @@
       if (!host) return;
       // Idempotente por ventana: lo llaman el ciclo de pintado y tambien
       // _renderVeraCards al reubicar la card. Sin esto la consulta se repite.
-      const token = String(this._gridWindow || '');
+      const r = this._gridCustomRange;
+      const token = String(this._gridWindow || '') + (r ? `:${r.from || ''}~${r.to || ''}` : '');
       if (host.dataset.tpWindow === token) return;
       host.dataset.tpWindow = token;
       const esc = (s) => this._esc(s);
