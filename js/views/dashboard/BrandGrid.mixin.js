@@ -672,6 +672,15 @@
         this._obsResizeObs = new ResizeObserver(() => aplicar());
         this._obsResizeObs.observe(cols[1]);
       }
+      // Pasadas de asentamiento: la columna derecha sigue creciendo después del
+      // primer cálculo (la foto de Publicación destacada carga tarde y el
+      // repaint del dashboard puede soltar el observer entremedio). Sin esto el
+      // tope se congela en el alto que la columna tenía a medio pintar.
+      requestAnimationFrame(() => aplicar());
+      [600, 2000].forEach((ms) => setTimeout(aplicar, ms));
+      if (this._obsResizeHandler) window.removeEventListener('resize', this._obsResizeHandler);
+      this._obsResizeHandler = () => aplicar();
+      window.addEventListener('resize', this._obsResizeHandler);
     },
 
     /* Bloques a pintar de una card: el JUICIO primero, la evidencia después.

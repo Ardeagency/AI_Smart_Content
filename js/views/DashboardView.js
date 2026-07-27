@@ -469,6 +469,7 @@ class DashboardView extends BaseView {
     // DOM viejo: si no se suelta aquí, sobrevive al repaint y observa un
     // huérfano. Se vuelve a enganchar al final de _renderVeraCards.
     if (this._obsResizeObs) { try { this._obsResizeObs.disconnect(); } catch (_) {} this._obsResizeObs = null; }
+    if (this._obsResizeHandler) { window.removeEventListener('resize', this._obsResizeHandler); this._obsResizeHandler = null; }
   }
 
   async render() {
