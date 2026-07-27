@@ -66,7 +66,14 @@
 .vera-card[data-tone="critical"] { border-left-color: #e77a7a; }
 /* Observaciones vive bajo Campañas y reusa la plantilla de Competencia
    (.cgrid-card--obs / .cgrid-obs / .cgo-item, en comp-grid.css — ambos módulos
-   cargan juntos en la ruta del dashboard). Aquí no necesita estilo propio. */
+   cargan juntos en la ruta del dashboard).
+   Lo único que cambia es la ALTURA: en Competencia la lista se topa en 560px
+   fijos; aquí crece con su contenido y el tope se calcula en vivo = lo que mide
+   la columna del análisis (_ajustarAltoObservaciones). Con pocas observaciones
+   la card mide lo que mide su texto; cuando llega al tope, scrollea dentro de sí
+   misma en vez de estirar la página y dejar media columna en blanco. */
+#bgridObsCard .cgrid-obs { max-height: none; min-height: 0; }
+#bgridObsCard .cgo-item { flex: 0 0 auto; }
 .vera-card.vera-card--bare { background: transparent; border: 0; border-radius: 0; padding: 0.15rem 0.25rem; }
 .vera-card--bare .vera-card-title { color: #fff; }
 .vera-card--bare .vera-md { color: rgba(255, 255, 255, 0.82); }

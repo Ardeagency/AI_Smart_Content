@@ -465,6 +465,10 @@ class DashboardView extends BaseView {
   _destroyCharts() {
     this._charts.forEach(c => { try { c.destroy(); } catch (_) {} });
     this._charts = [];
+    // El ResizeObserver que topa el alto de Observaciones apunta a un nodo del
+    // DOM viejo: si no se suelta aquí, sobrevive al repaint y observa un
+    // huérfano. Se vuelve a enganchar al final de _renderVeraCards.
+    if (this._obsResizeObs) { try { this._obsResizeObs.disconnect(); } catch (_) {} this._obsResizeObs = null; }
   }
 
   async render() {

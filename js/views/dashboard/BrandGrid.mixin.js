@@ -402,6 +402,8 @@
       // Bloques vivos: piden su propio dato, por eso van aparte de los charts.
       this._paintProductoEstrella(body);
       this._paintTopPostPropio(body);
+      // Con la columna derecha ya poblada, se calcula el tope de Observaciones.
+      this._ajustarAltoObservaciones(body);
     },
 
     /* ══ Evidencia del producto ═══════════════════════════════════════════
@@ -639,6 +641,37 @@
       const prodstar = body.querySelector('.bgrid-card--prodstar');
       if (toppost) algo.insertAdjacentElement('afterend', toppost);
       if (prodstar) cards.appendChild(prodstar);
+    },
+
+    /* La altura de Observaciones la manda la columna del análisis, no el número
+       de observaciones: crece con su contenido y, al llegar al alto de la otra
+       columna, se topa y scrollea dentro de sí misma. Así no deja hueco debajo
+       ni estira la página cuando Vera escribe seis en vez de una.
+       Se recalcula con un ResizeObserver porque la columna derecha cambia de
+       alto cuando entran los charts y las piezas destacadas (asíncronas).
+       No hay bucle: con `align-items: start` la columna derecha mide su propio
+       contenido, y tocar el alto de la izquierda no la mueve. */
+    _ajustarAltoObservaciones(body) {
+      const host = body.querySelector('#bgridObservacion');
+      const cols = body.querySelectorAll('.bgrid > .bgrid-col');
+      if (!host || cols.length < 2) return;
+      const ALTO_MINIMO = 240;
+      const aplicar = () => {
+        const card = host.closest('#bgridObsCard');
+        host.style.maxHeight = 'none';
+        if (!card || card.hidden) return;
+        // Lo que ocupa la columna izquierda SIN la lista (Tráfico + Campañas +
+        // el encabezado de la card), restado al alto de la columna derecha.
+        const sinLista = cols[0].getBoundingClientRect().height - host.getBoundingClientRect().height;
+        const libre = cols[1].getBoundingClientRect().height - sinLista;
+        if (libre > ALTO_MINIMO) host.style.maxHeight = `${Math.round(libre)}px`;
+      };
+      aplicar();
+      if (this._obsResizeObs) this._obsResizeObs.disconnect();
+      if (typeof ResizeObserver === 'function') {
+        this._obsResizeObs = new ResizeObserver(() => aplicar());
+        this._obsResizeObs.observe(cols[1]);
+      }
     },
 
     /* Bloques a pintar de una card: el JUICIO primero, la evidencia después.
