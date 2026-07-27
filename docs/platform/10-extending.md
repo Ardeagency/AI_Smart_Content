@@ -15,7 +15,7 @@ Guías paso-a-paso para agregar piezas comunes sin romper la coherencia del sist
 Caso típico: "Quiero un dashboard de **Audiencias**".
 
 ### 1. Definir la spec
-- Documento markdown en `/docs/` con el patrón de `DASHBOARD-MI-MARCA.txt`: widgets, fuente de cada dato, visualización, KPIs.
+- Documento markdown en `/docs/product/` con el patrón de `DASHBOARDS-V2-VISION.md` (la spec viva de dashboards; las specs `.txt` originales quedaron en `/docs/archive/`): qué responde, fuente de cada dato, veredicto/acción, evitar "número chatarra".
 - Decidir si es nuevo tab del `DashboardView` o ruta independiente.
 
 ### 2. Crear el RPC en Supabase

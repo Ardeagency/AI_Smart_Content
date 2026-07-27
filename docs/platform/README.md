@@ -29,7 +29,7 @@ Bienvenido. Este conjunto de documentos describe la arquitectura completa de la 
 | 06 | [Flujos de datos](./06-data-flows.md) | Recorridos end-to-end: scrape → signal → vulnerability → action → mission |
 | 07 | [Vera (la IA)](./07-vera.md) | Identidad de Vera, tools, policy engine, sessions, niveles de autonomía |
 | 08 | [Deployment & ops](./08-deployment.md) | Netlify, Hetzner, Cloudflared, env vars, secretos, runbooks |
-| 09 | [Estado actual](./09-current-state.md) | Qué funciona hoy, qué está vacío, qué está roto, deuda técnica |
+| 09 | [Estado actual](./09-current-state.md) | ⚠️ SNAPSHOT CONGELADO (2026-05-05). Estado vivo en [`../product/AUDITORIA-CMO-2026-07.md`](../product/AUDITORIA-CMO-2026-07.md) |
 | 10 | [Extender la plataforma](./10-extending.md) | Cómo agregar dashboards, sensores, tools, tablas, integraciones |
 
 ---

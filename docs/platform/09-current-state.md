@@ -1,14 +1,33 @@
 ---
-title: 09 — Estado actual de la plataforma
+title: 09 — Estado actual de la plataforma (SNAPSHOT HISTÓRICO 2026-05-05)
 author: Shenoa — Arde Agency S.A.S.
 since: 2025-09
 last_review: 2026-05-05
+snapshot_frozen: 2026-05-05
 audience: humanos del equipo + LLMs
-status: refrescar al menos cada 2 semanas
+status: histórico — el estado vivo vive en docs/product/AUDITORIA-CMO-2026-07.md
 ---
 
 # 09 · Estado actual
 
+> ⚠️ **ESTE DOCUMENTO ES UN SNAPSHOT CONGELADO DEL 2026-05-05 — NO refleja el estado de hoy.**
+> Se conserva como registro histórico. Para el estado VIVO de la plataforma, lee en este orden:
+> 1. **[`../product/AUDITORIA-CMO-2026-07.md`](../product/AUDITORIA-CMO-2026-07.md)** — estado real 2026-07-02: tesis, reparaciones desplegadas y verificadas, loop cerrado, deuda priorizada.
+> 2. **[`../product/DASHBOARDS-V2-VISION.md`](../product/DASHBOARDS-V2-VISION.md)** — hacia dónde van los 4 dashboards (supersede las specs viejas).
+> 3. **[`../task/INDEX.md`](../task/INDEX.md)** + **[`../task/INTEGRACIONES-PENDIENTES.md`](../task/INTEGRACIONES-PENDIENTES.md)** — qué falta construir hoy.
+>
+> **Qué cambió entre este snapshot (may-05) y hoy (jul-03), en grueso:** los 4 services de
+> dashboard ya existen y rinden (no solo 2); los dashboards se están rediseñando con criterio
+> CMO ("matar número chatarra", plan V2); el dato comercial se está *encendiendo* (sensores
+> mal-pausados reactivados, personas estructuradas, generador de recetas `strategy-review` LIVE,
+> puente Loop V1 aprobar→producir LIVE); media migró a Cloudflare R2 (bucket Supabase eliminado);
+> ingesta de posts propios IG/FB paginada; perfiles monitoreados con rol+relevancia end-to-end;
+> Vera con self-repair, artefactos, research Tavily y VMs re-provisionadas con skills CMO.
+> El grueso de los "🔴 roto/vacío" de abajo o se resolvió o cambió de forma. **No uses las tablas
+> de conteos ni la lista de deuda de este doc como verdad operativa.**
+
+> _(Texto original del snapshot 2026-05-05 a continuación, sin modificar.)_
+>
 > Este documento es **el snapshot** del estado de la plataforma a la fecha de `last_review`. Sirve para entender en 5 minutos qué funciona, qué está vacío y qué está roto. Si llegas como agente/LLM nuevo, lee primero esto antes de proponer cambios.
 
 ## Resumen ejecutivo
