@@ -81,7 +81,10 @@
         this._gridDP = new window.DateRangePicker({
           from: r.from || null,
           to: r.to || null,
-          label: '',
+          // OJO: el componente hace `opts.label || __('Fecha')` — una cadena
+          // vacía es falsy y pintaba "Fecha". Se manda un espacio y el CSS lo
+          // oculta: aquí el filtro es un pill más, sin etiqueta encima.
+          label: ' ',
           allLabel: __('Personalizado'),
           onChange: ({ from, to }) => {
             if (!from && !to) {           // "Limpiar" vuelve al preset por defecto
@@ -160,6 +163,7 @@
             <section class="bgrid-card cgrid-card--obs" id="bgridObsCard" hidden>
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--eye" aria-hidden="true"></i>${this._esc(__('Observaciones'))}</span>
+              ${this._veraRecheckBtn('observacion', __('Volver a consultar Observaciones'))}
             </header>
             <p class="bgrid-card-sub">${this._esc(__('Lo más destacado de tu marca en este periodo'))}</p>
             <div class="cgrid-obs" id="bgridObservacion"></div>
@@ -195,6 +199,8 @@
       body.dataset.bgridBound = '1';
       body.addEventListener('click', (e) => {
         if (e.target.closest('[data-salud-details]')) { this._openSaludDetails(this._gridHealth); return; }
+        const re = e.target.closest('[data-vera-recheck]');
+        if (re) { this._veraVolverAConsultar(re); return; }
         const btn = e.target.closest('[data-window]');
         if (!btn) return;
         const k = btn.dataset.window;
@@ -204,6 +210,53 @@
         this._gridSyncSeg(body);
         this._gridLoadAndPaint(body);
       });
+    },
+
+    /* El humano le pide a Vera que vuelva a mirar ESTA card.
+       OJO: la lectura se regenera ENTERA — el contrato cards.v2 exige las cinco
+       cards obligatorias, así que no hay modo parcial. La card pedida viaja en
+       la solicitud para que Vera sepa qué quiere el humano que reconsidere.
+       Cuesta una sesión de Vera: por eso se confirma antes y el backend limita
+       a una cada 3 minutos por marca. */
+    async _veraVolverAConsultar(btn) {
+      const card = btn.dataset.veraRecheck || '';
+      const avisar = (msg, type) => {
+        if (typeof window.showToast === 'function') window.showToast(msg, { type });
+      };
+      // Los containers se cachean en _gridLastOwnPost; si aun no se resolvieron
+      // (el usuario pulsa antes de que cargue), se resuelven aqui.
+      if (!this._gridBcIds) await this._gridLastOwnPost();
+      const bcId = (this._gridBcIds || [])[0];
+      if (!bcId) { avisar(__('Todavía no hay una marca cargada.'), 'error'); return; }
+      if (!window.confirm(__('¿Le pides a Vera que vuelva a analizar esto? Rehará su lectura completa de Mi Marca y puede tardar unos minutos.'))) return;
+
+      btn.classList.add('is-loading');
+      try {
+        const { data: sess } = await this._supabase.auth.getSession();
+        const token = sess?.session?.access_token;
+        if (!token) throw new Error(__('Sesión expirada'));
+        const base = (window.AI_ENGINE_BASE_URL || 'https://api.aismartcontent.io').replace(/\/+$/, '');
+        const res = await fetch(`${base}/dashboard/recheck`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ brandContainerId: bcId, card }),
+        });
+        const out = await res.json().catch(() => ({}));
+        if (res.status === 429) {
+          avisar(__('Vera acaba de revisar esta marca. Inténtalo en un momento.'), 'info');
+        } else if (res.status === 409) {
+          avisar(__('Vera ya está revisando esta marca.'), 'info');
+        } else if (!res.ok) {
+          throw new Error(out.error || `HTTP ${res.status}`);
+        } else {
+          avisar(__('Vera está volviendo a analizar. La card se actualiza al terminar.'), 'success');
+        }
+      } catch (err) {
+        console.warn('[BrandGrid] recheck falló:', err);
+        avisar(__('No se pudo pedir el reanálisis: {e}', { e: err?.message || '' }), 'error');
+      } finally {
+        btn.classList.remove('is-loading');
+      }
     },
 
     _gridWindowDays() {
@@ -792,6 +845,17 @@
     },
 
     /* Fortalezas + Debilidades como PAR hermano: dos paneles lado a lado. */
+    /* ══ "Volver a consultar" ═══════════════════════════════════════════════
+       Toda card que ESCRIBE Vera lleva este botón en su esquina superior
+       derecha: es el humano pidiéndole que vuelva a mirar ESE análisis.
+       `scope` identifica qué card pidió el repaso — viaja en la solicitud para
+       que Vera sepa qué quiere el humano que reconsidere. ══════════════════ */
+    _veraRecheckBtn(scope, etiqueta) {
+      const t = this._esc(etiqueta || __('Volver a consultar'));
+      return `<button type="button" class="vera-recheck" data-vera-recheck="${this._esc(scope)}"
+        title="${t}" aria-label="${t}"><i class="aisc-ico aisc-ico--refresh" aria-hidden="true"></i></button>`;
+    },
+
     _veraDuoHtml(virtItems, desvItems) {
       if (!virtItems.length && !desvItems.length) return '';
       const esc = (s) => this._esc(s);
@@ -800,6 +864,7 @@
         const content = items.map(({ card, key }) => {
           const blocks = this._veraBlocksDe(card);
           return `
+            ${this._veraRecheckBtn(side === 'pos' ? 'virtudes' : 'desventajas', __('Volver a consultar {c}', { c: label }))}
             <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${icon}" aria-hidden="true"></i>${esc(label)}</span>
             ${card.title ? `<h4 class="vera-card-title">${esc(card.title)}</h4>` : ''}
             <div class="vera-card-body">${blocks.map((b, bi) => this._veraBlockHtml(b, key, bi)).join('')}</div>`;
@@ -869,6 +934,7 @@
       }).join('');
       return `
         <section class="cgrid-card--aud vera-audrec">
+          ${this._veraRecheckBtn('audiencias_recomendadas', __('Volver a consultar Audiencias recomendadas'))}
           <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--audience" aria-hidden="true"></i>${esc(__('Audiencias recomendadas'))}</span>
           <p class="bgrid-card-sub">${esc(__('A quién deberías hablarle según lo que Vera aprendió de ti'))}</p>
           <div class="cgrid-aud">${fichas}</div>
@@ -988,6 +1054,7 @@
       const tone = ['positive', 'neutral', 'warning', 'critical'].includes(card.tone) ? card.tone : 'neutral';
       return `
         <section class="vera-card vera-card--${this._esc(card.type)}${bare ? ' vera-card--bare' : ''}" data-tone="${tone}">
+          ${this._veraRecheckBtn(card.type, __('Volver a consultar {c}', { c: m.label }))}
           <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${m.icon}" aria-hidden="true"></i>${esc(m.label)}</span>
           ${card.title ? `<h3 class="vera-card-title">${esc(card.title)}</h3>` : ''}
           <div class="vera-card-body">${inner}</div>
