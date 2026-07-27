@@ -61,9 +61,9 @@
 .vera-card[data-tone="positive"] { border-left-color: #46c98a; }
 .vera-card[data-tone="warning"]  { border-left-color: #e6a94e; }
 .vera-card[data-tone="critical"] { border-left-color: #e77a7a; }
-/* Observaciones: arriba de Interacciones, SIN fondo ni bordes (flota sobre el degradado). */
-.bgrid-observacion { display: flex; flex-direction: column; gap: 1rem; }
-.bgrid-observacion:empty { display: none; }
+/* Observaciones vive bajo Campañas y reusa la plantilla de Competencia
+   (.cgrid-card--obs / .cgrid-obs / .cgo-item, en comp-grid.css — ambos módulos
+   cargan juntos en la ruta del dashboard). Aquí no necesita estilo propio. */
 .vera-card.vera-card--bare { background: transparent; border: 0; border-radius: 0; padding: 0.15rem 0.25rem; }
 .vera-card--bare .vera-card-title { color: #fff; }
 .vera-card--bare .vera-md { color: rgba(255, 255, 255, 0.82); }

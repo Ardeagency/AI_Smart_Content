@@ -90,9 +90,19 @@
             </header>
             <div class="bgrid-campaigns" id="bgridCampaigns"></div>
           </section>
+          <!-- Observaciones: MISMA plantilla que Competencia (.cgrid-card--obs /
+               .cgrid-obs / .cgo-item), no un volcado de bloques. Va DEBAJO de
+               Campañas: primero el pulso y la pauta, después la lectura de Vera
+               sobre lo que la marca está haciendo. -->
+          <section class="bgrid-card cgrid-card--obs" id="bgridObsCard" hidden>
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--eye" aria-hidden="true"></i>${this._esc(__('Observaciones'))}</span>
+            </header>
+            <p class="bgrid-card-sub">${this._esc(__('Lo más destacado de tu marca en este periodo'))}</p>
+            <div class="cgrid-obs" id="bgridObservacion"></div>
+          </section>
           </div>
           <div class="bgrid-col">
-            <div class="bgrid-observacion" id="bgridObservacion"></div>
             <section class="bgrid-card glass-black bgrid-card--latidos">
               <header class="bgrid-card-head">
                 <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Interacciones'))}</span>
@@ -341,12 +351,18 @@
         else if (t === 'intuicion') intu.push(c);   // NIVEL 2: se pinta aparte, arriba
         else rest.push(c);
       });
-      const obsItems = obs.map((c, i) => ({ card: c, key: 'obs' + i }));
       const virtItems = virt.map((c, i) => ({ card: c, key: 'pos' + i }));
       const desvItems = desv.map((c, i) => ({ card: c, key: 'neg' + i }));
       const restItems = rest.map((c, i) => ({ card: c, key: 'v' + i }));
       const intuItems = intu.map((c, i) => ({ card: c, key: 'intu' + i }));
-      if (obsHost) obsHost.innerHTML = obsItems.map((x) => this._veraCardHtml(x.card, x.key, true)).join('');
+      // Observaciones: fichas como en Competencia. La card entera se oculta si
+      // Vera no escribió ninguna (no dejamos un marco vacío en la columna).
+      if (obsHost) {
+        const obsHtml = this._veraObservacionesHtml(obs);
+        obsHost.innerHTML = obsHtml;
+        const obsCard = body.querySelector('#bgridObsCard');
+        if (obsCard) obsCard.hidden = !obsHtml;
+      }
       // NIVEL 2 — la Intuición lidera la lectura de Vera (justo tras el veredicto
       // de salud, encima de Algoritmo/Audiencias). Banda full-width propia.
       const intuHost = body.querySelector('#bgridIntuicion');
@@ -378,7 +394,8 @@
       this._bindVeraAudRec(host);
       body.querySelectorAll('[data-panel-marca]').forEach((el) => this._vestirPanelDeMarca(el));
       try { await this._ensureChartJs(); } catch (_) {}
-      this._paintVeraCharts(body, obsItems.concat(virtItems, desvItems, intuItems, restItems));
+      // Observaciones queda fuera: su plantilla no pinta charts.
+      this._paintVeraCharts(body, virtItems.concat(desvItems, intuItems, restItems));
       // Bloques vivos: piden su propio dato, por eso van aparte de los charts.
       this._paintProductoEstrella(body);
       this._paintTopPostPropio(body);
@@ -737,9 +754,69 @@
       });
     },
 
+    /* ══ Observaciones — la MISMA plantilla que Competencia ═════════════════
+       Fichas .cgo-item: la clasificación de Vera va en el filete superior, los
+       chips dicen dónde y con qué urgencia, y el cuerpo es TEXTO. Aquí no se
+       pintan blocks: una observación es un juicio, y un número suelto no es
+       una tarjeta — si sostiene el juicio, va dentro de la frase.
+       Acepta el molde nuevo (items[]) y degrada una lectura vieja (un solo
+       markdown + blocks) a una ficha, conservando el juicio y tirando la
+       tabla, para que el tab no quede vacío entre ciclos de Vera. ══════════ */
+    _veraObservacionesHtml(cards) {
+      const esc = (s) => this._esc(s);
+      const SEV = {
+        opportunity: { cls: 'is-opp',    label: __('Oportunidad') },
+        positive:    { cls: 'is-opp',    label: __('Oportunidad') },
+        threat:      { cls: 'is-threat', label: __('Amenaza') },
+        critical:    { cls: 'is-threat', label: __('Amenaza') },
+        warning:     { cls: 'is-warn',   label: __('Atención') },
+        neutral:     { cls: 'is-neu',    label: __('Contexto') },
+      };
+      const items = [];
+      (cards || []).forEach((c) => {
+        if (Array.isArray(c && c.items) && c.items.length) {
+          c.items.forEach((o) => { if (o && o.observacion) items.push(o); });
+        } else if (c && (c.markdown || c.title)) {
+          items.push({ titulo: c.title, observacion: this._mdAPlano(c.markdown), severidad: c.tone });
+        }
+      });
+      if (!items.length) return '';
+      const PRIO = { alta: 0, media: 1, baja: 2 };
+      const orden = [...items].sort((a, b) =>
+        (PRIO[String(a.prioridad || '').toLowerCase()] ?? 1) -
+        (PRIO[String(b.prioridad || '').toLowerCase()] ?? 1));
+      return orden.map((o) => {
+        const sev = SEV[String(o.severidad || '').toLowerCase()] || SEV.neutral;
+        const prio = String(o.prioridad || '').toLowerCase();
+        return `
+          <article class="cgo-item ${esc(sev.cls)}">
+            <div class="cgo-head">
+              ${o.donde ? `<span class="cgo-perfil">${esc(o.donde)}</span>` : ''}
+              <span class="cgo-sev">${esc(sev.label)}</span>
+              ${prio === 'alta' ? `<span class="cgo-prio">${esc(__('Prioridad alta'))}</span>` : ''}
+            </div>
+            ${o.titulo ? `<h4 class="cgo-titulo">${esc(o.titulo)}</h4>` : ''}
+            <p class="cgo-txt">${esc(o.observacion || '')}</p>
+          </article>`;
+      }).join('');
+    },
+
+    /* Markdown → texto plano de un párrafo: solo para degradar lecturas viejas
+       a la ficha nueva. Quita marcas, no interpreta. */
+    _mdAPlano(md) {
+      return String(md || '')
+        .replace(/`{1,3}[^`]*`{1,3}/g, ' ')
+        .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+        .replace(/^[>#\-*+\s]+/gm, ' ')
+        .replace(/[*_~]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    },
+
     _veraCardHtml(card, key, bare) {
+      // 'observacion' NO vive aquí: tiene su propia plantilla (_veraObservacionesHtml,
+      // la misma de Competencia). Si vuelve a este mapa, vuelve la tabla.
       const META = {
-        observacion: { label: __('Observaciones'), icon: 'eye' },
         virtudes:    { label: __('Fortalezas'),    icon: 'star' },
         desventajas: { label: __('Debilidades'),   icon: 'alert-warning' },
         audiencia:   { label: __('Audiencias'),    icon: 'audience' },
