@@ -465,11 +465,12 @@ class DashboardView extends BaseView {
   _destroyCharts() {
     this._charts.forEach(c => { try { c.destroy(); } catch (_) {} });
     this._charts = [];
-    // El ResizeObserver que topa el alto de Observaciones apunta a un nodo del
-    // DOM viejo: si no se suelta aquí, sobrevive al repaint y observa un
-    // huérfano. Se vuelve a enganchar al final de _renderVeraCards.
-    if (this._obsResizeObs) { try { this._obsResizeObs.disconnect(); } catch (_) {} this._obsResizeObs = null; }
-    if (this._obsResizeHandler) { window.removeEventListener('resize', this._obsResizeHandler); this._obsResizeHandler = null; }
+    // OJO: aquí NO se suelta el ResizeObserver que topa el alto de Observaciones.
+    // _destroyCharts corre en CADA repintado, y cuando el repaint se aborta por
+    // "sin cambios" nadie lo vuelve a enganchar: el observer moría antes de que
+    // cargara la foto de Publicación destacada y el tope quedaba congelado en un
+    // alto a medio pintar. Su ciclo de vida vive en _renderVeraCards, que
+    // desconecta el anterior antes de crear el nuevo.
   }
 
   async render() {
