@@ -638,6 +638,17 @@
       if (prodstar) cards.appendChild(prodstar);
     },
 
+    /* Bloques a pintar de una card: el JUICIO primero, la evidencia después.
+       Antes era un o-excluyente (`blocks ? blocks : markdown`) y una card con
+       tabla o chart perdía su texto en silencio: quedaban los números sin una
+       línea de criterio, justo lo contrario de la doctrina. Van los dos. */
+    _veraBlocksDe(card) {
+      return [
+        ...(card && card.markdown ? [{ type: 'markdown', markdown: card.markdown }] : []),
+        ...(Array.isArray(card && card.blocks) ? card.blocks : []),
+      ];
+    },
+
     /* Fortalezas + Debilidades como PAR hermano: dos paneles lado a lado. */
     _veraDuoHtml(virtItems, desvItems) {
       if (!virtItems.length && !desvItems.length) return '';
@@ -645,7 +656,7 @@
       const panel = (items, side, label, icon) => {
         if (!items.length) return '';
         const content = items.map(({ card, key }) => {
-          const blocks = Array.isArray(card.blocks) ? card.blocks : (card.markdown ? [{ type: 'markdown', markdown: card.markdown }] : []);
+          const blocks = this._veraBlocksDe(card);
           return `
             <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${icon}" aria-hidden="true"></i>${esc(label)}</span>
             ${card.title ? `<h4 class="vera-card-title">${esc(card.title)}</h4>` : ''}
@@ -828,8 +839,7 @@
       // Audiencia = simbiosis: viz (choropleth + pyramid) a la izquierda, comentario a la derecha.
       if (card.type === 'audiencia' && !bare) return this._veraAudienciaHtml(card, key, m);
       const esc = (s) => this._esc(s);
-      const blocks = Array.isArray(card.blocks) ? card.blocks
-        : (card.markdown ? [{ type: 'markdown', markdown: card.markdown }] : []);
+      const blocks = this._veraBlocksDe(card);
       const esActo = card.type === 'algoritmo';
       const inner = blocks.map((b, bi) => this._veraBlockHtml(
         (esActo && b && b.type === 'markdown') ? { ...b, _actos: true } : b, key, bi)).join('');
