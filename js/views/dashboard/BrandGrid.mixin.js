@@ -384,6 +384,27 @@
        Vera compone cards tipadas (observacion/virtudes/desventajas/audiencia/
        algoritmo), cada una con bloques: markdown seguro y/o charts (solo datos,
        los pintamos nosotros en estilo de marca). Cero HTML libre. ══════════ */
+    /* Que lectura de Vera corresponde al filtro activo. Los cuatro presets tienen
+       la suya; el rango personalizado no puede tenerla (es arbitrario), asi que
+       se le da la del preset de duracion mas parecida — mejor una lectura del
+       tramo comparable que una de un periodo al azar. */
+    _veraPeriodoActivo() {
+      const w = this._gridWindow || 'month';
+      if (w !== 'custom') return w;
+      const r = this._gridCustomRange;
+      if (!r || !r.from || !r.to) return 'month';
+      const dias = Math.abs(new Date(r.to) - new Date(r.from)) / 86400000;
+      if (!isFinite(dias)) return 'month';
+      let mejor = 'all', dist = Infinity;
+      WINDOWS.forEach((win) => {
+        if (win.days == null) return;
+        const d = Math.abs(win.days - dias);
+        if (d < dist) { dist = d; mejor = win.k; }
+      });
+      // Mas alla de un ano no hay preset mas cercano que "Todo".
+      return dias > 365 ? 'all' : mejor;
+    },
+
     async _renderVeraCards(body) {
       const obsHost = body.querySelector('#bgridObservacion');
       const host = body.querySelector('#bgridVera');
@@ -402,7 +423,7 @@
           .select('reading, created_at, periodo')
           .eq('organization_id', this._orgId).eq('scope', 'mi_marca').eq('status', 'published')
           .order('created_at', { ascending: false }).limit(1);
-        const { data } = await base().eq('periodo', this._gridWindow || 'month');
+        const { data } = await base().eq('periodo', this._veraPeriodoActivo());
         let fila = (data && data[0]) ? data[0] : null;
         if (!fila) {
           const { data: fallback } = await base();
