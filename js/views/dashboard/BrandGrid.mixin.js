@@ -111,14 +111,17 @@
               <div class="bgrid-chart-wrap bgrid-chart-wrap--latidos"><canvas id="bgridLatidosChart"></canvas><div class="bgrid-empty" id="bgridLatidosEmpty" hidden>${this._esc(__('Sin señal de impacto en este periodo'))}</div></div>
             </section>
             <div class="bgrid-vd" id="bgridVD"></div>
+            <!-- NIVEL 2 de la jerarquía (pirámide invertida): tras el veredicto de
+                 salud, la LECTURA de Vera lidera el resto. La Intuición va primero
+                 (antes cerraba la página) para que lo primero que "dice" Vera sea
+                 su lectura del alma de la audiencia, no una tabla.
+                 VIVEN EN ESTA COLUMNA, no como filas full-width: si fueran filas
+                 tendrían que esperar a que termine la columna más alta, y una
+                 Observaciones con varios items las empujaba hacia abajo dejando
+                 media página muerta a la derecha. Aquí fluyen junto al análisis. -->
+            <div class="bgrid-intuicion" id="bgridIntuicion"></div>
+            <div class="bgrid-vera" id="bgridVera"></div>
           </div>
-          <!-- NIVEL 2 de la jerarquía (pirámide invertida): tras el veredicto de
-               salud, la LECTURA de Vera lidera el resto. La Intuición sube aquí
-               (antes cerraba la página) para que lo primero que "dice" Vera sea
-               su lectura del alma de la audiencia, no una tabla. Full-width,
-               encima de Algoritmo/Audiencias/piezas. -->
-          <div class="bgrid-intuicion" id="bgridIntuicion"></div>
-          <div class="bgrid-vera" id="bgridVera"></div>
           <!-- Producto destacado + Publicacion destacada cierran la pagina como
                PAR: se reubican debajo de Algoritmo (que va full-width) para que
                la pagina termine con las dos piezas concretas — que empujas y

@@ -43,11 +43,14 @@
 .camp-badge[data-tier="regular"] { color: #f0b45e; background: rgba(240, 180, 94, 0.14); }
 .camp-badge[data-tier="baja"]    { color: #ff9090; background: rgba(255, 90, 90, 0.14); }
 
-/* ── Cards de Vera (schema cards.v2): markdown + charts que Vera compone ── */
-.bgrid-vera { grid-column: 1 / -1; }
-/* NIVEL 2 de la jerarquía: la Intuición lidera la lectura de Vera, a todo el
-   ancho, tras el veredicto de salud. :empty se colapsa (sin lectura, sin banda). */
-.bgrid-intuicion { grid-column: 1 / -1; }
+/* ── Cards de Vera (schema cards.v2): markdown + charts que Vera compone ──
+   Viven DENTRO de la columna derecha (hermanas de Interacciones y del par
+   Fortalezas/Debilidades), no como filas full-width del grid: como filas
+   esperaban a que terminara la columna más alta, y una Observaciones con
+   varios items las empujaba hacia abajo dejando media página en blanco. */
+.bgrid-vera:empty { display: none; }
+/* NIVEL 2 de la jerarquía: la Intuición lidera la lectura de Vera, tras el
+   veredicto de salud. :empty se colapsa (sin lectura, sin banda). */
 .bgrid-intuicion:empty { display: none; }
 .vera-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
 @media (max-width: 900px) { .vera-cards, .vera-cards.has-cierre { grid-template-columns: 1fr; } }
