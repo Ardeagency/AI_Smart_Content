@@ -1238,7 +1238,7 @@
         // misma regla de Competencia: engagement_total puede venir nulo o
         // incluir alcance segun la red, metrics es la fuente fiable.
         const { data: rows } = await this._supabase.from('brand_posts')
-          .select('id, content, media_assets, permalink, post_id, profile_handle, network, captured_at, author_display_name, metrics, engagement_total')
+          .select('id, content, media_assets, permalink, post_id, profile_handle, network, captured_at, author_display_name, metrics, engagement_total, vera_por_que')
           .in('brand_container_id', this._gridBcIds)
           .eq('post_source', 'own')
           .gte('captured_at', dateFrom).lte('captured_at', dateTo)
@@ -1290,13 +1290,26 @@
           <p class="cgrid-post-copy">${esc(copy)}</p>
         </details>` : '';
 
+      /* El PORQUE de Vera, debajo del copy. El numero dice CUAL gano; esto dice
+         por que gano — quienes salen, de que trata, como esta hecha y a quien le
+         hablaba. Va pegado al post (brand_posts.vera_por_que) y no al periodo,
+         porque este ranking se recalcula en vivo: atarlo al periodo acabaria
+         mostrando el analisis de una pieza debajo de otra. */
+      const porQue = win.vera_por_que && win.vera_por_que.texto ? String(win.vera_por_que.texto) : '';
+      const porQueHtml = porQue ? `
+        <div class="cgrid-porque">
+          <div class="cgrid-porque-title">${esc(__('¿Por qué funcionó?'))}</div>
+          <p class="cgrid-porque-txt">${esc(porQue)}</p>
+        </div>` : '';
+
       // La publicacion incrustada YA muestra de quien es, sus cifras y el
       // enlace a la red. Debajo va solo lo que el embed no da: el copy completo
-      // colapsado y los comentarios cosechados.
+      // colapsado, el porque de Vera y los comentarios cosechados.
       host.innerHTML = `
         <article class="cgrid-post-card">
           ${media}
           ${copyHtml}
+          ${porQueHtml}
           ${commentsHtml}
         </article>`;
 

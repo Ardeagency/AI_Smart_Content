@@ -516,6 +516,25 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
 /* El nombre de cada metrica viaja en .sr-only (definida en bundle.css): la
    cifra se lee por el icono, pero un lector de pantalla necesita la palabra. */
 
+/* El PORQUE de Vera bajo el copy de la publicacion destacada. Mismo lenguaje
+   que los comentarios (separador arriba, titulo en versalitas) pero con el
+   acento de marca a la izquierda: no es un dato mas, es su lectura. */
+.cgrid-porque {
+  display: flex; flex-direction: column; gap: 0.4rem;
+  padding: 0.85rem 0 0.1rem 0.75rem;
+  margin-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 2px solid var(--brand-accent, rgba(255, 255, 255, 0.35));
+}
+.cgrid-porque-title {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: rgba(255, 255, 255, 0.5);
+}
+.cgrid-porque-txt {
+  margin: 0; font-size: 0.86rem; line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82); white-space: pre-wrap;
+}
+
 .cgrid-comments {
   display: flex; flex-direction: column; gap: 0.55rem;
   padding-top: 0.9rem; border-top: 1px solid rgba(255, 255, 255, 0.08);
