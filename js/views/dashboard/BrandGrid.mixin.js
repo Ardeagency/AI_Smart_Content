@@ -152,6 +152,18 @@
             <div class="bgrid-chart-wrap"><canvas id="bgridActivityChart"></canvas><div class="bgrid-empty" id="bgridActivityEmpty" hidden>${this._esc(__('Sin publicaciones en este periodo'))}</div></div>
             <footer class="bgrid-card-foot" id="bgridActivityFoot"></footer>
             </section>
+            <!-- Misma pieza que en Competencia (clases .cgrid-post-*), pero sobre
+                 tus propias publicaciones: la tuya que mas movio en el periodo.
+                 Va ARRIBA de Campañas y Observaciones: es la evidencia concreta
+                 de lo que la marca hizo, y se lee antes que la pauta y que la
+                 lectura de Vera sobre ella. El preview es vertical y encaja en
+                 el ancho de 480px de esta columna. -->
+            <section class="bgrid-card bgrid-card--toppost">
+              <header class="bgrid-card-head">
+                <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Publicación destacada'))}</span>
+              </header>
+              <div class="cgrid-post" id="bgridTopPost"><div class="cgrid-load">${this._esc(__('Buscando la publicación…'))}</div></div>
+            </section>
             <section class="bgrid-card bgrid-card--campaigns" id="bgridCampaignsCard" hidden>
             <header class="bgrid-card-head">
               <span class="bgrid-card-title bgrid-card-title--dark"><i class="aisc-ico aisc-ico--campaign" aria-hidden="true"></i>${this._esc(__('Campañas'))}</span>
@@ -159,9 +171,9 @@
             <div class="bgrid-campaigns" id="bgridCampaigns"></div>
             </section>
             <!-- Observaciones: MISMA plantilla que Competencia (.cgrid-card--obs /
-               .cgrid-obs / .cgo-item), no un volcado de bloques. Va DEBAJO de
-               Campañas: primero el pulso y la pauta, después la lectura de Vera
-               sobre lo que la marca está haciendo. -->
+               .cgrid-obs / .cgo-item), no un volcado de bloques. Cierra la
+               columna: primero el pulso, la pieza y la pauta; después la lectura
+               de Vera sobre lo que la marca está haciendo. -->
             <section class="bgrid-card cgrid-card--obs" id="bgridObsCard" hidden>
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--eye" aria-hidden="true"></i>${this._esc(__('Observaciones'))}</span>
@@ -169,16 +181,6 @@
             </header>
             <p class="bgrid-card-sub">${this._esc(__('Lo más destacado de tu marca en este periodo'))}</p>
             <div class="cgrid-obs" id="bgridObservacion"></div>
-            </section>
-            <!-- Misma pieza que en Competencia (clases .cgrid-post-*), pero sobre
-                 tus propias publicaciones: la tuya que mas movio en el periodo.
-                 Vive en ESTA columna (no bajo Algoritmo): el preview es vertical
-                 y encaja en el ancho de 480px, y suma alto donde hacia falta. -->
-            <section class="bgrid-card bgrid-card--toppost">
-              <header class="bgrid-card-head">
-                <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Publicación destacada'))}</span>
-              </header>
-              <div class="cgrid-post" id="bgridTopPost"><div class="cgrid-load">${this._esc(__('Buscando la publicación…'))}</div></div>
             </section>
           </div>
           <!-- Producto destacado cierra el bloque de Vera: se reubica al final de
@@ -490,18 +492,23 @@
       const all = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
       // Colocación por tipo: observacion arriba de Interacciones (transparente);
       // virtudes+desventajas como PAR hermano bajo Interacciones; resto full-width.
-      const obs = [], virt = [], desv = [], audRec = [], intu = [], rest = [];
+      const obs = [], virt = [], desv = [], audRec = [], aud = [], intu = [], rest = [];
       all.forEach((c) => {
         const t = c && c.type;
         if (t === 'observacion') obs.push(c);
         else if (t === 'virtudes') virt.push(c);
         else if (t === 'desventajas') desv.push(c);
         else if (t === 'audiencias_recomendadas') audRec.push(c);
+        // 'audiencia' (demografía real: mapa + pirámide) sale de `rest` para
+        // poder colocarla ENCIMA de las recomendadas: primero a quién YA le
+        // hablas, después a quién deberías hablarle.
+        else if (t === 'audiencia') aud.push(c);
         else if (t === 'intuicion') intu.push(c);   // NIVEL 2: se pinta aparte, arriba
         else rest.push(c);
       });
       const virtItems = virt.map((c, i) => ({ card: c, key: 'pos' + i }));
       const desvItems = desv.map((c, i) => ({ card: c, key: 'neg' + i }));
+      const audItems = aud.map((c, i) => ({ card: c, key: 'aud' + i }));
       const restItems = rest.map((c, i) => ({ card: c, key: 'v' + i }));
       const intuItems = intu.map((c, i) => ({ card: c, key: 'intu' + i }));
       // Observaciones: fichas como en Competencia. La card entera se oculta si
@@ -535,16 +542,19 @@
       // Va como banda FULL-WIDTH propia, fuera del grid de 2 columnas: es el
       // mismo carrusel que las Audiencias de Competencia, que tampoco vive en un
       // grid. Meterla como celda con grid-column: 1/-1 la dejaba en media pagina.
+      // Audiencia real (demografía) ABRE el bloque, encima de las recomendadas.
+      const audHtml = audItems.map((x) => this._veraCardHtml(x.card, x.key)).join('');
+      const audBlock = audHtml ? `<div class="vera-cards">${audHtml}</div>` : '';
       const audRecHtml = audRec.map((c) => this._veraAudRecHtml(c)).join('');
       const restHtml = restItems.map((x) => this._veraCardHtml(x.card, x.key)).join('');
       const restBlock = restHtml ? `<div class="vera-cards">${restHtml}</div>` : '';
-      if (host) host.innerHTML = `${audRecHtml}${restBlock}`;
+      if (host) host.innerHTML = `${audBlock}${audRecHtml}${restBlock}`;
       this._colocarCierreBajoAlgoritmo(body);
       this._bindVeraAudRec(host);
       body.querySelectorAll('[data-panel-marca]').forEach((el) => this._vestirPanelDeMarca(el));
       try { await this._ensureChartJs(); } catch (_) {}
       // Observaciones queda fuera: su plantilla no pinta charts.
-      this._paintVeraCharts(body, virtItems.concat(desvItems, intuItems, restItems));
+      this._paintVeraCharts(body, virtItems.concat(desvItems, intuItems, audItems, restItems));
       // Bloques vivos: piden su propio dato, por eso van aparte de los charts.
       this._paintProductoEstrella(body);
       this._paintTopPostPropio(body);
