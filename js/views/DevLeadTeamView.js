@@ -294,11 +294,17 @@ class DevLeadTeamView extends DevBaseView {
     this.savingEdit = true;
     this.setEditStatus('Guardando...', '');
     try {
-      const { error } = await this.supabase
-        .from('profiles')
-        .update({ dev_role, dev_rank })
-        .eq('id', this.editing.id);
-      if (error) throw error;
+      // El cambio de privilegios NO se escribe desde el navegador: profiles.dev_role
+      // ya no es escribible por `authenticated`. Pasa por admin-set-dev-role, que
+      // valida requireLead() en el servidor y deja rastro en staff_audit_log.
+      const { error } = await this.supabase.functions.invoke('admin-set-dev-role', {
+        body: { action: 'set_role', user_id: this.editing.id, dev_role, dev_rank }
+      });
+      if (error) {
+        let msg = error.message || 'Error al guardar';
+        try { const ctx = await error.context?.json?.(); if (ctx?.error) msg = ctx.error; } catch (_) {}
+        throw new Error(msg);
+      }
 
       this.showNotification('Cambios guardados.', 'success');
       this.closeEdit();
@@ -328,17 +334,15 @@ class DevLeadTeamView extends DevBaseView {
     this.savingEdit = true;
     this.setEditStatus('Quitando acceso...', '');
     try {
-      const { error } = await this.supabase
-        .from('profiles')
-        .update({
-          is_developer: false,
-          dev_role: null,
-          dev_rank: null,
-          role: 'user',
-          default_view_mode: 'user'
-        })
-        .eq('id', this.editing.id);
-      if (error) throw error;
+      // Igual que setRole: la revocacion la hace el servidor, no el navegador.
+      const { error } = await this.supabase.functions.invoke('admin-set-dev-role', {
+        body: { action: 'revoke_developer', user_id: this.editing.id }
+      });
+      if (error) {
+        let msg = error.message || 'Error al quitar acceso';
+        try { const ctx = await error.context?.json?.(); if (ctx?.error) msg = ctx.error; } catch (_) {}
+        throw new Error(msg);
+      }
       this.showNotification('Acceso developer quitado.', 'success');
       this.closeEdit();
       await this.loadTeam();
