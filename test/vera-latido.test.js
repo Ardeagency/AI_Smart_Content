@@ -106,6 +106,15 @@ describe('latido de Mi Marca — plantilla y huellas hablan el mismo idioma', ()
     expect(FUENTE).toMatch(/setAttribute\('data-nuevo-id',\s*this\._nid\('card',\s*'observacion'\)\)/);
   });
 
+  test('cambiar solo la hora no hace latir: eso es metadato, no novedad', () => {
+    const vista = cargarVista();
+    const antes = vista._veraHuellasDe(CARDS);
+    const despues = vista._veraHuellasDe(
+      CARDS.map((c) => ({ ...c, updated_at: new Date().toISOString() })),
+    );
+    expect(Object.keys(despues).filter((id) => antes[id] !== despues[id])).toEqual([]);
+  });
+
   test('una card que no cambió no late; una que cambió, sí', () => {
     const vista = cargarVista();
     const antes = vista._veraHuellasDe(CARDS);

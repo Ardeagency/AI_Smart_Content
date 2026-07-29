@@ -186,6 +186,9 @@
             </header>
             <p class="bgrid-card-sub">${this._esc(__('Lo más destacado de tu marca en este periodo'))}</p>
             <div class="cgrid-obs" id="bgridObservacion"></div>
+            <!-- El pie va FUERA de .cgrid-obs: esa lista lleva scroll y la hora
+                 se iría con ella. -->
+            <span class="vera-card-fecha" id="bgridObsFecha" hidden></span>
             </section>
           </div>
           <!-- Producto destacado cierra el bloque de Vera: se reubica al final de
@@ -482,6 +485,63 @@
        del filtro anterior). En la primera visita no late nada: solo se guarda la
        línea base. Si latiera todo, latir dejaría de significar algo. ══════════ */
 
+    /* ══ Cuándo lo escribió Vera ═══════════════════════════════════════════
+       Cada card lleva su propia hora (`updated_at`, sellada por ai-engine al
+       armar la lectura) porque el tablero cambia por partes: cinco cards de
+       ayer y una de hace un minuto viven en la misma fila. Si se usara la fecha
+       de la LECTURA, las seis dirían lo mismo y sería mentira en cinco.
+       Respaldo para lecturas viejas sin sello: la fecha de la lectura, que es
+       lo único cierto que hay de ellas. ═══════════════════════════════════ */
+
+    // En palabras, no en abreviaturas: esto lo lee quien mira su marca, no un
+    // panel de monitoreo. "hace 3 min", "hace 1 hora", "hace 2 días".
+    _veraHace(iso) {
+      const t = iso ? new Date(iso).getTime() : NaN;
+      if (!t || Number.isNaN(t)) return '';
+      const seg = Math.floor((Date.now() - t) / 1000);
+      if (seg < 0) return __('hace un momento');        // reloj del cliente adelantado
+      if (seg < 60) return __('hace un momento');
+      const min = Math.floor(seg / 60);
+      if (min < 60) return __('hace {n} min', { n: min });
+      const h = Math.floor(min / 60);
+      if (h < 24) return h === 1 ? __('hace 1 hora') : __('hace {n} horas', { n: h });
+      const d = Math.floor(h / 24);
+      if (d < 30) return d === 1 ? __('hace 1 día') : __('hace {n} días', { n: d });
+      const meses = Math.floor(d / 30);
+      return meses === 1 ? __('hace 1 mes') : __('hace {n} meses', { n: meses });
+    },
+
+    // Fecha exacta para el title: el relativo es cómodo, pero cuando alguien
+    // pregunta "¿exactamente cuándo?" el dato tiene que estar.
+    _veraFechaExacta(iso) {
+      try {
+        const loc = (window.i18n && window.i18n.getLocale() === 'en') ? 'en-US' : 'es-CO';
+        return new Date(iso).toLocaleString(loc, {
+          day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+        });
+      } catch (_) { return ''; }
+    },
+
+    /* La hora de UNA card: su sello, y si no lo tiene, el de la lectura.
+       Devuelve null si no hay ninguno — mejor sin pie que con un "—". */
+    _veraFechaDatos(card) {
+      const iso = (card && card.updated_at) || this._veraLecturaAt || null;
+      const rel = this._veraHace(iso);
+      if (!rel) return null;
+      return { iso, rel, exacta: this._veraFechaExacta(iso) };
+    },
+
+    // El pie, para las plantillas que se escriben como texto. La etiqueta es la
+    // misma clave que ya usa Brand Storage ('Última actualización {d}'), con el
+    // relativo dentro; al pasar el cursor, la fecha exacta.
+    _veraFechaHtml(card) {
+      const f = this._veraFechaDatos(card);
+      if (!f) return '';
+      const txt = __('Última actualización {d}', { d: f.rel });
+      const exacta = __('Última actualización {d}', { d: f.exacta });
+      return `<span class="vera-card-fecha" title="${this._esc(exacta)}">${this._esc(txt)}</span>`;
+    },
+
     _veraHuellasKey() {
       return `vera:mimarca:huellas:${this._orgId || 'global'}:${this._veraPeriodoActivo()}`;
     },
@@ -515,9 +575,14 @@
        observación" son noticias distintas y merecen señales distintas. */
     _veraHuellasDe(cards) {
       const mapa = {};
+      // La hora NO entra en la huella. Late lo que cambió para quien lee, y
+      // "Vera la volvió a mirar y escribió lo mismo" no es una novedad: sería
+      // latir por metadato. (Además, el día que se añadió el sello habrían
+      // latido las seis cards a la vez, que es justo lo que vacía la señal.)
+      const contenido = (c) => { const { updated_at: _sello, ...resto } = c; return resto; };
       (cards || []).forEach((c) => {
         if (!c || !c.type) return;
-        mapa[this._nidCard(c)] = this._huella(c);
+        mapa[this._nidCard(c)] = this._huella(contenido(c));
         if (!Array.isArray(c.items)) return;
         c.items.forEach((it) => {
           if (!it) return;
@@ -584,6 +649,8 @@
           fila = (fallback && fallback[0]) ? fallback[0] : null;
         }
         reading = fila ? fila.reading : null;
+        // Respaldo del pie de cada card: solo se usa si la card no trae sello.
+        this._veraLecturaAt = fila ? fila.created_at : null;
       } catch (_) {}
       const vdHost = body.querySelector('#bgridVD');
       const all = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
@@ -619,6 +686,17 @@
         if (obsCard) {
           obsCard.hidden = !obsHtml;
           obsCard.setAttribute('data-nuevo-id', this._nid('card', 'observacion'));
+        }
+        // Su pie también vive en el shell, así que se llena aquí en vez de salir
+        // de la plantilla como en las demás cards. Se ESCRIBE sobre el elemento,
+        // no se reemplaza: si se fuera el id, el repintado siguiente no lo
+        // encontraría y la hora se quedaría congelada.
+        const obsFecha = body.querySelector('#bgridObsFecha');
+        if (obsFecha) {
+          const f = obsHtml ? this._veraFechaDatos(obs[0]) : null;
+          obsFecha.hidden = !f;
+          obsFecha.textContent = f ? __('Última actualización {d}', { d: f.rel }) : '';
+          if (f) obsFecha.title = __('Última actualización {d}', { d: f.exacta });
         }
       }
       // NIVEL 2 — la Intuición lidera la lectura de Vera (justo tras el veredicto
@@ -984,7 +1062,8 @@
             ${this._veraRecheckBtn(side === 'pos' ? 'virtudes' : 'desventajas', __('Volver a consultar {c}', { c: label }))}
             <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${icon}" aria-hidden="true"></i>${esc(label)}</span>
             ${card.title ? `<h4 class="vera-card-title">${esc(card.title)}</h4>` : ''}
-            <div class="vera-card-body">${blocks.map((b, bi) => this._veraBlockHtml(b, key, bi)).join('')}</div>`;
+            <div class="vera-card-body">${blocks.map((b, bi) => this._veraBlockHtml(b, key, bi)).join('')}</div>
+            ${this._veraFechaHtml(card)}`;
         }).join('');
         // El par no pasa por _veraCardHtml, así que su identidad se escribe aquí:
         // sin esto, Fortalezas y Debilidades no latirían nunca y el fallo sería
@@ -1059,6 +1138,7 @@
           <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--audience" aria-hidden="true"></i>${esc(__('Audiencias recomendadas'))}</span>
           <p class="bgrid-card-sub">${esc(__('A quién deberías hablarle según lo que Vera aprendió de ti'))}</p>
           <div class="cgrid-aud">${fichas}</div>
+          ${this._veraFechaHtml(card)}
         </section>`;
     },
 
@@ -1179,6 +1259,7 @@
           <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${m.icon}" aria-hidden="true"></i>${esc(m.label)}</span>
           ${card.title ? `<h3 class="vera-card-title">${esc(card.title)}</h3>` : ''}
           <div class="vera-card-body">${inner}</div>
+          ${this._veraFechaHtml(card)}
         </section>`;
     },
 
@@ -1248,6 +1329,7 @@
             <div class="vera-aud-viz">${vizHtml}</div>
             <div class="vera-aud-comment vera-card-body" data-panel-marca="1">${restHtml}</div>
           </div>
+          ${this._veraFechaHtml(card)}
         </section>`;
     },
 
