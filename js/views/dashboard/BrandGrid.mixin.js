@@ -18,6 +18,29 @@
   'use strict';
   if (typeof DashboardView === 'undefined') return;
 
+  /* Países del mapa de audiencia: "ISO2/ISO3:id-numérico-del-topojson".
+     Los dos códigos en la MISMA entrada para que no puedan divergir — el fallo
+     que dejó el mundo entero encendido fue tener solo los de tres letras
+     mientras Vera mandaba los de dos. Cubre América entera, Europa occidental y
+     los mercados grandes; un país fuera de la tabla se avisa por consola y no
+     se pinta, en vez de contaminar la escala. */
+  const BrandGridGeo = {
+    mapa: null,
+    tabla: [
+      'AR/ARG:032 BO/BOL:068 BR/BRA:076 CL/CHL:152 CO/COL:170 CR/CRI:188 CU/CUB:192',
+      'DO/DOM:214 EC/ECU:218 SV/SLV:222 GT/GTM:320 HN/HND:340 MX/MEX:484 NI/NIC:558',
+      'PA/PAN:591 PY/PRY:600 PE/PER:604 PR/PRI:630 UY/URY:858 VE/VEN:862 BZ/BLZ:084',
+      'US/USA:840 CA/CAN:124 JM/JAM:388 HT/HTI:332 TT/TTO:780',
+      'ES/ESP:724 PT/PRT:620 FR/FRA:250 DE/DEU:276 IT/ITA:380 GB/GBR:826 IE/IRL:372',
+      'NL/NLD:528 BE/BEL:056 CH/CHE:756 AT/AUT:040 SE/SWE:752 NO/NOR:578 DK/DNK:208',
+      'FI/FIN:246 PL/POL:616 CZ/CZE:203 GR/GRC:300 RO/ROU:642 HU/HUN:348 UA/UKR:804',
+      'RU/RUS:643 TR/TUR:792 IL/ISR:376 SA/SAU:682 AE/ARE:784 EG/EGY:818 MA/MAR:504',
+      'NG/NGA:566 ZA/ZAF:710 KE/KEN:404 GH/GHA:288 ET/ETH:231',
+      'CN/CHN:156 JP/JPN:392 KR/KOR:410 IN/IND:356 ID/IDN:360 PH/PHL:608 VN/VNM:704',
+      'TH/THA:764 MY/MYS:458 SG/SGP:702 AU/AUS:036 NZ/NZL:554 PK/PAK:586 BD/BGD:050',
+    ].join(' '),
+  };
+
   const WINDOWS = [
     { k: 'week',  days: 7,    label: () => __('Semana') },
     { k: 'month', days: 30,   label: () => __('Mes') },
@@ -1833,30 +1856,108 @@
     },
 
     /* Choropleth de audiencia por país. Si la librería geo falla, cae a barras. */
+    /* ══ El mapa por país ═════════════════════════════════════════════════
+       El contrato admite ISO-2 o ISO-3 y el pintor traduce. Hasta hoy solo
+       traducía el de TRES letras: con "CO" no había match, los 195 países
+       quedaban en 0, y una escala donde todos los valores son iguales pinta el
+       mundo entero del color de la marca. El mapa decía justo lo contrario del
+       dato — "estás en todas partes" cuando el 83% está en Colombia.
+       De ahí las tres reglas de abajo: se traducen los dos códigos, la escala
+       se ancla a 0 en vez de dejar que la normalice sola, y si NINGÚN país casa
+       no se pinta un mapa falso: se cae a las barras. ══════════════════════ */
+
+    // ISO-2 / ISO-3 → id numérico del topojson, en una sola tabla para que los
+    // dos códigos no puedan divergir.
+    _geoNumPorCodigo(code) {
+      if (!BrandGridGeo.mapa) {
+        BrandGridGeo.mapa = {};
+        BrandGridGeo.tabla.split(' ').forEach((t) => {
+          const [codigos, num] = t.split(':');
+          codigos.split('/').forEach((c) => { BrandGridGeo.mapa[c] = num; });
+        });
+      }
+      const c = String(code == null ? '' : code).trim().toUpperCase();
+      if (!c) return null;
+      if (/^\d+$/.test(c)) return String(Number(c)).padStart(3, '0');   // ya venía numérico
+      return BrandGridGeo.mapa[c] || null;
+    },
+
+    /* Traduce el bloque a lo que necesita el mapa. Fuera del pintor porque esto
+       —y no el dibujo— es donde estaba el fallo, y así se puede probar. */
+    _geoDatos(block) {
+      const filas = Array.isArray(block && block.data) ? block.data : [];
+      const crudos = filas.map((d) => Number(d && d.value) || 0);
+      const maxCrudo = Math.max(0, ...crudos);
+      // Vera manda fracciones (0.834) o porcentajes (83.4). Se normaliza a % una
+      // sola vez: si el mayor no pasa de 1, era fracción.
+      const aPct = (v) => (maxCrudo > 0 && maxCrudo <= 1 ? v * 100 : v);
+      const valPorNum = {}, nombrePorNum = {}, sinMapear = [];
+      filas.forEach((d) => {
+        const num = this._geoNumPorCodigo(d && d.code);
+        if (!num) { sinMapear.push((d && d.code) || '?'); return; }
+        valPorNum[num] = aPct(Number(d.value) || 0);
+        nombrePorNum[num] = (d && d.name) || (d && d.code) || '';
+      });
+      const pcts = Object.values(valPorNum);
+      return {
+        valPorNum, nombrePorNum, sinMapear,
+        maxPct: pcts.length ? Math.max(...pcts) : 0,
+        mapeados: pcts.length,
+      };
+    },
+
     async _paintChoropleth(canvas, block, fbEl) {
-      const A3_NUM = { MEX: '484', COL: '170', USA: '840', PER: '604', ESP: '724', ARG: '032', CHL: '152', BRA: '076', ECU: '218', VEN: '862', GTM: '320', BOL: '068', DOM: '214', HND: '340', PRY: '600', SLV: '222', NIC: '558', CRI: '188', PAN: '591', URY: '858', PRI: '630', CAN: '124', GBR: '826', FRA: '250', DEU: '276', ITA: '380' };
       try {
         await this._ensureGeoChart();
         const G = window.ChartGeo, Chart = window.Chart;
         if (!G || !this._geoTopo || !G.topojson) throw new Error('geo-unavailable');
         const topo = this._geoTopo;
         const features = G.topojson.feature(topo, topo.objects.countries).features;
-        const valByNum = {};
-        (Array.isArray(block.data) ? block.data : []).forEach((d) => { valByNum[String(A3_NUM[d.code] || d.code)] = Number(d.value) || 0; });
-        const nameByNum = {};
-        (Array.isArray(block.data) ? block.data : []).forEach((d) => { nameByNum[String(A3_NUM[d.code] || d.code)] = d.name || d.code; });
+        const { valPorNum, nombrePorNum, sinMapear, maxPct, mapeados } = this._geoDatos(block);
+        // Ni un país reconocido = no hay mapa que pintar. Antes se pintaba igual
+        // y salía el planeta entero encendido.
+        if (!mapeados) throw new Error('sin-paises-mapeados');
+        if (sinMapear.length) console.warn('[BrandGrid] choropleth: códigos sin mapear ->', sinMapear.join(', '));
         const [accent] = this._gridBrandHexes();
         const [r, g, bl] = this._hexToRgb(accent);
-        const data = features.map((f) => ({ feature: f, value: valByNum[String(f.id)] != null ? valByNum[String(f.id)] : 0 }));
+        const data = features.map((f) => {
+          const num = String(f.id).padStart(3, '0');
+          return { feature: f, value: valPorNum[num] != null ? valPorNum[num] : 0 };
+        });
         this._reg(new Chart(canvas, {
           type: 'choropleth',
           data: { labels: features.map((f) => f.properties && f.properties.name), datasets: [{ label: '', outline: features, data, borderColor: 'rgba(255,255,255,0.06)', borderWidth: 0.4 }] },
           options: {
             responsive: true, maintainAspectRatio: false, showOutline: true, showGraticule: false,
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => { const num = String(c.raw.feature.id); return `${nameByNum[num] || (c.raw.feature.properties && c.raw.feature.properties.name)}: ${c.raw.value}%`; } } } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                // Sin dato no hay porcentaje que enseñar: se dice que no lo hay.
+                filter: (c) => Number(c.raw && c.raw.value) > 0,
+                callbacks: {
+                  label: (c) => {
+                    const num = String(c.raw.feature.id).padStart(3, '0');
+                    const nom = nombrePorNum[num] || (c.raw.feature.properties && c.raw.feature.properties.name) || '';
+                    return `${nom}: ${Math.round(Number(c.raw.value) * 10) / 10}%`;
+                  },
+                },
+              },
+            },
             scales: {
               projection: { axis: 'x', projection: 'equalEarth' },
-              color: { axis: 'x', display: false, interpolate: (v) => `rgba(${r},${g},${bl},${(0.10 + 0.88 * (v || 0)).toFixed(3)})` },
+              // El dominio se fija a mano. Dejando que lo deduzca de los datos,
+              // un conjunto donde todos valen lo mismo (o todos 0) degenera y
+              // devuelve el tope para TODOS: el mundo entero encendido.
+              color: {
+                axis: 'x', display: false, min: 0, max: maxPct || 1,
+                interpolate: (v) => {
+                  const t = Math.max(0, Math.min(1, Number(v) || 0));
+                  // Los países sin audiencia se quedan en el fondo, no en un
+                  // tono claro de la marca: ausencia no es "poquito".
+                  if (t <= 0) return 'rgba(255,255,255,0.05)';
+                  return `rgba(${r},${g},${bl},${(0.18 + 0.80 * t).toFixed(3)})`;
+                },
+              },
             },
           },
         }));
@@ -1872,14 +1973,22 @@
     _geoBarsHtml(block) {
       const rows = (Array.isArray(block.data) ? block.data : []).slice().sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
       if (!rows.length) return '';
-      const max = Math.max(1, ...rows.map((r) => Number(r.value) || 0));
+      // Misma normalización que el mapa: 0.834 y 83.4 son el mismo dato, y aquí
+      // se leía crudo — "0.834%" donde debía decir "83.4%".
+      const crudos = rows.map((r) => Number(r.value) || 0);
+      const maxCrudo = Math.max(0, ...crudos);
+      const aPct = (v) => (maxCrudo > 0 && maxCrudo <= 1 ? v * 100 : v);
+      const max = Math.max(1, ...crudos.map(aPct));
       const [accent] = this._gridBrandHexes();
-      return `<div class="vera-geo-bars">${rows.map((r) => `
+      return `<div class="vera-geo-bars">${rows.map((r) => {
+        const pct = aPct(Number(r.value) || 0);
+        return `
         <div class="vera-geo-row">
           <span class="vera-geo-name">${this._esc(r.name || r.code || '')}</span>
-          <div class="vera-geo-track"><div class="vera-geo-fill" style="width:${Math.round((Number(r.value) || 0) / max * 100)}%;background:${this._esc(accent)}"></div></div>
-          <span class="vera-geo-val">${Number(r.value) || 0}%</span>
-        </div>`).join('')}</div>`;
+          <div class="vera-geo-track"><div class="vera-geo-fill" style="width:${Math.round(pct / max * 100)}%;background:${this._esc(accent)}"></div></div>
+          <span class="vera-geo-val">${Math.round(pct * 10) / 10}%</span>
+        </div>`;
+      }).join('')}</div>`;
     },
 
     /* Tier de salud/rendimiento (misma lógica que Campañas): benchmark → nivel
