@@ -825,3 +825,41 @@
 @media (prefers-reduced-motion: reduce) { .vera-recheck.is-loading .aisc-ico { animation: none; } }
 /* En el header de Observaciones el botón es un hijo más del flex, no absoluto. */
 #bgridObsCard .bgrid-card-head .vera-recheck { position: static; }
+
+/* ── Lo último que Vera actualizó ────────────────────────────────────────
+   Vera elige qué card rehacer, así que el tablero cambia por partes y sin
+   avisar. Lo recién llegado late 30 segundos (el apagado lo hace el JS) para
+   que se distinga de lo que ya estaba, sin mover ni un píxel del layout: es un
+   anillo en un ::after, no un borde —un borde empujaría el contenido.
+   Late la card y, dentro de ella, el item concreto que cambió: no es lo mismo
+   "reescribió el análisis" que "añadió una observación". */
+.cgo-item[data-nuevo-id], .cga-item[data-nuevo-id] { position: relative; }
+/* El anillo va POR DENTRO (inset: 0) y su halo es `inset`, no exterior. Tres de
+   los contenedores que puede marcar recortan lo que se sale —.vera-card--algoritmo
+   con overflow:hidden, y los carruseles de Observaciones y Audiencias con su
+   scroll— y un anillo por fuera se veria cortado justo en las cards mas grandes. */
+[data-nuevo-id].is-nuevo::after {
+  content: ''; position: absolute; inset: 0;
+  border-radius: inherit; pointer-events: none; z-index: 3;
+  border: 1px solid var(--brand-color-light, #F79E1B);
+  box-shadow: inset 0 0 14px -4px var(--brand-color-light, #F79E1B);
+  animation: veraLatido 2.2s ease-in-out infinite;
+}
+/* Los items laten más suave: dentro de una card que ya late, dos señales al
+   mismo volumen compiten en vez de jerarquizar. */
+.cgo-item.is-nuevo::after, .cga-item.is-nuevo::after { box-shadow: none; }
+.cgo-item.is-nuevo::after { animation-name: veraLatidoSuave; }
+.cga-item.is-nuevo::after { animation-name: veraLatidoSuave; }
+@keyframes veraLatido {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 1; }
+}
+@keyframes veraLatidoSuave {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 0.7; }
+}
+/* Sin movimiento: el anillo se queda fijo. La novedad se sigue viendo — que era
+   el punto—, simplemente no parpadea. */
+@media (prefers-reduced-motion: reduce) {
+  [data-nuevo-id].is-nuevo::after { animation: none; opacity: 0.9; }
+}

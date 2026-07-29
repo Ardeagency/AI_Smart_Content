@@ -462,6 +462,98 @@
       return dias > 365 ? 'all' : mejor;
     },
 
+    /* ══ Lo último que hizo Vera ═══════════════════════════════════════════
+       Vera decide qué card actualizar, así que una lectura nueva casi nunca trae
+       las seis: trae cinco iguales y una reescrita. De ahí las dos reglas:
+
+       1. Nada se oculta por no haberse actualizado. Cada card sigue mostrando lo
+          último que ella escribió — lo garantiza el backend, que refresca la
+          MISMA fila del periodo dejando intactas las otras cinco.
+       2. Lo que sí cambió late 30 segundos, para que se vea de un vistazo cuál
+          fue su última aportación sin tener que releer el tablero entero.
+
+       Se compara contra la huella de la visita anterior, guardada por org y por
+       periodo (cambiar de filtro compara contra SU propia historia, no contra la
+       del filtro anterior). En la primera visita no late nada: solo se guarda la
+       línea base. Si latiera todo, latir dejaría de significar algo. ══════════ */
+
+    _veraHuellasKey() {
+      return `vera:mimarca:huellas:${this._orgId || 'global'}:${this._veraPeriodoActivo()}`;
+    },
+
+    // Identidad ESTABLE de cada pieza. Vive en un solo sitio porque la usan dos
+    // caminos que no se ven entre sí: la plantilla (que la escribe en el DOM) y
+    // el cálculo de huellas (que la compara). Si divergieran, nada latiría nunca.
+    _nid(prefijo, sem) {
+      const limpio = String(sem == null ? '' : sem)
+        .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48);
+      return `${prefijo}:${limpio || 'x'}`;
+    },
+    _nidCard(card)  { return this._nid('card', card && card.type); },
+    // Las observaciones no traen id: se identifican por su título, y si no lo
+    // tienen, por el arranque del texto.
+    _nidObs(o)      { return this._nid('obs', (o && (o.titulo || o.observacion)) || ''); },
+    _nidAudRec(a)   { return this._nid('audrec', a && a.id); },
+
+    // Huella de contenido: si cambia el texto, cambia el número. No pretende ser
+    // criptográfica — solo distinguir "esto es otra cosa" de "esto es lo mismo".
+    _huella(v) {
+      const s = JSON.stringify(v == null ? '' : v);
+      let h = 0x811c9dc5;
+      for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+      return (h >>> 0).toString(36);
+    },
+
+    /* Huella de TODO lo que se pinta: una por card y una por item suelto. Los
+       items van aparte porque "Vera reescribió la card" y "Vera añadió una
+       observación" son noticias distintas y merecen señales distintas. */
+    _veraHuellasDe(cards) {
+      const mapa = {};
+      (cards || []).forEach((c) => {
+        if (!c || !c.type) return;
+        mapa[this._nidCard(c)] = this._huella(c);
+        if (!Array.isArray(c.items)) return;
+        c.items.forEach((it) => {
+          if (!it) return;
+          if (c.type === 'audiencias_recomendadas') { if (it.id != null) mapa[this._nidAudRec(it)] = this._huella(it); }
+          else if (c.type === 'observacion' && it.observacion) mapa[this._nidObs(it)] = this._huella(it);
+        });
+      });
+      return mapa;
+    },
+
+    /* Marca en el DOM lo que cambió desde la visita anterior y programa su
+       apagado. El latido dura 30s y se apaga solo: una señal que no se apaga
+       deja de ser una señal y pasa a ser decoración. */
+    _veraMarcarNovedades(body, huellas) {
+      // Un repintado nuevo invalida los apagados en vuelo (el DOM que iban a
+      // limpiar ya no existe). Sin esto se acumula un timer por refresco.
+      (this._veraLatidos || []).forEach((t) => clearTimeout(t));
+      this._veraLatidos = [];
+
+      const key = this._veraHuellasKey();
+      let previas = null;
+      try { previas = JSON.parse(localStorage.getItem(key) || 'null'); } catch (_) {}
+      try { localStorage.setItem(key, JSON.stringify(huellas)); } catch (_) {}
+      if (!previas || typeof previas !== 'object') return;   // primera visita: solo línea base
+
+      const nuevos = Object.keys(huellas).filter((id) => previas[id] !== huellas[id]);
+      if (!nuevos.length) return;
+
+      const marcar = (el) => {
+        if (!el) return;
+        // Reiniciar la animación si el elemento ya venía latiendo.
+        el.classList.remove('is-nuevo');
+        void el.offsetWidth;
+        el.classList.add('is-nuevo');
+        this._veraLatidos.push(setTimeout(() => el.classList.remove('is-nuevo'), 30000));
+      };
+      nuevos.forEach((id) => {
+        body.querySelectorAll(`[data-nuevo-id="${id}"]`).forEach(marcar);
+      });
+    },
+
     async _renderVeraCards(body) {
       const obsHost = body.querySelector('#bgridObservacion');
       const host = body.querySelector('#bgridVera');
@@ -511,13 +603,18 @@
       const audItems = aud.map((c, i) => ({ card: c, key: 'aud' + i }));
       const restItems = rest.map((c, i) => ({ card: c, key: 'v' + i }));
       const intuItems = intu.map((c, i) => ({ card: c, key: 'intu' + i }));
-      // Observaciones: fichas como en Competencia. La card entera se oculta si
-      // Vera no escribió ninguna (no dejamos un marco vacío en la columna).
+      // Observaciones: fichas como en Competencia. La card solo se oculta si
+      // Vera no ha escrito NINGUNA nunca (no dejamos un marco vacío en la
+      // columna). Ojo con la diferencia: "no la actualizó en esta ronda" NO es
+      // motivo para ocultarla — sigue mostrando las últimas que escribió.
       if (obsHost) {
         const obsHtml = this._veraObservacionesHtml(obs);
         obsHost.innerHTML = obsHtml;
         const obsCard = body.querySelector('#bgridObsCard');
-        if (obsCard) obsCard.hidden = !obsHtml;
+        if (obsCard) {
+          obsCard.hidden = !obsHtml;
+          obsCard.setAttribute('data-nuevo-id', this._nid('card', 'observacion'));
+        }
       }
       // NIVEL 2 — la Intuición lidera la lectura de Vera (justo tras el veredicto
       // de salud, encima de Algoritmo/Audiencias). Banda full-width propia.
@@ -560,6 +657,9 @@
       this._paintTopPostPropio(body);
       // Con la columna derecha ya poblada, se calcula el tope de Observaciones.
       this._ajustarAltoObservaciones(body);
+      // Lo último de Vera, al final: el DOM ya está completo, así que aquí se
+      // encuentran todas las piezas que hay que marcar.
+      this._veraMarcarNovedades(body, this._veraHuellasDe(all));
     },
 
     /* ══ Evidencia del producto ═══════════════════════════════════════════
@@ -928,7 +1028,7 @@
           .map((t) => `<span class="tend-oc-chip">${esc(String(t))}</span>`).join('');
         const pri = ['alta', 'media', 'baja'].includes(a.priority) ? a.priority : 'media';
         return `
-          <article class="cga-item tend-oc" data-audrec-id="${esc(a.id)}" data-panel-marca>
+          <article class="cga-item tend-oc" data-audrec-id="${esc(a.id)}" data-nuevo-id="${esc(this._nidAudRec(a))}" data-panel-marca>
             <div class="cga-top">
               <span class="tend-oc-intent tend-oc-intent--${pri}">${esc(priLabel[pri] || priLabel.media)}</span>
               <h4 class="cga-quien">${esc(a.name || '')}</h4>
@@ -945,7 +1045,7 @@
           </article>`;
       }).join('');
       return `
-        <section class="cgrid-card--aud vera-audrec">
+        <section class="cgrid-card--aud vera-audrec" data-nuevo-id="${esc(this._nidCard(card))}">
           ${this._veraRecheckBtn('audiencias_recomendadas', __('Volver a consultar Audiencias recomendadas'))}
           <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--audience" aria-hidden="true"></i>${esc(__('Audiencias recomendadas'))}</span>
           <p class="bgrid-card-sub">${esc(__('A quién deberías hablarle según lo que Vera aprendió de ti'))}</p>
@@ -1020,7 +1120,7 @@
         const sev = SEV[String(o.severidad || '').toLowerCase()] || SEV.neutral;
         const prio = String(o.prioridad || '').toLowerCase();
         return `
-          <article class="cgo-item ${esc(sev.cls)}">
+          <article class="cgo-item ${esc(sev.cls)}" data-nuevo-id="${esc(this._nidObs(o))}">
             <div class="cgo-head">
               ${o.donde ? `<span class="cgo-perfil">${esc(o.donde)}</span>` : ''}
               <span class="cgo-sev">${esc(sev.label)}</span>
@@ -1065,7 +1165,7 @@
         (esActo && b && b.type === 'markdown') ? { ...b, _actos: true } : b, key, bi)).join('');
       const tone = ['positive', 'neutral', 'warning', 'critical'].includes(card.tone) ? card.tone : 'neutral';
       return `
-        <section class="vera-card vera-card--${this._esc(card.type)}${bare ? ' vera-card--bare' : ''}" data-tone="${tone}">
+        <section class="vera-card vera-card--${this._esc(card.type)}${bare ? ' vera-card--bare' : ''}" data-tone="${tone}" data-nuevo-id="${this._esc(this._nidCard(card))}">
           ${this._veraRecheckBtn(card.type, __('Volver a consultar {c}', { c: m.label }))}
           <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${m.icon}" aria-hidden="true"></i>${esc(m.label)}</span>
           ${card.title ? `<h3 class="vera-card-title">${esc(card.title)}</h3>` : ''}
