@@ -25,6 +25,11 @@
     { k: 'all',   days: null, label: () => __('Todo') },
   ];
 
+  // Cuánto late lo que Vera acaba de actualizar. Minuto y medio: el tablero se
+  // lee por partes y con calma, y a los 30s la señal se apagaba antes de que la
+  // vista llegara a la card de abajo. El apagado lo hace el JS, no el CSS.
+  const LATIDO_MS = 90000;
+
   // Icono de la red (Font Awesome, ya cargado). La plataforma se reconoce por su
   // marca, no leyendo una palabra en gris.
   const PLATFORM_ICON = {
@@ -469,7 +474,7 @@
        1. Nada se oculta por no haberse actualizado. Cada card sigue mostrando lo
           último que ella escribió — lo garantiza el backend, que refresca la
           MISMA fila del periodo dejando intactas las otras cinco.
-       2. Lo que sí cambió late 30 segundos, para que se vea de un vistazo cuál
+       2. Lo que sí cambió late minuto y medio, para que se vea de un vistazo cuál
           fue su última aportación sin tener que releer el tablero entero.
 
        Se compara contra la huella de la visita anterior, guardada por org y por
@@ -524,7 +529,7 @@
     },
 
     /* Marca en el DOM lo que cambió desde la visita anterior y programa su
-       apagado. El latido dura 30s y se apaga solo: una señal que no se apaga
+       apagado. El latido dura LATIDO_MS y se apaga solo: una señal que no se apaga
        deja de ser una señal y pasa a ser decoración. */
     _veraMarcarNovedades(body, huellas) {
       // Un repintado nuevo invalida los apagados en vuelo (el DOM que iban a
@@ -547,7 +552,7 @@
         el.classList.remove('is-nuevo');
         void el.offsetWidth;
         el.classList.add('is-nuevo');
-        this._veraLatidos.push(setTimeout(() => el.classList.remove('is-nuevo'), 30000));
+        this._veraLatidos.push(setTimeout(() => el.classList.remove('is-nuevo'), LATIDO_MS));
       };
       nuevos.forEach((id) => {
         body.querySelectorAll(`[data-nuevo-id="${id}"]`).forEach(marcar);
@@ -981,7 +986,11 @@
             ${card.title ? `<h4 class="vera-card-title">${esc(card.title)}</h4>` : ''}
             <div class="vera-card-body">${blocks.map((b, bi) => this._veraBlockHtml(b, key, bi)).join('')}</div>`;
         }).join('');
-        return `<div class="vera-duo-panel" data-side="${side}">${content}</div>`;
+        // El par no pasa por _veraCardHtml, así que su identidad se escribe aquí:
+        // sin esto, Fortalezas y Debilidades no latirían nunca y el fallo sería
+        // mudo (la huella existe, pero no hay elemento que la lleve).
+        const nid = this._nid('card', side === 'pos' ? 'virtudes' : 'desventajas');
+        return `<div class="vera-duo-panel" data-side="${side}" data-nuevo-id="${esc(nid)}">${content}</div>`;
       };
       return `<div class="vera-duo">${panel(virtItems, 'pos', __('Fortalezas'), 'star')}${panel(desvItems, 'neg', __('Debilidades'), 'alert-warning')}</div>`;
     },
@@ -1232,7 +1241,7 @@
       const restHtml = blocks.map((b, bi) => (b && !isViz(b)) ? this._veraBlockHtml(b, key, bi) : '').join('');
       const tone = ['positive', 'neutral', 'warning', 'critical'].includes(card.tone) ? card.tone : 'neutral';
       return `
-        <section class="vera-card vera-card--audiencia" data-tone="${tone}">
+        <section class="vera-card vera-card--audiencia" data-tone="${tone}" data-nuevo-id="${esc(this._nidCard(card))}">
           <span class="vera-card-kind"><i class="aisc-ico aisc-ico--${m.icon}" aria-hidden="true"></i>${esc(m.label)}</span>
           ${card.title ? `<h3 class="vera-card-title">${esc(card.title)}</h3>` : ''}
           <div class="vera-aud-grid">

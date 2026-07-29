@@ -828,7 +828,7 @@
 
 /* ── Lo último que Vera actualizó ────────────────────────────────────────
    Vera elige qué card rehacer, así que el tablero cambia por partes y sin
-   avisar. Lo recién llegado late 30 segundos (el apagado lo hace el JS) para
+   avisar. Lo recién llegado late minuto y medio (el apagado lo hace el JS) para
    que se distinga de lo que ya estaba, sin mover ni un píxel del layout: es un
    anillo en un ::after, no un borde —un borde empujaría el contenido.
    Late la card y, dentro de ella, el item concreto que cambió: no es lo mismo
@@ -842,12 +842,21 @@
   content: ''; position: absolute; inset: 0;
   border-radius: inherit; pointer-events: none; z-index: 3;
   border: 1px solid var(--brand-color-light, #F79E1B);
-  box-shadow: inset 0 0 14px -4px var(--brand-color-light, #F79E1B);
+  /* El brillo va en DOS capas: un filo nítido pegado al borde y un halo abierto
+     que tiñe el interior. Con una sola sombra hay que elegir entre verse dura
+     (filo sin luz) o sucia (halo que se come el texto); con dos, el anillo
+     ilumina y el contenido sigue legible. Ambas `inset` por la misma razón que
+     el anillo: los contenedores grandes recortan lo que se sale. */
+  box-shadow:
+    inset 0 0 5px -1px var(--brand-color-light, #F79E1B),
+    inset 0 0 26px -6px var(--brand-color-light, #F79E1B);
   animation: veraLatido 2.2s ease-in-out infinite;
 }
 /* Los items laten más suave: dentro de una card que ya late, dos señales al
-   mismo volumen compiten en vez de jerarquizar. */
-.cgo-item.is-nuevo::after, .cga-item.is-nuevo::after { box-shadow: none; }
+   mismo volumen compiten en vez de jerarquizar. Brillo sí, pero de una capa. */
+.cgo-item.is-nuevo::after, .cga-item.is-nuevo::after {
+  box-shadow: inset 0 0 12px -5px var(--brand-color-light, #F79E1B);
+}
 .cgo-item.is-nuevo::after { animation-name: veraLatidoSuave; }
 .cga-item.is-nuevo::after { animation-name: veraLatidoSuave; }
 @keyframes veraLatido {
