@@ -3150,195 +3150,6 @@
 
 @media (max-width: 760px) { .mb-plan-grid { grid-template-columns: 1fr; } .mb-plan-vitals { grid-template-columns: 1fr; } .mb-plan-vital { border-right: 0; border-bottom: 1px solid var(--dash-line, rgba(255,255,255,0.08)); } .mb-plan-vital:last-child { border-bottom: 0; } }
 
-/* ════════════════════════════════════════════════════════════════════
-   COMPETENCIA — campo de batalla + voz de audiencia + vulnerabilidades
-   ════════════════════════════════════════════════════════════════════ */
-/* KPIs panoramica */
-.comp-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.85rem; margin-bottom: 1rem; }
-.comp-kpi {
-  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
-  border-radius: 12px; padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.2rem;
-}
-.comp-kpi-val { font-size: 1.4rem; font-weight: 700; color: var(--text-primary, #D4D1D8); line-height: 1; letter-spacing: -0.01em; }
-.comp-kpi-lbl { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
-
-/* Ranking de rivales */
-.comp-rank { display: flex; flex-direction: column; gap: 0.4rem; }
-.comp-rank-row {
-  display: grid; grid-template-columns: 28px minmax(150px, 1.4fr) auto auto auto;
-  align-items: center; gap: 0.85rem;
-  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
-  border-radius: 11px; padding: 0.6rem 0.9rem;
-}
-.comp-rank-pos { font-size: 0.8125rem; font-weight: 700; color: var(--text-muted, rgba(212,209,216,0.5)); text-align: center; font-variant-numeric: tabular-nums; }
-.comp-rank-name { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
-.comp-rank-brand { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.comp-rank-tipo {
-  flex: 0 0 auto; font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
-  color: var(--ct, #87868b); border: 1px solid var(--ct, #87868b); border-radius: 5px; padding: 0.08rem 0.35rem; opacity: 0.9;
-}
-.comp-rank-posts, .comp-rank-avg { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); font-variant-numeric: tabular-nums; text-align: right; }
-.comp-rank-eng { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary, rgba(212,209,216,0.82)); font-variant-numeric: tabular-nums; text-align: right; }
-
-/* Mapa de burbujas Share of Voice vs. Sentimiento */
-.comp-sov { background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424); border-radius: 14px; padding: 0.9rem 1rem 0.8rem; }
-/* Header (titulo + descripcion) DENTRO de la card: aire entre la regla fina del
-   header y el chart. */
-.comp-sov > .mb-section-head { margin-bottom: 0.85rem; }
-.comp-sov-canvas { position: relative; height: 340px; }
-.comp-sov-legend { display: flex; flex-wrap: wrap; gap: 0.35rem 0.9rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-divider, #242424); }
-.comp-sov-leg { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-secondary, rgba(212,209,216,0.82)); }
-.comp-sov-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
-@media (max-width: 640px) { .comp-sov-canvas { height: 280px; } }
-
-/* ── Monitoreo: columna izquierda apilada (override del grid 2-col de Mi Marca) */
-.comp-main { grid-template-columns: 1fr; }
-
-/* ── Panel lateral "Observaciones" (sidebar del tab Monitoreo) ────────────── */
-/* Card de Observaciones = mismo diseño que Salud de tu marca (mb-health-card--aside:
-   acento superior + glow). El titulo/descripcion van DENTRO. La lista ya no es card. */
-.comp-obs-card { gap: 0.6rem; }
-.comp-obs-head-in { display: flex; flex-direction: column; gap: 0.25rem; }
-.comp-obs-hint { font-size: 0.8rem; line-height: 1.35; color: var(--text-secondary, rgba(212,209,216,0.5)); }
-.comp-obs { display: block; margin: 0 -1.2rem -1.2rem; }
-.comp-obs-group + .comp-obs-group { border-top: 1px solid var(--border-divider, #242424); }
-.comp-obs-grouptitle { padding: 0.7rem 1.2rem 0.35rem; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-tertiary, rgba(212,209,216,0.45)); }
-.comp-obs-item { padding: 0.7rem 1.2rem 0.8rem; border-top: 1px solid var(--border-divider, #242424); }
-.comp-obs-grouptitle + .comp-obs-item { border-top: 0; }
-.comp-obs-head { display: flex; align-items: center; gap: 0.5rem; }
-.comp-obs-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
-.comp-obs-name { font-size: 0.86rem; font-weight: 600; color: var(--text-primary, #e8e6ea); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.comp-obs-rango { margin-left: auto; flex: 0 0 auto; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 999px; padding: 0.1rem 0.45rem; }
-.comp-obs-rango--nacional { color: #6bcf7f; border: 1px solid rgba(107,207,127,0.4); }
-.comp-obs-rango--internacional { color: #5b9bd5; border: 1px solid rgba(91,155,213,0.4); }
-.comp-obs-signal { display: flex; align-items: flex-start; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.8rem; line-height: 1.35; color: var(--text-secondary, rgba(212,209,216,0.85)); }
-.comp-obs-signal .aisc-ico { flex: 0 0 auto; width: 14px; height: 14px; margin-top: 1px; }
-.comp-obs-signal--opp { color: #e5897c; }
-.comp-obs-signal--pos { color: #6bcf7f; }
-.comp-obs-signal--strong { color: #d7d4db; }
-.comp-obs-signal--neutral { color: var(--text-secondary, rgba(212,209,216,0.7)); }
-.comp-obs-terms { margin-top: 0.4rem; font-size: 0.74rem; line-height: 1.35; color: var(--text-secondary, rgba(212,209,216,0.62)); }
-.comp-obs-terms-lbl { text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.58rem; font-weight: 700; color: var(--text-tertiary, rgba(212,209,216,0.4)); margin-right: 0.4rem; }
-.comp-obs-rel { margin-top: 0.4rem; font-size: 0.73rem; line-height: 1.4; color: var(--text-tertiary, rgba(212,209,216,0.5)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-/* Observacion expandible: revela los posts + comentarios que la respaldan */
-.comp-obs-evi { margin-top: 0; }
-.comp-obs-evi > summary { list-style: none; cursor: pointer; outline: none; }
-.comp-obs-evi > summary::-webkit-details-marker { display: none; }
-.comp-obs-evi-sum { position: relative; padding-right: 1.1rem; border-radius: 8px; transition: color 0.15s ease; }
-.comp-obs-evi-sum:hover { color: var(--text-primary, #e8e6ea); }
-.comp-obs-evi-sum:focus-visible { box-shadow: 0 0 0 2px var(--brand-primary, rgba(255,255,255,0.3)); }
-.comp-obs-evi-caret { width: 12px !important; height: 12px !important; margin: 2px 0 0 auto !important; flex: 0 0 auto; opacity: 0.55; transition: transform 0.18s ease, opacity 0.15s ease; }
-.comp-obs-evi[open] > summary .comp-obs-evi-caret { transform: rotate(180deg); opacity: 0.85; }
-.comp-obs-evi-sum:hover .comp-obs-evi-caret { opacity: 0.85; }
-.comp-obs-evi-body { margin: 0.6rem 0 0.2rem; display: flex; flex-direction: column; gap: 0.55rem; }
-/* Cada post = tarjeta propia, para que la division sea evidente */
-.comp-evi-post { display: flex; flex-direction: column; gap: 0.45rem; padding: 0.7rem 0.75rem; border-radius: 11px; background: var(--bg-elevated, rgba(255,255,255,0.028)); border: 1px solid var(--border-divider, #262626); }
-.comp-evi-post-top { display: flex; align-items: center; gap: 0.5rem; }
-.comp-evi-post-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.55rem; min-width: 0; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-tertiary, rgba(212,209,216,0.5)); }
-.comp-evi-post-meta .aisc-ico { width: 11px; height: 11px; margin-right: 0.15rem; vertical-align: -1px; }
-.comp-evi-net { color: var(--text-secondary, rgba(212,209,216,0.78)); font-weight: 700; }
-.comp-evi-eng, .comp-evi-cc { display: inline-flex; align-items: center; }
-/* Icono de redireccion al post real */
-.comp-evi-go { flex: 0 0 auto; margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 8px; color: var(--text-secondary, rgba(212,209,216,0.7)); background: rgba(255,255,255,0.04); border: 1px solid var(--border-divider, #2c2c2c); text-decoration: none; transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease; }
-.comp-evi-go .aisc-ico { width: 13px; height: 13px; }
-.comp-evi-go:hover { color: var(--brand-primary, #fff); background: rgba(255,255,255,0.08); border-color: var(--brand-primary, rgba(255,255,255,0.35)); }
-.comp-evi-text { margin: 0; font-size: 0.78rem; line-height: 1.45; color: var(--text-secondary, rgba(212,209,216,0.85)); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.comp-evi-text--empty { font-style: italic; color: var(--text-tertiary, rgba(212,209,216,0.45)); }
-.comp-evi-cmts { list-style: none; margin: 0.15rem 0 0; padding: 0.5rem 0 0; border-top: 1px dashed var(--border-divider, rgba(255,255,255,0.08)); display: flex; flex-direction: column; gap: 0.35rem; }
-.comp-evi-cmt { display: flex; align-items: flex-start; gap: 0.4rem; font-size: 0.72rem; line-height: 1.35; color: var(--text-secondary, rgba(212,209,216,0.72)); }
-.comp-evi-cmt-dot { flex: 0 0 auto; width: 6px; height: 6px; margin-top: 0.4rem; border-radius: 50%; background: var(--text-tertiary, rgba(212,209,216,0.4)); }
-.comp-evi-cmt--neg .comp-evi-cmt-dot { background: #e06464; }
-.comp-evi-cmt--pos .comp-evi-cmt-dot { background: #6bcf7f; }
-.comp-evi-cmt-body { min-width: 0; }
-.comp-evi-cmt-author { color: var(--text-tertiary, rgba(212,209,216,0.45)); font-size: 0.68rem; }
-
-/* Voz de su audiencia */
-.comp-voice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0.85rem; }
-.comp-voice-card {
-  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
-  border-radius: 14px; padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: 0.85rem;
-}
-.comp-voice-head { display: flex; flex-direction: column; gap: 0.2rem; }
-.comp-voice-name { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary, #D4D1D8); }
-.comp-voice-meta { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
-.comp-voice-block { display: flex; flex-direction: column; gap: 0.4rem; }
-.comp-voice-label { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.35rem; }
-.comp-voice-block--neg .comp-voice-label { color: #e06464; }
-.comp-voice-block--pos .comp-voice-label { color: #6bcf7f; }
-.comp-voice-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
-.comp-voice-quote {
-  font-size: 0.75rem; line-height: 1.4; color: var(--text-secondary, rgba(212,209,216,0.82));
-  background: var(--bg-primary, #0b0b0b); border-left: 2px solid var(--border-divider, #242424);
-  border-radius: 0 8px 8px 0; padding: 0.45rem 0.6rem;
-}
-.comp-voice-block--neg .comp-voice-quote { border-left-color: rgba(224,100,100,0.5); }
-.comp-voice-block--pos .comp-voice-quote { border-left-color: rgba(107,207,127,0.5); }
-
-/* Vulnerabilidades */
-.comp-risk-list { display: flex; flex-direction: column; gap: 0.5rem; }
-.comp-risk-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
-  border-left: 3px solid #e06464; border-radius: 11px; padding: 0.75rem 1rem;
-}
-.comp-risk-name { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
-.comp-risk-brand { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #D4D1D8); }
-.comp-risk-desc { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
-.comp-risk-stats { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-.comp-risk-chip { font-size: 0.625rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 6px; color: var(--text-muted, rgba(212,209,216,0.6)); background: rgba(255,255,255,0.05); border: 1px solid var(--border-divider, #242424); }
-.comp-risk-chip--neg { color: #e06464; background: rgba(224,100,100,0.12); border-color: rgba(224,100,100,0.3); }
-
-@media (max-width: 760px) { .comp-kpis { grid-template-columns: repeat(2, 1fr); } .comp-rank-row { grid-template-columns: 24px 1fr auto; } .comp-rank-posts, .comp-rank-avg { display: none; } }
-
-/* Competencia — clickable (drill-down) */
-.comp-clickable { cursor: pointer; transition: border-color 0.15s ease, transform 0.15s ease; }
-.comp-rank-row.comp-clickable:hover { border-color: rgba(255,255,255,0.18); transform: translateX(2px); }
-.comp-voice-card.comp-clickable:hover { border-color: rgba(255,255,255,0.18); transform: translateY(-2px); }
-.comp-clickable:focus-visible { outline: 2px solid var(--accent-brand, rgba(255,255,255,0.4)); outline-offset: 2px; }
-
-/* ── Mi Marca vs Competencia (benchmark head-to-head + share-of-voice) ── */
-.comp-bench-head {
-  font-size: 0.875rem; line-height: 1.4; color: var(--text-secondary, rgba(212,209,216,0.82));
-  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
-  border-left: 3px solid var(--text-muted, rgba(212,209,216,0.4));
-  border-radius: 11px; padding: 0.7rem 1rem; margin-bottom: 0.85rem;
-}
-.comp-bench-head b { color: var(--text-primary, #D4D1D8); font-weight: 700; }
-.comp-bench-head--win  { border-left-color: #6bcf7f; }
-.comp-bench-head--lose { border-left-color: #e0a464; }
-.comp-bench-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
-.comp-bench-h2h, .comp-bench-sov {
-  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
-  border-radius: 12px; padding: 0.9rem 1.1rem;
-}
-.comp-bench-row { display: grid; grid-template-columns: 1.3fr 1fr 1fr; align-items: center; gap: 0.5rem; padding: 0.4rem 0; }
-.comp-bench-row + .comp-bench-row { border-top: 1px solid var(--border-divider, #242424); }
-.comp-bench-row--head { padding-top: 0; }
-.comp-bench-metric { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
-.comp-bench-col { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; text-align: right; }
-.comp-bench-col--brand { color: #6ba8d6; }
-.comp-bench-col--comp { color: var(--text-muted, rgba(212,209,216,0.55)); }
-.comp-bench-val { font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary, rgba(212,209,216,0.82)); text-align: right; font-variant-numeric: tabular-nums; }
-.comp-bench-val.is-win { color: #6bcf7f; font-weight: 700; }
-.comp-bench-sov-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--bg-primary, #0b0b0b); margin-bottom: 0.55rem; }
-.comp-bench-sov-seg { height: 100%; }
-.comp-bench-sov-seg--brand { background: #6ba8d6; }
-.comp-bench-sov-seg--comp { background: rgba(212,209,216,0.22); }
-.comp-bench-sov-legend { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.6)); }
-.comp-bench-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; vertical-align: middle; margin-right: 0.25rem; }
-.comp-bench-dot--brand { background: #6ba8d6; }
-.comp-bench-dot--comp { background: rgba(212,209,216,0.22); }
-.comp-bench-sov-cap { display: block; font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.45)); margin-top: 0.5rem; }
-.comp-bench-sov-list { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--border-divider, #242424); }
-.comp-bench-sov-row { display: grid; grid-template-columns: minmax(70px, 1fr) 2fr auto; align-items: center; gap: 0.5rem; border-radius: 7px; padding: 0.15rem 0.25rem; }
-.comp-bench-sov-row.comp-clickable:hover { background: rgba(255,255,255,0.04); }
-.comp-bench-sov-name { font-size: 0.6875rem; color: var(--text-secondary, rgba(212,209,216,0.82)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.comp-bench-sov-track { height: 7px; border-radius: 4px; background: var(--bg-primary, #0b0b0b); overflow: hidden; }
-.comp-bench-sov-fill { display: block; height: 100%; background: rgba(212,209,216,0.3); border-radius: 4px; }
-.comp-bench-sov-pct { font-size: 0.6875rem; font-weight: 600; color: var(--text-muted, rgba(212,209,216,0.6)); font-variant-numeric: tabular-nums; text-align: right; }
-@media (max-width: 760px) { .comp-bench-grid { grid-template-columns: 1fr; } }
-
 /* ── Indicador de frescura de datos (chip en la barra de filtros) ── */
 .dash-freshness {
   margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem;
@@ -3668,33 +3479,7 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
   .mb-lev-col--pos .mb-lev-label { text-align: left; }
   .mb-lev-col--neg .mb-lev-track, .mb-lev-col--pos .mb-lev-track { justify-content: flex-end; }
   .mb-lev-coltitle, .mb-lev-col--neg .mb-lev-coltitle { text-align: left; }
-}
-
-/* Delta periodo-vs-periodo en KPI strips */
-.comp-kpi-delta { font-size: 0.625rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 0.1rem; display: inline-flex; align-items: center; gap: 0.15rem; }
-.comp-kpi-delta.is-up { color: #6bcf7f; }
-.comp-kpi-delta.is-down { color: #e06464; }
-.comp-kpi-delta.is-flat { color: var(--text-muted, rgba(212,209,216,0.45)); }
-
-/* Competencia — Que les funciona (formulas ganadoras del nicho) */
-.comp-combos { display: flex; flex-direction: column; gap: 0.5rem; }
-.comp-combo-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
-  border-radius: 11px; padding: 0.7rem 1rem;
-}
-.comp-combo-dims { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; min-width: 0; }
-.comp-combo-tag {
-  font-size: 0.75rem; font-weight: 600; color: var(--text-primary, #D4D1D8);
-  background: rgba(255,255,255,0.05); border: 1px solid var(--border-divider, #242424);
-  border-radius: 7px; padding: 0.2rem 0.55rem;
-}
-.comp-combo-sep { color: var(--text-muted, rgba(212,209,216,0.35)); font-size: 0.75rem; }
-.comp-combo-meta { display: flex; align-items: center; gap: 0.85rem; }
-.comp-combo-brands { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.55)); }
-.comp-combo-eng { font-size: 0.8125rem; font-weight: 700; color: var(--text-secondary, rgba(212,209,216,0.85)); font-variant-numeric: tabular-nums; }
-
-/* ════════════════════════════════════════════════════════════════════
+}/* ════════════════════════════════════════════════════════════════════
    ESTRATEGIA — recomendaciones de Vera (cross-signal) + aprendizaje
    ════════════════════════════════════════════════════════════════════ */
 .strat-header {
@@ -4145,19 +3930,11 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 .insight-page .mb-act-card {
   background-image: var(--dash-sheen);
   box-shadow: var(--dash-elev);
-}
-/* Competencia / Tendencias / Estrategia: cards PLANAS como .mb-chart-card de Mi
-   Marca — solo la elevación sobria, SIN el sheen (el degradado gris claro→oscuro).
-   Mismo look oficial unificado en los 4 dashboards. */
-.insight-page .comp-voice-card,
-.insight-page .tend-gap-card,
+}.insight-page .tend-gap-card,
 .insight-page .tend-brand-card,
 .insight-page .strat-card {
   box-shadow: var(--dash-elev);
-}
-/* Hover lift en cards clickables (la sombra crece, no el color) */
-.insight-page .mb-causal-card:hover,
-.insight-page .comp-voice-card.comp-clickable:hover,
+}.insight-page .mb-causal-card:hover,
 .insight-page .tend-gap-card:hover {
   box-shadow: var(--dash-elev-hover);
   border-color: rgba(255, 255, 255, 0.16);
@@ -4179,23 +3956,7 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
   box-shadow:
     var(--dash-elev),
     inset 0 -52px 46px -34px var(--accent-brand-soft, rgba(110, 159, 129, 0.07));
-}
-
-/* ── KPI strip: panel raised unificado con divisores internos ── */
-.insight-page .comp-kpis {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-divider); box-shadow: var(--dash-elev);
-  border-radius: 14px; gap: 0; overflow: hidden;
-}
-.insight-page .comp-kpi {
-  background: transparent; border: 0;
-  border-right: 1px solid var(--dash-line); border-radius: 0;
-}
-.insight-page .comp-kpi:last-child { border-right: 0; }
-
-/* ── Disciplina tipografica de numeros (tabular + tracking) ── */
-.insight-page .comp-kpi-val,
-.insight-page .strat-stat-val,
+}.insight-page .strat-stat-val,
 .insight-page .mb-causal-value,
 .insight-page .mb-plan-metric,
 .insight-page .mb-hero-verdict,
@@ -4216,20 +3977,8 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 .insight-page .mb-causal-lift--up,
 .insight-page .mb-pil-lift--up   { color: var(--dash-pos);  background: transparent; padding: 0.12rem 0; }
 .insight-page .mb-causal-lift--down,
-.insight-page .mb-pil-lift--down { color: var(--dash-warn); background: transparent; padding: 0.12rem 0; }
-
-/* ── Neutralizacion de colores saturados compartidos ── */
-.insight-page .comp-voice-block--pos .comp-voice-label,
-.insight-page .strat-prod-dot { color: var(--dash-pos); }
-.insight-page .strat-prod-dot { background: var(--dash-pos); box-shadow: none; }
-.insight-page .comp-voice-block--neg .comp-voice-label { color: var(--dash-neg); }
-.insight-page .comp-voice-block--pos .comp-voice-quote { border-left-color: rgba(110, 159, 129, 0.5); }
-.insight-page .comp-voice-block--neg .comp-voice-quote { border-left-color: rgba(179, 121, 111, 0.5); }
-.insight-page .comp-risk-row { border-left-color: var(--dash-neg); }
-.insight-page .comp-risk-chip--neg {
-  color: var(--dash-neg); background: transparent; border-color: var(--border-divider);
-}
-.insight-page .mb-hc-bar-fill--good,
+.insight-page .mb-pil-lift--down { color: var(--dash-warn); background: transparent; padding: 0.12rem 0; }.insight-page .strat-prod-dot { color: var(--dash-pos); }
+.insight-page .strat-prod-dot { background: var(--dash-pos); box-shadow: none; }.insight-page .mb-hc-bar-fill--good,
 .insight-page .mb-feat-card--sentiment[data-value="POS"] .mb-feat-headline { color: inherit; }
 
 /* ── Tendencias: oceano azul y acentos → mono apagado ── */
@@ -4260,10 +4009,6 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 .insight-page .mb-causal-empty {
   border: 1px solid var(--dash-line); border-radius: 12px;
   color: var(--text-muted); background: transparent;
-}
-
-@media (max-width: 760px) {
-  .insight-page .comp-kpi:nth-child(2n) { border-right: 0; }
 }
 
 /* ========== Dashboard hero (overview a sangre completa) ==========
@@ -4723,32 +4468,6 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .mb-as-quote-net { color: var(--text-muted, rgba(212,209,216,0.5)); display: inline-flex; align-items: center; gap: 0.3rem; }
 .mb-as-quote-net i { font-size: 0.7rem; }
 @media (max-width: 640px) { .mb-as-grid { grid-template-columns: 1fr; } }
-
-/* ── FEAT-037: perfil de rival en el drawer (Competencia drill-down) ──────────
-   Distribuciones + actividad reciente + mejores horas. Monocromo: barras y
-   acentos en blanco translucido, sin color. */
-.comp-prof-sec { padding: 0.9rem 0 0; border-top: 1px solid rgba(255,255,255,0.06); }
-.comp-prof-sec:first-child { border-top: 0; padding-top: 0; }
-.comp-prof-h { margin: 0 0 0.7rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted, rgba(212,209,216,0.5)); }
-
-.comp-dist { display: flex; flex-direction: column; gap: 0.9rem; }
-.comp-dist-group { display: flex; flex-direction: column; gap: 0.4rem; }
-.comp-dist-title { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary, rgba(212,209,216,0.85)); }
-.comp-dist-row { display: grid; grid-template-columns: minmax(0, 0.85fr) 1fr auto; align-items: center; gap: 0.55rem; }
-.comp-dist-lbl { font-size: 0.78rem; color: var(--text-secondary, rgba(212,209,216,0.8)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.comp-dist-bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.06); overflow: hidden; }
-.comp-dist-bar span { display: block; height: 100%; background: rgba(255,255,255,0.8); border-radius: 3px; }
-.comp-dist-val { font-size: 0.72rem; color: var(--text-muted, rgba(212,209,216,0.5)); font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-.comp-act { display: flex; flex-direction: column; gap: 0.35rem; }
-.comp-act-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 0.7rem; font-size: 0.78rem; }
-.comp-act-lbl { color: var(--text-secondary, rgba(212,209,216,0.85)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.comp-act-posts, .comp-act-eng { color: var(--text-muted, rgba(212,209,216,0.55)); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.comp-act-sent { font-size: 0.7rem; color: var(--text-muted, rgba(212,209,216,0.5)); white-space: nowrap; }
-@media (max-width: 640px) {
-  .comp-act-row { grid-template-columns: 1fr auto; row-gap: 0.15rem; }
-  .comp-act-eng, .comp-act-sent { grid-column: 2; }
-}
 
 /* ════════════════════════════════════════════════════════════════════
    Estado de tu marca — banner ejecutivo sobre Tonos/Temas (tab Mi Marca).

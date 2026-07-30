@@ -700,16 +700,7 @@ class DashboardView extends BaseView {
     // El hero es TAB-AWARE: en Competencia muestra las cards del campo de batalla
     // (fórmula del nicho / vulnerabilidad rival / te están ganando / amenaza), no
     // las de Mi Marca.
-    if (this._activeTab === 'competence') {
-      if (!this._compData || typeof this._computeCompetitionCards !== 'function') return skel();
-      const c = this._computeCompetitionCards(this._compData);
-      return this._renderHeroCardDefs([
-        { kind: 'explota',  label: __('Fórmula del nicho'),    action: __('Estudia su fórmula'), item: c.funciona },
-        { kind: 'optimiza', label: __('Vulnerabilidad rival'), action: __('Atácalo'),            item: c.oportunidad },
-        { kind: 'elimina',  label: __('Te están ganando'),     action: __('Cierra la brecha'),   item: c.resta },
-        { kind: 'vigila',   label: __('Amenaza'),              action: __('Vigílalo'),           item: c.riesgo },
-      ]);
-    }
+    // (La rama de Competencia se retiró con el pipeline legacy del tab.)
     if (this._activeTab === 'tendencies') {
       if (!this._tendData || typeof this._computeTendenciesCards !== 'function') return skel();
       const c = this._computeTendenciesCards(this._tendData);
@@ -961,8 +952,7 @@ class DashboardView extends BaseView {
   _mountTabDatePicker() {
     const hero = document.getElementById('dashHero');
     const t = this._activeTab;
-    if (t === 'competence') this._mountCompDatePicker?.(hero);
-    else if (t === 'tendencies') this._mountTendDatePicker?.(hero);
+    if (t === 'tendencies') this._mountTendDatePicker?.(hero);
     else this._mountMbDatePicker?.(hero);  // Estrategia no tiene date picker (solo status)
   }
 
@@ -976,8 +966,7 @@ class DashboardView extends BaseView {
 
     const route = (patch) => {
       const t = this._activeTab;
-      if (t === 'competence') this._onCompFilterChange?.(patch);
-      else if (t === 'tendencies') this._onTendFilterChange?.(patch);
+      if (t === 'tendencies') this._onTendFilterChange?.(patch);
       else if (t === 'strategy') this._onStratFilterChange?.(patch);
       else this._onMbFilterChange?.(patch);
     };
