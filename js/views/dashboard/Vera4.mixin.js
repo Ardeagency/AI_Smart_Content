@@ -65,6 +65,16 @@
     verificacion:         { tab: 'estrategia', layout: 'verif',   icon: 'check',         label: () => __('Verificación antes de entregar'), sub: () => __('Qué revisé, qué corregí y qué rechacé') },
     brief_humano:         { tab: 'estrategia', layout: 'fichas',  icon: 'brief',         label: () => __('Brief para humanos'),       sub: () => __('Lo que necesita manos, cámaras o personas') },
     bucle_outcome:        { tab: 'estrategia', layout: 'bucle',   icon: 'history',       label: () => __('Lo que recomendé y qué pasó'), sub: () => __('Cada movida mía, con su resultado') },
+    // ── Competencia · instrumentos (el ojo) y juicio (la cabeza) ──────────
+    // La forma la fija el tablero; Vera solo alimenta la serie. Si ella pudiera
+    // elegir el gráfico, el tablero cambiaría de idioma cada semana y el cliente
+    // tendría que reaprenderlo en cada lectura.
+    territorio_tematico:  { tab: 'monitoreo',  layout: 'heatmap',   icon: 'grid',      label: () => __('Territorio temático'),      sub: () => __('Qué ocupa cada quién — y qué columna está vacía') },
+    registro_de_voz:      { tab: 'monitoreo',  layout: 'apilada',   icon: 'microphone', label: () => __('De qué está hecha su voz'), sub: () => __('Cómo suena cada competidor') },
+    emocion_competencia:  { tab: 'monitoreo',  layout: 'divergente', icon: 'comments', label: () => __('Qué emoción provocan'),     sub: () => __('De qué lado cae la audiencia de cada uno — y cómo lo consigue') },
+    busqueda_vs_voz:      { tab: 'monitoreo',  layout: 'indexadas', icon: 'search',    label: () => __('Te buscan o solo hablas'),  sub: () => __('La demanda se mueve meses antes que la venta') },
+    supuesto_punto_ciego: { tab: 'monitoreo',  layout: 'fichas',    icon: 'eye-off',   label: () => __('Su supuesto y su punto ciego'), sub: () => __('Dónde se cree seguro y se equivoca') },
+    proxima_movida:       { tab: 'monitoreo',  layout: 'fichas',    icon: 'compass',   label: () => __('Su próxima movida'),        sub: () => __('La apuesta, con la señal que la desmentiría') },
     // ── Sin tablero asignado (se pintan cuando exista dónde) ───────────────
     recalibracion:        { tab: null,         layout: 'ensayo',  icon: 'refresh',       label: () => __('Qué cambió en mi cabeza'),  sub: () => __('La creencia que se me cayó') },
     humildad:             { tab: null,         layout: 'ensayo',  icon: 'help',          label: () => __('¿Qué no estoy viendo?'),    sub: () => __('Dónde se acaba mi lectura') },
@@ -116,6 +126,21 @@
     const k = String(v == null ? '' : v).toLowerCase();
     return (ETIQUETA[k] ? ETIQUETA[k]() : String(v == null ? '' : v));
   };
+
+
+  /* Paleta categórica — el orden es FIJO y nunca se cicla: si un tono cambia de
+     posición entre lecturas, el cliente tiene que reaprender el gráfico. Son las
+     6 primeras ranuras del sistema, validadas contra la superficie real de la
+     card (#141517): banda de luminosidad, piso de croma, separación para daltonismo
+     (peor par ΔE 8.4) y contraste ≥3:1. No se tocan sin volver a validar. */
+  const SERIES = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#9085e9'];
+
+  /* Par divergente: azul ↔ rojo (frío/cálido, leen como opuestos) con gris
+     neutro al centro. Verde↔rojo se descartó: es el par que más falla con
+     daltonismo, y aquí además la posición respecto al centro ya carga el signo. */
+  const DIV_NEG = ['#e66767', '#b23c3c'];          // rechazo · indiferencia
+  const DIV_NEU = '#4a4a46';                        // el centro tiene que leerse como "nada"
+  const DIV_POS = ['#5598e7', '#3987e5', '#1c5cab']; // interés · deseo · devoción
 
   Object.assign(DashboardView.prototype, {
 
@@ -187,6 +212,8 @@
       }
       // Color de marca en los paneles que lo piden (mismo helper del resto).
       body.querySelectorAll('.vera4 [data-panel-marca]').forEach((el) => this._vestirPanelDeMarca?.(el));
+      // Los instrumentos con canvas se pintan cuando el HTML ya está en el DOM.
+      this._paintVera4Charts(body.querySelector('.vera4') || body);
     },
 
     /* ── Plantillas ───────────────────────────────────────────────────────── */
@@ -211,6 +238,10 @@
           case 'cadena':   cuerpo = this._v4Cadena(card); break;
           case 'verif':    cuerpo = this._v4Verificacion(card); break;
           case 'bucle':    cuerpo = this._v4Bucle(card); break;
+          case 'heatmap':    cuerpo = this._v4Heatmap(card); break;
+          case 'apilada':    cuerpo = this._v4Apilada(card); break;
+          case 'divergente': cuerpo = this._v4Divergente(card); break;
+          case 'indexadas':  cuerpo = this._v4Indexadas(card); break;
           default:         cuerpo = '';
         }
       } catch (e) {
@@ -225,7 +256,8 @@
        cuando la card lo pide (`ancho`), media columna el resto. */
     _v4Marco(card, meta, cuerpo) {
       const esc = (s) => this._esc(s);
-      const ancho = ['pulso', 'decision', 'ensayo', 'triang', 'cadena'].includes(meta.layout);
+      const ancho = ['pulso', 'decision', 'ensayo', 'triang', 'cadena',
+        'heatmap', 'apilada', 'divergente', 'indexadas'].includes(meta.layout);
       return `
         <section class="v4-card${ancho ? ' v4-card--ancha' : ''}" data-v4="${esc(card.type)}"
                  data-nuevo-id="${esc(this._nid ? this._nid('v4', card.type) : card.type)}">
@@ -270,6 +302,205 @@
       return `<ul class="v4-puntos${cls ? ' ' + cls : ''}">${arr.map((x) => `<li>${this._esc(x)}</li>`).join('')}</ul>`;
     },
 
+
+    /* ══ INSTRUMENTOS ══════════════════════════════════════════════════════
+       La forma la fija el tablero, Vera solo alimenta la serie. Todos llevan:
+       leyenda cuando hay 2+ series, etiquetas directas (la identidad nunca
+       depende solo del color), su vista en tabla, y la nota de método cuando el
+       dato es juicio y no medición. ══════════════════════════════════════════ */
+
+    /* Nota al pie de los instrumentos de JUICIO. Un gráfico parece una medición
+       aunque no lo sea: sin esto, un mapa de tonos se lee como si lo hubiera
+       producido un sensor. */
+    _v4Metodo(card) {
+      if (!card || !card.nota_metodo) return '';
+      return `<p class="v4-metodo"><i class="aisc-ico aisc-ico--alert-info" aria-hidden="true"></i>${
+        this._esc(__('Lectura de Vera · {n}', { n: card.nota_metodo }))}</p>`;
+    },
+
+    /* Vista en tabla: todo gráfico tiene su gemela accesible. Va plegada para no
+       competir con el instrumento, pero existe siempre. */
+    _v4Tabla(cols, filas, titulo) {
+      const esc = (s) => this._esc(s);
+      return `<details class="v4-tabla">
+        <summary>${esc(titulo || __('Ver los datos'))}</summary>
+        <table><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead>
+        <tbody>${filas.map((f) => `<tr>${f.map((c, i) => (i === 0
+          ? `<th scope="row">${esc(c)}</th>` : `<td>${esc(c)}</td>`)).join('')}</tr>`).join('')}</tbody></table>
+      </details>`;
+    },
+
+    /* ── Heatmap: tema × perfil ────────────────────────────────────────────
+       Dos ejes categóricos y una magnitud en cada cruce. Rampa de UN solo tono
+       (más = más opaco): con varios tonos el ojo leería identidad donde solo hay
+       cantidad. Lo que más vale es la columna VACÍA — el tema que nadie cubre —
+       así que se marca a propósito con contorno punteado en vez de dejarla
+       indistinguible de un cero. */
+    _v4Heatmap(card) {
+      const esc = (s) => this._esc(s);
+      const temas = Array.isArray(card.temas) ? card.temas.slice(0, 8) : [];
+      const perfiles = Array.isArray(card.perfiles) ? card.perfiles.slice(0, 6) : [];
+      const celdas = Array.isArray(card.celdas) ? card.celdas : [];
+      if (!temas.length || !perfiles.length) return '';
+      const val = (i, j) => Number((celdas[i] || [])[j] || 0);
+      // Una columna vacía es un hallazgo, no un hueco de datos: se nombra.
+      const vacias = temas.map((_, j) => perfiles.every((__, i) => val(i, j) <= 0));
+
+      const cabecera = temas.map((t, j) =>
+        `<div class="v4-hm-th${vacias[j] ? ' is-vacia' : ''}" title="${esc(t)}">${esc(t)}</div>`).join('');
+      const filas = perfiles.map((p, i) => `
+        <div class="v4-hm-rh" title="${esc(p)}">${esc(p)}</div>
+        ${temas.map((t, j) => {
+          const v = val(i, j);
+          const a = v <= 0 ? 0 : 0.12 + (Math.min(v, 100) / 100) * 0.78;
+          return `<div class="v4-hm-c${v <= 0 ? ' is-cero' : ''}" style="--a:${a.toFixed(2)}"
+            title="${esc(`${p} · ${t}: ${v}`)}" tabindex="0" role="img"
+            aria-label="${esc(`${p}, ${t}, ${v} de 100`)}">${v >= 55 ? `<span>${v}</span>` : ''}</div>`;
+        }).join('')}`).join('');
+
+      const hueco = vacias.some(Boolean)
+        ? `<p class="v4-hm-hueco"><i class="aisc-ico aisc-ico--idea" aria-hidden="true"></i>${
+            esc(__('Nadie cubre: {t}', { t: temas.filter((_, j) => vacias[j]).join(' · ') }))}</p>` : '';
+
+      return `<div class="v4-hm" style="--cols:${temas.length}">
+          <div class="v4-hm-rh"></div>${cabecera}${filas}
+        </div>
+        <div class="v4-hm-leyenda"><span>${esc(__('menos'))}</span><i></i><span>${esc(__('más'))}</span></div>
+        ${hueco}
+        ${this._v4Metodo(card)}
+        ${this._v4Tabla([__('Perfil')].concat(temas), perfiles.map((p, i) => [p].concat(temas.map((_, j) => val(i, j)))))}`;
+    },
+
+    /* ── Barra apilada al 100%: de qué está hecha su voz ───────────────────
+       Una mezcla es parte-de-un-todo, y cada fila suma 100. El orden de los
+       segmentos es el MISMO en todas las filas: así el ojo compara segmento
+       contra segmento sin tener que buscar. Horizontal porque las etiquetas de
+       tono son palabras, no números. */
+    _v4Apilada(card) {
+      const esc = (s) => this._esc(s);
+      const tonos = Array.isArray(card.tonos) ? card.tonos.slice(0, 6) : [];
+      const perfiles = Array.isArray(card.perfiles) ? card.perfiles.slice(0, 8) : [];
+      if (!tonos.length || !perfiles.length) return '';
+      const leyenda = tonos.map((t, i) =>
+        `<span class="v4-leg"><i style="background:${SERIES[i % SERIES.length]}"></i>${esc(t)}</span>`).join('');
+      const filas = perfiles.map((p) => {
+        const mezcla = Array.isArray(p.mezcla) ? p.mezcla : [];
+        const total = mezcla.reduce((a, b) => a + (Number(b) || 0), 0) || 1;
+        return `<div class="v4-ap-fila">
+          <span class="v4-ap-nombre" title="${esc(p.perfil || '')}">${esc(p.perfil || '')}</span>
+          <div class="v4-ap-barra" role="img" aria-label="${esc(tonos.map((t, i) =>
+            `${t} ${Math.round((Number(mezcla[i]) || 0) / total * 100)}%`).join(', '))}">
+            ${tonos.map((t, i) => {
+              const pct = (Number(mezcla[i]) || 0) / total * 100;
+              if (pct <= 0) return '';
+              return `<span class="v4-ap-seg" style="width:${pct.toFixed(1)}%;background:${SERIES[i % SERIES.length]}"
+                title="${esc(`${p.perfil} · ${t}: ${Math.round(pct)}%`)}">${
+                pct >= 14 ? `<b>${Math.round(pct)}</b>` : ''}</span>`;
+            }).join('')}
+          </div></div>`;
+      }).join('');
+      return `<div class="v4-leyendas">${leyenda}</div><div class="v4-ap">${filas}</div>
+        ${this._v4Metodo(card)}
+        ${this._v4Tabla([__('Perfil')].concat(tonos), perfiles.map((p) =>
+          [p.perfil].concat(tonos.map((_, i) => (Array.isArray(p.mezcla) ? (p.mezcla[i] ?? 0) : 0)))))}`;
+    },
+
+    /* ── Barra apilada DIVERGENTE: qué emoción provocan ────────────────────
+       La emoción tiene polaridad, así que la escala se parte por el neutro: lo
+       que aleja crece hacia la izquierda, lo que acerca hacia la derecha, y el
+       ojo lee de qué lado cae cada perfil sin sumar nada. El neutro se reparte
+       mitad y mitad para que el eje quede en el centro real de la escala. */
+    _v4Divergente(card) {
+      const esc = (s) => this._esc(s);
+      const escala = Array.isArray(card.escala) ? card.escala : [];
+      const perfiles = Array.isArray(card.perfiles) ? card.perfiles.slice(0, 8) : [];
+      if (escala.length < 3 || !perfiles.length) return '';
+      const iNeu = Math.max(1, escala.findIndex((e) => /neutr/i.test(String(e))));
+      const color = (i) => (i < iNeu ? DIV_NEG[Math.min(i, DIV_NEG.length - 1)]
+        : i === iNeu ? DIV_NEU : DIV_POS[Math.min(i - iNeu - 1, DIV_POS.length - 1)]);
+
+      const leyenda = escala.map((e, i) =>
+        `<span class="v4-leg"><i style="background:${color(i)}"></i>${esc(e)}</span>`).join('');
+      const filas = perfiles.map((p) => {
+        const v = (Array.isArray(p.valores) ? p.valores : []).map((x) => Number(x) || 0);
+        const total = v.reduce((a, b) => a + b, 0) || 1;
+        const pc = v.map((x) => x / total * 100);
+        // El eje cae donde termina la mitad izquierda del neutro.
+        const izq = pc.slice(0, iNeu).reduce((a, b) => a + b, 0) + (pc[iNeu] || 0) / 2;
+        const seg = (i) => (pc[i] > 0
+          ? `<span class="v4-dv-seg" style="width:${pc[i].toFixed(1)}%;background:${color(i)}"
+               title="${esc(`${p.perfil} · ${escala[i]}: ${Math.round(pc[i])}%`)}"></span>` : '');
+        return `<div class="v4-dv-fila">
+          <span class="v4-ap-nombre" title="${esc(p.perfil || '')}">${esc(p.perfil || '')}</span>
+          <div class="v4-dv-pista" role="img" aria-label="${esc(escala.map((e, i) =>
+            `${e} ${Math.round(pc[i] || 0)}%`).join(', '))}">
+            <div class="v4-dv-barra" style="transform:translateX(${(50 - izq).toFixed(2)}%)">
+              ${escala.map((_, i) => seg(i)).join('')}
+            </div></div>
+          <span class="v4-dv-saldo">${pc.slice(iNeu + 1).reduce((a, b) => a + b, 0) >= pc.slice(0, iNeu).reduce((a, b) => a + b, 0)
+            ? esc(__('acerca')) : esc(__('aleja'))}</span>
+        </div>`;
+      }).join('');
+      return `<div class="v4-leyendas">${leyenda}</div>
+        <div class="v4-dv"><div class="v4-dv-eje"></div>${filas}</div>
+        ${this._v4Metodo(card)}
+        ${this._v4Tabla([__('Perfil')].concat(escala), perfiles.map((p) =>
+          [p.perfil].concat(escala.map((_, i) => (Array.isArray(p.valores) ? (p.valores[i] ?? 0) : 0)))))}`;
+    },
+
+    /* ── Dos líneas indexadas: te buscan o solo hablas ─────────────────────
+       Son dos medidas de escalas distintas (búsquedas vs interacciones). La
+       única forma honesta de ponerlas juntas es indexar ambas a 100 en el origen
+       y usar UN eje: dos ejes Y inventarían una correlación que no está en el
+       dato. Lo que se lee es el HUECO entre las curvas. */
+    _v4Indexadas(card) {
+      const esc = (s) => this._esc(s);
+      const meses = Array.isArray(card.meses) ? card.meses : [];
+      const series = Array.isArray(card.series) ? card.series.slice(0, 3) : [];
+      if (meses.length < 2 || series.length < 1) return '';
+      const cid = `v4idx-${this._nid ? this._nid('c', card.type).replace(/[^a-z0-9]/gi, '') : 'x'}`;
+      const leyenda = series.map((s, i) =>
+        `<span class="v4-leg"><i style="background:${SERIES[i % SERIES.length]}"></i>${esc(s.nombre || '')}</span>`).join('');
+      return `<div class="v4-leyendas">${leyenda}</div>
+        <div class="v4-chart-wrap"><canvas id="${cid}" data-v4chart='${
+          this._esc(JSON.stringify({ meses, series: series.map((s, i) => ({
+            nombre: s.nombre, valores: s.valores, color: SERIES[i % SERIES.length] })) }))}'></canvas></div>
+        <p class="v4-campo-txt v4-campo-txt--tenue">${esc(card.base || __('Ambas series = 100 en el primer mes'))}</p>
+        ${this._v4Tabla([__('Mes')].concat(series.map((s) => s.nombre)),
+          meses.map((m, j) => [m].concat(series.map((s) => (Array.isArray(s.valores) ? (s.valores[j] ?? '') : '')))))}`;
+    },
+
+    /* Pinta los canvas que dejaron los instrumentos. Se llama DESPUÉS de meter
+       el HTML: antes, el canvas todavía no existe en el DOM. */
+    async _paintVera4Charts(raiz) {
+      const canvas = raiz ? [...raiz.querySelectorAll('canvas[data-v4chart]')] : [];
+      if (!canvas.length) return;
+      try { await this._ensureChartJs(); } catch (_) { return; }
+      if (typeof Chart === 'undefined') return;
+      this._v4Charts = this._v4Charts || [];
+      canvas.forEach((cv) => {
+        let d; try { d = JSON.parse(cv.dataset.v4chart); } catch (_) { return; }
+        this._v4Charts.push(new Chart(cv.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: d.meses,
+            datasets: (d.series || []).map((s) => ({
+              label: s.nombre, data: s.valores, borderColor: s.color, backgroundColor: s.color,
+              borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, tension: 0.25,
+            })),
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },   // cruz: los dos valores del mes
+            plugins: { legend: { display: false } },            // la leyenda ya está en HTML
+            scales: {
+              x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.45)', maxRotation: 0, autoSkip: true } },
+              y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.45)' } },
+            },
+          },
+        }));
+      });
+    },
     /* ── fichas: la plantilla de lista (la misma familia visual de las
        Observaciones de Competencia). Cada type declara qué va en el filete,
        en los chips, en el título y en el cuerpo. ─────────────────────────── */
@@ -284,6 +515,8 @@
         autoridad_adn:     { tono: (i) => (i.veredicto === 'tomar' ? 'opp' : i.veredicto === 'adaptar' ? 'warn' : 'neu'), chips: ['veredicto'], meta: [], titulo: 'senal', campos: [[() => __('Desde el ADN'), 'razon_desde_el_adn'], [() => __('Puerta de entrada'), 'puerta_de_entrada']] },
         puerta_aprobacion: { tono: (i) => (i.estado === 'vencido' ? 'threat' : i.estado === 'vence_pronto' ? 'warn' : 'neu'), chips: ['puerta', 'estado'], meta: ['espera_desde'], titulo: 'que', campos: [[() => __('Costo de esperar'), 'costo_de_esperar']] },
         formato:           { tono: () => 'neu', chips: ['formato'], meta: [], titulo: 'idea', campos: [[() => __('Se descarta'), 'descartado'], [() => __('Por qué moriría ahí'), 'por_que_moriria'], [() => __('La prueba'), 'prueba']] },
+        supuesto_punto_ciego: { tono: (i) => (i.confianza === 'alta' ? 'opp' : 'neu'), chips: ['rol', 'confianza'], meta: ['perfil'], titulo: 'que_cree', campos: [[() => __('En qué se equivoca'), 'en_que_se_equivoca'], [() => __('La grieta se ve en'), 'evidencia_de_la_grieta'], [() => __('Cómo se explota'), 'como_se_explota']] },
+        proxima_movida:    { tono: (i) => (i.confianza === 'alta' ? 'warn' : 'neu'), chips: ['confianza'], meta: ['perfil', 'revisar_el'], titulo: 'movida_probable', campos: [[() => __('Por qué ahora'), 'por_que_ahora'], [() => __('Lo confirmaría'), 'senal_que_la_confirma'], [() => __('Lo DESMENTIRÍA'), 'senal_que_la_desmiente'], [() => __('Si ocurre, hago'), 'si_ocurre_que_hago']] },
         brief_humano:      { tono: () => 'neu', chips: ['tiempo'], meta: ['con_quien', 'donde'], titulo: 'que', campos: [[() => __('Sirve a'), 'sirve_a'], [() => __('No hacer'), 'no_hacer'], [() => __('Listo cuando'), 'listo_cuando']], pasos: true },
       }[card.type];
       if (!S) return '';

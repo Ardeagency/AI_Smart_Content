@@ -40,7 +40,10 @@ function cargarVista() {
 const REPARTO = {
   mi_marca:   ['silencio', 'latencia', 'impacto_vs_ruido', 'emocion_objetivo',
                'viabilidad_comercial', 'ritmo', 'autopsia', 'victoria_explicada', 'causalidad'],
-  monitoreo:  ['anomalia', 'error_ajeno'],
+  monitoreo:  ['anomalia', 'error_ajeno',
+               // Instrumentos y juicio del rediseño de Competencia
+               'territorio_tematico', 'registro_de_voz', 'emocion_competencia',
+               'busqueda_vs_voz', 'supuesto_punto_ciego', 'proxima_movida'],
   tendencias: ['pulso_nicho', 'senal_debil', 'triangulacion', 'tension', 'timing', 'lo_que_falta'],
   estrategia: ['decision_del_dia', 'autoridad_adn', 'puerta_aprobacion', 'produccion_viva',
                'pieza_asombro', 'formato', 'cadena_portafolio', 'verificacion',
@@ -60,6 +63,12 @@ const EJEMPLO = {
   victoria_explicada:   { pieza: 'El Reel del equipo', mecanismo: 'Una sola toma, sin música.', como_se_repite: 'Grabar en el sitio.' },
   causalidad:           { resultado: 'Subieron 40% las visitas', veredicto: 'mezcla', alternativas: [{ explicacion: 'Temporada alta', descartada_porque: 'El año pasado no subió' }] },
   anomalia:             { items: [{ perfil: 'Marca X', rol: 'competidor_directo', antes: 'Publicaba recetas', ahora: 'Solo promociones', hipotesis: 'Está quemando inventario', veredicto: 'vigilar', prioridad: 'media' }] },
+  territorio_tematico:  { temas: ['recetas', 'vida fitness', 'ingrediente'], perfiles: ['Tosh', 'B3TTER'], celdas: [[80, 20, 0], [10, 60, 30]], nota_metodo: '52 piezas de 2 perfiles' },
+  registro_de_voz:      { tonos: ['cercano', 'épico', 'educativo'], perfiles: [{ perfil: 'Tosh', mezcla: [20, 60, 20] }, { perfil: 'B3TTER', mezcla: [30, 10, 60] }], nota_metodo: '48 copys' },
+  emocion_competencia:  { escala: ['rechazo', 'indiferencia', 'neutro', 'interés', 'deseo'], perfiles: [{ perfil: 'Tosh', valores: [2, 8, 20, 40, 30] }], nota_metodo: '120 comentarios' },
+  busqueda_vs_voz:      { meses: ['feb', 'mar', 'abr'], series: [{ nombre: 'te buscan', valores: [100, 92, 88] }, { nombre: 'hablas', valores: [100, 130, 145] }], base: 'ambas = 100 en febrero' },
+  supuesto_punto_ciego: { items: [{ perfil: 'Tosh', rol: 'competidor_directo', que_cree: 'Que el volumen de distribución compra el territorio funcional', en_que_se_equivoca: 'La credencial de ingrediente no se compra con pauta', evidencia_de_la_grieta: 'Sus comentarios preguntan por la lista de ingredientes', como_se_explota: 'Mostrar el maní sin explicación', confianza: 'media' }] },
+  proxima_movida:       { items: [{ perfil: 'Tosh', movida_probable: 'Extiende la paleta proteica a más sabores', por_que_ahora: 'La primera superó el millón de plays', senal_que_la_confirma: 'Registro de nuevos SKU', senal_que_la_desmiente: 'Que quiten la paleta del catálogo', revisar_el: '2026-09-15', confianza: 'media', si_ocurre_que_hago: 'Reclamar el ingrediente antes de que masifiquen' }] },
   error_ajeno:          { items: [{ quien: 'Marca Y', rol: 'referente', que_intento: 'Un lanzamiento con influencers', evidencia_del_fallo: 'Comentarios burlones', causa_raiz: 'No encajaba con su historia', me_puede_pasar: true, que_ajusto: 'Revisar el casting.' }] },
   pulso_nicho:          { estado: 'caliente', titular: 'El nicho se movió a lo salado', numero: '+38%', delta: 'vs junio' },
   senal_debil:          { items: [{ titulo: 'La proteína de huevo', que_vi: 'Sube en búsquedas', por_que_nadie_lo_ve: 'Está fuera de la categoría', si_es_real: 'Se abre una línea', fuerza: 'media', ventana: '30 días' }] },
@@ -98,10 +107,10 @@ describe('reparto — cada card vive en el tab que le toca', () => {
     });
   });
 
-  test('el catálogo tiene exactamente las 30 cards del documento', () => {
+  test('el catálogo tiene exactamente las 36 cards (30 del documento + 6 de Competencia)', () => {
     const tipos = [...FUENTE.matchAll(/^\s{4}([a-z_0-9]+):\s+\{ tab:/gm)].map((m) => m[1]);
-    expect(tipos).toHaveLength(30);
-    expect(new Set(tipos).size).toBe(30);        // sin duplicados
+    expect(tipos).toHaveLength(36);
+    expect(new Set(tipos).size).toBe(36);        // sin duplicados
   });
 });
 

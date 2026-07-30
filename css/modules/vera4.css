@@ -168,3 +168,109 @@
 .v4-eslabon-flecha { font-size: 0.72rem; color: rgba(255, 255, 255, 0.45); }
 
 .v4-verif-cifras { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+/* ════════════════════════════════════════════════════════════════════
+   INSTRUMENTOS — la forma la fija el tablero, Vera alimenta la serie.
+   Marcas finas, rejilla recesiva, 2px de aire entre segmentos (nunca un
+   borde), etiqueta directa solo donde cabe. Paleta validada contra la
+   superficie real de la card (#141517): banda de luminosidad, piso de
+   croma, separación para daltonismo y contraste ≥3:1.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Leyenda: siempre presente con 2+ series — la identidad no puede depender
+   solo del color. */
+.v4-leyendas { display: flex; flex-wrap: wrap; gap: 0.5rem 0.9rem; }
+.v4-leg { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; color: rgba(255, 255, 255, 0.62); }
+.v4-leg i { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+
+/* Nota de método: lo que separa una lectura de una medición. */
+.v4-metodo {
+  display: flex; align-items: center; gap: 0.4rem; margin: 0;
+  font-size: 0.7rem; color: rgba(255, 255, 255, 0.4);
+}
+.v4-metodo .aisc-ico { width: 12px; height: 12px; flex: 0 0 auto; }
+
+/* Vista en tabla: la gemela accesible de cada gráfico. */
+.v4-tabla { font-size: 0.78rem; }
+.v4-tabla > summary {
+  cursor: pointer; color: rgba(255, 255, 255, 0.45); font-size: 0.72rem;
+  padding: 0.2rem 0; list-style: none;
+}
+.v4-tabla > summary::-webkit-details-marker { display: none; }
+.v4-tabla > summary::before { content: '▸ '; }
+.v4-tabla[open] > summary::before { content: '▾ '; }
+.v4-tabla table { width: 100%; border-collapse: collapse; margin-top: 0.4rem; }
+.v4-tabla th, .v4-tabla td {
+  padding: 0.3rem 0.5rem; text-align: right; font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.72);
+}
+.v4-tabla thead th, .v4-tabla tbody th { text-align: left; color: rgba(255, 255, 255, 0.5); font-weight: 600; }
+
+/* ── Heatmap tema × perfil ───────────────────────────────────────────── */
+.v4-hm {
+  display: grid; grid-template-columns: minmax(90px, 150px) repeat(var(--cols), minmax(0, 1fr));
+  gap: 2px;                                   /* el aire ES el separador: nunca un borde */
+  align-items: stretch;
+}
+.v4-hm-th, .v4-hm-rh {
+  font-size: 0.66rem; color: rgba(255, 255, 255, 0.5); line-height: 1.2;
+  display: flex; align-items: flex-end; padding: 0 0.2rem 0.3rem;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.v4-hm-rh { align-items: center; padding: 0.3rem 0.4rem 0.3rem 0; color: rgba(255, 255, 255, 0.75); font-weight: 600; }
+.v4-hm-th.is-vacia { color: #5fd39a; }        /* la columna que nadie cubre es el hallazgo */
+.v4-hm-c {
+  min-height: 34px; border-radius: 4px;
+  background: rgba(255, 255, 255, var(--a, 0));  /* rampa de UN tono: más = más opaco */
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; font-weight: 700; color: #0f1012;
+}
+.v4-hm-c.is-cero { border: 1px dashed rgba(255, 255, 255, 0.14); }  /* vacío declarado, no ausente */
+.v4-hm-c:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+.v4-hm-leyenda { display: flex; align-items: center; gap: 0.4rem; font-size: 0.66rem; color: rgba(255, 255, 255, 0.4); }
+.v4-hm-leyenda i {
+  flex: 1 1 auto; height: 8px; border-radius: 999px; max-width: 160px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.9));
+}
+.v4-hm-hueco {
+  display: flex; align-items: center; gap: 0.45rem; margin: 0;
+  font-size: 0.82rem; color: #5fd39a;
+}
+.v4-hm-hueco .aisc-ico { width: 14px; height: 14px; }
+
+/* ── Apilada al 100% ─────────────────────────────────────────────────── */
+.v4-ap { display: flex; flex-direction: column; gap: 0.5rem; }
+.v4-ap-fila { display: grid; grid-template-columns: minmax(80px, 130px) minmax(0, 1fr); gap: 0.6rem; align-items: center; }
+.v4-ap-nombre {
+  font-size: 0.78rem; font-weight: 600; color: rgba(255, 255, 255, 0.8);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.v4-ap-barra { display: flex; height: 22px; border-radius: 5px; overflow: hidden; gap: 2px; }
+.v4-ap-seg { display: flex; align-items: center; justify-content: center; min-width: 2px; }
+.v4-ap-seg b { font-size: 0.64rem; font-weight: 700; color: rgba(0, 0, 0, 0.68); }
+
+/* ── Divergente centrada en el neutro ────────────────────────────────── */
+.v4-dv { position: relative; display: flex; flex-direction: column; gap: 0.5rem; }
+/* El eje del centro: hairline sólida, nunca punteada (el punteado lee como umbral). */
+.v4-dv-eje {
+  position: absolute; left: calc(130px + 0.6rem + 50%*0.999); top: 0; bottom: 0; width: 1px;
+  background: rgba(255, 255, 255, 0.22); pointer-events: none;
+}
+.v4-dv-fila { display: grid; grid-template-columns: minmax(80px, 130px) minmax(0, 1fr) 52px; gap: 0.6rem; align-items: center; }
+.v4-dv-pista { overflow: hidden; height: 22px; }
+.v4-dv-barra { display: flex; height: 22px; gap: 2px; width: 100%; }
+.v4-dv-seg { min-width: 2px; border-radius: 2px; }
+.v4-dv-saldo { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; color: rgba(255, 255, 255, 0.45); text-align: right; }
+
+/* ── Líneas indexadas ────────────────────────────────────────────────── */
+/* El contenedor incluye la banda del eje X: si se fija solo el alto del trazo,
+   las etiquetas quedan fuera y la card cría un scroll diminuto. */
+.v4-chart-wrap { position: relative; height: 220px; padding-bottom: 0.2rem; }
+.v4-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+@media (max-width: 700px) {
+  .v4-hm { grid-template-columns: 74px repeat(var(--cols), minmax(0, 1fr)); }
+  .v4-ap-fila, .v4-dv-fila { grid-template-columns: 74px minmax(0, 1fr); }
+  .v4-dv-saldo { display: none; }
+  .v4-dv-eje { left: calc(74px + 0.6rem + 50%*0.999); }
+}
