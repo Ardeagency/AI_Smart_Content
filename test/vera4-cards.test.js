@@ -39,7 +39,10 @@ function cargarVista() {
    card de tab, este mapa tiene que moverse con ella A PROPÓSITO. */
 const REPARTO = {
   mi_marca:   ['silencio', 'latencia', 'impacto_vs_ruido', 'emocion_objetivo',
-               'viabilidad_comercial', 'ritmo', 'autopsia', 'victoria_explicada', 'causalidad'],
+               'viabilidad_comercial', 'ritmo', 'autopsia', 'victoria_explicada', 'causalidad',
+               // Salud de marca: lo que un CMO mira primero
+               'cobertura_momentos', 'rejilla_codigos', 'deriva_codigos', 'construir_vs_cosechar',
+               'aplauso_vs_propagacion', 'penetracion_vs_lealtad', 'biblioteca_patrones'],
   monitoreo:  ['anomalia', 'error_ajeno',
                // Instrumentos y juicio del rediseño de Competencia
                'territorio_tematico', 'registro_de_voz', 'emocion_competencia',
@@ -62,6 +65,13 @@ const EJEMPLO = {
   autopsia:             { pieza: 'El carrusel del snack', culpable: 'formato', por_que: 'Informaba en vez de antojar.', leccion: 'El carrusel no antoja.' },
   victoria_explicada:   { pieza: 'El Reel del equipo', mecanismo: 'Una sola toma, sin música.', como_se_repite: 'Grabar en el sitio.' },
   causalidad:           { resultado: 'Subieron 40% las visitas', veredicto: 'mezcla', alternativas: [{ explicacion: 'Temporada alta', descartada_porque: 'El año pasado no subió' }] },
+  cobertura_momentos:    { momentos: [{ cep: 'el antojo de las 4pm', cobertura: 70, cubierto: true, piezas: 8 }, { cep: 'el desayuno del que madruga', cobertura: 0, cubierto: false, piezas: 0 }], ventana_dias: 90 },
+  rejilla_codigos:       { activos: [{ tipo: 'color', nombre: 'el amarillo', fama: 70, unicidad: 40, veces_aplicado: 22, de_cuantas_piezas: 30 }], umbral: 50, nota_metodo: '30 piezas' },
+  deriva_codigos:        { fechas: ['may', 'jun', 'jul'], series: [{ codigo: 'el amarillo', valores: [70, 55, 40] }, { codigo: 'la tipografía', valores: [60, 62, 61] }], destacado: 'el amarillo' },
+  construir_vs_cosechar: { meses: ['may', 'jun', 'jul'], construir: [60, 45, 30], cosechar: [40, 55, 70], vara: 60, nota_metodo: '74 piezas clasificadas' },
+  aplauso_vs_propagacion:{ piezas: [{ titulo: 'El reel del equipo', aplauso: 12, propagacion: 30, formato: 'reel' }, { titulo: 'La infografía', aplauso: 40, propagacion: 3, formato: 'carrusel' }], medianas: { aplauso: 20, propagacion: 10 }, nota_limite: 'No mide memoria de marca.' },
+  penetracion_vs_lealtad:{ meses: ['may', 'jun', 'jul'], series: [{ nombre: 'personas nuevas', valores: [100, 96, 88] }, { nombre: 'interacción por seguidor', valores: [100, 112, 130] }], base: 'ambas = 100 en mayo' },
+  biblioteca_patrones:   { patrones: [{ patron: 'La receta en una sola toma retiene', confirmado: 4, refutado: 1, confianza: 'alta', ultima_prueba: '2026-07-20', que_decide: 'El formato de las piezas de producto' }] },
   anomalia:             { items: [{ perfil: 'Marca X', rol: 'competidor_directo', antes: 'Publicaba recetas', ahora: 'Solo promociones', hipotesis: 'Está quemando inventario', veredicto: 'vigilar', prioridad: 'media' }] },
   territorio_tematico:  { temas: ['recetas', 'vida fitness', 'ingrediente'], perfiles: ['Tosh', 'B3TTER'], celdas: [[80, 20, 0], [10, 60, 30]], nota_metodo: '52 piezas de 2 perfiles' },
   registro_de_voz:      { tonos: ['cercano', 'épico', 'educativo'], perfiles: [{ perfil: 'Tosh', mezcla: [20, 60, 20] }, { perfil: 'B3TTER', mezcla: [30, 10, 60] }], nota_metodo: '48 copys' },
@@ -107,10 +117,10 @@ describe('reparto — cada card vive en el tab que le toca', () => {
     });
   });
 
-  test('el catálogo tiene exactamente las 36 cards (30 del documento + 6 de Competencia)', () => {
+  test('el catálogo tiene exactamente las 43 cards (30 del documento + 6 de Competencia + 7 de Mi Marca)', () => {
     const tipos = [...FUENTE.matchAll(/^\s{4}([a-z_0-9]+):\s+\{ tab:/gm)].map((m) => m[1]);
-    expect(tipos).toHaveLength(36);
-    expect(new Set(tipos).size).toBe(36);        // sin duplicados
+    expect(tipos).toHaveLength(43);
+    expect(new Set(tipos).size).toBe(43);        // sin duplicados
   });
 });
 

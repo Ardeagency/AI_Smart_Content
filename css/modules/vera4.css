@@ -274,3 +274,52 @@
   .v4-dv-saldo { display: none; }
   .v4-dv-eje { left: calc(74px + 0.6rem + 50%*0.999); }
 }
+
+/* ── Barras con énfasis: los momentos que NO cubres son el hallazgo ────── */
+.v4-enf { display: flex; flex-direction: column; gap: 0.45rem; }
+.v4-enf-fila { display: grid; grid-template-columns: minmax(90px, 170px) minmax(0, 1fr) 66px; gap: 0.6rem; align-items: center; }
+.v4-enf-pista { height: 18px; border-radius: 5px; background: rgba(255, 255, 255, 0.05); overflow: hidden; }
+.v4-enf-barra { display: block; height: 100%; border-radius: 5px; background: #3987e5; }
+.v4-enf-val { font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); text-align: right; font-variant-numeric: tabular-nums; }
+/* El momento sin cubrir se dibuja punteado y sin relleno: el vacío tiene que
+   verse como una decisión pendiente, no como un cero más. */
+.v4-enf-fila.is-vacia .v4-enf-pista { background: transparent; border: 1px dashed rgba(255, 255, 255, 0.18); }
+.v4-enf-fila.is-vacia .v4-ap-nombre { color: rgba(255, 255, 255, 0.5); }
+.v4-enf-fila.is-vacia .v4-enf-val { color: #5fd39a; }
+
+/* ── Dispersión: los cuadrantes se nombran para que la posición sea una
+   instrucción y nadie tenga que interpretarla. ─────────────────────────── */
+.v4-chart-wrap--alta { height: 300px; }
+.v4-cuadrantes {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem 0.9rem;
+  font-size: 0.66rem; color: rgba(255, 255, 255, 0.42);
+}
+.v4-cuad::before { content: '▚ '; opacity: 0.5; }
+.v4-cuad--1 { color: #5fd39a; }     /* el cuadrante bueno se nombra en verde */
+.v4-cuad--3 { color: #e6a94e; }
+
+.v4-leg.is-dest { color: #fff; font-weight: 600; }
+.v4-leg--vara i { background: rgba(255, 255, 255, 0.4); height: 2px; border-radius: 0; }
+
+/* ── Balanza construir / cosechar ─────────────────────────────────────── */
+.v4-bal { position: relative; display: flex; align-items: flex-end; gap: 4px; height: 190px; padding-top: 0.2rem; }
+.v4-bal-col { flex: 1 1 0; display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; height: 100%; }
+.v4-bal-barra { flex: 1 1 auto; display: flex; flex-direction: column; border-radius: 5px; overflow: hidden; gap: 2px; }
+.v4-bal-con { background: #3987e5; }
+.v4-bal-cos { background: #c98500; }
+.v4-bal-mes { font-size: 0.6rem; color: rgba(255, 255, 255, 0.42); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* La vara del 60: hairline sólida. Punteada leería como "umbral incierto" y
+   este corte es el criterio, no una estimación. */
+.v4-bal-vara { position: absolute; left: 0; right: 0; height: 1px; background: rgba(255, 255, 255, 0.4); pointer-events: none; }
+
+/* ── Patrones aprendidos ──────────────────────────────────────────────── */
+.v4-pat { display: flex; flex-direction: column; gap: 0.5rem; }
+.v4-pat-marcador { font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); font-variant-numeric: tabular-nums; }
+.v4-pat-marcador b { color: #5fd39a; }
+.v4-pat-marcador em { color: #e77a7a; font-style: normal; }
+.v4-pat-marcador i { opacity: 0.35; font-style: normal; }
+
+@media (max-width: 700px) {
+  .v4-enf-fila { grid-template-columns: 88px minmax(0, 1fr) 54px; }
+  .v4-cuadrantes { grid-template-columns: 1fr; }
+}

@@ -65,6 +65,16 @@
     verificacion:         { tab: 'estrategia', layout: 'verif',   icon: 'check',         label: () => __('Verificación antes de entregar'), sub: () => __('Qué revisé, qué corregí y qué rechacé') },
     brief_humano:         { tab: 'estrategia', layout: 'fichas',  icon: 'brief',         label: () => __('Brief para humanos'),       sub: () => __('Lo que necesita manos, cámaras o personas') },
     bucle_outcome:        { tab: 'estrategia', layout: 'bucle',   icon: 'history',       label: () => __('Lo que recomendé y qué pasó'), sub: () => __('Cada movida mía, con su resultado') },
+    // ── Mi Marca · salud de marca (lo que un CMO mira primero) ────────────
+    // Las dos primeras se alimentan de datos que YA se computan en la base y que
+    // hasta hoy no llegaban a ninguna pantalla.
+    cobertura_momentos:     { tab: 'mi_marca', layout: 'enfasis',   icon: 'goal',       label: () => __('En qué momentos te piensan'),  sub: () => __('Las situaciones que cubres — y el hueco por donde entra otro') },
+    rejilla_codigos:        { tab: 'mi_marca', layout: 'dispersion', icon: 'palette',   label: () => __('Tus códigos'),                 sub: () => __('Cuáles son famosos y cuáles son solo tuyos') },
+    deriva_codigos:         { tab: 'mi_marca', layout: 'lineas',    icon: 'history',    label: () => __('La deriva de tus códigos'),    sub: () => __('Lo que se está apagando sin que nadie lo note') },
+    construir_vs_cosechar:  { tab: 'mi_marca', layout: 'balanza',   icon: 'growth',     label: () => __('Construyes o cosechas'),       sub: () => __('La balanza que se desliza sola hacia lo que paga hoy') },
+    aplauso_vs_propagacion: { tab: 'mi_marca', layout: 'dispersion', icon: 'likes',     label: () => __('Te aplauden o te propagan'),   sub: () => __('Lo que gusta no es lo que construye') },
+    penetracion_vs_lealtad: { tab: 'mi_marca', layout: 'indexadas', icon: 'audience',   label: () => __('Creces por más gente o por los mismos'), sub: () => __('La lealtad es consecuencia del tamaño, no su causa') },
+    biblioteca_patrones:    { tab: 'mi_marca', layout: 'patrones',  icon: 'memory',     label: () => __('Lo que aprendí de esta marca'), sub: () => __('Los patrones, con su marcador honesto') },
     // ── Competencia · instrumentos (el ojo) y juicio (la cabeza) ──────────
     // La forma la fija el tablero; Vera solo alimenta la serie. Si ella pudiera
     // elegir el gráfico, el tablero cambiaría de idioma cada semana y el cliente
@@ -242,6 +252,11 @@
           case 'apilada':    cuerpo = this._v4Apilada(card); break;
           case 'divergente': cuerpo = this._v4Divergente(card); break;
           case 'indexadas':  cuerpo = this._v4Indexadas(card); break;
+          case 'enfasis':    cuerpo = this._v4Enfasis(card); break;
+          case 'dispersion': cuerpo = this._v4Dispersion(card); break;
+          case 'lineas':     cuerpo = this._v4Lineas(card); break;
+          case 'balanza':    cuerpo = this._v4Balanza(card); break;
+          case 'patrones':   cuerpo = this._v4Patrones(card); break;
           default:         cuerpo = '';
         }
       } catch (e) {
@@ -257,7 +272,8 @@
     _v4Marco(card, meta, cuerpo) {
       const esc = (s) => this._esc(s);
       const ancho = ['pulso', 'decision', 'ensayo', 'triang', 'cadena',
-        'heatmap', 'apilada', 'divergente', 'indexadas'].includes(meta.layout);
+        'heatmap', 'apilada', 'divergente', 'indexadas',
+        'enfasis', 'dispersion', 'lineas', 'balanza', 'patrones'].includes(meta.layout);
       return `
         <section class="v4-card${ancho ? ' v4-card--ancha' : ''}" data-v4="${esc(card.type)}"
                  data-nuevo-id="${esc(this._nid ? this._nid('v4', card.type) : card.type)}">
@@ -480,6 +496,7 @@
       this._v4Charts = this._v4Charts || [];
       canvas.forEach((cv) => {
         let d; try { d = JSON.parse(cv.dataset.v4chart); } catch (_) { return; }
+        if (d.kind === 'dispersion') { this._v4PintaDispersion(cv, d); return; }
         this._v4Charts.push(new Chart(cv.getContext('2d'), {
           type: 'line',
           data: {
@@ -500,6 +517,197 @@
           },
         }));
       });
+    },
+
+    /* ── Barras con ÉNFASIS: en qué momentos te piensan ────────────────────
+       Comparar magnitud entre categorías con nombre = barras, y horizontales
+       porque un momento se nombra con una frase ("el antojo de las 4pm"). El
+       énfasis es lo que la vuelve útil: lo que hay que ver no son los momentos
+       cubiertos sino los que NO — un momento vacío es una puerta por la que hoy
+       entra otro, así que se dibuja punteado y se nombra. */
+    _v4Enfasis(card) {
+      const esc = (s) => this._esc(s);
+      const ms = Array.isArray(card.momentos) ? card.momentos.filter(Boolean) : [];
+      if (!ms.length) return '';
+      const max = Math.max(...ms.map((m) => Number(m.cobertura) || 0), 1);
+      const orden = [...ms].sort((a, b) => (Number(b.cobertura) || 0) - (Number(a.cobertura) || 0));
+      const huecos = orden.filter((m) => !m.cubierto || !(Number(m.cobertura) > 0));
+      return `<div class="v4-enf">${orden.map((m) => {
+        const v = Number(m.cobertura) || 0;
+        const vacio = !m.cubierto || v <= 0;
+        return `<div class="v4-enf-fila${vacio ? ' is-vacia' : ''}">
+          <span class="v4-ap-nombre" title="${esc(m.cep || '')}">${esc(m.cep || '')}</span>
+          <div class="v4-enf-pista"><span class="v4-enf-barra" style="width:${(v / max * 100).toFixed(1)}%"
+            title="${esc(`${m.cep}: ${v}${m.piezas != null ? ` · ${m.piezas} piezas` : ''}`)}"></span></div>
+          <span class="v4-enf-val">${vacio ? esc(__('sin cubrir')) : esc(String(v))}</span>
+        </div>`;
+      }).join('')}</div>
+      ${huecos.length ? `<p class="v4-hm-hueco"><i class="aisc-ico aisc-ico--idea" aria-hidden="true"></i>${
+        esc(__('No ocupas: {t}', { t: huecos.map((m) => m.cep).join(' · ') }))}</p>` : ''}
+      ${this._v4Metodo(card)}
+      ${this._v4Tabla([__('Momento'), __('Cobertura'), __('Piezas')],
+        orden.map((m) => [m.cep, m.cobertura ?? 0, m.piezas ?? 0]))}`;
+    },
+
+    /* ── Dispersión con cuadrantes ─────────────────────────────────────────
+       Dos medidas por elemento donde lo que importa es la POSICIÓN CONJUNTA: un
+       código famoso que usan todos vale poco; uno único que nadie reconoce
+       todavía es donde hay que invertir. Los cuadrantes llevan nombre para que
+       la posición ya sea una instrucción y nadie tenga que interpretarla. */
+    _v4Dispersion(card) {
+      const esc = (s) => this._esc(s);
+      const S = {
+        rejilla_codigos: {
+          puntos: (c) => (c.activos || []).map((a) => ({ x: a.unicidad, y: a.fama, n: a.nombre, t: a.tipo })),
+          ejes: { x: __('Unicidad — ¿es solo tuyo?'), y: __('Fama — ¿lo ligan a ti?') },
+          corte: (c) => ({ x: Number(c.umbral) || 50, y: Number(c.umbral) || 50 }),
+          cuadrantes: [__('Compartido'), __('Proteger y escalar'), __('Abandonar'), __('Construir: repetir')],
+        },
+        aplauso_vs_propagacion: {
+          puntos: (c) => (c.piezas || []).map((p) => ({ x: p.aplauso, y: p.propagacion, n: p.titulo, t: p.formato })),
+          ejes: { x: __('Aplauso — me gusta por alcance'), y: __('Propagación — guardados + compartidos') },
+          corte: (c) => ({ x: Number(c.medianas?.aplauso) || 0, y: Number(c.medianas?.propagacion) || 0 }),
+          cuadrantes: [__('Ni gusta ni se pasa'), __('Gusta y se propaga'), __('Se pasa sin aplauso'), __('Gusta y muere ahí')],
+        },
+      }[card.type];
+      if (!S) return '';
+      const pts = S.puntos(card).filter((p) => p && Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y)));
+      if (!pts.length) return '';
+      const corte = S.corte(card);
+      const cid = `v4disp-${String(card.type).replace(/[^a-z0-9]/gi, '')}`;
+      return `<div class="v4-chart-wrap v4-chart-wrap--alta"><canvas id="${cid}" data-v4chart='${
+        this._esc(JSON.stringify({ kind: 'dispersion', pts, corte, ejes: S.ejes, color: SERIES[0] }))}'></canvas></div>
+      <div class="v4-cuadrantes">${S.cuadrantes.map((q, i) =>
+        `<span class="v4-cuad v4-cuad--${i}">${esc(q)}</span>`).join('')}</div>
+      ${card.nota_limite ? `<p class="v4-metodo"><i class="aisc-ico aisc-ico--alert-info" aria-hidden="true"></i>${esc(card.nota_limite)}</p>` : ''}
+      ${this._v4Metodo(card)}
+      ${this._v4Tabla([__('Elemento'), esc(S.ejes.x), esc(S.ejes.y)], pts.map((p) => [p.n, p.x, p.y]))}`;
+    },
+
+    /* ── Líneas con ÉNFASIS: la deriva de los códigos ──────────────────────
+       Tendencia en el tiempo = línea. Con énfasis en vez de cinco series de
+       colores: el punto no es comparar cinco curvas, es que UNA se está
+       apagando. Resaltar una y dejar el resto en gris es la forma honesta de
+       decir "mira esto". */
+    _v4Lineas(card) {
+      const esc = (s) => this._esc(s);
+      const fechas = Array.isArray(card.fechas) ? card.fechas : [];
+      const series = Array.isArray(card.series) ? card.series.slice(0, 6) : [];
+      if (fechas.length < 2 || !series.length) return '';
+      const cid = `v4lin-${String(card.type).replace(/[^a-z0-9]/gi, '')}`;
+      const dest = card.destacado || (series[0] && series[0].codigo);
+      return `<div class="v4-leyendas">${series.map((x) =>
+        `<span class="v4-leg${x.codigo === dest ? ' is-dest' : ''}"><i style="background:${
+          x.codigo === dest ? SERIES[0] : 'rgba(255,255,255,0.28)'}"></i>${esc(x.codigo || '')}</span>`).join('')}</div>
+      <div class="v4-chart-wrap"><canvas id="${cid}" data-v4chart='${
+        this._esc(JSON.stringify({ kind: 'lineas', meses: fechas,
+          series: series.map((x) => ({ nombre: x.codigo, valores: x.valores,
+            color: x.codigo === dest ? SERIES[0] : 'rgba(255,255,255,0.28)' })) }))}'></canvas></div>
+      ${this._v4Tabla([__('Fecha')].concat(series.map((x) => x.codigo)),
+        fechas.map((f, j) => [f].concat(series.map((x) => (Array.isArray(x.valores) ? (x.valores[j] ?? '') : '')))))}`;
+    },
+
+    /* ── Balanza construir/cosechar ────────────────────────────────────────
+       Parte-de-un-todo QUE CAMBIA: cada mes suma 100 y lo que importa es cómo se
+       mueve la frontera. La vara al 60 convierte el gráfico en un juicio sin que
+       nadie tenga que acordarse de la regla. La deriva es el hallazgo: casi toda
+       marca se desliza hacia la cosecha sin decidirlo, porque la cosecha se mide
+       fácil y paga rápido. */
+    _v4Balanza(card) {
+      const esc = (s) => this._esc(s);
+      const meses = Array.isArray(card.meses) ? card.meses : [];
+      const con = Array.isArray(card.construir) ? card.construir : [];
+      const cos = Array.isArray(card.cosechar) ? card.cosechar : [];
+      if (!meses.length || !con.length) return '';
+      const vara = Number(card.vara) || 60;
+      const cols = meses.map((m, i) => {
+        const c = Number(con[i]) || 0, k = Number(cos[i]) || 0;
+        const tot = c + k || 1;
+        const pc = c / tot * 100;
+        return `<div class="v4-bal-col" title="${esc(`${m}: ${Math.round(pc)}% construir`)}">
+          <div class="v4-bal-barra">
+            <span class="v4-bal-con" style="height:${pc.toFixed(1)}%"></span>
+            <span class="v4-bal-cos" style="height:${(100 - pc).toFixed(1)}%"></span>
+          </div><span class="v4-bal-mes">${esc(m)}</span></div>`;
+      }).join('');
+      return `<div class="v4-leyendas">
+          <span class="v4-leg"><i style="background:${SERIES[0]}"></i>${esc(__('Construir marca'))}</span>
+          <span class="v4-leg"><i style="background:${SERIES[3]}"></i>${esc(__('Cosechar demanda'))}</span>
+          <span class="v4-leg v4-leg--vara"><i></i>${esc(__('vara {v}% (Binet & Field)', { v: vara }))}</span>
+        </div>
+        <div class="v4-bal"><div class="v4-bal-vara" style="bottom:${vara}%"></div>${cols}</div>
+        ${this._v4Metodo(card)}
+        ${this._v4Tabla([__('Mes'), __('Construir'), __('Cosechar')],
+          meses.map((m, i) => [m, con[i] ?? 0, cos[i] ?? 0]))}`;
+    },
+
+    /* ── Tabla de patrones ─────────────────────────────────────────────────
+       Hechos heterogéneos con historia (un patrón, su marcador, su confianza).
+       No comparten unidad ni forma de serie, y por encima de ~7 filas con
+       significado la tabla gana a cualquier gráfico. Un patrón REFUTADO no se
+       borra: saber que una creencia falló vale tanto como la que aguanta. */
+    _v4Patrones(card) {
+      const esc = (s) => this._esc(s);
+      const ps = Array.isArray(card.patrones) ? card.patrones.filter(Boolean) : [];
+      if (!ps.length) return '';
+      const ORD = { alta: 0, media: 1, baja: 2, exploratoria: 3 };
+      const orden = [...ps].sort((a, b) =>
+        (ORD[String(a.confianza || '').toLowerCase()] ?? 2) - (ORD[String(b.confianza || '').toLowerCase()] ?? 2));
+      return `<div class="v4-pat">${orden.map((p) => {
+        const ok = Number(p.confirmado) || 0, no = Number(p.refutado) || 0;
+        const tono = no > ok ? 'threat' : (ok >= 3 ? 'opp' : 'neu');
+        return `<article class="v4-ficha is-${tono}">
+          <div class="v4-ficha-head">
+            ${this._v4Chip(p.confianza)}
+            <span class="v4-pat-marcador" title="${esc(__('confirmado / refutado'))}">
+              <b>${ok}</b> <i>·</i> <em>${no}</em></span>
+            ${p.ultima_prueba ? `<span class="v4-quien">${esc(p.ultima_prueba)}</span>` : ''}
+          </div>
+          <h4 class="v4-ficha-titulo">${esc(p.patron || '')}</h4>
+          ${p.que_decide ? this._v4Campo(__('Qué decide'), p.que_decide) : ''}
+        </article>`;
+      }).join('')}</div>`;
+    },
+
+    /* La dispersión con sus dos cortes. Las líneas de corte son hairlines
+       SÓLIDAS: punteadas leerían como "umbral incierto" y aquí el corte es el
+       criterio, no una estimación. */
+    _v4PintaDispersion(cv, d) {
+      const ejeX = { type: 'linear', grid: { color: 'rgba(255,255,255,0.06)' },
+        ticks: { color: 'rgba(255,255,255,0.45)' },
+        title: { display: true, text: d.ejes.x, color: 'rgba(255,255,255,0.45)', font: { size: 10 } } };
+      const ejeY = { ...ejeX, title: { ...ejeX.title, text: d.ejes.y } };
+      const cortes = {
+        id: 'v4cortes',
+        afterDraw(chart) {
+          const { ctx, chartArea: a, scales } = chart;
+          if (!a) return;
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+          ctx.lineWidth = 1;
+          const x = scales.x.getPixelForValue(d.corte.x);
+          const y = scales.y.getPixelForValue(d.corte.y);
+          ctx.beginPath(); ctx.moveTo(x, a.top); ctx.lineTo(x, a.bottom);
+          ctx.moveTo(a.left, y); ctx.lineTo(a.right, y); ctx.stroke();
+          ctx.restore();
+        },
+      };
+      this._v4Charts.push(new Chart(cv.getContext('2d'), {
+        type: 'scatter',
+        data: { datasets: [{ data: d.pts, backgroundColor: d.color, pointRadius: 6, pointHoverRadius: 9 }] },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => {
+              const p = c.raw || {};
+              return `${p.n || ''}${p.t ? ` (${p.t})` : ''} — ${Math.round(p.x)} / ${Math.round(p.y)}`;
+            } } },
+          },
+          scales: { x: ejeX, y: ejeY },
+        },
+        plugins: [cortes],
+      }));
     },
     /* ── fichas: la plantilla de lista (la misma familia visual de las
        Observaciones de Competencia). Cada type declara qué va en el filete,
