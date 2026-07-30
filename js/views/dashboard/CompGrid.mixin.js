@@ -92,6 +92,8 @@
         this._bindCompGrid(body);
       }
       await this._cgridLoadAndPaint(body);
+      // Cards del cerebro (cards.vera4) del scope monitoreo, al pie del grid.
+      this._renderVera4?.(body, 'monitoreo', body.querySelector('#cgridVera4'));
       return true;
     },
 
@@ -159,6 +161,10 @@
             <div class="cgrid-obs" id="cgridObs"></div>
           </section>
           </div>
+          <!-- Cards del cerebro de Vera que viven en Competencia (Anomalías del
+               rival, Errores ajenos). Banda full-width al pie; sin lectura
+               cards.vera4 se colapsa y el tab queda como está hoy. -->
+          <div class="cgrid-v4 vera4" id="cgridVera4"></div>
         </div>`;
     },
 

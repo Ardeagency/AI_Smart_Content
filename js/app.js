@@ -299,7 +299,8 @@ class App {
       '/js/views/dashboard/VeraReading.mixin.js',
       '/js/views/dashboard/BrandGrid.mixin.js',
       '/js/views/dashboard/CompGrid.mixin.js',
-    ], ['/css/modules/insight.css', '/css/modules/vera-reading.css', '/css/modules/brand-grid.css', '/css/modules/comp-grid.css']);
+      '/js/views/dashboard/Vera4.mixin.js',
+    ], ['/css/modules/insight.css', '/css/modules/vera-reading.css', '/css/modules/brand-grid.css', '/css/modules/comp-grid.css', '/css/modules/vera4.css']);
     r.register('/org/:orgIdShort/:orgNameSlug/dashboard', dashboardLoader, auth);
     r.register('/dashboard', dashboardLoader, auth);
 

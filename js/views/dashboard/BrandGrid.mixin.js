@@ -226,6 +226,11 @@
               <div class="vera-prodstar-load">${this._esc(__('Cargando productos…'))}</div>
             </div>
           </section>
+          <!-- Cards del cerebro de Vera (cards.vera4) que viven en Mi Marca:
+               Autopsia, Victorias, ¿Lo causé yo?, la plata, la latencia… Banda
+               full-width al pie; :empty se colapsa, así que mientras Vera no las
+               escriba el tab queda exactamente como está hoy. -->
+          <div class="bgrid-v4 vera4" id="bgridVera4"></div>
         </div>`;
     },
 
@@ -763,6 +768,10 @@
       this._paintTopPostPropio(body);
       // Con la columna derecha ya poblada, se calcula el tope de Observaciones.
       this._ajustarAltoObservaciones(body);
+      // Cards del cerebro (cards.vera4) al pie: lectura aparte, consulta aparte.
+      // Va después de v2 a propósito — si no hay lectura vera4, el host queda
+      // vacío y se colapsa, y el tab no cambia en nada.
+      this._renderVera4?.(body, 'mi_marca', body.querySelector('#bgridVera4'));
       // Lo último de Vera, al final: el DOM ya está completo, así que aquí se
       // encuentran todas las piezas que hay que marcar.
       this._veraMarcarNovedades(body, this._veraHuellasDe(all));

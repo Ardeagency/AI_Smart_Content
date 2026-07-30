@@ -28,6 +28,10 @@
       // REDISEÑO VERA 2026-07: la lectura de Vera ES el tab (legacy oculto abajo).
       if (this._renderVeraTabBody) {
         await this._renderVeraTabBody(body, 'estrategia');
+        // Cards del cerebro (cards.vera4) del scope estrategia: La decisión de
+        // hoy, En el horno, Lo que recomendé y qué pasó… Es el tab que estrenan:
+        // hoy solo pinta la Intuición reusada. Sin lectura, sigue igual.
+        await this._renderVera4?.(body, 'estrategia');
         await this._renderIntuicionUniversal?.(body);   // Intuición de Vera (misma que Mi Marca)
         return;
       }

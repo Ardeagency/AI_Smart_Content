@@ -34,6 +34,10 @@
       if (this._renderVeraTabBody) {
         await this._renderVeraTabBody(body, 'tendencias');
         await this._renderTendFechasOnly(body);
+        // Cards del cerebro (cards.vera4) del scope tendencias: el Latido, las
+        // Señales débiles, la Triangulación… Se cuelgan dentro de la página que
+        // dejó _renderTendFechasOnly; si no hay lectura, no dejan rastro.
+        await this._renderVera4?.(body, 'tendencias');
         await this._renderIntuicionUniversal?.(body);   // Intuición de Vera (misma que Mi Marca)
         return;
       }
