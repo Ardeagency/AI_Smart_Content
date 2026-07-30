@@ -54,6 +54,15 @@
     tension:              { tab: 'tendencias', layout: 'fichas',  icon: 'comments',      label: () => __('Tensiones no resueltas'),   sub: () => __('Lo que sienten y ninguna marca aborda') },
     timing:               { tab: 'tendencias', layout: 'timing',  icon: 'calendar',      label: () => __('El momento exacto'),        sub: () => __('Qué ventana está abierta y cuánto le queda') },
     lo_que_falta:         { tab: 'tendencias', layout: 'fichas',  icon: 'idea',          label: () => __('Lo que falta'),             sub: () => __('Lo que nadie está diciendo y podrías decir primero') },
+    // ── Tendencias · la disciplina de futuros ─────────────────────────────
+    // Un tablero de tendencias falla siempre igual: informa del mundo y no dice
+    // qué hacer con él. Estas cinco existen para responder las tres preguntas
+    // que lo salvan — ¿es real?, ¿en qué horizonte vive?, ¿a mí me toca?
+    crecimiento_categoria: { tab: 'tendencias', layout: 'descomposicion', icon: 'growth',   label: () => __('Crece la categoría o te quitan cuota'), sub: () => __('Si subiste, ¿fue el nicho entero o fuiste tú?') },
+    tendencia_o_moda:     { tab: 'tendencias', layout: 'trendmoda',     icon: 'flask',    label: () => __('Tendencia o moda'),          sub: () => __('Cuál sigue viva en tres meses y cuál se apaga en tres semanas') },
+    tres_horizontes:      { tab: 'tendencias', layout: 'horizontes',    icon: 'layers',   label: () => __('Los tres horizontes'),       sub: () => __('Qué exige acción hoy, qué preparar y qué solo vigilar') },
+    derecho_a_jugar:      { tab: 'tendencias', layout: 'fichas',        icon: 'shield',   label: () => __('¿A esta marca le toca?'),    sub: () => __('De todo lo que se mueve, en qué tienes derecho a jugar') },
+    curva_adopcion:       { tab: 'tendencias', layout: 'apilada',       icon: 'audience', label: () => __('Quién está adoptando esto'), sub: () => __('¿Lo mueven los pioneros o ya llegó a la mayoría?') },
     // ── Estrategia ────────────────────────────────────────────────────────
     decision_del_dia:     { tab: 'estrategia', layout: 'decision', icon: 'flag',         label: () => __('La decisión de hoy'),       sub: () => __('Lo único que mueve la aguja hoy') },
     autoridad_adn:        { tab: 'estrategia', layout: 'fichas',  icon: 'shield',        label: () => __('¿Tengo autoridad para esto?'), sub: () => __('Qué puede decir esta marca sin sonar forzada') },
@@ -257,6 +266,9 @@
           case 'lineas':     cuerpo = this._v4Lineas(card); break;
           case 'balanza':    cuerpo = this._v4Balanza(card); break;
           case 'patrones':   cuerpo = this._v4Patrones(card); break;
+          case 'descomposicion': cuerpo = this._v4Descomposicion(card); break;
+          case 'trendmoda':      cuerpo = this._v4TendenciaOModa(card); break;
+          case 'horizontes':     cuerpo = this._v4Horizontes(card); break;
           default:         cuerpo = '';
         }
       } catch (e) {
@@ -273,7 +285,8 @@
       const esc = (s) => this._esc(s);
       const ancho = ['pulso', 'decision', 'ensayo', 'triang', 'cadena',
         'heatmap', 'apilada', 'divergente', 'indexadas',
-        'enfasis', 'dispersion', 'lineas', 'balanza', 'patrones'].includes(meta.layout);
+        'enfasis', 'dispersion', 'lineas', 'balanza', 'patrones',
+        'descomposicion', 'trendmoda', 'horizontes'].includes(meta.layout);
       return `
         <section class="v4-card${ancho ? ' v4-card--ancha' : ''}" data-v4="${esc(card.type)}"
                  data-nuevo-id="${esc(this._nid ? this._nid('v4', card.type) : card.type)}">
@@ -394,8 +407,15 @@
        tono son palabras, no números. */
     _v4Apilada(card) {
       const esc = (s) => this._esc(s);
-      const tonos = Array.isArray(card.tonos) ? card.tonos.slice(0, 6) : [];
-      const perfiles = Array.isArray(card.perfiles) ? card.perfiles.slice(0, 8) : [];
+      // curva_adopcion habla de señales y grupos de adoptantes, pero el molde
+      // visual es el mismo: una mezcla que suma 100 por fila.
+      const esAdopcion = card.type === 'curva_adopcion';
+      const tonos = esAdopcion
+        ? [__('innovadores'), __('nicho especializado'), __('mainstream')]
+        : (Array.isArray(card.tonos) ? card.tonos.slice(0, 6) : []);
+      const perfiles = esAdopcion
+        ? (Array.isArray(card.senales) ? card.senales.map((x) => ({ perfil: x.tema, mezcla: x.mezcla })) : [])
+        : (Array.isArray(card.perfiles) ? card.perfiles.slice(0, 8) : []);
       if (!tonos.length || !perfiles.length) return '';
       const leyenda = tonos.map((t, i) =>
         `<span class="v4-leg"><i style="background:${SERIES[i % SERIES.length]}"></i>${esc(t)}</span>`).join('');
@@ -709,6 +729,112 @@
         plugins: [cortes],
       }));
     },
+
+    /* ── Descomposición: ¿subiste tú o subió la marea? ─────────────────────
+       Un solo número de crecimiento mezcla dos historias que se corrigen
+       distinto: si el nicho creció y tú creciste igual, no ganaste nada. Las dos
+       barras salen del mismo cero, a izquierda y derecha, para que el signo se
+       lea sin mirar la cifra. */
+    _v4Descomposicion(card) {
+      const esc = (s) => this._esc(s);
+      const cat = Number(card.efecto_categoria);
+      const cuo = Number(card.efecto_cuota);
+      if (!Number.isFinite(cat) && !Number.isFinite(cuo)) return '';
+      const max = Math.max(Math.abs(cat) || 0, Math.abs(cuo) || 0, 1);
+      const barra = (etq, v, color) => {
+        const val = Number(v) || 0;
+        const w = Math.abs(val) / max * 50;
+        return `<div class="v4-desc-fila">
+          <span class="v4-ap-nombre">${esc(etq)}</span>
+          <div class="v4-desc-pista">
+            <span class="v4-desc-barra" style="width:${w.toFixed(1)}%;background:${color};${
+              val < 0 ? `right:50%` : `left:50%`}"></span>
+          </div>
+          <span class="v4-desc-val${val < 0 ? ' is-neg' : ''}">${val > 0 ? '+' : ''}${esc(String(val))}</span>
+        </div>`;
+      };
+      // La cuota va primero: para una marca pequeña es la que manda.
+      return `<div class="v4-desc"><div class="v4-desc-cero"></div>
+          ${barra(__('Tu cuota'), cuo, SERIES[0])}
+          ${barra(__('La categoría'), cat, SERIES[3])}
+        </div>
+        ${card.total_cambio != null ? `<p class="v4-campo-txt">${
+          esc(__('Cambio total: {t}', { t: card.total_cambio }))}${card.unidad ? ` · ${esc(card.unidad)}` : ''}</p>` : ''}
+        ${(card.cuota_antes != null && card.cuota_ahora != null)
+          ? `<p class="v4-campo-txt v4-campo-txt--tenue">${esc(__('Cuota: {a} → {b}', { a: card.cuota_antes, b: card.cuota_ahora }))}</p>` : ''}
+        ${this._v4Tabla([__('Efecto'), __('Valor')],
+          [[__('Tu cuota'), cuo ?? 0], [__('La categoría'), cat ?? 0]])}`;
+    },
+
+    /* ── Tendencia o moda ──────────────────────────────────────────────────
+       El diagnóstico son TRES marcadores a la vez y colapsarlos en un puntaje
+       destruye justo lo que hay que ver: una señal puede picar altísimo en una
+       plataforma y no haber cruzado a ninguna otra — eso es una moda. El
+       sparkline añade la FORMA de la curva, que es lo que separa una rampa de
+       un pico. */
+    _v4TendenciaOModa(card) {
+      const esc = (s) => this._esc(s);
+      const ss = Array.isArray(card.senales) ? card.senales.filter(Boolean) : [];
+      if (!ss.length) return '';
+      const VER = { tendencia: 'opp', moda: 'threat', pronto_para_saber: 'neu' };
+      const spark = (vals) => {
+        const v = (Array.isArray(vals) ? vals : []).map(Number).filter(Number.isFinite);
+        if (v.length < 2) return '';
+        const max = Math.max(...v), min = Math.min(...v), rango = (max - min) || 1;
+        const pts = v.map((x, i) => `${(i / (v.length - 1) * 100).toFixed(1)},${(26 - ((x - min) / rango) * 22).toFixed(1)}`).join(' ');
+        return `<svg class="v4-spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
+          <polyline points="${pts}" fill="none" stroke="${SERIES[0]}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+      };
+      return `<div class="v4-tm">${ss.map((x) => `
+        <article class="v4-ficha is-${VER[String(x.veredicto || '').toLowerCase()] || 'neu'}">
+          <div class="v4-ficha-head">
+            ${this._v4Chip(x.veredicto)}
+            <span class="v4-quien">${esc(x.tema || '')}</span>
+          </div>
+          <div class="v4-tm-fila">
+            ${spark(x.serie)}
+            <div class="v4-tm-marcas">
+              <span class="v4-chip">${esc(__('{n} semanas', { n: x.semanas_activa ?? '—' }))}</span>
+              <span class="v4-chip${(x.plataformas || []).length > 1 ? ' is-opp' : ''}">${
+                esc((x.plataformas || []).length > 1
+                  ? __('{n} plataformas', { n: (x.plataformas || []).length })
+                  : __('una sola plataforma'))}</span>
+              ${this._v4Chip(x.consistencia)}
+            </div>
+          </div>
+        </article>`).join('')}</div>
+      ${this._v4Metodo(card)}
+      ${this._v4Tabla([__('Señal'), __('Veredicto'), __('Semanas'), __('Plataformas')],
+        ss.map((x) => [x.tema, eti(x.veredicto), x.semanas_activa ?? '', (x.plataformas || []).join(' · ')]))}`;
+    },
+
+    /* ── Tres horizontes ───────────────────────────────────────────────────
+       El problema de un tablero de tendencias no es encontrar señales: es que
+       todas se ven igual de urgentes. Tres carriles obligan a decidir el
+       horizonte de cada una, y esa decisión es la que convierte una lista en un
+       plan. No es un gráfico de datos: es una estructura de juicio, y por eso no
+       lleva ejes. */
+    _v4Horizontes(card) {
+      const esc = (s) => this._esc(s);
+      const carril = (clave, titulo, sub, items, campo) => {
+        const xs = Array.isArray(items) ? items.filter(Boolean) : [];
+        return `<div class="v4-hz-carril v4-hz-carril--${clave}">
+          <header class="v4-hz-head"><span class="v4-hz-t">${esc(titulo)}</span>
+            <span class="v4-hz-s">${esc(sub)}</span></header>
+          ${xs.length ? xs.map((x) => `<article class="v4-hz-item">
+            <h4 class="v4-ficha-titulo">${esc(x.senal || '')}</h4>
+            ${x[campo] ? `<p class="v4-campo-txt">${esc(x[campo])}</p>` : ''}
+            ${x.cuando || x.revisar_el ? `<span class="v4-quien">${esc(x.cuando || x.revisar_el)}</span>` : ''}
+          </article>`).join('') : `<p class="v4-campo-txt v4-campo-txt--tenue">${esc(__('nada en este horizonte'))}</p>`}
+        </div>`;
+      };
+      if (!(card.h1 || card.h2 || card.h3)) return '';
+      return `<div class="v4-hz">
+        ${carril('h1', __('Hoy'), __('exige acción'), card.h1, 'que_exige')}
+        ${carril('h2', __('Transición'), __('hay que preparar'), card.h2, 'que_preparar')}
+        ${carril('h3', __('Lejano'), __('solo se vigila'), card.h3, 'por_que_importa')}
+      </div>`;
+    },
     /* ── fichas: la plantilla de lista (la misma familia visual de las
        Observaciones de Competencia). Cada type declara qué va en el filete,
        en los chips, en el título y en el cuerpo. ─────────────────────────── */
@@ -723,6 +849,7 @@
         autoridad_adn:     { tono: (i) => (i.veredicto === 'tomar' ? 'opp' : i.veredicto === 'adaptar' ? 'warn' : 'neu'), chips: ['veredicto'], meta: [], titulo: 'senal', campos: [[() => __('Desde el ADN'), 'razon_desde_el_adn'], [() => __('Puerta de entrada'), 'puerta_de_entrada']] },
         puerta_aprobacion: { tono: (i) => (i.estado === 'vencido' ? 'threat' : i.estado === 'vence_pronto' ? 'warn' : 'neu'), chips: ['puerta', 'estado'], meta: ['espera_desde'], titulo: 'que', campos: [[() => __('Costo de esperar'), 'costo_de_esperar']] },
         formato:           { tono: () => 'neu', chips: ['formato'], meta: [], titulo: 'idea', campos: [[() => __('Se descarta'), 'descartado'], [() => __('Por qué moriría ahí'), 'por_que_moriria'], [() => __('La prueba'), 'prueba']] },
+        derecho_a_jugar:   { tono: (i) => (i.veredicto === 'tomar' ? 'opp' : i.veredicto === 'adaptar' ? 'warn' : 'neu'), chips: ['veredicto', 'autoridad', 'audiencia', 'momento', 'territorio'], meta: [], titulo: 'senal', campos: [[() => __('Por qué'), 'razon']] },
         supuesto_punto_ciego: { tono: (i) => (i.confianza === 'alta' ? 'opp' : 'neu'), chips: ['rol', 'confianza'], meta: ['perfil'], titulo: 'que_cree', campos: [[() => __('En qué se equivoca'), 'en_que_se_equivoca'], [() => __('La grieta se ve en'), 'evidencia_de_la_grieta'], [() => __('Cómo se explota'), 'como_se_explota']] },
         proxima_movida:    { tono: (i) => (i.confianza === 'alta' ? 'warn' : 'neu'), chips: ['confianza'], meta: ['perfil', 'revisar_el'], titulo: 'movida_probable', campos: [[() => __('Por qué ahora'), 'por_que_ahora'], [() => __('Lo confirmaría'), 'senal_que_la_confirma'], [() => __('Lo DESMENTIRÍA'), 'senal_que_la_desmiente'], [() => __('Si ocurre, hago'), 'si_ocurre_que_hago']] },
         brief_humano:      { tono: () => 'neu', chips: ['tiempo'], meta: ['con_quien', 'donde'], titulo: 'que', campos: [[() => __('Sirve a'), 'sirve_a'], [() => __('No hacer'), 'no_hacer'], [() => __('Listo cuando'), 'listo_cuando']], pasos: true },

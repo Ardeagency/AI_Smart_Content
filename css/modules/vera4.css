@@ -323,3 +323,47 @@
   .v4-enf-fila { grid-template-columns: 88px minmax(0, 1fr) 54px; }
   .v4-cuadrantes { grid-template-columns: 1fr; }
 }
+
+/* ── Descomposición: las dos barras salen del mismo cero ──────────────── */
+.v4-desc { position: relative; display: flex; flex-direction: column; gap: 0.5rem; }
+.v4-desc-cero { position: absolute; left: calc(130px + 0.6rem + 50%*0.999); top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, 0.22); pointer-events: none; }
+.v4-desc-fila { display: grid; grid-template-columns: minmax(80px, 130px) minmax(0, 1fr) 64px; gap: 0.6rem; align-items: center; }
+.v4-desc-pista { position: relative; height: 20px; }
+.v4-desc-barra { position: absolute; top: 0; height: 100%; border-radius: 4px; }
+.v4-desc-val { font-size: 0.78rem; font-weight: 700; color: #5fd39a; text-align: right; font-variant-numeric: tabular-nums; }
+.v4-desc-val.is-neg { color: #e77a7a; }
+
+/* ── Tendencia o moda: la forma de la curva importa tanto como el pico ── */
+.v4-tm { display: flex; flex-direction: column; gap: 0.6rem; }
+.v4-tm-fila { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 0.7rem; align-items: center; }
+.v4-spark { width: 96px; height: 28px; display: block; }
+.v4-tm-marcas { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+/* ── Tres horizontes: una estructura de juicio, no un gráfico ─────────── */
+.v4-hz { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem; }
+@media (max-width: 800px) { .v4-hz { grid-template-columns: 1fr; } }
+.v4-hz-carril {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  padding: 0.75rem 0.8rem; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 3px solid rgba(255, 255, 255, 0.2);
+}
+/* El horizonte se lee por intensidad: hoy manda, lo lejano se atenúa. */
+.v4-hz-carril--h1 { border-top-color: #e6a94e; }
+.v4-hz-carril--h2 { border-top-color: #3987e5; }
+.v4-hz-carril--h3 { border-top-color: rgba(255, 255, 255, 0.25); }
+.v4-hz-head { display: flex; flex-direction: column; gap: 0.05rem; }
+.v4-hz-t { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; }
+.v4-hz-s { font-size: 0.66rem; color: rgba(255, 255, 255, 0.42); }
+.v4-hz-item {
+  display: flex; flex-direction: column; gap: 0.25rem;
+  padding: 0.55rem 0.65rem; border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.v4-hz-carril--h3 .v4-hz-item { opacity: 0.75; }
+
+@media (max-width: 700px) {
+  .v4-desc-fila { grid-template-columns: 74px minmax(0, 1fr) 54px; }
+  .v4-desc-cero { left: calc(74px + 0.6rem + 50%*0.999); }
+  .v4-tm-fila { grid-template-columns: 1fr; }
+}

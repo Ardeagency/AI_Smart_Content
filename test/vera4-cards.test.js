@@ -47,7 +47,10 @@ const REPARTO = {
                // Instrumentos y juicio del rediseño de Competencia
                'territorio_tematico', 'registro_de_voz', 'emocion_competencia',
                'busqueda_vs_voz', 'supuesto_punto_ciego', 'proxima_movida'],
-  tendencias: ['pulso_nicho', 'senal_debil', 'triangulacion', 'tension', 'timing', 'lo_que_falta'],
+  tendencias: ['pulso_nicho', 'senal_debil', 'triangulacion', 'tension', 'timing', 'lo_que_falta',
+               // La disciplina de futuros
+               'crecimiento_categoria', 'tendencia_o_moda', 'tres_horizontes',
+               'derecho_a_jugar', 'curva_adopcion'],
   estrategia: ['decision_del_dia', 'autoridad_adn', 'puerta_aprobacion', 'produccion_viva',
                'pieza_asombro', 'formato', 'cadena_portafolio', 'verificacion',
                'brief_humano', 'bucle_outcome'],
@@ -86,6 +89,11 @@ const EJEMPLO = {
   tension:              { items: [{ tension: 'Quieren cuidarse sin renunciar al postre', cita: 'Ojalá no supiera a dieta', de_donde: '@alguien', por_que_nadie_la_toca: 'La categoría vende culpa', que_diria_la_marca: 'Que se puede.' }] },
   timing:               { abiertas: [{ ventana: 'Amor y amistad', cierra: '2026-09-20', fase: 'antes', que_exige_ahora: 'Grabar esta semana.' }] },
   lo_que_falta:         { items: [{ hueco: 'Snacks para el trabajo', demanda_observada: 'Se busca todos los días', quien_no_lo_cubre: 'Nadie del nicho', angulo_de_la_marca: 'El break de las 4pm', intencion_comercial: 'alta' }] },
+  crecimiento_categoria: { total_cambio: '+18%', efecto_categoria: 22, efecto_cuota: -4, cuota_antes: '27%', cuota_ahora: '23%', unidad: 'interacciones del nicho' },
+  tendencia_o_moda:      { senales: [{ tema: 'proteína de huevo', serie: [3, 5, 8, 14, 19], semanas_activa: 11, plataformas: ['instagram', 'tiktok'], consistencia: 'alta', veredicto: 'tendencia' }, { tema: 'el reto del vaso', serie: [2, 40, 12, 3], semanas_activa: 2, plataformas: ['tiktok'], consistencia: 'baja', veredicto: 'moda' }] },
+  tres_horizontes:       { h1: [{ senal: 'Boyacá en 8 días', que_exige: 'Grabar esta semana', cuando: '2026-08-07' }], h2: [{ senal: 'El snack como propuesta social', que_preparar: 'Un formato de viernes', revisar_el: '2026-09-15' }], h3: [{ senal: 'Proteína alternativa masiva', por_que_importa: 'Redefine la categoría en 2 años' }] },
+  derecho_a_jugar:       { items: [{ senal: 'El vocabulario del antojo', autoridad: 'si', audiencia: 'si', momento: 'justo', territorio: 'disputado', veredicto: 'adaptar', razon: 'La marca puede hablar de antojo sin traicionar el ingrediente honesto.' }] },
+  curva_adopcion:        { senales: [{ tema: 'proteína de huevo', mezcla: [50, 35, 15] }], nota_metodo: '18 perfiles clasificados' },
   decision_del_dia:     { decision: 'Grabar el Reel del equipo buceando', por_que: 'La alianza pedía eso, no una infografía.', costo_de_no_hacerla: 'Se cierra la ventana con el socio.', quien: 'equipo_humano', horizonte: 'esta_semana' },
   autoridad_adn:        { items: [{ senal: 'El auge del running', veredicto: 'adaptar', razon_desde_el_adn: 'La marca habla de energía, no de deporte', puerta_de_entrada: 'El desayuno de quien madruga.' }] },
   puerta_aprobacion:    { items: [{ que: 'Publicar el Reel', puerta: 'publicacion', espera_desde: '2026-07-28', costo_de_esperar: 'Pierde el momento', estado: 'vence_pronto' }] },
@@ -117,10 +125,10 @@ describe('reparto — cada card vive en el tab que le toca', () => {
     });
   });
 
-  test('el catálogo tiene exactamente las 43 cards (30 del documento + 6 de Competencia + 7 de Mi Marca)', () => {
+  test('el catálogo tiene exactamente las 48 cards (30 del documento + 6 Competencia + 7 Mi Marca + 5 Tendencias)', () => {
     const tipos = [...FUENTE.matchAll(/^\s{4}([a-z_0-9]+):\s+\{ tab:/gm)].map((m) => m[1]);
-    expect(tipos).toHaveLength(43);
-    expect(new Set(tipos).size).toBe(43);        // sin duplicados
+    expect(tipos).toHaveLength(48);
+    expect(new Set(tipos).size).toBe(48);        // sin duplicados
   });
 });
 
