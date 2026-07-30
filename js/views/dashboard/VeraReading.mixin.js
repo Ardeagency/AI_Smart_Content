@@ -113,6 +113,7 @@
         const base = () => this._supabase.from('vera_dashboard_readings')
           .select('reading, periodo')
           .eq('organization_id', this._orgId).eq('scope', 'mi_marca').eq('status', 'published')
+          .eq('schema_version', 2)          // cards.v2: la Intuicion vive ahi
           .order('created_at', { ascending: false }).limit(1);
         const { data } = await base().eq('periodo', 'month');
         let fila = (data && data[0]) ? data[0] : null;

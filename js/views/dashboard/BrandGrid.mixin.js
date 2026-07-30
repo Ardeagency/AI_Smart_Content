@@ -669,6 +669,10 @@
         const base = () => this._supabase.from('vera_dashboard_readings')
           .select('reading, created_at, periodo')
           .eq('organization_id', this._orgId).eq('scope', 'mi_marca').eq('status', 'published')
+          // Cada lector pide SU schema: desde que el cerebro (cards.vera4)
+          // escribe en los mismos scopes, "la ultima del scope" puede ser de
+          // otro contrato y este tab se pintaria vacio.
+          .eq('schema_version', 2)
           .order('created_at', { ascending: false }).limit(1);
         const { data } = await base().eq('periodo', this._veraPeriodoActivo());
         let fila = (data && data[0]) ? data[0] : null;

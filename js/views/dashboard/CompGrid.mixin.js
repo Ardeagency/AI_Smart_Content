@@ -516,6 +516,7 @@
         const { data } = await this._supabase.from('vera_dashboard_readings')
           .select('reading, created_at')
           .eq('organization_id', this._orgId).eq('scope', 'monitoreo').eq('status', 'published')
+          .eq('schema_version', 1)          // narrative v1: perfiles, observaciones, audiencias
           .order('created_at', { ascending: false }).limit(1);
         reading = (data && data[0]) || null;
       } catch (_) {}

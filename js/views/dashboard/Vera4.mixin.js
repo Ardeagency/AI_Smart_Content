@@ -129,6 +129,7 @@
         const base = () => this._supabase.from('vera_dashboard_readings')
           .select('reading, created_at, periodo')
           .eq('organization_id', this._orgId).eq('scope', scope).eq('status', 'published')
+          .eq('schema_version', 4)          // cards.vera4 y nada mas
           .order('created_at', { ascending: false }).limit(1);
         let fila = null;
         if (scope === 'mi_marca' && typeof this._veraPeriodoActivo === 'function') {
