@@ -1276,7 +1276,10 @@
         virtudes:    { label: __('Fortalezas'),    icon: 'star' },
         desventajas: { label: __('Debilidades'),   icon: 'alert-warning' },
         audiencia:   { label: __('Audiencias'),    icon: 'audience' },
-        algoritmo:   { label: __('Tu Algoritmo'),  icon: 'compass' },
+        // "Algoritmo" a secas: hay otra card de algoritmo en Competencia y el
+        // "Tu" no era lo que las separaba. Lo que las separa es el SUJETO —
+        // aquí, cómo te lee a ti; allá, qué está premiando en ellos.
+        algoritmo:   { label: __('Algoritmo'),     icon: 'compass' },
         intuicion:   { label: __('Intuición'),     icon: 'sparkle' },
       };
       const m = META[card && card.type];

@@ -2810,5 +2810,10 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Últimos ({n})": "Latest ({n})",
   "Propuestas de oportunidad": "Opportunity proposals",
   "Dos ideas por fecha, hechas para esta marca": "Two ideas per date, made for this brand",
-  "Por qué le sirve a esta marca": "Why it works for this brand"
+  "Por qué le sirve a esta marca": "Why it works for this brand",
+  "Algoritmo": "Algorithm",
+  "Qué está premiando la distribución en los perfiles que vigilas": "What distribution is rewarding in the profiles you watch",
+  "La prueba": "The proof",
+  "Se lo muestra a": "It shows it to",
+  "Qué me llevo": "What I take from it"
 }/* I18N:END */;

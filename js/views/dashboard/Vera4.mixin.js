@@ -13,9 +13,10 @@
  * REPARTO (VERA4[type].tab decide dónde vive cada una; una card que llegue en el
  * scope equivocado NO se pinta — así una lectura mal escrita no ensucia el tab):
  *   Mi Marca    silencio · latencia · impacto_vs_ruido · emocion_objetivo ·
- *               viabilidad_comercial · ritmo · autopsia · victoria_explicada · causalidad
- *   Competencia anomalia · error_ajeno
- *   Tendencias  pulso_nicho · senal_debil · triangulacion · tension · lo_que_falta
+ *               ritmo · autopsia · victoria_explicada · causalidad
+ *   Competencia anomalia · error_ajeno · algoritmo_rival
+ *   Tendencias  pulso_nicho · senal_debil · triangulacion · tension · lo_que_falta ·
+ *               propuestas_fecha
  *   Estrategia  decision_del_dia · autoridad_adn · puerta_aprobacion · produccion_viva ·
  *               pieza_asombro · formato · cadena_portafolio · verificacion ·
  *               brief_humano · bucle_outcome
@@ -45,7 +46,6 @@
     latencia:             { tab: 'mi_marca',   layout: 'latencia', icon: 'hourglass',    label: () => __('Latencia'),                 sub: () => __('Cuánto tardaste en reaccionar a la última ventana') },
     impacto_vs_ruido:     { tab: 'mi_marca',   layout: 'duo',     icon: 'goal',          label: () => __('Impacto vs. ruido'),        sub: () => __('Qué mueve la aguja y qué solo ocupa espacio') },
     emocion_objetivo:     { tab: 'mi_marca',   layout: 'ensayo',  icon: 'sparkle',       label: () => __('La emoción correcta'),      sub: () => __('Qué debe sentir la persona, no "interés"') },
-    viabilidad_comercial: { tab: 'mi_marca',   layout: 'plata',   icon: 'credit-card',   label: () => __('Lo que el negocio puede pagar'), sub: () => __('Gastado, costo por resultado y si la jugada cabe') },
     ritmo:                { tab: 'mi_marca',   layout: 'ritmo',   icon: 'clock',         label: () => __('Ritmo real'),               sub: () => __('Ráfagas que compiten contigo y silencios en ventanas abiertas') },
     autopsia:             { tab: 'mi_marca',   layout: 'ensayo',  icon: 'flask',         label: () => __('Autopsia'),                 sub: () => __('La pieza que no funcionó, sin excusas') },
     victoria_explicada:   { tab: 'mi_marca',   layout: 'ensayo',  icon: 'star',          label: () => __('Victoria explicada'),       sub: () => __('Por qué ganó y cómo se repite') },
@@ -53,6 +53,10 @@
     // ── Competencia ───────────────────────────────────────────────────────
     anomalia:             { tab: 'monitoreo',  layout: 'fichas',  icon: 'alert-warning', label: () => __('Anomalías del rival'),      sub: () => __('El movimiento raro y qué lo motivó') },
     error_ajeno:          { tab: 'monitoreo',  layout: 'fichas',  icon: 'ban',           label: () => __('Errores ajenos'),           sub: () => __('El fracaso del otro, y si yo podría cometerlo') },
+    // "Algoritmo" tambien existe en Mi Marca (cards.v2) y NO son la misma card:
+    // alla se lee como el algoritmo trata a la cuenta propia; aqui, que esta
+    // premiando en los perfiles vigilados. Mismo nombre, sujeto distinto.
+    algoritmo_rival:      { tab: 'monitoreo',  layout: 'algoritmo', icon: 'compass',     label: () => __('Algoritmo'),                sub: () => __('Qué está premiando la distribución en los perfiles que vigilas') },
     // ── Tendencias ────────────────────────────────────────────────────────
     pulso_nicho:          { tab: 'tendencias', layout: 'pulso',   icon: 'zap',           label: () => __('Latido del mercado'),       sub: () => __('Qué tan caliente está tu nicho y hacia dónde se mueve') },
     senal_debil:          { tab: 'tendencias', layout: 'fichas',  icon: 'wind',          label: () => __('Señales débiles'),          sub: () => __('Lo que todavía nadie nombró') },
@@ -164,7 +168,6 @@
     se_equivoca: () => __('Se equivoca'), tiene_razon: () => __('Tiene razón'), parcial: () => __('Acierta a medias'),
     se_hizo: () => __('Se hizo'), no_se_hizo: () => __('No se hizo'), se_hizo_distinto: () => __('Se hizo distinto'),
     acerte: () => __('Acerté'), me_equivoque: () => __('Me equivoqué'), sin_datos: () => __('Sin datos'),
-    cabe: () => __('Cabe'), cabe_moviendo: () => __('Cabe moviendo plata'), no_cabe: () => __('No cabe'),
     invisible: () => __('Invisible'), mencionada: () => __('Mencionada'), opcion_logica: () => __('Opción lógica'),
     // clases y estados
     pieza_retirada: () => __('Pieza retirada'), pregunta_sin_respuesta: () => __('Pregunta sin responder'),
@@ -451,10 +454,10 @@
           case 'duo':      cuerpo = this._v4Duo(card); break;
           case 'pulso':    cuerpo = this._v4Pulso(card); break;
           case 'decision': cuerpo = this._v4Decision(card); break;
-          case 'plata':    cuerpo = this._v4Plata(card); break;
           case 'latencia': cuerpo = this._v4Latencia(card); break;
           case 'ritmo':    cuerpo = this._v4Ritmo(card); break;
           case 'propuestas': cuerpo = this._v4Propuestas(card); break;
+          case 'algoritmo': cuerpo = this._v4AlgoritmoRival(card); break;
           case 'triang':   cuerpo = this._v4Triangulacion(card); break;
           case 'horno':    cuerpo = this._v4Horno(card); break;
           case 'cadena':   cuerpo = this._v4Cadena(card); break;
@@ -1196,30 +1199,6 @@
       </div>`;
     },
 
-    /* ── plata: el eje que hoy no existe en ningún tab. ───────────────────── */
-    _v4Plata(card) {
-      const esc = (s) => this._esc(s);
-      const k = card.kpi || {};
-      if (!card.gastado && !k.valor) return '';
-      const tonoKpi = { sano: 'opp', justo: 'warn', malo: 'threat' }[String(k.estado || '').toLowerCase()] || 'neu';
-      const tonoVer = { cabe: 'opp', cabe_moviendo: 'warn', no_cabe: 'threat' }[String(card.veredicto || '').toLowerCase()] || 'neu';
-      return `<div class="v4-plata">
-        <div class="v4-plata-cifra">
-          <span class="v4-num">${esc(card.gastado || '—')}</span>
-          <span class="v4-campo-label">${esc(card.ventana || __('Gastado en el periodo'))}</span>
-        </div>
-        ${k.valor ? `<div class="v4-plata-kpi is-${tonoKpi}">
-          <span class="v4-kpi-nombre">${esc(k.nombre || '')}</span>
-          <span class="v4-kpi-valor">${esc(k.valor)}</span>
-          ${k.vara ? `<span class="v4-kpi-vara">${esc(k.vara)}</span>` : ''}
-        </div>` : ''}
-      </div>
-      ${this._v4Campo(__('Ritmo de quema'), card.ritmo)}
-      ${card.veredicto ? `<p class="v4-destacado is-${tonoVer}">${esc(eti(card.veredicto))}</p>` : ''}
-      ${this._v4Campo(__('De dónde sale'), card.de_donde_sale)}
-      ${card.markdown ? `<p class="v4-campo-txt">${esc(card.markdown)}</p>` : ''}`;
-    },
-
     /* ── latencia: el Principio de Latencia Cero, en días. ────────────────── */
     _v4Latencia(card) {
       const esc = (s) => this._esc(s);
@@ -1263,6 +1242,28 @@
           ${s.ventana_perdida ? `<p class="v4-campo-txt">${esc(s.ventana_perdida)}</p>` : ''}</article>`).join('')}
       </div>
       ${card.instruccion ? `<div class="v4-leccion"><i class="aisc-ico aisc-ico--calendar" aria-hidden="true"></i><p>${esc(card.instruccion)}</p></div>` : ''}`;
+    },
+
+    /* ── algoritmo (Competencia): qué premia la distribución en los rivales.
+       Cada plataforma lleva su PRUEBA visible — sin el perfil y la cifra que la
+       respaldan, esto sería repetir lo que se dice de cada red. */
+    _v4AlgoritmoRival(card) {
+      const esc = (s) => this._esc(s);
+      const pl = Array.isArray(card.plataformas) ? card.plataformas.filter(Boolean) : [];
+      if (!pl.length) return '';
+      return `<div class="v4-algo">
+        ${pl.map((p) => `
+          <article class="v4-algo-pl">
+            <header class="v4-algo-head">
+              <span class="v4-algo-red">${esc(p.plataforma || '')}</span>
+            </header>
+            <p class="v4-algo-premia">${esc(p.que_premia || '')}</p>
+            ${p.prueba ? `<p class="v4-algo-prueba"><span>${esc(__('La prueba'))}</span>${esc(p.prueba)}</p>` : ''}
+            ${p.a_quien_alcanza ? `<p class="v4-algo-quien">${esc(__('Se lo muestra a'))}: ${esc(p.a_quien_alcanza)}</p>` : ''}
+            ${p.que_me_llevo ? `<p class="v4-algo-llevo"><span>${esc(__('Qué me llevo'))}</span>${esc(p.que_me_llevo)}</p>` : ''}
+          </article>`).join('')}
+      </div>
+      ${card.patron_transversal ? `<div class="v4-leccion"><i class="aisc-ico aisc-ico--compass" aria-hidden="true"></i><p>${esc(card.patron_transversal)}</p></div>` : ''}`;
     },
 
     /* ── propuestas por fecha: dos ideas producibles para cada ocasión. ─────

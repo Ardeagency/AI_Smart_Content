@@ -124,23 +124,11 @@
 @media (max-width: 700px) { .v4-duo { grid-template-columns: 1fr; } }
 .v4-duo-col { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
 
-/* ── Cifras grandes: pulso, plata, latencia ──────────────────────────── */
-.v4-pulso, .v4-plata, .v4-latencia { display: flex; flex-direction: column; gap: 0.6rem; }
-.v4-pulso-cifra, .v4-plata-cifra { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
+/* ── Cifras grandes: pulso, latencia ──────────────────────────────────── */
+.v4-pulso, .v4-latencia { display: flex; flex-direction: column; gap: 0.6rem; }
+.v4-pulso-cifra { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
 .v4-num { font-size: 2.1rem; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -0.02em; }
 .v4-delta { font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); }
-.v4-plata { gap: 0.8rem; }
-.v4-plata-kpi {
-  display: inline-flex; align-items: baseline; gap: 0.5rem;
-  padding: 0.4rem 0.7rem; border-radius: 10px; align-self: flex-start;
-  background: rgba(255, 255, 255, 0.05);
-}
-.v4-plata-kpi.is-opp    { background: rgba(95, 211, 154, 0.12); }
-.v4-plata-kpi.is-warn   { background: rgba(230, 169, 78, 0.12); }
-.v4-plata-kpi.is-threat { background: rgba(231, 122, 122, 0.12); }
-.v4-kpi-nombre { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.55); }
-.v4-kpi-valor { font-size: 1.05rem; font-weight: 700; color: #fff; }
-.v4-kpi-vara { font-size: 0.7rem; color: rgba(255, 255, 255, 0.45); }
 
 .v4-decision { display: flex; flex-direction: column; gap: 0.6rem; }
 
@@ -419,3 +407,40 @@
   color: var(--text-muted, rgba(212, 209, 216, 0.4));
   margin-bottom: 0.1rem;
 }
+
+/* ── Algoritmo (Competencia): qué premia la distribución en los rivales ─────
+   Una tarjeta por plataforma. La PRUEBA va destacada y no como pie de página:
+   es lo que separa esta card de repetir lo que "se dice" de cada red. */
+.v4-algo { display: flex; flex-direction: column; gap: 0.7rem; }
+.v4-algo-pl {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 12px;
+  padding: 0.8rem 0.9rem 0.85rem;
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+.v4-algo-head { display: flex; align-items: center; gap: 0.5rem; }
+.v4-algo-red {
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--brand-color-light, #FF6A1A);
+}
+.v4-algo-premia {
+  margin: 0; font-size: 0.88rem; line-height: 1.45; font-weight: 600;
+  color: var(--text-primary, #D4D1D8);
+}
+.v4-algo-prueba, .v4-algo-llevo {
+  margin: 0; font-size: 0.78rem; line-height: 1.45;
+  color: var(--text-secondary, rgba(212, 209, 216, 0.75));
+}
+.v4-algo-prueba span, .v4-algo-llevo span {
+  display: block; font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--text-muted, rgba(212, 209, 216, 0.4));
+  margin-bottom: 0.1rem;
+}
+/* Lo accionable cierra la tarjeta y se separa de la observación. */
+.v4-algo-llevo {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.45rem; margin-top: 0.1rem;
+}
+.v4-algo-quien { margin: 0; font-size: 0.74rem; color: var(--text-muted, rgba(212, 209, 216, 0.55)); }
