@@ -3236,6 +3236,50 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 }
 .dash-report-item:hover { background: rgba(255,255,255,0.06); color: var(--text-primary, #D4D1D8); }
 
+/* ── Sensor de Vera (bajo "Crear informe", sobre el degradado) ──────────────
+   El logo vive SIEMPRE; los tres puntos y la frase solo cuando de verdad esta
+   trabajando (rpc get_vera_pulse). En reposo el logo baja a 0.38 y el bloque
+   no dice nada: mudo es honesto, inventar actividad no. */
+.vera-pulse {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  min-height: 23px; /* reserva la altura del logo: nada salta al activarse */
+  user-select: none;
+}
+.vera-pulse-logo {
+  width: 60px; height: 23px; display: block;
+  opacity: 0.38;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
+  transition: opacity 0.35s ease;
+}
+.vera-pulse.is-activa .vera-pulse-logo { opacity: 1; }
+
+/* Tres puntos: respiran en cascada mientras Vera trabaja. */
+.vera-pulse-dots { display: inline-flex; align-items: center; gap: 4px; }
+.vera-pulse-dots i {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #fff; opacity: 0.35;
+  animation: veraPulseDot 1.25s ease-in-out infinite;
+}
+.vera-pulse-dots i:nth-child(2) { animation-delay: 0.18s; }
+.vera-pulse-dots i:nth-child(3) { animation-delay: 0.36s; }
+@keyframes veraPulseDot {
+  0%, 100% { opacity: 0.3; transform: translateY(0) scale(0.85); }
+  40%      { opacity: 1;   transform: translateY(-2px) scale(1); }
+}
+
+.vera-pulse-frase {
+  font-size: 0.8125rem; font-weight: 500; letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  animation: veraPulseFrase 0.45s ease-out;
+}
+@keyframes veraPulseFrase { from { opacity: 0; transform: translateY(3px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .vera-pulse-dots i { animation: none; opacity: 0.85; }
+  .vera-pulse-frase { animation: none; }
+}
+
 /* Analisis longitudinal — grid de charts Chart.js */
 .mb-long-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
 .mb-long-grid--single { grid-template-columns: 1fr; }
@@ -4147,6 +4191,8 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
    alinea a la derecha y da legibilidad a labels claros. */
 .dash-hero-actions .mb-filters-bar { margin: 0; padding: 0; background: none; border: 0; flex-wrap: wrap; justify-content: flex-start; }
 .dash-hero-actions .living-filter-label { color: rgba(255, 255, 255, 0.85); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); }
+/* Sensor de Vera: renglon propio bajo la fila de "Crear informe" + burbujas. */
+.dash-hero-pulse { margin-top: 0.9rem; }
 
 /* Tabs sobre el degradado: texto blanco translucido, activo = solido + underline. */
 .dash-hero-tabs {

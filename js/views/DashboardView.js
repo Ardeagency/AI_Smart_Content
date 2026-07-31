@@ -263,6 +263,8 @@ class DashboardView extends BaseView {
     this._stopAutoRefresh();
     this._unsubscribeRealtime();
     this._destroyCharts();
+    try { this._veraPulse?.destroy(); } catch (_) {}
+    this._veraPulse = null;
     if (this._onHashChange) {
       window.removeEventListener('hashchange', this._onHashChange);
       this._onHashChange = null;
@@ -490,6 +492,9 @@ class DashboardView extends BaseView {
     this._mountTabDatePicker();
     this._setupTabs();
     this._setupReportDropdown();
+    // Sensor de Vera: se monta ya (el host existe desde el primer HTML) y se
+    // re-monta en cada _renderHeroActions, que reescribe la barra.
+    this._mountVeraPulse();
     this._renderTab(this._activeTab);
     // KPIs del hero: se llenan en background (data de marca compartida).
     this._ensureHeroKpis();
@@ -938,7 +943,21 @@ class DashboardView extends BaseView {
       <header class="living-history-filters mb-filters-bar">
         ${typeof this._reportDropdown === 'function' ? this._reportDropdown() : ''}
         ${typeof this._buildIntegrationBubbles === 'function' ? this._buildIntegrationBubbles() : ''}
-      </header>`;
+      </header>
+      <div class="dash-hero-pulse" id="veraPulseHost"></div>`;
+  }
+
+  /* ── Sensor de Vera (debajo de "Crear informe") ──────────────────────────
+     Vive en los 4 tabs porque Vera trabaja para los 4. El host se recrea en
+     cada _renderHeroActions (innerHTML), así que hay que re-montarlo; mount()
+     es idempotente y se desconecta solo antes de re-conectar. */
+  _mountVeraPulse() {
+    const host = document.getElementById('veraPulseHost');
+    if (!host || typeof window.VeraPulse !== 'function') return;
+    if (!this._veraPulse) {
+      this._veraPulse = new window.VeraPulse({ supabase: this._supabase, orgId: this._orgId });
+    }
+    this._veraPulse.mount(host);
   }
 
   // Re-renderiza la barra de filtros del banner para el tab activo y monta su date
@@ -947,6 +966,7 @@ class DashboardView extends BaseView {
     const host = document.getElementById('dashHeroActions');
     if (host) host.innerHTML = this._buildTabFiltersBar(this._activeTab);
     this._mountTabDatePicker();
+    this._mountVeraPulse();  // el innerHTML de arriba destruyó su host
   }
 
   _mountTabDatePicker() {

@@ -290,6 +290,7 @@ class App {
     const dashboardLoader = this._lazy('DashboardView', [
       '/js/components/AudienceMap.js',
       '/js/components/OnboardingTour.js',
+      '/js/components/VeraPulse.js',
       '/js/services/VeraReadingService.js',
       '/js/views/DashboardView.js',
       '/js/views/dashboard/MyBrands.mixin.js',
