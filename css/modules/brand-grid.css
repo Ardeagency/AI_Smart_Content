@@ -700,6 +700,21 @@
 .vera-card--intuicion .vera-md { font-size: 0.9rem; line-height: 1.7; color: rgba(255, 255, 255, 0.74); max-width: 82ch; }
 .vera-card--intuicion .vera-md strong { color: #fff; font-weight: 600; }
 .vera-card--intuicion .vera-md a { color: rgb(var(--intu-accent)); }
+/* El subtitulo dice de QUE es esta intuicion: el rival, el mercado, la jugada.
+   Solo lo llevan las de los otros tres tabs (cards.vera4) — en Mi Marca la
+   pantalla ya deja claro cual es el sujeto, porque no hay otro. */
+.vera-card--intuicion .vera-card-sub {
+  margin: -0.55rem 0 0.15rem;
+  font-size: 0.795rem; line-height: 1.45;
+  color: rgba(255, 255, 255, 0.42);
+}
+/* La confianza va en el pie, junto a la frescura: es una acotacion del juicio,
+   no un titular. Sin ella la card no cambia de forma. */
+.vera-card--intuicion .vera-card-conf {
+  font-size: 0.72rem; letter-spacing: 0.02em; text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.34);
+}
+.vera-card--intuicion .vera-card-conf + .vera-card-fecha { margin-top: 0.15rem; }
 @media (max-width: 640px) {
   .vera-card--intuicion { padding: 1.4rem 1.35rem 1.5rem; }
   .vera-card--intuicion .vera-card-title { font-size: 1.3rem; }

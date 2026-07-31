@@ -15,6 +15,16 @@
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Intuición": "Intuition",
+  "Intuición sobre la competencia": "Intuition about the competition",
+  "Intuición sobre el mercado": "Intuition about the market",
+  "Intuición sobre la jugada": "Intuition about the play",
+  "El porqué del movimiento del rival que su tablero no dice": "The why behind the rival's move that their dashboard doesn't tell",
+  "Por qué esto se está moviendo ahora y no hace seis meses": "Why this is moving now and not six months ago",
+  "Lo que está en juego y todavía nadie ha nombrado": "What's at stake that nobody has named yet",
+  "Lo que sí funcionó": "What did work",
+  "El culpable": "The culprit",
+  "Qué hacer con esto": "What to do with this",
+  "confianza {c}": "confidence {c}",
   "Descartar audiencia": "Dismiss audience",
   "el nicho la busca · encaja con tu marca": "the niche is looking for it · fits your brand",
   "A quién deberías hablarle según lo que Vera aprendió de ti": "Who you should be talking to, based on what Vera learned about you",

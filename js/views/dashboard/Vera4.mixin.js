@@ -21,6 +21,12 @@
  *               brief_humano · bucle_outcome
  *   Sin tab     recalibracion · humildad · a2a_readiness (tab: null — hablan de Vera,
  *               no de la marca; se pintan solas el día que exista dónde ponerlas).
+ *   En tres     intuicion (tab: [monitoreo, tendencias, estrategia]) — la ÚNICA que
+ *               vive en varios, y escribe UNA DISTINTA en cada uno: el rival, el
+ *               mercado, la jugada. Antes había una sola (la de Mi Marca) que el
+ *               frontend copiaba a los otros tres tabs. Va en banda propia
+ *               (`aparte: true`), fuera de la rejilla, con el skin de la
+ *               Intuición de Mi Marca. Ver _renderIntuicionDelTab.
  *
  * SEGURIDAD: Vera lee posts, comentarios y web. TODO texto se escapa; aquí no
  * entra markup nunca. Un type desconocido se ignora (forward-compatible).
@@ -94,10 +100,28 @@
     busqueda_vs_voz:      { tab: 'monitoreo',  layout: 'indexadas', icon: 'search',    label: () => __('Te buscan o solo hablas'),  sub: () => __('La demanda se mueve meses antes que la venta') },
     supuesto_punto_ciego: { tab: 'monitoreo',  layout: 'fichas',    icon: 'eye-off',   label: () => __('Su supuesto y su punto ciego'), sub: () => __('Dónde se cree seguro y se equivoca') },
     proxima_movida:       { tab: 'monitoreo',  layout: 'fichas',    icon: 'compass',   label: () => __('Su próxima movida'),        sub: () => __('La apuesta, con la señal que la desmentiría') },
+    // ── La Intuición: vive en TRES tabs, una DISTINTA por tab ─────────────
+    // `aparte` = no entra en la rejilla de cards: es una banda propia, con el
+    // skin de la Intuición de Mi Marca (.vera-card--intuicion, acento de marca).
+    // Su rótulo y su subtítulo salen de INTU_TAB, porque el sujeto cambia.
+    intuicion:            { tab: ['monitoreo', 'tendencias', 'estrategia'], aparte: true, layout: 'intuicion', icon: 'sparkle', label: () => __('Intuición'), sub: () => '' },
     // ── Sin tablero asignado (se pintan cuando exista dónde) ───────────────
     recalibracion:        { tab: null,         layout: 'ensayo',  icon: 'refresh',       label: () => __('Qué cambió en mi cabeza'),  sub: () => __('La creencia que se me cayó') },
     humildad:             { tab: null,         layout: 'ensayo',  icon: 'help',          label: () => __('¿Qué no estoy viendo?'),    sub: () => __('Dónde se acaba mi lectura') },
     a2a_readiness:        { tab: null,         layout: 'ensayo',  icon: 'bot',           label: () => __('Legible para máquinas'),    sub: () => __('Si una IA comparara tu categoría, ¿te elegiría?') },
+  };
+
+  /* La Intuición es la MISMA lente en los tres tabs, pero NO el mismo sujeto:
+     el rival, el mercado, la jugada. Hasta el 2026-07-31 había una sola —la de
+     Mi Marca— y el frontend la copiaba al pie de los otros tres: el cliente leía
+     el mismo párrafo cuatro veces, justo en la única capa donde Vera dice lo que
+     un tablero no puede decir. El rótulo lo pone la pantalla (el contrato viaja
+     en claves estables, la pantalla en idioma).
+     Mi Marca NO está aquí: la suya es cards.v2 y la pinta BrandGrid en su Nivel 2. */
+  const INTU_TAB = {
+    monitoreo:  { kicker: () => __('Intuición sobre la competencia'), sub: () => __('El porqué del movimiento del rival que su tablero no dice') },
+    tendencias: { kicker: () => __('Intuición sobre el mercado'),     sub: () => __('Por qué esto se está moviendo ahora y no hace seis meses') },
+    estrategia: { kicker: () => __('Intuición sobre la jugada'),      sub: () => __('Lo que está en juego y todavía nadie ha nombrado') },
   };
 
   /* Tonos: los mismos cuatro del resto del tablero (.cgo-item hereda de aquí). */
@@ -171,6 +195,20 @@
        piden la última. Nunca lanza: sin lectura, devuelve null y no se pinta. */
     async _loadVera4(scope) {
       if (!this._supabase || !this._orgId) return null;
+      // La lectura del tab la piden DOS pintores: la rejilla de cards y la banda
+      // de Intuición. Sin este caché el tab consulta lo mismo dos veces por
+      // repintado. Vive por render (lo limpia _renderVera4 al empezar).
+      this._vera4Cache = this._vera4Cache || {};
+      const clave = scope === 'mi_marca' && typeof this._veraPeriodoActivo === 'function'
+        ? `mi_marca:${this._veraPeriodoActivo()}` : scope;
+      if (Object.prototype.hasOwnProperty.call(this._vera4Cache, clave)) return this._vera4Cache[clave];
+      const datos = await this._loadVera4Fresh(scope);
+      this._vera4Cache[clave] = datos;
+      return datos;
+    },
+
+    async _loadVera4Fresh(scope) {
+      if (!this._supabase || !this._orgId) return null;
       try {
         const base = () => this._supabase.from('vera_dashboard_readings')
           .select('reading, created_at, periodo')
@@ -202,13 +240,16 @@
        se cuelga al final de la página del tab. */
     async _renderVera4(body, scope, host) {
       if (!body) return;
+      this._vera4Cache = {};                     // repintado = lectura fresca
       let datos;
       try { datos = await this._loadVera4(scope); } catch (_) { return; }
       const destino = host || body.querySelector('.vera4');
       if (!datos) { if (destino) destino.innerHTML = ''; return; }
 
       this._vera4At = datos.createdAt || null;
-      const cards = datos.cards.filter((c) => c && VERA4[c.type] && VERA4[c.type].tab === scope);
+      // `aparte` queda fuera de la rejilla: la Intuición tiene banda propia.
+      const cards = datos.cards.filter((c) => c && VERA4[c.type]
+        && !VERA4[c.type].aparte && this._v4Cabe(c.type, scope));
       const html = cards.map((c) => this._vera4CardHtml(c)).filter(Boolean).join('');
       if (!html) { if (destino) destino.innerHTML = ''; return; }
 
@@ -235,6 +276,102 @@
       body.querySelectorAll('.vera4 [data-panel-marca]').forEach((el) => this._vestirPanelDeMarca?.(el));
       // Los instrumentos con canvas se pintan cuando el HTML ya está en el DOM.
       this._paintVera4Charts(body.querySelector('.vera4') || body);
+    },
+
+    /** El reparto: un type vive en UN tab, salvo la Intuición, que vive en tres
+        (una DISTINTA por tab — nunca la misma copiada). */
+    _v4Cabe(tipo, scope) {
+      const t = VERA4[tipo] && VERA4[tipo].tab;
+      return Array.isArray(t) ? t.includes(scope) : t === scope;
+    },
+
+    /* ══ LA INTUICIÓN DEL TAB ═══════════════════════════════════════════════
+       Cada tablero tiene la SUYA: en Competencia el sujeto es el rival, en
+       Tendencias el mercado, en Estrategia la jugada. (La de Mi Marca es
+       cards.v2 y la pinta BrandGrid dentro de su grid, en el Nivel 2.)
+
+       ANTES — y esto es lo que este método vino a matar — el frontend leía la
+       Intuición de `mi_marca` y la COPIABA al pie de los otros tres tabs: cuatro
+       pantallas distintas terminaban diciendo exactamente lo mismo, justo en la
+       única capa donde Vera dice lo que un tablero no puede decir.
+
+       Se pinta con el skin de siempre (.vera-card--intuicion, acento sólido del
+       color de la marca — NUNCA morado) para que se lea como la misma pieza del
+       sistema. Idempotente y silenciosa: sin card, no deja rastro; un fallo aquí
+       jamás tumba el tab. ═══════════════════════════════════════════════════ */
+    async _renderIntuicionDelTab(body, scope) {
+      if (!body) return;
+      const previa = body.querySelector('.vera-intu-tab');
+      let datos;
+      try { datos = await this._loadVera4(scope); } catch (_) { return; }
+      const card = datos && datos.cards.find((c) => c && c.type === 'intuicion');
+      if (!card || !this._v4Cabe('intuicion', scope)) { if (previa) previa.remove(); return; }
+      const html = this._v4IntuicionHtml(card, scope, datos.createdAt);
+      if (!html) { if (previa) previa.remove(); return; }
+
+      // Se anida en la página del tab si existe (hereda ancho y padding); si el
+      // tab está en blanco, se crea una .insight-page mínima.
+      let page = body.querySelector('.insight-page');
+      if (!page) {
+        page = document.createElement('div');
+        page.className = 'insight-page';
+        body.appendChild(page);
+      }
+      const wrap = document.createElement('div');
+      wrap.className = 'vera-cards vera-intu-tab';
+      wrap.innerHTML = html;
+      if (previa) previa.replaceWith(wrap); else page.appendChild(wrap);
+      try { this._acentuarIntuicion?.(wrap); } catch (_) {}
+    },
+
+    /* La card v4 → el molde visual de la Intuición. Los campos se convierten en
+       los bloques que ya sabe pintar el tablero (cita, comparación, veredicto):
+       así una Intuición de Competencia se ve idéntica a una de Mi Marca, que es
+       la idea — cambia el sujeto, no la pieza.
+       NO lleva el botón "volver a consultar": ese handler solo existe en Mi
+       Marca (_bindBrandGrid), y un botón que no hace nada es peor que ninguno. */
+    _v4IntuicionHtml(card, scope, createdAt) {
+      const esc = (s) => this._esc(s);
+      const meta = INTU_TAB[scope];
+      if (!meta || !card || !card.titulo) return '';
+      const blocks = [];
+
+      // De dónde parte: la pieza / el movimiento / la señal concreta. Es lo que
+      // separa una intuición de un horóscopo, así que abre la card.
+      if (card.de_donde) {
+        blocks.push({ type: 'quote', text: String(card.de_donde), source: card.lo_obvio ? String(card.lo_obvio) : '' });
+      }
+      // El porqué: el mecanismo que la cifra no trae.
+      if (card.el_porque) blocks.push({ type: 'markdown', markdown: String(card.el_porque) });
+      // Acierto vs. culpable a dos columnas: la card no condena todo junto.
+      if (card.acierto || card.culpable) {
+        const cols = [];
+        if (card.acierto)  cols.push({ side: 'pos', label: __('Lo que sí funcionó'), markdown: String(card.acierto) });
+        if (card.culpable) cols.push({ side: 'neg', label: __('El culpable'),        markdown: String(card.culpable) });
+        blocks.push({ type: 'split', columns: cols });
+      }
+      // La salida ejecutable. Si falta, la intuición quedó a medias — y se ve.
+      if (card.que_hago) {
+        blocks.push({ type: 'callout', tone: 'positive', icon: 'compass', title: __('Qué hacer con esto'), markdown: String(card.que_hago) });
+      }
+      if (!blocks.length) return '';
+
+      const inner = blocks.map((b, i) => this._veraBlockHtml(b, `intu-${scope}`, i)).join('');
+      const conf = card.confianza
+        ? `<span class="vera-card-conf">${esc(__('confianza {c}', { c: eti(card.confianza) }))}</span>` : '';
+      const iso = card.updated_at || createdAt || null;
+      const rel = (typeof this._veraHace === 'function') ? this._veraHace(iso) : '';
+      const pie = rel ? `<span class="vera-card-fecha">${esc(__('Última actualización {d}', { d: rel }))}</span>` : '';
+
+      return `
+        <section class="vera-card vera-card--intuicion" data-tone="neutral" data-v4="intuicion"
+                 data-nuevo-id="${esc(this._nid ? this._nid('v4intu', scope) : 'intu')}">
+          <span class="vera-card-kind"><i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>${esc(meta.kicker())}</span>
+          <h3 class="vera-card-title">${esc(card.titulo)}</h3>
+          <p class="vera-card-sub">${esc(meta.sub())}</p>
+          <div class="vera-card-body">${inner}</div>
+          ${conf}${pie}
+        </section>`;
     },
 
     /* ── Plantillas ───────────────────────────────────────────────────────── */

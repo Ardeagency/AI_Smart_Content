@@ -38,7 +38,9 @@
         // Señales débiles, la Triangulación… Se cuelgan dentro de la página que
         // dejó _renderTendFechasOnly; si no hay lectura, no dejan rastro.
         await this._renderVera4?.(body, 'tendencias');
-        await this._renderIntuicionUniversal?.(body);   // Intuición de Vera (misma que Mi Marca)
+        // Su propia Intuición: por qué el mercado se mueve AHORA. No la de Mi
+        // Marca copiada — eso hacía que los cuatro tabs dijeran lo mismo.
+        await this._renderIntuicionDelTab?.(body, 'tendencias');
         return;
       }
       await this._ensureTendenciasService();

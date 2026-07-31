@@ -125,10 +125,88 @@ describe('reparto — cada card vive en el tab que le toca', () => {
     });
   });
 
-  test('el catálogo tiene exactamente las 48 cards (30 del documento + 6 Competencia + 7 Mi Marca + 5 Tendencias)', () => {
+  test('el catálogo tiene exactamente las 49 cards (30 del documento + 6 Competencia + 7 Mi Marca + 5 Tendencias + la Intuición)', () => {
     const tipos = [...FUENTE.matchAll(/^\s{4}([a-z_0-9]+):\s+\{ tab:/gm)].map((m) => m[1]);
-    expect(tipos).toHaveLength(48);
-    expect(new Set(tipos).size).toBe(48);        // sin duplicados
+    expect(tipos).toHaveLength(49);
+    expect(new Set(tipos).size).toBe(49);        // sin duplicados
+  });
+});
+
+/* La Intuición es la ÚNICA card que vive en varios tabs, y ahí está el defecto
+   que vino a arreglar: hasta el 2026-07-31 había UNA sola —la de Mi Marca— y el
+   frontend la copiaba al pie de los otros tres. Cuatro tableros distintos decían
+   exactamente lo mismo. Si alguien vuelve a colapsarlas en una, esto se cae. */
+describe('la Intuición: una por tab, nunca la misma copiada', () => {
+  const vista = cargarVista();
+  /* _veraBlockHtml vive en BrandGrid (todos los mixins comparten prototype).
+     Aquí se sustituye por lo MÍNIMO que promete su contrato —escapar todo texto
+     de terceros— para probar la Intuición sin arrastrar el mixin entero; su
+     escapado real lo prueba la suite de BrandGrid. */
+  vista._veraBlockHtml = function (b) {
+    const esc = (s) => this._esc(s);
+    const plano = (o) => Object.values(o || {}).flatMap((v) => {
+      if (typeof v === 'string') return [esc(v)];
+      if (Array.isArray(v)) return v.map(plano);
+      return [];
+    });
+    return `<div>${plano(b).join(' ')}</div>`;
+  };
+  const INTU = {
+    titulo: 'El carrusel no falló por el tema',
+    de_donde: 'El carrusel infográfico del rival del 24/07',
+    lo_obvio: '40% menos interacción que su media',
+    el_porque: 'Esta audiencia consume momentos vivos, no láminas de datos.',
+    acierto: 'La alianza le da autoridad',
+    culpable: 'El formato, no la alianza',
+    que_hago: 'Un Reel del equipo en el sitio, con el nervio de antes y la energía de después',
+    confianza: 'media',
+  };
+
+  test('vive en los tres tabs y NO en Mi Marca (allí es cards.v2)', () => {
+    ['monitoreo', 'tendencias', 'estrategia'].forEach((s) => {
+      expect(vista._v4Cabe('intuicion', s), `debería caber en ${s}`).toBe(true);
+    });
+    expect(vista._v4Cabe('intuicion', 'mi_marca')).toBe(false);
+  });
+
+  test('cada tab la rotula con SU sujeto: el rival, el mercado, la jugada', () => {
+    const rotulo = (s) => vista._v4IntuicionHtml(INTU, s, null);
+    const comp = rotulo('monitoreo'), tend = rotulo('tendencias'), estr = rotulo('estrategia');
+    expect(comp).toContain('competencia');
+    expect(tend).toContain('mercado');
+    expect(estr).toContain('jugada');
+    // Si dos tabs pintaran el mismo encabezado, volvimos al defecto original.
+    expect(new Set([comp, tend, estr]).size).toBe(3);
+  });
+
+  test('pinta el skin de la Intuición, no el marco de las demás cards', () => {
+    const html = vista._v4IntuicionHtml(INTU, 'monitoreo', null);
+    expect(html).toContain('vera-card--intuicion');
+    expect(html).not.toContain('v4-card');
+    // El botón "volver a consultar" solo tiene handler en Mi Marca: aquí sería
+    // un botón muerto.
+    expect(html).not.toContain('data-vera-recheck');
+  });
+
+  test('sin título o sin cuerpo no deja marco huérfano', () => {
+    expect(vista._v4IntuicionHtml({}, 'monitoreo', null)).toBe('');
+    expect(vista._v4IntuicionHtml({ titulo: 'solo el título' }, 'monitoreo', null)).toBe('');
+    expect(vista._v4IntuicionHtml(INTU, 'mi_marca', null)).toBe('');   // tab sin rótulo
+  });
+
+  test('queda FUERA de la rejilla: tiene banda propia', () => {
+    const linea = FUENTE.split('\n').find((l) => /^\s{4}intuicion:\s/.test(l));
+    expect(linea).toContain('aparte: true');
+    expect(linea).toMatch(/tab: \['monitoreo', 'tendencias', 'estrategia'\]/);
+  });
+
+  test('escapa el texto de terceros', () => {
+    const veneno = '<img src=x onerror=alert(1)>';
+    const html = vista._v4IntuicionHtml(
+      Object.fromEntries(Object.entries(INTU).map(([k, v]) => [k, k === 'confianza' ? v : veneno])),
+      'monitoreo', null);
+    expect(html).not.toContain('<img src=x');
+    expect(html).toContain('&lt;img');
   });
 });
 

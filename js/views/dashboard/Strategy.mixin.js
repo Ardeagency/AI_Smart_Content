@@ -29,10 +29,11 @@
       if (this._renderVeraTabBody) {
         await this._renderVeraTabBody(body, 'estrategia');
         // Cards del cerebro (cards.vera4) del scope estrategia: La decisión de
-        // hoy, En el horno, Lo que recomendé y qué pasó… Es el tab que estrenan:
-        // hoy solo pinta la Intuición reusada. Sin lectura, sigue igual.
+        // hoy, En el horno, Lo que recomendé y qué pasó… Sin lectura, sigue igual.
         await this._renderVera4?.(body, 'estrategia');
-        await this._renderIntuicionUniversal?.(body);   // Intuición de Vera (misma que Mi Marca)
+        // Su propia Intuición: lo que se está jugando de verdad en la decisión.
+        // No la de Mi Marca copiada — eso hacía que los cuatro tabs dijeran lo mismo.
+        await this._renderIntuicionDelTab?.(body, 'estrategia');
         return;
       }
       await this._ensureStrategiaService();

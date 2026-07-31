@@ -90,58 +90,16 @@
       return true;
     },
 
-    /* ── Intuición de Vera, transversal a los 4 tabs ──────────────────────────
-       La Intuición ("ver más allá de lo obvio": el alma emocional de la
-       audiencia + el formato que la enamora) es UNA sola lectura de la marca,
-       no cambia según el tab. Vera la escribe en la lectura `mi_marca`
-       (schema cards.v2); aquí la reusamos tal cual para pintarla al pie de
-       Competencia, Tendencias y Estrategia. Mi Marca ya la coloca dentro de su
-       propio grid (BrandGrid), así que ese tab NO llama a esta función.
-       Reutiliza el mismo _veraCardHtml/_acentuarIntuicion/CSS de BrandGrid
-       (todos los mixins comparten prototype). Idempotente y nunca lanza: un
-       fallo aquí jamás tumba el tab. ─────────────────────────────────────── */
-    async _renderIntuicionUniversal(body) {
-      if (!body || !this._orgId || !this._supabase) return;
-      if (body.querySelector('.vera-intu-universal')) return;   // ya pintada en este render
-      /* La lectura mi_marca existe ahora en cuatro versiones, una por periodo del
-         filtro de Mi Marca. Estos tabs no tienen ese filtro, asi que se ancla al
-         periodo por defecto ('month'): sin anclar se traeria la ultima escrita,
-         que es la de un periodo cualquiera segun el orden en que Vera las
-         entrego. Respaldo a la mas reciente si ese periodo aun no existe. */
-      let reading = null;
-      try {
-        const base = () => this._supabase.from('vera_dashboard_readings')
-          .select('reading, periodo')
-          .eq('organization_id', this._orgId).eq('scope', 'mi_marca').eq('status', 'published')
-          .eq('schema_version', 2)          // cards.v2: la Intuicion vive ahi
-          .order('created_at', { ascending: false }).limit(1);
-        const { data } = await base().eq('periodo', 'month');
-        let fila = (data && data[0]) ? data[0] : null;
-        if (!fila) {
-          const { data: fallback } = await base();
-          fila = (fallback && fallback[0]) ? fallback[0] : null;
-        }
-        reading = fila ? fila.reading : null;
-      } catch (_) { return; }
-      const cards = (reading && reading.schema === 'cards.v2' && Array.isArray(reading.cards)) ? reading.cards : [];
-      const intu = cards.find((c) => c && c.type === 'intuicion');
-      if (!intu || typeof this._veraCardHtml !== 'function') return;
-      // Se anida en la página del tab si existe (hereda ancho/padding); si el tab
-      // está en blanco, se crea una .insight-page mínima para no quedar al borde.
-      let page = body.querySelector('.insight-page');
-      if (!page) {
-        page = document.createElement('div');
-        page.className = 'insight-page';
-        body.appendChild(page);
-      }
-      const wrap = document.createElement('div');
-      wrap.className = 'vera-cards vera-intu-universal';
-      wrap.innerHTML = this._veraCardHtml(intu, 'intu', false);
-      page.appendChild(wrap);
-      try { this._acentuarIntuicion(wrap); } catch (_) {}
-      try { wrap.querySelectorAll('[data-panel-marca]').forEach((el) => this._vestirPanelDeMarca(el)); } catch (_) {}
-      try { await this._ensureChartJs(); this._paintVeraCharts(wrap, [{ card: intu, key: 'intu' }]); } catch (_) {}
-    },
+    /* ── La Intuición YA NO SE COPIA de Mi Marca (2026-07-31) ────────────────
+       Aquí vivía `_renderIntuicionUniversal`: leía la Intuición de la lectura
+       `mi_marca` (cards.v2) y la pintaba tal cual al pie de Competencia,
+       Tendencias y Estrategia. La consecuencia era que cuatro tableros distintos
+       terminaban diciendo exactamente lo mismo, justo en la única capa donde
+       Vera dice lo que un tablero no puede decir.
+       Ahora cada tab escribe y pinta LA SUYA: mismo método, sujeto distinto —
+       el rival, el mercado, la jugada. Vive en `cards.vera4` (una card
+       `intuicion` por scope) y la pinta Vera4.mixin.js → _renderIntuicionDelTab.
+       Mi Marca conserva la suya en cards.v2, dentro de su grid. ────────────── */
 
     /* ── FORMATO LIBRE: Vera diseñó esto — el frontend solo lo hospeda.
        HTML → iframe sandbox (scripts aislados, sin acceso a la app/sesión:
