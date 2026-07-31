@@ -669,6 +669,12 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
    ancla en absoluto para que ninguna regla heredada le devuelva altura propia. */
 .cads-media { position: relative; aspect-ratio: 1 / 1; background: rgba(0, 0, 0, 0.35); overflow: hidden; }
 .cads-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+/* El fade global (img.is-loaded -> imgFadeIn) arranca en opacity:0 con
+   fill-mode none. Si el reloj de esa animacion no corre —pestana en segundo
+   plano, que es justo como se abre un tablero que se deja "para despues"— la
+   imagen se queda en el primer fotograma: invisible. En una galeria que ES la
+   imagen, eso vacia la seccion entera. Mismo antidoto que .pdeck-card. */
+.cads-img.is-loaded { opacity: 1; animation: none; }
 .cads-img--vacia {
   display: flex; align-items: center; justify-content: center;
   color: var(--text-muted, rgba(212, 209, 216, 0.35)); font-size: 1.4rem;
