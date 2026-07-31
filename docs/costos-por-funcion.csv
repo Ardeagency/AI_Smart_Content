@@ -1,0 +1,27 @@
+funcion,que_la_dispara,costo_unitario_usd,unidad,peor_caso_usd,veces_por_marca_mes,costo_mes_marca_usd,instrumentada,notas
+flow_execution,Produccion de una pieza (flujo n8n/Comfy),4.98000,por ejecucion,5.0000,2,9.96,si,Lo mas caro por evento de toda la plataforma
+apify_scrape,Scraping de un perfil monitoreado,0.08186,por corrida,0.4600,382,31.27,si,382 corridas/marca/mes medidas: el mayor gasto acumulado
+claude_tokens,Razonamiento de Vera (sesion OpenClaw),0.32879,por sesion,1.0014,20,6.58,si,Estimado cuando la org no tiene proxy midiendo
+visibility_probe,Sondeo de visibilidad en motores IA,0.68990,por sondeo,1.3932,4,2.76,si,El segundo mas caro por evento
+vera_dashboard_reading,Lectura de un tablero por Vera,0.13929,por lectura,0.2420,12,1.67,si,4 tabs x 3 ciclos/mes
+vera_chat,Respuesta de Vera en el chat,0.06658,por mensaje,0.4648,200,13.32,si,Depende del uso humano: es la mas variable
+vera_brief_generation,Brief estrategico,0.05983,por brief,0.0751,4,0.24,si,
+claude_describe,Vision: describir una imagen,0.00773,por imagen,0.0510,300,2.32,si,Volumen alto y costo bajo
+meta_ads_library_query,Consulta a la Biblioteca de Anuncios,0.00594,por consulta,0.0090,4,0.02,si,Reemplazada por el actor de Apify (0.00075/anuncio)
+pattern_llm_classify,Clasificacion de patron,0.00186,por item,0.0026,250,0.47,si,
+cmo_brief,Brief de CMO,0.00351,por brief,0.0059,4,0.01,si,
+scraper_facebook,Scraping Facebook (25 posts),0.00500,por resultado,,,,si,0.125 por corrida de 25
+scraper_youtube,Scraping YouTube (25 items),0.00400,por resultado,,,,si,0.100 por corrida de 25
+scraper_tiktok,Scraping TikTok (25 items),0.00370,por resultado,,,,si,+0.001 de arranque
+scraper_instagram,Scraping Instagram (25 posts),0.00270,por resultado,,,,si,0.0675 por corrida de 25
+scraper_x,Scraping X/Twitter (25 items),0.00025,por resultado,,,,si,El scraper mas barato
+meta_ad_library_apify,Anuncios de la competencia (Apify),0.00075,por anuncio,,40,0.03,si,Barrido semanal x 3 competidores
+mission_generation,Tic interno de misiones,0.00000,por corrida,,1525,0.00,NO,1525 corridas/marca/mes de 0.2s: sin costo LLM medido
+meta_own_ads_sync,Anuncios propios (Graph API),0.00000,por corrida,,30,0.00,NO,API propia de Meta: sin costo por llamada
+meta_page_insights,Metricas de pagina Meta,0.00000,por corrida,,72,0.00,NO,API propia: sin costo
+trends_keywords,Palabras en ascenso (SerpApi),,por corrida,,25,,NO,SerpApi: costo por consulta NO instrumentado
+tavily_search,Investigacion web de Vera,,por busqueda,,,,NO,Tavily: NO instrumentado
+serpapi_trends,Google Trends,,por consulta,,,,NO,SerpApi: NO instrumentado
+embeddings,Vectorizacion pgvector,,por documento,,,,NO,OpenAI text-embedding-3-small: NO instrumentado
+vera_session_audit,Sesiones de cards de Vera,0.02386,por sesion,,114,2.72,PARCIAL,Mide est_cost_usd pero NO escribe credit_usage
+strategic_recommendations,Recomendaciones estrategicas,0.03278,por recomendacion,,36,1.18,PARCIAL,Mide generation_cost_usd pero NO escribe credit_usage
