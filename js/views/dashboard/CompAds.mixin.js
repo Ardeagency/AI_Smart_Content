@@ -211,7 +211,8 @@
       /* Si el archivado en R2 falló, creative_url quedó apuntando a la CDN de
          Meta — y esa caduca. Mismo patrón que .cgp-post-thumb: nunca el icono
          roto del navegador, siempre el glifo sobre superficie neutra.
-         En captura porque `error` de <img> no burbujea. */
+         El listener va en fase de CAPTURA porque el evento `error` de una
+         imagen no burbujea. */
       body.addEventListener('error', (e) => {
         const img = e.target;
         if (!img || img.tagName !== 'IMG' || !img.classList.contains('cads-img')) return;
