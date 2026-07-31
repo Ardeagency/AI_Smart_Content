@@ -29,6 +29,7 @@
       if (!body) return;
       if (!this._orgId) { this._renderEmptyOrgState?.(body); return; }
       await this._renderCompGrid?.(body);
+      await this._renderCompAds?.(body);              // los anuncios que tienen corriendo
       await this._renderIntuicionUniversal?.(body);   // la misma lectura de Mi Marca
     },
   });
