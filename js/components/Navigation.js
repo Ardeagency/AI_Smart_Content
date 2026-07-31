@@ -3378,6 +3378,11 @@ class Navigation {
     const supabase = await this.getSupabase();
     if (!supabase) return;
 
+    // ANTES del guard de currentOrgId: en las rutas cortas ese guard hace
+    // return temprano, y el paywall no puede depender de por dónde entró el
+    // usuario. El propio método resuelve la org por su cuenta.
+    this.revisarMensualidad();
+
     try {
       if (!this.currentOrgId) {
         const typeEl = document.getElementById('navOrgType');
@@ -3429,10 +3434,6 @@ class Navigation {
       this.loadBrandContainersCount();
       // Calcular y renderear el botón "Upgrade to X" del footer del sidebar
       this.loadUpgradeTarget();
-      // Estado de la mensualidad: banner en gracia, muro si está vencida.
-      // Aquí y no en el router porque este es el punto donde la org ya está
-      // resuelta, y el muro tiene que poder aparecer en CUALQUIER pantalla.
-      this.revisarMensualidad();
     } catch (err) {
       console.error('Error loading organization info:', err);
     }
