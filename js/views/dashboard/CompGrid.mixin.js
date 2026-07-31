@@ -103,6 +103,10 @@
       return `
         <div class="cgrid">
           <div class="cgrid-col">
+          <!-- La Intuición abre el tablero, igual que en los otros tres: primero
+               el porqué del rival que su tablero no dice, después las cifras que
+               lo sostienen. Se colapsa sola si Vera no la escribió. -->
+          <div class="bgrid-intuicion" id="cgridIntuicion"></div>
           <section class="bgrid-card glass-black cgrid-card--influencia">
             <header class="bgrid-card-head">
               <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--chart-bar" aria-hidden="true"></i>${this._esc(__('Influencia digital'))}</span>

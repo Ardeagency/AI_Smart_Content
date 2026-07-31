@@ -148,6 +148,17 @@
       return `
         <div class="bgrid">
           <div class="bgrid-col">
+            <!-- LA INTUICIÓN ABRE EL TABLERO (2026-07-31). Arriba del todo en la
+                 columna izquierda, ENCIMA de Interacciones: primero lo que Vera
+                 ve y nadie más puede decir, después las cifras que lo sostienen.
+                 Es la misma decisión que en los otros tres tabs — la Intuición es
+                 lo primero de cada tablero, no un cierre.
+                 Va sin superficie ni bordes a propósito: no es una card, es la voz
+                 de Vera sobre el fondo del tablero. Ver css .vera-card--intuicion.
+                 VIVE EN ESTA COLUMNA, no como fila full-width: si fuera fila, la
+                 columna derecha (Tráfico) empezaría más abajo y quedaría media
+                 página muerta arriba. -->
+            <div class="bgrid-intuicion" id="bgridIntuicion"></div>
             <section class="bgrid-card glass-black bgrid-card--latidos">
               <header class="bgrid-card-head">
                 <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--fire" aria-hidden="true"></i>${this._esc(__('Interacciones'))}</span>
@@ -155,17 +166,6 @@
               <p class="bgrid-card-sub">${this._esc(__('Cuántas interacciones producen tus redes por periodo · toca una barra para ver ese día'))}</p>
               <div class="bgrid-chart-wrap bgrid-chart-wrap--latidos"><canvas id="bgridLatidosChart"></canvas><div class="bgrid-empty" id="bgridLatidosEmpty" hidden>${this._esc(__('Sin señal de impacto en este periodo'))}</div></div>
             </section>
-            <!-- NIVEL 2 de la jerarquía (pirámide invertida): tras el veredicto de
-                 salud, la LECTURA de Vera lidera el resto. La Intuición va JUSTO
-                 bajo Interacciones y ENCIMA de Fortalezas/Debilidades: se lee el
-                 pulso, e inmediatamente lo que ese pulso significa para el alma de
-                 la audiencia. Las fortalezas y debilidades vienen después, ya como
-                 desglose. (Antes cerraba la página; luego quedó bajo el par.)
-                 VIVEN EN ESTA COLUMNA, no como filas full-width: si fueran filas
-                 tendrían que esperar a que termine la columna más alta, y una
-                 Observaciones con varios items las empujaba hacia abajo dejando
-                 media página muerta a la derecha. Aquí fluyen junto al análisis. -->
-            <div class="bgrid-intuicion" id="bgridIntuicion"></div>
             <div class="bgrid-vd" id="bgridVD"></div>
             <div class="bgrid-vera" id="bgridVera"></div>
           </div>
@@ -731,8 +731,8 @@
           if (f) obsFecha.title = __('Última actualización {d}', { d: f.exacta });
         }
       }
-      // NIVEL 2 — la Intuición lidera la lectura de Vera (justo tras el veredicto
-      // de salud, encima de Algoritmo/Audiencias). Banda full-width propia.
+      // LA INTUICIÓN ABRE EL TABLERO: primera pieza de la columna izquierda,
+      // encima de Interacciones. Su hueco se colapsa solo si Vera no la escribió.
       const intuHost = body.querySelector('#bgridIntuicion');
       if (intuHost) {
         const intuHtml = intuItems.map((x) => this._veraCardHtml(x.card, x.key)).join('');

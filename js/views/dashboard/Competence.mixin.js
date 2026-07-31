@@ -29,9 +29,12 @@
     async _renderCompetence(body) {
       if (!body) return;
       if (!this._orgId) { this._renderEmptyOrgState?.(body); return; }
+      // La Intuición ABRE el tab (hueco reservado arriba en la columna
+      // izquierda), así que se pinta antes que nada: si tarda, no deja el resto
+      // esperando — el hueco ya está en el shell y se colapsa vacío.
       await this._renderCompGrid?.(body);
-      await this._renderCompAds?.(body);                          // los anuncios que tienen corriendo
       await this._renderIntuicionDelTab?.(body, 'monitoreo');     // la SUYA: el porqué del rival
+      await this._renderCompAds?.(body);                          // los anuncios que tienen corriendo
     },
   });
 })();

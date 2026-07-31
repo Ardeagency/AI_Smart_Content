@@ -124,6 +124,17 @@
     estrategia: { kicker: () => __('Intuición sobre la jugada'),      sub: () => __('Lo que está en juego y todavía nadie ha nombrado') },
   };
 
+  /* Dónde abre la Intuición en cada tablero. El PRIMER selector es su hueco
+     reservado en el shell del tab (si existe, se llena y nada más se mueve); los
+     siguientes son la columna izquierda donde se inserta como primer hijo cuando
+     el tab no tiene shell propio. Mi Marca no está aquí: su hueco es
+     #bgridIntuicion y lo llena BrandGrid con la card cards.v2. */
+  const INTU_HUECO = {
+    monitoreo:  ['#cgridIntuicion'],
+    tendencias: [null, '.tend-main', '.insight-page'],
+    estrategia: [null, '.insight-page'],
+  };
+
   /* Tonos: los mismos cuatro del resto del tablero (.cgo-item hereda de aquí). */
   const TONO = {
     opportunity: 'opp', oportunidad: 'opp', positive: 'opp', alta_positiva: 'opp',
@@ -295,10 +306,16 @@
        pantallas distintas terminaban diciendo exactamente lo mismo, justo en la
        única capa donde Vera dice lo que un tablero no puede decir.
 
-       Se pinta con el skin de siempre (.vera-card--intuicion, acento sólido del
-       color de la marca — NUNCA morado) para que se lea como la misma pieza del
-       sistema. Idempotente y silenciosa: sin card, no deja rastro; un fallo aquí
-       jamás tumba el tab. ═══════════════════════════════════════════════════ */
+       DÓNDE VA: arriba del todo, en la columna izquierda de cada tablero — la
+       misma posición que en Mi Marca. Primero lo que Vera ve y nadie más puede
+       decir; después las cifras que lo sostienen. Competencia tiene hueco
+       reservado en su shell (#cgridIntuicion); Tendencias y Estrategia no tienen
+       shell propio, así que se inserta como PRIMER hijo de su columna.
+
+       Se pinta sin superficie ni bordes (ver .vera-card--intuicion): no es una
+       card con marco, es la voz de Vera sobre el fondo del tablero. Idempotente y
+       silenciosa: sin card, no deja rastro; un fallo aquí jamás tumba el tab.
+       ═══════════════════════════════════════════════════════════════════════ */
     async _renderIntuicionDelTab(body, scope) {
       if (!body) return;
       const previa = body.querySelector('.vera-intu-tab');
@@ -309,18 +326,29 @@
       const html = this._v4IntuicionHtml(card, scope, datos.createdAt);
       if (!html) { if (previa) previa.remove(); return; }
 
-      // Se anida en la página del tab si existe (hereda ancho y padding); si el
-      // tab está en blanco, se crea una .insight-page mínima.
-      let page = body.querySelector('.insight-page');
-      if (!page) {
-        page = document.createElement('div');
-        page.className = 'insight-page';
-        body.appendChild(page);
-      }
       const wrap = document.createElement('div');
       wrap.className = 'vera-cards vera-intu-tab';
       wrap.innerHTML = html;
-      if (previa) previa.replaceWith(wrap); else page.appendChild(wrap);
+
+      const hueco = INTU_HUECO[scope] || [];
+      const reservado = hueco[0] ? body.querySelector(hueco[0]) : null;
+      if (reservado) {
+        // Hueco propio en el shell del tab: se llena y nada más se mueve.
+        reservado.innerHTML = '';
+        reservado.appendChild(wrap);
+      } else {
+        // Sin hueco: primer hijo de la columna izquierda. Si el tab está en
+        // blanco, se crea una .insight-page mínima para no quedar al borde.
+        let col = null;
+        for (const sel of hueco.slice(1)) { col = body.querySelector(sel); if (col) break; }
+        if (!col) {
+          col = document.createElement('div');
+          col.className = 'insight-page';
+          body.insertBefore(col, body.firstChild);
+        }
+        if (previa) previa.remove();
+        col.insertBefore(wrap, col.firstChild);
+      }
       try { this._acentuarIntuicion?.(wrap); } catch (_) {}
     },
 
