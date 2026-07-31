@@ -728,6 +728,11 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
 .cads-punto { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
 /* Verde = lo constatamos vivo en el último barrido. No es el flag de Meta. */
 .cads-hover-estado.is-vivo { color: #3ecf8e; }
+/* Solo en la galería PROPIA (Mi Marca): un anuncio rechazado o con problemas no
+   es un anuncio pausado. Pausarlo fue una decisión; esto es plata detenida por
+   algo que se puede arreglar, y no debe disfrazarse de lo primero. De un rival
+   nunca se va a poder saber esto. */
+.cads-hover-estado.is-alerta { color: #f0857d; }
 
 /* Detalle del anuncio */
 .cads-modal-img { width: 100%; border-radius: 12px; margin-bottom: 0.9rem; display: block; }
