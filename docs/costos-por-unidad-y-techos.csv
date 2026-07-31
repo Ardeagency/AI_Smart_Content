@@ -1,0 +1,30 @@
+bloque,unidad,detalle,costo_mes_usd,como_se_calcula,techo_o_cuota,que_pasa_al_llegar_al_techo,riesgo
+PERFIL MONITOREADO,1 perfil de Instagram,Scraping 28 corridas/mes x 25 posts,1.89,28 x 25 x 0.0027,Apify: sin techo (se paga por uso),Sigue cobrando,bajo
+PERFIL MONITOREADO,1 perfil de Instagram,Vision: describir ~35 imagenes nuevas,0.27,35 x 0.00773,Sin techo,Sigue cobrando,bajo
+PERFIL MONITOREADO,1 perfil de Instagram,Clasificacion de patrones,0.07,35 x 0.00186,Sin techo,Sigue cobrando,bajo
+PERFIL MONITOREADO,1 perfil de Instagram,Almacenamiento del media generado,0.0003,35 thumbs x 0.48 MB a 0.015/GB,10 GB gratis,Empieza a cobrar 0.015/GB,despreciable
+PERFIL MONITOREADO,1 perfil de INSTAGRAM,TOTAL,2.23,suma de lo anterior,,,
+PERFIL MONITOREADO,1 perfil de FACEBOOK,TOTAL (scraping 0.005/resultado),3.84,28 x 25 x 0.005 + vision + clasif,,,El scraper mas caro
+PERFIL MONITOREADO,1 perfil de TIKTOK,TOTAL (0.0037 + arranque),2.96,28 x (25 x 0.0037 + 0.001) + extras,,,
+PERFIL MONITOREADO,1 perfil de YOUTUBE,TOTAL (0.004/resultado),3.14,28 x 25 x 0.004 + extras,,,
+PERFIL MONITOREADO,1 perfil de X,TOTAL (0.00025/resultado),0.52,28 x 25 x 0.00025 + extras,,,El mas barato
+PERFIL MONITOREADO,Promedio real medido,Todas las plataformas mezcladas,2.60,31.27 de apify / ~12 perfiles por marca,,,Cuadra con lo medido
+ALMACENAMIENTO,Bucket R2 hoy,"1.672 objetos, 800,96 MB (0,78 GB)",0.00,Dentro del free tier,10 GB gratis / mes,Cobra 0.015 por GB,ninguno hoy
+ALMACENAMIENTO,Escritura de objetos,1.672 writes acumulados,0.00,Class A,1 millon gratis / mes,4.50 por millon,ninguno
+ALMACENAMIENTO,Lectura de objetos,Cada vez que se pinta una galeria,0.00,Class B,10 millones gratis / mes,0.36 por millon,ninguno
+ALMACENAMIENTO,Egreso (ancho de banda),Servir imagenes al navegador,0.00,R2 no cobra egreso,SIN LIMITE,Sigue en cero,ninguno — es la ventaja de R2 sobre S3
+ALMACENAMIENTO,Por marca al mes,~0.39 GB acumulados en 1 mes,0.006,0.39 GB x 0.015,,,
+ALMACENAMIENTO,Proyeccion 26 marcas,Cuando se rompe el free tier,0.00,26 x 0.39 GB = 10 GB,Ahi empieza a cobrar,~0.15/mes a 36 marcas,despreciable incluso a escala
+ALMACENAMIENTO,Supabase (brand_assets),0,57 MB en total,0.00,storage_usage,Segun plan,Cobra por GB,bajo — pero NO ve R2
+API GRATIS,Meta Graph (posts e insights),No cobra por llamada,0.00,-,200 llamadas/hora POR CUENTA IG,Se frena la ingesta de esa marca,medio
+API GRATIS,Meta Marketing (anuncios),No cobra por llamada,0.00,-,60 PUNTOS con Development Access,"Bloqueo temporal. Standard Access da 9.000 pero exige App Review",ALTO al escalar
+API GRATIS,Shopify Admin,No cobra por llamada,0.00,-,1.000 puntos/minuto por tienda,Se frena esa tienda,bajo
+API GRATIS,Google Ads,No cobra por llamada,0.00,-,2.880 operaciones/dia con Explorer Access,"Se corta el dia. Basic Access sube a 15.000",medio
+API GRATIS,GA4 Data,No cobra por llamada,0.00,-,Cuotas por propiedad,Se frena esa propiedad,bajo
+API GRATIS,TikTok,No cobra por llamada,0.00,-,Cuotas por app,Se frena,bajo
+CUOTA CRITICA,SerpApi (Google Trends),Plan FREE,0.00,-,250 CONSULTAS AL MES PARA TODA LA PLATAFORMA,"Tendencias deja de ver el mercado. Vigilar 5 terminos a diario ya son 150",EL MAS APRETADO
+INFRAESTRUCTURA,Servidor ai-engine,Hetzner CCX33 (30 GB RAM),,Costo fijo mensual,-,-,NO esta en el ledger
+INFRAESTRUCTURA,VM por organizacion,Una por cliente con Vera dedicada,,Costo fijo POR CLIENTE,-,-,Escala lineal con clientes: el mayor costo fijo
+INFRAESTRUCTURA,Servidor content-flows,Hetzner,,Costo fijo mensual,-,-,NO esta en el ledger
+INFRAESTRUCTURA,Supabase,Base de datos + storage,,Costo fijo + uso,-,-,NO esta en el ledger
+INFRAESTRUCTURA,Netlify,Hosting del frontend,,Costo fijo mensual,-,-,NO esta en el ledger
