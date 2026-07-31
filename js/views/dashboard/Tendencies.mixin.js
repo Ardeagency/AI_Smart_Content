@@ -38,6 +38,7 @@
         // Señales débiles, la Triangulación… Se cuelgan dentro de la página que
         // dejó _renderTendFechasOnly; si no hay lectura, no dejan rastro.
         await this._renderVera4?.(body, 'tendencias');
+        await this._renderPropuestasFecha?.(body);   // pegada al calendario
         // Su propia Intuición: por qué el mercado se mueve AHORA. No la de Mi
         // Marca copiada — eso hacía que los cuatro tabs dijeran lo mismo.
         await this._renderIntuicionDelTab?.(body, 'tendencias');
@@ -268,8 +269,12 @@
         ${this._buildTendBrands(data?.brands?.data)}`;
       // Con fechas -> layout 2 columnas (cuerpo + sidebar "Proximas Fechas", igual
       // que Mi Marca/Competencia). Sin fechas -> cuerpo a ancho completo.
+      // Bajo el calendario va el hueco de "Propuestas de oportunidad": la card
+      // la escribe Vera (cards.vera4, tipo propuestas_fecha) y necesita la
+      // fecha al lado para significar algo. Sin aside no hay hueco: una
+      // propuesta sin su ocasión es una idea suelta.
       const body = aside
-        ? `<div class="mb-layout"><div class="tend-main">${main}</div><aside class="mb-layout-aside">${aside}</aside></div>`
+        ? `<div class="mb-layout"><div class="tend-main">${main}</div><aside class="mb-layout-aside">${aside}<div id="tendPropuestas"></div></aside></div>`
         : main;
       return `
         <div class="insight-page mb-dash" id="tendPage">

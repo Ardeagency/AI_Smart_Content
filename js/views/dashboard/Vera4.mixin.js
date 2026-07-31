@@ -15,7 +15,7 @@
  *   Mi Marca    silencio · latencia · impacto_vs_ruido · emocion_objetivo ·
  *               viabilidad_comercial · ritmo · autopsia · victoria_explicada · causalidad
  *   Competencia anomalia · error_ajeno
- *   Tendencias  pulso_nicho · senal_debil · triangulacion · tension · timing · lo_que_falta
+ *   Tendencias  pulso_nicho · senal_debil · triangulacion · tension · lo_que_falta
  *   Estrategia  decision_del_dia · autoridad_adn · puerta_aprobacion · produccion_viva ·
  *               pieza_asombro · formato · cadena_portafolio · verificacion ·
  *               brief_humano · bucle_outcome
@@ -58,8 +58,10 @@
     senal_debil:          { tab: 'tendencias', layout: 'fichas',  icon: 'wind',          label: () => __('Señales débiles'),          sub: () => __('Lo que todavía nadie nombró') },
     triangulacion:        { tab: 'tendencias', layout: 'triang',  icon: 'layers',        label: () => __('Triangulación'),            sub: () => __('Tres señales desconectadas apuntando al mismo lado') },
     tension:              { tab: 'tendencias', layout: 'fichas',  icon: 'comments',      label: () => __('Tensiones no resueltas'),   sub: () => __('Lo que sienten y ninguna marca aborda') },
-    timing:               { tab: 'tendencias', layout: 'timing',  icon: 'calendar',      label: () => __('El momento exacto'),        sub: () => __('Qué ventana está abierta y cuánto le queda') },
     lo_que_falta:         { tab: 'tendencias', layout: 'fichas',  icon: 'idea',          label: () => __('Lo que falta'),             sub: () => __('Lo que nadie está diciendo y podrías decir primero') },
+    // `aparte`: no entra en la rejilla — vive pegada al calendario de Próximas
+    // Fechas, porque sin la fecha al lado las propuestas son ideas sueltas.
+    propuestas_fecha:     { tab: 'tendencias', aparte: true, layout: 'propuestas', icon: 'idea', label: () => __('Propuestas de oportunidad'), sub: () => __('Dos ideas por fecha, hechas para esta marca') },
     // ── Tendencias · la disciplina de futuros ─────────────────────────────
     // Un tablero de tendencias falla siempre igual: informa del mundo y no dice
     // qué hacer con él. Estas cinco existen para responder las tres preguntas
@@ -324,6 +326,25 @@
        card con marco, es la voz de Vera sobre el fondo del tablero. Idempotente y
        silenciosa: sin card, no deja rastro; un fallo aquí jamás tumba el tab.
        ═══════════════════════════════════════════════════════════════════════ */
+    /* ── Propuestas de oportunidad: la card `aparte` de Tendencias. ────────
+       Se pinta en el hueco reservado bajo el calendario (#tendPropuestas). Si
+       el hueco no existe (el tab sin fechas no arma el aside), no se pinta en
+       otro lado: sin el calendario al lado, la card pierde su sentido. */
+    async _renderPropuestasFecha(body) {
+      if (!body) return;
+      const hueco = body.querySelector('#tendPropuestas');
+      if (!hueco) return;
+      let datos;
+      try { datos = await this._loadVera4('tendencias'); } catch (_) { return; }
+      const card = datos && datos.cards.find((c) => c && c.type === 'propuestas_fecha');
+      if (!card || !this._v4Cabe('propuestas_fecha', 'tendencias')) { hueco.innerHTML = ''; return; }
+      const meta = VERA4.propuestas_fecha;
+      let cuerpo = '';
+      try { cuerpo = this._v4Propuestas(card); } catch (_) { cuerpo = ''; }
+      if (!cuerpo) { hueco.innerHTML = ''; return; }
+      hueco.innerHTML = `<div class="vera4">${this._v4Marco(card, meta, cuerpo)}</div>`;
+    },
+
     async _renderIntuicionDelTab(body, scope) {
       if (!body) return;
       const previa = body.querySelector('.vera-intu-tab');
@@ -433,7 +454,7 @@
           case 'plata':    cuerpo = this._v4Plata(card); break;
           case 'latencia': cuerpo = this._v4Latencia(card); break;
           case 'ritmo':    cuerpo = this._v4Ritmo(card); break;
-          case 'timing':   cuerpo = this._v4Timing(card); break;
+          case 'propuestas': cuerpo = this._v4Propuestas(card); break;
           case 'triang':   cuerpo = this._v4Triangulacion(card); break;
           case 'horno':    cuerpo = this._v4Horno(card); break;
           case 'cadena':   cuerpo = this._v4Cadena(card); break;
@@ -1244,20 +1265,37 @@
       ${card.instruccion ? `<div class="v4-leccion"><i class="aisc-ico aisc-ico--calendar" aria-hidden="true"></i><p>${esc(card.instruccion)}</p></div>` : ''}`;
     },
 
-    /* ── timing: ventanas abiertas + lo que todavía es pronto. ────────────── */
-    _v4Timing(card) {
+    /* ── propuestas por fecha: dos ideas producibles para cada ocasión. ─────
+       Vive pegada al calendario, no en la rejilla: una propuesta sin su fecha
+       al lado es una idea suelta, y el valor está justo en el pareo. Dos por
+       fecha a propósito — una sola parece la única salida; tres es un menú que
+       nadie decide. */
+    _v4Propuestas(card) {
       const esc = (s) => this._esc(s);
-      const ab = Array.isArray(card.abiertas) ? card.abiertas.filter(Boolean) : [];
-      const pr = Array.isArray(card.demasiado_pronto) ? card.demasiado_pronto.filter(Boolean) : [];
-      if (!ab.length && !pr.length) return '';
-      return `${ab.length ? `<div class="v4-fichas">
-        ${ab.map((v) => `<article class="v4-ficha is-opp">
-          <div class="v4-ficha-head">${this._v4Chip(v.fase)}${v.cierra ? `<span class="v4-quien">${esc(__('cierra {d}', { d: v.cierra }))}</span>` : ''}</div>
-          <h4 class="v4-ficha-titulo">${esc(v.ventana || '')}</h4>
-          ${this._v4Campo(__('Qué exige ahora'), v.que_exige_ahora)}</article>`).join('')}
-      </div>` : ''}
-      ${pr.length ? `<div class="v4-campo"><span class="v4-campo-label">${esc(__('Todavía es demasiado pronto'))}</span>${
-        this._v4Puntos(pr.map((p) => [p.que, p.volver_a_mirar ? `${__('volver a mirar')} ${p.volver_a_mirar}` : '', p.por_que].filter(Boolean).join(' · ')), 'v4-puntos--tenue')}</div>` : ''}`;
+      const fechas = Array.isArray(card.fechas) ? card.fechas.filter(Boolean) : [];
+      if (!fechas.length) return '';
+      return `<div class="v4-prop">
+        ${fechas.map((f) => {
+          const props = Array.isArray(f.propuestas) ? f.propuestas.filter(Boolean).slice(0, 2) : [];
+          if (!props.length) return '';
+          return `
+            <section class="v4-prop-fecha">
+              <header class="v4-prop-head">
+                <span class="v4-prop-cuando">${esc(f.cuando || f.fecha || '')}</span>
+                <h4 class="v4-prop-evento">${esc(f.evento || '')}</h4>
+              </header>
+              <div class="v4-prop-ideas">
+                ${props.map((p) => `
+                  <article class="v4-prop-idea">
+                    ${p.formato ? `<span class="v4-prop-formato">${esc(p.formato)}</span>` : ''}
+                    <h5 class="v4-prop-titulo">${esc(p.titulo || '')}</h5>
+                    ${p.idea ? `<p class="v4-prop-txt">${esc(p.idea)}</p>` : ''}
+                    ${p.por_que_esta_marca ? `<p class="v4-prop-porque"><span>${esc(__('Por qué le sirve a esta marca'))}</span>${esc(p.por_que_esta_marca)}</p>` : ''}
+                  </article>`).join('')}
+              </div>
+            </section>`;
+        }).join('')}
+      </div>`;
     },
 
     /* ── triangulación: el cruce, con las señales como prueba. ────────────── */

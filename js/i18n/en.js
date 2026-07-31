@@ -2807,5 +2807,8 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Con problemas": "With issues",
   "Rechazado por Meta": "Rejected by Meta",
   "En revisión": "Under review",
-  "Últimos ({n})": "Latest ({n})"
+  "Últimos ({n})": "Latest ({n})",
+  "Propuestas de oportunidad": "Opportunity proposals",
+  "Dos ideas por fecha, hechas para esta marca": "Two ideas per date, made for this brand",
+  "Por qué le sirve a esta marca": "Why it works for this brand"
 }/* I18N:END */;
