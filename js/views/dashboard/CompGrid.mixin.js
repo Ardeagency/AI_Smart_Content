@@ -107,16 +107,6 @@
                el porqué del rival que su tablero no dice, después las cifras que
                lo sostienen. Se colapsa sola si Vera no la escribió. -->
           <div class="bgrid-intuicion" id="cgridIntuicion"></div>
-          <!-- Lectura de Vera perfil por perfil. La escribe ella en su sesión
-               de dashboard (vera_dashboard_readings, scope monitoreo); aquí
-               solo se pinta. -->
-          <section class="bgrid-card cgrid-card--perfiles" id="cgridPerfilesCard" hidden>
-            <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--eye" aria-hidden="true"></i>${this._esc(__('Qué hace cada perfil'))}</span>
-            </header>
-            <p class="bgrid-card-sub">${this._esc(__('Lo que Vera aprendió de cada uno: sus temas, su tono y qué te llevas de ahí'))}</p>
-            <div class="cgrid-perfiles" id="cgridPerfiles"></div>
-          </section>
           <!-- Audiencias que pesca la competencia. Las identifica Vera; el
                boton las guarda en la biblioteca de la org (audience_personas). -->
           <section class="bgrid-card cgrid-card--aud" id="cgridAudCard" hidden>
@@ -295,7 +285,7 @@
       this._cgridData = data;
       this._cgridLastData = data;   // el toggle de medida repinta sin recargar
       await this._paintInfluenceBars(body, data);
-      this._paintVeraPerfiles(body);
+      this._paintVeraLecturaMonitoreo(body);
       this._paintTopPost(body, data);
     },
 
@@ -506,103 +496,26 @@
       });
     },
 
-    /* ══ Qué hace cada perfil — la lectura de Vera ══════════════════════════
-       Vera escribe, en su sesión de dashboard (scope `monitoreo`), un bloque
-       `perfil_analisis` por cada perfil que estudió: sus temas, su tono, sus
-       formatos y qué se lleva la marca de ahí. Aquí solo se agrupan en una
-       tabla — el frontend no interpreta ni resume nada por su cuenta.
-       Todo texto va ESCAPADO: Vera lee contenido de internet y su salida se
-       trata como dato, nunca como markup. ══════════════════════════════════ */
-    async _paintVeraPerfiles(body) {
-      const card = body.querySelector('#cgridPerfilesCard');
-      const host = body.querySelector('#cgridPerfiles');
-      if (!card || !host) return;
-      const esc = (s) => this._esc(s);
-
+    /* ══ La lectura de Vera para este tab ═══════════════════════════════════
+       Trae UNA vez la lectura `monitoreo` (narrative v1) y la reparte entre las
+       cards que viven de ella. Antes esta función además pintaba "Qué hace cada
+       perfil"; esa card se eliminó el 2026-07-31, pero la consulta se queda aquí
+       porque Observaciones y Audiencias salen de la MISMA fila: pedirla dos
+       veces sería pagar dos viajes por el mismo dato.
+       Nunca lanza: sin lectura, cada card muestra su propio estado honesto. ══ */
+    async _paintVeraLecturaMonitoreo(body) {
       let reading = null;
       try {
         const { data } = await this._supabase.from('vera_dashboard_readings')
           .select('reading, created_at')
           .eq('organization_id', this._orgId).eq('scope', 'monitoreo').eq('status', 'published')
-          .eq('schema_version', 1)          // narrative v1: perfiles, observaciones, audiencias
+          .eq('schema_version', 1)          // narrative v1: observaciones, audiencias
           .order('created_at', { ascending: false }).limit(1);
         reading = (data && data[0]) || null;
       } catch (_) {}
 
-      // Las cards de Vera viven de la MISMA lectura: se pintan aquí para no
-      // pedirla varias veces a la base.
       this._paintVeraObservaciones(body, reading);
       this._paintVeraAudiencias(body, reading);
-
-      // Color VIVO de la marca activa (el mismo del degradado del hero y de los
-      // charts). Se expone como variable local para que el CSS lo use en el
-      // velo de la superficie, los chips y los acentos: sin él la card queda
-      // gris sobre gris y se apaga respecto del resto del tab.
-      const [accent] = this._gridBrandHexes();
-      const [ar, ag, ab] = this._hexToRgb(accent);
-      card.style.setProperty('--cgp-accent', accent);
-      card.style.setProperty('--cgp-accent-rgb', `${ar}, ${ag}, ${ab}`);
-
-      const bloques = (reading?.reading?.narrative || [])
-        .filter((b) => b && b.type === 'perfil_analisis' && b.perfil);
-      if (!bloques.length) {
-        // Sin lectura todavía: se dice qué falta, no se finge una tabla vacía.
-        card.hidden = false;
-        host.innerHTML = `<div class="cgrid-empty">${esc(
-          reading
-            ? __('Vera aún no ha estudiado los perfiles uno a uno. Aparecerán aquí en su próxima lectura de Competencia.')
-            : __('Vera todavía no ha escrito su lectura de Competencia. Cuando la haga, aquí verás qué publica cada perfil, con qué tono y qué te llevas de ahí.'),
-        )}</div>`;
-        return;
-      }
-      card.hidden = false;
-
-      const ROL = {
-        competidor_directo:   { label: __('Directo'),   cls: 'is-dir' },
-        competidor_indirecto: { label: __('Indirecto'), cls: 'is-ind' },
-        competidor:           { label: __('Competidor'), cls: 'is-dir' },
-        referente:            { label: __('Referente'), cls: 'is-ref' },
-        referencia_cultural:  { label: __('Referente'), cls: 'is-ref' },
-        aliado:               { label: __('Aliado'),    cls: 'is-ali' },
-      };
-      const chips = (v) => (Array.isArray(v) ? v : String(v || '').split(/[,;·]/))
-        .map((x) => String(x || '').trim()).filter(Boolean).slice(0, 5)
-        .map((x) => `<span class="cgp-chip">${esc(x)}</span>`).join('');
-
-      const filas = bloques.map((b) => {
-        const rol = ROL[String(b.rol || '').toLowerCase()] || null;
-        const nets = (Array.isArray(b.plataformas) ? b.plataformas : []).map((p) => {
-          const k = String(p || '').toLowerCase();
-          const ico = PLATFORM_ICON[k];
-          return ico ? `<i class="${esc(ico)}" title="${esc(NET_LABEL[k] || k)}" aria-hidden="true"></i>` : '';
-        }).join('');
-        return `
-          <tr>
-            <td class="cgp-perfil">
-              <span class="cgp-perfil-name">${esc(b.perfil)}</span>
-              ${nets ? `<span class="cgp-perfil-nets">${nets}</span>` : ''}
-              ${rol ? `<span class="cgp-rol ${rol.cls}">${esc(rol.label)}</span>` : ''}
-            </td>
-            <td>${chips(b.temas) || '<span class="cgp-na">—</span>'}</td>
-            <td class="cgp-tono">${esc(b.tono || '—')}</td>
-            <td class="cgp-aprend">${esc(b.aprendizaje || b.que_aprender || '—')}</td>
-          </tr>`;
-      }).join('');
-
-      const cuando = reading?.created_at ? this._veraFmtDate(reading.created_at) : '';
-      host.innerHTML = `
-        <div class="cgp-table-wrap">
-          <table class="cgp-table">
-            <thead><tr>
-              <th>${esc(__('Perfil'))}</th>
-              <th>${esc(__('De qué habla'))}</th>
-              <th>${esc(__('Tono'))}</th>
-              <th>${esc(__('Qué te llevas'))}</th>
-            </tr></thead>
-            <tbody>${filas}</tbody>
-          </table>
-        </div>
-        ${cuando ? `<div class="cgp-firma">${esc(__('Lectura de Vera · {d}', { d: cuando }))}</div>` : ''}`;
     },
 
     /* ══ Observaciones por perfil — también de la lectura de Vera ═══════════
