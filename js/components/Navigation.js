@@ -3442,7 +3442,17 @@ class Navigation {
   async revisarMensualidad() {
     try {
       if (typeof window.SubscriptionGate !== 'function') return;
-      const orgId = this.currentOrgId;
+      // En las rutas cortas (/dashboard, /production…) currentOrgId viene null:
+      // el router solo lo puebla en /org/:short/:slug/*. Sin esta cadena —la
+      // misma que usan las vistas— el muro no aparecía justo en las pantallas
+      // más usadas.
+      const isUuid = (v) => typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+      const orgId = [
+        this.currentOrgId,
+        window.currentOrgId,
+        window.appState?.get?.('selectedOrganizationId'),
+        (() => { try { return localStorage.getItem('selectedOrganizationId'); } catch (_) { return null; } })(),
+      ].find(isUuid) || null;
       if (!orgId) { this._subGate?.destroy?.(); this._subGate = null; return; }
       const supabase = await this.getSupabase();
       if (!supabase) return;
