@@ -191,6 +191,20 @@
         const it = e.target.closest('[data-cads-id]');
         if (it) { e.preventDefault(); abrir(it); }
       });
+      /* Si el archivado en R2 falló, creative_url quedó apuntando a la CDN de
+         Meta — y esa caduca. Mismo patrón que .cgp-post-thumb: nunca el icono
+         roto del navegador, siempre el glifo sobre superficie neutra.
+         En captura porque `error` de <img> no burbujea. */
+      body.addEventListener('error', (e) => {
+        const img = e.target;
+        if (!img || img.tagName !== 'IMG' || !img.classList.contains('cads-img')) return;
+        img.hidden = true;
+        const caja = img.parentElement;
+        if (caja && !caja.querySelector('.cads-img--vacia')) {
+          caja.insertAdjacentHTML('afterbegin',
+            '<div class="cads-img--vacia"><i class="aisc-ico aisc-ico--image" aria-hidden="true"></i></div>');
+        }
+      }, true);
     },
 
     _cadsModal(g) {

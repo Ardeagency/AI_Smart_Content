@@ -663,8 +663,12 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
 .cads-item:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.22); }
 .cads-item:focus-visible { outline: 2px solid var(--brand-color-light, #FF6A1A); outline-offset: 2px; }
 
-.cads-media { position: relative; aspect-ratio: 1 / 1; background: rgba(0, 0, 0, 0.35); }
-.cads-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* La ventana del creativo es CUADRADA pase lo que pase: los anuncios llegan en
+   1080x1920 (story), 1:1 y horizontales, y con altura libre cada tarjeta medía
+   distinto — el grid quedaba en escalera y los textos bailaban. La imagen se
+   ancla en absoluto para que ninguna regla heredada le devuelva altura propia. */
+.cads-media { position: relative; aspect-ratio: 1 / 1; background: rgba(0, 0, 0, 0.35); overflow: hidden; }
+.cads-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .cads-img--vacia {
   display: flex; align-items: center; justify-content: center;
   color: var(--text-muted, rgba(212, 209, 216, 0.35)); font-size: 1.4rem;
