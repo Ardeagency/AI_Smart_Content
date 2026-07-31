@@ -3244,7 +3244,16 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
   display: inline-flex; align-items: center; gap: 0.6rem;
   min-height: 23px; /* reserva la altura del logo: nada salta al activarse */
   user-select: none;
+  /* Es un boton (abre la bitacora), pero no debe parecer un boton mas en una
+     barra que ya tiene dos: sin fondo ni borde hasta el hover. */
+  appearance: none; background: none; border: 0; padding: 0.25rem 0.5rem;
+  margin-left: -0.5rem; border-radius: 10px; cursor: pointer;
+  transition: background 0.15s ease;
 }
+.vera-pulse:hover { background: rgba(255, 255, 255, 0.10); }
+.vera-pulse:hover .vera-pulse-logo { opacity: 0.75; }
+.vera-pulse.is-activa:hover .vera-pulse-logo { opacity: 1; }
+.vera-pulse:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 2px; }
 .vera-pulse-logo {
   width: 60px; height: 23px; display: block;
   opacity: 0.38;
@@ -3278,6 +3287,47 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 @media (prefers-reduced-motion: reduce) {
   .vera-pulse-dots i { animation: none; opacity: 0.85; }
   .vera-pulse-frase { animation: none; }
+}
+
+/* ── Bitacora de Vera (modal del sensor) ────────────────────────────────────
+   Drill-down del pulso: la lista de lo que hizo, con sus cifras. Sobrio y
+   tabular — aqui no se juega, se audita. */
+.vera-bit-cargando, .vera-bit-vacio { padding: 1.5rem 0.25rem; color: var(--text-secondary, rgba(212,209,216,0.7)); font-size: 0.875rem; text-align: center; }
+.vera-bit-resumen {
+  margin: 0 0 0.9rem; padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-divider, rgba(255,255,255,0.09));
+  font-size: 0.875rem; color: var(--text-secondary, rgba(212,209,216,0.75));
+}
+.vera-bit-resumen b { color: var(--text-primary, #D4D1D8); font-variant-numeric: tabular-nums; }
+.vera-bit-resumen .vera-bit-mal { color: #e5776b; }
+.vera-bit-sub { display: block; margin-top: 0.3rem; font-size: 0.75rem; opacity: 0.65; }
+.vera-bit-lista { list-style: none; margin: 0; padding: 0; max-height: 55vh; overflow-y: auto; }
+.vera-bit-fila {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto auto;
+  gap: 0.75rem; align-items: baseline;
+  padding: 0.5rem 0.15rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.8125rem;
+}
+.vera-bit-fila:last-child { border-bottom: 0; }
+.vera-bit-hora { color: var(--text-secondary, rgba(212,209,216,0.55)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vera-bit-que { color: var(--text-primary, #D4D1D8); min-width: 0; }
+.vera-bit-veces { color: var(--text-secondary, rgba(212,209,216,0.6)); font-variant-numeric: tabular-nums; }
+.vera-bit-ent {
+  display: inline-block; margin-left: 0.4rem; padding: 0.05rem 0.45rem;
+  border-radius: 999px; background: rgba(255, 255, 255, 0.07);
+  font-size: 0.75rem; color: var(--text-secondary, rgba(212,209,216,0.85));
+}
+.vera-bit-ent i { font-style: normal; opacity: 0.7; text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.06em; }
+.vera-bit-err { display: block; margin-top: 0.15rem; font-size: 0.75rem; color: #e5776b; }
+.vera-bit-cifras { color: var(--text-secondary, rgba(212,209,216,0.7)); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.vera-bit-dur { color: var(--text-secondary, rgba(212,209,216,0.45)); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 3.5rem; text-align: right; }
+.vera-bit-fila.is-mal .vera-bit-que { color: #e5776b; }
+
+@media (max-width: 640px) {
+  .vera-bit-fila { grid-template-columns: 4.5rem minmax(0, 1fr); }
+  .vera-bit-cifras, .vera-bit-dur { grid-column: 2; text-align: left; }
 }
 
 /* Analisis longitudinal — grid de charts Chart.js */

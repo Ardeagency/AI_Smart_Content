@@ -108,6 +108,14 @@ describe('en reposo el sensor se calla', () => {
     expect(p.host.innerHTML).toContain('vera-pulse-frase');
   });
 
+  test('el sensor es un botón que se puede abrir', () => {
+    const p = new VeraPulse({});
+    p.host = host();
+    p._pintar({ activa: false });
+    expect(p.host.innerHTML).toContain('<button');
+    expect(p.host.innerHTML).toContain('data-vera-pulse-abrir');
+  });
+
   test('la frase no cambia mientras la actividad sea la misma', () => {
     const p = new VeraPulse({});
     p.host = host();
@@ -116,5 +124,79 @@ describe('en reposo el sensor se calla', () => {
     const primera = p._frase;
     for (let i = 0; i < 20; i++) p._pintar(act);
     expect(p._frase).toBe(primera);
+  });
+});
+
+/**
+ * La bitácora es el drill-down del sensor: si agrupa mal o esconde una falla,
+ * deja de ser auditable — que es su único motivo de existir.
+ */
+describe('la bitácora se puede auditar', () => {
+  const fila = (tipo, inicio, extra = {}) => ({
+    fuente: 'sensor', tipo, estado: 'success', inicio,
+    duracion_ms: 100, stats: {}, error: null, entidad: null, entidad_tipo: null, ...extra,
+  });
+
+  test('colapsa repeticiones seguidas y conserva el conteo', () => {
+    /* El caso real: 117 "mission_generation" seguidos entierran 2 lecturas. */
+    const filas = [];
+    for (let i = 0; i < 117; i++) filas.push(fila('mission_generation', `2026-07-31T14:${String(i % 60).padStart(2, '0')}:00Z`));
+    filas.push(fila('social', '2026-07-31T12:48:00Z', { entidad: 'Tosh', stats: { posts_found: 25 } }));
+
+    const g = VeraPulse._agrupar(filas);
+    expect(g).toHaveLength(2);
+    expect(g[0].veces).toBe(117);
+    expect(g[1].tipo).toBe('social');
+    expect(g[1].veces).toBe(1);
+    /* El total original no se pierde de vista. */
+    expect(g.reduce((a, x) => a + x.veces, 0)).toBe(filas.length);
+  });
+
+  test('no mezcla dos entidades distintas del mismo sensor', () => {
+    const g = VeraPulse._agrupar([
+      fila('social', '2026-07-31T14:00:00Z', { entidad: 'Tosh' }),
+      fila('social', '2026-07-31T13:00:00Z', { entidad: 'Nike' }),
+    ]);
+    expect(g).toHaveLength(2);
+  });
+
+  test('una falla nunca se agrupa dentro de los éxitos', () => {
+    const g = VeraPulse._agrupar([
+      fila('social', '2026-07-31T14:00:00Z'),
+      fila('social', '2026-07-31T13:00:00Z', { estado: 'failed', error: 'timeout' }),
+      fila('social', '2026-07-31T12:00:00Z'),
+    ]);
+    expect(g).toHaveLength(3);
+    expect(g[1].estado).toBe('failed');
+  });
+
+  test('las cifras en cero no se muestran (0 señales no es información)', () => {
+    expect(VeraPulse._detalleStats({ posts_found: 25, new_signals: 0 })).toBe('25 publicaciones');
+    expect(VeraPulse._detalleStats({})).toBe('');
+    expect(VeraPulse._detalleStats(null)).toBe('');
+  });
+
+  test('el resumen cuenta las fallas y los perfiles observados', () => {
+    const p = new VeraPulse({});
+    const html = p._bitHtml({
+      horas: 24,
+      filas: [
+        fila('social', '2026-07-31T14:00:00Z', { entidad: 'Tosh', entidad_tipo: 'competidor_directo' }),
+        fila('social', '2026-07-31T13:00:00Z', { entidad: 'Nike' }),
+        fila('meta_posts', '2026-07-31T12:00:00Z', { estado: 'failed', error: 'token vencido' }),
+      ],
+    });
+    expect(html).toContain('<b>3</b>');            // acciones
+    expect(html).toContain('<b>2</b>');            // perfiles observados
+    expect(html).toContain('vera-bit-mal">1');     // una falla, marcada
+    expect(html).toContain('token vencido');       // el error se muestra, no se esconde
+    expect(html).toContain('rival');               // solo el competidor directo
+  });
+
+  test('sin actividad lo dice, no finge una lista', () => {
+    const p = new VeraPulse({});
+    const html = p._bitHtml({ horas: 24, filas: [] });
+    expect(html).toContain('no ha registrado actividad');
+    expect(html).not.toContain('vera-bit-lista');
   });
 });

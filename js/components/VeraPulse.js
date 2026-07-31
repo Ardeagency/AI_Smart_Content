@@ -89,6 +89,54 @@
   /* Sin vocabulario para ese tipo: se dice lo único que se sabe con certeza. */
   const GENERICAS = ['trabajando en tus datos', 'procesando información'];
 
+  /* ── La bitácora ───────────────────────────────────────────────────────
+     El sensor en vivo juega; el historial NO. Aquí cada acción se nombra por
+     lo que es, para que se pueda auditar: es el drill-down del sensor. */
+  const ETIQUETA = {
+    social: 'Lectura de redes sociales',
+    meta_page_insights: 'Alcance y seguidores en Meta',
+    meta_posts: 'Publicaciones de Meta',
+    meta_ad_library_sync: 'Anuncios de la competencia',
+    meta_ads_audiences_sync: 'Audiencias de pauta',
+    meta_audience_demographics: 'Demografía de la audiencia',
+    meta_campaign_ad_insights: 'Rendimiento de campañas',
+    meta_campaign_audience_demographics: 'Audiencias de campaña',
+    threat_detection: 'Detección de amenazas',
+    audience_alignment_analysis: 'Alineación de audiencia',
+    brand_audience_heatmap_compute: 'Mapa de audiencia',
+    brand_indexer: 'Indexado de la marca',
+    trends_keywords: 'Palabras en ascenso',
+    trends_run: 'Barrido de tendencias',
+    shopify_metrics: 'Métricas de Shopify',
+    mercadolibre_metrics: 'Métricas de Mercado Libre',
+    google_ads_insights: 'Métricas de Google Ads',
+    tiktok_video_insights: 'Rendimiento en TikTok',
+    ga4_audience_demographics: 'Tráfico web (GA4)',
+    comment_harvest: 'Cosecha de comentarios',
+    mission_generation: 'Revisión de misiones',
+    dashboard_reading: 'Lectura del tablero',
+    brand_diagnosis: 'Diagnóstico de marca',
+    brand_mimarca_cards: 'Redacción de tarjetas',
+  };
+
+  /* Nombres legibles de las cifras que traen los sensores en `stats`. */
+  const CIFRA = {
+    posts_found: 'publicaciones',
+    new_signals: 'señales nuevas',
+    ig_reach: 'alcance IG',
+    ig_followers: 'seguidores IG',
+    fb_fans: 'fans FB',
+    fb_engagements: 'interacciones FB',
+    comments_found: 'comentarios',
+    comments_inserted: 'comentarios nuevos',
+    seeds: 'semillas',
+    measured: 'medidas',
+    promoted: 'promovidas',
+    month_calls: 'llamadas del mes',
+    errors: 'errores',
+    iteraciones: 'iteraciones',
+  };
+
   const esRival = (tipoEntidad) => tipoEntidad === 'competidor_directo';
 
   function elegirFrase(pulso) {
@@ -112,14 +160,50 @@
     return T(frase).replace('{n}', entidad || '');
   }
 
-  /* Detalle honesto para el tooltip: las cifras que el sensor acaba de traer. */
-  function detalleStats(stats) {
+  /* Detalle honesto: las cifras que el sensor de verdad trajo. Se descartan
+     los ceros — "0 señales nuevas" es ruido, no información. */
+  function detalleStats(stats, max) {
     if (!stats || typeof stats !== 'object') return '';
-    const partes = Object.entries(stats)
+    return Object.entries(stats)
       .filter(([, v]) => typeof v === 'number' && v > 0)
-      .slice(0, 3)
-      .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v.toLocaleString('es-CO')}`);
-    return partes.join(' · ');
+      .slice(0, max || 3)
+      .map(([k, v]) => `${v.toLocaleString('es-CO')} ${T(CIFRA[k] || k.replace(/_/g, ' '))}`)
+      .join(' · ');
+  }
+
+  const etiquetaDe = (tipo) => (ETIQUETA[tipo] ? T(ETIQUETA[tipo]) : String(tipo || '—').replace(/_/g, ' '));
+
+  function hora(iso) {
+    try {
+      return new Date(iso).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
+    } catch (_) { return ''; }
+  }
+
+  function duracion(ms) {
+    if (ms == null) return '';
+    if (ms < 1000) return `${ms} ms`;
+    const s = ms / 1000;
+    return s < 60 ? `${s.toFixed(1)} s` : `${Math.round(s / 60)} min`;
+  }
+
+  /* Colapsa ejecuciones CONSECUTIVAS del mismo tipo+entidad en una línea con
+     "×N". Sin esto la bitácora de un día son 117 renglones idénticos de
+     "Revisión de misiones" que entierran las 27 lecturas que sí importan.
+     No se pierde nada: se conserva el conteo y el rango de horas. */
+  function agrupar(filas) {
+    const out = [];
+    for (const f of filas) {
+      const ult = out[out.length - 1];
+      const mismo = ult && ult.tipo === f.tipo && ult.entidad === f.entidad && ult.estado === f.estado;
+      if (mismo) {
+        ult.veces++;
+        ult.hasta = f.inicio;                       // las filas vienen de nueva a vieja
+        ult.stats = ult.stats || f.stats;
+        continue;
+      }
+      out.push({ ...f, veces: 1, hasta: f.inicio });
+    }
+    return out;
   }
 
   function hace(iso) {
@@ -160,6 +244,11 @@
         else this._parar();
       };
       document.addEventListener('visibilitychange', this._onVis);
+      /* Delegado en el host: el botón se recrea en cada repintado. */
+      this._onClick = (e) => {
+        if (e.target.closest('[data-vera-pulse-abrir]')) this.abrirBitacora();
+      };
+      host.addEventListener('click', this._onClick);
       this._arrancar();
     }
 
@@ -219,11 +308,96 @@
         ? `<span class="vera-pulse-frase">${this._esc(this._frase)}</span>`
         : '';
 
+      /* Botón, no adorno: el estado se puede abrir y auditar. */
       return `
-        <div class="vera-pulse${activa ? ' is-activa' : ''}" role="status" aria-live="polite" title="${this._esc(title)}">
+        <button type="button" class="vera-pulse${activa ? ' is-activa' : ''}"
+                data-vera-pulse-abrir
+                aria-live="polite"
+                aria-label="${this._esc(T('Ver lo que Vera ha hecho'))}"
+                title="${this._esc(title)} · ${this._esc(T('clic para ver la bitácora'))}">
           <img class="vera-pulse-logo" src="${RUTA_LOGO}" alt="${this._esc(T('Vera'))}" width="60" height="23">
           ${puntos}
           ${frase}
+        </button>`;
+    }
+
+    /* ── Bitácora: el drill-down del sensor ────────────────────────────────
+       Todo lo que Vera hizo en las últimas 24h, con la entidad que miraba y
+       las cifras que trajo. Un estado que no se puede abrir no se puede creer. */
+    async abrirBitacora() {
+      if (!window.Modal || typeof window.Modal.show !== 'function') return;
+      const { bodyEl } = window.Modal.show({
+        title: T('Lo que Vera ha hecho'),
+        body: `<p class="vera-bit-cargando">${T('Cargando la bitácora…')}</p>`,
+        className: 'dash-modal vera-bit-modal',
+      }) || {};
+      if (!bodyEl) return;
+
+      if (!this.sb || !this.orgId) {
+        bodyEl.innerHTML = this._bitVacia(T('No hay sesión para consultar la bitácora.'));
+        return;
+      }
+      try {
+        const { data, error } = await this.sb.rpc('get_vera_bitacora', { p_org_id: this.orgId, p_horas: 24 });
+        if (error) throw error;
+        bodyEl.innerHTML = this._bitHtml(data || {});
+      } catch (e) {
+        console.warn('[VeraPulse] bitácora:', e && e.message ? e.message : e);
+        bodyEl.innerHTML = this._bitVacia(T('No se pudo leer la bitácora.'));
+      }
+    }
+
+    _bitVacia(msg) {
+      return `<div class="vera-bit-vacio"><p>${this._esc(msg)}</p></div>`;
+    }
+
+    _bitHtml(data) {
+      const filas = Array.isArray(data.filas) ? data.filas : [];
+      if (!filas.length) {
+        return this._bitVacia(T('Vera no ha registrado actividad en las últimas 24 horas.'));
+      }
+
+      const grupos = agrupar(filas);
+      const fallas = filas.filter((f) => f.estado && /fail|error/i.test(f.estado)).length;
+      const observadas = new Set(filas.map((f) => f.entidad).filter(Boolean)).size;
+
+      /* Resumen: lo que NO se ve recorriendo la lista. */
+      const resumen = [
+        `<b>${filas.length}</b> ${T('acciones')}`,
+        observadas ? `<b>${observadas}</b> ${T('perfiles observados')}` : '',
+        fallas ? `<b class="vera-bit-mal">${fallas}</b> ${T('con falla')}` : `<b>0</b> ${T('con falla')}`,
+      ].filter(Boolean).join(' · ');
+
+      const lineas = grupos.map((g) => {
+        const mal = g.estado && /fail|error/i.test(g.estado);
+        const rango = g.veces > 1 && g.hasta !== g.inicio
+          ? `${hora(g.hasta)}–${hora(g.inicio)}`
+          : hora(g.inicio);
+        const cifras = detalleStats(g.stats, 4);
+        const ent = g.entidad
+          ? `<span class="vera-bit-ent">${this._esc(g.entidad)}${
+              g.entidad_tipo === 'competidor_directo' ? ` <i>${T('rival')}</i>` : ''
+            }</span>`
+          : '';
+        return `
+          <li class="vera-bit-fila${mal ? ' is-mal' : ''}">
+            <span class="vera-bit-hora">${this._esc(rango)}</span>
+            <span class="vera-bit-que">
+              ${this._esc(etiquetaDe(g.tipo))}${g.veces > 1 ? ` <span class="vera-bit-veces">×${g.veces}</span>` : ''}
+              ${ent}
+              ${mal && g.error ? `<span class="vera-bit-err">${this._esc(g.error).slice(0, 140)}</span>` : ''}
+            </span>
+            <span class="vera-bit-cifras">${this._esc(cifras)}</span>
+            <span class="vera-bit-dur">${this._esc(duracion(g.duracion_ms))}</span>
+          </li>`;
+      }).join('');
+
+      return `
+        <div class="vera-bit">
+          <p class="vera-bit-resumen">${resumen}
+            <span class="vera-bit-sub">${T('últimas {n} horas · repeticiones seguidas agrupadas con ×N').replace('{n}', data.horas || 24)}</span>
+          </p>
+          <ul class="vera-bit-lista">${lineas}</ul>
         </div>`;
     }
 
@@ -240,6 +414,10 @@
         document.removeEventListener('visibilitychange', this._onVis);
         this._onVis = null;
       }
+      if (this._onClick && this.host) {
+        this.host.removeEventListener('click', this._onClick);
+        this._onClick = null;
+      }
     }
 
     destroy() {
@@ -253,6 +431,8 @@
      test/vera-pulse.test.js sin tener que montar el DOM. */
   VeraPulse._elegirFrase = elegirFrase;
   VeraPulse._VOCABULARIO = VOCABULARIO;
+  VeraPulse._agrupar = agrupar;
+  VeraPulse._detalleStats = detalleStats;
 
   window.VeraPulse = VeraPulse;
 })();
