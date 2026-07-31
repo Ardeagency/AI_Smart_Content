@@ -39,7 +39,7 @@ function cargarVista() {
    card de tab, este mapa tiene que moverse con ella A PROPÓSITO. */
 const REPARTO = {
   mi_marca:   ['silencio', 'latencia', 'impacto_vs_ruido', 'emocion_objetivo',
-               'viabilidad_comercial', 'ritmo', 'autopsia', 'victoria_explicada', 'causalidad',
+               'ritmo', 'autopsia', 'victoria_explicada', 'causalidad',
                // Salud de marca: lo que un CMO mira primero
                'cobertura_momentos', 'rejilla_codigos', 'deriva_codigos', 'construir_vs_cosechar',
                'aplauso_vs_propagacion', 'penetracion_vs_lealtad', 'biblioteca_patrones'],
@@ -47,7 +47,7 @@ const REPARTO = {
                // Instrumentos y juicio del rediseño de Competencia
                'territorio_tematico', 'registro_de_voz', 'emocion_competencia',
                'busqueda_vs_voz', 'supuesto_punto_ciego', 'proxima_movida'],
-  tendencias: ['pulso_nicho', 'senal_debil', 'triangulacion', 'tension', 'timing', 'lo_que_falta',
+  tendencias: ['pulso_nicho', 'senal_debil', 'triangulacion', 'tension', 'lo_que_falta',
                // La disciplina de futuros
                'crecimiento_categoria', 'tendencia_o_moda', 'tres_horizontes',
                'derecho_a_jugar', 'curva_adopcion'],
@@ -63,7 +63,6 @@ const EJEMPLO = {
   latencia:             { dias_promedio: 4, peor: { ventana: 'Mundial', se_abrio: '2026-06-01', reaccion: 'nunca', costo: 'Alcance prestado que no se tomó' } },
   impacto_vs_ruido:     { impacto: [{ que: 'Los Reels de cocina', mecanismo: 'Se ven sin sonido' }], ruido: [{ que: 'Las efemérides', por_que_no_mueve: 'Nadie las comenta' }], dejar_de_hacer: 'Dejar las efemérides.' },
   emocion_objetivo:     { emocion: 'pertenencia', para_quien: 'Madres que cocinan', momento: 'Domingo por la tarde', que_la_dispara: 'Ver a alguien como ellas.' },
-  viabilidad_comercial: { gastado: '$1.200.000', ventana: 'Julio', kpi: { nombre: 'CPL', valor: '$12.000', estado: 'justo' }, veredicto: 'cabe_moviendo' },
   ritmo:                { rafagas: [{ cuando: '2026-07-14', piezas: 4, costo: 'Se comieron entre sí' }], instruccion: 'Repartir en tres días.' },
   autopsia:             { pieza: 'El carrusel del snack', culpable: 'formato', por_que: 'Informaba en vez de antojar.', leccion: 'El carrusel no antoja.' },
   victoria_explicada:   { pieza: 'El Reel del equipo', mecanismo: 'Una sola toma, sin música.', como_se_repite: 'Grabar en el sitio.' },
@@ -87,7 +86,6 @@ const EJEMPLO = {
   senal_debil:          { items: [{ titulo: 'La proteína de huevo', que_vi: 'Sube en búsquedas', por_que_nadie_lo_ve: 'Está fuera de la categoría', si_es_real: 'Se abre una línea', fuerza: 'media', ventana: '30 días' }] },
   triangulacion:        { nombre_oportunidad: 'El snack que se lleva al agua', senales: [{ observacion: 'Sube la búsqueda', fuente: 'demanda' }, { observacion: 'Un rival lo retiró', fuente: 'competencia' }], conclusion: 'Hay hueco.' },
   tension:              { items: [{ tension: 'Quieren cuidarse sin renunciar al postre', cita: 'Ojalá no supiera a dieta', de_donde: '@alguien', por_que_nadie_la_toca: 'La categoría vende culpa', que_diria_la_marca: 'Que se puede.' }] },
-  timing:               { abiertas: [{ ventana: 'Amor y amistad', cierra: '2026-09-20', fase: 'antes', que_exige_ahora: 'Grabar esta semana.' }] },
   lo_que_falta:         { items: [{ hueco: 'Snacks para el trabajo', demanda_observada: 'Se busca todos los días', quien_no_lo_cubre: 'Nadie del nicho', angulo_de_la_marca: 'El break de las 4pm', intencion_comercial: 'alta' }] },
   crecimiento_categoria: { total_cambio: '+18%', efecto_categoria: 22, efecto_cuota: -4, cuota_antes: '27%', cuota_ahora: '23%', unidad: 'interacciones del nicho' },
   tendencia_o_moda:      { senales: [{ tema: 'proteína de huevo', serie: [3, 5, 8, 14, 19], semanas_activa: 11, plataformas: ['instagram', 'tiktok'], consistencia: 'alta', veredicto: 'tendencia' }, { tema: 'el reto del vaso', serie: [2, 40, 12, 3], semanas_activa: 2, plataformas: ['tiktok'], consistencia: 'baja', veredicto: 'moda' }] },
@@ -125,7 +123,7 @@ describe('reparto — cada card vive en el tab que le toca', () => {
     });
   });
 
-  test('el catálogo tiene exactamente las 49 cards (30 del documento + 6 Competencia + 7 Mi Marca + 5 Tendencias + la Intuición)', () => {
+  test('el catálogo tiene exactamente las 49 cards', () => {
     const tipos = [...FUENTE.matchAll(/^\s{4}([a-z_0-9]+):\s+\{ tab:/gm)].map((m) => m[1]);
     expect(tipos).toHaveLength(49);
     expect(new Set(tipos).size).toBe(49);        // sin duplicados
