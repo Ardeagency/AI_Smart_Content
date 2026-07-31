@@ -2770,5 +2770,7 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Dónde se muestra": "Where it shows",
   "Anuncios con este arte": "Ads using this creative",
   "Verlo en la Biblioteca de Anuncios de Meta": "View it in the Meta Ad Library",
-  "Anuncio de {marca}": "{marca} ad"
+  "Anuncio de {marca}": "{marca} ad",
+  "Sigue al aire · {n} días": "Still live · {n} days",
+  "Ya no está al aire": "No longer live"
 }/* I18N:END */;

@@ -23,7 +23,6 @@
   if (typeof DashboardView === 'undefined') return;
 
   const TOPE = 60;          // anuncios que se traen (los más recientes)
-  const VISIBLES = 12;      // los que se pintan antes de "ver más"
 
   Object.assign(DashboardView.prototype, {
 
@@ -73,13 +72,26 @@
           </header>
           <p class="bgrid-card-sub">${this._esc(__('Anuncios que tus competidores tienen corriendo en Meta · toca uno para verlo completo'))}</p>
           <nav class="cads-filtros" id="cadsFiltros" role="tablist"></nav>
-          <div class="cads-grid" id="cadsGrid"></div>
-          <footer class="cads-foot" id="cadsFoot"></footer>
+          <div class="cads-carrusel" id="cadsGrid"></div>
         </section>`;
     },
 
     /* Un mismo arte corriendo en varios anuncios = una sola tarjeta con ×N. */
     _cadsAgrupar(filas) {
+      /* ¿SIGUE CORRIENDO? No se puede creer el `activo` que trae Meta: el
+         barrido solo pide anuncios ACTIVOS, así que todos llegan en true y el
+         dato no distinguiría nada. Se deriva de lo que nosotros observamos: si
+         el último barrido de esa marca ya no lo trajo, el rival lo apagó.
+         Margen de 1 día para no marcar como muerto lo que solo se cruzó con un
+         barrido a medias. */
+      const ultimoPorMarca = new Map();
+      for (const f of filas) {
+        const m = f.intelligence_entities?.name || '—';
+        const t = Date.parse(f.last_seen_at || 0) || 0;
+        if (t > (ultimoPorMarca.get(m) || 0)) ultimoPorMarca.set(m, t);
+      }
+      const MARGEN = 24 * 3600 * 1000;
+
       const mapa = new Map();
       for (const f of filas) {
         const marca = f.intelligence_entities?.name || '—';
@@ -103,8 +115,8 @@
           cta: t.cta_text || null,
           formato: t.display_format || null,
           plataformas: Array.isArray(t.publisher_platforms) ? t.publisher_platforms : [],
-          activo: t.activo === true,
           urlLibrary: t.ad_library_url || (f.ad_archive_id ? `https://www.facebook.com/ads/library/?id=${f.ad_archive_id}` : null),
+          sigueCorriendo: (Date.parse(f.last_seen_at || 0) || 0) >= (ultimoPorMarca.get(marca) || 0) - MARGEN,
           veces: 1,
         });
       }
@@ -115,14 +127,12 @@
       const grid = body.querySelector('#cadsGrid');
       const cont = body.querySelector('#cadsCount');
       const nav = body.querySelector('#cadsFiltros');
-      const foot = body.querySelector('#cadsFoot');
       if (!grid) return;
 
       const todos = this._cadsGrupos || [];
       const marcas = [...new Set(todos.map((g) => g.marca))].sort();
       const sel = this._cadsMarca && marcas.includes(this._cadsMarca) ? this._cadsMarca : '';
       const lista = sel ? todos.filter((g) => g.marca === sel) : todos;
-      const tope = this._cadsVerTodo ? lista.length : VISIBLES;
 
       if (nav && marcas.length > 1) {
         nav.innerHTML = [['', __('Todas')], ...marcas.map((m) => [m, m])]
@@ -137,38 +147,46 @@
           : __('{n} anuncios · {m} marcas', { n, m: marcas.length });
       }
 
-      grid.innerHTML = lista.slice(0, tope).map((g) => this._cadsTarjeta(g)).join('');
-
-      if (foot) {
-        foot.innerHTML = lista.length > VISIBLES
-          ? `<button type="button" class="cads-mas" data-cads-mas="1">${this._esc(this._cadsVerTodo ? __('Ver menos') : __('Ver los {n}', { n: lista.length }))}</button>`
-          : '';
-      }
+      /* El carrusel los muestra TODOS: se navega desplazando, no paginando.
+         Vuelve al inicio al cambiar de marca, si no el filtro parece vacío
+         cuando el carrusel se quedó desplazado a la derecha. */
+      grid.innerHTML = lista.map((g) => this._cadsTarjeta(g)).join('');
+      grid.scrollLeft = 0;
     },
 
+    /* Solo la pieza. Cuándo se publicó y si sigue corriendo aparecen al pasar
+       el cursor: el creativo se lee de un vistazo y el dato está cuando se
+       busca, no compitiendo con la imagen. */
     _cadsTarjeta(g) {
-      const dias = Math.max(0, Math.floor((Date.now() - new Date(g.desde).getTime()) / 86400000));
-      /* "Lleva N días al aire" es la señal barata de que algo le funciona: un
-         anuncio malo se apaga en días, uno rentable lleva meses. */
-      const antig = dias < 1 ? __('nuevo hoy') : dias === 1 ? __('1 día al aire') : __('{n} días al aire', { n: dias });
       const medio = g.creativo
         ? `<img class="cads-img" src="${this._esc(g.creativo)}" alt="" loading="lazy">`
-        : `<div class="cads-img cads-img--vacia"><i class="aisc-ico aisc-ico--image" aria-hidden="true"></i></div>`;
-      const copy = (g.copy || '').replace(/\s+/g, ' ').trim();
+        : `<div class="cads-img--vacia"><i class="aisc-ico aisc-ico--image" aria-hidden="true"></i></div>`;
+      const publicado = this._cadsFecha(g.desde);
+      const dias = Math.max(0, Math.floor((Date.now() - new Date(g.desde).getTime()) / 86400000));
+      const estado = g.sigueCorriendo
+        ? __('Sigue al aire · {n} días', { n: dias })
+        : __('Ya no está al aire');
+      const etiqueta = `${g.marca} · ${publicado} · ${estado}`;
       return `
         <article class="cads-item" data-cads-id="${this._esc(g.id)}" tabindex="0" role="button"
-                 aria-label="${this._esc(__('Ver el anuncio de {marca}', { marca: g.marca }))}">
-          <div class="cads-media">
-            ${medio}
-            ${g.veces > 1 ? `<span class="cads-veces" title="${this._esc(__('El mismo arte corriendo en varios anuncios a la vez'))}">×${g.veces}</span>` : ''}
-            ${g.formato === 'VIDEO' ? `<span class="cads-fmt"><i class="aisc-ico aisc-ico--play" aria-hidden="true"></i></span>` : ''}
-          </div>
-          <div class="cads-info">
-            <p class="cads-marca">${this._esc(g.marca)}</p>
-            <p class="cads-copy">${this._esc(copy.slice(0, 90))}${copy.length > 90 ? '…' : ''}</p>
-            <p class="cads-meta">${this._esc(antig)}${g.cta ? ` · ${this._esc(g.cta)}` : ''}</p>
+                 aria-label="${this._esc(etiqueta)}">
+          ${medio}
+          ${g.veces > 1 ? `<span class="cads-veces" title="${this._esc(__('El mismo arte corriendo en varios anuncios a la vez'))}">×${g.veces}</span>` : ''}
+          ${g.formato === 'VIDEO' ? `<span class="cads-fmt"><i class="aisc-ico aisc-ico--play" aria-hidden="true"></i></span>` : ''}
+          <div class="cads-hover" aria-hidden="true">
+            <p class="cads-hover-marca">${this._esc(g.marca)}</p>
+            <p class="cads-hover-fecha">${this._esc(publicado)}</p>
+            <p class="cads-hover-estado${g.sigueCorriendo ? ' is-vivo' : ''}">
+              <i class="cads-punto" aria-hidden="true"></i>${this._esc(estado)}
+            </p>
           </div>
         </article>`;
+    },
+
+    _cadsFecha(iso) {
+      try {
+        return new Date(iso).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch (_) { return ''; }
     },
 
     _bindCompAds(body) {
@@ -181,8 +199,7 @@
       };
       body.addEventListener('click', (e) => {
         const m = e.target.closest('[data-cads-marca]');
-        if (m) { this._cadsMarca = m.dataset.cadsMarca || ''; this._cadsVerTodo = false; this._cadsPintar(body); return; }
-        if (e.target.closest('[data-cads-mas]')) { this._cadsVerTodo = !this._cadsVerTodo; this._cadsPintar(body); return; }
+        if (m) { this._cadsMarca = m.dataset.cadsMarca || ''; this._cadsPintar(body); return; }
         const it = e.target.closest('[data-cads-id]');
         if (it) abrir(it);
       });

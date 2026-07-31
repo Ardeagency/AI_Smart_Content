@@ -648,26 +648,34 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
 }
 .cads-filtros { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.15rem 0 0.9rem; }
 
-.cads-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-  gap: 0.85rem;
+/* CARRUSEL horizontal: la pieza manda y se navega desplazando. Mismo patrón
+   que .cgrid-aud (scroll-snap + barra fina), para que el tab se sienta uno. */
+.cads-carrusel {
+  display: flex; gap: 0.7rem;
+  overflow-x: auto; overflow-y: hidden;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  overscroll-behavior-x: contain;
 }
+.cads-carrusel::-webkit-scrollbar { height: 6px; }
+.cads-carrusel::-webkit-scrollbar-track { background: transparent; }
+.cads-carrusel::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: 999px; }
+
+/* Solo el creativo. Cuadrado siempre: llegan en 1080x1920 (story), 1:1 y
+   horizontales, y con altura libre el carrusel quedaba en dientes de sierra. */
 .cads-item {
-  display: flex; flex-direction: column; min-width: 0;
-  background: var(--bg-card, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--border-divider, rgba(255, 255, 255, 0.08));
+  position: relative; flex: 0 0 auto;
+  width: 190px; aspect-ratio: 1 / 1;
+  scroll-snap-align: start;
   border-radius: 14px; overflow: hidden; cursor: pointer;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-divider, rgba(255, 255, 255, 0.08));
   transition: transform 0.16s ease, border-color 0.16s ease;
 }
 .cads-item:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.22); }
 .cads-item:focus-visible { outline: 2px solid var(--brand-color-light, #FF6A1A); outline-offset: 2px; }
-
-/* La ventana del creativo es CUADRADA pase lo que pase: los anuncios llegan en
-   1080x1920 (story), 1:1 y horizontales, y con altura libre cada tarjeta medía
-   distinto — el grid quedaba en escalera y los textos bailaban. La imagen se
-   ancla en absoluto para que ninguna regla heredada le devuelva altura propia. */
-.cads-media { position: relative; aspect-ratio: 1 / 1; background: rgba(0, 0, 0, 0.35); overflow: hidden; }
 .cads-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 /* El fade global (img.is-loaded -> imgFadeIn) arranca en opacity:0 con
    fill-mode none. Si el reloj de esa animacion no corre —pestana en segundo
@@ -676,43 +684,50 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
    imagen, eso vacia la seccion entera. Mismo antidoto que .pdeck-card. */
 .cads-img.is-loaded { opacity: 1; animation: none; }
 .cads-img--vacia {
+  position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
   color: var(--text-muted, rgba(212, 209, 216, 0.35)); font-size: 1.4rem;
 }
+
 /* ×N = el mismo arte corriendo en varios anuncios: la señal pública más
    barata de cuánto está apostando el rival por ese mensaje. */
 .cads-veces, .cads-fmt {
-  position: absolute; top: 8px; padding: 0.14rem 0.42rem; border-radius: 999px;
+  position: absolute; top: 8px; z-index: 2;
+  padding: 0.14rem 0.42rem; border-radius: 999px;
   background: rgba(0, 0, 0, 0.62); color: #fff; font-size: 0.68rem; font-weight: 600;
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   font-variant-numeric: tabular-nums;
+  transition: opacity 0.18s ease;
 }
 .cads-veces { left: 8px; }
 .cads-fmt { right: 8px; display: inline-flex; align-items: center; }
+/* Al abrirse la capa de datos, los badges estorban: se apartan. */
+.cads-item:hover .cads-veces, .cads-item:hover .cads-fmt,
+.cads-item:focus-visible .cads-veces, .cads-item:focus-visible .cads-fmt { opacity: 0; }
 
-.cads-info { padding: 0.55rem 0.65rem 0.7rem; display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
-.cads-marca {
-  margin: 0; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em;
-  text-transform: uppercase; color: var(--text-primary, #D4D1D8);
+/* La capa de datos: cuándo se publicó y si sigue corriendo. Solo al pasar el
+   cursor — el dato está cuando se busca, sin competir con la imagen. */
+.cads-hover {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  gap: 0.12rem; padding: 0.7rem;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 0) 100%);
+  opacity: 0; transition: opacity 0.18s ease;
+}
+.cads-item:hover .cads-hover, .cads-item:focus-visible .cads-hover { opacity: 1; }
+.cads-hover-marca {
+  margin: 0; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: #fff;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.cads-copy {
-  margin: 0; font-size: 0.76rem; line-height: 1.35;
-  color: var(--text-secondary, rgba(212, 209, 216, 0.72));
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+.cads-hover-fecha { margin: 0; font-size: 0.72rem; color: rgba(255, 255, 255, 0.75); }
+.cads-hover-estado {
+  margin: 0.1rem 0 0; display: flex; align-items: center; gap: 0.35rem;
+  font-size: 0.7rem; font-weight: 600; color: rgba(255, 255, 255, 0.6);
 }
-.cads-meta { margin: 0; font-size: 0.68rem; color: var(--text-muted, rgba(212, 209, 216, 0.45)); }
-
-.cads-foot { margin-top: 0.9rem; display: flex; justify-content: center; }
-.cads-mas {
-  appearance: none; cursor: pointer; font: inherit; font-size: 0.78rem; font-weight: 600;
-  color: var(--text-secondary, rgba(212, 209, 216, 0.8));
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-divider, rgba(255, 255, 255, 0.1));
-  border-radius: 999px; padding: 0.45rem 1.1rem;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-.cads-mas:hover { background: rgba(255, 255, 255, 0.11); color: var(--text-primary, #D4D1D8); }
+.cads-punto { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
+/* Verde = lo constatamos vivo en el último barrido. No es el flag de Meta. */
+.cads-hover-estado.is-vivo { color: #3ecf8e; }
 
 /* Detalle del anuncio */
 .cads-modal-img { width: 100%; border-radius: 12px; margin-bottom: 0.9rem; display: block; }
@@ -739,6 +754,14 @@ a.cgp-post:hover { background: rgba(255, 255, 255, 0.07); }
 }
 .cads-modal-link:hover { text-decoration: underline; }
 
+/* En móvil el hover no existe: la capa de datos se muestra siempre, si no el
+   dato sería inalcanzable. Piezas algo más chicas para que asome la siguiente
+   y se entienda que el carrusel se desplaza. */
 @media (max-width: 520px) {
-  .cads-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.6rem; }
+  .cads-item { width: 150px; }
+  .cads-hover { opacity: 1; }
+  .cads-veces, .cads-fmt { opacity: 0; }
+}
+@media (hover: none) {
+  .cads-hover { opacity: 1; }
 }
