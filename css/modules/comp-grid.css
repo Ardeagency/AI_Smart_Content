@@ -36,8 +36,8 @@
 /* El JS esconde estas cards con `card.hidden = true` cuando Vera no ha escrito
    su contenido — pero `display:flex` de la regla de arriba GANA a [hidden] por
    especificidad, así que seguían en pantalla con su título y su subtítulo sobre
-   el vacío. Es el mismo defecto que este archivo ya documenta para el <img>
-   roto de la publicación destacada. */
+   el vacío. Es el mismo defecto que este archivo ya documenta más abajo para la
+   miniatura rota de la publicación destacada. */
 .cgrid-card--aud[hidden],
 .cgrid-card--obs[hidden] { display: none; }
 .cgrid-aud {
