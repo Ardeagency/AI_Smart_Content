@@ -1,0 +1,63 @@
+categoria,funcion,proveedor,modelo_o_actor,que_la_dispara,unidad,costo_unitario_usd,instrumentada,donde_vive,notas
+LLM - Vera,Chat de Vera,Anthropic,claude-sonnet-4-6,El usuario escribe en el chat,por respuesta,0.06658,SI,anthropic-proxy (VM de la org),Medido: 482 eventos. Pico 0.4648
+LLM - Vera,Razonamiento OpenClaw,Anthropic,claude-sonnet-4-6,Vera ejecuta una sesion agentica,por sesion,0.32879,SI,openclaw.adapter.js,Suplencia cuando la org no tiene proxy midiendo
+LLM - Vera,Lectura de tablero,Anthropic,claude-sonnet-4-6,Vera escribe las cards de un tab,por lectura,0.13929,SI,vera-dashboard-session.service.js,4 tabs: Mi Marca / Competencia / Tendencias / Estrategia
+LLM - Vera,Cards Mi Marca (cards.v2),Anthropic,claude-sonnet-4-6,publishMiMarcaCard,por sesion,0.02386,PARCIAL,vera-dashboard-session.service.js,Mide en vera_session_audit pero NO cobra
+LLM - Vera,Cards vera4 (Competencia/Tendencias/Estrategia),Anthropic,claude-sonnet-4-6,publishVera4Card,por sesion,0.02386,PARCIAL,vera4-write.tools.js,Idem: mide y no cobra
+LLM - Vera,Diagnostico de marca,Anthropic,claude-sonnet-4-6,brand_diagnosis,por diagnostico,0.02386,PARCIAL,vera-dashboard-session.service.js,84 fallidos en julio
+LLM - Vera,Intuicion,Anthropic,claude-sonnet-4-6,Card intuicion por tab,por card,0.02386,PARCIAL,vera4-write.tools.js,Una por tab
+LLM - Vera,Brief estrategico,Anthropic,claude-sonnet-4-6,vera_brief_generation,por brief,0.05983,SI,brief service,
+LLM - Vera,Recomendaciones estrategicas,Anthropic,claude-sonnet-4-6,strategic_recommendations,por recomendacion,0.03278,PARCIAL,strategic-recommendations,Mide generation_cost_usd y NO cobra
+LLM - Vera,Brain feed (cycle pulse),Anthropic,claude-sonnet-4-6,Fin de ciclo de sensores,por ciclo,0.00000,PARCIAL,vera-brain-feed.service.js,20 feeds con cost_usd en 0: no se esta midiendo
+LLM - Vera,Radar de estrategias,Anthropic,claude-sonnet-4-6,Radar quincenal,por corrida,,NO,centro/radar,Sin instrumentar
+LLM - Analisis,Vision: describir imagen,Anthropic,claude-sonnet-4-6,Cada media nuevo del scraping,por imagen,0.00773,SI,media-processor.service.js,1.381 eventos medidos
+LLM - Analisis,Clasificador de patrones,OpenAI,gpt-4o-mini,Clasificar un post,por item,0.00186,SI,pattern-classifier,
+LLM - Analisis,CMO brief,Anthropic,claude-sonnet-4-6,Banner de Tendencias,por brief,0.00351,SI,cmo-brief,
+LLM - Analisis,Brand DNA generator,Anthropic,claude-sonnet-4-6,Generar el ADN de marca,por marca,,NO,brand-dna-generator.service.js,Sin instrumentar
+LLM - Analisis,Populator Facebook,Anthropic,claude-sonnet-4-6,Poblar datos de marca,por corrida,,NO,populators/facebook.populator.js,Sin instrumentar
+LLM - Analisis,Populator enrichment,Anthropic,claude-sonnet-4-6,Enriquecer entidades,por corrida,,NO,populators/enrichment.populator.js,Sin instrumentar
+LLM - Analisis,Grounded LLM (respuesta con fuentes),Multi,gpt-4o / gemini-2.5-flash / sonar,Consulta que exige fuentes,por consulta,,NO,lib/grounded-llm.js,OpenAI + Gemini + Perplexity: NINGUNO instrumentado
+LLM - Analisis,Cotizador con IA,Anthropic,claude-sonnet-4-6,Generar cotizacion,por cotizacion,,NO,arde_cotizador_jobs,Sin instrumentar
+LLM - Analisis,Mission generation,interno,-,Tic de misiones,por corrida,0.00000,NO,social-scraper.service.js,1.525 corridas/marca/mes de 0.2s
+Embeddings,Indexado de marca,OpenAI,text-embedding-3-large,brand_indexer (diario),por documento,,NO,brand-indexer.service.js,Tiene manejo de quota agotada pero no mide costo
+Embeddings,Busqueda semantica (pgvector),OpenAI,text-embedding-3-small,match_ai_knowledge,por consulta,,NO,pgvector,Sin instrumentar
+Scraping,Instagram,Apify,per_result,Sensor social,por resultado,0.00270,SI,apify.client.js,25 por corrida = 0.0675
+Scraping,Facebook,Apify,per_result,Sensor social,por resultado,0.00500,SI,apify.client.js,25 por corrida = 0.125. El mas caro
+Scraping,TikTok,Apify,per_result,Sensor social,por resultado,0.00370,SI,apify.client.js,+0.001 de arranque
+Scraping,YouTube,Apify,per_result,Sensor video,por resultado,0.00400,SI,apify.client.js,
+Scraping,X (Twitter),Apify,per_result,Sensor social,por resultado,0.00025,SI,apify.client.js,El mas barato
+Scraping,Website crawler,Apify,per_usage,Sensor web,por corrida,,SI,apify.client.js,Modelo por uso: variable
+Scraping,E-commerce,Apify,per_event,Sensor marketplace,por evento,,SI,apify.client.js,
+Scraping,Anuncios de la competencia,Apify,curious_coder/facebook-ads-library-scraper,Sensor semanal meta_ad_library_sync,por anuncio,0.00075,SI,meta-ad-library.service.js,+0.00005 por arranque. Minimo 10
+Scraping,Cosecha de comentarios,Apify,apify/instagram-comment-scraper,Vera pide el hilo completo,por comentario,0.00230,SI,comment-harvest.service.js,Tope de 200 por peticion
+Scraping,Estudio de seguidores,Apify,-,follower_study_jobs,por corrida,,PARCIAL,follower-study,~1.40 por cuenta segun memoria
+Scraping,Scrape de marca (onboarding),Apify,-,brand_scrape_jobs,por corrida,0.03000,SI,brand-scrape,Medido: 1 corrida
+Busqueda,Google Trends,SerpApi,google_trends,trends_keywords + watchlist,por consulta,0.00000,NO,search-watchlist.service.js,PLAN FREE: 250 consultas/mes para TODO el sistema. Lo escaso es la cuota
+Busqueda,Investigacion web de Vera,Tavily,search,webSearch tool,por busqueda,,NO,tools/web.tools.js,Sin instrumentar
+Busqueda,Lectura de pagina,Tavily,extract,webFetch tool,por pagina,,NO,tools/web.tools.js,Sin instrumentar
+Busqueda,Sondeo de visibilidad IA,Multi,ChatGPT/Perplexity/Gemini,visibility_probe,por sondeo,0.68990,SI,visibility-sensor.service.js,El 2do mas caro por evento
+API plataforma,Meta - insights de pagina,Meta,Graph API,meta_page_insights,por corrida,0.00000,NO,platform-insights-sensors,Gratis: cuota por rate limit
+API plataforma,Meta - publicaciones,Meta,Graph API,meta_posts,por corrida,0.00000,NO,platform-insights-sensors,Gratis
+API plataforma,Meta - anuncios propios,Meta,Graph API,meta_own_ads_sync,por corrida,0.00000,NO,meta-own-ads.service.js,Gratis. 400 anuncios por barrido
+API plataforma,Meta - campanas e insights,Meta,Graph API,meta_campaign_ad_insights,por corrida,0.00000,NO,sync-meta-ad-insights,Gratis
+API plataforma,Meta - audiencias,Meta,Graph API,meta_ads_audiences_sync,por corrida,0.00000,NO,platform-insights-sensors,Gratis
+API plataforma,TikTok,TikTok,open.tiktokapis,tiktok_video_insights,por corrida,0.00000,NO,platform-insights-sensors,Gratis
+API plataforma,Google Ads,Google,googleads API,google_ads_insights,por corrida,0.00000,NO,platform-insights-sensors,Gratis
+API plataforma,GA4,Google,analyticsdata API,ga4_audience_demographics,por corrida,0.00000,NO,platform-insights-sensors,Gratis
+API plataforma,Shopify,Shopify,Admin API,shopify_metrics,por corrida,0.00000,NO,platform-insights-sensors,Gratis
+API plataforma,Mercado Libre,MercadoLibre,API,mercadolibre_metrics,por corrida,0.00000,NO,platform-insights-sensors,Gratis
+Produccion,Flujo Hero Shots + Video,n8n/Comfy,-,El usuario produce una pieza,por ejecucion,4.98000,SI,flow_runs,token_cost 155 creditos. Lo mas caro de la plataforma
+Produccion,Flujo Time Feeds Intelligence,n8n,-,Produccion,por ejecucion,4.98000,SI,flow_runs,token_cost 50
+Produccion,Flujo Product Feature Ads,n8n,-,Produccion,por ejecucion,4.98000,SI,flow_runs,token_cost 50
+Produccion,Flujo Render 3D,ComfyDeploy,-,Produccion,por ejecucion,4.98000,SI,flow_runs,token_cost 50
+Produccion,Flujo Fotografia Macro,ComfyDeploy,-,Produccion,por ejecucion,4.98000,SI,flow_runs,token_cost 50
+Produccion,Flujo Escenarios de Uso,n8n,-,Produccion,por ejecucion,4.98000,SI,flow_runs,token_cost 50
+Produccion,Flujo UGC Secuencial,n8n,-,Produccion,por ejecucion,4.98000,SI,flow_runs,token_cost 5
+Produccion,Generador directo de imagen,KIE.ai,-,Vera genera una pieza,por imagen,,NO,direct-generator.service.js,120 req/min de tope
+Produccion,Generacion de imagen,OpenAI,gpt-image-2,Generacion directa,por imagen,,NO,-,Sin instrumentar
+Infraestructura,Servidor ai-engine,Hetzner,CCX33,Siempre encendido,por mes,,NO,-,Costo fijo mensual: NO esta en el ledger
+Infraestructura,VM por organizacion,Hetzner,-,Una por org con Vera dedicada,por mes,,NO,hetzner.provisioner.js,2 VMs vivas hoy. Costo fijo por cliente
+Infraestructura,Servidor content-flows,Hetzner,-,Flujos n8n,por mes,,NO,-,Costo fijo mensual
+Infraestructura,Base de datos,Supabase,-,Siempre,por mes,,NO,-,Costo fijo + storage
+Infraestructura,Almacenamiento y CDN,Cloudflare R2,-,Media archivada,por GB,,NO,media-archive.service.js,Creativos y miniaturas. Crece sin tope hoy
+Infraestructura,Hosting del frontend,Netlify,-,Siempre,por mes,,NO,-,Costo fijo mensual
