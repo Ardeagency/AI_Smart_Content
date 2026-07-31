@@ -115,6 +115,8 @@
     responder_hoy: () => __('Responder hoy'), vigilar: () => __('Vigilar'), ignorar: () => __('Ignorar'),
     tomar: () => __('Tomar'), adaptar: () => __('Adaptar'), dejar_pasar: () => __('Dejar pasar'),
     causa_nuestra: () => __('Causa nuestra'), mezcla: () => __('Mezcla'), coincidencia: () => __('Coincidencia'),
+    // El rival PUEDE tener razón: sin este veredicto la card solo sabe acusar.
+    se_equivoca: () => __('Se equivoca'), tiene_razon: () => __('Tiene razón'), parcial: () => __('Acierta a medias'),
     se_hizo: () => __('Se hizo'), no_se_hizo: () => __('No se hizo'), se_hizo_distinto: () => __('Se hizo distinto'),
     acerte: () => __('Acerté'), me_equivoque: () => __('Me equivoqué'), sin_datos: () => __('Sin datos'),
     cabe: () => __('Cabe'), cabe_moviendo: () => __('Cabe moviendo plata'), no_cabe: () => __('No cabe'),
@@ -850,7 +852,9 @@
         puerta_aprobacion: { tono: (i) => (i.estado === 'vencido' ? 'threat' : i.estado === 'vence_pronto' ? 'warn' : 'neu'), chips: ['puerta', 'estado'], meta: ['espera_desde'], titulo: 'que', campos: [[() => __('Costo de esperar'), 'costo_de_esperar']] },
         formato:           { tono: () => 'neu', chips: ['formato'], meta: [], titulo: 'idea', campos: [[() => __('Se descarta'), 'descartado'], [() => __('Por qué moriría ahí'), 'por_que_moriria'], [() => __('La prueba'), 'prueba']] },
         derecho_a_jugar:   { tono: (i) => (i.veredicto === 'tomar' ? 'opp' : i.veredicto === 'adaptar' ? 'warn' : 'neu'), chips: ['veredicto', 'autoridad', 'audiencia', 'momento', 'territorio'], meta: [], titulo: 'senal', campos: [[() => __('Por qué'), 'razon']] },
-        supuesto_punto_ciego: { tono: (i) => (i.confianza === 'alta' ? 'opp' : 'neu'), chips: ['rol', 'confianza'], meta: ['perfil'], titulo: 'que_cree', campos: [[() => __('En qué se equivoca'), 'en_que_se_equivoca'], [() => __('La grieta se ve en'), 'evidencia_de_la_grieta'], [() => __('Cómo se explota'), 'como_se_explota']] },
+        // Si el rival TIENE RAZÓN eso es una amenaza (le funciona y no lo tenemos),
+        // no una oportunidad. El verde solo se gana cuando de verdad se equivoca.
+        supuesto_punto_ciego: { tono: (i) => (i.veredicto === 'tiene_razon' ? 'threat' : i.veredicto === 'parcial' ? 'warn' : i.confianza === 'alta' ? 'opp' : 'neu'), chips: ['rol', 'veredicto', 'confianza'], meta: ['perfil'], titulo: 'que_cree', campos: [[() => __('En qué ACIERTA (y por qué le funciona)'), 'en_que_acierta'], [() => __('En qué se equivoca'), 'en_que_se_equivoca'], [() => __('La evidencia se ve en'), 'evidencia_de_la_grieta'], [() => __('Qué lo DESMENTIRÍA'), 'que_lo_desmentiria'], [() => __('Qué hago con esto'), 'como_se_explota']] },
         proxima_movida:    { tono: (i) => (i.confianza === 'alta' ? 'warn' : 'neu'), chips: ['confianza'], meta: ['perfil', 'revisar_el'], titulo: 'movida_probable', campos: [[() => __('Por qué ahora'), 'por_que_ahora'], [() => __('Lo confirmaría'), 'senal_que_la_confirma'], [() => __('Lo DESMENTIRÍA'), 'senal_que_la_desmiente'], [() => __('Si ocurre, hago'), 'si_ocurre_que_hago']] },
         brief_humano:      { tono: () => 'neu', chips: ['tiempo'], meta: ['con_quien', 'donde'], titulo: 'que', campos: [[() => __('Sirve a'), 'sirve_a'], [() => __('No hacer'), 'no_hacer'], [() => __('Listo cuando'), 'listo_cuando']], pasos: true },
       }[card.type];
