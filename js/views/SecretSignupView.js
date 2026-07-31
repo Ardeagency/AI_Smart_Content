@@ -967,9 +967,13 @@ class SecretSignupView extends (window.BaseView || class {}) {
     }
   }
 
+  /* Respaldo por si la consulta a `plans` falla: sin esto el paso del signup se
+     queda sin nada que ofrecer. Tiene que ser ESPEJO de la tabla — un plan que
+     solo vive aquí se le ofrece a alguien que después no lo puede contratar.
+     2026-07-31: el catálogo se redujo a dos niveles y Creator salió de la BD;
+     salió también de aquí el mismo día. */
   _fallbackPlans() {
     return [
-      { id: 'creator', name: 'Creator', description: 'Solo / freelance que produce contenido de marca.', price_usd_month: 79, credits_monthly: 800, max_handles: 3, features: { vera_basic: true, studio: true, video: true }, is_popular: false },
       { id: 'team', name: 'Team', description: 'Equipos de marketing pequeños. Vera completo + colaboración.', price_usd_month: 179, credits_monthly: 2500, max_handles: 10, features: { vera_full: true, team_seats: 10, insights: true, brand_kits: 3 }, is_popular: true },
       { id: 'agency', name: 'Agency', description: 'Agencias gestionando múltiples marcas.', price_usd_month: 499, credits_monthly: 8000, max_handles: 25, features: { vera_full: true, sub_brands: true, team_seats: 25, custom_domain: true }, is_popular: false },
     ];

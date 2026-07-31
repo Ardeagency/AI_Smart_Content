@@ -342,7 +342,7 @@
       const card = datos && datos.cards.find((c) => c && c.type === 'propuestas_fecha');
       if (!card || !this._v4Cabe('propuestas_fecha', 'tendencias')) { hueco.innerHTML = ''; return; }
       const meta = VERA4.propuestas_fecha;
-      let cuerpo = '';
+      let cuerpo;   // el try o el catch siempre lo asignan
       try { cuerpo = this._v4Propuestas(card); } catch (_) { cuerpo = ''; }
       if (!cuerpo) { hueco.innerHTML = ''; return; }
       hueco.innerHTML = `<div class="vera4">${this._v4Marco(card, meta, cuerpo)}</div>`;

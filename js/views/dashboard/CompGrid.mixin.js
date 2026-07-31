@@ -608,9 +608,6 @@
       card.style.setProperty('--cgp-accent-rgb', `${rr}, ${gg}, ${bb}`);
       this._vestirPanelDeMarca?.(host, accentA);
 
-      const chips = (v, cls) => (Array.isArray(v) ? v : []).slice(0, 4)
-        .map((x) => `<span class="cga-chip ${cls}">${esc(String(x))}</span>`).join('');
-
       // La ficha muestra SOLO el nombre y de quién se aprendió: es un objeto
       // para hojear y elegir. El detalle (dolores, deseos, gancho) vive en el
       // modal — meterlo aquí convertía el carrusel en tres muros de texto.
