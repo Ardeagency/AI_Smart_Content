@@ -74,7 +74,7 @@ const EJEMPLO = {
   aplauso_vs_propagacion:{ piezas: [{ titulo: 'El reel del equipo', aplauso: 12, propagacion: 30, formato: 'reel' }, { titulo: 'La infografía', aplauso: 40, propagacion: 3, formato: 'carrusel' }], medianas: { aplauso: 20, propagacion: 10 }, nota_limite: 'No mide memoria de marca.' },
   penetracion_vs_lealtad:{ meses: ['may', 'jun', 'jul'], series: [{ nombre: 'personas nuevas', valores: [100, 96, 88] }, { nombre: 'interacción por seguidor', valores: [100, 112, 130] }], base: 'ambas = 100 en mayo' },
   biblioteca_patrones:   { patrones: [{ patron: 'La receta en una sola toma retiene', confirmado: 4, refutado: 1, confianza: 'alta', ultima_prueba: '2026-07-20', que_decide: 'El formato de las piezas de producto' }] },
-  anomalia:             { items: [{ perfil: 'Marca X', rol: 'competidor_directo', antes: 'Publicaba recetas', ahora: 'Solo promociones', hipotesis: 'Está quemando inventario', veredicto: 'vigilar', prioridad: 'media' }] },
+  anomalia:             { fuentes: [{ tipo: 'publicacion', que: 'Reel de @marcax del 12/07', url: 'https://instagram.com/p/abc', quien: '@marcax', cuando: '12 jul' }, { tipo: 'metrica', que: 'getAdsBreakdown 30 días', quien: 'Meta' }], items: [{ perfil: 'Marca X', rol: 'competidor_directo', antes: 'Publicaba recetas', ahora: 'Solo promociones', hipotesis: 'Está quemando inventario', veredicto: 'vigilar', prioridad: 'media' }] },
   territorio_tematico:  { temas: ['recetas', 'vida fitness', 'ingrediente'], perfiles: ['Tosh', 'B3TTER'], celdas: [[80, 20, 0], [10, 60, 30]], nota_metodo: '52 piezas de 2 perfiles' },
   registro_de_voz:      { tonos: ['cercano', 'épico', 'educativo'], perfiles: [{ perfil: 'Tosh', mezcla: [20, 60, 20] }, { perfil: 'B3TTER', mezcla: [30, 10, 60] }], nota_metodo: '48 copys' },
   emocion_competencia:  { escala: ['rechazo', 'indiferencia', 'neutro', 'interés', 'deseo'], perfiles: [{ perfil: 'Tosh', valores: [2, 8, 20, 40, 30] }], nota_metodo: '120 comentarios' },
@@ -272,5 +272,39 @@ describe('escapado — el texto de Vera nunca es markup', () => {
     expect(html).not.toContain('<img');
     expect(html).not.toContain(VENENO);
     expect(html).toContain('&lt;img');
+  });
+});
+
+/* Las fuentes son lo único clicable que Vera pone en pantalla, y salen de texto
+   de terceros. Un href sin filtrar aquí es un clic del cliente ejecutando lo que
+   un competidor escribió en un caption. */
+describe('pie de fuentes', () => {
+  const vista = cargarVista();
+  const conFuentes = (fuentes) => vista._vera4CardHtml({ ...EJEMPLO.anomalia, type: 'anomalia', fuentes });
+
+  test('una fuente con url http(s) se pinta como enlace que abre fuera', () => {
+    const html = conFuentes([{ tipo: 'web', que: 'Nota de El Tiempo', url: 'https://eltiempo.com/x' }]);
+    expect(html).toContain('href="https://eltiempo.com/x"');
+    expect(html).toContain('rel="noopener noreferrer"');
+    expect(html).toContain('Nota de El Tiempo');
+  });
+
+  test('una fuente SIN url no finge ser clicable', () => {
+    const html = conFuentes([{ tipo: 'metrica', que: 'getAdsBreakdown 30 días' }]);
+    expect(html).toContain('v4-fuente--plana');
+    expect(html).not.toContain('<a class="v4-fuente"');
+  });
+
+  test('javascript: NUNCA sale como href', () => {
+    for (const u of ['javascript:alert(1)', 'JaVaScRiPt:alert(1)', 'data:text/html,<script>x</script>', ' javascript:x']) {
+      const html = conFuentes([{ tipo: 'web', que: 'trampa', url: u }]);
+      expect(html, `${u} no debería ser enlace`).not.toContain('<a class="v4-fuente"');
+      expect(html).not.toContain('href="javascript');
+    }
+  });
+
+  test('sin fuentes no queda pie huérfano', () => {
+    expect(conFuentes(undefined)).not.toContain('v4-fuentes');
+    expect(conFuentes([])).not.toContain('v4-fuentes');
   });
 });

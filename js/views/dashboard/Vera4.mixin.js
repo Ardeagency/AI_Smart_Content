@@ -501,8 +501,45 @@
             <p class="v4-sub">${esc(meta.sub())}</p>
           </header>
           <div class="v4-body">${cuerpo}</div>
+          ${this._v4Fuentes(card)}
           ${this._v4Fecha(card)}
         </section>`;
+    },
+
+    /* ── Pie de fuentes: de dónde salió lo que se afirma ────────────────────
+       Va discreto a propósito — es el respaldo, no el mensaje. Pero clicable:
+       una fuente que no se puede abrir no es una fuente, es una afirmación con
+       aire de cita. Las que traen enlace se abren; las que no, se muestran como
+       texto y se ven distintas, para no prometer un clic que no existe. */
+    _v4Fuentes(card) {
+      const fs = Array.isArray(card && card.fuentes) ? card.fuentes.filter(Boolean) : [];
+      if (!fs.length) return '';
+      const esc = (s) => this._esc(s);
+      // Nombres verificados contra css/aisc-icons.css: uno inventado no falla,
+      // sale en blanco — y un pie de fuentes con huecos parece roto, no discreto.
+      const ICO = {
+        publicacion: 'image', comentarios: 'comments', tendencia: 'growth',
+        web: 'external-link', metrica: 'chart-bar', busqueda: 'search',
+      };
+      const partes = fs.slice(0, 8).map((f) => {
+        const que = String(f.que || '').trim();
+        if (!que) return '';
+        const meta = [f.quien, f.cuando].filter(Boolean).map((x) => esc(x)).join(' · ');
+        const cuerpo = `<i class="aisc-ico aisc-ico--${esc(ICO[f.tipo] || 'link')}" aria-hidden="true"></i>`
+          + `<span class="v4-fuente-que">${esc(que)}</span>`
+          + (meta ? `<span class="v4-fuente-meta">${meta}</span>` : '');
+        // Solo http(s). Vera lee captions y webs de terceros: un `javascript:`
+        // aquí sería ejecutable con un clic del cliente.
+        const url = String(f.url || '').trim();
+        const seguro = /^https?:\/\//i.test(url);
+        return seguro
+          ? `<a class="v4-fuente" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${cuerpo}</a>`
+          : `<span class="v4-fuente v4-fuente--plana">${cuerpo}</span>`;
+      }).filter(Boolean).join('');
+      if (!partes) return '';
+      return `<div class="v4-fuentes">
+        <span class="v4-fuentes-rot">${esc(__('Fuentes'))}</span>${partes}
+      </div>`;
     },
 
     /* Pie de frescura: una lectura vieja NO puede verse igual que una de hoy.

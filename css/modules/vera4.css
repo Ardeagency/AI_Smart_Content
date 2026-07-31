@@ -30,6 +30,45 @@
    fila entera: partirlas a media columna las vuelve ilegibles. */
 .v4-card--ancha { grid-column: 1 / -1; }
 
+/* ── Pie de fuentes ────────────────────────────────────────────────────────
+   Mismo registro discreto que la fecha: es el respaldo, no el mensaje. Se lee
+   si se busca. La diferencia con la fecha es que aquí SÍ se puede hacer clic,
+   así que las que llevan enlace tienen que sentirse clicables al pasar por
+   encima — y las que no, no: prometer un clic que no existe es peor que no
+   mostrar la fuente. */
+.v4-fuentes {
+  margin-top: auto; padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.45rem;
+}
+.v4-fuentes-rot {
+  font-size: 0.58rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: rgba(255, 255, 255, 0.28);
+  margin-right: 0.1rem;
+}
+.v4-fuente {
+  display: inline-flex; align-items: center; gap: 0.28rem;
+  max-width: 100%; min-width: 0;
+  font-size: 0.68rem; line-height: 1.3;
+  color: rgba(255, 255, 255, 0.38);
+  text-decoration: none; border-radius: 6px;
+  padding: 0.12rem 0.3rem;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.v4-fuente .aisc-ico { width: 0.72rem; height: 0.72rem; flex: 0 0 auto; opacity: 0.75; }
+.v4-fuente-que { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 18rem; }
+.v4-fuente-meta { color: rgba(255, 255, 255, 0.26); white-space: nowrap; }
+a.v4-fuente:hover, a.v4-fuente:focus-visible {
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.06);
+  text-decoration: underline; text-underline-offset: 2px;
+}
+a.v4-fuente:hover .v4-fuente-meta, a.v4-fuente:focus-visible .v4-fuente-meta { color: rgba(255, 255, 255, 0.5); }
+/* Sin enlace: no se ilumina y no cambia el cursor. */
+.v4-fuente--plana { cursor: default; color: rgba(255, 255, 255, 0.3); }
+.v4-fuentes + .vera-card-fecha { margin-top: 0; padding-top: 0.25rem; }
+@media (max-width: 600px) { .v4-fuente-que { max-width: 11rem; } }
+
 .v4-head { display: flex; flex-direction: column; gap: 0.15rem; }
 .v4-kind {
   display: inline-flex; align-items: center; gap: 0.4rem;
