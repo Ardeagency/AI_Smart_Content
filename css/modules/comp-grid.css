@@ -264,6 +264,14 @@
 /* Periodo + medida en la misma linea; el de medida es secundario. */
 .cgrid-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
 .bgrid-seg--metric { margin-left: auto; }
+/* Influencia vive ahora en la columna ESTRECHA (460px), encima de la publicacion
+   destacada. Ahi los dos grupos de controles NUNCA caben en una linea: con el
+   `margin-left:auto` el segundo envolvia y se pegaba al borde derecho, dejando
+   los filtros en escalera. Aqui se apilan alineados a la izquierda. */
+.cgrid-card--influencia .bgrid-seg--metric { margin-left: 0; }
+/* Y el pie ("N publicaciones · N interacciones · manda X en Y") se corta a ese
+   ancho: que envuelva en vez de perder la ultima frase, que es el veredicto. */
+.cgrid-card--influencia .bgrid-card-foot { flex-wrap: wrap; row-gap: 0.15rem; }
 .cgrid-foot-warn { color: rgba(255, 255, 255, 0.32); }
 .cgrid-foot-warn::before { content: "· "; }
 .cgrid-chart-wrap { position: relative; width: 100%; height: 320px; }
