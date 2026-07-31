@@ -1,0 +1,30 @@
+id,categoria,funcion,proveedor,modelo_o_recurso,disparador,unidad_facturada,costo_unitario_usd,costo_fijo_mensual_usd,tipo_de_costo,compartido_o_por_org,instrumentacion,fuente,confianza,riesgo,accion_pendiente
+INF-01,Infraestructura,Servidor ai-engine,Hetzner,ccx33 8vCPU 32GB,Siempre encendido,mes,,179.97,fijo,compartido,NO,API Hetzner /v1/servers,Confirmado,Capacidad no medida,Medir cuantas orgs soporta
+INF-02,Infraestructura,Servidor content-flows,Hetzner,cpx41 8vCPU 16GB,Siempre encendido,mes,,153.39,fijo,compartido,NO,API Hetzner /v1/servers,Confirmado,Capacidad no medida,Medir jobs concurrentes
+INF-03,Infraestructura,VM dedicada de organizacion,Hetzner,cx23 2vCPU 4GB,Una por org con Vera,mes,,7.04,fijo escalonado,por organizacion,NO,API Hetzner /v1/servers,Confirmado,Escala lineal con clientes,Definir si es obligatoria por plan
+INF-04,Infraestructura,Base de datos,Supabase,Plan FREE,Siempre,mes,,0.00,fijo,compartido,NO,API Supabase /v1/organizations,Confirmado,CRITICO: sin backups garantizados y 47% del limite,Migrar a plan Pro antes de vender
+INF-05,Infraestructura,Almacenamiento y CDN,Cloudflare R2,aisc-media,Media archivada,GB,0.015,0.00,variable,compartido,NO,API R2 usage: 800.96 MB de 10 GB,Confirmado,Ninguno hasta 26 marcas,Ninguna
+INF-06,Infraestructura,Hosting frontend,Netlify,-,Siempre,mes,,,fijo,compartido,NO,PENDIENTE,Pendiente de informacion,Desconocido,PREGUNTAR plan y costo
+PROV-01,Proveedor,Scraping,Apify,Plan STARTER,Sensores,mes,,29.00,fijo con creditos,compartido,SI,API Apify /users/me,Confirmado,78% consumido con 2 clientes,Subir de plan antes del 3er cliente
+PROV-02,Proveedor,Google Trends,SerpApi,Plan FREE,trends_keywords,consulta,0.00,0.00,cuota,compartido,NO,Codigo search-watchlist.service.js,Confirmado,250 consultas/mes TOTAL,Definir plan pago al escalar
+PROV-03,Proveedor,LLM Anthropic,Anthropic,claude-sonnet-4-6,Vera,Mtok in/out,3.00/15.00,,variable,compartido,PARCIAL,anthropic-proxy/server.js,Confirmado precio; factura Pendiente,Estimacion no calibrada,PEDIR factura real del mes
+PROV-04,Proveedor,LLM OpenAI,OpenAI,gpt-4o / gpt-4o-mini / embeddings,Clasificador e indexado,token,,,variable,compartido,NO,Codigo lib/openai.js,Pendiente de informacion,Gasto invisible,PEDIR factura real
+PROV-05,Proveedor,LLM Gemini,Google,gemini-2.5-flash,grounded-llm,token,,,variable,compartido,NO,Codigo lib/grounded-llm.js,Pendiente de informacion,Gasto invisible,PEDIR factura real
+PROV-06,Proveedor,LLM Perplexity,Perplexity,sonar,grounded-llm,consulta,,,variable,compartido,NO,Codigo lib/grounded-llm.js,Pendiente de informacion,Gasto invisible,PEDIR factura real
+PROV-07,Proveedor,Busqueda web,Tavily,search + extract,Vera investiga,consulta,,,variable,compartido,NO,Codigo tools/web.tools.js,Pendiente de informacion,Gasto invisible,PEDIR plan y consumo
+PROV-08,Proveedor,Generacion de imagen y video,KIE.ai,-,Flujos y generador directo,generacion,,,variable,compartido,NO,Codigo direct-generator.service.js,Pendiente de informacion,CRITICO para costear produccion,PEDIR plan y consumo
+PROV-09,Proveedor,Flujos GPU,ComfyDeploy,-,Flujos Comfy,ejecucion,,,variable,compartido,NO,comfyui.aismartcontent.io,Pendiente de informacion,CRITICO para costear produccion,PEDIR plan y consumo
+VAR-01,Variable IA,Chat de Vera,Anthropic,claude-sonnet-4-6,Usuario escribe,respuesta,0.06658,,variable,por organizacion,SI,credit_usage 482 eventos,Confirmado,Depende del uso humano,Ninguna
+VAR-02,Variable IA,Razonamiento OpenClaw,Anthropic,claude-sonnet-4-6,Sesion agentica,sesion,0.32879,,variable,por organizacion,SI,credit_usage 41 eventos,Confirmado,Loops sin tope,Poner limite de iteraciones
+VAR-03,Variable IA,Lectura de tablero,Anthropic,claude-sonnet-4-6,Vera escribe cards,lectura,0.13929,,variable,por organizacion,SI,credit_usage 9 eventos,Confirmado,-,Ninguna
+VAR-04,Variable IA,Vision describir imagen,Anthropic,claude-sonnet-4-6,Media nuevo del scraping,imagen,0.00773,,variable,por organizacion,SI,credit_usage 1381 eventos,Confirmado,Volumen alto,Ninguna
+VAR-05,Variable IA,Cards de tableros,Anthropic,claude-sonnet-4-6,publishVera4Card,sesion,0.02386,,variable,por organizacion,PARCIAL,vera_session_audit 114,Confirmado,Mide y NO cobra,Instrumentar cobro
+VAR-06,Variable scraping,Perfil monitoreado promedio,Apify,varios actores,Sensor social,perfil/mes,2.60,,variable,por organizacion,SI,credit_usage + sensor_runs,Confirmado,-,Ninguna
+VAR-07,Variable scraping,Anuncios de competencia,Apify,curious_coder ad library,Sensor semanal,anuncio,0.00075,,variable,por organizacion,SI,Prueba real 31/07,Confirmado,-,Ninguna
+VAR-08,Variable,Sondeo de visibilidad IA,Multi,ChatGPT/Perplexity/Gemini,visibility_probe,sondeo,0.68990,,variable,por organizacion,SI,credit_usage 6 eventos,Confirmado,Caro por evento,Limitar frecuencia
+VAR-09,Variable,Produccion de una pieza,ComfyDeploy/KIE/n8n,varios,Usuario produce,ejecucion,,,variable,por organizacion,ERRONEA,credit_usage: 4.98 = creditos/10,No determinado,CRITICO: costo real desconocido,MEDIR costo real de GPU
+HUM-01,Humano,Onboarding de organizacion,ARDE,-,Alta de cliente,horas,,,COGS humano,por organizacion,NO,PENDIENTE,Pendiente de informacion,Puede dominar el COGS,PREGUNTAR horas y tarifa
+HUM-02,Humano,Soporte y customer success,ARDE,-,Mensual,horas,,,COGS humano,por organizacion,NO,PENDIENTE,Pendiente de informacion,Puede dominar el COGS,PREGUNTAR horas y tarifa
+HUM-03,Humano,Revision y aprobacion creativa,ARDE,-,Por pieza,horas,,,COGS humano,por organizacion,NO,PENDIENTE,Pendiente de informacion,Puede dominar el COGS,PREGUNTAR horas y tarifa
+FIN-01,Financiero,Pasarela de pago,Wompi,-,Cada cobro,transaccion,,,variable,por organizacion,NO,wompi_transactions vacia,Pendiente de informacion,Sin cobros aun,PREGUNTAR comision
+FIN-02,Financiero,Diferencia cambiaria USD/COP,-,-,Cada cobro,%,,,variable,compartido,NO,PENDIENTE,Pendiente de informacion,Precios en USD y costos en EUR/USD,Definir cobertura
