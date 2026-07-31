@@ -107,21 +107,6 @@
                el porqué del rival que su tablero no dice, después las cifras que
                lo sostienen. Se colapsa sola si Vera no la escribió. -->
           <div class="bgrid-intuicion" id="cgridIntuicion"></div>
-          <section class="bgrid-card glass-black cgrid-card--influencia">
-            <header class="bgrid-card-head">
-              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--chart-bar" aria-hidden="true"></i>${this._esc(__('Influencia digital'))}</span>
-            </header>
-            <p class="bgrid-card-sub">${this._esc(__('Cuánta conversación genera cada competidor y en qué red la genera · toca una barra para ver todo lo recolectado'))}</p>
-            <div class="cgrid-controls">
-              <nav class="bgrid-seg" role="tablist" aria-label="${this._esc(__('Periodo'))}">${seg}</nav>
-              <nav class="bgrid-seg bgrid-seg--metric" role="tablist" aria-label="${this._esc(__('Medida'))}">
-                <button type="button" class="bgrid-seg-btn${this._cgridMetric === 'per1k' ? ' is-active' : ''}" data-cmetric="per1k" role="tab" title="${this._esc(__('Interacciones por cada 1.000 seguidores — comparable entre marcas de distinto tamaño'))}">${this._esc(__('Por audiencia'))}</button>
-                <button type="button" class="bgrid-seg-btn${this._cgridMetric === 'total' ? ' is-active' : ''}" data-cmetric="total" role="tab" title="${this._esc(__('Interacciones totales del periodo'))}">${this._esc(__('Total'))}</button>
-              </nav>
-            </div>
-            <div class="cgrid-bars" id="cgridBars"><div class="cgrid-load">${this._esc(__('Cargando perfiles…'))}</div></div>
-            <footer class="bgrid-card-foot" id="cgridBarsFoot"></footer>
-          </section>
           <!-- Lectura de Vera perfil por perfil. La escribe ella en su sesión
                de dashboard (vera_dashboard_readings, scope monitoreo); aquí
                solo se pinta. -->
@@ -146,6 +131,25 @@
                fila del grid — es decir, bajo "Qué hace cada perfil" — en vez de
                debajo de la publicación destacada. -->
           <div class="cgrid-col">
+          <!-- Influencia digital ABRE la columna derecha, encima de la
+               publicación destacada (2026-07-31). Estaba a la izquierda, y ahí
+               el tab empezaba por el gráfico; ahora la columna izquierda la abre
+               la Intuición y la derecha reúne las cifras y la pieza del rival. -->
+          <section class="bgrid-card glass-black cgrid-card--influencia">
+            <header class="bgrid-card-head">
+              <span class="bgrid-card-title"><i class="aisc-ico aisc-ico--chart-bar" aria-hidden="true"></i>${this._esc(__('Influencia digital'))}</span>
+            </header>
+            <p class="bgrid-card-sub">${this._esc(__('Cuánta conversación genera cada competidor y en qué red la genera · toca una barra para ver todo lo recolectado'))}</p>
+            <div class="cgrid-controls">
+              <nav class="bgrid-seg" role="tablist" aria-label="${this._esc(__('Periodo'))}">${seg}</nav>
+              <nav class="bgrid-seg bgrid-seg--metric" role="tablist" aria-label="${this._esc(__('Medida'))}">
+                <button type="button" class="bgrid-seg-btn${this._cgridMetric === 'per1k' ? ' is-active' : ''}" data-cmetric="per1k" role="tab" title="${this._esc(__('Interacciones por cada 1.000 seguidores — comparable entre marcas de distinto tamaño'))}">${this._esc(__('Por audiencia'))}</button>
+                <button type="button" class="bgrid-seg-btn${this._cgridMetric === 'total' ? ' is-active' : ''}" data-cmetric="total" role="tab" title="${this._esc(__('Interacciones totales del periodo'))}">${this._esc(__('Total'))}</button>
+              </nav>
+            </div>
+            <div class="cgrid-bars" id="cgridBars"><div class="cgrid-load">${this._esc(__('Cargando perfiles…'))}</div></div>
+            <footer class="bgrid-card-foot" id="cgridBarsFoot"></footer>
+          </section>
           <!-- Publicación destacada: SIN superficie — flota sobre el degradado
                y deja que el contenido del rival hable solo. Solo título, sin
                descripción: el contenido se explica a sí mismo. -->
