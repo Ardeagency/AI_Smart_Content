@@ -2815,5 +2815,17 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Qué está premiando la distribución en los perfiles que vigilas": "What distribution is rewarding in the profiles you watch",
   "La prueba": "The proof",
   "Se lo muestra a": "It shows it to",
-  "Qué me llevo": "What I take from it"
+  "Qué me llevo": "What I take from it",
+  "Tu plan {plan} venció": "Your {plan} plan expired",
+  "Venció el {fecha}. Renueva para volver a tener a Vera trabajando en tu marca.": "It expired on {fecha}. Renew to get Vera working on your brand again.",
+  "Plan": "Plan",
+  "Mensualidad": "Monthly",
+  "Vencido hace": "Expired",
+  "{n} días": "{n} days",
+  "Renovar mi plan": "Renew my plan",
+  "Renovar": "Renew",
+  "Tus datos y tu historial siguen intactos.": "Your data and history are untouched.",
+  "Tu plan {plan} venció el {fecha}. Te quedan {n} días de acceso.": "Your {plan} plan expired on {fecha}. You have {n} days of access left.",
+  "Tu plan {plan} venció el {fecha}. El acceso se cierra hoy.": "Your {plan} plan expired on {fecha}. Access closes today.",
+  "El plan {plan} está vencido desde el {fecha}. Es una cortesía: el acceso sigue abierto, pero hay que renovarlo.": "The {plan} plan has been expired since {fecha}. It is a courtesy: access stays open, but it needs renewing."
 }/* I18N:END */;

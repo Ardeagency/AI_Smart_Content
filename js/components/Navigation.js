@@ -3429,8 +3429,30 @@ class Navigation {
       this.loadBrandContainersCount();
       // Calcular y renderear el botón "Upgrade to X" del footer del sidebar
       this.loadUpgradeTarget();
+      // Estado de la mensualidad: banner en gracia, muro si está vencida.
+      // Aquí y no en el router porque este es el punto donde la org ya está
+      // resuelta, y el muro tiene que poder aparecer en CUALQUIER pantalla.
+      this.revisarMensualidad();
     } catch (err) {
       console.error('Error loading organization info:', err);
+    }
+  }
+
+  /** Paywall de mensualidad. Falla ABIERTA: sin veredicto, no se bloquea. */
+  async revisarMensualidad() {
+    try {
+      if (typeof window.SubscriptionGate !== 'function') return;
+      const orgId = this.currentOrgId;
+      if (!orgId) { this._subGate?.destroy?.(); this._subGate = null; return; }
+      const supabase = await this.getSupabase();
+      if (!supabase) return;
+      if (!this._subGate || this._subGate.orgId !== orgId) {
+        this._subGate?.destroy?.();
+        this._subGate = new window.SubscriptionGate({ supabase, orgId });
+      }
+      await this._subGate.revisar();
+    } catch (e) {
+      console.warn('[Navigation] mensualidad:', e?.message || e);
     }
   }
 

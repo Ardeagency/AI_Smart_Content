@@ -1176,3 +1176,78 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     color: #444;
   }
 }
+
+/* ── Mensualidad vencida: banner de gracia y muro de bloqueo ────────────────
+   Vive en bundle.css (no en un modulo por ruta) porque tiene que poder
+   aparecer en CUALQUIER pantalla: un paywall que depende de que haya cargado
+   el css de su vista no sirve de paywall. */
+.subgate-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9998;
+  display: flex; align-items: center; justify-content: center; gap: 0.9rem;
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(90deg, #7a2d0a, #b4470f);
+  color: #fff; font-size: 0.85rem; font-weight: 500;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+.subgate-banner-txt { max-width: 70ch; }
+.subgate-banner-cta {
+  flex: 0 0 auto; padding: 0.3rem 0.9rem; border-radius: 999px;
+  background: #fff; color: #12100d; font-weight: 700; font-size: 0.8rem;
+  text-decoration: none; white-space: nowrap;
+}
+.subgate-banner-cta:hover { background: rgba(255, 255, 255, 0.88); }
+/* El banner empuja la app hacia abajo en vez de taparle el header. */
+body.has-subgate-banner { padding-top: 42px; }
+
+/* El muro. Cubre todo y no se puede rodear con scroll. */
+body.has-subgate-wall { overflow: hidden; }
+.subgate-wall {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+  background: radial-gradient(120% 120% at 50% 0%, #241206 0%, #0b0b0a 60%);
+}
+.subgate-wall-card {
+  width: 100%; max-width: 460px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 0.9rem;
+}
+.subgate-logo { opacity: 0.9; margin-bottom: 0.5rem; height: auto; }
+.subgate-titulo {
+  margin: 0; font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 700;
+  letter-spacing: -0.02em; color: #fff;
+}
+.subgate-sub {
+  margin: 0; font-size: 0.95rem; line-height: 1.55; max-width: 42ch;
+  color: rgba(255, 255, 255, 0.72);
+}
+.subgate-datos {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem;
+  margin: 0.4rem 0 0.6rem; padding: 0.9rem 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.subgate-datos dt {
+  font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.09em;
+  color: rgba(255, 255, 255, 0.45); margin-bottom: 0.2rem;
+}
+.subgate-datos dd { margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff; }
+.subgate-btn {
+  display: inline-block; width: 100%; max-width: 300px;
+  padding: 0.85rem 1.5rem; border-radius: 12px;
+  background: linear-gradient(120deg, #C10801 0%, #E85002 55%, #F16001 100%);
+  color: #fff; font-size: 0.95rem; font-weight: 700; text-decoration: none;
+  box-shadow: 0 8px 24px rgba(232, 80, 2, 0.32);
+  transition: transform 0.15s ease;
+}
+.subgate-btn:hover { transform: translateY(-1px); }
+.subgate-salir {
+  appearance: none; background: none; border: 0; cursor: pointer;
+  font: inherit; font-size: 0.85rem; color: rgba(255, 255, 255, 0.55);
+  text-decoration: underline; padding: 0.3rem;
+}
+.subgate-salir:hover { color: rgba(255, 255, 255, 0.85); }
+.subgate-nota { margin: 0.3rem 0 0; font-size: 0.75rem; color: rgba(255, 255, 255, 0.38); }
+
+@media (max-width: 520px) {
+  .subgate-datos { gap: 1rem; padding: 0.75rem 0.9rem; }
+  body.has-subgate-banner { padding-top: 62px; }
+}
