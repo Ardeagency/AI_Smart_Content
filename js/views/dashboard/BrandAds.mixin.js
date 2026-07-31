@@ -124,9 +124,15 @@
       const lista = sel === 'activos' ? activos : todos;
 
       if (nav) {
+        /* "Todos" solo si de verdad son todos: se piden los TOPE más recientes
+           y la cuenta tiene cientos. Decir "Todos (60)" con 400 en la base es
+           una mentira pequeña que hace desconfiar del resto del tablero. */
+        const etiquetaTodos = todos.length >= TOPE
+          ? __('Últimos ({n})', { n: todos.length })
+          : __('Todos ({n})', { n: todos.length });
         nav.innerHTML = [
           ['activos', __('Activos ({n})', { n: activos.length })],
-          ['todos', __('Todos ({n})', { n: todos.length })],
+          ['todos', etiquetaTodos],
         ].map(([v, l]) => `<button type="button" class="bgrid-seg-btn${v === sel ? ' is-active' : ''}" data-bads-filtro="${v}" role="tab">${this._esc(l)}</button>`).join('');
       }
 

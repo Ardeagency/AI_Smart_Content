@@ -2792,5 +2792,6 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Eliminado": "Deleted",
   "Con problemas": "With issues",
   "Rechazado por Meta": "Rejected by Meta",
-  "En revisión": "Under review"
+  "En revisión": "Under review",
+  "Últimos ({n})": "Latest ({n})"
 }/* I18N:END */;
