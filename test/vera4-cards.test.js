@@ -188,6 +188,23 @@ describe('la Intuición: una por tab, nunca la misma copiada', () => {
     expect(html).not.toContain('data-vera-recheck');
   });
 
+  /* Dos defectos que solo se vieron pintados y que un mapa compartido puede
+     reintroducir sin avisar. */
+  test('la confianza no reusa la etiqueta de fuerza de señal', () => {
+    const html = vista._v4IntuicionHtml(INTU, 'monitoreo', null);
+    expect(html).toContain('confianza media');
+    expect(html).not.toContain('confianza Señal media');
+  });
+
+  test('el bloque de acción va en tono neutro: el tablero es monocromo', () => {
+    let tonos = [];
+    const espia = Object.create(Object.getPrototypeOf(vista));
+    Object.assign(espia, vista);
+    espia._veraBlockHtml = (b) => { if (b.type === 'callout') tonos.push(b.tone); return '<div>x</div>'; };
+    espia._v4IntuicionHtml(INTU, 'monitoreo', null);
+    expect(tonos).toEqual(['neutral']);
+  });
+
   test('sin título o sin cuerpo no deja marco huérfano', () => {
     expect(vista._v4IntuicionHtml({}, 'monitoreo', null)).toBe('');
     expect(vista._v4IntuicionHtml({ titulo: 'solo el título' }, 'monitoreo', null)).toBe('');

@@ -124,6 +124,14 @@
     estrategia: { kicker: () => __('Intuición sobre la jugada'),      sub: () => __('Lo que está en juego y todavía nadie ha nombrado') },
   };
 
+  /* La confianza de la Intuición tiene su propio vocabulario: en el mapa general
+     (ETIQUETA) 'media' es "Señal media", de la escala de fuerza de las señales
+     débiles, y al reusarlo salía "confianza señal media". */
+  const CONF_INTU = {
+    alta: () => __('alta'), media: () => __('media'),
+    baja: () => __('baja'), exploratoria: () => __('exploratoria'),
+  };
+
   /* Dónde abre la Intuición en cada tablero. El PRIMER selector es su hueco
      reservado en el shell del tab (si existe, se llena y nada más se mueve); los
      siguientes son la columna izquierda donde se inserta como primer hijo cuando
@@ -379,14 +387,21 @@
         blocks.push({ type: 'split', columns: cols });
       }
       // La salida ejecutable. Si falta, la intuición quedó a medias — y se ve.
+      // Tono NEUTRO a propósito: con 'positive' el bloque salía verde, y un verde
+      // suelto rompe el monocromo del tablero. En neutro toma el acento de la
+      // marca (--intu-accent), que es el único color que esta pieza admite.
       if (card.que_hago) {
-        blocks.push({ type: 'callout', tone: 'positive', icon: 'compass', title: __('Qué hacer con esto'), markdown: String(card.que_hago) });
+        blocks.push({ type: 'callout', tone: 'neutral', icon: 'compass', title: __('Qué hacer con esto'), markdown: String(card.que_hago) });
       }
       if (!blocks.length) return '';
 
       const inner = blocks.map((b, i) => this._veraBlockHtml(b, `intu-${scope}`, i)).join('');
-      const conf = card.confianza
-        ? `<span class="vera-card-conf">${esc(__('confianza {c}', { c: eti(card.confianza) }))}</span>` : '';
+      // OJO: `eti` NO sirve aquí. En su mapa 'media' es "Señal media" (la escala
+      // de fuerza de las señales débiles), así que salía "confianza señal media".
+      // La confianza tiene su propio vocabulario y va en minúscula, como una
+      // acotación al pie.
+      const conf = CONF_INTU[card.confianza]
+        ? `<span class="vera-card-conf">${esc(__('confianza {c}', { c: CONF_INTU[card.confianza]() }))}</span>` : '';
       const iso = card.updated_at || createdAt || null;
       const rel = (typeof this._veraHace === 'function') ? this._veraHace(iso) : '';
       const pie = rel ? `<span class="vera-card-fecha">${esc(__('Última actualización {d}', { d: rel }))}</span>` : '';
