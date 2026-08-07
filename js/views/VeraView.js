@@ -1231,6 +1231,67 @@ function getAiTaskEventUrl() {
   return `${window.location.origin}/api/ai/task-event`;
 }
 
+/* ─── Alto de los iframes de VERA (```html / ```artifact) ────────────
+   El iframe no puede medirse a sí mismo sin cuidado: `documentElement.scrollHeight`
+   NUNCA es menor que el viewport, y el viewport de un iframe ES el alto que le
+   pone el padre. Sumarle un margen a esa medida y devolverla convierte el puente
+   en un TRINQUETE: el ResizeObserver vuelve a disparar, mide más, el padre suma
+   otra vez, y el bloque crece sin techo dejando un vacío muerto bajo el HTML.
+
+   Por eso aquí se mide el CONTENIDO (`body`) y se compara contra el viewport:
+
+   - contenido ya es el alto aplicado → convergió: no se toca nada. (Es también
+     lo que reporta un documento al que ya le dimos su medida exacta.)
+   - contenido  <  viewport → el documento cabe: se encoge a su alto real.
+   - contenido  >  viewport → hay desborde medible: se crece a lo que pide.
+   - contenido === viewport, y NO es el alto que aplicamos → ambiguo: o mide
+     justo eso, o está ATADO al viewport (`min-height:100vh`, `height:100%`) y
+     seguirá al padre a donde vaya. Se SONDEA una sola vez con un alto de
+     lienzo; la medida siguiente lo resuelve sola: si vuelve a igualar al
+     viewport es que lo persigue y se queda en el lienzo (con scroll interno),
+     y si reporta menos, se encoge a su alto real.
+
+   El detector de TORMENTA es el fusible: muchos ajustes seguidos en el mismo
+   instante son un bucle, no una interacción. Se cuenta por ventana de tiempo y
+   no por total, para no congelar un artifact que el usuario despliega y cierra
+   a mano diez veces en un minuto. */
+const FRAME_MIN_H = 160;      // igual que el min-height del CSS
+const FRAME_MAX_H = 6000;     // techo duro: más allá, scroll interno
+const FRAME_PROBE_H = 640;    // lienzo de sondeo para documentos atados al viewport
+const FRAME_STORM_MS = 1500;  // ventana del detector
+const FRAME_STORM_MAX = 12;   // ajustes dentro de la ventana antes de congelar
+
+function fitSandboxFrame(frame, data, now = Date.now()) {
+  const st = frame.__veraFit
+    || (frame.__veraFit = { applied: 0, probed: false, frozen: false, winStart: 0, winCount: 0 });
+  if (st.frozen) return st;
+
+  const content = Math.round(Number(data?.content ?? data?.height) || 0);
+  const viewport = Math.round(Number(data?.viewport) || 0);
+  if (content <= 0) return st;
+
+  const aplicar = (h) => {
+    const next = clamp(Math.round(h), FRAME_MIN_H, FRAME_MAX_H);
+    if (Math.abs(next - st.applied) < 2) return; // ya estamos ahí
+    frame.style.height = `${next}px`;
+    st.applied = next;
+    if (now - st.winStart > FRAME_STORM_MS) { st.winStart = now; st.winCount = 1; }
+    else if ((st.winCount += 1) > FRAME_STORM_MAX) st.frozen = true;
+    if (next >= FRAME_MAX_H) st.frozen = true;
+  };
+
+  // Sin viewport (iframe viejo en caché): se aplica lo medido tal cual. No puede
+  // desbocarse porque el detector de tormenta sigue contando.
+  if (!viewport) { aplicar(content); return st; }
+
+  if (Math.abs(content - st.applied) <= 1) return st;
+  if (content < viewport - 1 || content > viewport + 1) { aplicar(content); return st; }
+
+  if (!st.probed) { st.probed = true; aplicar(FRAME_PROBE_H); return st; }
+  aplicar(content);
+  return st;
+}
+
 /* ─── View ─────────────────────────────────────────────── */
 class VeraView extends (window.BaseView || class {}) {
   constructor() {
@@ -1283,9 +1344,7 @@ class VeraView extends (window.BaseView || class {}) {
         const frames = document.querySelectorAll('.vera-sandbox-frame, .vera-artifact-frame');
         frames.forEach((frame) => {
           try {
-            if (frame.contentWindow === event.source) {
-              frame.style.height = (event.data.height + 24) + 'px';
-            }
+            if (frame.contentWindow === event.source) fitSandboxFrame(frame, event.data);
           } catch (_) { /* contentWindow puede ser inaccesible si el iframe se removio */ }
         });
         return;
@@ -3405,7 +3464,24 @@ class VeraView extends (window.BaseView || class {}) {
       const resizeScript = [
         '<script>',
         '(function(){',
-        'function r(){window.parent.postMessage({type:"vera_resize",height:document.documentElement.scrollHeight},"*");}',
+        // Mide el CONTENIDO (body), no `documentElement.scrollHeight`, cuyo piso
+        // es el viewport = el alto que el padre acaba de poner (eso realimentaba
+        // el bucle). Manda tambien el viewport para que el padre distinga un
+        // documento medible de uno atado a el (min-height:100vh). Una medida por
+        // fotograma como maximo, y solo si cambio.
+        'var __vRaf=0,__vPrev="";',
+        'function __vMide(){',
+          '__vRaf=0;',
+          'var b=document.body,d=document.documentElement;',
+          'var c=Math.max(b?b.scrollHeight:0,b?b.offsetHeight:0);',
+          'var v=d?d.clientHeight:0;',
+          'var k=c+"x"+v;',
+          'if(k===__vPrev)return;',
+          '__vPrev=k;',
+          'window.parent.postMessage({type:"vera_resize",height:c,content:c,viewport:v},"*");',
+        '}',
+        // rAF SIN desligarlo de window: invocarlo suelto lanza "Illegal invocation".
+        'function r(){if(!__vRaf)__vRaf=window.requestAnimationFrame?window.requestAnimationFrame(__vMide):setTimeout(__vMide,16);}',
         'window.addEventListener("load",r);',
         'try{new ResizeObserver(r).observe(document.body);}catch(e){}',
         // ── Widget action bridge ───────────────────────────────────────
@@ -4385,5 +4461,9 @@ class VeraView extends (window.BaseView || class {}) {
     });
   }
 }
+
+/* Expuesto para prueba: la convergencia del alto de los iframes se verifica en
+   test/vera-artifact-altura.test.js sin navegador. */
+VeraView._fitSandboxFrame = fitSandboxFrame;
 
 window.VeraView = VeraView;

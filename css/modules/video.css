@@ -3721,9 +3721,12 @@
   min-height: 80px;
 }
 .vera-html-block, .vera-artifact-block { background: #0d0d0f; }
+/* SIN transition en height: cada fotograma de la animación cambiaba el viewport
+   del iframe, disparaba su ResizeObserver y devolvía otra medida. El alto se
+   ajusta de una vez. */
 .vera-sandbox-frame, .vera-artifact-frame {
   display: block; width: 100%; border: none;
-  min-height: 160px; transition: height 0.3s ease;
+  min-height: 160px;
 }
 .vera-artifact-bar {
   display: flex; align-items: center;
