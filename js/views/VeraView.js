@@ -2204,6 +2204,11 @@ class VeraView extends (window.BaseView || class {}) {
       body.innerHTML = '';
       const f = document.createElement('iframe');
       f.className = 'vera-artifact-panel-frame';
+      // Este SÍ lleva allow-modals, y a propósito: `window.print()` cuenta como
+      // modal y sin el permiso el botón "Guardar como PDF" dejaría de funcionar.
+      // El riesgo de un alert() que congele la pestaña se acota a este marco,
+      // que solo existe cuando el usuario abre el artifact a mano; los bloques
+      // inline —que se pintan solos en cada mensaje— van sin él.
       f.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals');
       f.srcdoc = this._artifactSrcdoc || '';
       body.appendChild(f);
@@ -2521,9 +2526,12 @@ class VeraView extends (window.BaseView || class {}) {
       return;
     }
     try {
+      // `metadata` NO es opcional: el bloque [CONFIRM] guarda ahí el mensaje
+      // original que hay que reenviar cuando el usuario autoriza. Sin esta
+      // columna el botón "Autorizar" no tiene qué reenviar y muere en silencio.
       const { data, error } = await this.supabase
         .from('ai_messages')
-        .select('id, role, content, created_at')
+        .select('id, role, content, created_at, metadata')
         .eq('conversation_id', this.aiState.active_conversation_id)
         .in('role', ['user', 'assistant', 'error'])
         .order('created_at', { ascending: true });
@@ -3389,7 +3397,7 @@ class VeraView extends (window.BaseView || class {}) {
 
     // 2. Extrae bloques ```html y ```artifact ANTES de todo. Estos NO pasan por
     //    DOMPurify — se inyectan crudos en un iframe sandbox null-origin
-    //    (sandbox="allow-scripts allow-forms allow-modals" SIN allow-same-origin
+    //    (sandbox="allow-scripts allow-forms" SIN allow-same-origin ni allow-modals
     //    → el iframe no puede tocar localStorage/cookies del parent).
     // Placeholders en formato {{...}} (NO __x__): el doble guion bajo lo
     // interpreta marked como **bold** y rompe la restauracion (dejaba "legacy_N"
@@ -3512,6 +3520,28 @@ class VeraView extends (window.BaseView || class {}) {
         '<!DOCTYPE html><html><head>',
         '<meta charset="UTF-8">',
         '<meta name="viewport" content="width=device-width,initial-scale=1">',
+        // ── CSP: el sandbox null-origin impide LEER la sesión del padre, pero
+        //    no impedía HABLAR hacia afuera. Este HTML lo escribe un LLM que lee
+        //    webs y comentarios de terceros, y lleva datos de la marca dentro:
+        //    sin esta línea, una instrucción inyectada podía cargar un script de
+        //    cualquier CDN y sacar los datos por `fetch`. `connect-src 'none'`
+        //    cierra fetch/XHR/WebSocket, y `script-src` sin host deja solo lo
+        //    que va escrito aquí: el artifact tiene que ser autocontenido —el
+        //    mismo criterio de Claude y de los widgets de OpenAI—.
+        //    Las imágenes https SÍ se permiten (los artifacts muestran piezas y
+        //    miniaturas reales); es el único canal de salida que queda abierto.
+        '<meta http-equiv="Content-Security-Policy" content="' +
+          "default-src 'none'; " +
+          "script-src 'unsafe-inline' 'unsafe-eval'; " +
+          "style-src 'unsafe-inline'; " +
+          'img-src data: blob: https:; ' +
+          'media-src data: blob: https:; ' +
+          'font-src data: https:; ' +
+          "connect-src 'none'; " +
+          "form-action 'none'; " +
+          "base-uri 'none'; " +
+          "frame-src 'none'" +
+        '">',
         '<style>',
         '*{box-sizing:border-box;margin:0;padding:0}',
         'body{font-family:system-ui,sans-serif;background:#0d0d0f;color:#f0eff5;padding:16px}',
@@ -3548,7 +3578,7 @@ class VeraView extends (window.BaseView || class {}) {
             '</button>' +
           '</div>' +
           '<iframe class="' + frameClass + '" ' +
-            'sandbox="allow-scripts allow-forms allow-modals" ' +
+            'sandbox="allow-scripts allow-forms" ' +
             'srcdoc="' + srcdoc + '"></iframe>' +
         '</div>';
 
@@ -3611,6 +3641,9 @@ class VeraView extends (window.BaseView || class {}) {
     if (welcome) welcome.remove();
     this._setWelcomeMode(false);
 
+    // Se mide ANTES de insertar: después el contenido nuevo ya nos alejó del fondo.
+    const seguiaAbajo = this._pegadoAlFondo(scroll);
+
     // Pre-render del markdown para mensajes de VERA (asistente/error).
     // Los mensajes del usuario se escapan dentro de _msgHTML (no markdown).
     let prepared = msg;
@@ -3635,7 +3668,9 @@ class VeraView extends (window.BaseView || class {}) {
     this._initClarifyWidgets();
     this._dockActiveClarify();
     this._processChatRichContent(list);
-    if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
+    // El mensaje propio del usuario SIEMPRE lo lleva al fondo (lo acaba de
+    // escribir); el de Vera solo si estaba mirando el final.
+    setTimeout(() => this._irAlFondo(scroll, seguiaAbajo || msg.role === 'user'), 20);
 
     // Handler global para action pills (sobrescribe en cada append, OK).
     if (typeof window !== 'undefined') {
@@ -3648,22 +3683,33 @@ class VeraView extends (window.BaseView || class {}) {
         const meta = msg?.metadata || {};
         const original = meta.original_message || '';
         const attachments = meta.original_attachments || [];
-        // Marca el bloque como ya accionado para evitar doble-click + UX clara.
         const block = btnEl?.closest?.('.vera-confirm-block');
-        if (block) {
-          block.classList.add('vera-confirm-block--dismissed');
-          block.querySelectorAll('button').forEach((b) => { b.disabled = true; });
-          const tag = document.createElement('div');
-          tag.className = 'vera-confirm-status';
-          const labels = { authorize: __('✓ Autorizado'), simplify: __('✓ Autorizado (version simplificada)'), cancel: __('✕ Cancelado') };
-          tag.textContent = labels[action] || __('accion: {action}', { action });
-          block.appendChild(tag);
-        }
-        if (action === 'cancel') return;
+        const sellar = (texto, muerto) => {
+          if (!block) return;
+          if (muerto) block.classList.add('vera-confirm-block--dismissed');
+          block.querySelectorAll('button').forEach((b) => { b.disabled = muerto; });
+          let tag = block.querySelector('.vera-confirm-status');
+          if (!tag) {
+            tag = document.createElement('div');
+            tag.className = 'vera-confirm-status';
+            block.appendChild(tag);
+          }
+          tag.textContent = texto;
+        };
+
+        if (action === 'cancel') { sellar(__('✕ Cancelado'), true); return; }
+
+        // El sello se pone DESPUES de saber que se puede actuar. Antes se
+        // pintaba "✓ Autorizado" de entrada y, si faltaba el mensaje original,
+        // el handler se rendia con un console.warn: el usuario veia autorizado
+        // algo que jamas se ejecuto.
         if (!original) {
           console.warn('vera-confirm: original_message vacio en metadata, no se puede re-enviar');
+          sellar(__('No se pudo autorizar: falta el mensaje original. Vuelve a pedírselo a Vera.'), false);
+          window.showToast?.(__('No se pudo autorizar la tarea. Vuelve a pedírsela a Vera.'), { type: 'error' });
           return;
         }
+        sellar(action === 'simplify' ? __('✓ Autorizado (version simplificada)') : __('✓ Autorizado'), true);
         this.sendMessage(original, {
           confirmedHighCost: true,
           simplifyRequest: action === 'simplify',
@@ -3785,6 +3831,23 @@ class VeraView extends (window.BaseView || class {}) {
   }
 
   /* ── Typing / Activity indicator ────────────────────── */
+  /* ── Pegado al fondo, pero solo si el usuario YA estaba abajo ──────────────
+     El chat forzaba scrollTop = scrollHeight en cada append y en cada estado
+     (cada 5s durante esperas de hasta 12 min): si subías a releer una respuesta
+     mientras Vera trabajaba, te devolvía al fondo una y otra vez. Ahora solo se
+     sigue al que ya estaba mirando el final; leer atrás no se interrumpe.
+     `forzar` es para lo que el usuario acaba de provocar (su propio mensaje). */
+  _pegadoAlFondo(scroll, margen = 120) {
+    if (!scroll) return false;
+    return (scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight) <= margen;
+  }
+
+  _irAlFondo(scroll, forzar = false) {
+    if (!scroll) return;
+    if (!forzar && !this._pegadoAlFondo(scroll)) return;
+    scroll.scrollTop = scroll.scrollHeight;
+  }
+
   showTypingIndicator(statusText) {
     const list = document.getElementById('veraMessageList');
     const scroll = document.getElementById('veraMessagesWrap');
@@ -3803,15 +3866,15 @@ class VeraView extends (window.BaseView || class {}) {
         </div>
       </div>
     `);
-    if (scroll) scroll.scrollTop = scroll.scrollHeight;
+    // Forzado: aparece justo después de que el usuario mandó su mensaje.
+    this._irAlFondo(scroll, true);
   }
 
   updateTypingStatus(text) {
     const el = document.getElementById('veraStatusText');
     if (el) el.textContent = text || '';
-    // Auto-scroll suave
-    const scroll = document.getElementById('veraMessagesWrap');
-    if (scroll) scroll.scrollTop = scroll.scrollHeight;
+    // Solo sigue al que ya estaba abajo: esto corre cada 5s durante toda la espera.
+    this._irAlFondo(document.getElementById('veraMessagesWrap'));
   }
 
   hideTypingIndicator() {
@@ -4075,7 +4138,14 @@ class VeraView extends (window.BaseView || class {}) {
      opts.confirmedHighCost — pasa true cuando el usuario aceptó la
      advertencia de costo y queremos que el backend salte el pre-check. */
   async sendMessage(text, opts = {}) {
-    if (!this.aiState.organization_id || this.aiState.isLoading) return;
+    if (!this.aiState.organization_id) return;
+    // Ocupada: se AVISA. Antes se descartaba el envio en silencio mientras el
+    // mensaje de espera invitaba justamente a "enviar otro mensaje" — el texto
+    // prometia algo que el codigo prohibia, y sin decirlo.
+    if (this.aiState.isLoading) {
+      window.showToast?.(__('Vera está trabajando en tu mensaje anterior. En cuanto responda, sigue.'), { type: 'info' });
+      return;
+    }
 
     // Al enviar (opcion o texto libre) se retira la pregunta anclada al composer.
     if (!opts.confirmedHighCost) this._undockQuestion();
@@ -4179,12 +4249,20 @@ class VeraView extends (window.BaseView || class {}) {
       const convId = json?.conversation_id || this.aiState.active_conversation_id;
 
       if (json?.status === 'cost_confirmation_inline') {
-        // ── Backend persistio el [CONFIRM] como ai_message. Llega via Realtime
-        //    y se renderiza con 3 botones (Autorizar / Simplificar / Cancelar).
-        //    No hacemos nada aqui — solo soltamos el spinner y dejamos que el
-        //    bloque aparezca cuando Supabase Realtime lo entregue.
-        this.hideTypingIndicator();
-        this.aiState.isLoading = false;
+        // ── Backend persistio el [CONFIRM] como ai_message con 3 botones
+        //    (Autorizar / Simplificar / Cancelar).
+        //    ANTES aqui se soltaba el spinner y se confiaba en que "Realtime lo
+        //    entregara" — pero el UNICO canal Realtime del chat se abre DENTRO
+        //    de _waitForAsyncResponse, que en esta rama no se llamaba: no habia
+        //    ningun suscriptor vivo y el bloque no aparecia hasta recargar.
+        //    Ahora se espera igual que una respuesta normal; el respaldo por
+        //    polling lo encuentra aunque se insertara antes de suscribirnos.
+        //    Espera CORTA (30s): el bloque ya está en la BD cuando llegamos
+        //    aquí, así que si no aparece es un fallo, no una tarea larga.
+        await this._waitForAsyncResponse(convId, token, {
+          maxWaitMs: 30_000,
+          timeoutMsg: __('No se pudo mostrar la confirmación de costo. Recarga la página y vuelve a pedírselo a Vera.'),
+        });
         return;
 
       } else if (json?.status === 'cost_confirmation_required') {
@@ -4257,7 +4335,11 @@ class VeraView extends (window.BaseView || class {}) {
   _removeMessage(id) {
     const idx = this.aiState.messages.findIndex(m => m.id === id);
     if (idx >= 0) this.aiState.messages.splice(idx, 1);
-    document.querySelector(`[data-msg-id="${id}"]`)?.remove();
+    // El nodo del mensaje lleva `data-message-id` (ver _msgHTML); este método
+    // buscaba `data-msg-id` —el atributo del bloque [CONFIRM]— y por eso NUNCA
+    // borraba nada de la pantalla: el mensaje descartado seguía visible.
+    const esc = window.CSS?.escape ? window.CSS.escape(id) : String(id).replace(/"/g, '\\"');
+    document.querySelector(`[data-message-id="${esc}"]`)?.remove();
   }
 
   /* ── Mensajes de espera cíclicos (cuando no hay status del backend) ─────── */
@@ -4267,7 +4349,9 @@ class VeraView extends (window.BaseView || class {}) {
     if (elapsedMs < 90_000)  return __('Vera está trabajando en segundo plano…');
     if (elapsedMs < 180_000) return __('Vera está realizando tareas complejas — puede tardar unos minutos…');
     if (elapsedMs < 360_000) return __('Vera sigue activa — procesando en background…');
-    return __('Vera lleva un buen rato trabajando. Si hay algo urgente, puedes enviar otro mensaje.');
+    // NO invitar a "enviar otro mensaje": el composer está bloqueado hasta que
+    // Vera responda. Prometer lo que la pantalla no deja hacer es peor que callar.
+    return __('Vera lleva un buen rato trabajando. Puedes dejarla y volver: la respuesta te espera en este chat.');
   }
 
   /* ── Espera la respuesta async SOLO via Supabase Realtime ───────────────── */
@@ -4282,14 +4366,15 @@ class VeraView extends (window.BaseView || class {}) {
   //   - Si el tiempo de espera se agota, se avisa al usuario que recargue —
   //     nunca se carga el historial para "adivinar" la respuesta.
   //
-  async _waitForAsyncResponse(conversationId, token) {
+  async _waitForAsyncResponse(conversationId, token, opts = {}) {
     return new Promise((resolve) => {
       const startTime    = Date.now();
-      // ISO del momento exacto en que el usuario envió el mensaje — filtra mensajes anteriores
-      const startIso     = new Date().toISOString();
       const NOTIFY_AFTER_MS = 5_000;
-      // 12 minutos — OpenClaw puede tardar hasta 10 min en tareas complejas
-      const MAX_WAIT_MS  = 12 * 60 * 1000;
+      // 12 minutos — OpenClaw puede tardar hasta 10 min en tareas complejas.
+      // `opts.maxWaitMs` lo acorta para esperas que DEBEN ser inmediatas (el
+      // bloque de confirmación ya está escrito en la BD cuando llegamos aquí):
+      // si algo va mal ahí, hay que fallar rápido y decirlo, no colgar 12 min.
+      const MAX_WAIT_MS  = opts.maxWaitMs || 12 * 60 * 1000;
       const TICK_MS      = 5_000;
       // Polling de respaldo: primer check a los 5s, luego cada 6s
       const POLL_FIRST_MS    = 5_000;
@@ -4335,6 +4420,10 @@ class VeraView extends (window.BaseView || class {}) {
             id: msg.id || `local-${Date.now()}`,
             role: isError ? 'error' : 'assistant',
             content: msg.content,
+            // Se arrastra el metadata: el [CONFIRM] lleva ahí el mensaje original
+            // que el botón "Autorizar" tiene que reenviar. Recortarlo aquí dejaba
+            // el botón muerto para todo lo que llegara en vivo.
+            metadata: msg.metadata || null,
             created_at: msg.created_at || new Date().toISOString()
           };
           this.aiState.messages.push(displayMsg);
@@ -4374,14 +4463,23 @@ class VeraView extends (window.BaseView || class {}) {
         try {
           const { data } = await this.supabase
             .from('ai_messages')
-            .select('id, role, content, created_at, conversation_id')
+            .select('id, role, content, created_at, conversation_id, metadata')
             .eq('conversation_id', conversationId)
             .in('role', ['assistant', 'error'])
-            .gt('created_at', startIso)
             .order('created_at', { ascending: false })
-            .limit(1);
+            .limit(5);
 
-          if (data?.length) handleMsg(data[0]);
+          // Se descarta por ID, no por fecha: `created_at` lo pone Postgres y
+          // `startIso` salía del reloj del NAVEGADOR — con el equipo adelantado
+          // unos minutos la comparación no se cumplía nunca y este respaldo (que
+          // existe justo para cuando Realtime falla) no entregaba jamás.
+          // Además, por ID sí se ve un mensaje insertado ANTES de suscribirnos.
+          const vistos = new Set((this.aiState.messages || []).map((m) => m.id));
+          const nuevo = (data || [])
+            .slice()
+            .reverse()
+            .find((m) => m.id && !vistos.has(m.id));
+          if (nuevo) handleMsg(nuevo);
         } catch (err) {
           // Fallback poll del chat: si esto falla repetidamente, el usuario verá
           // "escribiendo…" sin respuesta. Logueamos para poder diagnosticar.
@@ -4406,7 +4504,8 @@ class VeraView extends (window.BaseView || class {}) {
             const timeoutMsg = {
               id: `local-timeout-${Date.now()}`,
               role: 'error',
-              content: __('Vera sigue trabajando en segundo plano. Recarga la página cuando quieras ver su respuesta.'),
+              content: opts.timeoutMsg
+                || __('Vera sigue trabajando en segundo plano. Recarga la página cuando quieras ver su respuesta.'),
               created_at: new Date().toISOString()
             };
             this.aiState.messages.push(timeoutMsg);
