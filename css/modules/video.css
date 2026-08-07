@@ -4253,6 +4253,48 @@
 
 /* Menú "+" del composer (archivos / biblioteca), popover hacia arriba */
 .vera-plus-wrap { position: relative; display: inline-flex; }
+/* ── Omnibox `@` del composer ─────────────────────────────────────────────
+   Mismo registro visual que el menú "+" (es el mismo gesto: traer algo de la
+   plataforma), pero aparece mientras escribes, sin sacarte del composer.
+   El ancla va por ID y no por `.gpt-composer`: esa clase la reusan la consola
+   de producción y la de dirección, y no tienen omnibox que colocar. */
+#veraInputWrap { position: relative; }
+.vera-omnibox {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0; right: 0;
+  z-index: 31;
+  padding: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  max-height: 44vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--white-10) transparent;
+}
+.vera-omni-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.vera-omni-item.is-active { background: var(--white-8); }
+.vera-omni-item > i { flex: 0 0 auto; width: 15px; font-size: 12px; color: var(--text-muted); }
+.vera-omni-name {
+  flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.vera-omni-kind {
+  flex: 0 0 auto;
+  font-size: 11px; color: var(--text-muted);
+  max-width: 45%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
 .vera-plus-menu {
   position: absolute;
   bottom: calc(100% + 8px);

@@ -1515,7 +1515,7 @@ class VeraView extends (window.BaseView || class {}) {
               <textarea
                 class="gpt-composer-textarea"
                 id="veraInput"
-                placeholder="${__('Pregunta lo que quieras')}"
+                placeholder="${__('Pregunta lo que quieras — escribe @ para traer un producto, una estrategia, una producción…')}"
                 rows="1"
               ></textarea>
               <div class="gpt-composer-row">
@@ -1535,6 +1535,9 @@ class VeraView extends (window.BaseView || class {}) {
                       <button class="vera-plus-item" data-lib-type="audience_objective" role="menuitem"><i class="aisc-ico aisc-ico--audience"></i><span>${__('Objetivo de audiencia')}</span></button>
                       <button class="vera-plus-item" data-lib-type="brief" role="menuitem"><i class="aisc-ico aisc-ico--copy"></i><span>${__('Brief')}</span></button>
                       <button class="vera-plus-item" data-lib-type="service" role="menuitem"><i class="aisc-ico aisc-ico--brief"></i><span>${__('Servicios')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="strategy" role="menuitem"><i class="aisc-ico aisc-ico--goal"></i><span>${__('Estrategia')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="production" role="menuitem"><i class="aisc-ico aisc-ico--flows"></i><span>${__('Producción')}</span></button>
+                      <button class="vera-plus-item" data-lib-type="flow" role="menuitem"><i class="aisc-ico aisc-ico--flows"></i><span>${__('Flujo')}</span></button>
                       <button class="vera-plus-item" data-lib-type="place" role="menuitem"><i class="aisc-ico aisc-ico--places"></i><span>${__('Lugares')}</span></button>
                       <button class="vera-plus-item" data-lib-type="character" role="menuitem"><i class="aisc-ico aisc-ico--characters"></i><span>${__('Personajes')}</span></button>
                     </div>
@@ -1983,6 +1986,60 @@ class VeraView extends (window.BaseView || class {}) {
             .select('id, nombre_personaje').in('entity_id', ids).limit(300);
           return (data || []).map((r) => ({ id: r.id, name: r.nombre_personaje || __('Personaje sin nombre'), meta: '' }));
         }
+      },
+      strategy: {
+        label: __('Estrategia'), icon: 'aisc-ico aisc-ico--goal',
+        load: async () => {
+          // canvas_strategies cuelga del contenedor de marca, no de la org.
+          const { data: marcas } = await sb().from('brand_containers')
+            .select('id, nombre_marca').eq('organization_id', orgId).limit(100);
+          const ids = (marcas || []).map((m) => m.id);
+          if (!ids.length) return [];
+          const nombre = new Map((marcas || []).map((m) => [m.id, m.nombre_marca]));
+          const { data } = await sb().from('canvas_strategies')
+            .select('id, name, description, brand_container_id')
+            .in('brand_container_id', ids)
+            .order('created_at', { ascending: false }).limit(300);
+          return (data || []).map((r) => ({
+            id: r.id,
+            name: r.name || __('Estrategia sin nombre'),
+            meta: nombre.get(r.brand_container_id) || '',
+          }));
+        }
+      },
+      production: {
+        label: __('Producción'), icon: 'aisc-ico aisc-ico--flows',
+        load: async () => {
+          const { data: runs } = await sb().from('flow_runs')
+            .select('id, flow_id, status, created_at')
+            .eq('organization_id', orgId)
+            .order('created_at', { ascending: false }).limit(60);
+          if (!runs?.length) return [];
+          const flowIds = [...new Set(runs.map((r) => r.flow_id).filter(Boolean))];
+          const { data: flows } = flowIds.length
+            ? await sb().from('content_flows').select('id, name').in('id', flowIds)
+            : { data: [] };
+          const nombre = new Map((flows || []).map((f) => [f.id, f.name]));
+          // Una producción no tiene título propio: se nombra por su flujo y su
+          // fecha, que es como el usuario la reconoce en el historial.
+          return runs.map((r) => ({
+            id: r.id,
+            name: nombre.get(r.flow_id) || __('Producción'),
+            meta: this._relTime(r.created_at) || r.status || '',
+          }));
+        }
+      },
+      flow: {
+        label: __('Flujo'), icon: 'aisc-ico aisc-ico--flows',
+        load: async () => {
+          // Catálogo compartido: publicado, activo y visible (nada de 'system').
+          const { data } = await sb().from('content_flows')
+            .select('id, name, output_type')
+            .eq('is_active', true).eq('status', 'published').eq('show_in_catalog', true)
+            .neq('flow_category_type', 'system')
+            .order('name', { ascending: true }).limit(300);
+          return (data || []).map((r) => ({ id: r.id, name: r.name || __('Flujo sin nombre'), meta: r.output_type || '' }));
+        }
       }
     };
     return defs[kind] || null;
@@ -1993,10 +2050,173 @@ class VeraView extends (window.BaseView || class {}) {
     return d ? d.label : 'Dato';
   }
   _libKindIcon(kind) {
-    return ({
-      product: 'aisc-ico aisc-ico--product', campaign: 'aisc-ico aisc-ico--campaign', campaign_objective: 'aisc-ico aisc-ico--goal',
-      audience_objective: 'aisc-ico aisc-ico--audience', brief: 'aisc-ico aisc-ico--copy', service: 'aisc-ico aisc-ico--brief', place: 'aisc-ico aisc-ico--places'
-    })[kind] || 'aisc-ico aisc-ico--layers';
+    const d = this._libTypeDef(kind);
+    return d?.icon || 'aisc-ico aisc-ico--layers';
+  }
+
+  /* Todos los tipos adjuntables, en el orden en que se ofrecen. Una sola lista:
+     el menú `+`, el omnibox `@` y el parseo de los chips leen de aquí, así que
+     añadir un tipo es tocar `_libTypeDef` y esta constante, y nada más. */
+  _libKinds() {
+    return ['product', 'service', 'strategy', 'production', 'flow', 'campaign',
+      'campaign_objective', 'audience_objective', 'brief', 'place', 'character'];
+  }
+
+  /* ── Omnibox `@` ───────────────────────────────────────────────────────────
+     Escribes `@wake` y sale lo que coincide, de TODOS los tipos a la vez, sin
+     salir del composer. El menú `+` sigue existiendo para quien prefiera
+     navegar por tipo, pero obligaba a saber la categoría antes que el nombre:
+     uno piensa "WAKEUP Refresh", no "eso es un producto".
+     Es una capa de búsqueda sobre los mismos `load()` del picker — no hay una
+     segunda fuente de datos que se pueda desincronizar. */
+
+  // Normaliza para buscar sin tildes ni mayúsculas ("cafe" encuentra "Café").
+  _normalizar(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  /* Ordena por qué tan bien casa: primero lo que EMPIEZA por lo escrito, luego
+     lo que empieza una palabra, y al final lo que solo lo contiene. Con
+     "wake" el producto "WAKEUP" tiene que salir antes que "Campaña de wake". */
+  _puntuarCoincidencia(nombre, q) {
+    const n = this._normalizar(nombre);
+    const idx = n.indexOf(q);
+    if (idx < 0) return -1;
+    if (idx === 0) return 0;
+    return / /.test(n.charAt(idx - 1)) ? 1 : 2;
+  }
+
+  _filtrarCandidatos(items, query, tope = 8) {
+    const q = this._normalizar(query).trim();
+    const con = items
+      .map((it) => ({ it, p: q ? this._puntuarCoincidencia(it.name, q) : 0 }))
+      .filter((x) => x.p >= 0);
+    con.sort((a, b) => (a.p - b.p) || String(a.it.name).localeCompare(String(b.it.name)));
+    return con.slice(0, tope).map((x) => x.it);
+  }
+
+  /* Lee el `@…` que el cursor está escribiendo. Solo cuenta si la arroba abre
+     palabra (para no capturar correos) y si lo tecleado no trae espacios. */
+  _tokenArroba(valor, cursor) {
+    const antes = String(valor || '').slice(0, cursor);
+    const at = antes.lastIndexOf('@');
+    if (at < 0) return null;
+    const previo = at > 0 ? antes.charAt(at - 1) : ' ';
+    if (!/[\s(]/.test(previo)) return null;
+    const query = antes.slice(at + 1);
+    if (/[\s\n]/.test(query)) return null;
+    return { desde: at, hasta: cursor, query };
+  }
+
+  /* Carga (y cachea 5 min) todos los tipos, aplanados con su kind. La caducidad
+     importa: si creas un producto en otra pestaña y vuelves, el buscador tiene
+     que encontrarlo sin recargar la página. */
+  async _cargarUniverso() {
+    const VIGENCIA_MS = 5 * 60 * 1000;
+    if (this._universo && (Date.now() - (this._universoAt || 0)) < VIGENCIA_MS) return this._universo;
+    this._universoAt = Date.now();
+    const kinds = this._libKinds();
+    const cargas = await Promise.all(kinds.map(async (kind) => {
+      try {
+        const def = this._libTypeDef(kind);
+        const items = def ? await def.load() : [];
+        return (items || []).map((it) => ({ ...it, kind }));
+      } catch (err) {
+        // Un tipo que falla no puede dejar mudo al buscador entero.
+        console.warn(`[VeraView] omnibox: no se pudo cargar "${kind}":`, err?.message || err);
+        return [];
+      }
+    }));
+    this._universo = cargas.flat();
+    return this._universo;
+  }
+
+  _cerrarOmnibox() {
+    document.getElementById('veraOmnibox')?.remove();
+    this._omni = null;
+  }
+
+  _pintarOmnibox(items, token) {
+    const wrap = document.getElementById('veraInputWrap') || document.getElementById('chatcontainer');
+    if (!wrap) return;
+    if (!items.length) { this._cerrarOmnibox(); return; }
+
+    this._omni = { items, token, activo: 0 };
+    let box = document.getElementById('veraOmnibox');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'veraOmnibox';
+      box.className = 'vera-omnibox';
+      box.setAttribute('role', 'listbox');
+      wrap.appendChild(box);
+      // El ratón elige lo mismo que el teclado.
+      box.addEventListener('mousedown', (e) => {
+        e.preventDefault(); // no robar el foco del composer
+        const fila = e.target.closest?.('[data-omni-idx]');
+        if (fila) this._elegirDelOmnibox(Number(fila.getAttribute('data-omni-idx')));
+      });
+    }
+    box.innerHTML = items.map((it, i) => `
+      <div class="vera-omni-item${i === 0 ? ' is-active' : ''}" data-omni-idx="${i}" role="option" aria-selected="${i === 0}">
+        <i class="aisc-ico ${escapeHtml((this._libKindIcon(it.kind) || '').replace('aisc-ico ', ''))}"></i>
+        <span class="vera-omni-name">${escapeHtml(it.name)}</span>
+        <span class="vera-omni-kind">${escapeHtml(this._libKindLabel(it.kind))}${it.meta ? ` · ${escapeHtml(it.meta)}` : ''}</span>
+      </div>`).join('');
+  }
+
+  _moverOmnibox(paso) {
+    if (!this._omni) return;
+    const n = this._omni.items.length;
+    this._omni.activo = (this._omni.activo + paso + n) % n;
+    document.querySelectorAll('#veraOmnibox .vera-omni-item').forEach((el, i) => {
+      const on = i === this._omni.activo;
+      el.classList.toggle('is-active', on);
+      el.setAttribute('aria-selected', String(on));
+      if (on) el.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  /* Adjunta lo elegido y BORRA el `@…` del texto: el adjunto ya se ve como chip,
+     dejarlo además escrito lo contaría dos veces. */
+  _elegirDelOmnibox(idx) {
+    const st = this._omni;
+    const input = document.getElementById('veraInput');
+    if (!st || !input) return;
+    const it = st.items[Number.isInteger(idx) ? idx : st.activo];
+    if (!it) return;
+
+    const valor = input.value || '';
+    input.value = valor.slice(0, st.token.desde) + valor.slice(st.token.hasta);
+    const pos = st.token.desde;
+    this._cerrarOmnibox();
+
+    const yaEstan = this.aiState.pendingAttachments
+      .filter((a) => a.type === 'library' && a.kind === it.kind)
+      .map((a) => ({ id: a.refId, name: a.name }));
+    if (!yaEstan.some((x) => x.id === it.id)) yaEstan.push({ id: it.id, name: it.name });
+    this._setLibraryAttachmentsForType(it.kind, yaEstan);
+
+    input.focus();
+    try { input.setSelectionRange(pos, pos); } catch (_) { /* navegador viejo */ }
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  /* Llamado en cada tecleo del composer. Sin `@` en curso, no hace nada. */
+  async _refrescarOmnibox() {
+    const input = document.getElementById('veraInput');
+    if (!input || !this.aiState.organization_id || !this.supabase) return this._cerrarOmnibox();
+    const token = this._tokenArroba(input.value, input.selectionStart ?? (input.value || '').length);
+    if (!token) return this._cerrarOmnibox();
+
+    // Cada tecla invalida la búsqueda anterior: si dos cargas se cruzan, solo
+    // se pinta la del texto que sigue escrito.
+    const sello = (this._omniSello = (this._omniSello || 0) + 1);
+    const universo = await this._cargarUniverso();
+    if (sello !== this._omniSello) return;
+    const actual = this._tokenArroba(input.value, input.selectionStart ?? (input.value || '').length);
+    if (!actual) return this._cerrarOmnibox();
+
+    this._pintarOmnibox(this._filtrarCandidatos(universo, actual.query), actual);
   }
 
   // Picker de UN tipo (Producto, Campaña, etc.). La selección se acumula con la
@@ -2133,10 +2353,10 @@ class VeraView extends (window.BaseView || class {}) {
     const raw = String(content || '');
     const m = raw.match(/<<DATOS_BIBLIOTECA>>\n([\s\S]*?)\n<<\/DATOS_BIBLIOTECA>>/);
     if (!m) return { text: raw, refs: [] };
-    const labelToKind = {
-      'Producto': 'product', 'Campaña': 'campaign', 'Objetivo de campaña': 'campaign_objective',
-      'Objetivo de audiencia': 'audience_objective', 'Brief': 'brief', 'Servicio': 'service', 'Lugar': 'place', 'Personaje': 'character'
-    };
+    // Se deriva de los tipos reales: una segunda lista escrita a mano se queda
+    // vieja en cuanto se añade un tipo, y el chip sale como "Dato" genérico.
+    const labelToKind = {};
+    this._libKinds().forEach((k) => { labelToKind[this._libKindLabel(k)] = k; });
     const refs = m[1].split('\n').map((line) => {
       const p = line.replace(/^-\s*/, '').split('|').map((s) => s.trim());
       return { kind: labelToKind[p[0]] || 'data', name: p[1] || '', id: p[2] || '' };
@@ -4012,7 +4232,10 @@ class VeraView extends (window.BaseView || class {}) {
     };
     this._syncSendBtn = syncSendBtn;
 
-    this.addEventListener(input, 'input', () => { autoResize(); syncSendBtn(); });
+    this.addEventListener(input, 'input', () => { autoResize(); syncSendBtn(); this._refrescarOmnibox(); });
+    // Mover el cursor también cambia el `@…` que se está escribiendo.
+    this.addEventListener(input, 'click', () => this._refrescarOmnibox());
+    this.addEventListener(input, 'blur', () => setTimeout(() => this._cerrarOmnibox(), 120));
     autoResize();
     syncSendBtn();
 
@@ -4027,6 +4250,14 @@ class VeraView extends (window.BaseView || class {}) {
     };
 
     this.addEventListener(input, 'keydown', (e) => {
+      // Con el omnibox abierto, las flechas y el Enter son SUYOS: Enter elige el
+      // elemento, no envía el mensaje a medio escribir.
+      if (this._omni) {
+        if (e.key === 'ArrowDown')  { e.preventDefault(); this._moverOmnibox(1);  return; }
+        if (e.key === 'ArrowUp')    { e.preventDefault(); this._moverOmnibox(-1); return; }
+        if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); this._elegirDelOmnibox(); return; }
+        if (e.key === 'Escape')     { e.preventDefault(); this._cerrarOmnibox(); return; }
+      }
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
     });
 
