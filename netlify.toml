@@ -83,6 +83,14 @@
   status = 200
   force = true
 
+# Predictor — solo el lanzamiento pasa por funcion; los resultados se leen
+# directo de Supabase con la RLS de predictor_runs.
+[[redirects]]
+  from = "/api/predictor/run"
+  to = "/.netlify/functions/api-predictor-run"
+  status = 200
+  force = true
+
 # ── Demo preview (anonymous IGNIS preview) ───────────────
 [[redirects]]
   from = "/api/demo-event"

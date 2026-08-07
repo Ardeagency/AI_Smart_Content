@@ -330,6 +330,12 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/execution-history', execHistoryLoader, auth);
     r.register('/execution-history', execHistoryLoader, auth);
 
+    // ── Org: Predictor (simular al publico antes de gastar en el) ──
+    // predictor.css tiene todas sus clases namespaced .pred-* → route-split seguro.
+    const predictorLoader = this._lazy('PredictorView', ['/js/views/PredictorView.js'], ['/css/modules/predictor.css']);
+    r.register('/org/:orgIdShort/:orgNameSlug/predictor', predictorLoader, auth);
+    r.register('/predictor', predictorLoader, auth);
+
     // ── Deps compartidas de marca: mixins que aplican sobre BrandstorageView
     // y/o BrandOrganizationView según cuál esté definido al cargar.
     // Typography, Uploads y ColorEditor son idénticos entre ambas vistas.

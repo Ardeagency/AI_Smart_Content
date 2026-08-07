@@ -57,6 +57,18 @@ const SIDEBAR_USER_CONFIG = {
       route: 'monitoring',
       requireCap: 'monitoring.view'
     },
+    {
+      type: 'page',
+      id: 'predictor',
+      label: 'Predictor',
+      icon: 'aisc-ico aisc-ico--insight',
+      iconSrc: '/recursos/icons/monitoring.svg',
+      route: 'predictor',
+      // Se reusa insights.view a proposito: el Predictor es una lectura mas
+      // (mirar hacia adelante en vez de hacia atras). Inventar un permiso nuevo
+      // que no exista en el enum lo dejaria invisible o roto.
+      requireCap: 'insights.view'
+    },
     { type: 'section', label: 'Crear' },
     { type: 'page', id: 'production', label: 'Producción', icon: 'aisc-ico aisc-ico--growth', iconSrc: '/recursos/icons/Production.svg', route: 'production', requireCap: 'production.create' },
     {
@@ -360,7 +372,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/products', '/services', '/places', '/characters', '/studio', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/products', '/services', '/places', '/characters', '/studio', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring', '/predictor'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -3063,6 +3075,7 @@ class Navigation {
       '/production': __('PRODUCCIÓN'),
       '/vera': 'VERA',
       '/tasks': __('TAREAS'),
+      '/predictor': __('PREDICTOR'),
       '/brand': __('MARCA'),
       '/brand-organization': __('MARCA'),
       '/brand-storage': __('ALMACENAMIENTO'),

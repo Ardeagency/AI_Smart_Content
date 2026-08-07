@@ -1,0 +1,383 @@
+/* ============================================================
+   Predictor — simular al publico antes de gastar en el.
+   Clases namespaced .pred-* para route-split seguro.
+   Cards = bg-card + border-divider (glass solo en botones, ver guia).
+   ============================================================ */
+
+.pred-page {
+  min-height: 100%;
+}
+
+.pred-container {
+  padding: calc(var(--app-header-height, 56px) + 2rem) 4rem 4rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── Cabecera ── */
+.pred-header {
+  margin-bottom: 2.25rem;
+}
+
+.pred-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.4rem;
+}
+
+.pred-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0;
+  max-width: 62ch;
+  line-height: 1.55;
+}
+
+/* ── Formulario de lanzamiento ── */
+.pred-lanzar {
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md, 12px);
+  padding: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.pred-lanzar-titulo {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 1.15rem;
+}
+
+.pred-campo {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.pred-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+}
+
+.pred-opcional {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.pred-input {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md, 12px);
+  padding: 0.65rem 0.8rem;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  transition: border-color 0.15s ease;
+}
+
+.pred-input:focus {
+  outline: none;
+  border-color: var(--accent, var(--text-primary));
+}
+
+.pred-input--area {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.pred-fila {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.pred-campo--corto { flex: 1 1 260px; }
+.pred-campo--mini  { flex: 0 1 130px; }
+
+.pred-acciones {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.pred-btn {
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md, 12px);
+  padding: 0.6rem 1.2rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  /* glass permitido aqui: es un boton */
+  backdrop-filter: blur(8px);
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.pred-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.pred-btn:disabled { opacity: 0.55; cursor: default; }
+
+.pred-btn--primario {
+  border-color: var(--text-primary);
+}
+
+.pred-aviso {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 0;
+  flex: 1 1 280px;
+  line-height: 1.45;
+}
+
+.pred-error {
+  color: var(--accent-warm, #d66);
+  font-size: 0.85rem;
+  margin: 0.85rem 0 0;
+}
+
+/* ── Historial ── */
+.pred-historial-titulo {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 1rem;
+}
+
+.pred-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.pred-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+}
+
+.pred-card.is-fallida { opacity: 0.85; }
+
+.pred-card-cabeza {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  width: 100%;
+  padding: 1.1rem 1.25rem;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pred-card-texto { min-width: 0; }
+
+.pred-card-titulo {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.3rem;
+}
+
+.pred-card-pregunta {
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pred-card-lado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.pred-estado {
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.pred-estado--listo { color: var(--text-primary); }
+.pred-estado--fallo { color: var(--accent-warm, #d66); }
+.pred-estado--viva  { color: var(--text-secondary); }
+
+.pred-pulso {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pred-latido 1.6s ease-in-out infinite;
+}
+
+@keyframes pred-latido {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pred-pulso { animation: none; opacity: 0.7; }
+  .pred-btn:hover:not(:disabled) { transform: none; }
+}
+
+.pred-card-meta {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+/* ── Detalle expandido ── */
+.pred-detalle {
+  padding: 0 1.25rem 1.4rem;
+  border-top: 1px solid var(--border-divider);
+  padding-top: 1.2rem;
+}
+
+.pred-bloque { margin-bottom: 1.4rem; }
+
+.pred-bloque-titulo {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin: 0 0 0.55rem;
+}
+
+.pred-prediccion {
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.pred-confianza {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0.5rem 0 0;
+}
+
+.pred-dinamicas {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+/* ── Señales ── */
+.pred-senales {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.pred-senal {
+  display: grid;
+  grid-template-columns: 1fr 110px 42px;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.pred-senal-barra {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-divider);
+  overflow: hidden;
+}
+
+.pred-senal-relleno {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--text-secondary);
+}
+
+/* Direccion: se distingue por opacidad, no por color — la guia es monocroma.
+   El signo lo lleva el texto de la señal, no un semaforo. */
+.pred-senal--positiva .pred-senal-relleno { background: var(--text-primary); }
+.pred-senal--negativa .pred-senal-relleno { background: var(--text-secondary); opacity: 0.55; }
+.pred-senal--mixta    .pred-senal-relleno { background: var(--text-secondary); opacity: 0.35; }
+
+.pred-senal-fuerza {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Estados de excepcion ── */
+.pred-corriendo {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.pred-fallo-titulo {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  margin: 0 0 0.6rem;
+  font-weight: 500;
+}
+
+.pred-fallo-motivo {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md, 12px);
+  padding: 0.7rem 0.85rem;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 220px;
+  overflow-y: auto;
+  line-height: 1.5;
+}
+
+.pred-descargo {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.85;
+  line-height: 1.55;
+  margin: 1.2rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border-divider);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .pred-container { padding: calc(var(--app-header-height, 56px) + 1.25rem) 1.25rem 2.5rem; }
+}
+
+@media (max-width: 620px) {
+  .pred-card-cabeza { flex-direction: column; gap: 0.7rem; }
+  .pred-card-lado { align-items: flex-start; flex-direction: row; gap: 0.75rem; }
+  .pred-senal { grid-template-columns: 1fr 60px 38px; }
+}
