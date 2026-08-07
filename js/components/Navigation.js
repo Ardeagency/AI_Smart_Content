@@ -61,8 +61,8 @@ const SIDEBAR_USER_CONFIG = {
       type: 'page',
       id: 'predictor',
       label: 'Predictor',
-      icon: 'aisc-ico aisc-ico--insight',
-      iconSrc: '/recursos/icons/monitoring.svg',
+      icon: 'aisc-ico aisc-ico--predictor',
+      iconSrc: '/recursos/icons/predictor.svg',
       route: 'predictor',
       // Se reusa insights.view a proposito: el Predictor es una lectura mas
       // (mirar hacia adelante en vez de hacia atras). Inventar un permiso nuevo

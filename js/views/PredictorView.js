@@ -105,7 +105,7 @@ class PredictorView extends BaseView {
       ${this.emptyState({
         id: 'predVacio',
         hidden: true,
-        icon: 'aisc-ico aisc-ico--insight',
+        icon: 'aisc-ico aisc-ico--predictor',
         title: __('Todavía no has corrido ninguna predicción.'),
         subtitle: __('Escribe arriba qué quieres probar y lanza la primera. El motor arma el público desde el ADN y las audiencias reales de tu marca.'),
       })}
