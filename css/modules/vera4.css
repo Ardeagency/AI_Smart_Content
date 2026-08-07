@@ -30,6 +30,40 @@
    fila entera: partirlas a media columna las vuelve ilegibles. */
 .v4-card--ancha { grid-column: 1 / -1; }
 
+/* ── El peaje del pasado: qué cambia a partir de esto ──────────────────────
+   Al revés que las fuentes: esto NO es discreto. Una card que mira atrás solo
+   se gana su sitio si cambia algo de lo que sigue, así que el acto se ve. Se
+   apoya en el pie de la card (margin-top:auto) para que quede pegado abajo aun
+   cuando la vecina de al lado sea más alta — dos cards en la misma fila cierran
+   a la misma altura. Sin color nuevo: la jerarquía la da la superficie y el
+   peso, no un verde de "hecho". */
+.v4-avance {
+  margin-top: auto;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem 0.55rem;
+  display: flex; flex-direction: column; gap: 0.3rem;
+}
+.v4-avance-rot {
+  font-size: 0.58rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: rgba(255, 255, 255, 0.34);
+}
+.v4-avance-mueve {
+  margin: 0; font-size: 0.86rem; line-height: 1.45;
+  color: rgba(255, 255, 255, 0.9);
+}
+.v4-avance-pie {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.7rem;
+  font-size: 0.68rem; color: rgba(255, 255, 255, 0.4);
+}
+/* El reloj primero y con icono: sin él, "cuando pueda" pasa por decisión. */
+.v4-avance-reloj { display: inline-flex; align-items: center; gap: 0.28rem; font-weight: 600; }
+.v4-avance-reloj .aisc-ico { width: 0.72rem; height: 0.72rem; flex: 0 0 auto; opacity: 0.7; }
+.v4-avance-senal { min-width: 0; }
+/* Con avance, las fuentes ya no necesitan empujar: el bloque de arriba lo hace. */
+.v4-avance + .v4-fuentes { margin-top: 0; }
+
 /* ── Pie de fuentes ────────────────────────────────────────────────────────
    Mismo registro discreto que la fecha: es el respaldo, no el mensaje. Se lee
    si se busca. La diferencia con la fecha es que aquí SÍ se puede hacer clic,

@@ -308,3 +308,51 @@ describe('pie de fuentes', () => {
     expect(conFuentes([])).not.toContain('v4-fuentes');
   });
 });
+
+/* EL PEAJE DEL PASADO. Nueve cards tienen por sujeto el periodo que ya cerró
+   (autopsia, silencio, causalidad…) y el motor no las publica sin `avance`. Si
+   el pintor no lo dibuja, Vera gasta la sesión escribiendo algo invisible y el
+   tablero vuelve a ser la crónica del mes — que es el defecto que esto vino a
+   corregir. Va en el MARCO, así que se prueba en el marco: cualquier card. */
+describe('avance — qué cambia a partir de esto', () => {
+  const vista = cargarVista();
+  const conAvance = (avance, tipo = 'anomalia') =>
+    vista._vera4CardHtml({ ...EJEMPLO[tipo], type: tipo, avance });
+
+  test('se pinta el acto, el reloj y la señal', () => {
+    const html = conAvance({
+      mueve: 'Escribir el plan del día siguiente al partido antes del pitazo inicial',
+      cuando: 'antes del 20 ago',
+      senal: 'interacciones del post del día después',
+    });
+    expect(html).toContain('v4-avance');
+    expect(html).toContain('Escribir el plan del día siguiente');
+    expect(html).toContain('antes del 20 ago');
+    expect(html).toContain('interacciones del post del día después');
+  });
+
+  test('cualquier card lo admite, no solo las nueve del peaje', () => {
+    for (const tipo of ['autopsia', 'silencio', 'pulso_nicho', 'decision_del_dia']) {
+      const html = conAvance({ mueve: 'Grabar al equipo en la planta un jueves', cuando: '12 ago' }, tipo);
+      expect(html, `${tipo} debería pintar el avance`).toContain('v4-avance');
+    }
+  });
+
+  test('sin avance no queda bloque huérfano', () => {
+    expect(conAvance(undefined)).not.toContain('v4-avance');
+    expect(conAvance({})).not.toContain('v4-avance');
+    expect(conAvance({ mueve: '   ' })).not.toContain('v4-avance');
+    // Sin reloj ni señal el pie no se inventa, pero el acto sí se ve.
+    const soloActo = conAvance({ mueve: 'Abrir la conversación con el gimnasio' });
+    expect(soloActo).toContain('v4-avance-mueve');
+    expect(soloActo).not.toContain('v4-avance-pie');
+  });
+
+  test('el texto del avance también viene de Vera: se escapa', () => {
+    const veneno = '<img src=x onerror=alert(1)>';
+    const html = conAvance({ mueve: `Grabar ${veneno} el jueves`, cuando: veneno, senal: veneno });
+    expect(html).not.toContain('<img');
+    expect(html).not.toContain(veneno);
+    expect(html).toContain('&lt;img');
+  });
+});

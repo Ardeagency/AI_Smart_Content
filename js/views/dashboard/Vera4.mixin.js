@@ -501,9 +501,38 @@
             <p class="v4-sub">${esc(meta.sub())}</p>
           </header>
           <div class="v4-body">${cuerpo}</div>
+          ${this._v4Avance(card)}
           ${this._v4Fuentes(card)}
           ${this._v4Fecha(card)}
         </section>`;
+    },
+
+    /* ── El peaje del pasado: qué cambia a partir de esto ───────────────────
+       Va en el MARCO y no en cada renderer a propósito: cualquier card puede
+       traerlo y en nueve el motor no la publica sin él (las que tienen por
+       sujeto el periodo que ya cerró — autopsia, silencio, causalidad…). Sin
+       este bloque el tablero volvía a ser la crónica del mes: cierto todo, y
+       sin nada que hacer con ello.
+
+       NO es el pie discreto de las fuentes. Es lo que el cliente vino a buscar,
+       así que se ve: superficie propia, rótulo y el acto en el cuerpo. El reloj
+       y la señal van debajo, secundarios — sin el reloj «cuando pueda» pasa por
+       decisión, y sin la señal la apuesta no se puede cobrar después. */
+    _v4Avance(card) {
+      const a = card && card.avance;
+      if (!a || typeof a !== 'object') return '';
+      const mueve = String(a.mueve == null ? '' : a.mueve).trim();
+      if (!mueve) return '';
+      const esc = (s) => this._esc(s);
+      const pie = [
+        a.cuando ? `<span class="v4-avance-reloj"><i class="aisc-ico aisc-ico--clock" aria-hidden="true"></i>${esc(a.cuando)}</span>` : '',
+        a.senal ? `<span class="v4-avance-senal">${esc(__('Se verá en: {s}', { s: a.senal }))}</span>` : '',
+      ].filter(Boolean).join('');
+      return `<div class="v4-avance">
+        <span class="v4-avance-rot">${esc(__('Qué cambia'))}</span>
+        <p class="v4-avance-mueve">${esc(mueve)}</p>
+        ${pie ? `<div class="v4-avance-pie">${pie}</div>` : ''}
+      </div>`;
     },
 
     /* ── Pie de fuentes: de dónde salió lo que se afirma ────────────────────
