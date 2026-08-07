@@ -68,6 +68,60 @@ describe('el chat no te arranca de donde estás leyendo', () => {
   });
 });
 
+describe('el artifact se resume en el chat, no se vuelca', () => {
+  const v = {
+    _textoPlano: VeraView.prototype._textoPlano,
+    _recortar: VeraView.prototype._recortar,
+    _tituloDeArtifact: VeraView.prototype._tituloDeArtifact,
+    _resumenDeArtifact: VeraView.prototype._resumenDeArtifact,
+  };
+
+  test('el título sale del <title> del documento', () => {
+    const html = '<!DOCTYPE html><html><head><title>Tráfico de marca · WAKEUP</title></head><body><h1>Otro</h1></body></html>';
+    expect(v._tituloDeArtifact(html)).toBe('Tráfico de marca · WAKEUP');
+  });
+
+  test('sin <title>, cae al primer encabezado', () => {
+    expect(v._tituloDeArtifact('<div><h1>Dashboard de <b>tráfico</b></h1></div>')).toBe('Dashboard de tráfico');
+    expect(v._tituloDeArtifact('<section><h2>Competencia</h2></section>')).toBe('Competencia');
+  });
+
+  test('un documento sin nada legible no inventa título', () => {
+    expect(v._tituloDeArtifact('<div><span>x</span></div>')).toBe('');
+    expect(v._tituloDeArtifact('')).toBe('');
+  });
+
+  test('el resumen no repite el título', () => {
+    const html = '<h1>Informe</h1><p>Informe</p><p>Instagram concentra el 70% del alcance del mes.</p>';
+    expect(v._resumenDeArtifact(html)).toBe('Instagram concentra el 70% del alcance del mes.');
+  });
+
+  test('el resumen ignora migajas y recorta lo largo', () => {
+    const largo = 'a'.repeat(300);
+    expect(v._resumenDeArtifact('<p>ok</p>')).toBe(''); // demasiado corto para resumir
+    const r = v._resumenDeArtifact(`<p>${largo}</p>`);
+    expect(r.length).toBe(110);
+    expect(r.endsWith('…')).toBe(true);
+  });
+
+  test('las entidades HTML se leen como texto, no como marcado', () => {
+    expect(v._tituloDeArtifact('<h1>Ventas &amp; alcance</h1>')).toBe('Ventas & alcance');
+  });
+
+  test('la tarjeta no monta iframe: el documento viaja en data-srcdoc', () => {
+    // Si alguien vuelve a meter un <iframe> en la tarjeta, el chat vuelve a
+    // renderizar el artifact entero — que es justo el defecto que se corrigió.
+    const card = FUENTE.slice(FUENTE.indexOf('vera-artifact-card"'), FUENTE.indexOf('// ── VISTA (```html)'));
+    expect(card).toContain('data-srcdoc="');
+    expect(card).not.toContain('<iframe');
+  });
+
+  test('el panel sabe abrir una tarjeta sin iframe', () => {
+    const fn = FUENTE.slice(FUENTE.indexOf('_openArtifactPanel(btnEl) {'));
+    expect(fn.slice(0, fn.indexOf('\n  }'))).toContain('block.dataset.srcdoc');
+  });
+});
+
 describe('invariantes que no se pueden deshacer sin querer', () => {
   test('el HTML que Vera escribe no puede hablar hacia afuera', () => {
     // El iframe es null-origin (no LEE la sesión), pero sin CSP sí podía SACAR

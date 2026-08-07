@@ -3728,6 +3728,55 @@
   display: block; width: 100%; border: none;
   min-height: 160px;
 }
+/* Tope de la vista inline: pasado ese alto, el marco hace scroll y el botón
+   "Abrir en panel" lleva al documento completo. Nada se pinta hasta abajo
+   dentro de la conversación. */
+.vera-sandbox-frame { max-height: 520px; }
+
+/* ── Tarjeta de artifact ─────────────────────────────────────────────────
+   En el chat, un artifact se RESUME: qué es, de qué va y cuánto pesa. El
+   documento entero se lee en el panel. Antes se renderizaba completo aquí
+   dentro —y encima llevaba un botón para abrir lo que ya estabas viendo—,
+   así que la conversación quedaba enterrada bajo la pieza. */
+.vera-artifact-card { min-height: 0; }
+.vera-artifact-card-btn {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 13px 14px;
+  background: none; border: 0; cursor: pointer;
+  font-family: inherit; text-align: left;
+  color: var(--text-primary);
+  transition: background .14s ease;
+}
+.vera-artifact-card-btn:hover { background: var(--white-4, rgba(255,255,255,0.04)); }
+.vera-artifact-card-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto; width: 34px; height: 34px;
+  border-radius: 9px;
+  background: var(--white-8); border: 1px solid var(--white-10);
+  color: var(--text-muted); font-size: 14px;
+}
+.vera-artifact-card-text { min-width: 0; flex: 1 1 auto; }
+.vera-artifact-card-title,
+.vera-artifact-card-sub {
+  display: block;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.vera-artifact-card-title { font-size: 13.5px; font-weight: 600; line-height: 1.35; }
+.vera-artifact-card-sub {
+  font-size: 11.5px; color: var(--text-muted); line-height: 1.4; margin-top: 2px;
+}
+.vera-artifact-card-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  flex: 0 0 auto;
+  background: var(--white-8); border: 1px solid var(--white-10);
+  border-radius: 8px; padding: 5px 11px;
+  font-size: 11.5px; color: var(--text-primary);
+}
+.vera-artifact-card-cta i { font-size: 10px; }
+.vera-artifact-card-btn:hover .vera-artifact-card-cta { background: var(--white-10); }
+@media (max-width: 620px) {
+  .vera-artifact-card-cta span { display: none; }
+}
 .vera-artifact-bar {
   display: flex; align-items: center;
   justify-content: space-between;

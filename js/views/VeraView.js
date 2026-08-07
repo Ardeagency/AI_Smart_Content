@@ -2164,12 +2164,17 @@ class VeraView extends (window.BaseView || class {}) {
   // Llamado desde el botón "Abrir en panel" del bloque inline.
   _openArtifactPanel(btnEl) {
     const block = btnEl?.closest?.('.vera-artifact-block, .vera-html-block');
-    const iframe = block?.querySelector('iframe');
-    if (!iframe) return;
-    const srcdoc = iframe.srcdoc || iframe.getAttribute('srcdoc') || '';
+    if (!block) return;
+    // La tarjeta de artifact NO monta iframe: guarda el documento en data-srcdoc.
+    // Las vistas (```html) sí siguen teniendo su iframe inline.
+    const iframe = block.querySelector('iframe');
+    const srcdoc = block.dataset.srcdoc || iframe?.srcdoc || iframe?.getAttribute('srcdoc') || '';
     if (!srcdoc) return;
-    const rawLabel = block.querySelector('.vera-artifact-bar span')?.textContent || __('Artefacto');
-    const title = rawLabel.replace(/^[⬡\s]+/, '').replace(/·.*$/, '').trim() || __('Artefacto');
+    // El título real del documento, si la tarjeta lo leyó; si no, el rótulo.
+    const rawLabel = block.querySelector('.vera-artifact-bar span')?.textContent || '';
+    const title = block.dataset.title
+      || rawLabel.replace(/^[⬡\s]+/, '').replace(/·.*$/, '').trim()
+      || __('Artefacto');
     this._showArtifactPanel({ srcdoc, title });
   }
 
@@ -2401,6 +2406,47 @@ class VeraView extends (window.BaseView || class {}) {
     if (n < 1024) return `${n} B`;
     if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
     return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  /* ── Resumen de un artifact para su tarjeta en el chat ─────────────────────
+     El título y la primera línea se LEEN del HTML que escribió Vera; no se
+     inventan ni se piden aparte. Si el documento no dice cómo se llama, la
+     tarjeta se queda sin subtítulo antes que rellenar el hueco con ruido. */
+  _textoPlano(html) {
+    return String(html || '')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  _recortar(s, max) {
+    return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+  }
+
+  _tituloDeArtifact(code) {
+    const src = String(code || '');
+    const m = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(src)
+      || /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(src)
+      || /<h2[^>]*>([\s\S]*?)<\/h2>/i.exec(src);
+    return this._recortar(this._textoPlano(m?.[1] || ''), 90);
+  }
+
+  _resumenDeArtifact(code) {
+    const src = String(code || '');
+    const titulo = this._tituloDeArtifact(src);
+    const parrafos = src.match(/<p[^>]*>[\s\S]*?<\/p>/gi) || [];
+    for (const p of parrafos) {
+      const t = this._textoPlano(p);
+      // Se descarta lo que solo repite el título: dos veces lo mismo no resume.
+      if (t.length >= 12 && t !== titulo) return this._recortar(t, 110);
+    }
+    return '';
   }
 
   _relTime(iso) {
@@ -3566,18 +3612,52 @@ class VeraView extends (window.BaseView || class {}) {
         .replace(/"/g, '&quot;');
 
       const isArtifact = type === 'artifact';
-      const blockClass = isArtifact ? 'vera-artifact-block' : 'vera-html-block';
-      const frameClass = isArtifact ? 'vera-artifact-frame' : 'vera-sandbox-frame';
-      const barLabel = isArtifact ? __('⬡ Artifact · VERA') : __('⬡ Vista · VERA');
+
+      // ── ARTIFACT: en el chat va un RESUMEN, no el documento ────────────────
+      //    Un artifact es una pieza de trabajo, no un mensaje: renderizarlo
+      //    entero inline enterraba la conversación bajo él (y dejaba encima un
+      //    botón para "abrir" algo que ya estabas viendo). Aquí se resume —
+      //    título, primera línea y peso— y el documento completo vive en el
+      //    panel, que es donde se puede leer, imprimir y descargar.
+      //    El HTML viaja en `data-srcdoc` (mismo escapado que usaba el iframe),
+      //    así que la tarjeta no monta ningún iframe hasta que la abres.
+      if (isArtifact) {
+        const titulo = this._tituloDeArtifact(code) || __('Documento de Vera');
+        const resumen = this._resumenDeArtifact(code);
+        const peso = this._humanBytes(fullHtml.length);
+        const cardHtml =
+          '<div class="vera-artifact-block vera-canvas-block vera-artifact-card" ' +
+              'data-srcdoc="' + srcdoc + '" data-title="' + escapeHtml(titulo) + '">' +
+            '<button type="button" class="vera-artifact-card-btn" ' +
+                'onclick="window._veraOpenArtifact && window._veraOpenArtifact(this)">' +
+              '<span class="vera-artifact-card-icon"><i class="aisc-ico aisc-ico--document"></i></span>' +
+              '<span class="vera-artifact-card-text">' +
+                '<span class="vera-artifact-card-title">' + escapeHtml(titulo) + '</span>' +
+                '<span class="vera-artifact-card-sub">' +
+                  (resumen ? escapeHtml(resumen) + ' · ' : '') + __('Artifact') + ' · ' + escapeHtml(peso) +
+                '</span>' +
+              '</span>' +
+              '<span class="vera-artifact-card-cta">' +
+                '<i class="aisc-ico aisc-ico--expand"></i> <span>' + __('Abrir') + '</span>' +
+              '</span>' +
+            '</button>' +
+          '</div>';
+        html = html.replace(`<p>${id}</p>`, cardHtml).replace(id, cardHtml);
+        return;
+      }
+
+      // ── VISTA (```html): sigue inline, porque son piezas pequeñas ──────────
+      //    Con tope de alto (CSS): si el contenido lo supera, el marco hace
+      //    scroll y el botón lleva al panel. Nada se renderiza "hasta abajo".
       const iframeHtml =
-        '<div class="' + blockClass + ' vera-canvas-block">' +
+        '<div class="vera-html-block vera-canvas-block">' +
           '<div class="vera-artifact-bar">' +
-            '<span>' + barLabel + '</span>' +
+            '<span>' + __('⬡ Vista · VERA') + '</span>' +
             '<button type="button" class="vera-artifact-open" onclick="window._veraOpenArtifact && window._veraOpenArtifact(this)">' +
               '<i class="aisc-ico aisc-ico--expand"></i> ' + __('Abrir en panel') +
             '</button>' +
           '</div>' +
-          '<iframe class="' + frameClass + '" ' +
+          '<iframe class="vera-sandbox-frame" ' +
             'sandbox="allow-scripts allow-forms" ' +
             'srcdoc="' + srcdoc + '"></iframe>' +
         '</div>';
