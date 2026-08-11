@@ -359,6 +359,23 @@ describe('Stack de activos — el producto que no debe cambiar', () => {
     expect(v.seedanceRefs.image.every((r) => r.lock && r.origen === 'activo')).toBe(true);
   });
 
+  test('el bloqueo no se come el cupo: tope de imágenes por producto', () => {
+    const { v } = nuevaVista();
+    v.dbData.products = [{
+      id: 'prod-1', nombre_producto: 'Botella', entity_id: 'ent-9',
+      image_urls: ['a', 'b', 'c', 'd'].map((n) => `https://cdn.test/${n}.jpg`)
+    }];
+    v.assetScope = 'product';
+    v.selectedAssetId = 'prod-1';
+
+    v.syncAssetSelectionToRefs();
+
+    // El catálogo guarda hasta 4 por producto. Meterlas todas dejaba 5 de 9
+    // libres para el estilo con un solo producto elegido.
+    expect(v.seedanceRefs.image).toHaveLength(VideoView.SEEDANCE_PRODUCT_LOCK_IMAGES);
+    expect(VideoView.SEEDANCE_PRODUCT_LOCK_IMAGES).toBeLessThan(VideoView.SEEDANCE_REF_LIMITS.image);
+  });
+
   test('cambiar de producto reemplaza, no acumula', () => {
     const { v } = nuevaVista();
     conProducto(v);

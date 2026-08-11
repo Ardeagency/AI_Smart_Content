@@ -63,6 +63,13 @@ class VideoView extends BaseView {
   static get SEEDANCE_REF_MAX_SECONDS() { return 15; }
   /** Bucket donde viven los adjuntos de referencia. */
   static get SEEDANCE_STORAGE_BUCKET() { return 'production-outputs'; }
+  /**
+   * Cuántas imágenes del producto entran como bloqueo. Dos bastan para fijar
+   * la identidad del objeto; el catálogo guarda hasta cuatro y meterlas todas
+   * se comía casi la mitad del cupo de imágenes con un solo producto,
+   * dejando sin espacio a las referencias de estilo.
+   */
+  static get SEEDANCE_PRODUCT_LOCK_IMAGES() { return 2; }
   /** Doc KIE: empezar polling 2-3s; dejar de hacer polling a los 10-15 min. Usamos 3s y máximo 12 min. */
   static get POLL_INTERVAL_MS() { return 3000; }
   static get POLL_MAX_DURATION_MS() { return 12 * 60 * 1000; }
@@ -1722,7 +1729,9 @@ class VideoView extends BaseView {
       return;
     }
     const product = (this.dbData.products || []).find((p) => String(p.id) === String(this.selectedAssetId));
-    const urls = (product && Array.isArray(product.image_urls) ? product.image_urls : []).filter(Boolean);
+    const urls = (product && Array.isArray(product.image_urls) ? product.image_urls : [])
+      .filter(Boolean)
+      .slice(0, VideoView.SEEDANCE_PRODUCT_LOCK_IMAGES);
     const libre = VideoView.SEEDANCE_REF_LIMITS.image - this.seedanceRefs.image.length;
     if (urls.length && libre <= 0) {
       this.selectedAssetId = '';
