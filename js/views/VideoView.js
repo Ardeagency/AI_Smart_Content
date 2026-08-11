@@ -83,8 +83,20 @@ class VideoView extends BaseView {
     this.selectedAudienceId = '';
     // Frames Clave: { url, storagePath } por slot, o null.
     this.seedanceFrames = { first: null, last: null };
-    // Referencias multimodales: [{ name, url, storagePath, seconds }] por tipo.
+    // Referencias multimodales por tipo:
+    //   [{ name, url, storagePath, seconds, origen, lock }]
+    // `origen` distingue de dónde salió cada una — 'manual' (subida por el
+    // usuario), 'produccion' (elegida en Escenas) o 'activo' (producto o
+    // servicio del Stack). Importa porque solo las manuales viven en nuestro
+    // bucket y solo esas se borran al quitarlas; las otras son URLs que ya
+    // existían. Todas cuentan para el mismo cupo, que es de KIE.
     this.seedanceRefs = { image: [], video: [], audio: [] };
+    // Producciones previas (Escenas) y selección activa.
+    this.videoProductions = [];
+    this.selectedProductionIds = new Set();
+    // Stack de activos: qué producto/servicio/entidad debe respetar el video.
+    this.assetScope = 'product';
+    this.selectedAssetId = '';
     // Slot que disparo el file picker de frames (el input es uno solo).
     this._pendingFrameSlot = null;
     // Dirección de fotografía (pestaña Cinematografía). Viene de Kling: son
@@ -209,6 +221,16 @@ class VideoView extends BaseView {
                   </div>
                 </div>
 
+                <div class="video-productions-panel video-productions-panel-inline" id="videoProductionsPanel" aria-hidden="true" style="display: none;">
+                  <div class="video-productions-panel-card">
+                    <div class="video-productions-panel-header">
+                      <h3 class="video-prompt-panel-title">${window.__('Producciones')}</h3>
+                      <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="${window.__('Cerrar')}"><i class="aisc-ico aisc-ico--close"></i></button>
+                    </div>
+                    <div class="video-productions-gallery" id="videoProductionsGallery"></div>
+                  </div>
+                </div>
+
               </section>
 
               <section class="video-director-console-zone video-prompt-wrap video-main-director" id="seedanceFooterControl" aria-label="${window.__('Director Console Seedance — secuencia narrativa')}">
@@ -286,7 +308,16 @@ class VideoView extends BaseView {
                     <div class="video-sidebar-section-header">
                       <h3 class="video-section-label">${window.__('Contexto de producción')}</h3>
                     </div>
-                    <p class="video-sidebar-section-hint">${window.__('Tipo de campaña conceptual, audiencia y productos que la secuencia debe respetar.')}</p>
+                    <p class="video-sidebar-section-hint">${window.__('A qué campaña pertenece la secuencia, a quién le habla, y qué producciones o productos debe respetar la IA al producirla.')}</p>
+                    <div class="video-escenas-block">
+                      <div class="video-escenas-header">
+                        <h4 class="video-prompt-panel-title">${window.__('Escenas')}</h4>
+                        <button type="button" class="video-escenas-all-btn" id="videoProductionsBtn" aria-label="${window.__('Todas las producciones')}">${window.__('Todas')}</button>
+                      </div>
+                      <div class="video-escenas-carousel-wrap">
+                        <div class="video-escenas-carousel" id="videoEscenasCarousel"></div>
+                      </div>
+                    </div>
                     <div class="video-left-block">
                       <h4 class="video-prompt-panel-title">${window.__('¿De qué trata?')}</h4>
                       <select id="seedanceCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="${window.__('Concepto de campaña')}" data-conceptual="1">
@@ -315,6 +346,24 @@ class VideoView extends BaseView {
                         <option value="Decision makers B2B">${window.__('Decision makers · B2B')}</option>
                         <option value="Existing customers">${window.__('Clientes existentes')}</option>
                         <option value="Parents / families">${window.__('Padres y familias')}</option>
+                      </select>
+                    </div>
+                    <div class="video-left-block video-asset-stack-block" id="videoAssetStackBlock">
+                      <h4 class="video-prompt-panel-title">${window.__('Stack de activos')}</h4>
+                      <p class="video-field-help video-asset-stack-help" id="videoAssetStackHelp">${window.__('Producto = bloqueo de referencia (el video no debe cambiar el producto)')}</p>
+                      <div class="video-asset-scope-wrap">
+                        <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="${window.__('Alcance')}">
+                          <option value="product">${window.__('Producto')}</option>
+                          <option value="service">${window.__('Servicio')}</option>
+                          <option value="brand_world">${window.__('Mundo de marca')}</option>
+                          <option value="collection">${window.__('Colección')}</option>
+                        </select>
+                      </div>
+                      <div class="video-asset-products-carousel-wrap" id="videoAssetProductsCarouselWrap">
+                        <div class="video-asset-products-carousel" id="videoAssetProductsCarousel"></div>
+                      </div>
+                      <select id="videoAssetSelect" class="video-prompt-db-select video-asset-select video-asset-select-other" aria-label="${window.__('Activo')}" style="display: none;">
+                        <option value="">${window.__('— Ninguno')}</option>
                       </select>
                     </div>
                   </div>
@@ -542,6 +591,15 @@ class VideoView extends BaseView {
 
   async init() {
     this.idleArea = this.container.querySelector('#videoCanvasIdle');
+    this.statusArea = this.container.querySelector('#videoStatusArea');
+    this.statusText = this.container.querySelector('#videoStatusText');
+    this.statusSpinner = this.container.querySelector('#videoStatusSpinner');
+    this.resultArea = this.container.querySelector('#videoResultArea');
+    this.resultPlayer = this.container.querySelector('#videoResultPlayer');
+    this.resultDownload = this.container.querySelector('#videoResultDownload');
+    this.errorArea = this.container.querySelector('#videoErrorArea');
+    this.errorText = this.container.querySelector('#videoErrorText');
+
     this.sendBtn = this.container.querySelector('#seedancePromptSend');
     this.promptInput = this.container.querySelector('#seedancePromptInput');
     this.aspectSelect = this.container.querySelector('#seedanceAspectRatio');
@@ -701,6 +759,61 @@ class VideoView extends BaseView {
     this.renderSeedanceRefs();
     this.renderSeedanceAttachmentChips();
 
+    // Contexto de marca ANTES del Stack de activos y de Escenas: ambos pintan
+    // desde dbData.products, y si corren primero el carrusel nace diciendo
+    // "no hay productos con imágenes" aunque los haya.
+    // Contexto de marca: alimenta buildBrandContextForAPI() y el linaje de
+    // system_ai_outputs. Los selects de campaña/audiencia son conceptuales
+    // (opciones fijas en el HTML), no vienen de la BD.
+    await this.loadBrandData();
+    const campaignSelect = this.container.querySelector('#seedanceCampaignSelect');
+    const audienceSelect = this.container.querySelector('#seedanceAudienceSelect');
+    if (campaignSelect) {
+      campaignSelect.addEventListener('change', () => {
+        this.selectedCampaignId = campaignSelect.value || '';
+      });
+    }
+    if (audienceSelect) {
+      audienceSelect.addEventListener('change', () => {
+        this.selectedAudienceId = audienceSelect.value || '';
+      });
+    }
+
+    // ── Escenas: producciones previas ──
+    const productionsBtn = this.container.querySelector('#videoProductionsBtn');
+    const panelClose = this.container.querySelector('#videoProductionsPanelClose');
+    if (productionsBtn && productionsBtn.dataset.boundProds !== '1') {
+      productionsBtn.dataset.boundProds = '1';
+      productionsBtn.addEventListener('click', (e) => { e.preventDefault(); this.openProductionsPanel(); });
+    }
+    if (panelClose && panelClose.dataset.boundProds !== '1') {
+      panelClose.dataset.boundProds = '1';
+      panelClose.addEventListener('click', (e) => { e.preventDefault(); this.closeProductionsPanel(); });
+    }
+
+    // ── Stack de activos ──
+    const assetScope = this.container.querySelector('#videoAssetScope');
+    const assetSelect = this.container.querySelector('#videoAssetSelect');
+    if (assetScope && assetScope.dataset.boundAsset !== '1') {
+      assetScope.dataset.boundAsset = '1';
+      assetScope.addEventListener('change', () => {
+        this.assetScope = assetScope.value;
+        this.selectedAssetId = '';
+        this.updateAssetStackScopeUI();
+      });
+    }
+    if (assetSelect && assetSelect.dataset.boundAsset !== '1') {
+      assetSelect.dataset.boundAsset = '1';
+      assetSelect.addEventListener('change', () => {
+        this.selectedAssetId = assetSelect.value || '';
+        this.syncAssetSelectionToRefs();
+      });
+    }
+    if (assetScope) this.assetScope = assetScope.value || 'product';
+    this.updateAssetStackScopeUI();
+    await this.loadVideoProductions();
+    this.renderEscenasCarousel();
+
     // ── Cinematografía ──
     this.initCinematography();
     const resetCineBtn = this.container.querySelector('#videoCineResetBtn');
@@ -762,32 +875,6 @@ class VideoView extends BaseView {
         if (!wasActive) tile.classList.add('is-active');
       });
     });
-
-    this.statusArea = this.container.querySelector('#videoStatusArea');
-    this.statusText = this.container.querySelector('#videoStatusText');
-    this.statusSpinner = this.container.querySelector('#videoStatusSpinner');
-    this.resultArea = this.container.querySelector('#videoResultArea');
-    this.resultPlayer = this.container.querySelector('#videoResultPlayer');
-    this.resultDownload = this.container.querySelector('#videoResultDownload');
-    this.errorArea = this.container.querySelector('#videoErrorArea');
-    this.errorText = this.container.querySelector('#videoErrorText');
-
-    // Contexto de marca: alimenta buildBrandContextForAPI() y el linaje de
-    // system_ai_outputs. Los selects de campaña/audiencia son conceptuales
-    // (opciones fijas en el HTML), no vienen de la BD.
-    await this.loadBrandData();
-    const campaignSelect = this.container.querySelector('#seedanceCampaignSelect');
-    const audienceSelect = this.container.querySelector('#seedanceAudienceSelect');
-    if (campaignSelect) {
-      campaignSelect.addEventListener('change', () => {
-        this.selectedCampaignId = campaignSelect.value || '';
-      });
-    }
-    if (audienceSelect) {
-      audienceSelect.addEventListener('change', () => {
-        this.selectedAudienceId = audienceSelect.value || '';
-      });
-    }
 
     this.scheduleResizeDirectorBriefInput();
     this._resizeDirectorBriefOnWin = () => this.scheduleResizeDirectorBriefInput();
@@ -1082,15 +1169,21 @@ class VideoView extends BaseView {
   }
 
   /**
-   * Resuelve entity_id para dar linaje canonico al output.
-   *
-   * DEVUELVE SIEMPRE null hoy: el selector de assets (Asset Stack) era del
-   * panel de Kling y salio con el. El sidebar de Seedance todavia no elige
-   * producto/servicio, asi que no hay de donde sacar la FK a brand_entities.
-   * Cuando el sidebar de Seedance tenga selector de asset, leerlo aqui
-   * (products.entity_id / services.entity_id) en vez de devolver null.
+   * Resuelve entity_id desde el activo elegido en el Stack, segun scope.
+   * products.entity_id y services.entity_id son FK a brand_entities y dan el
+   * linaje canonico al output. null si no hay activo o el scope no aplica.
    */
   _resolveSelectedEntityId() {
+    if (!this.selectedAssetId) return null;
+    const scope = this.assetScope || 'product';
+    if (scope === 'product') {
+      const p = (this.dbData?.products || []).find((x) => String(x.id) === String(this.selectedAssetId));
+      return p?.entity_id || null;
+    }
+    if (scope === 'service') {
+      const s = (this.dbData?.services || []).find((x) => String(x.id) === String(this.selectedAssetId));
+      return s?.entity_id || null;
+    }
     return null;
   }
 
@@ -1307,7 +1400,7 @@ class VideoView extends BaseView {
       }
       try {
         const subido = await this._uploadSeedanceFile(file, `${kind}s`);
-        this.seedanceRefs[kind].push({ name: file.name, seconds, ...subido });
+        this.seedanceRefs[kind].push({ name: file.name, seconds, origen: 'manual', ...subido });
         this.renderSeedanceRefs();
         this.renderSeedanceAttachmentChips();
       } catch (err) {
@@ -1320,8 +1413,334 @@ class VideoView extends BaseView {
   removeSeedanceRef(kind, index) {
     const item = (this.seedanceRefs[kind] || [])[index];
     if (!item) return;
-    this._removeSeedanceStorage(item.storagePath);
+    // Solo las subidas por el usuario viven en nuestro bucket. Las que vienen
+    // de una producción o de un producto son URLs ajenas: borrarlas del
+    // Storage se llevaría por delante la producción original.
+    if (item.origen === 'manual') this._removeSeedanceStorage(item.storagePath);
     this.seedanceRefs[kind].splice(index, 1);
+    // Quitar el chip también tiene que apagar su origen; si no, la tarjeta
+    // sigue marcada en el carrusel y el próximo sync la vuelve a meter.
+    if (item.origen === 'produccion' && item._productionId != null) {
+      this.selectedProductionIds.delete(item._productionId);
+      this.renderEscenasCarousel();
+      this.renderProductionsGallery();
+    }
+    if (item.origen === 'activo') {
+      this.selectedAssetId = '';
+      const assetSelect = this.container.querySelector('#videoAssetSelect');
+      if (assetSelect) assetSelect.value = '';
+      this.renderAssetProductsCarousel();
+    }
+    this.renderSeedanceRefs();
+    this.renderSeedanceAttachmentChips();
+  }
+
+  // ── Escenas: producciones previas como material de referencia ───────────
+
+  getPublicUrlFromStorage(bucketName, filePath) {
+    // R2 (media.aismartcontent.io): storage_path puede ser URL completa -> pass-through
+    if (typeof filePath === 'string' && /^(https?:|\/\/)/i.test(filePath.trim())) return filePath.trim();
+    if (!this.supabase?.storage?.from || !bucketName || typeof filePath !== 'string' || !filePath.trim()) return null;
+    try {
+      let path = filePath.trim();
+      if (path.startsWith(`${bucketName}/`)) path = path.replace(`${bucketName}/`, '');
+      else if (path.startsWith('/')) path = path.slice(1);
+      const { data } = this.supabase.storage.from(bucketName).getPublicUrl(path);
+      return data?.publicUrl || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async loadVideoProductions() {
+    if (!this.supabase) return;
+    try {
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (!user?.id) return;
+
+      const resolveMedia = (o) => {
+        let media_url = null;
+        const rawPath = o.storage_path && typeof o.storage_path === 'string' ? o.storage_path.trim() : '';
+        if (rawPath) {
+          if (rawPath.startsWith('http')) media_url = rawPath;
+          else media_url = this.getPublicUrlFromStorage('production-outputs', rawPath) || this.getPublicUrlFromStorage('outputs', rawPath);
+        }
+        const meta = o.metadata && typeof o.metadata === 'object' ? o.metadata : {};
+        if (!media_url) {
+          media_url = meta.video_url || meta.url || meta.file_url || meta.videoUrl || meta.output_url || meta.publicUrl || meta.src || null;
+        }
+        const type = (o.output_type || '').toLowerCase();
+        const isVideo = type.includes('video') || /\.(mp4|webm|mov)(\?|$)/i.test(media_url || '');
+        const isImage = type.includes('image') || type.includes('img') || /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(media_url || '');
+        return { ...o, media_url, isVideo, isImage };
+      };
+
+      // Origen 1: runs_outputs (linkeados a flow_runs de la org activa).
+      // Sin el filtro de organization_id, un usuario multi-org veria los videos
+      // de todas sus orgs mezclados en cualquier workspace.
+      let runsQ = this.supabase.from('flow_runs').select('id').eq('user_id', user.id);
+      if (this.organizationId) runsQ = runsQ.eq('organization_id', this.organizationId);
+      const { data: runs } = await runsQ;
+      const runIds = (runs || []).map((r) => r.id).filter(Boolean);
+      let fromRuns = [];
+      if (runIds.length > 0) {
+        const { data: roData } = await this.supabase
+          .from('runs_outputs')
+          .select('id, run_id, output_type, storage_path, metadata, created_at')
+          .in('run_id', runIds)
+          .order('created_at', { ascending: false })
+          .limit(100);
+        fromRuns = roData || [];
+      }
+
+      // Origen 2: system_ai_outputs (videos generados desde VideoView mismo
+      // o cualquier herramienta standalone). Filtrar por organization_id
+      // para que el contexto sea consistente con loadFlowOutputs en
+      // LivingManager.
+      let fromSystem = [];
+      if (this.organizationId) {
+        const { data: saoData } = await this.supabase
+          .from('system_ai_outputs')
+          .select('id, output_type, storage_path, metadata, created_at')
+          .eq('organization_id', this.organizationId)
+          .neq('provider', 'openai')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        fromSystem = saoData || [];
+      }
+
+      const merged = [...fromRuns, ...fromSystem]
+        .map(resolveMedia)
+        .filter((o) => o.media_url)
+        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+      // Dedupe por id (defensive — runs_outputs y system_ai_outputs tienen
+      // namespace de id distinto pero por si acaso).
+      const seen = new Set();
+      this.videoProductions = merged.filter((o) => {
+        if (seen.has(o.id)) return false;
+        seen.add(o.id);
+        return true;
+      });
+    } catch (e) {
+      console.warn('VideoView loadVideoProductions:', e);
+      this.videoProductions = [];
+    }
+  }
+
+  /** Pinta una lista de producciones (carrusel del sidebar o galería del panel). */
+  _renderProduccionesEn(selector, claseItem, claseThumb, claseVacio, textoVacio) {
+    const cont = this.container.querySelector(selector);
+    if (!cont) return;
+    if (this.videoProductions.length === 0) {
+      cont.innerHTML = `<p class="${claseVacio}">${textoVacio}</p>`;
+      return;
+    }
+    cont.innerHTML = this.videoProductions.map((p) => {
+      const seleccionada = this.selectedProductionIds.has(p.id);
+      const url = this.escapeHtml(p.media_url || '');
+      const esImagen = p.isImage && !p.isVideo;
+      const thumb = esImagen
+        ? `<img class="${claseThumb} ${claseThumb}-img" src="${url}" alt="" loading="lazy" decoding="async">`
+        : `<video class="${claseThumb}" src="${url}" preload="metadata" muted playsinline crossorigin="anonymous"></video>`;
+      return `
+        <div class="${claseItem} ${seleccionada ? 'is-selected' : ''}" data-id="${this.escapeHtml(p.id)}" role="button" tabindex="0" aria-pressed="${seleccionada}" aria-label="${window.__('Seleccionar producción')}">
+          <div class="${claseThumb}-wrap">${thumb}</div>
+        </div>`;
+    }).join('');
+    cont.querySelectorAll('.' + claseItem).forEach((el) => {
+      el.addEventListener('click', () => this.toggleProduccion(el.dataset.id));
+    });
+  }
+
+  renderEscenasCarousel() {
+    this._renderProduccionesEn(
+      '#videoEscenasCarousel', 'video-escena-item', 'video-escena-thumb', 'video-escenas-empty',
+      window.__('Aún no hay producciones. Las producciones de tus flows aparecerán aquí.')
+    );
+  }
+
+  renderProductionsGallery() {
+    this._renderProduccionesEn(
+      '#videoProductionsGallery', 'video-production-item', 'video-production-thumb', 'video-productions-empty',
+      window.__('Aún no hay producciones. Las producciones de tus flows aparecerán aquí.')
+    );
+  }
+
+  toggleProduccion(id) {
+    if (id == null) return;
+    if (this.selectedProductionIds.has(id)) {
+      this.selectedProductionIds.delete(id);
+    } else {
+      if (this._seedanceHasFrames()) {
+        this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para usar una escena como referencia.'));
+        return;
+      }
+      this.selectedProductionIds.add(id);
+    }
+    this.syncProductionSelectionToRefs();
+    this.renderEscenasCarousel();
+    this.renderProductionsGallery();
+  }
+
+  /**
+   * Vuelca las producciones elegidas en las referencias multimodales — el
+   * mismo cupo que las subidas a mano, porque el límite es de KIE y no le
+   * importa de dónde salió cada archivo. Si una no cabe, se deselecciona y
+   * se avisa: dejarla marcada sin estar en el payload sería mentir.
+   */
+  syncProductionSelectionToRefs() {
+    ['image', 'video'].forEach((kind) => {
+      this.seedanceRefs[kind] = this.seedanceRefs[kind].filter((r) => r.origen !== 'produccion');
+    });
+    const rechazadas = [];
+    Array.from(this.selectedProductionIds).forEach((id) => {
+      const p = this.videoProductions.find((prod) => String(prod.id) === String(id));
+      if (!p || !p.media_url) return;
+      const kind = p.isVideo ? 'video' : 'image';
+      if (this.seedanceRefs[kind].length >= VideoView.SEEDANCE_REF_LIMITS[kind]) {
+        this.selectedProductionIds.delete(id);
+        rechazadas.push(kind);
+        return;
+      }
+      this.seedanceRefs[kind].push({
+        name: `${window.__('Escena')} ${String(p.id).slice(0, 8)}`,
+        url: p.media_url,
+        storagePath: null,
+        seconds: null,
+        origen: 'produccion',
+        _productionId: p.id
+      });
+    });
+    if (rechazadas.length) {
+      this._seedanceNotify(window.__('{n} escena(s) no caben: el grupo ya está en su máximo. Quita una referencia y vuelve a intentar.', { n: rechazadas.length }));
+    }
+    this.renderSeedanceRefs();
+    this.renderSeedanceAttachmentChips();
+  }
+
+  async openProductionsPanel() {
+    const panel = this.container.querySelector('#videoProductionsPanel');
+    if (!panel) return;
+    panel.style.display = 'block';
+    panel.setAttribute('aria-hidden', 'false');
+    await this.loadVideoProductions();
+    this.renderProductionsGallery();
+  }
+
+  closeProductionsPanel() {
+    const panel = this.container.querySelector('#videoProductionsPanel');
+    if (!panel) return;
+    const btn = this.container.querySelector('#videoProductionsBtn');
+    if (btn && typeof btn.focus === 'function') btn.focus();
+    panel.style.display = 'none';
+    panel.setAttribute('aria-hidden', 'true');
+    this.renderEscenasCarousel();
+  }
+
+  // ── Stack de activos: el producto que el video no debe alterar ──────────
+
+  /** Muestra carrusel de productos u otro scope (dropdown). */
+  updateAssetStackScopeUI() {
+    const block = this.container.querySelector('#videoAssetStackBlock');
+    const carouselWrap = this.container.querySelector('#videoAssetProductsCarouselWrap');
+    const assetSelect = this.container.querySelector('#videoAssetSelect');
+    const scope = this.assetScope || 'product';
+    if (block) block.setAttribute('data-scope', scope);
+    const esProducto = scope === 'product';
+    if (carouselWrap) carouselWrap.style.display = esProducto ? 'block' : 'none';
+    if (assetSelect) assetSelect.style.display = esProducto ? 'none' : 'block';
+    if (esProducto) this.renderAssetProductsCarousel();
+    else this.renderAssetDropdown();
+    this.syncAssetSelectionToRefs();
+  }
+
+  getAssetListByScope() {
+    const scope = this.assetScope || 'product';
+    if (scope === 'product') return (this.dbData.products || []).map((p) => ({ id: p.id, name: p.nombre_producto || window.__('Producto'), type: 'product' }));
+    if (scope === 'service') return (this.dbData.services || []).map((s) => ({ id: s.id, name: s.nombre_servicio || window.__('Servicio'), type: 'service' }));
+    if (scope === 'brand_world') return (this.dbData.entities || []).map((e) => ({ id: e.id, name: e.name || window.__('Entidad'), type: 'entity' }));
+    return [];
+  }
+
+  renderAssetDropdown() {
+    const select = this.container.querySelector('#videoAssetSelect');
+    if (!select) return;
+    const items = this.getAssetListByScope();
+    const actual = select.value || this.selectedAssetId;
+    select.innerHTML = `<option value="">${window.__('— Ninguno')}</option>`
+      + items.map((i) => `<option value="${this.escapeHtml(i.id)}">${this.escapeHtml((i.name || '').slice(0, 50))}</option>`).join('');
+    if (actual && items.some((i) => String(i.id) === String(actual))) select.value = actual;
+    else this.selectedAssetId = '';
+  }
+
+  /** Carrusel de productos con imagen. Uno solo a la vez: es un bloqueo, no una galería. */
+  renderAssetProductsCarousel() {
+    const carousel = this.container.querySelector('#videoAssetProductsCarousel');
+    if (!carousel) return;
+    const products = (this.dbData.products || []).filter((p) => Array.isArray(p.image_urls) && p.image_urls.length > 0);
+    if (products.length === 0) {
+      carousel.innerHTML = `<p class="video-asset-products-empty">${window.__('No hay productos con imágenes.')}</p>`;
+      return;
+    }
+    carousel.innerHTML = products.map((p) => {
+      const seleccionado = String(this.selectedAssetId) === String(p.id);
+      return `
+        <div class="video-asset-product-item ${seleccionado ? 'is-selected' : ''}" data-id="${this.escapeHtml(p.id)}" role="button" tabindex="0" aria-pressed="${seleccionado}" aria-label="${window.__('Seleccionar producto')}">
+          <div class="video-asset-product-thumb-wrap"><img class="video-asset-product-thumb" src="${this.escapeHtml(p.image_urls[0] || '')}" alt="" loading="lazy"></div>
+        </div>`;
+    }).join('');
+    carousel.querySelectorAll('.video-asset-product-item').forEach((el) => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.id;
+        this.selectedAssetId = String(this.selectedAssetId) === String(id) ? '' : id;
+        this.renderAssetProductsCarousel();
+        this.syncAssetSelectionToRefs();
+      });
+    });
+  }
+
+  /**
+   * El activo elegido entra como referencia de imagen marcada con `lock`.
+   * No es inspiración: es la instrucción de que el producto NO cambie. Ocupa
+   * cupo igual, porque para KIE es una imagen de referencia más.
+   */
+  syncAssetSelectionToRefs() {
+    this.seedanceRefs.image = this.seedanceRefs.image.filter((r) => r.origen !== 'activo');
+    const scope = this.assetScope || 'product';
+    if (scope !== 'product' || !this.selectedAssetId) {
+      this.renderSeedanceRefs();
+      this.renderSeedanceAttachmentChips();
+      return;
+    }
+    if (this._seedanceHasFrames()) {
+      this.selectedAssetId = '';
+      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para bloquear un producto.'));
+      this.renderAssetProductsCarousel();
+      this.renderSeedanceRefs();
+      this.renderSeedanceAttachmentChips();
+      return;
+    }
+    const product = (this.dbData.products || []).find((p) => String(p.id) === String(this.selectedAssetId));
+    const urls = (product && Array.isArray(product.image_urls) ? product.image_urls : []).filter(Boolean);
+    const libre = VideoView.SEEDANCE_REF_LIMITS.image - this.seedanceRefs.image.length;
+    if (urls.length && libre <= 0) {
+      this.selectedAssetId = '';
+      this._seedanceNotify(window.__('No cabe el producto: el grupo de imágenes ya está en su máximo.'));
+      this.renderAssetProductsCarousel();
+    } else {
+      urls.slice(0, Math.max(0, libre)).forEach((url) => {
+        this.seedanceRefs.image.push({
+          name: product.nombre_producto || window.__('Producto'),
+          url,
+          storagePath: null,
+          seconds: null,
+          origen: 'activo',
+          lock: true,
+          _assetId: product.id
+        });
+      });
+    }
     this.renderSeedanceRefs();
     this.renderSeedanceAttachmentChips();
   }
@@ -1345,7 +1764,16 @@ class VideoView extends BaseView {
         const cuerpo = g.kind === 'image'
           ? `<img class="seedance-ref-thumb" src="${this.escapeHtml(item.url)}" alt="" loading="lazy">`
           : `<i class="aisc-ico ${g.icono}" aria-hidden="true"></i><span class="seedance-ref-name">${nombre}${dur}</span>`;
-        return `<span class="seedance-ref-item" title="${nombre}${dur}">${cuerpo}<button type="button" class="seedance-ref-remove" data-ref-kind="${g.kind}" data-ref-index="${idx}" aria-label="${window.__('Quitar {name}', { name: nombre })}">&times;</button></span>`;
+        // Una referencia de producto NO es inspiración: es la instrucción de
+        // que eso no cambie. Sin distintivo, en la fila se ve idéntica a una
+        // imagen de estilo y el usuario no sabe cuál está bloqueando.
+        const candado = item.lock
+          ? `<span class="seedance-ref-lock" aria-hidden="true" title="${window.__('Bloqueo de producto')}"><i class="aisc-ico aisc-ico--bookmark"></i></span>`
+          : '';
+        const titulo = item.lock
+          ? `${nombre}${dur} — ${window.__('bloqueo de producto')}`
+          : `${nombre}${dur}`;
+        return `<span class="seedance-ref-item${item.lock ? ' is-lock' : ''}" title="${titulo}">${cuerpo}${candado}<button type="button" class="seedance-ref-remove" data-ref-kind="${g.kind}" data-ref-index="${idx}" aria-label="${window.__('Quitar {name}', { name: nombre })}">&times;</button></span>`;
       }).join('');
     });
   }
@@ -1828,6 +2256,11 @@ class VideoView extends BaseView {
       first_frame_url: this.seedanceFrames.first?.url || null,
       last_frame_url: this.seedanceFrames.last?.url || null,
       reference_images: this.seedanceRefs.image.map((r) => r.url),
+      // Subconjunto de reference_images que NO debe alterarse (Stack de
+      // activos). Van ademas en reference_images porque para KIE ocupan
+      // cupo como cualquier otra imagen; el lock es una instruccion del
+      // prompt, no un campo aparte de la API.
+      product_lock_urls: this.seedanceRefs.image.filter((r) => r.lock).map((r) => r.url),
       reference_videos: this.seedanceRefs.video.map((r) => r.url),
       reference_audios: this.seedanceRefs.audio.map((r) => r.url),
       direction: {

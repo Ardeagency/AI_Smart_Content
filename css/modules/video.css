@@ -5813,6 +5813,28 @@ body.has-sidebar #app-container:has(.video-view-container) {
     white-space: nowrap;
 }
 
+/* Bloqueo de producto: la referencia que la IA no debe alterar */
+.video-view-container .seedance-ref-item.is-lock {
+    outline: 1px solid var(--video-accent);
+    outline-offset: 1px;
+}
+
+.video-view-container .seedance-ref-lock {
+    position: absolute;
+    bottom: -3px;
+    left: -3px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.82);
+    color: var(--video-accent-text);
+    font-size: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
 .video-view-container .seedance-ref-remove {
     position: absolute;
     top: -5px;

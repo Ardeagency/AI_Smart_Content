@@ -36,6 +36,10 @@ function nuevaVista(controles = {}) {
 
   v.seedanceFrames = { first: null, last: null };
   v.seedanceRefs = { image: [], video: [], audio: [] };
+  v.videoProductions = [];
+  v.selectedProductionIds = new Set();
+  v.assetScope = 'product';
+  v.selectedAssetId = '';
   v.cinematography = {
     preset: '', shotType: '', lens: '', framing: '', cameraMovement: '',
     motionSpeed: '', motionIntensity: '', lightType: '', contrastLevel: '',
@@ -64,6 +68,9 @@ function nuevaVista(controles = {}) {
   v.renderSeedanceFrames = () => {};
   v.renderSeedanceRefs = () => {};
   v.renderSeedanceAttachmentChips = () => {};
+  v.renderEscenasCarousel = () => {};
+  v.renderProductionsGallery = () => {};
+  v.renderAssetProductsCarousel = () => {};
   v.scheduleResizeDirectorBriefInput = () => {};
 
   return { v, avisos, borradosDeStorage };
@@ -247,6 +254,165 @@ describe('El payload lleva lo adjuntado', () => {
     expect(payload.reference_videos).toEqual([]);
     expect(payload.first_frame_url).toBeNull();
     expect(payload.last_frame_url).toBeNull();
+  });
+});
+
+describe('Escenas — producciones previas como referencia', () => {
+  const produccion = (id, tipo) => ({
+    id, media_url: `https://cdn.test/prod/${id}.${tipo === 'video' ? 'mp4' : 'jpg'}`,
+    isVideo: tipo === 'video', isImage: tipo !== 'video'
+  });
+
+  test('elegir una escena la mete en el grupo que le toca por tipo', () => {
+    const { v } = nuevaVista();
+    v.videoProductions = [produccion('p1', 'video'), produccion('p2', 'image')];
+    v.selectedProductionIds = new Set(['p1', 'p2']);
+
+    v.syncProductionSelectionToRefs();
+
+    expect(v.seedanceRefs.video.map((r) => r.url)).toEqual(['https://cdn.test/prod/p1.mp4']);
+    expect(v.seedanceRefs.image.map((r) => r.url)).toEqual(['https://cdn.test/prod/p2.jpg']);
+    expect(v.seedanceRefs.video[0].origen).toBe('produccion');
+  });
+
+  test('las escenas comparten cupo con lo subido a mano', async () => {
+    const { v, avisos } = nuevaVista();
+    // 3 videos subidos = grupo lleno.
+    await v.addSeedanceRefs('video', [1, 2, 3].map((i) => archivo(`v${i}.mp4`, 'video/mp4', 5)));
+    v.videoProductions = [produccion('p1', 'video')];
+    v.selectedProductionIds = new Set(['p1']);
+
+    v.syncProductionSelectionToRefs();
+
+    expect(v.seedanceRefs.video).toHaveLength(3);
+    // No basta con no meterla: hay que DESMARCARLA, o la tarjeta queda
+    // seleccionada en el carrusel y el payload no la lleva.
+    expect(v.selectedProductionIds.has('p1')).toBe(false);
+    expect(avisos.join(' ')).toMatch(/no caben/);
+  });
+
+  test('deseleccionar una escena la saca de las referencias', () => {
+    const { v } = nuevaVista();
+    v.videoProductions = [produccion('p1', 'image')];
+    v.selectedProductionIds = new Set(['p1']);
+    v.syncProductionSelectionToRefs();
+    v.selectedProductionIds.delete('p1');
+
+    v.syncProductionSelectionToRefs();
+
+    expect(v.seedanceRefs.image).toHaveLength(0);
+  });
+
+  test('quitar el chip de una escena la desmarca en el carrusel', () => {
+    const { v } = nuevaVista();
+    v.videoProductions = [produccion('p1', 'image')];
+    v.selectedProductionIds = new Set(['p1']);
+    v.syncProductionSelectionToRefs();
+
+    v.removeSeedanceRef('image', 0);
+
+    expect(v.selectedProductionIds.has('p1')).toBe(false);
+  });
+
+  test('quitar una escena NO borra el archivo original del bucket', () => {
+    const { v, borradosDeStorage } = nuevaVista();
+    v.videoProductions = [produccion('p1', 'image')];
+    v.selectedProductionIds = new Set(['p1']);
+    v.syncProductionSelectionToRefs();
+
+    v.removeSeedanceRef('image', 0);
+
+    // La URL es de una producción que existe por su cuenta: borrarla se
+    // llevaría por delante el output original.
+    expect(borradosDeStorage).toEqual([]);
+  });
+
+  test('con frames anclados una escena no se puede elegir', () => {
+    const { v, avisos } = nuevaVista();
+    v.seedanceFrames.first = { url: 'https://cdn.test/f.jpg', storagePath: 'p' };
+    v.videoProductions = [produccion('p1', 'image')];
+
+    v.toggleProduccion('p1');
+
+    expect(v.selectedProductionIds.size).toBe(0);
+    expect(avisos.join(' ')).toMatch(/excluyentes/);
+  });
+});
+
+describe('Stack de activos — el producto que no debe cambiar', () => {
+  const conProducto = (v) => {
+    v.dbData.products = [{
+      id: 'prod-1', nombre_producto: 'Botella', entity_id: 'ent-9',
+      image_urls: ['https://cdn.test/a.jpg', 'https://cdn.test/b.jpg']
+    }];
+  };
+
+  test('el producto elegido entra como referencia con lock', () => {
+    const { v } = nuevaVista();
+    conProducto(v);
+    v.assetScope = 'product';
+    v.selectedAssetId = 'prod-1';
+
+    v.syncAssetSelectionToRefs();
+
+    expect(v.seedanceRefs.image).toHaveLength(2);
+    expect(v.seedanceRefs.image.every((r) => r.lock && r.origen === 'activo')).toBe(true);
+  });
+
+  test('cambiar de producto reemplaza, no acumula', () => {
+    const { v } = nuevaVista();
+    conProducto(v);
+    v.assetScope = 'product';
+    v.selectedAssetId = 'prod-1';
+    v.syncAssetSelectionToRefs();
+
+    v.syncAssetSelectionToRefs();
+
+    expect(v.seedanceRefs.image).toHaveLength(2);
+  });
+
+  test('el bloqueo sale aparte en el payload, y también dentro de las imágenes', () => {
+    const { v } = nuevaVista();
+    conProducto(v);
+    v.assetScope = 'product';
+    v.selectedAssetId = 'prod-1';
+    v.syncAssetSelectionToRefs();
+
+    const payload = v.buildSeedancePayload();
+
+    expect(payload.product_lock_urls).toEqual(['https://cdn.test/a.jpg', 'https://cdn.test/b.jpg']);
+    // Ocupan cupo como cualquier imagen: para KIE no son un campo aparte.
+    expect(payload.reference_images).toEqual(payload.product_lock_urls);
+  });
+
+  test('el activo devuelve el linaje a la entidad de marca', () => {
+    const { v } = nuevaVista();
+    conProducto(v);
+    v.assetScope = 'product';
+    v.selectedAssetId = 'prod-1';
+
+    expect(v._resolveSelectedEntityId()).toBe('ent-9');
+  });
+
+  test('sin activo elegido no hay linaje que inventar', () => {
+    const { v } = nuevaVista();
+    conProducto(v);
+
+    expect(v._resolveSelectedEntityId()).toBeNull();
+  });
+
+  test('con frames anclados el producto se rechaza y se desmarca', () => {
+    const { v, avisos } = nuevaVista();
+    conProducto(v);
+    v.seedanceFrames.first = { url: 'https://cdn.test/f.jpg', storagePath: 'p' };
+    v.assetScope = 'product';
+    v.selectedAssetId = 'prod-1';
+
+    v.syncAssetSelectionToRefs();
+
+    expect(v.seedanceRefs.image).toHaveLength(0);
+    expect(v.selectedAssetId).toBe('');
+    expect(avisos.join(' ')).toMatch(/excluyentes/);
   });
 });
 

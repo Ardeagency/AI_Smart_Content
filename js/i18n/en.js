@@ -2861,5 +2861,13 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Dirección de fotografía": "Cinematography direction",
   "Panel de producción": "Production panel",
   "Recursos": "Resources",
-  "Secciones del panel": "Panel sections"
+  "Secciones del panel": "Panel sections",
+  "A qué campaña pertenece la secuencia, a quién le habla, y qué producciones o productos debe respetar la IA al producirla.": "Which campaign the sequence belongs to, who it speaks to, and which productions or products the AI must respect while producing it.",
+  "Bloqueo de producto": "Product lock",
+  "Escena": "Scene",
+  "Frames Clave y Referencias Multimodales son excluyentes: quita los frames para bloquear un producto.": "Key Frames and Multimodal References are mutually exclusive: remove the frames to lock a product.",
+  "Frames Clave y Referencias Multimodales son excluyentes: quita los frames para usar una escena como referencia.": "Key Frames and Multimodal References are mutually exclusive: remove the frames to use a scene as a reference.",
+  "No cabe el producto: el grupo de imágenes ya está en su máximo.": "The product does not fit: the image group is already at its maximum.",
+  "bloqueo de producto": "product lock",
+  "{n} escena(s) no caben: el grupo ya está en su máximo. Quita una referencia y vuelve a intentar.": "{n} scene(s) do not fit: the group is already at its maximum. Remove a reference and try again."
 }/* I18N:END */;
