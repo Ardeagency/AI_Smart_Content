@@ -1251,7 +1251,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     transition: var(--transition);
 }
 .video-cinematography-panel .video-cine-block:hover {
-    border-color: var(--color-info);
+    border-color: var(--video-accent);
     box-shadow: none;
 }
 /* Cabeceras de acordeón: mismo tono oscuro que el bloque, texto claro (evitar estilo por defecto del botón) */
@@ -4868,8 +4868,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 
 .video-cine-tile.is-selected {
-    border-color: var(--color-info);
-    color: var(--color-info);
+    border-color: var(--video-accent);
+    color: var(--video-accent-text);
+    background: var(--video-accent-soft);
 }
 
 /* Tooltip rico: aparece sobre el tile al hover */
@@ -4972,6 +4973,65 @@ body.has-sidebar #app-container:has(.video-view-container) {
     padding: var(--spacing-md);
     display: flex;
     flex-direction: column;
+    gap: 10px;
+}
+
+/* Pestañas del sidebar: Recursos | Cinematografía.
+   Van FUERA de la card para que no scrolleen con el panel — cambiar de
+   pestaña tiene que estar siempre a un clic, no a un scroll hacia arriba. */
+.video-view-container .video-sidebar-tabs {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 4px;
+    background: var(--bg-card, #141517);
+    border: 1px solid var(--border-divider, #242424);
+    border-radius: var(--radius-md);
+}
+
+.video-view-container .video-sidebar-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.video-view-container .video-sidebar-tab i {
+    font-size: 0.8rem;
+    opacity: 0.75;
+}
+
+.video-view-container .video-sidebar-tab:hover:not(.is-active) {
+    color: var(--text-primary);
+    background: var(--white-05, rgba(255, 255, 255, 0.05));
+}
+
+.video-view-container .video-sidebar-tab.is-active {
+    color: var(--video-accent-text);
+    background: var(--video-accent-soft);
+    border-color: var(--video-accent);
+}
+
+.video-view-container .video-sidebar-tab.is-active i {
+    opacity: 1;
+}
+
+/* Panel: el que no está activo lleva [hidden]; display:none explícito
+   porque el contenedor es flex y el atributo hidden no gana solo. */
+.video-view-container .video-sidebar-panel[hidden] {
+    display: none;
 }
 
 .video-view-container .video-sidebar-console .video-prompt-footer-card.video-sidebar-card {
@@ -5404,7 +5464,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 .video-view-container .video-cine-tab.is-active i {
     opacity: 1;
-    color: var(--color-info);
+    color: var(--video-accent-text);
 }
 
 /* Panels: contenido del tab activo */

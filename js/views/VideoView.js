@@ -22,8 +22,8 @@
  *    desplegar la función: poner el flag en true, escribir el POST y mapear
  *    los nombres de campo de buildSeedancePayload() a los de KIE.
  *
- * Las reglas de los adjuntos están cubiertas por
- * test/video-seedance-adjuntos.test.js.
+ * Las reglas del panel (adjuntos y cinematografía) están cubiertas por
+ * test/video-seedance-panel.test.js.
  */
 class VideoView extends BaseView {
   static documentTitle = 'Video';
@@ -87,11 +87,60 @@ class VideoView extends BaseView {
     this.seedanceRefs = { image: [], video: [], audio: [] };
     // Slot que disparo el file picker de frames (el input es uno solo).
     this._pendingFrameSlot = null;
+    // Dirección de fotografía (pestaña Cinematografía). Viene de Kling: son
+    // plantillas de prompt, no params de la API, así que sirven igual para
+    // Seedance — se traducen a lenguaje de dirección dentro del prompt.
+    this.cinematography = {
+      preset: '',
+      shotType: '',
+      lens: '',
+      framing: '',
+      cameraMovement: '',
+      motionSpeed: '',
+      motionIntensity: '',
+      lightType: '',
+      contrastLevel: '',
+      temperature: '',
+      tone: '',
+      colorGrade: '',
+      colorTemp: '',
+      energyLevel: ''
+    };
     // Tokens del ultimo cine-prompt — usados al finalize del video para
     // cobrar dinamico (KIE_real + OpenAI_tokens + 5 markup). Init explicito
     // para que primer acceso no sea undefined (P3#2 audit 2026-05-25).
     this._cinePromptTokens = null;
     this._lastKieOutputId = null;
+  }
+
+  static get CINEMATOGRAPHY_PRESETS() {
+    return {
+      '': { label: 'None' },
+      'product-launch': { label: 'Product Launch', shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Centered', cameraMovement: 'Slow Push In', motionSpeed: 'Moderate', motionIntensity: 'Moderate', lightType: 'Studio commercial', contrastLevel: 'Medium', temperature: 'Neutral', tone: 'Clean commercial', colorGrade: 'Neutral', colorTemp: 'Neutral', energyLevel: 'Moderate' },
+      'luxury-hero': { label: 'Luxury Hero', shotType: 'Wide Shot', lens: '85mm (Portrait Compression)', framing: 'Negative space left', cameraMovement: 'Slow Pull Out', motionSpeed: 'Subtle', motionIntensity: 'Subtle', lightType: 'Rim light', contrastLevel: 'High', temperature: 'Warm', tone: 'Minimal luxury', colorGrade: 'Muted tones', colorTemp: 'Muted tones', energyLevel: 'Low' },
+      'social-performance': { label: 'Social Performance', shotType: 'Close-up', lens: '35mm (Natural)', framing: 'Rule of thirds', cameraMovement: 'Tracking', motionSpeed: 'Dynamic', motionIntensity: 'Dynamic', lightType: 'Natural daylight', contrastLevel: 'Medium', temperature: 'Warm', tone: 'Bright energetic', colorGrade: 'Warm', colorTemp: 'Warm', energyLevel: 'High' },
+      'cinematic-teaser': { label: 'Cinematic Teaser', shotType: 'Wide Shot', lens: '24mm (Wide Cinematic)', framing: 'Dynamic off-center', cameraMovement: 'Dolly Left', motionSpeed: 'Dynamic', motionIntensity: 'Dynamic', lightType: 'Dramatic spotlight', contrastLevel: 'High', temperature: 'Cold', tone: 'Cinematic dramatic', colorGrade: 'Cold', colorTemp: 'Cold', energyLevel: 'High' },
+      'ecommerce-clean': { label: 'Ecommerce Clean', shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Symmetrical', cameraMovement: '360° Rotation', motionSpeed: 'Subtle', motionIntensity: 'Subtle', lightType: 'Studio commercial', contrastLevel: 'Low', temperature: 'Neutral', tone: 'Clean commercial', colorGrade: 'Neutral', colorTemp: 'Neutral', energyLevel: 'Low' },
+      'tech-explainer': { label: 'Tech Explainer', shotType: 'Medium Shot', lens: '35mm (Natural)', framing: 'Centered', cameraMovement: 'Orbit', motionSpeed: 'Moderate', motionIntensity: 'Moderate', lightType: 'Soft diffused', contrastLevel: 'Low', temperature: 'Neutral', tone: 'Clean commercial', colorGrade: 'Neutral', colorTemp: 'Neutral', energyLevel: 'Moderate' }
+    };
+  }
+
+  static get CINE_OPTIONS() {
+    return {
+      shotType: ['Macro Detail', 'Close-up', 'Medium Shot', 'Wide Shot', 'Hero Product Frame', 'Over-the-Shoulder', 'POV', 'Top Down', 'Low Angle', 'High Angle'],
+      lens: ['24mm (Wide Cinematic)', '35mm (Natural)', '50mm (Balanced)', '85mm (Portrait Compression)', '100mm Macro'],
+      framing: ['Centered', 'Rule of thirds', 'Negative space left', 'Negative space right', 'Symmetrical', 'Dynamic off-center'],
+      cameraMovement: ['Static', 'Slow Push In', 'Slow Pull Out', 'Dolly Left', 'Dolly Right', 'Orbit', '360° Rotation', 'Handheld', 'Tracking', 'FPV'],
+      motionSpeed: ['Subtle', 'Moderate', 'Dynamic', 'Aggressive'],
+      motionIntensity: ['Subtle', 'Moderate', 'Dynamic', 'Aggressive'],
+      lightType: ['Soft diffused', 'Hard contrast', 'Rim light', 'Backlit silhouette', 'Studio commercial', 'Natural daylight', 'Dramatic spotlight'],
+      contrastLevel: ['Low', 'Medium', 'High', 'Ultra contrast'],
+      temperature: ['Neutral', 'Warm', 'Cold'],
+      tone: ['Clean commercial', 'Cinematic dramatic', 'Hyperreal product', 'Minimal luxury', 'Dark premium', 'Bright energetic', 'Editorial fashion', 'Documentary'],
+      colorGrade: ['Neutral', 'Warm', 'Cold', 'High saturation', 'Muted tones'],
+      colorTemp: ['Neutral', 'Warm', 'Cold', 'High saturation', 'Muted tones'],
+      energyLevel: ['Low', 'Moderate', 'High', 'Peak']
+    };
   }
 
   async onEnter() {
@@ -180,6 +229,7 @@ class VideoView extends BaseView {
                     </div>
                     <div class="video-director-attachments-row">
                       <div class="video-attachments-list" id="seedanceElementsList" aria-live="polite"></div>
+                      <div class="video-director-variables-row" id="videoDirectorVariables" aria-label="${window.__('Variables de cinematografía')}"></div>
                     </div>
 
                     <div class="video-director-controls">
@@ -218,9 +268,19 @@ class VideoView extends BaseView {
               </section>
             </main>
 
-            <aside class="video-sidebar-console" aria-label="${window.__('Sidebar Seedance — secuencias narrativas')}">
+            <aside class="video-sidebar-console" aria-label="${window.__('Panel de producción')}">
+              <div class="video-sidebar-tabs" role="tablist" aria-label="${window.__('Secciones del panel')}">
+                <button type="button" class="video-sidebar-tab is-active" role="tab" id="videoSidebarTabRecursos" data-sidebar-tab="recursos" aria-selected="true" aria-controls="videoSidebarPanelRecursos">
+                  <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i><span>${window.__('Recursos')}</span>
+                </button>
+                <button type="button" class="video-sidebar-tab" role="tab" id="videoSidebarTabCine" data-sidebar-tab="cinematografia" aria-selected="false" aria-controls="videoSidebarPanelCine">
+                  <i class="aisc-ico aisc-ico--video" aria-hidden="true"></i><span>${window.__('Cinematografía')}</span>
+                </button>
+              </div>
               <div class="video-prompt-footer-card video-sidebar-card">
                 <div class="video-prompt-footer-card-inner video-sidebar-inner">
+
+                <div class="video-sidebar-panel is-active" data-sidebar-panel="recursos" role="tabpanel" id="videoSidebarPanelRecursos" aria-labelledby="videoSidebarTabRecursos">
 
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
@@ -334,6 +394,71 @@ class VideoView extends BaseView {
                     </div>
                   </div>
 
+                </div>
+
+                <div class="video-sidebar-panel" data-sidebar-panel="cinematografia" role="tabpanel" id="videoSidebarPanelCine" aria-labelledby="videoSidebarTabCine" hidden>
+
+                  <div class="video-sidebar-section video-sidebar-cine video-cinematography-panel">
+                    <div class="video-sidebar-section-header">
+                      <h3 class="video-section-label">${window.__('Dirección de fotografía')}</h3>
+                      <div class="video-sidebar-section-actions">
+                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCineResetBtn" aria-label="${window.__('Restablecer cinematografía')}" title="${window.__('Restablecer todos los valores')}"><i class="aisc-ico aisc-ico--refresh"></i></button>
+                      </div>
+                    </div>
+                    <p class="video-sidebar-section-hint">${window.__('Cámara, movimiento, luz y mood. Si no sabes por dónde empezar, elige un Production Preset y se llena el resto.')}</p>
+                    <div class="video-cine-preset-wrap">
+                      <label class="video-cine-label">${window.__('Production Preset')}</label>
+                      <select id="videoCinePreset" class="video-cine-select" aria-label="${window.__('Production Preset')}">
+                        <option value="">${window.__('Ninguno')}</option>
+                        <option value="product-launch">Product Launch</option>
+                        <option value="luxury-hero">Luxury Hero</option>
+                        <option value="social-performance">Social Performance</option>
+                        <option value="cinematic-teaser">Cinematic Teaser</option>
+                        <option value="ecommerce-clean">Ecommerce Clean</option>
+                        <option value="tech-explainer">Tech Explainer</option>
+                      </select>
+                    </div>
+                    <div class="video-cine-selected-tags" id="videoCineSelectedTags" aria-live="polite"></div>
+                    <div class="video-cine-tabs" role="tablist" aria-label="${window.__('Categoría de dirección')}">
+                      <button type="button" class="video-cine-tab is-active" role="tab" aria-selected="true" data-tab="movement"><i class="aisc-ico aisc-ico--move" aria-hidden="true"></i><span>${window.__('Movimiento')}</span></button>
+                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="lighting"><i class="aisc-ico aisc-ico--idea" aria-hidden="true"></i><span>${window.__('Luz')}</span></button>
+                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="mood"><i class="aisc-ico aisc-ico--palette" aria-hidden="true"></i><span>Mood</span></button>
+                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="camera"><i class="aisc-ico aisc-ico--filter" aria-hidden="true"></i><span>${window.__('Avanzado')}</span></button>
+                    </div>
+                    <div class="video-cine-panels">
+                      <div class="video-cine-panel is-active" data-panel="movement" role="tabpanel">
+                        <p class="video-cine-block-hint">${window.__('Cómo se mueve la cámara. Determina el ritmo y la sensación.')}</p>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Tipo de movimiento')}</label><select id="videoCineMovement" class="video-cine-select"></select></div>
+                        <div class="video-cine-row-pair">
+                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Velocidad')}</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Intensidad')}</label><select id="videoCineMotionIntensity" class="video-cine-select"></select></div>
+                        </div>
+                      </div>
+                      <div class="video-cine-panel" data-panel="lighting" role="tabpanel" hidden>
+                        <p class="video-cine-block-hint">${window.__('La iluminación dicta la emoción: suave para algo cálido, contrastada para drama.')}</p>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Tipo de luz')}</label><select id="videoCineLightType" class="video-cine-select"></select></div>
+                        <div class="video-cine-row-pair">
+                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Contraste')}</label><select id="videoCineContrast" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Temperatura')}</label><select id="videoCineTemperature" class="video-cine-select"></select></div>
+                        </div>
+                      </div>
+                      <div class="video-cine-panel" data-panel="mood" role="tabpanel" hidden>
+                        <p class="video-cine-block-hint">${window.__('La paleta y la energía emocional. Define si se siente premium, vibrante o dramático.')}</p>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Tono')}</label><select id="videoCineTone" class="video-cine-select"></select></div>
+                        <div class="video-cine-row-pair">
+                          <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="videoCineColorGrade" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Energía')}</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
+                        </div>
+                      </div>
+                      <div class="video-cine-panel" data-panel="camera" role="tabpanel" hidden>
+                        <p class="video-cine-block-hint">${window.__('Controles granulares para usuarios con experiencia. Si lo dejas vacío, la IA elige por ti.')}</p>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Tipo de toma')}</label><select id="videoCineShotType" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Lente')}</label><select id="videoCineLens" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Encuadre')}</label><select id="videoCineFraming" class="video-cine-select"></select></div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
                       <h3 class="video-section-label">${window.__('Pacing & Narrativa')}</h3>
@@ -397,12 +522,14 @@ class VideoView extends BaseView {
                   </div>
 
                 </div>
+
+                </div>
               </div>
               <button type="button" class="video-sidebar-help" id="seedanceSidebarHelpBtn" aria-label="${window.__('Ayuda Seedance')}" title="${window.__('Ayuda Seedance')}">?</button>
               <div class="video-sidebar-help-popover" id="seedanceSidebarHelpPopover" role="dialog" aria-label="${window.__('Ayuda Seedance')}">
                 <h4>${window.__('Seedance 2.0 — secuencias narrativas')}</h4>
-                <p><strong>${window.__('Frames Clave')}</strong>${window.__(': una imagen de inicio + una de cierre. La IA construye el arco entre ambas.')}</p>
-                <p><strong>${window.__('Referencias Multimodales')}</strong>${window.__(': imágenes para estilo, videos para movimiento, audios para vibe. Hasta 9/3/3 respectivamente.')}</p>
+                <p><strong>${window.__('Recursos')}</strong>${window.__(': el material que le entregas. Frames Clave ancla el inicio y el cierre; las Referencias Multimodales dan estilo, movimiento y vibe (hasta 9 imágenes, 3 videos y 3 audios). Frames y referencias no se combinan.')}</p>
+                <p><strong>${window.__('Cinematografía')}</strong>${window.__(': cómo se ve. Cámara, movimiento, luz y mood no son parámetros de la API — se traducen a lenguaje de dirección dentro del prompt. Un Production Preset llena todo de una.')}</p>
                 <p><strong>Audio</strong>${window.__(': Seedance genera el audio de la secuencia. Activarlo cuesta créditos extra pero devuelve un video listo para publicar.')}</p>
               </div>
             </aside>
@@ -438,6 +565,31 @@ class VideoView extends BaseView {
       this.promptInput.addEventListener('input', () => this.scheduleResizeDirectorBriefInput());
       this.promptInput.addEventListener('paste', () => this.scheduleResizeDirectorBriefInput());
     }
+
+    // ── Pestañas del sidebar: Recursos | Cinematografía ──
+    this.container.querySelectorAll('.video-sidebar-tab[data-sidebar-tab]').forEach((tab) => {
+      if (tab.dataset.boundSidebarTab === '1') return;
+      tab.dataset.boundSidebarTab = '1';
+      tab.addEventListener('click', (e) => {
+        e.preventDefault();
+        const destino = tab.getAttribute('data-sidebar-tab');
+        if (!destino) return;
+        this.container.querySelectorAll('.video-sidebar-tab[data-sidebar-tab]').forEach((t) => {
+          const activa = t === tab;
+          t.classList.toggle('is-active', activa);
+          t.setAttribute('aria-selected', activa ? 'true' : 'false');
+        });
+        this.container.querySelectorAll('.video-sidebar-panel[data-sidebar-panel]').forEach((p) => {
+          const activo = p.getAttribute('data-sidebar-panel') === destino;
+          p.classList.toggle('is-active', activo);
+          p.hidden = !activo;
+        });
+        // Cada panel scrollea desde su propio inicio: cambiar de pestaña y
+        // aterrizar a media altura del panel anterior desorienta.
+        const inner = this.container.querySelector('.video-sidebar-inner');
+        if (inner) inner.scrollTop = 0;
+      });
+    });
 
     // ── Frames Clave ──
     const frameInput = this.container.querySelector('#seedanceFrameUpload');
@@ -548,6 +700,27 @@ class VideoView extends BaseView {
     this.renderSeedanceFrames();
     this.renderSeedanceRefs();
     this.renderSeedanceAttachmentChips();
+
+    // ── Cinematografía ──
+    this.initCinematography();
+    const resetCineBtn = this.container.querySelector('#videoCineResetBtn');
+    if (resetCineBtn && resetCineBtn.dataset.boundReset !== '1') {
+      resetCineBtn.dataset.boundReset = '1';
+      resetCineBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!confirm(window.__('¿Restablecer todos los valores de Cinematografía?'))) return;
+        Object.keys(this.cinematography).forEach((k) => { this.cinematography[k] = ''; });
+        this.syncCinematographyToSelects();
+        this.renderCinematographySelectedTags();
+        this.renderDirectorVariables();
+        const presetEl = this.container.querySelector('#videoCinePreset');
+        if (presetEl) presetEl.value = '';
+        // Los tiles se repintan escuchando el change del select que espejan.
+        this.container.querySelectorAll('.video-cinematography-panel .video-cine-select').forEach((sel) => {
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+    }
 
     // Seedance: toggle Audio + Web search (solo UI state, sin wiring backend aún)
     ['seedanceGenAudioToggle', 'seedanceWebSearchToggle'].forEach((id) => {
@@ -933,15 +1106,6 @@ class VideoView extends BaseView {
     }
   }
 
-  _escapeHtml(str) {
-    return String(str == null ? '' : str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
   /**
    * Aviso al usuario. Un adjunto rechazado en silencio se lee como aceptado
    * y el error aparece 10 minutos despues, en KIE.
@@ -1091,7 +1255,7 @@ class VideoView extends BaseView {
           return;
         }
         el.classList.add('has-image');
-        el.style.backgroundImage = `url("${this._escapeHtml(frame.url)}")`;
+        el.style.backgroundImage = `url("${this.escapeHtml(frame.url)}")`;
         el.innerHTML = `
           <span class="seedance-frame-slot-label">${label}</span>
           <button type="button" class="seedance-frame-slot-remove" data-frame-remove="${slot}" aria-label="${window.__('Quitar {label}', { label })}">&times;</button>
@@ -1179,10 +1343,10 @@ class VideoView extends BaseView {
       const listEl = this.container.querySelector(g.list);
       if (!listEl) return;
       listEl.innerHTML = items.map((item, idx) => {
-        const nombre = this._escapeHtml(item.name || g.kind);
+        const nombre = this.escapeHtml(item.name || g.kind);
         const dur = item.seconds != null ? ` · ${Math.round(item.seconds)}s` : '';
         const cuerpo = g.kind === 'image'
-          ? `<img class="seedance-ref-thumb" src="${this._escapeHtml(item.url)}" alt="" loading="lazy">`
+          ? `<img class="seedance-ref-thumb" src="${this.escapeHtml(item.url)}" alt="" loading="lazy">`
           : `<i class="aisc-ico ${g.icono}" aria-hidden="true"></i><span class="seedance-ref-name">${nombre}${dur}</span>`;
         return `<span class="seedance-ref-item" title="${nombre}${dur}">${cuerpo}<button type="button" class="seedance-ref-remove" data-ref-kind="${g.kind}" data-ref-index="${idx}" aria-label="${window.__('Quitar {name}', { name: nombre })}">&times;</button></span>`;
       }).join('');
@@ -1210,9 +1374,9 @@ class VideoView extends BaseView {
     }
     listEl.style.display = 'flex';
     listEl.innerHTML = chips.map((c) => {
-      const etiqueta = this._escapeHtml(c.label);
+      const etiqueta = this.escapeHtml(c.label);
       const cuerpo = c.esImagen
-        ? `<span class="video-attachment-thumbs"><span class="video-attachment-thumb-wrap"><img class="video-attachment-thumb" src="${this._escapeHtml(c.url)}" alt="" loading="lazy"></span></span>`
+        ? `<span class="video-attachment-thumbs"><span class="video-attachment-thumb-wrap"><img class="video-attachment-thumb" src="${this.escapeHtml(c.url)}" alt="" loading="lazy"></span></span>`
         : `<span class="video-attachment-video-label">${etiqueta}</span>`;
       return `<span class="video-attachment-chip" title="${etiqueta}">${cuerpo}<button type="button" class="video-attachment-remove" data-attachment-remove="${c.quitar}" aria-label="${window.__('Quitar {name}', { name: etiqueta })}">&times;</button></span>`;
     }).join('');
@@ -1230,6 +1394,392 @@ class VideoView extends BaseView {
     }
   }
 
+  initCinematography() {
+    const opts = VideoView.CINE_OPTIONS;
+    const fill = (id, values, current) => {
+      const el = this.container.querySelector(id);
+      if (!el) return;
+      el.innerHTML = `<option value="">${window.__('— Ninguno')}</option>` + values.map((v) => `<option value="${v}" ${v === current ? 'selected' : ''}>${v}</option>`).join('');
+    };
+    fill('#videoCineShotType', opts.shotType, this.cinematography.shotType);
+    fill('#videoCineLens', opts.lens, this.cinematography.lens);
+    fill('#videoCineFraming', opts.framing, this.cinematography.framing);
+    fill('#videoCineMovement', opts.cameraMovement, this.cinematography.cameraMovement);
+    fill('#videoCineMotionSpeed', opts.motionSpeed, this.cinematography.motionSpeed);
+    fill('#videoCineMotionIntensity', opts.motionIntensity, this.cinematography.motionIntensity);
+    fill('#videoCineLightType', opts.lightType, this.cinematography.lightType);
+    fill('#videoCineContrast', opts.contrastLevel, this.cinematography.contrastLevel);
+    fill('#videoCineTemperature', opts.temperature, this.cinematography.temperature);
+    fill('#videoCineTone', opts.tone, this.cinematography.tone);
+    fill('#videoCineColorGrade', opts.colorGrade, this.cinematography.colorGrade);
+    fill('#videoCineEnergyLevel', opts.energyLevel, this.cinematography.energyLevel);
+    fill('#videoCineColorTemp', opts.colorTemp, this.cinematography.colorTemp);
+
+    const presetKeys = ['shotType', 'lens', 'framing', 'cameraMovement', 'motionSpeed', 'motionIntensity', 'lightType', 'contrastLevel', 'temperature', 'tone', 'colorGrade', 'colorTemp', 'energyLevel'];
+    const presetEl = this.container.querySelector('#videoCinePreset');
+    if (presetEl) {
+      presetEl.addEventListener('change', () => {
+        const key = presetEl.value;
+        const presets = VideoView.CINEMATOGRAPHY_PRESETS;
+        if (presets[key] && key) {
+          const p = presets[key];
+          this.cinematography.preset = key;
+          presetKeys.forEach((k) => { if (p[k] != null) this.cinematography[k] = p[k]; });
+          this.syncCinematographyToSelects();
+          this.renderCinematographySelectedTags();
+          this.renderDirectorVariables();
+        }
+      });
+    }
+
+    const selectConfig = [
+      ['videoCineShotType', 'shotType'], ['videoCineLens', 'lens'], ['videoCineFraming', 'framing'],
+      ['videoCineMovement', 'cameraMovement'], ['videoCineMotionSpeed', 'motionSpeed'], ['videoCineMotionIntensity', 'motionIntensity'],
+      ['videoCineLightType', 'lightType'], ['videoCineContrast', 'contrastLevel'], ['videoCineTemperature', 'temperature'],
+      ['videoCineTone', 'tone'], ['videoCineColorGrade', 'colorGrade'], ['videoCineEnergyLevel', 'energyLevel'], ['videoCineColorTemp', 'colorTemp']
+    ];
+    selectConfig.forEach(([id, key]) => {
+      const el = this.container.querySelector('#' + id);
+      if (el) el.addEventListener('change', () => {
+        this.cinematography[key] = el.value;
+        this.renderCinematographySelectedTags();
+        this.renderDirectorVariables();
+      });
+    });
+
+    /* Tabs cinematography: click swap panel */
+    this.container.querySelectorAll('.video-cine-tab[data-tab]').forEach((tab) => {
+      if (tab.dataset.boundTab === '1') return;
+      tab.dataset.boundTab = '1';
+      tab.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = tab.getAttribute('data-tab');
+        if (!target) return;
+        this.container.querySelectorAll('.video-cine-tab').forEach((t) => {
+          const active = t === tab;
+          t.classList.toggle('is-active', active);
+          t.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        this.container.querySelectorAll('.video-cine-panel').forEach((p) => {
+          const active = p.getAttribute('data-panel') === target;
+          p.classList.toggle('is-active', active);
+          p.hidden = !active;
+        });
+      });
+    });
+
+    this.renderCinematographySelectedTags();
+    this.renderDirectorVariables();
+    this.enhanceCinematographyWithTiles();
+  }
+
+  enhanceCinematographyWithTiles() {
+    // Fallback por categoría — solo aplica si no hay icono específico por valor
+    const FALLBACK_ICONS = {
+      shotType: 'aisc-ico aisc-ico--video',
+      lens: 'aisc-ico aisc-ico--camera',
+      framing: 'aisc-ico aisc-ico--crop',
+      cameraMovement: 'aisc-ico aisc-ico--move',
+      motionSpeed: 'aisc-ico aisc-ico--dashboard',
+      motionIntensity: 'aisc-ico aisc-ico--zap',
+      lightType: 'aisc-ico aisc-ico--idea',
+      contrastLevel: 'aisc-ico aisc-ico--moon',
+      temperature: 'fa-temperature-three-quarters',
+      tone: 'aisc-ico aisc-ico--palette',
+      colorGrade: 'aisc-ico aisc-ico--palette',
+      colorTemp: 'aisc-ico aisc-ico--palette',
+      energyLevel: 'aisc-ico aisc-ico--fire'
+    };
+
+    // Descripciones por VALOR — al hover sobre cada tile, tooltip explica
+    // qué hace el efecto en lenguaje claro para usuarios sin experiencia.
+    const VALUE_DESCRIPTIONS = {
+      // Camera movement
+      'Static': window.__('La cámara permanece fija. Ideal para tomas limpias y producto en primer plano.'),
+      'Slow Push In': window.__('La cámara se acerca lentamente al sujeto. Crea tensión y resalta un punto focal.'),
+      'Slow Pull Out': window.__('La cámara se aleja lentamente. Revela el entorno y da contexto al sujeto.'),
+      'Dolly Left': window.__('La cámara se desplaza hacia la izquierda manteniendo al sujeto centrado.'),
+      'Dolly Right': window.__('La cámara se desplaza hacia la derecha. Sensación de exploración lateral.'),
+      'Orbit': window.__('La cámara gira alrededor del sujeto en arco. Cinematográfico y dramático.'),
+      '360° Rotation': window.__('Rotación completa alrededor del sujeto. Muestra el producto desde todos los ángulos.'),
+      'Handheld': window.__('Movimiento de mano natural con pulso humano. Documental, auténtico, cercano.'),
+      'Tracking': window.__('La cámara sigue al sujeto en movimiento. Mantiene foco mientras hay acción.'),
+      'FPV': window.__('Punto de vista en primera persona. Inmersivo y dinámico (estilo dron o GoPro).'),
+
+      // Motion speed / intensity
+      'Subtle': window.__('Movimiento muy leve, casi imperceptible. Premium y elegante.'),
+      'Moderate': window.__('Movimiento controlado y constante. Balance entre energía y calma.'),
+      'Dynamic': window.__('Movimiento marcado y enérgico. Llama la atención.'),
+      'Aggressive': window.__('Movimiento intenso y rápido. Máxima energía visual.'),
+
+      // Lighting type
+      'Soft diffused': window.__('Luz suave y envolvente, sin sombras duras. Sensación cálida y limpia.'),
+      'Hard contrast': window.__('Luces fuertes y sombras marcadas. Dramatismo visual.'),
+      'Rim light': window.__('Luz que recorta el contorno del sujeto. Premium, lo separa del fondo.'),
+      'Backlit silhouette': window.__('Sujeto a contraluz, silueta negra contra luz. Misterio, drama.'),
+      'Studio commercial': window.__('Iluminación de estudio profesional. Limpia, pareja, comercial clásico.'),
+      'Natural daylight': window.__('Luz natural de día. Auténtico, lifestyle, accesible.'),
+      'Dramatic spotlight': window.__('Foco concentrado sobre el sujeto. Aislamiento y protagonismo total.'),
+
+      // Contrast
+      'Low': window.__('Contraste bajo. Tonos planos y suaves, look documental o vintage.'),
+      'Medium': window.__('Contraste balanceado. Look natural y versátil.'),
+      'High': window.__('Contraste alto. Imagen punchy y vibrante.'),
+      'Ultra contrast': window.__('Contraste extremo. Look gráfico, casi de moda editorial.'),
+
+      // Temperature
+      'Neutral': window.__('Temperatura neutra. Colores reales sin tinte cálido ni frío.'),
+      'Warm': window.__('Tonos cálidos (amarillos, naranjas). Acogedor, dorado, premium.'),
+      'Cold': window.__('Tonos fríos (azules). Tecnológico, sereno, sofisticado.'),
+
+      // Tone / Mood
+      'Clean commercial': window.__('Look comercial clásico. Limpio, claro, vende sin distracciones.'),
+      'Cinematic dramatic': window.__('Look de cine con paleta rica y tensión. Storytelling potente.'),
+      'Hyperreal product': window.__('Producto hiperdetallado, casi macro. Saca lo mejor del objeto.'),
+      'Minimal luxury': window.__('Estética minimal premium. Pocos elementos, mucho aire, lujo callado.'),
+      'Dark premium': window.__('Paleta oscura y elegante. Producto de gama alta nocturno.'),
+      'Bright energetic': window.__('Colores vivos y luminosos. Joven, social, juvenil.'),
+      'Editorial fashion': window.__('Estética de revista de moda. Sofisticado y aspiracional.'),
+      'Documentary': window.__('Look auténtico y crudo. Sin filtros, real, humano.'),
+
+      // Color grade / temp / energy
+      'High saturation': window.__('Colores muy saturados. Vibrante y llamativo.'),
+      'Muted tones': window.__('Tonos apagados y elegantes. Premium discreto.'),
+      'Peak': window.__('Energía visual máxima. Cortes rápidos, vivos, alta intensidad.')
+    };
+
+    // Mapping de iconos por VALOR — para que el usuario sin experiencia vea el
+    // pictograma y entienda qué hace cada opción sin tener que leer.
+    const VALUE_ICONS = {
+      // Camera movement
+      'Static': 'fa-square',
+      'Slow Push In': 'aisc-ico aisc-ico--minimize',
+      'Slow Pull Out': 'aisc-ico aisc-ico--expand',
+      'Dolly Left': 'aisc-ico aisc-ico--arrow-left',
+      'Dolly Right': 'aisc-ico aisc-ico--arrow-right',
+      'Orbit': 'aisc-ico aisc-ico--refresh',
+      '360° Rotation': 'aisc-ico aisc-ico--refresh',
+      'Handheld': 'aisc-ico aisc-ico--help',
+      'Tracking': 'fa-route',
+      'FPV': 'fa-helicopter',
+
+      // Motion speed / intensity (escala visual)
+      'Subtle': 'aisc-ico aisc-ico--circle',
+      'Moderate': 'aisc-ico aisc-ico--circle',
+      'Dynamic': 'aisc-ico aisc-ico--zap',
+      'Aggressive': 'aisc-ico aisc-ico--fire',
+
+      // Lighting type
+      'Soft diffused': 'aisc-ico aisc-ico--cloud',
+      'Hard contrast': 'fa-mountain-sun',
+      'Rim light': 'aisc-ico aisc-ico--moon',
+      'Backlit silhouette': 'aisc-ico aisc-ico--user-slash',
+      'Studio commercial': 'aisc-ico aisc-ico--store',
+      'Natural daylight': 'aisc-ico aisc-ico--sun',
+      'Dramatic spotlight': 'aisc-ico aisc-ico--goal',
+
+      // Contrast
+      'Low': 'aisc-ico aisc-ico--loader',
+      'Medium': 'aisc-ico aisc-ico--moon',
+      'High': 'aisc-ico aisc-ico--circle',
+      'Ultra contrast': 'fa-circle-radiation',
+
+      // Temperature
+      'Neutral': 'aisc-ico aisc-ico--circle',
+      'Warm': 'aisc-ico aisc-ico--fire',
+      'Cold': 'fa-snowflake',
+
+      // Tone / Mood
+      'Clean commercial': 'aisc-ico aisc-ico--eraser',
+      'Cinematic dramatic': 'aisc-ico aisc-ico--characters',
+      'Hyperreal product': 'aisc-ico aisc-ico--product',
+      'Minimal luxury': 'fa-gem',
+      'Dark premium': 'aisc-ico aisc-ico--moon',
+      'Bright energetic': 'aisc-ico aisc-ico--zap',
+      'Editorial fashion': 'aisc-ico aisc-ico--book',
+      'Documentary': 'aisc-ico aisc-ico--camera',
+
+      // Color grade / temp
+      'High saturation': 'aisc-ico aisc-ico--palette',
+      'Muted tones': 'aisc-ico aisc-ico--circle',
+
+      // Energy level
+      'Peak': 'aisc-ico aisc-ico--fire'
+    };
+
+    // SVG animados que comunican el movimiento de cámara visualmente.
+    // Cada SVG usa viewBox 32x24 (aspect cinema-ish), stroke currentColor,
+    // animaciones CSS por clase (.cine-anim-*) que solo corren on-hover/selected.
+    const VALUE_SVG = {
+      'Static': '<svg viewBox="0 0 32 24" class="cine-svg" aria-hidden="true"><rect x="6" y="4" width="20" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="12" r="1.4" fill="currentColor" class="cine-anim-pulse"/></svg>',
+      'Slow Push In': '<svg viewBox="0 0 32 24" class="cine-svg" aria-hidden="true"><rect x="2.5" y="2.5" width="27" height="19" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.35"/><rect class="cine-anim-push-in" x="9" y="6" width="14" height="12" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6" style="transform-origin:16px 12px"/></svg>',
+      'Slow Pull Out': '<svg viewBox="0 0 32 24" class="cine-svg" aria-hidden="true"><rect x="2.5" y="2.5" width="27" height="19" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.35"/><rect class="cine-anim-pull-out" x="9" y="6" width="14" height="12" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6" style="transform-origin:16px 12px"/></svg>',
+      'Dolly Left': '<svg viewBox="0 0 32 24" class="cine-svg" aria-hidden="true"><rect class="cine-anim-dolly-left" x="10" y="6" width="14" height="12" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 12h4M4 12l2-2M4 12l2 2" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.55"/></svg>',
+      'Dolly Right': '<svg viewBox="0 0 32 24" class="cine-svg" aria-hidden="true"><rect class="cine-anim-dolly-right" x="8" y="6" width="14" height="12" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M28 12h-4M28 12l-2-2M28 12l-2 2" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.55"/></svg>',
+      'Orbit': '<svg viewBox="0 0 32 24" class="cine-svg" aria-hidden="true"><circle cx="16" cy="12" r="2" fill="currentColor"/><ellipse cx="16" cy="12" rx="11" ry="6" fill="none" stroke="currentColor" stroke-width="1" opacity="0.4"/><circle class="cine-anim-orbit" cx="27" cy="12" r="1.8" fill="currentColor" style="transform-origin:16px 12px"/></svg>',
+      '360° Rotation': '<svg viewBox="0 0 32 24" class="cine-svg" aria-hidden="true"><rect class="cine-anim-rotate" x="10" y="6" width="12" height="12" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6" style="transform-origin:16px 12px"/><path d="M6 12a10 8 0 0120 0" stroke="currentColor" stroke-width="1" fill="none" opacity="0.4" stroke-dasharray="2 2"/></svg>',
+      'Handheld': '<svg viewBox="0 0 32 24" class="cine-svg" aria-hidden="true"><rect class="cine-anim-handheld" x="9" y="6" width="14" height="12" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6" style="transform-origin:16px 12px"/></svg>',
+      'Tracking': '<svg viewBox="0 0 32 24" class="cine-svg" aria-hidden="true"><circle class="cine-anim-tracking-subject" cx="8" cy="12" r="2" fill="currentColor" style="transform-origin:16px 12px"/><rect class="cine-anim-tracking-cam" x="20" y="6" width="9" height="12" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6" style="transform-origin:16px 12px"/><path d="M11 12h7" stroke="currentColor" stroke-width="1" opacity="0.4" stroke-dasharray="2 2"/></svg>',
+      'FPV': '<svg viewBox="0 0 32 24" class="cine-svg" aria-hidden="true"><path class="cine-anim-fpv" d="M4 4l24 8-24 8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>'
+    };
+
+    const config = [
+      ['videoCineShotType', 'shotType'], ['videoCineLens', 'lens'], ['videoCineFraming', 'framing'],
+      ['videoCineMovement', 'cameraMovement'], ['videoCineMotionSpeed', 'motionSpeed'], ['videoCineMotionIntensity', 'motionIntensity'],
+      ['videoCineLightType', 'lightType'], ['videoCineContrast', 'contrastLevel'], ['videoCineTemperature', 'temperature'],
+      ['videoCineTone', 'tone'], ['videoCineColorGrade', 'colorGrade'], ['videoCineEnergyLevel', 'energyLevel'], ['videoCineColorTemp', 'colorTemp']
+    ];
+    config.forEach(([id, key]) => {
+      const sel = this.container.querySelector('#' + id);
+      if (!sel) return;
+      const row = sel.closest('.video-cine-row');
+      if (!row) return;
+      let grid = row.querySelector('.video-cine-tile-grid');
+      if (!grid) {
+        grid = document.createElement('div');
+        grid.className = 'video-cine-tile-grid';
+        grid.setAttribute('data-target-select', id);
+        row.appendChild(grid);
+        sel.classList.add('video-cine-select-hidden');
+      }
+      const fallbackIcon = FALLBACK_ICONS[key] || 'aisc-ico aisc-ico--circle';
+      const renderTiles = () => {
+        const options = Array.from(sel.options).filter((o) => o.value);
+        const current = sel.value;
+        grid.innerHTML = options.map((opt) => {
+          const svg = VALUE_SVG[opt.value];
+          const icon = VALUE_ICONS[opt.value] || fallbackIcon;
+          const desc = VALUE_DESCRIPTIONS[opt.value] || '';
+          const descAttr = desc ? ` data-desc="${this.escapeHtml(desc)}"` : '';
+          const visual = svg
+            ? `<span class="video-cine-tile__svg" aria-hidden="true">${svg}</span>`
+            : `<i class="fas ${icon} video-cine-tile__icon" aria-hidden="true"></i>`;
+          return `
+            <button type="button" class="video-cine-tile${current === opt.value ? ' is-selected' : ''}${svg ? ' has-svg' : ''}" data-value="${this.escapeHtml(opt.value)}" aria-pressed="${current === opt.value ? 'true' : 'false'}"${descAttr} aria-label="${this.escapeHtml(opt.text)}${desc ? ' — ' + this.escapeHtml(desc) : ''}">
+              ${visual}
+              <span class="video-cine-tile__label">${this.escapeHtml(opt.text)}</span>
+              ${desc ? `<span class="video-cine-tile__tooltip" role="tooltip">${this.escapeHtml(desc)}</span>` : ''}
+            </button>`;
+        }).join('');
+      };
+      renderTiles();
+      if (grid.dataset.boundTileClick !== '1') {
+        grid.dataset.boundTileClick = '1';
+        grid.addEventListener('click', (e) => {
+          const tile = e.target.closest('.video-cine-tile');
+          if (!tile || !grid.contains(tile)) return;
+          e.preventDefault();
+          const value = tile.getAttribute('data-value');
+          sel.value = sel.value === value ? '' : value;
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+          renderTiles();
+        });
+      }
+      sel.addEventListener('change', renderTiles);
+    });
+  }
+
+  syncCinematographyToSelects() {
+    const c = this.cinematography;
+    const set = (id, value) => {
+      const el = this.container.querySelector(id);
+      if (!el) return;
+      el.value = value !== undefined && value !== null ? String(value) : '';
+    };
+    set('#videoCineShotType', c.shotType);
+    set('#videoCineLens', c.lens);
+    set('#videoCineFraming', c.framing);
+    set('#videoCineMovement', c.cameraMovement);
+    set('#videoCineMotionSpeed', c.motionSpeed);
+    set('#videoCineMotionIntensity', c.motionIntensity);
+    set('#videoCineLightType', c.lightType);
+    set('#videoCineContrast', c.contrastLevel);
+    set('#videoCineTemperature', c.temperature);
+    set('#videoCineTone', c.tone);
+    set('#videoCineColorGrade', c.colorGrade);
+    set('#videoCineEnergyLevel', c.energyLevel);
+    set('#videoCineColorTemp', c.colorTemp);
+  }
+
+  renderCinematographySelectedTags() {
+    const el = this.container.querySelector('#videoCineSelectedTags');
+    if (!el) return;
+    const c = this.cinematography;
+    const opts = VideoView.CINE_OPTIONS;
+    const tagConfig = [
+      { key: 'lens', value: c.lens, default: (opts.lens && opts.lens[0]) || '' },
+      { key: 'cameraMovement', value: c.cameraMovement, default: (opts.cameraMovement && opts.cameraMovement[0]) || '' },
+      { key: 'lightType', value: c.lightType, default: (opts.lightType && opts.lightType[0]) || '' }
+    ];
+    const tags = tagConfig.filter((t) => t.value).map((t) => ({ key: t.key, label: t.value, default: t.default }));
+    if (tags.length === 0) {
+      el.innerHTML = '';
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = 'flex';
+    el.innerHTML = `<span class="video-cine-selected-label">${window.__('Estilo seleccionado:')}</span>` + tags.map((t) =>
+      `<span class="video-cine-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}<button type="button" class="video-cine-tag-remove" aria-label="${window.__('Quitar {key}', { key: t.key })}">&times;</button></span>`
+    ).join('');
+    el.querySelectorAll('.video-cine-tag-remove').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tag = btn.closest('.video-cine-tag');
+        const key = tag?.dataset?.key;
+        if (key) {
+          this.cinematography[key] = '';
+          this.syncCinematographyToSelects();
+          this.renderCinematographySelectedTags();
+          this.renderDirectorVariables();
+        }
+      });
+    });
+  }
+
+  renderDirectorVariables() {
+    const el = this.container.querySelector('#videoDirectorVariables');
+    if (!el) return;
+    const c = this.cinematography;
+    const tags = [
+      c.shotType && { label: c.shotType, key: 'shotType' },
+      c.lens && { label: c.lens, key: 'lens' },
+      c.framing && { label: c.framing, key: 'framing' },
+      c.cameraMovement && { label: c.cameraMovement, key: 'cameraMovement' },
+      c.lightType && { label: c.lightType, key: 'lightType' },
+      c.tone && { label: c.tone, key: 'tone' }
+    ].filter(Boolean);
+    if (tags.length === 0) {
+      el.innerHTML = '';
+      el.style.display = 'none';
+      this.scheduleResizeDirectorBriefInput();
+      return;
+    }
+    el.style.display = 'flex';
+    el.className = 'video-director-variables-row video-cine-selected-tags';
+    el.innerHTML = `<span class="video-cine-selected-label">${window.__('Variables:')}</span>` + tags.map((t) =>
+      `<span class="video-cine-tag video-director-variable-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}<button type="button" class="video-cine-tag-remove" aria-label="${window.__('Quitar {key}', { key: t.key })}">&times;</button></span>`
+    ).join('');
+    el.querySelectorAll('.video-cine-tag-remove').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tag = btn.closest('.video-cine-tag');
+        const key = tag?.dataset?.key;
+        if (key) {
+          this.cinematography[key] = '';
+          this.syncCinematographyToSelects();
+          this.renderCinematographySelectedTags();
+          this.renderDirectorVariables();
+        }
+      });
+    });
+    this.scheduleResizeDirectorBriefInput();
+  }
+
+  /**
+   * Regla principal: cuando el usuario selecciona un producto (Asset Stack), ese producto
+   * se establece automáticamente como kling_element para la API Kie (referencia visual).
+   * Solo aplica con scope "product"; reemplaza cualquier producto previamente seleccionado.
+   */
   /**
    * Lee los controles del Director Console y del sidebar de Seedance y los
    * deja en el shape que espera la funcion de creacion.
@@ -1275,6 +1825,11 @@ class VideoView extends BaseView {
         mood: val('#seedanceMood', ''),
         realism: val('#seedanceRealism', '')
       },
+      // Dirección de fotografía de la pestaña Cinematografía. No son params
+      // de KIE: al cablear el backend van al cocinado del prompt (el mismo
+      // buildCinematographyNarrative que ya usa openai-cine-prompt), no al
+      // body de la tarea.
+      cinematography: { ...this.cinematography },
       campaign: this.selectedCampaignId || null,
       audience: this.selectedAudienceId || null,
       brand_context: this.buildBrandContextForAPI(),

@@ -2854,5 +2854,12 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Subir imagen de último frame": "Upload last frame image",
   "Un frame clave es una imagen (JPG, PNG o WebP).": "A key frame is an image (JPG, PNG or WebP).",
   "Ya tienes el máximo de {limite} en este grupo. Quita una para añadir otra.": "You already have the maximum of {limite} in this group. Remove one to add another.",
-  "{n} archivo(s) sin formato soportado aquí. Los audios se añaden desde el sidebar.": "{n} file(s) in a format not supported here. Audio is added from the sidebar."
+  "{n} archivo(s) sin formato soportado aquí. Los audios se añaden desde el sidebar.": "{n} file(s) in a format not supported here. Audio is added from the sidebar.",
+  ": cómo se ve. Cámara, movimiento, luz y mood no son parámetros de la API — se traducen a lenguaje de dirección dentro del prompt. Un Production Preset llena todo de una.": ": how it looks. Camera, movement, light and mood are not API parameters — they are translated into direction language inside the prompt. A Production Preset fills everything at once.",
+  ": el material que le entregas. Frames Clave ancla el inicio y el cierre; las Referencias Multimodales dan estilo, movimiento y vibe (hasta 9 imágenes, 3 videos y 3 audios). Frames y referencias no se combinan.": ": the material you hand over. Key Frames anchor the opening and the close; Multimodal References give style, movement and vibe (up to 9 images, 3 videos and 3 audios). Frames and references do not mix.",
+  "Cámara, movimiento, luz y mood. Si no sabes por dónde empezar, elige un Production Preset y se llena el resto.": "Camera, movement, light and mood. If you do not know where to start, pick a Production Preset and the rest fills in.",
+  "Dirección de fotografía": "Cinematography direction",
+  "Panel de producción": "Production panel",
+  "Recursos": "Resources",
+  "Secciones del panel": "Panel sections"
 }/* I18N:END */;

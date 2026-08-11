@@ -1,11 +1,13 @@
 /**
- * Los adjuntos de Seedance: Frames Clave y Referencias Multimodales.
+ * El panel de producción de Seedance: pestaña Recursos y pestaña Cinematografía.
  *
- * Lo que se ve mirando la pantalla es el chip. Lo que NO se ve es el criterio
- * con el que un archivo entra o se rechaza: el cupo por grupo, la duración
- * medida (no supuesta) de videos y audios, y la exclusión mutua entre anclar
- * frames y dar referencias. Si alguna de esas reglas falla en silencio, el
- * usuario se entera diez minutos después, cuando KIE devuelve el error.
+ * Lo que se ve mirando la pantalla es el chip o el tile seleccionado. Lo que
+ * NO se ve es el criterio: el cupo por grupo de referencias, la duración
+ * medida (no supuesta) de videos y audios, la exclusión mutua entre anclar
+ * frames y dar referencias, y que cada valor de un Production Preset exista
+ * de verdad en el catálogo de opciones. Cualquiera de esas reglas fallando en
+ * silencio se descubre tarde: un preset que no llena nada, o un error de KIE
+ * diez minutos después de subir los archivos.
  */
 import { describe, test, expect, beforeEach } from 'vitest';
 import fs from 'node:fs';
@@ -34,6 +36,11 @@ function nuevaVista(controles = {}) {
 
   v.seedanceFrames = { first: null, last: null };
   v.seedanceRefs = { image: [], video: [], audio: [] };
+  v.cinematography = {
+    preset: '', shotType: '', lens: '', framing: '', cameraMovement: '',
+    motionSpeed: '', motionIntensity: '', lightType: '', contrastLevel: '',
+    temperature: '', tone: '', colorGrade: '', colorTemp: '', energyLevel: ''
+  };
   v.selectedCampaignId = '';
   v.selectedAudienceId = '';
   v._cinePromptTokens = null;
@@ -240,6 +247,60 @@ describe('El payload lleva lo adjuntado', () => {
     expect(payload.reference_videos).toEqual([]);
     expect(payload.first_frame_url).toBeNull();
     expect(payload.last_frame_url).toBeNull();
+  });
+});
+
+describe('Cinematografía — las plantillas de prompt que venían de Kling', () => {
+  test('cada preset llena las trece claves de dirección', () => {
+    const claves = ['shotType', 'lens', 'framing', 'cameraMovement', 'motionSpeed',
+      'motionIntensity', 'lightType', 'contrastLevel', 'temperature', 'tone',
+      'colorGrade', 'colorTemp', 'energyLevel'];
+    const presets = VideoView.CINEMATOGRAPHY_PRESETS;
+    const nombrados = Object.keys(presets).filter((k) => k !== '');
+
+    expect(nombrados.length).toBeGreaterThan(0);
+    for (const nombre of nombrados) {
+      const faltantes = claves.filter((k) => !presets[nombre][k]);
+      expect(`${nombre}: ${faltantes.join(', ')}`).toBe(`${nombre}: `);
+    }
+  });
+
+  test('cada valor de preset existe como opción elegible', () => {
+    const opts = VideoView.CINE_OPTIONS;
+    const huerfanos = [];
+    for (const [nombre, preset] of Object.entries(VideoView.CINEMATOGRAPHY_PRESETS)) {
+      for (const [clave, valor] of Object.entries(preset)) {
+        if (clave === 'label' || !valor) continue;
+        if (!opts[clave]) { huerfanos.push(`${nombre}.${clave} sin catálogo`); continue; }
+        if (!opts[clave].includes(valor)) huerfanos.push(`${nombre}.${clave} = "${valor}"`);
+      }
+    }
+    // Un preset que apunta a un valor inexistente deja el select en blanco
+    // sin avisar: se elige el preset y no pasa nada visible.
+    expect(huerfanos).toEqual([]);
+  });
+
+  test('la dirección de fotografía viaja en el payload', () => {
+    const { v } = nuevaVista();
+    v.cinematography.cameraMovement = 'Orbit';
+    v.cinematography.lightType = 'Rim light';
+    v.cinematography.preset = 'luxury-hero';
+
+    const payload = v.buildSeedancePayload();
+
+    expect(payload.cinematography).toMatchObject({
+      cameraMovement: 'Orbit', lightType: 'Rim light', preset: 'luxury-hero'
+    });
+  });
+
+  test('el payload lleva una copia, no la referencia viva del estado', () => {
+    const { v } = nuevaVista();
+    v.cinematography.tone = 'Dark premium';
+
+    const payload = v.buildSeedancePayload();
+    v.cinematography.tone = 'Bright energetic';
+
+    expect(payload.cinematography.tone).toBe('Dark premium');
   });
 });
 
