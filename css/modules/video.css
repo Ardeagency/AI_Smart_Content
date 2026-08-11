@@ -6148,8 +6148,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
     height: 36px;
     padding: 0 18px;
     border-radius: var(--radius-sm);
-    /* Gradiente sutil tipo "send" — usa el dynamic brand de la org si existe */
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #1f3a8a 0%, #0ea5e9 100%));
+    /* Gradiente tipo "send" con el brand dinámico de la org. El respaldo es
+       el gris neutro que usa el resto del módulo: el azul #1f3a8a→#0ea5e9
+       que había aquí pintaba de azul el CTA de toda org sin color propio. */
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
     border: none;
     color: #ffffff;
     font-weight: 600;
