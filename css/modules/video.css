@@ -8,6 +8,42 @@
     display: flex;
     flex-direction: column;
 }
+/**
+ * El header principal es `position: fixed`, así que #app-container compensa
+ * su alto con padding-top. Pero bundle.css lo anula para toda vista con
+ * `.organization-container` (`body.has-sidebar #app-container:has(> .organization-container) { padding: 0 }`),
+ * porque esas vistas pintan su propio header dentro. Video NO: usa el header
+ * global, y sin esa compensación el canvas y el sidebar arrancan en y=0 y se
+ * meten debajo de la barra.
+ *
+ * Reponemos el padding solo aquí. La specificity tiene que igualar a la regla
+ * que lo quita (1 id + 2 clases + 1 elemento), de ahí el `body.has-sidebar`;
+ * el primer selector cubre el caso sin esa clase en el body. Con
+ * `box-sizing: border-box` el `height: 100vh` ya descuenta este padding, así
+ * que el alto útil sigue siendo exacto y nadie scrollea de más.
+ */
+#app-container:has(.video-view-container),
+body.has-sidebar #app-container:has(.video-view-container) {
+    padding-top: var(--app-header-height, 45.8px);
+}
+/**
+ * Acento de la vista, en un solo lugar.
+ *
+ * Antes cada estado seleccionado tiraba de `--color-info` (#00e7ff), un cian
+ * fijo que no es de ninguna marca. La plataforma pinta con el color dinámico
+ * de la organización: `--accent-brand` = `--brand-primary` inyectado por
+ * OrgBrandTheme, y si la org no tiene color propio cae a un blanco tenue y la
+ * vista queda monocroma. Nunca cian.
+ *
+ * `--video-accent` es para bordes y anillos de selección; para texto e iconos
+ * va `--video-accent-text`, porque un blanco al 35% sobre fondo oscuro no se
+ * lee.
+ */
+.video-view-container {
+    --video-accent: var(--accent-brand, rgba(255, 255, 255, 0.35));
+    --video-accent-soft: var(--accent-brand-soft, rgba(255, 255, 255, 0.08));
+    --video-accent-text: var(--text-primary);
+}
 .organization-container.video-view-container,
 #videoPage {
     padding: 0;
@@ -1870,7 +1906,7 @@
     width: 36px;
     height: 36px;
     border: 2px solid var(--white-15);
-    border-top-color: var(--color-info);
+    border-top-color: var(--video-accent-text);
     border-radius: 50%;
     animation: video-spin 0.8s linear infinite;
 }
@@ -4741,8 +4777,9 @@
 }
 .video-view-container .video-main-director .video-director-toggle.active,
 .video-view-container .video-main-director .video-director-toggle[aria-pressed="true"] {
-    color: var(--color-info);
-    border-color: var(--color-info);
+    color: var(--video-accent-text);
+    border-color: var(--video-accent);
+    background: var(--video-accent-soft);
 }
 
 /* Botón Generate — primary, brand gradient sin glow excesivo */
@@ -5162,7 +5199,7 @@
 .video-view-container .video-sidebar-console .video-cine-select:focus,
 .video-view-container .video-sidebar-console .video-asset-select:focus {
     outline: none;
-    border-color: var(--color-info);
+    border-color: var(--video-accent);
 }
 
 .video-view-container .video-sidebar-console .video-prompt-db-select option,
@@ -5541,9 +5578,9 @@
 }
 
 .video-view-container .seedance-frame-slot:hover {
-    border-color: var(--color-info);
+    border-color: var(--video-accent);
     color: var(--text-primary);
-    background: rgba(91,165,255,0.04);
+    background: var(--video-accent-soft);
 }
 
 .video-view-container .seedance-frame-slot i {
@@ -5564,7 +5601,7 @@
 
 .video-view-container .seedance-frame-slot.has-image {
     border-style: solid;
-    border-color: var(--color-info);
+    border-color: var(--video-accent);
     background-size: cover;
     background-position: center;
     justify-content: flex-end;
@@ -5654,9 +5691,9 @@
 }
 
 .video-view-container .seedance-ref-add-btn:hover {
-    border-color: var(--color-info);
+    border-color: var(--video-accent);
     border-style: solid;
-    color: var(--color-info);
+    color: var(--video-accent-text);
 }
 
 .video-view-container .seedance-ref-list {
@@ -5778,7 +5815,7 @@
 }
 
 .video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track {
-    background: var(--color-info);
+    background: var(--video-accent);
 }
 
 .video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track .seedance-toggle-thumb {
@@ -5824,8 +5861,9 @@
 }
 
 .video-view-container .seedance-audio-tile.is-active {
-    border-color: var(--color-info);
-    color: var(--color-info);
+    border-color: var(--video-accent);
+    color: var(--video-accent-text);
+    background: var(--video-accent-soft);
 }
 
 /* Director Console Seedance: textarea más grande para storyboard */
@@ -6046,15 +6084,21 @@
     border-color: var(--white-20);
     color: var(--text-primary);
 }
-/* Estado activo: blanco/neutral. No usamos cyan ni colores de marca
-   para indicar estado — son señalización funcional, no acento brand. */
-.video-view-container .video-director-console-zone .video-director-toggle.active {
-    color: var(--text-primary);
-    background: var(--white-15);
-    border-color: var(--white-20);
+/* Estado activo. Nada de cian: el borde toma el acento dinámico de la org
+   (blanco tenue si la org no tiene color), y el texto va en blanco pleno
+   para que se lea. `.active` y `[aria-pressed="true"]` describen el MISMO
+   estado — uno lo pone el JS al hacer clic, el otro viene en el HTML — así
+   que se pintan igual: si divergen, un toggle encendido de origen se ve
+   distinto a uno que el usuario encendió. */
+.video-view-container .video-director-console-zone .video-director-toggle.active,
+.video-view-container .video-director-console-zone .video-director-toggle[aria-pressed="true"] {
+    color: var(--video-accent-text);
+    background: var(--video-accent-soft);
+    border-color: var(--video-accent);
 }
-.video-view-container .video-director-console-zone .video-director-toggle.active i {
-    color: var(--text-primary);
+.video-view-container .video-director-console-zone .video-director-toggle.active i,
+.video-view-container .video-director-console-zone .video-director-toggle[aria-pressed="true"] i {
+    color: var(--video-accent-text);
 }
 
 /* Selects nativos: ocultar el chevron del browser para que solo se vea

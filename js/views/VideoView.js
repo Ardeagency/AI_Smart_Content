@@ -552,12 +552,17 @@ class VideoView extends BaseView {
     // Seedance: toggle Audio + Web search (solo UI state, sin wiring backend aún)
     ['seedanceGenAudioToggle', 'seedanceWebSearchToggle'].forEach((id) => {
       const btn = this.container.querySelector('#' + id);
-      if (!btn || btn.dataset.boundToggle === '1') return;
+      if (!btn) return;
+      // El estado inicial viene en aria-pressed desde el HTML; la clase la
+      // pone el clic. Sincronizarlas al montar evita que un toggle encendido
+      // de origen se vea distinto a uno que el usuario encendió.
+      btn.classList.toggle('active', btn.getAttribute('aria-pressed') === 'true');
+      if (btn.dataset.boundToggle === '1') return;
       btn.dataset.boundToggle = '1';
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         const pressed = btn.getAttribute('aria-pressed') === 'true';
-        btn.setAttribute('aria-pressed', !pressed);
+        btn.setAttribute('aria-pressed', String(!pressed));
         btn.classList.toggle('active', !pressed);
       });
     });
