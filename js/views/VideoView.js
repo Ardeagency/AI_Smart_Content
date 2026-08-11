@@ -11,12 +11,19 @@
  *    del video en R2 (downloadAndUploadKieVideo), cobro dinámico de créditos
  *    (kie-task-finalize, dentro de pollTask), registro en system_ai_outputs
  *    y el contexto de marca (loadBrandData / buildBrandContextForAPI).
+ *  - Cableado: Frames Clave y Referencias Multimodales suben a Storage, se
+ *    validan (cupo por grupo y duración MEDIDA, no supuesta), se muestran
+ *    como chips junto al prompt y salen en buildSeedancePayload(). Frames y
+ *    referencias son excluyentes, tal como promete el sidebar.
  *  - Pendiente: el endpoint de creación. No existe
  *    functions/seedance-video-create.js, así que SEEDANCE_BACKEND_READY es
- *    false y los botones avisan en pantalla en vez de disparar una tarea
- *    contra un endpoint inexistente (un 404 sería un fallo mudo). Al
- *    desplegar la función: poner el flag en true y completar
- *    buildSeedancePayload() con los params reales de KIE.
+ *    false y el botón PRODUCIR avisa en pantalla en vez de disparar una
+ *    tarea contra un endpoint inexistente (un 404 sería un fallo mudo). Al
+ *    desplegar la función: poner el flag en true, escribir el POST y mapear
+ *    los nombres de campo de buildSeedancePayload() a los de KIE.
+ *
+ * Las reglas de los adjuntos están cubiertas por
+ * test/video-seedance-adjuntos.test.js.
  */
 class VideoView extends BaseView {
   static documentTitle = 'Video';
@@ -43,6 +50,19 @@ class VideoView extends BaseView {
   static get KIE_VIDEO_DOWNLOAD_API() {
     return '/.netlify/functions/kie-video-download';
   }
+  /**
+   * Topes de las referencias multimodales, tal como los anuncia el sidebar.
+   * Si KIE los cambia, cambiar aqui Y el texto del contador: un limite que
+   * la UI promete y el codigo no aplica (o al reves) se paga en el error de
+   * la API, cuando el usuario ya subio los archivos.
+   */
+  static get SEEDANCE_REF_LIMITS() {
+    return { image: 9, video: 3, audio: 3 };
+  }
+  /** Duracion maxima de un video/audio de referencia, en segundos. */
+  static get SEEDANCE_REF_MAX_SECONDS() { return 15; }
+  /** Bucket donde viven los adjuntos de referencia. */
+  static get SEEDANCE_STORAGE_BUCKET() { return 'production-outputs'; }
   /** Doc KIE: empezar polling 2-3s; dejar de hacer polling a los 10-15 min. Usamos 3s y máximo 12 min. */
   static get POLL_INTERVAL_MS() { return 3000; }
   static get POLL_MAX_DURATION_MS() { return 12 * 60 * 1000; }
@@ -61,6 +81,12 @@ class VideoView extends BaseView {
     this.dbData = { products: [], services: [], entities: [], audiences: [], campaigns: [] };
     this.selectedCampaignId = '';
     this.selectedAudienceId = '';
+    // Frames Clave: { url, storagePath } por slot, o null.
+    this.seedanceFrames = { first: null, last: null };
+    // Referencias multimodales: [{ name, url, storagePath, seconds }] por tipo.
+    this.seedanceRefs = { image: [], video: [], audio: [] };
+    // Slot que disparo el file picker de frames (el input es uno solo).
+    this._pendingFrameSlot = null;
     // Tokens del ultimo cine-prompt — usados al finalize del video para
     // cobrar dinamico (KIE_real + OpenAI_tokens + 5 markup). Init explicito
     // para que primer acceso no sea undefined (P3#2 audit 2026-05-25).
@@ -238,17 +264,18 @@ class VideoView extends BaseView {
                       <h3 class="video-section-label">${window.__('Frames Clave')}</h3>
                     </div>
                     <p class="video-sidebar-section-hint">${window.__('Ancla el inicio y/o final de la secuencia con una imagen. La IA construirá el arco narrativo entre ambas.')}</p>
+                    <input type="file" id="seedanceFrameUpload" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;" aria-hidden="true">
                     <div class="seedance-frames-grid">
-                      <button type="button" class="seedance-frame-slot" data-frame="first" id="seedanceFirstFrameSlot">
+                      <div class="seedance-frame-slot" data-frame="first" id="seedanceFirstFrameSlot" role="button" tabindex="0" aria-label="${window.__('Subir imagen de primer frame')}">
                         <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
                         <span class="seedance-frame-slot-label">First Frame</span>
                         <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
-                      </button>
-                      <button type="button" class="seedance-frame-slot" data-frame="last" id="seedanceLastFrameSlot">
+                      </div>
+                      <div class="seedance-frame-slot" data-frame="last" id="seedanceLastFrameSlot" role="button" tabindex="0" aria-label="${window.__('Subir imagen de último frame')}">
                         <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
                         <span class="seedance-frame-slot-label">Last Frame</span>
                         <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
-                      </button>
+                      </div>
                     </div>
                   </div>
 
@@ -257,6 +284,9 @@ class VideoView extends BaseView {
                       <h3 class="video-section-label">${window.__('Referencias Multimodales')}</h3>
                     </div>
                     <p class="video-sidebar-section-hint">${window.__('Imágenes, videos y audios que la IA usa como inspiración. Mutuamente excluyentes con Frames Clave.')}</p>
+                    <input type="file" id="seedanceRefImgUpload" accept="image/jpeg,image/png,image/jpg,image/webp" multiple style="display: none;" aria-hidden="true">
+                    <input type="file" id="seedanceRefVidUpload" accept="video/mp4,video/quicktime,video/webm" multiple style="display: none;" aria-hidden="true">
+                    <input type="file" id="seedanceRefAudUpload" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-m4a,audio/mp4,audio/aac" multiple style="display: none;" aria-hidden="true">
 
                     <div class="seedance-ref-group">
                       <div class="seedance-ref-group-header">
@@ -408,6 +438,116 @@ class VideoView extends BaseView {
       this.promptInput.addEventListener('input', () => this.scheduleResizeDirectorBriefInput());
       this.promptInput.addEventListener('paste', () => this.scheduleResizeDirectorBriefInput());
     }
+
+    // ── Frames Clave ──
+    const frameInput = this.container.querySelector('#seedanceFrameUpload');
+    if (frameInput && frameInput.dataset.boundFrame !== '1') {
+      frameInput.dataset.boundFrame = '1';
+      frameInput.addEventListener('change', (e) => this.onSeedanceFrameFileSelected(e));
+    }
+    this.container.querySelectorAll('.seedance-frame-slot[data-frame]').forEach((slotEl) => {
+      if (slotEl.dataset.boundSlot === '1') return;
+      slotEl.dataset.boundSlot = '1';
+      const slot = slotEl.getAttribute('data-frame');
+      const abrir = (e) => {
+        // El botón de quitar vive dentro del slot: distinguir por el target,
+        // si no, quitar el frame reabre el selector de archivos.
+        const quitar = e.target.closest && e.target.closest('[data-frame-remove]');
+        e.preventDefault();
+        if (quitar) {
+          e.stopPropagation();
+          this.removeSeedanceFrame(quitar.getAttribute('data-frame-remove'));
+          return;
+        }
+        this.openSeedanceFramePicker(slot);
+      };
+      slotEl.addEventListener('click', abrir);
+      slotEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') abrir(e);
+      });
+    });
+
+    // ── Referencias multimodales ──
+    [
+      { kind: 'image', btn: '#seedanceAddRefImg', input: '#seedanceRefImgUpload' },
+      { kind: 'video', btn: '#seedanceAddRefVid', input: '#seedanceRefVidUpload' },
+      { kind: 'audio', btn: '#seedanceAddRefAud', input: '#seedanceRefAudUpload' }
+    ].forEach((g) => {
+      const btn = this.container.querySelector(g.btn);
+      if (btn && btn.dataset.boundRef !== '1') {
+        btn.dataset.boundRef = '1';
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.openSeedanceRefPicker(g.kind);
+        });
+      }
+      const input = this.container.querySelector(g.input);
+      if (input && input.dataset.boundRef !== '1') {
+        input.dataset.boundRef = '1';
+        input.addEventListener('change', async (e) => {
+          const files = Array.from(e.target.files || []);
+          e.target.value = '';
+          if (files.length) await this.addSeedanceRefs(g.kind, files);
+        });
+      }
+      const list = this.container.querySelector(
+        g.kind === 'image' ? '#seedanceRefImgList' : g.kind === 'video' ? '#seedanceRefVidList' : '#seedanceRefAudList'
+      );
+      if (list && list.dataset.boundRemove !== '1') {
+        list.dataset.boundRemove = '1';
+        list.addEventListener('click', (e) => {
+          const btnQuitar = e.target.closest('.seedance-ref-remove');
+          if (!btnQuitar) return;
+          e.preventDefault();
+          const idx = parseInt(btnQuitar.getAttribute('data-ref-index'), 10);
+          if (!Number.isNaN(idx)) this.removeSeedanceRef(btnQuitar.getAttribute('data-ref-kind'), idx);
+        });
+      }
+    });
+
+    // "+" del Director Console: atajo que enruta por tipo al grupo que toca.
+    const consoleAdd = this.container.querySelector('#seedancePromptAdd');
+    const consoleInput = this.container.querySelector('#seedanceImageUpload');
+    if (consoleAdd && consoleInput && consoleAdd.dataset.boundAdd !== '1') {
+      consoleAdd.dataset.boundAdd = '1';
+      consoleAdd.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (this._seedanceHasFrames()) {
+          this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para añadir referencias.'));
+          return;
+        }
+        consoleInput.click();
+      });
+      consoleInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        e.target.value = '';
+        if (files.length === 0) return;
+        const imagenes = files.filter((f) => f.type.startsWith('image/'));
+        const videos = files.filter((f) => f.type.startsWith('video/'));
+        const sobrantes = files.length - imagenes.length - videos.length;
+        if (sobrantes > 0) {
+          this._seedanceNotify(window.__('{n} archivo(s) sin formato soportado aquí. Los audios se añaden desde el sidebar.', { n: sobrantes }));
+        }
+        if (imagenes.length) await this.addSeedanceRefs('image', imagenes);
+        if (videos.length) await this.addSeedanceRefs('video', videos);
+      });
+    }
+
+    // Chips junto al prompt: una sola delegación para todas las bajas.
+    const chipsEl = this.container.querySelector('#seedanceElementsList');
+    if (chipsEl && chipsEl.dataset.boundChips !== '1') {
+      chipsEl.dataset.boundChips = '1';
+      chipsEl.addEventListener('click', (e) => {
+        const btnQuitar = e.target.closest('[data-attachment-remove]');
+        if (!btnQuitar) return;
+        e.preventDefault();
+        this.removeSeedanceAttachment(btnQuitar.getAttribute('data-attachment-remove'));
+      });
+    }
+
+    this.renderSeedanceFrames();
+    this.renderSeedanceRefs();
+    this.renderSeedanceAttachmentChips();
 
     // Seedance: toggle Audio + Web search (solo UI state, sin wiring backend aún)
     ['seedanceGenAudioToggle', 'seedanceWebSearchToggle'].forEach((id) => {
@@ -788,16 +928,311 @@ class VideoView extends BaseView {
     }
   }
 
+  _escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  /**
+   * Aviso al usuario. Un adjunto rechazado en silencio se lee como aceptado
+   * y el error aparece 10 minutos despues, en KIE.
+   */
+  _seedanceNotify(message, type = 'warning') {
+    if (typeof window.showToast === 'function') {
+      window.showToast(message, { type, duration: 5000 });
+    } else if (window.alert) {
+      window.alert(message);
+    }
+  }
+
+  _seedanceHasFrames() {
+    return !!(this.seedanceFrames.first || this.seedanceFrames.last);
+  }
+
+  _seedanceRefCount() {
+    return ['image', 'video', 'audio']
+      .reduce((n, kind) => n + (this.seedanceRefs[kind] || []).length, 0);
+  }
+
+  /**
+   * Mide la duracion REAL leyendo los metadatos del archivo — ni el peso ni
+   * el nombre dicen cuanto dura. Devuelve segundos, o null si el navegador
+   * no pudo decodificarlo; en ese caso dejamos pasar el archivo a proposito:
+   * bloquear por una medicion que fallo es peor que dejar que KIE lo
+   * rechace con su propio mensaje.
+   */
+  _measureMediaSeconds(file, kind) {
+    return new Promise((resolve) => {
+      let url = null;
+      let timer = null;
+      let done = false;
+      const finish = (value) => {
+        if (done) return;
+        done = true;
+        if (timer) clearTimeout(timer);
+        if (url) URL.revokeObjectURL(url);
+        resolve(value);
+      };
+      timer = setTimeout(() => finish(null), 8000);
+      try {
+        url = URL.createObjectURL(file);
+        const el = document.createElement(kind === 'audio' ? 'audio' : 'video');
+        el.preload = 'metadata';
+        el.onloadedmetadata = () => {
+          const d = Number(el.duration);
+          finish(Number.isFinite(d) && d > 0 ? d : null);
+        };
+        el.onerror = () => finish(null);
+        el.src = url;
+      } catch (_) {
+        finish(null);
+      }
+    });
+  }
+
+  /** Sube un adjunto y devuelve { url, storagePath }. Lanza si algo falla. */
+  async _uploadSeedanceFile(file, folder) {
+    if (!this.supabase || !this.supabase.storage) {
+      throw new Error(window.__('Almacenamiento no disponible. Recarga la página y reintenta.'));
+    }
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user?.id) throw new Error(window.__('Inicia sesión para subir referencias.'));
+    const bucket = VideoView.SEEDANCE_STORAGE_BUCKET;
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/jpeg/, 'jpg');
+    const storagePath = `seedance/${user.id}/${folder}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await this.supabase.storage
+      .from(bucket)
+      .upload(storagePath, file, { contentType: file.type, upsert: false });
+    if (error) throw error;
+    const { data } = this.supabase.storage.from(bucket).getPublicUrl(storagePath);
+    const url = data?.publicUrl;
+    if (!url) throw new Error(window.__('El archivo subió pero Storage no devolvió URL pública.'));
+    return { url, storagePath };
+  }
+
+  /** Limpieza del bucket al quitar un adjunto. Fire-and-forget: no bloquea la UI. */
+  _removeSeedanceStorage(storagePath) {
+    if (!storagePath || !this.supabase?.storage) return;
+    this.supabase.storage
+      .from(VideoView.SEEDANCE_STORAGE_BUCKET)
+      .remove([storagePath])
+      .catch((err) => console.warn('[VideoView] limpieza de Storage falló', storagePath, err));
+  }
+
+  // ── Frames Clave ────────────────────────────────────────────────────────
+
+  openSeedanceFramePicker(slot) {
+    if (this._seedanceRefCount() > 0) {
+      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita las referencias para anclar frames.'));
+      return;
+    }
+    const input = this.container.querySelector('#seedanceFrameUpload');
+    if (!input) return;
+    this._pendingFrameSlot = slot;
+    input.click();
+  }
+
+  async onSeedanceFrameFileSelected(e) {
+    const file = (e.target.files || [])[0];
+    e.target.value = '';
+    const slot = this._pendingFrameSlot;
+    this._pendingFrameSlot = null;
+    if (!file || !slot) return;
+    if (!file.type.startsWith('image/')) {
+      this._seedanceNotify(window.__('Un frame clave es una imagen (JPG, PNG o WebP).'));
+      return;
+    }
+    const label = slot === 'first' ? 'First Frame' : 'Last Frame';
+    try {
+      const subido = await this._uploadSeedanceFile(file, 'frames');
+      const previo = this.seedanceFrames[slot];
+      if (previo) this._removeSeedanceStorage(previo.storagePath);
+      this.seedanceFrames[slot] = subido;
+      this.renderSeedanceFrames();
+      this.renderSeedanceAttachmentChips();
+    } catch (err) {
+      console.error('VideoView frame upload:', err);
+      this._seedanceNotify(window.__('No se pudo subir {label}: ', { label }) + (err.message || ''), 'error');
+    }
+  }
+
+  removeSeedanceFrame(slot) {
+    const frame = this.seedanceFrames[slot];
+    if (!frame) return;
+    this._removeSeedanceStorage(frame.storagePath);
+    this.seedanceFrames[slot] = null;
+    this.renderSeedanceFrames();
+    this.renderSeedanceAttachmentChips();
+  }
+
+  renderSeedanceFrames() {
+    [['first', '#seedanceFirstFrameSlot', 'First Frame'], ['last', '#seedanceLastFrameSlot', 'Last Frame']]
+      .forEach(([slot, sel, label]) => {
+        const el = this.container.querySelector(sel);
+        if (!el) return;
+        const frame = this.seedanceFrames[slot];
+        if (!frame) {
+          el.classList.remove('has-image');
+          el.style.backgroundImage = '';
+          el.innerHTML = `
+            <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
+            <span class="seedance-frame-slot-label">${label}</span>
+            <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
+          `;
+          return;
+        }
+        el.classList.add('has-image');
+        el.style.backgroundImage = `url("${this._escapeHtml(frame.url)}")`;
+        el.innerHTML = `
+          <span class="seedance-frame-slot-label">${label}</span>
+          <button type="button" class="seedance-frame-slot-remove" data-frame-remove="${slot}" aria-label="${window.__('Quitar {label}', { label })}">&times;</button>
+        `;
+      });
+  }
+
+  // ── Referencias multimodales ────────────────────────────────────────────
+
+  openSeedanceRefPicker(kind) {
+    if (this._seedanceHasFrames()) {
+      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para añadir referencias.'));
+      return;
+    }
+    const inputs = { image: '#seedanceRefImgUpload', video: '#seedanceRefVidUpload', audio: '#seedanceRefAudUpload' };
+    const input = this.container.querySelector(inputs[kind]);
+    if (input) input.click();
+  }
+
+  /**
+   * Valida (tipo, cupo y duracion medida), sube y registra cada archivo.
+   * Secuencial a proposito: subir 9 imagenes en paralelo satura la conexion
+   * y deja huerfanos en el bucket si el usuario se va a mitad.
+   */
+  async addSeedanceRefs(kind, files) {
+    if (this._seedanceHasFrames()) {
+      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para añadir referencias.'));
+      return;
+    }
+    const limite = VideoView.SEEDANCE_REF_LIMITS[kind];
+    const libre = Math.max(0, limite - (this.seedanceRefs[kind] || []).length);
+    if (libre === 0) {
+      this._seedanceNotify(window.__('Ya tienes el máximo de {limite} en este grupo. Quita una para añadir otra.', { limite }));
+      return;
+    }
+    const usables = files.slice(0, libre);
+    if (files.length > libre) {
+      this._seedanceNotify(window.__('Solo caben {libre} más en este grupo: se ignoran {sobran}.', { libre, sobran: files.length - libre }));
+    }
+
+    for (const file of usables) {
+      let seconds = null;
+      if (kind === 'video' || kind === 'audio') {
+        seconds = await this._measureMediaSeconds(file, kind);
+        const tope = VideoView.SEEDANCE_REF_MAX_SECONDS;
+        if (seconds != null && seconds > tope) {
+          this._seedanceNotify(window.__('"{name}" dura {seconds}s y el tope es {tope}s. Recórtalo antes de subirlo.', {
+            name: file.name, seconds: Math.round(seconds), tope
+          }));
+          continue;
+        }
+      }
+      try {
+        const subido = await this._uploadSeedanceFile(file, `${kind}s`);
+        this.seedanceRefs[kind].push({ name: file.name, seconds, ...subido });
+        this.renderSeedanceRefs();
+        this.renderSeedanceAttachmentChips();
+      } catch (err) {
+        console.error('VideoView ref upload:', err);
+        this._seedanceNotify(window.__('No se pudo subir "{name}": ', { name: file.name }) + (err.message || ''), 'error');
+      }
+    }
+  }
+
+  removeSeedanceRef(kind, index) {
+    const item = (this.seedanceRefs[kind] || [])[index];
+    if (!item) return;
+    this._removeSeedanceStorage(item.storagePath);
+    this.seedanceRefs[kind].splice(index, 1);
+    this.renderSeedanceRefs();
+    this.renderSeedanceAttachmentChips();
+  }
+
+  renderSeedanceRefs() {
+    const tope = VideoView.SEEDANCE_REF_MAX_SECONDS;
+    const grupos = [
+      { kind: 'image', list: '#seedanceRefImgList', count: '#seedanceRefImgCount', sufijo: '', icono: 'aisc-ico--image' },
+      { kind: 'video', list: '#seedanceRefVidList', count: '#seedanceRefVidCount', sufijo: ` · ≤${tope}s`, icono: 'aisc-ico--film' },
+      { kind: 'audio', list: '#seedanceRefAudList', count: '#seedanceRefAudCount', sufijo: ` · ≤${tope}s`, icono: 'aisc-ico--music' }
+    ];
+    grupos.forEach((g) => {
+      const items = this.seedanceRefs[g.kind] || [];
+      const countEl = this.container.querySelector(g.count);
+      if (countEl) countEl.textContent = `${items.length} / ${VideoView.SEEDANCE_REF_LIMITS[g.kind]}${g.sufijo}`;
+      const listEl = this.container.querySelector(g.list);
+      if (!listEl) return;
+      listEl.innerHTML = items.map((item, idx) => {
+        const nombre = this._escapeHtml(item.name || g.kind);
+        const dur = item.seconds != null ? ` · ${Math.round(item.seconds)}s` : '';
+        const cuerpo = g.kind === 'image'
+          ? `<img class="seedance-ref-thumb" src="${this._escapeHtml(item.url)}" alt="" loading="lazy">`
+          : `<i class="aisc-ico ${g.icono}" aria-hidden="true"></i><span class="seedance-ref-name">${nombre}${dur}</span>`;
+        return `<span class="seedance-ref-item" title="${nombre}${dur}">${cuerpo}<button type="button" class="seedance-ref-remove" data-ref-kind="${g.kind}" data-ref-index="${idx}" aria-label="${window.__('Quitar {name}', { name: nombre })}">&times;</button></span>`;
+      }).join('');
+    });
+  }
+
+  /** Fila de chips junto al prompt: lo adjunto, a la vista, sin abrir el sidebar. */
+  renderSeedanceAttachmentChips() {
+    const listEl = this.container.querySelector('#seedanceElementsList');
+    if (!listEl) return;
+    const chips = [];
+    if (this.seedanceFrames.first) chips.push({ label: 'First Frame', url: this.seedanceFrames.first.url, quitar: 'frame:first', esImagen: true });
+    if (this.seedanceFrames.last) chips.push({ label: 'Last Frame', url: this.seedanceFrames.last.url, quitar: 'frame:last', esImagen: true });
+    ['image', 'video', 'audio'].forEach((kind) => {
+      (this.seedanceRefs[kind] || []).forEach((item, idx) => {
+        chips.push({ label: item.name || kind, url: item.url, quitar: `ref:${kind}:${idx}`, esImagen: kind === 'image' });
+      });
+    });
+
+    if (chips.length === 0) {
+      listEl.innerHTML = '';
+      listEl.style.display = 'none';
+      this.scheduleResizeDirectorBriefInput();
+      return;
+    }
+    listEl.style.display = 'flex';
+    listEl.innerHTML = chips.map((c) => {
+      const etiqueta = this._escapeHtml(c.label);
+      const cuerpo = c.esImagen
+        ? `<span class="video-attachment-thumbs"><span class="video-attachment-thumb-wrap"><img class="video-attachment-thumb" src="${this._escapeHtml(c.url)}" alt="" loading="lazy"></span></span>`
+        : `<span class="video-attachment-video-label">${etiqueta}</span>`;
+      return `<span class="video-attachment-chip" title="${etiqueta}">${cuerpo}<button type="button" class="video-attachment-remove" data-attachment-remove="${c.quitar}" aria-label="${window.__('Quitar {name}', { name: etiqueta })}">&times;</button></span>`;
+    }).join('');
+    this.scheduleResizeDirectorBriefInput();
+  }
+
+  /** Traduce el data-attachment-remove del chip a la baja correspondiente. */
+  removeSeedanceAttachment(token) {
+    const partes = String(token || '').split(':');
+    if (partes[0] === 'frame') {
+      this.removeSeedanceFrame(partes[1]);
+    } else if (partes[0] === 'ref') {
+      const idx = parseInt(partes[2], 10);
+      if (!Number.isNaN(idx)) this.removeSeedanceRef(partes[1], idx);
+    }
+  }
+
   /**
    * Lee los controles del Director Console y del sidebar de Seedance y los
    * deja en el shape que espera la funcion de creacion.
    *
    * OJO al cablear: esto es lo que la UI SABE hoy, no el contrato final de
-   * KIE. Los frames clave (#seedanceFirstFrameSlot / #seedanceLastFrameSlot)
-   * y las referencias multimodales (imagenes / videos / audios del sidebar)
-   * son maqueta — no tienen binding ni subida a Storage — por eso no salen
-   * aqui. Anadirlos al mismo tiempo que su wiring, no antes: un campo que
-   * KIE no reconoce se ignora en silencio.
+   * KIE. Los nombres de campo (first_frame_url, reference_images…) son
+   * nuestros; al escribir seedance-video-create.js hay que mapearlos a los
+   * que KIE reconoce — un campo que KIE no entiende lo ignora en silencio.
    */
   buildSeedancePayload() {
     const val = (sel, fallback) => {
@@ -823,6 +1258,11 @@ class VideoView extends BaseView {
       generate_audio: checked('#seedanceGenerateAudio') || pressed('#seedanceGenAudioToggle'),
       audio_type: audioTile ? audioTile.getAttribute('data-audio-type') : null,
       web_search: pressed('#seedanceWebSearchToggle'),
+      first_frame_url: this.seedanceFrames.first?.url || null,
+      last_frame_url: this.seedanceFrames.last?.url || null,
+      reference_images: this.seedanceRefs.image.map((r) => r.url),
+      reference_videos: this.seedanceRefs.video.map((r) => r.url),
+      reference_audios: this.seedanceRefs.audio.map((r) => r.url),
       direction: {
         pacing: val('#seedancePacing', ''),
         arc: val('#seedanceArc', ''),

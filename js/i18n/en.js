@@ -2838,5 +2838,21 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Escribe primero el storyboard: qué pasa en la apertura, en el desarrollo y en el cierre.": "Write the storyboard first: what happens at the opening, in the development and at the close.",
   "Seedance 2.0 todavía no está conectado: falta desplegar la función de creación de tarea. El resto del camino (guardado, créditos y resultado) ya está listo y se enciende con ese despliegue.": "Seedance 2.0 is not wired up yet: the task-creation function still has to be deployed. The rest of the path (storage, credits and result) is already in place and switches on with that deploy.",
   "Seedance 2.0 marcado como listo pero sin POST de creación implementado. Completa startGeneration() antes de activar el flag.": "Seedance 2.0 is flagged as ready but the create POST is not implemented. Finish startGeneration() before turning the flag on.",
-  "Generando video (Seedance 2.0). Esto puede tardar unos minutos…": "Generating video (Seedance 2.0). This may take a few minutes…"
+  "Generando video (Seedance 2.0). Esto puede tardar unos minutos…": "Generating video (Seedance 2.0). This may take a few minutes…",
+  "\"{name}\" dura {seconds}s y el tope es {tope}s. Recórtalo antes de subirlo.": "\"{name}\" runs {seconds}s and the cap is {tope}s. Trim it before uploading.",
+  "Almacenamiento no disponible. Recarga la página y reintenta.": "Storage is unavailable. Reload the page and try again.",
+  "El archivo subió pero Storage no devolvió URL pública.": "The file uploaded but Storage returned no public URL.",
+  "Frames Clave y Referencias Multimodales son excluyentes: quita las referencias para anclar frames.": "Key Frames and Multimodal References are mutually exclusive: remove the references to anchor frames.",
+  "Frames Clave y Referencias Multimodales son excluyentes: quita los frames para añadir referencias.": "Key Frames and Multimodal References are mutually exclusive: remove the frames to add references.",
+  "Inicia sesión para subir referencias.": "Sign in to upload references.",
+  "No se pudo subir \"{name}\": ": "Could not upload \"{name}\": ",
+  "No se pudo subir {label}: ": "Could not upload {label}: ",
+  "Quitar {label}": "Remove {label}",
+  "Quitar {name}": "Remove {name}",
+  "Solo caben {libre} más en este grupo: se ignoran {sobran}.": "Only {libre} more fit in this group: {sobran} ignored.",
+  "Subir imagen de primer frame": "Upload first frame image",
+  "Subir imagen de último frame": "Upload last frame image",
+  "Un frame clave es una imagen (JPG, PNG o WebP).": "A key frame is an image (JPG, PNG or WebP).",
+  "Ya tienes el máximo de {limite} en este grupo. Quita una para añadir otra.": "You already have the maximum of {limite} in this group. Remove one to add another.",
+  "{n} archivo(s) sin formato soportado aquí. Los audios se añaden desde el sidebar.": "{n} file(s) in a format not supported here. Audio is added from the sidebar."
 }/* I18N:END */;

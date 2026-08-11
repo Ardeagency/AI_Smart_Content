@@ -1423,6 +1423,13 @@
     border-radius: var(--radius-sm);
     position: relative;
 }
+/* Nombre del adjunto sin miniatura (video, audio): trunca, no empuja la fila */
+.video-attachment-video-label {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 .video-attachment-thumbs {
     display: inline-flex;
     gap: 0.25rem;
@@ -5560,6 +5567,50 @@
     border-color: var(--color-info);
     background-size: cover;
     background-position: center;
+    justify-content: flex-end;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Scrim: sin él la etiqueta desaparece sobre una imagen clara. */
+.video-view-container .seedance-frame-slot.has-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0) 60%);
+    pointer-events: none;
+}
+
+.video-view-container .seedance-frame-slot.has-image .seedance-frame-slot-label {
+    position: relative;
+    z-index: 1;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.video-view-container .seedance-frame-slot-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 2;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.62);
+    color: #fff;
+    font-size: 0.85rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+}
+
+.video-view-container .seedance-frame-slot-remove:hover {
+    background: var(--color-error, #e5484d);
 }
 
 /* Referencias multimodales */
@@ -5621,6 +5672,71 @@
     color: var(--text-muted);
     opacity: 0.5;
     font-style: italic;
+}
+
+/* Item de referencia: miniatura para imagen, icono + nombre para video/audio */
+.video-view-container .seedance-ref-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    padding: 3px 20px 3px 5px;
+    background: #0f1012;
+    border: 1px solid var(--border-divider, #242424);
+    border-radius: 6px;
+    font-size: 0.68rem;
+    color: var(--text-secondary, #b6b6b6);
+}
+
+.video-view-container .seedance-ref-item:has(.seedance-ref-thumb) {
+    padding: 0;
+    border-radius: var(--radius-sm);
+    overflow: visible;
+}
+
+.video-view-container .seedance-ref-thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    display: block;
+}
+
+.video-view-container .seedance-ref-item i {
+    font-size: 0.72rem;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.video-view-container .seedance-ref-name {
+    max-width: 118px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.video-view-container .seedance-ref-remove {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.78);
+    color: #fff;
+    font-size: 0.72rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+}
+
+.video-view-container .seedance-ref-remove:hover {
+    background: var(--color-error, #e5484d);
 }
 
 /* Toggle row (Generar audio) */
