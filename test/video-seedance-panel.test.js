@@ -293,6 +293,28 @@ describe('Cinematografía — las plantillas de prompt que venían de Kling', ()
     });
   });
 
+  test('asignar valores por código repinta los tiles', () => {
+    // Los <select> son el modelo; los tiles son lo que el usuario mira.
+    // Asignar .value no dispara 'change', así que si sync no repinta, elegir
+    // un preset llena el estado y la pantalla sigue diciendo "ninguno".
+    const { v } = nuevaVista();
+    let repintados = 0;
+    v._cineTileRenderers = [() => { repintados++; }, () => { repintados++; }];
+    v.container.querySelector = () => ({ value: '' });
+
+    v.cinematography.cameraMovement = 'Orbit';
+    v.syncCinematographyToSelects();
+
+    expect(repintados).toBe(2);
+  });
+
+  test('repintar sin tiles montados no revienta', () => {
+    const { v } = nuevaVista();
+    v.container.querySelector = () => null;
+
+    expect(() => v.repaintCinematographyTiles()).not.toThrow();
+  });
+
   test('el payload lleva una copia, no la referencia viva del estado', () => {
     const { v } = nuevaVista();
     v.cinematography.tone = 'Dark premium';

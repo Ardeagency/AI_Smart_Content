@@ -710,15 +710,12 @@ class VideoView extends BaseView {
         e.preventDefault();
         if (!confirm(window.__('¿Restablecer todos los valores de Cinematografía?'))) return;
         Object.keys(this.cinematography).forEach((k) => { this.cinematography[k] = ''; });
+        // syncCinematographyToSelects() ya repinta los tiles.
         this.syncCinematographyToSelects();
         this.renderCinematographySelectedTags();
         this.renderDirectorVariables();
         const presetEl = this.container.querySelector('#videoCinePreset');
         if (presetEl) presetEl.value = '';
-        // Los tiles se repintan escuchando el change del select que espejan.
-        this.container.querySelectorAll('.video-cinematography-panel .video-cine-select').forEach((sel) => {
-          sel.dispatchEvent(new Event('change', { bubbles: true }));
-        });
       });
     }
 
@@ -1629,6 +1626,10 @@ class VideoView extends BaseView {
       ['videoCineLightType', 'lightType'], ['videoCineContrast', 'contrastLevel'], ['videoCineTemperature', 'temperature'],
       ['videoCineTone', 'tone'], ['videoCineColorGrade', 'colorGrade'], ['videoCineEnergyLevel', 'energyLevel'], ['videoCineColorTemp', 'colorTemp']
     ];
+    // Registro de repintados: syncCinematographyToSelects() los llama tras
+    // asignar valores por código (un Production Preset, el reset), porque
+    // esa asignación no dispara 'change' y los tiles se quedarían mudos.
+    this._cineTileRenderers = [];
     config.forEach(([id, key]) => {
       const sel = this.container.querySelector('#' + id);
       if (!sel) return;
@@ -1663,6 +1664,7 @@ class VideoView extends BaseView {
         }).join('');
       };
       renderTiles();
+      this._cineTileRenderers.push(renderTiles);
       if (grid.dataset.boundTileClick !== '1') {
         grid.dataset.boundTileClick = '1';
         grid.addEventListener('click', (e) => {
@@ -1699,6 +1701,16 @@ class VideoView extends BaseView {
     set('#videoCineColorGrade', c.colorGrade);
     set('#videoCineEnergyLevel', c.energyLevel);
     set('#videoCineColorTemp', c.colorTemp);
+    // Los <select> son el modelo, pero lo que el usuario MIRA son los tiles.
+    // Asignar .value por código no dispara 'change', así que sin este repintado
+    // elegir un Production Preset llenaba los selects y no marcaba un solo
+    // tile: la pantalla decía "ninguno" mientras el estado ya estaba puesto.
+    this.repaintCinematographyTiles();
+  }
+
+  /** Repinta los grids de tiles desde el valor actual de su <select> espejo. */
+  repaintCinematographyTiles() {
+    (this._cineTileRenderers || []).forEach((repintar) => repintar());
   }
 
   renderCinematographySelectedTags() {
