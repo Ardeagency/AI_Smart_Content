@@ -203,7 +203,6 @@ class PlanesView extends BaseView {
     return `
       <div class="planes-page">
         <header class="planes-hero">
-          <h1 class="planes-hero-bg-word" aria-hidden="true">${window.__('PLANES')}</h1>
           <div class="planes-hero-content">
             <div class="planes-org-context glass-black" id="planesOrgContext" hidden></div>
 
