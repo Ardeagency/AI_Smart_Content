@@ -2204,8 +2204,7 @@ class Navigation {
              data-route="${this.getUserSidebarRoute('plans')}"
              aria-label="${__('Mejorar plan')}"
              title="${__('Mejorar plan')}">
-            <span class="nav-plan-card-arrow" aria-hidden="true"></span>
-            <span class="nav-plan-card-cta-text">${__('Mejorar')}</span>
+            <i class="aisc-ico aisc-ico--flecha-landing-1-seccion-2 nav-plan-card-arrow" aria-hidden="true"></i>
           </a>
         </div>
 
