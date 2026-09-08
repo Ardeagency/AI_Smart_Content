@@ -309,18 +309,18 @@
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
+/* Los estados se marcan SOLO con el filete. El aro `0 0 0 1px` que acompañaba a
+   cada uno existia porque el border-color perdia contra el `border !important`
+   de .glass-black; ahora que estos llevan !important, el aro dibujaba un segundo
+   borde exactamente encima del primero. */
 .plan-card-small.selected {
     border-color: rgba(255, 255, 255, 0.35) !important;
-    box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.35),
-        0 20px 50px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 .plan-card-small--popular {
     border-color: rgba(255, 255, 255, 0.18) !important;
-    box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.14),
-        0 16px 40px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
 }
 
 .plan-card-badge {
@@ -471,10 +471,11 @@
     border-color: rgba(255, 255, 255, 0.18) !important;
 }
 
-/* El plan actual se marca con un aro blanco, no con verde. */
+/* El plan actual se marca con el filete blanco, no con verde. Sin box-shadow
+   propio: el que tenia pisaba la elevacion de la base y la card del plan actual
+   se quedaba plana, flotando menos que la de al lado. */
 .plan-card-small--current {
     border-color: rgba(255, 255, 255, 0.3) !important;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
 .plan-card-badge--current {
