@@ -118,7 +118,7 @@ class CreditsShopView extends BaseView {
       <div class="credits-page">
         <header class="credits-hero">
           <div class="credits-hero-content">
-            <p class="credits-hero-eyebrow">${__('Pago único · Se suman a tu saldo · Expiran a los 12 meses')}</p>
+            <p class="credits-hero-eyebrow">${__('Pago único · Se suman a tu saldo · No expiran')}</p>
             <div id="creditsPacks"></div>
           </div>
         </header>
@@ -133,25 +133,35 @@ class CreditsShopView extends BaseView {
       el.innerHTML = `<div class="credits-empty">${__('No hay paquetes disponibles.')}</div>`;
       return;
     }
+    // Lista, no galeria: los paquetes se diferencian en UNA variable (cuantos
+    // creditos por cuanta plata). Puestos en columna, las cifras quedan alineadas
+    // y se comparan de un vistazo; en rejilla el ojo tiene que saltar en zigzag.
     el.innerHTML = `
-      <div class="credits-packs-grid">
+      <ul class="credits-packs-list">
         ${this.packages.map((p) => {
           const total = p.credits + p.bonus;
           return `
-            <div class="credits-pack-card glass-black ${p.popular ? 'is-popular' : ''}" data-pack-id="${p.id}">
-              ${p.popular ? `<span class="credits-pack-badge">${__('Recomendado')}</span>` : ''}
-              <div class="credits-pack-name">${this.escapeHtml(p.name)}</div>
-              <div class="credits-pack-credits">${p.credits.toLocaleString('es')}<small>${__('créditos')}</small></div>
-              ${p.bonus > 0 ? `<div class="credits-pack-bonus">+${p.bonus.toLocaleString('es')} ${__('bonus')}</div>` : ''}
-              <div class="credits-pack-price">$${p.price}</div>
-              <button type="button" class="btn btn-primary credits-pack-buy" data-pack-id="${p.id}">
-                ${__('Comprar')}
-              </button>
-              <div class="credits-pack-note">${__('Total: {n} cr · Expira en 12 meses', { n: total.toLocaleString('es') })}</div>
-            </div>
+            <li class="credits-pack-row glass-black ${p.popular ? 'is-popular' : ''}" data-pack-id="${p.id}">
+              <div class="credits-pack-main">
+                <div class="credits-pack-headline">
+                  <span class="credits-pack-credits">${p.credits.toLocaleString('es')}<small>${__('créditos')}</small></span>
+                  ${p.bonus > 0 ? `<span class="credits-pack-bonus">+${p.bonus.toLocaleString('es')} ${__('bonus')}</span>` : ''}
+                  ${p.popular ? `<span class="credits-pack-badge">${__('Recomendado')}</span>` : ''}
+                </div>
+                <div class="credits-pack-meta">
+                  ${this.escapeHtml(p.name)} · ${__('Total: {n} cr · No expiran, se acumulan', { n: total.toLocaleString('es') })}
+                </div>
+              </div>
+              <div class="credits-pack-buyside">
+                <span class="credits-pack-price">$${p.price}</span>
+                <button type="button" class="btn btn-primary credits-pack-buy" data-pack-id="${p.id}">
+                  ${__('Comprar')}
+                </button>
+              </div>
+            </li>
           `;
         }).join('')}
-      </div>
+      </ul>
     `;
   }
 

@@ -46,7 +46,7 @@
 
 .credits-hero-content > div { width: 100%; }
 
-.credits-hero .credits-packs-grid {
+.credits-hero .credits-packs-list {
   margin-top: 2rem;
   gap: 1.25rem;
 }
@@ -58,73 +58,65 @@
    tienda. Nada se perdio —esta en el historial de git y las tablas siguen
    intactas—; si el tablero vuelve, vuelve como pagina propia. */
 
-/* ─── Packs ────────────────────────────────────────────────────────── */
+/* ─── Packs (LISTA, no galeria) ──────────────────────────────────────
+   Los paquetes se diferencian en UNA variable: cuantos creditos por cuanta
+   plata. En columna las cifras quedan alineadas y se comparan de un vistazo;
+   en rejilla el ojo tiene que saltar en zigzag para lo mismo. */
 
-.credits-packs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-}
-
-/* Las cards son las MISMAS que las de /plans: solo vidrio, sin color de
-   resaltado. Se les quito el fondo opaco propio (--bg-tertiary) para que mande
-   .glass-black, que ahora traen en el markup — asi el fondo de plataforma y las
-   estrellas se leen a traves de ellas. */
-.credits-pack-card {
-  position: relative;
-  padding: 20px;
+.credits-packs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  text-align: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+/* Solo vidrio, sin color de resaltado — igual que las cards de /plans. El
+   fondo de plataforma y las estrellas se leen a traves de la fila. */
+.credits-pack-row {
+  position: relative;
+  display: flex;
   align-items: center;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 22px;
+  text-align: left;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
   transition: border-color .2s, box-shadow .2s, transform .2s;
 }
 
-.credits-pack-card:hover {
+.credits-pack-row:hover {
   border-color: rgba(255, 255, 255, 0.2) !important;
-  transform: translateY(-3px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
 }
 
-/* El recomendado se marca con el filete, no con cian. */
-.credits-pack-card.is-popular {
+/* El recomendado se marca con el filete, no con color. */
+.credits-pack-row.is-popular {
   border-color: rgba(255, 255, 255, 0.18) !important;
 }
 
-/* Pastilla blanca y CENTRADA arriba, igual que "Plan actual" en /plans. Sin
-   overflow:hidden en la card, asi que ya no se corta. */
-.credits-pack-badge {
-  position: absolute;
-  top: -0.6rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #ffffff;
-  color: #0a0a0a;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 3px 10px;
-  border-radius: 6px;
-  z-index: 2;
-}
+.credits-pack-main { min-width: 0; }
 
-.credits-pack-name {
-  font-size: 13px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.credits-pack-headline {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .credits-pack-credits {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--text-primary);
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
+  line-height: 1.1;
+  /* Cifras de ancho fijo: es lo que deja las columnas de creditos y de precio
+     alineadas entre filas, que es la razon de ser de la lista. */
+  font-variant-numeric: tabular-nums;
 }
 
 .credits-pack-credits small {
@@ -133,28 +125,63 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-left: 6px;
 }
 
-/* El bonus era verde; sin colores de resaltado se distingue por peso. */
+/* El bonus era verde; sin colores de resaltado se distingue por peso y filete. */
 .credits-pack-bonus {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
   font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* Pastilla blanca, ya no flotando sobre el borde: en una fila va en linea. */
+.credits-pack-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #ffffff;
+  color: #0a0a0a;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.credits-pack-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.credits-pack-buyside {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
 }
 
 .credits-pack-price {
   font-size: 20px;
   font-weight: 600;
   color: var(--text-primary);
-  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
-.credits-pack-buy { margin-top: 4px; }
+.credits-pack-buy { margin: 0; }
 
-.credits-pack-note {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 4px;
+/* En pantalla angosta la fila se parte en dos pisos; el boton toma el ancho
+   para no quedar de estampilla al lado del precio. */
+@media (max-width: 560px) {
+  .credits-pack-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .credits-pack-buyside { justify-content: space-between; }
+  .credits-pack-buy { flex: 1; }
 }
 
 /* ─── Vacio ───────────────────────────────────────────────────────── */
