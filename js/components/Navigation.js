@@ -80,6 +80,7 @@ const SIDEBAR_USER_CONFIG = {
       route: 'tasks',
       requireCap: 'production.create'
     },
+    { type: 'page', id: 'image', label: 'Imagen', icon: 'aisc-ico aisc-ico--image', iconSrc: '/recursos/icons/image.svg', route: 'image', requireCap: 'studio.create' },
     { type: 'page', id: 'video', label: 'Video', icon: 'aisc-ico aisc-ico--play', iconSrc: '/recursos/icons/video.svg', route: 'video', requireCap: 'video.create' },
     {
       type: 'container',
@@ -102,7 +103,8 @@ const SIDEBAR_USER_CONFIG = {
    --prune. Mantener sincronizado con SIDEBAR_USER_CONFIG.main[].label:
    __('Espacio de trabajo') __('Tablero') __('Identidad') __('Almacenamiento')
    __('Productos') __('Servicios') __('Escenarios') __('Personajes')
-   __('Monitoreo') __('Crear') __('Producción') __('Tareas') __('Flujos') */
+   __('Monitoreo') __('Crear') __('Producción') __('Tareas') __('Imagen')
+   __('Video') __('Flujos') */
 const SIDEBAR_USER_EXPANDED_KEY = 'sidebarUserExpanded';
 
 /** Versión en query de iconos del sidebar (SVG/PNG); subir si el navegador/CDN sirve assets viejos sin tocar el JS. */
@@ -372,7 +374,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/products', '/services', '/places', '/characters', '/studio', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring', '/predictor'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/products', '/services', '/places', '/characters', '/studio', '/image', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring', '/predictor'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -1300,7 +1302,10 @@ class Navigation {
         path = id ? `/studio?run=${id}` : '/studio';
         break;
 
-      // ── Video (ruta única sin params; el id va como query) ──
+      // ── Imagen / Video (ruta única sin params; el id va como query) ──
+      case 'image':
+        path = id ? `/image?id=${id}` : '/image';
+        break;
       case 'video':
         path = id ? `/video?id=${id}` : '/video';
         break;
@@ -3089,6 +3094,7 @@ class Navigation {
       '/studio/flows': __('FLUJOS'),
       '/studio/catalog': __('FLUJOS'),
       '/studio': 'STUDIO',
+      '/image': __('IMAGEN'),
       '/video': 'VIDEO',
       '/organization': __('AJUSTES'),
       '/credits': __('CRÉDITOS'),

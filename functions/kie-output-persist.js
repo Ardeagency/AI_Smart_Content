@@ -198,13 +198,14 @@ exports.handler = async (event) => {
   if (!ALLOWED_BUCKETS.has(bucket)) return fail(event, 400, 'bucket no permitido');
   if (!taskId) return fail(event, 400, 'task_id requerido');
 
-  // Path por tipo: image-edits / image-upscales / image-remove-bg / image-variations / kie-videos
+  // Path por tipo: image-edits / image-upscales / image-remove-bg / image-variations / images-generated / kie-videos
   const folderMap = {
     edit: 'image-edits',
     upscale: 'image-upscales',
     'remove-bg': 'image-remove-bg',
     reframe: 'image-reframes',
     variations: 'image-variations',
+    generated: 'images-generated',
     video: 'kie-videos'
   };
   const folder = folderMap[kind] || 'image-edits';

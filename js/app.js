@@ -496,6 +496,11 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/video', videoLoader, auth);
     r.register('/video', videoLoader, auth);
 
+    // ── Org: Imagen (nano-banana Pro / KIE) ──
+    const imageLoader = this._lazy('ImageView', ['/js/services/ImageDataService.js', '/js/views/ImageView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/image', imageLoader, auth);
+    r.register('/image', imageLoader, auth);
+
     // ── Créditos (tienda de créditos — paquetes desde Supabase) ──
     const creditsLoader = this._lazy('CreditsShopView', ['/js/views/CreditsShopView.js']);
     r.register('/credits', creditsLoader, auth);

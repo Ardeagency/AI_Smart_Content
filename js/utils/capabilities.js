@@ -128,6 +128,7 @@ window.OrgCapabilities = (() => {
   // Solo se listan rutas que tienen restricción; el resto queda abierto.
   const ROUTE_CAPABILITY = {
     '/studio':            'studio.create',
+    '/image':             'studio.create',
     '/video':             'video.create',
     '/production':        'production.create',
     '/vera':              'vera.chat',

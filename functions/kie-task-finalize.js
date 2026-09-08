@@ -28,6 +28,7 @@
  *   - image_fix_text:   +$3
  *   - image_upscale:    +$0 (KIE-only, sin OpenAI)
  *   - image_remove_bg:  +$0 (KIE-only, sin OpenAI)
+ *   - image_generated:  +$3 (nano-banana-pro + prompt OpenAI, desde /image)
  *   - video_generated:  +$5
  */
 
@@ -55,6 +56,9 @@ const MARKUP_BY_KIND = {
   image_upscale: 0,
   image_remove_bg: 0,
   image_reframe: 0, // outpaint nano-banana, KIE-only (prompt server-side, sin OpenAI)
+  // Generacion desde /image: mismo perfil de costo que image_edit (nano-banana-pro
+  // + un cocinado de prompt en OpenAI), asi que hereda su markup salvo override.
+  image_generated: Number(process.env.IMAGE_GEN_MARKUP_USD || process.env.OPENAI_OPS_MARKUP_USD || 3),
   video_generated: Number(process.env.VIDEO_MARKUP_USD || 5)
 };
 

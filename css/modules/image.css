@@ -1,0 +1,43 @@
+/* ==========================================================================
+   image.css — lo que la página /image NO comparte con /video.
+
+   El esqueleto (canvas, consola, sidebar, tiles de dirección) vive en
+   video.css y cuelga de `.video-view-container`, que ImageView también pone
+   en su raíz. Aquí solo va lo que difiere: el resultado es una imagen fija,
+   no un reproductor, y la fila de referencias tiene un solo grupo en vez de
+   tres. Si algo de aquí crece hasta valer para las dos páginas, sube a
+   video.css; duplicar el layout entero fue justo lo que se evitó.
+   ========================================================================== */
+
+/* El resultado es una foto: se ve entera, sin recortes, sobre fondo neutro.
+   El wrap de video.css pinta negro porque un video se mira así; una imagen
+   con transparencia (PNG de nano-banana sin fondo) sobre negro miente. */
+.image-view-container .image-result-wrap {
+    background: var(--bg-surface-2, var(--dev-bg-surface));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+}
+
+.image-view-container .image-result-picture {
+    width: auto;
+    max-width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+}
+
+/* El <img> del resultado nace sin `src` y lo llena showResult(). Sin esto, el
+   navegador pinta el icono de imagen rota en cuanto el área se muestra por un
+   instante antes de asignar la URL. */
+.image-view-container .image-result-picture:not([src]) {
+    display: none;
+}
+
+/* Un solo grupo de referencias: el separador entre grupos que video.css pone
+   para imágenes/videos/audios aquí sobra y deja un hueco muerto al final. */
+.image-view-container .seedance-ref-group:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
