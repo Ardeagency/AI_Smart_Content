@@ -10,7 +10,8 @@
    Va en #app-container y no en .planes-page porque esa esta centrada a 1280px
    y el fondo tiene que llegar a los bordes. Anclado al viewport, como ya lo
    hace Monitoreo. */
-#app-container:has(.planes-page) {
+#app-container:has(.planes-page),
+#app-container:has(.credits-page) {
     /* Manda el negro. El espectro entra al 20% y se apaga contra transparente
        antes del 90%, asi que es LUZ sobre la oscuridad y no un fondo de color:
        la version anterior lo pintaba a plena saturacion y la pagina entera se
@@ -31,16 +32,16 @@
 }
 
 /* ── Estrellas ────────────────────────────────────────────────────────────────
-   El campo lo pinta PlanesStarfield (js/views/PlanesView.js) en este canvas: las
+   El campo lo pinta window.Starfield (js/ui/Starfield.js) en este canvas: las
    particulas nacen en el borde, caen en espiral hacia el centro y mueren ahi, y
    eso ningun mosaico de CSS lo puede hacer — un mosaico se desplaza entero, no
    tiene particulas con vida propia. Aqui solo vive su caja.
 
-   Cuelga del <body>, asi que el z-index lo enfrenta a .planes-page (z-index 1):
-   el cielo queda debajo del contenido y, por estar en el mismo contexto raiz, el
+   Cuelga del <body>, asi que el z-index lo enfrenta a la pagina (z-index 1): el
+   cielo queda debajo del contenido y, por estar en el mismo contexto raiz, el
    backdrop-filter de las cards lo recoge y las estrellas se ven a traves del
    vidrio. */
-.planes-starfield {
+.aisc-starfield {
     position: fixed;
     inset: 0;
     width: 100%;
@@ -50,7 +51,8 @@
 }
 
 /* El contenido vive por encima del cielo. */
-.planes-page { position: relative; z-index: 1; }
+.planes-page,
+.credits-page { position: relative; z-index: 1; }
 
 .planes-main {
     padding: calc(48px + 2rem) 2rem 4rem;

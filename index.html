@@ -372,6 +372,11 @@
     <!-- UI primitives compartidas (window.UI.Button/Card/Input/Dialog/Dropdown/Tabs) -->
     <script src="js/ui/primitives.js?v=__BUILD_ID__" defer></script>
 
+    <!-- window.Starfield — el cielo de las paginas de facturacion (/plans y
+         /creditos). Global y no lazy porque lo montan DOS vistas; son ~7KB y no
+         corre nada hasta que alguien llama a start(). -->
+    <script src="js/ui/Starfield.js?v=__BUILD_ID__" defer></script>
+
     <!-- Utilidades de color — fuente única para hexToHSL/hslToHex/hexToRgba/etc.
          Debe cargar ANTES que OrgBrandTheme (que las consume en el theme inicial). -->
     <script src="js/utils/brand-colors.js?v=__BUILD_ID__" defer></script>
