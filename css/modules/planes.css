@@ -11,19 +11,60 @@
    y el fondo tiene que llegar a los bordes. Anclado al viewport, como ya lo
    hace Monitoreo. */
 #app-container:has(.planes-page) {
-    background-color: var(--bg-primary, #0b0b0b);
-    background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
-        var(--pf-7) 0%,
-        var(--pf-6) 11%,
-        var(--pf-5) 22%,
-        var(--pf-4) 35%,
-        var(--pf-3) 46%,
-        var(--pf-2) 57%,
-        var(--pf-1) 68%,
-        #141517 84%,
-        var(--bg-primary, #0b0b0b) 100%);
+    /* Manda el negro. El espectro entra al 20% y se apaga contra transparente
+       antes del 90%, asi que es LUZ sobre la oscuridad y no un fondo de color:
+       la version anterior lo pintaba a plena saturacion y la pagina entera se
+       volvia morada. Los porcentajes de color-mix son el dimmer; los stops
+       salen de los tokens para no repetir los hex. */
+    background-color: #050507;
+    background-image: radial-gradient(125% 72% at 50% -14%,
+        color-mix(in srgb, var(--pf-7) 22%, transparent) 0%,
+        color-mix(in srgb, var(--pf-6) 19%, transparent) 13%,
+        color-mix(in srgb, var(--pf-5) 16%, transparent) 25%,
+        color-mix(in srgb, var(--pf-4) 14%, transparent) 37%,
+        color-mix(in srgb, var(--pf-3) 12%, transparent) 49%,
+        color-mix(in srgb, var(--pf-2) 9%, transparent) 61%,
+        color-mix(in srgb, var(--pf-1) 6%, transparent) 73%,
+        transparent 90%);
     background-attachment: fixed;
     background-repeat: no-repeat;
+}
+
+/* ── Estrellas ────────────────────────────────────────────────────────────────
+   Campo de puntos como el de la landing. Tres capas de radial-gradient en mosaico
+   en vez de N elementos o un canvas: son tres pinceladas para el compositor, se
+   mueven con transform y no cuestan un solo nodo de DOM ni JS.
+   Los tres tamanos de mosaico son primos entre si (por eso 271/317/419): si
+   fueran multiplos, el ojo pilla la reja y deja de parecer cielo. Cada capa va
+   mas lenta que la anterior, que es lo que da la sensacion de profundidad. */
+#app-container:has(.planes-page)::after {
+    content: '';
+    position: fixed;
+    inset: -50%;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        radial-gradient(1.4px 1.4px at 40px 60px, rgba(255,255,255,.85), transparent 100%),
+        radial-gradient(1.1px 1.1px at 180px 210px, rgba(255,255,255,.6), transparent 100%),
+        radial-gradient(1px 1px at 90px 300px, rgba(255,255,255,.75), transparent 100%),
+        radial-gradient(1.6px 1.6px at 300px 130px, rgba(255,255,255,.5), transparent 100%),
+        radial-gradient(1px 1px at 250px 380px, rgba(255,255,255,.65), transparent 100%),
+        radial-gradient(1.2px 1.2px at 130px 160px, rgba(255,255,255,.45), transparent 100%);
+    background-size: 271px 271px, 317px 317px, 419px 419px, 271px 271px, 317px 317px, 419px 419px;
+    animation: planes-estrellas 240s linear infinite;
+    opacity: .55;
+}
+
+@keyframes planes-estrellas {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(-271px, -317px, 0); }
+}
+
+/* El contenido vive por encima del cielo. */
+.planes-page { position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+    #app-container:has(.planes-page)::after { animation: none; }
 }
 
 .planes-main {
@@ -229,10 +270,11 @@
    fondo de plataforma y la palabra PLANES se leen A TRAVES de la card, que es
    justo lo que hace que el vidrio parezca vidrio. */
 .plan-card-small {
-    --card-c1: #ff6500;
-    --card-c2: #ff0000;
     position: relative;
-    overflow: hidden;
+    /* SIN overflow:hidden. Estaba para recortar el resplandor del pie, que ya no
+       existe; lo unico que seguia recortando era el badge "Plan actual", que vive
+       en top:-0.6rem y quedaba partido por la mitad. El redondeo no lo necesita:
+       backdrop-filter ya se recorta contra el border-radius. */
     padding: 1.75rem 1.25rem;
     display: flex;
     flex-direction: column;
@@ -251,11 +293,11 @@
    contenido debe seguir por encima de cualquier pseudo-elemento futuro. */
 .plan-card-small > * { position: relative; z-index: 1; }
 
-/* Acentos por posición — siguen el --brand-gradient platform (solo precio/badge/popular) */
-.planes-plans .plan-card-small:nth-child(4n+1) { --card-c1: #ff6500; --card-c2: #ff0000; }
-.planes-plans .plan-card-small:nth-child(4n+2) { --card-c1: #ffe500; --card-c2: #9acc00; }
-.planes-plans .plan-card-small:nth-child(4n+3) { --card-c1: #00d614; --card-c2: #00e7ff; }
-.planes-plans .plan-card-small:nth-child(4n+4) { --card-c1: #5b00ea; --card-c2: #900090; }
+/* Aqui vivian los acentos por posicion (--card-c1/--card-c2: naranja, amarillo,
+   verde, morado del arcoiris de marca) que teñian precio, vinetas, badge y aros.
+   Se retiraron enteros: ninguna de las dos cards debe resaltarse con color. El
+   plan se distingue por jerarquia tipografica y por el aro blanco del actual, no
+   por pintarlo. El color de la pagina lo pone el fondo, una sola vez. */
 
 /* Hover neutro: el filete sube y la card se levanta. Se retiro el halo de color
    (0 0 40px -16px var(--card-c1)) junto con el degradado — sin el resplandor de
@@ -268,16 +310,16 @@
 }
 
 .plan-card-small.selected {
-    border-color: var(--card-c1);
+    border-color: rgba(255, 255, 255, 0.35) !important;
     box-shadow:
-        0 0 0 1px var(--card-c1),
+        0 0 0 1px rgba(255, 255, 255, 0.35),
         0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 .plan-card-small--popular {
-    border-color: color-mix(in srgb, var(--card-c1) 60%, var(--glass-black-border));
+    border-color: rgba(255, 255, 255, 0.18) !important;
     box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--card-c1) 40%, transparent),
+        0 0 0 1px rgba(255, 255, 255, 0.14),
         0 16px 40px rgba(0, 0, 0, 0.55);
 }
 
@@ -290,12 +332,13 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #ffffff;
-    background: linear-gradient(135deg, var(--card-c1, #ff6500) 0%, var(--card-c2, #ff0000) 100%);
+    /* Pastilla BLANCA con texto oscuro — el mismo recurso que ya usa el selector
+       Mensual/Anual de esta pagina, asi la etiqueta se lee sin meter otro color. */
+    color: #0a0a0a;
+    background: #ffffff;
     padding: 0.25rem 0.7rem;
     border-radius: var(--radius-sm, 6px);
-    z-index: 1;
-    box-shadow: 0 4px 16px -4px var(--card-c1, #ff6500);
+    z-index: 2;
 }
 
 .plan-card-name {
@@ -309,9 +352,8 @@
 .plan-card-price {
     font-size: 1.75rem;
     font-weight: 700;
-    color: var(--card-c1, #ff6500);
+    color: var(--text-primary, #fff);
     line-height: 1.1;
-    text-shadow: 0 0 24px color-mix(in srgb, var(--card-c1, #ff6500) 35%, transparent);
 }
 
 .plan-card-price span span {
@@ -356,7 +398,7 @@
     content: "✓";
     position: absolute;
     left: 0;
-    color: var(--card-c1, #ff6500);
+    color: rgba(255, 255, 255, 0.5);
     font-weight: 700;
 }
 
@@ -424,19 +466,20 @@
     font-weight: 400;
 }
 
+/* Enterprise ya no lleva su tinte cian: sin colores de resaltado en las cards. */
 .plan-card-small--enterprise {
-    background: linear-gradient(180deg, rgba(6, 182, 212, 0.04), transparent);
-    border-color: rgba(6, 182, 212, 0.3);
+    border-color: rgba(255, 255, 255, 0.18) !important;
 }
 
+/* El plan actual se marca con un aro blanco, no con verde. */
 .plan-card-small--current {
-    border-color: #22c55e;
-    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.25);
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
 .plan-card-badge--current {
-    background: #22c55e !important;
-    color: #052e16 !important;
+    background: #ffffff !important;
+    color: #0a0a0a !important;
 }
 
 .plan-card-desc {
@@ -458,9 +501,11 @@
 
 .plan-card-cta[disabled] { opacity: 0.6; cursor: default; }
 
-/* ── Upgrade button: rainbow gradient hover usando los colores arcoiris
-   de las cards (mismos hex que .planes-plans .plan-card-small:nth-child).
-   En reposo el botón es sólido; al hover el gradient se anima horizontalmente. */
+/* ── Upgrade button: blanco solido, sin arcoiris.
+   Aqui el hover pintaba un degradado de 9 colores animandose en bucle y un halo
+   cian debajo. Se fue con el resto del color: en una pagina donde nada mas se
+   resalta, el boton blanco ya es lo mas brillante que hay — que es exactamente
+   lo que debe llamar la atencion. */
 .plan-card-cta--upgrade {
     background: var(--accent-primary, #ffffff);
     color: #0a0a0a;
@@ -468,36 +513,9 @@
     font-weight: 600;
 }
 
-.plan-card-cta--upgrade::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        90deg,
-        #ff6500, #ff0000, #ffe500, #9acc00,
-        #00d614, #00e7ff, #5b00ea, #900090,
-        #ff6500
-    );
-    background-size: 300% 100%;
-    opacity: 0;
-    transition: opacity .25s ease;
-    z-index: -1;
-}
-
 .plan-card-cta--upgrade:hover {
-    color: #ffffff;
     transform: translateY(-1px);
-    box-shadow: 0 12px 32px -10px rgba(0, 231, 255, 0.5);
-}
-
-.plan-card-cta--upgrade:hover::before {
-    opacity: 1;
-    animation: planes-cta-rainbow 3.5s linear infinite;
-}
-
-@keyframes planes-cta-rainbow {
-    0%   { background-position: 0% 50%; }
-    100% { background-position: 300% 50%; }
+    box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.7);
 }
 
 /* Downgrade / switch / trial: hover sutil, sin rainbow */
@@ -529,7 +547,7 @@
     gap: 0.4rem;
 }
 
-.plan-card-current-status i { color: #00d614; }
+.plan-card-current-status i { color: rgba(255, 255, 255, 0.6); }
 
 /* Trust strip */
 .planes-trust-strip { padding: 32px 0; text-align: center; border-top: 1px solid var(--border-divider); border-bottom: 1px solid var(--border-divider); margin: 32px 0; }
