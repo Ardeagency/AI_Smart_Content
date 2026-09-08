@@ -10,8 +10,16 @@
    Va en #app-container y no en .planes-page porque esa esta centrada a 1280px
    y el fondo tiene que llegar a los bordes. Anclado al viewport, como ya lo
    hace Monitoreo. */
+/* Este bloque es el FONDO COMPARTIDO de las paginas de cuenta (Planes, Creditos
+   y Configuracion de organizacion). Vive en planes.css —que bundle.css importa
+   siempre, no por ruta— porque nacio aqui; si se suma una cuarta pagina, vale la
+   pena moverlo a un modulo propio en vez de seguir alargando la lista.
+   OJO: el cielo de estrellas NO acompaña al fondo. Es un canvas que cada vista
+   decide montar (window.Starfield), asi que Configuracion lo hereda apagado sin
+   necesidad de excluirse: simplemente no lo arranca. */
 #app-container:has(.planes-page),
-#app-container:has(.credits-page) {
+#app-container:has(.credits-page),
+#app-container:has(.organization-container) {
     /* Manda el negro. El espectro entra al 20% y se apaga contra transparente
        antes del 90%, asi que es LUZ sobre la oscuridad y no un fondo de color:
        la version anterior lo pintaba a plena saturacion y la pagina entera se
