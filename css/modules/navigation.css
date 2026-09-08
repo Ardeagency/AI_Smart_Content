@@ -4455,6 +4455,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     position: relative;
     isolation: isolate;
     overflow: hidden;
+    transition: border-color .28s ease;
 }
 
 /* Glow: barra del espectro de marca girada y desenfocada DETRAS del texto, no un
@@ -4473,11 +4474,17 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     left: 50%;
     top: -26px;
     margin-left: 20px;
-    transform: translateX(-50%) rotate(-33.15deg);
+    /* La lista lleva las 4 funciones aunque en reposo tres sean identidad: si
+       reposo y hover no tienen la MISMA forma, el navegador interpola por
+       matriz y el giro se deforma a mitad de camino. */
+    transform: translateX(-50%) translate(0, 0) rotate(-33.15deg) scale(1);
     background: linear-gradient(90deg, #0A1A5A 0%, #1E3FB0 16.67%, #4A2FB0 33.33%, #7A2A9A 50%, #C01A5A 66.67%, #E0301A 83.33%, #FF6A00 100%);
     filter: blur(50px);
     pointer-events: none;
     z-index: 0;
+    /* Solo transform: la barra ya esta desenfocada, asi que escalarla mueve el
+       bloom entero sin recalcular layout ni volver a aplicar el blur. */
+    transition: transform .55s cubic-bezier(.22, .61, .36, 1);
 }
 
 .side-navigation.nav-mode-user .nav-plan-card > * {
@@ -4548,9 +4555,46 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     opacity: .92;
 }
 
-.side-navigation.nav-mode-user .nav-plan-card-cta:hover .nav-plan-card-arrow {
+/* ── Hover: el color despierta ────────────────────────────────────────────────
+   Dos gestos, ambos sobre transform/color (nada que dispare layout): el bloom
+   crece y se corre hacia la flecha, y la flecha se va en su misma diagonal. El
+   borde sube un tono para cerrar el gesto. Deliberadamente SIN halo exterior:
+   la luz de esta tarjeta es la barra de adentro; un glow de color por fuera
+   seria decoracion encima de lo que ya brilla, y el mockup no lo pide.
+   El :has() da lo mismo al llegar por teclado, para que la tarjeta no sea una
+   afordancia solo-de-mouse. */
+.side-navigation.nav-mode-user .nav-plan-card:hover,
+.side-navigation.nav-mode-user .nav-plan-card:has(.nav-plan-card-cta:focus-visible) {
+    border-color: #3d3d3d;
+}
+
+.side-navigation.nav-mode-user .nav-plan-card:hover::before,
+.side-navigation.nav-mode-user .nav-plan-card:has(.nav-plan-card-cta:focus-visible)::before {
+    transform: translateX(-50%) translate(6px, 4px) rotate(-33.15deg) scale(1.18);
+}
+
+.side-navigation.nav-mode-user .nav-plan-card-cta:hover .nav-plan-card-arrow,
+.side-navigation.nav-mode-user .nav-plan-card-cta:focus-visible .nav-plan-card-arrow {
     opacity: 1;
-    transform: translate(1.5px, 1.5px);
+    transform: translate(3px, 3px);
+}
+
+/* Con reduced-motion no se quita la respuesta, se le quita el movimiento:
+   quedan el borde y el halo, que siguen diciendo "esto es clicable". */
+@media (prefers-reduced-motion: reduce) {
+    .side-navigation.nav-mode-user .nav-plan-card,
+    .side-navigation.nav-mode-user .nav-plan-card::before,
+    .side-navigation.nav-mode-user .nav-plan-card-arrow {
+        transition: none;
+    }
+    .side-navigation.nav-mode-user .nav-plan-card:hover::before,
+    .side-navigation.nav-mode-user .nav-plan-card:has(.nav-plan-card-cta:focus-visible)::before {
+        transform: translateX(-50%) translate(0, 0) rotate(-33.15deg) scale(1);
+    }
+    .side-navigation.nav-mode-user .nav-plan-card-cta:hover .nav-plan-card-arrow,
+    .side-navigation.nav-mode-user .nav-plan-card-cta:focus-visible .nav-plan-card-arrow {
+        transform: none;
+    }
 }
 
 /* respetar el atributo hidden (display:flex lo anulaba) cuando ya está en el tope.
