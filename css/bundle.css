@@ -160,6 +160,22 @@
     --warm-20: rgba(255, 101, 0, 0.2);
     --warm-30: rgba(255, 101, 0, 0.3);
     --warm-50: rgba(255, 101, 0, 0.5);
+    /* ========== Espectro de PLATAFORMA (no de marca) ==========
+       El degradado del producto: azul noche -> naranja. Es FIJO — no lo toca
+       OrgBrandTheme, a diferencia de --brand-gradient-dynamic, que es el color
+       del cliente. Se usa donde la interfaz habla de AI Smart Content y no de
+       la marca de la org: la tarjeta de plan del sidebar y el fondo de Planes.
+       Los stops sueltos existen para poder rearmar el espectro en otra forma
+       (radial, conico) sin copiar los hex y que se separen con el tiempo. */
+    --pf-1: #0A1A5A;
+    --pf-2: #1E3FB0;
+    --pf-3: #4A2FB0;
+    --pf-4: #7A2A9A;
+    --pf-5: #C01A5A;
+    --pf-6: #E0301A;
+    --pf-7: #FF6A00;
+    --platform-gradient: linear-gradient(90deg, var(--pf-1) 0%, var(--pf-2) 16.67%, var(--pf-3) 33.33%, var(--pf-4) 50%, var(--pf-5) 66.67%, var(--pf-6) 83.33%, var(--pf-7) 100%);
+
     --brand-gradient: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
     --brand-gradient-1: linear-gradient(90deg, #ff0000 0%, #ff6500 50%, #ffe500 100%);
     --brand-gradient-2: linear-gradient(90deg, #9acc00 0%, #00d614 50%, #00e7ff 100%);

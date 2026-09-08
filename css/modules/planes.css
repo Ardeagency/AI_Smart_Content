@@ -1,4 +1,31 @@
-/* ========== Planes (vista de suscripciones) ========== */
+/* ========== Planes (vista de suscripciones) ==========
+
+   FONDO: la misma receta del tablero y del chat de Vera (el radial anclado
+   arriba-centro del Frame 98: luz -> medio -> #141517 -> fondo de plataforma,
+   110.4% a 50% -10.4%), pero alimentada con el ESPECTRO DE PLATAFORMA en vez
+   de --brand-color-light/-mid. Es deliberado: el tablero habla de la marca del
+   cliente, esta pagina habla del producto que se vende, asi que se tiñe con el
+   degradado de AI Smart Content — el mismo de la tarjeta de plan del sidebar.
+
+   Va en #app-container y no en .planes-page porque esa esta centrada a 1280px
+   y el fondo tiene que llegar a los bordes. Anclado al viewport, como ya lo
+   hace Monitoreo. */
+#app-container:has(.planes-page) {
+    background-color: var(--bg-primary, #0b0b0b);
+    background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
+        var(--pf-7) 0%,
+        var(--pf-6) 11%,
+        var(--pf-5) 22%,
+        var(--pf-4) 35%,
+        var(--pf-3) 46%,
+        var(--pf-2) 57%,
+        var(--pf-1) 68%,
+        #141517 84%,
+        var(--bg-primary, #0b0b0b) 100%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
 .planes-main {
     padding: calc(48px + 2rem) 2rem 4rem;
     min-height: 100vh;
@@ -22,11 +49,11 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: clamp(10rem, 26vw, 28rem);
+    font-size: clamp(5rem, 15vw, 16rem);
     font-weight: 900;
     letter-spacing: -0.06em;
     color: #ffffff;
-    opacity: 0.3;
+    opacity: 0.8;
     margin: 0;
     pointer-events: none;
     user-select: none;
@@ -195,16 +222,17 @@
     margin: 2rem auto 0;
 }
 
-/* Cards — declaro background y backdrop-filter explícitos con !important
-   (la herencia desde .glass-black + var() no se aplicaba correctamente). */
+/* Cards — SOLO vidrio. Se fueron el background y el backdrop-filter propios
+   (rgba(0,0,0,.8) + blur 70/sat 180 con !important) para que mande .glass-black,
+   que la card ya trae en el markup: base 11,11,11 al 55%, filete blanco al 8% y
+   blur 24/sat 140. Al ser mas transparente y menos difuso que el override, el
+   fondo de plataforma y la palabra PLANES se leen A TRAVES de la card, que es
+   justo lo que hace que el vidrio parezca vidrio. */
 .plan-card-small {
     --card-c1: #ff6500;
     --card-c2: #ff0000;
     position: relative;
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.8) !important;
-    backdrop-filter: blur(70px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(70px) saturate(180%) !important;
     padding: 1.75rem 1.25rem;
     display: flex;
     flex-direction: column;
@@ -215,19 +243,12 @@
     transition: border-color var(--transition, .2s), box-shadow var(--transition, .2s), transform var(--transition, .2s);
 }
 
-.plan-card-small::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    background:
-        radial-gradient(ellipse 48% 32% at 50% 108%, rgba(255, 255, 255, 0.55) 0%, transparent 55%),
-        radial-gradient(ellipse 85% 55% at 50% 112%, var(--card-c1) 0%, transparent 65%),
-        radial-gradient(ellipse 115% 78% at 50% 118%, var(--card-c2) 0%, transparent 72%);
-    opacity: 0.85;
-}
+/* Aqui vivia el resplandor de tres radiales que subia desde el pie de cada card
+   (blanco + --card-c1 + --card-c2). Se retiro: con el fondo de plataforma detras
+   competian dos fuentes de luz y la card dejaba de leerse como vidrio.
 
+   .plan-card-small > * mantiene el z-index aunque ya no haya capa debajo: el
+   contenido debe seguir por encima de cualquier pseudo-elemento futuro. */
 .plan-card-small > * { position: relative; z-index: 1; }
 
 /* Acentos por posición — siguen el --brand-gradient platform (solo precio/badge/popular) */
@@ -236,12 +257,14 @@
 .planes-plans .plan-card-small:nth-child(4n+3) { --card-c1: #00d614; --card-c2: #00e7ff; }
 .planes-plans .plan-card-small:nth-child(4n+4) { --card-c1: #5b00ea; --card-c2: #900090; }
 
+/* Hover neutro: el filete sube y la card se levanta. Se retiro el halo de color
+   (0 0 40px -16px var(--card-c1)) junto con el degradado — sin el resplandor de
+   abajo, un aro naranja alrededor del vidrio quedaba huerfano, y la luz de la
+   pagina ya la pone el fondo. */
 .plan-card-small:hover {
-    border-color: color-mix(in srgb, var(--card-c1) 45%, var(--glass-black-border));
+    border-color: rgba(255, 255, 255, 0.2) !important;
     transform: translateY(-3px);
-    box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.6),
-        0 0 40px -16px var(--card-c1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 .plan-card-small.selected {

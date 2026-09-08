@@ -4478,7 +4478,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
        reposo y hover no tienen la MISMA forma, el navegador interpola por
        matriz y el giro se deforma a mitad de camino. */
     transform: translateX(-50%) translate(0, 0) rotate(-33.15deg) scale(1);
-    background: linear-gradient(90deg, #0A1A5A 0%, #1E3FB0 16.67%, #4A2FB0 33.33%, #7A2A9A 50%, #C01A5A 66.67%, #E0301A 83.33%, #FF6A00 100%);
+    background: var(--platform-gradient);
     filter: blur(50px);
     pointer-events: none;
     z-index: 0;
