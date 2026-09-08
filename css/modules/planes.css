@@ -31,48 +31,26 @@
 }
 
 /* ── Estrellas ────────────────────────────────────────────────────────────────
-   Campo de puntos como el de la landing. Tres capas de radial-gradient en mosaico
-   en vez de N elementos o un canvas: son tres pinceladas para el compositor, se
-   mueven con transform y no cuestan un solo nodo de DOM ni JS.
-   Los tres tamanos de mosaico son primos entre si (por eso 271/317/419): si
-   fueran multiplos, el ojo pilla la reja y deja de parecer cielo. Cada capa va
-   mas lenta que la anterior, que es lo que da la sensacion de profundidad. */
-#app-container:has(.planes-page)::after {
-    content: '';
+   El campo lo pinta PlanesStarfield (js/views/PlanesView.js) en este canvas: las
+   particulas nacen en el borde, caen en espiral hacia el centro y mueren ahi, y
+   eso ningun mosaico de CSS lo puede hacer — un mosaico se desplaza entero, no
+   tiene particulas con vida propia. Aqui solo vive su caja.
+
+   Cuelga del <body>, asi que el z-index lo enfrenta a .planes-page (z-index 1):
+   el cielo queda debajo del contenido y, por estar en el mismo contexto raiz, el
+   backdrop-filter de las cards lo recoge y las estrellas se ven a traves del
+   vidrio. */
+.planes-starfield {
     position: fixed;
-    inset: -50%;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 0;
-    /* Cada estrella lleva PARADA DURA: color pleno hasta su radio y recien ahi
-       cae a transparente. Escrito como `<color>, transparent 100%` el degradado
-       empieza a apagarse en el centro mismo, y a un radio de 1px eso deja un
-       punto de alfa casi nulo — invisible. El medio pixel entre las dos paradas
-       es el antialias.
-       Se cierra contra rgba(255,255,255,0) y no contra `transparent`, que es
-       negro transparente: al interpolar contra blanco ensucia el borde de gris. */
-    background-image:
-        radial-gradient(circle at 40px 60px,   rgba(255,255,255,.95) 0 1.2px, rgba(255,255,255,0) 1.7px),
-        radial-gradient(circle at 180px 210px, rgba(255,255,255,.70) 0 1.0px, rgba(255,255,255,0) 1.5px),
-        radial-gradient(circle at 90px 300px,  rgba(255,255,255,.85) 0 1.0px, rgba(255,255,255,0) 1.5px),
-        radial-gradient(circle at 300px 130px, rgba(255,255,255,.60) 0 1.4px, rgba(255,255,255,0) 1.9px),
-        radial-gradient(circle at 250px 380px, rgba(255,255,255,.78) 0 1.0px, rgba(255,255,255,0) 1.5px),
-        radial-gradient(circle at 130px 160px, rgba(255,255,255,.55) 0 1.1px, rgba(255,255,255,0) 1.6px);
-    background-size: 271px 271px, 317px 317px, 419px 419px, 271px 271px, 317px 317px, 419px 419px;
-    animation: planes-estrellas 240s linear infinite;
-    opacity: .9;
-}
-
-@keyframes planes-estrellas {
-    from { transform: translate3d(0, 0, 0); }
-    to   { transform: translate3d(-271px, -317px, 0); }
 }
 
 /* El contenido vive por encima del cielo. */
 .planes-page { position: relative; z-index: 1; }
-
-@media (prefers-reduced-motion: reduce) {
-    #app-container:has(.planes-page)::after { animation: none; }
-}
 
 .planes-main {
     padding: calc(48px + 2rem) 2rem 4rem;
