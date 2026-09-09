@@ -65,7 +65,7 @@ class OrganizationView extends BaseView {
   <div class="organization-tabs" role="tablist">
     <button type="button" class="tab-btn active" data-tab="general" role="tab" aria-selected="true">${__('General')}</button>
     <button type="button" class="tab-btn" data-tab="members" role="tab" aria-selected="false">${__('Miembros')}</button>
-    <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">${__('Facturación')}</button>
+    <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">${__('Suscripción')}</button>
     <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">${__('Uso')}</button>
     <button type="button" class="tab-btn" data-tab="notifications" role="tab" aria-selected="false">${__('Notificaciones')}</button>
     <button type="button" class="tab-btn" data-tab="security" role="tab" aria-selected="false">${__('Seguridad')}</button>
@@ -171,26 +171,52 @@ class OrganizationView extends BaseView {
 
     <!-- ── Facturación ──────────────────────────────────── -->
     <div class="tab-content" id="billingTab" role="tabpanel">
-      <section class="org-section">
-        <div class="org-billing-summary" id="orgBillingSummary"><p class="org-placeholder">${__('Cargando…')}</p></div>
-      </section>
+      <!-- Izquierda: QUE tienes contratado y cuanto te queda. Derecha: el
+           papeleo — que te han cobrado, que viene, y con que se paga. Son dos
+           preguntas distintas y se consultan en momentos distintos. -->
+      <div class="org-general-cols">
 
-      <section class="org-section">
-        <div class="org-billing-limits" id="orgBillingLimits"></div>
-      </section>
+        <div class="org-col-main">
+          <section class="org-sub-block">
+            <h2 class="org-sub-rotulo">${__('Suscripción')}</h2>
+            <div class="org-billing-summary" id="orgBillingSummary"><p class="org-placeholder">${__('Cargando…')}</p></div>
+            <div class="org-plan-incluye" id="orgPlanIncluye"></div>
+          </section>
 
-      <section class="org-section">
-        <div class="org-section-head">
-          <div>
-            <h2>${__('Historial de facturas')}</h2>
-            <p class="org-section-desc">${__('Facturas pagadas y pagos únicos de paquetes de créditos.')}</p>
-          </div>
+          <section class="org-sub-block">
+            <h2 class="org-sub-rotulo">${__('Créditos')}</h2>
+            <div class="org-billing-credits" id="orgBillingCredits"></div>
+          </section>
+
+          <!-- Este bloque no lleva rotulo propio: _renderBillingLimits ya
+               imprime su titulo y su descripcion dentro. -->
+          <section class="org-sub-block" id="orgBillingLimitsBlock">
+            <div class="org-billing-limits" id="orgBillingLimits"></div>
+          </section>
         </div>
-        <div class="org-billing-invoices" id="orgBillingInvoices"><p class="org-placeholder">${__('Cargando…')}</p></div>
-      </section>
+
+        <aside class="org-col-aside org-col-aside--liso">
+          <div class="org-aside-inner">
+            <section class="org-sub-block">
+              <h2 class="org-sub-rotulo">${__('Próximo cobro')}</h2>
+              <div class="org-billing-proximo" id="orgBillingProximo"></div>
+            </section>
+
+            <section class="org-sub-block">
+              <h2 class="org-sub-rotulo">${__('Facturas e historial')}</h2>
+              <div class="org-billing-invoices" id="orgBillingInvoices"><p class="org-placeholder">${__('Cargando…')}</p></div>
+            </section>
+
+            <section class="org-sub-block">
+              <h2 class="org-sub-rotulo">${__('Método de pago')}</h2>
+              <div class="org-billing-pago" id="orgBillingPago"></div>
+            </section>
+          </div>
+        </aside>
+
+      </div>
     </div>
 
-    <!-- ── Uso ──────────────────────────────────────────── -->
     <div class="tab-content" id="activityTab" role="tabpanel">
       <section class="org-section">
         <div class="org-section-head">
@@ -984,7 +1010,7 @@ class OrganizationView extends BaseView {
     try {
       const [{ data: subRows }, { data: stripeInvs }, { data: wompiTxs }, planRow, caps, usageToday] = await Promise.all([
         this.supabase.from('subscriptions')
-          .select('id,plan_id,status,current_period_start,current_period_end,cancel_at_period_end,canceled_at,provider,next_charge_at,stripe_subscription_id,wompi_last_transaction_id')
+          .select('id,plan_id,status,current_period_start,current_period_end,cancel_at_period_end,canceled_at,provider,next_charge_at,stripe_subscription_id,wompi_last_transaction_id,wompi_payment_source_id')
           .eq('organization_id', this.orgId).order('updated_at', { ascending: false }).limit(1),
         this.supabase.from('stripe_invoices')
           .select('invoice_id,amount_paid_cents,currency,status,hosted_invoice_url,invoice_pdf,paid_at,created_at,period_start,period_end')
@@ -1003,16 +1029,26 @@ class OrganizationView extends BaseView {
       this.billingPlanRow  = planRow    || null;
       this.billingCaps     = caps       || null;
       this.billingUsageToday = usageToday || null;
+      try {
+        const svc = await new window.OrgSummaryDataService().init(this.supabase, this.orgId);
+        this.billingCreditos = await svc._creditos();
+      } catch (_) { this.billingCreditos = null; }
     } catch (e) {
       console.warn('[organization] _loadBilling error:', e?.message || e);
     }
     this._renderBilling();
+    this._renderPlanIncluye();
+    this._renderBillingCredits();
+    this._renderBillingPago();
+    this._renderBillingProximo();
   }
 
   async _billingPlan() {
     if (!this.billingSub?.plan_id) return null;
     const { data } = await this.supabase
-      .from('plans').select('id,name,display_order').eq('id', this.billingSub.plan_id).maybeSingle();
+      .from('plans')
+      .select('id,name,display_order,price_usd_month,price_usd_year,credits_monthly,max_handles,storage_mb,features')
+      .eq('id', this.billingSub.plan_id).maybeSingle();
     return data || null;
   }
 

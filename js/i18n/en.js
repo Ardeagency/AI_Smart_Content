@@ -14,6 +14,16 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Facturas e historial": "Invoices & history",
+  "Próximo cobro": "Next charge",
+  "Método de pago": "Payment method",
+  "Límites de uso": "Usage limits",
+  "Tu plan incluye": "Your plan includes",
+  "No hay un método de pago registrado.": "No payment method on file.",
+  "Escribir al equipo": "Contact the team",
+  "Sin créditos asignados.": "No credits assigned.",
+  "Sin suscripción registrada.": "No subscription on record.",
+  "Sin fecha de cobro.": "No charge scheduled.",
   "Actividad del equipo": "Team activity",
   "Lo que cada miembro ha hecho en los últimos 6 meses.": "What each member has done in the last 6 months.",
   "Sin actividad registrada en los últimos 6 meses.": "No activity recorded in the last 6 months.",
