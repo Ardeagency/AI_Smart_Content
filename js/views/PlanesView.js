@@ -295,7 +295,7 @@ class PlanesView extends BaseView {
           <span class="planes-usage-meter-label"><i class="fas ${icon}"></i> ${this.escapeHtml(label)}</span>
           <span class="planes-usage-meter-value">${this.escapeHtml(fmt(safeUsed))} <span>/ ${this.escapeHtml(fmt(safeTotal))}</span></span>
         </div>
-        <div class="planes-usage-meter-bar"><span style="width:${pct}%"></span></div>
+        <div class="planes-usage-meter-bar"><span style="transform:scaleX(${(Number(pct) || 0) / 100})"></span></div>
       </div>
     `;
   }

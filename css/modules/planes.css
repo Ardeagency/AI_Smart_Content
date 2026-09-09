@@ -180,12 +180,17 @@
     overflow: hidden;
 }
 
+/* El medidor: relleno neutro y por scaleX. Antes era un degradado verde-cian y
+   animaba `width`, que obliga al navegador a recalcular layout en cada cuadro.
+   El verde ademas era el ultimo color suelto de una pagina que quedo neutra. */
 .planes-usage-meter-bar > span {
     display: block;
+    width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, #00d614, #00e7ff);
+    background: rgba(255, 255, 255, 0.55);
     border-radius: 999px;
-    transition: width .3s ease;
+    transform-origin: left center;
+    transition: transform .3s ease;
 }
 
 .planes-usage-meter.is-warning .planes-usage-meter-bar > span {
@@ -399,14 +404,16 @@
 
 .planes-page { max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; }
 
+/* El pill de descuento pierde el verde: en una pagina sin colores de resaltado
+   era el unico grito, y el ahorro ya se entiende por el texto. */
 .planes-toggle-discount {
     display: inline-block;
     margin-left: 6px;
     font-size: 10px;
     padding: 2px 6px;
     border-radius: 999px;
-    background: rgba(34, 197, 94, 0.15);
-    color: #22c55e;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.9);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -594,7 +601,9 @@
     text-align: center;
     padding: 64px 24px;
     margin: 32px 0 0;
-    background: linear-gradient(180deg, rgba(6, 182, 212, 0.06), transparent);
+    /* Se fue el tinte cian: no correspondia a ninguna marca ni al espectro de
+       plataforma. El bloque se separa por aire, como el resto. */
+    background: transparent;
     border-radius: 16px;
 }
 .planes-final-cta h2 { font-size: 28px; margin: 0 0 8px; color: var(--text-primary); }

@@ -208,9 +208,13 @@
     border-radius: var(--radius-sm);
 }
 
+/* Era texto GRIS (--accent-warm = #87868B) sobre naranja al 20%: resto del tema
+   viejo, y la unica combinacion de la pagina con dos colores que no conversan.
+   El rol de propietario se marca con el color claro de la marca sobre su propio
+   tinte, como el resto de resaltados. */
 .org-role-owner {
-    background: rgba(255, 101, 0, 0.2);
-    color: var(--accent-warm);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--brand-color-light, var(--accent-brand));
 }
 
 .org-role-admin {
@@ -580,9 +584,12 @@
     .dashboard-container { padding: 1rem; }
     .dashboard-grid-2x3 { grid-template-columns: 1fr; }
 }
-/* Estado estratégico: borde con color de marca (degradado dinámico) */
+/* Estado estrategico. Se retiro el `border-left: 4px solid` de color: una barra
+   gruesa pegada al costado es el gesto mas reconocible de interfaz generada, y
+   desentonaba con el resto de la pagina, que ya no usa cajas de color. El filete
+   completo de 1px basta para delimitar. */
 .dashboard-estado-card {
-    border-left: 4px solid var(--brand-primary, #1e3a5f);
+    border: 1px solid var(--border-divider);
     background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
     padding: 1.25rem 1.5rem;
     border-radius: var(--radius-sm);
@@ -591,7 +598,6 @@
 .dashboard-page-wrapper .dashboard-estado-card {
     background: var(--glass-white-bg, rgba(21, 23, 28, 0.6));
     border: 1px solid var(--glass-white-border, rgba(255, 255, 255, 0.1));
-    border-left: 4px solid var(--brand-primary, #5a9bd5);
 }
 .dashboard-estado-texto {
     color: var(--text-primary);
@@ -807,8 +813,10 @@
     padding: 0.1rem 0.25rem;
     border-radius: 2px;
 }
+/* Mismo caso: el filete lateral se cambia por borde completo. El fondo tenido
+   de marca se conserva — ese SI comunica que el bloque es de la marca. */
 .dashboard-mejor-periodo {
-    border-left: 4px solid var(--brand-primary, #1e3a5f);
+    border: 1px solid var(--border-divider);
     background: var(--brand-primary-brillo, rgba(30, 58, 95, 0.12));
     padding: 1.25rem 1.5rem;
     border-radius: var(--radius-sm);
@@ -1153,28 +1161,6 @@
 .org-billing-history { color: var(--text-muted); font-size: 0.9rem; }
 
 /* Usage cards & sparkline */
-.org-usage-card {
-    border: 1px solid var(--border-divider);
-    border-radius: var(--radius-md);
-    background: var(--bg-card, rgba(255, 255, 255, 0.04));
-    padding: 1rem 1.25rem;
-}
-.org-usage-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-.org-usage-main { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.65rem; flex-wrap: wrap; }
-.org-usage-primary { font-size: 1.5rem; font-weight: 600; color: var(--text-primary); }
-.org-usage-secondary { font-size: 0.85rem; color: var(--text-muted); }
-.org-usage-bar {
-    width: 100%;
-    height: 8px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
-    overflow: hidden;
-}
-.org-usage-bar-fill {
-    height: 100%;
-    background: var(--brand-gradient-dynamic, linear-gradient(90deg, #5a5e68, #3a3d45));
-    transition: width 0.3s ease;
-}
 .org-usage-sub { margin-top: 0.4rem; font-size: 0.78rem; color: var(--text-muted); }
 .org-usage-subtitle { font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); margin: 1rem 0 0.5rem; }
 
@@ -1239,7 +1225,18 @@
    responde el aire de arriba y no hay que apuntar al pixel exacto. */
 .org-uchart-col:hover .org-uchart-bar { opacity: .82; }
 .org-uchart-col { cursor: default; }
-.org-uchart-seg { width: 100%; }
+/* Cada tramo se lee como un BLOQUE aparte, no como franjas de una sola barra:
+   filete del color del fondo entre uno y otro, y esquinas propias. El filete va
+   con box-sizing:border-box para que se coma 2px del propio tramo en vez de
+   sumarlos — asi las alturas siguen sumando 100% y la escala no miente. */
+.org-uchart-seg {
+    width: 100%;
+    box-sizing: border-box;
+    border-bottom: 2px solid var(--bg-card, #141517);
+    border-radius: 3px;
+    min-height: 3px;
+}
+.org-uchart-seg:last-child { border-bottom: 0; }
 .org-uchart-xaxis { display: flex; justify-content: space-between; margin-top: .5rem; padding: 0 4px; }
 .org-uchart-xaxis span { font-size: .66rem; color: var(--text-muted); }
 
@@ -1420,7 +1417,9 @@
 .org-checkbox input[type="checkbox"] {
     width: 16px;
     height: 16px;
-    accent-color: var(--brand-primary, var(--accent-warm));
+    /* --brand-color-light y no --brand-primary: el primario de una marca puede
+       ser negro (WAKEUP) y un checkbox negro sobre fondo negro no se ve. */
+    accent-color: var(--brand-color-light, var(--accent-brand));
 }
 
 /* Runs list */
