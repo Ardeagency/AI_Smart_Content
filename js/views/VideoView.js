@@ -35,11 +35,12 @@ class VideoView extends BaseView {
   static documentTitle = 'Video';
 
   /**
-   * Interruptor único del cableado de Seedance. Mientras sea false la página
-   * es operable pero no produce: explica lo que falta en vez de fallar mudo.
+   * Interruptor único del cableado de Seedance. En false la página es operable
+   * pero no produce: explica lo que falta en vez de fallar mudo. Encendido el
+   * 2026-09-09, al desplegar functions/seedance-video-create.js.
    */
   static get SEEDANCE_BACKEND_READY() {
-    return false;
+    return true;
   }
   /** POST: crear tarea Seedance en KIE. Pendiente de desplegar. */
   static get SEEDANCE_VIDEO_CREATE_API() {
@@ -139,6 +140,7 @@ class VideoView extends BaseView {
     // para que primer acceso no sea undefined (P3#2 audit 2026-05-25).
     this._cinePromptTokens = null;
     this._lastKieOutputId = null;
+    this._generating = false;
   }
 
   /**
@@ -2307,6 +2309,7 @@ class VideoView extends BaseView {
    * en R2, cobro de creditos y render del resultado.
    */
   async startGeneration() {
+    if (this._generating) return;
     const payload = this.buildSeedancePayload();
 
     if (!payload.prompt) {
@@ -2323,12 +2326,91 @@ class VideoView extends BaseView {
       this.showError(window.__('Selecciona una organización para producir videos.'));
       return;
     }
+    if (!this.supabase) {
+      this.showError(window.__('Sesión no disponible. Recarga la página y reintenta.'));
+      return;
+    }
     if (!VideoView.SEEDANCE_BACKEND_READY) {
-      this.showError(window.__('Seedance 2.0 todavía no está conectado: falta desplegar la función de creación de tarea. El resto del camino (guardado, créditos y resultado) ya está listo y se enciende con ese despliegue.'));
+      this.showError(window.__('Seedance todavía no está conectado: falta desplegar la función de creación de tarea.'));
       return;
     }
 
-    this.showError(window.__('Seedance 2.0 marcado como listo pero sin POST de creación implementado. Completa startGeneration() antes de activar el flag.'));
+    this._setGenerating(true);
+    this.showStatus(window.__('Preparando la secuencia…'), true);
+
+    let created;
+    try {
+      const { data: { session } } = await this.supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) throw new Error(window.__('Inicia sesión para producir videos.'));
+
+      const res = await fetch(VideoView.SEEDANCE_VIDEO_CREATE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify(payload)
+      });
+      // Un 404 devuelve HTML: sin este guard el error sería "Unexpected token <".
+      let data = {};
+      try { data = await res.json(); }
+      catch (parseErr) {
+        throw new Error(
+          window.__('El servicio de video no respondió correctamente (estado {status}).', { status: res.status }),
+          { cause: parseErr }
+        );
+      }
+      if (!res.ok || !data.taskId) throw new Error(data.error || window.__('No se pudo iniciar la producción'));
+      created = data;
+    } catch (err) {
+      this._setGenerating(false);
+      this.showError(err.message || window.__('No se pudo iniciar la producción'));
+      return;
+    }
+
+    this._cinePromptTokens = {
+      input: created.openai_input_tokens || 0,
+      output: created.openai_output_tokens || 0,
+      model: created.openai_model || null
+    };
+
+    // Fila en 'processing' ANTES del polling: si el usuario cierra la pestaña,
+    // queda constancia de la tarea en vez de un cobro sin output.
+    this._lastKieOutputId = await this.saveSystemAIOutput({
+      provider: 'kie',
+      output_type: 'video',
+      external_job_id: created.taskId,
+      status: 'processing',
+      prompt_used: created.prompt || payload.prompt,
+      models: { generator: created.kie_model || null, prompter: created.openai_model || null },
+      technical_params: created.technical_params || {
+        resolution: payload.resolution,
+        aspect_ratio: payload.aspect_ratio,
+        duration: payload.duration,
+        generate_audio: payload.generate_audio
+      },
+      metadata: {
+        kind: 'video_generated',
+        intencion: payload.intencion,
+        variables: payload.variables,
+        reference_count: created.reference_count ?? 0,
+        product_lock_count: (payload.product_lock_urls || []).length,
+        first_frame_url: payload.first_frame_url || null,
+        last_frame_url: payload.last_frame_url || null,
+        audio_type: payload.audio_type || null,
+        campaign_concept: payload.campaign,
+        audience_concept: payload.audience
+      }
+    });
+
+    this.showStatus(window.__('Produciendo el video (Seedance 2.5). Esto puede tardar unos minutos…'), true);
+    await this.pollTask(created.taskId);
+  }
+
+  /** Habilita/inhabilita el botón para que dos clics no disparen dos tareas (dos cobros). */
+  _setGenerating(activo) {
+    this._generating = activo;
+    if (!this.sendBtn) return;
+    this.sendBtn.disabled = activo;
+    this.sendBtn.classList.toggle('is-busy', activo);
   }
 
   stopPolling() {
@@ -2350,6 +2432,7 @@ class VideoView extends BaseView {
     const poll = async () => {
       if (Date.now() - pollStartedAt > VideoView.POLL_MAX_DURATION_MS) {
         this.stopPolling();
+        this._setGenerating(false);
         this.showError(window.__('La generación superó el tiempo máximo de espera (12 min). Comprueba el estado en KIE o reintenta con un prompt más corto.'));
         if (this._lastKieOutputId) {
           await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'Timeout de polling (12 min)' });
@@ -2369,6 +2452,7 @@ class VideoView extends BaseView {
         } catch (parseErr) {
           console.error('[Video] GET', statusUrl, ': respuesta no es JSON. Status:', res.status, '→ ¿función desplegada?', parseErr);
           this.stopPolling();
+          this._setGenerating(false);
           this.showError(window.__('El servicio de video no respondió correctamente (estado {status}). Intenta de nuevo en unos minutos.', { status: res.status }));
           if (this._lastKieOutputId) {
             await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'Status ' + res.status });
@@ -2380,6 +2464,7 @@ class VideoView extends BaseView {
         if (!res.ok) {
           console.warn('[Video] GET', statusUrl, 'error:', res.status, data);
           this.stopPolling();
+          this._setGenerating(false);
           this.showError(data.error || window.__('Error al consultar el estado'));
           if (this._lastKieOutputId) {
             await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: data.error || 'Error al consultar el estado' });
@@ -2405,6 +2490,7 @@ class VideoView extends BaseView {
               const uploaded = await this.downloadAndUploadKieVideo(kieUrl, taskId);
               if (uploaded?.publicUrl) {
                 this.showResult(uploaded.publicUrl);
+                this._setGenerating(false);
 
                 // Cobro dinamico: kie-task-finalize lee creditsConsumed real
                 // de KIE + suma OpenAI tokens del cine-prompt + 5 cred markup.
@@ -2456,6 +2542,7 @@ class VideoView extends BaseView {
                   this._lastKieOutputId = null;
                 }
               } else {
+                this._setGenerating(false);
                 this.showError(window.__('No se pudo guardar el video en tu cuenta'));
                 if (this._lastKieOutputId) {
                   await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'No se pudo guardar el video en tu cuenta' });
@@ -2463,6 +2550,7 @@ class VideoView extends BaseView {
                 }
               }
             } catch (err) {
+              this._setGenerating(false);
               this.showError(err.message || window.__('Error al descargar o guardar el video'));
               if (this._lastKieOutputId) {
                 await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: err.message || 'Error al descargar o guardar el video' });
@@ -2470,6 +2558,7 @@ class VideoView extends BaseView {
               }
             }
           } else {
+            this._setGenerating(false);
             this.showError(window.__('No se encontró URL del video en la respuesta'));
             if (this._lastKieOutputId) {
               await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'No se encontró URL del video en la respuesta' });
@@ -2485,6 +2574,7 @@ class VideoView extends BaseView {
           const msg = is524
             ? window.__('La generación tardó demasiado en KIE (error 524). Prueba: modo Estándar, duración 5s, una sola imagen de referencia, o acorta el prompt.')
             : rawMsg;
+          this._setGenerating(false);
           this.showError(msg);
           if (this._lastKieOutputId) {
             await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: msg });
@@ -2496,6 +2586,7 @@ class VideoView extends BaseView {
         this.showStatus(window.__('Generando video (Seedance 2.0). Esto puede tardar unos minutos…'), true);
       } catch (err) {
         this.stopPolling();
+        this._setGenerating(false);
         this.showError(err.message || window.__('Error al consultar el estado'));
         if (this._lastKieOutputId) {
           await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: err.message || 'Error al consultar el estado' });
@@ -2505,6 +2596,7 @@ class VideoView extends BaseView {
     };
 
     await poll();
+    if (!this._generating) return; // ya terminó (éxito o fallo) en el primer poll
     this._pollInterval = setInterval(poll, VideoView.POLL_INTERVAL_MS);
     // Al volver a la pestaña, un poll inmediato evita esperar 3s al próximo tick.
     this._pollVisibilityHandler = () => { if (!document.hidden) poll(); };

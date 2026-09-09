@@ -588,26 +588,108 @@ describe('Cinematografía — cada opción es una variable de prompt', () => {
   });
 });
 
-describe('Producir sin backend', () => {
-  test('el flag apagado explica qué falta en vez de disparar la tarea', async () => {
-    const { v } = nuevaVista();
+describe('Producir — el disparo contra Seedance', () => {
+  /** Vista lista para producir, con supabase y fetch de mentira. */
+  function listaParaProducir(respuesta) {
+    const { v, avisos } = nuevaVista({
+      '#seedanceDuration': { value: '8' },
+      '#seedanceResolution': { value: '1080p' },
+      '#seedanceAspectRatio': { value: '9:16' },
+      '#seedanceGenerateAudio': { checked: true },
+      '#seedanceWebSearchToggle': { getAttribute: () => 'false' }
+    });
     const errores = [];
+    const estados = [];
     v.showError = (m) => errores.push(m);
-    let hubieraLlamado = false;
-    globalThis.fetch = () => { hubieraLlamado = true; return Promise.resolve(); };
+    v.showStatus = (m) => estados.push(m);
+    v.sendBtn = { disabled: false, classList: { toggle() {} } };
+    v.supabase = { auth: { getSession: async () => ({ data: { session: { access_token: 'tok' } } }) } };
+    v.saveSystemAIOutput = async () => 'out-1';
+    v.pollTask = async () => { v._polled = true; };
+    const llamadas = [];
+    globalThis.fetch = async (url, opts) => {
+      llamadas.push({ url, body: JSON.parse(opts.body) });
+      return respuesta;
+    };
+    return { v, errores, estados, llamadas, avisos };
+  }
+  const ok = (data) => ({ ok: true, status: 200, json: async () => data });
+
+  test('el backend ya está conectado', () => {
+    // Vivió meses en false: la página era operable pero no producía.
+    expect(VideoView.SEEDANCE_BACKEND_READY).toBe(true);
+  });
+
+  test('dispara contra la función y arranca el polling con su taskId', async () => {
+    const { v, llamadas } = listaParaProducir(ok({ taskId: 't-1', prompt: 'cocinado', kie_model: 'bytedance/seedance-2-5' }));
 
     await v.startGeneration();
 
-    expect(VideoView.SEEDANCE_BACKEND_READY).toBe(false);
-    expect(hubieraLlamado).toBe(false);
-    expect(errores.join(' ')).toMatch(/todavía no está conectado/);
+    expect(llamadas).toHaveLength(1);
+    expect(llamadas[0].url).toBe('/.netlify/functions/seedance-video-create');
+    expect(llamadas[0].body.model).toBe('bytedance/seedance-2-5');
+    expect(v._polled).toBe(true);
+  });
+
+  test('deja la fila en processing ANTES de esperar el resultado', async () => {
+    // Si el usuario cierra la pestaña, queda constancia de la tarea en vez de
+    // un cobro sin output.
+    const { v } = listaParaProducir(ok({ taskId: 't-1' }));
+    let fila = null;
+    v.saveSystemAIOutput = async (r) => { fila = r; return 'out-1'; };
+
+    await v.startGeneration();
+
+    expect(fila.status).toBe('processing');
+    expect(fila.output_type).toBe('video');
+    expect(fila.external_job_id).toBe('t-1');
+  });
+
+  test('guarda los tokens de OpenAI para que el cobro sea el real', async () => {
+    // kie-task-finalize suma KIE + OpenAI + markup; sin estos números se
+    // cobraría un estimado.
+    const { v } = listaParaProducir(ok({ taskId: 't-1', openai_input_tokens: 120, openai_output_tokens: 45, openai_model: 'gpt-4o-mini' }));
+
+    await v.startGeneration();
+
+    expect(v._cinePromptTokens).toEqual({ input: 120, output: 45, model: 'gpt-4o-mini' });
+  });
+
+  test('dos clics no disparan dos tareas (ni dos cobros)', async () => {
+    const { v, llamadas } = listaParaProducir(ok({ taskId: 't-1' }));
+    v.pollTask = async () => {}; // deja _generating en true, como en vuelo real
+
+    await v.startGeneration();
+    await v.startGeneration();
+
+    expect(llamadas).toHaveLength(1);
+  });
+
+  test('un 404 devuelve HTML: se explica el estado en vez de "Unexpected token <"', async () => {
+    const { v, errores } = listaParaProducir({
+      ok: false, status: 404, json: async () => { throw new SyntaxError('Unexpected token <'); }
+    });
+
+    await v.startGeneration();
+
+    expect(errores.join(' ')).toMatch(/no respondió correctamente \(estado 404\)/);
+    expect(errores.join(' ')).not.toMatch(/Unexpected token/);
+  });
+
+  test('el error de la función llega tal cual al canvas, y libera el botón', async () => {
+    const { v, errores } = listaParaProducir({
+      ok: false, status: 402, json: async () => ({ error: 'Creditos insuficientes para producir el video' })
+    });
+
+    await v.startGeneration();
+
+    expect(errores.join(' ')).toMatch(/Creditos insuficientes/);
+    expect(v._generating).toBe(false);   // si no, el botón queda muerto
   });
 
   test('sin storyboard pide el storyboard, no habla del backend', async () => {
-    const { v } = nuevaVista();
+    const { v, errores } = listaParaProducir(ok({ taskId: 't-1' }));
     v.editor = editorFalso('   ');
-    const errores = [];
-    v.showError = (m) => errores.push(m);
 
     await v.startGeneration();
 
@@ -615,11 +697,8 @@ describe('Producir sin backend', () => {
   });
 
   test('solo etiquetas no es un storyboard: falta qué pasa', async () => {
-    // La dirección dice CÓMO se ve. Sin acción, el modelo se inventa una.
-    const { v } = nuevaVista();
+    const { v, errores } = listaParaProducir(ok({ taskId: 't-1' }));
     v.editor = editorFalso('[Movimiento: Orbit] [Luz: Rim light]');
-    const errores = [];
-    v.showError = (m) => errores.push(m);
 
     await v.startGeneration();
 
@@ -967,5 +1046,70 @@ describe('El contrato de Seedance 2.5, tal como lo dice la doc', () => {
     expect(VideoView.SEEDANCE_REF_MAX_TOTAL_SECONDS).toBe(30);
     expect(VideoView.SEEDANCE_REF_LIMITS.video).toBe(3);
     expect(VideoView.SEEDANCE_REF_LIMITS.audio).toBe(3);
+  });
+});
+
+describe('El frontend y la función dicen lo mismo', () => {
+  const FN = fs.readFileSync(path.join(process.cwd(), 'functions/seedance-video-create.js'), 'utf8');
+
+  test('el modelo es el mismo en los dos lados', () => {
+    // Un identificador aproximado devuelve 404, y el 404 llega como HTML.
+    expect(FN).toContain("'bytedance/seedance-2-5'");
+    expect(VideoView.SEEDANCE_MODEL).toBe('bytedance/seedance-2-5');
+  });
+
+  test('los cupos de referencias son los mismos', () => {
+    // Un tope que la pantalla anuncia y el backend no aplica (o al revés) se
+    // paga en el error de KIE, cuando el usuario ya subió los archivos.
+    const max = (nombre) => Number(new RegExp(`${nombre}\\s*=\\s*(?:Number\\(process\\.env\\.[A-Z_]+\\s*\\|\\|\\s*)?(\\d+)`).exec(FN)[1]);
+    expect(max('MAX_REF_IMAGES')).toBe(VideoView.SEEDANCE_REF_LIMITS.image);
+    expect(max('MAX_REF_VIDEOS')).toBe(VideoView.SEEDANCE_REF_LIMITS.video);
+    expect(max('MAX_REF_AUDIOS')).toBe(VideoView.SEEDANCE_REF_LIMITS.audio);
+  });
+
+  test('la duración cabe en el rango que la función acepta', () => {
+    const html = VideoView.prototype.renderHTML.call({});
+    const input = html.slice(html.indexOf('id="seedanceDuration"'));
+    const maxUI = Number(/max="(\d+)"/.exec(input)[1]);
+    const maxFN = Number(/DURATION_MAX\s*=\s*(\d+)/.exec(FN)[1]);
+    expect(maxUI).toBe(maxFN);
+  });
+
+  test('la función manda a KIE exactamente los campos de la doc', () => {
+    // El `input` que se arma es lo que KIE lee. Un campo de más se ignora en
+    // silencio; uno de menos es una decisión del usuario que se pierde.
+    const input = FN.slice(FN.indexOf('const input = {'), FN.indexOf('const kiePayload'));
+    for (const campo of ['prompt', 'resolution', 'aspect_ratio', 'duration', 'output_format',
+      'generate_audio', 'web_search', 'first_frame_url', 'last_frame_url',
+      'reference_image_urls', 'reference_video_urls', 'reference_audio_urls']) {
+      expect(input).toContain(campo);
+    }
+  });
+
+  test('lo que NO es de la API no se cuela en el input', () => {
+    const input = FN.slice(FN.indexOf('const input = {'), FN.indexOf('const kiePayload'));
+    // Estos son nuestros y van al cocinado del prompt, no al body de la tarea.
+    for (const nuestro of ['product_lock_urls', 'brand_context', 'intencion', 'audio_type', 'campaign']) {
+      expect(input).not.toContain(nuestro);
+    }
+  });
+
+  test('el tipo de sonido elegido llega al prompt', () => {
+    // Seedance solo tiene `generate_audio` booleano: sin traducir la elección a
+    // texto, los cuatro tiles de Audio & Atmósfera eran decoración.
+    for (const tipo of ['ambient', 'music', 'voice', 'silence']) {
+      expect(FN).toContain(`${tipo}:`);
+    }
+    const html = VideoView.prototype.renderHTML.call({});
+    for (const tipo of ['ambient', 'music', 'voice', 'silence']) {
+      expect(html).toContain(`data-audio-type="${tipo}"`);
+    }
+  });
+
+  test('los bloqueos van PRIMERO para poder nombrarlos como @Image1', () => {
+    // La doc dirige las imágenes con @ImageN. Poner los bloqueos al frente es
+    // lo que convierte "no cambies el producto" en una instrucción con sujeto.
+    expect(FN).toContain('...lockUrls');
+    expect(FN).toContain('@Image');
   });
 });
