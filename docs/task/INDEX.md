@@ -4,7 +4,32 @@ Ordenado por severity desc. Cuando se cierra una tarea: eliminar el archivo Y la
 linea aqui. Las que solo esperan accion humana viven en
 [`PENDING-HUMAN-VERIFICATION.md`](./PENDING-HUMAN-VERIFICATION.md).
 
-**Ultima actualizacion: 2026-07-03** — reconciliacion de reorganizacion documental.
+**Ultima actualizacion: 2026-09-09** — auditoria contra la BASE VIVA, no contra
+el repo. Se verifico afirmacion por afirmacion ejecutando consultas y llamadas
+reales. Resultado resumido:
+
+- 🔴 **HALLAZGO NUEVO Y ABIERTO (no estaba en el INDEX):** 6 tablas con RLS
+  APAGADO y grants completos a `anon` (SELECT/INSERT/DELETE/**TRUNCATE**).
+  Comprobado ejecutando con la llave publica del frontend: se leen el brief
+  estrategico de IGNIS (`brand_cmo_brief`), los terminos de WAKEUP con sus ids
+  (`trend_keyword_candidates`) y `brand_posts_classifier_backup_20260716`. Una
+  tabla de control con RLS devuelve `[]` con la misma llave. Esto es lo que
+  SEC-002 llama "pendiente de barrer": no esta pendiente, esta abierto.
+- 🔴 **SEC-003 sigue exacto:** 2 perfiles con `dev_role` y **0 con MFA
+  verificado**.
+- 🟠 **SEC-005 es peor de lo escrito:** `staff_audit_log` tiene **0 filas**. No
+  es que "nadie la mire" — nada la escribe.
+- 🟡 **DESACTUALIZADAS:** DATA-001 y OPS-006 se apoyan en "competitor_ads
+  vacia": hoy tiene **98 filas**. `visual_references` 2 (decia 0),
+  `intelligence_entities` **37** (decia 22). La premisa de OPS-006 cayo.
+- 🟡 **SEC-004 avanzo y el INDEX no lo sabia:** el paso 1 se ejecuto el
+  2026-08-07 (repo `AISC-Admin` creado). Siguen **19 vistas dev** en console.
+- ✅ **SIGUEN EXACTAS:** FEAT-018 (2 de 50 notificaciones con `metadata.label`),
+  OPS-003 (sin baseline, solo `.gitkeep`), OPS-010 (sin gate de tests en
+  `netlify.toml`), OPS-012 (`enrich_lexicon_proposal` no existe;
+  `dimension_lexicon` 215), FEAT-022/RBAC (`organization_features` 0 filas).
+
+**Ultima actualizacion previa: 2026-07-03** — reconciliacion de reorganizacion documental.
 Se indexaron 5 tareas de junio que existian en `docs/task/` pero faltaban en este
 INDEX (FEAT-037-tag-productions, FEAT-038, FEAT-040, AUDIT-i18n-mobile; +FEAT-041
 CERRADA → movida a `docs/archive/`). Se documentaron 2 colisiones de numero:
@@ -39,6 +64,20 @@ BUG-004, SPRINT-FRONTEND-100)
 
 ---
 
+## ⚡ Rapido de cerrar (medido 2026-09-09)
+
+Cosas reales, acotadas y sin dependencias externas. Cada una es una sesion corta:
+
+| Que | Por que es rapido | Estado |
+|---|---|---|
+| Cerrar las 6 tablas sin RLS | `ALTER TABLE ... ENABLE RLS` + `REVOKE ... FROM anon` + 2 policies. El SQL esta escrito y verificado; solo una tabla (`brand_cmo_brief`) la lee el frontend, las otras 5 tienen **cero** usos en `js/`+`functions/`. | 🔴 hacer ya |
+| Borrar 3 tablas de respaldo | `brand_posts_classifier_backup_20260716` (1.182 filas, **expuesta a anon**), `_bak_stuck_missions_2026_05_05` (46), `_bak_stuck_actions_2026_05_05` (3). De mayo y julio; nadie las lee. | 🟠 |
+| FEAT-018 backfill `metadata.label` | Un UPDATE sobre 48 filas de `org_notifications`. El render ya existe. | 🟡 |
+| MFA a los 2 leads | La maquinaria de MFA ya esta construida (FEAT-020). Es activarla en dos cuentas. | 🔴 |
+| Actualizar/cerrar DATA-001 y OPS-006 | Su premisa ya no es cierta; o se reescriben sobre datos de hoy o se cierran. | 🟡 |
+
+---
+
 ## 🔴 Critical — falta construir
 
 | ID | Que falta EXACTAMENTE |
@@ -50,7 +89,7 @@ BUG-004, SPRINT-FRONTEND-100)
 | ID | Que falta EXACTAMENTE |
 |---|---|
 | [SEC-001](./SEC-001-auditar-rpcs-panel-dev.md) | 🔒 Auditar las **11 RPCs** que el panel `/dev` llama directo por PostgREST (`admin_create_organization`, `soft_delete_organization`, …): SECURITY DEFINER? validan `is_lead()` por dentro o confian en que el boton este escondido? grants de EXECUTE? `SET search_path`? Es la mitad del canal que quedo sin auditar el 2026-07-28. **Programado: esta semana al cerrar el dashboard** (parado para no romper el perfil lead `info@` con el que se testea). |
-| [SEC-002](./SEC-002-barrido-rls-grants-toda-la-base.md) | 🔒 Barrido de RLS+grants en las ~150 tablas (solo se miraron 22). Los 2 fallos hallados fueron **sistemicos**: GRANT UPDATE sobre columnas de privilegio, y policies "de bloqueo" creadas PERMISSIVE que **conceden** (se suman con OR). Buscar tambien UPDATE sin `WITH CHECK` y `USING (true)`. Verificar simulando el rol, no leyendo `SQL/`. **Programado: esta semana.** |
+| [SEC-002](./SEC-002-barrido-rls-grants-toda-la-base.md) | 🔴 **YA NO ES PREVENTIVA — HAY EXPOSICION ABIERTA (2026-09-09)**: 6 tablas con RLS apagado y grants a `anon` incluido TRUNCATE; 3 devuelven datos reales de cliente con la llave publica. Ver el encabezado. Son **206** tablas, no ~150. Barrido de RLS+grants (solo se miraron 22). Los 2 fallos hallados fueron **sistemicos**: GRANT UPDATE sobre columnas de privilegio, y policies "de bloqueo" creadas PERMISSIVE que **conceden** (se suman con OR). Buscar tambien UPDATE sin `WITH CHECK` y `USING (true)`. Verificar simulando el rol, no leyendo `SQL/`. **Programado: esta semana.** |
 | [SEC-003](./SEC-003-perimetro-identidad-signup-mfa.md) | 🔒 `disable_signup = False` en produccion: el registro esta abierto aunque no haya UI: fue el paso 1 de la cadena de ataque demostrada. Cerrarlo (antes ver de que depende `SecretSignupView`), acotar sesiones anonimas, y **MFA obligatorio para todo perfil con `dev_role`** (hoy 2 leads con acceso total y sin MFA). **Programado: esta semana.** |
 | [FEAT-022](./FEAT-022-rbac-granular.md) | RBAC formal owner/admin/editor/viewer: matriz de permisos + audit de RLS policies + UI + transfer ownership. Hoy solo hay selector de rol suelto. |
 | [FEAT-018](./FEAT-018-notifications-rich-model.md) | Modelo rico de notifs: render ya existe (`Navigation.js:944`), pero falta backfill SQL de `metadata.label` (solo 2 de ~50 filas lo tienen) + backend que escriba metadata al crear. |
@@ -66,8 +105,8 @@ BUG-004, SPRINT-FRONTEND-100)
 
 | ID | Que falta EXACTAMENTE |
 |---|---|
-| [SEC-004](./SEC-004-migrar-panel-dev-a-repo-propio.md) | 🔒 Migrar las **22 vistas** de `/dev/*` (~26k JS + ~15.7k CSS) a repo propio `AISC-Admin`, copia fiel, con **Cloudflare Access delante** (SSO+MFA antes de servir el HTML = la frontera real). Codigo compartido: copia propia, ni npm ni submodulo. **Va DESPUES de SEC-001 y SEC-002** — mover el panel con el canal directo sin auditar es mudar la puerta dejando la pared abierta. Al final: borrar `/dev/*` de console. |
-| [SEC-005](./SEC-005-regimen-permanente-staff.md) | 🔒 Regimen permanente: roles de staff con minimo privilegio (hoy `lead` = super-admin unico), ninguna operacion de staff escribe tablas desde el navegador (molde: `admin-set-dev-role`), impersonacion auditada (`lead-switch-user`), **test de regresion de seguridad en CI**, y que `staff_audit_log` se lea (hoy nadie la mira). La regla 2 aplica desde ya a codigo nuevo. |
+| [SEC-004](./SEC-004-migrar-panel-dev-a-repo-propio.md) | 🔒 Migrar las **22 vistas** de `/dev/*` (~26k JS + ~15.7k CSS) a repo propio `AISC-Admin`, copia fiel, con **Cloudflare Access delante** (SSO+MFA antes de servir el HTML = la frontera real). Codigo compartido: copia propia, ni npm ni submodulo. **Paso 1 EJECUTADO 2026-08-07** (repo `AISC-Admin` creado); siguen 19 vistas dev en console. **Va DESPUES de SEC-001 y SEC-002** — mover el panel con el canal directo sin auditar es mudar la puerta dejando la pared abierta. Al final: borrar `/dev/*` de console. |
+| [SEC-005](./SEC-005-regimen-permanente-staff.md) | 🔒 Regimen permanente: roles de staff con minimo privilegio (hoy `lead` = super-admin unico), ninguna operacion de staff escribe tablas desde el navegador (molde: `admin-set-dev-role`), impersonacion auditada (`lead-switch-user`), **test de regresion de seguridad en CI**, y que `staff_audit_log` se lea — **medido 2026-09-09: tiene 0 filas, o sea que nada la escribe; el problema no es que nadie la mire**. La regla 2 aplica desde ya a codigo nuevo. |
 | [PERF-001](./PERF-001-cleanup-optimization.md) | Limpieza+optimizacion. HECHO en rama `perf/cleanup-optimization` (perf glass/animaciones, 3 bugs runtime, -825 lineas muertas, command-center.css route-split + infra `_loadCss`). PENDIENTE QA visual: route-split del resto del CSS (developer.css 351KB con class-moves + mapa de inyeccion verificado), consolidar escapeHtml (seguridad), `.card` glass->solido, keyframes, z-index tokens, dividir monolitos. |
 | [FEAT-036](./FEAT-036-billing-console.md) | Billing console `/dev/lead/billing`. Fase 1 cerrada (Plans CRUD BD + Credit Packages CRUD completo sobre `credit_packages`). Pendiente Fase 2 (Subscriptions + Usage history) y Fase 3 (auto-sync Stripe/Wompi al editar precio). |
 | [FEAT-028](./FEAT-028-modal-migration.md) | Migracion de modales a `window.Modal`. **Ad-hoc de bajo riesgo = HECHO** (12 migrados). Lo que resta son SOLO los diferidos-con-justificacion: persistentes-toggle en tooling dev core (DevWebhooks/DevTest/DevBuilder), Settings/Navigation chrome global — ya tienen role/aria-modal/ESC, refactor de lifecycle de alto blast radius que el doc marca "NO migrar a ciegas". Requiere sesion dedicada CON validacion en browser, no es limpieza mecanica. Decision pendiente: cerrar alcance a "ad-hoc" y borrar, o agendar sesion browser. |
@@ -79,12 +118,12 @@ BUG-004, SPRINT-FRONTEND-100)
 | [FEAT-012](./FEAT-012-user-provisioning-end-to-end.md) | Provisioning end-to-end: requiere decision de producto (invitation-only vs autoservicio) + email sender (Resend). 3 endpoints hardcoded inexistentes en `DevLeadUserProvisioningView`. |
 | [FEAT-040](./FEAT-040-own-post-comments-collection.md) | Comentarios de posts propios: automatico y validado; segun el doc "solo falta D" (verificacion). Casi cerrada — confirmar y borrar. |
 | [AUDIT-i18n](./AUDIT-i18n-mobile-2026-06-16.md) | Auditoria de i18n y responsive movil del frontend. Referencia/diagnostico; no accionable como una sola tarea. |
-| [OPS-006](./OPS-006-meta-ad-library-diagnostico.md) | Decidir path A (Meta App Review) / B (Apify) / C (pausar). `meta_ad_library_sync` activo pero `competitor_ads` vacia. Decision estrategica. |
+| [OPS-006](./OPS-006-meta-ad-library-diagnostico.md) | ⚠ **PREMISA CAIDA (2026-09-09)**: `competitor_ads` ya NO esta vacia (**98 filas**). La decision path A/B/C se tomo de hecho, no en el doc. Verificar por que via entran y cerrar. Decision estrategica. |
 | [OPS-012](./OPS-012-lexicon-review-admin.md) | `DevLeadLexiconView.js` es shell ("Proximamente"). Falta UI `/dev/lexicon` (review de `dimension_lexicon`, 215 filas) + crear tabla `enrich_lexicon_proposal` (no existe en BD). |
 | [OPS-010](./OPS-010-ci-gates-staging.md) | `netlify.toml` no tiene gate `npm test` (solo cache-buster); `.github/workflows/ci.yml` corre tests en PR/push pero no bloquea el deploy. Falta gate en build + branch staging + Supabase staging separado. |
 | [OPS-003](./OPS-003-supabase-cli-migrations.md) | Existe `supabase/migrations/.gitkeep` pero no el baseline. Falta `supabase link` + `supabase db dump` -> baseline.sql. |
 | [OPS-005](./OPS-005-secrets-backup-strategy.md) | Backup del `.env` de ai-engine: decidir A (Supabase Vault) / B (1Password) / C (archivo cifrado) e implementar. Hoy solo `.env`. |
-| [DATA-001](./DATA-001-configure-competitor-entities.md) | 22 `intelligence_entities` pero `competitor_ads`/`retail_prices`/`visual_references` siguen en 0. Configurar competidores reales con dominio/target valido (depende en parte de OPS-006). Requiere input del usuario sobre que marcas. |
+| [DATA-001](./DATA-001-configure-competitor-entities.md) | ⚠ **PREMISA CAIDA (2026-09-09)**: hoy hay **37** `intelligence_entities`, `competitor_ads` tiene **98** filas y `visual_references` **2**. Solo `retail_prices` sigue en 0. Reescribir la tarea sobre lo que de verdad falta o cerrarla. Configurar competidores reales con dominio/target valido (depende en parte de OPS-006). Requiere input del usuario sobre que marcas. |
 
 ## 🟢 Low — falta construir (infra, no verificable desde el repo)
 
