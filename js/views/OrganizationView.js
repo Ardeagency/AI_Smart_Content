@@ -34,7 +34,6 @@ class OrganizationView extends BaseView {
 
     // Centro de control (conteos por entidad)
     this.controlStats = null;
-    this.prodRange = 7;
 
     // Uso (consumo de créditos)
     this.usageRange = 30;
@@ -117,7 +116,6 @@ class OrganizationView extends BaseView {
                 </div>
               </div>
               <div id="orgAsideMercado"></div>
-              <div id="orgAsideIntel"></div>
               <div class="org-subbrands-list" id="orgSubbrandsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
               <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nuevo%20mercado&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20un%20nuevo%20mercado%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-secondary btn-sm org-aside-cta" id="orgRequestBrandBtn"><i class="aisc-ico aisc-ico--send"></i> ${__('Solicitar nuevo mercado')}</a>
             </section>
@@ -842,15 +840,17 @@ class OrganizationView extends BaseView {
   // = flow_runs en el rango. Conteos con head:true (no traen filas).
   async _loadControlStats() {
     const sb = this.supabase, org = this.orgId;
-    const days = this.prodRange || 7;
-    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    // Producciones cuenta HISTORICO, como el resto de la fila. Antes miraba
+    // solo los ultimos 7 dias con un selector al lado; retirado el selector, esa
+    // ventana quedaba invisible y un "0 Producciones" se leia como "nunca se
+    // produjo nada" cuando queria decir "nada esta semana".
     const cnt = (q) => q.then((r) => r.count || 0).catch(() => 0);
     try {
       const [ents, products, services, productions] = await Promise.all([
         sb.from('brand_entities').select('id').eq('organization_id', org),
         cnt(sb.from('products').select('*', { count: 'exact', head: true }).eq('organization_id', org)),
         cnt(sb.from('services').select('*', { count: 'exact', head: true }).eq('organization_id', org)),
-        cnt(sb.from('flow_runs').select('*', { count: 'exact', head: true }).eq('organization_id', org).gte('created_at', since)),
+        cnt(sb.from('flow_runs').select('*', { count: 'exact', head: true }).eq('organization_id', org)),
       ]);
       const entIds = (ents.data || []).map((e) => e.id);
       let places = 0, characters = 0;
@@ -860,45 +860,52 @@ class OrganizationView extends BaseView {
           cnt(sb.from('brand_characters').select('*', { count: 'exact', head: true }).in('entity_id', entIds)),
         ]);
       }
-      this.controlStats = { identities: entIds.length, products, services, places, characters, productions, days };
+      this.controlStats = { identities: entIds.length, products, services, places, characters, productions };
     } catch (e) {
       console.warn('OrganizationView _loadControlStats:', e?.message || e);
-      this.controlStats = { identities: 0, products: 0, services: 0, places: 0, characters: 0, productions: 0, days };
+      this.controlStats = { identities: 0, products: 0, services: 0, places: 0, characters: 0, productions: 0 };
     }
   }
 
   _renderControlStats() {
     const el = this.querySelector('#orgCtrlStats');
     if (!el) return;
-    const s = this.controlStats || { identities: 0, products: 0, services: 0, places: 0, characters: 0, productions: 0, days: this.prodRange };
+    const s = this.controlStats || { identities: 0, products: 0, services: 0, places: 0, characters: 0, productions: 0 };
     const fmt = (n) => Number(n || 0).toLocaleString('es');
     // Cifra, etiqueta y enlace. Nada mas.
     // Se fueron el emoji en su chip de color y el color por tarjeta: siete
     // acentos distintos convertian una fila de datos en un semaforo, y el
     // emoji ocupaba el sitio de la unica cosa que importa aqui, que es el
     // numero. El color de la marca queda para el enlace, en hover.
-    const card = (route, value, label, extra = '') => `
+    const card = (route, value, label) => (route ? `
       <div class="org-ctrl-card" role="button" tabindex="0" data-route="${route}">
-        ${extra ? `<div class="org-ctrl-top">${extra}</div>` : ''}
         <span class="org-ctrl-num">${fmt(value)}</span>
         <span class="org-ctrl-label">${label}</span>
         <span class="org-ctrl-link">${__('Ver todas')} →</span>
-      </div>`;
-    const prodFilter = `
-      <span class="org-ctrl-spacer"></span>
-      <select class="org-prod-range" title="${__('Rango')}">
-        <option value="7"${s.days === 7 ? ' selected' : ''}>${__('7 días')}</option>
-        <option value="30"${s.days === 30 ? ' selected' : ''}>${__('30 días')}</option>
-        <option value="90"${s.days === 90 ? ' selected' : ''}>${__('90 días')}</option>
-      </select>`;
+      </div>` : `
+      <div class="org-ctrl-card org-ctrl-card--mudo">
+        <span class="org-ctrl-num">${fmt(value)}</span>
+        <span class="org-ctrl-label">${label}</span>
+      </div>`);
+    // Las tres cifras de inteligencia entran en la MISMA fila que el resto: son
+    // el mismo tipo de dato (cuanto hay de algo, y donde verlo). Las llena
+    // _renderResumen(), que corre despues, y vuelve a pedir este render.
+    const i = this._intel || null;
     el.innerHTML =
       card('/identities', s.identities, __('Elementos')) +
       card('/products',   s.products,   __('Productos')) +
       card('/services',   s.services,   __('Servicios')) +
       card('/places',     s.places,     __('Escenarios')) +
       card('/characters', s.characters, __('Actores')) +
-      card('/brand-storage', this.brandContainers.length, __('Mercado')) +
-      card('/production', s.productions, __('Producciones'), prodFilter);
+      card('/production', s.productions, __('Producciones')) +
+      // Audiencias y Estrategias NO llevan enlace: hoy no existe pagina propia
+      // para ninguna de las dos (audience_personas y strategic_recommendations
+      // solo se editan dentro del Command Center, que exige sub-marca en la
+      // ruta). Antes que mandar a una pagina que no es, se muestra la cifra sin
+      // destino.
+      (i ? card(null, i.audiencias, __('Audiencias')) : '') +
+      (i ? card(null, i.estrategias, __('Estrategias')) : '') +
+      (i ? card('/monitoring', i.vigilados, __('Perfiles monitoreados')) : '');
   }
 
   // ── Uso: consumo de créditos por día y por área (fuente) ──
@@ -1539,7 +1546,6 @@ class OrganizationView extends BaseView {
     this.querySelector('#orgInviteBtn')?.addEventListener('click', () => this._openInviteModal());
 
     this.querySelector('#orgCtrlStats')?.addEventListener('click', (e) => {
-      if (e.target.closest('.org-prod-range')) return;
       const card = e.target.closest('.org-ctrl-card[data-route]');
       if (!card) return;
       const prefix = (this.orgId && typeof window.getOrgPathPrefix === 'function')
@@ -1555,14 +1561,6 @@ class OrganizationView extends BaseView {
         ? window.getOrgPathPrefix(this.orgId, this.org?.name || '') : '';
       window.router?.navigate((prefix || '') + card.dataset.route);
     });
-    this.querySelector('#orgCtrlStats')?.addEventListener('change', async (e) => {
-      const sel = e.target.closest('.org-prod-range');
-      if (!sel) return;
-      this.prodRange = Number(sel.value);
-      await this._loadControlStats();
-      this._renderControlStats();
-    });
-
     this.querySelector('#orgUsageRange')?.addEventListener('click', async (e) => {
       const pill = e.target.closest('.org-range-pill');
       if (!pill) return;
@@ -1774,12 +1772,9 @@ class OrganizationView extends BaseView {
         const lista = (arr) => (Array.isArray(arr) ? arr.filter(Boolean) : []);
         const paises = lista(m.mercado_objetivo);
         const idiomas = lista(m.idiomas_contenido);
-        const subs = lista(m.sub_nichos);
-        if (paises.length) filas.push(`<dt>${__('Va dirigida a')}</dt><dd>${this._esc(paises.join(' · '))}</dd>`);
+        if (paises.length) filas.push(`<dt>${__('Mercado')}</dt><dd>${this._esc(paises.join(' · '))}</dd>`);
         if (idiomas.length) filas.push(`<dt>${__('Idiomas')}</dt><dd>${this._esc(idiomas.join(' · '))}</dd>`);
         if (m.nicho_core) filas.push(`<dt>${__('Nicho')}</dt><dd>${this._esc(m.nicho_core)}</dd>`);
-        if (subs.length) filas.push(`<dt>${__('Sub-nichos')}</dt><dd>${this._esc(subs.join(' · '))}</dd>`);
-        if (m.arquetipo) filas.push(`<dt>${__('Arquetipo')}</dt><dd>${this._esc(m.arquetipo)}</dd>`);
         if (!filas.length) return '';
         return `<div class="org-res-marca"><dl class="org-res-dl">${filas.join('')}</dl></div>`;
       }).filter(Boolean).join('');
@@ -1787,31 +1782,14 @@ class OrganizationView extends BaseView {
     }
 
     // ── Audiencias, vigilancia y estrategias ─────────────────────────
-    const partesInt = [];
-    if (r.audiencias?.total) {
-      // Si nadie midio la alineacion se DICE, en vez de pintar un 0% que se
-      // leeria como "va pesimo" cuando en realidad no se ha medido.
-      const sub = r.audiencias.medidas
-        ? __('Alineación media {n}%', { n: r.audiencias.alineacionMedia })
-        : `<span class="org-res-sinmedir">${__('Sin medir si funciona')}</span>`;
-      partesInt.push(this._resumenDato(r.audiencias.total, __('Audiencias'), sub));
-    }
-    if (r.vigilancia?.total) {
-      const roles = Object.entries(r.vigilancia.porRol)
-        .sort((a, b) => b[1] - a[1])
-        .map(([k, n]) => `${n} ${this._esc(k.replace(/_/g, ' '))}`)
-        .join(' · ');
-      partesInt.push(this._resumenDato(r.vigilancia.total, __('Perfiles vigilados'), roles));
-    }
-    if (r.estrategias?.total) {
-      const props = r.estrategias.porEstado?.proposed || 0;
-      partesInt.push(this._resumenDato(r.estrategias.total, __('Estrategias'),
-        props ? __('{n} sin usar', { n: props }) : ''));
-    }
-    const elIntel = this.querySelector('#orgAsideIntel');
-    if (elIntel && partesInt.length) {
-      elIntel.innerHTML = `<div class="org-res-grid org-res-grid--aside">${partesInt.join('')}</div>`;
-    }
+    // Las cifras de inteligencia no viven en un bloque aparte: se suman a la fila
+    // de insights de la izquierda, que es donde estan sus hermanas.
+    this._intel = {
+      audiencias: r.audiencias?.total || 0,
+      vigilados: r.vigilancia?.total || 0,
+      estrategias: r.estrategias?.total || 0,
+    };
+    this._renderControlStats();
 
     // ── Pauta ────────────────────────────────────────────────────────
     if (r.pauta) {
@@ -1831,7 +1809,10 @@ class OrganizationView extends BaseView {
           p.conversiones ? __('{n} conversiones', { n: Math.round(p.conversiones).toLocaleString('es') }) : ''));
       });
       if (partes.length) {
-        bloques.push(this._resumenBloque(__('Pauta'), `<div class="org-res-grid">${partes.join('')}</div>`));
+        bloques.push(`<div class="org-res-block org-res-block--pauta">
+          <h3 class="org-res-title">${__('Pauta')}</h3>
+          <div class="org-res-grid">${partes.join('')}</div>
+        </div>`);
       }
     }
 

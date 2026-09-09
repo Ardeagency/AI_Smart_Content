@@ -26,9 +26,15 @@
     margin-bottom: 2rem;
 }
 
+/* El titulo manda: mayusculas y tamano fluido. Y se le quita el aire de mas
+   —el header traia 1.5rem de margen y los tabs otros 2rem— para que la fila de
+   insights entre en pantalla sin scroll. */
 .organization-title {
-    font-size: var(--font-size-3xl);
+    font-size: clamp(2rem, 3.6vw, 3rem);
     font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
     color: var(--text-primary);
 }
 
@@ -42,7 +48,7 @@
     display: flex;
     gap: 1rem;
     border-bottom: 1px solid var(--border-divider);
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
     flex-wrap: wrap;
 }
 
@@ -990,7 +996,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
 }
 .organization-header-status { flex-shrink: 0; }
 
@@ -1962,3 +1968,25 @@
 
 /* En la columna derecha el grid general (190px) deja una sola cifra por fila. */
 .org-res-grid--aside { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1.25rem 1rem; }
+
+/* ── Pauta: aqui SI hay caja ──────────────────────────────────────────
+   Es la excepcion pedida al resto de la pagina. Tiene sentido: las cifras de
+   pauta son plata y estado de campanas, un bloque que se consulta aparte del
+   inventario de la marca; la caja lo separa en vez de dejarlo flotando entre
+   los demas datos. Se acota por el titulo del bloque para no volver a encajar
+   Inteligencia ni el resto. */
+.org-res-block--pauta .org-res-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.org-res-block--pauta .org-res-stat {
+    background: var(--bg-card, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--border-divider);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+}
+
+/* Cifra sin destino: no es clicable, asi que tampoco finge serlo. */
+.org-ctrl-card--mudo { cursor: default; }

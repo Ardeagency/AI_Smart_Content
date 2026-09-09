@@ -14,6 +14,12 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Audiencias": "Audiences",
+  "Perfiles monitoreados": "Monitored profiles",
+  "Pauta": "Paid media",
+  "Inteligencia": "Intelligence",
+  "Créditos utilizados": "Credits used",
+  "Plan de la marca": "Brand plan",
   "Mercado": "Market",
   "Elementos": "Elements",
   "Intuición": "Intuition",
