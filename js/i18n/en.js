@@ -14,6 +14,8 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Mercado": "Market",
+  "Elementos": "Elements",
   "Intuición": "Intuition",
   "Intuición sobre la competencia": "Intuition about the competition",
   "Intuición sobre el mercado": "Intuition about the market",

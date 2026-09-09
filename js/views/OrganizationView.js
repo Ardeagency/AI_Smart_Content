@@ -70,6 +70,7 @@ class OrganizationView extends BaseView {
     <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">${__('Uso')}</button>
     <button type="button" class="tab-btn" data-tab="notifications" role="tab" aria-selected="false">${__('Notificaciones')}</button>
     <button type="button" class="tab-btn" data-tab="security" role="tab" aria-selected="false">${__('Seguridad')}</button>
+    <button type="button" class="tab-btn" data-tab="settings" role="tab" aria-selected="false">${__('Ajustes')}</button>
   </div>
 
   <div class="organization-content">
@@ -87,36 +88,10 @@ class OrganizationView extends BaseView {
       </section>
 
       <div class="org-general-config">
-      <section class="org-section org-section-form">
-        <h2>${__('Datos regionales')}</h2>
-        <p class="org-section-desc">${__('Estos valores afectan reportes, scheduling y formato de fechas/idioma del workspace.')}</p>
-        <form id="orgGeneralForm" class="org-form">
-          <div class="org-form-grid">
-            <div class="form-group">
-              <label for="orgTimezone">${__('Zona horaria')}</label>
-              <select id="orgTimezone" class="form-input"></select>
-            </div>
-            <div class="form-group">
-              <label for="orgLocale">${__('Idioma')}</label>
-              <select id="orgLocale" class="form-input">
-                <option value="es">${__('Español')}</option>
-                <option value="en">English</option>
-                <option value="pt">Português</option>
-              </select>
-            </div>
-          </div>
-          <div class="org-form-actions">
-            <button type="submit" class="btn btn-primary" id="orgGeneralSubmit">
-              <i class="aisc-ico aisc-ico--save"></i> ${__('Guardar')}
-            </button>
-          </div>
-        </form>
-      </section>
-
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>${__('Marcas gestionadas')}</h2>
+            <h2>${__('Mercado')}</h2>
             <p class="org-section-desc">${__('Workspaces de datos aislados (audiencias, campañas, integraciones y contenido). La provisión inicial la gestiona el equipo de plataforma.')}</p>
           </div>
           <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nueva%20marca%20gestionada&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20una%20nueva%20marca%20gestionada%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-secondary btn-sm" id="orgRequestBrandBtn"><i class="aisc-ico aisc-ico--send"></i> ${__('Solicitar nueva marca')}</a>
@@ -201,6 +176,38 @@ class OrganizationView extends BaseView {
     </div>
 
     <!-- ── Seguridad ────────────────────────────────────── -->
+    <!-- ── Ajustes (configuracion tecnica del workspace) ──
+         Esta pestana existe para que General deje de ser un cajon de sastre:
+         General resume QUE tiene la organizacion; Ajustes guarda las perillas
+         que la configuran. Datos regionales fue el primer inquilino. -->
+    <div class="tab-content" id="settingsTab" role="tabpanel">
+      <section class="org-section org-section-form">
+        <h2>${__('Datos regionales')}</h2>
+        <p class="org-section-desc">${__('Estos valores afectan reportes, scheduling y formato de fechas/idioma del workspace.')}</p>
+        <form id="orgGeneralForm" class="org-form">
+          <div class="org-form-grid">
+            <div class="form-group">
+              <label for="orgTimezone">${__('Zona horaria')}</label>
+              <select id="orgTimezone" class="form-input"></select>
+            </div>
+            <div class="form-group">
+              <label for="orgLocale">${__('Idioma')}</label>
+              <select id="orgLocale" class="form-input">
+                <option value="es">${__('Español')}</option>
+                <option value="en">English</option>
+                <option value="pt">Português</option>
+              </select>
+            </div>
+          </div>
+          <div class="org-form-actions">
+            <button type="submit" class="btn btn-primary" id="orgGeneralSubmit">
+              <i class="aisc-ico aisc-ico--save"></i> ${__('Guardar')}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+
     <div class="tab-content" id="securityTab" role="tabpanel">
       <section class="org-section">
         <div class="org-section-head">
@@ -856,12 +863,12 @@ class OrganizationView extends BaseView {
         <option value="90"${s.days === 90 ? ' selected' : ''}>${__('90 días')}</option>
       </select>`;
     el.innerHTML =
-      card('/identities', '🪪', '#06b6d4', s.identities, __('Identidades')) +
+      card('/identities', '🪪', '#06b6d4', s.identities, __('Elementos')) +
       card('/products',   '📦', '#7c3aed', s.products,   __('Productos')) +
       card('/services',   '🛠️', '#22c55e', s.services,   __('Servicios')) +
       card('/places',     '🏞️', '#f59e0b', s.places,     __('Escenarios')) +
       card('/characters', '🎭', '#ef4444', s.characters, __('Actores')) +
-      card('/brand-storage', '🏢', '#3b82f6', this.brandContainers.length, __('Marcas gestionadas')) +
+      card('/brand-storage', '🏢', '#3b82f6', this.brandContainers.length, __('Mercado')) +
       card('/production', '🎬', '#ec4899', s.productions, __('Producciones'), prodFilter);
   }
 

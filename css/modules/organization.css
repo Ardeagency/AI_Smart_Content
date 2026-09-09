@@ -61,15 +61,18 @@
     color: var(--text-primary);
 }
 
-/* El resaltado usa el color DINAMICO de la marca de la org, no un gris.
-   Antes era --accent-warm, que suena a calido pero en el design system vale
-   #87868B: gris literal, herencia del tema naranja viejo.
-   --accent-brand = var(--brand-primary, blanco 35%): OrgBrandTheme publica
-   --brand-primary por org, y cuando la org no tiene brand_colors cae a blanco
-   —nunca al color de OTRA marca, que es la regla de aislamiento. */
+/* El resaltado usa el color de la marca CORREGIDO POR LUMINANCIA, no el primario.
+   Historia corta: era --accent-warm (#87868B, gris literal del tema naranja
+   viejo). Se paso a --brand-primary y quedo APAGADO, porque el primario de una
+   marca puede ser oscuro —el de WAKEUP es #000000— y negro sobre fondo negro no
+   resalta nada. El propio OrgBrandTheme ya conocia el caso: tiene un comentario
+   que dice "si la marca tiene un negro puro (ej. WAKEUP)".
+   --brand-color-light es el mas claro de la paleta por luminosidad HSL, que es
+   justo lo que un resaltado necesita sobre un tema oscuro. Cae a --accent-brand
+   y de ahi a blanco: una org sin brand_colors nunca hereda el color de otra. */
 .organization-tabs .tab-btn.active {
-    color: var(--accent-brand);
-    border-bottom-color: var(--accent-brand);
+    color: var(--brand-color-light, var(--accent-brand));
+    border-bottom-color: var(--brand-color-light, var(--accent-brand));
 }
 
 .organization-content {
@@ -85,11 +88,13 @@
 }
 
 /* Secciones (información general, metadata) */
+/* Sin color ni borde: los contenedores dejan de ser cajas y pasan a ser solo
+   agrupacion con aire. Lo que separa una seccion de otra es el espacio y el
+   titulo, no un marco — y asi el fondo de plataforma se ve entero detras. */
 .org-section {
-    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
-    padding: 1.5rem 2rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-divider);
+    background: transparent;
+    padding: 1.5rem 0;
+    border: 0;
     margin-bottom: 1.5rem;
 }
 
@@ -1185,7 +1190,10 @@
    ninguna marca ni con el design system. Pasa al color de la org; si la org no
    tiene brand_colors cae a un blanco tenue, que sigue leyendose como activo
    —no a un morado que no es de nadie. */
-.org-range-pill--active { background: var(--brand-primary, rgba(255,255,255,.16)); color: #fff; }
+/* Fondo tenido + texto de marca, en vez de un relleno solido de color: asi el
+   pill se lee como activo sea cual sea la marca. Un relleno solido obliga a
+   apostar por el color del texto, y con una marca clara el blanco desaparece. */
+.org-range-pill--active { background: rgba(255,255,255,.10); color: var(--brand-color-light, #fff); }
 
 .org-usage-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
 .org-usage-stats:empty { display: none; }
@@ -1233,9 +1241,10 @@
 /* ── Centro de control (General) ─────────────────────────── */
 .org-ctrl-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
 .org-ctrl-card { display: flex; flex-direction: column; align-items: stretch; gap: .55rem; background: var(--bg-card, rgba(255,255,255,.04)); border: 1px solid var(--border-divider); border-radius: 12px; padding: 1rem 1.05rem; cursor: pointer; text-align: left; font-family: inherit; transition: border-color .15s ease, transform .12s ease, background .15s ease; }
-/* Hover con el brillo de marca: --brillo-hover ya es var(--brand-primary-brillo,
-   blanco 8%), o sea el token que el design system creo justo para esto. */
-.org-ctrl-card:hover { border-color: var(--accent-brand-soft, rgba(255,255,255,.2)); background: var(--brillo-hover); transform: translateY(-1px); }
+/* OJO: aqui NO sirve --brillo-hover. Ese token es var(--brand-primary-brillo,
+   ...), y con un primario negro da rgba(0,0,0,.12): un hover que OSCURECE sobre
+   un fondo ya oscuro, o sea invisible. El filete de marca clara si se ve. */
+.org-ctrl-card:hover { border-color: var(--brand-color-light, rgba(255,255,255,.35)); background: rgba(255,255,255,.05); transform: translateY(-1px); }
 .org-ctrl-card:active { transform: translateY(0); }
 .org-ctrl-top { display: flex; align-items: center; gap: .5rem; min-height: 32px; }
 .org-ctrl-chip { width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: .95rem; flex: none; line-height: 1; }
