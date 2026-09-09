@@ -6516,86 +6516,30 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 
 /* Carrusel horizontal: la fila no se ensancha con el catálogo, scrollea. */
-.video-view-container .video-elementos-carrusel {
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: thin;
-}
-
-.video-view-container .video-elemento-tile {
-    flex: 0 0 auto;
-    width: 64px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 4px;
-    background: #0f1012;
-    border: 1px solid var(--border-divider, #242424);
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
-    font: inherit;
-    font-size: 0.58rem;
+/* Los tiles de elemento son EXACTAMENTE los de producción (.video-escena-item):
+   un carrusel de miniaturas se lee por la imagen. Tenían nombre debajo y un
+   tamaño propio, y al lado del carrusel de Producciones se veían como otro
+   componente. Aquí solo va lo que de verdad difiere. */
+.video-view-container .video-elemento-item {
     cursor: grab;
-    transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
-.video-view-container .video-elemento-tile:hover:not(:disabled) {
-    border-color: var(--video-accent, rgba(255, 255, 255, 0.35));
-    color: var(--text-primary);
-}
-.video-view-container .video-elemento-tile:active:not(:disabled) {
+.video-view-container .video-elemento-item:active:not(.is-sin-imagen) {
     cursor: grabbing;
 }
-/* El que ya está puesto en el prompt se marca: sin esto, arrastrar dos veces
-   el mismo producto parece que no hizo nada. */
-.video-view-container .video-elemento-tile.is-puesto {
-    border-color: var(--video-accent, rgba(255, 255, 255, 0.5));
-    background: var(--video-accent-soft, rgba(255, 255, 255, 0.08));
-    color: var(--text-primary);
-}
-.video-view-container .video-elemento-tile.is-arrastrando {
-    opacity: 0.45;
-    transform: scale(0.96);
-}
-/* Sin imagen no hay nada que soltar en un grupo de imágenes. Se muestra
+/* Sin imagen no hay nada que soltar en un grupo de imágenes: se muestra
    —existe en la marca— pero no finge ser arrastrable. */
-.video-view-container .video-elemento-tile.is-sin-imagen {
+.video-view-container .video-elemento-item.is-sin-imagen {
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: 0.45;
 }
-
-.video-view-container .video-elemento-thumb {
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: cover;
-    border-radius: 4px;
-    background: #17181b;
-    display: block;
-}
-.video-view-container .video-elemento-thumb--vacia {
+.video-view-container .video-elemento-sin-imagen {
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
 }
-.video-view-container .video-elemento-nombre {
-    width: 100%;
-    text-align: center;
-    line-height: 1.2;
-    /* Dos líneas y corta: los nombres largos rompían la altura de la fila. */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-.video-view-container .video-elementos-vacio {
-    margin: 0;
-    font-size: 0.66rem;
-    font-style: italic;
-    opacity: 0.5;
-    color: var(--text-muted);
+.video-view-container .video-elemento-item.is-arrastrando {
+    opacity: 0.45;
 }
 
 /* --- La zona que recibe: el grupo de Imágenes del prompt --- */

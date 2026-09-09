@@ -177,47 +177,6 @@ describe('Frames Clave y Referencias son excluyentes', () => {
   });
 });
 
-describe('Quitar un adjunto', () => {
-  let ctx;
-  beforeEach(async () => {
-    ctx = nuevaVista();
-    await ctx.v.addSeedanceRefs('image', [
-      archivo('a.jpg', 'image/jpeg'),
-      archivo('b.jpg', 'image/jpeg')
-    ]);
-  });
-
-  test('libera el archivo del bucket y reindexa la lista', () => {
-    const { v, borradosDeStorage } = ctx;
-
-    v.removeSeedanceRef('image', 0);
-
-    expect(borradosDeStorage).toEqual(['seedance/u/images/a.jpg']);
-    expect(v.seedanceRefs.image.map((r) => r.name)).toEqual(['b.jpg']);
-  });
-
-  test('el token del chip enruta a la baja correcta', () => {
-    const { v, borradosDeStorage } = ctx;
-    v.seedanceFrames.last = { url: 'https://cdn.test/z.jpg', storagePath: 'seedance/u/frames/z.jpg' };
-
-    v.removeSeedanceAttachment('frame:last');
-    v.removeSeedanceAttachment('ref:image:1');
-
-    expect(v.seedanceFrames.last).toBeNull();
-    expect(borradosDeStorage).toEqual(['seedance/u/frames/z.jpg', 'seedance/u/images/b.jpg']);
-  });
-
-  test('un token corrupto no rompe ni borra de más', () => {
-    const { v, borradosDeStorage } = ctx;
-
-    v.removeSeedanceAttachment('ref:image:xx');
-    v.removeSeedanceAttachment('');
-
-    expect(v.seedanceRefs.image).toHaveLength(2);
-    expect(borradosDeStorage).toEqual([]);
-  });
-});
-
 describe('El payload lleva lo adjuntado', () => {
   const CONTROLES = {
     '#seedanceDuration': { value: '8' },
@@ -727,14 +686,13 @@ describe('Las filas de Elementos y el contrato del arrastre', () => {
     const { v, nodo } = conFilas();
 
     v.renderElementosFilas();
-    const tiles = nodo.innerHTML.split('<button').slice(1);
+    const tiles = nodo.innerHTML.split('video-escena-item').slice(1);
     const conImagen = tiles.filter((t) => t.includes('draggable="true"'));
     const sinImagen = tiles.filter((t) => t.includes('is-sin-imagen'));
 
     expect(conImagen).toHaveLength(2);              // producto y personaje
     expect(sinImagen).toHaveLength(1);              // el servicio
-    // Deshabilitado Y explicado: un tile inerte sin motivo se lee como un bug.
-    expect(sinImagen[0]).toContain('disabled');
+    // Inerte Y explicado: un tile muerto sin motivo se lee como un bug.
     expect(sinImagen[0]).toMatch(/sin imagen/i);
   });
 
@@ -745,7 +703,23 @@ describe('Las filas de Elementos y el contrato del arrastre', () => {
 
     v.renderElementosFilas();
 
-    expect(nodo.innerHTML).toMatch(/class="video-elemento-tile is-puesto"[^>]*data-tipo="product"/);
+    expect(nodo.innerHTML).toMatch(/video-escena-item video-elemento-item is-selected"[\s\S]*?data-tipo="product"/);
+  });
+
+  test('usan EXACTAMENTE el contenedor de una producción', () => {
+    // Un carrusel de miniaturas se lee por la imagen. Con nombre debajo y un
+    // tamaño propio, al lado del carrusel de Producciones se veían como otro
+    // componente.
+    const { v, nodo } = conFilas();
+
+    v.renderElementosFilas();
+
+    expect(nodo.innerHTML).toContain('class="video-escena-item video-elemento-item');
+    expect(nodo.innerHTML).toContain('video-escena-thumb-wrap');
+    expect(nodo.innerHTML).toContain('<div class="video-escenas-carousel">');
+    // Sin etiqueta bajo la miniatura: el nombre vive en el title.
+    expect(nodo.innerHTML).not.toContain('video-elemento-nombre');
+    expect(nodo.innerHTML).toContain('title="Botella"');
   });
 
   test('el tipo MIME del arrastre lo declara un solo sitio', () => {
@@ -855,5 +829,31 @@ describe('Los tres tabs del panel', () => {
 
   test('ya no se llama "Escenas": son Producciones', () => {
     expect(html).not.toMatch(/>\s*Escenas\s*</);
+  });
+});
+
+describe('Un adjunto se ve en un solo sitio', () => {
+  const html = VideoView.prototype.renderHTML.call({});
+
+  test('no hay segunda fila de chips bajo el prompt', () => {
+    // La banda de recursos ya muestra los frames y las referencias justo
+    // encima; la fila de chips repetía lo mismo con otro dibujo, y sus × eran
+    // un segundo sitio desde donde quitar lo mismo.
+    expect(html).not.toContain('seedanceElementsList');
+    expect(html).not.toContain('video-attachment-chip');
+    expect(html).not.toContain('video-director-attachments-row');
+    expect(FUENTE).not.toContain('renderSeedanceAttachmentChips');
+  });
+
+  test('lo adjunto se quita desde donde se ve', () => {
+    // El frame tiene su × en el slot y la referencia la suya en el item: sin
+    // esos dos, quitar la fila de chips habría dejado adjuntos sin salida.
+    expect(FUENTE).toContain('seedance-frame-slot-remove');
+    expect(FUENTE).toContain('seedance-ref-remove');
+  });
+
+  test('las secciones del panel ya no llevan párrafo de ayuda', () => {
+    const panel = html.slice(html.indexOf('data-sidebar-panel="elementos"'), html.indexOf('data-sidebar-panel="enfoque"'));
+    expect(panel).not.toContain('video-sidebar-section-hint');
   });
 });

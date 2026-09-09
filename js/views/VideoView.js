@@ -484,9 +484,6 @@ class VideoView extends BaseView {
                     <div class="video-director-console-content">
                       <div id="videoPromptEditor"></div>
                     </div>
-                    <div class="video-director-attachments-row">
-                      <div class="video-attachments-list" id="seedanceElementsList" aria-live="polite"></div>
-                    </div>
 
                     <div class="video-director-controls">
                       <button type="button" class="video-director-btn-add" id="seedancePromptAdd" aria-label="${window.__('Añadir referencia visual')}"><i class="aisc-ico aisc-ico--add"></i></button>
@@ -547,7 +544,6 @@ class VideoView extends BaseView {
                         <button type="button" class="video-escenas-all-btn" id="videoProductionsBtn" aria-label="${window.__('Todas las producciones')}">${window.__('Todas')}</button>
                       </div>
                     </div>
-                    <p class="video-sidebar-section-hint">${window.__('Lo que ya produjiste. Arrástralo a un Frame Clave para anclar el inicio o el cierre, o a las Imágenes del prompt para que sirva de referencia — o tócalo, que lo manda a las referencias.')}</p>
                     <div class="video-escenas-carousel-wrap">
                       <div class="video-escenas-carousel" id="videoEscenasCarousel"></div>
                     </div>
@@ -557,7 +553,6 @@ class VideoView extends BaseView {
                     <div class="video-sidebar-section-header">
                       <h3 class="video-section-label">${window.__('Elementos')}</h3>
                     </div>
-                    <p class="video-sidebar-section-hint">${window.__('El catálogo de la marca, una fila por tipo. Arrastra uno a las Imágenes del prompt para que el video lo respete — o tócalo, que hace lo mismo.')}</p>
                     <div class="video-elementos-filas" id="videoElementosFilas"></div>
                   </div>
 
@@ -797,21 +792,8 @@ class VideoView extends BaseView {
       });
     }
 
-    // Chips junto al prompt: una sola delegación para todas las bajas.
-    const chipsEl = this.container.querySelector('#seedanceElementsList');
-    if (chipsEl && chipsEl.dataset.boundChips !== '1') {
-      chipsEl.dataset.boundChips = '1';
-      chipsEl.addEventListener('click', (e) => {
-        const btnQuitar = e.target.closest('[data-attachment-remove]');
-        if (!btnQuitar) return;
-        e.preventDefault();
-        this.removeSeedanceAttachment(btnQuitar.getAttribute('data-attachment-remove'));
-      });
-    }
-
     this.renderSeedanceFrames();
     this.renderSeedanceRefs();
-    this.renderSeedanceAttachmentChips();
 
     // Contexto de marca ANTES del Stack de activos y de Escenas: ambos pintan
     // desde dbData.products, y si corren primero el carrusel nace diciendo
@@ -1321,7 +1303,6 @@ class VideoView extends BaseView {
       if (previo) this._removeSeedanceStorage(previo.storagePath);
       this.seedanceFrames[slot] = subido;
       this.renderSeedanceFrames();
-      this.renderSeedanceAttachmentChips();
     } catch (err) {
       console.error('VideoView frame upload:', err);
       this._seedanceNotify(window.__('No se pudo subir {label}: ', { label }) + (err.message || ''), 'error');
@@ -1334,7 +1315,6 @@ class VideoView extends BaseView {
     this._removeSeedanceStorage(frame.storagePath);
     this.seedanceFrames[slot] = null;
     this.renderSeedanceFrames();
-    this.renderSeedanceAttachmentChips();
   }
 
   renderSeedanceFrames() {
@@ -1411,7 +1391,6 @@ class VideoView extends BaseView {
         const subido = await this._uploadSeedanceFile(file, `${kind}s`);
         this.seedanceRefs[kind].push({ name: file.name, seconds, origen: 'manual', ...subido });
         this.renderSeedanceRefs();
-        this.renderSeedanceAttachmentChips();
       } catch (err) {
         console.error('VideoView ref upload:', err);
         this._seedanceNotify(window.__('No se pudo subir "{name}": ', { name: file.name }) + (err.message || ''), 'error');
@@ -1443,7 +1422,6 @@ class VideoView extends BaseView {
       this.renderElementosFilas();
     }
     this.renderSeedanceRefs();
-    this.renderSeedanceAttachmentChips();
   }
 
   // ── Escenas: producciones previas como material de referencia ───────────
@@ -1644,7 +1622,6 @@ class VideoView extends BaseView {
       this._seedanceNotify(window.__('{n} escena(s) no caben: el grupo ya está en su máximo. Quita una referencia y vuelve a intentar.', { n: rechazadas.length }));
     }
     this.renderSeedanceRefs();
-    this.renderSeedanceAttachmentChips();
   }
 
   async openProductionsPanel() {
@@ -1720,7 +1697,7 @@ class VideoView extends BaseView {
     const filas = VideoView.ELEMENTO_TIPOS.map((def) => {
       const items = this.dbData[def.campo] || [];
       const cuerpo = items.length === 0
-        ? `<p class="video-elementos-vacio">${window.__('Sin {tipo}', { tipo: def.etiqueta.toLowerCase() })}</p>`
+        ? `<p class="video-escenas-empty">${window.__('Sin {tipo}', { tipo: def.etiqueta.toLowerCase() })}</p>`
         : items.map((fila) => {
           const nombre = fila[def.nombre] || def.etiqueta;
           const url = (Array.isArray(fila.image_urls) ? fila.image_urls : []).filter(Boolean)[0] || '';
@@ -1729,24 +1706,30 @@ class VideoView extends BaseView {
           // muestra igual —existe en la marca— pero se dice por qué no se
           // puede arrastrar, en vez de quedar inerte sin explicación.
           const arrastrable = !!url;
+          const titulo = arrastrable ? nombre : `${nombre} — ${window.__('sin imagen: no se puede usar como referencia')}`;
+          // MISMO contenedor que una producción: `video-escena-item`. El
+          // nombre vive en el title, no debajo — un carrusel de miniaturas se
+          // lee por la imagen, y las etiquetas obligaban a un tile más alto y
+          // distinto al de al lado.
+          const dentro = arrastrable
+            ? `<img class="video-escena-thumb video-escena-thumb-img" src="${this.escapeHtml(url)}" alt="" loading="lazy" decoding="async" draggable="false">`
+            : `<span class="video-escena-thumb video-elemento-sin-imagen"><i class="aisc-ico ${def.icono}" aria-hidden="true"></i></span>`;
           return `
-            <button type="button"
-              class="video-elemento-tile${puesto ? ' is-puesto' : ''}${arrastrable ? '' : ' is-sin-imagen'}"
+            <div class="video-escena-item video-elemento-item${puesto ? ' is-selected' : ''}${arrastrable ? '' : ' is-sin-imagen'}"
               data-tipo="${this.escapeHtml(def.tipo)}"
               data-id="${this.escapeHtml(fila.id)}"
-              ${arrastrable ? 'draggable="true"' : 'disabled'}
+              role="button" tabindex="0"
+              ${arrastrable ? 'draggable="true"' : ''}
               aria-pressed="${puesto}"
-              title="${this.escapeHtml(nombre)}${arrastrable ? '' : ' — ' + window.__('sin imagen: no se puede usar como referencia')}">
-              ${url
-                ? `<img class="video-elemento-thumb" src="${this.escapeHtml(url)}" alt="" loading="lazy" draggable="false">`
-                : `<span class="video-elemento-thumb video-elemento-thumb--vacia"><i class="aisc-ico ${def.icono}" aria-hidden="true"></i></span>`}
-              <span class="video-elemento-nombre">${this.escapeHtml(nombre)}</span>
-            </button>`;
+              aria-label="${this.escapeHtml(titulo)}"
+              title="${this.escapeHtml(titulo)}">
+              <div class="video-escena-thumb-wrap">${dentro}</div>
+            </div>`;
         }).join('');
       return `
         <div class="video-elementos-fila" data-tipo="${this.escapeHtml(def.tipo)}">
           <span class="video-elementos-fila-label"><i class="aisc-ico ${def.icono}" aria-hidden="true"></i>${this.escapeHtml(def.etiqueta)}</span>
-          <div class="video-elementos-carrusel">${cuerpo}</div>
+          <div class="video-escenas-carousel">${cuerpo}</div>
         </div>`;
     }).join('');
 
@@ -1758,14 +1741,14 @@ class VideoView extends BaseView {
       // con teclado y en táctil es un pulso fino; sin el clic, el panel sería
       // inalcanzable para media casa.
       cont.addEventListener('click', (e) => {
-        const tile = e.target.closest('.video-elemento-tile');
-        if (!tile || tile.disabled) return;
+        const tile = e.target.closest('.video-elemento-item');
+        if (!tile || tile.classList.contains('is-sin-imagen')) return;
         e.preventDefault();
         this.alternarElemento(tile.getAttribute('data-tipo'), tile.getAttribute('data-id'));
       });
       cont.addEventListener('dragstart', (e) => {
-        const tile = e.target.closest('.video-elemento-tile');
-        if (!tile || tile.disabled) return;
+        const tile = e.target.closest('.video-elemento-item');
+        if (!tile || tile.classList.contains('is-sin-imagen')) return;
         const carga = JSON.stringify({ fuente: 'elemento', tipo: tile.getAttribute('data-tipo'), id: tile.getAttribute('data-id') });
         // Tipo propio para que el drop distinga un elemento de un archivo del
         // escritorio; `text/plain` de respaldo porque Safari ignora los tipos
@@ -1777,7 +1760,7 @@ class VideoView extends BaseView {
         document.body.classList.add('video-arrastrando-elemento');
       });
       cont.addEventListener('dragend', (e) => {
-        const tile = e.target.closest('.video-elemento-tile');
+        const tile = e.target.closest('.video-elemento-item');
         if (tile) tile.classList.remove('is-arrastrando');
         document.body.classList.remove('video-arrastrando-elemento');
       });
@@ -1898,7 +1881,6 @@ class VideoView extends BaseView {
     if (previo) this._removeSeedanceStorage(previo.storagePath);
     this.seedanceFrames[slot] = { url: p.media_url, storagePath: null, origen: 'produccion' };
     this.renderSeedanceFrames();
-    this.renderSeedanceAttachmentChips();
   }
 
   /** Tocar un elemento: si ya está puesto lo quita, si no lo pone. */
@@ -1949,7 +1931,6 @@ class VideoView extends BaseView {
       this._seedanceNotify(window.__('De "{name}" solo cupieron {n} imagen(es).', { name: el.nombre, n: urls.length }));
     }
     this.renderSeedanceRefs();
-    this.renderSeedanceAttachmentChips();
     this.renderElementosFilas();
   }
 
@@ -1961,7 +1942,6 @@ class VideoView extends BaseView {
     );
     if (this.seedanceRefs.image.length === antes) return;
     this.renderSeedanceRefs();
-    this.renderSeedanceAttachmentChips();
     this.renderElementosFilas();
   }
 
@@ -1999,46 +1979,11 @@ class VideoView extends BaseView {
     });
   }
 
-  /** Fila de chips junto al prompt: lo adjunto, a la vista, sin abrir el sidebar. */
-  renderSeedanceAttachmentChips() {
-    const listEl = this.container.querySelector('#seedanceElementsList');
-    if (!listEl) return;
-    const chips = [];
-    if (this.seedanceFrames.first) chips.push({ label: 'First Frame', url: this.seedanceFrames.first.url, quitar: 'frame:first', esImagen: true });
-    if (this.seedanceFrames.last) chips.push({ label: 'Last Frame', url: this.seedanceFrames.last.url, quitar: 'frame:last', esImagen: true });
-    ['image', 'video', 'audio'].forEach((kind) => {
-      (this.seedanceRefs[kind] || []).forEach((item, idx) => {
-        chips.push({ label: item.name || kind, url: item.url, quitar: `ref:${kind}:${idx}`, esImagen: kind === 'image' });
-      });
-    });
-
-    if (chips.length === 0) {
-      listEl.innerHTML = '';
-      listEl.style.display = 'none';
-      this.scheduleResizeDirectorBriefInput();
-      return;
-    }
-    listEl.style.display = 'flex';
-    listEl.innerHTML = chips.map((c) => {
-      const etiqueta = this.escapeHtml(c.label);
-      const cuerpo = c.esImagen
-        ? `<span class="video-attachment-thumbs"><span class="video-attachment-thumb-wrap"><img class="video-attachment-thumb" src="${this.escapeHtml(c.url)}" alt="" loading="lazy"></span></span>`
-        : `<span class="video-attachment-video-label">${etiqueta}</span>`;
-      return `<span class="video-attachment-chip" title="${etiqueta}">${cuerpo}<button type="button" class="video-attachment-remove" data-attachment-remove="${c.quitar}" aria-label="${window.__('Quitar {name}', { name: etiqueta })}">&times;</button></span>`;
-    }).join('');
-    this.scheduleResizeDirectorBriefInput();
-  }
-
-  /** Traduce el data-attachment-remove del chip a la baja correspondiente. */
-  removeSeedanceAttachment(token) {
-    const partes = String(token || '').split(':');
-    if (partes[0] === 'frame') {
-      this.removeSeedanceFrame(partes[1]);
-    } else if (partes[0] === 'ref') {
-      const idx = parseInt(partes[2], 10);
-      if (!Number.isNaN(idx)) this.removeSeedanceRef(partes[1], idx);
-    }
-  }
+  /**
+   * La fila de chips bajo el prompt se retiró: repetía —con otro dibujo— lo que
+   * la banda de recursos ya muestra justo encima, y sus × eran un segundo sitio
+   * desde donde quitar lo mismo. Un adjunto se ve y se quita en un solo lugar.
+   */
 
   // ── Cinematografía: el catálogo escribe en el prompt ────────────────────
 
