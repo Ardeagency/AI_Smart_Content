@@ -2349,3 +2349,48 @@
 }
 
 .org-bill-historial-cuerpo { padding-top: 0.5rem; }
+
+/* ─── Suscripcion: sin cajas, salvo la tarjeta del plan ───────────────
+   La caja se reserva para lo unico que la merece: el plan. Los demas bloques
+   (proximo cobro, facturas, medio de pago, datos) se separan por su rotulo y el
+   aire, como el resto de la pagina. Se acota a #billingTab a proposito: los
+   bloques de Uso —creditos y limites— si conservan su caja. */
+#billingTab .org-sub-block {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 2rem;
+}
+
+#billingTab .org-sub-block:last-child { margin-bottom: 0; }
+
+/* ── Proximo cobro: la fecha en grande, y debajo cuanto y con que ── */
+.org-prox-fecha {
+    font-size: clamp(1.6rem, 3vw, 2.25rem);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.org-prox-dl {
+    margin: 1rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.org-prox-dl > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.org-prox-dl > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.org-prox-dl dt { color: var(--text-muted); font-size: 0.85rem; }
+.org-prox-dl dd { margin: 0; color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }

@@ -1014,7 +1014,7 @@ class OrganizationView extends BaseView {
   async _loadBilling() {
     if (!this.supabase || !this.orgId) return;
     try {
-      const [{ data: subRows }, { data: stripeInvs }, { data: wompiTxs }, planRow, caps, usageToday] = await Promise.all([
+      const [{ data: subRows }, { data: stripeInvs }, { data: wompiTxs }, caps, usageToday] = await Promise.all([
         this.supabase.from('subscriptions')
           .select('id,plan_id,status,current_period_start,current_period_end,cancel_at_period_end,canceled_at,provider,next_charge_at,stripe_subscription_id,wompi_last_transaction_id,wompi_payment_source_id')
           .eq('organization_id', this.orgId).order('updated_at', { ascending: false }).limit(1),
@@ -1024,15 +1024,18 @@ class OrganizationView extends BaseView {
         this.supabase.from('wompi_transactions')
           .select('transaction_id,reference,target,amount_in_cents,currency,status,payment_method_type,finalized_at,created_at')
           .eq('organization_id', this.orgId).eq('status', 'APPROVED').order('created_at', { ascending: false }).limit(50),
-        // plan en uso (puede ser distinto del de la sub si está en trial / sin sub)
-        this._billingPlan(),
         this.supabase.from('org_claude_caps').select('*').eq('organization_id', this.orgId).maybeSingle().then((r) => r.data).catch(() => null),
         this.supabase.from('v_org_claude_usage_today').select('*').eq('organization_id', this.orgId).maybeSingle().then((r) => r.data).catch(() => null),
       ]);
       this.billingSub      = (subRows && subRows[0]) || null;
       this.billingInvoices = stripeInvs || [];
       this.billingWompiTxs = wompiTxs   || [];
-      this.billingPlanRow  = planRow    || null;
+      // El plan se resuelve DESPUES y no dentro del Promise.all: _billingPlan()
+      // necesita this.billingSub, que solo existe cuando el Promise.all termina.
+      // Pedirlo en paralelo hacia que leyera billingSub=null y devolviera null
+      // SIEMPRE — por eso "Tu plan incluye" salia vacio y el nombre del plan
+      // caia al id en minuscula ('team') en vez del name ('Team').
+      this.billingPlanRow  = await this._billingPlan();
       this.billingCaps     = caps       || null;
       this.billingUsageToday = usageToday || null;
       try {
@@ -1084,13 +1087,9 @@ class OrganizationView extends BaseView {
       ? `<button type="button" class="btn btn-secondary" id="orgBillingPortalBtn"><i class="aisc-ico aisc-ico--external-link"></i> ${__('Gestionar suscripción')}</button>`
       : '';
     const hasActiveSub = sub && ['active','trial','past_due'].includes(sub.status);
-    const cancelBtn = hasActiveSub && !sub.cancel_at_period_end
-      ? `<button type="button" class="btn btn-secondary" id="orgBillingCancelBtn"><i class="aisc-ico aisc-ico--close"></i> ${__('Cancelar suscripción')}</button>`
-      : '';
     const reactivateBtn = hasActiveSub && sub.cancel_at_period_end
       ? `<button type="button" class="btn btn-secondary" id="orgBillingReactivateBtn"><i class="aisc-ico aisc-ico--refresh"></i> ${__('Reactivar suscripción')}</button>`
       : '';
-    const upgradeBtn = `<a href="${this.escapeHtml(this._plansHref())}" class="btn btn-primary"><i class="aisc-ico aisc-ico--arrow-up"></i> ${__('Ver planes')}</a>`;
 
     const limits = this.querySelector('#orgBillingLimits');
 
@@ -1138,7 +1137,7 @@ class OrganizationView extends BaseView {
         <div class="org-plan-card-sep"></div>
         <div class="org-plan-incluye" id="orgPlanIncluye"></div>
       </div>
-      <div class="org-bill-actions">${upgradeBtn} ${stripePortalBtn} ${cancelBtn} ${reactivateBtn}</div>
+      <div class="org-bill-actions">${stripePortalBtn}${reactivateBtn}</div>
     `;
 
     if (limits) this._renderBillingLimits(limits);
@@ -1284,6 +1283,11 @@ class OrganizationView extends BaseView {
    * `current_period_end`: leer siempre el mismo campo da la fecha equivocada
    * para la mitad de las orgs, asi que se elige segun el proveedor.
    */
+  /**
+   * Proximo cobro: cuando, cuanto y con que. Wompi cobra por `next_charge_at` y
+   * Stripe por `current_period_end`; leer siempre el mismo campo da la fecha
+   * equivocada para la mitad de las orgs, asi que se elige segun proveedor.
+   */
   _renderBillingProximo() {
     const el = this.querySelector('#orgBillingProximo');
     if (!el) return;
@@ -1293,17 +1297,30 @@ class OrganizationView extends BaseView {
     const fecha = sub.provider === 'wompi' ? sub.next_charge_at : sub.current_period_end;
     const plan = this.billingPlanRow;
     const cancelada = sub.cancel_at_period_end || sub.status === 'canceled';
-    if (!fecha) {
-      el.innerHTML = `<p class="org-pago-linea">${__('Sin fecha de cobro.')}</p>
-        <p class="org-res-sub">${__('La vigencia de esta suscripción está abierta; no hay un cargo programado.')}</p>`;
+
+    if (!fecha || cancelada) {
+      el.innerHTML = `<p class="org-pago-linea">${cancelada ? __('La suscripción no se renueva.') : __('Sin cobros programados.')}</p>`;
       return;
     }
-    const precio = plan?.price_usd_month != null ? this._fmtMoney(plan.price_usd_month, 'USD') : null;
+
+    // El medio de pago se nombra por lo que HAY registrado, no por el proveedor
+    // declarado en la fila: una suscripcion puede decir "wompi" sin tener aun
+    // una fuente de pago guardada, y anunciarlo seria prometer un cobro que no
+    // va a ocurrir.
+    const medio = sub.wompi_payment_source_id ? __('Wompi (COP)')
+      : sub.stripe_subscription_id ? __('Stripe (USD)')
+      : null;
+
     el.innerHTML = `
-      <div class="org-cred-num">${this._esc(this._fmtDate(fecha))}</div>
-      <span class="org-res-sub">${cancelada
-        ? __('La suscripción termina en esa fecha y no se renueva.')
-        : (precio ? this._esc(__('Se renueva {plan} por {precio}', { plan: plan?.name || '', precio })) : __('Renovación automática'))}</span>`;
+      <div class="org-prox-fecha">${this._esc(this._fmtDate(fecha))}</div>
+      <dl class="org-prox-dl">
+        <div><dt>${__('Total')}</dt><dd>${plan?.price_usd_month != null
+          ? this._esc(this._fmtMoney(plan.price_usd_month, 'USD'))
+          : `<span class="org-res-sinmedir">${__('sin precio en el plan')}</span>`}</dd></div>
+        <div><dt>${__('Se cobra con')}</dt><dd>${medio
+          ? this._esc(medio)
+          : `<span class="org-res-sinmedir">${__('sin método registrado')}</span>`}</dd></div>
+      </dl>`;
   }
 
   /**

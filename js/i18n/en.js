@@ -14,6 +14,11 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Se cobra con": "Charged to",
+  "sin método registrado": "no method on file",
+  "sin precio en el plan": "plan has no price",
+  "Sin cobros programados.": "No scheduled charges.",
+  "La suscripción no se renueva.": "The subscription will not renew.",
   "Información de la tarjeta": "Card information",
   "Fecha de expiración": "Expiry date",
   "Añadir nuevo método de pago": "Add new payment method",
