@@ -226,7 +226,6 @@ describe('El payload lleva lo adjuntado', () => {
     '#seedanceResolution': { value: '1080p' },
     '#seedanceAspectRatio': { value: '9:16' },
     '#seedanceGenerateAudio': { checked: true },
-    '#seedanceGenAudioToggle': { getAttribute: () => 'true' },
     '#seedanceWebSearchToggle': { getAttribute: () => 'false' },
     '#seedancePacing': { value: 'Balanced' },
     '#seedanceArc': { value: 'Crescendo' },
@@ -586,5 +585,45 @@ describe('Plantilla — los controles que init() busca tienen que existir', () =
       const cierra = (html.match(new RegExp(`</${tag}>`, 'g')) || []).length;
       expect(`${tag}: ${abre}/${cierra}`).toBe(`${tag}: ${abre}/${abre}`);
     }
+  });
+});
+
+describe('El material vive junto al prompt, no en el sidebar', () => {
+  const html = VideoView.prototype.renderHTML.call({});
+  // La consola arranca en su <section> y termina donde empieza el <aside>.
+  const consola = html.slice(html.indexOf('id="seedanceFooterControl"'), html.indexOf('<aside'));
+  const sidebar = html.slice(html.indexOf('<aside'));
+
+  test('Frames Clave, Referencias y Audio están en la consola', () => {
+    // Son EL MATERIAL que se le entrega al modelo: va junto a lo que se le
+    // pide, no a dos clics y en otra columna.
+    for (const id of ['seedanceFirstFrameSlot', 'seedanceLastFrameSlot',
+      'seedanceAddRefImg', 'seedanceAddRefVid', 'seedanceAddRefAud',
+      'seedanceGenerateAudio']) {
+      expect(consola).toContain(`id="${id}"`);
+    }
+  });
+
+  test('y ya NO están en el sidebar: se mudaron, no se duplicaron', () => {
+    // Dos sitios para el mismo control es el problema que ya costó caro con la
+    // dirección; no se repite con los adjuntos.
+    for (const id of ['seedanceFirstFrameSlot', 'seedanceAddRefImg', 'seedanceGenerateAudio']) {
+      expect(sidebar).not.toContain(`id="${id}"`);
+    }
+  });
+
+  test('el audio tiene UN solo control, y la pantalla dice lo que se manda', () => {
+    // Antes había dos —el switch y una píldora en la consola— y nacían en
+    // desacuerdo: píldora encendida, switch apagado, unidos por un OR. El
+    // video salía con audio mientras la pantalla decía que no.
+    expect(html).not.toContain('seedanceGenAudioToggle');
+    expect((html.match(/id="seedanceGenerateAudio"/g) || []).length).toBe(1);
+    expect(html).toContain('id="seedanceGenerateAudio" checked');
+  });
+
+  test('el switch apagado apaga el audio del payload', () => {
+    const { v } = nuevaVista({ '#seedanceGenerateAudio': { checked: false } });
+
+    expect(v.buildSeedancePayload().generate_audio).toBe(false);
   });
 });

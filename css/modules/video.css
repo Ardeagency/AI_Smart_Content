@@ -6364,3 +6364,117 @@ body.has-sidebar #app-container:has(.video-view-container) {
         right: -60px;
     }
 }
+
+/* ==========================================================================
+   Director Console — LA BANDA DE RECURSOS, arriba del prompt.
+
+   Frames Clave, Referencias Multimodales y Audio & Atmósfera vivían en el
+   sidebar. Se mudaron aquí porque son EL MATERIAL que se le entrega al modelo,
+   y el material va junto a lo que se le pide, no a dos clics de distancia y en
+   otra columna.
+
+   Lo que la mudanza obliga: la consola es ancha y baja, el sidebar era angosto
+   y alto. Los tres grupos van EN FILA y los componentes se compactan (slots de
+   96px a 54px, tiles de audio a una línea). Los párrafos de ayuda de cada
+   sección pasan a `title` del rótulo: en una banda de 100px de alto, tres
+   párrafos son el 70% del espacio.
+   ========================================================================== */
+.video-view-container .video-director-recursos {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    padding: 0 var(--spacing-sm) var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--white-10, rgba(255, 255, 255, 0.08));
+}
+
+.video-view-container .video-director-recursos .dr-grupo {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+/* Las referencias son el grupo que crece: se lleva el espacio sobrante cuando
+   se van llenando de miniaturas. */
+.video-view-container .video-director-recursos .dr-grupo--refs {
+    flex: 1 1 260px;
+}
+.video-view-container .video-director-recursos .dr-grupo--frames,
+.video-view-container .video-director-recursos .dr-grupo--audio {
+    flex: 0 0 auto;
+}
+
+.video-view-container .video-director-recursos .dr-titulo {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary, rgba(255, 255, 255, 0.45));
+    /* El rótulo lleva la explicación en el hover: `title` con cursor de ayuda
+       para que se note que hay algo que leer. */
+    cursor: help;
+}
+
+/* --- Frames: dos slots pequeños, uno al lado del otro --- */
+.video-view-container .video-director-recursos .seedance-frames-grid {
+    grid-template-columns: 84px 84px;
+    gap: 6px;
+}
+.video-view-container .video-director-recursos .seedance-frame-slot {
+    min-height: 54px;
+    padding: 6px 4px;
+    gap: 2px;
+    font-size: 0.62rem;
+}
+.video-view-container .video-director-recursos .seedance-frame-slot-hint {
+    display: none; /* "Click para subir" sobra: el cursor y el borde punteado ya lo dicen */
+}
+
+/* --- Referencias: los tres grupos en fila, cada uno con su contador --- */
+.video-view-container .video-director-recursos .dr-grupo--refs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+}
+.video-view-container .video-director-recursos .dr-grupo--refs .dr-titulo {
+    flex: 0 0 100%;
+}
+.video-view-container .video-director-recursos .seedance-ref-group {
+    margin-bottom: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.video-view-container .video-director-recursos .seedance-ref-group-header {
+    margin-bottom: 4px;
+}
+.video-view-container .video-director-recursos .seedance-ref-list:empty {
+    display: none; /* el "Sin referencias" de tres grupos vacíos era casi toda la banda */
+}
+
+/* --- Audio: el switch y los cuatro tipos, en una línea --- */
+.video-view-container .video-director-recursos .seedance-audio-tiles {
+    grid-template-columns: repeat(4, 58px);
+    gap: 4px;
+}
+.video-view-container .video-director-recursos .seedance-audio-tile {
+    padding: 6px 2px;
+    gap: 3px;
+    font-size: 0.6rem;
+}
+
+/* En pantallas estrechas la banda se apila y recupera el ancho completo: tres
+   columnas de 84px en un móvil dejan los tiles ilegibles. */
+@media (max-width: 900px) {
+    .video-view-container .video-director-recursos {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    .video-view-container .video-director-recursos .dr-grupo {
+        width: 100%;
+    }
+    .video-view-container .video-director-recursos .seedance-audio-tiles {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

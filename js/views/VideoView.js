@@ -411,6 +411,73 @@ class VideoView extends BaseView {
 
                     <input type="file" id="seedanceImageUpload" accept="image/jpeg,image/png,image/jpg,video/mp4,video/quicktime,video/x-msvideo" multiple style="display: none;" aria-hidden="true">
 
+                    <div class="video-director-recursos" id="seedanceRecursos" aria-label="${window.__('Recursos de la secuencia')}">
+
+                      <div class="dr-grupo dr-grupo--frames">
+                        <span class="dr-titulo" title="${window.__('Ancla el inicio y/o final de la secuencia con una imagen. La IA construirá el arco narrativo entre ambas.')}">${window.__('Frames Clave')}</span>
+                        <input type="file" id="seedanceFrameUpload" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;" aria-hidden="true">
+                        <div class="seedance-frames-grid">
+                          <div class="seedance-frame-slot" data-frame="first" id="seedanceFirstFrameSlot" role="button" tabindex="0" aria-label="${window.__('Subir imagen de primer frame')}">
+                            <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
+                            <span class="seedance-frame-slot-label">First Frame</span>
+                            <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
+                          </div>
+                          <div class="seedance-frame-slot" data-frame="last" id="seedanceLastFrameSlot" role="button" tabindex="0" aria-label="${window.__('Subir imagen de último frame')}">
+                            <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
+                            <span class="seedance-frame-slot-label">Last Frame</span>
+                            <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="dr-grupo dr-grupo--refs">
+                        <span class="dr-titulo" title="${window.__('Imágenes, videos y audios que la IA usa como inspiración. Mutuamente excluyentes con Frames Clave.')}">${window.__('Referencias Multimodales')}</span>
+                        <input type="file" id="seedanceRefImgUpload" accept="image/jpeg,image/png,image/jpg,image/webp" multiple style="display: none;" aria-hidden="true">
+                        <input type="file" id="seedanceRefVidUpload" accept="video/mp4,video/quicktime,video/webm" multiple style="display: none;" aria-hidden="true">
+                        <input type="file" id="seedanceRefAudUpload" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-m4a,audio/mp4,audio/aac" multiple style="display: none;" aria-hidden="true">
+
+                        <div class="seedance-ref-group">
+                          <div class="seedance-ref-group-header">
+                            <h4 class="video-prompt-panel-title">${window.__('Imágenes')} <span class="seedance-ref-limit" id="seedanceRefImgCount">0 / 9</span></h4>
+                            <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefImg" aria-label="${window.__('Añadir imágenes de referencia')}"><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
+                          </div>
+                          <div class="seedance-ref-list" id="seedanceRefImgList" aria-live="polite"></div>
+                        </div>
+
+                        <div class="seedance-ref-group">
+                          <div class="seedance-ref-group-header">
+                            <h4 class="video-prompt-panel-title">${window.__('Videos')} <span class="seedance-ref-limit" id="seedanceRefVidCount">0 / 3 · ≤15s</span></h4>
+                            <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefVid" aria-label="${window.__('Añadir videos de referencia')}"><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
+                          </div>
+                          <div class="seedance-ref-list" id="seedanceRefVidList" aria-live="polite"></div>
+                        </div>
+
+                        <div class="seedance-ref-group">
+                          <div class="seedance-ref-group-header">
+                            <h4 class="video-prompt-panel-title">${window.__('Audios')} <span class="seedance-ref-limit" id="seedanceRefAudCount">0 / 3 · ≤15s</span></h4>
+                            <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefAud" aria-label="${window.__('Añadir audios de referencia')}"><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
+                          </div>
+                          <div class="seedance-ref-list" id="seedanceRefAudList" aria-live="polite"></div>
+                        </div>
+                      </div>
+
+                      <div class="dr-grupo dr-grupo--audio">
+                        <span class="dr-titulo" title="${window.__('Seedance puede generar el audio de la secuencia. Activar aumenta el costo de créditos.')}">${window.__('Audio & Atmósfera')}</span>
+                        <label class="seedance-toggle-row">
+                          <input type="checkbox" id="seedanceGenerateAudio" checked>
+                          <span class="seedance-toggle-track" aria-hidden="true"><span class="seedance-toggle-thumb"></span></span>
+                          <span class="seedance-toggle-label">${window.__('Generar audio')}</span>
+                        </label>
+                        <div class="seedance-audio-tiles">
+                          <button type="button" class="seedance-audio-tile" data-audio-type="ambient"><i class="aisc-ico aisc-ico--wind" aria-hidden="true"></i><span>${window.__('Diegético')}</span></button>
+                          <button type="button" class="seedance-audio-tile" data-audio-type="music"><i class="aisc-ico aisc-ico--music" aria-hidden="true"></i><span>${window.__('Música')}</span></button>
+                          <button type="button" class="seedance-audio-tile" data-audio-type="voice"><i class="aisc-ico aisc-ico--microphone" aria-hidden="true"></i><span>${window.__('Voz')}</span></button>
+                          <button type="button" class="seedance-audio-tile" data-audio-type="silence"><i class="aisc-ico aisc-ico--volume" aria-hidden="true"></i><span>${window.__('Silencio')}</span></button>
+                        </div>
+                      </div>
+
+                    </div>
+
                     <div class="video-director-console-content">
                       <div id="videoPromptEditor"></div>
                     </div>
@@ -420,7 +487,6 @@ class VideoView extends BaseView {
 
                     <div class="video-director-controls">
                       <button type="button" class="video-director-btn-add" id="seedancePromptAdd" aria-label="${window.__('Añadir referencia visual')}"><i class="aisc-ico aisc-ico--add"></i></button>
-                      <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceGenAudioToggle" title="${window.__('Generar audio')}" aria-pressed="true"><i class="aisc-ico aisc-ico--volume"></i><span>Audio</span></button>
                       <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceWebSearchToggle" title="${window.__('Búsqueda online')}" aria-pressed="false"><i class="aisc-ico aisc-ico--globe"></i><span>Web</span></button>
                       <div class="video-prompt-aspect-wrap">
                         <select id="seedanceResolution" class="video-director-select" aria-label="${window.__('Resolución')}">
@@ -457,7 +523,7 @@ class VideoView extends BaseView {
             <aside class="video-sidebar-console" aria-label="${window.__('Panel de producción')}">
               <div class="video-sidebar-tabs" role="tablist" aria-label="${window.__('Secciones del panel')}">
                 <button type="button" class="video-sidebar-tab is-active" role="tab" id="videoSidebarTabRecursos" data-sidebar-tab="recursos" aria-selected="true" aria-controls="videoSidebarPanelRecursos">
-                  <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i><span>${window.__('Recursos')}</span>
+                  <i class="aisc-ico aisc-ico--brief" aria-hidden="true"></i><span>${window.__('Contexto')}</span>
                 </button>
                 <button type="button" class="video-sidebar-tab" role="tab" id="videoSidebarTabCine" data-sidebar-tab="cinematografia" aria-selected="false" aria-controls="videoSidebarPanelCine">
                   <i class="aisc-ico aisc-ico--video" aria-hidden="true"></i><span>${window.__('Cinematografía')}</span>
@@ -532,81 +598,6 @@ class VideoView extends BaseView {
                     </div>
                   </div>
 
-                  <div class="video-sidebar-section">
-                    <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">${window.__('Frames Clave')}</h3>
-                    </div>
-                    <p class="video-sidebar-section-hint">${window.__('Ancla el inicio y/o final de la secuencia con una imagen. La IA construirá el arco narrativo entre ambas.')}</p>
-                    <input type="file" id="seedanceFrameUpload" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;" aria-hidden="true">
-                    <div class="seedance-frames-grid">
-                      <div class="seedance-frame-slot" data-frame="first" id="seedanceFirstFrameSlot" role="button" tabindex="0" aria-label="${window.__('Subir imagen de primer frame')}">
-                        <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
-                        <span class="seedance-frame-slot-label">First Frame</span>
-                        <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
-                      </div>
-                      <div class="seedance-frame-slot" data-frame="last" id="seedanceLastFrameSlot" role="button" tabindex="0" aria-label="${window.__('Subir imagen de último frame')}">
-                        <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
-                        <span class="seedance-frame-slot-label">Last Frame</span>
-                        <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="video-sidebar-section">
-                    <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">${window.__('Referencias Multimodales')}</h3>
-                    </div>
-                    <p class="video-sidebar-section-hint">${window.__('Imágenes, videos y audios que la IA usa como inspiración. Mutuamente excluyentes con Frames Clave.')}</p>
-                    <input type="file" id="seedanceRefImgUpload" accept="image/jpeg,image/png,image/jpg,image/webp" multiple style="display: none;" aria-hidden="true">
-                    <input type="file" id="seedanceRefVidUpload" accept="video/mp4,video/quicktime,video/webm" multiple style="display: none;" aria-hidden="true">
-                    <input type="file" id="seedanceRefAudUpload" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-m4a,audio/mp4,audio/aac" multiple style="display: none;" aria-hidden="true">
-
-                    <div class="seedance-ref-group">
-                      <div class="seedance-ref-group-header">
-                        <h4 class="video-prompt-panel-title">${window.__('Imágenes')} <span class="seedance-ref-limit" id="seedanceRefImgCount">0 / 9</span></h4>
-                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefImg"><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
-                      </div>
-                      <div class="seedance-ref-list" id="seedanceRefImgList" aria-live="polite"></div>
-                    </div>
-
-                    <div class="seedance-ref-group">
-                      <div class="seedance-ref-group-header">
-                        <h4 class="video-prompt-panel-title">${window.__('Videos')} <span class="seedance-ref-limit" id="seedanceRefVidCount">0 / 3 · ≤15s</span></h4>
-                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefVid"><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
-                      </div>
-                      <div class="seedance-ref-list" id="seedanceRefVidList" aria-live="polite"></div>
-                    </div>
-
-                    <div class="seedance-ref-group">
-                      <div class="seedance-ref-group-header">
-                        <h4 class="video-prompt-panel-title">${window.__('Audios')} <span class="seedance-ref-limit" id="seedanceRefAudCount">0 / 3 · ≤15s</span></h4>
-                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefAud"><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
-                      </div>
-                      <div class="seedance-ref-list" id="seedanceRefAudList" aria-live="polite"></div>
-                    </div>
-                  </div>
-
-                  <div class="video-sidebar-section">
-                    <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">${window.__('Audio & Atmósfera')}</h3>
-                    </div>
-                    <p class="video-sidebar-section-hint">${window.__('Seedance puede generar el audio de la secuencia. Activar aumenta el costo de créditos.')}</p>
-                    <label class="seedance-toggle-row">
-                      <input type="checkbox" id="seedanceGenerateAudio">
-                      <span class="seedance-toggle-track" aria-hidden="true"><span class="seedance-toggle-thumb"></span></span>
-                      <span class="seedance-toggle-label">${window.__('Generar audio')}</span>
-                    </label>
-                    <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">${window.__('Tipo de sonido')}</h4>
-                      <div class="seedance-audio-tiles">
-                        <button type="button" class="seedance-audio-tile" data-audio-type="ambient"><i class="aisc-ico aisc-ico--wind" aria-hidden="true"></i><span>${window.__('Diegético')}</span></button>
-                        <button type="button" class="seedance-audio-tile" data-audio-type="music"><i class="aisc-ico aisc-ico--music" aria-hidden="true"></i><span>${window.__('Música')}</span></button>
-                        <button type="button" class="seedance-audio-tile" data-audio-type="voice"><i class="aisc-ico aisc-ico--microphone" aria-hidden="true"></i><span>${window.__('Voz')}</span></button>
-                        <button type="button" class="seedance-audio-tile" data-audio-type="silence"><i class="aisc-ico aisc-ico--volume" aria-hidden="true"></i><span>${window.__('Silencio')}</span></button>
-                      </div>
-                    </div>
-                  </div>
-
                 </div>
 
                 <div class="video-sidebar-panel" data-sidebar-panel="cinematografia" role="tabpanel" id="videoSidebarPanelCine" aria-labelledby="videoSidebarTabCine" hidden>
@@ -636,9 +627,9 @@ class VideoView extends BaseView {
               <button type="button" class="video-sidebar-help" id="seedanceSidebarHelpBtn" aria-label="${window.__('Ayuda Seedance')}" title="${window.__('Ayuda Seedance')}">?</button>
               <div class="video-sidebar-help-popover" id="seedanceSidebarHelpPopover" role="dialog" aria-label="${window.__('Ayuda Seedance')}">
                 <h4>${window.__('Seedance 2.0 — secuencias narrativas')}</h4>
-                <p><strong>${window.__('Recursos')}</strong>${window.__(': el material que le entregas. Frames Clave ancla el inicio y el cierre; las Referencias Multimodales dan estilo, movimiento y vibe (hasta 9 imágenes, 3 videos y 3 audios). Frames y referencias no se combinan.')}</p>
+                <p><strong>${window.__('Recursos')}</strong>${window.__(': el material que le entregas vive junto al prompt, no aquí. Frames Clave ancla el inicio y el cierre; las Referencias Multimodales dan estilo, movimiento y vibe (hasta 9 imágenes, 3 videos y 3 audios). Frames y referencias no se combinan.')}</p>
                 <p><strong>${window.__('Cinematografía')}</strong>${window.__(': cómo se ve. Cámara, movimiento, luz y mood no son parámetros de la API. Tocar una opción escribe su variable en el prompt, donde esté el cursor, y ahí queda a la vista; una Receta escribe todas de golpe.')}</p>
-                <p><strong>Audio</strong>${window.__(': Seedance genera el audio de la secuencia. Activarlo cuesta créditos extra pero devuelve un video listo para publicar.')}</p>
+                <p><strong>${window.__('Contexto')}</strong>${window.__(': a qué campaña pertenece la secuencia, a quién le habla y qué producto no debe cambiar.')}</p>
               </div>
             </aside>
           </div>
@@ -879,7 +870,7 @@ class VideoView extends BaseView {
     this.initCinematography();
 
     // Seedance: toggle Audio + Web search (solo UI state, sin wiring backend aún)
-    ['seedanceGenAudioToggle', 'seedanceWebSearchToggle'].forEach((id) => {
+    ['seedanceWebSearchToggle'].forEach((id) => {
       const btn = this.container.querySelector('#' + id);
       if (!btn) return;
       // El estado inicial viene en aria-pressed desde el HTML; la clase la
@@ -2123,7 +2114,11 @@ class VideoView extends BaseView {
       duration: val('#seedanceDuration', '5'),
       resolution: val('#seedanceResolution', '720p'),
       aspect_ratio: val('#seedanceAspectRatio', '16:9'),
-      generate_audio: checked('#seedanceGenerateAudio') || pressed('#seedanceGenAudioToggle'),
+      // Un solo control para el audio. Antes había dos —el switch del sidebar y
+      // una píldora en la consola— y NACÍAN en desacuerdo: la píldora encendida
+      // y el switch apagado, para el mismo campo. El payload los unía con un OR,
+      // así que el video salía con audio mientras la pantalla decía que no.
+      generate_audio: checked('#seedanceGenerateAudio'),
       audio_type: audioTile ? audioTile.getAttribute('data-audio-type') : null,
       web_search: pressed('#seedanceWebSearchToggle'),
       first_frame_url: this.seedanceFrames.first?.url || null,
