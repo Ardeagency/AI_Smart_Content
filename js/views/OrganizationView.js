@@ -36,7 +36,9 @@ class OrganizationView extends BaseView {
     this.controlStats = null;
 
     // Uso (consumo de créditos)
-    this.usageRange = 30;
+    // Rango de Uso: null = ultimos 30 dias (lo resuelve _loadUsage).
+    this.usageFrom = null;
+    this.usageTo = null;
     this.usage = null;
 
     // Notificaciones
@@ -224,34 +226,39 @@ class OrganizationView extends BaseView {
     </div>
 
     <div class="tab-content" id="activityTab" role="tabpanel">
-      <section class="org-section">
-        <div class="org-section-head">
-          <div>
-            <h2>${__('Uso')}</h2>
-            <p class="org-section-desc">${__('Consumo de créditos de la plataforma por día — scrapers, flujos, generación e IA.')}</p>
-          </div>
-          <div class="org-usage-range" id="orgUsageRange" role="tablist">
-            <button type="button" class="org-range-pill" data-range="7">${__('7 días')}</button>
-            <button type="button" class="org-range-pill org-range-pill--active" data-range="30">${__('30 días')}</button>
-            <button type="button" class="org-range-pill" data-range="90">${__('90 días')}</button>
-          </div>
-        </div>
-        <!-- Creditos y limites viven aqui, no en Suscripcion: son CONSUMO.
-             Suscripcion responde que contrataste; Uso, cuanto llevas gastado y
-             hasta donde puedes gastar. -->
-        <div class="org-sub-block">
-          <h2 class="org-sub-rotulo">${__('Créditos')}</h2>
-          <div class="org-billing-credits" id="orgBillingCredits"></div>
+      <!-- Izquierda: la lectura del consumo. Derecha: el saldo y los topes.
+           Una es historia, la otra es estado. -->
+      <div class="org-general-cols">
+
+        <div class="org-col-main">
+          <section class="org-section">
+            <div class="org-section-head">
+              <div>
+                <h2>${__('Uso')}</h2>
+                <p class="org-section-desc">${__('Consumo de créditos por día y por función de la plataforma.')}</p>
+              </div>
+              <div class="org-usage-range" id="orgUsageRange"></div>
+            </div>
+            <div class="org-usage-stats" id="orgUsageStats"></div>
+            <div class="org-usage-chart-card" id="orgUsageChart"><p class="org-placeholder">${__('Cargando…')}</p></div>
+            <div class="org-usage-breakdown-card" id="orgUsageBreakdown"></div>
+          </section>
         </div>
 
-        <div class="org-sub-block" id="orgBillingLimitsBlock">
-          <div class="org-billing-limits" id="orgBillingLimits"></div>
-        </div>
+        <aside class="org-col-aside org-col-aside--liso">
+          <div class="org-aside-inner">
+            <section class="org-sub-block">
+              <h2 class="org-sub-rotulo">${__('Créditos')}</h2>
+              <div class="org-billing-credits" id="orgBillingCredits"></div>
+            </section>
 
-        <div class="org-usage-stats" id="orgUsageStats"></div>
-        <div class="org-usage-chart-card" id="orgUsageChart"><p class="org-placeholder">${__('Cargando…')}</p></div>
-        <div class="org-usage-breakdown-card" id="orgUsageBreakdown"></div>
-      </section>
+            <section class="org-sub-block" id="orgBillingLimitsBlock">
+              <div class="org-billing-limits" id="orgBillingLimits"></div>
+            </section>
+          </div>
+        </aside>
+
+      </div>
     </div>
 
     <!-- ── Notificaciones ───────────────────────────────── -->
@@ -980,36 +987,45 @@ class OrganizationView extends BaseView {
   // credit_usage.credits_delta < 0 = consumo. El área (studio/video/vera/
   // production/background/system) viene de feature_costs vía CreditCosts.get(kind).
   async _loadUsage() {
-    const days = this.usageRange || 30;
-    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    // El rango lo manda el selector de fechas de la plataforma. Por defecto, los
+    // ultimos 30 dias; el picker puede fijar cualquier otro.
+    const hasta = this.usageTo ? new Date(this.usageTo) : new Date();
+    const desde = this.usageFrom ? new Date(this.usageFrom)
+      : new Date(hasta.getTime() - 29 * 24 * 60 * 60 * 1000);
+    const dias = Math.max(1, Math.round((hasta - desde) / (24 * 60 * 60 * 1000)) + 1);
+
     try { await (window.CreditCosts?.getMap?.()); } catch (_) {}
     const { data } = await this.supabase
-      .from('credit_usage').select('kind, credits_delta, created_at')
+      // `metadata` entra al select porque de ahi sale la plataforma del scraping:
+      // sin ella, Instagram y Facebook caen en el mismo saco.
+      .from('credit_usage').select('kind, credits_delta, created_at, metadata')
       .eq('organization_id', this.orgId)
       .lt('credits_delta', 0)
-      .gte('created_at', since)
+      .gte('created_at', desde.toISOString())
+      .lte('created_at', new Date(hasta.getTime() + 86399000).toISOString())
       .order('created_at', { ascending: true });
+
     const rows = data || [];
     const byDayMap = {};
-    const byArea = { studio: 0, video: 0, vera: 0, production: 0, background: 0, system: 0 };
+    const byArea = {};
+    OrganizationView.USAGE_AREAS.forEach((a) => { byArea[a.key] = 0; });
     let total = 0;
     rows.forEach((r) => {
       const day = (r.created_at || '').slice(0, 10);
       if (!day) return;
-      const area = (window.CreditCosts?.get?.(r.kind)?.area) || 'background';
+      const cat = OrganizationView._categoriaDe(r.kind, r.metadata?.platform);
       const c = Math.abs(Number(r.credits_delta) || 0);
       if (!byDayMap[day]) byDayMap[day] = { day, total: 0, byArea: {} };
-      byDayMap[day].byArea[area] = (byDayMap[day].byArea[area] || 0) + c;
+      byDayMap[day].byArea[cat] = (byDayMap[day].byArea[cat] || 0) + c;
       byDayMap[day].total += c;
-      byArea[area] = (byArea[area] || 0) + c;
+      byArea[cat] = (byArea[cat] || 0) + c;
       total += c;
     });
     const byDay = Object.values(byDayMap).sort((a, b) => a.day.localeCompare(b.day));
     const peak = byDay.reduce((m, d) => (d.total > (m ? m.total : 0) ? d : m), null);
     const topAreaKey = Object.entries(byArea).sort((a, b) => b[1] - a[1])[0];
     this.usage = {
-      days, byDay, byArea, total,
-      peak,
+      days: dias, byDay, byArea, total, peak,
       topAreaKey: total > 0 && topAreaKey ? topAreaKey[0] : null,
       events: rows.length,
     };
@@ -1665,16 +1681,61 @@ class OrganizationView extends BaseView {
   }
 
   // Áreas (fuentes) del consumo, en orden de apilado (arriba → abajo).
+  /**
+   * El consumo se lee por FUNCION, no por "area" tecnica. Antes eran seis cajones
+   * (studio/video/vera/production/background/system) que no le dicen nada a quien
+   * paga: "background" eran todos los scrapers juntos. Ahora cada scraper tiene
+   * su propia linea porque `credit_usage.metadata.platform` guarda la red
+   * —medido: instagram 814 usos, facebook 68, tiktok 67, youtube 69, x 64—.
+   *
+   * Los colores salen del ESPECTRO DE PLATAFORMA (--pf-1..7 de bundle.css),
+   * caminando de naranja a azul noche. No se usa el degradado de la marca del
+   * cliente: este grafico habla de la plataforma y su consumo, no de la marca.
+   *
+   * Las categorias sin uso hoy (imagenes, videos, simulador) se declaran igual:
+   * el dia que se estrenen aparecen solas, con su color ya asignado.
+   */
   static USAGE_AREAS = [
-    { key: 'studio',     label: 'Studio' },
-    { key: 'video',      label: 'Video' },
-    { key: 'vera',       label: 'Vera' },
-    { key: 'production', label: 'Producción' },
-    { key: 'background', label: 'Scrapers' },
-    { key: 'system',     label: 'Sistema' },
+    { key: 'imagenes',  label: 'Imágenes',   color: '#FF6A00' },
+    { key: 'videos',    label: 'Videos',     color: '#F04A0D' },
+    { key: 'flujos',    label: 'Flujos',     color: '#E0301A' },
+    { key: 'vera',      label: 'Vera',       color: '#C01A5A' },
+    { key: 'ig',        label: 'Instagram',  color: '#A02279' },
+    { key: 'fb',        label: 'Facebook',   color: '#7A2A9A' },
+    { key: 'tiktok',    label: 'TikTok',     color: '#6030A6' },
+    { key: 'youtube',   label: 'YouTube',    color: '#4A2FB0' },
+    { key: 'x',         label: 'X',          color: '#3437B0' },
+    { key: 'busqueda',  label: 'Búsqueda',   color: '#1E3FB0' },
+    { key: 'analisis',  label: 'Análisis IA', color: '#16337F' },
+    { key: 'simulador', label: 'Simulador',  color: '#0A1A5A' },
+    { key: 'ajustes',   label: 'Ajustes',    color: '#64748b' },
   ];
 
-  _usageColor(area) { return (window.CreditCosts?.getAreaColor?.(area)) || '#64748b'; }
+  /** kind (+ plataforma del metadata) -> categoria de la grafica. */
+  static _categoriaDe(kind, plataforma) {
+    const k = String(kind || '');
+    if (k === 'apify_scrape') {
+      const p = String(plataforma || '').toLowerCase();
+      if (p === 'instagram') return 'ig';
+      if (p === 'facebook')  return 'fb';
+      if (p === 'tiktok')    return 'tiktok';
+      if (p === 'youtube')   return 'youtube';
+      if (p === 'x' || p === 'twitter') return 'x';
+      return 'busqueda';
+    }
+    if (k.startsWith('studio_image')) return 'imagenes';
+    if (k.startsWith('video_')) return 'videos';
+    if (k === 'flow_execution' || k === 'production_flow') return 'flujos';
+    if (k.startsWith('vera_') || k === 'cmo_brief') return 'vera';
+    if (k.startsWith('predictor')) return 'simulador';
+    if (k.startsWith('claude_') || k === 'pattern_llm_classify') return 'analisis';
+    if (k === 'meta_ads_library_query' || k === 'visibility_probe') return 'busqueda';
+    return 'ajustes';
+  }
+
+  _usageColor(area) {
+    return (OrganizationView.USAGE_AREAS.find((a) => a.key === area) || {}).color || '#64748b';
+  }
   _fmtCredits(n) { return Math.round(Number(n) || 0).toLocaleString('es'); }
   _fmtCreditsK(n) {
     n = Number(n) || 0;
@@ -1694,11 +1755,36 @@ class OrganizationView extends BaseView {
     return m * pow;
   }
 
+  /**
+   * Selector de rango de Uso: el DateRangePicker de la plataforma, el mismo que
+   * usan Trafico y Mi Marca, en vez de tres pills de 7/30/90 dias. Se crea UNA
+   * vez y se conserva entre repintados, porque guarda el rango elegido.
+   */
+  _mountUsagePicker() {
+    const cont = this.querySelector('#orgUsageRange');
+    if (!cont || typeof window.DateRangePicker !== 'function') return;
+    if (!this._usageDP) {
+      this._usageDP = new window.DateRangePicker({
+        from: this.usageFrom || null,
+        to: this.usageTo || null,
+        // El componente hace `opts.label || __('Fecha')`: una cadena vacia es
+        // falsy y pintaria "Fecha". Un espacio lo deja mudo.
+        label: ' ',
+        allLabel: __('Últimos 30 días'),
+        onChange: async ({ from, to }) => {
+          this.usageFrom = from || null;
+          this.usageTo = to || null;
+          await this._loadUsage();
+          this._renderUsage();
+        },
+      });
+    }
+    cont.innerHTML = this._usageDP.html();
+    this._usageDP.mount(cont);
+  }
+
   _renderUsage() {
-    // Pills de rango activas
-    this.querySelectorAll('#orgUsageRange .org-range-pill').forEach((p) => {
-      p.classList.toggle('org-range-pill--active', Number(p.dataset.range) === this.usageRange);
-    });
+    this._mountUsagePicker();
 
     const u = this.usage;
     const statsEl = this.querySelector('#orgUsageStats');
@@ -1747,8 +1833,8 @@ class OrganizationView extends BaseView {
         chartEl.innerHTML = `
           <div class="org-uchart-head">
             <div>
-              <h3 class="org-uchart-title">${__('Consumo diario por fuente')}</h3>
-              <p class="org-uchart-desc">${__('Créditos consumidos por día, apilados por área de la plataforma.')}</p>
+              <h3 class="org-uchart-title">${__('Consumo diario por función')}</h3>
+              <p class="org-uchart-desc">${__('Créditos por día, apilados por lo que los gastó.')}</p>
             </div>
             <div class="org-uchart-legend">${legend}</div>
           </div>
@@ -1905,16 +1991,8 @@ class OrganizationView extends BaseView {
         ? window.getOrgPathPrefix(this.orgId, this.org?.name || '') : '';
       window.router?.navigate((prefix || '') + card.dataset.route);
     });
-    this.querySelector('#orgUsageRange')?.addEventListener('click', async (e) => {
-      const pill = e.target.closest('.org-range-pill');
-      if (!pill) return;
-      const range = Number(pill.dataset.range);
-      if (!range || range === this.usageRange) return;
-      this.usageRange = range;
-      this.querySelector('#orgUsageChart').innerHTML = `<p class="org-placeholder">${__('Cargando…')}</p>`;
-      await this._loadUsage();
-      this._renderUsage();
-    });
+    // El rango de Uso lo lleva el DateRangePicker de la plataforma, montado en
+    // _mountUsagePicker(); ya no hay pills que escuchar aqui.
 
     this.container.addEventListener('change', (e) => {
       const sel = e.target.closest('.org-role-select');

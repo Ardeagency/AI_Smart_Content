@@ -14,6 +14,12 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Consumo diario por función": "Daily usage by function",
+  "Créditos por día, apilados por lo que los gastó.": "Credits per day, stacked by what spent them.",
+  "Consumo de créditos por día y por función de la plataforma.": "Credit usage per day and per platform function.",
+  "Búsqueda": "Search",
+  "Análisis IA": "AI analysis",
+  "Simulador": "Simulator",
   "En uso": "In use",
   "Disponibles en tu plan": "Available in your plan",
   "Sin estrenar": "Never used",

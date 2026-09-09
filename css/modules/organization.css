@@ -1202,9 +1202,6 @@
 .org-spark-axis { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); }
 
 /* ── Uso (consumo de créditos) ───────────────────────────── */
-.org-usage-range { display: inline-flex; gap: 2px; padding: 3px; background: var(--bg-card, rgba(255,255,255,.04)); border: 1px solid var(--border-divider); border-radius: 10px; }
-.org-range-pill { appearance: none; border: 0; background: transparent; color: var(--text-muted); font: 500 0.8rem/1 inherit; font-family: inherit; padding: 6px 13px; border-radius: 8px; cursor: pointer; transition: background .15s ease, color .15s ease; }
-.org-range-pill:hover { color: var(--text-secondary); }
 /* El pill activo llevaba un morado #7c3aed clavado a mano, sin relacion con
    ninguna marca ni con el design system. Pasa al color de la org; si la org no
    tiene brand_colors cae a un blanco tenue, que sigue leyendose como activo
@@ -1212,7 +1209,6 @@
 /* Fondo tenido + texto de marca, en vez de un relleno solido de color: asi el
    pill se lee como activo sea cual sea la marca. Un relleno solido obliga a
    apostar por el color del texto, y con una marca clara el blanco desaparece. */
-.org-range-pill--active { background: rgba(255,255,255,.10); color: var(--brand-color-light, #fff); }
 
 .org-usage-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
 .org-usage-stats:empty { display: none; }
@@ -2450,3 +2446,11 @@
     .org-fx-row--head { display: none; }
     .org-fx-area { grid-column: 1; }
 }
+
+/* El selector de fechas de Uso es el DateRangePicker de la plataforma: aqui solo
+   se le da sitio en la cabecera de la seccion. */
+#orgUsageRange { flex-shrink: 0; }
+
+/* La leyenda crece a 13 categorias (una por funcion): en columna se lee, en
+   fila se amontonaba. */
+.org-uchart-legend { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; max-width: 420px; }
