@@ -828,8 +828,10 @@ describe('Las filas de Elementos y el contrato del arrastre', () => {
   /** Vista con la fila real montada sobre un contenedor de mentira. */
   function conFilas() {
     const { v, avisos } = nuevaVista();
-    const nodo = { innerHTML: '', dataset: {}, addEventListener() {} };
+    const nodo = { innerHTML: '', dataset: {}, addEventListener() {}, querySelectorAll: () => [] };
     v.container.querySelector = (sel) => (sel === '#videoElementosFilas' ? nodo : null);
+    // Lo hereda de BaseView, que aquí es un stub vacío.
+    v.addEventListener = () => {};
     v.escapeHtml = (t) => String(t == null ? '' : t)
       .replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
     delete v.renderElementosFilas; // usamos la de verdad, no el sustituto
@@ -1347,5 +1349,108 @@ describe('Los dos actos: forjar el prompt, y solo entonces producir', () => {
     await Promise.all([v.forjarPrompt(), v.forjarPrompt()]);
 
     expect(llamadas).toHaveLength(1);
+  });
+});
+
+describe('La galería flota: escapa de los tres overflow que la recortaban', () => {
+  /** Tile y galería de mentira, con rectángulos controlados. */
+  function conTile({ tileTop, galeriaAlto = 180, ventanaAlto = 800, ventanaAncho = 1400 }) {
+    const { v } = nuevaVista();
+    const estilo = { top: '', left: '', visibility: '' };
+    const clases = new Set();
+    const galeria = {
+      style: estilo,
+      classList: {
+        add: (c) => clases.add(c),
+        remove: (c) => clases.delete(c),
+        contains: (c) => clases.has(c)
+      },
+      getBoundingClientRect: () => ({ height: galeriaAlto, width: 260, top: 0, left: 0 })
+    };
+    const tile = {
+      querySelector: () => galeria,
+      getBoundingClientRect: () => ({ top: tileTop, bottom: tileTop + 72, left: 200, width: 72 })
+    };
+    globalThis.window.innerHeight = ventanaAlto;
+    globalThis.window.innerWidth = ventanaAncho;
+    return { v, tile, galeria, estilo, clases };
+  }
+
+  test('se abre por CLASE, no por :hover — hay que colocarla antes de mostrarla', () => {
+    // Colgada de `:hover` en CSS asomaba un instante en la esquina 0,0.
+    const { v, tile, clases, estilo } = conTile({ tileTop: 400 });
+
+    v.abrirGaleria(tile);
+
+    expect(clases.has('is-abierta')).toBe(true);
+    expect(estilo.top).not.toBe('');
+    expect(estilo.left).not.toBe('');
+  });
+
+  test('con aire arriba, se abre encima del tile', () => {
+    const { v, tile, estilo } = conTile({ tileTop: 400, galeriaAlto: 180 });
+
+    v.abrirGaleria(tile);
+
+    expect(estilo.top).toBe('212px'); // 400 - 180 - 8
+  });
+
+  test('sin aire arriba, baja: el sidebar es alto y la primera fila no respira', () => {
+    const { v, tile, estilo } = conTile({ tileTop: 40, galeriaAlto: 180 });
+
+    v.abrirGaleria(tile);
+
+    expect(estilo.top).toBe('120px'); // 40 + 72 + 8
+  });
+
+  test('no se sale por el borde derecho de la ventana', () => {
+    const { v, tile, estilo } = conTile({ tileTop: 400, ventanaAncho: 300 });
+
+    v.abrirGaleria(tile);
+
+    // 300 - 260 - 8 = 32
+    expect(estilo.left).toBe('32px');
+  });
+
+  test('se mide con la galería colocada pero invisible, o el alto sería 0', () => {
+    // Midiendo antes de añadir la clase, getBoundingClientRect da 0 y la
+    // decisión de arriba/abajo sale siempre mal.
+    const { v, tile, estilo } = conTile({ tileTop: 400 });
+    let visibilidadAlMedir;
+    const rectOriginal = tile.querySelector().getBoundingClientRect;
+    tile.querySelector().getBoundingClientRect = () => {
+      visibilidadAlMedir = estilo.visibility;
+      return rectOriginal();
+    };
+
+    v.abrirGaleria(tile);
+
+    expect(visibilidadAlMedir).toBe('hidden');
+    expect(estilo.visibility).toBe('');   // se devuelve al final
+  });
+
+  test('solo una abierta a la vez', () => {
+    const a = conTile({ tileTop: 400 });
+    const b = conTile({ tileTop: 400 });
+    a.v.abrirGaleria(a.tile);
+    a.v._galeriaAbierta = a.galeria;
+
+    a.v.abrirGaleria(b.tile);
+
+    expect(a.clases.has('is-abierta')).toBe(false);
+    expect(b.clases.has('is-abierta')).toBe(true);
+  });
+
+  test('un elemento de una sola foto no tiene panel que abrir', () => {
+    const { v } = nuevaVista();
+    const tile = { querySelector: () => null, getBoundingClientRect: () => ({}) };
+
+    expect(() => v.abrirGaleria(tile)).not.toThrow();
+  });
+
+  test('el CSS la deja en fixed: absolute la recortaban tres ancestros', () => {
+    const css = fs.readFileSync(path.join(process.cwd(), 'css/modules/video.css'), 'utf8');
+    const regla = css.slice(css.indexOf('.video-view-container .video-elemento-galeria {'));
+    expect(regla.slice(0, regla.indexOf('}'))).toContain('position: fixed');
   });
 });

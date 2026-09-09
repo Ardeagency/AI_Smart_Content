@@ -1798,6 +1798,9 @@ class VideoView extends BaseView {
         </div>`;
     }).join('');
 
+    // Repintar destruye el nodo que estuviera abierto: la referencia guardada
+    // apuntaría a un elemento que ya no está en el documento.
+    this._galeriaAbierta = null;
     cont.innerHTML = filas;
 
     if (cont.dataset.boundElementos !== '1') {
@@ -1836,7 +1839,89 @@ class VideoView extends BaseView {
         if (tile) tile.classList.remove('is-arrastrando');
         document.body.classList.remove('video-arrastrando-elemento');
       });
+
+      // La galería la abre el JS, no `:hover`: hay que colocarla antes de
+      // mostrarla. `mouseover` y no `mouseenter` porque el segundo no burbujea
+      // y aquí todo va por delegación.
+      cont.addEventListener('mouseover', (e) => {
+        const tile = e.target.closest('.video-elemento-item');
+        if (tile) this.abrirGaleria(tile);
+      });
+      cont.addEventListener('mouseout', (e) => {
+        const tile = e.target.closest('.video-elemento-item');
+        // Moverse DENTRO del mismo tile (o hacia su galería) no lo cierra.
+        if (!tile || tile.contains(e.relatedTarget)) return;
+        this.cerrarGaleria(tile);
+      });
+      // Con teclado se llega tabulando: un panel que solo existe para el mouse
+      // no existe para media casa.
+      cont.addEventListener('focusin', (e) => {
+        const tile = e.target.closest('.video-elemento-item');
+        if (tile) this.abrirGaleria(tile);
+      });
+      cont.addEventListener('focusout', (e) => {
+        const tile = e.target.closest('.video-elemento-item');
+        if (!tile || tile.contains(e.relatedTarget)) return;
+        this.cerrarGaleria(tile);
+      });
+      // Al scrollear, la galería se quedaría flotando donde estaba: sus
+      // coordenadas son del viewport y el tile ya se movió. Se escucha en los
+      // dos contenedores que de verdad scrollean —el sidebar en vertical y el
+      // carrusel en horizontal— porque `scroll` NO burbujea: colgarlo de
+      // window no vería ninguno de los dos.
+      const cerrar = () => this.cerrarGaleria();
+      this.addEventListener(cont, 'scroll', cerrar);
+      cont.querySelectorAll('.video-escenas-carousel').forEach((car) => {
+        this.addEventListener(car, 'scroll', cerrar);
+      });
+      const inner = this.container.querySelector('.video-sidebar-inner');
+      if (inner) this.addEventListener(inner, 'scroll', cerrar);
     }
+  }
+
+  /**
+   * Coloca la galería junto al tile y la muestra. Va en `position: fixed` para
+   * escapar de los tres overflow que la recortaban, así que las coordenadas
+   * son del VIEWPORT y hay que calcularlas cada vez.
+   */
+  abrirGaleria(tile) {
+    const galeria = tile.querySelector('.video-elemento-galeria');
+    if (!galeria) return;                 // un solo archivo: no hay panel
+    if (galeria.classList.contains('is-abierta')) return;
+    this.cerrarGaleria();                 // solo una abierta a la vez
+
+    const t = tile.getBoundingClientRect();
+    // Se mide con el panel ya colocado pero aún invisible: sin esto el alto es
+    // 0 y la decisión de arriba/abajo sale siempre mal.
+    galeria.style.visibility = 'hidden';
+    galeria.classList.add('is-abierta');
+    const g = galeria.getBoundingClientRect();
+
+    const margen = 8;
+    // Por defecto encima; si no cabe, debajo. El sidebar es alto y estrecho, y
+    // los elementos de la primera fila no tienen aire arriba.
+    const arriba = t.top - g.height - margen;
+    const top = arriba >= margen
+      ? arriba
+      : Math.min(t.bottom + margen, window.innerHeight - g.height - margen);
+    // Centrada en el tile, pero sin salirse por los lados.
+    const left = Math.max(margen, Math.min(
+      t.left + (t.width - g.width) / 2,
+      window.innerWidth - g.width - margen
+    ));
+
+    galeria.style.top = `${Math.max(margen, top)}px`;
+    galeria.style.left = `${left}px`;
+    galeria.style.visibility = '';
+    this._galeriaAbierta = galeria;
+  }
+
+  /** Cierra la galería del tile dado, o la que esté abierta. */
+  cerrarGaleria(tile) {
+    const galeria = tile ? tile.querySelector('.video-elemento-galeria') : this._galeriaAbierta;
+    if (!galeria) return;
+    galeria.classList.remove('is-abierta');
+    if (this._galeriaAbierta === galeria) this._galeriaAbierta = null;
   }
 
   /** El tipo MIME propio del arrastre. Un solo sitio para que no se desincronice. */

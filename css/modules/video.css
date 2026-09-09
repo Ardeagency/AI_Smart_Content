@@ -6638,16 +6638,23 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
    panel que solo existe para el mouse no existe para media casa. */
 .video-view-container .video-elemento-item {
     position: relative;
-    /* El carrusel scrollea en X con overflow, así que la galería no puede
-       colgar dentro de él sin que la recorte: va en `position: fixed`-like
-       usando un z-index alto y saliéndose por arriba. */
 }
+/* POSITION: FIXED, y no absolute. La galería tiene TRES ancestros que la
+   recortan: el carrusel (`overflow-x: auto` — y el spec fuerza el otro eje a
+   `auto`, así que un `overflow-y: visible` ahí no sirve de nada), el
+   `.video-sidebar-inner` (`overflow-y: auto`) y el `.video-sidebar-console`
+   (`overflow: hidden`). Colgada en absolute se recortaba tres veces y no se
+   veía nada. Fixed escapa de los tres porque ningún ancestro crea bloque
+   contenedor —no hay transform, filter ni backdrop-filter en la cadena, está
+   verificado—; las coordenadas las pone el JS al abrir.
+
+   Y la abre una CLASE, no `:hover`: hay que posicionarla ANTES de mostrarla o
+   asoma un instante en la esquina 0,0. */
 .video-view-container .video-elemento-galeria {
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%) translateY(4px);
-    z-index: 40;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 60;
     width: max-content;
     max-width: 260px;
     padding: 8px;
@@ -6658,14 +6665,12 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s;
+    transition: opacity 0.14s ease, visibility 0.14s;
 }
-.video-view-container .video-elemento-item:hover .video-elemento-galeria,
-.video-view-container .video-elemento-item:focus-within .video-elemento-galeria {
+.video-view-container .video-elemento-galeria.is-abierta {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transform: translateX(-50%) translateY(0);
 }
 .video-view-container .video-elemento-galeria-titulo {
     display: block;
@@ -6730,11 +6735,6 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     pointer-events: none;
 }
 
-/* El carrusel recorta en X; con la galería colgando hacia arriba hace falta
-   que el eje Y no la corte. */
-.video-view-container .video-elementos-filas .video-escenas-carousel {
-    overflow-y: visible;
-}
 .video-view-container .video-elementos-fila {
     position: relative;
 }
