@@ -6582,3 +6582,49 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     background: var(--video-accent-soft, rgba(255, 255, 255, 0.08));
     color: var(--text-primary);
 }
+
+/* --- LOS DOS ACTOS: PROMPT y PRODUCIR, juntos y al final de la fila ------
+   Escribir el prompt y mandarlo son los dos pasos de un mismo gesto: se tocan
+   y se leen en orden. PROMPT lleva el acento mientras es la orden principal;
+   ya forjado baja a secundario, porque "Recrear" es una segunda oportunidad,
+   no lo que toca hacer. */
+.video-view-container .video-director-btn-forge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--accent-warm, var(--white-50));
+    background: var(--accent-warm-soft, var(--white-10));
+    color: var(--text-primary);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.video-view-container .video-director-btn-forge:hover:not(:disabled) {
+    background: var(--white-15);
+    border-color: var(--white-50);
+}
+/* Ya forjado: mismo boton sin fuerza. No se pinta de otro color — se apaga. */
+.video-view-container .video-director-btn-forge.is-secundario {
+    border-color: var(--white-15);
+    background: var(--white-8);
+    color: var(--text-secondary);
+}
+.video-view-container .video-director-btn-forge:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+.video-view-container .video-director-btn-forge.is-busy .aisc-ico {
+    animation: video-spin 0.8s linear infinite;
+}
+
+/* PRODUCIR bloqueado hasta que haya prompt. Apagado no cambia de color: es el
+   mismo boton sin fuerza, que es justo lo que quiere decir. */
+.video-view-container .video-director-btn-generate:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    filter: grayscale(0.7);
+}

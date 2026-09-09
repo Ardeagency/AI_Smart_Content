@@ -184,6 +184,23 @@
       if (this._borrar(new Set([String(etiqueta).trim().toLowerCase()]), valor)) this._emitir();
     }
 
+    /**
+     * Reemplaza el contenido por texto plano, sin chips. Lo usa el forjador: lo
+     * que vuelve de OpenAI es prosa, y dejar los chips al lado haría creer que
+     * la dirección sigue viva como variable cuando ya está redactada dentro.
+     */
+    escribirTexto(texto) {
+      this.campo.textContent = String(texto == null ? '' : texto);
+      // El cursor al final, listo para retocar la redacción.
+      const sel = window.getSelection();
+      const r = document.createRange();
+      r.selectNodeContents(this.campo);
+      r.collapse(false);
+      if (sel) { sel.removeAllRanges(); sel.addRange(r); }
+      this._rango = r.cloneRange();
+      this._emitir();
+    }
+
     /** Vacía el editor. Es el único caso en que el dueño manda sobre el DOM. */
     limpiar() {
       this.campo.innerHTML = '';

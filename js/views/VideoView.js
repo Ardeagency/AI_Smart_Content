@@ -52,6 +52,10 @@ class VideoView extends BaseView {
    * identificador es exacto, y un nombre aproximado devuelve 404.
    */
   static get SEEDANCE_MODEL() { return 'bytedance/seedance-2-5'; }
+  /** POST: forjar el prompt de produccion desde la intencion (primer acto). */
+  static get SEEDANCE_FORGE_API() {
+    return '/.netlify/functions/seedance-forge-prompt';
+  }
   /**
    * GET: estado de la tarea. El archivo conserva el nombre `kling-video-status`
    * por historia, pero es el poller genérico de cualquier taskId de kie.ai
@@ -141,6 +145,16 @@ class VideoView extends BaseView {
     this._cinePromptTokens = null;
     this._lastKieOutputId = null;
     this._generating = false;
+    // El prompt de produccion NO lo escribe quien produce: lo escribe el
+    // forjador con la intencion, las variables y el contexto de marca.
+    // Mientras `forjado` sea false, PRODUCIR esta bloqueado a proposito: lo que
+    // se escribio es una intencion, y mandarla cruda desperdicia la pieza.
+    this.forjado = false;
+    this._forjando = false;
+    // La intencion original se guarda: "Recrear" vuelve a forjar DESDE ELLA, no
+    // desde el prompt ya forjado — re-forjar sobre lo forjado lo aleja mas en
+    // cada vuelta. Y es donde siguen vivos los chips: el forjado es prosa.
+    this.intencion = '';
   }
 
   /**
@@ -532,7 +546,8 @@ class VideoView extends BaseView {
                         <input type="number" id="seedanceDuration" class="video-director-select seedance-duration-input" min="1" max="30" step="1" value="5" aria-label="${window.__('Duración en segundos')}">
                         <span class="seedance-duration-unit">s</span>
                       </div>
-                      <button type="button" class="video-director-btn-generate" id="seedancePromptSend" aria-label="${window.__('Producir la secuencia')}" data-state="production"><i class="aisc-ico aisc-ico--play"></i><span>${window.__('PRODUCIR')}</span></button>
+                      <button type="button" class="video-director-btn-forge" id="seedancePromptForge" aria-label="${window.__('Forjar el prompt de producción')}" title="${window.__('Convertir lo escrito en el prompt de producción')}"><i class="aisc-ico aisc-ico--idea"></i><span>${window.__('PROMPT')}</span></button>
+                      <button type="button" class="video-director-btn-generate" id="seedancePromptSend" aria-label="${window.__('Producir la secuencia')}" title="${window.__('Primero forja el prompt con el botón PROMPT')}" data-state="production" disabled><i class="aisc-ico aisc-ico--play"></i><span>${window.__('PRODUCIR')}</span></button>
                     </div>
 
                   </div>
@@ -670,6 +685,15 @@ class VideoView extends BaseView {
     this.errorText = this.container.querySelector('#videoErrorText');
 
     this.sendBtn = this.container.querySelector('#seedancePromptSend');
+    this.forgeBtn = this.container.querySelector('#seedancePromptForge');
+
+    if (this.forgeBtn && this.forgeBtn.dataset.boundForge !== '1') {
+      this.forgeBtn.dataset.boundForge = '1';
+      this.forgeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.forjarPrompt();
+      });
+    }
     this.aspectSelect = this.container.querySelector('#seedanceAspectRatio');
 
     // Botón PRODUCIR. No dispara nada mientras el endpoint de creación no
@@ -687,11 +711,18 @@ class VideoView extends BaseView {
     const editorHost = this.container.querySelector('#videoPromptEditor');
     if (editorHost) {
       this.editor = new window.PromptEditor(editorHost, {
-        placeholder: window.__('Storyboard: describe la secuencia completa — apertura, desarrollo y cierre. Seedance produce el arco entero en una sola pasada.'),
-        ariaLabel: window.__('Storyboard narrativo'),
-        onEnviar: () => this.startGeneration()
+        placeholder: window.__('Storyboard: describe la secuencia completa — apertura, desarrollo y cierre. Esto es la intención; el botón PROMPT la convierte en el prompt de producción.'),
+        ariaLabel: window.__('Intención de la secuencia'),
+        // Enter forja si aún no hay prompt, produce si ya lo hay. Un Enter que
+        // no hace nada en la mitad del flujo se lee como que algo se rompió.
+        onEnviar: () => (this.forjado ? this.startGeneration() : this.forjarPrompt()),
+        // Tocar el texto después de forjar lo vuelve intención otra vez: si se
+        // edita la redacción, ya no es lo que el forjador aprobó, y producir
+        // sin volver a pasar por él mandaría algo que nadie revisó.
+        onCambio: () => { if (this.forjado) this._setForjado(false); }
       });
     }
+    this._pintarBotones();
 
     // ── Pestañas del sidebar: Recursos | Cinematografía ──
     this.container.querySelectorAll('.video-sidebar-tab[data-sidebar-tab]').forEach((tab) => {
@@ -2249,17 +2280,23 @@ class VideoView extends BaseView {
       return !!(el && el.checked);
     };
     const audioTile = this.container.querySelector('.seedance-audio-tile.is-active');
-    // La INTENCION es lo que el director escribió, con sus chips dentro. El
-    // PROMPT es esa misma intención con cada `[Etiqueta: Valor]` cambiado por
-    // su frase, EN SU SITIO: una dirección de lente junto al sujeto pesa
-    // distinto que la misma al final.
-    const intencion = this.editor ? this.editor.valor.trim() : '';
+    // Sin forjar, lo escrito ES la intención. Ya forjado, el editor tiene la
+    // prosa del forjador y la intención vive guardada aparte — ahí es donde
+    // siguen los chips, que es de donde salen las variables y las referencias.
+    const enPantalla = this.editor ? this.editor.valor.trim() : '';
+    const intencion = this.forjado ? this.intencion : enPantalla;
 
     return {
       action: 'createTask',
-      prompt: window.StudioDireccion.expandirVariables(this.catalogo, intencion).trim(),
+      // Ya forjado, `prompt` es la redacción tal como se ve en pantalla: lo que
+      // se manda es lo que se lee. Sin forjar es la intención con sus variables
+      // expandidas, que es lo que el forjador necesita para redactar.
+      prompt: this.forjado
+        ? enPantalla
+        : window.StudioDireccion.expandirVariables(this.catalogo, intencion).trim(),
       intencion,
       variables: window.StudioDireccion.leerVariables(intencion),
+      medio: 'video',
       // La doc pide number, no string: `duration` es Range -1..30 (-1 = que lo
       // decida el modelo). Mandarlo como texto es de los campos que se ignoran
       // en silencio.
@@ -2308,8 +2345,127 @@ class VideoView extends BaseView {
    * existe — saveSystemAIOutput() y pollTask(taskId), que resuelven guardado
    * en R2, cobro de creditos y render del resultado.
    */
+  /**
+   * Primer acto: de la intención al prompt de producción. El resultado
+   * REEMPLAZA lo escrito — lo que se manda a producir es lo que se ve, sin una
+   * segunda caja escondida diciendo otra cosa.
+   */
+  async forjarPrompt() {
+    if (this._forjando || this._generating || !this.editor) return;
+
+    // Recrear parte SIEMPRE de la intención original, no de lo ya forjado:
+    // re-forjar sobre lo forjado lo aleja más en cada vuelta.
+    const base = (this.forjado ? this.intencion : this.editor.valor).trim();
+    if (!base) {
+      this.showError(window.__('Escribe primero el storyboard: qué pasa en la apertura, en el desarrollo y en el cierre.'));
+      return;
+    }
+    if (!this.organizationId) {
+      this.showError(window.__('Selecciona una organización para producir videos.'));
+      return;
+    }
+    if (!this.supabase) {
+      this.showError(window.__('Sesión no disponible. Recarga la página y reintenta.'));
+      return;
+    }
+
+    this._forjando = true;
+    this._pintarBotones();
+    this.showStatus(window.__('Escribiendo el prompt de producción…'), true);
+
+    try {
+      const { data: { session } } = await this.supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) throw new Error(window.__('Inicia sesión para forjar el prompt.'));
+
+      // El payload se arma desde la intención: si ya estaba forjado, hay que
+      // volver a ponerla en el editor un instante para que buildSeedancePayload
+      // lea sus variables. Más simple: se le pasa la base explícita.
+      const payload = { ...this.buildSeedancePayload(), prompt: window.StudioDireccion.expandirVariables(this.catalogo, base).trim(), intencion: base };
+
+      const res = await fetch(VideoView.SEEDANCE_FORGE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify(payload)
+      });
+      let data = {};
+      try { data = await res.json(); }
+      catch (parseErr) {
+        throw new Error(
+          window.__('El servicio no respondió correctamente (estado {status}).', { status: res.status }),
+          { cause: parseErr }
+        );
+      }
+      if (!res.ok || !data.prompt) throw new Error(data.error || window.__('No se pudo forjar el prompt'));
+
+      this.intencion = base;
+      this._cinePromptTokens = {
+        input: data.openai_input_tokens || 0,
+        output: data.openai_output_tokens || 0,
+        model: data.openai_model || null
+      };
+      this.editor.escribirTexto(data.prompt);
+      this._setForjado(true);
+      this.hideAllFeedback();
+    } catch (err) {
+      this.showError(err.message || window.__('No se pudo forjar el prompt'));
+    } finally {
+      this._forjando = false;
+      this._pintarBotones();
+    }
+  }
+
+  /**
+   * `escribirTexto` dispara onCambio, que apaga el forjado. Por eso el flag se
+   * pone DESPUÉS de escribir, y siempre por aquí: hay dos sitios que lo mueven
+   * y uno solo que lo pinta.
+   */
+  _setForjado(valor) {
+    this.forjado = valor;
+    this._pintarBotones();
+  }
+
+  /**
+   * Un solo sitio decide qué se puede tocar. PRODUCIR sigue al forjado; PROMPT
+   * pasa a decir "Recrear" cuando ya hay redacción, porque volver a forjar es
+   * una segunda oportunidad, no la orden principal.
+   */
+  _pintarBotones() {
+    if (this.forgeBtn) {
+      const etiqueta = this.forgeBtn.querySelector('span');
+      const icono = this.forgeBtn.querySelector('i');
+      this.forgeBtn.disabled = this._forjando || this._generating;
+      this.forgeBtn.classList.toggle('is-busy', this._forjando);
+      this.forgeBtn.classList.toggle('is-secundario', this.forjado && !this._forjando);
+      if (etiqueta) {
+        etiqueta.textContent = this._forjando
+          ? window.__('FORJANDO…')
+          : this.forjado ? window.__('RECREAR') : window.__('PROMPT');
+      }
+      if (icono) {
+        icono.className = `aisc-ico ${this._forjando ? 'aisc-ico--loader' : this.forjado ? 'aisc-ico--refresh' : 'aisc-ico--idea'}`;
+      }
+      this.forgeBtn.title = this.forjado
+        ? window.__('Volver a forjar el prompt desde tu intención')
+        : window.__('Convertir lo escrito en el prompt de producción');
+    }
+    if (this.sendBtn) {
+      this.sendBtn.disabled = !this.forjado || this._generating || this._forjando;
+      this.sendBtn.classList.toggle('is-busy', this._generating);
+      this.sendBtn.title = this.forjado
+        ? window.__('Producir la secuencia')
+        : window.__('Primero forja el prompt con el botón PROMPT');
+    }
+  }
+
   async startGeneration() {
     if (this._generating) return;
+    // Sin forjar no se produce: lo que se escribió es una intención, y mandarla
+    // cruda desperdicia la pieza — y el crédito.
+    if (!this.forjado) {
+      this.showError(window.__('Primero forja el prompt: escribe tu intención y toca PROMPT. Lo que escribes es el brief, no el prompt de producción.'));
+      return;
+    }
     const payload = this.buildSeedancePayload();
 
     if (!payload.prompt) {
@@ -2408,9 +2564,7 @@ class VideoView extends BaseView {
   /** Habilita/inhabilita el botón para que dos clics no disparen dos tareas (dos cobros). */
   _setGenerating(activo) {
     this._generating = activo;
-    if (!this.sendBtn) return;
-    this.sendBtn.disabled = activo;
-    this.sendBtn.classList.toggle('is-busy', activo);
+    this._pintarBotones();
   }
 
   stopPolling() {

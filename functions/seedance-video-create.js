@@ -22,6 +22,12 @@
  * scene"). Es lo que convierte un bloqueo de producto en una instruccion util:
  * en vez de pedir "no cambies el producto" a ciegas, se le dice CUAL de las
  * imagenes es el producto. Por eso las bloqueadas viajan primero en el array.
+ *
+ * AQUI YA NO SE COCINA EL PROMPT. Lo forja seedance-forge-prompt en un acto
+ * aparte, que el director dispara con el boton «Prompt» y cuyo resultado LEE
+ * antes de producir. Cocinar y disparar en la misma llamada significaba que
+ * nadie llegaba a ver con que redaccion se produjo, y un video sale caro para
+ * descubrirlo despues.
  */
 
 const {
@@ -38,7 +44,6 @@ const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(
 const CREATE_PATH = '/api/v1/jobs/createTask';
 /** Doc: el identificador es exacto. Un nombre aproximado devuelve 404. */
 const KIE_MODEL = process.env.KIE_SEEDANCE_MODEL || 'bytedance/seedance-2-5';
-const OPENAI_MODEL = (process.env.OPENAI_CINE_MODEL || process.env.OPENAI_MODEL || 'gpt-4o-mini').trim();
 
 /** Pre-check estimado. Un video cuesta bastante mas que una imagen. */
 const MIN_BALANCE_VIDEO_CRED = Number(process.env.MIN_BALANCE_VIDEO_CRED || 9);
@@ -50,6 +55,7 @@ const OUTPUT_FORMATS = new Set(['mp4', 'mov']);
 /** Range -1..30. -1 = que lo decida el modelo. */
 const DURATION_MIN = -1;
 const DURATION_MAX = 30;
+/** Tope de `prompt` que publica la doc. */
 const PROMPT_MAX = 30000;
 /**
  * Cupos por grupo. Videos y audios los fija la doc ("the three videos"); el de
@@ -120,134 +126,6 @@ function sanitizeUrl(raw) {
   return validateExternalUrl(url).ok ? url : null;
 }
 
-/** ADN de marca: solo lo que orienta la IMAGEN en movimiento. */
-function buildBrandVisualText(brandContext) {
-  const voice = brandContext?.brand_voice || {};
-  const parts = [];
-  if (voice.nicho_core) parts.push(`Category: ${String(voice.nicho_core).trim()}`);
-  if (voice.arquetipo) parts.push(`Brand personality: ${String(voice.arquetipo).trim()}`);
-  if (voice.propuesta_valor) parts.push(`Value proposition: ${String(voice.propuesta_valor).trim()}`);
-  if (voice.visual_dna && typeof voice.visual_dna === 'object' && Object.keys(voice.visual_dna).length) {
-    parts.push(`Visual DNA: ${JSON.stringify(voice.visual_dna)}`);
-  }
-  if (arr(voice.palabras_prohibidas).length) parts.push(`Avoid: ${arr(voice.palabras_prohibidas).join(', ')}`);
-  return parts.length ? parts.join('. ') : '';
-}
-
-/**
- * El tipo de sonido que el usuario elige en la consola. Seedance NO tiene campo
- * para esto —solo `generate_audio` booleano—, asi que la unica forma de que la
- * eleccion importe es que viaje DENTRO del prompt. Sin esto, los cuatro tiles
- * de Audio & Atmosfera eran decoracion: se marcaban y no cambiaban nada.
- */
-const AUDIO_TYPE_PROMPT = {
-  ambient: 'Audio: diegetic sound only — what the scene itself would sound like. No music.',
-  music: 'Audio: a music track carries the sequence. No dialogue.',
-  voice: 'Audio: a spoken voice leads the sequence.',
-  silence: 'Audio: silence, or near-silence, as a deliberate choice.'
-};
-
-function buildAudioText(generateAudio, audioType) {
-  if (!generateAudio) return 'Do not generate audio for this sequence.';
-  const clave = typeof audioType === 'string' ? audioType.trim().toLowerCase() : '';
-  return AUDIO_TYPE_PROMPT[clave] || '';
-}
-
-function buildCampaignAudienceText(campaign, audience) {
-  const parts = [];
-  if (campaign) parts.push(`Campaign intent: ${campaign}`);
-  if (audience) parts.push(`Target audience: ${audience}`);
-  return parts.length ? parts.join('. ') : '';
-}
-
-/**
- * Explica al cocinador como se DIRIGEN las imagenes de referencia. Sin esto,
- * las referencias son decorado: el modelo las mira pero el prompt no dice cual
- * es cual, y un bloqueo de producto se queda en un deseo.
- */
-function buildReferenceMap({ total, lockCount, frames }) {
-  const lineas = [];
-  if (total > 0) {
-    const nombres = Array.from({ length: total }, (_, i) => `@Image${i + 1}`).join(' ');
-    lineas.push(`${total} reference image(s) are attached and are addressable inside the prompt as ${nombres}. Refer to them explicitly where they matter (e.g. "@Image1 is the product").`);
-    if (lockCount > 0) {
-      const bloqueadas = Array.from({ length: lockCount }, (_, i) => `@Image${i + 1}`).join(' ');
-      lineas.push(`${bloqueadas} are LOCKED brand assets: reproduce them exactly — same shape, label, colours and proportions. Never redesign them.`);
-    }
-  }
-  if (frames.first && frames.last) {
-    lineas.push('A first frame and a last frame are provided: the sequence must start on the first and land on the last. Describe the motion that connects them.');
-  } else if (frames.first) {
-    lineas.push('A first frame is provided: the sequence starts there. Describe where it goes from that image.');
-  } else if (frames.last) {
-    lineas.push('A last frame is provided: the sequence must land on that image.');
-  }
-  return lineas.join(' ');
-}
-
-/**
- * Cocina el prompt final. Devuelve tambien los tokens porque kie-task-finalize
- * cobra el costo REAL (KIE + OpenAI + markup) y sin estos numeros el usuario
- * pagaria un estimado.
- *
- * Sin OPENAI_API_KEY se manda el brief tal cual: se pierde el pulido, no la
- * pagina.
- */
-async function cookPrompt({ apiKey, brief, brandText, campaignAudienceText, referenceMap, audioText }) {
-  const bloques = [
-    // El brief ya trae dentro la direccion de cinematografia, redactada, en el
-    // sitio donde el director la escribio (js/studio/direccion.js).
-    brief ? `Creative brief from the director:\n${brief}` : '',
-    brandText ? `Brand context: ${brandText}` : '',
-    campaignAudienceText,
-    referenceMap,
-    audioText
-  ].filter(Boolean);
-
-  const fallback = bloques.join('\n\n');
-  if (!apiKey) return { prompt: fallback.slice(0, PROMPT_MAX), inputTokens: 0, outputTokens: 0, model: null };
-
-  const system = [
-    'You are a commercial film director writing prompts for an AI video model (Seedance).',
-    'Output ONE final video prompt in English, under 300 words, no explanations, no bullet lists, no preamble.',
-    'Direct the shot: subject, action, camera behaviour, lighting, pacing. Write what happens, in order.',
-    // El brief ya trae direccion explicita (movimiento, lente, luz): es una
-    // decision tomada, no una sugerencia. Dejar que el modelo la reescriba
-    // vaciaria el panel de Cinematografia de sentido.
-    'The brief may already contain explicit cinematographic direction (camera movement, lens, lighting, colour grade, pacing). Preserve every one of those decisions verbatim; never substitute or omit them.',
-    'If the brief lists @ImageN references, keep those tokens exactly as written — they address the attached images.',
-    'Never invent brands, logos or products that are not stated in the brief or visible in the references.',
-    'If an audio instruction is given, honour it in one short sentence at the end.'
-  ].join(' ');
-
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      temperature: 0.5,
-      max_tokens: 700,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: bloques.join('\n\n---\n\n') || 'Generate one commercial video prompt.' }
-      ]
-    })
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || data?.error) {
-    throw Object.assign(new Error(data?.error?.message || `OpenAI HTTP ${res.status}`), { httpStatus: 502 });
-  }
-  const refined = data?.choices?.[0]?.message?.content?.trim();
-  const usage = data?.usage || {};
-  if (!refined) throw Object.assign(new Error('OpenAI no devolvio un prompt valido'), { httpStatus: 502 });
-  return {
-    prompt: refined.slice(0, PROMPT_MAX),
-    inputTokens: Number(usage.prompt_tokens || 0),
-    outputTokens: Number(usage.completion_tokens || 0),
-    model: OPENAI_MODEL
-  };
-}
-
 exports.handler = async (event) => {
   const c = corsHeaders(event);
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: c, body: '' };
@@ -271,9 +149,12 @@ exports.handler = async (event) => {
     return fail(event, 400, 'Body JSON invalido');
   }
 
-  const brief = String(body.prompt || '').trim();
+  // Llega YA FORJADO desde seedance-forge-prompt: es exactamente el texto que
+  // el director leyo en pantalla. No se retoca — si lo reescribieramos aqui,
+  // lo que se ve y lo que se manda volverian a ser dos cosas distintas.
+  const prompt = String(body.prompt || '').trim().slice(0, PROMPT_MAX);
   const organizationId = String(body.organization_id || '').trim();
-  if (!brief) return fail(event, 400, 'El prompt es requerido');
+  if (!prompt) return fail(event, 400, 'El prompt es requerido');
   if (!organizationId) return fail(event, 400, 'organization_id requerido');
 
   let env;
@@ -320,24 +201,6 @@ exports.handler = async (event) => {
     ? Math.min(DURATION_MAX, Math.max(DURATION_MIN, Math.round(duracionPedida)))
     : 5;
 
-  let cooked;
-  try {
-    cooked = await cookPrompt({
-      apiKey: process.env.OPENAI_API_KEY,
-      brief,
-      brandText: buildBrandVisualText(body.brand_context),
-      campaignAudienceText: buildCampaignAudienceText(body.campaign, body.audience),
-      referenceMap: buildReferenceMap({
-        total: referenceImages.length,
-        lockCount: lockUrls.length,
-        frames: { first: !!firstFrame, last: !!lastFrame }
-      }),
-      audioText: buildAudioText(generate_audio, body.audio_type)
-    });
-  } catch (e) {
-    return fail(event, e.httpStatus || 502, `OpenAI no pudo preparar el prompt: ${e.message}`);
-  }
-
   // FEAT-036: governor de tasa KIE (20 createTask/10s POR CUENTA; 429 = job perdido).
   const slot = await acquireKieSlot({ env });
   if (!slot.ok) return fail(event, 429, 'KIE saturado, reintenta en unos segundos', { retryAfterMs: slot.retryAfterMs });
@@ -345,7 +208,7 @@ exports.handler = async (event) => {
   // Los opcionales solo viajan si tienen valor. La doc los ejemplifica como
   // cadena vacia, pero mandar `first_frame_url: ""` es pedirle al modelo que
   // interprete un vacio; omitirlo es decir que no hay.
-  const input = { prompt: cooked.prompt, resolution, aspect_ratio, duration, output_format, generate_audio, web_search };
+  const input = { prompt, resolution, aspect_ratio, duration, output_format, generate_audio, web_search };
   if (firstFrame) input.first_frame_url = firstFrame;
   if (lastFrame) input.last_frame_url = lastFrame;
   if (referenceImages.length) input.reference_image_urls = referenceImages;
@@ -399,14 +262,11 @@ exports.handler = async (event) => {
       headers: c,
       body: JSON.stringify({
         taskId: String(taskId),
-        prompt: cooked.prompt,
+        prompt,
         kie_model: KIE_MODEL,
         kind: 'video_generated',
         reference_count: referenceImages.length + referenceVideos.length + referenceAudios.length,
-        technical_params: { resolution, aspect_ratio, duration, output_format, generate_audio, web_search },
-        openai_model: cooked.model,
-        openai_input_tokens: cooked.inputTokens,
-        openai_output_tokens: cooked.outputTokens
+        technical_params: { resolution, aspect_ratio, duration, output_format, generate_audio, web_search }
       })
     };
   } catch (err) {

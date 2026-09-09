@@ -66,6 +66,10 @@ function nuevaVista(controles = {}) {
   v.dbData = { products: [], services: [], entities: [], audiences: [], campaigns: [] };
   v.editor = editorFalso('Apertura, desarrollo y cierre.');
   v._catalogo = null;
+  // Mismos valores que pone el constructor real: sin forjar no se produce.
+  v.forjado = false;
+  v._forjando = false;
+  v.intencion = '';
 
   v.container = {
     querySelector: (sel) => (sel in controles ? controles[sel] : null),
@@ -606,6 +610,10 @@ describe('Producir — el disparo contra Seedance', () => {
     v.supabase = { auth: { getSession: async () => ({ data: { session: { access_token: 'tok' } } }) } };
     v.saveSystemAIOutput = async () => 'out-1';
     v.pollTask = async () => { v._polled = true; };
+    v.forgeBtn = { disabled: false, classList: { toggle() {} }, querySelector: () => null };
+    // PRODUCIR exige prompt forjado: los tests de produccion parten de ahi.
+    v.forjado = true;
+    v.intencion = 'Apertura, desarrollo y cierre.';
     const llamadas = [];
     globalThis.fetch = async (url, opts) => {
       llamadas.push({ url, body: JSON.parse(opts.body) });
@@ -1051,6 +1059,7 @@ describe('El contrato de Seedance 2.5, tal como lo dice la doc', () => {
 
 describe('El frontend y la función dicen lo mismo', () => {
   const FN = fs.readFileSync(path.join(process.cwd(), 'functions/seedance-video-create.js'), 'utf8');
+  const FORJA = fs.readFileSync(path.join(process.cwd(), 'functions/lib/seedance-prompt.js'), 'utf8');
 
   test('el modelo es el mismo en los dos lados', () => {
     // Un identificador aproximado devuelve 404, y el 404 llega como HTML.
@@ -1098,7 +1107,7 @@ describe('El frontend y la función dicen lo mismo', () => {
     // Seedance solo tiene `generate_audio` booleano: sin traducir la elección a
     // texto, los cuatro tiles de Audio & Atmósfera eran decoración.
     for (const tipo of ['ambient', 'music', 'voice', 'silence']) {
-      expect(FN).toContain(`${tipo}:`);
+      expect(FORJA).toContain(`${tipo}:`);
     }
     const html = VideoView.prototype.renderHTML.call({});
     for (const tipo of ['ambient', 'music', 'voice', 'silence']) {
@@ -1110,6 +1119,151 @@ describe('El frontend y la función dicen lo mismo', () => {
     // La doc dirige las imágenes con @ImageN. Poner los bloqueos al frente es
     // lo que convierte "no cambies el producto" en una instrucción con sujeto.
     expect(FN).toContain('...lockUrls');
-    expect(FN).toContain('@Image');
+    expect(FORJA).toContain('@Image');
+  });
+
+  test('crear ya NO cocina: el prompt llega forjado y no se retoca', () => {
+    // Cocinar y disparar en la misma llamada significaba que nadie llegaba a
+    // ver con qué redacción se produjo.
+    expect(FN).not.toContain('openai.com');
+    expect(FN).not.toContain('forjarPrompt');
+    expect(FN).toContain('const input = { prompt,');
+  });
+});
+
+describe('Los dos actos: forjar el prompt, y solo entonces producir', () => {
+  /** Vista con editor de mentira, botones y fetch controlado. */
+  function enConsola(respuesta) {
+    const { v } = nuevaVista();
+    const errores = [];
+    v.showError = (m) => errores.push(m);
+    v.showStatus = () => {};
+    v.hideAllFeedback = () => {};
+    const btn = (extra = {}) => ({
+      disabled: false, title: '', classList: { toggle() {} },
+      querySelector: () => ({ textContent: '', className: '' }), ...extra
+    });
+    v.sendBtn = btn();
+    v.forgeBtn = btn();
+    v.supabase = { auth: { getSession: async () => ({ data: { session: { access_token: 'tok' } } }) } };
+    // Editor de mentira que sí sabe reemplazarse por prosa.
+    const ed = editorFalso('Un frasco girando [Luz: Rim light].');
+    ed.escribirTexto = (t) => { ed.valor = t; };
+    v.editor = ed;
+    const llamadas = [];
+    globalThis.fetch = async (url, opts) => {
+      llamadas.push({ url, body: JSON.parse(opts.body) });
+      return respuesta;
+    };
+    return { v, errores, llamadas, ed };
+  }
+  const ok = (data) => ({ ok: true, status: 200, json: async () => data });
+
+  test('PRODUCIR nace bloqueado en la plantilla', () => {
+    const html = VideoView.prototype.renderHTML.call({});
+    const boton = html.slice(html.indexOf('id="seedancePromptSend"'));
+    expect(boton.slice(0, boton.indexOf('>'))).toContain('disabled');
+    expect(html).toContain('id="seedancePromptForge"');
+  });
+
+  test('sin forjar, PRODUCIR no dispara nada y explica por qué', async () => {
+    // Lo que el humano escribe es el brief, no el prompt: mandarlo crudo
+    // desperdicia la pieza y el crédito.
+    const { v, errores, llamadas } = enConsola(ok({ taskId: 't-1' }));
+
+    await v.startGeneration();
+
+    expect(llamadas).toHaveLength(0);
+    expect(errores.join(' ')).toMatch(/Primero forja el prompt/);
+  });
+
+  test('forjar llama al forjador y reemplaza lo escrito por su redacción', async () => {
+    const { v, llamadas, ed } = enConsola(ok({ prompt: 'A glass jar rotates slowly...' }));
+
+    await v.forjarPrompt();
+
+    expect(llamadas[0].url).toBe('/.netlify/functions/seedance-forge-prompt');
+    // Lo que se manda a producir es lo que se ve: sin una segunda caja
+    // escondida diciendo otra cosa.
+    expect(ed.valor).toBe('A glass jar rotates slowly...');
+    expect(v.forjado).toBe(true);
+  });
+
+  test('la intención original se guarda: ahí siguen vivos los chips', async () => {
+    const { v } = enConsola(ok({ prompt: 'prosa sin chips' }));
+
+    await v.forjarPrompt();
+
+    expect(v.intencion).toBe('Un frasco girando [Luz: Rim light].');
+    expect(v.buildSeedancePayload().variables).toEqual([{ etiqueta: 'Luz', valor: 'Rim light' }]);
+  });
+
+  test('el forjador recibe la intención con las variables ya expandidas', async () => {
+    // Es lo que necesita para redactar: "[Luz: Rim light]" no le dice nada al
+    // modelo, su frase sí.
+    const { v, llamadas } = enConsola(ok({ prompt: 'x' }));
+
+    await v.forjarPrompt();
+
+    expect(llamadas[0].body.prompt).toContain('A rim light behind the subject');
+    expect(llamadas[0].body.medio).toBe('video');
+  });
+
+  test('recrear parte de la intención, no de lo ya forjado', async () => {
+    // Re-forjar sobre lo forjado lo aleja más en cada vuelta.
+    const { v, llamadas } = enConsola(ok({ prompt: 'primera redaccion' }));
+    await v.forjarPrompt();
+
+    await v.forjarPrompt();
+
+    expect(llamadas[1].body.intencion).toBe('Un frasco girando [Luz: Rim light].');
+    expect(llamadas[1].body.intencion).not.toBe('primera redaccion');
+  });
+
+  test('tocar el texto después de forjar vuelve a bloquear PRODUCIR', async () => {
+    // Si se edita la redacción ya no es lo que el forjador aprobó; producir sin
+    // volver a pasar por él mandaría algo que nadie revisó.
+    const { v } = enConsola(ok({ prompt: 'redaccion' }));
+    await v.forjarPrompt();
+    expect(v.forjado).toBe(true);
+
+    v._setForjado(false);   // es lo que dispara onCambio del editor
+
+    expect(v.forjado).toBe(false);
+    expect(v.sendBtn.disabled).toBe(true);
+  });
+
+  test('ya forjado, PRODUCIR manda la redacción que se ve, no la intención', async () => {
+    const { v, llamadas } = enConsola(ok({ prompt: 'A glass jar rotates.' }));
+    await v.forjarPrompt();
+    v.saveSystemAIOutput = async () => 'out-1';
+    v.pollTask = async () => {};
+    globalThis.fetch = async (url, opts) => {
+      llamadas.push({ url, body: JSON.parse(opts.body) });
+      return ok({ taskId: 't-1' });
+    };
+
+    await v.startGeneration();
+
+    const produccion = llamadas[llamadas.length - 1];
+    expect(produccion.url).toBe('/.netlify/functions/seedance-video-create');
+    expect(produccion.body.prompt).toBe('A glass jar rotates.');
+  });
+
+  test('si el forjador falla, no queda forjado ni se desbloquea PRODUCIR', async () => {
+    const { v, errores } = enConsola({ ok: false, status: 502, json: async () => ({ error: 'OpenAI se cayo' }) });
+
+    await v.forjarPrompt();
+
+    expect(v.forjado).toBe(false);
+    expect(errores.join(' ')).toMatch(/OpenAI se cayo/);
+  });
+
+  test('dos clics en PROMPT no forjan dos veces', async () => {
+    const { v, llamadas } = enConsola(ok({ prompt: 'x' }));
+
+    await Promise.all([v.forjarPrompt(), v.forjarPrompt()]);
+
+    expect(llamadas).toHaveLength(1);
   });
 });
