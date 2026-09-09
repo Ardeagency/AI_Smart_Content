@@ -14,6 +14,8 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Sin consumo": "No usage",
+  "cr": "cr",
   "Consumo por miembro": "Usage by member",
   "Quién gastó los créditos del período. Lo automático son sensores y flujos corriendo solos.": "Who spent the credits in this period. Automatic means sensors and flows running on their own.",
   "Automático (sensores y flujos)": "Automatic (sensors and flows)",

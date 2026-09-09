@@ -1040,7 +1040,14 @@ class OrganizationView extends BaseView {
       m.porCat[cat] = (m.porCat[cat] || 0) + c;
       if (!m.ultima || r.created_at > m.ultima) m.ultima = r.created_at;
     });
-    const byDay = Object.values(byDayMap).sort((a, b) => a.day.localeCompare(b.day));
+    // Se rellenan los dias SIN consumo con cero. Antes se omitian, y el eje X
+    // saltaba de "17 ago" a "19 ago" sin explicar el hueco: una barra ausente y
+    // un dia sin gasto se veian igual, que es justo lo que no debe pasar.
+    const byDay = [];
+    for (let t = new Date(desde); t <= hasta; t.setDate(t.getDate() + 1)) {
+      const dia = t.toISOString().slice(0, 10);
+      byDay.push(byDayMap[dia] || { day: dia, total: 0, byArea: {} });
+    }
     const peak = byDay.reduce((m, d) => (d.total > (m ? m.total : 0) ? d : m), null);
     const topAreaKey = Object.entries(byArea).sort((a, b) => b[1] - a[1])[0];
     this.usage = {
@@ -1716,19 +1723,22 @@ class OrganizationView extends BaseView {
    * el dia que se estrenen aparecen solas, con su color ya asignado.
    */
   static USAGE_AREAS = [
-    { key: 'imagenes',  label: 'Imágenes',   color: '#FF6A00' },
-    { key: 'videos',    label: 'Videos',     color: '#F04A0D' },
-    { key: 'flujos',    label: 'Flujos',     color: '#E0301A' },
-    { key: 'vera',      label: 'Vera',       color: '#C01A5A' },
-    { key: 'ig',        label: 'Instagram',  color: '#A02279' },
-    { key: 'fb',        label: 'Facebook',   color: '#7A2A9A' },
-    { key: 'tiktok',    label: 'TikTok',     color: '#6030A6' },
-    { key: 'youtube',   label: 'YouTube',    color: '#4A2FB0' },
-    { key: 'x',         label: 'X',          color: '#3437B0' },
-    { key: 'busqueda',  label: 'Búsqueda',   color: '#1E3FB0' },
-    { key: 'analisis',  label: 'Análisis IA', color: '#16337F' },
-    { key: 'simulador', label: 'Simulador',  color: '#0A1A5A' },
-    { key: 'ajustes',   label: 'Ajustes',    color: '#64748b' },
+    { key: 'imagenes',  label: 'Imágenes',    color: '#ff0000' },
+    { key: 'videos',    label: 'Videos',      color: '#ff6500' },
+    { key: 'flujos',    label: 'Flujos',      color: '#ffb300' },
+    { key: 'vera',      label: 'Vera',        color: '#ffe500' },
+    { key: 'ig',        label: 'Instagram',   color: '#9acc00' },
+    { key: 'fb',        label: 'Facebook',    color: '#00d614' },
+    { key: 'tiktok',    label: 'TikTok',      color: '#00e7ff' },
+    { key: 'youtube',   label: 'YouTube',     color: '#00a2ff' },
+    { key: 'x',         label: 'X',           color: '#0018ee' },
+    { key: 'busqueda',  label: 'Búsqueda',    color: '#5b00ea' },
+    { key: 'analisis',  label: 'Análisis IA', color: '#900090' },
+    { key: 'simulador', label: 'Simulador',   color: '#c2185b' },
+    // Ajustes queda NEUTRO a proposito: no es una funcion de la plataforma sino
+    // un movimiento manual de saldo, y darle color del arcoiris lo disfrazaria
+    // de consumo real.
+    { key: 'ajustes',   label: 'Ajustes',     color: '#64748b' },
   ];
 
   /** kind (+ plataforma del metadata) -> categoria de la grafica. */
@@ -1791,6 +1801,57 @@ class OrganizationView extends BaseView {
    *    y en esta organizacion es LA MAYORIA. Medido: 2.621 de 2.636 registros no
    *    llevan usuario. Decirlo asi convierte un hueco de datos en el dato.
    */
+  /**
+   * Tooltip de la grafica. Reemplaza al atributo `title` del navegador, que
+   * tardaba un segundo en salir, no se podia estilar y solo mostraba el total:
+   * lo util es ver QUE lo gasto ese dia, no cuanto en bruto.
+   *
+   * Un solo listener en el contenedor —no uno por columna— y el contenido se
+   * arma del data-attr que ya trae cada columna.
+   */
+  _bindUsageTooltip() {
+    const plot = this.querySelector('.org-uchart-plot');
+    const tip = this.querySelector('#orgUchartTip');
+    if (!plot || !tip || plot.dataset.tipBound === '1') return;
+    plot.dataset.tipBound = '1';
+
+    const ocultar = () => { tip.hidden = true; };
+
+    this.addEventListener(plot, 'mousemove', (e) => {
+      const col = e.target.closest('.org-uchart-col');
+      if (!col) { ocultar(); return; }
+
+      const total = col.dataset.total || '0';
+      const filas = (col.dataset.detalle || '').split('~').filter(Boolean).map((t) => {
+        const [, label, color, valor] = t.split('|');
+        return `<div class="org-uchart-tip-row">
+          <i style="background:${this._esc(color)}"></i>
+          <span>${this._esc(label)}</span>
+          <b>${this._esc(valor)}</b>
+        </div>`;
+      }).join('');
+
+      tip.innerHTML = `
+        <div class="org-uchart-tip-head">
+          <span>${this._esc(this._fmtDay(col.dataset.dia))}</span>
+          <b>${this._esc(total)} ${__('cr')}</b>
+        </div>
+        ${filas || `<div class="org-uchart-tip-vacio">${__('Sin consumo')}</div>`}`;
+      tip.hidden = false;
+
+      // El tooltip se ancla al plot y se voltea cerca del borde derecho, para
+      // que en los ultimos dias no se salga del recuadro.
+      const caja = plot.getBoundingClientRect();
+      const x = e.clientX - caja.left;
+      const y = e.clientY - caja.top;
+      const ancho = tip.offsetWidth || 180;
+      tip.style.left = `${x + ancho + 24 > caja.width ? x - ancho - 12 : x + 12}px`;
+      tip.style.top = `${Math.max(0, y - 12)}px`;
+    });
+
+    this.addEventListener(plot, 'mouseleave', ocultar);
+  }
+
   _renderUsageMiembros() {
     const el = this.querySelector('#orgUsageMiembros');
     if (!el) return;
@@ -1899,6 +1960,7 @@ class OrganizationView extends BaseView {
   _renderUsage() {
     this._mountUsagePicker();
     this._renderUsageMiembros();
+    this._bindUsageTooltip();
 
     const u = this.usage;
     const statsEl = this.querySelector('#orgUsageStats');
@@ -1931,14 +1993,25 @@ class OrganizationView extends BaseView {
         const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => this._fmtCreditsK(niceMax * f));
         const legend = OrganizationView.USAGE_AREAS.map((a) =>
           `<span class="org-uchart-leg"><i style="background:${this._usageColor(a.key)}"></i>${this.escapeHtml(a.label)}</span>`).join('');
+        // Cada columna lleva su desglose en un data-attr: el tooltip se arma al
+        // pasar por encima, sin recalcular nada. Un dia en cero se dibuja igual
+        // —columna vacia, sin barra— para que el hueco se vea como lo que es.
         const bars = u.byDay.map((d) => {
+          if (!d.total) {
+            return `<div class="org-uchart-col" data-dia="${this._esc(d.day)}" data-total="0"></div>`;
+          }
           const hPct = Math.max(1, (d.total / niceMax) * 100);
-          const segs = OrganizationView.USAGE_AREAS.filter((a) => (d.byArea[a.key] || 0) > 0).map((a) => {
+          const usados = OrganizationView.USAGE_AREAS.filter((a) => (d.byArea[a.key] || 0) > 0);
+          const segs = usados.map((a) => {
             const segPct = (d.byArea[a.key] / d.total) * 100;
             return `<div class="org-uchart-seg" style="height:${segPct}%;background:${this._usageColor(a.key)}"></div>`;
           }).join('');
-          const tip = `${this._fmtDay(d.day)} · ${this._fmtCredits(d.total)} ${__('créditos')}`;
-          return `<div class="org-uchart-col"><div class="org-uchart-bar" style="height:${hPct}%" title="${this.escapeHtml(tip)}">${segs}</div></div>`;
+          const detalle = usados
+            .map((a) => `${a.key}|${a.label}|${a.color}|${this._fmtCredits(d.byArea[a.key])}`)
+            .join('~');
+          return `<div class="org-uchart-col" data-dia="${this._esc(d.day)}" data-total="${this._esc(this._fmtCredits(d.total))}" data-detalle="${this._esc(detalle)}">
+            <div class="org-uchart-bar" style="height:${hPct}%">${segs}</div>
+          </div>`;
         }).join('');
         // Etiquetas X: hasta 6 fechas equiespaciadas
         const n = u.byDay.length;
@@ -1955,7 +2028,7 @@ class OrganizationView extends BaseView {
           <div class="org-uchart-body">
             <div class="org-uchart-yaxis">${ticks.map((t) => `<span>${this.escapeHtml(t)}</span>`).join('')}</div>
             <div class="org-uchart-plotcol">
-              <div class="org-uchart-plot">${bars}</div>
+              <div class="org-uchart-plot">${bars}<div class="org-uchart-tip" id="orgUchartTip" hidden></div></div>
               <div class="org-uchart-xaxis">${xlabels}</div>
             </div>
           </div>`;

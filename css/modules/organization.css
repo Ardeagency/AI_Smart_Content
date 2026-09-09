@@ -1231,10 +1231,14 @@
 .org-uchart-yaxis { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; height: 240px; width: 34px; flex: none; }
 .org-uchart-yaxis span { font-size: .66rem; color: var(--text-muted); line-height: 1; }
 .org-uchart-plotcol { flex: 1; min-width: 0; }
-.org-uchart-plot { display: flex; align-items: flex-end; gap: 5px; height: 240px; padding: 0 4px; background: rgba(255,255,255,.02); border-radius: 8px; }
+/* position:relative para que el tooltip se ancle al recuadro del grafico. */
+.org-uchart-plot { position: relative; display: flex; align-items: flex-end; gap: 5px; height: 240px; padding: 0 4px; background: rgba(255,255,255,.02); border-radius: 8px; }
 .org-uchart-col { flex: 1; min-width: 0; height: 100%; display: flex; align-items: flex-end; }
 .org-uchart-bar { width: 100%; display: flex; flex-direction: column; border-radius: 3px; overflow: hidden; min-height: 2px; transition: opacity .15s ease; }
-.org-uchart-bar:hover { opacity: .8; cursor: help; }
+/* El hover se resalta desde la COLUMNA, no desde la barra: asi tambien
+   responde el aire de arriba y no hay que apuntar al pixel exacto. */
+.org-uchart-col:hover .org-uchart-bar { opacity: .82; }
+.org-uchart-col { cursor: default; }
 .org-uchart-seg { width: 100%; }
 .org-uchart-xaxis { display: flex; justify-content: space-between; margin-top: .5rem; padding: 0 4px; }
 .org-uchart-xaxis span { font-size: .66rem; color: var(--text-muted); }
@@ -2513,3 +2517,47 @@
     .org-mem-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 0.4rem; }
     .org-mem-row--head, .org-mem-barra, .org-mem-fecha { display: none; }
 }
+
+/* ─── Tooltip de la grafica de consumo ────────────────────────────────
+   Reemplaza al `title` nativo: sale al instante, se puede estilar y muestra el
+   desglose del dia, que es lo que se quiere saber. */
+
+.org-uchart-tip {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+    min-width: 170px;
+    max-width: 240px;
+    padding: 0.6rem 0.7rem;
+    border-radius: 10px;
+    background: rgba(10, 10, 12, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    font-size: 0.78rem;
+}
+
+.org-uchart-tip-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
+.org-uchart-tip-head b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+.org-uchart-tip-row {
+    display: grid;
+    grid-template-columns: 9px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.15rem 0;
+    color: var(--text-secondary);
+}
+
+.org-uchart-tip-row i { width: 9px; height: 9px; border-radius: 3px; }
+.org-uchart-tip-row b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.org-uchart-tip-vacio { color: var(--text-muted); font-style: italic; }
