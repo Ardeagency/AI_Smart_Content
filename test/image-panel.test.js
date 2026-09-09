@@ -18,6 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const FUENTE = fs.readFileSync(path.join(process.cwd(), 'js/views/ImageView.js'), 'utf8');
+const GRAMATICA = fs.readFileSync(path.join(process.cwd(), 'js/studio/direccion.js'), 'utf8');
 
 function cargar() {
   const win = { BaseView: class {}, __: (s, p) => (p
@@ -26,11 +27,31 @@ function cargar() {
   globalThis.window = win;
   globalThis.BaseView = win.BaseView; // `class ImageView extends BaseView` lo busca global
   globalThis.document = { addEventListener() {}, removeEventListener() {} };
+  // La gramatica de variables va primero: el catalogo se arma con ella.
+  new Function(GRAMATICA)();
   new Function(FUENTE)();
   return win.ImageView;
 }
 
 const ImageView = cargar();
+const Direccion = globalThis.window.StudioDireccion;
+
+/**
+ * Doble del editor: guarda el texto y deja insertar chips, que es lo unico que
+ * la vista le pide. El editor de verdad necesita DOM y aqui no hay.
+ */
+function editorFalso(texto = '') {
+  return {
+    valor: texto,
+    get textoLibre() {
+      return this.valor.replace(Direccion.reVariable(), '').trim();
+    },
+    insertar(vs) {
+      const trozo = vs.map((v) => `[${v.etiqueta}: ${v.valor}]`).join(' ');
+      this.valor = (this.valor ? `${this.valor} ` : '') + trozo;
+    }
+  };
+}
 
 /** Vista con lo justo para ejercer la lógica de adjuntos, sin DOM real. */
 function nuevaVista(controles = {}) {
@@ -43,17 +64,13 @@ function nuevaVista(controles = {}) {
   v.selectedProductionIds = new Set();
   v.assetScope = 'product';
   v.selectedAssetId = '';
-  v.photography = {
-    preset: '', shotType: '', lens: '', framing: '', depthOfField: '',
-    backdrop: '', lightType: '', contrastLevel: '', temperature: '',
-    tone: '', colorGrade: '', energyLevel: ''
-  };
   v.selectedCampaignId = '';
   v.selectedAudienceId = '';
   v._promptTokens = null;
   v.organizationId = 'org-1';
   v.dbData = { products: [], services: [], entities: [], audiences: [], campaigns: [] };
-  v.promptInput = { value: 'Una botella sobre piedra mojada.' };
+  v.editor = editorFalso('Una botella sobre piedra mojada.');
+  v._catalogo = null;
 
   v.container = {
     querySelector: (sel) => (sel in controles ? controles[sel] : null),
@@ -215,60 +232,101 @@ describe('Stack de activos — el producto que la imagen no debe alterar', () =>
   });
 });
 
-describe('Fotografía — las plantillas de prompt del panel', () => {
-  const CLAVES = ['shotType', 'lens', 'framing', 'depthOfField', 'backdrop',
-    'lightType', 'contrastLevel', 'temperature', 'tone', 'colorGrade', 'energyLevel'];
+describe('Fotografía — cada opción es una variable de prompt', () => {
+  const cat = Object.create(ImageView.prototype).catalogo;
 
-  test('cada preset llena las once claves de dirección', () => {
-    const presets = ImageView.PHOTOGRAPHY_PRESETS;
-    const nombrados = Object.keys(presets).filter((k) => k !== '');
+  test('toda opción lleva su frase: mandar la etiqueta cruda desperdicia el control', () => {
+    // "Rim light" es una pista; su frase es una instrucción. Una opción sin
+    // `prompt` llega al modelo como una palabra suelta y no dirige nada.
+    const mudas = [];
+    for (const [campo, opciones] of Object.entries(cat.opciones)) {
+      opciones.forEach((o) => {
+        if (!o.prompt || !o.prompt.trim()) mudas.push(`${campo}.${o.valor}`);
+        if (o.prompt === o.valor) mudas.push(`${campo}.${o.valor} (frase = etiqueta)`);
+      });
+    }
+    expect(mudas).toEqual([]);
+  });
 
-    expect(nombrados.length).toBeGreaterThan(0);
-    for (const nombre of nombrados) {
-      const faltantes = CLAVES.filter((k) => !presets[nombre][k]);
-      expect(`${nombre}: ${faltantes.join(', ')}`).toBe(`${nombre}: `);
+  test('cada bloque del panel apunta a un campo que existe', () => {
+    // armarCatalogo() revienta si no; este test deja dicho por qué: un bloque
+    // huérfano pinta una rejilla vacía y el panel se ve completo sin estarlo.
+    for (const p of cat.pestanas) {
+      for (const b of p.bloques) expect(cat.opciones[b.campo]).toBeTruthy();
     }
   });
 
-  test('cada valor de preset existe como opción elegible', () => {
-    const opts = ImageView.PHOTO_OPTIONS;
+  test('cada valor de receta existe como opción elegible', () => {
     const huerfanos = [];
-    for (const [nombre, preset] of Object.entries(ImageView.PHOTOGRAPHY_PRESETS)) {
-      for (const [clave, valor] of Object.entries(preset)) {
-        if (clave === 'label' || !valor) continue;
-        if (!opts[clave]) { huerfanos.push(`${nombre}.${clave} sin catálogo`); continue; }
-        if (!opts[clave].includes(valor)) huerfanos.push(`${nombre}.${clave} = "${valor}"`);
+    for (const r of cat.presets) {
+      for (const [campo, valor] of Object.entries(r.valores)) {
+        if (!cat.opciones[campo]) { huerfanos.push(`${r.id}.${campo} sin catálogo`); continue; }
+        if (!cat.opciones[campo].some((o) => o.valor === valor)) huerfanos.push(`${r.id}.${campo} = "${valor}"`);
       }
     }
-    // Un preset que apunta a un valor inexistente deja el select en blanco sin
-    // avisar: se elige el preset y no pasa nada visible.
+    // Una receta que apunta a un valor inexistente escribe un chip que luego no
+    // se puede expandir: viaja el corchete crudo al modelo.
     expect(huerfanos).toEqual([]);
   });
 
-  test('el mapa de selects cubre exactamente las claves con catálogo', () => {
-    // Si una clave se queda fuera del mapa, su select nunca se llena ni se
-    // lee: el usuario ve un desplegable vacío y el preset no lo toca.
-    const enMapa = ImageView.PHOTO_SELECT_CONFIG.map(([, k]) => k).sort();
-    expect(enMapa).toEqual([...CLAVES].sort());
-  });
+  test('una receta escribe sus variables en el orden del catálogo', () => {
+    const receta = cat.presets[0];
+    const vs = Direccion.variablesDeReceta(cat, receta.valores);
 
-  test('la dirección de fotografía viaja en el payload', () => {
-    const { v } = nuevaVista();
-    v.photography.depthOfField = 'Heavy bokeh';
-    v.photography.lightType = 'Rim light';
-    v.photography.preset = 'luxury-still';
-
-    const payload = v.buildImagePayload();
-
-    expect(payload.photography.depthOfField).toBe('Heavy bokeh');
-    expect(payload.photography.lightType).toBe('Rim light');
-    expect(payload.photography.preset).toBe('luxury-still');
+    expect(vs.length).toBeGreaterThan(3);
+    // Un plano se describe en orden; el orden del catálogo es el del panel.
+    const posiciones = vs.map((v) => cat.orden.indexOf(
+      cat.pestanas.flatMap((p) => p.bloques).find((b) => b.etiqueta === v.etiqueta).campo
+    ));
+    expect(posiciones).toEqual([...posiciones].sort((a, b) => a - b));
   });
 
   test('el movimiento de cámara no existe aquí: una foto no se mueve', () => {
-    const opts = ImageView.PHOTO_OPTIONS;
-    expect(opts.cameraMovement).toBeUndefined();
-    expect(opts.motionSpeed).toBeUndefined();
+    expect(cat.opciones.cameraMovement).toBeUndefined();
+    expect(cat.opciones.motionSpeed).toBeUndefined();
+  });
+});
+
+describe('Las variables dentro del prompt', () => {
+  const cat = Object.create(ImageView.prototype).catalogo;
+
+  test('cada variable se cambia por su frase EN SU SITIO', () => {
+    const texto = 'Una botella sobre piedra mojada [Lente: 85mm (Portrait Compression)] al atardecer.';
+
+    const salida = Direccion.expandirVariables(cat, texto);
+
+    // El sitio importa: una dirección de lente junto al sujeto pesa distinto
+    // que la misma al final del prompt.
+    expect(salida).toBe('Una botella sobre piedra mojada Shot at 85mm, portrait compression separating subject from background. al atardecer.');
+  });
+
+  test('lo que no reconoce lo deja tal cual: es texto del usuario', () => {
+    const texto = 'Una botella [nota: revisar esto] y [Lente: 50mm (Balanced)].';
+
+    const salida = Direccion.expandirVariables(cat, texto);
+
+    expect(salida).toContain('[nota: revisar esto]');
+    expect(salida).toContain('Shot at 50mm');
+  });
+
+  test('expandir dos veces seguidas da lo mismo: la regex no arrastra lastIndex', () => {
+    // Una regex con /g compartida empieza a mitad del texto en la segunda
+    // llamada y se salta variables sin avisar.
+    const texto = '[Lente: 50mm (Balanced)] y [Luz: Rim light]';
+    expect(Direccion.expandirVariables(cat, texto)).toBe(Direccion.expandirVariables(cat, texto));
+    expect(Direccion.leerVariables(texto)).toHaveLength(2);
+    expect(Direccion.leerVariables(texto)).toHaveLength(2);
+  });
+
+  test('la etiqueta desambigua valores que se repiten entre campos', () => {
+    // "Warm" existe en Temperatura y en Color grade. Sin la etiqueta no hay
+    // forma de saber cuál frase toca.
+    const porTemp = Direccion.expandirVariables(cat, '[Temperatura: Warm]');
+    const porGrade = Direccion.expandirVariables(cat, '[Color grade: Warm]');
+
+    expect(porTemp).not.toBe(porGrade);
+    expect(porTemp).toContain('colour temperature');
+    expect(porGrade).toContain('colour grade');
   });
 });
 
@@ -286,6 +344,20 @@ describe('Payload — lo que se manda a crear la tarea', () => {
     // persona_id son uuid, y un string ahí tumba la fila entera después de
     // que la imagen ya se generó y ya se cobró.
     expect(v._resolveSelectedBriefId()).toBeNull();
+  });
+
+  test('el prompt viaja expandido y la intención guarda los chips', () => {
+    const { v } = nuevaVista();
+    v.editor = editorFalso('Una botella [Luz: Rim light] sobre piedra.');
+
+    const payload = v.buildImagePayload();
+
+    // Al modelo va la frase; a la ficha va lo que el director escribió, para
+    // poder recrear y para saber qué archivos mandó.
+    expect(payload.prompt).toContain('A rim light behind the subject');
+    expect(payload.prompt).not.toContain('[Luz:');
+    expect(payload.intencion).toBe('Una botella [Luz: Rim light] sobre piedra.');
+    expect(payload.variables).toEqual([{ etiqueta: 'Luz', valor: 'Rim light' }]);
   });
 
   test('sin controles en el DOM el formato cae a valores válidos, no a undefined', () => {
@@ -325,11 +397,16 @@ describe('Plantilla — los controles que init() busca tienen que existir', () =
     expect(buscados.filter((id) => !ids.has(id))).toEqual([]);
   });
 
-  test('cada select de la dirección de fotografía existe en la plantilla', () => {
-    // Estos se buscan por concatenación ('#' + id), así que el chequeo de
-    // arriba no los ve.
-    const faltantes = ImageView.PHOTO_SELECT_CONFIG.map(([id]) => id).filter((id) => !ids.has(id));
-    expect(faltantes).toEqual([]);
+  test('el panel de dirección se pinta por JS, no por marcado', () => {
+    // Los tiles ya no son <select> en la plantilla: initPhotography() los
+    // escribe dentro de estos dos huecos. Si dejan de existir, el panel queda
+    // en blanco sin un solo error en consola.
+    expect(ids.has('imagePhotoTabs')).toBe(true);
+    expect(ids.has('imagePhotoPanels')).toBe(true);
+    expect(ids.has('imagePhotoReceta')).toBe(true);
+    // Y el brief ya no es un textarea: es el hueco del editor de variables.
+    expect(ids.has('imagePromptEditor')).toBe(true);
+    expect(html).not.toContain('<textarea');
   });
 
   test('el árbol cierra: mismo número de aperturas y cierres por etiqueta', () => {

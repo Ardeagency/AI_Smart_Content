@@ -9,9 +9,15 @@
  *
  * Flujo:
  *   1. Auth + membresia de org + pre-check de saldo (antes de quemar OpenAI/KIE).
- *   2. OpenAI cocina el brief del usuario + la direccion de fotografia en un
- *      prompt final en ingles. Si no hay OPENAI_API_KEY, se arma un prompt
- *      deterministico con las mismas piezas: la pagina no se cae por eso.
+ *   2. OpenAI cocina el brief en un prompt final en ingles. Si no hay
+ *      OPENAI_API_KEY, se manda el brief tal cual: la pagina no se cae por eso.
+ *
+ *      OJO: la direccion de fotografia YA VIENE DENTRO de `prompt`. El panel
+ *      de /image no guarda estado — cada opcion escribe `[Etiqueta: Valor]` en
+ *      el texto y el navegador la cambia por su frase antes de enviar
+ *      (js/studio/direccion.js). Aqui NO se vuelve a armar una narrativa desde
+ *      un objeto aparte: hacerlo duplicaria la direccion y le daria doble peso
+ *      a lo mismo.
  *   3. kie.ai createTask con nano-banana-pro.
  *   4. Devuelve { taskId, prompt, openai_*, kind } — NO cobra. El cobro lo
  *      cierra kie-task-finalize (kind 'image_generated') tras el polling, que
@@ -111,37 +117,6 @@ function sanitizeUrls(list, max) {
   return out;
 }
 
-/**
- * Traduce la direccion de fotografia a lenguaje de direccion. NO son params de
- * la API: nano-banana-pro solo entiende prompt/aspect/resolution, asi que
- * encuadre, luz y color solo existen si viajan DENTRO del prompt.
- */
-function buildPhotographyNarrative(photo) {
-  if (!photo || typeof photo !== 'object') return '';
-  const parts = [];
-  if (photo.shotType) parts.push(`Shot type: ${photo.shotType}.`);
-  if (photo.lens) parts.push(`Shot on a ${photo.lens} lens.`);
-  if (photo.framing) parts.push(`Framing is ${String(photo.framing).toLowerCase()}.`);
-  if (photo.depthOfField) parts.push(`Depth of field: ${photo.depthOfField}.`);
-  if (photo.backdrop) parts.push(`Backdrop: ${photo.backdrop}.`);
-  if (photo.lightType) parts.push(`Lighting: ${photo.lightType}.`);
-  if (photo.contrastLevel) parts.push(`Contrast level: ${photo.contrastLevel}.`);
-  if (photo.temperature) parts.push(`Color temperature: ${photo.temperature}.`);
-  if (photo.tone) parts.push(`Tone: ${photo.tone}.`);
-  if (photo.colorGrade) parts.push(`Color grade: ${photo.colorGrade}.`);
-  if (photo.energyLevel) parts.push(`Visual energy: ${photo.energyLevel}.`);
-  return parts.length ? 'Photographic direction (use as camera, lighting and color direction):\n' + parts.join(' ') : '';
-}
-
-function buildStyleNarrative(direction) {
-  if (!direction || typeof direction !== 'object') return '';
-  const parts = [];
-  if (direction.mood) parts.push(`Visual mood: ${direction.mood}.`);
-  if (direction.realism) parts.push(`Realism: ${direction.realism}.`);
-  if (direction.finish) parts.push(`Finish: ${direction.finish}.`);
-  return parts.length ? parts.join(' ') : '';
-}
-
 /** ADN de marca: solo lo que orienta la IMAGEN (visual > verbal). */
 function buildBrandVisualText(brandContext) {
   const voice = brandContext?.brand_voice || {};
@@ -168,13 +143,13 @@ function buildCampaignAudienceText(campaign, audience) {
  * cobra el costo REAL (KIE + OpenAI + markup) y sin estos numeros el usuario
  * pagaria un estimado.
  */
-async function cookPrompt({ apiKey, brief, photoNarrative, styleNarrative, brandText, campaignAudienceText, hasRefs, lockCount }) {
+async function cookPrompt({ apiKey, brief, brandText, campaignAudienceText, hasRefs, lockCount }) {
   const bloques = [
+    // El brief ya trae dentro la direccion de fotografia, redactada, en el
+    // sitio donde el director la escribio.
     brief ? `Creative brief from the user:\n${brief}` : '',
     brandText ? `Brand context: ${brandText}` : '',
     campaignAudienceText,
-    photoNarrative,
-    styleNarrative,
     hasRefs
       ? 'Reference images are attached to the generation request. Do not describe them literally; use them as visual guidance.'
       : '',
@@ -194,6 +169,10 @@ async function cookPrompt({ apiKey, brief, photoNarrative, styleNarrative, brand
     'You are an advertising still-photography director writing prompts for an AI image model (nano-banana).',
     'Output ONE final image prompt in English, under 220 words, no explanations, no bullet lists, no preamble.',
     'Describe the frame as a photograph: subject, composition, lens behavior, lighting, surface, color.',
+    // El brief ya trae direccion explicita (focal, esquema de luz, color): es
+    // una decision tomada, no una sugerencia. Dejar que el modelo la reescriba
+    // vaciaria el panel de sentido.
+    'The brief may already contain explicit photographic direction (focal length, aperture, lighting setup, colour grade). Preserve every one of those decisions verbatim in the final prompt; never substitute or omit them.',
     'Never invent brands, logos or products that are not stated in the brief or visible in the references.',
     'Do not mention that references are attached; write the prompt as the description of the final image.'
   ].join(' ');
@@ -291,8 +270,6 @@ exports.handler = async (event) => {
     cooked = await cookPrompt({
       apiKey: process.env.OPENAI_API_KEY,
       brief,
-      photoNarrative: buildPhotographyNarrative(body.photography),
-      styleNarrative: buildStyleNarrative(body.direction),
       brandText: buildBrandVisualText(body.brand_context),
       campaignAudienceText: buildCampaignAudienceText(body.campaign, body.audience),
       hasRefs: referenceImages.length > 0,

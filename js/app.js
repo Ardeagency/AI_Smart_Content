@@ -194,6 +194,9 @@ class App {
     // append:true => va al final del <head> para que sus overrides genericos
     // (.btn/.app-header) ganen sobre bundle.css en /dev/* (como cuando era @import).
     const DEV_CSS = [{ href: '/css/modules/developer.css', append: true }];
+    // La gramatica de variables + el editor de prompt: los cargan /image y
+    // /video, que comparten el mismo panel de direccion.
+    const studioPrompt = ['/js/studio/direccion.js', '/js/components/PromptEditor.js'];
     const devBase = ['/js/views/DevBaseView.js'];
     const devInput = ['/js/views/DevBaseView.js', '/js/flags-data.js', '/js/components/ColorPickerModal.js', '/js/input-registry.js'];
 
@@ -492,12 +495,12 @@ class App {
     r.register('/vera', veraLoader, auth);
 
     // ── Org: Video (Seedance 2.0 / KIE) ──
-    const videoLoader = this._lazy('VideoView', ['/js/views/VideoView.js']);
+    const videoLoader = this._lazy('VideoView', [...studioPrompt, '/js/views/VideoView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/video', videoLoader, auth);
     r.register('/video', videoLoader, auth);
 
     // ── Org: Imagen (nano-banana Pro / KIE) ──
-    const imageLoader = this._lazy('ImageView', ['/js/services/ImageDataService.js', '/js/views/ImageView.js']);
+    const imageLoader = this._lazy('ImageView', [...studioPrompt, '/js/services/ImageDataService.js', '/js/views/ImageView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/image', imageLoader, auth);
     r.register('/image', imageLoader, auth);
 

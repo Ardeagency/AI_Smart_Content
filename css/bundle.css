@@ -45,6 +45,8 @@
 @import url('modules/video.css?v=__BUILD_ID__');
 /* image.css: solo lo que /image NO comparte con /video; el esqueleto sale de video.css. */
 @import url('modules/image.css?v=__BUILD_ID__');
+/* prompt-editor.css: el brief con variables como piezas; lo comparten /image y /video. */
+@import url('modules/prompt-editor.css?v=__BUILD_ID__');
 /* insight.css: route-split via app.js _loadCss (dashboardLoader + monitoringLoader). */
 /* monitoring.css: route-split via app.js _loadCss (monitoringLoader). */
 @import url('modules/public.css?v=__BUILD_ID__');

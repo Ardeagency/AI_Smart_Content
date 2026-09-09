@@ -1,0 +1,94 @@
+/* ==========================================================================
+   prompt-editor.css — el editor de prompt con variables como piezas enteras.
+
+   Lo comparten /image y /video: la dirección ya no vive en un panel con
+   estado, vive ESCRITA en el prompt. Ver js/components/PromptEditor.js y
+   js/studio/direccion.js.
+
+   Hereda el sitio y la tipografía del `.video-director-brief-input` al que
+   reemplaza (fondo transparente, la caja la pone la consola), porque el
+   contenedor de la consola ya resuelve el marco.
+   ========================================================================== */
+
+.prompt-editor {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+.prompt-editor__placeholder {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    pointer-events: none;
+    color: var(--text-tertiary, rgba(255, 255, 255, 0.38));
+    font-size: var(--font-size-sm, 0.875rem);
+    line-height: 1.5;
+    /* El placeholder no puede tapar el texto real cuando el campo crece: se
+       corta en una línea y desaparece en cuanto hay contenido. */
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.prompt-editor__campo {
+    width: 100%;
+    min-height: 24px;
+    max-height: min(200px, 26vh);
+    overflow-y: auto;
+    /* `pre-wrap` conserva los saltos que el usuario escribe con shift+enter, y
+       `break-words` evita que una URL pegada ensanche la consola entera. */
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    outline: none;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm, 0.875rem);
+    line-height: 1.6;
+    caret-color: var(--accent-warm, var(--text-primary));
+}
+
+/* ── El chip ────────────────────────────────────────────────────────────────
+   Es un átomo: `contenteditable="false"` hace que el navegador se lo lleve
+   entero de un backspace. `select-none` para que arrastrar sobre él no lo
+   parta por la mitad al copiar. */
+.prompt-chip {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 2px;
+    padding: 1px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--accent-warm, rgba(255, 255, 255, 0.35));
+    background: color-mix(in srgb, var(--accent-warm, #fff) 12%, transparent);
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.45;
+    vertical-align: baseline;
+    white-space: nowrap;
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* En navegadores sin color-mix el chip se quedaba sin fondo y solo se leía el
+   borde: el relleno tenue es lo que lo hace pieza y no palabra subrayada. */
+@supports not (background: color-mix(in srgb, red 10%, transparent)) {
+    .prompt-chip {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* ── Recetas: escriben todas sus variables de golpe ───────────────────────── */
+.studio-receta-wrap {
+    margin-bottom: var(--spacing-md);
+}
+
+.studio-receta-hint {
+    margin: var(--spacing-xs) 0 0;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: var(--text-tertiary, rgba(255, 255, 255, 0.45));
+}

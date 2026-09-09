@@ -86,22 +86,13 @@ class ImageView extends BaseView {
     // Stack de activos: qué producto/servicio/entidad debe respetar la imagen.
     this.assetScope = 'product';
     this.selectedAssetId = '';
-    // Dirección de fotografía (pestaña Fotografía). No son params de la API:
-    // se traducen a lenguaje de dirección dentro del prompt, server-side.
-    this.photography = {
-      preset: '',
-      shotType: '',
-      lens: '',
-      framing: '',
-      depthOfField: '',
-      backdrop: '',
-      lightType: '',
-      contrastLevel: '',
-      temperature: '',
-      tone: '',
-      colorGrade: '',
-      energyLevel: ''
-    };
+    // NO hay estado de dirección. La ley de la casa (portada del Studio de
+    // accounts-arde): tocar una opción no prende un botón, ESCRIBE su variable
+    // en el prompt. Lo elegido está escrito y se quita borrándolo como se borra
+    // una palabra. Un panel con estado paralelo decía una cosa y el prompt otra,
+    // y solo al producir se sabía cuál mandó.
+    this.editor = null;
+    this._catalogo = null;
     // Tokens del último prompt cocinado — van al finalize para cobrar el costo
     // real (KIE + OpenAI + markup) en vez de un estimado.
     this._promptTokens = null;
@@ -110,35 +101,182 @@ class ImageView extends BaseView {
   }
 
   /**
-   * Presets de producción. Son plantillas de prompt, no params de la API:
-   * llenan de una todos los campos del panel.
+   * EL CATALOGO DE FOTOGRAFIA — cada opcion es una VARIABLE DE PROMPT.
+   *
+   * `valor` es lo que se ve en el tile; `prompt` es la frase que de verdad
+   * dirige al modelo; `desc` explica que hace a quien no es del oficio.
+   * Mandar la etiqueta cruda seria desperdiciar el control: "Rim light" es una
+   * pista, su frase es una instruccion.
+   *
+   * Tocar un tile NO prende un boton: escribe `[Etiqueta: Valor]` en el prompt,
+   * donde este el cursor. Ver js/studio/direccion.js.
    */
-  static get PHOTOGRAPHY_PRESETS() {
+  static get PHOTO_OPCIONES() {
     return {
-      '': { label: 'None' },
-      'product-hero': { label: 'Product Hero', shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Centered', depthOfField: 'Shallow depth', backdrop: 'Seamless studio', lightType: 'Studio commercial', contrastLevel: 'Medium', temperature: 'Neutral', tone: 'Clean commercial', colorGrade: 'Neutral', energyLevel: 'Moderate' },
-      'luxury-still': { label: 'Luxury Still', shotType: 'Close-up', lens: '85mm (Portrait Compression)', framing: 'Negative space left', depthOfField: 'Heavy bokeh', backdrop: 'Dark void', lightType: 'Rim light', contrastLevel: 'High', temperature: 'Warm', tone: 'Minimal luxury', colorGrade: 'Muted tones', energyLevel: 'Low' },
-      'social-performance': { label: 'Social Performance', shotType: 'Medium Shot', lens: '35mm (Natural)', framing: 'Rule of thirds', depthOfField: 'Deep focus', backdrop: 'Lifestyle set', lightType: 'Natural daylight', contrastLevel: 'Medium', temperature: 'Warm', tone: 'Bright energetic', colorGrade: 'Warm', energyLevel: 'High' },
-      'editorial-fashion': { label: 'Editorial Fashion', shotType: 'Wide Shot', lens: '24mm (Wide Environmental)', framing: 'Dynamic off-center', depthOfField: 'Deep focus', backdrop: 'Textured surface', lightType: 'Hard contrast', contrastLevel: 'Ultra contrast', temperature: 'Cold', tone: 'Editorial fashion', colorGrade: 'High saturation', energyLevel: 'High' },
-      'ecommerce-clean': { label: 'Ecommerce Clean', shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Symmetrical', depthOfField: 'Deep focus', backdrop: 'Seamless studio', lightType: 'Soft diffused', contrastLevel: 'Low', temperature: 'Neutral', tone: 'Clean commercial', colorGrade: 'Neutral', energyLevel: 'Low' },
-      'macro-detail': { label: 'Macro Detail', shotType: 'Macro Detail', lens: '100mm Macro', framing: 'Centered', depthOfField: 'Macro focus stack', backdrop: 'Textured surface', lightType: 'Soft diffused', contrastLevel: 'High', temperature: 'Neutral', tone: 'Hyperreal product', colorGrade: 'Neutral', energyLevel: 'Moderate' }
+      shotType: [
+        { valor: 'Macro Detail', prompt: 'Shot type: extreme macro detail, texture and material filling the frame.', desc: window.__('Detalle extremo del objeto. Textura, materiales y acabados en primer plano.') },
+        { valor: 'Close-up', prompt: 'Shot type: close-up, the subject filling the frame.', desc: window.__('Plano cerrado sobre el sujeto. Íntimo y directo.') },
+        { valor: 'Medium Shot', prompt: 'Shot type: medium shot balancing the subject with some of its environment.', desc: window.__('Plano medio. Sujeto y algo de contexto alrededor.') },
+        { valor: 'Wide Shot', prompt: 'Shot type: wide shot placing the subject within its full scene.', desc: window.__('Plano abierto. El entorno cuenta tanto como el sujeto.') },
+        { valor: 'Hero Product Frame', prompt: 'Shot type: hero product frame, the product as absolute protagonist.', desc: window.__('El producto como protagonista absoluto del encuadre.') },
+        { valor: 'Flat Lay', prompt: 'Shot type: flat lay arrangement photographed from directly above.', desc: window.__('Vista cenital sobre superficie. Ordenado, editorial, muy de catálogo.') },
+        { valor: 'Top Down', prompt: 'Shot type: top-down overhead view.', desc: window.__('Cámara desde arriba. Muestra distribución y composición.') },
+        { valor: 'Low Angle', prompt: 'Shot type: low angle looking up, making the subject feel larger.', desc: window.__('Desde abajo. Engrandece al sujeto, lo hace imponente.') },
+        { valor: 'High Angle', prompt: 'Shot type: high angle looking down over the subject.', desc: window.__('Desde arriba. Contexto y sensación de observación.') }
+      ],
+      lens: [
+        { valor: '24mm (Wide Environmental)', prompt: 'Shot at 24mm, wide-angle perspective that opens up the space.', desc: window.__('Gran angular. Abarca el entorno y exagera la profundidad.') },
+        { valor: '35mm (Natural)', prompt: 'Shot at 35mm, natural perspective close to human vision.', desc: window.__('Mirada natural, parecida al ojo humano. Versátil y honesto.') },
+        { valor: '50mm (Balanced)', prompt: 'Shot at 50mm, standard undistorted perspective.', desc: window.__('Equilibrado, sin distorsión. El estándar del producto.') },
+        { valor: '85mm (Portrait Compression)', prompt: 'Shot at 85mm, portrait compression separating subject from background.', desc: window.__('Comprime el fondo y separa al sujeto. Retrato premium.') },
+        { valor: '100mm Macro', prompt: 'Shot at 100mm macro, focusing centimetres from the subject.', desc: window.__('Máximo detalle a corta distancia. Texturas y materiales.') }
+      ],
+      framing: [
+        { valor: 'Centered', prompt: 'Framing is centered and stable.', desc: window.__('Sujeto al centro. Estable, directo, comercial clásico.') },
+        { valor: 'Rule of thirds', prompt: 'Framing follows the rule of thirds.', desc: window.__('Sujeto descentrado sobre líneas guía. Natural y dinámico.') },
+        { valor: 'Negative space left', prompt: 'Framing leaves negative space on the left of the subject.', desc: window.__('Aire a la izquierda. Deja sitio para texto o copy.') },
+        { valor: 'Negative space right', prompt: 'Framing leaves negative space on the right of the subject.', desc: window.__('Aire a la derecha. Deja sitio para texto o copy.') },
+        { valor: 'Symmetrical', prompt: 'Framing is perfectly symmetrical.', desc: window.__('Composición simétrica. Orden, calma, autoridad.') },
+        { valor: 'Dynamic off-center', prompt: 'Framing is dynamic and off-center, creating visual tension.', desc: window.__('Composición descentrada y con tensión. Editorial.') }
+      ],
+      depthOfField: [
+        { valor: 'Deep focus', prompt: 'Deep focus: everything sharp from foreground to background.', desc: window.__('Todo nítido, del frente al fondo. Muestra el conjunto.') },
+        { valor: 'Shallow depth', prompt: 'Shallow depth of field, the subject sharp against a soft background.', desc: window.__('Sujeto nítido, fondo suave. Separa sin borrar el contexto.') },
+        { valor: 'Heavy bokeh', prompt: 'Very shallow depth of field with creamy bokeh dissolving the background.', desc: window.__('Fondo muy desenfocado. Aísla al sujeto por completo.') },
+        { valor: 'Macro focus stack', prompt: 'Focus-stacked macro: full sharpness across the whole subject.', desc: window.__('Nitidez total incluso en macro. Cada textura se ve.') }
+      ],
+      backdrop: [
+        { valor: 'Seamless studio', prompt: 'Set on a seamless studio backdrop, clean and free of distractions.', desc: window.__('Fondo infinito de estudio. Limpio, sin distracciones.') },
+        { valor: 'Natural environment', prompt: 'Set in a real, natural environment.', desc: window.__('El producto en un entorno real. Creíble y cercano.') },
+        { valor: 'Textured surface', prompt: 'Resting on a visibly textured surface such as stone, wood or fabric.', desc: window.__('Superficie con material visible (piedra, madera, tela).') },
+        { valor: 'Gradient sweep', prompt: 'Set against a smooth colour gradient sweep.', desc: window.__('Degradado suave de color. Moderno y gráfico.') },
+        { valor: 'Dark void', prompt: 'Set against a dark, featureless background.', desc: window.__('Fondo oscuro sin detalle. Premium y dramático.') },
+        { valor: 'Lifestyle set', prompt: 'Set within a styled real-life scene showing the product in use.', desc: window.__('Escena montada de vida real. Contexto de uso.') }
+      ],
+      lightType: [
+        { valor: 'Soft diffused', prompt: 'Lighting: soft diffused light with no harsh shadows.', desc: window.__('Luz suave y envolvente, sin sombras duras. Cálida y limpia.') },
+        { valor: 'Hard contrast', prompt: 'Lighting: hard directional light with pronounced shadows.', desc: window.__('Luces fuertes y sombras marcadas. Dramatismo visual.') },
+        { valor: 'Rim light', prompt: 'A rim light behind the subject traces its edge, separating it from the background.', desc: window.__('Luz que recorta el contorno. Premium, separa del fondo.') },
+        { valor: 'Backlit silhouette', prompt: 'The subject is backlit into a silhouette against the light.', desc: window.__('Sujeto a contraluz, silueta contra la luz. Misterio.') },
+        { valor: 'Studio commercial', prompt: 'Lighting: even professional studio commercial lighting.', desc: window.__('Iluminación de estudio profesional. Pareja y comercial.') },
+        { valor: 'Natural daylight', prompt: 'Lighting: soft natural daylight.', desc: window.__('Luz natural de día. Auténtico, lifestyle, accesible.') },
+        { valor: 'Dramatic spotlight', prompt: 'Lighting: a concentrated spotlight isolating the subject.', desc: window.__('Foco concentrado sobre el sujeto. Protagonismo total.') }
+      ],
+      contrastLevel: [
+        { valor: 'Low', prompt: 'Low contrast, flat and soft tonal range.', desc: window.__('Contraste bajo. Tonos planos y suaves, look documental o vintage.') },
+        { valor: 'Medium', prompt: 'Balanced, natural contrast.', desc: window.__('Contraste balanceado. Look natural y versátil.') },
+        { valor: 'High', prompt: 'High contrast, punchy and vibrant.', desc: window.__('Contraste alto. Imagen punchy y vibrante.') },
+        { valor: 'Ultra contrast', prompt: 'Extreme contrast with crushed blacks and bright highlights.', desc: window.__('Contraste extremo. Look gráfico, casi de moda editorial.') }
+      ],
+      temperature: [
+        { valor: 'Neutral', prompt: 'Neutral colour temperature, true to life.', desc: window.__('Temperatura neutra. Colores reales sin tinte cálido ni frío.') },
+        { valor: 'Warm', prompt: 'Warm colour temperature with golden tones.', desc: window.__('Tonos cálidos (amarillos, naranjas). Acogedor, dorado, premium.') },
+        { valor: 'Cold', prompt: 'Cool colour temperature with blue tones.', desc: window.__('Tonos fríos (azules). Tecnológico, sereno, sofisticado.') }
+      ],
+      tone: [
+        { valor: 'Clean commercial', prompt: 'Clean commercial tone: bright, uncluttered, made to sell.', desc: window.__('Look comercial clásico. Limpio, claro, vende sin distracciones.') },
+        { valor: 'Cinematic dramatic', prompt: 'Cinematic dramatic tone with rich palette and tension.', desc: window.__('Look de cine con paleta rica y tensión.') },
+        { valor: 'Hyperreal product', prompt: 'Hyperreal product rendering with exaggerated material detail.', desc: window.__('Producto hiperdetallado, casi macro. Saca lo mejor del objeto.') },
+        { valor: 'Minimal luxury', prompt: 'Minimal luxury tone: few elements, generous empty space, quiet wealth.', desc: window.__('Estética minimal premium. Pocos elementos, mucho aire.') },
+        { valor: 'Dark premium', prompt: 'Dark premium tone with an elegant, nocturnal palette.', desc: window.__('Paleta oscura y elegante. Gama alta nocturna.') },
+        { valor: 'Bright energetic', prompt: 'Bright energetic tone with vivid, saturated colour.', desc: window.__('Colores vivos y luminosos. Joven y social.') },
+        { valor: 'Editorial fashion', prompt: 'Editorial fashion magazine tone, sophisticated and aspirational.', desc: window.__('Estética de revista de moda. Sofisticado y aspiracional.') },
+        { valor: 'Documentary', prompt: 'Documentary tone: raw, unfiltered and human.', desc: window.__('Look auténtico y crudo. Sin filtros, real, humano.') }
+      ],
+      colorGrade: [
+        { valor: 'Neutral', prompt: 'Neutral colour grade.', desc: window.__('Sin tinte. Los colores tal como son.') },
+        { valor: 'Warm', prompt: 'Warm colour grade pushed towards amber.', desc: window.__('Virado a ámbar. Cálido y acogedor.') },
+        { valor: 'Cold', prompt: 'Cool colour grade pushed towards teal.', desc: window.__('Virado a azul verdoso. Frío y contemporáneo.') },
+        { valor: 'High saturation', prompt: 'Highly saturated colour grade.', desc: window.__('Colores muy saturados. Vibrante y llamativo.') },
+        { valor: 'Muted tones', prompt: 'Muted, desaturated colour grade.', desc: window.__('Tonos apagados y elegantes. Premium discreto.') }
+      ],
+      energyLevel: [
+        { valor: 'Low', prompt: 'Low visual energy: calm, still and quiet.', desc: window.__('Energía visual baja. Calma y quietud.') },
+        { valor: 'Moderate', prompt: 'Moderate visual energy.', desc: window.__('Energía visual contenida. Equilibrio entre calma y presencia.') },
+        { valor: 'High', prompt: 'High visual energy: bold and attention-grabbing.', desc: window.__('Energía alta. Llama la atención.') },
+        { valor: 'Peak', prompt: 'Peak visual energy: maximum intensity and vibrancy.', desc: window.__('Energía visual máxima. Vivo, saturado, alta intensidad.') }
+      ],
+      mood: [
+        { valor: 'Commercial photography', prompt: 'Shot as commercial advertising photography.', desc: window.__('Fotografía publicitaria de marca.') },
+        { valor: 'Editorial', prompt: 'Shot as editorial magazine photography.', desc: window.__('Fotografía de revista. Narrativa y estilizada.') },
+        { valor: 'Documentary', prompt: 'Shot as documentary photography, candid and unposed.', desc: window.__('Documental. Sin pose, capturado.') },
+        { valor: 'Fine art', prompt: 'Shot as fine art photography, composed and deliberate.', desc: window.__('Fotografía de autor. Composición deliberada.') },
+        { valor: 'Dreamlike', prompt: 'Dreamlike, ethereal atmosphere with soft haze.', desc: window.__('Atmósfera onírica y etérea.') },
+        { valor: 'Bright lifestyle', prompt: 'Bright lifestyle photography, warm and aspirational.', desc: window.__('Lifestyle luminoso. Cálido y aspiracional.') }
+      ],
+      realism: [
+        { valor: 'Photorealistic', prompt: 'Photorealistic rendering, indistinguishable from a real photograph.', desc: window.__('Indistinguible de una foto real.') },
+        { valor: 'Stylized', prompt: 'Stylized rendering with deliberate artistic treatment.', desc: window.__('Tratamiento artístico deliberado.') },
+        { valor: 'Hyperreal', prompt: 'Hyperreal rendering, sharper and more vivid than reality.', desc: window.__('Más nítido y vívido que la realidad.') },
+        { valor: 'Illustration', prompt: 'Rendered as an illustration rather than a photograph.', desc: window.__('Ilustrado, no fotográfico.') },
+        { valor: '3D render', prompt: 'Rendered as a polished 3D CGI image.', desc: window.__('Render 3D pulido, de CGI.') }
+      ],
+      finish: [
+        { valor: 'Clean digital', prompt: 'Clean digital finish with no grain.', desc: window.__('Digital limpio, sin grano.') },
+        { valor: 'Analog film grain', prompt: 'Finished with fine analog film grain.', desc: window.__('Grano de película fino.') },
+        { valor: 'High gloss', prompt: 'High gloss finish with bright specular highlights.', desc: window.__('Alto brillo, reflejos marcados.') },
+        { valor: 'Matte', prompt: 'Matte finish with soft, non-reflective surfaces.', desc: window.__('Mate, sin reflejos.') }
+      ]
     };
   }
 
-  static get PHOTO_OPTIONS() {
-    return {
-      shotType: ['Macro Detail', 'Close-up', 'Medium Shot', 'Wide Shot', 'Hero Product Frame', 'Flat Lay', 'Top Down', 'Low Angle', 'High Angle'],
-      lens: ['24mm (Wide Environmental)', '35mm (Natural)', '50mm (Balanced)', '85mm (Portrait Compression)', '100mm Macro'],
-      framing: ['Centered', 'Rule of thirds', 'Negative space left', 'Negative space right', 'Symmetrical', 'Dynamic off-center'],
-      depthOfField: ['Deep focus', 'Shallow depth', 'Heavy bokeh', 'Macro focus stack'],
-      backdrop: ['Seamless studio', 'Natural environment', 'Textured surface', 'Gradient sweep', 'Dark void', 'Lifestyle set'],
-      lightType: ['Soft diffused', 'Hard contrast', 'Rim light', 'Backlit silhouette', 'Studio commercial', 'Natural daylight', 'Dramatic spotlight'],
-      contrastLevel: ['Low', 'Medium', 'High', 'Ultra contrast'],
-      temperature: ['Neutral', 'Warm', 'Cold'],
-      tone: ['Clean commercial', 'Cinematic dramatic', 'Hyperreal product', 'Minimal luxury', 'Dark premium', 'Bright energetic', 'Editorial fashion', 'Documentary'],
-      colorGrade: ['Neutral', 'Warm', 'Cold', 'High saturation', 'Muted tones'],
-      energyLevel: ['Low', 'Moderate', 'High', 'Peak']
-    };
+  /** Cómo se agrupan los campos en el panel. La etiqueta es la que va al chip. */
+  static get PHOTO_PESTANAS() {
+    return [
+      { id: 'frame', etiqueta: window.__('Encuadre'), icono: 'crop', bloques: [
+        { campo: 'shotType', etiqueta: window.__('Tipo de toma') },
+        { campo: 'lens', etiqueta: window.__('Lente') },
+        { campo: 'framing', etiqueta: window.__('Encuadre') }
+      ] },
+      { id: 'lighting', etiqueta: window.__('Luz'), icono: 'idea', bloques: [
+        { campo: 'lightType', etiqueta: window.__('Luz') },
+        { campo: 'contrastLevel', etiqueta: window.__('Contraste') },
+        { campo: 'temperature', etiqueta: window.__('Temperatura') }
+      ] },
+      { id: 'mood', etiqueta: 'Mood', icono: 'palette', bloques: [
+        { campo: 'tone', etiqueta: window.__('Tono') },
+        { campo: 'colorGrade', etiqueta: 'Color grade' },
+        { campo: 'energyLevel', etiqueta: window.__('Energía') }
+      ] },
+      { id: 'depth', etiqueta: window.__('Profundidad'), icono: 'filter', bloques: [
+        { campo: 'depthOfField', etiqueta: window.__('Profundidad') },
+        { campo: 'backdrop', etiqueta: window.__('Fondo') }
+      ] },
+      { id: 'style', etiqueta: window.__('Estilo'), icono: 'camera', bloques: [
+        { campo: 'mood', etiqueta: window.__('Mood') },
+        { campo: 'realism', etiqueta: window.__('Realismo') },
+        { campo: 'finish', etiqueta: window.__('Acabado') }
+      ] }
+    ];
+  }
+
+  /**
+   * Recetas: escriben TODAS sus variables de golpe, en el orden del catálogo.
+   * Un plano se describe en orden —encuadre, óptica, luz, color, acabado— y así
+   * el prompt se lee como lo leería un fotógrafo, no como una lista de ajustes.
+   */
+  static get PHOTO_RECETAS() {
+    return [
+      { id: 'product-hero', label: 'Product Hero', valores: { shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Centered', lightType: 'Studio commercial', contrastLevel: 'Medium', temperature: 'Neutral', tone: 'Clean commercial', colorGrade: 'Neutral', energyLevel: 'Moderate', depthOfField: 'Shallow depth', backdrop: 'Seamless studio', realism: 'Photorealistic' } },
+      { id: 'luxury-still', label: 'Luxury Still', valores: { shotType: 'Close-up', lens: '85mm (Portrait Compression)', framing: 'Negative space left', lightType: 'Rim light', contrastLevel: 'High', temperature: 'Warm', tone: 'Minimal luxury', colorGrade: 'Muted tones', energyLevel: 'Low', depthOfField: 'Heavy bokeh', backdrop: 'Dark void', realism: 'Photorealistic' } },
+      { id: 'social-performance', label: 'Social Performance', valores: { shotType: 'Medium Shot', lens: '35mm (Natural)', framing: 'Rule of thirds', lightType: 'Natural daylight', contrastLevel: 'Medium', temperature: 'Warm', tone: 'Bright energetic', colorGrade: 'Warm', energyLevel: 'High', depthOfField: 'Deep focus', backdrop: 'Lifestyle set', mood: 'Bright lifestyle' } },
+      { id: 'editorial-fashion', label: 'Editorial Fashion', valores: { shotType: 'Wide Shot', lens: '24mm (Wide Environmental)', framing: 'Dynamic off-center', lightType: 'Hard contrast', contrastLevel: 'Ultra contrast', temperature: 'Cold', tone: 'Editorial fashion', colorGrade: 'High saturation', energyLevel: 'High', depthOfField: 'Deep focus', backdrop: 'Textured surface', mood: 'Editorial' } },
+      { id: 'ecommerce-clean', label: 'Ecommerce Clean', valores: { shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Symmetrical', lightType: 'Soft diffused', contrastLevel: 'Low', temperature: 'Neutral', tone: 'Clean commercial', colorGrade: 'Neutral', energyLevel: 'Low', depthOfField: 'Deep focus', backdrop: 'Seamless studio', finish: 'Clean digital' } },
+      { id: 'macro-detail', label: 'Macro Detail', valores: { shotType: 'Macro Detail', lens: '100mm Macro', framing: 'Centered', lightType: 'Soft diffused', contrastLevel: 'High', temperature: 'Neutral', tone: 'Hyperreal product', colorGrade: 'Neutral', energyLevel: 'Moderate', depthOfField: 'Macro focus stack', backdrop: 'Textured surface' } }
+    ];
+  }
+
+  /** El catálogo armado. Se memoiza: armarlo valida, y validar en cada tile sobra. */
+  get catalogo() {
+    if (!this._catalogo) {
+      this._catalogo = window.StudioDireccion.armarCatalogo({
+        titulo: window.__('Fotografía'),
+        opciones: ImageView.PHOTO_OPCIONES,
+        presets: ImageView.PHOTO_RECETAS,
+        pestanas: ImageView.PHOTO_PESTANAS
+      });
+    }
+    return this._catalogo;
   }
 
   async onEnter() {
@@ -233,18 +371,10 @@ class ImageView extends BaseView {
                     <input type="file" id="imageConsoleUpload" accept="image/jpeg,image/png,image/jpg,image/webp" multiple style="display: none;" aria-hidden="true">
 
                     <div class="video-director-console-content">
-                      <textarea
-                        id="imagePromptInput"
-                        class="video-director-brief-input"
-                        placeholder="${window.__('Describe la imagen: sujeto, escenario y qué debe transmitir. Un buen brief pesa más que diez ajustes.')}"
-                        rows="2"
-                        autocomplete="off"
-                        aria-label="${window.__('Brief de la imagen')}"
-                      ></textarea>
+                      <div id="imagePromptEditor"></div>
                     </div>
                     <div class="video-director-attachments-row">
                       <div class="video-attachments-list" id="imageElementsList" aria-live="polite"></div>
-                      <div class="video-director-variables-row" id="imageDirectorVariables" aria-label="${window.__('Variables de fotografía')}"></div>
                     </div>
 
                     <div class="video-director-controls">
@@ -389,96 +519,19 @@ class ImageView extends BaseView {
                   <div class="video-sidebar-section video-sidebar-cine video-cinematography-panel">
                     <div class="video-sidebar-section-header">
                       <h3 class="video-section-label">${window.__('Dirección de fotografía')}</h3>
-                      <div class="video-sidebar-section-actions">
-                        <button type="button" class="video-sidebar-section-icon-btn" id="imagePhotoResetBtn" aria-label="${window.__('Restablecer fotografía')}" title="${window.__('Restablecer todos los valores')}"><i class="aisc-ico aisc-ico--refresh"></i></button>
-                      </div>
                     </div>
-                    <p class="video-sidebar-section-hint">${window.__('Encuadre, luz, profundidad y color. Si no sabes por dónde empezar, elige un Preset de producción y se llena el resto.')}</p>
-                    <div class="video-cine-preset-wrap">
-                      <label class="video-cine-label">${window.__('Preset de producción')}</label>
-                      <select id="imagePhotoPreset" class="video-cine-select" aria-label="${window.__('Preset de producción')}">
-                        <option value="">${window.__('Ninguno')}</option>
-                        <option value="product-hero">Product Hero</option>
-                        <option value="luxury-still">Luxury Still</option>
-                        <option value="social-performance">Social Performance</option>
-                        <option value="editorial-fashion">Editorial Fashion</option>
-                        <option value="ecommerce-clean">Ecommerce Clean</option>
-                        <option value="macro-detail">Macro Detail</option>
-                      </select>
-                    </div>
-                    <div class="video-cine-selected-tags" id="imagePhotoSelectedTags" aria-live="polite"></div>
-                    <div class="video-cine-tabs" role="tablist" aria-label="${window.__('Categoría de dirección')}">
-                      <button type="button" class="video-cine-tab is-active" role="tab" aria-selected="true" data-tab="frame"><i class="aisc-ico aisc-ico--crop" aria-hidden="true"></i><span>${window.__('Encuadre')}</span></button>
-                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="lighting"><i class="aisc-ico aisc-ico--idea" aria-hidden="true"></i><span>${window.__('Luz')}</span></button>
-                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="mood"><i class="aisc-ico aisc-ico--palette" aria-hidden="true"></i><span>Mood</span></button>
-                      <button type="button" class="video-cine-tab" role="tab" aria-selected="false" data-tab="depth"><i class="aisc-ico aisc-ico--filter" aria-hidden="true"></i><span>${window.__('Profundidad')}</span></button>
-                    </div>
-                    <div class="video-cine-panels">
-                      <div class="video-cine-panel is-active" data-panel="frame" role="tabpanel">
-                        <p class="video-cine-block-hint">${window.__('Desde dónde se mira y con qué lente. Decide qué tan cerca está el sujeto y cuánto aire queda alrededor.')}</p>
-                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Tipo de toma')}</label><select id="imagePhotoShotType" class="video-cine-select"></select></div>
-                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Lente')}</label><select id="imagePhotoLens" class="video-cine-select"></select></div>
-                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Encuadre')}</label><select id="imagePhotoFraming" class="video-cine-select"></select></div>
-                      </div>
-                      <div class="video-cine-panel" data-panel="lighting" role="tabpanel" hidden>
-                        <p class="video-cine-block-hint">${window.__('La iluminación dicta la emoción: suave para algo cálido, contrastada para drama.')}</p>
-                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Tipo de luz')}</label><select id="imagePhotoLightType" class="video-cine-select"></select></div>
-                        <div class="video-cine-row-pair">
-                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Contraste')}</label><select id="imagePhotoContrast" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Temperatura')}</label><select id="imagePhotoTemperature" class="video-cine-select"></select></div>
-                        </div>
-                      </div>
-                      <div class="video-cine-panel" data-panel="mood" role="tabpanel" hidden>
-                        <p class="video-cine-block-hint">${window.__('La paleta y la energía emocional. Define si se siente premium, vibrante o dramático.')}</p>
-                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Tono')}</label><select id="imagePhotoTone" class="video-cine-select"></select></div>
-                        <div class="video-cine-row-pair">
-                          <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="imagePhotoColorGrade" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">${window.__('Energía')}</label><select id="imagePhotoEnergyLevel" class="video-cine-select"></select></div>
-                        </div>
-                      </div>
-                      <div class="video-cine-panel" data-panel="depth" role="tabpanel" hidden>
-                        <p class="video-cine-block-hint">${window.__('Qué tanto se separa el sujeto del fondo, y sobre qué fondo cae. En una foto fija es media dirección.')}</p>
-                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Profundidad de campo')}</label><select id="imagePhotoDepthOfField" class="video-cine-select"></select></div>
-                        <div class="video-cine-row"><label class="video-cine-label">${window.__('Fondo')}</label><select id="imagePhotoBackdrop" class="video-cine-select"></select></div>
-                      </div>
-                    </div>
-                  </div>
+                    <p class="video-sidebar-section-hint">${window.__('El oficio con el que se dirige la pieza. Tocar una opción no prende un botón: escribe su variable en el prompt, donde esté el cursor.')}</p>
 
-                  <div class="video-sidebar-section">
-                    <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">${window.__('Estilo Visual')}</h3>
-                    </div>
-                    <p class="video-sidebar-section-hint">${window.__('Mood general y nivel de realismo de la imagen.')}</p>
-                    <div class="video-cine-row"><label class="video-cine-label">${window.__('Mood visual')}</label>
-                      <select id="imageMood" class="video-cine-select">
-                        <option value="">${window.__('— Auto')}</option>
-                        <option value="Commercial photography">${window.__('Fotografía comercial')}</option>
-                        <option value="Editorial">Editorial</option>
-                        <option value="Documentary">${window.__('Documental')}</option>
-                        <option value="Fine art">${window.__('Fine art')}</option>
-                        <option value="Dreamlike">${window.__('Sueño / Onírico')}</option>
-                        <option value="Bright lifestyle">${window.__('Lifestyle luminoso')}</option>
+                    <div class="studio-receta-wrap">
+                      <label class="video-cine-label" for="imagePhotoReceta">${window.__('Receta')}</label>
+                      <select id="imagePhotoReceta" class="video-cine-select" aria-label="${window.__('Receta de producción')}">
+                        <option value="">${window.__('Escribir una receta…')}</option>
                       </select>
+                      <p class="studio-receta-hint">${window.__('Una receta escribe todas sus variables de golpe, en el orden en que se describe un plano.')}</p>
                     </div>
-                    <div class="video-cine-row"><label class="video-cine-label">${window.__('Realismo')}</label>
-                      <select id="imageRealism" class="video-cine-select">
-                        <option value="">${window.__('— Auto')}</option>
-                        <option value="Photorealistic">${window.__('Fotorrealista')}</option>
-                        <option value="Stylized">${window.__('Estilizado')}</option>
-                        <option value="Hyperreal">${window.__('Hiperreal')}</option>
-                        <option value="Illustration">${window.__('Ilustración')}</option>
-                        <option value="3D render">${window.__('Render 3D')}</option>
-                      </select>
-                    </div>
-                    <div class="video-cine-row"><label class="video-cine-label">${window.__('Acabado')}</label>
-                      <select id="imageFinish" class="video-cine-select">
-                        <option value="">${window.__('— Auto')}</option>
-                        <option value="Clean digital">${window.__('Digital limpio')}</option>
-                        <option value="Analog film grain">${window.__('Grano de película')}</option>
-                        <option value="High gloss">${window.__('Alto brillo')}</option>
-                        <option value="Matte">${window.__('Mate')}</option>
-                      </select>
-                    </div>
+
+                    <div class="video-cine-tabs" role="tablist" aria-label="${window.__('Categoría de dirección')}" id="imagePhotoTabs"></div>
+                    <div class="video-cine-panels" id="imagePhotoPanels"></div>
                   </div>
 
                 </div>
@@ -512,7 +565,6 @@ class ImageView extends BaseView {
     this.errorText = this.container.querySelector('#imageErrorText');
 
     this.sendBtn = this.container.querySelector('#imagePromptSend');
-    this.promptInput = this.container.querySelector('#imagePromptInput');
 
     if (this.sendBtn && this.sendBtn.dataset.boundImageSend !== '1') {
       this.sendBtn.dataset.boundImageSend = '1';
@@ -521,15 +573,17 @@ class ImageView extends BaseView {
         this.startGeneration();
       });
     }
-    if (this.promptInput) {
-      this.promptInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          this.startGeneration();
-        }
+
+    // El brief no es un textarea: es el editor con variables como piezas
+    // enteras. Un textarea no admite que un trozo tenga color, tooltip ni se
+    // comporte como un átomo que un backspace se lleva completo.
+    const editorHost = this.container.querySelector('#imagePromptEditor');
+    if (editorHost) {
+      this.editor = new window.PromptEditor(editorHost, {
+        placeholder: window.__('Describe la imagen: sujeto, escenario y qué debe transmitir. Un buen brief pesa más que diez ajustes.'),
+        ariaLabel: window.__('Brief de la imagen'),
+        onEnviar: () => this.startGeneration()
       });
-      this.promptInput.addEventListener('input', () => this.scheduleResizePromptInput());
-      this.promptInput.addEventListener('paste', () => this.scheduleResizePromptInput());
     }
 
     // ── Pestañas del sidebar: Recursos | Fotografía ──
@@ -676,21 +730,9 @@ class ImageView extends BaseView {
     this.renderEscenasCarousel();
 
     // ── Fotografía ──
+    // Sin botón de restablecer: no hay estado que restablecer. Lo elegido está
+    // escrito en el prompt y se quita borrando el chip.
     this.initPhotography();
-    const resetBtn = this.container.querySelector('#imagePhotoResetBtn');
-    if (resetBtn && resetBtn.dataset.boundReset !== '1') {
-      resetBtn.dataset.boundReset = '1';
-      resetBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (!confirm(window.__('¿Restablecer todos los valores de Fotografía?'))) return;
-        Object.keys(this.photography).forEach((k) => { this.photography[k] = ''; });
-        this.syncPhotographyToSelects();
-        this.renderPhotographySelectedTags();
-        this.renderDirectorVariables();
-        const presetEl = this.container.querySelector('#imagePhotoPreset');
-        if (presetEl) presetEl.value = '';
-      });
-    }
 
     // Botón de ayuda del sidebar
     const helpBtn = this.container.querySelector('#imageSidebarHelpBtn');
@@ -709,32 +751,15 @@ class ImageView extends BaseView {
       this.addEventListener(document, 'click', this._helpOutsideHandler);
     }
 
-    this.scheduleResizePromptInput();
-    this._resizeBriefOnWin = () => this.scheduleResizePromptInput();
-    this.addEventListener(window, 'resize', this._resizeBriefOnWin);
   }
 
-  /** Altura del textarea según contenido (vacío ≈ una línea; crece hasta un máximo). */
+  /**
+   * El editor crece solo (CSS: `max-height` + scroll propio), así que ya no hay
+   * altura que calcular a mano. Se conserva el método porque los renders de
+   * chips lo llaman tras cambiar la fila de adjuntos.
+   */
   scheduleResizePromptInput() {
-    if (this._resizeBriefRaf) cancelAnimationFrame(this._resizeBriefRaf);
-    this._resizeBriefRaf = requestAnimationFrame(() => {
-      this._resizeBriefRaf = null;
-      this.resizePromptInput();
-    });
-  }
-
-  resizePromptInput() {
-    const ta = this.promptInput;
-    if (!ta || ta.tagName !== 'TEXTAREA') return;
-    const maxPx = Math.min(
-      ImageView.BRIEF_MAX_HEIGHT_PX,
-      Math.floor(window.innerHeight * ImageView.BRIEF_MAX_VIEWPORT_FRAC)
-    );
-    const minPx = 44;
-    ta.style.height = '0px';
-    const sh = ta.scrollHeight;
-    ta.style.height = `${Math.min(Math.max(sh, minPx), maxPx)}px`;
-    ta.style.overflowY = sh > maxPx ? 'auto' : 'hidden';
+    /* el alto lo resuelve el CSS del editor */
   }
 
   // ── Contexto de marca ────────────────────────────────────────────────────
@@ -1308,187 +1333,110 @@ class ImageView extends BaseView {
     this.renderAttachmentChips();
   }
 
-  // ── Dirección de fotografía ─────────────────────────────────────────────
+  // ── Dirección de fotografía: el catálogo escribe en el prompt ───────────
 
-  /** Pares [id del select, clave del state]. Fuente única para llenar, leer y repintar. */
-  static get PHOTO_SELECT_CONFIG() {
-    return [
-      ['imagePhotoShotType', 'shotType'],
-      ['imagePhotoLens', 'lens'],
-      ['imagePhotoFraming', 'framing'],
-      ['imagePhotoDepthOfField', 'depthOfField'],
-      ['imagePhotoBackdrop', 'backdrop'],
-      ['imagePhotoLightType', 'lightType'],
-      ['imagePhotoContrast', 'contrastLevel'],
-      ['imagePhotoTemperature', 'temperature'],
-      ['imagePhotoTone', 'tone'],
-      ['imagePhotoColorGrade', 'colorGrade'],
-      ['imagePhotoEnergyLevel', 'energyLevel']
-    ];
-  }
-
+  /**
+   * Pinta las pestañas y las rejillas desde el catálogo. Ningún tile guarda
+   * estado ni se "prende": al tocarlo escribe `[Etiqueta: Valor]` en el prompt,
+   * donde esté el cursor, y ahí queda a la vista. Lo elegido se quita borrando
+   * el chip, como se borra una palabra.
+   */
   initPhotography() {
-    const opts = ImageView.PHOTO_OPTIONS;
-    const fill = (id, values, current) => {
-      const el = this.container.querySelector('#' + id);
-      if (!el) return;
-      el.innerHTML = `<option value="">${window.__('— Ninguno')}</option>`
-        + values.map((v) => `<option value="${v}" ${v === current ? 'selected' : ''}>${v}</option>`).join('');
-    };
-    ImageView.PHOTO_SELECT_CONFIG.forEach(([id, key]) => fill(id, opts[key] || [], this.photography[key]));
+    const cat = this.catalogo;
 
-    const presetEl = this.container.querySelector('#imagePhotoPreset');
-    if (presetEl) {
-      presetEl.addEventListener('change', () => {
-        const key = presetEl.value;
-        const presets = ImageView.PHOTOGRAPHY_PRESETS;
-        if (!key || !presets[key]) return;
-        const p = presets[key];
-        this.photography.preset = key;
-        ImageView.PHOTO_SELECT_CONFIG.forEach(([, k]) => { if (p[k] != null) this.photography[k] = p[k]; });
-        this.syncPhotographyToSelects();
-        this.renderPhotographySelectedTags();
-        this.renderDirectorVariables();
+    // --- recetas ---
+    const receta = this.container.querySelector('#imagePhotoReceta');
+    if (receta && receta.dataset.boundReceta !== '1') {
+      receta.dataset.boundReceta = '1';
+      receta.innerHTML = `<option value="">${window.__('Escribir una receta…')}</option>`
+        + cat.presets.map((r) => `<option value="${this.escapeHtml(r.id)}">${this.escapeHtml(r.label)}</option>`).join('');
+      receta.addEventListener('change', () => {
+        const preset = cat.presets.find((r) => String(r.id) === receta.value);
+        // Vuelve a "Escribir una receta…": el desplegable es un disparador, no
+        // un estado. Dejarlo marcado diría que esa receta sigue puesta cuando
+        // el usuario ya pudo borrar la mitad de sus chips.
+        receta.value = '';
+        if (!preset || !this.editor) return;
+        this.editor.insertar(window.StudioDireccion.variablesDeReceta(cat, preset.valores));
       });
     }
 
-    ImageView.PHOTO_SELECT_CONFIG.forEach(([id, key]) => {
-      const el = this.container.querySelector('#' + id);
-      if (!el) return;
-      el.addEventListener('change', () => {
-        this.photography[key] = el.value;
-        this.renderPhotographySelectedTags();
-        this.renderDirectorVariables();
-      });
-    });
+    // --- pestañas ---
+    const tabs = this.container.querySelector('#imagePhotoTabs');
+    const panels = this.container.querySelector('#imagePhotoPanels');
+    if (!tabs || !panels) return;
 
-    // Tabs de la pestaña Fotografía
-    this.container.querySelectorAll('.video-cine-tab[data-tab]').forEach((tab) => {
-      if (tab.dataset.boundTab === '1') return;
-      tab.dataset.boundTab = '1';
-      tab.addEventListener('click', (e) => {
+    tabs.innerHTML = cat.pestanas.map((p, i) => `
+      <button type="button" class="video-cine-tab${i === 0 ? ' is-active' : ''}" role="tab" aria-selected="${i === 0}" data-tab="${this.escapeHtml(p.id)}">
+        <i class="aisc-ico aisc-ico--${this.escapeHtml(p.icono)}" aria-hidden="true"></i><span>${this.escapeHtml(p.etiqueta)}</span>
+      </button>`).join('');
+
+    panels.innerHTML = cat.pestanas.map((p, i) => `
+      <div class="video-cine-panel${i === 0 ? ' is-active' : ''}" data-panel="${this.escapeHtml(p.id)}" role="tabpanel"${i === 0 ? '' : ' hidden'}>
+        ${p.bloques.map((b) => `
+          <div class="video-cine-row">
+            <p class="video-cine-label">${this.escapeHtml(b.etiqueta)}</p>
+            <div class="video-cine-tile-grid" data-campo="${this.escapeHtml(b.campo)}" data-etiqueta="${this.escapeHtml(b.etiqueta)}">
+              ${(cat.opciones[b.campo] || []).map((o) => this._tileHTML(b.campo, o)).join('')}
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+
+    if (tabs.dataset.boundTabs !== '1') {
+      tabs.dataset.boundTabs = '1';
+      tabs.addEventListener('click', (e) => {
+        const tab = e.target.closest('.video-cine-tab[data-tab]');
+        if (!tab) return;
         e.preventDefault();
-        const target = tab.getAttribute('data-tab');
-        if (!target) return;
-        this.container.querySelectorAll('.video-cine-tab').forEach((t) => {
-          const active = t === tab;
-          t.classList.toggle('is-active', active);
-          t.setAttribute('aria-selected', active ? 'true' : 'false');
+        const destino = tab.getAttribute('data-tab');
+        tabs.querySelectorAll('.video-cine-tab').forEach((t) => {
+          const activa = t === tab;
+          t.classList.toggle('is-active', activa);
+          t.setAttribute('aria-selected', activa ? 'true' : 'false');
         });
-        this.container.querySelectorAll('.video-cine-panel').forEach((p) => {
-          const active = p.getAttribute('data-panel') === target;
-          p.classList.toggle('is-active', active);
-          p.hidden = !active;
+        panels.querySelectorAll('.video-cine-panel').forEach((pa) => {
+          const activo = pa.getAttribute('data-panel') === destino;
+          pa.classList.toggle('is-active', activo);
+          pa.hidden = !activo;
         });
       });
-    });
+    }
 
-    this.renderPhotographySelectedTags();
-    this.renderDirectorVariables();
-    this.enhancePhotographyWithTiles();
+    // Una sola delegación para todos los tiles: son ~60 y colgarles un listener
+    // a cada uno es trabajo que el bubbling ya hace.
+    if (panels.dataset.boundTiles !== '1') {
+      panels.dataset.boundTiles = '1';
+      panels.addEventListener('click', (e) => {
+        const tile = e.target.closest('.video-cine-tile[data-valor]');
+        if (!tile) return;
+        e.preventDefault();
+        const grid = tile.closest('[data-campo]');
+        if (!grid || !this.editor) return;
+        const campo = grid.getAttribute('data-campo');
+        const etiqueta = grid.getAttribute('data-etiqueta');
+        const valor = tile.getAttribute('data-valor');
+        const o = (this.catalogo.opciones[campo] || []).find((x) => x.valor === valor);
+        if (!o) return;
+        this.editor.insertar([{ etiqueta, valor: o.valor, prompt: o.prompt }]);
+      });
+    }
   }
 
-  /**
-   * Convierte cada <select> en una rejilla de tiles con icono y tooltip. El
-   * select sigue siendo el modelo (lo lee syncPhotographyToSelects y los
-   * tests); los tiles son lo que el usuario mira.
-   */
-  enhancePhotographyWithTiles() {
-    const FALLBACK_ICONS = {
-      shotType: 'aisc-ico aisc-ico--camera',
-      lens: 'aisc-ico aisc-ico--camera',
-      framing: 'aisc-ico aisc-ico--crop',
-      depthOfField: 'aisc-ico aisc-ico--filter',
-      backdrop: 'aisc-ico aisc-ico--image',
-      lightType: 'aisc-ico aisc-ico--idea',
-      contrastLevel: 'aisc-ico aisc-ico--moon',
-      temperature: 'fa-temperature-three-quarters',
-      tone: 'aisc-ico aisc-ico--palette',
-      colorGrade: 'aisc-ico aisc-ico--palette',
-      energyLevel: 'aisc-ico aisc-ico--fire'
-    };
+  /** Un tile: pictograma o punto, etiqueta corta, y la explicación en el hover. */
+  _tileHTML(campo, o) {
+    const icon = ImageView.PHOTO_ICONOS[o.valor] || ImageView.PHOTO_ICONOS_CAMPO[campo] || 'aisc-ico aisc-ico--circle';
+    const desc = o.desc || '';
+    return `
+      <button type="button" class="video-cine-tile" data-valor="${this.escapeHtml(o.valor)}"${desc ? ` data-desc="${this.escapeHtml(desc)}"` : ''} aria-label="${this.escapeHtml(o.valor)}${desc ? ' — ' + this.escapeHtml(desc) : ''}">
+        <i class="fas ${icon} video-cine-tile__icon" aria-hidden="true"></i>
+        <span class="video-cine-tile__label">${this.escapeHtml(o.valor)}</span>
+        ${desc ? `<span class="video-cine-tile__tooltip" role="tooltip">${this.escapeHtml(desc)}</span>` : ''}
+      </button>`;
+  }
 
-    // Descripciones por VALOR: al hover, el tooltip explica qué hace el efecto
-    // en lenguaje claro, para quien no viene de fotografía.
-    const VALUE_DESCRIPTIONS = {
-      // Tipo de toma
-      'Macro Detail': window.__('Detalle extremo del objeto. Textura, materiales y acabados en primer plano.'),
-      'Close-up': window.__('Plano cerrado sobre el sujeto. Íntimo y directo.'),
-      'Medium Shot': window.__('Plano medio. Sujeto y algo de contexto alrededor.'),
-      'Wide Shot': window.__('Plano abierto. El entorno cuenta tanto como el sujeto.'),
-      'Hero Product Frame': window.__('El producto como protagonista absoluto del encuadre.'),
-      'Flat Lay': window.__('Vista cenital sobre superficie. Ordenado, editorial, muy de catálogo.'),
-      'Top Down': window.__('Cámara desde arriba. Muestra distribución y composición.'),
-      'Low Angle': window.__('Desde abajo. Engrandece al sujeto, lo hace imponente.'),
-      'High Angle': window.__('Desde arriba. Contexto y sensación de observación.'),
-
-      // Lente
-      '24mm (Wide Environmental)': window.__('Gran angular. Abarca el entorno y exagera la profundidad.'),
-      '35mm (Natural)': window.__('Mirada natural, parecida al ojo humano. Versátil y honesto.'),
-      '50mm (Balanced)': window.__('Equilibrado, sin distorsión. El estándar del producto.'),
-      '85mm (Portrait Compression)': window.__('Comprime el fondo y separa al sujeto. Retrato premium.'),
-      '100mm Macro': window.__('Máximo detalle a corta distancia. Texturas y materiales.'),
-
-      // Encuadre
-      'Centered': window.__('Sujeto al centro. Estable, directo, comercial clásico.'),
-      'Rule of thirds': window.__('Sujeto descentrado sobre líneas guía. Natural y dinámico.'),
-      'Negative space left': window.__('Aire a la izquierda. Deja sitio para texto o copy.'),
-      'Negative space right': window.__('Aire a la derecha. Deja sitio para texto o copy.'),
-      'Symmetrical': window.__('Composición simétrica. Orden, calma, autoridad.'),
-      'Dynamic off-center': window.__('Composición descentrada y con tensión. Editorial.'),
-
-      // Profundidad de campo
-      'Deep focus': window.__('Todo nítido, del frente al fondo. Muestra el conjunto.'),
-      'Shallow depth': window.__('Sujeto nítido, fondo suave. Separa sin borrar el contexto.'),
-      'Heavy bokeh': window.__('Fondo muy desenfocado. Aísla al sujeto por completo.'),
-      'Macro focus stack': window.__('Nitidez total incluso en macro. Cada textura se ve.'),
-
-      // Fondo
-      'Seamless studio': window.__('Fondo infinito de estudio. Limpio, sin distracciones.'),
-      'Natural environment': window.__('El producto en un entorno real. Creíble y cercano.'),
-      'Textured surface': window.__('Superficie con material visible (piedra, madera, tela).'),
-      'Gradient sweep': window.__('Degradado suave de color. Moderno y gráfico.'),
-      'Dark void': window.__('Fondo oscuro sin detalle. Premium y dramático.'),
-      'Lifestyle set': window.__('Escena montada de vida real. Contexto de uso.'),
-
-      // Luz
-      'Soft diffused': window.__('Luz suave y envolvente, sin sombras duras. Cálida y limpia.'),
-      'Hard contrast': window.__('Luces fuertes y sombras marcadas. Dramatismo visual.'),
-      'Rim light': window.__('Luz que recorta el contorno. Premium, separa del fondo.'),
-      'Backlit silhouette': window.__('Sujeto a contraluz, silueta contra la luz. Misterio.'),
-      'Studio commercial': window.__('Iluminación de estudio profesional. Pareja y comercial.'),
-      'Natural daylight': window.__('Luz natural de día. Auténtico, lifestyle, accesible.'),
-      'Dramatic spotlight': window.__('Foco concentrado sobre el sujeto. Protagonismo total.'),
-
-      // Contraste
-      'Low': window.__('Contraste bajo. Tonos planos y suaves, look documental o vintage.'),
-      'Medium': window.__('Contraste balanceado. Look natural y versátil.'),
-      'High': window.__('Contraste alto. Imagen punchy y vibrante.'),
-      'Ultra contrast': window.__('Contraste extremo. Look gráfico, casi de moda editorial.'),
-
-      // Temperatura
-      'Neutral': window.__('Temperatura neutra. Colores reales sin tinte cálido ni frío.'),
-      'Warm': window.__('Tonos cálidos (amarillos, naranjas). Acogedor, dorado, premium.'),
-      'Cold': window.__('Tonos fríos (azules). Tecnológico, sereno, sofisticado.'),
-
-      // Tono
-      'Clean commercial': window.__('Look comercial clásico. Limpio, claro, vende sin distracciones.'),
-      'Cinematic dramatic': window.__('Look de cine con paleta rica y tensión.'),
-      'Hyperreal product': window.__('Producto hiperdetallado, casi macro. Saca lo mejor del objeto.'),
-      'Minimal luxury': window.__('Estética minimal premium. Pocos elementos, mucho aire.'),
-      'Dark premium': window.__('Paleta oscura y elegante. Gama alta nocturna.'),
-      'Bright energetic': window.__('Colores vivos y luminosos. Joven y social.'),
-      'Editorial fashion': window.__('Estética de revista de moda. Sofisticado y aspiracional.'),
-      'Documentary': window.__('Look auténtico y crudo. Sin filtros, real, humano.'),
-
-      // Color grade / energía
-      'High saturation': window.__('Colores muy saturados. Vibrante y llamativo.'),
-      'Muted tones': window.__('Tonos apagados y elegantes. Premium discreto.'),
-      'Moderate': window.__('Energía visual contenida. Equilibrio entre calma y presencia.'),
-      'Peak': window.__('Energía visual máxima. Vivo, saturado, alta intensidad.')
-    };
-
-    const VALUE_ICONS = {
+  /** Icono por VALOR: el pictograma dice qué hace sin tener que leer. */
+  static get PHOTO_ICONOS() {
+    return {
       'Macro Detail': 'aisc-ico aisc-ico--search',
       'Close-up': 'aisc-ico aisc-ico--minimize',
       'Medium Shot': 'aisc-ico aisc-ico--user',
@@ -1553,140 +1501,47 @@ class ImageView extends BaseView {
       'High saturation': 'aisc-ico aisc-ico--palette',
       'Muted tones': 'aisc-ico aisc-ico--circle',
       'Moderate': 'aisc-ico aisc-ico--circle',
-      'Peak': 'aisc-ico aisc-ico--fire'
+      'Peak': 'aisc-ico aisc-ico--fire',
+
+      'Commercial photography': 'aisc-ico aisc-ico--store',
+      'Editorial': 'aisc-ico aisc-ico--book',
+      'Fine art': 'aisc-ico aisc-ico--palette',
+      'Dreamlike': 'aisc-ico aisc-ico--cloud',
+      'Bright lifestyle': 'aisc-ico aisc-ico--sun',
+
+      'Photorealistic': 'aisc-ico aisc-ico--camera',
+      'Stylized': 'aisc-ico aisc-ico--palette',
+      'Hyperreal': 'aisc-ico aisc-ico--zap',
+      'Illustration': 'aisc-ico aisc-ico--edit',
+      '3D render': 'aisc-ico aisc-ico--layers',
+
+      'Clean digital': 'aisc-ico aisc-ico--eraser',
+      'Analog film grain': 'aisc-ico aisc-ico--film',
+      'High gloss': 'aisc-ico aisc-ico--zap',
+      'Matte': 'aisc-ico aisc-ico--circle'
     };
-
-    // Registro de repintados: syncPhotographyToSelects() los llama tras asignar
-    // valores por código (un preset, el reset), porque esa asignación no
-    // dispara 'change' y los tiles se quedarían mudos.
-    this._photoTileRenderers = [];
-    ImageView.PHOTO_SELECT_CONFIG.forEach(([id, key]) => {
-      const sel = this.container.querySelector('#' + id);
-      if (!sel) return;
-      const row = sel.closest('.video-cine-row');
-      if (!row) return;
-      let grid = row.querySelector('.video-cine-tile-grid');
-      if (!grid) {
-        grid = document.createElement('div');
-        grid.className = 'video-cine-tile-grid';
-        grid.setAttribute('data-target-select', id);
-        row.appendChild(grid);
-        sel.classList.add('video-cine-select-hidden');
-      }
-      const fallbackIcon = FALLBACK_ICONS[key] || 'aisc-ico aisc-ico--circle';
-      const renderTiles = () => {
-        const options = Array.from(sel.options).filter((o) => o.value);
-        const current = sel.value;
-        grid.innerHTML = options.map((opt) => {
-          const icon = VALUE_ICONS[opt.value] || fallbackIcon;
-          const desc = VALUE_DESCRIPTIONS[opt.value] || '';
-          const descAttr = desc ? ` data-desc="${this.escapeHtml(desc)}"` : '';
-          return `
-            <button type="button" class="video-cine-tile${current === opt.value ? ' is-selected' : ''}" data-value="${this.escapeHtml(opt.value)}" aria-pressed="${current === opt.value ? 'true' : 'false'}"${descAttr} aria-label="${this.escapeHtml(opt.text)}${desc ? ' — ' + this.escapeHtml(desc) : ''}">
-              <i class="fas ${icon} video-cine-tile__icon" aria-hidden="true"></i>
-              <span class="video-cine-tile__label">${this.escapeHtml(opt.text)}</span>
-              ${desc ? `<span class="video-cine-tile__tooltip" role="tooltip">${this.escapeHtml(desc)}</span>` : ''}
-            </button>`;
-        }).join('');
-      };
-      renderTiles();
-      this._photoTileRenderers.push(renderTiles);
-      if (grid.dataset.boundTileClick !== '1') {
-        grid.dataset.boundTileClick = '1';
-        grid.addEventListener('click', (e) => {
-          const tile = e.target.closest('.video-cine-tile');
-          if (!tile || !grid.contains(tile)) return;
-          e.preventDefault();
-          const value = tile.getAttribute('data-value');
-          sel.value = sel.value === value ? '' : value;
-          sel.dispatchEvent(new Event('change', { bubbles: true }));
-          renderTiles();
-        });
-      }
-      sel.addEventListener('change', renderTiles);
-    });
   }
 
-  syncPhotographyToSelects() {
-    ImageView.PHOTO_SELECT_CONFIG.forEach(([id, key]) => {
-      const el = this.container.querySelector('#' + id);
-      if (!el) return;
-      const value = this.photography[key];
-      el.value = value !== undefined && value !== null ? String(value) : '';
-    });
-    // Los <select> son el modelo, pero lo que el usuario MIRA son los tiles.
-    // Asignar .value por código no dispara 'change', así que sin este repintado
-    // elegir un preset llenaría los selects sin marcar un solo tile.
-    this.repaintPhotographyTiles();
+  /** Fallback por campo, para el valor que no tenga pictograma propio. */
+  static get PHOTO_ICONOS_CAMPO() {
+    return {
+      shotType: 'aisc-ico aisc-ico--camera',
+      lens: 'aisc-ico aisc-ico--camera',
+      framing: 'aisc-ico aisc-ico--crop',
+      depthOfField: 'aisc-ico aisc-ico--filter',
+      backdrop: 'aisc-ico aisc-ico--image',
+      lightType: 'aisc-ico aisc-ico--idea',
+      contrastLevel: 'aisc-ico aisc-ico--moon',
+      temperature: 'fa-temperature-three-quarters',
+      tone: 'aisc-ico aisc-ico--palette',
+      colorGrade: 'aisc-ico aisc-ico--palette',
+      energyLevel: 'aisc-ico aisc-ico--fire',
+      mood: 'aisc-ico aisc-ico--camera',
+      realism: 'aisc-ico aisc-ico--eye',
+      finish: 'aisc-ico aisc-ico--layers'
+    };
   }
 
-  /** Repinta los grids de tiles desde el valor actual de su <select> espejo. */
-  repaintPhotographyTiles() {
-    (this._photoTileRenderers || []).forEach((repintar) => repintar());
-  }
-
-  renderPhotographySelectedTags() {
-    const el = this.container.querySelector('#imagePhotoSelectedTags');
-    if (!el) return;
-    const c = this.photography;
-    const tags = [
-      c.lens && { key: 'lens', label: c.lens },
-      c.lightType && { key: 'lightType', label: c.lightType },
-      c.depthOfField && { key: 'depthOfField', label: c.depthOfField }
-    ].filter(Boolean);
-    if (tags.length === 0) {
-      el.innerHTML = '';
-      el.style.display = 'none';
-      return;
-    }
-    el.style.display = 'flex';
-    el.innerHTML = `<span class="video-cine-selected-label">${window.__('Estilo seleccionado:')}</span>` + tags.map((t) =>
-      `<span class="video-cine-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}<button type="button" class="video-cine-tag-remove" aria-label="${window.__('Quitar {key}', { key: t.key })}">&times;</button></span>`
-    ).join('');
-    this._bindTagRemoval(el);
-  }
-
-  renderDirectorVariables() {
-    const el = this.container.querySelector('#imageDirectorVariables');
-    if (!el) return;
-    const c = this.photography;
-    const tags = [
-      c.shotType && { label: c.shotType, key: 'shotType' },
-      c.lens && { label: c.lens, key: 'lens' },
-      c.framing && { label: c.framing, key: 'framing' },
-      c.depthOfField && { label: c.depthOfField, key: 'depthOfField' },
-      c.lightType && { label: c.lightType, key: 'lightType' },
-      c.tone && { label: c.tone, key: 'tone' }
-    ].filter(Boolean);
-    if (tags.length === 0) {
-      el.innerHTML = '';
-      el.style.display = 'none';
-      this.scheduleResizePromptInput();
-      return;
-    }
-    el.style.display = 'flex';
-    el.className = 'video-director-variables-row video-cine-selected-tags';
-    el.innerHTML = `<span class="video-cine-selected-label">${window.__('Variables:')}</span>` + tags.map((t) =>
-      `<span class="video-cine-tag video-director-variable-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}<button type="button" class="video-cine-tag-remove" aria-label="${window.__('Quitar {key}', { key: t.key })}">&times;</button></span>`
-    ).join('');
-    this._bindTagRemoval(el);
-    this.scheduleResizePromptInput();
-  }
-
-  /** Quitar un tag apaga la variable en el state y repinta las dos filas. */
-  _bindTagRemoval(contenedor) {
-    contenedor.querySelectorAll('.video-cine-tag-remove').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const key = btn.closest('.video-cine-tag')?.dataset?.key;
-        if (!key) return;
-        this.photography[key] = '';
-        this.syncPhotographyToSelects();
-        this.renderPhotographySelectedTags();
-        this.renderDirectorVariables();
-      });
-    });
-  }
 
   // ── Generación ──────────────────────────────────────────────────────────
 
@@ -1700,8 +1555,16 @@ class ImageView extends BaseView {
       const el = this.container.querySelector(sel);
       return el && el.value ? String(el.value) : fallback;
     };
+    // La INTENCION es lo que el director escribió, con sus chips dentro. El
+    // PROMPT es esa misma intención con cada `[Etiqueta: Valor]` cambiado por
+    // su frase, EN SU SITIO: una dirección de lente junto al sujeto pesa
+    // distinto que la misma al final. Se mandan las dos — la intención se
+    // guarda para poder recrear, el prompt es lo que produce.
+    const intencion = this.editor ? this.editor.valor.trim() : '';
     return {
-      prompt: this.promptInput ? this.promptInput.value.trim() : '',
+      prompt: window.StudioDireccion.expandirVariables(this.catalogo, intencion).trim(),
+      intencion,
+      variables: window.StudioDireccion.leerVariables(intencion),
       aspect_ratio: val('#imageAspectRatio', '1:1'),
       resolution: val('#imageResolution', '2K'),
       output_format: val('#imageOutputFormat', 'png'),
@@ -1711,12 +1574,6 @@ class ImageView extends BaseView {
       // como cualquier otra imagen; el lock es una instrucción del prompt, no
       // un campo aparte de la API.
       product_lock_urls: this.imageRefs.filter((r) => r.lock).map((r) => r.url),
-      photography: { ...this.photography },
-      direction: {
-        mood: val('#imageMood', ''),
-        realism: val('#imageRealism', ''),
-        finish: val('#imageFinish', '')
-      },
       campaign: this.selectedCampaignId || null,
       audience: this.selectedAudienceId || null,
       brand_context: this.buildBrandContextForAPI(),
@@ -1730,6 +1587,12 @@ class ImageView extends BaseView {
 
     if (!payload.prompt) {
       this.showError(window.__('Escribe primero qué imagen quieres: sujeto, escenario y qué debe transmitir.'));
+      return;
+    }
+    // Solo variables no es un brief: la dirección dice CÓMO se ve, no QUÉ hay.
+    // Sin sujeto, el modelo inventa uno y la pieza no sirve.
+    if (this.editor && !this.editor.textoLibre) {
+      this.showError(window.__('Falta el sujeto: la dirección dice cómo se ve, pero no qué aparece. Escribe qué quieres ver además de las etiquetas.'));
       return;
     }
     if (!this.organizationId) {
@@ -1796,8 +1659,8 @@ class ImageView extends BaseView {
         kind: 'image_generated',
         reference_count: created.reference_count ?? payload.reference_images.length,
         product_lock_count: payload.product_lock_urls.length,
-        photography: payload.photography,
-        direction: payload.direction,
+        intencion: payload.intencion,
+        variables: payload.variables,
         campaign_concept: payload.campaign,
         audience_concept: payload.audience
       }

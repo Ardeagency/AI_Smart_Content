@@ -14,6 +14,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const FUENTE = fs.readFileSync(path.join(process.cwd(), 'js/views/VideoView.js'), 'utf8');
+const GRAMATICA = fs.readFileSync(path.join(process.cwd(), 'js/studio/direccion.js'), 'utf8');
 
 function cargar() {
   const win = { BaseView: class {}, __: (s, p) => (p
@@ -22,11 +23,31 @@ function cargar() {
   globalThis.window = win;
   globalThis.BaseView = win.BaseView; // `class VideoView extends BaseView` lo busca global
   globalThis.document = { addEventListener() {}, removeEventListener() {} };
+  // La gramatica de variables va primero: el catalogo se arma con ella.
+  new Function(GRAMATICA)();
   new Function(FUENTE)();
   return win.VideoView;
 }
 
 const VideoView = cargar();
+const Direccion = globalThis.window.StudioDireccion;
+
+/**
+ * Doble del editor: guarda el texto y deja insertar chips, que es lo unico que
+ * la vista le pide. El editor de verdad necesita DOM y aqui no hay.
+ */
+function editorFalso(texto = '') {
+  return {
+    valor: texto,
+    get textoLibre() {
+      return this.valor.replace(Direccion.reVariable(), '').trim();
+    },
+    insertar(vs) {
+      const trozo = vs.map((v) => `[${v.etiqueta}: ${v.valor}]`).join(' ');
+      this.valor = (this.valor ? `${this.valor} ` : '') + trozo;
+    }
+  };
+}
 
 /** Vista con lo justo para ejercer la lógica de adjuntos, sin DOM real. */
 function nuevaVista(controles = {}) {
@@ -40,17 +61,13 @@ function nuevaVista(controles = {}) {
   v.selectedProductionIds = new Set();
   v.assetScope = 'product';
   v.selectedAssetId = '';
-  v.cinematography = {
-    preset: '', shotType: '', lens: '', framing: '', cameraMovement: '',
-    motionSpeed: '', motionIntensity: '', lightType: '', contrastLevel: '',
-    temperature: '', tone: '', colorGrade: '', colorTemp: '', energyLevel: ''
-  };
   v.selectedCampaignId = '';
   v.selectedAudienceId = '';
   v._cinePromptTokens = null;
   v.organizationId = 'org-1';
   v.dbData = { products: [], services: [], entities: [], audiences: [], campaigns: [] };
-  v.promptInput = { value: 'Apertura, desarrollo y cierre.' };
+  v.editor = editorFalso('Apertura, desarrollo y cierre.');
+  v._catalogo = null;
 
   v.container = {
     querySelector: (sel) => (sel in controles ? controles[sel] : null),
@@ -228,7 +245,9 @@ describe('El payload lleva lo adjuntado', () => {
     expect(payload.aspect_ratio).toBe('9:16');
     expect(payload.generate_audio).toBe(true);
     expect(payload.web_search).toBe(false);
-    expect(payload.direction).toMatchObject({ pacing: 'Balanced', arc: 'Crescendo', mood: 'Cinematic' });
+    // Ritmo, arco y mood ya NO son controles del sidebar: son bloques del
+    // catálogo y viajan escritos dentro del prompt.
+    expect(payload.direction).toBeUndefined();
   });
 
   test('con frames anclados van los frames y ninguna referencia', () => {
@@ -433,79 +452,69 @@ describe('Stack de activos — el producto que no debe cambiar', () => {
   });
 });
 
-describe('Cinematografía — las plantillas de prompt que venían de Kling', () => {
-  test('cada preset llena las trece claves de dirección', () => {
-    const claves = ['shotType', 'lens', 'framing', 'cameraMovement', 'motionSpeed',
-      'motionIntensity', 'lightType', 'contrastLevel', 'temperature', 'tone',
-      'colorGrade', 'colorTemp', 'energyLevel'];
-    const presets = VideoView.CINEMATOGRAPHY_PRESETS;
-    const nombrados = Object.keys(presets).filter((k) => k !== '');
+describe('Cinematografía — cada opción es una variable de prompt', () => {
+  const cat = Object.create(VideoView.prototype).catalogo;
 
-    expect(nombrados.length).toBeGreaterThan(0);
-    for (const nombre of nombrados) {
-      const faltantes = claves.filter((k) => !presets[nombre][k]);
-      expect(`${nombre}: ${faltantes.join(', ')}`).toBe(`${nombre}: `);
+  test('toda opción lleva su frase: mandar la etiqueta cruda desperdicia el control', () => {
+    const mudas = [];
+    for (const [campo, opciones] of Object.entries(cat.opciones)) {
+      opciones.forEach((o) => {
+        if (!o.prompt || !o.prompt.trim()) mudas.push(`${campo}.${o.valor}`);
+        if (o.prompt === o.valor) mudas.push(`${campo}.${o.valor} (frase = etiqueta)`);
+      });
     }
+    expect(mudas).toEqual([]);
   });
 
-  test('cada valor de preset existe como opción elegible', () => {
-    const opts = VideoView.CINE_OPTIONS;
+  test('cada valor de receta existe como opción elegible', () => {
     const huerfanos = [];
-    for (const [nombre, preset] of Object.entries(VideoView.CINEMATOGRAPHY_PRESETS)) {
-      for (const [clave, valor] of Object.entries(preset)) {
-        if (clave === 'label' || !valor) continue;
-        if (!opts[clave]) { huerfanos.push(`${nombre}.${clave} sin catálogo`); continue; }
-        if (!opts[clave].includes(valor)) huerfanos.push(`${nombre}.${clave} = "${valor}"`);
+    for (const r of cat.presets) {
+      for (const [campo, valor] of Object.entries(r.valores)) {
+        if (!cat.opciones[campo]) { huerfanos.push(`${r.id}.${campo} sin catálogo`); continue; }
+        if (!cat.opciones[campo].some((o) => o.valor === valor)) huerfanos.push(`${r.id}.${campo} = "${valor}"`);
       }
     }
-    // Un preset que apunta a un valor inexistente deja el select en blanco
-    // sin avisar: se elige el preset y no pasa nada visible.
+    // Una receta que apunta a un valor inexistente escribe un chip que luego no
+    // se puede expandir: viaja el corchete crudo al modelo.
     expect(huerfanos).toEqual([]);
   });
 
-  test('la dirección de fotografía viaja en el payload', () => {
+  test('el movimiento de cámara sigue aquí: es lo que separa un video de una foto', () => {
+    expect(cat.opciones.cameraMovement.length).toBeGreaterThan(5);
+    expect(cat.opciones.cameraMovement.some((o) => o.valor === 'Orbit')).toBe(true);
+  });
+
+  test('cada movimiento de cámara tiene su pictograma animado', () => {
+    // El SVG dice en un segundo lo que un párrafo no. Un movimiento sin
+    // pictograma cae al icono genérico y se ve como una opción de segunda.
+    const sinSvg = cat.opciones.cameraMovement
+      .filter((o) => !VideoView.CINE_SVG[o.valor])
+      .map((o) => o.valor);
+    expect(sinSvg).toEqual([]);
+  });
+
+  test('la dirección viaja DENTRO del prompt, no como objeto aparte', () => {
     const { v } = nuevaVista();
-    v.cinematography.cameraMovement = 'Orbit';
-    v.cinematography.lightType = 'Rim light';
-    v.cinematography.preset = 'luxury-hero';
+    v.editor = editorFalso('Un frasco girando [Movimiento: Orbit] con [Luz: Rim light].');
 
     const payload = v.buildSeedancePayload();
 
-    expect(payload.cinematography).toMatchObject({
-      cameraMovement: 'Orbit', lightType: 'Rim light', preset: 'luxury-hero'
-    });
+    expect(payload.prompt).toContain('The camera orbits around the subject');
+    expect(payload.prompt).toContain('A rim light behind the subject');
+    expect(payload.prompt).not.toContain('[Movimiento:');
+    // Mandarla además como objeto le daría a la misma dirección doble peso.
+    expect(payload.cinematography).toBeUndefined();
+    expect(payload.direction).toBeUndefined();
   });
 
-  test('asignar valores por código repinta los tiles', () => {
-    // Los <select> son el modelo; los tiles son lo que el usuario mira.
-    // Asignar .value no dispara 'change', así que si sync no repinta, elegir
-    // un preset llena el estado y la pantalla sigue diciendo "ninguno".
+  test('la intención guarda los chips, para poder recrear', () => {
     const { v } = nuevaVista();
-    let repintados = 0;
-    v._cineTileRenderers = [() => { repintados++; }, () => { repintados++; }];
-    v.container.querySelector = () => ({ value: '' });
-
-    v.cinematography.cameraMovement = 'Orbit';
-    v.syncCinematographyToSelects();
-
-    expect(repintados).toBe(2);
-  });
-
-  test('repintar sin tiles montados no revienta', () => {
-    const { v } = nuevaVista();
-    v.container.querySelector = () => null;
-
-    expect(() => v.repaintCinematographyTiles()).not.toThrow();
-  });
-
-  test('el payload lleva una copia, no la referencia viva del estado', () => {
-    const { v } = nuevaVista();
-    v.cinematography.tone = 'Dark premium';
+    v.editor = editorFalso('Un frasco [Luz: Rim light].');
 
     const payload = v.buildSeedancePayload();
-    v.cinematography.tone = 'Bright energetic';
 
-    expect(payload.cinematography.tone).toBe('Dark premium');
+    expect(payload.intencion).toBe('Un frasco [Luz: Rim light].');
+    expect(payload.variables).toEqual([{ etiqueta: 'Luz', valor: 'Rim light' }]);
   });
 });
 
@@ -526,12 +535,56 @@ describe('Producir sin backend', () => {
 
   test('sin storyboard pide el storyboard, no habla del backend', async () => {
     const { v } = nuevaVista();
-    v.promptInput = { value: '   ' };
+    v.editor = editorFalso('   ');
     const errores = [];
     v.showError = (m) => errores.push(m);
 
     await v.startGeneration();
 
     expect(errores.join(' ')).toMatch(/Escribe primero el storyboard/);
+  });
+
+  test('solo etiquetas no es un storyboard: falta qué pasa', async () => {
+    // La dirección dice CÓMO se ve. Sin acción, el modelo se inventa una.
+    const { v } = nuevaVista();
+    v.editor = editorFalso('[Movimiento: Orbit] [Luz: Rim light]');
+    const errores = [];
+    v.showError = (m) => errores.push(m);
+
+    await v.startGeneration();
+
+    expect(errores.join(' ')).toMatch(/Falta la secuencia/);
+  });
+});
+
+describe('Plantilla — los controles que init() busca tienen que existir', () => {
+  const html = VideoView.prototype.renderHTML.call({});
+  const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
+
+  test('cada querySelector("#…") del código apunta a un id que la plantilla pinta', () => {
+    // Un id mal escrito no revienta: querySelector devuelve null, el listener
+    // no se cuelga y el control queda muerto sin una sola línea en consola.
+    const buscados = [...FUENTE.matchAll(/querySelector\('#([A-Za-z0-9_-]+)'\)/g)].map((m) => m[1]);
+    expect(buscados.length).toBeGreaterThan(20);
+    expect(buscados.filter((id) => !ids.has(id))).toEqual([]);
+  });
+
+  test('el panel de dirección se pinta por JS, no por marcado', () => {
+    expect(ids.has('videoCineTabs')).toBe(true);
+    expect(ids.has('videoCinePanels')).toBe(true);
+    expect(ids.has('videoCineReceta')).toBe(true);
+    // El storyboard ya no es un textarea: es el hueco del editor de variables.
+    expect(ids.has('videoPromptEditor')).toBe(true);
+    expect(html).not.toContain('<textarea');
+  });
+
+  test('el árbol cierra: mismo número de aperturas y cierres por etiqueta', () => {
+    // Este test ya atrapó un `</div>` perdido al reescribir el panel: el
+    // navegador lo "arregla" solo y el layout se rompe en silencio.
+    for (const tag of ['div', 'section', 'aside', 'main', 'select', 'button']) {
+      const abre = (html.match(new RegExp(`<${tag}[\\s>]`, 'g')) || []).length;
+      const cierra = (html.match(new RegExp(`</${tag}>`, 'g')) || []).length;
+      expect(`${tag}: ${abre}/${cierra}`).toBe(`${tag}: ${abre}/${abre}`);
+    }
   });
 });
