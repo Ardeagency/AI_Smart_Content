@@ -1917,9 +1917,22 @@
 
 /* En la columna derecha las secciones no llevan el padding vertical de las de
    la izquierda: el aire ya lo pone el gap del contenedor. */
-.org-aside-section { padding: 0; margin: 0; }
-.org-aside-section .org-section-head { display: block; margin-bottom: 0.75rem; }
-.org-aside-cta { margin-top: 1rem; display: inline-flex; }
+/* Un solo ritmo vertical para toda la seccion: titulo, ficha de mercado, lista
+   de marcas y boton se separan por el MISMO gap. Antes cada pieza traia su
+   propio margen y la lista terminaba pegada al ultimo dato del mercado, con el
+   boton encima. Los margenes propios se anulan para que el gap sea la unica
+   fuente de separacion y no se sumen dos. */
+.org-aside-section {
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.75rem;
+}
+.org-aside-section .org-section-head { display: block; margin: 0; }
+.org-aside-section .org-subbrands-list { margin: 0; }
+.org-aside-cta { margin: 0; display: inline-flex; align-self: flex-start; }
 
 /* ── El plan, en grande ── */
 .org-plan-hero { display: flex; flex-direction: column; gap: 0.25rem; }
