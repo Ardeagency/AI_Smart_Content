@@ -1198,7 +1198,9 @@
 
 .org-usage-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
 .org-usage-stats:empty { display: none; }
-.org-ustat { display: flex; flex-direction: column; gap: .4rem; background: var(--bg-card, rgba(255,255,255,.04)); border: 1px solid var(--border-divider); border-radius: var(--radius-md); padding: 1rem 1.1rem; }
+/* Sin caja: cifra, etiqueta y sub sobre el fondo de la pagina, igual que los
+   insights de General. Lo que separa una de otra es el aire. */
+.org-ustat { display: flex; flex-direction: column; gap: .4rem; background: transparent; border: 0; padding: 0; }
 .org-ustat-label { font-size: .7rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); }
 .org-ustat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); line-height: 1.1; }
 .org-ustat-sub { font-size: .76rem; color: var(--text-muted); }
@@ -2570,3 +2572,14 @@
     margin: -0.2rem 0 0.35rem;
 }
 .org-uchart-tip-vacio { color: var(--text-muted); font-style: italic; }
+
+/* En Uso los bloques laterales (Creditos, Limites) van sin caja, como el resto
+   de la pagina. La caja se reserva para Pauta en General y para nada mas. */
+#activityTab .org-sub-block {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 2rem;
+}
+#activityTab .org-sub-block:last-child { margin-bottom: 0; }

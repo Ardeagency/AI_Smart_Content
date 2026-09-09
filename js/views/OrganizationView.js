@@ -69,9 +69,7 @@ class OrganizationView extends BaseView {
     <button type="button" class="tab-btn" data-tab="members" role="tab" aria-selected="false">${__('Miembros')}</button>
     <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">${__('Suscripción')}</button>
     <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">${__('Uso')}</button>
-    <button type="button" class="tab-btn" data-tab="notifications" role="tab" aria-selected="false">${__('Notificaciones')}</button>
     <button type="button" class="tab-btn" data-tab="security" role="tab" aria-selected="false">${__('Seguridad')}</button>
-    <button type="button" class="tab-btn" data-tab="settings" role="tab" aria-selected="false">${__('Ajustes')}</button>
   </div>
 
   <div class="organization-content">
@@ -266,51 +264,12 @@ class OrganizationView extends BaseView {
       </div>
     </div>
 
-    <!-- ── Notificaciones ───────────────────────────────── -->
-    <div class="tab-content" id="notificationsTab" role="tabpanel">
-      <section class="org-section">
-        <h2>${__('Notificaciones recientes')}</h2>
-        <div class="org-notifications-list" id="orgNotificationsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
-      </section>
-      <section class="org-section">
-        <h2>${__('Preferencias')}</h2>
-        <p class="org-section-desc org-placeholder">${__('Configuración de canales (email, in-app, Slack) por tipo de evento — próximamente.')}</p>
-      </section>
-    </div>
-
-    <!-- ── Seguridad ────────────────────────────────────── -->
-    <!-- ── Ajustes (configuracion tecnica del workspace) ──
-         Esta pestana existe para que General deje de ser un cajon de sastre:
-         General resume QUE tiene la organizacion; Ajustes guarda las perillas
-         que la configuran. Datos regionales fue el primer inquilino. -->
-    <div class="tab-content" id="settingsTab" role="tabpanel">
-      <section class="org-section org-section-form">
-        <h2>${__('Datos regionales')}</h2>
-        <p class="org-section-desc">${__('Estos valores afectan reportes, scheduling y formato de fechas/idioma del workspace.')}</p>
-        <form id="orgGeneralForm" class="org-form">
-          <div class="org-form-grid">
-            <div class="form-group">
-              <label for="orgTimezone">${__('Zona horaria')}</label>
-              <select id="orgTimezone" class="form-input"></select>
-            </div>
-            <div class="form-group">
-              <label for="orgLocale">${__('Idioma')}</label>
-              <select id="orgLocale" class="form-input">
-                <option value="es">${__('Español')}</option>
-                <option value="en">English</option>
-                <option value="pt">Português</option>
-              </select>
-            </div>
-          </div>
-          <div class="org-form-actions">
-            <button type="submit" class="btn btn-primary" id="orgGeneralSubmit">
-              <i class="aisc-ico aisc-ico--save"></i> ${__('Guardar')}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
-
+    <!-- Aqui vivian las pestañas "Notificaciones" y "Ajustes", retiradas el
+         2026-09-09. La de notificaciones listaba org_notifications y tenia un
+         bloque de preferencias que nunca se construyo ("proximamente"). La de
+         Ajustes guardaba Datos regionales (zona horaria e idioma), que SI
+         escribe en organizations: ese formulario se fue con ella y hoy no hay
+         donde editar esos dos campos. Ver el mensaje de commit. -->
     <div class="tab-content" id="securityTab" role="tabpanel">
       <section class="org-section">
         <div class="org-section-head">
