@@ -170,11 +170,24 @@
     margin-bottom: 0.5rem;
 }
 
+/* min-width: 0 es lo que evita el desbordamiento. Por defecto un item flex no
+   se encoge por debajo del ancho de su contenido, asi que un correo largo
+   (growparthner@wakeupnf.com) estiraba esta columna y empujaba el selector de
+   rol y el boton de quitar FUERA de la fila. Con min-width:0 el item si cede, y
+   el texto se corta con puntos suspensivos en vez de romper el layout. */
 .org-member-info {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
+}
+
+.org-member-name,
+.org-member-email {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .org-member-name {
@@ -2061,3 +2074,12 @@
 /* La columna de miembros no lleva la imagen de fondo: esa es de Inteligencia,
    donde ilustra el tema. Aqui seria decoracion sin motivo. */
 .org-col-aside--liso { background: rgba(255, 255, 255, 0.03); }
+
+/* En la columna estrecha la fila se parte en dos pisos antes que apretar: el
+   selector de rol necesita su ancho para que "Administrador" se lea entero. */
+.org-col-aside .org-member-row { flex-wrap: wrap; gap: 0.6rem 0.75rem; }
+.org-col-aside .org-member-info { flex-basis: 100%; }
+.org-col-aside .org-role-select { flex: 1 1 auto; min-width: 0; }
+/* El margen propio de la lista sobra: el gap de la seccion ya la separa. */
+.org-aside-section .org-members-list,
+.org-aside-section .org-invitations-list { margin: 0; }
