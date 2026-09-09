@@ -525,8 +525,11 @@ class VideoView extends BaseView {
 
             <aside class="video-sidebar-console" aria-label="${window.__('Panel de producción')}">
               <div class="video-sidebar-tabs" role="tablist" aria-label="${window.__('Secciones del panel')}">
-                <button type="button" class="video-sidebar-tab is-active" role="tab" id="videoSidebarTabRecursos" data-sidebar-tab="recursos" aria-selected="true" aria-controls="videoSidebarPanelRecursos">
-                  <i class="aisc-ico aisc-ico--brief" aria-hidden="true"></i><span>${window.__('Contexto')}</span>
+                <button type="button" class="video-sidebar-tab is-active" role="tab" id="videoSidebarTabElementos" data-sidebar-tab="elementos" aria-selected="true" aria-controls="videoSidebarPanelElementos">
+                  <i class="aisc-ico aisc-ico--grid" aria-hidden="true"></i><span>${window.__('Elementos')}</span>
+                </button>
+                <button type="button" class="video-sidebar-tab" role="tab" id="videoSidebarTabEnfoque" data-sidebar-tab="enfoque" aria-selected="false" aria-controls="videoSidebarPanelEnfoque">
+                  <i class="aisc-ico aisc-ico--goal" aria-hidden="true"></i><span>${window.__('Enfoque')}</span>
                 </button>
                 <button type="button" class="video-sidebar-tab" role="tab" id="videoSidebarTabCine" data-sidebar-tab="cinematografia" aria-selected="false" aria-controls="videoSidebarPanelCine">
                   <i class="aisc-ico aisc-ico--video" aria-hidden="true"></i><span>${window.__('Cinematografía')}</span>
@@ -535,22 +538,38 @@ class VideoView extends BaseView {
               <div class="video-prompt-footer-card video-sidebar-card">
                 <div class="video-prompt-footer-card-inner video-sidebar-inner">
 
-                <div class="video-sidebar-panel is-active" data-sidebar-panel="recursos" role="tabpanel" id="videoSidebarPanelRecursos" aria-labelledby="videoSidebarTabRecursos">
+                <div class="video-sidebar-panel is-active" data-sidebar-panel="elementos" role="tabpanel" id="videoSidebarPanelElementos" aria-labelledby="videoSidebarTabElementos">
 
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">${window.__('Contexto de producción')}</h3>
-                    </div>
-                    <p class="video-sidebar-section-hint">${window.__('A qué campaña pertenece la secuencia, a quién le habla, y qué producciones o productos debe respetar la IA al producirla.')}</p>
-                    <div class="video-escenas-block">
-                      <div class="video-escenas-header">
-                        <h4 class="video-prompt-panel-title">${window.__('Escenas')}</h4>
+                      <h3 class="video-section-label">${window.__('Producciones')}</h3>
+                      <div class="video-sidebar-section-actions">
                         <button type="button" class="video-escenas-all-btn" id="videoProductionsBtn" aria-label="${window.__('Todas las producciones')}">${window.__('Todas')}</button>
                       </div>
-                      <div class="video-escenas-carousel-wrap">
-                        <div class="video-escenas-carousel" id="videoEscenasCarousel"></div>
-                      </div>
                     </div>
+                    <p class="video-sidebar-section-hint">${window.__('Lo que ya produjiste. Arrástralo a un Frame Clave para anclar el inicio o el cierre, o a las Imágenes del prompt para que sirva de referencia — o tócalo, que lo manda a las referencias.')}</p>
+                    <div class="video-escenas-carousel-wrap">
+                      <div class="video-escenas-carousel" id="videoEscenasCarousel"></div>
+                    </div>
+                  </div>
+
+                  <div class="video-sidebar-section">
+                    <div class="video-sidebar-section-header">
+                      <h3 class="video-section-label">${window.__('Elementos')}</h3>
+                    </div>
+                    <p class="video-sidebar-section-hint">${window.__('El catálogo de la marca, una fila por tipo. Arrastra uno a las Imágenes del prompt para que el video lo respete — o tócalo, que hace lo mismo.')}</p>
+                    <div class="video-elementos-filas" id="videoElementosFilas"></div>
+                  </div>
+
+                </div>
+
+                <div class="video-sidebar-panel" data-sidebar-panel="enfoque" role="tabpanel" id="videoSidebarPanelEnfoque" aria-labelledby="videoSidebarTabEnfoque" hidden>
+
+                  <div class="video-sidebar-section">
+                    <div class="video-sidebar-section-header">
+                      <h3 class="video-section-label">${window.__('Enfoque')}</h3>
+                    </div>
+                    <p class="video-sidebar-section-hint">${window.__('De qué trata la pieza y a quién le habla. No son parámetros de KIE: entran al cocinado del prompt como contexto, y por eso son conceptos, no las campañas del CRM.')}</p>
                     <div class="video-left-block">
                       <h4 class="video-prompt-panel-title">${window.__('¿De qué trata?')}</h4>
                       <select id="seedanceCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="${window.__('Concepto de campaña')}" data-conceptual="1">
@@ -580,11 +599,6 @@ class VideoView extends BaseView {
                         <option value="Existing customers">${window.__('Clientes existentes')}</option>
                         <option value="Parents / families">${window.__('Padres y familias')}</option>
                       </select>
-                    </div>
-                    <div class="video-left-block video-elementos-block" id="videoElementosBlock">
-                      <h4 class="video-prompt-panel-title">${window.__('Elementos')}</h4>
-                      <p class="video-field-help">${window.__('El catálogo de la marca, una fila por tipo. Arrastra uno a las Imágenes del prompt para que el video lo respete — o tócalo, que hace lo mismo.')}</p>
-                      <div class="video-elementos-filas" id="videoElementosFilas"></div>
                     </div>
                   </div>
 
@@ -1540,13 +1554,30 @@ class VideoView extends BaseView {
       const thumb = esImagen
         ? `<img class="${claseThumb} ${claseThumb}-img" src="${url}" alt="" loading="lazy" decoding="async">`
         : `<video class="${claseThumb}" src="${url}" preload="metadata" muted playsinline crossorigin="anonymous"></video>`;
+      // Una imagen puede anclar un Frame Clave; un video no —un frame es una
+      // imagen— y por eso el tile dice a dónde puede ir, en el title.
+      const destino = esImagen
+        ? window.__('Arrástrala a un Frame Clave o a las Imágenes del prompt')
+        : window.__('Arrástrala a los Videos del prompt');
       return `
-        <div class="${claseItem} ${seleccionada ? 'is-selected' : ''}" data-id="${this.escapeHtml(p.id)}" role="button" tabindex="0" aria-pressed="${seleccionada}" aria-label="${window.__('Seleccionar producción')}">
+        <div class="${claseItem} ${seleccionada ? 'is-selected' : ''}" data-id="${this.escapeHtml(p.id)}" data-medio="${esImagen ? 'image' : 'video'}" role="button" tabindex="0" draggable="true" aria-pressed="${seleccionada}" aria-label="${window.__('Producción')}" title="${destino}">
           <div class="${claseThumb}-wrap">${thumb}</div>
         </div>`;
     }).join('');
     cont.querySelectorAll('.' + claseItem).forEach((el) => {
       el.addEventListener('click', () => this.toggleProduccion(el.dataset.id));
+      el.addEventListener('dragstart', (e) => {
+        const carga = JSON.stringify({ fuente: 'produccion', id: el.dataset.id, medio: el.dataset.medio });
+        e.dataTransfer.setData(VideoView.DND_ELEMENTO, carga);
+        e.dataTransfer.setData('text/plain', carga);
+        e.dataTransfer.effectAllowed = 'copy';
+        el.classList.add('is-arrastrando');
+        document.body.classList.add('video-arrastrando-elemento');
+      });
+      el.addEventListener('dragend', () => {
+        el.classList.remove('is-arrastrando');
+        document.body.classList.remove('video-arrastrando-elemento');
+      });
     });
   }
 
@@ -1735,7 +1766,7 @@ class VideoView extends BaseView {
       cont.addEventListener('dragstart', (e) => {
         const tile = e.target.closest('.video-elemento-tile');
         if (!tile || tile.disabled) return;
-        const carga = JSON.stringify({ tipo: tile.getAttribute('data-tipo'), id: tile.getAttribute('data-id') });
+        const carga = JSON.stringify({ fuente: 'elemento', tipo: tile.getAttribute('data-tipo'), id: tile.getAttribute('data-id') });
         // Tipo propio para que el drop distinga un elemento de un archivo del
         // escritorio; `text/plain` de respaldo porque Safari ignora los tipos
         // personalizados en algunas versiones.
@@ -1767,14 +1798,6 @@ class VideoView extends BaseView {
     zona.dataset.boundDrop = '1';
     zona.classList.add('es-zona-drop');
 
-    const leerCarga = (dt) => {
-      const crudo = dt.getData(VideoView.DND_ELEMENTO) || dt.getData('text/plain') || '';
-      try {
-        const o = JSON.parse(crudo);
-        return o && o.tipo && o.id ? o : null;
-      } catch (_) { return null; }
-    };
-
     zona.addEventListener('dragover', (e) => {
       // Sin preventDefault el navegador NO dispara 'drop': la zona se ve activa
       // y no recibe nada. `types` se puede leer en dragover; `getData` no.
@@ -1792,9 +1815,90 @@ class VideoView extends BaseView {
     zona.addEventListener('drop', (e) => {
       e.preventDefault();
       zona.classList.remove('is-drop-activa');
-      const carga = leerCarga(e.dataTransfer);
-      if (carga) this.ponerElemento(carga.tipo, carga.id);
+      const carga = VideoView.leerCargaDnD(e.dataTransfer);
+      if (!carga) return;
+      if (carga.fuente === 'produccion') this.ponerProduccionEnRefs(carga.id);
+      else this.ponerElemento(carga.tipo, carga.id);
     });
+
+    this.bindZonaDropFrames();
+  }
+
+  /**
+   * Lee la carga del arrastre. `getData` solo funciona en el drop —en dragover
+   * el navegador la esconde a propósito—, de ahí que el resaltado se decida
+   * mirando `types` y el contenido solo aquí.
+   */
+  static leerCargaDnD(dt) {
+    const crudo = dt.getData(VideoView.DND_ELEMENTO) || dt.getData('text/plain') || '';
+    try {
+      const o = JSON.parse(crudo);
+      return o && o.id && (o.fuente === 'produccion' || o.tipo) ? o : null;
+    } catch (_) { return null; }
+  }
+
+  /**
+   * Los dos slots de Frame Clave reciben producciones. Solo imágenes: un frame
+   * ES una imagen, y dejar caer un video ahí produciría un error de KIE diez
+   * minutos después.
+   */
+  bindZonaDropFrames() {
+    this.container.querySelectorAll('.seedance-frame-slot[data-frame]').forEach((slot) => {
+      if (slot.dataset.boundDrop === '1') return;
+      slot.dataset.boundDrop = '1';
+      slot.addEventListener('dragover', (e) => {
+        if (!e.dataTransfer.types.includes(VideoView.DND_ELEMENTO)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        slot.classList.add('is-drop-activa');
+      });
+      slot.addEventListener('dragleave', (e) => {
+        if (slot.contains(e.relatedTarget)) return;
+        slot.classList.remove('is-drop-activa');
+      });
+      slot.addEventListener('drop', (e) => {
+        e.preventDefault();
+        slot.classList.remove('is-drop-activa');
+        const carga = VideoView.leerCargaDnD(e.dataTransfer);
+        if (!carga) return;
+        if (carga.fuente !== 'produccion') {
+          this._seedanceNotify(window.__('Un Frame Clave se ancla con una producción, no con un elemento del catálogo.'));
+          return;
+        }
+        this.ponerProduccionEnFrame(slot.getAttribute('data-frame'), carga.id);
+      });
+    });
+  }
+
+  /** Una producción soltada en las referencias: mismo camino que tocarla. */
+  ponerProduccionEnRefs(id) {
+    if (this.selectedProductionIds.has(id)) return;
+    this.toggleProduccion(id);
+  }
+
+  /**
+   * Ancla una producción en un slot de frame. Frames y referencias siguen
+   * siendo excluyentes: si ya hay referencias, se avisa en vez de dejar la
+   * secuencia en un estado que KIE rechaza.
+   */
+  ponerProduccionEnFrame(slot, id) {
+    const p = this.videoProductions.find((x) => String(x.id) === String(id));
+    if (!p || !p.media_url || !slot) return;
+    if (!p.isImage || p.isVideo) {
+      this._seedanceNotify(window.__('Un Frame Clave es una imagen: esa producción es un video.'));
+      return;
+    }
+    if (this._seedanceRefCount() > 0) {
+      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita las referencias para anclar frames.'));
+      return;
+    }
+    // La producción vive en su bucket, no en el nuestro: se guarda sin
+    // storagePath para que quitarla NO borre el archivo original.
+    const previo = this.seedanceFrames[slot];
+    if (previo) this._removeSeedanceStorage(previo.storagePath);
+    this.seedanceFrames[slot] = { url: p.media_url, storagePath: null, origen: 'produccion' };
+    this.renderSeedanceFrames();
+    this.renderSeedanceAttachmentChips();
   }
 
   /** Tocar un elemento: si ya está puesto lo quita, si no lo pone. */

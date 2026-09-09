@@ -756,3 +756,104 @@ describe('Las filas de Elementos y el contrato del arrastre', () => {
     expect(FUENTE).not.toContain("'application/x-aisc-elemento'.length");
   });
 });
+
+describe('Producciones — sirven de frame o de referencia', () => {
+  const conProducciones = (v) => {
+    v.videoProductions = [
+      { id: 'img-1', media_url: 'https://cdn.test/foto.jpg', isImage: true, isVideo: false },
+      { id: 'vid-1', media_url: 'https://cdn.test/clip.mp4', isImage: false, isVideo: true }
+    ];
+  };
+
+  test('una producción de imagen ancla un Frame Clave', () => {
+    const { v } = nuevaVista();
+    conProducciones(v);
+
+    v.ponerProduccionEnFrame('first', 'img-1');
+
+    expect(v.seedanceFrames.first.url).toBe('https://cdn.test/foto.jpg');
+    // Vive en su bucket, no en el nuestro: sin storagePath, quitarla del frame
+    // no puede borrar el archivo de la producción original.
+    expect(v.seedanceFrames.first.storagePath).toBeNull();
+  });
+
+  test('un video NO puede anclar un frame, y lo dice', () => {
+    const { v, avisos } = nuevaVista();
+    conProducciones(v);
+
+    v.ponerProduccionEnFrame('first', 'vid-1');
+
+    expect(v.seedanceFrames.first).toBeNull();
+    expect(avisos.join(' ')).toMatch(/es una imagen/);
+  });
+
+  test('con referencias puestas, anclar un frame se rechaza', () => {
+    // Frames y referencias siguen siendo excluyentes: dejarlo pasar produce un
+    // estado que KIE rechaza diez minutos después.
+    const { v, avisos } = nuevaVista();
+    conProducciones(v);
+    v.seedanceRefs.image = [{ name: 'r', url: 'u', storagePath: 'p', origen: 'manual' }];
+
+    v.ponerProduccionEnFrame('first', 'img-1');
+
+    expect(v.seedanceFrames.first).toBeNull();
+    expect(avisos.join(' ')).toMatch(/excluyentes/);
+  });
+
+  test('soltarla en las referencias hace lo mismo que tocarla', () => {
+    const { v } = nuevaVista();
+    conProducciones(v);
+
+    v.ponerProduccionEnRefs('img-1');
+
+    expect(v.selectedProductionIds.has('img-1')).toBe(true);
+    expect(v.seedanceRefs.image).toHaveLength(1);
+  });
+
+  test('soltar dos veces la misma producción no la duplica', () => {
+    const { v } = nuevaVista();
+    conProducciones(v);
+
+    v.ponerProduccionEnRefs('img-1');
+    v.ponerProduccionEnRefs('img-1');
+
+    expect(v.seedanceRefs.image).toHaveLength(1);
+  });
+
+  test('la carga del arrastre distingue producción de elemento', () => {
+    // Un solo tipo MIME para los dos, y `fuente` decide qué hacer al soltar.
+    const dt = (o) => ({ getData: (t) => (t === VideoView.DND_ELEMENTO ? JSON.stringify(o) : '') });
+
+    expect(VideoView.leerCargaDnD(dt({ fuente: 'produccion', id: 'p1' })).fuente).toBe('produccion');
+    expect(VideoView.leerCargaDnD(dt({ fuente: 'elemento', tipo: 'product', id: 'e1' })).tipo).toBe('product');
+    expect(VideoView.leerCargaDnD(dt({ ruido: 1 }))).toBeNull();
+    expect(VideoView.leerCargaDnD({ getData: () => 'no es json' })).toBeNull();
+  });
+});
+
+describe('Los tres tabs del panel', () => {
+  const html = VideoView.prototype.renderHTML.call({});
+
+  test('son Elementos, Enfoque y Cinematografía', () => {
+    for (const tab of ['elementos', 'enfoque', 'cinematografia']) {
+      expect(html).toContain(`data-sidebar-tab="${tab}"`);
+      expect(html).toContain(`data-sidebar-panel="${tab}"`);
+    }
+  });
+
+  test('el enfoque conceptual vive en su propio tab, no entre el material', () => {
+    const enfoque = html.slice(html.indexOf('data-sidebar-panel="enfoque"'), html.indexOf('data-sidebar-panel="cinematografia"'));
+    expect(enfoque).toContain('id="seedanceCampaignSelect"');
+    expect(enfoque).toContain('id="seedanceAudienceSelect"');
+  });
+
+  test('el material —producciones y elementos— vive en el primero', () => {
+    const elementos = html.slice(html.indexOf('data-sidebar-panel="elementos"'), html.indexOf('data-sidebar-panel="enfoque"'));
+    expect(elementos).toContain('id="videoEscenasCarousel"');
+    expect(elementos).toContain('id="videoElementosFilas"');
+  });
+
+  test('ya no se llama "Escenas": son Producciones', () => {
+    expect(html).not.toMatch(/>\s*Escenas\s*</);
+  });
+});

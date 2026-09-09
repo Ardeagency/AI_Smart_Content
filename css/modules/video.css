@@ -6612,3 +6612,29 @@ body.video-arrastrando-elemento .video-view-container .seedance-ref-group.es-zon
     background: var(--video-accent-soft, rgba(255, 255, 255, 0.08));
     box-shadow: inset 0 0 0 1px var(--video-accent, rgba(255, 255, 255, 0.45));
 }
+
+/* --- Producciones: también se arrastran (a un Frame Clave o a las Imágenes) --- */
+.video-view-container .video-escena-item {
+    cursor: grab;
+}
+.video-view-container .video-escena-item:active {
+    cursor: grabbing;
+}
+.video-view-container .video-escena-item.is-arrastrando,
+.video-view-container .video-production-item.is-arrastrando {
+    opacity: 0.45;
+    transform: scale(0.96);
+}
+
+/* Los slots de Frame Clave reciben producciones. Se insinúan mientras se
+   arrastra —igual que el grupo de Imágenes— para no tener que adivinar los
+   destinos posibles. */
+body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
+    border-color: var(--white-30, rgba(255, 255, 255, 0.3));
+}
+.video-view-container .seedance-frame-slot.is-drop-activa {
+    border-color: var(--video-accent, rgba(255, 255, 255, 0.6));
+    border-style: solid;
+    background: var(--video-accent-soft, rgba(255, 255, 255, 0.08));
+    color: var(--text-primary);
+}
