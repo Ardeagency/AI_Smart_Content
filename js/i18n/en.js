@@ -14,6 +14,14 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Ritmo diario": "Daily rate",
+  "Se agotan": "Runs out",
+  "a este ritmo": "at this rate",
+  "sin consumo para proyectar": "no usage to project from",
+  "sin período anterior": "no previous period",
+  "igual que el período anterior": "same as previous period",
+  "{signo}{n}% vs. período anterior": "{signo}{n}% vs. previous period",
+  "{usd} · {n} operaciones": "{usd} · {n} operations",
   "Historial de movimientos": "Movement history",
   "Cada cargo y abono del período, del más reciente al más antiguo.": "Every charge and credit in the period, newest first.",
   "{n} movimientos entraron con signo positivo. La gráfica de arriba solo cuenta los negativos, así que ese consumo no aparece en ella.": "{n} movements were recorded with a positive sign. The chart above only counts negatives, so that usage does not appear there.",

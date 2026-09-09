@@ -961,21 +961,44 @@ class OrganizationView extends BaseView {
     const desde = this.usageFrom ? new Date(this.usageFrom)
       : new Date(hasta.getTime() - 29 * 24 * 60 * 60 * 1000);
     const dias = Math.max(1, Math.round((hasta - desde) / (24 * 60 * 60 * 1000)) + 1);
+    const previoDesde = new Date(desde.getTime() - dias * 24 * 60 * 60 * 1000);
 
     try { await (window.CreditCosts?.getMap?.()); } catch (_) {}
+    // El saldo hace falta para proyectar el agotamiento, y _loadBilling puede no
+    // haber corrido todavia (Uso se abre sin pasar por Suscripcion).
+    if (!this.billingCreditos && window.OrgSummaryDataService) {
+      try {
+        const svc = await new window.OrgSummaryDataService().init(this.supabase, this.orgId);
+        this.billingCreditos = await svc._creditos();
+      } catch (_) { /* sin saldo no hay proyeccion, y se dice */ }
+    }
     const { data } = await this.supabase
       // `metadata` entra al select porque de ahi sale la plataforma del scraping:
       // sin ella, Instagram y Facebook caen en el mismo saco.
-      .from('credit_usage').select('kind, credits_delta, created_at, metadata, source_id')
+      // `usd_cost` YA existe y esta poblado (3.135 filas, US$207,90 en WAKEUP):
+      // los creditos solos no le dicen nada a nadie, el dinero si.
+      .from('credit_usage').select('kind, credits_delta, usd_cost, created_at, metadata, source_id')
       .eq('organization_id', this.orgId)
       // SIN filtro de signo: el historial de abajo muestra TODOS los
       // movimientos, y esconder los positivos taparia justo la anomalia que
       // hay que ver (ver el filtro de la grafica, mas abajo).
-      .gte('created_at', desde.toISOString())
+      // Se pide el DOBLE de ventana —el periodo y el inmediatamente anterior—
+      // en UNA consulta, y se parte aqui: comparar contra el periodo previo con
+      // una segunda consulta costaria otro viaje para el mismo dato.
+      .gte('created_at', previoDesde.toISOString())
       .lte('created_at', new Date(hasta.getTime() + 86399000).toISOString())
       .order('created_at', { ascending: true });
 
-    const rows = data || [];
+    const todas = data || [];
+    const corte = desde.toISOString();
+    const rows = todas.filter((r) => (r.created_at || '') >= corte);
+
+    // Consumo del periodo ANTERIOR, para poder decir si se gasta mas o menos.
+    // Un numero sin referencia no informa: "45 creditos" no dice si esta bien.
+    const previo = todas
+      .filter((r) => (r.created_at || '') < corte && Number(r.credits_delta) < 0)
+      .reduce((a2, r) => a2 + Math.abs(Number(r.credits_delta) || 0), 0);
+
     const byDayMap = {};
     const porMiembro = {};
     const byArea = {};
@@ -987,16 +1010,19 @@ class OrganizationView extends BaseView {
     // al reves (vera_chat y claude_tokens entran como abono). Reinterpretarlas
     // aqui seria adivinar; el arreglo va donde se escriben, no en la vista.
     let positivos = 0;
+    let usd = 0;
     rows.forEach((r) => {
       const day = (r.created_at || '').slice(0, 10);
       if (!day) return;
       if (Number(r.credits_delta) >= 0) { positivos += 1; return; }
+      usd += Number(r.usd_cost) || 0;
       const cat = OrganizationView._categoriaDe(r.kind, r.metadata?.platform);
       const c = Math.abs(Number(r.credits_delta) || 0);
       // Se guardan CREDITOS y OPERACIONES: el tooltip necesita las dos cosas
       // —cuanto costo y cuantas veces se hizo—, y con solo el gasto no se
       // distingue una operacion cara de veinte baratas.
-      if (!byDayMap[day]) byDayMap[day] = { day, total: 0, ops: 0, byArea: {}, opsArea: {} };
+      if (!byDayMap[day]) byDayMap[day] = { day, total: 0, ops: 0, usd: 0, byArea: {}, opsArea: {} };
+      byDayMap[day].usd += Number(r.usd_cost) || 0;
       byDayMap[day].byArea[cat] = (byDayMap[day].byArea[cat] || 0) + c;
       byDayMap[day].opsArea[cat] = (byDayMap[day].opsArea[cat] || 0) + 1;
       byDayMap[day].total += c;
@@ -1023,15 +1049,32 @@ class OrganizationView extends BaseView {
     const byDay = [];
     for (let t = new Date(desde); t <= hasta; t.setDate(t.getDate() + 1)) {
       const dia = t.toISOString().slice(0, 10);
-      byDay.push(byDayMap[dia] || { day: dia, total: 0, ops: 0, byArea: {}, opsArea: {} });
+      byDay.push(byDayMap[dia] || { day: dia, total: 0, ops: 0, usd: 0, byArea: {}, opsArea: {} });
     }
     const peak = byDay.reduce((m, d) => (d.total > (m ? m.total : 0) ? d : m), null);
     const topAreaKey = Object.entries(byArea).sort((a, b) => b[1] - a[1])[0];
+
+    // Ritmo y fecha de agotamiento. El saldo lo trae el service; si aun no se
+    // cargo, no se inventa una proyeccion — se deja en null y la tarjeta lo dice.
+    const porDia = total / dias;
+    const disponibles = this.billingCreditos?.disponibles;
+    const seAgotan = (porDia > 0 && typeof disponibles === 'number' && disponibles > 0)
+      ? new Date(Date.now() + (disponibles / porDia) * 24 * 60 * 60 * 1000)
+      : null;
+
     this.usage = {
+      porDia,
+      seAgotan,
       days: dias, byDay, byArea, total, peak,
       topAreaKey: total > 0 && topAreaKey ? topAreaKey[0] : null,
       events: rows.filter((r) => Number(r.credits_delta) < 0).length,
       positivos,
+      usd,
+      previo,
+      // Variacion contra el periodo anterior. Si el anterior fue cero no hay
+      // porcentaje que calcular —dividir por cero da Infinity y se pintaria un
+      // "+∞%"—, asi que queda en null y la vista lo omite.
+      variacion: previo > 0 ? Math.round(((total - previo) / previo) * 100) : null,
       // El historial va de mas reciente a mas antiguo y con TODOS los signos.
       movimientos: [...rows].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))),
       porMiembro: Object.values(porMiembro).sort((a, b) => b.creditos - a.creditos),
@@ -1803,6 +1846,7 @@ class OrganizationView extends BaseView {
 
       const total = col.dataset.total || '0';
       const ops = Number(col.dataset.ops || 0);
+      const dinero = col.dataset.usd || '';
       const filas = (col.dataset.detalle || '').split('~').filter(Boolean).map((t) => {
         const [, label, color, valor, veces] = t.split('|');
         return `<div class="org-uchart-tip-row">
@@ -1818,7 +1862,7 @@ class OrganizationView extends BaseView {
           <span>${this._esc(this._fmtDay(col.dataset.dia))}</span>
           <b>${this._esc(total)} ${__('cr')}</b>
         </div>
-        ${ops ? `<div class="org-uchart-tip-ops">${__('{n} operaciones', { n: ops.toLocaleString('es') })}</div>` : ''}
+        ${ops ? `<div class="org-uchart-tip-ops">${__('{n} operaciones', { n: ops.toLocaleString('es') })}${dinero ? ` · ${this._esc(dinero)}` : ''}</div>` : ''}
         ${filas || `<div class="org-uchart-tip-vacio">${__('Sin consumo')}</div>`}`;
       tip.hidden = false;
 
@@ -2026,9 +2070,26 @@ class OrganizationView extends BaseView {
       } else {
         const topMeta = OrganizationView.USAGE_AREAS.find((a) => a.key === u.topAreaKey);
         const topPct = u.topAreaKey ? Math.round((u.byArea[u.topAreaKey] / u.total) * 100) : 0;
+        // La variacion se dice en palabras y con signo; sin periodo anterior con
+        // datos no se muestra nada, en vez de un "+0%" que no significa nada.
+        const variacion = u.variacion == null ? __('sin período anterior')
+          : u.variacion === 0 ? __('igual que el período anterior')
+          : __('{signo}{n}% vs. período anterior', { signo: u.variacion > 0 ? '+' : '', n: u.variacion });
+
         statsEl.innerHTML = [
-          this._usageStat(__('Créditos consumidos · {d}d', { d: u.days }), this._fmtCredits(u.total), __('{n} operaciones', { n: u.events })),
-          this._usageStat(__('Promedio diario'), this._fmtCredits(u.total / u.days), __('créditos / día')),
+          this._usageStat(
+            __('Créditos consumidos · {d}d', { d: u.days }),
+            this._fmtCredits(u.total),
+            // El dinero al lado de los creditos: un credito solo no le dice nada
+            // a nadie. `usd_cost` ya venia poblado en la base y no se usaba.
+            u.usd > 0
+              ? __('{usd} · {n} operaciones', { usd: this._fmtMoney(u.usd, 'USD'), n: u.events })
+              : __('{n} operaciones', { n: u.events })),
+          this._usageStat(__('Ritmo diario'), this._fmtCredits(u.porDia), variacion),
+          this._usageStat(
+            __('Se agotan'),
+            u.seAgotan ? this._fmtDate(u.seAgotan) : '—',
+            u.seAgotan ? __('a este ritmo') : __('sin consumo para proyectar')),
           this._usageStat(__('Día pico'), u.peak ? this._fmtCredits(u.peak.total) : '—', u.peak ? this._fmtDay(u.peak.day) : __('sin datos')),
           this._usageStat(__('Fuente principal'), topMeta ? topMeta.label : '—', topMeta ? __('{p}% del consumo', { p: topPct }) : '—', topMeta ? this._usageColor(topMeta.key) : null),
         ].join('');
@@ -2060,7 +2121,7 @@ class OrganizationView extends BaseView {
           const detalle = usados
             .map((a) => `${a.key}|${a.label}|${a.color}|${this._fmtCredits(d.byArea[a.key])}|${d.opsArea[a.key] || 0}`)
             .join('~');
-          return `<div class="org-uchart-col" data-dia="${this._esc(d.day)}" data-total="${this._esc(this._fmtCredits(d.total))}" data-ops="${d.ops}" data-detalle="${this._esc(detalle)}">
+          return `<div class="org-uchart-col" data-dia="${this._esc(d.day)}" data-total="${this._esc(this._fmtCredits(d.total))}" data-ops="${d.ops}" data-usd="${this._esc(d.usd > 0 ? this._fmtMoney(d.usd, 'USD') : '')}" data-detalle="${this._esc(detalle)}">
             <div class="org-uchart-bar" style="height:${hPct}%">${segs}</div>
           </div>`;
         }).join('');
