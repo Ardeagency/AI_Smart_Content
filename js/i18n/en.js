@@ -14,6 +14,17 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Lo que cuesta tu monitoreo": "What your monitoring costs",
+  "Proyección desde lo que tienes configurado: cadencia × costo medido por corrida.": "Projected from what you have configured: cadence x measured cost per run.",
+  "A la semana": "Per week",
+  "Al mes": "Per month",
+  "Sensor": "Sensor",
+  "Activos": "Active",
+  "Corridas / día": "Runs / day",
+  "Créditos / día": "Credits / day",
+  "sin medir": "not measured",
+  "Raspado de perfiles": "Profile scraping",
+  "{n} sensores corren pero su costo todavía no se puede atribuir a un cargo concreto, así que no entran en la proyección.": "{n} sensors are running but their cost cannot be attributed to a specific charge yet, so they are excluded from the projection.",
   "Ritmo diario": "Daily rate",
   "Se agotan": "Runs out",
   "a este ritmo": "at this rate",

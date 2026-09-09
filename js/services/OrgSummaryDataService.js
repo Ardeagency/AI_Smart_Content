@@ -159,6 +159,40 @@ class OrgSummaryDataService {
     } catch (_) { return null; }
   }
 
+  /**
+   * Sensores de monitoreo ACTIVOS, para poder proyectar lo que costaran.
+   *
+   * La cadencia se guarda en dos formas y hay que leerlas distinto:
+   *   cadence='interval' -> cadence_value son MINUTOS (360 = cada 6 horas)
+   *   cadence='daily'    -> cadence_value son VECES POR DIA (1 = una vez)
+   * Confundirlas da proyecciones absurdas: leer 360 como "360 veces al dia" en
+   * vez de "cada 360 minutos" infla el calculo por 90.
+   */
+  async monitoreo() {
+    if (!this.sb || !this.orgId) return null;
+    try {
+      const { data } = await this.sb
+        .from('monitoring_triggers')
+        .select('sensor_type, status, cadence, cadence_value')
+        .eq('organization_id', this.orgId)
+        .eq('status', 'active');
+
+      const filas = Array.isArray(data) ? data : [];
+      const porTipo = {};
+      filas.forEach((t) => {
+        const tipo = t.sensor_type || 'desconocido';
+        const valor = Number(t.cadence_value) || 0;
+        let porDia = 0;
+        if (t.cadence === 'interval' && valor > 0) porDia = 1440 / valor;
+        else if (t.cadence === 'daily') porDia = valor || 1;
+        if (!porTipo[tipo]) porTipo[tipo] = { tipo, sensores: 0, corridasDia: 0 };
+        porTipo[tipo].sensores += 1;
+        porTipo[tipo].corridasDia += porDia;
+      });
+      return Object.values(porTipo).sort((a, b) => b.corridasDia - a.corridasDia);
+    } catch (_) { return null; }
+  }
+
   async _plan() {
     try {
       const { data: sub } = await this.sb

@@ -248,6 +248,9 @@ class OrganizationView extends BaseView {
 
             <!-- Historial de movimientos, en lista, como estaba en la vista de
                  creditos antes del rediseño. -->
+            <!-- Proyeccion del monitoreo: lo que va a costar lo configurado. -->
+            <div class="org-usage-proyeccion" id="orgUsageProyeccion"></div>
+
             <div class="org-usage-historial" id="orgUsageHistorial"></div>
           </section>
         </div>
@@ -966,10 +969,11 @@ class OrganizationView extends BaseView {
     try { await (window.CreditCosts?.getMap?.()); } catch (_) {}
     // El saldo hace falta para proyectar el agotamiento, y _loadBilling puede no
     // haber corrido todavia (Uso se abre sin pasar por Suscripcion).
-    if (!this.billingCreditos && window.OrgSummaryDataService) {
+    if (window.OrgSummaryDataService) {
       try {
         const svc = await new window.OrgSummaryDataService().init(this.supabase, this.orgId);
-        this.billingCreditos = await svc._creditos();
+        if (!this.billingCreditos) this.billingCreditos = await svc._creditos();
+        if (!this.monitoreo) this.monitoreo = await svc.monitoreo();
       } catch (_) { /* sin saldo no hay proyeccion, y se dice */ }
     }
     const { data } = await this.supabase
@@ -1011,11 +1015,21 @@ class OrganizationView extends BaseView {
     // aqui seria adivinar; el arreglo va donde se escriben, no en la vista.
     let positivos = 0;
     let usd = 0;
+    // Costo MEDIDO por tipo de operacion. La proyeccion de abajo se apoya en
+    // esto y no en `feature_costs.credits_per_action`: el catalogo dice 1
+    // credito por scraping, pero lo que de verdad se cobra son ~0,09 —el precio
+    // sale del proveedor, no de la tabla—. Proyectar con el catalogo daria una
+    // cifra diez veces mayor que la real.
+    const porKind = {};
     rows.forEach((r) => {
       const day = (r.created_at || '').slice(0, 10);
       if (!day) return;
       if (Number(r.credits_delta) >= 0) { positivos += 1; return; }
       usd += Number(r.usd_cost) || 0;
+      const kk = r.kind || 'desconocido';
+      if (!porKind[kk]) porKind[kk] = { creditos: 0, eventos: 0 };
+      porKind[kk].creditos += c;
+      porKind[kk].eventos += 1;
       const cat = OrganizationView._categoriaDe(r.kind, r.metadata?.platform);
       const c = Math.abs(Number(r.credits_delta) || 0);
       // Se guardan CREDITOS y OPERACIONES: el tooltip necesita las dos cosas
@@ -1070,6 +1084,7 @@ class OrganizationView extends BaseView {
       events: rows.filter((r) => Number(r.credits_delta) < 0).length,
       positivos,
       usd,
+      porKind,
       previo,
       // Variacion contra el periodo anterior. Si el anterior fue cero no hay
       // porcentaje que calcular —dividir por cero da Infinity y se pintaria un
@@ -1944,6 +1959,88 @@ class OrganizationView extends BaseView {
    * 2. Pagina en memoria sobre lo que ya se cargo para la grafica, en vez de
    *    pedir otra pagina al servidor por cada click.
    */
+  /**
+   * Lo que va a costar el monitoreo, proyectado desde lo que HAY CONFIGURADO.
+   *
+   * La cuenta es: (corridas por dia que dicta la cadencia) x (costo medio por
+   * corrida MEDIDO en el periodo) = creditos/dia, y de ahi semana y mes.
+   *
+   * El costo medio sale del historial y NO de `feature_costs`: el catalogo dice
+   * 1 credito por scraping y lo que de verdad se cobra son centimos, porque el
+   * precio lo pone el proveedor. Proyectar con el catalogo daria una cifra diez
+   * veces mayor.
+   *
+   * Solo se proyectan los sensores cuyo costo se puede atribuir con certeza. Un
+   * sensor sin coste medido muestra sus corridas y dice que no se puede
+   * proyectar, en vez de repartirle un promedio ajeno.
+   */
+  _renderProyeccion() {
+    const el = this.querySelector('#orgUsageProyeccion');
+    if (!el) return;
+    const sensores = this.monitoreo || [];
+    if (!sensores.length) { el.innerHTML = ''; return; }
+
+    // Mapa sensor -> tipo de cargo. Deliberadamente CORTO: solo los pares de los
+    // que hay certeza. `social` y `trends_run` raspan via Apify y se cobran como
+    // apify_scrape; el resto no tiene equivalencia clara en credit_usage y se
+    // deja sin proyectar antes que adivinar.
+    const CARGO = { social: 'apify_scrape', trends_run: 'apify_scrape' };
+    const porKind = this.usage?.porKind || {};
+    const costoDe = (tipo) => {
+      const kind = CARGO[tipo];
+      const d = kind && porKind[kind];
+      return d && d.eventos > 0 ? d.creditos / d.eventos : null;
+    };
+
+    const filas = sensores.map((s2) => {
+      const costo = costoDe(s2.tipo);
+      return { ...s2, costo, porDia: costo != null ? s2.corridasDia * costo : null };
+    });
+    const proyectables = filas.filter((f) => f.porDia != null);
+    const totalDia = proyectables.reduce((a, f) => a + f.porDia, 0);
+    const sinCosto = filas.length - proyectables.length;
+
+    const nombre = (t) => ({
+      social: __('Raspado de perfiles'),
+      trends_run: __('Tendencias'),
+    }[t] || String(t).replace(/_/g, ' '));
+
+    el.innerHTML = `
+      <div class="org-section-head">
+        <div>
+          <h3 class="org-uchart-title">${__('Lo que cuesta tu monitoreo')}</h3>
+          <p class="org-uchart-desc">${__('Proyección desde lo que tienes configurado: cadencia × costo medido por corrida.')}</p>
+        </div>
+      </div>
+
+      ${totalDia > 0 ? `
+        <div class="org-proy-totales">
+          ${[[__('Al día'), totalDia], [__('A la semana'), totalDia * 7], [__('Al mes'), totalDia * 30]]
+            .map(([etq, v]) => `
+              <div class="org-proy-total">
+                <span class="org-proy-num">${this._fmtCredits(v)}</span>
+                <span class="org-res-lbl">${this._esc(etq)}</span>
+              </div>`).join('')}
+        </div>` : ''}
+
+      <div class="org-proy-table">
+        <div class="org-proy-row org-proy-row--head">
+          <span>${__('Sensor')}</span><span class="org-bill-right">${__('Activos')}</span>
+          <span class="org-bill-right">${__('Corridas / día')}</span><span class="org-bill-right">${__('Créditos / día')}</span>
+        </div>
+        ${filas.map((f) => `
+          <div class="org-proy-row">
+            <span class="org-proy-nombre">${this._esc(nombre(f.tipo))}</span>
+            <span class="org-bill-right org-mem-num">${f.sensores}</span>
+            <span class="org-bill-right org-mem-num">${f.corridasDia % 1 === 0 ? f.corridasDia : f.corridasDia.toFixed(1)}</span>
+            <span class="org-bill-right org-mem-num">${f.porDia != null
+              ? this._fmtCredits(f.porDia)
+              : `<span class="org-res-sinmedir">${__('sin medir')}</span>`}</span>
+          </div>`).join('')}
+      </div>
+      ${sinCosto ? `<p class="org-hist-aviso">${__('{n} sensores corren pero su costo todavía no se puede atribuir a un cargo concreto, así que no entran en la proyección.', { n: sinCosto })}</p>` : ''}`;
+  }
+
   _renderUsageHistorial() {
     const el = this.querySelector('#orgUsageHistorial');
     if (!el) return;
@@ -1996,7 +2093,8 @@ class OrganizationView extends BaseView {
     el.querySelectorAll('[data-hist]').forEach((b) => {
       this.addEventListener(b, 'click', () => {
         this._histPagina = Math.max(0, Math.min(paginas - 1, pagina + (b.dataset.hist === 'next' ? 1 : -1)));
-        this._renderUsageHistorial();
+        this._renderProyeccion();
+    this._renderUsageHistorial();
       });
     });
   }

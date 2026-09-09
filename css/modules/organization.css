@@ -2648,3 +2648,45 @@
     .org-hist-row { grid-template-columns: 8px minmax(0, 1fr) auto; }
     .org-hist-fecha { display: none; }
 }
+
+/* ─── Proyeccion del monitoreo (Uso) ──────────────────────────────────
+   Tres cifras grandes —dia, semana, mes— y debajo el detalle por sensor. */
+
+.org-usage-proyeccion { margin-top: 2rem; }
+
+.org-proy-totales {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1.25rem;
+    margin: 0.75rem 0 1.25rem;
+}
+
+.org-proy-total { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.org-proy-num {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+}
+
+.org-proy-table { border-top: 1px solid var(--border-divider); }
+
+.org-proy-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) auto auto auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.org-proy-row--head { font-size: 0.75rem; color: var(--text-muted); }
+.org-proy-row:last-child { border-bottom: 0; }
+.org-proy-nombre { color: var(--text-primary); font-size: 0.86rem; text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 640px) {
+    .org-proy-row { grid-template-columns: minmax(0, 1fr) auto auto; }
+    .org-proy-row > :nth-child(2) { display: none; }
+}
