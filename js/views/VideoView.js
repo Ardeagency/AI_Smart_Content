@@ -101,9 +101,12 @@ class VideoView extends BaseView {
     // Producciones previas (Escenas) y selección activa.
     this.videoProductions = [];
     this.selectedProductionIds = new Set();
-    // Stack de activos: qué producto/servicio/entidad debe respetar el video.
-    this.assetScope = 'product';
-    this.selectedAssetId = '';
+    // Elementos: el catálogo de la marca —productos, personajes, escenarios,
+    // servicios— en filas por tipo. No hay "uno seleccionado": se arrastran (o
+    // se tocan) y entran como referencias de imagen del prompt. El estado vive
+    // en seedanceRefs con origen 'activo', no aquí.
+    this.dbData.places = [];
+    this.dbData.characters = [];
     // Slot que disparo el file picker de frames (el input es uno solo).
     this._pendingFrameSlot = null;
     // NO hay estado de dirección. La ley de la casa (portada del Studio de
@@ -578,23 +581,10 @@ class VideoView extends BaseView {
                         <option value="Parents / families">${window.__('Padres y familias')}</option>
                       </select>
                     </div>
-                    <div class="video-left-block video-asset-stack-block" id="videoAssetStackBlock">
-                      <h4 class="video-prompt-panel-title">${window.__('Stack de activos')}</h4>
-                      <p class="video-field-help video-asset-stack-help" id="videoAssetStackHelp">${window.__('Producto = bloqueo de referencia (el video no debe cambiar el producto)')}</p>
-                      <div class="video-asset-scope-wrap">
-                        <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="${window.__('Alcance')}">
-                          <option value="product">${window.__('Producto')}</option>
-                          <option value="service">${window.__('Servicio')}</option>
-                          <option value="brand_world">${window.__('Mundo de marca')}</option>
-                          <option value="collection">${window.__('Colección')}</option>
-                        </select>
-                      </div>
-                      <div class="video-asset-products-carousel-wrap" id="videoAssetProductsCarouselWrap">
-                        <div class="video-asset-products-carousel" id="videoAssetProductsCarousel"></div>
-                      </div>
-                      <select id="videoAssetSelect" class="video-prompt-db-select video-asset-select video-asset-select-other" aria-label="${window.__('Activo')}" style="display: none;">
-                        <option value="">${window.__('— Ninguno')}</option>
-                      </select>
+                    <div class="video-left-block video-elementos-block" id="videoElementosBlock">
+                      <h4 class="video-prompt-panel-title">${window.__('Elementos')}</h4>
+                      <p class="video-field-help">${window.__('El catálogo de la marca, una fila por tipo. Arrastra uno a las Imágenes del prompt para que el video lo respete — o tócalo, que hace lo mismo.')}</p>
+                      <div class="video-elementos-filas" id="videoElementosFilas"></div>
                     </div>
                   </div>
 
@@ -841,26 +831,9 @@ class VideoView extends BaseView {
       panelClose.addEventListener('click', (e) => { e.preventDefault(); this.closeProductionsPanel(); });
     }
 
-    // ── Stack de activos ──
-    const assetScope = this.container.querySelector('#videoAssetScope');
-    const assetSelect = this.container.querySelector('#videoAssetSelect');
-    if (assetScope && assetScope.dataset.boundAsset !== '1') {
-      assetScope.dataset.boundAsset = '1';
-      assetScope.addEventListener('change', () => {
-        this.assetScope = assetScope.value;
-        this.selectedAssetId = '';
-        this.updateAssetStackScopeUI();
-      });
-    }
-    if (assetSelect && assetSelect.dataset.boundAsset !== '1') {
-      assetSelect.dataset.boundAsset = '1';
-      assetSelect.addEventListener('change', () => {
-        this.selectedAssetId = assetSelect.value || '';
-        this.syncAssetSelectionToRefs();
-      });
-    }
-    if (assetScope) this.assetScope = assetScope.value || 'product';
-    this.updateAssetStackScopeUI();
+    // ── Elementos: filas por tipo + zona de drop en las Imágenes del prompt ──
+    this.renderElementosFilas();
+    this.bindZonaDropImagenes();
     await this.loadVideoProductions();
     this.renderEscenasCarousel();
 
@@ -984,6 +957,9 @@ class VideoView extends BaseView {
       this.dbData.products = productsRes.data || [];
       this.dbData.services = servicesRes.data || [];
       this.dbData.entities = entitiesRes.data || [];
+      // Escenarios y personajes cuelgan de brand_entities (no tienen FK a la
+      // org), así que se piden con los ids de entidad que acabamos de traer.
+      await this.loadPlacesAndCharacters((entitiesRes.data || []).map((e) => e.id).filter(Boolean));
       this.dbData.audiences = audiencesRes.data || [];
       // Aplanar campos del brief al row de campaña para que el resto del
       // código siga accediendo como c.contexto_temporal, c.tono_modificador, etc.
@@ -1017,6 +993,19 @@ class VideoView extends BaseView {
     } catch (e) {
       console.error('VideoView loadBrandData:', e);
     }
+  }
+
+  /**
+   * Escenarios y personajes. Van aparte de loadBrandData porque necesitan los
+   * entity_ids ya resueltos: `brand_places` y `brand_characters` no tienen FK
+   * a la organización, cuelgan de la entidad. La consulta vive en el servicio
+   * (regla de oro de la auditoría 2026-07-02).
+   */
+  async loadPlacesAndCharacters(entityIds) {
+    if (!this.assetsData) this.assetsData = new window.BrandAssetsDataService(this.supabase);
+    const { places, characters } = await this.assetsData.loadElementos(entityIds);
+    this.dbData.places = places;
+    this.dbData.characters = characters;
   }
 
   renderCampaignDropdown() {
@@ -1183,22 +1172,14 @@ class VideoView extends BaseView {
   }
 
   /**
-   * Resuelve entity_id desde el activo elegido en el Stack, segun scope.
-   * products.entity_id y services.entity_id son FK a brand_entities y dan el
-   * linaje canonico al output. null si no hay activo o el scope no aplica.
+   * Linaje del output: la entidad del PRIMER elemento puesto. Antes había un
+   * solo activo elegido y la respuesta era única; ahora se pueden soltar
+   * varios, y el primero es el que manda — es el que el director eligió antes
+   * de empezar a acompañarlo.
    */
   _resolveSelectedEntityId() {
-    if (!this.selectedAssetId) return null;
-    const scope = this.assetScope || 'product';
-    if (scope === 'product') {
-      const p = (this.dbData?.products || []).find((x) => String(x.id) === String(this.selectedAssetId));
-      return p?.entity_id || null;
-    }
-    if (scope === 'service') {
-      const s = (this.dbData?.services || []).find((x) => String(x.id) === String(this.selectedAssetId));
-      return s?.entity_id || null;
-    }
-    return null;
+    const primero = (this.seedanceRefs.image || []).find((r) => r.origen === 'activo' && r._entityId);
+    return primero ? primero._entityId : null;
   }
 
   async updateSystemAIOutput(id, updates) {
@@ -1440,10 +1421,12 @@ class VideoView extends BaseView {
       this.renderProductionsGallery();
     }
     if (item.origen === 'activo') {
-      this.selectedAssetId = '';
-      const assetSelect = this.container.querySelector('#videoAssetSelect');
-      if (assetSelect) assetSelect.value = '';
-      this.renderAssetProductsCarousel();
+      // Un elemento puede haber aportado dos imágenes: se van las dos, o la
+      // fila seguiría marcándolo como puesto con media identidad dentro.
+      this.seedanceRefs[kind] = this.seedanceRefs[kind].filter(
+        (r) => !(r.origen === 'activo' && String(r._assetId) === String(item._assetId))
+      );
+      this.renderElementosFilas();
     }
     this.renderSeedanceRefs();
     this.renderSeedanceAttachmentChips();
@@ -1652,114 +1635,232 @@ class VideoView extends BaseView {
     this.renderEscenasCarousel();
   }
 
-  // ── Stack de activos: el producto que el video no debe alterar ──────────
+  // ── Elementos: el catálogo de la marca, en filas por tipo ───────────────
 
-  /** Muestra carrusel de productos u otro scope (dropdown). */
-  updateAssetStackScopeUI() {
-    const block = this.container.querySelector('#videoAssetStackBlock');
-    const carouselWrap = this.container.querySelector('#videoAssetProductsCarouselWrap');
-    const assetSelect = this.container.querySelector('#videoAssetSelect');
-    const scope = this.assetScope || 'product';
-    if (block) block.setAttribute('data-scope', scope);
-    const esProducto = scope === 'product';
-    if (carouselWrap) carouselWrap.style.display = esProducto ? 'block' : 'none';
-    if (assetSelect) assetSelect.style.display = esProducto ? 'none' : 'block';
-    if (esProducto) this.renderAssetProductsCarousel();
-    else this.renderAssetDropdown();
-    this.syncAssetSelectionToRefs();
+  /**
+   * Los cuatro tipos que la marca sabe describir, en el orden en que se piensa
+   * una escena: qué se vende, quién aparece, dónde pasa, qué se ofrece.
+   *
+   * `lock` marca los que NO deben cambiar: el producto y el personaje tienen
+   * identidad —una botella con su etiqueta, una cara— y alterarla arruina la
+   * pieza. Un escenario es contexto: que la IA lo interprete no rompe nada.
+   */
+  static get ELEMENTO_TIPOS() {
+    return [
+      { tipo: 'product', etiqueta: window.__('Productos'), icono: 'aisc-ico--product', campo: 'products', nombre: 'nombre_producto', lock: true },
+      { tipo: 'character', etiqueta: window.__('Personajes'), icono: 'aisc-ico--characters', campo: 'characters', nombre: 'nombre_personaje', lock: true },
+      { tipo: 'place', etiqueta: window.__('Escenarios'), icono: 'aisc-ico--compass', campo: 'places', nombre: 'nombre_lugar', lock: false },
+      { tipo: 'service', etiqueta: window.__('Servicios'), icono: 'aisc-ico--service', campo: 'services', nombre: 'nombre_servicio', lock: false }
+    ];
   }
 
-  getAssetListByScope() {
-    const scope = this.assetScope || 'product';
-    if (scope === 'product') return (this.dbData.products || []).map((p) => ({ id: p.id, name: p.nombre_producto || window.__('Producto'), type: 'product' }));
-    if (scope === 'service') return (this.dbData.services || []).map((s) => ({ id: s.id, name: s.nombre_servicio || window.__('Servicio'), type: 'service' }));
-    if (scope === 'brand_world') return (this.dbData.entities || []).map((e) => ({ id: e.id, name: e.name || window.__('Entidad'), type: 'entity' }));
-    return [];
+  /** Cuántas imágenes aporta un elemento al soltarlo. Ver SEEDANCE_PRODUCT_LOCK_IMAGES. */
+  static get ELEMENTO_MAX_IMAGENES() { return VideoView.SEEDANCE_PRODUCT_LOCK_IMAGES; }
+
+  /** Un elemento por id, con su tipo. Fuente única para el drop y para el clic. */
+  _buscarElemento(tipo, id) {
+    const def = VideoView.ELEMENTO_TIPOS.find((t) => t.tipo === tipo);
+    if (!def) return null;
+    const fila = (this.dbData[def.campo] || []).find((x) => String(x.id) === String(id));
+    if (!fila) return null;
+    return {
+      def,
+      id: fila.id,
+      entityId: fila.entity_id || null,
+      nombre: fila[def.nombre] || def.etiqueta,
+      imagenes: Array.isArray(fila.image_urls) ? fila.image_urls.filter(Boolean) : []
+    };
   }
 
-  renderAssetDropdown() {
-    const select = this.container.querySelector('#videoAssetSelect');
-    if (!select) return;
-    const items = this.getAssetListByScope();
-    const actual = select.value || this.selectedAssetId;
-    select.innerHTML = `<option value="">${window.__('— Ninguno')}</option>`
-      + items.map((i) => `<option value="${this.escapeHtml(i.id)}">${this.escapeHtml((i.name || '').slice(0, 50))}</option>`).join('');
-    if (actual && items.some((i) => String(i.id) === String(actual))) select.value = actual;
-    else this.selectedAssetId = '';
+  /** Los elementos que ya están puestos como referencia, para marcarlos. */
+  _elementosPuestos() {
+    return new Set(
+      (this.seedanceRefs.image || [])
+        .filter((r) => r.origen === 'activo' && r._assetId != null)
+        .map((r) => String(r._assetId))
+    );
   }
 
-  /** Carrusel de productos con imagen. Uno solo a la vez: es un bloqueo, no una galería. */
-  renderAssetProductsCarousel() {
-    const carousel = this.container.querySelector('#videoAssetProductsCarousel');
-    if (!carousel) return;
-    const products = (this.dbData.products || []).filter((p) => Array.isArray(p.image_urls) && p.image_urls.length > 0);
-    if (products.length === 0) {
-      carousel.innerHTML = `<p class="video-asset-products-empty">${window.__('No hay productos con imágenes.')}</p>`;
-      return;
-    }
-    carousel.innerHTML = products.map((p) => {
-      const seleccionado = String(this.selectedAssetId) === String(p.id);
+  renderElementosFilas() {
+    const cont = this.container.querySelector('#videoElementosFilas');
+    if (!cont) return;
+    const puestos = this._elementosPuestos();
+
+    const filas = VideoView.ELEMENTO_TIPOS.map((def) => {
+      const items = this.dbData[def.campo] || [];
+      const cuerpo = items.length === 0
+        ? `<p class="video-elementos-vacio">${window.__('Sin {tipo}', { tipo: def.etiqueta.toLowerCase() })}</p>`
+        : items.map((fila) => {
+          const nombre = fila[def.nombre] || def.etiqueta;
+          const url = (Array.isArray(fila.image_urls) ? fila.image_urls : []).filter(Boolean)[0] || '';
+          const puesto = puestos.has(String(fila.id));
+          // Sin imagen no hay nada que soltar en un grupo de imágenes. Se
+          // muestra igual —existe en la marca— pero se dice por qué no se
+          // puede arrastrar, en vez de quedar inerte sin explicación.
+          const arrastrable = !!url;
+          return `
+            <button type="button"
+              class="video-elemento-tile${puesto ? ' is-puesto' : ''}${arrastrable ? '' : ' is-sin-imagen'}"
+              data-tipo="${this.escapeHtml(def.tipo)}"
+              data-id="${this.escapeHtml(fila.id)}"
+              ${arrastrable ? 'draggable="true"' : 'disabled'}
+              aria-pressed="${puesto}"
+              title="${this.escapeHtml(nombre)}${arrastrable ? '' : ' — ' + window.__('sin imagen: no se puede usar como referencia')}">
+              ${url
+                ? `<img class="video-elemento-thumb" src="${this.escapeHtml(url)}" alt="" loading="lazy" draggable="false">`
+                : `<span class="video-elemento-thumb video-elemento-thumb--vacia"><i class="aisc-ico ${def.icono}" aria-hidden="true"></i></span>`}
+              <span class="video-elemento-nombre">${this.escapeHtml(nombre)}</span>
+            </button>`;
+        }).join('');
       return `
-        <div class="video-asset-product-item ${seleccionado ? 'is-selected' : ''}" data-id="${this.escapeHtml(p.id)}" role="button" tabindex="0" aria-pressed="${seleccionado}" aria-label="${window.__('Seleccionar producto')}">
-          <div class="video-asset-product-thumb-wrap"><img class="video-asset-product-thumb" src="${this.escapeHtml(p.image_urls[0] || '')}" alt="" loading="lazy"></div>
+        <div class="video-elementos-fila" data-tipo="${this.escapeHtml(def.tipo)}">
+          <span class="video-elementos-fila-label"><i class="aisc-ico ${def.icono}" aria-hidden="true"></i>${this.escapeHtml(def.etiqueta)}</span>
+          <div class="video-elementos-carrusel">${cuerpo}</div>
         </div>`;
     }).join('');
-    carousel.querySelectorAll('.video-asset-product-item').forEach((el) => {
-      el.addEventListener('click', () => {
-        const id = el.dataset.id;
-        this.selectedAssetId = String(this.selectedAssetId) === String(id) ? '' : id;
-        this.renderAssetProductsCarousel();
-        this.syncAssetSelectionToRefs();
+
+    cont.innerHTML = filas;
+
+    if (cont.dataset.boundElementos !== '1') {
+      cont.dataset.boundElementos = '1';
+      // Tocar hace lo mismo que arrastrar. No es un adorno: arrastrar no existe
+      // con teclado y en táctil es un pulso fino; sin el clic, el panel sería
+      // inalcanzable para media casa.
+      cont.addEventListener('click', (e) => {
+        const tile = e.target.closest('.video-elemento-tile');
+        if (!tile || tile.disabled) return;
+        e.preventDefault();
+        this.alternarElemento(tile.getAttribute('data-tipo'), tile.getAttribute('data-id'));
       });
+      cont.addEventListener('dragstart', (e) => {
+        const tile = e.target.closest('.video-elemento-tile');
+        if (!tile || tile.disabled) return;
+        const carga = JSON.stringify({ tipo: tile.getAttribute('data-tipo'), id: tile.getAttribute('data-id') });
+        // Tipo propio para que el drop distinga un elemento de un archivo del
+        // escritorio; `text/plain` de respaldo porque Safari ignora los tipos
+        // personalizados en algunas versiones.
+        e.dataTransfer.setData(VideoView.DND_ELEMENTO, carga);
+        e.dataTransfer.setData('text/plain', carga);
+        e.dataTransfer.effectAllowed = 'copy';
+        tile.classList.add('is-arrastrando');
+        document.body.classList.add('video-arrastrando-elemento');
+      });
+      cont.addEventListener('dragend', (e) => {
+        const tile = e.target.closest('.video-elemento-tile');
+        if (tile) tile.classList.remove('is-arrastrando');
+        document.body.classList.remove('video-arrastrando-elemento');
+      });
+    }
+  }
+
+  /** El tipo MIME propio del arrastre. Un solo sitio para que no se desincronice. */
+  static get DND_ELEMENTO() { return 'application/x-aisc-elemento'; }
+
+  /**
+   * La zona de Imágenes del prompt acepta elementos soltados. Es el grupo que
+   * ya lleva las referencias visuales: soltar ahí es decir "esto entra en la
+   * toma", que es exactamente lo que significa una referencia de imagen.
+   */
+  bindZonaDropImagenes() {
+    const zona = this.container.querySelector('#seedanceRefImgList')?.closest('.seedance-ref-group');
+    if (!zona || zona.dataset.boundDrop === '1') return;
+    zona.dataset.boundDrop = '1';
+    zona.classList.add('es-zona-drop');
+
+    const leerCarga = (dt) => {
+      const crudo = dt.getData(VideoView.DND_ELEMENTO) || dt.getData('text/plain') || '';
+      try {
+        const o = JSON.parse(crudo);
+        return o && o.tipo && o.id ? o : null;
+      } catch (_) { return null; }
+    };
+
+    zona.addEventListener('dragover', (e) => {
+      // Sin preventDefault el navegador NO dispara 'drop': la zona se ve activa
+      // y no recibe nada. `types` se puede leer en dragover; `getData` no.
+      if (!e.dataTransfer.types.includes(VideoView.DND_ELEMENTO)) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      zona.classList.add('is-drop-activa');
+    });
+    zona.addEventListener('dragleave', (e) => {
+      // Solo al salir de la zona de verdad: pasar sobre un hijo dispara
+      // dragleave y la zona parpadearía.
+      if (zona.contains(e.relatedTarget)) return;
+      zona.classList.remove('is-drop-activa');
+    });
+    zona.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zona.classList.remove('is-drop-activa');
+      const carga = leerCarga(e.dataTransfer);
+      if (carga) this.ponerElemento(carga.tipo, carga.id);
     });
   }
 
+  /** Tocar un elemento: si ya está puesto lo quita, si no lo pone. */
+  alternarElemento(tipo, id) {
+    if (this._elementosPuestos().has(String(id))) this.quitarElemento(id);
+    else this.ponerElemento(tipo, id);
+  }
+
   /**
-   * El activo elegido entra como referencia de imagen marcada con `lock`.
-   * No es inspiración: es la instrucción de que el producto NO cambie. Ocupa
-   * cupo igual, porque para KIE es una imagen de referencia más.
+   * Mete las imágenes del elemento como referencias. Respeta el cupo de KIE: si
+   * no caben todas, avisa — un elemento a medias es peor que uno rechazado,
+   * porque el usuario cree que mandó la identidad completa.
    */
-  syncAssetSelectionToRefs() {
-    this.seedanceRefs.image = this.seedanceRefs.image.filter((r) => r.origen !== 'activo');
-    const scope = this.assetScope || 'product';
-    if (scope !== 'product' || !this.selectedAssetId) {
-      this.renderSeedanceRefs();
-      this.renderSeedanceAttachmentChips();
-      return;
-    }
+  ponerElemento(tipo, id) {
+    const el = this._buscarElemento(tipo, id);
+    if (!el) return;
+    if (this._elementosPuestos().has(String(el.id))) return;
+
     if (this._seedanceHasFrames()) {
-      this.selectedAssetId = '';
-      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para bloquear un producto.'));
-      this.renderAssetProductsCarousel();
-      this.renderSeedanceRefs();
-      this.renderSeedanceAttachmentChips();
+      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para usar un elemento.'));
       return;
     }
-    const product = (this.dbData.products || []).find((p) => String(p.id) === String(this.selectedAssetId));
-    const urls = (product && Array.isArray(product.image_urls) ? product.image_urls : [])
-      .filter(Boolean)
-      .slice(0, VideoView.SEEDANCE_PRODUCT_LOCK_IMAGES);
+    if (!el.imagenes.length) {
+      this._seedanceNotify(window.__('"{name}" no tiene imagen, así que no puede entrar como referencia.', { name: el.nombre }));
+      return;
+    }
+
     const libre = VideoView.SEEDANCE_REF_LIMITS.image - this.seedanceRefs.image.length;
-    if (urls.length && libre <= 0) {
-      this.selectedAssetId = '';
-      this._seedanceNotify(window.__('No cabe el producto: el grupo de imágenes ya está en su máximo.'));
-      this.renderAssetProductsCarousel();
-    } else {
-      urls.slice(0, Math.max(0, libre)).forEach((url) => {
-        this.seedanceRefs.image.push({
-          name: product.nombre_producto || window.__('Producto'),
-          url,
-          storagePath: null,
-          seconds: null,
-          origen: 'activo',
-          lock: true,
-          _assetId: product.id
-        });
+    if (libre <= 0) {
+      this._seedanceNotify(window.__('No cabe: el grupo de imágenes ya está en su máximo. Quita una referencia y vuelve a intentar.'));
+      return;
+    }
+    const urls = el.imagenes.slice(0, Math.min(VideoView.ELEMENTO_MAX_IMAGENES, libre));
+    urls.forEach((url) => {
+      this.seedanceRefs.image.push({
+        name: el.nombre,
+        url,
+        storagePath: null,
+        seconds: null,
+        origen: 'activo',
+        lock: el.def.lock,
+        _assetId: el.id,
+        _assetTipo: el.def.tipo,
+        _entityId: el.entityId
       });
+    });
+    if (el.imagenes.length > urls.length) {
+      this._seedanceNotify(window.__('De "{name}" solo cupieron {n} imagen(es).', { name: el.nombre, n: urls.length }));
     }
     this.renderSeedanceRefs();
     this.renderSeedanceAttachmentChips();
+    this.renderElementosFilas();
   }
+
+  /** Saca todas las referencias que vinieron de ese elemento. */
+  quitarElemento(id) {
+    const antes = this.seedanceRefs.image.length;
+    this.seedanceRefs.image = this.seedanceRefs.image.filter(
+      (r) => !(r.origen === 'activo' && String(r._assetId) === String(id))
+    );
+    if (this.seedanceRefs.image.length === antes) return;
+    this.renderSeedanceRefs();
+    this.renderSeedanceAttachmentChips();
+    this.renderElementosFilas();
+  }
+
 
   renderSeedanceRefs() {
     const tope = VideoView.SEEDANCE_REF_MAX_SECONDS;

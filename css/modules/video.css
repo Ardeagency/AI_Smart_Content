@@ -6478,3 +6478,137 @@ body.has-sidebar #app-container:has(.video-view-container) {
         grid-template-columns: repeat(4, 1fr);
     }
 }
+
+/* ==========================================================================
+   ELEMENTOS — el catálogo de la marca, una fila por tipo.
+
+   Reemplaza al "Stack de activos", que era un desplegable de alcance
+   (Producto / Servicio / Mundo de marca) más un carrusel del tipo elegido.
+   Ese desplegable escondía el catálogo detrás de una elección previa: para
+   ver si había personajes había que adivinar dónde estaban. En filas se ven
+   los cuatro tipos de una, que es lo que un panel de elementos tiene que
+   contestar antes de que le pregunten.
+
+   Se arrastran a las Imágenes del prompt. Tocarlos hace lo mismo: arrastrar
+   no existe con teclado y en táctil es un pulso fino.
+   ========================================================================== */
+.video-view-container .video-elementos-filas {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.video-view-container .video-elementos-fila-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 5px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-tertiary, rgba(255, 255, 255, 0.45));
+}
+.video-view-container .video-elementos-fila-label .aisc-ico {
+    width: 12px;
+    height: 12px;
+}
+
+/* Carrusel horizontal: la fila no se ensancha con el catálogo, scrollea. */
+.video-view-container .video-elementos-carrusel {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+}
+
+.video-view-container .video-elemento-tile {
+    flex: 0 0 auto;
+    width: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: #0f1012;
+    border: 1px solid var(--border-divider, #242424);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.58rem;
+    cursor: grab;
+    transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.video-view-container .video-elemento-tile:hover:not(:disabled) {
+    border-color: var(--video-accent, rgba(255, 255, 255, 0.35));
+    color: var(--text-primary);
+}
+.video-view-container .video-elemento-tile:active:not(:disabled) {
+    cursor: grabbing;
+}
+/* El que ya está puesto en el prompt se marca: sin esto, arrastrar dos veces
+   el mismo producto parece que no hizo nada. */
+.video-view-container .video-elemento-tile.is-puesto {
+    border-color: var(--video-accent, rgba(255, 255, 255, 0.5));
+    background: var(--video-accent-soft, rgba(255, 255, 255, 0.08));
+    color: var(--text-primary);
+}
+.video-view-container .video-elemento-tile.is-arrastrando {
+    opacity: 0.45;
+    transform: scale(0.96);
+}
+/* Sin imagen no hay nada que soltar en un grupo de imágenes. Se muestra
+   —existe en la marca— pero no finge ser arrastrable. */
+.video-view-container .video-elemento-tile.is-sin-imagen {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.video-view-container .video-elemento-thumb {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 4px;
+    background: #17181b;
+    display: block;
+}
+.video-view-container .video-elemento-thumb--vacia {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+.video-view-container .video-elemento-nombre {
+    width: 100%;
+    text-align: center;
+    line-height: 1.2;
+    /* Dos líneas y corta: los nombres largos rompían la altura de la fila. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.video-view-container .video-elementos-vacio {
+    margin: 0;
+    font-size: 0.66rem;
+    font-style: italic;
+    opacity: 0.5;
+    color: var(--text-muted);
+}
+
+/* --- La zona que recibe: el grupo de Imágenes del prompt --- */
+.video-view-container .seedance-ref-group.es-zona-drop {
+    border-radius: var(--radius-sm);
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+/* Mientras se arrastra, la zona se insinúa aunque el cursor no esté encima:
+   si no, hay que adivinar dónde soltar. */
+body.video-arrastrando-elemento .video-view-container .seedance-ref-group.es-zona-drop {
+    box-shadow: inset 0 0 0 1px var(--white-15, rgba(255, 255, 255, 0.15));
+}
+.video-view-container .seedance-ref-group.es-zona-drop.is-drop-activa {
+    background: var(--video-accent-soft, rgba(255, 255, 255, 0.08));
+    box-shadow: inset 0 0 0 1px var(--video-accent, rgba(255, 255, 255, 0.45));
+}

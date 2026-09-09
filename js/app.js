@@ -495,7 +495,7 @@ class App {
     r.register('/vera', veraLoader, auth);
 
     // ── Org: Video (Seedance 2.0 / KIE) ──
-    const videoLoader = this._lazy('VideoView', [...studioPrompt, '/js/views/VideoView.js']);
+    const videoLoader = this._lazy('VideoView', [...studioPrompt, '/js/services/BrandAssetsDataService.js', '/js/views/VideoView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/video', videoLoader, auth);
     r.register('/video', videoLoader, auth);
 
