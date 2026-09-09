@@ -1493,3 +1493,51 @@ describe('El selector de fotos: en el sitio, no flotando', () => {
     expect(css).not.toContain('video-elemento-galeria');
   });
 })
+
+describe('Los botones de la consola: sin iconos, plano y blanco', () => {
+  const html = VideoView.prototype.renderHTML.call({});
+  const css = fs.readFileSync(path.join(process.cwd(), 'css/modules/video.css'), 'utf8');
+  const regla = (sel) => {
+    const i = css.indexOf(sel + ' {');
+    return i === -1 ? '' : css.slice(i, css.indexOf('}', i));
+  };
+
+  test('ninguno de los dos lleva icono: la palabra sola es más clara', () => {
+    const forge = html.slice(html.indexOf('id="seedancePromptForge"'));
+    const send = html.slice(html.indexOf('id="seedancePromptSend"'));
+    expect(forge.slice(0, forge.indexOf('</button>'))).not.toContain('<i ');
+    expect(send.slice(0, send.indexOf('</button>'))).not.toContain('<i ');
+    // Y el repintado ya no toca ningún icono al cambiar de estado: el texto
+    // del botón es lo único que cambia.
+    const pintar = FUENTE.slice(FUENTE.indexOf('_pintarBotones() {'));
+    expect(pintar.slice(0, pintar.indexOf('\n  }'))).not.toContain('aisc-ico');
+  });
+
+  test('PRODUCIR va plano con el color más claro de la marca, no en degradado', () => {
+    // El degradado de marca es la firma del producto; gastarlo en un botón lo
+    // abarata. `--brand-color-light` lo calcula OrgBrandTheme ordenando la
+    // paleta de la org por luminosidad.
+    const r = regla('.video-view-container .video-director-console-zone .video-director-btn-generate');
+    expect(r).toContain('background: var(--brand-color-light');
+    expect(r).not.toContain('gradient');
+  });
+
+  test('PROMPT va blanco entero con texto negro', () => {
+    const r = regla('.video-view-container .video-director-btn-forge');
+    expect(r).toContain('background: #ffffff');
+    expect(r).toContain('color: #0b0b0d');
+  });
+
+  test('el switch de audio se enciende con el mismo color de marca', () => {
+    const r = regla('.video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track');
+    expect(r).toContain('var(--brand-color-light');
+  });
+
+  test('el brief ya no se resalta al enfocarlo', () => {
+    // Se escribe casi todo el tiempo, así que el anillo vivía encendido: no
+    // señalaba nada y competía con los dos botones.
+    const i = css.indexOf('.video-prompt-footer-card-inner.video-director-console:focus-within');
+    const r = css.slice(i, css.indexOf('}', i));
+    expect(r).not.toContain('rgba(255, 255, 255, 0.28)');
+  });
+})

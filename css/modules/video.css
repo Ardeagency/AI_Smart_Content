@@ -669,7 +669,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     color: var(--color-info);
 }
 .video-prompt-wrap .video-prompt-footer-card:focus-within::before {
-    opacity: 0.2;
+    opacity: 0;
 }
 .video-section-label {
     font-size: var(--font-size-sm);
@@ -5896,8 +5896,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
     transition: transform 0.18s ease;
 }
 
+/* Encendido con el color MÁS CLARO de la marca, el mismo que PRODUCIR: los
+   dos dicen "esto va a salir así", y con el gris neutro de antes el switch no
+   se leía como encendido. */
 .video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track {
-    background: var(--video-accent);
+    background: var(--brand-color-light, #FF6A1A);
 }
 
 .video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track .seedance-toggle-thumb {
@@ -6010,11 +6013,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
     transition: border-color 0.15s;
 }
 
+/* SIN resaltado al enfocar. El brief se escribe casi todo el tiempo, así que
+   el anillo vivía encendido: no señalaba nada y competía con los dos botones,
+   que son lo único que debe pesar en esta fila. El cursor ya dice dónde estás. */
 .video-view-container
   .video-director-console-zone.video-main-director
     .video-prompt-footer-card.video-prompt-footer-card-center
       .video-prompt-footer-card-inner.video-director-console:focus-within {
-    border-color: rgba(255, 255, 255, 0.28);
+    border-color: var(--glass-black-border);
 }
 
 /* ============================================================
@@ -6233,9 +6239,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
     /* Gradiente tipo "send" con el brand dinámico de la org. El respaldo es
        el gris neutro que usa el resto del módulo: el azul #1f3a8a→#0ea5e9
        que había aquí pintaba de azul el CTA de toda org sin color propio. */
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
+    /* PLANO, no degradado: el degradado de marca es la firma del producto y
+       gastarlo en un botón lo abarata. Va el color MÁS CLARO de la paleta de
+       la org (--brand-color-light, el que calcula OrgBrandTheme ordenando por
+       luminosidad), que es el que aguanta texto oscuro encima. */
+    background: var(--brand-color-light, #FF6A1A);
     border: none;
-    color: #ffffff;
+    color: #0b0b0d;
     font-weight: 600;
     font-size: 0.8rem;
     letter-spacing: 0.02em;
@@ -6243,7 +6253,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     transition: filter 0.15s ease, transform 0.15s ease;
 }
 .video-view-container .video-director-console-zone .video-director-btn-generate:hover:not(:disabled) {
-    filter: brightness(1.1);
+    filter: brightness(1.08);
     transform: translateY(-1px);
 }
 .video-view-container .video-director-console-zone .video-director-btn-generate:disabled {
@@ -6591,12 +6601,15 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
 .video-view-container .video-director-btn-forge {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-xs);
     padding: var(--spacing-xs) var(--spacing-md);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--accent-warm, var(--white-50));
-    background: var(--accent-warm-soft, var(--white-10));
-    color: var(--text-primary);
+    /* BLANCO ENTERO con texto negro: es el acto que gobierna la fila mientras
+       no hay prompt, y sobre este panel oscuro el blanco es lo que más pesa.
+       Sin icono — la palabra sola es más clara que una bombilla que hay que
+       interpretar. */
+    border: 1px solid #ffffff;
+    background: #ffffff;
+    color: #0b0b0d;
     font-size: var(--font-size-xs);
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -6604,10 +6617,11 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     transition: var(--transition);
 }
 .video-view-container .video-director-btn-forge:hover:not(:disabled) {
-    background: var(--white-15);
-    border-color: var(--white-50);
+    background: rgba(255, 255, 255, 0.88);
+    border-color: rgba(255, 255, 255, 0.88);
 }
-/* Ya forjado: mismo boton sin fuerza. No se pinta de otro color — se apaga. */
+/* Ya forjado baja a secundario: "Recrear" es una segunda oportunidad, no la
+   orden principal, y el blanco tiene que soltarlo para que PRODUCIR mande. */
 .video-view-container .video-director-btn-forge.is-secundario {
     border-color: var(--white-15);
     background: var(--white-8);
@@ -6617,8 +6631,10 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     opacity: 0.4;
     cursor: default;
 }
-.video-view-container .video-director-btn-forge.is-busy .aisc-ico {
-    animation: video-spin 0.8s linear infinite;
+/* Forjando: el botón se atenúa. El spinner colgaba de su icono, y el icono se
+   fue — la palabra ya cambia a "FORJANDO…", que dice más que un giro. */
+.video-view-container .video-director-btn-forge.is-busy {
+    opacity: 0.6;
 }
 
 /* PRODUCIR bloqueado hasta que haya prompt. Apagado no cambia de color: es el

@@ -543,8 +543,8 @@ class VideoView extends BaseView {
                         <input type="number" id="seedanceDuration" class="video-director-select seedance-duration-input" min="1" max="30" step="1" value="5" aria-label="${window.__('Duración en segundos')}">
                         <span class="seedance-duration-unit">s</span>
                       </div>
-                      <button type="button" class="video-director-btn-forge" id="seedancePromptForge" aria-label="${window.__('Forjar el prompt de producción')}" title="${window.__('Convertir lo escrito en el prompt de producción')}"><i class="aisc-ico aisc-ico--idea"></i><span>${window.__('PROMPT')}</span></button>
-                      <button type="button" class="video-director-btn-generate" id="seedancePromptSend" aria-label="${window.__('Producir la secuencia')}" title="${window.__('Primero forja el prompt con el botón PROMPT')}" data-state="production" disabled><i class="aisc-ico aisc-ico--play"></i><span>${window.__('PRODUCIR')}</span></button>
+                      <button type="button" class="video-director-btn-forge" id="seedancePromptForge" aria-label="${window.__('Forjar el prompt de producción')}" title="${window.__('Convertir lo escrito en el prompt de producción')}"><span>${window.__('PROMPT')}</span></button>
+                      <button type="button" class="video-director-btn-generate" id="seedancePromptSend" aria-label="${window.__('Producir la secuencia')}" title="${window.__('Primero forja el prompt con el botón PROMPT')}" data-state="production" disabled><span>${window.__('PRODUCIR')}</span></button>
                     </div>
 
                   </div>
@@ -2557,7 +2557,6 @@ class VideoView extends BaseView {
   _pintarBotones() {
     if (this.forgeBtn) {
       const etiqueta = this.forgeBtn.querySelector('span');
-      const icono = this.forgeBtn.querySelector('i');
       this.forgeBtn.disabled = this._forjando || this._generating;
       this.forgeBtn.classList.toggle('is-busy', this._forjando);
       this.forgeBtn.classList.toggle('is-secundario', this.forjado && !this._forjando);
@@ -2565,9 +2564,6 @@ class VideoView extends BaseView {
         etiqueta.textContent = this._forjando
           ? window.__('FORJANDO…')
           : this.forjado ? window.__('RECREAR') : window.__('PROMPT');
-      }
-      if (icono) {
-        icono.className = `aisc-ico ${this._forjando ? 'aisc-ico--loader' : this.forjado ? 'aisc-ico--refresh' : 'aisc-ico--idea'}`;
       }
       this.forgeBtn.title = this.forjado
         ? window.__('Volver a forjar el prompt desde tu intención')
