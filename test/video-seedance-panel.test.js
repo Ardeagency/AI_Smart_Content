@@ -116,22 +116,36 @@ describe('Referencias multimodales — cupo por grupo', () => {
 });
 
 describe('Referencias multimodales — duración medida', () => {
-  test('rechaza el que pasa del tope y nombra los segundos reales', async () => {
+  test('un archivo largo pero dentro del total entra: el tope es del GRUPO', async () => {
+    // Antes se rechazaba por archivo a los 15s. La doc pone el tope sobre el
+    // total: "the total length of the three videos must not exceed 30 seconds".
+    // Un video de 21s era válido y se bloqueaba.
     const { v, avisos } = nuevaVista();
 
     await v.addSeedanceRefs('video', [archivo('largo.mp4', 'video/mp4', 21.4)]);
 
-    expect(v.seedanceRefs.video).toHaveLength(0);
-    expect(avisos.join(' ')).toMatch(/"largo\.mp4" dura 21s y el tope es 15s/);
+    expect(v.seedanceRefs.video).toHaveLength(1);
+    expect(avisos.join(' ')).toBe('');
+  });
+
+  test('rechaza el que hace pasar al GRUPO del total, y dice cuánto lleva', async () => {
+    // Y al revés: tres de 15s suman 45 y antes pasaban los tres.
+    const { v, avisos } = nuevaVista();
+    await v.addSeedanceRefs('video', [archivo('uno.mp4', 'video/mp4', 20)]);
+
+    await v.addSeedanceRefs('video', [archivo('dos.mp4', 'video/mp4', 15)]);
+
+    expect(v.seedanceRefs.video).toHaveLength(1);
+    expect(avisos.join(' ')).toMatch(/el grupo ya suma 20s/);
   });
 
   test('acepta justo en el tope', async () => {
     const { v } = nuevaVista();
 
-    await v.addSeedanceRefs('audio', [archivo('justo.mp3', 'audio/mpeg', 15)]);
+    await v.addSeedanceRefs('audio', [archivo('justo.mp3', 'audio/mpeg', 30)]);
 
     expect(v.seedanceRefs.audio).toHaveLength(1);
-    expect(v.seedanceRefs.audio[0].seconds).toBe(15);
+    expect(v.seedanceRefs.audio[0].seconds).toBe(30);
   });
 
   test('si el navegador no pudo medir, deja pasar en vez de bloquear a ciegas', async () => {
@@ -153,27 +167,57 @@ describe('Referencias multimodales — duración medida', () => {
   });
 });
 
-describe('Frames Clave y Referencias son excluyentes', () => {
-  test('con referencias puestas, el slot de frame no abre el selector', () => {
-    const { v, avisos } = nuevaVista();
+describe('Frames Clave y Referencias SÍ se combinan', () => {
+  // La exclusividad venía de Kling y se heredó al portar la página; el código
+  // la aplicaba "tal como promete el sidebar", que es lo mismo que decir que
+  // nadie la comprobó. La doc de Seedance 2.5 la desmiente: first_frame_url,
+  // last_frame_url y reference_*_urls son opcionales e independientes, y su
+  // propio ejemplo de request los manda juntos.
+  test('con referencias puestas, el slot de frame SÍ abre el selector', () => {
+    const { v } = nuevaVista();
     v.seedanceRefs.image.push({ name: 'a.jpg', url: 'u', storagePath: 'p' });
     let abrio = false;
     v.container.querySelector = () => ({ click: () => { abrio = true; } });
 
     v.openSeedanceFramePicker('first');
 
-    expect(abrio).toBe(false);
-    expect(avisos.join(' ')).toMatch(/excluyentes/);
+    expect(abrio).toBe(true);
   });
 
-  test('con frames puestos, añadir referencias no sube nada', async () => {
+  test('con frames puestos, añadir referencias sube normal', async () => {
     const { v, avisos } = nuevaVista();
     v.seedanceFrames.first = { url: 'https://cdn.test/f.jpg', storagePath: 'p' };
 
     await v.addSeedanceRefs('image', [archivo('foto.png', 'image/png')]);
 
-    expect(v.seedanceRefs.image).toHaveLength(0);
-    expect(avisos.join(' ')).toMatch(/excluyentes/);
+    expect(v.seedanceRefs.image).toHaveLength(1);
+    expect(avisos.join(' ')).not.toMatch(/excluyente/);
+  });
+
+  test('con frames puestos, un elemento entra normal', async () => {
+    const { v } = nuevaVista();
+    v.seedanceFrames.first = { url: 'https://cdn.test/f.jpg', storagePath: 'p' };
+    v.dbData.products = [{ id: 'p1', nombre_producto: 'Botella', entity_id: 'e1', image_urls: ['https://cdn.test/a.jpg'] }];
+
+    v.ponerElemento('product', 'p1');
+
+    expect(v.seedanceRefs.image).toHaveLength(1);
+  });
+
+  test('el payload puede llevar frames Y referencias a la vez', () => {
+    const { v } = nuevaVista();
+    v.seedanceFrames.first = { url: 'https://cdn.test/ini.jpg', storagePath: 'p' };
+    v.seedanceRefs.image.push({ name: 'r.jpg', url: 'https://cdn.test/r.jpg', storagePath: 'p2' });
+
+    const payload = v.buildSeedancePayload();
+
+    expect(payload.first_frame_url).toBe('https://cdn.test/ini.jpg');
+    expect(payload.reference_image_urls).toEqual(['https://cdn.test/r.jpg']);
+  });
+
+  test('ya no queda ni un aviso de exclusividad en el código', () => {
+    expect(FUENTE).not.toContain('son excluyentes');
+    expect(FUENTE).not.toContain('_seedanceHasFrames');
   });
 });
 
@@ -196,7 +240,7 @@ describe('El payload lleva lo adjuntado', () => {
 
     const payload = v.buildSeedancePayload();
 
-    expect(payload.duration).toBe('8');
+    expect(payload.duration).toBe(8);
     expect(payload.resolution).toBe('1080p');
     expect(payload.aspect_ratio).toBe('9:16');
     expect(payload.generate_audio).toBe(true);
@@ -214,7 +258,7 @@ describe('El payload lleva lo adjuntado', () => {
 
     expect(payload.first_frame_url).toBe('https://cdn.test/frames/ini.jpg');
     expect(payload.last_frame_url).toBeNull();
-    expect(payload.reference_images).toEqual([]);
+    expect(payload.reference_image_urls).toEqual([]);
   });
 
   test('con referencias van sus URLs públicas y ningún frame', async () => {
@@ -224,9 +268,9 @@ describe('El payload lleva lo adjuntado', () => {
 
     const payload = v.buildSeedancePayload();
 
-    expect(payload.reference_images).toEqual(['https://cdn.test/images/ref.jpg']);
-    expect(payload.reference_audios).toEqual(['https://cdn.test/audios/vibe.mp3']);
-    expect(payload.reference_videos).toEqual([]);
+    expect(payload.reference_image_urls).toEqual(['https://cdn.test/images/ref.jpg']);
+    expect(payload.reference_audio_urls).toEqual(['https://cdn.test/audios/vibe.mp3']);
+    expect(payload.reference_video_urls).toEqual([]);
     expect(payload.first_frame_url).toBeNull();
     expect(payload.last_frame_url).toBeNull();
   });
@@ -302,15 +346,15 @@ describe('Escenas — producciones previas como referencia', () => {
     expect(borradosDeStorage).toEqual([]);
   });
 
-  test('con frames anclados una escena no se puede elegir', () => {
-    const { v, avisos } = nuevaVista();
+  test('con frames anclados una escena SÍ se puede elegir', () => {
+    // Frames y referencias se combinan (doc de Seedance 2.5).
+    const { v } = nuevaVista();
     v.seedanceFrames.first = { url: 'https://cdn.test/f.jpg', storagePath: 'p' };
-    v.videoProductions = [produccion('p1', 'image')];
+    v.videoProductions = [{ id: 'p-1', media_url: 'https://cdn.test/p1.png', isImage: true }];
 
-    v.toggleProduccion('p1');
+    v.toggleProduccion('p-1');
 
-    expect(v.selectedProductionIds.size).toBe(0);
-    expect(avisos.join(' ')).toMatch(/excluyentes/);
+    expect(v.seedanceRefs.image).toHaveLength(1);
   });
 });
 
@@ -444,7 +488,7 @@ describe('Elementos — el catálogo de la marca, en filas por tipo', () => {
 
     expect(payload.product_lock_urls).toEqual(['https://cdn.test/a.jpg', 'https://cdn.test/b.jpg']);
     // Ocupan cupo como cualquier imagen: para KIE no son un campo aparte.
-    expect(payload.reference_images).toEqual(payload.product_lock_urls);
+    expect(payload.reference_image_urls).toEqual(payload.product_lock_urls);
   });
 
   test('el linaje sale del PRIMER elemento puesto', () => {
@@ -464,15 +508,17 @@ describe('Elementos — el catálogo de la marca, en filas por tipo', () => {
     expect(v._resolveSelectedEntityId()).toBeNull();
   });
 
-  test('con frames anclados el elemento se rechaza y lo dice', () => {
+  test('con frames anclados el elemento entra igual', () => {
+    // Se combinan: la doc de Seedance 2.5 declara frames y referencias
+    // opcionales e independientes.
     const { v, avisos } = nuevaVista();
     conCatalogo(v);
     v.seedanceFrames.first = { url: 'https://cdn.test/f.jpg', storagePath: 'p' };
 
     v.ponerElemento('product', 'prod-1');
 
-    expect(v.seedanceRefs.image).toHaveLength(0);
-    expect(avisos.join(' ')).toMatch(/excluyentes/);
+    expect(v.seedanceRefs.image).toHaveLength(2);
+    expect(avisos.join(' ')).toBe('');
   });
 });
 
@@ -761,17 +807,17 @@ describe('Producciones — sirven de frame o de referencia', () => {
     expect(avisos.join(' ')).toMatch(/es una imagen/);
   });
 
-  test('con referencias puestas, anclar un frame se rechaza', () => {
-    // Frames y referencias siguen siendo excluyentes: dejarlo pasar produce un
-    // estado que KIE rechaza diez minutos después.
+  test('con referencias puestas, anclar un frame funciona igual', () => {
     const { v, avisos } = nuevaVista();
     conProducciones(v);
     v.seedanceRefs.image = [{ name: 'r', url: 'u', storagePath: 'p', origen: 'manual' }];
 
     v.ponerProduccionEnFrame('first', 'img-1');
 
-    expect(v.seedanceFrames.first).toBeNull();
-    expect(avisos.join(' ')).toMatch(/excluyentes/);
+    expect(v.seedanceFrames.first.url).toBe('https://cdn.test/foto.jpg');
+    // Y la referencia que ya estaba sigue ahí: no se sacrifica una por la otra.
+    expect(v.seedanceRefs.image).toHaveLength(1);
+    expect(avisos.join(' ')).toBe('');
   });
 
   test('soltarla en las referencias hace lo mismo que tocarla', () => {
@@ -855,5 +901,71 @@ describe('Un adjunto se ve en un solo sitio', () => {
   test('las secciones del panel ya no llevan párrafo de ayuda', () => {
     const panel = html.slice(html.indexOf('data-sidebar-panel="elementos"'), html.indexOf('data-sidebar-panel="enfoque"'));
     expect(panel).not.toContain('video-sidebar-section-hint');
+  });
+});
+
+describe('El contrato de Seedance 2.5, tal como lo dice la doc', () => {
+  // Lo que la UI promete tiene que ser lo que la API acepta. Esta página vivio
+  // un mes con una regla de Kling heredada ("frames y referencias son
+  // excluyentes") que Seedance no pide, y con topes inventados. Estos asserts
+  // son la doc puesta en codigo.
+  const { v } = nuevaVista({
+    '#seedanceDuration': { value: '12' },
+    '#seedanceResolution': { value: '1080p' },
+    '#seedanceAspectRatio': { value: 'adaptive' },
+    '#seedanceGenerateAudio': { checked: true },
+    '#seedanceWebSearchToggle': { getAttribute: () => 'true' }
+  });
+  const payload = v.buildSeedancePayload();
+
+  test('el modelo se nombra exacto: un aproximado devuelve 404', () => {
+    expect(VideoView.SEEDANCE_MODEL).toBe('bytedance/seedance-2-5');
+    expect(payload.model).toBe('bytedance/seedance-2-5');
+  });
+
+  test('los campos se llaman como en la doc, no como se nos ocurrio', () => {
+    // Un campo que KIE no reconoce lo ignora EN SILENCIO: el video sale sin
+    // las referencias y nadie se entera hasta verlo.
+    for (const campo of ['first_frame_url', 'last_frame_url', 'reference_image_urls',
+      'reference_video_urls', 'reference_audio_urls', 'generate_audio',
+      'resolution', 'aspect_ratio', 'duration', 'web_search']) {
+      expect(Object.keys(payload)).toContain(campo);
+    }
+    // Los nombres viejos ya no salen: si sobrevive uno, se manda dos veces lo
+    // mismo con dos nombres y uno de los dos se pierde.
+    for (const viejo of ['reference_images', 'reference_videos', 'reference_audios']) {
+      expect(Object.keys(payload)).not.toContain(viejo);
+    }
+  });
+
+  test('duration viaja como number, no como texto', () => {
+    expect(payload.duration).toBe(12);
+    expect(typeof payload.duration).toBe('number');
+  });
+
+  test('la duracion que ofrece la UI cabe en el rango de la doc (-1..30)', () => {
+    const html = VideoView.prototype.renderHTML.call({});
+    const input = html.slice(html.indexOf('id="seedanceDuration"'));
+    const max = Number(/max="(\d+)"/.exec(input)[1]);
+    // El tope estaba en 15 y la doc permite 30: se ofrecia la mitad del modelo.
+    expect(max).toBe(30);
+  });
+
+  test('las resoluciones y los ratios son los del enum, sin inventos', () => {
+    const html = VideoView.prototype.renderHTML.call({});
+    const opciones = (id) => {
+      const trozo = html.slice(html.indexOf(`id="${id}"`));
+      return [...trozo.slice(0, trozo.indexOf('</select>')).matchAll(/value="([^"]+)"/g)].map((m) => m[1]);
+    };
+    expect(opciones('seedanceResolution')).toEqual(['480p', '720p', '1080p']);
+    expect(opciones('seedanceAspectRatio').sort())
+      .toEqual(['1:1', '16:9', '21:9', '3:4', '4:3', '9:16', 'adaptive'].sort());
+  });
+
+  test('el tope de las referencias de tiempo es el TOTAL del grupo', () => {
+    // "the total length of the three videos must not exceed 30 seconds"
+    expect(VideoView.SEEDANCE_REF_MAX_TOTAL_SECONDS).toBe(30);
+    expect(VideoView.SEEDANCE_REF_LIMITS.video).toBe(3);
+    expect(VideoView.SEEDANCE_REF_LIMITS.audio).toBe(3);
   });
 });

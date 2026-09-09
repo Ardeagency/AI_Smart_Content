@@ -12,9 +12,15 @@
  *    (kie-task-finalize, dentro de pollTask), registro en system_ai_outputs
  *    y el contexto de marca (loadBrandData / buildBrandContextForAPI).
  *  - Cableado: Frames Clave y Referencias Multimodales suben a Storage, se
- *    validan (cupo por grupo y duración MEDIDA, no supuesta), se muestran
- *    como chips junto al prompt y salen en buildSeedancePayload(). Frames y
- *    referencias son excluyentes, tal como promete el sidebar.
+ *    validan (cupo por grupo y duración MEDIDA, no supuesta) y salen en
+ *    buildSeedancePayload().
+ *
+ *  - FRAMES Y REFERENCIAS **SÍ SE COMBINAN** (corregido 2026-09-09). La regla
+ *    de exclusividad venía de Kling y se heredó al portar la página; el código
+ *    la aplicaba "tal como promete el sidebar", que es lo mismo que decir que
+ *    nadie la comprobó. La doc de Seedance 2.5 la desmiente: first_frame_url,
+ *    last_frame_url y reference_*_urls son todos opcionales e independientes,
+ *    y su propio ejemplo de request los manda JUNTOS.
  *  - Pendiente: el endpoint de creación. No existe
  *    functions/seedance-video-create.js, así que SEEDANCE_BACKEND_READY es
  *    false y el botón PRODUCIR avisa en pantalla en vez de disparar una
@@ -40,6 +46,12 @@ class VideoView extends BaseView {
     return '/.netlify/functions/seedance-video-create';
   }
   /**
+   * El modelo, tal como lo nombra KIE. Va aquí y no en la función porque la
+   * función todavía no existe y este dato ya está confirmado por la doc: el
+   * identificador es exacto, y un nombre aproximado devuelve 404.
+   */
+  static get SEEDANCE_MODEL() { return 'bytedance/seedance-2-5'; }
+  /**
    * GET: estado de la tarea. El archivo conserva el nombre `kling-video-status`
    * por historia, pero es el poller genérico de cualquier taskId de kie.ai
    * (lo comparte Studio en js/living.js). No renombrar sin migrar ambos.
@@ -59,8 +71,14 @@ class VideoView extends BaseView {
   static get SEEDANCE_REF_LIMITS() {
     return { image: 9, video: 3, audio: 3 };
   }
-  /** Duracion maxima de un video/audio de referencia, en segundos. */
-  static get SEEDANCE_REF_MAX_SECONDS() { return 15; }
+  /**
+   * Tope de duración de las referencias. La doc de Seedance 2.5 lo pone sobre
+   * el TOTAL del grupo ("the total length of the three videos must not exceed
+   * 30 seconds"), no sobre cada archivo. Antes se rechazaba por archivo a los
+   * 15s: se bloqueaba un video de 20s que era perfectamente válido, y en
+   * cambio pasaban tres de 15s que suman 45 y KIE sí rechaza.
+   */
+  static get SEEDANCE_REF_MAX_TOTAL_SECONDS() { return 30; }
   /** Bucket donde viven los adjuntos de referencia. */
   static get SEEDANCE_STORAGE_BUCKET() { return 'production-outputs'; }
   /**
@@ -434,7 +452,7 @@ class VideoView extends BaseView {
                       </div>
 
                       <div class="dr-grupo dr-grupo--refs">
-                        <span class="dr-titulo" title="${window.__('Imágenes, videos y audios que la IA usa como inspiración. Mutuamente excluyentes con Frames Clave.')}">${window.__('Referencias Multimodales')}</span>
+                        <span class="dr-titulo" title="${window.__('Imágenes, videos y audios que la IA usa como inspiración. Se combinan con los Frames Clave.')}">${window.__('Referencias Multimodales')}</span>
                         <input type="file" id="seedanceRefImgUpload" accept="image/jpeg,image/png,image/jpg,image/webp" multiple style="display: none;" aria-hidden="true">
                         <input type="file" id="seedanceRefVidUpload" accept="video/mp4,video/quicktime,video/webm" multiple style="display: none;" aria-hidden="true">
                         <input type="file" id="seedanceRefAudUpload" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-m4a,audio/mp4,audio/aac" multiple style="display: none;" aria-hidden="true">
@@ -449,7 +467,7 @@ class VideoView extends BaseView {
 
                         <div class="seedance-ref-group">
                           <div class="seedance-ref-group-header">
-                            <h4 class="video-prompt-panel-title">${window.__('Videos')} <span class="seedance-ref-limit" id="seedanceRefVidCount">0 / 3 · ≤15s</span></h4>
+                            <h4 class="video-prompt-panel-title">${window.__('Videos')} <span class="seedance-ref-limit" id="seedanceRefVidCount">0 / 3 · total ≤30s</span></h4>
                             <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefVid" aria-label="${window.__('Añadir videos de referencia')}"><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
                           </div>
                           <div class="seedance-ref-list" id="seedanceRefVidList" aria-live="polite"></div>
@@ -457,7 +475,7 @@ class VideoView extends BaseView {
 
                         <div class="seedance-ref-group">
                           <div class="seedance-ref-group-header">
-                            <h4 class="video-prompt-panel-title">${window.__('Audios')} <span class="seedance-ref-limit" id="seedanceRefAudCount">0 / 3 · ≤15s</span></h4>
+                            <h4 class="video-prompt-panel-title">${window.__('Audios')} <span class="seedance-ref-limit" id="seedanceRefAudCount">0 / 3 · total ≤30s</span></h4>
                             <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefAud" aria-label="${window.__('Añadir audios de referencia')}"><i class="aisc-ico aisc-ico--add" aria-hidden="true"></i></button>
                           </div>
                           <div class="seedance-ref-list" id="seedanceRefAudList" aria-live="polite"></div>
@@ -509,7 +527,7 @@ class VideoView extends BaseView {
                         <i class="aisc-ico video-prompt-aspect-chevron aisc-ico--chevron-down" aria-hidden="true"></i>
                       </div>
                       <div class="video-prompt-duration-wrap seedance-duration-wrap">
-                        <input type="number" id="seedanceDuration" class="video-director-select seedance-duration-input" min="4" max="15" step="1" value="5" aria-label="${window.__('Duración en segundos')}">
+                        <input type="number" id="seedanceDuration" class="video-director-select seedance-duration-input" min="1" max="30" step="1" value="5" aria-label="${window.__('Duración en segundos')}">
                         <span class="seedance-duration-unit">s</span>
                       </div>
                       <button type="button" class="video-director-btn-generate" id="seedancePromptSend" aria-label="${window.__('Producir la secuencia')}" data-state="production"><i class="aisc-ico aisc-ico--play"></i><span>${window.__('PRODUCIR')}</span></button>
@@ -626,7 +644,7 @@ class VideoView extends BaseView {
               <button type="button" class="video-sidebar-help" id="seedanceSidebarHelpBtn" aria-label="${window.__('Ayuda Seedance')}" title="${window.__('Ayuda Seedance')}">?</button>
               <div class="video-sidebar-help-popover" id="seedanceSidebarHelpPopover" role="dialog" aria-label="${window.__('Ayuda Seedance')}">
                 <h4>${window.__('Seedance 2.0 — secuencias narrativas')}</h4>
-                <p><strong>${window.__('Recursos')}</strong>${window.__(': el material que le entregas vive junto al prompt, no aquí. Frames Clave ancla el inicio y el cierre; las Referencias Multimodales dan estilo, movimiento y vibe (hasta 9 imágenes, 3 videos y 3 audios). Frames y referencias no se combinan.')}</p>
+                <p><strong>${window.__('Recursos')}</strong>${window.__(': el material que le entregas vive junto al prompt, no aquí. Frames Clave ancla el inicio y el cierre; las Referencias Multimodales dan estilo, movimiento y vibe (hasta 9 imágenes, 3 videos y 3 audios). Se pueden usar a la vez.')}</p>
                 <p><strong>${window.__('Cinematografía')}</strong>${window.__(': cómo se ve. Cámara, movimiento, luz y mood no son parámetros de la API. Tocar una opción escribe su variable en el prompt, donde esté el cursor, y ahí queda a la vista; una Receta escribe todas de golpe.')}</p>
                 <p><strong>${window.__('Contexto')}</strong>${window.__(': a qué campaña pertenece la secuencia, a quién le habla y qué producto no debe cambiar.')}</p>
               </div>
@@ -771,10 +789,6 @@ class VideoView extends BaseView {
       consoleAdd.dataset.boundAdd = '1';
       consoleAdd.addEventListener('click', (e) => {
         e.preventDefault();
-        if (this._seedanceHasFrames()) {
-          this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para añadir referencias.'));
-          return;
-        }
         consoleInput.click();
       });
       consoleInput.addEventListener('change', async (e) => {
@@ -1199,10 +1213,6 @@ class VideoView extends BaseView {
     }
   }
 
-  _seedanceHasFrames() {
-    return !!(this.seedanceFrames.first || this.seedanceFrames.last);
-  }
-
   _seedanceRefCount() {
     return ['image', 'video', 'audio']
       .reduce((n, kind) => n + (this.seedanceRefs[kind] || []).length, 0);
@@ -1276,10 +1286,6 @@ class VideoView extends BaseView {
   // ── Frames Clave ────────────────────────────────────────────────────────
 
   openSeedanceFramePicker(slot) {
-    if (this._seedanceRefCount() > 0) {
-      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita las referencias para anclar frames.'));
-      return;
-    }
     const input = this.container.querySelector('#seedanceFrameUpload');
     if (!input) return;
     this._pendingFrameSlot = slot;
@@ -1345,10 +1351,6 @@ class VideoView extends BaseView {
   // ── Referencias multimodales ────────────────────────────────────────────
 
   openSeedanceRefPicker(kind) {
-    if (this._seedanceHasFrames()) {
-      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para añadir referencias.'));
-      return;
-    }
     const inputs = { image: '#seedanceRefImgUpload', video: '#seedanceRefVidUpload', audio: '#seedanceRefAudUpload' };
     const input = this.container.querySelector(inputs[kind]);
     if (input) input.click();
@@ -1360,10 +1362,6 @@ class VideoView extends BaseView {
    * y deja huerfanos en el bucket si el usuario se va a mitad.
    */
   async addSeedanceRefs(kind, files) {
-    if (this._seedanceHasFrames()) {
-      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para añadir referencias.'));
-      return;
-    }
     const limite = VideoView.SEEDANCE_REF_LIMITS[kind];
     const libre = Math.max(0, limite - (this.seedanceRefs[kind] || []).length);
     if (libre === 0) {
@@ -1379,10 +1377,15 @@ class VideoView extends BaseView {
       let seconds = null;
       if (kind === 'video' || kind === 'audio') {
         seconds = await this._measureMediaSeconds(file, kind);
-        const tope = VideoView.SEEDANCE_REF_MAX_SECONDS;
-        if (seconds != null && seconds > tope) {
-          this._seedanceNotify(window.__('"{name}" dura {seconds}s y el tope es {tope}s. Recórtalo antes de subirlo.', {
-            name: file.name, seconds: Math.round(seconds), tope
+        const tope = VideoView.SEEDANCE_REF_MAX_TOTAL_SECONDS;
+        // El tope es del GRUPO, no del archivo: se mide contra lo que ya hay.
+        // Si el navegador no pudo medir alguno, se deja pasar a propósito —
+        // bloquear por una medición fallida es peor que dejar que KIE responda
+        // con su propio mensaje.
+        const yaHay = (this.seedanceRefs[kind] || []).reduce((n, r) => n + (r.seconds || 0), 0);
+        if (seconds != null && yaHay + seconds > tope) {
+          this._seedanceNotify(window.__('"{name}" dura {seconds}s y el grupo ya suma {yaHay}s: el total no puede pasar de {tope}s.', {
+            name: file.name, seconds: Math.round(seconds), yaHay: Math.round(yaHay), tope
           }));
           continue;
         }
@@ -1578,10 +1581,6 @@ class VideoView extends BaseView {
     if (this.selectedProductionIds.has(id)) {
       this.selectedProductionIds.delete(id);
     } else {
-      if (this._seedanceHasFrames()) {
-        this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para usar una escena como referencia.'));
-        return;
-      }
       this.selectedProductionIds.add(id);
     }
     this.syncProductionSelectionToRefs();
@@ -1861,18 +1860,14 @@ class VideoView extends BaseView {
 
   /**
    * Ancla una producción en un slot de frame. Frames y referencias siguen
-   * siendo excluyentes: si ya hay referencias, se avisa en vez de dejar la
-   * secuencia en un estado que KIE rechaza.
+   * combinables con las referencias: la doc de Seedance 2.5 los declara
+   * opcionales e independientes, y su propio ejemplo los manda juntos.
    */
   ponerProduccionEnFrame(slot, id) {
     const p = this.videoProductions.find((x) => String(x.id) === String(id));
     if (!p || !p.media_url || !slot) return;
     if (!p.isImage || p.isVideo) {
       this._seedanceNotify(window.__('Un Frame Clave es una imagen: esa producción es un video.'));
-      return;
-    }
-    if (this._seedanceRefCount() > 0) {
-      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita las referencias para anclar frames.'));
       return;
     }
     // La producción vive en su bucket, no en el nuestro: se guarda sin
@@ -1899,10 +1894,6 @@ class VideoView extends BaseView {
     if (!el) return;
     if (this._elementosPuestos().has(String(el.id))) return;
 
-    if (this._seedanceHasFrames()) {
-      this._seedanceNotify(window.__('Frames Clave y Referencias Multimodales son excluyentes: quita los frames para usar un elemento.'));
-      return;
-    }
     if (!el.imagenes.length) {
       this._seedanceNotify(window.__('"{name}" no tiene imagen, así que no puede entrar como referencia.', { name: el.nombre }));
       return;
@@ -1947,11 +1938,11 @@ class VideoView extends BaseView {
 
 
   renderSeedanceRefs() {
-    const tope = VideoView.SEEDANCE_REF_MAX_SECONDS;
+    const tope = VideoView.SEEDANCE_REF_MAX_TOTAL_SECONDS;
     const grupos = [
       { kind: 'image', list: '#seedanceRefImgList', count: '#seedanceRefImgCount', sufijo: '', icono: 'aisc-ico--image' },
-      { kind: 'video', list: '#seedanceRefVidList', count: '#seedanceRefVidCount', sufijo: ` · ≤${tope}s`, icono: 'aisc-ico--film' },
-      { kind: 'audio', list: '#seedanceRefAudList', count: '#seedanceRefAudCount', sufijo: ` · ≤${tope}s`, icono: 'aisc-ico--music' }
+      { kind: 'video', list: '#seedanceRefVidList', count: '#seedanceRefVidCount', sufijo: ` · ${window.__('total')} ≤${tope}s`, icono: 'aisc-ico--film' },
+      { kind: 'audio', list: '#seedanceRefAudList', count: '#seedanceRefAudCount', sufijo: ` · ${window.__('total')} ≤${tope}s`, icono: 'aisc-ico--music' }
     ];
     grupos.forEach((g) => {
       const items = this.seedanceRefs[g.kind] || [];
@@ -2231,10 +2222,16 @@ class VideoView extends BaseView {
    * Lee los controles del Director Console y del sidebar de Seedance y los
    * deja en el shape que espera la funcion de creacion.
    *
-   * OJO al cablear: esto es lo que la UI SABE hoy, no el contrato final de
-   * KIE. Los nombres de campo (first_frame_url, reference_images…) son
-   * nuestros; al escribir seedance-video-create.js hay que mapearlos a los
-   * que KIE reconoce — un campo que KIE no entiende lo ignora en silencio.
+   * LOS NOMBRES SON LOS DE LA DOC de Seedance 2.5 (`bytedance/seedance-2-5`),
+   * no inventados: `first_frame_url`, `last_frame_url`, `reference_image_urls`,
+   * `reference_video_urls`, `reference_audio_urls`, `generate_audio`,
+   * `resolution`, `aspect_ratio`, `duration`, `web_search`. Así la función de
+   * creación reenvía en vez de traducir — un campo que KIE no reconoce lo
+   * ignora EN SILENCIO, y ese es el fallo que no se ve hasta ver el resultado.
+   *
+   * Lo que NO es de la API y hay que resolver antes de mandar: `direction`,
+   * `product_lock_urls`, `brand_context`, `campaign`, `audience` e `intencion`
+   * van al cocinado del prompt, no al body de la tarea.
    */
   buildSeedancePayload() {
     const val = (sel, fallback) => {
@@ -2261,7 +2258,11 @@ class VideoView extends BaseView {
       prompt: window.StudioDireccion.expandirVariables(this.catalogo, intencion).trim(),
       intencion,
       variables: window.StudioDireccion.leerVariables(intencion),
-      duration: val('#seedanceDuration', '5'),
+      // La doc pide number, no string: `duration` es Range -1..30 (-1 = que lo
+      // decida el modelo). Mandarlo como texto es de los campos que se ignoran
+      // en silencio.
+      duration: Number(val('#seedanceDuration', '5')),
+      model: VideoView.SEEDANCE_MODEL,
       resolution: val('#seedanceResolution', '720p'),
       aspect_ratio: val('#seedanceAspectRatio', '16:9'),
       // Un solo control para el audio. Antes había dos —el switch del sidebar y
@@ -2273,14 +2274,14 @@ class VideoView extends BaseView {
       web_search: pressed('#seedanceWebSearchToggle'),
       first_frame_url: this.seedanceFrames.first?.url || null,
       last_frame_url: this.seedanceFrames.last?.url || null,
-      reference_images: this.seedanceRefs.image.map((r) => r.url),
-      // Subconjunto de reference_images que NO debe alterarse (Stack de
-      // activos). Van ademas en reference_images porque para KIE ocupan
-      // cupo como cualquier otra imagen; el lock es una instruccion del
-      // prompt, no un campo aparte de la API.
+      reference_image_urls: this.seedanceRefs.image.map((r) => r.url),
+      reference_video_urls: this.seedanceRefs.video.map((r) => r.url),
+      reference_audio_urls: this.seedanceRefs.audio.map((r) => r.url),
+      // Subconjunto de reference_image_urls que NO debe alterarse (Elementos).
+      // Van ademas en reference_image_urls porque para KIE ocupan cupo como
+      // cualquier otra imagen; el lock es una instruccion del prompt, no un
+      // campo de la API.
       product_lock_urls: this.seedanceRefs.image.filter((r) => r.lock).map((r) => r.url),
-      reference_videos: this.seedanceRefs.video.map((r) => r.url),
-      reference_audios: this.seedanceRefs.audio.map((r) => r.url),
       // Ritmo, arco, transiciones, mood y realismo YA NO viajan aparte: son
       // bloques del catálogo y viven escritos dentro de `prompt`, en el sitio
       // donde el director los puso. Mandarlos también como objeto le daría a
