@@ -335,7 +335,13 @@ class App {
 
     // ── Org: Predictor (simular al publico antes de gastar en el) ──
     // predictor.css tiene todas sus clases namespaced .pred-* → route-split seguro.
-    const predictorLoader = this._lazy('PredictorView', ['/js/views/PredictorView.js'], ['/css/modules/predictor.css']);
+    const predictorLoader = this._lazy('PredictorView', [
+      // El mapa del mundo va antes que la vista: `PredictorView` lo instancia al
+      // abrir una corrida con grafo, asi que tiene que estar ya en `window`.
+      '/js/views/predictor/grafo.js',
+      '/js/views/predictor/mapa.js',
+      '/js/views/PredictorView.js',
+    ], ['/css/modules/predictor.css']);
     r.register('/org/:orgIdShort/:orgNameSlug/predictor', predictorLoader, auth);
     r.register('/predictor', predictorLoader, auth);
 

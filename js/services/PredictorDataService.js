@@ -52,6 +52,32 @@ class PredictorDataService {
   }
 
   /**
+   * El precio de una corrida y el saldo de la organizacion.
+   *
+   * El precio vive en `feature_costs` —una fila que alguien puede cambiar, no
+   * un numero enterrado en el codigo— y es un ESTIMADO: el cobro real lo hace
+   * el corredor al final con lo que la corrida consumio de verdad.
+   *
+   * Las dos lecturas van juntas porque se muestran juntas ("cuesta alrededor de
+   * X, te quedan Y"): partirlas serian dos viajes para pintar una sola frase.
+   */
+  async precioYSaldo() {
+    if (!this.sb) return { estimado: null, saldo: null };
+    const [costo, saldo] = await Promise.all([
+      this.sb.from('feature_costs').select('credits_per_action').eq('kind', 'simulacion').maybeSingle(),
+      this.orgId
+        ? this.sb.from('organization_credits').select('credits_available').eq('organization_id', this.orgId).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    const cr = Number(costo?.data?.credits_per_action);
+    const disp = Number(saldo?.data?.credits_available);
+    return {
+      estimado: Number.isFinite(cr) && cr > 0 ? cr : null,
+      saldo: Number.isFinite(disp) ? disp : null,
+    };
+  }
+
+  /**
    * Lanza una prediccion. Devuelve rapido con el id: la corrida dura minutos u
    * horas y su avance se lee despues de la tabla.
    */

@@ -60,11 +60,11 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'predictor',
-      label: 'Predictor',
+      label: 'Simulador',
       icon: 'aisc-ico aisc-ico--predictor',
       iconSrc: '/recursos/icons/predictor.svg',
       route: 'predictor',
-      // Se reusa insights.view a proposito: el Predictor es una lectura mas
+      // Se reusa insights.view a proposito: el Simulador es una lectura mas
       // (mirar hacia adelante en vez de hacia atras). Inventar un permiso nuevo
       // que no exista en el enum lo dejaria invisible o roto.
       requireCap: 'insights.view'
