@@ -1753,7 +1753,10 @@ class VideoView extends BaseView {
           // una sola, el tile YA es esa foto y el panel seria un eco.
           const galeria = imagenes.length > 1
             ? `<div class="video-elemento-galeria" role="group" aria-label="${this.escapeHtml(window.__('Imágenes de {name}', { name: nombre }))}">
-                 <span class="video-elemento-galeria-titulo">${this.escapeHtml(nombre)}</span>
+                 <div class="video-elemento-galeria-header">
+                   <span class="video-elemento-galeria-titulo">${this.escapeHtml(nombre)}</span>
+                   <button type="button" class="video-elemento-galeria-cerrar" data-cerrar-galeria aria-label="${window.__('Cerrar')}">&times;</button>
+                 </div>
                  <div class="video-elemento-galeria-grid">
                    ${imagenes.map((u, i) => `
                      <button type="button"
@@ -1801,6 +1804,7 @@ class VideoView extends BaseView {
     // Repintar destruye el nodo que estuviera abierto: la referencia guardada
     // apuntaría a un elemento que ya no está en el documento.
     this._galeriaAbierta = null;
+    this._tileGaleria = null;
     cont.innerHTML = filas;
 
     if (cont.dataset.boundElementos !== '1') {
@@ -1809,6 +1813,14 @@ class VideoView extends BaseView {
       // con teclado y en táctil es un pulso fino; sin el clic, el panel sería
       // inalcanzable para media casa.
       cont.addEventListener('click', (e) => {
+        // La × vive dentro del tile: sin atenderla primero, cerrar la galería
+        // metería además la portada como referencia.
+        if (e.target.closest('[data-cerrar-galeria]')) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.cerrarGaleria();
+          return;
+        }
         // Una foto del desplegable manda sobre el tile que la contiene: se
         // toco esa, no la portada.
         const foco = e.target.closest('.video-elemento-foto') || e.target.closest('.video-elemento-item');
@@ -1847,22 +1859,13 @@ class VideoView extends BaseView {
         const tile = e.target.closest('.video-elemento-item');
         if (tile) this.abrirGaleria(tile);
       });
-      cont.addEventListener('mouseout', (e) => {
-        const tile = e.target.closest('.video-elemento-item');
-        // Moverse DENTRO del mismo tile (o hacia su galería) no lo cierra.
-        if (!tile || tile.contains(e.relatedTarget)) return;
-        this.cerrarGaleria(tile);
-      });
-      // Con teclado se llega tabulando: un panel que solo existe para el mouse
-      // no existe para media casa.
+      // NO se cierra al salir el cursor. El panel flota separado del tile, y
+      // entre los dos hay un hueco: al cruzarlo para llegar a una foto se salía
+      // del tile y el panel se cerraba en la cara. Se queda abierto hasta que
+      // se elige otro elemento, se toca fuera, se pulsa Escape o su ×.
       cont.addEventListener('focusin', (e) => {
         const tile = e.target.closest('.video-elemento-item');
         if (tile) this.abrirGaleria(tile);
-      });
-      cont.addEventListener('focusout', (e) => {
-        const tile = e.target.closest('.video-elemento-item');
-        if (!tile || tile.contains(e.relatedTarget)) return;
-        this.cerrarGaleria(tile);
       });
       // Al scrollear, la galería se quedaría flotando donde estaba: sus
       // coordenadas son del viewport y el tile ya se movió. Se escucha en los
@@ -1870,6 +1873,23 @@ class VideoView extends BaseView {
       // carrusel en horizontal— porque `scroll` NO burbujea: colgarlo de
       // window no vería ninguno de los dos.
       const cerrar = () => this.cerrarGaleria();
+
+      // Tocar fuera cierra. El clic DENTRO del tile o de su galería no: ahí se
+      // está eligiendo, que es justo para lo que se abrió.
+      if (!this._cerrarGaleriaFuera) {
+        this._cerrarGaleriaFuera = (e) => {
+          if (!this._galeriaAbierta) return;
+          if (this._galeriaAbierta.contains(e.target)) return;
+          if (this._tileGaleria && this._tileGaleria.contains(e.target)) return;
+          this.cerrarGaleria();
+        };
+        this.addEventListener(document, 'click', this._cerrarGaleriaFuera);
+      }
+      if (!this._cerrarGaleriaEscape) {
+        this._cerrarGaleriaEscape = (e) => { if (e.key === 'Escape') this.cerrarGaleria(); };
+        this.addEventListener(document, 'keydown', this._cerrarGaleriaEscape);
+      }
+
       this.addEventListener(cont, 'scroll', cerrar);
       cont.querySelectorAll('.video-escenas-carousel').forEach((car) => {
         this.addEventListener(car, 'scroll', cerrar);
@@ -1914,6 +1934,7 @@ class VideoView extends BaseView {
     galeria.style.left = `${left}px`;
     galeria.style.visibility = '';
     this._galeriaAbierta = galeria;
+    this._tileGaleria = tile;
   }
 
   /** Cierra la galería del tile dado, o la que esté abierta. */
@@ -1921,7 +1942,10 @@ class VideoView extends BaseView {
     const galeria = tile ? tile.querySelector('.video-elemento-galeria') : this._galeriaAbierta;
     if (!galeria) return;
     galeria.classList.remove('is-abierta');
-    if (this._galeriaAbierta === galeria) this._galeriaAbierta = null;
+    if (this._galeriaAbierta === galeria) {
+      this._galeriaAbierta = null;
+      this._tileGaleria = null;
+    }
   }
 
   /** El tipo MIME propio del arrastre. Un solo sitio para que no se desincronice. */

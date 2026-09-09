@@ -6672,9 +6672,43 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     visibility: visible;
     pointer-events: auto;
 }
+/* Cabecera del panel: el nombre y su × . El panel ya no se cierra al salir el
+   cursor —flota separado del tile, y cruzar el hueco para llegar a una foto lo
+   cerraba en la cara—, así que necesita una salida visible. */
+.video-view-container .video-elemento-galeria-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.video-view-container .video-elemento-galeria-cerrar {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: var(--white-8);
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.video-view-container .video-elemento-galeria-cerrar:hover {
+    background: var(--white-15);
+    color: var(--text-primary);
+}
 .video-view-container .video-elemento-galeria-titulo {
     display: block;
-    margin-bottom: 6px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 0.62rem;
     font-weight: 700;
     letter-spacing: 0.05em;

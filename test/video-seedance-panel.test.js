@@ -1454,3 +1454,64 @@ describe('La galería flota: escapa de los tres overflow que la recortaban', () 
     expect(regla.slice(0, regla.indexOf('}'))).toContain('position: fixed');
   });
 });
+
+describe('La galería se queda abierta: el hover la cerraba al ir a elegir', () => {
+  const FUENTE_CSS = fs.readFileSync(path.join(process.cwd(), 'css/modules/video.css'), 'utf8');
+
+  test('ya no se cierra al salir el cursor', () => {
+    // El panel flota separado del tile y entre los dos hay un hueco: al
+    // cruzarlo para llegar a una foto se salía del tile y se cerraba en la
+    // cara, justo cuando se iba a elegir.
+    expect(FUENTE).not.toContain("addEventListener('mouseout'");
+    expect(FUENTE).not.toContain("addEventListener('focusout'");
+  });
+
+  test('tiene tres salidas: la ×, tocar fuera y Escape', () => {
+    expect(FUENTE).toContain('data-cerrar-galeria');
+    expect(FUENTE).toContain('_cerrarGaleriaFuera');
+    expect(FUENTE).toContain("e.key === 'Escape'");
+    expect(FUENTE_CSS).toContain('video-elemento-galeria-cerrar');
+  });
+
+  test('la × se atiende ANTES que el tile que la contiene', () => {
+    // Vive dentro del tile: sin interceptarla primero, cerrar metería además
+    // la portada como referencia.
+    const manejador = FUENTE.slice(FUENTE.indexOf("cont.addEventListener('click'"));
+    const cierre = manejador.indexOf('data-cerrar-galeria');
+    const foto = manejador.indexOf('video-elemento-foto');
+    expect(cierre).toBeGreaterThan(-1);
+    expect(cierre).toBeLessThan(foto);
+  });
+
+  test('tocar dentro del tile o de su galería NO cierra: ahí se está eligiendo', () => {
+    const { v } = nuevaVista();
+    const dentro = {};
+    const galeria = { contains: (n) => n === dentro, classList: { remove() {} } };
+    const tile = { contains: () => false };
+    v._galeriaAbierta = galeria;
+    v._tileGaleria = tile;
+
+    // El handler real, tal como lo monta init().
+    const fuera = (e) => {
+      if (!v._galeriaAbierta) return;
+      if (v._galeriaAbierta.contains(e.target)) return;
+      if (v._tileGaleria && v._tileGaleria.contains(e.target)) return;
+      v.cerrarGaleria();
+    };
+    fuera({ target: dentro });
+
+    expect(v._galeriaAbierta).toBe(galeria);
+  });
+
+  test('cerrar suelta también el tile dueño, o el próximo clic fuera no cerraría', () => {
+    const { v } = nuevaVista();
+    const galeria = { classList: { remove() {} } };
+    v._galeriaAbierta = galeria;
+    v._tileGaleria = { contains: () => false };
+
+    v.cerrarGaleria();
+
+    expect(v._galeriaAbierta).toBeNull();
+    expect(v._tileGaleria).toBeNull();
+  });
+})
