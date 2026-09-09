@@ -14,6 +14,10 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Consumo por miembro": "Usage by member",
+  "Quién gastó los créditos del período. Lo automático son sensores y flujos corriendo solos.": "Who spent the credits in this period. Automatic means sensors and flows running on their own.",
+  "Automático (sensores y flujos)": "Automatic (sensors and flows)",
+  "Reparto": "Share",
   "Consumo diario por función": "Daily usage by function",
   "Créditos por día, apilados por lo que los gastó.": "Credits per day, stacked by what spent them.",
   "Consumo de créditos por día y por función de la plataforma.": "Credit usage per day and per platform function.",

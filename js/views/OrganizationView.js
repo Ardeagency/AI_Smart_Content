@@ -242,6 +242,11 @@ class OrganizationView extends BaseView {
             <div class="org-usage-stats" id="orgUsageStats"></div>
             <div class="org-usage-chart-card" id="orgUsageChart"><p class="org-placeholder">${__('Cargando…')}</p></div>
             <div class="org-usage-breakdown-card" id="orgUsageBreakdown"></div>
+
+            <!-- Consumo por miembro: rescatado de la vista de creditos vieja
+                 (vivia en CreditsShopView antes del commit 07d290c6) y traido
+                 aqui, que es donde vive el consumo. -->
+            <div class="org-usage-miembros" id="orgUsageMiembros"></div>
           </section>
         </div>
 
@@ -1007,6 +1012,7 @@ class OrganizationView extends BaseView {
 
     const rows = data || [];
     const byDayMap = {};
+    const porMiembro = {};
     const byArea = {};
     OrganizationView.USAGE_AREAS.forEach((a) => { byArea[a.key] = 0; });
     let total = 0;
@@ -1020,6 +1026,19 @@ class OrganizationView extends BaseView {
       byDayMap[day].total += c;
       byArea[cat] = (byArea[cat] || 0) + c;
       total += c;
+
+      // Por miembro, en la misma pasada. `credit_usage` NO tiene columna
+      // user_id: la autoria, cuando existe, viaja en metadata.user_id. Lo que
+      // no la trae es consumo AUTOMATICO (sensores, scrapers, flujos
+      // programados), no un dato perdido — y por eso se agrupa aparte con
+      // nombre propio en vez de esconderlo bajo un id.
+      const uid = r.metadata?.user_id || '__auto__';
+      if (!porMiembro[uid]) porMiembro[uid] = { uid, creditos: 0, eventos: 0, ultima: null, porCat: {} };
+      const m = porMiembro[uid];
+      m.creditos += c;
+      m.eventos += 1;
+      m.porCat[cat] = (m.porCat[cat] || 0) + c;
+      if (!m.ultima || r.created_at > m.ultima) m.ultima = r.created_at;
     });
     const byDay = Object.values(byDayMap).sort((a, b) => a.day.localeCompare(b.day));
     const peak = byDay.reduce((m, d) => (d.total > (m ? m.total : 0) ? d : m), null);
@@ -1028,6 +1047,7 @@ class OrganizationView extends BaseView {
       days: dias, byDay, byArea, total, peak,
       topAreaKey: total > 0 && topAreaKey ? topAreaKey[0] : null,
       events: rows.length,
+      porMiembro: Object.values(porMiembro).sort((a, b) => b.creditos - a.creditos),
     };
   }
 
@@ -1760,6 +1780,99 @@ class OrganizationView extends BaseView {
    * usan Trafico y Mi Marca, en vez de tres pills de 7/30/90 dias. Se crea UNA
    * vez y se conserva entre repintados, porque guarda el rango elegido.
    */
+  /**
+   * Consumo por miembro. Rescatado de la vista de creditos vieja y corregido en
+   * dos cosas:
+   *
+   * 1. Los miembros se nombran con su nombre real (membersWithProfile), no con
+   *    los primeros 8 caracteres de su uuid como antes.
+   * 2. El consumo sin usuario ya no se rotula "Sistema (background)" —que suena
+   *    a cajon de descarte— sino "Automático": es la plataforma trabajando sola,
+   *    y en esta organizacion es LA MAYORIA. Medido: 2.621 de 2.636 registros no
+   *    llevan usuario. Decirlo asi convierte un hueco de datos en el dato.
+   */
+  _renderUsageMiembros() {
+    const el = this.querySelector('#orgUsageMiembros');
+    if (!el) return;
+    const filas = this.usage?.porMiembro || [];
+    if (!filas.length) { el.innerHTML = ''; return; }
+
+    const nombres = {};
+    (this.membersWithProfile || []).forEach((m) => {
+      nombres[m.user_id] = m.full_name || m.email || null;
+    });
+    const total = filas.reduce((a, m) => a + m.creditos, 0) || 1;
+    const quien = (uid) => (uid === '__auto__'
+      ? __('Automático (sensores y flujos)')
+      : (nombres[uid] || `${String(uid).slice(0, 8)}…`));
+
+    el.innerHTML = `
+      <div class="org-section-head">
+        <div>
+          <h3 class="org-uchart-title">${__('Consumo por miembro')}</h3>
+          <p class="org-uchart-desc">${__('Quién gastó los créditos del período. Lo automático son sensores y flujos corriendo solos.')}</p>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" id="orgUsageCsv">
+          <i class="aisc-ico aisc-ico--document"></i> ${__('Exportar CSV')}
+        </button>
+      </div>
+      <div class="org-mem-table">
+        <div class="org-mem-row org-mem-row--head">
+          <span>${__('Miembro')}</span><span class="org-bill-right">${__('Créditos')}</span>
+          <span>${__('Reparto')}</span><span class="org-bill-right">${__('Eventos')}</span>
+          <span>${__('Última actividad')}</span>
+        </div>
+        ${filas.map((m) => {
+          const pct = (m.creditos / total) * 100;
+          const auto = m.uid === '__auto__';
+          return `
+            <div class="org-mem-row">
+              <span class="org-mem-quien${auto ? ' org-mem-quien--auto' : ''}">${this._esc(quien(m.uid))}</span>
+              <span class="org-bill-right org-mem-num">${this._fmtCredits(m.creditos)}</span>
+              <span class="org-mem-barra"><span style="width:${pct.toFixed(1)}%"></span></span>
+              <span class="org-bill-right org-mem-num">${Number(m.eventos).toLocaleString('es')}</span>
+              <span class="org-mem-fecha">${m.ultima ? this._esc(this._fmtDate(m.ultima)) : '—'}</span>
+            </div>`;
+        }).join('')}
+      </div>`;
+
+    const btn = this.querySelector('#orgUsageCsv');
+    if (btn) this.addEventListener(btn, 'click', () => this._exportUsageCsv());
+  }
+
+  /**
+   * CSV del consumo por miembro, con una columna por CATEGORIA DE FUNCION
+   * (imagenes, videos, los cinco scrapers…). El export viejo usaba las seis
+   * "areas" tecnicas, que es justo el desglose que dejo de servir.
+   */
+  _exportUsageCsv() {
+    const filas = this.usage?.porMiembro || [];
+    if (!filas.length) return;
+    const cats = OrganizationView.USAGE_AREAS;
+    const nombres = {};
+    (this.membersWithProfile || []).forEach((m) => { nombres[m.user_id] = m.full_name || m.email || null; });
+
+    const cabecera = ['miembro', 'user_id', 'creditos', 'eventos', 'ultima_actividad', ...cats.map((c) => c.key)];
+    const cuerpo = filas.map((m) => ([
+      m.uid === '__auto__' ? 'automatico' : (nombres[m.uid] || m.uid),
+      m.uid === '__auto__' ? '' : m.uid,
+      m.creditos.toFixed(2),
+      m.eventos,
+      m.ultima || '',
+      ...cats.map((c) => (m.porCat[c.key] || 0).toFixed(2)),
+    ]));
+
+    const csv = [cabecera, ...cuerpo]
+      .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `consumo-por-miembro-${this.orgId}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   _mountUsagePicker() {
     const cont = this.querySelector('#orgUsageRange');
     if (!cont || typeof window.DateRangePicker !== 'function') return;
@@ -1785,6 +1898,7 @@ class OrganizationView extends BaseView {
 
   _renderUsage() {
     this._mountUsagePicker();
+    this._renderUsageMiembros();
 
     const u = this.usage;
     const statsEl = this.querySelector('#orgUsageStats');

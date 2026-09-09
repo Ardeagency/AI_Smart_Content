@@ -2454,3 +2454,62 @@
 /* La leyenda crece a 13 categorias (una por funcion): en columna se lee, en
    fila se amontonaba. */
 .org-uchart-legend { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; max-width: 420px; }
+
+/* ─── Consumo por miembro (Uso) ───────────────────────────────────────
+   Filas, con una barra de reparto para comparar de un vistazo quien gasta. */
+
+.org-usage-miembros { margin-top: 2rem; }
+
+.org-mem-table {
+    border: 1px solid var(--border-divider);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 0.75rem;
+}
+
+.org-mem-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) auto minmax(90px, 1fr) auto auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-divider);
+}
+
+.org-mem-row:last-child { border-bottom: 0; }
+
+.org-mem-row--head {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+}
+
+.org-mem-quien { color: var(--text-primary); font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Lo automatico se distingue en cursiva: no es una persona, y confundirlo con
+   un miembro fue justo el defecto de la version anterior. */
+.org-mem-quien--auto { font-style: italic; color: var(--text-secondary); }
+
+.org-mem-num { font-variant-numeric: tabular-nums; color: var(--text-secondary); font-size: 0.88rem; }
+.org-mem-fecha { color: var(--text-muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.org-mem-barra {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    overflow: hidden;
+}
+
+.org-mem-barra > span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    /* Color de plataforma, como el resto de la grafica de Uso. */
+    background: var(--pf-7, #FF6A00);
+}
+
+@media (max-width: 780px) {
+    .org-mem-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 0.4rem; }
+    .org-mem-row--head, .org-mem-barra, .org-mem-fecha { display: none; }
+}
