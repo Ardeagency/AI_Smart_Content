@@ -182,6 +182,16 @@ class OrganizationView extends BaseView {
             <div class="org-billing-summary" id="orgBillingSummary"><p class="org-placeholder">${__('Cargando…')}</p></div>
           </section>
 
+          <!-- Funciones especiales del plan: extras con vigencia propia
+               (empiezan y caducan), distintos de lo que "incluye" el plan de
+               forma permanente. Todavia no estan definidas: aqui vive la
+               estructura, y el cuerpo lo llena _renderFunciones() en cuanto
+               exista de donde leerlas. -->
+          <section class="org-sub-block">
+            <h2 class="org-sub-rotulo">${__('Funciones especiales activas')}</h2>
+            <div class="org-funciones" id="orgFunciones"></div>
+          </section>
+
         </div>
 
         <aside class="org-col-aside org-col-aside--liso">
@@ -189,11 +199,6 @@ class OrganizationView extends BaseView {
             <section class="org-sub-block">
               <h2 class="org-sub-rotulo">${__('Próximo cobro')}</h2>
               <div class="org-billing-proximo" id="orgBillingProximo"></div>
-            </section>
-
-            <section class="org-sub-block">
-              <h2 class="org-sub-rotulo">${__('Facturas e historial')}</h2>
-              <div class="org-billing-invoices" id="orgBillingInvoices"><p class="org-placeholder">${__('Cargando…')}</p></div>
             </section>
 
             <section class="org-sub-block">
@@ -209,6 +214,13 @@ class OrganizationView extends BaseView {
         </aside>
 
       </div>
+
+      <!-- Facturas al final y a todo el ancho: es una tabla, y una tabla en una
+           columna de 380px se lee peor que en cualquier otro sitio. -->
+      <section class="org-sub-block org-sub-block--ancho">
+        <h2 class="org-sub-rotulo">${__('Facturas e historial')}</h2>
+        <div class="org-billing-invoices" id="orgBillingInvoices"><p class="org-placeholder">${__('Cargando…')}</p></div>
+      </section>
     </div>
 
     <div class="tab-content" id="activityTab" role="tabpanel">
@@ -1051,6 +1063,7 @@ class OrganizationView extends BaseView {
     this._renderBillingPago();
     this._renderBillingProximo();
     this._renderBillingDatos();
+    this._renderFunciones();
   }
 
   async _billingPlan() {
@@ -1368,6 +1381,46 @@ class OrganizationView extends BaseView {
    * consta y se dice quien lleva el resto, en vez de pintar un formulario cuyo
    * "Guardar" no tendria donde escribir.
    */
+  /**
+   * Funciones especiales del plan: extras con VIGENCIA PROPIA —empiezan y
+   * caducan— a diferencia de lo que el plan incluye de forma permanente, que ya
+   * se lista arriba.
+   *
+   * TODAVIA NO EXISTEN. No hay tabla ni columna donde declararlas: `plans` solo
+   * tiene el jsonb `features`, que son banderas sin fecha. Asi que aqui va la
+   * ESTRUCTURA con su cabecera y un estado vacio explicito, y no filas de
+   * ejemplo: una tabla con nombres inventados se lee como si el cliente tuviera
+   * cosas contratadas que nadie le vendio.
+   *
+   * Para llenarla mas adelante basta darle a `filas` objetos
+   * { nombre, detalle, empieza, expira, estado } — el render ya los pinta.
+   */
+  _renderFunciones() {
+    const el = this.querySelector('#orgFunciones');
+    if (!el) return;
+
+    const filas = Array.isArray(this.billingFunciones) ? this.billingFunciones : [];
+
+    const cuerpo = filas.length
+      ? filas.map((f) => `
+          <div class="org-fx-row">
+            <span class="org-fx-nombre">${this._esc(f.nombre)}${f.detalle ? `<em>${this._esc(f.detalle)}</em>` : ''}</span>
+            <span class="org-fx-fecha">${this._esc(f.empieza || '—')}</span>
+            <span class="org-fx-fecha">${this._esc(f.expira || '—')}</span>
+            <span><span class="org-bill-pill org-bill-pill--ok">${this._esc(f.estado || __('Activa'))}</span></span>
+          </div>`).join('')
+      : `<p class="org-placeholder org-fx-vacio">${__('Todavía no hay funciones especiales definidas para este plan.')}</p>`;
+
+    el.innerHTML = `
+      <div class="org-fx-table">
+        <div class="org-fx-row org-fx-row--head">
+          <span>${__('Función')}</span><span>${__('Empieza')}</span>
+          <span>${__('Expira')}</span><span>${__('Estado')}</span>
+        </div>
+        ${cuerpo}
+      </div>`;
+  }
+
   _renderBillingDatos() {
     const el = this.querySelector('#orgBillingDatos');
     if (!el) return;

@@ -14,6 +14,11 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Funciones especiales activas": "Active plan perks",
+  "Función": "Perk",
+  "Empieza": "Starts",
+  "Expira": "Expires",
+  "Todavía no hay funciones especiales definidas para este plan.": "No plan perks defined yet.",
   "Se cobra con": "Charged to",
   "sin método registrado": "no method on file",
   "sin precio en el plan": "plan has no price",

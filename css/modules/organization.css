@@ -2394,3 +2394,39 @@
 .org-prox-dl > div:last-child { border-bottom: 0; padding-bottom: 0; }
 .org-prox-dl dt { color: var(--text-muted); font-size: 0.85rem; }
 .org-prox-dl dd { margin: 0; color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ─── Funciones especiales del plan ───────────────────────────────────
+   Tabla de extras con vigencia. Hoy sin filas: la cabecera queda igual para que
+   se entienda que va ahi, con el vacio dicho en palabras. */
+
+.org-fx-table {
+    border: 1px solid var(--border-divider);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.org-fx-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) 1fr 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border-divider);
+}
+
+.org-fx-row:last-child { border-bottom: 0; }
+
+.org-fx-row--head {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+}
+
+.org-fx-nombre { color: var(--text-primary); font-size: 0.9rem; min-width: 0; }
+.org-fx-nombre em { display: block; font-style: normal; font-size: 0.78rem; color: var(--text-muted); }
+.org-fx-fecha { color: var(--text-secondary); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.org-fx-vacio { padding: 1.5rem 1rem; margin: 0; }
+
+/* Facturas al final, a todo el ancho de la pagina. */
+#billingTab .org-sub-block--ancho { margin-top: 2rem; }
