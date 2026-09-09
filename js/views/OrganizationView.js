@@ -1143,15 +1143,36 @@ class OrganizationView extends BaseView {
 
     if (limits) this._renderBillingLimits(limits);
 
-    if (all.length === 0) {
-      list.innerHTML = `<p class="org-placeholder">${__('Sin facturas todavía. Las verás aquí después de tu primer pago.')}</p>`;
-    } else {
-      const paidPill = (s) => {
-        const ok = ['paid', 'APPROVED', 'succeeded'].includes(s);
-        return `<span class="org-bill-pill org-bill-pill--${ok ? 'ok' : 'muted'}">${this.escapeHtml(ok ? __('Pagado') : (s || '—'))}</span>`;
-      };
-      list.innerHTML = `
-        <div class="org-bill-table">
+    // FACTURA PENDIENTE. No hay tabla de facturas por emitir: la proxima se
+    // deduce de la suscripcion. Solo se dibuja si existen las TRES cosas —plan,
+    // precio y fecha—; con una que falte seria un cobro inventado.
+    const planPrecio = this.billingPlanRow?.price_usd_month;
+    const pendiente = (nextRenew && planPrecio != null && !canceled)
+      ? `<div class="org-bill-table org-bill-table--pend">
+          <div class="org-bill-prow org-bill-prow--head">
+            <span>${__('Descripción')}</span><span>${__('Vence el')}</span>
+            <span>${__('Estado')}</span><span class="org-bill-right">${__('Total')}</span>
+          </div>
+          <div class="org-bill-prow">
+            <span class="org-bill-desc">${this._esc(__('1 × {plan} — mensual', { plan: planName }))}</span>
+            <span class="org-bill-date">${this._esc(nextRenewStr)}</span>
+            <span><span class="org-bill-pill org-bill-pill--muted">${__('Próxima')}</span></span>
+            <span class="org-bill-right org-bill-amount">${this._esc(this._fmtMoney(planPrecio, 'USD'))}</span>
+          </div>
+        </div>`
+      : `<p class="org-placeholder">${__('No hay cobros programados.')}</p>`;
+
+    const paidPill = (st) => {
+      const ok = ['paid', 'APPROVED', 'succeeded'].includes(st);
+      return `<span class="org-bill-pill org-bill-pill--${ok ? 'ok' : 'muted'}">${this.escapeHtml(ok ? __('Pagado') : (st || '—'))}</span>`;
+    };
+
+    // El historial va PLEGADO: sin pagos, un desplegable cerrado ocupa una
+    // linea, mientras que una tabla vacia ocupa media pantalla para decir lo
+    // mismo.
+    const historial = all.length === 0
+      ? `<p class="org-placeholder">${__('Sin pagos todavía. Los verás aquí después del primer cobro.')}</p>`
+      : `<div class="org-bill-table">
           <div class="org-bill-trow org-bill-trow--head">
             <span>${__('Fecha')}</span><span>${__('Concepto')}</span>
             <span class="org-bill-right">${__('Monto')}</span><span>${__('Estado')}</span><span></span>
@@ -1165,12 +1186,178 @@ class OrganizationView extends BaseView {
               <span class="org-bill-right">${r.url ? `<a href="${this.escapeHtml(r.url)}" target="_blank" rel="noopener" class="org-bill-pdf">PDF ↗</a>` : '—'}</span>
             </div>`).join('')}
         </div>`;
-    }
+
+    list.innerHTML = `
+      ${pendiente}
+      <details class="org-bill-historial">
+        <summary>${__('Historial de pagos')}${all.length ? ` <span class="org-bill-cuenta">${all.length}</span>` : ''}</summary>
+        <div class="org-bill-historial-cuerpo">${historial}</div>
+      </details>`;
 
     this.querySelector('#orgBillingPortalBtn')?.addEventListener('click', () => { window.billingService?.openCustomerPortal(); });
     this.querySelector('#orgBillingCancelBtn')?.addEventListener('click', () => this._cancelSubscription(false));
     this.querySelector('#orgBillingReactivateBtn')?.addEventListener('click', () => this._cancelSubscription(true));
     this.querySelector('#orgCapsForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveCaps(); });
+  }
+
+  // ─── Suscripcion: plan, creditos, cobro y medio de pago ──────────────
+
+  _esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  _creditosHref() {
+    const prefix = (this.orgId && typeof window.getOrgPathPrefix === 'function')
+      ? window.getOrgPathPrefix(this.orgId, this.org?.name || '') : '';
+    return `${prefix || ''}/creditos`;
+  }
+
+  /**
+   * "Tu plan incluye" se arma con lo que la fila de `plans` declara de verdad
+   * —credits_monthly, max_handles, storage_mb y el jsonb `features`— y no con
+   * una lista escrita a mano: si manana cambia el plan en la base, la lista
+   * cambia sola. Una lista fija seria una promesa que la base no respalda.
+   */
+  _renderPlanIncluye() {
+    const el = this.querySelector('#orgPlanIncluye');
+    if (!el) return;
+    const p = this.billingPlanRow;
+    if (!p) { el.innerHTML = ''; return; }
+
+    const items = [];
+    if (p.credits_monthly > 0) items.push(__('{n} créditos al mes', { n: Number(p.credits_monthly).toLocaleString('es') }));
+    if (p.max_handles > 0) items.push(__('Hasta {n} marcas / perfiles', { n: p.max_handles }));
+    if (p.storage_mb > 0) {
+      const gb = p.storage_mb >= 1024 ? `${Math.round(p.storage_mb / 1024)} GB` : `${p.storage_mb} MB`;
+      items.push(__('{s} de almacenamiento', { s: gb }));
+    }
+
+    // El jsonb de features es abierto: se traduce lo conocido y lo desconocido
+    // se muestra por su clave, para que un plan que gane una feature nueva se
+    // vea aunque nadie haya pasado por aqui a bautizarla.
+    const nombres = {
+      vera_full: __('Vera completa (chat + acciones)'),
+      vera_basic: __('Vera chat'),
+      insights: __('Insights y analítica'),
+      sub_brands: __('Sub-marcas (multi-cliente)'),
+      custom_domain: __('Dominio personalizado'),
+      priority_support: __('Soporte prioritario'),
+    };
+    const f = p.features || {};
+    Object.keys(f).forEach((k) => {
+      const v = f[k];
+      if (v === false || v === null || v === 0) return;
+      if (k === 'brand_kits') { items.push(__('{n} brand kits', { n: v })); return; }
+      if (k === 'team_seats') { items.push(__('{n} miembros', { n: v })); return; }
+      items.push(nombres[k] || k.replace(/_/g, ' '));
+    });
+
+    el.innerHTML = items.length
+      ? `<ul class="org-incluye-list">${items.map((t) => `<li>${this._esc(t)}</li>`).join('')}</ul>`
+      : '';
+  }
+
+  _renderBillingCredits() {
+    const el = this.querySelector('#orgBillingCredits');
+    if (!el) return;
+    const c = this.billingCreditos;
+    if (!c || !c.total) { el.innerHTML = `<p class="org-placeholder">${__('Sin créditos asignados.')}</p>`; return; }
+    const pct = c.pctUsado || 0;
+    el.innerHTML = `
+      <div class="org-cred-head">
+        <div>
+          <span class="org-res-lbl">${__('Créditos mensuales restantes')}</span>
+          <div class="org-cred-num">${Math.round(c.disponibles).toLocaleString('es')}<span class="org-res-num-of"> / ${Math.round(c.total).toLocaleString('es')}</span></div>
+        </div>
+        <a href="${this._esc(this._creditosHref())}" class="btn btn-secondary btn-sm">${__('Comprar créditos')}</a>
+      </div>
+      <div class="org-res-bar" role="img" aria-label="${pct}%">
+        <span class="org-res-bar-fill" style="transform:scaleX(${pct / 100})"></span>
+      </div>
+      <span class="org-res-sub">${__('{n}% consumido este ciclo', { n: pct })}</span>`;
+  }
+
+  /**
+   * Proximo cobro. Wompi cobra por `next_charge_at` y Stripe por
+   * `current_period_end`: leer siempre el mismo campo da la fecha equivocada
+   * para la mitad de las orgs, asi que se elige segun el proveedor.
+   */
+  _renderBillingProximo() {
+    const el = this.querySelector('#orgBillingProximo');
+    if (!el) return;
+    const sub = this.billingSub;
+    if (!sub) { el.innerHTML = `<p class="org-placeholder">${__('Sin suscripción registrada.')}</p>`; return; }
+
+    const fecha = sub.provider === 'wompi' ? sub.next_charge_at : sub.current_period_end;
+    const plan = this.billingPlanRow;
+    const cancelada = sub.cancel_at_period_end || sub.status === 'canceled';
+    if (!fecha) {
+      el.innerHTML = `<p class="org-pago-linea">${__('Sin fecha de cobro.')}</p>
+        <p class="org-res-sub">${__('La vigencia de esta suscripción está abierta; no hay un cargo programado.')}</p>`;
+      return;
+    }
+    const precio = plan?.price_usd_month != null ? this._fmtMoney(plan.price_usd_month, 'USD') : null;
+    el.innerHTML = `
+      <div class="org-cred-num">${this._esc(this._fmtDate(fecha))}</div>
+      <span class="org-res-sub">${cancelada
+        ? __('La suscripción termina en esa fecha y no se renueva.')
+        : (precio ? this._esc(__('Se renueva {plan} por {precio}', { plan: plan?.name || '', precio })) : __('Renovación automática'))}</span>`;
+  }
+
+  /**
+   * Medio de pago con forma de tabla. La fila "Añadir" NO abre un formulario de
+   * tarjeta: no hay pasarela conectada —medido: wompi_payment_source_id y
+   * stripe_subscription_id vacios en toda la base— y capturar datos de tarjeta
+   * no es algo que esta vista deba hacer. Se dibuja el hueco con su forma y un
+   * camino real: escribir a quien hoy cobra de verdad.
+   */
+  _renderBillingPago() {
+    const el = this.querySelector('#orgBillingPago');
+    if (!el) return;
+    const sub = this.billingSub;
+    const tieneMedio = !!(sub?.wompi_payment_source_id || sub?.stripe_subscription_id);
+
+    const filaMedio = tieneMedio
+      ? `<div class="org-pay-row">
+           <span class="org-pay-check org-pay-check--on" role="img" aria-label="${__('Predeterminado')}"></span>
+           <span class="org-pay-tarjeta"><i class="aisc-ico aisc-ico--credit-card" aria-hidden="true"></i> ${this._esc(sub.stripe_subscription_id ? __('Stripe (USD)') : __('Wompi (COP)'))}</span>
+           <span class="org-pay-exp">—</span>
+         </div>`
+      : `<div class="org-pay-row org-pay-row--vacia">
+           <span class="org-pay-check" aria-hidden="true"></span>
+           <span class="org-pay-tarjeta">${__('No hay un método de pago registrado.')}</span>
+           <span class="org-pay-exp">—</span>
+         </div>`;
+
+    el.innerHTML = `
+      <div class="org-pay-table">
+        <div class="org-pay-row org-pay-row--head">
+          <span></span><span>${__('Información de la tarjeta')}</span><span>${__('Fecha de expiración')}</span>
+        </div>
+        ${filaMedio}
+        <a class="org-pay-anadir" href="mailto:info@ardeagency.com?subject=Suscripci%C3%B3n%20-%20m%C3%A9todo%20de%20pago">
+          <span class="org-pay-mas" aria-hidden="true">+</span> ${__('Añadir nuevo método de pago')}
+        </a>
+      </div>
+      ${tieneMedio ? '' : `<p class="org-res-sub org-pay-nota">${__('El cobro de esta organización lo gestiona el equipo de plataforma.')}</p>`}`;
+  }
+
+  /**
+   * Datos de facturacion. La plataforma NO tiene donde guardarlos: no existe
+   * tabla ni columnas de razon social, NIT o direccion (lo unico parecido es la
+   * vista v_org_billing, que solo refleja plan y creditos). Se muestra lo que si
+   * consta y se dice quien lleva el resto, en vez de pintar un formulario cuyo
+   * "Guardar" no tendria donde escribir.
+   */
+  _renderBillingDatos() {
+    const el = this.querySelector('#orgBillingDatos');
+    if (!el) return;
+    el.innerHTML = `
+      <p class="org-datos-nombre">${this._esc(this.org?.name || '—')}</p>
+      <p class="org-res-sub">${__('Razón social, NIT y dirección no se guardan todavía en la plataforma; los lleva el equipo para emitir tus facturas.')}</p>
+      <a class="btn btn-secondary btn-sm org-pago-cta" href="mailto:info@ardeagency.com?subject=Datos%20de%20facturaci%C3%B3n">${__('Actualizar datos')}</a>`;
   }
 
   _renderBillingLimits(el) {
@@ -1831,12 +2018,6 @@ class OrganizationView extends BaseView {
       <span class="org-res-lbl">${this._esc(etiqueta)}</span>
       ${extra ? `<span class="org-res-sub">${extra}</span>` : ''}
     </div>`;
-  }
-
-  _esc(v) {
-    return String(v == null ? '' : v)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   async _renderResumen() {

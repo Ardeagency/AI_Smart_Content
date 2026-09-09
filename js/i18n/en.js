@@ -14,6 +14,15 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Información de la tarjeta": "Card information",
+  "Fecha de expiración": "Expiry date",
+  "Añadir nuevo método de pago": "Add new payment method",
+  "Historial de pagos": "Payment history",
+  "No hay cobros programados.": "No scheduled charges.",
+  "Próxima": "Upcoming",
+  "Vence el": "Due on",
+  "Total": "Total",
+  "Sin pagos todavía. Los verás aquí después del primer cobro.": "No payments yet. They will show up here after the first charge.",
   "Datos de facturación": "Billing details",
   "Actualizar datos": "Update details",
   "Añadir método de pago": "Add payment method",

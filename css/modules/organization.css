@@ -2217,24 +2217,135 @@
 .org-bill-actions { margin-top: 1rem; display: flex; gap: 0.6rem; flex-wrap: wrap; }
 
 /* ─── Medio de pago y datos ── */
-.org-pago-vacio {
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    padding: 0.9rem 1rem;
-    border: 1px dashed var(--border-divider);
-    border-radius: 10px;
-}
-
-.org-pago-vacio-icono {
-    font-size: 1.1rem;
-    letter-spacing: 0.1em;
-    color: var(--text-muted);
-    flex-shrink: 0;
-}
-
 .org-datos-nombre {
     margin: 0 0 0.35rem;
     font-weight: 600;
     color: var(--text-primary);
 }
+
+/* ─── Metodos de pago: tabla ──────────────────────────────────────────
+   Cabecera, filas y una fila final para añadir. Cuando no hay tarjetas la
+   estructura se mantiene: el hueco con su forma explica que va ahi mejor que
+   un parrafo suelto. */
+
+.org-pay-table {
+    border: 1px solid var(--border-divider);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.org-pay-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.8rem 0.9rem;
+    border-bottom: 1px solid var(--border-divider);
+}
+
+.org-pay-row--head {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+}
+
+.org-pay-row--vacia .org-pay-tarjeta { color: var(--text-muted); }
+
+/* El selector de predeterminado usa el color CLARO de la marca: el primario
+   puede ser negro y desaparecer sobre el fondo. */
+.org-pay-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    display: inline-block;
+    position: relative;
+}
+
+.org-pay-check--on {
+    background: var(--brand-color-light, var(--accent-brand));
+    border-color: transparent;
+}
+
+.org-pay-check--on::after {
+    content: "✓";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #0a0a0a;
+}
+
+.org-pay-tarjeta { display: flex; align-items: center; gap: 0.6rem; min-width: 0; color: var(--text-primary); font-size: 0.9rem; }
+.org-pay-exp { color: var(--text-secondary); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+
+.org-pay-anadir {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.8rem 0.9rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background .15s ease;
+}
+
+.org-pay-anadir:hover { background: rgba(255, 255, 255, 0.04); }
+.org-pay-mas { font-size: 1.05rem; color: var(--text-muted); }
+.org-pay-nota { margin-top: 0.75rem; }
+
+/* ─── Facturas: pendiente arriba, historial plegado ── */
+
+.org-bill-prow {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--border-divider);
+}
+
+.org-bill-prow--head { font-size: 0.75rem; color: var(--text-muted); }
+.org-bill-prow:last-child { border-bottom: 0; }
+
+.org-bill-historial { margin-top: 1rem; }
+
+.org-bill-historial > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 0.6rem 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.org-bill-historial > summary::-webkit-details-marker { display: none; }
+
+/* El triangulo se dibuja aparte para poder girarlo al abrir: el marcador nativo
+   no se puede animar ni tenir. */
+.org-bill-historial > summary::before {
+    content: "›";
+    font-size: 1.1rem;
+    line-height: 1;
+    color: var(--text-muted);
+    transition: transform .18s ease;
+}
+
+.org-bill-historial[open] > summary::before { transform: rotate(90deg); }
+.org-bill-historial > summary:hover { color: var(--text-primary); }
+
+.org-bill-cuenta {
+    font-size: 0.72rem;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+}
+
+.org-bill-historial-cuerpo { padding-top: 0.5rem; }
