@@ -2583,3 +2583,68 @@
     margin-bottom: 2rem;
 }
 #activityTab .org-sub-block:last-child { margin-bottom: 0; }
+
+/* ─── Historial de movimientos (Uso) ──────────────────────────────────
+   Lista, como en la vista de creditos vieja: una fila por movimiento, del mas
+   reciente al mas antiguo. */
+
+.org-usage-historial { margin-top: 2rem; }
+
+.org-hist-aviso {
+    margin: 0 0 0.75rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-divider);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.org-hist-list { border-top: 1px solid var(--border-divider); }
+
+.org-hist-row {
+    display: grid;
+    grid-template-columns: 8px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* El chip de color amarra cada movimiento con su serie en la grafica de arriba:
+   sin el, la lista y el grafico se leen como dos cosas distintas. */
+.org-hist-cat { width: 8px; height: 8px; border-radius: 2px; }
+
+.org-hist-que {
+    min-width: 0;
+    color: var(--text-primary);
+    font-size: 0.86rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.org-hist-que em { font-style: normal; color: var(--text-muted); margin-left: 0.4rem; font-size: 0.78rem; }
+.org-hist-fecha { color: var(--text-muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.org-hist-delta { font-size: 0.85rem; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 62px; text-align: right; }
+.org-hist-delta.is-debito { color: var(--text-secondary); }
+/* El abono se distingue por el signo y algo mas de brillo, no por verde: el
+   verde en esta pagina ya significa otra cosa. */
+.org-hist-delta.is-abono { color: var(--text-primary); }
+
+.org-hist-pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+    .org-hist-row { grid-template-columns: 8px minmax(0, 1fr) auto; }
+    .org-hist-fecha { display: none; }
+}

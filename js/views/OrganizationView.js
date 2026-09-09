@@ -245,6 +245,10 @@ class OrganizationView extends BaseView {
                  (vivia en CreditsShopView antes del commit 07d290c6) y traido
                  aqui, que es donde vive el consumo. -->
             <div class="org-usage-miembros" id="orgUsageMiembros"></div>
+
+            <!-- Historial de movimientos, en lista, como estaba en la vista de
+                 creditos antes del rediseño. -->
+            <div class="org-usage-historial" id="orgUsageHistorial"></div>
           </section>
         </div>
 
@@ -962,9 +966,11 @@ class OrganizationView extends BaseView {
     const { data } = await this.supabase
       // `metadata` entra al select porque de ahi sale la plataforma del scraping:
       // sin ella, Instagram y Facebook caen en el mismo saco.
-      .from('credit_usage').select('kind, credits_delta, created_at, metadata')
+      .from('credit_usage').select('kind, credits_delta, created_at, metadata, source_id')
       .eq('organization_id', this.orgId)
-      .lt('credits_delta', 0)
+      // SIN filtro de signo: el historial de abajo muestra TODOS los
+      // movimientos, y esconder los positivos taparia justo la anomalia que
+      // hay que ver (ver el filtro de la grafica, mas abajo).
       .gte('created_at', desde.toISOString())
       .lte('created_at', new Date(hasta.getTime() + 86399000).toISOString())
       .order('created_at', { ascending: true });
@@ -975,9 +981,16 @@ class OrganizationView extends BaseView {
     const byArea = {};
     OrganizationView.USAGE_AREAS.forEach((a) => { byArea[a.key] = 0; });
     let total = 0;
+    // La grafica solo agrega los movimientos NEGATIVOS, que son el consumo tal
+    // como quedo escrito. Los positivos se cuentan aparte y se avisan: en esta
+    // base hay 486 filas con signo positivo y 484 de ellas son consumo anotado
+    // al reves (vera_chat y claude_tokens entran como abono). Reinterpretarlas
+    // aqui seria adivinar; el arreglo va donde se escriben, no en la vista.
+    let positivos = 0;
     rows.forEach((r) => {
       const day = (r.created_at || '').slice(0, 10);
       if (!day) return;
+      if (Number(r.credits_delta) >= 0) { positivos += 1; return; }
       const cat = OrganizationView._categoriaDe(r.kind, r.metadata?.platform);
       const c = Math.abs(Number(r.credits_delta) || 0);
       // Se guardan CREDITOS y OPERACIONES: el tooltip necesita las dos cosas
@@ -1017,7 +1030,10 @@ class OrganizationView extends BaseView {
     this.usage = {
       days: dias, byDay, byArea, total, peak,
       topAreaKey: total > 0 && topAreaKey ? topAreaKey[0] : null,
-      events: rows.length,
+      events: rows.filter((r) => Number(r.credits_delta) < 0).length,
+      positivos,
+      // El historial va de mas reciente a mas antiguo y con TODOS los signos.
+      movimientos: [...rows].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))),
       porMiembro: Object.values(porMiembro).sort((a, b) => b.creditos - a.creditos),
     };
   }
@@ -1873,6 +1889,74 @@ class OrganizationView extends BaseView {
    * (imagenes, videos, los cinco scrapers…). El export viejo usaba las seis
    * "areas" tecnicas, que es justo el desglose que dejo de servir.
    */
+  /**
+   * Historial de movimientos, en lista, como estaba en la vista de creditos
+   * antes del rediseño. Dos diferencias con aquella:
+   *
+   * 1. Muestra TODOS los signos. El negativo es consumo y el positivo un abono
+   *    —o un consumo mal anotado, que en esta base es lo mas comun: 484 de las
+   *    486 filas positivas son vera_chat y claude_tokens entrando como abono—.
+   *    Esconderlas taparia justo lo que hay que ver.
+   * 2. Pagina en memoria sobre lo que ya se cargo para la grafica, en vez de
+   *    pedir otra pagina al servidor por cada click.
+   */
+  _renderUsageHistorial() {
+    const el = this.querySelector('#orgUsageHistorial');
+    if (!el) return;
+    const todos = this.usage?.movimientos || [];
+    if (!todos.length) { el.innerHTML = ''; return; }
+
+    const POR_PAGINA = 25;
+    const pagina = this._histPagina || 0;
+    const paginas = Math.max(1, Math.ceil(todos.length / POR_PAGINA));
+    const visibles = todos.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA);
+
+    const aviso = this.usage?.positivos
+      ? `<p class="org-hist-aviso">${__('{n} movimientos entraron con signo positivo. La gráfica de arriba solo cuenta los negativos, así que ese consumo no aparece en ella.', { n: this.usage.positivos })}</p>`
+      : '';
+
+    el.innerHTML = `
+      <div class="org-section-head">
+        <div>
+          <h3 class="org-uchart-title">${__('Historial de movimientos')}</h3>
+          <p class="org-uchart-desc">${__('Cada cargo y abono del período, del más reciente al más antiguo.')}</p>
+        </div>
+      </div>
+      ${aviso}
+      <div class="org-hist-list">
+        ${visibles.map((r) => {
+          const delta = Number(r.credits_delta) || 0;
+          const cat = OrganizationView._categoriaDe(r.kind, r.metadata?.platform);
+          const meta = OrganizationView.USAGE_AREAS.find((a) => a.key === cat);
+          const etiqueta = (window.CreditCosts?.get?.(r.kind)?.label) || r.kind;
+          const detalle = r.metadata?.description || r.metadata?.handle || r.source_id || '';
+          return `
+            <div class="org-hist-row">
+              <span class="org-hist-cat" style="background:${meta ? meta.color : '#64748b'}" title="${this._esc(meta ? meta.label : cat)}"></span>
+              <span class="org-hist-que">
+                ${this._esc(etiqueta)}
+                ${detalle ? `<em>${this._esc(String(detalle).slice(0, 48))}</em>` : ''}
+              </span>
+              <span class="org-hist-fecha">${this._esc(this._fmtDate(r.created_at))}</span>
+              <span class="org-hist-delta ${delta < 0 ? 'is-debito' : 'is-abono'}">${delta > 0 ? '+' : ''}${delta.toFixed(2)}</span>
+            </div>`;
+        }).join('')}
+      </div>
+      ${paginas > 1 ? `
+        <div class="org-hist-pager">
+          <button type="button" class="btn btn-secondary btn-sm" data-hist="prev" ${pagina === 0 ? 'disabled' : ''}>${__('Anterior')}</button>
+          <span>${__('Página {n} de {t}', { n: pagina + 1, t: paginas })}</span>
+          <button type="button" class="btn btn-secondary btn-sm" data-hist="next" ${pagina >= paginas - 1 ? 'disabled' : ''}>${__('Siguiente')}</button>
+        </div>` : ''}`;
+
+    el.querySelectorAll('[data-hist]').forEach((b) => {
+      this.addEventListener(b, 'click', () => {
+        this._histPagina = Math.max(0, Math.min(paginas - 1, pagina + (b.dataset.hist === 'next' ? 1 : -1)));
+        this._renderUsageHistorial();
+      });
+    });
+  }
+
   _exportUsageCsv() {
     const filas = this.usage?.porMiembro || [];
     if (!filas.length) return;
@@ -1913,6 +1997,7 @@ class OrganizationView extends BaseView {
         label: ' ',
         allLabel: __('Últimos 30 días'),
         onChange: async ({ from, to }) => {
+          this._histPagina = 0;
           this.usageFrom = from || null;
           this.usageTo = to || null;
           await this._loadUsage();
@@ -2030,6 +2115,7 @@ class OrganizationView extends BaseView {
     // El tooltip se engancha AL FINAL, no al principio: .org-uchart-plot lo crea
     // el innerHTML de arriba, asi que atado antes el querySelector devuelve null
     // y no se engancha nada. Fue exactamente el bug que lo dejo mudo.
+    this._renderUsageHistorial();
     this._bindUsageTooltip();
   }
 

@@ -14,6 +14,10 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Historial de movimientos": "Movement history",
+  "Cada cargo y abono del período, del más reciente al más antiguo.": "Every charge and credit in the period, newest first.",
+  "{n} movimientos entraron con signo positivo. La gráfica de arriba solo cuenta los negativos, así que ese consumo no aparece en ella.": "{n} movements were recorded with a positive sign. The chart above only counts negatives, so that usage does not appear there.",
+  "Página {n} de {t}": "Page {n} of {t}",
   "Sin consumo": "No usage",
   "cr": "cr",
   "Consumo por miembro": "Usage by member",
