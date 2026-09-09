@@ -1497,9 +1497,17 @@ describe('El selector de fotos: en el sitio, no flotando', () => {
 describe('Los botones de la consola: sin iconos, plano y blanco', () => {
   const html = VideoView.prototype.renderHTML.call({});
   const css = fs.readFileSync(path.join(process.cwd(), 'css/modules/video.css'), 'utf8');
+  /** TODOS los bloques donde aparece ese selector: las metricas y el color
+      viven en reglas distintas a proposito (el par se mide junto). */
   const regla = (sel) => {
-    const i = css.indexOf(sel + ' {');
-    return i === -1 ? '' : css.slice(i, css.indexOf('}', i));
+    const partes = [];
+    let i = css.indexOf(sel);
+    while (i !== -1) {
+      const abre = css.indexOf('{', i);
+      if (abre !== -1) partes.push(css.slice(i, css.indexOf('}', abre)));
+      i = css.indexOf(sel, i + sel.length);
+    }
+    return partes.join('\n');
   };
 
   test('ninguno de los dos lleva icono: la palabra sola es más clara', () => {
@@ -1539,5 +1547,50 @@ describe('Los botones de la consola: sin iconos, plano y blanco', () => {
     const i = css.indexOf('.video-prompt-footer-card-inner.video-director-console:focus-within');
     const r = css.slice(i, css.indexOf('}', i));
     expect(r).not.toContain('rgba(255, 255, 255, 0.28)');
+  });
+})
+
+describe('PROMPT y PRODUCIR son un par: mismo sitio, mismo tamaño', () => {
+  const css = fs.readFileSync(path.join(process.cwd(), 'css/modules/video.css'), 'utf8');
+  const compartida = (() => {
+    const i = css.indexOf('.video-view-container .video-director-console-zone .video-director-btn-forge,');
+    return css.slice(i, css.indexOf('}', i));
+  })();
+
+  test('las métricas van en UNA sola regla para los dos', () => {
+    // Separadas, cualquier retoque en uno los desalinea sin que se note hasta
+    // verlo en pantalla.
+    expect(compartida).toContain('.video-director-btn-generate');
+    expect(compartida).toContain('height: 36px');
+    expect(compartida).toContain('min-width');
+    expect(compartida).toContain('font-size: 0.8rem');
+  });
+
+  test('el `margin-left: auto` lo lleva PROMPT, el primero del par', () => {
+    // Sobre PRODUCIR empujaba solo a PRODUCIR al extremo y dejaba PROMPT
+    // perdido entre los ajustes, con media barra en medio.
+    const i = css.indexOf('.video-view-container .video-director-console-zone .video-director-btn-forge {');
+    expect(css.slice(i, css.indexOf('}', i))).toContain('margin-left: auto');
+    const j = css.indexOf('.video-view-container .video-director-console-zone .video-director-btn-generate {');
+    expect(css.slice(j, css.indexOf('}', j))).not.toContain('margin-left: auto');
+  });
+
+  test('los dos llevan borde: sin él, PRODUCIR mide 2px menos de alto', () => {
+    // El bloque del COLOR, que es el que declara el borde — las métricas viven
+    // en la regla compartida y ahí no hay borde que buscar.
+    const i = css.indexOf('background: var(--brand-color-light, #FF6A1A);\n    /* Borde');
+    expect(i).toBeGreaterThan(-1);
+    const gen = css.slice(css.lastIndexOf('{', i), css.indexOf('}', i));
+    expect(gen).toContain('border: 1px solid');
+    expect(gen).not.toContain('border: none');
+  });
+
+  test('en el marcado van pegados, PROMPT primero', () => {
+    const html = VideoView.prototype.renderHTML.call({});
+    const forge = html.indexOf('id="seedancePromptForge"');
+    const send = html.indexOf('id="seedancePromptSend"');
+    expect(forge).toBeLessThan(send);
+    // Nada entre el cierre de uno y la apertura del otro salvo espacios.
+    expect(html.slice(html.indexOf('</button>', forge) + 9, send - 60).trim()).toBe('');
   });
 })

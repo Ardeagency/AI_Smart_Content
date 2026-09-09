@@ -6228,14 +6228,35 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* CTA principal "PROMPT" alineado a la derecha, prominente.
    Border-radius var(--radius-sm) = 8px para empatar con el botón
    Vera del sidebar (mismo lenguaje de esquinas en toda la app). */
+/* LOS DOS ACTOS, JUNTOS Y DEL MISMO TAMAÑO. El `margin-left: auto` lo lleva
+   PROMPT, que es el primero del par: puesto sobre PRODUCIR empujaba solo a
+   PRODUCIR al extremo y dejaba PROMPT perdido entre los ajustes, con media
+   barra en medio. Escribir el prompt y mandarlo son los dos pasos de un mismo
+   gesto: se tocan y se leen en orden.
+
+   Las metricas van en una sola regla para los dos. Separadas, cualquier
+   retoque en uno los desalinea sin que se note hasta verlo. */
+.video-view-container .video-director-console-zone .video-director-btn-forge,
 .video-view-container .video-director-console-zone .video-director-btn-generate {
-    margin-left: auto;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
     height: 36px;
+    min-width: 116px;
     padding: 0 18px;
     border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.video-view-container .video-director-console-zone .video-director-btn-forge {
+    margin-left: auto;
+}
+
+.video-view-container .video-director-console-zone .video-director-btn-generate {
     /* Gradiente tipo "send" con el brand dinámico de la org. El respaldo es
        el gris neutro que usa el resto del módulo: el azul #1f3a8a→#0ea5e9
        que había aquí pintaba de azul el CTA de toda org sin color propio. */
@@ -6244,12 +6265,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
        la org (--brand-color-light, el que calcula OrgBrandTheme ordenando por
        luminosidad), que es el que aguanta texto oscuro encima. */
     background: var(--brand-color-light, #FF6A1A);
-    border: none;
+    /* Borde del mismo color, no `none`: sin el, PRODUCIR mide 2px menos de
+       alto que PROMPT —que si lleva borde— y el par queda desalineado. */
+    border: 1px solid var(--brand-color-light, #FF6A1A);
     color: #0b0b0d;
-    font-weight: 600;
-    font-size: 0.8rem;
-    letter-spacing: 0.02em;
-    cursor: pointer;
     transition: filter 0.15s ease, transform 0.15s ease;
 }
 .video-view-container .video-director-console-zone .video-director-btn-generate:hover:not(:disabled) {
@@ -6598,22 +6617,15 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
    y se leen en orden. PROMPT lleva el acento mientras es la orden principal;
    ya forjado baja a secundario, porque "Recrear" es una segunda oportunidad,
    no lo que toca hacer. */
+/* El color de PROMPT. Las metricas —alto, ancho, tipografia— viven en la regla
+   que comparte con PRODUCIR, mas abajo: son un par y se miden juntos.
+
+   BLANCO ENTERO con texto negro: es el acto que gobierna la fila mientras no
+   hay prompt, y sobre este panel oscuro el blanco es lo que mas pesa. */
 .video-view-container .video-director-btn-forge {
-    display: inline-flex;
-    align-items: center;
-    padding: var(--spacing-xs) var(--spacing-md);
-    border-radius: var(--radius-sm);
-    /* BLANCO ENTERO con texto negro: es el acto que gobierna la fila mientras
-       no hay prompt, y sobre este panel oscuro el blanco es lo que más pesa.
-       Sin icono — la palabra sola es más clara que una bombilla que hay que
-       interpretar. */
     border: 1px solid #ffffff;
     background: #ffffff;
     color: #0b0b0d;
-    font-size: var(--font-size-xs);
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    cursor: pointer;
     transition: var(--transition);
 }
 .video-view-container .video-director-btn-forge:hover:not(:disabled) {
