@@ -86,13 +86,6 @@ class VideoView extends BaseView {
   static get SEEDANCE_REF_MAX_TOTAL_SECONDS() { return 30; }
   /** Bucket donde viven los adjuntos de referencia. */
   static get SEEDANCE_STORAGE_BUCKET() { return 'production-outputs'; }
-  /**
-   * Cuántas imágenes del producto entran como bloqueo. Dos bastan para fijar
-   * la identidad del objeto; el catálogo guarda hasta cuatro y meterlas todas
-   * se comía casi la mitad del cupo de imágenes con un solo producto,
-   * dejando sin espacio a las referencias de estilo.
-   */
-  static get SEEDANCE_PRODUCT_LOCK_IMAGES() { return 2; }
   /** Doc KIE: empezar polling 2-3s; dejar de hacer polling a los 10-15 min. Usamos 3s y máximo 12 min. */
   static get POLL_INTERVAL_MS() { return 3000; }
   static get POLL_MAX_DURATION_MS() { return 12 * 60 * 1000; }
@@ -1028,7 +1021,9 @@ class VideoView extends BaseView {
           byProduct[img.product_id].push(img.image_url);
         });
         this.dbData.products.forEach((p) => {
-          p.image_urls = (byProduct[p.id] || []).slice(0, 4);
+          // TODAS, sin recorte. Se recortaba a 4 cuando el panel usaba dos por
+          // producto y decidía él; ahora el director las ve todas y elige.
+          p.image_urls = byProduct[p.id] || [];
         });
       }
       this.renderCampaignDropdown();
@@ -1450,11 +1445,9 @@ class VideoView extends BaseView {
       this.renderProductionsGallery();
     }
     if (item.origen === 'activo') {
-      // Un elemento puede haber aportado dos imágenes: se van las dos, o la
-      // fila seguiría marcándolo como puesto con media identidad dentro.
-      this.seedanceRefs[kind] = this.seedanceRefs[kind].filter(
-        (r) => !(r.origen === 'activo' && String(r._assetId) === String(item._assetId))
-      );
+      // Se va SOLO la que se quitó. Antes se iban todas las del elemento, y era
+      // un error: si el director eligió tres fotos del producto y descarta una,
+      // pierde las otras dos sin haberlo pedido.
       this.renderElementosFilas();
     }
     this.renderSeedanceRefs();
@@ -1694,8 +1687,6 @@ class VideoView extends BaseView {
     ];
   }
 
-  /** Cuántas imágenes aporta un elemento al soltarlo. Ver SEEDANCE_PRODUCT_LOCK_IMAGES. */
-  static get ELEMENTO_MAX_IMAGENES() { return VideoView.SEEDANCE_PRODUCT_LOCK_IMAGES; }
 
   /** Un elemento por id, con su tipo. Fuente única para el drop y para el clic. */
   _buscarElemento(tipo, id) {
@@ -1712,7 +1703,20 @@ class VideoView extends BaseView {
     };
   }
 
-  /** Los elementos que ya están puestos como referencia, para marcarlos. */
+  /**
+   * Las IMÁGENES que ya están puestas, por URL. El estado dejó de ser "este
+   * elemento está usado" para ser "esta foto está usada": un producto puede
+   * tener seis y entrar con dos.
+   */
+  _urlsPuestas() {
+    return new Set(
+      (this.seedanceRefs.image || [])
+        .filter((r) => r.origen === 'activo' && r.url)
+        .map((r) => String(r.url))
+    );
+  }
+
+  /** Ids de elementos con al menos una foto puesta, para marcar el tile. */
   _elementosPuestos() {
     return new Set(
       (this.seedanceRefs.image || [])
@@ -1724,7 +1728,7 @@ class VideoView extends BaseView {
   renderElementosFilas() {
     const cont = this.container.querySelector('#videoElementosFilas');
     if (!cont) return;
-    const puestos = this._elementosPuestos();
+    const puestas = this._urlsPuestas();
 
     const filas = VideoView.ELEMENTO_TIPOS.map((def) => {
       const items = this.dbData[def.campo] || [];
@@ -1732,30 +1736,59 @@ class VideoView extends BaseView {
         ? `<p class="video-escenas-empty">${window.__('Sin {tipo}', { tipo: def.etiqueta.toLowerCase() })}</p>`
         : items.map((fila) => {
           const nombre = fila[def.nombre] || def.etiqueta;
-          const url = (Array.isArray(fila.image_urls) ? fila.image_urls : []).filter(Boolean)[0] || '';
-          const puesto = puestos.has(String(fila.id));
-          // Sin imagen no hay nada que soltar en un grupo de imágenes. Se
-          // muestra igual —existe en la marca— pero se dice por qué no se
-          // puede arrastrar, en vez de quedar inerte sin explicación.
-          const arrastrable = !!url;
+          const imagenes = (Array.isArray(fila.image_urls) ? fila.image_urls : []).filter(Boolean);
+          const portada = imagenes[0] || '';
+          const usadas = imagenes.filter((u) => puestas.has(u)).length;
+          const arrastrable = !!portada;
           const titulo = arrastrable ? nombre : `${nombre} — ${window.__('sin imagen: no se puede usar como referencia')}`;
-          // MISMO contenedor que una producción: `video-escena-item`. El
-          // nombre vive en el title, no debajo — un carrusel de miniaturas se
-          // lee por la imagen, y las etiquetas obligaban a un tile más alto y
-          // distinto al de al lado.
+
+          // MISMO contenedor que una producción: `video-escena-item`. El nombre
+          // vive en el title, no debajo — un carrusel de miniaturas se lee por
+          // la imagen.
           const dentro = arrastrable
-            ? `<img class="video-escena-thumb video-escena-thumb-img" src="${this.escapeHtml(url)}" alt="" loading="lazy" decoding="async" draggable="false">`
+            ? `<img class="video-escena-thumb video-escena-thumb-img" src="${this.escapeHtml(portada)}" alt="" loading="lazy" decoding="async" draggable="false">`
             : `<span class="video-escena-thumb video-elemento-sin-imagen"><i class="aisc-ico ${def.icono}" aria-hidden="true"></i></span>`;
+
+          // El desplegable con TODAS las fotos. Solo si hay mas de una: para
+          // una sola, el tile YA es esa foto y el panel seria un eco.
+          const galeria = imagenes.length > 1
+            ? `<div class="video-elemento-galeria" role="group" aria-label="${this.escapeHtml(window.__('Imágenes de {name}', { name: nombre }))}">
+                 <span class="video-elemento-galeria-titulo">${this.escapeHtml(nombre)}</span>
+                 <div class="video-elemento-galeria-grid">
+                   ${imagenes.map((u, i) => `
+                     <button type="button"
+                       class="video-elemento-foto${puestas.has(u) ? ' is-selected' : ''}"
+                       data-tipo="${this.escapeHtml(def.tipo)}"
+                       data-id="${this.escapeHtml(fila.id)}"
+                       data-url="${this.escapeHtml(u)}"
+                       draggable="true"
+                       aria-pressed="${puestas.has(u)}"
+                       title="${this.escapeHtml(nombre)} · ${i + 1}/${imagenes.length}">
+                       <img src="${this.escapeHtml(u)}" alt="" loading="lazy" draggable="false">
+                     </button>`).join('')}
+                 </div>
+               </div>`
+            : '';
+
+          // El contador dice que hay mas detras, y cuantas van puestas. Sin el,
+          // un producto de seis fotos se ve igual que uno de una.
+          const insignia = imagenes.length > 1
+            ? `<span class="video-elemento-contador" aria-hidden="true">${usadas ? `${usadas}/` : ''}${imagenes.length}</span>`
+            : '';
+
           return `
-            <div class="video-escena-item video-elemento-item${puesto ? ' is-selected' : ''}${arrastrable ? '' : ' is-sin-imagen'}"
+            <div class="video-escena-item video-elemento-item${usadas ? ' is-selected' : ''}${arrastrable ? '' : ' is-sin-imagen'}"
               data-tipo="${this.escapeHtml(def.tipo)}"
               data-id="${this.escapeHtml(fila.id)}"
+              ${portada ? `data-url="${this.escapeHtml(portada)}"` : ''}
               role="button" tabindex="0"
               ${arrastrable ? 'draggable="true"' : ''}
-              aria-pressed="${puesto}"
+              aria-pressed="${usadas > 0}"
               aria-label="${this.escapeHtml(titulo)}"
               title="${this.escapeHtml(titulo)}">
               <div class="video-escena-thumb-wrap">${dentro}</div>
+              ${insignia}
+              ${galeria}
             </div>`;
         }).join('');
       return `
@@ -1773,15 +1806,22 @@ class VideoView extends BaseView {
       // con teclado y en táctil es un pulso fino; sin el clic, el panel sería
       // inalcanzable para media casa.
       cont.addEventListener('click', (e) => {
-        const tile = e.target.closest('.video-elemento-item');
-        if (!tile || tile.classList.contains('is-sin-imagen')) return;
+        // Una foto del desplegable manda sobre el tile que la contiene: se
+        // toco esa, no la portada.
+        const foco = e.target.closest('.video-elemento-foto') || e.target.closest('.video-elemento-item');
+        if (!foco || foco.classList.contains('is-sin-imagen')) return;
         e.preventDefault();
-        this.alternarElemento(tile.getAttribute('data-tipo'), tile.getAttribute('data-id'));
+        this.alternarElemento(foco.getAttribute('data-tipo'), foco.getAttribute('data-id'), foco.getAttribute('data-url'));
       });
       cont.addEventListener('dragstart', (e) => {
-        const tile = e.target.closest('.video-elemento-item');
+        const tile = e.target.closest('.video-elemento-foto') || e.target.closest('.video-elemento-item');
         if (!tile || tile.classList.contains('is-sin-imagen')) return;
-        const carga = JSON.stringify({ fuente: 'elemento', tipo: tile.getAttribute('data-tipo'), id: tile.getAttribute('data-id') });
+        const carga = JSON.stringify({
+          fuente: 'elemento',
+          tipo: tile.getAttribute('data-tipo'),
+          id: tile.getAttribute('data-id'),
+          url: tile.getAttribute('data-url')
+        });
         // Tipo propio para que el drop distinga un elemento de un archivo del
         // escritorio; `text/plain` de respaldo porque Safari ignora los tipos
         // personalizados en algunas versiones.
@@ -1792,7 +1832,7 @@ class VideoView extends BaseView {
         document.body.classList.add('video-arrastrando-elemento');
       });
       cont.addEventListener('dragend', (e) => {
-        const tile = e.target.closest('.video-elemento-item');
+        const tile = e.target.closest('.video-elemento-foto') || e.target.closest('.video-elemento-item');
         if (tile) tile.classList.remove('is-arrastrando');
         document.body.classList.remove('video-arrastrando-elemento');
       });
@@ -1833,7 +1873,7 @@ class VideoView extends BaseView {
       const carga = VideoView.leerCargaDnD(e.dataTransfer);
       if (!carga) return;
       if (carga.fuente === 'produccion') this.ponerProduccionEnRefs(carga.id);
-      else this.ponerElemento(carga.tipo, carga.id);
+      else this.ponerElemento(carga.tipo, carga.id, carga.url);
     });
 
     this.bindZonaDropFrames();
@@ -1911,64 +1951,65 @@ class VideoView extends BaseView {
     this.renderSeedanceFrames();
   }
 
-  /** Tocar un elemento: si ya está puesto lo quita, si no lo pone. */
-  alternarElemento(tipo, id) {
-    if (this._elementosPuestos().has(String(id))) this.quitarElemento(id);
-    else this.ponerElemento(tipo, id);
+  /** Tocar una imagen: si ya está puesta la quita, si no la pone. */
+  alternarElemento(tipo, id, url) {
+    const el = this._buscarElemento(tipo, id);
+    if (!el) return;
+    const elegida = url && el.imagenes.includes(url) ? url : el.imagenes[0];
+    if (elegida && this._urlsPuestas().has(elegida)) this.quitarImagenElemento(elegida);
+    else this.ponerElemento(tipo, id, elegida);
   }
 
   /**
-   * Mete las imágenes del elemento como referencias. Respeta el cupo de KIE: si
-   * no caben todas, avisa — un elemento a medias es peor que uno rechazado,
-   * porque el usuario cree que mandó la identidad completa.
+   * Mete UNA imagen del elemento como referencia. Antes se metían dos de golpe
+   * —el panel decidía cuáles— y quitar una se llevaba las dos. Ahora el
+   * director elige foto por foto y cada una entra y sale sola.
+   *
+   * Sin `url` se usa la portada: es el gesto rápido de tocar el tile.
    */
-  ponerElemento(tipo, id) {
+  ponerElemento(tipo, id, url) {
     const el = this._buscarElemento(tipo, id);
     if (!el) return;
-    if (this._elementosPuestos().has(String(el.id))) return;
 
     if (!el.imagenes.length) {
       this._seedanceNotify(window.__('"{name}" no tiene imagen, así que no puede entrar como referencia.', { name: el.nombre }));
       return;
     }
+    // Una URL que no es de este elemento no entra: el arrastre viene del DOM y
+    // el DOM es dato de la pantalla, no una fuente de verdad.
+    const elegida = url && el.imagenes.includes(url) ? url : el.imagenes[0];
+    if (this._urlsPuestas().has(elegida)) return;
 
-    const libre = VideoView.SEEDANCE_REF_LIMITS.image - this.seedanceRefs.image.length;
-    if (libre <= 0) {
+    if (this.seedanceRefs.image.length >= VideoView.SEEDANCE_REF_LIMITS.image) {
       this._seedanceNotify(window.__('No cabe: el grupo de imágenes ya está en su máximo. Quita una referencia y vuelve a intentar.'));
       return;
     }
-    const urls = el.imagenes.slice(0, Math.min(VideoView.ELEMENTO_MAX_IMAGENES, libre));
-    urls.forEach((url) => {
-      this.seedanceRefs.image.push({
-        name: el.nombre,
-        url,
-        storagePath: null,
-        seconds: null,
-        origen: 'activo',
-        lock: el.def.lock,
-        _assetId: el.id,
-        _assetTipo: el.def.tipo,
-        _entityId: el.entityId
-      });
+
+    this.seedanceRefs.image.push({
+      name: el.nombre,
+      url: elegida,
+      storagePath: null,
+      seconds: null,
+      origen: 'activo',
+      lock: el.def.lock,
+      _assetId: el.id,
+      _assetTipo: el.def.tipo,
+      _entityId: el.entityId
     });
-    if (el.imagenes.length > urls.length) {
-      this._seedanceNotify(window.__('De "{name}" solo cupieron {n} imagen(es).', { name: el.nombre, n: urls.length }));
-    }
     this.renderSeedanceRefs();
     this.renderElementosFilas();
   }
 
-  /** Saca todas las referencias que vinieron de ese elemento. */
-  quitarElemento(id) {
+  /** Quita UNA imagen puesta, por su URL. */
+  quitarImagenElemento(url) {
     const antes = this.seedanceRefs.image.length;
     this.seedanceRefs.image = this.seedanceRefs.image.filter(
-      (r) => !(r.origen === 'activo' && String(r._assetId) === String(id))
+      (r) => !(r.origen === 'activo' && String(r.url) === String(url))
     );
     if (this.seedanceRefs.image.length === antes) return;
     this.renderSeedanceRefs();
     this.renderElementosFilas();
   }
-
 
   renderSeedanceRefs() {
     const tope = VideoView.SEEDANCE_REF_MAX_TOTAL_SECONDS;

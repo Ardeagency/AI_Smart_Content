@@ -362,11 +362,11 @@ describe('Escenas — producciones previas como referencia', () => {
   });
 });
 
-describe('Elementos — el catálogo de la marca, en filas por tipo', () => {
+describe('Elementos — se elige FOTO por FOTO, no el elemento entero', () => {
   const conCatalogo = (v) => {
     v.dbData.products = [{
       id: 'prod-1', nombre_producto: 'Botella', entity_id: 'ent-9',
-      image_urls: ['https://cdn.test/a.jpg', 'https://cdn.test/b.jpg']
+      image_urls: ['a', 'b', 'c', 'd', 'e', 'f'].map((n) => `https://cdn.test/${n}.jpg`)
     }];
     v.dbData.characters = [{
       id: 'per-1', nombre_personaje: 'Ana', entity_id: 'ent-7',
@@ -376,27 +376,77 @@ describe('Elementos — el catálogo de la marca, en filas por tipo', () => {
       id: 'lug-1', nombre_lugar: 'Terraza', entity_id: 'ent-5',
       image_urls: ['https://cdn.test/terraza.jpg']
     }];
-    // Los servicios NO tienen tabla de imágenes en la base: existen en la
-    // marca pero no pueden entrar como referencia visual.
+    // Los servicios NO tienen tabla de imágenes en la base.
     v.dbData.services = [{ id: 'srv-1', nombre_servicio: 'Asesoría', entity_id: 'ent-3' }];
   };
 
   test('los cuatro tipos existen y solo el producto y el personaje bloquean', () => {
-    // Un producto y una cara tienen identidad; alterarlas arruina la pieza. Un
-    // escenario es contexto: que la IA lo interprete no rompe nada.
     const porTipo = Object.fromEntries(VideoView.ELEMENTO_TIPOS.map((t) => [t.tipo, t.lock]));
     expect(porTipo).toEqual({ product: true, character: true, place: false, service: false });
   });
 
-  test('soltar un producto mete sus imágenes con lock', () => {
+  test('soltar el tile mete UNA foto —la portada—, no dos', () => {
+    // Antes metía dos por su cuenta: el panel elegía por el director.
     const { v } = nuevaVista();
     conCatalogo(v);
 
     v.ponerElemento('product', 'prod-1');
 
-    expect(v.seedanceRefs.image).toHaveLength(2);
-    expect(v.seedanceRefs.image.every((r) => r.lock === true)).toBe(true);
-    expect(v.seedanceRefs.image.every((r) => r.origen === 'activo')).toBe(true);
+    expect(v.seedanceRefs.image).toHaveLength(1);
+    expect(v.seedanceRefs.image[0].url).toBe('https://cdn.test/a.jpg');
+    expect(v.seedanceRefs.image[0].lock).toBe(true);
+  });
+
+  test('se puede elegir CUÁL foto, no solo la portada', () => {
+    const { v } = nuevaVista();
+    conCatalogo(v);
+
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/d.jpg');
+
+    expect(v.seedanceRefs.image[0].url).toBe('https://cdn.test/d.jpg');
+  });
+
+  test('entran varias fotos del MISMO producto', () => {
+    // Es el caso que el tope de dos impedía: seis fotos y el panel usaba dos.
+    const { v } = nuevaVista();
+    conCatalogo(v);
+
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/a.jpg');
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/c.jpg');
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/e.jpg');
+
+    expect(v.seedanceRefs.image.map((r) => r.url)).toEqual([
+      'https://cdn.test/a.jpg', 'https://cdn.test/c.jpg', 'https://cdn.test/e.jpg'
+    ]);
+  });
+
+  test('QUITAR UNA QUITA UNA: las demás del producto se quedan', () => {
+    // El bug: quitar una foto se llevaba todas las del producto, así que el
+    // director perdía una selección que no pidió deshacer.
+    const { v } = nuevaVista();
+    conCatalogo(v);
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/a.jpg');
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/c.jpg');
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/e.jpg');
+
+    v.quitarImagenElemento('https://cdn.test/c.jpg');
+
+    expect(v.seedanceRefs.image.map((r) => r.url)).toEqual([
+      'https://cdn.test/a.jpg', 'https://cdn.test/e.jpg'
+    ]);
+  });
+
+  test('quitarla desde la fila de referencias tampoco arrastra a las hermanas', () => {
+    // Misma regla por el otro camino: la × del item de referencia.
+    const { v } = nuevaVista();
+    conCatalogo(v);
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/a.jpg');
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/b.jpg');
+
+    v.removeSeedanceRef('image', 0);
+
+    expect(v.seedanceRefs.image).toHaveLength(1);
+    expect(v.seedanceRefs.image[0].url).toBe('https://cdn.test/b.jpg');
   });
 
   test('un escenario entra como referencia, pero SIN lock', () => {
@@ -405,13 +455,10 @@ describe('Elementos — el catálogo de la marca, en filas por tipo', () => {
 
     v.ponerElemento('place', 'lug-1');
 
-    expect(v.seedanceRefs.image).toHaveLength(1);
     expect(v.seedanceRefs.image[0].lock).toBe(false);
   });
 
-  test('se pueden soltar varios elementos de tipos distintos', () => {
-    // El desplegable viejo obligaba a elegir UN alcance: no había forma de
-    // pedir "este producto, en este escenario, con esta persona".
+  test('se pueden mezclar elementos de tipos distintos', () => {
     const { v } = nuevaVista();
     conCatalogo(v);
 
@@ -419,31 +466,37 @@ describe('Elementos — el catálogo de la marca, en filas por tipo', () => {
     v.ponerElemento('character', 'per-1');
     v.ponerElemento('place', 'lug-1');
 
-    expect(v.seedanceRefs.image).toHaveLength(4);
-    expect(new Set(v.seedanceRefs.image.map((r) => r._assetTipo))).toEqual(
-      new Set(['product', 'character', 'place'])
-    );
+    expect(new Set(v.seedanceRefs.image.map((r) => r._assetTipo)))
+      .toEqual(new Set(['product', 'character', 'place']));
   });
 
-  test('soltar dos veces el mismo elemento no lo duplica', () => {
+  test('la misma foto dos veces no se duplica', () => {
     const { v } = nuevaVista();
     conCatalogo(v);
 
-    v.ponerElemento('product', 'prod-1');
-    v.ponerElemento('product', 'prod-1');
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/a.jpg');
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/a.jpg');
 
-    expect(v.seedanceRefs.image).toHaveLength(2);
+    expect(v.seedanceRefs.image).toHaveLength(1);
   });
 
-  test('tocarlo otra vez lo quita entero, no a medias', () => {
+  test('una URL que no es del elemento cae a su portada', () => {
+    // El arrastre viene del DOM, y el DOM es dato de la pantalla, no verdad.
     const { v } = nuevaVista();
     conCatalogo(v);
-    v.ponerElemento('product', 'prod-1');
 
-    v.alternarElemento('product', 'prod-1');
+    v.ponerElemento('product', 'prod-1', 'https://otro.test/robada.jpg');
 
-    // Un producto aporta dos imágenes: si se fuera solo una, la fila lo
-    // seguiría marcando como puesto con media identidad dentro.
+    expect(v.seedanceRefs.image[0].url).toBe('https://cdn.test/a.jpg');
+  });
+
+  test('tocarla otra vez la quita', () => {
+    const { v } = nuevaVista();
+    conCatalogo(v);
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/b.jpg');
+
+    v.alternarElemento('product', 'prod-1', 'https://cdn.test/b.jpg');
+
     expect(v.seedanceRefs.image).toHaveLength(0);
   });
 
@@ -455,19 +508,6 @@ describe('Elementos — el catálogo de la marca, en filas por tipo', () => {
 
     expect(v.seedanceRefs.image).toHaveLength(0);
     expect(avisos.join(' ')).toMatch(/no tiene imagen/);
-  });
-
-  test('el elemento no se come el cupo: tope de imágenes por elemento', () => {
-    const { v } = nuevaVista();
-    v.dbData.products = [{
-      id: 'prod-1', nombre_producto: 'Botella', entity_id: 'ent-9',
-      image_urls: ['a', 'b', 'c', 'd'].map((n) => `https://cdn.test/${n}.jpg`)
-    }];
-
-    v.ponerElemento('product', 'prod-1');
-
-    expect(v.seedanceRefs.image).toHaveLength(VideoView.ELEMENTO_MAX_IMAGENES);
-    expect(VideoView.ELEMENTO_MAX_IMAGENES).toBeLessThan(VideoView.SEEDANCE_REF_LIMITS.image);
   });
 
   test('con el grupo lleno no entra y se avisa', () => {
@@ -486,12 +526,12 @@ describe('Elementos — el catálogo de la marca, en filas por tipo', () => {
   test('el bloqueo sale aparte en el payload, y también dentro de las imágenes', () => {
     const { v } = nuevaVista();
     conCatalogo(v);
-    v.ponerElemento('product', 'prod-1');
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/a.jpg');
+    v.ponerElemento('product', 'prod-1', 'https://cdn.test/b.jpg');
 
     const payload = v.buildSeedancePayload();
 
     expect(payload.product_lock_urls).toEqual(['https://cdn.test/a.jpg', 'https://cdn.test/b.jpg']);
-    // Ocupan cupo como cualquier imagen: para KIE no son un campo aparte.
     expect(payload.reference_image_urls).toEqual(payload.product_lock_urls);
   });
 
@@ -513,15 +553,13 @@ describe('Elementos — el catálogo de la marca, en filas por tipo', () => {
   });
 
   test('con frames anclados el elemento entra igual', () => {
-    // Se combinan: la doc de Seedance 2.5 declara frames y referencias
-    // opcionales e independientes.
     const { v, avisos } = nuevaVista();
     conCatalogo(v);
     v.seedanceFrames.first = { url: 'https://cdn.test/f.jpg', storagePath: 'p' };
 
     v.ponerElemento('product', 'prod-1');
 
-    expect(v.seedanceRefs.image).toHaveLength(2);
+    expect(v.seedanceRefs.image).toHaveLength(1);
     expect(avisos.join(' ')).toBe('');
   });
 });
@@ -830,13 +868,57 @@ describe('Las filas de Elementos y el contrato del arrastre', () => {
   });
 
   test('el que ya está puesto se marca', () => {
-    // Sin esto, arrastrar dos veces el mismo producto parece no hacer nada.
+    // Sin esto, arrastrar dos veces la misma foto parece no hacer nada.
     const { v, nodo } = conFilas();
-    v.seedanceRefs.image = [{ origen: 'activo', _assetId: 'p1', url: 'u', name: 'Botella' }];
+    v.seedanceRefs.image = [{ origen: 'activo', _assetId: 'p1', url: 'https://cdn.test/a.jpg', name: 'Botella' }];
 
     v.renderElementosFilas();
 
-    expect(nodo.innerHTML).toMatch(/video-escena-item video-elemento-item is-selected"[\s\S]*?data-tipo="product"/);
+    expect(nodo.innerHTML).toContain('video-elemento-item is-selected');
+  });
+
+  test('el desplegable trae TODAS las fotos, cada una arrastrable', () => {
+    // Un producto de seis se veía igual que uno de una, y el panel elegía dos
+    // por su cuenta.
+    const { v, nodo } = conFilas();
+    v.dbData.products = [{
+      id: 'p1', nombre_producto: 'Botella',
+      image_urls: ['a', 'b', 'c'].map((n) => `https://cdn.test/${n}.jpg`)
+    }];
+
+    v.renderElementosFilas();
+
+    const fotos = nodo.innerHTML.split('video-elemento-foto').length - 1;
+    expect(fotos).toBe(3);
+    expect(nodo.innerHTML).toContain('data-url="https://cdn.test/c.jpg"');
+    // Y el contador dice cuántas hay detrás.
+    expect(nodo.innerHTML).toContain('video-elemento-contador');
+  });
+
+  test('con una sola foto no hay desplegable: sería un eco del tile', () => {
+    const { v, nodo } = conFilas();
+
+    v.renderElementosFilas();
+
+    // El personaje del fixture tiene una sola imagen.
+    const galerias = nodo.innerHTML.split('video-elemento-galeria"').length - 1;
+    expect(galerias).toBe(0);
+  });
+
+  test('el contador muestra cuántas van puestas de cuántas hay', () => {
+    const { v, nodo } = conFilas();
+    v.dbData.products = [{
+      id: 'p1', nombre_producto: 'Botella',
+      image_urls: ['a', 'b', 'c'].map((n) => `https://cdn.test/${n}.jpg`)
+    }];
+    v.seedanceRefs.image = [
+      { origen: 'activo', _assetId: 'p1', url: 'https://cdn.test/a.jpg' },
+      { origen: 'activo', _assetId: 'p1', url: 'https://cdn.test/b.jpg' }
+    ];
+
+    v.renderElementosFilas();
+
+    expect(nodo.innerHTML).toContain('>2/3<');
   });
 
   test('usan EXACTAMENTE el contenedor de una producción', () => {

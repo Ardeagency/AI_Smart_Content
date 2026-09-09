@@ -21,8 +21,9 @@ class BrandAssetsDataService {
   }
 
   /**
-   * Escenarios y personajes de esos entity_ids, cada uno con `image_urls`
-   * (solo la primera, que es la que pinta el tile).
+   * Escenarios y personajes de esos entity_ids, cada uno con TODAS sus
+   * `image_urls`. La primera es la portada del tile; el resto se despliega al
+   * pasar el cursor, para que el director elija cual usar.
    *
    * Devuelve siempre el shape completo: un fallo deja listas vacías, no
    * undefined. La fila dice "Sin escenarios", que es la verdad visible, en vez
@@ -65,19 +66,23 @@ class BrandAssetsDataService {
           : Promise.resolve({ data: [] })
       ]);
 
-      const primeraPorId = (filas, clave) => {
+      // TODAS las imagenes, no solo la portada: el panel las despliega al pasar
+      // el cursor para que el director elija cual quiere. Guardar solo la
+      // primera era decidir por el.
+      const todasPorId = (filas, clave) => {
         const m = {};
         (filas || []).forEach((img) => {
           const url = (img.image_url || '').trim();
+          if (!url) return;
           // `image_order` viene ordenado: la primera que llega es la portada.
-          if (url && !m[img[clave]]) m[img[clave]] = url;
+          (m[img[clave]] ??= []).push(url);
         });
         return m;
       };
-      const porLugar = primeraPorId(placeImgs.data, 'place_id');
-      const porPersonaje = primeraPorId(charImgs.data, 'character_id');
-      places.forEach((x) => { x.image_urls = porLugar[x.id] ? [porLugar[x.id]] : []; });
-      characters.forEach((x) => { x.image_urls = porPersonaje[x.id] ? [porPersonaje[x.id]] : []; });
+      const porLugar = todasPorId(placeImgs.data, 'place_id');
+      const porPersonaje = todasPorId(charImgs.data, 'character_id');
+      places.forEach((x) => { x.image_urls = porLugar[x.id] || []; });
+      characters.forEach((x) => { x.image_urls = porPersonaje[x.id] || []; });
 
       return { places, characters };
     } catch (e) {

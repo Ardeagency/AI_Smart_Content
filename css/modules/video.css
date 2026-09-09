@@ -6628,3 +6628,113 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     cursor: not-allowed;
     filter: grayscale(0.7);
 }
+
+/* --- La galería del elemento: TODAS sus fotos, al pasar el cursor --------
+   Un producto puede tener seis fotos y antes el panel elegía dos por su
+   cuenta. Ahora el tile muestra la portada y el resto se despliega para que
+   el director escoja; cada foto se arrastra por separado y se quita sola.
+
+   Se abre en hover Y en focus-within: con teclado se llega tabulando, y un
+   panel que solo existe para el mouse no existe para media casa. */
+.video-view-container .video-elemento-item {
+    position: relative;
+    /* El carrusel scrollea en X con overflow, así que la galería no puede
+       colgar dentro de él sin que la recorte: va en `position: fixed`-like
+       usando un z-index alto y saliéndose por arriba. */
+}
+.video-view-container .video-elemento-galeria {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    z-index: 40;
+    width: max-content;
+    max-width: 260px;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-divider, #242424);
+    background: var(--living-bg-card, #14151a);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s;
+}
+.video-view-container .video-elemento-item:hover .video-elemento-galeria,
+.video-view-container .video-elemento-item:focus-within .video-elemento-galeria {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+.video-view-container .video-elemento-galeria-titulo {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-tertiary, rgba(255, 255, 255, 0.45));
+}
+.video-view-container .video-elemento-galeria-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 52px);
+    gap: 5px;
+    max-height: 170px;
+    overflow-y: auto;
+}
+.video-view-container .video-elemento-foto {
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #0f1012;
+    cursor: grab;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.video-view-container .video-elemento-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.video-view-container .video-elemento-foto:hover {
+    border-color: var(--white-50, rgba(255, 255, 255, 0.5));
+    transform: scale(1.04);
+}
+.video-view-container .video-elemento-foto:active {
+    cursor: grabbing;
+}
+/* La que ya está puesta en el prompt. Sin esto, arrastrar dos veces la misma
+   foto parece no hacer nada. */
+.video-view-container .video-elemento-foto.is-selected {
+    border-color: var(--video-accent, rgba(255, 255, 255, 0.7));
+    box-shadow: inset 0 0 0 2px var(--video-accent-soft, rgba(255, 255, 255, 0.25));
+}
+
+/* Cuántas fotos hay detrás, y cuántas van puestas. Sin el contador, un
+   producto de seis se ve igual que uno de una. */
+.video-view-container .video-elemento-contador {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    padding: 0 4px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.72);
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.56rem;
+    line-height: 1.5;
+    pointer-events: none;
+}
+
+/* El carrusel recorta en X; con la galería colgando hacia arriba hace falta
+   que el eje Y no la corte. */
+.video-view-container .video-elementos-filas .video-escenas-carousel {
+    overflow-y: visible;
+}
+.video-view-container .video-elementos-fila {
+    position: relative;
+}
