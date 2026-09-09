@@ -87,6 +87,13 @@ class OrganizationView extends BaseView {
         <div class="org-ctrl-stats" id="orgCtrlStats"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
 
+      <!-- Resumen de la organizacion: el "que hay aqui" completo. Lo llena
+           _renderResumen() con OrgSummaryDataService; cada bloque se pinta solo
+           si tiene datos, para no dejar tarjetas en cero fingiendo contenido. -->
+      <section class="org-section" id="orgResumenSection">
+        <div class="org-resumen" id="orgResumen"><p class="org-placeholder">${__('Cargando…')}</p></div>
+      </section>
+
       <div class="org-general-config">
       <section class="org-section">
         <div class="org-section-head">
@@ -377,6 +384,7 @@ class OrganizationView extends BaseView {
     this._populateTimezones();
     await this._loadAll();
     this._bindEvents();
+    this._renderResumen();
     this.updateHeaderContext(__('Configuración'), null, this.org?.name || null);
   }
 
@@ -1186,9 +1194,12 @@ class OrganizationView extends BaseView {
     const el = this.querySelector('#orgHeaderStatus');
     if (!el || !this.org) return;
     const archived = !!this.org.deleted_at;
+    // Solo se rotula lo EXCEPCIONAL. Una org archivada hay que avisarla; que
+    // este activa es el caso normal y no merece una pastilla verde gritando lo
+    // obvio en la cabecera de su propia pagina.
     el.innerHTML = archived
       ? `<span class="org-status-pill org-status-pill--archived"><i class="aisc-ico aisc-ico--archive"></i> ${__('Archivada')}</span>`
-      : `<span class="org-status-pill org-status-pill--active">${__('Activa')}</span>`;
+      : '';
   }
 
   _renderGeneral() {
@@ -1648,6 +1659,155 @@ class OrganizationView extends BaseView {
 
   _toast(msg) {
     if (typeof window.showToast === 'function') window.showToast(msg, 'success');
+  }
+
+  // ─── Resumen de la organizacion ──────────────────────────────────────
+
+  /** Formatea un importe con SU moneda. Nunca con "$" a secas: el gasto de esta
+   *  plataforma convive en COP y USD, y un simbolo generico convierte 18 millones
+   *  de pesos en dieciocho millones de dolares a los ojos de quien lee. */
+  _money(monto, moneda) {
+    try {
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency', currency: moneda, maximumFractionDigits: 0,
+      }).format(monto);
+    } catch (_) {
+      return `${Math.round(monto).toLocaleString('es')} ${moneda}`;
+    }
+  }
+
+  _resumenBloque(titulo, cuerpoHtml) {
+    return `<div class="org-res-block">
+      <h3 class="org-res-title">${this._esc(titulo)}</h3>
+      ${cuerpoHtml}
+    </div>`;
+  }
+
+  _resumenDato(valor, etiqueta, extra = '') {
+    return `<div class="org-res-stat">
+      <span class="org-res-num">${valor}</span>
+      <span class="org-res-lbl">${this._esc(etiqueta)}</span>
+      ${extra ? `<span class="org-res-sub">${extra}</span>` : ''}
+    </div>`;
+  }
+
+  _esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  async _renderResumen() {
+    const el = this.querySelector('#orgResumen');
+    if (!el) return;
+    if (!window.OrgSummaryDataService || !this.supabase || !this.orgId) {
+      el.innerHTML = '';
+      return;
+    }
+
+    let r = null;
+    try {
+      const svc = await new window.OrgSummaryDataService().init(this.supabase, this.orgId);
+      r = await svc.cargar();
+    } catch (e) {
+      console.warn('OrganizationView._renderResumen:', e);
+    }
+    if (!r) { el.innerHTML = ''; return; }
+
+    const bloques = [];
+
+    // ── Plan y creditos ──────────────────────────────────────────────
+    const partesPlan = [];
+    if (r.plan?.nombre) {
+      partesPlan.push(this._resumenDato(this._esc(r.plan.nombre), __('Plan de la marca'),
+        r.plan.creditosMes ? `${Number(r.plan.creditosMes).toLocaleString('es')} ${__('créditos / mes')}` : ''));
+    }
+    if (r.creditos && r.creditos.total > 0) {
+      const pct = r.creditos.pctUsado;
+      partesPlan.push(`<div class="org-res-stat org-res-stat--wide">
+        <span class="org-res-num">${Math.round(r.creditos.usados).toLocaleString('es')}<span class="org-res-num-of"> / ${Math.round(r.creditos.total).toLocaleString('es')}</span></span>
+        <span class="org-res-lbl">${__('Créditos utilizados')}</span>
+        <div class="org-res-bar" role="img" aria-label="${pct}%">
+          <span class="org-res-bar-fill" style="transform:scaleX(${(pct || 0) / 100})"></span>
+        </div>
+        <span class="org-res-sub">${__('Quedan {n}', { n: Math.round(r.creditos.disponibles).toLocaleString('es') })}</span>
+      </div>`);
+    }
+    if (partesPlan.length) {
+      bloques.push(this._resumenBloque(__('Plan y consumo'), `<div class="org-res-grid">${partesPlan.join('')}</div>`));
+    }
+
+    // ── Mercado: a quien le habla la marca ───────────────────────────
+    if (Array.isArray(r.mercado) && r.mercado.length) {
+      const marcas = r.mercado.map((m) => {
+        const filas = [];
+        const lista = (arr) => (Array.isArray(arr) ? arr.filter(Boolean) : []);
+        const paises = lista(m.mercado_objetivo);
+        const idiomas = lista(m.idiomas_contenido);
+        const subs = lista(m.sub_nichos);
+        if (paises.length) filas.push(`<dt>${__('Va dirigida a')}</dt><dd>${this._esc(paises.join(' · '))}</dd>`);
+        if (idiomas.length) filas.push(`<dt>${__('Idiomas')}</dt><dd>${this._esc(idiomas.join(' · '))}</dd>`);
+        if (m.nicho_core) filas.push(`<dt>${__('Nicho')}</dt><dd>${this._esc(m.nicho_core)}</dd>`);
+        if (subs.length) filas.push(`<dt>${__('Sub-nichos')}</dt><dd>${this._esc(subs.join(' · '))}</dd>`);
+        if (m.arquetipo) filas.push(`<dt>${__('Arquetipo')}</dt><dd>${this._esc(m.arquetipo)}</dd>`);
+        if (!filas.length) return '';
+        return `<div class="org-res-marca">
+          <h4>${this._esc(m.nombre_marca || '—')}</h4>
+          <dl class="org-res-dl">${filas.join('')}</dl>
+        </div>`;
+      }).filter(Boolean).join('');
+      if (marcas) bloques.push(this._resumenBloque(__('Mercado'), marcas));
+    }
+
+    // ── Audiencias, vigilancia y estrategias ─────────────────────────
+    const partesInt = [];
+    if (r.audiencias?.total) {
+      // Si nadie midio la alineacion se DICE, en vez de pintar un 0% que se
+      // leeria como "va pesimo" cuando en realidad no se ha medido.
+      const sub = r.audiencias.medidas
+        ? __('Alineación media {n}%', { n: r.audiencias.alineacionMedia })
+        : `<span class="org-res-sinmedir">${__('Sin medir si funciona')}</span>`;
+      partesInt.push(this._resumenDato(r.audiencias.total, __('Audiencias'), sub));
+    }
+    if (r.vigilancia?.total) {
+      const roles = Object.entries(r.vigilancia.porRol)
+        .sort((a, b) => b[1] - a[1])
+        .map(([k, n]) => `${n} ${this._esc(k.replace(/_/g, ' '))}`)
+        .join(' · ');
+      partesInt.push(this._resumenDato(r.vigilancia.total, __('Perfiles vigilados'), roles));
+    }
+    if (r.estrategias?.total) {
+      const props = r.estrategias.porEstado?.proposed || 0;
+      partesInt.push(this._resumenDato(r.estrategias.total, __('Estrategias'),
+        props ? __('{n} sin usar', { n: props }) : ''));
+    }
+    if (partesInt.length) {
+      bloques.push(this._resumenBloque(__('Inteligencia'), `<div class="org-res-grid">${partesInt.join('')}</div>`));
+    }
+
+    // ── Pauta ────────────────────────────────────────────────────────
+    if (r.pauta) {
+      const p = r.pauta;
+      const partes = [];
+      if (p.campanas.total) {
+        partes.push(this._resumenDato(p.campanas.total, __('Campañas'),
+          __('{a} activas · {p} pausadas', { a: p.campanas.activas, p: p.campanas.pausadas })));
+      }
+      if (p.anuncios.total) {
+        const extra = __('{a} activos · {p} pausados', { a: p.anuncios.activos, p: p.anuncios.pausados })
+          + (p.anuncios.conProblema ? ` · ${__('{n} con problema', { n: p.anuncios.conProblema })}` : '');
+        partes.push(this._resumenDato(p.anuncios.total, __('Anuncios'), extra));
+      }
+      Object.entries(p.gastoPorMoneda || {}).forEach(([moneda, monto]) => {
+        partes.push(this._resumenDato(this._money(monto, moneda), __('Invertido en pauta'),
+          p.conversiones ? __('{n} conversiones', { n: Math.round(p.conversiones).toLocaleString('es') }) : ''));
+      });
+      if (partes.length) {
+        bloques.push(this._resumenBloque(__('Pauta'), `<div class="org-res-grid">${partes.join('')}</div>`));
+      }
+    }
+
+    el.innerHTML = bloques.join('');
   }
 }
 
