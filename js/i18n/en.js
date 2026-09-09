@@ -14,6 +14,10 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Datos de facturación": "Billing details",
+  "Actualizar datos": "Update details",
+  "Añadir método de pago": "Add payment method",
+  "Sin fecha de renovación programada": "No renewal scheduled",
   "Facturas e historial": "Invoices & history",
   "Próximo cobro": "Next charge",
   "Método de pago": "Payment method",

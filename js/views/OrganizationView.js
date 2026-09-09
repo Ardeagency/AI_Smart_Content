@@ -180,19 +180,8 @@ class OrganizationView extends BaseView {
           <section class="org-sub-block">
             <h2 class="org-sub-rotulo">${__('Suscripción')}</h2>
             <div class="org-billing-summary" id="orgBillingSummary"><p class="org-placeholder">${__('Cargando…')}</p></div>
-            <div class="org-plan-incluye" id="orgPlanIncluye"></div>
           </section>
 
-          <section class="org-sub-block">
-            <h2 class="org-sub-rotulo">${__('Créditos')}</h2>
-            <div class="org-billing-credits" id="orgBillingCredits"></div>
-          </section>
-
-          <!-- Este bloque no lleva rotulo propio: _renderBillingLimits ya
-               imprime su titulo y su descripcion dentro. -->
-          <section class="org-sub-block" id="orgBillingLimitsBlock">
-            <div class="org-billing-limits" id="orgBillingLimits"></div>
-          </section>
         </div>
 
         <aside class="org-col-aside org-col-aside--liso">
@@ -210,6 +199,11 @@ class OrganizationView extends BaseView {
             <section class="org-sub-block">
               <h2 class="org-sub-rotulo">${__('Método de pago')}</h2>
               <div class="org-billing-pago" id="orgBillingPago"></div>
+            </section>
+
+            <section class="org-sub-block">
+              <h2 class="org-sub-rotulo">${__('Datos de facturación')}</h2>
+              <div class="org-billing-datos" id="orgBillingDatos"></div>
             </section>
           </div>
         </aside>
@@ -230,6 +224,18 @@ class OrganizationView extends BaseView {
             <button type="button" class="org-range-pill" data-range="90">${__('90 días')}</button>
           </div>
         </div>
+        <!-- Creditos y limites viven aqui, no en Suscripcion: son CONSUMO.
+             Suscripcion responde que contrataste; Uso, cuanto llevas gastado y
+             hasta donde puedes gastar. -->
+        <div class="org-sub-block">
+          <h2 class="org-sub-rotulo">${__('Créditos')}</h2>
+          <div class="org-billing-credits" id="orgBillingCredits"></div>
+        </div>
+
+        <div class="org-sub-block" id="orgBillingLimitsBlock">
+          <div class="org-billing-limits" id="orgBillingLimits"></div>
+        </div>
+
         <div class="org-usage-stats" id="orgUsageStats"></div>
         <div class="org-usage-chart-card" id="orgUsageChart"><p class="org-placeholder">${__('Cargando…')}</p></div>
         <div class="org-usage-breakdown-card" id="orgUsageBreakdown"></div>
@@ -1041,6 +1047,7 @@ class OrganizationView extends BaseView {
     this._renderBillingCredits();
     this._renderBillingPago();
     this._renderBillingProximo();
+    this._renderBillingDatos();
   }
 
   async _billingPlan() {
@@ -1062,7 +1069,6 @@ class OrganizationView extends BaseView {
     const past_due = sub?.status === 'past_due';
     const canceled = sub?.status === 'canceled' || sub?.cancel_at_period_end;
 
-    const providerLabel = sub?.provider === 'wompi' ? __('Wompi (COP)') : sub?.provider === 'stripe' ? __('Stripe (USD)') : '—';
     const planName      = plan?.name || sub?.plan_id || __('Sin plan');
     const nextRenew     = sub?.provider === 'wompi' ? sub?.next_charge_at : sub?.current_period_end;
     const nextRenewStr  = nextRenew ? new Date(nextRenew).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -1108,29 +1114,29 @@ class OrganizationView extends BaseView {
       url: null,
     }));
     const all = [...stripeRows, ...wompiRows].sort((a, b) => new Date(b.date) - new Date(a.date));
-    const lastPaid = all[0] || null;
+    // El "ultimo pago" ya no se calcula aparte: era para la tarjetita retirada, y
+    // el pago mas reciente es la primera fila de la lista de facturas.
 
     const statusTone = (past_due || canceled) ? 'warn' : sub ? 'ok' : 'muted';
-    const card = (label, emoji, accent, value, sub2, pill) => `
-      <div class="org-bill-card">
-        <div class="org-bill-card-top">
-          <span class="org-bill-chip" style="background:${accent}29;color:${accent}">${emoji}</span>
-          <span class="org-bill-card-label">${this.escapeHtml(label)}</span>
-        </div>
-        <div class="org-bill-card-val">
-          <span class="org-bill-card-value">${this.escapeHtml(value)}</span>
-          ${pill ? `<span class="org-bill-pill org-bill-pill--${pill.tone}">${this.escapeHtml(pill.text)}</span>` : ''}
-        </div>
-        <span class="org-bill-card-sub">${this.escapeHtml(sub2)}</span>
-      </div>`;
-    const nextSub = canceled ? __('La suscripción termina pronto') : (lastPaid ? this._fmtMoney(lastPaid.amount, lastPaid.currency) : '—');
 
+    // Tarjeta unica: nombre del plan, cuando se renueva, y debajo lo que
+    // incluye (lo escribe _renderPlanIncluye en el hueco #orgPlanIncluye, que se
+    // crea aqui y por eso debe correr DESPUES de este innerHTML).
+    // Las tres tarjetitas de "Plan actual / Proximo pago / Ultimo pago" se
+    // retiraron: proximo y ultimo pago viven ahora en la columna derecha, y
+    // repetirlos aqui era decir lo mismo dos veces en la misma pantalla.
     summary.innerHTML = `
       ${banner}
-      <div class="org-bill-cards">
-        ${card(__('Plan actual'), '💳', '#7c3aed', planName, providerLabel, { text: statusLabel, tone: statusTone })}
-        ${card(__('Próximo pago'), '📅', '#06b6d4', nextRenewStr, nextSub)}
-        ${card(__('Último pago'), '✅', '#22c55e', lastPaid ? this._fmtDate(lastPaid.date) : '—', lastPaid ? this._fmtMoney(lastPaid.amount, lastPaid.currency) : __('sin pagos aún'))}
+      <div class="org-plan-card">
+        <div class="org-plan-card-head">
+          <h3 class="org-plan-card-name">${this._esc(planName)}</h3>
+          <span class="org-plan-card-estado org-plan-card-estado--${this._esc(statusTone || 'muted')}">${this._esc(statusLabel)}</span>
+        </div>
+        <p class="org-plan-card-renueva">${nextRenewStr && nextRenewStr !== '—'
+          ? __('Tu plan se renueva el {fecha}', { fecha: this._esc(nextRenewStr) })
+          : __('Sin fecha de renovación programada')}</p>
+        <div class="org-plan-card-sep"></div>
+        <div class="org-plan-incluye" id="orgPlanIncluye"></div>
       </div>
       <div class="org-bill-actions">${upgradeBtn} ${stripePortalBtn} ${cancelBtn} ${reactivateBtn}</div>
     `;
@@ -1595,7 +1601,10 @@ class OrganizationView extends BaseView {
         panels.forEach((p) => { p.classList.remove('active'); });
         btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
         this.querySelector('#' + tab + 'Tab')?.classList.add('active');
-        if (tab === 'billing' && !this._billingLoaded) {
+        // Creditos y limites se mudaron a Uso, asi que esa pestana tambien
+        // tiene que disparar la carga: si no, se abre Uso y los dos bloques se
+        // quedan en "Cargando..." para siempre.
+        if ((tab === 'billing' || tab === 'activity') && !this._billingLoaded) {
           this._billingLoaded = true;
           this._loadBilling();
         }

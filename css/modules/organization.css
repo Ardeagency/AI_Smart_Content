@@ -2164,3 +2164,77 @@
 /* ── Medio de pago ── */
 .org-pago-linea { margin: 0 0 0.35rem; color: var(--text-secondary); font-size: 0.9rem; }
 .org-pago-cta { margin-top: 0.9rem; }
+
+/* ─── Tarjeta del plan ────────────────────────────────────────────────
+   Nombre, cuándo se renueva, una línea, y lo que incluye en dos columnas. */
+
+.org-plan-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-divider);
+    border-radius: 12px;
+    padding: 1.35rem 1.5rem;
+}
+
+.org-plan-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.org-plan-card-name {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: capitalize;
+}
+
+.org-plan-card-estado {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+}
+
+.org-plan-card-renueva {
+    margin: 0.35rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.org-plan-card-sep {
+    height: 1px;
+    background: var(--border-divider);
+    margin: 1.15rem 0;
+}
+
+/* Las acciones bajan de tamaño: son salidas, no el asunto de la tarjeta. */
+.org-bill-actions { margin-top: 1rem; display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+/* ─── Medio de pago y datos ── */
+.org-pago-vacio {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.9rem 1rem;
+    border: 1px dashed var(--border-divider);
+    border-radius: 10px;
+}
+
+.org-pago-vacio-icono {
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.org-datos-nombre {
+    margin: 0 0 0.35rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
