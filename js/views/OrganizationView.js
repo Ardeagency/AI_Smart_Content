@@ -112,11 +112,12 @@ class OrganizationView extends BaseView {
             <section class="org-section org-aside-section">
               <div class="org-section-head">
                 <div>
-                  <h2>${__('Mercado')}</h2>
-                  <p class="org-section-desc">${__('Workspaces de datos aislados (audiencias, campañas, integraciones y contenido). La provisión inicial la gestiona el equipo de plataforma.')}</p>
+                  <h2>${__('Inteligencia')}</h2>
+                  <p class="org-section-desc">${__('A quién le habla la marca, qué audiencias recibe y a quién vigila.')}</p>
                 </div>
               </div>
               <div id="orgAsideMercado"></div>
+              <div id="orgAsideIntel"></div>
               <div class="org-subbrands-list" id="orgSubbrandsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
               <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nuevo%20mercado&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20un%20nuevo%20mercado%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-secondary btn-sm org-aside-cta" id="orgRequestBrandBtn"><i class="aisc-ico aisc-ico--send"></i> ${__('Solicitar nuevo mercado')}</a>
             </section>
@@ -871,15 +872,17 @@ class OrganizationView extends BaseView {
     if (!el) return;
     const s = this.controlStats || { identities: 0, products: 0, services: 0, places: 0, characters: 0, productions: 0, days: this.prodRange };
     const fmt = (n) => Number(n || 0).toLocaleString('es');
-    const card = (route, emoji, accent, value, label, extra = '') => `
+    // Cifra, etiqueta y enlace. Nada mas.
+    // Se fueron el emoji en su chip de color y el color por tarjeta: siete
+    // acentos distintos convertian una fila de datos en un semaforo, y el
+    // emoji ocupaba el sitio de la unica cosa que importa aqui, que es el
+    // numero. El color de la marca queda para el enlace, en hover.
+    const card = (route, value, label, extra = '') => `
       <div class="org-ctrl-card" role="button" tabindex="0" data-route="${route}">
-        <div class="org-ctrl-top">
-          <span class="org-ctrl-chip" style="background:${accent}29;color:${accent}">${emoji}</span>
-          ${extra}
-        </div>
+        ${extra ? `<div class="org-ctrl-top">${extra}</div>` : ''}
         <span class="org-ctrl-num">${fmt(value)}</span>
         <span class="org-ctrl-label">${label}</span>
-        <span class="org-ctrl-link" style="color:${accent}">${__('Ver todas')} →</span>
+        <span class="org-ctrl-link">${__('Ver todas')} →</span>
       </div>`;
     const prodFilter = `
       <span class="org-ctrl-spacer"></span>
@@ -889,13 +892,13 @@ class OrganizationView extends BaseView {
         <option value="90"${s.days === 90 ? ' selected' : ''}>${__('90 días')}</option>
       </select>`;
     el.innerHTML =
-      card('/identities', '🪪', '#06b6d4', s.identities, __('Elementos')) +
-      card('/products',   '📦', '#7c3aed', s.products,   __('Productos')) +
-      card('/services',   '🛠️', '#22c55e', s.services,   __('Servicios')) +
-      card('/places',     '🏞️', '#f59e0b', s.places,     __('Escenarios')) +
-      card('/characters', '🎭', '#ef4444', s.characters, __('Actores')) +
-      card('/brand-storage', '🏢', '#3b82f6', this.brandContainers.length, __('Mercado')) +
-      card('/production', '🎬', '#ec4899', s.productions, __('Producciones'), prodFilter);
+      card('/identities', s.identities, __('Elementos')) +
+      card('/products',   s.products,   __('Productos')) +
+      card('/services',   s.services,   __('Servicios')) +
+      card('/places',     s.places,     __('Escenarios')) +
+      card('/characters', s.characters, __('Actores')) +
+      card('/brand-storage', this.brandContainers.length, __('Mercado')) +
+      card('/production', s.productions, __('Producciones'), prodFilter);
   }
 
   // ── Uso: consumo de créditos por día y por área (fuente) ──
@@ -1805,8 +1808,9 @@ class OrganizationView extends BaseView {
       partesInt.push(this._resumenDato(r.estrategias.total, __('Estrategias'),
         props ? __('{n} sin usar', { n: props }) : ''));
     }
-    if (partesInt.length) {
-      bloques.push(this._resumenBloque(__('Inteligencia'), `<div class="org-res-grid">${partesInt.join('')}</div>`));
+    const elIntel = this.querySelector('#orgAsideIntel');
+    if (elIntel && partesInt.length) {
+      elIntel.innerHTML = `<div class="org-res-grid org-res-grid--aside">${partesInt.join('')}</div>`;
     }
 
     // ── Pauta ────────────────────────────────────────────────────────

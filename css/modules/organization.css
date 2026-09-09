@@ -1239,22 +1239,25 @@
 }
 
 /* ── Centro de control (General) ─────────────────────────── */
-.org-ctrl-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-.org-ctrl-card { display: flex; flex-direction: column; align-items: stretch; gap: .55rem; background: var(--bg-card, rgba(255,255,255,.04)); border: 1px solid var(--border-divider); border-radius: 12px; padding: 1rem 1.05rem; cursor: pointer; text-align: left; font-family: inherit; transition: border-color .15s ease, transform .12s ease, background .15s ease; }
+/* Insights, no tarjetas: cifra, etiqueta y enlace sobre el fondo de la pagina.
+   Sin caja, columnas mas angostas (auto-fill a 130px) para que quepan mas por
+   fila y la vista se lea como una tira de datos, no como una parrilla de cajas. */
+.org-ctrl-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1.5rem 1.25rem; }
+.org-ctrl-card { display: flex; flex-direction: column; align-items: stretch; gap: .3rem; background: transparent; border: 0; padding: 0; cursor: pointer; text-align: left; font-family: inherit; }
 /* OJO: aqui NO sirve --brillo-hover. Ese token es var(--brand-primary-brillo,
    ...), y con un primario negro da rgba(0,0,0,.12): un hover que OSCURECE sobre
    un fondo ya oscuro, o sea invisible. El filete de marca clara si se ve. */
-.org-ctrl-card:hover { border-color: var(--brand-color-light, rgba(255,255,255,.35)); background: rgba(255,255,255,.05); transform: translateY(-1px); }
-.org-ctrl-card:active { transform: translateY(0); }
-.org-ctrl-top { display: flex; align-items: center; gap: .5rem; min-height: 32px; }
-.org-ctrl-chip { width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: .95rem; flex: none; line-height: 1; }
+/* Sin caja que iluminar, el hover vive en el enlace: es lo unico clicable que
+   se anuncia, y usa el color CLARO de la marca (el primario puede ser negro). */
+.org-ctrl-card:hover .org-ctrl-link { color: var(--brand-color-light, var(--accent-brand)); }
+/* Solo lo usa Producciones, para su selector de rango. */
+.org-ctrl-top { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; }
 .org-ctrl-spacer { flex: 1; }
-.org-ctrl-num { font-size: 1.7rem; font-weight: 700; color: var(--text-primary); line-height: 1.05; }
+.org-ctrl-num { font-size: 1.9rem; font-weight: 600; color: var(--text-primary); line-height: 1.05; font-variant-numeric: tabular-nums; }
 .org-ctrl-label { font-size: .82rem; color: var(--text-secondary); }
-.org-ctrl-link { font-size: .72rem; font-weight: 600; }
+.org-ctrl-link { font-size: .72rem; font-weight: 600; color: var(--text-muted); transition: color .15s ease; }
 .org-prod-range { background: rgba(255,255,255,.05); border: 1px solid var(--border-divider); border-radius: 7px; color: var(--text-muted); font: 500 .72rem/1 inherit; font-family: inherit; padding: 4px 6px; cursor: pointer; }
 @media (max-width: 980px) {
-  .org-ctrl-stats { grid-template-columns: repeat(2, 1fr); }
   }
 
 /* ── Facturación ─────────────────────────────────────────── */
@@ -1956,3 +1959,6 @@
     .org-general-cols { grid-template-columns: minmax(0, 1fr); }
     .org-col-aside { position: static; }
 }
+
+/* En la columna derecha el grid general (190px) deja una sola cifra por fila. */
+.org-res-grid--aside { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1.25rem 1rem; }
