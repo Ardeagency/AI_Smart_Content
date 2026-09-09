@@ -14,6 +14,16 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "Actividad del equipo": "Team activity",
+  "Lo que cada miembro ha hecho en los últimos 6 meses.": "What each member has done in the last 6 months.",
+  "Sin actividad registrada en los últimos 6 meses.": "No activity recorded in the last 6 months.",
+  "Crear perfiles a monitorear, vigilar sitios y correr el predictor todavía no guardan quién lo hizo, así que esas acciones no aparecen aquí.": "Creating monitored profiles, watching sites and running the predictor do not record who did it yet, so those actions do not show up here.",
+  "Generó contenido": "Generated content",
+  "Ejecutó una producción": "Ran a production",
+  "Creó una audiencia": "Created an audience",
+  "Creó una campaña": "Created a campaign",
+  "Trabajó en estrategia": "Worked on strategy",
+  "Conversó con Vera": "Talked to Vera",
   "Audiencias": "Audiences",
   "Perfiles monitoreados": "Monitored profiles",
   "Pauta": "Paid media",

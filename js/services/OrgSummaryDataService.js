@@ -55,6 +55,64 @@ class OrgSummaryDataService {
     return { plan, creditos, mercado, audiencias, vigilancia, estrategias, pauta };
   }
 
+  /**
+   * Bitacora de quien hizo que. NO hay tabla de actividad: se arma juntando el
+   * `created_by`/`user_id` de las tablas que SI lo guardan, y se ordena por
+   * fecha.
+   *
+   * COBERTURA REAL, medida en la base viva el 2026-09-09 (org WAKEUP). Esto no
+   * es un detalle: define lo que la vista puede y no puede afirmar.
+   *   flow_runs 2/2 con autor · runs_outputs 4/4 · ai_conversations 2/2
+   *   audience_personas 2 de 8 · campaigns 1 de 107 (!)
+   *   monitoring_triggers 0 de 23 · url_watchers 0 de 4 · predictor_runs 0 de 3
+   *
+   * Es decir: crear un perfil a monitorear —una de las acciones que se querian
+   * ver— HOY NO GUARDA QUIEN LO HIZO. Por eso esas tablas no se consultan aqui:
+   * traerlas sin autor obligaria a inventar una atribucion o a mostrar filas
+   * "por alguien", y las dos cosas son peores que decir que no se sabe. La vista
+   * declara la laguna en vez de disimularla; el arreglo de fondo es empezar a
+   * escribir created_by en esas tablas, no maquillarlo aqui.
+   */
+  async actividad(limite = 40) {
+    if (!this.sb || !this.orgId) return null;
+    const desde = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
+
+    const pedir = async (tabla, campoAutor, campos, tipo, etiqueta) => {
+      try {
+        const { data } = await this.sb
+          .from(tabla)
+          .select(`${campoAutor}, created_at, ${campos}`)
+          .eq('organization_id', this.orgId)
+          .not(campoAutor, 'is', null)
+          .gte('created_at', desde)
+          .order('created_at', { ascending: false })
+          .limit(limite);
+        return (data || []).map((f) => ({
+          tipo,
+          etiqueta,
+          userId: f[campoAutor],
+          fecha: f.created_at,
+          detalle: f.nombre_campana || f.name || f.titulo || f.title || null,
+        }));
+      } catch (_) { return []; }
+    };
+
+    const grupos = await Promise.all([
+      pedir('runs_outputs', 'user_id', 'id', 'contenido', 'Generó contenido'),
+      pedir('flow_runs', 'user_id', 'id', 'produccion', 'Ejecutó una producción'),
+      pedir('audience_personas', 'created_by', 'name', 'audiencia', 'Creó una audiencia'),
+      pedir('campaigns', 'created_by', 'nombre_campana', 'campana', 'Creó una campaña'),
+      pedir('canvas_strategies', 'created_by', 'name', 'estrategia', 'Trabajó en estrategia'),
+      pedir('ai_conversations', 'user_id', 'title', 'vera', 'Conversó con Vera'),
+    ]);
+
+    const eventos = grupos.flat()
+      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)))
+      .slice(0, limite);
+
+    return { eventos, sinAutoria: ['monitoring_triggers', 'url_watchers', 'predictor_runs'] };
+  }
+
   async _plan() {
     try {
       const { data: sub } = await this.sb

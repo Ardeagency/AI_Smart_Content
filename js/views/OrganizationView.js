@@ -127,23 +127,46 @@ class OrganizationView extends BaseView {
 
     <!-- ── Miembros ─────────────────────────────────────── -->
     <div class="tab-content" id="membersTab" role="tabpanel">
-      <section class="org-section">
-        <div class="org-section-head">
-          <div>
-            <h2>${__('Miembros')}</h2>
-            <p class="org-section-desc">${__('Roles y acceso al workspace.')}</p>
-          </div>
-          <button type="button" class="btn btn-primary" id="orgInviteBtn">
-            <i class="aisc-ico aisc-ico--user-registration"></i> ${__('Invitar')}
-          </button>
-        </div>
-        <div class="org-members-list" id="orgMembersList"></div>
-      </section>
+      <!-- Izquierda: que esta haciendo cada quien. Derecha: quienes son.
+           Una lista de miembros sola dice a quien le diste acceso; al lado de la
+           bitacora dice ademas si ese acceso se esta usando. -->
+      <div class="org-general-cols">
 
-      <section class="org-section" id="orgInvitationsSection" hidden>
-        <h3>${__('Invitaciones pendientes')}</h3>
-        <div class="org-invitations-list" id="orgInvitationsList"></div>
-      </section>
+        <div class="org-col-main">
+          <section class="org-section">
+            <div class="org-section-head">
+              <div>
+                <h2>${__('Actividad del equipo')}</h2>
+                <p class="org-section-desc">${__('Lo que cada miembro ha hecho en los últimos 6 meses.')}</p>
+              </div>
+            </div>
+            <div class="org-actividad" id="orgActividad"><p class="org-placeholder">${__('Cargando…')}</p></div>
+          </section>
+        </div>
+
+        <aside class="org-col-aside org-col-aside--liso">
+          <div class="org-aside-inner">
+            <section class="org-section org-aside-section">
+              <div class="org-section-head">
+                <div>
+                  <h2>${__('Miembros')}</h2>
+                  <p class="org-section-desc">${__('Roles y acceso al workspace.')}</p>
+                </div>
+              </div>
+              <div class="org-members-list" id="orgMembersList"></div>
+              <button type="button" class="btn btn-primary org-aside-cta" id="orgInviteBtn">
+                <i class="aisc-ico aisc-ico--user-registration"></i> ${__('Invitar')}
+              </button>
+            </section>
+
+            <section class="org-section org-aside-section" id="orgInvitationsSection" hidden>
+              <h3>${__('Invitaciones pendientes')}</h3>
+              <div class="org-invitations-list" id="orgInvitationsList"></div>
+            </section>
+          </div>
+        </aside>
+
+      </div>
     </div>
 
     <!-- ── Facturación ──────────────────────────────────── -->
@@ -402,6 +425,7 @@ class OrganizationView extends BaseView {
     await this._loadAll();
     this._bindEvents();
     this._renderResumen();
+    this._renderActividad();
     this.updateHeaderContext(__('Configuración'), null, this.org?.name || null);
   }
 
@@ -1678,6 +1702,60 @@ class OrganizationView extends BaseView {
 
   _toast(msg) {
     if (typeof window.showToast === 'function') window.showToast(msg, 'success');
+  }
+
+  /**
+   * Bitacora del equipo. Se apoya en membersWithProfile para poner nombre al
+   * user_id; un evento cuyo autor ya no es miembro se muestra igual, con el id
+   * abreviado — borrar a alguien del workspace no borra lo que hizo.
+   */
+  async _renderActividad() {
+    const el = this.querySelector('#orgActividad');
+    if (!el) return;
+    if (!window.OrgSummaryDataService || !this.supabase || !this.orgId) { el.innerHTML = ''; return; }
+
+    let act = null;
+    try {
+      const svc = await new window.OrgSummaryDataService().init(this.supabase, this.orgId);
+      act = await svc.actividad(40);
+    } catch (e) {
+      console.warn('OrganizationView._renderActividad:', e);
+    }
+    if (!act) { el.innerHTML = ''; return; }
+
+    const nombres = {};
+    (this.membersWithProfile || []).forEach((m) => {
+      nombres[m.user_id] = m.full_name || m.email || null;
+    });
+    const quien = (id) => nombres[id] || `${String(id).slice(0, 8)}…`;
+
+    // La laguna se declara SIEMPRE, haya o no eventos: sin esta nota, una
+    // bitacora corta se lee como "el equipo no hizo nada" cuando en realidad
+    // buena parte de lo que hicieron no quedo firmado.
+    const nota = `<p class="org-act-nota">${__('Crear perfiles a monitorear, vigilar sitios y correr el predictor todavía no guardan quién lo hizo, así que esas acciones no aparecen aquí.')}</p>`;
+
+    if (!act.eventos.length) {
+      el.innerHTML = `<p class="org-placeholder">${__('Sin actividad registrada en los últimos 6 meses.')}</p>` + nota;
+      return;
+    }
+
+    const filas = act.eventos.map((e) => `
+      <li class="org-act-row">
+        <div class="org-act-main">
+          <span class="org-act-quien">${this._esc(quien(e.userId))}</span>
+          <span class="org-act-que">${this._esc(__(e.etiqueta))}</span>
+          ${e.detalle ? `<span class="org-act-detalle">${this._esc(e.detalle)}</span>` : ''}
+        </div>
+        <time class="org-act-fecha" datetime="${this._esc(e.fecha)}">${this._esc(this._fmtFechaCorta(e.fecha))}</time>
+      </li>`).join('');
+
+    el.innerHTML = `<ul class="org-act-list">${filas}</ul>` + nota;
+  }
+
+  _fmtFechaCorta(iso) {
+    try {
+      return new Date(iso).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch (_) { return String(iso || '').slice(0, 10); }
   }
 
   // ─── Resumen de la organizacion ──────────────────────────────────────

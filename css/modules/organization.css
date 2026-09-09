@@ -2003,3 +2003,61 @@
 
 /* Cifra sin destino: no es clicable, asi que tampoco finge serlo. */
 .org-ctrl-card--mudo { cursor: default; }
+
+/* ─── Bitacora del equipo (pestana Miembros) ──────────────────────────
+   Filas, no tarjetas: son eventos en orden cronologico y lo que importa es
+   poder recorrerlos, no que cada uno tenga su marco. */
+
+.org-act-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.org-act-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.org-act-row:last-child { border-bottom: 0; }
+
+.org-act-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; min-width: 0; }
+.org-act-quien { font-weight: 600; color: var(--text-primary); }
+.org-act-que { color: var(--text-secondary); font-size: 0.9rem; }
+
+/* El detalle (nombre de la campana, de la audiencia) es contexto, no titular. */
+.org-act-detalle {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 22ch;
+}
+
+.org-act-fecha {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* La nota de cobertura: en cursiva y apagada, pero SIEMPRE presente. Sin ella
+   una bitacora corta se lee como "nadie hizo nada". */
+.org-act-nota {
+    margin: 1.25rem 0 0;
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* La columna de miembros no lleva la imagen de fondo: esa es de Inteligencia,
+   donde ilustra el tema. Aqui seria decoracion sin motivo. */
+.org-col-aside--liso { background: rgba(255, 255, 255, 0.03); }
