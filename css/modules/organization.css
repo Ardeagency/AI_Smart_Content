@@ -1253,12 +1253,9 @@
 .org-ctrl-label { font-size: .82rem; color: var(--text-secondary); }
 .org-ctrl-link { font-size: .72rem; font-weight: 600; }
 .org-prod-range { background: rgba(255,255,255,.05); border: 1px solid var(--border-divider); border-radius: 7px; color: var(--text-muted); font: 500 .72rem/1 inherit; font-family: inherit; padding: 4px 6px; cursor: pointer; }
-.org-general-config { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1.25rem; align-items: start; }
-.org-general-config > .org-section { margin: 0; }
 @media (max-width: 980px) {
   .org-ctrl-stats { grid-template-columns: repeat(2, 1fr); }
-  .org-general-config { grid-template-columns: 1fr; }
-}
+  }
 
 /* ── Facturación ─────────────────────────────────────────── */
 .org-bill-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
@@ -1856,4 +1853,106 @@
     .org-res-stat--wide { grid-column: span 1; }
     .org-res-dl { grid-template-columns: 1fr; gap: 0.15rem 0; }
     .org-res-dl dd { margin-bottom: 0.5rem; }
+}
+
+/* ─── General en dos columnas ─────────────────────────────────────────
+   Izquierda: lo que la organizacion HACE. Derecha: lo que ES y lo que paga.
+   La derecha no scrollea con la izquierda —queda pegada— porque es contexto
+   permanente, no una lista que se recorre. */
+
+.org-general-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+    gap: 2rem;
+    align-items: start;
+}
+
+.org-col-main { min-width: 0; }
+
+.org-col-aside {
+    /* sticky ya crea contexto de posicionamiento para el fondo absoluto; no
+       hace falta un `position: relative` aparte (declararlo dos veces solo
+       confunde a quien lea). */
+    position: sticky;
+    top: calc(48px + 1.5rem);
+    isolation: isolate;
+    border-radius: 18px;
+    overflow: hidden;
+    padding: 1.75rem 1.5rem;
+}
+
+/* El fondo va en SU PROPIA capa, no como background del <aside>: puesto en el
+   contenedor, cualquier ajuste de opacidad para que el texto se lea arrastraria
+   tambien al contenido. Asi la imagen se oscurece sola. */
+.org-aside-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+        /* Velo mas denso arriba, donde vive el plan en grande, y mas suelto
+           abajo, donde la imagen tiene su zona oscura propia. */
+        linear-gradient(180deg, rgba(5, 5, 7, 0.88) 0%, rgba(5, 5, 7, 0.72) 45%, rgba(5, 5, 7, 0.86) 100%),
+        url('/recursos/banners/org-mercado.jpg');
+    background-size: cover, cover;
+    background-position: center, center top;
+    pointer-events: none;
+}
+
+.org-aside-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+/* En la columna derecha las secciones no llevan el padding vertical de las de
+   la izquierda: el aire ya lo pone el gap del contenedor. */
+.org-aside-section { padding: 0; margin: 0; }
+.org-aside-section .org-section-head { display: block; margin-bottom: 0.75rem; }
+.org-aside-cta { margin-top: 1rem; display: inline-flex; }
+
+/* ── El plan, en grande ── */
+.org-plan-hero { display: flex; flex-direction: column; gap: 0.25rem; }
+
+.org-plan-eyebrow {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.org-plan-name {
+    font-size: clamp(2rem, 4.5vw, 3rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.org-plan-sub { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); }
+
+.org-plan-credits { margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.15rem; }
+
+.org-plan-credits-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.org-plan-credits-num {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Bajo 1024px la columna deja de ser columna: apilada y sin sticky, que en
+   pantalla corta se convierte en un bloque que persigue al lector. */
+@media (max-width: 1024px) {
+    .org-general-cols { grid-template-columns: minmax(0, 1fr); }
+    .org-col-aside { position: static; }
 }

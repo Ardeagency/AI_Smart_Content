@@ -77,34 +77,52 @@ class OrganizationView extends BaseView {
 
     <!-- ── General ──────────────────────────────────────── -->
     <div class="tab-content active" id="generalTab" role="tabpanel">
-      <section class="org-section">
-        <div class="org-section-head">
-          <div>
-            <h2>${__('Centro de control')}</h2>
-            <p class="org-section-desc">${__('Vista general de las entidades y la producción de tu organización. Pulsa una tarjeta para gestionarla.')}</p>
-          </div>
-        </div>
-        <div class="org-ctrl-stats" id="orgCtrlStats"><p class="org-placeholder">${__('Cargando…')}</p></div>
-      </section>
+      <!-- Dos columnas. Izquierda: lo que la organizacion HACE (entidades,
+           inteligencia, pauta). Derecha: lo que la organizacion ES y lo que
+           paga — plan, creditos y su mercado — sobre la imagen de fondo. -->
+      <div class="org-general-cols">
 
-      <!-- Resumen de la organizacion: el "que hay aqui" completo. Lo llena
-           _renderResumen() con OrgSummaryDataService; cada bloque se pinta solo
-           si tiene datos, para no dejar tarjetas en cero fingiendo contenido. -->
-      <section class="org-section" id="orgResumenSection">
-        <div class="org-resumen" id="orgResumen"><p class="org-placeholder">${__('Cargando…')}</p></div>
-      </section>
+        <div class="org-col-main">
+          <section class="org-section">
+            <div class="org-section-head">
+              <div>
+                <h2>${__('Centro de control')}</h2>
+                <p class="org-section-desc">${__('Vista general de las entidades y la producción de tu organización. Pulsa una tarjeta para gestionarla.')}</p>
+              </div>
+            </div>
+            <div class="org-ctrl-stats" id="orgCtrlStats"><p class="org-placeholder">${__('Cargando…')}</p></div>
+          </section>
 
-      <div class="org-general-config">
-      <section class="org-section">
-        <div class="org-section-head">
-          <div>
-            <h2>${__('Mercado')}</h2>
-            <p class="org-section-desc">${__('Workspaces de datos aislados (audiencias, campañas, integraciones y contenido). La provisión inicial la gestiona el equipo de plataforma.')}</p>
-          </div>
-          <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nueva%20marca%20gestionada&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20una%20nueva%20marca%20gestionada%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-secondary btn-sm" id="orgRequestBrandBtn"><i class="aisc-ico aisc-ico--send"></i> ${__('Solicitar nueva marca')}</a>
+          <!-- Inteligencia y pauta. Lo llena _renderResumen() con
+               OrgSummaryDataService; cada bloque se pinta solo si tiene datos,
+               para no dejar tarjetas en cero fingiendo contenido. -->
+          <section class="org-section" id="orgResumenSection">
+            <div class="org-resumen" id="orgResumen"><p class="org-placeholder">${__('Cargando…')}</p></div>
+          </section>
         </div>
-        <div class="org-subbrands-list" id="orgSubbrandsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
-      </section>
+
+        <aside class="org-col-aside">
+          <!-- El fondo va en su propia capa para poder oscurecerlo sin tocar el
+               texto: una imagen puesta como background del <aside> obligaria a
+               bajarle la opacidad al contenido junto con ella. -->
+          <div class="org-aside-bg" aria-hidden="true"></div>
+          <div class="org-aside-inner">
+            <div id="orgAsidePlan"></div>
+
+            <section class="org-section org-aside-section">
+              <div class="org-section-head">
+                <div>
+                  <h2>${__('Mercado')}</h2>
+                  <p class="org-section-desc">${__('Workspaces de datos aislados (audiencias, campañas, integraciones y contenido). La provisión inicial la gestiona el equipo de plataforma.')}</p>
+                </div>
+              </div>
+              <div id="orgAsideMercado"></div>
+              <div class="org-subbrands-list" id="orgSubbrandsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
+              <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nuevo%20mercado&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20un%20nuevo%20mercado%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-secondary btn-sm org-aside-cta" id="orgRequestBrandBtn"><i class="aisc-ico aisc-ico--send"></i> ${__('Solicitar nuevo mercado')}</a>
+            </section>
+          </div>
+        </aside>
+
       </div>
     </div>
 
@@ -1716,29 +1734,38 @@ class OrganizationView extends BaseView {
 
     const bloques = [];
 
-    // ── Plan y creditos ──────────────────────────────────────────────
-    const partesPlan = [];
-    if (r.plan?.nombre) {
-      partesPlan.push(this._resumenDato(this._esc(r.plan.nombre), __('Plan de la marca'),
-        r.plan.creditosMes ? `${Number(r.plan.creditosMes).toLocaleString('es')} ${__('créditos / mes')}` : ''));
-    }
-    if (r.creditos && r.creditos.total > 0) {
-      const pct = r.creditos.pctUsado;
-      partesPlan.push(`<div class="org-res-stat org-res-stat--wide">
-        <span class="org-res-num">${Math.round(r.creditos.usados).toLocaleString('es')}<span class="org-res-num-of"> / ${Math.round(r.creditos.total).toLocaleString('es')}</span></span>
-        <span class="org-res-lbl">${__('Créditos utilizados')}</span>
-        <div class="org-res-bar" role="img" aria-label="${pct}%">
-          <span class="org-res-bar-fill" style="transform:scaleX(${(pct || 0) / 100})"></span>
-        </div>
-        <span class="org-res-sub">${__('Quedan {n}', { n: Math.round(r.creditos.disponibles).toLocaleString('es') })}</span>
-      </div>`);
-    }
-    if (partesPlan.length) {
-      bloques.push(this._resumenBloque(__('Plan y consumo'), `<div class="org-res-grid">${partesPlan.join('')}</div>`));
+    // ── Plan (grande) y creditos → columna derecha ───────────────────
+    const aside = this.querySelector('#orgAsidePlan');
+    if (aside) {
+      let planHtml = '';
+      if (r.plan?.nombre) {
+        planHtml += `<div class="org-plan-hero">
+          <span class="org-plan-eyebrow">${__('Plan de la marca')}</span>
+          <span class="org-plan-name">${this._esc(r.plan.nombre)}</span>
+          ${r.plan.creditosMes
+            ? `<span class="org-plan-sub">${__('{n} créditos / mes', { n: Number(r.plan.creditosMes).toLocaleString('es') })}</span>`
+            : ''}
+        </div>`;
+      }
+      if (r.creditos && r.creditos.total > 0) {
+        const pct = r.creditos.pctUsado;
+        planHtml += `<div class="org-plan-credits">
+          <div class="org-plan-credits-head">
+            <span class="org-res-lbl">${__('Créditos utilizados')}</span>
+            <span class="org-plan-credits-num">${Math.round(r.creditos.usados).toLocaleString('es')}<span class="org-res-num-of"> / ${Math.round(r.creditos.total).toLocaleString('es')}</span></span>
+          </div>
+          <div class="org-res-bar" role="img" aria-label="${pct}%">
+            <span class="org-res-bar-fill" style="transform:scaleX(${(pct || 0) / 100})"></span>
+          </div>
+          <span class="org-res-sub">${__('Quedan {n}', { n: Math.round(r.creditos.disponibles).toLocaleString('es') })}</span>
+        </div>`;
+      }
+      aside.innerHTML = planHtml;
     }
 
-    // ── Mercado: a quien le habla la marca ───────────────────────────
-    if (Array.isArray(r.mercado) && r.mercado.length) {
+    // ── Mercado: a quien le habla la marca → columna derecha ─────────
+    const elMercado = this.querySelector('#orgAsideMercado');
+    if (elMercado && Array.isArray(r.mercado) && r.mercado.length) {
       const marcas = r.mercado.map((m) => {
         const filas = [];
         const lista = (arr) => (Array.isArray(arr) ? arr.filter(Boolean) : []);
@@ -1751,12 +1778,9 @@ class OrganizationView extends BaseView {
         if (subs.length) filas.push(`<dt>${__('Sub-nichos')}</dt><dd>${this._esc(subs.join(' · '))}</dd>`);
         if (m.arquetipo) filas.push(`<dt>${__('Arquetipo')}</dt><dd>${this._esc(m.arquetipo)}</dd>`);
         if (!filas.length) return '';
-        return `<div class="org-res-marca">
-          <h4>${this._esc(m.nombre_marca || '—')}</h4>
-          <dl class="org-res-dl">${filas.join('')}</dl>
-        </div>`;
+        return `<div class="org-res-marca"><dl class="org-res-dl">${filas.join('')}</dl></div>`;
       }).filter(Boolean).join('');
-      if (marcas) bloques.push(this._resumenBloque(__('Mercado'), marcas));
+      elMercado.innerHTML = marcas;
     }
 
     // ── Audiencias, vigilancia y estrategias ─────────────────────────
