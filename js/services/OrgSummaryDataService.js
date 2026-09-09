@@ -113,6 +113,52 @@ class OrgSummaryDataService {
     return { eventos, sinAutoria: ['monitoring_triggers', 'url_watchers', 'predictor_runs'] };
   }
 
+  /**
+   * Funciones de la plataforma disponibles en el plan, y cuales se estan usando.
+   *
+   * La fuente es `feature_costs`: el catalogo propio de la plataforma, con la
+   * etiqueta, el area y lo que cuesta cada accion en creditos. No es una lista
+   * escrita a mano — si manana se agrega una funcion a la tabla, aparece aqui
+   * sola.
+   *
+   * El "en uso" sale de que `credit_usage.kind` usa LAS MISMAS CLAVES que
+   * `feature_costs.kind`: se cuenta por clave y con eso se sabe si la
+   * organizacion ya toco esa funcion o solo la tiene disponible.
+   *
+   * Se cuenta con `head: true` (una consulta por clave que no transfiere filas)
+   * en vez de traerse `credit_usage` entero: en WAKEUP son 3.135 registros para
+   * responder algo que cabe en once numeros.
+   */
+  async funciones() {
+    if (!this.sb || !this.orgId) return null;
+    try {
+      const { data: cat } = await this.sb
+        .from('feature_costs')
+        .select('kind, label, area, credits_per_action, description, icon')
+        .eq('is_active', true)
+        .order('area', { ascending: true });
+
+      const catalogo = Array.isArray(cat) ? cat : [];
+      if (!catalogo.length) return { enUso: [], disponibles: [] };
+
+      const conteos = await Promise.all(catalogo.map(async (f) => {
+        try {
+          const { count } = await this.sb
+            .from('credit_usage')
+            .select('id', { count: 'exact', head: true })
+            .eq('organization_id', this.orgId)
+            .eq('kind', f.kind);
+          return { ...f, veces: count || 0 };
+        } catch (_) { return { ...f, veces: 0 }; }
+      }));
+
+      return {
+        enUso: conteos.filter((f) => f.veces > 0).sort((a, b) => b.veces - a.veces),
+        disponibles: conteos.filter((f) => !f.veces).sort((a, b) => String(a.label).localeCompare(String(b.label))),
+      };
+    } catch (_) { return null; }
+  }
+
   async _plan() {
     try {
       const { data: sub } = await this.sb

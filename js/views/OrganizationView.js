@@ -1053,6 +1053,7 @@ class OrganizationView extends BaseView {
       try {
         const svc = await new window.OrgSummaryDataService().init(this.supabase, this.orgId);
         this.billingCreditos = await svc._creditos();
+        this.billingFunciones = await svc.funciones();
       } catch (_) { this.billingCreditos = null; }
     } catch (e) {
       console.warn('[organization] _loadBilling error:', e?.message || e);
@@ -1395,30 +1396,47 @@ class OrganizationView extends BaseView {
    * Para llenarla mas adelante basta darle a `filas` objetos
    * { nombre, detalle, empieza, expira, estado } — el render ya los pinta.
    */
+  /**
+   * Funciones de la plataforma dentro del plan, partidas en dos: las que la
+   * organizacion YA USA y las que tiene disponibles sin estrenar. Salen de
+   * `feature_costs` —el catalogo propio, con su costo en creditos— cruzado con
+   * `credit_usage` por la clave `kind`, que es la misma en las dos tablas.
+   *
+   * No es una lista escrita a mano: si se agrega una funcion a feature_costs,
+   * aparece aqui sola.
+   */
   _renderFunciones() {
     const el = this.querySelector('#orgFunciones');
     if (!el) return;
+    const f = this.billingFunciones;
+    if (!f || (!f.enUso.length && !f.disponibles.length)) {
+      el.innerHTML = `<p class="org-placeholder">${__('No hay funciones declaradas para este plan.')}</p>`;
+      return;
+    }
 
-    const filas = Array.isArray(this.billingFunciones) ? this.billingFunciones : [];
+    const fila = (x, usada) => `
+      <div class="org-fx-row">
+        <span class="org-fx-nombre">${this._esc(x.label || x.kind)}${x.description ? `<em>${this._esc(x.description)}</em>` : ''}</span>
+        <span class="org-fx-area">${this._esc(x.area || '—')}</span>
+        <span class="org-fx-costo">${x.credits_per_action != null
+          ? __('{n} cr', { n: x.credits_per_action })
+          : '—'}</span>
+        <span>${usada
+          ? `<span class="org-bill-pill org-bill-pill--ok">${__('{n} usos', { n: Number(x.veces).toLocaleString('es') })}</span>`
+          : `<span class="org-bill-pill org-bill-pill--muted">${__('Sin estrenar')}</span>`}</span>
+      </div>`;
 
-    const cuerpo = filas.length
-      ? filas.map((f) => `
-          <div class="org-fx-row">
-            <span class="org-fx-nombre">${this._esc(f.nombre)}${f.detalle ? `<em>${this._esc(f.detalle)}</em>` : ''}</span>
-            <span class="org-fx-fecha">${this._esc(f.empieza || '—')}</span>
-            <span class="org-fx-fecha">${this._esc(f.expira || '—')}</span>
-            <span><span class="org-bill-pill org-bill-pill--ok">${this._esc(f.estado || __('Activa'))}</span></span>
-          </div>`).join('')
-      : `<p class="org-placeholder org-fx-vacio">${__('Todavía no hay funciones especiales definidas para este plan.')}</p>`;
-
-    el.innerHTML = `
+    const grupo = (titulo, items, usada) => items.length ? `
+      <h3 class="org-fx-grupo">${this._esc(titulo)} <span class="org-bill-cuenta">${items.length}</span></h3>
       <div class="org-fx-table">
         <div class="org-fx-row org-fx-row--head">
-          <span>${__('Función')}</span><span>${__('Empieza')}</span>
-          <span>${__('Expira')}</span><span>${__('Estado')}</span>
+          <span>${__('Función')}</span><span>${__('Área')}</span>
+          <span>${__('Costo')}</span><span>${__('Estado')}</span>
         </div>
-        ${cuerpo}
-      </div>`;
+        ${items.map((x) => fila(x, usada)).join('')}
+      </div>` : '';
+
+    el.innerHTML = grupo(__('En uso'), f.enUso, true) + grupo(__('Disponibles en tu plan'), f.disponibles, false);
   }
 
   _renderBillingDatos() {

@@ -2407,7 +2407,7 @@
 
 .org-fx-row {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) 1fr 1fr auto;
+    grid-template-columns: minmax(0, 2.4fr) 1fr auto auto;
     align-items: center;
     gap: 1rem;
     padding: 0.85rem 1rem;
@@ -2430,3 +2430,23 @@
 
 /* Facturas al final, a todo el ancho de la pagina. */
 #billingTab .org-sub-block--ancho { margin-top: 2rem; }
+
+.org-fx-grupo {
+    margin: 1.5rem 0 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.org-fx-grupo:first-child { margin-top: 0; }
+.org-fx-area { color: var(--text-muted); font-size: 0.82rem; text-transform: capitalize; }
+.org-fx-costo { color: var(--text-secondary); font-size: 0.85rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+@media (max-width: 720px) {
+    .org-fx-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 0.35rem; }
+    .org-fx-row--head { display: none; }
+    .org-fx-area { grid-column: 1; }
+}

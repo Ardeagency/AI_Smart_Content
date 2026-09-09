@@ -14,6 +14,11 @@
  */
 window.__I18N_CATALOGS = window.__I18N_CATALOGS || {};
 window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
+  "En uso": "In use",
+  "Disponibles en tu plan": "Available in your plan",
+  "Sin estrenar": "Never used",
+  "Área": "Area",
+  "No hay funciones declaradas para este plan.": "No functions declared for this plan.",
   "Funciones especiales activas": "Active plan perks",
   "Función": "Perk",
   "Empieza": "Starts",
