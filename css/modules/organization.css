@@ -2550,7 +2550,8 @@
 
 .org-uchart-tip-row {
     display: grid;
-    grid-template-columns: 9px minmax(0, 1fr) auto;
+    /* chip · nombre · veces · creditos */
+    grid-template-columns: 9px minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 0.5rem;
     padding: 0.15rem 0;
@@ -2559,4 +2560,13 @@
 
 .org-uchart-tip-row i { width: 9px; height: 9px; border-radius: 3px; }
 .org-uchart-tip-row b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+/* Las veces van apagadas y en cursiva: acompañan al costo, no compiten con el. */
+.org-uchart-tip-row em { font-style: normal; color: var(--text-muted); font-size: .72rem; font-variant-numeric: tabular-nums; }
+.org-uchart-tip-row em::after { content: '×'; margin-left: 1px; opacity: .6; }
+
+.org-uchart-tip-ops {
+    color: var(--text-muted);
+    font-size: .72rem;
+    margin: -0.2rem 0 0.35rem;
+}
 .org-uchart-tip-vacio { color: var(--text-muted); font-style: italic; }

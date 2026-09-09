@@ -1021,9 +1021,14 @@ class OrganizationView extends BaseView {
       if (!day) return;
       const cat = OrganizationView._categoriaDe(r.kind, r.metadata?.platform);
       const c = Math.abs(Number(r.credits_delta) || 0);
-      if (!byDayMap[day]) byDayMap[day] = { day, total: 0, byArea: {} };
+      // Se guardan CREDITOS y OPERACIONES: el tooltip necesita las dos cosas
+      // —cuanto costo y cuantas veces se hizo—, y con solo el gasto no se
+      // distingue una operacion cara de veinte baratas.
+      if (!byDayMap[day]) byDayMap[day] = { day, total: 0, ops: 0, byArea: {}, opsArea: {} };
       byDayMap[day].byArea[cat] = (byDayMap[day].byArea[cat] || 0) + c;
+      byDayMap[day].opsArea[cat] = (byDayMap[day].opsArea[cat] || 0) + 1;
       byDayMap[day].total += c;
+      byDayMap[day].ops += 1;
       byArea[cat] = (byArea[cat] || 0) + c;
       total += c;
 
@@ -1046,7 +1051,7 @@ class OrganizationView extends BaseView {
     const byDay = [];
     for (let t = new Date(desde); t <= hasta; t.setDate(t.getDate() + 1)) {
       const dia = t.toISOString().slice(0, 10);
-      byDay.push(byDayMap[dia] || { day: dia, total: 0, byArea: {} });
+      byDay.push(byDayMap[dia] || { day: dia, total: 0, ops: 0, byArea: {}, opsArea: {} });
     }
     const peak = byDay.reduce((m, d) => (d.total > (m ? m.total : 0) ? d : m), null);
     const topAreaKey = Object.entries(byArea).sort((a, b) => b[1] - a[1])[0];
@@ -1822,11 +1827,13 @@ class OrganizationView extends BaseView {
       if (!col) { ocultar(); return; }
 
       const total = col.dataset.total || '0';
+      const ops = Number(col.dataset.ops || 0);
       const filas = (col.dataset.detalle || '').split('~').filter(Boolean).map((t) => {
-        const [, label, color, valor] = t.split('|');
+        const [, label, color, valor, veces] = t.split('|');
         return `<div class="org-uchart-tip-row">
           <i style="background:${this._esc(color)}"></i>
           <span>${this._esc(label)}</span>
+          <em>${this._esc(veces)}</em>
           <b>${this._esc(valor)}</b>
         </div>`;
       }).join('');
@@ -1836,6 +1843,7 @@ class OrganizationView extends BaseView {
           <span>${this._esc(this._fmtDay(col.dataset.dia))}</span>
           <b>${this._esc(total)} ${__('cr')}</b>
         </div>
+        ${ops ? `<div class="org-uchart-tip-ops">${__('{n} operaciones', { n: ops.toLocaleString('es') })}</div>` : ''}
         ${filas || `<div class="org-uchart-tip-vacio">${__('Sin consumo')}</div>`}`;
       tip.hidden = false;
 
@@ -1960,7 +1968,6 @@ class OrganizationView extends BaseView {
   _renderUsage() {
     this._mountUsagePicker();
     this._renderUsageMiembros();
-    this._bindUsageTooltip();
 
     const u = this.usage;
     const statsEl = this.querySelector('#orgUsageStats');
@@ -2007,9 +2014,9 @@ class OrganizationView extends BaseView {
             return `<div class="org-uchart-seg" style="height:${segPct}%;background:${this._usageColor(a.key)}"></div>`;
           }).join('');
           const detalle = usados
-            .map((a) => `${a.key}|${a.label}|${a.color}|${this._fmtCredits(d.byArea[a.key])}`)
+            .map((a) => `${a.key}|${a.label}|${a.color}|${this._fmtCredits(d.byArea[a.key])}|${d.opsArea[a.key] || 0}`)
             .join('~');
-          return `<div class="org-uchart-col" data-dia="${this._esc(d.day)}" data-total="${this._esc(this._fmtCredits(d.total))}" data-detalle="${this._esc(detalle)}">
+          return `<div class="org-uchart-col" data-dia="${this._esc(d.day)}" data-total="${this._esc(this._fmtCredits(d.total))}" data-ops="${d.ops}" data-detalle="${this._esc(detalle)}">
             <div class="org-uchart-bar" style="height:${hPct}%">${segs}</div>
           </div>`;
         }).join('');
@@ -2060,6 +2067,11 @@ class OrganizationView extends BaseView {
           <div class="org-bd-rows">${rows}</div>`;
       }
     }
+
+    // El tooltip se engancha AL FINAL, no al principio: .org-uchart-plot lo crea
+    // el innerHTML de arriba, asi que atado antes el querySelector devuelve null
+    // y no se engancha nada. Fue exactamente el bug que lo dejo mudo.
+    this._bindUsageTooltip();
   }
 
   _usageStat(label, value, sub, accent) {
