@@ -879,9 +879,9 @@ describe('Las filas de Elementos y el contrato del arrastre', () => {
     expect(nodo.innerHTML).toContain('video-elemento-item is-selected');
   });
 
-  test('el desplegable trae TODAS las fotos, cada una arrastrable', () => {
-    // Un producto de seis se veía igual que uno de una, y el panel elegía dos
-    // por su cuenta.
+  test('las fotos NO se pintan hasta abrir el selector', () => {
+    // El popover flotante las tenía siempre en el DOM, escondidas. Ahora la
+    // fila es solo la fila: menos nodos y ningún panel invisible al acecho.
     const { v, nodo } = conFilas();
     v.dbData.products = [{
       id: 'p1', nombre_producto: 'Botella',
@@ -890,21 +890,10 @@ describe('Las filas de Elementos y el contrato del arrastre', () => {
 
     v.renderElementosFilas();
 
-    const fotos = nodo.innerHTML.split('video-elemento-foto').length - 1;
-    expect(fotos).toBe(3);
-    expect(nodo.innerHTML).toContain('data-url="https://cdn.test/c.jpg"');
-    // Y el contador dice cuántas hay detrás.
+    expect(nodo.innerHTML).not.toContain('video-elemento-foto');
+    // Pero el contador ya avisa de que hay tres.
     expect(nodo.innerHTML).toContain('video-elemento-contador');
-  });
-
-  test('con una sola foto no hay desplegable: sería un eco del tile', () => {
-    const { v, nodo } = conFilas();
-
-    v.renderElementosFilas();
-
-    // El personaje del fixture tiene una sola imagen.
-    const galerias = nodo.innerHTML.split('video-elemento-galeria"').length - 1;
-    expect(galerias).toBe(0);
+    expect(nodo.innerHTML).toContain('data-varias="1"');
   });
 
   test('el contador muestra cuántas van puestas de cuántas hay', () => {
@@ -1352,166 +1341,155 @@ describe('Los dos actos: forjar el prompt, y solo entonces producir', () => {
   });
 });
 
-describe('La galería flota: escapa de los tres overflow que la recortaban', () => {
-  /** Tile y galería de mentira, con rectángulos controlados. */
-  function conTile({ tileTop, galeriaAlto = 180, ventanaAlto = 800, ventanaAncho = 1400 }) {
+
+describe('El selector de fotos: en el sitio, no flotando', () => {
+  function conCatalogo() {
     const { v } = nuevaVista();
-    const estilo = { top: '', left: '', visibility: '' };
-    const clases = new Set();
-    const galeria = {
-      style: estilo,
-      classList: {
-        add: (c) => clases.add(c),
-        remove: (c) => clases.delete(c),
-        contains: (c) => clases.has(c)
-      },
-      getBoundingClientRect: () => ({ height: galeriaAlto, width: 260, top: 0, left: 0 })
-    };
-    const tile = {
-      querySelector: () => galeria,
-      getBoundingClientRect: () => ({ top: tileTop, bottom: tileTop + 72, left: 200, width: 72 })
-    };
-    globalThis.window.innerHeight = ventanaAlto;
-    globalThis.window.innerWidth = ventanaAncho;
-    return { v, tile, galeria, estilo, clases };
+    const nodo = { innerHTML: '', dataset: { boundElementos: '1' }, addEventListener() {}, querySelectorAll: () => [] };
+    v.container.querySelector = (sel) => (sel === '#videoElementosFilas' ? nodo : null);
+    v.escapeHtml = (t) => String(t == null ? '' : t).replace(/"/g, '&quot;');
+    v.addEventListener = () => {};
+    delete v.renderElementosFilas;
+    v.dbData.products = [{
+      id: 'p1', nombre_producto: 'Botella',
+      image_urls: ['a', 'b', 'c', 'd'].map((n) => `https://cdn.test/${n}.jpg`)
+    }];
+    v.dbData.characters = [{ id: 'c1', nombre_personaje: 'Ana', image_urls: ['https://cdn.test/ana.jpg'] }];
+    v.dbData.places = [];
+    v.dbData.services = [];
+    v.elementoAbierto = null;   // el constructor real lo pone así
+    return { v, nodo };
   }
-
-  test('se abre por CLASE, no por :hover — hay que colocarla antes de mostrarla', () => {
-    // Colgada de `:hover` en CSS asomaba un instante en la esquina 0,0.
-    const { v, tile, clases, estilo } = conTile({ tileTop: 400 });
-
-    v.abrirGaleria(tile);
-
-    expect(clases.has('is-abierta')).toBe(true);
-    expect(estilo.top).not.toBe('');
-    expect(estilo.left).not.toBe('');
+  /** El clic delegado real, con un target de mentira. */
+  const clic = (v, cadena) => v._onClicElementos({
+    preventDefault() {},
+    target: { closest: (sel) => cadena[sel] || null }
   });
 
-  test('con aire arriba, se abre encima del tile', () => {
-    const { v, tile, estilo } = conTile({ tileTop: 400, galeriaAlto: 180 });
+  test('tocar un elemento de varias fotos ABRE el selector, no mete la portada', () => {
+    // Antes metía la portada, y un clic de más mientras buscabas el panel te
+    // dejaba una imagen que no pediste.
+    const { v, nodo } = conCatalogo();
+    v.renderElementosFilas();
 
-    v.abrirGaleria(tile);
+    clic(v, {
+      '.video-elemento-item': {
+        classList: { contains: () => false },
+        hasAttribute: () => true,
+        getAttribute: (a) => ({ 'data-tipo': 'product', 'data-id': 'p1' }[a])
+      }
+    });
 
-    expect(estilo.top).toBe('212px'); // 400 - 180 - 8
+    expect(v.elementoAbierto).toEqual({ tipo: 'product', id: 'p1' });
+    expect(v.seedanceRefs.image).toHaveLength(0);
+    expect(nodo.innerHTML).toContain('video-elemento-selector');
   });
 
-  test('sin aire arriba, baja: el sidebar es alto y la primera fila no respira', () => {
-    const { v, tile, estilo } = conTile({ tileTop: 40, galeriaAlto: 180 });
+  test('el selector trae TODAS las fotos, cada una arrastrable', () => {
+    const { v, nodo } = conCatalogo();
+    v.elementoAbierto = { tipo: 'product', id: 'p1' };
 
-    v.abrirGaleria(tile);
+    v.renderElementosFilas();
 
-    expect(estilo.top).toBe('120px'); // 40 + 72 + 8
+    // Se cuentan los botones por su `data-url`: `video-elemento-foto-check`
+    // también empieza por "video-elemento-foto" y contarla infla el número.
+    expect(nodo.innerHTML.split('class="video-elemento-foto"').length - 1).toBe(4);
+    expect(nodo.innerHTML).toContain('data-url="https://cdn.test/d.jpg"');
+    expect(nodo.innerHTML).toContain('draggable="true"');
   });
 
-  test('no se sale por el borde derecho de la ventana', () => {
-    const { v, tile, estilo } = conTile({ tileTop: 400, ventanaAncho: 300 });
+  test('lleva palomita, no solo borde: sobre fotos claras el borde se pierde', () => {
+    const { v, nodo } = conCatalogo();
+    v.elementoAbierto = { tipo: 'product', id: 'p1' };
+    v.seedanceRefs.image = [{ origen: 'activo', _assetId: 'p1', url: 'https://cdn.test/b.jpg' }];
 
-    v.abrirGaleria(tile);
+    v.renderElementosFilas();
 
-    // 300 - 260 - 8 = 32
-    expect(estilo.left).toBe('32px');
+    expect(nodo.innerHTML).toContain('video-elemento-foto is-selected');
+    expect(nodo.innerHTML).toContain('video-elemento-foto-check');
+    expect(nodo.innerHTML).toContain('>1/4<');
   });
 
-  test('se mide con la galería colocada pero invisible, o el alto sería 0', () => {
-    // Midiendo antes de añadir la clase, getBoundingClientRect da 0 y la
-    // decisión de arriba/abajo sale siempre mal.
-    const { v, tile, estilo } = conTile({ tileTop: 400 });
-    let visibilidadAlMedir;
-    const rectOriginal = tile.querySelector().getBoundingClientRect;
-    tile.querySelector().getBoundingClientRect = () => {
-      visibilidadAlMedir = estilo.visibility;
-      return rectOriginal();
-    };
+  test('tocar el mismo elemento otra vez lo cierra', () => {
+    const { v } = conCatalogo();
+    v.elementoAbierto = { tipo: 'product', id: 'p1' };
+    v.renderElementosFilas();
 
-    v.abrirGaleria(tile);
+    clic(v, {
+      '.video-elemento-item': {
+        classList: { contains: () => false },
+        hasAttribute: () => true,
+        getAttribute: (a) => ({ 'data-tipo': 'product', 'data-id': 'p1' }[a])
+      }
+    });
 
-    expect(visibilidadAlMedir).toBe('hidden');
-    expect(estilo.visibility).toBe('');   // se devuelve al final
+    expect(v.elementoAbierto).toBeNull();
   });
 
-  test('solo una abierta a la vez', () => {
-    const a = conTile({ tileTop: 400 });
-    const b = conTile({ tileTop: 400 });
-    a.v.abrirGaleria(a.tile);
-    a.v._galeriaAbierta = a.galeria;
+  test('con UNA sola foto no hay selector: el tile ES esa foto', () => {
+    const { v } = conCatalogo();
+    v.renderElementosFilas();
 
-    a.v.abrirGaleria(b.tile);
+    clic(v, {
+      '.video-elemento-item': {
+        classList: { contains: () => false },
+        hasAttribute: () => false,
+        getAttribute: (a) => ({ 'data-tipo': 'character', 'data-id': 'c1', 'data-url': 'https://cdn.test/ana.jpg' }[a])
+      }
+    });
 
-    expect(a.clases.has('is-abierta')).toBe(false);
-    expect(b.clases.has('is-abierta')).toBe(true);
+    expect(v.elementoAbierto).toBeNull();
+    expect(v.seedanceRefs.image).toHaveLength(1);
   });
 
-  test('un elemento de una sola foto no tiene panel que abrir', () => {
-    const { v } = nuevaVista();
-    const tile = { querySelector: () => null, getBoundingClientRect: () => ({}) };
+  test('la × cierra sin tocar la selección', () => {
+    const { v } = conCatalogo();
+    v.elementoAbierto = { tipo: 'product', id: 'p1' };
+    v.seedanceRefs.image = [{ origen: 'activo', _assetId: 'p1', url: 'https://cdn.test/a.jpg' }];
+    v.renderElementosFilas();
 
-    expect(() => v.abrirGaleria(tile)).not.toThrow();
+    clic(v, { '[data-cerrar-selector]': {} });
+
+    expect(v.elementoAbierto).toBeNull();
+    expect(v.seedanceRefs.image).toHaveLength(1);
   });
 
-  test('el CSS la deja en fixed: absolute la recortaban tres ancestros', () => {
+  test('una foto del selector manda sobre el tile que la contiene', () => {
+    // Si el tile ganara, tocar una foto abriría/cerraría el panel en vez de
+    // elegirla.
+    const { v } = conCatalogo();
+    v.elementoAbierto = { tipo: 'product', id: 'p1' };
+    v.renderElementosFilas();
+
+    clic(v, {
+      '.video-elemento-foto': {
+        getAttribute: (a) => ({ 'data-tipo': 'product', 'data-id': 'p1', 'data-url': 'https://cdn.test/c.jpg' }[a])
+      },
+      '.video-elemento-item': { classList: { contains: () => false }, hasAttribute: () => true, getAttribute: () => 'p1' }
+    });
+
+    expect(v.seedanceRefs.image.map((r) => r.url)).toEqual(['https://cdn.test/c.jpg']);
+    expect(v.elementoAbierto).toEqual({ tipo: 'product', id: 'p1' });
+  });
+
+  test('elegir varias NO cierra el selector: se sigue eligiendo', () => {
+    const { v } = conCatalogo();
+    v.elementoAbierto = { tipo: 'product', id: 'p1' };
+    v.renderElementosFilas();
+
+    v.alternarElemento('product', 'p1', 'https://cdn.test/a.jpg');
+    v.alternarElemento('product', 'p1', 'https://cdn.test/c.jpg');
+
+    expect(v.seedanceRefs.image).toHaveLength(2);
+    expect(v.elementoAbierto).toEqual({ tipo: 'product', id: 'p1' });
+  });
+
+  test('ya no queda nada del popover flotante', () => {
+    // Un panel `fixed` sobre un carrusel con scroll, en un sidebar de 380px,
+    // con miniaturas de 52px: frágil por diseño.
+    expect(FUENTE).not.toContain('abrirGaleria');
+    expect(FUENTE).not.toContain("addEventListener('mouseover'");
     const css = fs.readFileSync(path.join(process.cwd(), 'css/modules/video.css'), 'utf8');
-    const regla = css.slice(css.indexOf('.video-view-container .video-elemento-galeria {'));
-    expect(regla.slice(0, regla.indexOf('}'))).toContain('position: fixed');
-  });
-});
-
-describe('La galería se queda abierta: el hover la cerraba al ir a elegir', () => {
-  const FUENTE_CSS = fs.readFileSync(path.join(process.cwd(), 'css/modules/video.css'), 'utf8');
-
-  test('ya no se cierra al salir el cursor', () => {
-    // El panel flota separado del tile y entre los dos hay un hueco: al
-    // cruzarlo para llegar a una foto se salía del tile y se cerraba en la
-    // cara, justo cuando se iba a elegir.
-    expect(FUENTE).not.toContain("addEventListener('mouseout'");
-    expect(FUENTE).not.toContain("addEventListener('focusout'");
-  });
-
-  test('tiene tres salidas: la ×, tocar fuera y Escape', () => {
-    expect(FUENTE).toContain('data-cerrar-galeria');
-    expect(FUENTE).toContain('_cerrarGaleriaFuera');
-    expect(FUENTE).toContain("e.key === 'Escape'");
-    expect(FUENTE_CSS).toContain('video-elemento-galeria-cerrar');
-  });
-
-  test('la × se atiende ANTES que el tile que la contiene', () => {
-    // Vive dentro del tile: sin interceptarla primero, cerrar metería además
-    // la portada como referencia.
-    const manejador = FUENTE.slice(FUENTE.indexOf("cont.addEventListener('click'"));
-    const cierre = manejador.indexOf('data-cerrar-galeria');
-    const foto = manejador.indexOf('video-elemento-foto');
-    expect(cierre).toBeGreaterThan(-1);
-    expect(cierre).toBeLessThan(foto);
-  });
-
-  test('tocar dentro del tile o de su galería NO cierra: ahí se está eligiendo', () => {
-    const { v } = nuevaVista();
-    const dentro = {};
-    const galeria = { contains: (n) => n === dentro, classList: { remove() {} } };
-    const tile = { contains: () => false };
-    v._galeriaAbierta = galeria;
-    v._tileGaleria = tile;
-
-    // El handler real, tal como lo monta init().
-    const fuera = (e) => {
-      if (!v._galeriaAbierta) return;
-      if (v._galeriaAbierta.contains(e.target)) return;
-      if (v._tileGaleria && v._tileGaleria.contains(e.target)) return;
-      v.cerrarGaleria();
-    };
-    fuera({ target: dentro });
-
-    expect(v._galeriaAbierta).toBe(galeria);
-  });
-
-  test('cerrar suelta también el tile dueño, o el próximo clic fuera no cerraría', () => {
-    const { v } = nuevaVista();
-    const galeria = { classList: { remove() {} } };
-    v._galeriaAbierta = galeria;
-    v._tileGaleria = { contains: () => false };
-
-    v.cerrarGaleria();
-
-    expect(v._galeriaAbierta).toBeNull();
-    expect(v._tileGaleria).toBeNull();
+    expect(css).not.toContain('video-elemento-galeria');
   });
 })

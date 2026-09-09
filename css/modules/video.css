@@ -6629,63 +6629,74 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     filter: grayscale(0.7);
 }
 
-/* --- La galería del elemento: TODAS sus fotos, al pasar el cursor --------
-   Un producto puede tener seis fotos y antes el panel elegía dos por su
-   cuenta. Ahora el tile muestra la portada y el resto se despliega para que
-   el director escoja; cada foto se arrastra por separado y se quita sola.
+/* --- EL SELECTOR DE FOTOS, en el sitio y a lo ancho del panel -------------
+   La primera version desplegaba las fotos en un popover flotante al pasar el
+   cursor. Se abandono: un panel `fixed` sobre un carrusel que scrollea, dentro
+   de un sidebar de 380px, con miniaturas de 52px, es fragil por diseno — se
+   cierra al pasar por el tile de al lado, se escapa al scrollear, y hay que
+   cruzar un hueco muerto para llegar a el. Elegir una foto costaba tres gestos
+   finos.
 
-   Se abre en hover Y en focus-within: con teclado se llega tabulando, y un
-   panel que solo existe para el mouse no existe para media casa. */
+   Ahora se abre debajo de su fila, a lo ancho: sin flotar, sin recortes, sin
+   hover, y con miniaturas del doble de tamano. */
 .video-view-container .video-elemento-item {
     position: relative;
+    cursor: pointer;
 }
-/* POSITION: FIXED, y no absolute. La galería tiene TRES ancestros que la
-   recortan: el carrusel (`overflow-x: auto` — y el spec fuerza el otro eje a
-   `auto`, así que un `overflow-y: visible` ahí no sirve de nada), el
-   `.video-sidebar-inner` (`overflow-y: auto`) y el `.video-sidebar-console`
-   (`overflow: hidden`). Colgada en absolute se recortaba tres veces y no se
-   veía nada. Fixed escapa de los tres porque ningún ancestro crea bloque
-   contenedor —no hay transform, filter ni backdrop-filter en la cadena, está
-   verificado—; las coordenadas las pone el JS al abrir.
-
-   Y la abre una CLASE, no `:hover`: hay que posicionarla ANTES de mostrarla o
-   asoma un instante en la esquina 0,0. */
-.video-view-container .video-elemento-galeria {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 60;
-    width: max-content;
-    max-width: 260px;
-    padding: 8px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-divider, #242424);
-    background: var(--living-bg-card, #14151a);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.14s ease, visibility 0.14s;
+/* El que tiene el selector abierto se marca, para no perderlo de vista al
+   mirar la rejilla de abajo. */
+.video-view-container .video-elemento-item.is-abierto {
+    box-shadow: 0 0 0 2px var(--video-accent, rgba(255, 255, 255, 0.75));
 }
-.video-view-container .video-elemento-galeria.is-abierta {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
+.video-view-container .video-elemento-item.is-arrastrando {
+    opacity: 0.45;
 }
-/* Cabecera del panel: el nombre y su × . El panel ya no se cierra al salir el
-   cursor —flota separado del tile, y cruzar el hueco para llegar a una foto lo
-   cerraba en la cara—, así que necesita una salida visible. */
-.video-view-container .video-elemento-galeria-header {
+/* Sin imagen no hay nada que soltar en un grupo de imagenes: se muestra
+   —existe en la marca— pero no finge ser arrastrable. */
+.video-view-container .video-elemento-item.is-sin-imagen {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+.video-view-container .video-elemento-sin-imagen {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 6px;
+    justify-content: center;
+    color: var(--text-muted);
 }
-.video-view-container .video-elemento-galeria-cerrar {
+
+.video-view-container .video-elemento-selector {
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-secondary, #0f1012);
+}
+.video-view-container .video-elemento-selector-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+.video-view-container .video-elemento-selector-titulo {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.video-view-container .video-elemento-selector-cuenta {
     flex-shrink: 0;
-    width: 18px;
-    height: 18px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    color: var(--text-muted);
+}
+.video-view-container .video-elemento-selector-cerrar {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -6694,44 +6705,42 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     border-radius: 4px;
     background: var(--white-8);
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1;
     cursor: pointer;
     transition: var(--transition);
 }
-.video-view-container .video-elemento-galeria-cerrar:hover {
+.video-view-container .video-elemento-selector-cerrar:hover {
     background: var(--white-15);
     color: var(--text-primary);
 }
-.video-view-container .video-elemento-galeria-titulo {
-    display: block;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+.video-view-container .video-elemento-selector-hint {
+    margin: 0 0 8px;
+    font-size: 0.64rem;
+    line-height: 1.35;
     color: var(--text-tertiary, rgba(255, 255, 255, 0.45));
 }
-.video-view-container .video-elemento-galeria-grid {
+
+/* Tres columnas a lo ancho del panel: ~100px por foto, casi el doble que las
+   52px del popover. Un blanco de 100px se acierta sin apuntar. */
+.video-view-container .video-elemento-selector-grid {
     display: grid;
-    grid-template-columns: repeat(4, 52px);
-    gap: 5px;
-    max-height: 170px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    max-height: 320px;
     overflow-y: auto;
 }
 .video-view-container .video-elemento-foto {
-    width: 52px;
-    height: 52px;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
     padding: 0;
-    border: 1px solid transparent;
-    border-radius: 4px;
+    border: 2px solid transparent;
+    border-radius: 6px;
     overflow: hidden;
     background: #0f1012;
-    cursor: grab;
-    transition: border-color 0.15s ease, transform 0.15s ease;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.12s ease;
 }
 .video-view-container .video-elemento-foto img {
     width: 100%;
@@ -6741,19 +6750,43 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
 }
 .video-view-container .video-elemento-foto:hover {
     border-color: var(--white-50, rgba(255, 255, 255, 0.5));
-    transform: scale(1.04);
 }
 .video-view-container .video-elemento-foto:active {
-    cursor: grabbing;
+    transform: scale(0.97);
 }
-/* La que ya está puesta en el prompt. Sin esto, arrastrar dos veces la misma
-   foto parece no hacer nada. */
+/* La palomita, no solo el borde: en una rejilla con fotos de fondo claro y
+   oscuro, un borde de color se pierde sobre la mitad de ellas. */
+.video-view-container .video-elemento-foto-check {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--accent-brand, #fff);
+    color: #000;
+}
+.video-view-container .video-elemento-foto-check .aisc-ico {
+    width: 12px;
+    height: 12px;
+}
 .video-view-container .video-elemento-foto.is-selected {
-    border-color: var(--video-accent, rgba(255, 255, 255, 0.7));
-    box-shadow: inset 0 0 0 2px var(--video-accent-soft, rgba(255, 255, 255, 0.25));
+    border-color: var(--accent-brand, rgba(255, 255, 255, 0.9));
+}
+.video-view-container .video-elemento-foto.is-selected .video-elemento-foto-check {
+    display: flex;
+}
+.video-view-container .video-elemento-foto.is-selected img {
+    opacity: 0.75;
+}
+.video-view-container .video-elemento-foto.is-arrastrando {
+    opacity: 0.45;
 }
 
-/* Cuántas fotos hay detrás, y cuántas van puestas. Sin el contador, un
+/* Cuantas fotos hay detras, y cuantas van puestas. Sin el contador, un
    producto de seis se ve igual que uno de una. */
 .video-view-container .video-elemento-contador {
     position: absolute;

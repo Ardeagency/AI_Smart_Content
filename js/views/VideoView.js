@@ -123,6 +123,10 @@ class VideoView extends BaseView {
     // en seedanceRefs con origen 'activo', no aquí.
     this.dbData.places = [];
     this.dbData.characters = [];
+    // Qué elemento tiene el selector de fotos abierto: { tipo, id } o null.
+    // Es estado declarativo — repintar las filas lo resuelve todo, sin
+    // posicionar nada a mano.
+    this.elementoAbierto = null;
     // Slot que disparo el file picker de frames (el input es uno solo).
     this._pendingFrameSlot = null;
     // NO hay estado de dirección. La ley de la casa (portada del Studio de
@@ -1725,10 +1729,25 @@ class VideoView extends BaseView {
     );
   }
 
+  /**
+   * Las filas del catálogo, y —si hay un elemento abierto— su SELECTOR justo
+   * debajo de su fila.
+   *
+   * La primera versión desplegaba las fotos en un popover flotante al pasar el
+   * cursor. Se abandonó: un panel `fixed` sobre un carrusel que scrollea,
+   * dentro de un sidebar de 380px, con miniaturas de 52px, es frágil por
+   * diseño — se cierra al pasar por el tile de al lado, se escapa al
+   * scrollear, y hay que cruzar un hueco muerto para llegar a él. Elegir una
+   * foto acababa costando tres gestos finos.
+   *
+   * Ahora se abre EN EL SITIO, a lo ancho del panel: sin flotar, sin recortes,
+   * sin hover. Miniaturas del doble de tamaño y un solo clic por foto.
+   */
   renderElementosFilas() {
     const cont = this.container.querySelector('#videoElementosFilas');
     if (!cont) return;
     const puestas = this._urlsPuestas();
+    const abierto = this.elementoAbierto;
 
     const filas = VideoView.ELEMENTO_TIPOS.map((def) => {
       const items = this.dbData[def.campo] || [];
@@ -1740,94 +1759,58 @@ class VideoView extends BaseView {
           const portada = imagenes[0] || '';
           const usadas = imagenes.filter((u) => puestas.has(u)).length;
           const arrastrable = !!portada;
-          const titulo = arrastrable ? nombre : `${nombre} — ${window.__('sin imagen: no se puede usar como referencia')}`;
+          const esteAbierto = !!abierto && abierto.tipo === def.tipo && String(abierto.id) === String(fila.id);
+          const varias = imagenes.length > 1;
+          const titulo = !arrastrable
+            ? `${nombre} — ${window.__('sin imagen: no se puede usar como referencia')}`
+            : varias
+              ? `${nombre} — ${window.__('{n} imágenes: toca para elegir', { n: imagenes.length })}`
+              : nombre;
 
-          // MISMO contenedor que una producción: `video-escena-item`. El nombre
-          // vive en el title, no debajo — un carrusel de miniaturas se lee por
-          // la imagen.
           const dentro = arrastrable
             ? `<img class="video-escena-thumb video-escena-thumb-img" src="${this.escapeHtml(portada)}" alt="" loading="lazy" decoding="async" draggable="false">`
             : `<span class="video-escena-thumb video-elemento-sin-imagen"><i class="aisc-ico ${def.icono}" aria-hidden="true"></i></span>`;
 
-          // El desplegable con TODAS las fotos. Solo si hay mas de una: para
-          // una sola, el tile YA es esa foto y el panel seria un eco.
-          const galeria = imagenes.length > 1
-            ? `<div class="video-elemento-galeria" role="group" aria-label="${this.escapeHtml(window.__('Imágenes de {name}', { name: nombre }))}">
-                 <div class="video-elemento-galeria-header">
-                   <span class="video-elemento-galeria-titulo">${this.escapeHtml(nombre)}</span>
-                   <button type="button" class="video-elemento-galeria-cerrar" data-cerrar-galeria aria-label="${window.__('Cerrar')}">&times;</button>
-                 </div>
-                 <div class="video-elemento-galeria-grid">
-                   ${imagenes.map((u, i) => `
-                     <button type="button"
-                       class="video-elemento-foto${puestas.has(u) ? ' is-selected' : ''}"
-                       data-tipo="${this.escapeHtml(def.tipo)}"
-                       data-id="${this.escapeHtml(fila.id)}"
-                       data-url="${this.escapeHtml(u)}"
-                       draggable="true"
-                       aria-pressed="${puestas.has(u)}"
-                       title="${this.escapeHtml(nombre)} · ${i + 1}/${imagenes.length}">
-                       <img src="${this.escapeHtml(u)}" alt="" loading="lazy" draggable="false">
-                     </button>`).join('')}
-                 </div>
-               </div>`
-            : '';
-
-          // El contador dice que hay mas detras, y cuantas van puestas. Sin el,
-          // un producto de seis fotos se ve igual que uno de una.
-          const insignia = imagenes.length > 1
+          // El contador dice que hay más detrás, y cuántas van puestas. Sin él,
+          // un producto de seis se ve igual que uno de una.
+          const insignia = varias
             ? `<span class="video-elemento-contador" aria-hidden="true">${usadas ? `${usadas}/` : ''}${imagenes.length}</span>`
             : '';
 
           return `
-            <div class="video-escena-item video-elemento-item${usadas ? ' is-selected' : ''}${arrastrable ? '' : ' is-sin-imagen'}"
+            <div class="video-escena-item video-elemento-item${usadas ? ' is-selected' : ''}${esteAbierto ? ' is-abierto' : ''}${arrastrable ? '' : ' is-sin-imagen'}"
               data-tipo="${this.escapeHtml(def.tipo)}"
               data-id="${this.escapeHtml(fila.id)}"
               ${portada ? `data-url="${this.escapeHtml(portada)}"` : ''}
+              ${varias ? 'data-varias="1"' : ''}
               role="button" tabindex="0"
               ${arrastrable ? 'draggable="true"' : ''}
               aria-pressed="${usadas > 0}"
+              aria-expanded="${esteAbierto}"
               aria-label="${this.escapeHtml(titulo)}"
               title="${this.escapeHtml(titulo)}">
               <div class="video-escena-thumb-wrap">${dentro}</div>
               ${insignia}
-              ${galeria}
             </div>`;
         }).join('');
+
+      const selector = abierto && abierto.tipo === def.tipo
+        ? this._selectorHTML(def, abierto.id, puestas)
+        : '';
+
       return `
         <div class="video-elementos-fila" data-tipo="${this.escapeHtml(def.tipo)}">
           <span class="video-elementos-fila-label"><i class="aisc-ico ${def.icono}" aria-hidden="true"></i>${this.escapeHtml(def.etiqueta)}</span>
           <div class="video-escenas-carousel">${cuerpo}</div>
+          ${selector}
         </div>`;
     }).join('');
 
-    // Repintar destruye el nodo que estuviera abierto: la referencia guardada
-    // apuntaría a un elemento que ya no está en el documento.
-    this._galeriaAbierta = null;
-    this._tileGaleria = null;
     cont.innerHTML = filas;
 
     if (cont.dataset.boundElementos !== '1') {
       cont.dataset.boundElementos = '1';
-      // Tocar hace lo mismo que arrastrar. No es un adorno: arrastrar no existe
-      // con teclado y en táctil es un pulso fino; sin el clic, el panel sería
-      // inalcanzable para media casa.
-      cont.addEventListener('click', (e) => {
-        // La × vive dentro del tile: sin atenderla primero, cerrar la galería
-        // metería además la portada como referencia.
-        if (e.target.closest('[data-cerrar-galeria]')) {
-          e.preventDefault();
-          e.stopPropagation();
-          this.cerrarGaleria();
-          return;
-        }
-        // Una foto del desplegable manda sobre el tile que la contiene: se
-        // toco esa, no la portada.
-        const foco = e.target.closest('.video-elemento-foto') || e.target.closest('.video-elemento-item');
-        if (!foco || foco.classList.contains('is-sin-imagen')) return;
-        e.preventDefault();
-        this.alternarElemento(foco.getAttribute('data-tipo'), foco.getAttribute('data-id'), foco.getAttribute('data-url'));
-      });
+      cont.addEventListener('click', (e) => this._onClicElementos(e));
       cont.addEventListener('dragstart', (e) => {
         const tile = e.target.closest('.video-elemento-foto') || e.target.closest('.video-elemento-item');
         if (!tile || tile.classList.contains('is-sin-imagen')) return;
@@ -1851,102 +1834,93 @@ class VideoView extends BaseView {
         if (tile) tile.classList.remove('is-arrastrando');
         document.body.classList.remove('video-arrastrando-elemento');
       });
-
-      // La galería la abre el JS, no `:hover`: hay que colocarla antes de
-      // mostrarla. `mouseover` y no `mouseenter` porque el segundo no burbujea
-      // y aquí todo va por delegación.
-      cont.addEventListener('mouseover', (e) => {
-        const tile = e.target.closest('.video-elemento-item');
-        if (tile) this.abrirGaleria(tile);
-      });
-      // NO se cierra al salir el cursor. El panel flota separado del tile, y
-      // entre los dos hay un hueco: al cruzarlo para llegar a una foto se salía
-      // del tile y el panel se cerraba en la cara. Se queda abierto hasta que
-      // se elige otro elemento, se toca fuera, se pulsa Escape o su ×.
-      cont.addEventListener('focusin', (e) => {
-        const tile = e.target.closest('.video-elemento-item');
-        if (tile) this.abrirGaleria(tile);
-      });
-      // Al scrollear, la galería se quedaría flotando donde estaba: sus
-      // coordenadas son del viewport y el tile ya se movió. Se escucha en los
-      // dos contenedores que de verdad scrollean —el sidebar en vertical y el
-      // carrusel en horizontal— porque `scroll` NO burbujea: colgarlo de
-      // window no vería ninguno de los dos.
-      const cerrar = () => this.cerrarGaleria();
-
-      // Tocar fuera cierra. El clic DENTRO del tile o de su galería no: ahí se
-      // está eligiendo, que es justo para lo que se abrió.
-      if (!this._cerrarGaleriaFuera) {
-        this._cerrarGaleriaFuera = (e) => {
-          if (!this._galeriaAbierta) return;
-          if (this._galeriaAbierta.contains(e.target)) return;
-          if (this._tileGaleria && this._tileGaleria.contains(e.target)) return;
-          this.cerrarGaleria();
-        };
-        this.addEventListener(document, 'click', this._cerrarGaleriaFuera);
-      }
-      if (!this._cerrarGaleriaEscape) {
-        this._cerrarGaleriaEscape = (e) => { if (e.key === 'Escape') this.cerrarGaleria(); };
-        this.addEventListener(document, 'keydown', this._cerrarGaleriaEscape);
-      }
-
-      this.addEventListener(cont, 'scroll', cerrar);
-      cont.querySelectorAll('.video-escenas-carousel').forEach((car) => {
-        this.addEventListener(car, 'scroll', cerrar);
-      });
-      const inner = this.container.querySelector('.video-sidebar-inner');
-      if (inner) this.addEventListener(inner, 'scroll', cerrar);
+      // Escape cierra el selector: es lo que busca quien usa teclado, y no
+      // cuesta nada ofrecerlo.
+      this._cerrarSelectorEscape = (e) => {
+        if (e.key === 'Escape' && this.elementoAbierto) this.abrirSelector(null);
+      };
+      this.addEventListener(document, 'keydown', this._cerrarSelectorEscape);
     }
   }
 
   /**
-   * Coloca la galería junto al tile y la muestra. Va en `position: fixed` para
-   * escapar de los tres overflow que la recortaban, así que las coordenadas
-   * son del VIEWPORT y hay que calcularlas cada vez.
+   * El selector abierto: todas las fotos del elemento, a lo ancho del panel.
+   * Van al DOBLE de tamaño que en el popover viejo porque aquí hay sitio — el
+   * panel mide 340px y no 260, y no compite con nada.
    */
-  abrirGaleria(tile) {
-    const galeria = tile.querySelector('.video-elemento-galeria');
-    if (!galeria) return;                 // un solo archivo: no hay panel
-    if (galeria.classList.contains('is-abierta')) return;
-    this.cerrarGaleria();                 // solo una abierta a la vez
-
-    const t = tile.getBoundingClientRect();
-    // Se mide con el panel ya colocado pero aún invisible: sin esto el alto es
-    // 0 y la decisión de arriba/abajo sale siempre mal.
-    galeria.style.visibility = 'hidden';
-    galeria.classList.add('is-abierta');
-    const g = galeria.getBoundingClientRect();
-
-    const margen = 8;
-    // Por defecto encima; si no cabe, debajo. El sidebar es alto y estrecho, y
-    // los elementos de la primera fila no tienen aire arriba.
-    const arriba = t.top - g.height - margen;
-    const top = arriba >= margen
-      ? arriba
-      : Math.min(t.bottom + margen, window.innerHeight - g.height - margen);
-    // Centrada en el tile, pero sin salirse por los lados.
-    const left = Math.max(margen, Math.min(
-      t.left + (t.width - g.width) / 2,
-      window.innerWidth - g.width - margen
-    ));
-
-    galeria.style.top = `${Math.max(margen, top)}px`;
-    galeria.style.left = `${left}px`;
-    galeria.style.visibility = '';
-    this._galeriaAbierta = galeria;
-    this._tileGaleria = tile;
+  _selectorHTML(def, id, puestas) {
+    const el = this._buscarElemento(def.tipo, id);
+    if (!el || el.imagenes.length < 2) return '';
+    const usadas = el.imagenes.filter((u) => puestas.has(u)).length;
+    return `
+      <div class="video-elemento-selector" role="group" aria-label="${this.escapeHtml(window.__('Imágenes de {name}', { name: el.nombre }))}">
+        <div class="video-elemento-selector-header">
+          <span class="video-elemento-selector-titulo">${this.escapeHtml(el.nombre)}</span>
+          <span class="video-elemento-selector-cuenta">${usadas}/${el.imagenes.length}</span>
+          <button type="button" class="video-elemento-selector-cerrar" data-cerrar-selector aria-label="${window.__('Cerrar')}">&times;</button>
+        </div>
+        <p class="video-elemento-selector-hint">${window.__('Toca las que quieras usar. También se arrastran a las Imágenes del prompt.')}</p>
+        <div class="video-elemento-selector-grid">
+          ${el.imagenes.map((u, i) => {
+    const puesta = puestas.has(u);
+    return `
+              <button type="button"
+                class="video-elemento-foto${puesta ? ' is-selected' : ''}"
+                data-tipo="${this.escapeHtml(def.tipo)}"
+                data-id="${this.escapeHtml(el.id)}"
+                data-url="${this.escapeHtml(u)}"
+                draggable="true"
+                aria-pressed="${puesta}"
+                title="${this.escapeHtml(el.nombre)} · ${i + 1}/${el.imagenes.length}">
+                <img src="${this.escapeHtml(u)}" alt="" loading="lazy" draggable="false">
+                <span class="video-elemento-foto-check" aria-hidden="true"><i class="aisc-ico aisc-ico--check"></i></span>
+              </button>`;
+  }).join('')}
+        </div>
+      </div>`;
   }
 
-  /** Cierra la galería del tile dado, o la que esté abierta. */
-  cerrarGaleria(tile) {
-    const galeria = tile ? tile.querySelector('.video-elemento-galeria') : this._galeriaAbierta;
-    if (!galeria) return;
-    galeria.classList.remove('is-abierta');
-    if (this._galeriaAbierta === galeria) {
-      this._galeriaAbierta = null;
-      this._tileGaleria = null;
+  /**
+   * Un solo manejador para todo el catálogo. El orden importa: lo más
+   * específico primero, o el clic en una foto acabaría tratado como clic en la
+   * fila que la contiene.
+   */
+  _onClicElementos(e) {
+    if (e.target.closest('[data-cerrar-selector]')) {
+      e.preventDefault();
+      this.abrirSelector(null);
+      return;
     }
+    const foto = e.target.closest('.video-elemento-foto');
+    if (foto) {
+      e.preventDefault();
+      this.alternarElemento(foto.getAttribute('data-tipo'), foto.getAttribute('data-id'), foto.getAttribute('data-url'));
+      return;
+    }
+    const tile = e.target.closest('.video-elemento-item');
+    if (!tile || tile.classList.contains('is-sin-imagen')) return;
+    e.preventDefault();
+    const tipo = tile.getAttribute('data-tipo');
+    const id = tile.getAttribute('data-id');
+    // Con varias fotos, tocar el tile ABRE el selector — no mete la portada.
+    // Antes la metía, y un clic de más mientras buscabas el panel te dejaba una
+    // imagen que no pediste.
+    if (tile.hasAttribute('data-varias')) {
+      const abierto = this.elementoAbierto;
+      const yaEstaba = abierto && abierto.tipo === tipo && String(abierto.id) === String(id);
+      this.abrirSelector(yaEstaba ? null : { tipo, id });
+      return;
+    }
+    // Con una sola foto no hay nada que elegir: el tile ES esa foto.
+    this.alternarElemento(tipo, id, tile.getAttribute('data-url'));
   }
+
+  /** Abre el selector de un elemento (o lo cierra con null) y repinta. */
+  abrirSelector(que) {
+    this.elementoAbierto = que;
+    this.renderElementosFilas();
+  }
+
 
   /** El tipo MIME propio del arrastre. Un solo sitio para que no se desincronice. */
   static get DND_ELEMENTO() { return 'application/x-aisc-elemento'; }
