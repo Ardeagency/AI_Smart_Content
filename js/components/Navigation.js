@@ -2081,9 +2081,9 @@ class Navigation {
           </div>
         </div>
         <div class="nav-item" id="navCommandCenterSingle" style="display:none">
-          <a href="#" class="nav-link nav-main-link" id="navCommandCenterSingleLink" data-route="" data-tooltip="${__('Estrategia')}">
+          <a href="#" class="nav-link nav-main-link" id="navCommandCenterSingleLink" data-route="" data-tooltip="${__('Marketing')}">
             <img src="${commandCenterIconSrc}" class="nav-icon nav-icon-img" alt="" width="16" height="16">
-            <span class="nav-text">${__('Estrategia')}</span>
+            <span class="nav-text">${__('Marketing')}</span>
           </a>
         </div>`;
       }
@@ -3737,8 +3737,8 @@ class Navigation {
         if (link) {
           link.setAttribute('href', href);
           link.setAttribute('data-route', href);
-          // El tooltip/colapsado debe decir "Estrategia", no el nombre del sub-brand.
-          link.setAttribute('data-tooltip', __('Estrategia'));
+          // El tooltip/colapsado debe decir "Marketing", no el nombre del sub-brand.
+          link.setAttribute('data-tooltip', __('Marketing'));
         }
         single.style.display = '';
       }
