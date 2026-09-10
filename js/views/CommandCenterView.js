@@ -645,7 +645,24 @@ class CommandCenterView extends BaseView {
 
     if (!isAudience && !isConcept) return;
 
-    // Sin confirm: borrado directo (la accion viene del trash button = intent claro)
+    // CONFIRMACION OBLIGATORIA. Antes esto borraba directo, con el argumento de
+    // que "la accion viene del trash button = intent claro". No lo era: el
+    // boton vive en el inspector, a un clic de haber seleccionado el nodo, y lo
+    // que destruye no es la presencia en el lienzo sino la AUDIENCIA ENTERA —
+    // con sus dolores, deseos y la demografia medida. Se perdieron dos de
+    // WAKEUP asi, y este proyecto no tiene PITR ni backups.
+    const nombre = isAudience
+      ? ((this._audiences || []).find((a) => String(a.id) === String(entityId))?.name || __('esta audiencia'))
+      : ((this._campaigns || []).find((c) => String(c.id) === String(entityId))?.nombre_campana || __('esta campaña'));
+    const ok = await this._confirmDestructive({
+      title: isAudience ? __('Eliminar audiencia') : __('Eliminar campaña'),
+      lead: isAudience
+        ? __('Se borrará «{n}» de la marca, no solo de este lienzo.', { n: nombre })
+        : __('Se borrará «{n}» y sus conjuntos y creativos, no solo de este lienzo.', { n: nombre }),
+      warn: __('No se puede deshacer. Si solo quieres sacarla del lienzo, usa «Quitar del lienzo».'),
+      confirmLabel: isAudience ? __('Eliminar audiencia') : __('Eliminar campaña'),
+    });
+    if (!ok) return;
 
     // Deshabilita el botón mientras se procesa
     const btn = cardEl?.querySelector('.cc-gallery-delete-btn');
@@ -658,6 +675,11 @@ class CommandCenterView extends BaseView {
 
       // Quitar localmente del state y re-render. Las galerías de campañas
       // reales no se tocan: no se pueden eliminar desde aquí.
+      // canvas_node_placements no tiene FK al registro: si no se borra aqui,
+      // queda un nodo fantasma en la estrategia. WAKEUP acumulo 4 asi.
+      this._deletePlacement?.(isAudience ? 'audience' : 'campaign', entityId);
+      this._sessionCreated?.delete(isAudience ? `aud:${entityId}` : `camp:${entityId}`);
+
       if (isAudience) {
         this._audiences = (this._audiences || []).filter(a => String(a.id) !== String(entityId));
       } else {
@@ -679,6 +701,55 @@ class CommandCenterView extends BaseView {
       console.error('CommandCenterView delete:', e?.message || e);
       if (btn) { btn.disabled = false; btn.style.opacity = ''; }
     }
+  }
+
+  /* ── Quitar del lienzo (NO borra el registro) ────────────────────────
+     Lo que faltaba: la unica accion que ofrecia el inspector para audiencias y
+     objetivos era ELIMINAR. Quien solo queria despejar el lienzo no tenia otra
+     puerta, y se llevaba por delante el registro. */
+  async _removeNodeFromCanvas(entityType, entityId) {
+    const type = entityType === 'audience' ? 'audience' : 'campaign';
+    const key = this._keyFromPlacement(type, entityId);
+    this._sessionCreated?.delete(key);
+    if (typeof this._deletePlacement === 'function') await this._deletePlacement(type, entityId);
+    if (String(this._selectedKey) === String(key)) {
+      this._selectedKey = null; this._selected = null; this._inspecting = false;
+      try { this._store?.clearSelection(); } catch (_) { /* noop */ }
+      if (typeof this._renderSelection === 'function') this._renderSelection();
+    }
+    this._renderCanvas();
+    if (typeof this._renderLibrary === 'function') this._renderLibrary();
+    this._renderMiniDash();
+  }
+
+  /* ── Confirmacion de accion destructiva ──────────────────────────────
+     Sobre la primitiva Modal.show (utils/modal.js), que es lo que pide ese
+     archivo para los modales nuevos. Devuelve una promesa: true solo si el
+     usuario pulsa el boton destructivo. Cerrar o cancelar = false. */
+  _confirmDestructive({ title, lead, warn, confirmLabel }) {
+    return new Promise((resolve) => {
+      if (!window.Modal || typeof window.Modal.show !== 'function') {
+        // Sin la primitiva, mejor un confirm nativo que un borrado mudo.
+        resolve(window.confirm(`${lead}\n\n${warn}`));
+        return;
+      }
+      let decidido = false;
+      const body = document.createElement('div');
+      body.className = 'cc-confirm';
+      body.innerHTML = `
+        <p class="cc-confirm-lead">${this.escapeHtml(lead)}</p>
+        <p class="cc-confirm-warn">${this.escapeHtml(warn)}</p>
+        <div class="cc-confirm-actions">
+          <button type="button" class="cc-confirm-cancel">${__('Cancelar')}</button>
+          <button type="button" class="cc-confirm-go">${this.escapeHtml(confirmLabel)}</button>
+        </div>`;
+      const { close } = window.Modal.show({
+        title, body, className: 'cc-confirm-modal',
+        onClose: () => { if (!decidido) resolve(false); },
+      });
+      body.querySelector('.cc-confirm-cancel').addEventListener('click', () => { decidido = true; close(); resolve(false); });
+      body.querySelector('.cc-confirm-go').addEventListener('click', () => { decidido = true; close(); resolve(true); });
+    });
   }
 
   /* ── Error state ──────────────────────────────────────────────────── */

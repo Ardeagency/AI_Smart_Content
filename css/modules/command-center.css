@@ -2697,6 +2697,49 @@
 }
 .cc-insp-delete:hover { background: rgba(225, 87, 96, 0.16); }
 
+/* Quitar del lienzo: accion NEUTRA, hermana del borrado pero sin su peso. Va
+   ANTES en el DOM porque es la que casi siempre se busca — el rojo debajo es la
+   excepcion, no el camino por defecto. */
+.cc-insp-uncanvas {
+  margin-top: 8px; width: 100%; padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06); color: var(--text-primary, #e8eaed);
+  cursor: pointer; font-size: 0.74rem; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.cc-insp-uncanvas:hover {
+  background: color-mix(in srgb, var(--cc-highlight) 12%, transparent);
+  border-color: color-mix(in srgb, var(--cc-highlight) 35%, transparent);
+}
+
+/* ── Confirmacion destructiva (sobre la primitiva Modal) ──────────────── */
+.cc-confirm-modal { max-width: 420px; }
+.cc-confirm-lead {
+  margin: 0 0 8px; font-size: 0.86rem; line-height: 1.45;
+  color: var(--text-primary, #e8eaed);
+}
+.cc-confirm-warn {
+  margin: 0 0 18px; font-size: 0.78rem; line-height: 1.45;
+  color: #f06060;
+}
+.cc-confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.cc-confirm-actions button {
+  padding: 9px 14px; border-radius: 8px; cursor: pointer;
+  font-size: 0.76rem; font-weight: 600;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.cc-confirm-cancel {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06); color: var(--text-primary, #e8eaed);
+}
+.cc-confirm-cancel:hover { background: rgba(255, 255, 255, 0.12); }
+.cc-confirm-go {
+  border: 1px solid rgba(225, 87, 96, 0.45);
+  background: rgba(225, 87, 96, 0.14); color: #f06060;
+}
+.cc-confirm-go:hover { background: rgba(225, 87, 96, 0.24); }
+
 /* ── Plantillas de ejecucion (jerarquia v2): Conjunto / Anuncio / Tienda ── */
 .cc-insp-add {
   margin-top: 4px; width: 100%; padding: 9px;

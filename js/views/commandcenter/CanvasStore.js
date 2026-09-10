@@ -5298,6 +5298,12 @@
         else if (kind === 'ad') this._createAdFor(parent);
         return;
       }
+      const unc = e.target.closest('.cc-insp-uncanvas[data-uncanvas-type]');
+      if (unc) {
+        e.preventDefault(); e.stopPropagation();
+        this._removeNodeFromCanvas(unc.getAttribute('data-uncanvas-type'), unc.getAttribute('data-uncanvas-id'));
+        return;
+      }
       const del = e.target.closest('.cc-insp-delete[data-del-type]');
       if (del) {
         e.preventDefault();
@@ -5417,7 +5423,8 @@
             <button type="button" class="cc-node-toggle cc-toggle-feature ${featured ? 'is-on' : ''}" data-toggle="is_featured" title="Destacar"><i class="aisc-ico aisc-ico--star"></i></button>
             <button type="button" class="cc-node-toggle cc-toggle-power ${off ? 'is-off' : 'is-on'}" data-toggle="is_active" title="${off ? 'Encender' : 'Apagar'}"><i class="aisc-ico aisc-ico--idea"></i></button>
           </div>
-          <button type="button" class="cc-insp-delete" data-del-type="audience" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> Eliminar audiencia</button>
+          <button type="button" class="cc-insp-uncanvas" data-uncanvas-type="audience" data-uncanvas-id="${eid}"><i class="aisc-ico aisc-ico--close"></i> ${__('Quitar del lienzo')}</button>
+          <button type="button" class="cc-insp-delete" data-del-type="audience" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> ${__('Eliminar audiencia')}</button>
         </div>
       `,
     };
@@ -5497,7 +5504,8 @@
           ${this._fieldText('Fin', 'date', 'ends_at', c.ends_at ? String(c.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           <div class="cc-insp-hint">${__('El Objetivo es la parte TÉCNICA (plataformas, presupuesto, fechas). La dirección creativa — que decir y que producir — vive en el Brief.')}</div>
           <button type="button" class="cc-insp-add" data-exec-add="adset" data-exec-parent="${eid}"><i class="aisc-ico aisc-ico--add"></i> ${__('Agregar Conjunto de Anuncios')}</button>
-          <button type="button" class="cc-insp-delete" data-del-type="campaign-concept" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> Eliminar campana</button>
+          <button type="button" class="cc-insp-uncanvas" data-uncanvas-type="campaign-concept" data-uncanvas-id="${eid}"><i class="aisc-ico aisc-ico--close"></i> ${__('Quitar del lienzo')}</button>
+          <button type="button" class="cc-insp-delete" data-del-type="campaign-concept" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> ${__('Eliminar campaña')}</button>
         </div>
       `,
     };
