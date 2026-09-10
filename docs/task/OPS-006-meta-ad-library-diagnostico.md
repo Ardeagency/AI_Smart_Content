@@ -65,3 +65,42 @@ Si no hay urgencia: **Opción C** y postergar.
 - (A o B) `competitor_ads` recibe ≥1 fila en 24-48h tras configurar competidores (DATA-001).
 - (C) `monitoring_triggers.status='paused'` y nota en este archivo de fecha de re-evaluación.
 - 0 errores `Application does not have permission` o `Cannot read properties of undefined` en `journalctl -u ai-engine` durante 7 días.
+
+---
+
+## RESUELTA 2026-09-10 — la pregunta ya tiene respuesta, y la vía funciona
+
+Esta ficha nació para diagnosticar por qué `competitor_ads` estaba **vacía** y
+decidir entre las vías A/B/C. **Las dos cosas ya están resueltas de hecho.**
+
+| Medida (2026-09-10) | Valor |
+|---|---|
+| Filas en `competitor_ads` | **98** |
+| Plataforma | **`meta` en las 98** |
+| Con `creative_url` | **98 de 98** |
+| Captura más antigua / más reciente | 2026-08-03 / **2026-08-21** |
+| Sensor `meta_ad_library_sync` | **existe y está `active`** (647 runs históricos) |
+
+La decisión A/B/C se tomó **en los hechos**: se barre la Biblioteca de Anuncios de
+Meta vía Apify, y funcionó — 98 anuncios ingestados en agosto.
+
+## Por qué se congeló el 2026-08-21 (no es esta ficha)
+
+El sensor siguió corriendo pero **fallando**:
+
+```
+meta_ad_library_sync: 0 de 3 competidores barridos
+  — Paranice: apify respondió 403 | Tosh: apify respondió 403
+```
+
+Causa: **Apify topó su límite mensual** (50,36 USD sobre un tope de 50, plan
+STARTER, ciclo hasta el 2026-09-14). El token es válido; es tope duro, no
+credencial muerta.
+
+Eso **no es un problema de diagnóstico de la Biblioteca de Anuncios**, que es lo
+que esta ficha perseguía: es capacidad contratada. Se trasladó a
+[OPS-013](./OPS-013-triggers-atascados-sin-reagendar.md), junto con el resto de
+sensores atascados.
+
+**Esta ficha se puede borrar.** Se deja el texto sólo hasta que se confirme la
+lectura; su contenido vivo ya está en OPS-013.

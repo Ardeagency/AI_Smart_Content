@@ -1,16 +1,17 @@
 /* ========== Fondo de plataforma (compartido) ==========
 
    El radial del espectro de AI Smart Content (--pf-1..7), anclado al viewport.
-   Lo comparten Planes, Creditos, Configuracion de organizacion y Campañas
-   (command center). Nacio dentro de planes.css; al entrar la cuarta pagina se
-   mudo aqui, que era lo que ese archivo mismo pedia.
+   Lo comparten Planes, Creditos y Configuracion de organizacion: paginas que
+   hablan del PRODUCTO que se vende, no de la marca del cliente. Nacio dentro de
+   planes.css y se mudo aqui al dejar de ser de una sola pagina.
+   Marketing lo uso un rato y se paso al degradado de MARCA (command-center.css):
+   ahi la pantalla habla de la marca del cliente, no de AI Smart Content.
    OJO: el cielo de estrellas NO acompaña al fondo. Es un canvas que cada vista
-   decide montar (window.Starfield), asi que Configuracion y Campañas lo heredan
-   apagado sin necesidad de excluirse: simplemente no lo arrancan. */
+   decide montar (window.Starfield), asi que Configuracion lo hereda apagado sin
+   necesidad de excluirse: simplemente no lo arranca. */
 #app-container:has(.planes-page),
 #app-container:has(.credits-page),
-#app-container:has(.organization-container),
-#app-container:has(.cc-page) {
+#app-container:has(.organization-container) {
     /* Manda el negro. El espectro entra al 20% y se apaga contra transparente
        antes del 90%, asi que es LUZ sobre la oscuridad y no un fondo de color:
        la version anterior lo pintaba a plena saturacion y la pagina entera se

@@ -82,3 +82,34 @@ Para resolver esta tarea **necesitamos los datos de los competidores reales** de
   SELECT count(*) FROM url_watchers;       -- > 0 (si hay web entities)
   ```
 - Dashboard "Mi Competencia" muestra datos reales de SKU vs SKU, ads del rival, etc.
+
+---
+
+## Medido 2026-09-10 — de todo lo que denunciaba, sólo queda una cosa
+
+| Lo que la ficha da por vacío | Realidad hoy |
+|---|---|
+| `intelligence_entities` | **37** |
+| `competitor_ads` | **98** (ver [OPS-006](./OPS-006-meta-ad-library-diagnostico.md)) |
+| `visual_references` | **2** |
+| **`retail_prices`** | **0** ← lo único que sigue en pie |
+
+Y `retail_prices` sigue en 0 por una razón que **no depende de configurar
+competidores**: la fuente era MercadoLibre y su API pública dejó de serlo.
+Verificado hoy ejecutando:
+
+```
+GET https://api.mercadolibre.com/sites/MCO/search?q=cafe&limit=1
+→ HTTP 403 {"message":"forbidden"}
+```
+
+Es exactamente el bloqueo de [FEAT-025](./FEAT-025-mercadolibre-api-publica-fiche.md).
+
+**Conclusión:** DATA-001 ya no tiene alcance propio. Lo que le queda es
+**FEAT-025**, y ésa está bloqueada por un tercero (requiere registrar app en ML +
+OAuth, o scrape con headless). **Cerrar DATA-001** y seguir el hilo en FEAT-025.
+
+> Nota: hay un sensor `mercadolibre_metrics` **activo** que reporta `success`
+> (último run 2026-09-01, 108 runs). O usa credencial propia por otra vía, o mide
+> algo distinto de precios de retail. Conviene mirarlo antes de dar FEAT-025 por
+> totalmente bloqueada.

@@ -14,6 +14,31 @@
    /command-center), asi que no tiñe nada mas. */
 :root { --cc-highlight: var(--brand-color-light, #c9cdd3); }
 
+/* ── Fondo: el radial de MARCA, atenuado ──────────────────────────────────
+   Misma geometria y mismo orden de color que el tablero, Vera y Monitoreo
+   (110.4% anclado arriba-centro, luz -> medio -> #141517 -> fondo): esta
+   pantalla habla de la marca del cliente, no del producto que vendemos, asi
+   que no le toca el espectro de plataforma de Planes/Creditos.
+
+   Lo que cambia es la INTENSIDAD. Alli el degradado entra a plena saturacion y
+   se come la pantalla; aqui el lienzo es la pieza y el fondo solo la sostiene,
+   asi que cada parada se diluye contra transparente sobre el negro base. Es
+   luz sobre la oscuridad, no un fondo de color. Los porcentajes de color-mix
+   son el dimmer — subirlos lo acerca al tablero.
+
+   Va anclado al viewport (fixed): el lienzo hace su propio pan/zoom y el fondo
+   no debe viajar con el. */
+#app-container:has(.cc-page) {
+  background-color: #050507;
+  background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
+    color-mix(in srgb, var(--brand-color-light, #F79E1B) 26%, transparent) 0%,
+    color-mix(in srgb, var(--brand-color-mid, #FF5F00) 18%, transparent) 30.29%,
+    color-mix(in srgb, #141517 55%, transparent) 74.04%,
+    transparent 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
 /* Rellena el alto útil bajo el header fijo (evita “hueco” bajo el contenido cuando el padre no da altura al %). */
 .cc-page {
   min-height: calc(100vh - var(--app-header-height, 45.8px));
