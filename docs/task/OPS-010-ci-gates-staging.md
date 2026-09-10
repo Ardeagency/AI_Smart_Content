@@ -60,3 +60,34 @@ Esto rompe en producción a la primera regresión silenciosa (ya pasó con `from
 ## Notas
 
 - Esto invalida parcialmente la memoria `feedback_auto_push_frontend` ("al cerrar iteración commitear+push a main sin re-preguntar"). Después de OPS-010, el flujo correcto será merge a `staging` primero, validar, luego promover a `main`. Replantear convención cuando se cierre.
+
+---
+
+## Fase 1 HECHA 2026-09-10 — el deploy ya tiene gate
+
+`netlify.toml` corre `npm run test:gate` **antes** de construir. Si un test falla,
+el deploy aborta.
+
+### Por qué el gate NO corre los 447 tests
+
+Corre **440**. Se excluyen a propósito `endpoints.test.js`, `rls.test.js` y
+`rpcs.test.js`, que salen a la red (ai-engine y Supabase). Colgar cada deploy de
+la disponibilidad de un tercero convierte una caída ajena en imposibilidad de
+publicar — incluido el hotfix que arreglaría esa caída. Esos tres siguen
+corriendo en GitHub Actions, donde fallar no bloquea publicar.
+
+```
+"test:gate": "vitest run --exclude '**/endpoints.test.js' --exclude '**/rls.test.js' --exclude '**/rpcs.test.js'"
+```
+
+Verificado: 440 pasan en 39s. Los 447 completos también pasan (incluido `rls`,
+que es la regresión de seguridad del mismo día).
+
+### Pendiente (Fase 2, y es decisión + acceso externo)
+
+- Branch `staging` + `staging.aismartcontent.io` en Netlify.
+- **Proyecto Supabase de staging separado.** Hoy los tests de red corren contra
+  **producción** con la llave anon. Funciona porque sólo verifican que un anónimo
+  NO pueda leer — pero cualquier test que escriba tendría que ir a staging.
+- Ojo con el branching: hoy `main` = auto-deploy y hay regla de autopush. Meter
+  protección de rama que exija PR **rompería** ese flujo. Decidir una cosa o la otra.

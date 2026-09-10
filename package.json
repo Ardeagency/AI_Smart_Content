@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "lint:ci": "eslint . --max-warnings 628",
     "audit:isolation": "node scripts/audit-org-isolation.mjs",
-    "build:minify": "node scripts/build-minify.mjs"
+    "build:minify": "node scripts/build-minify.mjs",
+    "test:gate": "vitest run --exclude '**/endpoints.test.js' --exclude '**/rls.test.js' --exclude '**/rpcs.test.js'"
   },
   "dependencies": {
     "@netlify/functions": "^2.8.0",

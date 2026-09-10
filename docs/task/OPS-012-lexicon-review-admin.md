@@ -52,3 +52,22 @@ Backend ya tiene:
 - Tabla `dimension_lexicon` (vocabulario controlado)
 - Tabla `enrich_lexicon_proposal` (workflow review)
 - Origen: `AUDIT-001-frontend-vs-backend-2026-05-05.md` P4
+
+---
+
+## Revisado 2026-09-10 — choca con SEC-004, decidir antes de construir
+
+Medido: `dimension_lexicon` tiene **215 filas**, `enrich_lexicon_proposal`
+**no existe** en la base, y `DevLeadLexiconView.js` sigue siendo un shell
+("Próximamente"). La ficha es exacta.
+
+**Pero construirla hoy contradice a [SEC-004](./SEC-004-migrar-panel-dev-a-repo-propio.md):**
+esa tarea quiere sacar las 19 vistas `/dev/*` de `console` a `AISC-Admin` detrás
+de Cloudflare Access. Añadir una vista dev número 20 es sumarle trabajo a la
+migración que estamos por hacer, y además nace en el lado inseguro.
+
+Además el orden ya se cumplió: SEC-004 decía ir *después* de SEC-001 y SEC-002,
+y las dos ya están (SEC-001 cerrada, SEC-002 con el núcleo cerrado el 2026-09-10).
+
+**Decisión pendiente:** construir `/dev/lexicon` en `AISC-Admin` (no en console),
+o dejar OPS-012 congelada hasta que SEC-004 termine. No construirla en console.

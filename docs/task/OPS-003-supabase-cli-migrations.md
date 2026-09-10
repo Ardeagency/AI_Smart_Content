@@ -61,3 +61,28 @@ supabase db push
 - `supabase/migrations/00000000000000_baseline.sql` existe en el repo.
 - `supabase/README.md` apuntado desde `docs/platform/08-deployment.md` como método preferido.
 - 1 cambio SQL futuro aplicado vía `supabase migration new` + `supabase db push` (en vez de Mgmt API ad-hoc).
+
+---
+
+## Revisado 2026-09-10 — el bloqueador que dice arriba ya no es cierto
+
+`auto_eligible_reason` dice *"supabase CLI no instalado localmente"*. **Sí está
+instalado**: `/usr/local/bin/supabase`.
+
+Lo único que falta es **la contraseña de la base**, que no está en ningún `.env`
+local (ni en `~/.claude/arde-tools/supabase/.env`, que sólo tiene access token,
+service role, anon y JWT secret). Sin ella `supabase link` y `supabase db dump`
+no corren.
+
+**No se generó un baseline "a mano" desde el catálogo a propósito**: un baseline
+reconstruido a medias es peor que no tenerlo, porque parece una fuente de verdad
+y no lo es.
+
+### Lo que falta es UNA acción humana (30 segundos)
+
+Dashboard → Settings → Database → *Database password*. Con eso:
+
+```bash
+supabase link --project-ref tsdpbqcwjckbfsdqacam
+supabase db dump -f supabase/migrations/00000000000000_baseline.sql
+```

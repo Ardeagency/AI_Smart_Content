@@ -12,7 +12,13 @@
   #    COMMIT_REF lo expone Netlify; en local sin build, el placeholder permanece y
   #    js/app.js cae a Date.now() en runtime para que tampoco haya cache stale en dev.
   #    (Los placeholders viven en string literals: sobreviven a la minificación.)
-  command = "node scripts/build-minify.mjs && sed -i \"s/__BUILD_ID__/$COMMIT_REF/g\" index.html css/bundle.css js/app.js js/utils/lazy-nav.js js/components/DevSidebarEnhancements.js sw.js"
+  # 0) test:gate (OPS-010): si un test falla, el deploy ABORTA. Son los 440 tests
+  #    HERMETICOS — se excluyen a proposito endpoints/rls/rpcs, que salen a la red
+  #    (ai-engine y Supabase). Colgar cada deploy de la disponibilidad de un
+  #    tercero convierte una caida ajena en una caida de deploy propia; esos tres
+  #    siguen corriendo en GitHub Actions (.github/workflows/ci.yml), donde fallar
+  #    no bloquea publicar un hotfix.
+  command = "npm run test:gate && node scripts/build-minify.mjs && sed -i \"s/__BUILD_ID__/$COMMIT_REF/g\" index.html css/bundle.css js/app.js js/utils/lazy-nav.js js/components/DevSidebarEnhancements.js sw.js"
   publish = "."
 
 [functions]

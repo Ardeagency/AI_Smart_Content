@@ -65,3 +65,23 @@ Beneficio: 1 fuente de verdad. El ai-engine puede leer al arrancar (en lugar de 
 
 - Todos los secrets críticos respaldados fuera del FS de la VM.
 - Runbook actualizado: "VM destruida → bootstrap nueva en X pasos" puede ejecutarse sin intervención del que originó los secrets.
+
+---
+
+## Revisado 2026-09-10 — sigue esperando una decisión, y no es mecánica
+
+No se avanzó a propósito. Las tres opciones exigen algo que no se puede tomar
+solo:
+
+- **A (1Password/Bitwarden):** hay que dar de alta el vault y el acceso.
+- **B (Supabase Vault):** implementable desde aquí —la extensión está—, pero
+  requiere **leer `/root/ai-engine/.env` por SSH y mover 27 secretos críticos**.
+  Es la opción más invasiva de las tres y no debería hacerse sin decirlo antes.
+- **C (archivo cifrado en repo privado):** la más simple, pero mueve el problema
+  a "dónde vive la llave de cifrado".
+
+Nota de riesgo que no estaba escrita: hoy el `.env` del ai-engine es
+**el único lugar** donde existen algunos valores, y esa VM **no tiene snapshots**
+(ver [OPS-001](./OPS-001-hetzner-snapshots.md), también abierta). Las dos juntas
+son el mismo riesgo: si la VM muere, se pierden datos que no están en ningún otro
+lado. OPS-001 es más barata y debería ir primero.
