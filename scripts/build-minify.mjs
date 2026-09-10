@@ -20,8 +20,13 @@
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import esbuild from 'esbuild';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+// `.pathname` devuelve la ruta PERCENT-ENCODED: con un espacio en el path
+// (`ARDE AGENCY/`) llega como `%20` y el build muere con ENOENT. En Netlify no
+// se nota porque alli la ruta no tiene espacios; en local si. Ya estaba
+// arreglado asi en el repo AISC-Admin.
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const stats = { css: [0, 0], js: [0, 0], errores: [] };
 
 function walk(dir, exts, out = []) {
@@ -73,7 +78,13 @@ for (const f of jsFiles) {
   await minifyFile(f, 'js', {
     minifyWhitespace: true,
     minifySyntax: true,
-    target: 'es2019',
+    // es2020, no es2019: MonitoringView.js y CompGrid.mixin.js usan literales
+    // BigInt (`0n`, `64n`), que son ES2020 y esbuild NO puede rebajar. Con el
+    // target viejo esos 2 archivos fallaban y se conservaba el original — es
+    // decir, YA viajaban con ES2020 sin rebajar, y encima sin minificar. El
+    // target declarado era una ficcion; esto lo alinea con lo que el codigo
+    // realmente exige y recupera su minificacion.
+    target: 'es2020',
   });
 }
 

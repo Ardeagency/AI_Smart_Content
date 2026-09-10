@@ -6,6 +6,10 @@
 const ALLOWED_ORIGINS = new Set([
   'https://aismartcontent.io',
   'https://www.aismartcontent.io',
+  // SEC-004: el panel /dev migra a su propio origen (repo AISC-Admin). Sin esto,
+  // los 2 botones "Conectar tienda" de Crear organizacion fallan por CORS en
+  // cuanto se opere desde admin en vez de console.
+  'https://admin.aismartcontent.io',
   'http://localhost:8888',
   'http://localhost:8080',
   'http://localhost:5173',
