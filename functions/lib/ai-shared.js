@@ -309,8 +309,20 @@ async function ensureBalanceAtLeast({ env, organizationId, minCredits }) {
  * @param {{ env: {url:string, serviceKey:string}, cost?: number, maxWaitMs?: number }} opts
  * @returns {Promise<{ ok: boolean, waitedMs: number, reason?: string, retryAfterMs?: number }>}
  */
+// Observabilidad del governor (FEAT-036 Fase 1).
+//
+// `acquireKieSlot` es fail-open A PROPOSITO: si el governor no esta disponible NO
+// debe tumbar produccion. El precio de esa decision es que, si el governor se
+// cae, todo pasa sin limite y nadie se entera — un gate que degrada en silencio.
+// Estas tres lineas son la diferencia entre "esta protegido" y "creemos que esta
+// protegido". Prefijo fijo para poder filtrar en los logs de Netlify.
+const KIE_GOV_TAG = '[kie-governor]';
+
 async function acquireKieSlot({ env, cost = 1, maxWaitMs = 8000 } = {}) {
-  if (!env?.url || !env?.serviceKey) return { ok: true, waitedMs: 0, reason: 'no env — fail-open' };
+  if (!env?.url || !env?.serviceKey) {
+    console.warn(`${KIE_GOV_TAG} FAIL-OPEN: sin env de Supabase. La generacion sale SIN limite de tasa.`);
+    return { ok: true, waitedMs: 0, reason: 'no env — fail-open' };
+  }
   const deadline = Date.now() + maxWaitMs;
   let waitedMs = 0;
   while (true) {
@@ -328,15 +340,26 @@ async function acquireKieSlot({ env, cost = 1, maxWaitMs = 8000 } = {}) {
       });
       if (!res.ok) {
         // RPC no disponible (404) o error: fail-open para no romper produccion.
+        console.warn(`${KIE_GOV_TAG} FAIL-OPEN: kie_rate_acquire respondio HTTP ${res.status}. La generacion sale SIN limite de tasa.`);
         return { ok: true, waitedMs, reason: `governor unavailable (HTTP ${res.status}) — fail-open` };
       }
       data = await res.json().catch(() => null);
     } catch (e) {
+      console.warn(`${KIE_GOV_TAG} FAIL-OPEN: ${e.message}. La generacion sale SIN limite de tasa.`);
       return { ok: true, waitedMs, reason: `governor error (${e.message}) — fail-open` };
     }
-    if (data && data.acquired) return { ok: true, waitedMs };
+    if (data && data.acquired) {
+      // Solo se registra cuando de verdad hubo espera: si no, seria una linea por
+      // cada generacion y el log dejaria de servir para ver los picos.
+      if (waitedMs > 0) {
+        console.log(`${KIE_GOV_TAG} throttle: espero ${waitedMs}ms antes de crear la tarea (tokens_left=${data.tokens_left ?? '?'}).`);
+      }
+      return { ok: true, waitedMs };
+    }
     const retry = Math.min(Math.max(Number(data?.retry_after_ms) || 250, 100), 1500);
     if (Date.now() + retry > deadline) {
+      // Esto SI es un job que no se creo. Es el evento que hay que poder contar.
+      console.warn(`${KIE_GOV_TAG} RECHAZADO tras esperar ${waitedMs}ms (maxWait=${maxWaitMs}ms). Se devuelve 429 al cliente.`);
       return { ok: false, waitedMs, reason: 'KIE rate limit busy', retryAfterMs: retry };
     }
     await new Promise(r => setTimeout(r, retry));

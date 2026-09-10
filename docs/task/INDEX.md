@@ -91,7 +91,7 @@ BUG-004, SPRINT-FRONTEND-100)
 
 | ID | Que falta EXACTAMENTE |
 |---|---|
-| [FEAT-036](./FEAT-036-kie-rate-governor-and-queue.md) | Governor de tasa KIE: limite real 20 createTask/10s POR CUENTA y 429 NO encola (= job perdido en picos). **Fase 1 CERRADA 2026-05-29**: token bucket Postgres + Path A (6 funciones Netlify, commit 6463f55a) + Path B (comfy-flow-runner cuenta nodos KIE_* y reserva tokens). Riesgo confirmado real (1 flow = 6 nodos KIE × 5 concurrentes = 30 > 20). Pendiente: observabilidad de throttle + Fases 2-4 (foreground>background, cola unificada con prioridad por plan, turbo por plan). |
+| [FEAT-036](./FEAT-036-kie-rate-governor-and-queue.md) | **VERIFICADO 2026-09-10: la Fase 1 esta ENTERA** — tabla + RPC existen, bucket `cap=18 refill=1.8/s` como se especifico, y **9 de 9** call-sites cableados (la ficha decia 6). El bucket llevaba 6 semanas sin tocarse y **no es fallo**: desde el 28/07 no hubo NINGUNA generacion de imagen ni video (1.424 `credit_usage` posteriores son apify/claude/vera). **Lo que si faltaba: el gate degradaba MUDO** — `acquireKieSlot` es fail-open y ningun caller leia `slot.reason`, asi que un governor caido y uno sano se veian igual. Ya registra (`[kie-governor]` FAIL-OPEN / throttle / RECHAZADO). Falta: contador persistente (cambio de esquema) y Fases 2-4 (dependen de que promete cada plan). |
 
 ## 🟠 High — falta construir
 

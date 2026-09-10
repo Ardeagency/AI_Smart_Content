@@ -111,3 +111,58 @@ una latencia simulada ni una compra de creditos suelta. Mejor para tiers altos,
 - Topologia y limites: memoria `project_kie_consumer_topology`.
 - KIE creds: `~/.claude/arde-tools/kie/.env`; control de creditos: memoria `feedback_kie_credits_control`.
 - Path B: `FEAT-033-comfy-flow-bridge.md`, dispatcher en content-flows `/opt/stacks/dispatcher/app.py`.
+
+---
+
+## Verificado 2026-09-10 — la Fase 1 está entera, y ahora además se puede ver
+
+### Lo que se comprobó contra la base y el código
+
+| Qué | Estado |
+|---|---|
+| Tabla `provider_rate_buckets` | ✅ existe |
+| RPC `kie_rate_acquire` | ✅ existe (`EXECUTE` sólo para `service_role`) |
+| Configuración del bucket | ✅ `kie` · `capacity=18` · `refill_per_s=1.8` — exactamente lo especificado |
+| Call-sites de `createTask` cableados a `acquireKieSlot` | ✅ **9 de 9** (la ficha decía 6; hay más cobertura de la escrita) |
+
+### El bucket llevaba 6 semanas sin tocarse, y NO es un fallo
+
+`updated_at = 2026-07-28 16:37 UTC`. Se cruzó con la actividad real: desde esa
+fecha hay **1.424** filas en `credit_usage`, pero de tipo `apify_scrape`,
+`claude_describe`, `vera_chat` y `adjustment` — **ninguna generación de imagen ni
+video**. El último `flow_runs` es del **2026-07-08**.
+
+O sea: el governor está intacto, simplemente **no ha habido tráfico de KIE que
+gobernar**. Conviene tenerlo presente al leer la severidad 🔴: el riesgo es real
+por diseño, pero hoy no hay carga que lo dispare.
+
+### El hueco que sí había: el gate degradaba MUDO
+
+`acquireKieSlot` es fail-open a propósito —si el governor no está, no debe tumbar
+producción—, y devuelve un `reason` en los tres casos de fallo. **Ningún caller
+leía `slot.reason` ni `slot.waitedMs`.** Consecuencia: si la RPC se cayera
+(migración revertida, grant cambiado, red), *todas* las generaciones saldrían sin
+límite y **nadie se enteraría**. La protección y la ausencia de protección se
+veían exactamente igual desde fuera.
+
+**Hecho:** el registro va **dentro del helper**, así que los 9 call-sites lo
+heredan sin tocarlos. Prefijo fijo `[kie-governor]` para filtrar en Netlify:
+
+- `FAIL-OPEN: …` (`console.warn`) — el governor no respondió. **Es la alarma de
+  que el gate está mudo.**
+- `throttle: espero Nms …` — sólo cuando de verdad hubo espera (si no, sería una
+  línea por generación y el log dejaría de servir para ver los picos).
+- `RECHAZADO tras esperar Nms` — el job que **no** se creó. Es el evento a contar.
+
+Probado ejecutando los dos caminos de fail-open: siguen devolviendo `ok:true`
+(producción intacta) y ahora emiten el aviso.
+
+### Pendiente
+
+- **Contador persistente de throttle/rechazo.** El log de Netlify se rota; para
+  dimensionar el problema hace falta una cifra acumulada (p. ej. columnas
+  `throttled_count`/`rejected_count` en `provider_rate_buckets`, incrementadas por
+  la propia RPC). Es un cambio de esquema + RPC.
+- Fases 2-4 (foreground > background, cola unificada con prioridad por plan,
+  turbo por plan) — **sin empezar**, y dependen de decisiones de producto sobre
+  qué promete cada plan.
