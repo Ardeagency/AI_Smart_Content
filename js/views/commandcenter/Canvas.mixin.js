@@ -1968,12 +1968,18 @@
     const sc = Math.min((W - pad * 2) / Math.max(1, x1 - x0), (H - pad * 2) / Math.max(1, y1 - y0));
     const ox = pad - x0 * sc, oy = pad - y0 * sc;
     this._miniTransform = { sc, ox, oy };
-    // Monocromo: tipos diferenciados por brillo, sin color.
-    const colorByType = { audience: '#c9cdd3', 'campaign-concept': '#e8eaed', 'campaign-real': '#90959c', identity: '#aeb3b9' };
+    // El mapa se pinta con el RESALTADO DE MARCA (--cc-highlight = el color mas
+    // claro de la paleta; nunca --brand-primary, que puede ser negro puro). Un
+    // <canvas> no resuelve var(), asi que hay que leerlo computado. Los tipos
+    // se siguen diferenciando, pero por OPACIDAD sobre el mismo color en vez de
+    // por cuatro grises distintos.
+    const hi = this._brandHighlight();
+    const alphaByType = { audience: 0.80, 'campaign-concept': 1, 'campaign-real': 0.55, identity: 0.68 };
     nodes.forEach((n) => {
       const p = this._positions[n.key]; if (!p) return;
-      ctx.fillStyle = colorByType[n.type] || '#888';
-      ctx.globalAlpha = (this._focusSet && !this._focusSet.has(n.key)) ? 0.25 : 0.9;
+      ctx.fillStyle = hi;
+      const base = alphaByType[n.type] ?? 0.6;
+      ctx.globalAlpha = (this._focusSet && !this._focusSet.has(n.key)) ? base * 0.28 : base * 0.9;
       const rw = Math.max(3, NW * sc), rh = Math.max(3, 60 * sc);
       ctx.fillRect(p.x * sc + ox, p.y * sc + oy, rw, rh);
     });
@@ -1985,10 +1991,26 @@
       const s = this._canvasScale || 1;
       const pn = this._canvasPan || { x: 0, y: 0 };
       const vx = (-pn.x) / s, vy = (-pn.y) / s, vw = r.width / s, vh = r.height / s;
-      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      ctx.strokeStyle = hi;
+      ctx.globalAlpha = 0.85;
       ctx.lineWidth = 1.5;
       ctx.strokeRect(vx * sc + ox, vy * sc + oy, vw * sc, vh * sc);
+      ctx.globalAlpha = 1;
     }
+  };
+
+  /** Resaltado de marca resuelto a color real, para el <canvas> del mapa.
+      Lee --cc-highlight de :root (que ya cae a --brand-color-light y de ahi al
+      gris monocromo). Se resuelve en CADA pintada a proposito: OrgBrandTheme
+      reescribe la variable al cambiar de organizacion y el mapa debe seguirla
+      sin recargar. */
+  P._brandHighlight = function () {
+    try {
+      const v = getComputedStyle(document.documentElement)
+        .getPropertyValue('--cc-highlight').trim();
+      if (v) return v;
+    } catch (_) { /* noop */ }
+    return '#c9cdd3';
   };
 
   /** Selecciona una seccion (toggle: re-click colapsa el panel de datos).

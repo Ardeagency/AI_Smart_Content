@@ -3,6 +3,17 @@
    mataba el blur de TODO descendiente por especificidad (1,0,0 > .clase 0,1,0):
    por eso el glass no se aplicaba y el fondo se veia nitido. Eliminado a proposito. */
 
+/* Resaltado de marca del lienzo: el color MAS CLARO de la paleta, NUNCA
+   --brand-primary (puede ser negro puro —WAKEUP— y el resaltado desaparece
+   sobre el fondo oscuro). Fallback monocromo: una org sin colores propios no
+   hereda el de otra marca.
+
+   Va en :root y no en .cc-page porque los modales del lienzo se montan en
+   PORTAL, fuera del contenedor de la pagina: ahi la variable no heredaria y la
+   propiedad quedaria invalida. Este modulo es route-split (solo se carga en
+   /command-center), asi que no tiñe nada mas. */
+:root { --cc-highlight: var(--brand-color-light, #c9cdd3); }
+
 /* Rellena el alto útil bajo el header fijo (evita “hueco” bajo el contenido cuando el padre no da altura al %). */
 .cc-page {
   min-height: calc(100vh - var(--app-header-height, 45.8px));
@@ -362,7 +373,7 @@
   pointer-events: auto;
 }
 .cc-gallery-edit-btn:hover {
-  background: var(--brand-primary, #3a3a42);
+  background: var(--cc-highlight);
   transform: scale(1.1);
 }
 .cc-gallery-delete-btn:hover {
@@ -642,7 +653,7 @@
   border-radius: 14px;
   /* Monocromo: sin gradiente, sin glow de color. El acento del chrome es neutro;
      el color solo vive en el CONTENIDO (fotos de producto/creativos). */
-  --cc-accent: #c9cdd3;
+  --cc-accent: var(--cc-highlight);
   background: #0c0c0d;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
@@ -658,7 +669,7 @@
 .cc-node--campaign,
 .cc-node--campaign.cc-node--readonly,
 .cc-node--identity {
-  --cc-accent: #c9cdd3;
+  --cc-accent: var(--cc-highlight);
   background: #0c0c0d;
 }
 
@@ -682,10 +693,10 @@
 .cc-node--readonly { width: 248px; }
 .cc-node--identity { width: 208px; }
 .cc-node--readonly.cc-node--expanded { width: 340px; z-index: 4; }
-.cc-node:hover { border-color: color-mix(in srgb, var(--brand-primary, #ffffff) 40%, transparent); }
+.cc-node:hover { border-color: color-mix(in srgb, var(--cc-highlight) 40%, transparent); }
 .cc-node.cc-node--dragging { box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6); z-index: 5; }
-.cc-node--drop-target { border-color: rgba(255, 255, 255, 0.55); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3), 0 6px 22px rgba(0, 0, 0, 0.45); }
-.cc-node--featured { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4), 0 6px 22px rgba(0, 0, 0, 0.45); }
+.cc-node--drop-target { border-color: color-mix(in srgb, var(--cc-highlight) 60%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc-highlight) 35%, transparent), 0 6px 22px rgba(0, 0, 0, 0.45); }
+.cc-node--featured { box-shadow: 0 0 0 1px color-mix(in srgb, var(--cc-highlight) 45%, transparent), 0 6px 22px rgba(0, 0, 0, 0.45); }
 .cc-node--off { opacity: 0.45; filter: grayscale(0.4); }
 
 /* ── Nodos minimalistas (audiencia / campana): se editan en el inspector ── */
@@ -722,7 +733,7 @@
 .cc-node-chip--status.cc-node-chip--paused { color: #b8bdc4; border-color: rgba(255, 255, 255, 0.16); }
 .cc-node-chip--status.cc-node-chip--conceptual { color: #c9cdd3; border-color: rgba(255, 255, 255, 0.18); }
 .cc-node-chip--link { color: var(--cc-accent); }
-.cc-node--selected { box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.55), 0 8px 26px rgba(0, 0, 0, 0.55); }
+.cc-node--selected { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--cc-highlight) 70%, transparent), 0 8px 26px rgba(0, 0, 0, 0.55); }
 
 .cc-node-head {
   display: flex;
@@ -791,7 +802,7 @@
 /* Objetivos de genero: checkboxes. */
 .cc-checks { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 2px 0; }
 .cc-check { display: inline-flex; align-items: center; gap: 5px; font-size: 0.74rem; color: var(--text-secondary); cursor: pointer; }
-.cc-check input { accent-color: var(--text-secondary); cursor: pointer; }
+.cc-check input { accent-color: var(--cc-highlight); cursor: pointer; }
 .cc-checks-hint { font-size: 0.66rem; color: var(--text-muted); font-style: italic; }
 .cc-node-meta {
   display: inline-flex; align-items: center; gap: 5px;
@@ -937,7 +948,7 @@
 }
 /* Preview de conexion: nace invisible y aparece a los 300ms (clase is-on desde
    JS, patron n8n) — un click rapido sobre el puerto no flashea un cable. */
-.cc-edge-path--preview { stroke: rgba(255, 255, 255, 0.55); stroke-width: calc(1.5px * var(--cc-zoom-comp, 1)); stroke-dasharray: 4 4; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }
+.cc-edge-path--preview { stroke: var(--cc-highlight); stroke-width: calc(1.5px * var(--cc-zoom-comp, 1)); stroke-dasharray: 4 4; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }
 .cc-edge-path--preview.is-on { opacity: 0.7; }
 .cc-edge-hit { stroke: transparent; stroke-width: calc(18px * var(--cc-zoom-comp, 1)); pointer-events: stroke; cursor: pointer; }
 .cc-edge-arrow-head { fill: rgba(255, 255, 255, 0.45); }
@@ -945,8 +956,8 @@
 .cc-edge--ingredient .cc-edge-path { stroke-dasharray: 0.5 7; stroke-linecap: round; opacity: 0.7; }
 .cc-edge--production .cc-edge-path { stroke-dasharray: none; opacity: 0.85; }
 /* Hover (patron n8n): la arista se aclara y su flecha tambien. */
-.cc-edge:hover .cc-edge-path { stroke: rgba(255, 255, 255, 0.9); }
-.cc-edge:hover .cc-edge-arrow-head { fill: rgba(255, 255, 255, 0.9); }
+.cc-edge:hover .cc-edge-path { stroke: var(--cc-highlight); }
+.cc-edge:hover .cc-edge-arrow-head { fill: var(--cc-highlight); }
 .cc-edge { pointer-events: auto; }
 .cc-edge-action { overflow: visible; }
 /* Toolbar del edge (patron n8n): fila "+ / x" centrada, contra-escalada para
@@ -1035,12 +1046,12 @@
   color: var(--text-primary, #fff);
   background:
     linear-gradient(color-mix(in srgb, #fff 6%, var(--bg-card, #141517)), color-mix(in srgb, #fff 6%, var(--bg-card, #141517))) padding-box,
-    var(--brand-gradient-dynamic, var(--brand-primary, #7C83FF)) border-box;
+    var(--brand-gradient-dynamic, var(--cc-highlight)) border-box;
 }
 .cc-strat-new.cc-canvas-btn:hover {
   background:
     linear-gradient(color-mix(in srgb, #fff 11%, var(--bg-card, #141517)), color-mix(in srgb, #fff 11%, var(--bg-card, #141517))) padding-box,
-    var(--brand-gradient-dynamic, var(--brand-primary, #7C83FF)) border-box;
+    var(--brand-gradient-dynamic, var(--cc-highlight)) border-box;
 }
 .cc-strat-new.cc-canvas-btn i { font-size: .72rem; }
 
@@ -1086,7 +1097,7 @@
   border-color: transparent;
   background:
     linear-gradient(var(--bg-card, #141517), var(--bg-card, #141517)) padding-box,
-    var(--brand-gradient-dynamic, var(--brand-primary, #7C83FF)) border-box;
+    var(--brand-gradient-dynamic, var(--cc-highlight)) border-box;
 }
 .cc-strategy-item-ic {
   flex: 0 0 auto;
@@ -1174,7 +1185,7 @@
   display: block;
   height: 100%;
   border-radius: 3px;
-  background: var(--brand-gradient-dynamic, var(--brand-primary, #c9cdd3));
+  background: var(--brand-gradient-dynamic, var(--cc-highlight));
   transition: width .3s ease;
 }
 .cc-strat-budget-bar.is-over > span { background: #e15760; }
@@ -1237,7 +1248,7 @@
   color: #fff;
   background:
     linear-gradient(color-mix(in srgb, #fff 8%, var(--bg-card, #141517)), color-mix(in srgb, #fff 8%, var(--bg-card, #141517))) padding-box,
-    var(--brand-gradient-dynamic, var(--brand-primary, #7C83FF)) border-box;
+    var(--brand-gradient-dynamic, var(--cc-highlight)) border-box;
 }
 /* Indicador de activo: barra vertical al borde derecho del rail (apunta al
    panel, que abre a la izquierda). */
@@ -1245,7 +1256,7 @@
   content: ''; position: absolute; right: -8px; top: 50%;
   transform: translateY(-50%);
   width: 3px; height: 0; border-radius: 2px 0 0 2px;
-  background: var(--brand-gradient-dynamic-vertical, var(--brand-primary, #fff)); transition: height 0.15s ease;
+  background: var(--brand-gradient-dynamic-vertical, var(--cc-highlight)); transition: height 0.15s ease;
 }
 .cc-rail-btn.is-active::before { height: 20px; }
 .cc-rail-badge {
@@ -1385,15 +1396,15 @@
   cursor: pointer;
 }
 .cc-strategy-item.is-active {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.22);
+  background: color-mix(in srgb, var(--cc-highlight) 8%, transparent);
+  border-color: color-mix(in srgb, var(--cc-highlight) 30%, transparent);
 }
-.cc-strategy-item.is-active .cc-lib-item-name { color: #ececec; }
+.cc-strategy-item.is-active .cc-lib-item-name { color: var(--cc-highlight); }
 .cc-strategy-check {
   position: absolute;
   right: 9px; top: 50%;
   transform: translateY(-50%);
-  color: #cfd3d8;
+  color: var(--cc-highlight);
   font-size: 0.68rem;
 }
 .cc-strategy-create {
@@ -1443,7 +1454,7 @@
   border-color: transparent;
   background:
     linear-gradient(color-mix(in srgb, #fff 4%, var(--bg-card, #141517)), color-mix(in srgb, #fff 4%, var(--bg-card, #141517))) padding-box,
-    var(--brand-gradient-dynamic, var(--brand-primary, #7C83FF)) border-box;
+    var(--brand-gradient-dynamic, var(--cc-highlight)) border-box;
 }
 .cc-nodo-card-icon {
   display: inline-flex; align-items: center; justify-content: center;
@@ -2028,12 +2039,12 @@
   animation: ccVeraPulseSharp 1s ease-out infinite;
 }
 .cc-node--vera-publicando {
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.55), 0 2px 8px rgba(0,0,0,0.30) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc-highlight) 70%, transparent), 0 2px 8px rgba(0,0,0,0.30) !important;
 }
 .cc-node--vera-midiendo {
-  box-shadow: 0 0 0 1.5px rgba(255,255,255,0.25), 0 2px 8px rgba(0,0,0,0.30) !important;
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--cc-highlight) 35%, transparent), 0 2px 8px rgba(0,0,0,0.30) !important;
   /* punteado solo se logra bien con outline */
-  outline: 1px dashed rgba(255,255,255,0.18);
+  outline: 1px dashed color-mix(in srgb, var(--cc-highlight) 30%, transparent);
   outline-offset: 3px;
 }
 .cc-node--vera-esperando_aprobacion {
@@ -2192,7 +2203,7 @@
   box-shadow: none !important;
 }
 .cc-node--anchor.cc-node--selected {
-  box-shadow: 0 0 0 2px #fff, 0 12px 28px rgba(0,0,0,0.30) !important;
+  box-shadow: 0 0 0 2px var(--cc-highlight), 0 12px 28px rgba(0,0,0,0.30) !important;
 }
 .cc-node--anchor .cc-node-head { background: transparent !important; }
 .cc-node--anchor .cc-node-icon--anchor {
@@ -2225,7 +2236,7 @@
 }
 .cc-node--campaign-v2 .cc-node-sync.is-synced { color: var(--text-secondary, #d4d1d8) !important; }
 .cc-node--campaign-v2.cc-node--selected {
-  box-shadow: 0 0 0 2px #fff, 0 12px 30px rgba(0,0,0,0.30) !important;
+  box-shadow: 0 0 0 2px var(--cc-highlight), 0 12px 30px rgba(0,0,0,0.30) !important;
 }
 
 /* Flow premium ports → todos blancos/muted */
@@ -2279,7 +2290,7 @@
 }
 .cc-node--prem::before { display: none !important; }
 .cc-node--prem.cc-node--selected {
-  box-shadow: 0 0 0 2px #ffffff, 0 16px 36px rgba(0,0,0,0.25) !important;
+  box-shadow: 0 0 0 2px var(--cc-highlight), 0 16px 36px rgba(0,0,0,0.25) !important;
 }
 
 /* Toolbar superior (icono / tag tipo + acciones) */
@@ -2423,7 +2434,7 @@
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 2px 6px rgba(0,0,0,0.25), 0 12px 28px rgba(0,0,0,0.18);
 }
 .cc-node--anchor.cc-node--selected {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55), 0 12px 28px rgba(0,0,0,0.30);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc-highlight) 70%, transparent), 0 12px 28px rgba(0,0,0,0.30);
 }
 .cc-node--anchor .cc-node-head {
   background: rgba(255, 255, 255, 0.04);
@@ -2935,7 +2946,7 @@
   padding: 2px;
   pointer-events: none;
   z-index: 4;
-  background: var(--brand-gradient-dynamic, var(--brand-primary, #7C83FF)) border-box;
+  background: var(--brand-gradient-dynamic, var(--cc-highlight)) border-box;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
           mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
