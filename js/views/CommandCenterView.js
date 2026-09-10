@@ -6,7 +6,7 @@
  * - Conexiones existentes: integraciones + segmentos con vínculo a persona
  */
 class CommandCenterView extends BaseView {
-  static get documentTitle() { return __('Campañas'); }
+  static get documentTitle() { return __('Marketing'); }
 
   constructor() {
     super();
@@ -337,7 +337,7 @@ class CommandCenterView extends BaseView {
     this._organizationId  = this._resolveOrganizationId();
 
     if (!this._organizationId) {
-      this.updateHeaderContext(__('Campañas'), this._subBrandSlug || '—', window.currentOrgName || '');
+      this.updateHeaderContext(__('Marketing'), this._subBrandSlug || '—', window.currentOrgName || '');
       this._setError(__('Selecciona una organización o inicia sesión de nuevo.'));
       return;
     }
@@ -382,7 +382,7 @@ class CommandCenterView extends BaseView {
     const displayName = match
       ? (String(match.nombre_marca || '').trim() || __('Sub-marca'))
       : (this._subBrandSlug || this._subBrandShortId || '—');
-    this.updateHeaderContext(__('Campañas'), displayName, window.currentOrgName || '');
+    this.updateHeaderContext(__('Marketing'), displayName, window.currentOrgName || '');
 
     if (!match) {
       this._setError(__('No se encontró la sub-marca "{displayName}". Revisa el nombre en Brand Storage.', { displayName }));

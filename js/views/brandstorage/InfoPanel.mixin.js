@@ -1707,7 +1707,7 @@
 
   /* ── Presupuesto de marketing (brand_containers.marketing_budget) ─────
      El techo que la marca establece para sus campanas. Se DEFINE aqui (INFO);
-     el Command Center lo lee y reparte entre objetivos. */
+     Marketing lo lee y reparte entre objetivos. */
   _budgetContainerRow() {
     return this.brandContainerData ||
       (Array.isArray(this.brandContainers) && this.brandContainers[0]) || null;
@@ -1722,7 +1722,7 @@
     return `
       <section class="info-section info-section-budget" aria-labelledby="infoBudgetHeading">
         <h3 class="info-section-title" id="infoBudgetHeading">${__('Presupuesto de marketing')}</h3>
-        <p class="info-budget-lead">${__('Techo que la marca establece para sus campañas. El Command Center reparte este total entre los objetivos de campaña.')}</p>
+        <p class="info-budget-lead">${__('Techo que la marca establece para sus campañas. Marketing reparte este total entre los objetivos de campaña.')}</p>
         <div class="info-budget-row">
           <input id="infoMarketingBudgetCur" class="info-budget-cur" type="text" maxlength="4"
                  value="${this.escapeHtml(cur)}" aria-label="${__('Moneda')}" spellcheck="false" />

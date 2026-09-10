@@ -3123,7 +3123,7 @@ class Navigation {
       '/brand-organization': __('MARCA'),
       '/brand-storage': __('ALMACENAMIENTO'),
       '/brandstorage': __('ALMACENAMIENTO'),
-      '/command-center': __('CAMPAÑAS'),
+      '/command-center': __('MARKETING'),
       '/brands': __('IDENTIDAD'),
       '/product-detail': __('PRODUCTO'),
       '/products': __('PRODUCTOS'),
