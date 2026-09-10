@@ -74,3 +74,34 @@ la mira**. Una bitácora que nadie revisa no es un control. Falta:
 - alerta en acciones destructivas (borrar org, cambiar rol a lead, revocar acceso).
 
 Relacionado: `SEC-004`, `FEAT-022`, `OPS-010`.
+
+---
+
+## Avance 2026-09-10 — la tabla ya tiene quién la escriba
+
+**El diagnóstico del INDEX era correcto pero incompleto.** `staff_audit_log`
+tenía 0 filas no porque nadie la mirara: tenía **un solo escritor**
+(`admin-set-dev-role`), y la operación de staff con más alcance que existe —la
+**impersonación**— no dejaba ningún rastro.
+
+### Hecho
+
+- `writeAudit()` y `auditContext()` extraídos a `supabase/functions/_shared/lead-auth.ts`.
+  **Se borró la copia local de `admin-set-dev-role`**: extraer una función y dejar
+  el bloque viejo no revienta, simplemente sigue mandando el viejo.
+- `lead-switch-user` → audita `impersonate` **antes** de devolver el magic link,
+  para que quede rastro aunque el navegador no complete el intercambio.
+- `admin-consumers` → audita `affiliate_member` y `remove_affiliation`.
+- `admin-update-brand` → las secciones se despachan dentro de `run()` y se audita
+  **una vez, con el status ya conocido** (`update_brand.<section>`). Auditar antes
+  del despacho registraría intentos fallidos como si fueran cambios.
+
+### Pendiente
+
+- **UI para leerla.** Una tabla de auditoría que nadie puede consultar no cierra
+  el régimen. Va junto con la migración del panel (SEC-004).
+- **Test de regresión de seguridad en CI** — sigue sin existir; hoy `ci.yml`
+  corre eslint (ratchet) + vitest smoke, ninguno cubre permisos.
+- `cancel-subscription` se dejó fuera a propósito: no es operación de staff (la
+  hace el owner/admin de la propia org), su rastro va en `user_audit_log`.
+- Rol de staff con mínimo privilegio (hoy `lead` = super-admin único): sin empezar.

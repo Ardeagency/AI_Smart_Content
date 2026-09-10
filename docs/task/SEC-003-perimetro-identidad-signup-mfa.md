@@ -59,3 +59,49 @@ al perfil `info@ardeagency.com`, que es la cuenta con la que se desarrolla y se
 testea. Se retoma al cerrar el dashboard.
 
 Relacionado: `SEC-001`, `SEC-002`, `SEC-004`.
+
+---
+
+## Medido 2026-09-10 contra la config viva de Auth
+
+```
+disable_signup                     False   <- el registro sigue abierto
+external_anonymous_users_enabled   True
+password_min_length                6       <- débil
+security_captcha_enabled           False
+mfa_totp_enroll_enabled            True    <- la maquinaria SÍ está
+```
+
+| Medida | Valor |
+|---|---|
+| Usuarios en toda la base | **3** |
+| Perfiles con `dev_role` | 2 |
+| De esos, con MFA verificado | **0** |
+| Factores MFA verificados en TODA la base | **0** |
+| Usuarios anónimos creados alguna vez | **0** |
+| Organizaciones con `mfa_required` | 0 |
+
+**Lectura honesta del riesgo:** el registro abierto es real, pero con 3 usuarios
+en total y 0 sesiones anónimas creadas nunca, no ha sido explotado. Es un hueco
+de perímetro, no un incidente.
+
+## Por qué NO se cerró el registro en esta pasada
+
+`disable_signup = true` **rompe dos caminos vivos**, y por eso la ficha decía
+"antes ver de qué depende `SecretSignupView`":
+
+- `js/views/SecretSignupView.js:895` → `supabase.auth.signUp()`
+- `js/views/DemoEntryView.js:78` → cae a `POST /auth/v1/signup`
+
+Cerrarlo es una **decisión de producto**, no un ajuste de seguridad: obliga a
+mover el alta a invitación/creación por admin, que es justo lo que
+[FEAT-012](./FEAT-012-user-provisioning-end-to-end.md) tiene sin decidir
+(invitation-only vs autoservicio). **Las dos fichas se resuelven juntas o
+ninguna.**
+
+## Lo que sí se puede hacer sin romper nada
+
+1. `password_min_length` 6 → 12. No rompe cuentas existentes.
+2. Captcha: requiere dar de alta un proveedor (hCaptcha/Turnstile) — acceso externo.
+3. MFA a los 2 leads: **acción humana obligatoria** — hay que escanear el QR del
+   TOTP. Ningún agente puede hacerlo por ellos. La maquinaria (FEAT-020) ya existe.

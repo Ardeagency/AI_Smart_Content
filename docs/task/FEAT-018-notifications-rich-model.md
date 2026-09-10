@@ -318,3 +318,44 @@ Helper `_buildSubjectUrl(subject)` en `Navigation.js` aplica este mapeo.
 ---
 
 _Última actualización: 2026-05-11_
+
+---
+
+## Corrección 2026-09-10 — el backfill prometido era un no-op
+
+El INDEX lo vendía como cierre rápido: *"un UPDATE sobre 48 filas de
+`org_notifications`, el render ya existe"*. **No era cierto, y el UPDATE no
+habría cambiado un solo pixel.**
+
+Al leer el render:
+
+- `_renderRichNotificationCard()` sólo se usa si la notificación trae
+  `summary`/`subject`/`checklist`/`actions`. De las 50 filas, **1** las tiene.
+- Las otras 49 caen en `_renderLegacyNotificationCard()`, que hacía
+  `const labelText = (n.type || 'info').toUpperCase();` — **ignoraba
+  `metadata.label` por completo**.
+
+O sea: backfillear la etiqueta en 48 filas que se renderizan por un camino que
+nunca lee esa etiqueta.
+
+## Lo que se hizo en su lugar
+
+La etiqueta corta de una notificación es **presentación, no dato**. Guardarla en
+`metadata` la deja en español dentro de la BD y fuera del i18n. Se resolvió en el
+frontend (`js/components/Navigation.js`):
+
+- Nuevo `_notificationTypeLabel(type)`: mapa tipo → etiqueta, traducible con `__()`.
+- Los **dos** renderers ahora hacen `n.label || this._notificationTypeLabel(n.type)`.
+  `metadata.label` queda como *override* para cuando el backend sí quiera fijar
+  una etiqueta específica.
+
+Ventaja sobre el backfill: arregla las 50 filas existentes **y todas las futuras**,
+sin escribir en la base y sin hardcodear español en los datos.
+
+## Pendiente real
+
+- **Backend que escriba metadata rica** (`summary`/`subject`/`checklist`/`actions`)
+  al crear la notificación. Ahí está el valor de FEAT-018, y sigue sin hacerse:
+  49 de 50 notificaciones se renderizan planas porque **no hay nada rico que
+  renderizar**, no porque falte la etiqueta.
+- Fase 2 del checklist server-side ya existe (`my_checklist_progress`).

@@ -15,6 +15,8 @@ import {
   errorResponse,
   jsonResponse,
   requireLead,
+  auditContext,
+  writeAudit,
 } from "../_shared/lead-auth.ts";
 
 const arr = (v: unknown) => Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()).map((x) => (x as string).trim()) : [];
@@ -32,7 +34,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
   try {
-    const { service } = await requireLead(req);
+    const { service, userId: actorId, email: actorEmail } = await requireLead(req);
     const body = await req.json().catch(() => ({}));
     const orgId = (body?.organization_id || "").toString();
     const section = (body?.section || "").toString();
@@ -53,6 +55,10 @@ Deno.serve(async (req) => {
       }
     };
 
+    // Las secciones se despachan dentro de `run()` para poder auditar UNA vez
+    // al final, cuando ya se sabe si la operacion salio bien. Auditar antes del
+    // despacho registraria intentos fallidos como si fueran cambios.
+    const run = async (): Promise<Response> => {
     if (section === "identity") {
       const { error } = await service.from("organizations")
         .update({ name: str(d.name) || "Marca", brand_slogan: str(d.slogan) }).eq("id", orgId);
@@ -357,6 +363,21 @@ Deno.serve(async (req) => {
     }
 
     return errorResponse(`Seccion desconocida: ${section}`, 400);
+    };
+
+    const res = await run();
+    if (res.status === 200 && section && section !== "competitors") {
+      await writeAudit(service, {
+        actor_user_id: actorId,
+        actor_email: actorEmail,
+        action: `update_brand.${section}`,
+        target_type: "organization",
+        target_id: orgId,
+        metadata: { section },
+        ...auditContext(req),
+      });
+    }
+    return res;
   } catch (err) {
     if (err instanceof Response) return err;
     return errorResponse((err as Error)?.message || "Error interno", 500);

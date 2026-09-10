@@ -18,22 +18,13 @@ import {
   errorResponse,
   jsonResponse,
   requireLead,
+  writeAudit,
 } from "../_shared/lead-auth.ts";
 
 // Espejo de las constantes de la vista. Se validan aquí porque el cliente no
 // es una fuente de verdad: el navegador puede mandar cualquier cosa.
 const ROLES = new Set(["viewer", "contributor", "senior", "lead"]);
 const RANKS = new Set(["rookie", "junior", "builder", "expert", "master", "legend"]);
-
-async function writeAudit(
-  service: ReturnType<typeof Object>,
-  entry: Record<string, unknown>,
-) {
-  // La auditoría nunca debe tumbar la operación: si falla, se registra y sigue.
-  // deno-lint-ignore no-explicit-any
-  const { error } = await (service as any).from("staff_audit_log").insert(entry);
-  if (error) console.error("staff_audit_log insert failed:", error.message);
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });

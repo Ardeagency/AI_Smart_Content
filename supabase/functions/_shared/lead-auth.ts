@@ -63,3 +63,44 @@ export async function requireLead(req: Request): Promise<LeadContext> {
 
   return { userId, email: userData.user.email ?? null, service };
 }
+
+// ── Auditoría de staff ────────────────────────────────────────────────
+// `staff_audit_log` existía desde 2026-07-28 pero durante más de un mes tuvo
+// UN SOLO escritor (admin-set-dev-role), así que se midió con 0 filas: el
+// problema no era que nadie la mirara, era que casi nada la escribía. En
+// particular la impersonación (lead-switch-user) no dejaba rastro.
+//
+// Regla: toda operación de staff con service_role escribe aquí. La auditoría
+// nunca tumba la operación — si falla, se registra en consola y se sigue.
+
+export interface StaffAuditEntry {
+  actor_user_id: string;
+  actor_email?: string | null;
+  action: string;
+  target_type?: string | null;
+  target_id?: string | null;
+  before_state?: unknown;
+  after_state?: unknown;
+  metadata?: Record<string, unknown>;
+  ip_address?: string | null;
+  user_agent?: string | null;
+}
+
+export async function writeAudit(
+  service: SupabaseClient,
+  entry: StaffAuditEntry,
+): Promise<void> {
+  // deno-lint-ignore no-explicit-any
+  const { error } = await (service as any)
+    .from("staff_audit_log")
+    .insert({ ...entry, metadata: entry.metadata ?? {} });
+  if (error) console.error("staff_audit_log insert failed:", error.message);
+}
+
+// Azúcar para no repetir la lectura de cabeceras en cada función.
+export function auditContext(req: Request): { ip_address: string | null; user_agent: string | null } {
+  return {
+    ip_address: req.headers.get("x-forwarded-for"),
+    user_agent: req.headers.get("user-agent"),
+  };
+}

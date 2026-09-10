@@ -7,10 +7,12 @@
 // hacia auth.admin.generateLink({type:'magiclink'}).
 
 import {
+  auditContext,
   corsHeaders,
   errorResponse,
   jsonResponse,
   requireLead,
+  writeAudit,
 } from "../_shared/lead-auth.ts";
 
 Deno.serve(async (req) => {
@@ -18,7 +20,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
   try {
-    const { userId: leadId, service } = await requireLead(req);
+    const { userId: leadId, email: leadEmail, service } = await requireLead(req);
     const { target_user_id } = await req.json();
     if (!target_user_id) return errorResponse("target_user_id requerido", 400);
     if (target_user_id === leadId) {
@@ -50,6 +52,20 @@ Deno.serve(async (req) => {
         500,
       );
     }
+
+    // Impersonar es la operación de staff con más alcance que existe: a partir
+    // de aquí el Lead actúa CON la identidad del target. Se audita antes de
+    // devolver el link, no después, para que quede rastro aunque el navegador
+    // no complete el intercambio.
+    await writeAudit(service, {
+      actor_user_id: leadId,
+      actor_email: leadEmail,
+      action: "impersonate",
+      target_type: "profile",
+      target_id: target.id,
+      metadata: { target_email: target.email, target_full_name: target.full_name },
+      ...auditContext(req),
+    });
 
     return jsonResponse({
       action_link: link.properties.action_link,

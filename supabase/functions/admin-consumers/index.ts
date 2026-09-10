@@ -14,6 +14,8 @@ import {
   errorResponse,
   jsonResponse,
   requireLead,
+  auditContext,
+  writeAudit,
 } from "../_shared/lead-auth.ts";
 
 // Roles afiliables desde aqui. 'owner' se excluye a proposito: pertenece a la
@@ -26,7 +28,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
   try {
-    const { service } = await requireLead(req);
+    const { service, userId: actorId, email: actorEmail } = await requireLead(req);
     const body = await req.json().catch(() => ({}));
     const action = body?.action || "list";
 
@@ -93,6 +95,16 @@ Deno.serve(async (req) => {
           { onConflict: "organization_id,user_id" },
         );
       if (error) return errorResponse(`organization_members upsert: ${error.message}`, 500);
+
+      await writeAudit(service, {
+        actor_user_id: actorId,
+        actor_email: actorEmail,
+        action: "affiliate_member",
+        target_type: "organization_member",
+        target_id: `${orgId}:${userId}`,
+        after_state: { organization_id: orgId, user_id: userId, role },
+        ...auditContext(req),
+      });
       return jsonResponse({ success: true });
     }
 
@@ -108,6 +120,16 @@ Deno.serve(async (req) => {
         .eq("user_id", userId)
         .eq("organization_id", orgId);
       if (error) return errorResponse(`delete membership: ${error.message}`, 500);
+
+      await writeAudit(service, {
+        actor_user_id: actorId,
+        actor_email: actorEmail,
+        action: "remove_affiliation",
+        target_type: "organization_member",
+        target_id: `${orgId}:${userId}`,
+        before_state: { organization_id: orgId, user_id: userId },
+        ...auditContext(req),
+      });
       return jsonResponse({ success: true });
     }
 
