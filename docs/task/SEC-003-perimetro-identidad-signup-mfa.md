@@ -105,3 +105,18 @@ ninguna.**
 2. Captcha: requiere dar de alta un proveedor (hCaptcha/Turnstile) — acceso externo.
 3. MFA a los 2 leads: **acción humana obligatoria** — hay que escanear el QR del
    TOTP. Ningún agente puede hacerlo por ellos. La maquinaria (FEAT-020) ya existe.
+
+## Aplicado 2026-09-10
+
+Decisión del usuario: **autoservicio, pero blindado** (no se cierra el registro).
+
+- ✅ `password_min_length` **6 → 12**. Verificado releyendo la config. No invalida
+  las cuentas existentes: aplica a contraseñas nuevas y a cambios de contraseña.
+
+### Sigue pendiente
+
+- **Captcha** (`security_captcha_enabled: false`): requiere dar de alta hCaptcha o
+  Turnstile y cargar la clave. Acceso externo — no se puede desde aquí.
+- **MFA a los 2 leads**: acción humana, hay que escanear el QR del TOTP.
+- `password_required_characters` está en `None`. Se puede exigir composición
+  (mayúsculas/dígitos/símbolos) sin romper nada, si se quiere ir más allá.
