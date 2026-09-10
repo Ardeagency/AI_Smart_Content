@@ -23,6 +23,10 @@ hoy**, así que el motor está vivo. Son estos los que se cayeron del turno.
 > anomalía — en un planificador por sondeo lo normal es que muchos estén "en
 > turno". El umbral que separa la señal del ruido es **> 2 días**.
 
+> **Corrección de una afirmación previa:** en el primer borrador de esta ficha
+> escribí que "nadie se enteró". Es falso para el caso de Apify: el sistema avisó
+> **132 veces**, la última el mismo día en que se escribió esto. Ver el paso 6.
+
 ## Los 36, por sensor
 
 | Sensor | n | Días de atraso | Último run | Estado del último run |
@@ -94,9 +98,28 @@ Hay **tres casos distintos** y conviene no mezclarlos:
    el 100% del tope no debería descubrirse barriendo deuda tres semanas después.
 5. `strategic_review`: confirmar si el dispatcher soporta ese `sensor_type`; si no,
    o se implementa o se pausa el trigger (dejarlo `active` y muerto miente).
-6. **Cuando esté arreglado, poner un aviso**: un sensor activo que lleva >2 días
-   sin correr debería avisar solo. Hoy nadie se entera — se descubrió barriendo
-   deuda a mano.
+6. **El aviso de Apify YA EXISTE y funciona. El problema es que nadie lo lee.**
+
+   Verificado el 2026-09-10: `developer_notifications` tiene **132** avisos de
+   Apify, el más reciente **de hoy a las 11:45 UTC**, y el throttle persistente en
+   `external_api_cache` está vivo (expira hoy 23:45) — o sea que la alerta
+   construida en julio hace exactamente lo que debe, y lleva **50 avisos desde el
+   28 de agosto**.
+
+   Así que la lección no es "falta una alerta". Es que **el canal no tiene
+   lectores**: `developer_notifications` se ve dentro del portal `/dev`, y nadie
+   ha abierto esa bandeja en más de una semana. Un aviso que nadie lee cuesta lo
+   mismo que no tenerlo.
+
+   Es el gemelo invertido de SEC-005: allá la tabla de auditoría existía y **nadie
+   la escribía**; aquí el aviso se escribe puntualmente y **nadie lo lee**.
+
+   Lo que falta decidir es **dónde tiene que aparecer** para que se vea de verdad
+   (sin romper la regla firme: los errores de sistema de AISC viven DENTRO de
+   AISC, dev-only, nunca al cliente ni por push a dispositivos).
+
+7. Para lo demás —los 33 sin reagendar y `strategic_review`— **sí** falta un
+   aviso: ninguno de ellos dispara nada hoy.
 
 ## Criterio de done
 
