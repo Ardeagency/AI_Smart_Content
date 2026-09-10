@@ -40,7 +40,7 @@ class PlacesView extends BaseView {
   <section class="products-list-section" id="placesListSection">
     <div class="products-list-section-head">
       <div class="products-list-section-head-main">
-        <h2 class="products-list-section-title">${__('Catalogo')}</h2>
+        <h2 class="products-list-section-title">${__('Catálogo')}</h2>
         <span class="products-list-section-count" id="placesListCount">0</span>
       </div>
     </div>
@@ -53,7 +53,7 @@ class PlacesView extends BaseView {
     icon: 'aisc-ico aisc-ico--places',
     iconSrc: '/recursos/icons/Places.svg',
     title: __('Crea tu primer escenario'),
-    subtitle: __('Sube fotos o una URL y Vera arma la ficha del lugar: ambiente, amenidades y caracteristicas visuales. Apareceran aqui como sets para tus producciones.'),
+    subtitle: __('Sube fotos o una URL y Vera arma la ficha del lugar: ambiente, amenidades y características visuales. Aparecerán aquí como sets para tus producciones.'),
     primaryLabel: __('+ Escenario'),
     secondaryLabel: __('Adjuntar escenario'),
   })}
@@ -270,7 +270,7 @@ class PlacesView extends BaseView {
 
   async _onDeletePlace(placeId, btn) {
     if (!placeId || !this.supabase) return;
-    if (!confirm(__('¿Eliminar este lugar? Se borraran tambien sus fotos.'))) return;
+    if (!confirm(__('¿Eliminar este lugar? Se borrarán también sus fotos.'))) return;
     if (btn) btn.disabled = true;
     try {
       const { error } = await this.supabase.from('brand_places').delete().eq('id', placeId);
@@ -336,14 +336,14 @@ class PlacesView extends BaseView {
     const body = `
       <div class="attach-product-wizard" data-step="picker">
         <section class="attach-product-step attach-product-step--picker" data-panel="picker">
-          <p class="attach-product-intro">${__('Elegi como queres que Vera obtenga la informacion del lugar. La ficha se crea automaticamente y solo te cobra el costo real de OpenAI.')}</p>
+          <p class="attach-product-intro">${__('Elegi como queres que Vera obtenga la información del lugar. La ficha se crea automáticamente y solo te cobra el costo real de OpenAI.')}</p>
           <div class="attach-product-options">
             <button type="button" class="attach-product-option" data-go="url" aria-label="${__('Adjuntar lugar por URL')}">
               <div class="attach-product-option-head">
                 <span class="attach-product-option-icon"><i class="aisc-ico aisc-ico--link" aria-hidden="true"></i></span>
                 <h4 class="attach-product-option-title">${__('URL del lugar')}</h4>
               </div>
-              <p class="attach-product-option-desc">${__('Pega el enlace de la pagina del lugar (Google Maps, sitio propio, TripAdvisor, etc.). Vera extraera nombre, direccion, descripcion, fotos y caracteristicas detectadas.')}</p>
+              <p class="attach-product-option-desc">${__('Pega el enlace de la página del lugar (Google Maps, sitio propio, TripAdvisor, etc.). Vera extraerá nombre, dirección, descripción, fotos y características detectadas.')}</p>
               <span class="attach-product-option-cta">${__('Continuar')} <i class="aisc-ico aisc-ico--arrow-right" aria-hidden="true"></i></span>
             </button>
 
@@ -352,7 +352,7 @@ class PlacesView extends BaseView {
                 <span class="attach-product-option-icon"><i class="aisc-ico aisc-ico--paperclip" aria-hidden="true"></i></span>
                 <h4 class="attach-product-option-title">${__('Adjuntar fotos y archivos')}</h4>
               </div>
-              <p class="attach-product-option-desc">${__('Subi fotos del lugar (interior, exterior, fachada) y archivos como brochures o PDFs. Vera analiza el espacio con vision y arma la ficha con ambiente, amenidades y caracteristicas visuales.')}</p>
+              <p class="attach-product-option-desc">${__('Subi fotos del lugar (interior, exterior, fachada) y archivos como brochures o PDFs. Vera analiza el espacio con visión y arma la ficha con ambiente, amenidades y características visuales.')}</p>
               <span class="attach-product-option-cta">${__('Continuar')} <i class="aisc-ico aisc-ico--arrow-right" aria-hidden="true"></i></span>
             </button>
           </div>
@@ -376,7 +376,7 @@ class PlacesView extends BaseView {
               <input type="file" class="attach-product-photos-input" multiple accept="image/jpeg,image/png,image/webp,image/jpg" hidden />
               <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
               <span class="attach-product-dropzone-text">${__('Arrastra fotos o hace click para elegirlas')}</span>
-              <span class="attach-product-dropzone-hint">${__('JPG, PNG, WebP · max 10 imagenes · 25MB c/u')}</span>
+              <span class="attach-product-dropzone-hint">${__('JPG, PNG, WebP · max 10 imágenes · 25MB c/u')}</span>
             </div>
             <ul class="attach-product-file-list" hidden></ul>
           </div>
@@ -493,7 +493,7 @@ class PlacesView extends BaseView {
       if (photoFiles.length) {
         const invalid = photoFiles.find((f) => !/^image\//.test(f.type));
         if (invalid) return this._showNotification(__('"{name}" no es una imagen', { name: invalid.name }), 'error');
-        if (photoFiles.length > 10) return this._showNotification(__('Maximo 10 imagenes por ficha'), 'error');
+        if (photoFiles.length > 10) return this._showNotification(__('Máximo 10 imágenes por ficha'), 'error');
         const oversize = photoFiles.find((f) => f.size > 25 * 1024 * 1024);
         if (oversize) return this._showNotification(__('"{name}" supera 25MB', { name: oversize.name }), 'error');
       }
@@ -571,7 +571,7 @@ class PlacesView extends BaseView {
 
   async _analyzePhotosAndCreatePlace({ files, docFiles = [], modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesion no disponible'), 'error');
+      this._showNotification(__('Sesión no disponible'), 'error');
       modalHandle?.close();
       return;
     }
@@ -609,7 +609,7 @@ class PlacesView extends BaseView {
         imageUrls.push(publicUrl);
       }
 
-      setHint(__('Vera esta analizando las fotos con OpenAI Vision...'));
+      setHint(__('Vera está analizando las fotos con OpenAI Vision...'));
       await this._callFichePlaceFunction({
         placeId,
         payload: { place_id: placeId, organization_id: this.organizationId, image_urls: imageUrls },
@@ -629,7 +629,7 @@ class PlacesView extends BaseView {
 
   async _analyzeUrlAndCreatePlace({ url, hostname, modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesion no disponible'), 'error');
+      this._showNotification(__('Sesión no disponible'), 'error');
       modalHandle?.close();
       return;
     }
@@ -652,7 +652,7 @@ class PlacesView extends BaseView {
       if (insertError || !created?.id) throw insertError || new Error(__('No se pudo crear el lugar'));
       placeId = created.id;
 
-      setHint(__('Leyendo {page} y extrayendo datos del lugar...', { page: hostname || __('la pagina') }));
+      setHint(__('Leyendo {page} y extrayendo datos del lugar...', { page: hostname || __('la página') }));
       await this._callFichePlaceFunction({
         placeId,
         payload: { place_id: placeId, organization_id: this.organizationId, url },
@@ -673,7 +673,7 @@ class PlacesView extends BaseView {
   async _callFichePlaceFunction({ placeId, payload, modalHandle, setHint }) {
     const { data: sessionData } = await this.supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) throw new Error(__('No hay sesion activa'));
+    if (!accessToken) throw new Error(__('No hay sesión activa'));
 
     const resp = await fetch('/.netlify/functions/api-places-generate-fiche', {
       method: 'POST',
@@ -690,24 +690,24 @@ class PlacesView extends BaseView {
       const errMsg = result.error || `HTTP ${resp.status}`;
       const detail = result.detail ? ` (${result.detail})` : '';
       if (resp.status === 402) {
-        this._showNotification(__('Creditos insuficientes. Necesitas {n} creditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
+        this._showNotification(__('Créditos insuficientes. Necesitas {n} créditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
       } else {
         this._showNotification(__('Error generando ficha: {msg}', { msg: `${errMsg}${detail}` }), 'error');
       }
       throw new Error(errMsg);
     }
 
-    setHint(__('Ficha generada (costo: {n} creditos). Recargando listado...', { n: result.credits_charged.toFixed(4) }));
+    setHint(__('Ficha generada (costo: {n} créditos). Recargando listado...', { n: result.credits_charged.toFixed(4) }));
     this._invalidateCache();
     window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
     modalHandle?.close();
     const imgCount = result.images?.inserted || 0;
     if (result.images?.error) {
-      this._showNotification(__('Ficha generada · imagenes no se vincularon: {err}', { err: result.images.error }), 'error');
+      this._showNotification(__('Ficha generada · imágenes no se vincularon: {err}', { err: result.images.error }), 'error');
     } else {
       const sourceLabel = result.source === 'url' ? __('desde URL') : __('desde fotos');
       this._showNotification(
-        __('Ficha de lugar generada {source} · {n} creditos · {count} {fotos}', {
+        __('Ficha de lugar generada {source} · {n} créditos · {count} {fotos}', {
           source: sourceLabel,
           n: result.credits_charged.toFixed(4),
           count: imgCount,
@@ -722,7 +722,7 @@ class PlacesView extends BaseView {
 
   async _createPendingPlace({ files = null, modalHandle = null }) {
     if (!this.supabase || !this.organizationId) {
-      this._showNotification(__('Sesion no disponible'), 'error');
+      this._showNotification(__('Sesión no disponible'), 'error');
       modalHandle?.close();
       return;
     }
@@ -734,7 +734,7 @@ class PlacesView extends BaseView {
         .insert({
           entity_id: entityId,
           nombre_lugar: files?.length ? `Lugar pendiente (${files.length} archivo${files.length === 1 ? '' : 's'})` : 'Lugar pendiente',
-          descripcion_lugar: 'Vera procesara los archivos para completar la ficha automaticamente cuando se cablee la extraccion server-side.',
+          descripcion_lugar: 'Vera procesará los archivos para completar la ficha automáticamente cuando se cablee la extracción server-side.',
           place_type: 'otro',
         });
       if (error) throw error;

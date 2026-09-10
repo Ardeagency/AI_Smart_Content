@@ -237,7 +237,7 @@
       // 1) Guardar sesion actual del lead
       const { data: { session } } = await supa.auth.getSession();
       if (!session?.refresh_token) {
-        throw new Error('No hay sesion activa para guardar');
+        throw new Error('No hay sesión activa para guardar');
       }
       const me = window.authService?.currentUser || {};
       const origin = {
@@ -287,7 +287,7 @@
     if (!supa) return;
     const origin = readOrigin();
     if (!origin) {
-      showToast('No hay sesion guardada para volver.', 'error');
+      showToast('No hay sesión guardada para volver.', 'error');
       return;
     }
 

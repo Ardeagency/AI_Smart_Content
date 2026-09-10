@@ -655,7 +655,7 @@
           <div class="mb-plan-vitals">
             ${vital(engStr, __('Engagement del periodo'), { tip: __('Interacciones reales de tus seguidores en el periodo: likes, comentarios, compartidos y guardados. No cuenta vistas ni reproducciones (alcance/público frío que no reacciona).') })}
             ${vital(fmt.int(oi.posts_analyzed), __('Posts analizados'), { tip: __('Número de publicaciones propias analizadas en el periodo.') })}
-            ${vital(cons, __('Consistencia de publicacion'), { sub: consSub, tip: __('Porcentaje de semanas del periodo en las que publicaste al menos una vez (desde tu primer post).') })}
+            ${vital(cons, __('Consistencia de publicación'), { sub: consSub, tip: __('Porcentaje de semanas del periodo en las que publicaste al menos una vez (desde tu primer post).') })}
           </div>
         </section>`;
     },
@@ -1134,7 +1134,7 @@
             <div class="mb-lev-track"><span class="mb-lev-bar" style="width:${w}%;"></span></div>
           </div>`;
       };
-      const colNote = __('Sin senal clara aun.');
+      const colNote = __('Sin señal clara aun.');
       return `
         <section class="mb-section mb-section--wide">
           <div class="mb-chart-card">
@@ -1239,7 +1239,7 @@
           ctx.setLineDash([]);
           ctx.font = '700 9.5px ui-sans-serif, system-ui, sans-serif';
           ctx.textBaseline = 'top'; ctx.textAlign = 'left';
-          ctx.fillStyle = 'rgba(107,207,127,0.65)'; ctx.fillText(__('EXPLOTALO'), ca.left + 6, ca.top + 5);
+          ctx.fillStyle = 'rgba(107,207,127,0.65)'; ctx.fillText(__('EXPLÓTALO'), ca.left + 6, ca.top + 5);
           ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(212,209,216,0.38)'; ctx.fillText(__('TU FORMULA'), ca.right - 6, ca.top + 5);
           ctx.textBaseline = 'bottom'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(212,209,216,0.3)'; ctx.fillText(__('IGNORA'), ca.left + 6, ca.bottom - 5);
           ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(224,160,69,0.6)'; ctx.fillText(__('REVISA'), ca.right - 6, ca.bottom - 5);
@@ -1278,7 +1278,7 @@
                 backgroundColor: '#141517', borderColor: '#242424', borderWidth: 1, titleColor: '#D4D1D8', bodyColor: 'rgba(212,209,216,0.85)', padding: 10,
                 callbacks: {
                   title: () => null,
-                  label: (c) => { const p = points[c.dataIndex]; return __('{label}: {use}% de uso · {sign}{perf}% rendimiento', { label: p.label, use: Math.round(p.x), sign: p.y >= 0 ? '+' : '', perf: p.y }) + (p.orphan ? ' · ' + __('huerfano') : ''); },
+                  label: (c) => { const p = points[c.dataIndex]; return __('{label}: {use}% de uso · {sign}{perf}% rendimiento', { label: p.label, use: Math.round(p.x), sign: p.y >= 0 ? '+' : '', perf: p.y }) + (p.orphan ? ' · ' + __('huérfano') : ''); },
                 },
               },
             },
@@ -1617,7 +1617,7 @@
             <span class="mb-tpt-sent mb-tpt-sent--${sc}">${this._sentLabel(p.sentiment_text)}</span>
             ${topics.map((t) => `<span class="mb-tag">${this._esc(this._capWords(t))}</span>`).join('')}
           </div>
-          <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="${__('Abrir publicacion')}"><i class="aisc-ico aisc-ico--external-link"></i></a>` : ''}</div>
+          <div class="mb-tpt-go">${url ? `<a class="mb-tpt-link" href="${this._esc(url)}" target="_blank" rel="noopener" aria-label="${__('Abrir publicación')}"><i class="aisc-ico aisc-ico--external-link"></i></a>` : ''}</div>
         </div>`;
     },
 
@@ -1702,7 +1702,7 @@
         const label = `${__('Publicaciones a las')} ${this._fmtHour(h == null ? hour : h)}`;
         if (titleH3) titleH3.textContent = label;
         if (labelEl) labelEl.textContent = label;
-        if (subEl)   subEl.textContent = `${posts.length} ${posts.length === 1 ? __('publicacion') : __('publicaciones')}`;
+        if (subEl)   subEl.textContent = `${posts.length} ${posts.length === 1 ? __('publicación') : __('publicaciones')}`;
         if (prevBtn) prevBtn.disabled = sel <= 0;
         if (nextBtn) nextBtn.disabled = sel >= hoursList.length - 1;
         if (contentEl) contentEl.innerHTML = posts.length
@@ -1739,14 +1739,14 @@
       const items = (insights || []).filter((i) => i.kind === kind);
       const title = kind === 'boost' ? __('Lo que te esta funcionando') : __('Lo que te esta restando');
       const hint  = kind === 'boost'
-        ? __('Lo que mas conecta con tu gente — y que hacer para aprovecharlo')
+        ? __('Lo que más conecta con tu gente — y qué hacer para aprovecharlo')
         : __('Lo que baja tu rendimiento frente a lo que sueles lograr — y como corregirlo');
       if (!items.length) {
         if (shouldHideEmpty()) return '';
         return `
           <section class="mb-section">
             <div class="mb-section-head"><span class="mb-section-title">${title}</span></div>
-            <div class="mb-causal-empty">${__('No hay contenido propio analizado en esta ventana. Amplia el rango (prueba {x}) para ver el analisis causal de tu marca.', { x: '<b>' + __('Todo el periodo') + '</b>' })}</div>
+            <div class="mb-causal-empty">${__('No hay contenido propio analizado en esta ventana. Amplia el rango (prueba {x}) para ver el análisis causal de tu marca.', { x: '<b>' + __('Todo el periodo') + '</b>' })}</div>
           </section>`;
       }
       // Orden: boost por mayor lift; drag por lift mas negativo.
@@ -1769,11 +1769,11 @@
        → que hacer. La metrica es evidencia, no encabezado. */
     _buildCausalCard(i, kind) {
       const meta = {
-        tono:    { detailDim: 'tone',   what: __('forma de hablar'), headUp: __('Tu mejor forma de hablar'),     headDown: __('Una forma de hablar que te resta'), actUp: __('Publica mas con este tono esta semana'),  actDown: __('Usa menos este tono') },
-        tema:    { detailDim: 'topic',  what: __('tema'),            headUp: __('Tu tema mas potente'),           headDown: __('Un tema que te resta'),             actUp: __('Crea mas contenido sobre este tema'),     actDown: __('Habla menos de este tema') },
-        formato: { detailDim: 'format', what: __('tipo de post'),    headUp: __('Tu tipo de publicacion ganador'),headDown: __('Un tipo de publicacion que te resta'),actUp: __('Haz mas publicaciones de este tipo'),     actDown: __('Reduce este tipo de publicacion') },
-        horario: { detailDim: 'hour',   what: __('horario'),         headUp: __('Tu mejor hora para publicar'),   headDown: __('Una hora que te resta'),            actUp: __('Publica mas a esta hora'),                actDown: __('Evita publicar a esta hora') },
-      }[i.dimension] || { detailDim: i.dimension, what: i.dimension, headUp: __('Lo que te funciona'), headDown: __('Lo que te resta'), actUp: __('Haz mas de esto'), actDown: __('Reduce esto') };
+        tono:    { detailDim: 'tone',   what: __('forma de hablar'), headUp: __('Tu mejor forma de hablar'),     headDown: __('Una forma de hablar que te resta'), actUp: __('Publica más con este tono esta semana'),  actDown: __('Usa menos este tono') },
+        tema:    { detailDim: 'topic',  what: __('tema'),            headUp: __('Tu tema más potente'),           headDown: __('Un tema que te resta'),             actUp: __('Crea más contenido sobre este tema'),     actDown: __('Habla menos de este tema') },
+        formato: { detailDim: 'format', what: __('tipo de post'),    headUp: __('Tu tipo de publicación ganador'),headDown: __('Un tipo de publicación que te resta'),actUp: __('Haz más publicaciones de este tipo'),     actDown: __('Reduce este tipo de publicación') },
+        horario: { detailDim: 'hour',   what: __('horario'),         headUp: __('Tu mejor hora para publicar'),   headDown: __('Una hora que te resta'),            actUp: __('Publica más a esta hora'),                actDown: __('Evita publicar a esta hora') },
+      }[i.dimension] || { detailDim: i.dimension, what: i.dimension, headUp: __('Lo que te funciona'), headDown: __('Lo que te resta'), actUp: __('Haz más de esto'), actDown: __('Reduce esto') };
 
       const isUp   = kind === 'boost';
       const lift   = Math.round(Number(i.lift_pct) || 0);
@@ -1788,8 +1788,8 @@
       const headline = `${isUp ? meta.headUp : meta.headDown}: ${value}`;
       const sent = this._tpSentimentPhrase(posRatio);
       const say = isUp
-        ? __('Cuando publicas asi, la gente interactua (likes, comentarios, compartidos) un <b>{p}% mas</b> que de costumbre', { p: absLift }) + (sent ? ` — ${sent}` : '') + '.'
-        : __('Cuando publicas asi, la gente interactua un <b>{p}% menos</b> que de costumbre', { p: absLift }) + (sent ? ` — ${sent}` : '') + '.';
+        ? __('Cuando publicas así, la gente interactúa (likes, comentarios, compartidos) un <b>{p}% más</b> que de costumbre', { p: absLift }) + (sent ? ` — ${sent}` : '') + '.'
+        : __('Cuando publicas así, la gente interactúa un <b>{p}% menos</b> que de costumbre', { p: absLift }) + (sent ? ` — ${sent}` : '') + '.';
 
       // Visual: numero grande comparativo + pictograma de reaccion.
       const filled = posRatio != null ? Math.round(posRatio * 10) : null;
@@ -1820,7 +1820,7 @@
             ${picto}
           </div>
           <div class="mb-tp-foot">
-            <span class="mb-tp-evidence">${n === 1 ? __('Lo vimos en {n} publicacion tuya', { n }) : __('Lo vimos en {n} publicaciones tuyas', { n })}</span>
+            <span class="mb-tp-evidence">${n === 1 ? __('Lo vimos en {n} publicación tuya', { n }) : __('Lo vimos en {n} publicaciones tuyas', { n })}</span>
             <span class="mb-tp-action">${this._esc(isUp ? meta.actUp : meta.actDown)} <i class="aisc-ico aisc-ico--arrow-right"></i></span>
           </div>
         </article>`;
@@ -1831,7 +1831,7 @@
       if (posRatio == null) return '';
       const p = Math.round(posRatio * 100);
       if (p >= 70) return __('a casi todos les gusta');
-      if (p >= 50) return __('a la mayoria le gusta');
+      if (p >= 50) return __('a la mayoría le gusta');
       if (p >= 30) return __('aunque a varios no les convence');
       return __('pero a muchos no les convence');
     },
@@ -1857,7 +1857,7 @@
       const days = Number(a.days_since);
       const headline = a.status === 'dormido'
         ? __('Llevas <strong>{d}</strong> sin publicar', { d: this._daysHuman(days) })
-        : __('Tu ultima publicacion fue hace <strong>{d}</strong>', { d: this._daysHuman(days) });
+        : __('Tu última publicación fue hace <strong>{d}</strong>', { d: this._daysHuman(days) });
       const nets = (Array.isArray(a.networks) ? a.networks : []).map((n) =>
         `<span class="mb-actb-net">${this._esc(this._prettyPlatform(n.network))} · ${__('{c} {posts} · hace {d}', { c: Number(n.posts), posts: Number(n.posts) === 1 ? __('post') : __('posts'), d: this._daysHuman(Number(n.days_since)) })}</span>`).join('');
       return `
@@ -1885,7 +1885,7 @@
       const days = Number(a.days_since);
       const headline = a.status === 'dormido'
         ? __('Llevas <strong>{d}</strong> sin publicar', { d: this._daysHuman(days) })
-        : __('Tu ultima publicacion fue hace <strong>{d}</strong>', { d: this._daysHuman(days) });
+        : __('Tu última publicación fue hace <strong>{d}</strong>', { d: this._daysHuman(days) });
 
       const nets = (Array.isArray(a.networks) ? a.networks : []).map((n) => `
         <div class="mb-act-net">
@@ -1928,8 +1928,8 @@
 
     _daysHuman(d) {
       const n = Number(d) || 0;
-      if (n < 60) return __('{n} dias', { n });
-      return __('{n} dias ({m} meses)', { n, m: Math.round(n / 30) });
+      if (n < 60) return __('{n} días', { n });
+      return __('{n} días ({m} meses)', { n, m: Math.round(n / 30) });
     },
 
     /* ── Pilares narrativos: de que hablas + temas huerfanos ──────────── */
@@ -1943,8 +1943,8 @@
       // Veredicto en lenguaje plano por pilar. rank = prioridad de accion.
       const verdictOf = (r) => {
         const share = Number(r.share_pct) || 0, lift = Number(r.lift_pct) || 0;
-        if (r.is_orphan || (lift > 0 && share < avg * 0.6)) return { k: 'explota', rank: 0, label: __('Explotalo'), icon: 'fa-gem', say: (ls, s) => __('Rinde {ls} pero es solo el {s}% de tu contenido — produce mas de esto.', { ls, s }) };
-        if (lift < 0 && share >= avg) return { k: 'revisa', rank: 1, label: __('Revisa'), icon: 'aisc-ico aisc-ico--alert-warning', say: (ls, s) => __('Es el {s}% de tu contenido pero rinde {ls} — replantealo o reducelo.', { ls, s }) };
+        if (r.is_orphan || (lift > 0 && share < avg * 0.6)) return { k: 'explota', rank: 0, label: __('Explótalo'), icon: 'fa-gem', say: (ls, s) => __('Rinde {ls} pero es solo el {s}% de tu contenido — produce más de esto.', { ls, s }) };
+        if (lift < 0 && share >= avg) return { k: 'revisa', rank: 1, label: __('Revisa'), icon: 'aisc-ico aisc-ico--alert-warning', say: (ls, s) => __('Es el {s}% de tu contenido pero rinde {ls} — replantéalo o redúcelo.', { ls, s }) };
         if (lift >= 0) return { k: 'formula', rank: 2, label: __('Tu formula'), icon: 'aisc-ico aisc-ico--check', say: (ls, s) => __('Rinde {ls} y ya es el {s}% de lo que publicas — mantenlo.', { ls, s }) };
         return { k: 'flojo', rank: 3, label: __('Bajo perfil'), icon: 'aisc-ico aisc-ico--minus', say: (ls, s) => __('Poco uso ({s}%) y rinde {ls} — baja prioridad.', { ls, s }) };
       };
@@ -2009,7 +2009,7 @@
              data-title="${__('Pilar: {p}', { p: this._esc(r.pillar) })}" role="button" tabindex="0">
           <div class="mb-pil-name">
             <span class="mb-pil-pillar">${this._esc(r.pillar)}</span>
-            ${orphan ? `<span class="mb-pil-orphan-badge">${__('Huerfano · explotalo')}</span>` : ''}
+            ${orphan ? `<span class="mb-pil-orphan-badge">${__('Huérfano · explótalo')}</span>` : ''}
           </div>
           <div class="mb-pil-share">
             <div class="mb-pil-bar"><span style="width:${share}%;"></span></div>
@@ -2243,7 +2243,7 @@
           dim: 'growth', value: '',
         },
         (profile && profile.brand_name) && {
-          kind: 'profile', label: __('Cuenta lider'), headline: profile.brand_name,
+          kind: 'profile', label: __('Cuenta líder'), headline: profile.brand_name,
           metricPrimary: __('{n} posts', { n: fmt.int(profile.total_posts) }),
           metricSecondary: __('{n} engagement', { n: this._compactNum(profile.total_engagement) }),
           dim: 'profile', value: '',
@@ -2885,7 +2885,7 @@
         });
         if (error) throw error;
         const posts = Array.isArray(data) ? data : [];
-        if (subEl) subEl.textContent = posts.length === 1 ? __('{n} publicacion', { n: posts.length }) : __('{n} publicaciones', { n: posts.length });
+        if (subEl) subEl.textContent = posts.length === 1 ? __('{n} publicación', { n: posts.length }) : __('{n} publicaciones', { n: posts.length });
         this._renderDetailPosts(bodyEl, posts);
       } catch (e) {
         console.error('[detail] load failed:', e?.message || e);

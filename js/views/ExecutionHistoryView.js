@@ -30,7 +30,7 @@ class ExecutionHistoryView extends BaseView {
   <div class="exec-container">
     <div class="exec-header">
       <h1 class="exec-title">${__('Execution History')}</h1>
-      <p class="exec-subtitle">${__('Cada sesion agrupa las producciones de un mismo run. Abre una para seguir generando dentro de ella.')}</p>
+      <p class="exec-subtitle">${__('Cada sesión agrupa las producciones de un mismo run. Abre una para seguir generando dentro de ella.')}</p>
     </div>
     <div class="exec-grid" id="execGrid">
       ${ExecutionHistoryView.skeletonGrid(8, 'lg')}
@@ -39,8 +39,8 @@ class ExecutionHistoryView extends BaseView {
       id: 'execEmpty',
       hidden: true,
       icon: 'aisc-ico aisc-ico--history',
-      title: __('Aun no tienes sesiones de produccion manual.'),
-      subtitle: __('Cada vez que produces un flujo desde el Estudio se crea una sesion. Aqui podras reabrirla y seguir generando dentro del mismo run.'),
+      title: __('Aun no tienes sesiones de producción manual.'),
+      subtitle: __('Cada vez que produces un flujo desde el Estudio se crea una sesión. Aquí podrás reabrirla y seguir generando dentro del mismo run.'),
     })}
   </div>
 </div>`;
@@ -75,7 +75,7 @@ class ExecutionHistoryView extends BaseView {
     } catch (err) {
       console.error('ExecutionHistoryView render:', err);
       const grid = document.getElementById('execGrid');
-      if (grid) grid.innerHTML = `<p class="exec-error">${__('Error al cargar el historial.')} ${err && err.message ? this.escapeHtml(err.message) : __('Recarga la pagina.')}</p>`;
+      if (grid) grid.innerHTML = `<p class="exec-error">${__('Error al cargar el historial.')} ${err && err.message ? this.escapeHtml(err.message) : __('Recarga la página.')}</p>`;
     }
   }
 
@@ -274,7 +274,7 @@ class ExecutionHistoryView extends BaseView {
       : '';
 
     return `
-      <button type="button" class="exec-card${disabled ? ' exec-card--disabled' : ''}"${multi ? ' data-carousel="1"' : ''} data-run-id="${this.escapeHtml(r.id)}" data-flow-slug="${this.escapeHtml(r.flow_slug)}"${disabled ? ` disabled title="${__('El flujo de esta sesion ya no existe')}"` : ''}>
+      <button type="button" class="exec-card${disabled ? ' exec-card--disabled' : ''}"${multi ? ' data-carousel="1"' : ''} data-run-id="${this.escapeHtml(r.id)}" data-flow-slug="${this.escapeHtml(r.flow_slug)}"${disabled ? ` disabled title="${__('El flujo de esta sesión ya no existe')}"` : ''}>
         <div class="exec-card-media">
           ${media}
           <div class="exec-card-gradient" aria-hidden="true"></div>
@@ -286,7 +286,7 @@ class ExecutionHistoryView extends BaseView {
           <div class="exec-card-info">
             <h3 class="exec-card-flow">${this.escapeHtml(r.flow_name)}</h3>
             <span class="exec-card-when">${this.escapeHtml(rel)}</span>
-            <span class="exec-card-resume"><i class="aisc-ico aisc-ico--arrow-right"></i> ${__('Continuar sesion')}</span>
+            <span class="exec-card-resume"><i class="aisc-ico aisc-ico--arrow-right"></i> ${__('Continuar sesión')}</span>
           </div>
         </div>
       </button>

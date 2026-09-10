@@ -48,7 +48,7 @@ class ProductsListView extends BaseView {
     icon: 'aisc-ico aisc-ico--product',
     iconSrc: '/recursos/icons/Identities.svg',
     title: __('Crea tu primer producto'),
-    subtitle: __('Sube fotos o una URL y Vera arma la ficha: beneficios, diferenciadores y caracteristicas. Apareceran aqui como base para tus producciones.'),
+    subtitle: __('Sube fotos o una URL y Vera arma la ficha: beneficios, diferenciadores y características. Aparecerán aquí como base para tus producciones.'),
     primaryLabel: __('+ Producto'),
     secondaryLabel: __('Adjuntar producto'),
   })}
@@ -310,7 +310,7 @@ class ProductsListView extends BaseView {
 
   async _onDeleteProduct(productId, btn) {
     if (!productId || !this.supabase) return;
-    if (!confirm(__('¿Eliminar este producto? Se borraran tambien sus imagenes.'))) return;
+    if (!confirm(__('¿Eliminar este producto? Se borrarán también sus imágenes.'))) return;
     if (btn) btn.disabled = true;
     try {
       const { error } = await this.supabase.from('products').delete().eq('id', productId);
@@ -444,14 +444,14 @@ class ProductsListView extends BaseView {
       <div class="attach-product-wizard" data-step="picker">
         <!-- Paso 1: elegir fuente -->
         <section class="attach-product-step attach-product-step--picker" data-panel="picker">
-          <p class="attach-product-intro">${__('Elegi como queres que Vera obtenga la informacion del producto. En ambos casos, la ficha se crea automaticamente con los datos detectados.')}</p>
+          <p class="attach-product-intro">${__('Elegi como queres que Vera obtenga la información del producto. En ambos casos, la ficha se crea automáticamente con los datos detectados.')}</p>
           <div class="attach-product-options">
             <button type="button" class="attach-product-option" data-go="url" aria-label="${__('Adjuntar producto por URL')}">
               <div class="attach-product-option-head">
                 <span class="attach-product-option-icon"><i class="aisc-ico aisc-ico--link" aria-hidden="true"></i></span>
                 <h4 class="attach-product-option-title">${__('URL del producto')}</h4>
               </div>
-              <p class="attach-product-option-desc">${__('Pega el enlace de la pagina del producto. Vera leera la URL, extraera nombre, descripcion, precio, imagenes y caracteristicas, y armara la ficha automaticamente.')}</p>
+              <p class="attach-product-option-desc">${__('Pega el enlace de la página del producto. Vera leerá la URL, extraerá nombre, descripción, precio, imágenes y características, y armará la ficha automáticamente.')}</p>
               <span class="attach-product-option-cta">${__('Continuar')} <i class="aisc-ico aisc-ico--arrow-right" aria-hidden="true"></i></span>
             </button>
 
@@ -460,7 +460,7 @@ class ProductsListView extends BaseView {
                 <span class="attach-product-option-icon"><i class="aisc-ico aisc-ico--paperclip" aria-hidden="true"></i></span>
                 <h4 class="attach-product-option-title">${__('Adjuntar archivos')}</h4>
               </div>
-              <p class="attach-product-option-desc">${__('Subi fotos del producto o archivos como PDFs, fichas tecnicas y catalogos. Vera analizara el contenido y construira la ficha automaticamente.')}</p>
+              <p class="attach-product-option-desc">${__('Subi fotos del producto o archivos como PDFs, fichas técnicas y catálogos. Vera analizará el contenido y construirá la ficha automáticamente.')}</p>
               <span class="attach-product-option-cta">${__('Continuar')} <i class="aisc-ico aisc-ico--arrow-right" aria-hidden="true"></i></span>
             </button>
           </div>
@@ -486,7 +486,7 @@ class ProductsListView extends BaseView {
               <input type="file" class="attach-product-photos-input" multiple accept="image/jpeg,image/png,image/webp,image/jpg" hidden />
               <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
               <span class="attach-product-dropzone-text">${__('Arrastra fotos o hace click para elegirlas')}</span>
-              <span class="attach-product-dropzone-hint">${__('JPG, PNG, WebP · max 10 imagenes · 25MB c/u')}</span>
+              <span class="attach-product-dropzone-hint">${__('JPG, PNG, WebP · max 10 imágenes · 25MB c/u')}</span>
             </div>
             <ul class="attach-product-file-list" hidden></ul>
           </div>
@@ -688,9 +688,9 @@ class ProductsListView extends BaseView {
       if (photoFiles.length) {
         const invalid = photoFiles.find((f) => !/^image\//.test(f.type));
         if (invalid) return this._showNotification(__('"{name}" no es una imagen', { name: invalid.name }), 'error');
-        if (photoFiles.length > 10) return this._showNotification(__('Maximo 10 imagenes por ficha'), 'error');
+        if (photoFiles.length > 10) return this._showNotification(__('Máximo 10 imágenes por ficha'), 'error');
         const oversize = photoFiles.find((f) => f.size > 25 * 1024 * 1024);
-        if (oversize) return this._showNotification(__('"{name}" supera el limite de 25MB', { name: oversize.name }), 'error');
+        if (oversize) return this._showNotification(__('"{name}" supera el límite de 25MB', { name: oversize.name }), 'error');
       }
 
       submitBtn.disabled = true;
@@ -719,7 +719,7 @@ class ProductsListView extends BaseView {
 
   async _analyzePhotosAndCreateProduct({ files, docFiles = [], modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesion no disponible'), 'error');
+      this._showNotification(__('Sesión no disponible'), 'error');
       modalHandle?.close();
       return;
     }
@@ -742,7 +742,7 @@ class ProductsListView extends BaseView {
           entity_id: entityId,
           tipo_producto: 'otro',
           nombre_producto: 'Procesando ficha...',
-          descripcion_producto: 'Vera esta analizando las fotos. La ficha se completara en unos segundos.',
+          descripcion_producto: 'Vera está analizando las fotos. La ficha se completará en unos segundos.',
           moneda: 'USD',
           metadata: placeholderMetadata,
         })
@@ -766,7 +766,7 @@ class ProductsListView extends BaseView {
       }
 
       // 3) Llamar a la Netlify function que analiza con OpenAI y cobra creditos
-      setHint(__('Vera esta analizando las fotos con OpenAI Vision...'));
+      setHint(__('Vera está analizando las fotos con OpenAI Vision...'));
       await this._callFicheFunction({
         productId, entityId,
         payload: { product_id: productId, organization_id: this.organizationId, image_urls: imageUrls },
@@ -786,7 +786,7 @@ class ProductsListView extends BaseView {
 
   async _analyzeUrlAndCreateProduct({ url, hostname, modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesion no disponible'), 'error');
+      this._showNotification(__('Sesión no disponible'), 'error');
       modalHandle?.close();
       return;
     }
@@ -804,7 +804,7 @@ class ProductsListView extends BaseView {
           entity_id: entityId,
           tipo_producto: 'otro',
           nombre_producto: 'Procesando ficha...',
-          descripcion_producto: 'Vera esta leyendo la pagina y armando la ficha. Esto toma unos segundos.',
+          descripcion_producto: 'Vera está leyendo la página y armando la ficha. Esto toma unos segundos.',
           moneda: 'USD',
           url_producto: url,
           metadata: { ai_generated: false, pending_ai_enrichment: true, source: 'url', source_url: url },
@@ -815,7 +815,7 @@ class ProductsListView extends BaseView {
       productId = created.id;
 
       // 2) Llamar a la function (hace scrape + reupload + OpenAI)
-      setHint(__('Leyendo {page} y extrayendo datos del producto...', { page: hostname || __('la pagina') }));
+      setHint(__('Leyendo {page} y extrayendo datos del producto...', { page: hostname || __('la página') }));
       await this._callFicheFunction({
         productId, entityId,
         payload: { product_id: productId, organization_id: this.organizationId, url },
@@ -837,7 +837,7 @@ class ProductsListView extends BaseView {
   async _callFicheFunction({ productId, entityId, payload, modalHandle, setHint }) {
     const { data: sessionData } = await this.supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) throw new Error(__('No hay sesion activa'));
+    if (!accessToken) throw new Error(__('No hay sesión activa'));
 
     const resp = await fetch('/.netlify/functions/api-products-generate-fiche', {
       method: 'POST',
@@ -855,7 +855,7 @@ class ProductsListView extends BaseView {
       const errMsg = result.error || `HTTP ${resp.status}`;
       const detail = result.detail ? ` (${result.detail})` : '';
       if (resp.status === 402) {
-        this._showNotification(__('Creditos insuficientes. Necesitas {n} creditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
+        this._showNotification(__('Créditos insuficientes. Necesitas {n} créditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
       } else {
         this._showNotification(__('Error generando ficha: {msg}', { msg: `${errMsg}${detail}` }), 'error');
       }
@@ -863,14 +863,14 @@ class ProductsListView extends BaseView {
       throw new Error(errMsg);
     }
 
-    setHint(__('Ficha generada (costo: {n} creditos). Redirigiendo...', { n: result.credits_charged.toFixed(4) }));
+    setHint(__('Ficha generada (costo: {n} créditos). Redirigiendo...', { n: result.credits_charged.toFixed(4) }));
     this._invalidateCache();
     window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
     modalHandle?.close();
     const imgCount = result.images?.inserted || 0;
     if (result.images?.error) {
       console.warn('[ProductsListView] imagenes no se vincularon:', result.images.error);
-      this._showNotification(__('Ficha generada · imagenes no se vincularon: {err}', { err: result.images.error }), 'error');
+      this._showNotification(__('Ficha generada · imágenes no se vincularon: {err}', { err: result.images.error }), 'error');
     } else {
       const sourceLabel = result.source === 'url'
         ? (result.scraped?.brand
@@ -880,7 +880,7 @@ class ProductsListView extends BaseView {
       const variantCount = result.variants?.inserted || 0;
       const variantStr = variantCount > 0 ? ` · ${__('{n} variante(s)', { n: variantCount })}` : '';
       this._showNotification(
-        __('Ficha generada {source} · {credits} creditos · {n} foto(s)', {
+        __('Ficha generada {source} · {credits} créditos · {n} foto(s)', {
           source: sourceLabel,
           credits: result.credits_charged.toFixed(4),
           n: imgCount,
@@ -893,7 +893,7 @@ class ProductsListView extends BaseView {
 
   async _createPendingProduct({ url = null, files = null, modalHandle = null } = {}) {
     if (!this.supabase || !this.organizationId) {
-      this._showNotification(__('Sesion no disponible'), 'error');
+      this._showNotification(__('Sesión no disponible'), 'error');
       modalHandle?.close();
       return;
     }
@@ -903,7 +903,7 @@ class ProductsListView extends BaseView {
 
       const name = url
         ? this._nameFromUrl(url)
-        : (files?.length ? `Producto sin titulo (${files.length} archivo${files.length === 1 ? '' : 's'})` : 'Producto pendiente');
+        : (files?.length ? `Producto sin título (${files.length} archivo${files.length === 1 ? '' : 's'})` : 'Producto pendiente');
 
       const metadata = {
         pending_ai_enrichment: true,
@@ -916,7 +916,7 @@ class ProductsListView extends BaseView {
         entity_id: entityId,
         tipo_producto: 'otro',
         nombre_producto: name,
-        descripcion_producto: 'Vera esta procesando la informacion. La ficha se completara automaticamente.',
+        descripcion_producto: 'Vera está procesando la información. La ficha se completará automáticamente.',
         moneda: 'USD',
         metadata,
       };

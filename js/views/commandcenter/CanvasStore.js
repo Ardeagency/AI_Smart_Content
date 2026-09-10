@@ -640,7 +640,7 @@
         const id = String(campaignId);
         const key = `camp:${id}`;
         return {
-          kind: 'on-canvas-add', label: 'Agregar campana al lienzo',
+          kind: 'on-canvas-add', label: 'Agregar campaña al lienzo',
           do() {
             store.addOnCanvas(id);
             if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
@@ -661,7 +661,7 @@
           .filter((l) => l.from === key || l.to === key)
           .map((l) => ({ from: l.from, to: l.to }));
         return {
-          kind: 'on-canvas-remove', label: 'Quitar campana del lienzo',
+          kind: 'on-canvas-remove', label: 'Quitar campaña del lienzo',
           do() {
             store.removeOnCanvas(id);
             prevLinks.forEach((l) => store.removeFreeLink(l.from, l.to));
@@ -694,7 +694,7 @@
         baseByKey.forEach((v, k) => fromCopy.set(k, { x: v.x, y: v.y }));
         finalByKey.forEach((v, k) => toCopy.set(k, { x: v.x, y: v.y }));
         return {
-          kind: 'move-nodes', label: 'Mover seleccion',
+          kind: 'move-nodes', label: 'Mover selección',
           _fromCopy: fromCopy,
           _toCopy:   toCopy,
           do() {
@@ -2390,7 +2390,7 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Publicando...'; }
       const { data: { session } } = await this._supabase.auth.getSession();
       const token = session && session.access_token;
-      if (!token) { window.showToast && window.showToast('Sin sesion activa', { type: 'error' }); return; }
+      if (!token) { window.showToast && window.showToast('Sin sesión activa', { type: 'error' }); return; }
       const res = await fetch('/.netlify/functions/api-social-publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -2400,7 +2400,7 @@
       const results = Array.isArray(data.results) ? data.results : [];
       const ok = results.some((r) => r.status === 'published');
       if (ok) {
-        window.showToast && window.showToast('Produccion publicada', { type: 'success' });
+        window.showToast && window.showToast('Producción publicada', { type: 'success' });
         this._prodData = {};                 // invalidar cache -> re-render muestra "Publicada"
         this._renderProductionSatellites();
       } else {
@@ -2450,7 +2450,7 @@
       const r = _mixinRenderEdges.apply(this, arguments);
       this._renderCampaignSatellites();
       this._renderProductionSatellites();
-      if (typeof this._renderStrategySteps === 'function') this._renderStrategySteps();
+      if (typeof this._renderStrategyBudget === 'function') this._renderStrategyBudget();
       return r;
     };
   }
@@ -2511,7 +2511,7 @@
         organization_id: this._organizationId,
         brand_container_id: brandId,
         name: 'Estrategia general',
-        description: 'Estrategia creada automaticamente al introducir el modelo de estrategias',
+        description: 'Estrategia creada automáticamente al introducir el modelo de estrategias',
         color: 'blue',
         icon: 'aisc-ico aisc-ico--flows',
         is_default: true,
@@ -2859,8 +2859,8 @@
       update_persona: 'Actualizar Audiencia',
       create_audience: 'Crear Audiencia',
       create_brief: 'Crear Brief',
-      create_campaign: 'Crear Campana',
-      pause_campaign: 'Pausar Campana',
+      create_campaign: 'Crear Campaña',
+      pause_campaign: 'Pausar Campaña',
       iterate_creative: 'Iterar Creativo',
       link_brief_to_campaign: 'Vincular Brief',
       publish_post: 'Publicar Post',
@@ -3726,8 +3726,8 @@
     // canvas-only types: identity (cualquier subtipo) + campana real
     const canvasOnly = type === 'identity' || type === 'campaign-real';
     const items = [
-      { action: 'duplicate', icon: 'aisc-ico aisc-ico--copy',           label: size > 1 ? 'Duplicar seleccion' : 'Duplicar', kbd: M + 'D' },
-      { action: 'copy',      icon: 'aisc-ico aisc-ico--copy',            label: size > 1 ? 'Copiar seleccion'   : 'Copiar',   kbd: M + 'C' },
+      { action: 'duplicate', icon: 'aisc-ico aisc-ico--copy',           label: size > 1 ? 'Duplicar selección' : 'Duplicar', kbd: M + 'D' },
+      { action: 'copy',      icon: 'aisc-ico aisc-ico--copy',            label: size > 1 ? 'Copiar selección'   : 'Copiar',   kbd: M + 'C' },
     ];
     if (size <= 1 && type !== 'sticky' && type !== 'group') {
       items.push({ action: 'collapse', icon: isCollapsed ? 'aisc-ico aisc-ico--chevron-down' : 'aisc-ico aisc-ico--chevron-up', label: isCollapsed ? 'Expandir' : 'Colapsar' });
@@ -3736,7 +3736,7 @@
       items.push({ action: 'uncanvas', icon: 'aisc-ico aisc-ico--eye-off', label: size > 1 ? 'Quitar del lienzo' : 'Quitar del lienzo' });
     }
     items.push({ sep: true });
-    items.push({ action: 'delete', icon: 'aisc-ico aisc-ico--delete', label: size > 1 ? 'Borrar seleccion' : 'Borrar', kbd: 'Del', danger: true });
+    items.push({ action: 'delete', icon: 'aisc-ico aisc-ico--delete', label: size > 1 ? 'Borrar selección' : 'Borrar', kbd: 'Del', danger: true });
     items.push({ sep: true });
     if (size <= 1) {
       items.push({ action: 'props', icon: 'aisc-ico aisc-ico--filter', label: 'Propiedades' });
@@ -4094,21 +4094,21 @@
     // Nota (sticky) y Grupo se crean desde botones del header (son anotaciones
     // que viven SOLO dentro de la estrategia), ya no como tipos de nodo aqui.
     return [
-      { id: 'objetivo-campana',   name: 'Objetivo de Campana',   icon: 'aisc-ico aisc-ico--goal',        group: 'Objetivos',    count: cConc, type: 'concept',       desc: 'Ancla de la estrategia; define el proposito al que apunta todo el flujo' },
+      { id: 'objetivo-campana',   name: 'Objetivo de Campaña',   icon: 'aisc-ico aisc-ico--goal',        group: 'Objetivos',    count: cConc, type: 'concept',       desc: 'Ancla de la estrategia; define el propósito al que apunta todo el flujo' },
       { id: 'objetivo-audiencia', name: 'Objetivo de Audiencia', icon: 'aisc-ico aisc-ico--audience',           group: 'Objetivos',    count: cAud,  type: 'audience',      desc: 'El segmento humano que esta estrategia quiere alcanzar' },
-      { id: 'campana-real',       name: 'Campana',               icon: 'aisc-ico aisc-ico--campaign',        group: 'Realidad',     count: cCamp, type: 'campaign-real', desc: 'Campanas sincronizadas desde Meta, Google u otra plataforma' },
+      { id: 'campana-real',       name: 'Campaña',               icon: 'aisc-ico aisc-ico--campaign',        group: 'Realidad',     count: cCamp, type: 'campaign-real', desc: 'Campañas sincronizadas desde Meta, Google u otra plataforma' },
       // Plantillas de ejecucion (jerarquia v2): cards CREADORAS — click crea
       // el nodo en el canvas (no drill). PROTOTIPO campana → conjunto →
       // creativo que persona+Vera arman aqui para crear los de produccion
       // real. Neutrales al objetivo; lo especifico de plataforma vive en
       // metadata (guardrail: no clonar Ads Manager).
-      { id: 'exec-meta',    name: __('Campana de Meta'),           icon: 'aisc-ico aisc-ico--campaign',   group: __('Ejecucion'), create: 'campaign:meta_facebook',    desc: __('Prototipo campana → conjuntos → creativos para crear la real en Meta') },
-      { id: 'exec-google',  name: __('Campana de Google Ads'),     icon: 'aisc-ico aisc-ico--search', group: __('Ejecucion'), create: 'campaign:google_ads', desc: __('Prototipo de ejecucion para Google Ads') },
-      { id: 'exec-tiktok',  name: __('Campana de TikTok'),         icon: 'aisc-ico aisc-ico--music',      group: __('Ejecucion'), create: 'campaign:tiktok_ads',       desc: __('Prototipo de ejecucion para TikTok Ads') },
-      { id: 'exec-x',       name: __('Campana de X'),              icon: 'aisc-ico aisc-ico--tag',    group: __('Ejecucion'), create: 'campaign:x_ads',            desc: __('Prototipo de ejecucion para X Ads') },
-      { id: 'exec-shopify', name: __('Optimizacion de Shopify'),   icon: 'aisc-ico aisc-ico--store',      group: __('Ejecucion'), create: 'stopt:shopify',             desc: __('SEO estacional de la ficha de producto en Shopify') },
-      { id: 'exec-meli',    name: __('Optimizacion de Mercado Libre'), icon: 'fa-handshake', group: __('Ejecucion'), create: 'stopt:mercadolibre',     desc: __('SEO estacional de la publicacion en Mercado Libre') },
-      { id: 'producto',           name: 'Producto',              icon: 'aisc-ico aisc-ico--product',             group: 'Identidades',                type: 'product',       desc: 'Productos del catalogo de la marca' },
+      { id: 'exec-meta',    name: __('Campaña de Meta'),           icon: 'aisc-ico aisc-ico--campaign',   group: __('Ejecución'), create: 'campaign:meta_facebook',    desc: __('Prototipo campaña → conjuntos → creativos para crear la real en Meta') },
+      { id: 'exec-google',  name: __('Campaña de Google Ads'),     icon: 'aisc-ico aisc-ico--search', group: __('Ejecución'), create: 'campaign:google_ads', desc: __('Prototipo de ejecución para Google Ads') },
+      { id: 'exec-tiktok',  name: __('Campaña de TikTok'),         icon: 'aisc-ico aisc-ico--music',      group: __('Ejecución'), create: 'campaign:tiktok_ads',       desc: __('Prototipo de ejecución para TikTok Ads') },
+      { id: 'exec-x',       name: __('Campaña de X'),              icon: 'aisc-ico aisc-ico--tag',    group: __('Ejecución'), create: 'campaign:x_ads',            desc: __('Prototipo de ejecución para X Ads') },
+      { id: 'exec-shopify', name: __('Optimización de Shopify'),   icon: 'aisc-ico aisc-ico--store',      group: __('Ejecución'), create: 'stopt:shopify',             desc: __('SEO estacional de la ficha de producto en Shopify') },
+      { id: 'exec-meli',    name: __('Optimización de Mercado Libre'), icon: 'fa-handshake', group: __('Ejecución'), create: 'stopt:mercadolibre',     desc: __('SEO estacional de la publicación en Mercado Libre') },
+      { id: 'producto',           name: 'Producto',              icon: 'aisc-ico aisc-ico--product',             group: 'Identidades',                type: 'product',       desc: 'Productos del catálogo de la marca' },
       { id: 'servicio',           name: 'Servicio',              icon: 'aisc-ico aisc-ico--tag',             group: 'Identidades',                type: 'service',       desc: 'Servicios que ofrece la marca' },
       { id: 'lugar',              name: 'Lugar',                 icon: 'aisc-ico aisc-ico--places',         group: 'Identidades',                type: 'place',         desc: 'Locaciones fisicas de la marca' },
       { id: 'flow',               name: 'Flow',                  icon: 'aisc-ico aisc-ico--flows', group: 'Identidades',                type: 'flow',          desc: 'Flujos de contenido del Studio' },
@@ -4165,10 +4165,10 @@
         update_persona: 'Actualizar Audiencia',
         create_audience: 'Crear Audiencia',
         create_brief: 'Crear Brief',
-        create_campaign: 'Crear Campana',
-        pause_campaign: 'Pausar Campana',
-        resume_campaign: 'Reactivar Campana',
-        launch_campaign: 'Lanzar Campana',
+        create_campaign: 'Crear Campaña',
+        pause_campaign: 'Pausar Campaña',
+        resume_campaign: 'Reactivar Campaña',
+        launch_campaign: 'Lanzar Campaña',
         iterate_creative: 'Iterar Creativo',
         link_brief_to_campaign: 'Vincular Brief',
         publish_post: 'Publicar Post',
@@ -4398,7 +4398,7 @@
     try {
       if (kind === 'campaign') {
         const platName = { meta_facebook: 'Meta', google_ads: 'Google Ads', tiktok_ads: 'TikTok', x_ads: 'X' }[platform] || platform;
-        const nombre = this._nextExecName(`${__('Campana de')} ${platName}`, (this._campaigns || []).map((x) => x.nombre_campana));
+        const nombre = this._nextExecName(`${__('Campaña de')} ${platName}`, (this._campaigns || []).map((x) => x.nombre_campana));
         const { data, error } = await this._supabase.from('campaigns').insert({
           organization_id: this._organizationId,
           brand_container_id: this._containerRow.id,
@@ -4413,7 +4413,7 @@
         await this._afterExecCreate(`camp:${data.id}`, 'campaign', data.id, c.x - 130, c.y - 40);
       } else if (kind === 'stopt') {
         const platName = { shopify: 'Shopify', mercadolibre: 'Mercado Libre' }[platform] || platform;
-        const nombre = this._nextExecName(`${__('Optimizacion de')} ${platName}`, (this._storeOpts || []).map((x) => x.nombre));
+        const nombre = this._nextExecName(`${__('Optimización de')} ${platName}`, (this._storeOpts || []).map((x) => x.nombre));
         const { data, error } = await this._supabase.from('store_optimizations').insert({
           organization_id: this._organizationId,
           brand_container_id: this._containerRow.id,
@@ -4543,9 +4543,9 @@
         ${isActive ? '<i class="aisc-ico cc-strategy-check aisc-ico--check"></i>' : ''}
       </button>`;
     }).join('');
-    const empty = items.length ? '' : `<div class="cc-strat-empty">${__('Sin estrategias todavia.')}</div>`;
+    const empty = items.length ? '' : `<div class="cc-strat-empty">${__('Sin estrategias todavía.')}</div>`;
     list.innerHTML = `${empty}${rows}`;
-    if (typeof this._renderStrategySteps === 'function') this._renderStrategySteps();
+    if (typeof this._renderStrategyBudget === 'function') this._renderStrategyBudget();
   };
 
   /** Cablea el sidebar de estrategias (1 vez por vista). Panel SIEMPRE abierto
@@ -4574,42 +4574,6 @@
     });
 
     this._renderStrategyPanel();
-  };
-
-  /* ── Secuencia estrategica (SOSTAC operativo) ────────────────────────
-     Los pasos que un equipo de marketing profesional completa, derivados del
-     estado REAL de la BD. El diagnostico (situacion/mercado/competencia) lo
-     cubre Vera ANTES de la estrategia (strategic_frame) — por eso aparece
-     siempre hecho y firmado por ella, sin nodo en el canvas. */
-  P._strategySequence = function () {
-    const concepts = (this._campaigns || []).filter((c) => !c.last_synced_at);
-    const reals    = (this._campaigns || []).filter((c) => !!c.last_synced_at);
-    const concept  = concepts[0] || null;
-
-    const objDone = !!concept && !!(concept.platform_objective || concept.budget_daily || concept.budget_total);
-    const audDone = !!concept && (!!concept.persona_id ||
-      (this._segments || []).some((s) => String(s.campaign_id) === String(concept.id)));
-    const briefId = concept && concept.brief_id;
-    const briefHero = !!briefId && (this._briefEntities || []).some(
-      (be) => String(be.brief_id) === String(briefId) && be.is_hero);
-    const realLinked = reals.find((r) => briefId && String(r.brief_id) === String(briefId));
-    const ctrlDone = !!(realLinked && (realLinked.metrics_cached_at || realLinked.cached_impressions));
-
-    const st = (done, partial) => (done ? 'done' : partial ? 'partial' : 'pending');
-    return [
-      { label: __('Diagnostico de mercado'), state: 'done', vera: true,
-        hint: __('Vera analiza mercado, competencia y demanda continuamente (strategic frame) antes de crear la estrategia') },
-      { label: __('Objetivo de campana'), state: st(objDone, !!concept),
-        hint: __('Crea el Objetivo y define plataforma, objetivo y presupuesto (media plan)') },
-      { label: __('Audiencia'), state: st(audDone, false),
-        hint: __('Conecta un Objetivo de Audiencia a la campana (STP)') },
-      { label: __('Brief estrategico'), state: st(!!briefId && briefHero, !!briefId),
-        hint: __('Vincula el brief con su producto hero; define objetivo comercial, angulos y oferta en el inspector') },
-      { label: __('Campana en plataforma'), state: st(!!realLinked, reals.length > 0),
-        hint: __('La campana real (Meta/Google) conectada al brief que la alimenta') },
-      { label: __('Control y aprendizaje'), state: st(ctrlDone, false),
-        hint: __('Metricas sincronizadas; Vera mide resultados y aprende (outcomes)') },
-    ];
   };
 
   /* ── Presupuesto de marketing del mercado (brand_container) ──────────
@@ -4652,21 +4616,6 @@
       </div>
       <div class="cc-strat-budget-bar ${over ? 'is-over' : ''}"><span style="width:${pct}%"></span></div>
       <div class="cc-strat-budget-sub ${over ? 'is-over' : ''}">${__('Asignado en objetivos')}: ${this.escapeHtml(cur)} ${fmt(assigned)}${total ? ` · ${pct}%` : ''}${over ? ' ⚠' : ''}</div>`;
-  };
-
-  P._renderStrategySteps = function () {
-    this._renderStrategyBudget();
-    const host = document.getElementById('ccStratSteps');
-    if (!host) return;
-    const steps = this._strategySequence();
-    const icon = { done: 'aisc-ico aisc-ico--check', partial: 'aisc-ico aisc-ico--minus' };
-    host.innerHTML = `<div class="cc-strat-steps-title">${__('Secuencia estrategica')}</div>` +
-      steps.map((s) => `
-      <div class="cc-strat-step is-${s.state}" title="${this.escapeHtml(s.hint)}">
-        <span class="cc-strat-step-dot">${s.state !== 'pending' ? `<i class="fas ${icon[s.state]}"></i>` : ''}</span>
-        <span class="cc-strat-step-label">${this.escapeHtml(s.label)}</span>
-        ${s.vera ? '<span class="cc-strat-step-vera">VERA</span>' : ''}
-      </div>`).join('');
   };
 
   /* ── Nombre de la estrategia activa en el header (editable inline) ──── */
@@ -5004,7 +4953,7 @@
     return `<div class="cc-node cc-node--group cc-group--${color}" data-node-key="${this.escapeHtml(n.key)}" data-type="group" data-id="${escId}" style="left:${pos.x}px;top:${pos.y}px;width:${w}px;height:${h}px;">
       <div class="cc-group-head" data-drag-handle>
         <i class="aisc-ico aisc-ico--layers"></i>
-        <input type="text" class="cc-group-title" data-cc-group-title="${escId}" placeholder="Sin titulo" value="${this.escapeHtml(title)}" autocomplete="off" spellcheck="false" />
+        <input type="text" class="cc-group-title" data-cc-group-title="${escId}" placeholder="Sin título" value="${this.escapeHtml(title)}" autocomplete="off" spellcheck="false" />
       </div>
       <div class="cc-group-area"></div>
     </div>`;
@@ -5458,7 +5407,7 @@
             ['', 'Sin definir'], ['unaware', 'Unaware'], ['problem_aware', 'Problem aware'],
             ['solution_aware', 'Solution aware'], ['product_aware', 'Product aware'], ['most_aware', 'Most aware'],
           ])}
-          ${this._fieldArea('Descripcion', 'str', 'description', a.description, { rows: 3, placeholder: 'Quien es esta audiencia' })}
+          ${this._fieldArea('Descripción', 'str', 'description', a.description, { rows: 3, placeholder: 'Quien es esta audiencia' })}
           ${this._fieldTags('Dolores', 'dolores', a.dolores)}
           ${this._fieldTags('Deseos', 'deseos', a.deseos)}
           ${this._fieldTags('Objeciones', 'objeciones', a.objeciones)}
@@ -5477,7 +5426,7 @@
   // ── Inspector: campana (real o conceptual) ───────────────────────────
   P._inspectorCampaign = function (id) {
     const row = (this._campaigns || []).find((c) => String(c.id) === String(id));
-    if (!row) return { title: '<i class="aisc-ico aisc-ico--campaign"></i> Campana', body: '<div class="cc-insp-empty">No encontrada.</div>' };
+    if (!row) return { title: '<i class="aisc-ico aisc-ico--campaign"></i> Campaña', body: '<div class="cc-insp-empty">No encontrada.</div>' };
     const isReal = !!row.last_synced_at;
     const status = row.status || '—';
     const objetivo = row.objetivo_comercial || '';
@@ -5488,7 +5437,7 @@
       const conv = Number(row.cached_conversions) || 0;
       const roas = Number(row.cached_roas);
       return {
-        title: `<i class="aisc-ico aisc-ico--campaign"></i> ${this.escapeHtml(row.nombre_campana || 'Campana')}`,
+        title: `<i class="aisc-ico aisc-ico--campaign"></i> ${this.escapeHtml(row.nombre_campana || 'Campaña')}`,
         body: `
           <div class="cc-insp-section">
             <span class="cc-insp-label">Plataforma</span>
@@ -5525,12 +5474,12 @@
     const c = row, eid = this.escapeHtml(String(id));
     const linkedName = c.persona_id ? ((this._audiences || []).find((x) => String(x.id) === String(c.persona_id))?.name || 'Audiencia vinculada') : '';
     return {
-      title: `<i class="aisc-ico aisc-ico--goal"></i> ${this.escapeHtml(c.nombre_campana || 'Objetivo de Campana')}`,
+      title: `<i class="aisc-ico aisc-ico--goal"></i> ${this.escapeHtml(c.nombre_campana || 'Objetivo de Campaña')}`,
       body: `
         <div class="cc-insp-form" data-field-host data-type="campaign-concept" data-id="${eid}">
-          ${this._fieldText('Nombre', 'str', 'nombre_campana', c.nombre_campana, { placeholder: 'Nombre de la campana' })}
+          ${this._fieldText('Nombre', 'str', 'nombre_campana', c.nombre_campana, { placeholder: 'Nombre de la campaña' })}
           ${linkedName ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="aisc-ico aisc-ico--link"></i> ${this.escapeHtml(linkedName)}</span></div>` : ''}
-          ${this._fieldArea('Descripcion interna', 'str', 'descripcion_interna', c.descripcion_interna, { rows: 3, placeholder: 'Objetivo del concepto' })}
+          ${this._fieldArea('Descripción interna', 'str', 'descripcion_interna', c.descripcion_interna, { rows: 3, placeholder: 'Objetivo del concepto' })}
           ${this._fieldSelect('Estado', 'status', c.status || 'draft', [
             ['draft', 'Borrador'], ['conceptual', 'Conceptual'], ['active', 'Activa'],
             ['paused', 'Pausada'], ['ended', 'Finalizada'], ['archived', 'Archivada'],
@@ -5546,7 +5495,7 @@
           ${this._fieldText('Moneda', 'str', 'budget_currency', c.budget_currency || 'USD')}
           ${this._fieldText('Inicio', 'date', 'starts_at', c.starts_at ? String(c.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${this._fieldText('Fin', 'date', 'ends_at', c.ends_at ? String(c.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
-          <div class="cc-insp-hint">${__('El Objetivo es la parte TECNICA (plataformas, presupuesto, fechas). La direccion creativa — que decir y que producir — vive en el Brief.')}</div>
+          <div class="cc-insp-hint">${__('El Objetivo es la parte TÉCNICA (plataformas, presupuesto, fechas). La dirección creativa — que decir y que producir — vive en el Brief.')}</div>
           <button type="button" class="cc-insp-add" data-exec-add="adset" data-exec-parent="${eid}"><i class="aisc-ico aisc-ico--add"></i> ${__('Agregar Conjunto de Anuncios')}</button>
           <button type="button" class="cc-insp-delete" data-del-type="campaign-concept" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> Eliminar campana</button>
         </div>
@@ -5567,20 +5516,20 @@
       body: `
         <div class="cc-insp-form" data-field-host data-type="adset" data-id="${eid}">
           ${this._fieldText(__('Nombre'), 'str', 'nombre', a.nombre, { placeholder: __('Nombre del conjunto') })}
-          ${camp ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="aisc-ico aisc-ico--campaign"></i> ${this.escapeHtml(camp.nombre_campana || __('Campana'))}</span></div>` : ''}
+          ${camp ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="aisc-ico aisc-ico--campaign"></i> ${this.escapeHtml(camp.nombre_campana || __('Campaña'))}</span></div>` : ''}
           ${this._fieldSelect(__('Estado'), 'status', a.status || 'draft', [
             ['draft', __('Borrador')], ['approved', __('Aprobado')], ['live', __('En pauta')], ['done', __('Finalizado')],
           ])}
-          ${this._fieldText(__('Optimizacion'), 'str', 'optimizacion', a.optimizacion, { placeholder: __('Hacia que optimiza: leads, alcance, compras…') })}
+          ${this._fieldText(__('Optimización'), 'str', 'optimizacion', a.optimizacion, { placeholder: __('Hacia que optimiza: leads, alcance, compras…') })}
           ${this._fieldSelect(__('Audiencia'), 'persona_id', a.persona_id ? String(a.persona_id) : '', personaOpts)}
-          ${this._fieldArea(__('Descripcion'), 'str', 'descripcion', a.descripcion, { rows: 2, placeholder: __('Rol de este conjunto dentro de la campana') })}
-          ${this._fieldText(__('Presupuesto/dia'), 'num', 'budget_daily', a.budget_daily, { inputType: 'number', dataType: 'number' })}
+          ${this._fieldArea(__('Descripción'), 'str', 'descripcion', a.descripcion, { rows: 2, placeholder: __('Rol de este conjunto dentro de la campaña') })}
+          ${this._fieldText(__('Presupuesto/día'), 'num', 'budget_daily', a.budget_daily, { inputType: 'number', dataType: 'number' })}
           ${this._fieldText(__('Presupuesto total'), 'num', 'budget_total', a.budget_total, { inputType: 'number', dataType: 'number' })}
           ${this._fieldText(__('Moneda'), 'str', 'budget_currency', a.budget_currency || '')}
           ${this._fieldText(__('Inicio'), 'date', 'starts_at', a.starts_at ? String(a.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${this._fieldText(__('Fin'), 'date', 'ends_at', a.ends_at ? String(a.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${a.external_adset_id ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Conjunto real')}</span><span class="cc-insp-value">${this.escapeHtml(a.external_adset_id)}</span></div>` : ''}
-          <div class="cc-insp-hint">${__('Prototipo que tu y Vera arman dentro de la plataforma; de aqui se crean los conjuntos de produccion real. El detalle fino de puja/ubicaciones vive en la plataforma.')}</div>
+          <div class="cc-insp-hint">${__('Prototipo que tu y Vera arman dentro de la plataforma; de aquí se crean los conjuntos de producción real. El detalle fino de puja/ubicaciones vive en la plataforma.')}</div>
           <button type="button" class="cc-insp-add" data-exec-add="ad" data-exec-parent="${eid}"><i class="aisc-ico aisc-ico--add"></i> ${__('Agregar Creativo')}</button>
           <button type="button" class="cc-insp-delete" data-del-type="adset" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> ${__('Eliminar conjunto')}</button>
         </div>
@@ -5608,14 +5557,14 @@
           ])}
           ${opts === undefined
             ? `<div class="cc-lib-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Cargando producciones…')}</div>`
-            : this._fieldSelect(__('Creativo (produccion)'), 'output_id', a.output_id ? String(a.output_id) : '', creativeOpts)}
-          ${this._fieldArea(__('Texto principal'), 'str', 'texto_principal', a.texto_principal, { rows: 3, placeholder: __('Copy del anuncio — ancla al menos 1 palabra de intencion') })}
-          ${this._fieldText(__('Titulo'), 'str', 'titulo', a.titulo)}
-          ${this._fieldText(__('Descripcion'), 'str', 'descripcion', a.descripcion)}
-          ${this._fieldText('CTA', 'str', 'cta', a.cta, { placeholder: __('Ej: Mas informacion') })}
+            : this._fieldSelect(__('Creativo (producción)'), 'output_id', a.output_id ? String(a.output_id) : '', creativeOpts)}
+          ${this._fieldArea(__('Texto principal'), 'str', 'texto_principal', a.texto_principal, { rows: 3, placeholder: __('Copy del anuncio — ancla al menos 1 palabra de intención') })}
+          ${this._fieldText(__('Título'), 'str', 'titulo', a.titulo)}
+          ${this._fieldText(__('Descripción'), 'str', 'descripcion', a.descripcion)}
+          ${this._fieldText('CTA', 'str', 'cta', a.cta, { placeholder: __('Ej: Mas información') })}
           ${this._fieldText('CTA URL', 'str', 'cta_url', a.cta_url, { inputType: 'url', placeholder: 'https://…' })}
           ${a.external_ad_id ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Anuncio real (plataforma)')}</span><span class="cc-insp-value">${this.escapeHtml(a.external_ad_id)}</span></div>` : ''}
-          <div class="cc-insp-hint">${__('Prototipo del anuncio: la pieza sale de las producciones del Studio y de aqui se crea el real en la plataforma. Cada texto editable debe llevar al menos un ancla de intencion — el algoritmo LEE el texto.')}</div>
+          <div class="cc-insp-hint">${__('Prototipo del anuncio: la pieza sale de las producciones del Studio y de aquí se crea el real en la plataforma. Cada texto editable debe llevar al menos un ancla de intención — el algoritmo LEE el texto.')}</div>
           <button type="button" class="cc-insp-delete" data-del-type="ad" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> ${__('Eliminar creativo')}</button>
         </div>
       `,
@@ -5650,7 +5599,7 @@
 
   P._inspectorStoreOpt = function (id) {
     const s = (this._storeOpts || []).find((x) => String(x.id) === String(id));
-    if (!s) return { title: `<i class="aisc-ico aisc-ico--store"></i> ${__('Optimizacion de tienda')}`, body: `<div class="cc-insp-empty">${__('No encontrada.')}</div>` };
+    if (!s) return { title: `<i class="aisc-ico aisc-ico--store"></i> ${__('Optimización de tienda')}`, body: `<div class="cc-insp-empty">${__('No encontrada.')}</div>` };
     const eid = this.escapeHtml(String(id));
     const platLabel = { shopify: 'Shopify', mercadolibre: 'Mercado Libre', amazon: 'Amazon' }[s.platform] || (s.platform || '—');
     // Picker de producto interno (lazy via libCache, mismo patron que la paleta).
@@ -5661,24 +5610,24 @@
     const prodOpts = [['', __('Sin producto')], ...((prodCache || []).map((p) => [String(p.id), p.name || __('Sin nombre')]))];
     const applied = s.status === 'applied';
     return {
-      title: `<i class="aisc-ico aisc-ico--store"></i> ${this.escapeHtml(s.nombre || __('Optimizacion de tienda'))}`,
+      title: `<i class="aisc-ico aisc-ico--store"></i> ${this.escapeHtml(s.nombre || __('Optimización de tienda'))}`,
       body: `
         <div class="cc-insp-form" data-field-host data-type="store_optimization" data-id="${eid}">
           <div class="cc-insp-meta"><span class="cc-insp-label">${__('Plataforma')}</span><span class="cc-insp-value">${this.escapeHtml(platLabel)}</span></div>
-          ${this._fieldText(__('Nombre'), 'str', 'nombre', s.nombre, { placeholder: __('Ej: SEO temporada Dia de Madres') })}
+          ${this._fieldText(__('Nombre'), 'str', 'nombre', s.nombre, { placeholder: __('Ej: SEO temporada Día de Madres') })}
           ${this._fieldSelect(__('Estado'), 'status', s.status || 'draft', applied
             ? [['applied', __('Aplicado')]]
             : [['draft', __('Borrador')], ['approved', __('Aprobado')]])}
           ${this._fieldSelect(__('Producto'), 'product_id', s.product_id ? String(s.product_id) : '', prodOpts)}
           ${this._fieldText(__('Listing externo'), 'str', 'external_product_id', s.external_product_id, { placeholder: __('ID del producto en la plataforma') })}
-          ${this._fieldText(__('Titulo SEO'), 'str', 'seo_titulo', s.seo_titulo)}
-          ${this._fieldArea(__('Descripcion SEO'), 'str', 'seo_descripcion', s.seo_descripcion, { rows: 3 })}
+          ${this._fieldText(__('Título SEO'), 'str', 'seo_titulo', s.seo_titulo)}
+          ${this._fieldArea(__('Descripción SEO'), 'str', 'seo_descripcion', s.seo_descripcion, { rows: 3 })}
           ${this._fieldTags(__('Keywords'), 'seo_keywords', s.seo_keywords)}
           ${this._fieldText(__('Inicio ventana'), 'date', 'starts_at', s.starts_at ? String(s.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${this._fieldText(__('Fin ventana'), 'date', 'ends_at', s.ends_at ? String(s.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
           ${applied ? `<div class="cc-insp-meta"><span class="cc-insp-label">${__('Aplicado')}</span><span class="cc-insp-value">${this.escapeHtml(String(s.applied_at || '').slice(0, 10))}</span></div>` : ''}
-          <div class="cc-insp-hint">${__('El write-back a la tienda se ejecuta con el boton humano "actualizar ficha" (nunca autonomo). Aprobar deja la propuesta lista para aplicar.')}</div>
-          <button type="button" class="cc-insp-delete" data-del-type="store_optimization" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> ${__('Eliminar optimizacion')}</button>
+          <div class="cc-insp-hint">${__('El write-back a la tienda se ejecuta con el botón humano "actualizar ficha" (nunca autónomo). Aprobar deja la propuesta lista para aplicar.')}</div>
+          <button type="button" class="cc-insp-delete" data-del-type="store_optimization" data-del-id="${eid}"><i class="aisc-ico aisc-ico--delete"></i> ${__('Eliminar optimización')}</button>
         </div>
       `,
     };
@@ -5756,16 +5705,16 @@
             ['draft', __('Borrador')], ['active', __('Activo')], ['archived', __('Archivado')],
           ])}
           ${this._fieldArea(__('Objetivo comercial'), 'str', 'objetivo_comercial', b.objetivo_comercial, { rows: 3, placeholder: __('Que debe lograr comercialmente esta estrategia…') })}
-          ${this._fieldTags(__('Objetivos estrategicos'), 'objetivos_estrategicos', b.objetivos_estrategicos)}
-          ${this._fieldTags(__('Angulos de venta'), 'angulos_venta', b.angulos_venta)}
+          ${this._fieldTags(__('Objetivos estratégicos'), 'objetivos_estrategicos', b.objetivos_estrategicos)}
+          ${this._fieldTags(__('Ángulos de venta'), 'angulos_venta', b.angulos_venta)}
           ${this._fieldTags(__('Oferta principal'), 'oferta_principal', b.oferta_principal)}
           ${this._fieldTags(__('Tono'), 'tono_modificador', b.tono_modificador)}
           ${this._fieldTags(__('Contexto temporal'), 'contexto_temporal', b.contexto_temporal)}
-          ${this._fieldTags(__('Plan de produccion'), 'plan_produccion', b.plan_produccion)}
+          ${this._fieldTags(__('Plan de producción'), 'plan_produccion', b.plan_produccion)}
           ${this._fieldText('CTA', 'str', 'cta', b.cta)}
           ${this._fieldText('CTA URL', 'str', 'cta_url', b.cta_url, { inputType: 'url', placeholder: 'https://…' })}
-          ${this._fieldArea(__('Descripcion interna'), 'str', 'descripcion_interna', b.descripcion_interna, { rows: 2 })}
-          <div class="cc-insp-hint">${__('El brief es el documento estrategico: objetivo comercial + angulos + oferta. El producto hero, escenario y personaje se conectan en sus puertos del nodo.')}</div>
+          ${this._fieldArea(__('Descripción interna'), 'str', 'descripcion_interna', b.descripcion_interna, { rows: 2 })}
+          <div class="cc-insp-hint">${__('El brief es el documento estratégico: objetivo comercial + ángulos + oferta. El producto hero, escenario y personaje se conectan en sus puertos del nodo.')}</div>
         </div>
       `,
     };

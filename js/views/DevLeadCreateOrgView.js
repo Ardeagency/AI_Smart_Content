@@ -91,7 +91,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     { key: 'market',      label: 'Mercado e idioma' },
     { key: 'voice',       label: 'Voz y mensaje' },
     { key: 'colors',      label: 'Colores' },
-    { key: 'fonts',       label: 'Tipografia' },
+    { key: 'fonts',       label: 'Tipografía' },
     { key: 'products',    label: 'Productos' },
     { key: 'services',    label: 'Servicios' },
     { key: 'competitors', label: 'Competencia' },
@@ -141,12 +141,12 @@ class DevLeadCreateOrgView extends DevBaseView {
         out.push({ key: 'brand', label: 'Marca' });
       }
       out.push(
-        { key: 'operacion', label: 'Operacion' },
+        { key: 'operacion', label: 'Operación' },
         { key: 'revisar',   label: 'Revisar' }
       );
     } else if (this.creationMode === 'auto') {
       // Ruta automatica (en construccion — se define con el usuario).
-      out.push({ key: 'auto', label: 'Automatico' });
+      out.push({ key: 'auto', label: 'Automático' });
     }
 
     // Owner va AL FINAL en la ruta MANUAL (por defecto la org se crea a nombre
@@ -164,22 +164,22 @@ class DevLeadCreateOrgView extends DevBaseView {
   // Footer Back + (Crear si es el ultimo paso, si no Siguiente).
   _footerButtons() {
     const main = this._isLastStep()
-      ? `<button type="button" class="createorg-submit-btn" data-action="create"><i class="aisc-ico aisc-ico--check"></i> Crear organizacion</button>`
+      ? `<button type="button" class="createorg-submit-btn" data-action="create"><i class="aisc-ico aisc-ico--check"></i> Crear organización</button>`
       : `<button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente"><i class="aisc-ico aisc-ico--arrow-right"></i></button>`;
     return `<button type="button" class="provision-back-btn" data-action="back">Back</button>${main}`;
   }
 
   METHODS = [
-    { v: 'manual', icon: 'aisc-ico aisc-ico--edit',   label: 'Manual',     hint: 'Lleno los datos a mano (descripcion, tono, paleta)' },
-    { v: 'url',    icon: 'aisc-ico aisc-ico--sparkle', label: 'Investigacion inteligente', hint: 'Vera escrapea una URL y detecta la identidad' },
-    { v: 'docs',   icon: 'aisc-ico aisc-ico--document',      label: 'Documentacion oficial', hint: 'Subo brief, brandbook o presentaciones' }
+    { v: 'manual', icon: 'aisc-ico aisc-ico--edit',   label: 'Manual',     hint: 'Lleno los datos a mano (descripción, tono, paleta)' },
+    { v: 'url',    icon: 'aisc-ico aisc-ico--sparkle', label: 'Investigación inteligente', hint: 'Vera escrapea una URL y detecta la identidad' },
+    { v: 'docs',   icon: 'aisc-ico aisc-ico--document',      label: 'Documentación oficial', hint: 'Subo brief, brandbook o presentaciones' }
   ];
 
   TONES = [
     { v: '',             label: '— Selecciona —' },
     { v: 'amigable',     label: 'Amigable' },
     { v: 'premium',      label: 'Premium' },
-    { v: 'tecnico',      label: 'Tecnico' },
+    { v: 'tecnico',      label: 'Técnico' },
     { v: 'profesional',  label: 'Profesional' },
     { v: 'casual',       label: 'Casual' },
     { v: 'inspirador',   label: 'Inspirador' },
@@ -205,15 +205,15 @@ class DevLeadCreateOrgView extends DevBaseView {
   ];
 
   LOCALES = [
-    { v: 'es', label: 'Espanol' },
+    { v: 'es', label: 'Español' },
     { v: 'en', label: 'English' },
-    { v: 'pt', label: 'Portugues' }
+    { v: 'pt', label: 'Portugués' }
   ];
 
   AUTONOMY = [
     { v: 'restringido', label: 'Restringido', desc: 'Vera propone, humano aprueba siempre. Curva de aprendizaje gentil.' },
     { v: 'parcial',     label: 'Parcial',     desc: 'Vera ejecuta tareas seguras, escala las complejas. Recomendado.' },
-    { v: 'total',       label: 'Total',       desc: 'Vera opera autonoma 24/7. Para orgs maduras con confianza alta.' }
+    { v: 'total',       label: 'Total',       desc: 'Vera opera autónoma 24/7. Para orgs maduras con confianza alta.' }
   ];
 
   // ─── Render ──────────────────────────────────────────────────────────
@@ -291,7 +291,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     const modes = [
       { v: 'manual', icon: 'aisc-ico aisc-ico--edit',       label: 'Crear manualmente',
         hint: 'Tu llenas la identidad, el mercado y el brand DNA paso a paso.' },
-      { v: 'auto',   icon: 'aisc-ico aisc-ico--sparkle', label: 'Crear automaticamente',
+      { v: 'auto',   icon: 'aisc-ico aisc-ico--sparkle', label: 'Crear automáticamente',
         hint: 'Das una fuente (URL/datos) y Vera investiga y arma la org sola.' }
     ];
     return `
@@ -301,7 +301,7 @@ class DevLeadCreateOrgView extends DevBaseView {
           <h2>Como quieres crear la organizacion?</h2>
           <p>Elige el camino. Manual y automatico siguen rutas completamente distintas.</p>
         </header>
-        <div class="provision-type-grid createorg-mode-grid" role="radiogroup" aria-label="Modo de creacion">
+        <div class="provision-type-grid createorg-mode-grid" role="radiogroup" aria-label="Modo de creación">
           ${modes.map((m) => {
             const active = this.creationMode === m.v;
             return `
@@ -410,7 +410,7 @@ class DevLeadCreateOrgView extends DevBaseView {
           <span class="provision-verify-icon" style="color:#ef6b6b"><i class="aisc-ico aisc-ico--alert-warning"></i></span>
           <h2>Algo fallo en el analisis</h2>
           <p class="provision-verify-status">${this.escapeHtml(this.autoError || 'Error desconocido')}</p>
-          <p class="provision-verify-meta">${this.autoOrgId ? 'El shell de la org si se creo — puedes verla en Organizaciones y reintentar el analisis luego.' : ''}</p>
+          <p class="provision-verify-meta">${this.autoOrgId ? 'El shell de la org sí se creó — puedes verla en Organizaciones y reintentar el análisis luego.' : ''}</p>
         </section>
         <footer class="provision-page-actions">
           <button type="button" class="provision-back-btn" data-action="auto-reset">Volver</button>
@@ -424,9 +424,9 @@ class DevLeadCreateOrgView extends DevBaseView {
     const RANK = { queued: 0, crawling: 1, crawling_done: 2, extracting_done: 3, consolidating: 3, consolidating_done: 4, applied: 5, apply_failed: 5, competitors_seeded: 6, competitors_failed: 6 };
     const rank = this.autoPhase === 'creating' ? 0 : (RANK[phase] != null ? RANK[phase] : 1);
     const steps = [
-      { label: 'Creando la organizacion', done: 1 },
+      { label: 'Creando la organización', done: 1 },
       { label: 'Navegando tu sitio web', done: 2 },
-      { label: 'Analizando paginas y contenido', done: 3 },
+      { label: 'Analizando páginas y contenido', done: 3 },
       { label: 'Obteniendo el ADN de la marca (IA)', done: 5 },
       { label: 'Guardando identidad y descargando logo', done: 6 },
       { label: 'Buscando la competencia real', done: 99 }
@@ -442,7 +442,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     return `
       <section class="provision-verify-card createorg-loading-card">
         <h2>Construyendo tu marca</h2>
-        <p class="provision-verify-meta">${st.stage ? this.escapeHtml(st.stage) : 'Vera esta investigando tu sitio...'}${pages != null ? ` · ${pages} paginas` : ''}</p>
+        <p class="provision-verify-meta">${st.stage ? this.escapeHtml(st.stage) : 'Vera esta investigando tu sitio...'}${pages != null ? ` · ${pages} páginas` : ''}</p>
         <ul class="createorg-load-list">${items}</ul>
       </section>
     `;
@@ -634,7 +634,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     const stageMap = {
       queued:        { label: 'En cola',                  pct: 5 },
       crawling:      { label: 'Descubriendo rutas',       pct: 25 },
-      extracting:    { label: 'Analizando paginas',       pct: 55 },
+      extracting:    { label: 'Analizando páginas',       pct: 55 },
       consolidating: { label: 'Consultando Vera (gpt-4o)', pct: 80 },
       done:          { label: 'Listo',                    pct: 100 },
       failed:        { label: 'Fallo',                    pct: 0 },
@@ -744,7 +744,7 @@ class DevLeadCreateOrgView extends DevBaseView {
           </div>
           <div class="provision-field createorg-field-full">
             <label for="brandPilares">Pilares de marca</label>
-            <input id="brandPilares" name="pilares" type="text" placeholder="autenticidad, innovacion, comunidad" value="${this.escapeHtml((f.pilares || []).join(', '))}">
+            <input id="brandPilares" name="pilares" type="text" placeholder="autenticidad, innovación, comunidad" value="${this.escapeHtml((f.pilares || []).join(', '))}">
             <small>Separados por coma.</small>
           </div>
           <div class="provision-field">
@@ -858,7 +858,7 @@ class DevLeadCreateOrgView extends DevBaseView {
         </header>
 
         <h3 class="createorg-subhead">Nivel de autonomia</h3>
-        <div class="createorg-autonomy" role="radiogroup" aria-label="Nivel de autonomia">
+        <div class="createorg-autonomy" role="radiogroup" aria-label="Nivel de autonomía">
           ${this.AUTONOMY.map((a) => `
             <label class="createorg-autonomy-option">
               <input type="radio" name="level_of_autonomy" value="${a.v}" ${a.v === f.level_of_autonomy ? 'checked' : ''}>
@@ -964,8 +964,8 @@ class DevLeadCreateOrgView extends DevBaseView {
           <div class="createorg-review-grid">
             ${this.tile('Paleta', `${f.primary_color} · ${f.secondary_color}`)}
             ${this.tile('Estetica', f.estetica || '—')}
-            ${this.tile('Tipografia 1', f.typography_primary || '—')}
-            ${this.tile('Tipografia 2', f.typography_secondary || '—')}
+            ${this.tile('Tipografía 1', f.typography_primary || '—')}
+            ${this.tile('Tipografía 2', f.typography_secondary || '—')}
             ${this.tile('Temas', (f.temas||[]).join(', ') || '—')}
           </div>
         </div>` : ''}
@@ -973,7 +973,7 @@ class DevLeadCreateOrgView extends DevBaseView {
         <div class="createorg-review-section">
           <h3 class="createorg-subhead">Operacion</h3>
           <div class="createorg-review-grid">
-            ${this.tile('Autonomia', f.level_of_autonomy)}
+            ${this.tile('Autonomía', f.level_of_autonomy)}
             ${this.tile('MFA', f.mfa_required ? 'Obligatorio' : 'Opcional')}
           </div>
         </div>
@@ -1415,7 +1415,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       return false;
     }
     if (this.form.method === 'docs') {
-      this.scrapeError = 'Scraping desde documentos aun no esta implementado. Usa URL o Manual por ahora.';
+      this.scrapeError = 'Scraping desde documentos aún no está implementado. Usa URL o Manual por ahora.';
       this.refreshMethodPane();
       return false;
     }
@@ -1537,7 +1537,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       try { f.name = new URL(f.brand_url).hostname.replace(/^www\./, ''); }
       catch (_) { f.name = f.brand_url; }
     }
-    if (!f.name) { this.setStatus('Falta el nombre de la organizacion.', 'error'); return; }
+    if (!f.name) { this.setStatus('Falta el nombre de la organización.', 'error'); return; }
 
     this._creating = true;
     this.setStatus('', '');
@@ -1589,14 +1589,14 @@ class DevLeadCreateOrgView extends DevBaseView {
         } catch (_) { /* la org ya quedo creada; el job se puede cerrar luego */ }
       }
 
-      this.showNotification(`Organizacion "${f.name}" creada.`, 'success');
+      this.showNotification(`Organización "${f.name}" creada.`, 'success');
       const dest = '/dev/lead/orgs';
       if (window.router) window.router.navigate(dest);
       else window.location.href = dest;
     } catch (err) {
       this._creating = false;
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="aisc-ico aisc-ico--check"></i> Crear organizacion'; }
-      this.setStatus(err?.message || 'Error al crear la organizacion.', 'error');
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="aisc-ico aisc-ico--check"></i> Crear organización'; }
+      this.setStatus(err?.message || 'Error al crear la organización.', 'error');
     }
   }
 
@@ -1637,7 +1637,7 @@ class DevLeadCreateOrgView extends DevBaseView {
         body: JSON.stringify({ url: f.brand_url, organization_id: orgId })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.job_id) throw new Error(data.error || `No se pudo iniciar el analisis (HTTP ${res.status})`);
+      if (!res.ok || !data.job_id) throw new Error(data.error || `No se pudo iniciar el análisis (HTTP ${res.status})`);
       this.autoJobId = data.job_id;
       this._pollAuto();
     } catch (err) {
@@ -1700,7 +1700,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       : '';
     return `
       <div class="createorg-auto-intg">
-        ${supported.length ? '<p class="provision-verify-meta">Conecta tu tienda para importar productos automaticamente:</p>' : ''}
+        ${supported.length ? '<p class="provision-verify-meta">Conecta tu tienda para importar productos automáticamente:</p>' : ''}
         ${btns ? `<div class="createorg-auto-intg-btns">${btns}</div>` : ''}
         ${note}
       </div>`;
@@ -1712,7 +1712,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     try {
       const { data: { session } } = await this.supabase.auth.getSession();
       const token = session?.access_token;
-      if (!token) { this.showNotification('Sesion no valida.', 'error'); return; }
+      if (!token) { this.showNotification('Sesión no valida.', 'error'); return; }
 
       let shop = null;
       if (provider === 'shopify') {
@@ -1729,7 +1729,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       // Redirige al provider; al volver, el exchange encola el populator (importa productos).
       window.location.href = json.authorize_url;
     } catch (err) {
-      this.showNotification(err?.message || 'No se pudo conectar la integracion.', 'error');
+      this.showNotification(err?.message || 'No se pudo conectar la integración.', 'error');
     }
   }
 
@@ -1875,7 +1875,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     catch (e) { this.showNotification(e?.message || 'No se pudo asignar el plan', 'error'); return; }
     const prefix = (typeof window.getOrgPathPrefix === 'function') ? window.getOrgPathPrefix(this.autoOrgId, this.approval.name || 'org') : '';
     const dest = prefix ? `${prefix}/dashboard` : '/dev/lead/orgs';
-    this.showNotification('Abriendo la organizacion en modo consumidor...', 'success');
+    this.showNotification('Abriendo la organización en modo consumidor...', 'success');
     if (window.router) window.router.navigate(dest); else window.location.href = dest;
   }
 
@@ -1950,14 +1950,14 @@ class DevLeadCreateOrgView extends DevBaseView {
       market:   ['Mercado e idioma', 'Donde y en que idioma opera la marca.'],
       voice:    ['Voz y mensaje', 'El ADN verbal: tono, propuesta, pilares y palabras.'],
       colors:   ['Paleta de colores', 'Los colores detectados de la marca. Ajusta o agrega.'],
-      fonts:    ['Tipografia y estetica', 'Las fuentes y el estilo visual.'],
+      fonts:    ['Tipografía y estética', 'Las fuentes y el estilo visual.'],
       products: ['Productos detectados', 'Lo que Vera encontro en el sitio. Quita lo que no sea un producto real; al avanzar se guardan.'],
       services: ['Servicios detectados', 'Los servicios que Vera identifico. Quita lo que no aplique; al avanzar se guardan y se enriquecen con IA.'],
       competitors: ['Competencia y monitoreo', 'Los competidores que Vera identifico. Revisa, corrige o quita; al avanzar se actualiza el monitoreo.'],
-      vera:     ['Agente de Vera', 'Activa la automatizacion: crea el equipo de IA Vera para esta marca. Opcional — puedes hacerlo despues.'],
-      owner:    ['Owner y miembros', 'Asigna un dueno y miembros a la organizacion. Opcional — por defecto queda a tu nombre (dev).'],
-      review:   ['Resumen', 'Revisa todo lo creado antes del ultimo paso.'],
-      plan:     ['Plan de la organizacion', 'Elige el plan. Es el ultimo paso: al confirmar se crea la org en produccion y se abre.']
+      vera:     ['Agente de Vera', 'Activa la automatización: crea el equipo de IA Vera para esta marca. Opcional — puedes hacerlo después.'],
+      owner:    ['Owner y miembros', 'Asigna un dueño y miembros a la organización. Opcional — por defecto queda a tu nombre (dev).'],
+      review:   ['Resumen', 'Revisa todo lo creado antes del último paso.'],
+      plan:     ['Plan de la organización', 'Elige el plan. Es el último paso: al confirmar se crea la org en producción y se abre.']
     }[key] || ['', ''];
   }
 
@@ -2015,7 +2015,7 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
   _apMarket() {
     const a = this.approval;
-    const localeOpts = [['es', 'Espanol'], ['en', 'English'], ['pt', 'Portugues']]
+    const localeOpts = [['es', 'Español'], ['en', 'English'], ['pt', 'Portugués']]
       .map(([v, l]) => `<option value="${v}" ${a.locale === v ? 'selected' : ''}>${l}</option>`).join('');
     const inList = this.MARKET_NICHES.includes(a.nicho_core);
     const nichoOpts = (a.nicho_core && !inList ? `<option value="${this.escapeHtml(a.nicho_core)}" selected>${this.escapeHtml(a.nicho_core)} (detectado)</option>` : '')
@@ -2037,7 +2037,7 @@ class DevLeadCreateOrgView extends DevBaseView {
       <div class="provision-field createorg-field-full"><label for="apTono">Tono de voz</label><select id="apTono" class="form-control">${toneOpts}</select></div>
       ${a.como_comunica ? `<div class="createorg-field-full createorg-insight"><span class="createorg-insight-tag"><i class="aisc-ico aisc-ico--eye"></i> Cómo comunica (visión)</span><p>${this.escapeHtml(a.como_comunica)}</p></div>` : ''}
       ${this._ta('Propuesta de valor', 'apPropuesta', a.propuesta_valor)}
-      ${this._ta('Mision / vision', 'apMision', a.mision_vision)}
+      ${this._ta('Misión / visión', 'apMision', a.mision_vision)}
       ${this._csv('Pilares', 'apPilares', a.pilares)}
       ${this._csv('Palabras clave', 'apClave', a.palabras_clave)}
       ${this._csv('Palabras prohibidas', 'apProhibidas', a.palabras_prohibidas)}
@@ -2062,8 +2062,8 @@ class DevLeadCreateOrgView extends DevBaseView {
   _apFonts() {
     const a = this.approval;
     return `
-      ${this._f('Tipografia principal', 'apFont1', a.typography_primary, 'Ej. Inter')}
-      ${this._f('Tipografia secundaria', 'apFont2', a.typography_secondary, 'Ej. Lora')}
+      ${this._f('Tipografía principal', 'apFont1', a.typography_primary, 'Ej. Inter')}
+      ${this._f('Tipografía secundaria', 'apFont2', a.typography_secondary, 'Ej. Lora')}
       ${this._f('Estetica', 'apEstetica', a.estetica, 'Ej. minimalista, premium')}
     `;
   }
@@ -2084,7 +2084,7 @@ class DevLeadCreateOrgView extends DevBaseView {
   _apServices() {
     const items = this.approval.services_detected || [];
     if (!items.length) {
-      return '<p class="cons-dim createorg-field-full">No se detectaron servicios en el sitio. Puedes agregarlos manualmente despues de crear la org.</p>';
+      return '<p class="cons-dim createorg-field-full">No se detectaron servicios en el sitio. Puedes agregarlos manualmente después de crear la org.</p>';
     }
     const rows = items.map((s, i) => `
       <div class="createorg-list-row" data-svc-idx="${i}">
@@ -2118,7 +2118,7 @@ class DevLeadCreateOrgView extends DevBaseView {
   _apVera() {
     const st = this.approval.veraStatus;
     if (st === 'done') {
-      return `<div class="createorg-field-full"><div class="createorg-insight"><span class="createorg-insight-tag"><i class="aisc-ico aisc-ico--bot"></i> Vera en camino</span><p>El agente se esta provisionando (VM dedicada, ~3-5 min). Cuando este healthy podra automatizar contenido, estrategia y monitoreo de la marca.</p></div></div>`;
+      return `<div class="createorg-field-full"><div class="createorg-insight"><span class="createorg-insight-tag"><i class="aisc-ico aisc-ico--bot"></i> Vera en camino</span><p>El agente se esta provisionando (VM dedicada, ~3-5 min). Cuando este healthy podrá automatizar contenido, estrategia y monitoreo de la marca.</p></div></div>`;
     }
     return `
       <div class="createorg-field-full">
@@ -2315,7 +2315,7 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   validateStep(key) {
     if (key === 'mode') {
-      if (!this.creationMode) return 'Elige como crear la organizacion.';
+      if (!this.creationMode) return 'Elige como crear la organización.';
     }
     if (key === 'auto') {
       if (!this.form.brand_url) return 'Agrega la URL de tu web.';

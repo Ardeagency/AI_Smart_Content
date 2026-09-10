@@ -40,12 +40,12 @@
       var visits=0;
       try{ visits=(parseInt(localStorage.getItem('arde_v_'+KEY)||'0',10)||0)+1; localStorage.setItem('arde_v_'+KEY,String(visits)); }catch(e){}
       var quien=(u.name?u.name+' — ':'')+u.email;
-      var rep=visits>=2?(' (sesion #'+visits+' en este navegador)'):'';
-      function ping(loc){ post('ARDE - Sesion iniciada: '+LABEL,'unlock,bust_in_silhouette',
-        'Inicio sesion en la consola: '+quien+rep+'\n'+loc+'\nLlego desde: '+(document.referrer||'enlace directo')+'\nDispositivo: '+ua.slice(0,90)); }
+      var rep=visits>=2?(' (sesión #'+visits+' en este navegador)'):'';
+      function ping(loc){ post('ARDE - Sesión iniciada: '+LABEL,'unlock,bust_in_silhouette',
+        'Inicio sesión en la consola: '+quien+rep+'\n'+loc+'\nLlego desde: '+(document.referrer||'enlace directo')+'\nDispositivo: '+ua.slice(0,90)); }
       fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(d){if(/rionegro|llanogrande/i.test((d.city||'')+' '+(d.region||''))&&!TESTMODE)ARDE_SELF=true;
-        ping('Ubicacion: '+(d.city||'?')+', '+(d.region||'')+' '+(d.country_name||'?')+' (IP '+(d.ip||'?')+')');
-      }).catch(function(){ ping('Ubicacion: no disponible'); });
+        ping('Ubicación: '+(d.city||'?')+', '+(d.region||'')+' '+(d.country_name||'?')+' (IP '+(d.ip||'?')+')');
+      }).catch(function(){ ping('Ubicación: no disponible'); });
     },1500);
   }catch(e){}
 })();

@@ -309,7 +309,7 @@
         <div class="cc-field-head"><span class="cc-field-label">${this.escapeHtml(label)}</span><span class="cc-field-count ${atMax ? 'is-max' : ''}">${items.length}/${m}</span></div>
         <div class="cc-tags">
           ${chips}
-          <input class="cc-tag-input" type="text" placeholder="${atMax ? 'Limite alcanzado' : 'Escribe y Enter'}" ${atMax ? 'disabled' : ''} />
+          <input class="cc-tag-input" type="text" placeholder="${atMax ? 'Límite alcanzado' : 'Escribe y Enter'}" ${atMax ? 'disabled' : ''} />
         </div>
       </div>`;
   };
@@ -427,8 +427,8 @@
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon cc-node-icon--camp cc-node-icon--hero"><i class="aisc-ico aisc-ico--campaign"></i></span>
         <div class="cc-node-head-text">
-          <span class="cc-node-title">Campana</span>
-          <span class="cc-node-realname" title="${this.escapeHtml(c.nombre_campana || 'Campana')}">${this.escapeHtml(c.nombre_campana || 'Sin nombre')}</span>
+          <span class="cc-node-title">Campaña</span>
+          <span class="cc-node-realname" title="${this.escapeHtml(c.nombre_campana || 'Campaña')}">${this.escapeHtml(c.nombre_campana || 'Sin nombre')}</span>
         </div>
         <div class="cc-node-actions">
           <span class="cc-node-sync ${synced ? 'is-synced' : ''}" title="${this.escapeHtml(syncTitle)}"><i class="aisc-ico aisc-ico--refresh"></i></span>
@@ -485,7 +485,7 @@
     ].join('');
     return `
     <div class="cc-node cc-node--adset cc-node--mini" data-node-key="${n.key}" data-type="adset" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
-      <span class="cc-node-port cc-node-port--in" data-port="in" title="${__('Campana')}"></span>
+      <span class="cc-node-port cc-node-port--in" data-port="in" title="${__('Campaña')}"></span>
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon cc-node-icon--adset"><i class="aisc-ico aisc-ico--layers"></i></span>
         <div class="cc-node-head-text">
@@ -541,7 +541,7 @@
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon cc-node-icon--stopt"><i class="aisc-ico aisc-ico--store"></i></span>
         <div class="cc-node-head-text">
-          <span class="cc-node-title">${__('Optimizacion de tienda')}</span>
+          <span class="cc-node-title">${__('Optimización de tienda')}</span>
           <span class="cc-node-name" title="${this.escapeHtml(s.nombre || '')}">${this.escapeHtml(s.nombre || __('Sin nombre'))}</span>
         </div>
         <span class="cc-node-status cc-node-status--${this.escapeHtml(s.status || 'draft')}" title="${this.escapeHtml(statusLabel || __('Borrador'))}"></span>
@@ -1322,7 +1322,7 @@
     const count = cont.querySelector('.cc-field-count');
     if (count) { count.textContent = `${vals.length}/${max}`; count.classList.toggle('is-max', atMax); }
     const input = cont.querySelector('.cc-tag-input');
-    if (input) { input.disabled = atMax; input.placeholder = atMax ? 'Limite alcanzado' : 'Escribe y Enter'; }
+    if (input) { input.disabled = atMax; input.placeholder = atMax ? 'Límite alcanzado' : 'Escribe y Enter'; }
 
     const type = nodeEl.getAttribute('data-type');
     const id   = nodeEl.getAttribute('data-id');
@@ -1847,8 +1847,8 @@
   P._librarySections = function () {
     return [
       { key: 'audiences', label: 'Objetivos de Audiencia', icon: 'aisc-ico aisc-ico--audience' },
-      { key: 'campaigns', label: 'Campanas',               icon: 'aisc-ico aisc-ico--campaign' },
-      { key: 'concepts',  label: 'Objetivos de Campana',   icon: 'aisc-ico aisc-ico--idea' },
+      { key: 'campaigns', label: 'Campañas',               icon: 'aisc-ico aisc-ico--campaign' },
+      { key: 'concepts',  label: 'Objetivos de Campaña',   icon: 'aisc-ico aisc-ico--idea' },
       { key: 'products',  label: 'Productos',           icon: 'aisc-ico aisc-ico--product' },
       { key: 'services',  label: 'Servicios',           icon: 'aisc-ico aisc-ico--tag' },
       { key: 'places',    label: 'Lugares',             icon: 'aisc-ico aisc-ico--places' },
@@ -1867,11 +1867,11 @@
     if (key === 'campaigns') {
       this._loadOnCanvas();
       return (this._campaigns || []).filter((c) => c.last_synced_at && !this._realOnCanvas(c))
-        .map((c) => ({ id: c.id, name: c.nombre_campana || 'Campana', sub: c.status || '', camp: true }));
+        .map((c) => ({ id: c.id, name: c.nombre_campana || 'Campaña', sub: c.status || '', camp: true }));
     }
     if (key === 'concepts') {
       return (this._campaigns || []).filter((c) => !c.last_synced_at)
-        .map((c) => ({ id: c.id, name: c.nombre_campana || 'Campana', sub: c.status || '' }));
+        .map((c) => ({ id: c.id, name: c.nombre_campana || 'Campaña', sub: c.status || '' }));
     }
     return this._libCache[key]; // lazy: undefined si no se ha cargado
   };
@@ -2327,7 +2327,7 @@
 
   P._generateReport = async function (scope) {
     const titleByScope = {
-      all: 'Informe integral', campaign: 'Informe de campana', audience: 'Informe de audiencia',
+      all: 'Informe integral', campaign: 'Informe de campaña', audience: 'Informe de audiencia',
       ecosystem: 'Aprendizaje del ecosistema', selection: 'Informe del seleccionado',
     };
     const body  = document.getElementById('ccReportBody');
@@ -2355,7 +2355,7 @@
     try {
       const { data: { session } } = await this._supabase.auth.getSession();
       const token = session?.access_token;
-      if (!token) throw new Error('Sesion expirada');
+      if (!token) throw new Error('Sesión expirada');
       const res = await fetch('/.netlify/functions/api-generate-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

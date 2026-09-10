@@ -180,7 +180,7 @@ class DevLeadConsumersView extends DevBaseView {
       ? (c.affiliations || []).map(a =>
           `<span class="cons-org-chip" title="${this.escapeHtml(this.ROLE_LABEL[a.role] || a.role)}">${this.escapeHtml(a.name)} <em>${this.escapeHtml(this.ROLE_LABEL[a.role] || a.role)}</em></span>`
         ).join('')
-      : '<span class="cons-dim">Sin organizacion</span>';
+      : '<span class="cons-dim">Sin organización</span>';
 
     const created = c.created_at
       ? new Date(c.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -242,7 +242,7 @@ class DevLeadConsumersView extends DevBaseView {
               ? '<span class="cons-aff-lock" title="Owner: se gestiona al crear/transferir la org"><i class="aisc-ico aisc-ico--lock"></i></span>'
               : `<button type="button" class="cons-aff-remove" data-remove-org="${this.escapeHtml(a.organization_id)}" title="Quitar afiliacion"><i class="aisc-ico aisc-ico--close"></i></button>`}
           </li>`).join('')
-      : '<li class="cons-aff-empty">Sin afiliaciones todavia.</li>';
+      : '<li class="cons-aff-empty">Sin afiliaciones todavía.</li>';
 
     // Orgs disponibles para anadir = todas menos las ya afiliadas.
     const affiliatedIds = new Set(affs.map(a => a.organization_id));
@@ -307,7 +307,7 @@ class DevLeadConsumersView extends DevBaseView {
     const fd = new FormData(e.target);
     const organization_id = (fd.get('organization_id') || '').toString();
     const role = (fd.get('role') || 'viewer').toString();
-    if (!organization_id) return this.setModalStatus('Selecciona una organizacion.', 'error');
+    if (!organization_id) return this.setModalStatus('Selecciona una organización.', 'error');
 
     this.setModalStatus('Afiliando...', '');
     try {
@@ -319,7 +319,7 @@ class DevLeadConsumersView extends DevBaseView {
         try { const ctx = await error?.context?.json?.(); if (ctx?.error) msg = ctx.error; } catch (_) {}
         throw new Error(msg);
       }
-      this.showNotification('Afiliacion guardada.', 'success');
+      this.showNotification('Afiliación guardada.', 'success');
       await this.load();
       this._renderModalInner(userId);
       this.renderRows((this.container.querySelector('#consSearch')?.value || '').trim().toLowerCase());
@@ -343,7 +343,7 @@ class DevLeadConsumersView extends DevBaseView {
         try { const ctx = await error?.context?.json?.(); if (ctx?.error) msg = ctx.error; } catch (_) {}
         throw new Error(msg);
       }
-      this.showNotification('Afiliacion eliminada.', 'success');
+      this.showNotification('Afiliación eliminada.', 'success');
       await this.load();
       this._renderModalInner(userId);
       this.renderRows((this.container.querySelector('#consSearch')?.value || '').trim().toLowerCase());

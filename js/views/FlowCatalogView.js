@@ -153,7 +153,7 @@ class FlowCatalogView extends BaseView {
         <div class="flow-catalog-content" id="flowCatalogContent" style="display: none;">
           <header class="flow-catalog-saved-header">
             <h1 class="flow-catalog-saved-title">My Flows</h1>
-            <p class="flow-catalog-saved-sub">${__('Tus flujos guardados. Toca el icono de guardar en cualquier flujo del catalogo para tenerlo aqui a la mano.')}</p>
+            <p class="flow-catalog-saved-sub">${__('Tus flujos guardados. Toca el icono de guardar en cualquier flujo del catálogo para tenerlo aquí a la mano.')}</p>
           </header>
           <section class="flow-catalog-row-section flow-catalog-row-section--unframed">
             <div class="flow-catalog-saved-grid" id="savedFlowsGrid"></div>
@@ -186,7 +186,7 @@ class FlowCatalogView extends BaseView {
             <div class="flow-toolbar-search">
               <i class="aisc-ico aisc-ico--search" aria-hidden="true"></i>
               <input type="search" id="flowSearchInput" placeholder="${__('Buscar flows...')}" autocomplete="off" aria-label="${__('Buscar flows')}">
-              <button type="button" class="flow-search-clear" id="flowSearchClear" style="display:none" aria-label="${__('Limpiar busqueda')}"><i class="aisc-ico aisc-ico--close"></i></button>
+              <button type="button" class="flow-search-clear" id="flowSearchClear" style="display:none" aria-label="${__('Limpiar búsqueda')}"><i class="aisc-ico aisc-ico--close"></i></button>
             </div>
             <div class="flow-toolbar-controls">
               <select id="flowSortSelect" class="flow-toolbar-select" aria-label="${__('Ordenar')}">
@@ -204,7 +204,7 @@ class FlowCatalogView extends BaseView {
                 <option value="document">${__('Documento')}</option>
                 <option value="mixed">${__('Mixto')}</option>
               </select>
-              <select id="flowFilterExec" class="flow-toolbar-select" aria-label="${__('Modo de ejecucion')}">
+              <select id="flowFilterExec" class="flow-toolbar-select" aria-label="${__('Modo de ejecución')}">
                 <option value="">${__('Todo modo')}</option>
                 <option value="single_step">${__('Un paso')}</option>
                 <option value="multi_step">${__('Multi paso')}</option>
@@ -810,7 +810,7 @@ class FlowCatalogView extends BaseView {
             <div class="flow-card-info-meta">
               ${primaryTagHtml}
               ${usesHtml}
-              <span class="flow-card-info-credits" title="${__('Creditos por ejecucion')}"><i class="aisc-ico aisc-ico--zap"></i>${cost}</span>
+              <span class="flow-card-info-credits" title="${__('Créditos por ejecución')}"><i class="aisc-ico aisc-ico--zap"></i>${cost}</span>
             </div>
             <div class="flow-card-info-extra">
               <span class="flow-card-info-pill">${outputTypeLabel}</span>
@@ -1150,7 +1150,7 @@ class FlowCatalogView extends BaseView {
       grid.innerHTML = this.emptyState({
         icon: 'aisc-ico aisc-ico--bookmark',
         title: __('Aun no has guardado flujos'),
-        subtitle: __('Explora el catalogo y toca el icono de guardar en los flujos que mas uses. Apareceran aqui para acceso rapido.'),
+        subtitle: __('Explora el catálogo y toca el icono de guardar en los flujos que más uses. Aparecerán aquí para acceso rápido.'),
       });
       return;
     }
@@ -1168,8 +1168,8 @@ class FlowCatalogView extends BaseView {
       gallery.innerHTML = this.emptyState({
         iconSrc: '/recursos/icons/flows.svg',
         icon: 'aisc-ico aisc-ico--sparkle',
-        title: __('Tu catalogo de flows esta por encenderse'),
-        subtitle: __('Los flows son recetas listas para producir contenido de tu marca: posts, historias, piezas de campaña. En cuanto se publiquen, apareceran aqui organizados por categoria.'),
+        title: __('Tu catálogo de flows esta por encenderse'),
+        subtitle: __('Los flows son recetas listas para producir contenido de tu marca: posts, historias, piezas de campaña. En cuanto se publiquen, aparecerán aquí organizados por categoría.'),
       });
       return;
     }
@@ -1295,7 +1295,7 @@ class FlowCatalogView extends BaseView {
         <div class="flow-catalog-empty flow-catalog-empty--teach" aria-live="polite">
           <i class="aisc-ico flow-catalog-empty-icon aisc-ico--search" aria-hidden="true"></i>
           <p class="flow-catalog-empty-title">${__('Sin resultados')}</p>
-          <p class="flow-catalog-empty-sub">${__('Prueba con otra busqueda o quita algun filtro.')}</p>
+          <p class="flow-catalog-empty-sub">${__('Prueba con otra búsqueda o quita algún filtro.')}</p>
         </div>`;
       return;
     }
@@ -1551,7 +1551,7 @@ class FlowCatalogView extends BaseView {
           <div class="exec-card-info">
             <h3 class="exec-card-flow">${this.escapeHtml(r.flow_name)}</h3>
             <span class="exec-card-when">${this.escapeHtml(this.relativeTime(r.created_at))}</span>
-            <span class="exec-card-resume"><i class="aisc-ico aisc-ico--arrow-right"></i> ${__('Continuar sesion')}</span>
+            <span class="exec-card-resume"><i class="aisc-ico aisc-ico--arrow-right"></i> ${__('Continuar sesión')}</span>
           </div>
         </div>
       </button>`;
@@ -2009,7 +2009,7 @@ class FlowCatalogView extends BaseView {
     const runs = await this.loadFlowRuns(flow.id, 2);
     if (!document.body.contains(host)) return; // modal cerrado mientras cargaba
     if (!runs.length) {
-      host.innerHTML = `<div class="flow-detail-runs-empty">${__('Este flow aun no tiene producciones. Cuando se ejecute, veras aqui las ultimas.')}</div>`;
+      host.innerHTML = `<div class="flow-detail-runs-empty">${__('Este flow aún no tiene producciones. Cuando se ejecute, verás aquí las últimas.')}</div>`;
       return;
     }
     host.innerHTML = runs.map(r => this.renderRunItem(r)).join('');
@@ -2049,7 +2049,7 @@ class FlowCatalogView extends BaseView {
       : '';
 
     const catLabel = [flow._categoryName, flow._subcategoryName].filter(Boolean).map(s => this.escapeHtml(s)).join('  ·  ');
-    const desc = flow.description ? this.escapeHtml(flow.description) : __('Sin descripcion disponible para este flow.');
+    const desc = flow.description ? this.escapeHtml(flow.description) : __('Sin descripción disponible para este flow.');
 
     const meta = [
       runs > 0 ? `<span class="flow-detail-meta-item"><i class="aisc-ico aisc-ico--play"></i>${this.formatCount(runs)} ${__('usos')}</span>` : '',
@@ -2075,7 +2075,7 @@ class FlowCatalogView extends BaseView {
       <div class="flow-detail-bg-scrim" aria-hidden="true"></div>
       <div class="flow-detail-grid">
         <aside class="flow-detail-col flow-detail-col--runs">
-          <h3 class="flow-detail-section-title">${__('Ultimas producciones')}</h3>
+          <h3 class="flow-detail-section-title">${__('Últimas producciones')}</h3>
           <div class="flow-detail-runs" data-runs>
             <div class="flow-detail-run flow-detail-run--skel"></div>
             <div class="flow-detail-run flow-detail-run--skel"></div>

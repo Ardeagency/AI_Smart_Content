@@ -1305,7 +1305,7 @@ class OrganizationView extends BaseView {
   _creditosHref() {
     const prefix = (this.orgId && typeof window.getOrgPathPrefix === 'function')
       ? window.getOrgPathPrefix(this.orgId, this.org?.name || '') : '';
-    return `${prefix || ''}/creditos`;
+    return `${prefix || ''}/créditos`;
   }
 
   /**

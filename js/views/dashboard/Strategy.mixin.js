@@ -203,12 +203,12 @@
       const trunc = (s, n) => { const t = String(s || '').trim(); return t.length > n ? t.slice(0, n - 1).trimEnd() + '…' : t; };
       let titleHtml, desc;
       if (top) {
-        titleHtml = `${__('Tu apuesta mas fuerte es')} <span class="mb-bstat-verdict mb-bstat-verdict--${lvl}">${this._esc(top.title)}</span>`;
+        titleHtml = `${__('Tu apuesta más fuerte es')} <span class="mb-bstat-verdict mb-bstat-verdict--${lvl}">${this._esc(top.title)}</span>`;
         const seed = trunc(top.description, 150);
         desc = (seed ? seed + ' ' : '')
           + __('Vera ejecuta lo reversible y te informa; solo te pide el OK para lo que gasta o publica.');
       } else {
-        titleHtml = `<span class="mb-bstat-verdict mb-bstat-verdict--good">${inProd.length === 1 ? __('1 estrategia en produccion') : __('{n} estrategias en produccion', { n: inProd.length })}</span>`;
+        titleHtml = `<span class="mb-bstat-verdict mb-bstat-verdict--good">${inProd.length === 1 ? __('1 estrategia en producción') : __('{n} estrategias en producción', { n: inProd.length })}</span>`;
         desc = __('No tienes decisiones pendientes: Vera ya esta ejecutando lo aprobado. Mide su impacto en Mi Marca y ajusta el rumbo.');
       }
 

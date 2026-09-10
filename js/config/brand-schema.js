@@ -62,7 +62,7 @@
    */
   function brandSchemaBlocksContainer() {
     return [
-      { field: 'creative_brief',        label: _t('Sintesis creativa'),        type: 'textarea', maxChars: 200 },
+      { field: 'creative_brief',        label: _t('Síntesis creativa'),        type: 'textarea', maxChars: 200 },
       { field: 'idiomas_contenido',     label: _t('Idiomas de contenido'),     type: 'array',    maxItems: 3 },
       { field: 'mercado_objetivo',      label: _t('Mercado objetivo'),         type: 'array',    maxItems: 4 },
       { field: 'nicho_core',            label: _t('Nicho core'),               type: 'select' },

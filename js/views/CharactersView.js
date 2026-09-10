@@ -46,7 +46,7 @@ class CharactersView extends BaseView {
   <section class="products-list-section" id="charactersListSection">
     <div class="products-list-section-head">
       <div class="products-list-section-head-main">
-        <h2 class="products-list-section-title">${__('Catalogo')}</h2>
+        <h2 class="products-list-section-title">${__('Catálogo')}</h2>
         <span class="products-list-section-count" id="charactersListCount">0</span>
       </div>
     </div>
@@ -59,7 +59,7 @@ class CharactersView extends BaseView {
     icon: 'aisc-ico aisc-ico--audience',
     iconSrc: '/recursos/icons/Characters.svg',
     title: __('Crea tu primer personaje'),
-    subtitle: __('Sube fotos de referencia y Vera arma la ficha: rasgos, vestuario y rol. Apareceran aqui listos para protagonizar tus producciones.'),
+    subtitle: __('Sube fotos de referencia y Vera arma la ficha: rasgos, vestuario y rol. Aparecerán aquí listos para protagonizar tus producciones.'),
     primaryLabel: __('+ Personaje'),
     secondaryLabel: __('Adjuntar personaje'),
   })}
@@ -196,7 +196,7 @@ class CharactersView extends BaseView {
       const { error } = await this.supabase.from('brand_characters').insert({
         entity_id: entityId,
         nombre_personaje: 'Nuevo personaje',
-        descripcion_personaje: 'Pendiente de descripcion.',
+        descripcion_personaje: 'Pendiente de descripción.',
         tipo_personaje: 'otro',
       });
       if (error) throw error;
@@ -273,7 +273,7 @@ class CharactersView extends BaseView {
 
   async _onDeleteCharacter(characterId, btn) {
     if (!characterId || !this.supabase) return;
-    if (!confirm(__('¿Eliminar este personaje? Se borraran tambien sus fotos.'))) return;
+    if (!confirm(__('¿Eliminar este personaje? Se borrarán también sus fotos.'))) return;
     if (btn) btn.disabled = true;
     try {
       const { error } = await this.supabase.from('brand_characters').delete().eq('id', characterId);
@@ -338,14 +338,14 @@ class CharactersView extends BaseView {
     const body = `
       <div class="attach-product-wizard" data-step="attach">
         <section class="attach-product-step attach-product-step--form" data-panel="attach">
-          <p class="attach-product-intro">${__('Sube fotos de referencia del personaje (poses, vestuario, expresiones). Vera analiza la imagen con vision y arma la ficha (rasgos, vestuario, rol). Solo te cobra el costo real de OpenAI.')}</p>
+          <p class="attach-product-intro">${__('Sube fotos de referencia del personaje (poses, vestuario, expresiones). Vera analiza la imagen con visión y arma la ficha (rasgos, vestuario, rol). Solo te cobra el costo real de OpenAI.')}</p>
           <div class="attach-product-field-group" data-group="photos">
             <span class="attach-product-field-label">${__('Fotos del personaje')}</span>
             <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="${__('Subir fotos del personaje')}">
               <input type="file" class="attach-product-photos-input" multiple accept="image/jpeg,image/png,image/webp,image/jpg" hidden />
               <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
               <span class="attach-product-dropzone-text">${__('Arrastra fotos o hace click para elegirlas')}</span>
-              <span class="attach-product-dropzone-hint">${__('JPG, PNG, WebP · max 10 imagenes · 25MB c/u')}</span>
+              <span class="attach-product-dropzone-hint">${__('JPG, PNG, WebP · max 10 imágenes · 25MB c/u')}</span>
             </div>
             <ul class="attach-product-file-list" hidden></ul>
           </div>
@@ -386,7 +386,7 @@ class CharactersView extends BaseView {
       if (!photoFiles.length) { this._showNotification(__('Adjunta al menos una foto'), 'error'); return; }
       const invalid = photoFiles.find((f) => !/^image\//.test(f.type));
       if (invalid) return this._showNotification(__('"{name}" no es una imagen', { name: invalid.name }), 'error');
-      if (photoFiles.length > 10) return this._showNotification(__('Maximo 10 imagenes por ficha'), 'error');
+      if (photoFiles.length > 10) return this._showNotification(__('Máximo 10 imágenes por ficha'), 'error');
       const oversize = photoFiles.find((f) => f.size > 25 * 1024 * 1024);
       if (oversize) return this._showNotification(__('"{name}" supera 25MB', { name: oversize.name }), 'error');
       submitBtn.disabled = true;
@@ -451,7 +451,7 @@ class CharactersView extends BaseView {
 
   async _analyzePhotosAndCreateCharacter({ files, modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesion no disponible'), 'error');
+      this._showNotification(__('Sesión no disponible'), 'error');
       modalHandle?.close();
       return;
     }
@@ -509,7 +509,7 @@ class CharactersView extends BaseView {
   async _callFicheCharacterFunction({ characterId, payload, modalHandle, setHint }) {
     const { data: sessionData } = await this.supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) throw new Error(__('No hay sesion activa'));
+    if (!accessToken) throw new Error(__('No hay sesión activa'));
 
     const resp = await fetch('/.netlify/functions/api-characters-generate-fiche', {
       method: 'POST',
@@ -526,23 +526,23 @@ class CharactersView extends BaseView {
       const errMsg = result.error || `HTTP ${resp.status}`;
       const detail = result.detail ? ` (${result.detail})` : '';
       if (resp.status === 402) {
-        this._showNotification(__('Creditos insuficientes. Necesitas {n} creditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
+        this._showNotification(__('Créditos insuficientes. Necesitas {n} créditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
       } else {
         this._showNotification(__('Error generando ficha: {msg}', { msg: `${errMsg}${detail}` }), 'error');
       }
       throw new Error(errMsg);
     }
 
-    setHint(__('Ficha generada (costo: {n} creditos). Recargando listado...', { n: result.credits_charged.toFixed(4) }));
+    setHint(__('Ficha generada (costo: {n} créditos). Recargando listado...', { n: result.credits_charged.toFixed(4) }));
     this._invalidateCache();
     window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
     modalHandle?.close();
     const imgCount = result.images?.inserted || 0;
     if (result.images?.error) {
-      this._showNotification(__('Ficha generada · imagenes no se vincularon: {err}', { err: result.images.error }), 'error');
+      this._showNotification(__('Ficha generada · imágenes no se vincularon: {err}', { err: result.images.error }), 'error');
     } else {
       this._showNotification(
-        __('Ficha de personaje generada · {n} creditos · {count} {fotos}', {
+        __('Ficha de personaje generada · {n} créditos · {count} {fotos}', {
           n: result.credits_charged.toFixed(4),
           count: imgCount,
           fotos: imgCount === 1 ? __('foto') : __('fotos'),

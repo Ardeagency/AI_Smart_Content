@@ -141,11 +141,11 @@
               <span class="cga-hint">${esc(__('el mercado lo busca · nadie lo cubre'))}</span>
               <span class="tend-oc-acts">
                 <button type="button" class="cga-add tend-oc-no" data-oc-act="dismissed"
-                        title="${esc(__('No me interesa'))}" aria-label="${esc(__('Descartar oceano'))}">
+                        title="${esc(__('No me interesa'))}" aria-label="${esc(__('Descartar océano'))}">
                   <i class="aisc-ico aisc-ico--close" aria-hidden="true"></i>
                 </button>
                 <button type="button" class="cga-add tend-oc-do" data-oc-act="work"
-                        title="${esc(__('Trabajarlo con Vera'))}" aria-label="${esc(__('Trabajar este oceano con Vera'))}">
+                        title="${esc(__('Trabajarlo con Vera'))}" aria-label="${esc(__('Trabajar este océano con Vera'))}">
                   <i class="aisc-ico aisc-ico--sparkle" aria-hidden="true"></i>
                 </button>
               </span>
@@ -321,26 +321,26 @@
 
       let titleTail, desc;
       if (hot && blue) {
-        titleTail = __('"{k}" esta en tendencia y "{t}" sigue sin dueno', { k: hot.theme, t: blue.topic_label || blue.topic });
-        desc = __('"{k}" esta haciendo boom en tu nicho y "{t}" tiene demanda que ningun rival cubre. Cada momento es un Category Entry Point: crea contenido ahora, mientras el tema esta caliente y el terreno libre — asi capturas la ola antes que la competencia.', {
+        titleTail = __('"{k}" está en tendencia y "{t}" sigue sin dueño', { k: hot.theme, t: blue.topic_label || blue.topic });
+        desc = __('"{k}" esta haciendo boom en tu nicho y "{t}" tiene demanda que ningún rival cubre. Cada momento es un Category Entry Point: crea contenido ahora, mientras el tema esta caliente y el terreno libre — así capturas la ola antes que la competencia.', {
           k: hot.theme, t: blue.topic_label || blue.topic,
         });
       } else if (hot) {
-        titleTail = __('"{k}" esta en tendencia en tu nicho', { k: hot.theme });
+        titleTail = __('"{k}" está en tendencia en tu nicho', { k: hot.theme });
         desc = __('"{k}" esta haciendo boom en tu nicho ahora. Es un momento fresco que tu audiencia esta viviendo: crea contenido para aprovecharlo mientras esta caliente.', {
           k: hot.theme,
         });
       } else if (blue) {
         const zero = Number(blue.competitor_post_count) === 0;
         titleTail = zero
-          ? __('"{t}" — nadie lo cubre todavia', { t: blue.topic_label || blue.topic })
+          ? __('"{t}" — nadie lo cubre todavía', { t: blue.topic_label || blue.topic })
           : __('"{t}" esta subexplotado', { t: blue.topic_label || blue.topic });
-        desc = __('El mercado pide "{t}" y tu competencia casi no lo cubre. Es terreno libre: ocupalo con contenido optimizado para SEO y GEO y quedate con esa ocasion como Category Entry Point antes de que lo hagan ellos.', {
+        desc = __('El mercado pide "{t}" y tu competencia casi no lo cubre. Es terreno libre: ocúpalo con contenido optimizado para SEO y GEO y quédate con esa ocasión como Category Entry Point antes de que lo hagan ellos.', {
           t: blue.topic_label || blue.topic,
         });
       } else {
-        titleTail = __('se acerca "{e}" en {d} dia(s)', { e: nextEv.event_name, d: Number(nextEv.days_until) || 0 });
-        desc = __('El nicho esta tranquilo, pero "{e}" se acerca. Cada fecha es un Category Entry Point: prepara contenido optimizado para SEO y GEO con anticipacion para llegar cuando el mundo este mirando.', {
+        titleTail = __('se acerca "{e}" en {d} día(s)', { e: nextEv.event_name, d: Number(nextEv.days_until) || 0 });
+        desc = __('El nicho esta tranquilo, pero "{e}" se acerca. Cada fecha es un Category Entry Point: prepara contenido optimizado para SEO y GEO con anticipación para llegar cuando el mundo este mirando.', {
           e: nextEv.event_name,
         });
       }

@@ -114,7 +114,7 @@
     // ── Sin tablero asignado (se pintan cuando exista dónde) ───────────────
     recalibracion:        { tab: null,         layout: 'ensayo',  icon: 'refresh',       label: () => __('Qué cambió en mi cabeza'),  sub: () => __('La creencia que se me cayó') },
     humildad:             { tab: null,         layout: 'ensayo',  icon: 'help',          label: () => __('¿Qué no estoy viendo?'),    sub: () => __('Dónde se acaba mi lectura') },
-    a2a_readiness:        { tab: null,         layout: 'ensayo',  icon: 'bot',           label: () => __('Legible para máquinas'),    sub: () => __('Si una IA comparara tu categoría, ¿te elegiría?') },
+    a2a_readiness:        { tab: null,         layout: 'ensayo',  icon: 'bot',           label: () => __('Legible para máquinas'),    sub: () => __('Si una IA comparará tu categoría, ¿te elegiría?') },
   };
 
   /* La Intuición es la MISMA lente en los tres tabs, pero NO el mismo sujeto:

@@ -1121,7 +1121,7 @@ class LivingManager {
         const fromPending = (this.pendingEdits || []).map(p => ({
             contentType: 'image',
             fileUrl: null,
-            prompt: p.error ? `Error: ${p.error}` : 'Edicion en curso...',
+            prompt: p.error ? `Error: ${p.error}` : 'Edición en curso...',
             run: null,
             output: null,
             created_at: p.createdAt,
@@ -1598,7 +1598,7 @@ class LivingManager {
                 <i class="aisc-ico aisc-ico--video"></i>
             </div>`;
         return `
-            <article class="living-masonry-item history-video-card" role="listitem" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}" aria-label="${this.escapeHtml(flowName || 'Produccion de video')}">
+            <article class="living-masonry-item history-video-card" role="listitem" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}" aria-label="${this.escapeHtml(flowName || 'Producción de video')}">
                 <figure class="history-video-card-thumbnail-wrap">${thumbnailHtml}</figure>
                 ${this._renderCardOverlay(output?.id, finalUrl, this.escapeHtml(promptSafe))}
                 <figcaption class="history-card-flow-name">${this.escapeHtml(flowName)}</figcaption>
@@ -1632,10 +1632,10 @@ class LivingManager {
         const alphaCls = hasAlpha ? ' is-alpha-bg' : '';
 
         return `
-            <article class="living-masonry-item history-image-card${alphaCls}" role="listitem" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}" aria-label="${this.escapeHtml(flowName || 'Produccion de imagen')}">
+            <article class="living-masonry-item history-image-card${alphaCls}" role="listitem" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}" aria-label="${this.escapeHtml(flowName || 'Producción de imagen')}">
                 <figure class="history-image-card-media">
                     ${finalUrl
-                        ? `<img src="${this.escapeHtml(finalUrl)}" alt="${this.escapeHtml(flowName || 'Produccion')}" loading="${loadingAttr}" decoding="async" fetchpriority="${fetchAttr}" onerror="this.closest('figure').innerHTML='<div class=\\'history-image-card-fallback\\'><i class=\\'fas fa-image\\'></i></div>';" />`
+                        ? `<img src="${this.escapeHtml(finalUrl)}" alt="${this.escapeHtml(flowName || 'Producción')}" loading="${loadingAttr}" decoding="async" fetchpriority="${fetchAttr}" onerror="this.closest('figure').innerHTML='<div class=\\'history-image-card-fallback\\'><i class=\\'fas fa-image\\'></i></div>';" />`
                         : `<div class="history-image-card-fallback" aria-hidden="true"><i class="aisc-ico aisc-ico--image"></i></div>`
                     }
                 </figure>
@@ -1648,7 +1648,7 @@ class LivingManager {
     renderTextCard(run, output, index) {
         const productionId = run?.id || output?.id;
         return `
-            <article class="living-masonry-item history-text-card" role="listitem" data-production-id="${productionId}" data-run-id="${run?.id || ''}" aria-label="Produccion de texto">
+            <article class="living-masonry-item history-text-card" role="listitem" data-production-id="${productionId}" data-run-id="${run?.id || ''}" aria-label="Producción de texto">
                 <div class="history-text-card-icon" aria-hidden="true">?</div>
                 <p class="history-text-card-title">Produccion de texto</p>
             </article>
@@ -2019,7 +2019,7 @@ class LivingManager {
                     <span class="campaign-picker-name">${this.escapeHtml(c.nombre_campana || 'Campaña')}</span>
                     ${c.status ? `<em class="campaign-picker-status">${this.escapeHtml(c.status)}</em>` : ''}
                 </button>`).join('')
-            : `<div class="campaign-picker-empty">No hay campañas en esta organizacion.</div>`;
+            : `<div class="campaign-picker-empty">No hay campañas en esta organización.</div>`;
         pop.innerHTML = `
             <div class="campaign-picker-head">Agregar ${ids.length} a una campaña</div>
             <div class="campaign-picker-list">${list}</div>`;
@@ -2125,7 +2125,7 @@ class LivingManager {
             } else {
                 imgEl.removeAttribute('src');
             }
-            imgEl.alt = (typeof data?.prompt === 'string' ? data.prompt : 'Produccion');
+            imgEl.alt = (typeof data?.prompt === 'string' ? data.prompt : 'Producción');
         }
 
         // Fondo ambiente (lightbox): la MISMA media, desenfocada + oscurecida por
@@ -2302,7 +2302,7 @@ class LivingManager {
                     <div class="publish-platforms" id="publishPlatforms"></div>
                     <div class="publish-label">MENSAJE</div>
                     <div class="publish-caption-wrap">
-                        <textarea class="publish-caption" id="publishCaption" rows="3" maxlength="2200" placeholder="Escribe un mensaje para esta publicacion..."></textarea>
+                        <textarea class="publish-caption" id="publishCaption" rows="3" maxlength="2200" placeholder="Escribe un mensaje para esta publicación..."></textarea>
                         <span class="publish-caption-count" id="publishCaptionCount">0 / 2200</span>
                     </div>
                 </div>
@@ -2377,7 +2377,7 @@ class LivingManager {
         } else {
             st = this._modalState;
         }
-        if (!st || !st.outputId) { if (typeof window.showToast === 'function') window.showToast('Abre una produccion para publicar'); return; }
+        if (!st || !st.outputId) { if (typeof window.showToast === 'function') window.showToast('Abre una producción para publicar'); return; }
         this._publishCtx = {
             outputId: st.outputId,
             outputIds: isMulti ? multiIds.slice() : null,
@@ -2436,7 +2436,7 @@ class LivingManager {
         if (!ctx) return;
         try {
             const token = await this._getAccessToken();
-            if (!token) throw new Error('No hay sesion activa');
+            if (!token) throw new Error('No hay sesión activa');
             const res = await fetch(`/.netlify/functions/api-social-publish?output_id=${encodeURIComponent(ctx.outputId)}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -2470,14 +2470,14 @@ class LivingManager {
             if (loading) {
                 right = '<span class="publish-platform-skel"></span>';
             } else if (p.soon) {
-                right = '<span class="publish-coming">Proximamente</span>';
+                right = '<span class="publish-coming">Próximamente</span>';
             } else if (connected) {
                 right = `<button type="button" class="publish-toggle ${selected ? 'is-on' : ''}" data-pub="toggle" role="switch" aria-checked="${selected ? 'true' : 'false'}"><span class="publish-toggle-knob"></span></button>`;
             } else {
                 right = '<button type="button" class="publish-connect" data-pub="connect">Conectar</button>';
             }
             const handle = loading ? '' : (p.soon
-                ? (p.key === 'youtube' || p.key === 'tiktok' ? 'Solo video' : 'Proximamente')
+                ? (p.key === 'youtube' || p.key === 'tiktok' ? 'Solo video' : 'Próximamente')
                 : (connected ? this.escapeHtml(conn.account_name || 'Conectado') : 'Sin conectar'));
             const disabledCls = (p.soon || (!loading && !connected)) ? 'is-disabled' : '';
             return `
@@ -2523,7 +2523,7 @@ class LivingManager {
         const loadingToast = window.showToast?.(multi ? `Publicando ${ids.length}…` : 'Publicando…', { duration: 0 });
         try {
             const token = await this._getAccessToken();
-            if (!token) throw new Error('No hay sesion activa');
+            if (!token) throw new Error('No hay sesión activa');
             const all = [];
             for (const oid of ids) {
                 const res = await fetch('/.netlify/functions/api-social-publish', {
@@ -2532,7 +2532,7 @@ class LivingManager {
                     body: JSON.stringify({ output_id: oid, platforms, caption })
                 });
                 const data = await res.json().catch(() => ({}));
-                if (res.status === 401) throw new Error('Sesion expirada, vuelve a entrar');
+                if (res.status === 401) throw new Error('Sesión expirada, vuelve a entrar');
                 (Array.isArray(data.results) ? data.results : []).forEach(r => all.push({ ...r, output_id: oid }));
             }
             loadingToast?.close?.();
@@ -2546,7 +2546,7 @@ class LivingManager {
             fail.forEach(r => console.error(`[publish] ❌ ${r.platform}: ${r.error || 'fallo desconocido'}`));
 
             if (ok.length) {
-                window.showToast?.(multi ? 'Producciones publicadas' : 'Produccion publicada', { type: 'success' });
+                window.showToast?.(multi ? 'Producciones publicadas' : 'Producción publicada', { type: 'success' });
                 this._renderPublishResult(ok, fail, multi);
             } else if (fail.length) {
                 window.showToast?.(`Error en ${fail[0].platform}: ${fail[0].error || 'fallo'}`, { type: 'error' });
@@ -2592,7 +2592,7 @@ class LivingManager {
         if (body) body.innerHTML = `
             <div class="publish-result">
                 <div class="publish-result-check"><i class="aisc-ico aisc-ico--check"></i></div>
-                <h3 class="publish-result-title">${multi ? 'Producciones publicadas' : 'Produccion publicada'}</h3>
+                <h3 class="publish-result-title">${multi ? 'Producciones publicadas' : 'Producción publicada'}</h3>
                 <div class="publish-result-links">${links}</div>
                 ${failNote}
             </div>`;
@@ -2674,7 +2674,7 @@ class LivingManager {
                     <label class="pmodal-copy-field-label">Copy</label>
                     <textarea class="pmodal-copy-input" data-copy-field="text" rows="4" placeholder="Escribe el copy...">${this.escapeHtml(copyPlain)}</textarea>
                     <label class="pmodal-copy-field-label">CTA</label>
-                    <input type="text" class="pmodal-copy-input" data-copy-field="cta" placeholder="Llamado a la accion" value="${this.escapeHtml(cta)}">
+                    <input type="text" class="pmodal-copy-input" data-copy-field="cta" placeholder="Llamado a la acción" value="${this.escapeHtml(cta)}">
                     <label class="pmodal-copy-field-label">Hashtags</label>
                     <textarea class="pmodal-copy-input" data-copy-field="hashtags" rows="2" placeholder="#uno #dos #tres">${this.escapeHtml(hashtags.join(' '))}</textarea>
                     <div class="pmodal-copy-edit-actions">
@@ -2868,12 +2868,12 @@ class LivingManager {
         const rows = [
             kind ? ['Tipo', kind, null] : null,
             flowName ? ['Flow', flowName, null] : null,
-            campaignName ? ['Campana', campaignName, null] : null,
+            campaignName ? ['Campaña', campaignName, null] : null,
             audienceName ? ['Audiencia', audienceName, null] : null,
             aspect ? ['Formato', String(aspect), null] : null,
-            quality ? ['Resolucion', String(quality), null] : null,
+            quality ? ['Resolución', String(quality), null] : null,
             size ? ['Size', size, null] : null,
-            composition ? ['Composicion', this._cap(composition), null] : null,
+            composition ? ['Composición', this._cap(composition), null] : null,
             gradient ? ['Fondo', null, gradient.html] : null,
             language ? ['Idioma', language, null] : null,
             models.length ? [models.length > 1 ? 'Modelos' : 'Modelo', null, modelsHtml] : null,
@@ -2922,7 +2922,7 @@ class LivingManager {
     _humanizeLang(code) {
         const c = String(code || '').trim().toLowerCase();
         if (!c) return '';
-        const map = { es: 'Espanol', en: 'Ingles', pt: 'Portugues', fr: 'Frances', de: 'Aleman', it: 'Italiano' };
+        const map = { es: 'Español', en: 'Inglés', pt: 'Portugués', fr: 'Francés', de: 'Alemán', it: 'Italiano' };
         return map[c] || c.toUpperCase();
     }
 
@@ -3032,9 +3032,9 @@ class LivingManager {
     _editKindLabel(kind) {
         const map = {
             image_edit: 'Editar', image_upscale: 'Mejorar 4K',
-            image_remove_bg: 'Sin fondo', image_fix_text: 'Mejorar texto', edit: 'Edicion'
+            image_remove_bg: 'Sin fondo', image_fix_text: 'Mejorar texto', edit: 'Edición'
         };
-        return map[kind] || 'Edicion';
+        return map[kind] || 'Edición';
     }
 
     /** Busca un output por id en las caches locales; si no esta, lo consulta en BD. */
@@ -3292,8 +3292,8 @@ class LivingManager {
         ]);
         const PARAM_LABELS = {
             aspect_ratio: 'Aspect Ratio', output_count: 'Salidas', num_outputs: 'Salidas',
-            language: 'Idioma', tone: 'Tono', resolution: 'Resolucion', model: 'Modelo',
-            format: 'Formato', duration: 'Duracion', quality: 'Calidad', style: 'Estilo',
+            language: 'Idioma', tone: 'Tono', resolution: 'Resolución', model: 'Modelo',
+            format: 'Formato', duration: 'Duración', quality: 'Calidad', style: 'Estilo',
             generar_video: 'Video', nota: 'Nota'
         };
         const extraRows = Object.entries(data)
@@ -3409,7 +3409,7 @@ class LivingManager {
                 || (s.storage_path ? (this.getPublicUrlFromStorage('production-outputs', s.storage_path) || this.getPublicUrlFromStorage('outputs', s.storage_path)) : '')
                 || '';
             return `
-                <button type="button" class="pmodal-sibling" data-output-id="${this.escapeHtml(s.id)}" title="Abrir variante" aria-label="Variante de produccion">
+                <button type="button" class="pmodal-sibling" data-output-id="${this.escapeHtml(s.id)}" title="Abrir variante" aria-label="Variante de producción">
                     ${url ? `<img data-src="${this.escapeHtml(url)}" alt="" decoding="async" loading="lazy">` : `<i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>`}
                 </button>
             `;
@@ -3456,7 +3456,7 @@ class LivingManager {
         const lockKey = `${tool}:${outputId}`;
         if (!this._inflightToolbarOps) this._inflightToolbarOps = new Set();
         if (this._inflightToolbarOps.has(lockKey)) {
-            if (typeof window.showToast === 'function') window.showToast('Ya estamos procesando esta accion. Espera unos segundos.');
+            if (typeof window.showToast === 'function') window.showToast('Ya estamos procesando esta acción. Espera unos segundos.');
             return;
         }
         // Edit abre overlay: no lock aqui (el lock va en _applyEditOverlay).
@@ -3502,7 +3502,7 @@ class LivingManager {
         // Solo aplica a imagenes (no video).
         const video = document.getElementById('pmodalVideo');
         if (video && !video.hidden) {
-            if (typeof window.showToast === 'function') window.showToast('Cambiar ratio solo aplica a imagenes');
+            if (typeof window.showToast === 'function') window.showToast('Cambiar ratio solo aplica a imágenes');
             return;
         }
 
@@ -3560,7 +3560,7 @@ class LivingManager {
             return;
         }
         if (!imageUrl || !/^https?:\/\//i.test(imageUrl)) {
-            if (typeof window.showToast === 'function') window.showToast('No hay URL valida de la imagen original');
+            if (typeof window.showToast === 'function') window.showToast('No hay URL válida de la imagen original');
             return;
         }
         if (!this.organizationId) {
@@ -3576,7 +3576,7 @@ class LivingManager {
         let createPayload;
         try {
             const accessToken = await this._getAccessToken();
-            if (!accessToken) throw new Error('No hay sesion activa');
+            if (!accessToken) throw new Error('No hay sesión activa');
             const res = await fetch('/.netlify/functions/kie-image-reframe-create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
@@ -3626,7 +3626,7 @@ class LivingManager {
             kind: 'image_reframe',
             downloadKind: 'reframe',
             successLabel: `Imagen reencuadrada a ${targetRatio} en el grid`,
-            failLabel: 'Reencuadre fallo',
+            failLabel: 'Reencuadre falló',
             buildModels: (cp) => ({ editor: cp.kie_model || null, prompter: null }),
             buildTechnicalParams: (cp, ar) => ({ output_format: 'png', aspect_ratio: ar }),
             buildMetadataExtras: () => ({ reframed_to: targetRatio })
@@ -3644,7 +3644,7 @@ class LivingManager {
         const imageUrl = state.mediaUrl;
         const sourceOutputId = state.outputId || null;
         if (!imageUrl || !/^https?:\/\//i.test(imageUrl)) {
-            if (typeof window.showToast === 'function') window.showToast('No hay URL valida de la imagen original');
+            if (typeof window.showToast === 'function') window.showToast('No hay URL válida de la imagen original');
             return;
         }
         if (!this.organizationId) {
@@ -3668,7 +3668,7 @@ class LivingManager {
         let createPayload;
         try {
             const accessToken = await this._getAccessToken();
-            if (!accessToken) throw new Error('No hay sesion activa');
+            if (!accessToken) throw new Error('No hay sesión activa');
             const res = await fetch('/.netlify/functions/kie-image-upscale-create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
@@ -3723,7 +3723,7 @@ class LivingManager {
             kind: 'image_upscale',
             downloadKind: 'upscale',
             successLabel: 'Imagen mejorada a 4K lista en el grid',
-            failLabel: 'Mejora 4K fallo',
+            failLabel: 'Mejora 4K falló',
             buildModels: (cp) => ({ editor: cp.kie_model || null, prompter: null }),
             buildTechnicalParams: (cp, ar) => ({
                 output_format: 'png',
@@ -3744,7 +3744,7 @@ class LivingManager {
         const imageUrl = state.mediaUrl;
         const sourceOutputId = state.outputId || null;
         if (!imageUrl || !/^https?:\/\//i.test(imageUrl)) {
-            if (typeof window.showToast === 'function') window.showToast('No hay URL valida de la imagen original');
+            if (typeof window.showToast === 'function') window.showToast('No hay URL válida de la imagen original');
             return;
         }
         if (!this.organizationId) {
@@ -3766,7 +3766,7 @@ class LivingManager {
         let createPayload;
         try {
             const accessToken = await this._getAccessToken();
-            if (!accessToken) throw new Error('No hay sesion activa');
+            if (!accessToken) throw new Error('No hay sesión activa');
             const res = await fetch('/.netlify/functions/kie-image-remove-bg-create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
@@ -3820,7 +3820,7 @@ class LivingManager {
             kind: 'image_remove_bg',
             downloadKind: 'remove-bg',
             successLabel: 'Fondo eliminado, PNG transparente en el grid',
-            failLabel: 'Quitar fondo fallo',
+            failLabel: 'Quitar fondo falló',
             buildModels: (cp) => ({ editor: cp.kie_model || null, prompter: null }),
             buildTechnicalParams: (cp, ar) => ({ output_format: 'png', aspect_ratio: ar, has_alpha: true }),
             buildMetadataExtras: () => ({})
@@ -3839,7 +3839,7 @@ class LivingManager {
         const imageUrl = state.mediaUrl;
         const sourceOutputId = state.outputId || null;
         if (!imageUrl || !/^https?:\/\//i.test(imageUrl)) {
-            if (typeof window.showToast === 'function') window.showToast('No hay URL valida de la imagen original');
+            if (typeof window.showToast === 'function') window.showToast('No hay URL válida de la imagen original');
             return;
         }
         if (!this.organizationId) {
@@ -3854,7 +3854,7 @@ class LivingManager {
         const productImageUrls = info?.imageUrls || [];
         if (!productImageUrls.length) {
             if (typeof window.showToast === 'function') {
-                window.showToast('No detectamos producto en esta produccion. Usa "Editar" → "Corregir producto" y selecciona uno manualmente.');
+                window.showToast('No detectamos producto en esta producción. Usa "Editar" → "Corregir producto" y selecciona uno manualmente.');
             }
             return;
         }
@@ -3870,7 +3870,7 @@ class LivingManager {
         let createPayload;
         try {
             const accessToken = await this._getAccessToken();
-            if (!accessToken) throw new Error('No hay sesion activa');
+            if (!accessToken) throw new Error('No hay sesión activa');
             const res = await fetch('/.netlify/functions/kie-image-fix-text-create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
@@ -3932,7 +3932,7 @@ class LivingManager {
             kind: 'image_fix_text',
             downloadKind: 'fix-text',
             successLabel: 'Textos mejorados lista en el grid',
-            failLabel: 'Mejorar textos fallo',
+            failLabel: 'Mejorar textos falló',
             entityIdOverride: entityId,
             promptUsed: createPayload.refined_prompt,
             openaiTokens: {
@@ -3974,7 +3974,7 @@ class LivingManager {
         const visual = document.querySelector('.production-modal-visual-inner');
         const img = document.getElementById('pmodalImage');
         if (!overlay || !canvas || !visual || !img || img.hidden || !img.src) {
-            if (typeof window.showToast === 'function') window.showToast('Editar solo disponible para imagenes');
+            if (typeof window.showToast === 'function') window.showToast('Editar solo disponible para imágenes');
             return;
         }
         // Guardar el elemento que tenia focus para restaurar al cerrar (a11y).
@@ -4229,7 +4229,7 @@ class LivingManager {
     async _uploadEditReferenceFile(file) {
         if (!this.supabase?.storage) throw new Error('Storage no disponible');
         const userId = this.userId || (await this.supabase.auth.getUser()).data?.user?.id;
-        if (!userId) throw new Error('No hay sesion');
+        if (!userId) throw new Error('No hay sesión');
         const extMap = { 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
         const ext = extMap[file.type] || (file.name.split('.').pop() || 'png').toLowerCase();
         const path = `edit-refs/${userId}/${Date.now()}.${ext}`;
@@ -4718,7 +4718,7 @@ class LivingManager {
         const sourceOutputId = state.outputId || null;
 
         if (!imageUrl || !/^https?:\/\//i.test(imageUrl)) {
-            this._setEditApplyState({ phase: 'error', message: 'No hay URL valida de la imagen original' });
+            this._setEditApplyState({ phase: 'error', message: 'No hay URL válida de la imagen original' });
             return;
         }
         if (!this.organizationId) {
@@ -4752,12 +4752,12 @@ class LivingManager {
 
         // Loading message incluye AR (P3#1 audit): user sabe que va a generar
         // 16:9 vs 1:1 antes de esperar 30-60s.
-        this._setEditApplyState({ phase: 'loading', message: `Iniciando edicion en ${aspectRatio}...`, lock: true });
+        this._setEditApplyState({ phase: 'loading', message: `Iniciando edición en ${aspectRatio}...`, lock: true });
 
         let createPayload;
         try {
             const accessToken = await this._getAccessToken();
-            if (!accessToken) throw new Error('No hay sesion activa. Vuelve a iniciar sesion.');
+            if (!accessToken) throw new Error('No hay sesión activa. Vuelve a iniciar sesión.');
 
             const createRes = await fetch('/.netlify/functions/kie-image-edit-create', {
                 method: 'POST',
@@ -4791,7 +4791,7 @@ class LivingManager {
             createPayload = parsed;
         } catch (err) {
             console.error('[edit-overlay] create error:', err);
-            this._setEditApplyState({ phase: 'error', message: err.message || 'Error al iniciar la edicion' });
+            this._setEditApplyState({ phase: 'error', message: err.message || 'Error al iniciar la edición' });
             return;
         }
 
@@ -4917,7 +4917,7 @@ class LivingManager {
         if (!Array.isArray(this.pendingEdits)) return;
         const item = this.pendingEdits.find(p => p.clientId === clientId);
         if (!item) return;
-        item.error = String(errorMessage || 'Operacion fallo');
+        item.error = String(errorMessage || 'Operación falló');
         item.label = `Error: ${item.error}`;
         try { this.renderHistorySection(); } catch (_) { /* noop */ }
     }
@@ -4975,8 +4975,8 @@ class LivingManager {
             ...args,
             kind: 'image_edit',
             downloadKind: undefined, // _downloadAndUploadEditResult default
-            successLabel: 'Edicion lista en el grid',
-            failLabel: 'Edicion fallo',
+            successLabel: 'Edición lista en el grid',
+            failLabel: 'Edición falló',
             entityIdOverride: entityId,
             promptUsed: createPayload.refined_prompt,
             openaiTokens: {
@@ -5067,7 +5067,7 @@ class LivingManager {
     async _finalizeKieTask({ taskId, kind, sourceOutputId = null, openaiInputTokens = 0, openaiOutputTokens = 0, openaiModel = 'gpt-4o-mini' }) {
         try {
             const accessToken = await this._getAccessToken();
-            if (!accessToken) throw new Error('No hay sesion activa');
+            if (!accessToken) throw new Error('No hay sesión activa');
             const res = await fetch('/.netlify/functions/kie-task-finalize', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
@@ -5248,7 +5248,7 @@ class LivingManager {
      */
     async _downloadAndUploadEditResult({ kieUrl, taskId, kind = 'edit' }) {
         const accessToken = await this._getAccessToken();
-        if (!accessToken) throw new Error('No hay sesion activa');
+        if (!accessToken) throw new Error('No hay sesión activa');
 
         const res = await fetch('/.netlify/functions/kie-output-persist', {
             method: 'POST',
@@ -5441,7 +5441,7 @@ class LivingManager {
                                 imageUrl: this.resolveOutputMediaUrl(source) || source.reference_image_url || ''
                             });
                         } else if (typeof window.showToast === 'function') {
-                            window.showToast('La produccion original no esta disponible');
+                            window.showToast('La producción original no está disponible');
                         }
                         break;
                     }

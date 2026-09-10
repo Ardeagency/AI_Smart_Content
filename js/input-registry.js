@@ -1561,7 +1561,7 @@
           '</div>' +
           '<div class="input-gradient-angle-wrap"' + angleStyle + '>' +
             '<div class="input-gradient-angle-track">' +
-              '<input type="range" class="input-gradient-angle" min="0" max="360" step="5" value="' + g.angle + '" aria-label="Angulo del degradado">' +
+              '<input type="range" class="input-gradient-angle" min="0" max="360" step="5" value="' + g.angle + '" aria-label="Ángulo del degradado">' +
             '</div>' +
             '<span class="input-gradient-angle-val">' + g.angle + '°</span>' +
           '</div>' +

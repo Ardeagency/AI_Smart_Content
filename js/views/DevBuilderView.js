@@ -1116,7 +1116,7 @@ class DevBuilderView extends DevBaseView {
               <h3 class="flow-card-title">${name}</h3>
               <div class="flow-card-info-meta">
                 ${primaryTagHtml}
-                <span class="flow-card-info-credits" title="Creditos por ejecucion"><i class="aisc-ico aisc-ico--zap"></i>${cost}</span>
+                <span class="flow-card-info-credits" title="Créditos por ejecución"><i class="aisc-ico aisc-ico--zap"></i>${cost}</span>
               </div>
               <div class="flow-card-info-extra">
                 <span class="flow-card-info-pill">${outputTypeLabel}</span>

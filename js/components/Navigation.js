@@ -165,7 +165,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'aisc-ico aisc-ico--growth', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
   { type: 'page', id: 'admin-inputs', label: 'Inputs', icon: 'aisc-ico aisc-ico--filter', iconSrc: '/recursos/icons/coding.svg', route: '/dev/lead/input-schemas' },
   { type: 'page', id: 'admin-categorias', label: 'Categories', icon: 'aisc-ico aisc-ico--tag', iconSrc: '/recursos/icons/file-storage.svg', route: '/dev/lead/categories' },
-  { type: 'page', id: 'admin-lexicon', label: 'Temas huerfanos', icon: 'aisc-ico aisc-ico--book', iconSrc: '/recursos/icons/book.svg', route: '/dev/lead/lexicon' },
+  { type: 'page', id: 'admin-lexicon', label: 'Temas huérfanos', icon: 'aisc-ico aisc-ico--book', iconSrc: '/recursos/icons/book.svg', route: '/dev/lead/lexicon' },
   { type: 'section', label: 'Code' },
   { type: 'page', id: 'flows', label: 'My Flows', icon: 'aisc-ico aisc-ico--grid', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
   {
@@ -729,7 +729,7 @@ class Navigation {
   }
 
   _renderActivityMissions(body, list) {
-    if (!list.length) { this._activityEmpty(body, 'aisc-ico aisc-ico--bot', 'Vera aun no ha ejecutado misiones.'); return; }
+    if (!list.length) { this._activityEmpty(body, 'aisc-ico aisc-ico--bot', 'Vera aún no ha ejecutado misiones.'); return; }
     body.innerHTML = `<ol class="activity-list">${list.map((m) => this._activityMissionItemHtml(m)).join('')}</ol>`;
   }
 
@@ -791,13 +791,13 @@ class Navigation {
   _humanizeMission(t) {
     const map = {
       daily_briefing:             __('Briefing diario'),
-      competitor_signal_analysis: __('Analisis de competencia'),
-      execute_update_persona:     __('Actualizacion de persona'),
+      competitor_signal_analysis: __('Análisis de competencia'),
+      execute_update_persona:     __('Actualización de persona'),
       opportunity_scan:           __('Escaneo de oportunidades'),
-      cross_signal_synthesis:     __('Sintesis de senales'),
+      cross_signal_synthesis:     __('Síntesis de señales'),
     };
     if (map[t]) return map[t];
-    const s = String(t || __('Mision')).replace(/_/g, ' ');
+    const s = String(t || __('Misión')).replace(/_/g, ' ');
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
@@ -830,7 +830,7 @@ class Navigation {
     try {
       const { data: { session } } = await sb.auth.getSession();
       const token = session?.access_token;
-      if (!token) throw new Error('Sin sesion');
+      if (!token) throw new Error('Sin sesión');
       const res = await fetch(`/api/vera/pending-actions/${id}/${op}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -1438,6 +1438,43 @@ class Navigation {
     return this._checklistCache.get(notifId);
   }
 
+  // ───────────────────────────────────────── Etiqueta por tipo
+  /**
+   * FEAT-018. La etiqueta corta de una notificacion es PRESENTACION, no dato:
+   * si se guardara en `metadata.label` quedaria en español dentro de la BD y
+   * fuera del i18n. Por eso el tipo se traduce aqui y `metadata.label` queda
+   * como override para el caso especifico que el backend si quiera fijar.
+   * @param {string} type
+   * @returns {string}
+   */
+  _notificationTypeLabel(type) {
+    const T = (str) => (typeof window.__ === 'function' ? window.__(str) : str);
+    const MAP = {
+      vera_insight:              'VERA · INSIGHT',
+      vera_message:              'VERA',
+      vera_conversation:         'VERA',
+      trend_brief:               'VERA · TENDENCIAS',
+      strategic_recommendations: 'VERA · ESTRATEGIA',
+      emerging_brands:           'VERA · INSIGHT',
+      campaign_alert:            'ALERTA DE CAMPAÑA',
+      brand_health:              'SALUD DE MARCA',
+      platform_health:           'SALUD DE PLATAFORMA',
+      content_ready:             'CONTENIDO LISTO',
+      strategy_blocked:          'ESTRATEGIA BLOQUEADA',
+      pipeline_blocked:          'PIPELINE BLOQUEADO',
+      ops_blocker:               'OPERACIÓN',
+      operational:               'OPERACIÓN',
+      calendar_alert:            'CALENDARIO',
+      calendar_gap:              'CALENDARIO',
+      calendar_opportunity:      'CALENDARIO',
+      calendar_reminder:         'CALENDARIO',
+      billing_vencida:           'FACTURACIÓN',
+      billing_por_vencer:        'FACTURACIÓN',
+    };
+    const hit = MAP[String(type || '').toLowerCase()];
+    return hit ? T(hit) : String(type || 'info').toUpperCase();
+  }
+
   // ───────────────────────────────────────── Renderer rico
 
   /**
@@ -1456,7 +1493,7 @@ class Navigation {
     const mode = opts.mode === 'expanded' ? 'expanded' : 'compact';
     const unread = !n.is_read;
     const sev = (n.severity || 'info').toLowerCase();
-    const labelText = n.label || (n.type || 'info').toUpperCase();
+    const labelText = n.label || this._notificationTypeLabel(n.type);
     const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
 
     // Subject card (el objeto motivador del análisis)
@@ -1590,7 +1627,9 @@ class Navigation {
     const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
     const unread = !n.is_read;
     const sev = (n.severity || 'info').toLowerCase();
-    const labelText = (n.type || 'info').toUpperCase();
+    // FEAT-018: el render plano ignoraba metadata.label, asi que backfillear la
+    // etiqueta no cambiaba nada en pantalla. Se honra igual que en el rico.
+    const labelText = n.label || this._notificationTypeLabel(n.type);
     const bodyHtml = this._renderMarkdownLite(n.body || n.message || '');
     return `
       <article class="notif-card legacy mode-expanded ${unread ? 'unread' : ''} sev-${_escapeHtml(sev)}" data-id="${_escapeHtml(n.id)}">
@@ -3084,7 +3123,7 @@ class Navigation {
       '/brand-organization': __('MARCA'),
       '/brand-storage': __('ALMACENAMIENTO'),
       '/brandstorage': __('ALMACENAMIENTO'),
-      '/command-center': __('ESTRATEGIA'),
+      '/command-center': __('CAMPAÑAS'),
       '/brands': __('IDENTIDAD'),
       '/product-detail': __('PRODUCTO'),
       '/products': __('PRODUCTOS'),

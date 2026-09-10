@@ -1,0 +1,31 @@
+/* ========== Fondo de plataforma (compartido) ==========
+
+   El radial del espectro de AI Smart Content (--pf-1..7), anclado al viewport.
+   Lo comparten Planes, Creditos, Configuracion de organizacion y Campañas
+   (command center). Nacio dentro de planes.css; al entrar la cuarta pagina se
+   mudo aqui, que era lo que ese archivo mismo pedia.
+   OJO: el cielo de estrellas NO acompaña al fondo. Es un canvas que cada vista
+   decide montar (window.Starfield), asi que Configuracion y Campañas lo heredan
+   apagado sin necesidad de excluirse: simplemente no lo arrancan. */
+#app-container:has(.planes-page),
+#app-container:has(.credits-page),
+#app-container:has(.organization-container),
+#app-container:has(.cc-page) {
+    /* Manda el negro. El espectro entra al 20% y se apaga contra transparente
+       antes del 90%, asi que es LUZ sobre la oscuridad y no un fondo de color:
+       la version anterior lo pintaba a plena saturacion y la pagina entera se
+       volvia morada. Los porcentajes de color-mix son el dimmer; los stops
+       salen de los tokens para no repetir los hex. */
+    background-color: #050507;
+    background-image: radial-gradient(125% 72% at 50% -14%,
+        color-mix(in srgb, var(--pf-7) 22%, transparent) 0%,
+        color-mix(in srgb, var(--pf-6) 19%, transparent) 13%,
+        color-mix(in srgb, var(--pf-5) 16%, transparent) 25%,
+        color-mix(in srgb, var(--pf-4) 14%, transparent) 37%,
+        color-mix(in srgb, var(--pf-3) 12%, transparent) 49%,
+        color-mix(in srgb, var(--pf-2) 9%, transparent) 61%,
+        color-mix(in srgb, var(--pf-1) 6%, transparent) 73%,
+        transparent 90%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}

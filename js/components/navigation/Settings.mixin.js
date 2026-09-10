@@ -83,7 +83,7 @@
     if (langSel && window.i18n) {
       // Poblar opciones desde los locales soportados (futuro-proof).
       if (typeof window.i18n.available === 'function') {
-        const LABELS = { es: 'Espanol', en: 'English' };
+        const LABELS = { es: 'Español', en: 'English' };
         const locales = window.i18n.available();
         langSel.innerHTML = locales
           .map((l) => `<option value="${l}">${LABELS[l] || l}</option>`)

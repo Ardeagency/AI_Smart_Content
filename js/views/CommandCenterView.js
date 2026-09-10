@@ -6,7 +6,7 @@
  * - Conexiones existentes: integraciones + segmentos con vínculo a persona
  */
 class CommandCenterView extends BaseView {
-  static get documentTitle() { return __('Command Center'); }
+  static get documentTitle() { return __('Campañas'); }
 
   constructor() {
     super();
@@ -118,8 +118,8 @@ class CommandCenterView extends BaseView {
           <button class="cc-canvas-btn cc-canvas-btn--primary" id="ccBtnCreateAudience" type="button" title="${__('Crear Objetivo de Audiencia')}">
             <i class="aisc-ico aisc-ico--user-registration"></i><span>${__('Objetivo de Audiencia')}</span>
           </button>
-          <button class="cc-canvas-btn cc-canvas-btn--primary cc-canvas-btn--anchor" id="ccBtnCreateCampaign" type="button" title="${__('Crear Objetivo de Campana (ancla de la estrategia)')}">
-            <i class="aisc-ico aisc-ico--goal"></i><span>${__('Objetivo de Campana')}</span>
+          <button class="cc-canvas-btn cc-canvas-btn--primary cc-canvas-btn--anchor" id="ccBtnCreateCampaign" type="button" title="${__('Crear Objetivo de Campaña (ancla de la estrategia)')}">
+            <i class="aisc-ico aisc-ico--goal"></i><span>${__('Objetivo de Campaña')}</span>
           </button>
           <div class="cc-report-dd" id="ccReportDD">
             <button class="cc-canvas-btn" id="ccBtnReport" type="button" title="${__('Crear informe con Vera (Claude)')}">
@@ -127,7 +127,7 @@ class CommandCenterView extends BaseView {
             </button>
             <div class="cc-report-menu" id="ccReportMenu" role="menu" style="display:none;">
               <button type="button" role="menuitem" data-scope="all"><i class="aisc-ico aisc-ico--layers"></i> ${__('Informar todo')}</button>
-              <button type="button" role="menuitem" data-scope="campaign"><i class="aisc-ico aisc-ico--campaign"></i> ${__('Campana seleccionada')}</button>
+              <button type="button" role="menuitem" data-scope="campaign"><i class="aisc-ico aisc-ico--campaign"></i> ${__('Campaña seleccionada')}</button>
               <button type="button" role="menuitem" data-scope="audience"><i class="aisc-ico aisc-ico--audience"></i> ${__('Audiencia seleccionada')}</button>
               <button type="button" role="menuitem" data-scope="ecosystem"><i class="aisc-ico aisc-ico--memory"></i> ${__('Aprendizaje del ecosistema')}</button>
               <button type="button" role="menuitem" data-scope="selection"><i class="aisc-ico aisc-ico--goal"></i> ${__('Seleccionado')}</button>
@@ -158,7 +158,7 @@ class CommandCenterView extends BaseView {
         <div class="cc-canvas-empty" id="ccCanvasEmpty" style="display:none;">
           <i class="aisc-ico aisc-ico--flows"></i>
           <p class="cc-canvas-empty-title">${__('Centro de estrategia')}</p>
-          <p>${__('Vera construye estrategias de campana usando nodos guia para analizar y producir. Esta pagina es tu centro de monitoreo para visualizar las estrategias creadas.')}</p>
+          <p>${__('Vera construye estrategias de campaña usando nodos guía para analizar y producir. Esta página es tu centro de monitoreo para visualizar las estrategias creadas.')}</p>
         </div>
 
         <!-- Minimapa flotante (esquina inferior izquierda), estilo n8n/React Flow -->
@@ -182,10 +182,6 @@ class CommandCenterView extends BaseView {
                editable + cuanto esta asignado en objetivos. La asignacion es
                la decision de CMO — sin techo comun no hay gobierno 60/40. -->
           <div class="cc-strat-budget" id="ccStratBudget"></div>
-          <!-- Secuencia estrategica: los pasos del marketing profesional
-               (SOSTAC) derivados del estado REAL de la BD. Vera cubre el
-               diagnostico; el resto se completa construyendo en el canvas. -->
-          <div class="cc-strat-steps" id="ccStratSteps"></div>
         </aside>
 
         <!-- Panel flotante = biblioteca tipo Figma: rail de iconos (siempre
@@ -197,7 +193,7 @@ class CommandCenterView extends BaseView {
           <!-- Panel de datos de la seccion activa (abre a la izquierda) -->
           <div class="cc-fp-panel" role="tabpanel" aria-labelledby="ccPanelTitle">
             <div class="cc-fp-head">
-              <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="${__('Cerrar seccion')}" aria-label="${__('Cerrar seccion')}">
+              <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="${__('Cerrar sección')}" aria-label="${__('Cerrar sección')}">
                 <i class="aisc-ico aisc-ico--close"></i>
               </button>
               <span class="cc-fp-title" id="ccPanelTitle">${__('Biblioteca')}</span>
@@ -341,7 +337,7 @@ class CommandCenterView extends BaseView {
     this._organizationId  = this._resolveOrganizationId();
 
     if (!this._organizationId) {
-      this.updateHeaderContext(__('Command Center'), this._subBrandSlug || '—', window.currentOrgName || '');
+      this.updateHeaderContext(__('Campañas'), this._subBrandSlug || '—', window.currentOrgName || '');
       this._setError(__('Selecciona una organización o inicia sesión de nuevo.'));
       return;
     }
@@ -386,7 +382,7 @@ class CommandCenterView extends BaseView {
     const displayName = match
       ? (String(match.nombre_marca || '').trim() || __('Sub-marca'))
       : (this._subBrandSlug || this._subBrandShortId || '—');
-    this.updateHeaderContext(__('Command Center'), displayName, window.currentOrgName || '');
+    this.updateHeaderContext(__('Campañas'), displayName, window.currentOrgName || '');
 
     if (!match) {
       this._setError(__('No se encontró la sub-marca "{displayName}". Revisa el nombre en Brand Storage.', { displayName }));

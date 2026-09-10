@@ -128,7 +128,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
           <div class="dev-flows-toolbar">
             <p class="dev-header-subtitle vera-tab-hint">Todo lo que el vector global aprendió. Cada burbuja es una fuente con sus chunks embedidos.</p>
             <div class="dev-lead-toolbar" id="headerToolbar">
-              <input type="search" id="veraKnowledgeSearch" class="form-control vera-knowledge-search" placeholder="Buscar por titulo o contenido..." autocomplete="off">
+              <input type="search" id="veraKnowledgeSearch" class="form-control vera-knowledge-search" placeholder="Buscar por título o contenido..." autocomplete="off">
             </div>
           </div>
           <div class="vera-knowledge-stats" id="veraKnowledgeStats" hidden>
@@ -291,7 +291,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
         file: this._fileObj ? { name: this._fileObj.name, size: this._fileObj.size, type: this._fileObj.type } : null,
         image: this._imageObj ? { name: this._imageObj.name, size: this._imageObj.size, type: this._imageObj.type } : null
       });
-      this.showNotification('Backend de vectorizacion pendiente. Payload listo para envio al endpoint /api/vera/train.', 'info');
+      this.showNotification('Backend de vectorización pendiente. Payload listo para envío al endpoint /api/vera/train.', 'info');
     } catch (err) {
       console.error('[VeraTraining] error:', err);
       this.showNotification('Error: ' + (err?.message || 'fallo de entrenamiento'), 'error');
@@ -347,7 +347,7 @@ class DevLeadVeraTrainingView extends DevBaseView {
           source_path: row.source_path || '',
           source_type: row.source_type || 'unknown',
           source_bucket: row.source_bucket || '',
-          title: (row.metadata && row.metadata.title) || row.source_path || 'Sin titulo',
+          title: (row.metadata && row.metadata.title) || row.source_path || 'Sin título',
           createdAt: row.created_at,
           chunks: []
         });

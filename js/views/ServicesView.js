@@ -47,7 +47,7 @@ class ServicesView extends BaseView {
     icon: 'aisc-ico aisc-ico--brief',
     iconSrc: '/recursos/icons/Service.svg',
     title: __('Crea tu primer servicio'),
-    subtitle: __('Sube fotos o una URL y Vera arma la ficha: entregables, metodologia y diferenciadores. Apareceran aqui para tus producciones.'),
+    subtitle: __('Sube fotos o una URL y Vera arma la ficha: entregables, metodología y diferenciadores. Aparecerán aquí para tus producciones.'),
     primaryLabel: __('+ Servicio'),
     secondaryLabel: __('Adjuntar servicio'),
   })}
@@ -215,7 +215,7 @@ class ServicesView extends BaseView {
             <h3 class="service-card-title">${name}</h3>
             ${price ? `<span class="service-card-price">${this.escapeHtml(price)}</span>` : ''}
           </div>
-          ${s.descripcion_servicio ? `<p class="service-card-desc">${this.escapeHtml(s.descripcion_servicio)}</p>` : `<p class="service-card-desc service-card-desc-empty">${__('Sin descripcion todavia.')}</p>`}
+          ${s.descripcion_servicio ? `<p class="service-card-desc">${this.escapeHtml(s.descripcion_servicio)}</p>` : `<p class="service-card-desc service-card-desc-empty">${__('Sin descripción todavía.')}</p>`}
           <div class="service-card-meta">
             ${s.duracion_estimada ? `<span class="service-card-duration"><i class="aisc-ico aisc-ico--clock" aria-hidden="true"></i> ${this.escapeHtml(s.duracion_estimada)}</span>` : ''}
           </div>
@@ -295,14 +295,14 @@ class ServicesView extends BaseView {
     const body = `
       <div class="attach-product-wizard" data-step="picker">
         <section class="attach-product-step attach-product-step--picker" data-panel="picker">
-          <p class="attach-product-intro">${__('Elegi como queres que Vera obtenga la informacion del servicio. La ficha se crea automaticamente y solo te cobra el costo real de OpenAI.')}</p>
+          <p class="attach-product-intro">${__('Elegi como queres que Vera obtenga la información del servicio. La ficha se crea automáticamente y solo te cobra el costo real de OpenAI.')}</p>
           <div class="attach-product-options">
             <button type="button" class="attach-product-option" data-go="url" aria-label="${__('Adjuntar servicio por URL')}">
               <div class="attach-product-option-head">
                 <span class="attach-product-option-icon"><i class="aisc-ico aisc-ico--link" aria-hidden="true"></i></span>
                 <h4 class="attach-product-option-title">${__('URL del servicio')}</h4>
               </div>
-              <p class="attach-product-option-desc">${__('Pega el enlace de la pagina del servicio. Vera leera la URL y armara la ficha con descripcion, beneficios, entregables y metodologia detectados.')}</p>
+              <p class="attach-product-option-desc">${__('Pega el enlace de la página del servicio. Vera leerá la URL y armará la ficha con descripción, beneficios, entregables y metodología detectados.')}</p>
               <span class="attach-product-option-cta">${__('Continuar')} <i class="aisc-ico aisc-ico--arrow-right" aria-hidden="true"></i></span>
             </button>
 
@@ -311,7 +311,7 @@ class ServicesView extends BaseView {
                 <span class="attach-product-option-icon"><i class="aisc-ico aisc-ico--paperclip" aria-hidden="true"></i></span>
                 <h4 class="attach-product-option-title">${__('Adjuntar archivos')}</h4>
               </div>
-              <p class="attach-product-option-desc">${__('Subi PDFs, brochures, fichas tecnicas o catalogos del servicio. Vera analizara el contenido y construira la ficha estructurada.')}</p>
+              <p class="attach-product-option-desc">${__('Subi PDFs, brochures, fichas técnicas o catálogos del servicio. Vera analizará el contenido y construirá la ficha estructurada.')}</p>
               <span class="attach-product-option-cta">${__('Continuar')} <i class="aisc-ico aisc-ico--arrow-right" aria-hidden="true"></i></span>
             </button>
           </div>
@@ -517,7 +517,7 @@ class ServicesView extends BaseView {
 
   async _analyzeUrlAndCreateService({ url, hostname, modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesion no disponible'), 'error');
+      this._showNotification(__('Sesión no disponible'), 'error');
       modalHandle?.close();
       return;
     }
@@ -595,7 +595,7 @@ class ServicesView extends BaseView {
 
   async _createPendingService({ files = null, modalHandle = null }) {
     if (!this.supabase || !this.organizationId) {
-      this._showNotification(__('Sesion no disponible'), 'error');
+      this._showNotification(__('Sesión no disponible'), 'error');
       modalHandle?.close();
       return;
     }

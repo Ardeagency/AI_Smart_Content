@@ -56,7 +56,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
   STEPS = [
     { key: 'type',   label: 'Tipo' },
     { key: 'data',   label: 'Datos' },
-    { key: 'verify', label: 'Verificacion' },
+    { key: 'verify', label: 'Verificación' },
     { key: 'final',  label: null } // dinamico segun userType
   ];
 
@@ -84,7 +84,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
   getStepLabel(step) {
     if (step.key !== 'final') return step.label;
     if (this.userType === 'developer') return 'Permisos';
-    if (this.userType === 'consumer')  return 'Organizacion';
+    if (this.userType === 'consumer')  return 'Organización';
     return 'Configurar';
   }
 
@@ -99,7 +99,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
   statusLabel(s) {
     return {
-      pending_email_confirmation: 'Esperando confirmacion del email',
+      pending_email_confirmation: 'Esperando confirmación del email',
       email_confirmed: 'Email confirmado',
       finalizing: 'Finalizando',
       completed: 'Completado',
@@ -215,7 +215,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
           </div>
           <div class="provision-field">
             <label for="provisionPassword">Contrasena temporal</label>
-            <input id="provisionPassword" name="password" type="password" placeholder="Minimo 8 caracteres" autocomplete="new-password" minlength="8" required>
+            <input id="provisionPassword" name="password" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" minlength="8" required>
             <small>El usuario podra cambiarla cuando confirme su email.</small>
           </div>
           <p class="provision-form-status" role="status" aria-live="polite" id="provisionDataStatus"></p>
@@ -228,7 +228,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
           form="provisionDataForm"
           class="provision-next-btn"
           data-action="next"
-          aria-label="Crear usuario y enviar verificacion"
+          aria-label="Crear usuario y enviar verificación"
         >
           <i class="aisc-ico aisc-ico--arrow-right"></i>
         </button>
@@ -282,20 +282,20 @@ class DevLeadUserProvisioningView extends DevBaseView {
       {
         action: 'create_org',
         icon: 'fa-crown',
-        title: 'Crear organizacion',
+        title: 'Crear organización',
         hint: 'Crear una marca desde cero. El usuario queda como owner.'
       },
       {
         action: 'affiliate',
         icon: 'aisc-ico aisc-ico--organization',
-        title: 'Afiliar a una organizacion',
-        hint: 'Conectarlo a una organizacion existente con un rol.'
+        title: 'Afiliar a una organización',
+        hint: 'Conectarlo a una organización existente con un rol.'
       },
       {
         action: 'conclude',
         icon: 'aisc-ico aisc-ico--check',
         title: 'Concluir usuario',
-        hint: 'Dejarlo creado como consumidor y asignar org despues.'
+        hint: 'Dejarlo creado como consumidor y asignar org después.'
       }
     ];
     return `
@@ -305,7 +305,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
           <h2>Usuario consumidor creado</h2>
           <p><strong>${this.escapeHtml(email)}</strong> ya existe y puede iniciar sesion. Elige como continuar.</p>
         </header>
-        <div class="provision-type-grid" role="radiogroup" aria-label="Accion de organizacion">
+        <div class="provision-type-grid" role="radiogroup" aria-label="Acción de organización">
           ${options.map((o) => `
             <button type="button" class="provision-type-card" data-consumer-action="${o.action}" role="radio" aria-checked="false">
               <span class="provision-type-icon"><i class="fas ${o.icon}"></i></span>
@@ -325,7 +325,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
   renderStepMemberOrg() {
     const orgOpts = this.orgsList.length === 0
       ? '<option value="" disabled selected>Cargando organizaciones...</option>'
-      : '<option value="" disabled selected>Selecciona una organizacion</option>' +
+      : '<option value="" disabled selected>Selecciona una organización</option>' +
         this.orgsList.map((o) =>
           `<option value="${o.id}">${this.escapeHtml(o.name || o.id)}</option>`
         ).join('');
@@ -447,17 +447,17 @@ class DevLeadUserProvisioningView extends DevBaseView {
     const email = this.activeJob?.email || '';
     const r = this.finalizedResult || {};
     let title = 'Usuario creado con exito';
-    let detail = `${email} ya puede iniciar sesion.`;
+    let detail = `${email} ya puede iniciar sesión.`;
     if (r.user_type === 'developer') {
       title = 'Nuevo desarrollador creado con exito';
       detail = `${email} ya puede entrar al portal /dev.`;
     } else if (r.user_type === 'member_org') {
       const orgName = (this.orgsList.find((o) => o.id === r.organization_id) || {}).name || 'la organizacion seleccionada';
       title = 'Usuario afiliado con exito';
-      detail = `${email} quedo afiliado a ${orgName}. No se creo ninguna organizacion.`;
+      detail = `${email} quedo afiliado a ${orgName}. No se creo ninguna organización.`;
     } else if (r.user_type === 'consumer') {
       title = 'Consumidor creado con exito';
-      detail = `${email} aparece en Consumidores; puedes asignarle una organizacion cuando quieras.`;
+      detail = `${email} aparece en Consumidores; puedes asignarle una organización cuando quieras.`;
     }
     return `
       <section class="provision-verify-card provision-final-card">
@@ -755,7 +755,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
     }
     if (this.currentStep === 'verify') {
       const ok = confirm(
-        'Cancelar la verificacion?\n\nEl usuario queda creado en Supabase pero sin confirmar.'
+        'Cancelar la verificación?\n\nEl usuario queda creado en Supabase pero sin confirmar.'
       );
       if (!ok) return;
       this.stopPolling();
@@ -835,7 +835,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
     if (this.userType === 'consumer' && this.consumerAction === 'affiliate') {
       const organization_id = (fd.get('organization_id') || '').toString();
       const role = (fd.get('role') || 'viewer').toString();
-      if (!organization_id) return this.setFinalStatus('Selecciona una organizacion.', 'error');
+      if (!organization_id) return this.setFinalStatus('Selecciona una organización.', 'error');
       payload.user_type = 'member_org';
       payload.member_org = { organization_id, role };
     } else if (this.userType === 'developer') {

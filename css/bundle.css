@@ -50,6 +50,7 @@
 /* insight.css: route-split via app.js _loadCss (dashboardLoader + monitoringLoader). */
 /* monitoring.css: route-split via app.js _loadCss (monitoringLoader). */
 @import url('modules/public.css?v=__BUILD_ID__');
+@import url('modules/fondo-plataforma.css?v=__BUILD_ID__');
 @import url('modules/planes.css?v=__BUILD_ID__');
 @import url('modules/credits.css?v=__BUILD_ID__');
 @import url('modules/notifications.css?v=__BUILD_ID__');

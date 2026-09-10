@@ -388,7 +388,7 @@ class DevLeadBillingView extends DevBaseView {
     const plan = this.plans.find(p => p.id === id);
     if (!plan) return;
     const next = !plan.is_active;
-    if (!confirm(`${next ? 'Activar' : 'Desactivar'} el plan "${plan.name}"?\n\nSi lo desactivas, NO sera visible en el catalogo. Las subs existentes mantienen el plan hasta migrar.`)) return;
+    if (!confirm(`${next ? 'Activar' : 'Desactivar'} el plan "${plan.name}"?\n\nSi lo desactivas, NO sera visible en el catálogo. Las subs existentes mantienen el plan hasta migrar.`)) return;
     try {
       const supabase = await this.getSupabase();
       const { error } = await supabase.from('plans').update({ is_active: next }).eq('id', id);
@@ -530,7 +530,7 @@ class DevLeadBillingView extends DevBaseView {
     this._creatingPack = true;
     this._editingPackId = null;
     const { modal, close } = window.Modal.show({
-      title: 'Nuevo paquete de creditos',
+      title: 'Nuevo paquete de créditos',
       body: this._packageModalBody(true),
       className: 'dev-lead-modal-content dev-lead-modal-wide',
       onClose: () => { this._modalClose = null; this._creatingPack = false; }
@@ -572,7 +572,7 @@ class DevLeadBillingView extends DevBaseView {
     if (!id || !/^[a-z0-9_-]+$/.test(id)) { this.showNotification('ID invalido: usar lowercase, numeros, _ o -', 'warning'); return; }
     if (!name) { this.showNotification('El nombre es obligatorio', 'warning'); return; }
     const credits = parseInt(document.getElementById('packFieldCredits')?.value || '0', 10);
-    if (credits <= 0) { this.showNotification('Creditos debe ser > 0', 'warning'); return; }
+    if (credits <= 0) { this.showNotification('Créditos debe ser > 0', 'warning'); return; }
     const price = Number(document.getElementById('packFieldPrice')?.value || 0);
     if (price < 0) { this.showNotification('Precio no puede ser negativo', 'warning'); return; }
 

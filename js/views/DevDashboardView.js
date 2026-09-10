@@ -295,7 +295,7 @@ class DevDashboardView extends DevBaseView {
 
     const provFail = att?.provisioning_failures_24h?.count || 0;
     if (provFail > 0) rows.push(this.attRow('crit',
-      `${provFail} fallo(s) de provisioning · 24h`, 'Veras sin desplegar', 'Ver orgs', '/dev/lead/orgs'));
+      `${provFail} fallo(s) de provisioning · 24h`, 'Verás sin desplegar', 'Ver orgs', '/dev/lead/orgs'));
 
     // Pill de conteo junto al título.
     const pill = document.getElementById('cmdAttCount');

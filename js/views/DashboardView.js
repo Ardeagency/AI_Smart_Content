@@ -154,7 +154,7 @@ class DashboardView extends BaseView {
     if (!ts) return '';
     const days = Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
     const stale = days > 3 ? ' dash-freshness--stale' : '';
-    return `<span class="dash-freshness${stale}" title="${__('Ultima captura de datos del scraping')}">
+    return `<span class="dash-freshness${stale}" title="${__('Última captura de datos del scraping')}">
       <i class="dash-freshness-dot"></i> ${__('Datos al {fecha}', { fecha: this._esc(this._fmtFreshness(ts, days)) })}
     </span>`;
   }
@@ -176,7 +176,7 @@ class DashboardView extends BaseView {
   _reportDropdown() {
     const opts = [
       { k: 'competencia', label: __('Informes de competencia') },
-      { k: 'diagnostico', label: __('Diagnostico de marca') },
+      { k: 'diagnostico', label: __('Diagnóstico de marca') },
       { k: 'ventas',      label: __('Informes de ventas') },
       { k: 'productos',   label: __('Research de productos') },
     ];
@@ -246,7 +246,7 @@ class DashboardView extends BaseView {
   _onCreateReport(type) {
     const labels = {
       competencia: __('Informes de competencia'),
-      diagnostico: __('Diagnostico de marca'),
+      diagnostico: __('Diagnóstico de marca'),
       ventas: __('Informes de ventas'),
       productos: __('Research de productos'),
     };

@@ -3285,7 +3285,7 @@ class VeraView extends (window.BaseView || class {}) {
             }),
           });
         } catch (err) { console.warn('approve failed', err); }
-        this.sendMessage(__('Aprobado, procede con la accion.'));
+        this.sendMessage(__('Aprobado, procede con la acción.'));
       };
       window._veraOpenArtifact = (btnEl) => this._openArtifactPanel(btnEl);
     }
@@ -3622,7 +3622,7 @@ class VeraView extends (window.BaseView || class {}) {
         // Gate de escritura: boton de aprobacion (en vez del checkbox crudo).
         const aMsgId = block._msgId || '';
         const aKey = esc(block.key || '');
-        return `<div class="vera-actions-row"><button class="vera-action-pill vera-approve-pill" title="${__('Aprobar y ejecutar esta accion')}" onclick="window._veraApproveAction && window._veraApproveAction('${aKey}', ${JSON.stringify(aMsgId)}, this)">${__('✓ Aprobar y ejecutar')}</button></div>`;
+        return `<div class="vera-actions-row"><button class="vera-action-pill vera-approve-pill" title="${__('Aprobar y ejecutar esta acción')}" onclick="window._veraApproveAction && window._veraApproveAction('${aKey}', ${JSON.stringify(aMsgId)}, this)">${__('✓ Aprobar y ejecutar')}</button></div>`;
       }
       case 'confirm': {
         const msgId = block._msgId || '';
@@ -4009,7 +4009,7 @@ class VeraView extends (window.BaseView || class {}) {
           window.showToast?.(__('No se pudo autorizar la tarea. Vuelve a pedírsela a Vera.'), { type: 'error' });
           return;
         }
-        sellar(action === 'simplify' ? __('✓ Autorizado (version simplificada)') : __('✓ Autorizado'), true);
+        sellar(action === 'simplify' ? __('✓ Autorizado (versión simplificada)') : __('✓ Autorizado'), true);
         this.sendMessage(original, {
           confirmedHighCost: true,
           simplifyRequest: action === 'simplify',

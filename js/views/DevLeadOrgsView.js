@@ -189,7 +189,7 @@ class DevLeadOrgsView extends DevBaseView {
     const cAvail = credits ? Math.round(credits.credits_available ?? 0) : 0;
     const cTotal = credits ? Math.round(credits.credits_total ?? 0) : 0;
     const cPct = cTotal > 0 ? Math.min(100, Math.max(0, Math.round((cAvail / cTotal) * 100))) : 0;
-    const creditsLabel = credits ? `${cAvail.toLocaleString('es')} / ${cTotal.toLocaleString('es')}` : 'Sin creditos';
+    const creditsLabel = credits ? `${cAvail.toLocaleString('es')} / ${cTotal.toLocaleString('es')}` : 'Sin créditos';
     const created = org.created_at
       ? new Date(org.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })
       : '—';
@@ -343,7 +343,7 @@ class DevLeadOrgsView extends DevBaseView {
 
   openCreateModal() {
     this._editingId = null;
-    this._openModal('Nueva organizacion', true);
+    this._openModal('Nueva organización', true);
     this.setFormValues({});
   }
 
@@ -383,7 +383,7 @@ class DevLeadOrgsView extends DevBaseView {
           .update(payload)
           .eq('id', this._editingId);
         if (error) throw error;
-        this.showNotification('Organizacion actualizada.', 'success');
+        this.showNotification('Organización actualizada.', 'success');
       } else {
         const ownerInput = (document.getElementById('orgFieldOwner')?.value || '').trim();
         payload.owner_user_id = ownerInput || this.userId || null;
@@ -392,7 +392,7 @@ class DevLeadOrgsView extends DevBaseView {
           .from('organizations')
           .insert(payload);
         if (error) throw error;
-        this.showNotification('Organizacion creada.', 'success');
+        this.showNotification('Organización creada.', 'success');
       }
       this.closeModal();
       await this.loadOrgs();
