@@ -99,3 +99,25 @@ Alternativa low-risk: ignorar los campos en el edge function por ahora — el us
 
 - B1 implementado y deployado en ai-engine → smoke test desde `/dev/lead/vera-training` adjuntando 1 file + verificar que aparece en `/dev/lead/vera-knowledge`
 - B2 extendido el edge function → smoke test desde `/dev/provisioning/users` creando un usuario con org nueva y verificar que `brand_slogan` quedo en la fila de `organizations`
+
+---
+
+## Nota de medición 2026-09-10 — no leer `ai_global_vectors` como señal de B1
+
+La ficha pide, como **B1**, un endpoint `POST /api/vera/train` que vectorice
+file/prompt/image dentro de `ai_global_vectors`.
+
+Esa tabla **tiene 108 filas**, pero *no vienen de ahí*: son vectores de ADN
+visual, cargados por otra vía. Su desglose por `source_type`:
+
+```
+composition_pattern 53 · lighting_preset 18 · camera_setup 11 · color_palette 9
+typography_treatment 6 · arde_method_principle 5 · anti_pattern 4
+render_style 1 · background_treatment 1
+```
+
+Último registro: **2026-07-03**. No hay ninguna fila que corresponda a un archivo
+o prompt subido desde el portal.
+
+**Por qué se anota:** una tabla con 108 filas invita a dar B1 por hecho de un
+vistazo. No lo está. B1 y B2 siguen pendientes tal como los describe la ficha.

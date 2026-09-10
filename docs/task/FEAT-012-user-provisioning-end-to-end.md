@@ -162,3 +162,35 @@ Crear `POST /api/auth/signup` (Netlify Function o `/auth/signup` en ai-engine si
 
 - BUG-004 — verificar VeraView para que el usuario nuevo pueda usar Vera.
 - DOCS-002 — actualizar documentación de auth flows.
+
+---
+
+## ⚠️ Verificado 2026-09-10 — la premisa central de esta ficha es FALSA
+
+La ficha dice: *"la UI invoca **3 endpoints backend que no existen**:
+`admin-create-user`, `lead-provision-user`, `dev-create-user`. Resultado: ninguna
+cuenta nueva se puede crear."*
+
+**Ninguno de esos tres nombres aparece hoy en `js/`, `functions/` ni
+`supabase/`.** El wizard se reconstruyó y ahora llama por
+`supabase.functions.invoke()` a:
+
+| Llamada en `DevLeadUserProvisioningView.js` | Edge function |
+|---|---|
+| `provision-user-start` (línea ~938) | ✅ existe |
+| `provision-user-check` (líneas ~562, ~994) | ✅ existe |
+| `provision-user-finalize` (línea ~862) | ✅ existe |
+
+También existen `provision-user-cancel` y `provision-org-agent`. El plan que
+propone la ficha (apuntar a `${AI_ENGINE_URL}/internal/users/provision`) **quedó
+obsoleto**: se resolvió con edge functions, no con el ai-engine.
+
+## Lo que de verdad queda
+
+1. **La decisión de producto ya se tomó (2026-09-10): autoservicio, no
+   invitation-only.** Ver [SEC-003](./SEC-003-perimetro-identidad-signup-mfa.md).
+   Con eso, el eje que bloqueaba esta ficha desaparece.
+2. **Email sender (Resend) sin configurar** — sigue pendiente y es lo único que
+   impide un alta autoservicio completa de punta a punta.
+3. Contexto: la base tiene **3 usuarios** y **2 organizaciones**. El camino existe
+   pero prácticamente no se ha usado; conviene probarlo antes de darlo por bueno.

@@ -33,6 +33,33 @@ midio EJECUTANDO contra la base viva y la config de Auth, no leyendo `SQL/`.
 - 📉 Contexto que baja el riesgo: la base tiene **3 usuarios** en total y **0**
   sesiones anonimas creadas nunca.
 
+**Barrido de premisas 2026-09-10 (segunda tanda).** Se verificaron contra la BD
+viva y el codigo las fichas que quedaban. Cuatro premisas resultaron FALSAS o a
+medias:
+
+- ❌ **FEAT-012**: dice que la UI invoca 3 endpoints inexistentes
+  (`admin-create-user`, `lead-provision-user`, `dev-create-user`). **Ninguno de
+  los tres aparece hoy en el repo.** El wizard se reconstruyo sobre
+  `provision-user-start/check/finalize`, que **si existen**. Y la decision de
+  producto que la bloqueaba (invitation-only vs autoservicio) **se tomo hoy**.
+- ⚠️ **FEAT-037-centro**: el INDEX la daba "probable cerrada". El paso REQUERIDO
+  (7 RPCs) **si esta hecho**, pero `/health` del ai-engine devuelve **404** — el
+  cambio vivia en el mirror local y **nunca llego a produccion** — y
+  `AI_ENGINE_BASE_URL` no esta expuesta.
+- ⚠️ **FEAT-033**: pide "migrar la tabla `comfy_flow_jobs`". **Ya existe**, con 2
+  jobs `completed` (ultimo 2026-06-02): el puente llego a correr de punta a punta.
+- ⚠️ **DEBT-vision**: el archivo estaba marcado RESUELTO y **sin borrar**. La
+  causa raiz si esta arreglada (338 de 341 con imagen) pero queda residuo: 106
+  sin descripcion visual y 27 con `image_extraction_error`.
+
+Ademas: se limpio basura de herramienta (`</content></invoke>`) incrustada dentro
+de `FEAT-037-dashboard-tier1-gap-closure.md`, y se abrio **DATA-003**
+(`media_type` guardado en dos capitalizaciones).
+
+Confirmadas EXACTAS: FEAT-037-tag (0 de 27 producciones tagueadas), FEAT-022
+(`organization_features` 0 filas), FEAT-031 (los 108 `ai_global_vectors` son de
+ADN visual, **no** del endpoint de entrenamiento que la ficha pide).
+
 **Ultima actualizacion previa: 2026-07-03** — reconciliacion de reorganizacion documental.
 Se indexaron 5 tareas de junio que existian en `docs/task/` pero faltaban en este
 INDEX (FEAT-037-tag-productions, FEAT-038, FEAT-040, AUDIT-i18n-mobile; +FEAT-041
@@ -103,7 +130,7 @@ BUG-004, SPRINT-FRONTEND-100)
 | [FEAT-018](./FEAT-018-notifications-rich-model.md) | Modelo rico de notifs. **La mitad de la etiqueta se cerro 2026-09-10** (mapa tipo→label traducible en ambos renderers; el backfill que prometia el INDEX era un no-op). Falta lo que de verdad vale: **backend que escriba metadata rica** (`summary`/`subject`/`checklist`/`actions`) al crear la notificacion — hoy 49 de 50 se renderizan planas porque no hay nada rico que renderizar. |
 | [FEAT-031](./FEAT-031-dev-portal-iteration-2026-05-22.md) | Backend ai-engine: B1 endpoint `POST /api/vera/train` (vectoriza file/prompt/image en `ai_global_vectors`); B2 extender edge function `provision-user-start` para guardar `new_brand_name_oficial`/`slogan`/`logo_url`. Frontend ya cablea ambos. |
 | [FEAT-037](./FEAT-037-dashboard-tier1-gap-closure.md) | Dashboard Tier-1 gap closure. **Fase 1 HECHA** + **Fase 2 #4 HECHA** (2026-07-06, commit 3416f096: drill-down completo de competidor en el drawer — distribuciones/horas/actividad) + **Fase 2 #7 HECHA** (2026-07-06: DROP de 10 RPCs legacy/superseded + dedup overload `mimarca_health`; inventario 84→74). Falta Fase 2 #5 (Estrategia: hashtags/platform_comparison/sentiments_by_brand), #6 (Mi Marca: 7 RPCs), superficies `featured`/`search`, y Fase 3 (export/alertas/reportes). 21 huerfanas-a-cablear restantes. Todo lo hecho falta QA visual humano. ⚠ Colision de numero FEAT-037 (ver encabezado). |
-| [FEAT-037-tag](./FEAT-037-tag-productions-to-strategy.md) | Taguear producciones al contexto de estrategia (`flow_runs`=fuente de verdad; `runs_outputs` hereda). **Fase 1 desplegada** (2026-06-24). Falta Fase 2: capturar brief/campaign en el disparo (Studio form / Vera tool / scheduled). Desbloquea FEAT-038. ⚠ Colision FEAT-037. |
+| [FEAT-037-tag](./FEAT-037-tag-productions-to-strategy.md) | ✅ **PREMISA EXACTA**: 0 de 27 `runs_outputs` tienen `campaign_id` ni `brief_id`. Falta la Fase 2. **Pero el ultimo `flow_runs` es del 2026-07-08**: no hay produccion que taguear desde hace dos meses, asi que ni se podria validar. Desbloquea FEAT-038. |
 | [FEAT-038](./FEAT-038-production-satellites-canvas.md) | Satelites de produccion/publicacion en canvas. PENDIENTE — bloqueado por FEAT-037-tag (necesita el tagging de producciones a estrategia). |
 
 <!-- FEAT-040 CERRADA 2026-07-06: comentarios propios verificados en prod (87 filas source=meta_api en brand_post_comments); D (reception) cableado — RPC dashboard_brand_post_reception existe en BD y la consume CampanasDataService. Ver "Resueltas 2026-07-06". -->
@@ -122,9 +149,12 @@ BUG-004, SPRINT-FRONTEND-100)
 | [FEAT-025](./FEAT-025-mercadolibre-api-publica-fiche.md) | **BLOQUEADA-EXTERNO** (verificado 2026-05-27): la API de ML ya no es publica, devuelve 403 `PA_UNAUTHORIZED` sin token. Requiere registrar app ML + OAuth, o seguir con scrape HTML + headless. Decision de producto pendiente. |
 | [FEAT-030](./FEAT-030-n8n-flow-output-semantics.md) | BD ya parchada (2026-05-23); falta tocar el flow IGNIS en n8n: renombrar `copys`->`scene_prompt` y agregar `post_copy`/`post_hashtags`. Owner: equipo n8n (herramienta externa). |
 | [FEAT-032](./FEAT-032-comfyui-flows-publishing.md) | Build del comfy-kie-adapter: `parser.js` + `resolver.js` + `orchestrator.js` + executors en ai-engine + POC con flow IGNIS. Discovery cerrado 2026-05-23. |
-| [FEAT-033](./FEAT-033-comfy-flow-bridge.md) | Puente orquestacion ComfyUI ai-engine<->content-flows: migracion tabla `comfy_flow_jobs` + `comfy-flow-runner.service.js` + pool de N workers en content-flows. Diseño aprobado 2026-05-25. |
-| [FEAT-012](./FEAT-012-user-provisioning-end-to-end.md) | Provisioning end-to-end: requiere decision de producto (invitation-only vs autoservicio) + email sender (Resend). 3 endpoints hardcoded inexistentes en `DevLeadUserProvisioningView`. |
+| [FEAT-033](./FEAT-033-comfy-flow-bridge.md) | ⚠️ **A MEDIAS**: `comfy_flow_jobs` **ya existe** con 2 jobs `completed` (ultimo 2026-06-02) — la migracion se aplico y el puente corrio de punta a punta. Falta verificar el **pool de N workers** en content-flows (vive en el servidor, no en este repo). |
+| [FEAT-012](./FEAT-012-user-provisioning-end-to-end.md) | ⚠️ **PREMISA FALSA (2026-09-10)**: los 3 endpoints "inexistentes" que denuncia **no aparecen en el repo**; el wizard usa `provision-user-start/check/finalize`, que existen. La decision de producto (autoservicio) **se tomo hoy**. Queda solo el **email sender (Resend)**. |
 | [AUDIT-i18n](./AUDIT-i18n-mobile-2026-06-16.md) | Auditoria de i18n y responsive movil del frontend. Referencia/diagnostico; no accionable como una sola tarea. |
+| [FEAT-037-centro](./FEAT-037-centro-de-mando-dev-deploy.md) | ⚠️ **NO estaba cerrada** (el INDEX la daba "probable cerrada"). Paso 1 (7 RPCs `dev_dashboard_*`) ✅ hecho y verificado. Paso 2 ❌: `GET api.aismartcontent.io/health` da **404** — vivia en el mirror local y nunca se desplego. Paso 3 ❌: `AI_ENGINE_BASE_URL` no se expone (el panel degrada, no rompe). La verificacion de seguridad que pide la ficha ✅ pasa: anon recibe `42501` en las 3 RPC. |
+| [DATA-003](./DATA-003-media-type-doble-capitalizacion.md) | 🆕 **Abierta 2026-09-10.** `media_assets->>'media_type'` convive en MAYUSCULAS y minusculas (`VIDEO`/`video`, `CAROUSEL_ALBUM`/`carousel_album`). Dos caminos de escritura que no acuerdan formato. Hoy sin bug activo —el unico comparador literal lee del Graph, que manda mayusculas— pero es el mismo patron que ya mordio con `campaigns.status`. |
+| [DEBT-vision](./DEBT-vision-coverage-posts-propios.md) | ⚠️ Estaba marcada RESUELTA **y sin borrar**. La causa raiz si esta arreglada (**338 de 341** posts propios con imagen). Residuo: **106 sin descripcion visual** (45 sin `media_type`, 27 carrusel, 23 video, 11 IMAGE) y **27 con `image_extraction_error`**. Falta reprocesar los 27+11 y decidir si video/carrusel entran. |
 | [OPS-006](./OPS-006-meta-ad-library-diagnostico.md) | ⚠ **PREMISA CAIDA (2026-09-09)**: `competitor_ads` ya NO esta vacia (**98 filas**). La decision path A/B/C se tomo de hecho, no en el doc. Verificar por que via entran y cerrar. Decision estrategica. |
 | [OPS-012](./OPS-012-lexicon-review-admin.md) | 🛑 **CHOCA CON SEC-004 — no construir en console.** Medido: `dimension_lexicon` 215 filas, `enrich_lexicon_proposal` no existe, la vista sigue siendo shell. Pero SEC-004 quiere SACAR las 19 vistas `/dev/*`: añadir la vista 20 es sumarle trabajo a esa migracion y nacer del lado inseguro. Decidir: construirla en `AISC-Admin`, o congelarla hasta que SEC-004 termine. |
 | [OPS-010](./OPS-010-ci-gates-staging.md) | ✅ **FASE 1 HECHA 2026-09-10**: `netlify.toml` corre `npm run test:gate` antes de construir — si un test falla, el deploy **aborta**. Son los 440 tests HERMETICOS; se excluyen `endpoints`/`rls`/`rpcs` a proposito (salen a la red: colgar el deploy de un tercero impide publicar hasta el hotfix). Falta Fase 2: branch `staging` + proyecto Supabase de staging. ⚠️ Ojo: proteccion de rama que exija PR **rompe** la regla de autopush a `main`. |

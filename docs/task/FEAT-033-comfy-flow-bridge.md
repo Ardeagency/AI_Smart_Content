@@ -72,3 +72,20 @@ VERA (tool) ────────┘                                         
 ## 7. Pendientes externos (bloquean E2E, no el build)
 - 5 imagenes de referencia de IGNIS (no existen aun).
 - Definir N inicial de workers (sugerido: 3 en CPX41 16GB).
+
+---
+
+## Medido 2026-09-10 — parte de lo que pide ya existe
+
+La ficha lista como pendiente *"migración tabla `comfy_flow_jobs` +
+`comfy-flow-runner.service.js` + pool de N workers"*.
+
+- ✅ **`comfy_flow_jobs` EXISTE** en producción, y no vacía: **2 jobs en estado
+  `completed`**, el último el **2026-06-02**. O sea que la migración se aplicó y
+  el puente llegó a ejecutar de punta a punta al menos dos veces.
+- `comfy_flow_definitions` tiene **1** fila.
+
+Lo que no se puede verificar desde este repo es el **pool de N workers** en
+content-flows (vive en el servidor). Antes de retomar esta ficha hay que mirar
+allá, porque su premisa de "falta la migración" ya no es cierta y el resto puede
+estar igual de avanzado.

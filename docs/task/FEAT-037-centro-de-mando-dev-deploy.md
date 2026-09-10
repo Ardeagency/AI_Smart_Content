@@ -45,3 +45,24 @@ está, el panel se degrada a "No configurado" (no rompe). Definir
 - Probar como **dev no-lead**: paneles globales muestran "requiere rol lead",
   KPIs/top-flows/atención degradan a vista propia (`my_*`).
 - Probar **anon crudo** contra las RPC: deben dar `forbidden` (42501), nunca data.
+
+---
+
+## Medido 2026-09-10 — el paso REQUERIDO está hecho; faltan los otros dos
+
+El INDEX la daba por *"probable cerrada"*. No lo está, pero le falta menos de lo
+que parecía.
+
+| Paso | Estado real |
+|---|---|
+| **1. RPCs en prod** (el marcado *REQUERIDO*) | ✅ **HECHO.** Las 7 existen y son `SECURITY DEFINER`: `dev_dashboard_indicators`, `_scrapers`, `_finops`, `_signals`, `_kpis`, `_top_flows`, `_attention` |
+| **2. `/health` en ai-engine** | ❌ **NO desplegado.** `GET https://api.aismartcontent.io/health` → **404 `Cannot GET /health`**. El cambio vivía en el mirror local y **nunca llegó a prod** |
+| **3. `AI_ENGINE_BASE_URL` al frontend** | ❌ **No expuesta.** `/.netlify/functions/supabase-config` sólo devuelve `url`, `anonKey`, `metaAppId`, `metaApiVersion`. El panel degrada a "No configurado" (por diseño, no rompe) |
+| **Verificación: anon crudo contra las RPC** | ✅ **PASA.** `dev_dashboard_finops`, `_indicators` y `_signals` devuelven **`42501 forbidden`** con la llave pública |
+
+**Lección del paso 2:** el mirror local del ai-engine estaba al día y producción
+no. Editar el mirror **no** es desplegar. Cualquier cosa que dependa del motor hay
+que verificarla con un `curl` contra `api.aismartcontent.io`, no leyendo el mirror.
+
+La **deuda de datos** (costo IA en USD por proveedor sin instrumentar) sigue
+igual y sigue sin ser bloqueante.

@@ -140,3 +140,45 @@ Los 20 restantes son mas viejos que la ventana que devuelve la API (`maxPages: 2
 
 Deteccion de producto: de **81 a 117** posts; los detectados **solo por la imagen**,
 de **24 a 60**. Costo total del rescate: **$1.49**.
+
+---
+
+## Medido 2026-09-10 — la causa raíz sí está resuelta; queda un residuo
+
+El archivo se marcó `RESUELTO 2026-07-22` pero **no se borró**, que es lo que
+manda la convención de esta carpeta. Antes de borrarlo se midió, y resultó que
+había motivo para no borrarlo: la mitad de "media" está resuelta, la de
+"descripción visual" no del todo.
+
+| Medida (posts `post_source='own'`) | Valor |
+|---|---|
+| Total | **341** |
+| Con imagen (`images` / `display_url` / `cover_image`) | **338** (99%) ✅ |
+| **Con descripción visual** | **235** (69%) |
+| **Sin descripción visual** | **106** (31%) |
+| Con `image_extraction_error` | **27** |
+
+**La causa raíz está arreglada:** pedirle `media_url`/`thumbnail_url` al Graph
+funcionó — 338 de 341 entran con imagen.
+
+### El residuo, y qué es cada cosa
+
+Los 106 sin descripción, por tipo de media:
+
+```
+(sin media_type) 45 · CAROUSEL_ALBUM+carousel_album 27 · VIDEO+video 23 · IMAGE+image 11
+```
+
+- Los **23 vídeos** probablemente no son un fallo: describir vídeo no es lo mismo
+  que describir imagen, y puede ser fuera de alcance a propósito.
+- Los **27 con `image_extraction_error`** sí son fallo real de extracción.
+- Los **45 sin `media_type`** son datos incompletos.
+- Los **11 IMAGE** son los que más claramente deberían tener descripción y no la
+  tienen.
+
+**Alcance que queda:** reprocesar los 27 con error y los 11 `IMAGE`, y decidir
+explícitamente si vídeo y carrusel entran o no. Cuando eso se cierre, **borrar
+este archivo** (no dejarlo marcado como resuelto, que fue el error anterior).
+
+> Nota: el desglose de arriba destapó que `media_type` se guarda en **dos
+> capitalizaciones** distintas. Eso se sacó a su propia ficha: `DATA-003`.

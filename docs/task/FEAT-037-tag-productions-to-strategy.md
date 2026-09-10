@@ -68,3 +68,29 @@ brief/campaign. Cerrar cuando se trabaje el disparo desde estrategia.
 - FEAT-038 (satelites de produccion en el canvas) depende de esto para tener datos.
 - Tablas: `runs_outputs` (produccion), `social_publications` (publicacion organica),
   `campaigns`/`campaign_briefs`/`audience_personas` (estrategia).
+
+---
+
+## Verificado 2026-09-10 — la premisa se sostiene EXACTAMENTE
+
+Medido en producción:
+
+| | |
+|---|---|
+| `runs_outputs` totales | **27** |
+| con `campaign_id` | **0** |
+| con `brief_id` | **0** |
+
+La Fase 1 (plumbing) está desplegada, pero **nada quedó tagueado**: la Fase 2
+—capturar brief/campaign en el disparo— sigue sin existir, tal como dice la ficha.
+
+**Dato de contexto que cambia la urgencia:** el último `flow_runs` es del
+**2026-07-08**. No se ha disparado ninguna producción en dos meses, así que la
+Fase 2 no sólo falta: **no habría tenido nada que taguear**. Conviene tenerlo en
+cuenta antes de priorizarla por encima de otras cosas, y también significa que
+cuando se construya no se podrá validar con tráfico real hasta que el Studio
+vuelva a usarse.
+
+Sigue bloqueando a [FEAT-038](./FEAT-038-production-satellites-canvas.md), que
+además ya tiene algo de dato con que trabajar: `social_publications` tiene **7**
+filas y **1** `runs_outputs` con `published_at`.

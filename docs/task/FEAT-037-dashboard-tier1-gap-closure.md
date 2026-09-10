@@ -130,5 +130,3 @@ Agency).
 - Cada tab muestra indicador de frescura.
 - KPI strips muestran delta vs periodo previo.
 - Verificacion humana en browser (PENDING-HUMAN-VERIFICATION).
-</content>
-</invoke>
