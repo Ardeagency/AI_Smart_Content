@@ -1223,8 +1223,31 @@
         const item = e.target.closest('[data-lib-id]');
         if (item) item.classList.remove('cc-camp-row--dragging');
       };
+      // Clic = misma accion que soltar, pero en el centro visible. Arrastrar no
+      // puede ser la UNICA forma de colocar: en un lienzo vacio el usuario hace
+      // clic primero y, si eso no responde, la pagina se siente rota.
+      this._campLibClick = (e) => {
+        const item = e.target.closest('[data-lib-id]');
+        if (!item || e.target.closest('button, a, input')) return;
+        const type = item.getAttribute('data-lib-type');
+        const id = item.getAttribute('data-lib-id');
+        const r = canvas.getBoundingClientRect();
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        if (type === 'campaigns') { this._addRealToCanvas(id, cx, cy); return; }
+        if (ID_TYPES.includes(type)) {
+          this._addIdentityToCanvas({
+            type,
+            id,
+            name: (item.querySelector('.cc-lib-item-name') || {}).textContent || '',
+            sub: (item.querySelector('.cc-lib-item-sub') || {}).textContent || '',
+          }, cx, cy);
+          return;
+        }
+        if (type === 'audiences' || type === 'concepts') this._addExistingToCanvas(type, id, cx, cy);
+      };
       list.addEventListener('dragstart', this._campDragStart);
       list.addEventListener('dragend', this._campDragEnd);
+      list.addEventListener('click', this._campLibClick);
     }
     if (!this._canvasDragOver) {
       this._canvasDragOver = (e) => {
@@ -1246,7 +1269,9 @@
         e.preventDefault();
         if (lib.type === 'campaigns') { this._addRealToCanvas(lib.id, e.clientX, e.clientY); return; }
         if (ID_TYPES.includes(lib.type)) { this._addIdentityToCanvas(lib, e.clientX, e.clientY); return; }
-        // audiences / concepts ya viven en el canvas → no-op
+        if (lib.type === 'audiences' || lib.type === 'concepts') {
+          this._addExistingToCanvas(lib.type, lib.id, e.clientX, e.clientY);
+        }
       };
       canvas.addEventListener('dragover', this._canvasDragOver);
       canvas.addEventListener('dragleave', this._canvasDragLeave);
@@ -1273,6 +1298,35 @@
     const toKey = target && target.getAttribute('data-node-key');
     this._renderCanvas();
     this._renderLibrary();
+    if (toKey && toKey !== key) this._addLink(key, toKey);
+  };
+
+  /** Coloca en la estrategia ACTIVA una audiencia u objetivo que YA existe.
+
+      Antes esto era un no-op con el comentario "ya viven en el canvas". Esa
+      suposicion se murio el 2026-07-02, cuando los nodos pasaron a tener scope
+      por estrategia: desde entonces una audiencia SOLO esta en el lienzo si
+      tiene fila en canvas_node_placements de esa estrategia. El resultado era
+      que arrastrarla no hacia absolutamente nada —ni error, ni aviso— y no
+      quedaba forma de meterla.
+
+      Misma receta que usa _createAndEdit al crear una: posicion en el punto
+      soltado, marca de creada-en-sesion (para que se vea antes de que el
+      placement viaje) y persistencia diferida del placement. */
+  P._addExistingToCanvas = function (libType, id, clientX, clientY) {
+    if (!id) return;
+    const key = libType === 'audiences' ? `aud:${id}` : `camp:${id}`;
+    if (!this._sessionCreated) this._sessionCreated = new Set();
+    this._sessionCreated.add(key);
+    const w = this._worldPointFromClient(clientX, clientY);
+    this._positions[key] = { x: Math.max(0, w.x - 110), y: Math.max(0, w.y - 20) };
+    this._savePositions();
+    const target = this._nodeAt(clientX, clientY, key);
+    const toKey = target && target.getAttribute('data-node-key');
+    this._renderCanvas();
+    this._renderLibrary();
+    try { this._store?.setNodePosition(key, this._positions[key].x, this._positions[key].y); } catch (_) { /* noop */ }
+    if (typeof this._persistPlacementPosition === 'function') this._persistPlacementPosition(key);
     if (toKey && toKey !== key) this._addLink(key, toKey);
   };
 
@@ -2417,6 +2471,7 @@
     if (canvas && this._canvasTagKey)    { canvas.removeEventListener('keydown', this._canvasTagKey); this._canvasTagKey = null; }
     if (canvas && this._canvasDragOver)  { canvas.removeEventListener('dragover', this._canvasDragOver); canvas.removeEventListener('dragleave', this._canvasDragLeave); canvas.removeEventListener('drop', this._canvasDrop); this._canvasDragOver = null; }
     if (list && this._campDragStart)     { list.removeEventListener('dragstart', this._campDragStart); list.removeEventListener('dragend', this._campDragEnd); this._campDragStart = null; }
+    if (list && this._campLibClick)      { list.removeEventListener('click', this._campLibClick); this._campLibClick = null; }
     if (panel && this._panelClick)       { panel.removeEventListener('click', this._panelClick); this._panelClick = null; }
     if (panel && this._railKey)          { panel.removeEventListener('keydown', this._railKey); this._railKey = null; }
     if (this._reportDocClick)            { document.removeEventListener('click', this._reportDocClick); this._reportDocClick = null; }
