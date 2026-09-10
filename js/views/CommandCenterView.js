@@ -157,8 +157,8 @@ class CommandCenterView extends BaseView {
         <div class="cc-canvas-world" id="ccCanvasWorld"></div>
         <div class="cc-canvas-empty" id="ccCanvasEmpty" style="display:none;">
           <i class="aisc-ico aisc-ico--flows"></i>
-          <p class="cc-canvas-empty-title">${__('Centro de estrategia')}</p>
-          <p>${__('Vera construye estrategias de campaña usando nodos guía para analizar y producir. Esta página es tu centro de monitoreo para visualizar las estrategias creadas.')}</p>
+          <p class="cc-canvas-empty-title">${__('El lienzo está vacío')}</p>
+          <p>${__('Aquí armas la estrategia: trae una audiencia o un objetivo desde la biblioteca de la derecha —arrástralo o haz clic— y conéctalos para ver de qué se alimenta cada campaña.')}</p>
         </div>
 
         <!-- Minimapa flotante (esquina inferior izquierda), estilo n8n/React Flow -->
