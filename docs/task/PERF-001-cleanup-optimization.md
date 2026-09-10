@@ -198,3 +198,48 @@ _resolveWindow/loadAll`) — hacer DESPUES de la limpieza de los muertos (ya hec
 ### Otros hardcodes a tokenizar
 92 `backdrop-filter: blur(Npx)` hardcodeados -> `var(--glass-blur)` (para tunear central).
 331 `!important` (sintoma de guerras de especificidad por el orden de @import).
+
+---
+
+## 2026-09-10 — "consolidar escapeHtml (seguridad)" NO era aseo: era un XSS
+
+La ficha lo listaba entre las tareas de limpieza pendientes. Al mirarlo, la
+duplicación era lo de menos. Había **7 implementaciones y 4 de ellas no escapaban
+comillas**:
+
+```js
+// La variante insegura, repetida en 4 archivos:
+const d = document.createElement('div');
+d.textContent = s;
+return d.innerHTML;      // escapa & < >  pero NO  "  ni  '
+```
+
+Y su resultado **sí se interpola dentro de atributos HTML**:
+
+| Archivo | Uso en atributo |
+|---|---|
+| `js/views/StudioView.js` | `alt="${escapeHtml(nombre)}"`, `src="${escapeHtml(mainImage)}"` |
+| `js/views/VeraView.js` | `aria-label="${escapeHtml(title \|\| type)}"`, `fill=`, `stroke=` |
+| `js/components/SwitchUserController.js` | `data-target-id="${escapeHtml(d.id)}"`, `data-rank=` |
+
+Un `"` en el dato cierra el atributo y permite inyectar otro (`onerror=…`).
+`js/views/builder/BuilderInputs.js` escapaba `&<>"` pero **no** `'` — mismo
+problema en atributos con comilla simple.
+
+### Hecho
+
+Las 5 delegan ahora en `BaseView.escapeHtml` (la canónica: escapa `& < > " '`)
+con el mismo fallback defensivo que ya usaban `input-registry.js` y
+`Navigation.js`. Verificado: no queda ninguna variante ciega a comillas.
+
+### Encontrado de paso: doble escapado en `BaseView.updateHeaderContext`
+
+Escapaba y **después** asignaba a `textContent`, que ya neutraliza HTML por sí
+mismo. Una sección llamada `Productos & Servicios` se leía `Productos &amp;
+Servicios`. Corregido (es cosmético, no de seguridad).
+
+### Sigue pendiente de PERF-001
+
+Route-split del resto del CSS (`developer.css` 351KB), `.card` glass→sólido,
+keyframes, tokens de z-index, dividir monolitos. **Todo eso requiere QA visual
+humano** — no es mecánico.

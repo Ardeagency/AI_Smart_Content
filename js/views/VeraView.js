@@ -7,10 +7,14 @@
 
 /* ─── Helpers ─────────────────────────────────────────── */
 function escapeHtml(s) {
+  // Unificado (PERF-001): las variantes con textContent+innerHTML NO
+  // escapaban comillas, y este valor se interpola DENTRO de atributos.
+  if (typeof BaseView !== 'undefined' && typeof BaseView.escapeHtml === 'function') {
+    return BaseView.escapeHtml(s);
+  }
   if (s == null) return '';
-  const d = document.createElement('div');
-  d.textContent = String(s);
-  return d.innerHTML;
+  return String(s).replace(/[&<>"']/g, (ch) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
 }
 
 /* ─── Vera Charts (SVG) ───────────────────────────────── */

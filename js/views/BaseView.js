@@ -559,7 +559,9 @@ class BaseView {
     const appHeader = document.getElementById('appHeader');
     const headerTitle = document.getElementById('headerTitle');
     if (appHeader && headerTitle) {
-      const line = activeObject ? `${this.escapeHtml(section)} / ${this.escapeHtml(activeObject)}` : this.escapeHtml(section);
+      // `textContent` ya neutraliza el HTML por sí mismo: escapar ANTES hacía que
+      // una sección con "&" se leyera "&amp;" en pantalla (doble escapado).
+      const line = activeObject ? `${section} / ${activeObject}` : String(section ?? '');
       headerTitle.textContent = line;
       return;
     }

@@ -93,9 +93,14 @@
   }
 
   function escapeHtml(s) {
-    const d = document.createElement('div');
-    d.textContent = s == null ? '' : String(s);
-    return d.innerHTML;
+    // Unificado (PERF-001): las variantes con textContent+innerHTML NO
+    // escapaban comillas, y este valor se interpola DENTRO de atributos.
+    if (typeof BaseView !== 'undefined' && typeof BaseView.escapeHtml === 'function') {
+      return BaseView.escapeHtml(s);
+    }
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, (ch) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
   }
 
   function renderResults(query) {

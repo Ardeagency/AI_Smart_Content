@@ -47,9 +47,14 @@
   }
 
   function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text ?? '';
-    return div.innerHTML;
+    // Unificado (PERF-001): las variantes con textContent+innerHTML NO
+    // escapaban comillas, y este valor se interpola DENTRO de atributos.
+    if (typeof BaseView !== 'undefined' && typeof BaseView.escapeHtml === 'function') {
+      return BaseView.escapeHtml(text);
+    }
+    if (text == null) return '';
+    return String(text).replace(/[&<>"']/g, (ch) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
   }
 
   // ─── Modal ─────────────────────────────────────────────────────────────

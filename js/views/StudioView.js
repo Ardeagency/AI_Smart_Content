@@ -1841,10 +1841,14 @@ class StudioView extends BaseView {
     }
 
     const escapeHtml = (s) => {
+      // Unificado (PERF-001): las variantes con textContent+innerHTML NO
+      // escapaban comillas, y este valor se interpola DENTRO de atributos.
+      if (typeof BaseView !== 'undefined' && typeof BaseView.escapeHtml === 'function') {
+        return BaseView.escapeHtml(s);
+      }
       if (s == null) return '';
-      const div = document.createElement('div');
-      div.textContent = s;
-      return div.innerHTML;
+      return String(s).replace(/[&<>"']/g, (ch) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
     };
 
     carousels.forEach(carousel => {
