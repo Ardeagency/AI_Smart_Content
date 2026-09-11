@@ -1158,7 +1158,7 @@
        (no por perfil monitoreado). Charts Chart.js: historial de actividad,
        tendencia de engagement + crecimiento (doble eje), patron de horas y sentimientos. */
     _buildLongitudinalSection(data) {
-      // Mi Marca V2 — Sprint 1 (docs/DASHBOARDS-V2-MIMARCA-REBUILD.md): esta
+      // Mi Marca V2 — Sprint 1 (Git-AISC-Docs/archivo/v1/product/DASHBOARDS-V2-MIMARCA-REBUILD.md): esta
       // sección concentraba las cards descriptivas sin veredicto (historial de
       // actividad, tendencia de engagement, heatmap de horas, actividad de
       // sentimientos, chips de alertas). Se retiran de la UI — sus RPCs siguen

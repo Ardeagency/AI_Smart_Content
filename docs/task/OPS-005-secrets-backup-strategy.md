@@ -59,7 +59,7 @@ Beneficio: 1 fuente de verdad. El ai-engine puede leer al arrancar (en lugar de 
 1. Decidir estrategia con el equipo.
 2. Migrar secrets uno por uno.
 3. Refactor `ai-engine/src/lib/supabase.js` para leer de Vault si elegimos B.
-4. Documentar en `docs/platform/08-deployment.md`.
+4. Documentar en `Git-AISC-Docs/operaciones/` (antes `docs/platform/08-deployment.md`).
 
 ## Criterio de done
 

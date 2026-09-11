@@ -30,4 +30,4 @@ Hoy la VM Hetzner CCX33 no tiene snapshots automáticos. Si la VM muere o el `.e
 
 - Mínimo 1 snapshot existe.
 - Política automática activa visible en consola.
-- Documentado en `docs/platform/08-deployment.md` sección "Backups".
+- Documentado en `Git-AISC-Docs/operaciones/` (antes `docs/platform/08-deployment.md`) sección "Backups".

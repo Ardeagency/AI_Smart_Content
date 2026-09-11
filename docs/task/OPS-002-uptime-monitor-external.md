@@ -38,4 +38,4 @@ Notificaciones a `info@ardeagency.com` cuando:
 
 - 3 monitores configurados.
 - Email de prueba recibido.
-- Documentar URL del dashboard de monitor en `docs/platform/08-deployment.md`.
+- Documentar URL del dashboard de monitor en `Git-AISC-Docs/operaciones/` (antes `docs/platform/08-deployment.md`).

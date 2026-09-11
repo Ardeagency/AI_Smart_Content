@@ -102,4 +102,4 @@ Las tareas marcadas `auto_eligible: yes` pueden ser programadas con `/schedule` 
 ## Ver también
 
 - [INDEX.md](./INDEX.md) — vista de pájaro de todas las tareas activas.
-- [docs/platform/09-current-state.md](../platform/09-current-state.md) — snapshot del estado de la plataforma.
+- `Git-AISC-Docs/archivo/v1/platform/09-current-state.md` — snapshot del estado de la plataforma (mayo 2026, archivado).

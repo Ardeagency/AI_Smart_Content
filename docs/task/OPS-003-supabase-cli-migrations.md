@@ -59,7 +59,7 @@ supabase db push
 ## Criterio de done
 
 - `supabase/migrations/00000000000000_baseline.sql` existe en el repo.
-- `supabase/README.md` apuntado desde `docs/platform/08-deployment.md` como método preferido.
+- `supabase/README.md` apuntado desde `Git-AISC-Docs/operaciones/` (antes `docs/platform/08-deployment.md`) como método preferido.
 - 1 cambio SQL futuro aplicado vía `supabase migration new` + `supabase db push` (en vez de Mgmt API ad-hoc).
 
 ---

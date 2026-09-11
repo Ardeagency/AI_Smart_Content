@@ -83,47 +83,20 @@ AI Smart Content/
 |   |-- favicons/           # Favicons SVG (claro/oscuro)
 |   |-- fondos/             # Fondos e imagenes de fondo
 |   `-- source/             # Archivos fuente Illustrator (.ai)
-`-- docs/                   # Documentacion tecnica y specs de producto
+`-- docs/task/              # Deuda tecnica (la doc de plataforma esta en Git-AISC-Docs)
 ```
 
 ---
 
 ## Documentacion
 
-Toda la documentacion tecnica y de producto esta en `docs/`:
+La documentacion de plataforma (arquitectura, decisiones, operaciones, mapa de
+repos) vive en el repo **`Git-AISC-Docs`**, no aqui. Lo que este repo
+documentaba hasta el 2026-09-11 quedo archivado entero en
+`Git-AISC-Docs/archivo/v1/`.
 
-### Arquitectura de plataforma (carpeta `docs/platform/`)
-Documentacion viva, mantenida en cada cambio estructural:
-- `01-overview.md` -- Vision general (empezar aqui)
-- `02-architecture.md` -- Arquitectura completa
-- `03-database.md` -- Schema, RLS, mat-views, RPCs
-- `04-ai-engine.md` -- Control plane Node + Python analyzer
-- `05-frontend.md` -- SPA vanilla + servicios + vistas
-- `06-data-flows.md` -- Flujos de datos sensor->signal->mision->UI
-- `07-vera.md` -- Agente Vera (chat + strategist + outcomes)
-- `08-deployment.md` -- Hetzner, Netlify, Cloudflared
-- `09-current-state.md` -- Snapshot del estado actual
-- `10-extending.md` -- Como anadir features nuevas
-- `sensor-types-catalog.md` -- 13 sensores documentados
-- `ESTADO_EXPANDIDO_2026-05-05.md` -- Snapshot expandido (referencia historica)
-
-### Sprint y tareas activas (carpeta `docs/task/`)
-- `INDEX.md` -- Tracker de todas las tareas activas (severidad + owner)
-- `SPRINT-FRONTEND-100-2026-05-06.md` -- Sprint critico actual
-- `AUDIT-001-frontend-vs-backend-2026-05-05.md` -- Auditoria frontend vs backend
-- `BUG-*.md`, `FEAT-*.md`, `OPS-*.md`, `DATA-*.md` -- Tareas individuales
-
-### Integraciones y APIs
-- `webhook-meta-setup.md` -- Configuracion webhooks Meta
-- `KIE-VIDEO-API.md` -- API de KIE (Kling 3.0 video)
-
-### Specs de Dashboards
-- `DASHBOARD-MI-MARCA.txt` -- Spec dashboard 1
-- `DASHBOARD-MI-COMPETENCIA.txt` -- Spec dashboard 2
-- `DASHBOARD-TENDENCIAS.txt` -- Spec dashboard 3
-
-### Schedules y flows
-- `AUTOMATED_FLOW_SCHEDULE_INPUTS.md` -- Schema de inputs para flows programados
+En `docs/` solo queda **`task/`**: la deuda tecnica de esta consola, una tarea
+por archivo que se borra al cerrarla. Indice en `docs/task/INDEX.md`.
 
 ---
 

@@ -54,7 +54,7 @@ Esto rompe en producción a la primera regresión silenciosa (ya pasó con `from
 
 - [ ] Push a `main` con test rojo NO deploya
 - [ ] Staging deploy en `staging.aismartcontent.io` con su propio Supabase
-- [ ] Flow documentado en `docs/platform/deploy.md` (crear si no existe)
+- [ ] Flow documentado en `Git-AISC-Docs/operaciones/` (crear el runbook si no existe)
 - [ ] Memoria actualizada: invalidar `project_aismartcontent_deploy` actual que dice "push=deploy directo"
 
 ## Notas

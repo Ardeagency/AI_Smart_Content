@@ -4351,7 +4351,7 @@
   // Anuncios (campaign_adsets) → Anuncio (campaign_ads); y Optimizacion de
   // tienda (store_optimizations, Shopify/Mercado Libre). Vera llena, el
   // humano aprueba, el engine ejecuta. Spec:
-  // docs/COMMAND-CENTER-PLANTILLAS-EJECUCION.md
+  // Git-AISC-Docs/archivo/v1/product/COMMAND-CENTER-PLANTILLAS-EJECUCION.md
   // ------------------------------------------------------------------
 
   /** Nombre incremental "Prefijo (N)" dentro de una lista de nombres. */
