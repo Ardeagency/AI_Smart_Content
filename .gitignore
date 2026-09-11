@@ -139,8 +139,10 @@ recursos/fondos/
 # Archivos fuente de diseño (.ai / .psd) — solo locales, no deployar
 recursos/source/
 
-# Esquemas de base de datos y migraciones SQL: no exponer estructura interna
+# Esquemas, funciones y migraciones de base de datos: NADA de SQL va en este repo
+# (la base vive en su propio repo, Git-AISC-DB)
 SQL/
+*.sql
 
 # Documentación interna sensible (arquitectura, seguridad, RLS)
 docs/SEGURIDAD_RLS_MAPA_PAGINAS.md

@@ -353,17 +353,11 @@ Corre como `postgres` (bypass RLS). Útil para CREATE FUNCTION, ALTER, etc.
 
 Permitiría `supabase db push` con migraciones versionadas en `SQL/migrations/`. Recomendado a futuro.
 
-### Convención de archivos SQL
+### Archivos SQL
 
-```
-SQL/schema.sql              — schema completo dump (regenerable)
-SQL/security_RLS.sql        — todas las RLS policies
-SQL/storage_buckets.sql     — definición de buckets
-SQL/functions/              — RPCs nuevas (uno por archivo)
-SQL/migrations/             — migraciones versionadas (timestamp prefijo)
-SQL/seeds/                  — seed data inicial
-SQL/v_*.sql                 — views/matviews
-```
+Este repo **no contiene SQL** (`*.sql` esta en `.gitignore`): ni schema, ni
+funciones, ni policies, ni migraciones. La base se cambia solo por migracion
+versionada en su propio repo (`Git-AISC-DB`).
 
 ---
 

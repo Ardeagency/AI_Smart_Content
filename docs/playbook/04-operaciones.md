@@ -152,7 +152,7 @@ Tooling sugerido:
 ### 4.3.1 Estado actual
 - `supabase/migrations/` está **vacío**.
 - Cambios SQL aplicados manualmente vía Management API o SQL Editor.
-- Carpeta `SQL/` gitignored (memoria: `project_aismartcontent_sql_gitignored`).
+- Ningun `.sql` en este repo (`*.sql` gitignored, carpeta `SQL/` eliminada el 2026-09-11); las migraciones viven en `Git-AISC-DB`.
 - Sin baseline, sin reproducibilidad.
 
 ### 4.3.2 Target Fase A

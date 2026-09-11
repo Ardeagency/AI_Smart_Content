@@ -73,13 +73,6 @@ AI Smart Content/
 |   `-- lib/                # Utilidades compartidas
 |
 |-- templates/              # HTML templates por vista (~18 templates)
-|-- SQL/
-|   |-- schema.sql          # Schema maestro de la base de datos
-|   |-- security_RLS.sql    # Politicas RLS (re-aplicable)
-|   |-- storage_buckets.sql # Configuracion de buckets de storage
-|   |-- migrations/         # Migraciones aplicadas (referencia)
-|   |-- functions/          # RPCs activas (products, inputs, living)
-|   `-- seeds/              # Seeds de datos (templates UI)
 |-- memory-banks/           # Bancos de memoria de Vera (identidad, estrategia, datos)
 |-- recursos/               # Todos los recursos visuales
 |   |-- logos/              # Variantes del logo AI Smart Content

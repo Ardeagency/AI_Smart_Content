@@ -460,9 +460,9 @@ Antes de declarar "listo":
 ## Recursos
 
 - **Spec docs**: `/docs/DASHBOARD-*.txt` (specs de los 3 dashboards de marca/competencia/tendencias).
-- **Schema fuente**: `SQL/schema.sql`.
-- **RLS fuente**: `SQL/security_RLS.sql`.
-- **Storage fuente**: `SQL/storage_buckets.sql`.
+- **Schema, RLS y storage**: NO viven en este repo (ningun `.sql` se versiona aqui);
+  la fuente son las migraciones del repo `Git-AISC-DB`. Las rutas `SQL/...` que
+  aparecen arriba en los ejemplos son de la epoca en que existia esa carpeta.
 - **Supabase Dashboard**: `https://supabase.com/dashboard/project/tsdpbqcwjckbfsdqacam`.
 - **Repo**: `https://github.com/Ardeagency/AI_Smart_Content`.
 - **Producción**: `https://aismartcontent.io`.

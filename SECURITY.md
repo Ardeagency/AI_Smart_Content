@@ -25,5 +25,5 @@ Configurar en el panel de despliegue (no en el repositorio):
 
 Los siguientes tipos de archivos nunca deben subirse al repositorio:
 - Archivos `.env` con valores reales
-- Directorio `SQL/` (esquemas de base de datos)
+- Cualquier `.sql`: esquemas, funciones, policies o migraciones de la base de datos (viven en el repo de la base, no aqui)
 - Documentos internos de arquitectura de seguridad

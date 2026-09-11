@@ -2,6 +2,8 @@
 
 3 archivos que extienden el sistema actual (PFA) con vocabulario Arde de video. **Ninguno aplicado todavia.** Para revisar antes de ejecutar.
 
+> 2026-09-11: los dos `.sql` (02 y 03) se retiraron del repo — ningun SQL de base de datos se versiona aqui. Quedan descritos abajo para saber que hacian; si se retoman, se reescriben como migracion en el repo de la base.
+
 ## Orden de aplicacion (cuando confirmes)
 
 | # | Archivo | Que hace | Donde se aplica | Reversible |
