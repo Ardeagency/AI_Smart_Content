@@ -682,22 +682,10 @@ class Router {
   }
 
   async _getDefaultUserRouteFallback(userId) {
-    const supabase = window.supabase || (window.supabaseService && (await window.supabaseService.getClient()));
-    if (!supabase || !userId) return '/creation_process';
+    if (!userId || !window.contextoService) return '/creation_process';
     try {
-      const [membersRes, ownedRes] = await Promise.all([
-        supabase.from('organization_members').select('organization_id, organizations(id, name)').eq('user_id', userId),
-        supabase.from('organizations').select('id, name').eq('owner_user_id', userId)
-      ]);
-      const list = [];
-      (membersRes.data || []).forEach((m) => {
-        const o = m.organizations;
-        const id = o?.id ?? m.organization_id;
-        if (id) list.push({ id, name: (o && o.name) || '' });
-      });
-      (ownedRes.data || []).forEach((o) => {
-        if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
-      });
+      // Base nueva (ADR-0052): mis marcas salen de mi_contexto().
+      const list = await window.contextoService.orgs();
       if (list.length === 0) return '/creation_process';
       const selectedId = localStorage.getItem('selectedOrganizationId');
       const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];

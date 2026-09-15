@@ -256,18 +256,21 @@ class AuthService {
       // tiene factor verificado, no completamos el login: redirigimos al tab
       // Seguridad de OrganizationView para enroll forzado.
       try {
-        const { data: status } = await this.supabase
-          .from('v_user_mfa_status')
-          .select('organization_id, mfa_enroll_required')
-          .eq('mfa_enroll_required', true)
-          .limit(1);
-        if (status && status.length > 0) {
-          return {
-            success:           false,
-            requiresMfaEnroll: true,
-            enforceOrgId:      status[0].organization_id,
-            message:           'Tu organización requiere activar 2FA. Te llevamos al flujo de activación.',
-          };
+        // Base nueva (ADR-0052): la exigencia viene por marca en mi_contexto()
+        // (organizations.mfa_required); el estado del factor lo da el cliente.
+        const ctx = await window.contextoService.cargar({ fresco: true });
+        const exige = (ctx?.organizations || []).find((o) => o.mfa_required);
+        if (exige) {
+          const { data: factors } = await this.supabase.auth.mfa.listFactors();
+          const verificado = (factors?.totp || []).some((f) => f.status === 'verified');
+          if (!verificado) {
+            return {
+              success:           false,
+              requiresMfaEnroll: true,
+              enforceOrgId:      exige.id,
+              message:           'Tu organización requiere activar 2FA. Te llevamos al flujo de activación.',
+            };
+          }
         }
       } catch (enfErr) {
         console.warn('AuthService.login enforce check skipped:', enfErr.message);
@@ -403,19 +406,8 @@ class AuthService {
     if (!this.supabase || !userId) return '/creation_process';
     try {
       const selectedId = localStorage.getItem('selectedOrganizationId') || window.appState?.get?.('selectedOrganizationId');
-      const [membersRes, ownedRes] = await Promise.all([
-        this.supabase.from('organization_members').select('organization_id, organizations(id, name)').eq('user_id', userId),
-        this.supabase.from('organizations').select('id, name').eq('owner_user_id', userId)
-      ]);
-      const list = [];
-      (membersRes.data || []).forEach((m) => {
-        const o = m.organizations;
-        const id = o?.id ?? m.organization_id;
-        if (id) list.push({ id, name: (o && o.name) || '' });
-      });
-      (ownedRes.data || []).forEach((o) => {
-        if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
-      });
+      // Base nueva (ADR-0052): mis marcas vienen de mi_contexto(), no de organization_members.
+      const list = await window.contextoService.orgs();
       if (list.length === 0) return '/creation_process';
       const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];
       if (typeof window.getOrgPathPrefix === 'function') {
@@ -473,31 +465,23 @@ class AuthService {
     const cached = this._membershipCache.get(orgId);
     if (cached && (now - cached.ts) < 60_000) return cached;
 
-    const [memberRes, orgRes] = await Promise.all([
-      this.supabase
-        .from('organization_members')
-        .select('role, permissions')
-        .eq('organization_id', orgId)
-        .eq('user_id', this.currentUser.id)
-        .maybeSingle(),
-      this.supabase
-        .from('organizations')
-        .select('owner_user_id')
-        .eq('id', orgId)
-        .maybeSingle(),
-    ]);
+    // Base nueva (ADR-0052): rol y permisos LITERALES vienen de mi_contexto().
+    // El rol solo habilita; el permiso autoriza (ADR-0004). No hay owner bypass en
+    // el cliente: si el dueño tiene todo es porque la base se lo dio en permissions.
+    await window.contextoService.cargar();
+    const o = window.contextoService.org(orgId);
+    const role = o?.role || null;
+    const permissions = window.contextoService.capacidadesV1(orgId) || {};
+    const isOwner = role === 'owner';
 
-    const isOwner = orgRes.data?.owner_user_id === this.currentUser.id;
-    const role = isOwner ? 'owner' : (memberRes.data?.role || null);
-    const permissions = memberRes.data?.permissions || {};
-
-    const entry = { role, permissions, isOwner, ts: now };
+    const entry = { role, permissions, permisos: o?.permissions || [], isOwner, ts: now };
     this._membershipCache.set(orgId, entry);
     return entry;
   }
 
   /** Limpia el cache de memberships (login/logout/cambio de org). */
   clearMembershipCache(orgId) {
+    if (window.contextoService && !orgId) window.contextoService.limpiar();
     if (!this._membershipCache) return;
     if (orgId) this._membershipCache.delete(orgId);
     else this._membershipCache.clear();
@@ -515,13 +499,8 @@ class AuthService {
     if (!targetOrg || !this._membershipCache) return false;
     const entry = this._membershipCache.get(targetOrg);
     if (!entry) return false;
-    if (entry.isOwner) return true;
-    if (!entry.role) return false;
-    // Resolver: preset del rol + override explícito en permissions.
-    if (window.OrgCapabilities) {
-      const resolved = window.OrgCapabilities.resolveCapabilities(entry.role, entry.permissions);
-      return resolved[cap] === true;
-    }
+    // Permiso literal de v2 (p. ej. 'producir_contenido') o capability de v1 ('studio.create').
+    if (Array.isArray(entry.permisos) && entry.permisos.includes(cap)) return true;
     return entry.permissions?.[cap] === true;
   }
 
@@ -538,11 +517,7 @@ class AuthService {
     if (!targetOrg || !this._membershipCache) return null;
     const entry = this._membershipCache.get(targetOrg);
     if (!entry) return null;
-    if (entry.isOwner && window.OrgCapabilities) return window.OrgCapabilities.fillAll(true);
-    if (!entry.role) return null;
-    return window.OrgCapabilities
-      ? window.OrgCapabilities.resolveCapabilities(entry.role, entry.permissions)
-      : entry.permissions;
+    return entry.permissions;
   }
 
   /**

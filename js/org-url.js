@@ -64,19 +64,9 @@ async function _fetchUserOrgs() {
 
   _orgResolverInflight = (async () => {
     try {
-      const [membersRes, ownedRes] = await Promise.all([
-        supabase.from('organization_members').select('organization_id, organizations(id, name)').eq('user_id', user.id),
-        supabase.from('organizations').select('id, name').eq('owner_user_id', user.id)
-      ]);
-      const list = [];
-      (membersRes.data || []).forEach((m) => {
-        const o = m.organizations;
-        const id = o?.id ?? m.organization_id;
-        if (id) list.push({ id, name: (o && o.name) || '' });
-      });
-      (ownedRes.data || []).forEach((o) => {
-        if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
-      });
+      // Base nueva (ADR-0052): mis marcas salen de mi_contexto() (una llamada, cacheada).
+      const orgs = await window.contextoService.orgs();
+      const list = orgs.map((o) => ({ id: o.id, name: o.name || '', slug: o.slug || '' }));
       _orgResolverCache = { userId: user.id, list, ts: Date.now() };
       return list;
     } finally {
@@ -99,19 +89,7 @@ async function resolveOrgIdFromShortAndSlug(shortId, nameSlug) {
   };
   try {
     const list = await _fetchUserOrgs();
-    const own = list ? pick(list) : null;
-    if (own) return own;
-    // Fallback Lead: un desarrollador Lead puede entrar a CUALQUIER org del
-    // sistema (no solo las suyas), no solo a las que es owner/miembro.
-    if (window.authService?.isLead?.()) {
-      const sb = window.supabaseService ? await window.supabaseService.getClient() : window.supabase;
-      if (sb) {
-        const { data } = await sb.from('organizations').select('id, name').is('deleted_at', null).limit(1000);
-        const hit = pick(data || []);
-        if (hit) return hit;
-      }
-    }
-    return null;
+    return list ? pick(list) : null;
   } catch (e) {
     console.warn('resolveOrgIdFromShortAndSlug:', e);
     return null;
@@ -166,27 +144,17 @@ function getCommandCenterPath(orgPathPrefix, container) {
  * @returns {Promise<string|null>} brand_container_id o null
  */
 async function resolveActiveBrandContainerId(supabase, orgId, userId) {
-  if (!supabase || typeof supabase.from !== 'function') return null;
+  // Base nueva (ADR-0052): brand_containers → markets; el «contenedor de marca»
+  // activo es el MERCADO PRINCIPAL de la org (o el primero). Sale de mi_contexto().
+  // Sin org activa no hay marca: ya no existe el fallback por user_id (fuga cross-org).
   const oid = orgId || (typeof window !== 'undefined' ? window.currentOrgId : null) || null;
+  if (!oid) return null;
   try {
-    if (oid) {
-      const { data, error } = await supabase
-        .from('brand_containers').select('id')
-        .eq('organization_id', oid)
-        .order('created_at', { ascending: true })
-        .limit(1).maybeSingle();
-      // Con org activa NO hay fallback a user_id (evita fuga cross-org).
-      return (!error && data && data.id) ? data.id : null;
-    }
-    // Solo cuando NO hay org en la URL (rutas legacy): marca del usuario.
-    if (userId) {
-      const { data, error } = await supabase
-        .from('brand_containers').select('id')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1).maybeSingle();
-      return (!error && data && data.id) ? data.id : null;
-    }
+    await window.contextoService.cargar();
+    const o = window.contextoService.org(oid);
+    const mk = o?.markets || [];
+    const principal = mk.find((m) => m.is_primary) || mk[0];
+    return principal?.id || null;
   } catch (e) {
     console.warn('resolveActiveBrandContainerId:', e);
   }

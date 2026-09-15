@@ -90,7 +90,7 @@ class SessionManager {
       // Consultar tabla unificada profiles
       const { data, error } = await supabaseClient
         .from('profiles')
-        .select('id, email, role')
+        .select('id, email')
         .eq('id', session.userId)
         .maybeSingle();
 
@@ -107,7 +107,7 @@ class SessionManager {
         return null;
       }
 
-      console.log('checkUserStatus: Usuario encontrado:', { role: data.role });
+      console.log('checkUserStatus: Usuario encontrado:', { id: data.id });
       return data;
     } catch (error) {
       console.error('checkUserStatus: Error exception:', error);

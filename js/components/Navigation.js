@@ -199,25 +199,26 @@ class Navigation {
         if (!supabase) return [];
         // Categorias + category_ids con al menos un flow publicado en catalogo
         // (mismos filtros que FlowCatalogView). Una categoria vacia no entra al sidebar.
+        // Base nueva (ADR-0052): flows.categories + flows.catalog_view (BD, 15/09).
+        // Una categoría sin flujo publicado en el catálogo no entra al sidebar.
         const [catsRes, flowsRes] = await Promise.all([
-          supabase
-            .from('content_categories')
-            .select('id, name, is_visible')
-            .order('order_index', { ascending: true, nullsFirst: false })
-            .order('name'),
-          supabase
-            .from('content_flows')
-            .select('category_id')
+          supabase.schema('flows')
+            .from('categories')
+            .select('id, name, is_active, position')
             .eq('is_active', true)
+            .order('position', { ascending: true, nullsFirst: false })
+            .order('name'),
+          supabase.schema('flows')
+            .from('catalog_view')
+            .select('categoria')
             .eq('status', 'published')
             .eq('show_in_catalog', true)
-            .neq('flow_category_type', 'system')
         ]);
         if (catsRes.error) return [];
-        const cats = Array.isArray(catsRes.data) ? catsRes.data : [];
+        const cats = (Array.isArray(catsRes.data) ? catsRes.data : []).map((c) => ({ id: c.id, name: c.name, is_visible: c.is_active !== false }));
         // Si la consulta de flows falla, no escondemos nada (fallback seguro).
         if (flowsRes.error || !Array.isArray(flowsRes.data)) return cats;
-        const withFlows = new Set(flowsRes.data.map((f) => f.category_id).filter(Boolean));
+        const withFlows = new Set(flowsRes.data.map((f) => f.categoria).filter(Boolean));
         return cats.filter((c) => withFlows.has(c.id));
       };
       const list = window.apiClient
@@ -241,8 +242,9 @@ class Navigation {
       const fetcher = async () => {
         const supabase = window.supabaseService ? await window.supabaseService.getClient() : window.supabase;
         if (!supabase) return 0;
-        const { count, error } = await supabase
-          .from('org_flow_saves')
+        // Base nueva (ADR-0052): org_flow_saves → flows.saves.
+        const { count, error } = await supabase.schema('flows')
+          .from('saves')
           .select('flow_id', { count: 'exact', head: true })
           .eq('organization_id', this.currentOrgId);
         return error ? 0 : (count || 0);
@@ -557,25 +559,32 @@ class Navigation {
     if (!sb || !orgId) { this._activityEmpty(body, 'aisc-ico aisc-ico--alert-info', 'Selecciona una marca para ver la actividad de Vera.'); return; }
     try {
       if (tab === 'misiones') {
-        const { data, error } = await sb
-          .from('body_missions')
-          .select('id,mission_type,status,result_reference,created_at,updated_at')
-          .eq('organization_id', orgId)
-          .order('created_at', { ascending: false })
-          .limit(30);
-        if (error) throw error;
-        this._renderActivityMissions(body, Array.isArray(data) ? data : []);
+        // Corte (D2, Vera): las misiones de v1 (body_missions) se portan con el chat de Vera.
+        // Hasta entonces: en obras, sin llamadas a una tabla que no existe.
+        this._activityEmpty(body, 'aisc-ico aisc-ico--clock', __('Las misiones de Vera se están trayendo a la nueva base. Vuelven con el chat.'));
       } else {
-        const { data, error } = await sb
-          .from('vera_pending_actions')
-          .select('id,action_type,vera_reasoning,vera_confidence,priority,proposed_payload,status,created_at,expires_at,executed_at')
+        // Base nueva (ADR-0052): ai.pending_actions (id, agent_id, action, permission, summary,
+        // payload, decided_by, decided_at, approved, decision_note, created_at).
+        const { data, error } = await sb.schema('ai')
+          .from('pending_actions')
+          .select('id,action,permission,summary,payload,decided_at,approved,decision_note,created_at')
           .eq('organization_id', orgId)
-          .in('status', ['pending', 'approved', 'executing', 'executed', 'completed', 'failed'])
           .order('created_at', { ascending: false })
           .limit(40);
         if (error) throw error;
-        const list = (Array.isArray(data) ? data : []).filter((a) =>
-          a?.proposed_payload?.placeholder !== true && !/bootstrap\s*stub/i.test(a?.vera_reasoning || ''));
+        const list = (Array.isArray(data) ? data : []).map((a) => ({
+          id: a.id,
+          action_type: a.action,
+          vera_reasoning: a.summary || '',
+          vera_confidence: null,
+          priority: null,
+          proposed_payload: a.payload || {},
+          status: a.decided_at ? (a.approved ? 'approved' : 'rejected') : 'pending',
+          created_at: a.created_at,
+          expires_at: null,
+          executed_at: null,
+          decision_note: a.decision_note || null,
+        }));
         this._renderActivityTasks(body, list);
       }
     } catch (e) {
@@ -768,11 +777,12 @@ class Navigation {
     const orgId = this.currentOrgId;
     if (!sb || !orgId) { badge.hidden = true; return; }
     try {
-      const { count, error } = await sb
-        .from('vera_pending_actions')
+      // Base nueva (ADR-0052): vera_pending_actions → ai.pending_actions; pendiente = sin decidir.
+      const { count, error } = await sb.schema('ai')
+        .from('pending_actions')
         .select('id', { count: 'exact', head: true })
         .eq('organization_id', orgId)
-        .eq('status', 'pending');
+        .is('decided_at', null);
       if (error) throw error;
       const n = Number(count) || 0;
       // Punto rojo (sin número), igual que la campana: solo señala "hay actividad pendiente".
@@ -1013,24 +1023,30 @@ class Navigation {
     return window.authService?.getCurrentUser?.()?.id || null;
   }
 
+  /* Base nueva (ADR-0052): los avisos son la tabla `public.alerts` (RLS: los de mis marcas,
+     broadcast o míos; UPDATE para marcar). No leído = read_at nulo; actuado = acted_at. */
   async _orgNotificationsCount() {
     const sb = await this._supabase();
-    if (!sb) return 0;
-    const { data, error } = await sb.rpc('my_unread_org_notifications_count', {
-      p_org_id: this.currentOrgId || null,
-    });
+    if (!sb || !this.currentOrgId) return 0;
+    const { count, error } = await sb.from('alerts')
+      .select('id', { count: 'exact', head: true })
+      .eq('organization_id', this.currentOrgId)
+      .is('read_at', null);
     if (error) { console.warn('[notifs] count error:', error.message); return 0; }
-    return Number(data) || 0;
+    return Number(count) || 0;
   }
 
   async _orgNotificationsList(state = 'unread', limit = 50) {
     const sb = await this._supabase();
-    if (!sb) return [];
-    const { data, error } = await sb.rpc('list_my_org_notifications', {
-      p_org_id: this.currentOrgId || null,
-      p_state:  state,
-      p_limit:  limit,
-    });
+    if (!sb || !this.currentOrgId) return [];
+    let q = sb.from('alerts')
+      .select('id, type_code, user_id, title, body, link, metadata, created_at, delivered_at, read_at, acted_at')
+      .eq('organization_id', this.currentOrgId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (state === 'unread') q = q.is('read_at', null);
+    else if (state === 'read') q = q.not('read_at', 'is', null);
+    const { data, error } = await q;
     if (error) { console.warn('[notifs] list error:', error.message); return []; }
     const arr = Array.isArray(data) ? data : [];
     return arr.map((n) => this._normalizeOrgNotification(n));
@@ -1039,9 +1055,11 @@ class Navigation {
   async _orgNotificationsMark(id, state) {
     const sb = await this._supabase();
     if (!sb || !id) return false;
-    const { error } = await sb.rpc('mark_org_notification_state', {
-      p_notification_id: id, p_state: state,
-    });
+    const ahora = new Date().toISOString();
+    const patch = state === 'unread' ? { read_at: null, acted_at: null }
+      : state === 'acted' || state === 'done' ? { read_at: ahora, acted_at: ahora }
+      : { read_at: ahora };
+    const { error } = await sb.from('alerts').update(patch).eq('id', id);
     if (error) { console.warn('[notifs] mark error:', error.message); return false; }
     return true;
   }
@@ -1051,14 +1069,14 @@ class Navigation {
     if (!n) return n;
     const md = n.metadata || {};
     return {
-      // Núcleo
+      // Núcleo (alerts: type_code, read_at/acted_at; severidad y tipo salen del metadata o del código)
       id:           n.id,
       title:        n.title || '',
       body:         n.body || '',                          // markdown / texto largo
-      severity:     n.severity || 'info',                  // urgencia
-      type:         n.type || 'info',
-      status:       n.status || 'pending',                 // estado de tarea
-      is_read:      n.my_state && n.my_state !== 'unread',
+      severity:     n.severity || md.severity || 'info',   // urgencia
+      type:         n.type || n.type_code || 'info',
+      status:       n.status || (n.acted_at ? 'done' : 'pending'), // estado de tarea
+      is_read:      n.my_state ? n.my_state !== 'unread' : !!n.read_at,
       created_at:   n.created_at,
       // Modelo rico (metadata)
       label:        md.label || '',                        // etiqueta corta
@@ -1079,7 +1097,7 @@ class Navigation {
       // el action_url del backend traiga la ruta correcta.
       link_to:      (md.conversation_id && (n.type === 'vera_message' || n.type === 'vera_conversation'))
                       ? this._resolveActionUrl(`/vera?c=${md.conversation_id}`)
-                      : this._resolveActionUrl(n.action_url),
+                      : this._resolveActionUrl(n.action_url || n.link),
       action_label: n.action_label || '',
       metadata:     md,
     };
@@ -1266,24 +1284,9 @@ class Navigation {
     map[stepId] = !!done;
     this._checklistCache.set(notifId, map);
 
-    // Persistencia en background
-    const sb = await this._supabase();
-    if (!sb) return map; // sin sb (offline) → cache local solamente
-    const { error } = await sb.rpc('mark_org_notification_checklist_step', {
-      p_notification_id: notifId,
-      p_step_id:         stepId,
-      p_done:            !!done,
-    });
-    if (error) {
-      console.warn('[notif checklist] persist error:', error.message);
-      // Revertir
-      const reverted = { ...(this._checklistCache.get(notifId) || {}) };
-      reverted[stepId] = !done;
-      this._checklistCache.set(notifId, reverted);
-      document.dispatchEvent(new CustomEvent('notif-checklist-revert', {
-        detail: { notifId, stepId, expected: done },
-      }));
-    }
+    // Persistencia en background. Base nueva (ADR-0052): el checklist por persona
+    // no existe en `alerts` (BD, 15/09): queda en memoria; si algún día hace falta
+    // va en alerts.metadata, no se inventa hoy.
     return this._checklistCache.get(notifId);
   }
 
@@ -2907,22 +2910,12 @@ class Navigation {
       // instancia (_orgCache); con apiClient sobrevive entre renders/vistas y
       // dedupea entre callsites concurrentes. La key es por orgId.
       const orgId = this.currentOrgId;
-      const fetcher = async () => {
-        const orgRes = await supabase.from('organizations').select('name, owner_user_id').eq('id', orgId).single();
-        let planLabel = 'Personal';
-        if (orgRes.data?.owner_user_id) {
-          const { data: owner } = await supabase.from('profiles').select('plan_type').eq('id', orgRes.data.owner_user_id).maybeSingle();
-          if (owner?.plan_type) {
-            const raw = String(owner.plan_type).replace(/_/g, ' ');
-            planLabel = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
-          }
-        }
-        return { name: orgRes.data?.name, plan: planLabel };
-      };
-      const cached = window.apiClient
-        ? await window.apiClient.query(`nav:org:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-      this._orgCache = { ...(cached || {}), credits: 0, credits_total: 0 };
+      // Base nueva (ADR-0052): nombre y plan de la marca vienen de mi_contexto().
+      await window.contextoService.cargar();
+      const o = window.contextoService.org(orgId);
+      const plan = String(o?.plan || 'free');
+      const cached = { name: o?.name || '', plan: plan.charAt(0).toUpperCase() + plan.slice(1) };
+      this._orgCache = { ...cached, credits: 0, credits_total: 0 };
       this._orgCacheId = orgId;
       this._orgCacheTime = Date.now();
       const typeEl = document.getElementById('navOrgType');
@@ -2998,38 +2991,18 @@ class Navigation {
       if (!supabase) { hide(); return; }
 
       const fetcher = async () => {
-        const [{ data: sub }, { data: activePlans }] = await Promise.all([
-          supabase.from('subscriptions')
-            .select('plan_id, status')
-            .eq('organization_id', orgId)
-            .order('created_at', { ascending: false })
-            .limit(1).maybeSingle(),
-          supabase.from('plans')
-            .select('id, name, display_order')
-            .eq('is_active', true)
-            .order('display_order', { ascending: true }),
-        ]);
-
-        const plansList = Array.isArray(activePlans) ? activePlans : [];
-        const activeStatuses = ['active', 'trialing', 'past_due'];
-        const hasActive = sub && activeStatuses.includes(sub.status);
-
-        let currentPlan = null;
-        if (hasActive && sub?.plan_id) {
-          currentPlan = plansList.find(p => p.id === sub.plan_id) || null;
-          // Plan legacy (no activo): fetch directo por id para tener display_order.
-          if (!currentPlan) {
-            const { data: legacy } = await supabase
-              .from('plans')
-              .select('id, name, display_order')
-              .eq('id', sub.plan_id)
-              .maybeSingle();
-            currentPlan = legacy || null;
-          }
-        }
-
-        const curOrder = currentPlan ? (Number(currentPlan.display_order) || 0) : -Infinity;
-        const next = plansList.find(p => (Number(p.display_order) || 0) > curOrder) || null;
+        // Base nueva (ADR-0052): el plan de la marca viene de mi_contexto() (tier) y el
+        // catálogo de billing.plans (tier, name, monthly_credits): el orden es el de créditos.
+        await window.contextoService.cargar();
+        const tier = window.contextoService.org(orgId)?.plan || null;
+        const { data: planes } = await supabase.schema('billing')
+          .from('plans')
+          .select('tier, name, monthly_credits')
+          .order('monthly_credits', { ascending: true });
+        const plansList = Array.isArray(planes) ? planes : [];
+        const currentPlan = plansList.find((p) => p.tier === tier) || null;
+        const curOrder = currentPlan ? (Number(currentPlan.monthly_credits) || 0) : -Infinity;
+        const next = plansList.find((p) => (Number(p.monthly_credits) || 0) > curOrder) || null;
         return { next, currentName: currentPlan?.name || null, entryName: plansList[0]?.name || null };
       };
 
@@ -3078,21 +3051,9 @@ class Navigation {
       return;
     }
     try {
-      const fetcher = async () => {
-        const supabase = window.supabaseService
-          ? await window.supabaseService.getClient()
-          : window.supabase;
-        if (!supabase) return [];
-        const { data, error } = await supabase
-          .from('brand_containers')
-          .select('id, nombre_marca')
-          .eq('organization_id', orgId)
-          .order('created_at', { ascending: false });
-        return !error && Array.isArray(data) ? data : [];
-      };
-      const list = window.apiClient
-        ? await window.apiClient.query(`nav:brand_containers:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
+      // Base nueva (ADR-0052): brand_containers → markets (de mi_contexto()).
+      await window.contextoService.cargar();
+      const list = (window.contextoService.org(orgId)?.markets || []).map((m) => ({ id: m.id, nombre_marca: m.name }));
       this._brandStorageSubbrands = list || [];
       this.updateBrandStorageLink(this._brandStorageSubbrands.length);
       this.renderBrandStorageSubmenu();
@@ -3209,32 +3170,9 @@ class Navigation {
       const user = window.authService?.getCurrentUser();
       if (!user) return;
 
-      // Misma cache que el resolver de orgs en js/org-url.js (5 min). Comparten
-      // dato, ahorra ~2 queries por nav en el dropdown del sidebar.
-      const fetchOrgs = async () => {
-        const [membershipsRes, ownedOrgsRes] = await Promise.all([
-          supabase.from('organization_members').select('organization_id, role, organizations (id, name)').eq('user_id', user.id),
-          supabase.from('organizations').select('id, name').eq('owner_user_id', user.id)
-        ]);
-        return { memberships: membershipsRes.data, ownedOrgs: ownedOrgsRes.data };
-      };
-      const { memberships, ownedOrgs } = window.apiClient
-        ? await window.apiClient.query(`nav:user_orgs:${user.id}`, fetchOrgs, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetchOrgs();
-
+      // Base nueva (ADR-0052): mis marcas con rol salen de mi_contexto().
       const orgsMap = new Map();
-      (memberships || []).forEach(m => {
-        if (m.organizations && m.organization_id) {
-          orgsMap.set(m.organization_id, {
-            id: m.organization_id,
-            name: m.organizations.name,
-            role: m.role
-          });
-        }
-      });
-      (ownedOrgs || []).forEach(o => {
-        if (!orgsMap.has(o.id)) orgsMap.set(o.id, { id: o.id, name: o.name, role: 'owner' });
-      });
+      (await window.contextoService.orgs()).forEach((o) => orgsMap.set(o.id, { id: o.id, name: o.name, role: o.role }));
 
       const listEl = document.getElementById('navOrgDropdownList');
       if (!listEl) return;

@@ -62,13 +62,14 @@
       // _startCreditsRefreshInterval invalida y refresca de fondo. El evento
       // 'credits-updated' (refreshCredits) invalida cuando se compran/usan.
       const fetcher = async () => {
-        const { data, error } = await supabase
-          .from('organization_credits')
-          .select('credits_available, credits_total')
-          .eq('organization_id', orgId)
-          .maybeSingle();
-        if (error) throw error;
-        return data;
+        // Base nueva (ADR-0052): organization_credits no existe; el saldo se SUMA en la base
+        // (billing.balance/available) y viaja en mi_contexto().credits. Se pide fresco: los
+        // créditos bajan con cada uso en el Studio. «total» = el tope mensual del plan.
+        const ctx = await window.contextoService.cargar({ fresco: true });
+        const o = (ctx?.organizations || []).find((x) => x.id === orgId);
+        if (!o) return null;
+        const { data: plan } = await supabase.schema('billing').from('plans').select('monthly_credits').eq('tier', o.plan).maybeSingle();
+        return { credits_available: o.credits.available, credits_total: Number(plan?.monthly_credits) || 0 };
       };
       const data = window.apiClient
         ? await window.apiClient.query(`nav:credits:${orgId}`, fetcher, { ttl: 15 * 1000, staleWhileRevalidate: true })
@@ -120,13 +121,17 @@
       // 2 min. Para refresh inmediato tras upload, llamar
       // apiClient.invalidate(`nav:storage:${orgId}`).
       const fetcher = async () => {
-        const { data, error } = await supabase
-          .from('storage_usage')
-          .select('used_mb, max_mb')
-          .eq('organization_id', orgId)
-          .maybeSingle();
+        // Base nueva (ADR-0052): public.storage_usage es una VISTA por proveedor
+        // (provider, archivos, bytes, gb…); se suman los gb. El tope viene del plan.
+        const [{ data: filas, error }, ctx] = await Promise.all([
+          supabase.from('storage_usage').select('gb').eq('organization_id', orgId),
+          window.contextoService.cargar(),
+        ]);
         if (error) throw error;
-        return data;
+        const usedMb = (Array.isArray(filas) ? filas : []).reduce((acc, f) => acc + (Number(f.gb) || 0) * 1024, 0);
+        const o = (ctx?.organizations || []).find((x) => x.id === orgId);
+        const { data: plan } = o ? await supabase.schema('billing').from('plans').select('max_storage_gb').eq('tier', o.plan).maybeSingle() : { data: null };
+        return { used_mb: usedMb, max_mb: (Number(plan?.max_storage_gb) || 0) * 1024 };
       };
       const data = window.apiClient
         ? await window.apiClient.query(`nav:storage:${orgId}`, fetcher, { ttl: 2 * 60 * 1000, staleWhileRevalidate: true })
