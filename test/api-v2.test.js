@@ -116,3 +116,19 @@ describe('ApiV2 · Studio = corrida de flujo (backend 260f742)', () => {
     apiV2.configurar({ fetch: null, sesion: null });
   });
 });
+
+describe('ApiV2 · galería con cookie (backend 260f742)', () => {
+  test('mantenerSesionGaleria pide la cookie al abrir y parar() detiene la renovación', async () => {
+    let peticionesHechas = 0;
+    globalThis.document = globalThis.document || { hidden: false };
+    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async (u) => { peticionesHechas++; expect(String(u)).toContain('/v1/sesion/galeria'); return respuesta(200, { ok: true }); } });
+    const s = apiV2.api.mantenerSesionGaleria('o1', { cadaMs: 5 });
+    await new Promise((r) => setTimeout(r, 20));
+    s.parar();
+    const alParar = peticionesHechas;
+    await new Promise((r) => setTimeout(r, 20));
+    expect(peticionesHechas).toBeGreaterThanOrEqual(2);
+    expect(peticionesHechas).toBe(alParar);
+    apiV2.configurar({ fetch: null, sesion: null });
+  });
+});

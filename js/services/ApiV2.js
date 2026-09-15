@@ -40,6 +40,15 @@
  *     storage_path, metadata:{file_id, prompt, creditos_kie, costo_usd}}] o
  *     `failed` con el motivo en palabras. Pintar con `url` (galería) o
  *     `metadata.file_id` → urlDescarga. `esperarCorrida()` hace el sondeo.
+ *   - GALERÍA (backend 260f742): `salidas[].url` = https://media-v2.aismartcontent.io/out/<org>/<clave>
+ *     y EXIGE la cookie de `POST /v1/sesion/galeria` (HttpOnly, Secure,
+ *     Domain=.aismartcontent.io, 10 min; sin ella 401, marca ajena 404). Por eso
+ *     la consola vive en console.aismartcontent.io: desde el Netlify
+ *     provisional la cookie NO viaja y la galería no se ve — camino alterno:
+ *     `metadata.file_id` → urlDescarga (prefirmada 5 min). /pub/* va sin cookie.
+ *     Patrón: al abrir /image o /video, `mantenerSesionGaleria(org)` pide la
+ *     cookie una vez y la renueva cada ~8 min mientras la vista esté abierta;
+ *     si una <img> de /out/ da 401, renovar y reintentar.
  *
  * URL del borde: `window.AISC_API_URL` (runtime-config.js). Vacía = `sin_api`:
  * las vistas dicen que el borde no está configurado, no fallan en silencio.
@@ -211,6 +220,19 @@
       return ejecutar(peticiones.iniciarPago(org, paquete));
     },
     mcp: (org, metodo, params = {}) => ejecutar(peticiones.mcp(org, metodo, params)),
+    /**
+     * Mantiene viva la cookie de galería mientras una vista esté abierta:
+     * la pide ya y la renueva cada `cadaMs` (8 min < 10 de vida). Devuelve
+     * `parar()` para el destroy() de la vista. Un fallo al renovar no tumba
+     * nada: la siguiente imagen dará 401 y la vista renueva y reintenta.
+     */
+    mantenerSesionGaleria: (org, { cadaMs = 8 * 60 * 1000, alFallar = null } = {}) => {
+      let parado = false;
+      const pedir = () => ejecutar(peticiones.sesionGaleria(org)).catch((e) => { if (typeof alFallar === 'function') alFallar(e); });
+      void pedir();
+      const timer = setInterval(() => { if (!parado && !document.hidden) void pedir(); }, cadaMs);
+      return { parar: () => { parado = true; clearInterval(timer); }, renovar: pedir };
+    },
     /**
      * Sondea una corrida hasta que termine. Resuelve con la corrida final
      * (`succeeded` | `failed`); rechaza con `tiempo_agotado` si pasa el tope.
