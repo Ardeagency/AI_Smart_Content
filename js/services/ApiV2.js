@@ -28,6 +28,18 @@
  *     prefirmada 300 s); galería por cookie + URL estable; nunca R2 directo.
  *   - La API no piensa: valida, autoriza y ENCOLA. Lo lento vuelve por
  *     Realtime sobre la tabla, no por HTTP.
+ *   - STUDIO (/image, /video; backend 260f742): una producción ES una corrida
+ *     de flujo, no hay /v1/producir. Dos flujos de PLATAFORMA sembrados por BD
+ *     (slugs `imagen-directa` y `video-directo`; la consola resuelve el uuid
+ *     leyendo flows.flows). `lanzarFlujo(id, org, entradas, idCliente)` con
+ *     entradas {prompt, aspecto, resolucion, referencia_1..3} (imagen) o
+ *     {prompt, aspecto, resolucion, duracion, con_audio, referencia_1..2}
+ *     (video); las referencias son URLs (subir antes con subirArchivo y pasar
+ *     la url de descarga o de galería). `corrida(id, org)` sondea: `running`
+ *     (1–2 min imagen, ~4 video) → `succeeded` con salidas [{key, kind, url,
+ *     storage_path, metadata:{file_id, prompt, creditos_kie, costo_usd}}] o
+ *     `failed` con el motivo en palabras. Pintar con `url` (galería) o
+ *     `metadata.file_id` → urlDescarga. `esperarCorrida()` hace el sondeo.
  *
  * URL del borde: `window.AISC_API_URL` (runtime-config.js). Vacía = `sin_api`:
  * las vistas dicen que el borde no está configurado, no fallan en silencio.
@@ -199,6 +211,22 @@
       return ejecutar(peticiones.iniciarPago(org, paquete));
     },
     mcp: (org, metodo, params = {}) => ejecutar(peticiones.mcp(org, metodo, params)),
+    /**
+     * Sondea una corrida hasta que termine. Resuelve con la corrida final
+     * (`succeeded` | `failed`); rechaza con `tiempo_agotado` si pasa el tope.
+     * `alCambiar(corrida)` se llama en cada sondeo para pintar el estado.
+     */
+    esperarCorrida: async (id, org, { intervaloMs = 4000, topeMs = 6 * 60 * 1000, alCambiar = null, dormir = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) => {
+      const inicio = Date.now();
+      for (;;) {
+        const c = await ejecutar(peticiones.corrida(id, org));
+        if (typeof alCambiar === 'function') { try { alCambiar(c); } catch (_) { /* pintar no puede tumbar el sondeo */ } }
+        const estado = c && c.status;
+        if (estado === 'succeeded' || estado === 'failed' || estado === 'canceled') return c;
+        if (Date.now() - inicio > topeMs) throw new ErrorApi('tiempo_agotado', 'La corrida sigue en marcha; vuelve a mirar en un rato.', 0, undefined, { id, ultimo: c });
+        await dormir(intervaloMs);
+      }
+    },
   };
 
   window.apiV2 = Object.freeze({

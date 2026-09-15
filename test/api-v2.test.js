@@ -98,3 +98,21 @@ describe('ApiV2 · ejecución', () => {
     expect(modoDeMuestra(null)).toBe('descarga');
   });
 });
+
+describe('ApiV2 · Studio = corrida de flujo (backend 260f742)', () => {
+  test('esperarCorrida sondea hasta succeeded/failed y avisa cada vuelta', async () => {
+    const estados = ['queued', 'running', 'succeeded'];
+    let n = 0; const vistos = [];
+    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async () => respuesta(200, { id: 'r1', status: estados[n++], salidas: n === 3 ? [{ key: 'imagen', kind: 'image', url: 'https://media/out/x' }] : [] }) });
+    const fin = await apiV2.api.esperarCorrida('r1', 'o1', { intervaloMs: 1, alCambiar: (c) => vistos.push(c.status), dormir: async () => {} });
+    expect(fin.status).toBe('succeeded'); expect(fin.salidas[0].kind).toBe('image');
+    expect(vistos).toEqual(['queued', 'running', 'succeeded']);
+    apiV2.configurar({ fetch: null, sesion: null });
+  });
+
+  test('esperarCorrida corta con tiempo_agotado si nunca termina', async () => {
+    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async () => respuesta(200, { id: 'r1', status: 'running' }) });
+    await expect(apiV2.api.esperarCorrida('r1', 'o1', { intervaloMs: 1, topeMs: 0, dormir: async () => {} })).rejects.toMatchObject({ codigo: 'tiempo_agotado' });
+    apiV2.configurar({ fetch: null, sesion: null });
+  });
+});
