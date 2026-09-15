@@ -399,6 +399,22 @@ class Navigation {
     const isDemo = guard && typeof guard.isDemo === 'function' && guard.isDemo();
     const existing = document.getElementById('demoBanner');
 
+    // Mantenimiento (corte ADR-0052, pasos 1.2 y 1.9): un VALOR en runtime-config
+    // (`window.AISC_MANTENIMIENTO = 'hasta las 17:30'`), no un build. Reusa la
+    // franja del demo (misma altura y empuje del shell); manda sobre el demo.
+    const mantenimiento = String(window.AISC_MANTENIMIENTO || '').trim();
+    if (mantenimiento) {
+      if (existing) existing.remove();
+      const banner = document.createElement('div');
+      banner.id = 'demoBanner';
+      banner.className = 'demo-banner demo-banner--mantenimiento';
+      banner.setAttribute('role', 'status');
+      banner.innerHTML = `<span class="demo-banner__text">${__('Mantenimiento en curso ({cuando}): lo que guardes ahora puede no quedar. Volvemos enseguida.', { cuando: _escapeHtml(mantenimiento) })}</span>`;
+      document.body.insertBefore(banner, document.body.firstChild);
+      document.body.classList.add('has-demo-banner');
+      return;
+    }
+
     if (!isDemo) {
       if (existing) existing.remove();
       document.body.classList.remove('has-demo-banner');

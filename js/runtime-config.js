@@ -28,6 +28,11 @@
       window[k] = (() => { try { return localStorage.getItem(k) || ""; } catch (_) { return ""; } })();
     }
   }
+  // Banner de mantenimiento (corte, pasos 1.2/1.9): un texto = se ve; vacio = no.
+  //   window.AISC_MANTENIMIENTO = 'hasta las 17:30';
+  if (window.AISC_MANTENIMIENTO === undefined) {
+    window.AISC_MANTENIMIENTO = (() => { try { return localStorage.getItem("AISC_MANTENIMIENTO") || ""; } catch (_) { return ""; } })();
+  }
   if (window.AISC_API_URL === undefined) {
     window.AISC_API_URL = (() => {
       try { return localStorage.getItem("AISC_API_URL") || ""; } catch (_) { return ""; }

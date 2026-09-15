@@ -268,3 +268,7 @@ body.has-demo-banner.no-nav #app-container {
 body.demo-cta-modal-open {
   overflow: hidden;
 }
+
+/* Mantenimiento (corte): misma franja, sin arcoíris — es un aviso, no marca. */
+.demo-banner--mantenimiento { background: var(--color-warning, #ffe500); color: #0b0b0b; font-weight: 600; }
+.demo-banner--mantenimiento::before { background: rgba(0, 0, 0, 0.12); }
