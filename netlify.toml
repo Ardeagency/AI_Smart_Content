@@ -18,7 +18,7 @@
   #    tercero convierte una caida ajena en una caida de deploy propia; esos tres
   #    siguen corriendo en GitHub Actions (.github/workflows/ci.yml), donde fallar
   #    no bloquea publicar un hotfix.
-  command = "npm run test:gate && node scripts/build-minify.mjs && sed -i \"s/__BUILD_ID__/$COMMIT_REF/g\" index.html css/bundle.css js/app.js js/utils/lazy-nav.js js/components/DevSidebarEnhancements.js sw.js"
+  command = "npm run test:gate && node scripts/build-minify.mjs && sed -i \"s/__BUILD_ID__/$COMMIT_REF/g\" index.html css/bundle.css js/app.js js/utils/lazy-nav.js sw.js"
   publish = "."
 
 [functions]
@@ -39,6 +39,17 @@
 # Excluir archivos estáticos del redirect SPA
 # Netlify procesa los redirects en orden, el primero que coincide gana.
 # IMPORTANTE: Las funciones deben matchear ANTES que el fallback /* para no devolver index.html.
+
+# El panel de staff (/dev/*) ya no vive en console: es AISC-Admin (SEC-004 paso 5,
+# 2026-09-15). 302 y no 301: el dominio definitivo es admin.aismartcontent.io y
+# aun no tiene DNS (token de Cloudflare invalido); cuando lo tenga se cambia el
+# destino sin que ningun navegador haya cacheado el provisional. Cubre tambien el
+# aterrizaje del OAuth de tiendas, que sanitizeReturnTo() mandaba a /dev/lead/orgs.
+[[redirects]]
+  from = "/dev/*"
+  to = "https://aisc-admin.netlify.app/dev/:splat"
+  status = 302
+  force = true
 
 # Rutas /api/* reescriben a las funciones (alternativa por si /.netlify/functions/* da 404)
 [[redirects]]

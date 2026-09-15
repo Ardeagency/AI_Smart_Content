@@ -1739,7 +1739,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-status-card,
 .video-result-card,
 .video-error-card {
-    background: var(--living-bg-card, var(--dev-bg-surface));
+    background: var(--living-bg-card, var(--bg-card));
     border: 1px solid var(--border-divider);
     border-radius: var(--radius-md);
     padding: var(--spacing-lg);

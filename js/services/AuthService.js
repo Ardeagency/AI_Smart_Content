@@ -3,8 +3,7 @@
  * Maneja login, logout, verificación de sesión y redirecciones
  * 
  * Soporta arquitectura MPA + SPA:
- * - Modo 'user': Usuario SaaS consumidor → SPA operativa
- * - Modo 'developer': Desarrollador PaaS → Portal de desarrollo
+ * Un solo modo: la consola es del cliente. El panel de staff vive en AISC-Admin.
  */
 class AuthService {
   constructor() {
@@ -12,7 +11,6 @@ class AuthService {
     this.isAuth = false;
     this.supabase = null;
     this.listeners = [];
-    this.userMode = 'user';
     this._sessionCheckedAt = 0;
     this._userDataLoadedAt = 0;
     this._SESSION_TTL = 30000;
@@ -158,17 +156,10 @@ class AuthService {
           full_name: profile.full_name,
           role: profile.role || 'user',
           is_anonymous: isAnonymous,
-          // Campos para arquitectura MPA + SPA
-          default_view_mode: profile.default_view_mode || 'user', // 'user' | 'developer'
-          is_developer: !!profile.is_developer,
-          dev_role: profile.dev_role || 'contributor', // lead | senior | contributor | viewer
-          dev_rank: profile.dev_rank || 'rookie', // rookie | junior | builder | expert | master | legend
           locale: profile.locale || 'es' // idioma preferido del usuario (i18n)
         };
 
-        this.userMode = this.currentUser.default_view_mode;
         this._userDataLoadedAt = Date.now();
-        localStorage.setItem('userViewMode', this.userMode);
 
         // i18n: aplicar el idioma del perfil (respeta la eleccion local si existe).
         if (window.i18n && typeof window.i18n.applyUserLocale === 'function') {
@@ -189,11 +180,8 @@ class AuthService {
             full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Demo visitor',
             email_verified: user.email_confirmed_at ? true : false,
             is_anonymous: !!user.is_anonymous,
-            role: 'user',
-            default_view_mode: 'user'
+            role: 'user'
           };
-          this.userMode = 'user';
-          localStorage.setItem('userViewMode', 'user');
         }
       }
     } catch (error) {
@@ -392,17 +380,12 @@ class AuthService {
   }
 
   /**
-   * Determinar ruta de redirección para usuario autenticado.
-   * Según modo: developer → /dev/dashboard, user → primera organización o /creation_process.
+   * Determinar ruta de redirección para usuario autenticado: su primera organización o /creation_process.
    */
   async determineRedirectRoute(userId) {
     if (!userId) return '/creation_process';
 
     try {
-      const viewMode = this.userMode || localStorage.getItem('userViewMode') || 'user';
-      if (viewMode === 'developer') {
-        return '/dev/dashboard';
-      }
       return await this.getDefaultUserRoute(userId);
     } catch (error) {
       console.error('Error determinando ruta:', error);
@@ -447,50 +430,8 @@ class AuthService {
   }
 
   /**
-   * Obtener el modo de vista actual del usuario
-   * @returns {'user' | 'developer'}
-   */
-  getUserMode() {
-    return this.userMode || localStorage.getItem('userViewMode') || 'user';
-  }
-
-  /**
-   * Cambiar el modo de vista del usuario
-   * @param {'user' | 'developer'} mode - Nuevo modo
-   * @param {boolean} persist - Si debe guardarse en la base de datos
-   */
-  async setUserMode(mode, persist = false) {
-    if (mode !== 'user' && mode !== 'developer') {
-      console.error('Modo inválido:', mode);
-      return;
-    }
-
-    this.userMode = mode;
-    localStorage.setItem('userViewMode', mode);
-
-    if (this.currentUser) {
-      this.currentUser.default_view_mode = mode;
-    }
-
-    // Persistir en la base de datos si se solicita
-    if (persist && this.supabase && this.currentUser?.id) {
-      try {
-        await this.supabase
-          .from('profiles')
-          .update({ default_view_mode: mode })
-          .eq('id', this.currentUser.id);
-      } catch (error) {
-        console.error('Error actualizando modo de vista:', error);
-      }
-    }
-
-    // Notificar listeners del cambio de modo
-    this.notifyListeners('mode_changed', { mode });
-  }
-
-  /**
    * Guardar el idioma preferido del usuario (i18n).
-   * Espeja el patron de setUserMode: memoria + persistencia opcional en perfil.
+   * Memoria + persistencia opcional en perfil.
    * El servicio window.i18n ya maneja localStorage y el repintado; aqui solo
    * persistimos en profiles.locale para que cruce dispositivos.
    * @param {string} locale - 'es' | 'en' | ...
@@ -513,34 +454,8 @@ class AuthService {
   }
 
   /**
-   * Verificar si el usuario actual está viendo en modo desarrollador
-   * @returns {boolean}
-   */
-  isDeveloper() {
-    return this.getUserMode() === 'developer';
-  }
-
-  /**
-   * Verificar si la cuenta del usuario tiene rol de desarrollador (profiles.is_developer)
-   * @returns {boolean}
-   */
-  userHasDeveloperRole() {
-    return this.currentUser?.is_developer === true;
-  }
-
-  /**
-   * Verificar si el usuario es desarrollador Lead (control total de BD y sección Equipo/Categorías/etc.)
-   * Solo dev_role === 'lead' tiene acceso a /dev/lead/*
-   * @returns {boolean}
-   */
-  isLead() {
-    return this.currentUser?.dev_role === 'lead';
-  }
-
-  /**
    * Capabilities por organización.
    *
-   * - Lead bypass: dev_role='lead' siempre retorna true (super-admin del portal).
    * - Owner bypass: el dueño (organizations.owner_user_id) siempre tiene todas las caps.
    * - Caso general: lee organization_members.{role,permissions} del usuario en la org activa.
    *
@@ -596,7 +511,6 @@ class AuthService {
    * @returns {boolean}
    */
   hasPermission(cap, orgId) {
-    if (this.isLead()) return true; // dev lead super-admin
     const targetOrg = orgId || window.currentOrgId;
     if (!targetOrg || !this._membershipCache) return false;
     const entry = this._membershipCache.get(targetOrg);
@@ -621,9 +535,6 @@ class AuthService {
   /** Map de capabilities efectivas del usuario en la org activa. */
   getCapabilities(orgId) {
     const targetOrg = orgId || window.currentOrgId;
-    if (this.isLead() && window.OrgCapabilities) {
-      return window.OrgCapabilities.fillAll(true);
-    }
     if (!targetOrg || !this._membershipCache) return null;
     const entry = this._membershipCache.get(targetOrg);
     if (!entry) return null;
@@ -632,26 +543,6 @@ class AuthService {
     return window.OrgCapabilities
       ? window.OrgCapabilities.resolveCapabilities(entry.role, entry.permissions)
       : entry.permissions;
-  }
-
-  /**
-   * Verificar si se debe mostrar el switcher Consumidor/Desarrollador en el dropdown.
-   * Se muestra si is_developer = true O si default_view_mode = 'developer' (tiene acceso a vista desarrollador).
-   * @returns {boolean}
-   */
-  shouldShowDeveloperSwitcher() {
-    const u = this.currentUser;
-    if (!u) return false;
-    return u.is_developer === true || u.default_view_mode === 'developer';
-  }
-
-  /**
-   * Verificar si el usuario está en una ruta de desarrollador
-   * @returns {boolean}
-   */
-  isInDevRoute() {
-    const currentPath = window.location.pathname || '/';
-    return currentPath.startsWith('/dev');
   }
 
   /**

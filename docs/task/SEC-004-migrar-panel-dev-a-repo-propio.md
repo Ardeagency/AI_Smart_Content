@@ -2,7 +2,7 @@
 id: SEC-004
 severity: medium
 type: SEC
-status: open
+status: done
 created: 2026-07-28
 owner: ARDE
 programado: esta semana, despues de SEC-001 y SEC-002
@@ -136,3 +136,57 @@ Recordar la deuda que eso destapa: `sanitizeReturnTo()` en console rechaza URLs
 absolutas a propósito, así que hoy el OAuth de tiendas aterriza en
 `console.aismartcontent.io/dev/lead/orgs`. **Funciona hoy y se rompe el día que se
 borre `/dev` de console.**
+
+
+---
+
+## HECHO el 2026-09-15 — paso 5: `/dev/*` FUERA de console (decisión de JC)
+
+JC decidió sacar el modo dev del frontend principal por completo, sin esperar
+la frontera (DNS + Cloudflare Access), porque el panel ya vive y responde en
+`aisc-admin.netlify.app` (200) y el reconocimiento que regalaba console pesaba
+más que el orden ideal.
+
+**Antes de borrar:** 8 vistas Dev* tenían en console las tildes corregidas del
+10/09 que admin no había recibido; se llevaron a AISC-Admin (`7d8f8ce`).
+`DevBaseView` se quedó con la versión de admin (trae su gate de staff).
+
+**Borrado en console:** 19 `Dev*View.js` + `views/builder/` (7) +
+`developer.css` (15.255 líneas) + `dev-shared.css` + `DevRankTheme.js` +
+`DevSidebarEnhancements.js` + `SwitchUserController.js` (impersonación de
+leads: era herramienta de staff). ≈30.900 líneas menos en el navegador de cada
+cliente.
+
+**Desconectado:** 21 rutas en `app.js`; forma canónica `/dev/:rank/:userId`,
+`route-dev`, DevRankTheme y el crossfade por regiones en `router.js` (sin dos
+cascarones ya no hace falta nombrar `nav-root`/`app-root`); en `Navigation.js`
+el sidebar developer, `switchMode`, `getDevUrl`, `loadDeveloperInfo`, las
+notificaciones de `developer_notifications`, el switcher de contexto y el
+bloque «Cambiar usuario»; en `AuthService.js` el modo de vista
+(`userMode`/`userViewMode`/`default_view_mode`), `isDeveloper`, `isLead` y —ojo—
+**el bypass de lead en `hasPermission`/`getCapabilities`** (un staff ya no ve
+en console más de lo que su rol en la org le da; la base decide igual).
+`index.html` sin los dos scripts; `lazy-nav.js` sin DevSidebarEnhancements;
+`bundle.css` sin `dev-shared` ni los 18 gradientes de rank; `navigation.css`
+−679 líneas (102 reglas dev); `image.css`/`video.css` con fallback real en vez
+de `--dev-bg-surface`.
+
+**Lo que se rescató:** 42 reglas de `dev-shared.css` que usaban
+`input-registry.js` y `StudioView` (zona de archivo, selector de imágenes,
+stepper, dropdown) pasaron a `input-components.css`, con `--dev-*` cambiadas
+por tokens de plataforma. Sin esto el Studio perdía estilo.
+
+**Redirect:** `netlify.toml` manda `/dev/*` → `https://aisc-admin.netlify.app/dev/:splat`
+con **302** (no 301): el dominio definitivo `admin.aismartcontent.io` sigue sin
+DNS; al fijarlo se cambia el destino sin que ningún navegador haya cacheado el
+provisional. Cubre el aterrizaje del OAuth de tiendas (`sanitizeReturnTo` →
+`/dev/lead/orgs`), que era la deuda anotada arriba.
+
+**Verificado:** `npm run test:gate` 440/440 · eslint 0 errores dentro del ratchet ·
+`build-minify` en copia aislada.
+
+**Sigue abierto (no es código):** DNS `admin` (token de Cloudflare inválido),
+Cloudflare Access delante del dominio, `INTERNAL_WEBHOOK_SECRET` en Netlify de
+aisc-admin, prueba en vivo con los 2 leads. Y las Netlify Functions de staff
+que quedan en este repo (`lead-switch-user`, `admin-set-dev-role` en
+supabase/functions) se apagan con el corte de runtime (ADR-0052).

@@ -188,19 +188,6 @@ class Router {
         return;
       }
 
-      // ── /dev/:rank/:userId/<rest>: forma canónica del portal developer ─────────
-      // Las rutas registradas siguen siendo /dev/<page>; reescribimos internamente
-      // para el matching. La URL del browser conserva la forma canónica.
-      const DEV_RANKS = ['rookie', 'junior', 'builder', 'expert', 'master', 'legend'];
-      const devCanonicalMatch = path.match(/^\/dev\/([a-z]+)\/([^/]+)\/(.+)$/);
-      if (devCanonicalMatch && DEV_RANKS.indexOf(devCanonicalMatch[1]) >= 0) {
-        // Solo aceptamos UUIDs (o "me"). Si el segundo segmento no luce como UUID, no remappeamos.
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(devCanonicalMatch[2]) || devCanonicalMatch[2] === 'me';
-        if (isUuid) {
-          path = '/dev/' + devCanonicalMatch[3];
-        }
-      }
-
       let route = this.routes[path];
       let routeParams = {};
 
@@ -336,23 +323,6 @@ class Router {
         }
       }
 
-      // Tema de rank developer: solo en /dev/*. Carga --dev-gradient-dynamic según profiles.dev_rank.
-      if (window.DevRankTheme) {
-        const path = window.location.pathname || '';
-        const isDev = path.startsWith('/dev');
-        const currentUserId = window.authService?.getCurrentUser?.()?.id || null;
-        const appliedUserId = window._devRankThemeAppliedUserId;
-        if (isDev && currentUserId) {
-          if (appliedUserId !== currentUserId) {
-            window._devRankThemeAppliedUserId = currentUserId;
-            window.DevRankTheme.applyDevRankTheme(currentUserId);
-          }
-        } else if (appliedUserId != null) {
-          window._devRankThemeAppliedUserId = null;
-          window.DevRankTheme.clearDevRankTheme();
-        }
-      }
-
       if (!route) {
         const route404 = this.routes['/404'];
         if (route404) {
@@ -397,10 +367,6 @@ class Router {
       if (!ViewClass || typeof ViewClass !== 'function') return;
 
       const prevView = this.currentView;
-      // Ruta anterior REAL (antes de que this.currentRoute se pise con el path nuevo):
-      // fuente de verdad para detectar el cruce org<->dev en la view-transition,
-      // en vez de leer body.route-dev (estado del DOM, mutable por otros caminos).
-      const prevPath = this.currentRoute;
       const canSoftNavigate =
         prevView &&
         prevView.constructor === ViewClass &&
@@ -414,7 +380,6 @@ class Router {
             this.currentRoute = path;
             prevView.routeParams = routeParams;
             document.body.classList.toggle('route-landing', path === '/');
-            document.body.classList.toggle('route-dev', path.startsWith('/dev/'));
 
             if (window.appNavigation && typeof window.appNavigation.render === 'function') {
               window.appNavigation.render();
@@ -447,8 +412,8 @@ class Router {
 
       // NO togglear route-* aquí: si lo hacemos antes de startViewTransition,
       // el snapshot "before" ya recoge la clase nueva y el fondo cambia hard
-      // antes del crossfade (otra fuente del "brinco" dev↔org). Se aplica
-      // dentro de doRender para que forme parte del cross-fade del root.
+      // antes del crossfade. Se aplica dentro de doRender para que forme parte
+      // del cross-fade del root.
 
       // Si hay HTML en bfCache fresco para esta ruta, pintarlo de inmediato
       // (instant restore). La vista hará su render normal encima — la vista
@@ -473,14 +438,12 @@ class Router {
       // mutación del DOM forme parte del callback de startViewTransition. Si lo
       // disparamos en un microtask externo, el sidebar puede haber cambiado
       // ANTES de que la API capture el snapshot "before" → desincronización
-      // entre el crossfade del sidebar y el de la vista (el "brinco" reportado
-      // al pasar dev↔org). Adentro: ambos snapshots quedan en el mismo tick y
-      // el crossfade nombrado (app-root + nav-root + root) corre sincronizado.
+      // entre el crossfade del sidebar y el de la vista. Adentro: ambos
+      // snapshots quedan en el mismo tick y el crossfade corre sincronizado.
       const doRender = async () => {
         // Body classes adentro del callback → caen en el snapshot "after" y
         // se animan junto con el crossfade del root (fondo, brand overlay).
         document.body.classList.toggle('route-landing', path === '/');
-        document.body.classList.toggle('route-dev', path.startsWith('/dev/'));
 
         const navRenderPromise = (window.appNavigation && typeof window.appNavigation.render === 'function')
           ? Promise.resolve().then(() => window.appNavigation.render()).catch(() => {})
@@ -493,29 +456,10 @@ class Router {
       // crossfade nativo a 60fps a nivel de pintura. Fallback al .route-fade-in
       // de 140ms si no hay soporte (Firefox aún no lo implementa).
       if (typeof document.startViewTransition === 'function' && !this._reduceMotion()) {
-        // Crossfade granular por region (sidebar + contenido cada uno en su caja)
-        // en vez del crossfade de pagina completa (que mostraba un "fantasma" al
-        // pasar dev↔org porque dos layouts distintos se solapaban). Los
-        // view-transition-name se aplican SOLO durante la transicion: crean un
-        // backdrop root boundary que romperia el glass, pero durante la animacion
-        // se ven snapshots rasterizados (no el DOM vivo), asi que es invisible; al
-        // terminar los quitamos y el backdrop-filter vuelve a funcionar.
-        const navEl = document.getElementById('navigation-container');
-        const appEl = container;
-        const clearVTNames = () => {
-          if (navEl) navEl.style.viewTransitionName = '';
-          if (appEl) appEl.style.viewTransitionName = '';
-        };
-        // SOLO al cambiar de modo org<->dev: ahi el sidebar/header cambian de verdad
-        // y el crossfade granular se ve limpio. En navegaciones del MISMO modo, nombrar
-        // nav-root/app-root hace que el sidebar/header se snapshoteen y animen (parpadeo)
-        // aunque no cambien -> dejamos el crossfade root global (invisible si son identicos).
-        const isDevRoute = path.startsWith('/dev/');
-        const wasDevRoute = (prevPath || '').startsWith('/dev/');
-        if (isDevRoute !== wasDevRoute) {
-          if (navEl) navEl.style.viewTransitionName = 'nav-root';
-          if (appEl) appEl.style.viewTransitionName = 'app-root';
-        }
+        // Crossfade del root entero: el cascarón (sidebar + header) es el mismo en
+        // todas las rutas, así que no se nombran regiones (nombrarlas hacía que
+        // el sidebar se snapshoteara y parpadeara sin cambiar). Cuando existía el
+        // modo dev con otro cascarón hacía falta; ya no.
         try {
           const transition = document.startViewTransition(doRender);
           // Silenciar los otros 2 promises del ViewTransition. Si el callback
@@ -525,8 +469,7 @@ class Router {
           // aparecerían como "Uncaught (in promise) TimeoutError". Atacharlos
           // a noop catch evita el warning en consola sin cambiar el flujo.
           transition.ready.catch(() => {});
-          // Quitar los nombres al terminar (o si falla) -> restaura el glass del DOM vivo.
-          transition.finished.catch(() => {}).then(clearVTNames);
+          transition.finished.catch(() => {});
           await transition.updateCallbackDone;
           // Path success de View Transitions: no se llama _playRouteFade, pero
           // sí necesitamos enhance de a11y labels y document.title en el nuevo DOM.
@@ -535,7 +478,6 @@ class Router {
         } catch (e) {
           // Solo log si NO es el timeout esperado del browser (4s default).
           // TimeoutError es benigno: la transición no se animó pero el DOM ya está.
-          clearVTNames();
           if (e?.name !== 'TimeoutError') {
             console.warn('Router: View Transition falló, fallback a fade.', e);
             await doRender();
@@ -779,26 +721,7 @@ class Router {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) return await this._getDefaultUserRouteFallback(user.id);
     }
-    if (localStorage.getItem('userViewMode') === 'developer') return '/dev/dashboard';
     return '/creation_process';
-  }
-
-  /**
-   * Verificar si la ruta actual es una ruta de desarrollador
-   * @returns {boolean}
-   */
-  isDevRoute() {
-    const currentPath = window.location.pathname || '/';
-    return currentPath.startsWith('/dev');
-  }
-
-  /**
-   * Verificar si la ruta actual requiere modo desarrollador
-   * @param {string} path - Ruta a verificar
-   * @returns {boolean}
-   */
-  requiresDevMode(path) {
-    return path.startsWith('/dev');
   }
 
   getCurrentRoute() {

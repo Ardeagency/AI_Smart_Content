@@ -33,7 +33,7 @@
   transform: scale(1.08);
 }
 .input-color-swatch.selected {
-  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--dev-primary);
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent-brand);
 }
 
 /* Colores: estilo Brand Colors (swatch con X para quitar + círculo punteado con + para añadir) */
@@ -348,10 +348,10 @@
   top: 50%;
   width: 2px;
   height: 28px;
-  background: var(--dev-rank-accent, #e09145);
+  background: #e09145;
   transform: translate(-50%, -50%);
   border-radius: 1px;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--dev-rank-accent, #e09145) 60%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, #e09145 60%, transparent);
   pointer-events: none;
   z-index: 2;
 }
@@ -409,7 +409,7 @@
   color: var(--text-primary);
 }
 .input-segmented-option.selected {
-  background: var(--dev-rank-accent, #e09145);
+  background: #e09145;
   color: #0B0B0B;
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -492,9 +492,9 @@
   transition: background 0.15s ease, transform 0.15s ease;
 }
 .input-steps-marker.selected .input-steps-marker-dot {
-  background: var(--dev-rank-accent, #e09145);
+  background: #e09145;
   transform: scale(1.5);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--dev-rank-accent, #e09145) 60%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, #e09145 60%, transparent);
 }
 .input-steps-marker-label {
   font-variant-numeric: tabular-nums;
@@ -711,11 +711,11 @@
   color: var(--text-primary);
 }
 .input-choice-chip input:checked + .input-choice-chip-label {
-  background: var(--dev-rank-accent, #e09145);
-  border-color: var(--dev-rank-accent, #e09145);
+  background: #e09145;
+  border-color: #e09145;
   color: #0B0B0B;
   font-weight: 600;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--dev-rank-accent, #e09145) 35%, transparent), 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px color-mix(in srgb, #e09145 35%, transparent), 0 1px 2px rgba(0, 0, 0, 0.2);
   transform: translateY(-1px);
 }
 
@@ -764,10 +764,10 @@
   color: #0B0B0B;
 }
 .input-chips-wrap--multi .input-multi-chip:has(input:checked) {
-  background: var(--dev-rank-accent, #e09145);
-  border-color: var(--dev-rank-accent, #e09145);
+  background: #e09145;
+  border-color: #e09145;
   font-weight: 600;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--dev-rank-accent, #e09145) 35%, transparent), 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px color-mix(in srgb, #e09145 35%, transparent), 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Form: tags (input + list) */
@@ -845,10 +845,10 @@
   background: var(--bg-hover);
   color: var(--text-primary);
 }
-.input-stepper-btn:first-child { border-radius: 0 8px 0 0; border-bottom: 0; color: var(--dev-success, var(--color-success)); }
-.input-stepper-btn:last-child { border-radius: 0 0 8px 0; color: var(--dev-error, var(--color-error)); }
-.input-stepper-btn:hover:first-child { color: var(--dev-success, #00d614); }
-.input-stepper-btn:hover:last-child { color: var(--dev-error, var(--color-critical)); }
+.input-stepper-btn:first-child { border-radius: 0 8px 0 0; border-bottom: 0; color: var(--color-success); }
+.input-stepper-btn:last-child { border-radius: 0 0 8px 0; color: var(--color-error); }
+.input-stepper-btn:hover:first-child { color: #00d614; }
+.input-stepper-btn:hover:last-child { color: var(--color-critical); }
 .input-stepper-unit {
   margin-left: 8px;
   font-size: var(--font-size-base);
@@ -887,8 +887,8 @@
 }
 .aspect-ratio-card.selected {
   background: #1a1c20;
-  border-color: var(--dev-rank-accent, #e09145);
-  box-shadow: 0 0 0 1px var(--dev-rank-accent, #e09145);
+  border-color: #e09145;
+  box-shadow: 0 0 0 1px #e09145;
 }
 .aspect-ratio-card.selected .aspect-ratio-icon {
   background: #ffffff;
@@ -929,3 +929,308 @@
   font-weight: 500;
 }
 
+
+
+/* ── Inputs del Studio que vivían en dev-shared.css (2026-09-15): zona de archivo, selector de imágenes, stepper, dropdown. Los usan input-registry.js y StudioView; el panel dev ya no vive aquí. ── */
+
+* --- input-dropdown-wrap (selects de Studio) --- */
+.input-dropdown-wrap {
+  width: 100%;
+  min-width: 0;
+}
+
+.input-dropdown-wrap .input-dropdown-select,
+.input-dropdown-wrap select.preview-input,
+.input-dropdown-wrap select.modern-input {
+  width: 100%;
+  min-width: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 10px 40px 10px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm, 8px);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath fill='%2387868B' d='M7 9L2 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.input-dropdown-wrap .input-dropdown-select:focus,
+.input-dropdown-wrap select.preview-input:focus,
+.input-dropdown-wrap select.modern-input:focus {
+  outline: none;
+  border-color: var(--accent-brand);
+  box-shadow: 0 0 0 2px rgba(0, 231, 255, 0.25);
+}
+
+.input-dropdown-wrap select:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
+* --- image-selector (carrusel selector de imagenes de Studio) --- */
+.image-selector-carousel {
+  width: 100%;
+  min-width: 0;
+}
+
+.image-selector-carousel-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.image-selector-carousel-track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overflow-y: hidden;
+  padding: 8px 0;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  min-height: 100px;
+}
+
+.image-selector-carousel-track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.image-selector-carousel-track::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 3px;
+}
+
+.image-selector-carousel-track::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.image-selector-card {
+  flex: 0 0 auto;
+  width: 100px;
+  border-radius: var(--media-container-radius);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: var(--media-container-bg);
+  box-shadow: var(--media-container-shadow);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.image-selector-card:hover {
+  box-shadow: var(--media-container-shadow-hover);
+}
+
+.image-selector-card.selected {
+  border-color: var(--accent-brand);
+  box-shadow: 0 0 0 2px var(--accent-brand-soft);
+}
+
+.image-selector-card-placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+}
+
+.image-selector-card-placeholder .ph {
+  font-size: var(--font-size-2xl);
+}
+
+.image-selector-card-image .image-selector-card-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.image-selector-card-label {
+  display: block;
+  padding: 6px 8px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-selector-carousel--preview .image-selector-card {
+  cursor: default;
+}
+
+.image-selector-carousel-track--empty {
+  align-items: stretch;
+  justify-content: flex-start;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-style: italic;
+  min-height: 120px;
+  padding: 8px 0;
+}
+
+* Cuando el track tiene skeletons no necesita el data-empty-msg pseudo */
+.image-selector-carousel-track--empty:not(:has(.image-selector-card--skeleton))::before {
+  content: attr(data-empty-msg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+* File input: drop zone estilizada con <input type=file> invisible encima */
+.file-input-wrap {
+  display: block;
+  position: relative;
+  cursor: pointer;
+}
+
+.file-input-wrap .file-input-native {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.file-input-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  transition: background 0.15s ease, border-color 0.15s ease;
+  text-align: center;
+}
+
+.file-input-wrap:hover .file-input-zone {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.file-input-icon {
+  font-size: 28px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.file-input-hint {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.file-input-accept {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+}
+
+* Skeleton cards: visibles en el canvas builder hasta que populate del studio
+   reemplace el track con cards reales. Más apagadas que las cards normales
+   para que se entienda que son placeholders. */
+.image-selector-card--skeleton {
+  opacity: 0.45;
+  border-style: dashed !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  cursor: default !important;
+  pointer-events: none;
+}
+
+.image-selector-card--skeleton .image-selector-card-placeholder {
+  background: transparent;
+}
+
+.image-selector-card--skeleton .image-selector-card-placeholder .ph {
+  opacity: 0.5;
+}
+
+.image-selector-card--skeleton .image-selector-card-label {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.image-selector-empty-msg {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 12px;
+}
+
+* --- input-stepper (steppers numericos de Studio) --- */
+.input-stepper-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  max-width: 160px;
+}
+
+.input-stepper-input {
+  width: 72px;
+  text-align: center;
+  border-radius: 8px 0 0 8px;
+  border-right: 0;
+}
+
+.input-stepper-btns {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-stepper-btn {
+  width: 32px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  transition: var(--transition);
+}
+
+.input-stepper-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.input-stepper-btn:first-child { border-radius: 0 8px 0 0; border-bottom: 0; color: var(--color-success); }
+
+.input-stepper-btn:last-child { border-radius: 0 0 8px 0; color: var(--color-error); }
+
+.input-stepper-btn:hover:first-child { color: #00d614; }
+
+.input-stepper-btn:hover:last-child { color: var(--color-critical); }
+
+.input-stepper-unit {
+  margin-left: 8px;
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+}

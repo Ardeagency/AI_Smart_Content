@@ -549,30 +549,6 @@ body.sidebar-collapsed .main-header,
 }
 
 /* Developer: cabecera con botón toggle y nombre del desarrollador */
-.nav-dev-toggle-header {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 12px 10px 14px;
-}
-.nav-dev-header-copy {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    flex: 1;
-    min-width: 0;
-}
-.nav-dev-header-copy .nav-org-title {
-    color: var(--sidebar-text-primary, var(--text-primary));
-}
-.side-navigation.collapsed .nav-dev-toggle-header {
-    justify-content: center;
-    padding: 12px;
-}
-.side-navigation.collapsed .nav-dev-header-copy {
-    display: none;
-}
 
 .nav-identity-card:hover {
     background: var(--bg-hover);
@@ -863,10 +839,8 @@ body.sidebar-collapsed .main-header,
     font-size: 18px;
     color: var(--text-primary);
 }
-
 .side-navigation.collapsed .nav-workspace-header .nav-logo-icon,
-.side-navigation.collapsed .nav-identity-section .nav-logo-icon,
-.side-navigation.collapsed .nav-identity-section .nav-dev-icon {
+.side-navigation.collapsed .nav-identity-section .nav-logo-icon {
     width: 24px;
     height: 24px;
     font-size: 14px;
@@ -898,39 +872,6 @@ body.sidebar-collapsed .main-header,
 }
 
 /* Footer desarrollador colapsado: mismo rail que el menú (iconos 40×40, sin texto) */
-.side-navigation.collapsed.nav-mode-developer .nav-footer {
-    padding: 12px 6px 16px;
-    gap: 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 0;
-}
-
-.side-navigation.collapsed.nav-mode-developer .nav-dev-stats {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 0;
-    background: transparent;
-    width: 100%;
-    max-width: 40px;
-}
-
-.side-navigation.collapsed.nav-mode-developer .nav-dev-stat {
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
-    min-height: 40px;
-    padding: 0;
-    justify-content: center;
-    border-radius: var(--radius-md);
-}
-
-.side-navigation.collapsed.nav-mode-developer .nav-dev-stat span {
-    display: none;
-}
 
 /* Toggle button removido del sidebar - ahora está en el header */
 
@@ -1480,7 +1421,7 @@ body.sidebar-collapsed .main-header,
 
 /* Legacy (BaseView antiguo):
    estas reglas se eliminaron aquí para no duplicar ni competir con
-   el sidebar actual basado en .nav-mode-user/.nav-mode-developer. */
+   el sidebar actual basado en .nav-mode-user. */
 
 /* El aire comunica estructura - espacios reales entre dominios */
 
@@ -2134,33 +2075,8 @@ body.subnav-in-header .app-header .header-production-slot {
 }
 
 /* Slot para pestañas del Builder: oculto cuando está vacío (resto de páginas dev) */
-.app-header .header-builder-slot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  flex: 1;
-}
-.app-header .header-builder-slot:empty {
-  display: none;
-}
 
 /* Builder: pestañas (Configuración, Módulos, Inputs, Ficha) integradas en el header principal */
-.app-header.app-header--builder .header-builder-slot .builder-tabs-header {
-  background: transparent;
-  border-bottom: none;
-  flex: 0 0 auto;
-  padding: 0;
-  margin: 0;
-  height: auto;
-}
-.app-header.app-header--builder .header-builder-slot .builder-tabs-header .builder-tabs {
-  padding: 0;
-  gap: 6px;
-}
-.app-header.app-header--builder .header-left .header-title {
-  margin-right: 8px;
-}
 
 .app-header .header-right {
     display: flex;
@@ -2412,9 +2328,6 @@ body.subnav-in-header .app-header .header-production-slot {
 
 /* ── "Cambiar usuario" — selector de cuentas inline (estilo Google) ──────
    Se expande dentro del #userDropdown en vez de abrir un modal. */
-.user-dropdown-switchuser #switchUserBtn {
-    width: 100%;
-}
 
 /* Chevron empujado a la derecha; rota al expandir */
 .user-dropdown-chevron {
@@ -2424,17 +2337,6 @@ body.subnav-in-header .app-header .header-production-slot {
     color: rgba(255, 255, 255, 0.45);
     transition: transform 0.18s ease, color 0.18s ease;
 }
-.user-dropdown-switchuser #switchUserBtn[aria-expanded="true"] .user-dropdown-chevron {
-    transform: rotate(180deg);
-    color: var(--glass-black-text, #fff);
-}
-
-.user-dropdown-switchuser-panel {
-    max-height: 264px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-}
-.user-dropdown-switchuser-panel[hidden] { display: none; }
 
 .udsu-list {
     display: flex;
@@ -2641,35 +2543,6 @@ body.subnav-in-header .app-header .header-production-slot {
 }
 
 /* Developer Identity Card - Idéntico al consumidor (Living/Brands): misma card, mismo icono naranja */
-.nav-identity-card.dev-identity {
-    background: var(--bg-hover);
-    border: 1px solid var(--border-divider);
-}
-
-.nav-identity-card.dev-identity:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-divider);
-}
-
-.nav-dev-icon {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-size: 16px;
-    flex-shrink: 0;
-    overflow: hidden;
-}
-
-.nav-dev-icon .nav-dev-avatar {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
 
 .nav-org-option-avatar {
     width: 28px;
@@ -2756,64 +2629,8 @@ body.subnav-in-header .app-header .header-production-slot {
 }
 
 /* Developer Stats */
-.nav-dev-stats {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 10px 12px;
-    background: var(--bg-hover);
-    border-radius: var(--radius-md);
-}
-
-.nav-dev-stat {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-}
-
-.nav-dev-stat i {
-    font-size: 14px;
-    color: var(--accent-brand);
-}
-
-.nav-dev-stat span {
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: 13px;
-}
 
 /* Mode Switch Button - Mismo estilo que nav-tokens (card sutil, acento naranja al hover) */
-.nav-mode-switch {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 12px;
-    background: var(--bg-hover);
-    border: 1px solid var(--nav-border);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.nav-mode-switch:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-color);
-    color: var(--accent-brand);
-}
-.nav-mode-switch:hover i {
-    color: var(--accent-brand);
-}
-
-.nav-mode-switch i {
-    font-size: 14px;
-    color: var(--text-muted);
-}
 
 /* =========================================
    SIDEBAR MÓVIL
@@ -2933,13 +2750,6 @@ body.subnav-in-header .app-header .header-production-slot {
     --text-muted: rgba(255, 255, 255, 0.7);
 }
 
-/* Dev: override hover/active con vars del rank (--dev-sidebar-* las setea DevRankTheme).
-   Mismo lenguaje que org/ que usa --brand-primary-brillo*, pero scopeado para no chocar
-   en transiciones rapidas dev <-> org. Fallback brown-vino si el rank aun no aplico. */
-.side-navigation.nav-mode-developer {
-    --sidebar-hover: var(--dev-sidebar-hover, rgba(224, 145, 69, 0.12));
-    --sidebar-active: var(--dev-sidebar-active, rgba(224, 145, 69, 0.20));
-}
 .side-navigation::before {
     content: '';
     position: absolute;
@@ -2991,77 +2801,8 @@ body.subnav-in-header .app-header .header-production-slot {
 }
 
 /* Dev: items con curva de animacion Linear/Vercel + micro-lift en hover */
-.nav-mode-developer .nav-link,
-.nav-mode-developer .nav-main-link {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 30px;
-    padding: 0 12px;
-    border-radius: var(--radius-sm);
-    color: var(--sidebar-text-secondary);
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: none;
-    transition:
-        background 0.18s cubic-bezier(0.2, 0, 0, 1),
-        color 0.18s cubic-bezier(0.2, 0, 0, 1),
-        opacity 0.18s ease,
-        transform 0.18s cubic-bezier(0.2, 0, 0, 1);
-    cursor: pointer;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
-    opacity: 0.62;
-}
-
-.nav-mode-developer .nav-link:hover:not(.active),
-.nav-mode-developer .nav-main-link:hover:not(.active) {
-    opacity: 0.92;
-    transform: translateX(2px);
-}
-
-.nav-mode-developer .nav-link:hover,
-.nav-mode-developer .nav-main-link:hover {
-    background: var(--sidebar-hover);
-    color: var(--sidebar-text-primary);
-}
-
-.nav-mode-developer .nav-link.active,
-.nav-mode-developer .nav-main-link.active {
-    /* Tint dinamico del rango (rgba 20% del color secundario del rank). Espejo del
-       patron org/ que usa --sidebar-active = --brand-primary-brillo-strong. Las vars
-       --dev-sidebar-active vienen de DevRankTheme; fallback brown-vino si no aplico aun. */
-    background: var(--sidebar-active);
-    color: var(--sidebar-text-primary);
-    opacity: 1;
-}
 
 /* Dev: sin barra lateral en items activos — solo tint de fondo (igual que org/) */
-.nav-mode-developer .nav-link.active::before,
-.nav-mode-developer .nav-main-link.active::before {
-    display: none !important;
-    content: none !important;
-}
-
-.nav-mode-developer .nav-icon {
-    width: 16px;
-    height: 16px;
-    font-size: 16px;
-    text-align: center;
-    flex-shrink: 0;
-    color: var(--sidebar-icon-color);
-}
-
-.nav-mode-developer .nav-icon-img {
-    width: 16px;
-    height: 16px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
 
 .nav-mode-user .nav-link:hover:not(.active),
 .nav-mode-user .nav-main-link:hover:not(.active),
@@ -3367,15 +3108,6 @@ body.subnav-in-header .app-header .header-production-slot {
 }
 
 /* Lead: gobernanza, diferenciación visual (spacing superior, acento sutil) */
-.nav-mode-developer .nav-dev-lead-section {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: none;
-}
-
-.nav-mode-developer .nav-dev-lead-section .nav-link.nav-submenu-toggle .nav-icon {
-    color: var(--text-primary);
-}
 
 /* =========================================
    VERA — ÍTEM PRIMARIO (acción principal)
@@ -3625,52 +3357,13 @@ body.subnav-in-header .app-header .header-production-slot {
    (expandido y colapsado), para que la transición no salte. El texto se
    conserva en el DOM pero oculto; ::before pinta la línea. Misma métrica en
    los dos estados → sin parpadeos ni desplazamientos. */
-.nav-mode-developer .nav-section-label {
-    display: block;
-    position: relative;
-    height: 1px;
-    margin: 10px 0;
-    padding: 0;
-    font-size: 0;
-    line-height: 0;
-    color: transparent;
-    visibility: hidden;
-    pointer-events: none;
-    user-select: none;
-}
-.nav-mode-developer .nav-section-label::before {
-    content: '';
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    top: 0;
-    height: 1px;
-    background: var(--nav-border);
-    visibility: visible;
-}
 /* Primera sección (MAIN, justo bajo la card de acciones): sin línea para no
    duplicar separadores; solo aporta el espacio superior. */
-.nav-mode-developer .nav-dev-primary-actions + .nav-section-label::before {
-    display: none;
-}
 
 /* Colapsado dev: ritmo de items igual al expandido (antes 40px alto + 6px de
    margen = demasiado aire). Ahora 34px sin margen extra → transición sin saltos. */
-.side-navigation.collapsed.nav-mode-developer .nav-link,
-.side-navigation.collapsed.nav-mode-developer .nav-submenu-toggle {
-    height: 34px;
-    min-height: 34px;
-}
-.side-navigation.collapsed.nav-mode-developer .nav-menu .nav-item,
-.side-navigation.collapsed.nav-mode-developer .nav-menu .nav-group {
-    margin-bottom: 0;
-}
 /* En colapsado .nav-menu usa align-items:center → el label se encogía a ancho 0
    y la línea (::before left/right) no se veía. Forzar ancho completo. */
-.side-navigation.collapsed.nav-mode-developer .nav-section-label {
-    align-self: stretch;
-    width: 100%;
-}
 
 /* =========================================
    ACTIVE STATE — Sidebar usuario: sin barra lateral; contraste por opacidad
@@ -4049,225 +3742,35 @@ body.subnav-in-header .app-header .header-production-slot {
 /* Header sidebar dev — medidas exactas del Frame 86 del mockup Figma.
    overflow: hidden recorta la parte del blur rainbow que se sale por
    debajo, dejándolo "encerrado" en el header (cortado por el border). */
-.nav-mode-developer .nav-workspace-header,
-.nav-mode-developer .nav-dev-workspace-header {
-  position: relative;
-  display: block;
-  height: 63px;
-  min-height: 63px;
-  padding: 0;
-  margin: 0 8px;
-  box-sizing: border-box;
-  border-bottom: 1px solid #242424;
-  overflow: hidden;
-}
 /* "DEVELOPER" = pre-label sobrio (pequeno, tracking abierto, color muted) */
-.nav-mode-developer .nav-dev-title {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 12px;
-  height: 14px;
-  margin: 0;
-  text-align: center;
-  text-transform: uppercase;
-  font-family: var(--font-family);
-  font-weight: 500;
-  font-size: 10px;
-  line-height: 14px;
-  letter-spacing: 0.32em;
-  color: rgba(255, 255, 255, 0.50);
-  white-space: nowrap;
-  overflow: hidden;
-  z-index: 2;
-}
 
 /* RANK = el heroe de la identidad dev (gradient text-fill del rango) */
-.nav-mode-developer .nav-dev-rank-block {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 30px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  z-index: 2;
-}
-.nav-mode-developer .nav-dev-rank-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 24px;
-}
-.nav-mode-developer .nav-dev-rank-value {
-  font-family: var(--font-family);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  line-height: 24px;
-  background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, linear-gradient(90deg, #ffffff, #ffffff)));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
-.nav-mode-developer .nav-dev-rank-label,
-.nav-mode-developer .nav-dev-rank-bar {
-  display: none;
-}
 
 /* Colapsado: header dev encoge y oculta el texto (la inicial podría mostrarse pero por minimalismo ocultamos) */
-.side-navigation.collapsed.nav-mode-developer .nav-workspace-header,
-.side-navigation.collapsed.nav-mode-developer .nav-dev-workspace-header {
-  height: 60px;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 /* Colapsado: ocultar el texto DEVELOPER + rank (se recortaba como "GE") y
    mostrar el favicon de marca centrado. */
-.side-navigation.collapsed.nav-mode-developer .nav-dev-title,
-.side-navigation.collapsed.nav-mode-developer .nav-dev-rank-block {
-  display: none !important;
-}
 
 /* Logo de marca en el header — solo visible en colapsado */
-.nav-dev-collapsed-logo {
-  display: none;
-}
-.side-navigation.collapsed.nav-mode-developer .nav-dev-collapsed-logo {
-  display: block;
-  width: 28px;
-  height: 28px;
-}
 
 /* ============================================================ *
  * Dev primary actions — card (mockup Figma node 232:14)         *
  * Contenedor único con filas icono+label; sin borde degradado. *
  * ============================================================ */
-.nav-mode-developer .nav-dev-primary-actions {
-  display: block;
-  margin: 14px 0 12px;
-  padding: 0 8px;
-}
 
 /* La card que agrupa las acciones */
-.nav-mode-developer .nav-dev-actions-card {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  background: #141517;
-  border: 1px solid #242424;
-  border-radius: 14px;
-  padding: 6px;
-}
 
 /* Fila de acción (icono + label) */
-.nav-mode-developer .nav-dev-actions-card .nav-dev-action {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  padding: 7px 10px 7px 8px;
-  border: none !important;
-  background: transparent !important;
-  border-radius: 10px;
-  box-shadow: none !important;
-  color: #D9D9D9 !important;
-  text-decoration: none;
-  opacity: 1 !important;
-  transition: background 0.15s ease;
-}
-.nav-mode-developer .nav-dev-actions-card .nav-dev-action:hover {
-  background: rgba(255, 255, 255, 0.04) !important;
-}
-.nav-mode-developer .nav-dev-actions-card .nav-dev-action.active {
-  background: rgba(255, 255, 255, 0.07) !important;
-}
-.nav-mode-developer .nav-dev-actions-card .nav-dev-action.active::before {
-  display: none;
-}
 
 /* Icono directo (sin medallón) — mismo lenguaje que el resto del nav */
-.nav-mode-developer .nav-dev-action .nav-dev-action-ico {
-  flex: 0 0 auto;
-  width: 22px;
-  height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #C8C8CB;
-  transition: color 0.15s ease;
-}
-.nav-mode-developer .nav-dev-action:hover .nav-dev-action-ico,
-.nav-mode-developer .nav-dev-action.active .nav-dev-action-ico {
-  color: #FFFFFF;
-}
-.nav-mode-developer .nav-dev-action .nav-dev-action-ico svg {
-  display: block;
-  width: 20px;
-  height: 20px;
-}
 
 /* Label de la acción — sentence case, no uppercase */
-.nav-mode-developer .nav-dev-actions-card .nav-dev-action .nav-text {
-  font-family: var(--font-family);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  color: #D9D9D9;
-  white-space: nowrap;
-  line-height: 1;
-}
 
 /* Colapsado: la card CONSERVA su contenedor (bg + borde) pero con el MISMO
    ancho que los pills de iconos (40px centrados), dejando margen lateral. */
-.side-navigation.collapsed.nav-mode-developer .nav-dev-primary-actions {
-  display: flex;
-  justify-content: center;
-  padding: 0;
-  margin-bottom: 8px;
-}
-.side-navigation.collapsed.nav-mode-developer .nav-dev-actions-card {
-  width: 40px;
-  padding: 4px;
-  gap: 2px;
-  align-items: stretch;
-}
-.side-navigation.collapsed.nav-mode-developer .nav-dev-actions-card .nav-dev-action {
-  width: 100%;
-  /* .nav-link colapsado fija min-width:40px → desbordaba el contenido de la
-     card (28px) empujando el icono a la derecha. Reset a 0 para centrar. */
-  min-width: 0;
-  height: 32px;
-  min-height: 32px;
-  justify-content: center;
-  padding: 0;
-  gap: 0;
-}
-.side-navigation.collapsed.nav-mode-developer .nav-dev-action .nav-text {
-  display: none;
-}
 
 /* Brand footer dev (logo + toggle): mismo patrón que user */
-.nav-mode-developer .nav-brand-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
 
 /* Si quedaron reglas obsoletas del header con toggle adentro, deshabilitar */
-.nav-mode-developer .nav-dev-toggle-header {
-  /* legacy: ya no se renderiza este wrapper */
-  display: none;
-}
 
 /* ============================================================ *
  * Dev rank gradient — visual signature por rango de developer  *
@@ -4275,84 +3778,15 @@ body.subnav-in-header .app-header .header-production-slot {
  * ============================================================ */
 
 /* 1. Header dev: layout absoluto según Frame 86 del mockup (children posicionados con top exactos) */
-.nav-mode-developer .nav-dev-workspace-header {
-  position: relative;
-  display: block;
-}
 /* Velo cinematografico del rango: glow ancho que respira bajo el rank
    (mas visible que el "shelf" Figma original, sin overpower). */
-.nav-mode-developer .nav-dev-workspace-header::after {
-  content: '';
-  position: absolute;
-  left: -8%;
-  right: -8%;
-  top: 28px;
-  bottom: -22px;
-  background:
-    radial-gradient(50% 70% at 50% 100%, rgba(255, 255, 255, 0.05), transparent 65%),
-    var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
-  filter: blur(18px);
-  border-radius: 50%;
-  opacity: 0.62;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* 2. Badge de rank (HTML <span>, no CSS pseudo) — siempre visible si hay rank context */
-.nav-dev-rank-badge {
-  display: none;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  text-align: center;
-  width: 100%;
-  background: var(--dev-gradient-dynamic, linear-gradient(135deg, var(--text-secondary), var(--text-primary)));
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  line-height: 1.2;
-}
-/* Mostrar solo cuando el body tiene rank context (DevRankTheme aplicó). Esto evita
-   parpadeos antes de cargar el rank y no depende del attribute hidden HTML. */
-body.dev-rank-context .nav-dev-rank-badge {
-  display: block;
-}
-
-/* Colapsado: ocultar trazo y badge */
-.side-navigation.collapsed.nav-mode-developer .nav-dev-workspace-header::after,
-.side-navigation.collapsed.nav-mode-developer .nav-dev-rank-badge {
-  display: none;
-}
 
 /* (Antes: trazo arcoiris bajo el primary pill activo; ahora la firma rainbow vive
    solo en el blur del header, los pills son chips planos según el mockup Figma) */
 
 /* 4. Glow sutil del logo Arde en el footer cuando hay rank (premiar la identidad) */
-.nav-mode-developer .nav-brand-footer .nav-brand-footer-logo-link {
-  position: relative;
-}
-.nav-mode-developer .nav-brand-footer .nav-brand-footer-logo-link::after {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  background: var(--dev-gradient-dynamic, transparent);
-  opacity: 0.18;
-  z-index: -1;
-  filter: blur(6px);
-  pointer-events: none;
-}
-body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::after {
-  display: none;
-}
 
 /* 5. Marca activa de menu item con un borde izquierdo del rank (sutil) */
-.nav-mode-developer .nav-link.active::before,
-.nav-mode-developer .nav-main-link.active::before {
-  background: var(--dev-gradient-dynamic-vertical, var(--dev-gradient-dynamic, transparent));
-}
 
 /* =========================================
    DRAWER MÓVIL — orden de apilamiento explícito
@@ -4704,156 +4138,7 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     border-top-color: #1e2229;
 }
 
-/* =========================================================================
-   GLASS NOIR — sidebar dev/ (espejo del org; acento = gradiente de RANK).
-   Override scopeado a .nav-mode-developer. Usa --dev-gradient-dynamic* y
-   --dev-sidebar-active (rgba del rank) para el glow.
-   ========================================================================= */
-.side-navigation.nav-mode-developer {
-    border-right: 1px solid #272b31;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    isolation: isolate;
-}
-
-/* fondo glass (el overlay base ::before pintaba plano) */
-.side-navigation.nav-mode-developer::before {
-    background: linear-gradient(180deg, #141517 0%, #0b0b0b 100%);
-}
-
-/* bloom del gradiente de RANK concentrado en la esquina superior izquierda */
-.side-navigation.nav-mode-developer::after {
-    content: '';
-    position: absolute;
-    width: 220px;
-    height: 190px;
-    left: -80px;
-    top: -95px;
-    background: var(--dev-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)));
-    opacity: 0.26;
-    filter: blur(44px) saturate(1.4);
-    pointer-events: none;
-    z-index: 0;
-}
-
-/* items como pastillas glass */
-.side-navigation.nav-mode-developer .nav-link {
-    border-radius: 9px;
-}
-
-/* hover: SOLO opacidad (sin translateX que expande, sin pastilla) */
-.side-navigation.nav-mode-developer .nav-link:hover,
-.side-navigation.nav-mode-developer .nav-main-link:hover,
-.side-navigation.nav-mode-developer .nav-link:hover:not(.active),
-.side-navigation.nav-mode-developer .nav-main-link:hover:not(.active) {
-    background: transparent;
-    transform: none;
-    opacity: 1;
-    color: var(--sidebar-text-primary);
-}
-
-/* activo = fill cálido del rank (mismo resaltado unificado que org/). */
-.side-navigation.nav-mode-developer .nav-link.active {
-    color: #ffffff;
-    opacity: 1;
-    background: var(--sidebar-active);
-    box-shadow: none;
-}
-
-/* re-mostrar el filo (el dev lo tenía en display:none) con el gradiente de rank */
-/* Sin filo de degradado en el activo: resaltado plano cálido unificado con org/. */
-.side-navigation.nav-mode-developer .nav-link.active::before {
-    display: none !important;
-    content: none !important;
-}
-
-/* submenú: enlaces redondeados + activo en pastilla translúcida */
-.side-navigation.nav-mode-developer .nav-submenu-link {
-    border-radius: 7px;
-}
-
-.side-navigation.nav-mode-developer .nav-submenu-link.active {
-    color: #ffffff;
-    background: var(--sidebar-active);
-    box-shadow: none;
-}
-
-/* divisor del pie en sintonía con el panel glass */
-.side-navigation.nav-mode-developer .nav-brand-footer {
-    border-top-color: #1e2229;
-}
-
-/* --- header dev limpio: DEVELOPER blanco + rank como chip, sin veil --- */
-
-/* quitar el veil/glow de degradado del header */
-.side-navigation.nav-mode-developer .nav-dev-workspace-header::after {
-    display: none !important;
-}
-
-/* header dev más alto para el rank grande */
-.side-navigation.nav-mode-developer .nav-workspace-header,
-.side-navigation.nav-mode-developer .nav-dev-workspace-header {
-    height: 76px;
-    min-height: 76px;
-}
-
-/* DEVELOPER = pre-label en blanco */
-.side-navigation.nav-mode-developer .nav-dev-title {
-    color: rgba(255, 255, 255, 0.85);
-    top: 16px;
-    font-size: 10.5px;
-}
-
-/* RANK = grande (sin chip), en BLANCO; el color lo da el bloom */
-.side-navigation.nav-mode-developer .nav-dev-rank-block {
-    top: 33px;
-    height: 32px;
-}
-
-.side-navigation.nav-mode-developer .nav-dev-rank-value {
-    color: #ffffff;
-    -webkit-text-fill-color: #ffffff;
-    background: none;
-    font-size: 24px;
-    line-height: 32px;
-}
-
-/* botones + : MISMO diseño que el botón Vera del org/ (pastilla glass
-   translúcida + borde COMPLETO del gradiente de rank via mask) */
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.025) 100%) !important;
-    border: 0 !important;
-    border-radius: var(--radius-sm) !important;
-    color: #e7e9ec !important;
-}
-
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link:hover,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link:hover {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.045) 100%) !important;
-    transform: none !important;
-}
-
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link::after,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link::after {
-    display: block !important;
-    content: '' !important;
-    position: absolute;
-    inset: 0;
-    border-radius: var(--radius-sm);
-    padding: 1px;
-    background: var(--dev-gradient-dynamic, linear-gradient(143deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-}
-
-/* =========================================================================
-   Guía vertical del submenú (org/ y dev/) — línea tipo árbol a la izquierda.
-   ========================================================================= */
-.side-navigation.nav-mode-user .nav-submenu,
-.side-navigation.nav-mode-developer .nav-submenu {
+.side-navigation.nav-mode-user .nav-submenu {
     position: relative;
 }
 
@@ -4861,18 +4146,6 @@ body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::aft
     content: '';
     position: absolute;
     left: 20px;
-    top: 3px;
-    bottom: 5px;
-    width: 1px;
-    background: rgba(255, 255, 255, 0.12);
-    pointer-events: none;
-    z-index: 1;
-}
-
-.side-navigation.nav-mode-developer .nav-submenu::before {
-    content: '';
-    position: absolute;
-    left: 22px;
     top: 3px;
     bottom: 5px;
     width: 1px;

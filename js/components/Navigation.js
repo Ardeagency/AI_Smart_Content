@@ -150,93 +150,12 @@ function _formatNotificationDate(iso) {
 const SIDEBAR_TOGGLE_ICON_DESPLEGADO = `<svg class="nav-sidebar-toggle-icon" width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4.79167 0.624996L0.624999 4.79166L4.79167 8.95833M10.625 0.624996L6.45833 4.79166L10.625 8.95833" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M6.45833 0.624996L10.625 4.79166L6.45833 8.95833M0.624999 0.624996L4.79167 4.79166L0.625 8.95833" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-/* Iconos contextuales de las acciones rápidas del sidebar dev (diseñados en Figma,
-   maqueta node 239:14). Trazo 1.6, 24px, sin relleno, heredan currentColor.
-   Usuario = persona + "+"; Flujo = diagrama de nodos; Org = banner editorial (familia Brands). */
-const DEV_ACTION_ICON_USER = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="14.5" cy="9" r="3.1" stroke="currentColor" stroke-width="1.6"/><path d="M9.5 19.2C9.5 16 11.8 14.2 14.5 14.2C17.2 14.2 19.5 16 19.5 19.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 9.8V14.2M2.3 12H6.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const DEV_ACTION_ICON_FLOW = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3.5" y="4" width="7.5" height="6" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="14" width="7.5" height="6" rx="1.5" stroke="currentColor" stroke-width="1.6"/><path d="M7.25 10V17H13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const DEV_ACTION_ICON_ORG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="9.5" cy="10" r="7.3" stroke="currentColor" stroke-width="1.6"/><circle cx="16.8" cy="16.2" r="4.3" stroke="currentColor" stroke-width="1.6"/></svg>`;
-
-/**
- * Sidebar desarrollador — Build, Operations, Observability, Resources, Lead (solo lead).
- */
-const SIDEBAR_DEVELOPER_CONFIG = [
-  { type: 'section', label: 'Main' },
-  { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'aisc-ico aisc-ico--growth', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
-  { type: 'page', id: 'admin-inputs', label: 'Inputs', icon: 'aisc-ico aisc-ico--filter', iconSrc: '/recursos/icons/coding.svg', route: '/dev/lead/input-schemas' },
-  { type: 'page', id: 'admin-categorias', label: 'Categories', icon: 'aisc-ico aisc-ico--tag', iconSrc: '/recursos/icons/file-storage.svg', route: '/dev/lead/categories' },
-  { type: 'page', id: 'admin-lexicon', label: 'Temas huérfanos', icon: 'aisc-ico aisc-ico--book', iconSrc: '/recursos/icons/book.svg', route: '/dev/lead/lexicon' },
-  { type: 'section', label: 'Code' },
-  { type: 'page', id: 'flows', label: 'My Flows', icon: 'aisc-ico aisc-ico--grid', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
-  {
-    type: 'container',
-    id: 'operations',
-    label: 'Operations',
-    icon: 'aisc-ico aisc-ico--settings',
-    iconSrc: '/recursos/icons/monitoring.svg',
-    children: [
-      { label: 'Flow Tests', route: '/dev/test' },
-      { label: 'Logs', route: '/dev/logs' },
-      { label: 'Costos', route: '/dev/costs' },
-      { label: 'Webhooks', route: '/dev/webhooks' },
-      { label: 'Web Vitals', route: '/dev/web-vitals' }
-    ]
-  },
-  {
-    type: 'page',
-    id: 'llm-training',
-    label: 'Entrenamiento',
-    icon: 'aisc-ico aisc-ico--memory',
-    iconSrc: '/recursos/icons/memory.svg',
-    role_required: 'lead',
-    route: '/dev/lead/vera-training'
-  },
-  { type: 'section', label: 'Admin', role_required: 'lead' },
-  {
-    type: 'page',
-    id: 'admin-orgs',
-    label: 'Organizaciones',
-    icon: 'aisc-ico aisc-ico--organization',
-    iconSrc: '/recursos/icons/organization.svg',
-    role_required: 'lead',
-    route: '/dev/lead/orgs'
-  },
-  {
-    type: 'page',
-    id: 'admin-team',
-    label: 'Team',
-    icon: 'aisc-ico aisc-ico--audience',
-    iconSrc: '/recursos/icons/Characters.svg',
-    role_required: 'lead',
-    route: '/dev/lead/team'
-  },
-  {
-    type: 'page',
-    id: 'admin-consumers',
-    label: 'Consumidores',
-    icon: 'aisc-ico aisc-ico--audience',
-    iconSrc: '/recursos/icons/user registration.svg',
-    role_required: 'lead',
-    route: '/dev/lead/consumers'
-  },
-  {
-    type: 'page',
-    id: 'admin-billing',
-    label: 'Billing',
-    icon: 'aisc-ico aisc-ico--credit-card',
-    iconSrc: '/recursos/icons/credits.svg',
-    role_required: 'lead',
-    route: '/dev/lead/billing'
-  },
-];
-
 /**
  * Navigation Component - Sistema de navegación inteligente
  * 
  * Maneja el sidebar y header según el contexto de la ruta:
  * - (Home/Hogar eliminado: tras login el usuario entra directo a su organización)
  * - /org/:org_id/...: Sidebar de organización (SaaS)
- * - /dev/...: Sidebar de desarrollador (PaaS)
  * - Rutas públicas (/, /login, /signin, /cambiar-contrasena): Sin navegación
  */
 class Navigation {
@@ -251,8 +170,6 @@ class Navigation {
     this._orgCache = null;
     this._orgCacheId = null;
     this._orgCacheTime = 0;
-    this._devCache = null;
-    this._devCacheTime = 0;
     this._catalogCategories = [];
     this._hasSavedFlows = false; // ¿la org tiene flujos guardados? (muestra/oculta "My Flows")
     /** @type {Array<{id:string,nombre_marca?:string}>} Sub-marcas para el submenú de Brand Storage */
@@ -358,11 +275,6 @@ class Navigation {
       return { mode: 'home', showSidebar: false, showHeader: true, orgId: null, brandId: null };
     }
     
-    // Rutas de desarrollador /dev/*
-    if (path.startsWith('/dev')) {
-      return { mode: 'developer', showSidebar: true, showHeader: true, orgId: null, brandId: null };
-    }
-    
     // Rutas de organización /org/:orgIdShort/:orgNameSlug/*
     const orgMatch = path.match(/^\/org\/([^\/]+)\/([^\/]+)/);
     if (orgMatch) {
@@ -430,8 +342,6 @@ class Navigation {
     // Renderizar según el modo
     if (config.mode === 'home') {
       this.container.innerHTML = this.getHomeHeaderHTML();
-    } else if (config.mode === 'developer') {
-      this.container.innerHTML = this.getDeveloperNavigationHTML();
     } else if (config.mode === 'user') {
       this.container.innerHTML = this.getUserNavigationHTML();
     }
@@ -444,24 +354,12 @@ class Navigation {
     this.updateBodyLayout(config);
     this.renderDemoBanner();
 
-    // Carga de datos en paralelo: usuario + (org|dev). Cada uno actualiza el DOM
+    // Carga de datos en paralelo: usuario + org. Cada uno actualiza el DOM
     // cuando llega; no hace falta serializarlos ni bloquear a quien llama (el
     // sidebar ya pintó con su layout en innerHTML).
     const dataTasks = [this.loadUserInfo().catch((e) => console.warn('Nav.loadUserInfo', e))];
-    if (config.mode === 'developer') {
-      dataTasks.push(this.loadDeveloperInfo().catch((e) => console.warn('Nav.loadDeveloperInfo', e)));
-      // Aplicar el gradient del rank al :root + sincronizar badge. No bloquea el render.
-      if (window.DevRankTheme && typeof window.DevRankTheme.applyDevRankTheme === 'function') {
-        const userId = window.authService?.getCurrentUser?.()?.id || null;
-        // Disparo inmediato (en background); el service mismo actualiza #navDevRankBadge cuando llegue la BD.
-        window.DevRankTheme.applyDevRankTheme(userId).catch((e) => console.warn('Nav.devRankTheme', e));
-      }
-    } else if (config.mode === 'user') {
+    if (config.mode === 'user') {
       dataTasks.push(this.loadOrganizationInfo().catch((e) => console.warn('Nav.loadOrganizationInfo', e)));
-      // Al volver al modo user, limpiar tema dev por si quedó pegado
-      if (window.DevRankTheme && typeof window.DevRankTheme.clearDevRankTheme === 'function') {
-        window.DevRankTheme.clearDevRankTheme();
-      }
     }
     if (config.showHeader) {
       this.refreshNotificationsBadge();
@@ -1095,12 +993,6 @@ class Navigation {
     return sb?.rpc ? sb : null;
   }
 
-  /** En /dev/* las notificaciones son del DESARROLLADOR (developer_notifications),
-   *  no de la org. Fuera de /dev usamos las notificaciones de org. */
-  _isDevContext() {
-    return (window.location.pathname || '').startsWith('/dev');
-  }
-
   _currentUserId() {
     return window.authService?.getCurrentUser?.()?.id || null;
   }
@@ -1108,17 +1000,6 @@ class Navigation {
   async _orgNotificationsCount() {
     const sb = await this._supabase();
     if (!sb) return 0;
-    if (this._isDevContext()) {
-      const uid = this._currentUserId();
-      if (!uid) return 0;
-      const { count, error } = await sb
-        .from('developer_notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('recipient_user_id', uid)
-        .eq('is_read', false);
-      if (error) { console.warn('[notifs] dev count error:', error.message); return 0; }
-      return Number(count) || 0;
-    }
     const { data, error } = await sb.rpc('my_unread_org_notifications_count', {
       p_org_id: this.currentOrgId || null,
     });
@@ -1129,21 +1010,6 @@ class Navigation {
   async _orgNotificationsList(state = 'unread', limit = 50) {
     const sb = await this._supabase();
     if (!sb) return [];
-    if (this._isDevContext()) {
-      const uid = this._currentUserId();
-      if (!uid) return [];
-      let q = sb
-        .from('developer_notifications')
-        .select('id, title, message, severity, flow_id, is_read, read_at, created_at')
-        .eq('recipient_user_id', uid)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-      if (state === 'unread') q = q.eq('is_read', false);
-      else if (state === 'read') q = q.eq('is_read', true);
-      const { data, error } = await q;
-      if (error) { console.warn('[notifs] dev list error:', error.message); return []; }
-      return (data || []).map((n) => this._normalizeDevNotification(n));
-    }
     const { data, error } = await sb.rpc('list_my_org_notifications', {
       p_org_id: this.currentOrgId || null,
       p_state:  state,
@@ -1157,13 +1023,6 @@ class Navigation {
   async _orgNotificationsMark(id, state) {
     const sb = await this._supabase();
     if (!sb || !id) return false;
-    if (this._isDevContext()) {
-      const patch = { is_read: state !== 'unread' };
-      if (state !== 'unread') patch.read_at = new Date().toISOString();
-      const { error } = await sb.from('developer_notifications').update(patch).eq('id', id);
-      if (error) { console.warn('[notifs] dev mark error:', error.message); return false; }
-      return true;
-    }
     const { error } = await sb.rpc('mark_org_notification_state', {
       p_notification_id: id, p_state: state,
     });
@@ -1171,32 +1030,6 @@ class Navigation {
     return true;
   }
 
-  /** Mapea una fila de developer_notifications al modelo de tarjeta de notificación. */
-  _normalizeDevNotification(n) {
-    if (!n) return n;
-    return {
-      id:          n.id,
-      title:       n.title || '',
-      body:        n.message || '',
-      message:     n.message || '',
-      severity:    n.severity || 'info',
-      type:        'developer',
-      status:      'pending',
-      is_read:     !!n.is_read,
-      created_at:  n.created_at,
-      label:       '',
-      summary:     '',
-      subject:     null,
-      outputs:     [],
-      checklist:   [],
-      actions:     [],
-      vera:        null,
-      checklist_progress: {},
-      link_to:     n.flow_id ? this.getDevUrl('/dev/builder') : '',
-      action_label: n.flow_id ? __('Ver flujo') : '',
-      metadata:    {},
-    };
-  }
 
   _normalizeOrgNotification(n) {
     if (!n) return n;
@@ -1906,24 +1739,6 @@ class Navigation {
           <img src="/recursos/icons/settings.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
           <span>${__('Ajustes')}</span>
         </a>
-        ${window.SwitchUserController?.hasImpersonation?.() ? `
-        <div class="user-dropdown-divider"></div>
-        <button class="user-dropdown-item user-dropdown-item--accent" id="returnLeadBtn">
-          <i class="aisc-ico aisc-ico--arrow-left"></i>
-          <span>${__('Volver a mi cuenta de Lead')}</span>
-        </button>
-        ` : ''}
-        ${window.SwitchUserController?.isLead?.() ? `
-        <div class="user-dropdown-divider"></div>
-        <div class="user-dropdown-switchuser" id="userDropdownSwitchUser">
-          <button class="user-dropdown-item" id="switchUserBtn" aria-expanded="false" aria-controls="switchUserInline">
-            <svg class="user-dropdown-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.5" cy="7" r="3.25"/><path d="M3 19v-.5a5.5 5.5 0 0 1 5.5-5.5 5.5 5.5 0 0 1 2.3.5"/><path d="M14 15.5h5.5l-2-2M19.5 20.5H14l2 2"/></svg>
-            <span>${__('Cambiar usuario')}</span>
-            <i class="aisc-ico user-dropdown-chevron aisc-ico--chevron-down" aria-hidden="true"></i>
-          </button>
-          <div class="user-dropdown-switchuser-panel" id="switchUserInline" hidden></div>
-        </div>
-        ` : ''}
         <button class="user-dropdown-item" id="logoutBtn">
           <i class="aisc-ico aisc-ico--logout"></i>
           <span>${__('Cerrar sesión')}</span>
@@ -2281,172 +2096,6 @@ class Navigation {
   }
 
   /**
-   * Construye la URL canónica del developer: /dev/<rank>/<userId>/<rest>.
-   * Si rank o userId aún no están disponibles, devuelve el route original.
-   * El router acepta ambos formatos (re-mapea canónico → registrado internamente).
-   */
-  getDevUrl(route) {
-    if (!route || !route.startsWith('/dev/')) return route;
-    const rest = route.slice(5);
-    if (!rest) return route;
-    const rank = (window.DevRankTheme && typeof window.DevRankTheme.getCurrentRank === 'function')
-      ? window.DevRankTheme.getCurrentRank() : null;
-    const userId = window.authService?.getCurrentUser?.()?.id || null;
-    if (!rank || !userId) return route; // fallback a forma vieja hasta que llegue el rank
-    return `/dev/${rank}/${userId}/${rest}`;
-  }
-
-  /**
-   * HTML para navegación de desarrollador PaaS (config-driven: Dashboard, Build, Operations, Observability, Resources, Lead).
-   */
-  getDeveloperNavigationHTML() {
-    const iconHTML = (item) => {
-      if (item.iconSrc) {
-        const src = _navSidebarIconUrl(item.iconSrc);
-        return `<img src="${src}" class="nav-icon nav-icon-img" alt="" width="16" height="16">`;
-      }
-      return `<i class="fas ${item.icon} nav-icon"></i>`;
-    };
-
-    const mainHTML = SIDEBAR_DEVELOPER_CONFIG.map((item) => {
-      const isLead = item.role_required === 'lead';
-      if (item.type === 'section') {
-        const sectionClass = isLead ? 'nav-section-label nav-lead-only' : 'nav-section-label';
-        const sectionAttrs = isLead ? ' style="display:none"' : '';
-        return `<div class="${sectionClass}"${sectionAttrs} aria-hidden="true">${_escapeHtml(item.label)}</div>`;
-      }
-      const wrapClass = isLead ? 'nav-item has-submenu nav-lead-only nav-dev-lead-section' : 'nav-item has-submenu';
-      const attrs = isLead ? ` style="display: none;"` : '';
-
-      if (item.type === 'page') {
-        const pageClass = isLead ? 'nav-item nav-lead-only' : 'nav-item';
-        const pageAttrs = isLead ? ' style="display: none;"' : '';
-        const href = this.getDevUrl(item.route);
-        return `
-          <div class="${pageClass}"${pageAttrs}>
-            <a href="${href}" class="nav-link" data-route="${href}" data-tooltip="${__(item.label)}">
-              ${iconHTML(item)}
-              <span class="nav-text">${__(item.label)}</span>
-            </a>
-          </div>`;
-      }
-
-      const children = (item.children || [])
-        .map((c) => {
-          const childHref = this.getDevUrl(c.route);
-          return `
-            <a href="${childHref}" class="nav-submenu-link" data-route="${childHref}" data-tooltip="${__(c.label)}">
-              <span>${__(c.label)}</span>
-            </a>`;
-        })
-        .join('');
-
-      return `
-        <div class="${wrapClass}" data-container-id="${item.id}"${attrs}>
-          <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${__(item.label)}" aria-expanded="false" aria-controls="nav-dev-sub-${item.id}">
-            ${iconHTML(item)}
-            <span class="nav-text">${__(item.label)}</span>
-            <i class="aisc-ico nav-chevron aisc-ico--chevron-right" aria-hidden="true"></i>
-          </button>
-          <div class="nav-submenu" id="nav-dev-sub-${item.id}" role="group" aria-label="${__(item.label)}">
-            ${children}
-          </div>
-        </div>`;
-    }).join('');
-
-    const builderHref = this.getDevUrl('/dev/builder');
-    const provisioningHref = this.getDevUrl('/dev/provisioning/users');
-    const createOrgHref = this.getDevUrl('/dev/provisioning/create-org');
-    const devPrimaryActionsHTML = `
-      <div class="nav-dev-primary-actions" role="group" aria-label="Acciones rápidas desarrollador">
-        <div class="nav-dev-actions-card">
-          <a href="${provisioningHref}" class="nav-link nav-dev-action nav-lead-only" data-route="${provisioningHref}" data-tooltip="Nuevo usuario" style="display:none">
-            <span class="nav-dev-action-ico" aria-hidden="true">${DEV_ACTION_ICON_USER}</span>
-            <span class="nav-text">Nuevo usuario</span>
-          </a>
-          <a href="${builderHref}" class="nav-link nav-dev-action" data-route="${builderHref}" data-tooltip="Nuevo flujo">
-            <span class="nav-dev-action-ico" aria-hidden="true">${DEV_ACTION_ICON_FLOW}</span>
-            <span class="nav-text">Nuevo flujo</span>
-          </a>
-          <a href="${createOrgHref}" class="nav-link nav-dev-action nav-lead-only" data-route="${createOrgHref}" data-tooltip="Nueva organización" style="display:none">
-            <span class="nav-dev-action-ico" aria-hidden="true">${DEV_ACTION_ICON_ORG}</span>
-            <span class="nav-text">Nueva organización</span>
-          </a>
-        </div>
-      </div>
-    `;
-
-    return `
-      <div class="nav-overlay" id="navOverlay"></div>
-
-      <header class="app-header with-sidebar" id="appHeader">
-        <div class="header-content">
-          <div class="header-left">
-            <button type="button" class="header-hamburger" id="headerHamburger" aria-label="${__('Abrir menú')}" aria-controls="sideNavigation" aria-expanded="false">
-              <i class="aisc-ico aisc-ico--menu"></i>
-            </button>
-            <h1 class="header-title" id="headerTitle">DEVELOPER</h1>
-          </div>
-          <div class="header-right">
-            <div class="header-user-menu-wrap">
-              ${this.getHeaderNotificationsButtonGroupHTML()}
-              <button class="user-menu-btn" id="userMenuBtn" aria-label="${__('Menú de usuario')}">
-                <i class="aisc-ico aisc-ico--chevron-down"></i>
-              </button>
-              ${this.getUserDropdownHTML('/home')}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
-        <div class="nav-workspace-header nav-identity-section nav-dev-workspace-header">
-          <img src="${_navSidebarIconUrl('/recursos/favicons/favicon-02.svg')}" class="nav-dev-collapsed-logo" alt="" aria-hidden="true">
-          <h2 class="nav-org-title nav-dev-title" id="navDevHeaderName">DEVELOPER</h2>
-          <div class="nav-dev-rank-block" id="navDevRankBlock" aria-label="Rango del desarrollador">
-            <div class="nav-dev-rank-row">
-              <span class="nav-dev-rank-value" id="navDevRankBadge"></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="nav-menu" role="navigation" aria-label="Menú desarrollador">
-          ${devPrimaryActionsHTML}
-          ${mainHTML}
-        </div>
-
-        <div class="nav-spacer" aria-hidden="true"></div>
-
-        <div class="nav-brand-footer" role="contentinfo">
-          <span class="nav-brand-footer-logo-link" aria-hidden="true">
-            <img src="${_navSidebarIconUrl('/recursos/logos/logo-03.svg')}" class="nav-brand-footer-logo" alt="">
-          </span>
-          <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="${__('Abrir o cerrar menú')}">
-            ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
-          </button>
-        </div>
-      </nav>
-      <div class="nav-flyout" id="navFlyout" aria-hidden="true"></div>
-    `;
-  }
-
-  /**
-   * Cambiar el modo de navegación (legacy; ya no se muestra el botón en el sidebar)
-   */
-  async switchMode(mode) {
-    if (mode === 'developer') {
-      localStorage.setItem('userViewMode', 'developer');
-      window.router?.navigate('/dev/dashboard');
-    } else {
-      localStorage.setItem('userViewMode', 'user');
-      const url = window.authService && typeof window.authService.getDefaultUserRoute === 'function'
-        ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser()?.id)
-        : '/home';
-      window.router?.navigate(url, true);
-    }
-  }
-
-  /**
    * Inicializar estado del sidebar
    */
   initializeSidebar() {
@@ -2683,10 +2332,6 @@ class Navigation {
       if (!userDropdown._closeOnActionBound) {
         userDropdown._closeOnActionBound = true;
         const closeOnAction = (e) => {
-          // El bloque "Cambiar usuario" se expande inline: no cerrar el
-          // dropdown al alternarlo ni al cargar la lista. Elegir una cuenta
-          // navega por sí solo (recarga), así que tampoco hace falta cerrarlo.
-          if (e.target.closest('#userDropdownSwitchUser')) return;
           const actionable = e.target.closest('a, button, input[type="radio"], label');
           if (actionable && userDropdown.contains(actionable)) {
             requestAnimationFrame(() => userDropdown.classList.remove('active'));
@@ -2700,41 +2345,6 @@ class Navigation {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => this.handleLogout());
-    }
-
-    // Cambiar usuario (impersonacion temporal, solo lead).
-    // Se expande INLINE dentro del dropdown (estilo selector de cuentas de
-    // Google), no abre un modal. El bloque #userDropdownSwitchUser está
-    // exento del cierre automático del dropdown (ver closeOnAction).
-    const switchBtn = document.getElementById('switchUserBtn');
-    if (switchBtn) {
-      switchBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const panel = document.getElementById('switchUserInline');
-        if (!panel) return;
-        const willExpand = switchBtn.getAttribute('aria-expanded') !== 'true';
-        switchBtn.setAttribute('aria-expanded', String(willExpand));
-        panel.hidden = !willExpand;
-        if (willExpand) {
-          window.SwitchUserController?.renderInline?.(panel);
-        }
-        // Reposicionar el dropdown: al expandir/colapsar cambia su altura y
-        // podría salirse del viewport.
-        const dd = document.getElementById('userDropdown');
-        const menuBtn = document.getElementById('userMenuBtn');
-        if (dd && menuBtn) {
-          requestAnimationFrame(() => this.positionUserDropdown(menuBtn, dd));
-        }
-      });
-    }
-
-    // Volver a cuenta de Lead (visible solo si hay impersonacion activa)
-    const returnLeadBtn = document.getElementById('returnLeadBtn');
-    if (returnLeadBtn) {
-      returnLeadBtn.addEventListener('click', () => {
-        window.SwitchUserController?.returnToLead?.();
-      });
     }
 
     // Settings en modal (no navegación de ruta)
@@ -2900,10 +2510,6 @@ class Navigation {
           this._renderAdaptiveOrgName(name, 'navOrgName');
           return;
         }
-        if (this.currentMode === 'developer') {
-          const name = document.getElementById('navDevHeaderName')?.textContent || '';
-          this._renderAdaptiveOrgName(name, 'navDevHeaderName');
-        }
       });
     }
 
@@ -2969,8 +2575,7 @@ class Navigation {
       }
       const containerId = parent.dataset.containerId;
       const isOpen = parent.classList.contains('submenu-open');
-      const scope = isUser ? '.nav-mode-user' : '.nav-mode-developer';
-      document.querySelectorAll(`${scope} .nav-item.has-submenu.submenu-open`).forEach((item) => {
+      document.querySelectorAll('.nav-mode-user .nav-item.has-submenu.submenu-open').forEach((item) => {
         if (item !== parent) item.classList.remove('submenu-open');
       });
       parent.classList.toggle('submenu-open', !isOpen);
@@ -2984,15 +2589,6 @@ class Navigation {
         const parent = toggle.closest('.nav-item.has-submenu');
         if (!parent) return;
         handleContainerClick(e, toggle, parent, true);
-      });
-    });
-
-    document.querySelectorAll('.nav-mode-developer .nav-submenu-toggle:not([data-sub-bound])').forEach((toggle) => {
-      toggle.setAttribute('data-sub-bound', '1');
-      toggle.addEventListener('click', (e) => {
-        const parent = toggle.closest('.nav-item.has-submenu');
-        if (!parent) return;
-        handleContainerClick(e, toggle, parent, false);
       });
     });
 
@@ -3050,11 +2646,6 @@ class Navigation {
       link.removeAttribute('aria-current');
     });
     toggles.forEach(t => t.classList.remove('active'));
-    // Limpiar submenu-open en dev: si navegas fuera de un hijo, el container se debe replegar.
-    // En user mode el estado lo gobierna setupSubmenus + localStorage; no tocar.
-    document.querySelectorAll('.side-navigation.nav-mode-developer .nav-item.has-submenu.submenu-open')
-      .forEach(el => el.classList.remove('submenu-open'));
-
     let bestMatch = null;
     let bestLength = 0;
     links.forEach(link => {
@@ -3082,7 +2673,7 @@ class Navigation {
   }
 
   /** Forzar re-evaluacion del item activo (invalida cache). Usado cuando data-route
-   *  de los links cambia despues del primer render (ej: DevRankTheme reescribe URLs canonicas). */
+    *  de los links cambia despues del primer render. */
   resyncActiveLink() {
     this._lastActivePath = null;
     this.updateActiveLink();
@@ -3099,20 +2690,7 @@ class Navigation {
     // Normalizar: quitar prefijo /org/:short/:slug para comparar segmento de vista
     const pathWithoutOrg = path.replace(/^\/org\/[^/]+\/[^/]+/, '') || '/';
 
-    // Solo en Builder: las pestañas se inyectan en #headerBuilderSlot por DevBuilderView.
-    // Al salir de Builder, vaciar el slot para que no queden tabs en el header.
-    const isBuilder = pathWithoutOrg === '/dev/builder' || pathWithoutOrg.startsWith('/dev/builder/');
-    const builderSlot = document.getElementById('headerBuilderSlot');
-    if (builderSlot && !isBuilder) {
-      builderSlot.innerHTML = '';
-      builderSlot.setAttribute('aria-hidden', 'true');
-      document.getElementById('appHeader')?.classList.remove('app-header--builder');
-    } else if (builderSlot && isBuilder) {
-      builderSlot.setAttribute('aria-hidden', 'false');
-    }
-
     // Rutas cliente: clave en español envuelta en __() (modelo "español como clave").
-    // Rutas /dev/* quedan sin i18n (vistas internas, excluidas del catálogo).
     const titles = {
       '/dashboard': __('TABLERO'),
       '/production': __('PRODUCCIÓN'),
@@ -3139,21 +2717,6 @@ class Navigation {
       '/credits': __('CRÉDITOS'),
       '/plans': __('PLANES'),
       '/monitoring': __('VIGILANCIA'),
-      '/dev/lead/lexicon': 'TEMAS HUÉRFANOS',
-      '/dev/dashboard': 'DASHBOARD',
-      '/dev/flows': 'MIS FLUJOS',
-      '/dev/builder': 'BUILDER',
-      '/dev/test': 'TEST DE FLUJOS',
-      '/dev/logs': 'LOGS',
-      '/dev/costs': 'COSTOS',
-      '/dev/webhooks': 'WEBHOOKS',
-      '/dev/web-vitals': 'WEB VITALS',
-      '/dev/provisioning/users': 'REGISTRAR USUARIO',
-      '/dev/provisioning/create-org': 'CREAR ORGANIZACIÓN',
-      '/dev/lead/team': 'EQUIPO',
-      '/dev/lead/consumers': 'CONSUMIDORES',
-      '/dev/lead/categories': 'CATEGORÍAS',
-      '/dev/lead/input-schemas': 'INPUT SCHEMAS'
     };
 
     for (const [route, title] of Object.entries(titles)) {
@@ -3179,10 +2742,6 @@ class Navigation {
     if (!this.isCollapsed && this.currentMode === 'user') {
       const name = this._orgCache?.name || document.getElementById('navOrgName')?.textContent || '';
       requestAnimationFrame(() => this._renderAdaptiveOrgName(name, 'navOrgName'));
-    }
-    if (!this.isCollapsed && this.currentMode === 'developer') {
-      const name = document.getElementById('navDevHeaderName')?.textContent || '';
-      requestAnimationFrame(() => this._renderAdaptiveOrgName(name, 'navDevHeaderName'));
     }
   }
 
@@ -3286,135 +2845,9 @@ class Navigation {
         emailEl.textContent = user.email || '';
       }
 
-      // Si el usuario es desarrollador o tiene vista por defecto desarrollador, mostrar switcher en el dropdown
-      if (window.authService?.shouldShowDeveloperSwitcher()) {
-        this.injectDeveloperModeSwitcher();
-        this.setupDeveloperModeSwitcherListeners();
-      }
     } catch (err) {
       console.error('Error loading user info:', err);
     }
-  }
-
-  /**
-   * Inyectar en #userDropdown el botón único de alternancia de contexto
-   * (solo para usuarios con is_developer).
-   *
-   * Reemplaza los antiguos radios Consumidor/Desarrollador (que tenían un bug
-   * de estado al depender del evento `change` del checkbox). Ahora es un solo
-   * botón cuya etiqueta y acción dependen del contexto actual:
-   *   · En modo desarrollador (/dev) → "Vista de organización": entra a la
-   *     última organización a la que entró el dev (selectedOrganizationId).
-   *   · En modo organización  (/org) → "Consola del desarrollador": va a /dev.
-   */
-  injectDeveloperModeSwitcher() {
-    const dropdown = document.getElementById('userDropdown');
-    if (!dropdown || document.getElementById('userDropdownModeSwitcher')) return;
-
-    // El contexto actual se deriva de la RUTA visible, no del modo persistido
-    // (getUserMode): un developer puede estar dentro de una org (/org/...) con
-    // su default_view_mode='developer' guardado, y el botón debe ofrecer "ir a
-    // la consola del dev", no "ir a la org" donde ya está. Las rutas dev empiezan
-    // por /dev; cualquier otra es vista de organización.
-    const path = window.location.pathname || '';
-    const inDevView = path === '/dev' || path.startsWith('/dev/');
-    const currentMode = inDevView ? 'developer' : 'user';
-    // El botón siempre ofrece el contexto OPUESTO al actual.
-    const target = currentMode === 'developer' ? 'user' : 'developer';
-    const label = target === 'developer'
-      ? __('Consola del desarrollador')
-      : __('Vista de organización');
-    // Iconos monoline propios (Figma "Iconos"): square-terminal para la consola
-    // del desarrollador, building para la vista de organización. currentColor
-    // → heredan el color del item (blanco) + hover, como el resto del dropdown.
-    const ICON_TERMINAL = '<svg class="user-dropdown-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5 10 12l-2.5 2.5M12.5 15h4"/></svg>';
-    const ICON_BUILDING = '<svg class="user-dropdown-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.25" y="2.75" width="15.5" height="18.5" rx="2.25"/><path d="M9.75 21.25v-3.5h4.5v3.5"/><path d="M8.5 7h.01M12 7h.01M15.5 7h.01M8.5 10.75h.01M12 10.75h.01M15.5 10.75h.01M8.5 14.5h.01M15.5 14.5h.01"/></svg>';
-    const iconSvg = target === 'developer' ? ICON_TERMINAL : ICON_BUILDING;
-    const html = `
-      <button type="button" class="user-dropdown-item user-dropdown-mode-toggle" id="userDropdownModeSwitcher" data-target="${target}">
-        ${iconSvg}
-        <span>${label}</span>
-      </button>
-      <div class="user-dropdown-divider"></div>`;
-    const firstDivider = dropdown.querySelector('.user-dropdown-divider');
-    if (firstDivider) {
-      firstDivider.insertAdjacentHTML('afterend', html);
-    } else {
-      dropdown.insertAdjacentHTML('beforeend', html);
-    }
-  }
-
-  /**
-   * Configurar el listener del botón único de alternancia de contexto.
-   *
-   * Diseño (heredado del switcher anterior, sin la lógica de radios):
-   * - setUserMode actualiza this.userMode + localStorage de forma síncrona;
-   *   solo el persist a Supabase es async → lo lanzamos fire-and-forget para
-   *   no bloquear la navegación (era la causa original de 200-800ms de
-   *   latencia entre el click y el cambio de página).
-   * - Para modo dev: navegamos directo a /dev/dashboard.
-   * - Para modo user: resolvemos la org URL inline con `getDefaultUserRoute`
-   *   (que usa selectedOrganizationId = última org a la que entró el dev) y
-   *   navegamos directo a /org/.../dashboard. NO pasamos por /home como
-   *   intermedio porque su view paintea "Redirigiendo..." en modo home (sin
-   *   sidebar) y el flash se ve raro al regresar al sidebar de la org.
-   * - Deshabilitamos el botón + flag _modeSwitchInFlight hasta el próximo
-   *   routechange (failsafe 4s) para impedir double-fire / carrera.
-   */
-  setupDeveloperModeSwitcherListeners() {
-    const btn = document.getElementById('userDropdownModeSwitcher');
-    if (!btn) return;
-
-    btn.addEventListener('click', async () => {
-      if (this._modeSwitchInFlight) return;
-      this._modeSwitchInFlight = true;
-      btn.disabled = true;
-
-      const release = () => {
-        this._modeSwitchInFlight = false;
-        const b = document.getElementById('userDropdownModeSwitcher');
-        if (b) b.disabled = false;
-      };
-      window.addEventListener('routechange', release, { once: true });
-      // Failsafe por si el routechange no se dispara (ruta misma vista, error, etc.)
-      setTimeout(release, 4000);
-
-      const mode = btn.dataset.target;
-
-      if (window.authService) {
-        // setUserMode actualiza memoria + localStorage síncronos; el await es
-        // solo para el persist a DB. No bloqueamos la navegación por eso.
-        Promise.resolve(window.authService.setUserMode(mode, true))
-          .catch((err) => console.warn('Nav.switchMode: persist falló', err));
-      } else {
-        localStorage.setItem('userViewMode', mode);
-      }
-
-      let target;
-      if (mode === 'user') {
-        // Resolver la URL final de la org del user para evitar el flash de /home.
-        const userId = window.authService?.getCurrentUser?.()?.id;
-        try {
-          if (userId && typeof window.authService?.getDefaultUserRoute === 'function') {
-            target = await window.authService.getDefaultUserRoute(userId);
-          }
-        } catch (err) {
-          console.warn('Nav.switchMode: getDefaultUserRoute falló', err);
-        }
-        // Fallback: si por alguna razón no pudimos resolver, cae a /home (con
-        // redirect interno arreglado), mejor eso que quedarse colgado.
-        if (!target) target = '/home';
-      } else {
-        target = '/dev/dashboard';
-      }
-
-      if (window.router) window.router.navigate(target, true);
-      else window.location.href = target;
-
-      // Cerrar el dropdown para feedback inmediato (la nueva nav lo destruirá igual).
-      const ud = document.getElementById('userDropdown');
-      if (ud) ud.classList.remove('active');
-    });
   }
 
   /**
@@ -3845,52 +3278,6 @@ class Navigation {
   }
 
   /**
-   * Cargar información del desarrollador: perfil (nombre), rol y rank
-   */
-  async loadDeveloperInfo() {
-    const now = Date.now();
-    if (this._devCache && (now - this._devCacheTime) < this._CACHE_TTL) {
-      this._applyDevCache();
-      return;
-    }
-
-    const supabase = await this.getSupabase();
-    if (!supabase) return;
-
-    try {
-      const user = window.authService?.getCurrentUser();
-      if (!user) return;
-
-      const profileRes = await supabase.from('profiles').select('full_name, email, dev_rank, dev_role').eq('id', user.id).maybeSingle();
-      const profile = profileRes.data;
-
-      this._devCache = { profile, userId: user.id, email: user.email };
-      this._devCacheTime = Date.now();
-      this._applyDevCache();
-    } catch (err) {
-      console.error('Error loading developer info:', err);
-    }
-  }
-
-  _applyDevCache() {
-    if (!this._devCache) return;
-    const { profile, email } = this._devCache;
-
-    const headerNameEl = document.getElementById('navDevHeaderName');
-    if (headerNameEl) {
-      const displayName = 'Developer';
-      headerNameEl.textContent = displayName;
-      this._renderAdaptiveOrgName(displayName, 'navDevHeaderName');
-    }
-
-    const leadSections = document.querySelectorAll('.nav-lead-only');
-    const isLead = profile?.dev_role === 'lead';
-    leadSections.forEach((section) => {
-      section.style.display = isLead ? '' : 'none';
-    });
-  }
-
-  /**
    * Manejar logout
    */
   async handleLogout() {
@@ -3902,7 +3289,6 @@ class Navigation {
         if (supabase) await supabase.auth.signOut();
       }
       
-      localStorage.removeItem('userViewMode');
       window.router?.navigate('/', true);
     } catch (err) {
       console.error('Error en logout:', err);

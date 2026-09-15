@@ -4,7 +4,7 @@
  * Arquitectura de rutas:
  * - Públicas: /, /login, /signin (sin navegación)
  * - Organización: /org/:org_id/... (sidebar SaaS); tras login el usuario entra directo a su org
- * - Desarrollador: /dev/... (sidebar PaaS)
+ * - Staff: /dev/* vive en AISC-Admin (admin.aismartcontent.io); aquí solo se redirige.
  */
 
 /** Query `?v=` en JS lazy: en cada deploy de Netlify, el comando `[build]` reemplaza
@@ -84,8 +84,6 @@ class App {
       const bundleLink = document.querySelector('link[rel="stylesheet"][href*="css/bundle.css"]');
       if (append) {
         // append: el modulo gana sobre bundle.css (sus reglas van al final del head).
-        // Lo usa developer.css en /dev/*: sus overrides genericos (.btn/.app-header)
-        // deben ganar igual que cuando era @import dentro del bundle.
         document.head.appendChild(link);
       } else if (bundleLink && bundleLink.parentNode) {
         // default: antes de bundle.css (preserva cascada modulo-antes-de-reglas-propias).
@@ -190,15 +188,9 @@ class App {
     // input-registry y los mixins de marca usan window.ColorPickerModal
     // (compartido desde 2026-05-12). Cargar antes que input-registry.
     const inputDeps = ['/js/utils/brand-colors.js', '/js/components/ColorPickerModal.js', '/js/flags-data.js', '/js/input-registry.js'];
-    // developer.css (351KB) ya NO esta en el bundle global: se carga por ruta aqui.
-    // append:true => va al final del <head> para que sus overrides genericos
-    // (.btn/.app-header) ganen sobre bundle.css en /dev/* (como cuando era @import).
-    const DEV_CSS = [{ href: '/css/modules/developer.css', append: true }];
     // La gramatica de variables + el editor de prompt: los cargan /image y
     // /video, que comparten el mismo panel de direccion.
     const studioPrompt = ['/js/studio/direccion.js', '/js/components/PromptEditor.js'];
-    const devBase = ['/js/views/DevBaseView.js'];
-    const devInput = ['/js/views/DevBaseView.js', '/js/flags-data.js', '/js/components/ColorPickerModal.js', '/js/input-registry.js'];
 
     // ── Raíz: redirige a /home si hay sesión, a /login si no. Login es la landing. ──
     const rootRedirectView = class extends (window.BaseView || class {}) {
@@ -531,35 +523,8 @@ class App {
     // ── Create ──
     r.register('/create', this._lazy('CreateView', ['/js/views/CreateView.js']), auth);
 
-    // ── Dev: Portal PaaS ──
-    r.register('/dev/dashboard', this._lazy('DevDashboardView', [...devBase, '/js/views/DevDashboardView.js'], DEV_CSS), auth);
-    const devFlowsLoader = this._lazy('DevFlowsView', [...devBase, '/js/views/DevFlowsView.js'], DEV_CSS);
-    r.register('/dev/flows', devFlowsLoader, auth);
-    r.register('/dev/flows/:flowId', devFlowsLoader, auth);
-    r.register('/dev/logs', this._lazy('DevLogsView', [...devBase, '/js/views/DevLogsView.js'], DEV_CSS), auth);
-    const devBuilderLoader = this._lazy('DevBuilderView', [...devInput, '/js/services/FlowWebhookService.js', '/js/views/DevBuilderView.js', '/js/views/builder/BuilderInputs.js', '/js/views/builder/BuilderModules.js', '/js/views/builder/BuilderPersistence.js', '/js/views/builder/BuilderProductivity.js', '/js/views/builder/BuilderAdvanced.js', '/js/views/builder/BuilderGraph.js', '/js/views/builder/BuilderEnterprise.js'], DEV_CSS);
-    r.register('/dev/builder', devBuilderLoader, auth);
-    r.register('/dev/builder/:flowId', devBuilderLoader, auth);
-    const devTestLoader = this._lazy('DevTestView', [...devInput, '/js/services/FlowWebhookService.js', '/js/views/DevTestView.js'], DEV_CSS);
-    r.register('/dev/test', devTestLoader, auth);
-    r.register('/dev/test/:flowId', devTestLoader, auth);
-    r.register('/dev/webhooks', this._lazy('DevWebhooksView', [...devBase, '/js/services/FlowWebhookService.js', '/js/views/DevWebhooksView.js'], DEV_CSS), auth);
-    r.register('/dev/web-vitals', this._lazy('DevWebVitalsView', [...devBase, '/js/views/DevWebVitalsView.js'], DEV_CSS), auth);
-    r.register('/dev/costs', this._lazy('DevCostView', [...devBase, '/js/views/DevCostView.js'], DEV_CSS), auth);
-
-    // ── Dev Lead ──
-    r.register('/dev/provisioning/users', this._lazy('DevLeadUserProvisioningView', [...devBase, '/js/views/DevLeadUserProvisioningView.js'], DEV_CSS), auth);
-    r.register('/dev/provisioning/create-org', this._lazy('DevLeadCreateOrgView', [...devBase, '/js/views/DevLeadCreateOrgView.js'], DEV_CSS), auth);
-    r.register('/dev/lead/team', this._lazy('DevLeadTeamView', [...devBase, '/js/views/DevLeadTeamView.js'], DEV_CSS), auth);
-    r.register('/dev/lead/consumers', this._lazy('DevLeadConsumersView', [...devBase, '/js/views/DevLeadConsumersView.js'], DEV_CSS), auth);
-    r.register('/dev/lead/orgs', this._lazy('DevLeadOrgsView', [...devBase, '/js/views/DevLeadOrgsView.js'], DEV_CSS), auth);
-    r.register('/dev/lead/categories', this._lazy('DevLeadCategoriesView', [...devBase, '/js/views/DevLeadCategoriesView.js'], DEV_CSS), auth);
-    r.register('/dev/lead/input-schemas', this._lazy('DevLeadInputSchemasView', [...devBase, '/js/views/DevLeadInputSchemasView.js'], DEV_CSS), auth);
-    // "Entrenamiento" (LLM): vista unificada con pestañas Entrenar + Conocimientos.
-    const veraTrainingLoader = this._lazy('DevLeadVeraTrainingView', [...devBase, '/js/views/DevLeadVeraTrainingView.js'], DEV_CSS);
-    r.register('/dev/lead/vera-training', veraTrainingLoader, auth);
-    r.register('/dev/lead/lexicon', this._lazy('DevLeadLexiconView', [...devBase, '/js/views/DevLeadLexiconView.js'], DEV_CSS), auth);
-    r.register('/dev/lead/billing', this._lazy('DevLeadBillingView', [...devBase, '/js/views/DevLeadBillingView.js'], DEV_CSS), auth);
+    // ── /dev/* ya no vive aquí: el panel de staff es AISC-Admin (SEC-004 paso 5,
+    //    2026-09-15). netlify.toml redirige /dev/* al dominio admin. ──
 
     // ── 404 ──
     // El 404 de la plataforma vive en la landing (aismartcontent.io/404).

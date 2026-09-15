@@ -13,7 +13,7 @@
    El wrap de video.css pinta negro porque un video se mira así; una imagen
    con transparencia (PNG de nano-banana sin fondo) sobre negro miente. */
 .image-view-container .image-result-wrap {
-    background: var(--bg-surface-2, var(--dev-bg-surface));
+    background: var(--bg-surface-2, var(--bg-card));
     display: flex;
     align-items: center;
     justify-content: center;
