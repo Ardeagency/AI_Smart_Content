@@ -1,0 +1,100 @@
+/*
+ * LOS TRES FONDOS y los RESALTADOS de la org. Rescatados de v1 (insight.css,
+ * command-center.css, planes.css / fondo-plataforma.css, organization.css).
+ *
+ * Una sola receta de luz —radial anclada arriba-centro, «110.4% at 50% -10.4%»
+ * (Frame 98)— con tres alimentaciones:
+ *
+ *   1. .fondo-org         MARCA LLENA: luz = el color más claro de la org →
+ *                         el SEGUNDO más claro → #141517 → negro de plataforma.
+ *                         Mi Marca, Monitoreo, Vera, Video, Simulador.
+ *                         Sin org: gris neutro, nunca un naranja inventado.
+ *   2. .fondo-org--tenue  MARCA TENUE: la misma receta pero cada parada diluida
+ *                         (color-mix 26% / 18%) sobre casi-negro. Luz sobre la
+ *                         oscuridad, no un fondo de color. El lienzo de Campañas.
+ *   3. .fx-fondo-plataforma (efectos.css) PLATAFORMA: la receta alimentada con
+ *                         el ESPECTRO de AISC. Planes, Créditos, Organización:
+ *                         las páginas que hablan del producto, no del cliente.
+ *
+ * `--fijo` ancla la luz al viewport (Monitoreo, lienzo: no viaja con el scroll);
+ * sin él la luz baja con el contenido (Mi Marca).
+ *
+ * Contrato: solo lee variables `--org-*` (las publica src/adn/org) y tokens.
+ */
+
+.fondo-org,
+.fondo-org--tenue {
+  background-repeat: no-repeat;
+}
+
+.fondo-org {
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
+    var(--org-color-light, #2a2b2e) 0%,
+    var(--org-color-mid, #1c1d20) 30.29%,
+    #141517 74.04%,
+    var(--bg-primary) 100%);
+}
+
+.fondo-org--tenue {
+  background-color: #050507;
+  background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
+    color-mix(in srgb, var(--org-color-light, #2a2b2e) 26%, transparent) 0%,
+    color-mix(in srgb, var(--org-color-mid, #1c1d20) 18%, transparent) 30.29%,
+    color-mix(in srgb, #141517 55%, transparent) 74.04%,
+    transparent 100%);
+}
+
+.fondo-org--fijo,
+.fondo-org--tenue.fondo-org--fijo {
+  background-attachment: fixed;
+}
+
+/* Una página con fondo llena el alto aunque el cuerpo esté vacío: si no, se ve
+   el fondo plano debajo del degradado (lección v1, .insight-page--hero). */
+.fondo-org--pagina {
+  min-height: 100vh;
+}
+
+/* ── RESALTADOS: el color MÁS CLARO de la marca, nunca el primario crudo (que
+   puede ser negro, WAKEUP). El acento/hover/foco de plataforma ya caen a
+   --org-* en tokens.css; esto es lo que v1 pintaba explícitamente. ── */
+
+.resalte-org { color: var(--org-color-light, var(--text-secondary)); }
+
+/* Texto con el espectro de la PLATAFORMA: para lo que habla del producto. */
+.texto-espectro {
+  background: var(--espectro);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Texto con el degradado de la marca (títulos de sección, cifras hero). */
+.texto-org {
+  background: var(--org-gradient, linear-gradient(135deg, var(--text-primary), var(--text-secondary)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Filete a la izquierda de una cita, nota o lectura de Vera. */
+.filete-org { border-left: 3px solid var(--org-color-light, var(--border-divider)); }
+
+/* Barra de progreso / línea de fuerza: del oscuro al claro de la marca. */
+.barra-org {
+  background: linear-gradient(90deg, var(--org-color-dark, var(--white-15)), var(--org-color-light, var(--white-45)));
+}
+
+/* Relleno de hover/selección con brillo de la marca (12% / 18%). */
+.brillo-org:hover,
+.brillo-org.is-activo { background: var(--org-brillo-strong, var(--white-12)); }
+
+/* Aura: la tarjeta que se enciende con la marca (v1 .vera-card--algoritmo). */
+.aura-org { position: relative; isolation: isolate; }
+.aura-org::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1;
+  background: radial-gradient(120% 80% at 92% -10%, var(--org-color-dark, transparent) 0%, transparent 62%);
+  opacity: 0.14;
+  border-radius: inherit;
+}

@@ -53,6 +53,37 @@
 @import url('modules/notifications.css?v=__BUILD_ID__');
 @import url('modules/ui-primitives.css?v=__BUILD_ID__');
 @import url('modules/demo.css?v=__BUILD_ID__');
+/* ADN v2: los tres fondos y los resaltados de la org (Git-AISC-Frontend fondos.css, 5337e46). */
+@import url('modules/fondos.css?v=__BUILD_ID__');
+
+@font-face {
+  font-family: 'Inter';
+  src: url('../recursos/fonts/adn/InterVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../recursos/fonts/adn/InterVariable-Italic.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Spline Sans Mono';
+  src: url('../recursos/fonts/adn/SplineSansMono.woff2') format('woff2');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Spline Sans Mono';
+  src: url('../recursos/fonts/adn/SplineSansMono-Italic.woff2') format('woff2');
+  font-weight: 300 700;
+  font-style: italic;
+  font-display: swap;
+}
 
 /* ========== DESIGN SYSTEM V2 — Tokens ========== */
 :root {
@@ -313,6 +344,316 @@
     --dev-border: rgba(0, 231, 255, 0.2);
     --dev-card-border: var(--border-divider);
     --border-radius: var(--radius-md);
+}
+
+/* ==========================================================================
+   ADN DE LA PLATAFORMA (v2) — GENERADO de Git-AISC-Frontend src/adn/plataforma/
+   tokens.ts (d43e948, congelado). Va DESPUÉS del :root de arriba a propósito:
+   estas variables ganan; las de v1 que no existen aquí quedan como alias.
+   Excepción: la escala de z-index de v1 se conserva (los módulos usan valores
+   crudos 1000/9000; unificarla es una auditoría aparte). Un token nuevo se
+   agrega aquí, nunca suelto en un módulo.
+   ========================================================================== */
+:root {
+  color-scheme: dark;
+
+  /* ── PRISMA — los 10 outputs ── */
+  --prisma-rojo: #ff0000;
+  --prisma-naranja: #ff6500;
+  --prisma-amarillo: #ffe500;
+  --prisma-limon: #9acc00;
+  --prisma-verde: #00d614;
+  --prisma-celeste: #00e7ff;
+  --prisma-azul: #0018ee;
+  --prisma-purpura: #5b00ea;
+  --prisma-violeta: #900090;
+  --prisma-fucsia: #ff004d;
+
+  /* ── DEGRADADOS — cada color hacia el siguiente del anillo ── */
+  --grad-rojo-naranja: linear-gradient(180deg, #ff0000 0%, #ff6500 100%);
+  --grad-rojo-naranja-h: linear-gradient(90deg, #ff0000 0%, #ff6500 100%);
+  --grad-rojo-naranja-d: linear-gradient(135deg, #ff0000 0%, #ff6500 100%);
+  --grad-naranja-amarillo: linear-gradient(180deg, #ff6500 0%, #ffe500 100%);
+  --grad-naranja-amarillo-h: linear-gradient(90deg, #ff6500 0%, #ffe500 100%);
+  --grad-naranja-amarillo-d: linear-gradient(135deg, #ff6500 0%, #ffe500 100%);
+  --grad-amarillo-limon: linear-gradient(180deg, #ffe500 0%, #9acc00 100%);
+  --grad-amarillo-limon-h: linear-gradient(90deg, #ffe500 0%, #9acc00 100%);
+  --grad-amarillo-limon-d: linear-gradient(135deg, #ffe500 0%, #9acc00 100%);
+  --grad-limon-verde: linear-gradient(180deg, #9acc00 0%, #00d614 100%);
+  --grad-limon-verde-h: linear-gradient(90deg, #9acc00 0%, #00d614 100%);
+  --grad-limon-verde-d: linear-gradient(135deg, #9acc00 0%, #00d614 100%);
+  --grad-verde-celeste: linear-gradient(180deg, #00d614 0%, #00e7ff 100%);
+  --grad-verde-celeste-h: linear-gradient(90deg, #00d614 0%, #00e7ff 100%);
+  --grad-verde-celeste-d: linear-gradient(135deg, #00d614 0%, #00e7ff 100%);
+  --grad-celeste-azul: linear-gradient(180deg, #00e7ff 0%, #0018ee 100%);
+  --grad-celeste-azul-h: linear-gradient(90deg, #00e7ff 0%, #0018ee 100%);
+  --grad-celeste-azul-d: linear-gradient(135deg, #00e7ff 0%, #0018ee 100%);
+  --grad-azul-purpura: linear-gradient(180deg, #0018ee 0%, #5b00ea 100%);
+  --grad-azul-purpura-h: linear-gradient(90deg, #0018ee 0%, #5b00ea 100%);
+  --grad-azul-purpura-d: linear-gradient(135deg, #0018ee 0%, #5b00ea 100%);
+  --grad-purpura-violeta: linear-gradient(180deg, #5b00ea 0%, #900090 100%);
+  --grad-purpura-violeta-h: linear-gradient(90deg, #5b00ea 0%, #900090 100%);
+  --grad-purpura-violeta-d: linear-gradient(135deg, #5b00ea 0%, #900090 100%);
+  --grad-violeta-fucsia: linear-gradient(180deg, #900090 0%, #ff004d 100%);
+  --grad-violeta-fucsia-h: linear-gradient(90deg, #900090 0%, #ff004d 100%);
+  --grad-violeta-fucsia-d: linear-gradient(135deg, #900090 0%, #ff004d 100%);
+  --grad-fucsia-rojo: linear-gradient(180deg, #ff004d 0%, #ff0000 100%);
+  --grad-fucsia-rojo-h: linear-gradient(90deg, #ff004d 0%, #ff0000 100%);
+  --grad-fucsia-rojo-d: linear-gradient(135deg, #ff004d 0%, #ff0000 100%);
+  --espectro: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
+  --espectro-v: linear-gradient(180deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
+  --espectro-d: linear-gradient(135deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
+  --gradiente-principal: var(--espectro);
+
+  /* ── GRADIENTES DE PLATAFORMA — de la noche al fuego (4 paradas) ── */
+  --gradiente-profundo: linear-gradient(90deg, #0018ee 0%, #5b00ea 30%, #ff004d 70.2%, #ff5c23 100%);
+  --gradiente-profundo-v: linear-gradient(180deg, #0018ee 0%, #5b00ea 30%, #ff004d 70.2%, #ff5c23 100%);
+  --gradiente-profundo-d: linear-gradient(135deg, #0018ee 0%, #5b00ea 30%, #ff004d 70.2%, #ff5c23 100%);
+  --gradiente-vivo: linear-gradient(90deg, #0063ff 0%, #814ac8 30%, #ff004d 70.2%, #ff3427 100%);
+  --gradiente-vivo-v: linear-gradient(180deg, #0063ff 0%, #814ac8 30%, #ff004d 70.2%, #ff3427 100%);
+  --gradiente-vivo-d: linear-gradient(135deg, #0063ff 0%, #814ac8 30%, #ff004d 70.2%, #ff3427 100%);
+
+  /* ── NEUTROS — la luz de entrada ── */
+  --bg-primary: #0b0b0b;
+  --bg-secondary: #141517;
+  --bg-tertiary: #000000;
+  --bg-ui: #0d0d0d;
+  --bg-card: #141517;
+  --text-primary: #d4d1d8;
+  --text-secondary: rgba(212, 209, 216, 0.85);
+  --text-muted: rgba(212, 209, 216, 0.60);
+  --text-disabled: rgba(212, 209, 216, 0.35);
+  --text-on-primary: #000000;
+  --text-on-critical: #ffffff;
+  --border-divider: #242424;
+  --border-stroke: #b1b1b7;
+  --border-soft: rgba(255, 255, 255, 0.25);
+  --border-hairline: rgba(255, 255, 255, 0.10);
+  --border-hairline-strong: rgba(255, 255, 255, 0.15);
+  --border-color: #242424;
+  --icon-button: #87868b;
+  --icon-button-hover: #d4d1d8;
+  --white-2: rgba(255, 255, 255, 0.02);
+  --white-5: rgba(255, 255, 255, 0.05);
+  --white-6: rgba(255, 255, 255, 0.06);
+  --white-7: rgba(255, 255, 255, 0.07);
+  --white-8: rgba(255, 255, 255, 0.08);
+  --white-10: rgba(255, 255, 255, 0.10);
+  --white-12: rgba(255, 255, 255, 0.12);
+  --white-15: rgba(255, 255, 255, 0.15);
+  --white-20: rgba(255, 255, 255, 0.20);
+  --white-45: rgba(255, 255, 255, 0.45);
+  --white-50: rgba(255, 255, 255, 0.50);
+  --white-60: rgba(255, 255, 255, 0.60);
+  --white-70: rgba(255, 255, 255, 0.70);
+  --white-80: rgba(255, 255, 255, 0.80);
+  --white-90: rgba(255, 255, 255, 0.90);
+  --white-95: rgba(255, 255, 255, 0.95);
+  --black-20: rgba(0, 0, 0, 0.20);
+  --black-35: rgba(0, 0, 0, 0.35);
+  --black-40: rgba(0, 0, 0, 0.40);
+  --black-50: rgba(0, 0, 0, 0.50);
+  --black-70: rgba(0, 0, 0, 0.70);
+  --black-80: rgba(0, 0, 0, 0.80);
+  --overlay-dark: rgba(0, 0, 0, 0.35);
+  --grid-color: rgba(212, 209, 216, 0.03);
+
+  /* ── GLASS — 3 variantes ── */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-black-bg: rgba(11, 11, 11, 0.55);
+  --glass-black-border: rgba(255, 255, 255, 0.08);
+  --glass-black-text: #ffffff;
+  --glass-white-bg: rgba(255, 255, 255, 0.55);
+  --glass-white-border: rgba(0, 0, 0, 0.08);
+  --glass-white-text: #0b0b0b;
+  --glass-blur: blur(14px) saturate(120%);
+  --glass-frost: blur(24px) saturate(140%);
+  --glass-overlay-blur: blur(6px);
+  --glass-radius: 14px;
+  --glass-padding: 8px 24px;
+
+  /* ── EFECTOS — puntos del canvas, fondo de plataforma, partículas ── */
+  --puntos-paso: 22px;
+  --puntos-radio: 1px;
+  --puntos-color: rgba(255, 255, 255, 0.10);
+  --puntos-color-tenue: rgba(255, 255, 255, 0.04);
+  --fondo-base: #050507;
+  --fondo-plataforma: radial-gradient(125% 72% at 50% -14%, color-mix(in srgb, var(--prisma-naranja) 22%, transparent) 0%, color-mix(in srgb, var(--prisma-rojo) 19%, transparent) 13%, color-mix(in srgb, var(--prisma-fucsia) 16%, transparent) 25%, color-mix(in srgb, var(--prisma-violeta) 14%, transparent) 37%, color-mix(in srgb, var(--prisma-purpura) 12%, transparent) 49%, color-mix(in srgb, var(--prisma-azul) 9%, transparent) 61%, color-mix(in srgb, var(--prisma-azul) 6%, transparent) 73%, transparent 90%);
+  --particulas-color: 255, 255, 255;
+  --glow-blur: 100px;
+  --glow-blur-suave: 60px;
+  --glow-blur-stage: 90px;
+  --glow-apagado: 42%;
+
+  /* ── SEMÁNTICOS — feedback ── */
+  --color-success: #00d614;
+  --color-success-light: rgba(0, 214, 20, 0.15);
+  --color-success-bg: rgba(0, 214, 20, 0.1);
+  --color-warning: #ffe500;
+  --color-warning-light: rgba(255, 229, 0, 0.15);
+  --color-warning-bg: rgba(255, 229, 0, 0.1);
+  --color-error: #ff0000;
+  --color-error-light: rgba(255, 0, 0, 0.15);
+  --color-error-bg: rgba(255, 0, 0, 0.1);
+  --color-info: #00e7ff;
+  --color-info-light: rgba(0, 231, 255, 0.15);
+  --color-info-bg: rgba(0, 231, 255, 0.1);
+  --color-critical: #ff0000;
+
+  /* ── WARM — lo que quema (créditos, gasto, irreversible) ── */
+  --warm-10: rgba(255, 101, 0, 0.1);
+  --warm-15: rgba(255, 101, 0, 0.15);
+  --warm-20: rgba(255, 101, 0, 0.2);
+  --warm-30: rgba(255, 101, 0, 0.3);
+  --warm-50: rgba(255, 101, 0, 0.5);
+  --warm: #ff6500;
+  --warm-strong: #ff0000;
+
+  /* ── ACENTO — la org lo pisa vía --org-*; sin org, neutro ── */
+  --accent: var(--org-primary, rgba(255, 255, 255, 0.35));
+  --accent-soft: var(--org-brillo, rgba(255, 255, 255, 0.08));
+  --accent-strong: var(--org-brillo-strong, rgba(255, 255, 255, 0.12));
+  --brillo-hover: var(--org-brillo, var(--white-8));
+  --brillo-active: var(--org-brillo-strong, var(--white-15));
+  --bg-hover: var(--brillo-hover);
+  --icon-button-active: var(--org-primary, var(--icon-button));
+
+  /* ── DEV — consola de desarrollador ── */
+  --dev-primary: #00e7ff;
+  --dev-primary-light: #66f0ff;
+  --dev-primary-dark: #00b8cc;
+  --dev-border: rgba(0, 231, 255, 0.2);
+  --dev-surface: rgba(21, 23, 28, 0.6);
+  --dev-surface-hover: rgba(255, 255, 255, 0.06);
+  --dev-rango-rookie: var(--grad-limon-verde-d);
+  --dev-rango-rookie-v: var(--grad-limon-verde);
+  --dev-rango-rookie-h: var(--grad-limon-verde-h);
+  --dev-rango-junior: var(--grad-verde-celeste-d);
+  --dev-rango-junior-v: var(--grad-verde-celeste);
+  --dev-rango-junior-h: var(--grad-verde-celeste-h);
+  --dev-rango-builder: var(--grad-celeste-azul-d);
+  --dev-rango-builder-v: var(--grad-celeste-azul);
+  --dev-rango-builder-h: var(--grad-celeste-azul-h);
+  --dev-rango-expert: var(--grad-azul-purpura-d);
+  --dev-rango-expert-v: var(--grad-azul-purpura);
+  --dev-rango-expert-h: var(--grad-azul-purpura-h);
+  --dev-rango-master: var(--grad-purpura-violeta-d);
+  --dev-rango-master-v: var(--grad-purpura-violeta);
+  --dev-rango-master-h: var(--grad-purpura-violeta-h);
+  --dev-rango-legend: var(--grad-violeta-fucsia-d);
+  --dev-rango-legend-v: var(--grad-violeta-fucsia);
+  --dev-rango-legend-h: var(--grad-violeta-fucsia-h);
+
+  /* ── TIPOGRAFÍA ── */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Spline Sans Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --font-size-xs: 0.6875rem;
+  --font-size-sm: 0.75rem;
+  --font-size-base: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 2.5rem;
+  --fs-hero: clamp(1.75rem, 2.27vw + 1.5rem, 3rem);
+  --fs-display: clamp(1.5rem, 1.95vw + 1.06rem, 2.5rem);
+  --fs-h1: clamp(1.375rem, 1.3vw + 1.08rem, 2rem);
+  --fs-h2: clamp(1.25rem, 0.82vw + 1.06rem, 1.75rem);
+  --fs-h3: clamp(1.0625rem, 0.43vw + 0.96rem, 1.375rem);
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --leading-tight: 1.15;
+  --leading-normal: 1.6;
+  --leading-relaxed: 1.75;
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0;
+  --tracking-mono: 0.04em;
+  --tracking-wide: 0.04em;
+
+  /* ── ESPACIO (escala de 4px) ── */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* ── RADIO ── */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-glass: 14px;
+  --radius-card: 16px;
+  --radius-media: 2px;
+  --radius-pill: 9999px;
+
+  /* ── CAPAS — la única escala de z-index ── */
+
+  /* ── LAYOUT ── */
+  --nav-width: 220px;
+  --nav-width-collapsed: 51px;
+  --nav-item-height: 36px;
+  --header-height: 46px;
+  --content-max: 1440px;
+  --route-progress: 2.5px;
+
+  /* ── MODAL — piel común de los tres modales ── */
+  --modal-radio: 20px;
+  --modal-ms: 320ms;
+  --modal-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  /* ── SOMBRAS ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.40);
+  --shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.50);
+  --shadow-floating: 0 24px 64px rgba(0, 0, 0, 0.60);
+  --shadow-focus: 0 0 0 2px #0b0b0b, 0 0 0 4px var(--org-primary, #00e7ff);
+
+  /* ── MOVIMIENTO ── */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-route: cubic-bezier(0.33, 0, 0.2, 1);
+  --duration-flyout: 120ms;
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-overlay: 220ms;
+  --duration-modal: 250ms;
+  --duration-route: 280ms;
+  --duration-nav: 300ms;
+  --duration-image: 450ms;
+  --duration-slow: 500ms;
+  --duration-progress: 1050ms;
+  --duration-shimmer: 1400ms;
+  --transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease, opacity 200ms ease, transform 200ms ease;
+  --transition-fast: color 150ms ease, background-color 150ms ease, border-color 150ms ease, opacity 150ms ease;
+  --transition-slow: color 500ms ease, background-color 500ms ease, opacity 500ms ease, transform 500ms ease;
+  --transition-nav: color 300ms cubic-bezier(0.4, 0, 0.2, 1), background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), border-color 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms cubic-bezier(0.4, 0, 0.2, 1), transform 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Puentes v1 → ADN: los nombres que v1 usa en 141k líneas apuntan al token nuevo. */
+:root {
+    --font-family: var(--font-sans);
+    --spacing-xs: var(--space-1);
+    --spacing-sm: var(--space-2);
+    --spacing-md: var(--space-4);
+    --spacing-lg: var(--space-6);
+    --spacing-xl: var(--space-8);
+    --spacing-2xl: var(--space-12);
+    --brand-gradient: var(--espectro);
+    --platform-gradient: var(--gradiente-vivo);
+    --accent-brand: var(--accent);
+    --accent-brand-soft: var(--accent-soft);
+    /* ADN de la org: OrgBrandTheme publica --brand-* (v1) y --org-* (ADN) a la vez. */
 }
 
 /* ========== RESET ========== */

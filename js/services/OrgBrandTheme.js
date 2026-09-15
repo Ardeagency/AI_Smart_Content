@@ -77,9 +77,16 @@
     return lastAppliedHexes.length ? lastAppliedHexes.slice() : [];
   }
 
+  // ADN de la org (v2, Git-AISC-Frontend src/adn/org, d43e948): las mismas
+  // variables con el nombre del ADN. Los módulos nuevos (fondos.css, primitivas)
+  // leen --org-*; los de v1 siguen leyendo --brand-*. Se publican y se limpian juntas.
+  const ORG_VARS = ['--org-primary', '--org-primary-rgb', '--org-secondary', '--org-brillo', '--org-brillo-strong',
+    '--org-gradient', '--org-gradient-v', '--org-color-light', '--org-color-mid', '--org-color-dark'];
+
   function clearOrgBrandTheme() {
     lastAppliedHexes = [];
     lastAppliedOrgId = null;
+    ORG_VARS.forEach((v) => root.style.removeProperty(v));
     root.style.removeProperty('--brand-primary');
     root.style.removeProperty('--brand-primary-rgb');
     root.style.removeProperty('--brand-primary-brillo');
@@ -119,6 +126,8 @@
     const gradientVertical = buildBrandGradientCss(hexes, 180);
     root.style.setProperty('--brand-gradient-dynamic', gradient);
     root.style.setProperty('--brand-gradient-dynamic-vertical', gradientVertical);
+    root.style.setProperty('--org-gradient', gradient);
+    root.style.setProperty('--org-gradient-v', gradientVertical);
     const palette = getBrandUIPalette(hexes);
     if (palette && palette.primary) {
       const hex = palette.primary.replace(/^#/, '');
@@ -130,6 +139,11 @@
         root.style.setProperty('--brand-primary-rgb', r + ',' + g + ',' + b);
         root.style.setProperty('--brand-primary-brillo', hexToRgba(palette.primary, 0.12));
         root.style.setProperty('--brand-primary-brillo-strong', hexToRgba(palette.primary, 0.18));
+        root.style.setProperty('--org-primary', palette.primary);
+        root.style.setProperty('--org-primary-rgb', r + ', ' + g + ', ' + b);
+        if (palette.secondary) root.style.setProperty('--org-secondary', palette.secondary);
+        root.style.setProperty('--org-brillo', hexToRgba(palette.primary, 0.12));
+        root.style.setProperty('--org-brillo-strong', hexToRgba(palette.primary, 0.18));
       }
     }
 
@@ -152,6 +166,9 @@
         root.style.setProperty('--brand-color-dark', darkest);
         root.style.setProperty('--brand-color-light', lightest);
         root.style.setProperty('--brand-color-mid', mid);
+        root.style.setProperty('--org-color-dark', darkest);
+        root.style.setProperty('--org-color-light', lightest);
+        root.style.setProperty('--org-color-mid', mid);
       }
     } catch (e) { /* si falla, el CSS usa el fallback naranja de referencia */ }
   }
