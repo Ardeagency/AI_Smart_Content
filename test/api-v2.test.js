@@ -21,7 +21,7 @@ beforeAll(() => {
   apiV2 = globalThis.window.apiV2;
 });
 
-const respuesta = (status, cuerpo, headers = {}) => new Response(JSON.stringify(cuerpo), { status, headers: { 'content-type': 'application/json', ...headers } });
+const respuesta = (status, cuerpo, headers = {}) => new globalThis.Response(JSON.stringify(cuerpo), { status, headers: { 'content-type': 'application/json', ...headers } });
 
 describe('ApiV2 · peticiones puras', () => {
   test('tienen la forma exacta del contrato (borde-http.md)', () => {
