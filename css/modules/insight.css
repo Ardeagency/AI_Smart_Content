@@ -2374,7 +2374,8 @@
    ════════════════════════════════════════════════════════════════════ */
 .mb-detail-overlay {
   position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--modal-velo);
+  backdrop-filter: var(--modal-velo-blur); -webkit-backdrop-filter: var(--modal-velo-blur);
   opacity: 0; visibility: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease;
   z-index: 100400;
@@ -2389,11 +2390,11 @@
   width: 620px; max-width: 92vw;
   max-height: 82vh;
   display: flex; flex-direction: column;
-  background: var(--bg-secondary, #141517);
-  border: 1px solid var(--border-divider, #242424);
-  border-radius: 16px;
+  background: var(--modal-panel-bg);
+  border: var(--modal-panel-border);
+  border-radius: var(--modal-panel-radius);
   overflow: hidden;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--modal-panel-shadow);
   opacity: 0; visibility: hidden; pointer-events: none;
   transition: opacity 0.18s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.18s ease;
   z-index: 100401;
@@ -3371,11 +3372,7 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
   width: 100%;
   max-width: min(1100px, calc(100vw - 3rem));
   max-height: 88vh;
-  background: var(--bg-card);
-  border: 1px solid var(--border-divider);
-  border-radius: var(--glass-radius, 16px);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  /* Piel = la forma principal (tokens --modal-* del bundle); aquí solo el ancho apaisado. */
 }
 @media (max-width: 720px) {
   .modal-content.dash-modal,

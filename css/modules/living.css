@@ -3253,9 +3253,9 @@ body.production-modal-open { overflow: hidden; }
 .publish-sheet-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.62);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: var(--modal-velo);
+    backdrop-filter: var(--modal-velo-blur);
+    -webkit-backdrop-filter: var(--modal-velo-blur);
 }
 .publish-sheet-panel {
     position: relative;
@@ -3265,10 +3265,10 @@ body.production-modal-open { overflow: hidden; }
     max-height: calc(100vh - 48px);
     display: flex;
     flex-direction: column;
-    background: var(--bg-card);
-    border: 1px solid var(--border-divider);
-    border-radius: 22px;
-    box-shadow: 0 28px 72px rgba(0, 0, 0, 0.55);
+    background: var(--modal-panel-bg);
+    border: var(--modal-panel-border);
+    border-radius: var(--modal-panel-radius);
+    box-shadow: var(--modal-panel-shadow);
     overflow: hidden;
     animation: publishSheetIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }

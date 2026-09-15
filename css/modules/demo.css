@@ -202,17 +202,19 @@ body.has-demo-banner.no-nav #app-container {
 .demo-cta-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: var(--modal-velo);
+  backdrop-filter: var(--modal-velo-blur);
+  -webkit-backdrop-filter: var(--modal-velo-blur);
 }
 
 .demo-cta-modal__card {
   position: relative;
   width: 100%;
   max-width: 440px;
-  background: var(--bg-card);
-  border: 1px solid var(--divider, #242424);
+  background: var(--modal-panel-bg);
+  border: var(--modal-panel-border);
+  border-radius: var(--modal-panel-radius);
+  box-shadow: var(--modal-panel-shadow);
   border-radius: 16px;
   padding: 32px 28px 24px;
   color: var(--text-primary);

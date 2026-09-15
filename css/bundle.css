@@ -643,6 +643,15 @@
 /* Puentes v1 → ADN: los nombres que v1 usa en 141k líneas apuntan al token nuevo. */
 :root {
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1); /* la curva de los modales (Adjuntar producto) */
+    /* LA piel de los modales (forma principal). Toda familia con overlay/panel
+       propio lee ESTOS tokens: un solo velo, un solo panel, una sola sombra. */
+    --modal-velo: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.75) 100%);
+    --modal-velo-blur: blur(20px) saturate(140%);
+    --modal-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 50%), linear-gradient(180deg, #18191b 0%, #131416 100%);
+    --modal-panel-border: 1px solid rgba(255, 255, 255, 0.06);
+    --modal-panel-radius: 18px;
+    --modal-panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.5), 0 16px 40px -12px rgba(0, 0, 0, 0.6), 0 32px 80px -16px rgba(0, 0, 0, 0.5);
+    --modal-divisor: 1px solid rgba(255, 255, 255, 0.05);
     --font-family: var(--font-sans);
     --spacing-xs: var(--space-1);
     --spacing-sm: var(--space-2);
@@ -791,9 +800,9 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     inset: 0;
     /* Velo: negro profundo con blur pesado (la piel de «Adjuntar producto», que
        JC fijó como LA forma principal el 15/09). Fade lento, cinematográfico. */
-    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.75) 100%);
-    backdrop-filter: blur(20px) saturate(140%);
-    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    background: var(--modal-velo);
+    backdrop-filter: var(--modal-velo-blur);
+    -webkit-backdrop-filter: var(--modal-velo-blur);
     z-index: 0;
     animation: overlayFadeIn 0.45s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
@@ -814,16 +823,10 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     max-width: min(880px, calc(100vw - 2rem));
     max-height: 90vh;
     /* Gradiente oscuro + sheen interno + sombra en capas: flota, no es una card plana. */
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 50%),
-      linear-gradient(180deg, #18191b 0%, #131416 100%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 18px;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.05),
-      0 1px 2px rgba(0, 0, 0, 0.5),
-      0 16px 40px -12px rgba(0, 0, 0, 0.6),
-      0 32px 80px -16px rgba(0, 0, 0, 0.5);
+    background: var(--modal-panel-bg);
+    border: var(--modal-panel-border);
+    border-radius: var(--modal-panel-radius);
+    box-shadow: var(--modal-panel-shadow);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -838,7 +841,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     justify-content: space-between;
     gap: var(--space-4);
     padding: 1.4rem 1.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: var(--modal-divisor);
 }
 .modal-header-left {
     display: inline-flex;
@@ -896,7 +899,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     justify-content: flex-end;
     gap: var(--space-2);
     padding: 1rem 1.75rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: var(--modal-divisor);
 }
 .modal-close {
     width: 32px;

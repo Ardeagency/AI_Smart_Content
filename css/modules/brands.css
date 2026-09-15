@@ -1145,21 +1145,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--black-50);
-    backdrop-filter: var(--overlay-blur);
-    -webkit-backdrop-filter: var(--overlay-blur);
+    background: var(--modal-velo);
+    backdrop-filter: var(--modal-velo-blur);
+    -webkit-backdrop-filter: var(--modal-velo-blur);
 }
 
 .color-editor-panel {
-    background: var(--bg-card);
-    border-radius: var(--radius-md);
+    background: var(--modal-panel-bg);
+    border-radius: var(--modal-panel-radius);
     padding: 1.25rem;
-    box-shadow: var(--shadow-floating);
+    box-shadow: var(--modal-panel-shadow);
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
-    border: 1px solid var(--border-color);
+    border: var(--modal-panel-border);
 }
 
 .color-editor-wheel-wrap {
