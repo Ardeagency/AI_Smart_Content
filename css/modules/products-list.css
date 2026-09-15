@@ -188,80 +188,12 @@
    Easing: cubic-bezier(0.16, 1, 0.3, 1) → soft-snap "ease-out-expo"
    ============================================================ */
 
-/* Backdrop: deep black + heavy blur. Slow fade-in cinematografico. */
-.modal:has(.attach-product-modal) > .modal-overlay {
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.75) 100%);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  animation: attachOverlayIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
+/* 2026-09-15: la piel de este modal (velo, panel, cabecera, cierre, animación)
+   pasó a ser LA piel base de .modal-* en bundle.css: JC la fijó como la forma
+   principal de toda la consola. Aquí queda solo lo propio del wizard. */
 
-@keyframes attachOverlayIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
 
-/* Modal-content: dark gradient + sheen interno + multi-layer shadow.
-   "Floating" effect en lugar de card plana. */
-.attach-product-modal.modal-content {
-  max-width: min(880px, calc(100vw - 2rem));
-  width: 100%;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0) 50%),
-    linear-gradient(180deg, #18191b 0%, #131416 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 18px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 1px 2px rgba(0, 0, 0, 0.5),
-    0 16px 40px -12px rgba(0, 0, 0, 0.6),
-    0 32px 80px -16px rgba(0, 0, 0, 0.5);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  animation: attachModalIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-}
 
-@keyframes attachModalIn {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Modal header refinado: padding mas generoso, divisor mas sutil. */
-.attach-product-modal .modal-header {
-  padding: 1.4rem 1.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.attach-product-modal .modal-header h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-}
-
-.attach-product-modal .modal-body {
-  padding: 1.75rem;
-}
-
-.attach-product-modal .modal-close {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.45);
-  transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              background 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.attach-product-modal .modal-close:hover {
-  color: rgba(255, 255, 255, 0.95);
-  background: rgba(255, 255, 255, 0.06);
-}
 
 /* Wizard: hide via [hidden] gana por specificity. */
 .attach-product-step[hidden] {
@@ -462,13 +394,6 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   /* sin background, sin border, sin shadow — solo el contenido */
 }
 
-/* ─── Header del modal: agrupa back + titulo a la izquierda, X a la derecha. ─── */
-.attach-product-header-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.85rem;
-  min-width: 0;
-}
 
 /* Titulo con icono opcional al lado. Se rellena via JS segun el paso. */
 .attach-product-modal .modal-header h3 {
@@ -482,39 +407,9 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   font-size: 0.95rem;
 }
 
-/* Boton Volver: vive en el header (no en el panel). */
-.attach-product-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.75rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 9px;
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: -0.003em;
-  cursor: pointer;
-  transition:
-    color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    background 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
 
-.attach-product-back i {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
 
-.attach-product-back:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.14);
-}
 
-.attach-product-back:hover i {
-  transform: translateX(-3px);
-}
 
 .attach-product-field {
   display: flex;
@@ -841,7 +736,6 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   .attach-product-loading-title,
   .attach-product-file-list li,
   .attach-product-submit,
-  .attach-product-back i,
   .attach-product-dropzone > i {
     animation: none !important;
     transition-duration: 0.01s !important;

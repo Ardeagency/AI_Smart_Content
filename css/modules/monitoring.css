@@ -512,28 +512,12 @@ body.mn-dragging, body.mn-dragging * { cursor: grabbing !important; }
 /* ════════════════════════════════════════════════════════════
    PANEL DE DETALLE (landscape, mismo lenguaje que el detalle de Flows)
    ════════════════════════════════════════════════════════════ */
+/* Piel: la forma PRINCIPAL (bundle .modal-*); aquí solo el ancho apaisado del detalle. */
 .modal-content.mn-detail-modal {
-  width: min(920px, 94vw) !important; max-width: min(920px, 94vw) !important;
-  background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424);
+  width: min(920px, 94vw); max-width: min(920px, 94vw);
 }
-/* Backdrop glass-black con blur (igual que flow-detail). */
-.modal:has(.modal-content.mn-detail-modal) .modal-overlay {
-  background: var(--glass-black-bg, rgba(11, 11, 11, 0.55));
-  backdrop-filter: blur(24px) saturate(140%); -webkit-backdrop-filter: blur(24px) saturate(140%);
-}
-.mn-detail-modal .modal-body { padding: 0; }
+
 /* Header vacío: el cierre flota sobre el fondo. */
-.mn-detail-modal .modal-header {
-  position: absolute; top: 0; right: 0; left: 0; padding: 0.7rem;
-  border-bottom: none; justify-content: flex-end; z-index: 6; pointer-events: none;
-}
-.mn-detail-modal .modal-header h3 { display: none; }
-.mn-detail-modal .modal-close {
-  pointer-events: auto; width: 38px; height: 38px; border-radius: 999px;
-  background: rgba(10, 11, 13, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.14); color: #fff;
-}
-.mn-detail-modal .modal-close:hover { background: rgba(10, 11, 13, 0.88); }
 
 .mn-detail { position: relative; min-height: 360px; }
 .mn-detail-bg {
@@ -1016,52 +1000,10 @@ a.mn-post:hover .mn-post-ext { color: rgba(255, 255, 255, 0.7); }
 }
 
 /* Contenedor flotante: gradiente oscuro + sheen + sombra multicapa. */
-.mn-follow-modal.modal-content {
-  max-width: min(560px, calc(100vw - 2rem));
-  width: 100%;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0) 50%),
-    linear-gradient(180deg, #18191b 0%, #131416 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 18px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 1px 2px rgba(0, 0, 0, 0.5),
-    0 16px 40px -12px rgba(0, 0, 0, 0.6),
-    0 32px 80px -16px rgba(0, 0, 0, 0.5);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  animation: mnFollowModalIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-}
 
 @keyframes mnFollowModalIn {
   from { opacity: 0; transform: translateY(14px) scale(0.96); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.mn-follow-modal .modal-header {
-  padding: 1.3rem 1.6rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.mn-follow-modal .modal-header h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.mn-follow-modal .modal-body { padding: 1.6rem; }
-
-.mn-follow-modal .modal-close {
-  width: 32px; height: 32px; border-radius: 10px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.45);
-  transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              background 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.mn-follow-modal .modal-close:hover {
-  color: rgba(255, 255, 255, 0.95);
-  background: rgba(255, 255, 255, 0.06);
 }
 
 /* Header: botón Volver junto al título. */

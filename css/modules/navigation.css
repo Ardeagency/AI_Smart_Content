@@ -36,7 +36,6 @@ body.sidebar-collapsed .main-header,
     left: var(--nav-width-collapsed, 72px);
 }
 
-
 .header-content {
     display: flex;
     justify-content: space-between;
@@ -1287,7 +1286,6 @@ body.sidebar-collapsed .main-header,
     color: var(--icon-button-active);
 }
 
-
 .nav-icon {
     width: 14px;
     height: 14px;
@@ -2428,45 +2426,8 @@ body.subnav-in-header .app-header .header-production-slot {
 .udsu-status.is-error { color: var(--color-error, #ff6b6b); }
 
 /* Settings Modal (header dropdown) */
-#modals-portal .modal.user-settings-modal .modal-overlay {
-    background: rgba(0, 0, 0, 0.32);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
-#modals-portal .modal.user-settings-modal .modal-content {
-    width: 860px;
-    max-width: min(860px, calc(100vw - 48px));
-    min-height: 560px;
-    max-height: min(78vh, 720px);
-    border: 1px solid var(--glass-white-border);
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
-}
-
-#modals-portal .modal.user-settings-modal .modal-header {
-    border-bottom: 1px solid var(--glass-white-border);
-}
-
-#modals-portal .modal.user-settings-modal .modal-close {
-    z-index: 2;
-    pointer-events: auto;
-}
 
 /* Notifications Modal (global, reemplaza dropdown/flyout en header) */
-#modals-portal .modal.notifications-modal .modal-overlay {
-    background: rgba(0, 0, 0, 0.32);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
-#modals-portal .modal.notifications-modal .modal-content {
-    width: 680px;
-    max-width: min(680px, calc(100vw - 48px));
-    min-height: 420px;
-    max-height: min(78vh, 760px);
-    border: 1px solid var(--glass-white-border);
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
-}
 
 .notifications-modal-body {
     padding: 12px 14px;
@@ -3734,7 +3695,6 @@ body.subnav-in-header .app-header .header-production-slot {
     display: none;
 }
 
-
 /* ============================================================ *
  * Sidebar developer — paridad estructural con sidebar user     *
  * ============================================================ */
@@ -3932,7 +3892,6 @@ body.subnav-in-header .app-header .header-production-slot {
     gap: 6px;
     min-width: 0;
 }
-
 
 /* el nombre de la org nunca debe quedar diminuto: piso de 20px,
    respetando el tamaño adaptativo del JS cuando es mayor */

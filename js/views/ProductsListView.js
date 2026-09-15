@@ -519,6 +519,7 @@ class ProductsListView extends BaseView {
       </div>
     `;
 
+    // La forma PRINCIPAL de la consola: Modal ya trae ← Volver, título con icono y ×.
     const handle = window.Modal.show({
       title: __('Adjuntar producto'),
       body,
@@ -527,30 +528,11 @@ class ProductsListView extends BaseView {
     if (!handle) return;
     const root = handle.bodyEl;
     const wizard = root.querySelector('.attach-product-wizard');
-
-    // Inyecta el boton "Volver" en el header del modal (queda junto al titulo).
-    const header = handle.modal.querySelector('.modal-header');
-    const titleEl = header?.querySelector('h3');
-    let backBtn = null;
-    let headerLeft = null;
-    if (header && titleEl) {
-      headerLeft = document.createElement('div');
-      headerLeft.className = 'attach-product-header-left';
-      backBtn = document.createElement('button');
-      backBtn.type = 'button';
-      backBtn.className = 'attach-product-back';
-      backBtn.hidden = true;
-      backBtn.setAttribute('aria-label', __('Volver'));
-      backBtn.innerHTML = `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${this.escapeHtml(__('Volver'))}</span>`;
-      backBtn.addEventListener('click', () => {
-        const currentStep = wizard?.getAttribute('data-step');
-        const target = stepConfig[currentStep]?.backTo || 'picker';
-        goToStep(target);
-      });
-      header.insertBefore(headerLeft, header.firstChild);
-      headerLeft.appendChild(backBtn);
-      headerLeft.appendChild(titleEl);
-    }
+    const volver = () => {
+      const currentStep = wizard?.getAttribute('data-step');
+      const target = stepConfig[currentStep]?.backTo || 'picker';
+      goToStep(target);
+    };
 
     const stepConfig = {
       picker:  { title: __('Adjuntar producto'),          icon: null,            back: false, backTo: null     },
@@ -566,13 +548,10 @@ class ProductsListView extends BaseView {
         panel.hidden = panel.getAttribute('data-panel') !== step;
       });
       const cfg = stepConfig[step];
-      if (cfg && titleEl) {
-        const iconHtml = cfg.icon
-          ? `<i class="fas ${cfg.icon} attach-product-header-icon" aria-hidden="true"></i>`
-          : '';
-        titleEl.innerHTML = `${iconHtml}<span>${this.escapeHtml(cfg.title)}</span>`;
+      if (cfg) {
+        handle.setTitle(cfg.title, cfg.icon ? `${cfg.icon} attach-product-header-icon` : null);
+        handle.setBack(cfg.back ? volver : null);
       }
-      if (backBtn) backBtn.hidden = !(cfg && cfg.back);
       const visible = root.querySelector(`[data-panel="${step}"]`);
       const focusable = visible?.querySelector('input, button');
       try { focusable?.focus(); } catch (_) {}

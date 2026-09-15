@@ -118,7 +118,6 @@
     box-sizing: border-box;
 }
 
-
 /* ============================================
    PAGE HEADER
    ============================================ */
@@ -552,7 +551,6 @@
     font-weight: 500;
 }
 
-
 .btn-icon.delete:hover {
     border-color: var(--color-error);
     color: var(--color-error);
@@ -822,45 +820,6 @@
     visibility: visible;
 }
 
-.modal-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--black-70);
-}
-
-.new-product-modal .modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
-    width: 90%;
-    max-width: 600px;
-    max-height: 90vh;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
-    display: flex;
-    flex-direction: column;
-    transition: var(--transition);
-    overflow: hidden;
-}
-
-.new-product-modal.active .modal-content {
-    transform: translate(-50%, -50%) scale(1);
-}
-
-.new-product-modal .modal-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--glass-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
 
 .modal-header h2 {
     font-size: var(--font-size-2xl);
@@ -940,8 +899,6 @@
     }
 
 }
-
-
 
 /* ========== product-detail.css (305 lineas) ========== */
 
@@ -1593,5 +1550,4 @@
   color: var(--living-text-light);
   margin-bottom: 0.5rem;
 }
-
 
