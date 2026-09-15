@@ -17,6 +17,17 @@
   // Borde HTTP del backend v2 (Fastify, ADR-0043/0052): la API va bajo /v1 y
   // ApiV2.js lo agrega. Vacía = `sin_api` (el borde aún no tiene host).
   //   window.AISC_API_URL = 'https://api-v2.aismartcontent.io';
+  // Base de datos (corte ADR-0052, paso 1.5): con estas dos fijas, app-loader
+  // NO llama a la function supabase-config (que en el corte esta en 503).
+  // Vacias = comportamiento de siempre (la function decide). La anon key es
+  // publica por diseno; la seguridad vive en RLS + privilegios cerrados.
+  //   window.AISC_SUPABASE_URL = 'https://aqblperqrcwumiztmjnw.supabase.co';
+  //   window.AISC_SUPABASE_ANON_KEY = '<anon key del proyecto nuevo>';
+  for (const k of ['AISC_SUPABASE_URL', 'AISC_SUPABASE_ANON_KEY', 'AISC_META_APP_ID']) {
+    if (window[k] === undefined) {
+      window[k] = (() => { try { return localStorage.getItem(k) || ""; } catch (_) { return ""; } })();
+    }
+  }
   if (window.AISC_API_URL === undefined) {
     window.AISC_API_URL = (() => {
       try { return localStorage.getItem("AISC_API_URL") || ""; } catch (_) { return ""; }

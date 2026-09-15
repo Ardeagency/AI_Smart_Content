@@ -78,20 +78,29 @@
      */
     async function loadSupabaseConfig(attempt = 1) {
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), CONFIG.supabaseTimeout);
-            
-            const response = await fetch('/.netlify/functions/supabase-config', {
-                signal: controller.signal
-            });
-            
-            clearTimeout(timeoutId);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+            let config;
+            if (window.AISC_SUPABASE_URL && window.AISC_SUPABASE_ANON_KEY) {
+                // Corte al runtime v2 (ADR-0052, paso 1.5): la base se fija en
+                // runtime-config.js y NO se pide a la function supabase-config,
+                // que en el corte esta en 503. La anon key es publica por diseno:
+                // la seguridad es RLS + privilegios cerrados, no esconderla.
+                config = { url: window.AISC_SUPABASE_URL, anonKey: window.AISC_SUPABASE_ANON_KEY, metaAppId: window.AISC_META_APP_ID || null };
+            } else {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.supabaseTimeout);
+
+                const response = await fetch('/.netlify/functions/supabase-config', {
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                config = await response.json();
             }
-            
-            const config = await response.json();
             
             if (!config.url || !config.anonKey) {
                 throw new Error('Configuración incompleta');
