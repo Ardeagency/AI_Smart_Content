@@ -4112,3 +4112,13 @@ body.subnav-in-header .app-header .header-production-slot {
     pointer-events: none;
     z-index: 1;
 }
+
+/* ── Corte (ADR-0052): secciones aún no portadas a la base nueva ── */
+.nav-item--en-obras .nav-link { opacity: 0.62; }
+.nav-item--en-obras .nav-link:hover { opacity: 0.85; }
+.nav-chip-obras {
+    margin-left: auto; padding: 1px 6px; border-radius: 999px;
+    font-size: 0.58rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-muted); border: 1px solid var(--border-hairline); background: var(--white-8);
+}
+.side-navigation.collapsed .nav-chip-obras { display: none; }

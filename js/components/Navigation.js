@@ -1886,11 +1886,14 @@ class Navigation {
         const ariaLabel = hideLabel ? ` aria-label="${_escapeHtml(__(item.label))}"` : '';
         const idAttr = item.navId ? ` id="${_escapeHtml(item.navId)}"` : '';
         const hiddenStyle = item.hidden ? ' style="display:none"' : '';
+        // Corte (ADR-0052): lo no portado se lista, pero avisa (chip) y va a «en obras».
+        const enObras = !!window.EnObras?.es(`/${item.route}`);
         return `
-          <div class="nav-item${isPrimary ? ' nav-item--primary' : ''}">
-            <a href="${href}" class="nav-link nav-main-link${isPrimary ? ' nav-link--primary' : ''}${hideLabel ? ' nav-link--no-label' : ''}"${idAttr}${hiddenStyle}${ariaLabel} data-route="${href}" data-tooltip="${__(item.label)}">
+          <div class="nav-item${isPrimary ? ' nav-item--primary' : ''}${enObras ? ' nav-item--en-obras' : ''}">
+            <a href="${href}" class="nav-link nav-main-link${isPrimary ? ' nav-link--primary' : ''}${hideLabel ? ' nav-link--no-label' : ''}"${idAttr}${hiddenStyle}${ariaLabel} data-route="${href}" data-tooltip="${__(item.label)}${enObras ? ' · ' + __('en obras') : ''}">
               ${iconHTML(item)}
               ${hideLabel ? '' : `<span class="nav-text">${__(item.label)}</span>`}
+              ${enObras && !hideLabel ? `<span class="nav-chip-obras" aria-label="${_escapeHtml(__('en obras'))}">${_escapeHtml(__('obras'))}</span>` : ''}
             </a>
           </div>`;
       }

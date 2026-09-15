@@ -178,3 +178,14 @@
   flex: 1 1 100%;
   width: 100%;
 }
+
+/* ── En obras (corte ADR-0052): página gris, sin datos, con el ADN ── */
+.en-obras {
+    min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: var(--space-3); text-align: center; padding: var(--space-12) var(--space-6);
+    color: var(--text-secondary);
+}
+.en-obras-eyebrow { font-family: var(--font-mono); font-size: var(--font-size-xs); letter-spacing: 0.08em; color: var(--text-muted); }
+.en-obras-eyebrow::before { content: '( '; } .en-obras-eyebrow::after { content: ' )'; }
+.en-obras-titulo { font-size: var(--fs-h1); font-weight: var(--font-weight-semibold); color: var(--text-primary); margin: 0; }
+.en-obras-texto { max-width: 46ch; margin: 0 0 var(--space-4); color: var(--text-muted); line-height: 1.6; }

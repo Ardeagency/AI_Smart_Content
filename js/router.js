@@ -363,7 +363,11 @@ class Router {
       const container = document.getElementById('app-container');
       if (!container) return;
 
-      const ViewClass = await this._resolveViewClassFromRoute(route);
+      // Corte (ADR-0052): una sección aún no portada a la base nueva se sirve como
+      // «en obras» (gris, sin llamadas a la base) en vez de su vista de v1, que
+      // pediría tablas que ya no existen. El registro vive en js/en-obras.js.
+      const enObras = route.requiresAuth && window.EnObras?.es(path) && typeof window.EnObrasView === 'function';
+      const ViewClass = enObras ? window.EnObrasView : await this._resolveViewClassFromRoute(route);
       if (!ViewClass || typeof ViewClass !== 'function') return;
 
       const prevView = this.currentView;
