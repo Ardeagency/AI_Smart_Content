@@ -193,6 +193,20 @@
     return 'descarga';
   }
 
+  function normalizarCorrida(r) {
+    const c = (r && r.corrida && r.corrida.corrida) ? r.corrida : (r || {});
+    const cabeza = c.corrida || c;
+    const pasos = Array.isArray(c.pasos) ? c.pasos : [];
+    let status = cabeza.estado || cabeza.status || 'unknown';
+    // Un paso fallido con la corrida aún «running» es un fallo: no esperar 6 minutos a nada.
+    if (status === 'running' && pasos.some((p) => p.estado === 'failed' || p.status === 'failed')) status = 'failed';
+    const pasoFallido = pasos.find((p) => p.estado === 'failed' || p.status === 'failed');
+    return {
+      id: cabeza.id, status, error: cabeza.error || (pasoFallido ? `${pasoFallido.nombre || 'paso'}: ${pasoFallido.error || 'falló'}` : null),
+      salidas: Array.isArray(c.salidas) ? c.salidas : [], pasos, entradas: c.entradas || {}, corrida: cabeza, raw: r,
+    };
+  }
+
   /** Una función por ruta: construye la petición pura y la ejecuta. */
   const api = {
     salud: () => ejecutar(peticiones.salud()),
@@ -205,8 +219,17 @@
     urlDescarga: (id, org) => ejecutar(peticiones.urlDescarga(id, org)),
     borrarArchivo: (id, org) => ejecutar(peticiones.borrarArchivo(id, org)),
     sesionGaleria: (org) => ejecutar(peticiones.sesionGaleria(org)),
-    lanzarFlujo: (flujo, org, entradas, idCliente, marketId) => ejecutar(peticiones.lanzarFlujo(flujo, org, entradas, idCliente, marketId)),
-    corrida: (id, org) => ejecutar(peticiones.corrida(id, org)),
+    /** Forma REAL del borde (medida 15/09 20:40 UTC): `{corrida: <run_id>, reintento, primer_paso}`. Se expone también `run_id`. */
+    lanzarFlujo: async (flujo, org, entradas, idCliente, marketId) => {
+      const r = await ejecutar(peticiones.lanzarFlujo(flujo, org, entradas, idCliente, marketId));
+      return Object.assign({ run_id: r && (r.run_id || r.corrida) }, r);
+    },
+    /**
+     * Forma REAL: `{corrida: {corrida: {id, estado, flujo, error, creditos…}, pasos: [{nombre, estado, error…}],
+     * salidas: [...], entradas, movimientos, aprobaciones}}`. Se normaliza a
+     * `{status, salidas, pasos, entradas, corrida, raw}` para que la consola no dependa del anidado.
+     */
+    corrida: async (id, org) => normalizarCorrida(await ejecutar(peticiones.corrida(id, org))),
     integraciones: (org) => ejecutar(peticiones.integraciones(org)),
     conectar: (plataforma, org, extra = {}) => ejecutar(peticiones.conectar(plataforma, org, extra)),
     desconectar: (id, org) => ejecutar(peticiones.desconectar(id, org)),
@@ -241,7 +264,7 @@
     esperarCorrida: async (id, org, { intervaloMs = 4000, topeMs = 6 * 60 * 1000, alCambiar = null, dormir = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) => {
       const inicio = Date.now();
       for (;;) {
-        const c = await ejecutar(peticiones.corrida(id, org));
+        const c = normalizarCorrida(await ejecutar(peticiones.corrida(id, org)));
         if (typeof alCambiar === 'function') { try { alCambiar(c); } catch (_) { /* pintar no puede tumbar el sondeo */ } }
         const estado = c && c.status;
         if (estado === 'succeeded' || estado === 'failed' || estado === 'canceled') return c;

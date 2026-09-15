@@ -101,9 +101,10 @@ describe('ApiV2 · ejecución', () => {
 
 describe('ApiV2 · Studio = corrida de flujo (backend 260f742)', () => {
   test('esperarCorrida sondea hasta succeeded/failed y avisa cada vuelta', async () => {
+    // Forma REAL del borde (15/09): {corrida: {corrida: {estado}, pasos, salidas}}.
     const estados = ['queued', 'running', 'succeeded'];
     let n = 0; const vistos = [];
-    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async () => respuesta(200, { id: 'r1', status: estados[n++], salidas: n === 3 ? [{ key: 'imagen', kind: 'image', url: 'https://media/out/x' }] : [] }) });
+    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async () => respuesta(200, { corrida: { corrida: { id: 'r1', estado: estados[n++] }, pasos: [], salidas: n === 3 ? [{ key: 'imagen', kind: 'image', url: 'https://media/out/x' }] : [] } }) });
     const fin = await apiV2.api.esperarCorrida('r1', 'o1', { intervaloMs: 1, alCambiar: (c) => vistos.push(c.status), dormir: async () => {} });
     expect(fin.status).toBe('succeeded'); expect(fin.salidas[0].kind).toBe('image');
     expect(vistos).toEqual(['queued', 'running', 'succeeded']);
@@ -111,8 +112,21 @@ describe('ApiV2 · Studio = corrida de flujo (backend 260f742)', () => {
   });
 
   test('esperarCorrida corta con tiempo_agotado si nunca termina', async () => {
-    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async () => respuesta(200, { id: 'r1', status: 'running' }) });
+    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async () => respuesta(200, { corrida: { corrida: { id: 'r1', estado: 'running' }, pasos: [], salidas: [] } }) });
     await expect(apiV2.api.esperarCorrida('r1', 'o1', { intervaloMs: 1, topeMs: 0, dormir: async () => {} })).rejects.toMatchObject({ codigo: 'tiempo_agotado' });
+  });
+
+  test('un paso fallido con la corrida aún running cuenta como failed (no se espera al tope)', async () => {
+    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async () => respuesta(200, { corrida: { corrida: { id: 'r1', estado: 'running', error: null }, pasos: [{ nombre: 'Generar imagen', estado: 'failed', error: 'permission denied for function puede_gastar' }], salidas: [] } }) });
+    const c = await apiV2.api.esperarCorrida('r1', 'o1', { intervaloMs: 1, dormir: async () => {} });
+    expect(c.status).toBe('failed'); expect(c.error).toMatch(/puede_gastar/);
+    apiV2.configurar({ fetch: null, sesion: null });
+  });
+
+  test('lanzarFlujo expone run_id desde {corrida: <id>}', async () => {
+    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async () => respuesta(200, { corrida: 'ab33', reintento: false, primer_paso: 'Generar imagen' }) });
+    const r = await apiV2.api.lanzarFlujo('f1', 'o1', { prompt: 'x' }, 'c1');
+    expect(r.run_id).toBe('ab33'); expect(r.primer_paso).toBe('Generar imagen');
     apiV2.configurar({ fetch: null, sesion: null });
   });
 });

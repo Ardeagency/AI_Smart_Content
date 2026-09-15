@@ -93,8 +93,8 @@ async function main() {
       ok('POST /v1/flujos/imagen-directa/lanzar', `run ${String(lanzada.run_id || lanzada.id || '').slice(0, 8)}…`);
       const runId = lanzada.run_id || lanzada.id;
       const fin_ = await api.esperarCorrida(runId, org.id, { intervaloMs: 4000, topeMs: 5 * 60 * 1000, alCambiar: (c) => process.stdout.write(`   … ${c.status}\r`) });
-      if (fin_.status !== 'succeeded') throw new Error(`corrida ${fin_.status}: ${fin_.error || fin_.motivo || JSON.stringify(fin_).slice(0, 160)}`);
-      const salida = (fin_.salidas || fin_.outputs || [])[0];
+      if (fin_.status !== 'succeeded') throw new Error(`corrida ${fin_.status}: ${fin_.error || JSON.stringify(fin_.corrida).slice(0, 160)}`);
+      const salida = (fin_.salidas || [])[0];
       ok('esperarCorrida → succeeded', `${(fin_.salidas || []).length} salida(s); kind ${salida?.kind} · file_id ${String(salida?.metadata?.file_id || '').slice(0, 8)}… · costo ${salida?.metadata?.costo_usd ?? '?'} USD`);
       const fileId = salida?.metadata?.file_id;
       if (!fileId) throw new Error('la salida no trae metadata.file_id');
