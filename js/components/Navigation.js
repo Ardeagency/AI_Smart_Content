@@ -733,28 +733,31 @@ class Navigation {
     return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
   }
 
+  /**
+   * Decidir una aprobación de Vera por el borde (vera.md): POST /v1/aprobaciones/:id
+   * {aprobar, nota}; rechazar exige motivo (≥5 caracteres). Sin borde lo dice con palabras.
+   */
   async _resolveActivityTask(id, op) {
     if (!id) return;
-    const sb = await this._supabase();
-    if (!sb) return;
+    const api = window.apiV2?.api;
     const li = document.querySelector(`#activityDropdown .activity-item[data-task-id="${id}"]`);
+    const avisar = (m) => { if (typeof window.showToast === 'function') window.showToast(m, { type: 'error' }); else console.warn('[activity]', m); };
+    if (!api) { avisar(__('El borde no está configurado: las aprobaciones de Vera aún no se deciden desde esta consola.')); return; }
+    let nota = null;
+    if (op === 'reject') {
+      nota = window.prompt(__('¿Por qué la descartas? (mínimo 5 caracteres)'), '');
+      if (nota === null) return;
+      if (String(nota).trim().length < 5) { avisar(__('Para descartar hace falta un motivo de al menos 5 caracteres.')); return; }
+    }
     if (li) { li.style.opacity = '0.45'; li.style.pointerEvents = 'none'; }
     try {
-      const { data: { session } } = await sb.auth.getSession();
-      const token = session?.access_token;
-      if (!token) throw new Error('Sin sesión');
-      const res = await fetch(`/api/vera/pending-actions/${id}/${op}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: op === 'reject' ? JSON.stringify({ reason: '' }) : '{}',
-      });
-      if (!res.ok) throw new Error((await res.text().catch(() => '')).slice(0, 200));
+      await api.decidirAprobacion(id, this.currentOrgId, op === 'reject' ? 'rechazar' : 'aprobar', nota || undefined);
       li?.remove();
       this.refreshActivityBadge();
       if (!document.querySelector('#activityDropdown .activity-item[data-task-id]')) this._loadActivity('tareas');
     } catch (e) {
-      console.error('[activity] resolve failed:', e?.message || e);
+      console.error('[activity] resolve failed:', e?.codigo || e?.message || e);
+      avisar(e?.codigo === 'sin_permiso' || e?.status === 403 ? __('No tienes el permiso que esta acción exige.') : (e?.message || __('No se pudo decidir.')));
       if (li) { li.style.opacity = ''; li.style.pointerEvents = ''; }
     }
   }
