@@ -556,8 +556,11 @@
         // El borde quiere solo el nombre de la tienda (^[a-z0-9-]+$), sin .myshopify.com
         extra.shop = String(shopDomain).toLowerCase().replace(/^https?:\/\//, '').replace(/\.myshopify\.com.*$/, '').replace(/\/.*$/, '');
       }
-      // El borde (16/09) ignora return_to/market_id: el callback vuelve siempre a
-      // /integraciones?plataforma=…&conectado=1 (o &error=…).
+      // return_to (backend 479fc1b): solo ruta propia, viaja en el state firmado; el
+      // callback vuelve a `${return_to}?plataforma=…&conectado=1&cuenta=…` o `&error=…`.
+      // Sin él, vuelve a /brand-integration-callback con los mismos parámetros.
+      const currentPath = (typeof window !== 'undefined' && window.location?.pathname) || '';
+      if (/^\/[A-Za-z0-9_\-/.]*$/.test(currentPath) && !currentPath.startsWith('//') && currentPath.length <= 500) extra.return_to = currentPath;
       const url = await window.MarcaDatos.urlParaConectar(orgId, normalizedProvider, extra);
       window.location.href = url;
     } catch (error) {
