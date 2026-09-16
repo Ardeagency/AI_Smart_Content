@@ -1,6 +1,13 @@
 /**
  * BrandOrganizationView — Identidad de marca a nivel workspace (`organizations`).
  * Sin `brand_containers`; sin card de entidades. Hereda la UX premium del antiguo BrandsView.
+ *
+ * Corte ADR-0052 (16/09): la vista NO habla con la base. Todo lo que lee y
+ * escribe pasa por `window.MarcaDatos` (js/services/MarcaDataService.js), que
+ * traduce entre los nombres de v1 que esta vista pinta (brand_name_oficial,
+ * hex_value, asset_type, nombre_marca…) y las tablas de la base nueva
+ * (organizations, brand_colors, brand_fonts, brand_assets, markets,
+ * integrations.connections). `this.supabase` queda solo para la sesión.
  */
 class BrandOrganizationView extends BaseView {
   static get documentTitle() { return __('Marca de la organización'); }
@@ -46,18 +53,19 @@ class BrandOrganizationView extends BaseView {
     this.brandData = {
       name: org.name,
       brand_name_oficial: org.brand_name_oficial,
-      brand_slogan: org.brand_slogan,
-      level_of_autonomy: org.level_of_autonomy
+      brand_slogan: org.brand_slogan
     };
   }
 
   async _patchOrganization(partial) {
     const orgId = this.organizationRow?.id || window.currentOrgId;
-    if (!this.supabase || !orgId || !partial || typeof partial !== 'object') return;
-    const { error } = await this.supabase.from('organizations').update(partial).eq('id', orgId);
-    if (error) throw error;
-    this.organizationRow = { ...this.organizationRow, ...partial };
+    if (!window.MarcaDatos || !orgId || !partial || typeof partial !== 'object') return;
+    // La base devuelve la fila guardada: la vista pinta lo que quedó, no lo que pidió.
+    const guardada = await window.MarcaDatos.actualizarOrganizacion(orgId, partial);
+    if (guardada) this.organizationRow = { ...this.organizationRow, ...guardada };
     this._mergeOrgIntoShim();
+    // El nombre y el logo también viven en el contexto (sidebar, selector de marca).
+    if (window.contextoService?.cargar) window.contextoService.cargar({ fresco: true }).catch(() => {});
   }
 
   renderHTML() {
@@ -346,16 +354,9 @@ class BrandOrganizationView extends BaseView {
         return;
       }
 
-      // Solo columnas leídas por la vista (ver _mergeOrgIntoShim y referencias a organizationRow).
-      const { data: org, error: orgErr } = await this.supabase
-        .from('organizations')
-        .select('id, name, brand_name_oficial, brand_slogan, logo_url, level_of_autonomy')
-        .eq('id', orgId)
-        .maybeSingle();
-
-      if (orgErr && orgErr.code !== 'PGRST116') {
-        console.warn('BrandOrganizationView: error cargando organizations', orgErr);
-      }
+      // UNA ida por tabla, traducida a los nombres de v1 (MarcaDataService).
+      const datos = window.MarcaDatos ? await window.MarcaDatos.cargar(orgId) : null;
+      const org = datos?.organizationRow || null;
 
       if (!org) {
         this.organizationRow = null;
@@ -363,6 +364,7 @@ class BrandOrganizationView extends BaseView {
         this.brandData = null;
         this.brandAssets = [];
         this.brandContainers = [];
+        this.brandIntegrations = [];
         this.brandColors = [];
         this.brandFonts = [];
         this._dataLoaded = true;
@@ -372,60 +374,15 @@ class BrandOrganizationView extends BaseView {
 
       this.organizationRow = org;
       this._mergeOrgIntoShim();
-
-      // Campos efectivamente leídos: id, asset_type, storage_path, bucket, file_name,
-      // file_type, file_url, created_at. Añadimos file_size por paridad con otras vistas.
-      const { data: assets, error: assetsError } = await this.supabase
-        .from('brand_assets')
-        .select('id, asset_type, storage_path, bucket, file_name, file_type, file_url, file_size, created_at')
-        .eq('organization_id', orgId)
-        .order('created_at', { ascending: false })
-        .limit(12);
-      if (assetsError) {
-        console.warn('BrandOrganizationView: brand_assets', assetsError);
-        this.brandAssets = [];
-      } else {
-        this.brandAssets = assets || [];
-      }
-
-      // Sub-marcas (brand_containers): se consume `length` (card INFO) y, cuando
-      // hay una sola sub-marca, su fila completa alimenta el panel INFO de
-      // organizacion (renderBrandReadonlySchema lee los campos del schema). Hay
-      // que traer todas las columnas del schema o el panel sale vacio.
-      try {
-        const { data: containerRows } = await this.supabase
-          .from('brand_containers')
-          .select('id, nombre_marca, creative_brief, idiomas_contenido, mercado_objetivo, nicho_core, sub_nichos, arquetipo, propuesta_valor, mision_vision, verbal_dna, visual_dna, palabras_clave, palabras_prohibidas, objetivos_estrategicos, marketing_budget, marketing_budget_currency, updated_at, created_at')
-          .eq('organization_id', orgId)
-          .order('created_at', { ascending: false });
-        this.brandContainers = containerRows || [];
-      } catch (e) {
-        console.warn('BrandOrganizationView: brand_containers', e);
-        this.brandContainers = [];
-      }
-
-      // brand_integrations: alimenta la seccion "En la web" del panel INFO
-      // (Google/Meta/Shopify). Sin esto getIntegrationsForContainer devuelve []
-      // y todas las integraciones salen como "Conectar" aunque esten activas.
-      try {
-        const containerIds = (this.brandContainers || []).map((row) => row.id).filter(Boolean);
-        if (containerIds.length) {
-          const { data: integrationRows } = await this.supabase
-            .from('brand_integrations')
-            .select('id, brand_container_id, platform, external_account_name, is_active, token_expires_at, metadata, last_sync_at, updated_at')
-            .in('brand_container_id', containerIds)
-            .order('platform', { ascending: true });
-          this.brandIntegrations = integrationRows || [];
-        } else {
-          this.brandIntegrations = [];
-        }
-      } catch (e) {
-        console.warn('BrandOrganizationView: brand_integrations', e);
-        this.brandIntegrations = [];
-      }
-
-      this.brandColors = await this._queryBrandColorsRows();
-      this.brandFonts = await this._queryBrandFontsRows();
+      this.brandAssets = datos.brandAssets;
+      // Mercados (markets): lo que v1 llamaba sub-marcas. Con uno solo, la card INFO
+      // abre su ficha (renderBrandReadonlySchema lee los campos del schema).
+      this.brandContainers = datos.brandContainers;
+      // integrations.connections: alimenta «En la web» del panel INFO. Sin el permiso
+      // gestionar_integraciones la lista llega vacía (no es error).
+      this.brandIntegrations = datos.brandIntegrations;
+      this.brandColors = datos.brandColors;
+      this.brandFonts = datos.brandFonts;
     } catch (error) {
       console.error('BrandOrganizationView loadData:', error);
     } finally {
@@ -440,40 +397,11 @@ class BrandOrganizationView extends BaseView {
     await this.loadData();
   }
 
-  /**
-   * Filas de brand_colors por organization_id.
-   */
+  /** Colores de la marca en forma v1 (hex_value, color_role), vía MarcaDataService. */
   async _queryBrandColorsRows() {
     const orgId = this.brandContainerData?.organization_id;
-    if (!this.supabase || !orgId) return [];
-    const fetcher = async () => {
-      const { data, error } = await this.supabase
-        .from('brand_colors')
-        .select('*')
-        .eq('organization_id', orgId);
-      if (error) { console.warn('⚠️ Error cargando colores:', error); return []; }
-      return data || [];
-    };
-    return window.apiClient
-      ? window.apiClient.query(`brand:colors:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
-      : fetcher();
-  }
-
-  /** Filas de brand_fonts por organization_id. */
-  async _queryBrandFontsRows() {
-    const orgId = this.brandContainerData?.organization_id;
-    if (!this.supabase || !orgId) return [];
-    const fetcher = async () => {
-      const { data, error } = await this.supabase
-        .from('brand_fonts')
-        .select('*')
-        .eq('organization_id', orgId);
-      if (error) { console.warn('⚠️ Error cargando fuentes:', error); return []; }
-      return data || [];
-    };
-    return window.apiClient
-      ? window.apiClient.query(`brand:fonts:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
-      : fetcher();
+    if (!window.MarcaDatos || !orgId) return [];
+    return window.MarcaDatos.colores(orgId);
   }
 
   /** Recarga solo brand_colors desde Supabase (invalida apiClient para forzar fetch). */
@@ -487,17 +415,11 @@ class BrandOrganizationView extends BaseView {
     this.brandColors = await this._queryBrandColorsRows();
   }
 
-  /** Recarga solo brand_assets desde Supabase (evita recargar todo loadData al subir archivos). */
+  /** Recarga solo los assets (evita recargar todo loadData al subir archivos). */
   async _reloadAssets() {
     const orgId = this.organizationRow?.id;
-    if (!this.supabase || !orgId) return;
-    const { data } = await this.supabase
-      .from('brand_assets')
-      .select('id, asset_type, storage_path, bucket, file_name, file_type, file_url, file_size, created_at')
-      .eq('organization_id', orgId)
-      .order('created_at', { ascending: false })
-      .limit(12);
-    this.brandAssets = data || [];
+    if (!window.MarcaDatos || !orgId) return;
+    this.brandAssets = await window.MarcaDatos.assets(orgId);
   }
 
   // Catálogos ahora viven en /js/config/brand-schema.js (fuente única compartida
@@ -1135,7 +1057,7 @@ class BrandOrganizationView extends BaseView {
   // ============================================
 
   async saveContainerField(fieldName, value) {
-    if (!this.supabase || !this.organizationRow) return;
+    if (!this.organizationRow) return;
 
     const saveKey = `container_${fieldName}`;
     if (this.savingFields.has(saveKey)) return;
@@ -1148,7 +1070,8 @@ class BrandOrganizationView extends BaseView {
       } else if (fieldName === 'logo_url') {
         await this._patchOrganization({ logo_url: value || null });
       } else {
-        const allowed = new Set(['name', 'brand_name_oficial', 'brand_slogan', 'level_of_autonomy']);
+        // level_of_autonomy ya no es de la marca: es de cada agente (ai.agents.autonomy).
+        const allowed = new Set(['name', 'brand_name_oficial', 'brand_slogan']);
         if (!allowed.has(fieldName)) {
           console.warn('BrandOrganizationView: campo organizations no soportado:', fieldName);
         } else {
@@ -1164,8 +1087,8 @@ class BrandOrganizationView extends BaseView {
   }
 
   async saveBrandField(fieldName, value) {
-    if (!this.supabase || !this.organizationRow) return;
-    const allowed = new Set(['name', 'brand_name_oficial', 'brand_slogan', 'level_of_autonomy']);
+    if (!this.organizationRow) return;
+    const allowed = new Set(['name', 'brand_name_oficial', 'brand_slogan']);
     if (!allowed.has(fieldName)) return;
 
     let v = value;

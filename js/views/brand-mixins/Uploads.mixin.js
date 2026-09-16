@@ -1,9 +1,11 @@
 /**
  * Shared Uploads mixin — consumido por BrandstorageView y BrandOrganizationView.
  *
- * Subida, inserción en `brand_assets` y borrado de archivos de marca:
- * logo de organización, identidad (indexada en `ai_brand_vectors`) y assets
- * generales. También expone los wirings de los botones "Subir archivo".
+ * Subida, registro en `brand_assets` y borrado de archivos de marca: logo de
+ * organización, identidad (documentos) y assets generales, todo por
+ * MarcaDataService (el archivo viaja por POST /v1/archivos del borde; la
+ * consola no tiene storage propio). También expone los wirings de los botones
+ * "Subir archivo".
  *
  * Aplica sobre el prototype de ambas vistas de marca al cargarse.
  */
@@ -14,8 +16,8 @@
     return;
   }
 
-  // Límites de tamaño de archivo (bytes). Supabase tiene sus propios límites de
-  // bucket, pero validar en el cliente evita el upload innecesario + da feedback inmediato.
+  // Límites de tamaño de archivo (bytes). El borde admite 200 MB por archivo,
+  // pero validar en el cliente evita el upload innecesario + da feedback inmediato.
   const MAX_LOGO_SIZE     = 10 * 1024 * 1024;   // 10 MB
   const MAX_ASSET_SIZE    = 50 * 1024 * 1024;   // 50 MB
   const MAX_IDENTITY_SIZE = 50 * 1024 * 1024;   // 50 MB
@@ -40,17 +42,12 @@
   }
 
   const UploadsMixin = {
+    /** El logo sube por el borde (POST /v1/archivos) y la marca apunta a él (logo_file_id + logo_url). */
     async uploadLogo(file) {
       if (!file || !this.organizationRow) return;
       const err = _validateFile(file, MAX_LOGO_SIZE, ALLOWED_LOGO_EXT, 'logo');
       if (err) { alert(err); return; }
-      if (!this.supabase && window.supabaseService) {
-        this.supabase = await window.supabaseService.getClient();
-      }
-      if (!this.supabase) {
-        alert('No se pudo conectar. Intenta de nuevo.');
-        return;
-      }
+      if (!window.MarcaDatos) { alert(__('No se pudo conectar. Intenta de nuevo.')); return; }
       const orgId = this.organizationRow.id;
       const container = this.container || document.getElementById('app-container');
       const logoWrap = container?.querySelector('.brand-corner-logo-btn') || container?.querySelector('.info-logo-container');
@@ -59,28 +56,18 @@
         logoWrap.style.opacity = '0.7';
       }
       try {
-        const fileExt = (file.name.split('.').pop() || 'png').toLowerCase();
-        const fileName = `org_logo_${orgId}_${Date.now()}.${fileExt}`;
-        const filePath = `${orgId}/${fileName}`;
-        const bucket = 'org-assets';
-
-        const { error: uploadError } = await this.supabase.storage
-          .from(bucket)
-          .upload(filePath, file, { upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        const {
-          data: { publicUrl }
-        } = this.supabase.storage.from(bucket).getPublicUrl(filePath);
-
-        await this._patchOrganization({ logo_url: publicUrl });
-        if (this.brandContainerData) this.brandContainerData.logo_url = publicUrl;
+        const asset = await window.MarcaDatos.subirAsset(orgId, file, { logo: true });
+        const logoUrl = asset?.file_url || null;
+        this.organizationRow = { ...this.organizationRow, logo_url: logoUrl, logo_file_id: asset?.file_id || null };
+        if (typeof this._mergeOrgIntoShim === 'function') this._mergeOrgIntoShim();
+        if (this.brandContainerData) this.brandContainerData.logo_url = logoUrl;
+        await this._reloadAssets();
         this.renderAll();
         this.renderCornerLogoUploader();
+        if (window.contextoService?.cargar) window.contextoService.cargar({ fresco: true }).catch(() => {});
       } catch (error) {
-        console.error('BrandstorageView uploadLogo:', error);
-        alert('Error al subir logo.');
+        console.error('BrandOrganizationView uploadLogo:', error);
+        alert(error?.code === 'sin_api' ? __('La subida de archivos aún no está disponible.') : __('Error al subir logo.'));
       } finally {
         if (logoWrap) {
           logoWrap.style.pointerEvents = '';
@@ -90,144 +77,50 @@
     },
 
     async uploadAsset(file) {
-      if (!this.supabase || !this.organizationRow) return;
+      if (!window.MarcaDatos || !this.organizationRow) return;
       const err = _validateFile(file, MAX_ASSET_SIZE, ALLOWED_ASSET_EXT, 'asset');
       if (err) { alert(err); return; }
-      const orgId = this.organizationRow.id;
       try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `org_asset_${orgId}_${Date.now()}.${fileExt}`;
-        const filePath = `organizations/${orgId}/assets/${fileName}`;
-
-        const { error: uploadError } = await this.supabase.storage.from('brand-core').upload(filePath, file);
-        if (uploadError) throw uploadError;
-
-        const {
-          data: { publicUrl }
-        } = this.supabase.storage.from('brand-core').getPublicUrl(filePath);
-
-        const { error: insertError } = await this.supabase.from('brand_assets').insert({
-          organization_id: orgId,
-          asset_scope: 'organization',
-          brand_container_id: null,
-          bucket: 'brand-core',
-          storage_path: filePath,
-          file_name: file.name,
-          file_url: publicUrl,
-          file_type: file.type,
-          file_size: file.size
-        });
-
-        if (insertError) throw insertError;
-
+        await window.MarcaDatos.subirAsset(this.organizationRow.id, file);
         await this._reloadAssets();
         this.renderAssetsFiles();
       } catch (error) {
-        console.error('BrandstorageView uploadAsset:', error);
-        alert('Error al subir archivo.');
+        console.error('BrandOrganizationView uploadAsset:', error);
+        alert(error?.code === 'sin_api' ? __('La subida de archivos aún no está disponible.') : __('Error al subir archivo.'));
       }
     },
 
+    /** Identidad = documentos (kind document). El índice para la IA lo hace la base al recibir el archivo, no la consola. */
     async uploadIdentityFile(file) {
-      if (!this.supabase || !this.organizationRow) return;
+      if (!window.MarcaDatos || !this.organizationRow) return;
       const err = _validateFile(file, MAX_IDENTITY_SIZE, ALLOWED_IDENTITY_EXT, 'archivo de identidad');
       if (err) { alert(err); return; }
-      const orgId = this.organizationRow.id;
       try {
-        const fileExt = (file.name.split('.').pop() || 'bin').toLowerCase();
-        const fileName = `identity_${orgId}_${Date.now()}.${fileExt}`;
-        const filePath = `organizations/${orgId}/identity/${fileName}`;
-        const bucket = 'brand-core';
-
-        const { error: uploadError } = await this.supabase.storage.from(bucket).upload(filePath, file, {
-          upsert: false,
-          contentType: file.type || undefined
-        });
-        if (uploadError) throw uploadError;
-
-        const {
-          data: { publicUrl }
-        } = this.supabase.storage.from(bucket).getPublicUrl(filePath);
-
-        const { data: insertedAsset, error: insertError } = await this.supabase
-          .from('brand_assets')
-          .insert({
-            organization_id: orgId,
-            asset_scope: 'organization',
-            asset_type: 'identity',
-            brand_container_id: null,
-            bucket,
-            storage_path: filePath,
-            file_name: file.name,
-            file_url: publicUrl,
-            file_type: file.type,
-            file_size: file.size
-          })
-          .select('id')
-          .single();
-        if (insertError) throw insertError;
-
-        // Registro base en ai_brand_vectors para que el pipeline de IA tenga fuente del archivo.
-        // Si falla, no bloquea el upload del asset.
-        const { error: vectorError } = await this.supabase.from('ai_brand_vectors').insert({
-          organization_id: orgId,
-          brand_container_id: null,
-          source_bucket: bucket,
-          source_path: filePath,
-          source_type: file.type || 'file',
-          chunk_index: 0,
-          content: `Archivo de identidad: ${file.name}`,
-          metadata: {
-            asset_id: insertedAsset?.id || null,
-            file_name: file.name,
-            origin: 'brand-identity-upload',
-            vector_status: 'pending'
-          }
-        });
-        if (vectorError) {
-          console.warn('BrandstorageView ai_brand_vectors:', vectorError);
-        }
-
+        await window.MarcaDatos.subirAsset(this.organizationRow.id, file, { identidad: true });
         await this._reloadAssets();
         this.renderIdentityFiles();
         this.renderAssetsFiles();
       } catch (error) {
-        console.error('BrandstorageView uploadIdentityFile:', error);
-        alert('Error al subir archivo de identidad.');
+        console.error('BrandOrganizationView uploadIdentityFile:', error);
+        alert(error?.code === 'sin_api' ? __('La subida de archivos aún no está disponible.') : __('Error al subir archivo de identidad.'));
       }
     },
 
     async removeAsset(assetId) {
-      if (!this.supabase || !assetId) return;
+      if (!window.MarcaDatos || !assetId || !this.organizationRow) return;
       const asset = (this.brandAssets || []).find((a) => a.id === assetId);
       if (!asset) return;
-
       try {
-        const bucket = asset.bucket || 'brand-core';
-        const storagePath = asset.storage_path || this._extractStoragePathFromUrl(asset.file_url, bucket);
-        if (storagePath) {
-          await this.supabase.storage.from(bucket).remove([storagePath]);
-        }
-
-        const { error } = await this.supabase.from('brand_assets').delete().eq('id', assetId);
-        if (error) throw error;
-
+        const borrado = await window.MarcaDatos.borrarAsset(this.organizationRow.id, asset);
+        if (!borrado) throw Object.assign(new Error('La base no borró el asset (¿sin permiso editar_marca?).'), { code: 'sin_fila' });
         this.brandAssets = (this.brandAssets || []).filter((a) => a.id !== assetId);
         // Re-rendear ambas cards: el asset borrado podia estar en cualquiera de las dos.
         if (typeof this.renderIdentityFiles === 'function') this.renderIdentityFiles();
         if (typeof this.renderAssetsFiles === 'function') this.renderAssetsFiles();
       } catch (error) {
-        console.error('BrandstorageView removeAsset:', error);
+        console.error('BrandOrganizationView removeAsset:', error);
+        alert(__('No se pudo eliminar el archivo.'));
       }
-    },
-
-    _extractStoragePathFromUrl(url, bucket) {
-      const raw = String(url || '').trim();
-      if (!raw) return '';
-      const marker = `/storage/v1/object/public/${bucket}/`;
-      const idx = raw.indexOf(marker);
-      if (idx >= 0) return raw.slice(idx + marker.length);
-      return '';
     },
 
     /**

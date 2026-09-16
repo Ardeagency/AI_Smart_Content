@@ -39,98 +39,49 @@
     },
 
     async updateColor(colorId, hexValue) {
-      if (!this.supabase || !this.brandData) return;
-      const hex = (hexValue || '').replace(/^#/, '').trim();
-      if (!/^[0-9A-Fa-f]{6}$/.test(hex)) return;
+      if (!window.MarcaDatos || !this.brandData) return;
       try {
-        const { error } = await this.supabase
-          .from('brand_colors')
-          .update({ hex_value: `#${hex}` })
-          .eq('id', colorId);
-        if (error) throw error;
+        await window.MarcaDatos.actualizarColor(colorId, hexValue);
         await this._reloadColors();
         this.renderCards();
         if (typeof this._refreshVisualChrome === 'function') this._refreshVisualChrome();
       } catch (error) {
+        if (error?.code === 'hex_invalido') return;
         console.error('❌ Error al actualizar color:', error);
-        alert('Error al actualizar el color. Por favor, intenta de nuevo.');
+        alert(__('Error al actualizar el color. Por favor, intenta de nuevo.'));
       }
-    },
-
-    /** Elige un color_role que no esté ya usado (para respetar UNIQUE(brand_id, color_role)). */
-    pickNextColorRole(existingColors) {
-      const roleLabels = ['Color', 'Color 2', 'Color 3', 'Color 4'];
-      const usedRoles = new Set((existingColors || []).map(c => (c.color_role || '').trim()));
-      const next = roleLabels.find(r => !usedRoles.has(r));
-      return next || `Color ${(existingColors || []).length + 1}`;
     },
 
     async createColor(hexValue) {
-      if (!this.supabase || !this.brandData) return;
-      const hex = (hexValue || '').replace(/^#/, '').trim();
-      if (!/^[0-9A-Fa-f]{6}$/.test(hex)) return;
-      const existing = this.brandColors || [];
-      if (existing.length >= 4) {
-        alert('Máximo 4 colores por marca.');
-        return;
-      }
-      const hexNorm = `#${hex}`.toLowerCase();
-      const alreadyExists = existing.some(
-        c => (c.hex_value || '').toLowerCase() === hexNorm
-      );
-      if (alreadyExists) {
-        alert('Este color ya existe en la marca.');
-        return;
-      }
+      if (!window.MarcaDatos || !this.brandData) return;
       const orgId = this.brandContainerData?.organization_id;
       if (!orgId) return;
-      const { data: freshColors } = await this.supabase
-        .from('brand_colors')
-        .select('id, color_role, hex_value')
-        .eq('organization_id', orgId);
-      const currentInDb = freshColors || [];
-      if (currentInDb.length >= 4) {
-        alert('Máximo 4 colores por marca.');
-        return;
-      }
-      const colorRole = this.pickNextColorRole(currentInDb);
       try {
-        const { error } = await this.supabase
-          .from('brand_colors')
-          .insert({
-            organization_id: orgId,
-            color_role: colorRole,
-            hex_value: hexNorm
-          });
-        if (error) throw error;
+        // El servicio relee la base antes de insertar: tope de 4, duplicado y rol (UN primary).
+        await window.MarcaDatos.crearColor(orgId, hexValue);
         await this._reloadColors();
         this.renderCards();
         if (typeof this._refreshVisualChrome === 'function') this._refreshVisualChrome();
       } catch (error) {
+        if (error?.code === 'hex_invalido') return;
+        if (error?.code === 'tope') { alert(__('Máximo 4 colores por marca.')); return; }
         const isDuplicate = (error?.code === '23505') || (error?.message || '').includes('duplicate key');
         console.error('❌ Error al crear color:', error);
-        if (isDuplicate) {
-          alert('Este color ya existe en la marca. Elige otro valor.');
-        } else {
-          alert('Error al agregar el color. Por favor, intenta de nuevo.');
-        }
+        alert(isDuplicate ? __('Este color ya existe en la marca. Elige otro valor.') : __('Error al agregar el color. Por favor, intenta de nuevo.'));
       }
     },
 
     async deleteColor(colorId) {
-      if (!this.supabase) return;
+      if (!window.MarcaDatos) return;
       try {
-        const { error } = await this.supabase
-          .from('brand_colors')
-          .delete()
-          .eq('id', colorId);
-        if (error) throw error;
+        const borrado = await window.MarcaDatos.borrarColor(colorId);
+        if (!borrado) throw Object.assign(new Error('La base no borró el color (¿sin permiso editar_marca?).'), { code: 'sin_fila' });
         await this._reloadColors();
         this.renderCards();
         if (typeof this._refreshVisualChrome === 'function') this._refreshVisualChrome();
       } catch (error) {
         console.error('❌ Error al eliminar color:', error);
-        alert('Error al eliminar color. Por favor, intenta de nuevo.');
+        alert(__('Error al eliminar color. Por favor, intenta de nuevo.'));
       }
     }
   };

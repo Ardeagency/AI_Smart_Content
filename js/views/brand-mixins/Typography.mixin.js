@@ -2,7 +2,7 @@
  * Shared Typography mixin — consumido por BrandstorageView y BrandOrganizationView.
  *
  * Dropdown de tipografía para imágenes: preview con Google Fonts lazy-loaded,
- * persistencia en `brand_fonts` (font_usage = 'images'). Aplica Object.assign
+ * persistencia en `brand_fonts` por MarcaDataService (rol display = «para imágenes»). Aplica Object.assign
  * sobre el prototype de cada clase definida al cargarse.
  */
 (function () {
@@ -128,28 +128,16 @@
 
     async saveTypographyForImages(fontFamily) {
       const orgId = this.brandContainerData?.organization_id;
-      if (!this.supabase || !orgId) return;
+      if (!window.MarcaDatos || !orgId) return;
       try {
-        const { data: existing } = await this.supabase
-          .from('brand_fonts')
-          .select('id')
-          .eq('organization_id', orgId)
-          .eq('font_usage', 'images')
-          .limit(1)
-          .maybeSingle();
-        if (existing) {
-          await this.supabase
-            .from('brand_fonts')
-            .update({ font_family: fontFamily, font_weight: '400', fallback_font: 'sans-serif' })
-            .eq('id', existing.id);
-        } else {
-          await this.supabase
-            .from('brand_fonts')
-            .insert({ organization_id: orgId, font_family: fontFamily, font_usage: 'images', font_weight: '400', fallback_font: 'sans-serif' });
-        }
+        // brand_fonts es único por (marca, rol): «para imágenes» = rol display.
+        const guardada = await window.MarcaDatos.guardarTipografiaImagenes(orgId, fontFamily);
+        const others = (this.brandFonts || []).filter(f => (f.font_usage || '').toLowerCase() !== 'images');
+        this.brandFonts = [...others, guardada];
       } catch (e) {
         console.error('Error al guardar tipografía:', e);
-        alert('No se pudo guardar la tipografía. Intenta de nuevo.');
+        alert(__('No se pudo guardar la tipografía. Intenta de nuevo.'));
+        throw e;
       }
     }
   };

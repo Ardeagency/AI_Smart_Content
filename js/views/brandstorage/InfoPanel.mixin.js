@@ -473,8 +473,9 @@
     }, 150);
     },
 
+  /** Un campo de la ficha del mercado (v1: brand_containers) → markets, por MarcaDataService. */
   async saveBrandContainerFieldById(brandContainerId, fieldName, value) {
-    if (!this.supabase || !brandContainerId || !fieldName) return false;
+    if (!window.MarcaDatos || !brandContainerId || !fieldName) return false;
     const normalizedValue = this._normalizeBrandFieldForDb(fieldName, value);
 
     if (fieldName === 'nombre_marca') {
@@ -485,88 +486,60 @@
       }
       const orgId = this.organizationRow?.id
         || (this.brandContainers || []).find((it) => String(it.id) === String(brandContainerId))?.organization_id;
-      if (orgId) {
-        const { data: conflicts, error: checkErr } = await this.supabase
-          .from('brand_containers')
-          .select('id')
-          .eq('organization_id', orgId)
-          .ilike('nombre_marca', trimmed)
-          .neq('id', brandContainerId)
-          .limit(1);
-        if (checkErr) {
-          console.error('saveBrandContainerFieldById uniqueness check:', checkErr);
-        } else if ((conflicts || []).length > 0) {
-          alert(__('Ya existe una sub-marca con el nombre "{name}" en esta organización. Elige otro nombre.', { name: trimmed }));
-          return false;
-        }
+      if (orgId && await window.MarcaDatos.nombreDeMercadoRepetido(orgId, trimmed, brandContainerId)) {
+        alert(__('Ya existe una sub-marca con el nombre "{name}" en esta organización. Elige otro nombre.', { name: trimmed }));
+        return false;
       }
     }
 
-    const { error } = await this.supabase
-      .from('brand_containers')
-      .update({ [fieldName]: normalizedValue })
-      .eq('id', brandContainerId);
-    if (error) {
-      if (error.code === '23505') {
+    try {
+      const guardado = await window.MarcaDatos.actualizarMercado(brandContainerId, fieldName, normalizedValue);
+      const idx = (this.brandContainers || []).findIndex((item) => String(item.id) === String(brandContainerId));
+      if (idx >= 0 && guardado) this.brandContainers[idx] = guardado;
+      return true;
+    } catch (error) {
+      if (error?.code === '23505') {
         alert(__('Ya existe una sub-marca con ese nombre en esta organización.'));
+      } else if (error?.code === 'campo_inexistente') {
+        alert(error.message);
       } else {
-        console.error('BrandstorageView saveBrandContainerFieldById:', error);
+        console.error('InfoPanel saveBrandContainerFieldById:', error);
         alert(__('No se pudo guardar {field}.', { field: fieldName }));
       }
       return false;
     }
-    const row = (this.brandContainers || []).find((item) => String(item.id) === String(brandContainerId));
-    if (row) row[fieldName] = normalizedValue;
-    return true;
     },
 
-  async saveBrandIntegrationField(integrationId, fieldName, value) {
-    if (!this.supabase || !integrationId || !fieldName) return false;
-    const normalized = fieldName === 'is_active' ? Boolean(Number(value)) : (String(value || '').trim() || null);
-    const { error } = await this.supabase
-      .from('brand_integrations')
-      .update({ [fieldName]: normalized })
-      .eq('id', integrationId);
-    if (error) {
-      console.error('BrandstorageView saveBrandIntegrationField:', error);
-      alert(__('No se pudo guardar integración ({field}).', { field: fieldName }));
-      return false;
-    }
-    const row = (this.brandIntegrations || []).find((item) => String(item.id) === String(integrationId));
-    if (row) row[fieldName] = normalized;
-    return true;
+  /**
+   * En la base nueva una conexión no se edita a mano: activar/desactivar es
+   * conectar/desconectar por el borde (POST /v1/integraciones/…). Nada se
+   * guarda en silencio: se avisa y se deja el valor como estaba.
+   */
+  async saveBrandIntegrationField(integrationId, fieldName, _value) {
+    if (!integrationId || !fieldName) return false;
+    alert(__('Las conexiones se gestionan desde Integraciones (conectar / desconectar), no desde esta ficha.'));
+    if (typeof this._refreshInfoPanelIfOpen === 'function') this._refreshInfoPanelIfOpen();
+    return false;
     },
 
-  async saveBrandEntityField(entityId, fieldName, value) {
-    if (!this.supabase || !entityId || !fieldName) return false;
-    const normalized = String(value || '').trim() || null;
-    const { error } = await this.supabase
-      .from('brand_entities')
-      .update({ [fieldName]: normalized })
-      .eq('id', entityId);
-    if (error) {
-      console.error('BrandstorageView saveBrandEntityField:', error);
-      alert(__('No se pudo guardar entidad ({field}).', { field: fieldName }));
-      return false;
-    }
-    const row = (this.brandEntities || []).find((item) => String(item.id) === String(entityId));
-    if (row) row[fieldName] = normalized;
-    return true;
+  /** Las entidades de v1 son hoy `public.elements` (catálogo): se editan en Productos/Servicios/Escenarios/Personajes. */
+  async saveBrandEntityField(entityId, fieldName, _value) {
+    if (!entityId || !fieldName) return false;
+    alert(__('Los elementos de la marca se editan en su propia sección del catálogo.'));
+    return false;
     },
 
+  /** Conectar una plataforma: el borde devuelve la URL de autorización en JSON (con Bearer un 302 no viaja). */
   async startBrandIntegrationOAuth(provider, brandContainerId, actionButton = null) {
     const normalizedProvider = String(provider || '').toLowerCase();
-    const brandId = String(brandContainerId || '').trim();
-    const SUPPORTED = ['google', 'facebook', 'shopify', 'mercadolibre', 'x', 'tiktok'];
-    if (!brandId || !SUPPORTED.includes(normalizedProvider)) return;
+    const SUPPORTED = ['google', 'facebook', 'shopify', 'mercadolibre', 'x', 'tiktok', 'linkedin'];
+    if (!SUPPORTED.includes(normalizedProvider)) return;
     if (window.DemoGuard?.isDemo?.()) {
       window.DemoGuard.showSignupModal(`conectar ${normalizedProvider}`);
       return;
     }
-    if (!this.supabase) {
-      alert(__('Supabase no disponible para conectar integración.'));
-      return;
-    }
+    const orgId = this.organizationRow?.id || window.currentOrgId;
+    if (!window.MarcaDatos || !orgId) return;
 
     try {
       if (actionButton) {
@@ -574,57 +547,23 @@
         actionButton.dataset.originalText = actionButton.textContent || __('Conectar');
         actionButton.textContent = __('Conectando...');
       }
-
-      const { data: { session } } = await this.supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) {
-        alert(__('Sesión no válida. Inicia sesión y vuelve a intentar.'));
-        return;
-      }
-
-      // ── Shopify requiere shop_domain antes del start ───────────────────────
-      let shopDomain = null;
+      const extra = {};
       if (normalizedProvider === 'shopify') {
-        shopDomain = await this._promptShopDomain();
+        const shopDomain = await this._promptShopDomain();
         if (!shopDomain) return;
+        extra.shop = shopDomain;
       }
-
-      // Endpoint Netlify (idéntico patrón para Meta/Google/Shopify/Mercado Libre)
-      const endpoint = (
-        normalizedProvider === 'facebook'     ? '/api/integrations/facebook/start' :
-        normalizedProvider === 'google'       ? '/api/integrations/google/start'   :
-        normalizedProvider === 'mercadolibre' ? '/api/integrations/meli/start'      :
-        normalizedProvider === 'x'            ? '/api/integrations/x/start'         :
-        normalizedProvider === 'tiktok'       ? '/api/integrations/tiktok/start'    :
-        /* shopify */                           '/api/integrations/shopify/start'
-      );
-
-      // Volver EXACTAMENTE a la pagina donde estaba el usuario al iniciar OAuth
-      // (la ruta actual). getBrandStorageReturnPath() queda solo como fallback —
-      // antes forzaba brand-storage aunque hubieras iniciado desde otra vista.
+      // Volver EXACTAMENTE a la página donde estaba la persona al iniciar OAuth.
       const currentPath = (typeof window !== 'undefined' && window.location?.pathname) || '';
-      const returnTo = (/^\/[A-Za-z0-9_\-/.]*$/.test(currentPath) && currentPath !== '/brand-integration-callback')
+      extra.return_to = (/^\/[A-Za-z0-9_\-/.]*$/.test(currentPath) && currentPath !== '/brand-integration-callback')
         ? currentPath
         : this.getBrandStorageReturnPath();
-      const qsParams = {
-        brand_container_id: brandId,
-        return_to: returnTo
-      };
-      if (normalizedProvider === 'shopify') qsParams.shop = shopDomain;
-
-      const qs = new URLSearchParams(qsParams);
-      const res = await fetch(`${location.origin}${endpoint}?${qs.toString()}`, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || !json?.authorize_url) {
-        throw new Error(json?.error || `No se pudo iniciar OAuth (${res.status})`);
-      }
-      window.location.href = json.authorize_url;
+      if (brandContainerId) extra.market_id = String(brandContainerId);
+      const url = await window.MarcaDatos.urlParaConectar(orgId, normalizedProvider, extra);
+      window.location.href = url;
     } catch (error) {
-      console.error('BrandstorageView startBrandIntegrationOAuth:', error);
-      alert(error?.message || __('No se pudo conectar la integración.'));
+      console.error('InfoPanel startBrandIntegrationOAuth:', error);
+      alert(error?.code === 'sin_api' ? __('Las integraciones aún no están disponibles.') : (error?.message || __('No se pudo conectar la integración.')));
     } finally {
       if (actionButton) {
         actionButton.disabled = false;
@@ -1715,7 +1654,9 @@
 
   renderMarketingBudgetSectionHtml() {
     const bc = this._budgetContainerRow();
-    if (!bc) return '';
+    // Base nueva (corte): el mercado no tiene techo de presupuesto; vive en
+    // marketing.plans.planned_budget por campaña. Sin la columna, la sección no existe.
+    if (!bc || !('marketing_budget' in bc)) return '';
     const total = Number(bc.marketing_budget) || 0;
     const cur = bc.marketing_budget_currency || 'COP';
     const fmt = (n) => Math.round(n).toLocaleString('es-CO');
@@ -1742,25 +1683,17 @@
     const fmt = (n) => Math.round(n).toLocaleString('es-CO');
     const commit = async () => {
       const bc = this._budgetContainerRow();
-      if (!bc || !this.supabase) return;
+      if (!bc) return;
       const raw = String(amount.value || '').replace(/[^\d]/g, '');
       const val = raw ? Number(raw) : null;
       const curVal = String(cur?.value || '').trim().toUpperCase() || 'COP';
       if ((Number(bc.marketing_budget) || null) === val && (bc.marketing_budget_currency || 'COP') === curVal) return;
-      try {
-        const { error } = await this.supabase
-          .from('brand_containers')
-          .update({ marketing_budget: val, marketing_budget_currency: curVal, updated_at: new Date().toISOString() })
-          .eq('id', bc.id);
-        if (error) throw error;
-        bc.marketing_budget = val;
-        bc.marketing_budget_currency = curVal;
-        amount.value = val ? fmt(val) : '';
-        if (cur) cur.value = curVal;
-      } catch (e) {
-        console.error('InfoPanel saveMarketingBudget:', e?.message || e);
-        alert(__('Error al guardar el presupuesto de marketing.'));
-      }
+      // Base nueva: el mercado no tiene techo de presupuesto (la sección no se pinta
+      // sin la columna). Si algún día vuelve, va por MarcaDataService; nunca en silencio.
+      console.error('InfoPanel saveMarketingBudget: el presupuesto de marketing ya no vive en la ficha del mercado.');
+      alert(__('El presupuesto de marketing ya no se define aquí.'));
+      amount.value = bc.marketing_budget ? fmt(Number(bc.marketing_budget)) : '';
+      if (cur) cur.value = bc.marketing_budget_currency || 'COP';
     };
     [amount, cur].forEach((el) => {
       if (!el) return;

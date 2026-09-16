@@ -24,7 +24,8 @@
     'dashboard',
     'production',
     'monitoring',
-    'brand', 'brands', 'brand-organization', 'brand-storage', 'brandstorage',
+    // 'brand' / 'brands' / 'brand-organization': PORTADAS el 16/09 (MarcaDataService, verificar-marca.mjs 14/14).
+    'brand-storage', 'brandstorage',
     'products', 'services', 'places', 'characters', 'identities', 'product-detail',
     'studio', 'studio/catalog', 'studio/flows',
     'vera',
