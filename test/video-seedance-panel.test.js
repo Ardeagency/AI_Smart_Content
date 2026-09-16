@@ -630,9 +630,9 @@ describe('Cinematografía — cada opción es una variable de prompt', () => {
   });
 });
 
-describe('Producir — el disparo contra Seedance', () => {
-  /** Vista lista para producir, con supabase y fetch de mentira. */
-  function listaParaProducir(respuesta) {
+describe('Producir — la corrida de video-directo por el borde (corte ADR-0052)', () => {
+  /** Vista lista para producir, con StudioDatos de mentira. */
+  function listaParaProducir(resultado) {
     const { v, avisos } = nuevaVista({
       '#seedanceDuration': { value: '8' },
       '#seedanceResolution': { value: '1080p' },
@@ -644,97 +644,103 @@ describe('Producir — el disparo contra Seedance', () => {
     const estados = [];
     v.showError = (m) => errores.push(m);
     v.showStatus = (m) => estados.push(m);
+    v.showResult = (u) => { v._resultado = u; };
     v.sendBtn = { disabled: false, classList: { toggle() {} } };
-    v.supabase = { auth: { getSession: async () => ({ data: { session: { access_token: 'tok' } } }) } };
-    v.saveSystemAIOutput = async () => 'out-1';
-    v.pollTask = async () => { v._polled = true; };
     v.forgeBtn = { disabled: false, classList: { toggle() {} }, querySelector: () => null };
+    v.organizationId = 'org-1';
+    v.loadVideoProductions = async () => {};
+    v.renderEscenasCarousel = () => {};
     // PRODUCIR exige prompt forjado: los tests de produccion parten de ahi.
     v.forjado = true;
     v.intencion = 'Apertura, desarrollo y cierre.';
     const llamadas = [];
-    globalThis.fetch = async (url, opts) => {
-      llamadas.push({ url, body: JSON.parse(opts.body) });
-      return respuesta;
+    globalThis.window.StudioDatos = {
+      mapeo: { entradasVideo: (p) => ({ prompt: p.prompt, aspecto: p.aspecto, resolucion: p.resolucion, duracion: Number(p.duracion), con_audio: !!p.con_audio, referencias: p.referencias }) },
+      producir: async (org, tipo, entradas, opts) => {
+        llamadas.push({ org, tipo, entradas, opts });
+        if (typeof resultado === 'function') return resultado(opts);
+        if (resultado instanceof Error) throw resultado;
+        return resultado;
+      },
     };
     return { v, errores, estados, llamadas, avisos };
   }
-  const ok = (data) => ({ ok: true, status: 200, json: async () => data });
+  const listo = { run_id: 'r-1', salida: { url: 'https://media-v2/out/o/v.mp4', file_id: 'f-1' }, corrida: { status: 'succeeded' } };
 
   test('el backend ya está conectado', () => {
-    // Vivió meses en false: la página era operable pero no producía.
     expect(VideoView.SEEDANCE_BACKEND_READY).toBe(true);
   });
 
-  test('dispara contra la función y arranca el polling con su taskId', async () => {
-    const { v, llamadas } = listaParaProducir(ok({ taskId: 't-1', prompt: 'cocinado', kie_model: 'bytedance/seedance-2-5' }));
+  test('produce con el flujo video-directo, con los controles del sidebar, y pinta la salida', async () => {
+    const { v, llamadas } = listaParaProducir(listo);
 
     await v.startGeneration();
 
     expect(llamadas).toHaveLength(1);
-    expect(llamadas[0].url).toBe('/.netlify/functions/seedance-video-create');
-    expect(llamadas[0].body.model).toBe('bytedance/seedance-2-5');
-    expect(v._polled).toBe(true);
+    expect(llamadas[0].tipo).toBe('video');
+    expect(llamadas[0].org).toBe('org-1');
+    expect(llamadas[0].entradas).toMatchObject({ aspecto: '9:16', resolucion: '1080p', duracion: 8, con_audio: true });
+    expect(v._resultado).toBe('https://media-v2/out/o/v.mp4');
+    expect(v._generating).toBe(false);
   });
 
-  test('deja la fila en processing ANTES de esperar el resultado', async () => {
-    // Si el usuario cierra la pestaña, queda constancia de la tarea en vez de
-    // un cobro sin output.
-    const { v } = listaParaProducir(ok({ taskId: 't-1' }));
-    let fila = null;
-    v.saveSystemAIOutput = async (r) => { fila = r; return 'out-1'; };
+  test('mientras la corrida avanza, el estado se pinta con palabras', async () => {
+    const { v, estados } = listaParaProducir(async (opts) => { opts.alCambiar({ status: 'queued' }); opts.alCambiar({ status: 'running' }); return listo; });
 
     await v.startGeneration();
 
-    expect(fila.status).toBe('processing');
-    expect(fila.output_type).toBe('video');
-    expect(fila.external_job_id).toBe('t-1');
+    expect(estados.join(' ')).toMatch(/En cola/);
+    expect(estados.join(' ')).toMatch(/Produciendo el video/);
   });
 
-  test('guarda los tokens de OpenAI para que el cobro sea el real', async () => {
-    // kie-task-finalize suma KIE + OpenAI + markup; sin estos números se
-    // cobraría un estimado.
-    const { v } = listaParaProducir(ok({ taskId: 't-1', openai_input_tokens: 120, openai_output_tokens: 45, openai_model: 'gpt-4o-mini' }));
+  test('dos clics no disparan dos corridas (ni dos cobros)', async () => {
+    let soltar;
+    const { v, llamadas } = listaParaProducir(() => new Promise((r) => { soltar = () => r(listo); }));
 
+    const primera = v.startGeneration();
     await v.startGeneration();
-
-    expect(v._cinePromptTokens).toEqual({ input: 120, output: 45, model: 'gpt-4o-mini' });
-  });
-
-  test('dos clics no disparan dos tareas (ni dos cobros)', async () => {
-    const { v, llamadas } = listaParaProducir(ok({ taskId: 't-1' }));
-    v.pollTask = async () => {}; // deja _generating en true, como en vuelo real
-
-    await v.startGeneration();
-    await v.startGeneration();
+    soltar();
+    await primera;
 
     expect(llamadas).toHaveLength(1);
   });
 
-  test('un 404 devuelve HTML: se explica el estado en vez de "Unexpected token <"', async () => {
-    const { v, errores } = listaParaProducir({
-      ok: false, status: 404, json: async () => { throw new SyntaxError('Unexpected token <'); }
-    });
+  test('sin borde lo dice, sin hablar de funciones ni de KIE', async () => {
+    const { v, errores } = listaParaProducir(Object.assign(new Error('Falta AISC_API_URL'), { code: 'sin_api' }));
 
     await v.startGeneration();
 
-    expect(errores.join(' ')).toMatch(/no respondió correctamente \(estado 404\)/);
-    expect(errores.join(' ')).not.toMatch(/Unexpected token/);
+    expect(errores.join(' ')).toMatch(/borde sin configurar/);
+    expect(v._generating).toBe(false);
   });
 
-  test('el error de la función llega tal cual al canvas, y libera el botón', async () => {
-    const { v, errores } = listaParaProducir({
-      ok: false, status: 402, json: async () => ({ error: 'Creditos insuficientes para producir el video' })
-    });
+  test('sin saldo lo dice con palabras y libera el botón', async () => {
+    const { v, errores } = listaParaProducir(Object.assign(new Error('sin saldo'), { codigo: 'sin_saldo' }));
 
     await v.startGeneration();
 
-    expect(errores.join(' ')).toMatch(/Creditos insuficientes/);
+    expect(errores.join(' ')).toMatch(/créditos suficientes/);
     expect(v._generating).toBe(false);   // si no, el botón queda muerto
   });
 
+  test('un paso fallido llega con su motivo al canvas', async () => {
+    const { v, errores } = listaParaProducir(Object.assign(new Error('render: el proveedor rechazó la referencia'), { code: 'fallo' }));
+
+    await v.startGeneration();
+
+    expect(errores.join(' ')).toMatch(/proveedor rechazó/);
+  });
+
+  test('una corrida sin salida visible manda a Producciones', async () => {
+    const { v, errores } = listaParaProducir({ run_id: 'r-2', salida: null, corrida: { status: 'succeeded' } });
+
+    await v.startGeneration();
+
+    expect(errores.join(' ')).toMatch(/Producciones/);
+  });
+
   test('sin storyboard pide el storyboard, no habla del backend', async () => {
-    const { v, errores } = listaParaProducir(ok({ taskId: 't-1' }));
+    const { v, errores } = listaParaProducir(listo);
     v.editor = editorFalso('   ');
 
     await v.startGeneration();
@@ -743,7 +749,7 @@ describe('Producir — el disparo contra Seedance', () => {
   });
 
   test('solo etiquetas no es un storyboard: falta qué pasa', async () => {
-    const { v, errores } = listaParaProducir(ok({ taskId: 't-1' }));
+    const { v, errores } = listaParaProducir(listo);
     v.editor = editorFalso('[Movimiento: Orbit] [Luz: Rim light]');
 
     await v.startGeneration();
@@ -1205,8 +1211,8 @@ describe('El frontend y la función dicen lo mismo', () => {
 });
 
 describe('Los dos actos: forjar el prompt, y solo entonces producir', () => {
-  /** Vista con editor de mentira, botones y fetch controlado. */
-  function enConsola(respuesta) {
+  /** Vista con editor de mentira, botones y StudioDatos controlado. */
+  function enConsola() {
     const { v } = nuevaVista();
     const errores = [];
     v.showError = (m) => errores.push(m);
@@ -1218,19 +1224,20 @@ describe('Los dos actos: forjar el prompt, y solo entonces producir', () => {
     });
     v.sendBtn = btn();
     v.forgeBtn = btn();
-    v.supabase = { auth: { getSession: async () => ({ data: { session: { access_token: 'tok' } } }) } };
+    v.organizationId = 'org-1';
+    v.loadVideoProductions = async () => {};
+    v.renderEscenasCarousel = () => {};
     // Editor de mentira que sí sabe reemplazarse por prosa.
     const ed = editorFalso('Un frasco girando [Luz: Rim light].');
     ed.escribirTexto = (t) => { ed.valor = t; };
     v.editor = ed;
     const llamadas = [];
-    globalThis.fetch = async (url, opts) => {
-      llamadas.push({ url, body: JSON.parse(opts.body) });
-      return respuesta;
+    globalThis.window.StudioDatos = {
+      mapeo: { entradasVideo: (p) => ({ prompt: p.prompt, referencias: p.referencias }) },
+      producir: async (org, tipo, entradas) => { llamadas.push({ tipo, entradas }); return { run_id: 'r', salida: { url: 'u' } }; },
     };
     return { v, errores, llamadas, ed };
   }
-  const ok = (data) => ({ ok: true, status: 200, json: async () => data });
 
   test('PRODUCIR nace bloqueado en la plantilla', () => {
     const html = VideoView.prototype.renderHTML.call({});
@@ -1242,7 +1249,7 @@ describe('Los dos actos: forjar el prompt, y solo entonces producir', () => {
   test('sin forjar, PRODUCIR no dispara nada y explica por qué', async () => {
     // Lo que el humano escribe es el brief, no el prompt: mandarlo crudo
     // desperdicia la pieza y el crédito.
-    const { v, errores, llamadas } = enConsola(ok({ taskId: 't-1' }));
+    const { v, errores, llamadas } = enConsola();
 
     await v.startGeneration();
 
@@ -1250,20 +1257,21 @@ describe('Los dos actos: forjar el prompt, y solo entonces producir', () => {
     expect(errores.join(' ')).toMatch(/Primero forja el prompt/);
   });
 
-  test('forjar llama al forjador y reemplaza lo escrito por su redacción', async () => {
-    const { v, llamadas, ed } = enConsola(ok({ prompt: 'A glass jar rotates slowly...' }));
+  test('forjar reemplaza lo escrito por la intención con sus chips expandidos EN SU SITIO', async () => {
+    // Corte: el forjador de OpenAI se apagó con las functions; forjar es expandir
+    // cada [Etiqueta: Valor] por su frase. Lo que se ve es lo que produce.
+    const { v, ed } = enConsola();
 
     await v.forjarPrompt();
 
-    expect(llamadas[0].url).toBe('/.netlify/functions/seedance-forge-prompt');
-    // Lo que se manda a producir es lo que se ve: sin una segunda caja
-    // escondida diciendo otra cosa.
-    expect(ed.valor).toBe('A glass jar rotates slowly...');
+    expect(ed.valor).toContain('Un frasco girando');
+    expect(ed.valor).toContain('A rim light behind the subject');
+    expect(ed.valor).not.toContain('[Luz: Rim light]');
     expect(v.forjado).toBe(true);
   });
 
   test('la intención original se guarda: ahí siguen vivos los chips', async () => {
-    const { v } = enConsola(ok({ prompt: 'prosa sin chips' }));
+    const { v } = enConsola();
 
     await v.forjarPrompt();
 
@@ -1271,32 +1279,19 @@ describe('Los dos actos: forjar el prompt, y solo entonces producir', () => {
     expect(v.buildSeedancePayload().variables).toEqual([{ etiqueta: 'Luz', valor: 'Rim light' }]);
   });
 
-  test('el forjador recibe la intención con las variables ya expandidas', async () => {
-    // Es lo que necesita para redactar: "[Luz: Rim light]" no le dice nada al
-    // modelo, su frase sí.
-    const { v, llamadas } = enConsola(ok({ prompt: 'x' }));
-
-    await v.forjarPrompt();
-
-    expect(llamadas[0].body.prompt).toContain('A rim light behind the subject');
-    expect(llamadas[0].body.medio).toBe('video');
-  });
-
   test('recrear parte de la intención, no de lo ya forjado', async () => {
-    // Re-forjar sobre lo forjado lo aleja más en cada vuelta.
-    const { v, llamadas } = enConsola(ok({ prompt: 'primera redaccion' }));
+    const { v, ed } = enConsola();
     await v.forjarPrompt();
+    const primera = ed.valor;
 
     await v.forjarPrompt();
 
-    expect(llamadas[1].body.intencion).toBe('Un frasco girando [Luz: Rim light].');
-    expect(llamadas[1].body.intencion).not.toBe('primera redaccion');
+    expect(ed.valor).toBe(primera);
+    expect(v.intencion).toBe('Un frasco girando [Luz: Rim light].');
   });
 
   test('tocar el texto después de forjar vuelve a bloquear PRODUCIR', async () => {
-    // Si se edita la redacción ya no es lo que el forjador aprobó; producir sin
-    // volver a pasar por él mandaría algo que nadie revisó.
-    const { v } = enConsola(ok({ prompt: 'redaccion' }));
+    const { v } = enConsola();
     await v.forjarPrompt();
     expect(v.forjado).toBe(true);
 
@@ -1307,37 +1302,37 @@ describe('Los dos actos: forjar el prompt, y solo entonces producir', () => {
   });
 
   test('ya forjado, PRODUCIR manda la redacción que se ve, no la intención', async () => {
-    const { v, llamadas } = enConsola(ok({ prompt: 'A glass jar rotates.' }));
+    const { v, llamadas, ed } = enConsola();
     await v.forjarPrompt();
-    v.saveSystemAIOutput = async () => 'out-1';
-    v.pollTask = async () => {};
-    globalThis.fetch = async (url, opts) => {
-      llamadas.push({ url, body: JSON.parse(opts.body) });
-      return ok({ taskId: 't-1' });
-    };
+    ed.valor = 'A glass jar rotates.';
 
     await v.startGeneration();
 
-    const produccion = llamadas[llamadas.length - 1];
-    expect(produccion.url).toBe('/.netlify/functions/seedance-video-create');
-    expect(produccion.body.prompt).toBe('A glass jar rotates.');
+    expect(llamadas[llamadas.length - 1].entradas.prompt).toBe('A glass jar rotates.');
   });
 
-  test('si el forjador falla, no queda forjado ni se desbloquea PRODUCIR', async () => {
-    const { v, errores } = enConsola({ ok: false, status: 502, json: async () => ({ error: 'OpenAI se cayo' }) });
+  test('sin storyboard, forjar pide el storyboard y no queda forjado', async () => {
+    const { v, errores } = enConsola();
+    v.editor = editorFalso('   ');
 
     await v.forjarPrompt();
 
     expect(v.forjado).toBe(false);
-    expect(errores.join(' ')).toMatch(/OpenAI se cayo/);
+    expect(errores.join(' ')).toMatch(/Escribe primero el storyboard/);
   });
 
-  test('dos clics en PROMPT no forjan dos veces', async () => {
-    const { v, llamadas } = enConsola(ok({ prompt: 'x' }));
+  test('dos clics en PROMPT dejan lo mismo que uno: el forjado es idempotente', async () => {
+    // El forjado local es instantáneo (no hay forjador remoto que doblar): el
+    // segundo clic recrea desde la intención y deja exactamente el mismo texto.
+    const { v, ed } = enConsola();
 
     await Promise.all([v.forjarPrompt(), v.forjarPrompt()]);
+    const unaVez = ed.valor;
+    await v.forjarPrompt();
 
-    expect(llamadas).toHaveLength(1);
+    expect(ed.valor).toBe(unaVez);
+    expect(v.intencion).toBe('Un frasco girando [Luz: Rim light].');
+    expect(v.forjado).toBe(true);
   });
 });
 

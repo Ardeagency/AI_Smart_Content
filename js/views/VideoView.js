@@ -39,40 +39,14 @@ class VideoView extends BaseView {
    * pero no produce: explica lo que falta en vez de fallar mudo. Encendido el
    * 2026-09-09, al desplegar functions/seedance-video-create.js.
    */
-  static get SEEDANCE_BACKEND_READY() {
-    return true;
-  }
-  /** POST: crear tarea Seedance en KIE. Pendiente de desplegar. */
-  static get SEEDANCE_VIDEO_CREATE_API() {
-    return '/.netlify/functions/seedance-video-create';
-  }
   /**
-   * El modelo, tal como lo nombra KIE. Va aquí y no en la función porque la
-   * función todavía no existe y este dato ya está confirmado por la doc: el
-   * identificador es exacto, y un nombre aproximado devuelve 404.
+   * Corte ADR-0052 (16/09): el video se produce con el flujo `video-directo` por el
+   * borde /v1 (StudioDatos.producir). Las functions de Netlify (seedance-video-create,
+   * seedance-forge-prompt, kling-video-status, kie-video-download) se apagan en la ventana.
    */
+  static get SEEDANCE_BACKEND_READY() { return true; }
   static get SEEDANCE_MODEL() { return 'bytedance/seedance-2-5'; }
   /** POST: forjar el prompt de produccion desde la intencion (primer acto). */
-  static get SEEDANCE_FORGE_API() {
-    return '/.netlify/functions/seedance-forge-prompt';
-  }
-  /**
-   * GET: estado de la tarea. El archivo conserva el nombre `kling-video-status`
-   * por historia, pero es el poller genérico de cualquier taskId de kie.ai
-   * (lo comparte Studio en js/living.js). No renombrar sin migrar ambos.
-   */
-  static get KIE_TASK_STATUS_API() {
-    return '/.netlify/functions/kling-video-status';
-  }
-  static get KIE_VIDEO_DOWNLOAD_API() {
-    return '/.netlify/functions/kie-video-download';
-  }
-  /**
-   * Topes de las referencias multimodales, tal como los anuncia el sidebar.
-   * Si KIE los cambia, cambiar aqui Y el texto del contador: un limite que
-   * la UI promete y el codigo no aplica (o al reves) se paga en el error de
-   * la API, cuando el usuario ya subio los archivos.
-   */
   static get SEEDANCE_REF_LIMITS() {
     return { image: 9, video: 3, audio: 3 };
   }
@@ -952,86 +926,16 @@ class VideoView extends BaseView {
 
   async loadBrandData() {
     this.brandContainerId = await this.getBrandContainerId();
-    if (!this.supabase || !this.brandContainerId) return;
+    if (!window.StudioDatos || !this.organizationId) return;
     try {
-      const bcId = this.brandContainerId;
-      // Modelo nuevo: las columnas "brand-level" viven en brand_containers
-      // (nicho_core, arquetipo, verbal_dna, etc.) y brand_profiles se filtra
-      // por brand_container_id en vez de brand_id.
-      const { data: brandRow } = await this.supabase
-        .from('brand_containers')
-        .select(
-          'id, nicho_core, sub_nichos, arquetipo, propuesta_valor, mision_vision, verbal_dna, visual_dna, palabras_clave, palabras_prohibidas, objetivos_estrategicos'
-        )
-        .eq('id', bcId)
-        .maybeSingle();
-      this.dbData.brand = brandRow || null;
-      this.dbData.brandProfiles = [];
-      if (brandRow?.id) {
-        const { data: profiles } = await this.supabase.from('brand_profiles').select('section, content').eq('brand_container_id', brandRow.id);
-        this.dbData.brandProfiles = profiles || [];
-      }
-      // audiences: tabla legacy reemplazada por audience_personas (BUG-005).
-      // campaigns: contexto_temporal/objetivos_estrategicos/tono_modificador
-      // viven en campaign_briefs (BUG-006); resolvemos vía embed PostgREST
-      // usando la FK campaigns.brief_id → campaign_briefs.id.
-      //
-      // Scope por tabla (modelo org vs brand_container):
-      //  - products/audience_personas/campaigns: tienen brand_container_id,
-      //    filtran por sub-marca.
-      //  - services/brand_entities: org-scope (compartidos entre todas las
-      //    sub-marcas de la org), filtran por organization_id. Filtrar por
-      //    brand_container_id en estas tablas dispara 400 (columna inexistente).
-      const orgId = this.organizationId || window.currentOrgId;
-      const [productsRes, servicesRes, entitiesRes, audiencesRes, campaignsRes] = await Promise.all([
-        this.supabase.from('products').select('id, entity_id, nombre_producto, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
-        orgId
-          ? this.supabase.from('services').select('id, entity_id, nombre_servicio').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(50)
-          : Promise.resolve({ data: [] }),
-        orgId
-          ? this.supabase.from('brand_entities').select('id, name, entity_type, description').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(50)
-          : Promise.resolve({ data: [] }),
-        this.supabase.from('audience_personas').select('id, name, description, estilo_lenguaje').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
-        this.supabase.from('campaigns').select('id, nombre_campana, descripcion_interna, persona_id, brief_id, campaign_briefs:brief_id(contexto_temporal, objetivos_estrategicos, tono_modificador)').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50)
-      ]);
-      this.dbData.products = productsRes.data || [];
-      this.dbData.services = servicesRes.data || [];
-      this.dbData.entities = entitiesRes.data || [];
-      // Escenarios y personajes cuelgan de brand_entities (no tienen FK a la
-      // org), así que se piden con los ids de entidad que acabamos de traer.
-      await this.loadPlacesAndCharacters((entitiesRes.data || []).map((e) => e.id).filter(Boolean));
-      this.dbData.audiences = audiencesRes.data || [];
-      // Aplanar campos del brief al row de campaña para que el resto del
-      // código siga accediendo como c.contexto_temporal, c.tono_modificador, etc.
-      this.dbData.campaigns = (campaignsRes.data || []).map((c) => {
-        const brief = c.campaign_briefs || {};
-        return {
-          id: c.id,
-          nombre_campana: c.nombre_campana,
-          descripcion_interna: c.descripcion_interna,
-          persona_id: c.persona_id,
-          brief_id: c.brief_id,
-          contexto_temporal: brief.contexto_temporal || null,
-          objetivos_estrategicos: brief.objetivos_estrategicos || null,
-          tono_modificador: brief.tono_modificador || null,
-        };
-      });
-      const productIds = this.dbData.products.map((p) => p.id).filter(Boolean);
-      if (productIds.length > 0) {
-        const { data: imgs } = await this.supabase.from('product_images').select('product_id, image_url, image_type, image_order').in('product_id', productIds).order('image_order', { ascending: true });
-        const byProduct = {};
-        (imgs || []).forEach((img) => {
-          if (!byProduct[img.product_id]) byProduct[img.product_id] = [];
-          byProduct[img.product_id].push(img.image_url);
-        });
-        this.dbData.products.forEach((p) => {
-          // TODAS, sin recorte. Se recortaba a 4 cuando el panel usaba dos por
-          // producto y decidía él; ahora el director las ve todas y elige.
-          p.image_urls = byProduct[p.id] || [];
-        });
-      }
+      // Base nueva: mercado (brief) + elements_full (productos, servicios, personajes, escenarios) con sus fotos.
+      const ctx = await window.StudioDatos.contexto(this.organizationId, this.brandContainerId || null);
+      this.dbData = { ...this.dbData, ...ctx };
+      this.dbData.places = ctx.entities.filter((e) => e.entity_type === 'place');
+      this.dbData.characters = ctx.entities.filter((e) => e.entity_type === 'character');
       this.renderCampaignDropdown();
       this.renderAudienceDropdown();
+      if (typeof this.renderElementosFilas === 'function') this.renderElementosFilas();
     } catch (e) {
       console.error('VideoView loadBrandData:', e);
     }
@@ -1043,11 +947,8 @@ class VideoView extends BaseView {
    * a la organización, cuelgan de la entidad. La consulta vive en el servicio
    * (regla de oro de la auditoría 2026-07-02).
    */
-  async loadPlacesAndCharacters(entityIds) {
-    if (!this.assetsData) this.assetsData = new window.BrandAssetsDataService(this.supabase);
-    const { places, characters } = await this.assetsData.loadElementos(entityIds);
-    this.dbData.places = places;
-    this.dbData.characters = characters;
+  async loadPlacesAndCharacters(_entityIds) {
+    // Ya vienen en loadBrandData (elements_full por kind).
   }
 
   renderCampaignDropdown() {
@@ -1109,27 +1010,8 @@ class VideoView extends BaseView {
    * @param {string} taskId - ID de la tarea KIE (para nombre de archivo)
    * @returns {{ publicUrl: string, storagePath: string } | null}
    */
-  async downloadAndUploadKieVideo(kieVideoUrl, taskId) {
-    const { data: { session } } = await this.supabase.auth.getSession();
-    if (!session?.access_token) return null;
-
-    this.showStatus(window.__('Guardando en tu cuenta…'), true);
-    try {
-      const res = await fetch('/.netlify/functions/kie-output-persist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ kie_url: kieVideoUrl, task_id: taskId, kind: 'video' })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.error || window.__('Descarga fallida: {status}', { status: res.status }));
-      }
-      return { publicUrl: data.public_url || null, storagePath: data.storage_path };
-    } catch (err) {
-      console.error('VideoView downloadAndUploadKieVideo:', err);
-      throw err;
-    }
-  }
+  /** La salida la guarda la base al terminar la corrida. */
+  async downloadAndUploadKieVideo(_kieVideoUrl, _taskId) { return null; }
 
   showError(message) {
     this.hideAllFeedback();
@@ -1166,47 +1048,9 @@ class VideoView extends BaseView {
     };
   }
 
-  async saveSystemAIOutput(record) {
-    if (!this.supabase) return null;
-    try {
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user?.id) return null;
-      const brandContainerId = this.brandContainerId || await this.getBrandContainerId();
-      if (!brandContainerId) return null;
-      // Schema unificado runs_outputs <-> system_ai_outputs (2026-05-22).
-      // Pueblan automaticamente los campos comunes desde el state del view;
-      // el caller solo pasa lo especifico (provider, output_type, prompt,
-      // metadata, etc.).
-      const briefId = this._resolveSelectedBriefId();
-      const entityId = this._resolveSelectedEntityId();
-      const row = {
-        brand_container_id: brandContainerId,
-        organization_id: this.organizationId || null,
-        user_id: user.id,
-        campaign_id: this.selectedCampaignId || null,
-        persona_id: this.selectedAudienceId || null,
-        brief_id: briefId,
-        entity_id: entityId,
-        ...record,
-        updated_at: new Date().toISOString()
-      };
-      const { data, error } = await this.supabase.from('system_ai_outputs').insert(row).select('id').single();
-      if (error) {
-        console.warn('VideoView saveSystemAIOutput:', error.message);
-        return null;
-      }
-      return data?.id || null;
-    } catch (e) {
-      console.warn('VideoView saveSystemAIOutput:', e);
-      return null;
-    }
-  }
+  /** system_ai_outputs no existe en la base nueva: la corrida deja su rastro en flows.run_outputs → salidas. */
+  async saveSystemAIOutput(_record) { return null; }
 
-  /**
-   * Resuelve brief_id desde la campana seleccionada (campaigns.brief_id ya
-   * viene aplanado en dbData.campaigns). Devuelve null si no hay campana
-   * seleccionada o la campana no tiene brief.
-   */
   _resolveSelectedBriefId() {
     if (!this.selectedCampaignId) return null;
     const c = (this.dbData?.campaigns || []).find((x) => String(x.id) === String(this.selectedCampaignId));
@@ -1224,19 +1068,8 @@ class VideoView extends BaseView {
     return primero ? primero._entityId : null;
   }
 
-  async updateSystemAIOutput(id, updates) {
-    if (!this.supabase || !id) return;
-    try {
-      await this.supabase.from('system_ai_outputs').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
-    } catch (e) {
-      console.warn('VideoView updateSystemAIOutput:', e);
-    }
-  }
+  async updateSystemAIOutput(_id, _updates) { /* sin tabla que actualizar */ }
 
-  /**
-   * Aviso al usuario. Un adjunto rechazado en silencio se lee como aceptado
-   * y el error aparece 10 minutos despues, en KIE.
-   */
   _seedanceNotify(message, type = 'warning') {
     if (typeof window.showToast === 'function') {
       window.showToast(message, { type, duration: 5000 });
@@ -1287,32 +1120,23 @@ class VideoView extends BaseView {
   }
 
   /** Sube un adjunto y devuelve { url, storagePath }. Lanza si algo falla. */
-  async _uploadSeedanceFile(file, folder) {
-    if (!this.supabase || !this.supabase.storage) {
-      throw new Error(window.__('Almacenamiento no disponible. Recarga la página y reintenta.'));
+  /** Sube un adjunto por el borde (POST /v1/archivos) y devuelve { url, file_id, storagePath }. */
+  async _uploadSeedanceFile(file, _folder) {
+    if (!window.StudioDatos) throw new Error(window.__('Almacenamiento no disponible. Recarga la página y reintenta.'));
+    if (!this.organizationId) throw new Error(window.__('Selecciona una organización para subir referencias.'));
+    try {
+      const subido = await window.StudioDatos.subirReferencia(this.organizationId, file);
+      return { url: subido.url || '', file_id: subido.file_id, storagePath: subido.object_key || null };
+    } catch (err) {
+      if (err?.code === 'sin_api') throw new Error(window.__('La subida de referencias aún no está disponible.'));
+      throw err;
     }
-    const { data: { user } } = await this.supabase.auth.getUser();
-    if (!user?.id) throw new Error(window.__('Inicia sesión para subir referencias.'));
-    const bucket = VideoView.SEEDANCE_STORAGE_BUCKET;
-    const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/jpeg/, 'jpg');
-    const storagePath = `seedance/${user.id}/${folder}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error } = await this.supabase.storage
-      .from(bucket)
-      .upload(storagePath, file, { contentType: file.type, upsert: false });
-    if (error) throw error;
-    const { data } = this.supabase.storage.from(bucket).getPublicUrl(storagePath);
-    const url = data?.publicUrl;
-    if (!url) throw new Error(window.__('El archivo subió pero Storage no devolvió URL pública.'));
-    return { url, storagePath };
   }
-
-  /** Limpieza del bucket al quitar un adjunto. Fire-and-forget: no bloquea la UI. */
-  _removeSeedanceStorage(storagePath) {
-    if (!storagePath || !this.supabase?.storage) return;
-    this.supabase.storage
-      .from(VideoView.SEEDANCE_STORAGE_BUCKET)
-      .remove([storagePath])
-      .catch((err) => console.warn('[VideoView] limpieza de Storage falló', storagePath, err));
+  /** Baja lógica del archivo en el borde al quitar un adjunto manual. Fire-and-forget. */
+  _removeSeedanceStorage(_storagePath, fileId = null) {
+    const a = window.apiV2?.api;
+    if (!fileId || !a || !this.organizationId) return;
+    a.borrarArchivo(fileId, this.organizationId).catch((err) => console.warn('[VideoView] baja del archivo falló', fileId, err?.codigo || err?.message));
   }
 
   // ── Frames Clave ────────────────────────────────────────────────────────
@@ -1338,8 +1162,8 @@ class VideoView extends BaseView {
     try {
       const subido = await this._uploadSeedanceFile(file, 'frames');
       const previo = this.seedanceFrames[slot];
-      if (previo) this._removeSeedanceStorage(previo.storagePath);
-      this.seedanceFrames[slot] = subido;
+      if (previo && previo.origen !== 'produccion') this._removeSeedanceStorage(previo.storagePath, previo.file_id || null);
+      this.seedanceFrames[slot] = { ...subido, origen: 'manual' };
       this.renderSeedanceFrames();
     } catch (err) {
       console.error('VideoView frame upload:', err);
@@ -1350,7 +1174,7 @@ class VideoView extends BaseView {
   removeSeedanceFrame(slot) {
     const frame = this.seedanceFrames[slot];
     if (!frame) return;
-    this._removeSeedanceStorage(frame.storagePath);
+    if (frame.origen !== 'produccion') this._removeSeedanceStorage(frame.storagePath, frame.file_id || null);
     this.seedanceFrames[slot] = null;
     this.renderSeedanceFrames();
   }
@@ -1439,7 +1263,7 @@ class VideoView extends BaseView {
     // Solo las subidas por el usuario viven en nuestro bucket. Las que vienen
     // de una producción o de un producto son URLs ajenas: borrarlas del
     // Storage se llevaría por delante la producción original.
-    if (item.origen === 'manual') this._removeSeedanceStorage(item.storagePath);
+    if (item.origen === 'manual') this._removeSeedanceStorage(item.storagePath, item.file_id || null);
     this.seedanceRefs[kind].splice(index, 1);
     // Quitar el chip también tiene que apagar su origen; si no, la tarjeta
     // sigue marcada en el carrusel y el próximo sync la vuelve a meter.
@@ -1474,76 +1298,11 @@ class VideoView extends BaseView {
     }
   }
 
+  /** Producciones previas de la marca (public.salidas): imágenes y videos, con URL por file_id → galería. */
   async loadVideoProductions() {
-    if (!this.supabase) return;
+    if (!window.StudioDatos || !this.organizationId) return;
     try {
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user?.id) return;
-
-      const resolveMedia = (o) => {
-        let media_url = null;
-        const rawPath = o.storage_path && typeof o.storage_path === 'string' ? o.storage_path.trim() : '';
-        if (rawPath) {
-          if (rawPath.startsWith('http')) media_url = rawPath;
-          else media_url = this.getPublicUrlFromStorage('production-outputs', rawPath) || this.getPublicUrlFromStorage('outputs', rawPath);
-        }
-        const meta = o.metadata && typeof o.metadata === 'object' ? o.metadata : {};
-        if (!media_url) {
-          media_url = meta.video_url || meta.url || meta.file_url || meta.videoUrl || meta.output_url || meta.publicUrl || meta.src || null;
-        }
-        const type = (o.output_type || '').toLowerCase();
-        const isVideo = type.includes('video') || /\.(mp4|webm|mov)(\?|$)/i.test(media_url || '');
-        const isImage = type.includes('image') || type.includes('img') || /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(media_url || '');
-        return { ...o, media_url, isVideo, isImage };
-      };
-
-      // Origen 1: runs_outputs (linkeados a flow_runs de la org activa).
-      // Sin el filtro de organization_id, un usuario multi-org veria los videos
-      // de todas sus orgs mezclados en cualquier workspace.
-      let runsQ = this.supabase.from('flow_runs').select('id').eq('user_id', user.id);
-      if (this.organizationId) runsQ = runsQ.eq('organization_id', this.organizationId);
-      const { data: runs } = await runsQ;
-      const runIds = (runs || []).map((r) => r.id).filter(Boolean);
-      let fromRuns = [];
-      if (runIds.length > 0) {
-        const { data: roData } = await this.supabase
-          .from('runs_outputs')
-          .select('id, run_id, output_type, storage_path, metadata, created_at')
-          .in('run_id', runIds)
-          .order('created_at', { ascending: false })
-          .limit(100);
-        fromRuns = roData || [];
-      }
-
-      // Origen 2: system_ai_outputs (videos generados desde VideoView mismo
-      // o cualquier herramienta standalone). Filtrar por organization_id
-      // para que el contexto sea consistente con loadFlowOutputs en
-      // LivingManager.
-      let fromSystem = [];
-      if (this.organizationId) {
-        const { data: saoData } = await this.supabase
-          .from('system_ai_outputs')
-          .select('id, output_type, storage_path, metadata, created_at')
-          .eq('organization_id', this.organizationId)
-          .neq('provider', 'openai')
-          .order('created_at', { ascending: false })
-          .limit(100);
-        fromSystem = saoData || [];
-      }
-
-      const merged = [...fromRuns, ...fromSystem]
-        .map(resolveMedia)
-        .filter((o) => o.media_url)
-        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-
-      // Dedupe por id (defensive — runs_outputs y system_ai_outputs tienen
-      // namespace de id distinto pero por si acaso).
-      const seen = new Set();
-      this.videoProductions = merged.filter((o) => {
-        if (seen.has(o.id)) return false;
-        seen.add(o.id);
-        return true;
-      });
+      this.videoProductions = (await window.StudioDatos.producciones(this.organizationId, null, 100)).filter((o) => o.media_url && (o.isImage || o.isVideo));
     } catch (e) {
       console.warn('VideoView loadVideoProductions:', e);
       this.videoProductions = [];
@@ -2029,8 +1788,8 @@ class VideoView extends BaseView {
     // La producción vive en su bucket, no en el nuestro: se guarda sin
     // storagePath para que quitarla NO borre el archivo original.
     const previo = this.seedanceFrames[slot];
-    if (previo) this._removeSeedanceStorage(previo.storagePath);
-    this.seedanceFrames[slot] = { url: p.media_url, storagePath: null, origen: 'produccion' };
+    if (previo && previo.origen !== 'produccion') this._removeSeedanceStorage(previo.storagePath, previo.file_id || null);
+    this.seedanceFrames[slot] = { url: p.media_url, file_id: p.file_id || null, storagePath: null, origen: 'produccion' };
     this.renderSeedanceFrames();
   }
 
@@ -2474,61 +2233,25 @@ class VideoView extends BaseView {
    * REEMPLAZA lo escrito — lo que se manda a producir es lo que se ve, sin una
    * segunda caja escondida diciendo otra cosa.
    */
+  /**
+   * Primer acto: de la intención al prompt de producción. Corte ADR-0052: el
+   * forjado por IA (seedance-forge-prompt, OpenAI) se apagó con las functions;
+   * hoy el prompt es la intención con cada chip `[Etiqueta: Valor]` cambiado
+   * por su frase EN SU SITIO (StudioDireccion). Lo que se ve es lo que produce.
+   */
   async forjarPrompt() {
     if (this._forjando || this._generating || !this.editor) return;
-
-    // Recrear parte SIEMPRE de la intención original, no de lo ya forjado:
-    // re-forjar sobre lo forjado lo aleja más en cada vuelta.
     const base = (this.forjado ? this.intencion : this.editor.valor).trim();
     if (!base) {
       this.showError(window.__('Escribe primero el storyboard: qué pasa en la apertura, en el desarrollo y en el cierre.'));
       return;
     }
-    if (!this.organizationId) {
-      this.showError(window.__('Selecciona una organización para producir videos.'));
-      return;
-    }
-    if (!this.supabase) {
-      this.showError(window.__('Sesión no disponible. Recarga la página y reintenta.'));
-      return;
-    }
-
     this._forjando = true;
     this._pintarBotones();
-    this.showStatus(window.__('Escribiendo el prompt de producción…'), true);
-
     try {
-      const { data: { session } } = await this.supabase.auth.getSession();
-      const accessToken = session?.access_token;
-      if (!accessToken) throw new Error(window.__('Inicia sesión para forjar el prompt.'));
-
-      // El payload se arma desde la intención: si ya estaba forjado, hay que
-      // volver a ponerla en el editor un instante para que buildSeedancePayload
-      // lea sus variables. Más simple: se le pasa la base explícita.
-      const payload = { ...this.buildSeedancePayload(), prompt: window.StudioDireccion.expandirVariables(this.catalogo, base).trim(), intencion: base };
-
-      const res = await fetch(VideoView.SEEDANCE_FORGE_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify(payload)
-      });
-      let data = {};
-      try { data = await res.json(); }
-      catch (parseErr) {
-        throw new Error(
-          window.__('El servicio no respondió correctamente (estado {status}).', { status: res.status }),
-          { cause: parseErr }
-        );
-      }
-      if (!res.ok || !data.prompt) throw new Error(data.error || window.__('No se pudo forjar el prompt'));
-
       this.intencion = base;
-      this._cinePromptTokens = {
-        input: data.openai_input_tokens || 0,
-        output: data.openai_output_tokens || 0,
-        model: data.openai_model || null
-      };
-      this.editor.escribirTexto(data.prompt);
+      this._cinePromptTokens = { input: 0, output: 0, model: null };
+      this.editor.escribirTexto(window.StudioDireccion.expandirVariables(this.catalogo, base).trim());
       this._setForjado(true);
       this.hideAllFeedback();
     } catch (err) {
@@ -2538,7 +2261,6 @@ class VideoView extends BaseView {
       this._pintarBotones();
     }
   }
-
   /**
    * `escribirTexto` dispara onCambio, que apaga el forjado. Por eso el flag se
    * pone DESPUÉS de escribir, y siempre por aquí: hay dos sitios que lo mueven
@@ -2580,20 +2302,15 @@ class VideoView extends BaseView {
 
   async startGeneration() {
     if (this._generating) return;
-    // Sin forjar no se produce: lo que se escribió es una intención, y mandarla
-    // cruda desperdicia la pieza — y el crédito.
     if (!this.forjado) {
       this.showError(window.__('Primero forja el prompt: escribe tu intención y toca PROMPT. Lo que escribes es el brief, no el prompt de producción.'));
       return;
     }
     const payload = this.buildSeedancePayload();
-
     if (!payload.prompt) {
       this.showError(window.__('Escribe primero el storyboard: qué pasa en la apertura, en el desarrollo y en el cierre.'));
       return;
     }
-    // Solo variables no es un storyboard: la dirección dice CÓMO se ve, no QUÉ
-    // pasa. Sin acción, el modelo se inventa una y la secuencia no sirve.
     if (this.editor && !this.editor.textoLibre) {
       this.showError(window.__('Falta la secuencia: la dirección dice cómo se ve, pero no qué pasa. Escribe la acción además de las etiquetas.'));
       return;
@@ -2602,83 +2319,57 @@ class VideoView extends BaseView {
       this.showError(window.__('Selecciona una organización para producir videos.'));
       return;
     }
-    if (!this.supabase) {
+    if (!window.StudioDatos) {
       this.showError(window.__('Sesión no disponible. Recarga la página y reintenta.'));
       return;
     }
-    if (!VideoView.SEEDANCE_BACKEND_READY) {
-      this.showError(window.__('Seedance todavía no está conectado: falta desplegar la función de creación de tarea.'));
-      return;
-    }
-
     this._setGenerating(true);
     this.showStatus(window.__('Preparando la secuencia…'), true);
-
-    let created;
+    // Corte ADR-0052: un video ES una corrida del flujo `video-directo` por el borde
+    // /v1 (prompt, aspecto, resolucion, duracion, con_audio, referencia_1..2). Los
+    // frames clave van como referencias (file_id o URL); la base reserva y cobra lo medido.
+    const refs = [
+      this.seedanceFrames.first?.file_id || this.seedanceFrames.first?.url || null,
+      this.seedanceFrames.last?.file_id || this.seedanceFrames.last?.url || null,
+      ...this.seedanceRefs.image.map((r) => r.file_id || r.url),
+    ].filter(Boolean);
+    const entradas = window.StudioDatos.mapeo.entradasVideo({ prompt: payload.prompt, aspecto: payload.aspect_ratio, resolucion: payload.resolution, duracion: payload.duration, con_audio: payload.generate_audio, referencias: refs });
+    const estados = { queued: window.__('En cola…'), running: window.__('Produciendo el video (Seedance). Esto puede tardar unos minutos…'), awaiting_approval: window.__('Esperando aprobación…') };
     try {
-      const { data: { session } } = await this.supabase.auth.getSession();
-      const accessToken = session?.access_token;
-      if (!accessToken) throw new Error(window.__('Inicia sesión para producir videos.'));
-
-      const res = await fetch(VideoView.SEEDANCE_VIDEO_CREATE_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify(payload)
+      const r = await window.StudioDatos.producir(this.organizationId, 'video', entradas, {
+        marketId: this.brandContainerId || null,
+        topeMs: 10 * 60 * 1000,
+        alCambiar: (c) => { if (this._generating) this.showStatus(estados[c.status] || estados.running, true); },
       });
-      // Un 404 devuelve HTML: sin este guard el error sería "Unexpected token <".
-      let data = {};
-      try { data = await res.json(); }
-      catch (parseErr) {
-        throw new Error(
-          window.__('El servicio de video no respondió correctamente (estado {status}).', { status: res.status }),
-          { cause: parseErr }
-        );
+      const url = r.salida?.url || null;
+      if (!url) {
+        await this._failRun(window.__('La corrida terminó pero no devolvió un video visible. Revísalo en Producciones.'));
+        return;
       }
-      if (!res.ok || !data.taskId) throw new Error(data.error || window.__('No se pudo iniciar la producción'));
-      created = data;
-    } catch (err) {
+      this.showResult(url);
       this._setGenerating(false);
-      this.showError(err.message || window.__('No se pudo iniciar la producción'));
-      return;
-    }
-
-    this._cinePromptTokens = {
-      input: created.openai_input_tokens || 0,
-      output: created.openai_output_tokens || 0,
-      model: created.openai_model || null
-    };
-
-    // Fila en 'processing' ANTES del polling: si el usuario cierra la pestaña,
-    // queda constancia de la tarea en vez de un cobro sin output.
-    this._lastKieOutputId = await this.saveSystemAIOutput({
-      provider: 'kie',
-      output_type: 'video',
-      external_job_id: created.taskId,
-      status: 'processing',
-      prompt_used: created.prompt || payload.prompt,
-      models: { generator: created.kie_model || null, prompter: created.openai_model || null },
-      technical_params: created.technical_params || {
-        resolution: payload.resolution,
-        aspect_ratio: payload.aspect_ratio,
-        duration: payload.duration,
-        generate_audio: payload.generate_audio
-      },
-      metadata: {
-        kind: 'video_generated',
-        intencion: payload.intencion,
-        variables: payload.variables,
-        reference_count: created.reference_count ?? 0,
-        product_lock_count: (payload.product_lock_urls || []).length,
-        first_frame_url: payload.first_frame_url || null,
-        last_frame_url: payload.last_frame_url || null,
-        audio_type: payload.audio_type || null,
-        campaign_concept: payload.campaign,
-        audience_concept: payload.audience
+      this._lastRunId = r.run_id;
+      if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
+        window.appNavigation.loadCreditsFromDb(this.organizationId);
       }
-    });
+      await this.loadVideoProductions();
+      this.renderEscenasCarousel();
+    } catch (err) {
+      const code = err?.code || err?.codigo;
+      const msg = code === 'sin_api' ? window.__('El Studio aún no produce en esta consola (borde sin configurar).')
+        : code === 'sin_saldo' ? window.__('No hay créditos suficientes para producir este video.')
+        : code === 'tiempo_agotado' ? window.__('La producción superó el tiempo máximo de espera (10 min). La corrida sigue: mírala en Producciones.')
+        : (err?.message || window.__('No se pudo iniciar la producción'));
+      await this._failRun(msg);
+    }
+  }
 
-    this.showStatus(window.__('Produciendo el video (Seedance 2.5). Esto puede tardar unos minutos…'), true);
-    await this.pollTask(created.taskId);
+  /** Cierra el intento: libera el botón y muestra el error. */
+  async _failRun(message) {
+    this.stopPolling();
+    this._setGenerating(false);
+    this.showError(message);
+    this._lastKieOutputId = null;
   }
 
   /** Habilita/inhabilita el botón para que dos clics no disparen dos tareas (dos cobros). */
@@ -2698,184 +2389,8 @@ class VideoView extends BaseView {
     }
   }
 
-  async pollTask(taskId) {
-    const statusUrl = `${VideoView.KIE_TASK_STATUS_API}?taskId=${encodeURIComponent(taskId)}`;
-    const pollStartedAt = Date.now();
-    console.log('[Video] Polling estado → GET', statusUrl, '(cada', VideoView.POLL_INTERVAL_MS / 1000, 's, máx', VideoView.POLL_MAX_DURATION_MS / 60000, 'min)');
-
-    const poll = async () => {
-      if (Date.now() - pollStartedAt > VideoView.POLL_MAX_DURATION_MS) {
-        this.stopPolling();
-        this._setGenerating(false);
-        this.showError(window.__('La generación superó el tiempo máximo de espera (12 min). Comprueba el estado en KIE o reintenta con un prompt más corto.'));
-        if (this._lastKieOutputId) {
-          await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'Timeout de polling (12 min)' });
-          this._lastKieOutputId = null;
-        }
-        return;
-      }
-      // Pausamos el fetch a KIE cuando la pestaña está oculta. El timeout se sigue
-      // midiendo contra wall-clock (pollStartedAt), así que no se alarga la espera total.
-      // Ahorra ~20 llamadas/min a KIE por cada tab en background generando video.
-      if (document.hidden) return;
-      try {
-        const res = await fetch(statusUrl);
-        let data = {};
-        try {
-          data = await res.json();
-        } catch (parseErr) {
-          console.error('[Video] GET', statusUrl, ': respuesta no es JSON. Status:', res.status, '→ ¿función desplegada?', parseErr);
-          this.stopPolling();
-          this._setGenerating(false);
-          this.showError(window.__('El servicio de video no respondió correctamente (estado {status}). Intenta de nuevo en unos minutos.', { status: res.status }));
-          if (this._lastKieOutputId) {
-            await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'Status ' + res.status });
-            this._lastKieOutputId = null;
-          }
-          return;
-        }
-
-        if (!res.ok) {
-          console.warn('[Video] GET', statusUrl, 'error:', res.status, data);
-          this.stopPolling();
-          this._setGenerating(false);
-          this.showError(data.error || window.__('Error al consultar el estado'));
-          if (this._lastKieOutputId) {
-            await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: data.error || 'Error al consultar el estado' });
-            this._lastKieOutputId = null;
-          }
-          return;
-        }
-
-        const state = data.data?.state;
-        console.log('[Video] GET estado →', res.status, 'state:', state, 'data.data:', data.data);
-        if (state === 'success') {
-          this.stopPolling();
-          let resultJson = data.data?.resultJson;
-          if (typeof resultJson === 'string') {
-            try {
-              resultJson = JSON.parse(resultJson);
-            } catch (_) {}
-          }
-          const urls = resultJson?.resultUrls;
-          const kieUrl = Array.isArray(urls) && urls.length > 0 ? urls[0] : null;
-          if (kieUrl) {
-            try {
-              const uploaded = await this.downloadAndUploadKieVideo(kieUrl, taskId);
-              if (uploaded?.publicUrl) {
-                this.showResult(uploaded.publicUrl);
-                this._setGenerating(false);
-
-                // Cobro dinamico: kie-task-finalize lee creditsConsumed real
-                // de KIE + suma OpenAI tokens del cine-prompt + 5 cred markup.
-                // Reemplaza el cobro fijo previo de 25 cred (deduct_credits_for_video).
-                let finalizeResult = null;
-                try {
-                  const { data: { session } } = await this.supabase.auth.getSession();
-                  const accessToken = session?.access_token;
-                  if (accessToken && this.organizationId) {
-                    const finalizeRes = await fetch('/.netlify/functions/kie-task-finalize', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-                      body: JSON.stringify({
-                        task_id: taskId,
-                        kind: 'video_generated',
-                        organization_id: this.organizationId,
-                        source_output_id: this._lastKieOutputId || null,
-                        openai_input_tokens: this._cinePromptTokens?.input || 0,
-                        openai_output_tokens: this._cinePromptTokens?.output || 0,
-                        openai_model: this._cinePromptTokens?.model || 'gpt-4o-mini'
-                      })
-                    });
-                    finalizeResult = await finalizeRes.json().catch(() => null);
-                    if (!finalizeRes.ok) {
-                      console.warn('[Video] finalize fallo, video guardado sin cobro:', finalizeResult);
-                    } else if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
-                      window.appNavigation.loadCreditsFromDb(this.organizationId);
-                    }
-                  }
-                } catch (e) {
-                  console.warn('[Video] finalize exception:', e);
-                }
-
-                if (this._lastKieOutputId) {
-                  // Merge metadata: preserva kind y campos del insert original.
-                  await this.updateSystemAIOutput(this._lastKieOutputId, {
-                    status: 'completed',
-                    storage_path: uploaded.storagePath,
-                    metadata: {
-                      kind: 'video_generated',
-                      resultUrls: urls,
-                      video_url: uploaded.publicUrl,
-                      kie_source_url: kieUrl,
-                      credits_charged: finalizeResult?.credits_charged ?? null,
-                      cost_breakdown: finalizeResult?.cost_breakdown ?? null
-                    },
-                    error_message: null
-                  });
-                  this._lastKieOutputId = null;
-                }
-              } else {
-                this._setGenerating(false);
-                this.showError(window.__('No se pudo guardar el video en tu cuenta'));
-                if (this._lastKieOutputId) {
-                  await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'No se pudo guardar el video en tu cuenta' });
-                  this._lastKieOutputId = null;
-                }
-              }
-            } catch (err) {
-              this._setGenerating(false);
-              this.showError(err.message || window.__('Error al descargar o guardar el video'));
-              if (this._lastKieOutputId) {
-                await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: err.message || 'Error al descargar o guardar el video' });
-                this._lastKieOutputId = null;
-              }
-            }
-          } else {
-            this._setGenerating(false);
-            this.showError(window.__('No se encontró URL del video en la respuesta'));
-            if (this._lastKieOutputId) {
-              await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'No se encontró URL del video en la respuesta' });
-              this._lastKieOutputId = null;
-            }
-          }
-          return;
-        }
-        if (state === 'fail') {
-          this.stopPolling();
-          const rawMsg = data.data?.failMsg || data.data?.failCode || window.__('La generación falló');
-          const is524 = String(data.data?.failCode || '') === '524' || /timeout/i.test(rawMsg);
-          const msg = is524
-            ? window.__('La generación tardó demasiado en KIE (error 524). Prueba: modo Estándar, duración 5s, una sola imagen de referencia, o acorta el prompt.')
-            : rawMsg;
-          this._setGenerating(false);
-          this.showError(msg);
-          if (this._lastKieOutputId) {
-            await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: msg });
-            this._lastKieOutputId = null;
-          }
-          return;
-        }
-
-        this.showStatus(window.__('Generando video (Seedance 2.0). Esto puede tardar unos minutos…'), true);
-      } catch (err) {
-        this.stopPolling();
-        this._setGenerating(false);
-        this.showError(err.message || window.__('Error al consultar el estado'));
-        if (this._lastKieOutputId) {
-          await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: err.message || 'Error al consultar el estado' });
-          this._lastKieOutputId = null;
-        }
-      }
-    };
-
-    await poll();
-    if (!this._generating) return; // ya terminó (éxito o fallo) en el primer poll
-    this._pollInterval = setInterval(poll, VideoView.POLL_INTERVAL_MS);
-    // Al volver a la pestaña, un poll inmediato evita esperar 3s al próximo tick.
-    this._pollVisibilityHandler = () => { if (!document.hidden) poll(); };
-    document.addEventListener('visibilitychange', this._pollVisibilityHandler);
-  }
+  /** El sondeo lo hace ApiV2.esperarCorrida dentro de StudioDatos.producir. */
+  async pollTask(_taskId) { /* sin polling propio en la base nueva */ }
 
   onLeave() {
     this.stopPolling();

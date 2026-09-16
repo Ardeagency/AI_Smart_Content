@@ -29,8 +29,7 @@
     'products', 'services', 'places', 'characters', 'identities', 'product-detail',
     'studio', 'studio/catalog', 'studio/flows',
     'vera',
-    // 'image': PORTADA el 16/09 (StudioDataService: imagen-directa por /v1; verificar-studio.mjs).
-    'video',
+    // 'image' / 'video': PORTADAS el 16/09 (StudioDataService: imagen-directa / video-directo por /v1; verificar-studio.mjs).
     // 'credits' / 'plans': PORTADAS el 16/09 (PlanesDataService, verificar-planes.mjs).
     'plans/cancel', // cancelar no tiene puerta para una persona (planes.md): sigue en obras
     // 'organization': PORTADA el 16/09 (OrganizacionDataService, verificar-organizacion.mjs); resumen y bitácora esperan la 190000.
