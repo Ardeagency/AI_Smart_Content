@@ -124,42 +124,13 @@ class CharactersView extends BaseView {
     }
   }
 
+  /** Corte: public.elements_full (kind character) por CatalogoDataService, con las fotos por file_id. */
   async _fetchCharactersData(orgId) {
-    // brand_characters se filtra via brand_entities.organization_id (sin FK directo a org)
-    const { data: entities, error: entError } = await this.supabase
-      .from('brand_entities')
-      .select('id')
-      .eq('organization_id', orgId);
-    if (entError) throw entError;
-    const entityIds = (entities || []).map((e) => e.id);
-    if (entityIds.length === 0) return { characters: [], characterImageById: {} };
-
-    const { data: charactersData, error: charactersError } = await this.supabase
-      .from('brand_characters')
-      .select('id, entity_id, nombre_personaje, descripcion_personaje, tipo_personaje')
-      .in('entity_id', entityIds)
-      .order('created_at', { ascending: false });
-    if (charactersError) throw charactersError;
-    const characters = charactersData || [];
-
-    const characterIds = characters.map((c) => c.id);
+    if (!window.CatalogoDatos) return { characters: [], characterImageById: {}, fallbackEntityId: null };
+    const lista = await window.CatalogoDatos.elementos(orgId, 'character');
     const characterImageById = {};
-    if (characterIds.length) {
-      const { data: imagesData, error: imagesError } = await this.supabase
-        .from('character_images')
-        .select('character_id, image_url, image_order')
-        .in('character_id', characterIds)
-        .not('image_url', 'is', null)
-        .order('image_order', { ascending: true });
-      if (imagesError) throw imagesError;
-      (imagesData || []).forEach((img) => {
-        const url = (img.image_url || '').trim();
-        if (!url) return;
-        if (!characterImageById[img.character_id]) characterImageById[img.character_id] = url;
-      });
-    }
-
-    return { characters, characterImageById };
+    lista.forEach((e) => { if (e.imagen) characterImageById[e.id] = e.imagen; });
+    return { characters: lista, characterImageById, fallbackEntityId: null };
   }
 
   _invalidateCache() {
@@ -168,44 +139,28 @@ class CharactersView extends BaseView {
     }
   }
 
+  /** En la base nueva no hay «entidad» contenedora: el elemento es su propia identidad. */
   async _ensureEntityId() {
-    if (!this.supabase || !this.organizationId) return null;
-    const { data: rows, error } = await this.supabase
-      .from('brand_entities')
-      .select('id')
-      .eq('organization_id', this.organizationId)
-      .order('created_at', { ascending: true })
-      .limit(1);
-    if (error) { console.error('CharactersView _ensureEntityId:', error); return null; }
-    if (rows?.length) return rows[0].id;
-    const { data: created, error: insErr } = await this.supabase
-      .from('brand_entities')
-      .insert({ organization_id: this.organizationId, name: 'Identity principal', entity_type: 'other', description: null })
-      .select('id').single();
-    if (insErr) { console.error('CharactersView _ensureEntityId insert:', insErr); return null; }
-    return created?.id || null;
+    return null;
   }
 
   async _onAddCharacter() {
-    if (!this.supabase || !this.organizationId) return;
-    const btn = document.getElementById('charactersListAddBtn');
+    if (!window.CatalogoDatos || !this.organizationId) return;
+    const btn = this.container?.querySelector('[id$="AddBtn"]') || document.querySelector('[id$="AddBtn"]');
     if (btn) btn.disabled = true;
     try {
-      const entityId = await this._ensureEntityId();
-      if (!entityId) { this._showNotification(__('No se pudo obtener una identidad para vincular el personaje'), 'error'); return; }
-      const { error } = await this.supabase.from('brand_characters').insert({
-        entity_id: entityId,
-        nombre_personaje: 'Nuevo personaje',
-        descripcion_personaje: 'Pendiente de descripción.',
-        tipo_personaje: 'otro',
-      });
-      if (error) throw error;
+      const creado = await window.CatalogoDatos.crear(this.organizationId, 'character', { nombre_personaje: __('nuevo personaje'), description: __('Pendiente de descripción.'), tipo_personaje: 'otro' });
+      if (!creado?.id) throw new Error(__('No se pudo crear'));
       this._invalidateCache();
       await this._loadData();
-      this._renderCharactersMasonry();
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
     } catch (e) {
-      console.error('CharactersView _onAddCharacter:', e);
-      this._showNotification(e?.message || __('Error al crear el personaje'), 'error');
+      console.error('_onAddCharacter:', e);
+      alert(e?.message || __('Error al crear'));
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -271,64 +226,48 @@ class CharactersView extends BaseView {
     `;
   }
 
+  /** Archivar (PATCH archived_at): no se borra, las producciones lo referencian. */
   async _onDeleteCharacter(characterId, btn) {
-    if (!characterId || !this.supabase) return;
-    if (!confirm(__('¿Eliminar este personaje? Se borrarán también sus fotos.'))) return;
+    if (!characterId || !window.CatalogoDatos) return;
+    if (!confirm(__('¿Quitar este elemento del catálogo? Sus producciones se conservan.'))) return;
     if (btn) btn.disabled = true;
     try {
-      const { error } = await this.supabase.from('brand_characters').delete().eq('id', characterId);
-      if (error) throw error;
+      const fue = await window.CatalogoDatos.archivar(characterId);
+      if (!fue) throw new Error(__('No se pudo quitar (¿sin permiso editar_marca?).'));
       this._invalidateCache();
       await this._loadData();
-      this._renderCharactersMasonry();
-      this._showNotification(__('Personaje eliminado'), 'success');
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Elemento archivado'), 'success');
     } catch (e) {
-      console.error('CharactersView _onDeleteCharacter:', e);
-      this._showNotification(e?.message || __('Error al eliminar el personaje'), 'error');
+      console.error('_onDeleteCharacter:', e);
+      this._showNotification(e?.message || __('Error al quitar'), 'error');
       if (btn) btn.disabled = false;
     }
   }
 
   async _onDuplicateCharacter(characterId, btn) {
-    if (!characterId || !this.supabase) return;
+    if (!characterId || !window.CatalogoDatos) return;
     if (btn) btn.disabled = true;
     try {
-      const { data: character, error: fetchError } = await this.supabase
-        .from('brand_characters').select('*').eq('id', characterId).single();
-      if (fetchError || !character) throw fetchError || new Error(__('No se pudo cargar el personaje'));
-      const { id: _id, created_at: _c, ...rest } = character;
-      const copyData = { ...rest, nombre_personaje: (character.nombre_personaje || 'Personaje').trim() + ' (copia)' };
-      const { data: newCharacter, error: insertError } = await this.supabase
-        .from('brand_characters').insert(copyData).select('id').single();
-      if (insertError || !newCharacter?.id) throw insertError || new Error(__('No se pudo crear la copia'));
-
-      const { data: images } = await this.supabase
-        .from('character_images')
-        .select('image_url, image_type, image_order')
-        .eq('character_id', characterId)
-        .order('image_order', { ascending: true });
-      if (images && images.length) {
-        await this.supabase.from('character_images').insert(images.map((img) => ({
-          character_id: newCharacter.id,
-          image_url: img.image_url,
-          image_type: img.image_type,
-          image_order: img.image_order,
-          download_status: 'stored'
-        })));
-      }
+      const copia = await window.CatalogoDatos.duplicar(characterId);
+      if (!copia?.id) throw new Error(__('No se pudo crear la copia'));
       this._invalidateCache();
       await this._loadData();
-      this._renderCharactersMasonry();
-      this._showNotification(__('Personaje duplicado'), 'success');
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Duplicado'), 'success');
     } catch (e) {
-      console.error('CharactersView _onDuplicateCharacter:', e);
-      this._showNotification(e?.message || __('Error al duplicar el personaje'), 'error');
+      console.error('_onDuplicateCharacter:', e);
+      this._showNotification(e?.message || __('Error al duplicar'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
   }
-
-  // ─── Modal: Adjuntar personaje (sube fotos + crea, sin ficha IA aun) ──────
 
   _onAttachCharacter() {
     if (!window.Modal || typeof window.Modal.show !== 'function') {
@@ -449,109 +388,43 @@ class CharactersView extends BaseView {
     return { input, list };
   }
 
+  /**
+   * Corte: la ficha por IA (api-*-generate-fiche) se apagó con las functions; el
+   * elemento se crea con sus fotos (POST /v1/archivos → attributes.imagenes) y
+   * la ficha se completa a mano o, más adelante, con el flujo de catálogo.
+   */
   async _analyzePhotosAndCreateCharacter({ files, modalHandle, hintEl }) {
-    if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesión no disponible'), 'error');
-      modalHandle?.close();
-      return;
-    }
-    const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
-    let characterId = null;
+    if (!window.CatalogoDatos || !this.organizationId) return;
+    const setHint = (t) => { if (hintEl) hintEl.textContent = t; };
     try {
-      setHint(__('Creando personaje inicial...'));
-      const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el personaje'));
-      const { data: created, error: insertError } = await this.supabase
-        .from('brand_characters')
-        .insert({
-          entity_id: entityId,
-          nombre_personaje: 'Procesando ficha...',
-          descripcion_personaje: 'Vera esta analizando las fotos del personaje.',
-          tipo_personaje: 'otro',
-        })
-        .select('id').single();
-      if (insertError || !created?.id) throw insertError || new Error(__('No se pudo crear el personaje'));
-      characterId = created.id;
-
-      // Subir imagenes a bucket character-images
-      setHint(__('Subiendo {n} {fotos} a storage...', { n: files.length, fotos: files.length === 1 ? __('foto') : __('fotos') }));
-      const imageUrls = [];
-      for (const file of files) {
-        const ext = (file.name?.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
-        const fileName = `${this.userId}/${characterId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-        const { error: uploadError } = await this.supabase.storage
-          .from('character-images')
-          .upload(fileName, file, { contentType: file.type, cacheControl: '3600', upsert: false });
-        if (uploadError) throw new Error(`Error subiendo "${file.name}": ${uploadError.message}`);
-        const { data: { publicUrl } } = this.supabase.storage.from('character-images').getPublicUrl(fileName);
-        imageUrls.push(publicUrl);
+      setHint(__('Creando el elemento…'));
+      const creado = await window.CatalogoDatos.crear(this.organizationId, 'character', { nombre_personaje: __('nuevo personaje'), description: __('Pendiente de descripción.') });
+      const lista = Array.from(files || []).filter((f) => f && /^image\//.test(f.type || ''));
+      for (const f of lista) {
+        setHint(__('Subiendo {n}…', { n: f.name }));
+        try { await window.CatalogoDatos.subirFoto(this.organizationId, creado.id, f); }
+        catch (e) { console.warn('[catalogo] foto:', e?.code || e?.message); if (e?.code === 'sin_api') { setHint(__('Las fotos se suben cuando el borde esté configurado.')); break; } }
       }
-
-      setHint(__('Vera esta analizando las fotos con OpenAI Vision...'));
-      await this._callFicheCharacterFunction({
-        characterId,
-        payload: { character_id: characterId, organization_id: this.organizationId, image_urls: imageUrls },
-        modalHandle, setHint
-      });
-      characterId = null;
-    } catch (err) {
-      console.error('CharactersView _analyzePhotosAndCreateCharacter:', err);
-      if (characterId) {
-        try { await this.supabase.from('brand_characters').delete().eq('id', characterId); }
-        catch (delErr) { console.warn('No se pudo limpiar placeholder:', delErr); }
-        this._invalidateCache();
-      }
-      this._showNotification(err?.message || __('No se pudo crear el personaje'), 'error');
-      modalHandle?.close();
+      modalHandle?.close?.();
+      this._invalidateCache();
+      await this._loadData();
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Elemento creado. La ficha por IA llega con el flujo de catálogo: complétala desde su detalle.'), 'info');
+      if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
+    } catch (e) {
+      console.error('_analyzePhotosAndCreateCharacter:', e);
+      setHint(e?.message || __('No se pudo crear'));
     }
   }
 
-  async _callFicheCharacterFunction({ characterId, payload, modalHandle, setHint }) {
-    const { data: sessionData } = await this.supabase.auth.getSession();
-    const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) throw new Error(__('No hay sesión activa'));
-
-    const resp = await fetch('/.netlify/functions/api-characters-generate-fiche', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-      body: JSON.stringify(payload),
-    });
-    let result;
-    try { result = await resp.json(); }
-    catch (_) {
-      const text = await resp.text().catch(() => '');
-      throw new Error(`Gateway HTTP ${resp.status}: ${text.slice(0, 200) || 'sin body'}`);
-    }
-    if (!resp.ok || !result.ok) {
-      const errMsg = result.error || `HTTP ${resp.status}`;
-      const detail = result.detail ? ` (${result.detail})` : '';
-      if (resp.status === 402) {
-        this._showNotification(__('Créditos insuficientes. Necesitas {n} créditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
-      } else {
-        this._showNotification(__('Error generando ficha: {msg}', { msg: `${errMsg}${detail}` }), 'error');
-      }
-      throw new Error(errMsg);
-    }
-
-    setHint(__('Ficha generada (costo: {n} créditos). Recargando listado...', { n: result.credits_charged.toFixed(4) }));
-    this._invalidateCache();
-    window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
-    modalHandle?.close();
-    const imgCount = result.images?.inserted || 0;
-    if (result.images?.error) {
-      this._showNotification(__('Ficha generada · imágenes no se vincularon: {err}', { err: result.images.error }), 'error');
-    } else {
-      this._showNotification(
-        __('Ficha de personaje generada · {n} créditos · {count} {fotos}', {
-          n: result.credits_charged.toFixed(4),
-          count: imgCount,
-          fotos: imgCount === 1 ? __('foto') : __('fotos'),
-        }),
-        'success'
-      );
-    }
-    await this._loadData();
-    this._renderCharactersMasonry();
+  /** La ficha por IA llega como flujo de catálogo (backend catalogo.enriquecer); aquí solo se dice. */
+  async _callFicheCharacterFunction({ modalHandle, setHint } = {}) {
+    if (typeof setHint === 'function') setHint(__('La ficha por IA llega con el flujo de catálogo.'));
+    modalHandle?.close?.();
+    return null;
   }
 
   _showNotification(message, type = 'info') {

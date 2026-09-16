@@ -112,14 +112,13 @@ class ServicesView extends BaseView {
     }
   }
 
+  /** Corte: public.elements_full (kind service) por CatalogoDataService, con las fotos por file_id. */
   async _fetchServicesData(orgId) {
-    const { data, error } = await this.supabase
-      .from('services')
-      .select('id, entity_id, nombre_servicio, descripcion_servicio, duracion_estimada, precio_base, moneda, beneficios_principales')
-      .eq('organization_id', orgId)
-      .order('created_at', { ascending: false });
-    if (error) throw error;
-    return { services: data || [] };
+    if (!window.CatalogoDatos) return { services: [], serviceImageById: {}, fallbackEntityId: null };
+    const lista = await window.CatalogoDatos.elementos(orgId, 'service');
+    const serviceImageById = {};
+    lista.forEach((e) => { if (e.imagen) serviceImageById[e.id] = e.imagen; });
+    return { services: lista, serviceImageById, fallbackEntityId: null };
   }
 
   _invalidateCache() {
@@ -128,53 +127,28 @@ class ServicesView extends BaseView {
     }
   }
 
+  /** En la base nueva no hay «entidad» contenedora: el elemento es su propia identidad. */
   async _ensureEntityId() {
-    if (!this.supabase || !this.organizationId) return null;
-    const { data: rows, error } = await this.supabase
-      .from('brand_entities')
-      .select('id')
-      .eq('organization_id', this.organizationId)
-      .order('created_at', { ascending: true })
-      .limit(1);
-    if (error) { console.error('ServicesView _ensureEntityId:', error); return null; }
-    if (rows?.length) return rows[0].id;
-    const { data: created, error: insErr } = await this.supabase
-      .from('brand_entities')
-      .insert({
-        organization_id: this.organizationId,
-        name: 'Identity principal',
-        entity_type: 'other',
-        description: null,
-      })
-      .select('id')
-      .single();
-    if (insErr) { console.error('ServicesView _ensureEntityId insert:', insErr); return null; }
-    return created?.id || null;
+    return null;
   }
 
   async _onAddService() {
-    if (!this.supabase || !this.organizationId) return;
-    const btn = document.getElementById('servicesAddBtn');
+    if (!window.CatalogoDatos || !this.organizationId) return;
+    const btn = this.container?.querySelector('[id$="AddBtn"]') || document.querySelector('[id$="AddBtn"]');
     if (btn) btn.disabled = true;
     try {
-      const entityId = await this._ensureEntityId();
-      if (!entityId) {
-        this._showNotification(__('No se pudo obtener una identidad para vincular el servicio.'), 'error');
-        return;
-      }
-      const { error } = await this.supabase.from('services').insert({
-        organization_id: this.organizationId,
-        entity_id: entityId,
-        nombre_servicio: 'Nuevo servicio',
-        descripcion_servicio: null,
-      });
-      if (error) throw error;
+      const creado = await window.CatalogoDatos.crear(this.organizationId, 'service', { nombre_servicio: __('nuevo servicio'), description: __('Pendiente de descripción.'), tipo_servicio: 'otro' });
+      if (!creado?.id) throw new Error(__('No se pudo crear'));
       this._invalidateCache();
       await this._loadData();
-      this._renderServices();
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
     } catch (e) {
-      console.error('ServicesView _onAddService:', e);
-      this._showNotification(e?.message || __('Error al crear el servicio'), 'error');
+      console.error('_onAddService:', e);
+      alert(e?.message || __('Error al crear'));
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -238,54 +212,48 @@ class ServicesView extends BaseView {
     });
   }
 
+  /** Archivar (PATCH archived_at): no se borra, las producciones lo referencian. */
   async _onDeleteService(serviceId, btn) {
-    if (!serviceId || !this.supabase) return;
-    if (!confirm(__('¿Eliminar este servicio?'))) return;
+    if (!serviceId || !window.CatalogoDatos) return;
+    if (!confirm(__('¿Quitar este elemento del catálogo? Sus producciones se conservan.'))) return;
     if (btn) btn.disabled = true;
     try {
-      const { error } = await this.supabase.from('services').delete().eq('id', serviceId);
-      if (error) throw error;
+      const fue = await window.CatalogoDatos.archivar(serviceId);
+      if (!fue) throw new Error(__('No se pudo quitar (¿sin permiso editar_marca?).'));
       this._invalidateCache();
       await this._loadData();
-      this._renderServices();
-      this._showNotification(__('Servicio eliminado'), 'success');
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Elemento archivado'), 'success');
     } catch (e) {
-      console.error('ServicesView _onDeleteService:', e);
-      this._showNotification(e?.message || __('Error al eliminar el servicio'), 'error');
+      console.error('_onDeleteService:', e);
+      this._showNotification(e?.message || __('Error al quitar'), 'error');
       if (btn) btn.disabled = false;
     }
   }
 
   async _onDuplicateService(serviceId, btn) {
-    if (!serviceId || !this.supabase || !this.organizationId) return;
+    if (!serviceId || !window.CatalogoDatos) return;
     if (btn) btn.disabled = true;
     try {
-      const { data: service, error: fetchError } = await this.supabase
-        .from('services')
-        .select('*')
-        .eq('id', serviceId)
-        .single();
-      if (fetchError || !service) throw fetchError || new Error(__('No se pudo cargar el servicio'));
-      const { id: _id, created_at: _c, updated_at: _u, ...rest } = service;
-      const copyData = {
-        ...rest,
-        nombre_servicio: (service.nombre_servicio || __('Servicio')).trim() + ' ' + __('(copia)'),
-      };
-      const { error: insertError } = await this.supabase.from('services').insert(copyData);
-      if (insertError) throw insertError;
+      const copia = await window.CatalogoDatos.duplicar(serviceId);
+      if (!copia?.id) throw new Error(__('No se pudo crear la copia'));
       this._invalidateCache();
       await this._loadData();
-      this._renderServices();
-      this._showNotification(__('Servicio duplicado'), 'success');
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Duplicado'), 'success');
     } catch (e) {
-      console.error('ServicesView _onDuplicateService:', e);
-      this._showNotification(e?.message || __('Error al duplicar el servicio'), 'error');
+      console.error('_onDuplicateService:', e);
+      this._showNotification(e?.message || __('Error al duplicar'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
   }
-
-  // ─── Modal: Adjuntar servicio ─────────────────────────────────────────
 
   _onAttachService() {
     if (!window.Modal || typeof window.Modal.show !== 'function') {
@@ -516,111 +484,61 @@ class ServicesView extends BaseView {
   }
 
   async _analyzeUrlAndCreateService({ url, hostname, modalHandle, hintEl }) {
-    if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesión no disponible'), 'error');
-      modalHandle?.close();
-      return;
-    }
-    const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
-    let serviceId = null;
+    if (!window.CatalogoDatos || !this.organizationId) return;
+    const setHint = (t) => { if (hintEl) hintEl.textContent = t; };
     try {
-      setHint(__('Creando servicio inicial...'));
-      const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el servicio'));
-      const { data: created, error: insertError } = await this.supabase
-        .from('services')
-        .insert({
-          organization_id: this.organizationId,
-          entity_id: entityId,
-          nombre_servicio: __('Procesando ficha...'),
-          descripcion_servicio: __('Vera está leyendo la página y armando la ficha del servicio.'),
-          url_servicio: url,
-        })
-        .select('id')
-        .single();
-      if (insertError || !created?.id) throw insertError || new Error('No se pudo crear el servicio');
-      serviceId = created.id;
-
-      setHint(__('Leyendo {host} y extrayendo datos del servicio...', { host: hostname || __('la página') }));
-      const { data: sessionData } = await this.supabase.auth.getSession();
-      const accessToken = sessionData?.session?.access_token;
-      if (!accessToken) throw new Error(__('No hay sesión activa'));
-
-      const resp = await fetch('/.netlify/functions/api-services-generate-fiche', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify({ service_id: serviceId, organization_id: this.organizationId, url }),
-      });
-      let result;
-      try { result = await resp.json(); }
-      catch (_) {
-        const text = await resp.text().catch(() => '');
-        throw new Error(`Gateway HTTP ${resp.status}: ${text.slice(0, 200) || 'sin body'}`);
-      }
-      if (!resp.ok || !result.ok) {
-        const errMsg = result.error || `HTTP ${resp.status}`;
-        const detail = result.detail ? ` (${result.detail})` : '';
-        if (resp.status === 402) {
-          this._showNotification(__('Créditos insuficientes. Necesitas {n} créditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
-        } else {
-          this._showNotification(__('Error generando ficha: {err}', { err: `${errMsg}${detail}` }), 'error');
-        }
-        throw new Error(errMsg);
-      }
-
-      setHint(__('Ficha generada (costo: {n} créditos). Recargando listado...', { n: result.credits_charged.toFixed(4) }));
+      setHint(__('Creando el elemento…'));
+      const nombre = typeof this._nameFromUrl === 'function' ? this._nameFromUrl(url) : (hostname || __('nuevo servicio'));
+      const creado = await window.CatalogoDatos.crear(this.organizationId, 'service', { nombre_servicio: nombre || __('nuevo servicio'), description: __('Pendiente de descripción.'), url });
+      modalHandle?.close?.();
       this._invalidateCache();
-      window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
-      modalHandle?.close();
-      this._showNotification(
-        __('Ficha de servicio generada{brand} · {n} créditos', {
-          brand: result.scraped?.brand ? ' (' + result.scraped.brand + ')' : '',
-          n: result.credits_charged.toFixed(4),
-        }),
-        'success'
-      );
       await this._loadData();
-      this._renderServices();
-      serviceId = null;
-    } catch (err) {
-      console.error('ServicesView _analyzeUrlAndCreateService:', err);
-      if (serviceId) {
-        try { await this.supabase.from('services').delete().eq('id', serviceId); }
-        catch (delErr) { console.warn('No se pudo limpiar placeholder:', delErr); }
-        this._invalidateCache();
-      }
-      modalHandle?.close();
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Elemento creado con su enlace. La lectura automática de la página llega con el flujo de catálogo.'), 'info');
+      if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
+    } catch (e) {
+      console.error('_analyzeUrlAndCreateService:', e);
+      setHint(e?.message || __('No se pudo crear'));
     }
   }
 
-  async _createPendingService({ files = null, modalHandle = null }) {
-    if (!this.supabase || !this.organizationId) {
-      this._showNotification(__('Sesión no disponible'), 'error');
-      modalHandle?.close();
-      return;
-    }
+  /**
+   * Corte: la ficha por IA (api-*-generate-fiche) se apagó con las functions; el
+   * elemento se crea con sus fotos (POST /v1/archivos → attributes.imagenes) y
+   * la ficha se completa a mano o, más adelante, con el flujo de catálogo.
+   */
+  async _crearServicioConArchivos({ files, modalHandle, hintEl }) {
+    if (!window.CatalogoDatos || !this.organizationId) return;
+    const setHint = (t) => { if (hintEl) hintEl.textContent = t; };
     try {
-      const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el servicio'));
-      const { error } = await this.supabase
-        .from('services')
-        .insert({
-          organization_id: this.organizationId,
-          entity_id: entityId,
-          nombre_servicio: files?.length ? __('Servicio pendiente ({n} archivo(s))', { n: files.length }) : __('Servicio pendiente'),
-          descripcion_servicio: __('Vera procesará los archivos para completar la ficha automáticamente cuando se cablee la extracción server-side.'),
-        });
-      if (error) throw error;
+      setHint(__('Creando el elemento…'));
+      const creado = await window.CatalogoDatos.crear(this.organizationId, 'service', { nombre_servicio: __('nuevo servicio'), description: __('Pendiente de descripción.') });
+      const lista = Array.from(files || []).filter((f) => f && /^image\//.test(f.type || ''));
+      for (const f of lista) {
+        setHint(__('Subiendo {n}…', { n: f.name }));
+        try { await window.CatalogoDatos.subirFoto(this.organizationId, creado.id, f); }
+        catch (e) { console.warn('[catalogo] foto:', e?.code || e?.message); if (e?.code === 'sin_api') { setHint(__('Las fotos se suben cuando el borde esté configurado.')); break; } }
+      }
+      modalHandle?.close?.();
       this._invalidateCache();
-      modalHandle?.close();
       await this._loadData();
-      this._renderServices();
-      this._showNotification(__('Servicio guardado para procesamiento posterior'), 'info');
-    } catch (err) {
-      console.error('ServicesView _createPendingService:', err);
-      this._showNotification(err?.message || __('No se pudo crear el servicio'), 'error');
-      modalHandle?.close();
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Elemento creado. La ficha por IA llega con el flujo de catálogo: complétala desde su detalle.'), 'info');
+      if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
+    } catch (e) {
+      console.error('_crearServicioConArchivos:', e);
+      setHint(e?.message || __('No se pudo crear'));
     }
+  }
+
+  async _createPendingService({ files = null, modalHandle = null } = {}) {
+    return this._crearServicioConArchivos({ files: files || [], modalHandle, hintEl: null });
   }
 
   _showNotification(message, type = 'info') {

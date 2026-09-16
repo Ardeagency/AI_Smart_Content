@@ -120,46 +120,13 @@ class ProductsListView extends BaseView {
     }
   }
 
+  /** Corte: public.elements_full (kind product) por CatalogoDataService, con las fotos por file_id. */
   async _fetchProductsData(orgId) {
-    const { data: productsData, error: productsError } = await this.supabase
-      .from('products')
-      .select('id, entity_id, nombre_producto, descripcion_producto, tipo_producto, precio_producto, moneda')
-      .eq('organization_id', orgId)
-      .order('created_at', { ascending: false });
-    if (productsError) throw productsError;
-
-    const products = productsData || [];
-
-    const productIds = products.map((p) => p.id);
+    if (!window.CatalogoDatos) return { products: [], productImageById: {}, fallbackEntityId: null };
+    const lista = await window.CatalogoDatos.elementos(orgId, 'product');
     const productImageById = {};
-    if (productIds.length) {
-      const { data: imagesData, error: imagesError } = await this.supabase
-        .from('product_images')
-        .select('product_id, image_url, image_order')
-        .in('product_id', productIds)
-        .not('image_url', 'is', null)
-        .order('image_order', { ascending: true });
-      if (imagesError) throw imagesError;
-      (imagesData || []).forEach((img) => {
-        const url = (img.image_url || '').trim();
-        if (!url) return;
-        if (!productImageById[img.product_id]) productImageById[img.product_id] = url;
-      });
-    }
-
-    let fallbackEntityId = null;
-    const orphan = products.some((p) => !p.entity_id);
-    if (orphan) {
-      const { data: ents } = await this.supabase
-        .from('brand_entities')
-        .select('id')
-        .eq('organization_id', orgId)
-        .order('created_at', { ascending: true })
-        .limit(1);
-      fallbackEntityId = ents?.[0]?.id || null;
-    }
-
-    return { products, productImageById, fallbackEntityId };
+    lista.forEach((e) => { if (e.imagen) productImageById[e.id] = e.imagen; });
+    return { products: lista, productImageById, fallbackEntityId: null };
   }
 
   _invalidateCache() {
@@ -168,81 +135,28 @@ class ProductsListView extends BaseView {
     }
   }
 
+  /** En la base nueva no hay «entidad» contenedora: el elemento es su propia identidad. */
   async _ensureEntityId() {
-    if (!this.supabase || !this.organizationId) return null;
-    const { data: rows, error } = await this.supabase
-      .from('brand_entities')
-      .select('id')
-      .eq('organization_id', this.organizationId)
-      .order('created_at', { ascending: true })
-      .limit(1);
-    if (error) {
-      console.error('ProductsListView _ensureEntityId:', error);
-      return null;
-    }
-    if (rows?.length) return rows[0].id;
-
-    const { data: created, error: insErr } = await this.supabase
-      .from('brand_entities')
-      .insert({
-        organization_id: this.organizationId,
-        name: 'Identity principal',
-        entity_type: 'other',
-        description: null,
-      })
-      .select('id')
-      .single();
-    if (insErr) {
-      console.error('ProductsListView _ensureEntityId insert:', insErr);
-      return null;
-    }
-    return created?.id || null;
-  }
-
-  _navigateToProductDetail(entityId, productId) {
-    if (!entityId || !productId || !window.router) return;
-    const orgId = this.routeParams?.orgId;
-    const orgSlug = this.routeParams?.orgNameSlug;
-    let url;
-    if (orgId && orgSlug && typeof window.getOrgPathPrefix === 'function') {
-      url = `${window.getOrgPathPrefix(orgId, orgSlug)}/product-detail/${entityId}/${productId}`;
-    } else if (orgId && orgSlug) {
-      url = `/org/${orgId}/${orgSlug}/product-detail/${entityId}/${productId}`;
-    } else {
-      url = `/product-detail/${entityId}/${productId}`;
-    }
-    window.router.navigate(url, true);
+    return null;
   }
 
   async _onAddProduct() {
-    if (!this.supabase || !this.organizationId) return;
-    const btn = document.getElementById('productsListAddBtn');
+    if (!window.CatalogoDatos || !this.organizationId) return;
+    const btn = this.container?.querySelector('[id$="AddBtn"]') || document.querySelector('[id$="AddBtn"]');
     if (btn) btn.disabled = true;
     try {
-      const entityId = await this._ensureEntityId();
-      if (!entityId) {
-        alert(__('No se pudo obtener una identidad para vincular el producto.'));
-        return;
-      }
-      const { data, error } = await this.supabase
-        .from('products')
-        .insert({
-          organization_id: this.organizationId,
-          entity_id: entityId,
-          tipo_producto: 'otro',
-          nombre_producto: 'nuevo producto',
-          descripcion_producto: 'Pendiente de descripción.',
-          moneda: 'USD',
-        })
-        .select('id')
-        .single();
-      if (error) throw error;
-      if (!data?.id) return;
+      const creado = await window.CatalogoDatos.crear(this.organizationId, 'product', { nombre_producto: __('nuevo producto'), description: __('Pendiente de descripción.'), tipo_producto: 'otro' });
+      if (!creado?.id) throw new Error(__('No se pudo crear'));
       this._invalidateCache();
-      this._navigateToProductDetail(entityId, data.id);
+      await this._loadData();
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
     } catch (e) {
-      console.error('ProductsListView _onAddProduct:', e);
-      alert(e?.message || __('Error al crear el producto'));
+      console.error('_onAddProduct:', e);
+      alert(e?.message || __('Error al crear'));
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -308,70 +222,44 @@ class ProductsListView extends BaseView {
     });
   }
 
+  /** Archivar (PATCH archived_at): no se borra, las producciones lo referencian. */
   async _onDeleteProduct(productId, btn) {
-    if (!productId || !this.supabase) return;
-    if (!confirm(__('¿Eliminar este producto? Se borrarán también sus imágenes.'))) return;
+    if (!productId || !window.CatalogoDatos) return;
+    if (!confirm(__('¿Quitar este elemento del catálogo? Sus producciones se conservan.'))) return;
     if (btn) btn.disabled = true;
     try {
-      const { error } = await this.supabase.from('products').delete().eq('id', productId);
-      if (error) throw error;
+      const fue = await window.CatalogoDatos.archivar(productId);
+      if (!fue) throw new Error(__('No se pudo quitar (¿sin permiso editar_marca?).'));
       this._invalidateCache();
       await this._loadData();
-      this._renderProductsMasonry();
-      this._showNotification(__('Producto eliminado'), 'success');
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Elemento archivado'), 'success');
     } catch (e) {
-      console.error('ProductsListView _onDeleteProduct:', e);
-      this._showNotification(e?.message || __('Error al eliminar el producto'), 'error');
+      console.error('_onDeleteProduct:', e);
+      this._showNotification(e?.message || __('Error al quitar'), 'error');
       if (btn) btn.disabled = false;
     }
   }
 
   async _onDuplicateProduct(productId, btn) {
-    if (!productId || !this.supabase || !this.organizationId) return;
+    if (!productId || !window.CatalogoDatos) return;
     if (btn) btn.disabled = true;
     try {
-      const { data: product, error: fetchError } = await this.supabase
-        .from('products')
-        .select('*')
-        .eq('id', productId)
-        .single();
-      if (fetchError || !product) throw fetchError || new Error(__('No se pudo cargar el producto'));
-
-      const { id: _id, created_at: _c, updated_at: _u, ...rest } = product;
-      const copyData = {
-        ...rest,
-        nombre_producto: (product.nombre_producto || 'Producto').trim() + ' (copia)',
-      };
-      const { data: newProduct, error: insertError } = await this.supabase
-        .from('products')
-        .insert(copyData)
-        .select('id')
-        .single();
-      if (insertError || !newProduct?.id) throw insertError || new Error(__('No se pudo crear la copia'));
-
-      const { data: images } = await this.supabase
-        .from('product_images')
-        .select('image_url, image_type, image_order')
-        .eq('product_id', productId)
-        .order('image_order', { ascending: true });
-      if (images && images.length) {
-        await this.supabase.from('product_images').insert(
-          images.map((img) => ({
-            product_id: newProduct.id,
-            image_url: img.image_url,
-            image_type: img.image_type,
-            image_order: img.image_order,
-          }))
-        );
-      }
-
+      const copia = await window.CatalogoDatos.duplicar(productId);
+      if (!copia?.id) throw new Error(__('No se pudo crear la copia'));
       this._invalidateCache();
       await this._loadData();
-      this._renderProductsMasonry();
-      this._showNotification(__('Producto duplicado'), 'success');
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Duplicado'), 'success');
     } catch (e) {
-      console.error('ProductsListView _onDuplicateProduct:', e);
-      this._showNotification(e?.message || __('Error al duplicar el producto'), 'error');
+      console.error('_onDuplicateProduct:', e);
+      this._showNotification(e?.message || __('Error al duplicar'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -696,227 +584,69 @@ class ProductsListView extends BaseView {
     });
   }
 
-  async _analyzePhotosAndCreateProduct({ files, docFiles = [], modalHandle, hintEl }) {
-    if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesión no disponible'), 'error');
-      modalHandle?.close();
-      return;
-    }
-    const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
-    let productId = null;  // declarado fuera para cleanup en error
+  /**
+   * Corte: la ficha por IA (api-*-generate-fiche) se apagó con las functions; el
+   * elemento se crea con sus fotos (POST /v1/archivos → attributes.imagenes) y
+   * la ficha se completa a mano o, más adelante, con el flujo de catálogo.
+   */
+  async _analyzePhotosAndCreateProduct({ files, modalHandle, hintEl }) {
+    if (!window.CatalogoDatos || !this.organizationId) return;
+    const setHint = (t) => { if (hintEl) hintEl.textContent = t; };
     try {
-      // 1) Crear producto placeholder para tener product_id antes de subir
-      setHint(__('Creando producto inicial...'));
-      const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el producto'));
-      const placeholderMetadata = { ai_generated: false, pending_ai_enrichment: true, source: 'photos' };
-      if (docFiles.length) {
-        placeholderMetadata.pending_files = docFiles;
-        placeholderMetadata.source = 'photos+files';
+      setHint(__('Creando el elemento…'));
+      const creado = await window.CatalogoDatos.crear(this.organizationId, 'product', { nombre_producto: __('nuevo producto'), description: __('Pendiente de descripción.') });
+      const lista = Array.from(files || []).filter((f) => f && /^image\//.test(f.type || ''));
+      for (const f of lista) {
+        setHint(__('Subiendo {n}…', { n: f.name }));
+        try { await window.CatalogoDatos.subirFoto(this.organizationId, creado.id, f); }
+        catch (e) { console.warn('[catalogo] foto:', e?.code || e?.message); if (e?.code === 'sin_api') { setHint(__('Las fotos se suben cuando el borde esté configurado.')); break; } }
       }
-      const { data: created, error: insertError } = await this.supabase
-        .from('products')
-        .insert({
-          organization_id: this.organizationId,
-          entity_id: entityId,
-          tipo_producto: 'otro',
-          nombre_producto: 'Procesando ficha...',
-          descripcion_producto: 'Vera está analizando las fotos. La ficha se completará en unos segundos.',
-          moneda: 'USD',
-          metadata: placeholderMetadata,
-        })
-        .select('id')
-        .single();
-      if (insertError || !created?.id) throw insertError || new Error(__('No se pudo crear el producto'));
-      productId = created.id;
-
-      // 2) Subir imagenes a Supabase Storage
-      setHint(__('Subiendo {n} {fotos} a storage...', { n: files.length, fotos: files.length === 1 ? __('foto') : __('fotos') }));
-      const imageUrls = [];
-      for (const file of files) {
-        const ext = (file.name?.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
-        const fileName = `${this.userId}/${productId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-        const { error: uploadError } = await this.supabase.storage
-          .from('product-images')
-          .upload(fileName, file, { contentType: file.type, cacheControl: '3600', upsert: false });
-        if (uploadError) throw new Error(__('Error subiendo "{file}": {msg}', { file: file.name, msg: uploadError.message }));
-        const { data: { publicUrl } } = this.supabase.storage.from('product-images').getPublicUrl(fileName);
-        imageUrls.push(publicUrl);
-      }
-
-      // 3) Llamar a la Netlify function que analiza con OpenAI y cobra creditos
-      setHint(__('Vera está analizando las fotos con OpenAI Vision...'));
-      await this._callFicheFunction({
-        productId, entityId,
-        payload: { product_id: productId, organization_id: this.organizationId, image_urls: imageUrls },
-        modalHandle, setHint
-      });
-      productId = null;  // exito: NO limpiar
-    } catch (err) {
-      console.error('ProductsListView _analyzePhotosAndCreateProduct:', err);
-      if (productId) {
-        try { await this.supabase.from('products').delete().eq('id', productId); }
-        catch (delErr) { console.warn('No se pudo limpiar placeholder:', delErr); }
-        this._invalidateCache();
-      }
-      modalHandle?.close();
+      modalHandle?.close?.();
+      this._invalidateCache();
+      await this._loadData();
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Elemento creado. La ficha por IA llega con el flujo de catálogo: complétala desde su detalle.'), 'info');
+      if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
+    } catch (e) {
+      console.error('_analyzePhotosAndCreateProduct:', e);
+      setHint(e?.message || __('No se pudo crear'));
     }
   }
 
   async _analyzeUrlAndCreateProduct({ url, hostname, modalHandle, hintEl }) {
-    if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesión no disponible'), 'error');
-      modalHandle?.close();
-      return;
-    }
-    const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
-    let productId = null;  // declarado fuera del try para que el catch pueda limpiarlo
+    if (!window.CatalogoDatos || !this.organizationId) return;
+    const setHint = (t) => { if (hintEl) hintEl.textContent = t; };
     try {
-      // 1) Crear producto placeholder
-      setHint(__('Creando producto inicial...'));
-      const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el producto'));
-      const { data: created, error: insertError } = await this.supabase
-        .from('products')
-        .insert({
-          organization_id: this.organizationId,
-          entity_id: entityId,
-          tipo_producto: 'otro',
-          nombre_producto: 'Procesando ficha...',
-          descripcion_producto: 'Vera está leyendo la página y armando la ficha. Esto toma unos segundos.',
-          moneda: 'USD',
-          url_producto: url,
-          metadata: { ai_generated: false, pending_ai_enrichment: true, source: 'url', source_url: url },
-        })
-        .select('id')
-        .single();
-      if (insertError || !created?.id) throw insertError || new Error(__('No se pudo crear el producto'));
-      productId = created.id;
-
-      // 2) Llamar a la function (hace scrape + reupload + OpenAI)
-      setHint(__('Leyendo {page} y extrayendo datos del producto...', { page: hostname || __('la página') }));
-      await this._callFicheFunction({
-        productId, entityId,
-        payload: { product_id: productId, organization_id: this.organizationId, url },
-        modalHandle, setHint
-      });
-      productId = null;  // exito: NO limpiar el producto creado
-    } catch (err) {
-      console.error('ProductsListView _analyzeUrlAndCreateProduct:', err);
-      // Limpiar el placeholder vacio para no dejar basura en BD si fallo el scrape/OpenAI
-      if (productId) {
-        try { await this.supabase.from('products').delete().eq('id', productId); }
-        catch (delErr) { console.warn('No se pudo limpiar placeholder:', delErr); }
-        this._invalidateCache();
-      }
-      modalHandle?.close();
+      setHint(__('Creando el elemento…'));
+      const nombre = typeof this._nameFromUrl === 'function' ? this._nameFromUrl(url) : (hostname || __('nuevo producto'));
+      const creado = await window.CatalogoDatos.crear(this.organizationId, 'product', { nombre_producto: nombre || __('nuevo producto'), description: __('Pendiente de descripción.'), url });
+      modalHandle?.close?.();
+      this._invalidateCache();
+      await this._loadData();
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Elemento creado con su enlace. La lectura automática de la página llega con el flujo de catálogo.'), 'info');
+      if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
+    } catch (e) {
+      console.error('_analyzeUrlAndCreateProduct:', e);
+      setHint(e?.message || __('No se pudo crear'));
     }
   }
 
-  async _callFicheFunction({ productId, entityId, payload, modalHandle, setHint }) {
-    const { data: sessionData } = await this.supabase.auth.getSession();
-    const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) throw new Error(__('No hay sesión activa'));
-
-    const resp = await fetch('/.netlify/functions/api-products-generate-fiche', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-      body: JSON.stringify(payload),
-    });
-    // Manejar gateway errors (502/503/504) que no devuelven JSON parseable
-    let result;
-    try { result = await resp.json(); }
-    catch (_) {
-      const text = await resp.text().catch(() => '');
-      throw new Error(`Gateway HTTP ${resp.status}: ${text.slice(0, 200) || 'sin body'}`);
-    }
-    if (!resp.ok || !result.ok) {
-      const errMsg = result.error || `HTTP ${resp.status}`;
-      const detail = result.detail ? ` (${result.detail})` : '';
-      if (resp.status === 402) {
-        this._showNotification(__('Créditos insuficientes. Necesitas {n} créditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
-      } else {
-        this._showNotification(__('Error generando ficha: {msg}', { msg: `${errMsg}${detail}` }), 'error');
-      }
-      console.error('[ProductsListView] fiche function error:', result);
-      throw new Error(errMsg);
-    }
-
-    setHint(__('Ficha generada (costo: {n} créditos). Redirigiendo...', { n: result.credits_charged.toFixed(4) }));
-    this._invalidateCache();
-    window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
-    modalHandle?.close();
-    const imgCount = result.images?.inserted || 0;
-    if (result.images?.error) {
-      console.warn('[ProductsListView] imagenes no se vincularon:', result.images.error);
-      this._showNotification(__('Ficha generada · imágenes no se vincularon: {err}', { err: result.images.error }), 'error');
-    } else {
-      const sourceLabel = result.source === 'url'
-        ? (result.scraped?.brand
-            ? __('desde URL ({brand})', { brand: result.scraped.brand })
-            : __('desde URL'))
-        : __('desde fotos');
-      const variantCount = result.variants?.inserted || 0;
-      const variantStr = variantCount > 0 ? ` · ${__('{n} variante(s)', { n: variantCount })}` : '';
-      this._showNotification(
-        __('Ficha generada {source} · {credits} créditos · {n} foto(s)', {
-          source: sourceLabel,
-          credits: result.credits_charged.toFixed(4),
-          n: imgCount,
-        }) + variantStr,
-        'success'
-      );
-    }
-    this._navigateToProductDetail(entityId, productId);
+  /** La ficha por IA llega como flujo de catálogo (backend catalogo.enriquecer); aquí solo se dice. */
+  async _callFicheFunction({ modalHandle, setHint } = {}) {
+    if (typeof setHint === 'function') setHint(__('La ficha por IA llega con el flujo de catálogo.'));
+    modalHandle?.close?.();
+    return null;
   }
 
   async _createPendingProduct({ url = null, files = null, modalHandle = null } = {}) {
-    if (!this.supabase || !this.organizationId) {
-      this._showNotification(__('Sesión no disponible'), 'error');
-      modalHandle?.close();
-      return;
-    }
-    try {
-      const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el producto'));
-
-      const name = url
-        ? this._nameFromUrl(url)
-        : (files?.length ? `Producto sin título (${files.length} archivo${files.length === 1 ? '' : 's'})` : 'Producto pendiente');
-
-      const metadata = {
-        pending_ai_enrichment: true,
-        source: url ? 'url' : 'files',
-      };
-      if (files?.length) metadata.pending_files = files;
-
-      const payload = {
-        organization_id: this.organizationId,
-        entity_id: entityId,
-        tipo_producto: 'otro',
-        nombre_producto: name,
-        descripcion_producto: 'Vera está procesando la información. La ficha se completará automáticamente.',
-        moneda: 'USD',
-        metadata,
-      };
-      if (url) payload.url_producto = url;
-
-      const { data, error } = await this.supabase
-        .from('products')
-        .insert(payload)
-        .select('id')
-        .single();
-      if (error) throw error;
-      if (!data?.id) throw new Error(__('No se obtuvo el id del producto creado'));
-
-      this._invalidateCache();
-      modalHandle?.close();
-      this._navigateToProductDetail(entityId, data.id);
-    } catch (err) {
-      console.error('ProductsListView _createPendingProduct:', err);
-      this._showNotification(err?.message || __('No se pudo crear la ficha'), 'error');
-      modalHandle?.close();
-    }
+    return this._analyzePhotosAndCreateProduct({ files: files || [], modalHandle, hintEl: null });
   }
 
   _nameFromUrl(url) {

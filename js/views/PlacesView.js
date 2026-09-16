@@ -118,45 +118,13 @@ class PlacesView extends BaseView {
     }
   }
 
+  /** Corte: public.elements_full (kind scenario) por CatalogoDataService, con las fotos por file_id. */
   async _fetchPlacesData(orgId) {
-    // brand_places se filtra via brand_entities.organization_id (no tiene FK directo a org)
-    // Paso 1: obtener entity_ids de la org
-    const { data: entities, error: entError } = await this.supabase
-      .from('brand_entities')
-      .select('id')
-      .eq('organization_id', orgId);
-    if (entError) throw entError;
-    const entityIds = (entities || []).map((e) => e.id);
-    if (entityIds.length === 0) return { places: [], placeImageById: {} };
-
-    // Paso 2: lugares filtrados por esos entities
-    const { data: placesData, error: placesError } = await this.supabase
-      .from('brand_places')
-      .select('id, entity_id, nombre_lugar, descripcion_lugar, place_type, city, country, address')
-      .in('entity_id', entityIds)
-      .order('created_at', { ascending: false });
-    if (placesError) throw placesError;
-    const places = placesData || [];
-
-    // Paso 3: thumbnails desde place_images
-    const placeIds = places.map((p) => p.id);
+    if (!window.CatalogoDatos) return { places: [], placeImageById: {}, fallbackEntityId: null };
+    const lista = await window.CatalogoDatos.elementos(orgId, 'scenario');
     const placeImageById = {};
-    if (placeIds.length) {
-      const { data: imagesData, error: imagesError } = await this.supabase
-        .from('place_images')
-        .select('place_id, image_url, image_order')
-        .in('place_id', placeIds)
-        .not('image_url', 'is', null)
-        .order('image_order', { ascending: true });
-      if (imagesError) throw imagesError;
-      (imagesData || []).forEach((img) => {
-        const url = (img.image_url || '').trim();
-        if (!url) return;
-        if (!placeImageById[img.place_id]) placeImageById[img.place_id] = url;
-      });
-    }
-
-    return { places, placeImageById };
+    lista.forEach((e) => { if (e.imagen) placeImageById[e.id] = e.imagen; });
+    return { places: lista, placeImageById, fallbackEntityId: null };
   }
 
   _invalidateCache() {
@@ -165,44 +133,28 @@ class PlacesView extends BaseView {
     }
   }
 
+  /** En la base nueva no hay «entidad» contenedora: el elemento es su propia identidad. */
   async _ensureEntityId() {
-    if (!this.supabase || !this.organizationId) return null;
-    const { data: rows, error } = await this.supabase
-      .from('brand_entities')
-      .select('id')
-      .eq('organization_id', this.organizationId)
-      .order('created_at', { ascending: true })
-      .limit(1);
-    if (error) { console.error('PlacesView _ensureEntityId:', error); return null; }
-    if (rows?.length) return rows[0].id;
-    const { data: created, error: insErr } = await this.supabase
-      .from('brand_entities')
-      .insert({ organization_id: this.organizationId, name: 'Identity principal', entity_type: 'other', description: null })
-      .select('id').single();
-    if (insErr) { console.error('PlacesView _ensureEntityId insert:', insErr); return null; }
-    return created?.id || null;
+    return null;
   }
 
   async _onAddPlace() {
-    if (!this.supabase || !this.organizationId) return;
-    const btn = document.getElementById('placesListAddBtn');
+    if (!window.CatalogoDatos || !this.organizationId) return;
+    const btn = this.container?.querySelector('[id$="AddBtn"]') || document.querySelector('[id$="AddBtn"]');
     if (btn) btn.disabled = true;
     try {
-      const entityId = await this._ensureEntityId();
-      if (!entityId) { this._showNotification(__('No se pudo obtener una identidad para vincular el lugar'), 'error'); return; }
-      const { error } = await this.supabase.from('brand_places').insert({
-        entity_id: entityId,
-        nombre_lugar: __('Nuevo lugar'),
-        descripcion_lugar: __('Pendiente de descripción.'),
-        place_type: 'otro',
-      });
-      if (error) throw error;
+      const creado = await window.CatalogoDatos.crear(this.organizationId, 'scenario', { nombre_lugar: __('nuevo escenario'), description: __('Pendiente de descripción.'), place_type: 'otro' });
+      if (!creado?.id) throw new Error(__('No se pudo crear'));
       this._invalidateCache();
       await this._loadData();
-      this._renderPlacesMasonry();
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
     } catch (e) {
-      console.error('PlacesView _onAddPlace:', e);
-      this._showNotification(e?.message || __('Error al crear el lugar'), 'error');
+      console.error('_onAddPlace:', e);
+      alert(e?.message || __('Error al crear'));
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -268,65 +220,48 @@ class PlacesView extends BaseView {
     `;
   }
 
+  /** Archivar (PATCH archived_at): no se borra, las producciones lo referencian. */
   async _onDeletePlace(placeId, btn) {
-    if (!placeId || !this.supabase) return;
-    if (!confirm(__('¿Eliminar este lugar? Se borrarán también sus fotos.'))) return;
+    if (!placeId || !window.CatalogoDatos) return;
+    if (!confirm(__('¿Quitar este elemento del catálogo? Sus producciones se conservan.'))) return;
     if (btn) btn.disabled = true;
     try {
-      const { error } = await this.supabase.from('brand_places').delete().eq('id', placeId);
-      if (error) throw error;
+      const fue = await window.CatalogoDatos.archivar(placeId);
+      if (!fue) throw new Error(__('No se pudo quitar (¿sin permiso editar_marca?).'));
       this._invalidateCache();
       await this._loadData();
-      this._renderPlacesMasonry();
-      this._showNotification(__('Lugar eliminado'), 'success');
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Elemento archivado'), 'success');
     } catch (e) {
-      console.error('PlacesView _onDeletePlace:', e);
-      this._showNotification(e?.message || __('Error al eliminar el lugar'), 'error');
+      console.error('_onDeletePlace:', e);
+      this._showNotification(e?.message || __('Error al quitar'), 'error');
       if (btn) btn.disabled = false;
     }
   }
 
   async _onDuplicatePlace(placeId, btn) {
-    if (!placeId || !this.supabase) return;
+    if (!placeId || !window.CatalogoDatos) return;
     if (btn) btn.disabled = true;
     try {
-      const { data: place, error: fetchError } = await this.supabase
-        .from('brand_places').select('*').eq('id', placeId).single();
-      if (fetchError || !place) throw fetchError || new Error(__('No se pudo cargar el lugar'));
-      const { id: _id, created_at: _c, ...rest } = place;
-      const copyData = { ...rest, nombre_lugar: (place.nombre_lugar || 'Lugar').trim() + ' (copia)' };
-      const { data: newPlace, error: insertError } = await this.supabase
-        .from('brand_places').insert(copyData).select('id').single();
-      if (insertError || !newPlace?.id) throw insertError || new Error(__('No se pudo crear la copia'));
-
-      // Copiar imagenes
-      const { data: images } = await this.supabase
-        .from('place_images')
-        .select('image_url, image_type, image_order')
-        .eq('place_id', placeId)
-        .order('image_order', { ascending: true });
-      if (images && images.length) {
-        await this.supabase.from('place_images').insert(images.map((img) => ({
-          place_id: newPlace.id,
-          image_url: img.image_url,
-          image_type: img.image_type,
-          image_order: img.image_order,
-          download_status: 'stored'
-        })));
-      }
+      const copia = await window.CatalogoDatos.duplicar(placeId);
+      if (!copia?.id) throw new Error(__('No se pudo crear la copia'));
       this._invalidateCache();
       await this._loadData();
-      this._renderPlacesMasonry();
-      this._showNotification(__('Lugar duplicado'), 'success');
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Duplicado'), 'success');
     } catch (e) {
-      console.error('PlacesView _onDuplicatePlace:', e);
-      this._showNotification(e?.message || __('Error al duplicar el lugar'), 'error');
+      console.error('_onDuplicatePlace:', e);
+      this._showNotification(e?.message || __('Error al duplicar'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
   }
-
-  // ─── Modal: Adjuntar lugar ───────────────────────────────────────────
 
   _onAttachPlace() {
     if (!window.Modal || typeof window.Modal.show !== 'function') {
@@ -569,185 +504,69 @@ class PlacesView extends BaseView {
     return { input, list };
   }
 
-  async _analyzePhotosAndCreatePlace({ files, docFiles = [], modalHandle, hintEl }) {
-    if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesión no disponible'), 'error');
-      modalHandle?.close();
-      return;
-    }
-    const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
-    let placeId = null;
+  /**
+   * Corte: la ficha por IA (api-*-generate-fiche) se apagó con las functions; el
+   * elemento se crea con sus fotos (POST /v1/archivos → attributes.imagenes) y
+   * la ficha se completa a mano o, más adelante, con el flujo de catálogo.
+   */
+  async _analyzePhotosAndCreatePlace({ files, modalHandle, hintEl }) {
+    if (!window.CatalogoDatos || !this.organizationId) return;
+    const setHint = (t) => { if (hintEl) hintEl.textContent = t; };
     try {
-      setHint(__('Creando lugar inicial...'));
-      const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el lugar'));
-      const placeholderMeta = docFiles.length ? { pending_files: docFiles } : null;
-      const { data: created, error: insertError } = await this.supabase
-        .from('brand_places')
-        .insert({
-          entity_id: entityId,
-          nombre_lugar: __('Procesando ficha...'),
-          descripcion_lugar: __('Vera está analizando las fotos del lugar.'),
-          place_type: 'otro',
-          ...(placeholderMeta ? { contact_info: placeholderMeta } : {})  // reusamos contact_info jsonb para guardar metadata temporal
-        })
-        .select('id').single();
-      if (insertError || !created?.id) throw insertError || new Error(__('No se pudo crear el lugar'));
-      placeId = created.id;
-
-      // Subir imagenes a bucket place-images
-      setHint(__('Subiendo {n} {fotos} a storage...', { n: files.length, fotos: files.length === 1 ? __('foto') : __('fotos') }));
-      const imageUrls = [];
-      for (const file of files) {
-        const ext = (file.name?.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
-        const fileName = `${this.userId}/${placeId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-        const { error: uploadError } = await this.supabase.storage
-          .from('place-images')
-          .upload(fileName, file, { contentType: file.type, cacheControl: '3600', upsert: false });
-        if (uploadError) throw new Error(`Error subiendo "${file.name}": ${uploadError.message}`);
-        const { data: { publicUrl } } = this.supabase.storage.from('place-images').getPublicUrl(fileName);
-        imageUrls.push(publicUrl);
+      setHint(__('Creando el elemento…'));
+      const creado = await window.CatalogoDatos.crear(this.organizationId, 'scenario', { nombre_lugar: __('nuevo escenario'), description: __('Pendiente de descripción.') });
+      const lista = Array.from(files || []).filter((f) => f && /^image\//.test(f.type || ''));
+      for (const f of lista) {
+        setHint(__('Subiendo {n}…', { n: f.name }));
+        try { await window.CatalogoDatos.subirFoto(this.organizationId, creado.id, f); }
+        catch (e) { console.warn('[catalogo] foto:', e?.code || e?.message); if (e?.code === 'sin_api') { setHint(__('Las fotos se suben cuando el borde esté configurado.')); break; } }
       }
-
-      setHint(__('Vera está analizando las fotos con OpenAI Vision...'));
-      await this._callFichePlaceFunction({
-        placeId,
-        payload: { place_id: placeId, organization_id: this.organizationId, image_urls: imageUrls },
-        modalHandle, setHint
-      });
-      placeId = null;
-    } catch (err) {
-      console.error('PlacesView _analyzePhotosAndCreatePlace:', err);
-      if (placeId) {
-        try { await this.supabase.from('brand_places').delete().eq('id', placeId); }
-        catch (delErr) { console.warn('No se pudo limpiar placeholder:', delErr); }
-        this._invalidateCache();
-      }
-      modalHandle?.close();
+      modalHandle?.close?.();
+      this._invalidateCache();
+      await this._loadData();
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Elemento creado. La ficha por IA llega con el flujo de catálogo: complétala desde su detalle.'), 'info');
+      if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
+    } catch (e) {
+      console.error('_analyzePhotosAndCreatePlace:', e);
+      setHint(e?.message || __('No se pudo crear'));
     }
   }
 
   async _analyzeUrlAndCreatePlace({ url, hostname, modalHandle, hintEl }) {
-    if (!this.supabase || !this.organizationId || !this.userId) {
-      this._showNotification(__('Sesión no disponible'), 'error');
-      modalHandle?.close();
-      return;
-    }
-    const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
-    let placeId = null;
+    if (!window.CatalogoDatos || !this.organizationId) return;
+    const setHint = (t) => { if (hintEl) hintEl.textContent = t; };
     try {
-      setHint(__('Creando lugar inicial...'));
-      const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error(__('No se pudo obtener una identidad para vincular el lugar'));
-      const { data: created, error: insertError } = await this.supabase
-        .from('brand_places')
-        .insert({
-          entity_id: entityId,
-          nombre_lugar: __('Procesando ficha...'),
-          descripcion_lugar: __('Vera está leyendo la página del lugar.'),
-          place_type: 'otro',
-          url_lugar: url,
-        })
-        .select('id').single();
-      if (insertError || !created?.id) throw insertError || new Error(__('No se pudo crear el lugar'));
-      placeId = created.id;
-
-      setHint(__('Leyendo {page} y extrayendo datos del lugar...', { page: hostname || __('la página') }));
-      await this._callFichePlaceFunction({
-        placeId,
-        payload: { place_id: placeId, organization_id: this.organizationId, url },
-        modalHandle, setHint
-      });
-      placeId = null;
-    } catch (err) {
-      console.error('PlacesView _analyzeUrlAndCreatePlace:', err);
-      if (placeId) {
-        try { await this.supabase.from('brand_places').delete().eq('id', placeId); }
-        catch (delErr) { console.warn('No se pudo limpiar placeholder:', delErr); }
-        this._invalidateCache();
-      }
-      modalHandle?.close();
-    }
-  }
-
-  async _callFichePlaceFunction({ placeId, payload, modalHandle, setHint }) {
-    const { data: sessionData } = await this.supabase.auth.getSession();
-    const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) throw new Error(__('No hay sesión activa'));
-
-    const resp = await fetch('/.netlify/functions/api-places-generate-fiche', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-      body: JSON.stringify(payload),
-    });
-    let result;
-    try { result = await resp.json(); }
-    catch (_) {
-      const text = await resp.text().catch(() => '');
-      throw new Error(`Gateway HTTP ${resp.status}: ${text.slice(0, 200) || 'sin body'}`);
-    }
-    if (!resp.ok || !result.ok) {
-      const errMsg = result.error || `HTTP ${resp.status}`;
-      const detail = result.detail ? ` (${result.detail})` : '';
-      if (resp.status === 402) {
-        this._showNotification(__('Créditos insuficientes. Necesitas {n} créditos', { n: result.credits_needed?.toFixed?.(4) || '?' }), 'error');
-      } else {
-        this._showNotification(__('Error generando ficha: {msg}', { msg: `${errMsg}${detail}` }), 'error');
-      }
-      throw new Error(errMsg);
-    }
-
-    setHint(__('Ficha generada (costo: {n} créditos). Recargando listado...', { n: result.credits_charged.toFixed(4) }));
-    this._invalidateCache();
-    window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
-    modalHandle?.close();
-    const imgCount = result.images?.inserted || 0;
-    if (result.images?.error) {
-      this._showNotification(__('Ficha generada · imágenes no se vincularon: {err}', { err: result.images.error }), 'error');
-    } else {
-      const sourceLabel = result.source === 'url' ? __('desde URL') : __('desde fotos');
-      this._showNotification(
-        __('Ficha de lugar generada {source} · {n} créditos · {count} {fotos}', {
-          source: sourceLabel,
-          n: result.credits_charged.toFixed(4),
-          count: imgCount,
-          fotos: imgCount === 1 ? __('foto') : __('fotos'),
-        }),
-        'success'
-      );
-    }
-    await this._loadData();
-    this._renderPlacesMasonry();
-  }
-
-  async _createPendingPlace({ files = null, modalHandle = null }) {
-    if (!this.supabase || !this.organizationId) {
-      this._showNotification(__('Sesión no disponible'), 'error');
-      modalHandle?.close();
-      return;
-    }
-    try {
-      const entityId = await this._ensureEntityId();
-      if (!entityId) throw new Error(__('No se pudo obtener una identidad'));
-      const { error } = await this.supabase
-        .from('brand_places')
-        .insert({
-          entity_id: entityId,
-          nombre_lugar: files?.length ? `Lugar pendiente (${files.length} archivo${files.length === 1 ? '' : 's'})` : 'Lugar pendiente',
-          descripcion_lugar: 'Vera procesará los archivos para completar la ficha automáticamente cuando se cablee la extracción server-side.',
-          place_type: 'otro',
-        });
-      if (error) throw error;
+      setHint(__('Creando el elemento…'));
+      const nombre = typeof this._nameFromUrl === 'function' ? this._nameFromUrl(url) : (hostname || __('nuevo escenario'));
+      const creado = await window.CatalogoDatos.crear(this.organizationId, 'scenario', { nombre_lugar: nombre || __('nuevo escenario'), description: __('Pendiente de descripción.'), url });
+      modalHandle?.close?.();
       this._invalidateCache();
-      modalHandle?.close();
       await this._loadData();
-      this._renderPlacesMasonry();
-      this._showNotification(__('Lugar guardado para procesamiento posterior'), 'info');
-    } catch (err) {
-      console.error('PlacesView _createPendingPlace:', err);
-      this._showNotification(err?.message || __('No se pudo crear el lugar'), 'error');
-      modalHandle?.close();
+      if (typeof this._renderProductsMasonry === 'function') this._renderProductsMasonry();
+      else if (typeof this._renderServices === 'function') this._renderServices();
+      else if (typeof this._renderPlacesMasonry === 'function') this._renderPlacesMasonry();
+      else if (typeof this._renderCharactersMasonry === 'function') this._renderCharactersMasonry();
+      this._showNotification(__('Elemento creado con su enlace. La lectura automática de la página llega con el flujo de catálogo.'), 'info');
+      if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
+    } catch (e) {
+      console.error('_analyzeUrlAndCreatePlace:', e);
+      setHint(e?.message || __('No se pudo crear'));
     }
+  }
+
+  /** La ficha por IA llega como flujo de catálogo (backend catalogo.enriquecer); aquí solo se dice. */
+  async _callFichePlaceFunction({ modalHandle, setHint } = {}) {
+    if (typeof setHint === 'function') setHint(__('La ficha por IA llega con el flujo de catálogo.'));
+    modalHandle?.close?.();
+    return null;
+  }
+
+  async _createPendingPlace({ files = null, modalHandle = null } = {}) {
+    return this._analyzePhotosAndCreatePlace({ files: files || [], modalHandle, hintEl: null });
   }
 
   _showNotification(message, type = 'info') {

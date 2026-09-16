@@ -26,7 +26,8 @@
     'monitoring',
     // 'brand' / 'brands' / 'brand-organization': PORTADAS el 16/09 (MarcaDataService, verificar-marca.mjs 14/14).
     'brand-storage', 'brandstorage',
-    'products', 'services', 'places', 'characters', 'identities', 'product-detail',
+    // 'products' / 'services' / 'places' / 'characters': PORTADAS el 16/09 (CatalogoDataService sobre elements_full; la ficha por IA avisa «en obras»).
+    'identities', 'product-detail',
     'studio', 'studio/catalog', 'studio/flows',
     'vera',
     // 'image' / 'video': PORTADAS el 16/09 (StudioDataService: imagen-directa / video-directo por /v1; verificar-studio.mjs).
