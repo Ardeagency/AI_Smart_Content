@@ -751,7 +751,7 @@
       return;
     }
     const orgId = this.organizationRow?.id || window.currentOrgId;
-    const conexion = this.findIntegration ? this.findIntegration(brandContainerId, normalizedProvider) : null;
+    const conexion = this._pickBrandIntegrationForContainer(brandContainerId, normalizedProvider);
     const fila = conexion || (this.brandIntegrations || []).find((r) => String(r.platform || '').toLowerCase() === normalizedProvider);
     if (!fila?.id || !window.apiV2?.api || !orgId) { alert(__('No hay una conexión que desconectar.')); return; }
     try {
