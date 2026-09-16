@@ -470,12 +470,14 @@
          está cacheado. Cero coste si idle nunca llega (low-end devices). -->
     <script>
       (function() {
+        // Corte (ADR-0052): las vistas más usadas de la consola nueva (el Tablero es TableroView;
+        // DashboardView/BrandstorageView/TasksView ya no tienen ruta o están en obras).
         var topViews = [
-          'js/views/DashboardView.js',
-          'js/views/StudioView.js',
+          'js/views/TableroView.js',
+          'js/views/ImageView.js',
+          'js/views/VeraView.js',
           'js/views/ProductionView.js',
-          'js/views/BrandstorageView.js',
-          'js/views/TasksView.js'
+          'js/views/StudioView.js'
         ];
         function injectPrefetch() {
           topViews.forEach(function(src) {
