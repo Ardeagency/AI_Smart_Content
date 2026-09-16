@@ -32,7 +32,7 @@
     'image', 'video',
     // 'credits' / 'plans': PORTADAS el 16/09 (PlanesDataService, verificar-planes.mjs).
     'plans/cancel', // cancelar no tiene puerta para una persona (planes.md): sigue en obras
-    'organization',
+    // 'organization': PORTADA el 16/09 (OrganizacionDataService, verificar-organizacion.mjs); resumen y bitácora esperan la 190000.
     'creation_process',
   ];
 

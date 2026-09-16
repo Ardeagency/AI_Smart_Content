@@ -8,6 +8,13 @@
  *
  * Tabs: General · Miembros · Facturación · Actividad · Notificaciones · Seguridad
  */
+/**
+ * Corte ADR-0052 (16/09): esta vista NO habla con la base. Todo pasa por
+ * `window.OrganizacionDatos` (js/services/OrganizacionDataService.js) y por
+ * `window.PlanesDatos`; `this.supabase` queda solo para la sesión y el MFA de
+ * la persona (auth.mfa.*). Lo que la base aún no da (resumen_de_marca,
+ * historial_de_marca hasta la 190000) se DICE en pantalla como pendiente.
+ */
 class OrganizationView extends BaseView {
   static documentTitle = 'Configuración';
   static cacheable = false;
@@ -514,15 +521,11 @@ class OrganizationView extends BaseView {
   }
 
   async _loadOrg() {
-    const { data, error } = await this.supabase
-      .from('organizations')
-      .select('id, name, owner_user_id, created_at, deleted_at, timezone, locale, mfa_required')
-      .eq('id', this.orgId).maybeSingle();
-    if (error) throw error;
-    if (!data) throw new Error(__('Organización no encontrada.'));
-    this.org = data;
+    const org = await window.OrganizacionDatos.organizacion(this.orgId);
+    if (!org) throw new Error(__('Organización no encontrada.'));
+    this.org = org;
     this.isOwner = this.org.owner_user_id === this.userId;
-    this.mfaOrgRequired = Boolean(data.mfa_required);
+    this.mfaOrgRequired = Boolean(org.mfa_required);
   }
 
   // ── MFA (FEAT-020) ───────────────────────────────────────
@@ -771,13 +774,11 @@ class OrganizationView extends BaseView {
 
   async _toggleOrgMfaRequired(required) {
     try {
-      const { data, error } = await this.supabase.rpc('set_org_mfa_required', {
-        p_org_id:   this.orgId,
-        p_required: required,
-      });
-      if (error) throw error;
-      this.mfaOrgRequired = Boolean(data);
-      this._toast(required ? __('Política activada: 2FA exigida para todos los miembros.') : __('Política desactivada.'));
+      // organizations.mfa_required por UPDATE (policy editar_marca); la base devuelve lo que quedó.
+      const org = await window.OrganizacionDatos.actualizarOrganizacion(this.orgId, { mfa_required: !!required });
+      this.org = { ...this.org, ...org };
+      this.mfaOrgRequired = Boolean(org.mfa_required);
+      this._toast(this.mfaOrgRequired ? __('Política activada: 2FA exigida para todos los miembros.') : __('Política desactivada.'));
       this._renderMfa();
       this._bindMfaEvents();
     } catch (e) {
@@ -841,72 +842,28 @@ class OrganizationView extends BaseView {
   }
 
   async _loadMembers() {
-    const { data, error } = await this.supabase
-      .from('organization_members')
-      .select('id, user_id, role, created_at')
-      .eq('organization_id', this.orgId);
-    if (error) throw error;
-    this.members = data || [];
-    const myMember = this.members.find((m) => m.user_id === this.userId);
-    this.canManageMembers = this.isOwner || (myMember && ['owner', 'admin'].includes(myMember.role));
-
-    const userIds = [...new Set(this.members.map((m) => m.user_id).filter(Boolean))];
-    let profilesMap = {};
-    if (userIds.length > 0) {
-      const { data: profiles } = await this.supabase
-        .from('profiles').select('id, full_name, email').in('id', userIds);
-      if (profiles) profiles.forEach((p) => { profilesMap[p.id] = p; });
-    }
-    this.membersWithProfile = this.members.map((m) => ({
-      ...m,
-      full_name: profilesMap[m.user_id]?.full_name || null,
-      email: profilesMap[m.user_id]?.email || null,
-    }));
+    // public.equipo = members ⋈ profiles ⋈ member_permissions; id = user_id.
+    this.membersWithProfile = await window.OrganizacionDatos.equipo(this.orgId);
+    this.members = this.membersWithProfile;
+    const yo = this.members.find((m) => m.user_id === this.userId);
+    // El rol NO autoriza: autoriza el permiso literal (editar_equipo). El owner lo tiene siempre.
+    this.canManageMembers = this.isOwner || (yo && (yo.permisos.includes('editar_equipo') || ['owner', 'admin'].includes(yo.role)));
   }
 
+  /** Invitaciones por correo: sin tabla en la base nueva (ADR-0048, borrador). */
   async _loadInvitations() {
-    const { data } = await this.supabase
-      .from('organization_invitations')
-      .select('id, email, role, status, expires_at, created_at, invited_by')
-      .eq('organization_id', this.orgId).eq('status', 'pending').order('created_at', { ascending: false });
-    this.invitations = data || [];
+    this.invitations = [];
   }
 
   async _loadBrandContainers() {
-    const { data } = await this.supabase
-      .from('brand_containers')
-      .select('id, nombre_marca, created_at')
-      .eq('organization_id', this.orgId).order('created_at', { ascending: true });
-    this.brandContainers = data || [];
+    // Mercados de la marca (lo que v1 llamaba sub-marcas).
+    this.brandContainers = await window.OrganizacionDatos.mercados(this.orgId);
   }
 
-  // ── Centro de control: conteos por entidad ──
-  // brand_entities/products/services son org-scope directos; brand_places
-  // (escenarios) y brand_characters (actores) cuelgan de entity_id; producciones
-  // = flow_runs en el rango. Conteos con head:true (no traen filas).
+  // ── Centro de control: conteos por entidad (public.elements por kind + flows.runs) ──
   async _loadControlStats() {
-    const sb = this.supabase, org = this.orgId;
-    // Producciones cuenta HISTORICO, como el resto de la fila. Antes miraba
-    // solo los ultimos 7 dias con un selector al lado; retirado el selector, esa
-    // ventana quedaba invisible y un "0 Producciones" se leia como "nunca se
-    // produjo nada" cuando queria decir "nada esta semana".
-    const cnt = (q) => q.then((r) => r.count || 0).catch(() => 0);
     try {
-      const [ents, products, services, productions] = await Promise.all([
-        sb.from('brand_entities').select('id').eq('organization_id', org),
-        cnt(sb.from('products').select('*', { count: 'exact', head: true }).eq('organization_id', org)),
-        cnt(sb.from('services').select('*', { count: 'exact', head: true }).eq('organization_id', org)),
-        cnt(sb.from('flow_runs').select('*', { count: 'exact', head: true }).eq('organization_id', org)),
-      ]);
-      const entIds = (ents.data || []).map((e) => e.id);
-      let places = 0, characters = 0;
-      if (entIds.length) {
-        [places, characters] = await Promise.all([
-          cnt(sb.from('brand_places').select('*', { count: 'exact', head: true }).in('entity_id', entIds)),
-          cnt(sb.from('brand_characters').select('*', { count: 'exact', head: true }).in('entity_id', entIds)),
-        ]);
-      }
-      this.controlStats = { identities: entIds.length, products, services, places, characters, productions };
+      this.controlStats = await window.OrganizacionDatos.centroDeControl(this.orgId);
     } catch (e) {
       console.warn('OrganizationView _loadControlStats:', e?.message || e);
       this.controlStats = { identities: 0, products: 0, services: 0, places: 0, characters: 0, productions: 0 };
@@ -963,179 +920,47 @@ class OrganizationView extends BaseView {
     const hasta = this.usageTo ? new Date(this.usageTo) : new Date();
     const desde = this.usageFrom ? new Date(this.usageFrom)
       : new Date(hasta.getTime() - 29 * 24 * 60 * 60 * 1000);
-    const dias = Math.max(1, Math.round((hasta - desde) / (24 * 60 * 60 * 1000)) + 1);
-    const previoDesde = new Date(desde.getTime() - dias * 24 * 60 * 60 * 1000);
-
-    try { await (window.CreditCosts?.getMap?.()); } catch (_) {}
-    // El saldo hace falta para proyectar el agotamiento, y _loadBilling puede no
-    // haber corrido todavia (Uso se abre sin pasar por Suscripcion).
-    if (window.OrgSummaryDataService) {
+    // El saldo hace falta para proyectar el agotamiento (Uso se abre sin pasar por Suscripción).
+    if (!this.billingCreditos && window.PlanesDatos) {
       try {
-        const svc = await new window.OrgSummaryDataService().init(this.supabase, this.orgId);
-        if (!this.billingCreditos) this.billingCreditos = await svc._creditos();
-        if (!this.monitoreo) this.monitoreo = await svc.monitoreo();
+        const p = await window.PlanesDatos.cargar(this.orgId);
+        if (p) this.billingCreditos = { disponibles: p.orgCredits.credits_available, total: p.orgCredits.credits_total, usados: Math.max(0, p.orgCredits.credits_total - p.orgCredits.credits_available), pctUsado: p.orgCredits.credits_total > 0 ? Math.round(((p.orgCredits.credits_total - p.orgCredits.credits_available) / p.orgCredits.credits_total) * 100) : 0 };
       } catch (_) { /* sin saldo no hay proyeccion, y se dice */ }
     }
-    const { data } = await this.supabase
-      // `metadata` entra al select porque de ahi sale la plataforma del scraping:
-      // sin ella, Instagram y Facebook caen en el mismo saco.
-      // `usd_cost` YA existe y esta poblado (3.135 filas, US$207,90 en WAKEUP):
-      // los creditos solos no le dicen nada a nadie, el dinero si.
-      .from('credit_usage').select('kind, credits_delta, usd_cost, created_at, metadata, source_id')
-      .eq('organization_id', this.orgId)
-      // SIN filtro de signo: el historial de abajo muestra TODOS los
-      // movimientos, y esconder los positivos taparia justo la anomalia que
-      // hay que ver (ver el filtro de la grafica, mas abajo).
-      // Se pide el DOBLE de ventana —el periodo y el inmediatamente anterior—
-      // en UNA consulta, y se parte aqui: comparar contra el periodo previo con
-      // una segunda consulta costaria otro viaje para el mismo dato.
-      .gte('created_at', previoDesde.toISOString())
-      .lte('created_at', new Date(hasta.getTime() + 86399000).toISOString())
-      .order('created_at', { ascending: true });
-
-    const todas = data || [];
-    const corte = desde.toISOString();
-    const rows = todas.filter((r) => (r.created_at || '') >= corte);
-
-    // Consumo del periodo ANTERIOR, para poder decir si se gasta mas o menos.
-    // Un numero sin referencia no informa: "45 creditos" no dice si esta bien.
-    const previo = todas
-      .filter((r) => (r.created_at || '') < corte && Number(r.credits_delta) < 0)
-      .reduce((a2, r) => a2 + Math.abs(Number(r.credits_delta) || 0), 0);
-
-    const byDayMap = {};
-    const porMiembro = {};
-    const byArea = {};
-    OrganizationView.USAGE_AREAS.forEach((a) => { byArea[a.key] = 0; });
-    let total = 0;
-    // La grafica solo agrega los movimientos NEGATIVOS, que son el consumo tal
-    // como quedo escrito. Los positivos se cuentan aparte y se avisan: en esta
-    // base hay 486 filas con signo positivo y 484 de ellas son consumo anotado
-    // al reves (vera_chat y claude_tokens entran como abono). Reinterpretarlas
-    // aqui seria adivinar; el arreglo va donde se escriben, no en la vista.
-    let positivos = 0;
-    let usd = 0;
-    // Costo MEDIDO por tipo de operacion. La proyeccion de abajo se apoya en
-    // esto y no en `feature_costs.credits_per_action`: el catalogo dice 1
-    // credito por scraping, pero lo que de verdad se cobra son ~0,09 —el precio
-    // sale del proveedor, no de la tabla—. Proyectar con el catalogo daria una
-    // cifra diez veces mayor que la real.
-    const porKind = {};
-    rows.forEach((r) => {
-      const day = (r.created_at || '').slice(0, 10);
-      if (!day) return;
-      if (Number(r.credits_delta) >= 0) { positivos += 1; return; }
-      usd += Number(r.usd_cost) || 0;
-      const kk = r.kind || 'desconocido';
-      if (!porKind[kk]) porKind[kk] = { creditos: 0, eventos: 0 };
-      porKind[kk].creditos += c;
-      porKind[kk].eventos += 1;
-      const cat = OrganizationView._categoriaDe(r.kind, r.metadata?.platform);
-      const c = Math.abs(Number(r.credits_delta) || 0);
-      // Se guardan CREDITOS y OPERACIONES: el tooltip necesita las dos cosas
-      // —cuanto costo y cuantas veces se hizo—, y con solo el gasto no se
-      // distingue una operacion cara de veinte baratas.
-      if (!byDayMap[day]) byDayMap[day] = { day, total: 0, ops: 0, usd: 0, byArea: {}, opsArea: {} };
-      byDayMap[day].usd += Number(r.usd_cost) || 0;
-      byDayMap[day].byArea[cat] = (byDayMap[day].byArea[cat] || 0) + c;
-      byDayMap[day].opsArea[cat] = (byDayMap[day].opsArea[cat] || 0) + 1;
-      byDayMap[day].total += c;
-      byDayMap[day].ops += 1;
-      byArea[cat] = (byArea[cat] || 0) + c;
-      total += c;
-
-      // Por miembro, en la misma pasada. `credit_usage` NO tiene columna
-      // user_id: la autoria, cuando existe, viaja en metadata.user_id. Lo que
-      // no la trae es consumo AUTOMATICO (sensores, scrapers, flujos
-      // programados), no un dato perdido — y por eso se agrupa aparte con
-      // nombre propio en vez de esconderlo bajo un id.
-      const uid = r.metadata?.user_id || '__auto__';
-      if (!porMiembro[uid]) porMiembro[uid] = { uid, creditos: 0, eventos: 0, ultima: null, porCat: {} };
-      const m = porMiembro[uid];
-      m.creditos += c;
-      m.eventos += 1;
-      m.porCat[cat] = (m.porCat[cat] || 0) + c;
-      if (!m.ultima || r.created_at > m.ultima) m.ultima = r.created_at;
-    });
-    // Se rellenan los dias SIN consumo con cero. Antes se omitian, y el eje X
-    // saltaba de "17 ago" a "19 ago" sin explicar el hueco: una barra ausente y
-    // un dia sin gasto se veian igual, que es justo lo que no debe pasar.
-    const byDay = [];
-    for (let t = new Date(desde); t <= hasta; t.setDate(t.getDate() + 1)) {
-      const dia = t.toISOString().slice(0, 10);
-      byDay.push(byDayMap[dia] || { day: dia, total: 0, ops: 0, usd: 0, byArea: {}, opsArea: {} });
-    }
-    const peak = byDay.reduce((m, d) => (d.total > (m ? m.total : 0) ? d : m), null);
-    const topAreaKey = Object.entries(byArea).sort((a, b) => b[1] - a[1])[0];
-
-    // Ritmo y fecha de agotamiento. El saldo lo trae el service; si aun no se
-    // cargo, no se inventa una proyeccion — se deja en null y la tarjeta lo dice.
-    const porDia = total / dias;
-    const disponibles = this.billingCreditos?.disponibles;
-    const seAgotan = (porDia > 0 && typeof disponibles === 'number' && disponibles > 0)
-      ? new Date(Date.now() + (disponibles / porDia) * 24 * 60 * 60 * 1000)
-      : null;
-
-    this.usage = {
-      porDia,
-      seAgotan,
-      days: dias, byDay, byArea, total, peak,
-      topAreaKey: total > 0 && topAreaKey ? topAreaKey[0] : null,
-      events: rows.filter((r) => Number(r.credits_delta) < 0).length,
-      positivos,
-      usd,
-      porKind,
-      previo,
-      // Variacion contra el periodo anterior. Si el anterior fue cero no hay
-      // porcentaje que calcular —dividir por cero da Infinity y se pintaria un
-      // "+∞%"—, asi que queda en null y la vista lo omite.
-      variacion: previo > 0 ? Math.round(((total - previo) / previo) * 100) : null,
-      // El historial va de mas reciente a mas antiguo y con TODOS los signos.
-      movimientos: [...rows].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))),
-      porMiembro: Object.values(porMiembro).sort((a, b) => b.creditos - a.creditos),
-    };
+    // billing.usage_records (1 crédito = 1 USD), del periodo y del anterior, ya agregado.
+    this.usage = await window.OrganizacionDatos.uso(this.orgId, desde, hasta, this.billingCreditos?.disponibles);
   }
 
   async _loadNotifications() {
-    const { data } = await this.supabase
-      .from('org_notifications')
-      .select('id, type, severity, title, body, action_url, action_label, status, read_at, created_at')
-      .eq('organization_id', this.orgId).order('created_at', { ascending: false }).limit(20);
-    this.notifications = data || [];
+    // public.alerts de la marca (+ severidad de alert_types).
+    this.notifications = await window.OrganizacionDatos.notificaciones(this.orgId, 20);
   }
 
   async _loadBilling() {
-    if (!this.supabase || !this.orgId) return;
+    if (!this.orgId) return;
     try {
-      const [{ data: subRows }, { data: stripeInvs }, { data: wompiTxs }, caps, usageToday] = await Promise.all([
-        this.supabase.from('subscriptions')
-          .select('id,plan_id,status,current_period_start,current_period_end,cancel_at_period_end,canceled_at,provider,next_charge_at,stripe_subscription_id,wompi_last_transaction_id,wompi_payment_source_id')
-          .eq('organization_id', this.orgId).order('updated_at', { ascending: false }).limit(1),
-        this.supabase.from('stripe_invoices')
-          .select('invoice_id,amount_paid_cents,currency,status,hosted_invoice_url,invoice_pdf,paid_at,created_at,period_start,period_end')
-          .eq('organization_id', this.orgId).order('created_at', { ascending: false }).limit(50),
-        this.supabase.from('wompi_transactions')
-          .select('transaction_id,reference,target,amount_in_cents,currency,status,payment_method_type,finalized_at,created_at')
-          .eq('organization_id', this.orgId).eq('status', 'APPROVED').order('created_at', { ascending: false }).limit(50),
-        this.supabase.from('org_claude_caps').select('*').eq('organization_id', this.orgId).maybeSingle().then((r) => r.data).catch(() => null),
-        this.supabase.from('v_org_claude_usage_today').select('*').eq('organization_id', this.orgId).maybeSingle().then((r) => r.data).catch(() => null),
-      ]);
-      this.billingSub      = (subRows && subRows[0]) || null;
-      this.billingInvoices = stripeInvs || [];
-      this.billingWompiTxs = wompiTxs   || [];
-      // El plan se resuelve DESPUES y no dentro del Promise.all: _billingPlan()
-      // necesita this.billingSub, que solo existe cuando el Promise.all termina.
-      // Pedirlo en paralelo hacia que leyera billingSub=null y devolviera null
-      // SIEMPRE — por eso "Tu plan incluye" salia vacio y el nombre del plan
-      // caia al id en minuscula ('team') en vez del name ('Team').
-      this.billingPlanRow  = await this._billingPlan();
-      this.billingCaps     = caps       || null;
-      this.billingUsageToday = usageToday || null;
-      try {
-        const svc = await new window.OrgSummaryDataService().init(this.supabase, this.orgId);
-        this.billingCreditos = await svc._creditos();
-        this.billingFunciones = await svc.funciones();
-      } catch (_) { this.billingCreditos = null; }
+      const f = await window.OrganizacionDatos.facturacion(this.orgId);
+      this.billingSub      = f?.sub || null;
+      this.billingPlanRow  = f?.plan || null;
+      this.billingAcceso   = f?.acceso || null;
+      this.billingInvoices = f?.invoices || [];
+      this.billingPayments = f?.payments || [];
+      this.billingFicha    = f?.ficha || null;
+      this.billingFichaSinPermiso = !!f?.fichaSinPermiso;
+      this.billingPuedeFacturar = f?.puedeFacturar || { puede: false, falta: [] };
+      this.billingAlmacenamiento = f?.almacenamiento || null;
+      // Topes de gasto automático (org_claude_caps de v1): sin casa en la base nueva.
+      this.billingCaps = null;
+      this.billingUsageToday = null;
+      if (f?.creditos) {
+        const total = Math.max(f.creditos.mensuales || 0, f.creditos.saldo || 0);
+        const usados = Math.max(0, total - (f.creditos.disponibles || 0));
+        this.billingCreditos = { total, usados, disponibles: f.creditos.disponibles || 0, retenido: f.creditos.retenido || 0, pctUsado: total > 0 ? Math.round((usados / total) * 100) : 0 };
+      } else {
+        this.billingCreditos = null;
+      }
+      // Funciones del plan (feature_costs de v1): hoy son las capacidades del plan.
+      this.billingFunciones = null;
     } catch (e) {
       console.warn('[organization] _loadBilling error:', e?.message || e);
     }
@@ -1146,15 +971,6 @@ class OrganizationView extends BaseView {
     this._renderBillingProximo();
     this._renderBillingDatos();
     this._renderFunciones();
-  }
-
-  async _billingPlan() {
-    if (!this.billingSub?.plan_id) return null;
-    const { data } = await this.supabase
-      .from('plans')
-      .select('id,name,display_order,price_usd_month,price_usd_year,credits_monthly,max_handles,storage_mb,features')
-      .eq('id', this.billingSub.plan_id).maybeSingle();
-    return data || null;
   }
 
   _renderBilling() {
@@ -1168,9 +984,9 @@ class OrganizationView extends BaseView {
     const canceled = sub?.status === 'canceled' || sub?.cancel_at_period_end;
 
     const planName      = plan?.name || sub?.plan_id || __('Sin plan');
-    const nextRenew     = sub?.provider === 'wompi' ? sub?.next_charge_at : sub?.current_period_end;
+    const nextRenew     = sub?.current_period_end;
     const nextRenewStr  = nextRenew ? new Date(nextRenew).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-    const statusLabel   = ({ active: __('Activa'), trial: __('En prueba'), past_due: __('Pago pendiente'), canceled: __('Cancelada') }[sub?.status]) || (sub?.status || __('Sin suscripción'));
+    const statusLabel   = ({ active: __('Activa'), trialing: __('En prueba'), trial: __('En prueba'), past_due: __('Pago pendiente'), paused: __('En pausa'), canceled: __('Cancelada'), expired: __('Vencida') }[sub?.status]) || (sub?.status || __('Sin suscripción'));
 
     const banner = past_due
       ? `<div class="org-error-banner" style="margin-bottom:1rem;">${__('Tu último pago no se procesó correctamente. Actualiza tu método de pago para evitar la suspensión del servicio.')}</div>`
@@ -1178,33 +994,31 @@ class OrganizationView extends BaseView {
       ? `<div class="org-warning-banner" style="margin-bottom:1rem;background:#3a2410;border:1px solid #6b3a17;color:#fbbf24;padding:.75rem 1rem;border-radius:8px;">${__('Tu suscripción terminará el {fecha}.', { fecha: this.escapeHtml(nextRenewStr) })}</div>`
       : '';
 
-    const stripePortalBtn = sub?.provider === 'stripe'
-      ? `<button type="button" class="btn btn-secondary" id="orgBillingPortalBtn"><i class="aisc-ico aisc-ico--external-link"></i> ${__('Gestionar suscripción')}</button>`
-      : '';
-    const hasActiveSub = sub && ['active','trial','past_due'].includes(sub.status);
-    const reactivateBtn = hasActiveSub && sub.cancel_at_period_end
-      ? `<button type="button" class="btn btn-secondary" id="orgBillingReactivateBtn"><i class="aisc-ico aisc-ico--refresh"></i> ${__('Reactivar suscripción')}</button>`
-      : '';
+    // Cambiar/cancelar la suscripción no tiene puerta para una persona (planes.md):
+    // un solo camino real, escribir, en vez de botones que prometen.
+    const stripePortalBtn = '';
+    const reactivateBtn = `<a class="btn btn-secondary btn-sm" href="mailto:contact@aismartcontent.io?subject=Suscripci%C3%B3n%20${encodeURIComponent(this.org?.name || '')}">${__('Cambiar o cancelar el plan: escríbenos')}</a>`;
 
     const limits = this.querySelector('#orgBillingLimits');
 
     // Pagos unificados (Stripe + Wompi) — para "último pago" y el historial.
+    // billing.invoices (facturas de la suscripción) y billing.payments (pagos: paquetes o facturas).
     const stripeRows = (this.billingInvoices || []).map((inv) => ({
-      key: inv.invoice_id, provider: 'stripe',
-      date: inv.paid_at || inv.created_at,
-      amount: (inv.amount_paid_cents || 0) / 100,
-      currency: (inv.currency || 'usd').toUpperCase(),
+      key: `f-${inv.id}`, provider: inv.provider || 'factura',
+      date: inv.paid_at || inv.issued_at || inv.created_at,
+      amount: Number(inv.total) || 0,
+      currency: (inv.currency || 'USD').toUpperCase(),
       status: inv.status,
-      desc: __('Período {periodo}', { periodo: this._fmtPeriod(inv.period_start, inv.period_end) }),
-      url: inv.hosted_invoice_url || inv.invoice_pdf || null,
+      desc: (inv.number ? `${inv.number} · ` : '') + __('Período {periodo}', { periodo: this._fmtPeriod(inv.period_start, inv.period_end) }),
+      url: null,
     }));
-    const wompiRows = (this.billingWompiTxs || []).map((tx) => ({
-      key: tx.transaction_id, provider: 'wompi',
-      date: tx.finalized_at || tx.created_at,
-      amount: (tx.amount_in_cents || 0) / 100,
-      currency: tx.currency || 'COP',
-      status: tx.status,
-      desc: tx.target === 'subscription' ? __('Suscripción') : __('Paquete de créditos'),
+    const wompiRows = (this.billingPayments || []).filter((pg) => !pg.invoice_id).map((pg) => ({
+      key: `p-${pg.id}`, provider: pg.provider || 'pago',
+      date: pg.paid_at || pg.created_at,
+      amount: Number(pg.amount) || 0,
+      currency: (pg.currency || 'COP').toUpperCase(),
+      status: pg.status,
+      desc: pg.package_id ? __('Paquete de créditos') : __('Pago') + (pg.method_brand ? ` · ${pg.method_brand} ${pg.method_last4 ? '•••• ' + pg.method_last4 : ''}` : ''),
       url: null,
     }));
     const all = [...stripeRows, ...wompiRows].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -1274,7 +1088,7 @@ class OrganizationView extends BaseView {
           ${all.map((r) => `
             <div class="org-bill-trow">
               <span class="org-bill-date">${this.escapeHtml(this._fmtDate(r.date))}</span>
-              <span class="org-bill-desc">${this.escapeHtml(r.desc || '—')} <em>· ${r.provider === 'wompi' ? 'Wompi' : 'Stripe'}</em></span>
+              <span class="org-bill-desc">${this.escapeHtml(r.desc || '—')} <em>· ${this.escapeHtml(r.provider === 'wompi' ? 'Wompi' : r.provider === 'stripe' ? 'Stripe' : (r.provider || ''))}</em></span>
               <span class="org-bill-right org-bill-amount">${this.escapeHtml(this._fmtMoney(r.amount, r.currency))}</span>
               <span>${paidPill(r.status)}</span>
               <span class="org-bill-right">${r.url ? `<a href="${this.escapeHtml(r.url)}" target="_blank" rel="noopener" class="org-bill-pdf">PDF ↗</a>` : '—'}</span>
@@ -1288,7 +1102,6 @@ class OrganizationView extends BaseView {
         <div class="org-bill-historial-cuerpo">${historial}</div>
       </details>`;
 
-    this.querySelector('#orgBillingPortalBtn')?.addEventListener('click', () => { window.billingService?.openCustomerPortal(); });
     this.querySelector('#orgBillingCancelBtn')?.addEventListener('click', () => this._cancelSubscription(false));
     this.querySelector('#orgBillingReactivateBtn')?.addEventListener('click', () => this._cancelSubscription(true));
     this.querySelector('#orgCapsForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveCaps(); });
@@ -1322,31 +1135,20 @@ class OrganizationView extends BaseView {
 
     const items = [];
     if (p.credits_monthly > 0) items.push(__('{n} créditos al mes', { n: Number(p.credits_monthly).toLocaleString('es') }));
-    if (p.max_handles > 0) items.push(__('Hasta {n} marcas / perfiles', { n: p.max_handles }));
+    if (p.max_handles > 0) items.push(__('Hasta {n} mercados', { n: p.max_handles }));
     if (p.storage_mb > 0) {
       const gb = p.storage_mb >= 1024 ? `${Math.round(p.storage_mb / 1024)} GB` : `${p.storage_mb} MB`;
       items.push(__('{s} de almacenamiento', { s: gb }));
+    } else if (p.sin_limite_almacenamiento) {
+      items.push(__('Almacenamiento sin límite'));
     }
+    const etiquetas = window.PlanesDatos?.CAPACIDADES || {};
+    (p.features?.capacidades || []).forEach((cap) => items.push(__(etiquetas[cap] || cap)));
 
     // El jsonb de features es abierto: se traduce lo conocido y lo desconocido
     // se muestra por su clave, para que un plan que gane una feature nueva se
     // vea aunque nadie haya pasado por aqui a bautizarla.
-    const nombres = {
-      vera_full: __('Vera completa (chat + acciones)'),
-      vera_basic: __('Vera chat'),
-      insights: __('Insights y analítica'),
-      sub_brands: __('Sub-marcas (multi-cliente)'),
-      custom_domain: __('Dominio personalizado'),
-      priority_support: __('Soporte prioritario'),
-    };
-    const f = p.features || {};
-    Object.keys(f).forEach((k) => {
-      const v = f[k];
-      if (v === false || v === null || v === 0) return;
-      if (k === 'brand_kits') { items.push(__('{n} brand kits', { n: v })); return; }
-      if (k === 'team_seats') { items.push(__('{n} miembros', { n: v })); return; }
-      items.push(nombres[k] || k.replace(/_/g, ' '));
-    });
+    if (p.features?.team_seats) items.push(__('{n} miembros', { n: p.features.team_seats }));
 
     el.innerHTML = items.length
       ? `<ul class="org-incluye-list">${items.map((t) => `<li>${this._esc(t)}</li>`).join('')}</ul>`
@@ -1389,7 +1191,7 @@ class OrganizationView extends BaseView {
     const sub = this.billingSub;
     if (!sub) { el.innerHTML = `<p class="org-placeholder">${__('Sin suscripción registrada.')}</p>`; return; }
 
-    const fecha = sub.provider === 'wompi' ? sub.next_charge_at : sub.current_period_end;
+    const fecha = sub.current_period_end;
     const plan = this.billingPlanRow;
     const cancelada = sub.cancel_at_period_end || sub.status === 'canceled';
 
@@ -1402,8 +1204,9 @@ class OrganizationView extends BaseView {
     // declarado en la fila: una suscripcion puede decir "wompi" sin tener aun
     // una fuente de pago guardada, y anunciarlo seria prometer un cobro que no
     // va a ocurrir.
-    const medio = sub.wompi_payment_source_id ? __('Wompi (COP)')
-      : sub.stripe_subscription_id ? __('Stripe (USD)')
+    const medio = sub.provider === 'wompi' ? __('Wompi (COP)')
+      : sub.provider === 'stripe' ? __('Stripe (USD)')
+      : sub.provider === 'manual' ? __('Acuerdo directo con la plataforma')
       : null;
 
     el.innerHTML = `
@@ -1428,13 +1231,13 @@ class OrganizationView extends BaseView {
   _renderBillingPago() {
     const el = this.querySelector('#orgBillingPago');
     if (!el) return;
-    const sub = this.billingSub;
-    const tieneMedio = !!(sub?.wompi_payment_source_id || sub?.stripe_subscription_id);
+    const ultimoPago = (this.billingPayments || []).find((pg) => pg.status === 'succeeded' && pg.method_brand);
+    const tieneMedio = !!ultimoPago;
 
     const filaMedio = tieneMedio
       ? `<div class="org-pay-row">
            <span class="org-pay-check org-pay-check--on" role="img" aria-label="${__('Predeterminado')}"></span>
-           <span class="org-pay-tarjeta"><i class="aisc-ico aisc-ico--credit-card" aria-hidden="true"></i> ${this._esc(sub.stripe_subscription_id ? __('Stripe (USD)') : __('Wompi (COP)'))}</span>
+           <span class="org-pay-tarjeta"><i class="aisc-ico aisc-ico--credit-card" aria-hidden="true"></i> ${this._esc(`${ultimoPago.method_brand}${ultimoPago.method_last4 ? ' •••• ' + ultimoPago.method_last4 : ''} · ${ultimoPago.provider || ''}`)}</span>
            <span class="org-pay-exp">—</span>
          </div>`
       : `<div class="org-pay-row org-pay-row--vacia">
@@ -1449,7 +1252,7 @@ class OrganizationView extends BaseView {
           <span></span><span>${__('Información de la tarjeta')}</span><span>${__('Fecha de expiración')}</span>
         </div>
         ${filaMedio}
-        <a class="org-pay-anadir" href="mailto:info@ardeagency.com?subject=Suscripci%C3%B3n%20-%20m%C3%A9todo%20de%20pago">
+        <a class="org-pay-anadir" href="mailto:contact@aismartcontent.io?subject=Suscripci%C3%B3n%20-%20m%C3%A9todo%20de%20pago">
           <span class="org-pay-mas" aria-hidden="true">+</span> ${__('Añadir nuevo método de pago')}
         </a>
       </div>
@@ -1489,125 +1292,17 @@ class OrganizationView extends BaseView {
   _renderFunciones() {
     const el = this.querySelector('#orgFunciones');
     if (!el) return;
-    const f = this.billingFunciones;
-    if (!f || (!f.enUso.length && !f.disponibles.length)) {
+    const caps = this.billingPlanRow?.features?.capacidades || [];
+    if (!caps.length) {
       el.innerHTML = `<p class="org-placeholder">${__('No hay funciones declaradas para este plan.')}</p>`;
       return;
     }
-
-    const fila = (x, usada) => `
-      <div class="org-fx-row">
-        <span class="org-fx-nombre">${this._esc(x.label || x.kind)}${x.description ? `<em>${this._esc(x.description)}</em>` : ''}</span>
-        <span class="org-fx-area">${this._esc(x.area || '—')}</span>
-        <span class="org-fx-costo">${x.credits_per_action != null
-          ? __('{n} cr', { n: x.credits_per_action })
-          : '—'}</span>
-        <span>${usada
-          ? `<span class="org-bill-pill org-bill-pill--ok">${__('{n} usos', { n: Number(x.veces).toLocaleString('es') })}</span>`
-          : `<span class="org-bill-pill org-bill-pill--muted">${__('Sin estrenar')}</span>`}</span>
-      </div>`;
-
-    const grupo = (titulo, items, usada) => items.length ? `
-      <h3 class="org-fx-grupo">${this._esc(titulo)} <span class="org-bill-cuenta">${items.length}</span></h3>
+    const etiquetas = window.PlanesDatos?.CAPACIDADES || {};
+    el.innerHTML = `
       <div class="org-fx-table">
-        <div class="org-fx-row org-fx-row--head">
-          <span>${__('Función')}</span><span>${__('Área')}</span>
-          <span>${__('Costo')}</span><span>${__('Estado')}</span>
-        </div>
-        ${items.map((x) => fila(x, usada)).join('')}
-      </div>` : '';
-
-    el.innerHTML = grupo(__('En uso'), f.enUso, true) + grupo(__('Disponibles en tu plan'), f.disponibles, false);
-  }
-
-  _renderBillingDatos() {
-    const el = this.querySelector('#orgBillingDatos');
-    if (!el) return;
-    el.innerHTML = `
-      <p class="org-datos-nombre">${this._esc(this.org?.name || '—')}</p>
-      <p class="org-res-sub">${__('Razón social, NIT y dirección no se guardan todavía en la plataforma; los lleva el equipo para emitir tus facturas.')}</p>
-      <a class="btn btn-secondary btn-sm org-pago-cta" href="mailto:info@ardeagency.com?subject=Datos%20de%20facturaci%C3%B3n">${__('Actualizar datos')}</a>`;
-  }
-
-  _renderBillingLimits(el) {
-    const caps = this.billingCaps || {};
-    const today = this.billingUsageToday || {};
-    const canEdit = this.isOwner || this.canManageMembers;
-    const dailyCap = caps.daily_usd_cap;
-    const usedToday = today.cost_usd_today ?? today.usd ?? null;
-    const pct = (dailyCap && usedToday != null) ? Math.min(100, Math.round((usedToday / dailyCap) * 100)) : 0;
-    const warnPct = caps.warn_threshold != null ? Math.round(caps.warn_threshold * 100) : '';
-    const todayStr = (usedToday != null ? this._fmtMoney(usedToday, 'USD') : '$0.00') + (dailyCap ? ' / ' + this._fmtMoney(dailyCap, 'USD') : '');
-    el.innerHTML = `
-      <div class="org-bill-limits-head">
-        <h3 class="org-uchart-title">${__('Límites de uso automático')}</h3>
-        <p class="org-uchart-desc">${__('Topes de consumo del agente. Al alcanzar el umbral de aviso te notificamos; al llegar al cap se pausan las operaciones automáticas.')}</p>
-      </div>
-      <form id="orgCapsForm" class="org-bill-limits-form">
-        <div class="org-bill-fields">
-          <div class="org-bill-field"><label for="capsDaily">${__('Cap diario (USD)')}</label><input type="number" min="0" step="0.01" id="capsDaily" class="form-input" placeholder="${__('ej. 10')}" value="${dailyCap ?? ''}"></div>
-          <div class="org-bill-field"><label for="capsMonthly">${__('Cap mensual (USD)')}</label><input type="number" min="0" step="0.01" id="capsMonthly" class="form-input" placeholder="${__('ej. 200')}" value="${caps.monthly_usd_cap ?? ''}"></div>
-          <div class="org-bill-field"><label for="capsWarn">${__('Umbral de aviso (%)')}</label><input type="number" min="0" max="100" step="1" id="capsWarn" class="form-input" placeholder="${__('ej. 80')}" value="${warnPct}"></div>
-        </div>
-        <div class="org-bill-today">
-          <div class="org-bill-today-row"><span>${__('Consumo automático de hoy')}</span><strong>${this.escapeHtml(todayStr)}</strong></div>
-          <div class="org-bill-today-track"><span class="org-bill-today-fill" style="width:${pct}%"></span></div>
-        </div>
-        <div class="org-bill-limits-actions">
-          <button type="submit" class="btn btn-primary" id="orgCapsSubmit"${canEdit ? '' : ' disabled'}><i class="aisc-ico aisc-ico--save"></i> ${__('Guardar límites')}</button>
-        </div>
-      </form>`;
-    if (!canEdit) el.querySelectorAll('input').forEach((i) => { i.disabled = true; });
-  }
-
-  async _saveCaps() {
-    const btn = this.querySelector('#orgCapsSubmit');
-    const num = (sel) => { const v = this.querySelector(sel)?.value; if (v === '' || v == null) return null; const n = Number(v); return isNaN(n) ? null : n; };
-    const payload = {
-      organization_id: this.orgId,
-      daily_usd_cap: num('#capsDaily'),
-      monthly_usd_cap: num('#capsMonthly'),
-      warn_threshold: (() => { const v = num('#capsWarn'); return v == null ? null : v / 100; })(),
-    };
-    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Guardando…')}`; }
-    try {
-      const { error } = await this.supabase.from('org_claude_caps').upsert(payload, { onConflict: 'organization_id' });
-      if (error) throw error;
-      this.billingCaps = { ...(this.billingCaps || {}), ...payload };
-      this._toast(__('Límites actualizados'));
-    } catch (e) {
-      alert(e.message || __('No se pudo guardar los límites.'));
-    } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="aisc-ico aisc-ico--save"></i> ${__('Guardar límites')}`; }
-    }
-  }
-
-  async _cancelSubscription(undo) {
-    const action = undo ? __('reactivar') : __('cancelar');
-    if (!undo && !window.confirm(__('¿Cancelar la suscripción al final del período actual? Mantendrás acceso hasta entonces y no se hará otro cobro automático.'))) return;
-
-    try {
-      const supabase = window.supabaseService?.getClient ? await window.supabaseService.getClient() : window.supabase;
-      const { data: sess } = await supabase.auth.getSession();
-      const token = sess?.session?.access_token;
-      const res = await fetch('/api/billing/cancel', {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ organization_id: this.orgId, undo: !!undo }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || __('No se pudo {accion}', { accion: action }));
-      const msg = undo ? __('Suscripción reactivada. El próximo cobro procederá como antes.')
-                       : __('Suscripción cancelada. Mantienes acceso hasta el {fecha}.', { fecha: this._fmtDate(data.cancel_at) });
-      (window.showToast || window.alert)(msg, 'success');
-      this._billingLoaded = false;
-      await this._loadBilling();
-    } catch (e) {
-      (window.showToast || window.alert)(__('Error: {error}', { error: e.message }), 'error');
-    }
+        <div class="org-fx-row org-fx-row--head"><span>${__('Función')}</span><span>${__('Estado')}</span></div>
+        ${caps.map((c) => `<div class="org-fx-row"><span class="org-fx-nombre">${this._esc(__(etiquetas[c] || c))}</span><span><span class="org-bill-pill org-bill-pill--ok">${__('Incluida')}</span></span></div>`).join('')}
+      </div>`;
   }
 
   _fmtPeriod(start, end) {
@@ -1632,11 +1327,20 @@ class OrganizationView extends BaseView {
   }
 
   async _loadAuditLog() {
-    const { data } = await this.supabase
-      .from('user_audit_log')
-      .select('id, action, resource_type, resource_id, user_id, user_email, metadata, created_at')
-      .eq('organization_id', this.orgId).order('created_at', { ascending: false }).limit(200);
-    this.auditLog = data || [];
+    // historial_de_marca (ops.audit_log con actor). Hasta la 190000 la base no lo da: se dice.
+    const act = await window.OrganizacionDatos.actividad(this.orgId, 200);
+    this.auditPendiente = act.pendiente ? (act.codigo || true) : null;
+    this.auditLog = act.eventos.map((e) => ({
+      id: `${e.fecha}-${e.etiqueta}`,
+      action: e.etiqueta,
+      resource_type: e.sujeto || null,
+      resource_id: null,
+      user_id: e.userId,
+      user_email: e.actor || null,
+      actor_kind: e.actorKind,
+      metadata: e.datos,
+      created_at: e.fecha,
+    }));
   }
 
   // ── Render ─────────────────────────────────────────────
@@ -1703,7 +1407,7 @@ class OrganizationView extends BaseView {
       const rolePicker = canChangeRole
         ? `<select class="org-role-select" data-member-id="${this.escapeHtml(m.id)}">
              <option value="admin"${m.role === 'admin' ? ' selected' : ''}>${__('Administrador')}</option>
-             <option value="member"${m.role === 'member' ? ' selected' : ''}>${__('Miembro')}</option>
+             <option value="editor"${m.role === 'editor' ? ' selected' : ''}>${__('Editor')}</option>
              <option value="viewer"${m.role === 'viewer' ? ' selected' : ''}>${__('Viewer')}</option>
            </select>`
         : `<span class="org-member-role org-role-${(roleLabel || 'member').toLowerCase()}">${this.escapeHtml(roleLabel)}</span>`;
@@ -1779,26 +1483,11 @@ class OrganizationView extends BaseView {
     { key: 'ajustes',   label: 'Ajustes',     color: '#64748b' },
   ];
 
-  /** kind (+ plataforma del metadata) -> categoria de la grafica. */
-  static _categoriaDe(kind, plataforma) {
-    const k = String(kind || '');
-    if (k === 'apify_scrape') {
-      const p = String(plataforma || '').toLowerCase();
-      if (p === 'instagram') return 'ig';
-      if (p === 'facebook')  return 'fb';
-      if (p === 'tiktok')    return 'tiktok';
-      if (p === 'youtube')   return 'youtube';
-      if (p === 'x' || p === 'twitter') return 'x';
-      return 'busqueda';
-    }
-    if (k.startsWith('studio_image')) return 'imagenes';
-    if (k.startsWith('video_')) return 'videos';
-    if (k === 'flow_execution' || k === 'production_flow') return 'flujos';
-    if (k.startsWith('vera_') || k === 'cmo_brief') return 'vera';
-    if (k.startsWith('predictor')) return 'simulador';
-    if (k.startsWith('claude_') || k === 'pattern_llm_classify') return 'analisis';
-    if (k === 'meta_ads_library_query' || k === 'visibility_probe') return 'busqueda';
-    return 'ajustes';
+  /** meter_code de billing.meters → categoría de la gráfica (la regla vive en OrganizacionDataService). */
+  static _categoriaDe(kind, _plataforma) {
+    return window.OrganizacionDatos?.mapeo?.areaDeMedidor
+      ? window.OrganizacionDatos.mapeo.areaDeMedidor(kind)
+      : 'ajustes';
   }
 
   _usageColor(area) {
@@ -2069,7 +1758,7 @@ class OrganizationView extends BaseView {
           const delta = Number(r.credits_delta) || 0;
           const cat = OrganizationView._categoriaDe(r.kind, r.metadata?.platform);
           const meta = OrganizationView.USAGE_AREAS.find((a) => a.key === cat);
-          const etiqueta = (window.CreditCosts?.get?.(r.kind)?.label) || r.kind;
+          const etiqueta = r.display_name || r.kind;
           const detalle = r.metadata?.description || r.metadata?.handle || r.source_id || '';
           return `
             <div class="org-hist-row">
@@ -2332,10 +2021,11 @@ class OrganizationView extends BaseView {
     let rows = this.auditLog;
     if (this.auditFilter.action) rows = rows.filter((r) => r.action === this.auditFilter.action);
     if (this.auditFilter.user) rows = rows.filter((r) => r.user_id === this.auditFilter.user);
+    if (this.auditPendiente) { listEl.innerHTML = `<p class="org-members-empty">${__('La bitácora de la marca se está trayendo a la nueva base (historial_de_marca). Vuelve en unos días.')}</p>`; return; }
     if (!rows.length) { listEl.innerHTML = `<p class="org-members-empty">${__('Sin actividad registrada.')}</p>`; return; }
     listEl.innerHTML = rows.map((r) => {
       const when = r.created_at ? new Date(r.created_at).toLocaleString('es') : '—';
-      const who = r.user_email || r.user_id?.slice(0, 8) + '…' || '—';
+      const who = r.user_email || (r.user_id ? r.user_id.slice(0, 8) + '…' : (r.actor_kind || '—'));
       const resource = r.resource_type ? `${r.resource_type}${r.resource_id ? ' · ' + r.resource_id.slice(0, 8) : ''}` : '';
       return `
         <div class="org-audit-row">
@@ -2428,9 +2118,8 @@ class OrganizationView extends BaseView {
     };
     if (btn) { btn.disabled = true; btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Guardando…')}`; }
     try {
-      const { error } = await this.supabase.from('organizations').update(payload).eq('id', this.orgId);
-      if (error) throw error;
-      this.org = { ...this.org, ...payload };
+      const org = await window.OrganizacionDatos.actualizarOrganizacion(this.orgId, payload);
+      this.org = { ...this.org, ...org };
       this._toast(__('Configuración regional guardada'));
     } catch (e) {
       alert(e.message || __('No se pudo guardar.'));
@@ -2451,22 +2140,18 @@ class OrganizationView extends BaseView {
   async _submitInvite() {
     if (!this.canManageMembers) return;
     const email = document.getElementById('inviteEmail')?.value?.trim();
-    const role = (document.getElementById('inviteRole')?.value || 'member').toLowerCase();
+    const role = (document.getElementById('inviteRole')?.value || 'viewer').toLowerCase();
     if (!email) return;
     const btn = document.querySelector('#orgInviteForm button[type="submit"]');
     if (btn) { btn.disabled = true; btn.textContent = __('Enviando…'); }
     try {
-      const { data: existing } = await this.supabase
-        .from('organization_invitations').select('id').eq('organization_id', this.orgId).eq('email', email).eq('status', 'pending').maybeSingle();
-      if (existing) { alert(__('Ya existe una invitación pendiente para ese email.')); return; }
-      const { data: profile } = await this.supabase.from('profiles').select('id').eq('email', email).maybeSingle();
-      if (profile && this.members.some((m) => m.user_id === profile.id)) { alert(__('Ese usuario ya es miembro.')); return; }
-      const { error } = await this.supabase.from('organization_invitations').insert({ organization_id: this.orgId, email, role, invited_by: this.userId });
-      if (error) throw error;
+      if (this.members.some((m) => (m.email || '').toLowerCase() === email.toLowerCase())) { alert(__('Ese usuario ya es miembro.')); return; }
+      // invitar_miembro exige una persona CON cuenta; por correo es ADR-0048.
+      await window.OrganizacionDatos.invitar(this.orgId, email, role === 'member' ? 'editor' : role);
       this._closeInviteModal();
-      await this._loadInvitations();
-      this._renderInvitations();
-      this._toast(__('Invitación enviada'));
+      await this._loadMembers();
+      this._renderMembers();
+      this._toast(__('Persona añadida al equipo'));
     } catch (e) {
       alert(e.message || __('No se pudo enviar la invitación.'));
     } finally {
@@ -2474,18 +2159,16 @@ class OrganizationView extends BaseView {
     }
   }
 
-  async _revokeInvitation(invitationId) {
-    if (!invitationId || !confirm(__('¿Revocar esta invitación?'))) return;
-    const { error } = await this.supabase.from('organization_invitations').update({ status: 'revoked' }).eq('id', invitationId);
-    if (error) { alert(error.message || __('Error.')); return; }
-    await this._loadInvitations(); this._renderInvitations();
-    this._toast(__('Invitación revocada'));
+  async _revokeInvitation(_invitationId) {
+    this._toast(__('Las invitaciones por correo llegan con la próxima versión.'));
   }
 
   async _changeRole(memberId, role) {
     if (!memberId || !role || !this.canManageMembers) return;
-    const { error } = await this.supabase.from('organization_members').update({ role }).eq('id', memberId).eq('organization_id', this.orgId);
-    if (error) { alert(error.message || __('No se pudo cambiar el rol.')); return; }
+    try {
+      // members.role por UPDATE (editar_equipo); triggers: no_dejar_sin_dueno, poda_permisos, tope_del_plan.
+      await window.OrganizacionDatos.cambiarRol(this.orgId, memberId, role);
+    } catch (e) { alert(e.message || __('No se pudo cambiar el rol.')); await this._loadMembers(); this._renderMembers(); return; }
     await this._loadMembers(); this._renderMembers();
     this._toast(__('Rol actualizado'));
   }
@@ -2495,8 +2178,10 @@ class OrganizationView extends BaseView {
     const m = this.members.find((x) => x.id === memberId);
     if (!m || m.user_id === this.org?.owner_user_id) return;
     if (!confirm(__('¿Quitar a este miembro de la organización?'))) return;
-    const { error } = await this.supabase.from('organization_members').delete().eq('id', memberId).eq('organization_id', this.orgId);
-    if (error) { alert(error.message || __('Error.')); return; }
+    try {
+      const fue = await window.OrganizacionDatos.retirarMiembro(this.orgId, memberId);
+      if (!fue) throw new Error(__('La base no retiró al miembro (¿sin permiso editar_equipo?).'));
+    } catch (e) { alert(e.message || __('Error.')); return; }
     await this._loadMembers(); this._renderMembers();
     this._toast(__('Miembro eliminado'));
   }
@@ -2513,37 +2198,34 @@ class OrganizationView extends BaseView {
   async _renderActividad() {
     const el = this.querySelector('#orgActividad');
     if (!el) return;
-    if (!window.OrgSummaryDataService || !this.supabase || !this.orgId) { el.innerHTML = ''; return; }
-
+    if (!window.OrganizacionDatos || !this.orgId) { el.innerHTML = ''; return; }
     let act = null;
     try {
-      const svc = await new window.OrgSummaryDataService().init(this.supabase, this.orgId);
-      act = await svc.actividad(40);
+      act = await window.OrganizacionDatos.actividad(this.orgId, 40);
     } catch (e) {
       console.warn('OrganizationView._renderActividad:', e);
     }
     if (!act) { el.innerHTML = ''; return; }
-
+    if (act.pendiente) {
+      // Hasta la 190000 la base no expone historial_de_marca a una persona: se dice, no se calla.
+      el.innerHTML = `<p class="org-placeholder">${__('La bitácora de la marca se está trayendo a la nueva base. Vuelve en unos días.')}</p>`;
+      return;
+    }
     const nombres = {};
     (this.membersWithProfile || []).forEach((m) => {
       nombres[m.user_id] = m.full_name || m.email || null;
     });
-    const quien = (id) => nombres[id] || `${String(id).slice(0, 8)}…`;
-
-    // La laguna se declara SIEMPRE, haya o no eventos: sin esta nota, una
-    // bitacora corta se lee como "el equipo no hizo nada" cuando en realidad
-    // buena parte de lo que hicieron no quedo firmado.
-    const nota = `<p class="org-act-nota">${__('Crear perfiles a monitorear, vigilar sitios y correr el predictor todavía no guardan quién lo hizo, así que esas acciones no aparecen aquí.')}</p>`;
-
+    // En la base nueva TODO lo que pasa por bitácora lleva actor (persona, agente o sistema).
+    const quien = (e) => (e.userId && nombres[e.userId]) || e.actor || (e.userId ? `${String(e.userId).slice(0, 8)}…` : (e.actorKind || '—'));
+    const nota = '';
     if (!act.eventos.length) {
-      el.innerHTML = `<p class="org-placeholder">${__('Sin actividad registrada en los últimos 6 meses.')}</p>` + nota;
+      el.innerHTML = `<p class="org-placeholder">${__('Sin actividad registrada.')}</p>`;
       return;
     }
-
     const filas = act.eventos.map((e) => `
       <li class="org-act-row">
         <div class="org-act-main">
-          <span class="org-act-quien">${this._esc(quien(e.userId))}</span>
+          <span class="org-act-quien">${this._esc(quien(e))}</span>
           <span class="org-act-que">${this._esc(__(e.etiqueta))}</span>
           ${e.detalle ? `<span class="org-act-detalle">${this._esc(e.detalle)}</span>` : ''}
         </div>
@@ -2592,20 +2274,34 @@ class OrganizationView extends BaseView {
   async _renderResumen() {
     const el = this.querySelector('#orgResumen');
     if (!el) return;
-    if (!window.OrgSummaryDataService || !this.supabase || !this.orgId) {
+    if (!window.OrganizacionDatos || !this.orgId) {
       el.innerHTML = '';
       return;
     }
-
     let r = null;
     try {
-      const svc = await new window.OrgSummaryDataService().init(this.supabase, this.orgId);
-      r = await svc.cargar();
+      if (!this.billingPlanRow && window.PlanesDatos) {
+        const p = await window.PlanesDatos.cargar(this.orgId);
+        if (p) { this.billingPlanRow = p.currentPlan; this.billingSub = this.billingSub || p.currentSubscription; }
+      }
+      r = await window.OrganizacionDatos.resumen(this.orgId, this.billingPlanRow, this.brandContainers);
     } catch (e) {
       console.warn('OrganizationView._renderResumen:', e);
     }
     if (!r) { el.innerHTML = ''; return; }
-
+    if (r.pendiente) {
+      // resumen_de_marca aún no responde a una persona (42804 hasta la 190000). Se pinta lo
+      // que sí hay (plan, saldo, mercado) y se declara el resto como pendiente.
+      const p = this.billingPlanRow;
+      const c = this.billingCreditos;
+      const aside = this.querySelector('#orgAsidePlan');
+      if (aside) aside.innerHTML = (p ? `<div class="org-plan-hero"><span class="org-plan-eyebrow">${__('Plan de la marca')}</span><span class="org-plan-name">${this._esc(p.name)}</span>${p.credits_monthly ? `<span class="org-plan-sub">${__('{n} créditos / mes', { n: Number(p.credits_monthly).toLocaleString('es') })}</span>` : ''}</div>` : '')
+        + (c ? `<div class="org-plan-credits"><div class="org-plan-credits-head"><span class="org-res-lbl">${__('Créditos disponibles')}</span><span class="org-plan-credits-num">${Math.round(c.disponibles).toLocaleString('es')}</span></div></div>` : '');
+      const elMercado = this.querySelector('#orgAsideMercado');
+      if (elMercado) elMercado.innerHTML = (this.brandContainers || []).map((m) => { const filas = []; if ((m.mercado_objetivo || []).length) filas.push(`<dt>${__('Mercado')}</dt><dd>${this._esc(m.mercado_objetivo.join(' · '))}</dd>`); if ((m.idiomas_contenido || []).length) filas.push(`<dt>${__('Idiomas')}</dt><dd>${this._esc(m.idiomas_contenido.join(' · '))}</dd>`); if (m.nicho_core) filas.push(`<dt>${__('Nicho')}</dt><dd>${this._esc(m.nicho_core)}</dd>`); return filas.length ? `<div class="org-res-marca"><dl class="org-res-dl">${filas.join('')}</dl></div>` : ''; }).join('');
+      el.innerHTML = `<p class="org-placeholder">${__('El resumen de audiencias, vigilancia, estrategias y pauta se está trayendo a la nueva base. Vuelve en unos días.')}</p>`;
+      return;
+    }
     const bloques = [];
 
     // ── Plan (grande) y creditos → columna derecha ───────────────────
