@@ -42,6 +42,12 @@
   if (window.AISC_TURNSTILE_SITE_KEY === undefined) {
     window.AISC_TURNSTILE_SITE_KEY = (() => { try { return localStorage.getItem("AISC_TURNSTILE_SITE_KEY") || ""; } catch (_) { return ""; } })();
   }
+  // Herramientas de imagen de Producciones como flujos del catálogo (acordado con backend 16/09):
+  // {upscale|remove-bg|fix-text: {flujo: '<slug>', entrada: 'imagen', extras?: {…}}}. Vacío = «en obras».
+  //   window.AISC_HERRAMIENTAS = { upscale: { flujo: 'ampliar-imagen', entrada: 'imagen' } };
+  if (window.AISC_HERRAMIENTAS === undefined) {
+    window.AISC_HERRAMIENTAS = (() => { try { return JSON.parse(localStorage.getItem("AISC_HERRAMIENTAS") || 'null') || {}; } catch (_) { return {}; } })();
+  }
   // Banner de mantenimiento (corte, pasos 1.2/1.9): un texto = se ve; vacio = no.
   //   window.AISC_MANTENIMIENTO = 'hasta las 17:30';
   if (window.AISC_MANTENIMIENTO === undefined) {

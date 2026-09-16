@@ -2126,10 +2126,9 @@ class LivingManager {
     }
 
     openPublishSheet(multiIds) {
-        // Corte (ADR-0052): publicar en redes iba por la function api-social-publish (muerta).
-        // La puerta nueva será del borde (publicaciones); hasta entonces se dice con palabras.
-        if (typeof window.showToast === 'function') window.showToast('Publicar en redes desde aquí está en obras: descarga la producción y publícala desde la red, o pídeselo a Vera.', { type: 'info' });
-        if (!this._publicarHabilitado) return;
+        // Corte (ADR-0052): publicar = lanzar el flujo del catálogo `publicar-meta` (BD 220000)
+        // con {imagen: file_id, texto, destino}; la corrida pide aprobación y publica con la
+        // conexión de Integraciones. Sin file_id o sin el flujo, se dice con palabras.
         // Modo multiple: publicar todas las producciones seleccionadas a la vez
         // (caption compartido). El estado de conexion se lee del primer output.
         const isMulti = Array.isArray(multiIds) && multiIds.length > 0;
@@ -2200,28 +2199,29 @@ class LivingManager {
         document.body.classList.remove('publish-sheet-open');
     }
 
+    /** Conexiones reales (integrations.connections por MarcaDatos): meta = facebook + instagram. */
     async _loadPublishConnections() {
         const ctx = this._publishCtx;
         if (!ctx) return;
         try {
-            const token = await this._getAccessToken();
-            if (!token) throw new Error('No hay sesión activa');
-            const res = await fetch(`/.netlify/functions/api-social-publish?output_id=${encodeURIComponent(ctx.outputId)}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-            ctx.connections = data.connections || {};
-            // Pre-seleccionar las plataformas reales conectadas.
-            ctx.selected = new Set(['facebook', 'instagram'].filter(k => ctx.connections[k]?.connected));
+            const M = window.MarcaDatos;
+            const d = M && this.organizationId ? await M.cargar(this.organizationId) : null;
+            const activas = (d?.brandIntegrations || []).filter((c) => c.is_active);
+            const meta = activas.find((c) => c.plataforma === 'meta');
+            ctx.connections = {
+                facebook: meta ? { connected: true, account_name: meta.external_account_name } : { connected: false },
+                instagram: meta ? { connected: true, account_name: meta.external_account_name } : { connected: false },
+            };
+            ctx.selected = new Set(['instagram', 'facebook'].filter((k) => ctx.connections[k]?.connected).slice(0, 1));
             this._renderPublishPlatforms(ctx.connections);
             this._updatePublishSelectionUI();
         } catch (err) {
-            console.error('[publish] status error:', err);
+            console.error('[publish] conexiones:', err);
             this._renderPublishPlatforms({});
             this._updatePublishSelectionUI();
         }
     }
+
 
     _renderPublishPlatforms(connections) {
         const wrap = document.getElementById('publishPlatforms');
@@ -2281,57 +2281,60 @@ class LivingManager {
         if (btn) btn.disabled = n === 0;
     }
 
+    /**
+     * Publicar = flujo del catálogo `publicar-meta` (imagen: file_id de la salida · texto ·
+     * destino instagram|facebook). La corrida queda `awaiting_approval`: la persona aprueba
+     * en el panel de actividad (campana) o en el runner, y el paso publish escribe
+     * marketing.publications con la conexión de Integraciones.
+     */
     async _submitPublish(btn) {
         const ctx = this._publishCtx;
         if (!ctx || !ctx.selected.size) return;
-        const platforms = [...ctx.selected];
+        const S = window.StudioDatos;
+        const destinos = [...ctx.selected];
         const caption = document.getElementById('publishCaption')?.value || ctx.caption || '';
         const ids = (ctx.outputIds && ctx.outputIds.length) ? ctx.outputIds : [ctx.outputId];
         const multi = ids.length > 1;
         if (btn) { btn.disabled = true; btn.classList.add('is-loading'); }
-        const loadingToast = window.showToast?.(multi ? `Publicando ${ids.length}…` : 'Publicando…', { duration: 0 });
+        const loadingToast = window.showToast?.(multi ? `Enviando ${ids.length} a publicar…` : 'Enviando a publicar…', { duration: 0 });
         try {
-            const token = await this._getAccessToken();
-            if (!token) throw new Error('No hay sesión activa');
+            if (!S) throw new Error('El Studio no está listo. Recarga la página.');
+            const f = await S.flujo('publicar-meta');
+            if (!f?.id) throw Object.assign(new Error('Publicar en redes llega con el catálogo nuevo (flujo «publicar-meta»): todavía no está en esta base.'), { code: 'flujo_no_encontrado' });
             const all = [];
             for (const oid of ids) {
-                const res = await fetch('/.netlify/functions/api-social-publish', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                    body: JSON.stringify({ output_id: oid, platforms, caption })
-                });
-                const data = await res.json().catch(() => ({}));
-                if (res.status === 401) throw new Error('Sesión expirada, vuelve a entrar');
-                (Array.isArray(data.results) ? data.results : []).forEach(r => all.push({ ...r, output_id: oid }));
+                const out = (this.flowOutputs || []).find((o) => o?.id === oid) || (ctx.outputId === oid ? this._modalState?.output : null);
+                const fileId = out?.file_id || out?.metadata?.file_id || null;
+                if (!fileId) { destinos.forEach((d) => all.push({ platform: d, status: 'failed', error: 'sin archivo propio en la base nueva', output_id: oid })); continue; }
+                for (const destino of destinos) {
+                    try {
+                        const r = await S.lanzar(this.organizationId, f.id, { imagen: fileId, texto: caption, destino });
+                        all.push({ platform: destino, status: 'queued', run_id: r.run_id, output_id: oid });
+                    } catch (e) {
+                        all.push({ platform: destino, status: 'failed', error: e?.message || 'no se pudo lanzar', output_id: oid });
+                    }
+                }
             }
             loadingToast?.close?.();
-            const ok   = all.filter(r => r.status === 'published');
-            const fail = all.filter(r => r.status === 'failed');
-            const soon = all.filter(r => r.status === 'not_implemented');
-
-            // Diagnostico explicito en consola: exito (con link) y error (mensaje de Meta).
-            console.log('[publish] resultados:', all);
-            ok.forEach(r => console.log(`[publish] ✅ ${r.platform}: ${r.remote_url || r.remote_post_id || 'publicado'}`));
-            fail.forEach(r => console.error(`[publish] ❌ ${r.platform}: ${r.error || 'fallo desconocido'}`));
-
+            const ok = all.filter((r) => r.status === 'queued');
+            const fail = all.filter((r) => r.status === 'failed');
+            console.log('[publish] corridas:', all);
             if (ok.length) {
-                window.showToast?.(multi ? 'Producciones publicadas' : 'Producción publicada', { type: 'success' });
-                this._renderPublishResult(ok, fail, multi);
-            } else if (fail.length) {
-                window.showToast?.(`Error en ${fail[0].platform}: ${fail[0].error || 'fallo'}`, { type: 'error' });
-            } else if (soon.length) {
-                window.showToast?.('Esas plataformas llegan pronto');
+                window.showToast?.(ok.length === 1 ? 'En cola: Vera te pedirá aprobar la publicación en la campana.' : `${ok.length} en cola: aprueba cada publicación en la campana.`, { type: 'success' });
+                this._renderPublishResult(ok.map((r) => ({ ...r, status: 'published', remote_url: null })), fail, multi);
+                if (window.appNavigation?.refreshActivityBadge) window.appNavigation.refreshActivityBadge();
             } else {
-                window.showToast?.('No se pudo publicar', { type: 'error' });
+                window.showToast?.(`No se pudo enviar: ${fail[0]?.error || 'fallo'}`, { type: 'error' });
             }
         } catch (err) {
             loadingToast?.close?.();
             console.error('[publish] error:', err);
-            window.showToast?.(`No se pudo publicar: ${err.message}`, { type: 'error' });
+            window.showToast?.(err?.code === 'sin_api' ? err.message : `No se pudo enviar a publicar: ${err.message}`, { type: 'error' });
         } finally {
             if (btn) { btn.classList.remove('is-loading'); btn.disabled = (this._publishCtx?.selected?.size || 0) === 0; }
         }
     }
+
 
     // Estado de exito dentro de la hoja: "Produccion publicada" + link(s) o resumen.
     _renderPublishResult(ok, fail, multi) {
@@ -3212,6 +3215,40 @@ class LivingManager {
     }
 
     /**
+     * Herramienta como FLUJO DEL CATÁLOGO: lanza `h.flujo` con la salida abierta como entrada
+     * (`h.entrada` = clave del file_id, p. ej. 'imagen'; `h.extras` = entradas fijas) por
+     * StudioDatos y, al terminar, recarga la galería para que la salida nueva aparezca.
+     */
+    async _lanzarHerramienta(tool, h, btn) {
+        const NOMBRES_HERRAMIENTA = { upscale: 'Ampliar', 'remove-bg': 'Quitar el fondo', 'fix-text': 'Arreglar el texto', 'change-ratio': 'Reencuadrar' };
+        const S = window.StudioDatos;
+        const st = this._modalState || {};
+        const fileId = st.output?.file_id || st.output?.metadata?.file_id || null;
+        const avisar = (m, t = 'info') => { if (typeof window.showToast === 'function') window.showToast(m, { type: t }); };
+        if (!S) { avisar('El Studio no está listo. Recarga la página.', 'error'); return; }
+        if (!fileId) { avisar('Esta producción no tiene archivo propio en la base nueva: no se puede transformar.', 'error'); return; }
+        const lockKey = `${tool}:${st.outputId || fileId}`;
+        if (!this._inflightToolbarOps) this._inflightToolbarOps = new Set();
+        if (this._inflightToolbarOps.has(lockKey)) { avisar('Ya estamos procesando esta acción. Espera unos segundos.'); return; }
+        this._inflightToolbarOps.add(lockKey);
+        if (btn) { btn.setAttribute('aria-busy', 'true'); btn.setAttribute('disabled', ''); }
+        try {
+            const f = await S.flujo(h.flujo);
+            if (!f?.id) throw Object.assign(new Error(`«${NOMBRES_HERRAMIENTA[tool] || h.flujo}» llega con el catálogo nuevo (flujo «${h.flujo}»): todavía no está en esta base.`), { code: 'flujo_no_encontrado' });
+            const entradas = Object.assign({}, h.extras || {}, { [h.entrada || 'imagen']: fileId });
+            avisar(`${({ upscale: 'Ampliando', 'remove-bg': 'Quitando el fondo', 'fix-text': 'Arreglando el texto', 'change-ratio': 'Reencuadrando' })[tool] || 'Produciendo'}… la salida aparecerá en la galería.`);
+            const r = await S.producir(this.organizationId, f.slug, entradas, { topeMs: 6 * 60 * 1000 });
+            if (typeof this.loadMoreHistorySources === 'function') await this.loadMoreHistorySources({ reset: true });
+            avisar(r?.salida?.url ? 'Listo: la salida nueva ya está en la galería.' : 'La corrida terminó; refresca la galería si no la ves.');
+        } catch (e) {
+            avisar(e?.code === 'sin_api' ? e.message : (e?.message || 'No se pudo lanzar la herramienta.'), 'error');
+        } finally {
+            this._inflightToolbarOps.delete(lockKey);
+            if (btn) { btn.removeAttribute('aria-busy'); btn.removeAttribute('disabled'); }
+        }
+    }
+
+    /**
      * Despacha clicks del toolbar del modal. Cada accion mapea a un endpoint
      * Kie (data-kie-model en el HTML); por ahora solo "edit" abre UI propia,
      * los demas muestran toast porque el backend (Netlify Functions) sigue
@@ -3220,9 +3257,17 @@ class LivingManager {
     _handleToolbarAction(tool, btn) {
         // Corte (ADR-0052): las herramientas de imagen (editar, reencuadrar, ampliar, quitar
         // fondo, arreglar texto) iban por functions kie-* que ya no existen; vuelven como
-        // flujos del catálogo. Hasta entonces, palabras — y ningún 503.
+        // FLUJOS DEL CATÁLOGO (acordado con backend 16/09). Se encienden por configuración,
+        // sin build: window.AISC_HERRAMIENTAS = { upscale: { flujo: 'ampliar-imagen', entrada: 'imagen' }, … }
+        // (runtime-config / snippet / localStorage). Sin entrada para la herramienta: palabras, ningún 503.
+        // Slugs sembrados por BD (20260916220000): ampliar · quitar-fondo · reencuadrar; entrada `imagen` = file_id.
+        const H = Object.assign({ upscale: { flujo: 'ampliar', entrada: 'imagen' }, 'remove-bg': { flujo: 'quitar-fondo', entrada: 'imagen' }, 'change-ratio': { flujo: 'reencuadrar', entrada: 'imagen' } },
+            (window.AISC_HERRAMIENTAS && typeof window.AISC_HERRAMIENTAS === 'object') ? window.AISC_HERRAMIENTAS : {});
+        const NOMBRE = { edit: 'Editar', 'change-ratio': 'Reencuadrar', upscale: 'Ampliar', 'remove-bg': 'Quitar el fondo', 'fix-text': 'Arreglar el texto' };
         if (!this._herramientasHabilitadas) {
-            const NOMBRE = { edit: 'Editar', 'change-ratio': 'Reencuadrar', upscale: 'Ampliar', 'remove-bg': 'Quitar el fondo', 'fix-text': 'Arreglar el texto' };
+            const h = H[tool];
+            if (tool === 'change-ratio' && h && h.flujo) { this._toggleRatioPicker(btn); return; }
+            if (h && h.flujo && tool !== 'edit' && tool !== 'change-ratio') { this._lanzarHerramienta(tool, h, btn); return; }
             if (typeof window.showToast === 'function') window.showToast(`${NOMBRE[tool] || 'Esta herramienta'} está en obras: produce la imagen de nuevo desde /image con lo que necesitas.`, { type: 'info' });
             void btn;
             return;
@@ -3328,6 +3373,10 @@ class LivingManager {
      * destino y un prompt de extension; nunca recorta al sujeto.
      */
     async _applyChangeRatio(targetRatio) {
+        // Corte: reencuadrar = flujo del catálogo `reencuadrar` (imagen: file_id · aspecto).
+        const H = (window.AISC_HERRAMIENTAS && typeof window.AISC_HERRAMIENTAS === 'object') ? window.AISC_HERRAMIENTAS : {};
+        const h = H['change-ratio'] || { flujo: 'reencuadrar', entrada: 'imagen' };
+        if (!this._herramientasHabilitadas) { await this._lanzarHerramienta('change-ratio', Object.assign({}, h, { extras: Object.assign({}, h.extras || {}, { aspecto: targetRatio }) }), null); return; }
         const state = this._modalState || {};
         const imageUrl = state.mediaUrl;
         const sourceOutputId = state.outputId || null;

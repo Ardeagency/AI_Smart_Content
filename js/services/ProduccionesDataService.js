@@ -12,9 +12,11 @@
  *     duration_ms, creditos_aprox, estado_corrida, created_at) — manda file_id →
  *     url_galeria/url_publica (StudioDatos.urlsDeArchivos); `url` solo sin archivo.
  *   · Entradas: T flows.run_inputs(id, run_id, key, value) — lo que se pidió.
- *   · Aprobaciones (vera.md): T ai.pending_actions(run_id, action, permission, summary, payload,
- *     decided_at…) — una corrida `awaiting_approval` espera que la persona decida por el borde
- *     (POST /v1/aprobaciones/:id {aprobar, nota}); decide quien TIENE el permiso que la acción pide.
+ *   · Corrida `awaiting_approval` (backend 16/09 17:31): la pone flows.avanzar cuando el paso
+ *     tiene requires_approval; lo que se aprueba es la corrida misma (sus entradas y salidas
+ *     previas). Decidir = R flows.decidir_corrida(p_run, p_aprobar, p_nota) (pedida a BD, SIN
+ *     SHA aún: hasta entonces PGRST202 → se dice con palabras). ai.pending_actions es OTRA cosa
+ *     (los actos de Vera; se deciden por POST /v1/aprobaciones/:id desde la campana).
  *   · Likes/guardados de v1 (production_output_likes) NO existen para salidas:
  *     flows.likes/saves son por FLUJO. Borrar una salida no tiene puerta; se da
  *     de baja el ARCHIVO por DELETE /v1/archivos/:id (editar_marca).
@@ -133,20 +135,22 @@
     return r.data ? corridaAV1(r.data, nombres) : null;
   }
 
-  /** Aprobaciones que una corrida tiene pendientes (ai.pending_actions con run_id, sin decidir). */
-  async function aprobacionesPendientes(orgId, runId) {
+  /**
+   * Decidir una corrida `awaiting_approval`: R flows.decidir_corrida(p_run, p_aprobar, p_nota)
+   * (aprobar → running y siguiente paso; rechazar → failed con «Rechazado por <nombre>: <nota>»).
+   * Hasta que BD la firme: PGRST202 → error con palabras (code `sin_puerta`).
+   */
+  async function decidirCorrida(runId, aprobar, nota = null) {
     const sb = await cliente();
-    if (!sb || !orgId || !runId) return [];
-    const r = await sb.schema('ai').from('pending_actions').select('id, run_id, agent_id, action, permission, summary, payload, created_at').eq('organization_id', orgId).eq('run_id', runId).is('decided_at', null).order('created_at', { ascending: true });
-    aviso('ai.pending_actions', r);
-    return r.data || [];
-  }
-
-  /** Decidir una aprobación por el borde: POST /v1/aprobaciones/:id {aprobar, nota} (rechazar exige motivo ≥5). */
-  async function decidirAprobacion(orgId, id, aprobar, nota = null) {
-    const a = api();
-    if (!a) throw Object.assign(new Error('El borde no está configurado (AISC_API_URL): las aprobaciones aún no se deciden desde esta consola.'), { code: 'sin_api' });
-    try { return await a.decidirAprobacion(id, orgId, aprobar ? 'aprobar' : 'rechazar', nota || undefined); } catch (e) { if (e?.codigo) e.code = e.codigo; throw e; }
+    if (!sb || !runId) throw Object.assign(new Error('Falta la corrida.'), { code: 'sin_corrida' });
+    if (!aprobar && String(nota || '').trim().length < 5) throw Object.assign(new Error('Para rechazar hace falta un motivo de al menos 5 caracteres.'), { code: 'entrada_invalida' });
+    const { data, error } = await sb.schema('flows').rpc('decidir_corrida', { p_run: runId, p_aprobar: aprobar === true, p_nota: nota || null });
+    if (error) {
+      if (error.code === 'PGRST202' || error.code === '42883') throw Object.assign(new Error('Aprobar o rechazar una corrida llega con la migración de BD (flows.decidir_corrida): todavía no está en esta base.'), { code: 'sin_puerta' });
+      if (error.code === '42501') throw Object.assign(new Error('No tienes el permiso que este paso exige.'), { code: 'sin_permiso' });
+      throw error;
+    }
+    return data;
   }
 
   /** Salidas de unas corridas (o de toda la marca si runIds está vacío). Forma runs_outputs de v1. */
@@ -185,7 +189,7 @@
   }
 
   window.ProduccionesDatos = Object.freeze({
-    corridas, corrida, salidas, entradas, borrarArchivoDeSalida, nombresDeFlujos, aprobacionesPendientes, decidirAprobacion,
+    corridas, corrida, salidas, entradas, borrarArchivoDeSalida, nombresDeFlujos, decidirCorrida,
     mapeo: Object.freeze({ corridaAV1, salidaAV1, entradaAV1, entradasPorCorrida }),
     _inyectarCliente(sb) { clienteInyectado = sb; },
   });

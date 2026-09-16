@@ -128,41 +128,43 @@ class StudioView extends BaseView {
   }
 
   /**
-   * Corrida `awaiting_approval` (contrato vera.md): la persona decide la acción pendiente
-   * (ai.pending_actions con run_id) por POST /v1/aprobaciones/:id. Devuelve true si pintó
-   * la aprobación (el sondeo se detiene; se retoma al decidir).
+   * Corrida `awaiting_approval` (backend 16/09): la pone flows.avanzar cuando el paso tiene
+   * requires_approval; lo que se aprueba es la corrida misma (sus entradas: para publicar-meta,
+   * imagen/texto/destino). Devuelve true si pintó la aprobación (el sondeo se detiene; se retoma
+   * al decidir).
    */
   async _pintarAprobacionSiEspera(runId, attempt) {
     const c = this._ultimaCorrida && this._ultimaCorrida.id === runId ? this._ultimaCorrida : await this._corrida(runId);
     if (String(c?.status || '').toLowerCase() !== 'awaiting_approval') return false;
     const P = window.ProduccionesDatos;
-    const pendientes = P ? await P.aprobacionesPendientes(this.organizationId, runId) : [];
-    if (!pendientes.length) return false; // ya decidida por otra persona: seguir sondeando
-    this._renderAprobacion(runId, pendientes[0], attempt);
+    const filas = P ? await P.entradas(this.organizationId, [runId]) : [];
+    const entradas = P ? (P.mapeo.entradasPorCorrida(filas)[runId] || {}) : {};
+    let salidas = [];
+    try { salidas = P ? await P.salidas(this.organizationId, [runId], { limite: 8 }) : []; } catch (_) { /* sin salidas previas */ }
+    this._renderAprobacion(runId, { corrida: c, entradas, salidas }, attempt);
     return true;
   }
 
-  _renderAprobacion(runId, p, attempt) {
+
+  _renderAprobacion(runId, { corrida, entradas, salidas }, attempt) {
     const host = this._stageHost();
     if (!host || this._activeRunId !== runId) return;
     const esc = (v) => this.escapeHtmlSafe(v);
-    const ACCION = { read: __('leer'), produce: __('producir'), publish: __('publicar'), spend: __('gastar créditos'), configure: __('configurar') };
-    const pl = p.payload && typeof p.payload === 'object' ? p.payload : {};
-    const texto = pl.texto || pl.prompt || pl.caption || pl.copy || '';
-    const imagen = pl.url || pl.imagen_url || pl.image_url || '';
-    const detalle = Object.entries(pl).filter(([k, v]) => !['texto', 'prompt', 'caption', 'copy', 'url', 'imagen_url', 'image_url'].includes(k) && v != null && typeof v !== 'object').slice(0, 8);
+    const texto = entradas.texto || entradas.prompt || entradas.caption || '';
+    const imagenSalida = (salidas || []).find((o) => o.storage_path && /^https?:\/\//.test(o.storage_path));
+    const imagenUrl = imagenSalida ? imagenSalida.storage_path : '';
+    const detalle = Object.entries(entradas).filter(([k, v]) => !['texto', 'prompt', 'caption'].includes(k) && v != null && v !== '' && typeof v !== 'object').slice(0, 8);
+    const nombre = corrida?.content_flows?.name || this.selectedFlow?.name || '';
     host.innerHTML = `
-      <div class="studio-stage" data-aprobacion="${esc(p.id)}">
+      <div class="studio-stage" data-aprobacion="${esc(runId)}">
         <div class="studio-stage-body"><div class="stage-approval">
-          <p class="stage-approval-title">${__('Vera pide permiso para {accion}', { accion: ACCION[p.action] || esc(p.action) })}</p>
-          <p class="stage-variant-hook">${esc(p.summary || '')}</p>
-          ${imagen && /^https?:\/\//.test(imagen) ? `<div class="stage-image-wrap"><img class="stage-image" src="${esc(imagen)}" alt=""></div>` : ''}
+          <p class="stage-approval-title">${__('Este paso de «{flujo}» necesita tu aprobación', { flujo: esc(nombre) })}</p>
+          ${imagenUrl ? `<div class="stage-image-wrap"><img class="stage-image" src="${esc(imagenUrl)}" alt=""></div>` : ''}
           ${texto ? `<blockquote class="stage-variant">${esc(texto)}</blockquote>` : ''}
           ${detalle.length ? `<ul class="stage-variant-scenes">${detalle.map(([k, v]) => `<li><b>${esc(k)}:</b> ${esc(String(v))}</li>`).join('')}</ul>` : ''}
-          <p class="vera-dim">${__('Exige el permiso «{p}».', { p: esc(p.permission || '') })}</p>
           <textarea class="stage-ajustes" rows="2" placeholder="${__('Motivo (obligatorio si rechazas, mínimo 5 caracteres)…')}"></textarea>
           <div class="stage-actions">
-            <button type="button" class="studio-btn-producir" data-aprobar="1">${__('Aprobar')}</button>
+            <button type="button" class="studio-btn-producir" data-aprobar="1">${__('Aprobar y continuar')}</button>
             <button type="button" class="pmodal-toolpill" data-aprobar="0">${__('Rechazar')}</button>
           </div>
           <p class="stage-approval-msg" aria-live="polite"></p>
@@ -178,17 +180,19 @@ class StudioView extends BaseView {
       body.querySelectorAll('[data-aprobar]').forEach((b) => { b.disabled = true; });
       msg.textContent = aprobar ? __('Aprobando…') : __('Rechazando…');
       try {
-        await window.ProduccionesDatos.decidirAprobacion(this.organizationId, p.id, aprobar, nota || null);
+        await window.ProduccionesDatos.decidirCorrida(runId, aprobar, nota || null);
         this._ultimaCorrida = null;
-        if (aprobar) { this._renderStageSkeleton(1, __('Vera sigue con la producción…')); this._pollActiveRunOutputs(runId, Math.min(attempt + 1, 4)); }
-        else { msg.textContent = __('Rechazada: la corrida se detiene.'); this._pollActiveRunOutputs(runId, Math.min(attempt + 1, 4)); }
+        if (aprobar) this._renderStageSkeleton(1, __('Sigue la producción…'));
+        else msg.textContent = __('Rechazada: la corrida se detiene.');
+        this._pollActiveRunOutputs(runId, Math.min(attempt + 1, 4));
       } catch (err) {
-        msg.textContent = err?.code === 'sin_api' ? err.message : (err?.status === 403 || err?.code === 'sin_permiso' ? __('No tienes el permiso que esta acción exige.') : (err?.message || __('No se pudo decidir.')));
+        msg.textContent = err?.message || __('No se pudo decidir.');
         body.querySelectorAll('[data-aprobar]').forEach((b) => { b.disabled = false; });
       }
     });
     this._playNotificationSound();
   }
+
 
   /** La corrida (forma flow_runs de v1) por id. */
   async _corrida(runId) {

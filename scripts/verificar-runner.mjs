@@ -18,6 +18,7 @@ const pasos = [];
 const ok = (p, d = '') => { pasos.push(['OK', p]); console.log(`OK     ${p}${d ? ' — ' + d : ''}`); };
 const falla = (p, e) => { pasos.push(['FALLA', p]); console.log(`FALLA  ${p} — ${e?.code || ''} ${e?.message || e}`); };
 const salta = (p, d) => { pasos.push(['SALTA', p]); console.log(`SALTA  ${p} — ${d}`); };
+const pendiente = (p, d) => { pasos.push(['PENDIENTE', p]); console.log(`PEND.  ${p} — ${d}`); };
 globalThis.window = globalThis; globalThis.document = { hidden: false };
 for (const f of ['ApiV2', 'StudioDataService', 'FlujosDataService', 'ProduccionesDataService']) new Function(readFileSync(new URL(`../js/services/${f}.js`, import.meta.url), 'utf8'))();
 const F = globalThis.FlujosDatos; const S = globalThis.StudioDatos; const P = globalThis.ProduccionesDatos;
@@ -60,8 +61,8 @@ async function main() {
     const e = ids.length ? await P.entradas(org.id, ids) : [];
     ok('run_inputs de las últimas 5', `${e.length} filas · claves ${[...new Set(e.map((x) => x.key))].slice(0, 6).join(',')}`);
     if (ids[0]) { const una = await P.corrida(org.id, ids[0]); if (!una?.id) throw new Error('corrida por id vacía'); ok('corrida por id', `${una.status} · ${una.content_flows?.name || '—'}`); }
-    const ap = ids[0] ? await P.aprobacionesPendientes(org.id, ids[0]) : [];
-    ok('aprobaciones pendientes de la corrida (ai.pending_actions por run_id)', `${ap.length}`);
+    try { await P.decidirCorrida('00000000-0000-0000-0000-000000000000', true); falla('decidir_corrida', new Error('no falló con id imposible')); }
+    catch (e) { (e.code === 'sin_puerta' ? pendiente : ok)('flows.decidir_corrida', e.code === 'sin_puerta' ? 'espera la migración de BD' : `${e.code || ''} ${e.message}`); }
   } catch (e) { falla('corridas/salidas', e); }
   const slug = env('LANZAR');
   if (!env('AISC_API_URL')) {
@@ -84,7 +85,7 @@ async function main() {
 }
 function fin() {
   const n = (t) => pasos.filter((p) => p[0] === t).length;
-  console.log(`\n${n('OK')} OK · ${n('FALLA')} FALLA · ${n('SALTA')} SALTA`);
+  console.log(`\n${n('OK')} OK · ${n('FALLA')} FALLA · ${n('PENDIENTE')} PENDIENTE · ${n('SALTA')} SALTA`);
   process.exit(n('FALLA') ? 1 : 0);
 }
 main().catch((e) => { falla('inesperado', e); fin(); });
