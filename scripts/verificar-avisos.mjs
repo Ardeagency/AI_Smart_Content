@@ -63,7 +63,7 @@ async function main() {
       const r1 = await D.marcar(vivo, 'read'); if (!r1.read_at) throw new Error('read_at nulo');
       const r2 = await D.marcar({ ...vivo, is_delivered: true }, 'unread'); if (r2.read_at) throw new Error('no volvió a no leído');
       ok('marcar uno (leído → no leído)', `id ${vivo.id}`);
-    } catch (e) { if (e.code === '42501') pendiente('marcar uno', `${e.code} ${e.message} — la policy alerts_marcar llega con la 170000`); else falla('marcar uno', e); }
+    } catch (e) { if (e.code === '23514') pendiente('marcar uno', `${e.code} el CHECK viejo exige delivered_at — lo relaja la 170000 (1f96cfc)`); else falla('marcar uno', e); }
   }
   try {
     const n = await D.marcarTodo(org.id, '2000-01-01T00:00:00Z');

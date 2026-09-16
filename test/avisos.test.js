@@ -58,8 +58,8 @@ describe('AvisosDataService · mapeos', () => {
     expect(D.canalesEfectivos({ default_channels: ['in_app'] }, { is_muted: true, channels: ['email'] })).toEqual([]);
     expect(D.canalesEfectivos(null, null)).toEqual(['in_app']);
   });
-  test('marcar respeta el CHECK de la base: leído exige entregado, actuado exige leído', () => {
-    expect(D.parcheDeMarca('read', { is_delivered: false, read_at: null }, 'T')).toEqual({ delivered_at: 'T', read_at: 'T' });
+  test('marcar solo toca read_at/acted_at (grant por columna: otra columna = 42501); actuar exige leer', () => {
+    expect(D.parcheDeMarca('read', { is_delivered: false, read_at: null }, 'T')).toEqual({ read_at: 'T' });
     expect(D.parcheDeMarca('read', { is_delivered: true, read_at: 'R' }, 'T')).toEqual({ read_at: 'R' });
     expect(D.parcheDeMarca('acted', { is_delivered: true, read_at: null }, 'T')).toEqual({ read_at: 'T', acted_at: 'T' });
     expect(D.parcheDeMarca('unread', {}, 'T')).toEqual({ read_at: null, acted_at: null });

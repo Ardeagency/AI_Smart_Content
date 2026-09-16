@@ -12,8 +12,8 @@
  *     hecho se repitió mientras el aviso seguía vivo.
  *   · Taxonomía: T public.alert_types(code, name, description, severity, family,
  *     max_shown, is_active, default_channels alert_channel[], params text[]).
- *   · Marcar uno: PATCH alerts {read_at} (CHECK alerts_secuencia: leído exige
- *     delivered_at; actuado exige read_at). Marcar todo: R marcar_avisos_leidos(p_org,
+ *   · Marcar uno: PATCH alerts {read_at} a secas (grant por columna: solo read_at y
+ *     acted_at; CHECK alerts_secuencia: actuar exige leer). Marcar todo: R marcar_avisos_leidos(p_org,
  *     p_hasta) con p_hasta = el `newest` que la persona vio.
  *   · Preferencias: T public.alert_preferences(organization_id, user_id, type_code,
  *     channels alert_channel[], is_muted) — por persona y tipo (RLS propio user_id).
@@ -76,12 +76,14 @@
     return Array.isArray(tipo?.default_channels) ? tipo.default_channels : ['in_app'];
   }
 
-  /** El parche de «marcar»: leído exige entregado; actuado exige leído (CHECK de la base). */
+  /**
+   * El parche de «marcar»: el grant de UPDATE para authenticated es POR COLUMNA
+   * (solo read_at y acted_at, 0910810000): cualquier otra columna en el PATCH da
+   * 42501. Actuar exige leer (CHECK alerts_secuencia tras la 170000).
+   */
   function parcheDeMarca(estado, aviso, ahora = new Date().toISOString()) {
     if (estado === 'unread') return { read_at: null, acted_at: null };
-    const p = {};
-    if (!aviso?.is_delivered) p.delivered_at = ahora;
-    p.read_at = aviso?.read_at || ahora;
+    const p = { read_at: aviso?.read_at || ahora };
     if (estado === 'acted' || estado === 'done') p.acted_at = ahora;
     return p;
   }
