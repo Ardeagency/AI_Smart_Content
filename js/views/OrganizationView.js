@@ -77,6 +77,7 @@ class OrganizationView extends BaseView {
     <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">${__('Suscripción')}</button>
     <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">${__('Uso')}</button>
     <button type="button" class="tab-btn" data-tab="security" role="tab" aria-selected="false">${__('Seguridad')}</button>
+    <button type="button" class="tab-btn" data-tab="avisos" role="tab" aria-selected="false">${__('Avisos')}</button>
   </div>
 
   <div class="organization-content">
@@ -337,6 +338,19 @@ class OrganizationView extends BaseView {
         <div class="org-sessions-list" id="orgSessionsList">
           <p class="org-placeholder">${__('Cargando…')}</p>
         </div>
+      </section>
+    </div>
+
+    <!-- ── AVISOS (ADR-0054): qué te avisa la marca y por dónde, por persona ── -->
+    <div class="tab-content" id="avisosTab" role="tabpanel">
+      <section class="org-section">
+        <div class="org-section-head">
+          <div>
+            <h2>${__('Avisos')}</h2>
+            <p class="org-section-desc">${__('Qué te avisa esta marca y por dónde. El canal lo dicta la severidad de cada tipo; aquí lo corriges para ti: en la app, por correo al momento, en el resumen diario, o en silencio.')}</p>
+          </div>
+        </div>
+        <div id="orgAvisosPrefs"><p class="org-placeholder">${__('Cargando…')}</p></div>
       </section>
     </div>
 
@@ -2131,6 +2145,91 @@ class OrganizationView extends BaseView {
       `<div class="org-error-banner" role="alert">${this.escapeHtml(msg)}</div>`);
   }
 
+  // ── Avisos: preferencias por tipo (ADR-0054) ───────────
+  /**
+   * Una fila por tipo activo, agrupadas por familia: severidad, canales por
+   * defecto y los de la persona. Sin fila en alert_preferences = el defecto del
+   * tipo; «silencio» apaga todos los canales de ese tipo para esta persona.
+   */
+  async _renderAvisosPrefs() {
+    const el = this.querySelector('#orgAvisosPrefs');
+    if (!el || !window.AvisosDatos) return;
+    try {
+      const [tipos, prefs] = await Promise.all([window.AvisosDatos.tipos({ fresco: true }), window.AvisosDatos.preferencias(this.orgId)]);
+      this._avisosTipos = tipos; this._avisosPrefs = prefs;
+      const activos = Object.values(tipos).filter((t) => t.is_active !== false);
+      if (!activos.length) { el.innerHTML = `<p class="org-placeholder">${__('La marca aún no tiene tipos de aviso activos.')}</p>`; return; }
+      const familias = (window.Avisos && window.Avisos.FAMILIAS) || {};
+      const etiquetaCanal = { in_app: __('En la app'), email: __('Correo al momento'), email_digest: __('Resumen diario') };
+      const sev = { info: __('info'), success: __('ok'), warning: __('aviso'), error: __('error'), critical: __('crítico') };
+      const porFamilia = {};
+      activos.forEach((t) => { (porFamilia[t.family || 'ops'] ||= []).push(t); });
+      const fila = (t) => {
+        const p = prefs[t.code] || null;
+        const efectivos = window.AvisosDatos.mapeo.canalesEfectivos(t, p);
+        const defecto = Array.isArray(t.default_channels) ? t.default_channels : ['in_app'];
+        const nombre = (window.Avisos && window.Avisos.RENDER[t.code]?.etiqueta) || t.name || t.code;
+        const check = (c) => `<label class="org-aviso-canal"><input type="checkbox" data-aviso-canal="${this._esc(c)}" data-aviso-tipo="${this._esc(t.code)}"${efectivos.includes(c) ? ' checked' : ''}${p?.is_muted ? ' disabled' : ''}> ${etiquetaCanal[c]}</label>`;
+        return `
+          <div class="org-aviso-row${p?.is_muted ? ' is-muda' : ''}${p ? ' is-propia' : ''}" data-aviso-tipo="${this._esc(t.code)}">
+            <div class="org-aviso-info">
+              <span class="org-aviso-nombre">${this._esc(__(nombre))}</span>
+              <span class="org-aviso-meta"><span class="org-bill-pill org-bill-pill--${['error', 'critical'].includes(t.severity) ? 'warn' : 'muted'}">${this._esc(sev[t.severity] || t.severity)}</span> ${t.description ? this._esc(t.description) : ''}${p ? ` · <em>${__('ajustado por ti')}</em>` : ` · ${__('por defecto: {c}', { c: this._esc(defecto.map((c) => etiquetaCanal[c] || c).join(', ')) })}`}</span>
+            </div>
+            <div class="org-aviso-canales">${window.AvisosDatos.CANALES_EDITABLES.map(check).join('')}</div>
+            <div class="org-aviso-acciones">
+              <label class="org-aviso-canal"><input type="checkbox" data-aviso-silencio="${this._esc(t.code)}"${p?.is_muted ? ' checked' : ''}> ${__('Silencio')}</label>
+              ${p ? `<button type="button" class="btn btn-ghost btn-sm" data-aviso-defecto="${this._esc(t.code)}">${__('Volver al defecto')}</button>` : ''}
+            </div>
+          </div>`;
+      };
+      el.innerHTML = Object.entries(porFamilia).map(([fam, lista]) => `
+        <h3 class="org-fx-grupo"><i class="aisc-ico ${this._esc(familias[fam]?.icono || 'aisc-ico--alert-info')}" aria-hidden="true"></i> ${this._esc(__(familias[fam]?.etiqueta || fam))} <span class="org-bill-cuenta">${lista.length}</span></h3>
+        <div class="org-aviso-lista">${lista.map(fila).join('')}</div>`).join('');
+      if (el.dataset.bound !== '1') {
+        el.dataset.bound = '1';
+        el.addEventListener('change', (e) => this._onAvisoPrefChange(e));
+        el.addEventListener('click', async (e) => {
+          const btn = e.target.closest('[data-aviso-defecto]');
+          if (!btn) return;
+          await this._guardarAvisoPref(btn.getAttribute('data-aviso-defecto'), { channels: null, is_muted: false });
+        });
+      }
+    } catch (e) {
+      console.warn('OrganizationView _renderAvisosPrefs:', e);
+      el.innerHTML = `<p class="org-placeholder">${__('No se pudieron cargar las preferencias de avisos.')}</p>`;
+    }
+  }
+
+  async _onAvisoPrefChange(e) {
+    const canal = e.target.closest('[data-aviso-canal]');
+    const silencio = e.target.closest('[data-aviso-silencio]');
+    if (silencio) {
+      const code = silencio.getAttribute('data-aviso-silencio');
+      const t = this._avisosTipos?.[code];
+      const p = this._avisosPrefs?.[code] || null;
+      const channels = silencio.checked ? (p?.channels || t?.default_channels || ['in_app']) : (p?.channels || null);
+      await this._guardarAvisoPref(code, { channels: silencio.checked ? channels : (p ? channels : null), is_muted: silencio.checked });
+      return;
+    }
+    if (canal) {
+      const code = canal.getAttribute('data-aviso-tipo');
+      const fila = canal.closest('.org-aviso-row');
+      const channels = [...fila.querySelectorAll('[data-aviso-canal]')].filter((i) => i.checked).map((i) => i.getAttribute('data-aviso-canal'));
+      await this._guardarAvisoPref(code, { channels, is_muted: false });
+    }
+  }
+
+  async _guardarAvisoPref(code, opciones) {
+    try {
+      await window.AvisosDatos.guardarPreferencia(this.orgId, this.userId, code, opciones);
+      this._toast(__('Preferencia guardada'));
+    } catch (e) {
+      alert(e.message || __('No se pudo guardar la preferencia.'));
+    }
+    await this._renderAvisosPrefs();
+  }
+
   // ── Eventos ────────────────────────────────────────────
   _bindEvents() {
     const tabs = this.querySelectorAll('.organization-tabs .tab-btn');
@@ -2149,8 +2248,18 @@ class OrganizationView extends BaseView {
           this._billingLoaded = true;
           this._loadBilling();
         }
+        if (tab === 'avisos' && !this._avisosLoaded) {
+          this._avisosLoaded = true;
+          this._renderAvisosPrefs();
+        }
       });
     });
+    // Pestaña por URL: /organization/<tab> (los enlaces de la campana y de Créditos llegan aquí).
+    const porUrl = { avisos: 'avisos', subscription: 'billing', suscripcion: 'billing', members: 'members', miembros: 'members', usage: 'activity', uso: 'activity', security: 'security', seguridad: 'security', general: 'general' }[String(this.routeParams?.tab || '').toLowerCase()];
+    if (porUrl && porUrl !== 'general') {
+      const btn = this.querySelector(`.organization-tabs .tab-btn[data-tab="${porUrl}"]`);
+      if (btn) btn.click();
+    }
 
     this.querySelector('#orgGeneralForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveGeneral(); });
     this.querySelector('#orgInviteBtn')?.addEventListener('click', () => this._openInviteModal());

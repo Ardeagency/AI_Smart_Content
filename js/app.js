@@ -519,6 +519,8 @@ class App {
 
     // ── Org: Organization ──
     r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
+    // Pestaña por URL (avisos, subscription, members, usage, security): la abre OrganizationView.
+    r.register('/org/:orgIdShort/:orgNameSlug/organization/:tab', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
     // ── Create ──
     r.register('/create', this._lazy('CreateView', ['/js/views/CreateView.js']), auth);

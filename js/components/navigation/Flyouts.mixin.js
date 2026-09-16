@@ -7,8 +7,8 @@
  * collapsed y el wiring global de cierre (click fuera, ESC, routechange).
  *
  * Mixin vanilla: aplica sobre Navigation.prototype al cargarse. Debe cargarse
- * DESPUÉS de Navigation.js. Usa los helpers module-level `_escapeHtml` y
- * `_formatNotificationDate` que Navigation.js define al inicio del archivo.
+ * DESPUÉS de Navigation.js. Usa el helper module-level `_escapeHtml` que
+ * Navigation.js define al inicio del archivo. Los avisos los pinta Avisos.js (ADR-0054).
  */
 (function () {
   'use strict';
@@ -193,17 +193,9 @@
         });
       };
 
-      this._renderNotificationsDropdownContent(panel, null, 'Cargando…', false);
       openPanel();
-
-      let notifications = [];
-      let error = null;
-      try {
-        notifications = await this._orgNotificationsList('all', 50);
-      } catch (e) { error = e; }
-
-      this._renderNotificationsDropdownContent(panel, notifications, null, true,
-        error ? (error.message || 'No se pudieron cargar notificaciones') : null);
+      // ADR-0054: el contenido lo pinta Avisos (lista por tipo, marcar, preferencias).
+      if (window.Avisos) await window.Avisos.pintar(panel, { alCerrar: () => this.closeNotificationsDropdown?.() });
       requestAnimationFrame(() => {
         if (typeof this.positionUserDropdown === 'function') {
           this.positionUserDropdown(triggerEl, panel);
@@ -215,123 +207,12 @@
     const flyout = document.getElementById('navFlyout');
     if (!flyout) return;
 
-    this._renderNotificationsFlyoutContent(flyout, null, 'Cargando…', false);
+    flyout.innerHTML = '<div class="nav-flyout-body nav-flyout-notifications-body"></div>';
     this._showNotificationsFlyout(flyout, triggerEl);
-
-    let notifications = [];
-    let error = null;
-    try {
-      notifications = await this._orgNotificationsList('all', 50);
-    } catch (e) { error = e; }
-
-    if (error) {
-      this._renderNotificationsFlyoutContent(flyout, [], null, true, error.message);
-      return;
-    }
-    this._renderNotificationsFlyoutContent(flyout, notifications || [], null, true);
+    const cuerpo = flyout.querySelector('.nav-flyout-notifications-body') || flyout;
+    if (window.Avisos) await window.Avisos.pintar(cuerpo, { alCerrar: () => this.closeFlyout?.() });
   },
 
-  _renderNotificationsDropdownContent(panel, notifications, loadingLabel, ready, errorMessage) {
-    const list = Array.isArray(notifications) ? notifications : [];
-    const configHref = this.getUserSidebarRoute('organization');
-
-    let bodyHtml;
-    if (errorMessage) {
-      bodyHtml = `<div class="nav-flyout-notifications-error">${_escapeHtml(errorMessage)}</div>`;
-    } else if (loadingLabel) {
-      bodyHtml = `<div class="nav-flyout-notifications-loading">${_escapeHtml(loadingLabel)}</div>`;
-    } else if (list.length === 0) {
-      bodyHtml = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
-    } else {
-      bodyHtml =
-        '<div class="notif-list">' +
-        list.map((n) => this._renderRichNotificationCard(n)).join('') +
-        '</div>';
-    }
-
-    const footerHtml = configHref
-      ? `<div class="nav-flyout-footer">
-          <a href="${configHref}" class="nav-flyout-cta nav-flyout-cta-link" data-route="${configHref}">Configuración <i class="aisc-ico aisc-ico--chevron-right"></i></a>
-        </div>`
-      : '';
-
-    panel.innerHTML = `
-      <div class="notifications-dropdown-inner">
-        <div class="notifications-dropdown-head user-dropdown-header">
-          <div class="notifications-dropdown-head-row">
-            <i class="aisc-ico aisc-ico--notification" aria-hidden="true"></i>
-            <span>Notificaciones</span>
-          </div>
-        </div>
-        <div class="notifications-dropdown-body nav-flyout-notifications-body">${bodyHtml}</div>
-        ${footerHtml}
-      </div>`;
-
-    if (ready && list.length) {
-      const onClose = () => {
-        if (typeof this.closeNotificationsDropdown === 'function') {
-          this.closeNotificationsDropdown();
-        }
-      };
-      this._attachNotificationListeners(panel, onClose, list);
-    }
-    panel.querySelector('.nav-flyout-cta-link')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      const route = panel.querySelector('.nav-flyout-cta-link')?.dataset?.route;
-      if (route && window.router) window.router.navigate(route);
-      if (typeof this.closeNotificationsDropdown === 'function') {
-        this.closeNotificationsDropdown();
-      }
-    });
-  },
-
-  _renderNotificationsFlyoutContent(flyout, notifications, loadingLabel, ready, errorMessage) {
-    const isLoading = notifications === null && !errorMessage;
-    const list = Array.isArray(notifications) ? notifications : [];
-    const configHref = this.getUserSidebarRoute('organization');
-
-    let bodyHtml;
-    if (errorMessage) {
-      bodyHtml = `<div class="nav-flyout-notifications-error">${_escapeHtml(errorMessage)}</div>`;
-    } else if (loadingLabel) {
-      bodyHtml = `<div class="nav-flyout-notifications-loading">${_escapeHtml(loadingLabel)}</div>`;
-    } else if (list.length === 0) {
-      bodyHtml = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
-    } else {
-      bodyHtml = '<div class="notif-list">' +
-        list.map((n) => this._renderRichNotificationCard(n)).join('') +
-        '</div>';
-    }
-
-    const footerHtml = configHref
-      ? `<div class="nav-flyout-footer">
-          <a href="${configHref}" class="nav-flyout-cta nav-flyout-cta-link" data-route="${configHref}">Configuración <i class="aisc-ico aisc-ico--chevron-right"></i></a>
-        </div>`
-      : '';
-
-    flyout.innerHTML = `
-      <div class="nav-flyout-bridge" aria-hidden="true"></div>
-      <div class="nav-flyout-inner">
-        <div class="nav-flyout-header">
-          <span class="nav-flyout-header-icon"><i class="aisc-ico aisc-ico--notification"></i></span>
-          <span class="nav-flyout-header-label">Notificaciones</span>
-        </div>
-        <div class="nav-flyout-body nav-flyout-notifications-body">${bodyHtml}</div>
-        ${footerHtml}
-      </div>`;
-
-    if (ready && list.length) {
-      this._attachNotificationListeners(flyout, () => this.closeFlyout(), list);
-    }
-    flyout.querySelector('.nav-flyout-cta-link')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      const route = flyout.querySelector('.nav-flyout-cta-link')?.dataset?.route;
-      if (route && window.router) window.router.navigate(route);
-      this.closeFlyout();
-    });
-  },
-
-  /** Solo sidebar / footer: flyout lateral junto al menú (no header). */
   _showNotificationsFlyout(flyout, triggerEl) {
     flyout.classList.remove('nav-flyout--header-anchor');
     flyout.style.top = '';

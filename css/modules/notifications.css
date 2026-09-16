@@ -653,3 +653,53 @@
 .header-notifications-wrap img.nav-icon { width: 20px !important; height: 20px !important; }
 /* El badge de notificaciones acompana el icono mas grande */
 .header-notifications-badge { top: 3px; right: 3px; width: 9px; height: 9px; }
+
+/* ============================================================
+   AVISOS (ADR-0054) — la campana: panel, pestañas, tarjeta por tipo.
+   Vive en los mismos contenedores que antes (dropdown del header y
+   flyout del sidebar). Las tarjetas viejas (.notif-card) quedan solo
+   para lo que aún las pinte; la campana usa .aviso.
+   ============================================================ */
+.avisos { display: flex; flex-direction: column; min-height: 120px; max-height: min(70vh, 640px); }
+.avisos-cabecera { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; padding: 0.75rem 0.9rem 0.5rem; border-bottom: 1px solid var(--border-color); }
+.avisos-titulo { display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 600; font-size: 0.95rem; }
+.avisos-cuenta { font-size: 0.72rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 999px; background: var(--brand-primary-brillo, rgba(255,255,255,0.12)); color: var(--text-primary); }
+.avisos-pestanas { display: inline-flex; gap: 0.25rem; margin-left: auto; }
+.avisos-pestana { background: transparent; border: 1px solid transparent; color: var(--text-secondary); font-size: 0.78rem; padding: 0.25rem 0.6rem; border-radius: 999px; cursor: pointer; }
+.avisos-pestana.is-activa { color: var(--text-primary); border-color: var(--border-color); background: rgba(255,255,255,0.06); }
+.avisos-herramientas { display: flex; gap: 0.5rem; width: 100%; }
+.avisos-lista { overflow: auto; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.avisos-vacio { padding: 1.5rem 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.aviso { display: grid; grid-template-columns: 32px 1fr; gap: 0.6rem; padding: 0.75rem 0.85rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card, rgba(255,255,255,0.03)); position: relative; }
+.aviso::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--text-secondary); opacity: 0.6; }
+.aviso--info::before, .aviso--success::before { background: var(--pf-4, #9acc00); }
+.aviso--warning::before { background: var(--pf-2, #ffb300); }
+.aviso--error::before, .aviso--critical::before { background: var(--pf-1, #ff5f00); }
+.aviso--critical { border-color: rgba(255, 95, 0, 0.45); }
+.aviso--leido { opacity: 0.72; }
+.aviso--leido::before { opacity: 0.25; }
+.aviso-icono { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.06); color: var(--text-primary); font-size: 0.95rem; }
+.aviso-cuerpo { min-width: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.aviso-cabecera { display: flex; align-items: center; gap: 0.5rem; font-size: 0.72rem; color: var(--text-secondary); }
+.aviso-etiqueta { text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+.aviso-veces { font-weight: 600; padding: 0 0.35rem; border-radius: 999px; background: rgba(255,255,255,0.08); }
+.aviso-cuando { margin-left: auto; white-space: nowrap; }
+.aviso-titulo { margin: 0; font-size: 0.9rem; font-weight: 600; line-height: 1.3; cursor: pointer; }
+.aviso-texto { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45; }
+.aviso-texto p { margin: 0 0 0.35rem; }
+.aviso-acciones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.aviso-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.75rem; padding: 0.3rem 0.65rem; border-radius: 999px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; }
+.aviso-btn:hover { background: rgba(255,255,255,0.06); }
+.aviso-btn--ir { border-color: var(--brand-primary, var(--border-color)); }
+
+/* Organización › Avisos: preferencias por tipo */
+.org-aviso-lista { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+.org-aviso-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.3fr) auto; gap: 0.75rem 1rem; align-items: center; padding: 0.7rem 0.9rem; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-card, rgba(255,255,255,0.03)); }
+.org-aviso-row.is-propia { border-color: rgba(255,255,255,0.18); }
+.org-aviso-row.is-muda { opacity: 0.6; }
+.org-aviso-info { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.org-aviso-nombre { font-weight: 600; font-size: 0.9rem; }
+.org-aviso-meta { font-size: 0.75rem; color: var(--text-secondary); }
+.org-aviso-canales, .org-aviso-acciones { display: flex; flex-wrap: wrap; gap: 0.5rem 0.9rem; align-items: center; }
+.org-aviso-canal { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; cursor: pointer; }
+@media (max-width: 900px) { .org-aviso-row { grid-template-columns: 1fr; } }

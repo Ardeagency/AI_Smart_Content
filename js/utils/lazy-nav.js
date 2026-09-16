@@ -21,6 +21,10 @@
     '/js/components/navigation/Flyouts.mixin.js',
     '/js/components/navigation/Credits.mixin.js',
     '/js/components/navigation/Settings.mixin.js',
+    // Avisos (ADR-0054): markdown, datos y campana; Navigation solo la monta.
+    '/js/utils/markdown.js',
+    '/js/services/AvisosDataService.js',
+    '/js/components/Avisos.js',
     // Componentes que las vistas usan dentro del shell auth.
     '/js/components/MatchBars.js',
     '/js/components/AudienceMap.js',

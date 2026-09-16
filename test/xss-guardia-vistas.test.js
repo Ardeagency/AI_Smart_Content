@@ -20,13 +20,14 @@ const VISTAS = [
   'js/views/OrganizationView.js',
   'js/views/ImageView.js',
   'js/views/VideoView.js',
+  'js/components/Avisos.js',
 ];
 // Campos de fila que llegan de la base y podrían traer HTML de una persona.
 // (kind/role/action/meter_code son enums o códigos de la base, no texto de una persona.)
 const CAMPOS = '(name|full_name|email|title|body|nombre_marca|file_name|legal_name|description|detalle|slogan|tagline|account_name|external_account_name|display_name|user_email|billing_email|address_line|city|region|number)';
 const PELIGRO = new RegExp('\\$\\{([^{}]*(?:\\{[^{}]*\\}[^{}]*)*)\\}', 'g');
 const CAMPO = new RegExp('[\\w$\\]\\)]\\.' + CAMPOS + '\\b');
-const ESCAPADO = /escapeHtml\(|_esc\(|escHtml\(|__\(|toLocaleString|toFixed|Number\(|Math\.round|encodeURIComponent|\.length|=== |!== |\? '|\? `|\.map\(|\.join\(|\.filter\(|\.includes\(|\.slice\(0, 8\)|\.toLowerCase\(\) === /;
+const ESCAPADO = /escapeHtml\(|_esc\(|escHtml\(|\besc\(|__\(|toLocaleString|toFixed|Number\(|Math\.round|encodeURIComponent|\.length|=== |!== |\? '|\? `|\.map\(|\.join\(|\.filter\(|\.includes\(|\.slice\(0, 8\)|\.toLowerCase\(\) === /;
 
 function hallazgos(src) {
   const salida = [];
