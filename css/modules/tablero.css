@@ -25,7 +25,7 @@
 .tablero-hueco-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
 .tablero-score { font-variant-numeric: tabular-nums; font-weight: 700; color: #6bcf7f; font-size: 0.8125rem; }
 .tablero-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.5rem; }
-.tablero-enlace { display: inline-block; margin-top: 0.5rem; font-size: 0.75rem; color: var(--brand-primary, #d4d1d8); text-decoration: none; }
+.tablero-enlace { display: inline-block; margin: 0.5rem 0.75rem 0 0; font-size: 0.75rem; color: var(--brand-primary, #d4d1d8); text-decoration: none; }
 .tablero-enlace:hover { text-decoration: underline; }
 .tablero-tendencia { display: flex; flex-direction: column; gap: 0.125rem; }
 .tablero-tendencia-kw { font-weight: 600; font-size: 0.875rem; }

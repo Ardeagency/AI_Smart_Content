@@ -67,11 +67,18 @@ class TableroView extends BaseView {
     this._pintarHuecos();
     this._pintarTendencias();
     this._bind();
+    // Los enlaces se pintaron después de render(): engancharlos al router (sin recarga).
+    this.updateLinksForRouter();
   }
 
   _prefijo() {
     const orgName = window.currentOrgName || '';
     return (this.organizationId && typeof window.getOrgPathPrefix === 'function') ? window.getOrgPathPrefix(this.organizationId, orgName) : '';
+  }
+
+  /** Vera con el mensaje ya escrito (?q=, mismo mecanismo que Competencia). */
+  _veraUrl(prompt) {
+    return `${this._prefijo()}/vera?q=${encodeURIComponent(prompt)}`;
   }
 
   _pintarLecturas() {
@@ -130,7 +137,8 @@ class TableroView extends BaseView {
           <div class="tablero-hueco-head"><strong>${this.escapeHtml(g.phrase)}</strong><span class="tablero-score" title="${__('demanda {d} · cobertura {c}', { d: pct(g.demand_score), c: pct(g.coverage_score) })}">${pct(g.gap_score)}</span></div>
           ${g.angle ? `<p>${this.escapeHtml(g.angle)}</p>` : ''}
           ${g.demand_terms.length ? `<div class="tablero-chips">${g.demand_terms.slice(0, 4).map((t) => `<span class="vera-move-chip">${this.escapeHtml(t)}</span>`).join('')}</div>` : ''}
-          <a class="tablero-enlace" href="${this.escapeHtml(this._prefijo() + '/image')}">${__('producir sobre esto →')}</a>
+          <a class="tablero-enlace" href="${this.escapeHtml(this._veraUrl(__('Quiero producir contenido sobre «{tema}». Ángulo: {angulo}. Propón 3 piezas (formato, canal y copy) con los productos de la marca.', { tema: g.phrase, angulo: g.angle || __('el que mejor encaje') })))}">${__('pedírselo a Vera →')}</a>
+          <a class="tablero-enlace" href="${this.escapeHtml(this._prefijo() + '/image')}">${__('producir una imagen →')}</a>
         </li>`).join('')}</ul>` : `<p class="vera-dim">${__('Sin huecos detectados todavía.')}</p>`}`;
   }
 
