@@ -98,89 +98,30 @@ class ExecutionHistoryView extends BaseView {
    * manual = TODO lo que NO es autopilot, asi que estos se EXCLUYEN. Es el inverso
    * simetrico del filtro de Tasks (que muestra solo estos).
    */
-  async _autopilotRunIds() {
-    if (!this.supabase) return [];
-    try {
-      let q = this.supabase
-        .from('runs_inputs')
-        .select('run_id')
-        .eq('metadata->>captured_from', 'autopilot_ingest')
-        .order('created_at', { ascending: false })
-        .limit(500);
-      if (this.organizationId) q = q.eq('organization_id', this.organizationId);
-      const { data, error } = await q;
-      if (error) throw error;
-      return [...new Set((data || []).map(r => r.run_id).filter(Boolean))];
-    } catch (e) {
-      console.error('ExecutionHistoryView _autopilotRunIds:', e);
-      return [];
-    }
-  }
+  /** El autopilot de v1 no existe en la base nueva. */
+  async _autopilotRunIds() { return []; }
 
-  /**
-   * Carga los runs de produccion manual (TODOS los de la org EXCEPTO autopilot) +
-   * hidrata nombre del flow, imagenes (para el carrusel) y conteo de outputs.
-   */
+  /** Corte: flows.runs + public.salidas por ProduccionesDatos (URL por file_id → galería). */
   async loadRuns() {
-    if (!this.supabase) return [];
+    if (!window.ProduccionesDatos || !this.organizationId) return [];
     try {
-      const autopilotIds = await this._autopilotRunIds();
-      let q = this.supabase
-        .from('flow_runs')
-        .select('id, flow_id, status, created_at, tokens_consumed')
-        .order('created_at', { ascending: false })
-        .limit(this.pageSize);
-      if (this.organizationId) q = q.eq('organization_id', this.organizationId);
-      else if (this.userId) q = q.eq('user_id', this.userId);
-      if (autopilotIds.length) q = q.not('id', 'in', `(${autopilotIds.join(',')})`);
-      const { data: runs, error } = await q;
-      if (error) throw error;
-      const list = runs || [];
+      const list = await window.ProduccionesDatos.corridas(this.organizationId, { desde: 0, limite: this.pageSize });
       if (!list.length) return [];
-
-      const flowIds = [...new Set(list.map(r => r.flow_id).filter(Boolean))];
-      const runIds = list.map(r => r.id);
-
-      const [flowsRes, outputsRes] = await Promise.all([
-        flowIds.length
-          ? this.supabase.from('content_flows').select('id, name, flow_image_url').in('id', flowIds)
-          : Promise.resolve({ data: [] }),
-        this.supabase.from('runs_outputs')
-          .select('run_id, output_type, storage_path, storage_object_id, created_at')
-          .in('run_id', runIds)
-          .order('created_at', { ascending: false })
-      ]);
-
-      const flowMap = (flowsRes.data || []).reduce((acc, f) => { acc[f.id] = f; return acc; }, {});
-
-      // Agrupar outputs por run (orden desc por created_at).
+      const outs = await window.ProduccionesDatos.salidas(this.organizationId, list.map((r) => r.id));
       const outputsByRun = {};
-      (outputsRes.data || []).forEach(o => {
-        (outputsByRun[o.run_id] = outputsByRun[o.run_id] || []).push(o);
-      });
-
-      const MAX_CAROUSEL = 8; // tope de imagenes que recorre el hover
-      return list.map(r => {
-        const flow = flowMap[r.flow_id] || null;
-        const outs = outputsByRun[r.id] || [];
-        // Todas las imagenes resolubles del run (para el carrusel en hover).
+      outs.forEach((o) => { (outputsByRun[o.run_id] = outputsByRun[o.run_id] || []).push(o); });
+      const MAX_CAROUSEL = 8;
+      return list.map((r) => {
+        const list2 = outputsByRun[r.id] || [];
         const images = [];
-        for (const o of outs) {
-          if ((o.output_type || '').toLowerCase() === 'text') continue;
-          const url = this.getPublicUrlFromStorage('production-outputs', o.storage_path)
-            || this.getPublicUrlFromStorage('outputs', o.storage_path)
-            || this.getPublicUrlFromStorage('production-outputs', o.storage_object_id);
-          if (url && !images.includes(url)) images.push(url);
+        for (const o of list2) {
+          const t = (o.output_type || '').toLowerCase();
+          if (t === 'text' || t === 'json') continue;
+          if (o.storage_path && !images.includes(o.storage_path)) images.push(o.storage_path);
           if (images.length >= MAX_CAROUSEL) break;
         }
-        if (!images.length && flow?.flow_image_url) images.push(flow.flow_image_url);
-        return {
-          ...r,
-          flow_name: flow?.name || __('Flujo eliminado'),
-          flow_slug: flow ? this.flowNameToSlug(flow.name) : '',
-          images,
-          output_count: outs.length
-        };
+        const nombre = r.content_flows?.name || __('Flujo');
+        return { ...r, tokens_consumed: r.credits_charged, flow_name: nombre, flow_slug: this.flowNameToSlug(nombre), images, output_count: list2.length };
       });
     } catch (e) {
       console.error('ExecutionHistoryView loadRuns:', e);
@@ -232,7 +173,7 @@ class ExecutionHistoryView extends BaseView {
       ? `organization_id=eq.${this.organizationId}`
       : (this.userId ? `user_id=eq.${this.userId}` : null);
     this.liveSubscribe([
-      { name: 'runs', table: 'flow_runs', filter, onChange: () => this._liveTick() },
+      { name: 'runs', schema: 'flows', table: 'runs', filter, onChange: () => this._liveTick() },
     ]);
     this.startLivePoll(60000, () => this._liveTick());
   }

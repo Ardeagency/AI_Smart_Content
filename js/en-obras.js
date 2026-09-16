@@ -19,7 +19,7 @@
     'command-center',
     'predictor',
     'tasks',
-    'execution-history',
+    // 'execution-history': PORTADA el 16/09 (flows.runs + public.salidas por ProduccionesDatos).
     // Hasta que cada una se porte y pruebe (se van quitando en el D1/D2/D3):
     'dashboard',
     // 'production': PORTADA el 16/09 (ProduccionesDataService sobre flows.runs + public.salidas; editar/likes/campaña avisan «en obras»).
