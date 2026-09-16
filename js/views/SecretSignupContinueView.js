@@ -96,6 +96,12 @@ class SecretSignupContinueView extends (window.BaseView || class {}) {
     this._set(null, this._t('Creando tu organización…'));
 
     try {
+      // Corte (ADR-0052): la function signup-self-finalize murió con v1 y la base nueva aún no
+      // tiene puerta para que una persona cree su marca (SEC-001, decisión de JC sobre el
+      // registro). Se dice con palabras; la cuenta ya existe y el equipo la conecta a su marca.
+      if (!window.AISC_REGISTRO_HABILITADO) {
+        throw new Error(this._t('Tu cuenta quedó creada. La marca la conecta el equipo: escríbenos a contact@aismartcontent.io con el correo con el que te registraste y te avisamos cuando esté lista.'));
+      }
       const { data, error } = await this.supabase.functions.invoke('signup-self-finalize', { body: {} });
       if (error) {
         // El cuerpo de error de una Edge Function trae el mensaje real.
