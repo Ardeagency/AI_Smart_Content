@@ -113,8 +113,8 @@
   const KIND = { diagnosis: () => t('Diagnóstico'), recommendation: () => t('Recomendación'), observation: () => t('Observación'), retrospective: () => t('Retrospectiva') };
 
   /**
-   * La lectura completa como banda. `opts.accion` = true pinta «Lo hice» (data-lectura-actuar)
-   * cuando no está atendida.
+   * La lectura completa como banda. `opts.accion` = true pinta «Ponerla en marcha»
+   * (data-lectura-actuar) cuando aún no se actuó sobre ella.
    */
   function lectura(l, opts = {}) {
     if (!l) return '';
@@ -125,9 +125,11 @@
     const d = datos(l.datos);
     const apoyo = d ? `<details class="vera-why"><summary>${esc(t('Datos de apoyo'))}</summary><div class="vera-why-body">${d}</div></details>` : '';
     const periodo = l.period_start ? `${fecha(l.period_start)}${l.period_end ? ` → ${fecha(l.period_end)}` : ''}` : fecha(l.created_at);
+    // Actuar = PATCH acted_on: la base encola `estrategia.producir` (competencia.md), o sea
+    // Vera convierte la recomendación en producción. El botón lo dice así, no «lo hice».
     const estado = l.acted_on
-      ? `<span class="vera-chip vera-chip--done">${esc(t('atendida'))}${l.acted_at ? ` · ${esc(fecha(l.acted_at))}` : ''}</span>`
-      : (opts.accion ? `<button type="button" class="strat-btn strat-btn--approve" data-lectura-actuar="${esc(l.id)}">${esc(t('Lo hice'))}</button>` : '');
+      ? `<span class="vera-chip vera-chip--done">${esc(t('en marcha'))}${l.acted_at ? ` · ${esc(fecha(l.acted_at))}` : ''}</span>`
+      : (opts.accion ? `<button type="button" class="strat-btn strat-btn--approve" data-lectura-actuar="${esc(l.id)}" title="${esc(t('Vera la convierte en producción'))}">${esc(t('Ponerla en marcha'))}</button>` : '');
     return `
       <section class="vera-band-section" data-lectura="${esc(l.id)}">
         <div class="vera-band">

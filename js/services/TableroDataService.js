@@ -145,7 +145,7 @@
     return (r.data || []).map(lecturaAV1);
   }
 
-  /** «Lo hice»: marca la lectura como atendida (solo acted_on/acted_note/acted_at: el grant es por columna). */
+  /** «Ponerla en marcha»: acted_on=true (la base encola estrategia.producir); solo acted_on/acted_note/acted_at (grant por columna, medido 16/09). */
   async function actuar(id, nota = null) {
     const sb = await cliente();
     if (!sb || !id) return null;

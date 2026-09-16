@@ -37,7 +37,7 @@ describe('Tablero · lecturas de Vera', () => {
     expect(M.bloquesDesde('[sic] esto es prosa')).toEqual([{ type: 'texto', body: '[sic] esto es prosa' }]);
     expect(M.esJsonHeredado('[sic] esto es prosa')).toBe(false);
   });
-  test('LecturaVera escapa todo y pinta «Lo hice» solo si no está atendida', () => {
+  test('LecturaVera escapa todo y pinta «Ponerla en marcha» solo si aún no se actuó', () => {
     const l = M.lecturaAV1({ id: 'r5', kind: 'recommendation', title: '<img src=x onerror=alert(1)>', body: 'Hola <b>mundo</b>', evidence: {} });
     const html = L.lectura(l, { accion: true });
     expect(html).not.toContain('<img'); expect(html).toContain('&lt;img'); expect(html).toContain('&lt;b&gt;mundo');
