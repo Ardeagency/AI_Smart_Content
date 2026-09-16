@@ -1138,10 +1138,11 @@ class Navigation {
             ${subHtml}
           </div>
         </div>
-        <div class="nav-item" id="navCommandCenterSingle" style="display:none">
-          <a href="#" class="nav-link nav-main-link" id="navCommandCenterSingleLink" data-route="" data-tooltip="${__('Marketing')}">
+        <div class="nav-item${window.EnObras?.es('/command-center') ? ' nav-item--en-obras' : ''}" id="navCommandCenterSingle" style="display:none">
+          <a href="#" class="nav-link nav-main-link" id="navCommandCenterSingleLink" data-route="" data-tooltip="${__('Marketing')}${window.EnObras?.es('/command-center') ? ' · ' + __('en obras') : ''}">
             <img src="${commandCenterIconSrc}" class="nav-icon nav-icon-img" alt="" width="16" height="16">
             <span class="nav-text">${__('Marketing')}</span>
+            ${window.EnObras?.es('/command-center') ? `<span class="nav-chip-obras" aria-label="${_escapeHtml(__('en obras'))}">${_escapeHtml(__('obras'))}</span>` : ''}
           </a>
         </div>`;
       }
