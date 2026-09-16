@@ -28,12 +28,12 @@
       window[k] = (() => { try { return localStorage.getItem(k) || ""; } catch (_) { return ""; } })();
     }
   }
-  // Video del login (corte 0.9/1.5): el original vive en el storage VIEJO; al
-  // cortar se pone la copia inmutable de media-v2 (hash en el nombre):
-  //   window.AISC_LOGIN_VIDEO_URL = 'https://media-v2.aismartcontent.io/pub/web-assets/home-banner-web.3bb070f1d072.mp4';
-  // (y el <link rel="preconnect"> de index.html se cambia a mano ese dia).
+  // Video del login (corte 0.9, VERIFICADO 16/09 13:38 UTC: 200, video/mp4,
+  // cache-control immutable): la copia con hash en media-v2 es el valor por
+  // defecto de esta rama; localStorage o un snippet pueden cambiarlo sin build.
   if (window.AISC_LOGIN_VIDEO_URL === undefined) {
-    window.AISC_LOGIN_VIDEO_URL = (() => { try { return localStorage.getItem("AISC_LOGIN_VIDEO_URL") || ""; } catch (_) { return ""; } })();
+    window.AISC_LOGIN_VIDEO_URL = (() => { try { return localStorage.getItem("AISC_LOGIN_VIDEO_URL") || ""; } catch (_) { return ""; } })()
+      || 'https://media-v2.aismartcontent.io/pub/web-assets/home-banner-web.3bb070f1d072.mp4';
   }
   // Banner de mantenimiento (corte, pasos 1.2/1.9): un texto = se ve; vacio = no.
   //   window.AISC_MANTENIMIENTO = 'hasta las 17:30';
