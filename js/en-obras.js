@@ -27,7 +27,8 @@
     // 'brand' / 'brands' / 'brand-organization': PORTADAS el 16/09 (MarcaDataService, verificar-marca.mjs 14/14).
     'brand-storage', 'brandstorage',
     // 'products' / 'services' / 'places' / 'characters': PORTADAS el 16/09 (CatalogoDataService sobre elements_full; la ficha por IA avisa «en obras»).
-    'identities', 'product-detail',
+    // 'product-detail': PORTADA el 16/09 (ProductsView sobre CatalogoDataService; variantes de solo lectura).
+    'identities',
     'studio', 'studio/catalog', 'studio/flows',
     // 'vera': PORTADA el 16/09 (VeraDataService: conversaciones/mensajes por PostgREST, turno por /v1; sin borde lo dice).
     // 'image' / 'video': PORTADAS el 16/09 (StudioDataService: imagen-directa / video-directo por /v1; verificar-studio.mjs).

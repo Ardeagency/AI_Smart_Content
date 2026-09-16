@@ -48,7 +48,7 @@
     const imgs = urlsDeImagenes(e.attributes?.imagenes, urlPorArchivo);
     const base = { id: e.id, entity_id: e.id, organization_id: e.organization_id, kind: e.kind, name: e.name, description: e.description || null, summary: e.summary || null, is_featured: e.is_featured === true, attributes: e.attributes || {}, detail: d, created_at: e.created_at, updated_at: e.updated_at, image_urls: imgs.map((i) => i.url), imagenes: imgs, imagen: imgs[0]?.url || null };
     switch (e.kind) {
-      case 'product': return { ...base, nombre_producto: e.name, descripcion_producto: e.description || e.summary || null, tipo_producto: d.product_type || null, precio_producto: d.price ?? null, moneda: d.currency || null, sku: d.sku || null, url_producto: d.url || null, beneficios: d.benefits || [], diferenciadores: d.differentiators || [], casos_de_uso: d.use_cases || [], rasgos_visuales: d.visual_traits || [], ingredientes: d.ingredients || [] };
+      case 'product': return { ...base, nombre_producto: e.name, descripcion_producto: e.description || e.summary || null, tipo_producto: d.product_type || null, precio_producto: d.price ?? null, moneda: d.currency || null, sku: d.sku || null, url_producto: d.url || null, beneficios: d.benefits || [], beneficios_principales: d.benefits || [], diferenciadores: d.differentiators || [], casos_de_uso: d.use_cases || [], rasgos_visuales: d.visual_traits || [], caracteristicas_visuales: d.visual_traits || [], ingredientes: d.ingredients || [], materiales_composicion: d.ingredients || [] };
       case 'service': return { ...base, nombre_servicio: e.name, descripcion_servicio: e.description || e.summary || null, tipo_servicio: d.service_type || null, precio_base: d.price ?? null, moneda: d.currency || null, modelo_precio: d.price_model || null, duracion_estimada: d.duration_minutes != null ? `${d.duration_minutes} min` : null, modalidad: d.modality || null, beneficios_principales: d.benefits || [], entregables: d.deliverables || [] };
       case 'scenario': return { ...base, nombre_lugar: e.name, descripcion_lugar: e.description || e.summary || null, place_type: d.scenario_type || null, city: d.city || null, country: d.country || null, address: d.address || null, mood: d.mood || null, amenities: d.amenities || [] };
       case 'character': return { ...base, nombre_personaje: e.name, descripcion_personaje: e.description || e.summary || null, tipo_personaje: d.role || null, personalidad: d.personality || null, historia: d.backstory || null, tono: d.voice_tone || null, rango_edad: d.age_range || null, descripcion_fisica: d.physical_description || null, rasgos: d.traits || [] };
@@ -69,7 +69,7 @@
     if (v1.attributes !== undefined) elemento.attributes = v1.attributes;
     const detalle = {};
     const pon = (col, val) => { if (val !== undefined) detalle[col] = val === '' ? null : val; };
-    if (k === 'product') { pon('product_type', v1.tipo_producto ?? v1.product_type); pon('price', v1.precio_producto ?? v1.price); pon('currency', v1.moneda ?? v1.currency); pon('sku', v1.sku); pon('url', v1.url_producto ?? v1.url); pon('benefits', v1.beneficios ?? v1.benefits); pon('differentiators', v1.diferenciadores ?? v1.differentiators); pon('use_cases', v1.casos_de_uso ?? v1.use_cases); pon('visual_traits', v1.rasgos_visuales ?? v1.visual_traits); pon('ingredients', v1.ingredientes ?? v1.ingredients); }
+    if (k === 'product') { pon('product_type', v1.tipo_producto ?? v1.product_type); pon('price', v1.precio_producto ?? v1.price); pon('currency', v1.moneda ?? v1.currency); pon('sku', v1.sku); pon('url', v1.url_producto ?? v1.url); pon('benefits', v1.beneficios ?? v1.beneficios_principales ?? v1.benefits); pon('differentiators', v1.diferenciadores ?? v1.differentiators); pon('use_cases', v1.casos_de_uso ?? v1.use_cases); pon('visual_traits', v1.rasgos_visuales ?? v1.caracteristicas_visuales ?? v1.visual_traits); pon('ingredients', v1.ingredientes ?? v1.materiales_composicion ?? v1.ingredients); }
     if (k === 'service') { pon('service_type', v1.tipo_servicio ?? v1.service_type); pon('price', v1.precio_base ?? v1.price); pon('currency', v1.moneda ?? v1.currency); pon('price_model', v1.modelo_precio ?? v1.price_model); pon('duration_minutes', v1.duration_minutes); pon('modality', v1.modalidad ?? v1.modality); pon('url', v1.url); pon('benefits', v1.beneficios_principales ?? v1.benefits); pon('deliverables', v1.entregables ?? v1.deliverables); }
     if (k === 'scenario') { pon('scenario_type', v1.place_type ?? v1.scenario_type); pon('city', v1.city); pon('country', v1.country); pon('address', v1.address); pon('mood', v1.mood); pon('amenities', v1.amenities); pon('url', v1.url); pon('opening_hours', v1.opening_hours); }
     if (k === 'character') { pon('role', v1.tipo_personaje ?? v1.role); pon('personality', v1.personalidad ?? v1.personality); pon('backstory', v1.historia ?? v1.backstory); pon('voice_tone', v1.tono ?? v1.voice_tone); pon('age_range', v1.rango_edad ?? v1.age_range); pon('physical_description', v1.descripcion_fisica ?? v1.physical_description); pon('traits', v1.rasgos ?? v1.traits); pon('visual_traits', v1.visual_traits); }
@@ -207,8 +207,34 @@
     return elemento(id);
   }
 
+  /** La foto principal: va primera (orden 0, tipo principal); las demás conservan su orden relativo. */
+  async function hacerPrincipal(id, { file_id = null, url = null } = {}) {
+    const sb = await cliente();
+    if (!sb || !id) return null;
+    const actual = await sb.from('elements').select('attributes').eq('id', id).maybeSingle();
+    if (actual.error) throw actual.error;
+    const attrs = (actual.data?.attributes && typeof actual.data.attributes === 'object') ? { ...actual.data.attributes } : {};
+    const lista = Array.isArray(attrs.imagenes) ? attrs.imagenes.slice() : [];
+    const es = (im) => (file_id && im.file_id === file_id) || (url && im.url === url);
+    const principal = lista.find(es);
+    if (!principal) return elemento(id);
+    attrs.imagenes = [{ ...principal, tipo: 'principal', orden: 0 }, ...lista.filter((im) => !es(im)).map((im, i) => ({ ...im, tipo: im.tipo === 'principal' ? 'galeria' : (im.tipo || 'galeria'), orden: i + 1 }))];
+    const { error } = await sb.from('elements').update({ attributes: attrs }).eq('id', id);
+    if (error) throw error;
+    return elemento(id);
+  }
+
+  /** Variantes de un producto (V public.elements_variants_view), forma product_variants de v1. Solo lectura hoy. */
+  async function variantes(elementId) {
+    const sb = await cliente();
+    if (!sb || !elementId) return [];
+    const r = await sb.from('elements_variants_view').select('element_id, organization_id, producto, variant_id, sku, variante, price, currency, compare_price, stock, track_stock, is_default, is_active, opciones, imagen').eq('element_id', elementId);
+    aviso('elements_variants_view', r);
+    return (r.data || []).map((v) => ({ id: v.variant_id, product_id: v.element_id, organization_id: v.organization_id, variant_name: v.variante, sku: v.sku || null, precio: v.price ?? null, precio_comparacion: v.compare_price ?? null, moneda: v.currency || null, stock_quantity: v.stock ?? null, stock_status: v.track_stock ? (Number(v.stock) > 0 ? 'in_stock' : 'out_of_stock') : 'not_tracked', is_default: v.is_default === true, is_active: v.is_active !== false, opciones: v.opciones || null, imagen_url: v.imagen || null, peso: null, peso_unidad: null }));
+  }
+
   window.CatalogoDatos = Object.freeze({
-    KINDS, elementos, elemento, crear, actualizar, archivar, duplicar, subirFoto, quitarFoto,
+    KINDS, elementos, elemento, crear, actualizar, archivar, duplicar, subirFoto, quitarFoto, hacerPrincipal, variantes,
     mapeo: Object.freeze({ elementoAV1, aBase, urlsDeImagenes }),
     _inyectarCliente(sb) { clienteInyectado = sb; },
   });

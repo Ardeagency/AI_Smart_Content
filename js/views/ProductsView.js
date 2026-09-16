@@ -201,54 +201,28 @@ class ProductsView extends BaseView {
   /**
    * Cargar producto por ID
    */
+  /** Corte: public.elements_full (kind product) por CatalogoDataService, en la forma de v1. */
   async loadProductForDetail(productId) {
-    if (!this.supabase || !productId) return null;
-    let q = this.supabase
-      .from('products')
-      .select('*')
-      .eq('id', productId);
-    // Aislamiento: aunque el id es único, acotar a la org activa evita resolver un
-    // producto de otra org del mismo usuario (RLS permite todas sus orgs).
+    if (!window.CatalogoDatos || !productId) return null;
+    const e = await window.CatalogoDatos.elemento(productId);
+    if (!e || e.kind !== 'product') return null;
     const orgId = this.organizationId || window.currentOrgId || null;
-    if (orgId) q = q.eq('organization_id', orgId);
-    const { data, error } = await q.single();
-    if (error) return null;
-    return data;
+    if (orgId && e.organization_id && e.organization_id !== orgId) return null;
+    return e;
   }
 
-  /**
-   * Cargar imágenes del producto
-   */
+  /** Fotos = attributes.imagenes (file_id → galería; url de respaldo), con la forma product_images de v1. */
   async loadProductImagesForDetail(productId) {
-    if (!this.supabase || !productId) return [];
-      const { data, error } = await this.supabase
-        .from('product_images')
-      .select('id, image_url, image_type, image_order')
-      .eq('product_id', productId)
-        .order('image_order', { ascending: true });
-    if (error) return [];
-    return data || [];
+    if (!window.CatalogoDatos || !productId) return [];
+    const e = await window.CatalogoDatos.elemento(productId);
+    return (e?.imagenes || []).map((im, i) => ({ id: im.file_id || im.url, file_id: im.file_id || null, image_url: im.url, image_type: im.tipo === 'principal' || i === 0 ? 'principal' : 'secundaria', image_order: im.orden ?? i }));
   }
 
-  /**
-   * Cargar nombre de entidad (brand_entity) para mostrar en el detalle
-   */
-  async loadEntityName(entityId) {
-    if (!this.supabase || !entityId) return '';
-    let q = this.supabase
-      .from('brand_entities')
-      .select('name')
-      .eq('id', entityId);
-    const orgId = this.organizationId || window.currentOrgId || null;
-    if (orgId) q = q.eq('organization_id', orgId);
-    const { data, error } = await q.single();
-    if (error || !data) return '';
-    return data.name || '';
+  /** La «entidad» de v1 es la marca misma. */
+  async loadEntityName(_entityId) {
+    return window.currentOrgName || '';
   }
 
-  /**
-   * Opciones para tipo_producto (select editable)
-   */
   getTipoProductoOptions() {
     return [
       { value: 'bebida', label: __('Bebidas') }, { value: 'bebida_alcoholica', label: __('Bebidas Alcohólicas') },
@@ -365,49 +339,12 @@ class ProductsView extends BaseView {
    * Eliminar una imagen del producto (storage + product_images)
    */
   async removeProductImage(imageId) {
-    if (!this.supabase || !this.productId) return;
+    if (!window.CatalogoDatos || !this.productId) return;
     if (!confirm(__('¿Eliminar esta foto del producto?'))) return;
     try {
-      const { data: image, error: fetchError } = await this.supabase
-        .from('product_images')
-        .select('image_url, image_type')
-        .eq('id', imageId)
-        .single();
-      if (fetchError) throw fetchError;
-
-      const wasPrincipal = (image.image_type || '') === 'principal';
-      if (image.image_url) {
-        try {
-          const url = new URL(image.image_url);
-          const pathParts = url.pathname.split('/');
-          const idx = pathParts.indexOf('product-images');
-          if (idx !== -1) {
-            const fileName = pathParts.slice(idx + 1).join('/');
-            await this.supabase.storage.from('product-images').remove([fileName]);
-          }
-        } catch (_) { /* ignorar fallo storage */ }
-      }
-
-      const { error: deleteError } = await this.supabase
-        .from('product_images')
-        .delete()
-        .eq('id', imageId);
-      if (deleteError) throw deleteError;
-
-      if (wasPrincipal) {
-        const { data: remaining } = await this.supabase
-          .from('product_images')
-          .select('id')
-          .eq('product_id', this.productId)
-          .order('image_order', { ascending: true })
-          .limit(1);
-        if (remaining && remaining.length > 0) {
-          await this.supabase
-            .from('product_images')
-            .update({ image_type: 'principal' })
-            .eq('id', remaining[0].id);
-        }
-      }
+      const im = (this.productImages || []).find((x) => String(x.id) === String(imageId));
+      const orgId = this.organizationId || window.currentOrgId || null;
+      await window.CatalogoDatos.quitarFoto(orgId, this.productId, { file_id: im?.file_id || null, url: im?.file_id ? null : (im?.image_url || imageId) });
       await this.refreshDetailImages();
       this.showNotification(__('Foto eliminada'), 'success');
     } catch (err) {
@@ -416,119 +353,33 @@ class ProductsView extends BaseView {
     }
   }
 
-  /**
-   * Subir nuevas fotos al producto
-   */
+  /** Sube por el borde (POST /v1/archivos) y registra en attributes.imagenes. */
   async uploadProductImages(files) {
-    if (!this.supabase || !this.productId || !files || files.length === 0) return;
-    const { data: { user } } = await this.supabase.auth.getUser();
-    const userId = user?.id;
-    if (!userId) {
-      this.showNotification(__('Sesión no disponible. Inicia sesión de nuevo.'), 'error');
-      return;
-    }
+    if (!window.CatalogoDatos || !this.productId || !files || files.length === 0) return;
+    const orgId = this.organizationId || window.currentOrgId || null;
     const validFiles = Array.from(files).filter((file) => {
-      if (file.size > 5 * 1024 * 1024) {
-        this.showNotification(__('"{name}" es demasiado grande (máx. 5MB)', { name: file.name }), 'error');
-        return false;
-      }
-      if (!file.type.startsWith('image/')) {
-        this.showNotification(__('"{name}" no es una imagen válida', { name: file.name }), 'error');
-        return false;
-      }
+      if (file.size > 5 * 1024 * 1024) { this.showNotification(__('"{name}" es demasiado grande (máx. 5MB)', { name: file.name }), 'error'); return false; }
+      if (!file.type.startsWith('image/')) { this.showNotification(__('"{name}" no es una imagen válida', { name: file.name }), 'error'); return false; }
       return true;
     });
-    if (validFiles.length === 0) return;
-
-    try {
-      const { count: existingCount } = await this.supabase
-        .from('product_images')
-        .select('*', { count: 'exact', head: true })
-        .eq('product_id', this.productId);
-      const currentCount = existingCount ?? 0;
-      if (currentCount >= MAX_PRODUCT_IMAGES) {
-        this.showNotification(__('Máximo {n} imágenes por producto. Elimina alguna para añadir más.', { n: MAX_PRODUCT_IMAGES }), 'error');
-        return;
+    if (!validFiles.length) return;
+    let subidas = 0;
+    for (const file of validFiles) {
+      try { await window.CatalogoDatos.subirFoto(orgId, this.productId, file); subidas += 1; }
+      catch (err) {
+        console.error('Error subiendo foto:', err);
+        this.showNotification(err?.code === 'sin_api' ? __('Las fotos se suben cuando el borde esté configurado.') : __('Error al subir "{name}"', { name: file.name }), 'error');
+        if (err?.code === 'sin_api') break;
       }
-      const slotsLeft = MAX_PRODUCT_IMAGES - currentCount;
-      const toUpload = validFiles.slice(0, slotsLeft);
-      if (toUpload.length < validFiles.length) {
-        this.showNotification(__('Solo se pueden añadir {n} más (máx. {max} por producto).', { n: slotsLeft, max: MAX_PRODUCT_IMAGES }), 'info');
-      }
-
-      this.showNotification(__('Subiendo fotos...'), 'info');
-
-      const { data: existing } = await this.supabase
-        .from('product_images')
-        .select('image_order')
-        .eq('product_id', this.productId)
-        .order('image_order', { ascending: false })
-        .limit(1);
-      let nextOrder = (existing && existing.length > 0) ? (existing[0].image_order + 1) : 0;
-
-      for (const file of toUpload) {
-        const ext = (file.name && file.name.split('.').pop()) || 'jpg';
-        const safeExt = ext.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
-        const fileName = `${userId}/${this.productId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${safeExt}`;
-        const { error: uploadError } = await this.supabase.storage
-          .from('product-images')
-          .upload(fileName, file, { contentType: file.type, cacheControl: '3600', upsert: false });
-        if (uploadError) {
-          console.error('Supabase storage upload error:', uploadError);
-          const msg = uploadError.message || __('Error al subir archivo');
-          this.showNotification(msg.length > 80 ? msg.slice(0, 80) + '…' : msg, 'error');
-          return;
-        }
-
-        const { data: { publicUrl } } = this.supabase.storage.from('product-images').getPublicUrl(fileName);
-        const { data: hasPrincipal } = await this.supabase
-          .from('product_images')
-          .select('id')
-          .eq('product_id', this.productId)
-          .eq('image_type', 'principal')
-          .limit(1);
-        const imageType = (!hasPrincipal || hasPrincipal.length === 0) && nextOrder === 0 ? 'principal' : 'secundaria';
-
-        const { error: insertError } = await this.supabase
-          .from('product_images')
-          .insert({
-            product_id: this.productId,
-            image_url: publicUrl,
-            image_type: imageType,
-            image_order: nextOrder
-          });
-        if (insertError) {
-          console.error('Supabase product_images insert error:', insertError);
-          const msg = insertError.message || __('Error al guardar la imagen en la base de datos');
-          this.showNotification(msg.length > 80 ? msg.slice(0, 80) + '…' : msg, 'error');
-          return;
-        }
-        nextOrder++;
-      }
-      await this.refreshDetailImages();
-      this.showNotification(__('{n} foto(s) añadida(s)', { n: toUpload.length }), 'success');
-    } catch (err) {
-      console.error('Error subiendo imágenes:', err);
-      const msg = (err && err.message) ? err.message : __('Error al subir fotos');
-      this.showNotification(msg.length > 80 ? msg.slice(0, 80) + '…' : msg, 'error');
     }
+    if (subidas) { await this.refreshDetailImages(); this.showNotification(__('{n} foto(s) subida(s)', { n: subidas }), 'success'); }
   }
 
-  /**
-   * Marcar una imagen como principal
-   */
   async setImageAsPrincipal(imageId) {
-    if (!this.supabase || !this.productId) return;
+    if (!window.CatalogoDatos || !this.productId) return;
     try {
-      await this.supabase
-        .from('product_images')
-        .update({ image_type: 'secundaria' })
-        .eq('product_id', this.productId);
-      const { error } = await this.supabase
-        .from('product_images')
-        .update({ image_type: 'principal' })
-        .eq('id', imageId);
-      if (error) throw error;
+      const im = (this.productImages || []).find((x) => String(x.id) === String(imageId));
+      await window.CatalogoDatos.hacerPrincipal(this.productId, { file_id: im?.file_id || null, url: im?.file_id ? null : (im?.image_url || imageId) });
       await this.refreshDetailImages();
       this.showNotification(__('Imagen principal actualizada'), 'success');
     } catch (err) {
@@ -537,9 +388,6 @@ class ProductsView extends BaseView {
     }
   }
 
-  /**
-   * Recargar imágenes del detalle y actualizar la galería en el DOM
-   */
   async refreshDetailImages() {
     if (!this.container || !this.productId) return;
     const images = await this.loadProductImagesForDetail(this.productId);
@@ -665,22 +513,21 @@ class ProductsView extends BaseView {
    * Guardar un campo del producto en Supabase
    */
   async saveProductField(fieldName, value) {
-    if (!this.supabase || !this.productId) return;
-    const payload = { updated_at: new Date().toISOString() };
+    if (!window.CatalogoDatos || !this.productId) return;
     const arrayFields = ['beneficios_principales', 'diferenciadores', 'casos_de_uso', 'materiales_composicion', 'caracteristicas_visuales'];
+    let v = value;
     if (arrayFields.includes(fieldName)) {
-      const arr = typeof value === 'string' ? value.split(/\n/).map(s => s.trim()).filter(Boolean) : (Array.isArray(value) ? value : []);
-      payload[fieldName] = arr.length ? arr : [];
+      v = typeof value === 'string' ? value.split(/\n/).map(s => s.trim()).filter(Boolean) : (Array.isArray(value) ? value : []);
     } else if (fieldName === 'precio_producto') {
       const num = value === '' ? null : parseFloat(value);
-      payload[fieldName] = isNaN(num) ? null : num;
+      v = isNaN(num) ? null : num;
     } else {
-      payload[fieldName] = value === '' ? null : value;
+      v = value === '' ? null : value;
     }
     try {
-      const { error } = await this.supabase.from('products').update(payload).eq('id', this.productId);
-      if (error) throw error;
-      if (this.productData) this.productData[fieldName] = payload[fieldName];
+      // elements (nombre, descripción) + element_products (tipo, precio, moneda, listas) por el servicio.
+      const guardado = await window.CatalogoDatos.actualizar(this.productId, 'product', { [fieldName]: v });
+      if (guardado) this.productData = guardado; else if (this.productData) this.productData[fieldName] = v;
       this.showNotification(__('Guardado'), 'success');
     } catch (err) {
       console.error('Error guardando:', err);
@@ -688,27 +535,12 @@ class ProductsView extends BaseView {
     }
   }
 
-  /**
-   * Cargar variantes del producto ordenadas por position
-   */
+  /** Variantes de solo lectura (elements_variants_view); crear/editar llega con el catálogo v2. */
   async loadProductVariants(productId) {
-    if (!this.supabase || !productId) return [];
-    const { data, error } = await this.supabase
-      .from('product_variants')
-      .select('*')
-      .eq('product_id', productId)
-      .order('position', { ascending: true })
-      .order('created_at', { ascending: true });
-    if (error) {
-      console.error('Error cargando variantes:', error);
-      return [];
-    }
-    return data || [];
+    if (!window.CatalogoDatos || !productId) return [];
+    try { return await window.CatalogoDatos.variantes(productId); } catch (e) { console.error('Error cargando variantes:', e); return []; }
   }
 
-  /**
-   * HTML de la sección "Variantes" (header + lista + empty state)
-   */
   getProductVariantsHTML(variants) {
     const cards = (variants && variants.length)
       ? variants.map(v => this.getVariantCardHTML(v)).join('')
@@ -866,96 +698,17 @@ class ProductsView extends BaseView {
    * Insertar una variante nueva con defaults heredados del producto
    */
   async addVariant() {
-    if (!this.supabase || !this.productId || !this.productData) return;
-    const orgId = this.productData.organization_id;
-    if (!orgId) {
-      this.showNotification(__('Producto sin organización asociada'), 'error');
-      return;
-    }
-    try {
-      const { data, error } = await this.supabase
-        .from('product_variants')
-        .insert({
-          product_id: this.productId,
-          organization_id: orgId,
-          variant_name: __('Nueva variante'),
-          moneda: this.productData.moneda || 'USD',
-          is_active: true,
-          disponible: true,
-          stock_status: 'in_stock',
-          peso_unidad: 'kg',
-          dimension_unidad: 'cm',
-          position: (this.productVariants || []).length + 1
-        })
-        .select()
-        .single();
-      if (error) throw error;
-      this.productVariants = [...(this.productVariants || []), data];
-      this.refreshVariantsList();
-      this.showNotification(__('Variante añadida'), 'success');
-    } catch (err) {
-      console.error('Error añadiendo variante:', err);
-      this.showNotification(__('Error al añadir variante'), 'error');
-    }
+    this.showNotification(__('Las variantes se crean con el catálogo v2 (próxima versión).'), 'info');
   }
 
-  /**
-   * Eliminar variante (también elimina relaciones y imágenes asociadas por FK cascade)
-   */
-  async deleteVariant(variantId) {
-    if (!this.supabase || !variantId) return;
-    if (!confirm(__('¿Eliminar esta variante? Se borrarán también sus imágenes y valores de opción asociados.'))) return;
-    try {
-      const { error } = await this.supabase.from('product_variants').delete().eq('id', variantId);
-      if (error) throw error;
-      this.productVariants = (this.productVariants || []).filter(v => v.id !== variantId);
-      this.refreshVariantsList();
-      this.showNotification(__('Variante eliminada'), 'success');
-    } catch (err) {
-      console.error('Error eliminando variante:', err);
-      this.showNotification(__('Error al eliminar variante'), 'error');
-    }
+  async deleteVariant(_variantId) {
+    this.showNotification(__('Las variantes se editan con el catálogo v2 (próxima versión).'), 'info');
   }
 
-  /**
-   * Guardar un campo individual de una variante
-   */
-  async saveVariantField(variantId, fieldName, value) {
-    if (!this.supabase || !variantId) return;
-    const payload = { updated_at: new Date().toISOString() };
-    const arrayFields = ['beneficios_adicionales', 'caracteristicas_visuales'];
-    const numericFields = ['precio', 'precio_comparacion', 'stock_quantity', 'peso', 'alto', 'ancho', 'largo', 'position'];
-
-    if (arrayFields.includes(fieldName)) {
-      const arr = typeof value === 'string' ? value.split(/\n/).map(s => s.trim()).filter(Boolean) : (Array.isArray(value) ? value : []);
-      payload[fieldName] = arr.length ? arr : null;
-    } else if (numericFields.includes(fieldName)) {
-      const num = value === '' ? null : parseFloat(value);
-      payload[fieldName] = isNaN(num) ? null : num;
-    } else if (typeof value === 'boolean') {
-      payload[fieldName] = value;
-    } else {
-      payload[fieldName] = value === '' ? null : value;
-    }
-
-    try {
-      const { error } = await this.supabase
-        .from('product_variants')
-        .update(payload)
-        .eq('id', variantId);
-      if (error) throw error;
-      const v = (this.productVariants || []).find(x => x.id === variantId);
-      if (v) v[fieldName] = payload[fieldName];
-      this.showNotification(__('Guardado'), 'success');
-    } catch (err) {
-      console.error('Error guardando variante:', err);
-      this.showNotification(__('Error al guardar variante'), 'error');
-    }
+  async saveVariantField(_variantId, _fieldName, _value) {
+    this.showNotification(__('Las variantes se editan con el catálogo v2 (próxima versión).'), 'info');
   }
 
-  /**
-   * Re-renderizar lista de variantes y volver a enlazar eventos (tras add/delete)
-   */
   refreshVariantsList() {
     if (!this.container) return;
     const list = this.container.querySelector('#productVariantsList');
