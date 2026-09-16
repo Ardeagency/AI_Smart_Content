@@ -1389,7 +1389,7 @@ class FlowCatalogView extends BaseView {
         }
         if (!images.length && flow?.flow_image_url) images.push(flow.flow_image_url);
         const nombre = r.content_flows?.name || flow?.name || __('Flujo');
-        return { ...r, flow_name: nombre, flow_slug: flow ? this.flowNameToSlug(flow.name) : this.flowNameToSlug(nombre), images, output_count: list.length };
+        return { ...r, flow_name: nombre, flow_slug: flow ? (flow.slug || this.flowNameToSlug(flow.name)) : this.flowNameToSlug(nombre), images, output_count: list.length };
       });
     } catch (e) { console.warn('loadRecentProductions:', e); return []; }
   }
@@ -1713,7 +1713,8 @@ class FlowCatalogView extends BaseView {
 
   runFlow(flowId) {
     const flow = this.flowsById?.get(flowId) || this.flows?.find(f => f.id === flowId);
-    const slug = flow?.name ? this.flowNameToSlug(flow.name) : '';
+    // El slug de la base manda (es el que casa StudioView); el derivado del nombre es el respaldo de v1.
+    const slug = flow?.slug || (flow?.name ? this.flowNameToSlug(flow.name) : '');
     if (slug && window.router) {
       window.router.navigate(`${this.getStudioPath()}/${encodeURIComponent(slug)}`);
       return;
@@ -1863,7 +1864,7 @@ class FlowCatalogView extends BaseView {
 
   openRun(flow, runId) {
     this.closeFlowDetail();
-    const slug = flow?.name ? this.flowNameToSlug(flow.name) : '';
+    const slug = flow?.slug || (flow?.name ? this.flowNameToSlug(flow.name) : '');
     const base = slug ? `${this.getStudioPath()}/${encodeURIComponent(slug)}` : this.getStudioPath();
     const url = runId ? `${base}?run=${encodeURIComponent(runId)}` : base;
     if (window.router) window.router.navigate(url);

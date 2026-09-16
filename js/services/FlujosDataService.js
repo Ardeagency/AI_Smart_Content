@@ -11,6 +11,9 @@
  *     cover_url) — las subcategorías de v1 son categorías con parent_id.
  *   · Guardar/like: T flows.saves(flow_id, organization_id, user_id) · T flows.likes(flow_id,
  *     user_id): INSERT/DELETE, sin RPC; contadores en catalog_view.
+ *   · Entradas del formulario: T flows.inputs(flow_id, step_id, key, label, help_text, kind,
+ *     is_required, position, default_value, options[{label,value}], validation) → campos
+ *     de InputRegistry (entradaACampo). Lanzar: StudioDatos.lanzar (borde /v1/flujos/:id/lanzar).
  *   · Corridas y salidas: ProduccionesDatos (flows.runs + public.salidas).
  *
  * Devuelve las filas con la forma de v1 (content_flows, content_categories,
@@ -63,6 +66,34 @@
     return { categories: categories.sort(orden), subcategories: subcategories.sort(orden), porId: Object.fromEntries(activas.map((c) => [c.id, c])) };
   }
 
+  /**
+   * flows.inputs → campo que InputRegistry.renderFormFromSchema sabe pintar. `kind` de la
+   * base: text, long_text, number, boolean, select, multi_select, image, video, audio, file,
+   * url, date, color, gradient, element_ref, market_ref. Los archivos se suben por el borde
+   * antes de lanzar (file_id); las referencias a elementos/mercados se pintan como select
+   * con las opciones que le pase la vista (`opciones`).
+   */
+  const KIND_A_TIPO = Object.freeze({ text: 'text', long_text: 'textarea', number: 'number', boolean: 'toggle', select: 'select', multi_select: 'multi_select', image: 'file', video: 'file', audio: 'file', file: 'file', url: 'text', date: 'text', color: 'text', gradient: 'text', element_ref: 'select', market_ref: 'select' });
+  const ACEPTA = Object.freeze({ image: 'image/*', video: 'video/*', audio: 'audio/*', file: '*' });
+  function entradaACampo(fila, opciones = {}) {
+    const kind = String(fila.kind || 'text');
+    const tipo = KIND_A_TIPO[kind] || 'text';
+    const campo = {
+      key: fila.key, name: fila.key, label: fila.label || fila.key, description: fila.help_text || '',
+      input_type: tipo, type: tipo, required: fila.is_required === true, kind, position: fila.position ?? 0,
+      options: Array.isArray(fila.options) ? fila.options : [],
+      defaultValue: fila.default_value ?? undefined, validation: fila.validation || {},
+    };
+    if (tipo === 'file') { campo.accept = ACEPTA[kind] || '*'; campo.multiUpload = false; }
+    if (kind === 'element_ref') campo.options = opciones.elementos || [];
+    if (kind === 'market_ref') campo.options = opciones.mercados || [];
+    if (kind === 'url') campo.placeholder = 'https://…';
+    if (kind === 'date') campo.placeholder = 'AAAA-MM-DD';
+    if (kind === 'color') campo.placeholder = '#RRGGBB';
+    if (kind === 'long_text') campo.rows = 4;
+    return campo;
+  }
+
   /* ── Acceso ──────────────────────────────────────────────────────────────── */
 
   let clienteInyectado = null;
@@ -97,6 +128,15 @@
     if (subcategoriaId) lista = lista.filter((f) => f.subcategory_id === subcategoriaId);
     else if (categoriaId) lista = lista.filter((f) => f.category_id === categoriaId);
     return lista;
+  }
+
+  /** Entradas de un flujo (flows.inputs) como campos del formulario del Studio, en orden. */
+  async function entradas(flowId, opciones = {}) {
+    const sb = await cliente();
+    if (!sb || !flowId) return [];
+    const r = await sb.schema('flows').from('inputs').select('id, flow_id, step_id, key, label, help_text, kind, is_required, position, default_value, options, validation').eq('flow_id', flowId).order('position', { ascending: true });
+    aviso('flows.inputs', r);
+    return (r.data || []).map((f) => entradaACampo(f, opciones));
   }
 
   async function likesYGuardados(orgId, userId) {
@@ -134,8 +174,8 @@
   }
 
   window.FlujosDatos = Object.freeze({
-    categorias, flujos, likesYGuardados, alternarLike, alternarGuardado,
-    mapeo: Object.freeze({ flujoAV1, categoriasAV1 }),
+    categorias, flujos, entradas, likesYGuardados, alternarLike, alternarGuardado,
+    mapeo: Object.freeze({ flujoAV1, categoriasAV1, entradaACampo }),
     _inyectarCliente(sb) { clienteInyectado = sb; },
   });
 })();

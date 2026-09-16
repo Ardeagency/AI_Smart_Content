@@ -29,8 +29,7 @@
     // 'products' / 'services' / 'places' / 'characters': PORTADAS el 16/09 (CatalogoDataService sobre elements_full; la ficha por IA avisa «en obras»).
     // 'product-detail': PORTADA el 16/09 (ProductsView sobre CatalogoDataService; variantes de solo lectura).
     'identities',
-    // 'studio/catalog' / 'studio/flows': PORTADAS el 16/09 (FlujosDataService). 'studio' (lanzar un flujo cualquiera con su formulario) sigue en obras: hoy se produce en /image y /video.
-    'studio',
+    // 'studio/catalog' / 'studio/flows': PORTADAS el 16/09 (FlujosDataService). 'studio/:flowSlug' (el runner genérico): PORTADA el 16/09 (formulario desde flows.inputs, lanzar por /v1/flujos/:id/lanzar).
     // 'vera': PORTADA el 16/09 (VeraDataService: conversaciones/mensajes por PostgREST, turno por /v1; sin borde lo dice).
     // 'image' / 'video': PORTADAS el 16/09 (StudioDataService: imagen-directa / video-directo por /v1; verificar-studio.mjs).
     // 'credits' / 'plans': PORTADAS el 16/09 (PlanesDataService, verificar-planes.mjs).
@@ -49,8 +48,8 @@
   }
 
   /** ¿Esta ruta está en obras? Coincide por el segmento entero o por su primer tramo. */
-  // Portadas que viven DEBAJO de una ruta en obras (el catálogo de flujos bajo /studio).
-  const PORTADAS = ['studio/catalog', 'studio/flows', 'studio/imagen-directa', 'studio/imagen', 'studio/image', 'studio/video-directo', 'studio/video'];
+  // Portadas que viven DEBAJO de una ruta en obras (hoy ninguna: /studio entero es portada).
+  const PORTADAS = [];
 
   function es(path) {
     const seg = segmento(path);

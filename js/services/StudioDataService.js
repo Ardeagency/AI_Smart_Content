@@ -220,6 +220,22 @@
     return { corrida, salida, run_id: runId, flujo: f };
   }
 
+  /**
+   * Lanza un flujo del catálogo por su uuid SIN esperar la corrida (el runner genérico
+   * sondea las salidas con ProduccionesDatos). Devuelve {run_id, estado, primer_paso}.
+   * Mismos errores con palabras que producir().
+   */
+  async function lanzar(orgId, flowId, entradas, { idCliente = null, marketId = null } = {}) {
+    const a = api();
+    if (!a) throw Object.assign(new Error('El borde no está configurado (AISC_API_URL): el Studio aún no produce aquí.'), { code: 'sin_api' });
+    if (!flowId) throw Object.assign(new Error('Falta el flujo.'), { code: 'flujo_no_encontrado' });
+    let lanzada;
+    try { lanzada = await a.lanzarFlujo(flowId, orgId, entradas, idCliente || undefined, marketId || undefined); } catch (e) { throw conCode(e); }
+    const runId = lanzada?.run_id || lanzada?.corrida;
+    if (!runId) throw Object.assign(new Error('El borde no devolvió la corrida.'), { code: 'sin_corrida' });
+    return { run_id: runId, estado: lanzada?.estado || lanzada?.status || 'queued', primer_paso: lanzada?.primer_paso || null };
+  }
+
   /** Cookie de galería viva mientras el Studio está abierto (devuelve la función para pararla). */
   function mantenerGaleria(orgId) {
     const a = api();
@@ -229,7 +245,7 @@
   }
 
   window.StudioDatos = Object.freeze({
-    SLUGS, flujo, contexto, producciones, subirReferencia, producir, mantenerGaleria, urlsDeArchivos,
+    SLUGS, flujo, contexto, producciones, subirReferencia, producir, lanzar, mantenerGaleria, urlsDeArchivos,
     mapeo: Object.freeze({ urlsDeImagenes, contextoAV1, salidaAV1, entradasImagen, entradasVideo, salidaPrincipal }),
     _inyectarCliente(sb) { clienteInyectado = sb; },
   });

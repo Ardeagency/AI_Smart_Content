@@ -19,4 +19,16 @@ describe('Catálogo de flujos · formas de v1', () => {
     expect(F.flujoAV1({ id: 'g', name: 'Imagen', kind: 'image', pricing_mode: 'observed', creditos_promedio: 0.09, categoria: null, es_del_catalogo_comun: true }, cats)).toMatchObject({ category_id: null, subcategory_id: null, token_cost: 0.09, flow_category_type: 'platform' });
     expect(F.flujoAV1({ id: 'h', name: 'Libre', kind: 'research', pricing_mode: 'free' }, {}).token_cost).toBe(0);
   });
+  test('flows.inputs → campos de InputRegistry: kind tipado, requerido de verdad, archivos por el borde, refs con opciones', () => {
+    expect(F.entradaACampo({ key: 'prompt', label: 'Prompt', help_text: 'Describe', kind: 'long_text', is_required: true, position: 1, options: [] }))
+      .toMatchObject({ key: 'prompt', name: 'prompt', input_type: 'textarea', required: true, description: 'Describe', rows: 4, kind: 'long_text' });
+    expect(F.entradaACampo({ key: 'aspecto', kind: 'select', is_required: false, default_value: '1:1', options: [{ label: '1:1', value: '1:1' }] }))
+      .toMatchObject({ input_type: 'select', required: false, defaultValue: '1:1', options: [{ label: '1:1', value: '1:1' }] });
+    expect(F.entradaACampo({ key: 'ref', kind: 'image' })).toMatchObject({ input_type: 'file', accept: 'image/*', multiUpload: false });
+    expect(F.entradaACampo({ key: 'entity_id', kind: 'element_ref' }, { elementos: [{ value: 'e1', label: 'Producto · X' }] }).options).toEqual([{ value: 'e1', label: 'Producto · X' }]);
+    expect(F.entradaACampo({ key: 'm', kind: 'market_ref' }, { mercados: [{ value: 'm1', label: 'CO' }] })).toMatchObject({ input_type: 'select', options: [{ value: 'm1', label: 'CO' }] });
+    expect(F.entradaACampo({ key: 'on', kind: 'boolean' })).toMatchObject({ input_type: 'toggle' });
+    expect(F.entradaACampo({ key: 'n', kind: 'number' })).toMatchObject({ input_type: 'number' });
+    expect(F.entradaACampo({ key: 'raro', kind: 'lo_que_sea' })).toMatchObject({ input_type: 'text' });
+  });
 });

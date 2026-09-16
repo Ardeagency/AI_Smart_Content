@@ -463,7 +463,7 @@ class App {
     r.register('/identities/:entityId', redirectIdentitiesToProducts, auth);
 
     // ── Org: Studio ──
-    const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);
+    const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/products.js', '/js/views/StudioView.js']);
     const catalogLoader = this._lazy('FlowCatalogView', ['/js/views/FlowCatalogView.js']);
     // 'saved' (My Flows) ANTES de :categoryId para que el literal gane al param.
     r.register('/org/:orgIdShort/:orgNameSlug/studio/flows/saved', catalogLoader, auth);
@@ -483,7 +483,7 @@ class App {
 
     // Corte ADR-0052: los dos flujos del Studio (imagen-directa / video-directo; en el
     // catálogo «Imagen» y «Video») se producen en /image y /video. Se registran ANTES
-    // del runner genérico /studio/:flowSlug (el router casa por orden), que sigue «en obras».
+    // del runner genérico /studio/:flowSlug (el router casa por orden).
     // OJO: onEnter() lo llama BaseView.render(); una vista que reescribe render() tiene
     // que navegar desde render() (redirectBrandStorageToBrand arrastra ese mismo silencio).
     const redirectStudioFlow = (destino) => class extends (window.BaseView || class {}) {

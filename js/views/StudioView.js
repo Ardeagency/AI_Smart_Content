@@ -1,11 +1,13 @@
 /**
- * StudioView - Consumidor de flujos (content_flows).
- * Panel central vacío, footer con créditos y coste, sidebar con input_schema y envío a webhook_url.
- * Usa FlowWebhookService para ejecución con timeout y reintentos; deducción de créditos atómica vía RPC.
+ * StudioView - el runner genérico de flujos (/studio/:flowSlug) sobre la base nueva
+ * (corte ADR-0052). Panel central con las producciones del flujo, footer con créditos
+ * y coste, sidebar con el formulario que sale de flows.inputs (FlujosDatos.entradas).
+ * Producir = subir los archivos del formulario por el borde y lanzar el flujo por
+ * /v1/flujos/:id/lanzar (StudioDatos.lanzar): el borde reserva y cobra los créditos;
+ * las salidas llegan a public.salidas y el canvas las sondea (ProduccionesDatos).
+ * Sin `.from()`: toda la base pasa por js/services. Etapas con aprobación y
+ * programaciones (autopilot) quedan «en obras» hasta que el borde las exponga.
  */
-
-const DEFAULT_STUDIO_TIMEOUT_MS = 120000;
-const DEFAULT_STUDIO_MAX_RETRIES = 3;
 
 class StudioView extends BaseView {
   static cacheable = true;
@@ -101,35 +103,39 @@ class StudioView extends BaseView {
     }, delay);
   }
 
-  /** ¿Ya hay al menos un output en runs_outputs para este run? (verdad de BD). */
+  /** ¿Ya hay al menos una salida de esta corrida en public.salidas? (verdad de BD). */
   async _runHasOutputInDb(runId) {
-    if (!runId || !this.supabase || this._activeRunId !== runId) return false;
+    if (!runId || this._activeRunId !== runId) return false;
+    return (await this._runOutputCount(runId)) > 0;
+  }
+
+
+  /** ¿La corrida quedó failed/cancelled en flows.runs? */
+  async _isRunFailed(runId) {
+    if (!runId || !this.organizationId || this._activeRunId !== runId) return false;
     try {
-      const { count } = await this.supabase
-        .from('runs_outputs')
-        .select('id', { count: 'exact', head: true })
-        .eq('run_id', runId);
-      return (count || 0) > 0;
+      const c = await this._corrida(runId);
+      const st = String(c?.status || '').toLowerCase();
+      if (st === 'failed' || st === 'cancelled' || st === 'canceled') { this._ultimoErrorDeCorrida = c?.error || null; return true; }
+      return false;
     } catch (_) {
       return false;
     }
   }
 
-  /** ¿El backend marcó este run como fallido? (status 'failed'/'error' en flow_runs). */
-  async _isRunFailed(runId) {
-    if (!runId || !this.supabase || this._activeRunId !== runId) return false;
-    try {
-      const { data } = await this.supabase
-        .from('flow_runs')
-        .select('status')
-        .eq('id', runId)
-        .maybeSingle();
-      const s = (data?.status || '').toLowerCase();
-      return s === 'failed' || s === 'error';
-    } catch (_) {
-      return false;
+  /** La corrida (forma flow_runs de v1) buscándola en las últimas de la marca. */
+  async _corrida(runId) {
+    const P = window.ProduccionesDatos;
+    if (!P || !runId) return null;
+    for (let desde = 0; desde < 200; desde += 50) {
+      const lote = await P.corridas(this.organizationId, { desde, limite: 50 });
+      const c = lote.find((r) => r.id === runId);
+      if (c) return c;
+      if (lote.length < 50) break;
     }
+    return null;
   }
+
 
   /**
    * Reemplaza el skeleton de carga por un estado de error dentro del canvas
@@ -137,6 +143,7 @@ class StudioView extends BaseView {
    */
   _renderRunErrorState(runId) {
     if (runId && this._activeRunId !== runId) return;
+    if (this._ultimoErrorDeCorrida) this._notify(String(this._ultimoErrorDeCorrida));
     if (this._activeRunHasOutputs(runId)) return; // por si el output llegó justo ahora
     try {
       const canvas = document.getElementById('studioCanvas');
@@ -217,20 +224,16 @@ class StudioView extends BaseView {
       </div>`;
   }
 
-  /** Busca el output de la etapa `order` del run en runs_outputs (metadata.stage). */
+  /** Busca la salida de la etapa `order` de la corrida (metadata.stage) en public.salidas. */
   async _fetchStageOutput(runId, order) {
-    if (!this.supabase) return null;
+    const P = window.ProduccionesDatos;
+    if (!P || !this.organizationId) return null;
     try {
-      const { data } = await this.supabase
-        .from('runs_outputs')
-        .select('id, output_type, storage_path, metadata, created_at')
-        .eq('run_id', runId)
-        .order('created_at', { ascending: false })
-        .limit(8);
-      const rows = data || [];
+      const rows = await P.salidas(this.organizationId, [runId], { limite: 8 });
       return rows.find(r => Number(r?.metadata?.stage) === Number(order)) || null;
     } catch (_) { return null; }
   }
+
 
   _pollStageOutput(runId, order, attempt) {
     if (this._activeRunId !== runId) return; // el usuario cambio de run
@@ -256,9 +259,8 @@ class StudioView extends BaseView {
     let inner;
     if (kind === 'image') {
       const path = payload.storage_path || output.storage_path || '';
-      let url = '';
-      if (/^https?:\/\//.test(path)) url = path; // media.aismartcontent.io (R2): URL completa
-      else { try { url = path ? this.supabase.storage.from('production-outputs').getPublicUrl(path).data.publicUrl : ''; } catch (_) {} }
+      // En la base nueva las salidas ya traen URL (url_galeria/url_publica); una ruta suelta no se resuelve.
+      const url = /^https?:\/\//.test(path) ? path : '';
       this._stageApprovalState = { order, outputId: output.id, kind };
       inner = `
         <p class="stage-approval-title">${__('Revisa la imagen y aprueba para continuar')}</p>
@@ -323,53 +325,13 @@ class StudioView extends BaseView {
     });
   }
 
+  /** Aprobar/regenerar una etapa: el borde aún no expone la aprobación por etapas. */
   async _stageAction(action, sel, btn) {
-    const st = this._stageApprovalState; const seq = this._seq;
-    if (!st || !seq) return;
+    void action; void sel; void btn;
     const msgEl = document.querySelector('.stage-approval-msg');
-    const setMsg = (t) => { if (msgEl) msgEl.textContent = t; };
-    const btns = document.querySelectorAll('.stage-actions [data-stage-action]');
-    btns.forEach(b => { b.disabled = true; });
-    try {
-      const token = await this._studioAccessToken();
-      if (!token) { setMsg(__('No hay sesión activa.')); btns.forEach(b => b.disabled = false); return; }
-      const edits = st.kind === 'image'
-        ? { approved: true, ajustes: sel.ajustes }
-        : { variante_elegida: sel.idx, variante: (st.variantes || [])[sel.idx] || null, ajustes: sel.ajustes };
-      const bodyReq = {
-        organization_id: this.organizationId,
-        run_id: seq.runId,
-        from_order: st.order,
-        action,
-        approved_output_id: st.outputId,
-        edits,
-        context: seq.contextBody,
-        cost: (this.selectedFlow && this.selectedFlow.token_cost) || 5
-      };
-      setMsg(action === 'regenerate' ? __('Regenerando…') : __('Aprobando…'));
-      const res = await fetch('/.netlify/functions/api-flow-stage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(bodyReq)
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) { setMsg(__('Error:') + ' ' + (data.error || res.status)); btns.forEach(b => b.disabled = false); return; }
-      if (action === 'regenerate') {
-        // El webhook del guion se redisparó: volver a esperar el nuevo output.
-        this._enterStageWait(seq.runId, st.order);
-        return;
-      }
-      // approve / edit
-      const r = data.data || {};
-      if (r.done) { this._renderStageStub(st.order, { name: __('Final') }); return; }
-      const next = r.next_module;
-      if (next) { this._enterStageWait(seq.runId, next.step_order); }
-      else { setMsg(__('Etapa aprobada.')); }
-    } catch (e) {
-      setMsg(__('Error:') + ' ' + (e && e.message || e));
-      btns.forEach(b => b.disabled = false);
-    }
+    if (msgEl) msgEl.textContent = __('La aprobación por etapas está en obras: el borde aún no la expone.');
   }
+
 
   /** Aspect ratio de la produccion en camino (para el skeleton): el elegido al
    * producir, si no el del form, fallback 4:5. */
@@ -408,19 +370,18 @@ class StudioView extends BaseView {
     }
   }
 
-  /** Conteo real de outputs de un run en BD (para detectar el output NUEVO en append). */
+  /** Conteo real de salidas de una corrida en BD (para detectar la salida NUEVA en append). */
   async _runOutputCount(runId) {
-    if (!runId || !this.supabase) return 0;
+    const P = window.ProduccionesDatos;
+    if (!runId || !P || !this.organizationId) return 0;
     try {
-      const { count } = await this.supabase
-        .from('runs_outputs')
-        .select('id', { count: 'exact', head: true })
-        .eq('run_id', runId);
-      return count || 0;
+      const rows = await P.salidas(this.organizationId, [runId], { limite: 50 });
+      return rows.length;
     } catch (_) {
       return 0;
     }
   }
+
 
   /** Inyecta una card skeleton al frente del canvas mientras llega el output nuevo (append). */
   _showAppendSkeleton() {
@@ -480,8 +441,9 @@ class StudioView extends BaseView {
     }, delay);
   }
 
-  _notify(message, _type = 'info') {
-    if (typeof alert === 'function') alert(message);
+  _notify(message, type = 'info') {
+    if (typeof window.showToast === 'function') window.showToast(message, { type: type === 'info' ? 'error' : type, duration: 6000 });
+    else console.warn('[Studio]', message);
   }
 
   /** Ruta base de Studio (con o sin org) para construir URL con slug del flujo. */
@@ -607,7 +569,7 @@ class StudioView extends BaseView {
 
     let flowToSelect = null;
     if (flowSlug) {
-      const found = this.flows.find(f => this.flowNameToSlug(f.name) === flowSlug);
+      const found = this.flows.find(f => f.slug === flowSlug || this.flowNameToSlug(f.name) === flowSlug);
       if (found) flowToSelect = found;
     }
     if (!flowToSelect && preselectedId) {
@@ -622,7 +584,7 @@ class StudioView extends BaseView {
       this.updateCreditsDisplay();
       this.applyStudioMode(flowToSelect);
       if (!flowSlug && window.router) {
-        const slug = this.flowNameToSlug(flowToSelect.name);
+        const slug = flowToSelect.slug || this.flowNameToSlug(flowToSelect.name);
         if (slug) window.router.navigate(`${this.getStudioBasePath()}/${encodeURIComponent(slug)}`, true);
       }
     } else {
@@ -652,28 +614,18 @@ class StudioView extends BaseView {
   }
 
   async loadCredits() {
-    if (!this.supabase || !this.organizationId) return;
+    if (!this.organizationId || !window.contextoService) return;
     try {
-      // Misma key que Navigation.loadCreditsFromDb → 1 sola query compartida.
-      // El RPC deduct_credits_and_create_run invalida vía 'credits-updated'.
-      const orgId = this.organizationId;
-      const fetcher = async () => {
-        const { data, error } = await this.supabase
-          .from('organization_credits')
-          .select('credits_available, credits_total')
-          .eq('organization_id', orgId)
-          .maybeSingle();
-        if (error) throw error;
-        return data;
-      };
-      const data = window.apiClient
-        ? await window.apiClient.query(`nav:credits:${orgId}`, fetcher, { ttl: 15 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-      if (data) {
-        this.credits.available = data.credits_available ?? 0;
-        this.credits.total = data.credits_total ?? 0;
+      // Base nueva: el saldo viaja en mi_contexto().credits (se suma en billing); «total» = tope del plan.
+      const ctx = await window.contextoService.cargar({ fresco: true });
+      const o = (ctx?.organizations || []).find((x) => x.id === this.organizationId);
+      if (o) {
+        this.credits.available = Number(o.credits?.available) || 0;
+        const planes = window.PlanesDatos ? await window.PlanesDatos.cargar(this.organizationId).catch(() => null) : null;
+        this.credits.total = Number(planes?.plan?.monthly_credits) || Number(o.credits?.balance) || 0;
       }
       this.updateCreditsDisplay();
+      window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
       document.dispatchEvent(new CustomEvent('credits-updated'));
       if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
         await window.appNavigation.loadCreditsFromDb(this.organizationId);
@@ -683,75 +635,50 @@ class StudioView extends BaseView {
     }
   }
 
-  /**
-   * Carga flujos (manuales y automatizados) con su primer módulo si existe (input_schema y webhooks en flow_modules).
-   * Los flujos automatizados no son modulares y pueden no tener flow_modules.
-   */
+
+  /** Flujos publicados del catálogo (comunes + de la marca), forma v1 + slug de la base. */
   async loadFlows() {
-    if (!this.supabase) return;
+    if (!window.FlujosDatos) { this.flows = []; return; }
     try {
-      // Flows + flow_modules: cambian solo cuando un dev publica/edita. Cache 2 min + SWR.
-      const fetcher = async () => {
-        const { data, error } = await this.supabase
-          .from('content_flows')
-          .select(`
-            id,
-            name,
-            description,
-            token_cost,
-            output_type,
-            execution_mode,
-            flow_category_type,
-            flow_image_url,
-            flow_modules ( id, name, step_order, is_human_approval_required, input_schema, webhook_url_test, webhook_url_prod )
-          `)
-          .eq('is_active', true);
-        return !error && data ? data : [];
-      };
-      const data = window.apiClient
-        ? await window.apiClient.query('studio:flows', fetcher, { ttl: 2 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-      this.flows = data.map(f => this.buildFlowFromFirstModule(f));
+      const lista = await window.FlujosDatos.flujos(this.organizationId);
+      this.flows = lista.map(f => this.buildFlowFromFirstModule(f));
     } catch (e) {
       console.error('Studio loadFlows:', e);
       this.flows = [];
     }
   }
 
+
   /**
-   * Adaptador canónico: construye el objeto flujo que usa Studio a partir de content_flows + flow_modules.
-   * Toma el primer módulo (por step_order) para input_schema y webhooks. Para manual y automated
-   * los campos de entrada/programación viven en flow_modules.input_schema (único formato).
+   * Adaptador canónico: el objeto flujo que usa Studio a partir de la fila v1 de FlujosDatos.
+   * Las entradas (input_schema) se cargan al seleccionar el flujo (FlujosDatos.entradas).
    */
   buildFlowFromFirstModule(flow) {
-    const modules = (flow.flow_modules || []).slice().sort((a, b) => (a.step_order ?? 0) - (b.step_order ?? 0));
-    const first = modules[0] || null;
-    const Service = (typeof window !== 'undefined' && window.FlowWebhookService) ? window.FlowWebhookService : null;
-    const webhookUrlProd = first && Service ? Service.getWebhookUrl(first, 'prod') : (first?.webhook_url_prod || first?.webhook_url_test || null);
     return {
       id: flow.id,
+      slug: flow.slug || null,
       name: flow.name,
       description: flow.description,
       token_cost: flow.token_cost,
+      pricing_mode: flow.pricing_mode || null,
       output_type: flow.output_type,
-      execution_mode: flow.execution_mode || 'single_step',
-      flow_category_type: flow.flow_category_type || 'manual',
+      kind: flow.kind || null,
+      execution_mode: 'single_step',
+      flow_category_type: 'manual',
       flow_image_url: flow.flow_image_url || null,
-      input_schema: first?.input_schema ?? {},
-      webhook_url: webhookUrlProd,
-      webhook_url_test: first?.webhook_url_test,
-      webhook_url_prod: first?.webhook_url_prod,
-      // Etapas (flujos secuenciales): lista de modulos para orquestar la aprobacion.
-      modules: modules.map(m => ({
-        id: m.id, name: m.name, step_order: m.step_order,
-        is_human_approval_required: !!m.is_human_approval_required,
-        webhook_url_prod: m.webhook_url_prod
-      }))
+      pasos: flow.pasos ?? null,
+      input_schema: null,
+      // El borde lanza cualquier flujo publicado: la vista solo mira que haya «puerta».
+      webhook_url: `/v1/flujos/${flow.id}/lanzar`,
+      modules: []
     };
   }
 
+
   /** ¿El flujo seleccionado es secuencial (pipeline por etapas con aprobacion)? */
   _isSequential() {
+    // La base nueva no expone módulos con aprobación: las corridas de varios pasos las
+    // orquesta el Worker y el canvas solo espera las salidas.
     return this.selectedFlow && this.selectedFlow.execution_mode === 'sequential'
       && Array.isArray(this.selectedFlow.modules) && this.selectedFlow.modules.length > 1;
   }
@@ -792,7 +719,7 @@ class StudioView extends BaseView {
     this.updateCreditsDisplay();
     this.applyStudioMode(flow);
 
-    const slug = this.flowNameToSlug(flow.name);
+    const slug = flow.slug || this.flowNameToSlug(flow.name);
     if (slug && window.router) {
       window.router.navigate(`${this.getStudioBasePath()}/${encodeURIComponent(slug)}`, true);
     }
@@ -1501,78 +1428,27 @@ class StudioView extends BaseView {
     }
   }
 
-  /** Inserta un flow_schedules con el estado pedido (active | draft). */
+  /** Programaciones (autopilot): sin puerta en el borde todavía. */
   async _saveSchedule(status) {
-    if (!this.supabase || !this.selectedFlow) {
-      this._notify(__('No hay flujo seleccionado.'));
-      return;
-    }
-    const formEl = document.getElementById('studioScheduleForm');
-    if (!formEl) return;
-
-    const data = {};
-    formEl.querySelectorAll('input, textarea, select').forEach(el => {
-      const name = el.getAttribute('name');
-      if (!name || el.type === 'checkbox') return;
-      data[name] = (el.value || '').trim();
-    });
-
-    const cron = data.cron_expression || document.getElementById('studio-schedule-cron_expression')?.value || '';
-    if (!cron) { this._notify(__('Programación inválida.')); return; }
-
-    const entityVal = document.getElementById('studio-schedule-entity_id_value')?.value || data.entity_id || '';
-    const entityIds = entityVal ? entityVal.split(',').filter(Boolean) : null;
-    const campaignId = data.campaign_id || null;
-    const audienceId = data.audience_id || null;
-    const productionCount = parseInt(data.production_count || '1', 10) || 1;
-    const aspectRatio = data.aspect_ratio || '1:1';
-    const specs = data.production_specifications || '';
-
-    const jobName = `${this.selectedFlow.name} — ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`;
-    const brandId = await this.getBrandContainerId();
-
-    const insert = {
-      user_id: this.userId,
-      flow_id: this.selectedFlow.id,
-      brand_id: brandId || null,
-      cron_expression: cron,
-      status,
-      job_name: jobName,
-      entity_ids: entityIds,
-      campaign_ids: campaignId ? [campaignId] : null,
-      campaign_id: campaignId,
-      audience_ids: audienceId ? [audienceId] : null,
-      persona_id: audienceId,
-      production_count: productionCount,
-      aspect_ratio: aspectRatio,
-      production_specifications: specs || null
-    };
-
-    const btnId = status === 'active' ? 'studioScheduleActivate' : 'studioScheduleDraft';
-    const btn = document.getElementById(btnId);
-    if (btn) btn.disabled = true;
-    try {
-      const { error } = await this.supabase.from('flow_schedules').insert(insert).select('id').single();
-      if (error) {
-        console.error('[Studio] _saveSchedule:', error);
-        this._notify(`${__('Error al {action}: {message}', { action: status === 'active' ? __('activar') : __('guardar borrador'), message: error.message })}`);
-        return;
-      }
-      this._notify(status === 'active' ? __('Programación activada') : __('Borrador guardado'));
-    } finally {
-      if (btn) btn.disabled = false;
-    }
+    void status;
+    this._notify(__('Las programaciones están en obras: el borde aún no las recibe.'));
   }
 
-  renderFlowForm(flow) {
+
+  async renderFlowForm(flow) {
     const titleEl = document.getElementById('studioFormTitle');
     const formEl = document.getElementById('studioFlowForm');
     if (!formEl || !flow) return;
 
     if (titleEl) titleEl.textContent = flow.name;
+    if (!Array.isArray(flow.input_schema)) {
+      formEl.innerHTML = '<p class="studio-form-empty">' + __('Cargando el formulario…') + '</p>';
+      try { flow.input_schema = await this._cargarEntradas(flow); } catch (e) { console.warn('[Studio] entradas:', e); flow.input_schema = []; }
+      if (this.selectedFlow !== flow) return; // cambió de flujo mientras cargaba
+    }
+    this._archivosPendientes = {};
 
-    const schema = flow.input_schema || {};
-    const fields = Array.isArray(schema) ? schema : (schema.fields || schema.inputs || []);
+    const fields = flow.input_schema || [];
     if (!Array.isArray(fields) || fields.length === 0) {
       formEl.innerHTML = '<p class="studio-form-empty">' + __('Este flujo no requiere datos adicionales.') + '</p>';
       return;
@@ -1591,21 +1467,25 @@ class StudioView extends BaseView {
     } else {
       formEl.innerHTML = fields.map(f => this.renderFormField(f)).join('');
       if (Registry && Registry.initFormPickers) Registry.initFormPickers(formEl);
-      else if (Registry) {
-        if (Registry.initColorsPicker) Registry.initColorsPicker(formEl);
-        if (Registry.initAspectRatioPicker) Registry.initAspectRatioPicker(formEl);
-      }
     }
 
     formEl.querySelectorAll('input, textarea, select').forEach(el => {
       el.addEventListener('input', () => this.updateCreditsDisplay());
       el.addEventListener('change', () => this.updateCreditsDisplay());
     });
+    // Archivos (image/video/audio/file): se guardan aparte y se suben por el borde al producir.
+    formEl.querySelectorAll('input[type="file"]').forEach(el => {
+      el.addEventListener('change', () => {
+        const f = el.files && el.files[0];
+        this._archivosPendientes[el.name] = f || null;
+        const zone = el.parentElement && el.parentElement.querySelector('.file-input-hint');
+        if (zone) zone.textContent = f ? f.name : __('Click o arrastra un archivo');
+      });
+    });
 
     // Poblar carruseles, selectores de enfoque y colores por defecto desde la marca.
-    // Si hay una sesion reabierta (?run=ID), al final se restaura el snapshot de
-    // runs_inputs de esa corrida: un reintento debe reproducir la produccion
-    // original, no disparar el formulario en blanco.
+    // Si hay una sesión reabierta (?run=ID), al final se restaura lo que se pidió en
+    // esa corrida (flows.run_inputs): un reintento debe reproducir la producción original.
     setTimeout(async () => {
       try {
         await this.populateImageSelectorCarousels();
@@ -1618,53 +1498,39 @@ class StudioView extends BaseView {
     }, 0);
   }
 
-  /**
-   * Obtiene los hex de colores de la marca (brand_colors) para un brand_container_id. Máx. 6.
-   * Solo lectura; no modifica la marca. Usado para prellenar el campo "colores" en el formulario.
-   */
+  /** flows.inputs del flujo como campos; element_ref/market_ref con las opciones de la marca. */
+  async _cargarEntradas(flow) {
+    const F = window.FlujosDatos;
+    if (!F || !flow?.id) return [];
+    const C = window.CatalogoDatos;
+    const KINDS = { product: __('Producto'), service: __('Servicio'), scenario: __('Escenario'), character: __('Personaje'), identity: __('Identidad') };
+    const [productos, servicios, escenarios, personajes] = await Promise.all(['product', 'service', 'scenario', 'character'].map((k) => (C ? C.elementos(this.organizationId, k).catch(() => []) : [])));
+    const elementos = [...productos, ...servicios, ...escenarios, ...personajes].map((e) => ({ value: e.id, label: (KINDS[e.kind] || e.kind) + ' · ' + e.name })); // InputRegistry escapa las opciones al pintarlas
+    const org = window.contextoService?.org?.(this.organizationId);
+    const mercados = (org?.markets || []).map((m) => ({ value: m.id, label: m.name }));
+    return F.entradas(flow.id, { elementos, mercados });
+  }
+
+
+  /** Hex de los colores de la marca (mi_contexto().colores), máx. 6. Solo lectura. */
   async getBrandColorsForContainer(brandContainerId) {
-    if (!this.supabase || !brandContainerId) return [];
+    void brandContainerId;
     try {
-      // Cache 5 min — los colores cambian solo en el editor de marca. Esa vista
-      // invalida `brand:colors:${orgId}` y `theme:colors:${orgId}` pero esta
-      // key es por brandContainerId, otro plano.
-      const fetcher = async () => {
-        // brand_colors es org-scoped en el schema actual (no por container).
-        // Resolvemos organization_id desde el container y filtramos por org.
-        const { data: container, error: e1 } = await this.supabase
-          .from('brand_containers')
-          .select('organization_id')
-          .eq('id', brandContainerId)
-          .maybeSingle();
-        if (e1 || !container?.organization_id) return [];
-        const { data: colors, error: e2 } = await this.supabase
-          .from('brand_colors')
-          .select('hex_value')
-          .eq('organization_id', container.organization_id)
-          .order('created_at', { ascending: true });
-        if (e2 || !colors || colors.length === 0) return [];
-        const seen = new Set();
-        const hexes = [];
-        for (const row of colors) {
-          const raw = (row.hex_value || '').trim().replace(/^#/, '');
-          if (!/^[0-9A-Fa-f]{6}$/.test(raw)) continue;
-          const hex = '#' + raw;
-          if (!seen.has(hex)) {
-            seen.add(hex);
-            hexes.push(hex);
-            if (hexes.length >= 6) break;
-          }
-        }
-        return hexes;
-      };
-      return window.apiClient
-        ? await window.apiClient.query(`studio:brand_colors:${brandContainerId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
+      const org = window.contextoService?.org?.(this.organizationId);
+      const seen = new Set(); const hexes = [];
+      for (const c of (org?.colores || [])) {
+        const raw = String(c?.hex || '').trim().replace(/^#/, '');
+        if (!/^[0-9A-Fa-f]{6}$/.test(raw)) continue;
+        const hex = '#' + raw.toLowerCase();
+        if (!seen.has(hex)) { seen.add(hex); hexes.push(hex); if (hexes.length >= 6) break; }
+      }
+      return hexes;
     } catch (e) {
       console.error('Studio getBrandColorsForContainer:', e);
       return [];
     }
   }
+
 
   /**
    * Prellena los campos "colores" vacíos con los colores de la marca. Solo afecta al valor del formulario (JSON del webhook); no modifica brand_colors.
@@ -1702,89 +1568,30 @@ class StudioView extends BaseView {
     }
   }
 
-  /**
-   * Obtiene el brand_container_id para cargar productos de la marca del usuario.
-   * 1) Intenta por organización (brand_containers.organization_id).
-   * 2) Si no hay marca en la org, fallback por usuario (brand_containers.user_id) para que el usuario vea sus productos.
-   * Misma relación que en products.js: products.brand_container_id → brand_containers.id
-   */
+  /** En la base nueva la marca ES la organización: no hay brand_container. */
   async getBrandContainerId() {
-    if (!this.supabase) return null;
-    try {
-      const cacheKey = `studio:bc_id:org=${this.organizationId || ''}:user=${this.userId || ''}`;
-      // Regla central de aislamiento: la marca SIEMPRE se resuelve dentro de la org
-      // activa, sin fallback cross-org a user_id (ver js/org-url.js).
-      const fetcher = () => window.resolveActiveBrandContainerId(this.supabase, this.organizationId, this.userId);
-      return window.apiClient
-        ? await window.apiClient.query(cacheKey, fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-    } catch (e) {
-      console.error('Studio getBrandContainerId:', e);
-      return null;
-    }
+    return this.organizationId || null;
   }
 
-  /**
-   * Carga productos con sus imágenes (misma lógica que products.js loadProducts).
-   * Tablas: products (brand_container_id), product_images (product_id, image_url, image_type, image_order).
-   * Devuelve array de productos con .images = [{ image_url, image_type, image_order }, ...].
-   * Imagen principal: primera de la lista o la que tenga image_type === 'principal'.
-   */
+
+  /** Productos de la marca con sus imágenes (CatalogoDatos), forma products+product_images de v1. */
   async loadProductsWithImages(brandContainerId) {
-    // Los productos son org-scope (organization_id); brand_container_id suele venir NULL.
-    // Igual que products.js loadProducts(), filtramos por organization_id y solo caemos
-    // a brand_container_id si no hay org (caso de marca por usuario sin org).
-    const orgId = this.organizationId || null;
-    if (!this.supabase || (!orgId && !brandContainerId)) return [];
+    void brandContainerId;
+    const C = window.CatalogoDatos;
+    if (!C || !this.organizationId) return [];
     try {
-      const cacheScope = orgId ? `org:${orgId}` : `bc:${brandContainerId}`;
-      const fetcher = async () => {
-        let query = this.supabase
-          .from('products')
-          .select('id, nombre_producto, tipo_producto, brand_container_id, organization_id, created_at');
-        query = orgId
-          ? query.eq('organization_id', orgId)
-          : query.eq('brand_container_id', brandContainerId);
-        const { data: products, error: productsError } = await query
-          .order('created_at', { ascending: false });
-        if (productsError || !products || products.length === 0) return [];
-
-        const productIds = products.map(p => p.id).filter(Boolean);
-        const imagesQuery = this.supabase
-          .from('product_images')
-          .select('id, product_id, image_url, image_type, image_order')
-          .order('image_order', { ascending: true });
-        const { data: allImages, error: imagesError } = productIds.length === 1
-          ? await imagesQuery.eq('product_id', productIds[0])
-          : await imagesQuery.in('product_id', productIds);
-
-        if (!imagesError && allImages && allImages.length > 0) {
-          const byProduct = {};
-          allImages.forEach(img => {
-            if (!byProduct[img.product_id]) byProduct[img.product_id] = [];
-            byProduct[img.product_id].push(img);
-          });
-          products.forEach(p => {
-            const imgs = byProduct[p.id] || [];
-            p.images = imgs.sort((a, b) => {
-              if (a.image_type === 'principal') return -1;
-              if (b.image_type === 'principal') return 1;
-              return (a.image_order ?? 0) - (b.image_order ?? 0);
-            });
-          });
-        } else {
-          products.forEach(p => { p.images = []; });
-        }
-        return products;
-      };
-      return window.apiClient
-        ? await window.apiClient.query(`studio:products:${cacheScope}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
+      const lista = await C.elementos(this.organizationId, 'product');
+      return lista.map((p) => ({
+        id: p.id, nombre_producto: p.nombre_producto || p.name, tipo_producto: p.tipo_producto || null,
+        organization_id: p.organization_id, created_at: p.created_at,
+        images: (p.imagenes || []).map((i, n) => ({ id: i.file_id || null, product_id: p.id, image_url: i.url, image_type: n === 0 ? 'principal' : 'gallery', image_order: n })),
+      }));
     } catch (e) {
       console.error('Studio loadProductsWithImages:', e);
       return [];
     }
   }
+
 
   /**
    * Rellena los carruseles .image-selector-carousel con productos cuando:
@@ -1916,17 +1723,14 @@ class StudioView extends BaseView {
   async _restoreFormFromRunSnapshot() {
     const runId = this._activeRunId;
     const formEl = document.getElementById('studioFlowForm');
-    if (!runId || !formEl || !this.supabase) return;
+    const P = window.ProduccionesDatos;
+    if (!runId || !formEl || !P || !this.organizationId) return;
     let snap;
     try {
-      const { data, error } = await this.supabase
-        .from('runs_inputs')
-        .select('input_data, created_at')
-        .eq('run_id', runId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      if (error || !data || data.length === 0) return;
-      snap = data[0].input_data;
+      // flows.run_inputs: una fila por entrada {key, value}; value jsonb (string o {value}).
+      const filas = await P.entradas(this.organizationId, [runId]);
+      if (!filas.length) return;
+      snap = P.mapeo.entradasPorCorrida(filas)[runId] || null;
     } catch (_) { return; }
     if (!snap || typeof snap !== 'object' || Array.isArray(snap)) return;
 
@@ -2048,85 +1852,37 @@ class StudioView extends BaseView {
     }
   }
 
+  /** La marca (mercado principal + ADN) en la forma brand de v1, desde StudioDatos.contexto. */
   async loadBrandData(brandContainerId) {
-    if (!this.supabase || !brandContainerId) return null;
-    try {
-      const fetcher = async () => {
-        const { data: container, error: e1 } = await this.supabase
-          .from('brand_containers')
-          .select('*')
-          .eq('id', brandContainerId)
-          .single();
-        if (e1 || !container) return null;
-        return container;
-      };
-      return window.apiClient
-        ? await window.apiClient.query(`studio:brand_data:${brandContainerId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-    } catch (e) {
-      console.error('Studio loadBrandData:', e);
-      return null;
-    }
+    void brandContainerId;
+    if (!window.StudioDatos || !this.organizationId) return null;
+    try { return (await window.StudioDatos.contexto(this.organizationId))?.brand || null; }
+    catch (e) { console.error('Studio loadBrandData:', e); return null; }
   }
 
+
+  /** Campañas: viven en marketing.* (D3) y aún no tienen contrato en la consola. */
   async loadCampaigns(brandContainerId) {
-    if (!this.supabase || !brandContainerId) return [];
-    try {
-      const fetcher = async () => {
-        const { data, error } = await this.supabase
-          .from('campaigns')
-          .select('*')
-          .eq('brand_container_id', brandContainerId)
-          .order('created_at', { ascending: false });
-        return error ? [] : (data || []);
-      };
-      return window.apiClient
-        ? await window.apiClient.query(`studio:campaigns:${brandContainerId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-    } catch (e) {
-      console.error('Studio loadCampaigns:', e);
-      return [];
-    }
+    void brandContainerId;
+    return [];
   }
 
+
+  /** Audiencias: viven en marketing.* (D3) y aún no tienen contrato en la consola. */
   async loadAudiences(brandContainerId) {
-    if (!this.supabase || !brandContainerId) return [];
-    try {
-      const fetcher = async () => {
-        const { data, error } = await this.supabase
-          .from('audience_personas')
-          .select('*')
-          .eq('brand_container_id', brandContainerId);
-        return error ? [] : (data || []);
-      };
-      return window.apiClient
-        ? await window.apiClient.query(`studio:audiences:${brandContainerId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-    } catch (e) {
-      console.error('Studio loadAudiences:', e);
-      return [];
-    }
+    void brandContainerId;
+    return [];
   }
 
+
+  /** Entidades de la marca (identidades, personajes, escenarios), forma brand_entities de v1. */
   async loadEntities(brandContainerId) {
-    if (!this.supabase || !brandContainerId) return [];
-    try {
-      const fetcher = async () => {
-        const { data, error } = await this.supabase
-          .from('brand_entities')
-          .select('*')
-          .eq('brand_container_id', brandContainerId)
-          .order('created_at', { ascending: false });
-        return error ? [] : (data || []);
-      };
-      return window.apiClient
-        ? await window.apiClient.query(`studio:entities:${brandContainerId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-    } catch (e) {
-      console.error('Studio loadEntities:', e);
-      return [];
-    }
+    void brandContainerId;
+    if (!window.StudioDatos || !this.organizationId) return [];
+    try { return (await window.StudioDatos.contexto(this.organizationId))?.entities || []; }
+    catch (e) { console.error('Studio loadEntities:', e); return []; }
   }
+
 
   /**
    * Enlaza los acordeones scope_picker (enfoque de la producción): toggle "Que la IA decida" y checkboxes
@@ -2213,6 +1969,7 @@ class StudioView extends BaseView {
     formEl.querySelectorAll('input, textarea, select').forEach(el => {
       const name = el.getAttribute('name');
       if (!name) return;
+      if (el.type === 'file') return; // se sube por el borde al producir (_archivosPendientes)
       if (el.type === 'checkbox') data[name] = el.checked;
       else {
         const raw = el.value?.trim() ?? '';
@@ -2277,47 +2034,24 @@ class StudioView extends BaseView {
   }
 
   /**
-   * Reemplaza en el payload los campos "selector de productos" (UUID o array de UUIDs)
-   * por el objeto completo de cada producto (con imágenes y todos los datos de BD), vía RPC get_products_full_by_ids.
-   * El webhook recibe así todos los datos del producto, no solo el ID.
+   * En la base nueva el flujo recibe IDS de elementos (element_ref): el motor lee la
+   * ficha completa por su cuenta. Se normaliza a string o array de strings, nada más.
    */
   async enrichProductPayload(payload) {
-    if (!this.supabase || !this.selectedFlow) return payload;
-    const schema = this.selectedFlow.input_schema || {};
-    const fields = Array.isArray(schema) ? schema : (schema.fields || schema.inputs || []);
-    if (!Array.isArray(fields) || fields.length === 0) return payload;
-
+    if (!this.selectedFlow) return payload;
+    const fields = Array.isArray(this.selectedFlow.input_schema) ? this.selectedFlow.input_schema : [];
     const productFields = fields.filter(f => this._isProductSelectorField(f));
     if (productFields.length === 0) return payload;
-
     const out = { ...payload };
     for (const field of productFields) {
       const key = field.key || field.name;
       if (!key || out[key] == null) continue;
-      let ids = out[key];
-      if (typeof ids === 'string') {
-        const trimmed = ids.trim();
-        if (!trimmed) continue;
-        ids = [trimmed];
-      }
-      if (!Array.isArray(ids) || ids.length === 0) continue;
-      const validIds = ids.filter(id => typeof id === 'string' && id.length > 0);
-      if (validIds.length === 0) continue;
-
-      try {
-        const { data, error } = await this.supabase.rpc('get_products_full_by_ids', { p_product_ids: validIds });
-        if (error) {
-          console.warn('[Studio] get_products_full_by_ids:', error.message);
-          continue;
-        }
-        const list = Array.isArray(data) ? data : [];
-        out[key] = list.length === 1 && validIds.length === 1 ? list[0] : list;
-      } catch (e) {
-        console.warn('[Studio] enrichProductPayload:', e);
-      }
+      const ids = (Array.isArray(out[key]) ? out[key] : [out[key]]).map(p => (p && typeof p === 'object') ? (p.id || p.entity_id) : p).filter(id => typeof id === 'string' && id);
+      out[key] = Array.isArray(out[key]) ? ids : (ids[0] || null);
     }
     return out;
   }
+
 
   setupEventListeners() {
     const btn = document.getElementById('studioProducirBtn');
@@ -2337,16 +2071,12 @@ class StudioView extends BaseView {
 
   async producir() {
     if (this._producing) return; // lock anti doble-clic / doble produccion
-    if (!this.selectedFlow || !this.selectedFlow.webhook_url) return;
-    const cost = this.selectedFlow.token_cost ?? 1;
-    if (this.credits.available < cost) {
+    if (!this.selectedFlow || !this.selectedFlow.id) return;
+    const S = window.StudioDatos;
+    if (!S) { this._notify(__('El Studio no está listo. Recarga la página.')); return; }
+    const cost = this.selectedFlow.token_cost ?? 0;
+    if (cost && this.credits.available < cost) {
       this._notify(__('Créditos insuficientes para esta producción.'));
-      return;
-    }
-
-    const Service = window.FlowWebhookService;
-    if (!Service || typeof Service.executeWebhook !== 'function') {
-      this._notify(__('Servicio de ejecución no disponible. Recarga la página.'));
       return;
     }
 
@@ -2356,233 +2086,38 @@ class StudioView extends BaseView {
     const btn = document.getElementById('studioProducirBtn');
     if (btn) btn.disabled = true;
 
-    const timeoutMs = DEFAULT_STUDIO_TIMEOUT_MS;
-    const maxRetries = DEFAULT_STUDIO_MAX_RETRIES;
-    let runId = null;
-    let creditsDeducted = false;
-    let isAppend = false;
-
     try {
       let payload = this.collectFormData();
       payload = await this.enrichProductPayload(payload);
-      // Validar limites de seleccion (min/max) de los selectores de imagen multiples.
-      // Ej: un flujo que exige 3 productos obligatorios bloquea aqui si no se cumplen.
       const selErr = this._validateSelectionLimits(payload);
       if (selErr) { this._notify(selErr); return; }
-      // Aspect ratio elegido: el skeleton lo usa para mostrarse con la misma
-      // proporcion que la produccion en camino (horizontal/cuadrado/vertical).
-      this._activeAspectRatio = payload.aspect_ratio || this._activeAspectRatio || null;
-      // Modelo Sessions: si hay un run activo (sesion abierta, o reabierta desde
-      // Execution History con ?run=ID), los outputs nuevos caen DENTRO de ese run.
-      // Los flujos SECUENCIALES no appendean: cada produccion arranca un pipeline nuevo.
-      const sequential = this._isSequential();
-      const resumeRunId = sequential ? null : (this._activeRunId || null);
-      const appendBaseline = resumeRunId ? await this._runOutputCount(resumeRunId) : 0;
+      const faltan = this._entradasObligatoriasVacias(payload);
+      if (faltan.length) { this._notify(__('Falta: {campos}', { campos: faltan.join(', ') })); return; }
+      // Aspect ratio elegido: el skeleton lo usa para mostrarse con la misma proporción.
+      this._activeAspectRatio = payload.aspect_ratio || payload.aspecto || this._activeAspectRatio || null;
 
-      // 1) Deducción de créditos. Pasamos campaign/persona/brief para que queden
-      // ligados al flow_run (la RPC los inserta). Asi el modal de Production puede
-      // mostrar a que campania y audiencia pertenece cada produccion.
-      const campaignId = payload?.campaign_id || (Array.isArray(payload?.campaign_ids) ? payload.campaign_ids[0] : null) || null;
-      const personaId = payload?.persona_id || payload?.audience_id || null;
-      const briefId = payload?.brief_id || null;
-
-      if (resumeRunId) {
-        // Append: cobrar reusando el run existente (NO crea run nuevo).
-        const { data: dr, error: appendErr } = await this.supabase
-          .rpc('deduct_credits_for_run', {
-            p_organization_id: this.organizationId,
-            p_user_id: this.userId,
-            p_run_id: resumeRunId,
-            p_amount: cost
-          });
-        if (appendErr) {
-          console.error('Studio deduct_credits_for_run:', appendErr);
-          this._notify(__('No se pudo reservar créditos. Intenta de nuevo.'));
-          return;
-        }
-        if (dr?.success === true && dr?.run_id) {
-          runId = dr.run_id;
-          isAppend = true;
-          creditsDeducted = true;
-          this.credits.available = dr.new_available ?? this.credits.available - cost;
-        } else if (dr?.error_message === 'run_not_found') {
-          // El run de la URL ya no existe: caemos a crear uno nuevo (no abortar).
-          this._activeRunId = null;
-        } else {
-          this._notify(dr?.error_message === 'insufficient_credits'
-            ? __('Créditos insuficientes para esta producción.')
-            : (dr?.error_message || __('Error al reservar créditos.')));
-          return;
-        }
+      // 1) Archivos del formulario → el borde (file_id). Sin borde, se dice con palabras.
+      const entradas = this._entradasParaElBorde(payload);
+      for (const [name, file] of Object.entries(this._archivosPendientes || {})) {
+        if (!file) continue;
+        const subido = await S.subirReferencia(this.organizationId, file);
+        entradas[name] = subido.file_id;
       }
 
-      if (!runId) {
-        // Sesion nueva: deducción atómica + creación de run.
-        const { data: deductResult, error: rpcError } = await this.supabase
-          .rpc('deduct_credits_and_create_run', {
-            p_organization_id: this.organizationId,
-            p_user_id: this.userId,
-            p_flow_id: this.selectedFlow.id,
-            p_amount: cost,
-            p_brief_id: briefId,
-            p_persona_id: personaId,
-            p_campaign_id: campaignId
-          });
-        if (rpcError) {
-          console.error('Studio deduct RPC:', rpcError);
-          this._notify(__('No se pudo reservar créditos. Intenta de nuevo.'));
-          return;
-        }
-        const success = deductResult?.success === true;
-        runId = deductResult?.run_id;
-        if (!success || !runId) {
-          const msg = deductResult?.error_message === 'insufficient_credits'
-            ? __('Créditos insuficientes para esta producción.')
-            : (deductResult?.error_message || __('Error al reservar créditos.'));
-          this._notify(msg);
-          return;
-        }
-        creditsDeducted = true;
-        this.credits.available = deductResult.new_available ?? this.credits.available - cost;
-      }
+      // 2) Lanzar: el borde reserva y cobra los créditos y crea la corrida (flows.runs).
+      //    Las salidas llegan a public.salidas: el canvas las sondea desde el skeleton.
+      this._activeRunId = null; // cada producción es una corrida nueva (sin append en la base nueva)
+      const idCliente = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const marketId = payload.market_id || window.contextoService?.org?.(this.organizationId)?.markets?.find?.((m) => m.is_primary)?.id || null;
+      const lanzada = await S.lanzar(this.organizationId, this.selectedFlow.id, entradas, { idCliente, marketId });
+      const runId = lanzada.run_id;
 
+      if (cost) this.credits.available = Math.max(0, this.credits.available - cost);
       this.updateCreditsDisplay();
-      // Invalida apiClient: la próxima lectura (sidebar/tienda) verá créditos frescos.
       window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
-      // Skeleton INMEDIATO (antes del webhook) para feedback al instante: si no,
-      // el tramo deduct->contexto->webhook deja el canvas sin senal y parece roto.
-      if (sequential) { this._activeRunId = runId; this._renderStageSkeleton(1, __('Generando guion…')); }
-      else if (isAppend) this._showAppendSkeleton();
-      else { try { await this.setActiveRun(runId); } catch (_) {} }
-
-      // 1b) Persistir snapshot del payload del usuario en runs_inputs.
-      // Cierra el hueco "runs_inputs vacio": cada produccion deja registro
-      // del formulario que la origino (entity ids, referencias, briefing,
-      // etc) para auditoria + alimentar el bloque INFORMATION del modal.
-      try {
-        const moduleId = this.selectedFlow?.flow_module_id
-          || this.selectedFlow?.module_id
-          || this.selectedFlow?.modules?.[0]?.id
-          || null;
-        await this.supabase.from('runs_inputs').insert({
-          run_id: runId,
-          input_data: payload,
-          flow_module_id: moduleId,
-          organization_id: this.organizationId,
-          metadata: {
-            captured_from: 'studio_ui',
-            flow_id: this.selectedFlow?.id || null
-          }
-        });
-      } catch (inputsErr) {
-        // No bloqueamos la produccion si falla el snapshot: log y seguimos.
-        console.warn('runs_inputs snapshot fallo (no bloquea produccion):', inputsErr);
-      }
-
-      // 1c) Flows MANUALES (single_step/form): enriquecer el payload con el
-      // contexto rico (meta.run_id, entities con imagenes, brand_identity,
-      // brand_colors, schedule_config) via rpc_build_manual_context — el mismo
-      // shape que el body de autopilot, para que el flow n8n moderno lo lea
-      // igual. El payload original del form se preserva (merge) por compat.
-      let webhookBody = payload;
-      try {
-        const schema = this.selectedFlow.input_schema || {};
-        const fields = Array.isArray(schema) ? schema : (schema.fields || schema.inputs || []);
-        const prodFields = (Array.isArray(fields) ? fields : []).filter(f => this._isProductSelectorField(f));
-        const entityIds = [];
-        for (const f of prodFields) {
-          const v = payload[f.key || f.name];
-          const arr = Array.isArray(v) ? v : (v ? [v] : []);
-          for (const p of arr) { const eid = (p && (p.entity_id || p.id)) || (typeof p === 'string' ? p : null); if (eid) entityIds.push(eid); }
-        }
-        const coloresVal = Array.isArray(payload.colores) ? payload.colores.join(',') : (payload.colores || null);
-        const aspect = payload.aspect_ratio || '1:1';
-        const specs = payload.production_specifications || payload.specs || '';
-        const { data: ctx, error: ctxErr } = await this.supabase.rpc('rpc_build_manual_context', {
-          p_run_id: runId, p_org_id: this.organizationId, p_user_id: this.userId,
-          p_flow_id: this.selectedFlow.id, p_entity_ids: entityIds,
-          p_colores: coloresVal, p_aspect_ratio: aspect, p_specs: specs
-        });
-        if (!ctxErr && ctx && typeof ctx === 'object') webhookBody = { ...payload, ...ctx };
-        else if (ctxErr) console.warn('[Studio] rpc_build_manual_context:', ctxErr.message);
-      } catch (ctxE) {
-        console.warn('[Studio] rpc_build_manual_context (no bloquea):', ctxE);
-      }
-
-      // 2) Ejecutar webhook con reintentos y timeout
-      const res = await Service.executeWebhook({
-        url: this.selectedFlow.webhook_url,
-        method: (this.selectedFlow.webhook_method || 'POST').toUpperCase(),
-        body: webhookBody,
-        timeoutMs,
-        maxRetries
-      });
-
-      if (!res.ok) {
-        await this._refundCreditsSafe(runId, cost);
-        this.credits.available += cost;
-        this.updateCreditsDisplay();
-        await this.loadCredits();
-        if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
-          await window.appNavigation.loadCreditsFromDb(this.organizationId);
-        }
-        const detail = res.error || res.statusText || `${__('Código {status}', { status: res.status })}`;
-        if (res.status === 400) {
-          this._notify(__('Solicitud incorrecta: {detail}. Revisa los datos del formulario.', { detail }));
-        } else if (res.status >= 500) {
-          this._notify(__('Error del servidor del flujo. Intenta más tarde o contacta al administrador.'));
-        } else {
-          this._notify(__('Error en la producción: {detail}', { detail }));
-        }
-        return;
-      }
-
-      // 3) Marcar run como completado. En append NO tocamos tokens_consumed: la
-      //    RPC deduct_credits_for_run ya sumó el costo al acumulado del run.
-      //    SECUENCIAL: NO marcar completed — rpc_ingest_stage_output dejó el run
-      //    'running'+is_paused esperando aprobacion; marcarlo aqui lo pisaria.
-      if (!sequential) {
-        const runUpdate = { status: 'completed', webhook_response_code: res.status };
-        if (!isAppend) runUpdate.tokens_consumed = cost;
-        await this.supabase
-          .from('flow_runs')
-          .update(runUpdate)
-          .eq('id', runId);
-      }
-
       await this.loadCredits();
-      this.updateCreditsDisplay();
-      if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
-        await window.appNavigation.loadCreditsFromDb(this.organizationId);
-      }
-      // Sin popup de éxito: el canvas pasa directo al skeleton de carga.
-      // Los outputs llegan async (webhook → n8n → ai-engine), por eso hacemos poll.
-      if (sequential) {
-        // Pipeline por etapas: tomamos el canvas y esperamos el output de la etapa 1
-        // (guion) para mostrar la card de aprobacion. La plataforma orquesta el resto.
-        this._seq = { runId, contextBody: webhookBody, modules: this.selectedFlow.modules || [] };
-        this._activeRunId = runId;
-        this._enterStageWait(runId, 1);
-      } else if (isAppend) {
-        // La sesion ya es el run activo del canvas: mostramos un skeleton al frente
-        // y esperamos el output NUEVO (conteo > baseline) sin perder los previos.
-        this._showAppendSkeleton();
-        this._pollActiveRunNewOutputs(runId, appendBaseline, 0);
-      } else {
-        // Sesion nueva: scope del canvas al run recien creado (skeleton hasta que
-        // aparezca su primer output; si no llega, el poll pinta el estado de error).
-        await this.setActiveRun(runId, { poll: true });
-      }
+      await this.setActiveRun(runId, { poll: true });
     } catch (e) {
-      if (creditsDeducted && runId) {
-        await this._refundCreditsSafe(runId, cost);
-        this.credits.available += cost;
-        this.updateCreditsDisplay();
-        await this.loadCredits();
-        if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
-          await window.appNavigation.loadCreditsFromDb(this.organizationId);
-        }
-      }
       const msg = this._messageForProducirError(e);
       console.error('Studio producir:', e);
       this._notify(msg);
@@ -2592,20 +2127,45 @@ class StudioView extends BaseView {
     }
   }
 
-  async _refundCreditsSafe(runId, amount) {
-    try {
-      await this.supabase.rpc('refund_credits_for_run', {
-        p_organization_id: this.organizationId,
-        p_run_id: runId,
-        p_amount: amount
-      });
-      window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
-    } catch (refundErr) {
-      console.error('Studio refund fallback:', refundErr);
-    }
+  /** Nombres de las entradas obligatorias que quedaron vacías (los archivos cuentan si están pendientes). */
+  _entradasObligatoriasVacias(payload) {
+    const fields = Array.isArray(this.selectedFlow?.input_schema) ? this.selectedFlow.input_schema : [];
+    const vacio = (v) => v == null || v === '' || (Array.isArray(v) && v.length === 0);
+    return fields.filter((f) => f.required && f.kind !== 'boolean').filter((f) => {
+      if (f.input_type === 'file') return !(this._archivosPendientes && this._archivosPendientes[f.key]);
+      return vacio(payload[f.key]);
+    }).map((f) => f.label || f.key);
   }
 
+  /** Lo que se manda a /v1/flujos/:id/lanzar: solo las entradas del flujo, tipadas por su kind. */
+  _entradasParaElBorde(payload) {
+    const fields = Array.isArray(this.selectedFlow?.input_schema) ? this.selectedFlow.input_schema : [];
+    const out = {};
+    for (const f of fields) {
+      if (f.input_type === 'file') continue; // van por subirReferencia
+      let v = payload[f.key];
+      if (v == null || v === '') continue;
+      if (f.kind === 'number') { v = Number(v); if (Number.isNaN(v)) continue; }
+      else if (f.kind === 'boolean') v = v === true || v === 'true' || v === 'on';
+      else if (f.kind === 'multi_select') v = Array.isArray(v) ? v : String(v).split(',').map((x) => x.trim()).filter(Boolean);
+      out[f.key] = v;
+    }
+    return out;
+  }
+
+
+  /** Los reembolsos los hace el borde al fallar la corrida (billing): la consola no toca el saldo. */
+  async _refundCreditsSafe(runId, amount) {
+    void runId; void amount;
+    window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
+  }
+
+
   _messageForProducirError(e) {
+    const codigo = e && (e.code || e.codigo);
+    if (codigo === 'sin_api') return __('El borde no está configurado: el Studio aún no produce en esta consola.');
+    if (codigo === 'sin_saldo' || e?.status === 402) return __('Créditos insuficientes para esta producción.');
+    if (codigo === 'entrada_invalida' || e?.status === 422) return __('Revisa los datos del formulario: {detalle}', { detalle: e.message || '' });
     if (e.name === 'AbortError') {
       return __('Tiempo de espera agotado. El servidor no respondió a tiempo.');
     }
