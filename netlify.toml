@@ -428,7 +428,14 @@
   to = "/index.html"
   status = 200
 
-# Cabeceras de seguridad globales para todos los recursos
+# Cabeceras de seguridad para TODO lo que sirve el sitio (H4, docs 16/09): la
+# SPA entra por "/" y por rutas como "/organization", que Netlify sirve como
+# index.html pero NO casan con "/*.html" ni "/index.html" — con esas reglas la
+# CSP y el HSTS solo protegian a quien pedia /index.html a mano. Una sola regla
+# "/*" cubre la entrada real. Sobre un .js o .css la CSP no hace nada y no estorba.
+#   'unsafe-inline' en script-src: runtime-config.js se inyecta como snippet y
+#   app-loader/index.html llevan scripts en linea (build sin bundler); pasar a
+#   hash exige un build que hoy no existe (fase 2, anotado en docs).
 [[headers]]
   for = "/*"
   [headers.values]
@@ -436,17 +443,6 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-
-# Cabeceras de seguridad adicionales para HTML
-[[headers]]
-  for = "/*.html"
-  [headers.values]
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; connect-src 'self' https://aqblperqrcwumiztmjnw.supabase.co wss://aqblperqrcwumiztmjnw.supabase.co https://api-v2.aismartcontent.io https://media-v2.aismartcontent.io https://res.cloudinary.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; media-src 'self' blob: https:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
-
-[[headers]]
-  for = "/index.html"
-  [headers.values]
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; connect-src 'self' https://aqblperqrcwumiztmjnw.supabase.co wss://aqblperqrcwumiztmjnw.supabase.co https://api-v2.aismartcontent.io https://media-v2.aismartcontent.io https://res.cloudinary.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; media-src 'self' blob: https:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
 
