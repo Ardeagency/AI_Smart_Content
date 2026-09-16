@@ -27,4 +27,9 @@ describe('Producciones · formas de v1', () => {
       .toEqual({ r1: { prompt: 'hola', aspecto: '4:5' }, r2: { prompt: 'x' } });
     expect(P.entradaAV1({ id: 1, run_id: 'r1', key: 'prompt', value: 'v', created_at: 't' })).toMatchObject({ input_key: 'prompt', key: 'prompt', value: 'v' });
   });
+  test('la corrida lleva el slug de la base para abrir el runner (/studio/:slug?run=)', () => {
+    const c = P.corridaAV1({ id: 'r', organization_id: 'o', flow_id: 'f', status: 'awaiting_approval', created_at: '2026-09-16' }, { f: 'Publicar en Meta', __slugs: { f: 'publicar-meta' } });
+    expect(c.content_flows).toEqual({ name: 'Publicar en Meta', slug: 'publicar-meta' });
+    expect(P.corridaAV1({ id: 'r2', flow_id: 'x', status: 'queued', created_at: '2026-09-16' }, {}).content_flows).toEqual({ name: null, slug: null });
+  });
 });

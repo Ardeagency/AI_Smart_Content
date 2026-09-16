@@ -905,6 +905,13 @@ class StudioView extends BaseView {
       // Si venimos con un run por deep-link, asegurar que sus outputs esten cargados.
       if (activeRun) {
         await lm.setActiveRun(activeRun);
+        // Corrida viva (queued/running/awaiting_approval): retomar el sondeo para que el
+        // skeleton, la aprobación pendiente o la salida nueva aparezcan sin refrescar.
+        try {
+          const c = await this._corrida(activeRun);
+          const st = String(c?.status || '').toLowerCase();
+          if (['queued', 'running', 'awaiting_approval'].includes(st)) { this._ultimaCorrida = c; this._pollActiveRunOutputs(activeRun, 0); }
+        } catch (_) { /* sin estado: la galería ya muestra lo que hay */ }
       }
     } catch (e) {
       console.error('Studio initLivingGallery:', e);

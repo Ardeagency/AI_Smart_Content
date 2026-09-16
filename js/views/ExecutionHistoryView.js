@@ -121,7 +121,7 @@ class ExecutionHistoryView extends BaseView {
           if (images.length >= MAX_CAROUSEL) break;
         }
         const nombre = r.content_flows?.name || __('Flujo');
-        return { ...r, tokens_consumed: r.credits_charged, flow_name: nombre, flow_slug: this.flowNameToSlug(nombre), images, output_count: list2.length };
+        return { ...r, tokens_consumed: r.credits_charged, flow_name: nombre, flow_slug: r.content_flows?.slug || this.flowNameToSlug(nombre), images, output_count: list2.length };
       });
     } catch (e) {
       console.error('ExecutionHistoryView loadRuns:', e);
@@ -180,12 +180,16 @@ class ExecutionHistoryView extends BaseView {
 
   renderRunCard(r) {
     const status = (r.status || '').toLowerCase();
-    const statusClass = status === 'completed' ? 'task-card-badge-active'
-                      : status === 'failed' || status === 'error' ? 'task-card-badge-danger'
-                      : status === 'running' || status === 'in_progress' ? 'task-card-badge-running'
+    // Estados de flows.runs: queued, running, awaiting_approval, succeeded, failed, cancelled.
+    const statusClass = status === 'completed' || status === 'succeeded' ? 'task-card-badge-active'
+                      : status === 'failed' || status === 'error' || status === 'cancelled' || status === 'canceled' ? 'task-card-badge-danger'
+                      : status === 'running' || status === 'in_progress' || status === 'queued' ? 'task-card-badge-running'
                       : 'task-card-badge-paused';
-    const statusLabel = status === 'completed' ? __('Completado')
+    const statusLabel = status === 'completed' || status === 'succeeded' ? __('Completado')
                       : status === 'failed' || status === 'error' ? __('Error')
+                      : status === 'cancelled' || status === 'canceled' ? __('Cancelada')
+                      : status === 'awaiting_approval' ? __('Esperando tu aprobación · revisar')
+                      : status === 'queued' ? __('En cola')
                       : status === 'running' || status === 'in_progress' ? __('En curso')
                       : status ? status.charAt(0).toUpperCase() + status.slice(1) : '—';
     const { rel } = this._formatRunDateParts(r.created_at);

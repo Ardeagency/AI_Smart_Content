@@ -2323,11 +2323,11 @@ class LivingManager {
                 // La corrida queda `awaiting_approval`: se aprueba en el runner de ese flujo (?run=).
                 const prefix = (this.organizationId && typeof window.getOrgPathPrefix === 'function') ? window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') : '';
                 if (ok.length === 1 && window.router) {
-                    window.showToast?.('En cola: revisa y aprueba la publicación.', { type: 'success' });
+                    window.showToast?.('La publicación queda esperando tu aprobación en esta corrida.', { type: 'success' });
                     this.closePublishSheet(); this.closeProductionModal?.();
                     window.router.navigate(`${prefix}/studio/publicar-meta?run=${encodeURIComponent(ok[0].run_id)}`);
                 } else {
-                    window.showToast?.(`${ok.length} en cola: aprueba cada publicación desde el historial de corridas.`, { type: 'success' });
+                    window.showToast?.(`${ok.length} publicaciones esperan tu aprobación: ábrelas desde el historial de corridas.`, { type: 'success' });
                     this._renderPublishResult(ok.map((r) => ({ ...r, status: 'published', remote_url: null })), fail, multi);
                 }
             } else {

@@ -43,7 +43,7 @@
       started_at: fila.started_at || null,
       finished_at: fila.finished_at || null,
       created_at: fila.created_at,
-      content_flows: { name: nombresPorFlujo[fila.flow_id] || null },
+      content_flows: { name: nombresPorFlujo[fila.flow_id] || null, slug: (nombresPorFlujo.__slugs && nombresPorFlujo.__slugs[fila.flow_id]) || null },
       campaigns: null,
       audience_personas: null,
     };
@@ -98,16 +98,17 @@
   function api() { return (typeof window !== 'undefined' && window.apiV2?.api) || null; }
   function aviso(nombre, r) { if (r?.error) console.warn(`[producciones] ${nombre}:`, r.error.code, r.error.message); }
 
-  let nombresCache = {};
+  // {flow_id: nombre, __slugs: {flow_id: slug}} — el slug de la base es el que abre el runner (/studio/:slug).
+  let nombresCache = { __slugs: {} };
   async function nombresDeFlujos(orgId) {
     const sb = await cliente();
     if (!sb || !orgId) return nombresCache;
     const r = await sb.schema('flows').from('vista_org').select('flow_id, nombre, slug, tipo').eq('organization_id', orgId);
     aviso('flows.vista_org', r);
-    (r.data || []).forEach((f) => { nombresCache[f.flow_id] = f.nombre || f.slug; });
-    // Los flujos comunes (imagen-directa, video-directo) no salen en vista_org hasta la primera corrida.
+    (r.data || []).forEach((f) => { nombresCache[f.flow_id] = f.nombre || f.slug; if (f.slug) nombresCache.__slugs[f.flow_id] = f.slug; });
+    // Los flujos comunes (imagen-directa, video-directo…) no salen en vista_org hasta la primera corrida.
     const c = await sb.schema('flows').from('catalog_view').select('id, name, slug').is('organization_id', null);
-    (c.data || []).forEach((f) => { if (!nombresCache[f.id]) nombresCache[f.id] = f.name || f.slug; });
+    (c.data || []).forEach((f) => { if (!nombresCache[f.id]) nombresCache[f.id] = f.name || f.slug; if (f.slug && !nombresCache.__slugs[f.id]) nombresCache.__slugs[f.id] = f.slug; });
     return nombresCache;
   }
 
