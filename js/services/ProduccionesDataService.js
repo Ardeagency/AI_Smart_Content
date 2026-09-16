@@ -137,9 +137,12 @@
   }
 
   /**
-   * Decidir una corrida `awaiting_approval`: R flows.decidir_corrida(p_run, p_aprobar, p_nota)
-   * (aprobar → running y siguiente paso; rechazar → failed con «Rechazado por <nombre>: <nota>»).
-   * Hasta que BD la firme: PGRST202 → error con palabras (code `sin_puerta`).
+   * Decidir una corrida `awaiting_approval`: R flows.decidir_corrida({p_run, p_aprobar, p_nota})
+   * (BD 20260916230000, SIN aplicar): aprobar → {estado:'running', paso, decidida:true, aprobada:true}
+   * (la corrida sigue sola); rechazar → p_nota obligatoria (23514) → {estado:'failed', decidida:true,
+   * aprobada:false} y corrida.error = «Rechazada por <nombre>: <nota>»; ya no espera →
+   * {decidida:false, estado, motivo}; sin permiso 42501 (publicar_contenido si el paso siguiente es
+   * publish, si no producir_contenido). Hasta aplicarla: PGRST202 → `sin_puerta` con palabras.
    */
   async function decidirCorrida(runId, aprobar, nota = null) {
     const sb = await cliente();
@@ -149,8 +152,10 @@
     if (error) {
       if (error.code === 'PGRST202' || error.code === '42883') throw Object.assign(new Error('Aprobar o rechazar una corrida llega con la migración de BD (flows.decidir_corrida): todavía no está en esta base.'), { code: 'sin_puerta' });
       if (error.code === '42501') throw Object.assign(new Error('No tienes el permiso que este paso exige.'), { code: 'sin_permiso' });
+      if (error.code === '23514') throw Object.assign(new Error('Para rechazar hace falta un motivo.'), { code: 'entrada_invalida' });
       throw error;
     }
+    if (data && data.decidida === false) throw Object.assign(new Error(data.motivo || `La corrida ya no espera aprobación (${data.estado || 'sin estado'}).`), { code: 'ya_decidida', estado: data.estado || null });
     return data;
   }
 
