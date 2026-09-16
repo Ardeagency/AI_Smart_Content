@@ -560,7 +560,7 @@
       // callback vuelve a `${return_to}?plataforma=…&conectado=1&cuenta=…` o `&error=…`.
       // Sin él, vuelve a /brand-integration-callback con los mismos parámetros.
       const currentPath = (typeof window !== 'undefined' && window.location?.pathname) || '';
-      if (/^\/[A-Za-z0-9_\-/.]*$/.test(currentPath) && !currentPath.startsWith('//') && currentPath.length <= 500) extra.return_to = currentPath;
+      if (/^\/[A-Za-z0-9_\-/.]*$/.test(currentPath) && !currentPath.startsWith('//') && currentPath.length <= 500) { extra.return_to = currentPath; try { sessionStorage.setItem('_obic_return', currentPath); } catch (_) { /* nada */ } }
       const url = await window.MarcaDatos.urlParaConectar(orgId, normalizedProvider, extra);
       window.location.href = url;
     } catch (error) {

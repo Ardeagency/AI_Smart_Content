@@ -1,12 +1,8 @@
 /**
- * BrandIntegrationCallbackView
- * Maneja el callback OAuth de Facebook/Google.
- *
- * Flujo Facebook:
- *  1. Exchange code → token (backend guarda todas las páginas en metadata)
- *  2. Si hay 1 página  → auto-selecciona y redirige
- *  3. Si hay >1 página → muestra selector, usuario elige 1, guarda y redirige
- *  4. Si hay 0 páginas → muestra error con instrucciones
+ * BrandIntegrationCallbackView — a dónde vuelve la persona tras autorizar una
+ * plataforma. Desde el corte (ADR-0052) el borde ya hizo el intercambio: aquí
+ * solo se cuenta el resultado (`?plataforma=&conectado=1&cuenta=` o `&error=`)
+ * y se vuelve a la ficha de marca.
  */
 class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
   constructor() {
@@ -27,232 +23,37 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       </div>`;
   }
 
+  /**
+   * Corte ADR-0052 (backend 479fc1b): el intercambio del código lo hace el BORDE en
+   * GET /v1/integraciones/:plataforma/callback (cambia el código, resuelve la
+   * identidad, escribe integrations.connections, guarda tokens en la bóveda) y
+   * vuelve aquí con `?plataforma=<x>&conectado=1&cuenta=<nombre>` o
+   * `?plataforma=<x>&error=<texto>`. Esta vista solo lo cuenta y devuelve a la
+   * persona a la ficha de marca (o al `return_to` que guardó al conectar).
+   * La elección de página de Meta ya no ocurre aquí: la resuelve el borde.
+   */
   async onEnter() {
-    // Protección contra doble llamada dentro de la misma instancia
     if (this._processing) return;
     this._processing = true;
-
     try {
-      this.supabase = window.supabaseService
-        ? await window.supabaseService.getClient()
-        : window.supabase;
-      if (!this.supabase) throw new Error('Supabase no disponible.');
-
       const params = new URLSearchParams(window.location.search || '');
-      const oauthError = params.get('error');
-      const code  = params.get('code');
-      const state = params.get('state');
-
-      if (oauthError) throw new Error(oauthError);
-      if (!code || !state) throw new Error('Faltan parámetros OAuth (code/state).');
-
-      // Shopify firma el redirect con HMAC sobre el query string ordenado.
-      // Capturamos los params del callback para que el backend los verifique.
-      const callbackParams = {};
-      for (const [k, v] of params.entries()) callbackParams[k] = v;
-
-      // Protección contra doble envío del mismo código (Facebook solo permite 1 uso)
-      const codeKey = `_obic_${code.slice(-12)}`;
-      if (sessionStorage.getItem(codeKey)) {
-        this._redirect(sessionStorage.getItem('_obic_return') || '/brands');
-        return;
-      }
-      sessionStorage.setItem(codeKey, '1');
-
-      // Limpiar URL para que un re-render del router no reintente el exchange
-      if (window.history?.replaceState) {
-        window.history.replaceState({}, '', window.location.pathname);
-      }
-
-      const { data: sd } = await this.supabase.auth.getSession();
-      const token = sd?.session?.access_token;
-      if (!token) throw new Error('Sesión no válida. Inicia sesión y vuelve a intentarlo.');
-
-      // Intercambiar el código por tokens (backend también captura /me/accounts)
-      // callback_params + shop + hmac: necesarios para verificar HMAC de Shopify
-      // (los Meta/Google ignoran estos campos extra)
-      const res = await fetch(`${location.origin}/api/integrations/exchange`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          code,
-          state,
-          shop:            callbackParams.shop || undefined,
-          hmac:            callbackParams.hmac || undefined,
-          callback_params: callbackParams
-        })
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.error || `Error ${res.status}`);
-
-      const returnTo = json.return_to || '/brands';
-      sessionStorage.setItem('_obic_return', returnTo);
-
-      // Solo Facebook necesita selección de página
-      if (json.platform !== 'facebook') {
-        this._showSuccess(json.platform, returnTo);
-        return;
-      }
-
-      const pages   = Array.isArray(json.pages) ? json.pages : [];
-      const integId = json.integ_id || null;
-
-      // Sin páginas: mostrar error con instrucciones
-      if (pages.length === 0) {
-        this._showNoPages(returnTo);
-        return;
-      }
-
-      // 1 sola página: auto-seleccionar sin molestar al usuario
-      if (pages.length === 1) {
-        await this._savePage(integId, pages[0]);
-        this._showSuccess('facebook', returnTo);
-        return;
-      }
-
-      // Múltiples páginas: el usuario elige cuál conectar a esta marca
-      this._showPicker({ pages, integId, returnTo });
-
+      const plataforma = String(params.get('plataforma') || params.get('platform') || '').toLowerCase();
+      const error = params.get('error');
+      const conectado = params.get('conectado') === '1';
+      const cuenta = params.get('cuenta') || '';
+      if (window.history?.replaceState) window.history.replaceState({}, '', window.location.pathname);
+      const returnTo = sessionStorage.getItem('_obic_return') || '/brands';
+      if (error) throw new Error(error);
+      if (!conectado) throw new Error(window.__('La plataforma no devolvió una conexión. Vuelve a intentarlo desde la ficha de marca.'));
+      // Un contexto viejo (mi_contexto) taparía la conexión nueva en la ficha.
+      if (window.contextoService?.cargar) window.contextoService.cargar({ fresco: true }).catch(() => {});
+      this._showSuccess(plataforma, returnTo, cuenta);
     } catch (e) {
       console.error('[BrandIntegrationCallback]', e);
       this._showError(e?.message || String(e));
     }
   }
 
-  // ── Guardar página seleccionada ───────────────────────────────────────────
-
-  async _savePage(integId, page) {
-    if (!integId) return;
-    const pic = typeof page.picture === 'string'
-      ? page.picture
-      : (page.picture?.data?.url || null);
-
-    const { data: rows } = await this.supabase
-      .from('brand_integrations').select('metadata').eq('id', integId).limit(1);
-    const meta = rows?.[0]?.metadata || {};
-
-    await this.supabase
-      .from('brand_integrations')
-      .update({
-        metadata: {
-          ...meta,
-          selected_page_id:      page.id,
-          selected_page_name:    page.name || null,
-          selected_page_picture: pic
-        }
-      })
-      .eq('id', integId);
-  }
-
-  // ── Pantalla: selección de página ─────────────────────────────────────────
-
-  _showPicker({ pages, integId, returnTo }) {
-    const wrap = document.getElementById('bic-container');
-    if (!wrap) return;
-
-    wrap.innerHTML = `
-      <div class="bic-page-picker">
-        <div class="bic-page-picker-head">
-          <i class="fab fa-facebook bic-fb-icon"></i>
-          <h2>${window.__('¿Qué página quieres conectar?')}</h2>
-          <p>${window.__('Tu cuenta tiene acceso a <strong>{n} páginas</strong>. Elige la que corresponde a esta marca.', { n: pages.length })}</p>
-        </div>
-        <ul class="bic-page-list" id="bicPageList">
-          ${pages.map((pg) => {
-            const pic  = typeof pg.picture === 'string' ? pg.picture : (pg.picture?.data?.url || null);
-            const hasIg = !!pg.instagram_business_account?.id;
-            return `
-              <li class="bic-page-item" data-id="${this._esc(pg.id)}">
-                <label class="bic-page-label">
-                  <input type="radio" name="bic_page" value="${this._esc(pg.id)}" class="bic-page-radio">
-                  <div class="bic-page-info">
-                    ${pic
-                      ? `<img src="${this._esc(pic)}" class="bic-page-avatar" alt="" loading="lazy" decoding="async">`
-                      : `<div class="bic-page-avatar bic-page-avatar--placeholder"><i class="fab fa-facebook"></i></div>`}
-                    <div class="bic-page-text">
-                      <strong>${this._esc(pg.name)}</strong>
-                      ${hasIg ? `<span class="bic-page-ig"><i class="fab fa-instagram"></i> ${window.__('Instagram Business vinculado')}</span>` : ''}
-                    </div>
-                  </div>
-                </label>
-              </li>`;
-          }).join('')}
-        </ul>
-        <div class="bic-page-actions">
-          <button id="bicConfirmBtn" class="bic-confirm-btn" disabled>
-            <i class="aisc-ico aisc-ico--check"></i> ${window.__('Conectar esta página')}
-          </button>
-        </div>
-        <p class="bic-page-note">${window.__('Solo se conectará la página elegida. El resto quedará excluido.')}</p>
-      </div>`;
-
-    const list = document.getElementById('bicPageList');
-    const btn  = document.getElementById('bicConfirmBtn');
-
-    list?.addEventListener('change', (e) => {
-      if (e.target?.name !== 'bic_page') return;
-      list.querySelectorAll('.bic-page-item').forEach((li) => li.classList.remove('is-selected'));
-      e.target.closest('.bic-page-item')?.classList.add('is-selected');
-      if (btn) btn.disabled = false;
-    });
-
-    btn?.addEventListener('click', async () => {
-      const radio = list?.querySelector('input[name="bic_page"]:checked');
-      if (!radio) return;
-      const page = pages.find((p) => p.id === radio.value);
-      if (!page) return;
-
-      btn.disabled = true;
-      btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${window.__('Guardando…')}`;
-
-      try {
-        await this._savePage(integId, page);
-        this._showSuccess('facebook', returnTo);
-      } catch (err) {
-        console.error('[BrandIntegrationCallback] save page error:', err);
-        btn.disabled = false;
-        btn.innerHTML = `<i class="aisc-ico aisc-ico--check"></i> ${window.__('Conectar esta página')}`;
-        alert(window.__('No se pudo guardar. Inténtalo de nuevo.'));
-      }
-    });
-  }
-
-  // ── Pantalla: sin páginas ─────────────────────────────────────────────────
-
-  _showNoPages(returnTo) {
-    const wrap = document.getElementById('bic-container');
-    if (!wrap) return;
-    const safeReturn = this._safeInternalPath(returnTo);
-    wrap.innerHTML = `
-      <div class="bic-error">
-        <i class="aisc-ico aisc-ico--flag"></i>
-        <h2>${window.__('No se encontraron páginas')}</h2>
-        <p>
-          ${window.__('Tu cuenta de Facebook no devolvió ninguna Página. Puede ocurrir si no seleccionaste ninguna en el paso de autorización de Meta.')}
-        </p>
-        <ul style="text-align:left;font-size:.88rem;line-height:1.6;color:var(--text-secondary);max-width:440px;margin:0 auto 1.25rem">
-          <li>${window.__('Haz clic en <strong>Volver</strong> y vuelve a conectar Meta.')}</li>
-          <li>${window.__('En el diálogo de Facebook, en el paso <em>"Elige qué páginas conectar"</em>, asegúrate de seleccionar al menos una página antes de continuar.')}</li>
-          <li>${window.__('Si no eres Administrador de ninguna Página, primero crea una o pide acceso de administrador.')}</li>
-        </ul>
-        <button type="button" class="bic-confirm-btn" data-bic-back="1">
-          <i class="aisc-ico aisc-ico--arrow-left"></i> ${window.__('Volver')}
-        </button>
-      </div>`;
-    wrap.querySelector('[data-bic-back="1"]')?.addEventListener('click', () => this._redirect(safeReturn));
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
-
-  /**
-   * Valida que `path` sea una ruta interna segura (misma app, sin esquema, sin `//`
-   * para que el router no lo interprete como protocol-relative). Si no lo es,
-   * devuelve `/brands` (fallback seguro).
-   *
-   * Rechazamos deliberadamente `?`, `#`, `%`, `&`, `=`, espacios y comillas —
-   * nunca necesarios en una ruta interna y sí utilizables para XSS/open-redirect
-   * si el valor llegara a un atributo HTML o a `window.location.href`.
-   */
   _safeInternalPath(path) {
     const s = typeof path === 'string' ? path.trim() : '';
     if (!s || s.length > 200) return '/brands';
@@ -267,7 +68,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
     else window.location.href = safe;
   }
 
-  _showSuccess(platform, returnTo) {
+  _showSuccess(platform, returnTo, cuenta = '') {
     const safe = this._safeInternalPath(returnTo);
     const wrap = document.getElementById('bic-container');
     if (!wrap) { this._redirect(safe); return; }
@@ -276,12 +77,13 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       : platform === 'mercadolibre' ? 'Mercado Libre'
       : platform === 'x' ? 'X'
       : platform === 'tiktok' ? 'TikTok'
+      : platform === 'linkedin' ? 'LinkedIn'
       : 'Meta';
     wrap.innerHTML = `
       <div class="bic-success">
         <div class="bic-success-check"><i class="aisc-ico aisc-ico--check"></i></div>
         <h2>${window.__('Integración conectada')}</h2>
-        <p>${window.__('{label} se conectó correctamente a tu marca.', { label: this._esc(label) })}</p>
+        <p>${cuenta ? window.__('{label} se conectó a tu marca como «{cuenta}».', { label: this._esc(label), cuenta: this._esc(cuenta) }) : window.__('{label} se conectó correctamente a tu marca.', { label: this._esc(label) })}</p>
         <button type="button" class="bic-confirm-btn" data-bic-continue="1">
           <i class="aisc-ico aisc-ico--arrow-right"></i> ${window.__('Continuar')}
         </button>
