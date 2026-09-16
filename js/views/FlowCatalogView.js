@@ -354,15 +354,13 @@ class FlowCatalogView extends BaseView {
       recent: this.recentRunFlowIds || [],
     });
 
-    const specs = [
-      { name: 'cf', table: 'content_flows', onChange: () => this._liveTick() }, // catalogo global
-    ];
-    if (this.userId) {
-      specs.push({ name: 'likes', table: 'user_flow_likes', filter: `user_id=eq.${this.userId}`, onChange: () => this._liveTick() });
-      specs.push({ name: 'runs',  table: 'flow_runs',       filter: `user_id=eq.${this.userId}`, onChange: () => this._liveTick() });
-    }
+    // Base nueva: las tablas viven en el schema flows (la 180000 publica flows.runs;
+    // hasta entonces Realtime no entrega y el sondeo de 60 s es la red).
+    const specs = [];
+    if (this.userId) specs.push({ name: 'likes', schema: 'flows', table: 'likes', filter: `user_id=eq.${this.userId}`, onChange: () => this._liveTick() });
     if (this.organizationId) {
-      specs.push({ name: 'saves', table: 'org_flow_saves', filter: `organization_id=eq.${this.organizationId}`, onChange: () => this._liveTick() });
+      specs.push({ name: 'runs', schema: 'flows', table: 'runs', filter: `organization_id=eq.${this.organizationId}`, onChange: () => this._liveTick() });
+      specs.push({ name: 'saves', schema: 'flows', table: 'saves', filter: `organization_id=eq.${this.organizationId}`, onChange: () => this._liveTick() });
     }
     this.liveSubscribe(specs);
     this.startLivePoll(60000, () => this._liveTick());
@@ -401,81 +399,28 @@ class FlowCatalogView extends BaseView {
     }
   }
 
+  /** Corte: flows.categories (raíz) por FlujosDataService, forma content_categories. */
   async loadCategories() {
-    if (!this.supabase) return;
-    try {
-      // Config global, cambia rarísimo. Cache 10 min + SWR.
-      const fetcher = async () => {
-        const { data, error } = await this.supabase
-          .from('content_categories')
-          .select('id, name, description, order_index, cover_url, cover_type, cover_storage_path, is_visible')
-          .eq('is_visible', true)
-          .order('order_index', { ascending: true, nullsFirst: false })
-          .order('name');
-        return !error && data ? data : [];
-      };
-      const list = window.apiClient
-        ? await window.apiClient.query('flow:categories', fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-      this.categories = (list || []).filter((c) => c.is_visible !== false);
-    } catch (e) {
-      console.error('FlowCatalog loadCategories:', e);
-      this.categories = [];
-    }
+    if (!window.FlujosDatos) { this.categories = []; return; }
+    try { this.categories = (await window.FlujosDatos.categorias()).categories; }
+    catch (e) { console.error('FlowCatalog loadCategories:', e); this.categories = []; }
   }
 
+  /** Subcategorías = categorías con parent_id (category_ids = [parent]). */
   async loadSubcategories() {
-    if (!this.supabase) return;
-    try {
-      const fetcher = async () => {
-        // Embed many-to-many: content_subcategory_categories es el junction
-        // que define qué subcategorías aplican a cada categoría. Cargamos
-        // los category_ids junto a cada subcategoría para que el strip de
-        // chips no dependa de que haya flows asignados.
-        const { data, error } = await this.supabase
-          .from('content_subcategories')
-          .select('id, name, description, order_index, content_subcategory_categories(category_id)')
-          .order('order_index', { ascending: true, nullsFirst: false })
-          .order('name');
-        if (error || !data) return [];
-        return data.map(s => ({
-          ...s,
-          category_ids: (s.content_subcategory_categories || []).map(j => j.category_id)
-        }));
-      };
-      this.subcategories = window.apiClient
-        ? await window.apiClient.query('flow:subcategories', fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-    } catch (e) {
-      console.error('FlowCatalog loadSubcategories:', e);
-      this.subcategories = [];
-    }
+    if (!window.FlujosDatos) { this.subcategories = []; return; }
+    try { this.subcategories = (await window.FlujosDatos.categorias()).subcategories; }
+    catch (e) { console.error('FlowCatalog loadSubcategories:', e); this.subcategories = []; }
   }
 
-  /**
-   * Carga flujos del catálogo. Solo flujos publicados y con "mostrar en catálogo" activado.
-   * Filtra por category_id o subcategory_id según la vista activa.
-   */
+  /** flows.catalog_view (comunes + de la marca, publicados y visibles), forma content_flows. */
   async loadFlows() {
-    if (!this.supabase) return;
+    if (!window.FlujosDatos) { this.flows = []; this.flowsById = new Map(); return; }
     try {
-      // Cache key incluye los filtros activos para distinguir vistas (home vs categoría/sub).
       const filterKey = this.selectedSubcategoryId ? `sub:${this.selectedSubcategoryId}` : (this.selectedCategoryId ? `cat:${this.selectedCategoryId}` : 'home');
-      const fetcher = async () => {
-        let q = this.supabase
-          .from('content_flows')
-          .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at, status, version, execution_mode')
-          .eq('is_active', true)
-          .eq('status', 'published')
-          .eq('show_in_catalog', true)
-          .neq('flow_category_type', 'system');
-        if (this.selectedSubcategoryId) q = q.eq('subcategory_id', this.selectedSubcategoryId);
-        else if (this.selectedCategoryId) q = q.eq('category_id', this.selectedCategoryId);
-        const { data, error } = await q.order('created_at', { ascending: false });
-        return !error && data ? data : [];
-      };
+      const fetcher = () => window.FlujosDatos.flujos(this.organizationId, { categoriaId: this.selectedCategoryId || null, subcategoriaId: this.selectedSubcategoryId || null });
       const flows = window.apiClient
-        ? await window.apiClient.query(`flow:flows:${filterKey}`, fetcher, { ttl: 2 * 60 * 1000, staleWhileRevalidate: true })
+        ? await window.apiClient.query(`flow:flows:${this.organizationId || 'comun'}:${filterKey}`, fetcher, { ttl: 2 * 60 * 1000, staleWhileRevalidate: true })
         : await fetcher();
       this.flows = flows || [];
       this.flowsById = new Map(this.flows.map(f => [f.id, f]));
@@ -489,34 +434,10 @@ class FlowCatalogView extends BaseView {
   async loadLikesAndSaves() {
     this.likedFlowIds = new Set();
     this.savedFlowIds = new Set();
-    if (!this.supabase) return;
+    if (!window.FlujosDatos) return;
     try {
-      const likesFetcher = async () => {
-        if (!this.userId) return [];
-        const { data, error } = await this.supabase
-          .from('user_flow_likes')
-          .select('flow_id')
-          .eq('user_id', this.userId);
-        return !error && data ? data : [];
-      };
-      const savesFetcher = async () => {
-        if (!this.organizationId) return [];
-        const { data, error } = await this.supabase
-          .from('org_flow_saves')
-          .select('flow_id')
-          .eq('organization_id', this.organizationId);
-        return !error && data ? data : [];
-      };
-      const [likes, saves] = await Promise.all([
-        window.apiClient
-          ? window.apiClient.query(`flow:likes:${this.userId}`, likesFetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
-          : likesFetcher(),
-        window.apiClient
-          ? window.apiClient.query(`flow:saves:${this.organizationId}`, savesFetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
-          : savesFetcher()
-      ]);
-      (likes || []).forEach(r => r.flow_id && this.likedFlowIds.add(r.flow_id));
-      (saves || []).forEach(r => r.flow_id && this.savedFlowIds.add(r.flow_id));
+      const { likes, saves } = await window.FlujosDatos.likesYGuardados(this.organizationId, this.userId);
+      this.likedFlowIds = likes; this.savedFlowIds = saves;
     } catch (e) {
       console.error('FlowCatalog loadLikesAndSaves:', e);
     }
@@ -524,33 +445,11 @@ class FlowCatalogView extends BaseView {
 
   async loadRecentRuns() {
     this.recentRunFlowIds = [];
-    if (!this.supabase || !this.userId) return;
+    if (!window.ProduccionesDatos || !this.organizationId) return;
     try {
-      const fetcher = async () => {
-        let q = this.supabase
-          .from('flow_runs')
-          .select('flow_id')
-          .eq('user_id', this.userId);
-        // "Usados recientemente" debe reflejar solo la org activa, no la actividad
-        // del usuario en otras orgs.
-        if (this.organizationId) q = q.eq('organization_id', this.organizationId);
-        const { data, error } = await q
-          .order('created_at', { ascending: false })
-          .limit(50);
-        return !error && data ? data : [];
-      };
-      const data = window.apiClient
-        ? await window.apiClient.query(`flow:recent_runs:${this.organizationId || this.userId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-      if (data) {
-        const seen = new Set();
-        data.forEach(r => {
-          if (r.flow_id && !seen.has(r.flow_id)) {
-            seen.add(r.flow_id);
-            this.recentRunFlowIds.push(r.flow_id);
-          }
-        });
-      }
+      const corridas = await window.ProduccionesDatos.corridas(this.organizationId, { desde: 0, limite: 50 });
+      const seen = new Set();
+      corridas.forEach((r) => { if (r.flow_id && !seen.has(r.flow_id)) { seen.add(r.flow_id); this.recentRunFlowIds.push(r.flow_id); } });
     } catch (e) {
       console.error('FlowCatalog loadRecentRuns:', e);
     }
@@ -1465,52 +1364,32 @@ class FlowCatalogView extends BaseView {
     return prefix ? `${prefix}/execution-history` : '/execution-history';
   }
 
-  async _autopilotRunIds() {
-    if (!this.supabase) return [];
-    try {
-      const { data } = await this.supabase.from('runs_inputs').select('run_id').eq('captured_from', 'autopilot_ingest');
-      return [...new Set((data || []).map(r => r.run_id).filter(Boolean))];
-    } catch (_) { return []; }
-  }
+  /** El autopilot de v1 no existe en la base nueva. */
+  async _autopilotRunIds() { return []; }
 
-  // Sesiones manuales recientes con sus outputs (mismo modelo que Record).
+  /** Últimas corridas de la marca con sus salidas (flows.runs + public.salidas por file_id). */
   async loadRecentProductions(limit = 12) {
-    if (!this.supabase) return [];
+    if (!window.ProduccionesDatos || !this.organizationId) return [];
     try {
-      const autopilotIds = await this._autopilotRunIds();
-      let q = this.supabase.from('flow_runs')
-        .select('id, flow_id, status, created_at')
-        .order('created_at', { ascending: false })
-        .limit(limit);
-      if (this.organizationId) q = q.eq('organization_id', this.organizationId);
-      else if (this.userId) q = q.eq('user_id', this.userId);
-      if (autopilotIds.length) q = q.not('id', 'in', `(${autopilotIds.join(',')})`);
-      const { data: runs, error } = await q;
-      if (error || !Array.isArray(runs) || !runs.length) return [];
-      const flowIds = [...new Set(runs.map(r => r.flow_id).filter(Boolean))];
-      const runIds = runs.map(r => r.id);
-      const [flowsRes, outsRes] = await Promise.all([
-        flowIds.length ? this.supabase.from('content_flows').select('id, name, flow_image_url').in('id', flowIds) : Promise.resolve({ data: [] }),
-        this.supabase.from('runs_outputs').select('run_id, output_type, storage_path, storage_object_id, created_at').in('run_id', runIds).order('created_at', { ascending: false })
-      ]);
-      const flowMap = (flowsRes.data || []).reduce((a, f) => { a[f.id] = f; return a; }, {});
+      const runs = await window.ProduccionesDatos.corridas(this.organizationId, { desde: 0, limite: limit });
+      if (!runs.length) return [];
+      const outs = await window.ProduccionesDatos.salidas(this.organizationId, runs.map((r) => r.id));
       const byRun = {};
-      (outsRes.data || []).forEach(o => { (byRun[o.run_id] = byRun[o.run_id] || []).push(o); });
+      outs.forEach((o) => { (byRun[o.run_id] = byRun[o.run_id] || []).push(o); });
       const MAX = 8;
-      return runs.map(r => {
-        const flow = flowMap[r.flow_id] || null;
-        const outs = byRun[r.id] || [];
+      return runs.map((r) => {
+        const flow = this.flowsById.get(r.flow_id) || null;
+        const list = byRun[r.id] || [];
         const images = [];
-        for (const o of outs) {
-          if ((o.output_type || '').toLowerCase() === 'text') continue;
-          const url = this.getPublicUrlFromStorage('production-outputs', o.storage_path)
-            || this.getPublicUrlFromStorage('outputs', o.storage_path)
-            || this.getPublicUrlFromStorage('production-outputs', o.storage_object_id);
+        for (const o of list) {
+          if ((o.output_type || '').toLowerCase() === 'text' || (o.output_type || '').toLowerCase() === 'json') continue;
+          const url = o.storage_path;
           if (url && !images.includes(url)) images.push(url);
           if (images.length >= MAX) break;
         }
         if (!images.length && flow?.flow_image_url) images.push(flow.flow_image_url);
-        return { ...r, flow_name: flow?.name || __('Flujo eliminado'), flow_slug: flow ? this.flowNameToSlug(flow.name) : '', images, output_count: outs.length };
+        const nombre = r.content_flows?.name || flow?.name || __('Flujo');
+        return { ...r, flow_name: nombre, flow_slug: flow ? this.flowNameToSlug(flow.name) : this.flowNameToSlug(nombre), images, output_count: list.length };
       });
     } catch (e) { console.warn('loadRecentProductions:', e); return []; }
   }
@@ -1784,16 +1663,12 @@ class FlowCatalogView extends BaseView {
   }
 
   async toggleLike(flowId) {
-    if (!this.supabase || !this.userId) return;
+    if (!window.FlujosDatos || !this.userId) return;
     const flow = this.flowsById.get(flowId) || this.flows.find(f => f.id === flowId);
     try {
-      const { data, error } = await this.supabase.rpc('toggle_user_flow_like', { p_flow_id: flowId });
-      if (error) throw error;
-      const nowLiked = data === true;
-      if (nowLiked) this.likedFlowIds.add(flowId);
-      else this.likedFlowIds.delete(flowId);
+      const nowLiked = await window.FlujosDatos.alternarLike(flowId, this.userId);
+      if (nowLiked) this.likedFlowIds.add(flowId); else this.likedFlowIds.delete(flowId);
       if (flow) flow.likes_count = Math.max(0, (flow.likes_count || 0) + (nowLiked ? 1 : -1));
-      window.apiClient?.invalidate(`flow:likes:${this.userId}`);
     } catch (e) {
       console.error('toggleLike:', e);
       return;
@@ -1802,30 +1677,20 @@ class FlowCatalogView extends BaseView {
   }
 
   async toggleSave(flowId) {
-    if (!this.supabase || !this.organizationId) return;
+    if (!window.FlujosDatos || !this.organizationId) return;
     const flow = this.flowsById.get(flowId) || this.flows.find(f => f.id === flowId);
     try {
-      const { data, error } = await this.supabase.rpc('toggle_org_flow_save', {
-        p_org_id: this.organizationId,
-        p_flow_id: flowId
-      });
-      if (error) throw error;
-      const nowSaved = data === true;
-      if (nowSaved) this.savedFlowIds.add(flowId);
-      else this.savedFlowIds.delete(flowId);
+      const nowSaved = await window.FlujosDatos.alternarGuardado(flowId, this.organizationId, this.userId);
+      if (nowSaved) this.savedFlowIds.add(flowId); else this.savedFlowIds.delete(flowId);
       if (flow) flow.saves_count = Math.max(0, (flow.saves_count || 0) + (nowSaved ? 1 : -1));
-      window.apiClient?.invalidate(`flow:saves:${this.organizationId}`);
     } catch (e) {
       console.error('toggleSave:', e);
       return;
     }
     this.refreshFlowLikeSaveUI(flowId);
-    // En My Flows, desguardar saca el card de la vista al instante.
     if (this.savedView) this.renderSavedFlows();
   }
 
-  // Refresca el estado like/save en TODAS las superficies del flow: cards del
-  // catalogo (puede haber varias) y los botones del modal de detalle si esta abierto.
   refreshFlowLikeSaveUI(flowId) {
     const liked = this.likedFlowIds.has(flowId);
     const saved = this.savedFlowIds.has(flowId);
@@ -1918,38 +1783,16 @@ class FlowCatalogView extends BaseView {
   // sin filtrar por organization_id se filtran producciones de otra org (p.ej. las
   // de IGNIS apareciendo en WAKEUP). content_flows es catálogo global compartido,
   // pero sus runs/producciones son por org.
+  /** Últimas corridas de UN flujo con su salida principal (para la tarjeta). */
   async loadFlowRuns(flowId, limit = 2) {
-    if (!this.supabase || !flowId) return [];
+    if (!window.ProduccionesDatos || !flowId || !this.organizationId) return [];
     try {
-      let q1 = this.supabase
-        .from('flow_runs')
-        .select('id, created_at, status')
-        .eq('flow_id', flowId);
-      if (this.organizationId) q1 = q1.eq('organization_id', this.organizationId);
-      let { data: runs, error } = await q1
-        .order('created_at', { ascending: false })
-        .limit(8);
-      if (error) {
-        // status puede no existir en algun entorno → reintento minimo
-        let q2 = this.supabase
-          .from('flow_runs')
-          .select('id, created_at')
-          .eq('flow_id', flowId);
-        if (this.organizationId) q2 = q2.eq('organization_id', this.organizationId);
-        const r2 = await q2
-          .order('created_at', { ascending: false })
-          .limit(8);
-        runs = r2.data; error = r2.error;
-      }
-      if (error || !Array.isArray(runs) || !runs.length) return [];
-      const runIds = runs.map(r => r.id);
-      const { data: outs } = await this.supabase
-        .from('runs_outputs')
-        .select('id, run_id, output_type, storage_path, metadata, created_at')
-        .in('run_id', runIds)
-        .order('created_at', { ascending: false });
+      const todas = await window.ProduccionesDatos.corridas(this.organizationId, { desde: 0, limite: 60 });
+      const runs = todas.filter((r) => r.flow_id === flowId).slice(0, 8);
+      if (!runs.length) return [];
+      const outs = await window.ProduccionesDatos.salidas(this.organizationId, runs.map((r) => r.id));
       const byRun = new Map();
-      (outs || []).forEach(o => { if (!byRun.has(o.run_id)) byRun.set(o.run_id, this.resolveRunMedia(o)); });
+      outs.forEach((o) => { if (!byRun.has(o.run_id)) byRun.set(o.run_id, this.resolveRunMedia(o)); });
       const result = [];
       for (const r of runs) {
         result.push({ ...r, output: byRun.get(r.id) || null });

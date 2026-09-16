@@ -382,17 +382,16 @@ class App {
     // r.register('/brand-storage', brandStorageViewLoader, auth);
     // r.register('/brandstorage', brandStorageViewLoader, auth);
     const redirectBrandStorageToBrand = class extends (window.BaseView || class {}) {
-      async onEnter() {
+      async render() {
+        const c = document.getElementById('app-container');
+        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
         if (!window.router) return;
         const p = this.routeParams || {};
         const target = (p.orgIdShort && p.orgNameSlug)
           ? `/org/${p.orgIdShort}/${p.orgNameSlug}/brand`
           : '/brand-organization';
-        window.router.navigate(target, true);
-      }
-      async render() {
-        const c = document.getElementById('app-container');
-        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+        // onEnter() lo llama BaseView.render(): al reescribir render() hay que navegar aquí.
+        setTimeout(() => window.router.navigate(target, true), 0);
       }
     };
     r.register('/org/:orgIdShort/:orgNameSlug/brand-storage', redirectBrandStorageToBrand, auth);
@@ -482,6 +481,29 @@ class App {
     r.register('/studio/catalog/:categoryId', catalogLoader, auth);
     r.register('/studio/catalog', catalogLoader, auth);
 
+    // Corte ADR-0052: los dos flujos del Studio (imagen-directa / video-directo; en el
+    // catálogo «Imagen» y «Video») se producen en /image y /video. Se registran ANTES
+    // del runner genérico /studio/:flowSlug (el router casa por orden), que sigue «en obras».
+    // OJO: onEnter() lo llama BaseView.render(); una vista que reescribe render() tiene
+    // que navegar desde render() (redirectBrandStorageToBrand arrastra ese mismo silencio).
+    const redirectStudioFlow = (destino) => class extends (window.BaseView || class {}) {
+      async render() {
+        const c = document.getElementById('app-container');
+        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+        if (!window.router) return;
+        const p = this.routeParams || {};
+        const prefix = (p.orgIdShort && p.orgNameSlug) ? `/org/${p.orgIdShort}/${p.orgNameSlug}` : '';
+        setTimeout(() => window.router.navigate(`${prefix}/${destino}`, true), 0);
+      }
+    };
+    for (const slug of ['imagen-directa', 'imagen', 'image']) {
+      r.register(`/org/:orgIdShort/:orgNameSlug/studio/${slug}`, redirectStudioFlow('image'), auth);
+      r.register(`/studio/${slug}`, redirectStudioFlow('image'), auth);
+    }
+    for (const slug of ['video-directo', 'video']) {
+      r.register(`/org/:orgIdShort/:orgNameSlug/studio/${slug}`, redirectStudioFlow('video'), auth);
+      r.register(`/studio/${slug}`, redirectStudioFlow('video'), auth);
+    }
     r.register('/org/:orgIdShort/:orgNameSlug/studio', studioLoader, auth);
     r.register('/studio', studioLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/studio/:flowSlug', studioLoader, auth);

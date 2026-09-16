@@ -1014,7 +1014,8 @@ class BaseView {
     if (!this._liveChannels) this._liveChannels = [];
     for (const s of specs) {
       if (!s?.table) continue;
-      const cfg = { event: s.event || '*', schema: 'public', table: s.table };
+      // Base nueva: las tablas viven en schemas propios (flows, ai, social…); 'public' sigue siendo el defecto.
+      const cfg = { event: s.event || '*', schema: s.schema || 'public', table: s.table };
       if (s.filter) cfg.filter = s.filter;
       try {
         const ch = sb
