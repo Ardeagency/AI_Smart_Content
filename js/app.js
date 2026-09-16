@@ -445,7 +445,7 @@ class App {
     r.register('/identities/:entityId', redirectIdentitiesToProducts, auth);
 
     // ── Org: Studio ──
-    const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/products.js', '/js/views/StudioView.js']);
+    const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/views/StudioView.js']);
     const catalogLoader = this._lazy('FlowCatalogView', ['/js/views/FlowCatalogView.js']);
     // 'saved' (My Flows) ANTES de :categoryId para que el literal gane al param.
     r.register('/org/:orgIdShort/:orgNameSlug/studio/flows/saved', catalogLoader, auth);
