@@ -29,6 +29,7 @@ describe('Catálogo de flujos · formas de v1', () => {
     expect(F.entradaACampo({ key: 'm', kind: 'market_ref' }, { mercados: [{ value: 'm1', label: 'CO' }] })).toMatchObject({ input_type: 'select', options: [{ value: 'm1', label: 'CO' }] });
     expect(F.entradaACampo({ key: 'on', kind: 'boolean' })).toMatchObject({ input_type: 'toggle' });
     expect(F.entradaACampo({ key: 'n', kind: 'number' })).toMatchObject({ input_type: 'number' });
-    expect(F.entradaACampo({ key: 'raro', kind: 'lo_que_sea' })).toMatchObject({ input_type: 'text' });
+    expect(F.entradaACampo({ key: 'raro', kind: 'lo_que_sea' })).toMatchObject({ input_type: 'text', label: 'Raro' });
+    expect(F.entradaACampo({ key: 'aspect_ratio', label: 'aspect_ratio', kind: 'select' }).label).toBe('Aspect ratio');
   });
 });

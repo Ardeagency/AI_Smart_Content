@@ -75,11 +75,17 @@
    */
   const KIND_A_TIPO = Object.freeze({ text: 'text', long_text: 'textarea', number: 'number', boolean: 'toggle', select: 'select', multi_select: 'multi_select', image: 'file', video: 'file', audio: 'file', file: 'file', url: 'text', date: 'text', color: 'text', gradient: 'text', element_ref: 'select', market_ref: 'select' });
   const ACEPTA = Object.freeze({ image: 'image/*', video: 'video/*', audio: 'audio/*', file: '*' });
+  /** `aspect_ratio` → «Aspect ratio»: respaldo cuando el label viene vacío o igual a la clave (herencia de v1). */
+  function humanizar(clave) {
+    const t = String(clave || '').replace(/[_-]+/g, ' ').trim();
+    return t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
+  }
   function entradaACampo(fila, opciones = {}) {
     const kind = String(fila.kind || 'text');
     const tipo = KIND_A_TIPO[kind] || 'text';
+    const label = (!fila.label || fila.label === fila.key) ? humanizar(fila.key) : fila.label;
     const campo = {
-      key: fila.key, name: fila.key, label: fila.label || fila.key, description: fila.help_text || '',
+      key: fila.key, name: fila.key, label, description: fila.help_text || '',
       input_type: tipo, type: tipo, required: fila.is_required === true, kind, position: fila.position ?? 0,
       options: Array.isArray(fila.options) ? fila.options : [],
       defaultValue: fila.default_value ?? undefined, validation: fila.validation || {},
