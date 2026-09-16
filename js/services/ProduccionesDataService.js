@@ -12,6 +12,9 @@
  *     duration_ms, creditos_aprox, estado_corrida, created_at) — manda file_id →
  *     url_galeria/url_publica (StudioDatos.urlsDeArchivos); `url` solo sin archivo.
  *   · Entradas: T flows.run_inputs(id, run_id, key, value) — lo que se pidió.
+ *   · Aprobaciones (vera.md): T ai.pending_actions(run_id, action, permission, summary, payload,
+ *     decided_at…) — una corrida `awaiting_approval` espera que la persona decida por el borde
+ *     (POST /v1/aprobaciones/:id {aprobar, nota}); decide quien TIENE el permiso que la acción pide.
  *   · Likes/guardados de v1 (production_output_likes) NO existen para salidas:
  *     flows.likes/saves son por FLUJO. Borrar una salida no tiene puerta; se da
  *     de baja el ARCHIVO por DELETE /v1/archivos/:id (editar_marca).
@@ -118,6 +121,34 @@
     return (r.data || []).map((f) => corridaAV1(f, nombres));
   }
 
+  /** Una corrida por id (forma flow_runs de v1) — para sondear estado sin listar la marca entera. */
+  async function corrida(orgId, runId) {
+    const sb = await cliente();
+    if (!sb || !orgId || !runId) return null;
+    const [r, nombres] = await Promise.all([
+      sb.schema('flows').from('runs').select('id, organization_id, flow_id, market_id, version_id, user_id, agent_id, status, error, credits_charged, started_at, finished_at, created_at').eq('id', runId).maybeSingle(),
+      nombresDeFlujos(orgId),
+    ]);
+    aviso('flows.runs (una)', r);
+    return r.data ? corridaAV1(r.data, nombres) : null;
+  }
+
+  /** Aprobaciones que una corrida tiene pendientes (ai.pending_actions con run_id, sin decidir). */
+  async function aprobacionesPendientes(orgId, runId) {
+    const sb = await cliente();
+    if (!sb || !orgId || !runId) return [];
+    const r = await sb.schema('ai').from('pending_actions').select('id, run_id, agent_id, action, permission, summary, payload, created_at').eq('organization_id', orgId).eq('run_id', runId).is('decided_at', null).order('created_at', { ascending: true });
+    aviso('ai.pending_actions', r);
+    return r.data || [];
+  }
+
+  /** Decidir una aprobación por el borde: POST /v1/aprobaciones/:id {aprobar, nota} (rechazar exige motivo ≥5). */
+  async function decidirAprobacion(orgId, id, aprobar, nota = null) {
+    const a = api();
+    if (!a) throw Object.assign(new Error('El borde no está configurado (AISC_API_URL): las aprobaciones aún no se deciden desde esta consola.'), { code: 'sin_api' });
+    try { return await a.decidirAprobacion(id, orgId, aprobar ? 'aprobar' : 'rechazar', nota || undefined); } catch (e) { if (e?.codigo) e.code = e.codigo; throw e; }
+  }
+
   /** Salidas de unas corridas (o de toda la marca si runIds está vacío). Forma runs_outputs de v1. */
   async function salidas(orgId, runIds = [], { limite = 200 } = {}) {
     const sb = await cliente();
@@ -154,7 +185,7 @@
   }
 
   window.ProduccionesDatos = Object.freeze({
-    corridas, salidas, entradas, borrarArchivoDeSalida, nombresDeFlujos,
+    corridas, corrida, salidas, entradas, borrarArchivoDeSalida, nombresDeFlujos, aprobacionesPendientes, decidirAprobacion,
     mapeo: Object.freeze({ corridaAV1, salidaAV1, entradaAV1, entradasPorCorrida }),
     _inyectarCliente(sb) { clienteInyectado = sb; },
   });

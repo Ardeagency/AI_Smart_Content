@@ -94,6 +94,9 @@ class StudioView extends BaseView {
       }
       // ¿El backend marcó el run como fallido? Avisar ya, sin esperar el tope.
       if (await this._isRunFailed(runId)) { this._renderRunErrorState(runId); return; }
+      // ¿La corrida espera que la persona apruebe un paso? Pintar la aprobación y parar el
+      // sondeo hasta que decida (al decidir se retoma).
+      if (await this._pintarAprobacionSiEspera(runId, attempt)) return;
       if (attempt + 1 >= MAX_ATTEMPTS) {
         // Se agotó la espera sin output: tratamos el run como fallido (sin popup).
         this._renderRunErrorState(runId);
@@ -115,6 +118,7 @@ class StudioView extends BaseView {
     if (!runId || !this.organizationId || this._activeRunId !== runId) return false;
     try {
       const c = await this._corrida(runId);
+      this._ultimaCorrida = c;
       const st = String(c?.status || '').toLowerCase();
       if (st === 'failed' || st === 'cancelled' || st === 'canceled') { this._ultimoErrorDeCorrida = c?.error || null; return true; }
       return false;
@@ -123,18 +127,76 @@ class StudioView extends BaseView {
     }
   }
 
-  /** La corrida (forma flow_runs de v1) buscándola en las últimas de la marca. */
+  /**
+   * Corrida `awaiting_approval` (contrato vera.md): la persona decide la acción pendiente
+   * (ai.pending_actions con run_id) por POST /v1/aprobaciones/:id. Devuelve true si pintó
+   * la aprobación (el sondeo se detiene; se retoma al decidir).
+   */
+  async _pintarAprobacionSiEspera(runId, attempt) {
+    const c = this._ultimaCorrida && this._ultimaCorrida.id === runId ? this._ultimaCorrida : await this._corrida(runId);
+    if (String(c?.status || '').toLowerCase() !== 'awaiting_approval') return false;
+    const P = window.ProduccionesDatos;
+    const pendientes = P ? await P.aprobacionesPendientes(this.organizationId, runId) : [];
+    if (!pendientes.length) return false; // ya decidida por otra persona: seguir sondeando
+    this._renderAprobacion(runId, pendientes[0], attempt);
+    return true;
+  }
+
+  _renderAprobacion(runId, p, attempt) {
+    const host = this._stageHost();
+    if (!host || this._activeRunId !== runId) return;
+    const esc = (v) => this.escapeHtmlSafe(v);
+    const ACCION = { read: __('leer'), produce: __('producir'), publish: __('publicar'), spend: __('gastar créditos'), configure: __('configurar') };
+    const pl = p.payload && typeof p.payload === 'object' ? p.payload : {};
+    const texto = pl.texto || pl.prompt || pl.caption || pl.copy || '';
+    const imagen = pl.url || pl.imagen_url || pl.image_url || '';
+    const detalle = Object.entries(pl).filter(([k, v]) => !['texto', 'prompt', 'caption', 'copy', 'url', 'imagen_url', 'image_url'].includes(k) && v != null && typeof v !== 'object').slice(0, 8);
+    host.innerHTML = `
+      <div class="studio-stage" data-aprobacion="${esc(p.id)}">
+        <div class="studio-stage-body"><div class="stage-approval">
+          <p class="stage-approval-title">${__('Vera pide permiso para {accion}', { accion: ACCION[p.action] || esc(p.action) })}</p>
+          <p class="stage-variant-hook">${esc(p.summary || '')}</p>
+          ${imagen && /^https?:\/\//.test(imagen) ? `<div class="stage-image-wrap"><img class="stage-image" src="${esc(imagen)}" alt=""></div>` : ''}
+          ${texto ? `<blockquote class="stage-variant">${esc(texto)}</blockquote>` : ''}
+          ${detalle.length ? `<ul class="stage-variant-scenes">${detalle.map(([k, v]) => `<li><b>${esc(k)}:</b> ${esc(String(v))}</li>`).join('')}</ul>` : ''}
+          <p class="vera-dim">${__('Exige el permiso «{p}».', { p: esc(p.permission || '') })}</p>
+          <textarea class="stage-ajustes" rows="2" placeholder="${__('Motivo (obligatorio si rechazas, mínimo 5 caracteres)…')}"></textarea>
+          <div class="stage-actions">
+            <button type="button" class="studio-btn-producir" data-aprobar="1">${__('Aprobar')}</button>
+            <button type="button" class="pmodal-toolpill" data-aprobar="0">${__('Rechazar')}</button>
+          </div>
+          <p class="stage-approval-msg" aria-live="polite"></p>
+        </div></div>
+      </div>`;
+    const body = host.querySelector('.stage-approval');
+    body.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-aprobar]'); if (!btn) return;
+      const aprobar = btn.getAttribute('data-aprobar') === '1';
+      const nota = (body.querySelector('.stage-ajustes')?.value || '').trim();
+      const msg = body.querySelector('.stage-approval-msg');
+      if (!aprobar && nota.length < 5) { msg.textContent = __('Para rechazar hace falta un motivo de al menos 5 caracteres.'); return; }
+      body.querySelectorAll('[data-aprobar]').forEach((b) => { b.disabled = true; });
+      msg.textContent = aprobar ? __('Aprobando…') : __('Rechazando…');
+      try {
+        await window.ProduccionesDatos.decidirAprobacion(this.organizationId, p.id, aprobar, nota || null);
+        this._ultimaCorrida = null;
+        if (aprobar) { this._renderStageSkeleton(1, __('Vera sigue con la producción…')); this._pollActiveRunOutputs(runId, Math.min(attempt + 1, 4)); }
+        else { msg.textContent = __('Rechazada: la corrida se detiene.'); this._pollActiveRunOutputs(runId, Math.min(attempt + 1, 4)); }
+      } catch (err) {
+        msg.textContent = err?.code === 'sin_api' ? err.message : (err?.status === 403 || err?.code === 'sin_permiso' ? __('No tienes el permiso que esta acción exige.') : (err?.message || __('No se pudo decidir.')));
+        body.querySelectorAll('[data-aprobar]').forEach((b) => { b.disabled = false; });
+      }
+    });
+    this._playNotificationSound();
+  }
+
+  /** La corrida (forma flow_runs de v1) por id. */
   async _corrida(runId) {
     const P = window.ProduccionesDatos;
     if (!P || !runId) return null;
-    for (let desde = 0; desde < 200; desde += 50) {
-      const lote = await P.corridas(this.organizationId, { desde, limite: 50 });
-      const c = lote.find((r) => r.id === runId);
-      if (c) return c;
-      if (lote.length < 50) break;
-    }
-    return null;
+    return P.corrida(this.organizationId, runId);
   }
+
 
 
   /**

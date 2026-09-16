@@ -59,6 +59,9 @@ async function main() {
     ok('salidas de las últimas 5', `${s.length} · con url ${s.filter((x) => x.storage_path).length}`);
     const e = ids.length ? await P.entradas(org.id, ids) : [];
     ok('run_inputs de las últimas 5', `${e.length} filas · claves ${[...new Set(e.map((x) => x.key))].slice(0, 6).join(',')}`);
+    if (ids[0]) { const una = await P.corrida(org.id, ids[0]); if (!una?.id) throw new Error('corrida por id vacía'); ok('corrida por id', `${una.status} · ${una.content_flows?.name || '—'}`); }
+    const ap = ids[0] ? await P.aprobacionesPendientes(org.id, ids[0]) : [];
+    ok('aprobaciones pendientes de la corrida (ai.pending_actions por run_id)', `${ap.length}`);
   } catch (e) { falla('corridas/salidas', e); }
   const slug = env('LANZAR');
   if (!env('AISC_API_URL')) {
