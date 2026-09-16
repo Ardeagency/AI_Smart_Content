@@ -637,6 +637,17 @@ class StudioView extends BaseView {
     if (flowSlug) {
       const found = this.flows.find(f => f.slug === flowSlug || this.flowNameToSlug(f.name) === flowSlug);
       if (found) flowToSelect = found;
+      else if (window.StudioDatos) {
+        // Flujos publicados que no salen en el catálogo (show_in_catalog=false: publicar-meta,
+        // reencuadrar, ampliar, quitar-fondo…) igual se abren por su slug (deep-link ?run=).
+        try {
+          const f = await window.StudioDatos.flujo(flowSlug);
+          if (f?.id) {
+            flowToSelect = this.buildFlowFromFirstModule({ id: f.id, slug: f.slug, name: f.name, description: '', token_cost: f.pricing_mode === 'fixed' ? Number(f.fixed_credits) || 0 : null, pricing_mode: f.pricing_mode, output_type: f.kind, kind: f.kind });
+            this.flows.push(flowToSelect);
+          }
+        } catch (e) { console.warn('[Studio] flujo por slug:', e?.message || e); }
+      }
     }
     if (!flowToSelect && preselectedId) {
       const byId = this.flows.find(f => f.id === preselectedId);
