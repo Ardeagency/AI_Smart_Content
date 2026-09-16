@@ -50,16 +50,12 @@ class CreationProcessView extends BaseView {
     }
   }
 
+  /** Corte: «tener marca» = mi_contexto() trae al menos una organización (membresía real). */
   async _userHasOrg(supabase, userId) {
-    if (!supabase || !userId) return false;
+    if (!supabase || !userId || !window.contextoService) return false;
     try {
-      const [membersRes, ownedRes] = await Promise.all([
-        supabase.from('organization_members').select('organization_id').eq('user_id', userId).limit(1),
-        supabase.from('organizations').select('id').eq('owner_user_id', userId).limit(1),
-      ]);
-      const m = (membersRes.data || []).length > 0;
-      const o = (ownedRes.data || []).length > 0;
-      return m || o;
+      const ctx = await window.contextoService.cargar({ fresco: true });
+      return Array.isArray(ctx?.organizations) && ctx.organizations.length > 0;
     } catch (e) {
       console.warn('CreationProcessView._userHasOrg:', e);
       return false;

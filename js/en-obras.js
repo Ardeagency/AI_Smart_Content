@@ -25,7 +25,7 @@
     // 'production': PORTADA el 16/09 (ProduccionesDataService sobre flows.runs + public.salidas; editar/likes/campaña avisan «en obras»).
     // 'monitoring': PORTADA el 16/09 (MonitoringDataService sobre social.profiles/posts_view, intel.signals, ingest.schedules; URLs vigiladas y clasificador por IA avisan).
     // 'brand' / 'brands' / 'brand-organization': PORTADAS el 16/09 (MarcaDataService, verificar-marca.mjs 14/14).
-    'brand-storage', 'brandstorage',
+    // 'brand-storage' / 'brandstorage': solo redirigen a /brand (portada).
     // 'products' / 'services' / 'places' / 'characters': PORTADAS el 16/09 (CatalogoDataService sobre elements_full; la ficha por IA avisa «en obras»).
     // 'product-detail': PORTADA el 16/09 (ProductsView sobre CatalogoDataService; variantes de solo lectura).
     // 'identities': solo redirige a /products (portada) desde el 16/09.
@@ -35,7 +35,7 @@
     // 'credits' / 'plans': PORTADAS el 16/09 (PlanesDataService, verificar-planes.mjs).
     // 'plans/cancel': PORTADA el 16/09 (la petición sale por correo ya escrito: cancelar no tiene puerta para una persona, planes.md).
     // 'organization': PORTADA el 16/09 (OrganizacionDataService, verificar-organizacion.mjs); resumen y bitácora esperan la 190000.
-    'creation_process',
+    // 'creation_process': PORTADA el 16/09 (la espera del workspace mira mi_contexto(); sin tablas de v1).
   ];
 
   const extra = (typeof window !== 'undefined' && Array.isArray(window.AISC_EN_OBRAS)) ? window.AISC_EN_OBRAS : [];
