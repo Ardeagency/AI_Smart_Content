@@ -742,54 +742,30 @@
     });
     },
 
+  /** Desconectar por el borde: POST /v1/integraciones/:id/desconectar (la conexión es de la marca). */
   async disconnectBrandIntegration(provider, brandContainerId, actionButton = null) {
     const normalizedProvider = String(provider || '').toLowerCase();
-    const brandId = String(brandContainerId || '').trim();
-    if (!brandId || !['google', 'facebook', 'shopify'].includes(normalizedProvider)) return;
+    if (!normalizedProvider) return;
     if (window.DemoGuard?.isDemo?.()) {
       window.DemoGuard.showSignupModal(`desconectar ${normalizedProvider}`);
       return;
     }
-    if (!this.supabase) {
-      alert(__('Supabase no disponible para desconectar integración.'));
-      return;
-    }
-
+    const orgId = this.organizationRow?.id || window.currentOrgId;
+    const conexion = this.findIntegration ? this.findIntegration(brandContainerId, normalizedProvider) : null;
+    const fila = conexion || (this.brandIntegrations || []).find((r) => String(r.platform || '').toLowerCase() === normalizedProvider);
+    if (!fila?.id || !window.apiV2?.api || !orgId) { alert(__('No hay una conexión que desconectar.')); return; }
     try {
       if (actionButton) {
         actionButton.disabled = true;
         actionButton.dataset.originalText = actionButton.textContent || __('Desconectar');
         actionButton.textContent = __('Desconectando...');
       }
-
-      const { data: { session } } = await this.supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) {
-        alert(__('Sesión no válida. Inicia sesión y vuelve a intentar.'));
-        return;
-      }
-
-      const res = await fetch(`${location.origin}/api/integrations/disconnect`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          brand_container_id: brandId,
-          platform: normalizedProvider
-        })
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(json?.error || `No se pudo desconectar (${res.status})`);
-      }
-
+      await window.apiV2.api.desconectar(fila.id, orgId);
       await this.loadData();
       this._refreshInfoPanelIfOpen();
     } catch (error) {
-      console.error('BrandstorageView disconnectBrandIntegration:', error);
-      alert(error?.message || __('No se pudo desconectar la integración.'));
+      console.error('InfoPanel disconnectBrandIntegration:', error);
+      alert(error?.codigo === 'sin_api' ? __('Las integraciones aún no están disponibles.') : (error?.message || __('No se pudo desconectar la integración.')));
     } finally {
       if (actionButton) {
         actionButton.disabled = false;
