@@ -551,14 +551,11 @@
       if (normalizedProvider === 'shopify') {
         const shopDomain = await this._promptShopDomain();
         if (!shopDomain) return;
-        extra.shop = shopDomain;
+        // El borde quiere solo el nombre de la tienda (^[a-z0-9-]+$), sin .myshopify.com
+        extra.shop = String(shopDomain).toLowerCase().replace(/^https?:\/\//, '').replace(/\.myshopify\.com.*$/, '').replace(/\/.*$/, '');
       }
-      // Volver EXACTAMENTE a la página donde estaba la persona al iniciar OAuth.
-      const currentPath = (typeof window !== 'undefined' && window.location?.pathname) || '';
-      extra.return_to = (/^\/[A-Za-z0-9_\-/.]*$/.test(currentPath) && currentPath !== '/brand-integration-callback')
-        ? currentPath
-        : this.getBrandStorageReturnPath();
-      if (brandContainerId) extra.market_id = String(brandContainerId);
+      // El borde (16/09) ignora return_to/market_id: el callback vuelve siempre a
+      // /integraciones?plataforma=…&conectado=1 (o &error=…).
       const url = await window.MarcaDatos.urlParaConectar(orgId, normalizedProvider, extra);
       window.location.href = url;
     } catch (error) {

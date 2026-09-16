@@ -14,6 +14,11 @@
  *
  * El efecto secundario que importa: la vista pasa de cinco consultas y un
  * barrido de credit_usage a UNA sola lectura de credit_packages.
+ *
+ * Corte ADR-0052 (16/09): los paquetes salen de `window.PlanesDatos.paquetes()`
+ * (billing.credit_packages, precio en su moneda) y la compra va por el borde
+ * (`POST /v1/pagos/iniciar` → widget de Wompi). Hasta reprecificar (ADR-0042)
+ * ApiV2 tiene el candado PAGOS_HABILITADOS=false: el botón avisa, no cobra.
  */
 class CreditsShopView extends BaseView {
   constructor() {
@@ -85,30 +90,23 @@ class CreditsShopView extends BaseView {
       } else if (window.supabase) {
         this.supabase = window.supabase;
       }
-      if (this.supabase) {
-        const { data: orgData } = await this.supabase
-          .from('organizations')
-          .select('id, name')
-          .eq('id', this.orgId)
-          .maybeSingle();
-        if (orgData) this.org = orgData;
-      }
+      // El nombre de la marca ya está en el contexto de arranque (mi_contexto).
+      const org = window.contextoService?.org?.(this.orgId) || null;
+      this.org = org ? { id: org.id, name: org.name } : { id: this.orgId, name: window.currentOrgName || null };
     } catch (e) {
       console.error('CreditsShopView initSupabase:', e);
     }
   }
 
   async loadPackages() {
-    if (!this.supabase) return;
-    const { data } = await this.supabase
-      .from('credit_packages')
-      .select('id, name, credits, price_usd, bonus_credits, is_popular, display_order')
-      .eq('is_active', true)
-      .order('display_order', { ascending: true });
-    this.packages = (data || []).map((p) => ({
-      id: p.id, name: p.name, credits: p.credits, bonus: p.bonus_credits || 0,
-      price: Number(p.price_usd) || 0, popular: !!p.is_popular,
-    }));
+    this.packages = window.PlanesDatos ? await window.PlanesDatos.paquetes() : [];
+  }
+
+  /** Precio en su moneda: COP sin decimales (240.000 COP), USD con símbolo. */
+  formatPrecio(p) {
+    const n = Number(p.price) || 0;
+    if (p.currency === 'USD') return `$${n.toLocaleString('en-US')}`;
+    return `${n.toLocaleString('es-CO')} ${this.escapeHtml(p.currency || 'COP')}`;
   }
 
   // ─── render ───────────────────────────────────────────────────────────
@@ -153,7 +151,7 @@ class CreditsShopView extends BaseView {
                 </div>
               </div>
               <div class="credits-pack-buyside">
-                <span class="credits-pack-price">$${p.price}</span>
+                <span class="credits-pack-price">${this.formatPrecio(p)}</span>
                 <button type="button" class="btn btn-primary credits-pack-buy" data-pack-id="${p.id}">
                   ${__('Comprar')}
                 </button>
@@ -175,20 +173,60 @@ class CreditsShopView extends BaseView {
     });
   }
 
-  _onBuyClick(e) {
-    const packId = e.currentTarget.getAttribute('data-pack-id');
-    if (!packId) return;
-    if (!window.billingService) {
-      const msg = __('Billing service no disponible. Recarga la página.');
-      this.showNotification?.(msg, 'error') || alert(msg);
-      return;
+  async _onBuyClick(e) {
+    const btn = e.currentTarget;
+    const packId = btn.getAttribute('data-pack-id');
+    if (!packId || !window.PlanesDatos) return;
+    const avisar = (msg, tipo = 'error') => { if (window.showToast) window.showToast(msg, tipo); else alert(msg); };
+    btn.disabled = true;
+    try {
+      const r = await window.PlanesDatos.iniciarCompra(this.orgId, packId);
+      await this._abrirWompi(r.checkout);
+    } catch (err) {
+      const code = err?.code || err?.codigo;
+      if (code === 'pagos_no_habilitados' || code === 'sin_api') {
+        avisar(__('La compra de créditos se habilita con el corte. Escríbenos a contact@aismartcontent.io si necesitas saldo hoy.'), 'info');
+      } else if (code === 'ficha_de_facturacion_incompleta') {
+        avisar(__('Antes de comprar completa los datos de facturación de la marca (Organización › Suscripción).'), 'info');
+        const prefix = (window.getOrgPathPrefix && window.currentOrgName) ? window.getOrgPathPrefix(this.orgId, window.currentOrgName) : '';
+        window.router?.navigate(`${prefix || ''}/organization/subscription`);
+      } else if (err?.http === 403) {
+        avisar(__('Tu rol no puede comprar créditos en esta marca.'));
+      } else {
+        console.error('CreditsShopView compra:', err);
+        avisar(err?.message || __('No se pudo iniciar la compra.'));
+      }
+    } finally {
+      btn.disabled = false;
     }
-    window.billingService.startCheckout({
-      target:    'package',
-      packageId: packId,
-      gateway:   'auto',
+  }
+
+  /** Abre el widget de Wompi con el checkout firmado por el borde (el monto no se toca aquí). */
+  async _abrirWompi(checkout) {
+    if (!window.WidgetCheckout) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://checkout.wompi.co/widget.js'; s.async = true;
+        s.onload = resolve; s.onerror = () => reject(new Error('No se pudo cargar el widget de Wompi.'));
+        document.head.appendChild(s);
+      });
+    }
+    const w = new window.WidgetCheckout({
+      currency: checkout.currency,
+      amountInCents: checkout.amountInCents,
+      reference: checkout.reference,
+      publicKey: checkout.publicKey,
+      signature: { integrity: checkout.signature?.integrity },
+      redirectUrl: checkout.redirectUrl,
+    });
+    w.open((result) => {
+      const status = result?.transaction?.status || 'UNKNOWN';
+      const avisar = (msg, tipo) => { if (window.showToast) window.showToast(msg, tipo); else alert(msg); };
+      if (status === 'APPROVED') avisar(__('Pago aprobado. El saldo se actualiza en unos segundos.'), 'success');
+      else if (status === 'PENDING') avisar(__('Pago en proceso. Te avisamos cuando se confirme.'), 'info');
+      else avisar(__('Pago no completado ({estado}). Intenta de nuevo.', { estado: status }), 'error');
+      if (window.contextoService?.cargar) window.contextoService.cargar({ fresco: true }).catch(() => {});
     });
   }
 }
-
 window.CreditsShopView = CreditsShopView;

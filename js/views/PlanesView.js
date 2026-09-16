@@ -1,12 +1,15 @@
 /**
  * PlanesView — Página /plans profesional (2026 SaaS standard).
  *
- * 3 tiers (Creator/Team/Agency) — sin Free ni Enterprise (eliminados 2026-05-14).
- *
- * Stripe NO conectado: CTAs muestran "Billing is not connected yet" hasta integrar (Fase C).
+ * Corte ADR-0052 (16/09): la vista lee TODO de `window.PlanesDatos`
+ * (js/services/PlanesDataService.js) sobre la base nueva: billing.plans +
+ * prices + plan_capabilities (la llave es el tier), la suscripción de la marca,
+ * `acceso_por_suscripcion`, el saldo (`available`) y `public.storage_usage`.
+ * Cambiar de plan o cancelar NO tiene puerta para una persona (decisión de JC,
+ * planes.md): los CTA abren «escríbenos», nunca un checkout que no existe.
  *
  * Fase A (2026-05-14): contexto del org en header (plan actual, créditos, storage,
- * próxima renovación), CTAs diferenciados Upgrade/Downgrade/Current/Trial, copy en inglés.
+ * próxima renovación), CTAs diferenciados Upgrade/Downgrade/Current/Trial.
  */
 class PlanesView extends BaseView {
   static cacheable = true;
@@ -38,13 +41,13 @@ class PlanesView extends BaseView {
 
   async _loadAndRender({ background = false } = {}) {
     try {
-      const [plans] = await Promise.all([
-        window.apiClient.query('plans:active', () => this._fetchPlans(), { ttl: 5 * 60 * 1000, staleWhileRevalidate: true }),
-        this._loadCurrentSubscription(),
-        this._loadOrgUsage(),
-      ]);
-      this.plans = Array.isArray(plans) ? plans : [];
-      await this._resolveCurrentPlan();
+      const datos = window.PlanesDatos ? await window.PlanesDatos.cargar(this._resolveOrgId()) : null;
+      this.plans = datos?.plans || [];
+      this.currentSubscription = datos?.currentSubscription || null;
+      this.currentPlan = datos?.currentPlan || null;
+      this.acceso = datos?.acceso || null;
+      this.orgCredits = datos?.orgCredits || null;
+      this.orgStorage = datos?.orgStorage || null;
       this._renderOrgContext();
       this._renderPlansList();
       this._applyBillingPeriod();
@@ -57,73 +60,11 @@ class PlanesView extends BaseView {
     }
   }
 
-  async _fetchPlans() {
-    const supabase = await window.apiClient.getSupabase();
-    if (!supabase) throw new Error('Supabase no disponible');
-    const { data, error } = await supabase
-      .from('plans')
-      .select('id, name, description, price_usd_month, price_usd_year, credits_monthly, max_handles, storage_mb, features, is_popular, display_order, is_active')
-      .eq('is_active', true)
-      .order('display_order', { ascending: true });
-    if (error) throw error;
-    return data || [];
-  }
-
   _resolveOrgId() {
     return window.currentOrgId
       || window.appState?.get('selectedOrganizationId')
       || localStorage.getItem('selectedOrganizationId')
       || null;
-  }
-
-  async _loadCurrentSubscription() {
-    const orgId = this._resolveOrgId();
-    if (!orgId) return;
-    const supabase = await window.apiClient.getSupabase();
-    if (!supabase) return;
-    const { data } = await supabase
-      .from('subscriptions')
-      .select('plan_id, status, current_period_end')
-      .eq('organization_id', orgId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    this.currentSubscription = data || null;
-  }
-
-  async _loadOrgUsage() {
-    const orgId = this._resolveOrgId();
-    if (!orgId) return;
-    const supabase = await window.apiClient.getSupabase();
-    if (!supabase) return;
-    const [{ data: credits }, { data: storage }] = await Promise.all([
-      supabase.from('organization_credits')
-        .select('credits_available, credits_total').eq('organization_id', orgId).maybeSingle(),
-      supabase.from('storage_usage')
-        .select('used_mb, max_mb').eq('organization_id', orgId).maybeSingle(),
-    ]);
-    this.orgCredits = credits || null;
-    this.orgStorage = storage || null;
-  }
-
-  /**
-   * Resuelve el plan actual del org. Maneja el caso de planes legacy
-   * (sub activa en un plan con is_active=false): los cargamos por id directo
-   * para poder comparar display_order y mostrar Upgrade/Downgrade correctos.
-   */
-  async _resolveCurrentPlan() {
-    if (!this.currentSubscription?.plan_id) { this.currentPlan = null; return; }
-    const inList = this.plans.find(p => p.id === this.currentSubscription.plan_id);
-    if (inList) { this.currentPlan = inList; return; }
-    // Plan legacy (no is_active): fetch puntual por id.
-    const supabase = await window.apiClient.getSupabase();
-    if (!supabase) { this.currentPlan = null; return; }
-    const { data } = await supabase
-      .from('plans')
-      .select('id, name, description, price_usd_month, price_usd_year, credits_monthly, max_handles, storage_mb, features, is_popular, display_order')
-      .eq('id', this.currentSubscription.plan_id)
-      .maybeSingle();
-    this.currentPlan = data || null;
   }
 
   /** True si la subscription está en estado que cuenta como "activa" (no cancelled/expired). */
@@ -135,7 +76,7 @@ class PlanesView extends BaseView {
   // ─── formatters ──────────────────────────────────────────────────────
 
   formatStorage(mb) {
-    if (!mb || mb <= 0) return null;
+    if (mb == null || mb <= 0) return null;
     if (mb >= 1024) {
       const gb = mb / 1024;
       return `${Number.isInteger(gb) ? gb : gb.toFixed(1)} GB`;
@@ -182,18 +123,15 @@ class PlanesView extends BaseView {
       items.push(`<strong>${plan.credits_monthly.toLocaleString('en-US')}</strong> ${window.__('créditos / mes')}`);
     }
     if (plan.max_handles > 0) {
-      items.push(window.__('Hasta <strong>{n}</strong> marcas / perfiles', { n: plan.max_handles }));
+      items.push(window.__('Hasta <strong>{n}</strong> mercados', { n: plan.max_handles }));
     }
     const storage = this.formatStorage(plan.storage_mb);
     if (storage) items.push(`<strong>${storage}</strong> ${window.__('de Almacenamiento')}`);
-    if (plan.features?.vera_full) items.push(window.__('Vera completa (chat + acciones)'));
-    else if (plan.features?.vera_basic) items.push(window.__('Vera chat'));
+    else if (plan.sin_limite_almacenamiento) items.push(window.__('Almacenamiento sin límite'));
     if (plan.features?.team_seats) items.push(`<strong>${plan.features.team_seats}</strong> ${window.__('miembros')}`);
-    if (plan.features?.insights) items.push(window.__('Insights y analítica'));
-    if (plan.features?.brand_kits) items.push(`<strong>${plan.features.brand_kits}</strong> ${window.__('brand kits')}`);
-    if (plan.features?.sub_brands) items.push(window.__('Sub-marcas (multi-cliente)'));
-    if (plan.features?.custom_domain) items.push(window.__('Dominio personalizado'));
-    if (plan.features?.priority_support) items.push(window.__('Soporte prioritario'));
+    // Capacidades del plan (billing.plan_capabilities): la etiqueta la pone la consola, el dato la base.
+    const etiquetas = window.PlanesDatos?.CAPACIDADES || {};
+    (plan.features?.capacidades || []).forEach((cap) => items.push(this.escapeHtml(window.__(etiquetas[cap] || cap))));
     return items;
   }
 
@@ -260,15 +198,19 @@ class PlanesView extends BaseView {
       : '';
 
     const storage = this.orgStorage;
-    const storageBlock = storage && Number(storage.max_mb) > 0
-      ? this._usageMeter({
-          icon: 'aisc-ico aisc-ico--database',
-          label: window.__('Almacenamiento'),
-          used: Number(storage.used_mb) || 0,
-          total: Number(storage.max_mb) || 0,
-          formatter: (n) => this.formatStorage(n) || `${n} MB`,
-        })
-      : '';
+    let storageBlock = '';
+    if (storage && Number(storage.max_mb) > 0) {
+      storageBlock = this._usageMeter({
+        icon: 'aisc-ico aisc-ico--database',
+        label: window.__('Almacenamiento'),
+        used: Number(storage.used_mb) || 0,
+        total: Number(storage.max_mb) || 0,
+        formatter: (n) => this.formatStorage(n) || `${n} MB`,
+      });
+    } else if (storage && storage.max_mb == null) {
+      // Tope NULO en billing.plans = sin límite (decisión escrita en la base).
+      storageBlock = `<div class="planes-usage-meter"><div class="planes-usage-meter-head"><span class="planes-usage-meter-label"><i class="fas aisc-ico aisc-ico--database"></i> ${window.__('Almacenamiento')}</span><span class="planes-usage-meter-value">${this.escapeHtml(this.formatStorage(Number(storage.used_mb) || 0) || '0 MB')} <span>· ${window.__('sin límite')}</span></span></div></div>`;
+    }
 
     host.hidden = false;
     host.innerHTML = `
@@ -427,18 +369,14 @@ class PlanesView extends BaseView {
 
   _handleCtaKind(kind, planId) {
     if (kind === 'current') return;
-    if (!window.billingService) {
-      const msg = window.__('Billing service no disponible. Recarga la página.');
-      if (window.showToast) window.showToast(msg, 'error'); else alert(msg);
+    // Cambiar de plan no tiene puerta para una persona en la base nueva (planes.md):
+    // se pide por escrito y lo aplica la plataforma. Nunca un botón que promete.
+    if (!window.PlanesDatos?.puedeCambiarPlan()) {
+      const plan = this.plans.find((p) => p.id === planId);
+      const msg = window.__('Para cambiar al plan {nombre} escríbenos a contact@aismartcontent.io y lo activamos por ti.', { nombre: plan?.name || planId });
+      if (window.showToast) window.showToast(msg, 'info'); else alert(msg);
       return;
     }
-    const billing = this.billingPeriod === 'annual' ? 'year' : 'month';
-    window.billingService.startCheckout({
-      target:  'subscription',
-      planId,
-      billing,
-      gateway: 'auto',
-    });
   }
 }
 

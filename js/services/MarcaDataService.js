@@ -222,7 +222,7 @@
     try {
       const r = await a.archivos(orgId);
       const lista = Array.isArray(r?.archivos) ? r.archivos : [];
-      return Object.fromEntries(lista.filter((f) => f?.id && f.url_galeria).map((f) => [f.id, f.url_galeria]));
+      return Object.fromEntries(lista.filter((f) => f?.id && (f.url_publica || f.url_galeria)).map((f) => [f.id, f.url_publica || f.url_galeria]));
     } catch (e) {
       if (e?.codigo !== 'sin_api') console.warn('[marca] archivos del borde:', e?.codigo || e?.message || e);
       else console.info('[marca] sin borde (AISC_API_URL vacío): los archivos subidos no tienen URL de galería.');
@@ -338,8 +338,11 @@
 
   /**
    * Sube por el borde y registra el asset. Devuelve el asset en forma v1.
-   * `logo: true` además apunta organizations.logo_file_id (+ logo_url a la galería
-   * mientras el borde no exponga un espacio público para logos).
+   * `logo: true` sube con `proposito=publico` (backend d9858c0, 16/09): solo imagen,
+   * bucket público, `archivo.url_publica` sin cookie y `cache-control immutable`
+   * (reemplazar el logo = subir otro y guardar la nueva URL). La marca queda con
+   * organizations.logo_file_id + logo_url = url_publica, que el sidebar y el
+   * selector de marca pintan sin sesión de galería.
    */
   async function subirAsset(orgId, archivo, { identidad = false, logo = false } = {}) {
     const a = api();
@@ -347,13 +350,13 @@
     if (!a) throw Object.assign(new Error('El borde no está configurado (AISC_API_URL): no se puede subir.'), { code: 'sin_api' });
     if (!sb || !orgId || !archivo) throw Object.assign(new Error('Falta la marca o el archivo.'), { code: 'entrada_invalida' });
     let subido;
-    try { subido = await a.subirArchivo(orgId, archivo, 'subida'); } catch (e) { if (e?.codigo) e.code = e.codigo; throw e; }
+    try { subido = await a.subirArchivo(orgId, archivo, logo ? 'publico' : 'subida'); } catch (e) { if (e?.codigo) e.code = e.codigo; throw e; }
     const f = subido?.archivo;
     if (!f?.id) throw Object.assign(new Error('El borde no devolvió el archivo subido.'), { code: 'sin_archivo' });
     const kind = kindDeArchivo(archivo, { identidad, logo });
     const fila = {
       organization_id: orgId, kind, name: archivo.name || 'archivo', file_id: f.id,
-      storage_path: f.object_key || null, mime_type: archivo.type || null, bytes: f.bytes ?? archivo.size ?? null, is_primary: false,
+      storage_path: f.object_key || null, url: f.url_publica || null, mime_type: archivo.type || null, bytes: f.bytes ?? archivo.size ?? null, is_primary: false,
     };
     if (logo) await sb.from('brand_assets').update({ is_primary: false }).eq('organization_id', orgId).eq('kind', 'logo');
     if (logo) fila.is_primary = true;
@@ -361,7 +364,7 @@
     if (error) throw error;
     const urls = await urlsDeGaleria(orgId);
     const asset = assetAV1(data, urls);
-    if (logo) await actualizarOrganizacion(orgId, { logo_file_id: f.id, logo_url: asset.file_url || null });
+    if (logo) await actualizarOrganizacion(orgId, { logo_file_id: f.id, logo_url: f.url_publica || asset.file_url || null });
     return asset;
   }
 
@@ -412,7 +415,7 @@
     if (!plataforma) throw Object.assign(new Error(`Plataforma no admitida: ${plataformaV1}`), { code: 'plataforma' });
     let r;
     try { r = await a.conectar(plataforma, orgId, extra); } catch (e) { if (e?.codigo) e.code = e.codigo; throw e; }
-    const url = r?.url || r?.authorize_url || r?.url_autorizacion;
+    const url = r?.url; // forma real (backend 16/09): {url, expira_en_minutos}
     if (!url) throw Object.assign(new Error('El borde no devolvió la URL de autorización.'), { code: 'sin_url' });
     return url;
   }

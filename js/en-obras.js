@@ -30,7 +30,8 @@
     'studio', 'studio/catalog', 'studio/flows',
     'vera',
     'image', 'video',
-    'credits', 'plans', 'plans/cancel',
+    // 'credits' / 'plans': PORTADAS el 16/09 (PlanesDataService, verificar-planes.mjs).
+    'plans/cancel', // cancelar no tiene puerta para una persona (planes.md): sigue en obras
     'organization',
     'creation_process',
   ];
