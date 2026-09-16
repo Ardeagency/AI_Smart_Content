@@ -699,17 +699,18 @@ class StudioView extends BaseView {
       textEl.textContent = `${__('{n} créditos restantes', { n: n.toLocaleString('es') })}`;
     }
     if (costEl) {
-      if (this.selectedFlow && this.selectedFlow.token_cost != null) {
-        costEl.textContent = `${__('{n} créditos esta producción', { n: this.selectedFlow.token_cost })}`;
-        costEl.style.display = '';
-      } else {
-        costEl.textContent = '';
-        costEl.style.display = 'none';
-      }
+      const f = this.selectedFlow;
+      // pricing_mode de la base: fixed = precio cerrado · observed = se cobra lo medido
+      // (el promedio si hay corridas) · free = sin costo.
+      if (f && f.pricing_mode === 'free') costEl.textContent = __('sin costo');
+      else if (f && f.pricing_mode === 'observed') costEl.textContent = f.token_cost ? __('~{n} créditos, se cobra lo medido', { n: f.token_cost }) : __('se cobra lo medido al terminar');
+      else if (f && f.token_cost != null) costEl.textContent = `${__('{n} créditos esta producción', { n: f.token_cost })}`;
+      else costEl.textContent = '';
+      costEl.style.display = costEl.textContent ? '' : 'none';
     }
     const btn = document.getElementById('studioProducirBtn');
     if (btn && this.selectedFlow) {
-      const cost = this.selectedFlow.token_cost ?? 1;
+      const cost = this.selectedFlow.pricing_mode === 'free' ? 0 : (this.selectedFlow.token_cost ?? 1);
       btn.disabled = !this.selectedFlow.webhook_url || this.credits.available < cost;
     }
   }
