@@ -30,6 +30,8 @@ const VISTAS = [
   'js/views/MonitoringView.js',
   'js/views/FlowCatalogView.js',
   'js/views/StudioView.js',
+  'js/views/TableroView.js',
+  'js/components/LecturaVera.js',
   'js/views/ExecutionHistoryView.js',
 ];
 // Campos de fila que llegan de la base y podrían traer HTML de una persona.

@@ -1,0 +1,50 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   TABLERO — /dashboard compuesto sobre la base nueva (TableroView.js).
+   Reusa .insight-page (insight.css) y .vera-* (vera-reading.css).
+   Namespaced .tablero-* — no colisiona con .mb-/.insight-/.strat-.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.tablero-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 1.25rem; align-items: start; }
+@media (max-width: 960px) { .tablero-grid { grid-template-columns: 1fr; } }
+.tablero-col { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.tablero-card {
+  padding: 1rem 1.125rem 1.125rem;
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 14px;
+  background: var(--bg-elevated, rgba(255,255,255,0.02));
+}
+.tablero-card .mb-section-head { margin-bottom: 0.75rem; }
+.tablero-h3 { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary, rgba(212,209,216,0.55)); margin: 1rem 0 0.5rem; }
+.tablero-tiles { margin-top: 0; }
+.tablero-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.625rem; }
+.tablero-lista li { padding: 0.625rem 0.75rem; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-divider, #242424); }
+.tablero-lista p { margin: 0.25rem 0 0; font-size: 0.8125rem; color: var(--text-muted, rgba(212,209,216,0.7)); line-height: 1.4; }
+.tablero-senal { border-left: 3px solid var(--border-divider, #242424); }
+.tablero-senal.vera-sev--threat { border-left-color: #e06464; }
+.tablero-senal.vera-sev--warn { border-left-color: #e0a045; }
+.tablero-senal-kind { display: block; font-size: 0.625rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary, rgba(212,209,216,0.55)); margin-bottom: 0.125rem; }
+.tablero-hueco-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
+.tablero-score { font-variant-numeric: tabular-nums; font-weight: 700; color: #6bcf7f; font-size: 0.8125rem; }
+.tablero-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.5rem; }
+.tablero-enlace { display: inline-block; margin-top: 0.5rem; font-size: 0.75rem; color: var(--brand-primary, #d4d1d8); text-decoration: none; }
+.tablero-enlace:hover { text-decoration: underline; }
+.tablero-tendencia { display: flex; flex-direction: column; gap: 0.125rem; }
+.tablero-tendencia-kw { font-weight: 600; font-size: 0.875rem; }
+.tablero-tendencia-meta { font-size: 0.6875rem; color: var(--text-secondary, rgba(212,209,216,0.55)); }
+.tablero-vacio { padding: 2rem 1.5rem; border: 1px dashed var(--border-divider, #242424); border-radius: 14px; text-align: center; }
+.tablero-vacio h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+.tablero-vacio p { margin: 0 0 1rem; color: var(--text-muted, rgba(212,209,216,0.7)); }
+.tablero-atendidas > summary { cursor: pointer; font-size: 0.8125rem; color: var(--text-secondary, rgba(212,209,216,0.55)); margin: 0.5rem 0 0.75rem; }
+.tablero-error { color: #e06464; }
+.tablero-skeleton { height: 140px; border-radius: 14px; background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.07), rgba(255,255,255,0.03)); background-size: 200% 100%; animation: tablero-shimmer 1.4s infinite; }
+.tablero-skeleton--corto { height: 72px; }
+@keyframes tablero-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+/* Bloques de la lectura que vera-reading.css no cubre */
+.vera-prosa p { margin: 0 0 0.625rem; line-height: 1.55; font-size: 0.9375rem; }
+.vera-list { margin: 0.375rem 0 0; padding-left: 1.125rem; font-size: 0.8125rem; line-height: 1.45; }
+.vera-datos { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 0.75rem; margin: 0; font-size: 0.75rem; }
+.vera-datos > div { display: contents; }
+.vera-datos dt { color: var(--text-secondary, rgba(212,209,216,0.55)); text-transform: capitalize; }
+.vera-datos dd { margin: 0; word-break: break-word; }
+.vera-chip--done { color: #6bcf7f; text-transform: none; }
+.vera-move-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; }
+.vera-move-actions:empty { display: none; }

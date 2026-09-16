@@ -277,28 +277,11 @@ class App {
     r.register('/home', redirectToDefaultView, auth);
     r.register('/hogar', redirectToDefaultView, auth);
 
-    // ── Org: Dashboard ──
-    // El god-class fue dividido en core + 4 mixins (uno por tab). Los mixins
-    // aplican Object.assign sobre DashboardView.prototype al cargarse, así que
-    // deben ir DESPUÉS de DashboardView.js. El orden secuencial está garantizado
-    // por _loadScripts (await por cada src).
-    const dashboardLoader = this._lazy('DashboardView', [
-      '/js/components/AudienceMap.js',
-      '/js/components/OnboardingTour.js',
-      '/js/components/VeraPulse.js',
-      '/js/services/VeraReadingService.js',
-      '/js/views/DashboardView.js',
-      '/js/views/dashboard/MyBrands.mixin.js',
-      '/js/views/dashboard/Competence.mixin.js',
-      '/js/views/dashboard/Tendencies.mixin.js',
-      '/js/views/dashboard/Strategy.mixin.js',
-      '/js/views/dashboard/VeraReading.mixin.js',
-      '/js/views/dashboard/BrandGrid.mixin.js',
-      '/js/views/dashboard/CompGrid.mixin.js',
-      '/js/views/dashboard/CompAds.mixin.js',
-      '/js/views/dashboard/BrandAds.mixin.js',
-      '/js/views/dashboard/Vera4.mixin.js',
-    ], ['/css/modules/insight.css', '/css/modules/vera-reading.css', '/css/modules/brand-grid.css', '/css/modules/comp-grid.css', '/css/modules/vera4.css']);
+    // ── Org: Tablero (corte ADR-0052) ──
+    // Compuesto en la consola sobre marketing.readings, intel.tendencias_vivas/trends,
+    // intel.content_gaps, social.profiles e intel.signals (TableroDataService).
+    // DashboardView.js y sus mixins (los 60 dashboard_* de v1) quedan como cantera, sin ruta.
+    const dashboardLoader = this._lazy('TableroView', ['/js/components/LecturaVera.js', '/js/views/TableroView.js'], ['/css/modules/insight.css', '/css/modules/vera-reading.css', '/css/modules/tablero.css']);
     r.register('/org/:orgIdShort/:orgNameSlug/dashboard', dashboardLoader, auth);
     r.register('/dashboard', dashboardLoader, auth);
 

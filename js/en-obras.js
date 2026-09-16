@@ -21,7 +21,7 @@
     'tasks',
     // 'execution-history': PORTADA el 16/09 (flows.runs + public.salidas por ProduccionesDatos).
     // Hasta que cada una se porte y pruebe (se van quitando en el D1/D2/D3):
-    'dashboard',
+    // 'dashboard': PORTADA el 16/09 (TableroView compuesto con TableroDataService: lecturas de Vera, tendencias, huecos, competencia; los 60 dashboard_* de v1 no se portan).
     // 'production': PORTADA el 16/09 (ProduccionesDataService sobre flows.runs + public.salidas; editar/likes/campaña avisan «en obras»).
     // 'monitoring': PORTADA el 16/09 (MonitoringDataService sobre social.profiles/posts_view, intel.signals, ingest.schedules; URLs vigiladas y clasificador por IA avisan).
     // 'brand' / 'brands' / 'brand-organization': PORTADAS el 16/09 (MarcaDataService, verificar-marca.mjs 14/14).
