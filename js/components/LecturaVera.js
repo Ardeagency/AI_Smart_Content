@@ -113,8 +113,8 @@
   const KIND = { diagnosis: () => t('Diagnóstico'), recommendation: () => t('Recomendación'), observation: () => t('Observación'), retrospective: () => t('Retrospectiva') };
 
   /**
-   * La lectura completa como banda. `opts.accion` = true pinta «Ponerla en marcha»
-   * (data-lectura-actuar) cuando aún no se actuó sobre ella.
+   * La lectura completa como banda. `opts.accion` = true pinta el botón de actuar
+   * (data-lectura-actuar) cuando aún no se actuó: «Ponerla en marcha» si produce, «Lo hice» si no.
    */
   function lectura(l, opts = {}) {
     if (!l) return '';
@@ -125,11 +125,14 @@
     const d = datos(l.datos);
     const apoyo = d ? `<details class="vera-why"><summary>${esc(t('Datos de apoyo'))}</summary><div class="vera-why-body">${d}</div></details>` : '';
     const periodo = l.period_start ? `${fecha(l.period_start)}${l.period_end ? ` → ${fecha(l.period_end)}` : ''}` : fecha(l.created_at);
-    // Actuar = PATCH acted_on: la base encola `estrategia.producir` (competencia.md), o sea
-    // Vera convierte la recomendación en producción. El botón lo dice así, no «lo hice».
+    // Actuar = PATCH acted_on. Si la lectura trae `evidence.produccion` (l.produce), la base
+    // encola estrategia.producir y Vera la convierte en producción: «Ponerla en marcha» / «en
+    // marcha». Si no (las 43 heredadas de v1), solo registra que la persona actuó: «Lo hice» / «atendida».
     const estado = l.acted_on
-      ? `<span class="vera-chip vera-chip--done">${esc(t('en marcha'))}${l.acted_at ? ` · ${esc(fecha(l.acted_at))}` : ''}</span>`
-      : (opts.accion ? `<button type="button" class="strat-btn strat-btn--approve" data-lectura-actuar="${esc(l.id)}" title="${esc(t('Vera la convierte en producción'))}">${esc(t('Ponerla en marcha'))}</button>` : '');
+      ? `<span class="vera-chip vera-chip--done">${esc(l.produce ? t('en marcha') : t('atendida'))}${l.acted_at ? ` · ${esc(fecha(l.acted_at))}` : ''}</span>`
+      : (opts.accion ? (l.produce
+        ? `<button type="button" class="strat-btn strat-btn--approve" data-lectura-actuar="${esc(l.id)}" title="${esc(t('Vera la convierte en producción'))}">${esc(t('Ponerla en marcha'))}</button>`
+        : `<button type="button" class="strat-btn" data-lectura-actuar="${esc(l.id)}" title="${esc(t('Ya actuaste sobre esto por tu cuenta'))}">${esc(t('Lo hice'))}</button>`) : '');
     return `
       <section class="vera-band-section" data-lectura="${esc(l.id)}">
         <div class="vera-band">

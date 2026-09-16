@@ -41,7 +41,10 @@ describe('Tablero · lecturas de Vera', () => {
     const l = M.lecturaAV1({ id: 'r5', kind: 'recommendation', title: '<img src=x onerror=alert(1)>', body: 'Hola <b>mundo</b>', evidence: {} });
     const html = L.lectura(l, { accion: true });
     expect(html).not.toContain('<img'); expect(html).toContain('&lt;img'); expect(html).toContain('&lt;b&gt;mundo');
-    expect(html).toContain('data-lectura-actuar="r5"');
+    expect(html).toContain('data-lectura-actuar="r5"'); expect(html).toContain('Lo hice');
+    const conProd = M.lecturaAV1({ id: 'r7', kind: 'recommendation', title: 'T', body: 'Prosa.', evidence: { produccion: { flujo: 'imagen-directa', entradas: { prompt: 'x' } } } });
+    expect(conProd.produce).toBe(true); expect(conProd.datos).toEqual({}); expect(L.lectura(conProd, { accion: true })).toContain('Ponerla en marcha');
+    expect(M.lecturaAV1({ id: 'r8', kind: 'diagnosis', title: 'T', body: 'P', evidence: { produccion: {} } }).produce).toBe(false);
     expect(L.lectura({ ...l, acted_on: true, acted_at: '2026-09-16' }, { accion: true })).not.toContain('data-lectura-actuar');
     expect(L.bloque({ type: 'lo_que_sea' })).toBe('');
   });

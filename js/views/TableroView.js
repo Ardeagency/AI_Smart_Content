@@ -2,7 +2,8 @@
  * TableroView — el TABLERO (/dashboard) compuesto en la consola sobre la base nueva
  * (corte ADR-0052). Los 60 `dashboard_*` de v1 no existen: el Tablero se arma con lo
  * que la base sí da (contrato competencia.md): lo que Vera opina (marketing.readings,
- * con «Ponerla en marcha» → acted_on, que encola estrategia.producir), las tendencias vivas (intel.tendencias_vivas / trends),
+ * con «Lo hice» / «Ponerla en marcha» → acted_on; con evidence.produccion la base encola
+ * estrategia.producir), las tendencias vivas (intel.tendencias_vivas / trends),
  * los huecos de contenido (intel.content_gaps) y la competencia de un vistazo
  * (social.profiles + intel.signals). Todo por TableroDatos; sin `.from()` aquí.
  * DashboardView.js (v1) queda como cantera, sin ruta.
@@ -93,7 +94,7 @@ class TableroView extends BaseView {
     host.innerHTML = [
       pendientes.length ? cab(__('Lo que Vera recomienda'), pendientes.length) + pendientes.slice(0, 6).map((l, i) => L.lectura(l, { accion: true, abierto: i === 0 })).join('') : '',
       d.observaciones.length ? cab(__('Lo que Vera observó'), d.observaciones.length) + d.observaciones.slice(0, 2).map((l) => L.lectura(l)).join('') : '',
-      atendidas.length ? `<details class="tablero-atendidas"><summary>${this.escapeHtml(__('En marcha ({n})', { n: atendidas.length }))}</summary>${atendidas.slice(0, 6).map((l) => L.lectura(l)).join('')}</details>` : '',
+      atendidas.length ? `<details class="tablero-atendidas"><summary>${this.escapeHtml(__('Atendidas o en marcha ({n})', { n: atendidas.length }))}</summary>${atendidas.slice(0, 6).map((l) => L.lectura(l)).join('')}</details>` : '',
     ].join('');
   }
 
@@ -160,7 +161,7 @@ class TableroView extends BaseView {
         const l = await window.TableroDatos.actuar(id);
         const sec = host.querySelector(`[data-lectura="${CSS.escape(id)}"]`);
         if (sec && l) sec.outerHTML = window.LecturaVera.lectura(l);
-        if (typeof window.showToast === 'function') window.showToast(__('En marcha: Vera la convierte en producción.'));
+        if (typeof window.showToast === 'function') window.showToast(l?.produce ? __('En marcha: Vera la convierte en producción.') : __('Marcada como atendida.'));
       } catch (err) {
         btn.disabled = false;
         const msg = err?.code === '42501' ? __('No tienes permiso para marcar lecturas en esta marca.') : (err?.message || __('No se pudo marcar.'));

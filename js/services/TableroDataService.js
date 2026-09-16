@@ -73,10 +73,14 @@
       porque: bloques.filter((b) => !['stat_tile', 'recommended_move', 'watchlist_item'].includes(b.type)),
       evidence,
       // La 210000 deja el original v1 (reading/card) en evidence: no es dato de apoyo, es archivo.
-      datos: Object.fromEntries(Object.entries(evidence).filter(([k]) => !['bloques', 'cards', 'card', 'reading', 'lectura_v1'].includes(k))),
+      datos: Object.fromEntries(Object.entries(evidence).filter(([k]) => !['bloques', 'cards', 'card', 'reading', 'lectura_v1', 'produccion'].includes(k))),
       confidence: fila.confidence ?? null,
       period_start: fila.period_start || null,
       period_end: fila.period_end || null,
+      // Trigger private.recomendacion_actuada (BD 16/09): acted_on por una persona SOLO encola
+      // estrategia.producir si kind=recommendation y evidence.produccion existe ({flujo, entradas}
+      // o {campana}); si no, el update solo registra que la persona actuó.
+      produce: fila.kind === 'recommendation' && !!(evidence.produccion && typeof evidence.produccion === 'object'),
       acted_on: fila.acted_on === true,
       acted_note: fila.acted_note || null,
       acted_at: fila.acted_at || null,
@@ -145,7 +149,7 @@
     return (r.data || []).map(lecturaAV1);
   }
 
-  /** «Ponerla en marcha»: acted_on=true (la base encola estrategia.producir); solo acted_on/acted_note/acted_at (grant por columna, medido 16/09). */
+  /** Actuar: acted_on=true (con evidence.produccion la base encola estrategia.producir; si no, solo registra). Columnas: acted_on/acted_note/acted_at (grant por columna, medido 16/09). */
   async function actuar(id, nota = null) {
     const sb = await cliente();
     if (!sb || !id) return null;
