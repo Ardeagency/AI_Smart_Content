@@ -213,81 +213,54 @@ class LivingManager {
                typeof client.auth.getUser === 'function';
     }
 
+    /** Perfil de la persona: viene en mi_contexto (ContextoDataService), no de profiles a pelo. */
     async loadUserData() {
-        if (!this.supabase || !this.userId) { this.userData = null; return; }
+        if (!this.userId) { this.userData = null; return; }
         try {
-            const fetcher = async () => {
-                const { data, error } = await this.supabase
-                    .from('profiles').select('*').eq('id', this.userId).maybeSingle();
-                if (error) throw error;
-                return data;
-            };
-            this.userData = window.apiClient
-                ? await window.apiClient.query(`living:user:${this.userId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
-                : await fetcher();
+            const ctx = window.contextoService ? await window.contextoService.cargar() : null;
+            this.userData = ctx?.profile ? { id: ctx.profile.id, email: ctx.profile.email, full_name: ctx.profile.full_name, avatar_url: ctx.profile.avatar_url } : null;
         } catch (error) {
             console.error('❌ Error cargando datos de usuario:', error);
             this.userData = null;
         }
     }
-
+    /** «Proyecto» = el mercado principal de la marca (markets), que en v1 era brand_containers. */
     async loadProjectData() {
-        if (!this.supabase || !this.userId) { this.projectData = null; return; }
-        // La marca SIEMPRE se resuelve dentro de la org activa de la URL, nunca
-        // "la más reciente del usuario": un usuario multi-org (ej. dueño de IGNIS
-        // y WAKEUP) heredaria la marca de otra org y las producciones/tareas se
-        // cruzarian entre workspaces. La org activa la publica el router en
-        // window.currentOrgId (resuelta desde /org/{shortId}/{slug}).
+        if (!this.userId) { this.projectData = null; return; }
         const activeOrgId = this.organizationId || window.currentOrgId || this.routeParams?.orgId || null;
         if (activeOrgId) this.organizationId = activeOrgId;
         try {
-            const fetcher = async () => {
-                let q = this.supabase.from('brand_containers').select('*');
-                // Scope duro a la org activa; solo rutas legacy sin /org/ caen al usuario.
-                q = activeOrgId ? q.eq('organization_id', activeOrgId) : q.eq('user_id', this.userId);
-                const { data, error } = await q
-                    .order('created_at', { ascending: true })
-                    .limit(1).maybeSingle();
-                if (error) throw error;
-                return data;
-            };
-            // Cache por org (no por usuario) para no arrastrar la marca de otra org.
-            const cacheKey = `living:project:${activeOrgId || this.userId}`;
-            this.projectData = window.apiClient
-                ? await window.apiClient.query(cacheKey, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
-                : await fetcher();
+            const ctx = window.contextoService ? await window.contextoService.cargar() : null;
+            const org = ctx && activeOrgId ? window.contextoService.org(activeOrgId) : null;
+            const mk = (org?.markets || []).find((m) => m.is_primary) || (org?.markets || [])[0] || null;
+            this.projectData = mk ? { id: mk.id, organization_id: activeOrgId, nombre_marca: mk.name, slug: mk.slug } : (activeOrgId ? { id: null, organization_id: activeOrgId } : null);
         } catch (error) {
             console.error('❌ Error cargando datos del proyecto:', error);
             this.projectData = null;
         }
     }
-
     /**
      * Cargar productos para el dashboard Living
      * NOTA: Esta función es una versión simplificada que solo carga datos básicos.
      * Para funcionalidad completa (con imágenes), usar ProductsManager.
      */
     async loadProducts() {
-        if (!this.supabase) { this.products = []; return; }
         const orgId = this.organizationId || this.projectData?.organization_id || null;
-        if (!orgId && !this.brandContainerId) { this.products = []; return; }
+        if (!orgId || !window.StudioDatos) { this.products = []; return; }
         try {
-            let q = this.supabase
-                .from('products')
-                .select('id, nombre_producto, tipo_producto, precio_producto, moneda, created_at');
-            if (orgId) q = q.eq('organization_id', orgId);
-            else q = q.eq('brand_container_id', this.brandContainerId);
-            const { data, error } = await q.order('created_at', { ascending: false });
-            if (error) throw error;
-            this.products = data || [];
+            // public.elements_full (kind product), por StudioDataService.
+            const ctx = await window.StudioDatos.contexto(orgId, this.brandContainerId || null);
+            this.products = (ctx.products || []).map((p) => ({ id: p.id, nombre_producto: p.nombre_producto, tipo_producto: p.detail?.product_type || null, precio_producto: p.detail?.price ?? null, moneda: p.detail?.currency || null, created_at: null }));
         } catch (error) {
             console.error('❌ Error cargando productos:', error);
             this.products = [];
         }
     }
 
+    /** Corridas de la marca (flows.runs), paginadas, con la forma flow_runs de v1. */
     async loadFlowRuns({ reset = false } = {}) {
-        if (!this.supabase || (!this.brandId && !this.userId)) {
+        const orgId = this.organizationId || this.projectData?.organization_id || null;
+        if (!orgId || !window.ProduccionesDatos) {
             if (reset) this.flowRuns = [];
             return [];
         }
@@ -298,35 +271,7 @@ class LivingManager {
         }
         if (!this._flowRunsHasMore) return [];
         try {
-            const from = this._flowRunsOffset;
-            const to = from + this._historySourceBatchSize - 1;
-            let query = this.supabase
-                .from('flow_runs')
-                .select('*, content_flows(name), campaigns(nombre_campana), audience_personas(name)')
-                .order('created_at', { ascending: false })
-                .range(from, to);
-
-            query = this.brandId ? query.eq('brand_id', this.brandId) : query.eq('user_id', this.userId);
-            let { data, error } = await query;
-
-            if (error) {
-                // Fallback sin join si la relación falla
-                query = this.supabase.from('flow_runs').select('*')
-                    .order('created_at', { ascending: false }).range(from, to);
-                query = this.brandId ? query.eq('brand_id', this.brandId) : query.eq('user_id', this.userId);
-                const res = await query;
-                if (res.error) {
-                    this._flowRunsHasMore = false;
-                    return [];
-                }
-                const newRuns = res.data || [];
-                if (newRuns.length < this._historySourceBatchSize) this._flowRunsHasMore = false;
-                this._flowRunsOffset += newRuns.length;
-                const existing = new Set((this.flowRuns || []).map(r => r?.id).filter(Boolean));
-                this.flowRuns = [...(this.flowRuns || []), ...newRuns.filter(r => r?.id && !existing.has(r.id))];
-                return newRuns;
-            }
-            const newRuns = data || [];
+            const newRuns = await window.ProduccionesDatos.corridas(orgId, { desde: this._flowRunsOffset, limite: this._historySourceBatchSize });
             if (newRuns.length < this._historySourceBatchSize) this._flowRunsHasMore = false;
             this._flowRunsOffset += newRuns.length;
             const existing = new Set((this.flowRuns || []).map(r => r?.id).filter(Boolean));
@@ -339,8 +284,10 @@ class LivingManager {
         }
     }
 
+    /** Salidas (public.salidas) de las corridas cargadas, con la forma runs_outputs de v1. */
     async loadFlowOutputs({ reset = false, runIds = [] } = {}) {
-        if (!this.supabase) {
+        const orgId = this.organizationId || this.projectData?.organization_id || null;
+        if (!orgId || !window.ProduccionesDatos) {
             if (reset) this.flowOutputs = [];
             return;
         }
@@ -348,20 +295,12 @@ class LivingManager {
         try {
             const targetRunIds = (runIds && runIds.length ? runIds : this.flowRuns.map(r => r?.id).filter(Boolean));
             if (!targetRunIds.length) return;
-
-            const { data, error } = await this.supabase
-                .from('runs_outputs')
-                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, technical_params, created_at, generated_hashtags, creative_rationale, models, reference_image_url, entity_id')
-                .in('run_id', targetRunIds)
-                .order('created_at', { ascending: false });
-            if (error) throw error;
-            const newOutputs = data || [];
+            const newOutputs = await window.ProduccionesDatos.salidas(orgId, targetRunIds);
             const existing = new Set((this.flowOutputs || []).map(o => o?.id).filter(Boolean));
             this.flowOutputs = [...(this.flowOutputs || []), ...newOutputs.filter(o => o?.id && !existing.has(o.id))];
         } catch (error) {
             console.error('❌ Error cargando flow outputs:', error);
         }
-        // Paralelo: hidratar runs_inputs para los mismos run_ids (tab Input del modal).
         this.loadFlowInputs({ reset, runIds }).catch(() => {});
     }
 
@@ -388,7 +327,8 @@ class LivingManager {
      * briefing). Tolerante a errores: si RLS o tabla no responde, falla silencioso.
      */
     async loadFlowInputs({ reset = false, runIds = [] } = {}) {
-        if (!this.supabase) {
+        const orgId = this.organizationId || this.projectData?.organization_id || null;
+        if (!orgId || !window.ProduccionesDatos) {
             if (reset) this.flowInputs = [];
             return;
         }
@@ -396,16 +336,11 @@ class LivingManager {
         try {
             const targetRunIds = (runIds && runIds.length ? runIds : (this.flowRuns || []).map(r => r?.id).filter(Boolean));
             if (!targetRunIds.length) return;
-            const { data, error } = await this.supabase
-                .from('runs_inputs').select('*')
-                .in('run_id', targetRunIds);
-            if (error) throw error;
-            const newInputs = data || [];
+            const newInputs = await window.ProduccionesDatos.entradas(orgId, targetRunIds);
             const existing = new Set((this.flowInputs || []).map(i => i?.id).filter(Boolean));
             this.flowInputs = [...(this.flowInputs || []), ...newInputs.filter(i => i?.id && !existing.has(i.id))];
         } catch (error) {
-            // No bloqueamos el modal si falla; el tab Input mostrara estado vacio.
-            console.warn('runs_inputs hydrate fallo:', error);
+            console.warn('run_inputs hydrate fallo:', error);
         }
     }
 
@@ -414,83 +349,24 @@ class LivingManager {
      * Se llama después de loadFlowOutputs para que las cards renderícen con
      * el estado correcto del corazón.
      */
+    /** Likes por salida (production_output_likes de v1) no existen en la base nueva: flows.likes es por flujo. */
     async loadLikedOutputs() {
-        if (!this.supabase || !this.userId || !this.organizationId) {
-            this.likedOutputs = new Set();
-            return;
-        }
-        try {
-            const { data, error } = await this.supabase
-                .from('production_output_likes')
-                .select('output_id')
-                .eq('user_id', this.userId)
-                .eq('organization_id', this.organizationId);
-            if (error) throw error;
-            this.likedOutputs = new Set((data || []).map(r => r.output_id));
-        } catch (error) {
-            console.error('❌ Error cargando likes:', error);
-            this.likedOutputs = new Set();
-        }
+        this.likedOutputs = new Set();
     }
 
-    /**
-     * Toggle like sobre un output. Optimistic update + reconciliación contra
-     * la BD. Devuelve true si quedó likeado, false si quedó sin like.
-     */
-    async toggleLike(outputId) {
-        if (!this.supabase || !this.userId || !this.organizationId || !outputId) return false;
-        const wasLiked = this.likedOutputs.has(outputId);
-        // Optimistic
-        if (wasLiked) this.likedOutputs.delete(outputId);
-        else this.likedOutputs.add(outputId);
-
-        try {
-            if (wasLiked) {
-                const { error } = await this.supabase
-                    .from('production_output_likes')
-                    .delete()
-                    .eq('output_id', outputId)
-                    .eq('user_id', this.userId);
-                if (error) throw error;
-            } else {
-                const { error } = await this.supabase
-                    .from('production_output_likes')
-                    .insert({
-                        output_id: outputId,
-                        user_id: this.userId,
-                        organization_id: this.organizationId
-                    });
-                if (error) throw error;
-            }
-            return !wasLiked;
-        } catch (error) {
-            // Rollback
-            if (wasLiked) this.likedOutputs.add(outputId);
-            else this.likedOutputs.delete(outputId);
-            console.error('❌ Error toggle like:', error);
-            if (typeof window.showToast === 'function') window.showToast('No se pudo guardar el like');
-            return wasLiked;
-        }
+    async toggleLike(_outputId) {
+        if (typeof window.showToast === 'function') window.showToast(__('Los favoritos por producción llegan con la próxima versión.'), 'info');
+        return false;
     }
 
-    /**
-     * Borra un output. CASCADE en BD limpia los likes asociados. Actualiza
-     * la grilla local sin volver a fetch (optimistic).
-     */
+    /** Borrar = dar de baja el archivo por el borde (DELETE /v1/archivos/:id); la salida deja de pintarse. */
     async deleteOutput(outputId) {
-        if (!this.supabase || !outputId) return false;
-        // Los outputs vienen de 2 tablas: runs_outputs (flows) y system_ai_outputs
-        // (generacion directa de modelo). Borrar de la equivocada devolvia 0 filas
-        // SIN error -> la card desaparecia optimista pero reaparecia al recargar.
-        const table = (this.systemAiOutputs || []).some(o => o?.id === outputId)
-            ? 'system_ai_outputs'
-            : 'runs_outputs';
+        if (!outputId) return false;
+        const orgId = this.organizationId || this.projectData?.organization_id || null;
+        const salida = (this.flowOutputs || []).find(o => o?.id === outputId);
         try {
-            const { error } = await this.supabase
-                .from(table)
-                .delete()
-                .eq('id', outputId);
-            if (error) throw error;
+            if (!window.ProduccionesDatos) throw new Error('sin servicio');
+            await window.ProduccionesDatos.borrarArchivoDeSalida(orgId, salida);
             this.flowOutputs = (this.flowOutputs || []).filter(o => o?.id !== outputId);
             this.latestGeneratedContent = (this.latestGeneratedContent || []).filter(o => o?.id !== outputId);
             this.systemAiOutputs = (this.systemAiOutputs || []).filter(o => o?.id !== outputId);
@@ -499,46 +375,19 @@ class LivingManager {
             return true;
         } catch (error) {
             console.error('❌ Error eliminando output:', error);
-            if (typeof window.showToast === 'function') window.showToast('No se pudo eliminar: ' + (error?.message || 'error desconocido'));
+            const msg = error?.code === 'sin_api' ? __('Borrar aún no está disponible en esta consola.') : error?.code === 'sin_archivo' ? error.message : (__('No se pudo eliminar: ') + (error?.message || 'error desconocido'));
+            if (typeof window.showToast === 'function') window.showToast(msg);
             return false;
         }
     }
 
-    /**
-     * Borra múltiples outputs en una sola operación de BD.
-     */
     async bulkDeleteOutputs(outputIds) {
-        if (!this.supabase || !Array.isArray(outputIds) || !outputIds.length) return 0;
-        // Separar por tabla de origen (runs_outputs vs system_ai_outputs) y borrar
-        // de cada una; antes todo iba a runs_outputs y los system_ai no se borraban.
-        const sysIds = new Set((this.systemAiOutputs || []).map(o => o?.id).filter(Boolean));
-        const fromSystem = outputIds.filter(id => sysIds.has(id));
-        const fromRuns = outputIds.filter(id => !sysIds.has(id));
-        try {
-            if (fromRuns.length) {
-                const { error } = await this.supabase.from('runs_outputs').delete().in('id', fromRuns);
-                if (error) throw error;
-            }
-            if (fromSystem.length) {
-                const { error } = await this.supabase.from('system_ai_outputs').delete().in('id', fromSystem);
-                if (error) throw error;
-            }
-            const idSet = new Set(outputIds);
-            this.flowOutputs = (this.flowOutputs || []).filter(o => !idSet.has(o?.id));
-            this.latestGeneratedContent = (this.latestGeneratedContent || []).filter(o => !idSet.has(o?.id));
-            this.systemAiOutputs = (this.systemAiOutputs || []).filter(o => !idSet.has(o?.id));
-            outputIds.forEach(id => { this.likedOutputs.delete(id); this.selectedOutputs.delete(id); });
-            return outputIds.length;
-        } catch (error) {
-            console.error('❌ Error bulk delete:', error);
-            if (typeof window.showToast === 'function') window.showToast('No se pudieron eliminar: ' + (error?.message || 'error desconocido'));
-            return 0;
-        }
+        if (!Array.isArray(outputIds) || !outputIds.length) return 0;
+        let n = 0;
+        for (const id of outputIds) { if (await this.deleteOutput(id)) n += 1; }
+        return n;
     }
 
-    /**
-     * Copia la URL pública de un asset al portapapeles. Para "compartir".
-     */
     async copyShareUrl(url) {
         if (!url) return false;
         try {
@@ -552,24 +401,9 @@ class LivingManager {
         }
     }
 
+    /** El consumo vive en billing.usage_records (Organización › Uso); aquí no se pinta. */
     async loadCreditUsage() {
-        if (!this.supabase || !this.organizationId) { this.creditUsage = []; return; }
-        try {
-            const fetcher = async () => {
-                const { data, error } = await this.supabase
-                    .from('credit_usage').select('*')
-                    .eq('organization_id', this.organizationId)
-                    .order('created_at', { ascending: false }).limit(100);
-                if (error) throw error;
-                return data || [];
-            };
-            this.creditUsage = window.apiClient
-                ? await window.apiClient.query(`living:credit_usage:${this.organizationId}`, fetcher, { ttl: 30 * 1000, staleWhileRevalidate: true })
-                : await fetcher();
-        } catch (error) {
-            console.error('❌ Error cargando credit usage:', error);
-            this.creditUsage = [];
-        }
+        this.creditUsage = [];
     }
 
     async loadBrandId() {
@@ -605,55 +439,10 @@ class LivingManager {
         }
     }
 
+    /** Ya no hay una segunda fuente: todas las salidas entran por loadFlowOutputs (public.salidas). */
     async loadLatestGeneratedContent({ reset = false } = {}) {
-        if (!this.supabase || !this.brandId) {
-            if (reset) this.latestGeneratedContent = [];
-            return;
-        }
-        if (reset) {
-            this.latestGeneratedContent = [];
-            this._latestGeneratedOffset = 0;
-            this._latestGeneratedHasMore = true;
-        }
-        if (!this._latestGeneratedHasMore) return;
-
-        try {
-            const { data: runs, error: runsError } = await this.supabase
-                .from('flow_runs').select('id')
-                .eq('brand_id', this.brandId)
-                .order('created_at', { ascending: false })
-                .range(this._latestGeneratedOffset, this._latestGeneratedOffset + this._historySourceBatchSize - 1);
-            if (runsError || !runs?.length) {
-                this._latestGeneratedHasMore = false;
-                return;
-            }
-
-            const runIds = runs.map(r => r.id).filter(Boolean);
-            if (!runIds.length) {
-                this._latestGeneratedHasMore = false;
-                return;
-            }
-
-            const { data: outputs, error: outputsError } = await this.supabase
-                .from('runs_outputs')
-                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, technical_params, created_at, generated_hashtags, creative_rationale, reference_image_url, entity_id')
-                .in('run_id', runIds)
-                .order('created_at', { ascending: false })
-                .limit(this._historySourceBatchSize);
-
-            if (outputsError) {
-                this._latestGeneratedHasMore = false;
-                return;
-            }
-            const page = outputs || [];
-            this._latestGeneratedOffset += runIds.length;
-            if (runIds.length < this._historySourceBatchSize) this._latestGeneratedHasMore = false;
-            const existing = new Set((this.latestGeneratedContent || []).map(o => o?.id).filter(Boolean));
-            this.latestGeneratedContent = [...(this.latestGeneratedContent || []), ...page.filter(o => o?.id && !existing.has(o.id))];
-        } catch (error) {
-            console.error('❌ Error loading latest generated content:', error);
-            this._latestGeneratedHasMore = false;
-        }
+        if (reset) this.latestGeneratedContent = [];
+        this._latestGeneratedHasMore = false;
     }
 
     /**
@@ -661,39 +450,10 @@ class LivingManager {
      * generated text). Filtra por organization_id (consistente con
      * runs_outputs). Selecciona los campos FK canonicos.
      */
+    /** system_ai_outputs (herramientas standalone de v1) no existe en la base nueva. */
     async loadSystemAiOutputs({ reset = false } = {}) {
-        if (!this.supabase || !this.organizationId) {
-            if (reset) this.systemAiOutputs = [];
-            return;
-        }
-        if (reset) {
-            this.systemAiOutputs = [];
-            this._systemAiOffset = 0;
-            this._systemAiHasMore = true;
-        }
-        if (!this._systemAiHasMore) return;
-        try {
-            const { data, error } = await this.supabase
-                .from('system_ai_outputs')
-                .select('id, run_id, brand_container_id, organization_id, user_id, provider, output_type, status, storage_path, storage_object_id, prompt_used, text_content, technical_params, metadata, models, entity_id, reference_image_url, brief_id, persona_id, campaign_id, created_at')
-                .eq('organization_id', this.organizationId)
-                .neq('provider', 'openai')
-                .order('created_at', { ascending: false })
-                .range(this._systemAiOffset, this._systemAiOffset + this._historySourceBatchSize - 1);
-            if (error) {
-                console.warn('⚠️ Error cargando system_ai_outputs:', error.message || error.code);
-                this._systemAiHasMore = false;
-                return;
-            }
-            const page = data || [];
-            if (page.length < this._historySourceBatchSize) this._systemAiHasMore = false;
-            this._systemAiOffset += page.length;
-            const existing = new Set((this.systemAiOutputs || []).map(o => o?.id).filter(Boolean));
-            this.systemAiOutputs = [...(this.systemAiOutputs || []), ...page.filter(o => o?.id && !existing.has(o.id))];
-        } catch (error) {
-            console.error('❌ Error cargando system_ai_outputs:', error);
-            this._systemAiHasMore = false;
-        }
+        if (reset) this.systemAiOutputs = [];
+        this._systemAiHasMore = false;
     }
 
     async loadMoreHistorySources({ reset = false } = {}) {
@@ -1998,6 +1758,11 @@ class LivingManager {
     async _openCampaignPicker(anchor, ids) {
         if (!ids.length) return;
         this._closeCampaignPicker();
+        // Corte: las campañas viven en marketing.* (D3) y las salidas no llevan campaign_id editable.
+        if (!this.supabase?.from || window.EnObras?.es?.('command-center')) {
+            if (typeof window.showToast === 'function') window.showToast(__('Asignar a una campaña llega con la sección de Campañas.'), 'info');
+            return;
+        }
         let campaigns = [];
         try {
             const { data } = await this.supabase
@@ -4227,6 +3992,11 @@ class LivingManager {
      * la URL publica. Bucket existente, RLS permite insert con auth.
      */
     async _uploadEditReferenceFile(file) {
+        // Corte: las referencias suben por el borde (POST /v1/archivos) y van al flujo por file_id.
+        if (window.StudioDatos && this.organizationId) {
+            const subido = await window.StudioDatos.subirReferencia(this.organizationId, file);
+            return { url: subido.url || '', file_id: subido.file_id, path: subido.object_key || null };
+        }
         if (!this.supabase?.storage) throw new Error('Storage no disponible');
         const userId = this.userId || (await this.supabase.auth.getUser()).data?.user?.id;
         if (!userId) throw new Error('No hay sesión');
@@ -4295,7 +4065,14 @@ class LivingManager {
      * Cache en memoria mientras viva el LivingManager.
      */
     async _loadOrgProducts() {
-        if (!this.supabase || !this.organizationId) return [];
+        if (!this.organizationId) return [];
+        // Corte: elements_full por StudioDataService (con fotos por file_id).
+        if (window.StudioDatos) {
+            try {
+                const ctx = await window.StudioDatos.contexto(this.organizationId, this.brandContainerId || null);
+                return (ctx.products || []).map((p) => ({ id: p.id, nombre_producto: p.nombre_producto, image_urls: p.image_urls || [], product_images: (p.image_urls || []).map((u, i) => ({ image_url: u, image_order: i })) }));
+            } catch (e) { console.warn('[living] _loadOrgProducts:', e?.message || e); return []; }
+        }
         try {
             const { data: products, error } = await this.supabase
                 .from('products')
@@ -4348,6 +4125,8 @@ class LivingManager {
      *           productName, imageUrls, briefId, personaId, campaignId } o null.
      */
     async _detectSourceProductInfo() {
+        // Corte: la salida no lleva entity_id ni referencia de producto; el modal edita sin linaje.
+        if (window.StudioDatos) return null;
         if (!this.supabase) return null;
         const state = this._modalState || {};
 
@@ -5122,6 +4901,13 @@ class LivingManager {
      * @returns {Promise<{credits_charged?:number}|null>} finalize result o null si fallo
      */
     async _runStandaloneKieOp(opts) {
+        // Corte ADR-0052: las ediciones standalone (kie-image-create/kling-video-status)
+        // se apagan con las functions; la edición sobre una producción llega como flujo.
+        if (window.StudioDatos) {
+            if (typeof window.showToast === 'function') window.showToast(__('Editar una producción llega con los flujos de edición. Por ahora, produce una nueva desde Imagen o Video.'), 'info');
+            try { opts?.onDone?.(); } catch (_) { /* nada */ }
+            return null;
+        }
         const {
             clientId, taskId, createPayload, sourceOutputId, sourceImageUrl,
             aspectRatio, sourceInfo, kind, downloadKind, successLabel, failLabel,

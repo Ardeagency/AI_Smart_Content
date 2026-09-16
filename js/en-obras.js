@@ -22,7 +22,7 @@
     'execution-history',
     // Hasta que cada una se porte y pruebe (se van quitando en el D1/D2/D3):
     'dashboard',
-    'production',
+    // 'production': PORTADA el 16/09 (ProduccionesDataService sobre flows.runs + public.salidas; editar/likes/campaña avisan «en obras»).
     'monitoring',
     // 'brand' / 'brands' / 'brand-organization': PORTADAS el 16/09 (MarcaDataService, verificar-marca.mjs 14/14).
     'brand-storage', 'brandstorage',
