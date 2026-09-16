@@ -18,6 +18,7 @@ const VISTAS = [
   'js/views/PlanesView.js',
   'js/views/CreditsShopView.js',
   'js/views/OrganizationView.js',
+  'js/views/ImageView.js',
 ];
 // Campos de fila que llegan de la base y podrían traer HTML de una persona.
 // (kind/role/action/meter_code son enums o códigos de la base, no texto de una persona.)

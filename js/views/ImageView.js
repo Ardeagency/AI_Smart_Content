@@ -11,15 +11,13 @@
  *  - Entra Fotografía: profundidad de campo y fondo, que en video no se
  *    controlan por separado y en una imagen son media dirección.
  *
- * A diferencia de /video, esta página SÍ produce: functions/kie-image-create.js
- * existe y devuelve un taskId. De ahí en adelante el camino es el mismo que ya
- * usaban las ediciones de Studio — polling con kling-video-status (poller
- * genérico de KIE, el nombre es histórico), persistencia en R2 vía
- * kie-output-persist, cobro real con kie-task-finalize (kind 'image_generated')
- * y registro en system_ai_outputs.
+ * Esta página PRODUCE: desde el corte (ADR-0052) una imagen es una corrida del
+ * flujo común `imagen-directa` lanzada por el borde /v1 (StudioDatos.producir),
+ * que la base reserva, cobra por lo medido y guarda en flows.run_outputs →
+ * public.salidas. La consola espera la corrida y pinta la salida principal.
  *
  * Los topes de referencias los promete el sidebar y los aplica el código: si
- * cambian, cambian en los dos sitios Y en kie-image-create.js. Un límite que
+ * cambian, cambian en los dos sitios Y en flows.inputs del flujo. Un límite que
  * la UI anuncia y nadie aplica se paga en el error de la API, cuando el
  * usuario ya subió los archivos.
  *
@@ -29,23 +27,11 @@ class ImageView extends BaseView {
   static documentTitle = 'Imagen';
 
   /** POST: crear tarea de generación en KIE. */
-  static get IMAGE_CREATE_API() {
-    return '/.netlify/functions/kie-image-create';
-  }
   /**
-   * GET: estado de la tarea. El archivo conserva el nombre `kling-video-status`
-   * por historia, pero es el poller genérico de cualquier taskId de kie.ai
-   * (lo comparten Studio en js/living.js y VideoView). No renombrar sin migrar
-   * a los tres.
-   */
-  static get KIE_TASK_STATUS_API() {
-    return '/.netlify/functions/kling-video-status';
-  }
-  /**
-   * Cupo de referencias visuales. Es un tope NUESTRO, conservador: KIE no
-   * documenta el máximo de `image_input` y un rechazo llega cuando el usuario
-   * ya subió los archivos. Debe coincidir con MAX_REFERENCE_IMAGES en
-   * functions/kie-image-create.js.
+   * Corte ADR-0052 (16/09): la imagen se produce con el flujo `imagen-directa`
+   * por el borde /v1 (StudioDatos.producir); las functions de Netlify
+   * (kie-image-create, kling-video-status, kie-output-persist, kie-task-finalize)
+   * se apagan en la ventana. Sin borde (AISC_API_URL vacío) el botón lo dice.
    */
   static get IMAGE_REF_LIMIT() { return 6; }
   /**
@@ -74,7 +60,7 @@ class ImageView extends BaseView {
     this.dbData = { products: [], services: [], entities: [], audiences: [], campaigns: [] };
     this.selectedCampaignId = '';
     this.selectedAudienceId = '';
-    // Referencias visuales: [{ name, url, storagePath, origen, lock }].
+    // Referencias visuales: [{ name, url, file_id, storagePath, origen, lock }] — al flujo va file_id (o la url si no hay archivo).
     // `origen` distingue de dónde salió cada una — 'manual' (subida por el
     // usuario), 'produccion' (elegida en Escenas) o 'activo' (producto del
     // Stack). Importa porque solo las manuales viven en nuestro bucket y solo
@@ -857,20 +843,8 @@ class ImageView extends BaseView {
    * kie-output-persist: el worker de ingesta la descarga server-side, así que
    * los bytes no pasan por el browser. Devuelve URLs completas.
    */
-  async persistKieImage(kieImageUrl, taskId) {
-    const { data: { session } } = await this.supabase.auth.getSession();
-    if (!session?.access_token) return null;
-
-    this.showStatus(window.__('Guardando en tu cuenta…'), true);
-    const res = await fetch('/.netlify/functions/kie-output-persist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ kie_url: kieImageUrl, task_id: taskId, kind: 'generated' })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || window.__('Descarga fallida: {status}', { status: res.status }));
-    return { publicUrl: data.public_url || null, storagePath: data.storage_path };
-  }
+  /** La salida la guarda la base al terminar la corrida (flows.run_outputs → public.salidas). */
+  async persistKieImage(_kieImageUrl, _taskId) { return null; }
 
   buildBrandContextForAPI() {
     const d = this.dbData || {};
@@ -982,33 +956,26 @@ class ImageView extends BaseView {
 
   // ── Referencias visuales ────────────────────────────────────────────────
 
-  /** Sube un adjunto y devuelve { url, storagePath }. Lanza si algo falla. */
+  /** Sube un adjunto por el borde (POST /v1/archivos) y devuelve { url, file_id, storagePath }. Lanza si algo falla. */
   async _uploadFile(file) {
-    if (!this.supabase || !this.supabase.storage) {
-      throw new Error(window.__('Almacenamiento no disponible. Recarga la página y reintenta.'));
+    if (!window.StudioDatos) throw new Error(window.__('Almacenamiento no disponible. Recarga la página y reintenta.'));
+    if (!this.organizationId) throw new Error(window.__('Selecciona una organización para subir referencias.'));
+    try {
+      const subido = await window.StudioDatos.subirReferencia(this.organizationId, file);
+      // Sin URL de galería (sin cookie) la miniatura no se pinta, pero la referencia
+      // sirve igual: al flujo va el file_id.
+      return { url: subido.url || '', file_id: subido.file_id, storagePath: subido.object_key || null };
+    } catch (err) {
+      if (err?.code === 'sin_api') throw new Error(window.__('La subida de referencias aún no está disponible.'));
+      throw err;
     }
-    const { data: { user } } = await this.supabase.auth.getUser();
-    if (!user?.id) throw new Error(window.__('Inicia sesión para subir referencias.'));
-    const bucket = ImageView.IMAGE_STORAGE_BUCKET;
-    const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/jpeg/, 'jpg');
-    const storagePath = `image-refs/${user.id}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error } = await this.supabase.storage
-      .from(bucket)
-      .upload(storagePath, file, { contentType: file.type, upsert: false });
-    if (error) throw error;
-    const { data } = this.supabase.storage.from(bucket).getPublicUrl(storagePath);
-    const url = data?.publicUrl;
-    if (!url) throw new Error(window.__('El archivo subió pero Storage no devolvió URL pública.'));
-    return { url, storagePath };
   }
 
-  /** Limpieza del bucket al quitar un adjunto. Fire-and-forget: no bloquea la UI. */
-  _removeStorage(storagePath) {
-    if (!storagePath || !this.supabase?.storage) return;
-    this.supabase.storage
-      .from(ImageView.IMAGE_STORAGE_BUCKET)
-      .remove([storagePath])
-      .catch((err) => console.warn('[ImageView] limpieza de Storage falló', storagePath, err));
+  /** Baja lógica del archivo en el borde al quitar un adjunto manual. Fire-and-forget. */
+  _removeStorage(_storagePath, fileId = null) {
+    const a = window.apiV2?.api;
+    if (!fileId || !a || !this.organizationId) return;
+    a.borrarArchivo(fileId, this.organizationId).catch((err) => console.warn('[ImageView] baja del archivo falló', fileId, err?.codigo || err?.message));
   }
 
   openRefPicker() {
@@ -1051,7 +1018,7 @@ class ImageView extends BaseView {
     // Solo las subidas por el usuario viven en nuestro bucket. Las que vienen
     // de una producción o de un producto son URLs ajenas: borrarlas del
     // Storage se llevaría por delante la producción original.
-    if (item.origen === 'manual') this._removeStorage(item.storagePath);
+    if (item.origen === 'manual') this._removeStorage(item.storagePath, item.file_id || null);
     this.imageRefs.splice(index, 1);
     // Quitar el chip también tiene que apagar su origen; si no, la tarjeta
     // sigue marcada en el carrusel y el próximo sync la vuelve a meter.
@@ -1569,6 +1536,8 @@ class ImageView extends BaseView {
       resolution: val('#imageResolution', '2K'),
       output_format: val('#imageOutputFormat', 'png'),
       reference_images: this.imageRefs.map((r) => r.url),
+      // Al flujo van file_id (subidas por el borde) o la URL (producciones/activos con URL pública).
+      referencias: this.imageRefs.map((r) => r.file_id || r.url).filter(Boolean),
       // Subconjunto de reference_images que NO debe alterarse (Stack de
       // activos). Van además en reference_images porque para KIE ocupan cupo
       // como cualquier otra imagen; el lock es una instrucción del prompt, no
@@ -1584,7 +1553,6 @@ class ImageView extends BaseView {
   async startGeneration() {
     if (this._generating) return;
     const payload = this.buildImagePayload();
-
     if (!payload.prompt) {
       this.showError(window.__('Escribe primero qué imagen quieres: sujeto, escenario y qué debe transmitir.'));
       return;
@@ -1599,75 +1567,43 @@ class ImageView extends BaseView {
       this.showError(window.__('Selecciona una organización para generar imágenes.'));
       return;
     }
-    if (!this.supabase) {
+    if (!window.StudioDatos) {
       this.showError(window.__('Sesión no disponible. Recarga la página y reintenta.'));
       return;
     }
-
     this._setGenerating(true);
     this.showStatus(window.__('Preparando la toma…'), true);
-
-    let created;
+    // Corte ADR-0052: una imagen ES una corrida del flujo `imagen-directa` por el
+    // borde /v1. La base reserva y cobra lo medido; la consola solo espera y pinta.
+    // El prompt ya va expandido (chips → frases); las referencias van por file_id.
+    const entradas = window.StudioDatos.mapeo.entradasImagen({ ...payload, referencias: payload.referencias });
+    const estados = { queued: window.__('En cola…'), running: window.__('Generando la imagen. Suele tardar menos de un minuto…'), awaiting_approval: window.__('Esperando aprobación…') };
     try {
-      const { data: { session } } = await this.supabase.auth.getSession();
-      const accessToken = session?.access_token;
-      if (!accessToken) throw new Error(window.__('Inicia sesión para generar imágenes.'));
-
-      const res = await fetch(ImageView.IMAGE_CREATE_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify(payload)
+      const r = await window.StudioDatos.producir(this.organizationId, 'imagen', entradas, {
+        marketId: this.brandContainerId || null,
+        alCambiar: (c) => { if (this._generating) this.showStatus(estados[c.status] || estados.running, true); },
       });
-      // Un 404 devuelve HTML: sin este guard el error sería "Unexpected token <".
-      let data = {};
-      try { data = await res.json(); }
-      catch (parseErr) {
-        throw new Error(
-          window.__('El servicio de imagen no respondió correctamente (estado {status}).', { status: res.status }),
-          { cause: parseErr }
-        );
+      const url = r.salida?.url || null;
+      if (!url) {
+        await this._failRun(window.__('La corrida terminó pero no devolvió una imagen visible. Revísala en Producciones.'));
+        return;
       }
-      if (!res.ok || !data.taskId) throw new Error(data.error || window.__('No se pudo iniciar la generación'));
-      created = data;
-    } catch (err) {
+      this.showResult(url);
       this._setGenerating(false);
-      this.showError(err.message || window.__('No se pudo iniciar la generación'));
-      return;
-    }
-
-    this._promptTokens = {
-      input: created.openai_input_tokens || 0,
-      output: created.openai_output_tokens || 0,
-      model: created.openai_model || null
-    };
-
-    // Fila en 'processing' ANTES del polling: si el usuario cierra la pestaña,
-    // queda constancia de la tarea en vez de un cobro sin output.
-    this._lastKieOutputId = await this.saveSystemAIOutput({
-      provider: 'kie',
-      output_type: 'image',
-      external_job_id: created.taskId,
-      status: 'processing',
-      prompt_used: created.prompt || payload.prompt,
-      models: { generator: created.kie_model || null, prompter: created.openai_model || null },
-      technical_params: created.technical_params || {
-        aspect_ratio: payload.aspect_ratio,
-        resolution: payload.resolution,
-        output_format: payload.output_format
-      },
-      metadata: {
-        kind: 'image_generated',
-        reference_count: created.reference_count ?? payload.reference_images.length,
-        product_lock_count: payload.product_lock_urls.length,
-        intencion: payload.intencion,
-        variables: payload.variables,
-        campaign_concept: payload.campaign,
-        audience_concept: payload.audience
+      this._lastRunId = r.run_id;
+      if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
+        window.appNavigation.loadCreditsFromDb(this.organizationId);
       }
-    });
-
-    this.showStatus(window.__('Generando la imagen. Suele tardar menos de un minuto…'), true);
-    await this.pollTask(created.taskId);
+      await this.loadImageProductions();
+      this.renderEscenasCarousel();
+    } catch (err) {
+      const code = err?.code || err?.codigo;
+      const msg = code === 'sin_api' ? window.__('El Studio aún no produce en esta consola (borde sin configurar).')
+        : code === 'sin_saldo' ? window.__('No hay créditos suficientes para producir esta imagen.')
+        : code === 'tiempo_agotado' ? window.__('La generación superó el tiempo máximo de espera (6 min). La corrida sigue: mírala en Producciones.')
+        : (err?.message || window.__('No se pudo iniciar la generación'));
+      await this._failRun(msg);
+    }
   }
 
   stopPolling() {
@@ -1686,135 +1622,11 @@ class ImageView extends BaseView {
     this.stopPolling();
     this._setGenerating(false);
     this.showError(message);
-    if (this._lastKieOutputId) {
-      await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: message });
-      this._lastKieOutputId = null;
-    }
+    this._lastKieOutputId = null;
   }
 
-  async pollTask(taskId) {
-    const statusUrl = `${ImageView.KIE_TASK_STATUS_API}?taskId=${encodeURIComponent(taskId)}`;
-    const pollStartedAt = Date.now();
-
-    const poll = async () => {
-      if (Date.now() - pollStartedAt > ImageView.POLL_MAX_DURATION_MS) {
-        await this._failRun(window.__('La generación superó el tiempo máximo de espera (6 min). Reintenta con un brief más corto o menos referencias.'));
-        return;
-      }
-      // Pausamos el fetch a KIE cuando la pestaña está oculta. El timeout se
-      // sigue midiendo contra wall-clock, así que no se alarga la espera total.
-      if (document.hidden) return;
-      try {
-        const res = await fetch(statusUrl);
-        let data = {};
-        try { data = await res.json(); }
-        catch (parseErr) {
-          console.error('[Image] GET', statusUrl, ': respuesta no es JSON. Status:', res.status, parseErr);
-          await this._failRun(window.__('El servicio de imagen no respondió correctamente (estado {status}). Intenta de nuevo en unos minutos.', { status: res.status }));
-          return;
-        }
-        if (!res.ok) {
-          await this._failRun(data.error || window.__('Error al consultar el estado'));
-          return;
-        }
-
-        const state = data.data?.state;
-        if (state === 'success') {
-          this.stopPolling();
-          let resultJson = data.data?.resultJson;
-          if (typeof resultJson === 'string') {
-            try { resultJson = JSON.parse(resultJson); } catch (_) { /* noop */ }
-          }
-          const urls = resultJson?.resultUrls;
-          const kieUrl = Array.isArray(urls) && urls.length > 0 ? urls[0] : null;
-          if (!kieUrl) {
-            await this._failRun(window.__('No se encontró URL de la imagen en la respuesta'));
-            return;
-          }
-          try {
-            const uploaded = await this.persistKieImage(kieUrl, taskId);
-            if (!uploaded?.publicUrl) {
-              await this._failRun(window.__('No se pudo guardar la imagen en tu cuenta'));
-              return;
-            }
-            this.showResult(uploaded.publicUrl);
-            this._setGenerating(false);
-
-            // Cobro dinámico: kie-task-finalize lee creditsConsumed real de KIE
-            // y le suma los tokens de OpenAI del prompt + el markup del kind.
-            let finalizeResult = null;
-            try {
-              const { data: { session } } = await this.supabase.auth.getSession();
-              const accessToken = session?.access_token;
-              if (accessToken && this.organizationId) {
-                const finalizeRes = await fetch('/.netlify/functions/kie-task-finalize', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-                  body: JSON.stringify({
-                    task_id: taskId,
-                    kind: 'image_generated',
-                    organization_id: this.organizationId,
-                    source_output_id: this._lastKieOutputId || null,
-                    openai_input_tokens: this._promptTokens?.input || 0,
-                    openai_output_tokens: this._promptTokens?.output || 0,
-                    openai_model: this._promptTokens?.model || 'gpt-4o-mini'
-                  })
-                });
-                finalizeResult = await finalizeRes.json().catch(() => null);
-                if (!finalizeRes.ok) {
-                  console.warn('[Image] finalize falló, imagen guardada sin cobro:', finalizeResult);
-                } else if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
-                  window.appNavigation.loadCreditsFromDb(this.organizationId);
-                }
-              }
-            } catch (e) {
-              console.warn('[Image] finalize exception:', e);
-            }
-
-            if (this._lastKieOutputId) {
-              // Merge de metadata: preserva kind y campos del insert original.
-              await this.updateSystemAIOutput(this._lastKieOutputId, {
-                status: 'completed',
-                storage_path: uploaded.storagePath,
-                metadata: {
-                  kind: 'image_generated',
-                  resultUrls: urls,
-                  image_url: uploaded.publicUrl,
-                  kie_source_url: kieUrl,
-                  credits_charged: finalizeResult?.credits_charged ?? null,
-                  cost_breakdown: finalizeResult?.cost_breakdown ?? null
-                },
-                error_message: null
-              });
-              this._lastKieOutputId = null;
-            }
-            // La imagen recién hecha entra al carrusel de Escenas sin recargar.
-            await this.loadImageProductions();
-            this.renderEscenasCarousel();
-          } catch (err) {
-            await this._failRun(err.message || window.__('Error al guardar la imagen'));
-          }
-          return;
-        }
-        if (state === 'fail') {
-          const rawMsg = data.data?.failMsg || data.data?.failCode || window.__('La generación falló');
-          await this._failRun(rawMsg);
-          return;
-        }
-
-        this.showStatus(window.__('Generando la imagen. Suele tardar menos de un minuto…'), true);
-      } catch (err) {
-        await this._failRun(err.message || window.__('Error al consultar el estado'));
-      }
-    };
-
-    await poll();
-    if (!this._generating) return; // ya terminó (éxito o fallo) en el primer poll
-    this._pollInterval = setInterval(poll, ImageView.POLL_INTERVAL_MS);
-    // Al volver a la pestaña, un poll inmediato evita esperar 3s al próximo tick.
-    this._pollVisibilityHandler = () => { if (!document.hidden) poll(); };
-    this.addEventListener(document, 'visibilitychange', this._pollVisibilityHandler);
-  }
+  /** El sondeo lo hace ApiV2.esperarCorrida dentro de StudioDatos.producir. */
+  async pollTask(_taskId) { /* sin polling propio en la base nueva */ }
 
   _teardown() {
     this.stopPolling();
