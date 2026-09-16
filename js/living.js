@@ -3218,6 +3218,15 @@ class LivingManager {
      * pendiente. Cuando se conecten, este switch llama al endpoint y refresca.
      */
     _handleToolbarAction(tool, btn) {
+        // Corte (ADR-0052): las herramientas de imagen (editar, reencuadrar, ampliar, quitar
+        // fondo, arreglar texto) iban por functions kie-* que ya no existen; vuelven como
+        // flujos del catálogo. Hasta entonces, palabras — y ningún 503.
+        if (!this._herramientasHabilitadas) {
+            const NOMBRE = { edit: 'Editar', 'change-ratio': 'Reencuadrar', upscale: 'Ampliar', 'remove-bg': 'Quitar el fondo', 'fix-text': 'Arreglar el texto' };
+            if (typeof window.showToast === 'function') window.showToast(`${NOMBRE[tool] || 'Esta herramienta'} está en obras: produce la imagen de nuevo desde /image con lo que necesitas.`, { type: 'info' });
+            void btn;
+            return;
+        }
         // Debounce double-click: si el mismo source+tool esta inflight, ignoramos
         // el click. Cada handler lockea/desbloquea via _toolbarLock(tool, outputId).
         const state = this._modalState || {};
@@ -3319,9 +3328,6 @@ class LivingManager {
      * destino y un prompt de extension; nunca recorta al sujeto.
      */
     async _applyChangeRatio(targetRatio) {
-        // Corte: el reencuadre iba por la function kie-image-reframe-create (muerta); vuelve como flujo del catálogo.
-        if (typeof window.showToast === 'function') window.showToast(`Reencuadrar a ${targetRatio} está en obras: produce la imagen de nuevo con ese formato desde /image.`, { type: 'info' });
-        if (!this._reencuadreHabilitado) return;
         const state = this._modalState || {};
         const imageUrl = state.mediaUrl;
         const sourceOutputId = state.outputId || null;
@@ -3412,9 +3418,6 @@ class LivingManager {
      * Reusa todos los helpers del flujo de edit (background tasks).
      */
     async _applyUpscale() {
-        // Corte: la ampliación iba por la function kie-image-upscale-create (muerta); vuelve como flujo del catálogo.
-        if (typeof window.showToast === 'function') window.showToast('Ampliar la resolución está en obras: produce la imagen en 2K o 4K desde /image.', { type: 'info' });
-        if (!this._ampliacionHabilitada) return;
         const state = this._modalState || {};
         const imageUrl = state.mediaUrl;
         const sourceOutputId = state.outputId || null;
