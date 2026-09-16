@@ -1212,6 +1212,12 @@ const VERA_WORDMARK_SRC = '/recursos/vera/Vera-2.svg';
 function getAiChatUrl() { return ''; }
 function getAiTaskEventUrl() { return ''; }
 
+const FRAME_MIN_H = 160;      // igual que el min-height del CSS
+const FRAME_MAX_H = 6000;     // techo duro: más allá, scroll interno
+const FRAME_PROBE_H = 640;    // lienzo de sondeo para documentos atados al viewport
+const FRAME_STORM_MS = 1500;  // ventana del detector
+const FRAME_STORM_MAX = 12;   // ajustes dentro de la ventana antes de congelar
+
 function fitSandboxFrame(frame, data, now = Date.now()) {
   const st = frame.__veraFit
     || (frame.__veraFit = { applied: 0, probed: false, frozen: false, winStart: 0, winCount: 0 });

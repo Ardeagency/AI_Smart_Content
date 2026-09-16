@@ -156,11 +156,13 @@ describe('invariantes que no se pueden deshacer sin querer', () => {
     expect(cuerpo.slice(0, fin)).toContain('data-message-id=');
   });
 
-  test('los mensajes se cargan con su metadata', () => {
-    // Sin metadata el botón "Autorizar" de una tarea costosa no tiene qué
-    // reenviar: se queda mudo después de decir "✓ Autorizado".
-    expect(FUENTE).toContain("select('id, role, content, created_at, metadata')");
-    expect(FUENTE).toContain("select('id, role, content, created_at, conversation_id, metadata')");
+  test('los mensajes se cargan por VeraDatos (con metadata) y el sondeo descarta por id', () => {
+    // Corte ADR-0052: ai.messages por VeraDataService; mensajeAV1 conserva metadata
+    // (tokens, costo, herramienta) y el respaldo por sondeo descarta por ID, no por reloj.
+    expect(FUENTE).toContain('await window.VeraDatos.mensajes(this.aiState.active_conversation_id)');
+    expect(FUENTE).toContain('await window.VeraDatos.respuestasNuevas(conversationId, vistos)');
+    const SERVICIO = fs.readFileSync(path.join(process.cwd(), 'js/services/VeraDataService.js'), 'utf8');
+    expect(SERVICIO).toMatch(/metadata: \{ tool_name/);
   });
 
   test('el respaldo por polling no depende del reloj del navegador', () => {
