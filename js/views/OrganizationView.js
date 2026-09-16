@@ -1305,6 +1305,93 @@ class OrganizationView extends BaseView {
       </div>`;
   }
 
+  /**
+   * Ficha de facturación (billing.customers). Es la puerta de la compra de
+   * créditos: `puede_facturar` dice qué falta y `guardar_ficha` valida (DV del
+   * NIT si el país es CO). Leerla y guardarla exige gestionar_facturacion.
+   */
+  _renderBillingDatos() {
+    const el = this.querySelector('#orgBillingDatos');
+    if (!el) return;
+    const f = this.billingFicha || {};
+    const pf = this.billingPuedeFacturar || { puede: false, falta: [] };
+    const canEdit = this.isOwner || this.canManageMembers;
+    if (this.billingFichaSinPermiso) {
+      el.innerHTML = `<p class="org-datos-nombre">${this._esc(this.org?.name || '—')}</p>
+        <p class="org-res-sub">${__('Tu rol no puede ver ni editar los datos de facturación de la marca.')}</p>`;
+      return;
+    }
+    const estado = pf.puede
+      ? `<span class="org-bill-pill org-bill-pill--ok">${__('Lista para facturar')}</span>`
+      : `<span class="org-bill-pill org-bill-pill--muted">${__('Incompleta')}</span>${pf.falta.length ? ` <span class="org-res-sub">${__('Falta: {lista}', { lista: this._esc(pf.falta.join(', ')) })}</span>` : ''}`;
+    const campo = (k, label, extra = '') => `
+      <div class="org-bill-field"><label for="ficha_${k}">${label}</label>
+        <input type="text" id="ficha_${k}" name="${k}" class="form-input" value="${this._esc(f[k] ?? '')}"${canEdit ? '' : ' disabled'} ${extra}></div>`;
+    el.innerHTML = `
+      <div class="org-ficha-estado">${estado}</div>
+      <form id="orgFichaForm" class="org-bill-limits-form" autocomplete="off">
+        <div class="org-bill-fields">
+          ${campo('legal_name', __('Razón social'))}
+          ${campo('taxpayer_kind', __('Tipo de contribuyente'), 'placeholder="persona_juridica / persona_natural"')}
+          ${campo('tax_id', __('NIT / documento'))}
+          ${campo('tax_id_dv', __('DV'), 'maxlength="1" inputmode="numeric"')}
+          ${campo('tax_regime', __('Régimen'), 'placeholder="comun / simple / no_responsable"')}
+          ${campo('billing_email', __('Correo de facturación'), 'inputmode="email"')}
+          ${campo('billing_phone', __('Teléfono'), 'inputmode="tel"')}
+          ${campo('address_line', __('Dirección'))}
+          ${campo('city', __('Ciudad'))}
+          ${campo('region', __('Departamento / región'))}
+          ${campo('country', __('País (ISO-2)'), 'maxlength="2" placeholder="CO"')}
+          ${campo('postal_code', __('Código postal'))}
+        </div>
+        <div class="org-bill-limits-actions">
+          <button type="submit" class="btn btn-primary" id="orgFichaSubmit"${canEdit ? '' : ' disabled'}><i class="aisc-ico aisc-ico--save"></i> ${__('Guardar datos de facturación')}</button>
+        </div>
+      </form>`;
+    el.querySelector('#orgFichaForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveFicha(); });
+  }
+
+  async _saveFicha() {
+    const form = this.querySelector('#orgFichaForm');
+    const btn = this.querySelector('#orgFichaSubmit');
+    if (!form) return;
+    const ficha = {};
+    (window.OrganizacionDatos?.CAMPOS_FICHA || []).forEach((k) => { const i = form.querySelector(`[name="${k}"]`); if (i) ficha[k] = i.value; });
+    if (ficha.country) ficha.country = String(ficha.country).trim().toUpperCase();
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Guardando…')}`; }
+    try {
+      const r = await window.OrganizacionDatos.guardarFicha(this.orgId, ficha);
+      this.billingFicha = { ...this.billingFicha, ...ficha };
+      this.billingPuedeFacturar = { puede: r?.puede_facturar === true || r?.puede === true, falta: Array.isArray(r?.falta) ? r.falta : [] };
+      this._toast(__('Datos de facturación guardados'));
+      this._renderBillingDatos();
+    } catch (e) {
+      alert(e.message || __('No se pudo guardar la ficha.'));
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="aisc-ico aisc-ico--save"></i> ${__('Guardar datos de facturación')}`; }
+    }
+  }
+
+  _renderBillingLimits(el) {
+    // Topes de gasto automático (org_claude_caps de v1) NO existen en la base nueva:
+    // el freno es el saldo (ADR-0029: sin créditos la marca se detiene) y la
+    // autonomía de cada agente (ai.agents.autonomy). Se dice, no se dibuja un formulario mudo.
+    el.innerHTML = `
+      <div class="org-bill-limits-head">
+        <h3 class="org-uchart-title">${__('Límites de uso automático')}</h3>
+        <p class="org-uchart-desc">${__('En esta versión el freno del gasto automático es el saldo de créditos: sin saldo, la marca se detiene. El nivel de autonomía de cada agente se ajusta en Seguridad › Agentes.')}</p>
+      </div>`;
+  }
+
+  async _saveCaps() {
+    this._toast(__('Los topes de gasto automático ya no se configuran aquí.'));
+  }
+
+  async _cancelSubscription(_undo) {
+    // Sin puerta para una persona (planes.md, decisión de JC): se pide por escrito.
+    (window.showToast || window.alert)(__('Para cambiar o cancelar el plan escríbenos a contact@aismartcontent.io y lo aplicamos por ti.'), 'info');
+  }
+
   _fmtPeriod(start, end) {
     if (!start || !end) return '—';
     const opts = { day: 'numeric', month: 'short' };

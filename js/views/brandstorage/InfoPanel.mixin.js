@@ -26,7 +26,9 @@
   const InfoPanelMixin = {
   getIntegrationsForContainer(brandContainerId) {
     const id = String(brandContainerId || '');
-    return (this.brandIntegrations || []).filter((row) => String(row.brand_container_id || '') === id);
+    // Base nueva: las conexiones son de la MARCA (integrations.connections, sin
+    // brand_container_id) y valen para cualquier mercado de la ficha.
+    return (this.brandIntegrations || []).filter((row) => row.brand_container_id == null || String(row.brand_container_id) === id);
     },
 
   getEntitiesForContainer(brandContainerId) {
