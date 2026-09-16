@@ -2063,6 +2063,8 @@ class MonitoringView extends BaseView {
    * usuario clasifica a mano.
    */
   async _classifyProfile(det) {
+    // Corte ADR-0052: la function de OpenAI se apagó; la persona clasifica a mano (rol + relevancia).
+    if (window.MonitoringDataService) return null;
     try {
       const { data: sessionData } = await this._supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;

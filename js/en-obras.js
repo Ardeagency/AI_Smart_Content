@@ -23,7 +23,7 @@
     // Hasta que cada una se porte y pruebe (se van quitando en el D1/D2/D3):
     'dashboard',
     // 'production': PORTADA el 16/09 (ProduccionesDataService sobre flows.runs + public.salidas; editar/likes/campaña avisan «en obras»).
-    'monitoring',
+    // 'monitoring': PORTADA el 16/09 (MonitoringDataService sobre social.profiles/posts_view, intel.signals, ingest.schedules; URLs vigiladas y clasificador por IA avisan).
     // 'brand' / 'brands' / 'brand-organization': PORTADAS el 16/09 (MarcaDataService, verificar-marca.mjs 14/14).
     'brand-storage', 'brandstorage',
     // 'products' / 'services' / 'places' / 'characters': PORTADAS el 16/09 (CatalogoDataService sobre elements_full; la ficha por IA avisa «en obras»).
