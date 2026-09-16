@@ -2320,9 +2320,16 @@ class LivingManager {
             const fail = all.filter((r) => r.status === 'failed');
             console.log('[publish] corridas:', all);
             if (ok.length) {
-                window.showToast?.(ok.length === 1 ? 'En cola: Vera te pedirá aprobar la publicación en la campana.' : `${ok.length} en cola: aprueba cada publicación en la campana.`, { type: 'success' });
-                this._renderPublishResult(ok.map((r) => ({ ...r, status: 'published', remote_url: null })), fail, multi);
-                if (window.appNavigation?.refreshActivityBadge) window.appNavigation.refreshActivityBadge();
+                // La corrida queda `awaiting_approval`: se aprueba en el runner de ese flujo (?run=).
+                const prefix = (this.organizationId && typeof window.getOrgPathPrefix === 'function') ? window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') : '';
+                if (ok.length === 1 && window.router) {
+                    window.showToast?.('En cola: revisa y aprueba la publicación.', { type: 'success' });
+                    this.closePublishSheet(); this.closeProductionModal?.();
+                    window.router.navigate(`${prefix}/studio/publicar-meta?run=${encodeURIComponent(ok[0].run_id)}`);
+                } else {
+                    window.showToast?.(`${ok.length} en cola: aprueba cada publicación desde el historial de corridas.`, { type: 'success' });
+                    this._renderPublishResult(ok.map((r) => ({ ...r, status: 'published', remote_url: null })), fail, multi);
+                }
             } else {
                 window.showToast?.(`No se pudo enviar: ${fail[0]?.error || 'fallo'}`, { type: 'error' });
             }
