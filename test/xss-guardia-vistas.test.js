@@ -47,7 +47,7 @@ function hallazgos(src) {
     const linea = src.slice(0, m.index).split('\n').length;
     const contexto = src.slice(Math.max(0, m.index - 200), m.index);
     // Texto que NO es HTML (alert/return de validación) o cadenas que la vista escapa al pintarlas (desc, resource).
-    if (/apiClient\.(query|invalidate)|console\.(warn|error|log|info)|throw |new Error|navigate\(|href = |localStorage|\[`|`\$\{prefix\}|`\$\{k\}|`\$\{e\.fecha\}|_validateFile|alert\(|desc: \(|const resource = /.test(contexto)) continue;
+    if (/apiClient\.(query|invalidate)|console\.(warn|error|log|info)|throw |new Error|navigate\(|href = |localStorage|\[`|`\$\{prefix\}|`\$\{k\}|`\$\{e\.fecha\}|_validateFile|alert\(|desc: \(|const resource = |_prompt[A-Za-z]*\(e\) \{/.test(contexto)) continue;
     salida.push(`línea ${linea}: \${${expr.trim().slice(0, 70)}}`);
   }
   return salida;
