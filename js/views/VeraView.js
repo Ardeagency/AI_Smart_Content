@@ -1203,67 +1203,14 @@ const VERA_AVATAR_SRC = '/recursos/vera/Vera.svg';
 const VERA_WORDMARK_SRC = '/recursos/vera/Vera-2.svg';
 
 /** URL del chat: ai-engine externo o Netlify Function en el mismo origen */
-function getAiChatUrl() {
-  const base = (typeof window !== 'undefined' && window.AI_ENGINE_BASE_URL)
-    ? String(window.AI_ENGINE_BASE_URL).trim().replace(/\/+$/, '')
-    : '';
-  if (!base) {
-    // Si el frontend está en HTTPS, evitamos Mixed Content usando el proxy HTTPS del mismo dominio.
-    // En ese caso, la función proxy debe tener AI_ENGINE_URL configurado en Netlify.
-    const pageIsHttps = window.location?.protocol === "https:";
-    if (pageIsHttps) {
-      return `${window.location.origin}/api/ai/engine-chat`;
-    }
-    throw new Error(
-      'AI_ENGINE_BASE_URL no configurado. Define window.AI_ENGINE_BASE_URL (ej: http://tu-servidor:3000) o usa HTTPS + proxy /api/ai/engine-chat con AI_ENGINE_URL en Netlify.'
-    );
-  }
-
-  // Si la página corre en HTTPS y ai-engine solo está en HTTP,
-  // el browser bloqueará el request como Mixed Content.
-  // En ese caso usamos un proxy bajo el mismo dominio.
-  const pageIsHttps = window.location?.protocol === "https:";
-  if (pageIsHttps && base.startsWith("http://")) {
-    return `${window.location.origin}/api/ai/engine-chat`;
-  }
-
-  return `${base}/chat`;
-}
-
-/** Task events: solo mismo origen (Netlify) salvo que definas AI_ENGINE_BASE_URL con rutas equivalentes */
-function getAiTaskEventUrl() {
-  return `${window.location.origin}/api/ai/task-event`;
-}
-
-/* ─── Alto de los iframes de VERA (```html / ```artifact) ────────────
-   El iframe no puede medirse a sí mismo sin cuidado: `documentElement.scrollHeight`
-   NUNCA es menor que el viewport, y el viewport de un iframe ES el alto que le
-   pone el padre. Sumarle un margen a esa medida y devolverla convierte el puente
-   en un TRINQUETE: el ResizeObserver vuelve a disparar, mide más, el padre suma
-   otra vez, y el bloque crece sin techo dejando un vacío muerto bajo el HTML.
-
-   Por eso aquí se mide el CONTENIDO (`body`) y se compara contra el viewport:
-
-   - contenido ya es el alto aplicado → convergió: no se toca nada. (Es también
-     lo que reporta un documento al que ya le dimos su medida exacta.)
-   - contenido  <  viewport → el documento cabe: se encoge a su alto real.
-   - contenido  >  viewport → hay desborde medible: se crece a lo que pide.
-   - contenido === viewport, y NO es el alto que aplicamos → ambiguo: o mide
-     justo eso, o está ATADO al viewport (`min-height:100vh`, `height:100%`) y
-     seguirá al padre a donde vaya. Se SONDEA una sola vez con un alto de
-     lienzo; la medida siguiente lo resuelve sola: si vuelve a igualar al
-     viewport es que lo persigue y se queda en el lienzo (con scroll interno),
-     y si reporta menos, se encoge a su alto real.
-
-   El detector de TORMENTA es el fusible: muchos ajustes seguidos en el mismo
-   instante son un bucle, no una interacción. Se cuenta por ventana de tiempo y
-   no por total, para no congelar un artifact que el usuario despliega y cierra
-   a mano diez veces en un minuto. */
-const FRAME_MIN_H = 160;      // igual que el min-height del CSS
-const FRAME_MAX_H = 6000;     // techo duro: más allá, scroll interno
-const FRAME_PROBE_H = 640;    // lienzo de sondeo para documentos atados al viewport
-const FRAME_STORM_MS = 1500;  // ventana del detector
-const FRAME_STORM_MAX = 12;   // ajustes dentro de la ventana antes de congelar
+/**
+ * Corte ADR-0052: Vera habla por el borde /v1 (StudioDatos/VeraDatos.enviar →
+ * POST /v1/conversaciones/:id/mensajes) y responde como filas de ai.messages.
+ * El ai-engine (api-ai-engine-chat, task-event, widget-action) se apaga con
+ * las functions: estas dos funciones quedan solo para que nadie las llame a ciegas.
+ */
+function getAiChatUrl() { return ''; }
+function getAiTaskEventUrl() { return ''; }
 
 function fitSandboxFrame(frame, data, now = Date.now()) {
   const st = frame.__veraFit
@@ -1376,6 +1323,12 @@ class VeraView extends (window.BaseView || class {}) {
           reply(false, null, 'no_organization_context'); return;
         }
 
+        // Corte ADR-0052: api-widget-action se apagó; la acción de un widget se le dice a Vera como mensaje.
+        if (window.VeraDatos) {
+          try { await this.sendMessage(__('Acción del widget «{tipo}»: {carga}', { tipo: actionType, carga: JSON.stringify(payload || {}).slice(0, 500) })); reply(true, { encolado: true }, null); }
+          catch (e) { reply(false, null, e?.message || 'error'); }
+          return;
+        }
         try {
           const token = this.supabase
             ? (await this.supabase.auth.getSession())?.data?.session?.access_token
@@ -1464,12 +1417,9 @@ class VeraView extends (window.BaseView || class {}) {
         // sidebar, esta lectura es instantánea sin pegar a Supabase.
         const orgId = this.aiState.organization_id;
         const fetcher = async () => {
-          const { data } = await this.supabase
-            .from('organizations')
-            .select('name')
-            .eq('id', orgId)
-            .maybeSingle();
-          return data ? { name: data.name, plan: '' } : null;
+          // Base nueva: el nombre viene en mi_contexto (ContextoDataService).
+          if (window.contextoService) { await window.contextoService.cargar(); const o = window.contextoService.org(orgId); return o ? { name: o.name, plan: o.plan || '' } : null; }
+          return null;
         };
         const cached = window.apiClient
           ? await window.apiClient.query(`nav:org:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
@@ -1715,19 +1665,10 @@ class VeraView extends (window.BaseView || class {}) {
 
   /* ── Active conversation (última sesión) ─────────────── */
   async loadActiveConversation() {
-    if (!this.supabase || !this.aiState.organization_id || !this.userId) return;
-    const { data } = await this.supabase
-      .from('ai_conversations')
-      .select('id')
-      .eq('organization_id', this.aiState.organization_id)
-      .eq('user_id', this.userId)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (data?.id) this.aiState.active_conversation_id = data.id;
+    if (!window.VeraDatos || !this.aiState.organization_id || !this.userId) return;
+    const lista = await window.VeraDatos.conversaciones(this.aiState.organization_id, { mias: true, userId: this.userId, limite: 1 });
+    if (lista[0]?.id) this.aiState.active_conversation_id = lista[0].id;
   }
-
-  /* ── Deep-link de conversación (?c=<id>&t=<slug>) ────── */
 
   _getUrlConversationId() {
     try { return new URLSearchParams(window.location.search || '').get('c') || ''; }
@@ -1777,19 +1718,11 @@ class VeraView extends (window.BaseView || class {}) {
    */
   async loadConversations() {
     this.aiState.conversations = [];
-    if (!this.supabase || !this.aiState.organization_id || !this.userId) return;
+    if (!window.VeraDatos || !this.aiState.organization_id || !this.userId) return;
     try {
-      const { data, error } = await this.supabase
-        .from('ai_conversations')
-        .select('id, title, updated_at, metadata, ai_messages(count)')
-        .eq('organization_id', this.aiState.organization_id)
-        .eq('user_id', this.userId)
-        .order('updated_at', { ascending: false })
-        .limit(60);
-      if (error || !data) return;
-      this.aiState.conversations = data.filter(
-        (c) => (c.ai_messages?.[0]?.count || 0) > 0
-      );
+      // ai.conversations (las mías en la marca); en el rail solo las que ya tienen mensajes.
+      const lista = await window.VeraDatos.conversaciones(this.aiState.organization_id, { mias: true, userId: this.userId, limite: 60 });
+      this.aiState.conversations = lista.filter((c) => (c.ai_messages?.[0]?.count || 0) > 0);
     } catch (_) { /* lista vacía si falla */ }
   }
 
@@ -1902,6 +1835,14 @@ class VeraView extends (window.BaseView || class {}) {
   _libTypeDef(kind) {
     const orgId = this.aiState.organization_id;
     const sb = () => this.supabase;
+    // Corte ADR-0052: los datos del picker salen de VeraDatos.universo (elements_full,
+    // flows.vista_org); las etiquetas e iconos siguen abajo. Lo que aún no existe en la
+    // base nueva (campañas, audiencias, estrategias, briefs, producciones) devuelve [].
+    if (window.VeraDatos) {
+      const etiquetas = { product: [__('Producto'), 'aisc-ico aisc-ico--product'], service: [__('Servicio'), 'aisc-ico aisc-ico--service'], place: [__('Escenario'), 'aisc-ico aisc-ico--place'], character: [__('Personaje'), 'aisc-ico aisc-ico--character'], flow: [__('Flujo'), 'aisc-ico aisc-ico--flow'], campaign: [__('Campaña'), 'aisc-ico aisc-ico--megaphone'], campaign_objective: [__('Objetivo de campaña'), 'aisc-ico aisc-ico--target'], audience_objective: [__('Audiencia'), 'aisc-ico aisc-ico--users'], brief: [__('Brief'), 'aisc-ico aisc-ico--document'], strategy: [__('Estrategia'), 'aisc-ico aisc-ico--growth'], production: [__('Producción'), 'aisc-ico aisc-ico--image'], brand: [__('Marca'), 'aisc-ico aisc-ico--brand'] };
+      const [label, icon] = etiquetas[kind] || [kind, 'aisc-ico aisc-ico--document'];
+      return { label, icon, load: async () => { const u = await window.VeraDatos.universo(orgId); return u[kind] || []; } };
+    }
     const defs = {
       product: {
         label: __('Producto'), icon: 'aisc-ico aisc-ico--product',
@@ -2119,6 +2060,14 @@ class VeraView extends (window.BaseView || class {}) {
     const VIGENCIA_MS = 5 * 60 * 1000;
     if (this._universo && (Date.now() - (this._universoAt || 0)) < VIGENCIA_MS) return this._universo;
     this._universoAt = Date.now();
+    // Corte: el universo (@menciones) sale de VeraDatos.universo (elements_full + flows.vista_org).
+    if (window.VeraDatos) {
+      try {
+        const u = await window.VeraDatos.universo(this.aiState.organization_id);
+        this._universo = Object.entries(u).flatMap(([kind, items]) => (items || []).map((it) => ({ ...it, kind })));
+        return this._universo;
+      } catch (err) { console.warn('[VeraView] omnibox:', err?.message || err); this._universo = []; return this._universo; }
+    }
     const kinds = this._libKinds();
     const cargas = await Promise.all(kinds.map(async (kind) => {
       try {
@@ -2547,33 +2496,14 @@ class VeraView extends (window.BaseView || class {}) {
     setTimeout(() => { if (!ov.classList.contains('open')) ov.hidden = true; }, 220);
   }
 
-  async _loadArtifacts(force) {
+  /** vera_artifacts no existe en la base nueva: los archivos de Vera llegan como salidas (Producciones). */
+  async _loadArtifacts(_force) {
     const body = document.getElementById('veraGalleryBody');
     const countEl = document.getElementById('veraGalleryCount');
     if (!body) return;
-    if (!this.supabase || !this.aiState.organization_id) {
-      body.innerHTML = this._galleryMsg(__('Inicia sesión para ver tus archivos.'));
-      return;
-    }
-    // Skeleton solo si no hay nada pintado aún (sin parpadeo en refresh).
-    if (force || !body.dataset.loaded) {
-      body.innerHTML = `<div class="vera-gallery-grid">${'<div class="vera-gallery-card vera-gallery-card--skel"></div>'.repeat(6)}</div>`;
-    }
-    try {
-      const { data, error } = await this.supabase
-        .from('vera_artifacts')
-        .select('id,type,title,format,public_url,bytes,created_at')
-        .eq('organization_id', this.aiState.organization_id)
-        .order('created_at', { ascending: false })
-        .limit(100);
-      if (error) throw error;
-      const list = data || [];
-      body.dataset.loaded = '1';
-      if (countEl) countEl.textContent = list.length ? String(list.length) : '';
-      this._renderGallery(list);
-    } catch (_) {
-      body.innerHTML = this._galleryMsg(__('No se pudieron cargar los archivos.'));
-    }
+    body.dataset.loaded = '1';
+    if (countEl) countEl.textContent = '';
+    body.innerHTML = this._galleryMsg(__('Los archivos que produce Vera se ven en Producción.'));
   }
 
   _renderGallery(list) {
@@ -2753,59 +2683,32 @@ class VeraView extends (window.BaseView || class {}) {
   /* Genera el titulo de una conversacion recien creada con OpenAI (Netlify fn
      api-name-conversation), a partir del primer mensaje del usuario. Best-effort,
      una sola vez por conversacion; al exito repinta el rail con el titulo nuevo. */
-  _nameConversationSoon(convId) {
-    if (!convId) return;
+  /** Título de la conversación: las primeras palabras del primer mensaje (sin OpenAI, ADR-0052). */
+  _nameConversationSoon(convId, primerTexto = '') {
+    if (!convId || !window.VeraDatos) return;
     this._namedConvs = this._namedConvs || new Set();
     if (this._namedConvs.has(convId)) return;
     this._namedConvs.add(convId);
+    const titulo = window.VeraDatos.mapeo.tituloDesde(primerTexto);
+    if (!titulo) return;
     setTimeout(async () => {
       try {
-        const token = this.supabase
-          ? (await this.supabase.auth.getSession())?.data?.session?.access_token
-          : null;
-        const res = await fetch('/.netlify/functions/api-name-conversation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify({
-            conversation_id: convId,
-            organization_id: this.aiState.organization_id
-          })
-        });
-        if (!res.ok) return;
-        const json = await res.json().catch(() => null);
-        if (json?.title) {
-          await this.loadConversations();
-          this.renderHistory();
-          // Si esta conversación sigue siendo la activa, refleja el título
-          // nuevo en el slug de la URL.
-          if (this.aiState.active_conversation_id === convId) {
-            this._setConversationUrl(convId, json.title);
-          }
-        }
+        await window.VeraDatos.renombrar(convId, titulo);
+        await this.loadConversations();
+        this.renderHistory();
+        if (this.aiState.active_conversation_id === convId) this._setConversationUrl(convId, titulo);
       } catch (_) { /* best-effort: si falla, queda "Nueva conversación" */ }
-    }, 1500);
+    }, 300);
   }
 
   /* ── Messages ────────────────────────────────────────── */
   async loadMessages() {
-    if (!this.supabase || !this.aiState.active_conversation_id) {
+    if (!window.VeraDatos || !this.aiState.active_conversation_id) {
       this.aiState.messages = [];
       return;
     }
     try {
-      // `metadata` NO es opcional: el bloque [CONFIRM] guarda ahí el mensaje
-      // original que hay que reenviar cuando el usuario autoriza. Sin esta
-      // columna el botón "Autorizar" no tiene qué reenviar y muere en silencio.
-      const { data, error } = await this.supabase
-        .from('ai_messages')
-        .select('id, role, content, created_at, metadata')
-        .eq('conversation_id', this.aiState.active_conversation_id)
-        .in('role', ['user', 'assistant', 'error'])
-        .order('created_at', { ascending: true });
-      this.aiState.messages = (!error && data) ? data : [];
+      this.aiState.messages = await window.VeraDatos.mensajes(this.aiState.active_conversation_id);
     } catch (_) {
       this.aiState.messages = [];
     }
@@ -2946,6 +2849,8 @@ class VeraView extends (window.BaseView || class {}) {
 
       // Persist event so Vera can see it next turn (no immediate assistant reply)
       try {
+        // Corte ADR-0052: api-task-event se apagó; el evento queda en memoria y viaja en el próximo mensaje.
+        if (!getAiTaskEventUrl()) { (this._eventosPendientes ||= []).push({ sourceMessageId, idx, taskText, checked }); return; }
         const token = this.supabase
           ? (await this.supabase.auth.getSession())?.data?.session?.access_token
           : null;
@@ -3275,6 +3180,7 @@ class VeraView extends (window.BaseView || class {}) {
       window._veraApproveAction = async (key, msgId, btnEl) => {
         if (btnEl) { btnEl.disabled = true; btnEl.textContent = __('✓ Aprobado'); btnEl.classList.add('vera-approve-pill--done'); }
         try {
+          if (!getAiTaskEventUrl()) throw new Error('sin task-event en v2: la aprobación viaja como mensaje');
           const token = this.supabase ? (await this.supabase.auth.getSession())?.data?.session?.access_token : null;
           await fetch(getAiTaskEventUrl(), {
             method: 'POST',
@@ -4351,23 +4257,19 @@ class VeraView extends (window.BaseView || class {}) {
   }
 
   /* ── Adjuntos: subir a Supabase Storage ─────────────── */
+  /** Adjuntos por el borde (POST /v1/archivos): al mensaje va la URL de galería/pública y el file_id. */
   async _uploadAttachment(att, file) {
-    if (!this.supabase?.storage) throw new Error(__('Supabase storage no disponible'));
+    if (!window.StudioDatos) throw new Error(__('Almacenamiento no disponible'));
     const orgId = this.aiState.organization_id;
-    const userId = this.userId || 'anon';
-    const safeName = (file.name || 'archivo')
-      .replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
-    // Path con orgId al inicio para alinear con las policies de Storage
-    // (storage.foldername(name)[1] = orgId → match con organization_members).
-    const path = `${orgId}/chat/${userId}/${Date.now()}-${att.id}-${safeName}`;
-    const { error } = await this.supabase.storage
-      .from('org-assets')
-      .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
-    if (error) throw error;
-    const { data } = this.supabase.storage.from('org-assets').getPublicUrl(path);
-    if (!data?.publicUrl) throw new Error(__('No se obtuvo URL pública'));
-    att.url = data.publicUrl;
-    att.path = path;
+    try {
+      const subido = await window.StudioDatos.subirReferencia(orgId, file);
+      att.url = subido.url || `archivo:${subido.file_id}`;
+      att.file_id = subido.file_id;
+      att.path = subido.object_key || null;
+    } catch (e) {
+      if (e?.code === 'sin_api') throw new Error(__('Los adjuntos se suben cuando el borde esté configurado.'));
+      throw e;
+    }
   }
 
   /* ── Adjuntos: manejar selección + subir en paralelo ──── */
@@ -4507,118 +4409,38 @@ class VeraView extends (window.BaseView || class {}) {
     this.showTypingIndicator();
 
     try {
-      const token = this.supabase
-        ? (await this.supabase.auth.getSession())?.data?.session?.access_token
-        : null;
-
-      const res = await fetch(getAiChatUrl(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          'X-AI-ENGINE-BASE-URL': (window.AI_ENGINE_BASE_URL || (() => {
-            try { return localStorage.getItem('AI_ENGINE_BASE_URL') || ''; } catch (_) { return ''; }
-          })())
-        },
-        body: JSON.stringify({
-          organization_id: this.aiState.organization_id,
-          conversation_id: this.aiState.active_conversation_id || undefined,
-          message: messageToSend,
-          attachments,
-          confirmed_high_cost: opts.confirmedHighCost === true,
-          simplify_request: opts.simplifyRequest === true,
-        })
-      });
-
-      if (!res.ok) {
-        // Demo rate-limit response → open signup modal instead of generic error.
-        if (res.status === 429) {
-          try {
-            const errJson = await res.clone().json();
-            if ((errJson.error === 'demo_rate_limited' || errJson.error === 'demo_global_capacity')
-                && window.DemoGuard) {
-              this.hideTypingIndicator();
-              this.aiState.isLoading = false;
-              if (userMsg) this._removeMessage(userMsg.id);
-              window.DemoGuard.showSignupModal(__('seguir conversando con Vera'));
-              return;
-            }
-          } catch (_) { /* fall through to generic error */ }
-        }
-        throw new Error(await res.text());
+      // Corte ADR-0052: la conversación se crea por PostgREST (ai.conversations) y el
+      // mensaje va por el borde: POST /v1/conversaciones/:id/mensajes {texto, id_cliente}.
+      // El borde guarda el `user` y ENCOLA el turno; la respuesta llega como filas
+      // `assistant` en ai.messages (también «sin créditos» / «tope» / «cancelado»).
+      if (!window.VeraDatos) throw new Error(__('Vera no está disponible. Recarga la página.'));
+      let convId = this.aiState.active_conversation_id;
+      let nueva = false;
+      if (!convId) {
+        const conv = await window.VeraDatos.crearConversacion(this.aiState.organization_id, { userId: this.userId, marketId: this.aiState.brand_container_id || null });
+        convId = conv.id; nueva = true;
+        this.aiState.active_conversation_id = convId;
+        this._setConversationUrl(convId);
       }
-      const json = await res.json();
-
-      // Guardar conversation_id si es nuevo
-      if (json?.conversation_id && !this.aiState.active_conversation_id) {
-        this.aiState.active_conversation_id = json.conversation_id;
-        // Deep-link: fija ?c=<id> para que un refresh mantenga la conversación.
-        this._setConversationUrl(json.conversation_id);
-        // Conversación recién creada: refresca el rail para que aparezca y
-        // genera un título con OpenAI a partir del primer mensaje del usuario
-        // (evita que todo el historial diga "Nueva conversación").
-        this._refreshHistorySoon();
-        this._nameConversationSoon(json.conversation_id);
-      }
-
-      const convId = json?.conversation_id || this.aiState.active_conversation_id;
-
-      if (json?.status === 'cost_confirmation_inline') {
-        // ── Backend persistio el [CONFIRM] como ai_message con 3 botones
-        //    (Autorizar / Simplificar / Cancelar).
-        //    ANTES aqui se soltaba el spinner y se confiaba en que "Realtime lo
-        //    entregara" — pero el UNICO canal Realtime del chat se abre DENTRO
-        //    de _waitForAsyncResponse, que en esta rama no se llamaba: no habia
-        //    ningun suscriptor vivo y el bloque no aparecia hasta recargar.
-        //    Ahora se espera igual que una respuesta normal; el respaldo por
-        //    polling lo encuentra aunque se insertara antes de suscribirnos.
-        //    Espera CORTA (30s): el bloque ya está en la BD cuando llegamos
-        //    aquí, así que si no aparece es un fallo, no una tarea larga.
-        await this._waitForAsyncResponse(convId, token, {
-          maxWaitMs: 30_000,
-          timeoutMsg: __('No se pudo mostrar la confirmación de costo. Recarga la página y vuelve a pedírselo a Vera.'),
-        });
-        return;
-
-      } else if (json?.status === 'cost_confirmation_required') {
-        // ── Fallback legacy: backend devolvio el status viejo (e.g. el INSERT
-        //    del [CONFIRM] fallo). Usa el window.confirm() de respaldo.
-        this.hideTypingIndicator();
-        this.aiState.isLoading = false;
-        const accepted = await this._confirmHighCost(json.estimate);
-        if (accepted) {
-          await this.sendMessage(text, { confirmedHighCost: true });
-        } else {
-          if (userMsg) this._removeMessage(userMsg.id);
-        }
-        return;
-
-      } else if (json?.status === 'processing') {
-        // ── Modo async: Vera procesa en background ──────────────────────────
-        await this._waitForAsyncResponse(convId, token);
-
-      } else {
-        // ── Modo sync (legacy / fallback) ───────────────────────────────────
-        this.hideTypingIndicator();
-        if (json?.message) {
-          const assistantMsg = {
-            id: `local-assistant-${Date.now()}`,
-            role: 'assistant',
-            content: json.message,
-            created_at: new Date().toISOString()
-          };
-          this.aiState.messages.push(assistantMsg);
-          this.appendMessage(assistantMsg);
-        }
-      }
-
+      const idCliente = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const envio = await window.VeraDatos.enviar(convId, messageToSend, idCliente);
+      this._turnoActivo = envio?.turno_id || null;
+      if (userMsg && envio?.mensaje_id) userMsg.id = envio.mensaje_id;
+      if (nueva) { this._refreshHistorySoon(); this._nameConversationSoon(convId, text); }
+      await this._waitForAsyncResponse(convId, null);
     } catch (err) {
       console.error('VeraView sendMessage:', err);
       this.hideTypingIndicator();
+      const code = err?.code || err?.codigo;
+      const texto = code === 'sin_api' ? __('Vera aún no responde en esta consola: el borde no está configurado.')
+        : code === 'sin_agente' ? __('Esta marca no tiene una Vera activa todavía.')
+        : code === 'sin_saldo' ? __('No hay créditos para que Vera piense. Recarga saldo y vuelve a escribirle.')
+        : (err?.http === 403 || code === '42501') ? __('Tu rol no puede conversar con Vera en esta marca (permiso conversar_con_agente).')
+        : __('Lo siento, hubo un error al procesar tu mensaje. Inténtalo de nuevo.');
       const errMsg = {
         id: `local-error-${Date.now()}`,
         role: 'error',
-        content: __('Lo siento, hubo un error al procesar tu mensaje. Inténtalo de nuevo.'),
+        content: texto,
         created_at: new Date().toISOString()
       };
       this.aiState.messages.push(errMsg);
@@ -4774,27 +4596,12 @@ class VeraView extends (window.BaseView || class {}) {
       // Garantiza que si Realtime falla, igual mostramos la respuesta.
       // El filtro created_at > startIso previene cargar el mensaje anterior.
       const doPoll = async () => {
-        if (resolved || !this.supabase) return;
+        if (resolved || !window.VeraDatos) return;
         try {
-          const { data } = await this.supabase
-            .from('ai_messages')
-            .select('id, role, content, created_at, conversation_id, metadata')
-            .eq('conversation_id', conversationId)
-            .in('role', ['assistant', 'error'])
-            .order('created_at', { ascending: false })
-            .limit(5);
-
-          // Se descarta por ID, no por fecha: `created_at` lo pone Postgres y
-          // `startIso` salía del reloj del NAVEGADOR — con el equipo adelantado
-          // unos minutos la comparación no se cumplía nunca y este respaldo (que
-          // existe justo para cuando Realtime falla) no entregaba jamás.
-          // Además, por ID sí se ve un mensaje insertado ANTES de suscribirnos.
+          // Se descarta por ID, no por fecha (el reloj del navegador no es el de Postgres).
           const vistos = new Set((this.aiState.messages || []).map((m) => m.id));
-          const nuevo = (data || [])
-            .slice()
-            .reverse()
-            .find((m) => m.id && !vistos.has(m.id));
-          if (nuevo) handleMsg(nuevo);
+          const nuevos = await window.VeraDatos.respuestasNuevas(conversationId, vistos);
+          if (nuevos[0]) handleMsg(nuevos[0]);
         } catch (err) {
           // Fallback poll del chat: si esto falla repetidamente, el usuario verá
           // "escribiendo…" sin respuesta. Logueamos para poder diagnosticar.
@@ -4853,12 +4660,13 @@ class VeraView extends (window.BaseView || class {}) {
         channel = this.supabase
           .channel(`vera-msg-${conversationId}-${Date.now()}`)
           .on('postgres_changes', {
+            // Base nueva: ai.messages (la 180000 la publica; hasta entonces el sondeo es la red).
             event: 'INSERT',
-            schema: 'public',
-            table: 'ai_messages',
+            schema: 'ai',
+            table: 'messages',
             filter: `conversation_id=eq.${conversationId}`,
           }, (payload) => {
-            handleMsg(payload.new);
+            handleMsg(window.VeraDatos ? window.VeraDatos.mapeo.mensajeAV1(payload.new) : payload.new);
           })
           .subscribe((status) => {
             if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
