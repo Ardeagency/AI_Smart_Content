@@ -426,18 +426,17 @@ class App {
     r.register('/characters', charactersListLoader, auth);
 
     // ── Legacy: /identities → /products (bookmarks viejos) ──
+    // OJO: onEnter() lo llama BaseView.render(); al reescribir render() hay que navegar desde ahí.
     const redirectIdentitiesToProducts = class extends (window.BaseView || class {}) {
-      async onEnter() {
+      async render() {
+        const c = document.getElementById('app-container');
+        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
         if (!window.router) return;
         const p = this.routeParams || {};
         const target = (p.orgIdShort && p.orgNameSlug)
           ? `/org/${p.orgIdShort}/${p.orgNameSlug}/products`
           : '/products';
-        window.router.navigate(target, true);
-      }
-      async render() {
-        const c = document.getElementById('app-container');
-        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+        setTimeout(() => window.router.navigate(target, true), 0);
       }
     };
     r.register('/org/:orgIdShort/:orgNameSlug/identities', redirectIdentitiesToProducts, auth);
