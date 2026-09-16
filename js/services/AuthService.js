@@ -192,7 +192,8 @@ class AuthService {
   /**
    * Login con email y contraseña
    */
-  async login(email, password) {
+  /** `opciones.captchaToken` (Turnstile) viaja a GoTrue cuando la consola lo tiene; sin él, el camino de hoy. */
+  async login(email, password, opciones = {}) {
     if (!this.supabase) {
       this.supabase = await this.getSupabaseClient();
     }
@@ -204,7 +205,8 @@ class AuthService {
     try {
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email: email.toLowerCase().trim(),
-        password: password
+        password: password,
+        ...(opciones.captchaToken ? { options: { captchaToken: opciones.captchaToken } } : {}),
       });
 
       if (error) {
@@ -629,7 +631,7 @@ class AuthService {
   /**
    * Reset password
    */
-  async resetPassword(email) {
+  async resetPassword(email, opciones = {}) {
     if (!this.supabase) {
       this.supabase = await this.getSupabaseClient();
     }
@@ -645,7 +647,8 @@ class AuthService {
 
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-        redirectTo
+        redirectTo,
+        ...(opciones.captchaToken ? { captchaToken: opciones.captchaToken } : {}),
       });
 
       if (error) {

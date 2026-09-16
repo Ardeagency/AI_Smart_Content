@@ -51,6 +51,7 @@ class SignInView extends BaseView {
                   <input type="password" class="form-input" id="signinPassword" name="password" placeholder="********" autocomplete="current-password" required>
                 </div>
                 <button type="button" class="signin-forgot signin-forgot-btn" id="linkForgotPassword">${__('¿Olvidaste tu contraseña?')}</button>
+                <div class="signin-turnstile" id="turnstileLogin" hidden></div>
                 <button type="submit" class="btn btn-primary signin-submit" id="btnSignIn">${__('Login')}</button>
               </div>
             </form>
@@ -72,6 +73,7 @@ class SignInView extends BaseView {
             <p class="signin-recover-desc">${__('Te enviaremos un enlace a tu correo para restablecer la contraseña. Debes hacer clic en el enlace para verificar que eres tú.')}</p>
             <div class="signin-recover-form" id="recoverForm">
               <input type="email" class="form-input" id="recoverEmail" placeholder="${__('Correo electrónico')}" autocomplete="email" required>
+              <div class="signin-turnstile" id="turnstileRecover" hidden></div>
               <button type="button" class="btn btn-primary" id="btnSendRecover">${__('Enviar enlace')}</button>
             </div>
             <div class="signin-recover-success" id="recoverSuccess" hidden>
@@ -125,6 +127,8 @@ class SignInView extends BaseView {
       e.preventDefault();
       this.handleSignIn();
     });
+    // Captcha (Turnstile): solo si la consola tiene AISC_TURNSTILE_SITE_KEY; sin clave, nada cambia.
+    if (window.Turnstile?.activo()) window.Turnstile.pintar('turnstileLogin', { accion: 'login' }).catch((e) => console.warn('[signin] turnstile:', e.message));
 
     this.signinMain = this.querySelector('#signinMain');
     this.signinRecover = this.querySelector('#signinRecover');
@@ -190,8 +194,13 @@ class SignInView extends BaseView {
       btn.textContent = __('Iniciando sesión...');
     }
 
+    let captchaToken;
+    try { captchaToken = window.Turnstile ? window.Turnstile.token('turnstileLogin') : null; }
+    catch (e) { alert(e.message); if (btn) { btn.disabled = false; btn.textContent = __('Login'); } return; }
+
     try {
-      const result = await window.authService.login(email, password);
+      const result = await window.authService.login(email, password, { captchaToken });
+      if (captchaToken && !result.success) window.Turnstile.reiniciar('turnstileLogin');
       if (result.success && result.redirectRoute) {
         if (window.router) window.router.navigate(result.redirectRoute, true);
         else window.location.href = `/#${result.redirectRoute}`;
@@ -309,6 +318,7 @@ class SignInView extends BaseView {
       emailInput.value = this.querySelector('#signinEmail')?.value?.trim() || '';
       emailInput.focus();
     }
+    if (window.Turnstile?.activo()) window.Turnstile.pintar('turnstileRecover', { accion: 'recuperar' }).catch((e) => console.warn('[signin] turnstile:', e.message));
   }
 
   hideRecoverState() {
@@ -337,7 +347,11 @@ class SignInView extends BaseView {
       btn.textContent = __('Enviando...');
     }
 
-    const result = await window.authService.resetPassword(email);
+    let captchaToken;
+    try { captchaToken = window.Turnstile ? window.Turnstile.token('turnstileRecover') : null; }
+    catch (e) { alert(e.message); if (btn) { btn.disabled = false; btn.textContent = __('Enviar enlace'); } return; }
+    const result = await window.authService.resetPassword(email, { captchaToken });
+    if (captchaToken) window.Turnstile.reiniciar('turnstileRecover');
 
     if (btn) {
       btn.disabled = false;

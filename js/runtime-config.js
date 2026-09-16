@@ -35,6 +35,13 @@
     window.AISC_LOGIN_VIDEO_URL = (() => { try { return localStorage.getItem("AISC_LOGIN_VIDEO_URL") || ""; } catch (_) { return ""; } })()
       || 'https://media-v2.aismartcontent.io/pub/web-assets/home-banner-web.3bb070f1d072.mp4';
   }
+  // Captcha (lista de cierre): la site key del widget Turnstile de console.aismartcontent.io.
+  // Vacía = sin widget y sin captchaToken (el camino de hoy). JC la pone cuando encienda
+  // security_captcha_enabled + provider=turnstile en Supabase Auth: un snippet, no un build.
+  //   window.AISC_TURNSTILE_SITE_KEY = '0x4AAAAAAA…';
+  if (window.AISC_TURNSTILE_SITE_KEY === undefined) {
+    window.AISC_TURNSTILE_SITE_KEY = (() => { try { return localStorage.getItem("AISC_TURNSTILE_SITE_KEY") || ""; } catch (_) { return ""; } })();
+  }
   // Banner de mantenimiento (corte, pasos 1.2/1.9): un texto = se ve; vacio = no.
   //   window.AISC_MANTENIMIENTO = 'hasta las 17:30';
   if (window.AISC_MANTENIMIENTO === undefined) {

@@ -749,3 +749,7 @@
 @media (prefers-reduced-motion: reduce) {
     .creation-spinner-ring { animation: none; border-top-color: rgba(0, 231, 255, 0.45); }
 }
+
+/* Captcha (Turnstile): el widget vive entre el formulario y el botón; sin clave queda [hidden]. */
+.signin-turnstile { margin: 0.75rem 0 0.25rem; min-height: 65px; display: flex; justify-content: center; }
+.signin-turnstile[hidden] { display: none; }

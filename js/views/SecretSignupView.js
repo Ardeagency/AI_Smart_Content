@@ -160,6 +160,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
           <label for="ssupPass">${this._t('Contraseña')}</label>
           <input class="form-input" id="ssupPass" name="password" type="password" placeholder="${this._t('Mínimo 8 caracteres')}" autocomplete="new-password" minlength="8" value="${this.escapeHtml(f.password)}">
         </div>
+        <div class="signin-turnstile" id="turnstileSignup" hidden></div>
         <p class="ssup-status" id="ssupStatus" role="status" aria-live="polite"></p>
         <button type="submit" class="ssup-btn ssup-btn-primary ssup-btn-block" data-action="create">${this._t('Crear cuenta')}</button>
       </form>
@@ -826,6 +827,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
     }
     const body = this.querySelector('#ssupBody');
     if (body) { body.innerHTML = this.renderStep(); this.wire(); }
+    if (step === 'cuenta' && window.Turnstile?.activo()) window.Turnstile.pintar('turnstileSignup', { accion: 'registro' }).catch((e) => console.warn('[signup] turnstile:', e.message));
     if (step === 'plans' && !this._plans) this._loadPlans();
     const card2 = this.querySelector('#ssupCard');
     card2?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
@@ -886,6 +888,9 @@ class SecretSignupView extends (window.BaseView || class {}) {
 
     if (this._submitting) return;
     if (!this._validateCuenta()) return;
+    let captchaToken;
+    try { captchaToken = window.Turnstile ? window.Turnstile.token('turnstileSignup') : null; }
+    catch (e) { this._setStatus(e.message, 'error'); return; }
     this._submitting = true;
     this._setSubmitting(true);
     this._setStatus(this._t('Creando tu cuenta y enviando el correo…'), '');
@@ -898,6 +903,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
         options: {
           emailRedirectTo: `${window.location.origin}${this._continuePath()}`,
           data: { full_name: f.full_name, pending_org: this._defaultPendingOrg() },
+          ...(captchaToken ? { captchaToken } : {}),
         },
       });
       if (error) throw error;
@@ -908,6 +914,7 @@ class SecretSignupView extends (window.BaseView || class {}) {
     } catch (err) {
       this._submitting = false;
       this._setSubmitting(false);
+      if (captchaToken) window.Turnstile.reiniciar('turnstileSignup');
       this._setStatus((err && err.message) ? err.message : String(err), 'error');
     }
   }
