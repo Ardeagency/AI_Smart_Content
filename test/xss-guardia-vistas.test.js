@@ -31,6 +31,7 @@ const VISTAS = [
   'js/views/FlowCatalogView.js',
   'js/views/StudioView.js',
   'js/views/TableroView.js',
+  'js/views/CancelSubscriptionView.js',
   'js/components/LecturaVera.js',
   'js/views/ExecutionHistoryView.js',
 ];

@@ -8,9 +8,10 @@
  *   - Sin teléfono, sin loop "¿estás seguro?"
  *   - Confirmación por email
  *
- * Stripe NO conectado: el Edge Function provision-cancel-subscription es stub
- * que marca subscription.status='cancellation_pending' y manda el email.
- * Cuando Stripe se conecte, llamará a stripe.subscriptions.cancel().
+ * Corte (ADR-0052, planes.md): en la base nueva cancelar NO tiene puerta para una
+ * persona (Wompi no tiene suscripciones; el equipo cambia el estado). La página
+ * cuenta lo mismo de siempre y la petición sale por correo ya escrito a
+ * CancelSubscriptionView.CORREO. Datos por PlanesDatos; sin `.from()` aquí.
  */
 class CancelSubscriptionView extends BaseView {
   constructor() {
@@ -45,47 +46,32 @@ class CancelSubscriptionView extends BaseView {
     }
   }
 
+  /** BaseView.render() exige renderHTML(): el cascarón; _render() pinta encima con los datos. */
+  renderHTML() {
+    return '<div class="cancel-page"><div class="cancel-card"><p class="text-muted">' + __('Cargando…') + '</p></div></div>';
+  }
+
   async render() {
     await super.render();
-    if (window.supabaseService) {
-      this.supabase = await window.supabaseService.getClient();
-    } else if (window.supabase) {
-      this.supabase = window.supabase;
-    }
-    if (!this.supabase) {
-      this.showError(__('Supabase no disponible.'));
-      return;
-    }
+    if (!window.PlanesDatos) { this.showError(__('Planes no disponible.')); return; }
     await this._loadContext();
     this._render();
     this._bind();
   }
 
+  /** Corte (planes.md): plan, suscripción y créditos por PlanesDatos; la marca por mi_contexto(). */
   async _loadContext() {
-    const [orgRes, subRes, credRes] = await Promise.all([
-      this.supabase.from('organizations').select('id, name').eq('id', this.orgId).maybeSingle(),
-      this.supabase.from('subscriptions')
-        .select('id, plan_id, status, current_period_end')
-        .eq('organization_id', this.orgId)
-        .order('created_at', { ascending: false })
-        .limit(1).maybeSingle(),
-      this.supabase.from('organization_credits')
-        .select('credits_available').eq('organization_id', this.orgId).maybeSingle(),
-    ]);
-    this.org = orgRes.data;
-    this.subscription = subRes.data;
-    this.creditsAvailable = Number(credRes.data?.credits_available ?? 0);
-    if (this.subscription?.plan_id) {
-      const { data } = await this.supabase.from('plans')
-        .select('id, name, price_usd_month').eq('id', this.subscription.plan_id).maybeSingle();
-      this.plan = data;
-    }
+    const d = await window.PlanesDatos.cargar(this.orgId).catch(() => null);
+    this.org = window.contextoService?.org?.(this.orgId) || { id: this.orgId, name: window.currentOrgName || '' };
+    this.subscription = d?.currentSubscription || null;
+    this.plan = d?.currentPlan || null;
+    this.creditsAvailable = Number(d?.orgCredits?.credits_available ?? 0);
   }
 
   _render() {
     const host = this.container;
     if (!host) return;
-    if (!this.subscription || this.subscription.status === 'cancelled') {
+    if (!this.subscription || this.subscription.status === 'cancelled' || this.subscription.status === 'canceled' || (this.subscription.tier || this.subscription.plan_id) === 'free') {
       host.innerHTML = this._renderEmpty();
       return;
     }
@@ -161,7 +147,7 @@ class CancelSubscriptionView extends BaseView {
           </div>
 
           <p class="cancel-fineprint">
-            ${__('Recibirás un email de confirmación. Si tienes problemas con esto, escríbenos a soporte; no requerimos llamada telefónica.')}
+            ${__('Hoy la cancelación la hace una persona del equipo: al confirmar se abre un correo ya escrito a {correo} con tu petición y te respondemos con la confirmación. No requerimos llamada telefónica.', { correo: CancelSubscriptionView.CORREO })}
           </p>
 
           <div id="cancelStatus" class="cancel-status" role="status" aria-live="polite"></div>
@@ -179,40 +165,28 @@ class CancelSubscriptionView extends BaseView {
     if (confirm) this.addEventListener(confirm, 'click', () => this._confirmCancel());
   }
 
+  /**
+   * Cancelar no tiene puerta para una persona en la base nueva (planes.md): la
+   * petición sale por correo, ya escrita con plan, marca, motivo y comentario.
+   * Nada se promete que no pase: el estado de la suscripción lo cambia el equipo.
+   */
   async _confirmCancel() {
-    if (this.cancelling) return;
-    this.cancelling = true;
-
     const root = this.container;
     const reason = root.querySelector('input[name="cancel_reason"]:checked')?.value || null;
     const comment = root.querySelector('#cancelComment')?.value?.trim() || null;
     const status = root.querySelector('#cancelStatus');
-    const btn = root.querySelector('#cancelConfirm');
-    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Cancelando…')}`; }
-
-    try {
-      const { data, error } = await this.supabase.functions.invoke('cancel-subscription', {
-        body: {
-          subscription_id: this.subscription.id,
-          organization_id: this.orgId,
-          reason,
-          comment,
-        },
-      });
-      if (error) throw new Error(error.message || __('No se pudo cancelar'));
-
-      if (status) {
-        status.className = 'cancel-status is-success';
-        status.innerHTML = `<i class="aisc-ico aisc-ico--check"></i> ${__('Cancelación confirmada. Te enviamos un email con los detalles.')}`;
-      }
-      setTimeout(() => window.router?.navigate(this._plansRoute(), true), 2000);
-    } catch (e) {
-      if (status) {
-        status.className = 'cancel-status is-error';
-        status.textContent = `${__('Error')}: ${e.message}`;
-      }
-      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="aisc-ico aisc-ico--close"></i> ${__('Cancelar suscripción')}`; }
-      this.cancelling = false;
+    const asunto = __('Cancelar la suscripción de {org}', { org: this.org?.name || this.orgId });
+    const cuerpo = [
+      __('Hola, quiero cancelar la suscripción de la marca {org} (plan {plan}).', { org: this.org?.name || '', plan: this.plan?.name || this.subscription?.tier || '' }),
+      `organization_id: ${this.orgId}`,
+      reason ? `${__('Motivo')}: ${reason}` : '',
+      comment ? `${__('Comentario')}: ${comment}` : '',
+    ].filter(Boolean).join('\n');
+    const href = `mailto:${CancelSubscriptionView.CORREO}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+    try { window.location.href = href; } catch (_) { /* sin cliente de correo */ }
+    if (status) {
+      status.className = 'cancel-status is-success';
+      status.innerHTML = `<i class="aisc-ico aisc-ico--check"></i> ${__('Se abrió tu correo con la petición. Si no se abrió, escríbenos a {correo}.', { correo: `<a href="${this.escapeHtml(href)}">${this.escapeHtml(CancelSubscriptionView.CORREO)}</a>` })}`;
     }
   }
 
@@ -225,4 +199,5 @@ class CancelSubscriptionView extends BaseView {
   }
 }
 
+CancelSubscriptionView.CORREO = 'contact@aismartcontent.io';
 window.CancelSubscriptionView = CancelSubscriptionView;
