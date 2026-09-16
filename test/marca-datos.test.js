@@ -26,10 +26,15 @@ describe('Mi Marca · organización', () => {
     expect(v1.brand_name_oficial).toBe('WAKEUP');
     expect(v1.brand_slogan).toBe('Despierta');
     expect(v1.legal_name).toBe('Wakeup SAS');
+    // La URL del logo se deriva del archivo embebido cuando no hay URL externa.
+    expect(M.organizacionAV1({ id: 'o', name: 'W', logo_url: null, logo_file_id: 'f1', logo: { public_url: 'https://media-v2/pub/o/l.png' } }).logo_url).toBe('https://media-v2/pub/o/l.png');
   });
   test('el parche traduce nombres de v1 y nunca manda plan ni columnas inventadas', () => {
     expect(M.organizacionABase({ brand_name_oficial: ' Nueva ', brand_slogan: 'x', level_of_autonomy: 3, plan: 'pro' })).toEqual({ name: 'Nueva', tagline: 'x' });
-    expect(M.organizacionABase({ logo_url: '' })).toEqual({ logo_url: null });
+    expect(M.organizacionABase({ logo_url: '' })).toEqual({ logo_url: null, logo_file_id: null });
+    // Una sola fuente de logo (CHECK org_logo_una_sola_fuente): archivo manda y vacía la URL externa.
+    expect(M.organizacionABase({ logo_file_id: 'f1', logo_url: 'https://x/l.png' })).toEqual({ logo_file_id: 'f1', logo_url: null });
+    expect(M.organizacionABase({ logo_url: 'https://x/l.png' })).toEqual({ logo_url: 'https://x/l.png', logo_file_id: null });
     expect(M.organizacionABase({ brand_name_oficial: '   ' })).toEqual({});
   });
 });

@@ -57,7 +57,7 @@
       }
       try {
         const asset = await window.MarcaDatos.subirAsset(orgId, file, { logo: true });
-        const logoUrl = asset?.file_url || null;
+        const logoUrl = asset?.logo_url || asset?.file_url || null;
         this.organizationRow = { ...this.organizationRow, logo_url: logoUrl, logo_file_id: asset?.file_id || null };
         if (typeof this._mergeOrgIntoShim === 'function') this._mergeOrgIntoShim();
         if (this.brandContainerData) this.brandContainerData.logo_url = logoUrl;

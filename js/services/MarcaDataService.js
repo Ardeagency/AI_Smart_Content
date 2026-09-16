@@ -66,6 +66,9 @@
 
   function organizacionAV1(fila) {
     if (!fila) return null;
+    // CHECK org_logo_una_sola_fuente (BD 0910970000): logo_url (externa) XOR logo_file_id.
+    // Para pintar, la URL del archivo llega por el embed `logo:files!logo_file_id(public_url)`.
+    const urlArchivo = fila.logo?.public_url || (Array.isArray(fila.logo) ? fila.logo[0]?.public_url : null) || null;
     return {
       id: fila.id,
       name: fila.name || '',
@@ -75,7 +78,8 @@
       brand_name_oficial: fila.name || '',
       legal_name: fila.legal_name || null,
       brand_slogan: fila.tagline || null,
-      logo_url: fila.logo_url || null,
+      logo_url: fila.logo_url || urlArchivo,
+      logo_url_externa: fila.logo_url || null,
       logo_file_id: fila.logo_file_id || null,
       mfa_required: fila.mfa_required === true,
     };
@@ -90,8 +94,10 @@
       if (v != null && String(v).trim()) salida.name = String(v).trim();
     }
     if ('brand_slogan' in parcial || 'tagline' in parcial) salida.tagline = (parcial.brand_slogan ?? parcial.tagline) || null;
-    if ('logo_url' in parcial) salida.logo_url = parcial.logo_url || null;
-    if ('logo_file_id' in parcial) salida.logo_file_id = parcial.logo_file_id || null;
+    // Una sola fuente de logo: si llega un archivo, la URL externa se vacía, y al revés.
+    if ('logo_file_id' in parcial && parcial.logo_file_id) { salida.logo_file_id = parcial.logo_file_id; salida.logo_url = null; }
+    else if ('logo_url' in parcial && parcial.logo_url) { salida.logo_url = parcial.logo_url; salida.logo_file_id = null; }
+    else if ('logo_url' in parcial || 'logo_file_id' in parcial) { salida.logo_url = null; salida.logo_file_id = null; }
     if ('legal_name' in parcial) salida.legal_name = parcial.legal_name || null;
     return salida;
   }
@@ -235,7 +241,7 @@
     const sb = await cliente();
     if (!sb || !orgId) return null;
     const [org, colores, fuentes, assets, mercados, conexiones, urls] = await Promise.all([
-      sb.from('organizations').select('id, slug, name, legal_name, tagline, logo_url, logo_file_id, mfa_required').eq('id', orgId).maybeSingle(),
+      sb.from('organizations').select('id, slug, name, legal_name, tagline, logo_url, logo_file_id, mfa_required, logo:files!logo_file_id(public_url)').eq('id', orgId).maybeSingle(),
       sb.from('brand_colors').select('id, organization_id, role, hex, name, position').eq('organization_id', orgId).order('position', { ascending: true }),
       sb.from('brand_fonts').select('id, organization_id, role, family, fallback_stack, weights').eq('organization_id', orgId),
       sb.from('brand_assets').select('id, organization_id, kind, name, storage_path, url, mime_type, bytes, is_primary, file_id, created_at').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(24),
@@ -282,7 +288,7 @@
     const sb = await cliente();
     const cambios = organizacionABase(parcialV1);
     if (!sb || !orgId || !Object.keys(cambios).length) return null;
-    const { data, error } = await sb.from('organizations').update(cambios).eq('id', orgId).select('id, slug, name, legal_name, tagline, logo_url, logo_file_id, mfa_required').maybeSingle();
+    const { data, error } = await sb.from('organizations').update(cambios).eq('id', orgId).select('id, slug, name, legal_name, tagline, logo_url, logo_file_id, mfa_required, logo:files!logo_file_id(public_url)').maybeSingle();
     if (error) throw error;
     if (!data) throw Object.assign(new Error('La base no devolvió la marca actualizada (¿sin permiso editar_marca?).'), { code: 'sin_fila' });
     return organizacionAV1(data);
@@ -340,9 +346,9 @@
    * Sube por el borde y registra el asset. Devuelve el asset en forma v1.
    * `logo: true` sube con `proposito=publico` (backend d9858c0, 16/09): solo imagen,
    * bucket público, `archivo.url_publica` sin cookie y `cache-control immutable`
-   * (reemplazar el logo = subir otro y guardar la nueva URL). La marca queda con
-   * organizations.logo_file_id + logo_url = url_publica, que el sidebar y el
-   * selector de marca pintan sin sesión de galería.
+   * (reemplazar el logo = subir otro). La marca queda con organizations.logo_file_id
+   * (y logo_url NULA: CHECK org_logo_una_sola_fuente); mi_contexto y el embed de
+   * files derivan la URL pública, que el sidebar y el selector pintan sin cookie.
    */
   async function subirAsset(orgId, archivo, { identidad = false, logo = false } = {}) {
     const a = api();
@@ -364,7 +370,11 @@
     if (error) throw error;
     const urls = await urlsDeGaleria(orgId);
     const asset = assetAV1(data, urls);
-    if (logo) await actualizarOrganizacion(orgId, { logo_file_id: f.id, logo_url: f.url_publica || asset.file_url || null });
+    if (logo) {
+      // Solo logo_file_id (el CHECK rechaza las dos fuentes); la URL pública se devuelve para pintar ya.
+      const org = await actualizarOrganizacion(orgId, { logo_file_id: f.id });
+      asset.logo_url = f.url_publica || org?.logo_url || asset.file_url || null;
+    }
     return asset;
   }
 
