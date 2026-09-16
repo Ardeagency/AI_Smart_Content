@@ -410,11 +410,14 @@ class AuthService {
       const list = await window.contextoService.orgs();
       if (list.length === 0) return '/creation_process';
       const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];
+      // Corte: mientras el Tablero esté «en obras» (dashboard_* de v1 sin equivalente),
+      // la persona entra por su MARCA: es lo primero que JC pidió ver funcionando.
+      const destino = (window.EnObras && window.EnObras.es('/dashboard')) ? 'brand' : 'dashboard';
       if (typeof window.getOrgPathPrefix === 'function') {
         const prefix = window.getOrgPathPrefix(org.id, org.name);
-        return prefix ? `${prefix}/dashboard` : '/creation_process';
+        return prefix ? `${prefix}/${destino}` : '/creation_process';
       }
-      return `/org/${org.id}/dashboard`;
+      return `/org/${org.id}/${destino}`;
     } catch (e) {
       console.warn('getDefaultUserRoute:', e);
       return '/creation_process';
