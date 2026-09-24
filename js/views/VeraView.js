@@ -118,9 +118,7 @@ class VeraView extends (window.BaseView || class {}) {
     try { window.appNavigation?.collapseForImmersive?.(); } catch (_) { /* el shell puede no estar montado */ }
 
     this.aiState.organization_id =
-      this.routeParams?.orgId ||
-      window.appState?.get('selectedOrganizationId') ||
-      localStorage.getItem('selectedOrganizationId');
+      this.routeParams?.orgId || window.currentOrgId || null; // de la ruta (L7), no de localStorage
 
     if (!this.aiState.organization_id) {
       const url =

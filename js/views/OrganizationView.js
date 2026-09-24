@@ -447,9 +447,7 @@ class OrganizationView extends BaseView {
     if (window.appNavigation && !window.appNavigation.initialized) {
       await window.appNavigation.render();
     }
-    this.orgId = this.routeParams?.orgId ||
-      window.appState?.get?.('selectedOrganizationId') ||
-      localStorage.getItem('selectedOrganizationId');
+    this.orgId = this.routeParams?.orgId || window.currentOrgId || null; // de la ruta (L7), no de localStorage
     if (!this.orgId) {
       const url = window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
         ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)

@@ -551,10 +551,11 @@
       }
       const extra = {};
       if (normalizedProvider === 'shopify') {
-        const shopDomain = await this._promptShopDomain();
-        if (!shopDomain) return;
-        // El borde quiere solo el nombre de la tienda (^[a-z0-9-]+$), sin .myshopify.com
-        extra.shop = String(shopDomain).toLowerCase().replace(/^https?:\/\//, '').replace(/\.myshopify\.com.*$/, '').replace(/\/.*$/, '');
+        // Shopify necesita el nombre de la tienda: se pide en Configuración › Integraciones,
+        // en la misma fila (L7). Aquí solo se lleva a la persona ahí.
+        const prefijo = window.getOrgPathPrefix && window.currentOrgName ? window.getOrgPathPrefix(orgId, window.currentOrgName) : '';
+        window.router?.navigate(`${prefijo || ''}/configuracion/integraciones`);
+        return;
       }
       // return_to (backend 479fc1b): solo ruta propia, viaja en el state firmado; el
       // callback vuelve a `${return_to}?plataforma=…&conectado=1&cuenta=…` o `&error=…`.
@@ -575,165 +576,13 @@
     },
 
   /**
-   * Selector de cuenta de Google Ads: el usuario elige QUE cuenta(s) son de la
-   * marca. Solo esas se sincronizan — nunca todo el portafolio del MCC.
+   * Selector de cuenta de Google Ads (elegir QUÉ cuentas son de la marca). En la base
+   * nueva no hay puerta para guardar esa selección (la function /api/integrations/google/select
+   * se apagó con el corte, y integrations.connections no trae available_accounts), así que
+   * se dice con palabras. L7: fuera el fetch muerto y el modal a mano con colores propios.
    */
-  async selectGoogleAdsAccounts(brandContainerId, actionButton = null) {
-    const brandId = String(brandContainerId || '').trim();
-    if (!brandId) return;
-    const integ = this._pickBrandIntegrationForContainer(brandId, 'google');
-    const accounts = (integ?.metadata?.available_accounts) || [];
-    if (!accounts.length) { window.showToast(__('No hay cuentas de Google Ads para elegir. Reconecta Google.'), { type: 'warning' }); return; }
-
-    const selected = await this._promptGoogleAccounts(accounts);
-    if (!selected || !selected.length) return;
-
-    try {
-      if (actionButton) { actionButton.disabled = true; actionButton.textContent = __('Guardando...'); }
-      const { data: { session } } = await this.supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) { window.showToast(__('Sesión no válida. Inicia sesión y vuelve a intentar.'), { type: 'error' }); return; }
-      const res = await fetch(`${location.origin}/api/integrations/google/select`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ brand_container_id: brandId, selected_customer_ids: selected })
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.error || `Error ${res.status}`);
-      window.showToast(__('Cuenta(s) seleccionada(s). Importando campañas…'), { type: 'success' });
-      if (window.router) window.router.navigate(window.location.pathname, true);
-    } catch (e) {
-      console.error('selectGoogleAdsAccounts:', e);
-      window.showToast(e?.message || __('No se pudo guardar la selección.'), { type: 'error' });
-    } finally {
-      if (actionButton) { actionButton.disabled = false; actionButton.textContent = __('Elegir cuenta'); }
-    }
-    },
-
-  /** Modal con checkboxes de las cuentas de Ads disponibles. Devuelve [ids] o null. */
-  _promptGoogleAccounts(accounts) {
-    return new Promise((resolve) => {
-      const overlay = document.createElement('div');
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:var(--z-drawer);display:flex;align-items:center;justify-content:center;';
-      const rows = accounts.map((a) => `
-        <label style="display:flex;align-items:center;gap:.6rem;padding:.6rem .4rem;border-bottom:1px solid #242424;cursor:pointer;">
-          <input type="checkbox" value="${this.escapeHtml(String(a.customer_id))}" class="gads-acc-chk">
-          <span style="flex:1;">
-            <strong>${this.escapeHtml(a.name || String(a.customer_id))}</strong>
-            <span style="display:block;font-size:.78rem;color:#888;">${this.escapeHtml(String(a.customer_id))}${a.currency ? ' · ' + this.escapeHtml(a.currency) : ''}</span>
-          </span>
-        </label>`).join('');
-      overlay.innerHTML = `
-        <div style="background:#141517;border:1px solid #242424;border-radius:12px;max-width:440px;width:90%;padding:1.25rem;">
-          <h3 style="margin:0 0 .25rem;color:#fff;">${__('¿Qué cuenta de Google Ads es de esta marca?')}</h3>
-          <p style="margin:0 0 1rem;font-size:.85rem;color:#999;">${__('Elige solo la(s) cuenta(s) de esta marca. Solo se importarán esas — no todo tu portafolio.')}</p>
-          <div style="max-height:300px;overflow:auto;margin-bottom:1rem;">${rows}</div>
-          <div style="display:flex;gap:.5rem;justify-content:flex-end;">
-            <button type="button" class="gads-cancel" style="padding:.5rem 1rem;background:transparent;border:1px solid #333;border-radius:8px;color:#ccc;cursor:pointer;">${__('Cancelar')}</button>
-            <button type="button" class="gads-confirm" style="padding:.5rem 1rem;background:#3b82f6;border:none;border-radius:8px;color:#fff;cursor:pointer;">${__('Conectar cuenta(s)')}</button>
-          </div>
-        </div>`;
-      document.body.appendChild(overlay);
-      const close = (val) => { overlay.remove(); resolve(val); };
-      overlay.querySelector('.gads-cancel').addEventListener('click', () => close(null));
-      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(null); });
-      overlay.querySelector('.gads-confirm').addEventListener('click', () => {
-        const ids = Array.from(overlay.querySelectorAll('.gads-acc-chk:checked')).map((c) => c.value);
-        if (!ids.length) { window.showToast(__('Selecciona al menos una cuenta.'), { type: 'warning' }); return; }
-        close(ids);
-      });
-    });
-    },
-
-  /**
-   * Modal para que el usuario ingrese su dominio Shopify (mitienda.myshopify.com).
-   * Acepta input libre y lo normaliza: https://, trailing slashes, mayúsculas.
-   * Devuelve string normalizado o null si cancela.
-   */
-  _promptShopDomain() {
-    return new Promise((resolve) => {
-      const SHOP_REGEX = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
-
-      const normalize = (raw) => {
-        const cleaned = String(raw || '')
-          .trim()
-          .toLowerCase()
-          .replace(/^https?:\/\//, '')
-          .replace(/\/+$/, '');
-        return SHOP_REGEX.test(cleaned) ? cleaned : null;
-      };
-
-      // Single-resolve guard (onClose dispara después de submit; evita doble resolve)
-      let resolved = false;
-      const safeResolve = (v) => { if (!resolved) { resolved = true; resolve(v); } };
-
-      // Usar window.Modal si está disponible; sino fallback a prompt nativo.
-      if (window.Modal && typeof window.Modal.show === 'function') {
-        // Body HTML — el título y close button los pone el Modal automáticamente.
-        const bodyHtml = `
-          <p style="margin:0 0 1rem;color:var(--text-secondary,#a0a0a0)">
-            ${__('Ingresa el dominio de tu tienda Shopify. Lo encontrarás como {ex}.', { ex: '<code>mitienda.myshopify.com</code>' })}
-          </p>
-          <input
-            type="text"
-            id="bs-shopify-input"
-            placeholder="mitienda.myshopify.com"
-            autocomplete="off"
-            style="width:100%;padding:.6rem .8rem;border:1px solid var(--border-soft,#444);border-radius:6px;background:var(--bg-input,#1a1a1a);color:var(--text-primary,#ecebda);font-size:1rem;box-sizing:border-box"
-          />
-          <p id="bs-shopify-err" style="margin:.5rem 0 0;color:#e74c3c;font-size:.85rem;min-height:1.2em"></p>
-          <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
-            <button type="button" id="bs-shopify-cancel" class="btn btn-secondary">${__('Cancelar')}</button>
-            <button type="button" id="bs-shopify-ok" class="btn btn-primary">${__('Continuar')}</button>
-          </div>`;
-
-        const { bodyEl, close } = window.Modal.show({
-          title:     __('Conectar Shopify'),
-          body:      bodyHtml,
-          className: 'bs-shopify-modal',
-          onClose:   () => safeResolve(null)
-        });
-
-        // bodyEl es el contenedor del body — buscar dentro de él (no en document)
-        // por si hay 2 modales simultáneos con mismos IDs.
-        const input  = bodyEl.querySelector('#bs-shopify-input');
-        const err    = bodyEl.querySelector('#bs-shopify-err');
-        const ok     = bodyEl.querySelector('#bs-shopify-ok');
-        const cancel = bodyEl.querySelector('#bs-shopify-cancel');
-
-        if (!input || !ok || !cancel) {
-          // Sanity check — no debería pasar, pero failsafe
-          close();
-          safeResolve(null);
-          return;
-        }
-
-        // Focus después del primer paint
-        setTimeout(() => input.focus(), 50);
-
-        const submit = () => {
-          const normalized = normalize(input.value);
-          if (!normalized) {
-            if (err) err.textContent = __('Formato inválido. Usa: mitienda.myshopify.com');
-            input.focus();
-            return;
-          }
-          safeResolve(normalized);
-          close();
-        };
-
-        ok.addEventListener('click', submit);
-        input.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter')  { e.preventDefault(); submit(); }
-          if (e.key === 'Escape') { close(); }  // onClose disparará safeResolve(null)
-        });
-        cancel.addEventListener('click', () => close());
-      } else {
-        // Sin window.Modal no hay dónde pedirlo (nunca prompt() del navegador).
-        console.warn('Shopify: window.Modal no está cargado');
-        safeResolve(null);
-      }
-    });
+  async selectGoogleAdsAccounts() {
+    window.showToast(__('Elegir la cuenta de Google Ads todavía no se hace desde aquí. Escríbenos y la dejamos lista.'), { type: 'info' });
     },
 
   /** Desconectar por el borde: POST /v1/integraciones/:id/desconectar (la conexión es de la marca). */
@@ -1254,7 +1103,7 @@
 
       if (Array.isArray(this._brandInfoPanelDisposers)) {
         this._brandInfoPanelDisposers.forEach((fn) => {
-          try { fn(); } catch (_) {}
+          try { fn(); } catch (_) { /* un disposer roto no frena a los demás */ }
         });
       }
       this._brandInfoPanelDisposers = [];

@@ -34,11 +34,9 @@ class CancelSubscriptionView extends BaseView {
         return;
       }
     }
-    this.orgId = this.routeParams?.orgId
-      || window.appState?.get('selectedOrganizationId')
-      || localStorage.getItem('selectedOrganizationId');
+    this.orgId = this.routeParams?.orgId || window.currentOrgId || null; // de la ruta (L7), no de localStorage
     if (!this.orgId) {
-      window.router?.navigate('/create', true);
+      window.router?.navigate('/home', true); // /create era el generador de v1
       return;
     }
     if (window.appNavigation && !window.appNavigation.initialized) {

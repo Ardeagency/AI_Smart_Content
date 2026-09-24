@@ -4035,5 +4035,6 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Cuadro inicial": "First frame",
   "Cuadro final": "Last frame",
   "En espera": "Stand by",
-  "No se pudo cargar el historial": "Couldn't load the history"
+  "No se pudo cargar el historial": "Couldn't load the history",
+  "Elegir la cuenta de Google Ads todavía no se hace desde aquí. Escríbenos y la dejamos lista.": "Choosing the Google Ads account can't be done here yet. Write to us and we'll set it up."
 }/* I18N:END */;

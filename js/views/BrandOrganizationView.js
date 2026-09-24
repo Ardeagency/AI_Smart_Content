@@ -748,7 +748,7 @@ class BrandOrganizationView extends BaseView {
     const colors = (this.brandColors || []).slice(0, MAX_COLORS);
 
     const swatchesHtml = colors.map(color => {
-      const hex = color.hex_value || color.hex_code || color.color_value || color.hex || '#000000';
+      const hex = color.hex_value || color.hex_code || color.color_value || color.hex || 'var(--bg-tertiary)';
       const colorId = color.id;
       return `
         <div class="color-swatch" style="background: ${hex};" data-color-id="${colorId}">

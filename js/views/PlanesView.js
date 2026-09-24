@@ -12,6 +12,9 @@
  * próxima renovación), CTAs diferenciados Upgrade/Downgrade/Current/Trial.
  */
 class PlanesView extends BaseView {
+  /** Idioma activo para fechas y números (ADR-0040: Intl con el locale de la persona, no 'en-US' fijo). */
+  static _loc() { return (window.i18n?.getLocale?.() === 'en' ? 'en-US' : 'es-CO'); }
+
   static cacheable = true;
 
   constructor() {
@@ -61,10 +64,7 @@ class PlanesView extends BaseView {
   }
 
   _resolveOrgId() {
-    return window.currentOrgId
-      || window.appState?.get('selectedOrganizationId')
-      || localStorage.getItem('selectedOrganizationId')
-      || null;
+    return this.routeParams?.orgId || window.currentOrgId || null; // de la ruta (L7), no de localStorage
   }
 
   /** True si la subscription está en estado que cuenta como "activa" (no cancelled/expired). */
@@ -120,7 +120,7 @@ class PlanesView extends BaseView {
   buildFeatureBullets(plan) {
     const items = [];
     if (plan.credits_monthly > 0) {
-      items.push(`<strong>${plan.credits_monthly.toLocaleString('en-US')}</strong> ${window.__('créditos / mes')}`);
+      items.push(`<strong>${plan.credits_monthly.toLocaleString(PlanesView._loc())}</strong> ${window.__('créditos / mes')}`);
     }
     if (plan.max_handles > 0) {
       items.push(window.__('Hasta <strong>{n}</strong> mercados', { n: plan.max_handles }));
@@ -183,7 +183,7 @@ class PlanesView extends BaseView {
     const renewISO = this.currentSubscription?.current_period_end;
     const renewDate = renewISO ? new Date(renewISO) : null;
     const renewLabel = renewDate && !isNaN(renewDate.getTime())
-      ? renewDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      ? renewDate.toLocaleDateString(PlanesView._loc(), { month: 'short', day: 'numeric', year: 'numeric' })
       : null;
 
     const credits = this.orgCredits;
@@ -193,7 +193,7 @@ class PlanesView extends BaseView {
           label: window.__('Créditos'),
           used: Number(credits.credits_total) - Number(credits.credits_available || 0),
           total: Number(credits.credits_total),
-          formatter: (n) => Number(n).toLocaleString('en-US'),
+          formatter: (n) => Number(n).toLocaleString(PlanesView._loc()),
         })
       : '';
 
@@ -276,7 +276,7 @@ class PlanesView extends BaseView {
         <span class="price-monthly">$${monthly}<span>${window.__('/mes')}</span></span>
         <span class="price-annual">
           $${monthlyEquivalent}<span>${window.__('/mes')}</span>
-          <small>${window.__('facturado anualmente')} · $${annual.toLocaleString('en-US')}${window.__('/año')}</small>
+          <small>${window.__('facturado anualmente')} · $${annual.toLocaleString(PlanesView._loc())}${window.__('/año')}</small>
         </span>
       </div>`;
 

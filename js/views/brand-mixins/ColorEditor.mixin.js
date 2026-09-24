@@ -24,9 +24,11 @@
       }
       const isNew = !color || !color.id;
       const colorId = isNew ? null : color.id;
-      const initialHex = color
-        ? (color.hex_value || color.hex_code || color.hex || '#888888')
-        : '#888888';
+      // Sin color guardado, el selector arranca en el gris neutro de la plataforma
+      // (token --icon-button, leído en ejecución: el selector necesita un hex, no var()).
+      let neutro = 'gray';
+      try { neutro = getComputedStyle(document.documentElement).getPropertyValue('--icon-button').trim() || neutro; } catch (_) { /* sin estilos calculados */ }
+      const initialHex = (color && (color.hex_value || color.hex_code || color.hex)) || neutro;
       const container = this.container || document.getElementById('app-container');
       window.ColorPickerModal.open({
         initialHex,

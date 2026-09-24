@@ -66,9 +66,7 @@ class ServicesView extends BaseView {
       await window.appNavigation.render();
     }
     this.organizationId =
-      this.routeParams?.orgId ||
-      window.appState?.get('selectedOrganizationId') ||
-      localStorage.getItem('selectedOrganizationId');
+      this.routeParams?.orgId || window.currentOrgId || null; // la marca sale de la ruta (L7), no de localStorage
   }
 
   async render() {
@@ -382,7 +380,7 @@ class ServicesView extends BaseView {
       if (backBtn) backBtn.hidden = !(cfg && cfg.back);
       const visible = root.querySelector(`[data-panel="${step}"]`);
       const focusable = visible?.querySelector('input, button');
-      try { focusable?.focus(); } catch (_) {}
+      try { focusable?.focus(); } catch (_) { /* el elemento ya no admite foco */ }
     };
 
     root.querySelectorAll('[data-go]').forEach((btn) => {
@@ -548,12 +546,8 @@ class ServicesView extends BaseView {
   }
 
   _showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.style.cssText = `position:fixed;top:80px;right:2rem;padding:0.75rem 1.1rem;background:${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};color:white;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:var(--z-modal-backdrop);font-size:0.85rem;`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 2800);
+    // Un solo sistema de avisos (L4/L7): el toast de la plataforma, no un <div> con hex propios.
+    window.showToast?.(message, { type });
   }
 
   _setupEventListeners() {
