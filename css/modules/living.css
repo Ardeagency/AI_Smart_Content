@@ -756,7 +756,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%) translateY(150%);
-    z-index: 1500;
+    z-index: var(--z-selection-bar);
     display: flex;
     align-items: center;
     gap: 16px;
@@ -815,7 +815,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     position: fixed;
     inset: 0;
     /* Por encima de header (900), sidebar (850), flyouts (10050) y modales del sistema (10001). */
-    z-index: 10100;
+    z-index: var(--z-sheet);
     display: none;
     /* Aisla el stacking context si el padre (main, etc) tuviera transforms. */
     isolation: isolate;
@@ -3243,7 +3243,7 @@ body.production-modal-open { overflow: hidden; }
 .publish-sheet {
     position: fixed;
     inset: 0;
-    z-index: 10200;
+    z-index: var(--z-sheet-top);
     display: none;
     align-items: center;
     justify-content: center;
@@ -3540,7 +3540,7 @@ body.production-modal-open { overflow: hidden; }
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%) translateY(16px);
-    z-index: 1500;
+    z-index: var(--z-selection-bar);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -3601,7 +3601,7 @@ body.production-modal-open { overflow: hidden; }
 /* Campaign picker (popover de "Agregar a campaña") */
 .campaign-picker {
     position: fixed;
-    z-index: 1600;
+    z-index: var(--z-picker);
     min-width: 260px;
     max-width: 320px;
     max-height: 340px;

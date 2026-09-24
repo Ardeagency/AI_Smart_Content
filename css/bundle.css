@@ -166,11 +166,6 @@
     --edge-stroke: #b1b1b7;
     --border-light-soft: rgba(255, 255, 255, 0.25);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
-    /* Z-index escala (anteriormente 1000+1000 colisión modal/toast) */
-    --z-panel: 100;
-    --z-dropdown: 200;
-    --z-modal: 1000;
-    --z-toast: 1100;
     --white-5: rgba(255, 255, 255, 0.05);
     --white-8: rgba(255, 255, 255, 0.08);
     --white-10: rgba(255, 255, 255, 0.1);
@@ -276,14 +271,47 @@
     --spacing-2xl: 3rem;
     --border-radius-sm: 8px;
     --border-radius-lg: 16px;
+    /* ── CAPAS: la ÚNICA escala de z-index (L2, 24/09) ──────────────────────
+       Antes había dos grupos --z-* en este :root que se pisaban y ~45 valores
+       crudos en los módulos. Esta escala conserva EXACTAMENTE el orden de
+       apilado que había (cada valor crudo >= 100 pasó a su token), así que
+       nada cambia de sitio; lo que cambia es que ya no se inventan números.
+       Un z-index >= 100 SIEMPRE es uno de estos tokens. Por debajo de 100 son
+       apilados locales dentro de un componente (0, 1, 2…) y van crudos.
+       Nota: el splash (5000) y #modals-portal (2000) viven en el CSS crítico
+       de index.html, que pinta antes de este archivo. */
+    --z-sticky: 100;              /* cabeceras pegajosas, barras de producción */
     --z-dropdown: 100;
+    --z-panel: 200;               /* paneles laterales de vista */
+    --z-inspector: 600;           /* inspector del Command Center */
     --z-nav-overlay: 800;
     --z-nav-sidebar: 850;
+    --z-header: 900;              /* .app-header */
+    --z-chrome: 1000;             /* header, #navigation-container, menús del nav */
     --z-nav-mobile-overlay: 1001;
+    --z-nav-mobile: 1002;         /* sidebar en móvil, sobre su velo */
+    --z-brand-zone: 1010;         /* zona de cards de marca expandidas */
+    --z-menu: 1200;               /* menús contextuales y popovers de vista */
+    --z-selection-bar: 1500;
+    --z-picker: 1600;
+    --z-loader: 1999;
+    --z-portal: 2000;             /* = #modals-portal (index.html) */
+    --z-progress: 4000;           /* barra de progreso de ruta */
+    --z-banner: 9000;
+    --z-drawer-velo: 9998;
+    --z-drawer: 9999;             /* drawers y el menú de usuario del header */
     --z-modal-backdrop: 10000;
+    --z-notification: 10000;
     --z-modal: 10001;
     --z-popover: 10002;
-    --z-notification: 10000;
+    --z-flyout: 10050;            /* flyouts del nav y avisos */
+    --z-report-velo: 10060;       /* velo del reporte del Command Center */
+    --z-sheet: 10100;
+    --z-sheet-top: 10200;
+    --z-tour: 99999;              /* tour de bienvenida (OnboardingTour.js) */
+    --z-overlay-top: 100400;      /* drawer de detalle de insight */
+    --z-overlay-top-panel: 100401;
+    --z-activity: 100500;         /* dropdown de actividad (también desde Navigation.js) */
     --nav-width: 220px;
     --nav-width-collapsed: 51px;
     --nav-transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1270,12 +1298,12 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     top: 0 !important;
     background: transparent !important;
     background-color: transparent !important;
-    z-index: 1000 !important;
+    z-index: var(--z-chrome) !important;
     visibility: visible !important;
     opacity: 1 !important;
     display: flex !important;
 }
-#navigation-container { position: relative; z-index: 1000; }
+#navigation-container { position: relative; z-index: var(--z-chrome); }
 
 /* ========== APP — Transiciones, loader, notificaciones ========== */
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -1424,7 +1452,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     left: 0;
     right: 0;
     height: 2.5px;
-    z-index: 4000;
+    z-index: var(--z-progress);
     pointer-events: none;
     opacity: 0;
     transition: opacity 160ms ease;
@@ -1454,7 +1482,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 .loader-overlay {
     position: fixed;
     inset: 0;
-    z-index: 1999;
+    z-index: var(--z-loader);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1571,7 +1599,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
    aparecer en CUALQUIER pantalla: un paywall que depende de que haya cargado
    el css de su vista no sirve de paywall. */
 .subgate-banner {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 9998;
+  position: fixed; top: 0; left: 0; right: 0; z-index: var(--z-drawer-velo);
   display: flex; align-items: center; justify-content: center; gap: 0.9rem;
   padding: 0.6rem 1.2rem;
   background: linear-gradient(90deg, #7a2d0a, #b4470f);
@@ -1591,7 +1619,7 @@ body.has-subgate-banner { padding-top: 42px; }
 /* El muro. Cubre todo y no se puede rodear con scroll. */
 body.has-subgate-wall { overflow: hidden; }
 .subgate-wall {
-  position: fixed; inset: 0; z-index: 9999;
+  position: fixed; inset: 0; z-index: var(--z-drawer);
   display: flex; align-items: center; justify-content: center; padding: 1.5rem;
   background: radial-gradient(120% 120% at 50% 0%, #241206 0%, #0b0b0a 60%);
 }

@@ -2629,7 +2629,7 @@
   position: fixed;
   right: 0; top: 0; bottom: 0;
   width: 320px;
-  z-index: 600;
+  z-index: var(--z-inspector);
   background: rgba(20, 21, 23, 0.96);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -2911,7 +2911,7 @@
 /* F1.9: context menu (right-click) */
 .cc-ctx-menu {
   position: fixed;
-  z-index: 1200;
+  z-index: var(--z-menu);
   min-width: 220px;
   padding: 4px;
   border: 1px solid var(--border-divider, #242424);
@@ -3048,7 +3048,7 @@
 
 /* ── Modal del informe ─────────────────────────────────────────────── */
 .cc-report-backdrop {
-  position: fixed; inset: 0; z-index: 10060;
+  position: fixed; inset: 0; z-index: var(--z-report-velo);
   display: flex; align-items: center; justify-content: center;
   background: var(--modal-velo); backdrop-filter: var(--modal-velo-blur); -webkit-backdrop-filter: var(--modal-velo-blur); padding: 4vh 16px;
 }

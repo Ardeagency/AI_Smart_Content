@@ -238,7 +238,7 @@
 
 /* ── Modal de desglose de salud ── */
 .salud-overlay {
-  position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0; z-index: var(--z-banner); display: flex; align-items: center; justify-content: center;
   background: var(--modal-velo); backdrop-filter: var(--modal-velo-blur); -webkit-backdrop-filter: var(--modal-velo-blur); padding: 1.5rem;
   animation: overlayFadeIn 0.45s var(--ease-out-expo) both;
 }

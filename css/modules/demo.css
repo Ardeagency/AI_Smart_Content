@@ -85,7 +85,7 @@ body.has-demo-banner {
   left: 0;
   right: 0;
   height: var(--demo-banner-height, 26px);
-  z-index: 9000;
+  z-index: var(--z-banner);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -188,7 +188,7 @@ body.has-demo-banner.no-nav #app-container {
 .demo-cta-modal {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: var(--z-drawer);
   display: none;
   align-items: center;
   justify-content: center;

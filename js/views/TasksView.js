@@ -662,7 +662,7 @@ class TasksView extends BaseView {
     notification.style.cssText = `
       position: fixed; top: 80px; right: 2rem; padding: 1rem 1.5rem;
       background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
-      color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 10000;
+      color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: var(--z-modal-backdrop);
     `;
     notification.textContent = message;
     document.body.appendChild(notification);

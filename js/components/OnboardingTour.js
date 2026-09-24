@@ -30,7 +30,7 @@
   function injectStyle() {
     if (document.getElementById(STYLE_ID)) return;
     const css = `
-      .asc-onb-ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
+      .asc-onb-ov{position:fixed;inset:0;z-index:var(--z-tour);display:flex;align-items:center;justify-content:center;
         background:rgba(8,8,12,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
         opacity:0;transition:opacity .25s ease;font-family:'Inter',system-ui,-apple-system,sans-serif;}
       .asc-onb-ov.is-in{opacity:1;}

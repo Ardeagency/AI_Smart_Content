@@ -45,7 +45,7 @@ function medir() {
 const TOPES = {
   hexEnCss: 2401,
   importantEnCss: 339,
-  zIndexDistintos: 43,
+  zIndexDistintos: 19,
   hexEnJs: 331,
   styleEnLineaEnJs: 299,
   innerHtml: 559,

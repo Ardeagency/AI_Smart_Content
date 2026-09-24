@@ -614,7 +614,7 @@
   _promptGoogleAccounts(accounts) {
     return new Promise((resolve) => {
       const overlay = document.createElement('div');
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:var(--z-drawer);display:flex;align-items:center;justify-content:center;';
       const rows = accounts.map((a) => `
         <label style="display:flex;align-items:center;gap:.6rem;padding:.6rem .4rem;border-bottom:1px solid #242424;cursor:pointer;">
           <input type="checkbox" value="${this.escapeHtml(String(a.customer_id))}" class="gads-acc-chk">

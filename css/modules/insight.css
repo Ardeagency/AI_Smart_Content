@@ -2378,7 +2378,7 @@
   backdrop-filter: var(--modal-velo-blur); -webkit-backdrop-filter: var(--modal-velo-blur);
   opacity: 0; visibility: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease;
-  z-index: 100400;
+  z-index: var(--z-overlay-top);
 }
 .mb-detail-overlay.active { opacity: 1; visibility: visible; }
 
@@ -2397,7 +2397,7 @@
   box-shadow: var(--modal-panel-shadow);
   opacity: 0; visibility: hidden; pointer-events: none;
   transition: opacity 0.18s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.18s ease;
-  z-index: 100401;
+  z-index: var(--z-overlay-top-panel);
 }
 .mb-detail-drawer.active {
   opacity: 1; visibility: visible; pointer-events: auto;

@@ -259,7 +259,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     right: 0;
     bottom: 0;
     padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
-    z-index: 100;
+    z-index: var(--z-sticky);
     pointer-events: none;
 }
 .video-production-cards-row,
@@ -1005,7 +1005,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     right: 0;
     bottom: 0;
     top: 0;
-    z-index: 200;
+    z-index: var(--z-panel);
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -4111,7 +4111,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-lib-modal {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: var(--z-menu);
   display: flex;
   align-items: center;
   justify-content: center;

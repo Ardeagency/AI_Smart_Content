@@ -19,7 +19,7 @@
     background: transparent;
     border-bottom: none;
     padding: 8px 16px;
-    z-index: 1000;
+    z-index: var(--z-chrome);
     box-shadow: none;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     height: 48px;
@@ -683,7 +683,7 @@ body.sidebar-collapsed .main-header,
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
-    z-index: 1000;
+    z-index: var(--z-chrome);
     display: none;
     opacity: 0;
     visibility: hidden;
@@ -947,7 +947,7 @@ body.sidebar-collapsed .main-header,
     transform: none;
     width: min(320px, calc(100vw - 24px));
     /* Por encima del contenido y alineado con portales (#userDropdown en body usa ~9999; modales ~10001+). */
-    z-index: 10050;
+    z-index: var(--z-flyout);
 }
 
 .nav-flyout.nav-flyout--header-anchor .nav-flyout-bridge {
@@ -1531,7 +1531,7 @@ body.sidebar-collapsed .main-header,
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
-    z-index: 1000;
+    z-index: var(--z-chrome);
     display: none;
     overflow: hidden;
     margin-bottom: 8px;
@@ -1839,7 +1839,7 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
     color: #ffffff;
     --text-primary: #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.85);
-    z-index: 900;
+    z-index: var(--z-header);
     display: flex;
     align-items: center;
     overflow: visible;
@@ -2141,7 +2141,7 @@ body.subnav-in-header .app-header .header-production-slot {
     color: var(--glass-black-text);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     overflow: hidden;
-    z-index: 9999;
+    z-index: var(--z-drawer);
     display: none;
 }
 /* Visible solo con .active; especificidad alta para que nada lo pise */
@@ -2173,7 +2173,7 @@ body.subnav-in-header .app-header .header-production-slot {
     color: var(--glass-black-text);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     overflow: hidden;
-    z-index: 10050;
+    z-index: var(--z-flyout);
     display: none;
 }
 
@@ -3752,16 +3752,16 @@ body.subnav-in-header .app-header .header-production-slot {
    DRAWER MÓVIL — orden de apilamiento explícito
    Va al final a propósito: gana por orden de fuente sobre reglas previas de
    .nav-overlay/.side-navigation que tenían z-index conflictivos (drawer 850 y
-   overlay 800 quedaban DEBAJO del header z-index:900). Stack correcto en móvil:
+   overlay 800 quedaban DEBAJO del header z-index:var(--z-header)). Stack correcto en móvil:
    contenido < header (900) < scrim (1001) < drawer (1002).
    ========================================= */
 @media (max-width: 768px) {
     .nav-overlay,
     .nav-overlay.active {
-        z-index: 1001;
+        z-index: var(--z-nav-mobile-overlay);
     }
     .side-navigation {
-        z-index: 1002;
+        z-index: var(--z-nav-mobile);
     }
 }
 

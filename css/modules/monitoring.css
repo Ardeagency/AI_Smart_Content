@@ -475,7 +475,7 @@
    ════════════════════════════════════════════════════════════ */
 body.mn-dragging, body.mn-dragging * { cursor: grabbing !important; }
 .mn-drag-ghost {
-  position: fixed; top: 0; left: 0; z-index: 2000;
+  position: fixed; top: 0; left: 0; z-index: var(--z-portal);
   will-change: transform;               /* movimiento por compositor (sin latencia) */
   transform: translate3d(-9999px, -9999px, 0) translate(-50%, -50%);
   border-radius: 50%;
@@ -820,7 +820,7 @@ a.mn-post:hover .mn-post-ext { color: rgba(255, 255, 255, 0.7); }
 /* ── Popover al hacer clic en una burbuja: color + acciones ── */
 .mn-bubpop {
   position: fixed;
-  z-index: 1200;
+  z-index: var(--z-menu);
   width: 244px;
   background: #1a1a1e;
   border: 1px solid rgba(255, 255, 255, 0.1);
