@@ -1,0 +1,90 @@
+/* ========== Transiciones de página (js/ui/transiciones.js) ==========
+   Solo se anima el CONTENIDO (#app-container). El cascarón (sidebar + topbar)
+   queda fijo: el root no se funde, cambia en seco bajo el contenido.
+
+   - `html.vt-contenido` existe SOLO mientras dura la transición: el nombre
+     crea un backdrop root que, fijo, aislaría el backdrop-filter del cascarón.
+   - `html[data-vt-tipo]` da la dirección (adelante | atras | suave) sin depender
+     de :active-view-transition-type(), que Safari 18.0 y Firefox aún no tienen.
+   - Selectores con `:root` delante: le ganan en especificidad al bloque viejo de
+     bundle.css (::view-transition-*(root)) sin forzar prioridad, sin importar el orden
+     de carga.
+   - Tokens de movimiento del bundle: --duration-route y --ease-route. */
+
+html.vt-contenido #app-container {
+  view-transition-name: contenido;
+}
+
+/* Cascarón fijo: la foto vieja del root no se ve y la nueva no anima. */
+:root::view-transition-old(root) {
+  display: none;
+}
+:root::view-transition-new(root) {
+  animation: none;
+}
+
+/* Sin morfear tamaño/posición del contenido entre una vista y otra: el alto de
+   dos vistas no tiene nada que ver y el morfeo se ve como un estirón. */
+:root::view-transition-group(contenido) {
+  animation: none;
+  overflow: clip;
+}
+:root::view-transition-old(contenido),
+:root::view-transition-new(contenido) {
+  height: 100%;
+  object-fit: none;
+  object-position: top center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root::view-transition-old(contenido) {
+    animation: vt-salida var(--duration-route, 280ms) var(--ease-route, ease-out) both;
+  }
+  :root::view-transition-new(contenido) {
+    animation: vt-entrada var(--duration-route, 280ms) var(--ease-route, ease-out) both;
+  }
+  :root[data-vt-tipo="atras"]::view-transition-new(contenido) {
+    animation-name: vt-entrada-atras;
+  }
+  :root[data-vt-tipo="suave"]::view-transition-old(contenido),
+  :root[data-vt-tipo="suave"]::view-transition-new(contenido) {
+    animation-duration: var(--duration-fast, 150ms);
+  }
+  :root[data-vt-tipo="suave"]::view-transition-new(contenido) {
+    animation-name: vt-aparece;
+  }
+}
+
+/* La saliente se va rápido (primer tercio) para que no convivan dos vistas
+   legibles; la entrante llega con un leve desplazamiento. */
+@keyframes vt-salida {
+  from { opacity: 1; }
+  40%  { opacity: 0; }
+  to   { opacity: 0; }
+}
+@keyframes vt-entrada {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes vt-entrada-atras {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes vt-aparece {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root::view-transition-old(contenido),
+  :root::view-transition-new(contenido) {
+    animation: none;
+  }
+}
+
+/* Esqueleto genérico mientras cargan los datos de la vista nueva. */
+.vt-esqueleto {
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem;
+}
