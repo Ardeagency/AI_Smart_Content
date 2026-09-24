@@ -18,13 +18,28 @@ function escapeHtml(s) {
 }
 
 /* ─── Vera Charts (SVG) ───────────────────────────────── */
+/**
+ * Color de un token del prisma (bundle.css :root). Las librerías de gráficos y el
+ * tema de Mermaid no entienden var(--x): se lee el valor en tiempo de ejecución,
+ * así el chat de Vera usa los MISMOS colores que el resto de la consola (L7).
+ */
+function tokenColor(nombre, respaldo = 'gray') {
+  try {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
+    return v || respaldo;
+  } catch (_) { return respaldo; /* sin DOM (tests): color neutro */ }
+}
+/** El espectro de la plataforma, en el orden de la marca. */
+const PRISMA = ['--prisma-naranja', '--prisma-rojo', '--prisma-amarillo', '--prisma-verde', '--prisma-celeste', '--prisma-azul', '--prisma-purpura', '--prisma-violeta', '--prisma-limon', '--prisma-fucsia'];
+const veraPaleta = () => PRISMA.map((t) => tokenColor(t));
+
 function clamp(n, a, b) {
   const x = Number(n);
   if (!Number.isFinite(x)) return a;
   return Math.min(b, Math.max(a, x));
 }
 
-function safeColor(c, fallback = '#ffffff') {
+function safeColor(c, fallback = 'white') {
   const s = String(c || '').trim();
   if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(s)) return s;
   if (/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*(?:0?\.\d+|1(?:\.0)?))?\s*\)$/.test(s)) return s;
@@ -204,9 +219,7 @@ function renderChartSVG(spec) {
   const legendX = pad + plotW;
   const legendY = plotY;
 
-  const palette = [
-    '#ff6500', '#ff0000', '#ffe500', '#00d614', '#00e7ff', '#0018ee', '#5b00ea', '#900090'
-  ];
+  const palette = veraPaleta().slice(0, 8);
 
   const normalized = data.map((d, i) => ({
     label: String(d?.label ?? `Serie ${i + 1}`),
@@ -279,7 +292,7 @@ function renderChartSVG(spec) {
     // grid + axis
     svg += `<line x1="${plotX}" y1="${baseY}" x2="${plotX + wMax}" y2="${baseY}" stroke="${escapeHtml(border)}" stroke-width="1" />`;
 
-    const stroke = safeColor(spec.stroke || '#00e7ff', '#00e7ff');
+    const stroke = safeColor(spec.stroke || tokenColor('--prisma-celeste'), tokenColor('--prisma-celeste'));
     const points = normalized.map((d, i) => ({ x: xFor(i), y: yFor(d.value) }));
     const dPath = (type === 'spline' && points.length >= 2)
       ? buildSmoothPath(points, spec.tension ?? 0.65)
@@ -305,7 +318,7 @@ function renderChartSVG(spec) {
     const value = clamp(spec.value ?? 0, 0, 100);
     const label = spec.label ? String(spec.label) : '';
     const track = safeColor(spec.trackColor || 'rgba(255,255,255,0.12)', 'rgba(255,255,255,0.12)');
-    const fill = safeColor(spec.fillColor || '#00d614', '#00d614');
+    const fill = safeColor(spec.fillColor || tokenColor('--prisma-verde'), tokenColor('--prisma-verde'));
     const x = plotX;
     const y = plotY + plotH2 * 0.35;
     const w = plotW - 14;
@@ -338,7 +351,7 @@ function renderChartSVG(spec) {
       const path = `M ${xTopL} ${y} L ${xTopR} ${y} L ${xBotR} ${y + hSeg} L ${xBotL} ${y + hSeg} Z`;
       svg += `<path d="${path}" fill="${escapeHtml(seg.color)}" />`;
       if (spec.labels !== false) {
-        svg += `<text x="${cx}" y="${y + hSeg / 2 + 4}" text-anchor="middle" fill="#0b0b0b" font-family="${fontFamily}" font-size="12" font-weight="600">${escapeHtml(seg.label)}</text>`;
+        svg += `<text x="${cx}" y="${y + hSeg / 2 + 4}" text-anchor="middle" fill="${tokenColor('--bg-primary')}" font-family="${fontFamily}" font-size="12" font-weight="600">${escapeHtml(seg.label)}</text>`;
       }
       y += hSeg;
     });
@@ -392,7 +405,7 @@ function renderChartSVG(spec) {
         }))
       : [{
           name: String(spec.seriesName || 'Serie 1'),
-          color: safeColor(spec.stroke || '#00e7ff', '#00e7ff'),
+          color: safeColor(spec.stroke || tokenColor('--prisma-celeste'), tokenColor('--prisma-celeste')),
           data: normalized.map((d) => d.value)
         }];
 
@@ -603,22 +616,22 @@ async function ensureMermaid() {
           // Canvas
           background: 'transparent',
           // Default node
-          primaryColor: '#16171b',
-          primaryBorderColor: '#3a3a44',
-          primaryTextColor: '#E8E5EC',
+          primaryColor: tokenColor('--bg-secondary'),
+          primaryBorderColor: tokenColor('--border-hairline-strong'),
+          primaryTextColor: tokenColor('--text-primary'),
           // Edges (arrows)
-          lineColor: '#6f6f78',
+          lineColor: tokenColor('--text-muted'),
           // Edge labels
-          edgeLabelBackground: '#16171b',
-          tertiaryColor: '#16171b',
+          edgeLabelBackground: tokenColor('--bg-secondary'),
+          tertiaryColor: tokenColor('--bg-secondary'),
           // Subgraphs (clusters)
           clusterBkg: 'rgba(255,255,255,0.02)',
-          clusterBorder: '#2c2c34',
-          titleColor: '#D4D1D8',
+          clusterBorder: tokenColor('--border-color'),
+          titleColor: tokenColor('--text-primary'),
           // Flowchart specifics
-          nodeBorder: '#3a3a44',
-          mainBkg: '#16171b',
-          secondBkg: '#1a1b1f',
+          nodeBorder: tokenColor('--border-hairline-strong'),
+          mainBkg: tokenColor('--bg-secondary'),
+          secondBkg: tokenColor('--bg-card'),
           // Misc
           fontSize: '14px',
         },
@@ -704,7 +717,7 @@ function applyMermaidSemanticClasses(src) {
 function _cleanupMermaidOrphans() {
   try {
     document.querySelectorAll('body > [id^="dvera-mmd-"]').forEach((n) => n.remove());
-  } catch (_) {}
+  } catch (_) { /* nodos ya retirados */ }
 }
 
 async function ensurePrism() {
@@ -739,10 +752,7 @@ async function ensureECharts() {
 }
 
 // Paleta brand para ECharts — usa los acentos del sistema premium ya cableado
-const VERA_CHART_PALETTE = [
-  '#f5b942', '#3ec47d', '#5b8def', '#ff5b5b', '#a78bfa',
-  '#22d3ee', '#fb923c', '#f472b6', '#84cc16', '#facc15',
-];
+// (L7: el espectro del prisma, leído al pintar; antes 10 hex sueltos de otra paleta)
 
 // Tipos que ECharts puede renderizar nativamente. Si Vera pide un tipo
 // fuera de este set, caemos a la tabla de datos.
@@ -868,18 +878,18 @@ function buildEChartsOption(rawSpec) {
   const seriesIn = Array.isArray(spec.series) ? spec.series : null;
 
   // Theme base — premium dark coherente con el resto del chat
-  const textColor = '#E8E5EC';
+  const textColor = tokenColor('--text-primary');
   const subColor = 'rgba(212,209,216,0.65)';
   const gridColor = 'rgba(255,255,255,0.06)';
   const tooltipBg = 'rgba(20,21,25,0.95)';
 
   const option = {
     backgroundColor: 'transparent',
-    color: VERA_CHART_PALETTE,
+    color: veraPaleta(),
     textStyle: { color: textColor, fontFamily: 'inherit' },
     title: title ? {
       text: title,
-      textStyle: { color: '#F0EDE8', fontWeight: 600, fontSize: 15 },
+      textStyle: { color: textColor, fontWeight: 600, fontSize: 15 },
       left: 14, top: 12,
     } : undefined,
     grid: { left: 50, right: 30, top: title ? 50 : 24, bottom: 36, containLabel: true },
@@ -896,7 +906,7 @@ function buildEChartsOption(rawSpec) {
     tooltip: {
       trigger: 'item',
       backgroundColor: tooltipBg,
-      borderColor: '#2c2c34',
+      borderColor: tokenColor('--border-color'),
       textStyle: { color: textColor, fontSize: 12 },
       extraCssText: 'box-shadow: 0 8px 20px rgba(0,0,0,0.5); border-radius: 8px;',
     },
@@ -974,7 +984,7 @@ function buildEChartsOption(rawSpec) {
         radius: normalizedType === 'donut' ? [innerR, '72%'] : '72%',
         center: ['50%', '55%'],
         data: data.map((d) => ({ name: d.label || d.name, value: d.value, itemStyle: d.color ? { color: d.color } : undefined })),
-        itemStyle: { borderColor: '#0e0f12', borderWidth: 2, borderRadius: 4 },
+        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 2, borderRadius: 4 },
         label: { color: textColor },
         emphasis: { itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.5)' } },
       }];
@@ -988,7 +998,7 @@ function buildEChartsOption(rawSpec) {
         radius: ['10%', '72%'],
         center: ['50%', '55%'],
         data: data.map((d) => ({ name: d.label || d.name, value: d.value, itemStyle: d.color ? { color: d.color } : undefined })),
-        itemStyle: { borderColor: '#0e0f12', borderWidth: 2 },
+        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 2 },
         label: { color: textColor },
         emphasis: { itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.5)' } },
       }];
@@ -1035,7 +1045,7 @@ function buildEChartsOption(rawSpec) {
       option.visualMap = {
         min: spec.min ?? 0, max: spec.max ?? 100, calculable: true, orient: 'horizontal',
         left: 'center', bottom: 0, textStyle: { color: subColor },
-        inRange: { color: ['#1a1b1f', '#5b8def', '#f5b942', '#ff5b5b'] },
+        inRange: { color: [tokenColor('--bg-card'), tokenColor('--prisma-azul'), tokenColor('--prisma-amarillo'), tokenColor('--prisma-rojo')] },
       };
       option.series = [{ type: 'heatmap', data: values_, label: { show: false }, emphasis: { itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,0.5)' } } }];
       break;
@@ -1046,9 +1056,9 @@ function buildEChartsOption(rawSpec) {
         data: data,
         roam: false,
         breadcrumb: { show: false },
-        label: { color: '#fff', fontWeight: 500 },
-        upperLabel: { show: true, height: 28, color: '#fff' },
-        itemStyle: { borderColor: '#0e0f12', borderWidth: 2, gapWidth: 2 },
+        label: { color: 'white', fontWeight: 500 },
+        upperLabel: { show: true, height: 28, color: 'white' },
+        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 2, gapWidth: 2 },
       }];
       delete option.grid;
       break;
@@ -1058,8 +1068,8 @@ function buildEChartsOption(rawSpec) {
         type: 'sunburst',
         data: data,
         radius: ['0%', '85%'],
-        label: { color: '#fff' },
-        itemStyle: { borderColor: '#0e0f12', borderWidth: 2 },
+        label: { color: 'white' },
+        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 2 },
       }];
       delete option.grid;
       break;
@@ -1078,7 +1088,7 @@ function buildEChartsOption(rawSpec) {
         pointer: { show: false },
         detail: { valueAnimation: true, formatter: spec.formatter || '{value}', color: textColor, fontSize: 30, offsetCenter: [0, '5%'] },
         data: [{ value: val, name: spec.subtitle || '' }],
-        itemStyle: { color: VERA_CHART_PALETTE[0] },
+        itemStyle: { color: veraPaleta()[0] },
       }];
       delete option.grid;
       break;
@@ -1089,8 +1099,8 @@ function buildEChartsOption(rawSpec) {
         type: 'funnel',
         sort: normalizedType === 'pyramid' ? 'ascending' : 'descending',
         data: data.map((d) => ({ name: d.label || d.name, value: d.value })),
-        label: { color: '#fff', fontWeight: 500 },
-        itemStyle: { borderColor: '#0e0f12', borderWidth: 2 },
+        label: { color: 'white', fontWeight: 500 },
+        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 2 },
       }];
       delete option.grid;
       break;
@@ -1103,7 +1113,7 @@ function buildEChartsOption(rawSpec) {
         nodeAlign: 'justify',
         label: { color: textColor },
         lineStyle: { color: 'gradient', opacity: 0.45, curveness: 0.5 },
-        itemStyle: { borderColor: '#0e0f12', borderWidth: 1 },
+        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 1 },
       }];
       delete option.grid;
       break;
@@ -1132,7 +1142,7 @@ function buildEChartsOption(rawSpec) {
       option.series = [{
         type: 'candlestick',
         data: data.map((d) => [d.open, d.close, d.low, d.high]),
-        itemStyle: { color: '#3ec47d', color0: '#ff5b5b', borderColor: '#3ec47d', borderColor0: '#ff5b5b' },
+        itemStyle: { color: tokenColor('--color-success'), color0: tokenColor('--color-error'), borderColor: tokenColor('--color-success'), borderColor0: tokenColor('--color-error') },
       }];
       break;
     }
@@ -1143,7 +1153,7 @@ function buildEChartsOption(rawSpec) {
       option.series = [{
         type: 'boxplot',
         data: data.map((d) => Array.isArray(d.value) ? d.value : [d.min, d.q1, d.median, d.q3, d.max]),
-        itemStyle: { color: 'rgba(91,141,239,0.3)', borderColor: '#5b8def' },
+        itemStyle: { color: tokenColor('--white-12'), borderColor: tokenColor('--prisma-azul') },
       }];
       break;
     }
@@ -1176,8 +1186,8 @@ function buildEChartsOption(rawSpec) {
     }
     case 'calendar': {
       const year = spec.year || new Date().getFullYear();
-      option.calendar = { range: String(year), cellSize: ['auto', 16], itemStyle: { borderColor: '#0e0f12' }, dayLabel: { color: subColor }, monthLabel: { color: subColor }, splitLine: { lineStyle: { color: gridColor } } };
-      option.visualMap = { min: spec.min ?? 0, max: spec.max ?? 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, textStyle: { color: subColor }, inRange: { color: ['#1a1b1f', '#5b8def', '#f5b942'] } };
+      option.calendar = { range: String(year), cellSize: ['auto', 16], itemStyle: { borderColor: tokenColor('--bg-primary') }, dayLabel: { color: subColor }, monthLabel: { color: subColor }, splitLine: { lineStyle: { color: gridColor } } };
+      option.visualMap = { min: spec.min ?? 0, max: spec.max ?? 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, textStyle: { color: subColor }, inRange: { color: [tokenColor('--bg-card'), tokenColor('--prisma-azul'), tokenColor('--prisma-amarillo')] } };
       option.series = [{ type: 'heatmap', coordinateSystem: 'calendar', data: data.map((d) => [d.date, d.value]) }];
       delete option.grid;
       delete option.xAxis;
@@ -1202,15 +1212,13 @@ const VERA_AVATAR_SRC = '/recursos/vera/Vera.svg';
 // Logotipo completo (wordmark) para el hero de bienvenida: transparente, sin caja.
 const VERA_WORDMARK_SRC = '/recursos/vera/Vera-2.svg';
 
-/** URL del chat: ai-engine externo o Netlify Function en el mismo origen */
 /**
- * Corte ADR-0052: Vera habla por el borde /v1 (StudioDatos/VeraDatos.enviar →
+ * Corte ADR-0052: Vera habla por el borde /v1 (VeraDatos.enviar →
  * POST /v1/conversaciones/:id/mensajes) y responde como filas de ai.messages.
- * El ai-engine (api-ai-engine-chat, task-event, widget-action) se apaga con
- * las functions: estas dos funciones quedan solo para que nadie las llame a ciegas.
+ * El ai-engine (api-ai-engine-chat, task-event, widget-action) se apagó con las
+ * functions; lo que iba por ahí (acciones de widget, tareas, aprobaciones) viaja
+ * como mensaje a Vera (L7: fuera el código que aún las llamaba).
  */
-function getAiChatUrl() { return ''; }
-function getAiTaskEventUrl() { return ''; }
 
 const FRAME_MIN_H = 160;      // igual que el min-height del CSS
 const FRAME_MAX_H = 6000;     // techo duro: más allá, scroll interno
@@ -1313,7 +1321,7 @@ class VeraView extends (window.BaseView || class {}) {
           .find((f) => f.contentWindow === event.source);
         if (!iframe) return; // mensaje no viene de iframe nuestro -> ignorar
 
-        const { requestId, actionType, payload, reasoning } = event.data || {};
+        const { requestId, actionType, payload } = event.data || {};
         const reply = (ok, data, error) => {
           try { event.source.postMessage({ type: 'vera_action_result', requestId, ok, data, error }, '*'); }
           catch (_) { /* iframe puede haberse removido */ }
@@ -1335,34 +1343,7 @@ class VeraView extends (window.BaseView || class {}) {
           catch (e) { reply(false, null, e?.message || 'error'); }
           return;
         }
-        try {
-          const token = this.supabase
-            ? (await this.supabase.auth.getSession())?.data?.session?.access_token
-            : null;
-          const res = await fetch('/.netlify/functions/api-widget-action', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify({
-              organization_id: this.aiState.organization_id,
-              conversation_id: this.aiState.active_conversation_id || null,
-              brand_container_id: this.aiState.brand_container_id || null,
-              actionType,
-              payload: payload || {},
-              reasoning: reasoning || '',
-            }),
-          });
-          let json = null;
-          try { json = await res.json(); } catch (_) {}
-          if (!res.ok) {
-            reply(false, null, json?.error || `http_${res.status}`); return;
-          }
-          reply(json?.ok !== false, json?.data, json?.error);
-        } catch (e) {
-          reply(false, null, e?.message || 'network_error');
-        }
+        reply(false, null, 'sin_puente'); // sin VeraDatos no hay a quién decírselo
         return;
       }
     });
@@ -1384,7 +1365,7 @@ class VeraView extends (window.BaseView || class {}) {
     // Vista inmersiva: al entrar a Vera se colapsa el sidebar global para dar
     // todo el ancho al chat + su propio historial. Recuerda el estado previo y
     // lo restaura en onLeave() — no toca la preferencia global del usuario.
-    try { window.appNavigation?.collapseForImmersive?.(); } catch (_) {}
+    try { window.appNavigation?.collapseForImmersive?.(); } catch (_) { /* el shell puede no estar montado */ }
 
     this.aiState.organization_id =
       this.routeParams?.orgId ||
@@ -1649,7 +1630,7 @@ class VeraView extends (window.BaseView || class {}) {
           el.controls = false;
           el.currentTime = 0;
           await el.play();
-        } catch (_) {}
+        } catch (_) { /* el navegador bloqueó el autoplay: queda quieto */ }
       },
       true
     );
@@ -1663,7 +1644,7 @@ class VeraView extends (window.BaseView || class {}) {
           el.pause();
           el.currentTime = 0;
           el.controls = true;
-        } catch (_) {}
+        } catch (_) { /* el video ya no está en el DOM */ }
       },
       true
     );
@@ -1708,13 +1689,13 @@ class VeraView extends (window.BaseView || class {}) {
 
   // Al salir de Vera (router.onLeave) restauramos el sidebar global.
   onLeave() {
-    try { window.appNavigation?.restoreFromImmersive?.(); } catch (_) {}
+    try { window.appNavigation?.restoreFromImmersive?.(); } catch (_) { /* el shell puede no estar montado */ }
     // Matar cualquier espera async en vuelo (ticker + polling 6s + realtime) para
     // que no siga golpeando Supabase en background tras salir de Vera.
-    try { this._cancelAsyncWait?.(); } catch (_) {}
+    try { this._cancelAsyncWait?.(); } catch (_) { /* nada que cancelar */ }
     // El modal de adjuntar (#veraLibModal) vive en <body>; si se navega con el
     // abierto (teclado/back) quedaba huerfano tapando la vista siguiente.
-    try { document.getElementById('veraLibModal')?.remove(); } catch (_) {}
+    try { document.getElementById('veraLibModal')?.remove(); } catch (_) { /* ya no estaba */ }
   }
 
   /**
@@ -1840,7 +1821,6 @@ class VeraView extends (window.BaseView || class {}) {
   // que devuelve [{id, name, meta}].
   _libTypeDef(kind) {
     const orgId = this.aiState.organization_id;
-    const sb = () => this.supabase;
     // Corte ADR-0052: los datos del picker salen de VeraDatos.universo (elements_full,
     // flows.vista_org); las etiquetas e iconos siguen abajo. Lo que aún no existe en la
     // base nueva (campañas, audiencias, estrategias, briefs, producciones) devuelve [].
@@ -1849,151 +1829,7 @@ class VeraView extends (window.BaseView || class {}) {
       const [label, icon] = etiquetas[kind] || [kind, 'aisc-ico aisc-ico--document'];
       return { label, icon, load: async () => { const u = await window.VeraDatos.universo(orgId); return u[kind] || []; } };
     }
-    const defs = {
-      product: {
-        label: __('Producto'), icon: 'aisc-ico aisc-ico--product',
-        load: async () => {
-          const { data } = await sb().from('products')
-            .select('id, nombre_producto, tipo_producto')
-            .eq('organization_id', orgId).order('nombre_producto', { ascending: true }).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_producto || __('Producto sin nombre'), meta: r.tipo_producto || '' }));
-        }
-      },
-      campaign: {
-        // Campañas REALES = sincronizadas desde Meta/Google (last_synced_at no nulo).
-        label: __('Campaña'), icon: 'aisc-ico aisc-ico--campaign',
-        load: async () => {
-          const { data } = await sb().from('campaigns')
-            .select('id, nombre_campana, status')
-            .eq('organization_id', orgId).not('last_synced_at', 'is', null)
-            .order('created_at', { ascending: false }).limit(300);
-          const st = { active: __('Activa'), paused: __('Pausada'), draft: __('Borrador'), ended: __('Finalizada'), archived: __('Archivada') };
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_campana || __('Campaña sin nombre'), meta: st[r.status] || r.status || '' }));
-        }
-      },
-      campaign_objective: {
-        // Campañas CONCEPTUALES = no sincronizadas (last_synced_at nulo); sirven
-        // para dirigir la producción hacia un objetivo.
-        label: __('Objetivo de campaña'), icon: 'aisc-ico aisc-ico--goal',
-        load: async () => {
-          const { data } = await sb().from('campaigns')
-            .select('id, nombre_campana')
-            .eq('organization_id', orgId).is('last_synced_at', null)
-            .order('created_at', { ascending: false }).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_campana || __('Objetivo sin nombre'), meta: __('Conceptual') }));
-        }
-      },
-      audience_objective: {
-        label: __('Objetivo de audiencia'), icon: 'aisc-ico aisc-ico--audience',
-        load: async () => {
-          const { data } = await sb().from('audience_personas')
-            .select('id, name, awareness_level')
-            .eq('organization_id', orgId).order('name', { ascending: true }).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.name || __('Audiencia sin nombre'), meta: r.awareness_level || '' }));
-        }
-      },
-      brief: {
-        label: __('Brief'), icon: 'aisc-ico aisc-ico--copy',
-        load: async () => {
-          const { data } = await sb().from('brand_containers')
-            .select('id, nombre_marca, creative_brief')
-            .eq('organization_id', orgId).order('created_at', { ascending: true }).limit(100);
-          return (data || [])
-            .filter((r) => r.creative_brief && String(r.creative_brief).trim())
-            .map((r) => ({ id: r.id, name: __('Brief — {marca}', { marca: r.nombre_marca || __('Marca') }), meta: '' }));
-        }
-      },
-      service: {
-        label: __('Servicio'), icon: 'aisc-ico aisc-ico--brief',
-        load: async () => {
-          const { data } = await sb().from('services')
-            .select('id, nombre_servicio')
-            .eq('organization_id', orgId).order('nombre_servicio', { ascending: true }).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_servicio || __('Servicio sin nombre'), meta: '' }));
-        }
-      },
-      place: {
-        label: __('Lugar'), icon: 'aisc-ico aisc-ico--places',
-        load: async () => {
-          // brand_places no tiene organization_id → se filtra por entity_id de la org.
-          const { data: ents } = await sb().from('brand_entities')
-            .select('id').eq('organization_id', orgId).limit(500);
-          const ids = (ents || []).map((e) => e.id);
-          if (!ids.length) return [];
-          const { data } = await sb().from('brand_places')
-            .select('id, nombre_lugar').in('entity_id', ids).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_lugar || __('Lugar sin nombre'), meta: '' }));
-        }
-      },
-      character: {
-        label: __('Personaje'), icon: 'aisc-ico aisc-ico--characters',
-        load: async () => {
-          // brand_characters no tiene organization_id → se filtra por entity_id de la org.
-          const { data: ents } = await sb().from('brand_entities')
-            .select('id').eq('organization_id', orgId).limit(500);
-          const ids = (ents || []).map((e) => e.id);
-          if (!ids.length) return [];
-          const { data } = await sb().from('brand_characters')
-            .select('id, nombre_personaje').in('entity_id', ids).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_personaje || __('Personaje sin nombre'), meta: '' }));
-        }
-      },
-      strategy: {
-        label: __('Estrategia'), icon: 'aisc-ico aisc-ico--goal',
-        load: async () => {
-          // canvas_strategies cuelga del contenedor de marca, no de la org.
-          const { data: marcas } = await sb().from('brand_containers')
-            .select('id, nombre_marca').eq('organization_id', orgId).limit(100);
-          const ids = (marcas || []).map((m) => m.id);
-          if (!ids.length) return [];
-          const nombre = new Map((marcas || []).map((m) => [m.id, m.nombre_marca]));
-          const { data } = await sb().from('canvas_strategies')
-            .select('id, name, description, brand_container_id')
-            .in('brand_container_id', ids)
-            .order('created_at', { ascending: false }).limit(300);
-          return (data || []).map((r) => ({
-            id: r.id,
-            name: r.name || __('Estrategia sin nombre'),
-            meta: nombre.get(r.brand_container_id) || '',
-          }));
-        }
-      },
-      production: {
-        label: __('Producción'), icon: 'aisc-ico aisc-ico--flows',
-        load: async () => {
-          const { data: runs } = await sb().from('flow_runs')
-            .select('id, flow_id, status, created_at')
-            .eq('organization_id', orgId)
-            .order('created_at', { ascending: false }).limit(60);
-          if (!runs?.length) return [];
-          const flowIds = [...new Set(runs.map((r) => r.flow_id).filter(Boolean))];
-          const { data: flows } = flowIds.length
-            ? await sb().from('content_flows').select('id, name').in('id', flowIds)
-            : { data: [] };
-          const nombre = new Map((flows || []).map((f) => [f.id, f.name]));
-          // Una producción no tiene título propio: se nombra por su flujo y su
-          // fecha, que es como el usuario la reconoce en el historial.
-          return runs.map((r) => ({
-            id: r.id,
-            name: nombre.get(r.flow_id) || __('Producción'),
-            meta: this._relTime(r.created_at) || r.status || '',
-          }));
-        }
-      },
-      flow: {
-        label: __('Flujo'), icon: 'aisc-ico aisc-ico--flows',
-        load: async () => {
-          // Catálogo compartido: publicado, activo y visible (nada de 'system').
-          const { data } = await sb().from('content_flows')
-            .select('id, name, output_type')
-            .eq('is_active', true).eq('status', 'published').eq('show_in_catalog', true)
-            .neq('flow_category_type', 'system')
-            .order('name', { ascending: true }).limit(300);
-          return (data || []).map((r) => ({ id: r.id, name: r.name || __('Flujo sin nombre'), meta: r.output_type || '' }));
-        }
-      }
-    };
-    return defs[kind] || null;
+    return null;
   }
 
   _libKindLabel(kind) {
@@ -2429,11 +2265,11 @@ class VeraView extends (window.BaseView || class {}) {
     on('veraArtifactClose', () => this._closeArtifactPanel());
     on('veraArtifactView', () => { this._artifactView = 'preview'; this._renderArtifactBody(); });
     on('veraArtifactCode', () => { this._artifactView = 'code'; this._renderArtifactBody(); });
-    on('veraArtifactFull', () => { try { this._artifactFrame?.requestFullscreen?.(); } catch (_) {} });
+    on('veraArtifactFull', () => { try { this._artifactFrame?.requestFullscreen?.(); } catch (_) { /* el navegador puede negar la pantalla completa */ } });
     on('veraArtifactPdf', () => {
       // Imprime el artefacto (Guardar como PDF). Requiere la vista previa (iframe).
       const doPrint = () => {
-        try { this._artifactFrame?.contentWindow?.postMessage({ type: 'vera_print' }, '*'); } catch (_) {}
+        try { this._artifactFrame?.contentWindow?.postMessage({ type: 'vera_print' }, '*'); } catch (_) { /* el iframe ya no existe */ }
       };
       if (this._artifactView !== 'preview') {
         this._artifactView = 'preview';
@@ -2455,7 +2291,7 @@ class VeraView extends (window.BaseView || class {}) {
         a.href = url; a.download = 'artefacto-vera.html';
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 2000);
-      } catch (_) {}
+      } catch (_) { /* sin descarga: el artefacto sigue en pantalla */ }
     });
   }
 
@@ -2636,7 +2472,7 @@ class VeraView extends (window.BaseView || class {}) {
     layout.classList.toggle('history-collapsed', next);
     // En móvil el historial es un drawer temporal: no persistimos su estado.
     if (!this._isMobile()) {
-      try { localStorage.setItem('veraHistoryCollapsed', next ? 'true' : 'false'); } catch (_) {}
+      try { localStorage.setItem('veraHistoryCollapsed', next ? 'true' : 'false'); } catch (_) { /* navegación privada: vale solo esta sesión */ }
     }
   }
 
@@ -2647,7 +2483,7 @@ class VeraView extends (window.BaseView || class {}) {
     if (this._isMobile()) {
       collapsed = true; // móvil: drawer cerrado por defecto
     } else {
-      try { collapsed = localStorage.getItem('veraHistoryCollapsed') === 'true'; } catch (_) {}
+      try { collapsed = localStorage.getItem('veraHistoryCollapsed') === 'true'; } catch (_) { /* navegación privada: se queda expandido */ }
     }
     layout.classList.toggle('history-collapsed', collapsed);
   }
@@ -2853,32 +2689,9 @@ class VeraView extends (window.BaseView || class {}) {
       const sourceMessageId = el.getAttribute('data-message-id') || '';
       const checked = !!el.checked;
 
-      // Persist event so Vera can see it next turn (no immediate assistant reply)
-      try {
-        // Corte ADR-0052: api-task-event se apagó; el evento queda en memoria y viaja en el próximo mensaje.
-        if (!getAiTaskEventUrl()) { (this._eventosPendientes ||= []).push({ sourceMessageId, idx, taskText, checked }); return; }
-        const token = this.supabase
-          ? (await this.supabase.auth.getSession())?.data?.session?.access_token
-          : null;
-
-        await fetch(getAiTaskEventUrl(), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify({
-            organization_id: this.aiState.organization_id,
-            conversation_id: this.aiState.active_conversation_id,
-            source_message_id: sourceMessageId,
-            task_index: idx,
-            task_text: taskText,
-            checked
-          })
-        });
-      } catch (err) {
-        console.warn('Task event failed:', err);
-      }
+      // Corte ADR-0052: api-task-event se apagó; el evento queda en memoria y viaja
+      // en el próximo mensaje (no dispara una respuesta de Vera por sí solo).
+      (this._eventosPendientes ||= []).push({ sourceMessageId, idx, taskText, checked });
     });
   }
 
@@ -2940,7 +2753,7 @@ class VeraView extends (window.BaseView || class {}) {
           input.value = cur ? `${cur}, ${value.trim()}` : value.trim();
           input.dispatchEvent(new Event('input', { bubbles: true }));
           input.focus();
-          try { input.selectionStart = input.selectionEnd = input.value.length; } catch (_) {}
+          try { input.selectionStart = input.selectionEnd = input.value.length; } catch (_) { /* el campo no admite selección */ }
         }
         return;
       }
@@ -2953,7 +2766,7 @@ class VeraView extends (window.BaseView || class {}) {
     const input = document.getElementById('veraInput');
     if (!input) return;
     input.focus();
-    try { input.selectionStart = input.selectionEnd = input.value.length; } catch (_) {}
+    try { input.selectionStart = input.selectionEnd = input.value.length; } catch (_) { /* el campo no admite selección */ }
   }
 
   /* Controlador del widget [CLARIFY]: pager "n de N", teclado (↑↓ opciones,
@@ -3185,22 +2998,7 @@ class VeraView extends (window.BaseView || class {}) {
       // TASK_EVENT (igual que el checkbox) y dispara a Vera para que ejecute.
       window._veraApproveAction = async (key, msgId, btnEl) => {
         if (btnEl) { btnEl.disabled = true; btnEl.textContent = __('✓ Aprobado'); btnEl.classList.add('vera-approve-pill--done'); }
-        try {
-          if (!getAiTaskEventUrl()) throw new Error('sin task-event en v2: la aprobación viaja como mensaje');
-          const token = this.supabase ? (await this.supabase.auth.getSession())?.data?.session?.access_token : null;
-          await fetch(getAiTaskEventUrl(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-            body: JSON.stringify({
-              organization_id: this.aiState.organization_id,
-              conversation_id: this.aiState.active_conversation_id,
-              source_message_id: msgId,
-              task_index: 0,
-              task_text: 'APPROVE_ACTION:' + key,
-              checked: true,
-            }),
-          });
-        } catch (err) { console.warn('approve failed', err); }
+        // Sin task-event en v2 (ADR-0052): la aprobación viaja como mensaje a Vera.
         this.sendMessage(__('Aprobado, procede con la acción.'));
       };
       window._veraOpenArtifact = (btnEl) => this._openArtifactPanel(btnEl);
@@ -3673,7 +3471,7 @@ class VeraView extends (window.BaseView || class {}) {
         // rAF SIN desligarlo de window: invocarlo suelto lanza "Illegal invocation".
         'function r(){if(!__vRaf)__vRaf=window.requestAnimationFrame?window.requestAnimationFrame(__vMide):setTimeout(__vMide,16);}',
         'window.addEventListener("load",r);',
-        'try{new ResizeObserver(r).observe(document.body);}catch(e){}',
+        'try{new ResizeObserver(r).observe(document.body);}catch(e){/* sin ResizeObserver: altura fija */}',
         // ── Widget action bridge ───────────────────────────────────────
         'window.__veraActionCallbacks = {};',
         'window.__veraAction = function(actionType, payload, reasoning){',
@@ -3692,7 +3490,7 @@ class VeraView extends (window.BaseView || class {}) {
         // ── Imprimir/PDF: el panel envia "vera_print" y el iframe imprime su
         //    propio documento (Guardar como PDF en el dialogo del navegador).
         'window.addEventListener("message", function(e){',
-          'if(e && e.data && e.data.type === "vera_print"){ try{ window.focus(); window.print(); }catch(_){} }',
+          'if(e && e.data && e.data.type === "vera_print"){ try{ window.focus(); window.print(); }catch(_){/* impresión bloqueada */} }',
         '});',
         '})();',
         '<\/script>'
@@ -3998,7 +3796,7 @@ class VeraView extends (window.BaseView || class {}) {
         codeNodes.forEach((node) => {
           if (node.dataset.veraProcessed) return;
           node.dataset.veraProcessed = '1';
-          try { Prism.highlightElement(node); } catch (_) {}
+          try { Prism.highlightElement(node); } catch (_) { /* lenguaje desconocido: queda sin resaltar */ }
         });
       }).catch((e) => console.warn('Prism load error:', e?.message || e));
     }
@@ -4035,7 +3833,7 @@ class VeraView extends (window.BaseView || class {}) {
             // Limpieza si el nodo se remueve
             node._veraChartDispose = () => {
               window.removeEventListener('resize', onResize);
-              try { chart.dispose(); } catch (_) {}
+              try { chart.dispose(); } catch (_) { /* ya estaba liberado */ }
             };
           } catch (e) {
             console.warn('ECharts init error:', e?.message || e);
@@ -4125,7 +3923,7 @@ class VeraView extends (window.BaseView || class {}) {
       });
       notif.onclick = () => { window.focus(); notif.close(); };
       setTimeout(() => notif.close(), 8000);
-    } catch (_) {}
+    } catch (_) { /* sin permiso de notificaciones: nada que avisar */ }
   }
 
   /* ── Input binding ───────────────────────────────────── */
@@ -4345,9 +4143,11 @@ class VeraView extends (window.BaseView || class {}) {
         const idx = this.aiState.pendingAttachments.findIndex(a => a.id === id);
         if (idx >= 0) {
           const att = this.aiState.pendingAttachments[idx];
-          // Best-effort cleanup del archivo subido
-          if (att.path && this.supabase?.storage) {
-            this.supabase.storage.from('org-assets').remove([att.path]).catch(() => {});
+          // El archivo ya subido se borra por el borde (DELETE /v1/archivos/:id). Si falla,
+          // queda en la bóveda de la marca: no es un error para la persona, solo se registra.
+          if (att.file_id && window.apiV2?.api?.borrarArchivo) {
+            window.apiV2.api.borrarArchivo(att.file_id, this.aiState.organization_id)
+              .catch((err) => console.warn('[vera] adjunto quitado sin borrar:', err?.codigo || err?.message));
           }
           this.aiState.pendingAttachments.splice(idx, 1);
           this._renderAttachChips();
@@ -4541,7 +4341,7 @@ class VeraView extends (window.BaseView || class {}) {
         clearInterval(tickInterval);
         clearInterval(pollInterval);
         clearTimeout(firstPollTimeout);
-        try { channel?.unsubscribe(); } catch (_) {}
+        try { channel?.unsubscribe(); } catch (_) { /* el canal ya se cerró */ }
         this._cancelAsyncWait = null;
         resolve();
       };
@@ -4554,7 +4354,7 @@ class VeraView extends (window.BaseView || class {}) {
         clearInterval(pollInterval);
         clearTimeout(firstPollTimeout);
         this._cancelAsyncWait = null;
-        try { channel?.unsubscribe(); } catch (_) {}
+        try { channel?.unsubscribe(); } catch (_) { /* el canal ya se cerró */ }
         this.hideTypingIndicator();
 
         if (msg) {
@@ -4627,7 +4427,7 @@ class VeraView extends (window.BaseView || class {}) {
           if (!resolved) {
             resolved = true;
             this._cancelAsyncWait = null;
-            try { channel?.unsubscribe(); } catch (_) {}
+            try { channel?.unsubscribe(); } catch (_) { /* el canal ya se cerró */ }
             this.hideTypingIndicator();
             const timeoutMsg = {
               id: `local-timeout-${Date.now()}`,

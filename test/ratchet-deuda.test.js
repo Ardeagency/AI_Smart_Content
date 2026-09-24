@@ -46,11 +46,11 @@ const TOPES = {
   hexEnCss: 2318,
   importantEnCss: 318,
   zIndexDistintos: 19,
-  hexEnJs: 310,
+  hexEnJs: 247,
   styleEnLineaEnJs: 291,
   innerHtml: 542,
-  catchVacios: 163,
-  fromEnVistas: 278,
+  catchVacios: 140,
+  fromEnVistas: 262,
 };
 
 describe('Ratchet de deuda del frontend', () => {
