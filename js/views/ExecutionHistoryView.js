@@ -13,7 +13,7 @@
  */
 class ExecutionHistoryView extends BaseView {
   static cacheable = true;
-  static get documentTitle() { return __('Execution History'); }
+  static get documentTitle() { return __('Historial'); }
 
   constructor() {
     super();
@@ -29,7 +29,7 @@ class ExecutionHistoryView extends BaseView {
 <div class="exec-page" id="execPage">
   <div class="exec-container">
     <div class="exec-header">
-      <h1 class="exec-title">${__('Execution History')}</h1>
+      <h1 class="exec-title">${__('Historial')}</h1>
       <p class="exec-subtitle">${__('Cada sesión agrupa las producciones de un mismo run. Abre una para seguir generando dentro de ella.')}</p>
     </div>
     <div class="exec-grid" id="execGrid">
@@ -47,22 +47,8 @@ class ExecutionHistoryView extends BaseView {
   }
 
   async onEnter() {
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
-        return;
-      }
-    }
-    if (window.appNavigation && !window.appNavigation.initialized) {
-      await window.appNavigation.render();
-    }
-    this.organizationId = this.routeParams?.orgId ||
-      window.appState?.get('selectedOrganizationId') ||
-      localStorage.getItem('selectedOrganizationId');
-    if (this.organizationId) {
-      localStorage.setItem('selectedOrganizationId', this.organizationId);
-    }
+    // La sesión la exige el router (ruta auth); la marca sale de la URL (L7: sin localStorage).
+    this.organizationId = this.routeParams?.orgId || window.currentOrgId || null;
   }
 
   async render() {
@@ -75,7 +61,10 @@ class ExecutionHistoryView extends BaseView {
     } catch (err) {
       console.error('ExecutionHistoryView render:', err);
       const grid = document.getElementById('execGrid');
-      if (grid) grid.innerHTML = `<p class="exec-error">${__('Error al cargar el historial.')} ${err && err.message ? this.escapeHtml(err.message) : __('Recarga la página.')}</p>`;
+      if (grid && window.Estado) {
+        window.Estado.pintar(grid, window.Estado.error({ titulo: __('No se pudo cargar el historial'), texto: err?.message || '' }));
+        window.Estado.alReintentar(grid, () => this.render());
+      }
     }
   }
 
@@ -133,7 +122,7 @@ class ExecutionHistoryView extends BaseView {
     const grid = document.getElementById('execGrid');
     const empty = document.getElementById('execEmpty');
     if (!grid) return;
-    grid.innerHTML = ExecutionHistoryView.skeletonGrid(8, 'lg');
+    window.Estado.pintar(grid, ExecutionHistoryView.skeletonGrid(8, 'lg'));
     this.runs = await this.loadRuns();
     this._paintRuns(this.runs);
   }
@@ -145,12 +134,12 @@ class ExecutionHistoryView extends BaseView {
     const empty = document.getElementById('execEmpty');
     if (!grid) return;
     if (!runs || !runs.length) {
-      grid.innerHTML = '';
+      grid.replaceChildren();
       if (empty) empty.style.display = 'flex';
       return;
     }
     if (empty) empty.style.display = 'none';
-    grid.innerHTML = runs.map(r => this.renderRunCard(r)).join('');
+    window.Estado.pintar(grid, runs.map(r => this.renderRunCard(r)).join(''));
     this._bindCarousels();
   }
 
@@ -262,8 +251,8 @@ class ExecutionHistoryView extends BaseView {
       if (items.length < 2) return;
       let idx = 0;
       let timer = null;
-      const playVid = (el) => { if (el && el.tagName === 'VIDEO') { try { el.currentTime = 0; el.play(); } catch (_) {} } };
-      const pauseVid = (el) => { if (el && el.tagName === 'VIDEO') { try { el.pause(); } catch (_) {} } };
+      const playVid = (el) => { if (el && el.tagName === 'VIDEO') { try { el.currentTime = 0; el.play(); } catch (_) { /* autoplay bloqueado: queda el cuadro */ } } };
+      const pauseVid = (el) => { if (el && el.tagName === 'VIDEO') { try { el.pause(); } catch (_) { /* ya no está en el DOM */ } } };
       const show = (n, playActive = true) => {
         items[idx]?.classList.remove('is-visible');
         pauseVid(items[idx]);
@@ -293,7 +282,7 @@ class ExecutionHistoryView extends BaseView {
 
   async onLeave() {
     // Detener cualquier carrusel en curso para no dejar intervals huerfanos.
-    (this._carouselTimers || []).forEach(stop => { try { stop(); } catch (_) {} });
+    (this._carouselTimers || []).forEach(stop => { try { stop(); } catch (_) { /* ya estaba detenido */ } });
     this._carouselTimers = [];
   }
 
@@ -325,32 +314,6 @@ class ExecutionHistoryView extends BaseView {
     if (!name || typeof name !== 'string') return '';
     return name.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
       .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  }
-
-  /** Resuelve URL publica de un objeto en Storage (replica de living.js). */
-  getPublicUrlFromStorage(bucketName, filePath) {
-    // R2 (media.aismartcontent.io): storage_path puede ser URL completa -> pass-through
-    if (typeof filePath === 'string' && /^(https?:|\/\/)/i.test(filePath.trim())) return filePath.trim();
-    if (!this.supabase || !bucketName || !filePath) return null;
-    if (!this.supabase.storage || typeof this.supabase.storage.from !== 'function') return null;
-    if (typeof filePath !== 'string' || filePath.trim() === '') return null;
-    try {
-      let cleanPath = filePath.trim();
-      if (cleanPath.startsWith(`${bucketName}/`)) cleanPath = cleanPath.replace(`${bucketName}/`, '');
-      else if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
-      if (!cleanPath) return null;
-      const result = this.supabase.storage.from(bucketName).getPublicUrl(cleanPath);
-      return (result && result.data && result.data.publicUrl) ? result.data.publicUrl : null;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  escapeHtml(s) {
-    if (s == null || s === '') return '';
-    const div = document.createElement('div');
-    div.textContent = s;
-    return div.innerHTML;
   }
 }
 

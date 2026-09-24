@@ -4034,5 +4034,6 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Hablar con Vera": "Talk to Vera",
   "Cuadro inicial": "First frame",
   "Cuadro final": "Last frame",
-  "En espera": "Stand by"
+  "En espera": "Stand by",
+  "No se pudo cargar el historial": "Couldn't load the history"
 }/* I18N:END */;
