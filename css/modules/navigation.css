@@ -3852,31 +3852,27 @@ body.subnav-in-header .app-header .header-production-slot {
     transition: border-color .28s ease;
 }
 
-/* Glow: barra del espectro de marca girada y desenfocada DETRAS del texto, no un
-   relleno. Medidas literales del mockup (Figma, frame "Plan Agency"): 276x62 en
-   top -26, centrada con +20px de corrimiento, rotate(-33.15deg), blur(50px).
-   El degradado es FIJO: dejo de usar --brand-gradient-dynamic porque esta
-   tarjeta habla del PRODUCTO (el plan que puedes comprar), no de la marca del
-   cliente — por eso no debe teñirse con el color de cada org.
-   Ya no hace falta el scrim oscuro de la version anterior: el fondo es negro
-   solido y el glow queda difuso detras, asi que el texto blanco se lee solo. */
+/* Glow: franja del espectro de marca desenfocada en el PIE de la tarjeta, detras
+   del texto. Medidas literales del mockup (Figma, frame "Plan Agency", 24/09):
+   Rectangle 228x65, top 82px (sale por abajo y el overflow la recorta),
+   centrada con +5px de corrimiento, sin giro, blur(30px).
+   El degradado es el OFICIAL de la plataforma (--gradiente-principal = espectro):
+   esta tarjeta habla del PRODUCTO
+   (el plan que puedes comprar), no de la marca del cliente — no se tiñe con el
+   color de cada org. */
 .side-navigation.nav-mode-user .nav-plan-card::before {
     content: '';
     position: absolute;
-    width: 276px;
-    height: 62px;
-    left: 50%;
-    top: -26px;
-    margin-left: 20px;
-    /* La lista lleva las 4 funciones aunque en reposo tres sean identidad: si
-       reposo y hover no tienen la MISMA forma, el navegador interpola por
-       matriz y el giro se deforma a mitad de camino. */
-    transform: translateX(-50%) translate(0, 0) rotate(-33.15deg) scale(1);
-    background: var(--platform-gradient);
-    filter: blur(50px);
+    width: 228px;
+    height: 65px;
+    left: calc(50% - 228px / 2 + 5px);
+    top: 82px;
+    transform: translate(0, 0) scale(1);
+    background: var(--gradiente-principal);
+    filter: blur(30px);
     pointer-events: none;
     z-index: 0;
-    /* Solo transform: la barra ya esta desenfocada, asi que escalarla mueve el
+    /* Solo transform: la franja ya esta desenfocada, asi que escalarla mueve el
        bloom entero sin recalcular layout ni volver a aplicar el blur. */
     transition: transform .55s cubic-bezier(.22, .61, .36, 1);
 }
@@ -3921,6 +3917,8 @@ body.subnav-in-header .app-header .header-production-slot {
     letter-spacing: -0.01em;
     text-transform: uppercase;
     color: #fff;
+    /* mockup: el nombre arranca 2px antes que el kicker (18px vs 20px) */
+    margin-left: -2px;
 }
 
 /* CTA: se fue el hairline, el cuadro y la palabra "MEJORAR". Ahora el enlace es
@@ -3963,7 +3961,7 @@ body.subnav-in-header .app-header .header-production-slot {
 
 .side-navigation.nav-mode-user .nav-plan-card:hover::before,
 .side-navigation.nav-mode-user .nav-plan-card:has(.nav-plan-card-cta:focus-visible)::before {
-    transform: translateX(-50%) translate(6px, 4px) rotate(-33.15deg) scale(1.18);
+    transform: translate(0, -8px) scale(1.18);
 }
 
 .side-navigation.nav-mode-user .nav-plan-card-cta:hover .nav-plan-card-arrow,
@@ -3982,7 +3980,7 @@ body.subnav-in-header .app-header .header-production-slot {
     }
     .side-navigation.nav-mode-user .nav-plan-card:hover::before,
     .side-navigation.nav-mode-user .nav-plan-card:has(.nav-plan-card-cta:focus-visible)::before {
-        transform: translateX(-50%) translate(0, 0) rotate(-33.15deg) scale(1);
+        transform: translate(0, 0) scale(1);
     }
     .side-navigation.nav-mode-user .nav-plan-card-cta:hover .nav-plan-card-arrow,
     .side-navigation.nav-mode-user .nav-plan-card-cta:focus-visible .nav-plan-card-arrow {

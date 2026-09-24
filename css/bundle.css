@@ -660,7 +660,7 @@
     --spacing-xl: var(--space-8);
     --spacing-2xl: var(--space-12);
     --brand-gradient: var(--espectro);
-    --platform-gradient: var(--gradiente-vivo);
+    --platform-gradient: var(--gradiente-principal);
     --accent-brand: var(--accent);
     --accent-brand-soft: var(--accent-soft);
     /* ADN de la org: OrgBrandTheme publica --brand-* (v1) y --org-* (ADN) a la vez. */
