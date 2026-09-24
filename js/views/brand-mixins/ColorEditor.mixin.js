@@ -48,7 +48,7 @@
       } catch (error) {
         if (error?.code === 'hex_invalido') return;
         console.error('❌ Error al actualizar color:', error);
-        alert(__('Error al actualizar el color. Por favor, intenta de nuevo.'));
+        window.showToast(__('Error al actualizar el color. Por favor, intenta de nuevo.'), { type: 'error' });
       }
     },
 
@@ -64,10 +64,10 @@
         if (typeof this._refreshVisualChrome === 'function') this._refreshVisualChrome();
       } catch (error) {
         if (error?.code === 'hex_invalido') return;
-        if (error?.code === 'tope') { alert(__('Máximo 4 colores por marca.')); return; }
+        if (error?.code === 'tope') { window.showToast(__('Máximo 4 colores por marca.'), { type: 'warning' }); return; }
         const isDuplicate = (error?.code === '23505') || (error?.message || '').includes('duplicate key');
         console.error('❌ Error al crear color:', error);
-        alert(isDuplicate ? __('Este color ya existe en la marca. Elige otro valor.') : __('Error al agregar el color. Por favor, intenta de nuevo.'));
+        window.showToast(isDuplicate ? __('Este color ya existe en la marca. Elige otro valor.') : __('Error al agregar el color. Por favor, intenta de nuevo.'), { type: 'error' });
       }
     },
 
@@ -81,7 +81,7 @@
         if (typeof this._refreshVisualChrome === 'function') this._refreshVisualChrome();
       } catch (error) {
         console.error('❌ Error al eliminar color:', error);
-        alert(__('Error al eliminar color. Por favor, intenta de nuevo.'));
+        window.showToast(__('Error al eliminar color. Por favor, intenta de nuevo.'), { type: 'error' });
       }
     }
   };

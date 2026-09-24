@@ -136,7 +136,7 @@
         this.brandFonts = [...others, guardada];
       } catch (e) {
         console.error('Error al guardar tipografía:', e);
-        alert(__('No se pudo guardar la tipografía. Intenta de nuevo.'));
+        window.showToast(__('No se pudo guardar la tipografía. Intenta de nuevo.'), { type: 'error' });
         throw e;
       }
     }

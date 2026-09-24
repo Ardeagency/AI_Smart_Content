@@ -766,7 +766,8 @@ if (typeof window.ProductsManager === 'undefined') {
         card.querySelector('.product-card-delete')?.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
-            if (confirm('¿Eliminar este producto?')) this.deleteProduct(product.id);
+            window.Capas.preguntar(card, { texto: '¿Eliminar este producto?', aceptar: 'Eliminar' })
+                .then((si) => { if (si) this.deleteProduct(product.id); });
         });
 
         card.querySelector('.product-card-duplicate')?.addEventListener('click', (e) => {
@@ -1077,7 +1078,7 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async removeProductImage(imageId, productId) {
-        if (!confirm('¿Estás seguro de que deseas eliminar esta imagen?')) {
+        if (!(await window.Capas.confirmar({ titulo: '¿Eliminar esta imagen?', aceptar: 'Eliminar', peligro: true }))) {
             return;
         }
 
@@ -1498,7 +1499,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
         } catch (error) {
             console.error('Error eliminando producto:', error);
-            alert(`Error al eliminar el producto: ${error.message}`);
+            window.showToast(`Error al eliminar el producto: ${error.message}`, { type: 'error' });
         }
     }
 

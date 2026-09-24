@@ -483,13 +483,13 @@
     if (fieldName === 'nombre_marca') {
       const trimmed = String(normalizedValue || '').trim();
       if (!trimmed) {
-        alert(__('El nombre de la sub-marca no puede estar vacío.'));
+        window.showToast(__('El nombre de la sub-marca no puede estar vacío.'), { type: 'warning' });
         return false;
       }
       const orgId = this.organizationRow?.id
         || (this.brandContainers || []).find((it) => String(it.id) === String(brandContainerId))?.organization_id;
       if (orgId && await window.MarcaDatos.nombreDeMercadoRepetido(orgId, trimmed, brandContainerId)) {
-        alert(__('Ya existe una sub-marca con el nombre "{name}" en esta organización. Elige otro nombre.', { name: trimmed }));
+        window.showToast(__('Ya existe una sub-marca con el nombre "{name}" en esta organización. Elige otro nombre.', { name: trimmed }), { type: 'warning' });
         return false;
       }
     }
@@ -501,12 +501,12 @@
       return true;
     } catch (error) {
       if (error?.code === '23505') {
-        alert(__('Ya existe una sub-marca con ese nombre en esta organización.'));
+        window.showToast(__('Ya existe una sub-marca con ese nombre en esta organización.'), { type: 'warning' });
       } else if (error?.code === 'campo_inexistente') {
-        alert(error.message);
+        window.showToast(error.message, { type: 'error' });
       } else {
         console.error('InfoPanel saveBrandContainerFieldById:', error);
-        alert(__('No se pudo guardar {field}.', { field: fieldName }));
+        window.showToast(__('No se pudo guardar {field}.', { field: fieldName }), { type: 'error' });
       }
       return false;
     }
@@ -519,7 +519,7 @@
    */
   async saveBrandIntegrationField(integrationId, fieldName, _value) {
     if (!integrationId || !fieldName) return false;
-    alert(__('Las conexiones se gestionan desde Integraciones (conectar / desconectar), no desde esta ficha.'));
+    window.showToast(__('Las conexiones se gestionan desde Integraciones (conectar / desconectar), no desde esta ficha.'), { type: 'info' });
     if (typeof this._refreshInfoPanelIfOpen === 'function') this._refreshInfoPanelIfOpen();
     return false;
     },
@@ -527,7 +527,7 @@
   /** Las entidades de v1 son hoy `public.elements` (catálogo): se editan en Productos/Servicios/Escenarios/Personajes. */
   async saveBrandEntityField(entityId, fieldName, _value) {
     if (!entityId || !fieldName) return false;
-    alert(__('Los elementos de la marca se editan en su propia sección del catálogo.'));
+    window.showToast(__('Los elementos de la marca se editan en su propia sección del catálogo.'), { type: 'info' });
     return false;
     },
 
@@ -565,7 +565,7 @@
       window.location.href = url;
     } catch (error) {
       console.error('InfoPanel startBrandIntegrationOAuth:', error);
-      alert(error?.code === 'sin_api' ? __('Las integraciones aún no están disponibles.') : (error?.message || __('No se pudo conectar la integración.')));
+      window.showToast(error?.code === 'sin_api' ? __('Las integraciones aún no están disponibles.') : (error?.message || __('No se pudo conectar la integración.')), { type: 'error' });
     } finally {
       if (actionButton) {
         actionButton.disabled = false;
@@ -583,7 +583,7 @@
     if (!brandId) return;
     const integ = this._pickBrandIntegrationForContainer(brandId, 'google');
     const accounts = (integ?.metadata?.available_accounts) || [];
-    if (!accounts.length) { alert(__('No hay cuentas de Google Ads para elegir. Reconecta Google.')); return; }
+    if (!accounts.length) { window.showToast(__('No hay cuentas de Google Ads para elegir. Reconecta Google.'), { type: 'warning' }); return; }
 
     const selected = await this._promptGoogleAccounts(accounts);
     if (!selected || !selected.length) return;
@@ -592,7 +592,7 @@
       if (actionButton) { actionButton.disabled = true; actionButton.textContent = __('Guardando...'); }
       const { data: { session } } = await this.supabase.auth.getSession();
       const token = session?.access_token;
-      if (!token) { alert(__('Sesión no válida. Inicia sesión y vuelve a intentar.')); return; }
+      if (!token) { window.showToast(__('Sesión no válida. Inicia sesión y vuelve a intentar.'), { type: 'error' }); return; }
       const res = await fetch(`${location.origin}/api/integrations/google/select`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -600,11 +600,11 @@
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error || `Error ${res.status}`);
-      alert(__('Cuenta(s) seleccionada(s). Importando campañas…'));
+      window.showToast(__('Cuenta(s) seleccionada(s). Importando campañas…'), { type: 'success' });
       if (window.router) window.router.navigate(window.location.pathname, true);
     } catch (e) {
       console.error('selectGoogleAdsAccounts:', e);
-      alert(e?.message || __('No se pudo guardar la selección.'));
+      window.showToast(e?.message || __('No se pudo guardar la selección.'), { type: 'error' });
     } finally {
       if (actionButton) { actionButton.disabled = false; actionButton.textContent = __('Elegir cuenta'); }
     }
@@ -639,7 +639,7 @@
       overlay.addEventListener('click', (e) => { if (e.target === overlay) close(null); });
       overlay.querySelector('.gads-confirm').addEventListener('click', () => {
         const ids = Array.from(overlay.querySelectorAll('.gads-acc-chk:checked')).map((c) => c.value);
-        if (!ids.length) { alert(__('Selecciona al menos una cuenta.')); return; }
+        if (!ids.length) { window.showToast(__('Selecciona al menos una cuenta.'), { type: 'warning' }); return; }
         close(ids);
       });
     });
@@ -729,15 +729,9 @@
         });
         cancel.addEventListener('click', () => close());
       } else {
-        // Fallback: prompt nativo
-        const raw = window.prompt(__('Ingresa tu dominio Shopify (ej. mitienda.myshopify.com):'));
-        if (raw == null) return safeResolve(null);
-        const normalized = normalize(raw);
-        if (!normalized) {
-          alert(__('Formato inválido. Debe ser mitienda.myshopify.com'));
-          return safeResolve(null);
-        }
-        safeResolve(normalized);
+        // Sin window.Modal no hay dónde pedirlo (nunca prompt() del navegador).
+        console.warn('Shopify: window.Modal no está cargado');
+        safeResolve(null);
       }
     });
     },
@@ -753,7 +747,7 @@
     const orgId = this.organizationRow?.id || window.currentOrgId;
     const conexion = this._pickBrandIntegrationForContainer(brandContainerId, normalizedProvider);
     const fila = conexion || (this.brandIntegrations || []).find((r) => String(r.platform || '').toLowerCase() === normalizedProvider);
-    if (!fila?.id || !window.apiV2?.api || !orgId) { alert(__('No hay una conexión que desconectar.')); return; }
+    if (!fila?.id || !window.apiV2?.api || !orgId) { window.showToast(__('No hay una conexión que desconectar.'), { type: 'warning' }); return; }
     try {
       if (actionButton) {
         actionButton.disabled = true;
@@ -765,7 +759,7 @@
       this._refreshInfoPanelIfOpen();
     } catch (error) {
       console.error('InfoPanel disconnectBrandIntegration:', error);
-      alert(error?.codigo === 'sin_api' ? __('Las integraciones aún no están disponibles.') : (error?.message || __('No se pudo desconectar la integración.')));
+      window.showToast(error?.codigo === 'sin_api' ? __('Las integraciones aún no están disponibles.') : (error?.message || __('No se pudo desconectar la integración.')), { type: 'error' });
     } finally {
       if (actionButton) {
         actionButton.disabled = false;
@@ -1669,7 +1663,7 @@
       // Base nueva: el mercado no tiene techo de presupuesto (la sección no se pinta
       // sin la columna). Si algún día vuelve, va por MarcaDataService; nunca en silencio.
       console.error('InfoPanel saveMarketingBudget: el presupuesto de marketing ya no vive en la ficha del mercado.');
-      alert(__('El presupuesto de marketing ya no se define aquí.'));
+      window.showToast(__('El presupuesto de marketing ya no se define aquí.'), { type: 'info' });
       amount.value = bc.marketing_budget ? fmt(Number(bc.marketing_budget)) : '';
       if (cur) cur.value = bc.marketing_budget_currency || 'COP';
     };
@@ -1768,13 +1762,13 @@
           try {
             parsed = JSON.parse(t);
           } catch (_) {
-            alert(__('JSON no válido en {field}. Revisá la sintaxis.', { field }));
+            window.showToast(__('JSON no válido en {field}. Revisa la sintaxis.', { field }), { type: 'error' });
             el.focus();
             return;
           }
         }
         if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-          alert(__('Este campo debe ser un objeto JSON (por ejemplo { "clave": "valor" }).'));
+          window.showToast(__('Este campo debe ser un objeto JSON (por ejemplo { "clave": "valor" }).'), { type: 'error' });
           return;
         }
         const prev = JSON.stringify(this.brandData?.[field] || {});

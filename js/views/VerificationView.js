@@ -100,7 +100,13 @@ class VerificationView extends BaseView {
 
     let email = this._email;
     if (!email) {
-      email = (prompt(__('¿A qué correo enviamos el enlace?')) || '').trim().toLowerCase();
+      email = ((await window.Capas.pedirTexto({
+        titulo: __('¿A qué correo enviamos el enlace?'),
+        tipo: 'email',
+        placeholder: 'nombre@empresa.com',
+        aceptar: __('Enviar enlace'),
+        validar: (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? '' : __('Escribe un correo válido.')),
+      })) || '').trim().toLowerCase();
       if (!email) return;
       this._email = email;
     }

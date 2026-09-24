@@ -1605,7 +1605,11 @@ class LivingManager {
                     break;
                 }
                 case 'delete': {
-                    if (!confirm('¿Eliminar esta producción? No se puede deshacer.')) break;
+                    // Sobre su tarjeta (Capas.preguntar); sin tarjeta, confirmación de peligro.
+                    const quitar = card
+                        ? await window.Capas.preguntar(card, { texto: __('¿Eliminar esta producción? No se puede deshacer.'), aceptar: __('Eliminar') })
+                        : await window.Capas.confirmar({ titulo: __('¿Eliminar esta producción?'), texto: __('No se puede deshacer.'), aceptar: __('Eliminar'), peligro: true });
+                    if (!quitar) break;
                     const ok = await this.deleteOutput(outputId);
                     if (ok) {
                         const item = card?.closest('.living-masonry-item') || card;
@@ -1702,7 +1706,7 @@ class LivingManager {
             case 'bulk-like': await this._bulkLike(ids); break;
             case 'bulk-delete': {
                 if (!ids.length) break;
-                if (!confirm(`¿Eliminar ${ids.length} producción${ids.length === 1 ? '' : 'es'}? No se puede deshacer.`)) break;
+                if (!(await window.Capas.confirmar({ titulo: `¿Eliminar ${ids.length} producción${ids.length === 1 ? '' : 'es'}?`, texto: __('No se puede deshacer.'), aceptar: __('Eliminar'), peligro: true }))) break;
                 const n = await this.bulkDeleteOutputs(ids);
                 if (n > 0) {
                     ids.forEach(id => document.querySelectorAll(`[data-output-id="${CSS.escape(id)}"]`).forEach(el => {
@@ -5313,7 +5317,7 @@ class LivingManager {
                         break;
                     }
                     case 'delete': {
-                        if (!confirm('¿Eliminar esta producción? No se puede deshacer.')) break;
+                        if (!(await window.Capas.confirmar({ titulo: __('¿Eliminar esta producción?'), texto: __('No se puede deshacer.'), aceptar: __('Eliminar'), peligro: true }))) break;
                         const ok = await this.deleteOutput(state.outputId);
                         if (ok) {
                             document.querySelectorAll(`[data-output-id="${CSS.escape(state.outputId || '')}"]`).forEach(el => {

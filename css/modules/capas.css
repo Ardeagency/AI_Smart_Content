@@ -186,8 +186,10 @@ dialog.capa--edicion { max-width: none; max-height: none; width: calc(100vw - 48
 /* ── Tamaños del principal y la confirmación ───────────────────────────── */
 dialog.capa--sm { max-width: min(480px, calc(100vw - var(--space-8))); }
 dialog.capa--md { max-width: min(640px, calc(100vw - var(--space-8))); }
-.capa--confirmar .capa__titulo { font-size: var(--font-size-xl); }
+.capa--confirmar .capa__titulo, .capa--pedir .capa__titulo { font-size: var(--font-size-xl); }
 .capa__texto { font-size: var(--font-size-base); color: var(--text-secondary); line-height: var(--leading-normal); }
+.capa__campo { width: 100%; margin-top: var(--space-3); }
+.capa__error { margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--warm); }
 
 @media (prefers-reduced-motion: reduce) {
   dialog.capa[open], dialog.capa.is-cerrando, dialog.capa::backdrop, .pregunta { animation: none; }

@@ -1071,11 +1071,7 @@ class VideoView extends BaseView {
   async updateSystemAIOutput(_id, _updates) { /* sin tabla que actualizar */ }
 
   _seedanceNotify(message, type = 'warning') {
-    if (typeof window.showToast === 'function') {
-      window.showToast(message, { type, duration: 5000 });
-    } else if (window.alert) {
-      window.alert(message);
-    }
+    window.showToast(message, { type, duration: 5000 });
   }
 
   _seedanceRefCount() {

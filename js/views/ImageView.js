@@ -943,11 +943,7 @@ class ImageView extends BaseView {
    * aceptada y el error aparece después, en KIE.
    */
   _notify(message, type = 'warning') {
-    if (typeof window.showToast === 'function') {
-      window.showToast(message, { type, duration: 5000 });
-    } else if (window.alert) {
-      window.alert(message);
-    }
+    window.showToast(message, { type, duration: 5000 });
   }
 
   _refCount() {

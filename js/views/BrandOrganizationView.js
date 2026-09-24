@@ -1080,7 +1080,7 @@ class BrandOrganizationView extends BaseView {
       }
     } catch (error) {
       console.error(`BrandOrganizationView saveContainerField ${fieldName}:`, error);
-      alert(__('Error al guardar {field}.', { field: fieldName }));
+      window.showToast(__('Error al guardar {field}.', { field: fieldName }), { type: 'error' });
     } finally {
       this.savingFields.delete(saveKey);
     }
@@ -1102,7 +1102,7 @@ class BrandOrganizationView extends BaseView {
       if (this.brandData) this.brandData[fieldName] = v;
     } catch (error) {
       console.error('BrandOrganizationView saveBrandField:', error);
-      alert(__('Error al guardar {field}.', { field: fieldName }));
+      window.showToast(__('Error al guardar {field}.', { field: fieldName }), { type: 'error' });
     } finally {
       this.savingFields.delete(saveKey);
     }

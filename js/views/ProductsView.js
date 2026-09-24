@@ -340,7 +340,7 @@ class ProductsView extends BaseView {
    */
   async removeProductImage(imageId) {
     if (!window.CatalogoDatos || !this.productId) return;
-    if (!confirm(__('¿Eliminar esta foto del producto?'))) return;
+    if (!(await window.Capas.confirmar({ titulo: __('¿Eliminar esta foto del producto?'), aceptar: __('Eliminar'), peligro: true }))) return;
     try {
       const im = (this.productImages || []).find((x) => String(x.id) === String(imageId));
       const orgId = this.organizationId || window.currentOrgId || null;

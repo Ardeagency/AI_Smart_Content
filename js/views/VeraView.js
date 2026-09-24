@@ -4457,22 +4457,22 @@ class VeraView extends (window.BaseView || class {}) {
     }
   }
 
-  /* Pregunta al usuario si quiere continuar con una tarea costosa.
-     v1 con window.confirm() — modal custom queda para iteración futura. */
+  /* Pregunta al usuario si quiere continuar con una tarea costosa (Capas.confirmar). */
   async _confirmHighCost(estimate) {
     if (!estimate) return true;
     const usdMin = Number(estimate.usd_min || 0).toFixed(2);
     const usdMax = Number(estimate.usd_max || 0).toFixed(2);
     const minutesRange = `${estimate.minutes_min || 1}-${estimate.minutes_max || 10} ${__('min')}`;
-    const reasons = (estimate.reasons || []).map(r => `  • ${r}`).join('\n');
-    const msg =
-      `${__('⚠️ Vera detectó una tarea potencialmente costosa.')}\n\n` +
-      `${__('Costo estimado:')} $${usdMin} – $${usdMax} USD\n` +
-      `${__('Duración estimada:')} ${minutesRange}\n\n` +
-      `${__('Razones:')}\n${reasons}\n\n` +
-      `${__('¿Continuar con esta tarea?')}\n` +
-      `${__('(Aceptar = ejecutar · Cancelar = replantear o descartar)')}`;
-    return window.confirm(msg);
+    const reasons = (estimate.reasons || []).filter(Boolean).join(' · ');
+    const texto =
+      `${__('Costo estimado:')} $${usdMin} – $${usdMax} USD · ${__('Duración estimada:')} ${minutesRange}` +
+      (reasons ? `. ${__('Razones:')} ${reasons}` : '');
+    return window.Capas.confirmar({
+      titulo: __('Vera detectó una tarea potencialmente costosa. ¿Continuar?'),
+      texto,
+      aceptar: __('Ejecutar'),
+      cancelar: __('Replantear'),
+    });
   }
 
   _removeMessage(id) {

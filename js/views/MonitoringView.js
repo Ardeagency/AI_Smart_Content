@@ -2473,7 +2473,7 @@ class MonitoringView extends BaseView {
           </footer>
         </div>`;
       const handle = window.Modal.show({ title, body, className: 'mn-follow-modal mn-follow-modal--confirm' });
-      if (!handle) { resolve(window.confirm(message)); return; }
+      if (!handle) { window.Capas.confirmar({ titulo: title, texto: message, aceptar: confirmLabel || __('Eliminar'), peligro: true }).then(resolve); return; }
       const { modal, close } = handle;
       let settled = false;
       const settle = (val) => { if (settled) return; settled = true; resolve(val); };

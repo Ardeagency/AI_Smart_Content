@@ -374,7 +374,7 @@ class PlanesView extends BaseView {
     if (!window.PlanesDatos?.puedeCambiarPlan()) {
       const plan = this.plans.find((p) => p.id === planId);
       const msg = window.__('Para cambiar al plan {nombre} escríbenos a contact@aismartcontent.io y lo activamos por ti.', { nombre: plan?.name || planId });
-      if (window.showToast) window.showToast(msg, 'info'); else alert(msg);
+      window.showToast(msg, { type: 'info' });
       return;
     }
   }

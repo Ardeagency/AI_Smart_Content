@@ -16,6 +16,7 @@
  *   d.lienzo.append(img); d.barra.append(...); d.lado.append(...); d.acciones.append(...);
  *
  *   if (await Capas.confirmar({ titulo: '¿Descartar los cambios?', aceptar: 'Descartar', peligro: true })) …
+ *   const correo = await Capas.pedirTexto({ titulo: '¿A qué correo?', tipo: 'email' });   // null = canceló
  *   if (await Capas.preguntar(tarjeta, { texto: '¿Borrar Maitamac?', seVa: { proyectos: 6 } })) …
  *
  * Reglas: nada abre encima de la plataforma si no es por aquí. Nunca alert()/
@@ -208,6 +209,49 @@
   }
 
   /**
+   * Pedir un dato corto (reemplaza a prompt()). Resuelve el texto (recortado) o
+   * null si cancela. `validar(texto)` devuelve un mensaje de error o '' si vale.
+   *   await Capas.pedirTexto({ titulo, etiqueta?, texto?, valor?, placeholder?, tipo?, aceptar?, validar? })
+   */
+  function pedirTexto(o) {
+    const opciones = o || {};
+    const c = abrir({ forma: 'principal', titulo: opciones.titulo || t('Escribe el dato'), tamano: 'sm', clase: 'capa--pedir' });
+    if (opciones.texto) c.cuerpo.append(el('p', 'capa__texto', opciones.texto));
+    const campo = document.createElement('input');
+    campo.type = opciones.tipo || 'text';
+    campo.className = 'form-input capa__campo';
+    campo.value = opciones.valor || '';
+    if (opciones.placeholder) campo.placeholder = opciones.placeholder;
+    campo.setAttribute('aria-label', opciones.etiqueta || opciones.titulo || '');
+    const error = el('p', 'capa__error');
+    error.setAttribute('role', 'alert');
+    error.hidden = true;
+    c.cuerpo.append(campo, error);
+    const no = boton(opciones.cancelar || t('Cancelar'), 'btn btn-secondary');
+    const si = boton(opciones.aceptar || t('Aceptar'), 'btn btn-primary');
+    let valor = null;
+    const enviar = () => {
+      const texto = String(campo.value || '').trim();
+      const problema = typeof opciones.validar === 'function' ? opciones.validar(texto) : (texto ? '' : t('Escribe algo para continuar.'));
+      if (problema) {
+        error.textContent = problema;
+        error.hidden = false;
+        campo.setAttribute('aria-invalid', 'true');
+        campo.focus();
+        return;
+      }
+      valor = texto;
+      c.cerrar('aceptar');
+    };
+    no.addEventListener('click', () => c.cerrar('cancelar'));
+    si.addEventListener('click', enviar);
+    campo.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); enviar(); } });
+    c.pie.append(no, si);
+    campo.focus();
+    return c.cerrada.then((r) => (r === 'aceptar' ? valor : null));
+  }
+
+  /**
    * La pregunta: vive ENCIMA de la tarjeta (o del pie) de la que habla y cuenta
    * antes de preguntar. Resuelve true si la persona acepta.
    *   await Capas.preguntar(tarjeta, { texto: '¿Borrar Maitamac?', seVa: { proyectos: 6, piezas: 18 }, queda: { cotizaciones: 2 } })
@@ -272,5 +316,5 @@
     return { close() { /* sin toast no hay nada que cerrar */ } };
   }
 
-  window.Capas = { abrir, confirmar, preguntar, frase, avisar };
+  window.Capas = { abrir, confirmar, pedirTexto, preguntar, frase, avisar };
 })();

@@ -46,8 +46,8 @@
     async uploadLogo(file) {
       if (!file || !this.organizationRow) return;
       const err = _validateFile(file, MAX_LOGO_SIZE, ALLOWED_LOGO_EXT, 'logo');
-      if (err) { alert(err); return; }
-      if (!window.MarcaDatos) { alert(__('No se pudo conectar. Intenta de nuevo.')); return; }
+      if (err) { window.showToast(err, { type: 'warning' }); return; }
+      if (!window.MarcaDatos) { window.showToast(__('No se pudo conectar. Intenta de nuevo.'), { type: 'error' }); return; }
       const orgId = this.organizationRow.id;
       const container = this.container || document.getElementById('app-container');
       const logoWrap = container?.querySelector('.brand-corner-logo-btn') || container?.querySelector('.info-logo-container');
@@ -67,7 +67,7 @@
         if (window.contextoService?.cargar) window.contextoService.cargar({ fresco: true }).catch(() => {});
       } catch (error) {
         console.error('BrandOrganizationView uploadLogo:', error);
-        alert(error?.code === 'sin_api' ? __('La subida de archivos aún no está disponible.') : __('Error al subir logo.'));
+        window.showToast(error?.code === 'sin_api' ? __('La subida de archivos aún no está disponible.') : __('Error al subir logo.'), { type: 'error' });
       } finally {
         if (logoWrap) {
           logoWrap.style.pointerEvents = '';
@@ -79,14 +79,14 @@
     async uploadAsset(file) {
       if (!window.MarcaDatos || !this.organizationRow) return;
       const err = _validateFile(file, MAX_ASSET_SIZE, ALLOWED_ASSET_EXT, 'asset');
-      if (err) { alert(err); return; }
+      if (err) { window.showToast(err, { type: 'warning' }); return; }
       try {
         await window.MarcaDatos.subirAsset(this.organizationRow.id, file);
         await this._reloadAssets();
         this.renderAssetsFiles();
       } catch (error) {
         console.error('BrandOrganizationView uploadAsset:', error);
-        alert(error?.code === 'sin_api' ? __('La subida de archivos aún no está disponible.') : __('Error al subir archivo.'));
+        window.showToast(error?.code === 'sin_api' ? __('La subida de archivos aún no está disponible.') : __('Error al subir archivo.'), { type: 'error' });
       }
     },
 
@@ -94,7 +94,7 @@
     async uploadIdentityFile(file) {
       if (!window.MarcaDatos || !this.organizationRow) return;
       const err = _validateFile(file, MAX_IDENTITY_SIZE, ALLOWED_IDENTITY_EXT, 'archivo de identidad');
-      if (err) { alert(err); return; }
+      if (err) { window.showToast(err, { type: 'warning' }); return; }
       try {
         await window.MarcaDatos.subirAsset(this.organizationRow.id, file, { identidad: true });
         await this._reloadAssets();
@@ -102,7 +102,7 @@
         this.renderAssetsFiles();
       } catch (error) {
         console.error('BrandOrganizationView uploadIdentityFile:', error);
-        alert(error?.code === 'sin_api' ? __('La subida de archivos aún no está disponible.') : __('Error al subir archivo de identidad.'));
+        window.showToast(error?.code === 'sin_api' ? __('La subida de archivos aún no está disponible.') : __('Error al subir archivo de identidad.'), { type: 'error' });
       }
     },
 
@@ -119,7 +119,7 @@
         if (typeof this.renderAssetsFiles === 'function') this.renderAssetsFiles();
       } catch (error) {
         console.error('BrandOrganizationView removeAsset:', error);
-        alert(__('No se pudo eliminar el archivo.'));
+        window.showToast(__('No se pudo eliminar el archivo.'), { type: 'error' });
       }
     },
 

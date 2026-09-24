@@ -119,11 +119,11 @@ class CambiarContrasenaView extends BaseView {
       const btn = this.querySelector('#btnChangePassword');
 
       if (!newPassword || newPassword.length < 8) {
-        alert(__('La contraseña debe tener al menos 8 caracteres.'));
+        window.showToast(__('La contraseña debe tener al menos 8 caracteres.'), { type: 'warning' });
         return;
       }
       if (newPassword !== confirm) {
-        alert(__('Las contraseñas no coinciden.'));
+        window.showToast(__('Las contraseñas no coinciden.'), { type: 'warning' });
         return;
       }
 
@@ -140,7 +140,7 @@ class CambiarContrasenaView extends BaseView {
       }
 
       if (error) {
-        alert(error.message || __('Error al actualizar la contraseña.'));
+        window.showToast(error.message || __('Error al actualizar la contraseña.'), { type: 'error' });
         return;
       }
 

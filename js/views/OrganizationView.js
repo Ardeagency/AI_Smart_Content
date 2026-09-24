@@ -772,7 +772,7 @@ class OrganizationView extends BaseView {
 
   async _unenrollMfa(factorId) {
     if (!factorId) return;
-    if (!confirm(__('¿Desactivar 2FA? Tu cuenta volverá a quedar solo con email + contraseña.'))) return;
+    if (!(await window.Capas.confirmar({ titulo: __('¿Desactivar 2FA?'), texto: __('Tu cuenta volverá a quedar solo con email + contraseña.'), aceptar: __('Desactivar'), peligro: true }))) return;
     try {
       const { error } = await this.supabase.auth.mfa.unenroll({ factorId });
       if (error) throw error;
@@ -844,7 +844,7 @@ class OrganizationView extends BaseView {
   }
 
   async _revokeOtherSessions() {
-    if (!confirm(__('¿Cerrar todas las otras sesiones? Tendrás que volver a iniciar sesión en cualquier otro dispositivo o navegador.'))) return;
+    if (!(await window.Capas.confirmar({ titulo: __('¿Cerrar todas las otras sesiones?'), texto: __('Tendrás que volver a iniciar sesión en cualquier otro dispositivo o navegador.'), aceptar: __('Cerrar sesiones'), peligro: true }))) return;
     try {
       const { error } = await this.supabase.auth.signOut({ scope: 'others' });
       if (error) throw error;
@@ -1380,7 +1380,7 @@ class OrganizationView extends BaseView {
       this._toast(__('Datos de facturación guardados'));
       this._renderBillingDatos();
     } catch (e) {
-      alert(e.message || __('No se pudo guardar la ficha.'));
+      window.showToast(e.message || __('No se pudo guardar la ficha.'), { type: 'error' });
     } finally {
       if (btn) { btn.disabled = false; btn.innerHTML = `<i class="aisc-ico aisc-ico--save"></i> ${__('Guardar datos de facturación')}`; }
     }
@@ -2225,7 +2225,7 @@ class OrganizationView extends BaseView {
       await window.AvisosDatos.guardarPreferencia(this.orgId, this.userId, code, opciones);
       this._toast(__('Preferencia guardada'));
     } catch (e) {
-      alert(e.message || __('No se pudo guardar la preferencia.'));
+      window.showToast(e.message || __('No se pudo guardar la preferencia.'), { type: 'error' });
     }
     await this._renderAvisosPrefs();
   }
@@ -2318,7 +2318,7 @@ class OrganizationView extends BaseView {
       this.org = { ...this.org, ...org };
       this._toast(__('Configuración regional guardada'));
     } catch (e) {
-      alert(e.message || __('No se pudo guardar.'));
+      window.showToast(e.message || __('No se pudo guardar.'), { type: 'error' });
     } finally {
       if (btn) { btn.disabled = false; btn.innerHTML = `<i class="aisc-ico aisc-ico--save"></i> ${__('Guardar')}`; }
     }
@@ -2341,7 +2341,7 @@ class OrganizationView extends BaseView {
     const btn = document.querySelector('#orgInviteForm button[type="submit"]');
     if (btn) { btn.disabled = true; btn.textContent = __('Enviando…'); }
     try {
-      if (this.members.some((m) => (m.email || '').toLowerCase() === email.toLowerCase())) { alert(__('Ese usuario ya es miembro.')); return; }
+      if (this.members.some((m) => (m.email || '').toLowerCase() === email.toLowerCase())) { window.showToast(__('Ese usuario ya es miembro.'), { type: 'warning' }); return; }
       // invitar_miembro exige una persona CON cuenta; por correo es ADR-0048.
       await window.OrganizacionDatos.invitar(this.orgId, email, role === 'member' ? 'editor' : role);
       this._closeInviteModal();
@@ -2349,7 +2349,7 @@ class OrganizationView extends BaseView {
       this._renderMembers();
       this._toast(__('Persona añadida al equipo'));
     } catch (e) {
-      alert(e.message || __('No se pudo enviar la invitación.'));
+      window.showToast(e.message || __('No se pudo enviar la invitación.'), { type: 'error' });
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = __('Enviar invitación'); }
     }
@@ -2364,7 +2364,7 @@ class OrganizationView extends BaseView {
     try {
       // members.role por UPDATE (editar_equipo); triggers: no_dejar_sin_dueno, poda_permisos, tope_del_plan.
       await window.OrganizacionDatos.cambiarRol(this.orgId, memberId, role);
-    } catch (e) { alert(e.message || __('No se pudo cambiar el rol.')); await this._loadMembers(); this._renderMembers(); return; }
+    } catch (e) { window.showToast(e.message || __('No se pudo cambiar el rol.'), { type: 'error' }); await this._loadMembers(); this._renderMembers(); return; }
     await this._loadMembers(); this._renderMembers();
     this._toast(__('Rol actualizado'));
   }
@@ -2373,11 +2373,11 @@ class OrganizationView extends BaseView {
     if (!memberId || !this.canManageMembers) return;
     const m = this.members.find((x) => x.id === memberId);
     if (!m || m.user_id === this.org?.owner_user_id) return;
-    if (!confirm(__('¿Quitar a este miembro de la organización?'))) return;
+    if (!(await window.Capas.confirmar({ titulo: __('¿Quitar a este miembro de la organización?'), texto: m.email || '', aceptar: __('Quitar'), peligro: true }))) return;
     try {
       const fue = await window.OrganizacionDatos.retirarMiembro(this.orgId, memberId);
       if (!fue) throw new Error(__('La base no retiró al miembro (¿sin permiso editar_equipo?).'));
-    } catch (e) { alert(e.message || __('Error.')); return; }
+    } catch (e) { window.showToast(e.message || __('Error.'), { type: 'error' }); return; }
     await this._loadMembers(); this._renderMembers();
     this._toast(__('Miembro eliminado'));
   }
