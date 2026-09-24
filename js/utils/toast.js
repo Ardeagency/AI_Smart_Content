@@ -31,8 +31,26 @@
     el.setAttribute('role', politeness === 'assertive' ? 'alert' : 'status');
     el.setAttribute('aria-live', politeness);
     el.setAttribute('aria-atomic', 'true');
+    // Capa superior: un <dialog> modal (Capas, window.Modal) vive en el top layer y
+    // taparía a cualquier z-index. Como popover manual, el toast también entra al
+    // top layer; `alFrente` lo re-promueve encima del último modal abierto.
+    if (SOPORTA_POPOVER) el.setAttribute('popover', 'manual');
     document.body.appendChild(el);
     return el;
+  }
+
+  const SOPORTA_POPOVER = typeof HTMLElement !== 'undefined' &&
+    Object.prototype.hasOwnProperty.call(HTMLElement.prototype, 'popover');
+
+  /** Pone el contenedor al frente del top layer (encima de modales abiertos). */
+  function alFrente(el) {
+    if (!SOPORTA_POPOVER || !el.hasAttribute('popover')) return;
+    try {
+      if (el.matches(':popover-open')) el.hidePopover();
+      el.showPopover();
+    } catch (e) {
+      console.warn('toast: no se pudo traer al frente', e);
+    }
   }
 
   function showToast(message, opts) {
@@ -51,6 +69,7 @@
     toast.textContent = String(message == null ? '' : message);
 
     container.appendChild(toast);
+    alFrente(container);
     // Force reflow para que la transition de entrada dispare.
     void toast.offsetHeight;
     toast.classList.add('toast--enter');
@@ -61,7 +80,13 @@
       toast.classList.remove('toast--enter');
       toast.classList.add('toast--leave');
       // Esperar la animación de salida antes de remover.
-      setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 240);
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+        // Vacío: fuera del top layer (no se queda una caja invisible encima de todo).
+        if (SOPORTA_POPOVER && container.childElementCount === 0 && container.matches(':popover-open')) {
+          try { container.hidePopover(); } catch (e) { console.warn('toast: hidePopover', e); }
+        }
+      }, 240);
     };
 
     if (duration > 0) closeTimer = setTimeout(close, duration);

@@ -192,3 +192,35 @@ dialog.capa--md { max-width: min(640px, calc(100vw - var(--space-8))); }
 @media (prefers-reduced-motion: reduce) {
   dialog.capa[open], dialog.capa.is-cerrando, dialog.capa::backdrop, .pregunta { animation: none; }
 }
+
+/* ── Toast en el top layer (js/utils/toast.js lo vuelve popover manual) ────
+   :where() = especificidad 0: solo deshace el estilo de popover del navegador
+   (centrado, borde, fondo); la posición la siguen mandando las reglas de
+   .toast-container de index.html, móvil incluido. */
+:where(.toast-container[popover]) {
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+  width: auto;
+  height: auto;
+}
+
+/* ── window.Modal sobre <dialog> (js/utils/modal.js) ──────────────────────
+   El dialog es solo el ANFITRIÓN a pantalla completa: la piel sigue siendo la
+   de .modal/.modal-overlay/.modal-content de bundle.css. Aquí solo se deshace
+   el estilo de dialog del navegador (tamaño máximo, borde, fondo, margen). */
+dialog.modal {
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+dialog.modal::backdrop { background: transparent; }

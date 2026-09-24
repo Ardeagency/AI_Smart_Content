@@ -254,6 +254,25 @@ describe('Estado', () => {
   });
 });
 
+// ── Capa superior: todo lo que se abre encima vive en el top layer ────────
+describe('Top layer', () => {
+  const MODAL = fs.readFileSync('js/utils/modal.js', 'utf8');
+  const TOAST = fs.readFileSync('js/utils/toast.js', 'utf8');
+  const CSS = fs.readFileSync('css/modules/capas.css', 'utf8');
+  test('window.Modal se aloja en <dialog> con showModal() y Esc por `cancel`', () => {
+    expect(MODAL).toMatch(/createElement\('dialog'\)/);
+    expect(MODAL).toMatch(/\.showModal\(\)/);
+    expect(MODAL).toMatch(/addEventListener\('cancel'/);
+    expect(MODAL).not.toMatch(/document\.addEventListener\('keydown'/);
+  });
+  test('el toast es popover manual y se trae al frente en cada aviso', () => {
+    expect(TOAST).toMatch(/setAttribute\('popover', 'manual'\)/);
+    expect(TOAST).toMatch(/alFrente\(container\)/);
+    expect(CSS).toMatch(/:where\(\.toast-container\[popover\]\)/);
+    expect(CSS).toMatch(/dialog\.modal \{/);
+  });
+});
+
 // ── Guardia: el feedback vive en js/ui ───────────────────────────────────
 function archivos(dir) {
   const out = [];

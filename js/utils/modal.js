@@ -104,12 +104,15 @@
       content.appendChild(footerEl);
     }
 
-    const modal = document.createElement('div');
+    // Anfitrión = <dialog> nativo (L4, 24/09): showModal() lo sube a la capa
+    // superior del navegador (sin guerra de z-index), deja inerte el resto de la
+    // página, atrapa el foco y Esc cierra SOLO el de arriba (antes un keydown en
+    // document cerraba todos los apilados a la vez). El DOM de adentro no cambia
+    // (.modal-overlay/.modal-content/.modal-header…): la piel y el CSS de cada
+    // familia (className) siguen aplicando igual. Mismo contrato que Capas.
+    const modal = document.createElement('dialog');
     modal.className = 'modal modal-open';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-labelledby', h3.id);
-    modal.style.display = 'flex';
     modal.appendChild(overlay);
     modal.appendChild(content);
 
@@ -124,9 +127,12 @@
     const focusables = () => Array.from(content.querySelectorAll(FOCUSABLE))
       .filter((el) => !el.hasAttribute('inert') && el.offsetParent !== null);
 
+    let cerrado = false;
     const close = () => {
+      if (cerrado) return;
+      cerrado = true;
+      if (modal.open) modal.close();
       modal.remove();
-      document.removeEventListener('keydown', onKey);
       // A11y: si activamos el portal antes (aria-hidden false) y ya no quedan
       // modales montados ahi, restauramos aria-hidden="true".
       if (portalA11yRestored) {
@@ -145,26 +151,17 @@
     // Bandera setada justo despues del appendChild (ver mas abajo).
     let portalA11yRestored = false;
 
-    const onKey = (e) => {
-      if (e.key === 'Escape') { close(); return; }
-      if (e.key !== 'Tab') return;
-      // Focus trap: Tab cicla dentro del modal, Shift+Tab también.
-      const items = focusables();
-      if (!items.length) { e.preventDefault(); return; }
-      const first = items[0];
-      const last = items[items.length - 1];
-      const active = document.activeElement;
-      if (e.shiftKey && active === first) { last.focus(); e.preventDefault(); }
-      else if (!e.shiftKey && active === last) { first.focus(); e.preventDefault(); }
-    };
+    // Esc: el navegador dispara `cancel` solo en el dialog de arriba. Se toma para
+    // cerrar por close() (onClose, devolver el foco, sacarlo del DOM).
+    modal.addEventListener('cancel', (e) => { e.preventDefault(); close(); });
     overlay.addEventListener('click', close);
     closeBtn.addEventListener('click', close);
-    document.addEventListener('keydown', onKey);
 
     const target = portal
       ? (document.getElementById('modals-portal') || document.body)
       : (parentEl || document.body);
     target.appendChild(modal);
+    modal.showModal();
 
     // A11y: si el target es #modals-portal y tenia aria-hidden="true" por defecto,
     // lo desactivamos mientras este modal viva. Sin esto el navegador bloquea
