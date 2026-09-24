@@ -33,10 +33,20 @@
   /* ── Mapeos puros (test/studio-datos.test.js) ─────────────────────────── */
 
   /** attributes.imagenes[] → URLs para pintar (file_id → galería; si no, url). */
+  /**
+   * URL de un archivo: si el file_id está en el mapa manda el mapa — aunque sea null, que es
+   * «pendiente» (pedido por ids y no devuelto): NUNCA se cae a la URL vieja. Si no está (mapa
+   * sin ids, camino antiguo), queda el respaldo.
+   */
+  function urlDe(fileId, respaldo, urlPorArchivo = {}) {
+    if (fileId && Object.prototype.hasOwnProperty.call(urlPorArchivo, fileId)) return urlPorArchivo[fileId];
+    return respaldo || null;
+  }
+
   function urlsDeImagenes(imagenes, urlPorArchivo = {}) {
     return (Array.isArray(imagenes) ? imagenes : [])
       .slice().sort((a, b) => (Number(a?.orden) || 0) - (Number(b?.orden) || 0))
-      .map((im) => (im?.file_id && urlPorArchivo[im.file_id]) || im?.url || null)
+      .map((im) => urlDe(im?.file_id, im?.url, urlPorArchivo))
       .filter(Boolean);
   }
 
@@ -66,7 +76,7 @@
 
   /** public.salidas → la producción como la pintan los carruseles de v1 (media_url, isImage, isVideo). */
   function salidaAV1(fila, urlPorArchivo = {}) {
-    const media_url = (fila.file_id && urlPorArchivo[fila.file_id]) || (fila.file_id ? null : fila.url) || fila.url || null;
+    const media_url = urlDe(fila.file_id, fila.url, urlPorArchivo);
     const tipo = String(fila.tipo || '').toLowerCase();
     return {
       id: fila.output_id,
@@ -139,12 +149,34 @@
   }
 
   /** file_id → url para pintar (url_publica si es público, si no url_galeria). Sin borde = {}. */
-  async function urlsDeArchivos(orgId) {
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  /** file_ids distintos y válidos de una lista (lo que se va a pintar). */
+  const idsDe = (lista) => [...new Set((lista || []).filter((x) => typeof x === 'string' && UUID.test(x)))];
+
+  /**
+   * file_id → url (galería o pública) de LOS archivos que se van a pintar, por
+   * GET /v1/archivos?ids= en lotes de ≤ 100 (backend 566631c). Un id pedido que no vuelve
+   * (ajeno, borrado, o un borde viejo que ignora `ids` y devuelve los 50 recientes) queda en
+   * el mapa con null = pendiente: se pinta el placeholder, nunca la URL vieja.
+   * Sin `ids` (camino antiguo) devuelve los 50 más recientes sin marcar nada.
+   */
+  async function urlsDeArchivos(orgId, ids = null) {
     const a = api();
     if (!a || !orgId) return {};
+    const fila = (f) => [f.id, f.url_publica || f.url_galeria || null];
     try {
-      const r = await a.archivos(orgId);
-      return Object.fromEntries((r?.archivos || []).filter((f) => f?.id && (f.url_publica || f.url_galeria)).map((f) => [f.id, f.url_publica || f.url_galeria]));
+      if (ids === null) {
+        const r = await a.archivos(orgId);
+        return Object.fromEntries((r?.archivos || []).filter((f) => f?.id && (f.url_publica || f.url_galeria)).map(fila));
+      }
+      const pedidos = idsDe(ids);
+      if (!pedidos.length) return {};
+      const lotes = [];
+      for (let i = 0; i < pedidos.length; i += 100) lotes.push(pedidos.slice(i, i + 100));
+      const respuestas = await Promise.all(lotes.map((l) => a.archivos(orgId, l)));
+      const mapa = Object.fromEntries(pedidos.map((id) => [id, null]));
+      respuestas.forEach((r) => (r?.archivos || []).forEach((f) => { if (f?.id && f.id in mapa) mapa[f.id] = fila(f)[1]; }));
+      return mapa;
     } catch (e) {
       if (e?.codigo !== 'sin_api') console.warn('[studio] archivos del borde:', e?.codigo || e?.message || e);
       return {};
@@ -157,12 +189,13 @@
     if (!sb || !orgId) return contextoAV1(null, []);
     let q = sb.from('markets').select('id, name, countries, languages, core_niche, sub_niches, archetype, value_proposition, mission_vision, keywords, banned_words, strategic_goals, creative_brief, verbal_dna, visual_dna, is_primary').eq('organization_id', orgId).is('archived_at', null);
     q = marketId ? q.eq('id', marketId) : q.order('is_primary', { ascending: false }).order('created_at', { ascending: true });
-    const [m, el, urls] = await Promise.all([
+    const [m, el] = await Promise.all([
       q.limit(1).maybeSingle(),
       sb.from('elements_full').select('id, kind, name, summary, description, is_featured, attributes, detail, archived_at').eq('organization_id', orgId).is('archived_at', null).order('is_featured', { ascending: false }).order('created_at', { ascending: false }).limit(200),
-      urlsDeArchivos(orgId),
     ]);
     aviso('markets', m); aviso('elements_full', el);
+    // Solo las fotos que se van a pintar (el borde devuelve 50 recientes si no se le dicen cuáles).
+    const urls = await urlsDeArchivos(orgId, (el.data || []).flatMap((e) => (e.attributes?.imagenes || []).map((im) => im?.file_id)));
     return contextoAV1(m.data, el.data || [], urls);
   }
 
@@ -172,8 +205,9 @@
     if (!sb || !orgId) return [];
     let q = sb.from('salidas').select('output_id, run_id, flow_id, flujo, clave, tipo, es_principal, url, storage_path, file_id, mime_type, bytes, width, height, duration_ms, creditos_aprox, estado_corrida, created_at').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(limite);
     if (tipo) q = q.eq('tipo', tipo);
-    const [r, urls] = await Promise.all([q, urlsDeArchivos(orgId)]);
+    const r = await q;
     aviso('salidas', r);
+    const urls = await urlsDeArchivos(orgId, (r.data || []).map((f) => f.file_id));
     return (r.data || []).map((f) => salidaAV1(f, urls)).filter((s) => s.media_url);
   }
 
@@ -186,7 +220,7 @@
     const f = r?.archivo;
     if (!f?.id) throw Object.assign(new Error('El borde no devolvió el archivo subido.'), { code: 'sin_archivo' });
     let url = f.url_publica || f.url_galeria || null;
-    if (!url) { const urls = await urlsDeArchivos(orgId); url = urls[f.id] || null; }
+    if (!url) { const urls = await urlsDeArchivos(orgId, [f.id]); url = urls[f.id] || null; }
     return { file_id: f.id, url, bytes: f.bytes ?? archivo.size ?? null, object_key: f.object_key || null };
   }
 
@@ -213,7 +247,7 @@
     }
     let salida = salidaPrincipal(corrida);
     if (salida && !salida.url && salida.file_id) {
-      const urls = await urlsDeArchivos(orgId);
+      const urls = await urlsDeArchivos(orgId, [salida.file_id]);
       salida.url = urls[salida.file_id] || null;
       if (!salida.url) { try { const d = await a.urlDescarga(salida.file_id, orgId); salida.url = d?.url || null; } catch (_) { /* se pinta sin url */ } }
     }

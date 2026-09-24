@@ -95,7 +95,8 @@
       const form = new FormData(); form.set('archivo', archivo);
       return { method: 'POST', path: '/v1/archivos', query: { org, proposito }, form };
     },
-    archivos: (org) => ({ method: 'GET', path: '/v1/archivos', query: { org } }),
+    // ids (backend 566631c): 1–100 uuid por petición; con ids se ignora `limite`. Sin ids = los 50 más recientes.
+    archivos: (org, ids = null) => ({ method: 'GET', path: '/v1/archivos', query: (Array.isArray(ids) && ids.length) ? { org, ids: ids.join(',') } : { org } }),
     urlDescarga: (id, org) => ({ method: 'GET', path: `/v1/archivos/${id}/descarga`, query: { org } }),
     borrarArchivo: (id, org) => ({ method: 'DELETE', path: `/v1/archivos/${id}`, query: { org } }),
     sesionGaleria: (org) => ({ method: 'POST', path: '/v1/sesion/galeria', body: { org } }),
@@ -218,7 +219,7 @@
     enviarMensaje: (conversacion, texto, idCliente = uid()) => ejecutar(peticiones.enviarMensaje(conversacion, texto, idCliente)),
     cancelarTurno: (turno) => ejecutar(peticiones.cancelarTurno(turno)),
     subirArchivo: (org, archivo, proposito = 'subida') => ejecutar(peticiones.subirArchivo(org, archivo, proposito)),
-    archivos: (org) => ejecutar(peticiones.archivos(org)),
+    archivos: (org, ids = null) => ejecutar(peticiones.archivos(org, ids)),
     urlDescarga: (id, org) => ejecutar(peticiones.urlDescarga(id, org)),
     borrarArchivo: (id, org) => ejecutar(peticiones.borrarArchivo(id, org)),
     sesionGaleria: (org) => ejecutar(peticiones.sesionGaleria(org)),

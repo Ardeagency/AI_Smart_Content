@@ -50,3 +50,43 @@ describe('Studio · contexto y producciones', () => {
     expect(S.salidaAV1({ output_id: 3, tipo: 'image', file_id: 'nadie', url: 'https://media.aismartcontent.io/viejo.png' }, urls).media_url).toBe('https://media.aismartcontent.io/viejo.png');
   });
 });
+
+/* Archivos por ids (backend 566631c, sin desplegar al escribir esto): se piden SOLO los file_id
+   que se van a pintar, en lotes de ≤ 100. Con un borde viejo que ignora `ids` (devuelve los 50
+   recientes), los pedidos que no vuelven quedan en null = pendiente: nunca la URL vieja. */
+describe('Studio · urlsDeArchivos por ids: las dos formas del borde', () => {
+  const uuid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+  function cargarCon(archivos) {
+    const w = {};
+    const pedidas = [];
+    w.apiV2 = { api: { archivos: async (org, ids) => { pedidas.push(ids); return { archivos: archivos(ids) }; } } };
+    new Function('window', FUENTE)(w);
+    return { S: w.StudioDatos, pedidas };
+  }
+
+  test('borde NUEVO: solo los pedidos, en lotes de ≤ 100, sin duplicados ni basura', async () => {
+    const ids = Array.from({ length: 150 }, (_, i) => uuid(i));
+    const { S, pedidas } = cargarCon((lote) => lote.map((id) => ({ id, url_galeria: `https://media-v2/in/${id}` })));
+    const mapa = await S.urlsDeArchivos('o', [...ids, ids[0], 'no-es-uuid', null]);
+    expect(pedidas.map((l) => l.length)).toEqual([100, 50]);
+    expect(Object.keys(mapa)).toHaveLength(150);
+    expect(mapa[ids[149]]).toBe(`https://media-v2/in/${ids[149]}`);
+  });
+
+  test('borde VIEJO (ignora ids y devuelve 50 recientes): lo que falta queda pendiente (null)', async () => {
+    const recientes = Array.from({ length: 50 }, (_, i) => ({ id: uuid(1000 + i), url_galeria: 'https://media-v2/x' }));
+    const { S } = cargarCon(() => recientes);
+    const pedido = [uuid(1000), uuid(7)];
+    const mapa = await S.urlsDeArchivos('o', pedido);
+    expect(mapa[uuid(1000)]).toBe('https://media-v2/x');
+    expect(mapa).toHaveProperty(uuid(7), null);
+    // y el mapeo NO cae a la url vieja de la fila para un id pendiente
+    const salida = S.mapeo.salidaAV1({ output_id: 's', file_id: uuid(7), url: 'https://viejo/7.png', tipo: 'image' }, mapa);
+    expect(salida.media_url).toBeNull();
+  });
+
+  test('sin ids (camino antiguo) no marca nada pendiente', async () => {
+    const { S } = cargarCon(() => [{ id: uuid(1), url_publica: 'https://pub/1' }]);
+    expect(await S.urlsDeArchivos('o')).toEqual({ [uuid(1)]: 'https://pub/1' });
+  });
+});

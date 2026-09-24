@@ -38,8 +38,13 @@
   function urlsDeImagenes(imagenes, urlPorArchivo = {}) {
     return (Array.isArray(imagenes) ? imagenes : [])
       .slice().sort((a, b) => (Number(a?.orden) || 0) - (Number(b?.orden) || 0))
-      .map((im) => ({ url: (im?.file_id && urlPorArchivo[im.file_id]) || im?.url || null, file_id: im?.file_id || null, tipo: im?.tipo || null, orden: im?.orden ?? 0 }))
-      .filter((im) => im.url);
+      .map((im) => {
+        // file_id en el mapa manda; null = pendiente (pedido por ids y no devuelto): placeholder, nunca la URL vieja.
+        const enMapa = !!im?.file_id && Object.prototype.hasOwnProperty.call(urlPorArchivo, im.file_id);
+        const url = enMapa ? urlPorArchivo[im.file_id] : (im?.url || null);
+        return { url, file_id: im?.file_id || null, tipo: im?.tipo || null, orden: im?.orden ?? 0, pendiente: enMapa && !url };
+      })
+      .filter((im) => im.url || im.pendiente);
   }
 
   /**
@@ -119,10 +124,10 @@
       if (!faltaColumna(r.error)) return { r, urls: {} };
       conImagenes = false;
     }
-    const [r, urls] = await Promise.all([
-      construir(SEL),
-      window.StudioDatos && orgId ? window.StudioDatos.urlsDeArchivos(orgId) : Promise.resolve({}),
-    ]);
+    const r = await construir(SEL);
+    const filas = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
+    const ids = filas.flatMap((e) => (e.attributes?.imagenes || []).map((im) => im?.file_id));
+    const urls = window.StudioDatos && (orgId || filas[0]?.organization_id) ? await window.StudioDatos.urlsDeArchivos(orgId || filas[0].organization_id, ids) : {};
     return { r, urls };
   }
 
@@ -139,10 +144,9 @@
   async function elemento(id) {
     const sb = await cliente();
     if (!sb || !id) return null;
-    let { r, urls } = await leerElements(sb, null, (sel) => sb.from('elements_full').select(sel).eq('id', id).maybeSingle());
+    const { r, urls } = await leerElements(sb, null, (sel) => sb.from('elements_full').select(sel).eq('id', id).maybeSingle());
     aviso('elements_full id', r);
     if (!r.data) return null;
-    if (conImagenes === false && window.StudioDatos) urls = await window.StudioDatos.urlsDeArchivos(r.data.organization_id);
     return elementoAV1(r.data, urls);
   }
 

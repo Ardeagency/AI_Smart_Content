@@ -51,7 +51,8 @@
 
   /** public.salidas → runs_outputs de v1 (storage_path = URL para pintar; file_id para el borde). */
   function salidaAV1(fila, urlPorArchivo = {}, entradasPorCorrida = {}) {
-    const url = (fila.file_id && urlPorArchivo[fila.file_id]) || fila.url || null;
+    // file_id en el mapa manda (null = pendiente: nunca la URL vieja); fuera del mapa, la url de la fila.
+    const url = (fila.file_id && Object.prototype.hasOwnProperty.call(urlPorArchivo, fila.file_id)) ? urlPorArchivo[fila.file_id] : (fila.url || null);
     const tipo = String(fila.tipo || 'file').toLowerCase();
     const entradas = entradasPorCorrida[fila.run_id] || {};
     return {
@@ -166,12 +167,13 @@
     let q = sb.from('salidas').select('output_id, run_id, flow_id, flujo, clave, tipo, es_principal, url, storage_path, file_id, mime_type, bytes, width, height, duration_ms, creditos_aprox, estado_corrida, created_at').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(limite);
     if (Array.isArray(runIds) && runIds.length) q = q.in('run_id', runIds);
     const ids = Array.isArray(runIds) && runIds.length ? runIds : null;
-    const [r, urls, ent] = await Promise.all([
+    const [r, ent] = await Promise.all([
       q,
-      window.StudioDatos ? window.StudioDatos.urlsDeArchivos(orgId) : Promise.resolve({}),
       ids ? sb.schema('flows').from('run_inputs').select('id, run_id, key, value, created_at').in('run_id', ids) : Promise.resolve({ data: [] }),
     ]);
     aviso('salidas', r); aviso('flows.run_inputs', ent);
+    // Solo los archivos de ESTAS salidas (sin ids el borde da los 50 recientes y el resto caía a la URL vieja).
+    const urls = window.StudioDatos ? await window.StudioDatos.urlsDeArchivos(orgId, (r.data || []).map((f) => f.file_id)) : {};
     const porCorrida = entradasPorCorrida(ent.data || []);
     return (r.data || []).map((f) => salidaAV1(f, urls, porCorrida));
   }
