@@ -42,11 +42,27 @@
       .filter((im) => im.url);
   }
 
+  /**
+   * elements_full.imagenes (BD 20260924130000, contrato studio.md): [{file_id, url, tipo, orden,
+   * mime, ancho, alto, bytes, pendiente}], ya ordenada y con la url RESUELTA por la base
+   * (url_de_archivo). `pendiente: true` + url null = foto sin archivo: se conserva para que la
+   * vista pinte el placeholder (nunca la URL vieja). Con esta columna NO se lee
+   * attributes.imagenes[].url ni se resuelve con urlsDeArchivos (tope de 50 del borde).
+   */
+  function imagenesDeLaBase(imagenes) {
+    return (Array.isArray(imagenes) ? imagenes : []).map((im, i) => ({
+      url: im?.pendiente ? null : (im?.url || null), file_id: im?.file_id || null, tipo: im?.tipo || null,
+      orden: im?.orden ?? i, pendiente: !!im?.pendiente || !im?.url,
+    }));
+  }
+
   /** elements_full → la fila de v1 de cada kind (products / services / brand_places / brand_characters / brand_entities). */
   function elementoAV1(e, urlPorArchivo = {}) {
     const d = (e.detail && typeof e.detail === 'object') ? e.detail : {};
-    const imgs = urlsDeImagenes(e.attributes?.imagenes, urlPorArchivo);
-    const base = { id: e.id, entity_id: e.id, organization_id: e.organization_id, kind: e.kind, name: e.name, description: e.description || null, summary: e.summary || null, is_featured: e.is_featured === true, attributes: e.attributes || {}, detail: d, created_at: e.created_at, updated_at: e.updated_at, image_urls: imgs.map((i) => i.url), imagenes: imgs, imagen: imgs[0]?.url || null };
+    // Base con la migración: la columna `imagenes` manda. Base de hoy: attributes + urlsDeArchivos.
+    const imgs = Array.isArray(e.imagenes) ? imagenesDeLaBase(e.imagenes) : urlsDeImagenes(e.attributes?.imagenes, urlPorArchivo);
+    const conUrl = imgs.filter((i) => i.url);
+    const base = { id: e.id, entity_id: e.id, organization_id: e.organization_id, kind: e.kind, name: e.name, description: e.description || null, summary: e.summary || null, is_featured: e.is_featured === true, attributes: e.attributes || {}, detail: d, created_at: e.created_at, updated_at: e.updated_at, image_urls: conUrl.map((i) => i.url), imagenes: imgs, imagen: conUrl[0]?.url || null };
     switch (e.kind) {
       case 'product': return { ...base, nombre_producto: e.name, descripcion_producto: e.description || e.summary || null, tipo_producto: d.product_type || null, precio_producto: d.price ?? null, moneda: d.currency || null, sku: d.sku || null, url_producto: d.url || null, beneficios: d.benefits || [], beneficios_principales: d.benefits || [], diferenciadores: d.differentiators || [], casos_de_uso: d.use_cases || [], rasgos_visuales: d.visual_traits || [], caracteristicas_visuales: d.visual_traits || [], ingredientes: d.ingredients || [], materiales_composicion: d.ingredients || [] };
       case 'service': return { ...base, nombre_servicio: e.name, descripcion_servicio: e.description || e.summary || null, tipo_servicio: d.service_type || null, precio_base: d.price ?? null, moneda: d.currency || null, modelo_precio: d.price_model || null, duracion_estimada: d.duration_minutes != null ? `${d.duration_minutes} min` : null, modalidad: d.modality || null, beneficios_principales: d.benefits || [], entregables: d.deliverables || [] };
@@ -86,16 +102,36 @@
   function api() { return (typeof window !== 'undefined' && window.apiV2?.api) || null; }
   function aviso(nombre, r) { if (r?.error) console.warn(`[catalogo] ${nombre}:`, r.error.code, r.error.message); }
   const SEL = 'id, organization_id, kind, name, summary, description, is_featured, attributes, archived_at, created_at, updated_at, detail, has_detail';
+  const SEL_CON_IMAGENES = `${SEL}, imagenes`;
+  /** ¿La base viva ya expone elements_full.imagenes? null = sin probar. */
+  let conImagenes = null;
+  const faltaColumna = (err) => ['PGRST204', '42703'].includes(String(err?.code || ''));
+
+  /**
+   * Lee elements_full con la columna `imagenes` si existe; si la base aún no la tiene
+   * (PGRST204/42703) repite sin ella y resuelve fotos como hoy (urlsDeArchivos). Aprende la
+   * respuesta para no repetir el intento fallido en cada lectura.
+   */
+  async function leerElements(sb, orgId, construir) {
+    if (conImagenes !== false) {
+      const r = await construir(SEL_CON_IMAGENES);
+      if (!r.error) { conImagenes = true; return { r, urls: {} }; }
+      if (!faltaColumna(r.error)) return { r, urls: {} };
+      conImagenes = false;
+    }
+    const [r, urls] = await Promise.all([
+      construir(SEL),
+      window.StudioDatos && orgId ? window.StudioDatos.urlsDeArchivos(orgId) : Promise.resolve({}),
+    ]);
+    return { r, urls };
+  }
 
   /** Elementos vivos de la marca por kind (v1: products/services/places/characters). */
   async function elementos(orgId, kind, { limite = 500 } = {}) {
     const sb = await cliente();
     if (!sb || !orgId) return [];
     const k = KINDS[kind] || kind;
-    const [r, urls] = await Promise.all([
-      sb.from('elements_full').select(SEL).eq('organization_id', orgId).eq('kind', k).is('archived_at', null).order('is_featured', { ascending: false }).order('created_at', { ascending: false }).limit(limite),
-      window.StudioDatos ? window.StudioDatos.urlsDeArchivos(orgId) : Promise.resolve({}),
-    ]);
+    const { r, urls } = await leerElements(sb, orgId, (sel) => sb.from('elements_full').select(sel).eq('organization_id', orgId).eq('kind', k).is('archived_at', null).order('is_featured', { ascending: false }).order('created_at', { ascending: false }).limit(limite));
     aviso(`elements_full ${k}`, r);
     return (r.data || []).map((e) => elementoAV1(e, urls));
   }
@@ -103,10 +139,10 @@
   async function elemento(id) {
     const sb = await cliente();
     if (!sb || !id) return null;
-    const r = await sb.from('elements_full').select(SEL).eq('id', id).maybeSingle();
+    let { r, urls } = await leerElements(sb, null, (sel) => sb.from('elements_full').select(sel).eq('id', id).maybeSingle());
     aviso('elements_full id', r);
     if (!r.data) return null;
-    const urls = window.StudioDatos ? await window.StudioDatos.urlsDeArchivos(r.data.organization_id) : {};
+    if (conImagenes === false && window.StudioDatos) urls = await window.StudioDatos.urlsDeArchivos(r.data.organization_id);
     return elementoAV1(r.data, urls);
   }
 
@@ -184,7 +220,8 @@
     if (actual.error) throw actual.error;
     const attrs = (actual.data?.attributes && typeof actual.data.attributes === 'object') ? { ...actual.data.attributes } : {};
     const lista = Array.isArray(attrs.imagenes) ? attrs.imagenes.slice() : [];
-    lista.push({ file_id: f.id, storage_path: f.object_key || null, url: f.url_publica || null, mime: archivo.type || null, bytes: f.bytes ?? archivo.size ?? null, tipo: tipo || (lista.length ? 'galeria' : 'principal'), orden: lista.length });
+    // Sin `url` (contrato studio.md): la url se DERIVA del file_id en la base.
+    lista.push({ file_id: f.id, storage_path: f.object_key || null, mime: archivo.type || null, bytes: f.bytes ?? archivo.size ?? null, tipo: tipo || (lista.length ? 'galeria' : 'principal'), orden: lista.length });
     attrs.imagenes = lista;
     const { data, error } = await sb.from('elements').update({ attributes: attrs }).eq('id', id).select('id');
     if (error) throw error;
@@ -235,7 +272,7 @@
 
   window.CatalogoDatos = Object.freeze({
     KINDS, elementos, elemento, crear, actualizar, archivar, duplicar, subirFoto, quitarFoto, hacerPrincipal, variantes,
-    mapeo: Object.freeze({ elementoAV1, aBase, urlsDeImagenes }),
+    mapeo: Object.freeze({ elementoAV1, aBase, urlsDeImagenes, imagenesDeLaBase }),
     _inyectarCliente(sb) { clienteInyectado = sb; },
   });
 })();
