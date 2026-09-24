@@ -246,9 +246,9 @@ class SignInView extends BaseView {
       }
 
       // FEAT-020 · org exige MFA pero user no tiene factor → forzar enroll
-      // Activar el factor desde la consola llega con ADR-0049 (L6); hasta entonces se dice.
+      // La marca exige verificación en dos pasos y la cuenta no la tiene: activarla en /mfa (ADR-0049).
       if (result.requiresMfaEnroll) {
-        this._error(__('Tu marca exige verificación en dos pasos y tu cuenta aún no la tiene activa. Escríbenos a contact@aismartcontent.io y la activamos contigo.'));
+        window.router?.navigate(`/mfa${this._next ? `?next=${encodeURIComponent(this._next)}` : ''}`, true);
         return;
       }
 

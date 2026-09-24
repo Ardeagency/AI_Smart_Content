@@ -36,7 +36,7 @@
   const RENDER = Object.freeze({
     'billing.provider_cap_near': { icono: 'aisc-ico--credit-card', etiqueta: 'Gasto cerca del tope', params: ['gastado', 'tope', 'medidor'],
       titulo: (p) => t('{medidor} va en {gastado} de {tope} USD', { medidor: p.medidor, gastado: num(p.gastado), tope: num(p.tope) }),
-      cuerpo: (p) => t('Este mes ya se gastó el {pct}% de {techo}. Si sigue así, se detiene al llegar al tope.', { pct: Math.round((Number(p.gastado) / Math.max(1, Number(p.tope))) * 100), techo: techo(p) }), ruta: '/organization' },
+      cuerpo: (p) => t('Este mes ya se gastó el {pct}% de {techo}. Si sigue así, se detiene al llegar al tope.', { pct: Math.round((Number(p.gastado) / Math.max(1, Number(p.tope))) * 100), techo: techo(p) }), ruta: '/configuracion/facturacion' },
     'billing.provider_cap_hit': { icono: 'aisc-ico--credit-card', etiqueta: 'Tope de gasto alcanzado', params: ['gastado', 'tope', 'medidor'],
       titulo: (p) => t('{medidor} llegó a su tope ({tope} USD)', { medidor: p.medidor, tope: num(p.tope) }),
       cuerpo: (p) => t('Se gastaron {gastado} USD, {techo}. Las corridas que usan este medidor quedan detenidas hasta el próximo ciclo o hasta subir el tope.', { gastado: num(p.gastado), techo: techo(p) }), ruta: '/organization' },
@@ -71,6 +71,10 @@
     'agent.job_dead': { icono: 'aisc-ico--sparkles', etiqueta: 'Turno de Vera caído', params: [], titulo: null, cuerpo: null, ruta: '/vera' },
     'intel.critical_signal': { icono: 'aisc-ico--growth', etiqueta: 'Señal crítica', params: [], titulo: null, cuerpo: null, ruta: '/dashboard' },
     'marketing.approval': { icono: 'aisc-ico--megaphone', etiqueta: 'Aprobación de campaña', params: [], titulo: null, cuerpo: null, ruta: '/command-center' },
+    // ADR-0048 (BD 6d1c421): alguien del equipo invitó a una persona por correo.
+    'equipo.invitacion': { icono: 'aisc-ico--user-registration', etiqueta: 'Invitación enviada', params: ['invitacion_id', 'email'],
+      titulo: (p) => t('Invitamos a {correo} a la marca', { correo: p.email }),
+      cuerpo: () => t('La invitación dura 7 días. Desde Miembros puedes reenviarla o revocarla.'), ruta: '/configuracion/miembros' },
   });
 
   function fecha(iso) {

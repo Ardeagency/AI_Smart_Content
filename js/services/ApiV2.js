@@ -78,6 +78,8 @@
   // ── Peticiones: constructores PUROS (sin fetch) — es lo que prueba el contrato ─
   const peticiones = {
     salud: () => ({ method: 'GET', path: '/salud', publica: true }),
+    // Alta por invitación (ADR-0048, backend 5953f12): pública; el token ES la autorización.
+    altaPorInvitacion: (token, password, nombre) => ({ method: 'POST', path: '/v1/invitaciones/alta', body: { token, password, nombre }, publica: true }),
     aprobaciones: (org) => ({ method: 'GET', path: '/v1/aprobaciones', query: { org } }),
     /** `aprobar: boolean`; al RECHAZAR la nota es obligatoria (la BASE exige motivo, 5+ caracteres). */
     decidirAprobacion: (id, org, decision, nota) => {
@@ -210,6 +212,7 @@
   /** Una función por ruta: construye la petición pura y la ejecuta. */
   const api = {
     salud: () => ejecutar(peticiones.salud()),
+    altaPorInvitacion: (token, password, nombre) => ejecutar(peticiones.altaPorInvitacion(token, password, nombre)),
     aprobaciones: (org) => ejecutar(peticiones.aprobaciones(org)),
     decidirAprobacion: (id, org, decision, nota) => ejecutar(peticiones.decidirAprobacion(id, org, decision, nota)),
     enviarMensaje: (conversacion, texto, idCliente = uid()) => ejecutar(peticiones.enviarMensaje(conversacion, texto, idCliente)),

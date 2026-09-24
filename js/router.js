@@ -291,6 +291,20 @@ class Router {
         }
       }
 
+      // ADR-0049: la marca exige verificación en dos pasos y esta sesión no la cumple
+      // (mi_contexto: acceso=false && mfa_required && !mfa_cumplida) → /mfa, no una
+      // pantalla vacía ni un «sin permiso». Con la base de hoy (sin esos campos) no salta.
+      if (window.currentOrgId && window.contextoService?.pideMfa) {
+        try {
+          await window.contextoService.cargar();
+          if (window.contextoService.pideMfa(window.contextoService.org(window.currentOrgId))) {
+            this._handlingRoute = false;
+            this.navigate(`/mfa?next=${encodeURIComponent(path + (window.location.search || ''))}`, true);
+            return;
+          }
+        } catch (_) { /* sin contexto: sigue; la base autoriza igual */ }
+      }
+
       // Guard de capabilities: si la ruta requiere una capability que el usuario
       // no tiene, redirigir a /vera (única página garantizada para todos los miembros).
       // Lead bypass: window.authService.hasPermission ya retorna true para Leads.

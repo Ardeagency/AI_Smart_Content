@@ -128,9 +128,9 @@ class App {
       // del hero en /login. Aplicamos no-nav antes del primer paint para
       // evitarlo. En rutas auth, Navigation.render() reemplaza esta clase
       // por has-sidebar/has-header-only con su propio reset.
-      const PUBLIC_FIRST_PAINT = new Set(['/', '/login', '/signin', '/recuperar', '/cambiar-contrasena']);
+      const PUBLIC_FIRST_PAINT = new Set(['/', '/login', '/signin', '/recuperar', '/cambiar-contrasena', '/mfa', '/invitacion']);
       const initialPath = window.location.pathname || '/';
-      if (PUBLIC_FIRST_PAINT.has(initialPath)) {
+      if (PUBLIC_FIRST_PAINT.has(initialPath) || initialPath.startsWith('/invitacion/')) {
         document.body.classList.add('no-nav');
       }
 
@@ -210,6 +210,13 @@ class App {
     // Recuperar contraseña: la misma tarjeta del login abierta en «recuperar»
     // (resetPasswordForEmail → correo → /cambiar-contrasena).
     r.register('/recuperar', window.SignInView, pub);
+    // Invitación (ADR-0048, L6): la única puerta de alta. Pública: el token ES la autorización;
+    // con sesión la acepta, sin sesión crea el acceso por el borde. /invitacion sola = el token
+    // ya se limpió de la URL (replaceState): se queda en la tarjeta.
+    const invitacionLoader = this._lazy('InvitacionView', ['/js/services/InvitacionesDataService.js', '/js/views/InvitacionView.js']);
+    r.register('/invitacion/:token', invitacionLoader, pub);
+    // Verificación en dos pasos (ADR-0049, L6): con sesión, fuera del shell.
+    r.register('/mfa', this._lazy('MfaView', ['/js/views/MfaView.js']), auth);
 
     // SaaS CERRADO (FASE 2 · L1, 24/09): sin /demo anónimo ni /registro secreto.
     // La única puerta de entrada es la invitación (ADR-0048); la cuenta la crea staff.
@@ -511,7 +518,7 @@ class App {
     const prefijoOrg = (p) => (p.match(/^\/org\/[^/]+\/[^/]+/) || [''])[0];
     const DE_ORGANIZATION = { general: 'general', members: 'miembros', miembros: 'miembros', subscription: 'facturacion', suscripcion: 'facturacion', billing: 'facturacion', usage: 'uso', uso: 'uso', activity: 'uso', security: 'seguridad', seguridad: 'seguridad', avisos: 'avisos' };
     const ajustesDeps = ['/js/views/ajustes-pestanas.js'];
-    const configuracionLoader = this._lazy('ConfiguracionView', [...ajustesDeps, '/js/views/OrganizationView.js', '/js/views/ConfiguracionView.js']);
+    const configuracionLoader = this._lazy('ConfiguracionView', [...ajustesDeps, '/js/services/InvitacionesDataService.js', '/js/views/OrganizationView.js', '/js/views/ConfiguracionView.js']);
     const integracionesLoader = this._lazy('IntegracionesView', ['/js/services/IntegracionesDataService.js', ...ajustesDeps, '/js/views/IntegracionesView.js']);
     const cuentaLoader = this._lazy('CuentaView', [...ajustesDeps, '/js/views/CuentaView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/configuracion', redirigir((p) => `${prefijoOrg(p)}/configuracion/general`), auth);

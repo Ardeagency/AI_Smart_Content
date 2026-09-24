@@ -864,9 +864,18 @@ class OrganizationView extends BaseView {
     this.canManageMembers = this.isOwner || (yo && (yo.permisos.includes('editar_equipo') || ['owner', 'admin'].includes(yo.role)));
   }
 
-  /** Invitaciones por correo: sin tabla en la base nueva (ADR-0048, borrador). */
+  /**
+   * Invitaciones por correo (ADR-0048, L6): vista invitaciones_pendientes. Mientras la
+   * migración no esté aplicada (PGRST205/42P01) la sección simplemente no aparece.
+   */
   async _loadInvitations() {
     this.invitations = [];
+    if (!window.InvitacionesDatos) return; // la vista solo devuelve filas a quien puede verlas (RLS)
+    try {
+      this.invitations = await window.InvitacionesDatos.pendientes(this.orgId);
+    } catch (e) {
+      if (!window.InvitacionesDatos.todaviaNo(e)) console.warn('[organizacion] invitaciones:', e?.code, e?.message);
+    }
   }
 
   async _loadBrandContainers() {
@@ -1544,6 +1553,7 @@ class OrganizationView extends BaseView {
             <span class="org-invitation-meta">${this.escapeHtml(inv.role)} · ${__('expira {fecha}', { fecha: expires })}</span>
           </div>
           <div class="org-invitation-actions">
+            <button type="button" class="btn btn-ghost btn-sm org-invitation-resend" data-invitation-id="${this.escapeHtml(inv.id)}">${inv.estado === 'caducada' ? __('Renovar') : __('Reenviar')}</button>
             <button type="button" class="btn btn-ghost btn-sm org-invitation-revoke" data-invitation-id="${this.escapeHtml(inv.id)}">${__('Revocar')}</button>
           </div>
         </div>`;
@@ -2292,6 +2302,8 @@ class OrganizationView extends BaseView {
       if (removeBtn) { this._removeMember(removeBtn.getAttribute('data-member-id')); return; }
       const revokeBtn = e.target.closest('.org-invitation-revoke');
       if (revokeBtn) { this._revokeInvitation(revokeBtn.getAttribute('data-invitation-id')); return; }
+      const resendBtn = e.target.closest('.org-invitation-resend');
+      if (resendBtn) { this._resendInvitation(resendBtn.getAttribute('data-invitation-id')); return; }
     });
 
     document.getElementById('orgInviteModalClose')?.addEventListener('click', () => this._closeInviteModal());
@@ -2342,21 +2354,58 @@ class OrganizationView extends BaseView {
     if (btn) { btn.disabled = true; btn.textContent = __('Enviando…'); }
     try {
       if (this.members.some((m) => (m.email || '').toLowerCase() === email.toLowerCase())) { window.showToast(__('Ese usuario ya es miembro.'), { type: 'warning' }); return; }
-      // invitar_miembro exige una persona CON cuenta; por correo es ADR-0048.
-      await window.OrganizacionDatos.invitar(this.orgId, email, role === 'member' ? 'editor' : role);
+      const rol = role === 'member' ? 'editor' : role;
+      // ADR-0048: un solo gesto, «invitar por correo». Mientras la RPC no esté en la base
+      // viva, cae a invitar_miembro (persona CON cuenta), que es lo que había.
+      let porCorreo = false;
+      try {
+        if (window.InvitacionesDatos) { await window.InvitacionesDatos.invitar(this.orgId, email, rol); porCorreo = true; }
+      } catch (e) {
+        if (!window.InvitacionesDatos.todaviaNo(e)) throw e;
+      }
+      if (!porCorreo) await window.OrganizacionDatos.invitar(this.orgId, email, rol);
       this._closeInviteModal();
       await this._loadMembers();
+      await this._loadInvitations();
       this._renderMembers();
-      this._toast(__('Persona añadida al equipo'));
+      this._renderInvitations();
+      this._toast(porCorreo ? __('Invitación enviada a {correo}. Caduca en 7 días.', { correo: email }) : __('Persona añadida al equipo'));
     } catch (e) {
-      window.showToast(e.message || __('No se pudo enviar la invitación.'), { type: 'error' });
+      const c = String(e?.code || '');
+      const mensajes = {
+        23505: __('Esa persona ya es miembro o ya tiene una invitación viva.'),
+        42501: __('Tu rol no puede invitar con ese rol o esos permisos.'),
+        23514: __('Ese rol no puede llevar un permiso tan delicado.'),
+        22023: __('Revisa el correo: no parece válido.'),
+      };
+      window.showToast(mensajes[c] || e.message || __('No se pudo enviar la invitación.'), { type: 'error' });
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = __('Enviar invitación'); }
     }
   }
 
-  async _revokeInvitation(_invitationId) {
-    this._toast(__('Las invitaciones por correo llegan con la próxima versión.'));
+  async _revokeInvitation(invitationId) {
+    if (!invitationId || !window.InvitacionesDatos) return;
+    try {
+      await window.InvitacionesDatos.revocar(invitationId);
+      this._toast(__('Invitación revocada: el enlace ya no sirve.'));
+    } catch (e) {
+      window.showToast(window.InvitacionesDatos.todaviaNo(e) ? __('Las invitaciones por correo llegan en unos días.') : (e.message || __('No se pudo revocar.')), { type: 'error' });
+    }
+    await this._loadInvitations();
+    this._renderInvitations();
+  }
+
+  async _resendInvitation(invitationId) {
+    if (!invitationId || !window.InvitacionesDatos) return;
+    try {
+      await window.InvitacionesDatos.reenviar(invitationId);
+      this._toast(__('Invitación reenviada. Vuelve a durar 7 días.'));
+    } catch (e) {
+      window.showToast(window.InvitacionesDatos.todaviaNo(e) ? __('Las invitaciones por correo llegan en unos días.') : (e.message || __('No se pudo reenviar.')), { type: 'error' });
+    }
+    await this._loadInvitations();
+    this._renderInvitations();
   }
 
   async _changeRole(memberId, role) {

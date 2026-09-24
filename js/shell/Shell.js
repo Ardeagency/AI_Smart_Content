@@ -123,7 +123,8 @@
     /** ¿La ruta actual lleva shell? Las de acceso no; todo lo demás que requiere sesión, sí. */
     _llevaShell() {
       const p = window.location.pathname || '/';
-      return !['/', '/login', '/signin', '/recuperar', '/cambiar-contrasena', '/verification', '/index.html'].includes(p);
+      if (p.startsWith('/invitacion')) return false;
+      return !['/', '/login', '/signin', '/recuperar', '/cambiar-contrasena', '/verification', '/mfa', '/index.html'].includes(p);
     }
 
     getOrgBasePath() {
@@ -137,6 +138,14 @@
     getUserSidebarRoute(sufijo) {
       const base = this.getOrgBasePath();
       return base ? `${base}/${sufijo}` : `/${sufijo}`;
+    }
+
+    /** Enlace de un aviso (Avisos.js): una ruta corta cuelga de la marca actual. */
+    _resolveActionUrl(ruta) {
+      const u = String(ruta || '').trim();
+      if (!u || /^https?:\/\//i.test(u) || u.startsWith('/org/')) return u;
+      const base = this.getOrgBasePath();
+      return base ? `${base}${u.startsWith('/') ? u : `/${u}`}` : u;
     }
 
     _visible(item) {
@@ -644,17 +653,30 @@
       nodo.querySelector('[aria-checked="true"]')?.focus();
     }
 
+    /** Título (opcional) + cuerpo vacío de un panel, por DOM (el título es texto). */
+    _estructuraPanel(nodo, titulo) {
+      const cuerpo = document.createElement('div');
+      cuerpo.className = 'shell-panel-cuerpo';
+      if (!titulo) { nodo.replaceChildren(cuerpo); return cuerpo; }
+      const h = document.createElement('p');
+      h.className = 'shell-panel-titulo';
+      h.textContent = titulo;
+      nodo.replaceChildren(h, cuerpo);
+      return cuerpo;
+    }
+
     async _panelAvisos(nodo) {
-      nodo.innerHTML = `<p class="shell-panel-titulo">${esc(t('Avisos'))}</p><div class="shell-panel-cuerpo" id="notificationsFlyoutBody"></div>`;
-      const cuerpo = nodo.querySelector('.shell-panel-cuerpo');
+      const cuerpo = this._estructuraPanel(nodo, null); // Avisos.pintar trae su propia cabecera
+      cuerpo.id = 'notificationsFlyoutBody';
       if (!window.Avisos) { cuerpo.textContent = t('Los avisos no están disponibles ahora.'); return; }
       await window.Avisos.pintar(cuerpo, { alCerrar: () => this._cerrarPanel() });
       this._refrescarPuntos();
     }
 
     async _panelActividad(nodo) {
-      nodo.innerHTML = `<p class="shell-panel-titulo">${esc(t('Lo que Vera espera de ti'))}</p><div class="shell-panel-cuerpo" aria-busy="true"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div></div>`;
-      const cuerpo = nodo.querySelector('.shell-panel-cuerpo');
+      const cuerpo = this._estructuraPanel(nodo, t('Lo que Vera espera de ti'));
+      cuerpo.setAttribute('aria-busy', 'true');
+      for (let i = 0; i < 2; i++) { const s = document.createElement('div'); s.className = 'skeleton skeleton-text'; cuerpo.append(s); }
       let lista = null;
       try {
         lista = window.ShellDatos ? await window.ShellDatos.pendientesDeVera(this.currentOrgId) : [];

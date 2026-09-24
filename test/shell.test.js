@@ -54,7 +54,7 @@ describe('Shell', () => {
     for (const id of ['appHeader', 'headerTitle', 'headerProductionSlot', 'sideNavigation', 'navTokensValue', 'navPlanCard', 'headerNotificationsBadge']) {
       expect(SHELL).toContain(`id="${id}"`);
     }
-    for (const api of ['render()', 'loadCreditsFromDb(', 'collapseForImmersive()', 'restoreFromImmersive()', 'getUserSidebarRoute(', 'getOrgBasePath()']) {
+    for (const api of ['render()', 'loadCreditsFromDb(', 'collapseForImmersive()', 'restoreFromImmersive()', 'getUserSidebarRoute(', 'getOrgBasePath()', '_resolveActionUrl(']) {
       expect(SHELL).toContain(api);
     }
     expect(SHELL).toMatch(/window\.appNavigation = new Shell\(\)/);

@@ -103,6 +103,13 @@
         credits: { balance: Number(o.credits?.balance ?? 0), available: Number(o.credits?.available ?? 0) },
         markets: Array.isArray(o.markets) ? o.markets : [],
         mfa_required: !!o.mfa_required,
+        // Contrato 6d1c421/b2aee6c (sin aplicar al 24/09): con la base de hoy estos campos
+        // no llegan y se leen con respaldo — acceso ausente = true, mfa_cumplida ausente = true,
+        // short/ruta como los calcula js/org-url.js. Nada cambia antes ni después de aplicar.
+        mfa_cumplida: o.mfa_cumplida === undefined ? true : !!o.mfa_cumplida,
+        acceso: o.acceso === undefined ? true : !!o.acceso,
+        short: o.short || (typeof window !== 'undefined' && window.getOrgShortId ? window.getOrgShortId(o.id) : String(o.id || '').replace(/-/g, '').slice(-12)),
+        ruta: o.ruta || (typeof window !== 'undefined' && window.getOrgPathPrefix ? window.getOrgPathPrefix(o.id, o.name || '') : null),
       })),
     };
   }
@@ -134,5 +141,8 @@
   function limpiar() { cache = null; }
   function alCambiar(fn) { oyentes.add(fn); return () => oyentes.delete(fn); }
 
-  window.contextoService = Object.freeze({ cargar, actual, orgs, org, orgActiva, orgActivaId, puede, planPermite, capacidadesV1, limpiar, alCambiar, CAPACIDAD_A_PERMISO });
+  /** ¿La persona tiene que pasar por /mfa para entrar a esta marca? (ADR-0049) */
+  const pideMfa = (o) => !!o && o.acceso === false && o.mfa_required && !o.mfa_cumplida;
+
+  window.contextoService = Object.freeze({ cargar, actual, orgs, org, orgActiva, orgActivaId, puede, planPermite, capacidadesV1, limpiar, alCambiar, pideMfa, CAPACIDAD_A_PERMISO, mapeo: Object.freeze({ normalizar }) });
 })();

@@ -338,6 +338,36 @@ class AuthService {
   }
 
   /**
+   * ADR-0049 · estado de la verificación en dos pasos de la persona:
+   * { nivel: 'aal1'|'aal2', siguiente, factores: [{id, nombre}] } (solo TOTP verificados).
+   */
+  async mfaEstado() {
+    if (!this.supabase) this.supabase = await this.getSupabaseClient();
+    if (!this.supabase) return null;
+    const [{ data: aal }, { data: f }] = await Promise.all([
+      this.supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+      this.supabase.auth.mfa.listFactors(),
+    ]);
+    const factores = (f?.totp || []).filter((x) => x.status === 'verified').map((x) => ({ id: x.id, nombre: x.friendly_name || 'Authenticator' }));
+    return { nivel: aal?.currentLevel || 'aal1', siguiente: aal?.nextLevel || 'aal1', factores };
+  }
+
+  /**
+   * ADR-0049 · empezar a enrolar un factor TOTP. Borra antes los factores a medio
+   * enrolar (Supabase no deja tener dos sin verificar). Devuelve { factorId, qr, secreto }.
+   */
+  async mfaEnrolar() {
+    if (!this.supabase) this.supabase = await this.getSupabaseClient();
+    const { data: f } = await this.supabase.auth.mfa.listFactors();
+    for (const x of (f?.all || []).filter((y) => y.status !== 'verified')) {
+      await this.supabase.auth.mfa.unenroll({ factorId: x.id }).catch(() => {});
+    }
+    const { data, error } = await this.supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: `AI Smart Content ${new Date().toISOString().slice(0, 10)}` });
+    if (error) throw error;
+    return { factorId: data.id, qr: data.totp?.qr_code || '', secreto: data.totp?.secret || '' };
+  }
+
+  /**
    * FEAT-020 · Magic link — envía email con link de acceso (sin password).
    */
   async sendMagicLink(email) {
