@@ -52,7 +52,7 @@
         att.file_id = subido.file_id;
         att.path = subido.object_key || null;
       } catch (e) {
-        if (e?.code === 'sin_api') throw new Error(__('Los adjuntos se suben cuando el borde esté configurado.'));
+        if (e?.code === 'sin_api') throw new Error(__('Los adjuntos se suben cuando el borde esté configurado.'), { cause: e });
         throw e;
       }
     },

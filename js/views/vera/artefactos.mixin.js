@@ -164,7 +164,7 @@
       requestAnimationFrame(() => ov.classList.add('open'));
       // Esc cierra: listener solo mientras está abierto (sin fugas entre remounts).
       if (!this._galKeyHandler) this._galKeyHandler = (e) => { if (e.key === 'Escape') this._closeGallery(); };
-      document.addEventListener('keydown', this._galKeyHandler);
+      this.addEventListener(document, 'keydown', this._galKeyHandler); // BaseView lo suelta en destroy()
       this._loadArtifacts();
     },
 

@@ -403,7 +403,7 @@
 
       // 6. Restaura bloques legacy con sus renders originales
       legacyPlaceholders.forEach(({ pid, lang, content }) => {
-        let legacyHtml = '';
+        let legacyHtml;
         if (['chart', 'vera-chart', 'viz'].includes(lang)) {
           legacyHtml = renderChartBlock(content);
         } else if (['buttons', 'quickreplies', 'quick-replies', 'actions'].includes(lang)) {
@@ -475,7 +475,7 @@
             'if(e && e.data && e.data.type === "vera_print"){ try{ window.focus(); window.print(); }catch(_){/* impresión bloqueada */} }',
           '});',
           '})();',
-          '<\/script>'
+          '</script>'
         ].join('');
 
         const fullHtml = [
@@ -811,7 +811,7 @@
               chart.setOption(built.option);
               // Auto-resize cuando el viewport cambia (el chat es responsive)
               const onResize = () => chart.resize();
-              window.addEventListener('resize', onResize);
+              this.addEventListener(window, 'resize', onResize); // se suelta en destroy() aunque nadie llame a _veraChartDispose
               // Limpieza si el nodo se remueve
               node._veraChartDispose = () => {
                 window.removeEventListener('resize', onResize);

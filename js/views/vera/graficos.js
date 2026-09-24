@@ -232,7 +232,6 @@ function renderChartSVG(spec) {
   const categories = Array.isArray(spec.categories) ? spec.categories.map((x) => String(x)) : null;
   const series = Array.isArray(spec.series) ? spec.series : null;
   const isMulti = Array.isArray(categories) && categories.length > 0 && Array.isArray(series) && series.length > 0;
-  const legendOverride = Array.isArray(spec.__legendSeries) ? spec.__legendSeries : null;
 
   if (type === 'pie' || type === 'donut') {
     const total = normalized.reduce((a, b) => a + Math.max(0, b.value), 0) || 1;
@@ -673,7 +672,7 @@ function applyMermaidSemanticClasses(src) {
 
   // Captura definiciones de nodo: id + apertura + label + cierre.
   // Soporta los shapes comunes de mermaid: [], (), {}, [[]], [()], (()), {{}}.
-  const nodeRegex = /(\b[A-Za-z][\w]*)\s*(\[\[|\[\(|\(\(|\(|\[|\{\{|\{|>)([^\]\)\}>]*?)(\]\]|\)\]|\)\)|\)|\]|\}\}|\})/g;
+  const nodeRegex = /(\b[A-Za-z][\w]*)\s*(\[\[|\[\(|\(\(|\(|\[|\{\{|\{|>)([^\])}>]*?)(\]\]|\)\]|\)\)|\)|\]|\}\}|\})/g;
 
   const patterns = [
     { re: /🔴|🚨|\b(crisis|amenaza|riesgo|urgente|error|critical|critico|crítico)\b/i, cls: 'sem-critical' },

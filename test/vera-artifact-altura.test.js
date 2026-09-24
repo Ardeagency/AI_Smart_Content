@@ -11,8 +11,6 @@
  * padre↔iframe se DETIENE. Un bucle no se ve midiendo una vuelta.
  */
 import { describe, test, expect } from 'vitest';
-import fs from 'node:fs';
-import path from 'node:path';
 
 import { FUENTE_VERA } from './vera-fuente.js';
 const FUENTE = FUENTE_VERA;

@@ -31,11 +31,11 @@ class VeraView extends (window.BaseView || class {}) {
       1) `vera_resize` → ajusta height del iframe.
       2) `vera_action` → widget invoca accion en plataforma (allowlist).
 
-     Guard estatico evita registrar el listener mas de una vez si VeraView
-     se instancia varias veces durante la sesion. */
+     L7: un listener POR INSTANCIA vía this.addEventListener (BaseView lo quita en
+     destroy()). Antes un guard estático lo registraba una sola vez con el `this` de
+     la PRIMERA instancia: al volver a Vera, las acciones de widget iban a una vista
+     ya destruida. */
   _initWidgetBridge() {
-    if (VeraView.__widgetBridgeBound) return;
-    VeraView.__widgetBridgeBound = true;
     // Allowlist de actionType. Read-only ejecutan directo en backend;
     // write actions se persisten en vera_pending_actions para revision humana.
     const ACTION_ALLOWLIST = new Set([
@@ -51,7 +51,7 @@ class VeraView extends (window.BaseView || class {}) {
       'flag_competitor',
     ]);
 
-    window.addEventListener('message', async (event) => {
+    this.addEventListener(window, 'message', async (event) => {
       const t = event.data?.type;
       if (!t) return;
 
@@ -600,7 +600,7 @@ class VeraView extends (window.BaseView || class {}) {
       if (this.aiState.isLoading) return;
 
       // Disable the whole quick reply group after selection (prevents double clicks)
-      const group = btn.closest?.('[data-qr=\"true\"]');
+      const group = btn.closest?.('[data-qr="true"]');
       if (group) {
         group.querySelectorAll?.('button.gpt-qr-btn')?.forEach?.((b) => (b.disabled = true));
         group.setAttribute('data-qr-used', 'true');
