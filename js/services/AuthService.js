@@ -451,15 +451,11 @@ class AuthService {
     if (this.currentUser) {
       this.currentUser.locale = locale;
     }
+    // ADR-0040: el idioma se guarda SOLO por public.guardar_preferencias (valida y
+    // escribe la fila propia), nunca con un update directo a profiles.
     if (persist && this.supabase && this.currentUser?.id) {
-      try {
-        await this.supabase
-          .from('profiles')
-          .update({ locale })
-          .eq('id', this.currentUser.id);
-      } catch (error) {
-        console.error('Error actualizando idioma del usuario:', error);
-      }
+      const { error } = await this.supabase.rpc('guardar_preferencias', { p_locale: locale });
+      if (error) console.warn('[auth] guardar_preferencias:', error.code, error.message);
     }
   }
 

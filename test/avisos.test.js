@@ -35,8 +35,8 @@ describe('Markdown ligero (salió de Navigation.js)', () => {
     expect(h).toContain('<p>línea 1<br>línea 2</p>');
     expect(MD.render('| a | b |\n|---|---|\n| 1 | 2 |')).toContain('<table class="notif-md-table"><thead><tr><th>a</th><th>b</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>');
   });
-  test('Navigation.js ya no trae su propio parser', () => {
-    expect(leer('js/components/Navigation.js')).not.toMatch(/_renderMarkdownLite\s*\(/);
+  test('el shell no trae su propio parser (Navigation.js se retiró en L3)', () => {
+    expect(leer('js/shell/Shell.js')).not.toMatch(/_renderMarkdownLite\s*\(/);
   });
 });
 

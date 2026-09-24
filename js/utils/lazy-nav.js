@@ -1,31 +1,26 @@
 /**
- * lazy-nav — carga diferida del bundle de Navigation.
+ * lazy-nav — carga diferida del cascarón (js/shell/, L3 24/09).
  *
- * Por qué: Navigation.js es 114 KB raw / 29 KB gz, y rutas públicas
- * (/, /login, /signin, legales) NUNCA renderizan sidebar. Cargarlo
- * sólo cuando el usuario llega a una ruta autenticada ahorra ~35 KB
- * gz (Navigation + 3 mixins + MatchBars + AudienceMap) en first paint
- * de la página de login.
+ * Por qué: las rutas de acceso (/login, /recuperar…) NUNCA pintan shell. Cargarlo
+ * solo cuando la persona llega a una ruta con sesión ahorra ese peso en la primera
+ * pintura del login.
  *
  * Uso:
  *   await window.__ensureNavigationLoaded();
- *   // ahora window.appNavigation está disponible
+ *   // ahora window.appNavigation (el Shell) está disponible
  *
  * Idempotente: llamadas concurrentes retornan la misma Promise.
  */
 (function () {
   const SCRIPTS = [
-    '/js/components/Navigation.js',
-    // Mixins: deben cargar DESPUÉS de Navigation.js. Object.assign sobre
-    // Navigation.prototype: las instancias ya creadas heredan los métodos.
-    '/js/components/navigation/Flyouts.mixin.js',
-    '/js/components/navigation/Credits.mixin.js',
-    '/js/components/navigation/Settings.mixin.js',
-    // Avisos (ADR-0054): markdown, datos y campana; Navigation solo la monta.
+    // Datos del shell: el cascarón no toca supabase.from().
+    '/js/services/ShellDataService.js',
+    // Avisos (ADR-0054): markdown, datos y campana; el shell solo los monta.
     '/js/utils/markdown.js',
     '/js/services/AvisosDataService.js',
     '/js/components/Avisos.js',
-    // Componentes que las vistas usan dentro del shell auth.
+    '/js/shell/Shell.js',
+    // Componentes que las vistas usan dentro del shell.
     '/js/components/MatchBars.js',
     '/js/components/AudienceMap.js',
   ];
@@ -59,7 +54,7 @@
           await loadScript(src);
         } catch (err) {
           console.error('[lazy-nav]', err);
-          // Continuar: si falla un mixin, al menos el resto carga.
+          // Continuar: si falla uno, al menos el resto carga.
         }
       }
     })();
