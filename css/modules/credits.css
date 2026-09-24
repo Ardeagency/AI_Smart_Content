@@ -2,6 +2,7 @@
    está cerrada por ADR-0042). Solo tokens del prisma: cero hex, cero px sueltos.
    El fondo de plataforma lo pone fondo-plataforma.css (:has(.creditos-page)). */
 
+#app-container > .creditos-page,
 .creditos-page {
   max-width: 960px;
   margin: 0 auto;

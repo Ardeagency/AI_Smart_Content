@@ -66,7 +66,8 @@
     image: 'Imagen', video: 'Video', production: 'Producciones', 'execution-history': 'Historial',
     brand: 'Identidad', brands: 'Identidad', 'brand-organization': 'Identidad', products: 'Productos',
     'product-detail': 'Producto', services: 'Servicios', places: 'Escenarios', characters: 'Personajes',
-    monitoring: 'Competencia', organization: 'Configuración', plans: 'Planes', credits: 'Créditos',
+    monitoring: 'Competencia', organization: 'Configuración', configuracion: 'Configuración', cuenta: 'Tu cuenta',
+    plans: 'Planes', credits: 'Créditos',
     'plans/cancel': 'Planes', 'command-center': 'Marketing', predictor: 'Simulador', tasks: 'Tareas',
     '404': 'Página no encontrada', '403': 'Sin acceso',
   };
@@ -238,7 +239,7 @@
       }).join('');
 
       const creditos = ruta('credits');
-      const config = ruta('organization');
+      const config = ruta('configuracion/general');
       const planes = ruta('plans');
 
       return `
@@ -384,8 +385,13 @@
       if (nombre) nombre.textContent = this._orgNombre;
       const logo = document.getElementById('shellMarcaLogo');
       if (logo) {
-        if (o.logo_url) logo.innerHTML = `<img src="${esc(o.logo_url)}" alt="" width="28" height="28">`;
-        else logo.textContent = iniciales(this._orgNombre);
+        if (o.logo_url) {
+          const img = document.createElement('img');
+          img.src = o.logo_url; img.alt = ''; img.width = 28; img.height = 28;
+          logo.replaceChildren(img);
+        } else {
+          logo.textContent = iniciales(this._orgNombre);
+        }
       }
       this._titulo();
     }
@@ -469,7 +475,10 @@
       b.id = 'demoBanner';
       b.className = 'demo-banner demo-banner--mantenimiento';
       b.setAttribute('role', 'status');
-      b.innerHTML = `<span class="demo-banner__text">${esc(t('Mantenimiento en curso ({cuando}): lo que guardes ahora puede no quedar. Volvemos enseguida.', { cuando: mant }))}</span>`;
+      const texto = document.createElement('span');
+      texto.className = 'demo-banner__text';
+      texto.textContent = t('Mantenimiento en curso ({cuando}): lo que guardes ahora puede no quedar. Volvemos enseguida.', { cuando: mant });
+      b.append(texto);
       document.body.insertBefore(b, document.body.firstChild);
       document.body.classList.add('has-demo-banner');
     }
@@ -599,7 +608,8 @@
       const seg = segmento(window.location.pathname) || 'dashboard';
       const lista = marcas.map((m) => {
         const actual = m.id === this.currentOrgId;
-        const destino = window.getOrgPathPrefix ? `${window.getOrgPathPrefix(m.id, m.name)}/${seg.split('/')[0]}` : '/home';
+        const prefijo = window.getOrgPathPrefix ? window.getOrgPathPrefix(m.id, m.name) : '';
+        const destino = prefijo ? `${prefijo}/${seg.split('/')[0]}` : '/home'; // se escapa al pintarlo
         return `<li><a href="${esc(destino)}" class="shell-panel-opcion${actual ? ' is-actual' : ''}" data-ruta="${esc(destino)}"${actual ? ' aria-current="true"' : ''}>
           <span class="shell-marca-logo shell-marca-logo--sm" aria-hidden="true">${m.logo_url ? `<img src="${esc(m.logo_url)}" alt="" width="24" height="24">` : esc(iniciales(m.name))}</span>
           <span class="shell-panel-opcion-texto"><span>${esc(m.name)}</span><small>${esc(t(m.role === 'owner' ? 'Propietaria' : m.role === 'admin' ? 'Administración' : m.role === 'viewer' ? 'Lectura' : 'Edición'))}</small></span>
@@ -627,7 +637,8 @@
           </div>
         </div>
         <ul class="shell-panel-lista">
-          <li><a href="/cambiar-contrasena" class="shell-panel-opcion" data-ruta="/cambiar-contrasena">${esc(t('Cambiar contraseña'))}</a></li>
+          <li><a href="${esc(this.getUserSidebarRoute('cuenta/perfil'))}" class="shell-panel-opcion" data-ruta="${esc(this.getUserSidebarRoute('cuenta/perfil'))}">${esc(t('Mi cuenta'))}</a></li>
+          <li><a href="${esc(this.getUserSidebarRoute('cuenta/seguridad'))}" class="shell-panel-opcion" data-ruta="${esc(this.getUserSidebarRoute('cuenta/seguridad'))}">${esc(t('Cambiar contraseña'))}</a></li>
           <li><button type="button" class="shell-panel-opcion" data-accion="salir">${esc(t('Cerrar sesión'))}</button></li>
         </ul>`;
       nodo.querySelector('[aria-checked="true"]')?.focus();
@@ -644,23 +655,17 @@
     async _panelActividad(nodo) {
       nodo.innerHTML = `<p class="shell-panel-titulo">${esc(t('Lo que Vera espera de ti'))}</p><div class="shell-panel-cuerpo" aria-busy="true"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div></div>`;
       const cuerpo = nodo.querySelector('.shell-panel-cuerpo');
-      let lista;
+      let lista = null;
       try {
         lista = window.ShellDatos ? await window.ShellDatos.pendientesDeVera(this.currentOrgId) : [];
       } catch (e) {
         console.warn('[shell] pendientes de Vera:', e?.message || e);
-        cuerpo.removeAttribute('aria-busy');
-        cuerpo.innerHTML = `<p class="shell-panel-vacio">${esc(t('No pudimos leer la actividad de Vera. Intenta en un momento.'))}</p>`;
-        return;
       }
       if (this._panel?.nodo !== nodo) return;
       cuerpo.removeAttribute('aria-busy');
-      const pendientes = lista.filter((a) => !a.decided_at);
-      const resto = lista.filter((a) => a.decided_at).slice(0, 10);
-      if (!lista.length) {
-        cuerpo.innerHTML = `<p class="shell-panel-vacio">${esc(t('Vera no tiene nada pendiente contigo.'))}</p>`;
-        return;
-      }
+      const vacio = (texto) => `<p class="shell-panel-vacio">${esc(texto)}</p>`;
+      const pendientes = (lista || []).filter((a) => !a.decided_at);
+      const resto = (lista || []).filter((a) => a.decided_at).slice(0, 10);
       const tarjeta = (a) => {
         const estado = !a.decided_at ? '' : a.approved ? t('Aprobada') : t('Descartada');
         return `
@@ -673,7 +678,8 @@
             </div>`}
           </li>`;
       };
-      cuerpo.innerHTML = `
+      cuerpo.innerHTML = !lista ? vacio(t('No pudimos leer la actividad de Vera. Intenta en un momento.'))
+        : !lista.length ? vacio(t('Vera no tiene nada pendiente contigo.')) : `
         ${pendientes.length ? `<p class="shell-panel-subtitulo">${esc(t('Esperan tu decisión'))} · ${pendientes.length}</p><ul class="shell-panel-lista">${pendientes.map(tarjeta).join('')}</ul>` : ''}
         ${resto.length ? `<p class="shell-panel-subtitulo">${esc(t('Decididas'))}</p><ul class="shell-panel-lista">${resto.map(tarjeta).join('')}</ul>` : ''}`;
     }

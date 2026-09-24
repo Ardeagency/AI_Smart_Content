@@ -566,3 +566,80 @@ body.production-filters-in-header .shell-topbar .header-production-slot .living-
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* ── Pestañas de Configuración / Cuenta en la topbar (L5) ─────────────── */
+.shell-subnav { display: flex; gap: var(--space-1); overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.shell-subnav::-webkit-scrollbar { display: none; }
+.shell-subnav-pestana {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: var(--transition-fast);
+}
+.shell-subnav-pestana:hover { color: var(--text-primary); background: var(--white-6); }
+.shell-subnav-pestana.is-actual { color: var(--text-primary); background: var(--white-8); }
+.shell-subnav-pestana:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+
+/* Configuración reusa OrganizationView: su tira de pestañas y su título los pone la topbar. */
+body.en-ajustes .organization-tabs,
+body.en-ajustes .organization-header .organization-title { display: none; }
+body.en-ajustes #app-container { padding-top: calc(var(--header-height) + 2.75rem); }
+body.en-ajustes.has-sidebar #app-container:has(> .organization-container) { padding-top: calc(var(--header-height) + 2.75rem); }
+
+/* ── Páginas de Ajustes (Integraciones, Cuenta) ─────────────────────────── */
+#app-container > .ajustes-page,
+.ajustes-page { max-width: 48rem; margin: 0 auto; padding: var(--space-8) var(--space-6) var(--space-16); display: flex; flex-direction: column; gap: var(--space-6); font-family: var(--font-sans); }
+.ajustes-eyebrow { margin: 0 0 var(--space-2); font-family: var(--font-mono); font-size: var(--font-size-xs); letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.ajustes-titulo { margin: 0; font-size: var(--fs-h2); font-weight: var(--font-weight-semibold); letter-spacing: -0.01em; color: var(--text-primary); }
+.ajustes-bajada { margin: var(--space-2) 0 0; font-size: var(--font-size-sm); color: var(--text-secondary); max-width: 40rem; }
+.ajustes-subtitulo { margin: 0 0 var(--space-2); font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); color: var(--text-primary); }
+.ajustes-bloque { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-5); border: 1px solid var(--border-hairline); border-radius: var(--radius-card); background: var(--white-5); }
+.ajustes-nota { margin: 0; font-size: var(--font-size-sm); color: var(--text-secondary); }
+.ajustes-enlace { color: var(--text-primary); text-decoration: underline; text-underline-offset: 0.2em; }
+.ajustes-error { margin: 0; font-size: var(--font-size-sm); color: var(--color-error); }
+.ajustes-error[hidden] { display: none; }
+
+.ajustes-lista { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border-hairline); border-radius: var(--radius-card); overflow: hidden; }
+.ajustes-fila { display: flex; align-items: center; gap: var(--space-4); min-height: 4rem; padding: var(--space-3) var(--space-5); border-top: 1px solid var(--border-hairline); }
+.ajustes-fila:first-child { border-top: 0; }
+.ajustes-fila.skeleton { border-radius: 0; }
+.ajustes-fila-logo { width: 1.75rem; height: 1.75rem; object-fit: contain; flex-shrink: 0; filter: brightness(0) invert(1); opacity: 0.85; }
+.ajustes-fila-texto { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.ajustes-fila-nombre { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; color: var(--text-primary); font-size: var(--font-size-md); }
+.ajustes-fila-detalle { font-size: var(--font-size-sm); color: var(--text-muted); overflow-wrap: anywhere; }
+.ajustes-fila-detalle.is-alerta { color: var(--color-warning); }
+.ajustes-estado { padding: 1px var(--space-2); border-radius: var(--radius-pill); font-family: var(--font-mono); font-size: var(--font-size-xs); letter-spacing: 0.02em; }
+.ajustes-estado.is-ok { color: var(--color-success); background: var(--color-success-bg); }
+.ajustes-estado.is-alerta { color: var(--color-warning); background: var(--color-warning-bg); }
+
+.ajustes-tienda { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3) var(--space-5) var(--space-4) calc(var(--space-5) + 1.75rem + var(--space-4)); border-top: 1px solid var(--border-hairline); font-size: var(--font-size-sm); color: var(--text-secondary); }
+.ajustes-tienda-campo { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+.ajustes-tienda-campo input { flex: 1; min-width: 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--border-hairline-strong); border-radius: var(--radius-sm); background: var(--bg-primary); color: var(--text-primary); font: inherit; }
+.ajustes-tienda-campo input[aria-invalid="true"] { border-color: var(--color-error); }
+.ajustes-tienda-acciones, .ajustes-acciones { display: flex; gap: var(--space-2); justify-content: flex-end; }
+
+.ajustes-persona { display: flex; align-items: center; gap: var(--space-5); }
+.ajustes-datos { display: grid; gap: var(--space-3); margin: 0; }
+.ajustes-datos div { display: flex; flex-direction: column; gap: 2px; }
+.ajustes-datos dt { font-family: var(--font-mono); font-size: var(--font-size-xs); letter-spacing: 0.04em; color: var(--text-muted); }
+.ajustes-datos dd { margin: 0; color: var(--text-primary); }
+
+.ajustes-form { gap: var(--space-5); }
+.ajustes-campo { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; border: 0; font-size: var(--font-size-sm); color: var(--text-secondary); }
+.ajustes-campo legend { margin-bottom: var(--space-2); padding: 0; }
+.ajustes-campo small { color: var(--text-muted); font-size: var(--font-size-xs); }
+.ajustes-campo .shell-segmento { margin: 0; max-width: 20rem; }
+.ajustes-campo .shell-segmento label { display: grid; place-items: center; min-height: 2rem; border-radius: var(--radius-xs); color: var(--text-secondary); cursor: pointer; }
+.ajustes-campo .shell-segmento input { position: absolute; opacity: 0; pointer-events: none; }
+.ajustes-campo .shell-segmento label:has(input:checked) { background: var(--white-12); color: var(--text-primary); }
+.ajustes-campo .shell-segmento label:has(input:focus-visible) { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+
+@media (max-width: 640px) {
+  .ajustes-page { padding: var(--space-6) var(--space-4) var(--space-12); }
+  .ajustes-fila { flex-wrap: wrap; padding-inline: var(--space-4); }
+  .ajustes-tienda { padding-left: var(--space-4); }
+}

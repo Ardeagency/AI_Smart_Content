@@ -501,10 +501,28 @@ class App {
     r.register('/plans/cancel', cancelLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/plans/cancel', cancelLoader, auth);
 
-    // ── Org: Organization ──
-    r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
-    // Pestaña por URL (avisos, subscription, members, usage, security): la abre OrganizationView.
-    r.register('/org/:orgIdShort/:orgNameSlug/organization/:tab', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
+    // ── Configuración de la marca y Cuenta de la persona (L5, 24/09) ──
+    // Una URL por pestaña; las pestañas van en la segunda fila de la topbar
+    // (js/views/ConfiguracionView.js). Las URLs viejas /organization/* redirigen.
+    const BV = window.BaseView || class {};
+    const redirigir = (destino) => class extends BV {
+      async render() { window.router?.navigate(destino(window.location.pathname), true); }
+    };
+    const prefijoOrg = (p) => (p.match(/^\/org\/[^/]+\/[^/]+/) || [''])[0];
+    const DE_ORGANIZATION = { general: 'general', members: 'miembros', miembros: 'miembros', subscription: 'facturacion', suscripcion: 'facturacion', billing: 'facturacion', usage: 'uso', uso: 'uso', activity: 'uso', security: 'seguridad', seguridad: 'seguridad', avisos: 'avisos' };
+    const ajustesDeps = ['/js/views/ajustes-pestanas.js'];
+    const configuracionLoader = this._lazy('ConfiguracionView', [...ajustesDeps, '/js/views/OrganizationView.js', '/js/views/ConfiguracionView.js']);
+    const integracionesLoader = this._lazy('IntegracionesView', ['/js/services/IntegracionesDataService.js', ...ajustesDeps, '/js/views/IntegracionesView.js']);
+    const cuentaLoader = this._lazy('CuentaView', [...ajustesDeps, '/js/views/CuentaView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/configuracion', redirigir((p) => `${prefijoOrg(p)}/configuracion/general`), auth);
+    // integraciones ANTES de :tab (el router se queda con el primer patrón que encaja).
+    r.register('/org/:orgIdShort/:orgNameSlug/configuracion/integraciones', integracionesLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/configuracion/:tab', configuracionLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/cuenta', redirigir((p) => `${prefijoOrg(p)}/cuenta/perfil`), auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/cuenta/:tab', cuentaLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/organization', redirigir((p) => `${prefijoOrg(p)}/configuracion/general`), auth);
+    const deOrganization = (p) => `${prefijoOrg(p)}/configuracion/${DE_ORGANIZATION[p.split('/').pop().toLowerCase()] || 'general'}`;
+    r.register('/org/:orgIdShort/:orgNameSlug/organization/:tab', redirigir(deOrganization), auth);
 
     // ── Create ──
     r.register('/create', this._lazy('CreateView', ['/js/views/CreateView.js']), auth);

@@ -447,6 +447,14 @@ class AuthService {
    * @param {string} locale - 'es' | 'en' | ...
    * @param {boolean} persist - Si debe guardarse en la base de datos (default true)
    */
+  /** Cambiar la contraseña con la sesión abierta (Cuenta › Seguridad). Devuelve { ok, error }. */
+  async cambiarContrasena(nueva) {
+    if (!this.supabase) this.supabase = await this.getSupabaseClient();
+    if (!this.supabase) return { ok: false, error: 'sin_cliente' };
+    const { error } = await this.supabase.auth.updateUser({ password: nueva });
+    return error ? { ok: false, error: error.message || String(error) } : { ok: true };
+  }
+
   async setUserLocale(locale, persist = true) {
     if (this.currentUser) {
       this.currentUser.locale = locale;

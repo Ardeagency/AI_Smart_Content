@@ -12,6 +12,9 @@
  *   tieneGuardados(orgId)    ¿la marca guardó flujos? (flows.saves)
  *   pendientesDeVera(orgId)  ai.pending_actions de la marca (40 más recientes)
  *   cuantosPendientes(orgId) cuántas sin decidir
+ *   perfil()                 profile de mi_contexto: id, email, full_name, avatar_url, locale, timezone
+ *   guardarPreferencias({ locale, timezone })  public.guardar_preferencias (ADR-0040): la ÚNICA
+ *                            puerta para idioma y zona; 22023 = valor que la base no acepta
  */
 (function () {
   'use strict';
@@ -109,7 +112,23 @@
     return Number(count) || 0;
   }
 
+  async function perfil() {
+    if (!window.contextoService) return null;
+    const ctx = await window.contextoService.cargar();
+    return ctx?.profile || null;
+  }
+
+  async function guardarPreferencias({ locale = null, timezone = null } = {}) {
+    const sb = await cliente();
+    if (!sb) throw Object.assign(new Error('Sin conexión con la base.'), { code: 'sin_cliente' });
+    const { data, error } = await sb.rpc('guardar_preferencias', { p_locale: locale, p_timezone: timezone });
+    if (error) throw error;
+    window.contextoService?.limpiar?.();
+    return data;
+  }
+
   window.ShellDatos = Object.freeze({
     marcas, marca, planes, creditos, categoriasDeFlujos, tieneGuardados, pendientesDeVera, cuantosPendientes,
+    perfil, guardarPreferencias,
   });
 })();
