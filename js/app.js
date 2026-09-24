@@ -479,7 +479,12 @@ class App {
     r.register('/studio/:flowSlug', studioLoader, auth);
 
     // ── Org: Vera (chat) ──
-    const veraLoader = this._lazy('VeraView', ['/js/views/VeraView.js']);
+    // Vera partida en L7: helpers → clase → mixins por sección (el orden importa).
+    const veraLoader = this._lazy('VeraView', [
+      '/js/views/vera/graficos.js', '/js/views/VeraView.js',
+      '/js/views/vera/historial.mixin.js', '/js/views/vera/biblioteca.mixin.js', '/js/views/vera/artefactos.mixin.js',
+      '/js/views/vera/render.mixin.js', '/js/views/vera/adjuntos.mixin.js',
+    ]);
     r.register('/org/:orgIdShort/:orgNameSlug/vera', veraLoader, auth);
     r.register('/vera', veraLoader, auth);
 

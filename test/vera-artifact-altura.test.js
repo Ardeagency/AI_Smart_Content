@@ -14,8 +14,8 @@ import { describe, test, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const RUTA = path.join(process.cwd(), 'js/views/VeraView.js');
-const FUENTE = fs.readFileSync(RUTA, 'utf8');
+import { FUENTE_VERA } from './vera-fuente.js';
+const FUENTE = FUENTE_VERA;
 
 /* VeraView es un script de navegador: se le monta un window falso y se evalúa.
    Nada del módulo toca el DOM hasta que se instancia la vista. */

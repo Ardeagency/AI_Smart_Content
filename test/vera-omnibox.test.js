@@ -10,7 +10,8 @@ import { describe, test, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const FUENTE = fs.readFileSync(path.join(process.cwd(), 'js/views/VeraView.js'), 'utf8');
+import { FUENTE_VERA } from './vera-fuente.js';
+const FUENTE = FUENTE_VERA;
 
 function cargar() {
   const win = { BaseView: class {}, location: { protocol: 'https:', origin: 'https://x' } };
