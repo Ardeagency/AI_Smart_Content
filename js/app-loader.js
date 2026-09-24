@@ -49,7 +49,7 @@
                 });
                 // Buscar updates inmediatamente si la página estuvo abierta horas.
                 if (registration && typeof registration.update === 'function') {
-                    setTimeout(() => { try { registration.update(); } catch (_) {} }, 60 * 60 * 1000);
+                    setTimeout(() => { try { registration.update(); } catch (_) { /* sin red: el service worker se actualiza en la próxima visita */ } }, 60 * 60 * 1000);
                 }
             }).catch(() => {
                 /* registro silencioso; offline-first es opt-in, no romper si falla */

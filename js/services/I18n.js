@@ -74,7 +74,7 @@
     }
 
     _applyHtmlLang() {
-      try { document.documentElement.setAttribute('lang', this.locale); } catch (_) {}
+      try { document.documentElement.setAttribute('lang', this.locale); } catch (_) { /* sin documentElement (tests) */ }
     }
 
     /**
@@ -100,11 +100,11 @@
 
       try {
         window.dispatchEvent(new CustomEvent('localechange', { detail: { locale } }));
-      } catch (_) {}
+      } catch (_) { /* navegador sin CustomEvent */ }
     }
 
     _persistLocal(locale) {
-      try { localStorage.setItem(STORAGE_KEY, locale); } catch (_) {}
+      try { localStorage.setItem(STORAGE_KEY, locale); } catch (_) { /* navegación privada: vale esta sesión */ }
     }
 
     _rerender() {
@@ -128,7 +128,7 @@
     applyUserLocale(locale) {
       if (!locale || !SUPPORTED.includes(locale)) return;
       let hasLocal = false;
-      try { hasLocal = !!localStorage.getItem(STORAGE_KEY); } catch (_) {}
+      try { hasLocal = !!localStorage.getItem(STORAGE_KEY); } catch (_) { /* navegación privada: sin elección local */ }
       if (hasLocal || locale === this.locale) return;
       this.locale = locale;
       this._applyHtmlLang();

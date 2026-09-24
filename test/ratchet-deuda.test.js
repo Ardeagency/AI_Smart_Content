@@ -46,10 +46,10 @@ const TOPES = {
   hexEnCss: 662,
   importantEnCss: 318,
   zIndexDistintos: 19,
-  hexEnJs: 208,
+  hexEnJs: 199,
   styleEnLineaEnJs: 262,
   innerHtml: 536,
-  catchVacios: 127,
+  catchVacios: 104,
   fromEnVistas: 259,
 };
 

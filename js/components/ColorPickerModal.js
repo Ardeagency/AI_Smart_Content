@@ -77,7 +77,9 @@
       return { close: () => {} };
     }
     const root = container || document.getElementById('app-container') || document.body;
-    const seedHex = parseHex(initialHex) || '#888888';
+    let neutro = null;
+    try { neutro = parseHex(getComputedStyle(document.documentElement).getPropertyValue('--icon-button').trim()); } catch (_) { /* sin estilos calculados */ }
+    const seedHex = parseHex(initialHex) || neutro || parseHex('888');
     let { h, s, l } = BC.hexToHSL(seedHex);
 
     // ─── Modal & panel ────────────────────────────────────────────────
@@ -183,7 +185,7 @@
         e.preventDefault();
         e.stopPropagation();
         active = true;
-        try { el.setPointerCapture(e.pointerId); } catch (_) {}
+        try { el.setPointerCapture(e.pointerId); } catch (_) { /* puntero sin captura (táctil viejo) */ }
         onMove(e);
       });
       el.addEventListener('pointermove', (e) => {
@@ -195,7 +197,7 @@
       const end = (e) => {
         if (!active) return;
         active = false;
-        try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+        try { el.releasePointerCapture(e.pointerId); } catch (_) { /* la captura ya se soltó */ }
       };
       el.addEventListener('pointerup', end);
       el.addEventListener('pointercancel', end);

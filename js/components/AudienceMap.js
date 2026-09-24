@@ -135,8 +135,10 @@
                     cs.getPropertyValue('--brand-gradient') || '').trim();
       const hexes = grad.match(/#[0-9a-fA-F]{6,8}/g);
       if (hexes && hexes.length > 0) return hexes[hexes.length - 1];
-    } catch (_) { /* noop */ }
-    return '#e09145';
+      const calido = (cs.getPropertyValue('--warm-1') || '').trim();
+      if (calido) return calido; // respaldo: el cálido de la plataforma (token)
+    } catch (_) { /* sin estilos calculados */ }
+    return 'orange';
   }
 
   function hexToRgb(hex) {

@@ -43,7 +43,7 @@
       for (const entry of entries.getEntries()) lcpValue = entry.startTime;
     });
     lcpObs.observe({ type: 'largest-contentful-paint', buffered: true });
-  } catch (_) {}
+  } catch (_) { /* navegador sin LCP */ }
 
   // ── CLS ──────────────────────────────────────────────────────────
   let clsValue = 0;
@@ -55,7 +55,7 @@
       }
     });
     clsObs.observe({ type: 'layout-shift', buffered: true });
-  } catch (_) {}
+  } catch (_) { /* navegador sin layout-shift */ }
 
   // ── FCP + paint timings ──────────────────────────────────────────
   try {
@@ -68,13 +68,13 @@
       }
     });
     paintObs.observe({ type: 'paint', buffered: true });
-  } catch (_) {}
+  } catch (_) { /* navegador sin paint timing */ }
 
   // ── TTFB ─────────────────────────────────────────────────────────
   try {
     const nav = performance.getEntriesByType('navigation')[0];
     if (nav) record('TTFB', nav.responseStart);
-  } catch (_) {}
+  } catch (_) { /* sin navigation timing */ }
 
   // ── INP (Interaction to Next Paint) ──────────────────────────────
   // Aproximación pragmática: trackear duration de eventos de interacción
@@ -93,7 +93,7 @@
     });
     // durationThreshold 40 = ignorar interacciones rápidas (señal limpia).
     inpObs.observe({ type: 'event', buffered: true, durationThreshold: 40 });
-  } catch (_) {}
+  } catch (_) { /* navegador sin event timing (INP) */ }
 
   // ── Flush al cerrar/ocultar la pestaña ───────────────────────────
   function flush() {
@@ -106,7 +106,7 @@
           source: 'webvital',
           samples: samples.slice(),
         });
-      } catch (_) {}
+      } catch (_) { /* sin logger: la medición no es crítica */ }
     }
   }
 

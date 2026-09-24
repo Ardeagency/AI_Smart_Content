@@ -177,7 +177,7 @@ class Router {
     // el crossfade y se veia doble feedback. Se limpia en el finally.
     const spinnerTimer = setTimeout(() => {
       if (window.appLoader && typeof window.appLoader.showProgress === 'function') {
-        try { window.appLoader.showProgress(); } catch (_) {}
+        try { window.appLoader.showProgress(); } catch (_) { /* sin barra de progreso: la navegación sigue */ }
       }
     }, 350);
 
@@ -441,8 +441,8 @@ class Router {
         if (prevView) {
           // Snapshot (scroll siempre; HTML solo si la vista opta in con `static cacheable`).
           this._bfSnapshot(prevView, this.currentRoute);
-          if (typeof prevView.onLeave === 'function') { try { prevView.onLeave(); } catch (_) {} }
-          if (typeof prevView.destroy === 'function') { try { prevView.destroy(); } catch (_) {} }
+          if (typeof prevView.onLeave === 'function') { try { prevView.onLeave(); } catch (_) { /* la vista vieja falló al salir: no frena la nueva */ } }
+          if (typeof prevView.destroy === 'function') { try { prevView.destroy(); } catch (_) { /* la vista vieja falló al destruirse: no frena la nueva */ } }
         }
         document.body.classList.toggle('route-landing', path === '/');
         container.innerHTML = hasFreshHtml
@@ -540,7 +540,7 @@ class Router {
       } else {
         document.title = 'AI Smart Content';
       }
-    } catch (_) {}
+    } catch (_) { /* sin título de vista: queda el de la plataforma */ }
   }
 
   /** Copia title → aria-label en botones/links/[role] que no lo tienen. */
@@ -555,7 +555,7 @@ class Router {
         const t = (el.getAttribute('title') || '').trim();
         if (t) el.setAttribute('aria-label', t);
       });
-    } catch (_) {}
+    } catch (_) { /* etiquetas de accesibilidad: mejor esfuerzo */ }
   }
 
   /**
@@ -683,7 +683,7 @@ class Router {
   reloadCurrentRoute() {
     const prev = this.currentView;
     if (prev && typeof prev.destroy === 'function') {
-      try { prev.destroy(); } catch (_) {}
+      try { prev.destroy(); } catch (_) { /* la vista previa ya estaba destruida */ }
     }
     this.currentView = null;
     this.handleRoute();

@@ -145,7 +145,7 @@
       // Devolver foco al disparador (botón que abrió el modal, link, etc.).
       // Si el elemento ya no está en el DOM, dejar el foco donde caiga natural.
       if (previousFocus && document.contains(previousFocus)) {
-        try { previousFocus.focus(); } catch (_) {}
+        try { previousFocus.focus(); } catch (_) { /* el foco previo ya no existe */ }
       }
     };
     // Bandera setada justo despues del appendChild (ver mas abajo).
@@ -177,7 +177,7 @@
     setTimeout(() => {
       const items = focusables();
       const target = items.find((el) => el !== closeBtn) || items[0] || closeBtn;
-      try { target.focus(); } catch (_) {}
+      try { target.focus(); } catch (_) { /* el elemento no admite foco */ }
     }, 0);
 
     return { modal, bodyEl, footerEl, close, setTitle, setBack };

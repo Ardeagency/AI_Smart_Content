@@ -47,7 +47,7 @@ class AppState {
     if (this._persistTimer) clearTimeout(this._persistTimer);
     this._persistTimer = setTimeout(() => {
       try { localStorage.setItem('app_state', JSON.stringify(this.state)); }
-      catch (_) {}
+      catch (_) { /* navegación privada o cuota llena: el estado vive en memoria */ }
     }, 100);
   }
 

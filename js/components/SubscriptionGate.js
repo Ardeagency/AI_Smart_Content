@@ -126,7 +126,7 @@
       document.body.classList.add('has-subgate-wall');
 
       wall.querySelector('[data-subgate-logout]')?.addEventListener('click', async () => {
-        try { await (window.authService?.signOut?.() || this.sb?.auth?.signOut?.()); } catch (_) {}
+        try { await (window.authService?.signOut?.() || this.sb?.auth?.signOut?.()); } catch (_) { /* ya no había sesión que cerrar */ }
         window.location.href = '/login';
       });
     }

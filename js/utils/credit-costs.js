@@ -32,13 +32,14 @@ window.CreditCosts = (() => {
     migration_grant:       { label: 'Otorgación migración',   icon: 'aisc-ico aisc-ico--gift',             area: 'system',     credits: 0 },
   };
 
+  // Colores por área = tokens del prisma (L7; antes hex de otra paleta). Valen en CSS/estilo.
   const AREA_COLORS = {
-    studio:     '#7c3aed',
-    video:      '#ef4444',
-    vera:       '#06b6d4',
-    production: '#22c55e',
-    background: '#64748b',
-    system:     '#94a3b8',
+    studio:     'var(--prisma-purpura)',
+    video:      'var(--prisma-rojo)',
+    vera:       'var(--prisma-celeste)',
+    production: 'var(--prisma-verde)',
+    background: 'var(--text-muted)',
+    system:     'var(--text-disabled)',
   };
 
   async function _load() {
@@ -107,7 +108,7 @@ window.CreditCosts = (() => {
   }
 
   function getAreaColor(area) {
-    return AREA_COLORS[area] || '#64748b';
+    return AREA_COLORS[area] || 'var(--text-muted)';
   }
 
   function clearCache() {
