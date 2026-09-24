@@ -2190,7 +2190,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     margin: 0;
     padding: 0 14px 12px;
     color: var(--text-muted);
-    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 0.78rem;
     line-height: 1.5;
     max-height: 220px;

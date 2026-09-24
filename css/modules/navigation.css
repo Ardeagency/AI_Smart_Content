@@ -3900,7 +3900,7 @@ body.subnav-in-header .app-header .header-production-slot {
    va primera en la pila y detras el mono del sistema, que da el mismo aire de
    maquina de escribir sin sumar una descarga bloqueante. */
 .side-navigation.nav-mode-user .nav-plan-card-title {
-    font-family: 'Spline Sans Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+    font-family: var(--font-mono);
     font-size: 14px;
     font-weight: 500;
     line-height: 17px;

@@ -642,7 +642,7 @@
     font-size: 1.75rem !important;
     letter-spacing: 0.5rem !important;
     text-align: center !important;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace !important;
+    font-family: var(--font-mono) !important;
     margin: 0.75rem 0 !important;
 }
 .signin-mfa-error {
