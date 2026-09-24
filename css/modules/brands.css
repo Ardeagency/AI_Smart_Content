@@ -94,7 +94,7 @@
     position: absolute;
     inset: 0;
     /* Fallback neutro hasta que JS pinte (alineado con BrandOrganizationView.neutralBg; --warm-* no es paleta de fondo) */
-    background: linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%);
+    background: linear-gradient(145deg, var(--border-color) 0%, var(--border-color) 50%, var(--border-color) 100%);
 }
 
 /* Texturas/film grain eliminados (2026-05-11). Clases conservadas como shim
@@ -551,11 +551,11 @@
    cards de una sola vez; los colores semanticos (--color-*) quedan intactos. */
 #brandsListContainer.brand-cards-glass-white,
 .brand-dashboard-container.brand-cards-glass-white {
-    --text-primary: #0b0b0b;
+    --text-primary: var(--bg-primary);
     --text-secondary: rgba(11, 11, 11, 0.82);
     --text-muted: rgba(11, 11, 11, 0.6);
-    --brand-text-gold: #0b0b0b;
-    --brand-text-light: #0b0b0b;
+    --brand-text-gold: var(--bg-primary);
+    --brand-text-light: var(--bg-primary);
     --brand-text-muted: rgba(11, 11, 11, 0.6);
     --icon-button: rgba(11, 11, 11, 0.7);
 }
@@ -692,7 +692,7 @@
 
 .progress-bar-fill {
     height: 100%;
-    background: #ff0000;
+    background: var(--color-error);
     width: 0%;
     transition: width 0.5s ease;
 }
@@ -1038,7 +1038,7 @@
     width: 100%;
     height: 64px;
     border-radius: var(--radius-md, 10px);
-    border: 1px solid var(--border-color, #242424);
+    border: 1px solid var(--border-color);
 }
 .input-gradient--preview .input-gradient-preview { height: 40px; }
 .input-gradient-stops {
@@ -1055,7 +1055,7 @@
 }
 .input-gradient-type {
     display: inline-flex;
-    border: 1px solid var(--border-color, #242424);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm, 6px);
     overflow: hidden;
 }
@@ -1090,7 +1090,7 @@
     height: 12px;
     border-radius: 6px;
     border: 1px solid var(--white-8, rgba(255, 255, 255, 0.08));
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, var(--bg-card), var(--border-color)));
 }
 .input-gradient-angle {
     -webkit-appearance: none;
@@ -1110,8 +1110,8 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #ffffff;
-    border: 2px solid #ffffff;
+    background: var(--color-white);
+    border: 2px solid var(--color-white);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.15);
     cursor: grab;
     transition: transform 0.15s ease;
@@ -1123,8 +1123,8 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #ffffff;
-    border: 2px solid #ffffff;
+    background: var(--color-white);
+    border: 2px solid var(--color-white);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
     cursor: grab;
 }
@@ -1170,7 +1170,7 @@
     width: 200px;
     height: 200px;
     border-radius: 50%;
-    background: conic-gradient(from 0deg, #ff0000, #ffe500, #00d614, #00e7ff, #0018ee, #900090, #ff0000);
+    background: conic-gradient(from 0deg, var(--color-error), var(--color-warning), var(--color-success), var(--color-info), var(--prisma-azul), var(--prisma-violeta), var(--color-error));
     position: relative;
     cursor: crosshair;
 }
@@ -1756,11 +1756,11 @@
     color: rgba(255, 255, 255, 0.85);
 }
 
-.identity-doc-icon--pdf     { color: #ff5a5f; background: rgba(255, 90, 95, 0.12); border-color: rgba(255, 90, 95, 0.28); }
-.identity-doc-icon--word    { color: #4f8cf2; background: rgba(79, 140, 242, 0.12); border-color: rgba(79, 140, 242, 0.28); }
-.identity-doc-icon--ppt     { color: #ff8a3d; background: rgba(255, 138, 61, 0.12); border-color: rgba(255, 138, 61, 0.28); }
-.identity-doc-icon--excel   { color: #3ec48a; background: rgba(62, 196, 138, 0.12); border-color: rgba(62, 196, 138, 0.28); }
-.identity-doc-icon--text    { color: #c8c8d0; background: rgba(200, 200, 208, 0.10); border-color: rgba(200, 200, 208, 0.22); }
+.identity-doc-icon--pdf     { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); background: rgba(255, 90, 95, 0.12); border-color: rgba(255, 90, 95, 0.28); }
+.identity-doc-icon--word    { color: var(--color-info); background: rgba(79, 140, 242, 0.12); border-color: rgba(79, 140, 242, 0.28); }
+.identity-doc-icon--ppt     { color: var(--prisma-naranja); background: rgba(255, 138, 61, 0.12); border-color: rgba(255, 138, 61, 0.28); }
+.identity-doc-icon--excel   { color: var(--color-success); background: rgba(62, 196, 138, 0.12); border-color: rgba(62, 196, 138, 0.28); }
+.identity-doc-icon--text    { color: var(--text-primary); background: rgba(200, 200, 208, 0.10); border-color: rgba(200, 200, 208, 0.22); }
 .identity-doc-icon--generic { color: rgba(255, 255, 255, 0.78); }
 
 .identity-file-icon {
@@ -2048,7 +2048,7 @@
 
 .asset-action-btn--danger:hover {
     border-color: rgba(255, 99, 99, 0.45);
-    color: #ff9b9b;
+    color: color-mix(in srgb, var(--color-error) 45%, var(--color-white));
 }
 
 .identity-cta-link:hover {
@@ -2215,7 +2215,7 @@
     gap: 10px;
     max-width: 340px;
     padding: 9px 12px;
-    border: 1px solid var(--border-divider, #242424);
+    border: 1px solid var(--border-divider);
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.03);
 }
@@ -2237,7 +2237,7 @@
     min-width: 0;
     border: none;
     background: transparent;
-    color: var(--text-primary, #fff);
+    color: var(--text-primary);
     font-family: inherit;
     font-size: 1.05rem;
     font-weight: 600;
@@ -2479,11 +2479,11 @@
 }
 
 #infoPanelContent .info-brand-counter.is-warn {
-    color: #f0b95b;
+    color: var(--prisma-naranja);
 }
 
 #infoPanelContent .info-brand-counter.is-over {
-    color: #ff5a5f;
+    color: color-mix(in srgb, var(--color-error) 45%, var(--color-white));
     font-weight: 600;
 }
 
@@ -2698,9 +2698,9 @@
 
 /* Nicho core: desplegable estilo pill (referencia UI azul) */
 #infoPanelContent .info-brand-select--nicho {
-    --ib-nicho-blue: #2563eb;
-    --ib-nicho-blue-soft: #e8f1ff;
-    --ib-nicho-panel-border: #c7d7f5;
+    --ib-nicho-blue: var(--prisma-azul);
+    --ib-nicho-blue-soft: var(--color-white);
+    --ib-nicho-panel-border: var(--prisma-azul);
     position: relative;
     width: 100%;
     max-width: 100%;
@@ -2771,7 +2771,7 @@
     left: 0;
     right: 0;
     z-index: 50;
-    background: #fff;
+    background: var(--color-white);
     border: 1px solid var(--ib-nicho-panel-border);
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(15, 23, 42, 0.12);
@@ -2791,7 +2791,7 @@
     border-radius: 8px;
     font-size: var(--font-size-sm);
     cursor: pointer;
-    color: #0f172a;
+    color: var(--bg-secondary);
     transition: background-color 0.12s ease, color 0.12s ease;
 }
 
@@ -2809,7 +2809,7 @@
 #brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-select__option:hover,
 #brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-select__option:focus {
     background: rgba(37, 99, 235, 0.22);
-    color: #93c5fd;
+    color: var(--color-info);
 }
 
 #infoPanelContent .info-brand-select__option.is-selected {
@@ -2820,7 +2820,7 @@
 
 #brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-select__option.is-selected {
     background: rgba(37, 99, 235, 0.25);
-    color: #bfdbfe;
+    color: var(--color-info);
 }
 
 /* Multiselect dropdown (Idiomas / Mercado objetivo) */
@@ -3210,8 +3210,8 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #0f0f0f;
-    color: #fff;
+    background: var(--bg-ui);
+    color: var(--color-white);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3289,7 +3289,7 @@
 }
 
 #infoPanelContent .info-connect-action.is-connect {
-    color: #fff;
+    color: var(--color-white);
 }
 
 #infoPanelContent .info-connect-action.is-open {
@@ -3783,7 +3783,7 @@
 }
 
 .brand-integration-status.is-connected {
-    color: #7bf1a8;
+    color: var(--color-success);
     border-color: rgba(123, 241, 168, 0.35);
     background: rgba(123, 241, 168, 0.12);
 }
@@ -3820,7 +3820,7 @@
 }
 
 .brand-integration-disconnect-btn {
-    color: #ff6b6b;
+    color: color-mix(in srgb, var(--color-error) 45%, var(--color-white));
     border-color: rgba(255, 107, 107, 0.35);
     background: rgba(255, 107, 107, 0.1);
 }
@@ -3852,7 +3852,7 @@
   border-radius: 6px;
   margin-bottom: 0.4rem;
 }
-.brand-integration-active-page .fab { color: #1877f2; font-size: 0.9rem; }
+.brand-integration-active-page .fab { color: var(--color-info); font-size: 0.9rem; }
 
 /* ── Callback: pantalla de selección de página ── */
 .bic-wrap {
@@ -3870,7 +3870,7 @@
   color: var(--text-secondary);
   font-size: 1rem;
 }
-.bic-spinner .fa-sync-alt { font-size: 2.5rem; color: var(--accent-warm, #e09145); }
+.bic-spinner .fa-sync-alt { font-size: 2.5rem; color: var(--accent-warm); }
 .bic-page-picker {
   background: var(--card-bg, rgba(255,255,255,0.05));
   border: 1px solid rgba(255,255,255,0.1);
@@ -3883,7 +3883,7 @@
   text-align: center;
   margin-bottom: 1.5rem;
 }
-.bic-fb-icon { font-size: 2rem; color: #1877f2; display: block; margin-bottom: 0.65rem; }
+.bic-fb-icon { font-size: 2rem; color: var(--color-info); display: block; margin-bottom: 0.65rem; }
 .bic-page-picker-head h2 { font-size: 1.25rem; color: var(--text-primary); margin: 0 0 0.4rem; }
 .bic-page-picker-head p  { font-size: 0.88rem; color: var(--text-secondary); margin: 0; }
 .bic-page-list {
@@ -3897,7 +3897,7 @@
   overflow-y: auto;
 }
 .bic-page-item { border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.1); transition: border-color 0.15s; }
-.bic-page-item.is-selected { border-color: #1877f2; background: rgba(24,119,242,0.08); }
+.bic-page-item.is-selected { border-color: var(--prisma-azul); background: rgba(24,119,242,0.08); }
 .bic-page-label {
   display: flex;
   align-items: center;
@@ -3920,20 +3920,20 @@
   align-items: center;
   justify-content: center;
   background: rgba(24,119,242,0.15);
-  color: #1877f2;
+  color: var(--color-info);
   font-size: 1.2rem;
 }
 .bic-page-text { display: flex; flex-direction: column; gap: 0.15rem; }
 .bic-page-text strong { font-size: 0.92rem; color: var(--text-primary); }
-.bic-page-ig { font-size: 0.75rem; color: #e1306c; display: flex; align-items: center; gap: 0.3rem; }
+.bic-page-ig { font-size: 0.75rem; color: var(--prisma-fucsia); display: flex; align-items: center; gap: 0.3rem; }
 .bic-page-actions { display: flex; justify-content: center; margin-bottom: 0.75rem; }
 .bic-confirm-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1.5rem;
-  background: #1877f2;
-  color: #fff;
+  background: var(--prisma-azul);
+  color: var(--color-white);
   border: none;
   border-radius: 10px;
   font-size: 0.95rem;
@@ -3952,7 +3952,7 @@
   padding: 3rem 1.5rem;
   text-align: center;
 }
-.bic-error .fa-exclamation-triangle { font-size: 2.5rem; color: #f87171; }
+.bic-error .fa-exclamation-triangle { font-size: 2.5rem; color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
 .bic-error h2 { color: var(--text-primary); margin: 0; }
 .bic-error p  { color: var(--text-secondary); margin: 0; }
 
@@ -3972,8 +3972,8 @@
   border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
   background: var(--color-success-bg, rgba(0, 214, 20, 0.1));
-  border: 1px solid var(--color-success, #00d614);
-  color: var(--color-success, #00d614);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
   font-size: 1.6rem;
   animation: bicSuccessPop 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -3994,17 +3994,17 @@
     border: 1px solid transparent;
 }
 .brand-integration-expiry--active-ok {
-    color: #7bf1a8;
+    color: var(--color-success);
     background: rgba(123, 241, 168, 0.1);
     border-color: rgba(123, 241, 168, 0.25);
 }
 .brand-integration-expiry--expiring-soon {
-    color: #fbbf24;
+    color: var(--color-warning);
     background: rgba(251, 191, 36, 0.1);
     border-color: rgba(251, 191, 36, 0.3);
 }
 .brand-integration-expiry--expired {
-    color: #ff6b6b;
+    color: color-mix(in srgb, var(--color-error) 45%, var(--color-white));
     background: rgba(255, 107, 107, 0.1);
     border-color: rgba(255, 107, 107, 0.3);
 }
@@ -4342,7 +4342,7 @@
 #infoPanelContent .info-brand-tag__remove:hover {
     opacity: 1;
     background: rgba(255, 80, 80, 0.18);
-    color: #ff8a8a;
+    color: color-mix(in srgb, var(--color-error) 45%, var(--color-white));
 }
 
 #infoPanelContent .info-brand-tag-input {

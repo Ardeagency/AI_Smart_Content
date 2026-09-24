@@ -388,7 +388,7 @@
 
 .signin-forgot:hover,
 .signin-forgot-btn:hover {
-    color: #00e7ff;
+    color: var(--color-info);
     text-decoration: underline;
 }
 
@@ -516,7 +516,7 @@
 
 .signin-recover-back:hover,
 .signin-recover-back-btn:hover {
-    color: #00e7ff;
+    color: var(--color-info);
     text-decoration: underline;
 }
 
@@ -546,13 +546,13 @@
 .legal-page-title {
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     margin: 0 0 0.25rem 0;
     text-align: center;
 }
 .legal-page-updated {
     font-size: 0.85rem;
-    color: var(--text-secondary, #a0a0a0);
+    color: var(--text-secondary);
     margin: 0 0 1.25rem 0;
     text-align: center;
 }
@@ -566,13 +566,13 @@
 .legal-page-body h2 {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     margin: 0 0 0.5rem 0;
 }
 .legal-page-body p {
     font-size: 0.9rem;
     line-height: 1.5;
-    color: var(--text-secondary, #a0a0a0);
+    color: var(--text-secondary);
     margin: 0;
 }
 .legal-page-back {
@@ -606,7 +606,7 @@
 }
 
 .signin-toggle-link:hover {
-    color: #00e7ff;
+    color: var(--color-info);
     text-decoration: underline;
 }
 
@@ -625,7 +625,7 @@
     align-items: center;
     gap: 0.75rem;
     margin: 1rem 0;
-    color: var(--text-muted, #6b6b6b);
+    color: var(--text-muted);
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -635,7 +635,7 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--border-divider, #242424);
+    background: var(--border-divider);
 }
 
 .signin-mfa-code {
@@ -646,7 +646,7 @@
     margin: 0.75rem 0 !important;
 }
 .signin-mfa-error {
-    color: #f87171;
+    color: color-mix(in srgb, var(--color-error) 45%, var(--color-white));
     font-size: 0.85rem;
     margin: 0 0 0.75rem 0;
     padding: 0.5rem 0.75rem;
@@ -684,7 +684,7 @@
 
 .verification-desc {
     font-size: 0.9rem;
-    color: var(--text-secondary, #a0a0a0);
+    color: var(--text-secondary);
     line-height: 1.5;
     margin: 0;
 }
@@ -702,7 +702,7 @@
 
 .verification-hint {
     font-size: 0.8rem;
-    color: var(--text-muted, #6b6b6b);
+    color: var(--text-muted);
     margin: 0;
     line-height: 1.45;
 }
@@ -721,7 +721,7 @@
     border: 1px solid rgba(0, 214, 20, 0.35);
 }
 .verification-status--err {
-    color: #fca5a5;
+    color: color-mix(in srgb, var(--color-error) 45%, var(--color-white));
     background: rgba(248, 113, 113, 0.08);
     border: 1px solid rgba(248, 113, 113, 0.25);
 }
