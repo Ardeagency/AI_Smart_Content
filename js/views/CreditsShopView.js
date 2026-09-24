@@ -1,232 +1,142 @@
 /**
- * CreditsShopView — /creditos: comprar créditos extra. Nada más.
+ * CreditsShopView — /credits: el SALDO de créditos de la marca y en qué se fue.
+ * Solo lectura.
  *
- * Esta vista era un tablero de 784 líneas: saldo, plan, gráfico de consumo a
- * 7/30/90 días, alertas y auto-recarga, consumo por miembro con exportación a
- * CSV, e historial paginado. Todo eso se retiró el 2026-09-08 por decisión del
- * usuario: /plans y /creditos son la MISMA página con distinta mercancía —una
- * vende el plan del mes, la otra créditos sueltos— y la tienda no tiene por qué
- * cargar con la analítica.
+ * Antes era la tienda de paquetes. La compra está CERRADA por ADR-0042 (paquetes
+ * al ~12 % del costo): no basta el candado PAGOS_HABILITADOS de ApiV2, la consola
+ * no enseña ni el precio ni el botón (test/creditos-sin-compra.test.js lo vigila).
+ * Cuando un ADR sustituya a 0042, la compra vuelve como página propia.
  *
- * Lo retirado NO se perdió: vive en el historial de git, y las tablas que leía
- * (credit_usage, credit_alert_prefs) siguen intactas. Si el tablero vuelve, es
- * como página propia, no colgado de la tienda.
- *
- * El efecto secundario que importa: la vista pasa de cinco consultas y un
- * barrido de credit_usage a UNA sola lectura de credit_packages.
- *
- * Corte ADR-0052 (16/09): los paquetes salen de `window.PlanesDatos.paquetes()`
- * (billing.credit_packages, precio en su moneda) y la compra va por el borde
- * (`POST /v1/pagos/iniciar` → widget de Wompi). Hasta reprecificar (ADR-0042)
- * ApiV2 tiene el candado PAGOS_HABILITADOS=false: el botón avisa, no cobra.
+ * Datos: saldo por PlanesDatos.cargar (billing.available/balance), consumo de los
+ * últimos 30 días por OrganizacionDatos.uso (billing.usage_records). Sin
+ * ver_facturacion el consumo dice que falta el permiso, no «0».
  */
 class CreditsShopView extends BaseView {
   constructor() {
     super();
-    this.supabase = null;
     this.orgId = null;
-    this.org = null;
-    this.packages = [];
-    this._starfield = null;
+    this.creditos = null;
+    this.consumo = null;
   }
 
   async onEnter() {
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
-        return;
-      }
-    }
     if (window.appNavigation && !window.appNavigation.initialized) {
       await window.appNavigation.render();
     }
-
-    this.orgId = this.routeParams?.orgId ||
-      window.appState?.get('selectedOrganizationId') ||
-      localStorage.getItem('selectedOrganizationId');
-
+    this.orgId = this.routeParams?.orgId || window.currentOrgId || null;
     if (!this.orgId) {
-      const url = window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
-        ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
-        : '/create';
+      const uid = window.authService?.getCurrentUser()?.id;
+      const url = uid && window.authService?.getDefaultUserRoute ? await window.authService.getDefaultUserRoute(uid) : '/home';
       window.router?.navigate(url, true);
-      return;
     }
-
-    if (window.appState) window.appState.set('selectedOrganizationId', this.orgId, true);
-    localStorage.setItem('selectedOrganizationId', this.orgId);
   }
 
   async render() {
     await super.render();
-    await this.initSupabase();
-    await this.loadPackages();
-    this.renderPacks();
-    this.bindEvents();
-
-    this._starfield = window.Starfield ? new window.Starfield() : null;
-    if (this._starfield) this._starfield.start();
-
-    this.updateHeaderContext(__('Créditos'), null, this.org?.name || null);
+    this.updateHeaderContext(__('Créditos'), null, window.currentOrgName || null);
+    if (!this.orgId) return;
+    await this.cargar();
+    this.pintar();
   }
 
-  /** El router llama destroy() al salir: sin esto el canvas y su rAF sobreviven
-   *  a la vista y siguen pintando encima de las demás páginas. */
-  destroy() {
-    if (this._starfield) {
-      this._starfield.stop();
-      this._starfield = null;
-    }
-    super.destroy();
-  }
-
-  // ─── data ─────────────────────────────────────────────────────────────
-
-  async initSupabase() {
+  async cargar() {
+    const hasta = new Date();
+    const desde = new Date(hasta.getTime() - 29 * 24 * 60 * 60 * 1000);
     try {
-      if (window.supabaseService) {
-        this.supabase = await window.supabaseService.getClient();
-      } else if (window.supabase) {
-        this.supabase = window.supabase;
-      }
-      // El nombre de la marca ya está en el contexto de arranque (mi_contexto).
-      const org = window.contextoService?.org?.(this.orgId) || null;
-      this.org = org ? { id: org.id, name: org.name } : { id: this.orgId, name: window.currentOrgName || null };
+      const planes = window.PlanesDatos ? await window.PlanesDatos.cargar(this.orgId) : null;
+      this.creditos = planes?.orgCredits || null;
     } catch (e) {
-      console.error('CreditsShopView initSupabase:', e);
+      console.warn('[creditos] saldo:', e?.message || e);
     }
-  }
-
-  async loadPackages() {
-    this.packages = window.PlanesDatos ? await window.PlanesDatos.paquetes() : [];
-  }
-
-  /** Precio en su moneda: COP sin decimales (240.000 COP), USD con símbolo. */
-  formatPrecio(p) {
-    const n = Number(p.price) || 0;
-    if (p.currency === 'USD') return `$${n.toLocaleString('en-US')}`;
-    return `${n.toLocaleString('es-CO')} ${this.escapeHtml(p.currency || 'COP')}`;
+    try {
+      const disponibles = this.creditos ? this.creditos.credits_available : undefined;
+      this.consumo = window.OrganizacionDatos ? await window.OrganizacionDatos.uso(this.orgId, desde, hasta, disponibles) : null;
+    } catch (e) {
+      console.warn('[creditos] consumo:', e?.message || e);
+    }
   }
 
   // ─── render ───────────────────────────────────────────────────────────
 
   renderHTML() {
     return `
-      <div class="credits-page">
-        <header class="credits-hero">
-          <div class="credits-hero-content">
-            <p class="credits-hero-eyebrow">${__('Pago único · Se suman a tu saldo · No expiran')}</p>
-            <div id="creditsPacks"></div>
-          </div>
+      <div class="creditos-page">
+        <header class="creditos-cabecera">
+          <p class="creditos-eyebrow">${__('Créditos de la marca')}</p>
+          <h1 class="creditos-titulo">${__('Saldo y consumo')}</h1>
         </header>
+        <div id="creditosCuerpo" class="creditos-cuerpo" aria-busy="true">
+          <div class="creditos-cifras">
+            <div class="creditos-cifra skeleton"></div><div class="creditos-cifra skeleton"></div><div class="creditos-cifra skeleton"></div>
+          </div>
+        </div>
       </div>
     `;
   }
 
-  renderPacks() {
-    const el = this.querySelector('#creditsPacks');
+  /** Créditos: FLOOR a 4 decimales (ADR-0040), sin ceros de relleno. */
+  cr(n) {
+    const v = Math.floor((Number(n) || 0) * 10000) / 10000;
+    return v.toLocaleString(window.i18n?.locale || 'es', { maximumFractionDigits: 4 });
+  }
+
+  pintar() {
+    const el = this.querySelector('#creditosCuerpo');
     if (!el) return;
-    if (!this.packages.length) {
-      el.innerHTML = `<div class="credits-empty">${__('No hay paquetes disponibles.')}</div>`;
-      return;
+    el.removeAttribute('aria-busy');
+    const c = this.creditos;
+    const u = this.consumo;
+    const fecha = (d) => d.toLocaleDateString(window.i18n?.locale || 'es', { day: 'numeric', month: 'long' });
+
+    const cifras = c ? `
+      <div class="creditos-cifras">
+        <div class="creditos-cifra">
+          <span class="creditos-cifra-rotulo">${__('Disponibles')}</span>
+          <span class="creditos-cifra-valor">${this.cr(c.credits_available)}</span>
+        </div>
+        <div class="creditos-cifra">
+          <span class="creditos-cifra-rotulo">${__('Reservados en producciones en curso')}</span>
+          <span class="creditos-cifra-valor">${this.cr(c.retenido)}</span>
+        </div>
+        <div class="creditos-cifra">
+          <span class="creditos-cifra-rotulo">${__('Gastados en 30 días')}</span>
+          <span class="creditos-cifra-valor">${u && !u.pendiente ? this.cr(u.total) : '—'}</span>
+        </div>
+      </div>` : `<p class="creditos-nota">${__('No pudimos leer el saldo de la marca. Recarga la página en un momento.')}</p>`;
+
+    let detalle = '';
+    if (u?.sinPermiso) {
+      detalle = `<p class="creditos-nota">${__('Tu rol no puede ver el consumo de esta marca.')}</p>`;
+    } else if (u && !u.pendiente) {
+      const porQue = Object.values(u.porKind || {}).sort((a, b) => b.creditos - a.creditos).slice(0, 6);
+      detalle = `
+        ${u.seAgotan ? `<p class="creditos-nota">${__('Al ritmo de este mes, el saldo alcanza hasta el {fecha}.', { fecha: this.escapeHtml(fecha(u.seAgotan)) })}</p>` : ''}
+        <section class="creditos-bloque" aria-labelledby="creditosEnQue">
+          <h2 class="creditos-subtitulo" id="creditosEnQue">${__('En qué se fueron')}</h2>
+          ${porQue.length ? `<ul class="creditos-lista">${porQue.map((k) => `
+            <li class="creditos-fila">
+              <span class="creditos-fila-nombre">${this.escapeHtml(k.nombre)}</span>
+              <span class="creditos-fila-veces">${__('{n} usos', { n: Number(k.eventos) || 0 })}</span>
+              <span class="creditos-fila-valor">${this.cr(k.creditos)}</span>
+            </li>`).join('')}</ul>` : `<p class="creditos-nota">${__('Sin consumo en los últimos 30 días.')}</p>`}
+        </section>`;
     }
-    // Lista, no galeria: los paquetes se diferencian en UNA variable (cuantos
-    // creditos por cuanta plata). Puestos en columna, las cifras quedan alineadas
-    // y se comparan de un vistazo; en rejilla el ojo tiene que saltar en zigzag.
+
+    const usoHref = this.rutaDeOrg('/organization/usage');
     el.innerHTML = `
-      <ul class="credits-packs-list">
-        ${this.packages.map((p) => {
-          const total = p.credits + p.bonus;
-          return `
-            <li class="credits-pack-row glass-black ${p.popular ? 'is-popular' : ''}" data-pack-id="${p.id}">
-              <div class="credits-pack-main">
-                <div class="credits-pack-headline">
-                  <span class="credits-pack-credits">${p.credits.toLocaleString('es')}<small>${__('créditos')}</small></span>
-                  ${p.bonus > 0 ? `<span class="credits-pack-bonus">+${p.bonus.toLocaleString('es')} ${__('bonus')}</span>` : ''}
-                  ${p.popular ? `<span class="credits-pack-badge">${__('Recomendado')}</span>` : ''}
-                </div>
-                <div class="credits-pack-meta">
-                  ${this.escapeHtml(p.name)} · ${__('Total: {n} cr · No expiran, se acumulan', { n: total.toLocaleString('es') })}
-                </div>
-              </div>
-              <div class="credits-pack-buyside">
-                <span class="credits-pack-price">${this.formatPrecio(p)}</span>
-                <button type="button" class="btn btn-primary credits-pack-buy" data-pack-id="${p.id}">
-                  ${__('Comprar')}
-                </button>
-              </div>
-            </li>
-          `;
-        }).join('')}
-      </ul>
-    `;
+      ${cifras}
+      ${detalle}
+      <p class="creditos-pie">
+        <a href="${this.escapeHtml(usoHref)}" data-route="${this.escapeHtml(usoHref)}" class="creditos-enlace">${__('Ver el consumo por día y por persona')}</a>
+        · ${__('¿Necesitas más créditos? Escríbenos a {correo}.', { correo: '<a class="creditos-enlace" href="mailto:contact@aismartcontent.io">contact@aismartcontent.io</a>' })}
+      </p>`;
+    const a = el.querySelector('a[data-route]');
+    if (a) this.addEventListener(a, 'click', (e) => { e.preventDefault(); window.router?.navigate(usoHref); });
   }
 
-  // ─── events ──────────────────────────────────────────────────────────
-
-  bindEvents() {
-    const root = this.container;
-    if (!root) return;
-    root.querySelectorAll('.credits-pack-buy').forEach((btn) => {
-      this.addEventListener(btn, 'click', (e) => this._onBuyClick(e));
-    });
-  }
-
-  async _onBuyClick(e) {
-    const btn = e.currentTarget;
-    const packId = btn.getAttribute('data-pack-id');
-    if (!packId || !window.PlanesDatos) return;
-    const avisar = (msg, tipo = 'error') => { if (window.showToast) window.showToast(msg, tipo); else alert(msg); };
-    btn.disabled = true;
-    try {
-      const r = await window.PlanesDatos.iniciarCompra(this.orgId, packId);
-      await this._abrirWompi(r.checkout);
-    } catch (err) {
-      const code = err?.code || err?.codigo;
-      if (code === 'pagos_no_habilitados' || code === 'sin_api') {
-        avisar(__('La compra de créditos se habilita con el corte. Escríbenos a contact@aismartcontent.io si necesitas saldo hoy.'), 'info');
-      } else if (code === 'ficha_de_facturacion_incompleta') {
-        avisar(__('Antes de comprar completa los datos de facturación de la marca (Organización › Suscripción).'), 'info');
-        const prefix = (window.getOrgPathPrefix && window.currentOrgName) ? window.getOrgPathPrefix(this.orgId, window.currentOrgName) : '';
-        window.router?.navigate(`${prefix || ''}/organization/subscription`);
-      } else if (err?.http === 403) {
-        avisar(__('Tu rol no puede comprar créditos en esta marca.'));
-      } else {
-        console.error('CreditsShopView compra:', err);
-        avisar(err?.message || __('No se pudo iniciar la compra.'));
-      }
-    } finally {
-      btn.disabled = false;
-    }
-  }
-
-  /** Abre el widget de Wompi con el checkout firmado por el borde (el monto no se toca aquí). */
-  async _abrirWompi(checkout) {
-    if (!window.WidgetCheckout) {
-      await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = 'https://checkout.wompi.co/widget.js'; s.async = true;
-        s.onload = resolve; s.onerror = () => reject(new Error('No se pudo cargar el widget de Wompi.'));
-        document.head.appendChild(s);
-      });
-    }
-    const w = new window.WidgetCheckout({
-      currency: checkout.currency,
-      amountInCents: checkout.amountInCents,
-      reference: checkout.reference,
-      publicKey: checkout.publicKey,
-      signature: { integrity: checkout.signature?.integrity },
-      redirectUrl: checkout.redirectUrl,
-    });
-    w.open((result) => {
-      const status = result?.transaction?.status || 'UNKNOWN';
-      const avisar = (msg, tipo) => { if (window.showToast) window.showToast(msg, tipo); else alert(msg); };
-      if (status === 'APPROVED') avisar(__('Pago aprobado. El saldo se actualiza en unos segundos.'), 'success');
-      else if (status === 'PENDING') avisar(__('Pago en proceso. Te avisamos cuando se confirme.'), 'info');
-      else avisar(__('Pago no completado ({estado}). Intenta de nuevo.', { estado: status }), 'error');
-      if (window.contextoService?.cargar) window.contextoService.cargar({ fresco: true }).catch(() => {});
-    });
+  rutaDeOrg(sufijo) {
+    const prefijo = window.getOrgPathPrefix && window.currentOrgName ? window.getOrgPathPrefix(this.orgId, window.currentOrgName) : '';
+    return `${prefijo || ''}${sufijo}`;
   }
 }
 window.CreditsShopView = CreditsShopView;

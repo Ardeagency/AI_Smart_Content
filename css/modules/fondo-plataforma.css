@@ -10,7 +10,7 @@
    decide montar (window.Starfield), asi que Configuracion lo hereda apagado sin
    necesidad de excluirse: simplemente no lo arranca. */
 #app-container:has(.planes-page),
-#app-container:has(.credits-page),
+#app-container:has(.creditos-page),
 #app-container:has(.organization-container) {
     /* Manda el negro. El espectro entra al 20% y se apaga contra transparente
        antes del 90%, asi que es LUZ sobre la oscuridad y no un fondo de color:

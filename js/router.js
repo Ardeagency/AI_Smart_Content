@@ -146,6 +146,19 @@ class Router {
   }
 
   /**
+   * A /login recordando a dónde iba la persona (`?next=`), para volver ahí tras
+   * entrar. `motivo` = 'sesion' cuando la sesión caducó (el login lo dice).
+   */
+  irALogin(motivo) {
+    const aqui = (window.location.pathname || '/') + (window.location.search || '');
+    const q = new URLSearchParams();
+    if (window.rutaInterna(aqui) && !/^\/(login|signin|recuperar|cambiar-contrasena)?(\?|$)/.test(aqui)) q.set('next', aqui);
+    if (motivo) q.set('motivo', motivo);
+    const s = q.toString();
+    this.navigate('/login' + (s ? `?${s}` : ''), true);
+  }
+
+  /**
    * Manejar cambio de ruta
    */
   async handleRoute() {
@@ -241,7 +254,7 @@ class Router {
             this._handlingRoute = false;
             const isAuth = await this.checkAuthentication();
             if (!isAuth) {
-              this.navigate('/login', true);
+              this.irALogin();
               return;
             }
             let defaultUrl = '/home';
@@ -284,14 +297,9 @@ class Router {
       if (window.OrgCapabilities && window.authService?.hasPermission && window.currentOrgId) {
         const requiredCap = window.OrgCapabilities.getCapabilityForPath(path);
         if (requiredCap && !window.authService.hasPermission(requiredCap, window.currentOrgId)) {
-          this._handlingRoute = false;
-          const veraRoute = window.appNavigation?.getUserSidebarRoute?.('vera')
-            || (window.getOrgPathPrefix
-                ? `${window.getOrgPathPrefix(window.currentOrgId, window.currentOrgName)}/vera`
-                : '/vera');
-          console.warn(`[router] capability ${requiredCap} requerida; redirigiendo a ${veraRoute}`);
-          this.navigate(veraRoute, true);
-          return;
+          // 403 en su sitio (la URL no cambia): decir por qué, no mandar a Vera en silencio.
+          console.warn(`[router] capability ${requiredCap} requerida; se pinta 403`);
+          route = this.routes['/403'] || route;
         }
       }
 
@@ -343,7 +351,7 @@ class Router {
       }
       if (route.requiresAuth && !isAuth) {
         this._handlingRoute = false;
-        this.navigate('/login', true);
+        this.irALogin();
         return;
       }
       if (route.redirectIfAuth && isAuth) {
@@ -781,3 +789,11 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = Router;
 }
 
+/**
+ * ¿`ruta` es un destino interno seguro para `?next=`? Solo `/algo` del mismo
+ * origen: nada de `//otro.com`, `/\otro.com`, esquemas ni rutas de auth en bucle.
+ */
+window.rutaInterna = function rutaInterna(ruta) {
+  if (typeof ruta !== 'string' || !ruta.startsWith('/') || ruta.startsWith('//') || ruta.includes('\\')) return false;
+  try { return new URL(ruta, window.location.origin).origin === window.location.origin; } catch (_) { return false; }
+};

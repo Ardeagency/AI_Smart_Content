@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <base href="/">
     <title>AI Smart Content</title>
     <meta name="description" content="Un ecosistema estratégico que analiza el mundo en tiempo real para garantizar que una marca se mantenga siempre relevante, competitiva y proactiva.">
@@ -431,6 +431,7 @@
     <!-- En obras (corte): rutas aún no portadas a la base nueva → página gris sin llamadas. -->
     <script src="js/en-obras.js?v=__BUILD_ID__" defer></script>
     <script src="js/views/EnObrasView.js?v=__BUILD_ID__" defer></script>
+    <script src="js/views/PaginaEstadoView.js?v=__BUILD_ID__" defer></script>
     <script src="js/services/OrgBrandTheme.js?v=__BUILD_ID__" defer></script>
     <!-- ApiV2: el borde /v1 del backend v2 (ADR-0052); reemplaza a las Netlify Functions. -->
     <script src="js/services/ApiV2.js?v=__BUILD_ID__" defer></script>
@@ -452,9 +453,8 @@
     <!-- ARDE sentinel: aviso ntfy+email cuando alguien llega al login (solo rutas públicas de entrada) -->
     <script src="js/arde-sentinel.js?v=__BUILD_ID__" defer></script>
 
-    <!-- Demo mode (anonymous preview de IGNIS): guard + vista pública /demo -->
+    <!-- DemoGuard: sin /demo ya no hay sesiones anónimas que abrir (L1, 24/09); sale en L8 con el banner. -->
     <script src="js/services/DemoGuard.js?v=__BUILD_ID__" defer></script>
-    <script src="js/views/DemoEntryView.js?v=__BUILD_ID__" defer></script>
 
     <!-- Lazy-loader del bundle de Navigation (~35 KB gz). Las rutas públicas
          (/, /login, /signin, legales) no renderizan sidebar, así que cargar

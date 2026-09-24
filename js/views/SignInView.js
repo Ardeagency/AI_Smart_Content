@@ -34,6 +34,10 @@ class SignInView extends BaseView {
             <img src="/recursos/logos/logo-02.svg" alt="AI Smart Content" class="signin-brand-logo" width="180" height="72" decoding="async">
           </div>
 
+          <div class="signin-success-banner" id="signinSesionBanner" role="status" hidden>
+            <span>${__('Tu sesión terminó. Vuelve a entrar y seguimos donde ibas.')}</span>
+          </div>
+
           <div class="signin-success-banner" id="signinPasswordChangedBanner" hidden>
             <span class="signin-success-banner-icon" aria-hidden="true">✓</span>
             <span>${__('Contraseña actualizada. Inicia sesión con tu nueva contraseña.')}</span>
@@ -43,16 +47,17 @@ class SignInView extends BaseView {
             <form id="form_signin" novalidate>
               <div class="auth-state active" data-state="signin">
                 <div class="signin-field">
-                  <label class="signin-field-label" for="signinEmail">${__('Email Address')}</label>
-                  <input type="email" class="form-input" id="signinEmail" name="email" placeholder="name@company.com" autocomplete="email" required>
+                  <label class="signin-field-label" for="signinEmail">${__('Correo electrónico')}</label>
+                  <input type="email" class="form-input" id="signinEmail" name="email" placeholder="${__('nombre@empresa.com')}" autocomplete="email" required>
                 </div>
                 <div class="signin-field">
-                  <label class="signin-field-label" for="signinPassword">${__('Password')}</label>
+                  <label class="signin-field-label" for="signinPassword">${__('Contraseña')}</label>
                   <input type="password" class="form-input" id="signinPassword" name="password" placeholder="********" autocomplete="current-password" required>
                 </div>
                 <button type="button" class="signin-forgot signin-forgot-btn" id="linkForgotPassword">${__('¿Olvidaste tu contraseña?')}</button>
                 <div class="signin-turnstile" id="turnstileLogin" hidden></div>
-                <button type="submit" class="btn btn-primary signin-submit" id="btnSignIn">${__('Login')}</button>
+                <p class="signin-mfa-error" id="signinError" role="alert" hidden></p>
+                <button type="submit" class="btn btn-primary signin-submit" id="btnSignIn">${__('Iniciar sesión')}</button>
               </div>
             </form>
           </div>
@@ -74,6 +79,7 @@ class SignInView extends BaseView {
             <div class="signin-recover-form" id="recoverForm">
               <input type="email" class="form-input" id="recoverEmail" placeholder="${__('Correo electrónico')}" autocomplete="email" required>
               <div class="signin-turnstile" id="turnstileRecover" hidden></div>
+              <p class="signin-mfa-error" id="recoverError" role="alert" hidden></p>
               <button type="button" class="btn btn-primary" id="btnSendRecover">${__('Enviar enlace')}</button>
             </div>
             <div class="signin-recover-success" id="recoverSuccess" hidden>
@@ -99,16 +105,23 @@ class SignInView extends BaseView {
 
   async onEnter() {
     const params = new URLSearchParams(window.location.search || '');
+    this._motivoSesion = params.get('motivo') === 'sesion';
+    const next = params.get('next');
+    this._next = next && window.rutaInterna?.(next) ? next : null;
     if (params.get('password_changed') === '1') {
       // Sólo se puede consultar el DOM DESPUÉS de render; lo movemos a init.
       this._showPasswordChangedBanner = true;
       if (window.history && window.history.replaceState) {
-        window.history.replaceState(null, '', window.location.pathname);
+        window.history.replaceState(null, '', window.location.pathname + (this._next ? `?next=${encodeURIComponent(this._next)}` : ''));
       }
     }
   }
 
   async init() {
+    if (this._motivoSesion) {
+      const b = this.querySelector('#signinSesionBanner');
+      if (b) b.hidden = false;
+    }
     if (this._showPasswordChangedBanner) {
       const banner = this.querySelector('#signinPasswordChangedBanner');
       if (banner) banner.hidden = false;
@@ -164,6 +177,9 @@ class SignInView extends BaseView {
         this.hideMfaState();
       });
     }
+    // /recuperar abre directo la tarjeta de recuperar contraseña.
+    if (window.location.pathname === '/recuperar') this.showRecoverState();
+
     // Navegación SPA para footer (sin full reload)
     const spaLinks = this.querySelectorAll('a[data-href]');
     spaLinks.forEach((link) => {
@@ -175,17 +191,33 @@ class SignInView extends BaseView {
     });
   }
 
+  /** Error dentro de la tarjeta, nunca en un diálogo del navegador. `id` = el <p role="alert"> a usar. */
+  _error(msg, id = 'signinError') {
+    const el = this.querySelector(`#${id}`);
+    if (!el) return;
+    el.textContent = msg || '';
+    el.hidden = !msg;
+  }
+
+  /** Tras entrar: vuelve a `?next=` si es una ruta interna; si no, a la ruta por defecto. */
+  _irTrasEntrar(ruta) {
+    const destino = this._next || ruta;
+    if (window.router) window.router.navigate(destino, true);
+    else window.location.href = destino;
+  }
+
   async handleSignIn() {
     const email = this.querySelector('#signinEmail')?.value?.trim();
     const password = this.querySelector('#signinPassword')?.value;
     const btn = this.querySelector('#btnSignIn');
 
+    this._error('');
     if (!email || !password) {
-      alert(__('Introduce email y contraseña.'));
+      this._error(__('Escribe tu correo y tu contraseña.'));
       return;
     }
     if (!window.authService) {
-      alert(__('Error: servicio de autenticación no disponible.'));
+      this._error(__('No pudimos conectar con el servicio de acceso. Recarga la página.'));
       return;
     }
 
@@ -196,14 +228,13 @@ class SignInView extends BaseView {
 
     let captchaToken;
     try { captchaToken = window.Turnstile ? window.Turnstile.token('turnstileLogin') : null; }
-    catch (e) { alert(e.message); if (btn) { btn.disabled = false; btn.textContent = __('Login'); } return; }
+    catch (e) { this._error(e.message); if (btn) { btn.disabled = false; btn.textContent = __('Iniciar sesión'); } return; }
 
     try {
       const result = await window.authService.login(email, password, { captchaToken });
       if (captchaToken && !result.success) window.Turnstile.reiniciar('turnstileLogin');
       if (result.success && result.redirectRoute) {
-        if (window.router) window.router.navigate(result.redirectRoute, true);
-        else window.location.href = `/#${result.redirectRoute}`;
+        this._irTrasEntrar(result.redirectRoute);
         return;
       }
 
@@ -215,11 +246,9 @@ class SignInView extends BaseView {
       }
 
       // FEAT-020 · org exige MFA pero user no tiene factor → forzar enroll
+      // Activar el factor desde la consola llega con ADR-0049 (L6); hasta entonces se dice.
       if (result.requiresMfaEnroll) {
-        alert(result.message || __('Tu organización requiere 2FA. Te llevamos al flujo de activación.'));
-        const route = result.enforceOrgId ? `/org/${result.enforceOrgId}/configuracion` : '/configuracion';
-        if (window.router) window.router.navigate(route, true);
-        else window.location.href = `/#${route}`;
+        this._error(__('Tu marca exige verificación en dos pasos y tu cuenta aún no la tiene activa. Escríbenos a contact@aismartcontent.io y la activamos contigo.'));
         return;
       }
 
@@ -230,16 +259,16 @@ class SignInView extends BaseView {
         return;
       }
       const msg = result.error && result.error.includes('Invalid')
-        ? __('Email o contraseña incorrectos.')
-        : (result.error || __('Error al iniciar sesión.'));
-      alert(msg);
+        ? __('El correo o la contraseña no coinciden.')
+        : (result.error || __('No pudimos iniciar sesión. Intenta de nuevo.'));
+      this._error(msg);
     } catch (err) {
       console.error('Error en login:', err);
-      alert(__('Error al iniciar sesión. Intenta de nuevo.'));
+      this._error(__('No pudimos iniciar sesión. Intenta de nuevo.'));
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = __('Login');
+        btn.textContent = __('Iniciar sesión');
       }
     }
   }
@@ -287,8 +316,7 @@ class SignInView extends BaseView {
     try {
       const result = await window.authService.verifyMfa(this._pendingMfa.factorId, code);
       if (result.success && result.redirectRoute) {
-        if (window.router) window.router.navigate(result.redirectRoute, true);
-        else window.location.href = `/#${result.redirectRoute}`;
+        this._irTrasEntrar(result.redirectRoute);
         return;
       }
       if (errorEl) {
@@ -336,8 +364,9 @@ class SignInView extends BaseView {
       if (emailInput) emailInput.focus();
       return;
     }
+    this._error('', 'recoverError');
     if (!window.authService) {
-      alert(__('Servicio no disponible.'));
+      this._error(__('No pudimos conectar con el servicio de acceso. Recarga la página.'), 'recoverError');
       return;
     }
 
@@ -349,7 +378,7 @@ class SignInView extends BaseView {
 
     let captchaToken;
     try { captchaToken = window.Turnstile ? window.Turnstile.token('turnstileRecover') : null; }
-    catch (e) { alert(e.message); if (btn) { btn.disabled = false; btn.textContent = __('Enviar enlace'); } return; }
+    catch (e) { this._error(e.message, 'recoverError'); if (btn) { btn.disabled = false; btn.textContent = __('Enviar enlace'); } return; }
     const result = await window.authService.resetPassword(email, { captchaToken });
     if (captchaToken) window.Turnstile.reiniciar('turnstileRecover');
 
@@ -364,7 +393,7 @@ class SignInView extends BaseView {
       if (form) form.hidden = true;
       if (success) success.hidden = false;
     } else {
-      alert(result.error || __('Error al enviar el correo. Intenta de nuevo.'));
+      this._error(result.error || __('No pudimos enviar el correo. Intenta de nuevo.'), 'recoverError');
     }
   }
 }

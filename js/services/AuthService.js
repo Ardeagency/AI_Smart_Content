@@ -70,9 +70,13 @@ class AuthService {
       await this.loadUserData(session.user.id);
       this.notifyListeners('signed_in', this.currentUser);
     } else if (event === 'SIGNED_OUT') {
+      const estaba = this.isAuth;
       this.isAuth = false;
       this.currentUser = null;
       this.notifyListeners('signed_out', null);
+      // La sesión se cerró SIN pasar por logout() (caducó, se revocó o se cerró en
+      // otra pestaña): llevar a /login con el motivo y el destino, no dejar la vista rota.
+      if (estaba && !this._saliendo && window.router?.irALogin) window.router.irALogin('sesion');
     } else if (event === 'TOKEN_REFRESHED' && session) {
       await this.loadUserData(session.user.id);
     }
@@ -108,6 +112,12 @@ class AuthService {
 
     try {
       const { data: { user }, error } = await this.supabase.auth.getUser();
+      // SaaS cerrado (L1, 24/09): una sesión anónima (el viejo /demo) no entra.
+      if (user && !error && user.is_anonymous) {
+        await this.supabase.auth.signOut().catch(() => {});
+        this.isAuth = false;
+        return false;
+      }
       if (user && !error) {
         this.isAuth = true;
         this._sessionCheckedAt = now;
@@ -350,6 +360,8 @@ class AuthService {
    * Logout
    */
   async logout() {
+    // Salida PEDIDA: SIGNED_OUT no debe tratarla como sesión caducada.
+    this._saliendo = true;
     if (this.supabase) {
       try {
         await this.supabase.auth.signOut();
@@ -357,6 +369,7 @@ class AuthService {
         console.error('Error en logout:', error);
       }
     }
+    this._saliendo = false;
 
     this.isAuth = false;
     this.currentUser = null;

@@ -34,7 +34,7 @@
 
 /* El contenido vive por encima del cielo. */
 .planes-page,
-.credits-page { position: relative; z-index: 1; }
+.creditos-page { position: relative; z-index: 1; }
 
 .planes-main {
     padding: calc(48px + 2rem) 2rem 4rem;
