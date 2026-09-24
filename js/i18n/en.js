@@ -4022,5 +4022,14 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "ok": "ok",
   "{medidor} llegó a su tope ({tope} USD)": "{medidor} hit its cap ({tope} USD)",
   "{medidor} va en {gastado} de {tope} USD": "{medidor} is at {gastado} of {tope} USD",
-  "¿No puedes escanear? Escribe esta clave:": "Can't scan? Enter this key:"
+  "¿No puedes escanear? Escribe esta clave:": "Can't scan? Enter this key:",
+  "lectura anterior": "earlier reading",
+  "Movida de un rival": "Rival move",
+  "Cambio de precio": "Price change",
+  "Producto nuevo": "New product",
+  "Pico de contenido": "Content spike",
+  "Campaña nueva": "New campaign",
+  "Cambio en su sitio": "Change on their site",
+  "No se pudo cargar el Tablero": "Couldn't load the dashboard",
+  "Hablar con Vera": "Talk to Vera"
 }/* I18N:END */;

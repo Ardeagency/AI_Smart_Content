@@ -138,7 +138,7 @@
         <div class="vera-band">
           <div class="vera-band-head">
             <span class="vera-dot" aria-hidden="true"></span>
-            <span class="vera-band-kicker">${esc(t('Lectura de Vera'))} — ${esc(KIND[l.kind] ? KIND[l.kind]() : l.kind)}${l.de_v1 ? ` <span class="vera-chip vera-chip--stale">${esc(t('lectura de v1'))}</span>` : ''}</span>
+            <span class="vera-band-kicker">${esc(t('Lectura de Vera'))} — ${esc(KIND[l.kind] ? KIND[l.kind]() : l.kind)}${l.de_v1 ? ` <span class="vera-chip vera-chip--stale">${esc(t('lectura anterior'))}</span>` : ''}</span>
             ${periodo ? `<time class="vera-band-when">${esc(periodo)}</time>` : ''}
           </div>
           <h3 class="vera-band-headline">${esc(l.headline)}</h3>

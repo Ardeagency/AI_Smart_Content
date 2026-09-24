@@ -43,12 +43,12 @@ function medir() {
 
 // Medido el 24/09/2026 sobre a064abec; bajado en L1 y en L3 (shell nuevo: fuera Navigation.js + navigation.css).
 const TOPES = {
-  hexEnCss: 2328,
+  hexEnCss: 2318,
   importantEnCss: 318,
   zIndexDistintos: 19,
   hexEnJs: 310,
   styleEnLineaEnJs: 291,
-  innerHtml: 548,
+  innerHtml: 542,
   catchVacios: 163,
   fromEnVistas: 278,
 };
