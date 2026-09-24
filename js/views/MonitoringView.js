@@ -57,12 +57,21 @@ class MonitoringView extends BaseView {
 
   // Paleta para personalizar el color de una burbuja (opcional; el default es
   // el degradado de la marca). '' = volver al color de marca.
-  // Sincronizada con TasksView.PALETTE: 10 tonos en orden espectral, todos
-  // distinguibles entre sí a tamaño swatch (sin pares casi-idénticos).
-  static PALETTE = [
-    '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e',
-    '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899',
-  ];
+  // L7 (24/09): el espectro del PRISMA (los 10 --prisma-* de bundle.css), leído del
+  // token al pintar: el canvas y los swatches necesitan el valor, no var(--x).
+  // Un color guardado antes con otra paleta se sigue pintando tal cual (item.color).
+  static get PALETTE() {
+    return ['rojo', 'naranja', 'amarillo', 'limon', 'verde', 'celeste', 'azul', 'purpura', 'violeta', 'fucsia']
+      .map((n) => MonitoringView._token(`--prisma-${n}`));
+  }
+
+  /** Valor de un token de :root (el canvas no entiende var()). */
+  static _token(nombre, respaldo = 'gray') {
+    try {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
+      return v || respaldo;
+    } catch (_) { return respaldo; /* sin DOM (tests) */ }
+  }
 
   // Plataforma → icono (Font Awesome, ya cargado globalmente en la app).
   static PLATFORM_ICON = {
@@ -105,12 +114,11 @@ class MonitoringView extends BaseView {
     try {
       if (window.supabaseService) this._supabase = await window.supabaseService.getClient();
       else if (window.supabase)   this._supabase = window.supabase;
-    } catch (_) {}
+    } catch (_) { /* sin cliente: las lecturas lo dirán */ }
 
     const isUuid = (v) => typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
-    let candidate = this.routeParams?.orgId || window.currentOrgId
-      || window.appState?.get('selectedOrganizationId')
-      || localStorage.getItem('selectedOrganizationId') || null;
+    // La marca sale de la ruta (L7): nada de localStorage como fuente.
+    let candidate = this.routeParams?.orgId || window.currentOrgId || null;
 
     if (!isUuid(candidate)
         && this.routeParams?.orgIdShort && this.routeParams?.orgNameSlug
@@ -119,7 +127,7 @@ class MonitoringView extends BaseView {
         const r = await window.resolveOrgIdFromShortAndSlug(
           this.routeParams.orgIdShort, this.routeParams.orgNameSlug);
         if (isUuid(r?.id)) candidate = r.id;
-      } catch (_) {}
+      } catch (_) { /* no se pudo resolver: queda sin marca y lo dice la vista */ }
     }
 
     this._orgId = isUuid(candidate) ? candidate : null;
@@ -287,7 +295,7 @@ class MonitoringView extends BaseView {
     });
     pages.forEach(w => {
       let hostname = w.url;
-      try { hostname = new URL(w.url).hostname.replace(/^www\./, ''); } catch (_) {}
+      try { hostname = new URL(w.url).hostname.replace(/^www\./, ''); } catch (_) { /* URL inválida: sin dominio */ }
       const allWsigs = sigByUrl.get(w.url) || [];
       const wsigs = allWsigs.slice(0, 3);
       const lastAt = wsigs[0]?.captured_at || null;
@@ -365,10 +373,10 @@ class MonitoringView extends BaseView {
     return `
       <div class="mn-page">
         <div class="mn-kpi-skel">
-          ${Array(4).fill('<div class="mb-skel-block" style="height:74px;border-radius:12px"></div>').join('')}
+          ${Array(4).fill('<div class="mb-skel-block mn-skel--fila"></div>').join('')}
         </div>
         <div class="mn-grid">
-          ${Array(6).fill('<div class="mb-skel-block" style="height:150px;border-radius:12px"></div>').join('')}
+          ${Array(6).fill('<div class="mb-skel-block mn-skel--tarjeta"></div>').join('')}
         </div>
       </div>`;
   }
@@ -597,22 +605,22 @@ class MonitoringView extends BaseView {
       if (cols.length === 1) return [cols[0], this._lighten(this._toHex(cols[0]), 0.28)];
       const primary = (cs.getPropertyValue('--brand-primary') || '').trim();
       if (/^#[0-9a-fA-F]{6}/.test(primary)) return [primary.slice(0, 7), this._lighten(primary.slice(0, 7), 0.28)];
-    } catch (_) {}
-    return ['#e09145', '#f6b26b'];
+    } catch (_) { /* sin estilos calculados: cae al par cálido de la plataforma */ }
+    return [MonitoringView._token('--warm-1'), MonitoringView._token('--warm-2')];
   }
 
   /** Convierte rgb()/rgba() o #hex a #rrggbb (para _lighten). */
   _toHex(col) {
-    if (!col) return '#888888';
+    if (!col) return MonitoringView._token('--icon-button');
     if (col[0] === '#') return col.slice(0, 7);
     const m = col.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
-    if (!m) return '#888888';
+    if (!m) return MonitoringView._token('--icon-button');
     return '#' + [m[1], m[2], m[3]].map(x => (+x).toString(16).padStart(2, '0')).join('');
   }
 
   /** CSS linear-gradient con todos los stops (para avatar/chip del popover). */
   _gradientCss(stops, angle = 135) {
-    const s = (stops && stops.length ? stops : ['#e09145', '#f6b26b']);
+    const s = (stops && stops.length ? stops : [MonitoringView._token('--warm-1'), MonitoringView._token('--warm-2')]);
     return `linear-gradient(${angle}deg, ${s.join(', ')})`;
   }
 
@@ -620,7 +628,7 @@ class MonitoringView extends BaseView {
       si no el degradado dinámico de la marca (array de colores). */
   _bubbleStops(item) {
     if (item && item.color) return [item.color, this._lighten(item.color, 0.28)];
-    return this._brandStops || ['#e09145', '#f6b26b'];
+    return this._brandStops || [MonitoringView._token('--warm-1'), MonitoringView._token('--warm-2')];
   }
 
   /** Color sólido de las cards (--bg-card) para el relleno de las burbujas. */
@@ -628,8 +636,8 @@ class MonitoringView extends BaseView {
     try {
       const v = (getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '').trim();
       if (/^#[0-9a-fA-F]{3,8}$/.test(v)) return v;
-    } catch (_) {}
-    return '#141517';
+    } catch (_) { /* sin estilos calculados */ }
+    return MonitoringView._token('--bg-secondary');
   }
 
   /** Aclara un hex mezclándolo hacia blanco (para el 2º stop si falta). */
@@ -911,7 +919,7 @@ class MonitoringView extends BaseView {
       const tDepth = (isFloat && rMax > rMin) ? (b.r - rMin) / (rMax - rMin) : 1;
       const depthA = isHover ? 1 : (isFloat ? (0.74 + 0.26 * tDepth) : 1);
 
-      const card = this._cardColor || '#141517';
+      const card = this._cardColor || MonitoringView._token('--bg-secondary');
 
       // Sombra suave que ATERRIZA la burbuja + relleno SÓLIDO (color de las cards).
       ctx.save();
@@ -919,7 +927,7 @@ class MonitoringView extends BaseView {
       ctx.shadowColor = 'rgba(0,0,0,0.5)';
       ctx.shadowBlur = isFloat ? 24 : 13;
       ctx.shadowOffsetY = isFloat ? 10 : 5;
-      ctx.fillStyle = dimmed ? '#101012' : card;
+      ctx.fillStyle = dimmed ? (this._fondoTenue ||= MonitoringView._token('--bg-primary')) : card;
       ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
       ctx.restore();
 
@@ -1463,16 +1471,16 @@ class MonitoringView extends BaseView {
           ${editable}
           <div class="mn-detail-foot">
             ${isProfile ? `<button type="button" class="mn-btn-secondary" data-bact="toggle-highlight"><i class="aisc-ico aisc-ico--star"></i> ${item.highlighted ? __('Quitar destacado') : __('Destacar')}</button>` : ''}
-            <span style="flex:1"></span>
+            <span class="mn-espaciador"></span>
             <button type="button" class="mn-btn-secondary mn-btn-danger" data-bact="delete"><i class="aisc-ico aisc-ico--delete"></i> ${__('Dejar de seguir')}</button>
           </div>
         </div>
         ${isProfile ? `<aside class="mn-detail-col mn-detail-col--dash">
           <h3 class="mn-det-section-title">${__('Lo que hay que saber')}</h3>
           <div class="mn-detail-dash" data-dashboard>
-            <div class="mn-post mn-post--skel" style="height:44px"></div>
-            <div class="mn-post mn-post--skel" style="height:44px"></div>
-            <div class="mn-post mn-post--skel" style="height:44px"></div>
+            <div class="mn-post mn-post--skel"></div>
+            <div class="mn-post mn-post--skel"></div>
+            <div class="mn-post mn-post--skel"></div>
           </div>
         </aside>` : ''}
       </div>`;
@@ -1536,10 +1544,10 @@ class MonitoringView extends BaseView {
       : '';
     // Línea de impacto social (lo que dimensiona la burbuja).
     const impactLine = isProfile
-      ? `<div class="mn-bubpop-meta"><i class="aisc-ico aisc-ico--fire" style="opacity:.6"></i> ${item.impact > 0
+      ? `<div class="mn-bubpop-meta"><i class="aisc-ico aisc-ico--fire mn-meta-ico"></i> ${item.impact > 0
             ? __('Impacto social: {n} interacciones (90 d)', { n: this._compact(item.impact) })
             : __('Sin impacto medido aún')}</div>`
-      : `<div class="mn-bubpop-meta"><i class="aisc-ico aisc-ico--refresh" style="opacity:.6"></i> ${item.dataCount} ${__('cambios detectados')}</div>`;
+      : `<div class="mn-bubpop-meta"><i class="aisc-ico aisc-ico--refresh mn-meta-ico"></i> ${item.dataCount} ${__('cambios detectados')}</div>`;
 
     const veraActs = isProfile ? `
       <button class="mn-bubpop-act" data-bact="vera-analizar"><i class="aisc-ico aisc-ico--sparkle"></i> ${__('Analizar')}</button>
@@ -2062,48 +2070,15 @@ class MonitoringView extends BaseView {
    * de la org (rol + relevancia). Best-effort: null ante cualquier fallo y el
    * usuario clasifica a mano.
    */
-  async _classifyProfile(det) {
-    // Corte ADR-0052: la function de OpenAI se apagó; la persona clasifica a mano (rol + relevancia).
-    if (window.MonitoringDataService) return null;
-    try {
-      const { data: sessionData } = await this._supabase.auth.getSession();
-      const accessToken = sessionData?.session?.access_token;
-      if (!accessToken) return null;
-      const resp = await fetch('/.netlify/functions/api-monitoring-classify-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify({
-          organization_id: this._orgId,
-          url: det.url,
-          platform: det.platform,
-          handle: det.handle,
-          name: det.name,
-        }),
-      });
-      const result = await resp.json().catch(() => null);
-      if (!resp.ok || !result?.ok) return null;
-      return result;
-    } catch (_) { return null; }
+  async _classifyProfile() {
+    // Corte ADR-0052: la function de OpenAI (api-monitoring-classify-profile) se apagó;
+    // la persona clasifica a mano (rol + relevancia). L7: fuera el fetch que ya no corría.
+    return null;
   }
 
   _showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.style.cssText = `
-      position: fixed;
-      top: 80px;
-      right: 2rem;
-      padding: 0.75rem 1.1rem;
-      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-      color: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-      z-index: var(--z-modal-backdrop);
-      font-size: 0.85rem;
-    `;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 2800);
+    // Un solo sistema de avisos (L4): el toast de la plataforma, no un <div> con hex propios.
+    window.showToast?.(message, { type });
   }
 
   /**
@@ -2236,7 +2211,7 @@ class MonitoringView extends BaseView {
       if (cfg && titleEl) titleEl.textContent = cfg.title;
       if (backBtn) backBtn.hidden = !(cfg && cfg.back);
       const focusable = root.querySelector(`[data-panel="${step}"] input, [data-panel="${step}"] select`);
-      try { focusable?.focus(); } catch (_) {}
+      try { focusable?.focus(); } catch (_) { /* el elemento ya no admite foco */ }
     };
 
     // Checklist de carga: los 3 primeros pasos son detección local (la
