@@ -169,6 +169,20 @@ dialog.capa--edicion { max-width: none; max-height: none; width: calc(100vw - 48
 .pregunta__acciones { display: flex; gap: var(--space-2); }
 .tiene-pregunta { position: relative; }
 
+/* ── Botones propios de la capa: v1 no trae reset global de <button> (la cantera
+   sí), así que sin esto salen con el gris y el borde del navegador. */
+.capa__cerrar, .capa__volver, .edicion__herr, .edicion__pestana, .editorial__icono, .editorial__cta {
+  font: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.capa__cerrar:not(.capa__cerrar--flotante), .edicion__herr, .edicion__pestana { background: transparent; border: 0; }
+.capa__cerrar:focus-visible, .capa__volver:focus-visible, .edicion__herr:focus-visible, .edicion__pestana:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
 /* ── Tamaños del principal y la confirmación ───────────────────────────── */
 dialog.capa--sm { max-width: min(480px, calc(100vw - var(--space-8))); }
 dialog.capa--md { max-width: min(640px, calc(100vw - var(--space-8))); }
