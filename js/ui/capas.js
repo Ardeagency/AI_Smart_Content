@@ -246,7 +246,13 @@
       };
       no.addEventListener('click', () => fin(false));
       si.addEventListener('click', () => fin(true));
-      caja.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); fin(false); } });
+      // La pregunta suele vivir sobre una tarjeta clicable (abre su detalle): ni un
+      // clic ni una tecla dentro de la pregunta deben llegar a la tarjeta.
+      caja.addEventListener('click', (e) => e.stopPropagation());
+      caja.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Escape') fin(false);
+      });
     });
   }
 

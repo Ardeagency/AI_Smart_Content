@@ -154,7 +154,7 @@ class PlacesView extends BaseView {
       if (typeof this._navigateToProductDetail === 'function') this._navigateToProductDetail(creado.id, creado.id);
     } catch (e) {
       console.error('_onAddPlace:', e);
-      alert(e?.message || __('Error al crear'));
+      this._showNotification(e?.message || __('Error al crear'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -223,7 +223,13 @@ class PlacesView extends BaseView {
   /** Archivar (PATCH archived_at): no se borra, las producciones lo referencian. */
   async _onDeletePlace(placeId, btn) {
     if (!placeId || !window.CatalogoDatos) return;
-    if (!confirm(__('¿Quitar este elemento del catálogo? Sus producciones se conservan.'))) return;
+    // Sobre la tarjeta de la que habla (Capas.preguntar); sin tarjeta, confirmación.
+    const tarjeta = btn && btn.closest('article');
+    const texto = __('¿Quitar este elemento del catálogo? Sus producciones se conservan.');
+    const si = tarjeta
+      ? await window.Capas.preguntar(tarjeta, { texto, aceptar: __('Quitar') })
+      : await window.Capas.confirmar({ titulo: texto, aceptar: __('Quitar'), peligro: true });
+    if (!si) return;
     if (btn) btn.disabled = true;
     try {
       const fue = await window.CatalogoDatos.archivar(placeId);

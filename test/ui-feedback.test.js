@@ -284,8 +284,8 @@ function medir() {
   return { dialogosNavegador, modalesPropios, toastsPropios };
 }
 
-// Medido el 24/09/2026 sobre e2f21a65. Solo BAJAN; la meta de L4 es 0 en los tres.
-const TOPES = { dialogosNavegador: 87, modalesPropios: 149, toastsPropios: 0 };
+// Medido el 24/09/2026 (79 tras el piloto del catálogo). Solo BAJAN; la meta de L4 es 0 en los tres.
+const TOPES = { dialogosNavegador: 79, modalesPropios: 149, toastsPropios: 0 };
 
 describe('Guardia: modales, toasts y diálogos solo en js/ui', () => {
   const hoy = medir();
