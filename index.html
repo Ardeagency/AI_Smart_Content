@@ -56,6 +56,8 @@
 
     <!-- Application CSS: un solo stylesheet; los módulos entran vía @import en bundle.css. -->
     <link rel="stylesheet" href="css/bundle.css?v=__BUILD_ID__">
+    <!-- Transiciones de página (js/ui/transiciones.js): solo se anima #app-container. -->
+    <link rel="stylesheet" href="css/modules/transiciones.css?v=__BUILD_ID__">
 
     <!-- Font Awesome — SUBSET local: solo los 155 íconos usados en la app.
          Reemplaza el CDN @fortawesome/fontawesome-free (102 KB CSS + 252 KB woff2)
@@ -472,6 +474,7 @@
          para registrar el listener `routechange` antes del primer dispatch. -->
     <script src="js/utils/PageMeta.js?v=__BUILD_ID__" defer></script>
     <script src="js/views/BaseView.js?v=__BUILD_ID__" defer></script>
+    <script src="js/ui/transiciones.js?v=__BUILD_ID__" defer></script>
     <script src="js/router.js?v=__BUILD_ID__" defer></script>
 
     <!-- Modal primitiva compartida (window.Modal.show) -->

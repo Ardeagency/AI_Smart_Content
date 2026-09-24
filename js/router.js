@@ -86,7 +86,7 @@ class Router {
   init() {
     // Usar History API en lugar de hash-based routing
     // Escuchar cambios en el historial (botones atrás/adelante)
-    window.addEventListener('popstate', () => this.handleRoute());
+    window.addEventListener('popstate', () => { this._porPopstate = true; this.handleRoute(); });
     // Ruta inicial la dispara app.init() una sola vez para evitar doble render y parpadeo
   }
 
@@ -393,11 +393,17 @@ class Router {
             prevView.routeParams = routeParams;
             document.body.classList.toggle('route-landing', path === '/');
 
+            this._porPopstate = false;
             if (window.appNavigation && typeof window.appNavigation.render === 'function') {
               window.appNavigation.render();
             }
 
-            this._playRouteFade(container);
+            // La vista ya cambió su DOM: la transición «suave» solo acompaña (fade).
+            if (typeof window.transicion === 'function') {
+              await window.transicion({ tipo: 'suave', cambiar: () => {}, contenedor: container });
+            }
+            this._enhanceA11yLabels(container);
+            this._applyDocumentTitle();
             window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
             return;
           }
@@ -406,35 +412,40 @@ class Router {
         }
       }
 
-      // Montaje completo: destruir vista anterior. No vaciar innerHTML aquí:
-      // la nueva vista reemplaza el DOM en BaseView.render() y así evitamos un
-      // frame en blanco entre ambas vistas.
-      if (prevView) {
-        // Guardar snapshot (scroll siempre; HTML solo si la vista opta in con
-        // `static cacheable = true`) antes de destruir.
-        this._bfSnapshot(prevView, this.currentRoute);
-        this.currentView = null;
-        if (typeof prevView.onLeave === 'function') {
-          try { prevView.onLeave(); } catch (_) {}
-        }
-        if (typeof prevView.destroy === 'function') {
-          try { prevView.destroy(); } catch (_) {}
-        }
-      }
-
-      // NO togglear route-* aquí: si lo hacemos antes de startViewTransition,
-      // el snapshot "before" ya recoge la clase nueva y el fondo cambia hard
-      // antes del crossfade. Se aplica dentro de doRender para que forme parte
-      // del cross-fade del root.
-
-      // Si hay HTML en bfCache fresco para esta ruta, pintarlo de inmediato
-      // (instant restore). La vista hará su render normal encima — la vista
-      // que opte in al cache debería detectar `this._restoredFromCache` y
-      // refrescar incrementalmente en lugar de re-pintar el árbol.
+      // Montaje completo (b2, 24/09): la transición SOLO cambia el DOM —destruir la
+      // vista vieja, pintar el esqueleto (o el HTML del bfCache) y subir el scroll—;
+      // el render de la vista nueva, que trae los DATOS, corre DESPUÉS. Antes el
+      // render iba dentro de startViewTransition y el navegador congelaba la pintura
+      // hasta que llegaban los datos (o el TimeoutError de ~4 s). Solo se anima
+      // #app-container: el cascarón queda fijo (js/ui/transiciones.js).
       const cached = this._bfGet(path);
       const hasFreshHtml = cached && cached.html && (Date.now() - cached.t) < this._BF_HTML_TTL;
-      if (hasFreshHtml) {
-        container.innerHTML = cached.html;
+      const tipo = this._porPopstate ? 'atras' : 'adelante';
+      this._porPopstate = false;
+
+      const cambiar = () => {
+        if (prevView) {
+          // Snapshot (scroll siempre; HTML solo si la vista opta in con `static cacheable`).
+          this._bfSnapshot(prevView, this.currentRoute);
+          if (typeof prevView.onLeave === 'function') { try { prevView.onLeave(); } catch (_) {} }
+          if (typeof prevView.destroy === 'function') { try { prevView.destroy(); } catch (_) {} }
+        }
+        document.body.classList.toggle('route-landing', path === '/');
+        container.innerHTML = hasFreshHtml
+          ? cached.html
+          : (window.transicion?.esqueleto ? window.transicion.esqueleto() : '');
+        window.scrollTo(0, 0);
+        if (window.appNavigation && typeof window.appNavigation.render === 'function') {
+          Promise.resolve().then(() => window.appNavigation.render()).catch(() => {});
+        }
+      };
+
+      this.currentView = null;
+      if (typeof window.transicion === 'function') {
+        const nav = await window.transicion({ tipo, cambiar, contenedor: container });
+        if (!nav.vigente()) return;
+      } else {
+        cambiar();
       }
 
       this.currentView = new ViewClass();
@@ -442,66 +453,11 @@ class Router {
       if (Object.keys(routeParams).length > 0) {
         this.currentView.routeParams = routeParams;
       }
-      // Marcar la vista para que sepa si está siendo restaurada desde cache;
-      // útil para que decida si re-renderizar todo o solo refrescar datos.
+      // La vista sabe si parte del HTML del bfCache (refrescar en vez de repintar todo).
       this.currentView._restoredFromCache = !!hasFreshHtml;
-
-      // Navigation render se inicia DENTRO de doRender (no fuera) para que su
-      // mutación del DOM forme parte del callback de startViewTransition. Si lo
-      // disparamos en un microtask externo, el sidebar puede haber cambiado
-      // ANTES de que la API capture el snapshot "before" → desincronización
-      // entre el crossfade del sidebar y el de la vista. Adentro: ambos
-      // snapshots quedan en el mismo tick y el crossfade corre sincronizado.
-      const doRender = async () => {
-        // Body classes adentro del callback → caen en el snapshot "after" y
-        // se animan junto con el crossfade del root (fondo, brand overlay).
-        document.body.classList.toggle('route-landing', path === '/');
-
-        const navRenderPromise = (window.appNavigation && typeof window.appNavigation.render === 'function')
-          ? Promise.resolve().then(() => window.appNavigation.render()).catch(() => {})
-          : Promise.resolve();
-        await this.currentView.render();
-        await navRenderPromise;
-      };
-
-      // View Transitions API (Chrome 111+, Safari 18+, Edge 111+):
-      // crossfade nativo a 60fps a nivel de pintura. Fallback al .route-fade-in
-      // de 140ms si no hay soporte (Firefox aún no lo implementa).
-      if (typeof document.startViewTransition === 'function' && !this._reduceMotion()) {
-        // Crossfade del root entero: el cascarón (sidebar + header) es el mismo en
-        // todas las rutas, así que no se nombran regiones (nombrarlas hacía que
-        // el sidebar se snapshoteara y parpadeara sin cambiar). Cuando existía el
-        // modo dev con otro cascarón hacía falta; ya no.
-        try {
-          const transition = document.startViewTransition(doRender);
-          // Silenciar los otros 2 promises del ViewTransition. Si el callback
-          // se pasa del timeout interno del browser (~4s), los 3 promises
-          // (updateCallbackDone/ready/finished) rechazan con TimeoutError.
-          // El try/catch solo cubre el await de updateCallbackDone — los otros
-          // aparecerían como "Uncaught (in promise) TimeoutError". Atacharlos
-          // a noop catch evita el warning en consola sin cambiar el flujo.
-          transition.ready.catch(() => {});
-          transition.finished.catch(() => {});
-          await transition.updateCallbackDone;
-          // Path success de View Transitions: no se llama _playRouteFade, pero
-          // sí necesitamos enhance de a11y labels y document.title en el nuevo DOM.
-          this._enhanceA11yLabels(container);
-          this._applyDocumentTitle();
-        } catch (e) {
-          // Solo log si NO es el timeout esperado del browser (4s default).
-          // TimeoutError es benigno: la transición no se animó pero el DOM ya está.
-          if (e?.name !== 'TimeoutError') {
-            console.warn('Router: View Transition falló, fallback a fade.', e);
-            await doRender();
-            this._playRouteFade(container);
-          }
-          // Si fue TimeoutError, doRender ya corrió (es el que se pasó del límite),
-          // así que el DOM nuevo ya está montado — no necesitamos re-renderizar.
-        }
-      } else {
-        await doRender();
-        this._playRouteFade(container);
-      }
+      await this.currentView.render();
+      this._enhanceA11yLabels(container);
+      this._applyDocumentTitle();
 
       // Restaurar scroll de back/forward al final (cuando el DOM ya está). Si
       // no hay entrada cacheada, volver al top (comportamiento previo).
@@ -536,23 +492,6 @@ class Router {
         }
       }
     }
-  }
-
-  /**
-   * Reinicia la animación de fade del contenedor de la vista actual.
-   * Forzar un reflow (offsetHeight) garantiza que el navegador relance la
-   * animación incluso cuando la clase ya estaba aplicada en la navegación anterior.
-   */
-  _playRouteFade(container) {
-    if (!container || typeof container.classList === 'undefined') return;
-    container.classList.remove('route-fade-in');
-    void container.offsetHeight;
-    container.classList.add('route-fade-in');
-    // Post-render a11y enhance: copia `title` a `aria-label` en interactivos
-    // sin aria. Baseline para screen readers cuando los autores olvidaron el
-    // aria explícito; no pisa los que ya lo tienen.
-    this._enhanceA11yLabels(container);
-    this._applyDocumentTitle();
   }
 
   /** Scroll a #hash con offset si lo hay; el siguiente frame para que el
@@ -603,13 +542,6 @@ class Router {
         if (t) el.setAttribute('aria-label', t);
       });
     } catch (_) {}
-  }
-
-  /** Respeta prefers-reduced-motion: si el usuario lo pide, saltamos animaciones. */
-  _reduceMotion() {
-    return typeof window !== 'undefined'
-      && window.matchMedia
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   /**
