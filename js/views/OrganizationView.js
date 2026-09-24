@@ -2459,7 +2459,14 @@ class OrganizationView extends BaseView {
       nombres[m.user_id] = m.full_name || m.email || null;
     });
     // En la base nueva TODO lo que pasa por bitácora lleva actor (persona, agente o sistema).
-    const quien = (e) => (e.userId && nombres[e.userId]) || e.actor || (e.userId ? `${String(e.userId).slice(0, 8)}…` : (e.actorKind || '—'));
+    // L7: la bitácora trae enums de la base (accion/actor); se muestran en palabras, no crudos.
+    // i18n-keep: __('terminó') __('falló') __('en curso') __('en cola') __('cancelada') __('espera tu aprobación')
+    // __('escribió a Vera') __('Vera respondió') __('ajuste de créditos') __('consumo') __('recarga de créditos')
+    // __('creó') __('editó') __('borró') __('Motor de imágenes') __('Motor') __('Una persona') __('Facturación') __('Sistema') __('Vera')
+    const ACCION = { succeeded: 'terminó', completed: 'terminó', failed: 'falló', running: 'en curso', queued: 'en cola', cancelled: 'cancelada', awaiting_approval: 'espera tu aprobación', user: 'escribió a Vera', assistant: 'Vera respondió', adjustment: 'ajuste de créditos', consumption: 'consumo', grant: 'recarga de créditos', insert: 'creó', update: 'editó', delete: 'borró' };
+    const ACTOR = { render: 'Motor de imágenes', transform: 'Motor', user: 'Una persona', adjustment: 'Facturación', consumption: 'Facturación', grant: 'Facturación', system: 'Sistema', agent: 'Vera' };
+    const enPalabras = (mapa, v) => (v && mapa[v] ? __(mapa[v]) : v);
+    const quien = (e) => (e.userId && nombres[e.userId]) || enPalabras(ACTOR, e.actor) || (e.userId ? `${String(e.userId).slice(0, 8)}…` : (enPalabras(ACTOR, e.actorKind) || '—'));
     const nota = '';
     if (!act.eventos.length) {
       el.innerHTML = `<p class="org-placeholder">${__('Sin actividad registrada.')}</p>`;
@@ -2469,7 +2476,7 @@ class OrganizationView extends BaseView {
       <li class="org-act-row">
         <div class="org-act-main">
           <span class="org-act-quien">${this._esc(quien(e))}</span>
-          <span class="org-act-que">${this._esc(__(e.etiqueta))}</span>
+          <span class="org-act-que">${this._esc(enPalabras(ACCION, e.etiqueta) || '')}</span>
           ${e.detalle ? `<span class="org-act-detalle">${this._esc(e.detalle)}</span>` : ''}
         </div>
         <time class="org-act-fecha" datetime="${this._esc(e.fecha)}">${this._esc(this._fmtFechaCorta(e.fecha))}</time>

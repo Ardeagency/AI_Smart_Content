@@ -122,7 +122,7 @@ class BrandOrganizationView extends BaseView {
                 <div class="card-content">
                 <!-- Brand Colors -->
                 <div class="visual-section">
-                    <div class="visual-section-label">Brand Colors</div>
+                    <div class="visual-section-label">${__('Colores de marca')}</div>
                     <div class="color-swatches" id="brandColorSwatches">
                         <!-- Se renderizarán dinámicamente -->
             </div>
@@ -130,7 +130,7 @@ class BrandOrganizationView extends BaseView {
 
                 <!-- Typography System -->
                 <div class="visual-section">
-                    <div class="visual-section-label">Typography System</div>
+                    <div class="visual-section-label">${__('Tipografía')}</div>
                     <div class="typography-preview" id="typographyPreview">
                         <!-- Se renderizará dinámicamente -->
                     </div>
@@ -160,7 +160,7 @@ class BrandOrganizationView extends BaseView {
         <!-- Assets -->
         <div class="brand-card card-assets">
             <div class="card-header">
-                <h2 class="card-title">Assets</h2>
+                <h2 class="card-title">${__('Recursos')}</h2>
             </div>
             <div class="card-content">
                 <!-- Lista (reescrita por renderAssetsFiles) -->
@@ -663,7 +663,7 @@ class BrandOrganizationView extends BaseView {
     const el = document.getElementById('brandMarketLabel');
     if (!el) return;
     el.removeAttribute('data-field');
-    el.textContent = __('Workspace · identidad organizacional');
+    el.textContent = __('Identidad de la marca');
     el.style.cursor = 'default';
     el.style.opacity = '0.72';
   }

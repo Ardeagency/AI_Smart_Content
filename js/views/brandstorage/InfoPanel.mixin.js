@@ -1357,7 +1357,7 @@
     if (!assets.length) {
       return `
       <section class="info-section info-section-assets" aria-labelledby="infoAssetsHeading">
-        <h3 class="info-section-title" id="infoAssetsHeading">${__('Assets')}</h3>
+        <h3 class="info-section-title" id="infoAssetsHeading">${__('Recursos')}</h3>
         <p class="info-assets-empty">${__('Aún no hay archivos. Súbelos desde la card «Archivos de identidad».')}</p>
       </section>`;
     }
@@ -1387,7 +1387,7 @@
     }).join('');
     return `
       <section class="info-section info-section-assets" aria-labelledby="infoAssetsHeading">
-        <h3 class="info-section-title" id="infoAssetsHeading">${__('Assets')}</h3>
+        <h3 class="info-section-title" id="infoAssetsHeading">${__('Recursos')}</h3>
         <ul class="info-asset-list" role="list">${items}</ul>
       </section>`;
     },
