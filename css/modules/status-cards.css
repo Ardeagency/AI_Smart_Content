@@ -21,17 +21,17 @@
    use estos tokens (calendario incluido) se actualiza solo.
    ============================================================ */
 :root {
-  --status-gray-mix: #9a9a92;
+  --status-gray-mix: var(--white-12);
 
   --status-gradient-active: linear-gradient(180deg,
-    color-mix(in srgb, #9acc00 60%, var(--status-gray-mix)) 0%,
-    color-mix(in srgb, var(--color-success, #00d614) 60%, var(--status-gray-mix)) 100%);
+    color-mix(in srgb, var(--prisma-limon) 60%, var(--status-gray-mix)) 0%,
+    color-mix(in srgb, var(--color-success) 60%, var(--status-gray-mix)) 100%);
 
   --status-gradient-draft: linear-gradient(180deg,
-    color-mix(in srgb, var(--color-warning, #ffe500) 60%, var(--status-gray-mix)) 0%,
-    color-mix(in srgb, #9acc00 60%, var(--status-gray-mix)) 100%);
+    color-mix(in srgb, var(--color-warning) 60%, var(--status-gray-mix)) 0%,
+    color-mix(in srgb, var(--prisma-limon) 60%, var(--status-gray-mix)) 100%);
 
-  --status-fill-paused: color-mix(in srgb, var(--text-tertiary, #87868B) 22%, transparent);
+  --status-fill-paused: color-mix(in srgb, var(--text-tertiary, var(--white-12)) 22%, transparent);
 
   /* Texto sobre los gradientes claros (borrador/activa) */
   --status-text-strong: rgba(12, 22, 0, 0.92);

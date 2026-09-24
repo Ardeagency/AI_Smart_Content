@@ -61,7 +61,7 @@
     padding: 1px 6px;
     border-radius: 6px;
     border: 1px solid var(--accent-warm, rgba(255, 255, 255, 0.35));
-    background: color-mix(in srgb, var(--accent-warm, #fff) 12%, transparent);
+    background: color-mix(in srgb, var(--accent-warm) 12%, transparent);
     color: var(--text-primary);
     font-size: 0.78rem;
     font-weight: 600;

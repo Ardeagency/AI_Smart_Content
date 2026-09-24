@@ -40,10 +40,10 @@
   overflow: hidden;
   color: var(--text-primary);
   background: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    var(--brand-color-light, #F79E1B) 0%,
-    var(--brand-color-mid, #FF5F00) 30.29%,
-    #141517 74.04%,
-    #000000 100%);
+    var(--brand-color-light, var(--prisma-naranja)) 0%,
+    var(--brand-color-mid, var(--warm-1)) 30.29%,
+    var(--bg-secondary) 74.04%,
+    var(--bg-tertiary) 100%);
 }
 
 /* Los puntitos de esquina, iguales a los del chat. Van sobre el velo (z-index 1
@@ -65,14 +65,14 @@
 .pred-page::before {
   top: -100px;
   left: -100px;
-  -webkit-mask-image: radial-gradient(circle at 30% 30%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
-  mask-image: radial-gradient(circle at 30% 30%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+  -webkit-mask-image: radial-gradient(circle at 30% 30%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+  mask-image: radial-gradient(circle at 30% 30%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
 }
 .pred-page::after {
   bottom: -100px;
   right: -100px;
-  -webkit-mask-image: radial-gradient(circle at 70% 70%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
-  mask-image: radial-gradient(circle at 70% 70%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+  -webkit-mask-image: radial-gradient(circle at 70% 70%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+  mask-image: radial-gradient(circle at 70% 70%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
 }
 
 /* DOS capas y no una. El velo plano (0.45, el mismo del chat en conversacion)
@@ -163,7 +163,7 @@
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--color-white);
 }
 
 .pred-panel-nota {
@@ -296,8 +296,8 @@
    y el texto que se escribe compite con el fondo. */
 .pred-input {
   width: 100%;
-  background: #0f1012;
-  border: 1px solid var(--border-divider, #242424);
+  background: var(--bg-ui);
+  border: 1px solid var(--border-divider);
   border-radius: 10px;
   padding: 0.5rem 0.6rem;
   color: var(--text-primary);
@@ -470,7 +470,7 @@
   color: var(--text-secondary);
   opacity: 0.5;
 }
-.pred-ronda.is-viva { color: #fff; opacity: 1; }
+.pred-ronda.is-viva { color: var(--color-white); opacity: 1; }
 
 .pred-posts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
 .pred-post {
@@ -483,7 +483,7 @@
   display: block;
   font-size: 0.68rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-white);
   margin-bottom: 0.2rem;
 }
 .pred-post-texto { margin: 0; font-size: 0.74rem; line-height: 1.55; color: var(--text-secondary); }
@@ -521,7 +521,7 @@
   font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: #fff;
+  color: var(--color-white);
 }
 .pred-lienzo-meta {
   display: block;
@@ -550,8 +550,8 @@
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.pred-cara:hover { color: #fff; }
-.pred-cara.is-activa { background: rgba(255, 255, 255, 0.12); color: #fff; }
+.pred-cara:hover { color: var(--color-white); }
+.pred-cara.is-activa { background: rgba(255, 255, 255, 0.12); color: var(--color-white); }
 
 /* En telefono NO scrollea por dentro: la mesa entera es la que scrollea, y un
    area de scroll anidada dentro de otra atrapa el gesto. */
@@ -582,7 +582,7 @@
   font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: #fff;
+  color: var(--color-white);
 }
 /* Blanco tibio y no gris: este texto cae sobre la luz de la marca, y un gris
    neutro encima de un naranja se lee sucio ademas de flojo. */
@@ -598,7 +598,7 @@
   margin: 0 0 0.9rem;
   font-size: 1.05rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-white);
 }
 .pred-esperando .pred-nota { margin-top: 1rem; margin-bottom: 0; }
 
@@ -618,7 +618,7 @@
   margin: 0;
   font-size: 1rem;
   line-height: 1.7;
-  color: #fff;
+  color: var(--color-white);
 }
 .pred-confianza {
   margin: 0.6rem 0 0;
@@ -652,7 +652,7 @@
 .pred-senal-relleno { display: block; height: 100%; border-radius: 2px; background: var(--text-secondary); }
 /* Direccion: se distingue por opacidad, no por color — la guia es monocroma.
    El signo lo lleva el texto de la señal, no un semaforo. */
-.pred-senal--positiva .pred-senal-relleno { background: #fff; }
+.pred-senal--positiva .pred-senal-relleno { background: var(--color-white); }
 .pred-senal--negativa .pred-senal-relleno { background: var(--text-secondary); opacity: 0.55; }
 .pred-senal--mixta    .pred-senal-relleno { background: var(--text-secondary); opacity: 0.35; }
 .pred-senal-fuerza {
@@ -667,7 +667,7 @@
   margin-bottom: 0.7rem;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-white);
 }
 .pred-fallo .pred-crudo { max-height: 320px; overflow-y: auto; }
 .pred-fallo .pred-nota { margin: 0.8rem 0 0; }
@@ -680,13 +680,13 @@
   margin: 1.4rem 0 0.5rem;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-white);
 }
 .pred-reporte.is-markdown p { margin: 0 0 0.8rem; }
 .pred-reporte.is-markdown ul,
 .pred-reporte.is-markdown ol { margin: 0 0 0.9rem; padding-left: 1.2rem; }
 .pred-reporte.is-markdown li { margin-bottom: 0.3rem; }
-.pred-reporte.is-markdown strong { color: #fff; }
+.pred-reporte.is-markdown strong { color: var(--color-white); }
 .pred-reporte.is-markdown table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
 .pred-reporte.is-markdown th,
 .pred-reporte.is-markdown td { border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.35rem 0.5rem; text-align: left; }
@@ -801,11 +801,11 @@
   transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 .pmapa-chip span { opacity: 0.6; }
-.pmapa-chip:hover { color: #fff; }
+.pmapa-chip:hover { color: var(--color-white); }
 .pmapa-chip.is-activo {
   border-color: rgba(var(--brand-primary-rgb, 255, 255, 255), 0.8);
   background: rgba(var(--brand-primary-rgb, 255, 255, 255), 0.15);
-  color: #fff;
+  color: var(--color-white);
 }
 
 /* La ficha del actor. Al pie y no en el centro: tapa el mapa lo menos posible,
@@ -827,7 +827,7 @@
 }
 .pmapa-ficha-alto { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
 .pmapa-ficha-quien { min-width: 0; }
-.pmapa-ficha-quien b { display: block; font-size: 0.82rem; font-weight: 600; color: #fff; }
+.pmapa-ficha-quien b { display: block; font-size: 0.82rem; font-weight: 600; color: var(--color-white); }
 .pmapa-ficha-quien p { margin: 0.15rem 0 0; font-size: 0.65rem; color: var(--text-secondary); }
 .pmapa-cerrar {
   flex: none;
@@ -838,7 +838,7 @@
   cursor: pointer;
   padding: 0 0.2rem;
 }
-.pmapa-cerrar:hover { color: #fff; }
+.pmapa-cerrar:hover { color: var(--color-white); }
 .pmapa-ficha-resumen {
   margin: 0.55rem 0 0;
   font-size: 0.72rem;

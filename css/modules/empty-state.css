@@ -38,8 +38,8 @@
     radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.2px);
   background-size: 22px 22px, 22px 22px;
   background-position: 0 0, 11px 11px;
-  -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
-  mask-image: radial-gradient(circle at 50% 45%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+  mask-image: radial-gradient(circle at 50% 45%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
 }
 
 /* Ocupa el alto disponible cuando el contenedor padre es flex */
@@ -67,7 +67,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #16181b;
+  background: var(--bg-secondary);
   border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow:
     0 0 72px 14px rgba(224, 86, 63, 0.12),
@@ -84,7 +84,7 @@
   height: 100%;
   font-size: 28px;
   line-height: 1;
-  color: var(--text-primary, #D4D1D8);
+  color: var(--text-primary);
   opacity: 0.92;
 }
 /* Iconos del sistema aisc-ico son MASCARAS (no glyphs): ignoran font-size y se
@@ -108,7 +108,7 @@
   font-size: 1.4rem;
   font-weight: 600;
   line-height: 1.25;
-  color: var(--text-primary, #D4D1D8);
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 .ple-subtitle {
@@ -138,10 +138,10 @@
 }
 .ple-btn:active { transform: translateY(1px); }
 .ple-btn--primary {
-  background: #f2f0f4;
-  color: #0f1011;
+  background: var(--color-white);
+  color: var(--bg-ui);
 }
-.ple-btn--primary:hover { background: #ffffff; }
+.ple-btn--primary:hover { background: var(--color-white); }
 .ple-btn--secondary {
   background: transparent;
   color: rgba(212, 209, 216, 0.9);

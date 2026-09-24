@@ -17,7 +17,7 @@
        la version anterior lo pintaba a plena saturacion y la pagina entera se
        volvia morada. Los porcentajes de color-mix son el dimmer; los stops
        salen de los tokens para no repetir los hex. */
-    background-color: #050507;
+    background-color: var(--fondo-base);
     background-image: radial-gradient(125% 72% at 50% -14%,
         color-mix(in srgb, var(--pf-7) 22%, transparent) 0%,
         color-mix(in srgb, var(--pf-6) 19%, transparent) 13%,

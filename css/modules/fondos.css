@@ -30,18 +30,18 @@
 .fondo-org {
   background-color: var(--bg-primary);
   background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    var(--org-color-light, #2a2b2e) 0%,
-    var(--org-color-mid, #1c1d20) 30.29%,
-    #141517 74.04%,
+    var(--org-color-light, var(--border-color)) 0%,
+    var(--org-color-mid, var(--border-color)) 30.29%,
+    var(--bg-secondary) 74.04%,
     var(--bg-primary) 100%);
 }
 
 .fondo-org--tenue {
-  background-color: #050507;
+  background-color: var(--fondo-base);
   background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    color-mix(in srgb, var(--org-color-light, #2a2b2e) 26%, transparent) 0%,
-    color-mix(in srgb, var(--org-color-mid, #1c1d20) 18%, transparent) 30.29%,
-    color-mix(in srgb, #141517 55%, transparent) 74.04%,
+    color-mix(in srgb, var(--org-color-light, var(--border-color)) 26%, transparent) 0%,
+    color-mix(in srgb, var(--org-color-mid, var(--border-color)) 18%, transparent) 30.29%,
+    color-mix(in srgb, var(--bg-secondary) 55%, transparent) 74.04%,
     transparent 100%);
 }
 

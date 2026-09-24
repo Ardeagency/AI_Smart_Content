@@ -21,12 +21,12 @@
 /* ─────── Input: wrapper .form-field con label/helper/error */
 .form-field               { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
 .form-field .form-label   { font-size: var(--font-size-sm); font-weight: 500; color: var(--text-secondary); margin: 0; }
-.form-field .form-required{ color: var(--color-error, #ef4444); }
+.form-field .form-required{ color: var(--color-error); }
 .form-field .form-helper  { font-size: var(--font-size-xs); color: var(--text-secondary); opacity: 0.8; }
-.form-field .form-error   { font-size: var(--font-size-xs); color: var(--color-error, #ef4444); }
+.form-field .form-error   { font-size: var(--font-size-xs); color: var(--color-error); }
 .form-field--error .form-input,
 .form-field--error .form-textarea {
-  border-color: var(--color-error, #ef4444);
+  border-color: var(--color-error);
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
 }
 
@@ -79,7 +79,7 @@
 }
 .ui-dropdown-item:hover:not(.is-disabled) { background: rgba(255, 255, 255, 0.08); }
 .ui-dropdown-item.is-disabled { opacity: 0.45; cursor: not-allowed; }
-.ui-dropdown-item--danger { color: var(--color-error, #ef4444); }
+.ui-dropdown-item--danger { color: var(--color-error); }
 .ui-dropdown-item--danger:hover:not(.is-disabled) { background: rgba(239, 68, 68, 0.12); }
 .ui-dropdown-item > i { width: 16px; text-align: center; opacity: 0.8; }
 .ui-dropdown-separator {
@@ -120,7 +120,7 @@
 .ui-tab:hover:not(.is-disabled) { color: var(--text-primary); }
 .ui-tab.is-active {
   color: var(--text-primary);
-  border-bottom-color: var(--brand-primary, var(--accent-brand, #ecebda));
+  border-bottom-color: var(--brand-primary, var(--accent-brand));
 }
 .ui-tab.is-disabled { opacity: 0.4; cursor: not-allowed; }
 .ui-tab-badge {
