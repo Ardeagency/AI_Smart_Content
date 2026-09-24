@@ -22,7 +22,6 @@ body.has-sidebar #app-container {
   padding: 0;
   padding-top: var(--header-height);
   box-sizing: border-box;
-  transition: margin-left 0.28s var(--ease-standard), max-width 0.28s var(--ease-standard);
 }
 body.has-sidebar.sidebar-collapsed #app-container {
   margin-left: var(--nav-width-collapsed);
@@ -53,7 +52,7 @@ body.has-sidebar #app-container:has(> main.living-main-content) { padding-top: c
   background: var(--bg-secondary);
   border-right: 1px solid var(--border-hairline);
   font-family: var(--font-sans);
-  transition: width 0.28s var(--ease-standard), transform 0.28s var(--ease-out);
+  transition: transform 0.28s var(--ease-out); /* solo el drawer móvil; contraer en escritorio es inmediato (sin animar layout) */
 }
 body.has-demo-banner .shell-sidebar { top: var(--demo-banner-height, 0); }
 
@@ -309,7 +308,6 @@ body.has-demo-banner .shell-sidebar { top: var(--demo-banner-height, 0); }
   -webkit-backdrop-filter: blur(14px) saturate(120%);
   border-bottom: 1px solid var(--border-hairline);
   font-family: var(--font-sans);
-  transition: left 0.28s var(--ease-standard);
 }
 body.sidebar-collapsed .shell-topbar { left: var(--nav-width-collapsed); }
 body.has-demo-banner .shell-topbar { top: var(--demo-banner-height, 0); }

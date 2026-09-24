@@ -19,9 +19,8 @@
 .tablero-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .tablero-lista li { padding: var(--space-3); border: 1px solid var(--border-hairline); border-radius: var(--radius-md); background: var(--white-2); }
 .tablero-lista p { margin: var(--space-1) 0 0; font-size: var(--font-size-sm); line-height: 1.45; color: var(--text-secondary); }
-.tablero-senal { border-left: 3px solid var(--border-hairline-strong); }
-.tablero-senal.vera-sev--threat { border-left-color: var(--color-error); }
-.tablero-senal.vera-sev--warn { border-left-color: var(--color-warning); }
+.tablero-senal.vera-sev--threat .tablero-senal-kind { color: var(--color-error); }
+.tablero-senal.vera-sev--warn .tablero-senal-kind { color: var(--color-warning); }
 .tablero-senal-kind { display: block; margin-bottom: 2px; font-family: var(--font-mono); font-size: var(--font-size-xs); letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
 .tablero-hueco-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
 .tablero-score { font-family: var(--font-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; color: var(--color-success); }
