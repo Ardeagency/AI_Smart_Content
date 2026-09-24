@@ -301,7 +301,7 @@ class ImageView extends BaseView {
 
                 <div class="video-canvas-idle" id="imageCanvasIdle">
                   <div class="video-canvas-idle-content">
-                    <p class="video-canvas-idle__eyebrow">Stand by</p>
+                    <p class="video-canvas-idle__eyebrow">${__('En espera')}</p>
                     <h3 class="video-canvas-idle__title">${window.__('Listo para fotografiar')}</h3>
                     <p class="video-canvas-idle__hint">${window.__('Describe la imagen abajo: qué se ve, dónde y con qué intención. La dirección de fotografía la pones en el panel de la derecha.')}</p>
                   </div>
@@ -354,7 +354,7 @@ class ImageView extends BaseView {
                 <div class="video-prompt-footer-card video-prompt-footer-card-center">
                   <div class="video-prompt-footer-card-inner video-director-console">
 
-                    <input type="file" id="imageConsoleUpload" accept="image/jpeg,image/png,image/jpg,image/webp" multiple style="display: none;" aria-hidden="true">
+                    <input type="file" id="imageConsoleUpload" accept="image/jpeg,image/png,image/jpg,image/webp" multiple hidden aria-hidden="true">
 
                     <div class="video-director-console-content">
                       <div id="imagePromptEditor"></div>
@@ -487,7 +487,7 @@ class ImageView extends BaseView {
                       <h3 class="video-section-label">${window.__('Referencias visuales')}</h3>
                     </div>
                     <p class="video-sidebar-section-hint">${window.__('Imágenes que la IA usa como guía de estilo, escena o producto. No se copian: orientan.')}</p>
-                    <input type="file" id="imageRefUpload" accept="image/jpeg,image/png,image/jpg,image/webp" multiple style="display: none;" aria-hidden="true">
+                    <input type="file" id="imageRefUpload" accept="image/jpeg,image/png,image/jpg,image/webp" multiple hidden aria-hidden="true">
 
                     <div class="seedance-ref-group">
                       <div class="seedance-ref-group-header">

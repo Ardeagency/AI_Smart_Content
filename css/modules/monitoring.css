@@ -152,7 +152,7 @@
 }
 .mn-btn-icon:hover { background: rgba(255, 255, 255, 0.06); color: var(--color-white); }
 .mn-btn-icon--danger:hover {
-  background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.3); color: var(--color-error-light);
+  background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.3); color: color-mix(in srgb, var(--color-error) 45%, var(--color-white));
 }
 
 /* ── Navegacion del header (tabs): Seguidos / URLs / Sugerencias ── */
@@ -637,8 +637,8 @@ body.mn-dragging, body.mn-dragging * { cursor: grabbing !important; }
   display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
   padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
-.mn-btn-danger { color: var(--color-error-light) !important; border-color: rgba(239, 68, 68, 0.25) !important; }
-.mn-btn-danger:hover { background: rgba(239, 68, 68, 0.12) !important; color: var(--color-error-light) !important; }
+.mn-btn-danger { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)) !important; border-color: rgba(239, 68, 68, 0.25) !important; }
+.mn-btn-danger:hover { background: rgba(239, 68, 68, 0.12) !important; color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)) !important; }
 /* ── Columna izquierda: contenido capturado (posts con link al original) ── */
 .mn-detail-posts {
   display: flex; flex-direction: column; gap: 8px;
@@ -1271,7 +1271,7 @@ a.mn-post:hover .mn-post-ext { color: rgba(255, 255, 255, 0.7); }
 .mn-btn-danger {
   background: rgba(239, 68, 68, 0.12) !important;
   border-color: rgba(239, 68, 68, 0.4) !important;
-  color: var(--color-error-light) !important;
+  color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)) !important;
 }
 .mn-btn-danger:hover {
   background: rgba(239, 68, 68, 0.2) !important;

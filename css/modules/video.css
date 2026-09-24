@@ -29,7 +29,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /**
  * Acento de la vista, en un solo lugar.
  *
- * Antes cada estado seleccionado tiraba de `--color-info` (#00e7ff), un cian
+ * Antes cada estado seleccionado tiraba de `--color-info` (var(--prisma-celeste)), un cian
  * fijo que no es de ninguna marca. La plataforma pinta con el color dinámico
  * de la organización: `--accent-brand` = `--brand-primary` inyectado por
  * OrgBrandTheme, y si la org no tiene color propio cae a un blanco tenue y la
@@ -109,8 +109,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
         radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.2px);
     background-size: 22px 22px, 22px 22px;
     background-position: 0 0, 11px 11px;
-    -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
-    mask-image: radial-gradient(circle at 50% 45%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+    -webkit-mask-image: radial-gradient(circle at 50% 45%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+    mask-image: radial-gradient(circle at 50% 45%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
     pointer-events: none;
     z-index: 0;
 }
@@ -185,7 +185,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-view-container .video-sidebar-console .video-prompt-footer-card-inner.video-sidebar-inner {
     background: var(--bg-secondary);
-    border: 1px solid var(--border-light, #212126);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
     padding: 12px 12px 14px 14px;
     /* Sombra alineada con Studio sidebar para que ambas cards "floten" igual */
@@ -449,8 +449,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: 0.78rem;
     font-weight: 500;
     color: var(--text-primary);
-    background: #0f1012;
-    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-ui);
+    border: 1px solid var(--border-divider);
     border-radius: var(--radius-sm);
     cursor: pointer;
     appearance: none;
@@ -1050,8 +1050,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     margin: 0 auto 6rem;
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    background: var(--bg-card, #141517);
-    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-card);
+    border: 1px solid var(--border-divider);
     box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
@@ -1505,7 +1505,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-attachment-remove-thumb:hover {
     opacity: 1;
     background: var(--accent-warm, var(--color-warning));
-    color: #fff;
+    color: var(--color-white);
 }
 .video-attachment-pin-thumb {
     position: absolute;
@@ -1533,7 +1533,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-attachment-pin-thumb:hover {
     opacity: 1;
     background: var(--brand-primary-brillo, rgba(255,255,255,0.2));
-    color: #fff;
+    color: var(--color-white);
 }
 .video-attachment-pin-thumb .video-attachment-pin-active,
 .video-attachment-pin-active {
@@ -1603,7 +1603,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     width: 100%;
     padding: 0.65rem 0.85rem;
     font-size: var(--font-size-base);
-    color: var(--glass-black-text, #ffffff);
+    color: var(--glass-black-text);
     background: rgba(0, 0, 0, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: var(--radius-sm);
@@ -1649,12 +1649,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
     flex-shrink: 0;
     min-width: 36px;
     background: var(--glass-black-bg, rgba(20, 20, 26, 0.9));
-    color: var(--color-white, #ffffff);
+    color: var(--color-white);
     border: 1px solid var(--glass-black-border);
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn-ai:hover {
     background: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.15));
-    color: var(--color-white, #ffffff);
+    color: var(--color-white);
 }
 .video-prompt-btn-ai:disabled {
     opacity: 0.6;
@@ -1663,12 +1663,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn-send {
     margin-left: auto;
     background: var(--glass-black-bg, rgba(20, 20, 26, 0.9));
-    color: var(--color-white, #ffffff);
+    color: var(--color-white);
     border: 1px solid var(--glass-black-border);
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn-send:hover {
     background: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.15));
-    color: var(--color-white, #ffffff);
+    color: var(--color-white);
 }
 .video-prompt-btn-send:disabled {
     opacity: 0.6;
@@ -1821,7 +1821,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #000;
+    color: var(--bg-tertiary);
     background: var(--color-info);
     border-radius: var(--radius-xs);
     line-height: 1.5;
@@ -1933,7 +1933,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #000;
+    color: var(--bg-tertiary);
     background: var(--color-success);
     border-radius: var(--radius-xs);
     flex-shrink: 0;
@@ -1978,7 +1978,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: 0.55rem;
     font-weight: 800;
     letter-spacing: 0.04em;
-    color: #000;
+    color: var(--bg-tertiary);
     background: var(--color-info);
     border-radius: var(--radius-xs);
     flex-shrink: 0;
@@ -2024,19 +2024,19 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-sidebar-section-num,
 .video-view-container .video-console-dot,
 .video-view-container .video-canvas-model-badge {
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5)));
 }
 .video-view-container .video-prompt-preview-score {
     margin-top: var(--spacing-sm);
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: transparent;
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5)));
     -webkit-background-clip: text;
     background-clip: text;
 }
 .video-view-container .video-asset-card-locks .fa-check {
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5)));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2057,10 +2057,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-radius: inherit;
     z-index: 0;
     padding: 1px;
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5)));
+    -webkit-mask: linear-gradient(var(--color-white) 0 0) content-box, linear-gradient(var(--color-white) 0 0);
     -webkit-mask-composite: xor;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(var(--color-white) 0 0) content-box, linear-gradient(var(--color-white) 0 0);
     mask-composite: exclude;
     pointer-events: none;
 }
@@ -2073,7 +2073,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 2px solid transparent;
     background:
         linear-gradient(var(--black-40), var(--black-40)) padding-box,
-        var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138)) border-box;
+        var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5))) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -2083,7 +2083,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 2px solid transparent;
     background:
         linear-gradient(var(--black-40), var(--black-40)) padding-box,
-        var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138)) border-box;
+        var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5))) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -2093,7 +2093,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     box-shadow: none;
     background:
         linear-gradient(var(--bg-secondary), var(--bg-secondary)) padding-box,
-        var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138)) border-box;
+        var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5))) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -2102,7 +2102,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 1px solid transparent;
     background-image:
         linear-gradient(var(--brand-primary-brillo-strong, var(--brillo-active)), var(--brand-primary-brillo-strong, var(--brillo-active))) padding-box,
-        var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138)) border-box;
+        var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5))) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -2122,14 +2122,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 /* ---- Form Record Enhancements ---- */
 .form-org-card .step-subtitle {
-  color: var(--text-secondary, #a0a0a0);
+  color: var(--text-secondary);
   font-size: 0.95rem;
   margin-bottom: 0.75rem;
 }
 .form-org-card .field-hint {
   display: block;
   margin-top: 0.35rem;
-  color: var(--text-tertiary, #8a8a8a);
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 .social-input-grid {
@@ -2142,7 +2142,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex;
   flex-direction: column;
   font-size: 0.85rem;
-  color: var(--text-secondary, #a0a0a0);
+  color: var(--text-secondary);
 }
 .social-input-grid label input {
   margin-top: 0.35rem;
@@ -2151,7 +2151,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: var(--text-primary, #ecebda);
+  color: var(--text-primary);
 }
 .form-status {
   margin-top: 1.5rem;
@@ -2171,12 +2171,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .form-status.success {
   background: rgba(58, 183, 109, 0.15);
   border: 1px solid rgba(58, 183, 109, 0.3);
-  color: #9ef5c4;
+  color: color-mix(in srgb, var(--color-success) 55%, var(--color-white));
 }
 .form-status.error {
   background: rgba(255, 99, 99, 0.1);
   border: 1px solid rgba(255, 99, 99, 0.35);
-  color: #ff9c9c;
+  color: color-mix(in srgb, var(--color-error) 45%, var(--color-white));
 }
 .form-status.loading {
   background: rgba(236, 235, 218, 0.08);
@@ -2223,7 +2223,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   gap: 0.5rem;
   flex-wrap: wrap;
   font-size: 0.85rem;
-  color: var(--text-secondary, #a0a0a0);
+  color: var(--text-secondary);
 }
 .manual-competitor {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -2272,15 +2272,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
   width: 100%;
   height: calc(100dvh - var(--app-header-height, 45.8px));
   /* Fondo = radial exacto del Frame 98 (4 paradas): color mas claro de la marca
-     (0%) -> mas oscuro (30.29%) -> #141517 (74.04%) -> #000 (100%). Va en el
+     (0%) -> mas oscuro (30.29%) -> var(--bg-card) (74.04%) -> var(--bg-tertiary) (100%). Va en el
      .gpt-layout (no en .gpt-main::before) para que los dots de esquina de
      .gpt-layout::before/::after se pinten POR ENCIMA y sigan visibles.
      --brand-color-light/-dark los publica OrgBrandTheme por org; fallback naranja. */
   background: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    var(--brand-color-light, #F79E1B) 0%,
-    var(--brand-color-mid, #FF5F00) 30.29%,
-    #141517 74.04%,
-    #000000 100%);
+    var(--brand-color-light, var(--prisma-naranja)) 0%,
+    var(--brand-color-mid, var(--prisma-naranja)) 30.29%,
+    var(--bg-card) 74.04%,
+    var(--bg-tertiary) 100%);
   color: var(--text-primary);
   position: relative;
   overflow: hidden;
@@ -2537,7 +2537,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   width: 3px;
   height: 16px;
   border-radius: 3px;
-  background: var(--brand-gradient-dynamic-vertical, var(--brand-primary, #c0392b));
+  background: var(--brand-gradient-dynamic-vertical, var(--accent-brand));
 }
 .vera-history-item-title {
   display: block;
@@ -2561,9 +2561,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
   text-transform: uppercase;
   padding: 2px 7px;
   border-radius: 999px;
-  color: #fff;
+  color: var(--color-white);
   line-height: 1.5;
-  background: var(--brand-gradient-dynamic-vertical, var(--brand-primary, #c0392b));
+  background: var(--brand-gradient-dynamic-vertical, var(--accent-brand));
 }
 .vera-history-empty {
   color: var(--text-muted);
@@ -2784,7 +2784,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   -webkit-appearance: none;
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.10));
   background: var(--glass-bg, rgba(255, 255, 255, 0.04));
-  color: var(--text-secondary, #b8b8bd);
+  color: var(--text-secondary);
   font-size: 0.875rem;
   font-family: var(--font-family);
   line-height: 1.2;
@@ -2853,7 +2853,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   gap: 10px;
   padding: 13px 16px;
   border-radius: 12px;
-  border: 1px solid var(--border-light, #212126);
+  border: 1px solid var(--border-light);
   background: var(--white-5);
   color: var(--text-secondary);
   font-size: 0.875rem;
@@ -2986,7 +2986,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   min-width: 1.4em;
   text-align: right;
 }
-.gpt-msg-content strong { font-weight: 600; color: #fff; }
+.gpt-msg-content strong { font-weight: 600; color: var(--color-white); }
 .gpt-msg-content em { font-style: italic; color: var(--text-secondary); }
 .gpt-msg-content del { color: var(--text-tertiary, rgba(212, 209, 216, 0.6)); }
 
@@ -3003,7 +3003,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   margin-top: 3px;
   width: 16px;
   height: 16px;
-  accent-color: var(--accent-brand, #00e7ff);
+  accent-color: var(--accent-brand);
   flex-shrink: 0;
 }
 .gpt-task-text { color: var(--text-primary); }
@@ -3020,7 +3020,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   margin: 0.9em 0 0.5em;
   font-weight: 650;
   letter-spacing: -0.01em;
-  color: #fff;
+  color: var(--color-white);
 }
 .gpt-msg-content h1 { font-size: 1.25rem; }
 .gpt-msg-content h2 { font-size: 1.125rem; }
@@ -3044,7 +3044,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 
 .gpt-msg-content a.gpt-md-link {
-  color: #9bcaff;
+  color: color-mix(in srgb, var(--color-info) 50%, var(--color-white));
   text-decoration: none;
   background-image: linear-gradient(90deg, rgba(155, 202, 255, 0.5) 0%, rgba(155, 202, 255, 0.5) 100%);
   background-repeat: no-repeat;
@@ -3054,7 +3054,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   padding-bottom: 1px;
 }
 .gpt-msg-content a.gpt-md-link:hover {
-  color: #bfdcff;
+  color: color-mix(in srgb, var(--color-info) 35%, var(--color-white));
   background-size: 100% 2px;
 }
 
@@ -3067,7 +3067,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: block;
   margin: 14px 0;
   border-radius: 12px;
-  border: 1px solid #242429;
+  border: 1px solid var(--border-color);
   box-shadow:
     0 16px 32px -20px rgba(0, 0, 0, 0.6),
     0 2px 4px rgba(0, 0, 0, 0.2);
@@ -3087,7 +3087,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: block;
   margin: 0.75em 0;
   border-radius: 10px;
-  border: 1px solid var(--border-light, #212126);
+  border: 1px solid var(--border-light);
   background: var(--bg-card);
 }
 
@@ -3097,10 +3097,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
   margin: 18px 0;
   padding: 20px 18px 16px;
   border-radius: 14px;
-  border: 1px solid #242429;
+  border: 1px solid var(--border-color);
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.025) 0%, transparent 60%),
-    linear-gradient(180deg, #131418 0%, #0e0f12 100%);
+    linear-gradient(180deg, var(--bg-card) 0%, var(--bg-ui) 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 20px 40px -24px rgba(0, 0, 0, 0.6),
@@ -3123,7 +3123,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
 }
 .gpt-viz--error {
-  color: #ff7a7a;
+  color: color-mix(in srgb, var(--color-error) 45%, var(--color-white));
   border-color: rgba(255, 80, 80, 0.3);
   background: linear-gradient(180deg, rgba(40, 10, 10, 0.4) 0%, rgba(20, 8, 8, 0.4) 100%);
 }
@@ -3148,7 +3148,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   gap: 8px;
 }
 .gpt-qr-btn {
-  border: 1px solid #2c2c34;
+  border: 1px solid var(--border-color);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.015) 100%);
   color: var(--text-primary);
@@ -3178,8 +3178,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   cursor: not-allowed;
 }
 .gpt-qr-btn--primary {
-  background: color-mix(in oklab, var(--accent-brand, #00e7ff) 20%, rgba(255,255,255,0.04));
-  border-color: color-mix(in oklab, var(--accent-brand, #00e7ff) 30%, var(--border-light, #212126));
+  background: color-mix(in oklab, var(--accent-brand) 20%, rgba(255,255,255,0.04));
+  border-color: color-mix(in oklab, var(--accent-brand) 30%, var(--border-light));
 }
 .gpt-qr-btn--danger {
   background: rgba(255, 0, 0, 0.08);
@@ -3216,7 +3216,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 /* Error messages */
 .gpt-msg--error .gpt-msg-content {
-  color: var(--color-error, #ff4444);
+  color: var(--color-error);
 }
 
 /* Typing / Activity indicator */
@@ -3278,7 +3278,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   width: 100%;
   max-width: 768px;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-light, #212126);
+  border: 1px solid var(--border-light);
   border-radius: 16px;
   padding: 12px 12px 8px 14px;
   display: flex;
@@ -3364,7 +3364,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   margin: 0;
   width: 100%;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-light, #212126);
+  border: 1px solid var(--border-light);
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
@@ -3527,7 +3527,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border: none;
   border-radius: 999px;
   background: var(--text-primary);
-  color: var(--bg-primary, #0b0b0b);
+  color: var(--bg-primary);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -3557,7 +3557,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-opt--check.checked .vera-opt-check {
   background: var(--text-primary);
   border-color: var(--text-primary);
-  color: var(--bg-primary, #0b0b0b);
+  color: var(--bg-primary);
 }
 .vera-opt--check.checked { background: var(--white-5); }
 
@@ -3599,7 +3599,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-step-num {
   width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
   background: rgba(139,127,240,0.15); border: 1px solid rgba(139,127,240,0.3);
-  color: #8b7ff0; font-size: 10px; font-weight: 500;
+  color: var(--color-info); font-size: 10px; font-weight: 500;
   display: flex; align-items: center; justify-content: center; margin-top: 2px;
 }
 .vera-step-text { font-size: 13.5px; line-height: 1.55; opacity: 0.85; }
@@ -3625,7 +3625,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   background: transparent; font-size: 12px; opacity: 0.6;
   cursor: pointer; transition: all 0.15s; color: inherit; font-family: inherit;
 }
-.vera-action-pill:hover { border-color: #8b7ff0; color: #8b7ff0; opacity: 1; background: rgba(139,127,240,0.08); }
+.vera-action-pill:hover { border-color: var(--color-info); color: var(--color-info); opacity: 1; background: rgba(139,127,240,0.08); }
 
 /* ── Input-area options (CLARIFY / PILLS) ──
    Reemplazan temporalmente el textarea cuando VERA emite opciones.
@@ -3635,7 +3635,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .vera-input-options-label {
   font-size: 13px;
-  color: var(--text-secondary, #9997ad);
+  color: var(--text-secondary);
   margin-bottom: 10px;
   font-weight: 500;
 }
@@ -3663,7 +3663,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   background: rgba(139,127,240,0.06);
 }
 .vera-input-option-card.selected {
-  border-color: #8b7ff0;
+  border-color: var(--color-info);
   background: rgba(139,127,240,0.12);
 }
 .vera-option-icon {
@@ -3680,14 +3680,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-option-title {
   font-size: 14px;
   font-weight: 500;
-  color: #f0eff5;
+  color: var(--color-white);
 }
 .vera-input-option-card.selected .vera-option-title {
-  color: #8b7ff0;
+  color: var(--color-info);
 }
 .vera-option-desc {
   font-size: 12px;
-  color: #6b6980;
+  color: var(--text-muted);
 }
 
 /* ── [CONFIRM] — bloque de confirmacion de tarea costosa ──
@@ -3698,8 +3698,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   margin: 12px 0;
   padding: 14px 16px;
   border-radius: 12px;
-  background: #141517;
-  border: 1px solid #242424;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   display: flex; flex-direction: column; gap: 10px;
 }
 .vera-confirm-block--dismissed {
@@ -3710,13 +3710,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex; align-items: center; gap: 8px;
   font-size: 13px; font-weight: 500;
 }
-.vera-confirm-icon { color: #f0b400; font-size: 14px; }
+.vera-confirm-icon { color: var(--color-warning); font-size: 14px; }
 .vera-confirm-title { color: rgba(255,255,255,0.85); }
 .vera-confirm-estimate {
   font-size: 13px; opacity: 0.85;
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
-.vera-confirm-estimate strong { color: #f0b400; font-weight: 500; }
+.vera-confirm-estimate strong { color: var(--color-warning); font-weight: 500; }
 .vera-confirm-sep { opacity: 0.3; }
 .vera-confirm-minutes { opacity: 0.6; }
 .vera-confirm-reasons {
@@ -3742,9 +3742,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-confirm-btn:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.04); }
 .vera-confirm-btn:disabled { cursor: default; opacity: 0.5; }
 .vera-confirm-btn-primary {
-  border-color: rgba(139,127,240,0.5); color: #8b7ff0;
+  border-color: rgba(139,127,240,0.5); color: var(--color-info);
 }
-.vera-confirm-btn-primary:hover { border-color: #8b7ff0; background: rgba(139,127,240,0.1); }
+.vera-confirm-btn-primary:hover { border-color: var(--color-info); background: rgba(139,127,240,0.1); }
 .vera-confirm-btn-cancel { opacity: 0.55; }
 .vera-confirm-btn-cancel:hover { opacity: 1; }
 .vera-confirm-status {
@@ -3758,12 +3758,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-canvas-block {
   margin: 14px 0;
   border-radius: 12px;
-  border: 1px solid var(--glass-black-border, #242429);
+  border: 1px solid var(--glass-black-border);
   overflow: hidden;
-  background: #0d0d0f;
+  background: var(--bg-ui);
   min-height: 80px;
 }
-.vera-html-block, .vera-artifact-block { background: #0d0d0f; }
+.vera-html-block, .vera-artifact-block { background: var(--bg-ui); }
 /* SIN transition en height: cada fotograma de la animación cambiaba el viewport
    del iframe, disparaba su ResizeObserver y devolvía otra medida. El alto se
    ajusta de una vez. */
@@ -3824,7 +3824,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex; align-items: center;
   justify-content: space-between;
   padding: 9px 12px 9px 14px;
-  border-bottom: 1px solid var(--glass-black-border, #242429);
+  border-bottom: 1px solid var(--glass-black-border);
   font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
@@ -3890,14 +3890,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .vera-artifact-act:hover { background: var(--white-8); color: var(--text-primary); }
 .vera-artifact-act.active { background: var(--white-10); color: var(--text-primary); }
-.vera-artifact-act--close:hover { background: rgba(192,57,43,0.18); color: #ff6b5e; }
-.vera-artifact-panel-body { flex: 1; min-height: 0; position: relative; background: #0d0d0f; }
+.vera-artifact-act--close:hover { background: rgba(192,57,43,0.18); color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
+.vera-artifact-panel-body { flex: 1; min-height: 0; position: relative; background: var(--bg-ui); }
 .vera-artifact-panel-frame {
   display: block; width: 100%; height: 100%; border: none;
 }
 .vera-artifact-code {
   margin: 0; height: 100%; overflow: auto;
-  padding: 16px; background: #0d0d0f;
+  padding: 16px; background: var(--bg-ui);
   color: var(--text-primary);
   font-size: 12.5px; line-height: 1.55;
   white-space: pre-wrap; word-break: break-word;
@@ -3980,18 +3980,18 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-gallery-card-icon {
   flex: 0 0 auto; width: 44px; height: 44px; border-radius: 10px;
   display: inline-flex; align-items: center; justify-content: center;
-  font-size: 1.15rem; color: #fff;
-  background: linear-gradient(135deg, #5b5e66, #44464d);
+  font-size: 1.15rem; color: var(--color-white);
+  background: linear-gradient(135deg, var(--white-20), var(--white-10));
 }
-.vera-gallery-card-icon--pdf  { background: linear-gradient(135deg,#e2574c,#b53124); }
+.vera-gallery-card-icon--pdf  { background: linear-gradient(135deg, var(--prisma-rojo), var(--prisma-fucsia)); }
 .vera-gallery-card-icon--png,
 .vera-gallery-card-icon--jpg,
 .vera-gallery-card-icon--jpeg,
-.vera-gallery-card-icon--webp { background: linear-gradient(135deg,#7c5cff,#5b3fd6); }
+.vera-gallery-card-icon--webp { background: linear-gradient(135deg, var(--prisma-purpura), var(--prisma-violeta)); }
 .vera-gallery-card-icon--xlsx,
-.vera-gallery-card-icon--csv  { background: linear-gradient(135deg,#1f9d57,#157a42); }
+.vera-gallery-card-icon--csv  { background: linear-gradient(135deg, var(--prisma-verde), var(--prisma-limon)); }
 .vera-gallery-card-icon--docx,
-.vera-gallery-card-icon--doc  { background: linear-gradient(135deg,#2b7cd3,#1c5aa6); }
+.vera-gallery-card-icon--doc  { background: linear-gradient(135deg, var(--prisma-azul), var(--prisma-celeste)); }
 .vera-gallery-card-meta { flex: 1; min-width: 0; }
 .vera-gallery-card-title { font-size: .86rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vera-gallery-card-sub { font-size: .72rem; color: var(--text-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -4280,7 +4280,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border: none;
   border-radius: 999px;
   background: var(--text-primary);
-  color: var(--bg-primary, #0b0b0b);
+  color: var(--bg-primary);
   font-size: .82rem; font-weight: 600; font-family: inherit; cursor: pointer;
   transition: opacity .14s ease, transform .14s ease;
 }
@@ -4407,11 +4407,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
   justify-content: center;
   font-size: 0.875rem;
   flex-shrink: 0;
-  background: var(--text-primary, #D4D1D8);
-  color: #000;
+  background: var(--text-primary);
+  color: var(--bg-tertiary);
   transition: background 0.15s, transform 0.1s;
 }
-.gpt-send-btn:hover:not(:disabled) { background: #fff; transform: scale(1.05); }
+.gpt-send-btn:hover:not(:disabled) { background: var(--color-white); transform: scale(1.05); }
 .gpt-send-btn:disabled {
   background: var(--white-15);
   color: var(--text-muted);
@@ -4437,8 +4437,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   margin: 16px 0;
   overflow-x: auto;
   border-radius: 12px;
-  border: 1px solid #242429;
-  background: linear-gradient(180deg, #131418 0%, #0e0f12 100%);
+  border: 1px solid var(--border-color);
+  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-ui) 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 12px 28px -20px rgba(0, 0, 0, 0.6);
@@ -4460,7 +4460,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   text-align: left;
   padding: 12px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  color: #fff;
+  color: var(--color-white);
   white-space: nowrap;
   font-size: 0.82em;
   text-transform: uppercase;
@@ -4469,7 +4469,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg-content .gpt-md-table td {
   padding: 11px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: var(--text-primary, #D4D1D8);
+  color: var(--text-primary);
   vertical-align: top;
   transition: background 0.15s ease;
 }
@@ -4489,8 +4489,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   padding: 22px 20px;
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.025) 0%, transparent 60%),
-    linear-gradient(180deg, #131418 0%, #0e0f12 100%);
-  border: 1px solid #242429;
+    linear-gradient(180deg, var(--bg-card) 0%, var(--bg-ui) 100%);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   overflow-x: auto;
   text-align: center;
@@ -4567,8 +4567,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   padding: 16px 18px;
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
-    linear-gradient(180deg, #0c0d10 0%, #08090b 100%);
-  border: 1px solid #242429;
+    linear-gradient(180deg, var(--bg-ui) 0%, var(--bg-primary) 100%);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow-x: auto;
   font-size: 0.86em;
@@ -4591,7 +4591,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   background: none;
   padding: 0;
   font-family: var(--font-mono);
-  color: #E8E5EC;
+  color: var(--text-primary);
   font-size: inherit;
   font-variant-ligatures: contextual;
 }
@@ -4602,7 +4602,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border-radius: 5px;
   font-family: var(--font-mono);
   font-size: 0.86em;
-  color: #F0EDE8;
+  color: var(--text-primary);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
@@ -4610,7 +4610,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg-content pre[class*="language-"] {
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
-    linear-gradient(180deg, #0c0d10 0%, #08090b 100%);
+    linear-gradient(180deg, var(--bg-ui) 0%, var(--bg-primary) 100%);
   text-shadow: none;
 }
 .gpt-msg-content code[class*="language-"] {
@@ -4624,7 +4624,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border-left: none;
   background:
     linear-gradient(90deg, rgba(245, 185, 66, 0.06) 0%, rgba(255, 255, 255, 0.015) 12%, transparent 80%);
-  color: var(--text-secondary, #B5B0B8);
+  color: var(--text-secondary);
   border-radius: 0 10px 10px 0;
   position: relative;
   font-style: italic;
@@ -4673,7 +4673,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-size: 1em;
   margin: 12px 0 5px;
   font-weight: 600;
-  color: #F0EDE8;
+  color: var(--text-primary);
 }
 .gpt-msg-content h5,
 .gpt-msg-content h6 {
@@ -4682,7 +4682,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-secondary, #B5B0B8);
+  color: var(--text-secondary);
 }
 
 /* — HR ———————————————————————————————————————————————————— */
@@ -4699,8 +4699,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-main-director .video-prompt-footer-card-inner.video-director-console {
     padding: var(--spacing-md) var(--spacing-lg) var(--spacing-md);
     gap: var(--spacing-sm);
-    background: var(--bg-card, #141517);
-    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-card);
+    border: 1px solid var(--border-divider);
 }
 
 .video-view-container .video-main-director .video-console-header-row {
@@ -4708,7 +4708,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     align-items: center;
     gap: 0.5rem;
     padding-bottom: var(--spacing-xs);
-    border-bottom: 1px solid var(--border-divider, #242424);
+    border-bottom: 1px solid var(--border-divider);
     margin-bottom: var(--spacing-xs);
 }
 
@@ -4746,7 +4746,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* Separador entre prompt y controls */
 .video-view-container .video-main-director .video-director-separator {
     height: 1px;
-    background: var(--border-divider, #242424);
+    background: var(--border-divider);
     border: none;
     margin: var(--spacing-xs) 0;
 }
@@ -4765,7 +4765,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     letter-spacing: 0.04em;
     padding: 6px 12px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border-divider, #242424);
+    border: 1px solid var(--border-divider);
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
@@ -4789,9 +4789,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.04em;
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #4a4e57, #2e3138));
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5)));
     border: none;
-    color: #fff;
+    color: var(--color-white);
     border-radius: var(--radius-sm);
     cursor: pointer;
     display: inline-flex;
@@ -4851,8 +4851,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     justify-content: center;
     gap: 6px;
     padding: 10px 6px;
-    background: #0f1012;
-    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-ui);
+    border: 1px solid var(--border-divider);
     border-radius: var(--radius-sm);
     color: var(--text-secondary);
     cursor: pointer;
@@ -4883,8 +4883,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     width: max-content;
     max-width: 240px;
     padding: 8px 10px;
-    background: #1a1c20;
-    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-card);
+    border: 1px solid var(--border-divider);
     border-radius: 6px;
     color: var(--text-primary);
     font-size: 0.72rem;
@@ -4907,7 +4907,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     left: 50%;
     transform: translateX(-50%);
     border: 5px solid transparent;
-    border-top-color: #1a1c20;
+    border-top-color: var(--bg-card);
 }
 
 .video-cine-tile:hover .video-cine-tile__tooltip,
@@ -4985,8 +4985,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     grid-template-columns: 1fr 1fr;
     gap: 4px;
     padding: 4px;
-    background: var(--bg-card, #141517);
-    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-card);
+    border: 1px solid var(--border-divider);
     border-radius: var(--radius-md);
 }
 
@@ -5049,8 +5049,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     -webkit-overflow-scrolling: touch;
     padding: 0;
     gap: 0;
-    background: var(--bg-card, #141517);
-    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-card);
+    border: 1px solid var(--border-divider);
     border-radius: var(--radius-md);
     box-shadow: none;
 }
@@ -5074,7 +5074,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     flex-direction: column;
     gap: 12px;
     padding: 18px 16px;
-    border-bottom: 1px solid var(--border-divider, #242424);
+    border-bottom: 1px solid var(--border-divider);
 }
 
 .video-view-container .video-sidebar-section:last-child {
@@ -5154,7 +5154,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-cinematography-panel .video-cine-block {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border-divider, #242424);
+    border-top: 1px solid var(--border-divider);
     border-radius: 0;
     overflow: visible;
     transition: none;
@@ -5165,7 +5165,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 
 .video-view-container .video-cinematography-panel .video-cine-block:hover {
-    border-color: var(--border-divider, #242424);
+    border-color: var(--border-divider);
 }
 
 .video-view-container .video-cinematography-panel .video-cine-block-header,
@@ -5233,12 +5233,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-weight: 500;
     line-height: 1.3;
     color: var(--text-primary);
-    background-color: #0f1012;
+    background-color: var(--bg-ui);
     background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 10px 6px;
-    border: 1px solid var(--border-divider, #242424);
+    border: 1px solid var(--border-divider);
     border-radius: var(--radius-sm);
     cursor: pointer;
     appearance: none;
@@ -5251,7 +5251,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-sidebar-console .video-cine-select:hover,
 .video-view-container .video-sidebar-console .video-asset-select:hover {
     border-color: rgba(255, 255, 255, 0.22);
-    background-color: #131418;
+    background-color: var(--bg-card);
 }
 
 .video-view-container .video-sidebar-console .video-prompt-db-select:focus,
@@ -5266,7 +5266,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-sidebar-console .video-asset-scope-select option,
 .video-view-container .video-sidebar-console .video-cine-select option,
 .video-view-container .video-sidebar-console .video-asset-select option {
-    background: #0f1012;
+    background: var(--bg-ui);
     color: var(--text-primary);
 }
 
@@ -5281,7 +5281,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: 0.7rem;
     font-weight: 600;
     border-radius: 999px;
-    border: 1px solid var(--border-divider, #242424);
+    border: 1px solid var(--border-divider);
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
@@ -5322,7 +5322,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     align-items: center;
     gap: 18px;
     padding: 14px 16px 12px;
-    border-bottom: 1px solid var(--border-divider, #242424);
+    border-bottom: 1px solid var(--border-divider);
 }
 .video-view-container .video-sidebar-tab {
     background: transparent;
@@ -5361,7 +5361,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     height: 36px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--border-divider, #242424);
+    border: 1px solid var(--border-divider);
     color: var(--text-secondary);
     cursor: pointer;
     display: inline-flex;
@@ -5383,8 +5383,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     right: 24px;
     bottom: 70px;
     width: 280px;
-    background: var(--bg-card, #141517);
-    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-card);
+    border: 1px solid var(--border-divider);
     border-radius: var(--radius-md);
     padding: 14px 16px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
@@ -5419,8 +5419,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     grid-template-columns: repeat(4, 1fr);
     gap: 4px;
     padding: 4px;
-    background: #0f1012;
-    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-ui);
+    border: 1px solid var(--border-divider);
     border-radius: var(--radius-md);
     margin-bottom: 12px;
 }
@@ -5457,9 +5457,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 
 .video-view-container .video-cine-tab.is-active {
-    background: var(--bg-card, #141517);
+    background: var(--bg-card);
     color: var(--text-primary);
-    box-shadow: 0 0 0 1px var(--border-divider, #242424);
+    box-shadow: 0 0 0 1px var(--border-divider);
 }
 
 .video-view-container .video-cine-tab.is-active i {
@@ -5626,7 +5626,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     justify-content: center;
     gap: 6px;
     padding: 18px 8px;
-    background: #0f1012;
+    background: var(--bg-ui);
     border: 1px dashed rgba(255,255,255,0.16);
     border-radius: var(--radius-sm);
     color: var(--text-muted);
@@ -5682,7 +5682,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .seedance-frame-slot.has-image .seedance-frame-slot-label {
     position: relative;
     z-index: 1;
-    color: #fff;
+    color: var(--color-white);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
@@ -5696,7 +5696,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: none;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.62);
-    color: #fff;
+    color: var(--color-white);
     font-size: 0.85rem;
     line-height: 1;
     cursor: pointer;
@@ -5707,7 +5707,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 
 .video-view-container .seedance-frame-slot-remove:hover {
-    background: var(--color-error, #e5484d);
+    background: var(--color-error);
 }
 
 /* Referencias multimodales */
@@ -5779,11 +5779,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
     gap: 5px;
     max-width: 100%;
     padding: 3px 20px 3px 5px;
-    background: #0f1012;
-    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-ui);
+    border: 1px solid var(--border-divider);
     border-radius: 6px;
     font-size: 0.68rem;
-    color: var(--text-secondary, #b6b6b6);
+    color: var(--text-secondary);
 }
 
 .video-view-container .seedance-ref-item:has(.seedance-ref-thumb) {
@@ -5844,7 +5844,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: none;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.78);
-    color: #fff;
+    color: var(--color-white);
     font-size: 0.72rem;
     line-height: 1;
     cursor: pointer;
@@ -5855,7 +5855,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 
 .video-view-container .seedance-ref-remove:hover {
-    background: var(--color-error, #e5484d);
+    background: var(--color-error);
 }
 
 /* Toggle row (Generar audio) */
@@ -5878,7 +5878,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .seedance-toggle-track {
     width: 32px;
     height: 18px;
-    background: #2a2c30;
+    background: var(--border-color);
     border-radius: 999px;
     position: relative;
     transition: background 0.18s ease;
@@ -5900,7 +5900,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
    dos dicen "esto va a salir así", y con el gris neutro de antes el switch no
    se leía como encendido. */
 .video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track {
-    background: var(--brand-color-light, #FF6A1A);
+    background: var(--brand-color-light, var(--prisma-naranja));
 }
 
 .video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track .seedance-toggle-thumb {
@@ -5926,8 +5926,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     justify-content: center;
     gap: 6px;
     padding: 12px 4px;
-    background: #0f1012;
-    border: 1px solid var(--border-divider, #242424);
+    background: var(--bg-ui);
+    border: 1px solid var(--border-divider);
     border-radius: var(--radius-sm);
     color: var(--text-muted);
     cursor: pointer;
@@ -6258,17 +6258,17 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 .video-view-container .video-director-console-zone .video-director-btn-generate {
     /* Gradiente tipo "send" con el brand dinámico de la org. El respaldo es
-       el gris neutro que usa el resto del módulo: el azul #1f3a8a→#0ea5e9
+       el gris neutro que usa el resto del módulo: el azul de v1
        que había aquí pintaba de azul el CTA de toda org sin color propio. */
     /* PLANO, no degradado: el degradado de marca es la firma del producto y
        gastarlo en un botón lo abarata. Va el color MÁS CLARO de la paleta de
        la org (--brand-color-light, el que calcula OrgBrandTheme ordenando por
        luminosidad), que es el que aguanta texto oscuro encima. */
-    background: var(--brand-color-light, #FF6A1A);
+    background: var(--brand-color-light, var(--prisma-naranja));
     /* Borde del mismo color, no `none`: sin el, PRODUCIR mide 2px menos de
        alto que PROMPT —que si lleva borde— y el par queda desalineado. */
-    border: 1px solid var(--brand-color-light, #FF6A1A);
-    color: #0b0b0d;
+    border: 1px solid var(--brand-color-light, var(--prisma-naranja));
+    color: var(--bg-primary);
     transition: filter 0.15s ease, transform 0.15s ease;
 }
 .video-view-container .video-director-console-zone .video-director-btn-generate:hover:not(:disabled) {
@@ -6328,7 +6328,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-view-container .video-director-console-zone
   .video-attachment-pin-chip:has(.video-attachment-pin-active):hover {
-    background: #fff;
+    background: var(--color-white);
 }
 .video-view-container .video-director-console-zone
   .video-attachment-pin-chip .video-attachment-pin-active {
@@ -6361,15 +6361,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-layout::before {
     top: -100px;
     left: -100px;
-    -webkit-mask-image: radial-gradient(circle at 30% 30%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
-    mask-image: radial-gradient(circle at 30% 30%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+    -webkit-mask-image: radial-gradient(circle at 30% 30%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+    mask-image: radial-gradient(circle at 30% 30%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
 }
 
 .gpt-layout::after {
     bottom: -100px;
     right: -100px;
-    -webkit-mask-image: radial-gradient(circle at 70% 70%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
-    mask-image: radial-gradient(circle at 70% 70%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+    -webkit-mask-image: radial-gradient(circle at 70% 70%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+    mask-image: radial-gradient(circle at 70% 70%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
 }
 
 /* El contenido principal queda sobre los dots sin afectar interacción */
@@ -6623,9 +6623,9 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
    BLANCO ENTERO con texto negro: es el acto que gobierna la fila mientras no
    hay prompt, y sobre este panel oscuro el blanco es lo que mas pesa. */
 .video-view-container .video-director-btn-forge {
-    border: 1px solid #ffffff;
-    background: #ffffff;
-    color: #0b0b0d;
+    border: 1px solid var(--color-white);
+    background: var(--color-white);
+    color: var(--bg-primary);
     transition: var(--transition);
 }
 .video-view-container .video-director-btn-forge:hover:not(:disabled) {
@@ -6696,8 +6696,8 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     margin-top: 8px;
     padding: 10px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border-divider, #242424);
-    background: var(--bg-secondary, #0f1012);
+    border: 1px solid var(--border-divider);
+    background: var(--bg-secondary);
 }
 .video-view-container .video-elemento-selector-header {
     display: flex;
@@ -6766,7 +6766,7 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     border: 2px solid transparent;
     border-radius: 6px;
     overflow: hidden;
-    background: #0f1012;
+    background: var(--bg-ui);
     cursor: pointer;
     transition: border-color 0.15s ease, transform 0.12s ease;
 }
@@ -6794,8 +6794,8 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: var(--accent-brand, #fff);
-    color: #000;
+    background: var(--accent-brand);
+    color: var(--bg-tertiary);
 }
 .video-view-container .video-elemento-foto-check .aisc-ico {
     width: 12px;

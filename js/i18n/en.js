@@ -4031,5 +4031,8 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Campaña nueva": "New campaign",
   "Cambio en su sitio": "Change on their site",
   "No se pudo cargar el Tablero": "Couldn't load the dashboard",
-  "Hablar con Vera": "Talk to Vera"
+  "Hablar con Vera": "Talk to Vera",
+  "Cuadro inicial": "First frame",
+  "Cuadro final": "Last frame",
+  "En espera": "Stand by"
 }/* I18N:END */;

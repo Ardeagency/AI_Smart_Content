@@ -25,6 +25,7 @@ function cargar() {
     ? String(s).replace(/\{(\w+)\}/g, (m, k) => (k in p ? String(p[k]) : m))
     : String(s)) };
   globalThis.window = win;
+  globalThis.__ = win.__; // en el navegador __ es global (window.__)
   globalThis.BaseView = win.BaseView; // `class ImageView extends BaseView` lo busca global
   globalThis.document = { addEventListener() {}, removeEventListener() {} };
   // La gramatica de variables va primero: el catalogo se arma con ella.

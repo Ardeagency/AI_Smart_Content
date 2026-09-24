@@ -364,7 +364,7 @@ class VideoView extends BaseView {
 
                 <div class="video-canvas-idle" id="videoCanvasIdle">
                   <div class="video-canvas-idle-content">
-                    <p class="video-canvas-idle__eyebrow">Stand by</p>
+                    <p class="video-canvas-idle__eyebrow">${__('En espera')}</p>
                     <h3 class="video-canvas-idle__title">${window.__('Listo para producir')}</h3>
                     <p class="video-canvas-idle__hint">${window.__('Describe la secuencia completa abajo. Seedance 2.0 produce el arco entero — apertura, desarrollo y cierre — en una sola pasada.')}</p>
                   </div>
@@ -417,22 +417,22 @@ class VideoView extends BaseView {
                 <div class="video-prompt-footer-card video-prompt-footer-card-center">
                   <div class="video-prompt-footer-card-inner video-director-console">
 
-                    <input type="file" id="seedanceImageUpload" accept="image/jpeg,image/png,image/jpg,video/mp4,video/quicktime,video/x-msvideo" multiple style="display: none;" aria-hidden="true">
+                    <input type="file" id="seedanceImageUpload" accept="image/jpeg,image/png,image/jpg,video/mp4,video/quicktime,video/x-msvideo" multiple hidden aria-hidden="true">
 
                     <div class="video-director-recursos" id="seedanceRecursos" aria-label="${window.__('Recursos de la secuencia')}">
 
                       <div class="dr-grupo dr-grupo--frames">
                         <span class="dr-titulo" title="${window.__('Ancla el inicio y/o final de la secuencia con una imagen. La IA construirá el arco narrativo entre ambas.')}">${window.__('Frames Clave')}</span>
-                        <input type="file" id="seedanceFrameUpload" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;" aria-hidden="true">
+                        <input type="file" id="seedanceFrameUpload" accept="image/jpeg,image/png,image/jpg,image/webp" hidden aria-hidden="true">
                         <div class="seedance-frames-grid">
                           <div class="seedance-frame-slot" data-frame="first" id="seedanceFirstFrameSlot" role="button" tabindex="0" aria-label="${window.__('Subir imagen de primer frame')}">
                             <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
-                            <span class="seedance-frame-slot-label">First Frame</span>
+                            <span class="seedance-frame-slot-label">${__('Cuadro inicial')}</span>
                             <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
                           </div>
                           <div class="seedance-frame-slot" data-frame="last" id="seedanceLastFrameSlot" role="button" tabindex="0" aria-label="${window.__('Subir imagen de último frame')}">
                             <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
-                            <span class="seedance-frame-slot-label">Last Frame</span>
+                            <span class="seedance-frame-slot-label">${__('Cuadro final')}</span>
                             <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
                           </div>
                         </div>
@@ -440,9 +440,9 @@ class VideoView extends BaseView {
 
                       <div class="dr-grupo dr-grupo--refs">
                         <span class="dr-titulo" title="${window.__('Imágenes, videos y audios que la IA usa como inspiración. Se combinan con los Frames Clave.')}">${window.__('Referencias Multimodales')}</span>
-                        <input type="file" id="seedanceRefImgUpload" accept="image/jpeg,image/png,image/jpg,image/webp" multiple style="display: none;" aria-hidden="true">
-                        <input type="file" id="seedanceRefVidUpload" accept="video/mp4,video/quicktime,video/webm" multiple style="display: none;" aria-hidden="true">
-                        <input type="file" id="seedanceRefAudUpload" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-m4a,audio/mp4,audio/aac" multiple style="display: none;" aria-hidden="true">
+                        <input type="file" id="seedanceRefImgUpload" accept="image/jpeg,image/png,image/jpg,image/webp" multiple hidden aria-hidden="true">
+                        <input type="file" id="seedanceRefVidUpload" accept="video/mp4,video/quicktime,video/webm" multiple hidden aria-hidden="true">
+                        <input type="file" id="seedanceRefAudUpload" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-m4a,audio/mp4,audio/aac" multiple hidden aria-hidden="true">
 
                         <div class="seedance-ref-group">
                           <div class="seedance-ref-group-header">
@@ -1154,7 +1154,7 @@ class VideoView extends BaseView {
       this._seedanceNotify(window.__('Un frame clave es una imagen (JPG, PNG o WebP).'));
       return;
     }
-    const label = slot === 'first' ? 'First Frame' : 'Last Frame';
+    const label = slot === 'first' ? __('Cuadro inicial') : __('Cuadro final');
     try {
       const subido = await this._uploadSeedanceFile(file, 'frames');
       const previo = this.seedanceFrames[slot];
@@ -1176,7 +1176,7 @@ class VideoView extends BaseView {
   }
 
   renderSeedanceFrames() {
-    [['first', '#seedanceFirstFrameSlot', 'First Frame'], ['last', '#seedanceLastFrameSlot', 'Last Frame']]
+    [['first', '#seedanceFirstFrameSlot', __('Cuadro inicial')], ['last', '#seedanceLastFrameSlot', __('Cuadro final')]]
       .forEach(([slot, sel, label]) => {
         const el = this.container.querySelector(sel);
         if (!el) return;
@@ -1278,21 +1278,6 @@ class VideoView extends BaseView {
   }
 
   // ── Escenas: producciones previas como material de referencia ───────────
-
-  getPublicUrlFromStorage(bucketName, filePath) {
-    // R2 (media.aismartcontent.io): storage_path puede ser URL completa -> pass-through
-    if (typeof filePath === 'string' && /^(https?:|\/\/)/i.test(filePath.trim())) return filePath.trim();
-    if (!this.supabase?.storage?.from || !bucketName || typeof filePath !== 'string' || !filePath.trim()) return null;
-    try {
-      let path = filePath.trim();
-      if (path.startsWith(`${bucketName}/`)) path = path.replace(`${bucketName}/`, '');
-      else if (path.startsWith('/')) path = path.slice(1);
-      const { data } = this.supabase.storage.from(bucketName).getPublicUrl(path);
-      return data?.publicUrl || null;
-    } catch (e) {
-      return null;
-    }
-  }
 
   /** Producciones previas de la marca (public.salidas): imágenes y videos, con URL por file_id → galería. */
   async loadVideoProductions() {

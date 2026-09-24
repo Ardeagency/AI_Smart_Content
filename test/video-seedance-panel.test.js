@@ -21,6 +21,7 @@ function cargar() {
     ? String(s).replace(/\{(\w+)\}/g, (m, k) => (k in p ? String(p[k]) : m))
     : String(s)) };
   globalThis.window = win;
+  globalThis.__ = win.__; // en el navegador __ es global (window.__)
   globalThis.BaseView = win.BaseView; // `class VideoView extends BaseView` lo busca global
   globalThis.document = { addEventListener() {}, removeEventListener() {} };
   // La gramatica de variables va primero: el catalogo se arma con ella.
@@ -1525,10 +1526,10 @@ describe('Los botones de la consola: sin iconos, plano y blanco', () => {
     expect(r).not.toContain('gradient');
   });
 
-  test('PROMPT va blanco entero con texto negro', () => {
+  test('PROMPT va blanco entero con texto negro (tokens, L7)', () => {
     const r = regla('.video-view-container .video-director-btn-forge');
-    expect(r).toContain('background: #ffffff');
-    expect(r).toContain('color: #0b0b0d');
+    expect(r).toContain('background: var(--color-white)');
+    expect(r).toContain('color: var(--bg-primary)');
   });
 
   test('el switch de audio se enciende con el mismo color de marca', () => {
@@ -1573,7 +1574,7 @@ describe('PROMPT y PRODUCIR son un par: mismo sitio, mismo tamaño', () => {
   test('los dos llevan borde: sin él, PRODUCIR mide 2px menos de alto', () => {
     // El bloque del COLOR, que es el que declara el borde — las métricas viven
     // en la regla compartida y ahí no hay borde que buscar.
-    const i = css.indexOf('background: var(--brand-color-light, #FF6A1A);\n    /* Borde');
+    const i = css.indexOf('background: var(--brand-color-light, var(--prisma-naranja));\n    /* Borde');
     expect(i).toBeGreaterThan(-1);
     const gen = css.slice(css.lastIndexOf('{', i), css.indexOf('}', i));
     expect(gen).toContain('border: 1px solid');
