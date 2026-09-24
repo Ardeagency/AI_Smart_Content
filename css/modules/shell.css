@@ -195,7 +195,7 @@ body.has-demo-banner .shell-sidebar { top: var(--demo-banner-height, 0); }
 .shell-creditos-fila { display: flex; align-items: center; gap: var(--space-3); }
 .shell-creditos-valor { margin-left: auto; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-primary); }
 .shell-creditos-barra { display: block; height: 2px; border-radius: var(--radius-pill); background: var(--white-8); overflow: hidden; }
-.shell-creditos-relleno { display: block; height: 100%; width: var(--lleno, 0%); background: var(--espectro); transition: width 0.6s var(--ease-out); }
+.shell-creditos-relleno { display: block; height: 100%; width: 100%; background: var(--espectro); transform: scaleX(var(--lleno-f, 0)); transform-origin: left; transition: transform 0.6s var(--ease-out); }
 
 .shell-firma {
   display: flex;

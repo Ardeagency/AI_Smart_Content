@@ -438,7 +438,7 @@
         if (!c) { valor.textContent = '—'; return; }
         const n = Math.floor(c.disponibles);
         valor.textContent = n >= 10000 ? `${Math.floor(n / 100) / 10}K` : n.toLocaleString(window.i18n?.getLocale?.() || 'es');
-        if (relleno) relleno.style.setProperty('--lleno', `${c.delPlan > 0 ? Math.min(100, Math.round((c.disponibles / c.delPlan) * 100)) : 0}%`);
+        if (relleno) relleno.style.setProperty('--lleno-f', String(c.delPlan > 0 ? Math.min(1, c.disponibles / c.delPlan) : 0)); // scaleX: sin animar width
       } catch (e) {
         valor.textContent = '—';
       }
