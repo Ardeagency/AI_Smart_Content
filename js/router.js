@@ -429,19 +429,31 @@ class Router {
           if (typeof prevView.onLeave === 'function') { try { prevView.onLeave(); } catch (_) { /* la vista vieja falló al salir: no frena la nueva */ } }
           if (typeof prevView.destroy === 'function') { try { prevView.destroy(); } catch (_) { /* la vista vieja falló al destruirse: no frena la nueva */ } }
         }
+        // Vistas inmersivas (Vera): el sidebar se contrae AQUÍ, dentro del cambio y
+        // antes de la captura, para que la foto nueva ya lo traiga contraído. Antes lo
+        // contraía la vista en su render, después de la transición: saltaba 220↔51 px
+        // a la vista y los iconos se reacomodaban (diagnóstico 25/09, CLS 0,12).
+        if (ViewClass && ViewClass.inmersiva) {
+          try { window.appNavigation?.collapseForImmersive?.(); } catch (_) { /* el shell puede no estar montado */ }
+        }
         document.body.classList.toggle('route-landing', path === '/');
         window.Estado.pintar(container, hasFreshHtml
           ? cached.html
           : (window.transicion?.esqueleto ? window.transicion.esqueleto() : ''));
         window.scrollTo(0, 0);
+        // Enlace activo, migas y título YA, dentro del cambio: en un microtask
+        // quedaban fuera de la captura y la foto nueva mostraba la ruta vieja.
         if (window.appNavigation && typeof window.appNavigation.render === 'function') {
-          Promise.resolve().then(() => window.appNavigation.render()).catch(() => {});
+          try { Promise.resolve(window.appNavigation.render()).catch(() => {}); } catch (_) { /* el shell no frena la navegación */ }
         }
       };
 
       this.currentView = null;
       if (typeof window.transicion === 'function') {
-        const nav = await window.transicion({ tipo, cambiar, contenedor: container });
+        // Entrar o salir de una vista inmersiva cambia la forma del shell: sin animación.
+        const inmersivaAntes = !!(prevView && prevView.constructor && prevView.constructor.inmersiva);
+        const inmersivaAhora = !!(ViewClass && ViewClass.inmersiva);
+        const nav = await window.transicion({ tipo, cambiar, contenedor: container, sinAnimacion: inmersivaAntes !== inmersivaAhora });
         if (!nav.vigente()) return;
       } else {
         cambiar();

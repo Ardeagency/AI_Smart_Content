@@ -380,9 +380,10 @@
       for (const [clave, valor] of Object.entries(TITULOS)) {
         if ((seg === clave || seg.startsWith(clave + '/')) && clave.length > largo) { titulo = valor; largo = clave.length; }
       }
-      el.textContent = titulo ? t(titulo) : '';
+      const nuevo = titulo ? t(titulo) : '';
+      if (el.textContent !== nuevo) el.textContent = nuevo; // sin repintar si no cambió
       const migas = document.getElementById('shellMigasMarca');
-      if (migas) migas.textContent = this._orgNombre || '';
+      if (migas && migas.textContent !== (this._orgNombre || '')) migas.textContent = this._orgNombre || '';
     }
 
     async _pintarMarca() {

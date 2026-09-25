@@ -57,7 +57,7 @@
     }
 
     async function transicion(opciones) {
-      const { cambiar, tipo = 'adelante', contenedor } = opciones || {};
+      const { cambiar, tipo = 'adelante', contenedor, sinAnimacion = false } = opciones || {};
       if (typeof cambiar !== 'function') throw new TypeError('transicion: falta cambiar()');
 
       const mio = ++turno;
@@ -72,8 +72,20 @@
         try { previa.skipTransition(); } catch (_) { /* ya había terminado */ }
       }
 
+      // sinAnimacion: el cambio va directo (p. ej. al entrar o salir de una vista
+      // inmersiva, donde el shell cambia de forma: una foto vieja con el sidebar ya
+      // contraído es justo el «desorden» de iconos que se veía).
+      if (sinAnimacion) {
+        await cambiar({ vigente });
+        return { vigente, animada: false };
+      }
+
       const reducido = sinMovimiento();
-      const conApi = typeof doc.startViewTransition === 'function' && !reducido;
+      // View Transitions queda APAGADA por defecto (25/09): medido cuadro a cuadro, el
+      // mismo cambio se ve a los 55–370 ms con cambio directo + fundido CSS y a ~740 ms
+      // con la API (la captura es un cuadro largo que congela la página). Se prueba
+      // encendiendo window.AISC_VIEW_TRANSITIONS = true.
+      const conApi = typeof doc.startViewTransition === 'function' && !reducido && !!(win && win.AISC_VIEW_TRANSITIONS === true);
 
       if (!conApi) {
         await cambiar({ vigente });
@@ -126,6 +138,19 @@
         if (!hecho) throw e;
       }
       if (hecho) await hecho;
+      // Esperar la CAPTURA del estado nuevo (vt.ready) antes de devolver: lo que el
+      // router hace después (el render de la vista, que es pesado y sincrónico en
+      // parte) retrasaba la captura y la página vieja quedaba congelada 0,5–1,9 s
+      // (diagnóstico de navegación, 25/09). Tope de 300 ms por si ready nunca llega.
+      const espera = (win && typeof win.setTimeout === 'function') ? win.setTimeout.bind(win) : setTimeout;
+      const capturada = await Promise.race([
+        vt.ready.then(() => true, () => true),
+        new Promise((r) => espera(() => r(false), 300)),
+      ]);
+      // Si la captura no llegó a tiempo, se suelta la transición: mejor el estado
+      // nuevo sin animar que la página congelada (y así nunca queda atascada una
+      // transición detrás de la siguiente navegación: re-medición 25/09, N1).
+      if (!capturada) { try { vt.skipTransition(); } catch (_) { /* ya terminó */ } }
       return { vigente, animada: true };
     }
 

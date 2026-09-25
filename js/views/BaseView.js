@@ -561,7 +561,7 @@ class BaseView {
       // `textContent` ya neutraliza el HTML por sí mismo: escapar ANTES hacía que
       // una sección con "&" se leyera "&amp;" en pantalla (doble escapado).
       const line = activeObject ? `${section} / ${activeObject}` : String(section ?? '');
-      headerTitle.textContent = line;
+      if (headerTitle.textContent !== line) headerTitle.textContent = line; // sin repintar si no cambió
       return;
     }
 

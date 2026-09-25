@@ -34,7 +34,7 @@ function elemento() {
 }
 
 /** Entorno falso. `api: false` = navegador sin View Transitions. */
-function entorno({ api = true, reducido = false } = {}) {
+function entorno({ api = true, reducido = false, encendida = true } = {}) {
   const html = elemento();
   const contenedor = elemento();
   const transiciones = [];
@@ -65,6 +65,7 @@ function entorno({ api = true, reducido = false } = {}) {
   }
   const window = {
     matchMedia: (q) => ({ matches: reducido && q.includes('reduce') }),
+    AISC_VIEW_TRANSITIONS: encendida,
   };
   return { html, contenedor, transiciones, t: crear({ document, window }) };
 }
@@ -80,6 +81,18 @@ describe('Contrato', () => {
   test('expone esqueleto() con aria-busy', () => {
     const { t } = entorno();
     expect(t.esqueleto()).toMatch(/aria-busy="true"/);
+  });
+});
+
+describe('Por defecto (25/09): cambio directo + fundido CSS, sin la API', () => {
+  test('aunque el navegador tenga la API, no la usa si el interruptor no está encendido', async () => {
+    const { t, transiciones, contenedor } = entorno({ encendida: false });
+    let cambio = 0;
+    const nav = await t({ cambiar: () => { cambio++; } });
+    expect(cambio).toBe(1);
+    expect(nav.animada).toBe(false);
+    expect(transiciones.length).toBe(0);
+    expect(contenedor.classList.contains('route-fade-in')).toBe(true);
   });
 });
 

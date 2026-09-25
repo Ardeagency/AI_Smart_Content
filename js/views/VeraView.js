@@ -9,6 +9,9 @@
    Secciones del chat en mixins: js/views/vera/{historial,biblioteca,artefactos,render,adjuntos}.mixin.js. */
 
 class VeraView extends (window.BaseView || class {}) {
+  /** El router contrae el sidebar ANTES de la transición (ver router.js, cambiar()). */
+  static inmersiva = true;
+
   constructor() {
     super();
     this.templatePath = null;

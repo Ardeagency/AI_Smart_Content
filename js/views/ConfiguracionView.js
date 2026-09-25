@@ -19,8 +19,10 @@
         this._slugAjustes = SLUG_A_PESTANA[slug] ? slug : 'general';
         // OrganizationView abre la pestaña por routeParams.tab con sus propios nombres.
         this.routeParams = Object.assign({}, this.routeParams, { tab: SLUG_A_PESTANA[this._slugAjustes] });
-        await super.render();
+        // Pestañas y body.en-ajustes ANTES de cargar: si no, durante la carga se veía la
+        // cabecera legada de OrganizationView y luego todo subía 90 px (diagnóstico 25/09).
         window.PestanasDeAjustes.montar(this, 'configuracion', this._slugAjustes);
+        await super.render();
         if (typeof this.updateHeaderContext === 'function') this.updateHeaderContext(t('Configuración'));
       }
 

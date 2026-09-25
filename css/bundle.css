@@ -1073,7 +1073,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.route-fade-in { animation: routeFadeIn var(--duracion-media) var(--curva-estandar) both; }
+.route-fade-in { animation: routeFadeIn var(--duracion-media) var(--curva-entrada) both; } /* página: 250 ms, entrada (Figma › Movimiento) */
 
 /* prefers-reduced-motion: respetar — solo opacity, sin desplazamiento. */
 @media (prefers-reduced-motion: reduce) {
