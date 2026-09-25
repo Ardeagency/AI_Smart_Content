@@ -128,13 +128,9 @@
                 throw new Error('Cliente Supabase inválido');
             }
 
-            // Inicializar Facebook JS SDK si está disponible el App ID
-            if (config.metaAppId) {
-                window.META_APP_ID = config.metaAppId;
-                window.META_API_VERSION = config.metaApiVersion || 'v19.0';
-                initFacebookSDK(config.metaAppId, config.metaApiVersion || 'v19.0');
-            }
-            
+            // Sin SDK de Facebook (25/09): en v2 las integraciones conectan por el borde (OAuth con
+            // return_to). El SDK cargaba connect.facebook.net, que la CSP bloquea, y nadie lo usaba.
+
             // Marcar como listo
             window.SUPABASE_CONFIG_READY = true;
             state.supabaseReady = true;
@@ -246,49 +242,6 @@
             return window.supabase;
         }
         return null;
-    }
-
-    // ===== FACEBOOK JS SDK =====
-
-    /**
-     * Carga e inicializa el Facebook JS SDK con el App ID obtenido del servidor.
-     * Se invoca solo si META_APP_ID está disponible en la configuración.
-     *
-     * Uso desde otras vistas:
-     *   - window.META_APP_ID  → App ID de la app de Facebook
-     *   - window.META_API_VERSION → versión de la Graph API (ej. 'v19.0')
-     *   - Escuchar window.addEventListener('fbSDKReady', ...) para saber cuándo FB está listo
-     */
-    function initFacebookSDK(appId, version) {
-        window.fbAsyncInit = function () {
-            FB.init({
-                appId:   appId,
-                cookie:  true,
-                xfbml:   true,
-                version: version
-            });
-
-            // Page view inicial
-            FB.AppEvents.logPageView();
-
-            // Page views en cada navegación SPA: el router dispara 'routechange'
-            window.addEventListener('routechange', function () {
-                if (window.FB && window.FB.AppEvents) {
-                    FB.AppEvents.logPageView();
-                }
-            });
-
-            window.dispatchEvent(new CustomEvent('fbSDKReady'));
-        };
-
-        (function (d, s, id) {
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) { return; }
-            js = d.createElement(s);
-            js.id = id;
-            js.src = 'https://connect.facebook.net/en_US/sdk.js';
-            fjs.parentNode.insertBefore(js, fjs);
-        }(document, 'script', 'facebook-jssdk'));
     }
 
     // ===== SPINNER GLOBAL ÚNICO =====
