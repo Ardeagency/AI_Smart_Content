@@ -25,12 +25,16 @@
  *   · campaign_adsets / campaign_ads → T marketing.ad_sets / ads, colgados de marketing.deliveries
  *                                    (external_id NOT NULL: son el espejo de la plataforma, no
  *                                    plantillas). Aquí solo se LEEN.
- *   · ad_insights_daily            → V marketing.performance (solo lectura).
+ *   · ad_insights_daily            → V marketing.performance (solo lectura). El GASTO de la campaña
+ *                                    viene ya sumado en campaigns_view.gastado + gastado_moneda
+ *                                    (migración 20260925160000): gastado NULL = mezcla monedas.
+ *   · Realtime: marketing.boards, board_nodes y board_edges están en la publicación (con RLS);
+ *                                    escuchar() suscribe el lienzo abierto y avisa de cada cambio.
  *   · products/services/brand_*    → public.elements_full por kind, vía window.CatalogoDatos.
  * Permisos (RLS): leer = `ver_campanas`; escribir tablero/nodos/aristas/audiencias/campañas/vínculos
  * = `editar_campanas`; ad_sets/ads/deliveries escribir = `gestionar_pauta` (aquí no se escriben).
- * FALTAN en la base: audience_segments, store_optimizations, campaign_brief_entities, Realtime en
- * marketing.board_*, y rutas del borde para publicar en redes o pedir un informe con Claude.
+ * FALTAN en la base: audience_segments, store_optimizations, campaign_brief_entities, presupuesto de
+ * marketing por mercado, y rutas del borde para publicar en redes o pedir un informe con Claude.
  */
 (function () {
   'use strict';
@@ -276,7 +280,11 @@
       piezas: Number(fila.piezas) || 0,
       piezas_al_aire: Number(fila.piezas_al_aire) || 0,
       entregas: Number(fila.entregas) || 0,
+      // campaigns_view.gastado: suma en UNA moneda (gastado_moneda). NULL = la campaña gastó en
+      // varias monedas y no se suman: se dice «varias monedas», nunca 0.
       gastado: num(fila.gastado),
+      gastado_moneda: fila.gastado_moneda ? String(fila.gastado_moneda).trim() : null,
+      varias_monedas: Object.prototype.hasOwnProperty.call(fila, 'gastado') && fila.gastado == null,
       created_at: fila.created_at || null,
     };
   }
@@ -304,6 +312,31 @@
     if (c.url !== undefined) p.landing_url = String(c.url || '').trim() || null;
     if (c.notas !== undefined) p.internal_notes = String(c.notas || '').trim() || null;
     return p;
+  }
+
+  /** Lo que se muestra como gasto de una campaña: monto + moneda, «varias monedas» o nada. */
+  function gastoDe(c) {
+    if (!c) return { tipo: 'nada' };
+    if (c.varias_monedas) return { tipo: 'varias' };
+    if (c.gastado == null) return { tipo: 'nada' };
+    return { tipo: 'monto', monto: c.gastado, moneda: c.gastado_moneda || null };
+  }
+
+  /**
+   * Un evento de Realtime (postgres_changes) de marketing.boards/board_nodes/board_edges → cambio
+   * del lienzo: { tabla, tipo: 'alta'|'cambio'|'baja', id, fila (ya mapeada) }. Una baja solo trae
+   * la llave (RLS): se aplica por id. null si el evento no sirve.
+   */
+  function cambioDeRealtime(tabla, payload) {
+    if (!payload || !['boards', 'board_nodes', 'board_edges'].includes(tabla)) return null;
+    const ev = payload.eventType || payload.type;
+    const tipo = { INSERT: 'alta', UPDATE: 'cambio', DELETE: 'baja' }[ev];
+    if (!tipo) return null;
+    const cruda = tipo === 'baja' ? (payload.old || {}) : (payload.new || {});
+    if (!cruda.id) return null;
+    if (tipo === 'baja') return { tabla, tipo, id: cruda.id, fila: null };
+    const fila = tabla === 'boards' ? tableroAV1(cruda) : tabla === 'board_nodes' ? nodoAV1(cruda) : aristaAV1(cruda);
+    return { tabla, tipo, id: cruda.id, fila, board_id: cruda.board_id || null };
   }
 
   /** Filas de marketing.performance → totales de una campaña (por moneda; se reporta la dominante). */
@@ -357,7 +390,7 @@
   const SEL_NODO_VISTA = 'id, board_id, organization_id, parent_id, kind, subject_id, x, y, width, height, style, body, title, subtitle';
   const SEL_ARISTA = 'id, board_id, from_node_id, to_node_id, label, style';
   const SEL_AUDIENCIA = 'id, organization_id, market_id, name, description, awareness_level, pains, desires, objections, buying_triggers, target_age_min, target_age_max, target_genders, target_locations, alignment_score, is_active, updated_at';
-  const SEL_CAMPANA_VISTA = 'id, organization_id, market_id, name, objective, narrative, status, planned_budget, planned_currency, starts_on, ends_on, call_to_action, landing_url, created_at, plan_name, conversion_name, brief_title, audiencia_principal, mensaje_principal, piezas, piezas_al_aire, entregas, gastado';
+  const SEL_CAMPANA_VISTA = 'id, organization_id, market_id, name, objective, narrative, status, planned_budget, planned_currency, starts_on, ends_on, call_to_action, landing_url, created_at, plan_name, conversion_name, brief_title, audiencia_principal, mensaje_principal, piezas, piezas_al_aire, entregas, gastado, gastado_moneda';
 
   /* Tableros («estrategias» de v1) */
 
@@ -656,6 +689,42 @@
     return (filas || []).map((e) => ({ id: e.id, kind: e.kind, nombre: e.name || '', resumen: e.summary || e.description || '', imagen: e.imagen || null }));
   }
 
+  /* Realtime: el lienzo abierto escucha sus tres tablas */
+
+  /**
+   * Suscribe el tablero abierto a postgres_changes (schema marketing). alCambio recibe cada
+   * cambio ya mapeado (cambioDeRealtime); alEstado('vivo' | 'fallo') dice si la suscripción
+   * quedó en pie (con 'fallo' la vista sondea). Las bajas no se pueden filtrar por columna en
+   * Realtime: llegan sin filtro y la vista ignora los ids que no conoce. Devuelve apagar().
+   */
+  async function escuchar(orgId, boardId, alCambio, alEstado) {
+    const sb = await cliente();
+    if (!sb?.channel || !orgId || !boardId) { if (alEstado) alEstado('fallo'); return () => {}; }
+    const canal = sb.channel(`marketing-lienzo-${boardId}-${Math.random().toString(36).slice(2, 8)}`);
+    const escucha = (tabla, event, filter) => {
+      const cfg = { event, schema: 'marketing', table: tabla };
+      if (filter) cfg.filter = filter;
+      canal.on('postgres_changes', cfg, (payload) => {
+        const c = cambioDeRealtime(tabla, payload);
+        if (c) { try { alCambio(c); } catch (e) { console.warn('[marketing] realtime:', e?.message || e); } }
+      });
+    };
+    for (const ev of ['INSERT', 'UPDATE']) {
+      escucha('boards', ev, `organization_id=eq.${orgId}`);
+      escucha('board_nodes', ev, `board_id=eq.${boardId}`);
+      escucha('board_edges', ev, `board_id=eq.${boardId}`);
+    }
+    for (const t of ['boards', 'board_nodes', 'board_edges']) escucha(t, 'DELETE', null);
+    let avisado = false;
+    let apagado = false;
+    canal.subscribe((estado) => {
+      if (!alEstado || apagado) return;
+      if (estado === 'SUBSCRIBED') { avisado = false; alEstado('vivo'); }
+      else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(estado) && !avisado) { avisado = true; alEstado('fallo'); }
+    });
+    return () => { apagado = true; try { sb.removeChannel ? sb.removeChannel(canal) : canal.unsubscribe(); } catch (_) { /* ya cerrado */ } };
+  }
+
   /** Todo lo que el lienzo necesita para abrir: tableros, audiencias, campañas y vínculos. */
   async function base(orgId) {
     const [t, a, c, v] = await Promise.all([tableros(orgId), audiencias(orgId), campanas(orgId), vinculos(orgId)]);
@@ -667,9 +736,9 @@
     lienzo, nodo, crearNodo, moverNodos, editarNodo, quitarNodo, crearArista, quitarArista,
     audiencias, crearAudiencia, editarAudiencia, borrarAudiencia,
     campanas, campana, crearCampana, editarCampana, borrarCampana,
-    vinculos, vincular, desvincular, entregas, elementos,
+    vinculos, vincular, desvincular, entregas, elementos, escuchar,
     OBJETIVOS, ESTADOS_CAMPANA, NARRATIVAS, CONCIENCIA, TIPOS_NODO, COLUMNA_SUJETO, ESCALA_MIN, ESCALA_MAX,
-    mapeo: Object.freeze({ viewportDesde, tableroAV1, nodoAV1, filaDeNodo, aristaAV1, tipoDeConexion, parVinculo, aristasVisibles, siguienteNombre, posicionLibre, reorganizar, audienciaAV1, audienciaABase, campanaAV1, campanaABase, rendimientoDe }),
+    mapeo: Object.freeze({ viewportDesde, tableroAV1, nodoAV1, filaDeNodo, aristaAV1, tipoDeConexion, parVinculo, aristasVisibles, siguienteNombre, posicionLibre, reorganizar, audienciaAV1, audienciaABase, campanaAV1, campanaABase, rendimientoDe, gastoDe, cambioDeRealtime }),
     _inyectarCliente(sb) { clienteInyectado = sb; },
   });
 })();

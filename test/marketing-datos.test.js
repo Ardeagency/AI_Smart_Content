@@ -83,6 +83,25 @@ describe('Marketing · audiencias y campañas', () => {
     expect(M.campanaAV1({ id: 'c', name: 'Lanzamiento', objective: 'sales', status: 'paused', planned_budget: '100', planned_currency: 'COP', entregas: '2', gastado: '0' }))
       .toMatchObject({ nombre: 'Lanzamiento', objetivo: 'sales', estado: 'paused', presupuesto: 100, moneda: 'COP', entregas: 2, gastado: 0 });
   });
+  test('gasto de campaigns_view: monto en su moneda; NULL = varias monedas (nunca 0)', () => {
+    const una = M.campanaAV1({ id: 'c', name: 'X', entregas: 1, gastado: '16180999.00', gastado_moneda: 'COP ' });
+    expect(una).toMatchObject({ gastado: 16180999, gastado_moneda: 'COP', varias_monedas: false });
+    expect(M.gastoDe(una)).toEqual({ tipo: 'monto', monto: 16180999, moneda: 'COP' });
+    const mezcla = M.campanaAV1({ id: 'c', name: 'X', entregas: 2, gastado: null, gastado_moneda: null });
+    expect(mezcla.varias_monedas).toBe(true);
+    expect(M.gastoDe(mezcla)).toEqual({ tipo: 'varias' });
+    expect(M.gastoDe(M.campanaAV1({ id: 'c', name: 'X' }))).toEqual({ tipo: 'nada' });
+  });
+  test('Realtime → cambio del lienzo: alta/cambio con la fila mapeada; baja solo con la llave', () => {
+    expect(M.cambioDeRealtime('board_nodes', { eventType: 'UPDATE', new: { id: 'n', board_id: 'b', kind: 'note', x: 5, y: 6, body: 'hola' } }))
+      .toMatchObject({ tabla: 'board_nodes', tipo: 'cambio', id: 'n', board_id: 'b', fila: { kind: 'note', x: 5, y: 6, cuerpo: 'hola' } });
+    expect(M.cambioDeRealtime('board_edges', { eventType: 'INSERT', new: { id: 'e', board_id: 'b', from_node_id: 'a', to_node_id: 'z' } }).fila)
+      .toMatchObject({ desde: 'a', hasta: 'z', tipo: 'arista' });
+    expect(M.cambioDeRealtime('boards', { eventType: 'DELETE', old: { id: 't' } })).toEqual({ tabla: 'boards', tipo: 'baja', id: 't', fila: null });
+    expect(M.cambioDeRealtime('boards', { eventType: 'UPDATE', new: { id: 't', name: 'Q4', viewport: {} } }).fila).toMatchObject({ nombre: 'Q4' });
+    expect(M.cambioDeRealtime('otra', { eventType: 'INSERT', new: { id: 'x' } })).toBe(null);
+    expect(M.cambioDeRealtime('board_nodes', { eventType: 'DELETE', old: {} })).toBe(null);
+  });
   test('campaña → patch con los CHECK de la base: presupuesto con moneda ISO, fechas en orden, enums', () => {
     expect(M.campanaABase({ presupuesto: '500', moneda: 'cop' })).toEqual({ planned_budget: 500, planned_currency: 'COP' });
     expect(M.campanaABase({ presupuesto: '', moneda: 'COP' })).toEqual({ planned_budget: null, planned_currency: null });

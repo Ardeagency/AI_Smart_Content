@@ -55,6 +55,10 @@ async function main() {
     ok('tableros', `${b.tableros.length} · «${b.tableros[0]?.nombre || '—'}» · viewport ${JSON.stringify(b.tableros[0]?.viewport || null)}`);
     ok('audiencias', `${b.audiencias.length} · con dolores ${b.audiencias.filter((a) => a.dolores.length).length} · con edades ${b.audiencias.filter((a) => a.edad_min != null).length}`);
     ok('campañas (campaigns_view)', `${b.campanas.length} · estados ${[...new Set(b.campanas.map((c) => c.estado))].join(',')} · con entregas ${b.campanas.filter((c) => c.entregas).length}`);
+    const conGasto = b.campanas.filter((c) => M.mapeo.gastoDe(c).tipo === 'monto' && c.gastado > 0);
+    const porMoneda = {};
+    for (const c of conGasto) porMoneda[c.gastado_moneda || '¿?'] = (porMoneda[c.gastado_moneda || '¿?'] || 0) + c.gastado;
+    ok('gasto (campaigns_view.gastado + gastado_moneda)', `${conGasto.length} con gasto · ${Object.entries(porMoneda).map(([m, v]) => `${Math.round(v).toLocaleString('es-CO')} ${m}`).join(' · ') || '—'} · varias monedas ${b.campanas.filter((c) => c.varias_monedas).length}`);
     ok('vínculos audiencia↔campaña', `${b.vinculos.length}`);
   } catch (e) { falla('base', e); return fin(); }
 
@@ -100,6 +104,11 @@ async function main() {
     const audiencia = b.audiencias.find((a) => !b.vinculos.some((v) => v.audience_id === a.id && v.campaign_id === campana.id));
     if (!campana || !audiencia) throw new Error('faltan campaña o audiencia para probar');
 
+    // Realtime: el lienzo abierto oye sus propias altas/cambios/bajas (lo que vería otra persona).
+    const oidos = [];
+    let estadoRt = null;
+    const apagar = await M.escuchar(org.id, tablero.id, (c) => oidos.push(`${c.tabla}:${c.tipo}`), (e) => { estadoRt = e; });
+    for (let i = 0; i < 50 && !estadoRt; i++) await new Promise((r) => setTimeout(r, 200));
     const nota = await M.crearNodo(org.id, tablero.id, { kind: 'note', x: -900, y: -900, cuerpo: 'verificar-marketing.mjs (se borra sola)' });
     creados.nodos.push(nota.id);
     if (nota.kind !== 'note' || nota.cuerpo.indexOf('verificar') !== 0) throw new Error('la nota no volvió como se creó');
@@ -109,6 +118,10 @@ async function main() {
     const nota2 = await M.nodo(nota.id);
     if (nota2.cuerpo !== 'verificar-marketing.mjs · editada' || nota2.x !== -880) throw new Error('editar/mover no se guardó');
     ok('editar y mover nodo', `x ${nota2.x} · y ${nota2.y}`);
+    for (let i = 0; i < 40 && !oidos.includes('board_nodes:cambio'); i++) await new Promise((r) => setTimeout(r, 200));
+    if (estadoRt === 'vivo' && oidos.includes('board_nodes:alta') && oidos.includes('board_nodes:cambio')) ok('Realtime (board_nodes)', `suscripción ${estadoRt} · oídos ${[...new Set(oidos)].join(', ')}`);
+    else falla('Realtime (board_nodes)', new Error(`estado ${estadoRt} · oídos ${JSON.stringify(oidos)}`));
+    apagar();
 
     const nc = await M.crearNodo(org.id, tablero.id, { kind: 'campaign', sujeto_id: campana.id, x: -600, y: -900 });
     creados.nodos.push(nc.id);
