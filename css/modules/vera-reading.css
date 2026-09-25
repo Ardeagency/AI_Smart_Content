@@ -14,8 +14,7 @@
   position: relative;
   padding: var(--space-4) var(--space-5) var(--space-5);
   border: 1px solid var(--border-color);
-  border-left: 3px solid var(--org-primary);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background:
     linear-gradient(90deg,
       color-mix(in srgb, var(--org-primary) 7%, transparent),
@@ -26,11 +25,6 @@
   display: flex; align-items: center; gap: var(--space-2);
   font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-mono); text-transform: uppercase;
   color: var(--org-primary);
-}
-.vera-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 8px currentColor;
 }
 .vera-band-when {
   margin-left: auto; text-transform: none; letter-spacing: 0;
@@ -94,7 +88,6 @@
   margin: 0 0 var(--space-5);
   padding: var(--space-4) var(--space-5);
   border: 1px solid color-mix(in srgb, var(--org-primary) 35%, transparent);
-  border-left: 3px solid var(--org-primary);
   border-radius: var(--radius-md);
   background: linear-gradient(90deg, color-mix(in srgb, var(--org-primary) 8%, transparent), transparent 78%);
 }
@@ -103,7 +96,6 @@
   font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-mono); text-transform: uppercase;
   color: var(--org-primary);
 }
-.vera-move-kicker::before { content: '◆ '; }
 .vera-move-chip {
   border: 1px solid var(--border-color); border-radius: var(--radius-pill);
   padding: var(--space-half) var(--space-2); color: var(--text-secondary, rgba(212,209,216,0.55));
@@ -128,8 +120,6 @@
   display: inline-flex; align-items: center; gap: var(--space-1);
   font-size: var(--font-size-base); font-weight: var(--font-weight-medium); color: var(--org-primary);
 }
-.vera-why summary::before { content: '▸'; transition: transform var(--duracion-base) var(--curva-estandar); }
-.vera-why[open] summary::before { transform: rotate(90deg); }
 .vera-why summary::-webkit-details-marker { display: none; }
 .vera-why summary:hover { text-decoration: underline; }
 .vera-why-body { margin-top: var(--space-2); border-top: 1px solid var(--border-color); padding-top: var(--space-1); }
@@ -138,7 +128,6 @@
   font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-mono); text-transform: uppercase;
   color: var(--text-secondary, rgba(212,209,216,0.55)); margin-bottom: var(--space-1);
 }
-.vera-watchrow-title::before { content: '🔭 '; }
 
 /* ── FORMATO LIBRE (Protocolo Libertad): el dashboard que Vera diseñó ── */
 .vera-band--free { padding: 0; }
@@ -187,8 +176,7 @@
 
 /* ── Bloques tipados ── */
 .vera-blk {
-  border-left: 2px solid var(--text-secondary, rgba(212, 209, 216, 0.35));
-  padding: var(--space-1) 0 var(--space-1) var(--space-3);
+  padding: var(--space-1) 0;
   margin: var(--space-4) 0;
 }
 .vera-blk-lbl {
@@ -204,21 +192,17 @@
   padding: var(--space-half) var(--space-2); border-radius: var(--radius-pill); border: 1px solid currentColor;
   font-size: var(--font-size-xs); letter-spacing: var(--tracking-mono);
 }
-.vera-sev--opp    { border-left-color: var(--color-success); } .vera-sev--opp    .vera-sev { color: var(--color-success); }
-.vera-sev--warn   { border-left-color: var(--color-warning); } .vera-sev--warn   .vera-sev { color: var(--color-warning); }
-.vera-sev--threat { border-left-color: var(--color-error); } .vera-sev--threat .vera-sev { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
+.vera-sev--opp    .vera-sev { color: var(--color-success); }
+.vera-sev--warn   .vera-sev { color: var(--color-warning); }
+.vera-sev--threat .vera-sev { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
 .vera-sev--neu    .vera-sev { color: var(--text-secondary, rgba(212, 209, 216, 0.55)); }
 
-.vera-blk--tri { border-left-color: var(--org-primary); }
 .vera-sig { display: flex; gap: var(--space-2); margin: var(--space-1) 0; }
-.vera-sig-dot { color: var(--org-primary); font-size: var(--font-size-xs); line-height: var(--leading-normal); flex: none; }
 .vera-sowhat {
   margin-top: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--org-primary) 9%, transparent);
 }
 .vera-sowhat p { margin: 0; }
-
-.vera-blk--hyp { border-left-color: var(--color-warning); }
 
 .vera-blk--receipt blockquote {
   margin: var(--space-1) 0 var(--space-half); font-size: var(--font-size-md); font-style: italic;
@@ -227,9 +211,8 @@
 .vera-who { font-size: var(--font-size-xs); color: var(--text-secondary, rgba(212, 209, 216, 0.55)); }
 
 .vera-blk--move {
-  border-left-color: var(--org-primary);
   background: linear-gradient(90deg, color-mix(in srgb, var(--org-primary) 8%, transparent), transparent 75%);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-3);
 }
 .vera-urg {
@@ -237,8 +220,6 @@
   color: var(--org-primary); font-size: var(--font-size-xs); letter-spacing: var(--tracking-mono);
 }
 
-.vera-blk--delta.vera-delta--down { border-left-color: var(--color-error); }
-.vera-blk--delta.vera-delta--up   { border-left-color: var(--color-success); }
 .vera-arrow { font-weight: var(--font-weight-bold); }
 .vera-delta--down .vera-arrow { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
 .vera-delta--up   .vera-arrow { color: var(--color-success); }
@@ -261,7 +242,7 @@
 }
 .vera-ev-quote {
   margin: 0; padding: var(--space-3) var(--space-4);
-  border-left: 2px solid var(--org-primary); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.03);
   font-size: var(--font-size-md); line-height: var(--leading-normal); white-space: pre-wrap;
   color: var(--text-primary);

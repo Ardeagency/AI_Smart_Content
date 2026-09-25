@@ -69,7 +69,7 @@
         return `<div class="vera-blk vera-blk--insight vera-sev--${sev[0]}"><div class="vera-blk-lbl"><span>${esc(t('insight'))}</span><span class="vera-sev">${esc(sev[1]())}</span></div><h4>${esc(b.title || '')}</h4><p>${esc(b.body || '')}</p></div>`;
       }
       case 'signal_triangulation': {
-        const sigs = (Array.isArray(b.signals) ? b.signals : []).map((s) => `<div class="vera-sig"><span class="vera-sig-dot" aria-hidden="true">◆</span><p>${esc(s.observation || '')}</p></div>`).join('');
+        const sigs = (Array.isArray(b.signals) ? b.signals : []).map((s) => `<div class="vera-sig"><p>${esc(s.observation || '')}</p></div>`).join('');
         return `<div class="vera-blk vera-blk--tri"><div class="vera-blk-lbl"><span>${esc(t('triangulación de señales'))}</span></div>${sigs}<div class="vera-sowhat"><p><strong>${esc(t('¿Y entonces?'))}</strong> ${esc(b.so_what || '')}</p></div></div>`;
       }
       case 'hypothesis':
@@ -137,7 +137,6 @@
       <section class="vera-band-section" data-lectura="${esc(l.id)}">
         <div class="vera-band">
           <div class="vera-band-head">
-            <span class="vera-dot" aria-hidden="true"></span>
             <span class="vera-band-kicker">${esc(t('Lectura de Vera'))} — ${esc(KIND[l.kind] ? KIND[l.kind]() : l.kind)}${l.de_v1 ? ` <span class="vera-chip vera-chip--stale">${esc(t('lectura anterior'))}</span>` : ''}</span>
             ${periodo ? `<time class="vera-band-when">${esc(periodo)}</time>` : ''}
           </div>
