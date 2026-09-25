@@ -47,7 +47,9 @@
     const err = (error instanceof Error) ? error : new Error(error == null ? 'Unknown error' : String(error));
     const message = (err.message || 'Unknown error').slice(0, MAX_MSG_LEN);
     const stack = err.stack ? String(err.stack).slice(0, MAX_STACK_LEN) : null;
-    const route = (location.pathname || '/') + (location.search || '');
+    // Sin query (?code=, ?cuenta=, ?next=… de OAuth e invitaciones) y con el token de
+    // /invitacion/<token> tapado: la ruta va a una tabla de logs, no a la llave de nadie.
+    const route = String(location.pathname || '/').replace(/^\/invitacion\/[^/]+/, '/invitacion/:token');
     const userId = (window.authService && typeof window.authService.getCurrentUser === 'function')
       ? (window.authService.getCurrentUser()?.id || null)
       : null;
