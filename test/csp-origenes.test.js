@@ -40,6 +40,16 @@ describe('CSP: lo que se carga de fuera está permitido', () => {
     }
   });
 
+  test('el login no usa Cloudinary ni el storage del proyecto viejo (poster 401, 25/09)', () => {
+    const signin = sinComentarios(fs.readFileSync('js/views/SignInView.js', 'utf8'));
+    expect(signin).not.toMatch(/cloudinary|tsdpbqcwjckbfsdqacam|poster=/);
+  });
+
+  test('cada <link rel="preconnect"> de index.html apunta a un origen que la CSP deja usar', () => {
+    const usables = new Set([...directiva('connect-src'), ...directiva('script-src'), ...directiva('font-src'), ...directiva('style-src')]);
+    for (const m of INDEX.matchAll(/<link rel="preconnect" href="(https:\/\/[^"]+)"/g)) expect([...usables], m[1]).toContain(origen(m[1]));
+  });
+
   test('no queda el SDK de Facebook', () => {
     for (const [f, src] of JS) expect(src, f).not.toMatch(/connect\.facebook\.net|FB\.init\(/);
   });

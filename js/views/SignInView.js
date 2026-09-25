@@ -23,11 +23,13 @@ class SignInView extends BaseView {
 
   renderHTML() {
     const year = new Date().getFullYear();
+    // Video del login: media-v2 (runtime-config, corte 0.9). Sin poster: el de Cloudinary daba 401
+    // en producción (25/09) y no hay copia en aisc-public. Sin URL no se pinta el <source>.
+    const video = window.AISC_LOGIN_VIDEO_URL || '';
     return `
       <div class="signin-container signin-container--hero">
-        <video class="signin-hero-video" autoplay muted loop playsinline preload="metadata"
-               poster="https://res.cloudinary.com/dmruwjuxn/image/upload/v1779481981/__8_kejphv.jpg">
-          <source src="${window.AISC_LOGIN_VIDEO_URL || 'https://tsdpbqcwjckbfsdqacam.supabase.co/storage/v1/object/public/web-assets/home-banner-web.mp4'}" type="video/mp4">
+        <video class="signin-hero-video" autoplay muted loop playsinline preload="metadata">
+          ${video ? `<source src="${this.escapeHtml(video)}" type="video/mp4">` : ''}
         </video>
         <div class="signin-card">
           <div class="signin-brand">
