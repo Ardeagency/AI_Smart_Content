@@ -324,7 +324,9 @@ describe('Guardia: sin createContextualFragment', () => {
 // Medido el 24/09/2026. diálogos 14 y toasts 1 = solo código que muere en L8 o está EN OBRAS
 // (BrandstorageView, dashboard/*, CommandCenter, Tasks). modales 18 = diálogos semánticos
 // fuera de js/ui (antes 149 por clases: falsos). Solo BAJAN; la meta de L4 es 0 en los tres.
-const TOPES = { dialogosNavegador: 14, modalesPropios: 18, toastsPropios: 1 };
+// modalesPropios: 34 medido sobre `git archive` (el commit); baja a 18 cuando entre el L8 de -45
+// (borra dashboard/*, CommandCenter, DemoGuard, OnboardingTour), y lo baja -45 en ese commit.
+const TOPES = { dialogosNavegador: 14, modalesPropios: 34, toastsPropios: 1 };
 
 describe('Guardia: modales, toasts y diálogos solo en js/ui', () => {
   const hoy = medir();
