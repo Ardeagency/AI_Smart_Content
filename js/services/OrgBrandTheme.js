@@ -1,12 +1,12 @@
 /**
  * OrgBrandTheme - Aplica el degradado/resaltados de marca a toda la org.
- * Carga brand_colors de la organización y setea en :root
+ * Toma los colores de la marca y setea en :root
  * --brand-gradient-dynamic, --brand-gradient-dynamic-vertical, --brand-primary, etc.
  * para que production, products, flows, identity, settings usen el mismo resaltado.
  *
- * Schema vigente: brand_colors.organization_id → organizations.id. La columna
- * legacy brand_colors.brand_id fue eliminada (verificado 2026-05-12); el
- * fallback anterior que la consultaba se removió por código muerto.
+ * Base nueva (25/09): los colores vienen en `mi_contexto().organizations[].colores`
+ * ([{hex, rol, nombre}], vía window.contextoService). Ya no se consulta brand_colors:
+ * allí la columna es `hex` y `select=hex_value` daba 400 en cada carga de producción.
  */
 (function () {
   'use strict';
@@ -15,18 +15,14 @@
   let lastAppliedHexes = [];
   let lastAppliedOrgId = null;
 
-  function getSupabase() {
-    return window.supabase || null;
-  }
-
   /**
-   * Normaliza y deduplica un array de filas {hex_value} → array de strings '#rrggbb' (máx 4).
+   * Normaliza y deduplica los colores de mi_contexto ({hex}) → array de strings '#rrggbb' (máx 4).
    */
   function normalizeHexRows(rows) {
     const seen = new Set();
     const hexes = [];
     for (const row of (rows || [])) {
-      const raw = (row.hex_value || '').trim().replace(/^#/, '');
+      const raw = String(row?.hex || '').trim().replace(/^#/, '');
       if (!raw || !/^[0-9A-Fa-f]{6}$/.test(raw)) continue;
       const normalized = '#' + raw;
       if (seen.has(normalized)) continue;
@@ -38,20 +34,18 @@
   }
 
   /**
-   * Hexes de brand_colors de la org (hasta 4, sin duplicados).
-   * Lee por `organization_id` (schema vigente — única columna FK en brand_colors).
+   * Hexes de la marca (hasta 4, sin duplicados), de mi_contexto().
    * Cache 10 min vía apiClient + SWR; invalidar desde el view al guardar:
    *   apiClient.invalidate(`theme:colors:${orgId}`)
+   * Al fallar la cache se pide el contexto FRESCO: así lo recién guardado se ve al momento.
    */
   async function getOrganizationBrandColors(organizationId) {
     const fetcher = async () => {
-      const supabase = getSupabase();
-      if (!supabase) return [];
-      const { data: colors } = await supabase
-        .from('brand_colors')
-        .select('hex_value')
-        .eq('organization_id', organizationId);
-      return normalizeHexRows(colors);
+      const ctx = window.contextoService;
+      if (!ctx) return [];
+      const contexto = await ctx.cargar({ fresco: true });
+      const org = (contexto?.organizations || []).find((o) => o.id === organizationId);
+      return normalizeHexRows(org?.colores);
     };
     try {
       return window.apiClient
@@ -97,7 +91,7 @@
   }
 
   /**
-   * Carga brand_colors de la organización y aplica en :root el degradado y color principal.
+   * Toma los colores de la marca (mi_contexto) y aplica en :root el degradado y color principal.
    */
   async function applyOrgBrandTheme(organizationId) {
     if (!organizationId) {
