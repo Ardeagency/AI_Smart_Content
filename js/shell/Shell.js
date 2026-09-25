@@ -46,7 +46,7 @@
     ] },
     { seccion: 'Espacio de trabajo', items: [
       { id: 'inicio', etiqueta: 'Inicio', ruta: 'dashboard', icono: '/recursos/icons/dashboard.svg', cap: 'insights.view' },
-      { id: 'marketing', etiqueta: 'Marketing', ruta: 'command-center', icono: '/recursos/icons/commandcenter.svg', cap: 'insights.view', pronto: true },
+      { id: 'marketing', etiqueta: 'Marketing', ruta: 'command-center', icono: '/recursos/icons/commandcenter.svg', cap: 'insights.view' },
       { id: 'identidad', etiqueta: 'Identidad', ruta: 'brand', icono: '/recursos/icons/Brands.svg', cap: 'brand.identity.edit', hijos: [
         { etiqueta: 'Productos', ruta: 'products' },
         { etiqueta: 'Servicios', ruta: 'services' },
@@ -73,7 +73,7 @@
     image: 'Imagen', video: 'Video', production: 'Producciones', 'execution-history': 'Historial',
     brand: 'Identidad', brands: 'Identidad', 'brand-organization': 'Identidad', products: 'Productos',
     'product-detail': 'Producto', services: 'Servicios', places: 'Escenarios', characters: 'Personajes',
-    monitoring: 'Competencia', 'command-center': 'Marketing', predictor: 'Simulador', tasks: 'Tareas', organization: 'Configuración', configuracion: 'Configuración', cuenta: 'Tu cuenta',
+    monitoring: 'Competencia', 'command-center': 'Marketing', marketing: 'Marketing', predictor: 'Simulador', tasks: 'Tareas', organization: 'Configuración', configuracion: 'Configuración', cuenta: 'Tu cuenta',
     plans: 'Planes', credits: 'Créditos',
     'plans/cancel': 'Planes',
     '404': 'Página no encontrada', '403': 'Sin acceso',

@@ -28,8 +28,8 @@
     ingest: { icono: 'aisc-ico--radar', etiqueta: 'Monitoreo', ruta: '/monitoring' },
     agent: { icono: 'aisc-ico--sparkles', etiqueta: 'Vera', ruta: '/vera' },
     intel: { icono: 'aisc-ico--growth', etiqueta: 'Inteligencia', ruta: '/dashboard' },
-    // Campañas (/command-center) se retiró en L8: sus avisos llevan al inicio, no a un 404.
-    marketing: { icono: 'aisc-ico--megaphone', etiqueta: 'Marketing', ruta: '/dashboard' },
+    // Marketing (/command-center) volvió sobre la base nueva (MarketingView): sus avisos llevan al lienzo.
+    marketing: { icono: 'aisc-ico--megaphone', etiqueta: 'Marketing', ruta: '/command-center' },
   });
 
   /* ── Render por tipo: titulo(p)/cuerpo(p) con los params del contrato; null = respaldo ── */
@@ -71,7 +71,7 @@
     'agent.needs_approval': { icono: 'aisc-ico--sparkles', etiqueta: 'Vera pide aprobación', params: [], titulo: null, cuerpo: null, ruta: '/vera' },
     'agent.job_dead': { icono: 'aisc-ico--sparkles', etiqueta: 'Turno de Vera caído', params: [], titulo: null, cuerpo: null, ruta: '/vera' },
     'intel.critical_signal': { icono: 'aisc-ico--growth', etiqueta: 'Señal crítica', params: [], titulo: null, cuerpo: null, ruta: '/dashboard' },
-    'marketing.approval': { icono: 'aisc-ico--megaphone', etiqueta: 'Aprobación de campaña', params: [], titulo: null, cuerpo: null, ruta: '/dashboard' },
+    'marketing.approval': { icono: 'aisc-ico--megaphone', etiqueta: 'Aprobación de campaña', params: [], titulo: null, cuerpo: null, ruta: '/command-center' },
     // ADR-0048 (BD 6d1c421): alguien del equipo invitó a una persona por correo.
     'equipo.invitacion': { icono: 'aisc-ico--user-registration', etiqueta: 'Invitación enviada', params: ['invitacion_id', 'email'],
       titulo: (p) => t('Invitamos a {correo} a la marca', { correo: p.email }),

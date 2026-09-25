@@ -285,6 +285,17 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/monitoring', monitoringLoader, auth);
     r.register('/monitoring', monitoringLoader, auth);
 
+    // ── Org: Marketing (lienzo de estrategia; antes «Command Center», borrado en L8) ──
+    // Todo por MarketingDataService (marketing.boards/board_nodes/board_edges, audiences,
+    // campaigns, campaign_audiences); la mecánica en marketing/Lienzo.js. marketing.css
+    // route-split (clases .mk-*), con append: va DESPUÉS de bundle.css para ajustar .form-*.
+    // CatalogoDataService ya es global (elementos del lienzo).
+    const marketingLoader = this._lazy('MarketingView', ['/js/services/MarketingDataService.js', '/js/views/marketing/Lienzo.js', '/js/views/MarketingView.js'], [{ href: '/css/modules/marketing.css', append: true }]);
+    r.register('/org/:orgIdShort/:orgNameSlug/command-center', marketingLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/marketing', marketingLoader, auth);
+    r.register('/command-center', marketingLoader, auth);
+    r.register('/marketing', marketingLoader, auth);
+
     // ── Org: Execution History (sesiones de produccion manual reabribles) ──
     const execHistoryLoader = this._lazy('ExecutionHistoryView', ['/js/views/ExecutionHistoryView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/execution-history', execHistoryLoader, auth);
