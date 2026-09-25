@@ -240,6 +240,11 @@ describe('Estado', () => {
     expect(Estado.vacio({ titulo: 'Nada' })).toMatch(/class="empty-state /);
   });
 
+  test('pintar parsea con DOMParser (los <script> quedan inertes al insertarse)', () => {
+    const FUENTE = sinComentarios(fs.readFileSync('js/ui/estado.js', 'utf8'));
+    expect(FUENTE).toMatch(/new DOMParser\(\)\.parseFromString\(/);
+  });
+
   test('alReintentar engancha una sola vez por zona', () => {
     const zona = document.createElement('div');
     const boton = document.createElement('button');
@@ -302,6 +307,15 @@ function medir() {
   }
   return { dialogosNavegador, modalesPropios, toastsPropios };
 }
+
+// createContextualFragment EJECUTA los <script> del HTML al insertarlo (innerHTML,
+// <template> y DOMParser no). Medido en Chrome por -46 el 24/09: prohibido en js/.
+describe('Guardia: sin createContextualFragment', () => {
+  test('ningún archivo de js/ lo usa', () => {
+    const usos = archivos('js').filter((f) => /createContextualFragment\s*\(/.test(sinComentarios(fs.readFileSync(f, 'utf8'))));
+    expect(usos, 'usa DOMParser o <template>: createContextualFragment ejecuta scripts').toEqual([]);
+  });
+});
 
 // Medido el 24/09/2026: 14 = solo código que muere en L8 (BrandstorageView, dashboard/*) o
 // está EN OBRAS sin ruta (CommandCenter, Tasks). Solo BAJAN; la meta de L4 es 0 en los tres.

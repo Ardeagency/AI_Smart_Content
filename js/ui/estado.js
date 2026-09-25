@@ -115,14 +115,15 @@
   }
 
   /**
-   * Pinta un estado en la zona (reemplaza lo que había). Sin innerHTML en la vista:
+   * Pinta un estado en la zona (reemplaza lo que había). La vista no asigna HTML a mano:
    * el HTML sale de estas funciones, que ya escapan todo lo interpolado.
    */
   function pintar(zona, html) {
     if (!zona) return;
-    const rango = document.createRange();
-    rango.selectNodeContents(zona);
-    zona.replaceChildren(rango.createContextualFragment(String(html == null ? '' : html)));
+    // DOMParser deja los <script> INERTES (como asignar HTML al elemento). createContextualFragment
+    // los ejecutaba al insertar (medido por -46 en Chrome, 24/09): no volver a usarlo.
+    const doc = new DOMParser().parseFromString(String(html == null ? '' : html), 'text/html');
+    zona.replaceChildren(...doc.body.childNodes);
   }
 
   window.Estado = {
