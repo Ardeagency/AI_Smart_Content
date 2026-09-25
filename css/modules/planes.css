@@ -607,3 +607,5 @@
 .cancel-status.is-success { background: rgba(34, 197, 94, 0.1); color: var(--color-success); border: 1px solid rgba(34, 197, 94, 0.25); }
 .cancel-status.is-error { background: rgba(239, 68, 68, 0.1); color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); border: 1px solid rgba(239, 68, 68, 0.25); }
 .cancel-status:empty { display: none; }
+
+.planes-skel-linea { height: 1.2em; }

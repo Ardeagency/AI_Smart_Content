@@ -819,7 +819,7 @@
               };
             } catch (e) {
               console.warn('ECharts init error:', e?.message || e);
-              node.innerHTML = `<div class="gpt-viz--error" style="padding:14px;">${__('Error renderizando chart:')} ${escapeHtml(e?.message || 'unknown')}</div>`;
+              node.innerHTML = `<div class="gpt-viz--error gpt-viz--error-caja">${__('Error renderizando chart:')} ${escapeHtml(e?.message || 'unknown')}</div>`;
             }
           });
         }).catch((e) => console.warn('ECharts load error:', e?.message || e));

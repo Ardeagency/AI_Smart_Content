@@ -6833,3 +6833,13 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
 .video-view-container .video-elementos-fila {
     position: relative;
 }
+
+/* L7: el origen de los iconos animados de cámara (antes style="" en cada elemento). */
+.cine-svg [class*="cine-anim-"] { transform-origin: 16px 12px; }
+
+/* L7: lo que iba en style="" en los gráficos de Vera (js/views/vera/graficos.js). */
+.gpt-viz-nota { margin-top: var(--space-2); color: var(--text-muted); }
+.gpt-viz-pista { margin-top: var(--space-1); font-size: 0.8em; color: var(--text-muted); }
+.gpt-viz-titulo { margin-bottom: var(--space-1); font-size: 1.05em; font-weight: var(--font-weight-semibold); }
+.gpt-viz-tabla { margin-top: var(--space-3); }
+.gpt-viz--error-caja { padding: var(--space-3); }

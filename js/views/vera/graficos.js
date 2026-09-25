@@ -110,9 +110,9 @@ function renderChartAsDataTable(spec) {
   const title = spec.title ? String(spec.title) : '';
   const data = Array.isArray(spec.data) ? spec.data : [];
   if (!data.length) {
-    return `<div class="gpt-viz gpt-viz--fallback"><strong>${escapeHtml(title || __('Datos'))}</strong><p style="color:var(--text-muted);margin-top:8px">${__('El tipo')} <code>${escapeHtml(spec.type)}</code> ${__('no tiene render visual disponible y no hay datos para tabular.')}</p></div>`;
+    return `<div class="gpt-viz gpt-viz--fallback"><strong>${escapeHtml(title || __('Datos'))}</strong><p class="gpt-viz-nota">${__('El tipo')} <code>${escapeHtml(spec.type)}</code> ${__('no tiene render visual disponible y no hay datos para tabular.')}</p></div>`;
   }
-  const hint = spec.type ? `<div style="font-size:.8em;color:var(--text-muted);margin-top:4px;">(${__('tipo solicitado:')} <code>${escapeHtml(spec.type)}</code> ${__('— mostrado como tabla')})</div>` : '';
+  const hint = spec.type ? `<div class="gpt-viz-pista">(${__('tipo solicitado:')} <code>${escapeHtml(spec.type)}</code> ${__('— mostrado como tabla')})</div>` : '';
   const headerKeys = Array.from(new Set(data.flatMap((d) => d && typeof d === 'object' ? Object.keys(d) : [])));
   const cols = headerKeys.length ? headerKeys : [__('valor')];
   const ths = cols.map((c) => `<th>${escapeHtml(c)}</th>`).join('');
@@ -124,9 +124,9 @@ function renderChartAsDataTable(spec) {
     return `<tr>${cells}</tr>`;
   }).join('');
   return `<div class="gpt-viz gpt-viz--fallback">` +
-    (title ? `<div style="font-weight:600;font-size:1.05em;margin-bottom:4px;">${escapeHtml(title)}</div>` : '') +
+    (title ? `<div class="gpt-viz-titulo">${escapeHtml(title)}</div>` : '') +
     hint +
-    `<div class="gpt-md-table-wrap" style="margin-top:10px;"><table class="gpt-md-table"><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table></div>` +
+    `<div class="gpt-md-table-wrap gpt-viz-tabla"><table class="gpt-md-table"><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table></div>` +
     `</div>`;
 }
 

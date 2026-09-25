@@ -161,7 +161,7 @@ class PlanesView extends BaseView {
   _planSkeletonHtml(count = 5) {
     const card = `
       <div class="plan-card-small">
-        <span class="skeleton skeleton-text skeleton-text--w50" style="height: 1.2em;"></span>
+        <span class="skeleton skeleton-text skeleton-text--w50 planes-skel-linea"></span>
         <div class="plan-card-price"><span class="skeleton skeleton-text skeleton-text--lg skeleton-text--w35"></span></div>
         <span class="skeleton skeleton-text skeleton-text--w75"></span>
       </div>`;

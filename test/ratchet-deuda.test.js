@@ -47,7 +47,7 @@ const TOPES = {
   importantEnCss: 318,
   zIndexDistintos: 19,
   hexEnJs: 198,
-  styleEnLineaEnJs: 255,
+  styleEnLineaEnJs: 242,
   innerHtml: 536,
   catchVacios: 104,
   fromEnVistas: 259,
