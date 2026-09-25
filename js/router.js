@@ -161,6 +161,29 @@ class Router {
   /**
    * Manejar cambio de ruta
    */
+  /** /ruta → /org/:short/:slug/ruta si esa gemela existe y hay sesión con marca; si no, null. */
+  async _conMarca(path) {
+    if (!path || path === '/' || path.startsWith('/org/')) return null;
+    const prefijo = '/org/:orgIdShort/:orgNameSlug';
+    const gemela = Object.keys(this.routes).some((patron) => {
+      if (!patron.startsWith(prefijo + '/')) return false;
+      const resto = patron.slice(prefijo.length);
+      return new RegExp('^' + resto.replace(/:[^/]+/g, '[^/]+') + '$').test(path);
+    });
+    if (!gemela || !(await this.checkAuthentication())) return null;
+    try {
+      const marcas = (await window.contextoService?.orgs?.()) || [];
+      if (!marcas.length) return null;
+      const elegida = localStorage.getItem('selectedOrganizationId');
+      const org = marcas.find((m) => m.id === elegida) || marcas[0];
+      const base = typeof window.getOrgPathPrefix === 'function' ? window.getOrgPathPrefix(org.id, org.name) : '';
+      return base ? base + path : null;
+    } catch (e) {
+      console.warn('[router] ruta sin marca:', e);
+      return null;
+    }
+  }
+
   async handleRoute() {
     if (this._handlingRoute) {
       this._pendingRoute = window.location.pathname;
@@ -260,6 +283,16 @@ class Router {
         window.currentOrgSlug = window.currentOrgSlug || '';
         window.currentOrgName = window.currentOrgName || '';
       } else {
+        // Ruta de marca SIN la marca en la URL (/dashboard, /tasks/123, /marketing#x: un
+        // enlace viejo, un marcador o una URL escrita). Sin esto la vista se pintaba sin
+        // marca: esqueleto eterno y menú vacío. Si existe su gemela /org/:short/:slug/...,
+        // se va a la marca elegida (o la primera) conservando ?query y #hash.
+        const destino = await this._conMarca(path);
+        if (destino) {
+          this._handlingRoute = false;
+          this.navigate(destino + (window.location.search || '') + (window.location.hash || ''), true);
+          return;
+        }
         window.currentOrgId = null;
         window.currentOrgSlug = null;
         window.currentOrgName = null;
