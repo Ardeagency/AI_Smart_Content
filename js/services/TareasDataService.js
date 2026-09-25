@@ -257,7 +257,7 @@
 
   /* ── Filas → lo que pinta la vista ─────────────────────────────────────── */
 
-  function programacionDeFila(f, nombres = {}) {
+  function programacionDeFila(f, nombres = {}, portadas = {}) {
     const activa = f.is_active === true;
     const motivo = f.ultimo_motivo || null;
     const fallos = Number(f.fallos_seguidos) || 0;
@@ -272,6 +272,7 @@
       creadaPor: f.created_by || null,
       nombre: f.name || '',
       flujo: nombres[f.flow_id] || null,
+      portada: portadas[f.flow_id] || null,
       cron: f.cron || '',
       zona: f.timezone || 'America/Bogota',
       activa,
@@ -305,6 +306,24 @@
     if (s === 'queued') return { etiqueta: t('En cola'), badge: 'badge--info' };
     if (s === 'running') return { etiqueta: t('En curso'), badge: 'badge--info' };
     return { etiqueta: s || '—', badge: '' };
+  }
+
+  /**
+   * Elementos de la marca que la tarea usa en sus entradas (fijo o rotar con el id de un
+   * elemento): lo que pintan los círculos de la tarjeta y del calendario. `automaticos` cuenta
+   * las entradas «elemento» (la base elige uno en cada corrida).
+   */
+  function elementosDeEntradas(entradas, elementos) {
+    const porId = new Map((elementos || []).map((x) => [x.value, x]));
+    const vistos = new Map();
+    let automaticos = 0;
+    for (const r of Object.values(entradas || {})) {
+      if (!esReceta(r)) continue;
+      if (r.modo === 'elemento') { automaticos++; continue; }
+      const ids = r.modo === 'fijo' ? [r.valor] : (r.modo === 'rotar' && Array.isArray(r.valores) ? r.valores : []);
+      ids.forEach((v) => { const el = typeof v === 'string' ? porId.get(v) : null; if (el && !vistos.has(el.value)) vistos.set(el.value, el); });
+    }
+    return { elementos: [...vistos.values()], automaticos };
   }
 
   function filtrar(lista, filtro) {
@@ -377,21 +396,25 @@
   }
   function aviso(nombre, r) { if (r?.error) console.warn(`[tareas] ${nombre}:`, r.error.code, r.error.message); }
 
-  /** Nombre de cada flujo (catalog_view; si no sale ahí, vista_org de la marca). */
+  /**
+   * Nombre y portada de cada flujo (catalog_view; si no sale ahí, el nombre de vista_org de la
+   * marca) → {nombres, portadas}: id → name e id → cover_url.
+   */
   async function nombresDeFlujos(sb, orgId, flowIds) {
     const ids = [...new Set((flowIds || []).filter(Boolean))];
     const nombres = {};
-    if (!ids.length) return nombres;
-    const c = await sb.schema('flows').from('catalog_view').select('id, name').in('id', ids);
+    const portadas = {};
+    if (!ids.length) return { nombres, portadas };
+    const c = await sb.schema('flows').from('catalog_view').select('id, name, cover_url').in('id', ids);
     aviso('flows.catalog_view', c);
-    (c.data || []).forEach((f) => { nombres[f.id] = f.name; });
+    (c.data || []).forEach((f) => { nombres[f.id] = f.name; if (f.cover_url) portadas[f.id] = f.cover_url; });
     const faltan = ids.filter((id) => !nombres[id]);
     if (faltan.length && orgId) {
       const v = await sb.schema('flows').from('vista_org').select('flow_id, nombre').eq('organization_id', orgId).in('flow_id', faltan);
       aviso('flows.vista_org', v);
       (v.data || []).forEach((f) => { if (f.nombre) nombres[f.flow_id] = f.nombre; });
     }
-    return nombres;
+    return { nombres, portadas };
   }
 
   async function programaciones(orgId) {
@@ -399,8 +422,8 @@
     const sb = await exigirCliente();
     const r = await sb.schema('flows').from('schedules').select(COLS).eq('organization_id', orgId).order('created_at', { ascending: false });
     if (r.error) throw enPalabras(r.error);
-    const nombres = await nombresDeFlujos(sb, orgId, (r.data || []).map((f) => f.flow_id));
-    return (r.data || []).map((f) => programacionDeFila(f, nombres));
+    const { nombres, portadas } = await nombresDeFlujos(sb, orgId, (r.data || []).map((f) => f.flow_id));
+    return (r.data || []).map((f) => programacionDeFila(f, nombres, portadas));
   }
 
   async function programacion(orgId, id) {
@@ -409,8 +432,8 @@
     const r = await sb.schema('flows').from('schedules').select(COLS).eq('organization_id', orgId).eq('id', id).maybeSingle();
     if (r.error) throw enPalabras(r.error);
     if (!r.data) return null;
-    const nombres = await nombresDeFlujos(sb, orgId, [r.data.flow_id]);
-    return programacionDeFila(r.data, nombres);
+    const { nombres, portadas } = await nombresDeFlujos(sb, orgId, [r.data.flow_id]);
+    return programacionDeFila(r.data, nombres, portadas);
   }
 
   /** Update que confirma que la fila cambió (RLS no da error: devuelve cero filas). */
@@ -419,8 +442,8 @@
     const r = await sb.schema('flows').from('schedules').update(cambios).eq('id', id).select(COLS).maybeSingle();
     if (r.error) throw enPalabras(r.error);
     if (!r.data) throw enPalabras({ code: 'sin_cambio', message: t('No se guardó: la tarea ya no existe o no tienes permiso.') });
-    const nombres = await nombresDeFlujos(sb, r.data.organization_id, [r.data.flow_id]);
-    return programacionDeFila(r.data, nombres);
+    const { nombres, portadas } = await nombresDeFlujos(sb, r.data.organization_id, [r.data.flow_id]);
+    return programacionDeFila(r.data, nombres, portadas);
   }
 
   /** Crea la programación EN PAUSA: activarla es un paso aparte (gasta créditos). */
@@ -434,8 +457,8 @@
     };
     const r = await sb.schema('flows').from('schedules').insert(fila).select(COLS).single();
     if (r.error) throw enPalabras(r.error);
-    const nombres = await nombresDeFlujos(sb, orgId, [r.data.flow_id]);
-    return programacionDeFila(r.data, nombres);
+    const { nombres, portadas } = await nombresDeFlujos(sb, orgId, [r.data.flow_id]);
+    return programacionDeFila(r.data, nombres, portadas);
   }
 
   async function guardar(id, datos) {
@@ -496,13 +519,18 @@
     const vacio = { elementos: [], mercados: [] };
     if (!orgId) return vacio;
     const sb = await exigirCliente();
-    const [e, m] = await Promise.all([
-      sb.from('elements_full').select('id, name, kind').eq('organization_id', orgId).is('archived_at', null).order('name', { ascending: true }),
+    // `imagenes` (url ya resuelta por la base) da la foto de cada elemento; una base sin la
+    // columna (PGRST204/42703) se lee sin ella y los elementos van sin foto.
+    const leer = (cols) => sb.from('elements_full').select(cols).eq('organization_id', orgId).is('archived_at', null).order('name', { ascending: true });
+    const [e0, m] = await Promise.all([
+      leer('id, name, kind, imagenes'),
       sb.from('markets').select('id, name').eq('organization_id', orgId).order('name', { ascending: true }),
     ]);
+    const e = e0.error && ['PGRST204', '42703'].includes(String(e0.error.code || '')) ? await leer('id, name, kind') : e0;
     aviso('elements_full', e); aviso('markets', m);
+    const foto = (x) => (Array.isArray(x.imagenes) ? x.imagenes : []).find((im) => im && im.url && !im.pendiente)?.url || null;
     return {
-      elementos: (e.data || []).map((x) => ({ value: x.id, label: x.name, kind: x.kind })),
+      elementos: (e.data || []).map((x) => ({ value: x.id, label: x.name, kind: x.kind, imagen: foto(x) })),
       mercados: (m.data || []).map((x) => ({ value: x.id, label: x.name })),
     };
   }
@@ -523,7 +551,7 @@
     mapeo: Object.freeze({
       campoCron, validarCron, camposCron, ocurrenciasDelDia, formaDeCron, cronDeForma, describirCron,
       modosPara, esReceta, heredadas, formularioDeEntrada, recetaDeFormulario, componerEntradas, avisosDeEntradas,
-      programacionDeFila, estadoProgramacion, estadoCorrida, filtrar, contar, inicioDeSemana, agendaDeSemana, enPalabras,
+      programacionDeFila, estadoProgramacion, estadoCorrida, elementosDeEntradas, filtrar, contar, inicioDeSemana, agendaDeSemana, enPalabras,
       CRITERIOS, TIPOS_ELEMENTO,
     }),
     _inyectarCliente(sb) { clienteInyectado = sb; },
