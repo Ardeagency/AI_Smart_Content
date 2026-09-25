@@ -534,10 +534,6 @@
     const normalizedProvider = String(provider || '').toLowerCase();
     const SUPPORTED = ['google', 'facebook', 'shopify', 'mercadolibre', 'x', 'tiktok', 'linkedin'];
     if (!SUPPORTED.includes(normalizedProvider)) return;
-    if (window.DemoGuard?.isDemo?.()) {
-      window.DemoGuard.showSignupModal(`conectar ${normalizedProvider}`);
-      return;
-    }
     const orgId = this.organizationRow?.id || window.currentOrgId;
     if (!window.MarcaDatos || !orgId) return;
 
@@ -587,10 +583,6 @@
   async disconnectBrandIntegration(provider, brandContainerId, actionButton = null) {
     const normalizedProvider = String(provider || '').toLowerCase();
     if (!normalizedProvider) return;
-    if (window.DemoGuard?.isDemo?.()) {
-      window.DemoGuard.showSignupModal(`desconectar ${normalizedProvider}`);
-      return;
-    }
     const orgId = this.organizationRow?.id || window.currentOrgId;
     const conexion = this._pickBrandIntegrationForContainer(brandContainerId, normalizedProvider);
     const fila = conexion || (this.brandIntegrations || []).find((r) => String(r.platform || '').toLowerCase() === normalizedProvider);

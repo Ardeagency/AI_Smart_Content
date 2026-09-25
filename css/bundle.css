@@ -18,7 +18,6 @@
    cada módulo va en URL propia; sin ?v= aquí el CDN/navegador puede quedarse con CSS viejo.
    Subir APP_CSS_MODULES_VER en todos los imports cuando cambie cualquier modules/*.css.
    ============================================================ */
-@import url('modules/status-cards.css?v=__BUILD_ID__');
 @import url('modules/shell.css?v=__BUILD_ID__'); /* cascarón (L3); reemplaza a navigation.css */
 @import url('modules/auth.css?v=__BUILD_ID__');
 @import url('modules/brands.css?v=__BUILD_ID__');
@@ -48,7 +47,6 @@
 @import url('modules/prompt-editor.css?v=__BUILD_ID__');
 /* insight.css: route-split via app.js _loadCss (dashboardLoader + monitoringLoader). */
 /* monitoring.css: route-split via app.js _loadCss (monitoringLoader). */
-@import url('modules/public.css?v=__BUILD_ID__');
 @import url('modules/fondo-plataforma.css?v=__BUILD_ID__');
 @import url('modules/planes.css?v=__BUILD_ID__');
 @import url('modules/credits.css?v=__BUILD_ID__');
@@ -311,7 +309,6 @@
     --z-report-velo: 10060;       /* velo del reporte del Command Center */
     --z-sheet: 10100;
     --z-sheet-top: 10200;
-    --z-tour: 99999;              /* tour de bienvenida (OnboardingTour.js) */
     --z-overlay-top: 100400;      /* drawer de detalle de insight */
     --z-overlay-top-panel: 100401;
     --z-activity: 100500;         /* dropdown de actividad (también desde Navigation.js) */

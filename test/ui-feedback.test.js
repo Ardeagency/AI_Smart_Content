@@ -326,7 +326,7 @@ describe('Guardia: sin createContextualFragment', () => {
 // fuera de js/ui (antes 149 por clases: falsos). Solo BAJAN; la meta de L4 es 0 en los tres.
 // modalesPropios: 34 medido sobre `git archive` (el commit); baja a 18 cuando entre el L8 de -45
 // (borra dashboard/*, CommandCenter, DemoGuard, OnboardingTour), y lo baja -45 en ese commit.
-const TOPES = { dialogosNavegador: 14, modalesPropios: 34, toastsPropios: 1 };
+const TOPES = { dialogosNavegador: 3, modalesPropios: 18, toastsPropios: 1 };
 
 describe('Guardia: modales, toasts y diálogos solo en js/ui', () => {
   const hoy = medir();

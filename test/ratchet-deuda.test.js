@@ -43,14 +43,14 @@ function medir() {
 
 // Medido el 24/09/2026 sobre a064abec; bajado en L1 y en L3 (shell nuevo: fuera Navigation.js + navigation.css).
 const TOPES = {
-  hexEnCss: 662,
-  importantEnCss: 318,
+  hexEnCss: 602,
+  importantEnCss: 292,
   zIndexDistintos: 19,
-  hexEnJs: 198,
-  styleEnLineaEnJs: 242,
-  innerHtml: 317,
-  catchVacios: 104,
-  fromEnVistas: 259,
+  hexEnJs: 74,
+  styleEnLineaEnJs: 170,
+  innerHtml: 199,
+  catchVacios: 50,
+  fromEnVistas: 209,
 };
 
 describe('Ratchet de deuda del frontend', () => {
