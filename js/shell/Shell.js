@@ -197,6 +197,20 @@
       this._pintarPlan();
       this._refrescarPuntos();
       this._sondear();
+      this._galeria(orgId);
+    }
+
+    /**
+     * Cookie de galería (aisc_sesion) viva mientras haya marca activa: sin ella media-v2
+     * responde 401 a toda /out/ e /in/ (Marca, Catálogo, Producciones, Studio). UNA por
+     * marca: al cambiar de marca se para la anterior; al desmontar el shell, también.
+     */
+    _galeria(orgId) {
+      if (this._pararGaleria) { this._pararGaleria(); this._pararGaleria = null; }
+      const api = window.apiV2?.api;
+      if (!orgId || typeof api?.mantenerSesionGaleria !== 'function') return;
+      const m = api.mantenerSesionGaleria(orgId, { alFallar: (e) => { if (e?.codigo !== 'sin_api') console.warn('[shell] sesión de galería:', e?.codigo || e?.message); } });
+      this._pararGaleria = () => m.parar();
     }
 
     _desmontar() {
@@ -208,6 +222,7 @@
       this.initialized = false;
       this.currentOrgId = null;
       if (this._sondeo) { clearInterval(this._sondeo); this._sondeo = null; }
+      this._galeria(null);
     }
 
     _html() {

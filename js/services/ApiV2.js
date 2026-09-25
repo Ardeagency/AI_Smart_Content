@@ -108,7 +108,10 @@
     archivos: (org, ids = null) => ({ method: 'GET', path: '/v1/archivos', query: (Array.isArray(ids) && ids.length) ? { org, ids: ids.join(',') } : { org } }),
     urlDescarga: (id, org) => ({ method: 'GET', path: `/v1/archivos/${id}/descarga`, query: { org } }),
     borrarArchivo: (id, org) => ({ method: 'DELETE', path: `/v1/archivos/${id}`, query: { org } }),
-    sesionGaleria: (org) => ({ method: 'POST', path: '/v1/sesion/galeria', body: { org } }),
+    // La ÚNICA con credenciales: sin `include` el navegador descarta el Set-Cookie de otro
+    // origen y la cookie de media (aisc_sesion, Domain .aismartcontent.io) nunca existe.
+    // El borde autentica solo por Authorization, así que el resto sigue en `omit`.
+    sesionGaleria: (org) => ({ method: 'POST', path: '/v1/sesion/galeria', body: { org }, credenciales: 'include' }),
     /** id_cliente OBLIGATORIO y del cliente (dos toques = una corrida). `market_id`, no `market`. */
     lanzarFlujo: (flujo, org, entradas, idCliente, marketId) => ({ method: 'POST', path: `/v1/flujos/${flujo}/lanzar`, body: Object.assign({ org, entradas }, marketId ? { market_id: marketId } : {}, { id_cliente: idCliente }) }),
     corrida: (id, org) => ({ method: 'GET', path: `/v1/corridas/${id}`, query: { org } }),
@@ -172,7 +175,7 @@
       const cabeceras = { 'x-request-id': requestId };
       if (jwt) cabeceras['authorization'] = `Bearer ${jwt}`;
       if (contentType) cabeceras['content-type'] = contentType;
-      try { return await (fetchInyectado || fetch)(url, { method: p.method, headers: cabeceras, body, credentials: 'omit' }); }
+      try { return await (fetchInyectado || fetch)(url, { method: p.method, headers: cabeceras, body, credentials: p.credenciales === 'include' ? 'include' : 'omit' }); }
       catch (e) { throw new ErrorApi('red', 'No se pudo hablar con el borde.', 0, requestId, e); }
     };
 
@@ -265,11 +268,18 @@
      * nada: la siguiente imagen dará 401 y la vista renueva y reintenta.
      */
     mantenerSesionGaleria: (org, { cadaMs = 8 * 60 * 1000, alFallar = null } = {}) => {
-      let parado = false;
-      const pedir = () => ejecutar(peticiones.sesionGaleria(org)).catch((e) => { if (typeof alFallar === 'function') alFallar(e); });
+      let parado = false; let ultima = 0;
+      const pedir = () => { ultima = Date.now(); return ejecutar(peticiones.sesionGaleria(org)).catch((e) => { if (typeof alFallar === 'function') alFallar(e); }); };
       void pedir();
       const timer = setInterval(() => { if (!parado && !document.hidden) void pedir(); }, cadaMs);
-      return { parar: () => { parado = true; clearInterval(timer); }, renovar: pedir };
+      // Con la pestaña oculta no se renueva; al volver, si ya pasó el intervalo la cookie
+      // puede haber vencido (10 min): se pide antes de que la primera imagen dé 401.
+      const alVolver = () => { if (!parado && !document.hidden && Date.now() - ultima >= cadaMs) void pedir(); };
+      if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', alVolver);
+      return {
+        parar: () => { parado = true; clearInterval(timer); if (typeof document.removeEventListener === 'function') document.removeEventListener('visibilitychange', alVolver); },
+        renovar: pedir,
+      };
     },
     /**
      * Sondea una corrida hasta que termine. Resuelve con la corrida final

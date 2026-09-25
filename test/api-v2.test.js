@@ -171,3 +171,31 @@ describe('ApiV2 · id_cliente', () => {
     finally { Object.defineProperty(globalThis, 'crypto', real); }
   });
 });
+
+describe('ApiV2 · credenciales', () => {
+  test('solo la sesión de galería va con credentials include (si no, el Set-Cookie de otro origen se descarta)', async () => {
+    const vistas = [];
+    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async (u, init) => { vistas.push([String(u), init.credentials]); return respuesta(200, { ok: true, archivos: [] }); } });
+    await apiV2.api.sesionGaleria('o1');
+    await apiV2.api.archivos('o1');
+    expect(vistas[0][0]).toContain('/v1/sesion/galeria'); expect(vistas[0][1]).toBe('include');
+    expect(vistas[1][0]).toContain('/v1/archivos'); expect(vistas[1][1]).toBe('omit');
+    apiV2.configurar({ fetch: null, sesion: null });
+  });
+
+  test('al volver a la pestaña, si ya pasó el intervalo, renueva la cookie', async () => {
+    let pedidas = 0; const oyentes = {};
+    const doc = globalThis.document;
+    globalThis.document = { hidden: true, addEventListener: (n, f) => { oyentes[n] = f; }, removeEventListener: (n) => { delete oyentes[n]; } };
+    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async () => { pedidas++; return respuesta(200, { ok: true }); } });
+    const s = apiV2.api.mantenerSesionGaleria('o1', { cadaMs: 5 });
+    await new Promise((r) => setTimeout(r, 20));
+    expect(pedidas).toBe(1);                       // oculta: el intervalo no renueva
+    globalThis.document.hidden = false; oyentes.visibilitychange();
+    await new Promise((r) => setTimeout(r, 5));
+    expect(pedidas).toBeGreaterThanOrEqual(2);
+    s.parar(); expect(oyentes.visibilitychange).toBeUndefined();
+    globalThis.document = doc;
+    apiV2.configurar({ fetch: null, sesion: null });
+  });
+});
