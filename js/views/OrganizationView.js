@@ -490,7 +490,7 @@ class OrganizationView extends BaseView {
     const zones = (typeof Intl !== 'undefined' && Intl.supportedValuesOf)
       ? Intl.supportedValuesOf('timeZone')
       : ['UTC', 'America/Bogota', 'America/Mexico_City', 'America/New_York', 'Europe/Madrid'];
-    sel.innerHTML = zones.map((z) => `<option value="${this.escapeHtml(z)}">${this.escapeHtml(z)}</option>`).join('');
+    window.Estado.pintar(sel, zones.map((z) => `<option value="${this.escapeHtml(z)}">${this.escapeHtml(z)}</option>`).join(''));
   }
 
   // ── Carga ──────────────────────────────────────────────
@@ -557,7 +557,7 @@ class OrganizationView extends BaseView {
     if (personal) {
       const verified = this.mfaFactors.filter((f) => f.status === 'verified');
       if (verified.length === 0) {
-        personal.innerHTML = `
+        window.Estado.pintar(personal, `
           <div class="org-mfa-status org-mfa-status--off">
             <i class="aisc-ico aisc-ico--shield"></i>
             <div>
@@ -568,11 +568,11 @@ class OrganizationView extends BaseView {
               <i class="aisc-ico aisc-ico--lock"></i> ${__('Activar 2FA')}
             </button>
           </div>
-        `;
+        `);
       } else {
         const f = verified[0];
         const created = f.created_at ? new Date(f.created_at).toLocaleDateString() : '—';
-        personal.innerHTML = `
+        window.Estado.pintar(personal, `
           <div class="org-mfa-status org-mfa-status--on">
             <i class="aisc-ico aisc-ico--shield"></i>
             <div>
@@ -583,7 +583,7 @@ class OrganizationView extends BaseView {
               <i class="aisc-ico aisc-ico--delete"></i> ${__('Desactivar')}
             </button>
           </div>
-        `;
+        `);
       }
     }
 
@@ -640,7 +640,7 @@ class OrganizationView extends BaseView {
 
     if (errorEl) { errorEl.hidden = true; errorEl.textContent = ''; }
     if (codeInput) codeInput.value = '';
-    if (qrWrap) qrWrap.innerHTML = `<p class="org-placeholder">${__('Generando código…')}</p>`;
+    if (qrWrap) window.Estado.pintar(qrWrap, `<p class="org-placeholder">${__('Generando código…')}</p>`);
     if (secretWrap) secretWrap.hidden = true;
 
     modal.setAttribute('aria-hidden', 'false');
@@ -671,7 +671,7 @@ class OrganizationView extends BaseView {
 
       if (qrWrap && this.mfaEnroll.qr) {
         // Supabase devuelve el QR como SVG inline (string) o data URL.
-        // Para data URLs de SVG no podemos usar innerHTML con un <img src="..."> en
+        // Para data URLs de SVG no podemos meter un <img src="..."> en un
         // template string porque el SVG contiene comillas y >, que rompen el atributo.
         // → property assignment via createElement evita cualquier escape de HTML.
         const qr = this.mfaEnroll.qr;
@@ -685,7 +685,7 @@ class OrganizationView extends BaseView {
         } else if (qr.includes('<svg')) {
           const wrap = document.createElement('div');
           wrap.style.cssText = 'display:inline-block;background:white;padding:8px;border-radius:8px;width:216px;height:216px;';
-          wrap.innerHTML = qr;
+          window.Estado.pintar(wrap, qr);
           qrWrap.appendChild(wrap);
         } else {
           const p = document.createElement('p');
@@ -821,7 +821,7 @@ class OrganizationView extends BaseView {
     })();
     const sessionStartHuman = sessionStartIso ? new Date(sessionStartIso).toLocaleString() : __('desconocido');
 
-    wrap.innerHTML = `
+    window.Estado.pintar(wrap, `
       <div class="org-session-card">
         <i class="aisc-ico aisc-ico--laptop"></i>
         <div class="org-session-info">
@@ -833,7 +833,7 @@ class OrganizationView extends BaseView {
       <p class="org-section-desc org-section-desc--nota">
         ${__('Si tienes acceso desde otros dispositivos o navegadores y quieres revocarlos, usa el botón "Cerrar todas las otras sesiones" arriba. Esta sesión actual no se cerrará.')}
       </p>
-    `;
+    `);
   }
 
   _bindSessionsEvents() {
@@ -915,8 +915,7 @@ class OrganizationView extends BaseView {
     // el mismo tipo de dato (cuanto hay de algo, y donde verlo). Las llena
     // _renderResumen(), que corre despues, y vuelve a pedir este render.
     const i = this._intel || null;
-    el.innerHTML =
-      card('/identities', s.identities, __('Elementos')) +
+    window.Estado.pintar(el, card('/identities', s.identities, __('Elementos')) +
       card('/products',   s.products,   __('Productos')) +
       card('/services',   s.services,   __('Servicios')) +
       card('/places',     s.places,     __('Escenarios')) +
@@ -929,7 +928,7 @@ class OrganizationView extends BaseView {
       // destino.
       (i ? card(null, i.audiencias, __('Audiencias')) : '') +
       (i ? card(null, i.estrategias, __('Estrategias')) : '') +
-      (i ? card('/monitoring', i.vigilados, __('Perfiles monitoreados')) : '');
+      (i ? card('/monitoring', i.vigilados, __('Perfiles monitoreados')) : ''));
   }
 
   // ── Uso: consumo de créditos por día y por área (fuente) ──
@@ -1050,11 +1049,11 @@ class OrganizationView extends BaseView {
 
     // Tarjeta unica: nombre del plan, cuando se renueva, y debajo lo que
     // incluye (lo escribe _renderPlanIncluye en el hueco #orgPlanIncluye, que se
-    // crea aqui y por eso debe correr DESPUES de este innerHTML).
+    // crea aqui y por eso debe correr DESPUES de este pintado).
     // Las tres tarjetitas de "Plan actual / Proximo pago / Ultimo pago" se
     // retiraron: proximo y ultimo pago viven ahora en la columna derecha, y
     // repetirlos aqui era decir lo mismo dos veces en la misma pantalla.
-    summary.innerHTML = `
+    window.Estado.pintar(summary, `
       ${banner}
       <div class="org-plan-card">
         <div class="org-plan-card-head">
@@ -1068,7 +1067,7 @@ class OrganizationView extends BaseView {
         <div class="org-plan-incluye" id="orgPlanIncluye"></div>
       </div>
       <div class="org-bill-actions">${stripePortalBtn}${reactivateBtn}</div>
-    `;
+    `);
 
     if (limits) this._renderBillingLimits(limits);
 
@@ -1116,12 +1115,12 @@ class OrganizationView extends BaseView {
             </div>`).join('')}
         </div>`;
 
-    list.innerHTML = `
+    window.Estado.pintar(list, `
       ${pendiente}
       <details class="org-bill-historial">
         <summary>${__('Historial de pagos')}${all.length ? ` <span class="org-bill-cuenta">${all.length}</span>` : ''}</summary>
         <div class="org-bill-historial-cuerpo">${historial}</div>
-      </details>`;
+      </details>`);
 
     this.querySelector('#orgBillingCancelBtn')?.addEventListener('click', () => this._cancelSubscription(false));
     this.querySelector('#orgBillingReactivateBtn')?.addEventListener('click', () => this._cancelSubscription(true));
@@ -1152,7 +1151,7 @@ class OrganizationView extends BaseView {
     const el = this.querySelector('#orgPlanIncluye');
     if (!el) return;
     const p = this.billingPlanRow;
-    if (!p) { el.innerHTML = ''; return; }
+    if (!p) { window.Estado.pintar(el, ''); return; }
 
     const items = [];
     if (p.credits_monthly > 0) items.push(__('{n} créditos al mes', { n: Number(p.credits_monthly).toLocaleString('es') }));
@@ -1171,18 +1170,18 @@ class OrganizationView extends BaseView {
     // vea aunque nadie haya pasado por aqui a bautizarla.
     if (p.features?.team_seats) items.push(__('{n} miembros', { n: p.features.team_seats }));
 
-    el.innerHTML = items.length
+    window.Estado.pintar(el, items.length
       ? `<ul class="org-incluye-list">${items.map((t) => `<li>${this._esc(t)}</li>`).join('')}</ul>`
-      : '';
+      : '');
   }
 
   _renderBillingCredits() {
     const el = this.querySelector('#orgBillingCredits');
     if (!el) return;
     const c = this.billingCreditos;
-    if (!c || !c.total) { el.innerHTML = `<p class="org-placeholder">${__('Sin créditos asignados.')}</p>`; return; }
+    if (!c || !c.total) { window.Estado.pintar(el, `<p class="org-placeholder">${__('Sin créditos asignados.')}</p>`); return; }
     const pct = c.pctUsado || 0;
-    el.innerHTML = `
+    window.Estado.pintar(el, `
       <div class="org-cred-head">
         <div>
           <span class="org-res-lbl">${__('Créditos mensuales restantes')}</span>
@@ -1193,7 +1192,7 @@ class OrganizationView extends BaseView {
       <div class="org-res-bar" role="img" aria-label="${pct}%">
         <span class="org-res-bar-fill" style="transform:scaleX(${pct / 100})"></span>
       </div>
-      <span class="org-res-sub">${__('{n}% consumido este ciclo', { n: pct })}</span>`;
+      <span class="org-res-sub">${__('{n}% consumido este ciclo', { n: pct })}</span>`);
   }
 
   /**
@@ -1210,14 +1209,14 @@ class OrganizationView extends BaseView {
     const el = this.querySelector('#orgBillingProximo');
     if (!el) return;
     const sub = this.billingSub;
-    if (!sub) { el.innerHTML = `<p class="org-placeholder">${__('Sin suscripción registrada.')}</p>`; return; }
+    if (!sub) { window.Estado.pintar(el, `<p class="org-placeholder">${__('Sin suscripción registrada.')}</p>`); return; }
 
     const fecha = sub.current_period_end;
     const plan = this.billingPlanRow;
     const cancelada = sub.cancel_at_period_end || sub.status === 'canceled';
 
     if (!fecha || cancelada) {
-      el.innerHTML = `<p class="org-pago-linea">${cancelada ? __('La suscripción no se renueva.') : __('Sin cobros programados.')}</p>`;
+      window.Estado.pintar(el, `<p class="org-pago-linea">${cancelada ? __('La suscripción no se renueva.') : __('Sin cobros programados.')}</p>`);
       return;
     }
 
@@ -1230,7 +1229,7 @@ class OrganizationView extends BaseView {
       : sub.provider === 'manual' ? __('Acuerdo directo con la plataforma')
       : null;
 
-    el.innerHTML = `
+    window.Estado.pintar(el, `
       <div class="org-prox-fecha">${this._esc(this._fmtDate(fecha))}</div>
       <dl class="org-prox-dl">
         <div><dt>${__('Total')}</dt><dd>${plan?.price_usd_month != null
@@ -1239,7 +1238,7 @@ class OrganizationView extends BaseView {
         <div><dt>${__('Se cobra con')}</dt><dd>${medio
           ? this._esc(medio)
           : `<span class="org-res-sinmedir">${__('sin método registrado')}</span>`}</dd></div>
-      </dl>`;
+      </dl>`);
   }
 
   /**
@@ -1267,7 +1266,7 @@ class OrganizationView extends BaseView {
            <span class="org-pay-exp">—</span>
          </div>`;
 
-    el.innerHTML = `
+    window.Estado.pintar(el, `
       <div class="org-pay-table">
         <div class="org-pay-row org-pay-row--head">
           <span></span><span>${__('Información de la tarjeta')}</span><span>${__('Fecha de expiración')}</span>
@@ -1277,7 +1276,7 @@ class OrganizationView extends BaseView {
           <span class="org-pay-mas" aria-hidden="true">+</span> ${__('Añadir nuevo método de pago')}
         </a>
       </div>
-      ${tieneMedio ? '' : `<p class="org-res-sub org-pay-nota">${__('El cobro de esta organización lo gestiona el equipo de plataforma.')}</p>`}`;
+      ${tieneMedio ? '' : `<p class="org-res-sub org-pay-nota">${__('El cobro de esta organización lo gestiona el equipo de plataforma.')}</p>`}`);
   }
 
   /**
@@ -1315,15 +1314,15 @@ class OrganizationView extends BaseView {
     if (!el) return;
     const caps = this.billingPlanRow?.features?.capacidades || [];
     if (!caps.length) {
-      el.innerHTML = `<p class="org-placeholder">${__('No hay funciones declaradas para este plan.')}</p>`;
+      window.Estado.pintar(el, `<p class="org-placeholder">${__('No hay funciones declaradas para este plan.')}</p>`);
       return;
     }
     const etiquetas = window.PlanesDatos?.CAPACIDADES || {};
-    el.innerHTML = `
+    window.Estado.pintar(el, `
       <div class="org-fx-table">
         <div class="org-fx-row org-fx-row--head"><span>${__('Función')}</span><span>${__('Estado')}</span></div>
         ${caps.map((c) => `<div class="org-fx-row"><span class="org-fx-nombre">${this._esc(__(etiquetas[c] || c))}</span><span><span class="org-bill-pill org-bill-pill--ok">${__('Incluida')}</span></span></div>`).join('')}
-      </div>`;
+      </div>`);
   }
 
   /**
@@ -1338,8 +1337,8 @@ class OrganizationView extends BaseView {
     const pf = this.billingPuedeFacturar || { puede: false, falta: [] };
     const canEdit = this.isOwner || this.canManageMembers;
     if (this.billingFichaSinPermiso) {
-      el.innerHTML = `<p class="org-datos-nombre">${this._esc(this.org?.name || '—')}</p>
-        <p class="org-res-sub">${__('Tu rol no puede ver ni editar los datos de facturación de la marca.')}</p>`;
+      window.Estado.pintar(el, `<p class="org-datos-nombre">${this._esc(this.org?.name || '—')}</p>
+        <p class="org-res-sub">${__('Tu rol no puede ver ni editar los datos de facturación de la marca.')}</p>`);
       return;
     }
     const estado = pf.puede
@@ -1348,7 +1347,7 @@ class OrganizationView extends BaseView {
     const campo = (k, label, extra = '') => `
       <div class="org-bill-field"><label for="ficha_${k}">${label}</label>
         <input type="text" id="ficha_${k}" name="${k}" class="form-input" value="${this._esc(f[k] ?? '')}"${canEdit ? '' : ' disabled'} ${extra}></div>`;
-    el.innerHTML = `
+    window.Estado.pintar(el, `
       <div class="org-ficha-estado">${estado}</div>
       <form id="orgFichaForm" class="org-bill-limits-form" autocomplete="off">
         <div class="org-bill-fields">
@@ -1368,7 +1367,7 @@ class OrganizationView extends BaseView {
         <div class="org-bill-limits-actions">
           <button type="submit" class="btn btn-primary" id="orgFichaSubmit"${canEdit ? '' : ' disabled'}><i class="aisc-ico aisc-ico--save"></i> ${__('Guardar datos de facturación')}</button>
         </div>
-      </form>`;
+      </form>`);
     el.querySelector('#orgFichaForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveFicha(); });
   }
 
@@ -1379,7 +1378,7 @@ class OrganizationView extends BaseView {
     const ficha = {};
     (window.OrganizacionDatos?.CAMPOS_FICHA || []).forEach((k) => { const i = form.querySelector(`[name="${k}"]`); if (i) ficha[k] = i.value; });
     if (ficha.country) ficha.country = String(ficha.country).trim().toUpperCase();
-    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Guardando…')}`; }
+    if (btn) { btn.disabled = true; window.Estado.pintar(btn, `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Guardando…')}`); }
     try {
       const r = await window.OrganizacionDatos.guardarFicha(this.orgId, ficha);
       this.billingFicha = { ...this.billingFicha, ...ficha };
@@ -1389,7 +1388,7 @@ class OrganizationView extends BaseView {
     } catch (e) {
       window.showToast(e.message || __('No se pudo guardar la ficha.'), { type: 'error' });
     } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="aisc-ico aisc-ico--save"></i> ${__('Guardar datos de facturación')}`; }
+      if (btn) { btn.disabled = false; window.Estado.pintar(btn, `<i class="aisc-ico aisc-ico--save"></i> ${__('Guardar datos de facturación')}`); }
     }
   }
 
@@ -1397,11 +1396,11 @@ class OrganizationView extends BaseView {
     // Topes de gasto automático (org_claude_caps de v1) NO existen en la base nueva:
     // el freno es el saldo (ADR-0029: sin créditos la marca se detiene) y la
     // autonomía de cada agente (ai.agents.autonomy). Se dice, no se dibuja un formulario mudo.
-    el.innerHTML = `
+    window.Estado.pintar(el, `
       <div class="org-bill-limits-head">
         <h3 class="org-uchart-title">${__('Límites de uso automático')}</h3>
         <p class="org-uchart-desc">${__('En esta versión el freno del gasto automático es el saldo de créditos: sin saldo, la marca se detiene. El nivel de autonomía de cada agente se ajusta en Seguridad › Agentes.')}</p>
-      </div>`;
+      </div>`);
   }
 
   async _saveCaps() {
@@ -1459,9 +1458,9 @@ class OrganizationView extends BaseView {
     // Solo se rotula lo EXCEPCIONAL. Una org archivada hay que avisarla; que
     // este activa es el caso normal y no merece una pastilla verde gritando lo
     // obvio en la cabecera de su propia pagina.
-    el.innerHTML = archived
+    window.Estado.pintar(el, archived
       ? `<span class="org-status-pill org-status-pill--archived"><i class="aisc-ico aisc-ico--archive"></i> ${__('Archivada')}</span>`
-      : '';
+      : '');
   }
 
   _renderGeneral() {
@@ -1481,10 +1480,10 @@ class OrganizationView extends BaseView {
     const el = this.querySelector('#orgSubbrandsList');
     if (!el) return;
     if (!this.brandContainers.length) {
-      el.innerHTML = `<p class="org-members-empty">${__('Aún no tienes marcas gestionadas. Pulsa "Solicitar nueva marca" para iniciar el proceso de provisión.')}</p>`;
+      window.Estado.pintar(el, `<p class="org-members-empty">${__('Aún no tienes marcas gestionadas. Pulsa "Solicitar nueva marca" para iniciar el proceso de provisión.')}</p>`);
       return;
     }
-    el.innerHTML = this.brandContainers.map((b) => {
+    window.Estado.pintar(el, this.brandContainers.map((b) => {
       const since = b.created_at ? new Date(b.created_at).toLocaleDateString('es') : '—';
       return `
         <div class="org-subbrand-row">
@@ -1494,7 +1493,7 @@ class OrganizationView extends BaseView {
           </div>
           <span class="org-subbrand-lock" title="${__('Provisión gestionada por el equipo de plataforma')}"><i class="aisc-ico aisc-ico--lock"></i> ${__('Gestionada por plataforma')}</span>
         </div>`;
-    }).join('');
+    }).join(''));
   }
 
   _renderMembers() {
@@ -1502,10 +1501,10 @@ class OrganizationView extends BaseView {
     if (!listEl) return;
     const canManage = this.canManageMembers;
     if (!this.membersWithProfile.length) {
-      listEl.innerHTML = `<p class="org-members-empty">${__('Sin miembros cargados.')}</p>`;
+      window.Estado.pintar(listEl, `<p class="org-members-empty">${__('Sin miembros cargados.')}</p>`);
       return;
     }
-    listEl.innerHTML = this.membersWithProfile.map((m) => {
+    window.Estado.pintar(listEl, this.membersWithProfile.map((m) => {
       const display = m.full_name || m.email || (m.user_id ? m.user_id.slice(0, 8) + '…' : __('Miembro'));
       const isCurrent = m.user_id === this.userId;
       const isOrgOwner = this.org?.owner_user_id === m.user_id;
@@ -1531,7 +1530,7 @@ class OrganizationView extends BaseView {
           ${rolePicker}
           ${removeBtn}
         </div>`;
-    }).join('');
+    }).join(''));
     const inviteBtn = this.querySelector('#orgInviteBtn');
     if (inviteBtn) inviteBtn.style.display = canManage ? '' : 'none';
   }
@@ -1542,7 +1541,7 @@ class OrganizationView extends BaseView {
     if (!section || !list) return;
     if (!this.invitations.length) { section.hidden = true; return; }
     section.hidden = false;
-    list.innerHTML = this.invitations.map((inv) => {
+    window.Estado.pintar(list, this.invitations.map((inv) => {
       const expires = inv.expires_at ? new Date(inv.expires_at).toLocaleDateString('es') : '—';
       return `
         <div class="org-invitation-row">
@@ -1555,7 +1554,7 @@ class OrganizationView extends BaseView {
             <button type="button" class="btn btn-ghost btn-sm org-invitation-revoke" data-invitation-id="${this.escapeHtml(inv.id)}">${__('Revocar')}</button>
           </div>
         </div>`;
-    }).join('');
+    }).join(''));
   }
 
   // Áreas (fuentes) del consumo, en orden de apilado (arriba → abajo).
@@ -1670,13 +1669,13 @@ class OrganizationView extends BaseView {
         </div>`;
       }).join('');
 
-      tip.innerHTML = `
+      window.Estado.pintar(tip, `
         <div class="org-uchart-tip-head">
           <span>${this._esc(this._fmtDay(col.dataset.dia))}</span>
           <b>${this._esc(total)} ${__('cr')}</b>
         </div>
         ${ops ? `<div class="org-uchart-tip-ops">${__('{n} operaciones', { n: ops.toLocaleString('es') })}${dinero ? ` · ${this._esc(dinero)}` : ''}</div>` : ''}
-        ${filas || `<div class="org-uchart-tip-vacio">${__('Sin consumo')}</div>`}`;
+        ${filas || `<div class="org-uchart-tip-vacio">${__('Sin consumo')}</div>`}`);
       tip.hidden = false;
 
       // El tooltip se ancla al plot y se voltea cerca del borde derecho, para
@@ -1696,7 +1695,7 @@ class OrganizationView extends BaseView {
     const el = this.querySelector('#orgUsageMiembros');
     if (!el) return;
     const filas = this.usage?.porMiembro || [];
-    if (!filas.length) { el.innerHTML = ''; return; }
+    if (!filas.length) { window.Estado.pintar(el, ''); return; }
 
     const nombres = {};
     (this.membersWithProfile || []).forEach((m) => {
@@ -1707,7 +1706,7 @@ class OrganizationView extends BaseView {
       ? __('Automático (sensores y flujos)')
       : (nombres[uid] || `${String(uid).slice(0, 8)}…`));
 
-    el.innerHTML = `
+    window.Estado.pintar(el, `
       <div class="org-section-head">
         <div>
           <h3 class="org-uchart-title">${__('Consumo por miembro')}</h3>
@@ -1735,7 +1734,7 @@ class OrganizationView extends BaseView {
               <span class="org-mem-fecha">${m.ultima ? this._esc(this._fmtDate(m.ultima)) : '—'}</span>
             </div>`;
         }).join('')}
-      </div>`;
+      </div>`);
 
     const btn = this.querySelector('#orgUsageCsv');
     if (btn) this.addEventListener(btn, 'click', () => this._exportUsageCsv());
@@ -1776,7 +1775,7 @@ class OrganizationView extends BaseView {
     const el = this.querySelector('#orgUsageProyeccion');
     if (!el) return;
     const sensores = this.monitoreo || [];
-    if (!sensores.length) { el.innerHTML = ''; return; }
+    if (!sensores.length) { window.Estado.pintar(el, ''); return; }
 
     // Mapa sensor -> tipo de cargo. Deliberadamente CORTO: solo los pares de los
     // que hay certeza. `social` y `trends_run` raspan via Apify y se cobran como
@@ -1803,7 +1802,7 @@ class OrganizationView extends BaseView {
       trends_run: __('Tendencias'),
     }[t] || String(t).replace(/_/g, ' '));
 
-    el.innerHTML = `
+    window.Estado.pintar(el, `
       <div class="org-section-head">
         <div>
           <h3 class="org-uchart-title">${__('Lo que cuesta tu monitoreo')}</h3>
@@ -1836,14 +1835,14 @@ class OrganizationView extends BaseView {
               : `<span class="org-res-sinmedir">${__('sin medir')}</span>`}</span>
           </div>`).join('')}
       </div>
-      ${sinCosto ? `<p class="org-hist-aviso">${__('{n} sensores corren pero su costo todavía no se puede atribuir a un cargo concreto, así que no entran en la proyección.', { n: sinCosto })}</p>` : ''}`;
+      ${sinCosto ? `<p class="org-hist-aviso">${__('{n} sensores corren pero su costo todavía no se puede atribuir a un cargo concreto, así que no entran en la proyección.', { n: sinCosto })}</p>` : ''}`);
   }
 
   _renderUsageHistorial() {
     const el = this.querySelector('#orgUsageHistorial');
     if (!el) return;
     const todos = this.usage?.movimientos || [];
-    if (!todos.length) { el.innerHTML = ''; return; }
+    if (!todos.length) { window.Estado.pintar(el, ''); return; }
 
     const POR_PAGINA = 25;
     const pagina = this._histPagina || 0;
@@ -1854,7 +1853,7 @@ class OrganizationView extends BaseView {
       ? `<p class="org-hist-aviso">${__('{n} movimientos entraron con signo positivo. La gráfica de arriba solo cuenta los negativos, así que ese consumo no aparece en ella.', { n: this.usage.positivos })}</p>`
       : '';
 
-    el.innerHTML = `
+    window.Estado.pintar(el, `
       <div class="org-section-head">
         <div>
           <h3 class="org-uchart-title">${__('Historial de movimientos')}</h3>
@@ -1886,7 +1885,7 @@ class OrganizationView extends BaseView {
           <button type="button" class="btn btn-secondary btn-sm" data-hist="prev" ${pagina === 0 ? 'disabled' : ''}>${__('Anterior')}</button>
           <span>${__('Página {n} de {t}', { n: pagina + 1, t: paginas })}</span>
           <button type="button" class="btn btn-secondary btn-sm" data-hist="next" ${pagina >= paginas - 1 ? 'disabled' : ''}>${__('Siguiente')}</button>
-        </div>` : ''}`;
+        </div>` : ''}`);
 
     el.querySelectorAll('[data-hist]').forEach((b) => {
       this.addEventListener(b, 'click', () => {
@@ -1945,7 +1944,7 @@ class OrganizationView extends BaseView {
         },
       });
     }
-    cont.innerHTML = this._usageDP.html();
+    window.Estado.pintar(cont, this._usageDP.html());
     this._usageDP.mount(cont);
   }
 
@@ -1962,7 +1961,7 @@ class OrganizationView extends BaseView {
     // ── Stat cards ──
     if (statsEl) {
       if (empty) {
-        statsEl.innerHTML = '';
+        window.Estado.pintar(statsEl, '');
       } else {
         const topMeta = OrganizationView.USAGE_AREAS.find((a) => a.key === u.topAreaKey);
         const topPct = u.topAreaKey ? Math.round((u.byArea[u.topAreaKey] / u.total) * 100) : 0;
@@ -1972,7 +1971,7 @@ class OrganizationView extends BaseView {
           : u.variacion === 0 ? __('igual que el período anterior')
           : __('{signo}{n}% vs. período anterior', { signo: u.variacion > 0 ? '+' : '', n: u.variacion });
 
-        statsEl.innerHTML = [
+        window.Estado.pintar(statsEl, [
           this._usageStat(
             __('Créditos consumidos · {d}d', { d: u.days }),
             this._fmtCredits(u.total),
@@ -1988,14 +1987,14 @@ class OrganizationView extends BaseView {
             u.seAgotan ? __('a este ritmo') : __('sin consumo para proyectar')),
           this._usageStat(__('Día pico'), u.peak ? this._fmtCredits(u.peak.total) : '—', u.peak ? this._fmtDay(u.peak.day) : __('sin datos')),
           this._usageStat(__('Fuente principal'), topMeta ? topMeta.label : '—', topMeta ? __('{p}% del consumo', { p: topPct }) : '—', topMeta ? this._usageColor(topMeta.key) : null),
-        ].join('');
+        ].join(''));
       }
     }
 
     // ── Gráfica apilada ──
     if (chartEl) {
       if (empty) {
-        chartEl.innerHTML = `<p class="org-placeholder">${__('Sin consumo de créditos registrado en este período.')}</p>`;
+        window.Estado.pintar(chartEl, `<p class="org-placeholder">${__('Sin consumo de créditos registrado en este período.')}</p>`);
       } else {
         const niceMax = this._niceMax(Math.max(...u.byDay.map((d) => d.total)));
         const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => this._fmtCreditsK(niceMax * f));
@@ -2025,7 +2024,7 @@ class OrganizationView extends BaseView {
         const n = u.byDay.length;
         const idxs = n <= 6 ? u.byDay.map((_, i) => i) : [0, 1, 2, 3, 4, 5].map((k) => Math.round(k * (n - 1) / 5));
         const xlabels = [...new Set(idxs)].map((i) => `<span>${this.escapeHtml(this._fmtDay(u.byDay[i].day))}</span>`).join('');
-        chartEl.innerHTML = `
+        window.Estado.pintar(chartEl, `
           <div class="org-uchart-head">
             <div>
               <h3 class="org-uchart-title">${__('Consumo diario por función')}</h3>
@@ -2039,14 +2038,14 @@ class OrganizationView extends BaseView {
               <div class="org-uchart-plot">${bars}<div class="org-uchart-tip" id="orgUchartTip" hidden></div></div>
               <div class="org-uchart-xaxis">${xlabels}</div>
             </div>
-          </div>`;
+          </div>`);
       }
     }
 
     // ── Desglose por fuente ──
     if (bdEl) {
       if (empty) {
-        bdEl.innerHTML = '';
+        window.Estado.pintar(bdEl, '');
       } else {
         const rows = OrganizationView.USAGE_AREAS
           .map((a) => ({ ...a, value: u.byArea[a.key] || 0 }))
@@ -2063,14 +2062,14 @@ class OrganizationView extends BaseView {
                 <span class="org-bd-pct">${pct}%</span>
               </div>`;
           }).join('');
-        bdEl.innerHTML = `
+        window.Estado.pintar(bdEl, `
           <h3 class="org-uchart-title">${__('Consumo por fuente · {d} días', { d: u.days })}</h3>
-          <div class="org-bd-rows">${rows}</div>`;
+          <div class="org-bd-rows">${rows}</div>`);
       }
     }
 
     // El tooltip se engancha AL FINAL, no al principio: .org-uchart-plot lo crea
-    // el innerHTML de arriba, asi que atado antes el querySelector devuelve null
+    // el pintado de arriba, asi que atado antes el querySelector devuelve null
     // y no se engancha nada. Fue exactamente el bug que lo dejo mudo.
     this._renderUsageHistorial();
     this._bindUsageTooltip();
@@ -2089,10 +2088,10 @@ class OrganizationView extends BaseView {
     const list = this.querySelector('#orgNotificationsList');
     if (!list) return;
     if (!this.notifications.length) {
-      list.innerHTML = `<p class="org-members-empty">${__('No hay notificaciones recientes.')}</p>`;
+      window.Estado.pintar(list, `<p class="org-members-empty">${__('No hay notificaciones recientes.')}</p>`);
       return;
     }
-    list.innerHTML = this.notifications.map((n) => {
+    window.Estado.pintar(list, this.notifications.map((n) => {
       const when = n.created_at ? new Date(n.created_at).toLocaleString('es') : '';
       const sev = (n.severity || 'info').toLowerCase();
       const unread = !n.read_at ? '<span class="org-notif-dot"></span>' : '';
@@ -2106,7 +2105,7 @@ class OrganizationView extends BaseView {
           </div>
           ${n.action_url ? `<a href="${this.escapeHtml(n.action_url)}" class="btn btn-secondary btn-sm">${this.escapeHtml(n.action_label || __('Abrir'))}</a>` : ''}
         </div>`;
-    }).join('');
+    }).join(''));
   }
 
   _renderAuditLog() {
@@ -2130,9 +2129,9 @@ class OrganizationView extends BaseView {
     let rows = this.auditLog;
     if (this.auditFilter.action) rows = rows.filter((r) => r.action === this.auditFilter.action);
     if (this.auditFilter.user) rows = rows.filter((r) => r.user_id === this.auditFilter.user);
-    if (this.auditPendiente) { listEl.innerHTML = `<p class="org-members-empty">${__('La bitácora de la marca se está trayendo a la nueva base (historial_de_marca). Vuelve en unos días.')}</p>`; return; }
-    if (!rows.length) { listEl.innerHTML = `<p class="org-members-empty">${__('Sin actividad registrada.')}</p>`; return; }
-    listEl.innerHTML = rows.map((r) => {
+    if (this.auditPendiente) { window.Estado.pintar(listEl, `<p class="org-members-empty">${__('La bitácora de la marca se está trayendo a la nueva base (historial_de_marca). Vuelve en unos días.')}</p>`); return; }
+    if (!rows.length) { window.Estado.pintar(listEl, `<p class="org-members-empty">${__('Sin actividad registrada.')}</p>`); return; }
+    window.Estado.pintar(listEl, rows.map((r) => {
       const when = r.created_at ? new Date(r.created_at).toLocaleString('es') : '—';
       const who = r.user_email || (r.user_id ? r.user_id.slice(0, 8) + '…' : (r.actor_kind || '—'));
       const resource = r.resource_type ? `${r.resource_type}${r.resource_id ? ' · ' + r.resource_id.slice(0, 8) : ''}` : '';
@@ -2143,7 +2142,7 @@ class OrganizationView extends BaseView {
           <div class="org-audit-action"><code>${this.escapeHtml(r.action || '')}</code></div>
           <div class="org-audit-resource">${this.escapeHtml(resource)}</div>
         </div>`;
-    }).join('');
+    }).join(''));
   }
 
   // ── Helpers ────────────────────────────────────────────
@@ -2166,7 +2165,7 @@ class OrganizationView extends BaseView {
       const [tipos, prefs] = await Promise.all([window.AvisosDatos.tipos({ fresco: true }), window.AvisosDatos.preferencias(this.orgId)]);
       this._avisosTipos = tipos; this._avisosPrefs = prefs;
       const activos = Object.values(tipos).filter((t) => t.is_active !== false);
-      if (!activos.length) { el.innerHTML = `<p class="org-placeholder">${__('La marca aún no tiene tipos de aviso activos.')}</p>`; return; }
+      if (!activos.length) { window.Estado.pintar(el, `<p class="org-placeholder">${__('La marca aún no tiene tipos de aviso activos.')}</p>`); return; }
       const familias = (window.Avisos && window.Avisos.FAMILIAS) || {};
       const etiquetaCanal = { in_app: __('En la app'), email: __('Correo al momento'), email_digest: __('Resumen diario') };
       const sev = { info: __('info'), success: __('ok'), warning: __('aviso'), error: __('error'), critical: __('crítico') };
@@ -2191,9 +2190,9 @@ class OrganizationView extends BaseView {
             </div>
           </div>`;
       };
-      el.innerHTML = Object.entries(porFamilia).map(([fam, lista]) => `
+      window.Estado.pintar(el, Object.entries(porFamilia).map(([fam, lista]) => `
         <h3 class="org-fx-grupo"><i class="aisc-ico ${this._esc(familias[fam]?.icono || 'aisc-ico--alert-info')}" aria-hidden="true"></i> ${this._esc(__(familias[fam]?.etiqueta || fam))} <span class="org-bill-cuenta">${lista.length}</span></h3>
-        <div class="org-aviso-lista">${lista.map(fila).join('')}</div>`).join('');
+        <div class="org-aviso-lista">${lista.map(fila).join('')}</div>`).join(''));
       if (el.dataset.bound !== '1') {
         el.dataset.bound = '1';
         el.addEventListener('change', (e) => this._onAvisoPrefChange(e));
@@ -2205,7 +2204,7 @@ class OrganizationView extends BaseView {
       }
     } catch (e) {
       console.warn('OrganizationView _renderAvisosPrefs:', e);
-      el.innerHTML = `<p class="org-placeholder">${__('No se pudieron cargar las preferencias de avisos.')}</p>`;
+      window.Estado.pintar(el, `<p class="org-placeholder">${__('No se pudieron cargar las preferencias de avisos.')}</p>`);
     }
   }
 
@@ -2322,7 +2321,7 @@ class OrganizationView extends BaseView {
       timezone: this.querySelector('#orgTimezone')?.value || 'UTC',
       locale: this.querySelector('#orgLocale')?.value || 'es',
     };
-    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Guardando…')}`; }
+    if (btn) { btn.disabled = true; window.Estado.pintar(btn, `<i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Guardando…')}`); }
     try {
       const org = await window.OrganizacionDatos.actualizarOrganizacion(this.orgId, payload);
       this.org = { ...this.org, ...org };
@@ -2330,7 +2329,7 @@ class OrganizationView extends BaseView {
     } catch (e) {
       window.showToast(e.message || __('No se pudo guardar.'), { type: 'error' });
     } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="aisc-ico aisc-ico--save"></i> ${__('Guardar')}`; }
+      if (btn) { btn.disabled = false; window.Estado.pintar(btn, `<i class="aisc-ico aisc-ico--save"></i> ${__('Guardar')}`); }
     }
   }
 
@@ -2441,17 +2440,17 @@ class OrganizationView extends BaseView {
   async _renderActividad() {
     const el = this.querySelector('#orgActividad');
     if (!el) return;
-    if (!window.OrganizacionDatos || !this.orgId) { el.innerHTML = ''; return; }
+    if (!window.OrganizacionDatos || !this.orgId) { window.Estado.pintar(el, ''); return; }
     let act = null;
     try {
       act = await window.OrganizacionDatos.actividad(this.orgId, 40);
     } catch (e) {
       console.warn('OrganizationView._renderActividad:', e);
     }
-    if (!act) { el.innerHTML = ''; return; }
+    if (!act) { window.Estado.pintar(el, ''); return; }
     if (act.pendiente) {
       // Hasta la 190000 la base no expone historial_de_marca a una persona: se dice, no se calla.
-      el.innerHTML = `<p class="org-placeholder">${__('La bitácora de la marca se está trayendo a la nueva base. Vuelve en unos días.')}</p>`;
+      window.Estado.pintar(el, `<p class="org-placeholder">${__('La bitácora de la marca se está trayendo a la nueva base. Vuelve en unos días.')}</p>`);
       return;
     }
     const nombres = {};
@@ -2469,7 +2468,7 @@ class OrganizationView extends BaseView {
     const quien = (e) => (e.userId && nombres[e.userId]) || enPalabras(ACTOR, e.actor) || (e.userId ? `${String(e.userId).slice(0, 8)}…` : (enPalabras(ACTOR, e.actorKind) || '—'));
     const nota = '';
     if (!act.eventos.length) {
-      el.innerHTML = `<p class="org-placeholder">${__('Sin actividad registrada.')}</p>`;
+      window.Estado.pintar(el, `<p class="org-placeholder">${__('Sin actividad registrada.')}</p>`);
       return;
     }
     const filas = act.eventos.map((e) => `
@@ -2482,7 +2481,7 @@ class OrganizationView extends BaseView {
         <time class="org-act-fecha" datetime="${this._esc(e.fecha)}">${this._esc(this._fmtFechaCorta(e.fecha))}</time>
       </li>`).join('');
 
-    el.innerHTML = `<ul class="org-act-list">${filas}</ul>` + nota;
+    window.Estado.pintar(el, `<ul class="org-act-list">${filas}</ul>` + nota);
   }
 
   _fmtFechaCorta(iso) {
@@ -2525,7 +2524,7 @@ class OrganizationView extends BaseView {
     const el = this.querySelector('#orgResumen');
     if (!el) return;
     if (!window.OrganizacionDatos || !this.orgId) {
-      el.innerHTML = '';
+      window.Estado.pintar(el, '');
       return;
     }
     let r = null;
@@ -2538,18 +2537,18 @@ class OrganizationView extends BaseView {
     } catch (e) {
       console.warn('OrganizationView._renderResumen:', e);
     }
-    if (!r) { el.innerHTML = ''; return; }
+    if (!r) { window.Estado.pintar(el, ''); return; }
     if (r.pendiente) {
       // resumen_de_marca aún no responde a una persona (42804 hasta la 190000). Se pinta lo
       // que sí hay (plan, saldo, mercado) y se declara el resto como pendiente.
       const p = this.billingPlanRow;
       const c = this.billingCreditos;
       const aside = this.querySelector('#orgAsidePlan');
-      if (aside) aside.innerHTML = (p ? `<div class="org-plan-hero"><span class="org-plan-eyebrow">${__('Plan de la marca')}</span><span class="org-plan-name">${this._esc(p.name)}</span>${p.credits_monthly ? `<span class="org-plan-sub">${__('{n} créditos / mes', { n: Number(p.credits_monthly).toLocaleString('es') })}</span>` : ''}</div>` : '')
-        + (c ? `<div class="org-plan-credits"><div class="org-plan-credits-head"><span class="org-res-lbl">${__('Créditos disponibles')}</span><span class="org-plan-credits-num">${Math.round(c.disponibles).toLocaleString('es')}</span></div></div>` : '');
+      if (aside) window.Estado.pintar(aside, (p ? `<div class="org-plan-hero"><span class="org-plan-eyebrow">${__('Plan de la marca')}</span><span class="org-plan-name">${this._esc(p.name)}</span>${p.credits_monthly ? `<span class="org-plan-sub">${__('{n} créditos / mes', { n: Number(p.credits_monthly).toLocaleString('es') })}</span>` : ''}</div>` : '')
+        + (c ? `<div class="org-plan-credits"><div class="org-plan-credits-head"><span class="org-res-lbl">${__('Créditos disponibles')}</span><span class="org-plan-credits-num">${Math.round(c.disponibles).toLocaleString('es')}</span></div></div>` : ''));
       const elMercado = this.querySelector('#orgAsideMercado');
-      if (elMercado) elMercado.innerHTML = (this.brandContainers || []).map((m) => { const filas = []; if ((m.mercado_objetivo || []).length) filas.push(`<dt>${__('Mercado')}</dt><dd>${this._esc(m.mercado_objetivo.join(' · '))}</dd>`); if ((m.idiomas_contenido || []).length) filas.push(`<dt>${__('Idiomas')}</dt><dd>${this._esc(m.idiomas_contenido.join(' · '))}</dd>`); if (m.nicho_core) filas.push(`<dt>${__('Nicho')}</dt><dd>${this._esc(m.nicho_core)}</dd>`); return filas.length ? `<div class="org-res-marca"><dl class="org-res-dl">${filas.join('')}</dl></div>` : ''; }).join('');
-      el.innerHTML = `<p class="org-placeholder">${__('El resumen de audiencias, vigilancia, estrategias y pauta se está trayendo a la nueva base. Vuelve en unos días.')}</p>`;
+      if (elMercado) window.Estado.pintar(elMercado, (this.brandContainers || []).map((m) => { const filas = []; if ((m.mercado_objetivo || []).length) filas.push(`<dt>${__('Mercado')}</dt><dd>${this._esc(m.mercado_objetivo.join(' · '))}</dd>`); if ((m.idiomas_contenido || []).length) filas.push(`<dt>${__('Idiomas')}</dt><dd>${this._esc(m.idiomas_contenido.join(' · '))}</dd>`); if (m.nicho_core) filas.push(`<dt>${__('Nicho')}</dt><dd>${this._esc(m.nicho_core)}</dd>`); return filas.length ? `<div class="org-res-marca"><dl class="org-res-dl">${filas.join('')}</dl></div>` : ''; }).join(''));
+      window.Estado.pintar(el, `<p class="org-placeholder">${__('El resumen de audiencias, vigilancia, estrategias y pauta se está trayendo a la nueva base. Vuelve en unos días.')}</p>`);
       return;
     }
     const bloques = [];
@@ -2580,7 +2579,7 @@ class OrganizationView extends BaseView {
           <span class="org-res-sub">${__('Quedan {n}', { n: Math.round(r.creditos.disponibles).toLocaleString('es') })}</span>
         </div>`;
       }
-      aside.innerHTML = planHtml;
+      window.Estado.pintar(aside, planHtml);
     }
 
     // ── Mercado: a quien le habla la marca → columna derecha ─────────
@@ -2597,7 +2596,7 @@ class OrganizationView extends BaseView {
         if (!filas.length) return '';
         return `<div class="org-res-marca"><dl class="org-res-dl">${filas.join('')}</dl></div>`;
       }).filter(Boolean).join('');
-      elMercado.innerHTML = marcas;
+      window.Estado.pintar(elMercado, marcas);
     }
 
     // ── Audiencias, vigilancia y estrategias ─────────────────────────
@@ -2635,7 +2634,7 @@ class OrganizationView extends BaseView {
       }
     }
 
-    el.innerHTML = bloques.join('');
+    window.Estado.pintar(el, bloques.join(''));
   }
 }
 
