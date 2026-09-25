@@ -259,8 +259,8 @@
       // Rayos del splash: trazos de luz refractada que caen en camara lenta hacia
       // el centro. Misma fisica que js/ui/Starfield.js (tiron que crece al
       // acercarse, exponente 0.6, leve giro) pero con TRAZOS orientados al punto
-      // de fuga: cada rayo es una franja del espectro (azul en la punta que mira
-      // al centro, naranja en la cola), largo y grueso segun la distancia, asi
+      // de fuga: cada rayo es un destello del espectro con forma de cometa (punta roja
+      // que mira al centro, cola que se desvanece), largo y grueso segun la distancia, asi
       // la perspectiva sale sola. Inline porque debe animar desde la primera
       // pintura, antes de cualquier bundle.
       (function () {
@@ -280,7 +280,8 @@
             giro: (Math.random() < 0.5 ? -1 : 1) * (0.006 + Math.random() * 0.018),
             len: 0.22 + Math.random() * 0.38,          // largo relativo a la distancia
             grosor: 2.4 + Math.random() * 4.2,
-            brillo: 0.55 + Math.random() * 0.45
+            brillo: 0.55 + Math.random() * 0.45,
+            variante: Math.random() < 0.6 ? 0 : 1   // los dos destellos de Figma
           };
         }
         function resize() {
@@ -303,10 +304,46 @@
             if (p.r <= 40) rays[i] = spawn();
           }
         }
+        // Destellos del espectro (Figma › Recursos, 25/09: «Ellipse 1» y «Rectangle 98»):
+        // forma de cometa, punta roja afilada DELANTE (mira al centro), cola que se
+        // desvanece detrás; desenfoque real. Se dibujan UNA vez en un lienzo aparte y
+        // cada fotograma solo se estampan girados y escalados (desenfocar 64 trazos
+        // por fotograma sería caro).
+        var SW = 512, SH = 28;
+        var DESTELLOS = [
+          { sigma: 17, paradas: [[0, '91,0,234', 0], [0.08, '91,0,234', 0.9], [0.27, '0,24,238', 1], [0.44, '0,231,255', 1], [0.55, '0,214,20', 1], [0.68, '154,204,0', 1], [0.77, '255,229,0', 1], [0.875, '255,101,0', 1], [0.935, '255,0,0', 1], [1, '255,0,0', 1]] },
+          { sigma: 10, paradas: [[0, '0,10,94', 0], [0.033, '0,10,94', 0.9], [0.25, '0,24,238', 1], [0.375, '0,231,255', 1], [0.524, '0,214,20', 1], [0.626, '154,204,0', 1], [0.713, '255,229,0', 1], [0.817, '255,101,0', 1], [0.882, '255,0,0', 1], [1, '35,0,0', 1]] }
+        ];
+        function cometa(c, x0, cy, L, hw) {
+          c.beginPath();
+          c.moveTo(x0, cy);
+          c.bezierCurveTo(x0, cy - hw, x0 + L * 0.35, cy - hw, x0 + L * 0.6, cy - hw * 0.8);
+          c.bezierCurveTo(x0 + L * 0.85, cy - hw * 0.55, x0 + L, cy - hw * 0.08, x0 + L, cy);
+          c.bezierCurveTo(x0 + L, cy + hw * 0.08, x0 + L * 0.85, cy + hw * 0.55, x0 + L * 0.6, cy + hw * 0.8);
+          c.bezierCurveTo(x0 + L * 0.35, cy + hw, x0, cy + hw, x0, cy);
+          c.closePath();
+        }
+        var sprites = DESTELLOS.map(function (d) {
+          var pad = Math.ceil(d.sigma * 3);
+          var cv = document.createElement('canvas');
+          cv.width = SW + pad * 2; cv.height = SH + pad * 2;
+          var c = cv.getContext('2d');
+          var g = c.createLinearGradient(pad, 0, pad + SW, 0);
+          d.paradas.forEach(function (p) { g.addColorStop(p[0], 'rgba(' + p[1] + ',' + p[2] + ')'); });
+          c.fillStyle = g;
+          if ('filter' in c) {
+            c.filter = 'blur(' + d.sigma + 'px)';
+            cometa(c, pad, pad + SH / 2, SW, SH / 2); c.fill();
+          } else {
+            // Sin filtro de canvas (Safari antiguo): halo ancho y tenue + núcleo.
+            c.globalAlpha = 0.3; cometa(c, pad, pad + SH / 2, SW, SH); c.fill();
+            c.globalAlpha = 1;   cometa(c, pad, pad + SH / 2, SW, SH / 2); c.fill();
+          }
+          return { canvas: cv, pad: pad };
+        });
         function draw() {
           ctx.clearRect(0, 0, w, h);
           ctx.globalCompositeOperation = 'lighter';
-          ctx.lineCap = 'round';
           var entrada = spawnR * 0.9, salida = 200;
           for (var i = 0; i < rays.length; i++) {
             var p = rays[i];
@@ -316,25 +353,16 @@
             if (a <= 0.01) continue;
             var k = p.r / spawnR;                      // 0 en el centro, 1 en el borde
             var L = p.r * p.len;
-            var cos = Math.cos(p.ang), sin = Math.sin(p.ang);
-            var x1 = cx + cos * p.r, y1 = cy + sin * p.r;
-            var x2 = cx + cos * (p.r + L), y2 = cy + sin * (p.r + L);
-            var g = ctx.createLinearGradient(x1, y1, x2, y2);
-            g.addColorStop(0,    'rgba(91,0,234,0)');
-            g.addColorStop(0.14, 'rgba(0,24,238,' + a + ')');
-            g.addColorStop(0.36, 'rgba(0,231,255,' + a + ')');
-            g.addColorStop(0.52, 'rgba(255,248,228,' + a + ')');
-            g.addColorStop(0.7,  'rgba(255,229,0,' + a + ')');
-            g.addColorStop(0.88, 'rgba(255,101,0,' + a * 0.9 + ')');
-            g.addColorStop(1,    'rgba(255,40,0,0)');
-            var ancho = p.grosor * (0.3 + k * 0.9);
-            ctx.strokeStyle = g;
-            // halo: el mismo trazo ancho y tenue = el desenfoque de la foto
-            ctx.globalAlpha = 0.3; ctx.lineWidth = ancho * 3.2;
-            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-            // nucleo
-            ctx.globalAlpha = 1; ctx.lineWidth = ancho;
-            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+            var ancho = p.grosor * (0.3 + k * 0.9) * 1.6;
+            var spr = sprites[p.variante || 0];
+            // La cola (x = pad del sprite) va hacia afuera y la punta hacia el centro.
+            ctx.save();
+            ctx.globalAlpha = a;
+            ctx.translate(cx + Math.cos(p.ang) * (p.r + L), cy + Math.sin(p.ang) * (p.r + L));
+            ctx.rotate(p.ang + Math.PI);
+            ctx.scale(L / SW, ancho / SH);
+            ctx.drawImage(spr.canvas, -spr.pad, -spr.pad - SH / 2);
+            ctx.restore();
           }
           ctx.globalAlpha = 1;
           ctx.globalCompositeOperation = 'source-over';
