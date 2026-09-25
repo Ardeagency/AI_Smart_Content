@@ -10,6 +10,7 @@
     "lint:ci": "eslint . --max-warnings 499",
     "audit:isolation": "node scripts/audit-org-isolation.mjs",
     "build:minify": "node scripts/build-minify.mjs",
+    "verificar:rutas": "node scripts/verificar-rutas.mjs",
     "test:gate": "vitest run --exclude '**/endpoints.test.js' --exclude '**/rls.test.js' --exclude '**/rpcs.test.js'"
   },
   "dependencies": {

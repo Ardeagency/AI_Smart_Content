@@ -12,9 +12,12 @@
  *
  * Sesión de prueba SIN teclear la clave en el navegador: con
  *   AISC_PRUEBA_USUARIO=… AISC_PRUEBA_CLAVE=…
- * el servidor hace el login una vez (supabase-js en Node) y sirve /__sesion.js,
- * que siembra la sesión en localStorage con la clave que usa supabase-js
- * (`sb-<ref>-auth-token`). La clave nunca sale del entorno; el JWT solo viaja
+ * /__sesion.js siembra la sesión en localStorage con la clave que usa supabase-js
+ * (`sb-<ref>-auth-token`), SOLO si el perfil no tiene ya una: entonces pide
+ * /__sesion.json, que hace un login NUEVO (supabase-js en Node) por cada perfil. Una
+ * sesión compartida entre perfiles moría al caducar (~1 h): el primero que refrescaba
+ * gastaba el refresh token y los demás caían a /login (scripts/verificar-rutas.mjs
+ * abre un perfil nuevo en cada corrida). La clave nunca sale del entorno; el JWT solo viaja
  * servidor → navegador en 127.0.0.1. Solo para local: en Netlify no existe.
  */
 import { createServer } from 'node:http';
@@ -30,25 +33,19 @@ const inyectables = ['AISC_SUPABASE_URL', 'AISC_SUPABASE_ANON_KEY', 'AISC_API_UR
 const conSesion = !!(process.env.AISC_PRUEBA_USUARIO && process.env.AISC_PRUEBA_CLAVE && process.env.AISC_SUPABASE_URL && process.env.AISC_SUPABASE_ANON_KEY);
 const snippet = '<script>' + inyectables.filter((k) => process.env[k]).map((k) => `window.${k}=${JSON.stringify(process.env[k])};`).join('') + '</script>\n'
   + (conSesion ? '<script src="/__sesion.js"></script>\n' : '');
-let sesionPromesa = null;
+/** Un login nuevo por llamada: cada perfil de navegador tiene su propia sesión (y su refresh token). */
 async function sesionDePrueba() {
-  if (!sesionPromesa) {
-    sesionPromesa = (async () => {
-      const { createClient } = await import('@supabase/supabase-js');
-      const sb = createClient(process.env.AISC_SUPABASE_URL, process.env.AISC_SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
-      const { data, error } = await sb.auth.signInWithPassword({ email: process.env.AISC_PRUEBA_USUARIO, password: process.env.AISC_PRUEBA_CLAVE });
-      if (error) throw error;
-      return data.session;
-    })();
-    sesionPromesa.catch(() => { sesionPromesa = null; });
-  }
-  return sesionPromesa;
+  const { createClient } = await import('@supabase/supabase-js');
+  const sb = createClient(process.env.AISC_SUPABASE_URL, process.env.AISC_SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data, error } = await sb.auth.signInWithPassword({ email: process.env.AISC_PRUEBA_USUARIO, password: process.env.AISC_PRUEBA_CLAVE });
+  if (error) throw error;
+  return data.session;
 }
-async function sesionJs() {
-  const s = await sesionDePrueba();
+function sesionJs() {
   const ref = new URL(process.env.AISC_SUPABASE_URL).host.split('.')[0];
+  // Síncrono a propósito: la sesión tiene que estar en localStorage antes de que arranque supabase-js.
   // Misma forma que guarda supabase-js v2 (GoTrue): el objeto de sesión entero.
-  return `try{var k='sb-${ref}-auth-token';if(!localStorage.getItem(k)){localStorage.setItem(k,${JSON.stringify(JSON.stringify(s))});}}catch(e){}`;
+  return `try{var k='sb-${ref}-auth-token';if(!localStorage.getItem(k)){var x=new XMLHttpRequest();x.open('GET','/__sesion.json',false);x.send();if(x.status===200)localStorage.setItem(k,x.responseText);else console.warn('sesión de prueba: '+x.responseText);}}catch(e){}`;
 }
 
 async function indexHtml() {
@@ -60,8 +57,13 @@ createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   let ruta = normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, '');
   if (ruta === '/__sesion.js' && conSesion) {
-    try { const js = await sesionJs(); res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' }); res.end(js); }
-    catch (e) { res.writeHead(500, { 'content-type': 'text/javascript' }); res.end(`console.error('sesión de prueba: ${String(e.message || e).replace(/'/g, '')}');`); }
+    res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' });
+    res.end(sesionJs());
+    return;
+  }
+  if (ruta === '/__sesion.json' && conSesion) {
+    try { const s = await sesionDePrueba(); res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(s)); }
+    catch (e) { res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' }); res.end(String(e.message || e)); }
     return;
   }
   if (ruta.startsWith('/.netlify/functions/')) { res.writeHead(503, { 'content-type': 'application/json' }); res.end('{"error":"sin_functions_en_local"}'); return; }
