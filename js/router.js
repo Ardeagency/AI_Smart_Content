@@ -445,9 +445,9 @@ class Router {
           if (typeof prevView.destroy === 'function') { try { prevView.destroy(); } catch (_) { /* la vista vieja falló al destruirse: no frena la nueva */ } }
         }
         document.body.classList.toggle('route-landing', path === '/');
-        container.innerHTML = hasFreshHtml
+        window.Estado.pintar(container, hasFreshHtml
           ? cached.html
-          : (window.transicion?.esqueleto ? window.transicion.esqueleto() : '');
+          : (window.transicion?.esqueleto ? window.transicion.esqueleto() : ''));
         window.scrollTo(0, 0);
         if (window.appNavigation && typeof window.appNavigation.render === 'function') {
           Promise.resolve().then(() => window.appNavigation.render()).catch(() => {});
@@ -696,7 +696,7 @@ class Router {
   showError(message) {
     const container = document.getElementById('app-container');
     if (container) {
-      container.innerHTML = `
+      window.Estado.pintar(container, `
         <div class="error-container" role="alert" aria-live="assertive" style="
           display: flex;
           flex-direction: column;
@@ -722,7 +722,7 @@ class Router {
             font-weight: 600;
           ">${__('Recargar Página')}</button>
         </div>
-      `;
+      `);
     }
   }
 }

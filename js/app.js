@@ -192,7 +192,7 @@ class App {
     const rootRedirectView = class extends (window.BaseView || class {}) {
       async render() {
         const c = document.getElementById('app-container');
-        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+        if (c) window.Estado.pintar(c, '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>');
         const isAuth = window.router && typeof window.router.checkAuthentication === 'function'
           ? await window.router.checkAuthentication()
           : false;
@@ -256,7 +256,7 @@ class App {
     const redirectToDefaultView = class extends (window.BaseView || class {}) {
       async render() {
         const c = document.getElementById('app-container');
-        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+        if (c) window.Estado.pintar(c, '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>');
         await redirectToDefaultOrg();
       }
     };
@@ -354,7 +354,7 @@ class App {
     const redirectBrandStorageToBrand = class extends (window.BaseView || class {}) {
       async render() {
         const c = document.getElementById('app-container');
-        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+        if (c) window.Estado.pintar(c, '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>');
         if (!window.router) return;
         const p = this.routeParams || {};
         const target = (p.orgIdShort && p.orgNameSlug)
@@ -417,7 +417,7 @@ class App {
     const redirectIdentitiesToProducts = class extends (window.BaseView || class {}) {
       async render() {
         const c = document.getElementById('app-container');
-        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+        if (c) window.Estado.pintar(c, '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>');
         if (!window.router) return;
         const p = this.routeParams || {};
         const target = (p.orgIdShort && p.orgNameSlug)
@@ -458,7 +458,7 @@ class App {
     const redirectStudioFlow = (destino) => class extends (window.BaseView || class {}) {
       async render() {
         const c = document.getElementById('app-container');
-        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+        if (c) window.Estado.pintar(c, '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>');
         if (!window.router) return;
         const p = this.routeParams || {};
         const prefix = (p.orgIdShort && p.orgNameSlug) ? `/org/${p.orgIdShort}/${p.orgNameSlug}` : '';
@@ -557,7 +557,7 @@ class App {
     if (typeof window.__appSplashDismiss === 'function') window.__appSplashDismiss();
     const container = document.getElementById('app-container');
     if (container) {
-      container.innerHTML = `
+      window.Estado.pintar(container, `
         <div class="error-container" style="
           display: flex;
           flex-direction: column;
@@ -585,7 +585,7 @@ class App {
             font-weight: 600;
           ">Recargar Página</button>
         </div>
-      `;
+      `);
     }
   }
 }

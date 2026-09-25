@@ -47,14 +47,14 @@
     backBtn.type = 'button';
     backBtn.className = 'modal-back';
     backBtn.hidden = true;
-    backBtn.innerHTML = `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${t(backLabel || 'Volver')}</span>`;
+    window.Estado.pintar(backBtn, `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${t(backLabel || 'Volver')}</span>`);
     const h3 = document.createElement('h3');
     h3.id = 'modal-title-' + Math.random().toString(36).slice(2, 8);
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
     closeBtn.className = 'modal-close';
     closeBtn.setAttribute('aria-label', t('Cerrar'));
-    closeBtn.innerHTML = '&times;';
+    window.Estado.pintar(closeBtn, '&times;');
     headerLeft.appendChild(backBtn);
     headerLeft.appendChild(h3);
     header.appendChild(headerLeft);
@@ -99,7 +99,7 @@
     if (footer) {
       footerEl = document.createElement('div');
       footerEl.className = 'modal-footer';
-      if (typeof footer === 'string') footerEl.innerHTML = footer;
+      if (typeof footer === 'string') window.Estado.pintar(footerEl, footer);
       else if (footer instanceof HTMLElement) footerEl.appendChild(footer);
       content.appendChild(footerEl);
     }

@@ -64,7 +64,7 @@ class BaseView {
       let html = this.renderHTML();
       if (html instanceof Promise) html = await html;
       
-      this.container.innerHTML = html;
+      window.Estado.pintar(this.container, html);
       this.moveModalsToPortal();
       this.updateLinksForRouter();
       await this.init();
@@ -89,12 +89,12 @@ class BaseView {
           onRetry: () => this.render(),
         });
       } else {
-        this.container.innerHTML = `
+        window.Estado.pintar(this.container, `
           <div class="section-error" role="alert">
             <div class="section-error-title">Error</div>
             <p class="section-error-msg">${this.escapeHtml(error.message)}</p>
           </div>
-        `;
+        `);
       }
     }
   }
@@ -106,7 +106,7 @@ class BaseView {
    */
   moveModalsToPortal() {
     const portal = document.getElementById('modals-portal');
-    if (portal) portal.innerHTML = '';
+    if (portal) window.Estado.pintar(portal, '');
   }
 
   /**
@@ -175,7 +175,7 @@ class BaseView {
       }
       return null;
     }
-    slot.innerHTML = html;
+    window.Estado.pintar(slot, html);
     slot.setAttribute('aria-hidden', 'false');
     // onclick (handler unico) evita listeners duplicados si se re-inyecta.
     slot.onclick = (e) => {
@@ -194,7 +194,7 @@ class BaseView {
     }
     const slot = document.getElementById('headerProductionSlot');
     if (slot) {
-      slot.innerHTML = '';
+      window.Estado.pintar(slot, '');
       slot.onclick = null;
       slot.setAttribute('aria-hidden', 'true');
     }
@@ -451,7 +451,7 @@ class BaseView {
    *
    * Uso típico en renderHTML():
    *   <div id="kpis">${this.skeletonGrid(4, 'lg')}</div>
-   * Y después de fetchear, this.container.querySelector('#kpis').innerHTML = realHtml.
+   * Y después de fetchear, Estado.pintar(this.container.querySelector('#kpis'), realHtml).
    */
   static skeletonText(width = '100%', size = '') {
     const sizeCls = size === 'lg' ? ' skeleton-text--lg' : (size === 'sm' ? ' skeleton-text--sm' : '');
@@ -576,7 +576,7 @@ class BaseView {
         toggleButton.className = 'header-sidebar-toggle';
         toggleButton.id = 'headerSidebarToggle';
         toggleButton.setAttribute('aria-label', 'Toggle sidebar');
-        toggleButton.innerHTML = '<i class="aisc-ico aisc-ico--menu"></i>';
+        window.Estado.pintar(toggleButton, '<i class="aisc-ico aisc-ico--menu"></i>');
         headerContent.insertBefore(toggleButton, headerContent.firstChild);
       }
     }
@@ -590,7 +590,7 @@ class BaseView {
         ${organizationName ? `<div class="header-context-secondary">${this.escapeHtml(organizationName)}</div>` : ''}
       </div>
     `;
-    headerLeft.innerHTML = html;
+    window.Estado.pintar(headerLeft, html);
   }
 
   /**
@@ -672,7 +672,7 @@ class BaseView {
       toggleButton.className = 'header-sidebar-toggle';
       toggleButton.id = 'headerSidebarToggle';
       toggleButton.setAttribute('aria-label', 'Toggle sidebar');
-      toggleButton.innerHTML = '<i class="aisc-ico aisc-ico--menu"></i>';
+      window.Estado.pintar(toggleButton, '<i class="aisc-ico aisc-ico--menu"></i>');
       const headerContent = existingHeader.querySelector('.header-content');
       if (headerContent) {
         headerContent.insertBefore(toggleButton, headerContent.firstChild);
@@ -683,7 +683,7 @@ class BaseView {
     this.updateHeaderContext(section, null, null);
 
     // Actualizar zona derecha con nuevo formato de usuario (solo botón, sin avatar)
-    headerRight.innerHTML = `
+    window.Estado.pintar(headerRight, `
       <div class="header-user" id="headerUser">
         <button class="header-user-chevron" id="headerUserChevron" aria-label="Menú de usuario">
           <i class="aisc-ico aisc-ico--chevron-down"></i>
@@ -708,7 +708,7 @@ class BaseView {
         <div class="hamburger-line"></div>
         <div class="hamburger-line"></div>
       </button>
-    `;
+    `);
   }
 
   /**
