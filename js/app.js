@@ -288,7 +288,7 @@ class App {
     // ── Org: Marketing (lienzo de estrategia; antes «Command Center», borrado en L8) ──
     // Todo por MarketingDataService (marketing.boards/board_nodes/board_edges, audiences,
     // campaigns, campaign_audiences); la mecánica en marketing/Lienzo.js. marketing.css
-    // route-split (clases .mk-*), con append: va DESPUÉS de bundle.css para ajustar .form-*.
+    // route-split (clases .cc-* del diseño v1), con append: va DESPUÉS de bundle.css.
     // CatalogoDataService ya es global (elementos del lienzo).
     const marketingLoader = this._lazy('MarketingView', ['/js/services/MarketingDataService.js', '/js/views/marketing/Lienzo.js', '/js/views/MarketingView.js'], [{ href: '/css/modules/marketing.css', append: true }]);
     r.register('/org/:orgIdShort/:orgNameSlug/command-center', marketingLoader, auth);
