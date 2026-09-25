@@ -18,7 +18,7 @@ const PULIDOS = [
   'js/shell/Shell.js', 'js/ui/estado.js', 'js/ui/capas.js', 'js/components/Avisos.js', 'js/components/LecturaVera.js',
   'js/views/ConfiguracionView.js', 'js/views/ajustes-pestanas.js', 'js/views/OrganizationView.js', 'js/views/IntegracionesView.js',
   'js/views/CuentaView.js', 'js/views/InvitacionView.js', 'js/views/MfaView.js', 'js/views/PaginaEstadoView.js',
-  'js/views/EnObrasView.js', 'js/views/PlanesView.js', 'js/views/CreditsShopView.js', 'js/views/BrandOrganizationView.js',
+  'js/views/PlanesView.js', 'js/views/CreditsShopView.js', 'js/views/BrandOrganizationView.js',
   'js/views/vera/graficos.js', 'js/views/vera/historial.mixin.js', 'js/views/vera/biblioteca.mixin.js',
   'js/views/vera/artefactos.mixin.js', 'js/views/vera/render.mixin.js', 'js/views/vera/adjuntos.mixin.js',
 ];

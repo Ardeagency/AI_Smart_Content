@@ -1763,7 +1763,8 @@ class LivingManager {
         if (!ids.length) return;
         this._closeCampaignPicker();
         // Corte: las campañas viven en marketing.* (D3) y las salidas no llevan campaign_id editable.
-        if (!this.supabase?.from || window.EnObras?.es?.('command-center')) {
+        // Campañas (command-center) se retiró en L8: no hay dónde asignar hasta que vuelva.
+        if (!this.supabase?.from || !window.AISC_CAMPANAS) {
             if (typeof window.showToast === 'function') window.showToast(__('Asignar a una campaña llega con la sección de Campañas.'), 'info');
             return;
         }

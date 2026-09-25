@@ -20,9 +20,6 @@
     '/js/services/AvisosDataService.js',
     '/js/components/Avisos.js',
     '/js/shell/Shell.js',
-    // Componentes que las vistas usan dentro del shell.
-    '/js/components/MatchBars.js',
-    '/js/components/AudienceMap.js',
   ];
 
   // Build ID: el comando `[build]` de netlify.toml reemplaza __BUILD_ID__ por

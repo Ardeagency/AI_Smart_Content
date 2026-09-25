@@ -283,29 +283,10 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/monitoring', monitoringLoader, auth);
     r.register('/monitoring', monitoringLoader, auth);
 
-    // ── Org: Tasks (registrar pronto para que /org/.../tasks coincida con prioridad) ──
-    const tasksLoader = this._lazy('TasksView', ['/js/views/TasksView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/tasks', tasksLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/tasks/:taskId', tasksLoader, auth);
-    r.register('/tasks', tasksLoader, auth);
-    r.register('/tasks/:taskId', tasksLoader, auth);
-
     // ── Org: Execution History (sesiones de produccion manual reabribles) ──
     const execHistoryLoader = this._lazy('ExecutionHistoryView', ['/js/views/ExecutionHistoryView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/execution-history', execHistoryLoader, auth);
     r.register('/execution-history', execHistoryLoader, auth);
-
-    // ── Org: Predictor (simular al publico antes de gastar en el) ──
-    // predictor.css tiene todas sus clases namespaced .pred-* → route-split seguro.
-    const predictorLoader = this._lazy('PredictorView', [
-      // El mapa del mundo va antes que la vista: `PredictorView` lo instancia al
-      // abrir una corrida con grafo, asi que tiene que estar ya en `window`.
-      '/js/views/predictor/grafo.js',
-      '/js/views/predictor/mapa.js',
-      '/js/views/PredictorView.js',
-    ], ['/css/modules/predictor.css']);
-    r.register('/org/:orgIdShort/:orgNameSlug/predictor', predictorLoader, auth);
-    r.register('/predictor', predictorLoader, auth);
 
     // ── Deps compartidas de marca: mixins que aplican sobre BrandstorageView
     // y/o BrandOrganizationView según cuál esté definido al cargar.
@@ -368,17 +349,6 @@ class App {
     r.register('/brand-storage', redirectBrandStorageToBrand, auth);
     r.register('/brandstorage', redirectBrandStorageToBrand, auth);
 
-    // El mixin Canvas debe ir DESPUÉS de CommandCenterView.js (extiende su prototype).
-    // command-center.css (108KB) sale del bundle global y se carga solo aqui:
-    // sus clases .cc-* estan namespaced y verificadas sin colision con modulos globales.
-    const commandCenterLoader = this._lazy('CommandCenterView', ['/js/views/CommandCenterView.js', '/js/views/commandcenter/Canvas.mixin.js', '/js/views/commandcenter/CanvasStore.js'], ['/css/modules/command-center.css']);
-    // Canónico: shortId del brand_container + slug del nombre (mismo patrón que /org/...).
-    // El shortId garantiza unicidad incluso si dos sub-marcas comparten nombre.
-    r.register('/org/:orgIdShort/:orgNameSlug/command-center/:subBrandShortId/:subBrandSlug', commandCenterLoader, auth);
-    r.register('/command-center/:subBrandShortId/:subBrandSlug', commandCenterLoader, auth);
-    // Legacy: slug-only. Resuelve por slug (primer match) para compatibilidad con bookmarks.
-    r.register('/org/:orgIdShort/:orgNameSlug/command-center/:subBrandSlug', commandCenterLoader, auth);
-    r.register('/command-center/:subBrandSlug', commandCenterLoader, auth);
 
     // OAuth callback para integraciones OAuth propias (Google/Facebook)
     r.register(

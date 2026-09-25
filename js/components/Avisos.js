@@ -28,7 +28,8 @@
     ingest: { icono: 'aisc-ico--radar', etiqueta: 'Monitoreo', ruta: '/monitoring' },
     agent: { icono: 'aisc-ico--sparkles', etiqueta: 'Vera', ruta: '/vera' },
     intel: { icono: 'aisc-ico--growth', etiqueta: 'Inteligencia', ruta: '/dashboard' },
-    marketing: { icono: 'aisc-ico--megaphone', etiqueta: 'Marketing', ruta: '/command-center' },
+    // Campañas (/command-center) se retiró en L8: sus avisos llevan al inicio, no a un 404.
+    marketing: { icono: 'aisc-ico--megaphone', etiqueta: 'Marketing', ruta: '/dashboard' },
   });
 
   /* ── Render por tipo: titulo(p)/cuerpo(p) con los params del contrato; null = respaldo ── */

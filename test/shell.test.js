@@ -40,14 +40,16 @@ describe('Shell', () => {
     expect(CSS.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
 
-  test('ninguna ruta del menú está en obras', () => {
-    const enObras = fs.readFileSync('js/en-obras.js', 'utf8');
-    const base = enObras.slice(enObras.indexOf('const BASE = ['), enObras.indexOf('];', enObras.indexOf('const BASE = [')));
-    const activas = [...base.matchAll(/^\s*'([^']+)',/gm)].map((m) => m[1]);
+  test('toda ruta del menú existe en el router', () => {
+    // Antes: «ninguna ruta del menú está en obras» (js/en-obras.js). Las pantallas en
+    // obras se BORRARON (L8, 24/09): la regla útil ahora es que el menú no lleve a un 404.
+    const app = fs.readFileSync('js/app.js', 'utf8');
+    const registradas = new Set([...app.matchAll(/r\.register\('([^']+)'/g)].map((m) => m[1]));
     const menu = SHELL.slice(SHELL.indexOf('const MENU = ['), SHELL.indexOf('const TITULOS'));
     const rutas = [...menu.matchAll(/ruta: '([^']+)'/g)].map((m) => m[1]);
     expect(rutas.length).toBeGreaterThan(8);
-    expect(rutas.filter((r) => activas.some((o) => r === o || r.startsWith(o + '/')))).toEqual([]);
+    const sinRuta = rutas.filter((r) => !registradas.has('/org/:orgIdShort/:orgNameSlug/' + r) && !registradas.has('/' + r));
+    expect(sinRuta).toEqual([]);
   });
 
   test('contrato con las vistas', () => {
