@@ -1749,29 +1749,13 @@ class FlowCatalogView extends BaseView {
 
   // ---- helpers de runs (columna izquierda del modal) ----
 
-  getPublicUrlFromStorage(bucket, filePath) {
-    // R2 (media.aismartcontent.io): storage_path puede ser URL completa -> pass-through
-    if (typeof filePath === 'string' && /^(https?:|\/\/)/i.test(filePath.trim())) return filePath.trim();
-    if (!this.supabase?.storage?.from || !bucket || typeof filePath !== 'string' || !filePath.trim()) return null;
-    try {
-      let path = filePath.trim();
-      if (path.startsWith(`${bucket}/`)) path = path.slice(bucket.length + 1);
-      else if (path.startsWith('/')) path = path.slice(1);
-      const { data } = this.supabase.storage.from(bucket).getPublicUrl(path);
-      return data?.publicUrl || null;
-    } catch (_) { return null; }
-  }
-
-  // Resuelve el media de un output (runs_outputs) a una URL mostrable.
+  // Resuelve el media de una salida (ProduccionesDatos.salidas) a una URL mostrable. En la base
+  // nueva la URL ya viene resuelta (file_id → galería, o la url de la fila): no hay buckets de
+  // Supabase Storage que consultar (storage.buckets está vacío), así que un path suelto no se adivina.
   resolveRunMedia(o) {
     if (!o) return null;
-    let media_url = null;
-    const rawPath = typeof o.storage_path === 'string' ? o.storage_path.trim() : '';
-    if (rawPath) {
-      media_url = rawPath.startsWith('http')
-        ? rawPath
-        : (this.getPublicUrlFromStorage('production-outputs', rawPath) || this.getPublicUrlFromStorage('outputs', rawPath));
-    }
+    const directa = [o.file_url, o.storage_path].find((u) => typeof u === 'string' && /^(https?:|\/\/)/i.test(u.trim()));
+    let media_url = directa ? directa.trim() : null;
     const meta = o.metadata && typeof o.metadata === 'object' ? o.metadata : {};
     if (!media_url) media_url = meta.url || meta.image_url || meta.file_url || meta.output_url || meta.publicUrl || meta.src || meta.video_url || null;
     const type = (o.output_type || '').toLowerCase();
