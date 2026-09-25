@@ -950,30 +950,10 @@ class ProductsView extends BaseView {
    * Mostrar notificación
    */
   showNotification(message, type = 'info') {
-    // Crear elemento de notificación
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.style.cssText = `
-      position: fixed;
-      top: 80px;
-      right: 2rem;
-      padding: 1rem 1.5rem;
-      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-      color: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      z-index: var(--z-modal-backdrop);
-      animation: slideIn 0.3s ease;
-    `;
-    notification.textContent = message;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-      notification.style.animation = 'slideOut 0.3s ease';
-      setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    // El toast ÚNICO de la plataforma (js/utils/toast.js): accesible, en el top layer.
+    window.showToast(message, { type });
   }
+
 
   /**
    * Hook al salir de la vista

@@ -298,11 +298,15 @@ function medir() {
     if (f.startsWith('js/ui/')) continue;
     const s = sinComentarios(fs.readFileSync(f, 'utf8'));
     dialogosNavegador += (s.match(/(^|[^.\w$])(?:window\.)?(alert|confirm|prompt)\s*\(/g) || []).length;
+    // Un modal propio es un DIÁLOGO: role=dialog/alertdialog o aria-modal fuera de js/ui.
+    // (Contar clases con «-sheet»/«-modal» contaba secciones de formulario: 55 falsos
+    // en ProductsView. Medido el 24/09.)
     if (f !== 'js/utils/modal.js') {
-      modalesPropios += (s.match(/(class=["'`]|className\s*=\s*["'`]|classList\.add\(["'`])[\w\s-]*\b[\w-]*(modal-overlay|-overlay|-modal|-drawer|-sheet)\b/g) || []).length;
+      modalesPropios += (s.match(/role=["'](alert)?dialog["']|setAttribute\(['"]role['"],\s*['"](alert)?dialog['"]\)|aria-modal=["']true["']|setAttribute\(['"]aria-modal['"]/g) || []).length;
     }
+    // Un toast propio: un elemento .toast o .notification pintado a mano.
     if (f !== 'js/utils/toast.js') {
-      toastsPropios += (s.match(/(class=["'`]|className\s*=\s*["'`])[\w\s-]*\btoast\b/g) || []).length;
+      toastsPropios += (s.match(/(class=["'`]|className\s*=\s*["'`])([\w-]+\s+)*(toast|notification)(?![\w-])/g) || []).length;
     }
   }
   return { dialogosNavegador, modalesPropios, toastsPropios };
@@ -317,9 +321,10 @@ describe('Guardia: sin createContextualFragment', () => {
   });
 });
 
-// Medido el 24/09/2026: 14 = solo código que muere en L8 (BrandstorageView, dashboard/*) o
-// está EN OBRAS sin ruta (CommandCenter, Tasks). Solo BAJAN; la meta de L4 es 0 en los tres.
-const TOPES = { dialogosNavegador: 14, modalesPropios: 149, toastsPropios: 0 };
+// Medido el 24/09/2026. diálogos 14 y toasts 1 = solo código que muere en L8 o está EN OBRAS
+// (BrandstorageView, dashboard/*, CommandCenter, Tasks). modales 18 = diálogos semánticos
+// fuera de js/ui (antes 149 por clases: falsos). Solo BAJAN; la meta de L4 es 0 en los tres.
+const TOPES = { dialogosNavegador: 14, modalesPropios: 18, toastsPropios: 1 };
 
 describe('Guardia: modales, toasts y diálogos solo en js/ui', () => {
   const hoy = medir();
