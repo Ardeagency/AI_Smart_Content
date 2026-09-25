@@ -1,0 +1,505 @@
+/* ════════════════════════════════════════════════════════════════════
+   BrandGrid — grid de cards de Mi Marca (diseño de v1, 8520ff8a^, a tokens).
+   Cards glass-black sobre el degradado de la marca del hero. Mismo aspecto
+   que v1 con dos excepciones de JC (25/09): sin barras ni bordes de color a
+   un lado (cards, cita, actos del Algoritmo) y sin adornos antes del texto.
+   Los datos de la MARCA van en --org-*; los estados, en su sub-acento.
+   ════════════════════════════════════════════════════════════════════ */
+
+.bgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+  gap: var(--space-5);
+  align-items: start;
+  padding-top: var(--space-1);
+}
+.bgrid-col { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+
+/* «Todavía no» dentro de una card: ocupa el hueco del chart y conserva el marco. */
+.bgrid-falta[hidden], .bgrid-chart-wrap[hidden] { display: none; }
+.bgrid-falta .estado--todavia-no { min-height: 160px; }
+.vera-card--falta .estado--todavia-no, .vera-duo-panel .estado--todavia-no, .vera-audrec--falta .estado--todavia-no { min-height: 140px; }
+
+/* Campañas: el contenedor es transparente; cada fila lleva el color de card. */
+.bgrid-card--campaigns {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  display: flex; flex-direction: column; gap: var(--space-3);
+  min-width: 0;
+}
+.bgrid-campaigns { display: flex; flex-direction: column; gap: var(--space-3); }
+.camp-row {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius-md);
+  background: var(--bg-card); border: 1px solid var(--border-color);
+}
+.camp-gauge { width: 40px; height: 40px; flex: 0 0 auto; }
+.camp-gauge-track { stroke: var(--white-12); }
+.camp-gauge-val { stroke: var(--color-success); }
+.camp-gauge[data-tier="buena"] .camp-gauge-val { stroke: color-mix(in srgb, var(--color-success) 65%, var(--color-white)); }
+.camp-gauge[data-tier="regular"] .camp-gauge-val { stroke: var(--prisma-naranja); }
+.camp-gauge[data-tier="baja"] .camp-gauge-val { stroke: color-mix(in srgb, var(--color-error) 60%, var(--color-white)); }
+.camp-gauge-num { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); fill: var(--color-white); }
+.camp-body { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: var(--space-half); }
+.camp-name { font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--color-white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.camp-desc { font-size: var(--font-size-sm); color: var(--white-50); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.camp-badge { flex: 0 0 auto; font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); white-space: nowrap; }
+.camp-badge[data-tier="exc"]     { color: var(--color-success); background: color-mix(in srgb, var(--color-success) 15%, transparent); }
+.camp-badge[data-tier="buena"]   { color: var(--color-success); background: color-mix(in srgb, var(--color-success) 12%, transparent); }
+.camp-badge[data-tier="regular"] { color: var(--prisma-naranja); background: color-mix(in srgb, var(--prisma-naranja) 14%, transparent); }
+.camp-badge[data-tier="baja"]    { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); background: color-mix(in srgb, var(--color-error) 14%, transparent); }
+
+/* ── Cards de Vera (schema cards.v2) ── */
+.bgrid-vera:empty { display: none; }
+.bgrid-intuicion:empty { display: none; }
+.bgrid-intuicion { margin-bottom: calc(var(--space-2) * -1); }
+.vera-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+@media (max-width: 900px) { .vera-cards { grid-template-columns: 1fr; } }
+/* Sin barra de color a la izquierda (JC): borde uniforme; el tono vive en el contenido. */
+.vera-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg); padding: var(--space-5) var(--space-6) var(--space-6);
+  display: flex; flex-direction: column; gap: var(--space-3); min-width: 0;
+}
+#bgridObsCard { position: relative; }
+#bgridObsCard .cgrid-obs { max-height: none; min-height: 0; }
+#bgridObsCard .cgo-item { flex: 0 0 auto; }
+.vera-card.vera-card--bare { background: transparent; border: 0; border-radius: 0; padding: var(--space-half) var(--space-1); }
+.vera-card--bare .vera-card-title { color: var(--color-white); }
+.vera-card--bare .vera-md { color: color-mix(in srgb, var(--color-white) 82%, transparent); }
+
+/* Fortalezas + Debilidades: par hermano lado a lado. */
+.bgrid-vd:empty { display: none; }
+.vera-duo {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg); padding: var(--space-6);
+}
+.vera-duo-panel { position: relative; padding: var(--space-6) var(--space-6) var(--space-8); display: flex; flex-direction: column; gap: var(--space-3); border-radius: var(--radius-md); min-width: 0; }
+.vera-duo-panel[data-side="pos"] { background: transparent; border: 1px solid var(--duo-acento, var(--bg-base)); }
+.vera-duo-panel[data-side="neg"] { background: var(--bg-base); border: 1px solid var(--duo-acento, transparent); }
+.vera-duo-panel[data-side="pos"] .vera-card-kind { color: var(--color-success); }
+.vera-duo-panel[data-side="neg"] .vera-card-kind { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
+@media (max-width: 640px) { .vera-duo { grid-template-columns: 1fr; } }
+.vera-card-kind { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-mono); text-transform: uppercase; color: var(--white-45); }
+.vera-card-kind .aisc-ico { font-size: var(--font-size-base); }
+.vera-card-title { margin: 0; font-size: var(--font-size-md); font-weight: var(--font-weight-bold); color: var(--color-white); letter-spacing: var(--tracking-tight); }
+.vera-card-body { display: flex; flex-direction: column; gap: var(--space-3); }
+/* Última actualización, abajo a la derecha de cada card de Vera. */
+.vera-card-fecha {
+  margin-top: auto; align-self: flex-end; padding-top: var(--space-1);
+  font-size: var(--font-size-xs); color: color-mix(in srgb, var(--color-white) 34%, transparent);
+  white-space: nowrap; cursor: default;
+}
+.vera-card-fecha[hidden] { display: none; }
+.vera-md { font-size: var(--font-size-base); line-height: var(--leading-normal); color: color-mix(in srgb, var(--color-white) 78%, transparent); }
+.vera-md p { margin: 0 0 var(--space-2); }
+.vera-md p:last-child { margin-bottom: 0; }
+.vera-md strong { color: var(--color-white); font-weight: var(--font-weight-bold); }
+.vera-md ul, .vera-md ol { margin: var(--space-half) 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-1); }
+.vera-md li { line-height: var(--leading-normal); }
+.vera-md h3, .vera-md h4 { margin: var(--space-1) 0 var(--space-half); color: var(--color-white); font-size: var(--font-size-md); }
+.vera-md a { color: var(--org-color-light, var(--accent)); text-decoration: underline; }
+.vera-md code { background: var(--white-8); padding: 0 var(--space-1); border-radius: var(--radius-xs); font-size: 0.85em; }
+.vera-chart-title { font-size: var(--font-size-sm); color: var(--white-50); margin-bottom: var(--space-2); }
+.vera-chart-wrap { position: relative; width: 100%; height: 190px; }
+.vera-chart-wrap canvas { width: 100%; height: 100%; }
+.vera-chart-wrap--pyramid { height: 210px; }
+.vera-chart-wrap--map { height: 230px; }
+
+/* Audiencia: viz (mapa + pirámide) a la izquierda, comentario a la derecha. A lo ancho. */
+.vera-cards .vera-card--audiencia { grid-column: 1 / -1; }
+.vera-card--audiencia .vera-aud-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: var(--space-6); align-items: stretch; }
+.vera-aud-viz { display: flex; flex-direction: column; justify-content: center; gap: var(--space-4); min-width: 0; }
+.vera-aud-viz .vera-chart { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.vera-aud-viz .vera-chart-wrap { flex: 1 1 auto; height: auto; min-height: 190px; max-height: 340px; }
+.vera-aud-comment { min-width: 0; }
+@media (max-width: 760px) { .vera-card--audiencia .vera-aud-grid { grid-template-columns: 1fr; } }
+
+/* Respaldo del mapa: barras por país (relleno por scaleX, sin animar el ancho). */
+.vera-geo-bars { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2) 0; }
+.vera-geo-row { display: flex; align-items: center; gap: var(--space-2); }
+.vera-geo-name { flex: 0 0 34%; font-size: var(--font-size-sm); color: color-mix(in srgb, var(--color-white) 75%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vera-geo-track { flex: 1 1 auto; height: 8px; border-radius: var(--radius-pill); background: var(--white-8); overflow: hidden; }
+.vera-geo-fill {
+  width: 100%; height: 100%;
+  background: var(--org-color-light, var(--accent));
+  transform: scaleX(var(--lleno-f, 0)); transform-origin: left;
+  transition: transform var(--duracion-lenta) var(--curva-entrada);
+}
+.vera-geo-val { flex: 0 0 auto; font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); color: var(--white-50); font-variant-numeric: tabular-nums; }
+.vera-stat { display: flex; align-items: baseline; gap: var(--space-2); }
+.vera-stat-value { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-white); font-variant-numeric: tabular-nums; }
+.vera-stat-label { font-size: var(--font-size-sm); color: var(--white-50); }
+
+/* Audiencias recomendadas: banda a lo ancho que abre el bloque de Vera. */
+.bgrid-vera > .vera-audrec { margin-bottom: var(--space-5); }
+.vera-audrec { position: relative; }
+
+/* Algoritmo: a lo ancho, para que la tabla respire. */
+.vera-cards .vera-card--algoritmo { grid-column: 1 / -1; }
+
+/* Tabla: temas/tonos por plataforma y a quién te muestra el algoritmo. */
+.vera-table-wrap { overflow-x: auto; margin: 0 calc(var(--space-1) * -1); }
+.vera-table { width: 100%; border-collapse: collapse; font-size: var(--font-size-base); }
+.vera-table th {
+  text-align: left; font-weight: var(--font-weight-bold); color: var(--white-50);
+  font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: var(--tracking-mono);
+  padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-color); white-space: nowrap;
+}
+.vera-table td {
+  padding: var(--space-3); color: color-mix(in srgb, var(--color-white) 78%, transparent);
+  border-bottom: 1px solid var(--white-5); vertical-align: top; line-height: var(--leading-normal);
+}
+.vera-table tr:last-child td { border-bottom: 0; }
+.vera-table .vera-td-lead { color: var(--color-white); font-weight: var(--font-weight-bold); white-space: nowrap; }
+
+/* Card glass-black (la receta global .glass-black pone fondo, filete y blur). */
+.bgrid-card.glass-black {
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  box-shadow: var(--sombra-flotante);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* Interacciones: sin fondo NI bordes — el latido flota sobre el degradado. */
+.bgrid-card--latidos {
+  padding: var(--space-5) var(--space-2) var(--space-3);
+  display: flex; flex-direction: column; gap: var(--space-4); min-width: 0;
+}
+
+.bgrid-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+/* ── Tráfico: arco de salud + botón de detalles ── */
+.bgrid-details-btn[hidden] { display: none; }
+.bgrid-salud-arc { display: flex; align-items: center; justify-content: center; padding: var(--space-2) 0 var(--space-1); }
+.bgrid-arc { position: relative; width: 100%; max-width: 240px; }
+.bgrid-arc-svg { width: 100%; height: auto; display: block; }
+.bgrid-arc-track { stroke: var(--white-10); }
+.bgrid-arc-val { stroke: var(--color-success); }
+.bgrid-arc[data-tier="buena"] .bgrid-arc-val { stroke: color-mix(in srgb, var(--color-success) 65%, var(--color-white)); }
+.bgrid-arc[data-tier="regular"] .bgrid-arc-val { stroke: var(--prisma-naranja); }
+.bgrid-arc[data-tier="baja"] .bgrid-arc-val { stroke: color-mix(in srgb, var(--color-error) 60%, var(--color-white)); }
+.bgrid-arc-center {
+  position: absolute; left: 0; right: 0; bottom: 6%;
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-half);
+}
+.bgrid-arc-score { font-size: var(--font-size-3xl); font-weight: var(--font-weight-bold); color: var(--color-white); line-height: var(--leading-none); font-variant-numeric: tabular-nums; }
+.bgrid-arc-max { font-size: var(--font-size-base); font-weight: var(--font-weight-medium); color: color-mix(in srgb, var(--color-white) 40%, transparent); }
+.bgrid-arc-verdict { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); color: var(--color-success); }
+.bgrid-arc[data-tier="regular"] .bgrid-arc-verdict { color: var(--prisma-naranja); }
+.bgrid-arc[data-tier="baja"] .bgrid-arc-verdict { color: color-mix(in srgb, var(--color-error) 60%, var(--color-white)); }
+.bgrid-arc-empty { width: 100%; }
+.bgrid-arc-empty .estado--todavia-no { min-height: 120px; }
+
+/* ── Desglose de salud (dentro de la capa de la plataforma) ── */
+.salud-modal-body { display: flex; flex-direction: column; gap: var(--space-4); }
+.salud-ch { display: flex; flex-direction: column; gap: var(--space-2); }
+.salud-ch-head { display: flex; align-items: baseline; justify-content: space-between; }
+.salud-ch-name { font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--color-white); }
+.salud-ch-score { font-size: var(--font-size-base); font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums; }
+.salud-ch-score[data-tier="exc"], .salud-ch-score[data-tier="buena"] { color: var(--color-success); }
+.salud-ch-score[data-tier="regular"] { color: var(--prisma-naranja); }
+.salud-ch-score[data-tier="baja"] { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
+.salud-metric { display: flex; flex-direction: column; gap: var(--space-1); }
+.salud-metric-top { display: flex; align-items: baseline; justify-content: space-between; font-size: var(--font-size-sm); color: color-mix(in srgb, var(--color-white) 70%, transparent); }
+.salud-metric-pct { font-variant-numeric: tabular-nums; color: var(--white-50); }
+.salud-seg-bar { display: flex; gap: var(--space-half); height: 22px; align-items: stretch; }
+.salud-seg { flex: 1 1 0; min-width: 0; border-radius: var(--radius-xs); background: var(--white-8); }
+.salud-seg-bar[data-tier="exc"] .salud-seg.is-on, .salud-seg-bar[data-tier="buena"] .salud-seg.is-on { background: var(--color-success); }
+.salud-seg-bar[data-tier="regular"] .salud-seg.is-on { background: var(--prisma-naranja); }
+.salud-seg-bar[data-tier="baja"] .salud-seg.is-on { background: var(--color-error); }
+
+/* ── Drill-down de Interacciones (publicaciones del periodo) ── */
+.inter-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.inter-post { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-3); border-radius: var(--radius-md); background: color-mix(in srgb, var(--color-white) 3%, transparent); border: 1px solid var(--white-6); }
+.inter-post--top { background: var(--white-6); border-color: var(--white-12); }
+.inter-post-head { display: flex; align-items: center; gap: var(--space-2); }
+.inter-post-net { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); color: var(--color-white); }
+.inter-post-eng { margin-left: auto; font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--org-color-light, var(--accent)); font-variant-numeric: tabular-nums; }
+.inter-post-snippet { font-size: var(--font-size-sm); line-height: var(--leading-normal); color: var(--white-50); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.inter-empty { font-size: var(--font-size-base); color: var(--white-50); text-align: center; padding: var(--space-6) var(--space-2); }
+
+@media (max-width: 1280px) {
+  .bgrid { grid-template-columns: minmax(0, 480px) minmax(0, 1fr); }
+}
+@media (max-width: 900px) { .bgrid { grid-template-columns: 1fr; } }
+.bgrid-card-title {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-mono); text-transform: uppercase;
+  color: var(--white-45);
+}
+.bgrid-card-title .aisc-ico { font-size: var(--font-size-base); color: inherit; opacity: 1; }
+.bgrid-card-sub { margin: calc(var(--space-2) * -1) 0 0; font-size: var(--font-size-base); color: var(--white-50); }
+
+/* ── Segmentado Semana/Mes/Año/Todo/Personalizado ── */
+.bgrid-seg {
+  display: inline-flex; align-items: stretch; gap: var(--space-1);
+  background: color-mix(in srgb, var(--bg-base) 35%, transparent);
+  border: 1px solid var(--white-8);
+  border-radius: var(--radius-pill); padding: var(--space-1); align-self: flex-start;
+  overflow: hidden;
+  max-width: 100%;
+}
+.bgrid-seg-btn {
+  border: 0; background: transparent; cursor: pointer;
+  font: inherit; font-size: var(--font-size-sm); font-weight: var(--font-weight-bold);
+  color: color-mix(in srgb, var(--color-white) 60%, transparent);
+  padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill);
+  white-space: nowrap;
+  transition: color var(--duracion-base) var(--curva-estandar), background var(--duracion-base) var(--curva-estandar);
+}
+.bgrid-seg-btn:hover { color: var(--white-90); }
+.bgrid-seg-btn.is-active { color: var(--bg-base); background: var(--color-white); }
+
+/* El DateRangePicker entra al segmento como un pill más. */
+.bgrid-seg [data-drp] { display: flex; align-items: stretch; min-width: 0; }
+.bgrid-seg [data-drp] .living-filter-label { display: none; }
+.bgrid-seg [data-drp-trigger] {
+  display: inline-flex; align-items: center; gap: var(--space-1); cursor: pointer;
+  background: transparent; border: 0; box-shadow: none; min-height: 0; min-width: 0;
+  font: inherit; font-size: var(--font-size-sm); font-weight: var(--font-weight-bold);
+  color: color-mix(in srgb, var(--color-white) 60%, transparent);
+  padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill);
+  white-space: nowrap;
+  transition: color var(--duracion-base) var(--curva-estandar), background var(--duracion-base) var(--curva-estandar);
+}
+.bgrid-seg [data-drp-trigger]:hover { color: var(--white-90); }
+.bgrid-seg [data-drp] .living-date-value { font: inherit; color: inherit; overflow: hidden; text-overflow: ellipsis; }
+.bgrid-seg [data-drp] .living-date-icon { display: none; }
+.bgrid-seg [data-drp].is-active [data-drp-trigger] { color: var(--bg-base); background: var(--color-white); }
+
+/* ── Charts ── */
+.bgrid-chart-wrap { position: relative; width: 100%; height: 240px; }
+.bgrid-chart-wrap--latidos { height: 200px; }
+.bgrid-chart-wrap canvas { width: 100%; height: 100%; }
+.bgrid-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  text-align: center; font-size: var(--font-size-base); color: var(--white-45); padding: var(--space-4);
+}
+.bgrid-empty[hidden] { display: none; }
+
+.bgrid-card-foot {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--font-size-sm); color: var(--white-50);
+  padding-top: var(--space-half);
+}
+.bgrid-foot-sep { opacity: 0.4; }
+
+/* ── Producto destacado: cierra el bloque de Vera, a lo ancho, sin superficie ── */
+.bgrid-card--prodstar {
+  grid-column: 1 / -1;
+  justify-self: start;
+  width: 100%;
+  max-width: 480px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  margin-top: var(--space-1);
+  display: flex; flex-direction: column; gap: var(--space-4); min-width: 0;
+}
+.vera-cards .bgrid-card--prodstar { max-width: none; align-self: start; grid-column: 1 / -1; }
+@media (max-width: 900px) { .vera-cards .bgrid-card--prodstar { grid-column: auto; } }
+
+/* Publicación destacada propia: en la columna de Tráfico, sin superficie. */
+.bgrid-card--toppost {
+  width: 100%;
+  max-width: 480px;
+  min-width: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.bgrid-card--toppost .cgrid-post-card { width: 100%; max-width: 100%; }
+
+/* ── Algoritmo: se lee como una sección de informe ── */
+.vera-card--algoritmo {
+  position: relative; overflow: hidden;
+  padding: var(--space-8) var(--space-8) var(--space-8);
+  gap: 0;
+}
+/* Un velo del color de la marca, apenas perceptible. */
+.vera-card--algoritmo::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(120% 80% at 92% -10%, var(--org-color-dark, var(--accent)) 0%, transparent 62%);
+  opacity: 0.14;
+}
+.vera-card--algoritmo > * { position: relative; }
+.vera-card--algoritmo .vera-card-kind { margin-bottom: var(--space-4); }
+.vera-card--algoritmo .vera-card-title {
+  font-size: var(--font-size-3xl); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-1); max-width: 22ch;
+}
+.vera-card--algoritmo .vera-chart-title,
+.vera-card--algoritmo > .vera-card-body > .vera-md:first-child > p:first-child {
+  font-size: var(--font-size-base); color: var(--white-45);
+}
+.vera-card--algoritmo .vera-card-body { gap: var(--space-6); }
+.vera-card--algoritmo .vera-table-wrap { margin: var(--space-half) 0 0; }
+.vera-card--algoritmo .vera-table { font-size: var(--font-size-base); }
+.vera-card--algoritmo .vera-table th {
+  font-size: var(--font-size-xs); letter-spacing: var(--tracking-mono); text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-white) 35%, transparent); font-weight: var(--font-weight-bold);
+  padding: 0 var(--space-4) var(--space-3); border-bottom: 1px solid var(--white-12);
+}
+.vera-card--algoritmo .vera-table td {
+  padding: var(--space-4); vertical-align: top;
+  border-bottom: 1px solid var(--white-5);
+  color: color-mix(in srgb, var(--color-white) 66%, transparent); line-height: var(--leading-normal);
+}
+.vera-card--algoritmo .vera-table tbody tr:last-child td { border-bottom: 0; }
+.vera-card--algoritmo .vera-table .vera-td-lead {
+  color: var(--color-white); font-weight: var(--font-weight-bold); font-size: var(--font-size-md); letter-spacing: var(--tracking-tight);
+}
+.vera-table .vera-td-lead i { margin-right: var(--space-2); font-size: var(--font-size-md); vertical-align: -2px; }
+/* Cada red con su color: se reconocen sin leer. */
+.vera-table .vera-td-lead .fa-tiktok { color: var(--prisma-celeste); }
+.vera-table .vera-td-lead .fa-instagram { color: var(--prisma-fucsia); }
+.vera-table .vera-td-lead .fa-facebook { color: var(--color-info); }
+.vera-table .vera-td-lead .fa-youtube { color: var(--color-error); }
+.vera-table .vera-td-lead .fa-meta, .vera-table .vera-td-lead .fa-bullseye { color: var(--org-color-light, var(--accent)); }
+.vera-td-sep { display: inline-block; padding: 0 var(--space-2); color: color-mix(in srgb, var(--color-white) 22%, transparent); }
+
+/* ── Intuición: la voz de Vera sobre el fondo del tablero, sin marco ── */
+.vera-cards .vera-card--intuicion { grid-column: 1 / -1; }
+.vera-card--intuicion {
+  --intu-accent: 255, 255, 255;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: var(--space-half) var(--space-2) var(--space-5);
+  gap: var(--space-2);
+  max-width: 78ch;
+}
+.vera-card--intuicion .vera-card-body { gap: var(--space-4); }
+.vera-card--intuicion .vera-md { font-size: var(--font-size-base); line-height: var(--leading-normal); color: color-mix(in srgb, var(--color-white) 72%, transparent); }
+.vera-card--intuicion .vera-md strong { color: var(--color-white); font-weight: var(--font-weight-bold); }
+.vera-card--intuicion .vera-md a { color: rgb(var(--intu-accent)); }
+.vera-card--intuicion .vera-card-sub {
+  margin: calc(var(--space-1) * -1) 0 var(--space-half);
+  font-size: var(--font-size-base); line-height: var(--leading-normal);
+  color: var(--white-50);
+}
+.vera-card--intuicion .vera-card-conf {
+  align-self: flex-end;
+  font-size: var(--font-size-xs); text-transform: lowercase;
+  color: color-mix(in srgb, var(--color-white) 34%, transparent);
+}
+.vera-card--intuicion .vera-card-conf + .vera-card-fecha { margin-top: var(--space-half); padding-top: 0; }
+
+/* ── Bloques expresivos: veredicto (callout), cita (quote) y comparación (split) ── */
+.vera-callout {
+  display: flex; gap: var(--space-3); align-items: flex-start;
+  padding: var(--space-4) var(--space-5); border-radius: var(--radius-md);
+  background: rgba(var(--intu-accent, 255, 255, 255), 0.09);
+  border: 1px solid rgba(var(--intu-accent, 255, 255, 255), 0.24);
+}
+.vera-callout[data-tone="critical"] { background: color-mix(in srgb, var(--color-error) 9%, transparent); border-color: color-mix(in srgb, var(--color-error) 24%, transparent); }
+.vera-callout[data-tone="warning"]  { background: color-mix(in srgb, var(--prisma-naranja) 9%, transparent); border-color: color-mix(in srgb, var(--prisma-naranja) 24%, transparent); }
+.vera-callout[data-tone="positive"] { background: color-mix(in srgb, var(--color-success) 9%, transparent); border-color: color-mix(in srgb, var(--color-success) 24%, transparent); }
+.vera-callout-ico { flex: 0 0 auto; font-size: var(--font-size-md); color: rgb(var(--intu-accent, 255, 255, 255)); margin-top: var(--space-half); }
+.vera-callout[data-tone="critical"] .vera-callout-ico { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
+.vera-callout[data-tone="warning"]  .vera-callout-ico { color: var(--prisma-naranja); }
+.vera-callout[data-tone="positive"] .vera-callout-ico { color: var(--color-success); }
+.vera-callout-body { min-width: 0; }
+.vera-callout-title { font-size: var(--font-size-md); font-weight: var(--font-weight-bold); color: var(--color-white); margin: 0 0 var(--space-half); }
+.vera-callout .vera-md { color: color-mix(in srgb, var(--color-white) 78%, transparent); }
+
+/* La cita: sin barra a la izquierda (JC), en cursiva y con su sangría. */
+.vera-quote { position: relative; margin: 0; padding: var(--space-1) 0 var(--space-1) var(--space-10); }
+.vera-quote-text { margin: 0; font-size: var(--font-size-md); line-height: var(--leading-normal); color: var(--white-90); font-style: italic; }
+.vera-quote-source { display: block; margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--white-45); font-style: normal; }
+
+.vera-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-3); }
+.vera-split-col {
+  padding: var(--space-4); border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-white) 3%, transparent); border: 1px solid color-mix(in srgb, var(--color-white) 7%, transparent);
+}
+.vera-split-col[data-side="neg"] { border-color: color-mix(in srgb, var(--color-error) 22%, transparent); }
+.vera-split-col[data-side="pos"] { border-color: color-mix(in srgb, var(--color-success) 22%, transparent); }
+.vera-split-label {
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: var(--tracking-mono);
+  color: var(--white-50); margin-bottom: var(--space-2);
+}
+.vera-split-col[data-side="neg"] .vera-split-label { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
+.vera-split-col[data-side="pos"] .vera-split-label { color: var(--color-success); }
+.vera-split-col .vera-md { font-size: var(--font-size-base); color: color-mix(in srgb, var(--color-white) 78%, transparent); }
+
+/* ── Los actos del Algoritmo: lectura, riesgo y salida. Sin filetes de color a un
+   lado (JC): el hallazgo se distingue por su tamaño y el riesgo/la salida por el
+   color de su rótulo. ── */
+.vera-actos { display: flex; flex-direction: column; gap: var(--space-5); }
+.vera-acto { display: flex; gap: var(--space-3); padding-left: var(--space-5); }
+.vera-acto .vera-md { font-size: var(--font-size-base); line-height: var(--leading-normal); color: color-mix(in srgb, var(--color-white) 68%, transparent); max-width: 68ch; }
+.vera-acto .vera-md strong { color: var(--color-white); font-weight: var(--font-weight-bold); }
+.vera-acto[data-tono="lectura"] .vera-md {
+  font-size: var(--font-size-lg); line-height: var(--leading-normal); letter-spacing: var(--tracking-tight);
+  color: var(--white-95); max-width: 46ch;
+}
+.vera-acto[data-tono="riesgo"] .vera-md strong:first-child { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
+.vera-acto[data-tono="accion"] .vera-md strong:first-child { color: var(--color-success); }
+
+@media (max-width: 900px) {
+  .vera-card--algoritmo { padding: var(--space-6) var(--space-6) var(--space-6); }
+  .vera-card--algoritmo .vera-card-title { font-size: var(--font-size-2xl); }
+  .vera-acto[data-tono="lectura"] .vera-md { font-size: var(--font-size-md); }
+}
+
+/* ── Audiencias: lo que Vera escribe va sobre el color de la marca ──
+   La tinta la resuelve el JS según la luminancia (--panel-fg y compañía). */
+.vera-aud-comment[data-panel-marca] {
+  background: var(--panel-bg, var(--org-color-light, var(--accent)));
+  color: var(--panel-fg, var(--color-white));
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  align-self: start;
+}
+.vera-aud-comment[data-panel-marca] .vera-md,
+.vera-aud-comment[data-panel-marca] .vera-md p,
+.vera-aud-comment[data-panel-marca] .vera-md li { color: var(--panel-fg-soft, color-mix(in srgb, var(--color-white) 78%, transparent)); }
+.vera-aud-comment[data-panel-marca] .vera-md strong,
+.vera-aud-comment[data-panel-marca] .vera-stat-value { color: var(--panel-fg, var(--color-white)); }
+.vera-aud-comment[data-panel-marca] .vera-stat-label,
+.vera-aud-comment[data-panel-marca] .vera-chart-title { color: var(--panel-fg-faint, var(--white-50)); }
+.vera-aud-comment[data-panel-marca] .vera-md a { color: var(--panel-fg, var(--color-white)); text-decoration-color: var(--panel-linea); }
+.vera-aud-comment[data-panel-marca] .vera-md code { background: var(--panel-linea, var(--white-12)); color: var(--panel-fg, var(--color-white)); }
+.vera-aud-comment[data-panel-marca] .vera-table th { color: var(--panel-fg-faint); border-color: var(--panel-linea); }
+.vera-aud-comment[data-panel-marca] .vera-table td { color: var(--panel-fg-soft); border-color: var(--panel-linea); }
+.vera-aud-comment[data-panel-marca] .vera-table .vera-td-lead { color: var(--panel-fg); }
+
+/* ── Lo último que Vera actualizó: un anillo que late minuto y medio (lo apaga el JS) ── */
+.cgo-item[data-nuevo-id], .cga-item[data-nuevo-id] { position: relative; }
+[data-nuevo-id].is-nuevo::after {
+  content: ''; position: absolute; inset: 0;
+  border-radius: inherit; pointer-events: none; z-index: 3;
+  border: 1px solid var(--org-color-light, var(--accent));
+  box-shadow:
+    inset 0 0 5px -1px var(--org-color-light, var(--accent)),
+    inset 0 0 26px -6px var(--org-color-light, var(--accent));
+  animation: veraLatido 2.2s linear infinite;
+}
+.cgo-item.is-nuevo::after, .cga-item.is-nuevo::after {
+  box-shadow: inset 0 0 12px -5px var(--org-color-light, var(--accent));
+  animation-name: veraLatidoSuave;
+}
+@keyframes veraLatido {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 1; }
+}
+@keyframes veraLatidoSuave {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 0.7; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-nuevo-id].is-nuevo::after { animation: none; opacity: 0.9; }
+}
