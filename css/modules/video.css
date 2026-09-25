@@ -3039,7 +3039,6 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg-content blockquote {
   margin: var(--space-3) 0;
   padding: var(--space-1) 0 var(--space-1) var(--space-4);
-  border-left: 2px solid var(--white-15, rgba(255,255,255,0.15));
   color: var(--text-secondary);
 }
 
@@ -4636,23 +4635,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg-content blockquote {
   margin: var(--space-3) 0;
   padding: var(--space-3) var(--space-4) var(--space-3) var(--space-4);
-  border-left: none;
   background:
     linear-gradient(90deg, rgba(245, 185, 66, 0.06) 0%, rgba(255, 255, 255, 0.015) 12%, transparent 80%);
   color: var(--text-secondary);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  border-radius: var(--radius-md);
   position: relative;
   font-style: italic;
-}
-.gpt-msg-content blockquote::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 4px;
-  bottom: 4px;
-  width: 3px;
-  border-radius: var(--radius-xs);
-  background: linear-gradient(180deg, rgba(245, 185, 66, 0.7) 0%, rgba(245, 185, 66, 0.2) 100%);
 }
 .gpt-msg-content blockquote p {
   margin: 0;

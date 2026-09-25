@@ -79,7 +79,6 @@
 }
 
 /* Filete a la izquierda de una cita, nota o lectura de Vera. */
-.filete-org { border-left: 3px solid var(--org-color-light); }
 
 /* Barra de progreso / línea de fuerza: del oscuro al claro de la marca. */
 .barra-org {

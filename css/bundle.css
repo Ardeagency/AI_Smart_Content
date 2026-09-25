@@ -1233,10 +1233,6 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 .app-notification.show { opacity: 1; transform: translateX(0); }
 .app-notification .notification-close { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: var(--space-1); opacity: 0.7; }
 .app-notification .notification-close:hover { opacity: 1; }
-.app-notification.success { border-left: 4px solid var(--color-success); }
-.app-notification.error { border-left: 4px solid var(--color-error); }
-.app-notification.warning { border-left: 4px solid var(--color-warning); }
-.app-notification.info { border-left: 4px solid var(--color-info); }
 .app-notification .notification-content { display: flex; align-items: center; gap: var(--space-3); color: var(--text-primary); }
 
 .error-container {

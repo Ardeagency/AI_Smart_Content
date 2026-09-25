@@ -1376,10 +1376,6 @@
   border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4);
   min-height: 100px;
 }
-.mb-v2-swot-cell--s { border-left: 3px solid var(--color-success); }
-.mb-v2-swot-cell--w { border-left: 3px solid var(--color-warning); }
-.mb-v2-swot-cell--o { border-left: 3px solid var(--color-info); }
-.mb-v2-swot-cell--t { border-left: 3px solid var(--color-error); }
 .mb-v2-swot-label {
   font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); letter-spacing: var(--tracking-mono);
   text-transform: uppercase; color: rgba(255,255,255,0.65);
@@ -3515,7 +3511,7 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
   position: relative; display: flex; align-items: center; gap: var(--space-3);
   padding: var(--space-3) var(--space-3); border-radius: var(--radius-md); cursor: pointer;
   background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border-color); border-left: 3px solid var(--stg-accent);
+  border: 1px solid var(--border-color);
   transition: background var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar);
 }
 .mb-stage:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.16); }
@@ -3715,8 +3711,8 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
 .tend-gap-samples { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .tend-gap-samples li {
   font-size: var(--font-size-xs); line-height: var(--leading-tight); color: var(--text-muted, rgba(212,209,216,0.62));
-  background: var(--bg-base); border-left: 2px solid rgba(91,155,213,0.4);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: var(--space-1) var(--space-2);
+  background: var(--bg-base);
+  border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2);
 }
 
 /* 4. Léxico emergente */
@@ -4079,7 +4075,6 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
   background: rgba(255, 255, 255, 0.03); border-color: var(--dash-line);
   color: var(--text-secondary);
 }
-.insight-page .tend-gap-samples li { border-left-color: var(--dash-line); }
 .insight-page .tend-signal-vel,
 .insight-page .tend-brand-count,
 .insight-page .tend-world-when { color: var(--dash-warn); }
@@ -4333,12 +4328,7 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
 .plan-detail-b { font-size: var(--font-size-md); line-height: var(--leading-normal); color: var(--text-secondary); }
 /* Riesgo compuesto: lista de señales de riesgo por severidad. */
 .plan-find { display: flex; flex-direction: column; gap: var(--space-2); }
-.plan-find-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); border-left-width: 3px; }
-.plan-find-row--bad { border-left-color: var(--color-error); }
-.plan-find-row--mid { border-left-color: var(--color-warning); }
-.plan-find-row--low { border-left-color: var(--border-hairline-strong); }
-.plan-find-row--good { border-left-color: var(--color-success); }
-.plan-find-row--opp { border-left-color: var(--color-info); }
+.plan-find-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); }
 .plan-find-cat { flex: none; font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-mono); text-transform: uppercase; padding: var(--space-half) var(--space-2); border-radius: var(--radius-xs); background: rgba(255,255,255,0.06); color: var(--text-muted, rgba(212,209,216,0.6)); }
 .plan-find-label { flex: 1 1 auto; min-width: 0; font-size: var(--font-size-base); color: var(--text-primary); }
 .plan-find-n { flex: none; font-size: var(--font-size-md); font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums; color: var(--text-secondary); }
