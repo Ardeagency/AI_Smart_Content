@@ -4442,5 +4442,20 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Se borrará «{n}» de la marca, no solo de este lienzo, con sus dolores, deseos y vínculos. No se puede deshacer. Para despejar el lienzo usa «Quitar del lienzo».": "«{n}» will be deleted from the brand, not just from this canvas, with its pains, desires and links. This can't be undone. To clear the canvas use «Remove from canvas».",
   "Se borrará «{n}» de la marca, no solo de este lienzo. No se puede deshacer. Para despejar el lienzo usa «Quitar del lienzo».": "«{n}» will be deleted from the brand, not just from this canvas. This can't be undone. To clear the canvas use «Remove from canvas».",
   "Audiencia eliminada.": "Audience deleted.",
-  "Campaña eliminada.": "Campaign deleted."
+  "Campaña eliminada.": "Campaign deleted.",
+  "Gestiona tus flujos programados: cuándo corren y con qué entradas.": "Manage your scheduled flows: when they run and with which inputs.",
+  "Cargar más tareas": "Load more tasks",
+  "Una tarea corre un flujo sola en la fecha que elijas. Créala con «Crear tarea»: nace en pausa y la activas cuando esté lista.": "A task runs a flow on its own on the dates you choose. Create one with “Create task”: it starts paused and you activate it when it's ready.",
+  "SE DETUVO": "STOPPED",
+  "Cada {n} h": "Every {n} h",
+  "Avanzada": "Advanced",
+  "CORRIDAS": "RUNS",
+  "OMITIDAS": "SKIPPED",
+  "FREQ": "FREQ",
+  "Las pausadas se ven tenues y no corren. Cada hora va en la zona horaria de su tarea.": "Paused tasks look dimmed and don't run. Each time is in its task's time zone.",
+  "Son las últimas corridas de este flujo en la marca: la base aún no marca cuáles lanzó esta tarea.": "These are this flow's latest runs in the brand: the database doesn't yet mark which ones this task launched.",
+  "Desde que se creó": "Since it was created",
+  "en {n} min": "in {n} min",
+  "en {n} h": "in {n} h",
+  "en {n} d": "in {n} d"
 }/* I18N:END */;

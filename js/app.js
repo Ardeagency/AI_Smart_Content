@@ -302,8 +302,9 @@ class App {
     r.register('/execution-history', execHistoryLoader, auth);
 
     // ── Org: Tareas (programaciones de flujos: flows.schedules por TareasDatos) ──
-    // /tasks/nueva crea (en pausa); /tasks/:taskId abre el detalle. La TasksView de v1 se borró (32d3f821).
-    const tareasLoader = this._lazy('TareasView', ['/js/services/TareasDataService.js', '/js/views/TareasView.js'], ['/css/modules/insight.css', '/css/modules/tareas.css']);
+    // /tasks/nueva crea (en pausa); /tasks/:taskId abre el detalle. Diseño de la TasksView de v1
+    // (su CSS .tasks-*/.task-*/.cal2-* vive en content-management.css, dentro del bundle).
+    const tareasLoader = this._lazy('TareasView', ['/js/services/TareasDataService.js', '/js/views/TareasView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/tasks', tareasLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/tasks/:taskId', tareasLoader, auth);
     r.register('/tasks', tareasLoader, auth);
