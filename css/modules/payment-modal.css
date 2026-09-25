@@ -34,7 +34,7 @@
 .payment-modal {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 24px;
+    border-radius: var(--radius-pill);
     width: 90%;
     max-width: 520px;
     max-height: 90vh;
@@ -42,7 +42,7 @@
     position: relative;
     transform: scale(0.8) translateY(50px);
     transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--shadow-floating);
+    box-shadow: var(--sombra-modal);
 }
 
 .payment-overlay.active .payment-modal {
@@ -90,9 +90,9 @@
     background: var(--brillo-hover);
     border: 1px solid var(--border-color);
     padding: 0.5rem 1rem;
-    border-radius: var(--radius-xl);
-    font-size: 0.9rem;
-    font-weight: 500;
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
     margin-bottom: 1rem;
 }
 
@@ -129,8 +129,8 @@
 }
 
 .payment-title {
-    font-size: 1.8rem;
-    font-weight: 700;
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
     margin-bottom: 0.5rem;
     background: linear-gradient(135deg, var(--text-primary), var(--accent));
     -webkit-background-clip: text;
@@ -154,14 +154,14 @@
 
 .price-amount {
     font-size: var(--font-size-3xl);
-    font-weight: 800;
+    font-weight: var(--font-weight-bold);
     color: var(--accent);
     margin-bottom: 0.25rem;
 }
 
 .price-period {
     color: var(--text-secondary);
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
 }
 
 /* ========================
@@ -196,8 +196,8 @@
   width: 100%;
   position: relative;
   overflow: hidden;
-  border-radius: var(--radius-media);
-  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--sombra-flotante);
   transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   background: var(--media-container-bg);
 }
@@ -237,8 +237,8 @@
 }
 
 .section-title {
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
     margin-bottom: 1.5rem;
     color: var(--text-primary);
     display: flex;
@@ -250,7 +250,7 @@
 
 .section-title i {
     color: var(--accent);
-    font-size: 1.2rem;
+    font-size: var(--font-size-xl);
 }
 
 .payment-modal .form-group {
@@ -259,8 +259,8 @@
 
 .form-label {
     display: block;
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
@@ -293,7 +293,7 @@
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
     padding: 8px;
     border-radius: var(--radius-xs);
     transition: var(--transition);
@@ -315,7 +315,7 @@
     flex: 1;
     height: 4px;
     background: var(--white-10);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     overflow: hidden;
 }
 
@@ -347,7 +347,7 @@
 }
 
 .strength-text {
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
     color: var(--text-muted);
     min-width: 60px;
 }
@@ -359,27 +359,27 @@
 
 .password-strength {
     margin-top: 0.5rem;
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
 }
 
 .strength-weak {
     color: var(--color-error);
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 
 .strength-medium {
     color: var(--color-warning);
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 
 .strength-strong {
     color: var(--text-muted);
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 
 .strength-very-strong {
     color: var(--text-muted);
-    font-weight: 600;
+    font-weight: var(--font-weight-medium);
 }
 
 /* ========================
@@ -391,7 +391,7 @@
     margin-top: 0.5rem;
     font-size: var(--font-size-base);
     color: var(--color-error);
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 
 .form-input.error {
@@ -447,27 +447,27 @@
 }
 
 .wompi-name {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
     color: var(--text-primary);
     margin-bottom: 0.25rem;
 }
 
 .wompi-description {
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
 }
 
 .beta-badge {
     background: var(--color-white);
     color: var(--bg-base);
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
     padding: 0.375rem 0.75rem;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-lg);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: var(--shadow-card);
+    letter-spacing: var(--tracking-mono);
+    box-shadow: var(--sombra-flotante);
     border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
@@ -479,7 +479,7 @@
 
 .feature {
     color: var(--text-secondary);
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -488,7 +488,7 @@
 .feature::before {
     content: '✓';
     color: var(--text-muted);
-    font-weight: bold;
+    font-weight: var(--font-weight-bold);
 }
 
 .wompi-note {
@@ -499,7 +499,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-size: 0.85rem;
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
 }
 
@@ -529,8 +529,8 @@
     align-items: center;
     gap: 0.5rem;
     color: var(--text-muted);
-    font-size: 0.8rem;
-    font-weight: 500;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
 }
 
 .security-badge i {
@@ -551,7 +551,7 @@
 
 .features-title {
     font-size: var(--font-size-md);
-    font-weight: 600;
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
     margin-bottom: 1rem;
     display: flex;
@@ -573,13 +573,13 @@
     align-items: center;
     gap: 0.75rem;
     color: var(--text-secondary);
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
 }
 
 .feature-item i {
     color: var(--text-muted);
     width: 16px;
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
 }
 
 .feature-item span {
@@ -610,19 +610,19 @@
 }
 
 .total-row.final {
-    font-weight: 700;
-    font-size: 1.1rem;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-lg);
     color: var(--accent);
 }
 
 .total-label {
     color: var(--text-secondary);
-    font-size: 0.95rem;
+    font-size: var(--font-size-md);
 }
 
 .total-amount {
     color: var(--text-primary);
-    font-weight: 600;
+    font-weight: var(--font-weight-medium);
 }
 
 /* ========================
@@ -643,7 +643,7 @@
     padding: 1rem 2rem;
     border-radius: var(--radius-md);
     font-size: var(--font-size-md);
-    font-weight: 600;
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: var(--transition);
     position: relative;
@@ -658,7 +658,7 @@
     background: var(--color-white);
     color: var(--bg-base);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-floating);
+    box-shadow: var(--sombra-modal);
 }
 
 .pay-button:active {
@@ -696,7 +696,7 @@
     padding: 1rem 2rem;
     border-radius: var(--radius-md);
     font-size: var(--font-size-md);
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: var(--transition);
 }
@@ -719,9 +719,9 @@
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
-    font-size: 0.85rem;
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: var(--leading-normal);
     cursor: pointer;
 }
 
@@ -764,7 +764,7 @@
 .payment-disclaimer a {
     color: var(--accent);
     text-decoration: none;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 
 .payment-disclaimer a:hover {
@@ -801,7 +801,7 @@
     }
     
     .wompi-features {
-        font-size: 0.85rem;
+        font-size: var(--font-size-base);
     }
     
     .security-badges {
@@ -810,7 +810,7 @@
     }
     
     .security-badge {
-        font-size: 0.8rem;
+        font-size: var(--font-size-sm);
     }
     
     .payment-actions {
@@ -820,7 +820,7 @@
     .pay-button,
     .cancel-button {
         padding: 0.875rem 1.5rem;
-        font-size: 0.95rem;
+        font-size: var(--font-size-md);
     }
 }
 
@@ -846,7 +846,7 @@
     }
     
     .price-amount {
-        font-size: 1.75rem;
+        font-size: var(--font-size-3xl);
     }
     
     .payment-method-fixed {
@@ -864,7 +864,7 @@
 
     .wompi-note {
         padding: 0.75rem;
-        font-size: 0.8rem;
+        font-size: var(--font-size-sm);
     }
     
     .payment-total {

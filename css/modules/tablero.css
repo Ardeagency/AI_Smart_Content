@@ -10,31 +10,31 @@
 .tablero-card {
   padding: var(--space-4) var(--space-5) var(--space-5);
   border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--white-2);
 }
 .tablero-card .mb-section-head { margin-bottom: var(--space-3); }
-.tablero-h3 { margin: var(--space-4) 0 var(--space-2); font-family: var(--font-mono); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.tablero-h3 { margin: var(--space-4) 0 var(--space-2); font-family: var(--font-mono); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); letter-spacing: var(--tracking-mono); text-transform: uppercase; color: var(--text-muted); }
 .tablero-tiles { margin-top: 0; }
 .tablero-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .tablero-lista li { padding: var(--space-3); border: 1px solid var(--border-hairline); border-radius: var(--radius-md); background: var(--white-2); }
-.tablero-lista p { margin: var(--space-1) 0 0; font-size: var(--font-size-sm); line-height: 1.45; color: var(--text-secondary); }
+.tablero-lista p { margin: var(--space-1) 0 0; font-size: var(--font-size-sm); line-height: var(--leading-normal); color: var(--text-secondary); }
 .tablero-senal.vera-sev--threat .tablero-senal-kind { color: var(--color-error); }
 .tablero-senal.vera-sev--warn .tablero-senal-kind { color: var(--color-warning); }
-.tablero-senal-kind { display: block; margin-bottom: 2px; font-family: var(--font-mono); font-size: var(--font-size-xs); letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.tablero-senal-kind { display: block; margin-bottom: 2px; font-family: var(--font-mono); font-size: var(--font-size-xs); letter-spacing: var(--tracking-mono); text-transform: uppercase; color: var(--text-muted); }
 .tablero-hueco-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
-.tablero-score { font-family: var(--font-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; color: var(--color-success); }
+.tablero-score { font-family: var(--font-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); font-variant-numeric: tabular-nums; color: var(--color-success); }
 .tablero-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-2); }
 .tablero-enlace { display: inline-block; margin: var(--space-2) var(--space-3) 0 0; font-size: var(--font-size-xs); color: var(--text-primary); text-decoration: none; }
 .tablero-enlace:hover { text-decoration: underline; text-underline-offset: 0.2em; }
 .tablero-enlace:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; border-radius: var(--radius-xs); }
 .tablero-tendencia { display: flex; flex-direction: column; gap: 2px; }
-.tablero-tendencia-kw { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--text-primary); }
+.tablero-tendencia-kw { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--text-primary); }
 .tablero-tendencia-meta { font-size: var(--font-size-xs); color: var(--text-muted); }
 .tablero-atendidas > summary { margin: var(--space-2) 0 var(--space-3); font-size: var(--font-size-sm); color: var(--text-muted); cursor: pointer; }
 /* Bloques de la lectura que vera-reading.css no cubre */
-.vera-prosa p { margin: 0 0 var(--space-3); font-size: var(--font-size-md); line-height: 1.55; }
-.vera-list { margin: var(--space-2) 0 0; padding-left: var(--space-5); font-size: var(--font-size-sm); line-height: 1.45; }
+.vera-prosa p { margin: 0 0 var(--space-3); font-size: var(--font-size-md); line-height: var(--leading-normal); }
+.vera-list { margin: var(--space-2) 0 0; padding-left: var(--space-5); font-size: var(--font-size-sm); line-height: var(--leading-normal); }
 .vera-datos { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-3); margin: 0; font-size: var(--font-size-xs); }
 .vera-datos > div { display: contents; }
 .vera-datos dt { color: var(--text-muted); text-transform: capitalize; }

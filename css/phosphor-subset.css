@@ -12,11 +12,11 @@
   display:inline-block;
   font-family:"Phosphor"!important;
   font-style:normal;
-  font-weight:normal;
+  font-weight:var(--font-weight-regular);
   font-variant:normal;
   font-feature-settings:normal;
   text-transform:none;
-  line-height:1;
+  line-height:var(--leading-none);
   speak:never;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;

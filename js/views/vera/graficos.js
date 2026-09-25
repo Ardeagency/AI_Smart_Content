@@ -189,7 +189,7 @@ function renderChartSVG(spec) {
 
   const bg = safeColor(spec.background || 'transparent', 'transparent');
   const showLegend = spec.legend !== false;
-  const fontFamily = 'var(--font-mono)';
+  const fontFamily = 'var(--font-texto)';
   const textColor = 'var(--text-primary, #D4D1D8)';
   const muted = 'var(--text-muted, rgba(212,209,216,0.6))';
   const border = 'var(--border-color, #212126)';

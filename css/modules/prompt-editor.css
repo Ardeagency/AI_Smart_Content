@@ -23,7 +23,7 @@
     pointer-events: none;
     color: var(--text-tertiary, rgba(255, 255, 255, 0.38));
     font-size: var(--font-size-sm, 0.875rem);
-    line-height: 1.5;
+    line-height: var(--leading-normal);
     /* El placeholder no puede tapar el texto real cuando el campo crece: se
        corta en una línea y desaparece en cuanto hay contenido. */
     max-width: 100%;
@@ -46,7 +46,7 @@
     background: transparent;
     color: var(--text-primary);
     font-size: var(--font-size-sm, 0.875rem);
-    line-height: 1.6;
+    line-height: var(--leading-normal);
     caret-color: var(--icon-button);
 }
 
@@ -59,13 +59,13 @@
     align-items: center;
     margin: 0 2px;
     padding: 1px 6px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--icon-button);
     background: color-mix(in srgb, var(--icon-button) 12%, transparent);
     color: var(--text-primary);
-    font-size: 0.78rem;
-    font-weight: 600;
-    line-height: 1.45;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--leading-normal);
     vertical-align: baseline;
     white-space: nowrap;
     cursor: default;
@@ -88,7 +88,7 @@
 
 .studio-receta-hint {
     margin: var(--space-1) 0 0;
-    font-size: 0.72rem;
-    line-height: 1.4;
+    font-size: var(--font-size-sm);
+    line-height: var(--leading-normal);
     color: var(--text-tertiary, rgba(255, 255, 255, 0.45));
 }

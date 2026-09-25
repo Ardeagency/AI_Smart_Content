@@ -2,7 +2,7 @@
    AI Smart Content — CSS Bundle (estilo unificado)
    Efecto glass: 3 variantes — .glass (original), .glass-black, .glass-white.
    Variables: --glass-* (original), --glass-black-bg/border, --glass-white-bg/border.
-   Comparten --glass-radius, --glass-blur, --glass-padding.
+   Comparten --radius-md, --glass-blur, --glass-padding.
    — Botones: .btn, .btn--blanco, .btn--oscuro, .btn--icono (glass).
    — Cards: .card, .brand-card (glass).
    — Dropdowns, tooltips, modales (glass). Usar glass-black o glass-white si el fondo pide más contraste.
@@ -56,7 +56,8 @@
 @import url('modules/fondos.css?v=__BUILD_ID__');
 
 /* TIPOGRAFÍA = la de la landing (25/09): Apfel Grotezk (títulos, OFL · Collletttivo,
-   licencia en recursos/fonts/adn/ApfelGrotezk-OFL.txt) + Spline Sans Mono (texto e interfaz). */
+   licencia en recursos/fonts/adn/ApfelGrotezk-OFL.txt) + Spline Sans (texto, OFL) + Spline Sans Mono
+   (botones, badges, chips, rótulos y datos). */
 @font-face {
   font-family: 'Apfel Grotezk';
   src: url('../recursos/fonts/adn/ApfelGrotezk-Regular.woff2') format('woff2');
@@ -75,6 +76,13 @@
   font-family: 'Apfel Grotezk';
   src: url('../recursos/fonts/adn/ApfelGrotezk-Fett.woff2') format('woff2');
   font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Spline Sans';
+  src: url('../recursos/fonts/adn/SplineSans.woff2') format('woff2');
+  font-weight: 300 700;
   font-style: normal;
   font-display: swap;
 }
@@ -112,7 +120,7 @@
        glass = original muy translúcido
        glass-black = versión oscura (fondos claros detrás → mejor contraste para texto)
        glass-white = versión más blanca (fondos oscuros detrás → texto más notorio)
-       Todas comparten --glass-radius, --glass-blur, --glass-padding. */
+       Todas comparten --radius-md, --glass-blur, --glass-padding. */
     /* glass-blur: blur(14px) + saturate(120%). Reducido desde blur(24px)/sat(140%)
        por costo de repaint: backdrop-filter se aplica en 240+ sitios y el radio de
        blur domina el costo de la convolucion. 14px sigue leyendose como frosted
@@ -278,7 +286,6 @@
   --glass-white-border: rgba(0, 0, 0, 0.08);
   --glass-white-text: #0b0b0b;
   --glass-blur: blur(14px) saturate(120%);
-  --glass-radius: 14px;
   --glass-padding: 8px 24px;
 
   /* ── EFECTOS — puntos del canvas, fondo de plataforma, partículas ── */
@@ -326,7 +333,8 @@
 
   /* ── TIPOGRAFÍA ── */
   --font-display: 'Apfel Grotezk', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif; /* títulos */
-  --font-mono: 'Spline Sans Mono', ui-monospace, Menlo, monospace;
+  --font-mono: 'Spline Sans Mono', ui-monospace, Menlo, monospace; /* botones, badges, chips, rótulos, datos */
+  --font-texto: 'Spline Sans', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif; /* texto de lectura */
   --font-size-xs: 0.6875rem;
   --font-size-sm: 0.75rem;
   --font-size-base: 0.875rem;
@@ -341,11 +349,14 @@
   --fs-h1: clamp(1.375rem, 1.3vw + 1.08rem, 2rem);
   --fs-h2: clamp(1.25rem, 0.82vw + 1.06rem, 1.75rem);
   --fs-h3: clamp(1.0625rem, 0.43vw + 0.96rem, 1.375rem);
+  /* 4 pesos: light solo para el botón terciario */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
   --font-weight-medium: 500;
-  --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  --leading-tight: 1.15;
-  --leading-normal: 1.6;
+  --leading-none: 1;      /* una línea: botones, chips, etiquetas */
+  --leading-tight: 1.25;  /* títulos */
+  --leading-normal: 1.5;  /* texto */
   --tracking-tight: -0.01em;
   --tracking-mono: 0.04em;
 
@@ -365,7 +376,6 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-media: 2px;
   --radius-pill: 9999px;
 
   /* ── CAPAS — la única escala de z-index ── */
@@ -376,12 +386,17 @@
   --header-height: 46px;
 
   /* ── MODAL — piel común de los tres modales ── */
-  --modal-radio: 20px;
 
   /* ── SOMBRAS ── */
-  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.40);
-  --shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.50);
-  --shadow-floating: 0 24px 64px rgba(0, 0, 0, 0.60);
+  /* ── ELEVACIÓN — 5 niveles (Figma › Tarjeta). El nivel fija fondo, borde, sombra, desenfoque y radio.
+     1 hundida · 2 base · 3 elevada (vidrio) · 4 flotante · 5 modal. En oscuro se eleva ACLARANDO. */
+  --sombra-flotante: 0 8px 24px rgba(0, 0, 0, 0.40);   /* nivel 4: menú, desplegable, popover, toast */
+  --sombra-modal: 0 24px 64px rgba(0, 0, 0, 0.60);     /* nivel 5: diálogo */
+  --bg-modal: #1c1d20;                                  /* nivel 5: más clara que --bg-card (nivel 4) */
+  /* ── CONTROLES — alturas (botón, input, select) */
+  --control-sm: 32px;
+  --control-md: 40px;
+  --control-lg: 48px;
 
   /* ── MOVIMIENTO ── */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
@@ -403,7 +418,6 @@
     --modal-velo-blur: blur(20px) saturate(140%);
     --modal-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 50%), var(--bg-base);
     --modal-panel-border: 1px solid rgba(255, 255, 255, 0.06);
-    --modal-panel-radius: 18px;
     --modal-panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.5), 0 16px 40px -12px rgba(0, 0, 0, 0.6), 0 32px 80px -16px rgba(0, 0, 0, 0.5);
     --modal-divisor: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -412,10 +426,10 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
-    font-family: var(--font-mono);
+    font-family: var(--font-texto);
     background: var(--bg-base);
     color: var(--text-primary);
-    line-height: 1.6;
+    line-height: var(--leading-normal);
     overflow-x: hidden;
     min-height: 100vh;
     margin: 0;
@@ -428,7 +442,7 @@ body {
 /* Los controles nativos no heredan la fuente del body (el navegador les pone la del sistema). */
 button, input, select, textarea, optgroup { font-family: inherit; }
 
-/* Títulos: Apfel Grotezk. El texto y la interfaz van en Spline Sans Mono (body). */
+/* Títulos: Apfel Grotezk. Texto: Spline Sans (body). Mono: botones, badges, chips, rótulos. */
 h1, h2, h3, h4, h5, h6,
 .u-fs-hero, .u-fs-display, .u-fs-h1, .u-fs-h2, .u-fs-h3 { font-family: var(--font-display); }
 
@@ -444,14 +458,14 @@ h1, h2, h3, h4, h5, h6,
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    min-height: 45px;
-    padding: 14px 24px;
+    min-height: var(--control-md);
+    padding: 0 var(--space-5);
     font-family: var(--font-mono);
     font-size: var(--font-size-base);
-    font-weight: 300;
+    font-weight: var(--font-weight-light);
     letter-spacing: var(--tracking-mono);
     text-transform: uppercase;
-    line-height: 1.2;
+    line-height: var(--leading-tight);
     white-space: nowrap;
     text-decoration: none;
     border-radius: var(--radius-sm);
@@ -486,11 +500,11 @@ h1, h2, h3, h4, h5, h6,
 .btn--peligro, .btn--peligro:hover:not(:disabled) { color: var(--color-error); }
 .btn--peligro:hover:not(:disabled) { background: var(--color-error-bg); border-color: var(--color-error-border); }
 
-.btn--sm { min-height: 32px; padding: 6px 12px; font-size: var(--font-size-sm); }
-.btn--lg { min-height: 52px; padding: 16px 32px; font-size: var(--font-size-md); }
+.btn--sm { min-height: var(--control-sm); padding: 0 var(--space-3); font-size: var(--font-size-sm); }
+.btn--lg { min-height: var(--control-lg); padding: 0 var(--space-6); font-size: var(--font-size-md); }
 .btn--bloque { width: 100%; }
-.btn--icono { width: 36px; height: 36px; min-height: 0; padding: 0; letter-spacing: 0; }
-.btn--icono.btn--sm { width: 28px; height: 28px; font-size: var(--font-size-sm); }
+.btn--icono { width: var(--control-md); height: var(--control-md); min-height: 0; padding: 0; letter-spacing: 0; }
+.btn--icono.btn--sm { width: var(--control-sm); height: var(--control-sm); font-size: var(--font-size-sm); }
 
 /* ========== MODAL — Un solo sistema ========== */
 .modal {
@@ -538,7 +552,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     /* Gradiente oscuro + sheen interno + sombra en capas: flota, no es una card plana. */
     background: var(--modal-panel-bg);
     border: var(--modal-panel-border);
-    border-radius: var(--modal-panel-radius);
+    border-radius: var(--radius-lg);
     box-shadow: var(--modal-panel-shadow);
     display: flex;
     flex-direction: column;
@@ -566,9 +580,9 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    font-size: 1.2rem;
-    font-weight: 600;
-    letter-spacing: -0.025em;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--tracking-tight);
     color: var(--text-primary);
     margin: 0;
 }
@@ -580,11 +594,11 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     padding: 0.45rem 0.75rem;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 9px;
+    border-radius: var(--radius-sm);
     color: rgba(255, 255, 255, 0.65);
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: -0.003em;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0;
     cursor: pointer;
     transition: color 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
                 background 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
@@ -602,9 +616,9 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 .modal-intro {
     margin: 0 0 1.5rem;
     color: rgba(255, 255, 255, 0.55);
-    font-size: 0.92rem;
-    line-height: 1.6;
-    letter-spacing: -0.005em;
+    font-size: var(--font-size-base);
+    line-height: var(--leading-normal);
+    letter-spacing: var(--tracking-tight);
 }
 .modal-footer {
     display: flex;
@@ -624,9 +638,9 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     border: none;
     color: rgba(255, 255, 255, 0.45);
     cursor: pointer;
-    border-radius: 10px;
-    font-size: 1.25rem;
-    line-height: 1;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-xl);
+    line-height: var(--leading-none);
     transition: color 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
                 background 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
@@ -641,11 +655,11 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 
 /* ========== TIPOGRAFÍA FLUIDA — utilidades opt-in ==========
    Reemplazan font-size fijos en títulos/heros. Una clase, sin media queries. */
-.u-fs-hero    { font-size: var(--fs-hero);    line-height: 1.1;  }
-.u-fs-display { font-size: var(--fs-display); line-height: 1.15; }
-.u-fs-h1      { font-size: var(--fs-h1);      line-height: 1.2;  }
-.u-fs-h2      { font-size: var(--fs-h2);      line-height: 1.25; }
-.u-fs-h3      { font-size: var(--fs-h3);      line-height: 1.3;  }
+.u-fs-hero    { font-size: var(--fs-hero);    line-height: var(--leading-none);  }
+.u-fs-display { font-size: var(--fs-display); line-height: var(--leading-tight); }
+.u-fs-h1      { font-size: var(--fs-h1);      line-height: var(--leading-tight);  }
+.u-fs-h2      { font-size: var(--fs-h2);      line-height: var(--leading-tight); }
+.u-fs-h3      { font-size: var(--fs-h3);      line-height: var(--leading-tight);  }
 /* Evita que palabras largas (URLs, nombres) desborden contenedores estrechos. */
 .u-balance    { text-wrap: balance; }
 .u-truncate   { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -662,7 +676,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
         width: 100%;
         max-width: 100%;
         max-height: 92vh;
-        border-radius: var(--glass-radius) var(--glass-radius) 0 0;
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
         border-bottom: none;
         animation: sheetUp 0.28s var(--ease-out, ease-out);
     }
@@ -737,8 +751,8 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 }
 .form-group label {
     color: var(--text-primary);
-    font-weight: 500;
-    font-size: 0.9rem;
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-base);
 }
 .form-group .required {
     color: var(--color-error);
@@ -746,15 +760,17 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 .form-label {
     display: block;
     font-size: var(--font-size-sm);
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     color: var(--text-secondary);
     margin-bottom: 0.2rem;
 }
 /* Inputs de texto: sin efecto glass (nombre de marca, etc.) */
+/* input de una línea: alto de control; el textarea crece con su contenido */
+.form-input { min-height: var(--control-md); }
 .form-input, .form-textarea {
     width: 100%;
     padding: 0.6rem 0.75rem;
-    font-family: var(--font-mono);
+    font-family: var(--font-texto);
     font-size: var(--font-size-base);
     color: var(--text-primary);
     background: var(--bg-base);
@@ -769,7 +785,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 }
 .form-input::placeholder, .form-textarea::placeholder { color: var(--text-disabled); }
 .form-input:disabled, .form-textarea:disabled { opacity: 0.5; cursor: not-allowed; }
-.form-textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+.form-textarea { min-height: 80px; resize: vertical; line-height: var(--leading-normal); }
 
 /* .form-control: alias de buscador usado en varias vistas (orgs, vera-knowledge…).
    Antes no tenia CSS y caia a la apariencia nativa del navegador (caja inset de
@@ -777,7 +793,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 .form-control {
     width: 100%;
     padding: 0.6rem 0.75rem;
-    font-family: var(--font-mono);
+    font-family: var(--font-texto);
     font-size: var(--font-size-base);
     color: var(--text-primary);
     background: var(--bg-base);
@@ -785,6 +801,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     border-radius: var(--radius-sm);
     outline: none;
     transition: var(--transition);
+    min-height: var(--control-md);
 }
 .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 .form-control::placeholder { color: var(--text-disabled); }
@@ -812,14 +829,14 @@ input[type="search"]::-webkit-search-results-decoration {
 .form-select {
     width: 100%;
     padding: 0.6rem 2.5rem 0.6rem 0.75rem;
-    font-family: var(--font-mono);
+    font-family: var(--font-texto);
     font-size: var(--font-size-base);
     color: var(--text-primary);
     background: var(--glass-bg);
     border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
+    border-radius: var(--radius-md);
     outline: none;
     transition: var(--transition);
     appearance: none;
@@ -827,6 +844,7 @@ input[type="search"]::-webkit-search-results-decoration {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23D4D1D8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
+    min-height: var(--control-md);
 }
 .form-select:focus {
     border-color: var(--accent);
@@ -842,7 +860,7 @@ input[type="search"]::-webkit-search-results-decoration {
     border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
+    border-radius: var(--radius-md);
     padding: 1.25rem;
     transition: var(--transition);
 }
@@ -861,7 +879,7 @@ input[type="search"]::-webkit-search-results-decoration {
     border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
+    border-radius: var(--radius-md);
 }
 /* glass-black: receta EXACTA del card de login (auth.css). Validada como
    el unico glass-black que se ve correcto en la plataforma. Los valores
@@ -873,7 +891,7 @@ input[type="search"]::-webkit-search-results-decoration {
     color: var(--glass-black-text);
     backdrop-filter: blur(24px) saturate(140%) !important;
     -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
-    border-radius: var(--glass-radius);
+    border-radius: var(--radius-md);
 }
 /* .glass-white — espejo blanco de .glass-black: mismo recipe frosted en blanco.
    Base blanca 0.55 + filete negro 0.08 + blur 24/sat 140 + texto oscuro.
@@ -884,7 +902,7 @@ input[type="search"]::-webkit-search-results-decoration {
     color: var(--glass-white-text);
     backdrop-filter: blur(24px) saturate(140%);
     -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border-radius: var(--glass-radius);
+    border-radius: var(--radius-md);
 }
 
 /* ========== BADGES — UNO (Figma › Componentes › Badge) ==========
@@ -898,9 +916,9 @@ input[type="search"]::-webkit-search-results-decoration {
     padding: 9px 18px 9px 14px;
     border-radius: var(--radius-pill);
     font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: var(--font-weight-semibold);
-    line-height: 1.2;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--leading-tight);
     white-space: nowrap;
     background: var(--icon-button);
     color: var(--bg-base);
@@ -910,6 +928,40 @@ input[type="search"]::-webkit-search-results-decoration {
 .badge--error { background: var(--color-error); }
 .badge--info { background: var(--color-info); }
 .badge--sm { gap: var(--space-1); padding: 3px 10px 3px 8px; font-size: var(--font-size-xs); }
+
+/* ========== SUPERFICIES — 5 niveles de elevación (Figma › Componentes › Tarjeta) ==========
+   La elevación la decide el ROL: se usa la más baja que se lea. Radio 12 (modal 16), relleno 20 (modal 24).
+   .superficie--interactiva: hover cambia el fondo, no la forma. Guardia: test/superficies.test.js */
+.superficie { box-sizing: border-box; border-radius: var(--radius-md); padding: var(--space-5); border: 1px solid transparent; }
+.superficie--1 { background: var(--white-2); }
+.superficie--2 { background: transparent; border-color: var(--border-hairline-strong); }
+.superficie--3 { background: var(--white-6); border-color: var(--white-12); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
+.superficie--4 { background: var(--bg-card); border-color: var(--border-hairline); box-shadow: var(--sombra-flotante); }
+.superficie--5 { background: var(--bg-modal); border-color: var(--border-hairline); box-shadow: var(--sombra-modal); border-radius: var(--radius-lg); padding: var(--space-6); }
+.superficie--interactiva { cursor: pointer; transition: background-color var(--duracion-base, 150ms) ease, border-color var(--duracion-base, 150ms) ease; }
+.superficie--1.superficie--interactiva:hover, .superficie--2.superficie--interactiva:hover { background: var(--white-5); }
+.superficie--3.superficie--interactiva:hover { background: var(--white-10); }
+.superficie--interactiva:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ========== CHIP — UNA burbuja para filtros, etiquetas y selección (los ESTADOS son .badge) ========== */
+.chip { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--control-sm); padding: 0 var(--space-3); border-radius: var(--radius-pill); border: 1px solid var(--white-12); background: var(--white-6); color: var(--text-secondary); font-family: var(--font-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-regular); line-height: var(--leading-none); white-space: nowrap; }
+.chip--activo { background: var(--white-95); border-color: var(--white-95); color: var(--bg-base); }
+
+/* ========== IMAGEN — UN contenedor (radio 12, 4 proporciones) y avatar ========== */
+.media { position: relative; overflow: hidden; border-radius: var(--radius-md); background: var(--bg-card); border: 1px solid var(--border-hairline); }
+.media > img, .media > video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.media--1x1 { aspect-ratio: 1 / 1; }
+.media--4x5 { aspect-ratio: 4 / 5; }
+.media--16x9 { aspect-ratio: 16 / 9; }
+.media--9x16 { aspect-ratio: 9 / 16; }
+/* avatar: círculo = persona; cuadrado (.avatar--marca) = organización o marca (Primer, Atlassian) */
+.avatar { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; overflow: hidden; border-radius: 50%; border: 1px solid var(--border-hairline); background: var(--white-8); color: var(--text-secondary); font-family: var(--font-mono); font-weight: var(--font-weight-medium); }
+.avatar > img { width: 100%; height: 100%; object-fit: cover; }
+.avatar--marca { border-radius: var(--radius-sm); }
+.avatar--24 { width: 24px; height: 24px; font-size: var(--font-size-xs); }
+.avatar--32 { width: 32px; height: 32px; font-size: var(--font-size-xs); }
+.avatar--48 { width: 48px; height: 48px; font-size: var(--font-size-md); }
+.avatar--64 { width: 64px; height: 64px; font-size: var(--font-size-xl); }
 
 /* ========== UTILIDADES ========== */
 .text-xs { font-size: var(--font-size-xs); }
@@ -944,7 +996,7 @@ textarea:focus-visible,
 [contenteditable]:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
 }
 
 /* ========== APP CONTAINER ========== */
@@ -1037,16 +1089,16 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
   );
   background-size: 200% 100%;
   animation: skeletonShimmer 1.4s ease-in-out infinite;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
-.skeleton-text       { display: block; height: 0.9em; margin: 0.45em 0; border-radius: 4px; }
+.skeleton-text       { display: block; height: 0.9em; margin: 0.45em 0; border-radius: var(--radius-xs); }
 .skeleton-text--lg   { height: 1.4em; }
 .skeleton-text--sm   { height: 0.7em; }
 .skeleton-text--w90  { width: 90%; }
 .skeleton-text--w75  { width: 75%; }
 .skeleton-text--w50  { width: 50%; }
 .skeleton-text--w35  { width: 35%; }
-.skeleton-card       { width: 100%; min-height: 120px; border-radius: 12px; }
+.skeleton-card       { width: 100%; min-height: 120px; border-radius: var(--radius-md); }
 .skeleton-card--lg   { min-height: 220px; }
 .skeleton-circle     { border-radius: 50%; width: 40px; height: 40px; flex: 0 0 40px; }
 .skeleton-circle--sm { width: 28px; height: 28px; flex-basis: 28px; }
@@ -1100,7 +1152,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     inset: 0;
     width: 45%;
     background: var(--espectro);
-    border-radius: 0 3px 3px 0;
+    border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
     /* animation-play-state pausado por defecto: solo corre cuando --active (abajo).
        Asi la barra no repinta en background cuando esta oculta. */
@@ -1238,13 +1290,13 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
   display: flex; align-items: center; justify-content: center; gap: 0.9rem;
   padding: 0.6rem 1.2rem;
   background: linear-gradient(90deg, #7a2d0a, #b4470f);
-  color: #fff; font-size: 0.85rem; font-weight: 500;
+  color: #fff; font-size: var(--font-size-base); font-weight: var(--font-weight-medium);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 .subgate-banner-txt { max-width: 70ch; }
 .subgate-banner-cta {
-  flex: 0 0 auto; padding: 0.3rem 0.9rem; border-radius: 999px;
-  background: #fff; color: #12100d; font-weight: 700; font-size: 0.8rem;
+  flex: 0 0 auto; padding: 0.3rem 0.9rem; border-radius: var(--radius-pill);
+  background: #fff; color: #12100d; font-weight: var(--font-weight-bold); font-size: var(--font-size-sm);
   text-decoration: none; white-space: nowrap;
 }
 .subgate-banner-cta:hover { background: rgba(255, 255, 255, 0.88); }
@@ -1264,40 +1316,40 @@ body.has-subgate-wall { overflow: hidden; }
 }
 .subgate-logo { opacity: 0.9; margin-bottom: 0.5rem; height: auto; }
 .subgate-titulo {
-  margin: 0; font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 700;
-  letter-spacing: -0.02em; color: #fff;
+  margin: 0; font-size: clamp(1.5rem, 4vw, 2rem); font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight); color: #fff;
 }
 .subgate-sub {
-  margin: 0; font-size: 0.95rem; line-height: 1.55; max-width: 42ch;
+  margin: 0; font-size: var(--font-size-md); line-height: var(--leading-normal); max-width: 42ch;
   color: rgba(255, 255, 255, 0.72);
 }
 .subgate-datos {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem;
   margin: 0.4rem 0 0.6rem; padding: 0.9rem 1.2rem;
-  border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.03);
 }
 .subgate-datos dt {
-  font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.09em;
+  font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: var(--tracking-mono);
   color: rgba(255, 255, 255, 0.45); margin-bottom: 0.2rem;
 }
-.subgate-datos dd { margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff; }
+.subgate-datos dd { margin: 0; font-size: var(--font-size-md); font-weight: var(--font-weight-medium); color: #fff; }
 .subgate-btn {
   display: inline-block; width: 100%; max-width: 300px;
-  padding: 0.85rem 1.5rem; border-radius: 12px;
+  padding: 0.85rem 1.5rem; border-radius: var(--radius-md);
   background: linear-gradient(120deg, #C10801 0%, #E85002 55%, #F16001 100%);
-  color: #fff; font-size: 0.95rem; font-weight: 700; text-decoration: none;
+  color: #fff; font-size: var(--font-size-md); font-weight: var(--font-weight-bold); text-decoration: none;
   box-shadow: 0 8px 24px rgba(232, 80, 2, 0.32);
   transition: transform 0.15s ease;
 }
 .subgate-btn:hover { transform: translateY(-1px); }
 .subgate-salir {
   appearance: none; background: none; border: 0; cursor: pointer;
-  font: inherit; font-size: 0.85rem; color: rgba(255, 255, 255, 0.55);
+  font: inherit; font-size: var(--font-size-base); color: rgba(255, 255, 255, 0.55);
   text-decoration: underline; padding: 0.3rem;
 }
 .subgate-salir:hover { color: rgba(255, 255, 255, 0.85); }
-.subgate-nota { margin: 0.3rem 0 0; font-size: 0.75rem; color: rgba(255, 255, 255, 0.38); }
+.subgate-nota { margin: 0.3rem 0 0; font-size: var(--font-size-sm); color: rgba(255, 255, 255, 0.38); }
 
 @media (max-width: 520px) {
   .subgate-datos { gap: 1rem; padding: 0.75rem 0.9rem; }

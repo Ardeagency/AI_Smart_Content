@@ -1487,7 +1487,7 @@ describe('PROMPT y PRODUCIR son un par: mismo sitio, mismo tamaño', () => {
     expect(compartida).toContain('.video-director-btn-generate');
     expect(compartida).toContain('height: 36px');
     expect(compartida).toContain('min-width');
-    expect(compartida).toContain('font-size: 0.8rem');
+    expect(compartida).toContain('font-size: var(--font-size-sm)');
   });
 
   test('el `margin-left: auto` lo lleva PROMPT, el primero del par', () => {

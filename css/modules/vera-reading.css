@@ -15,7 +15,7 @@
   padding: 1.125rem 1.375rem 1.25rem;
   border: 1px solid var(--border-color);
   border-left: 3px solid var(--org-primary);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   background:
     linear-gradient(90deg,
       color-mix(in srgb, var(--org-primary) 7%, transparent),
@@ -24,7 +24,7 @@
 
 .vera-band-head {
   display: flex; align-items: center; gap: 0.5rem;
-  font-size: 0.625rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-mono); text-transform: uppercase;
   color: var(--org-primary);
 }
 .vera-dot {
@@ -34,12 +34,12 @@
 }
 .vera-band-when {
   margin-left: auto; text-transform: none; letter-spacing: 0;
-  font-weight: 500; color: var(--text-secondary, rgba(212, 209, 216, 0.55));
+  font-weight: var(--font-weight-medium); color: var(--text-secondary, rgba(212, 209, 216, 0.55));
 }
 .vera-chip {
   margin-left: auto;
-  font-size: 0.5625rem; font-weight: 600; letter-spacing: 0.04em;
-  padding: 0.125rem 0.5rem; border-radius: 999px;
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); letter-spacing: var(--tracking-mono);
+  padding: 0.125rem 0.5rem; border-radius: var(--radius-pill);
   border: 1px solid currentColor;
 }
 .vera-chip--stale { color: var(--color-warning); text-transform: none; }
@@ -47,23 +47,23 @@
 .vera-band-headline {
   margin: 0.625rem 0 0.25rem;
   font-size: clamp(1.125rem, 2.2vw, 1.4375rem);
-  line-height: 1.32; font-weight: 750; letter-spacing: -0.01em;
+  line-height: var(--leading-tight); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-tight);
   color: var(--text-primary);
   text-wrap: balance;
 }
 .vera-band-conf {
-  font-size: 0.6875rem; color: var(--text-secondary, rgba(212, 209, 216, 0.55));
+  font-size: var(--font-size-xs); color: var(--text-secondary, rgba(212, 209, 216, 0.55));
 }
 
 .vera-more {
   all: unset; cursor: pointer;
   display: inline-flex; align-items: center; gap: 0.375rem;
   margin-top: 0.625rem;
-  font-size: 0.8125rem; font-weight: 600;
+  font-size: var(--font-size-base); font-weight: var(--font-weight-medium);
   color: var(--org-primary);
 }
 .vera-more:hover { text-decoration: underline; }
-.vera-more:focus-visible { outline: 2px solid var(--org-primary); outline-offset: 2px; border-radius: 4px; }
+.vera-more:focus-visible { outline: 2px solid var(--org-primary); outline-offset: 2px; border-radius: var(--radius-xs); }
 
 .vera-full { margin-top: 0.875rem; border-top: 1px solid var(--border-color); padding-top: 0.375rem; }
 .vera-full--open { margin-top: 1rem; }
@@ -75,19 +75,19 @@
 }
 .vera-tile {
   padding: 0.875rem 1rem;
-  border: 1px solid var(--border-color); border-radius: 12px;
+  border: 1px solid var(--border-color); border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.015);
 }
-.vera-tile-label { font-size: 0.6875rem; color: var(--text-secondary, rgba(212,209,216,0.55)); }
+.vera-tile-label { font-size: var(--font-size-xs); color: var(--text-secondary, rgba(212,209,216,0.55)); }
 .vera-tile-value {
-  font-size: 1.625rem; font-weight: 800; line-height: 1.15; margin-top: 0.125rem;
+  font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); line-height: var(--leading-tight); margin-top: 0.125rem;
   color: var(--text-primary); font-variant-numeric: tabular-nums;
 }
-.vera-tile-delta { font-size: 0.75rem; font-weight: 700; margin-top: 0.125rem; }
+.vera-tile-delta { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); margin-top: 0.125rem; }
 .vera-tile-delta--down { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
 .vera-tile-delta--up   { color: var(--color-success); }
 .vera-tile-delta--flat { color: var(--text-secondary, rgba(212,209,216,0.55)); }
-.vera-tile-note { font-size: 0.6875rem; color: var(--text-muted, rgba(212,209,216,0.7)); margin-top: 0.25rem; }
+.vera-tile-note { font-size: var(--font-size-xs); color: var(--text-muted, rgba(212,209,216,0.7)); margin-top: 0.25rem; }
 
 /* ── INSTRUMENTO: la movida (card accionable) ── */
 .vera-move-card {
@@ -95,30 +95,30 @@
   padding: 1.125rem 1.25rem;
   border: 1px solid color-mix(in srgb, var(--org-primary) 35%, transparent);
   border-left: 3px solid var(--org-primary);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: linear-gradient(90deg, color-mix(in srgb, var(--org-primary) 8%, transparent), transparent 78%);
 }
 .vera-move-head {
   display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
-  font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase;
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-mono); text-transform: uppercase;
   color: var(--org-primary);
 }
 .vera-move-kicker::before { content: '◆ '; }
 .vera-move-chip {
-  border: 1px solid var(--border-color); border-radius: 999px;
+  border: 1px solid var(--border-color); border-radius: var(--radius-pill);
   padding: 0.0625rem 0.5rem; color: var(--text-secondary, rgba(212,209,216,0.55));
-  font-size: 0.5625rem; letter-spacing: 0.04em; text-transform: none;
+  font-size: var(--font-size-xs); letter-spacing: var(--tracking-mono); text-transform: none;
 }
 .vera-move-ev { margin-left: auto; display: inline-flex; gap: 0.5rem; }
-.vera-move-action { margin: 0.5rem 0 0.25rem; font-size: 1.0625rem; font-weight: 750; line-height: 1.35; color: var(--text-primary); }
-.vera-move-rationale { margin: 0.25rem 0; font-size: 0.875rem; line-height: 1.55; color: var(--text-muted, rgba(212,209,216,0.75)); max-width: 78ch; }
+.vera-move-action { margin: 0.5rem 0 0.25rem; font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); line-height: var(--leading-tight); color: var(--text-primary); }
+.vera-move-rationale { margin: 0.25rem 0; font-size: var(--font-size-base); line-height: var(--leading-normal); color: var(--text-muted, rgba(212,209,216,0.75)); max-width: 78ch; }
 .vera-move-seed {
-  margin-top: 0.625rem; padding: 0.5rem 0.75rem; border-radius: 8px;
-  background: rgba(255,255,255,0.03); font-size: 0.8125rem; font-style: italic;
+  margin-top: 0.625rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.03); font-size: var(--font-size-base); font-style: italic;
   color: var(--text-primary);
 }
 .vera-move-actions { display: flex; gap: 0.5rem; margin-top: 0.875rem; }
-.vera-move-done { margin-top: 0.875rem; font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary, rgba(212,209,216,0.6)); }
+.vera-move-done { margin-top: 0.875rem; font-size: var(--font-size-base); font-weight: var(--font-weight-medium); color: var(--text-secondary, rgba(212,209,216,0.6)); }
 .vera-move-done--ok { color: var(--color-success); }
 
 /* ── INSTRUMENTO: el porqué (colapsable) + vigilancia ── */
@@ -126,7 +126,7 @@
 .vera-why summary {
   cursor: pointer; list-style: none;
   display: inline-flex; align-items: center; gap: 0.375rem;
-  font-size: 0.8125rem; font-weight: 600; color: var(--org-primary);
+  font-size: var(--font-size-base); font-weight: var(--font-weight-medium); color: var(--org-primary);
 }
 .vera-why summary::before { content: '▸'; transition: transform 0.15s ease; }
 .vera-why[open] summary::before { transform: rotate(90deg); }
@@ -135,7 +135,7 @@
 .vera-why-body { margin-top: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 0.25rem; }
 .vera-watchrow { border-top: 1px solid var(--border-color); padding-top: 0.75rem; }
 .vera-watchrow-title {
-  font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase;
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-mono); text-transform: uppercase;
   color: var(--text-secondary, rgba(212,209,216,0.55)); margin-bottom: 0.25rem;
 }
 .vera-watchrow-title::before { content: '🔭 '; }
@@ -145,25 +145,25 @@
 .vera-band--free .vera-band-head { padding: 0 0 0.75rem; }
 .vera-free-frame {
   display: block; width: 100%; min-height: 82vh;
-  border: 0; border-radius: 12px; background: transparent;
+  border: 0; border-radius: var(--radius-md); background: transparent;
   color-scheme: dark;
 }
 .vera-free-text {
-  white-space: pre-wrap; font-size: 0.9375rem; line-height: 1.65;
+  white-space: pre-wrap; font-size: var(--font-size-md); line-height: var(--leading-normal);
   color: var(--text-primary); max-width: 84ch; margin: 0;
 }
 .vera-free-json .vj-section { margin: 0 0 1.5rem; }
 .vera-free-json .vj-h {
-  margin: 0 0 0.5rem; font-size: 1rem; font-weight: 750; text-transform: capitalize;
+  margin: 0 0 0.5rem; font-size: var(--font-size-md); font-weight: var(--font-weight-bold); text-transform: capitalize;
   color: var(--org-primary);
   border-bottom: 1px solid var(--border-color); padding-bottom: 0.375rem;
 }
-.vera-free-json .vj-row { display: flex; gap: 0.75rem; padding: 0.25rem 0; font-size: 0.875rem; }
+.vera-free-json .vj-row { display: flex; gap: 0.75rem; padding: 0.25rem 0; font-size: var(--font-size-base); }
 .vera-free-json .vj-row--block { flex-direction: column; gap: 0.125rem; }
 .vera-free-json .vj-k { color: var(--text-secondary, rgba(212,209,216,0.55)); text-transform: capitalize; min-width: 10rem; flex: none; }
 .vera-free-json .vj-v { color: var(--text-primary); }
 .vera-free-json .vj-list { margin: 0.25rem 0; padding-left: 1.125rem; }
-.vera-free-json .vj-list li { margin: 0.25rem 0; font-size: 0.875rem; }
+.vera-free-json .vj-list li { margin: 0.25rem 0; font-size: var(--font-size-base); }
 .vera-free-json .vj-null { color: var(--text-muted, rgba(212,209,216,0.5)); }
 
 /* Modo página completa (rediseño 2026-07: la lectura ES el tab).
@@ -176,12 +176,12 @@
   border-radius: 0;
 }
 .vera-page .vera-band-headline { font-size: clamp(1.25rem, 2.6vw, 1.75rem); }
-.vera-page .vera-blk p { font-size: 0.9375rem; }
-.vera-page .vera-blk h4 { font-size: 1rem; }
+.vera-page .vera-blk p { font-size: var(--font-size-md); }
+.vera-page .vera-blk h4 { font-size: var(--font-size-md); }
 .vera-band--empty .vera-band-headline { color: var(--text-muted, rgba(212, 209, 216, 0.8)); }
 .vera-empty-desc {
   margin: 0.375rem 0 0; max-width: 62ch;
-  font-size: 0.9375rem; line-height: 1.6;
+  font-size: var(--font-size-md); line-height: var(--leading-normal);
   color: var(--text-secondary, rgba(212, 209, 216, 0.55));
 }
 
@@ -193,16 +193,16 @@
 }
 .vera-blk-lbl {
   display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
-  font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase;
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-mono); text-transform: uppercase;
   color: var(--text-secondary, rgba(212, 209, 216, 0.55));
 }
-.vera-blk h4 { margin: 0.375rem 0 0.125rem; font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); }
-.vera-blk p { margin: 0.25rem 0; font-size: 0.875rem; line-height: 1.55; color: var(--text-primary); max-width: 76ch; }
+.vera-blk h4 { margin: 0.375rem 0 0.125rem; font-size: var(--font-size-md); font-weight: var(--font-weight-bold); color: var(--text-primary); }
+.vera-blk p { margin: 0.25rem 0; font-size: var(--font-size-base); line-height: var(--leading-normal); color: var(--text-primary); max-width: 76ch; }
 .vera-blk .vera-dim { color: var(--text-muted, rgba(212, 209, 216, 0.7)); }
 
 .vera-sev {
-  padding: 0.0625rem 0.5rem; border-radius: 999px; border: 1px solid currentColor;
-  font-size: 0.5625rem; letter-spacing: 0.06em;
+  padding: 0.0625rem 0.5rem; border-radius: var(--radius-pill); border: 1px solid currentColor;
+  font-size: var(--font-size-xs); letter-spacing: var(--tracking-mono);
 }
 .vera-sev--opp    { border-left-color: var(--color-success); } .vera-sev--opp    .vera-sev { color: var(--color-success); }
 .vera-sev--warn   { border-left-color: var(--color-warning); } .vera-sev--warn   .vera-sev { color: var(--color-warning); }
@@ -211,9 +211,9 @@
 
 .vera-blk--tri { border-left-color: var(--org-primary); }
 .vera-sig { display: flex; gap: 0.5rem; margin: 0.375rem 0; }
-.vera-sig-dot { color: var(--org-primary); font-size: 0.6875rem; line-height: 1.9; flex: none; }
+.vera-sig-dot { color: var(--org-primary); font-size: var(--font-size-xs); line-height: var(--leading-normal); flex: none; }
 .vera-sowhat {
-  margin-top: 0.5rem; padding: 0.625rem 0.875rem; border-radius: 9px;
+  margin-top: 0.5rem; padding: 0.625rem 0.875rem; border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--org-primary) 9%, transparent);
 }
 .vera-sowhat p { margin: 0; }
@@ -221,59 +221,59 @@
 .vera-blk--hyp { border-left-color: var(--color-warning); }
 
 .vera-blk--receipt blockquote {
-  margin: 0.375rem 0 0.125rem; font-size: 0.9375rem; font-style: italic;
+  margin: 0.375rem 0 0.125rem; font-size: var(--font-size-md); font-style: italic;
   color: var(--text-primary);
 }
-.vera-who { font-size: 0.6875rem; color: var(--text-secondary, rgba(212, 209, 216, 0.55)); }
+.vera-who { font-size: var(--font-size-xs); color: var(--text-secondary, rgba(212, 209, 216, 0.55)); }
 
 .vera-blk--move {
   border-left-color: var(--org-primary);
   background: linear-gradient(90deg, color-mix(in srgb, var(--org-primary) 8%, transparent), transparent 75%);
-  border-radius: 0 10px 10px 0;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
   padding: 0.625rem 0.875rem 0.625rem 0.875rem;
 }
 .vera-urg {
-  padding: 0.0625rem 0.5rem; border-radius: 999px; border: 1px solid var(--org-primary);
-  color: var(--org-primary); font-size: 0.5625rem; letter-spacing: 0.06em;
+  padding: 0.0625rem 0.5rem; border-radius: var(--radius-pill); border: 1px solid var(--org-primary);
+  color: var(--org-primary); font-size: var(--font-size-xs); letter-spacing: var(--tracking-mono);
 }
 
 .vera-blk--delta.vera-delta--down { border-left-color: var(--color-error); }
 .vera-blk--delta.vera-delta--up   { border-left-color: var(--color-success); }
-.vera-arrow { font-weight: 800; }
+.vera-arrow { font-weight: var(--font-weight-bold); }
 .vera-delta--down .vera-arrow { color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
 .vera-delta--up   .vera-arrow { color: var(--color-success); }
 
 /* ── Evidencia ── */
 .vera-ev {
   all: unset; cursor: pointer;
-  font-size: 0.625rem; font-weight: 600; letter-spacing: 0.02em; text-transform: none;
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); letter-spacing: var(--tracking-mono); text-transform: none;
   color: var(--org-primary);
   border-bottom: 1px dotted currentColor;
 }
 .vera-ev:hover { opacity: 0.85; }
-.vera-ev:focus-visible { outline: 2px solid var(--org-primary); outline-offset: 2px; border-radius: 3px; }
+.vera-ev:focus-visible { outline: 2px solid var(--org-primary); outline-offset: 2px; border-radius: var(--radius-xs); }
 .vera-ev.is-loading { opacity: 0.5; pointer-events: none; }
 
 .vera-ev-modal .vera-ev-card { display: flex; flex-direction: column; gap: 0.625rem; }
 .vera-ev-meta {
-  font-size: 0.625rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); letter-spacing: var(--tracking-mono); text-transform: uppercase;
   color: var(--text-secondary, rgba(212, 209, 216, 0.55));
 }
 .vera-ev-quote {
   margin: 0; padding: 0.75rem 1rem;
-  border-left: 2px solid var(--org-primary); border-radius: 0 8px 8px 0;
+  border-left: 2px solid var(--org-primary); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   background: rgba(255, 255, 255, 0.03);
-  font-size: 0.9375rem; line-height: 1.55; white-space: pre-wrap;
+  font-size: var(--font-size-md); line-height: var(--leading-normal); white-space: pre-wrap;
   color: var(--text-primary);
 }
-.vera-ev-kw { font-size: 1.0625rem; font-weight: 750; color: var(--text-primary); }
-.vera-ev-stats { display: flex; gap: 0.875rem; flex-wrap: wrap; font-size: 0.75rem; color: var(--text-secondary, rgba(212, 209, 216, 0.6)); font-variant-numeric: tabular-nums; }
-.vera-ev-link { font-size: 0.8125rem; font-weight: 600; color: var(--org-primary); text-decoration: none; }
+.vera-ev-kw { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--text-primary); }
+.vera-ev-stats { display: flex; gap: 0.875rem; flex-wrap: wrap; font-size: var(--font-size-sm); color: var(--text-secondary, rgba(212, 209, 216, 0.6)); font-variant-numeric: tabular-nums; }
+.vera-ev-link { font-size: var(--font-size-base); font-weight: var(--font-weight-medium); color: var(--org-primary); text-decoration: none; }
 .vera-ev-link:hover { text-decoration: underline; }
-.vera-ev-note { font-size: 0.8125rem; color: var(--text-muted, rgba(212, 209, 216, 0.7)); }
+.vera-ev-note { font-size: var(--font-size-base); color: var(--text-muted, rgba(212, 209, 216, 0.7)); }
 .vera-ev-empty { padding: 1rem 0; color: var(--text-secondary, rgba(212, 209, 216, 0.55)); }
 
 @media (max-width: 900px) {
   .vera-band { padding: 1rem 1.125rem; }
-  .vera-band-headline { font-size: 1.125rem; }
+  .vera-band-headline { font-size: var(--font-size-lg); }
 }

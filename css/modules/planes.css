@@ -68,7 +68,7 @@
 .planes-org-context {
     width: 100%;
     max-width: 760px;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     border: 1px solid var(--border-color);
     padding: 1rem 1.25rem;
     display: flex;
@@ -94,27 +94,27 @@
 }
 
 .planes-org-context-eyebrow {
-    font-size: 0.7rem;
+    font-size: var(--font-size-xs);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--tracking-mono);
     color: var(--text-secondary);
 }
 
 .planes-org-context-plan {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
 }
 
 .planes-org-context-renew {
-    font-size: 0.82rem;
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
 }
 
-.planes-org-context-renew i { font-size: 0.75rem; }
+.planes-org-context-renew i { font-size: var(--font-size-sm); }
 
 .planes-org-context-usage {
     display: grid;
@@ -132,7 +132,7 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    font-size: 0.82rem;
+    font-size: var(--font-size-base);
 }
 
 .planes-usage-meter-label {
@@ -142,15 +142,15 @@
     gap: 0.4rem;
 }
 
-.planes-usage-meter-label i { font-size: 0.72rem; opacity: 0.8; }
+.planes-usage-meter-label i { font-size: var(--font-size-sm); opacity: 0.8; }
 
-.planes-usage-meter-value { color: var(--text-primary); font-weight: 500; }
-.planes-usage-meter-value span { color: var(--text-secondary); font-weight: 400; }
+.planes-usage-meter-value { color: var(--text-primary); font-weight: var(--font-weight-medium); }
+.planes-usage-meter-value span { color: var(--text-secondary); font-weight: var(--font-weight-regular); }
 
 .planes-usage-meter-bar {
     height: 6px;
     background: rgba(255, 255, 255, 0.06);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     overflow: hidden;
 }
 
@@ -162,7 +162,7 @@
     width: 100%;
     height: 100%;
     background: rgba(255, 255, 255, 0.55);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     transform-origin: left center;
     transition: transform .3s ease;
 }
@@ -179,7 +179,7 @@
     display: inline-flex;
     background: var(--bg-card, rgba(21, 23, 28, 0.6));
     border: 1px solid var(--border-color);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 4px;
     gap: 2px;
 }
@@ -189,9 +189,9 @@
     border: none;
     color: var(--text-secondary);
     padding: 0.5rem 1.25rem;
-    border-radius: 999px;
-    font-size: 0.9rem;
-    font-weight: 500;
+    border-radius: var(--radius-pill);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: background var(--transition, .2s), color var(--transition, .2s);
 }
@@ -207,7 +207,7 @@
 
 .planes-hero-subtitle {
     color: var(--text-secondary);
-    font-size: 1rem;
+    font-size: var(--font-size-md);
     margin: 0;
 }
 
@@ -286,37 +286,37 @@
     top: -0.6rem;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: var(--tracking-mono);
     /* Pastilla BLANCA con texto oscuro — el mismo recurso que ya usa el selector
        Mensual/Anual de esta pagina, asi la etiqueta se lee sin meter otro color. */
     color: var(--bg-base);
     background: var(--color-white);
     padding: 0.25rem 0.7rem;
-    border-radius: var(--radius-sm, 6px);
+    border-radius: var(--radius-sm);
     z-index: 2;
 }
 
 .plan-card-name {
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
     margin: 0;
     text-transform: capitalize;
 }
 
 .plan-card-price {
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
     color: var(--text-primary);
-    line-height: 1.1;
+    line-height: var(--leading-none);
 }
 
 .plan-card-price span span {
-    font-size: 0.8rem;
-    font-weight: 500;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
     color: var(--text-secondary);
     margin-left: 0.25rem;
 }
@@ -327,8 +327,8 @@
 .planes-hero.billing-annual .plan-card-price .price-annual { display: inline; }
 
 .plan-card-credits {
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
     padding: 0.5rem 0;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -346,7 +346,7 @@
 }
 
 .plan-card-details li {
-    font-size: 0.85rem;
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
     padding-left: 1.25rem;
     position: relative;
@@ -357,7 +357,7 @@
     position: absolute;
     left: 0;
     color: rgba(255, 255, 255, 0.5);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
 }
 
 .planes-loading,
@@ -383,14 +383,14 @@
 .planes-toggle-discount {
     display: inline-block;
     margin-left: 6px;
-    font-size: 10px;
+    font-size: var(--font-size-xs);
     padding: 2px 6px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: rgba(255, 255, 255, 0.12);
     color: rgba(255, 255, 255, 0.9);
-    font-weight: 600;
+    font-weight: var(--font-weight-medium);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: var(--tracking-mono);
 }
 
 /* Default = annual (research 2026): hide monthly, show annual */
@@ -401,29 +401,29 @@
 
 .plan-card-small .price-annual small {
     display: block;
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     color: var(--text-muted);
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
     margin-top: 2px;
     letter-spacing: 0;
 }
 
 .plan-card-small .price-free {
-    font-size: 32px;
-    font-weight: 700;
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
     color: var(--text-primary);
 }
 
 .plan-card-small .plan-card-contact-price {
-    font-size: 18px;
-    font-weight: 600;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
 }
 
 .plan-card-small .plan-card-contact-price span {
-    font-size: 12px;
+    font-size: var(--font-size-sm);
     color: var(--text-muted);
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
 }
 
 /* Enterprise ya no lleva su tinte cian: sin colores de resaltado en las cards. */
@@ -446,7 +446,7 @@
 .plan-card-desc {
     margin: 0 0 12px;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: var(--font-size-sm);
     min-height: 32px;
 }
 
@@ -471,7 +471,7 @@
     background: var(--accent-primary, var(--color-white));
     color: var(--bg-base);
     border: none;
-    font-weight: 600;
+    font-weight: var(--font-weight-medium);
 }
 
 .plan-card-cta--upgrade:hover {
@@ -498,8 +498,8 @@
     width: 100%;
     text-align: center;
     padding: 0.65rem 1rem;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
     color: var(--text-secondary);
     border-top: 1px dashed var(--border-color);
     display: inline-flex;
@@ -512,7 +512,7 @@
 
 /* Trust strip */
 .planes-trust-strip { padding: 32px 0; text-align: center; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); margin: 32px 0; }
-.planes-trust-eyebrow { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+.planes-trust-eyebrow { color: var(--text-muted); font-size: var(--font-size-sm); text-transform: uppercase; letter-spacing: var(--tracking-mono); margin-bottom: 16px; }
 .planes-trust-logos { display: flex; flex-wrap: wrap; justify-content: center; gap: 32px; }
 .planes-trust-logo-slot {
     display: inline-flex;
@@ -522,52 +522,52 @@
     height: 40px;
     padding: 8px 16px;
     border: 1px dashed var(--border-color);
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: var(--font-size-sm);
     font-family: var(--font-mono);
 }
 
 /* Testimonial */
 .planes-testimonial { max-width: 720px; margin: 48px auto; text-align: center; padding: 0 16px; }
-.planes-testimonial-quote { font-size: 22px; font-style: italic; color: var(--text-primary); margin: 0 0 24px; line-height: 1.5; }
+.planes-testimonial-quote { font-size: var(--font-size-2xl); font-style: italic; color: var(--text-primary); margin: 0 0 24px; line-height: var(--leading-normal); }
 .planes-testimonial-attribution { display: inline-flex; align-items: center; gap: 12px; color: var(--text-secondary); }
 .planes-testimonial-avatar {
     width: 48px; height: 48px; border-radius: 50%;
     background: var(--bg-base);
     border: 1px dashed var(--border-color);
 }
-.planes-testimonial-name { font-weight: 600; color: var(--text-primary); }
-.planes-testimonial-role { font-size: 13px; color: var(--text-muted); }
+.planes-testimonial-name { font-weight: var(--font-weight-medium); color: var(--text-primary); }
+.planes-testimonial-role { font-size: var(--font-size-base); color: var(--text-muted); }
 
 /* FAQ */
 .planes-faq { padding: 48px 0; max-width: 800px; margin: 0 auto; }
-.planes-faq-title { text-align: center; font-size: 24px; margin: 0 0 32px; color: var(--text-primary); }
+.planes-faq-title { text-align: center; font-size: var(--font-size-2xl); margin: 0 0 32px; color: var(--text-primary); }
 .planes-faq-list { display: flex; flex-direction: column; gap: 8px; }
 .planes-faq-item {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     padding: 0;
 }
 .planes-faq-q {
     cursor: pointer;
     padding: 16px 20px;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
     list-style: none;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-.planes-faq-q::after { content: '+'; color: var(--text-muted); font-size: 18px; }
+.planes-faq-q::after { content: '+'; color: var(--text-muted); font-size: var(--font-size-lg); }
 .planes-faq-item[open] .planes-faq-q::after { content: '–'; }
 .planes-faq-a {
     padding: 0 20px 16px;
     margin: 0;
     color: var(--text-secondary);
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: var(--font-size-base);
+    line-height: var(--leading-normal);
 }
 
 /* Final CTA */
@@ -578,32 +578,32 @@
     /* Se fue el tinte cian: no correspondia a ninguna marca ni al espectro de
        plataforma. El bloque se separa por aire, como el resto. */
     background: transparent;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
 }
-.planes-final-cta h2 { font-size: 28px; margin: 0 0 8px; color: var(--text-primary); }
+.planes-final-cta h2 { font-size: var(--font-size-3xl); margin: 0 0 8px; color: var(--text-primary); }
 .planes-final-cta p { color: var(--text-muted); margin: 0 0 24px; }
 .planes-final-cta-actions { display: inline-flex; gap: 12px; }
 
 /* ─── Cancel page ─────────────────────────────────────────────────── */
 .cancel-page { max-width: 720px; margin: 0 auto; padding: 32px 24px 64px; }
-.cancel-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 32px; }
-.cancel-back { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 13px; margin-bottom: 16px; }
+.cancel-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 32px; }
+.cancel-back { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: var(--font-size-base); margin-bottom: 16px; }
 .cancel-back:hover { color: var(--text-primary); }
-.cancel-card h1 { font-size: 24px; color: var(--text-primary); margin: 0 0 8px; }
+.cancel-card h1 { font-size: var(--font-size-2xl); color: var(--text-primary); margin: 0 0 8px; }
 .cancel-lead { color: var(--text-secondary); margin: 0 0 24px; }
-.cancel-facts { background: var(--bg-base); border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; }
-.cancel-facts h3 { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; }
+.cancel-facts { background: var(--bg-base); border-radius: var(--radius-sm); padding: 16px 20px; margin-bottom: 24px; }
+.cancel-facts h3 { font-size: var(--font-size-base); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--tracking-mono); margin: 0 0 12px; }
 .cancel-facts ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
-.cancel-facts li { font-size: 13px; color: var(--text-secondary); display: flex; gap: 10px; align-items: flex-start; }
+.cancel-facts li { font-size: var(--font-size-base); color: var(--text-secondary); display: flex; gap: 10px; align-items: flex-start; }
 .cancel-facts li i { color: var(--text-muted); margin-top: 3px; }
-.cancel-survey { background: var(--bg-base); border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; }
-.cancel-survey summary { cursor: pointer; color: var(--text-secondary); font-size: 13px; }
+.cancel-survey { background: var(--bg-base); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 24px; }
+.cancel-survey summary { cursor: pointer; color: var(--text-secondary); font-size: var(--font-size-base); }
 .cancel-survey-options { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-.cancel-survey-option { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; cursor: pointer; }
-.cancel-survey textarea { width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; color: var(--text-primary); font-family: inherit; font-size: 13px; resize: vertical; margin-top: 8px; }
+.cancel-survey-option { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: var(--font-size-base); cursor: pointer; }
+.cancel-survey textarea { width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px; color: var(--text-primary); font-family: inherit; font-size: var(--font-size-base); resize: vertical; margin-top: 8px; }
 .cancel-actions { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
-.cancel-fineprint { font-size: 12px; color: var(--text-muted); text-align: center; margin: 16px 0 0; }
-.cancel-status { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-size: 13px; }
+.cancel-fineprint { font-size: var(--font-size-sm); color: var(--text-muted); text-align: center; margin: 16px 0 0; }
+.cancel-status { margin-top: 16px; padding: 12px 16px; border-radius: var(--radius-sm); font-size: var(--font-size-base); }
 .cancel-status.is-success { background: rgba(34, 197, 94, 0.1); color: var(--color-success); border: 1px solid rgba(34, 197, 94, 0.25); }
 .cancel-status.is-error { background: rgba(239, 68, 68, 0.1); color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); border: 1px solid rgba(239, 68, 68, 0.25); }
 .cancel-status:empty { display: none; }

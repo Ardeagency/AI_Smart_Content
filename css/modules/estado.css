@@ -23,13 +23,13 @@
   padding: var(--space-6) var(--space-4);
   text-align: center;
   border: 1px dashed var(--border-color);
-  border-radius: var(--modal-radio);
+  border-radius: var(--radius-lg);
   color: var(--text-muted);
 }
 .estado__titulo {
   margin: 0;
   font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
 }
 .estado__texto {

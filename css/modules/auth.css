@@ -57,7 +57,7 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(24px) saturate(140%);
     -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border-radius: 28px;
+    border-radius: var(--radius-pill);
     padding: 2.25rem;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
     z-index: 2;
@@ -72,8 +72,8 @@
     justify-content: space-between;
     gap: 1rem;
     color: var(--text-muted);
-    font-size: 0.7rem;
-    letter-spacing: 0.06em;
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--tracking-mono);
     text-transform: uppercase;
     z-index: 2;
 }
@@ -136,7 +136,7 @@
     border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
+    border-radius: var(--radius-md);
     padding: 2rem;
     position: relative;
 }
@@ -173,7 +173,7 @@
     border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
+    border-radius: var(--radius-md);
     padding: 2rem;
     position: relative;
 }
@@ -206,9 +206,9 @@
 }
 
 .signin-field-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--tracking-mono);
     text-transform: uppercase;
     color: var(--text-muted);
 }
@@ -223,7 +223,7 @@
     background: rgba(0, 214, 20, 0.12);
     border: 1px solid rgba(0, 214, 20, 0.35);
     border-radius: var(--radius-md);
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
     color: var(--text-primary);
 }
 
@@ -233,7 +233,7 @@
 
 .signin-success-banner-icon {
     color: var(--color-success);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
 }
 
 /* Formulario: ancho completo */
@@ -262,9 +262,9 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     padding: 0.85rem 1rem;
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
 }
 
 .signin-container--hero .form-input:focus {
@@ -277,9 +277,9 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     padding: 0.85rem 1rem;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     margin-top: 0.25rem;
 }
 
@@ -291,7 +291,7 @@
 .signin-container--hero .signin-forgot,
 .signin-container--hero .signin-forgot-btn {
     color: var(--text-muted);
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
     margin-top: -0.25rem;
     margin-bottom: 0;
     text-decoration: underline;
@@ -315,11 +315,11 @@
     border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: var(--font-size-md);
     font-family: inherit;
-    line-height: 1.4;
+    line-height: var(--leading-normal);
     box-sizing: border-box;
 }
 
@@ -340,9 +340,9 @@
     width: 100%;
     max-width: 100%;
     padding: var(--glass-padding);
-    border-radius: var(--glass-radius);
-    font-weight: 600;
-    font-size: 0.9rem;
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-base);
     cursor: pointer;
     transition: var(--transition);
     font-family: inherit;
@@ -421,7 +421,7 @@
     border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
+    border-radius: var(--radius-md);
     color: var(--text-primary);
 }
 
@@ -455,16 +455,16 @@
 
 .signin-recover-title {
     font-size: var(--font-size-xl);
-    font-weight: 600;
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
     margin: 0 0 0.25rem 0;
 }
 
 .signin-recover-desc {
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
     margin: 0 0 0.5rem 0;
-    line-height: 1.45;
+    line-height: var(--leading-normal);
 }
 
 .signin-recover-form {
@@ -486,14 +486,14 @@
 }
 
 .signin-recover-success-text {
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
     color: var(--text-primary);
     margin: 0;
-    line-height: 1.45;
+    line-height: var(--leading-normal);
 }
 
 .signin-recover-back {
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
     color: var(--color-info-border);
     text-decoration: none;
     margin-top: 0.25rem;
@@ -539,14 +539,14 @@
     max-width: 560px;
 }
 .legal-page-title {
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
     margin: 0 0 0.25rem 0;
     text-align: center;
 }
 .legal-page-updated {
-    font-size: 0.85rem;
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
     margin: 0 0 1.25rem 0;
     text-align: center;
@@ -559,14 +559,14 @@
     margin-bottom: 1rem;
 }
 .legal-page-body h2 {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
     margin: 0 0 0.5rem 0;
 }
 .legal-page-body p {
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: var(--font-size-base);
+    line-height: var(--leading-normal);
     color: var(--text-secondary);
     margin: 0;
 }
@@ -583,7 +583,7 @@
 }
 
 .signin-toggle-text {
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
 }
 
@@ -591,8 +591,8 @@
     background: none;
     border: none;
     color: var(--color-info-border);
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
     padding: 0;
     text-decoration: none;
@@ -621,9 +621,9 @@
     gap: 0.75rem;
     margin: 1rem 0;
     color: var(--text-muted);
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: var(--tracking-mono);
 }
 .signin-divider::before,
 .signin-divider::after {
@@ -634,19 +634,19 @@
 }
 
 .signin-mfa-code {
-    font-size: 1.75rem !important;
-    letter-spacing: 0.5rem !important;
+    font-size: var(--font-size-3xl) !important;
+    letter-spacing: var(--tracking-mono) !important;
     text-align: center !important;
     font-family: var(--font-mono) !important;
     margin: 0.75rem 0 !important;
 }
 .signin-mfa-error {
     color: color-mix(in srgb, var(--color-error) 45%, var(--color-white));
-    font-size: 0.85rem;
+    font-size: var(--font-size-base);
     margin: 0 0 0.75rem 0;
     padding: 0.5rem 0.75rem;
     background: rgba(248, 113, 113, 0.08);
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     text-align: center;
 }
 
@@ -670,44 +670,44 @@
 }
 
 .verification-title {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
     margin: 0;
-    line-height: 1.3;
+    line-height: var(--leading-tight);
 }
 
 .verification-desc {
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: var(--leading-normal);
     margin: 0;
 }
 
 .verification-email {
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
     color: var(--text-primary);
     margin: 0;
     padding: 0.5rem 0.75rem;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     word-break: break-all;
 }
 
 .verification-hint {
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
     color: var(--text-muted);
     margin: 0;
-    line-height: 1.45;
+    line-height: var(--leading-normal);
 }
 
 .verification-status {
-    font-size: 0.85rem;
+    font-size: var(--font-size-base);
     margin: 0;
     padding: 0.6rem 0.75rem;
-    border-radius: 8px;
-    line-height: 1.4;
+    border-radius: var(--radius-sm);
+    line-height: var(--leading-normal);
 }
 .verification-status[hidden] { display: none; }
 .verification-status--ok {

@@ -12,20 +12,20 @@
   display: flex; align-items: center; justify-content: center;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-color);
-  color: var(--text-muted); font-size: 15px;
+  color: var(--text-muted); font-size: var(--font-size-md);
 }
 .section-error-title {
-  font-size: 15px; font-weight: 600; color: var(--text-primary);
+  font-size: var(--font-size-md); font-weight: var(--font-weight-medium); color: var(--text-primary);
 }
 .section-error-msg {
-  font-size: 13px; color: var(--text-muted);
-  max-width: 48ch; margin: 0; line-height: 1.5;
+  font-size: var(--font-size-base); color: var(--text-muted);
+  max-width: 48ch; margin: 0; line-height: var(--leading-normal);
 }
 .section-error-retry {
-  margin-top: 8px; padding: 8px 14px; border-radius: 8px;
+  margin-top: 8px; padding: 8px 14px; border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer;
-  font-size: 13px; font-weight: 600; font-family: inherit;
+  font-size: var(--font-size-base); font-weight: var(--font-weight-medium); font-family: inherit;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .section-error-retry:hover { background: rgba(255, 255, 255, 0.08); }

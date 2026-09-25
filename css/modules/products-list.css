@@ -17,11 +17,11 @@
 }
 
 .products-list-title {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-tight);
 }
 
 .products-list-header-actions {
@@ -40,12 +40,12 @@
   align-items: center;
   gap: 0.45rem;
   padding: 0.45rem 0.85rem;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
   background: var(--bg-card, rgba(255, 255, 255, 0.06));
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md, 10px);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
@@ -82,13 +82,13 @@
 
 .products-list-section-title {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
 }
 
 .products-list-section-count {
-  font-size: 0.78rem;
+  font-size: var(--font-size-sm);
   color: var(--text-muted);
 }
 
@@ -106,8 +106,8 @@
 
 .products-list-page .history-card-flow-name {
   text-transform: none;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-mono);
 }
 
 .product-list-card-actions {
@@ -137,11 +137,11 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  border-radius: 8px;
-  font-size: 0.78rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
   color: var(--text-primary);
   cursor: pointer;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .product-list-card .product-list-card-action:disabled {
@@ -163,7 +163,7 @@
   padding: 2rem;
   text-align: center;
   color: var(--text-muted);
-  font-size: 1.75rem;
+  font-size: var(--font-size-3xl);
   background: var(--bg-card);
 }
 
@@ -219,9 +219,9 @@
 .attach-product-intro {
   margin: 0 0 1.5rem;
   color: rgba(255, 255, 255, 0.55);
-  font-size: 0.92rem;
-  line-height: 1.6;
-  letter-spacing: -0.005em;
+  font-size: var(--font-size-base);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-tight);
 }
 
 .attach-product-options {
@@ -246,7 +246,7 @@ button.attach-product-option {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.028) 0%, rgba(255,255,255,0.005) 100%);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 1px 2px rgba(0, 0, 0, 0.25);
@@ -313,7 +313,7 @@ button.attach-product-option:active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background:
     linear-gradient(180deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -321,7 +321,7 @@ button.attach-product-option:active {
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     0 1px 2px rgba(0, 0, 0, 0.3);
   color: rgba(255, 255, 255, 0.92);
-  font-size: 1.05rem;
+  font-size: var(--font-size-md);
   transition:
     background 0.45s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
@@ -341,18 +341,18 @@ button.attach-product-option:focus-visible .attach-product-option-icon {
 
 .attach-product-option-title {
   margin: 0;
-  font-size: 1.08rem;
-  font-weight: 600;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
   color: rgba(255, 255, 255, 0.98);
-  letter-spacing: -0.022em;
+  letter-spacing: var(--tracking-tight);
 }
 
 .attach-product-option-desc {
   margin: 0;
-  font-size: 0.86rem;
-  line-height: 1.6;
+  font-size: var(--font-size-base);
+  line-height: var(--leading-normal);
   color: rgba(255, 255, 255, 0.5);
-  letter-spacing: -0.003em;
+  letter-spacing: 0;
 }
 
 /* CTA "Continuar →" con flecha animada y eyebrow uppercase. */
@@ -361,17 +361,17 @@ button.attach-product-option:focus-visible .attach-product-option-icon {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   color: rgba(255, 255, 255, 0.4);
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
   transition: color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .attach-product-option-cta i {
   transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  font-size: 0.85rem;
+  font-size: var(--font-size-base);
 }
 
 button.attach-product-option:hover .attach-product-option-cta,
@@ -404,7 +404,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 
 .attach-product-header-icon {
   color: rgba(255, 255, 255, 0.45);
-  font-size: 0.95rem;
+  font-size: var(--font-size-md);
 }
 
 
@@ -429,9 +429,9 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 }
 
 .attach-product-field-label {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.4);
 }
@@ -439,12 +439,12 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 .attach-product-url-input {
   width: 100%;
   padding: 0.85rem 1rem;
-  font-size: 0.94rem;
+  font-size: var(--font-size-md);
   font-family: inherit;
   color: rgba(255, 255, 255, 0.98);
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   outline: none;
   box-sizing: border-box;
   transition:
@@ -473,10 +473,10 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   text-align: center;
   background: rgba(0, 0, 0, 0.35);
   border: 1px dashed rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   color: rgba(255, 255, 255, 0.5);
-  font-size: 0.85rem;
+  font-size: var(--font-size-base);
   transition:
     border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
     background 0.35s cubic-bezier(0.16, 1, 0.3, 1),
@@ -497,7 +497,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 }
 
 .attach-product-dropzone > i {
-  font-size: 1.55rem;
+  font-size: var(--font-size-2xl);
   color: rgba(255, 255, 255, 0.55);
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -508,15 +508,15 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 
 .attach-product-dropzone-text {
   color: rgba(255, 255, 255, 0.92);
-  font-weight: 500;
-  font-size: 0.88rem;
-  letter-spacing: -0.005em;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-tight);
 }
 
 .attach-product-dropzone-hint {
-  font-size: 0.72rem;
+  font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.35);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-mono);
 }
 
 .attach-product-file-list {
@@ -535,11 +535,11 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   align-items: center;
   gap: 0.55rem;
   padding: 0.55rem 0.7rem;
-  font-size: 0.82rem;
+  font-size: var(--font-size-base);
   color: rgba(255, 255, 255, 0.92);
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   animation: attachFileItemIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -550,7 +550,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 
 .attach-product-file-list li > i {
   color: rgba(255, 255, 255, 0.5);
-  font-size: 0.85rem;
+  font-size: var(--font-size-base);
 }
 
 .attach-product-file-list .attach-product-file-name {
@@ -562,7 +562,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 
 .attach-product-file-list .attach-product-file-size {
   color: rgba(255, 255, 255, 0.4);
-  font-size: 0.72rem;
+  font-size: var(--font-size-sm);
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
@@ -577,9 +577,9 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   padding: 0;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: rgba(255, 255, 255, 0.35);
-  font-size: 0.72rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   opacity: 0.6;
   transition:
@@ -615,14 +615,14 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   justify-content: center;
   gap: 0.55rem;
   padding: 0.9rem 1.25rem;
-  font-size: 0.92rem;
-  font-weight: 600;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   font-family: inherit;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--tracking-tight);
   color: var(--bg-base);
   background: linear-gradient(180deg, var(--color-white) 0%, var(--white-20) 100%);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 11px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.5),
@@ -658,7 +658,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 }
 
 .attach-product-submit i {
-  font-size: 0.85rem;
+  font-size: var(--font-size-base);
   color: var(--bg-base);
 }
 
@@ -703,10 +703,10 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 
 .attach-product-loading-title {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
   color: rgba(255, 255, 255, 0.98);
-  letter-spacing: -0.025em;
+  letter-spacing: var(--tracking-tight);
   animation: attachPulseText 2.4s ease-in-out infinite;
 }
 
@@ -717,10 +717,10 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 
 .attach-product-loading-hint {
   margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.6;
+  font-size: var(--font-size-base);
+  line-height: var(--leading-normal);
   color: rgba(255, 255, 255, 0.5);
-  letter-spacing: -0.005em;
+  letter-spacing: var(--tracking-tight);
 }
 
 /* Respeta prefer reduced motion. */

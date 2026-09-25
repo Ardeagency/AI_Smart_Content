@@ -19,15 +19,15 @@
 }
 
 .exec-title {
-  font-size: 2rem;
-  font-weight: 600;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
   margin: 0 0 0.4rem;
 }
 
 .exec-subtitle {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: var(--font-size-md);
   margin: 0;
   max-width: 60ch;
 }
@@ -46,7 +46,7 @@
   width: 100%;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md, 12px);
+  border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
   color: inherit;
@@ -114,7 +114,7 @@
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.25);
-  font-size: 2.4rem;
+  font-size: var(--font-size-4xl);
 }
 
 .exec-card-gradient {
@@ -140,14 +140,14 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.22rem 0.55rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(20, 21, 23, 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--color-white);
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .exec-card-status {
@@ -202,9 +202,9 @@
 
 .exec-card-flow {
   margin: 0;
-  font-size: 0.92rem;
-  font-weight: 600;
-  line-height: 1.25;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-tight);
   color: var(--color-white);
   white-space: nowrap;
   overflow: hidden;
@@ -212,7 +212,7 @@
 }
 
 .exec-card-when {
-  font-size: 0.78rem;
+  font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.7);
 }
 
@@ -221,8 +221,8 @@
   align-items: center;
   gap: 0.4rem;
   margin-top: 0.35rem;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   color: var(--icon-button);
   max-height: 0;
   opacity: 0;
@@ -246,13 +246,13 @@
 }
 
 .exec-empty-icon {
-  font-size: 2.5rem;
+  font-size: var(--font-size-4xl);
   color: var(--text-tertiary, var(--text-disabled));
   margin-bottom: 1rem;
 }
 
 .exec-empty-hint {
-  font-size: 0.9rem;
+  font-size: var(--font-size-base);
   color: var(--text-tertiary, var(--text-muted));
   max-width: 48ch;
   margin: 0.5rem auto 0;
