@@ -303,7 +303,31 @@ class BrandOrganizationView extends BaseView {
   async init() {
     await this.initSupabase();
     await this.loadData();
+    this._avisarVueltaDeConexion();
     // No llamar renderAll aquí, se llamará desde render() después del DOM
+  }
+
+  /**
+   * Vuelta de conectar una plataforma desde esta ficha: el borde redirige al `return_to`
+   * (esta misma ruta) con `?plataforma=…&conectado=1&cuenta=…` o `&error=…`. Se dice con un
+   * aviso y se limpia la barra; las conexiones ya vienen frescas de loadData().
+   */
+  _avisarVueltaDeConexion() {
+    const q = new URLSearchParams(window.location.search || '');
+    const plataforma = String(q.get('plataforma') || '').toLowerCase();
+    if (!plataforma) return;
+    const NOMBRES = { meta: 'Meta', facebook: 'Meta', google: 'Google', shopify: 'Shopify', mercadolibre: 'Mercado Libre', x: 'X', tiktok: 'TikTok', linkedin: 'LinkedIn' };
+    const nombre = NOMBRES[plataforma] || plataforma;
+    const cuenta = q.get('cuenta') || '';
+    if (q.get('conectado') === '1') {
+      window.showToast?.(__('{p} quedó conectada{cuenta}.', { p: nombre, cuenta: cuenta ? ` · ${cuenta}` : '' }), { type: 'success' });
+      // Un contexto viejo (mi_contexto) taparía la conexión nueva en el resto de la consola.
+      window.contextoService?.cargar?.({ fresco: true })?.catch?.(() => {});
+    } else if (q.get('error')) {
+      window.showToast?.(__('No se pudo conectar {p}: {e}', { p: nombre, e: q.get('error') }), { type: 'error' });
+    }
+    try { sessionStorage.removeItem('_obic_return'); } catch (_) { /* nada */ }
+    if (window.history?.replaceState) window.history.replaceState(null, '', window.location.pathname);
   }
 
   async updateHeader() {
