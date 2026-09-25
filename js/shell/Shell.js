@@ -46,7 +46,7 @@
     ] },
     { seccion: 'Espacio de trabajo', items: [
       { id: 'inicio', etiqueta: 'Inicio', ruta: 'dashboard', icono: '/recursos/icons/dashboard.svg', cap: 'insights.view' },
-      { id: 'marketing', etiqueta: 'Marketing', ruta: 'command-center', icono: '/recursos/icons/commandcenter.svg', cap: 'insights.view' },
+      { id: 'marketing', etiqueta: 'Marketing', ruta: 'marketing', icono: '/recursos/icons/commandcenter.svg', cap: 'insights.view' },
       { id: 'identidad', etiqueta: 'Identidad', ruta: 'brand', icono: '/recursos/icons/Brands.svg', cap: 'brand.identity.edit', hijos: [
         { etiqueta: 'Productos', ruta: 'products' },
         { etiqueta: 'Servicios', ruta: 'services' },
