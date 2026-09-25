@@ -120,7 +120,6 @@ class ExecutionHistoryView extends BaseView {
 
   async renderRuns() {
     const grid = document.getElementById('execGrid');
-    const empty = document.getElementById('execEmpty');
     if (!grid) return;
     window.Estado.pintar(grid, ExecutionHistoryView.skeletonGrid(8, 'lg'));
     this.runs = await this.loadRuns();

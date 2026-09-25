@@ -9,7 +9,7 @@
  * silencio se descubre tarde: un preset que no llena nada, o un error de KIE
  * diez minutos después de subir los archivos.
  */
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 

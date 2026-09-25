@@ -26,7 +26,7 @@ T._inyectarCliente(sb);
 async function main() {
   let org;
   try {
-    const { data, error } = await sb.auth.signInWithPassword({ email: env('AISC_PRUEBA_USUARIO'), password: env('AISC_PRUEBA_CLAVE') });
+    const { error } = await sb.auth.signInWithPassword({ email: env('AISC_PRUEBA_USUARIO'), password: env('AISC_PRUEBA_CLAVE') });
     if (error) throw error; ok('login');
     const ctx = await sb.rpc('mi_contexto'); if (ctx.error) throw ctx.error;
     org = (ctx.data?.organizations || []).find((o) => o.id === env('AISC_PRUEBA_ORG')) || ctx.data.organizations[0];

@@ -40,7 +40,7 @@ async function main() {
   } catch (e) { falla('login (password)', e); return fin(); }
 
   // 2) mi_contexto
-  let ctx = null; let org = null;
+  let ctx; let org = null;
   try {
     const { data, error } = await sb.rpc('mi_contexto');
     if (error) throw error;

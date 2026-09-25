@@ -882,7 +882,7 @@ class VideoView extends BaseView {
         e.stopPropagation();
         seedanceHelpPopover.classList.toggle('is-open');
       });
-      document.addEventListener('click', (e) => {
+      this.addEventListener(document, 'click', (e) => {
         if (!seedanceHelpPopover.classList.contains('is-open')) return;
         if (seedanceHelpPopover.contains(e.target) || seedanceHelpBtn.contains(e.target)) return;
         seedanceHelpPopover.classList.remove('is-open');
@@ -1124,7 +1124,7 @@ class VideoView extends BaseView {
       const subido = await window.StudioDatos.subirReferencia(this.organizationId, file);
       return { url: subido.url || '', file_id: subido.file_id, storagePath: subido.object_key || null };
     } catch (err) {
-      if (err?.code === 'sin_api') throw new Error(window.__('La subida de referencias aún no está disponible.'));
+      if (err?.code === 'sin_api') throw new Error(window.__('La subida de referencias aún no está disponible.'), { cause: err });
       throw err;
     }
   }

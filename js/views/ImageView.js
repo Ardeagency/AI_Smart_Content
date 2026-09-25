@@ -962,7 +962,7 @@ class ImageView extends BaseView {
       // sirve igual: al flujo va el file_id.
       return { url: subido.url || '', file_id: subido.file_id, storagePath: subido.object_key || null };
     } catch (err) {
-      if (err?.code === 'sin_api') throw new Error(window.__('La subida de referencias aún no está disponible.'));
+      if (err?.code === 'sin_api') throw new Error(window.__('La subida de referencias aún no está disponible.'), { cause: err });
       throw err;
     }
   }

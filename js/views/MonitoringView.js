@@ -727,7 +727,7 @@ class MonitoringView extends BaseView {
         this._layoutBubbles(); this._presettleBubbles();
         if (!this._bubbleRAF) { this._bubbleRAF = requestAnimationFrame(() => this._bubbleLoop()); }
       };
-      window.addEventListener('resize', this._bubbleResizeBound);
+      this.addEventListener(window, 'resize', this._bubbleResizeBound);
     }
   }
 
@@ -1041,8 +1041,8 @@ class MonitoringView extends BaseView {
       this._clearDropTargets();
       this._resolveBubbleDrop(w, b, targetCol); // planea al destino real y aplica
     };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+    this.addEventListener(document, 'mousemove', onMove);
+    this.addEventListener(document, 'mouseup', onUp);
   }
 
   _makeDragGhost(b) {
@@ -1617,9 +1617,9 @@ class MonitoringView extends BaseView {
 
     if (!this._bubPopOutside) {
       this._bubPopOutside = () => this._closeBubblePop();
-      setTimeout(() => document.addEventListener('click', this._bubPopOutside), 0);
+      setTimeout(() => this.addEventListener(document, 'click', this._bubPopOutside), 0);
       this._bubPopEsc = (e) => { if (e.key === 'Escape') this._closeBubblePop(); };
-      document.addEventListener('keydown', this._bubPopEsc);
+      this.addEventListener(document, 'keydown', this._bubPopEsc);
     }
   }
 
@@ -1761,7 +1761,7 @@ class MonitoringView extends BaseView {
     this._wakeBubbles();
     if (!this._bubbleResizeBound) {
       this._bubbleResizeBound = () => { this._layoutFloat(world); this._wakeBubbles(); };
-      window.addEventListener('resize', this._bubbleResizeBound);
+      this.addEventListener(window, 'resize', this._bubbleResizeBound);
     }
   }
 

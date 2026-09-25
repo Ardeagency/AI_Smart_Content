@@ -204,7 +204,7 @@
       .filter((block) => block.field !== 'propuesta_valor');
     const fieldHtml = schemaBlocks.map((block) => {
       const raw = item?.[block.field];
-      let valueHtml = '';
+      let valueHtml;
       if (block.type === 'select') {
         valueHtml = this.renderBrandSingleSelect(block.field, raw, window.BrandSchema?.NICHO_CORE_OPTIONS || []);
       } else if (block.type === 'array') {
@@ -307,7 +307,7 @@
       const childPath = [...pathArr, key];
       const childPathStr = childPath.join('.');
       const v = obj[key];
-      let inner = '';
+      let inner;
       if (Array.isArray(v)) {
         inner = this.renderBrandTagsEditor(field, v, { path: childPathStr });
       } else if (v !== null && typeof v === 'object') {
@@ -360,9 +360,7 @@
   renderBrandContainerInfoContent(item) {
     const name = this.escapeHtml(item?.nombre_marca || __('Sub-marca'));
     const slogan = this.escapeHtml(String(item?.brand_slogan || item?.propuesta_valor || '').trim());
-    const href = this.escapeHtml(this.getBrandContainerHref(item?.id));
     const updated = item?.updated_at ? this.formatInfoDate(item.updated_at) : '';
-    const created = item?.created_at ? this.formatInfoDate(item.created_at) : '';
 
     const orgLogoUrl = String(this.organizationRow?.logo_url || '').trim();
     const logoUrl = orgLogoUrl;
@@ -783,7 +781,7 @@
       const closeOnOutside = (ev) => {
         if (!wrap.contains(ev.target)) setOpen(false);
       };
-      document.addEventListener('click', closeOnOutside, true);
+      this.addEventListener(document, 'click', closeOnOutside, true);
       if (!this._brandInfoPanelDisposers) this._brandInfoPanelDisposers = [];
       this._brandInfoPanelDisposers.push(() => document.removeEventListener('click', closeOnOutside, true));
       syncUi();
@@ -882,7 +880,7 @@
       const closeOnOutside = (ev) => {
         if (!wrap.contains(ev.target)) setOpen(false);
       };
-      document.addEventListener('click', closeOnOutside, true);
+      this.addEventListener(document, 'click', closeOnOutside, true);
       if (!this._brandInfoPanelDisposers) this._brandInfoPanelDisposers = [];
       this._brandInfoPanelDisposers.push(() => document.removeEventListener('click', closeOnOutside, true));
       syncUi();
@@ -1665,7 +1663,7 @@
         wrap._nichoDocCloser = (ev) => {
           if (!wrap.contains(ev.target)) setOpen(false);
         };
-        setTimeout(() => document.addEventListener('click', wrap._nichoDocCloser, true), 0);
+        setTimeout(() => this.addEventListener(document, 'click', wrap._nichoDocCloser, true), 0);
       }
     };
 

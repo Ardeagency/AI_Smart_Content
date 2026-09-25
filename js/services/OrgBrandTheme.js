@@ -68,8 +68,6 @@
   const _BC = () => window.BrandColors || {};
   function hexToRgba(hex, alpha)           { return _BC().hexToRgba(hex, alpha); }
   function hexToHSL(hex)                   { return _BC().hexToHSL(hex); }
-  function hslToHex(h, s, l)               { return _BC().hslToHex(h, s, l); }
-  function filterAndScoreBrandColors(hexes){ return _BC().filterAndScoreBrandColors(hexes); }
   function getBrandUIPalette(hexes)        { return _BC().getBrandUIPalette(hexes); }
   function buildBrandGradientCss(hexes, angle) { return _BC().buildBrandGradientCss(hexes, angle); }
 

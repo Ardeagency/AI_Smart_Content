@@ -140,7 +140,7 @@ class BaseView {
     if (this.eventListeners && this.eventListeners.length) {
       this.eventListeners.forEach(function (item) {
         if (item.element && typeof item.element.removeEventListener === 'function') {
-          item.element.removeEventListener(item.event, item.handler);
+          item.element.removeEventListener(item.event, item.handler, item.opciones);
         }
       });
       this.eventListeners = [];
@@ -312,10 +312,11 @@ class BaseView {
    * @param {string} event - Tipo de evento
    * @param {Function} handler - Handler del evento
    */
-  addEventListener(element, event, handler) {
+  addEventListener(element, event, handler, opciones) {
     if (element && handler) {
-      element.addEventListener(event, handler);
-      this.eventListeners.push({ element, event, handler });
+      // `opciones` (capture/passive/once) se recuerda para soltarlo igual en destroy().
+      element.addEventListener(event, handler, opciones);
+      this.eventListeners.push({ element, event, handler, opciones });
     }
   }
 
@@ -369,8 +370,6 @@ class BaseView {
    * @returns {string} HTML del header
    */
   getHeaderHTML(section, activeObject = null, organizationName = null) {
-    // Línea 1: Sección / Objeto activo
-    const line1 = activeObject ? `${section} / ${activeObject}` : section;
     
     return `
     <header class="main-header">
@@ -614,7 +613,7 @@ class BaseView {
     // Cache vía apiClient (1 min TTL + SWR). Reemplaza el cache ad-hoc previo
     // (_userProfileCache) — el apiClient hace dedupe entre vistas que rendericen
     // al mismo tiempo (router transitions) y se invalida en logout.
-    let profile = null;
+    let profile;
     try {
       const supabase = await this.getSupabaseClient();
       if (!supabase) return;
@@ -1077,7 +1076,7 @@ class BaseView {
     if (!(ms > 0) || typeof tickFn !== 'function') return;
     this._livePollTimer = setInterval(() => { if (!document.hidden) tickFn(); }, ms);
     this._livePollVis = () => { if (!document.hidden) tickFn(); };
-    document.addEventListener('visibilitychange', this._livePollVis);
+    this.addEventListener(document, 'visibilitychange', this._livePollVis);
   }
 
   stopLivePoll() {

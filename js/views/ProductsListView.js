@@ -299,7 +299,7 @@ class ProductsListView extends BaseView {
   _setupEventListeners() {
     if (!this._onResizeBound) {
       this._onResizeBound = () => this._renderProductsMasonry();
-      window.addEventListener('resize', this._onResizeBound);
+      this.addEventListener(window, 'resize', this._onResizeBound);
     }
     const addBtn = document.getElementById('productsListAddBtn');
     if (addBtn) addBtn.onclick = () => this._onAddProduct();

@@ -112,7 +112,7 @@
             this._typographyOutsideClose = (ev) => {
               if (dropdown && !dropdown.contains(ev.target)) closePanel();
             };
-            document.addEventListener('click', this._typographyOutsideClose);
+            this.addEventListener(document, 'click', this._typographyOutsideClose);
           }
         });
       }

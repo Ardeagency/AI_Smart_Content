@@ -581,7 +581,7 @@ class PlacesView extends BaseView {
   _setupEventListeners() {
     if (!this._onResizeBound) {
       this._onResizeBound = () => this._renderPlacesMasonry();
-      window.addEventListener('resize', this._onResizeBound);
+      this.addEventListener(window, 'resize', this._onResizeBound);
     }
     const addBtn = document.getElementById('placesListAddBtn');
     if (addBtn) addBtn.onclick = () => this._onAddPlace();

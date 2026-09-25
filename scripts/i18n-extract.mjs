@@ -94,7 +94,7 @@ try {
 }
 
 let added = 0;
-let orphan = 0;
+let orphan;
 const merged = {};
 // Mantener orden alfabetico estable por clave.
 for (const k of sortedKeys) {

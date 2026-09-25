@@ -739,7 +739,7 @@ class OrganizationView extends BaseView {
       const { data: chal, error: chalErr } = await this.supabase.auth.mfa.challenge({ factorId: this.mfaEnroll.factorId });
       if (chalErr) throw chalErr;
 
-      const { data: verify, error: verErr } = await this.supabase.auth.mfa.verify({
+      const { error: verErr } = await this.supabase.auth.mfa.verify({
         factorId:    this.mfaEnroll.factorId,
         challengeId: chal.id,
         code,
