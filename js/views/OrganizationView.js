@@ -316,7 +316,7 @@ class OrganizationView extends BaseView {
         </div>
 
         <div class="org-mfa-policy" id="orgMfaPolicy" hidden>
-          <h3 style="margin-top: 1.5rem; font-size: 0.95rem;">${__('Política de organización')}</h3>
+          <h3 class="org-subtitulo">${__('Política de organización')}</h3>
           <p class="org-section-desc">${__('Como propietario, puedes exigir 2FA a todos los miembros antes de que puedan acceder.')}</p>
           <label class="org-toggle">
             <input type="checkbox" id="orgMfaRequireToggle">
@@ -404,7 +404,7 @@ class OrganizationView extends BaseView {
 
 <!-- ── Modal: Activar 2FA (TOTP enroll) ────────────────── -->
 <div class="modal org-modal" id="orgMfaEnrollModal" aria-hidden="true">
-  <div class="modal-content" style="max-width: 480px;">
+  <div class="modal-content org-modal-estrecho">
     <div class="modal-header">
       <h3>${__('Activar autenticación de 2 pasos')}</h3>
       <button type="button" class="modal-close" id="orgMfaEnrollClose" aria-label="${__('Cerrar')}">&times;</button>
@@ -420,12 +420,12 @@ class OrganizationView extends BaseView {
       </div>
       <div class="form-group" id="orgMfaSecretWrap" hidden>
         <label>${__('Código manual (si el QR no funciona)')}</label>
-        <input type="text" id="orgMfaSecret" class="form-input" readonly style="font-family: monospace; letter-spacing: 1px;">
+        <input type="text" id="orgMfaSecret" class="form-input org-mfa-secreto" readonly>
       </div>
       <form id="orgMfaEnrollForm">
         <div class="form-group">
           <label for="orgMfaCode">${__('Código de 6 dígitos')}</label>
-          <input type="text" id="orgMfaCode" class="form-input" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" style="font-size: 1.5rem; letter-spacing: 0.3rem; text-align: center; font-family: monospace;">
+          <input type="text" id="orgMfaCode" class="form-input org-mfa-codigo" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="123456">
         </div>
         <p class="org-mfa-error" id="orgMfaEnrollError" hidden></p>
         <div class="modal-actions">
@@ -830,7 +830,7 @@ class OrganizationView extends BaseView {
           <p class="org-session-meta">${__('Plataforma:')} ${this.escapeHtml(platform || '—')} · ${__('Iniciada:')} ${this.escapeHtml(sessionStartHuman)}</p>
         </div>
       </div>
-      <p class="org-section-desc" style="margin-top: 0.75rem; font-size: 0.85rem;">
+      <p class="org-section-desc org-section-desc--nota">
         ${__('Si tienes acceso desde otros dispositivos o navegadores y quieres revocarlos, usa el botón "Cerrar todas las otras sesiones" arriba. Esta sesión actual no se cerrará.')}
       </p>
     `;
@@ -1010,9 +1010,9 @@ class OrganizationView extends BaseView {
     const statusLabel   = ({ active: __('Activa'), trialing: __('En prueba'), trial: __('En prueba'), past_due: __('Pago pendiente'), paused: __('En pausa'), canceled: __('Cancelada'), expired: __('Vencida') }[sub?.status]) || (sub?.status || __('Sin suscripción'));
 
     const banner = past_due
-      ? `<div class="org-error-banner" style="margin-bottom:1rem;">${__('Tu último pago no se procesó correctamente. Actualiza tu método de pago para evitar la suspensión del servicio.')}</div>`
+      ? `<div class="org-error-banner org-banner--espacio">${__('Tu último pago no se procesó correctamente. Actualiza tu método de pago para evitar la suspensión del servicio.')}</div>`
       : canceled
-      ? `<div class="org-warning-banner" style="margin-bottom:1rem;background:#3a2410;border:1px solid #6b3a17;color:#fbbf24;padding:.75rem 1rem;border-radius:8px;">${__('Tu suscripción terminará el {fecha}.', { fecha: this.escapeHtml(nextRenewStr) })}</div>`
+      ? `<div class="org-warning-banner org-banner--espacio">${__('Tu suscripción terminará el {fecha}.', { fecha: this.escapeHtml(nextRenewStr) })}</div>`
       : '';
 
     // Cambiar/cancelar la suscripción no tiene puerta para una persona (planes.md):
@@ -1871,7 +1871,7 @@ class OrganizationView extends BaseView {
           const detalle = r.metadata?.description || r.metadata?.handle || r.source_id || '';
           return `
             <div class="org-hist-row">
-              <span class="org-hist-cat" style="background:${meta ? meta.color : '#64748b'}" title="${this._esc(meta ? meta.label : cat)}"></span>
+              <span class="org-hist-cat" style="background:${meta ? meta.color : 'var(--text-muted)'}" title="${this._esc(meta ? meta.label : cat)}"></span>
               <span class="org-hist-que">
                 ${this._esc(etiqueta)}
                 ${detalle ? `<em>${this._esc(String(detalle).slice(0, 48))}</em>` : ''}

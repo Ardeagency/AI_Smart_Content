@@ -2652,3 +2652,12 @@
     .org-proy-row { grid-template-columns: minmax(0, 1fr) auto auto; }
     .org-proy-row > :nth-child(2) { display: none; }
 }
+
+/* L7 (24/09): lo que iba en style="" dentro de OrganizationView.js. */
+.org-subtitulo { margin-top: var(--space-6); font-size: var(--font-size-md); }
+.org-modal-estrecho { max-width: 30rem; }
+.org-mfa-secreto { font-family: var(--font-mono); letter-spacing: 0.06em; }
+.org-mfa-codigo { font-family: var(--font-mono); font-size: var(--font-size-2xl); letter-spacing: 0.3rem; text-align: center; }
+.org-section-desc--nota { margin-top: var(--space-3); font-size: var(--font-size-sm); }
+.org-banner--espacio { margin-bottom: var(--space-4); }
+.org-warning-banner.org-banner--espacio { padding: var(--space-3) var(--space-4); border: 1px solid color-mix(in srgb, var(--color-warning) 35%, transparent); border-radius: var(--radius-sm); background: var(--color-warning-bg); color: var(--color-warning); }
