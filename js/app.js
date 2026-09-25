@@ -266,11 +266,20 @@ class App {
     r.register('/home', redirectToDefaultView, auth);
     r.register('/hogar', redirectToDefaultView, auth);
 
-    // ── Org: Tablero (corte ADR-0052) ──
-    // Compuesto en la consola sobre marketing.readings, intel.tendencias_vivas/trends,
-    // intel.content_gaps, social.profiles e intel.signals (TableroDataService).
-    // DashboardView.js y sus mixins (los 60 dashboard_* de v1) quedan como cantera, sin ruta.
-    const dashboardLoader = this._lazy('TableroView', ['/js/components/LecturaVera.js', '/js/views/TableroView.js'], ['/css/modules/insight.css', '/css/modules/vera-reading.css', '/css/modules/tablero.css']);
+    // ── Org: Tablero (25/09: vuelve el dashboard de 4 pestañas con el diseño de v1) ──
+    // Mi Marca · Competencia · Tendencias · Estrategia. Datos por DashboardDataService (global en
+    // index.html) sobre las vistas del contrato docs/contratos/dashboard.md; cada pestaña en su mixin.
+    const dashboardLoader = this._lazy('DashboardView', [
+      '/js/components/VeraPulse.js',
+      '/js/views/DashboardView.js',
+      '/js/views/dashboard/Pestanas.mixin.js',
+      '/js/views/dashboard/BrandGrid.mixin.js',
+      '/js/views/dashboard/BrandAds.mixin.js',
+      '/js/views/dashboard/CompGrid.mixin.js',
+      '/js/views/dashboard/CompAds.mixin.js',
+      '/js/views/dashboard/Tendencies.mixin.js',
+      '/js/views/dashboard/Vera4.mixin.js',
+    ], ['/css/modules/insight.css', '/css/modules/brand-grid.css', '/css/modules/comp-grid.css', '/css/modules/vera4.css']);
     r.register('/org/:orgIdShort/:orgNameSlug/dashboard', dashboardLoader, auth);
     r.register('/dashboard', dashboardLoader, auth);
 

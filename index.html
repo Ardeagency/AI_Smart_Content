@@ -566,7 +566,8 @@
     <script src="js/services/VeraDataService.js?v=__BUILD_ID__" defer></script>
     <!-- Catálogo de flujos (base nueva): flows.catalog_view + flows.categories; likes/saves por INSERT/DELETE. -->
     <script src="js/services/FlujosDataService.js?v=__BUILD_ID__" defer></script>
-    <script src="js/services/TableroDataService.js?v=__BUILD_ID__" defer></script>
+    <!-- Tablero (dashboard de 4 pestañas, base nueva): social.actividad_diaria/posts_view, marketing.lecturas_tablero, pauta, frescura, pulso de Vera. -->
+    <script src="js/services/DashboardDataService.js?v=__BUILD_ID__" defer></script>
     <script src="js/views/PaginaEstadoView.js?v=__BUILD_ID__" defer></script>
     <script src="js/services/OrgBrandTheme.js?v=__BUILD_ID__" defer></script>
     <!-- ApiV2: el borde /v1 del backend v2 (ADR-0052); reemplaza a las Netlify Functions. -->
@@ -596,10 +597,10 @@
          está cacheado. Cero coste si idle nunca llega (low-end devices). -->
     <script>
       (function() {
-        // Corte (ADR-0052): las vistas más usadas de la consola nueva (el Tablero es TableroView;
-        // DashboardView/BrandstorageView/TasksView ya no tienen ruta o están en obras).
+        // Corte (ADR-0052): las vistas más usadas de la consola nueva (el Tablero es DashboardView
+        // de 4 pestañas, 25/09).
         var topViews = [
-          'js/views/TableroView.js',
+          'js/views/DashboardView.js',
           'js/views/ImageView.js',
           'js/views/VeraView.js',
           'js/views/ProductionView.js',

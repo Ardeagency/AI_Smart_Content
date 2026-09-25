@@ -3231,6 +3231,9 @@ button.dash-integ-add:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6
   transition: background var(--duracion-rapida) var(--curva-estandar), color var(--duracion-rapida) var(--curva-estandar);
 }
 .dash-report-item:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); }
+/* Los cuatro informes nunca existieron: se listan como lo que son, «todavía no». */
+.dash-report-item[aria-disabled="true"] { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); cursor: default; color: var(--text-muted); }
+.dash-report-pronto { font-size: var(--font-size-xs); font-weight: var(--font-weight-regular); color: var(--text-disabled); white-space: nowrap; }
 
 /* ── Sensor de Vera (bajo "Crear informe", sobre el degradado) ──────────────
    El logo vive SIEMPRE; los tres puntos y la frase solo cuando de verdad esta
@@ -4215,7 +4218,8 @@ body.has-sidebar #app-container:has(> .insight-page--hero) { padding-top: 0; }
    de que la animacion arranque: el logo nunca se pinta a alta opacidad, por lo
    que es imposible que se vea el flash blanco. Entra suave (~0.55s) y se queda
    en su opacidad final. */
-.dash-hero-logo.is-entering { animation: heroLogoIn var(--duracion-lenta) var(--curva-entrada) backwards; }
+/* El fondo del hero es siempre oscuro: la marca de agua va en blanco tenue (v1 lo fijaba en línea). */
+.dash-hero-logo.is-entering { opacity: 0.16; animation: heroLogoIn var(--duracion-lenta) var(--curva-entrada) backwards; }
 @keyframes heroLogoIn { from { opacity: 0; } }
 /* Transiciones suaves para re-tintes POSTERIORES (cambio de tema/tab), nunca en
    la aparicion inicial. */

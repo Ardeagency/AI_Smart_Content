@@ -1,7 +1,7 @@
 /**
  * Guardia de sintaxis: cada .js que sirve la consola tiene que PARSEAR. Un paréntesis
  * de menos en una vista no lo caza ningún test de unidad (la vista se carga lazy) y en
- * producción es una pantalla en negro: «TableroView not found after loading».
+ * producción es una pantalla en negro: «DashboardView not found after loading».
  */
 import { describe, test, expect } from 'vitest';
 import fs from 'node:fs';

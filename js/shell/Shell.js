@@ -5,7 +5,7 @@
  *
  *   ┌ sidebar ──────────────┐┌ topbar ─────────────────────────────────────┐
  *   │ [marca ▾] plan        ││ ☰  Marca › Sección          ⚡  🔔  (JC)    │
- *   │ Inicio · Vera         │└─────────────────────────────────────────────┘
+ *   │ Tablero · Vera        │└─────────────────────────────────────────────┘
  *   │ CREAR  Studio …       │  #app-container (lo pinta cada vista)
  *   │ MARCA  Identidad …    │
  *   │ ── créditos (lectura) │
@@ -36,7 +36,7 @@
   /* Mapa de navegación: el sidebar de siempre (Navigation.js hasta el 24/09) con los
      nombres nuevos. `ruta` = segmento bajo /org/:short/:slug. `pronto` = la pantalla aún
      no volvió a la base nueva: se lista, no navega.
-     i18n-keep: __('Vera') __('Espacio de trabajo') __('Inicio') __('Marketing')
+     i18n-keep: __('Vera') __('Espacio de trabajo') __('Tablero') __('Marketing')
      __('Identidad') __('Productos') __('Servicios') __('Escenarios') __('Personajes')
      __('Competencia') __('Simulador') __('Crear') __('Producciones') __('Historial')
      __('Tareas') __('Imagen') __('Video') __('Studio') __('pronto') */
@@ -45,7 +45,7 @@
       { id: 'vera', etiqueta: 'Vera', ruta: 'vera', icono: '/recursos/vera/Logoverablanco.svg', iconoColapsado: '/recursos/vera/Vera.svg', cap: 'vera.chat', primario: true },
     ] },
     { seccion: 'Espacio de trabajo', items: [
-      { id: 'inicio', etiqueta: 'Inicio', ruta: 'dashboard', icono: '/recursos/icons/dashboard.svg', cap: 'insights.view' },
+      { id: 'tablero', etiqueta: 'Tablero', ruta: 'dashboard', icono: '/recursos/icons/dashboard.svg', cap: 'insights.view' },
       { id: 'marketing', etiqueta: 'Marketing', ruta: 'marketing', icono: '/recursos/icons/commandcenter.svg', cap: 'insights.view' },
       { id: 'identidad', etiqueta: 'Identidad', ruta: 'brand', icono: '/recursos/icons/Brands.svg', cap: 'brand.identity.edit', hijos: [
         { etiqueta: 'Productos', ruta: 'products' },
@@ -69,7 +69,7 @@
   /* Título de la topbar por segmento (el más largo que coincida gana).
      BaseView.updateHeaderContext() lo puede afinar desde la vista. */
   const TITULOS = {
-    dashboard: 'Inicio', vera: 'Vera', 'studio/flows': 'Studio', 'studio/catalog': 'Studio', studio: 'Studio',
+    dashboard: 'Tablero', vera: 'Vera', 'studio/flows': 'Studio', 'studio/catalog': 'Studio', studio: 'Studio',
     image: 'Imagen', video: 'Video', production: 'Producciones', 'execution-history': 'Historial',
     brand: 'Identidad', brands: 'Identidad', 'brand-organization': 'Identidad', products: 'Productos',
     'product-detail': 'Producto', services: 'Servicios', places: 'Escenarios', characters: 'Personajes',

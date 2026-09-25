@@ -1,6 +1,6 @@
 /**
  * i18n (modelo «español como clave»): toda clave que la UI pide con __('…') o con un alias
- * `const t = (…) => … window.__` (Estado, Capas, Avisos, LecturaVera) tiene que existir en
+ * `const t = (…) => … window.__` (Estado, Capas, Avisos) tiene que existir en
  * js/i18n/en.js. Un valor "" cae al español, así que para el inglés cuenta como sin traducir.
  *
  * - Los archivos PULIDOS (shell, ajustes, acceso, Estado/Capas, Vera, avisos) van a cero:
@@ -15,7 +15,7 @@ import path from 'node:path';
 
 const TOPE = { faltantes: 124, vacias: 923 };
 const PULIDOS = [
-  'js/shell/Shell.js', 'js/ui/estado.js', 'js/ui/capas.js', 'js/components/Avisos.js', 'js/components/LecturaVera.js',
+  'js/shell/Shell.js', 'js/ui/estado.js', 'js/ui/capas.js', 'js/components/Avisos.js',
   'js/views/ConfiguracionView.js', 'js/views/ajustes-pestanas.js', 'js/views/OrganizationView.js', 'js/views/IntegracionesView.js',
   'js/views/CuentaView.js', 'js/views/InvitacionView.js', 'js/views/MfaView.js', 'js/views/PaginaEstadoView.js',
   'js/views/PlanesView.js', 'js/views/CreditsShopView.js', 'js/views/BrandOrganizationView.js',
@@ -56,8 +56,8 @@ const vacias = (claves) => [...claves].filter((k) => k in CATALOGO && !CATALOGO[
 const todas = new Set([...porArchivo.values()].flatMap((s) => [...s]));
 
 describe('i18n: las claves de la UI existen en en.js', () => {
-  test('los alias de traducción se reconocen (Estado, Capas, Avisos, LecturaVera)', () => {
-    for (const f of ['js/ui/estado.js', 'js/ui/capas.js', 'js/components/Avisos.js', 'js/components/LecturaVera.js']) {
+  test('los alias de traducción se reconocen (Estado, Capas, Avisos)', () => {
+    for (const f of ['js/ui/estado.js', 'js/ui/capas.js', 'js/components/Avisos.js']) {
       expect(porArchivo.get(f)?.size, f).toBeGreaterThan(0);
     }
   });

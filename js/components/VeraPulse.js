@@ -3,14 +3,15 @@
  *
  * Muestra si Vera está trabajando AHORA y qué está haciendo. En reposo el
  * logo se apaga y no dice nada: el sensor solo habla cuando hay actividad
- * real (rpc get_vera_pulse, que lee sensor_runs + vera_session_audit).
+ * real. Base nueva: ai.pulso y ai.bitacora (P3, 20260925172000) por
+ * DashboardDatos.pulso/bitacora; sin la vista, el sensor queda apagado.
  *
  * Nada aquí es decorativo. La frase se deriva del `sensor_type` que de verdad
  * corrió y, cuando el sensor apuntaba a una entidad monitoreada, la nombra.
  * Si el tipo es desconocido, dice algo genérico antes que inventar.
  *
  * Uso:
- *   const pulso = new VeraPulse({ supabase, orgId });
+ *   const pulso = new VeraPulse({ orgId, datos: window.DashboardDatos });
  *   pulso.mount(hostEl);   // pinta y arranca el sondeo
  *   pulso.destroy();       // al salir de la vista
  */
@@ -218,8 +219,8 @@
   }
 
   class VeraPulse {
-    constructor({ supabase, orgId } = {}) {
-      this.sb = supabase || window.supabase || null;
+    constructor({ orgId, datos } = {}) {
+      this.datos = datos || null;
       this.orgId = orgId || null;
       this.host = null;
       this.timer = null;
@@ -238,7 +239,7 @@
       this._desconectar();
       this.host = host;
       window.Estado.pintar(host, this._html({ activa: false }));
-      if (!this.sb || !this.orgId) return; // sin sesión no hay pulso: queda apagado
+      if (!this.datos || !this.orgId) return; // sin sesión no hay pulso: queda apagado
       this._onVis = () => {
         if (document.visibilityState === 'visible') this._arrancar();
         else this._parar();
@@ -264,9 +265,10 @@
 
     async _sondear() {
       try {
-        const { data, error } = await this.sb.rpc('get_vera_pulse', { p_org_id: this.orgId });
-        if (error) throw error;
-        this._pintar(data || { activa: false });
+        const r = await this.datos.pulso(this.orgId);
+        // Sin la vista (P3 sin aplicar) o sin permiso: apagado, sin fingir actividad ni reintentar a lo loco.
+        if (r.falta) { this._pintar({ activa: false }); if (r.falta === 'vista') this._parar(); return; }
+        this._pintar(r.datos || { activa: false });
       } catch (e) {
         /* Un pulso que no se puede leer se apaga; nunca se finge actividad. */
         console.warn('[VeraPulse] sin pulso:', e && e.message ? e.message : e);
@@ -333,14 +335,15 @@
       }) || {};
       if (!bodyEl) return;
 
-      if (!this.sb || !this.orgId) {
+      if (!this.datos || !this.orgId) {
         window.Estado.pintar(bodyEl, this._bitVacia(T('No hay sesión para consultar la bitácora.')));
         return;
       }
       try {
-        const { data, error } = await this.sb.rpc('get_vera_bitacora', { p_org_id: this.orgId, p_horas: 24 });
-        if (error) throw error;
-        window.Estado.pintar(bodyEl, this._bitHtml(data || {}));
+        const r = await this.datos.bitacora(this.orgId);
+        if (r.falta === 'vista') { window.Estado.pintar(bodyEl, this._bitVacia(T('La bitácora todavía no está en la base nueva: aparece cuando se active el registro de Vera.'))); return; }
+        if (r.falta) throw new Error(r.falta);
+        window.Estado.pintar(bodyEl, this._bitHtml({ filas: r.datos, horas: 24 }));
       } catch (e) {
         console.warn('[VeraPulse] bitácora:', e && e.message ? e.message : e);
         window.Estado.pintar(bodyEl, this._bitVacia(T('No se pudo leer la bitácora.')));
