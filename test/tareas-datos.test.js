@@ -138,6 +138,15 @@ describe('Tareas · filas de flows.schedules', () => {
   test('las filas de v1 (entradas con la forma vieja) se marcan heredadas', () => {
     expect(T.programacionDeFila({ ...fila, entradas: { entity_ids: ['a'], aspect_ratio: '9:16' } }).heredada).toBe(true);
   });
+  test('portada del flujo y elementos que usa la tarea (tarjeta y calendario de v1)', () => {
+    expect(T.programacionDeFila(fila, { f: 'Imagen' }, { f: 'https://x/portada.jpg' }).portada).toBe('https://x/portada.jpg');
+    expect(T.programacionDeFila(fila).portada).toBeNull();
+    const elementos = [{ value: 'e1', label: 'Frasco', imagen: 'https://x/1.jpg' }, { value: 'e2', label: 'Tarro', imagen: null }];
+    const r = T.elementosDeEntradas({ a: { modo: 'rotar', valores: ['e1', 'e2', 'e1'] }, b: { modo: 'fijo', valor: 'e2' }, c: { modo: 'fijo', valor: 'texto' }, d: { modo: 'elemento' }, e: ['viejo'] }, elementos);
+    expect(r.elementos.map((x) => x.value)).toEqual(['e1', 'e2']);
+    expect(r.automaticos).toBe(1);
+    expect(T.elementosDeEntradas({}, elementos)).toEqual({ elementos: [], automaticos: 0 });
+  });
   test('filtros y cuentas', () => {
     const l = [T.programacionDeFila(fila), T.programacionDeFila({ ...fila, id: 't', is_active: false })];
     expect(T.contar(l)).toEqual({ todas: 2, activas: 1, pausadas: 1 });

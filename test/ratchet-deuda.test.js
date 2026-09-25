@@ -43,7 +43,7 @@ function medir() {
 
 // Medido el 24/09/2026 sobre a064abec; bajado en L1 y en L3 (shell nuevo: fuera Navigation.js + navigation.css).
 const TOPES = {
-  hexEnCss: 259,
+  hexEnCss: 243,  // 25/09 Tareas v1: fuera colores por tarea, puntos de estado y CSS muerto de historial
   importantEnCss: 171,  // 25/09 escalas: el reduced-motion global ya no fuerza animation-* con !important
   zIndexDistintos: 19,
   hexEnJs: 54,
