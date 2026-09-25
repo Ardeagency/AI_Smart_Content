@@ -9,9 +9,9 @@
  * preset que no llena nada, o un error de KIE cuando el usuario ya subió los
  * archivos y ya se le cobró.
  *
- * El cupo se prueba aquí Y se aplica en functions/kie-image-create.js: son
- * dos números que tienen que decir lo mismo (ImageView.IMAGE_REF_LIMIT y
- * MAX_REFERENCE_IMAGES). El test los cruza contra el archivo de la función.
+ * El cupo se prueba aquí. Antes se cruzaba también contra functions/kie-image-create.js;
+ * esa function se borró en L8 (la imagen se produce por flujos del borde v2, que
+ * aplica su propio tope).
  */
 import { describe, test, expect } from 'vitest';
 import fs from 'node:fs';
@@ -127,16 +127,6 @@ describe('Referencias visuales — el cupo que promete el sidebar', () => {
 
     expect(v.imageRefs).toHaveLength(ImageView.IMAGE_REF_LIMIT);
     expect(avisos.join(' ')).toMatch(new RegExp(`máximo de ${ImageView.IMAGE_REF_LIMIT}`));
-  });
-
-  test('el cupo de la UI es el mismo que aplica la función de creación', () => {
-    // Un tope que la pantalla anuncia y el backend no aplica (o al revés) se
-    // paga en el error de KIE, cuando el usuario ya subió los archivos.
-    const fn = fs.readFileSync(path.join(process.cwd(), 'functions/kie-image-create.js'), 'utf8');
-    const m = fn.match(/KIE_IMAGE_MAX_REFS\s*\|\|\s*(\d+)/);
-
-    expect(m).not.toBeNull();
-    expect(Number(m[1])).toBe(ImageView.IMAGE_REF_LIMIT);
   });
 
   test('quitar una subida a mano la borra del bucket; una ajena, no', () => {

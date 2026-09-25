@@ -51,257 +51,28 @@
   status = 302
   force = true
 
-# Rutas /api/* reescriben a las funciones (alternativa por si /.netlify/functions/* da 404)
-[[redirects]]
-  from = "/api/kling-video"
-  to = "/.netlify/functions/kling-video"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/kling-video-create"
-  to = "/.netlify/functions/kling-video-create"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/kling-video-status"
-  to = "/.netlify/functions/kling-video-status"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/kie-video-download"
-  to = "/.netlify/functions/kie-video-download"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/kie-nano-banana-create"
-  to = "/.netlify/functions/kie-nano-banana-create"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/ai/chat"
-  to = "/.netlify/functions/api-ai-chat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/ai/engine-chat"
-  to = "/.netlify/functions/api-ai-engine-chat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/ai/context"
-  to = "/.netlify/functions/api-ai-context"
-  status = 200
-  force = true
-
-# Predictor — solo el lanzamiento pasa por funcion; los resultados se leen
-# directo de Supabase con la RLS de predictor_runs.
-[[redirects]]
-  from = "/api/predictor/run"
-  to = "/.netlify/functions/api-predictor-run"
-  status = 200
-  force = true
-
-# ── Demo preview (anonymous IGNIS preview) ───────────────
-[[redirects]]
-  from = "/api/demo-event"
-  to = "/.netlify/functions/api-demo-event"
-  status = 200
-  force = true
-
-# ── Stripe billing endpoints (FEAT-019) ──────────────────
-[[redirects]]
-  from = "/api/billing/checkout"
-  to = "/.netlify/functions/api-billing-checkout"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/billing/portal"
-  to = "/.netlify/functions/api-billing-portal"
-  status = 200
-  force = true
-
+# Rutas /api/* que SIGUEN: solo las que llama un tercero (webhooks, callback OAuth).
+# L8 (24/09): se borraron las functions que ningún archivo de js/ llamaba y sus
+# redirects; la consola habla con el borde v2 (/v1) y con PostgREST. Estas quedan
+# hasta confirmar que el backend v2 recibe esos webhooks.
+# ── Stripe billing (webhook) ──────────────────
 [[redirects]]
   from = "/api/billing/webhook"
   to = "/.netlify/functions/api-billing-webhook"
   status = 200
   force = true
 
-# ── Wompi billing endpoints (FEAT-019, Colombia) ─────────
-[[redirects]]
-  from = "/api/billing/wompi/checkout"
-  to = "/.netlify/functions/api-billing-wompi-checkout"
-  status = 200
-  force = true
-
+# ── Wompi (webhook) ─────────
 [[redirects]]
   from = "/api/billing/wompi/webhook"
   to = "/.netlify/functions/api-billing-wompi-webhook"
   status = 200
   force = true
 
-[[redirects]]
-  from = "/api/billing/gateways"
-  to = "/.netlify/functions/api-billing-gateways"
-  status = 200
-  force = true
-
-# ── Wompi Fase 2 (recurring tokenizado) ──────────────────
-[[redirects]]
-  from = "/api/billing/wompi/setup-source"
-  to = "/.netlify/functions/api-billing-wompi-setup-source"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/billing/wompi/charge-source"
-  to = "/.netlify/functions/api-billing-wompi-charge-source"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/billing/cancel"
-  to = "/.netlify/functions/api-billing-cancel"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/ai/action"
-  to = "/.netlify/functions/api-ai-action"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/insights/fetch"
-  to = "/.netlify/functions/api-insights-fetch"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/insights/mybrand"
-  to = "/.netlify/functions/api-insights-mybrand"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/insights/snapshots-list"
-  to = "/.netlify/functions/api-insights-snapshots-list"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/brand/analytics-ga4"
-  to = "/.netlify/functions/api-brand-analytics-ga4"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/brand/videos-youtube"
-  to = "/.netlify/functions/api-brand-videos-youtube"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/brand/posts-meta"
-  to = "/.netlify/functions/api-brand-posts-meta"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/brand/sync-meta"
-  to = "/.netlify/functions/api-brand-sync-meta"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/brand-scrape"
-  to = "/.netlify/functions/api-brand-scrape"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/brand/analyze-posts"
-  to = "/.netlify/functions/api-brand-analyze-posts"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/integrations/facebook/start"
-  to = "/.netlify/functions/api-integrations-facebook-start"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/integrations/google/start"
-  to = "/.netlify/functions/api-integrations-google-start"
-  status = 200
-  force = true
-
+# ── Callback OAuth de integraciones ──────────────────
 [[redirects]]
   from = "/api/integrations/exchange"
   to = "/.netlify/functions/api-integrations-exchange"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/integrations/disconnect"
-  to = "/.netlify/functions/api-integrations-disconnect"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/integrations/shopify/start"
-  to = "/.netlify/functions/api-integrations-shopify-start"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/integrations/meli/start"
-  to = "/.netlify/functions/api-integrations-meli-start"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/integrations/x/start"
-  to = "/.netlify/functions/api-integrations-x-start"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/integrations/tiktok/start"
-  to = "/.netlify/functions/api-integrations-tiktok-start"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/integrations/google/select"
-  to = "/.netlify/functions/api-integrations-google-select"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/integrations/link"
-  to = "/.netlify/functions/api-integrations-link"
-  status = 200
-  force = true
-
-# Vera pending actions: list + per-id approve/reject (catch-all)
-[[redirects]]
-  from = "/api/vera/pending-actions"
-  to = "/.netlify/functions/api-vera-pending-actions"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/vera/pending-actions/*"
-  to = "/.netlify/functions/api-vera-pending-actions"
   status = 200
   force = true
 
