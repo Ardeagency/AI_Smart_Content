@@ -1236,7 +1236,7 @@
   overflow: hidden;
 }
 
-/* .glass-black fija `background: rgba(11,11,11,0.55) !important`; lo sustituimos
+/* .glass-black fija `background: rgba(0, 0, 0,0.55) !important`; lo sustituimos
    por el degradado de dos grises (translucido, para no matar el frost) sin
    perder el blur/borde que aporta la clase. */
 .cc-strat-panel.glass-black,
@@ -1337,7 +1337,7 @@
   padding: 6px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  background: rgba(11, 11, 11, 0.6);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
@@ -3027,7 +3027,7 @@
 .cc-report-menu {
   position: absolute; top: calc(100% + 6px); left: 0;
   z-index: 20; min-width: 232px;
-  background: rgba(11, 11, 11, 0.92);
+  background: rgba(0, 0, 0, 0.92);
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
   border: 1px solid rgba(255, 255, 255, 0.12);

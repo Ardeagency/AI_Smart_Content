@@ -518,7 +518,7 @@ body.mn-dragging, body.mn-dragging * { cursor: grabbing !important; }
 }
 /* Backdrop glass-black con blur (igual que flow-detail). */
 .modal:has(.modal-content.mn-detail-modal) .modal-overlay {
-  background: var(--glass-black-bg, rgba(11, 11, 11, 0.55));
+  background: var(--glass-black-bg, rgba(0, 0, 0, 0.55));
   backdrop-filter: blur(24px) saturate(140%); -webkit-backdrop-filter: blur(24px) saturate(140%);
 }
 .mn-detail-modal .modal-body { padding: 0; }

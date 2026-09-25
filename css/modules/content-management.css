@@ -2202,7 +2202,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   overflow: hidden;
   margin-left: -8px;
   background: var(--bg-tertiary, #0d0d0f);
-  border: 2px solid var(--bg-primary, #0b0b0b);
+  border: 2px solid var(--bg-primary, var(--bg-base));
   display: inline-flex;
   align-items: center;
   justify-content: center;

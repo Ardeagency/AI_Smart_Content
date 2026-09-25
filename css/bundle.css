@@ -89,10 +89,15 @@
 
 /* ========== DESIGN SYSTEM V2 — Tokens ========== */
 :root {
-    --bg-primary: #0b0b0b;
+    /* FONDO BASE = NEGRO PURO (encargo del usuario: «todos los fondos en negro puro»).
+       UN token: todo fondo de base (body, vista, shell, login, estados, modales,
+       drawer) lee --bg-base. Las superficies elevadas NO: siguen siendo capas
+       translúcidas (--white-*) o el gris de flotantes (--bg-secondary). */
+    --bg-base: #000;
+    --bg-primary: var(--bg-base);
     --bg-secondary: #141517;
     --bg-card: #141517;
-    --bg-tertiary: #000000;
+    --bg-tertiary: var(--bg-base);
     /* Hover y seleccionado: brillo con color principal de la marca (BrandOrganizationView inyecta --brand-primary-brillo) */
     --brillo-hover: var(--brand-primary-brillo, rgba(255, 255, 255, 0.08));
     --brillo-active: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.12));
@@ -101,8 +106,8 @@
     --accent-brand: var(--brand-primary, rgba(255, 255, 255, 0.35));
     --accent-brand-soft: var(--brand-primary-brillo, rgba(255, 255, 255, 0.08));
     --icon-button-active: var(--brand-primary, var(--icon-button));
-    --bg-black: #000000;
-    --bg-interactive: #000000;
+    --bg-black: var(--bg-base);
+    --bg-interactive: var(--bg-base);
     --border-color: #242424;
     --border-light: #242424;
     --border-divider: #242424;
@@ -226,9 +231,9 @@
     --glass-blur: blur(14px) saturate(120%);
     --glass-padding: 8px 24px;
     /* glass-black: ~50% opacidad; textos blancos y mismo borde que glass normal */
-    /* glass-black-bg: receta del card de login. rgba(11,11,11,0.55) usa el
+    /* glass-black-bg: receta del card de login. rgba(0, 0, 0,0.55) usa el
        negro de la plataforma (#0b0b0b = --bg-primary) con alpha 0.55. */
-    --glass-black-bg: rgba(11, 11, 11, 0.55);
+    --glass-black-bg: rgba(0, 0, 0, 0.55);
     /* glass-black-border: receta del card de login. 0.08 alpha — filete
        muy sutil que mantiene la estetica frosted. */
     --glass-black-border: rgba(255, 255, 255, 0.08);
@@ -440,10 +445,10 @@
   --gradiente-vivo-d: linear-gradient(135deg, #0063ff 0%, #814ac8 30%, #ff004d 70.2%, #ff3427 100%);
 
   /* ── NEUTROS — la luz de entrada ── */
-  --bg-primary: #0b0b0b;
+  --bg-primary: var(--bg-base);
   --bg-secondary: #141517;
-  --bg-tertiary: #000000;
-  --bg-ui: #0d0d0d;
+  --bg-tertiary: var(--bg-base);
+  --bg-ui: var(--bg-base);
   --bg-card: #141517;
   --text-primary: #d4d1d8;
   --text-secondary: rgba(212, 209, 216, 0.85);
@@ -487,7 +492,7 @@
   /* ── GLASS — 3 variantes ── */
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.10);
-  --glass-black-bg: rgba(11, 11, 11, 0.55);
+  --glass-black-bg: rgba(0, 0, 0, 0.55);
   --glass-black-border: rgba(255, 255, 255, 0.08);
   --glass-black-text: #ffffff;
   --glass-white-bg: rgba(255, 255, 255, 0.55);
@@ -504,7 +509,7 @@
   --puntos-radio: 1px;
   --puntos-color: rgba(255, 255, 255, 0.10);
   --puntos-color-tenue: rgba(255, 255, 255, 0.04);
-  --fondo-base: #050507;
+  --fondo-base: var(--bg-base);
   --fondo-plataforma: radial-gradient(125% 72% at 50% -14%, color-mix(in srgb, var(--prisma-naranja) 22%, transparent) 0%, color-mix(in srgb, var(--prisma-rojo) 19%, transparent) 13%, color-mix(in srgb, var(--prisma-fucsia) 16%, transparent) 25%, color-mix(in srgb, var(--prisma-violeta) 14%, transparent) 37%, color-mix(in srgb, var(--prisma-purpura) 12%, transparent) 49%, color-mix(in srgb, var(--prisma-azul) 9%, transparent) 61%, color-mix(in srgb, var(--prisma-azul) 6%, transparent) 73%, transparent 90%);
   --particulas-color: 255, 255, 255;
   --glow-blur: 100px;
@@ -644,7 +649,7 @@
   --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.40);
   --shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.50);
   --shadow-floating: 0 24px 64px rgba(0, 0, 0, 0.60);
-  --shadow-focus: 0 0 0 2px #0b0b0b, 0 0 0 4px var(--org-primary, #00e7ff);
+  --shadow-focus: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--org-primary, #00e7ff);
 
   /* ── MOVIMIENTO ── */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
@@ -673,7 +678,7 @@
        propio lee ESTOS tokens: un solo velo, un solo panel, una sola sombra. */
     --modal-velo: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.75) 100%);
     --modal-velo-blur: blur(20px) saturate(140%);
-    --modal-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 50%), linear-gradient(180deg, #18191b 0%, #131416 100%);
+    --modal-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 50%), var(--bg-base);
     --modal-panel-border: 1px solid rgba(255, 255, 255, 0.06);
     --modal-panel-radius: 18px;
     --modal-panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.5), 0 16px 40px -12px rgba(0, 0, 0, 0.6), 0 32px 80px -16px rgba(0, 0, 0, 0.5);
@@ -1181,7 +1186,7 @@ input[type="search"]::-webkit-search-results-decoration {
    anteriores eran demasiado agresivos (blur 70px) o tan debiles (blur 7px)
    que no se notaban. */
 .glass-black {
-    background: rgba(11, 11, 11, 0.55) !important;
+    background: rgba(0, 0, 0, 0.55) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     color: var(--glass-black-text);
     backdrop-filter: blur(24px) saturate(140%) !important;
@@ -1284,7 +1289,7 @@ textarea:focus-visible,
   padding: 0 !important;
 }
 /* Landing usa el tono del canvas para evitar flash de fondo distinto. */
-body.route-landing { background: #0b0b0b; }
+body.route-landing { background: var(--bg-base); }
 /* En la landing el video está detrás; el contenedor debe ser transparente para que se vea */
 body.route-landing #app-container { background: transparent; padding-top: 0; }
 #app-container > main, #app-container > div { max-width: 100%; overflow-x: hidden; box-sizing: border-box; min-width: 0; }

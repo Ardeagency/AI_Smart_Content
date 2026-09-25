@@ -17,7 +17,7 @@
          Worker y HTTPS, los browsers ofrecen "Instalar aplicación" y la
          vuelven app nativa con icono propio. -->
     <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="theme-color" content="#0b0b0b">
+    <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -81,7 +81,9 @@
         html, body {
             margin: 0;
             padding: 0;
-            background: #0b0b0b;
+            /* Negro puro: = --bg-base de bundle.css. Literal porque este CSS crítico
+               pinta antes de que cargue el bundle (y con él los tokens). */
+            background: #000;
             color: #D4D1D8;
             font-family: 'Inter', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
@@ -92,7 +94,7 @@
             overflow-x: hidden;
         }
         #app-container, #navigation-container {
-            background: #0b0b0b;
+            background: #000; /* = --bg-base */
         }
         /* ===== Splash de arranque =====
            Cubre TODO (header + contenido + barra de progreso) mientras la app
@@ -108,7 +110,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            background: #050506;
+            background: #000; /* = --bg-base (negro puro; literal: pinta antes del bundle) */
             opacity: 1;
             transition: opacity 0.5s ease;
         }

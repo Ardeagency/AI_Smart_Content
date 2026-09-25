@@ -1211,7 +1211,7 @@
 /* Backdrop del modal de detalle = glass-black (no el --bg-overlay morado).
    La clase vive en .modal-content, asi que scopeamos el overlay via :has. */
 .modal:has(.modal-content.flow-detail-modal) .modal-overlay {
-  background: var(--glass-black-bg, rgba(11, 11, 11, 0.55));
+  background: var(--glass-black-bg, rgba(0, 0, 0, 0.55));
   backdrop-filter: blur(24px) saturate(140%);
   -webkit-backdrop-filter: blur(24px) saturate(140%);
 }
@@ -1614,7 +1614,7 @@
   gap: 0.75rem 1rem;
   flex-wrap: wrap;
   padding: 0.85rem clamp(2rem, 5vw, 4rem);
-  background: var(--view-bg-base, #0b0b0b);
+  background: var(--view-bg-base, var(--bg-base));
   border-bottom: 1px solid var(--border-divider, #242424);
 }
 /* En el header (reusa el slot y la clase de Production, que ya dan el layout de
@@ -1633,7 +1633,7 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
   flex: 1 1 280px;
   max-width: 460px;
   padding: 0.55rem 0.9rem;
-  background: var(--glass-black-bg, rgba(11, 11, 11, 0.55));
+  background: var(--glass-black-bg, rgba(0, 0, 0, 0.55));
   border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   border-radius: 10px;
   backdrop-filter: blur(24px) saturate(140%);
@@ -1672,7 +1672,7 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
 }
 .flow-toolbar-select {
   padding: 0.55rem 2rem 0.55rem 0.9rem;
-  background-color: var(--glass-black-bg, rgba(11, 11, 11, 0.55));
+  background-color: var(--glass-black-bg, rgba(0, 0, 0, 0.55));
   border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   border-radius: 10px;
   color: var(--text-secondary, rgba(255, 255, 255, 0.82));

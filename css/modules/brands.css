@@ -552,12 +552,12 @@
 #brandsListContainer.brand-cards-glass-white,
 .brand-dashboard-container.brand-cards-glass-white {
     --text-primary: var(--bg-primary);
-    --text-secondary: rgba(11, 11, 11, 0.82);
-    --text-muted: rgba(11, 11, 11, 0.6);
+    --text-secondary: rgba(0, 0, 0, 0.82);
+    --text-muted: rgba(0, 0, 0, 0.6);
     --brand-text-gold: var(--bg-primary);
     --brand-text-light: var(--bg-primary);
-    --brand-text-muted: rgba(11, 11, 11, 0.6);
-    --icon-button: rgba(11, 11, 11, 0.7);
+    --brand-text-muted: rgba(0, 0, 0, 0.6);
+    --icon-button: rgba(0, 0, 0, 0.7);
 }
 
 /* Trigger del dropdown (boton) sigue el patron glass de la card.
