@@ -43,6 +43,12 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       const cuenta = params.get('cuenta') || '';
       if (window.history?.replaceState) window.history.replaceState({}, '', window.location.pathname);
       const returnTo = sessionStorage.getItem('_obic_return') || '/brands';
+      // Visita directa (sin nada del borde): no es un fallo, solo no hay nada que contar.
+      // El mismo aviso de siempre, sin console.error.
+      if (!plataforma && !error && !conectado) {
+        this._showError(window.__('La plataforma no devolvió una conexión. Vuelve a intentarlo desde la ficha de marca.'));
+        return;
+      }
       if (error) throw new Error(error);
       if (!conectado) throw new Error(window.__('La plataforma no devolvió una conexión. Vuelve a intentarlo desde la ficha de marca.'));
       // Un contexto viejo (mi_contexto) taparía la conexión nueva en la ficha.
