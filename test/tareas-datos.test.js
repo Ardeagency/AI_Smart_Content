@@ -148,8 +148,7 @@ describe('Tareas · filas de flows.schedules', () => {
     expect(T.estadoCorrida('failed').badge).toBe('badge--error');
     expect(T.estadoCorrida('awaiting_approval').badge).toBe('badge--advertencia');
   });
-  test('errores de la base en palabras; activar sin permiso sobre siguiente_cron = sin_puerta', () => {
-    expect(T.enPalabras({ code: '42501', message: 'permission denied for function siguiente_cron' }).code).toBe('sin_puerta');
+  test('errores de la base en palabras', () => {
     expect(T.enPalabras({ code: '42501', message: 'new row violates row-level security policy' }).message).toMatch(/permiso/);
     expect(T.enPalabras({ code: '22023', message: 'zona horaria desconocida: «X».' }).message).toMatch(/zona horaria/);
   });

@@ -110,8 +110,7 @@ async function main() {
     if (b.activa) throw new Error('no se pausó');
     ok('activar → próxima en el futuro → pausar', `próxima ${a.proxima} · pausada ${!b.activa}`);
   } catch (e) {
-    if (e.code === 'sin_puerta') pendiente('activar', `${e.message} (${e.original?.message?.trim()})`);
-    else falla('activar/pausar', e);
+    falla('activar/pausar', e);
     try { const b = await T.activar(p.id, false); (b.activa ? falla : ok)('pausar', `activa ${b.activa}`); } catch (e2) { falla('pausar', e2); }
   }
 

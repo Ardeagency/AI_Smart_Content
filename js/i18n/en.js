@@ -4300,7 +4300,6 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Ese tipo de elemento no existe.": "That element type doesn't exist.",
   "Se detuvo": "Stopped",
   "Espera aprobación": "Awaiting approval",
-  "Activar tareas desde la consola todavía no está disponible: la base aún no lo permite. La tarea queda guardada en pausa.": "Activating tasks from the console isn't available yet: the database doesn't allow it yet. The task stays saved and paused.",
   "No tienes permiso para gestionar los flujos de esta marca.": "You don't have permission to manage this brand's flows.",
   "La base rechazó la frecuencia o la zona horaria.": "The database rejected the frequency or the time zone.",
   "Falta el nombre o la frecuencia.": "The name or the frequency is missing.",

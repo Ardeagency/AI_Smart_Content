@@ -7,8 +7,9 @@
  *     timezone (defecto America/Bogota), is_active, last_run_at, next_run_at, created_at,
  *     updated_at, entradas jsonb, rotacion jsonb, al_no_poder omitir|fallar, corridas,
  *     omitidas, ultimo_motivo, fallos_seguidos). RLS: gestionar_flujos (ALL). Sin `color`.
- *     Triggers: schedules_actualizado, schedules_calcula_proxima (solo si queda activa y
- *     next_run_at es nulo o cambió cron/zona), schedules_zona_valida (22023 con palabras).
+ *     Triggers: schedules_actualizado, schedules_calcula_proxima (DEFINER desde 20260925150000:
+ *     valida el cron siempre que cambie cron o zona, también en pausa; al reactivar recalcula
+ *     next_run_at desde ahora y pone fallos_seguidos en 0), schedules_zona_valida (22023 con palabras).
  *   · El cron de la base (private.siguiente_cron / campo_cron): 5 campos, listas, rangos y
  *     pasos; día de la semana 0-6 (el 7 NO vale); si día del mes Y día de la semana están
  *     restringidos, vale cualquiera de los dos (regla clásica).
@@ -353,12 +354,6 @@
     const e = error || {};
     const code = e.code || '';
     let msg;
-    // Medido 25/09: el trigger schedules_calcula_proxima (INVOKER) llama a private.siguiente_cron
-    // y authenticated no tiene EXECUTE → activar (o cambiar el cron de una activa) da 42501.
-    if (code === '42501' && /siguiente_cron|campo_cron/.test(e.message || '')) {
-      console.warn('[tareas] activar sin puerta (private.siguiente_cron sin EXECUTE para authenticated):', e.message);
-      return Object.assign(new Error(t('Activar tareas desde la consola todavía no está disponible: la base aún no lo permite. La tarea queda guardada en pausa.')), { code: 'sin_puerta', original: e });
-    }
     if (code === '42501') msg = t('No tienes permiso para gestionar los flujos de esta marca.');
     else if (code === '22023') msg = e.message || t('La base rechazó la frecuencia o la zona horaria.');
     else if (code === '23514') msg = t('Falta el nombre o la frecuencia.');
@@ -456,12 +451,11 @@
   }
 
   /**
-   * Activar: next_run_at = null para que la base la recalcule HACIA ADELANTE (el trigger
-   * solo recalcula si es nula o cambió cron/zona) y la racha de fallos a cero (con 10
-   * se apaga sola: reactivarla sin limpiarla la volvería a apagar al primer fallo).
+   * Activar: solo is_active. Al pasar de pausa a activa la base (migración 20260925150000)
+   * recalcula next_run_at desde ahora y pone fallos_seguidos en 0.
    */
   async function activar(id, activa) {
-    return cambiar(id, activa ? { is_active: true, next_run_at: null, fallos_seguidos: 0 } : { is_active: false });
+    return cambiar(id, { is_active: !!activa });
   }
 
   async function duplicar(p, userId) {
