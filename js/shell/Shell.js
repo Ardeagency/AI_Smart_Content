@@ -6,7 +6,7 @@
  *   ┌ sidebar ──────────────┐┌ topbar ─────────────────────────────────────┐
  *   │ [marca ▾] plan        ││ ☰  Marca › Sección          ⚡  🔔  (JC)    │
  *   │ Tablero · Vera        │└─────────────────────────────────────────────┘
- *   │ CREAR  Studio …       │  #app-container (lo pinta cada vista)
+ *   │ CREAR  Flows …        │  #app-container (lo pinta cada vista)
  *   │ MARCA  Identidad …    │
  *   │ ── créditos (lectura) │
  *   │ ── Configuración  «   │
@@ -39,7 +39,7 @@
      i18n-keep: __('Vera') __('Espacio de trabajo') __('Tablero') __('Marketing')
      __('Identidad') __('Productos') __('Servicios') __('Escenarios') __('Personajes')
      __('Competencia') __('Simulador') __('Crear') __('Producciones') __('Historial')
-     __('Tareas') __('Imagen') __('Video') __('Studio') __('pronto') */
+     __('Tareas') __('Imagen') __('Video') __('Flows') __('Studio') __('pronto') */
   const MENU = [
     { seccion: null, items: [
       { id: 'vera', etiqueta: 'Vera', ruta: 'vera', icono: '/recursos/vera/Logoverablanco.svg', iconoColapsado: '/recursos/vera/Vera.svg', cap: 'vera.chat', primario: true },
@@ -62,14 +62,14 @@
       { id: 'tareas', etiqueta: 'Tareas', ruta: 'tasks', icono: '/recursos/icons/task.svg', cap: 'production.create' },
       { id: 'imagen', etiqueta: 'Imagen', ruta: 'image', icono: '/recursos/icons/image.svg', cap: 'studio.create' },
       { id: 'video', etiqueta: 'Video', ruta: 'video', icono: '/recursos/icons/video.svg', cap: 'video.create' },
-      { id: 'studio', etiqueta: 'Studio', ruta: 'studio/flows', icono: '/recursos/icons/flows.svg', cap: 'studio.create', hijos: 'flujos' },
+      { id: 'flows', etiqueta: 'Flows', ruta: 'studio/flows', icono: '/recursos/icons/flows.svg', cap: 'studio.create', hijos: 'flujos' },
     ] },
   ];
 
   /* Título de la topbar por segmento (el más largo que coincida gana).
      BaseView.updateHeaderContext() lo puede afinar desde la vista. */
   const TITULOS = {
-    dashboard: 'Tablero', vera: 'Vera', 'studio/flows': 'Studio', 'studio/catalog': 'Studio', studio: 'Studio',
+    dashboard: 'Tablero', vera: 'Vera', 'studio/flows': 'Flows', 'studio/catalog': 'Flows', studio: 'Studio',
     image: 'Imagen', video: 'Video', production: 'Producciones', 'execution-history': 'Historial',
     brand: 'Identidad', brands: 'Identidad', 'brand-organization': 'Identidad', products: 'Productos',
     'product-detail': 'Producto', services: 'Servicios', places: 'Escenarios', characters: 'Personajes',

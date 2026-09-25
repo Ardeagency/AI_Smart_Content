@@ -1396,14 +1396,19 @@ class FlowCatalogView extends BaseView {
 
   renderExecCard(r) {
     const status = (r.status || '').toLowerCase();
-    const statusClass = status === 'completed' ? 'task-card-badge-active'
-      : (status === 'failed' || status === 'error') ? 'task-card-badge-danger'
-      : (status === 'running' || status === 'in_progress') ? 'task-card-badge-running'
+    // Estados de flows.runs (base nueva): queued, running, awaiting_approval, succeeded, failed,
+    // cancelled. Mismo mapeo que Historial; un estado desconocido no sale crudo en inglés.
+    const statusClass = status === 'completed' || status === 'succeeded' ? 'task-card-badge-active'
+      : status === 'failed' || status === 'error' || status === 'cancelled' || status === 'canceled' ? 'task-card-badge-danger'
+      : status === 'running' || status === 'in_progress' || status === 'queued' ? 'task-card-badge-running'
       : 'task-card-badge-paused';
-    const statusLabel = status === 'completed' ? __('Completado')
-      : (status === 'failed' || status === 'error') ? __('Error')
-      : (status === 'running' || status === 'in_progress') ? __('En curso')
-      : (status ? status.charAt(0).toUpperCase() + status.slice(1) : '—');
+    const statusLabel = status === 'completed' || status === 'succeeded' ? __('Completado')
+      : status === 'failed' || status === 'error' ? __('Error')
+      : status === 'cancelled' || status === 'canceled' ? __('Cancelada')
+      : status === 'awaiting_approval' ? __('Esperando tu aprobación')
+      : status === 'queued' ? __('En cola')
+      : status === 'running' || status === 'in_progress' ? __('En curso')
+      : '—';
     const images = Array.isArray(r.images) ? r.images : [];
     const count = r.output_count || 0;
     const disabled = !r.flow_slug;

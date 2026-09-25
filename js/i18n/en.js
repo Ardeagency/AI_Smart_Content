@@ -4064,6 +4064,8 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Storyboard: describe la secuencia completa — apertura, desarrollo y cierre. Seedance produce el arco entero en una sola pasada.": "Storyboard: describe the full sequence — opening, build-up and close. Seedance produces the whole arc in a single pass.",
   "Stripe (USD)": "Stripe (USD)",
   "Studio": "Studio",
+  "Flows": "Flows",
+  "Esperando tu aprobación": "Waiting for your approval",
   "Su audiencia busca el producto y no lo encuentra: hueco de distribución que puedes capitalizar": "Their audience is looking for the product and can't find it: a distribution gap you can capitalize on",
   "Su audiencia lo adora y pide más: {n} comentarios de deseo y apoyo": "Their audience adores it and wants more: {n} comments of desire and support",
   "Su audiencia lo respalda: {p}% de comentarios positivos": "Their audience backs them: {p}% positive comments",
