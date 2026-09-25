@@ -15,8 +15,7 @@
   // 1) define window.AI_ENGINE_BASE_URL desde un snippet en el HTML
   // 2) o guarda/consulta en localStorage bajo la misma key
   // Borde HTTP del backend v2 (Fastify, ADR-0043/0052): la API va bajo /v1 y
-  // ApiV2.js lo agrega. Vacía = `sin_api` (el borde aún no tiene host).
-  //   window.AISC_API_URL = 'https://api-v2.aismartcontent.io';
+  // ApiV2.js lo agrega. Por defecto https://api-v2.aismartcontent.io (ver abajo).
   // Base de datos (corte ADR-0052, paso 1.5): con estas dos fijas, app-loader
   // NO llama a la function supabase-config (que en el corte esta en 503).
   // Vacias = comportamiento de siempre (la function decide). La anon key es
@@ -53,10 +52,13 @@
   if (window.AISC_MANTENIMIENTO === undefined) {
     window.AISC_MANTENIMIENTO = (() => { try { return localStorage.getItem("AISC_MANTENIMIENTO") || ""; } catch (_) { return ""; } })();
   }
+  // Borde v2 (VERIFICADO 25/09: /salud 200, CORS acepta console.aismartcontent.io, CSP
+  // connect-src ya lo lista): api-v2 es el valor por defecto; localStorage o un snippet
+  // pueden cambiarlo sin build (desarrollo local). Un snippet con '' lo apaga (`sin_api`).
   if (window.AISC_API_URL === undefined) {
     window.AISC_API_URL = (() => {
       try { return localStorage.getItem("AISC_API_URL") || ""; } catch (_) { return ""; }
-    })();
+    })() || 'https://api-v2.aismartcontent.io';
   }
   if (window.AI_ENGINE_BASE_URL === undefined) {
     const stored = (() => {
