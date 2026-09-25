@@ -122,7 +122,10 @@
     if (!zona) return;
     // DOMParser deja los <script> INERTES (como asignar HTML al elemento). createContextualFragment
     // los ejecutaba al insertar (medido por -46 en Chrome, 24/09): no volver a usarlo.
-    const doc = new DOMParser().parseFromString(String(html == null ? '' : html), 'text/html');
+    // El '<body>' delante hace que todo caiga DENTRO del body, como al asignar HTML: sin él, un
+    // comentario inicial va al documento y <style>/<link>/<meta> iniciales van al <head> (y se pierden).
+    // NO sirve para filas sueltas (<tr>/<td>) ni SVG suelto: el contexto es un body, no una tabla/svg.
+    const doc = new DOMParser().parseFromString('<body>' + String(html == null ? '' : html), 'text/html');
     zona.replaceChildren(...doc.body.childNodes);
   }
 
