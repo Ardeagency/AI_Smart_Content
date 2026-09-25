@@ -59,7 +59,7 @@
     { seccion: 'Crear', items: [
       { id: 'producciones', etiqueta: 'Producciones', ruta: 'production', icono: '/recursos/icons/Production.svg', cap: 'production.create' },
       { id: 'historial', etiqueta: 'Historial', ruta: 'execution-history', icono: '/recursos/icons/history.svg', cap: 'production.create' },
-      { id: 'tareas', etiqueta: 'Tareas', ruta: 'tasks', icono: '/recursos/icons/task.svg', cap: 'production.create', pronto: true },
+      { id: 'tareas', etiqueta: 'Tareas', ruta: 'tasks', icono: '/recursos/icons/task.svg', cap: 'production.create' },
       { id: 'imagen', etiqueta: 'Imagen', ruta: 'image', icono: '/recursos/icons/image.svg', cap: 'studio.create' },
       { id: 'video', etiqueta: 'Video', ruta: 'video', icono: '/recursos/icons/video.svg', cap: 'video.create' },
       { id: 'studio', etiqueta: 'Studio', ruta: 'studio/flows', icono: '/recursos/icons/flows.svg', cap: 'studio.create', hijos: 'flujos' },

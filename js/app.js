@@ -290,6 +290,14 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/execution-history', execHistoryLoader, auth);
     r.register('/execution-history', execHistoryLoader, auth);
 
+    // ── Org: Tareas (programaciones de flujos: flows.schedules por TareasDatos) ──
+    // /tasks/nueva crea (en pausa); /tasks/:taskId abre el detalle. La TasksView de v1 se borró (32d3f821).
+    const tareasLoader = this._lazy('TareasView', ['/js/services/TareasDataService.js', '/js/views/TareasView.js'], ['/css/modules/insight.css', '/css/modules/tareas.css']);
+    r.register('/org/:orgIdShort/:orgNameSlug/tasks', tareasLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/tasks/:taskId', tareasLoader, auth);
+    r.register('/tasks', tareasLoader, auth);
+    r.register('/tasks/:taskId', tareasLoader, auth);
+
     // ── Deps compartidas de marca: mixins que aplican sobre BrandstorageView
     // y/o BrandOrganizationView según cuál esté definido al cargar.
     // Typography, Uploads y ColorEditor son idénticos entre ambas vistas.
