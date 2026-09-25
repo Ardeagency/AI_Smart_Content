@@ -72,12 +72,14 @@
     const meli = this._pickBrandIntegrationForContainer(brandContainerId, 'mercadolibre');
     const x = this._pickBrandIntegrationForContainer(brandContainerId, 'x');
     const tiktok = this._pickBrandIntegrationForContainer(brandContainerId, 'tiktok');
+    const linkedin = this._pickBrandIntegrationForContainer(brandContainerId, 'linkedin');
     const gOk = this._integrationUsable(google);
     const fOk = this._integrationUsable(facebook);
     const sOk = this._integrationUsable(shopify);
     const mOk = this._integrationUsable(meli);
     const xOk = this._integrationUsable(x);
     const tkOk = this._integrationUsable(tiktok);
+    const liOk = this._integrationUsable(linkedin);
     const xUrl = xOk && x?.account_url ? x.account_url : null;
     const tkUrl = tkOk && tiktok?.account_url ? tiktok.account_url : null;
     const shopUrl = sOk && shopify?.account_url ? shopify.account_url : null;
@@ -150,6 +152,17 @@
         actionHref: tkUrl || dashboardHref,
         actionExternal: !!tkUrl,
         hint: tkOk && tiktok?.external_account_name ? tiktok.external_account_name : ''
+      },
+      {
+        // startBrandIntegrationOAuth ya admitía linkedin; faltaba la fila para llegar a él.
+        key: 'linkedin',
+        label: 'LinkedIn',
+        iconClass: 'fab fa-linkedin',
+        connected: liOk,
+        oauthProvider: 'linkedin',
+        actionHref: liOk && linkedin?.account_url ? linkedin.account_url : dashboardHref,
+        actionExternal: !!(liOk && linkedin?.account_url),
+        hint: liOk && linkedin?.external_account_name ? linkedin.external_account_name : ''
       }
     ];
     },
