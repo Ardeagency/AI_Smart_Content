@@ -753,7 +753,7 @@
         this._refrescarPuntos();
       } catch (e) {
         li.removeAttribute('aria-busy');
-        avisar(e?.codigo === 'sin_permiso' || e?.status === 403 ? t('Tu rol no puede decidir esta acción.') : (e?.message || t('No se pudo decidir. Intenta de nuevo.')));
+        avisar(e?.codigo === 'sin_permiso' || e?.http === 403 ? t('Tu rol no puede decidir esta acción.') : (e?.message || t('No se pudo decidir. Intenta de nuevo.')));
       }
     }
 
