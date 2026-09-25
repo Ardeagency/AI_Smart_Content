@@ -155,3 +155,19 @@ describe('ApiV2 · galería con cookie (backend 260f742)', () => {
     apiV2.configurar({ fetch: null, sesion: null });
   });
 });
+
+describe('ApiV2 · id_cliente', () => {
+  const V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  test('sin crypto.randomUUID (http, contexto no seguro) nuevoIdCliente sigue siendo un uuid v4', () => {
+    const real = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+    Object.defineProperty(globalThis, 'crypto', { value: { getRandomValues: (b) => { for (let i = 0; i < b.length; i++) b[i] = (i * 37 + 11) & 0xff; return b; } }, configurable: true });
+    try { expect(apiV2.nuevoIdCliente()).toMatch(V4); }
+    finally { Object.defineProperty(globalThis, 'crypto', real); }
+  });
+  test('sin crypto en absoluto también', () => {
+    const real = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+    Object.defineProperty(globalThis, 'crypto', { value: undefined, configurable: true });
+    try { expect(apiV2.nuevoIdCliente()).toMatch(V4); }
+    finally { Object.defineProperty(globalThis, 'crypto', real); }
+  });
+});

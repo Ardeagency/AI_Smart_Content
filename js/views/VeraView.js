@@ -1175,7 +1175,8 @@ class VeraView extends (window.BaseView || class {}) {
         this.aiState.active_conversation_id = convId;
         this._setConversationUrl(convId);
       }
-      const idCliente = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      // uuid v4 siempre (el borde valida id_cliente con z.uuid()), también fuera de contexto seguro.
+      const idCliente = window.apiV2?.nuevoIdCliente?.();
       const envio = await window.VeraDatos.enviar(convId, messageToSend, idCliente);
       this._turnoActivo = envio?.turno_id || null;
       if (userMsg && envio?.mensaje_id) userMsg.id = envio.mensaje_id;
