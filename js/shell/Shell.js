@@ -68,11 +68,11 @@
     'product-detail': 'Producto', services: 'Servicios', places: 'Escenarios', characters: 'Personajes',
     monitoring: 'Competencia', organization: 'Configuración', configuracion: 'Configuración', cuenta: 'Tu cuenta',
     plans: 'Planes', credits: 'Créditos',
-    'plans/cancel': 'Planes', 'command-center': 'Marketing', predictor: 'Simulador', tasks: 'Tareas',
+    'plans/cancel': 'Planes',
     '404': 'Página no encontrada', '403': 'Sin acceso',
   };
-  /* i18n-keep: __('Configuración') __('Planes') __('Créditos') __('Producto') __('Marketing')
-     __('Simulador') __('Tareas') __('Página no encontrada') __('Sin acceso') */
+  /* i18n-keep: __('Configuración') __('Planes') __('Créditos') __('Producto')
+     __('Página no encontrada') __('Sin acceso') */
 
   const CLAVE_COLAPSADO = 'sidebarCollapsed';
   const CLAVE_ABIERTO = 'shellSubmenuAbierto';
