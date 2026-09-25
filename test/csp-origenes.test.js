@@ -50,6 +50,19 @@ describe('CSP: lo que se carga de fuera está permitido', () => {
     for (const m of INDEX.matchAll(/<link rel="preconnect" href="(https:\/\/[^"]+)"/g)) expect([...usables], m[1]).toContain(origen(m[1]));
   });
 
+  test('cada fetch/sendBeacon a una URL externa de js/ va a un origen de connect-src', () => {
+    const permitidos = directiva('connect-src');
+    for (const [f, src] of JS) {
+      for (const m of src.matchAll(/(?:fetch|sendBeacon)\(\s*['"`](https:\/\/[^'"`/]+)/g)) expect(permitidos, `${f}: ${m[1]}`).toContain(origen(m[1]));
+    }
+  });
+
+  test('arde-sentinel retirado: sin IP a terceros ni avisos a ntfy (Ley 1581)', () => {
+    expect(fs.existsSync('js/arde-sentinel.js')).toBe(false);
+    expect(INDEX).not.toMatch(/arde-sentinel/);
+    for (const [f, src] of JS) expect(src, f).not.toMatch(/ipapi\.co|ntfy\.sh/);
+  });
+
   test('no queda el SDK de Facebook', () => {
     for (const [f, src] of JS) expect(src, f).not.toMatch(/connect\.facebook\.net|FB\.init\(/);
   });
