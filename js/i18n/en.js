@@ -4160,5 +4160,6 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Para cambiar al plan {nombre} escríbenos a contact@aismartcontent.io y lo activamos por ti.": "To switch to the {nombre} plan, write to us at contact@aismartcontent.io and we'll activate it for you.",
   "Almacenamiento no disponible": "Storage unavailable",
   "Los adjuntos se suben cuando el borde esté configurado.": "Attachments upload once the edge is configured.",
-  "Los archivos que produce Vera se ven en Producción.": "The files Vera produces show up in Production."
+  "Los archivos que produce Vera se ven en Producción.": "The files Vera produces show up in Production.",
+  "Rol de {nombre}": "Role of {nombre}"
 }/* I18N:END */;

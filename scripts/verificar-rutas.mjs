@@ -27,6 +27,11 @@
  *   npm run verificar:rutas -- --solo vera      # solo las rutas que contienen «vera»
  *   npm run verificar:rutas -- --captura /tmp/rutas --espera 12000
  *   BASE=http://127.0.0.1:5182 PUERTO_CDP=9335 npm run verificar:rutas
+ *   npm run verificar:rutas -- --a11y           # + accesibilidad en las vistas pulidas (ver a11y-cdp.mjs)
+ *
+ * --a11y: en las rutas de A11Y_RUTAS mide nombres accesibles, botones solo-icono, foco visible
+ * con Tab real, la matriz de contraste AA de los tokens (una vez) y el drawer móvil (una vez:
+ * es el único paso que hace un clic, en la hamburguesa, sin efectos fuera de la página).
  *
  * NO se visitan: las rutas de sesión (/login, /signin, /mfa, /verification, /cambiar-contrasena).
  * Pueden cerrar la sesión de prueba (un signOut la REVOCA en el servidor) o enrolar un factor
@@ -37,6 +42,7 @@ import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import * as a11y from './a11y-cdp.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const args = process.argv.slice(2);
@@ -45,6 +51,10 @@ const BASE = (process.env.BASE || 'http://127.0.0.1:5182').replace(/\/$/, '');
 const ESPERA = Number(opcion('espera', 9000));
 const SOLO = opcion('solo', '');
 const CAPTURA = opcion('captura', '');
+const A11Y = args.includes('--a11y');
+// Vistas pulidas (shell incluido): las que la auditoría --a11y exige en verde.
+export const A11Y_RUTAS = ['/configuracion/general', '/configuracion/miembros', '/configuracion/facturacion', '/configuracion/actividad',
+  '/configuracion/integraciones', '/cuenta/perfil', '/plans', '/vera', '/404', '/403', '/invitacion'];
 const PUERTO = Number(process.env.PUERTO_CDP || 9335);
 const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
@@ -107,7 +117,7 @@ async function main() {
   }
   const perfil = mkdtempSync(join(tmpdir(), 'verificar-rutas-'));
   const ch = spawn(CHROME, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PUERTO}`, `--user-data-dir=${perfil}`, '--window-size=1440,900', 'about:blank'], { stdio: 'ignore' });
-  let ws; let fallos = 0;
+  let ws; let fallos = 0; let a11yGlobal = false; let fallosGlobales = 0;
   try {
     let lista;
     for (let i = 0; i < 60 && !lista; i++) { try { lista = await (await fetch(`http://127.0.0.1:${PUERTO}/json`)).json(); } catch { await dormir(250); } }
@@ -143,6 +153,16 @@ async function main() {
       const problemas = [...eventos];
       if (/^\/(login|signin)\b/.test(v.final || '')) problemas.push(`terminó en ${v.final}: la sesión murió`);
       for (const x of v.mal || []) problemas.push('pintar ≠ innerHTML: ' + x);
+      if (A11Y && A11Y_RUTAS.some((r) => ruta.replace(m[0], '') === r || ruta.startsWith(r + '/'))) {
+        const ev = async (expression) => (await cmd('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result?.result?.value;
+        problemas.push(...await a11y.nombres(cmd, ev), ...await a11y.foco(cmd, ev));
+        const conShell = await ev(`!!document.getElementById('headerHamburger')`);
+        if (!a11yGlobal && conShell) {
+          a11yGlobal = true;
+          const globales = [...(await a11y.contraste(ev)) || [], ...await a11y.drawer(cmd, ev)];
+          if (globales.length) { fallosGlobales++; console.log('✗ a11y global (tokens y drawer)'); globales.forEach((g) => console.log('    ' + g)); } else console.log('✓ a11y global: contraste AA de los tokens y drawer móvil');
+        }
+      }
       if (CAPTURA) {
         const png = await cmd('Page.captureScreenshot', { format: 'png' });
         writeFileSync(join(CAPTURA, ruta.replace(/^\//, '').replace(/[/:]/g, '_') + '.png'), Buffer.from(png.result.data, 'base64'));
@@ -151,14 +171,15 @@ async function main() {
       const destino = v.final && v.final !== ruta ? ` → ${v.final.replace(m[0], '')}` : '';
       if (problemas.length) { fallos++; console.log(`✗ ${corta}${destino}`); problemas.forEach((p) => console.log('    ' + p)); } else console.log(`✓ ${corta}${destino}  (pintar ${v.pintar})`);
     }
-    console.log(`\n${rutas.length - fallos}/${rutas.length} rutas sin problemas`);
+    if (A11Y && !a11yGlobal) { fallosGlobales++; console.log('✗ a11y global: ninguna vista pulida con shell en esta corrida; tokens y drawer sin medir'); }
+    console.log(`\n${rutas.length - fallos}/${rutas.length} rutas sin problemas${A11Y ? (fallosGlobales ? ' · a11y global con problemas' : ' · a11y global en verde') : ''}`);
   } finally {
     try { ws?.close(); } catch { /* ya cerrado */ }
     ch.kill();
     await dormir(300);
     try { rmSync(perfil, { recursive: true, force: true }); } catch { /* Chrome aún suelta archivos */ }
   }
-  process.exit(fallos ? 1 : 0);
+  process.exit(fallos || fallosGlobales ? 1 : 0);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

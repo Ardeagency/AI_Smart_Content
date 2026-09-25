@@ -1512,7 +1512,7 @@ class OrganizationView extends BaseView {
       const canChangeRole = canManage && !isOrgOwner && !isCurrent;
       const canRemove = canManage && !isOrgOwner && !isCurrent;
       const rolePicker = canChangeRole
-        ? `<select class="org-role-select" data-member-id="${this.escapeHtml(m.id)}">
+        ? `<select class="org-role-select" data-member-id="${this.escapeHtml(m.id)}" aria-label="${this.escapeHtml(__('Rol de {nombre}', { nombre: display }))}">
              <option value="admin"${m.role === 'admin' ? ' selected' : ''}>${__('Administrador')}</option>
              <option value="editor"${m.role === 'editor' ? ' selected' : ''}>${__('Editor')}</option>
              <option value="viewer"${m.role === 'viewer' ? ' selected' : ''}>${__('Viewer')}</option>

@@ -255,7 +255,7 @@
         <div class="shell-velo" id="navOverlay" hidden></div>
         <aside class="shell-sidebar" id="sideNavigation" aria-label="${esc(t('Navegación principal'))}">
           <div class="shell-marca">
-            <button type="button" class="shell-marca-btn" id="shellMarcaBtn" aria-haspopup="true" aria-expanded="false" aria-controls="shellPanelMarcas">
+            <button type="button" class="shell-marca-btn" id="shellMarcaBtn" aria-labelledby="navOrgName" aria-haspopup="true" aria-expanded="false" aria-controls="shellPanelMarcas">
               <span class="shell-marca-logo" id="shellMarcaLogo" aria-hidden="true">${esc(iniciales(this._orgNombre))}</span>
               <span class="shell-marca-texto">
                 <span class="shell-marca-nombre" id="navOrgName">${esc(this._orgNombre || t('Tu marca'))}</span>

@@ -145,7 +145,7 @@
     --color-warning: #ffe500;
     --color-warning-light: rgba(255, 229, 0, 0.15);
     --color-warning-bg: rgba(255, 229, 0, 0.1);
-    --color-error: #ff0000;
+    --color-error: #ff4040; /* AA sobre --white-10 (a11y, 24/09): el rojo puro daba 3.91 */
     --color-error-light: rgba(255, 0, 0, 0.15);
     --color-error-bg: rgba(255, 0, 0, 0.1);
     --color-info: #00e7ff;
@@ -519,7 +519,7 @@
   --color-warning: #ffe500;
   --color-warning-light: rgba(255, 229, 0, 0.15);
   --color-warning-bg: rgba(255, 229, 0, 0.1);
-  --color-error: #ff0000;
+  --color-error: #ff4040; /* AA sobre --white-10 (a11y, 24/09): el rojo puro daba 3.91 */
   --color-error-light: rgba(255, 0, 0, 0.15);
   --color-error-bg: rgba(255, 0, 0, 0.1);
   --color-info: #00e7ff;
