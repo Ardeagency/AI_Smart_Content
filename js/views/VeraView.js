@@ -971,6 +971,40 @@ class VeraView extends (window.BaseView || class {}) {
     document.getElementById('gptTyping')?.remove();
   }
 
+  /**
+   * «Detener» mientras Vera trabaja: POST /v1/turnos/:id/cancelar MARCA el turno y el bucle
+   * lo mira entre pasos; al parar escribe «Detuve lo que estaba haciendo» y la espera se
+   * cierra sola con ese mensaje. El botón vive dentro del indicador y se va con él.
+   */
+  _mostrarDetener() {
+    const turno = this._turnoActivo;
+    const cont = document.querySelector('#gptTyping .gpt-msg-content');
+    if (!turno || !cont || cont.querySelector('.gpt-typing-stop') || !window.VeraDatos?.cancelarTurno) return;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'gpt-typing-stop';
+    b.textContent = __('Detener');
+    b.addEventListener('click', async () => {
+      b.disabled = true;
+      b.textContent = __('Deteniendo…');
+      try {
+        const r = await window.VeraDatos.cancelarTurno(turno);
+        if (r?.cancelado === true) {
+          this._deteniendo = true;
+          this.updateTypingStatus(this._getWaitMessage(0));
+        } else {
+          b.textContent = __('Ya está terminando');
+        }
+      } catch (e) {
+        console.warn('[VeraView] cancelar turno:', e?.codigo || e?.message || e);
+        b.disabled = false;
+        b.textContent = __('Detener');
+        window.showToast?.(__('No se pudo detener. Intenta de nuevo.'), { type: 'error' });
+      }
+    });
+    cont.appendChild(b);
+  }
+
   /* _playNotificationSound() vive ahora en BaseView (chime canonico de la
      plataforma, compartido con Studio); VeraView lo hereda tal cual. */
 
@@ -1179,6 +1213,7 @@ class VeraView extends (window.BaseView || class {}) {
       const idCliente = window.apiV2?.nuevoIdCliente?.();
       const envio = await window.VeraDatos.enviar(convId, messageToSend, idCliente);
       this._turnoActivo = envio?.turno_id || null;
+      this._mostrarDetener();
       if (userMsg && envio?.mensaje_id) userMsg.id = envio.mensaje_id;
       if (nueva) { this._refreshHistorySoon(); this._nameConversationSoon(convId, text); }
       await this._waitForAsyncResponse(convId, null);
@@ -1200,6 +1235,8 @@ class VeraView extends (window.BaseView || class {}) {
       this.aiState.messages.push(errMsg);
       this.appendMessage(errMsg);
     } finally {
+      this._turnoActivo = null;
+      this._deteniendo = false;
       this.aiState.isLoading = false;
       if (sendBtn) sendBtn.disabled = !(input?.value || '').trim();
     }
@@ -1235,6 +1272,7 @@ class VeraView extends (window.BaseView || class {}) {
 
   /* ── Mensajes de espera cíclicos (cuando no hay status del backend) ─────── */
   _getWaitMessage(elapsedMs) {
+    if (this._deteniendo) return __('Vera se detiene al terminar el paso en curso…');
     if (elapsedMs < 15_000)  return __('Vera está pensando…');
     if (elapsedMs < 40_000)  return __('Vera está procesando tu solicitud…');
     if (elapsedMs < 90_000)  return __('Vera está trabajando en segundo plano…');
@@ -1381,7 +1419,9 @@ class VeraView extends (window.BaseView || class {}) {
               id: `local-timeout-${Date.now()}`,
               role: 'error',
               content: opts.timeoutMsg
-                || __('Vera sigue trabajando en segundo plano. Recarga la página cuando quieras ver su respuesta.'),
+                // Sin estado del turno desde la consola: no se promete una respuesta que puede no
+                // llegar (si el trabajo cayó sin escribir, no llega nunca). Se dice qué hacer.
+                || __('Vera no respondió en 12 minutos. Recarga la página: si su respuesta no aparece, vuelve a enviarle el mensaje.'),
               created_at: new Date().toISOString()
             };
             this.aiState.messages.push(timeoutMsg);
