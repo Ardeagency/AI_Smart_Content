@@ -4,11 +4,14 @@
  * (código ≠ 0) si alguna rompe. Para comprobar que un cambio no rompió nada fuera de lo que tocaste.
  *
  * Por cada ruta:
- *   - 0 excepciones sin capturar y 0 console.error;
+ *   - 0 excepciones sin capturar, 0 console.error, 0 errores de consola del navegador (recursos
+ *     que fallan: 400/401/404…) y 0 violaciones de CSP (evento securitypolicyviolation);
  *   - no acaba en /login ni /signin (eso es que la sesión murió);
  *   - espía de pintado: cada Estado.pintar se compara con lo que daría innerHTML en el mismo
  *     contexto. El gemelo se parsea en un documento inerte (no carga imágenes ni ejecuta scripts).
  *     Cualquier diferencia es un fallo.
+ *   - EXCEPCIONES (arriba, comentadas): errores de infraestructura sin desplegar que se toleran
+ *     e informan con recuento; --estricto los vuelve fallo;
  *   - el splash de arranque se va en menos de --splash-max ms (8000 por defecto);
  *   - opcional: captura PNG de cada ruta.
  *
@@ -57,6 +60,17 @@ const ESPERA = Number(opcion('espera', 9000));
 const SOLO = opcion('solo', '');
 const CAPTURA = opcion('captura', '');
 const A11Y = args.includes('--a11y');
+// Errores de consola CONOCIDOS que dependen de infraestructura aún sin desplegar, no de la consola.
+// Se toleran pero se informan con su recuento; `--estricto` los vuelve fallo. Cada entrada dice
+// por qué y cuándo se quita: una excepción sin motivo no entra.
+export const EXCEPCIONES = [
+  { patron: /media-v2\.aismartcontent\.io\/(in|pub)\/.*|status of 40[134] \(\) ← https:\/\/media-v2\.aismartcontent\.io\//,
+    motivo: 'media-v2: el Worker (ADR-0045) no está desplegado; 401/404 hasta el paso del Worker. Quitar cuando /in/ sirva.' },
+  { patron: /ERR_NAME_NOT_RESOLVED ← https:\/\/api-v2\.aismartcontent\.io\//,
+    motivo: 'api-v2: el borde no tiene DNS todavía (NXDOMAIN, 25/09); las vistas lo dicen con «todavía no». Quitar cuando resuelva.' },
+];
+const ESTRICTO = args.includes('--estricto');
+const tolerados = new Map();
 // El splash de arranque (#app-splash) se va con el primer `routechange`; el failsafe de index.html
 // lo quita a los 10 s. Si una ruta lo deja más de SPLASH_MAX ms, es que algo tapa la señal de «app
 // lista». Tope fijado con lo medido antes del hotfix del SW (bcdc2d0b, 25/09): peor caso 6.2 s
@@ -112,7 +126,8 @@ export function rutasDeApp(fuente, org) {
 const ESPIA = `(() => {
   new MutationObserver(() => { const s = document.getElementById('app-splash'); if (s && s.classList.contains('app-splash--hide') && !window.__splashFuera) window.__splashFuera = Math.round(performance.now()); })
     .observe(document, { subtree: true, attributes: true, attributeFilter: ['class'] });
-  window.__pintarMal = []; window.__pintarN = 0;
+  window.__pintarMal = []; window.__pintarN = 0; window.__csp = [];
+  document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(e.effectiveDirective + ' bloqueó ' + (e.blockedURI || '(inline)') + (e.sourceFile ? ' desde ' + e.sourceFile.split('/').pop() + ':' + e.lineNumber : '')));
   const inerte = document.implementation.createHTMLDocument('');
   const gemelo = (z) => z.namespaceURI === 'http://www.w3.org/1999/xhtml' ? inerte.createElement(z.localName) : inerte.createElementNS(z.namespaceURI, z.localName);
   let E;
@@ -155,9 +170,12 @@ async function main() {
       if (d.id && pend.has(d.id)) { pend.get(d.id)(d); pend.delete(d.id); }
       if (d.method === 'Runtime.exceptionThrown') eventos.push('excepción: ' + (d.params.exceptionDetails.exception?.description || d.params.exceptionDetails.text).split('\n')[0].slice(0, 200));
       if (d.method === 'Runtime.consoleAPICalled' && d.params.type === 'error') eventos.push('console.error: ' + d.params.args.map((a) => a.value ?? a.description).join(' ').split('\n')[0].slice(0, 200));
+      // Lo que la consola de DevTools muestra en rojo sin pasar por console.error: recursos que
+      // fallan (400/401/404…) y violaciones de CSP. Con la URL, que el texto de Chrome no trae.
+      if (d.method === 'Log.entryAdded' && d.params.entry.level === 'error') eventos.push('consola (' + d.params.entry.source + '): ' + d.params.entry.text.split('\n')[0].slice(0, 160) + (d.params.entry.url ? ' ← ' + d.params.entry.url.slice(0, 140) : ''));
     });
     const cmd = (method, params = {}) => new Promise((r) => { const i = ++id; pend.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
-    await cmd('Runtime.enable'); await cmd('Page.enable');
+    await cmd('Runtime.enable'); await cmd('Page.enable'); await cmd('Log.enable');
     await cmd('Page.addScriptToEvaluateOnNewDocument', { source: ESPIA });
     if (SESION_NODE) await cmd('Page.addScriptToEvaluateOnNewDocument', { source: await sembrado() });
     // Dos visitas por perfil: la 1.ª (/home) instala el Service Worker y TODAS las rutas siguientes
@@ -186,12 +204,17 @@ async function main() {
       eventos = [];
       await cmd('Page.navigate', { url: BASE + ruta });
       await dormir(ESPERA);
-      const v = (await cmd('Runtime.evaluate', { returnByValue: true, expression: `({ final: location.pathname, splash: window.__splashFuera || null, hayplash: !!document.getElementById('app-splash'), pintar: window.__pintarN || 0, mal: window.__pintarMal || [] })` })).result?.result?.value || {};
-      const problemas = [...eventos];
+      const v = (await cmd('Runtime.evaluate', { returnByValue: true, expression: `({ final: location.pathname, splash: window.__splashFuera || null, hayplash: !!document.getElementById('app-splash'), pintar: window.__pintarN || 0, mal: window.__pintarMal || [], csp: window.__csp || [] })` })).result?.result?.value || {};
+      const problemas = [];
+      for (const e of eventos) {
+        const x = ESTRICTO ? null : EXCEPCIONES.find((ex) => ex.patron.test(e));
+        if (x) tolerados.set(x.motivo, (tolerados.get(x.motivo) || 0) + 1); else problemas.push(e);
+      }
       if (/^\/(login|signin)\b/.test(v.final || '')) problemas.push(`terminó en ${v.final}: la sesión murió`);
       for (const x of v.mal || []) problemas.push('pintar ≠ innerHTML: ' + x);
       if (v.hayplash && !v.splash) problemas.push(`el splash sigue encima a los ${ESPERA} ms`);
       else if (v.splash > SPLASH_MAX) problemas.push(`el splash tardó ${v.splash} ms en irse (tope ${SPLASH_MAX})`);
+      for (const x of v.csp || []) problemas.push('violación de CSP: ' + x);
       if (A11Y && A11Y_RUTAS.some((r) => ruta.replace(m[0], '') === r || ruta.startsWith(r + '/'))) {
         const ev = async (expression) => (await cmd('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result?.result?.value;
         problemas.push(...await a11y.nombres(cmd, ev), ...await a11y.foco(cmd, ev));
@@ -210,6 +233,7 @@ async function main() {
       const destino = v.final && v.final !== ruta ? ` → ${v.final.replace(m[0], '')}` : '';
       if (problemas.length) { fallos++; console.log(`✗ ${corta}${destino}`); problemas.forEach((p) => console.log('    ' + p)); } else console.log(`✓ ${corta}${destino}  (pintar ${v.pintar})`);
     }
+    for (const [motivo, n] of tolerados) console.log(`  tolerado ×${n}: ${motivo}`);
     if (A11Y && !a11yGlobal) { fallosGlobales++; console.log('✗ a11y global: ninguna vista pulida con shell en esta corrida; tokens y drawer sin medir'); }
     console.log(`\n${rutas.length - fallos}/${rutas.length} rutas sin problemas${A11Y ? (fallosGlobales ? ' · a11y global con problemas' : ' · a11y global en verde') : ''}`);
   } finally {
