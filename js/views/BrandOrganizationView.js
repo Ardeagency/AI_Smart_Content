@@ -695,8 +695,6 @@ class BrandOrganizationView extends BaseView {
   renderCards() {
     this.applyBrandBackgroundGradient();
     const container = this.container || document.getElementById('app-container');
-    const root = container?.querySelector('#brandsListContainer');
-    if (root) root.classList.remove('brand-storage-gallery-view');
 
     const showInfoCard = Array.isArray(this.brandContainers) && this.brandContainers.length === 1;
     const infoCardEl = container?.querySelector('.card-info:not(.expanded)');
@@ -706,8 +704,6 @@ class BrandOrganizationView extends BaseView {
       const card = container?.querySelector(`.${cls}`);
       if (card) card.style.display = '';
     });
-
-    container?.querySelector('.brand-cards-zone .card-storage-library')?.remove();
 
     const corner = container?.querySelector('.brand-corner-bottom-left');
     if (corner) corner.style.display = '';
@@ -722,17 +718,6 @@ class BrandOrganizationView extends BaseView {
     this.setupEventListeners();
   }
 
-  /** Ruta a la página dedicada Brand Storage (sub-marcas). */
-  getBrandStoragePageHref() {
-    const orgId = window.currentOrgId || this.organizationRow?.id;
-    const orgName = (window.currentOrgName || this.organizationRow?.name || '').trim();
-    if (orgId && orgName && typeof window.getOrgPathPrefix === 'function') {
-      const prefix = window.getOrgPathPrefix(orgId, orgName);
-      if (prefix) return `${prefix}/brand-storage`;
-    }
-    return '/brand-storage';
-  }
-
   /** Path al detalle de un brand_container concreto (mismo formato que BrandstorageView). */
   getBrandContainerHref(id) {
     const orgId = window.currentOrgId || this.organizationRow?.id || this.brandContainerData?.organization_id;
@@ -742,11 +727,6 @@ class BrandOrganizationView extends BaseView {
       if (prefix) return `${prefix}/brand/${id}`;
     }
     return `/brand/${id}`;
-  }
-
-  /** URL de retorno OAuth tras conectar integraciones desde el panel INFO. */
-  getBrandStorageReturnPath() {
-    return this.getBrandStoragePageHref();
   }
 
   /** Fecha legible para "Ultima actualizacion" en el panel INFO. */

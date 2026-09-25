@@ -2,7 +2,7 @@
  * PageMeta — actualiza <title>, og:title y twitter:title según la vista activa.
  *
  * Formato del title (sin prefijo de producto — el favicon ya identifica la app):
- *   - Con org + sección:  "{OrgName} | {Section}"   ej: "Ignis | Brand Storage"
+ *   - Con org + sección:  "{OrgName} | {Section}"   ej: "Ignis | Identidad"
  *   - Con org sin sección: "{OrgName}"
  *   - Sin org + sección:  "{Section}"                ej: "Login"
  *   - Fallback:           "AI Smart Content"
@@ -23,7 +23,6 @@
     [new RegExp(`${ORG}/dashboard$`),                          'Tablero'],
     [new RegExp(`${ORG}/production$`),                         'Production'],
     [new RegExp(`${ORG}/monitoring$`),                         'Monitoring'],
-    [new RegExp(`${ORG}/brand-storage$`),                      'Brand Storage'],
     [new RegExp(`${ORG}/brand-organization$`),                 'Brand Organization'],
     [new RegExp(`${ORG}/brand(/.+)?$`),                        'Brand'],
     [new RegExp(`${ORG}/product-detail/.+$`),                  'Product'],
@@ -47,8 +46,6 @@
     [/^\/dashboard$/,                                          'Tablero'],
     [/^\/production$/,                                         'Production'],
     [/^\/monitoring$/,                                         'Monitoring'],
-    [/^\/brand-storage$/,                                      'Brand Storage'],
-    [/^\/brandstorage$/,                                       'Brand Storage'],
     [/^\/brand-organization$/,                                 'Brand Organization'],
     [/^\/brands?(\/.+)?$/,                                     'Brand'],
     [/^\/product-detail\/.+$/,                                 'Product'],

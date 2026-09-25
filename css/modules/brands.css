@@ -69,7 +69,6 @@
                 transform var(--duracion-lenta) var(--curva-entrada) 0.3s;
 }
 
-
 @media (max-width: 768px) {
     .brand-dashboard-container {
         left: 0;
@@ -136,41 +135,9 @@
 }
 
 /* Brand Storage — mismo relleno que Organization (#app-container); sin 72vh que cortaba el fondo */
-.brand-dashboard-container.brand-storage-standalone {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    min-height: 0;
-    overflow: hidden;
-    background: transparent;
-}
 
 /* Galería: degradado en el propio contenedor (hereda --org-gradient de :root / JS).
    La capa interna a veces queda detrás del stacking del glass; así el color siempre se ve. */
-.brand-dashboard-container.brand-storage-standalone.brand-storage-gallery-view {
-    background: transparent;
-}
-
-/* Brand Storage usa el mismo sistema de capas de fondo que Brand Organization */
-.brand-dashboard-container.brand-storage-gallery-view .brand-dashboard-background .background-skeleton {
-    opacity: 1 !important;
-    pointer-events: none;
-}
-
-.brand-dashboard-container.brand-storage-gallery-view .brand-dashboard-background .background-gradient {
-    opacity: 0 !important;
-    pointer-events: none;
-}
-
-.brand-dashboard-container.brand-storage-gallery-view.brands-background-ready .brand-dashboard-background .background-skeleton {
-    opacity: 0 !important;
-}
-
-.brand-dashboard-container.brand-storage-gallery-view.brands-background-ready .brand-dashboard-background .background-gradient {
-    opacity: 1 !important;
-}
 
 /* Entrada suave del contenido al pintar */
 .brand-dashboard-container .brand-corner-bottom-left,
@@ -873,7 +840,6 @@
     background: rgba(255, 255, 255, 0.3);
 }
 
-
 /* Contenido expandido */
 .card-content-expanded {
     display: none;
@@ -1489,219 +1455,10 @@
     height: auto;
 }
 
-.card-storage-library {
-    min-height: 0;
-    height: auto;
-}
-
 .card-title-counter {
     font-size: var(--font-size-sm);
     color: var(--text-muted);
     font-weight: var(--font-weight-medium);
-}
-
-.card-storage-library .card-content {
-    padding-top: var(--space-1);
-}
-
-.brand-storage-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-2);
-}
-
-/* Galería en grid por filas (orden estable); columnas CSS reordenaban visualmente */
-.brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: var(--space-4);
-    align-items: start;
-}
-
-/* Grid: fila 1fr empuja el pie a la esquina inferior (flex de .brand-card no respetaba altura con aspect-ratio). */
-.brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry > .brand-storage-tile.brand-card {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto 1fr;
-    align-content: stretch;
-    justify-items: stretch;
-    width: 100%;
-    margin: 0;
-    aspect-ratio: 1;
-    min-height: 0;
-    min-width: 0;
-    box-sizing: border-box;
-    cursor: pointer;
-    text-align: left;
-    font: inherit;
-    color: inherit;
-    padding: clamp(0.9rem, 2.8vw, 1.2rem);
-    overflow: visible;
-    transition: border-color var(--duracion-base) var(--curva-estandar), box-shadow var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
-}
-
-.brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry > .brand-storage-tile.brand-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
-}
-
-/* ===== Brand Storage — móvil =====
-   .brand-storage-standalone tiene mayor especificidad que el reflow genérico
-   .brand-dashboard-container, así que en móvil se quedaba position:absolute +
-   overflow:hidden -> el grid de sub-marcas se cortaba sin poder scrollear. */
-@media (max-width: 768px) {
-    .brand-dashboard-container.brand-storage-standalone {
-        position: relative;
-        inset: auto;
-        min-height: calc(100vh - 48px);
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-    /* minmax(260px,…) forzaba 260px y desbordaba en pantallas estrechas (≤320px).
-       min(220px,100%) garantiza que el tile nunca exceda el ancho disponible. */
-    .brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry {
-        grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
-    }
-}
-
-.brand-storage-tile__head {
-    grid-row: 1;
-    grid-column: 1;
-    align-self: start;
-    justify-self: stretch;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
-    width: 100%;
-    min-width: 0;
-}
-
-.brand-storage-tile__bottom {
-    grid-row: 2;
-    grid-column: 1;
-    align-self: end;
-    justify-self: stretch;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-1);
-    width: 100%;
-    min-width: 0;
-    padding-top: var(--space-1);
-}
-
-.brand-storage-tile__name {
-    font-weight: var(--font-weight-bold);
-    font-size: clamp(0.95rem, 2.6vw, 1.2rem);
-    letter-spacing: var(--tracking-mono);
-    line-height: var(--leading-tight);
-    min-width: 0;
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.brand-storage-tile__mercado {
-    flex: 0 1 auto;
-    min-height: 0;
-    width: 100%;
-    font-size: var(--font-size-sm);
-    line-height: var(--leading-normal);
-    font-weight: var(--font-weight-medium);
-    opacity: 0.88;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 4;
-    /* Sin % de altura: el padre .__head es auto y 38% recortaba mal el -webkit-box */
-    max-height: 5.2em;
-}
-
-.brand-storage-tile__prods {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: flex-start;
-    gap: var(--space-1) var(--space-2);
-    text-align: left;
-    width: 100%;
-}
-
-.brand-storage-tile__prods-num {
-    font-weight: var(--font-weight-bold);
-    font-size: clamp(1.05rem, 2.8vw, 1.35rem);
-    line-height: var(--leading-none);
-    font-variant-numeric: tabular-nums;
-}
-
-.brand-storage-tile__prods-label {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-mono);
-    opacity: 0.72;
-}
-
-.brand-storage-tile__updated {
-    font-size: var(--font-size-xs);
-    opacity: 0.62;
-    line-height: var(--leading-tight);
-    min-width: 0;
-    width: 100%;
-}
-
-#brandsListContainer.brand-cards-glass-white .brand-storage-tile__mercado,
-#brandsListContainer.brand-cards-glass-white .brand-storage-tile__updated,
-#brandsListContainer.brand-cards-glass-white .brand-storage-tile__prods-label {
-    opacity: 0.78;
-}
-
-/* Brand Storage: zona de cards a altura completa (evita “corte” visual); scroll interno */
-.brand-dashboard-container.brand-storage-gallery-view .brand-cards-zone {
-    left: 1.5rem;
-    right: 1.5rem;
-    top: calc(48px + 1.5rem);
-    bottom: 1.5rem;
-    width: auto;
-    max-width: none;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-.brand-dashboard-container.brand-storage-gallery-view .card-storage-library {
-    min-height: 0;
-    background: transparent;
-    border: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0;
-}
-
-.brand-dashboard-container.brand-storage-gallery-view .card-storage-library .card-content {
-    flex: 0 0 auto;
-    display: block;
-    padding-top: var(--space-2);
-}
-
-/* En galería, el contenedor NO debe heredar glass dinámico de .brand-card */
-#brandsListContainer.brand-storage-gallery-view.brand-cards-glass-black .card-storage-library,
-#brandsListContainer.brand-storage-gallery-view.brand-cards-glass-white .card-storage-library {
-    background: transparent;
-    border: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
-
-.brand-storage-empty {
-    font-size: var(--font-size-sm);
-    color: var(--text-muted);
-    opacity: 0.9;
-    padding: var(--space-2) 0;
 }
 
 .identity-files {
@@ -4042,7 +3799,6 @@
     border-radius: 50%;
 }
 
-
 /* Campos de información */
 .card-content-expanded .info-field {
     margin-bottom: var(--space-6);
@@ -4247,7 +4003,6 @@
    ============================================ */
 
 /* Reglas de .editable-field heredan de base.css - sin duplicación */
-
 
 /* Responsive: panel INFO y card expandida en pantallas pequeñas */
 @media (max-width: 768px) {
@@ -4470,5 +4225,4 @@
     margin: 0;
     font-size: var(--font-size-base);
 }
-
 

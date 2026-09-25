@@ -36,7 +36,7 @@
   /* Mapa de navegación: el sidebar de siempre (Navigation.js hasta el 24/09) con los
      nombres nuevos. `ruta` = segmento bajo /org/:short/:slug. `pronto` = la pantalla aún
      no volvió a la base nueva: se lista, no navega.
-     i18n-keep: __('Vera') __('Espacio de trabajo') __('Inicio') __('Archivos') __('Marketing')
+     i18n-keep: __('Vera') __('Espacio de trabajo') __('Inicio') __('Marketing')
      __('Identidad') __('Productos') __('Servicios') __('Escenarios') __('Personajes')
      __('Competencia') __('Simulador') __('Crear') __('Producciones') __('Historial')
      __('Tareas') __('Imagen') __('Video') __('Studio') __('pronto') */
@@ -46,7 +46,6 @@
     ] },
     { seccion: 'Espacio de trabajo', items: [
       { id: 'inicio', etiqueta: 'Inicio', ruta: 'dashboard', icono: '/recursos/icons/dashboard.svg', cap: 'insights.view' },
-      { id: 'archivos', etiqueta: 'Archivos', ruta: 'brand-storage', icono: '/recursos/icons/file-storage.svg', cap: 'brand.identity.edit', pronto: true },
       { id: 'marketing', etiqueta: 'Marketing', ruta: 'command-center', icono: '/recursos/icons/commandcenter.svg', cap: 'insights.view', pronto: true },
       { id: 'identidad', etiqueta: 'Identidad', ruta: 'brand', icono: '/recursos/icons/Brands.svg', cap: 'brand.identity.edit', hijos: [
         { etiqueta: 'Productos', ruta: 'products' },
@@ -74,7 +73,7 @@
     image: 'Imagen', video: 'Video', production: 'Producciones', 'execution-history': 'Historial',
     brand: 'Identidad', brands: 'Identidad', 'brand-organization': 'Identidad', products: 'Productos',
     'product-detail': 'Producto', services: 'Servicios', places: 'Escenarios', characters: 'Personajes',
-    monitoring: 'Competencia', 'command-center': 'Marketing', predictor: 'Simulador', tasks: 'Tareas', 'brand-storage': 'Archivos', organization: 'Configuración', configuracion: 'Configuración', cuenta: 'Tu cuenta',
+    monitoring: 'Competencia', 'command-center': 'Marketing', predictor: 'Simulador', tasks: 'Tareas', organization: 'Configuración', configuracion: 'Configuración', cuenta: 'Tu cuenta',
     plans: 'Planes', credits: 'Créditos',
     'plans/cancel': 'Planes',
     '404': 'Página no encontrada', '403': 'Sin acceso',

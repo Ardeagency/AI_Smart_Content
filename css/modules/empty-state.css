@@ -172,7 +172,6 @@
    toda la fila (grid-column en grids; width 100% + flex-basis en contenedores
    flex-wrap) lo deja centrado a lo ancho como en el resto de la plataforma. */
 .planes-plans > .empty-state,
-.brand-storage-grid > .empty-state,
 .flow-catalog-saved-grid > .empty-state {
   grid-column: 1 / -1;
   flex: 1 1 100%;

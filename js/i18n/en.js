@@ -865,7 +865,6 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "Compartidos": "",
   "Competencia": "Competition",
   "pronto": "soon",
-  "Archivos": "Files",
   "Competencia {n}%": "Competition {n}%",
   "Competencia directa": "Direct competitor",
   "Competencia indirecta": "Indirect competitor",
