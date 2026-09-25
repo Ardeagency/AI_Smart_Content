@@ -46,7 +46,9 @@ describe('Shell', () => {
     const app = fs.readFileSync('js/app.js', 'utf8');
     const registradas = new Set([...app.matchAll(/r\.register\('([^']+)'/g)].map((m) => m[1]));
     const menu = SHELL.slice(SHELL.indexOf('const MENU = ['), SHELL.indexOf('const TITULOS'));
-    const rutas = [...menu.matchAll(/ruta: '([^']+)'/g)].map((m) => m[1]);
+    // Las marcadas `pronto: true` se listan sin enlace (no navegan): no cuentan.
+    const rutas = menu.split('\n').filter((l) => !/pronto: true/.test(l))
+      .flatMap((l) => [...l.matchAll(/ruta: '([^']+)'/g)].map((m) => m[1]));
     expect(rutas.length).toBeGreaterThan(8);
     const sinRuta = rutas.filter((r) => !registradas.has('/org/:orgIdShort/:orgNameSlug/' + r) && !registradas.has('/' + r));
     expect(sinRuta).toEqual([]);

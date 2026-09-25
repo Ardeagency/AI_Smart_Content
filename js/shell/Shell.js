@@ -31,24 +31,23 @@
   const esc = (s) => (window.BaseView?.escapeHtml ? window.BaseView.escapeHtml(s) : String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c])));
   const ICONO_VER = '20260924a';
   const icono = (src) => `<img src="${src}?nav=${ICONO_VER}" class="shell-icono" alt="" width="16" height="16" aria-hidden="true">`;
+  const iconoNav = (src, extra = '') => `<img src="${src}?nav=${ICONO_VER}" class="nav-icon nav-icon-img${extra}" alt="" width="16" height="16" aria-hidden="true">`;
 
-  /* Mapa de navegación del SaaS (L3). `ruta` = segmento bajo /org/:short/:slug.
-     i18n-keep: __('Inicio') __('Vera') __('Crear') __('Studio') __('Imagen') __('Video')
-     __('Producciones') __('Historial') __('Marca') __('Identidad') __('Productos')
-     __('Servicios') __('Escenarios') __('Personajes') __('Competencia') */
+  /* Mapa de navegación: el sidebar de siempre (Navigation.js hasta el 24/09) con los
+     nombres nuevos. `ruta` = segmento bajo /org/:short/:slug. `pronto` = la pantalla aún
+     no volvió a la base nueva: se lista, no navega.
+     i18n-keep: __('Vera') __('Espacio de trabajo') __('Inicio') __('Archivos') __('Marketing')
+     __('Identidad') __('Productos') __('Servicios') __('Escenarios') __('Personajes')
+     __('Competencia') __('Simulador') __('Crear') __('Producciones') __('Historial')
+     __('Tareas') __('Imagen') __('Video') __('Studio') __('pronto') */
   const MENU = [
     { seccion: null, items: [
+      { id: 'vera', etiqueta: 'Vera', ruta: 'vera', icono: '/recursos/vera/Logoverablanco.svg', iconoColapsado: '/recursos/vera/Vera.svg', cap: 'vera.chat', primario: true },
+    ] },
+    { seccion: 'Espacio de trabajo', items: [
       { id: 'inicio', etiqueta: 'Inicio', ruta: 'dashboard', icono: '/recursos/icons/dashboard.svg', cap: 'insights.view' },
-      { id: 'vera', etiqueta: 'Vera', ruta: 'vera', icono: '/recursos/vera/Vera.svg', cap: 'vera.chat' },
-    ] },
-    { seccion: 'Crear', items: [
-      { id: 'studio', etiqueta: 'Studio', ruta: 'studio/flows', icono: '/recursos/icons/flows.svg', cap: 'studio.create', hijos: 'flujos' },
-      { id: 'imagen', etiqueta: 'Imagen', ruta: 'image', icono: '/recursos/icons/image.svg', cap: 'studio.create' },
-      { id: 'video', etiqueta: 'Video', ruta: 'video', icono: '/recursos/icons/video.svg', cap: 'video.create' },
-      { id: 'producciones', etiqueta: 'Producciones', ruta: 'production', icono: '/recursos/icons/Production.svg', cap: 'production.create' },
-      { id: 'historial', etiqueta: 'Historial', ruta: 'execution-history', icono: '/recursos/icons/history.svg', cap: 'production.create' },
-    ] },
-    { seccion: 'Marca', items: [
+      { id: 'archivos', etiqueta: 'Archivos', ruta: 'brand-storage', icono: '/recursos/icons/file-storage.svg', cap: 'brand.identity.edit', pronto: true },
+      { id: 'marketing', etiqueta: 'Marketing', ruta: 'command-center', icono: '/recursos/icons/commandcenter.svg', cap: 'insights.view', pronto: true },
       { id: 'identidad', etiqueta: 'Identidad', ruta: 'brand', icono: '/recursos/icons/Brands.svg', cap: 'brand.identity.edit', hijos: [
         { etiqueta: 'Productos', ruta: 'products' },
         { etiqueta: 'Servicios', ruta: 'services' },
@@ -56,6 +55,15 @@
         { etiqueta: 'Personajes', ruta: 'characters' },
       ] },
       { id: 'competencia', etiqueta: 'Competencia', ruta: 'monitoring', icono: '/recursos/icons/monitoring.svg', cap: 'monitoring.view' },
+      { id: 'simulador', etiqueta: 'Simulador', ruta: 'predictor', icono: '/recursos/icons/predictor.svg', cap: 'insights.view', pronto: true },
+    ] },
+    { seccion: 'Crear', items: [
+      { id: 'producciones', etiqueta: 'Producciones', ruta: 'production', icono: '/recursos/icons/Production.svg', cap: 'production.create' },
+      { id: 'historial', etiqueta: 'Historial', ruta: 'execution-history', icono: '/recursos/icons/history.svg', cap: 'production.create' },
+      { id: 'tareas', etiqueta: 'Tareas', ruta: 'tasks', icono: '/recursos/icons/task.svg', cap: 'production.create', pronto: true },
+      { id: 'imagen', etiqueta: 'Imagen', ruta: 'image', icono: '/recursos/icons/image.svg', cap: 'studio.create' },
+      { id: 'video', etiqueta: 'Video', ruta: 'video', icono: '/recursos/icons/video.svg', cap: 'video.create' },
+      { id: 'studio', etiqueta: 'Studio', ruta: 'studio/flows', icono: '/recursos/icons/flows.svg', cap: 'studio.create', hijos: 'flujos' },
     ] },
   ];
 
@@ -66,7 +74,7 @@
     image: 'Imagen', video: 'Video', production: 'Producciones', 'execution-history': 'Historial',
     brand: 'Identidad', brands: 'Identidad', 'brand-organization': 'Identidad', products: 'Productos',
     'product-detail': 'Producto', services: 'Servicios', places: 'Escenarios', characters: 'Personajes',
-    monitoring: 'Competencia', organization: 'Configuración', configuracion: 'Configuración', cuenta: 'Tu cuenta',
+    monitoring: 'Competencia', 'command-center': 'Marketing', predictor: 'Simulador', tasks: 'Tareas', 'brand-storage': 'Archivos', organization: 'Configuración', configuracion: 'Configuración', cuenta: 'Tu cuenta',
     plans: 'Planes', credits: 'Créditos',
     'plans/cancel': 'Planes',
     '404': 'Página no encontrada', '403': 'Sin acceso',
@@ -229,37 +237,46 @@
       const ruta = (s) => esc(this.getUserSidebarRoute(s));
       const abierto = leer(CLAVE_ABIERTO) || '';
 
-      const grupos = MENU.map((g) => {
+      const menu = MENU.map((g) => {
         const items = g.items.filter((i) => this._visible(i));
         if (!items.length) return '';
         const lis = items.map((i) => {
           const href = ruta(i.ruta);
+          const nombre = esc(t(i.etiqueta));
+          const iconos = i.iconoColapsado
+            ? `${iconoNav(i.icono, ' nav-icon-img--vera-logo nav-icon-img--expanded')}${iconoNav(i.iconoColapsado, ' nav-icon-img--vera-mark nav-icon-img--collapsed')}`
+            : iconoNav(i.icono);
+          if (i.pronto) {
+            return `
+            <div class="nav-item nav-item--en-obras">
+              <span class="nav-link nav-main-link" aria-disabled="true" title="${nombre} · ${esc(t('pronto'))}">
+                ${iconos}<span class="nav-text">${nombre}</span><span class="nav-chip-obras">${esc(t('pronto'))}</span>
+              </span>
+            </div>`;
+          }
           const hijos = this._hijos(i);
-          const enlace = `
-            <a href="${href}" class="shell-enlace" data-ruta="${href}" data-id="${i.id}" title="${esc(t(i.etiqueta))}">
-              ${icono(i.icono)}<span class="shell-texto">${esc(t(i.etiqueta))}</span>
+          const clasePrimaria = i.primario ? ' nav-link--primary nav-link--no-label' : '';
+          const enlace = (extra = '') => `
+            <a href="${href}" class="nav-link nav-main-link${clasePrimaria}${extra}" data-ruta="${href}" data-id="${i.id}" title="${nombre}"${i.primario ? ` aria-label="${nombre}"` : ''}>
+              ${iconos}${i.primario ? '' : `<span class="nav-text">${nombre}</span>`}
             </a>`;
-          if (!hijos.length) return `<li>${enlace}</li>`;
+          if (!hijos.length) return `<div class="nav-item${i.primario ? ' nav-item--primary' : ''}">${enlace()}</div>`;
           const id = `shell-sub-${i.id}`;
           const esAbierto = abierto === i.id;
           return `
-            <li class="shell-grupo${esAbierto ? ' is-abierto' : ''}" data-grupo="${i.id}">
-              <div class="shell-grupo-cabeza">
-                ${enlace}
-                <button type="button" class="shell-desplegar" aria-expanded="${esAbierto}" aria-controls="${id}" aria-label="${esc(t('Mostrar {x}', { x: t(i.etiqueta) }))}">
-                  <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="nav-item has-submenu nav-flows-wrap shell-grupo${esAbierto ? ' is-abierto' : ''}" data-grupo="${i.id}">
+              <div class="nav-flows-head">
+                ${enlace(' nav-flows-page')}
+                <button type="button" class="nav-submenu-toggle nav-flows-expand-btn shell-desplegar" aria-expanded="${esAbierto}" aria-controls="${id}" aria-label="${esc(t('Mostrar {x}', { x: t(i.etiqueta) }))}">
+                  <i class="aisc-ico nav-chevron aisc-ico--chevron-right" aria-hidden="true"></i>
                 </button>
               </div>
-              <ul class="shell-sub" id="${id}">
-                ${hijos.map((h) => `<li><a href="${esc(h.href)}" class="shell-enlace shell-enlace--sub" data-ruta="${esc(h.href)}">${esc(h.etiqueta)}</a></li>`).join('')}
-              </ul>
-            </li>`;
+              <div class="nav-submenu" id="${id}" role="group" aria-label="${nombre}">
+                ${hijos.map((h) => `<a href="${esc(h.href)}" class="nav-submenu-link" data-ruta="${esc(h.href)}"><span>${esc(h.etiqueta)}</span></a>`).join('')}
+              </div>
+            </div>`;
         }).join('');
-        return `
-          <div class="shell-seccion">
-            ${g.seccion ? `<p class="shell-seccion-titulo" aria-hidden="true">${esc(t(g.seccion))}</p>` : ''}
-            <ul class="shell-lista">${lis}</ul>
-          </div>`;
+        return `${g.seccion ? `<div class="nav-section-label" aria-hidden="true">${esc(t(g.seccion))}</div>` : ''}${lis}`;
       }).join('');
 
       const creditos = ruta('credits');
@@ -267,50 +284,58 @@
       const planes = ruta('plans');
 
       return `
-        <div class="shell-velo" id="navOverlay" hidden></div>
-        <aside class="shell-sidebar" id="sideNavigation" aria-label="${esc(t('Navegación principal'))}">
-          <div class="shell-marca">
-            <button type="button" class="shell-marca-btn" id="shellMarcaBtn" aria-labelledby="navOrgName" aria-haspopup="true" aria-expanded="false" aria-controls="shellPanelMarcas">
-              <span class="shell-marca-logo" id="shellMarcaLogo" aria-hidden="true">${esc(iniciales(this._orgNombre))}</span>
-              <span class="shell-marca-texto">
-                <span class="shell-marca-nombre" id="navOrgName">${esc(this._orgNombre || t('Tu marca'))}</span>
-                <span class="shell-marca-plan" id="navOrgPlan"></span>
+        <div class="nav-overlay shell-velo" id="navOverlay" hidden></div>
+        <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="${esc(t('Navegación principal'))}">
+          <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
+            <button type="button" class="nav-org-boton" id="shellMarcaBtn" aria-haspopup="true" aria-expanded="false" aria-controls="shellPanelMarcas">
+              <span class="nav-org-title" id="navOrgName">${esc(this._orgNombre || t('Tu marca'))}</span>
+            </button>
+            <span class="nav-org-plan" id="navOrgPlan"></span>
+            <a href="${creditos}" class="nav-org-credits" id="navOrgCreditsBlock" data-ruta="${creditos}" aria-label="${esc(t('Ir a créditos'))}">
+              <span class="nav-org-credits-row">
+                <span class="nav-org-credits-label">${esc(t('créditos'))}</span>
+                <span class="nav-org-credits-value" id="navTokensValue">—</span>
               </span>
-              <svg class="shell-marca-flecha" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="nav-org-credits-bar" aria-hidden="true"><span class="nav-org-credits-bar-fill" id="shellCreditosRelleno"></span></span>
+            </a>
+            <div class="nav-credits-vertical" aria-hidden="true"><div class="nav-credits-vertical-fill"></div></div>
+          </div>
+
+          <div class="nav-menu" role="navigation" aria-label="${esc(t('Secciones'))}">${menu}</div>
+
+          <div class="nav-spacer" aria-hidden="true"></div>
+
+          <div class="nav-plan-card" id="navPlanCard" hidden>
+            <div class="nav-plan-card-heading">
+              <span class="nav-plan-card-title">${esc(t('Actualiza tu plan'))}</span>
+              <span class="nav-plan-card-name" id="navPlanName">—</span>
+            </div>
+            <a href="${planes}" class="nav-plan-card-cta" id="navUpgradeBtn" data-ruta="${planes}" aria-label="${esc(t('Ver los planes'))}">
+              <i class="aisc-ico aisc-ico--flecha-landing-1-seccion-2 nav-plan-card-arrow" aria-hidden="true"></i>
+            </a>
+          </div>
+
+          <div class="nav-footer-links" role="navigation" aria-label="${esc(t('Atajos'))}">
+            <a href="${config}" class="nav-footer-link" data-ruta="${config}" data-id="configuracion" title="${esc(t('Configuración'))}">
+              ${iconoNav('/recursos/icons/settings.svg')}<span class="nav-text">${esc(t('Configuración'))}</span>
+            </a>
+            <a href="${planes}" class="nav-footer-link" data-ruta="${planes}" title="${esc(t('Planes'))}">
+              ${iconoNav('/recursos/icons/Planes.svg')}<span class="nav-text">${esc(t('Planes'))}</span>
+            </a>
+            <a href="${creditos}" class="nav-footer-link" data-ruta="${creditos}" title="${esc(t('Créditos'))}">
+              ${iconoNav('/recursos/icons/credits.svg')}<span class="nav-text">${esc(t('Créditos'))}</span>
+            </a>
+          </div>
+
+          <div class="nav-brand-footer">
+            <span class="nav-brand-footer-logo-link" aria-hidden="true">
+              <img src="/recursos/logos/logo-03.svg?nav=${ICONO_VER}" class="nav-brand-footer-logo" alt="" width="96" height="10">
+            </span>
+            <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-pressed="${this.isCollapsed}" aria-label="${esc(t('Contraer el menú'))}">
+              <svg class="nav-sidebar-toggle-icon" viewBox="0 0 12 10" width="12" height="10" aria-hidden="true"><path d="M4.8 .6L.6 4.8l4.2 4.2M10.6.6L6.5 4.8l4.1 4.2" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
-
-          <nav class="shell-menu" aria-label="${esc(t('Secciones'))}">${grupos}</nav>
-
-          <div class="shell-pie">
-            <div class="nav-plan-card" id="navPlanCard" hidden>
-              <div class="nav-plan-card-heading">
-                <span class="nav-plan-card-title">${esc(t('Actualiza tu plan'))}</span>
-                <span class="nav-plan-card-name" id="navPlanName">—</span>
-              </div>
-              <a href="${planes}" class="nav-plan-card-cta" id="navUpgradeBtn" data-ruta="${planes}" aria-label="${esc(t('Ver los planes'))}">
-                <i class="aisc-ico aisc-ico--flecha-landing-1-seccion-2 nav-plan-card-arrow" aria-hidden="true"></i>
-              </a>
-            </div>
-            <a href="${creditos}" class="shell-creditos" data-ruta="${creditos}" title="${esc(t('Créditos'))}">
-              <span class="shell-creditos-fila">
-                ${icono('/recursos/icons/credits.svg')}
-                <span class="shell-texto">${esc(t('Créditos'))}</span>
-                <span class="shell-creditos-valor" id="navTokensValue">—</span>
-              </span>
-              <span class="shell-creditos-barra" aria-hidden="true"><span class="shell-creditos-relleno" id="shellCreditosRelleno"></span></span>
-            </a>
-            <a href="${config}" class="shell-enlace" data-ruta="${config}" data-id="configuracion" title="${esc(t('Configuración'))}">
-              ${icono('/recursos/icons/settings.svg')}<span class="shell-texto">${esc(t('Configuración'))}</span>
-            </a>
-            <div class="shell-firma">
-              <img src="/recursos/logos/logo-03.svg?nav=${ICONO_VER}" class="shell-firma-logo" alt="AI Smart Content" width="96" height="10">
-              <button type="button" class="shell-icono-btn shell-colapsar" id="sidebarToggleBtn" aria-pressed="${this.isCollapsed}" aria-label="${esc(t('Contraer el menú'))}">
-                <svg viewBox="0 0 12 10" width="12" height="10" aria-hidden="true"><path d="M4.8 .6L.6 4.8l4.2 4.2M10.6.6L6.5 4.8l4.1 4.2" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-            </div>
-          </div>
-        </aside>
+        </nav>
 
         <header class="shell-topbar app-header" id="appHeader">
           <div class="shell-topbar-fila">
@@ -454,7 +479,8 @@
         if (!c) { valor.textContent = '—'; return; }
         const n = Math.floor(c.disponibles);
         valor.textContent = n >= 10000 ? `${Math.floor(n / 100) / 10}K` : n.toLocaleString(window.i18n?.getLocale?.() || 'es');
-        if (relleno) relleno.style.setProperty('--lleno-f', String(c.delPlan > 0 ? Math.min(1, c.disponibles / c.delPlan) : 0)); // scaleX: sin animar width
+        const f = String(c.delPlan > 0 ? Math.min(1, c.disponibles / c.delPlan) : 0);
+        if (relleno) document.getElementById('navWorkspaceHeader')?.style.setProperty('--lleno-f', f); // scaleX/scaleY: sin animar width/height
       } catch (e) {
         valor.textContent = '—';
       }

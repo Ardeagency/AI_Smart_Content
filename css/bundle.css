@@ -17,7 +17,8 @@
    cada módulo va en URL propia; sin ?v= aquí el CDN/navegador puede quedarse con CSS viejo.
    Subir APP_CSS_MODULES_VER en todos los imports cuando cambie cualquier modules/*.css.
    ============================================================ */
-@import url('modules/shell.css?v=__BUILD_ID__'); /* cascarón (L3); reemplaza a navigation.css */
+@import url('modules/shell.css?v=__BUILD_ID__'); /* cascarón (L3): topbar, paneles, drawer */
+@import url('modules/sidebar.css?v=__BUILD_ID__'); /* el sidebar de siempre, en tokens */
 @import url('modules/auth.css?v=__BUILD_ID__');
 @import url('modules/brands.css?v=__BUILD_ID__');
 @import url('modules/content-management.css?v=__BUILD_ID__');

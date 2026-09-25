@@ -39,42 +39,12 @@ body.has-sidebar #app-container:has(> main.living-main-content) { padding-top: c
 
 /* ── Sidebar ───────────────────────────────────────────────────────────── */
 
-.shell-sidebar {
-  position: fixed;
-  inset: 0 auto 0 0;
-  z-index: var(--z-nav-sidebar);
-  width: var(--nav-width);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-2) var(--space-3);
-  box-sizing: border-box;
-  background: var(--bg-base);
-  border-right: 1px solid var(--border-hairline);
-  font-family: var(--font-texto);
+.side-navigation {
   transition: transform var(--duracion-media) var(--curva-entrada); /* solo el drawer móvil; contraer en escritorio es inmediato (sin animar layout) */
 }
-body.has-demo-banner .shell-sidebar { top: var(--demo-banner-height, 0); }
+body.has-demo-banner .side-navigation { top: var(--demo-banner-height, 0); }
 
 .shell-icono { width: 1rem; height: 1rem; flex-shrink: 0; opacity: 0.72; }
-
-/* Selector de marca */
-.shell-marca-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-2);
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-primary);
-  text-align: left;
-  cursor: pointer;
-  transition: var(--transicion-controles-rapida);
-}
-.shell-marca-btn:hover,
-.shell-marca-btn[aria-expanded="true"] { background: var(--white-6); border-color: var(--border-hairline); }
 
 .shell-marca-logo {
   display: inline-grid;
@@ -93,118 +63,16 @@ body.has-demo-banner .shell-sidebar { top: var(--demo-banner-height, 0); }
 .shell-marca-logo img { width: 100%; height: 100%; object-fit: cover; }
 .shell-marca-logo--sm { width: 1.5rem; height: 1.5rem; }
 
-.shell-marca-texto { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.shell-marca-nombre {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
-  line-height: var(--leading-tight);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.shell-marca-plan {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
-  letter-spacing: var(--tracking-mono);
-  color: var(--text-muted);
-}
-.shell-marca-plan:empty { display: none; }
 .shell-marca-flecha { color: var(--text-muted); flex-shrink: 0; }
 
-/* Menú */
-.shell-menu {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  padding-top: var(--space-2);
-  scrollbar-width: none;
-}
-.shell-menu::-webkit-scrollbar { display: none; }
+/* El nombre de la marca abre el panel de marcas (antes, el dropdown del h2). */
+.nav-org-boton { all: unset; display: block; min-width: 0; cursor: pointer; border-radius: var(--radius-sm); }
+.nav-org-boton:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+.nav-org-plan:empty { display: none; }
 
-.shell-seccion-titulo {
-  margin: 0 0 var(--space-1);
-  padding: 0 var(--space-3);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
-  letter-spacing: var(--tracking-mono);
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.shell-lista, .shell-sub { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-half); }
-
-.shell-enlace {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 2.25rem;
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: var(--transicion-controles-rapida);
-}
-.shell-enlace:hover { background: var(--white-6); color: var(--text-primary); }
-.shell-enlace:hover .shell-icono { opacity: 1; }
-.shell-enlace.is-activo { background: var(--white-8); color: var(--text-primary); }
-.shell-enlace.is-activo .shell-icono { opacity: 1; }
-.shell-texto { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-
-.shell-grupo-cabeza { display: flex; align-items: center; }
-.shell-grupo-cabeza .shell-enlace { flex: 1; min-width: 0; }
-.shell-desplegar {
-  display: inline-grid;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: 0;
-  border-radius: var(--radius-xs);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.shell-desplegar:hover { color: var(--text-primary); background: var(--white-6); }
-.shell-desplegar svg { transition: transform var(--duracion-base) var(--curva-estandar); }
-.shell-grupo.is-abierto .shell-desplegar svg { transform: rotate(90deg); }
-
-.shell-sub { display: none; padding: var(--space-half) 0 var(--space-1) calc(var(--space-3) + 1rem); }
-.shell-grupo.is-abierto .shell-sub { display: flex; }
-.shell-enlace--sub { min-height: 2rem; font-size: var(--font-size-sm); color: var(--text-muted); }
-
-/* Pie */
-.shell-pie { display: flex; flex-direction: column; gap: var(--space-2); }
-
-.shell-creditos {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-  text-decoration: none;
-  transition: var(--transicion-controles-rapida);
-}
-.shell-creditos:hover, .shell-creditos.is-activo { background: var(--white-6); color: var(--text-primary); }
-.shell-creditos-fila { display: flex; align-items: center; gap: var(--space-3); }
-.shell-creditos-valor { margin-left: auto; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-primary); }
-.shell-creditos-barra { display: block; height: 2px; border-radius: var(--radius-pill); background: var(--white-8); overflow: hidden; }
-.shell-creditos-relleno { display: block; height: 100%; width: 100%; background: var(--espectro); transform: scaleX(var(--lleno-f, 0)); transform-origin: left; transition: transform var(--duracion-lenta) var(--curva-entrada); }
-
-.shell-firma {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-2) var(--space-2) 0 var(--space-3);
-  border-top: 1px solid var(--border-hairline);
-}
-.shell-firma-logo { height: 0.625rem; width: auto; opacity: 0.8; }
+/* Barras de créditos: transform, no width/height (sin recálculo de layout). */
+.nav-org-credits-bar-fill { display: block; width: 100%; transform: scaleX(var(--lleno-f, 0)); transform-origin: left; transition: transform var(--duracion-lenta) var(--curva-entrada); }
+.nav-credits-vertical-fill { height: 100%; transform: scaleY(var(--lleno-f, 0)); transform-origin: bottom; transition: transform var(--duracion-lenta) var(--curva-entrada); }
 
 /* ── Tarjeta de plan (a064abec, mockup Figma «Plan Agency»: px literales del mockup) ── */
 .nav-plan-card {
@@ -222,6 +90,7 @@ body.has-demo-banner .shell-sidebar { top: var(--demo-banner-height, 0); }
   transition: border-color var(--duracion-media) var(--curva-estandar);
 }
 .nav-plan-card[hidden], .nav-plan-card-cta[hidden] { display: none; }
+.side-navigation.is-colapsado .nav-plan-card { display: none; } /* contraído: la tarjeta no cabe; el plan sigue en Planes */
 .nav-plan-card::before {
   content: '';
   position: absolute;
@@ -272,25 +141,6 @@ body.has-demo-banner .shell-sidebar { top: var(--demo-banner-height, 0); }
 .nav-plan-card-cta:hover .nav-plan-card-arrow,
 .nav-plan-card-cta:focus-visible .nav-plan-card-arrow { opacity: 1; transform: translate(3px, 3px); }
 .nav-plan-card-cta:focus-visible { outline: 2px solid var(--text-primary); outline-offset: -2px; border-radius: var(--radius-md); }
-
-/* ── Colapsado (escritorio) ────────────────────────────────────────────── */
-
-.shell-sidebar.is-colapsado { width: var(--nav-width-collapsed); padding-inline: var(--space-1); }
-.shell-sidebar.is-colapsado .shell-marca-texto,
-.shell-sidebar.is-colapsado .shell-marca-flecha,
-.shell-sidebar.is-colapsado .shell-texto,
-.shell-sidebar.is-colapsado .shell-seccion-titulo,
-.shell-sidebar.is-colapsado .shell-desplegar,
-.shell-sidebar.is-colapsado .shell-sub,
-.shell-sidebar.is-colapsado .shell-creditos-valor,
-.shell-sidebar.is-colapsado .shell-creditos-barra,
-.shell-sidebar.is-colapsado .nav-plan-card,
-.shell-sidebar.is-colapsado .shell-firma-logo { display: none; }
-.shell-sidebar.is-colapsado .shell-marca-btn,
-.shell-sidebar.is-colapsado .shell-enlace,
-.shell-sidebar.is-colapsado .shell-creditos { justify-content: center; padding-inline: 0; }
-.shell-sidebar.is-colapsado .shell-firma { justify-content: center; padding-inline: 0; }
-.shell-sidebar.is-colapsado .shell-colapsar svg { transform: scaleX(-1); }
 
 /* ── Topbar ────────────────────────────────────────────────────────────── */
 
@@ -492,8 +342,8 @@ body.production-filters-in-header .shell-topbar .header-production-slot .living-
 
 /* ── Foco visible (teclado) ────────────────────────────────────────────── */
 
-.shell-sidebar a:focus-visible,
-.shell-sidebar button:focus-visible,
+.side-navigation a:focus-visible,
+.side-navigation button:focus-visible,
 .shell-topbar a:focus-visible,
 .shell-topbar button:focus-visible,
 .shell-panel a:focus-visible,
@@ -522,30 +372,20 @@ body.production-filters-in-header .shell-topbar .header-production-slot .living-
   .shell-topbar-fila { padding: 0 var(--space-3); }
   .shell-hamburguesa { display: inline-grid; }
 
-  .shell-sidebar,
-  .shell-sidebar.is-colapsado {
+  .side-navigation,
+  .side-navigation.is-colapsado {
     z-index: var(--z-nav-mobile);
     width: min(18rem, 86vw);
-    padding-inline: var(--space-2);
     transform: translateX(-100%);
     box-shadow: var(--sombra-modal);
   }
-  .shell-sidebar.is-abierto { transform: translateX(0); }
-  /* En móvil el drawer va siempre expandido, aunque en escritorio esté contraído. */
-  .shell-sidebar.is-colapsado .shell-marca-texto,
-  .shell-sidebar.is-colapsado .shell-texto,
-  .shell-sidebar.is-colapsado .shell-seccion-titulo,
-  .shell-sidebar.is-colapsado .shell-creditos-valor,
-  .shell-sidebar.is-colapsado .shell-creditos-barra,
-  .shell-sidebar.is-colapsado .shell-firma-logo { display: revert; }
-  .shell-sidebar.is-colapsado .shell-enlace,
-  .shell-sidebar.is-colapsado .shell-creditos { justify-content: flex-start; padding-inline: var(--space-3); }
-  .shell-colapsar { display: none; }
+  .side-navigation.is-abierto { transform: translateX(0); }
+  .nav-sidebar-toggle { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shell-sidebar, .shell-topbar, body.has-sidebar #app-container, .shell-panel,
-  .nav-plan-card, .nav-plan-card::before, .nav-plan-card-arrow, .shell-creditos-relleno { transition: none; animation: none; }
+  .side-navigation, .shell-topbar, body.has-sidebar #app-container, .shell-panel,
+  .nav-plan-card, .nav-plan-card::before, .nav-plan-card-arrow, .nav-org-credits-bar-fill, .nav-credits-vertical-fill { transition: none; animation: none; }
   .nav-plan-card:hover::before,
   .nav-plan-card:has(.nav-plan-card-cta:focus-visible)::before { transform: none; }
   .nav-plan-card-cta:hover .nav-plan-card-arrow,
