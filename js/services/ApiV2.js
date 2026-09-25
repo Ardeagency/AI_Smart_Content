@@ -224,7 +224,9 @@
     borrarArchivo: (id, org) => ejecutar(peticiones.borrarArchivo(id, org)),
     sesionGaleria: (org) => ejecutar(peticiones.sesionGaleria(org)),
     /** Forma REAL del borde (medida 15/09 20:40 UTC): `{corrida: <run_id>, reintento, primer_paso}`. Se expone también `run_id`. */
-    lanzarFlujo: async (flujo, org, entradas, idCliente, marketId) => {
+    // id_cliente por defecto, como enviarMensaje: el borde lo exige (uuid) y sin él
+    // JSON.stringify quitaba el campo → 422 en /image, /video y las herramientas.
+    lanzarFlujo: async (flujo, org, entradas, idCliente = uid(), marketId) => {
       const r = await ejecutar(peticiones.lanzarFlujo(flujo, org, entradas, idCliente, marketId));
       return Object.assign({ run_id: r && (r.run_id || r.corrida) }, r);
     },

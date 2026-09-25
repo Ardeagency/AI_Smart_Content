@@ -129,6 +129,15 @@ describe('ApiV2 · Studio = corrida de flujo (backend 260f742)', () => {
     expect(r.run_id).toBe('ab33'); expect(r.primer_paso).toBe('Generar imagen');
     apiV2.configurar({ fetch: null, sesion: null });
   });
+
+  test('lanzarFlujo sin idCliente manda uno (uuid): el borde lo exige y sin él respondía 422', async () => {
+    let cuerpo = null;
+    apiV2.configurar({ sesion: { actual: async () => ({ access_token: 'j' }), refrescar: async () => null }, fetch: async (_u, init) => { cuerpo = JSON.parse(init.body); return respuesta(200, { corrida: 'ab34' }); } });
+    await apiV2.api.lanzarFlujo('f1', 'o1', { prompt: 'x' }, undefined, 'm1');
+    expect(cuerpo.id_cliente).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(cuerpo.market_id).toBe('m1');
+    apiV2.configurar({ fetch: null, sesion: null });
+  });
 });
 
 describe('ApiV2 · galería con cookie (backend 260f742)', () => {
