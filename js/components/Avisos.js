@@ -71,7 +71,7 @@
     'agent.needs_approval': { icono: 'aisc-ico--sparkles', etiqueta: 'Vera pide aprobación', params: [], titulo: null, cuerpo: null, ruta: '/vera' },
     'agent.job_dead': { icono: 'aisc-ico--sparkles', etiqueta: 'Turno de Vera caído', params: [], titulo: null, cuerpo: null, ruta: '/vera' },
     'intel.critical_signal': { icono: 'aisc-ico--growth', etiqueta: 'Señal crítica', params: [], titulo: null, cuerpo: null, ruta: '/dashboard' },
-    'marketing.approval': { icono: 'aisc-ico--megaphone', etiqueta: 'Aprobación de campaña', params: [], titulo: null, cuerpo: null, ruta: '/command-center' },
+    'marketing.approval': { icono: 'aisc-ico--megaphone', etiqueta: 'Aprobación de campaña', params: [], titulo: null, cuerpo: null, ruta: '/dashboard' },
     // ADR-0048 (BD 6d1c421): alguien del equipo invitó a una persona por correo.
     'equipo.invitacion': { icono: 'aisc-ico--user-registration', etiqueta: 'Invitación enviada', params: ['invitacion_id', 'email'],
       titulo: (p) => t('Invitamos a {correo} a la marca', { correo: p.email }),
