@@ -20,9 +20,10 @@
     // Registramos /sw.js con scope raíz. Sólo en hosts no-localhost para
     // no interferir con hot reload en dev. El SW cachea assets versionados
     // (cache-first) y nunca toca HTML ni APIs (bypass).
+    // AISC_SW_LOCAL: scripts/verificar-rutas.mjs lo activa en su perfil temporal para probar
+    // la 2.ª visita con SW también en local (el fallo del 25/09 solo se veía así).
     if ('serviceWorker' in navigator
-        && location.hostname !== 'localhost'
-        && location.hostname !== '127.0.0.1') {
+        && ((location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') || window.AISC_SW_LOCAL === true)) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js').then((registration) => {
                 // Detectar updates en background. Cuando Netlify deploya una
@@ -160,6 +161,25 @@
             window.SUPABASE_CONFIG_READY = false;
             state.supabaseReady = false;
             window.supabase = null;
+            // Rescate: si la librería no llegó y hay un Service Worker controlando la página,
+            // puede ser un SW viejo que no deja pasar el CDN (25/09). Se desregistra, se borran sus
+            // caches y se recarga UNA vez (la marca en sessionStorage evita el bucle).
+            if (/Librería Supabase no disponible/.test(error.message) && navigator.serviceWorker?.controller) {
+                // Sin sessionStorage no se arriesga un bucle: cuenta como ya rescatado.
+                const yaRescatado = (() => {
+                    try { const v = sessionStorage.getItem('aisc-rescate-sw') === '1'; sessionStorage.setItem('aisc-rescate-sw', '1'); return v; } catch (_) { return true; }
+                })();
+                if (!yaRescatado) {
+                    console.warn('Supabase no cargó bajo un Service Worker: se retira el SW y se recarga una vez.');
+                    try {
+                        const regs = await navigator.serviceWorker.getRegistrations();
+                        await Promise.all(regs.map((r) => r.unregister()));
+                        if (window.caches) await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
+                    } catch (_) { /* se recarga igual */ }
+                    window.location.reload();
+                    return false;
+                }
+            }
             console.warn('Supabase no disponible. Comprueba /.netlify/functions/supabase-config y las variables de entorno.');
             executeCallbacks(null);
             

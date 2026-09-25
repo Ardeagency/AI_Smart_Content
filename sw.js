@@ -7,11 +7,14 @@
  *  - JS/CSS con ?v=BUILD: CACHE-FIRST (immutable). La URL cambia con
  *    cada deploy, así que cache infinito por URL es seguro.
  *  - JS/CSS sin ?v= (utils/, config/): STALE-WHILE-REVALIDATE.
- *  - Fonts/CDN libs (jsdelivr): CACHE-FIRST.
  *  - Imágenes locales (/recursos/): CACHE-FIRST.
- *  - Imágenes de usuario (Cloudinary, Supabase Storage): NETWORK-FIRST
- *    con fallback a caché si offline.
- *  - Supabase REST/RPC, Netlify functions, Edge Functions: NETWORK-ONLY.
+ *  - Netlify functions: NETWORK-ONLY.
+ *  - OTRO ORIGEN (CDN, fuentes, Supabase, api-v2, media-v2, Cloudinary…): NO se toca.
+ *    Un SW obedece la CSP con la que se sirve /sw.js: si su fetch() va a un origen
+ *    que no está en connect-src, la petición muere (net::ERR_FAILED). Pasó en
+ *    producción el 25/09: el SW interceptaba cdn.jsdelivr.net, supabase-js no
+ *    cargaba en la 2.ª visita y la consola no arrancaba. Lo externo lo cachea el
+ *    navegador por HTTP; el SW solo sirve lo propio.
  *
  * Versionado del cache: el nombre incluye BUILD_ID. Cada deploy crea un
  * nuevo cache y borra los anteriores en `activate`. Kill switch: en
@@ -22,11 +25,11 @@
 // placeholder queda como fallback de string para que el SW no rompa.
 const BUILD_ID = '__BUILD_ID__';
 const CACHE_VERSIONED = `versioned-${BUILD_ID}`;
-const CACHE_LIBS = `libs-${BUILD_ID}`;
 const CACHE_IMAGES = `images-${BUILD_ID}`;
 const CACHE_OFFLINE = `offline-${BUILD_ID}`;
 const OFFLINE_URL = '/offline.html';
-const ALLOWED_CACHES = new Set([CACHE_VERSIONED, CACHE_LIBS, CACHE_IMAGES, CACHE_OFFLINE]);
+// Todo cache que no esté aquí se borra al activar (incluidas las libs-* de los SW viejos).
+const ALLOWED_CACHES = new Set([CACHE_VERSIONED, CACHE_IMAGES, CACHE_OFFLINE]);
 
 self.addEventListener('install', (event) => {
   // Skip waiting → activar la nueva SW al instante. El cliente recibe
@@ -74,18 +77,8 @@ function isLocalImage(url) {
   return isAppOrigin(url) && /\.(png|jpe?g|gif|webp|avif|svg|ico)$/i.test(url.pathname);
 }
 
-function isRemoteLib(url) {
-  return /^https:\/\/cdn\.jsdelivr\.net\//i.test(url.href);
-}
-
-function isRemoteImage(url) {
-  return /^https:\/\/res\.cloudinary\.com\//i.test(url.href)
-      || /supabase\.co\/.*\/storage\/.*\/(public|sign)\//i.test(url.href);
-}
-
 function isApiCall(url) {
-  return /supabase\.co\/(rest|auth|realtime|functions)\b/i.test(url.href)
-      || /\/\.netlify\/functions\//i.test(url.pathname);
+  return /\/\.netlify\/functions\//i.test(url.pathname);
 }
 
 function isHtmlNavigation(request) {
@@ -113,19 +106,6 @@ async function staleWhileRevalidate(request, cacheName) {
   return cached || fetchPromise;
 }
 
-async function networkFirst(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  try {
-    const response = await fetch(request);
-    if (response.ok) { try { cache.put(request, response.clone()); } catch (_) {} }
-    return response;
-  } catch (e) {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    throw e;
-  }
-}
-
 async function navigationWithOfflineFallback(request) {
   try {
     return await fetch(request);
@@ -150,6 +130,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
+  // Solo el mismo origen (ver cabecera): lo externo va a red sin pasar por el SW.
+  if (!isAppOrigin(url)) return;
+
   // Bypass total para APIs.
   if (isApiCall(url)) return;
 
@@ -161,8 +144,6 @@ self.addEventListener('fetch', (event) => {
   if (isVersionedAsset(url))   return event.respondWith(cacheFirst(request, CACHE_VERSIONED));
   if (isUnversionedAsset(url)) return event.respondWith(staleWhileRevalidate(request, CACHE_VERSIONED));
   if (isLocalImage(url))       return event.respondWith(cacheFirst(request, CACHE_IMAGES));
-  if (isRemoteLib(url))        return event.respondWith(cacheFirst(request, CACHE_LIBS));
-  if (isRemoteImage(url))      return event.respondWith(networkFirst(request, CACHE_IMAGES));
 
   // Default: passthrough (red directo).
 });

@@ -19,14 +19,28 @@
  * gastaba el refresh token y los demás caían a /login (scripts/verificar-rutas.mjs
  * abre un perfil nuevo en cada corrida). La clave nunca sale del entorno; el JWT solo viaja
  * servidor → navegador en 127.0.0.1. Solo para local: en Netlify no existe.
+ *
+ * Cabeceras: por defecto sirve las REALES de netlify.toml (CSP incluida, ver
+ * scripts/cabeceras-netlify.mjs), para que lo que rompe la CSP en producción rompa
+ * también aquí. Una sola diferencia: se quita `upgrade-insecure-requests`, porque
+ * aquí se sirve por http. `--sin-cabeceras` las apaga.
  */
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { leerReglas, cabecerasPara } from './cabeceras-netlify.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const PUERTO = Number(process.env.PUERTO || 5182);
+const REGLAS = process.argv.includes('--sin-cabeceras') ? [] : leerReglas(readFileSync(join(ROOT, 'netlify.toml'), 'utf8'));
+function cabeceras(ruta) {
+  const c = cabecerasPara(REGLAS, ruta);
+  delete c['Strict-Transport-Security']; // sin sentido por http
+  if (c['Content-Security-Policy']) c['Content-Security-Policy'] = c['Content-Security-Policy'].replace(/;\s*upgrade-insecure-requests/, '');
+  return c;
+}
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.woff': 'font/woff', '.mp4': 'video/mp4', '.webmanifest': 'application/manifest+json', '.txt': 'text/plain' };
 
 const inyectables = ['AISC_SUPABASE_URL', 'AISC_SUPABASE_ANON_KEY', 'AISC_API_URL', 'AISC_LOGIN_VIDEO_URL', 'AISC_MANTENIMIENTO', 'AISC_META_APP_ID'];
@@ -56,6 +70,7 @@ async function indexHtml() {
 createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   let ruta = normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, '');
+  for (const [k, v] of Object.entries(cabeceras(url.pathname))) res.setHeader(k, v);
   if (ruta === '/__sesion.js' && conSesion) {
     res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' });
     res.end(sesionJs());

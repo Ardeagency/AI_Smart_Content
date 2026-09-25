@@ -33,6 +33,10 @@
  * con Tab real, la matriz de contraste AA de los tokens (una vez) y el drawer móvil (una vez:
  * es el único paso que hace un clic, en la hamburguesa, sin efectos fuera de la página).
  *
+ * DOS VISITAS: la 1.ª (/home) instala el Service Worker y las rutas cargan después con él, como un
+ * usuario que vuelve (el 25/09 la consola moría solo en la 2.ª visita). --sin-sw lo ignora.
+ * Producción: BASE=https://console.aismartcontent.io … --sesion-node (login de prueba en Node).
+ *
  * NO se visitan: las rutas de sesión (/login, /signin, /mfa, /verification, /cambiar-contrasena).
  * Pueden cerrar la sesión de prueba (un signOut la REVOCA en el servidor) o enrolar un factor
  * TOTP real. Tampoco las que piden ids reales (:brandId, :taskId…). Solo lectura: no hace clics.
@@ -52,6 +56,19 @@ const ESPERA = Number(opcion('espera', 9000));
 const SOLO = opcion('solo', '');
 const CAPTURA = opcion('captura', '');
 const A11Y = args.includes('--a11y');
+// --sesion-node: para un BASE sin /__sesion.js (producción). Login de la cuenta de prueba en Node
+// (AISC_SUPABASE_URL, AISC_SUPABASE_ANON_KEY, AISC_PRUEBA_USUARIO, AISC_PRUEBA_CLAVE) y la sesión se
+// siembra en el perfil temporal antes de que cargue la app. La clave no sale del entorno.
+const SESION_NODE = args.includes('--sesion-node');
+async function sembrado() {
+  const { createClient } = await import('@supabase/supabase-js');
+  const url = process.env.AISC_SUPABASE_URL;
+  const sb = createClient(url, process.env.AISC_SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data, error } = await sb.auth.signInWithPassword({ email: process.env.AISC_PRUEBA_USUARIO, password: process.env.AISC_PRUEBA_CLAVE });
+  if (error) throw new Error('login de prueba: ' + error.message);
+  const clave = `sb-${new URL(url).host.split('.')[0]}-auth-token`;
+  return `try{if(!localStorage.getItem(${JSON.stringify(clave)}))localStorage.setItem(${JSON.stringify(clave)},${JSON.stringify(JSON.stringify(data.session))});}catch(e){}`;
+}
 // Vistas pulidas (shell incluido): las que la auditoría --a11y exige en verde.
 export const A11Y_RUTAS = ['/configuracion/general', '/configuracion/miembros', '/configuracion/facturacion', '/configuracion/actividad',
   '/configuracion/integraciones', '/cuenta/perfil', '/plans', '/vera', '/404', '/403', '/invitacion'];
@@ -134,6 +151,13 @@ async function main() {
     const cmd = (method, params = {}) => new Promise((r) => { const i = ++id; pend.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
     await cmd('Runtime.enable'); await cmd('Page.enable');
     await cmd('Page.addScriptToEvaluateOnNewDocument', { source: ESPIA });
+    if (SESION_NODE) await cmd('Page.addScriptToEvaluateOnNewDocument', { source: await sembrado() });
+    // Dos visitas por perfil: la 1.ª (/home) instala el Service Worker y TODAS las rutas siguientes
+    // cargan con él controlando la página, como un usuario que vuelve. En local se activa con
+    // AISC_SW_LOCAL (solo en este perfil temporal). --sin-sw lo ignora, para aislar otros fallos.
+    const SIN_SW = args.includes('--sin-sw');
+    if (SIN_SW) { await cmd('Network.enable'); await cmd('Network.setBypassServiceWorker', { bypass: true }); }
+    else await cmd('Page.addScriptToEvaluateOnNewDocument', { source: 'window.AISC_SW_LOCAL = true;' });
 
     // La marca de la sesión: /home lleva a /org/<short>/<slug>/…
     await cmd('Page.navigate', { url: BASE + '/home' });
@@ -141,6 +165,11 @@ async function main() {
     const donde = (await cmd('Runtime.evaluate', { expression: 'location.pathname', returnByValue: true })).result?.result?.value || '';
     const m = donde.match(/^\/org\/[^/]+\/[^/]+/);
     if (!m) throw new Error(`Sin sesión de prueba: /home terminó en «${donde}». ¿servir-local con AISC_PRUEBA_*?`);
+    if (!SIN_SW) {
+      const sw = (await cmd('Runtime.evaluate', { returnByValue: true, awaitPromise: true, expression: `navigator.serviceWorker ? Promise.race([navigator.serviceWorker.ready.then((r) => !!r.active), new Promise((ok) => setTimeout(() => ok(false), 8000))]) : false` })).result?.result?.value;
+      if (!sw) throw new Error('el Service Worker no se instaló en la 1.ª visita: la 2.ª visita no se estaría probando');
+      console.log('Service Worker activo tras la 1.ª visita: las rutas cargan con él (2.ª visita en adelante)');
+    }
     const rutas = rutasDeApp(readFileSync(join(ROOT, 'js/app.js'), 'utf8'), m[0]);
     if (CAPTURA) mkdirSync(CAPTURA, { recursive: true });
     console.log(`verificar-rutas: ${rutas.length} rutas en ${BASE} (marca ${m[0]}), ${ESPERA} ms cada una\n`);
