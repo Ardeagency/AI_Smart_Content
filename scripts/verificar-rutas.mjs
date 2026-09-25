@@ -9,6 +9,7 @@
  *   - espía de pintado: cada Estado.pintar se compara con lo que daría innerHTML en el mismo
  *     contexto. El gemelo se parsea en un documento inerte (no carga imágenes ni ejecuta scripts).
  *     Cualquier diferencia es un fallo.
+ *   - el splash de arranque se va en menos de --splash-max ms (8000 por defecto);
  *   - opcional: captura PNG de cada ruta.
  *
  * REQUISITOS
@@ -56,6 +57,11 @@ const ESPERA = Number(opcion('espera', 9000));
 const SOLO = opcion('solo', '');
 const CAPTURA = opcion('captura', '');
 const A11Y = args.includes('--a11y');
+// El splash de arranque (#app-splash) se va con el primer `routechange`; el failsafe de index.html
+// lo quita a los 10 s. Si una ruta lo deja más de SPLASH_MAX ms, es que algo tapa la señal de «app
+// lista». Tope fijado con lo medido antes del hotfix del SW (bcdc2d0b, 25/09): peor caso 6.2 s
+// (/configuracion/general, que espera sus datos); 8 s deja margen para una máquina cargada.
+const SPLASH_MAX = Number(opcion('splash-max', 8000));
 // --sesion-node: para un BASE sin /__sesion.js (producción). Login de la cuenta de prueba en Node
 // (AISC_SUPABASE_URL, AISC_SUPABASE_ANON_KEY, AISC_PRUEBA_USUARIO, AISC_PRUEBA_CLAVE) y la sesión se
 // siembra en el perfil temporal antes de que cargue la app. La clave no sale del entorno.
@@ -104,6 +110,8 @@ export function rutasDeApp(fuente, org) {
 
 // Espía: se instala antes de que cargue la app y envuelve Estado.pintar en cuanto se define.
 const ESPIA = `(() => {
+  new MutationObserver(() => { const s = document.getElementById('app-splash'); if (s && s.classList.contains('app-splash--hide') && !window.__splashFuera) window.__splashFuera = Math.round(performance.now()); })
+    .observe(document, { subtree: true, attributes: true, attributeFilter: ['class'] });
   window.__pintarMal = []; window.__pintarN = 0;
   const inerte = document.implementation.createHTMLDocument('');
   const gemelo = (z) => z.namespaceURI === 'http://www.w3.org/1999/xhtml' ? inerte.createElement(z.localName) : inerte.createElementNS(z.namespaceURI, z.localName);
@@ -178,10 +186,12 @@ async function main() {
       eventos = [];
       await cmd('Page.navigate', { url: BASE + ruta });
       await dormir(ESPERA);
-      const v = (await cmd('Runtime.evaluate', { returnByValue: true, expression: `({ final: location.pathname, pintar: window.__pintarN || 0, mal: window.__pintarMal || [] })` })).result?.result?.value || {};
+      const v = (await cmd('Runtime.evaluate', { returnByValue: true, expression: `({ final: location.pathname, splash: window.__splashFuera || null, hayplash: !!document.getElementById('app-splash'), pintar: window.__pintarN || 0, mal: window.__pintarMal || [] })` })).result?.result?.value || {};
       const problemas = [...eventos];
       if (/^\/(login|signin)\b/.test(v.final || '')) problemas.push(`terminó en ${v.final}: la sesión murió`);
       for (const x of v.mal || []) problemas.push('pintar ≠ innerHTML: ' + x);
+      if (v.hayplash && !v.splash) problemas.push(`el splash sigue encima a los ${ESPERA} ms`);
+      else if (v.splash > SPLASH_MAX) problemas.push(`el splash tardó ${v.splash} ms en irse (tope ${SPLASH_MAX})`);
       if (A11Y && A11Y_RUTAS.some((r) => ruta.replace(m[0], '') === r || ruta.startsWith(r + '/'))) {
         const ev = async (expression) => (await cmd('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result?.result?.value;
         problemas.push(...await a11y.nombres(cmd, ev), ...await a11y.foco(cmd, ev));
