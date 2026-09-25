@@ -3939,6 +3939,8 @@ window.__I18N_CATALOGS.en = /* I18N:BEGIN */{
   "No pudimos cambiar la contraseña.": "We couldn't change the password.",
   "No pudimos guardar tus preferencias. Intenta de nuevo.": "We couldn't save your preferences. Try again.",
   "No pudimos leer las conexiones. Recarga la página en un momento.": "We couldn't read the connections. Reload the page in a moment.",
+  "Abre otra vez el enlace de tu correo": "Open the link in your email again",
+  "Por seguridad, el enlace de invitación sale de la barra de direcciones en cuanto se abre, así que al recargar la página se pierde. Vuelve a abrirlo desde el correo: sigue sirviendo hasta que venza.": "For security, the invitation link is removed from the address bar as soon as it opens, so reloading the page loses it. Open it again from the email: it keeps working until it expires.",
   "No se pudo conectar {p}: {e}": "Couldn't connect {p}: {e}",
   "No se pudo desconectar.": "Couldn't disconnect.",
   "No se pudo iniciar la conexión.": "Couldn't start the connection.",

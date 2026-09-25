@@ -211,10 +211,12 @@ class App {
     // (resetPasswordForEmail → correo → /cambiar-contrasena).
     r.register('/recuperar', window.SignInView, pub);
     // Invitación (ADR-0048, L6): la única puerta de alta. Pública: el token ES la autorización;
-    // con sesión la acepta, sin sesión crea el acceso por el borde. /invitacion sola = el token
-    // ya se limpió de la URL (replaceState): se queda en la tarjeta.
+    // con sesión la acepta, sin sesión crea el acceso por el borde. El token sale de la URL
+    // (replaceState a /invitacion); si se recarga ahí, la tarjeta pide volver al correo.
     const invitacionLoader = this._lazy('InvitacionView', ['/js/services/InvitacionesDataService.js', '/js/views/InvitacionView.js']);
     r.register('/invitacion/:token', invitacionLoader, pub);
+    // Al recargar, la barra ya dice /invitacion (sin token): la misma vista lo explica.
+    r.register('/invitacion', invitacionLoader, pub);
     // Verificación en dos pasos (ADR-0049, L6): con sesión, fuera del shell.
     r.register('/mfa', this._lazy('MfaView', ['/js/views/MfaView.js']), auth);
 

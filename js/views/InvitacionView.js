@@ -38,6 +38,12 @@ class InvitacionView extends BaseView {
   }
 
   async init() {
+    // /invitacion sin token: la página se recargó después de que el token saliera de la barra.
+    // No se guarda en ningún lado (es la llave de la invitación): se vuelve al correo.
+    if (!this._token) {
+      this._final(__('Abre otra vez el enlace de tu correo'), __('Por seguridad, el enlace de invitación sale de la barra de direcciones en cuanto se abre, así que al recargar la página se pierde. Vuelve a abrirlo desde el correo: sigue sirviendo hasta que venza.'));
+      return;
+    }
     if (!window.InvitacionesDatos?.tokenValido(this._token)) {
       this._final(__('Este enlace de invitación no es válido'), __('Revisa que lo hayas copiado completo o pide uno nuevo a quien te invitó.'));
       return;

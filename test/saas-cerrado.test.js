@@ -10,7 +10,7 @@ const APP = fs.readFileSync('js/app.js', 'utf8');
 const INDEX = fs.readFileSync('index.html', 'utf8');
 
 /** Las rutas de acceso: las ÚNICAS que se sirven sin sesión. */
-const PUBLICAS = ['/', '/login', '/signin', '/recuperar', '/cambiar-contrasena', '/verification', '/invitacion/:token'];
+const PUBLICAS = ['/', '/login', '/signin', '/recuperar', '/cambiar-contrasena', '/verification', '/invitacion/:token', '/invitacion'];
 
 describe('Sin puertas públicas', () => {
   test('no existen /demo ni /registro', () => {
