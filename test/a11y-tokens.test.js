@@ -1,7 +1,7 @@
 /**
  * Contraste AA de los tokens de texto sobre los fondos, calculado desde css/bundle.css
  * (la misma matriz que mide `npm run verificar:rutas -- --a11y` en el navegador). Así el gate
- * lo exige sin servidor. La transparencia se compone sobre --bg-primary, que es la página.
+ * lo exige sin servidor. La transparencia se compone sobre --bg-base, que es la página.
  */
 import { describe, test, expect } from 'vitest';
 import fs from 'node:fs';
@@ -29,7 +29,7 @@ const L = (c) => { const t = [c.r, c.g, c.b].map((v) => { v /= 255; return v <= 
 const ratio = (a, b) => { const x = L(a), y = L(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
 
 describe('a11y: contraste AA de los tokens', () => {
-  const pagina = color('--bg-primary');
+  const pagina = color('--bg-base');
   test.each(FONDOS.flatMap((f) => TEXTOS.map((t) => [t, f])))('%s sobre %s ≥ 4.5', (t, f) => {
     const bg = sobre(color(f), pagina);
     expect(ratio(sobre(color(t), bg), bg)).toBeGreaterThanOrEqual(AA);

@@ -11,7 +11,7 @@
   width: 44px; height: 44px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-divider);
+  border: 1px solid var(--border-color);
   color: var(--text-muted); font-size: 15px;
 }
 .section-error-title {
@@ -29,5 +29,5 @@
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .section-error-retry:hover { background: rgba(255, 255, 255, 0.08); }
-.section-error-retry:focus-visible { outline: 2px solid var(--brand-primary, var(--prisma-azul)); outline-offset: 2px; }
+.section-error-retry:focus-visible { outline: 2px solid var(--org-primary); outline-offset: 2px; }
 .section-error-retry:disabled { opacity: 0.5; cursor: default; }

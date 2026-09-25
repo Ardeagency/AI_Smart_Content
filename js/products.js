@@ -990,8 +990,8 @@ if (typeof window.ProductsManager === 'undefined') {
                 `}
 
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" id="${prefix}cancelBtn">Cancelar</button>
-                    <button type="submit" class="btn-primary" id="${prefix}saveBtn">
+                    <button type="button" class="btn--oscuro" id="${prefix}cancelBtn">Cancelar</button>
+                    <button type="submit" class="btn--blanco" id="${prefix}saveBtn">
                         ${product ? 'Guardar Cambios' : 'Crear Producto'}
                     </button>
                 </div>
@@ -1062,7 +1062,7 @@ if (typeof window.ProductsManager === 'undefined') {
                         Agregar nueva imagen
                     </label>
                     <div class="upload-zone-small" onclick="document.getElementById('${inputId}').click()" 
-                         style="border: 2px dashed var(--border-divider); border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: var(--bg-secondary);">
+                         style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: var(--bg-card);">
                         <input type="file" id="${inputId}" accept="image/*" style="display: none;" 
                                onchange="productsManager.handleNewImageUpload(event, '${productId}')" multiple>
                         <i class="aisc-ico aisc-ico--add" style="font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 0.5rem;"></i>

@@ -113,8 +113,8 @@ class IntegracionesView extends BaseView {
             : `<span class="ajustes-estado is-alerta">${c.status === 'expired' ? __('Caducó: vuelve a conectarla') : __('Con problemas')}</span>`;
           const cuenta = c?.account_name || c?.external_account_id || '';
           const accion = activa
-            ? `<button type="button" class="btn btn-secondary btn-sm" data-desconectar="${this.escapeHtml(c.id)}" data-nombre="${this.escapeHtml(p.nombre)}">${__('Desconectar')}</button>`
-            : `<button type="button" class="btn btn-primary btn-sm" data-conectar="${this.escapeHtml(p.conectar)}">${c ? __('Reconectar') : __('Conectar')}</button>`;
+            ? `<button type="button" class="btn btn--oscuro btn--sm" data-desconectar="${this.escapeHtml(c.id)}" data-nombre="${this.escapeHtml(p.nombre)}">${__('Desconectar')}</button>`
+            : `<button type="button" class="btn btn--blanco btn--sm" data-conectar="${this.escapeHtml(p.conectar)}">${c ? __('Reconectar') : __('Conectar')}</button>`;
           return `
             <li class="ajustes-fila" data-plataforma="${this.escapeHtml(p.clave)}">
               <img class="ajustes-fila-logo" src="${this.escapeHtml(p.logo)}" alt="" width="28" height="28" loading="lazy">
@@ -155,8 +155,8 @@ class IntegracionesView extends BaseView {
             <span class="ajustes-tienda-campo"><input type="text" autocomplete="off" placeholder="mitienda" spellcheck="false"><span>.myshopify.com</span></span>
           </label>
           <div class="ajustes-tienda-acciones">
-            <button type="button" class="btn btn-secondary btn-sm" data-tienda="cancelar">${__('Cancelar')}</button>
-            <button type="button" class="btn btn-primary btn-sm" data-tienda="ok">${__('Continuar')}</button>
+            <button type="button" class="btn btn--oscuro btn--sm" data-tienda="cancelar">${__('Cancelar')}</button>
+            <button type="button" class="btn btn--blanco btn--sm" data-tienda="ok">${__('Continuar')}</button>
           </div>
         </li>`);
       const caja = fila.nextElementSibling;

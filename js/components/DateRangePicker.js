@@ -6,7 +6,7 @@
  *   - Columna principal: dos inputs MM/DD/YYYY (inicio → fin) con hint de
  *     formato + calendario de un mes (semana en domingo; etiquetas via __(),
  *     español como clave) con seleccion de rango.
- * Tema oscuro adaptado al dashboard, acento = --brand-primary.
+ * Tema oscuro adaptado al dashboard, acento = --org-primary.
  *
  * Scopeado por atributos data-drp (no ids) para permitir varias instancias.
  * Persiste entre re-renders (el mixin llama html() + mount() en cada render).

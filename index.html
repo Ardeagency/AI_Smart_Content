@@ -49,8 +49,8 @@
          dns-prefetch: solo resolución DNS (más barato; suficiente para libs). -->
     <link rel="preconnect" href="https://aqblperqrcwumiztmjnw.supabase.co" crossorigin>
     <link rel="preconnect" href="https://media-v2.aismartcontent.io" crossorigin>
-    <!-- ADN: Inter autoalojada (variable); la mono se carga cuando el CSS la pide. -->
-    <link rel="preload" href="recursos/fonts/adn/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- Tipografía de la landing, autoalojada: la mono es el texto de todo, se precarga; Apfel (títulos) la pide el CSS. -->
+    <link rel="preload" href="recursos/fonts/adn/SplineSansMono.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 
     <!-- Application CSS: un solo stylesheet; los módulos entran vía @import en bundle.css. -->
@@ -84,7 +84,7 @@
                pinta antes de que cargue el bundle (y con él los tokens). */
             background: #000;
             color: #D4D1D8;
-            font-family: 'Inter', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Spline Sans Mono', ui-monospace, Menlo, monospace;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }

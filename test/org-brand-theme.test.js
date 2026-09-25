@@ -28,8 +28,8 @@ describe('OrgBrandTheme con la base nueva', () => {
 
   test('aplica el color principal desde mi_contexto (normaliza y deduplica)', async () => {
     await window.OrgBrandTheme.applyOrgBrandTheme('org-1');
-    // --brand-primary es la versión ajustada para UI (BrandColors.getBrandUIPalette): no el hex crudo.
-    expect(document.documentElement.style.getPropertyValue('--brand-primary').trim()).toMatch(/^#[0-9a-f]{6}$/i);
+    // --org-primary es la versión ajustada para UI (BrandColors.getBrandUIPalette): no el hex crudo.
+    expect(document.documentElement.style.getPropertyValue('--org-primary').trim()).toMatch(/^#[0-9a-f]{6}$/i);
     expect(window.OrgBrandTheme.getLastBrandHexes()).toEqual(['#ff6450', '#1a2b3c']);
   });
 
@@ -40,6 +40,6 @@ describe('OrgBrandTheme con la base nueva', () => {
   test('una marca sin colores limpia el tema', async () => {
     window.OrgBrandTheme.clearOrgBrandTheme();
     await window.OrgBrandTheme.applyOrgBrandTheme('otra-org');
-    expect(document.documentElement.style.getPropertyValue('--brand-primary')).toBe('');
+    expect(document.documentElement.style.getPropertyValue('--org-primary')).toBe('');
   });
 });

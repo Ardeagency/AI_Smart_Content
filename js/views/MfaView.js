@@ -68,7 +68,7 @@ class MfaView extends BaseView {
         <label class="signin-field-label" for="mfaCodigo">${__('Código de 6 dígitos')}</label>
         <input type="text" class="form-input signin-mfa-code" id="mfaCodigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
         <p class="signin-mfa-error" id="mfaError" role="alert" hidden></p>
-        <button type="submit" class="btn btn-primary signin-submit" id="mfaVerificar">${__('Verificar')}</button>
+        <button type="submit" class="btn btn--blanco signin-submit" id="mfaVerificar">${__('Verificar')}</button>
       </form>`);
     const form = el.querySelector('#mfaForm');
     this.addEventListener(form, 'submit', (e) => { e.preventDefault(); this._verificar(form); });

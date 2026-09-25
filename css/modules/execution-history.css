@@ -45,7 +45,7 @@
   padding: 0;
   width: 100%;
   background: var(--bg-card);
-  border: 1px solid var(--border-divider);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md, 12px);
   overflow: hidden;
   cursor: pointer;
@@ -64,7 +64,7 @@
 }
 
 .exec-card:focus-visible {
-  outline: 2px solid var(--accent-warm, var(--accent-brand));
+  outline: 2px solid var(--icon-button);
   outline-offset: 2px;
 }
 
@@ -75,7 +75,7 @@
 
 .exec-card--disabled:hover {
   transform: none;
-  border-color: var(--border-divider);
+  border-color: var(--border-color);
   box-shadow: none;
 }
 
@@ -85,7 +85,7 @@
   width: 100%;
   aspect-ratio: 4 / 5;
   overflow: hidden;
-  background: linear-gradient(160deg, var(--bg-card) 0%, var(--bg-ui) 100%);
+  background: linear-gradient(160deg, var(--bg-card) 0%, var(--bg-base) 100%);
 }
 
 .exec-card-img {
@@ -223,7 +223,7 @@
   margin-top: 0.35rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--accent-warm);
+  color: var(--icon-button);
   max-height: 0;
   opacity: 0;
   overflow: hidden;

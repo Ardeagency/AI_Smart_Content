@@ -15,7 +15,7 @@
  *       ${UI.Card.html({
  *         title: 'Mi tarjeta',
  *         body: '<p>Contenido</p>',
- *         footer: UI.Button.html({ label: 'Guardar', variant: 'primary', id: 'saveBtn' })
+ *         footer: UI.Button.html({ label: 'Guardar', variant: 'blanco', id: 'saveBtn' })
  *       })}
  *     `;
  *   }
@@ -59,7 +59,8 @@
      * @param {object} o
      * @param {string} [o.label]                — texto del botón
      * @param {string} [o.icon]                 — clase FA o Phosphor (ej. 'aisc-ico aisc-ico--add')
-     * @param {'primary'|'secondary'|'icon'} [o.variant='primary']
+     * @param {'blanco'|'oscuro'|'gris'} [o.variant='blanco'] — los 3 botones (Figma › Button/1·2·3)
+     * @param {boolean} [o.peligro]            — texto error; solo con variant 'gris'
      * @param {'sm'|'md'|'lg'} [o.size='md']
      * @param {'button'|'submit'|'reset'} [o.type='button']
      * @param {boolean} [o.block]               — width: 100%
@@ -73,7 +74,7 @@
      */
     html(o = {}) {
       const {
-        label = '', icon = null, variant = 'primary', size = 'md',
+        label = '', icon = null, variant = 'blanco', peligro = false, size = 'md',
         type = 'button', block = false, disabled = false, loading = false,
         id = '', className = '', href = null, ariaLabel = null, dataset = null
       } = o;
@@ -82,9 +83,9 @@
       const isDisabled = disabled || loading;
       const cls = _cls(
         'btn',
-        `btn-${variant}`,
-        size === 'sm' ? 'btn-sm' : (size === 'lg' ? 'btn-lg' : ''),
-        block ? 'btn-block' : '',
+        peligro ? 'btn--gris btn--peligro' : `btn--${variant}`,
+        size === 'sm' ? 'btn--sm' : (size === 'lg' ? 'btn--lg' : ''),
+        block ? 'btn--bloque' : '',
         loading ? 'is-loading' : '',
         className
       );
@@ -243,13 +244,13 @@
       });
     },
     /** Helper común: confirmación con dos botones. Resuelve true/false. */
-    confirm({ title = 'Confirmar', message = '', confirmLabel = 'Confirmar', cancelLabel = 'Cancelar', variant = 'primary' } = {}) {
+    confirm({ title = 'Confirmar', message = '', confirmLabel = 'Confirmar', cancelLabel = 'Cancelar', peligro = false } = {}) {
       return new Promise((resolve) => {
         const body = `
           <p class="dialog-message">${_esc(message)}</p>
           <div class="modal-footer dialog-footer">
-            ${Button.html({ label: cancelLabel, variant: 'secondary', id: '_dialogCancel' })}
-            ${Button.html({ label: confirmLabel, variant, id: '_dialogConfirm' })}
+            ${Button.html({ label: cancelLabel, variant: 'gris', id: '_dialogCancel' })}
+            ${Button.html({ label: confirmLabel, variant: peligro ? 'gris' : 'blanco', peligro, id: '_dialogConfirm' })}
           </div>
         `;
         const handle = window.Modal && window.Modal.show({

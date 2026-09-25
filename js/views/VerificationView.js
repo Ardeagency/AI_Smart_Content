@@ -52,7 +52,7 @@ class VerificationView extends BaseView {
           ${emailHtml}
           <p class="verification-hint">${__('¿No te llega? Revisa la carpeta de spam o promociones.')}</p>
 
-          <button type="button" class="btn btn-primary signin-submit" id="btnResendVerification">
+          <button type="button" class="btn btn--blanco signin-submit" id="btnResendVerification">
             ${__('Reenviar correo de verificación')}
           </button>
           <p class="verification-status" id="verificationStatus" hidden></p>

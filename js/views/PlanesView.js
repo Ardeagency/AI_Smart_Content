@@ -289,7 +289,7 @@ class PlanesView extends BaseView {
     const ctaBlock = current
       ? `<div class="plan-card-current-status"><i class="aisc-ico aisc-ico--check"></i> ${window.__('Estás en este plan')}</div>`
       : `<button type="button"
-          class="btn btn-primary plan-card-cta plan-card-cta--${cta.kind}"
+          class="btn btn--blanco plan-card-cta plan-card-cta--${cta.kind}"
           data-plan="${plan.id}"
           data-cta="${cta.kind}">
           <i class="fas ${cta.icon}"></i> ${cta.label}

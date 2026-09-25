@@ -9,7 +9,7 @@
    Banner es position:fixed top:0 con z-index muy alto. Empuja al resto del
    shell hacia abajo vía body.has-demo-banner que define --demo-banner-height
    y sobrescribe los `top:` del sidebar / header y el padding-top del
-   #app-container. El gradiente arcoíris reusa --brand-gradient (paleta oficial
+   #app-container. El gradiente arcoíris reusa --espectro (paleta oficial
    de la app) sobre fondo negro para legibilidad del texto. */
 body.has-demo-banner {
   --demo-banner-height: 26px;
@@ -29,7 +29,7 @@ body.has-demo-banner {
   padding: 0 14px;
   /* Arcoíris atenuado: la franja sigue siendo identificable pero NO compite
      con el contenido de la app (jerarquía reducida vs versión hero). */
-  background: var(--brand-gradient);
+  background: var(--espectro);
   color: rgba(0, 0, 0, 0.78);
   font-size: 0.72rem;
   font-weight: 500;

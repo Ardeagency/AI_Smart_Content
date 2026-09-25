@@ -2,7 +2,7 @@
 
 .signin-container {
     min-height: 100vh;
-    background: var(--bg-primary);
+    background: var(--bg-base);
     color: var(--text-primary);
     padding: 0;
     margin: 0;
@@ -13,7 +13,7 @@
 
 /* Hero layout: video full-bleed + card glass a la derecha */
 .signin-container--hero {
-    background-color: var(--bg-primary);
+    background-color: var(--bg-base);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -113,7 +113,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-xl);
+    padding: var(--space-8);
     min-height: 0;
     position: relative;
     z-index: 1;
@@ -130,10 +130,10 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    gap: var(--space-6);
     align-items: center;
     background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
@@ -152,7 +152,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-xl);
+    padding: var(--space-8);
     min-height: 0;
     position: relative;
     z-index: 1;
@@ -167,10 +167,10 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    gap: var(--space-6);
     align-items: center;
     background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
@@ -222,7 +222,7 @@
     padding: 0.75rem 1rem;
     background: rgba(0, 214, 20, 0.12);
     border: 1px solid rgba(0, 214, 20, 0.35);
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-md);
     font-size: 0.9rem;
     color: var(--text-primary);
 }
@@ -240,7 +240,7 @@
 .signin-container #form_signin {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--space-4);
     width: 100%;
     box-sizing: border-box;
 }
@@ -249,7 +249,7 @@
 .signin-container .auth-state {
     display: none;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--space-4);
     width: 100%;
     box-sizing: border-box;
 }
@@ -312,7 +312,7 @@
     max-width: 100%;
     padding: 0.85rem 1rem;
     background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
@@ -331,8 +331,8 @@
 .signin-container .form-input:focus,
 .signin-container input:focus {
     outline: none;
-    border-color: var(--accent-brand);
-    box-shadow: 0 0 0 2px var(--accent-brand-soft);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 /* Botones: estilo glass unificado (misma plataforma) */
@@ -350,17 +350,12 @@
     align-items: center;
     justify-content: center;
     background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     color: var(--text-primary);
 }
 
-.signin-container .btn-primary:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: var(--glass-border);
-    color: var(--text-primary);
-}
 
 .signin-container .btn:disabled {
     opacity: 0.5;
@@ -370,7 +365,7 @@
 /* Enlace "¿Olvidaste tu contraseña?" – acento paleta (cyan) */
 .signin-forgot {
     font-size: var(--font-size-base);
-    color: rgba(0, 231, 255, 0.95);
+    color: var(--color-info-border);
     text-decoration: none;
     text-align: center;
     margin-top: -0.25rem;
@@ -397,7 +392,7 @@
     display: flex;
     align-items: center;
     width: 100%;
-    gap: var(--spacing-md);
+    gap: var(--space-4);
     margin: 0.25rem 0;
 }
 
@@ -423,7 +418,7 @@
     gap: 0.75rem;
     width: 100%;
     background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
@@ -436,7 +431,7 @@
 
 .signin-google-btn:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.08);
-    border-color: var(--glass-border);
+    border-color: var(--border-hairline);
 }
 
 .signin-google-icon {
@@ -450,7 +445,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--space-4);
     text-align: center;
 }
 
@@ -475,7 +470,7 @@
 .signin-recover-form {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--space-4);
     width: 100%;
 }
 
@@ -483,7 +478,7 @@
     padding: 0.75rem;
     background: var(--color-success-bg);
     border: 1px solid rgba(0, 214, 20, 0.3);
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-md);
 }
 
 .signin-recover-success[hidden] {
@@ -499,7 +494,7 @@
 
 .signin-recover-back {
     font-size: 0.9rem;
-    color: rgba(0, 231, 255, 0.95);
+    color: var(--color-info-border);
     text-decoration: none;
     margin-top: 0.25rem;
     transition: var(--transition);
@@ -534,7 +529,7 @@
 .cambiar-contrasena-form-wrap form {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--space-4);
     width: 100%;
 }
 
@@ -595,7 +590,7 @@
 .signin-toggle-link {
     background: none;
     border: none;
-    color: rgba(0, 231, 255, 0.95);
+    color: var(--color-info-border);
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
@@ -613,7 +608,7 @@
 @media (max-width: 768px) {
     .signin-container .form-main-content,
     .signin-container .signin-inner {
-        padding: var(--spacing-lg);
+        padding: var(--space-6);
         align-items: flex-start;
         padding-top: 3rem;
     }
@@ -635,7 +630,7 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--border-divider);
+    background: var(--border-color);
 }
 
 .signin-mfa-code {
@@ -664,7 +659,7 @@
     width: 56px;
     height: 56px;
     margin: 0.25rem auto 0;
-    color: rgba(0, 231, 255, 0.95);
+    color: var(--color-info-border);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -740,14 +735,14 @@
     height: 44px;
     border-radius: 50%;
     border: 3px solid rgba(255, 255, 255, 0.08);
-    border-top-color: rgba(0, 231, 255, 0.95);
+    border-top-color: var(--color-info-border);
     animation: creation-spin 1.1s linear infinite;
 }
 @keyframes creation-spin {
     to { transform: rotate(360deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-    .creation-spinner-ring { animation: none; border-top-color: rgba(0, 231, 255, 0.45); }
+    .creation-spinner-ring { animation: none; border-top-color: var(--color-info-border); }
 }
 
 /* Captcha (Turnstile): el widget vive entre el formulario y el botón; sin clave queda [hidden]. */

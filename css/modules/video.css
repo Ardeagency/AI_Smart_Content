@@ -1,6 +1,6 @@
 /* ========== Video (Kling 3.0 / KIE) ==========
    Estilos alineados al design system: --spacing-*, --radius-*, --glass-*, --text-*, --white-*,
-   --black-*, --border-divider, --transition. Vista Video: app-container sin scroll; scroll propio
+   --black-*, --border-color, --transition. Vista Video: app-container sin scroll; scroll propio
    en Canvas y Sidebar Console; Director Console en el footer del app-container. */
 #app-container:has(.video-view-container) {
     overflow: hidden;
@@ -29,9 +29,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /**
  * Acento de la vista, en un solo lugar.
  *
- * Antes cada estado seleccionado tiraba de `--color-info` (var(--prisma-celeste)), un cian
+ * Antes cada estado seleccionado tiraba de `--color-info` (var(--color-info)), un cian
  * fijo que no es de ninguna marca. La plataforma pinta con el color dinámico
- * de la organización: `--accent-brand` = `--brand-primary` inyectado por
+ * de la organización: `--accent` = `--org-primary` inyectado por
  * OrgBrandTheme, y si la org no tiene color propio cae a un blanco tenue y la
  * vista queda monocroma. Nunca cian.
  *
@@ -40,8 +40,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
  * lee.
  */
 .video-view-container {
-    --video-accent: var(--accent-brand, rgba(255, 255, 255, 0.35));
-    --video-accent-soft: var(--accent-brand-soft, rgba(255, 255, 255, 0.08));
+    --video-accent: var(--accent);
+    --video-accent-soft: var(--accent-soft);
     --video-accent-text: var(--text-primary);
 }
 .organization-container.video-view-container,
@@ -80,8 +80,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: var(--spacing-md);
-    gap: var(--spacing-sm);
+    padding: var(--space-4);
+    gap: var(--space-2);
 }
 .video-main .video-canvas,
 .video-main .video-canva-view {
@@ -109,8 +109,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
         radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.2px);
     background-size: 22px 22px, 22px 22px;
     background-position: 0 0, 11px 11px;
-    -webkit-mask-image: radial-gradient(circle at 50% 45%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
-    mask-image: radial-gradient(circle at 50% 45%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+    -webkit-mask-image: radial-gradient(circle at 50% 45%, var(--bg-base) 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+    mask-image: radial-gradient(circle at 50% 45%, var(--bg-base) 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
     pointer-events: none;
     z-index: 0;
 }
@@ -130,7 +130,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     flex-shrink: 0;
     width: 100%;
     max-width: 100%;
-    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    padding: var(--space-2) var(--space-4) var(--space-4);
 }
 .video-main .video-main-director {
     padding: 0;
@@ -158,7 +158,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     width: 360px;
     flex-shrink: 0;
     min-height: 0;
-    padding: var(--spacing-md);
+    padding: var(--space-4);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -184,8 +184,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-radius: 16px;
 }
 .video-view-container .video-sidebar-console .video-prompt-footer-card-inner.video-sidebar-inner {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-light);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 12px 12px 14px 14px;
     /* Sombra alineada con Studio sidebar para que ambas cards "floten" igual */
@@ -236,20 +236,20 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-sidebar-inner {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    gap: var(--space-6);
 }
 .video-sidebar-section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
 }
 .video-sidebar-section .video-section-label,
 .video-sidebar-section .video-prompt-panel-title {
-    margin: 0 0 var(--spacing-xs) 0;
+    margin: 0 0 var(--space-1) 0;
 }
 .video-sidebar-cine {
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--glass-border);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-hairline);
 }
 /* Compatibilidad: barra fija (si se usa en otra vista) */
 .video-page-footer.video-prompt-wrap,
@@ -258,7 +258,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     left: 0;
     right: 0;
     bottom: 0;
-    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+    padding: var(--space-4) var(--space-6) var(--space-6);
     z-index: var(--z-sticky);
     pointer-events: none;
 }
@@ -266,7 +266,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-prompt-cards-row {
     display: grid;
     grid-template-columns: 1fr 2fr 1fr;
-    gap: var(--spacing-md);
+    gap: var(--space-4);
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
@@ -327,7 +327,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     position: relative;
     z-index: 1;
     margin: 0;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--space-2) var(--space-4);
     border: 1px solid var(--white-10);
     border-radius: calc(var(--glass-radius) - 2px);
     box-shadow: none;
@@ -335,7 +335,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    background: var(--bg-tertiary);
+    background: var(--bg-base);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     color: var(--text-primary);
@@ -354,8 +354,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
 }
 .video-director-btn-add {
     flex-shrink: 0;
@@ -379,7 +379,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-director-top-row .video-attachments-list {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--spacing-xs);
+    gap: var(--space-1);
     align-items: center;
 }
 .video-director-console-content {
@@ -392,7 +392,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: block;
     width: 100%;
     min-height: 100px;
-    padding: var(--spacing-sm) var(--spacing-sm);
+    padding: var(--space-2) var(--space-2);
     margin: 0;
     font-size: var(--font-size-base);
     color: var(--glass-black-text);
@@ -413,21 +413,21 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-director-separator {
     height: 1px;
-    margin: var(--spacing-sm) 0;
-    background: var(--glass-border);
+    margin: var(--space-2) 0;
+    background: var(--border-hairline);
     border: none;
 }
 .video-director-controls {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
 }
 .video-director-toggle {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-xs) var(--spacing-sm);
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
     background: var(--white-8);
@@ -445,12 +445,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: var(--white-10);
 }
 .video-director-console .video-director-select {
-    padding: var(--spacing-xs) 1.75rem var(--spacing-xs) var(--spacing-sm);
+    padding: var(--space-1) 1.75rem var(--space-1) var(--space-2);
     font-size: 0.78rem;
     font-weight: 500;
     color: var(--text-primary);
-    background: var(--bg-ui);
-    border: 1px solid var(--border-divider);
+    background: var(--bg-base);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     cursor: pointer;
     appearance: none;
@@ -468,7 +468,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-director-console .video-prompt-aspect-chevron {
     position: absolute;
-    right: var(--spacing-sm);
+    right: var(--space-2);
     pointer-events: none;
     font-size: 0.65rem;
     color: var(--text-muted);
@@ -489,8 +489,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     margin-left: auto;
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-xs) var(--spacing-md);
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-4);
     font-size: var(--font-size-sm);
     font-weight: 600;
     letter-spacing: 0.03em;
@@ -515,8 +515,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-director-controls .video-director-btn-regenerate {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-xs) var(--spacing-sm);
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
     font-size: var(--font-size-xs);
     font-weight: 500;
     color: var(--text-muted);
@@ -541,21 +541,21 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
 }
 .video-prompt-actions-row2 {
-    margin-top: var(--spacing-xs);
-    padding-top: var(--spacing-xs);
+    margin-top: var(--space-1);
+    padding-top: var(--space-1);
     border-top: 1px solid var(--white-8);
 }
 .video-prompt-actions-row1 .video-prompt-btn-add {
-    padding-left: var(--spacing-sm);
-    padding-right: var(--spacing-sm);
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
 }
 .video-storyboard-wrap {
-    margin-top: var(--spacing-sm);
-    padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--glass-border);
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border-hairline);
 }
 .video-storyboard-title {
     font-size: var(--font-size-sm);
@@ -563,22 +563,22 @@ body.has-sidebar #app-container:has(.video-view-container) {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--text-secondary);
-    margin: 0 0 var(--spacing-xs) 0;
+    margin: 0 0 var(--space-1) 0;
 }
 .video-storyboard-scenes {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: var(--space-1);
 }
 .video-storyboard-scene {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-xs) var(--spacing-sm);
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
     background: var(--black-20);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-hairline);
 }
 .video-storyboard-scene-label {
     font-size: var(--font-size-xs);
@@ -587,7 +587,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-storyboard-scene-brief,
 .video-storyboard-scene-duration {
-    padding: var(--spacing-xs) var(--spacing-xs);
+    padding: var(--space-1) var(--space-1);
     font-size: var(--font-size-xs);
     background: var(--white-8);
     border: 1px solid var(--white-15);
@@ -600,13 +600,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-prompt-footer-card-right {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
 }
 .video-cine-tag {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-xs);
-    padding-right: var(--spacing-xs);
+    gap: var(--space-1);
+    padding-right: var(--space-1);
 }
 .video-cine-tag-remove {
     display: inline-flex;
@@ -628,27 +628,27 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: var(--white-50);
 }
 .video-prompt-preview-block {
-    margin-top: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-sm);
+    margin-top: var(--space-1);
+    padding: var(--space-2) var(--space-2);
     background: var(--black-40);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-hairline);
     border-radius: var(--radius-sm);
 }
 .video-prompt-preview-block .video-collapse-header {
-    padding: var(--spacing-xs) 0;
+    padding: var(--space-1) 0;
 }
 .video-prompt-preview-placeholder {
     font-size: var(--font-size-sm);
     color: var(--text-muted);
-    padding: var(--spacing-xs) 0;
+    padding: var(--space-1) 0;
 }
 .video-prompt-preview-generated {
-    padding: var(--spacing-xs) 0;
+    padding: var(--space-1) 0;
 }
 .video-prompt-preview-title {
     font-size: var(--font-size-sm);
     font-weight: 700;
-    margin: 0 0 var(--spacing-xs) 0;
+    margin: 0 0 var(--space-1) 0;
     color: var(--glass-black-text);
 }
 .video-prompt-preview-body {
@@ -657,13 +657,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
     line-height: 1.45;
 }
 .video-prompt-preview-body p {
-    margin: 0 0 var(--spacing-xs) 0;
+    margin: 0 0 var(--space-1) 0;
 }
 .video-prompt-preview-body strong {
     color: var(--white-95);
 }
 .video-prompt-preview-score {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--space-2);
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: var(--color-info);
@@ -677,18 +677,18 @@ body.has-sidebar #app-container:has(.video-view-container) {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-muted);
-    margin: 0 0 var(--spacing-sm) 0;
+    margin: 0 0 var(--space-2) 0;
 }
 .video-left-inner {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
 }
 .video-left-inner .video-left-block,
 .video-prompt-left-section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: var(--space-1);
 }
 .video-left-block .video-prompt-panel-title,
 .video-prompt-left-block .video-prompt-panel-title {
@@ -696,24 +696,24 @@ body.has-sidebar #app-container:has(.video-view-container) {
     margin: 0;
 }
 .video-asset-stack-block .video-asset-scope-wrap {
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: var(--space-1);
 }
 /* Ocultar descripción cuando scope es Product (estado por defecto) */
 .video-asset-stack-block[data-scope="product"] .video-asset-stack-help {
     display: none;
 }
 .video-asset-products-carousel-wrap {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--space-2);
     min-height: 0;
     overflow: hidden;
 }
 .video-asset-products-carousel {
     display: flex;
-    gap: var(--spacing-xs);
+    gap: var(--space-1);
     overflow-x: auto;
   overflow-y: hidden;
     overflow-y: hidden;
-    padding: var(--spacing-xs) 0;
+    padding: var(--space-1) 0;
     -webkit-overflow-scrolling: touch;
 }
 .video-asset-products-carousel::-webkit-scrollbar {
@@ -743,7 +743,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     opacity: 0.9;
 }
 .video-asset-product-item.is-selected {
-    box-shadow: 0 0 0 2px var(--accent-brand, var(--color-info));
+    box-shadow: 0 0 0 2px var(--accent);
 }
 .video-asset-product-thumb-wrap {
     width: 72px;
@@ -763,23 +763,23 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-asset-products-empty {
     margin: 0;
-    padding: var(--spacing-sm) 0;
+    padding: var(--space-2) 0;
     font-size: var(--font-size-xs);
     color: var(--text-muted);
     line-height: 1.35;
 }
 .video-asset-select {
     width: 100%;
-    margin-top: var(--spacing-xs);
+    margin-top: var(--space-1);
 }
 .video-asset-select.video-asset-select-other {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--space-2);
 }
 .video-asset-card {
-    margin-top: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-sm);
+    margin-top: var(--space-2);
+    padding: var(--space-2) var(--space-2);
     background: var(--black-40);
-    border: 1px solid var(--border-divider);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-card);
 }
@@ -791,25 +791,25 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: var(--glass-black-text);
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: var(--space-1);
 }
 .video-asset-card-locks {
     list-style: none;
-    margin: 0 0 var(--spacing-sm) 0;
+    margin: 0 0 var(--space-2) 0;
     padding: 0;
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
 }
 .video-asset-card-locks li {
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: var(--space-1);
 }
 .video-asset-card-locks .fa-check {
-    margin-right: var(--spacing-xs);
+    margin-right: var(--space-1);
     color: var(--color-info);
 }
 .video-asset-change-btn {
     font-size: var(--font-size-sm);
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: var(--space-1) var(--space-2);
     background: transparent;
     border: 1px solid var(--white-50);
     border-radius: var(--radius-xs);
@@ -822,14 +822,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-color: var(--white-80);
 }
 .video-brand-context-block {
-    margin-top: var(--spacing-xs);
+    margin-top: var(--space-1);
 }
 .video-collapse-header {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-xs) 0;
+    padding: var(--space-1) 0;
     font-size: var(--font-size-sm);
     font-weight: 600;
     text-transform: uppercase;
@@ -848,7 +848,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     transition: var(--transition);
 }
 .video-collapse-content {
-    padding: var(--spacing-xs) 0 var(--spacing-sm);
+    padding: var(--space-1) 0 var(--space-2);
     overflow: hidden;
 }
 .video-collapse-content.video-collapse-content-closed {
@@ -862,18 +862,18 @@ body.has-sidebar #app-container:has(.video-view-container) {
     color: var(--text-secondary);
 }
 .video-brand-context-list li {
-    margin-bottom: var(--spacing-xs);
-    padding-left: var(--spacing-sm);
+    margin-bottom: var(--space-1);
+    padding-left: var(--space-2);
 }
 .video-prompt-left-section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--space-4);
 }
 .video-prompt-left-block {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: var(--space-1);
 }
 .video-prompt-left-block .video-prompt-panel-title {
     margin: 0;
@@ -883,38 +883,38 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-xs) var(--spacing-sm);
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
     font-size: var(--font-size-xs);
     cursor: pointer;
     border-radius: var(--radius-sm);
-    background: var(--brand-primary-brillo, var(--white-10));
+    background: var(--org-brillo);
     border: 1px solid var(--glass-black-border);
     color: var(--glass-black-text);
     transition: var(--transition);
 }
 .video-prompt-productions-btn:hover {
-    background: var(--brand-primary-brillo-strong, var(--brillo-active));
+    background: var(--org-brillo-strong);
 }
 
 /* Bloque Escenas: título + botón "All production" + carrusel horizontal de seleccionadas */
 .video-escenas-block {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
 }
 .video-escenas-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
 }
 .video-escenas-header .video-prompt-panel-title {
     margin: 0;
 }
 .video-escenas-all-btn {
     flex-shrink: 0;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: var(--space-1) var(--space-2);
     font-size: var(--font-size-xs);
     font-weight: 600;
     text-transform: none;
@@ -936,11 +936,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-escenas-carousel {
     display: flex;
-    gap: var(--spacing-xs);
+    gap: var(--space-1);
     overflow-x: auto;
   overflow-y: hidden;
     overflow-y: hidden;
-    padding: var(--spacing-xs) 0;
+    padding: var(--space-1) 0;
     -webkit-overflow-scrolling: touch;
 }
 .video-escenas-carousel::-webkit-scrollbar {
@@ -970,7 +970,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     opacity: 0.9;
 }
 .video-escena-item.is-selected {
-    box-shadow: 0 0 0 2px var(--accent-brand, var(--color-info));
+    box-shadow: 0 0 0 2px var(--accent);
 }
 .video-escena-thumb-wrap {
     width: 72px;
@@ -993,7 +993,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-escenas-empty {
     margin: 0;
-    padding: var(--spacing-sm) 0;
+    padding: var(--space-2) 0;
     font-size: var(--font-size-xs);
     color: var(--text-muted);
     line-height: 1.35;
@@ -1048,10 +1048,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
     max-width: 900px;
     max-height: 45vh;
     margin: 0 auto 6rem;
-    padding: var(--spacing-md);
+    padding: var(--space-4);
     border-radius: var(--radius-md);
     background: var(--bg-card);
-    border: 1px solid var(--border-divider);
+    border: 1px solid var(--border-color);
     box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
@@ -1080,14 +1080,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--space-2);
     flex-shrink: 0;
 }
 .video-productions-panel-header .video-prompt-panel-title {
     margin: 0;
 }
 .video-productions-panel-close {
-    padding: var(--spacing-xs);
+    padding: var(--space-1);
     background: none;
     border: none;
     color: var(--glass-black-text);
@@ -1103,11 +1103,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-productions-gallery {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
-    padding: var(--spacing-xs) 0;
+    padding: var(--space-1) 0;
     -webkit-overflow-scrolling: touch;
 }
 .video-productions-gallery::-webkit-scrollbar {
@@ -1131,7 +1131,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: var(--spacing-sm);
+    padding: var(--space-2);
     border-radius: var(--radius-sm);
     border: 2px solid transparent;
     cursor: pointer;
@@ -1141,8 +1141,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: var(--white-8);
 }
 .video-production-item.is-selected {
-    border-color: var(--accent-brand, var(--color-info));
-    box-shadow: 0 0 0 1px var(--accent-brand, var(--color-info));
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
 }
 .video-production-thumb-wrap {
     width: 100%;
@@ -1169,14 +1169,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-productions-empty {
     margin: 0;
-    padding: var(--spacing-md);
+    padding: var(--space-4);
     font-size: var(--font-size-sm);
     color: var(--text-muted);
     text-align: center;
 }
 /* Las 3 cards del footer comparten el mismo estilo (padding y crecimiento vía .video-prompt-footer-card-inner.glass-black). */
 .video-cine-preset-wrap {
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--space-2);
 }
 .video-cine-preset-wrap .video-cine-label {
     display: block;
@@ -1184,11 +1184,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--text-secondary);
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: var(--space-1);
 }
 .video-cine-select {
     width: 100%;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: var(--space-1) var(--space-2);
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
     background: var(--white-8);
@@ -1202,19 +1202,19 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: none;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--spacing-xs);
-    margin-bottom: var(--spacing-sm);
-    padding: var(--spacing-xs) 0;
-    border-bottom: 1px solid var(--glass-border);
+    gap: var(--space-1);
+    margin-bottom: var(--space-2);
+    padding: var(--space-1) 0;
+    border-bottom: 1px solid var(--border-hairline);
 }
 .video-director-variables-row {
     display: none;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-xs) 0;
-    margin-bottom: var(--spacing-xs);
-    border-bottom: 1px solid var(--glass-border);
+    gap: var(--space-1);
+    padding: var(--space-1) 0;
+    margin-bottom: var(--space-1);
+    border-bottom: 1px solid var(--border-hairline);
 }
 .video-field-help {
     font-size: var(--font-size-xs);
@@ -1227,11 +1227,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--text-muted);
-    margin-right: var(--spacing-xs);
+    margin-right: var(--space-1);
 }
 .video-cine-tag {
     display: inline-block;
-    padding: var(--spacing-xs) var(--spacing-xs);
+    padding: var(--space-1) var(--space-1);
     font-size: var(--font-size-sm);
     color: var(--glass-black-text);
     background: var(--white-10);
@@ -1241,7 +1241,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-cinematography-panel .video-cine-blocks {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: var(--space-1);
 }
 .video-cinematography-panel .video-cine-block {
     background: var(--black-20);
@@ -1261,7 +1261,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: var(--space-1) var(--space-2);
     font-size: var(--font-size-xs);
     font-weight: 600;
     text-transform: uppercase;
@@ -1271,7 +1271,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: none;
     cursor: pointer;
     transition: var(--transition);
-    font-family: var(--font-family);
+    font-family: var(--font-mono);
     text-align: left;
 }
 .video-cinematography-panel .video-cine-block-header:hover,
@@ -1285,22 +1285,22 @@ body.has-sidebar #app-container:has(.video-view-container) {
     color: var(--glass-black-text);
     transition: var(--transition);
     flex-shrink: 0;
-    margin-left: var(--spacing-sm);
+    margin-left: var(--space-2);
 }
 .video-cinematography-panel .video-cine-block-header[aria-expanded="false"] i,
 .video-sidebar-cine .video-cine-block-header[aria-expanded="false"] i {
     transform: rotate(-90deg);
 }
 .video-cinematography-panel .video-cine-block-content {
-    padding: var(--spacing-xs) var(--spacing-sm) var(--spacing-sm);
-    border-top: 1px solid var(--glass-border);
+    padding: var(--space-1) var(--space-2) var(--space-2);
+    border-top: 1px solid var(--border-hairline);
     display: block;
 }
 .video-cinematography-panel .video-cine-block-content.video-cine-block-collapsed {
     display: none;
 }
 .video-cinematography-panel .video-cine-row {
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: var(--space-1);
 }
 .video-cinematography-panel .video-cine-row:last-child {
     margin-bottom: 0;
@@ -1311,7 +1311,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     text-transform: uppercase;
     letter-spacing: 0.03em;
     color: var(--text-muted);
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: var(--space-1);
 }
 .video-cinematography-panel .video-cine-row .video-cine-select {
     width: 100%;
@@ -1321,7 +1321,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: var(--font-size-xs);
     font-weight: 600;
     color: var(--glass-black-text);
-    margin: 0 0 var(--spacing-sm) 0;
+    margin: 0 0 var(--space-2) 0;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     opacity: 0.9;
@@ -1348,7 +1348,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     padding: 0.35rem 0.5rem;
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
-    background: var(--brand-primary-brillo, rgba(255,255,255,0.08));
+    background: var(--org-brillo);
     border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-sm);
     cursor: pointer;
@@ -1363,15 +1363,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
     padding: 0.4rem 0.5rem;
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
-    background: var(--brand-primary-brillo-strong, rgba(255,255,255,0.12));
+    background: var(--org-brillo-strong);
     border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background 0.2s ease;
 }
 .video-prompt-ai-prompt-btn:hover {
-    background: var(--accent-brand);
-    color: var(--bg-primary);
+    background: var(--accent);
+    color: var(--bg-base);
 }
 .video-prompt-db-list {
     flex: 1;
@@ -1389,7 +1389,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     padding: 0.35rem 0.5rem;
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
-    background: var(--brand-primary-brillo, rgba(255,255,255,0.06));
+    background: var(--org-brillo);
     border: 1px solid transparent;
     border-radius: var(--radius-xs);
 }
@@ -1410,9 +1410,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
     transition: background 0.2s ease, color 0.2s ease;
 }
 .video-prompt-db-item-btn:hover {
-    background: var(--accent-brand);
-    color: var(--bg-primary);
-    border-color: var(--accent-brand);
+    background: var(--accent);
+    color: var(--bg-base);
+    border-color: var(--accent);
 }
 .video-prompt-db-list-empty {
     font-size: var(--font-size-xs);
@@ -1428,7 +1428,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     .video-sidebar-console {
         width: 100%;
         border-left: none;
-        border-top: 1px solid var(--border-divider);
+        border-top: 1px solid var(--border-color);
     }
     .video-prompt-cards-row,
     .video-production-cards-row {
@@ -1454,7 +1454,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     padding: 0.25rem 0.25rem 0.25rem 0.5rem;
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
-    background: var(--brand-primary-brillo, rgba(255,255,255,0.08));
+    background: var(--org-brillo);
     border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-sm);
     position: relative;
@@ -1504,7 +1504,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-attachment-remove-thumb:hover {
     opacity: 1;
-    background: var(--accent-warm, var(--color-warning));
+    background: var(--icon-button);
     color: var(--color-white);
 }
 .video-attachment-pin-thumb {
@@ -1532,12 +1532,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-attachment-pin-thumb:hover {
     opacity: 1;
-    background: var(--brand-primary-brillo, rgba(255,255,255,0.2));
+    background: var(--org-brillo);
     color: var(--color-white);
 }
 .video-attachment-pin-thumb .video-attachment-pin-active,
 .video-attachment-pin-active {
-    color: var(--accent-warm, var(--color-warning));
+    color: var(--icon-button);
 }
 .video-attachment-pin-chip {
     padding: 0 0.2rem;
@@ -1557,10 +1557,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-attachment-pin-chip:hover {
     opacity: 1;
-    background: var(--brand-primary-brillo, rgba(255,255,255,0.12));
+    background: var(--org-brillo);
 }
 .video-attachment-pin-chip .video-attachment-pin-active {
-    color: var(--accent-warm, var(--color-warning));
+    color: var(--icon-button);
 }
 .video-attachment-thumb {
     width: 40px;
@@ -1618,8 +1618,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     color: rgba(255, 255, 255, 0.5);
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-input:focus {
-    border-color: var(--accent-brand);
-    box-shadow: 0 0 0 2px rgba(var(--accent-brand-rgb, 99, 102, 241), 0.2);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb, 99, 102, 241), 0.2);
 }
 .video-prompt-actions {
     display: flex;
@@ -1636,13 +1636,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
     padding: 0;
     border: none;
     border-radius: var(--radius-sm);
-    background: var(--brand-primary-brillo, rgba(255, 255, 255, 0.1));
+    background: var(--org-brillo);
     color: var(--glass-black-text);
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease;
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn:hover {
-    background: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.18));
+    background: var(--org-brillo-strong);
     color: var(--glass-black-text);
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn-ai {
@@ -1653,7 +1653,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 1px solid var(--glass-black-border);
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn-ai:hover {
-    background: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.15));
+    background: var(--org-brillo-strong);
     color: var(--color-white);
 }
 .video-prompt-btn-ai:disabled {
@@ -1667,7 +1667,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 1px solid var(--glass-black-border);
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn-send:hover {
-    background: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.15));
+    background: var(--org-brillo-strong);
     color: var(--color-white);
 }
 .video-prompt-btn-send:disabled {
@@ -1697,7 +1697,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     padding: 0.4rem 1.75rem 0.4rem 0.6rem;
     font-size: var(--font-size-sm);
     color: var(--glass-black-text);
-    background: var(--brand-primary-brillo, rgba(255, 255, 255, 0.1));
+    background: var(--org-brillo);
     border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-sm);
     cursor: pointer;
@@ -1718,31 +1718,31 @@ body.has-sidebar #app-container:has(.video-view-container) {
     padding: 0.35rem 0.6rem;
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
-    background: var(--brand-primary-brillo, rgba(255, 255, 255, 0.1));
+    background: var(--org-brillo);
     border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background 0.2s ease, border-color 0.2s ease;
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-toggle:hover {
-    background: var(--brand-primary-brillo-strong, var(--brillo-active));
+    background: var(--org-brillo-strong);
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-toggle.active {
-    border-color: var(--accent-brand);
-    background: var(--brand-primary-brillo-strong, var(--brillo-active));
+    border-color: var(--accent);
+    background: var(--org-brillo-strong);
 }
 .video-status-area,
 .video-result-area,
 .video-error-area {
-    margin-top: var(--spacing-md);
+    margin-top: var(--space-4);
 }
 .video-status-card,
 .video-result-card,
 .video-error-card {
-    background: var(--living-bg-card, var(--bg-card));
-    border: 1px solid var(--border-divider);
+    background: var(--bg-card, var(--bg-card));
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: var(--spacing-lg);
+    padding: var(--space-6);
 }
 .video-status-text {
     margin: 0;
@@ -1751,11 +1751,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-status-spinner {
     width: 24px;
     height: 24px;
-    border: 2px solid var(--border-divider);
-    border-top-color: var(--accent-warm);
+    border: 2px solid var(--border-color);
+    border-top-color: var(--icon-button);
     border-radius: 50%;
     animation: video-spin 0.8s linear infinite;
-    margin-top: var(--spacing-sm);
+    margin-top: var(--space-2);
 }
 @keyframes video-spin {
     to { transform: rotate(360deg); }
@@ -1764,13 +1764,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: var(--font-size-lg);
     font-weight: 600;
     color: var(--text-primary);
-    margin: 0 0 var(--spacing-md) 0;
+    margin: 0 0 var(--space-4) 0;
 }
 .video-result-player-wrap {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--space-4);
     border-radius: var(--radius-sm);
     overflow: hidden;
-    background: var(--bg-black);
+    background: var(--bg-base);
 }
 .video-result-player {
     width: 100%;
@@ -1778,11 +1778,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: block;
 }
 .video-download-btn {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--space-2);
 }
 .video-error-text {
     margin: 0;
-    color: var(--accent-warm, var(--color-warning));
+    color: var(--icon-button);
 }
 
 /* ========== Video — Design Enhancements ========== */
@@ -1799,15 +1799,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-bottom: 1px solid var(--glass-border);
+    padding: var(--space-1) var(--space-2);
+    border-bottom: 1px solid var(--border-hairline);
     flex-shrink: 0;
     min-height: 36px;
 }
 .video-canvas-topbar-left {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
 }
 .video-canvas-topbar-right {
     display: flex;
@@ -1816,12 +1816,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-canvas-model-badge {
     display: inline-flex;
     align-items: center;
-    padding: 2px var(--spacing-xs);
+    padding: 2px var(--space-1);
     font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--bg-tertiary);
+    color: var(--bg-base);
     background: var(--color-info);
     border-radius: var(--radius-xs);
     line-height: 1.5;
@@ -1860,7 +1860,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     align-items: center;
     justify-content: center;
     min-height: 0;
-    padding: var(--spacing-xl);
+    padding: var(--space-8);
 }
 .video-canvas-idle-content {
     display: flex;
@@ -1898,9 +1898,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-md);
+    gap: var(--space-4);
     text-align: center;
-    padding: var(--spacing-xl) var(--spacing-lg);
+    padding: var(--space-8) var(--space-6);
 }
 .video-status-spinner {
     width: 36px;
@@ -1922,26 +1922,26 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-result-card-header {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
 }
 .video-result-output-badge {
     display: inline-flex;
     align-items: center;
-    padding: 2px var(--spacing-xs);
+    padding: 2px var(--space-1);
     font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--bg-tertiary);
+    color: var(--bg-base);
     background: var(--color-success);
     border-radius: var(--radius-xs);
     flex-shrink: 0;
 }
 .video-result-actions {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--space-2);
     display: flex;
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
 }
 
 /* Error card — icon + message */
@@ -1949,9 +1949,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
     text-align: center;
-    padding: var(--spacing-xl) var(--spacing-lg);
+    padding: var(--space-8) var(--space-6);
 }
 .video-error-icon-wrap {
     font-size: 1.5rem;
@@ -1963,8 +1963,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-sidebar-section-header {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
 }
 .video-sidebar-section-header .video-section-label {
     margin: 0;
@@ -1978,7 +1978,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: 0.55rem;
     font-weight: 800;
     letter-spacing: 0.04em;
-    color: var(--bg-tertiary);
+    color: var(--bg-base);
     background: var(--color-info);
     border-radius: var(--radius-xs);
     flex-shrink: 0;
@@ -1989,9 +1989,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     align-items: center;
     gap: 0.4em;
-    margin-bottom: var(--spacing-xs);
-    padding-bottom: var(--spacing-xs);
-    border-bottom: 1px solid var(--glass-border);
+    margin-bottom: var(--space-1);
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid var(--border-hairline);
 }
 .video-console-dot {
     width: 6px;
@@ -2020,23 +2020,23 @@ body.has-sidebar #app-container:has(.video-view-container) {
     letter-spacing: 0.04em;
 }
 
-/* Video: acentos → --brand-gradient-dynamic (sin barrido de posición) */
+/* Video: acentos → --org-gradient (sin barrido de posición) */
 .video-view-container .video-sidebar-section-num,
 .video-view-container .video-console-dot,
 .video-view-container .video-canvas-model-badge {
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5)));
+    background: var(--org-gradient);
 }
 .video-view-container .video-prompt-preview-score {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--space-2);
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: transparent;
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5)));
+    background: var(--org-gradient);
     -webkit-background-clip: text;
     background-clip: text;
 }
 .video-view-container .video-asset-card-locks .fa-check {
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5)));
+    background: var(--org-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2057,7 +2057,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-radius: inherit;
     z-index: 0;
     padding: 1px;
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5)));
+    background: var(--org-gradient);
     -webkit-mask: linear-gradient(var(--color-white) 0 0) content-box, linear-gradient(var(--color-white) 0 0);
     -webkit-mask-composite: xor;
     mask: linear-gradient(var(--color-white) 0 0) content-box, linear-gradient(var(--color-white) 0 0);
@@ -2073,7 +2073,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 2px solid transparent;
     background:
         linear-gradient(var(--black-40), var(--black-40)) padding-box,
-        var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5))) border-box;
+        var(--org-gradient) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -2083,7 +2083,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 2px solid transparent;
     background:
         linear-gradient(var(--black-40), var(--black-40)) padding-box,
-        var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5))) border-box;
+        var(--org-gradient) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -2092,8 +2092,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 2px solid transparent;
     box-shadow: none;
     background:
-        linear-gradient(var(--bg-secondary), var(--bg-secondary)) padding-box,
-        var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5))) border-box;
+        linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+        var(--org-gradient) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -2101,8 +2101,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-toggle.active {
     border: 1px solid transparent;
     background-image:
-        linear-gradient(var(--brand-primary-brillo-strong, var(--brillo-active)), var(--brand-primary-brillo-strong, var(--brillo-active))) padding-box,
-        var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5))) border-box;
+        linear-gradient(var(--org-brillo-strong), var(--org-brillo-strong)) padding-box,
+        var(--org-gradient) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
     background-size: 100% 100%, 100% 100%;
@@ -2272,15 +2272,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
   width: 100%;
   height: calc(100dvh - var(--app-header-height, 45.8px));
   /* Fondo = radial exacto del Frame 98 (4 paradas): color mas claro de la marca
-     (0%) -> mas oscuro (30.29%) -> var(--bg-card) (74.04%) -> var(--bg-tertiary) (100%). Va en el
+     (0%) -> mas oscuro (30.29%) -> var(--bg-card) (74.04%) -> var(--bg-base) (100%). Va en el
      .gpt-layout (no en .gpt-main::before) para que los dots de esquina de
      .gpt-layout::before/::after se pinten POR ENCIMA y sigan visibles.
-     --brand-color-light/-dark los publica OrgBrandTheme por org; fallback naranja. */
+     --org-color-light/-dark los publica OrgBrandTheme por org; fallback naranja. */
   background: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    var(--brand-color-light, var(--prisma-naranja)) 0%,
-    var(--brand-color-mid, var(--prisma-naranja)) 30.29%,
+    var(--org-color-light) 0%,
+    var(--org-color-mid) 30.29%,
     var(--bg-card) 74.04%,
-    var(--bg-tertiary) 100%);
+    var(--bg-base) 100%);
   color: var(--text-primary);
   position: relative;
   overflow: hidden;
@@ -2330,7 +2330,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
    VERA · HISTORIAL DE CONVERSACIONES (panel flotante derecho, estilo Studio/CC)
    El sidebar global de la app se colapsa al entrar a Vera (collapseForImmersive).
    Este panel flota sobre el chat a la derecha, con el mismo gris del sidebar de
-   navegacion (--bg-primary) + borde glass + sombra. Lista de sesiones reabribles
+   navegacion (--bg-base) + borde glass + sombra. Lista de sesiones reabribles
    + "Nueva conversacion".
    =========================================================================== */
 .vera-history {
@@ -2346,7 +2346,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   background: var(--glass-black-bg, rgba(0, 0, 0, 0.55));
   backdrop-filter: var(--glass-blur, blur(14px) saturate(120%));
   -webkit-backdrop-filter: var(--glass-blur, blur(14px) saturate(120%));
-  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border: 1px solid var(--glass-black-border, var(--border-color));
   border-radius: 16px;
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
   overflow: hidden;
@@ -2443,7 +2443,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   flex: 0 0 auto;
   margin: 0 12px 8px;
   padding: 9px 12px;
-  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border: 1px solid var(--glass-black-border, var(--border-color));
   border-radius: 10px;
   background: var(--white-5);
   color: var(--text-primary);
@@ -2477,7 +2477,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-history-attach:hover {
   background: var(--white-5);
   color: var(--text-primary);
-  border-color: var(--glass-black-border, var(--border-divider));
+  border-color: var(--glass-black-border, var(--border-color));
 }
 .vera-history-attach i { font-size: .85rem; }
 
@@ -2487,7 +2487,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 6px 8px 16px;
-  border-top: 1px solid var(--glass-black-border, var(--border-divider));
+  border-top: 1px solid var(--glass-black-border, var(--border-color));
   scrollbar-width: thin;
   scrollbar-color: var(--white-10) transparent;
 }
@@ -2537,7 +2537,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   width: 3px;
   height: 16px;
   border-radius: 3px;
-  background: var(--brand-gradient-dynamic-vertical, var(--accent-brand));
+  background: var(--org-gradient-v);
 }
 .vera-history-item-title {
   display: block;
@@ -2563,7 +2563,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border-radius: 999px;
   color: var(--color-white);
   line-height: 1.5;
-  background: var(--brand-gradient-dynamic-vertical, var(--accent-brand));
+  background: var(--org-gradient-v);
 }
 .vera-history-empty {
   color: var(--text-muted);
@@ -2583,7 +2583,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   height: 38px;
   border-radius: 12px;
   background: var(--bg-card);
-  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border: 1px solid var(--glass-black-border, var(--border-color));
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
   display: none;
 }
@@ -2601,7 +2601,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     max-width: 330px;
     border-radius: 0;
     border: none;
-    border-left: 1px solid var(--glass-black-border, var(--border-divider));
+    border-left: 1px solid var(--glass-black-border, var(--border-color));
     z-index: 20;
     transition: transform .24s ease;
   }
@@ -2723,7 +2723,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   inset: -60% -25%;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(50% 60% at 50% 50%, rgba(var(--brand-primary-rgb, 255, 255, 255), 0.22), transparent 70%);
+  background: radial-gradient(50% 60% at 50% 50%, rgba(var(--org-primary-rgb), 0.22), transparent 70%);
   filter: blur(26px);
 }
 .gpt-welcome-mark--wordmark img {
@@ -2741,7 +2741,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   background: linear-gradient(100deg,
     var(--text-primary) 0%,
     var(--text-primary) 36%,
-    rgba(var(--brand-primary-rgb, 255, 255, 255), 0.98) 50%,
+    rgba(var(--org-primary-rgb), 0.98) 50%,
     var(--text-primary) 64%,
     var(--text-primary) 100%);
   background-size: 220% 100%;
@@ -2782,11 +2782,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-quick-chip {
   appearance: none;
   -webkit-appearance: none;
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.10));
+  border: 1px solid var(--border-hairline, rgba(255, 255, 255, 0.10));
   background: var(--glass-bg, rgba(255, 255, 255, 0.04));
   color: var(--text-secondary);
   font-size: 0.875rem;
-  font-family: var(--font-family);
+  font-family: var(--font-mono);
   line-height: 1.2;
   padding: 8px 14px;
   border-radius: 999px;
@@ -2797,7 +2797,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-quick-chip:hover {
   background: var(--white-8, rgba(255, 255, 255, 0.08));
   color: var(--text-primary);
-  border-color: rgba(var(--brand-primary-rgb, 255, 255, 255), 0.3);
+  border-color: rgba(var(--org-primary-rgb), 0.3);
   transform: translateY(-1px);
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2853,11 +2853,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
   gap: 10px;
   padding: 13px 16px;
   border-radius: 12px;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-color);
   background: var(--white-5);
   color: var(--text-secondary);
   font-size: 0.875rem;
-  font-family: var(--font-family);
+  font-family: var(--font-mono);
   cursor: pointer;
   text-align: left;
   line-height: 1.4;
@@ -3003,7 +3003,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   margin-top: 3px;
   width: 16px;
   height: 16px;
-  accent-color: var(--accent-brand);
+  accent-color: var(--accent);
   flex-shrink: 0;
 }
 .gpt-task-text { color: var(--text-primary); }
@@ -3087,7 +3087,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: block;
   margin: 0.75em 0;
   border-radius: 10px;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-color);
   background: var(--bg-card);
 }
 
@@ -3100,7 +3100,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border: 1px solid var(--border-color);
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.025) 0%, transparent 60%),
-    linear-gradient(180deg, var(--bg-card) 0%, var(--bg-ui) 100%);
+    linear-gradient(180deg, var(--bg-card) 0%, var(--bg-base) 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 20px 40px -24px rgba(0, 0, 0, 0.6),
@@ -3178,12 +3178,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
   cursor: not-allowed;
 }
 .gpt-qr-btn--primary {
-  background: color-mix(in oklab, var(--accent-brand) 20%, rgba(255,255,255,0.04));
-  border-color: color-mix(in oklab, var(--accent-brand) 30%, var(--border-light));
+  background: color-mix(in oklab, var(--accent) 20%, rgba(255,255,255,0.04));
+  border-color: color-mix(in oklab, var(--accent) 30%, var(--border-color));
 }
 .gpt-qr-btn--danger {
-  background: rgba(255, 0, 0, 0.08);
-  border-color: rgba(255, 0, 0, 0.18);
+  background: var(--color-error-bg);
+  border-color: var(--color-error-light);
 }
 .gpt-msg-content code {
   background: var(--white-10);
@@ -3196,7 +3196,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .gpt-msg-content pre {
   background: var(--bg-card);
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 14px 18px;
   margin: 0.75em 0;
@@ -3277,29 +3277,29 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-composer {
   width: 100%;
   max-width: 768px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 12px 12px 8px 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   transition: border-color 0.15s, box-shadow 0.2s;
-  /* Sombra tenida con el color dinamico de marca (--brand-primary-rgb, lo setea
+  /* Sombra tenida con el color dinamico de marca (--org-primary-rgb, lo setea
      OrgBrandTheme). Fallback a blanco muy sutil si la org no tiene brand_colors. */
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 2px 12px rgba(0, 0, 0, 0.35),
     0 24px 60px -24px rgba(0, 0, 0, 0.65),
-    0 8px 40px -10px rgba(var(--brand-primary-rgb, 255, 255, 255), 0.28);
+    0 8px 40px -10px rgba(var(--org-primary-rgb), 0.28);
 }
 .gpt-composer:focus-within {
-  border-color: rgba(var(--brand-primary-rgb, 255, 255, 255), 0.35);
+  border-color: rgba(var(--org-primary-rgb), 0.35);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 2px 12px rgba(0, 0, 0, 0.35),
     0 24px 60px -24px rgba(0, 0, 0, 0.65),
-    0 10px 52px -8px rgba(var(--brand-primary-rgb, 255, 255, 255), 0.42);
+    0 10px 52px -8px rgba(var(--org-primary-rgb), 0.42);
 }
 
 .gpt-composer-textarea {
@@ -3313,7 +3313,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   resize: none;
   min-height: 26px;
   max-height: 180px;
-  font-family: var(--font-family);
+  font-family: var(--font-mono);
   overflow-y: auto;
   padding: 0;
   scrollbar-width: thin;
@@ -3321,7 +3321,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 /* El foco del composer ya se comunica con .gpt-composer:focus-within (borde
    sutil). El outline naranja de la baseline a11y (*:focus-visible ->
-   --accent-brand) se ve mal encajonando el textarea, asi que lo anulamos solo
+   --accent) se ve mal encajonando el textarea, asi que lo anulamos solo
    aqui. Specificity 0,0,2,0 gana a textarea:focus-visible (0,0,1,1). */
 .gpt-composer-textarea:focus,
 .gpt-composer-textarea:focus-visible { outline: none; }
@@ -3363,8 +3363,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-dock .vera-clarify.is-docked {
   margin: 0;
   width: 100%;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
@@ -3527,7 +3527,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border: none;
   border-radius: 999px;
   background: var(--text-primary);
-  color: var(--bg-primary);
+  color: var(--bg-base);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -3557,7 +3557,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-opt--check.checked .vera-opt-check {
   background: var(--text-primary);
   border-color: var(--text-primary);
-  color: var(--bg-primary);
+  color: var(--bg-base);
 }
 .vera-opt--check.checked { background: var(--white-5); }
 
@@ -3760,10 +3760,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border-radius: 12px;
   border: 1px solid var(--glass-black-border);
   overflow: hidden;
-  background: var(--bg-ui);
+  background: var(--bg-base);
   min-height: 80px;
 }
-.vera-html-block, .vera-artifact-block { background: var(--bg-ui); }
+.vera-html-block, .vera-artifact-block { background: var(--bg-base); }
 /* SIN transition en height: cada fotograma de la animación cambiaba el viewport
    del iframe, disparaba su ResizeObserver y devolvía otra medida. El alto se
    ajusta de una vez. */
@@ -3854,7 +3854,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
-  border-left: 1px solid var(--glass-black-border, var(--border-divider));
+  border-left: 1px solid var(--glass-black-border, var(--border-color));
   overflow: hidden;
   opacity: 0;
   transition: flex-basis .26s cubic-bezier(0.33,0,0.2,1), width .26s cubic-bezier(0.33,0,0.2,1), opacity .2s ease;
@@ -3874,7 +3874,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   justify-content: space-between;
   gap: 10px;
   padding: 12px 12px 12px 16px;
-  border-bottom: 1px solid var(--glass-black-border, var(--border-divider));
+  border-bottom: 1px solid var(--glass-black-border, var(--border-color));
 }
 .vera-artifact-panel-title {
   font-size: .9rem; font-weight: 600; color: var(--text-primary);
@@ -3891,13 +3891,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-artifact-act:hover { background: var(--white-8); color: var(--text-primary); }
 .vera-artifact-act.active { background: var(--white-10); color: var(--text-primary); }
 .vera-artifact-act--close:hover { background: rgba(192,57,43,0.18); color: color-mix(in srgb, var(--color-error) 45%, var(--color-white)); }
-.vera-artifact-panel-body { flex: 1; min-height: 0; position: relative; background: var(--bg-ui); }
+.vera-artifact-panel-body { flex: 1; min-height: 0; position: relative; background: var(--bg-base); }
 .vera-artifact-panel-frame {
   display: block; width: 100%; height: 100%; border: none;
 }
 .vera-artifact-code {
   margin: 0; height: 100%; overflow: auto;
-  padding: 16px; background: var(--bg-ui);
+  padding: 16px; background: var(--bg-base);
   color: var(--text-primary);
   font-size: 12.5px; line-height: 1.55;
   white-space: pre-wrap; word-break: break-word;
@@ -3937,7 +3937,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   width: min(920px, 100%); max-height: 84vh;
   display: flex; flex-direction: column;
   background: var(--bg-card);
-  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border: 1px solid var(--glass-black-border, var(--border-color));
   border-radius: 16px;
   box-shadow: 0 24px 70px rgba(0,0,0,.5);
   overflow: hidden;
@@ -3949,7 +3949,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   flex: 0 0 auto;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 14px 14px 14px 18px;
-  border-bottom: 1px solid var(--glass-black-border, var(--border-divider));
+  border-bottom: 1px solid var(--glass-black-border, var(--border-color));
 }
 .vera-gallery-head-title { display: inline-flex; align-items: center; gap: 10px; font-size: .95rem; font-weight: 600; color: var(--text-primary); }
 .vera-gallery-head-title > i { color: var(--text-muted); }
@@ -3983,15 +3983,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-size: 1.15rem; color: var(--color-white);
   background: linear-gradient(135deg, var(--white-20), var(--white-10));
 }
-.vera-gallery-card-icon--pdf  { background: linear-gradient(135deg, var(--prisma-rojo), var(--prisma-fucsia)); }
+.vera-gallery-card-icon--pdf  { background: linear-gradient(135deg, var(--color-error), var(--color-info)); }
 .vera-gallery-card-icon--png,
 .vera-gallery-card-icon--jpg,
 .vera-gallery-card-icon--jpeg,
-.vera-gallery-card-icon--webp { background: linear-gradient(135deg, var(--prisma-purpura), var(--prisma-violeta)); }
+.vera-gallery-card-icon--webp { background: linear-gradient(135deg, var(--color-info), var(--color-info)); }
 .vera-gallery-card-icon--xlsx,
-.vera-gallery-card-icon--csv  { background: linear-gradient(135deg, var(--prisma-verde), var(--prisma-limon)); }
+.vera-gallery-card-icon--csv  { background: linear-gradient(135deg, var(--color-success), var(--color-success)); }
 .vera-gallery-card-icon--docx,
-.vera-gallery-card-icon--doc  { background: linear-gradient(135deg, var(--prisma-azul), var(--prisma-celeste)); }
+.vera-gallery-card-icon--doc  { background: linear-gradient(135deg, var(--color-info), var(--color-info)); }
 .vera-gallery-card-meta { flex: 1; min-width: 0; }
 .vera-gallery-card-title { font-size: .86rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vera-gallery-card-sub { font-size: .72rem; color: var(--text-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -4100,7 +4100,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* Chip de elemento de biblioteca adjuntado (producto/campaña/audiencia/marca) */
 .gpt-msg-att--lib {
   background: var(--white-5);
-  border-color: var(--glass-black-border, var(--border-divider));
+  border-color: var(--glass-black-border, var(--border-color));
 }
 .gpt-msg-att--lib i { color: var(--text-primary); opacity: .85; }
 .gpt-msg-attachments--lib { margin-top: 2px; }
@@ -4133,7 +4133,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
-  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border: 1px solid var(--glass-black-border, var(--border-color));
   border-radius: 18px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
   overflow: hidden;
@@ -4147,7 +4147,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px;
-  border-bottom: 1px solid var(--glass-black-border, var(--border-divider));
+  border-bottom: 1px solid var(--glass-black-border, var(--border-color));
 }
 .vera-lib-title {
   display: inline-flex;
@@ -4202,7 +4202,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-lib-search {
   margin: 12px 16px 8px;
   padding: 10px 13px;
-  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border: 1px solid var(--glass-black-border, var(--border-color));
   border-radius: 11px;
   background: var(--white-5);
   color: var(--text-primary);
@@ -4261,7 +4261,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
-  border-top: 1px solid var(--glass-black-border, var(--border-divider));
+  border-top: 1px solid var(--glass-black-border, var(--border-color));
 }
 .vera-lib-count { font-size: .8rem; color: var(--text-muted); }
 .vera-lib-foot-actions { display: inline-flex; gap: 8px; }
@@ -4280,7 +4280,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border: none;
   border-radius: 999px;
   background: var(--text-primary);
-  color: var(--bg-primary);
+  color: var(--bg-base);
   font-size: .82rem; font-weight: 600; font-family: inherit; cursor: pointer;
   transition: opacity .14s ease, transform .14s ease;
 }
@@ -4309,7 +4309,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   z-index: 31;
   padding: 6px;
   background: var(--bg-card);
-  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border: 1px solid var(--glass-black-border, var(--border-color));
   border-radius: 14px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   max-height: 44vh;
@@ -4346,7 +4346,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   min-width: 232px;
   padding: 6px;
   background: var(--bg-card);
-  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border: 1px solid var(--glass-black-border, var(--border-color));
   border-radius: 14px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   max-height: 60vh;
@@ -4358,7 +4358,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-plus-menu::-webkit-scrollbar { width: 6px; }
 .vera-plus-menu::-webkit-scrollbar-thumb { background: var(--white-10); border-radius: 3px; }
 .vera-plus-menu[hidden] { display: none; }
-.vera-plus-sep { height: 1px; margin: 6px 8px; background: var(--glass-black-border, var(--border-divider)); }
+.vera-plus-sep { height: 1px; margin: 6px 8px; background: var(--glass-black-border, var(--border-color)); }
 @keyframes veraPlusIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .vera-plus-menu { animation: none; } }
 .vera-plus-item {
@@ -4408,7 +4408,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-size: 0.875rem;
   flex-shrink: 0;
   background: var(--text-primary);
-  color: var(--bg-tertiary);
+  color: var(--bg-base);
   transition: background 0.15s, transform 0.1s;
 }
 .gpt-send-btn:hover:not(:disabled) { background: var(--color-white); transform: scale(1.05); }
@@ -4438,7 +4438,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   overflow-x: auto;
   border-radius: 12px;
   border: 1px solid var(--border-color);
-  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-ui) 100%);
+  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-base) 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 12px 28px -20px rgba(0, 0, 0, 0.6);
@@ -4489,7 +4489,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   padding: 22px 20px;
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.025) 0%, transparent 60%),
-    linear-gradient(180deg, var(--bg-card) 0%, var(--bg-ui) 100%);
+    linear-gradient(180deg, var(--bg-card) 0%, var(--bg-base) 100%);
   border: 1px solid var(--border-color);
   border-radius: 14px;
   overflow-x: auto;
@@ -4567,7 +4567,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   padding: 16px 18px;
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
-    linear-gradient(180deg, var(--bg-ui) 0%, var(--bg-primary) 100%);
+    linear-gradient(180deg, var(--bg-base) 0%, var(--bg-base) 100%);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow-x: auto;
@@ -4610,7 +4610,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg-content pre[class*="language-"] {
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
-    linear-gradient(180deg, var(--bg-ui) 0%, var(--bg-primary) 100%);
+    linear-gradient(180deg, var(--bg-base) 0%, var(--bg-base) 100%);
   text-shadow: none;
 }
 .gpt-msg-content code[class*="language-"] {
@@ -4697,19 +4697,19 @@ body.has-sidebar #app-container:has(.video-view-container) {
    Solid bg, borde sutil, textarea editorial, sin glass.
    ============================================ */
 .video-view-container .video-main-director .video-prompt-footer-card-inner.video-director-console {
-    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-md);
-    gap: var(--spacing-sm);
+    padding: var(--space-4) var(--space-6) var(--space-4);
+    gap: var(--space-2);
     background: var(--bg-card);
-    border: 1px solid var(--border-divider);
+    border: 1px solid var(--border-color);
 }
 
 .video-view-container .video-main-director .video-console-header-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding-bottom: var(--spacing-xs);
-    border-bottom: 1px solid var(--border-divider);
-    margin-bottom: var(--spacing-xs);
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: var(--space-1);
 }
 
 /* Add-element button — drop-zone discreto, sin glass */
@@ -4746,9 +4746,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* Separador entre prompt y controls */
 .video-view-container .video-main-director .video-director-separator {
     height: 1px;
-    background: var(--border-divider);
+    background: var(--border-color);
     border: none;
-    margin: var(--spacing-xs) 0;
+    margin: var(--space-1) 0;
 }
 
 /* Controls compactos y refinados */
@@ -4756,7 +4756,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: var(--space-1);
 }
 
 .video-view-container .video-main-director .video-director-toggle {
@@ -4765,7 +4765,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     letter-spacing: 0.04em;
     padding: 6px 12px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border-divider);
+    border: 1px solid var(--border-color);
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
@@ -4789,7 +4789,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.04em;
-    background: var(--brand-gradient-dynamic, linear-gradient(135deg, var(--white-12), var(--white-5)));
+    background: var(--org-gradient);
     border: none;
     color: var(--color-white);
     border-radius: var(--radius-sm);
@@ -4825,7 +4825,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--space-2);
 }
 
 .video-cinematography-panel .video-cine-row .video-cine-label,
@@ -4851,8 +4851,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     justify-content: center;
     gap: 6px;
     padding: 10px 6px;
-    background: var(--bg-ui);
-    border: 1px solid var(--border-divider);
+    background: var(--bg-base);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     color: var(--text-secondary);
     cursor: pointer;
@@ -4884,7 +4884,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     max-width: 240px;
     padding: 8px 10px;
     background: var(--bg-card);
-    border: 1px solid var(--border-divider);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--text-primary);
     font-size: 0.72rem;
@@ -4970,7 +4970,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-sidebar-console {
     width: 380px;
     height: 100%;
-    padding: var(--spacing-md);
+    padding: var(--space-4);
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -4986,7 +4986,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     gap: 4px;
     padding: 4px;
     background: var(--bg-card);
-    border: 1px solid var(--border-divider);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
 }
 
@@ -5050,7 +5050,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     padding: 0;
     gap: 0;
     background: var(--bg-card);
-    border: 1px solid var(--border-divider);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     box-shadow: none;
 }
@@ -5074,7 +5074,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     flex-direction: column;
     gap: 12px;
     padding: 18px 16px;
-    border-bottom: 1px solid var(--border-divider);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .video-view-container .video-sidebar-section:last-child {
@@ -5154,7 +5154,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-cinematography-panel .video-cine-block {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border-divider);
+    border-top: 1px solid var(--border-color);
     border-radius: 0;
     overflow: visible;
     transition: none;
@@ -5165,7 +5165,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 
 .video-view-container .video-cinematography-panel .video-cine-block:hover {
-    border-color: var(--border-divider);
+    border-color: var(--border-color);
 }
 
 .video-view-container .video-cinematography-panel .video-cine-block-header,
@@ -5233,12 +5233,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-weight: 500;
     line-height: 1.3;
     color: var(--text-primary);
-    background-color: var(--bg-ui);
+    background-color: var(--bg-base);
     background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 10px 6px;
-    border: 1px solid var(--border-divider);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     cursor: pointer;
     appearance: none;
@@ -5266,13 +5266,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-sidebar-console .video-asset-scope-select option,
 .video-view-container .video-sidebar-console .video-cine-select option,
 .video-view-container .video-sidebar-console .video-asset-select option {
-    background: var(--bg-ui);
+    background: var(--bg-base);
     color: var(--text-primary);
 }
 
 /* Production Preset wrapper más espacio */
 .video-view-container .video-sidebar-console .video-cine-preset-wrap {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--space-4);
 }
 
 /* "All" chip de Scenes */
@@ -5281,7 +5281,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: 0.7rem;
     font-weight: 600;
     border-radius: 999px;
-    border: 1px solid var(--border-divider);
+    border: 1px solid var(--border-color);
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
@@ -5322,7 +5322,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     align-items: center;
     gap: 18px;
     padding: 14px 16px 12px;
-    border-bottom: 1px solid var(--border-divider);
+    border-bottom: 1px solid var(--border-color);
 }
 .video-view-container .video-sidebar-tab {
     background: transparent;
@@ -5361,7 +5361,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     height: 36px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--border-divider);
+    border: 1px solid var(--border-color);
     color: var(--text-secondary);
     cursor: pointer;
     display: inline-flex;
@@ -5384,7 +5384,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     bottom: 70px;
     width: 280px;
     background: var(--bg-card);
-    border: 1px solid var(--border-divider);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 14px 16px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
@@ -5419,8 +5419,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     grid-template-columns: repeat(4, 1fr);
     gap: 4px;
     padding: 4px;
-    background: var(--bg-ui);
-    border: 1px solid var(--border-divider);
+    background: var(--bg-base);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     margin-bottom: 12px;
 }
@@ -5459,7 +5459,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-cine-tab.is-active {
     background: var(--bg-card);
     color: var(--text-primary);
-    box-shadow: 0 0 0 1px var(--border-divider);
+    box-shadow: 0 0 0 1px var(--border-color);
 }
 
 .video-view-container .video-cine-tab.is-active i {
@@ -5626,7 +5626,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     justify-content: center;
     gap: 6px;
     padding: 18px 8px;
-    background: var(--bg-ui);
+    background: var(--bg-base);
     border: 1px dashed rgba(255,255,255,0.16);
     border-radius: var(--radius-sm);
     color: var(--text-muted);
@@ -5779,8 +5779,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     gap: 5px;
     max-width: 100%;
     padding: 3px 20px 3px 5px;
-    background: var(--bg-ui);
-    border: 1px solid var(--border-divider);
+    background: var(--bg-base);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     font-size: 0.68rem;
     color: var(--text-secondary);
@@ -5900,7 +5900,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
    dos dicen "esto va a salir así", y con el gris neutro de antes el switch no
    se leía como encendido. */
 .video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track {
-    background: var(--brand-color-light, var(--prisma-naranja));
+    background: var(--org-color-light);
 }
 
 .video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track .seedance-toggle-thumb {
@@ -5926,8 +5926,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     justify-content: center;
     gap: 6px;
     padding: 12px 4px;
-    background: var(--bg-ui);
-    border: 1px solid var(--border-divider);
+    background: var(--bg-base);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     color: var(--text-muted);
     cursor: pointer;
@@ -6104,7 +6104,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     box-shadow: none;
     resize: none;
     /* Font del sistema, no monospace, no italic */
-    font-family: var(--font-sans, var(--font-family));
+    font-family: var(--font-mono);
     font-style: normal;
     font-size: 0.9rem;
     line-height: 1.45;
@@ -6262,13 +6262,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
        que había aquí pintaba de azul el CTA de toda org sin color propio. */
     /* PLANO, no degradado: el degradado de marca es la firma del producto y
        gastarlo en un botón lo abarata. Va el color MÁS CLARO de la paleta de
-       la org (--brand-color-light, el que calcula OrgBrandTheme ordenando por
+       la org (--org-color-light, el que calcula OrgBrandTheme ordenando por
        luminosidad), que es el que aguanta texto oscuro encima. */
-    background: var(--brand-color-light, var(--prisma-naranja));
+    background: var(--org-color-light);
     /* Borde del mismo color, no `none`: sin el, PRODUCIR mide 2px menos de
        alto que PROMPT —que si lleva borde— y el par queda desalineado. */
-    border: 1px solid var(--brand-color-light, var(--prisma-naranja));
-    color: var(--bg-primary);
+    border: 1px solid var(--org-color-light);
+    color: var(--bg-base);
     transition: filter 0.15s ease, transform 0.15s ease;
 }
 .video-view-container .video-director-console-zone .video-director-btn-generate:hover:not(:disabled) {
@@ -6321,7 +6321,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-director-console-zone
   .video-attachment-pin-chip:has(.video-attachment-pin-active) {
     background: var(--text-primary);
-    color: var(--bg-primary);
+    color: var(--bg-base);
     border-color: var(--text-primary);
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.10);
     transform: rotate(-15deg);
@@ -6361,15 +6361,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-layout::before {
     top: -100px;
     left: -100px;
-    -webkit-mask-image: radial-gradient(circle at 30% 30%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
-    mask-image: radial-gradient(circle at 30% 30%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+    -webkit-mask-image: radial-gradient(circle at 30% 30%, var(--bg-base) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+    mask-image: radial-gradient(circle at 30% 30%, var(--bg-base) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
 }
 
 .gpt-layout::after {
     bottom: -100px;
     right: -100px;
-    -webkit-mask-image: radial-gradient(circle at 70% 70%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
-    mask-image: radial-gradient(circle at 70% 70%, var(--bg-tertiary) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+    -webkit-mask-image: radial-gradient(circle at 70% 70%, var(--bg-base) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
+    mask-image: radial-gradient(circle at 70% 70%, var(--bg-base) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 68%);
 }
 
 /* El contenido principal queda sobre los dots sin afectar interacción */
@@ -6411,10 +6411,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-director-recursos {
     display: flex;
     align-items: flex-start;
-    gap: var(--spacing-md);
+    gap: var(--space-4);
     flex-wrap: wrap;
-    padding: 0 var(--spacing-sm) var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
+    padding: 0 var(--space-2) var(--space-2);
+    margin-bottom: var(--space-2);
     border-bottom: 1px solid var(--white-10, rgba(255, 255, 255, 0.08));
 }
 
@@ -6465,7 +6465,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
-    gap: var(--spacing-sm);
+    gap: var(--space-2);
 }
 .video-view-container .video-director-recursos .dr-grupo--refs .dr-titulo {
     flex: 0 0 100%;
@@ -6498,7 +6498,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 @media (max-width: 900px) {
     .video-view-container .video-director-recursos {
         flex-direction: column;
-        gap: var(--spacing-sm);
+        gap: var(--space-2);
     }
     .video-view-container .video-director-recursos .dr-grupo {
         width: 100%;
@@ -6625,7 +6625,7 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
 .video-view-container .video-director-btn-forge {
     border: 1px solid var(--color-white);
     background: var(--color-white);
-    color: var(--bg-primary);
+    color: var(--bg-base);
     transition: var(--transition);
 }
 .video-view-container .video-director-btn-forge:hover:not(:disabled) {
@@ -6696,8 +6696,8 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     margin-top: 8px;
     padding: 10px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border-divider);
-    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
 }
 .video-view-container .video-elemento-selector-header {
     display: flex;
@@ -6766,7 +6766,7 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     border: 2px solid transparent;
     border-radius: 6px;
     overflow: hidden;
-    background: var(--bg-ui);
+    background: var(--bg-base);
     cursor: pointer;
     transition: border-color 0.15s ease, transform 0.12s ease;
 }
@@ -6794,15 +6794,15 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: var(--accent-brand);
-    color: var(--bg-tertiary);
+    background: var(--accent);
+    color: var(--bg-base);
 }
 .video-view-container .video-elemento-foto-check .aisc-ico {
     width: 12px;
     height: 12px;
 }
 .video-view-container .video-elemento-foto.is-selected {
-    border-color: var(--accent-brand, rgba(255, 255, 255, 0.9));
+    border-color: var(--accent);
 }
 .video-view-container .video-elemento-foto.is-selected .video-elemento-foto-check {
     display: flex;

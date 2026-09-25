@@ -537,7 +537,7 @@ class App {
           padding: 2rem;
           text-align: center;
         ">
-          <div class="error-icon" style="font-size: 4rem; color: var(--accent-warm, #e09145); margin-bottom: 1rem;">
+          <div class="error-icon" style="font-size: 4rem; color: var(--icon-button); margin-bottom: 1rem;">
             <i class="aisc-ico aisc-ico--alert-warning"></i>
           </div>
           <h1 style="color: var(--text-primary, #ecebda); margin-bottom: 1rem;">Error de Inicialización</h1>
@@ -547,7 +547,7 @@ class App {
           </p>
           <button onclick="window.location.reload()" style="
             padding: 0.75rem 1.5rem;
-            background: var(--primary-color, #ecebda);
+            background: var(--text-primary);
             color: #1a1a1a;
             border: none;
             border-radius: 8px;

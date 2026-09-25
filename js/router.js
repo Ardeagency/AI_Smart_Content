@@ -691,7 +691,7 @@ class Router {
           padding: 2rem;
           text-align: center;
         ">
-          <div class="error-icon" style="font-size: 3rem; color: var(--accent-warm, #e09145); margin-bottom: 1rem;">
+          <div class="error-icon" style="font-size: 3rem; color: var(--icon-button); margin-bottom: 1rem;">
             <i class="aisc-ico aisc-ico--alert-warning"></i>
           </div>
           <h2 style="color: var(--text-primary, #ecebda); margin-bottom: 1rem;">${__('Error')}</h2>
@@ -699,7 +699,7 @@ class Router {
           <button onclick="window.location.reload()" style="
             margin-top: 1.5rem;
             padding: 0.75rem 1.5rem;
-            background: var(--primary-color, #ecebda);
+            background: var(--text-primary);
             color: #1a1a1a;
             border: none;
             border-radius: 8px;

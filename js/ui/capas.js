@@ -198,8 +198,8 @@
     const c = abrir({ forma: 'principal', titulo: opciones.titulo || t('¿Continuar?'), tamano: 'sm', clase: 'capa--confirmar' });
     if (opciones.texto) c.cuerpo.append(el('p', 'capa__texto', opciones.texto));
     else c.cuerpo.hidden = true;
-    const no = boton(opciones.cancelar || t('Cancelar'), 'btn btn-secondary');
-    const si = boton(opciones.aceptar || t('Aceptar'), opciones.peligro ? 'btn btn-danger' : 'btn btn-primary');
+    const no = boton(opciones.cancelar || t('Cancelar'), 'btn btn--gris');
+    const si = boton(opciones.aceptar || t('Aceptar'), opciones.peligro ? 'btn btn--gris btn--peligro' : 'btn btn--blanco');
     no.addEventListener('click', () => c.cerrar('cancelar'));
     si.addEventListener('click', () => c.cerrar('aceptar'));
     c.pie.append(no, si);
@@ -227,8 +227,8 @@
     error.setAttribute('role', 'alert');
     error.hidden = true;
     c.cuerpo.append(campo, error);
-    const no = boton(opciones.cancelar || t('Cancelar'), 'btn btn-secondary');
-    const si = boton(opciones.aceptar || t('Aceptar'), 'btn btn-primary');
+    const no = boton(opciones.cancelar || t('Cancelar'), 'btn btn--gris');
+    const si = boton(opciones.aceptar || t('Aceptar'), 'btn btn--blanco');
     let valor = null;
     const enviar = () => {
       const texto = String(campo.value || '').trim();
@@ -274,8 +274,8 @@
     if (seVa) caja.append(el('p', 'pregunta__cuenta', seVa + ' · ' + t('se van')));
     if (queda) caja.append(el('p', 'pregunta__cuenta pregunta__cuenta--sobrevive', queda + ' · ' + t('quedan sueltos')));
     const acciones = el('div', 'pregunta__acciones');
-    const no = boton(opciones.cancelar || t('Cancelar'), 'btn btn-secondary btn-sm');
-    const si = boton(opciones.aceptar || t('Borrar'), 'btn btn-danger btn-sm');
+    const no = boton(opciones.cancelar || t('Cancelar'), 'btn btn--gris btn--sm');
+    const si = boton(opciones.aceptar || t('Borrar'), 'btn btn--gris btn--peligro btn--sm');
     acciones.append(no, si);
     caja.append(acciones);
     anfitrion.append(caja);

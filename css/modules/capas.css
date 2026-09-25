@@ -43,7 +43,7 @@ dialog.capa {
   overflow: hidden;
   border: 1px solid var(--border-hairline);
   border-radius: var(--modal-radio);
-  background: var(--bg-ui);
+  background: var(--bg-base);
   color: var(--text-primary);
   box-shadow: var(--shadow-floating);
 }
@@ -73,7 +73,6 @@ dialog.capa.is-cerrando::backdrop { animation: capa-desvanece var(--duration-bas
 .capa__intro { font-size: var(--font-size-lg); color: var(--text-secondary); line-height: var(--leading-normal); margin-bottom: 28px; max-width: 70ch; }
 .capa__pie { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); padding: var(--space-4) 28px; border-top: 1px solid var(--border-hairline); flex: none; }
 .capa__pie--repartido { justify-content: space-between; }
-.capa__pie .btn-danger { color: var(--warm); border-color: var(--warm-30); }
 
 /* Las OPCIONES del principal (elegir un camino): icono en caja, título, texto,
  * y «CONTINUAR →» en mono. Es la card sólida del ADN con hover de card. */
@@ -93,7 +92,7 @@ dialog.capa--editorial { max-width: min(1400px, 94vw); max-height: min(92dvh, ca
 .editorial { position: relative; flex: 1; min-height: 380px; display: flex; overflow: auto; }
 /* La imagen a sangre: oscurecida (.42), un poco saturada, escalada 1.04 para
  * que el borde no se vea al hacer scroll. */
-.editorial__fondo { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: linear-gradient(160deg, var(--bg-card) 0%, var(--bg-primary) 100%); }
+.editorial__fondo { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: linear-gradient(160deg, var(--bg-card) 0%, var(--bg-base) 100%); }
 .editorial__fondo > img, .editorial__fondo > video { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(0.42) saturate(1.05); transform: scale(1.04); }
 .editorial__velo { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to right, rgba(13, 14, 16, 0.92) 0%, rgba(13, 14, 16, 0.74) 44%, rgba(13, 14, 16, 0.5) 100%), linear-gradient(to top, rgba(13, 14, 16, 0.9) 0%, transparent 55%); }
 .editorial__grid { position: relative; z-index: 2; flex: 1; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 3rem); padding: clamp(1.5rem, 3vw, 2.75rem); align-items: start; }
@@ -101,17 +100,17 @@ dialog.capa--editorial { max-width: min(1400px, 94vw); max-height: min(92dvh, ca
 .editorial__col--info { padding-right: 2.5rem; }
 /* Eyebrow en el color de la org (cae al muted). Título editorial: grande,
  * apretado, blanco, con sombra para leerse sobre la foto. */
-.editorial__eyebrow { font-family: var(--font-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); letter-spacing: 0.16em; text-transform: uppercase; color: var(--org-primary, var(--text-muted)); }
+.editorial__eyebrow { font-family: var(--font-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); letter-spacing: 0.16em; text-transform: uppercase; color: var(--org-primary); }
 .editorial__titulo { font-size: clamp(1.9rem, 3.2vw, 2.9rem); font-weight: var(--font-weight-bold); letter-spacing: -0.025em; line-height: 1.04; color: var(--color-white); text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5); text-wrap: balance; }
 .editorial__badges { display: flex; flex-wrap: wrap; gap: 6px; }
-.editorial__badge { padding: 6px 14px; border-radius: var(--radius-pill); background: var(--color-white); color: var(--bg-primary); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); letter-spacing: 0.02em; text-transform: uppercase; }
+.editorial__badge { padding: 6px 14px; border-radius: var(--radius-pill); background: var(--color-white); color: var(--bg-base); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); letter-spacing: 0.02em; text-transform: uppercase; }
 .editorial__badge--suave { background: var(--white-45); color: var(--color-white); }
 .editorial__acciones { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
 /* CTA blanco con el costo separado por una hairline negra. */
-.editorial__cta { display: inline-flex; align-items: center; gap: 9px; padding: 11px 21px; border-radius: 8px; background: var(--color-white); color: var(--bg-primary); font-size: 0.92rem; font-weight: var(--font-weight-semibold); transition: transform 180ms ease, box-shadow 180ms ease; }
+.editorial__cta { display: inline-flex; align-items: center; gap: 9px; padding: 11px 21px; border-radius: 8px; background: var(--color-white); color: var(--bg-base); font-size: 0.92rem; font-weight: var(--font-weight-semibold); transition: transform 180ms ease, box-shadow 180ms ease; }
 .editorial__cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); }
 .editorial__cta-costo { display: inline-flex; align-items: center; gap: 4px; margin-left: 4px; padding-left: 10px; border-left: 1px solid rgba(0, 0, 0, 0.18); font-weight: var(--font-weight-bold); }
-.editorial__icono { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 8px; background: var(--white-5); border: 1px solid var(--border-divider); color: var(--text-secondary); transition: var(--transition-fast); }
+.editorial__icono { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 8px; background: var(--white-5); border: 1px solid var(--border-color); color: var(--text-secondary); transition: var(--transition-fast); }
 .editorial__icono:hover { background: var(--white-10); color: var(--color-white); transform: translateY(-1px); }
 .editorial__meta { display: flex; flex-wrap: wrap; gap: 18px; font-size: var(--font-size-md); color: var(--text-secondary); }
 .editorial__desc { font-size: var(--font-size-lg); color: var(--text-secondary); line-height: var(--leading-normal); max-width: 60ch; }
@@ -125,7 +124,7 @@ dialog.capa--editorial { max-width: min(1400px, 94vw); max-height: min(92dvh, ca
 dialog.capa--edicion::backdrop { background: rgba(0, 0, 0, 0.78); -webkit-backdrop-filter: blur(18px) saturate(120%); backdrop-filter: blur(18px) saturate(120%); }
 dialog.capa--edicion { max-width: none; max-height: none; width: calc(100vw - 48px); height: calc(100dvh - 48px); background: transparent; border: 0; box-shadow: none; border-radius: 0; overflow: visible; }
 .edicion { flex: 1; display: flex; gap: 16px; min-height: 0; }
-.edicion__visual { position: relative; flex: 1 1 auto; min-width: 0; border-radius: 18px; overflow: hidden; background: var(--bg-primary); display: flex; isolation: isolate; }
+.edicion__visual { position: relative; flex: 1 1 auto; min-width: 0; border-radius: 18px; overflow: hidden; background: var(--bg-base); display: flex; isolation: isolate; }
 /* Halo cinematográfico: la misma pieza desenfocada detrás, con scrim radial. */
 .edicion__halo { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
 .edicion__halo > img, .edicion__halo > video { width: 100%; height: 100%; object-fit: cover; filter: blur(40px) brightness(0.5) saturate(1.2); transform: scale(1.2); }
@@ -133,15 +132,15 @@ dialog.capa--edicion { max-width: none; max-height: none; width: calc(100vw - 48
 .edicion__lienzo { position: relative; z-index: 2; flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 32px; }
 .edicion__lienzo > img, .edicion__lienzo > video { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 10px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45); }
 /* Barra de herramientas flotante abajo al centro; el zoom abajo a la izquierda. */
-.edicion__barra { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 3; display: inline-flex; gap: 4px; padding: 6px; border-radius: 14px; background: rgba(20, 21, 23, 0.92); border: 1px solid var(--border-divider); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); max-width: calc(100% - 48px); overflow-x: auto; scrollbar-width: none; }
+.edicion__barra { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 3; display: inline-flex; gap: 4px; padding: 6px; border-radius: 14px; background: rgba(20, 21, 23, 0.92); border: 1px solid var(--border-color); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); max-width: calc(100% - 48px); overflow-x: auto; scrollbar-width: none; }
 .edicion__barra--izq { left: 20px; transform: none; }
 .edicion__herr { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: var(--font-weight-medium); white-space: nowrap; transition: background 140ms ease, color 140ms ease; }
 .edicion__herr:hover:not(:disabled) { background: var(--white-5); color: var(--text-primary); }
 .edicion__herr.is-active { background: var(--white-8); color: var(--text-primary); }
-.edicion__herr > i, .edicion__herr > svg { color: var(--org-primary, var(--text-secondary)); }
-.edicion__lado { flex: 0 0 400px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; border-radius: 18px; background: var(--bg-card); border: 1px solid var(--border-divider); }
+.edicion__herr > i, .edicion__herr > svg { color: var(--org-primary); }
+.edicion__lado { flex: 0 0 400px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; border-radius: 18px; background: var(--bg-card); border: 1px solid var(--border-color); }
 .edicion__lado-cab { display: flex; justify-content: flex-end; padding: 14px 14px 0; }
-.edicion__pestanas { display: flex; padding: 0 28px; border-bottom: 1px solid var(--border-divider); }
+.edicion__pestanas { display: flex; padding: 0 28px; border-bottom: 1px solid var(--border-color); }
 .edicion__pestana { flex: 1; padding: 14px 0 16px; text-align: center; font-size: var(--font-size-md); font-weight: var(--font-weight-medium); color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: var(--transition-fast); }
 .edicion__pestana[aria-selected='true'] { color: var(--text-primary); border-bottom-color: var(--text-primary); }
 .edicion__lado-cuerpo { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 24px 28px; display: flex; flex-direction: column; gap: 22px; }
@@ -151,20 +150,19 @@ dialog.capa--edicion { max-width: none; max-height: none; width: calc(100vw - 48
 .edicion__miniatura.is-active { border-color: var(--text-primary); }
 .edicion__copy { font-size: var(--font-size-xl); line-height: 1.4; color: var(--text-primary); }
 .edicion__tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.edicion__fila { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border-divider); font-size: var(--font-size-md); }
+.edicion__fila { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: var(--font-size-md); }
 .edicion__fila dt { color: var(--text-muted); } .edicion__fila dd { margin: 0; color: var(--text-primary); text-align: right; }
 .edicion__acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 28px 24px; }
 .edicion__acciones .btn { min-height: 56px; font-size: var(--font-size-md); border-radius: 18px; }
-.edicion__acciones .btn--blanco { border-radius: 18px; text-transform: none; font-family: var(--font-sans); letter-spacing: 0; font-weight: var(--font-weight-semibold); }
 .edicion__acciones--ancha { grid-template-columns: 1fr auto auto; }
 @media (max-width: 900px) { .edicion { flex-direction: column; } .edicion__lado { flex-basis: auto; max-height: 50%; } }
 
 /* ── La pregunta (borrar, descartar): encima de lo que habla ───────────── */
 /* No es un modal: cubre la tarjeta o el pie de la ficha de la que habla, y
  * cuenta ANTES de preguntar («6 proyectos · 18 piezas se van»). */
-.pregunta { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: center; gap: var(--space-3); padding: var(--space-4); border-radius: inherit; background: color-mix(in srgb, var(--bg-ui) 92%, transparent); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); animation: capa-fundido var(--duration-fast) var(--ease-standard) both; }
+.pregunta { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: center; gap: var(--space-3); padding: var(--space-4); border-radius: inherit; background: color-mix(in srgb, var(--bg-base) 92%, transparent); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); animation: capa-fundido var(--duration-fast) var(--ease-standard) both; }
 .pregunta__texto { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); }
-.pregunta__cuenta { font-family: var(--font-mono); font-size: var(--font-size-sm); letter-spacing: var(--tracking-mono); color: var(--warm); }
+.pregunta__cuenta { font-family: var(--font-mono); font-size: var(--font-size-sm); letter-spacing: var(--tracking-mono); color: var(--color-error); }
 .pregunta__cuenta--sobrevive { color: var(--text-muted); }
 .pregunta__acciones { display: flex; gap: var(--space-2); }
 .tiene-pregunta { position: relative; }
@@ -189,7 +187,7 @@ dialog.capa--md { max-width: min(640px, calc(100vw - var(--space-8))); }
 .capa--confirmar .capa__titulo, .capa--pedir .capa__titulo { font-size: var(--font-size-xl); }
 .capa__texto { font-size: var(--font-size-base); color: var(--text-secondary); line-height: var(--leading-normal); }
 .capa__campo { width: 100%; margin-top: var(--space-3); }
-.capa__error { margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--warm); }
+.capa__error { margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--color-error); }
 
 @media (prefers-reduced-motion: reduce) {
   dialog.capa[open], dialog.capa.is-cerrando, dialog.capa::backdrop, .pregunta { animation: none; }

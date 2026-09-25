@@ -596,17 +596,17 @@ class MonitoringView extends BaseView {
   _brandGradientStops() {
     try {
       const cs = getComputedStyle(document.documentElement);
-      const grad = (cs.getPropertyValue('--brand-gradient-dynamic') ||
-                    cs.getPropertyValue('--brand-gradient') || '').trim();
+      const grad = (cs.getPropertyValue('--org-gradient') ||
+                    cs.getPropertyValue('--espectro') || '').trim();
       // El degradado dinámico usa rgba()/rgb() (no hex). Extraer TODOS los stops
       // de color en orden para replicar EXACTO el degradado de la plataforma.
       const cols = grad ? (grad.match(/rgba?\([^)]*\)|#[0-9a-fA-F]{3,8}/g) || []) : [];
       if (cols.length >= 2) return cols;
       if (cols.length === 1) return [cols[0], this._lighten(this._toHex(cols[0]), 0.28)];
-      const primary = (cs.getPropertyValue('--brand-primary') || '').trim();
+      const primary = (cs.getPropertyValue('--org-primary') || '').trim();
       if (/^#[0-9a-fA-F]{6}/.test(primary)) return [primary.slice(0, 7), this._lighten(primary.slice(0, 7), 0.28)];
-    } catch (_) { /* sin estilos calculados: cae al par cálido de la plataforma */ }
-    return [MonitoringView._token('--warm-1'), MonitoringView._token('--warm-2')];
+    } catch (_) { /* sin estilos calculados: cae al acento principal (blanco → gris) */ }
+    return [MonitoringView._token('--accent'), MonitoringView._token('--icon-button')];
   }
 
   /** Convierte rgb()/rgba() o #hex a #rrggbb (para _lighten). */
@@ -620,7 +620,7 @@ class MonitoringView extends BaseView {
 
   /** CSS linear-gradient con todos los stops (para avatar/chip del popover). */
   _gradientCss(stops, angle = 135) {
-    const s = (stops && stops.length ? stops : [MonitoringView._token('--warm-1'), MonitoringView._token('--warm-2')]);
+    const s = (stops && stops.length ? stops : [MonitoringView._token('--accent'), MonitoringView._token('--icon-button')]);
     return `linear-gradient(${angle}deg, ${s.join(', ')})`;
   }
 
@@ -628,7 +628,7 @@ class MonitoringView extends BaseView {
       si no el degradado dinámico de la marca (array de colores). */
   _bubbleStops(item) {
     if (item && item.color) return [item.color, this._lighten(item.color, 0.28)];
-    return this._brandStops || [MonitoringView._token('--warm-1'), MonitoringView._token('--warm-2')];
+    return this._brandStops || [MonitoringView._token('--accent'), MonitoringView._token('--icon-button')];
   }
 
   /** Color sólido de las cards (--bg-card) para el relleno de las burbujas. */
@@ -637,7 +637,7 @@ class MonitoringView extends BaseView {
       const v = (getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '').trim();
       if (/^#[0-9a-fA-F]{3,8}$/.test(v)) return v;
     } catch (_) { /* sin estilos calculados */ }
-    return MonitoringView._token('--bg-secondary');
+    return MonitoringView._token('--bg-card');
   }
 
   /** Aclara un hex mezclándolo hacia blanco (para el 2º stop si falta). */
@@ -919,7 +919,7 @@ class MonitoringView extends BaseView {
       const tDepth = (isFloat && rMax > rMin) ? (b.r - rMin) / (rMax - rMin) : 1;
       const depthA = isHover ? 1 : (isFloat ? (0.74 + 0.26 * tDepth) : 1);
 
-      const card = this._cardColor || MonitoringView._token('--bg-secondary');
+      const card = this._cardColor || MonitoringView._token('--bg-card');
 
       // Sombra suave que ATERRIZA la burbuja + relleno SÓLIDO (color de las cards).
       ctx.save();
@@ -927,7 +927,7 @@ class MonitoringView extends BaseView {
       ctx.shadowColor = 'rgba(0,0,0,0.5)';
       ctx.shadowBlur = isFloat ? 24 : 13;
       ctx.shadowOffsetY = isFloat ? 10 : 5;
-      ctx.fillStyle = dimmed ? (this._fondoTenue ||= MonitoringView._token('--bg-primary')) : card;
+      ctx.fillStyle = dimmed ? (this._fondoTenue ||= MonitoringView._token('--bg-base')) : card;
       ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
       ctx.restore();
 

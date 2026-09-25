@@ -22,7 +22,7 @@
   min-height: 180px;
   padding: var(--space-6) var(--space-4);
   text-align: center;
-  border: 1px dashed var(--border-divider);
+  border: 1px dashed var(--border-color);
   border-radius: var(--modal-radio);
   color: var(--text-muted);
 }

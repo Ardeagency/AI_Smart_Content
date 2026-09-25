@@ -15,7 +15,7 @@
 
 export const AA = 4.5;
 export const TEXTOS = ['--text-primary', '--text-secondary', '--text-muted', '--color-success', '--color-warning', '--color-error', '--color-info'];
-export const FONDOS = ['--bg-primary', '--bg-secondary', '--bg-card', '--bg-ui', '--bg-tertiary', '--white-2', '--white-5', '--white-8', '--white-10'];
+export const FONDOS = ['--bg-base', '--bg-card', '--bg-card', '--bg-base', '--bg-base', '--white-2', '--white-5', '--white-8', '--white-10'];
 
 const ROLES = new Set(['button', 'link', 'textbox', 'combobox', 'checkbox', 'radio', 'switch', 'tab', 'menuitem', 'menuitemcheckbox', 'menuitemradio', 'searchbox', 'slider', 'spinbutton', 'listbox', 'option', 'treeitem']);
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -78,7 +78,7 @@ export async function contraste(ev) {
     const sobre = (f, b) => ({ r: f.r * f.a + b.r * (1 - f.a), g: f.g * f.a + b.g * (1 - f.a), b: f.b * f.a + b.b * (1 - f.a), a: 1 });
     const L = (c) => { const t = [c.r, c.g, c.b].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * t[0] + 0.7152 * t[1] + 0.0722 * t[2]; };
     const ratio = (a, b) => { const x = L(a), y = L(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-    const pagina = px('var(--bg-primary)');
+    const pagina = px('var(--bg-base)');
     const malos = [];
     for (const f of ${JSON.stringify(FONDOS)}) {
       const bg = sobre(px('var(' + f + ')'), pagina);

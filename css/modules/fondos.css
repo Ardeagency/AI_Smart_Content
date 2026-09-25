@@ -28,20 +28,20 @@
 }
 
 .fondo-org {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-base);
   background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    var(--org-color-light, var(--border-color)) 0%,
-    var(--org-color-mid, var(--border-color)) 30.29%,
-    var(--bg-secondary) 74.04%,
-    var(--bg-primary) 100%);
+    var(--org-color-light) 0%,
+    var(--org-color-mid) 30.29%,
+    var(--bg-card) 74.04%,
+    var(--bg-base) 100%);
 }
 
 .fondo-org--tenue {
-  background-color: var(--fondo-base);
+  background-color: var(--bg-base);
   background-image: radial-gradient(110.4% 110.4% at 50% -10.4%,
-    color-mix(in srgb, var(--org-color-light, var(--border-color)) 26%, transparent) 0%,
-    color-mix(in srgb, var(--org-color-mid, var(--border-color)) 18%, transparent) 30.29%,
-    color-mix(in srgb, var(--bg-secondary) 55%, transparent) 74.04%,
+    color-mix(in srgb, var(--org-color-light) 26%, transparent) 0%,
+    color-mix(in srgb, var(--org-color-mid) 18%, transparent) 30.29%,
+    color-mix(in srgb, var(--bg-card) 55%, transparent) 74.04%,
     transparent 100%);
 }
 
@@ -60,7 +60,7 @@
    puede ser negro, WAKEUP). El acento/hover/foco de plataforma ya caen a
    --org-* en tokens.css; esto es lo que v1 pintaba explícitamente. ── */
 
-.resalte-org { color: var(--org-color-light, var(--text-secondary)); }
+.resalte-org { color: var(--org-color-light); }
 
 /* Texto con el espectro de la PLATAFORMA: para lo que habla del producto. */
 .texto-espectro {
@@ -72,29 +72,29 @@
 
 /* Texto con el degradado de la marca (títulos de sección, cifras hero). */
 .texto-org {
-  background: var(--org-gradient, linear-gradient(135deg, var(--text-primary), var(--text-secondary)));
+  background: var(--org-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 /* Filete a la izquierda de una cita, nota o lectura de Vera. */
-.filete-org { border-left: 3px solid var(--org-color-light, var(--border-divider)); }
+.filete-org { border-left: 3px solid var(--org-color-light); }
 
 /* Barra de progreso / línea de fuerza: del oscuro al claro de la marca. */
 .barra-org {
-  background: linear-gradient(90deg, var(--org-color-dark, var(--white-15)), var(--org-color-light, var(--white-45)));
+  background: linear-gradient(90deg, var(--org-color-dark), var(--org-color-light));
 }
 
 /* Relleno de hover/selección con brillo de la marca (12% / 18%). */
 .brillo-org:hover,
-.brillo-org.is-activo { background: var(--org-brillo-strong, var(--white-12)); }
+.brillo-org.is-activo { background: var(--org-brillo-strong); }
 
 /* Aura: la tarjeta que se enciende con la marca (v1 .vera-card--algoritmo). */
 .aura-org { position: relative; isolation: isolate; }
 .aura-org::before {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1;
-  background: radial-gradient(120% 80% at 92% -10%, var(--org-color-dark, transparent) 0%, transparent 62%);
+  background: radial-gradient(120% 80% at 92% -10%, var(--org-color-dark) 0%, transparent 62%);
   opacity: 0.14;
   border-radius: inherit;
 }

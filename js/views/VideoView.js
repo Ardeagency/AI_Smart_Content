@@ -387,7 +387,7 @@ class VideoView extends BaseView {
                       <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
                     </div>
                     <div class="video-result-actions">
-                      <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
+                      <a id="videoResultDownload" class="btn btn--oscuro video-download-btn" href="#" download target="_blank" rel="noopener">
                         <i class="aisc-ico aisc-ico--dowload"></i> ${window.__('Descargar')}
                       </a>
                     </div>

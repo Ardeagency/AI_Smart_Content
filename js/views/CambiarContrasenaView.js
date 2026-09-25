@@ -25,7 +25,7 @@ class CambiarContrasenaView extends BaseView {
             <div class="cambiar-contrasena-invalid" id="changePasswordInvalid" hidden>
               <h2 class="signin-recover-title">${__('Enlace inválido o expirado')}</h2>
               <p class="signin-recover-desc">${__('Este enlace ya no es válido. Solicita uno nuevo desde la página de inicio de sesión.')}</p>
-              <a href="/login" class="btn btn-primary" id="linkInvalidToLogin">${__('Ir a iniciar sesión')}</a>
+              <a href="/login" class="btn btn--blanco" id="linkInvalidToLogin">${__('Ir a iniciar sesión')}</a>
             </div>
 
             <div class="cambiar-contrasena-form-wrap" id="changePasswordFormWrap" hidden>
@@ -34,7 +34,7 @@ class CambiarContrasenaView extends BaseView {
               <form id="form_change_password" novalidate>
                 <input type="password" class="form-input" id="newPassword" name="newPassword" placeholder="${__('Nueva contraseña')}" autocomplete="new-password" required minlength="8">
                 <input type="password" class="form-input" id="newPasswordConfirm" name="newPasswordConfirm" placeholder="${__('Confirmar contraseña')}" autocomplete="new-password" required minlength="8">
-                <button type="submit" class="btn btn-primary" id="btnChangePassword">${__('Cambiar contraseña')}</button>
+                <button type="submit" class="btn btn--blanco" id="btnChangePassword">${__('Cambiar contraseña')}</button>
               </form>
               <a href="/login" class="signin-recover-back" id="linkChangeBackToLogin">${__('Volver al inicio de sesión')}</a>
             </div>

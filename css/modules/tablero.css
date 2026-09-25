@@ -10,7 +10,7 @@
 .tablero-card {
   padding: var(--space-4) var(--space-5) var(--space-5);
   border: 1px solid var(--border-hairline);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-lg);
   background: var(--white-2);
 }
 .tablero-card .mb-section-head { margin-bottom: var(--space-3); }

@@ -3,11 +3,10 @@
    Efecto glass: 3 variantes — .glass (original), .glass-black, .glass-white.
    Variables: --glass-* (original), --glass-black-bg/border, --glass-white-bg/border.
    Comparten --glass-radius, --glass-blur, --glass-padding.
-   — Botones: .btn, .btn-primary, .btn-secondary, .btn-icon (glass).
+   — Botones: .btn, .btn--blanco, .btn--oscuro, .btn--icono (glass).
    — Cards: .card, .brand-card (glass).
    — Dropdowns, tooltips, modales (glass). Usar glass-black o glass-white si el fondo pide más contraste.
    ============================================================ */
-
 
 /* ============================================================
    Módulos — importados desde css/modules/
@@ -56,18 +55,27 @@
 /* ADN v2: los tres fondos y los resaltados de la org (Git-AISC-Frontend fondos.css, 5337e46). */
 @import url('modules/fondos.css?v=__BUILD_ID__');
 
+/* TIPOGRAFÍA = la de la landing (25/09): Apfel Grotezk (títulos, OFL · Collletttivo,
+   licencia en recursos/fonts/adn/ApfelGrotezk-OFL.txt) + Spline Sans Mono (texto e interfaz). */
 @font-face {
-  font-family: 'Inter';
-  src: url('../recursos/fonts/adn/InterVariable.woff2') format('woff2');
-  font-weight: 100 900;
+  font-family: 'Apfel Grotezk';
+  src: url('../recursos/fonts/adn/ApfelGrotezk-Regular.woff2') format('woff2');
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Inter';
-  src: url('../recursos/fonts/adn/InterVariable-Italic.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: italic;
+  font-family: 'Apfel Grotezk';
+  src: url('../recursos/fonts/adn/ApfelGrotezk-Mittel.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Apfel Grotezk';
+  src: url('../recursos/fonts/adn/ApfelGrotezk-Fett.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
   font-display: swap;
 }
 @font-face {
@@ -90,188 +98,41 @@
     /* FONDO BASE = NEGRO PURO (encargo del usuario: «todos los fondos en negro puro»).
        UN token: todo fondo de base (body, vista, shell, login, estados, modales,
        drawer) lee --bg-base. Las superficies elevadas NO: siguen siendo capas
-       translúcidas (--white-*) o el gris de flotantes (--bg-secondary). */
+       translúcidas (--white-*) o el gris de flotantes (--bg-card). */
     --bg-base: #000;
-    --bg-primary: var(--bg-base);
-    --bg-secondary: #141517;
-    --bg-card: #141517;
-    --bg-tertiary: var(--bg-base);
-    /* Hover y seleccionado: brillo con color principal de la marca (BrandOrganizationView inyecta --brand-primary-brillo) */
-    --brillo-hover: var(--brand-primary-brillo, rgba(255, 255, 255, 0.08));
-    --brillo-active: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.12));
-    --bg-hover: var(--brillo-hover);
-    /* Acento: sin naranja por defecto; BrandOrganizationView/OrgBrandTheme inyectan --brand-primary desde brand_colors */
-    --accent-brand: var(--brand-primary, rgba(255, 255, 255, 0.35));
-    --accent-brand-soft: var(--brand-primary-brillo, rgba(255, 255, 255, 0.08));
-    --icon-button-active: var(--brand-primary, var(--icon-button));
-    --bg-black: var(--bg-base);
-    --bg-interactive: var(--bg-base);
-    --border-color: #242424;
-    --border-light: #242424;
-    --border-divider: #242424;
-    --text-primary: #D4D1D8;
-    --text-secondary: rgba(212, 209, 216, 0.85);
-    --text-muted: rgba(212, 209, 216, 0.6);
-    --text-disabled: rgba(212, 209, 216, 0.35);
-    --icon-button: #87868B;
-    --icon-button-hover: #D4D1D8;
-    --accent-yellow: #87868B;
-    --accent-yellow-hover: #D4D1D8;
-    --accent-warm: #87868B;
-    --primary-color: #D4D1D8;
-    --accent-cta: var(--warm-1);
-    --accent-cta-hover: var(--warm-2);
-    --accent-cta-dark: var(--warm-3);
     --color-white: #ffffff;
-    --text-black: #000000;
-    --bg-light-gray: #f3f4f6;
-    --font-size-xs: 0.6875rem;
-    --font-size-sm: 0.75rem;
-    --font-size-base: 0.875rem;
-    --font-size-md: 1rem;
-    --font-size-lg: 1.125rem;
-    --font-size-xl: 1.25rem;
-    --font-size-2xl: 1.5rem;
-    --font-size-3xl: 2rem;
-    --font-size-4xl: 2.5rem;
     /* Tipografía fluida (clamp): escala suave móvil→escritorio sin media queries.
        Anclada en rem (respeta zoom / WCAG 1.4.4). Fórmula Smashing: vw + rem.
        Usar para títulos/heros de vista; NO para body. Mín ~360px, máx ~1280px+. */
-    --fs-hero: clamp(1.75rem, 2.27vw + 1.5rem, 3rem);     /* 28 → 48px */
-    --fs-display: clamp(1.5rem, 1.95vw + 1.06rem, 2.5rem);/* 24 → 40px */
-    --fs-h1: clamp(1.375rem, 1.3vw + 1.08rem, 2rem);      /* 22 → 32px */
-    --fs-h2: clamp(1.25rem, 0.82vw + 1.06rem, 1.75rem);   /* 20 → 28px */
-    --fs-h3: clamp(1.0625rem, 0.43vw + 0.96rem, 1.375rem);/* 17 → 22px */
-    --color-success: #00d614;
-    --color-success-light: rgba(0, 214, 20, 0.15);
-    --color-success-bg: rgba(0, 214, 20, 0.1);
-    --color-warning: #ffe500;
-    --color-warning-light: rgba(255, 229, 0, 0.15);
-    --color-warning-bg: rgba(255, 229, 0, 0.1);
-    --color-error: #ff4040; /* AA sobre --white-10 (a11y, 24/09): el rojo puro daba 3.91 */
-    --color-error-light: rgba(255, 0, 0, 0.15);
-    --color-error-bg: rgba(255, 0, 0, 0.1);
-    --color-info: #00e7ff;
-    --color-info-light: rgba(0, 231, 255, 0.15);
-    --color-info-bg: rgba(0, 231, 255, 0.1);
-    --color-critical: #ff0000;
-    /* Builder accent (naranja warm específico del builder; el resto de la app usa --accent-warm gris) */
-    --builder-accent: #e09145;
-    --builder-accent-soft: rgba(224, 145, 69, 0.2);
-    --builder-accent-tint: rgba(224, 145, 69, 0.1);
-    --builder-accent-bg: rgba(224, 145, 69, 0.08);
     /* Tokens auxiliares para reemplazar hardcoded */
-    --text-on-primary: #000000;
-    --text-on-critical: #ffffff;
-    --overlay-dark: rgba(0, 0, 0, 0.35);
     --edge-stroke: #b1b1b7;
     --border-light-soft: rgba(255, 255, 255, 0.25);
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
-    --white-5: rgba(255, 255, 255, 0.05);
-    --white-8: rgba(255, 255, 255, 0.08);
-    --white-10: rgba(255, 255, 255, 0.1);
-    --white-15: rgba(255, 255, 255, 0.15);
-    --white-20: rgba(255, 255, 255, 0.2);
-    --white-50: rgba(255, 255, 255, 0.5);
-    --white-80: rgba(255, 255, 255, 0.8);
-    --white-95: rgba(255, 255, 255, 0.95);
-    --black-20: rgba(0, 0, 0, 0.2);
-    --black-40: rgba(0, 0, 0, 0.4);
-    --black-50: rgba(0, 0, 0, 0.5);
-    --black-70: rgba(0, 0, 0, 0.7);
-    --warm-1: #ff6500;
-    --warm-2: #ff0000;
-    --warm-3: #ff6500;
-    --warm-4: #ff0000;
-    --warm-5: #ff0000;
-    --warm-10: rgba(255, 101, 0, 0.1);
-    --warm-15: rgba(255, 101, 0, 0.15);
-    --warm-20: rgba(255, 101, 0, 0.2);
-    --warm-30: rgba(255, 101, 0, 0.3);
-    --warm-50: rgba(255, 101, 0, 0.5);
-    /* ========== Espectro de PLATAFORMA (no de marca) ==========
-       El degradado del producto: azul noche -> naranja. Es FIJO — no lo toca
-       OrgBrandTheme, a diferencia de --brand-gradient-dynamic, que es el color
-       del cliente. Se usa donde la interfaz habla de AI Smart Content y no de
-       la marca de la org: la tarjeta de plan del sidebar y el fondo de Planes.
-       Los stops sueltos existen para poder rearmar el espectro en otra forma
-       (radial, conico) sin copiar los hex y que se separen con el tiempo. */
-    --pf-1: #0A1A5A;
-    --pf-2: #1E3FB0;
-    --pf-3: #4A2FB0;
-    --pf-4: #7A2A9A;
-    --pf-5: #C01A5A;
-    --pf-6: #E0301A;
-    --pf-7: #FF6A00;
-    --platform-gradient: linear-gradient(90deg, var(--pf-1) 0%, var(--pf-2) 16.67%, var(--pf-3) 33.33%, var(--pf-4) 50%, var(--pf-5) 66.67%, var(--pf-6) 83.33%, var(--pf-7) 100%);
 
-    --brand-gradient: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
-    --brand-gradient-1: linear-gradient(90deg, #ff0000 0%, #ff6500 50%, #ffe500 100%);
-    --brand-gradient-2: linear-gradient(90deg, #9acc00 0%, #00d614 50%, #00e7ff 100%);
-    --brand-gradient-3: linear-gradient(90deg, #0018ee 0%, #5b00ea 50%, #900090 100%);
-    --radius-xs: 4px;
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-pill: 9999px;
     /* ========== ESTILOS GLASS DE LA PLATAFORMA (3 variantes) ==========
        glass = original muy translúcido
        glass-black = versión oscura (fondos claros detrás → mejor contraste para texto)
        glass-white = versión más blanca (fondos oscuros detrás → texto más notorio)
        Todas comparten --glass-radius, --glass-blur, --glass-padding. */
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-radius: 14px;
     /* glass-blur: blur(14px) + saturate(120%). Reducido desde blur(24px)/sat(140%)
        por costo de repaint: backdrop-filter se aplica en 240+ sitios y el radio de
        blur domina el costo de la convolucion. 14px sigue leyendose como frosted
        real y baja sensiblemente el paint en scroll/hover de listas y cards. */
-    --glass-blur: blur(14px) saturate(120%);
-    --glass-padding: 8px 24px;
     /* glass-black: ~50% opacidad; textos blancos y mismo borde que glass normal */
     /* glass-black-bg: receta del card de login. rgba(0, 0, 0,0.55) usa el
-       negro de la plataforma (#0b0b0b = --bg-primary) con alpha 0.55. */
-    --glass-black-bg: rgba(0, 0, 0, 0.55);
+       negro de la plataforma (#0b0b0b = --bg-base) con alpha 0.55. */
     /* glass-black-border: receta del card de login. 0.08 alpha — filete
        muy sutil que mantiene la estetica frosted. */
-    --glass-black-border: rgba(255, 255, 255, 0.08);
-    --glass-black-text: #ffffff;
     /* glass-white: espejo blanco de glass-black (mismo recipe, en blanco).
        Frost blanco real: base blanca 0.55 + filete negro 0.08 + blur 24/sat 140.
        Texto oscuro (--glass-white-text) para legibilidad sobre el frost claro. */
-    --glass-white-bg: rgba(255, 255, 255, 0.55);
-    --glass-white-border: rgba(0, 0, 0, 0.08);
-    --glass-white-text: #0b0b0b;
     /* Blur para fondos de overlay (modales, backdrops); distinto del glass de UI */
     --overlay-blur: blur(6px);
-    --shadow-card: 0 4px 16px rgba(32, 29, 38, 0.5);
-    --shadow-hover: 0 8px 24px rgba(32, 29, 38, 0.6);
-    --shadow-floating: 0 12px 32px rgba(32, 29, 38, 0.7);
     /* Contenedor de imagen (estilo historial-living) — único punto de verdad */
-    --media-container-shadow: var(--shadow-card);
-    --media-container-shadow-hover: var(--shadow-hover);
     --media-container-bg: transparent;
-    --media-container-bg-fill: var(--bg-card);
-    --media-container-radius: 2px;
-    --grid-color: rgba(212, 209, 216, 0.03);
     /* --transition: sin box-shadow. Animar box-shadow es paint puro (no compositable)
        y este token se usa en 115+ sitios incluido .card. Quien necesite transicion de
        sombra al hover la declara explicitamente. */
-    --transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
-    --transition-fast: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
-    --transition-slow: color 0.5s ease, background-color 0.5s ease, opacity 0.5s ease, transform 0.5s ease;
     /* Curvas de easing canonicas (antes habia 8 sueltas). Usar estas para coherencia. */
-    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);  /* la dominante (Material) */
-    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);      /* ease-out expo, entradas */
-    --ease-route: cubic-bezier(0.33, 0, 0.2, 1);    /* transiciones de ruta */
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
-    --spacing-2xl: 3rem;
-    --border-radius-sm: 8px;
-    --border-radius-lg: 16px;
     /* ── CAPAS: la ÚNICA escala de z-index (L2, 24/09) ──────────────────────
        Antes había dos grupos --z-* en este :root que se pisaban y ~45 valores
        crudos en los módulos. Esta escala conserva EXACTAMENTE el orden de
@@ -284,8 +145,6 @@
     --z-sticky: 100;              /* cabeceras pegajosas, barras de producción */
     --z-dropdown: 100;
     --z-panel: 200;               /* paneles laterales de vista */
-    --z-inspector: 600;           /* inspector del Command Center */
-    --z-nav-overlay: 800;
     --z-nav-sidebar: 850;
     --z-header: 900;              /* .app-header */
     --z-chrome: 1000;             /* header, #navigation-container, menús del nav */
@@ -305,73 +164,18 @@
     --z-notification: 10000;
     --z-modal: 10001;
     --z-popover: 10002;
-    --z-flyout: 10050;            /* flyouts del nav y avisos */
-    --z-report-velo: 10060;       /* velo del reporte del Command Center */
     --z-sheet: 10100;
     --z-sheet-top: 10200;
     --z-overlay-top: 100400;      /* drawer de detalle de insight */
     --z-overlay-top-panel: 100401;
     --z-activity: 100500;         /* dropdown de actividad (también desde Navigation.js) */
-    --nav-width: 220px;
-    --nav-width-collapsed: 51px;
-    --nav-transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --nav-overlay: rgba(0, 0, 0, 0.8);
-    --nav-bg: var(--bg-primary);
-    --nav-border: var(--border-divider);
-    --nav-separator: var(--border-divider);
-    --nav-item-height: 36px;
     --app-header-height: 45.8px;
-    --sidebar-background: var(--bg-primary);
-    --sidebar-hover: var(--brillo-hover);
-    --sidebar-active: var(--brillo-active);
-    --sidebar-icon-color: var(--text-secondary);
-    --sidebar-text-primary: var(--text-primary);
-    --sidebar-text-secondary: var(--text-secondary);
-    --living-warm-1: var(--warm-1);
-    --living-warm-2: var(--warm-2);
-    --living-warm-3: var(--warm-3);
-    --living-warm-4: var(--warm-4);
-    --living-warm-5: var(--warm-5);
-    --living-text-light: var(--text-primary);
-    --living-text-gold: var(--icon-button);
-    --living-text-muted: var(--text-muted);
-    --living-text-whisper: var(--text-disabled);
-    /* Base de fondo de las views. Siempre --bg-primary opaco. */
-    --view-bg-base: var(--bg-primary);
-    --living-bg-deep: var(--view-bg-base);
-    --living-bg-surface: var(--bg-secondary);
-    --living-bg-card: var(--bg-card);
-    --living-bg-card-hover: var(--bg-hover);
-    --living-bg-glass: var(--bg-card);
-    --living-shadow-soft: var(--shadow-card);
-    --living-shadow-medium: var(--shadow-hover);
-    --living-shadow-deep: var(--shadow-floating);
-    --living-spacing-section: 3rem;
-    --living-spacing-card: 1.5rem;
-    --brand-warm-1: var(--warm-1);
-    --brand-warm-2: var(--warm-2);
-    --brand-warm-3: var(--warm-3);
-    --brand-warm-4: var(--warm-4);
-    --brand-warm-5: var(--warm-5);
+    /* Base de fondo de las views. Siempre --bg-base opaco. */
     --brand-text-light: var(--text-primary);
     --brand-text-gold: var(--text-primary);
     --brand-text-muted: var(--text-muted);
-    --dev-primary: #00E7FF;
-    --dev-primary-light: #66f0ff;
-    --dev-primary-dark: #00b8cc;
-    --dev-success: #00d614;
-    --dev-warning: #ffe500;
-    --dev-error: #ff0000;
-    --dev-critical: #ff0000;
-    --dev-info: #00e7ff;
-    --dev-bg-card: var(--living-bg-card);
-    --dev-bg-card-hover: var(--living-bg-card-hover);
     /* Superficie visible para cards/secciones en dev (evita negro sobre negro) */
-    --dev-bg-surface: rgba(21, 23, 28, 0.6);
-    --dev-bg-surface-hover: rgba(255, 255, 255, 0.06);
-    --dev-border: rgba(0, 231, 255, 0.2);
-    --dev-card-border: var(--border-divider);
-    --border-radius: var(--radius-md);
 }
 
 /* ==========================================================================
@@ -397,74 +201,59 @@
   --prisma-violeta: #900090;
   --prisma-fucsia: #ff004d;
 
+  /* ── SUB-DEGRADADOS del espectro (estáticos) — parte del acento 2 (plataforma) ──
+     El anillo del prisma: cada color hacia el siguiente, y fucsia cierra en rojo (10).
+     Sin sufijo = vertical (180deg) · -h horizontal · -d diagonal. */
+  --grad-rojo-naranja: linear-gradient(180deg, var(--prisma-rojo), var(--prisma-naranja));
+  --grad-rojo-naranja-h: linear-gradient(90deg, var(--prisma-rojo), var(--prisma-naranja));
+  --grad-rojo-naranja-d: linear-gradient(135deg, var(--prisma-rojo), var(--prisma-naranja));
+  --grad-naranja-amarillo: linear-gradient(180deg, var(--prisma-naranja), var(--prisma-amarillo));
+  --grad-naranja-amarillo-h: linear-gradient(90deg, var(--prisma-naranja), var(--prisma-amarillo));
+  --grad-naranja-amarillo-d: linear-gradient(135deg, var(--prisma-naranja), var(--prisma-amarillo));
+  --grad-amarillo-limon: linear-gradient(180deg, var(--prisma-amarillo), var(--prisma-limon));
+  --grad-amarillo-limon-h: linear-gradient(90deg, var(--prisma-amarillo), var(--prisma-limon));
+  --grad-amarillo-limon-d: linear-gradient(135deg, var(--prisma-amarillo), var(--prisma-limon));
+  --grad-limon-verde: linear-gradient(180deg, var(--prisma-limon), var(--prisma-verde));
+  --grad-limon-verde-h: linear-gradient(90deg, var(--prisma-limon), var(--prisma-verde));
+  --grad-limon-verde-d: linear-gradient(135deg, var(--prisma-limon), var(--prisma-verde));
+  --grad-verde-celeste: linear-gradient(180deg, var(--prisma-verde), var(--prisma-celeste));
+  --grad-verde-celeste-h: linear-gradient(90deg, var(--prisma-verde), var(--prisma-celeste));
+  --grad-verde-celeste-d: linear-gradient(135deg, var(--prisma-verde), var(--prisma-celeste));
+  --grad-celeste-azul: linear-gradient(180deg, var(--prisma-celeste), var(--prisma-azul));
+  --grad-celeste-azul-h: linear-gradient(90deg, var(--prisma-celeste), var(--prisma-azul));
+  --grad-celeste-azul-d: linear-gradient(135deg, var(--prisma-celeste), var(--prisma-azul));
+  --grad-azul-purpura: linear-gradient(180deg, var(--prisma-azul), var(--prisma-purpura));
+  --grad-azul-purpura-h: linear-gradient(90deg, var(--prisma-azul), var(--prisma-purpura));
+  --grad-azul-purpura-d: linear-gradient(135deg, var(--prisma-azul), var(--prisma-purpura));
+  --grad-purpura-violeta: linear-gradient(180deg, var(--prisma-purpura), var(--prisma-violeta));
+  --grad-purpura-violeta-h: linear-gradient(90deg, var(--prisma-purpura), var(--prisma-violeta));
+  --grad-purpura-violeta-d: linear-gradient(135deg, var(--prisma-purpura), var(--prisma-violeta));
+  --grad-violeta-fucsia: linear-gradient(180deg, var(--prisma-violeta), var(--prisma-fucsia));
+  --grad-violeta-fucsia-h: linear-gradient(90deg, var(--prisma-violeta), var(--prisma-fucsia));
+  --grad-violeta-fucsia-d: linear-gradient(135deg, var(--prisma-violeta), var(--prisma-fucsia));
+  --grad-fucsia-rojo: linear-gradient(180deg, var(--prisma-fucsia), var(--prisma-rojo));
+  --grad-fucsia-rojo-h: linear-gradient(90deg, var(--prisma-fucsia), var(--prisma-rojo));
+  --grad-fucsia-rojo-d: linear-gradient(135deg, var(--prisma-fucsia), var(--prisma-rojo));
+
   /* ── DEGRADADOS — cada color hacia el siguiente del anillo ── */
-  --grad-rojo-naranja: linear-gradient(180deg, #ff0000 0%, #ff6500 100%);
-  --grad-rojo-naranja-h: linear-gradient(90deg, #ff0000 0%, #ff6500 100%);
-  --grad-rojo-naranja-d: linear-gradient(135deg, #ff0000 0%, #ff6500 100%);
-  --grad-naranja-amarillo: linear-gradient(180deg, #ff6500 0%, #ffe500 100%);
-  --grad-naranja-amarillo-h: linear-gradient(90deg, #ff6500 0%, #ffe500 100%);
-  --grad-naranja-amarillo-d: linear-gradient(135deg, #ff6500 0%, #ffe500 100%);
-  --grad-amarillo-limon: linear-gradient(180deg, #ffe500 0%, #9acc00 100%);
-  --grad-amarillo-limon-h: linear-gradient(90deg, #ffe500 0%, #9acc00 100%);
-  --grad-amarillo-limon-d: linear-gradient(135deg, #ffe500 0%, #9acc00 100%);
-  --grad-limon-verde: linear-gradient(180deg, #9acc00 0%, #00d614 100%);
-  --grad-limon-verde-h: linear-gradient(90deg, #9acc00 0%, #00d614 100%);
-  --grad-limon-verde-d: linear-gradient(135deg, #9acc00 0%, #00d614 100%);
-  --grad-verde-celeste: linear-gradient(180deg, #00d614 0%, #00e7ff 100%);
-  --grad-verde-celeste-h: linear-gradient(90deg, #00d614 0%, #00e7ff 100%);
-  --grad-verde-celeste-d: linear-gradient(135deg, #00d614 0%, #00e7ff 100%);
-  --grad-celeste-azul: linear-gradient(180deg, #00e7ff 0%, #0018ee 100%);
-  --grad-celeste-azul-h: linear-gradient(90deg, #00e7ff 0%, #0018ee 100%);
-  --grad-celeste-azul-d: linear-gradient(135deg, #00e7ff 0%, #0018ee 100%);
-  --grad-azul-purpura: linear-gradient(180deg, #0018ee 0%, #5b00ea 100%);
-  --grad-azul-purpura-h: linear-gradient(90deg, #0018ee 0%, #5b00ea 100%);
-  --grad-azul-purpura-d: linear-gradient(135deg, #0018ee 0%, #5b00ea 100%);
-  --grad-purpura-violeta: linear-gradient(180deg, #5b00ea 0%, #900090 100%);
-  --grad-purpura-violeta-h: linear-gradient(90deg, #5b00ea 0%, #900090 100%);
-  --grad-purpura-violeta-d: linear-gradient(135deg, #5b00ea 0%, #900090 100%);
-  --grad-violeta-fucsia: linear-gradient(180deg, #900090 0%, #ff004d 100%);
-  --grad-violeta-fucsia-h: linear-gradient(90deg, #900090 0%, #ff004d 100%);
-  --grad-violeta-fucsia-d: linear-gradient(135deg, #900090 0%, #ff004d 100%);
-  --grad-fucsia-rojo: linear-gradient(180deg, #ff004d 0%, #ff0000 100%);
-  --grad-fucsia-rojo-h: linear-gradient(90deg, #ff004d 0%, #ff0000 100%);
-  --grad-fucsia-rojo-d: linear-gradient(135deg, #ff004d 0%, #ff0000 100%);
   --espectro: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
   --espectro-v: linear-gradient(180deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
-  --espectro-d: linear-gradient(135deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
-  --gradiente-principal: var(--espectro);
 
   /* ── GRADIENTES DE PLATAFORMA — de la noche al fuego (4 paradas) ── */
-  --gradiente-profundo: linear-gradient(90deg, #0018ee 0%, #5b00ea 30%, #ff004d 70.2%, #ff5c23 100%);
-  --gradiente-profundo-v: linear-gradient(180deg, #0018ee 0%, #5b00ea 30%, #ff004d 70.2%, #ff5c23 100%);
-  --gradiente-profundo-d: linear-gradient(135deg, #0018ee 0%, #5b00ea 30%, #ff004d 70.2%, #ff5c23 100%);
-  --gradiente-vivo: linear-gradient(90deg, #0063ff 0%, #814ac8 30%, #ff004d 70.2%, #ff3427 100%);
-  --gradiente-vivo-v: linear-gradient(180deg, #0063ff 0%, #814ac8 30%, #ff004d 70.2%, #ff3427 100%);
-  --gradiente-vivo-d: linear-gradient(135deg, #0063ff 0%, #814ac8 30%, #ff004d 70.2%, #ff3427 100%);
 
   /* ── NEUTROS — la luz de entrada ── */
-  --bg-primary: var(--bg-base);
-  --bg-secondary: #141517;
-  --bg-tertiary: var(--bg-base);
-  --bg-ui: var(--bg-base);
   --bg-card: #141517;
   --text-primary: #d4d1d8;
   --text-secondary: rgba(212, 209, 216, 0.85);
   --text-muted: rgba(212, 209, 216, 0.60);
   --text-disabled: rgba(212, 209, 216, 0.35);
-  --text-on-primary: #000000;
-  --text-on-critical: #ffffff;
-  --border-divider: #242424;
-  --border-stroke: #b1b1b7;
-  --border-soft: rgba(255, 255, 255, 0.25);
   --border-hairline: rgba(255, 255, 255, 0.10);
   --border-hairline-strong: rgba(255, 255, 255, 0.15);
   --border-color: #242424;
   --icon-button: #87868b;
-  --icon-button-hover: #d4d1d8;
   --white-2: rgba(255, 255, 255, 0.02);
   --white-5: rgba(255, 255, 255, 0.05);
   --white-6: rgba(255, 255, 255, 0.06);
-  --white-7: rgba(255, 255, 255, 0.07);
   --white-8: rgba(255, 255, 255, 0.08);
   --white-10: rgba(255, 255, 255, 0.10);
   --white-12: rgba(255, 255, 255, 0.12);
@@ -472,23 +261,16 @@
   --white-20: rgba(255, 255, 255, 0.20);
   --white-45: rgba(255, 255, 255, 0.45);
   --white-50: rgba(255, 255, 255, 0.50);
-  --white-60: rgba(255, 255, 255, 0.60);
-  --white-70: rgba(255, 255, 255, 0.70);
   --white-80: rgba(255, 255, 255, 0.80);
   --white-90: rgba(255, 255, 255, 0.90);
   --white-95: rgba(255, 255, 255, 0.95);
   --black-20: rgba(0, 0, 0, 0.20);
-  --black-35: rgba(0, 0, 0, 0.35);
   --black-40: rgba(0, 0, 0, 0.40);
   --black-50: rgba(0, 0, 0, 0.50);
   --black-70: rgba(0, 0, 0, 0.70);
-  --black-80: rgba(0, 0, 0, 0.80);
-  --overlay-dark: rgba(0, 0, 0, 0.35);
-  --grid-color: rgba(212, 209, 216, 0.03);
 
   /* ── GLASS — 3 variantes ── */
   --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.10);
   --glass-black-bg: rgba(0, 0, 0, 0.55);
   --glass-black-border: rgba(255, 255, 255, 0.08);
   --glass-black-text: #ffffff;
@@ -496,85 +278,54 @@
   --glass-white-border: rgba(0, 0, 0, 0.08);
   --glass-white-text: #0b0b0b;
   --glass-blur: blur(14px) saturate(120%);
-  --glass-frost: blur(24px) saturate(140%);
-  --glass-overlay-blur: blur(6px);
   --glass-radius: 14px;
   --glass-padding: 8px 24px;
 
   /* ── EFECTOS — puntos del canvas, fondo de plataforma, partículas ── */
-  --puntos-paso: 22px;
-  --puntos-radio: 1px;
-  --puntos-color: rgba(255, 255, 255, 0.10);
-  --puntos-color-tenue: rgba(255, 255, 255, 0.04);
-  --fondo-base: var(--bg-base);
-  --fondo-plataforma: radial-gradient(125% 72% at 50% -14%, color-mix(in srgb, var(--prisma-naranja) 22%, transparent) 0%, color-mix(in srgb, var(--prisma-rojo) 19%, transparent) 13%, color-mix(in srgb, var(--prisma-fucsia) 16%, transparent) 25%, color-mix(in srgb, var(--prisma-violeta) 14%, transparent) 37%, color-mix(in srgb, var(--prisma-purpura) 12%, transparent) 49%, color-mix(in srgb, var(--prisma-azul) 9%, transparent) 61%, color-mix(in srgb, var(--prisma-azul) 6%, transparent) 73%, transparent 90%);
-  --particulas-color: 255, 255, 255;
-  --glow-blur: 100px;
-  --glow-blur-suave: 60px;
-  --glow-blur-stage: 90px;
-  --glow-apagado: 42%;
 
-  /* ── SEMÁNTICOS — feedback ── */
+  /* ── ACENTOS — solo 3 (Figma › Tokens › «Acentos — los 3») ──
+     1 · --accent      blanco: el acento principal.
+     2 · --espectro    el arcoíris de la plataforma: donde la interfaz habla de AI Smart Content.
+     3 · --org-*       mode-org: los colores de la organización activa. Los publica
+                       OrgBrandTheme en <html>; sin org valen el blanco y el espectro.
+     Nada más es acento: un color de estado usa su SUB-ACENTO. */
+  --accent: #ffffff;
+  --accent-soft: rgba(255, 255, 255, 0.08);
+  --accent-strong: rgba(255, 255, 255, 0.12);
+  --org-primary: var(--accent);
+  --org-primary-rgb: 255, 255, 255;
+  --org-secondary: var(--accent);
+  --org-brillo: var(--accent-soft);
+  --org-brillo-strong: var(--accent-strong);
+  --org-gradient: var(--espectro);
+  --org-gradient-v: var(--espectro-v);
+  --org-color-light: var(--accent);
+  --org-color-mid: var(--accent);
+  --org-color-dark: var(--accent);
+  --brillo-hover: var(--org-brillo);
+  --brillo-active: var(--org-brillo-strong);
+
+  /* ── SUB-ACENTOS — estados, en color PLANO ──
+     base = texto/icono (AA sobre todos los fondos, test/a11y-tokens) · -bg 10 % · -light 15 % · -border 30 % */
   --color-success: #00d614;
-  --color-success-light: rgba(0, 214, 20, 0.15);
   --color-success-bg: rgba(0, 214, 20, 0.1);
+  --color-success-light: rgba(0, 214, 20, 0.15);
+  --color-success-border: rgba(0, 214, 20, 0.3);
   --color-warning: #ffe500;
-  --color-warning-light: rgba(255, 229, 0, 0.15);
   --color-warning-bg: rgba(255, 229, 0, 0.1);
-  --color-error: #ff4040; /* AA sobre --white-10 (a11y, 24/09): el rojo puro daba 3.91 */
-  --color-error-light: rgba(255, 0, 0, 0.15);
-  --color-error-bg: rgba(255, 0, 0, 0.1);
-  --color-info: #00e7ff;
-  --color-info-light: rgba(0, 231, 255, 0.15);
-  --color-info-bg: rgba(0, 231, 255, 0.1);
-  --color-critical: #ff0000;
-
-  /* ── WARM — lo que quema (créditos, gasto, irreversible) ── */
-  --warm-10: rgba(255, 101, 0, 0.1);
-  --warm-15: rgba(255, 101, 0, 0.15);
-  --warm-20: rgba(255, 101, 0, 0.2);
-  --warm-30: rgba(255, 101, 0, 0.3);
-  --warm-50: rgba(255, 101, 0, 0.5);
-  --warm: #ff6500;
-  --warm-strong: #ff0000;
-
-  /* ── ACENTO — la org lo pisa vía --org-*; sin org, neutro ── */
-  --accent: var(--org-primary, rgba(255, 255, 255, 0.35));
-  --accent-soft: var(--org-brillo, rgba(255, 255, 255, 0.08));
-  --accent-strong: var(--org-brillo-strong, rgba(255, 255, 255, 0.12));
-  --brillo-hover: var(--org-brillo, var(--white-8));
-  --brillo-active: var(--org-brillo-strong, var(--white-15));
-  --bg-hover: var(--brillo-hover);
-  --icon-button-active: var(--org-primary, var(--icon-button));
-
-  /* ── DEV — consola de desarrollador ── */
-  --dev-primary: #00e7ff;
-  --dev-primary-light: #66f0ff;
-  --dev-primary-dark: #00b8cc;
-  --dev-border: rgba(0, 231, 255, 0.2);
-  --dev-surface: rgba(21, 23, 28, 0.6);
-  --dev-surface-hover: rgba(255, 255, 255, 0.06);
-  --dev-rango-rookie: var(--grad-limon-verde-d);
-  --dev-rango-rookie-v: var(--grad-limon-verde);
-  --dev-rango-rookie-h: var(--grad-limon-verde-h);
-  --dev-rango-junior: var(--grad-verde-celeste-d);
-  --dev-rango-junior-v: var(--grad-verde-celeste);
-  --dev-rango-junior-h: var(--grad-verde-celeste-h);
-  --dev-rango-builder: var(--grad-celeste-azul-d);
-  --dev-rango-builder-v: var(--grad-celeste-azul);
-  --dev-rango-builder-h: var(--grad-celeste-azul-h);
-  --dev-rango-expert: var(--grad-azul-purpura-d);
-  --dev-rango-expert-v: var(--grad-azul-purpura);
-  --dev-rango-expert-h: var(--grad-azul-purpura-h);
-  --dev-rango-master: var(--grad-purpura-violeta-d);
-  --dev-rango-master-v: var(--grad-purpura-violeta);
-  --dev-rango-master-h: var(--grad-purpura-violeta-h);
-  --dev-rango-legend: var(--grad-violeta-fucsia-d);
-  --dev-rango-legend-v: var(--grad-violeta-fucsia);
-  --dev-rango-legend-h: var(--grad-violeta-fucsia-h);
+  --color-warning-light: rgba(255, 229, 0, 0.15);
+  --color-warning-border: rgba(255, 229, 0, 0.3);
+  --color-error: #ff4040;
+  --color-error-bg: rgba(255, 64, 64, 0.1);
+  --color-error-light: rgba(255, 64, 64, 0.15);
+  --color-error-border: rgba(255, 64, 64, 0.3);
+  --color-info: #a57cff; /* púrpura de LECTURA: prisma-purpura (#5b00ea) da 2.6:1 sobre negro */
+  --color-info-bg: rgba(165, 124, 255, 0.1);
+  --color-info-light: rgba(165, 124, 255, 0.15);
+  --color-info-border: rgba(165, 124, 255, 0.3);
 
   /* ── TIPOGRAFÍA ── */
-  --font-sans: 'Inter', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Apfel Grotezk', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif; /* títulos */
   --font-mono: 'Spline Sans Mono', ui-monospace, Menlo, monospace;
   --font-size-xs: 0.6875rem;
   --font-size-sm: 0.75rem;
@@ -590,20 +341,15 @@
   --fs-h1: clamp(1.375rem, 1.3vw + 1.08rem, 2rem);
   --fs-h2: clamp(1.25rem, 0.82vw + 1.06rem, 1.75rem);
   --fs-h3: clamp(1.0625rem, 0.43vw + 0.96rem, 1.375rem);
-  --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   --leading-tight: 1.15;
   --leading-normal: 1.6;
-  --leading-relaxed: 1.75;
   --tracking-tight: -0.01em;
-  --tracking-normal: 0;
   --tracking-mono: 0.04em;
-  --tracking-wide: 0.04em;
 
   /* ── ESPACIO (escala de 4px) ── */
-  --space-0: 0;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -611,18 +357,14 @@
   --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
-  --space-10: 2.5rem;
   --space-12: 3rem;
   --space-16: 4rem;
-  --space-20: 5rem;
 
   /* ── RADIO ── */
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-glass: 14px;
-  --radius-card: 16px;
   --radius-media: 2px;
   --radius-pill: 9999px;
 
@@ -631,46 +373,30 @@
   /* ── LAYOUT ── */
   --nav-width: 220px;
   --nav-width-collapsed: 51px;
-  --nav-item-height: 36px;
   --header-height: 46px;
-  --content-max: 1440px;
-  --route-progress: 2.5px;
 
   /* ── MODAL — piel común de los tres modales ── */
   --modal-radio: 20px;
-  --modal-ms: 320ms;
-  --modal-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
   /* ── SOMBRAS ── */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
   --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.40);
   --shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.50);
   --shadow-floating: 0 24px 64px rgba(0, 0, 0, 0.60);
-  --shadow-focus: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--org-primary, #00e7ff);
 
   /* ── MOVIMIENTO ── */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-route: cubic-bezier(0.33, 0, 0.2, 1);
-  --duration-flyout: 120ms;
   --duration-fast: 150ms;
   --duration-base: 200ms;
-  --duration-overlay: 220ms;
   --duration-modal: 250ms;
   --duration-route: 280ms;
-  --duration-nav: 300ms;
-  --duration-image: 450ms;
-  --duration-slow: 500ms;
-  --duration-progress: 1050ms;
-  --duration-shimmer: 1400ms;
   --transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease, opacity 200ms ease, transform 200ms ease;
   --transition-fast: color 150ms ease, background-color 150ms ease, border-color 150ms ease, opacity 150ms ease;
   --transition-slow: color 500ms ease, background-color 500ms ease, opacity 500ms ease, transform 500ms ease;
-  --transition-nav: color 300ms cubic-bezier(0.4, 0, 0.2, 1), background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), border-color 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms cubic-bezier(0.4, 0, 0.2, 1), transform 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 /* Puentes v1 → ADN: los nombres que v1 usa en 141k líneas apuntan al token nuevo. */
 :root {
-    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1); /* la curva de los modales (Adjuntar producto) */
     /* LA piel de los modales (forma principal). Toda familia con overlay/panel
        propio lee ESTOS tokens: un solo velo, un solo panel, una sola sombra. */
     --modal-velo: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.75) 100%);
@@ -680,26 +406,14 @@
     --modal-panel-radius: 18px;
     --modal-panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.5), 0 16px 40px -12px rgba(0, 0, 0, 0.6), 0 32px 80px -16px rgba(0, 0, 0, 0.5);
     --modal-divisor: 1px solid rgba(255, 255, 255, 0.05);
-    --font-family: var(--font-sans);
-    --spacing-xs: var(--space-1);
-    --spacing-sm: var(--space-2);
-    --spacing-md: var(--space-4);
-    --spacing-lg: var(--space-6);
-    --spacing-xl: var(--space-8);
-    --spacing-2xl: var(--space-12);
-    --brand-gradient: var(--espectro);
-    --platform-gradient: var(--gradiente-principal);
-    --accent-brand: var(--accent);
-    --accent-brand-soft: var(--accent-soft);
-    /* ADN de la org: OrgBrandTheme publica --brand-* (v1) y --org-* (ADN) a la vez. */
 }
 
 /* ========== RESET ========== */
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
-    font-family: var(--font-family);
-    background: var(--bg-primary);
+    font-family: var(--font-mono);
+    background: var(--bg-base);
     color: var(--text-primary);
     line-height: 1.6;
     overflow-x: hidden;
@@ -708,104 +422,75 @@ body {
     padding: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    accent-color: var(--accent-brand);
+    accent-color: var(--accent);
 }
 
-/* ========== BOTONES — Design glass unificado ========== */
+/* Los controles nativos no heredan la fuente del body (el navegador les pone la del sistema). */
+button, input, select, textarea, optgroup { font-family: inherit; }
+
+/* Títulos: Apfel Grotezk. El texto y la interfaz van en Spline Sans Mono (body). */
+h1, h2, h3, h4, h5, h6,
+.u-fs-hero, .u-fs-display, .u-fs-h1, .u-fs-h2, .u-fs-h3 { font-family: var(--font-display); }
+
+/* ========== BOTONES — SOLO 3 (Figma › Componentes › Button/1 · 2 · 3) ==========
+   1 · .btn--blanco   PRINCIPAL: la acción más importante de la vista (una por vista).
+   2 · .btn--oscuro   SECUNDARIO: la alternativa junto al principal.
+   3 · .btn--gris     TERCIARIO: cancelar, volver, saber más. Un .btn sin tipo se ve así.
+   Modificadores (no son estilos): .btn--peligro (texto error, SOLO con .btn--gris),
+   .btn--sm · .btn--lg · .btn--bloque · .btn--icono. Guardia: test/botones.test.js */
 .btn {
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    padding: var(--glass-padding);
-    font-family: var(--font-family);
+    gap: var(--space-2);
+    min-height: 45px;
+    padding: 14px 24px;
+    font-family: var(--font-mono);
     font-size: var(--font-size-base);
-    font-weight: 600;
-    line-height: 1.4;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: var(--transition);
+    font-weight: 300;
+    letter-spacing: var(--tracking-mono);
+    text-transform: uppercase;
+    line-height: 1.2;
     white-space: nowrap;
     text-decoration: none;
-    outline: none;
-    -webkit-tap-highlight-color: transparent;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-}
-/* Feedback de "press" al click: micro-scale. Da sensacion tactil a TODOS los
-   botones de la app (.btn no tenia :active). transform es compositable (0 layout). */
-.btn:active:not(:disabled):not([disabled]) { transform: scale(0.97); }
-.btn:disabled, .btn[disabled] {
-    opacity: 0.45;
-    pointer-events: none;
-}
-
-/* Primario: glass, texto primary */
-.btn-primary {
-    background: var(--glass-bg);
-    color: var(--text-primary);
-    border-color: var(--glass-border);
-}
-.btn-primary:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-primary);
-    border-color: var(--glass-border);
-}
-
-/* Secundario: glass */
-.btn-secondary {
-    background: var(--glass-bg);
-    color: var(--text-primary);
-    border: 1px solid var(--glass-border);
-}
-.btn-secondary:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-primary);
-}
-.app-shell .btn-secondary,
-#app-container .btn-secondary,
-body:not(.on-landing) .btn-secondary {
-    color: var(--text-primary);
-    border-color: var(--glass-border);
-    background: var(--glass-bg);
-}
-.app-shell .btn-secondary:hover:not(:disabled),
-#app-container .btn-secondary:hover:not(:disabled),
-body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-primary);
-}
-
-.btn-sm { padding: 0.35rem 0.75rem; font-size: var(--font-size-sm); }
-.btn-lg { padding: 0.75rem 1.5rem; font-size: var(--font-size-md); }
-.btn-block { width: 100%; }
-
-.btn-icon {
-    box-sizing: border-box;
-    width: 36px;
-    height: 36px;
-    padding: 0;
     border-radius: var(--radius-sm);
-    background: var(--glass-bg);
-    color: var(--text-secondary);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    border: 1px solid var(--border-hairline-strong);
+    background: transparent;
+    color: var(--white-80);
     cursor: pointer;
     transition: var(--transition);
-    font-size: var(--font-size-base);
+    -webkit-tap-highlight-color: transparent;
 }
-.btn-icon:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); }
-.btn-icon.btn-secondary { background: var(--glass-bg); border-color: var(--glass-border); color: var(--text-secondary); }
-.btn-icon.btn-secondary:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); }
-.btn-icon-sm { width: 28px; height: 28px; font-size: var(--font-size-sm); border-radius: var(--glass-radius); }
-.btn-icon-xs { width: 24px; height: 24px; font-size: var(--font-size-xs); border-radius: var(--glass-radius); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* press: micro-escala, compositable (0 layout) */
+.btn:active:not(:disabled):not([disabled]) { transform: scale(0.97); }
+.btn:disabled, .btn[disabled] { opacity: 0.45; pointer-events: none; }
+
+.btn--blanco { background: var(--white-95); border-color: var(--white-95); color: var(--bg-base); font-weight: var(--font-weight-medium); }
+.btn--blanco:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
+
+.btn--oscuro {
+    background: var(--white-8);
+    border-color: var(--border-hairline);
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+}
+.btn--oscuro:hover:not(:disabled) { background: var(--white-12); }
+
+.btn--gris { background: transparent; border-color: var(--border-hairline-strong); color: var(--white-80); }
+.btn:not(.btn--blanco):not(.btn--oscuro):hover:not(:disabled) { background: var(--white-5); color: var(--text-primary); }
+
+.btn--peligro, .btn--peligro:hover:not(:disabled) { color: var(--color-error); }
+.btn--peligro:hover:not(:disabled) { background: var(--color-error-bg); border-color: var(--color-error-border); }
+
+.btn--sm { min-height: 32px; padding: 6px 12px; font-size: var(--font-size-sm); }
+.btn--lg { min-height: 52px; padding: 16px 32px; font-size: var(--font-size-md); }
+.btn--bloque { width: 100%; }
+.btn--icono { width: 36px; height: 36px; min-height: 0; padding: 0; letter-spacing: 0; }
+.btn--icono.btn--sm { width: 28px; height: 28px; font-size: var(--font-size-sm); }
 
 /* ========== MODAL — Un solo sistema ========== */
 .modal {
@@ -815,7 +500,7 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-md);
+    padding: var(--space-4);
     overflow-y: auto;
     box-sizing: border-box;
 }
@@ -832,7 +517,7 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     backdrop-filter: var(--modal-velo-blur);
     -webkit-backdrop-filter: var(--modal-velo-blur);
     z-index: 0;
-    animation: overlayFadeIn 0.45s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+    animation: overlayFadeIn 0.45s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 @keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -858,7 +543,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    animation: modalIn 0.55s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+    animation: modalIn 0.55s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .modal-content--sm { max-width: min(480px, calc(100vw - 2rem)); }
 .modal-content--md { max-width: min(640px, calc(100vw - 2rem)); }
@@ -901,11 +586,11 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     font-weight: 500;
     letter-spacing: -0.003em;
     cursor: pointer;
-    transition: color 0.25s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)),
-                background 0.25s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)),
-                border-color 0.25s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+    transition: color 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+                background 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+                border-color 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
-.modal-back i { transition: transform 0.35s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)); }
+.modal-back i { transition: transform 0.35s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)); }
 .modal-back:hover { color: #fff; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.14); }
 .modal-back:hover i { transform: translateX(-3px); }
 .modal-back[hidden] { display: none; }
@@ -942,8 +627,8 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     border-radius: 10px;
     font-size: 1.25rem;
     line-height: 1;
-    transition: color 0.25s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)),
-                background 0.25s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+    transition: color 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+                background 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .modal-close:hover {
     color: rgba(255, 255, 255, 0.95);
@@ -1019,7 +704,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 }
 
 .close-btn:hover {
-    background: var(--bg-hover);
+    background: var(--brillo-hover);
     color: var(--text-primary);
 }
 
@@ -1034,7 +719,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     z-index: var(--z-modal-backdrop);
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-md);
+    padding: var(--space-4);
 }
 .new-product-modal.active,
 .org-modal.modal-open,
@@ -1045,7 +730,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 
 /* ========== FORMULARIOS — Una sola definición ========== */
 .form-group {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--space-4);
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
@@ -1069,18 +754,18 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 .form-input, .form-textarea {
     width: 100%;
     padding: 0.6rem 0.75rem;
-    font-family: var(--font-family);
+    font-family: var(--font-mono);
     font-size: var(--font-size-base);
     color: var(--text-primary);
-    background: var(--bg-primary);
+    background: var(--bg-base);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     outline: none;
     transition: var(--transition);
 }
 .form-input:focus, .form-textarea:focus {
-    border-color: var(--accent-brand);
-    box-shadow: 0 0 0 2px var(--accent-brand-soft);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .form-input::placeholder, .form-textarea::placeholder { color: var(--text-disabled); }
 .form-input:disabled, .form-textarea:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -1092,16 +777,16 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 .form-control {
     width: 100%;
     padding: 0.6rem 0.75rem;
-    font-family: var(--font-family);
+    font-family: var(--font-mono);
     font-size: var(--font-size-base);
     color: var(--text-primary);
-    background: var(--bg-primary);
+    background: var(--bg-base);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     outline: none;
     transition: var(--transition);
 }
-.form-control:focus { border-color: var(--accent-brand); box-shadow: 0 0 0 2px var(--accent-brand-soft); }
+.form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 .form-control::placeholder { color: var(--text-disabled); }
 .form-control:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -1127,11 +812,11 @@ input[type="search"]::-webkit-search-results-decoration {
 .form-select {
     width: 100%;
     padding: 0.6rem 2.5rem 0.6rem 0.75rem;
-    font-family: var(--font-family);
+    font-family: var(--font-mono);
     font-size: var(--font-size-base);
     color: var(--text-primary);
     background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
@@ -1144,8 +829,8 @@ input[type="search"]::-webkit-search-results-decoration {
     background-position: right 0.75rem center;
 }
 .form-select:focus {
-    border-color: var(--accent-brand);
-    box-shadow: 0 0 0 2px var(--accent-brand-soft);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .form-select:disabled { opacity: 0.5; cursor: not-allowed; }
 .form-hint { font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 0.2rem; }
@@ -1154,26 +839,26 @@ input[type="search"]::-webkit-search-results-decoration {
 .card {
     box-sizing: border-box;
     background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
     padding: 1.25rem;
     transition: var(--transition);
 }
-.card:hover { border-color: var(--glass-border); }
+.card:hover { border-color: var(--border-hairline); }
 .card-interactive { cursor: pointer; }
 /* Micro-lift en hover: transform es compositable (0 layout). Da sensacion premium
    a las cards clickeables sin reflow. La transicion ya viene de var(--transition). */
 .card-interactive:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
-.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--spacing-md); }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
 .card-body { flex: 1; }
-.card-footer { display: flex; align-items: center; gap: var(--spacing-sm); margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--glass-border); }
+.card-footer { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-hairline); }
 
 /* Clases utilitarias glass: 3 variantes según contraste necesario */
 .glass {
     background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-hairline);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
@@ -1202,22 +887,29 @@ input[type="search"]::-webkit-search-results-decoration {
     border-radius: var(--glass-radius);
 }
 
-/* ========== BADGES ========== */
+/* ========== BADGES — UNO (Figma › Componentes › Badge) ==========
+   Píldora SÓLIDA del sub-acento, texto negro en negrita e icono de trazo. Un estado = un color:
+   .badge (neutro, gris) · .badge--exito · .badge--advertencia · .badge--error · .badge--info.
+   Texto negro en los 5: contraste AA medido (≥ 5.8:1). .badge--sm para tablas y tarjetas. */
 .badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.2rem 0.6rem;
-    font-size: var(--font-size-xs);
-    font-weight: 500;
+    gap: var(--space-2);
+    padding: 9px 18px 9px 14px;
     border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.2;
     white-space: nowrap;
-    background: var(--bg-hover);
-    color: var(--text-secondary);
+    background: var(--icon-button);
+    color: var(--bg-base);
 }
-.badge-success { background: var(--color-success-bg); color: var(--color-success); }
-.badge-warning { background: var(--color-warning-bg); color: var(--color-warning); }
-.badge-error { background: var(--color-error-bg); color: var(--color-error); }
+.badge--exito { background: var(--color-success); }
+.badge--advertencia { background: var(--color-warning); }
+.badge--error { background: var(--color-error); }
+.badge--info { background: var(--color-info); }
+.badge--sm { gap: var(--space-1); padding: 3px 10px 3px 8px; font-size: var(--font-size-xs); }
 
 /* ========== UTILIDADES ========== */
 .text-xs { font-size: var(--font-size-xs); }
@@ -1235,7 +927,7 @@ input[type="search"]::-webkit-search-results-decoration {
    abajo tienen specificity 0,0,2,1+ y garantizan el outline en teclado.
    :focus-visible solo matchea cuando el browser detecta navegación por
    teclado, así que clicks de mouse/touch no muestran el ring. */
-*:focus-visible { outline: 2px solid var(--accent-brand); outline-offset: 2px; }
+*:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -1250,7 +942,7 @@ textarea:focus-visible,
 [role="link"]:focus-visible,
 [role="switch"]:focus-visible,
 [contenteditable]:focus-visible {
-  outline: 2px solid var(--accent-brand);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -1261,7 +953,7 @@ textarea:focus-visible,
     width: 100%;
     max-width: 100%;
     min-height: 100vh;
-    background: var(--bg-primary);
+    background: var(--bg-base);
     transition: opacity 0.5s ease-out;
     overflow-x: hidden;
     overflow-y: auto;
@@ -1272,7 +964,7 @@ textarea:focus-visible,
 /* El degradado dinamico de fondo del #app-container (div fixed #brand-bg-overlay
    + clases body.org-brand-context / body.dev-rank-context que volvian la vista
    transparente) fue eliminado por completo. El fondo de las views queda opaco con
-   --bg-primary. El tinte de marca dinamico (--brand-gradient-dynamic*) que vive
+   --bg-base. El tinte de marca dinamico (--org-gradient*) que vive
    DENTRO de la vista de marca se conserva intacto. */
 
 /* Cuando está el chat de Vera, el scroll vive en #chatcontainer para evitar doble scroll */
@@ -1407,7 +1099,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     position: absolute;
     inset: 0;
     width: 45%;
-    background: var(--brand-gradient, linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.9), rgba(255,255,255,0.2)));
+    background: var(--espectro);
     border-radius: 0 3px 3px 0;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
     /* animation-play-state pausado por defecto: solo corre cuando --active (abajo).
@@ -1429,7 +1121,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-black);
+    background: var(--bg-base);
     pointer-events: auto;
     transition: opacity 0.35s ease-out;
 }
@@ -1440,7 +1132,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     width: 65%;
     max-width: 520px;
     height: 1.5px;
-    background: var(--brand-gradient);
+    background: var(--espectro);
     background-size: 200% 100%;
     animation: loader-gradient-cycle 6s linear infinite;
 }
@@ -1456,7 +1148,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     right: 20px;
     z-index: var(--z-notification);
     padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -1493,7 +1185,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 .error-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
 
 .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: var(--radius-xs); }
+.custom-scrollbar::-webkit-scrollbar-track { background: var(--bg-card); border-radius: var(--radius-xs); }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: var(--radius-xs); }
 /* ========== Print stylesheet ==========
    Pensado para que los users puedan imprimir briefs / tareas / vistas con

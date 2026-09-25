@@ -197,8 +197,8 @@ class BrandOrganizationView extends BaseView {
 
   onLeave() {
     this.isActive = false;
-    // resetBrandPrimaryBrillo ya no toca --brand-gradient-dynamic (lo gestiona OrgBrandTheme),
-    // por lo que la llamada aquí solo limpia --brand-primary* y no afecta otras vistas.
+    // resetBrandPrimaryBrillo ya no toca --org-gradient (lo gestiona OrgBrandTheme),
+    // por lo que la llamada aquí solo limpia --org-primary* y no afecta otras vistas.
     this.resetBrandPrimaryBrillo();
     if (window.currentOrgId && window.OrgBrandTheme && typeof window.OrgBrandTheme.applyOrgBrandTheme === 'function') {
       window.OrgBrandTheme.applyOrgBrandTheme(window.currentOrgId);
@@ -468,7 +468,7 @@ class BrandOrganizationView extends BaseView {
   /** Hook llamado por ColorEditor.mixin.js tras cada cambio de color. */
   _refreshVisualChrome() {
     this.applyBrandBackgroundGradient(true);
-    // Re-sincroniza el tema global (--brand-gradient-dynamic* + --brand-primary*)
+    // Re-sincroniza el tema global (--org-gradient* + --org-primary*)
     // para que TODA la plataforma vea el cambio sin esperar al onLeave.
     const orgId = (typeof window !== 'undefined') ? window.currentOrgId : null;
     if (orgId && window.OrgBrandTheme) {
@@ -496,7 +496,7 @@ class BrandOrganizationView extends BaseView {
       const brandGradient = this.buildBrandGradientCss(hexes);
       gradientEl.style.background = `${brandGradient}, ${neutralBg}`;
       gradientEl.setAttribute('data-brand-gradient', 'true');
-      // --brand-gradient-dynamic* las gestiona OrgBrandTheme (single source of
+      // --org-gradient* las gestiona OrgBrandTheme (single source of
       // truth para toda la plataforma). _refreshVisualChrome invalida su cache
       // y re-aplica tras un cambio local de colores.
       this.applyBrandPrimaryBrillo();
@@ -555,21 +555,21 @@ class BrandOrganizationView extends BaseView {
     const g = parseInt(hex.slice(2, 4), 16);
     const b = parseInt(hex.slice(4, 6), 16);
     const root = document.documentElement;
-    root.style.setProperty('--brand-primary', palette.primary);
-    root.style.setProperty('--brand-primary-rgb', `${r},${g},${b}`);
-    root.style.setProperty('--brand-primary-brillo', this.hexToRgba(palette.primary, 0.12));
-    root.style.setProperty('--brand-primary-brillo-strong', this.hexToRgba(palette.primary, 0.18));
+    root.style.setProperty('--org-primary', palette.primary);
+    root.style.setProperty('--org-primary-rgb', `${r},${g},${b}`);
+    root.style.setProperty('--org-brillo', this.hexToRgba(palette.primary, 0.12));
+    root.style.setProperty('--org-brillo-strong', this.hexToRgba(palette.primary, 0.18));
   }
 
   /** Vuelve al brillo por defecto (cuando no hay marca o se sale de brands).
-   *  SOLO borra las vars --brand-primary*; las vars --brand-gradient-dynamic* las gestiona
+   *  SOLO borra las vars --org-primary*; las vars --org-gradient* las gestiona
    *  exclusivamente OrgBrandTheme para no borrar el tema de toda la plataforma. */
   resetBrandPrimaryBrillo() {
     const root = document.documentElement;
-    root.style.removeProperty('--brand-primary');
-    root.style.removeProperty('--brand-primary-rgb');
-    root.style.removeProperty('--brand-primary-brillo');
-    root.style.removeProperty('--brand-primary-brillo-strong');
+    root.style.removeProperty('--org-primary');
+    root.style.removeProperty('--org-primary-rgb');
+    root.style.removeProperty('--org-brillo');
+    root.style.removeProperty('--org-brillo-strong');
   }
 
   // ============================================
@@ -748,7 +748,7 @@ class BrandOrganizationView extends BaseView {
     const colors = (this.brandColors || []).slice(0, MAX_COLORS);
 
     const swatchesHtml = colors.map(color => {
-      const hex = color.hex_value || color.hex_code || color.color_value || color.hex || 'var(--bg-tertiary)';
+      const hex = color.hex_value || color.hex_code || color.color_value || color.hex || 'var(--bg-base)';
       const colorId = color.id;
       return `
         <div class="color-swatch" style="background: ${hex};" data-color-id="${colorId}">

@@ -125,7 +125,7 @@ class OrganizationView extends BaseView {
               </div>
               <div id="orgAsideMercado"></div>
               <div class="org-subbrands-list" id="orgSubbrandsList"><p class="org-placeholder">${__('Cargando…')}</p></div>
-              <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nuevo%20mercado&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20un%20nuevo%20mercado%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-secondary btn-sm org-aside-cta" id="orgRequestBrandBtn"><i class="aisc-ico aisc-ico--send"></i> ${__('Solicitar nuevo mercado')}</a>
+              <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nuevo%20mercado&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20un%20nuevo%20mercado%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn--oscuro btn--sm org-aside-cta" id="orgRequestBrandBtn"><i class="aisc-ico aisc-ico--send"></i> ${__('Solicitar nuevo mercado')}</a>
             </section>
           </div>
         </aside>
@@ -162,7 +162,7 @@ class OrganizationView extends BaseView {
                 </div>
               </div>
               <div class="org-members-list" id="orgMembersList"></div>
-              <button type="button" class="btn btn-primary org-aside-cta" id="orgInviteBtn">
+              <button type="button" class="btn btn--blanco org-aside-cta" id="orgInviteBtn">
                 <i class="aisc-ico aisc-ico--user-registration"></i> ${__('Invitar')}
               </button>
             </section>
@@ -331,7 +331,7 @@ class OrganizationView extends BaseView {
             <h2>${__('Sesiones activas')}</h2>
             <p class="org-section-desc">${__('Dispositivos donde tu cuenta tiene sesión abierta. Cierra cualquier sesión que no reconozcas.')}</p>
           </div>
-          <button type="button" class="btn btn-secondary" id="orgSessionsRevokeAllBtn">
+          <button type="button" class="btn btn--oscuro" id="orgSessionsRevokeAllBtn">
             <i class="aisc-ico aisc-ico--logout"></i> ${__('Cerrar todas las otras sesiones')}
           </button>
         </div>
@@ -395,8 +395,8 @@ class OrganizationView extends BaseView {
         </select>
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" id="orgInviteCancel">${__('Cancelar')}</button>
-        <button type="submit" class="btn btn-primary">${__('Enviar invitación')}</button>
+        <button type="button" class="btn btn--oscuro" id="orgInviteCancel">${__('Cancelar')}</button>
+        <button type="submit" class="btn btn--blanco">${__('Enviar invitación')}</button>
       </div>
     </form>
   </div>
@@ -429,8 +429,8 @@ class OrganizationView extends BaseView {
         </div>
         <p class="org-mfa-error" id="orgMfaEnrollError" hidden></p>
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="orgMfaEnrollCancel">${__('Cancelar')}</button>
-          <button type="submit" class="btn btn-primary" id="orgMfaEnrollSubmit">${__('Verificar y activar')}</button>
+          <button type="button" class="btn btn--oscuro" id="orgMfaEnrollCancel">${__('Cancelar')}</button>
+          <button type="submit" class="btn btn--blanco" id="orgMfaEnrollSubmit">${__('Verificar y activar')}</button>
         </div>
       </form>
     </div>
@@ -564,7 +564,7 @@ class OrganizationView extends BaseView {
               <strong>${__('2FA no activa')}</strong>
               <p>${__('Tu cuenta usa solo email + contraseña. Activa la autenticación de 2 pasos para una capa extra de seguridad.')}</p>
             </div>
-            <button type="button" class="btn btn-primary" id="orgMfaEnrollBtn">
+            <button type="button" class="btn btn--blanco" id="orgMfaEnrollBtn">
               <i class="aisc-ico aisc-ico--lock"></i> ${__('Activar 2FA')}
             </button>
           </div>
@@ -579,7 +579,7 @@ class OrganizationView extends BaseView {
               <strong>${__('2FA activa')}</strong>
               <p>${__('Factor TOTP enrolado el {fecha}. En tu próximo login se te pedirá el código de 6 dígitos.', { fecha: this.escapeHtml(created) })}</p>
             </div>
-            <button type="button" class="btn btn-secondary" data-factor-id="${this.escapeHtml(f.id)}" id="orgMfaUnenrollBtn">
+            <button type="button" class="btn btn--oscuro" data-factor-id="${this.escapeHtml(f.id)}" id="orgMfaUnenrollBtn">
               <i class="aisc-ico aisc-ico--delete"></i> ${__('Desactivar')}
             </button>
           </div>
@@ -1017,7 +1017,7 @@ class OrganizationView extends BaseView {
     // Cambiar/cancelar la suscripción no tiene puerta para una persona (planes.md):
     // un solo camino real, escribir, en vez de botones que prometen.
     const stripePortalBtn = '';
-    const reactivateBtn = `<a class="btn btn-secondary btn-sm" href="mailto:contact@aismartcontent.io?subject=Suscripci%C3%B3n%20${encodeURIComponent(this.org?.name || '')}">${__('Cambiar o cancelar el plan: escríbenos')}</a>`;
+    const reactivateBtn = `<a class="btn btn--oscuro btn--sm" href="mailto:contact@aismartcontent.io?subject=Suscripci%C3%B3n%20${encodeURIComponent(this.org?.name || '')}">${__('Cambiar o cancelar el plan: escríbenos')}</a>`;
 
     const limits = this.querySelector('#orgBillingLimits');
 
@@ -1187,7 +1187,7 @@ class OrganizationView extends BaseView {
           <span class="org-res-lbl">${__('Créditos mensuales restantes')}</span>
           <div class="org-cred-num">${Math.round(c.disponibles).toLocaleString('es')}<span class="org-res-num-of"> / ${Math.round(c.total).toLocaleString('es')}</span></div>
         </div>
-        <a href="${this._esc(this._creditosHref())}" class="btn btn-secondary btn-sm">${__('Comprar créditos')}</a>
+        <a href="${this._esc(this._creditosHref())}" class="btn btn--oscuro btn--sm">${__('Comprar créditos')}</a>
       </div>
       <div class="org-res-bar" role="img" aria-label="${pct}%">
         <span class="org-res-bar-fill" style="transform:scaleX(${pct / 100})"></span>
@@ -1365,7 +1365,7 @@ class OrganizationView extends BaseView {
           ${campo('postal_code', __('Código postal'))}
         </div>
         <div class="org-bill-limits-actions">
-          <button type="submit" class="btn btn-primary" id="orgFichaSubmit"${canEdit ? '' : ' disabled'}><i class="aisc-ico aisc-ico--save"></i> ${__('Guardar datos de facturación')}</button>
+          <button type="submit" class="btn btn--blanco" id="orgFichaSubmit"${canEdit ? '' : ' disabled'}><i class="aisc-ico aisc-ico--save"></i> ${__('Guardar datos de facturación')}</button>
         </div>
       </form>`);
     el.querySelector('#orgFichaForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveFicha(); });
@@ -1519,7 +1519,7 @@ class OrganizationView extends BaseView {
            </select>`
         : `<span class="org-member-role org-role-${(roleLabel || 'member').toLowerCase()}">${this.escapeHtml(roleLabel)}</span>`;
       const removeBtn = canRemove
-        ? `<button type="button" class="btn btn-ghost btn-sm org-member-remove" data-member-id="${this.escapeHtml(m.id)}" title="${__('Quitar')}"><i class="aisc-ico aisc-ico--close"></i></button>`
+        ? `<button type="button" class="btn btn--gris btn--sm org-member-remove" data-member-id="${this.escapeHtml(m.id)}" title="${__('Quitar')}"><i class="aisc-ico aisc-ico--close"></i></button>`
         : '';
       return `
         <div class="org-member-row" data-member-id="${this.escapeHtml(m.id)}">
@@ -1550,8 +1550,8 @@ class OrganizationView extends BaseView {
             <span class="org-invitation-meta">${this.escapeHtml(inv.role)} · ${__('expira {fecha}', { fecha: expires })}</span>
           </div>
           <div class="org-invitation-actions">
-            <button type="button" class="btn btn-ghost btn-sm org-invitation-resend" data-invitation-id="${this.escapeHtml(inv.id)}">${inv.estado === 'caducada' ? __('Renovar') : __('Reenviar')}</button>
-            <button type="button" class="btn btn-ghost btn-sm org-invitation-revoke" data-invitation-id="${this.escapeHtml(inv.id)}">${__('Revocar')}</button>
+            <button type="button" class="btn btn--gris btn--sm org-invitation-resend" data-invitation-id="${this.escapeHtml(inv.id)}">${inv.estado === 'caducada' ? __('Renovar') : __('Reenviar')}</button>
+            <button type="button" class="btn btn--gris btn--sm org-invitation-revoke" data-invitation-id="${this.escapeHtml(inv.id)}">${__('Revocar')}</button>
           </div>
         </div>`;
     }).join(''));
@@ -1565,7 +1565,7 @@ class OrganizationView extends BaseView {
    * su propia linea porque `credit_usage.metadata.platform` guarda la red
    * —medido: instagram 814 usos, facebook 68, tiktok 67, youtube 69, x 64—.
    *
-   * Los colores salen del ESPECTRO DE PLATAFORMA (--pf-1..7 de bundle.css),
+   * Los colores salen del ESPECTRO DE PLATAFORMA (--prisma-* de bundle.css),
    * caminando de naranja a azul noche. No se usa el degradado de la marca del
    * cliente: este grafico habla de la plataforma y su consumo, no de la marca.
    *
@@ -1712,7 +1712,7 @@ class OrganizationView extends BaseView {
           <h3 class="org-uchart-title">${__('Consumo por miembro')}</h3>
           <p class="org-uchart-desc">${__('Quién gastó los créditos del período. Lo automático son sensores y flujos corriendo solos.')}</p>
         </div>
-        <button type="button" class="btn btn-secondary btn-sm" id="orgUsageCsv">
+        <button type="button" class="btn btn--oscuro btn--sm" id="orgUsageCsv">
           <i class="aisc-ico aisc-ico--document"></i> ${__('Exportar CSV')}
         </button>
       </div>
@@ -1882,9 +1882,9 @@ class OrganizationView extends BaseView {
       </div>
       ${paginas > 1 ? `
         <div class="org-hist-pager">
-          <button type="button" class="btn btn-secondary btn-sm" data-hist="prev" ${pagina === 0 ? 'disabled' : ''}>${__('Anterior')}</button>
+          <button type="button" class="btn btn--oscuro btn--sm" data-hist="prev" ${pagina === 0 ? 'disabled' : ''}>${__('Anterior')}</button>
           <span>${__('Página {n} de {t}', { n: pagina + 1, t: paginas })}</span>
-          <button type="button" class="btn btn-secondary btn-sm" data-hist="next" ${pagina >= paginas - 1 ? 'disabled' : ''}>${__('Siguiente')}</button>
+          <button type="button" class="btn btn--oscuro btn--sm" data-hist="next" ${pagina >= paginas - 1 ? 'disabled' : ''}>${__('Siguiente')}</button>
         </div>` : ''}`);
 
     el.querySelectorAll('[data-hist]').forEach((b) => {
@@ -2103,7 +2103,7 @@ class OrganizationView extends BaseView {
             ${n.body ? `<span class="org-notif-body">${this.escapeHtml(n.body)}</span>` : ''}
             <span class="org-notif-meta">${this.escapeHtml(when)} · ${this.escapeHtml(n.type || '')}</span>
           </div>
-          ${n.action_url ? `<a href="${this.escapeHtml(n.action_url)}" class="btn btn-secondary btn-sm">${this.escapeHtml(n.action_label || __('Abrir'))}</a>` : ''}
+          ${n.action_url ? `<a href="${this.escapeHtml(n.action_url)}" class="btn btn--oscuro btn--sm">${this.escapeHtml(n.action_label || __('Abrir'))}</a>` : ''}
         </div>`;
     }).join(''));
   }
@@ -2186,7 +2186,7 @@ class OrganizationView extends BaseView {
             <div class="org-aviso-canales">${window.AvisosDatos.CANALES_EDITABLES.map(check).join('')}</div>
             <div class="org-aviso-acciones">
               <label class="org-aviso-canal"><input type="checkbox" data-aviso-silencio="${this._esc(t.code)}"${p?.is_muted ? ' checked' : ''}> ${__('Silencio')}</label>
-              ${p ? `<button type="button" class="btn btn-ghost btn-sm" data-aviso-defecto="${this._esc(t.code)}">${__('Volver al defecto')}</button>` : ''}
+              ${p ? `<button type="button" class="btn btn--gris btn--sm" data-aviso-defecto="${this._esc(t.code)}">${__('Volver al defecto')}</button>` : ''}
             </div>
           </div>`;
       };

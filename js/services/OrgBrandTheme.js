@@ -1,7 +1,7 @@
 /**
  * OrgBrandTheme - Aplica el degradado/resaltados de marca a toda la org.
  * Toma los colores de la marca y setea en :root
- * --brand-gradient-dynamic, --brand-gradient-dynamic-vertical, --brand-primary, etc.
+ * --org-gradient, --org-gradient-v, --org-primary, etc.
  * para que production, products, flows, identity, settings usen el mismo resaltado.
  *
  * Base nueva (25/09): los colores vienen en `mi_contexto().organizations[].colores`
@@ -71,7 +71,7 @@
 
   // ADN de la org (v2, Git-AISC-Frontend src/adn/org, d43e948): las mismas
   // variables con el nombre del ADN. Los módulos nuevos (fondos.css, primitivas)
-  // leen --org-*; los de v1 siguen leyendo --brand-*. Se publican y se limpian juntas.
+  // leen --org-*; ya no hay --brand-*: se retiraron el 25/09 (acentos a 3).
   const ORG_VARS = ['--org-primary', '--org-primary-rgb', '--org-secondary', '--org-brillo', '--org-brillo-strong',
     '--org-gradient', '--org-gradient-v', '--org-color-light', '--org-color-mid', '--org-color-dark'];
 
@@ -79,15 +79,6 @@
     lastAppliedHexes = [];
     lastAppliedOrgId = null;
     ORG_VARS.forEach((v) => root.style.removeProperty(v));
-    root.style.removeProperty('--brand-primary');
-    root.style.removeProperty('--brand-primary-rgb');
-    root.style.removeProperty('--brand-primary-brillo');
-    root.style.removeProperty('--brand-primary-brillo-strong');
-    root.style.removeProperty('--brand-gradient-dynamic');
-    root.style.removeProperty('--brand-gradient-dynamic-vertical');
-    root.style.removeProperty('--brand-color-light');
-    root.style.removeProperty('--brand-color-mid');
-    root.style.removeProperty('--brand-color-dark');
   }
 
   /**
@@ -116,8 +107,6 @@
     lastAppliedHexes = hexes.slice(0, 4);
     const gradient = buildBrandGradientCss(hexes, 135);
     const gradientVertical = buildBrandGradientCss(hexes, 180);
-    root.style.setProperty('--brand-gradient-dynamic', gradient);
-    root.style.setProperty('--brand-gradient-dynamic-vertical', gradientVertical);
     root.style.setProperty('--org-gradient', gradient);
     root.style.setProperty('--org-gradient-v', gradientVertical);
     const palette = getBrandUIPalette(hexes);
@@ -127,10 +116,6 @@
         const r = parseInt(hex.slice(0, 2), 16);
         const g = parseInt(hex.slice(2, 4), 16);
         const b = parseInt(hex.slice(4, 6), 16);
-        root.style.setProperty('--brand-primary', palette.primary);
-        root.style.setProperty('--brand-primary-rgb', r + ',' + g + ',' + b);
-        root.style.setProperty('--brand-primary-brillo', hexToRgba(palette.primary, 0.12));
-        root.style.setProperty('--brand-primary-brillo-strong', hexToRgba(palette.primary, 0.18));
         root.style.setProperty('--org-primary', palette.primary);
         root.style.setProperty('--org-primary-rgb', r + ', ' + g + ', ' + b);
         if (palette.secondary) root.style.setProperty('--org-secondary', palette.secondary);
@@ -142,7 +127,7 @@
     // Color mas claro, intermedio y mas oscuro de la marca (por luminosidad HSL).
     // Los usa el fondo radial del dashboard y del chat de Vera:
     //   nucleo = mas claro -> INTERMEDIO -> #141517 -> #000 (plataforma).
-    // El segundo stop (--brand-color-mid = 2do mas claro) es clave: si usaramos el
+    // El segundo stop (--org-color-mid = 2do mas claro) es clave: si usaramos el
     // mas oscuro y la marca tiene un negro puro (ej. WAKEUP), el radial saltaba de
     // amarillo directo a negro y se comia el naranja. La cola #141517->plataforma
     // ya aporta el oscuro, asi que el 2do stop debe ser el color de acento medio.
@@ -155,9 +140,6 @@
         const lightest = withL[withL.length - 1].hex;
         const darkest = withL[0].hex;
         const mid = withL.length >= 2 ? withL[withL.length - 2].hex : lightest;
-        root.style.setProperty('--brand-color-dark', darkest);
-        root.style.setProperty('--brand-color-light', lightest);
-        root.style.setProperty('--brand-color-mid', mid);
         root.style.setProperty('--org-color-dark', darkest);
         root.style.setProperty('--org-color-light', lightest);
         root.style.setProperty('--org-color-mid', mid);

@@ -60,7 +60,7 @@ class InvitacionView extends BaseView {
     const el = this._pintar(`
       <h1 class="signin-recover-title">${this.escapeHtml(titulo)}</h1>
       <p class="signin-recover-desc">${this.escapeHtml(texto)}</p>
-      ${accion ? `<button type="button" class="btn btn-primary signin-submit" id="invitacionAccion">${this.escapeHtml(accion.texto)}</button>` : ''}`);
+      ${accion ? `<button type="button" class="btn btn--blanco signin-submit" id="invitacionAccion">${this.escapeHtml(accion.texto)}</button>` : ''}`);
     if (el && accion) this.addEventListener(el.querySelector('#invitacionAccion'), 'click', accion.hacer);
   }
 
@@ -116,7 +116,7 @@ class InvitacionView extends BaseView {
           <small class="signin-field-hint" id="invClaveAyuda">${__('Entre 12 y 72 caracteres, con al menos una letra y un número.')}</small>
         </div>
         <p class="signin-mfa-error" id="invError" role="alert" hidden></p>
-        <button type="submit" class="btn btn-primary signin-submit" id="invEnviar">${__('Crear acceso y entrar')}</button>
+        <button type="submit" class="btn btn--blanco signin-submit" id="invEnviar">${__('Crear acceso y entrar')}</button>
         <button type="button" class="signin-recover-back signin-recover-back-btn" id="invYaTengo">${__('Ya tengo cuenta')}</button>
       </form>`);
     if (!el) return;

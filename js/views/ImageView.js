@@ -324,7 +324,7 @@ class ImageView extends BaseView {
                       <img id="imageResultPicture" class="video-result-player image-result-picture" alt="${window.__('Imagen generada')}">
                     </div>
                     <div class="video-result-actions">
-                      <a id="imageResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
+                      <a id="imageResultDownload" class="btn btn--oscuro video-download-btn" href="#" download target="_blank" rel="noopener">
                         <i class="aisc-ico aisc-ico--dowload"></i> ${window.__('Descargar')}
                       </a>
                     </div>

@@ -84,7 +84,7 @@ class CancelSubscriptionView extends BaseView {
           <p>${this.subscription?.status === 'cancelled'
               ? __('Tu suscripción ya está cancelada.')
               : __('Esta organización no tiene una suscripción activa que cancelar.')}</p>
-          <a href="${this._plansRoute()}" class="btn btn-primary">
+          <a href="${this._plansRoute()}" class="btn btn--blanco">
             <i class="aisc-ico aisc-ico--arrow-left"></i> ${__('Volver a planes')}
           </a>
         </div>
@@ -136,10 +136,10 @@ class CancelSubscriptionView extends BaseView {
           </details>
 
           <div class="cancel-actions">
-            <button type="button" class="btn btn-secondary" id="cancelKeep">
+            <button type="button" class="btn btn--oscuro" id="cancelKeep">
               ${__('Conservar mi suscripción')}
             </button>
-            <button type="button" class="btn btn-danger" id="cancelConfirm">
+            <button type="button" class="btn btn--gris btn--peligro" id="cancelConfirm">
               <i class="aisc-ico aisc-ico--close"></i> ${__('Cancelar suscripción')}
             </button>
           </div>

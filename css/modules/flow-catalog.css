@@ -8,7 +8,7 @@
   min-height: 100vh;
   width: 100%;
   padding-bottom: 3rem;
-  background: var(--view-bg-base);
+  background: var(--bg-base);
 }
 
 .flow-catalog-loading {
@@ -20,7 +20,7 @@
   gap: 1rem;
   color: var(--text-muted);
 }
-.flow-catalog-loading .fa-spin { font-size: var(--font-size-3xl); color: var(--accent-warm); }
+.flow-catalog-loading .fa-spin { font-size: var(--font-size-3xl); color: var(--icon-button); }
 
 /* ---------- HERO CAROUSEL ---------- */
 /* Estado vacío: mensaje PROXIMAMENTE cuando no hay flujos */
@@ -164,7 +164,7 @@
   display: inline-block;
   width: 22px;
   height: 2px;
-  background: linear-gradient(to right, var(--accent-warm, #d4b896), rgba(212, 184, 150, 0.2));
+  background: linear-gradient(to right, var(--icon-button), rgba(212, 184, 150, 0.2));
   border-radius: 999px;
 }
 .flow-catalog-category-header-title {
@@ -188,7 +188,7 @@
   font-size: 0.76rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--accent-warm, #d4b896);
+  color: var(--icon-button);
   margin-top: 0.25rem;
 }
 
@@ -200,7 +200,7 @@
 
 /* Hero carrusel: full-bleed por categoría, minimalista, sin flechas.
    El bottom del slide hace mask-image fade-out → se funde con el fondo
-   de la app (--bg-primary), sin corte visible. */
+   de la app (--bg-base), sin corte visible. */
 .flow-catalog-hero-section {
   position: relative;
   width: 100%;
@@ -251,7 +251,7 @@
   z-index: 0;
   background: transparent;
   /* Fade-out del bottom 30% de la imagen para que el hero se funda con el fondo
-     de la página (--bg-primary), sin corte. */
+     de la página (--bg-base), sin corte. */
   -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
   mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
 }
@@ -313,7 +313,7 @@
   display: inline-block;
   width: 28px;
   height: 2px;
-  background: linear-gradient(to right, var(--accent-warm, #d4b896), rgba(212, 184, 150, 0.2));
+  background: linear-gradient(to right, var(--icon-button), rgba(212, 184, 150, 0.2));
   border-radius: 999px;
   box-shadow: 0 0 10px rgba(212, 184, 150, 0.55);
   flex-shrink: 0;
@@ -436,7 +436,7 @@
   display: inline-block;
   width: 1.5rem;
   height: 1px;
-  background: linear-gradient(to right, var(--accent-warm, #d4b896), transparent);
+  background: linear-gradient(to right, var(--icon-button), transparent);
   opacity: 0.55;
   margin-left: 0.2rem;
 }
@@ -552,7 +552,7 @@
   width: 240px;
   scroll-snap-align: start;
   background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider, #242424);
+  border: 1px solid var(--border-color, #242424);
   border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
@@ -576,7 +576,7 @@
   border-color: rgba(255, 255, 255, 0.18);
 }
 .flow-card:focus-visible {
-  outline: 2px solid var(--accent-warm);
+  outline: 2px solid var(--icon-button);
   outline-offset: 2px;
 }
 
@@ -793,7 +793,7 @@
   gap: 0.25rem;
   margin-left: auto;
   font-weight: 600;
-  color: var(--accent-warm, #87868B);
+  color: var(--icon-button);
 }
 .flow-card-info-credits i {
   font-size: 0.65rem;
@@ -845,7 +845,7 @@
   justify-content: center;
   gap: 8px;
   padding: 10px 12px;
-  background: var(--bg-hover);
+  background: var(--brillo-hover);
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
@@ -924,7 +924,7 @@
   display: inline-block;
   width: 2rem;
   height: 1px;
-  background: linear-gradient(to right, var(--accent-warm, #d4b896), transparent);
+  background: linear-gradient(to right, var(--icon-button), transparent);
   opacity: 0.6;
   flex-shrink: 0;
 }
@@ -1099,7 +1099,7 @@
 
 /* ---------- Badge Popular (uso absoluto alto) ---------- */
 .flow-card-badge--popular {
-  background: var(--accent-warm, #d4b896);
+  background: var(--icon-button);
   color: #1a1305;
   border-color: transparent;
 }
@@ -1174,7 +1174,7 @@
 }
 .flow-catalog-empty-icon {
   font-size: 2rem;
-  color: var(--accent-warm, #d4b896);
+  color: var(--icon-button);
   opacity: 0.9;
   margin-bottom: 0.35rem;
 }
@@ -1206,7 +1206,7 @@
   width: min(1400px, 94vw) !important;
   max-width: min(1400px, 94vw) !important;
   background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider, #242424);
+  border: 1px solid var(--border-color, #242424);
 }
 /* Backdrop del modal de detalle = glass-black (no el --bg-overlay morado).
    La clase vive en .modal-content, asi que scopeamos el overlay via :has. */
@@ -1306,7 +1306,7 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--accent-warm, #d4b896);
+  color: var(--icon-button);
 }
 .flow-detail-title {
   width: 100%;
@@ -1339,7 +1339,7 @@
   padding: 0.5rem;
   text-align: left;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-divider, #242424);
+  border: 1px solid var(--border-color, #242424);
   border-radius: var(--radius-md);
   cursor: pointer;
   font-family: inherit;
@@ -1385,7 +1385,7 @@
 }
 .flow-detail-run-status--ok { color: #3ddc84; }
 .flow-detail-run-status--err { color: #ff5a6a; }
-.flow-detail-run-status--run { color: var(--accent-warm, #d4b896); }
+.flow-detail-run-status--run { color: var(--icon-button); }
 .flow-detail-run-status--idle { color: var(--text-secondary, rgba(255, 255, 255, 0.7)); }
 .flow-detail-run-date {
   font-size: 0.72rem;
@@ -1456,7 +1456,7 @@
   height: 42px;
   padding: 0;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-divider, #242424);
+  border: 1px solid var(--border-color, #242424);
   border-radius: 8px;
   color: var(--text-secondary, rgba(255, 255, 255, 0.7));
   cursor: pointer;
@@ -1492,7 +1492,7 @@
 }
 .flow-detail-meta-item i {
   font-size: 0.72rem;
-  color: var(--accent-warm, #d4b896);
+  color: var(--icon-button);
   opacity: 0.9;
 }
 .flow-detail-desc {
@@ -1614,8 +1614,8 @@
   gap: 0.75rem 1rem;
   flex-wrap: wrap;
   padding: 0.85rem clamp(2rem, 5vw, 4rem);
-  background: var(--view-bg-base, var(--bg-base));
-  border-bottom: 1px solid var(--border-divider, #242424);
+  background: var(--bg-base, var(--bg-base));
+  border-bottom: 1px solid var(--border-color, #242424);
 }
 /* En el header (reusa el slot y la clase de Production, que ya dan el layout de
    2a fila): la toolbar va plana, sin chrome propio. */
@@ -1755,7 +1755,7 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
   overflow: hidden;
   cursor: pointer;
   background: linear-gradient(160deg, #1a1b1f, #0e0f12);
-  border: 1px solid var(--border-divider, #242424);
+  border: 1px solid var(--border-color, #242424);
   text-align: left;
 }
 .flow-featured-bg { position: absolute; inset: 0; z-index: 0; }
@@ -1785,7 +1785,7 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--accent-warm, #d4b896);
+  color: var(--icon-button);
 }
 .flow-featured-title {
   margin: 0;

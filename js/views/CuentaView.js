@@ -96,7 +96,7 @@ class CuentaView extends BaseView {
           <small>${__('Las fechas y horas de la consola se muestran en esta zona. La de la marca se cambia en Configuración.')}</small>
         </label>
         <p class="ajustes-error" role="alert" hidden></p>
-        <div class="ajustes-acciones"><button type="submit" class="btn btn-primary">${__('Guardar preferencias')}</button></div>
+        <div class="ajustes-acciones"><button type="submit" class="btn btn--blanco">${__('Guardar preferencias')}</button></div>
       </form>`;
     const enlazar = (el) => {
     const form = el.querySelector('form');
@@ -134,7 +134,7 @@ class CuentaView extends BaseView {
         <label class="ajustes-campo"><span>${__('Repítela')}</span>
           <input type="password" name="repetida" class="form-input" autocomplete="new-password" minlength="8" required></label>
         <p class="ajustes-error" role="alert" hidden></p>
-        <div class="ajustes-acciones"><button type="submit" class="btn btn-primary">${__('Cambiar contraseña')}</button></div>
+        <div class="ajustes-acciones"><button type="submit" class="btn btn--blanco">${__('Cambiar contraseña')}</button></div>
       </form>
       <section class="ajustes-bloque">
         <h2 class="ajustes-subtitulo">${__('Verificación en dos pasos')}</h2>

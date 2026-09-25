@@ -54,7 +54,7 @@ class ProductsView extends BaseView {
                         <i class="aisc-ico aisc-ico--product"></i>
                         <h3>${__('No hay productos')}</h3>
                         <p>${__('Aún no has creado ningún producto')}</p>
-                        <button class="btn-primary" onclick="document.getElementById('addProductBtn').click()">
+                        <button class="btn--blanco" onclick="document.getElementById('addProductBtn').click()">
                             <i class="aisc-ico aisc-ico--add"></i>
                             ${__('Crear Primer Producto')}
                         </button>

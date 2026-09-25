@@ -67,9 +67,9 @@ class CreateView extends BaseView {
             </div>
         </div>
         <div class="wizard-actions">
-            <button class="btn btn-secondary" id="wizardPrevBtn">${__('Anterior')}</button>
-            <button class="btn btn-primary" id="wizardNextBtn">${__('Siguiente')}</button>
-            <button class="btn btn-primary" id="wizardGenerateBtn" style="display: none;">${__('Generar')}</button>
+            <button class="btn btn--oscuro" id="wizardPrevBtn">${__('Anterior')}</button>
+            <button class="btn btn--blanco" id="wizardNextBtn">${__('Siguiente')}</button>
+            <button class="btn btn--blanco" id="wizardGenerateBtn" style="display: none;">${__('Generar')}</button>
         </div>
     </div>
 
@@ -87,7 +87,7 @@ class CreateView extends BaseView {
                           placeholder='{"restrictions": [], "priorities": []}'></textarea>
             </div>
             <div class="editor-actions">
-                <button class="btn btn-primary" id="proGenerateBtn">${__('Generar')}</button>
+                <button class="btn btn--blanco" id="proGenerateBtn">${__('Generar')}</button>
             </div>
         </div>
     </div>

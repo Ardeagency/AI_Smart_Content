@@ -189,10 +189,10 @@ function renderChartSVG(spec) {
 
   const bg = safeColor(spec.background || 'transparent', 'transparent');
   const showLegend = spec.legend !== false;
-  const fontFamily = 'var(--font-family, ui-sans-serif, system-ui, sans-serif)';
+  const fontFamily = 'var(--font-mono)';
   const textColor = 'var(--text-primary, #D4D1D8)';
   const muted = 'var(--text-muted, rgba(212,209,216,0.6))';
-  const border = 'var(--border-light, #212126)';
+  const border = 'var(--border-color, #212126)';
 
   const pad = 16;
   const innerW = width - pad * 2;
@@ -301,7 +301,7 @@ function renderChartSVG(spec) {
       : points.reduce((acc, p, i) => acc + (i === 0 ? `M ${p.x} ${p.y}` : ` L ${p.x} ${p.y}`), '');
 
     if (type === 'area' && points.length >= 2) {
-      const areaFill = safeColor(spec.fill || 'rgba(0,231,255,0.18)', 'rgba(0,231,255,0.18)');
+      const areaFill = safeColor(spec.fill || 'var(--color-info-light)', 'var(--color-info-light)');
       const areaPath = `${dPath} L ${points[points.length - 1].x} ${baseY} L ${points[0].x} ${baseY} Z`;
       svg += `<path d="${areaPath}" fill="${escapeHtml(areaFill)}" stroke="none" />`;
     }
@@ -353,7 +353,7 @@ function renderChartSVG(spec) {
       const path = `M ${xTopL} ${y} L ${xTopR} ${y} L ${xBotR} ${y + hSeg} L ${xBotL} ${y + hSeg} Z`;
       svg += `<path d="${path}" fill="${escapeHtml(seg.color)}" />`;
       if (spec.labels !== false) {
-        svg += `<text x="${cx}" y="${y + hSeg / 2 + 4}" text-anchor="middle" fill="${tokenColor('--bg-primary')}" font-family="${fontFamily}" font-size="12" font-weight="600">${escapeHtml(seg.label)}</text>`;
+        svg += `<text x="${cx}" y="${y + hSeg / 2 + 4}" text-anchor="middle" fill="${tokenColor('--bg-base')}" font-family="${fontFamily}" font-size="12" font-weight="600">${escapeHtml(seg.label)}</text>`;
       }
       y += hSeg;
     });
@@ -618,21 +618,21 @@ async function ensureMermaid() {
           // Canvas
           background: 'transparent',
           // Default node
-          primaryColor: tokenColor('--bg-secondary'),
+          primaryColor: tokenColor('--bg-card'),
           primaryBorderColor: tokenColor('--border-hairline-strong'),
           primaryTextColor: tokenColor('--text-primary'),
           // Edges (arrows)
           lineColor: tokenColor('--text-muted'),
           // Edge labels
-          edgeLabelBackground: tokenColor('--bg-secondary'),
-          tertiaryColor: tokenColor('--bg-secondary'),
+          edgeLabelBackground: tokenColor('--bg-card'),
+          tertiaryColor: tokenColor('--bg-card'),
           // Subgraphs (clusters)
           clusterBkg: 'rgba(255,255,255,0.02)',
           clusterBorder: tokenColor('--border-color'),
           titleColor: tokenColor('--text-primary'),
           // Flowchart specifics
           nodeBorder: tokenColor('--border-hairline-strong'),
-          mainBkg: tokenColor('--bg-secondary'),
+          mainBkg: tokenColor('--bg-card'),
           secondBkg: tokenColor('--bg-card'),
           // Misc
           fontSize: '14px',
@@ -986,7 +986,7 @@ function buildEChartsOption(rawSpec) {
         radius: normalizedType === 'donut' ? [innerR, '72%'] : '72%',
         center: ['50%', '55%'],
         data: data.map((d) => ({ name: d.label || d.name, value: d.value, itemStyle: d.color ? { color: d.color } : undefined })),
-        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 2, borderRadius: 4 },
+        itemStyle: { borderColor: tokenColor('--bg-base'), borderWidth: 2, borderRadius: 4 },
         label: { color: textColor },
         emphasis: { itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.5)' } },
       }];
@@ -1000,7 +1000,7 @@ function buildEChartsOption(rawSpec) {
         radius: ['10%', '72%'],
         center: ['50%', '55%'],
         data: data.map((d) => ({ name: d.label || d.name, value: d.value, itemStyle: d.color ? { color: d.color } : undefined })),
-        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 2 },
+        itemStyle: { borderColor: tokenColor('--bg-base'), borderWidth: 2 },
         label: { color: textColor },
         emphasis: { itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.5)' } },
       }];
@@ -1060,7 +1060,7 @@ function buildEChartsOption(rawSpec) {
         breadcrumb: { show: false },
         label: { color: 'white', fontWeight: 500 },
         upperLabel: { show: true, height: 28, color: 'white' },
-        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 2, gapWidth: 2 },
+        itemStyle: { borderColor: tokenColor('--bg-base'), borderWidth: 2, gapWidth: 2 },
       }];
       delete option.grid;
       break;
@@ -1071,7 +1071,7 @@ function buildEChartsOption(rawSpec) {
         data: data,
         radius: ['0%', '85%'],
         label: { color: 'white' },
-        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 2 },
+        itemStyle: { borderColor: tokenColor('--bg-base'), borderWidth: 2 },
       }];
       delete option.grid;
       break;
@@ -1102,7 +1102,7 @@ function buildEChartsOption(rawSpec) {
         sort: normalizedType === 'pyramid' ? 'ascending' : 'descending',
         data: data.map((d) => ({ name: d.label || d.name, value: d.value })),
         label: { color: 'white', fontWeight: 500 },
-        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 2 },
+        itemStyle: { borderColor: tokenColor('--bg-base'), borderWidth: 2 },
       }];
       delete option.grid;
       break;
@@ -1115,7 +1115,7 @@ function buildEChartsOption(rawSpec) {
         nodeAlign: 'justify',
         label: { color: textColor },
         lineStyle: { color: 'gradient', opacity: 0.45, curveness: 0.5 },
-        itemStyle: { borderColor: tokenColor('--bg-primary'), borderWidth: 1 },
+        itemStyle: { borderColor: tokenColor('--bg-base'), borderWidth: 1 },
       }];
       delete option.grid;
       break;
@@ -1188,7 +1188,7 @@ function buildEChartsOption(rawSpec) {
     }
     case 'calendar': {
       const year = spec.year || new Date().getFullYear();
-      option.calendar = { range: String(year), cellSize: ['auto', 16], itemStyle: { borderColor: tokenColor('--bg-primary') }, dayLabel: { color: subColor }, monthLabel: { color: subColor }, splitLine: { lineStyle: { color: gridColor } } };
+      option.calendar = { range: String(year), cellSize: ['auto', 16], itemStyle: { borderColor: tokenColor('--bg-base') }, dayLabel: { color: subColor }, monthLabel: { color: subColor }, splitLine: { lineStyle: { color: gridColor } } };
       option.visualMap = { min: spec.min ?? 0, max: spec.max ?? 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, textStyle: { color: subColor }, inRange: { color: [tokenColor('--bg-card'), tokenColor('--prisma-azul'), tokenColor('--prisma-amarillo')] } };
       option.series = [{ type: 'heatmap', coordinateSystem: 'calendar', data: data.map((d) => [d.date, d.value]) }];
       delete option.grid;

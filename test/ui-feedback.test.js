@@ -172,15 +172,15 @@ describe('Capas.confirmar (reemplaza a confirm())', () => {
 
     const q = Capas.confirmar('¿Salir?');
     const dlg2 = document.body.children.at(-1);
-    buscar(dlg2, 'btn-secondary').disparar('click');
+    buscarTodos(dlg2, 'btn').find((b) => b.textContent === 'Cancelar').disparar('click');
     expect(await q).toBe(false);
   });
 
   test('peligro: botón rojo y el foco arranca en Cancelar', () => {
     Capas.confirmar({ titulo: '¿Borrar?', peligro: true });
     const dlg = document.body.children.at(-1);
-    expect(buscar(dlg, 'btn-danger')).toBeTruthy();
-    expect(document.activeElement).toBe(buscar(dlg, 'btn-secondary'));
+    expect(buscar(dlg, 'btn--peligro')).toBeTruthy();
+    expect(document.activeElement).toBe(buscarTodos(dlg, 'btn').find((b) => b.textContent === 'Cancelar'));
   });
 });
 
@@ -193,7 +193,7 @@ describe('Capas.preguntar', () => {
     const cuentas = buscarTodos(tarjeta, 'pregunta__cuenta').map((n) => n.textContent);
     expect(cuentas[0]).toBe('18 piezas · 6 proyectos · se van');
     expect(cuentas[1]).toBe('2 cotizaciones · quedan sueltos');
-    buscar(tarjeta, 'btn-danger').disparar('click');
+    buscar(tarjeta, 'btn--peligro').disparar('click');
     expect(await p).toBe(true);
     expect(buscar(tarjeta, 'pregunta')).toBeUndefined();
     expect(tarjeta.classList.contains('tiene-pregunta')).toBe(false);

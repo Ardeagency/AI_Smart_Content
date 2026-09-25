@@ -1447,22 +1447,22 @@ describe('Los botones de la consola: sin iconos, plano y blanco', () => {
 
   test('PRODUCIR va plano con el color más claro de la marca, no en degradado', () => {
     // El degradado de marca es la firma del producto; gastarlo en un botón lo
-    // abarata. `--brand-color-light` lo calcula OrgBrandTheme ordenando la
+    // abarata. `--org-color-light` lo calcula OrgBrandTheme ordenando la
     // paleta de la org por luminosidad.
     const r = regla('.video-view-container .video-director-console-zone .video-director-btn-generate');
-    expect(r).toContain('background: var(--brand-color-light');
+    expect(r).toContain('background: var(--org-color-light)');
     expect(r).not.toContain('gradient');
   });
 
   test('PROMPT va blanco entero con texto negro (tokens, L7)', () => {
     const r = regla('.video-view-container .video-director-btn-forge');
     expect(r).toContain('background: var(--color-white)');
-    expect(r).toContain('color: var(--bg-primary)');
+    expect(r).toContain('color: var(--bg-base)');
   });
 
   test('el switch de audio se enciende con el mismo color de marca', () => {
     const r = regla('.video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track');
-    expect(r).toContain('var(--brand-color-light');
+    expect(r).toContain('var(--org-color-light)');
   });
 
   test('el brief ya no se resalta al enfocarlo', () => {
@@ -1502,7 +1502,7 @@ describe('PROMPT y PRODUCIR son un par: mismo sitio, mismo tamaño', () => {
   test('los dos llevan borde: sin él, PRODUCIR mide 2px menos de alto', () => {
     // El bloque del COLOR, que es el que declara el borde — las métricas viven
     // en la regla compartida y ahí no hay borde que buscar.
-    const i = css.indexOf('background: var(--brand-color-light, var(--prisma-naranja));\n    /* Borde');
+    const i = css.indexOf('background: var(--org-color-light);\n    /* Borde');
     expect(i).toBeGreaterThan(-1);
     const gen = css.slice(css.lastIndexOf('{', i), css.indexOf('}', i));
     expect(gen).toContain('border: 1px solid');

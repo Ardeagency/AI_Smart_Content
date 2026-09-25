@@ -85,7 +85,7 @@ class CreationProcessView extends BaseView {
           ${emailHtml}
           <p class="verification-hint">${__('Este proceso puede tardar unos minutos. Puedes cerrar esta ventana — te avisaremos por email.')}</p>
 
-          <button type="button" class="btn btn-primary signin-submit" id="btnCheckStatus">
+          <button type="button" class="btn btn--blanco signin-submit" id="btnCheckStatus">
             ${__('Ya verifiqué, refrescar')}
           </button>
           <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkLogout">

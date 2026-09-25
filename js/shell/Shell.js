@@ -695,8 +695,8 @@
             <div class="shell-actividad-cabeza"><span>${esc(a.summary || a.action)}</span><time datetime="${esc(a.created_at)}">${esc(hace(a.created_at))}</time></div>
             ${estado ? `<p class="shell-actividad-estado">${esc(estado)}</p>` : `
             <div class="shell-actividad-acciones">
-              <button type="button" class="btn btn-primary btn-sm" data-decidir="aprobar">${esc(t('Aprobar'))}</button>
-              <button type="button" class="btn btn-secondary btn-sm" data-decidir="descartar">${esc(t('Descartar'))}</button>
+              <button type="button" class="btn btn--blanco btn--sm" data-decidir="aprobar">${esc(t('Aprobar'))}</button>
+              <button type="button" class="btn btn--oscuro btn--sm" data-decidir="descartar">${esc(t('Descartar'))}</button>
             </div>`}
           </li>`;
       };

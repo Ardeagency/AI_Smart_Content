@@ -702,7 +702,7 @@ class LivingManager {
         
         if (automatedContent.length === 0) {
             heroGrid.innerHTML = `
-                <div style="text-align: center; padding: 3rem; color: var(--living-text-muted); opacity: 0.6;">
+                <div style="text-align: center; padding: 3rem; color: var(--text-muted); opacity: 0.6;">
                     <p style="font-size: 0.938rem;">Sistema en espera de producción</p>
                 </div>
             `;
@@ -1352,8 +1352,8 @@ class LivingManager {
         // que se hidrata bajo demanda en setupHistoryCardListeners (hover) o en applyJustifiedLayout (ya en viewport).
         const thumbnailHtml = finalUrl
             ? (isVideoUrl
-                ? `<video class="history-video-card-thumbnail" data-src="${this.escapeHtml(finalUrl)}" muted playsinline preload="none" crossorigin="anonymous" aria-label="Vista previa de video" onerror="var w=this.closest('.history-video-card-thumbnail-wrap'); if(w){ var d=document.createElement('div'); d.className='history-video-card-thumbnail'; d.style.cssText='background:#0F1115;display:flex;align-items:center;justify-content:center'; d.innerHTML='<i class=\\'fas fa-video\\' style=\\'font-size:2rem;color:var(--living-text-muted)\\'>\\x3c/i>'; w.innerHTML=''; w.appendChild(d); }"></video>`
-                : `<img src="${this.escapeHtml(finalUrl)}" alt="Vista previa de video" class="history-video-card-thumbnail" loading="${loadingAttr}" decoding="async" fetchpriority="${fetchAttr}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" />`)
+                ? `<video class="history-video-card-thumbnail" data-src="${this.escapeHtml(finalUrl)}" muted playsinline preload="none" crossorigin="anonymous" aria-label="Vista previa de video" onerror="var w=this.closest('.history-video-card-thumbnail-wrap'); if(w){ var d=document.createElement('div'); d.className='history-video-card-thumbnail'; d.style.cssText='background:#0F1115;display:flex;align-items:center;justify-content:center'; d.innerHTML='<i class=\\'fas fa-video\\' style=\\'font-size:2rem;color:var(--text-muted)\\'>\\x3c/i>'; w.innerHTML=''; w.appendChild(d); }"></video>`
+                : `<img src="${this.escapeHtml(finalUrl)}" alt="Vista previa de video" class="history-video-card-thumbnail" loading="${loadingAttr}" decoding="async" fetchpriority="${fetchAttr}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--text-muted);\\'></i></div>';" />`)
             : `<div class="history-video-card-thumbnail history-video-card-thumbnail--empty" aria-hidden="true">
                 <i class="aisc-ico aisc-ico--video"></i>
             </div>`;
@@ -5727,7 +5727,7 @@ class LivingManager {
         
         if (highlights.length === 0) {
             highlightsContent.innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: var(--living-text-muted);">
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
                     <i class="aisc-ico aisc-ico--growth" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
                     <p>No hay datos destacados aún</p>
                 </div>

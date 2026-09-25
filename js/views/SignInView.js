@@ -59,7 +59,7 @@ class SignInView extends BaseView {
                 <button type="button" class="signin-forgot signin-forgot-btn" id="linkForgotPassword">${__('¿Olvidaste tu contraseña?')}</button>
                 <div class="signin-turnstile" id="turnstileLogin" hidden></div>
                 <p class="signin-mfa-error" id="signinError" role="alert" hidden></p>
-                <button type="submit" class="btn btn-primary signin-submit" id="btnSignIn">${__('Iniciar sesión')}</button>
+                <button type="submit" class="btn btn--blanco signin-submit" id="btnSignIn">${__('Iniciar sesión')}</button>
               </div>
             </form>
           </div>
@@ -70,7 +70,7 @@ class SignInView extends BaseView {
             <form id="form_mfa" novalidate>
               <input type="text" class="form-input signin-mfa-code" id="mfaCode" placeholder="123456" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" required>
               <p class="signin-mfa-error" id="mfaError" hidden></p>
-              <button type="submit" class="btn btn-primary signin-submit" id="btnVerifyMfa">${__('Verificar')}</button>
+              <button type="submit" class="btn btn--blanco signin-submit" id="btnVerifyMfa">${__('Verificar')}</button>
               <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkMfaBack">${__('Volver')}</button>
             </form>
           </div>
@@ -82,7 +82,7 @@ class SignInView extends BaseView {
               <input type="email" class="form-input" id="recoverEmail" placeholder="${__('Correo electrónico')}" autocomplete="email" required>
               <div class="signin-turnstile" id="turnstileRecover" hidden></div>
               <p class="signin-mfa-error" id="recoverError" role="alert" hidden></p>
-              <button type="button" class="btn btn-primary" id="btnSendRecover">${__('Enviar enlace')}</button>
+              <button type="button" class="btn btn--blanco" id="btnSendRecover">${__('Enviar enlace')}</button>
             </div>
             <div class="signin-recover-success" id="recoverSuccess" hidden>
               <p class="signin-recover-success-text">${__('Si existe una cuenta con ese correo, recibirás un enlace en unos minutos. Revisa también la carpeta de spam.')}</p>

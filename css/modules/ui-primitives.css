@@ -1,11 +1,11 @@
 /* ============================================================
    UI Primitives — Button, Card, Input, Dialog, Dropdown, Tabs
    Estilos que extienden el bundle existente; reutilizan tokens
-   (--bg-secondary, --text-primary, --glass-*, --radius-*).
+   (--bg-card, --text-primary, --glass-*, --radius-*).
    ============================================================ */
 
 /* ─────── Button: estado loading + label spacing
-   (.btn .btn-primary .btn-secondary .btn-icon ya existen en bundle.css) */
+   (.btn .btn--blanco .btn--oscuro .btn--icono ya existen en bundle.css) */
 .btn.is-loading        { opacity: 0.7; cursor: progress; pointer-events: none; }
 .btn .btn-label        { white-space: nowrap; }
 .btn > i + .btn-label  { margin-left: 0.4rem; }
@@ -31,14 +31,14 @@
 }
 
 /* ─────── Dialog: footer dentro de .modal-content */
-.modal-footer             { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--glass-border); }
+.modal-footer             { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-hairline); }
 .dialog-message           { margin: 0 0 0.5rem; color: var(--text-primary); line-height: 1.5; }
 .dialog-footer            { border-top: none; padding-top: 0; margin-top: 1.25rem; }
 
 /* ─────── Dropdown */
 .ui-dropdown              { position: relative; display: inline-flex; }
 .ui-dropdown-trigger      { cursor: pointer; user-select: none; outline: none; border-radius: var(--radius-sm); }
-.ui-dropdown-trigger:focus-visible { box-shadow: 0 0 0 2px var(--accent-brand-soft, rgba(255,255,255,0.2)); }
+.ui-dropdown-trigger:focus-visible { box-shadow: 0 0 0 2px var(--accent-soft); }
 .ui-dropdown-menu {
   position: absolute;
   top: calc(100% + 6px);
@@ -46,8 +46,8 @@
   margin: 0;
   padding: 0.35rem;
   list-style: none;
-  background: var(--bg-secondary);
-  border: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+  background: var(--bg-card);
+  border: 1px solid var(--border-hairline, rgba(255,255,255,0.08));
   border-radius: var(--radius-md, 10px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(20px) saturate(140%);
@@ -85,7 +85,7 @@
 .ui-dropdown-separator {
   height: 1px;
   margin: 0.35rem 0;
-  background: var(--glass-border, rgba(255,255,255,0.08));
+  background: var(--border-hairline, rgba(255,255,255,0.08));
   list-style: none;
 }
 
@@ -93,7 +93,7 @@
 .ui-tabs {
   display: flex;
   gap: 0.25rem;
-  border-bottom: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+  border-bottom: 1px solid var(--border-hairline, rgba(255,255,255,0.08));
   margin-bottom: 1rem;
   overflow-x: auto;
   scrollbar-width: none;
@@ -105,7 +105,7 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.6rem 0.9rem;
-  font-family: var(--font-family);
+  font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--text-secondary);
@@ -120,7 +120,7 @@
 .ui-tab:hover:not(.is-disabled) { color: var(--text-primary); }
 .ui-tab.is-active {
   color: var(--text-primary);
-  border-bottom-color: var(--brand-primary, var(--accent-brand));
+  border-bottom-color: var(--org-primary);
 }
 .ui-tab.is-disabled { opacity: 0.4; cursor: not-allowed; }
 .ui-tab-badge {
