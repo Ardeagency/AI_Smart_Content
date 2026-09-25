@@ -194,18 +194,14 @@ class MonitoringView extends BaseView {
       () => this._service.loadAll(),
       (data) => { this._data = data; this._renderBody(); });
 
+    // Las tablas que el servicio LEE (base nueva): perfiles vigilados, sus agendas de ingesta
+    // y las señales. Las tres llevan organization_id. Hasta que la base las publique en
+    // supabase_realtime no llega ningún evento: el sondeo de 60 s de abajo es el respaldo.
     const orgFilter = `organization_id=eq.${this._orgId}`;
     this.liveSubscribe([
-      { name: 'ent', table: 'intelligence_entities', filter: orgFilter, onChange: () => this._liveTick() },
-      { name: 'wat', table: 'url_watchers',           filter: orgFilter, onChange: () => this._liveTick() },
-      // intelligence_signals no tiene organization_id: filtramos por entity_id
-      // contra las entities ya cargadas (mismo criterio que el servicio).
-      { name: 'sig', table: 'intelligence_signals', event: 'INSERT', onChange: (p) => {
-          const eid = p?.new?.entity_id;
-          const known = (this._data?.entities?.data || []).map(e => e.id);
-          if (eid && known.length && !known.includes(eid)) return;
-          this._liveTick();
-        } },
+      { name: 'perfiles', schema: 'social', table: 'profiles',  filter: orgFilter, onChange: () => this._liveTick() },
+      { name: 'agendas',  schema: 'ingest', table: 'schedules', filter: orgFilter, onChange: () => this._liveTick() },
+      { name: 'senales',  schema: 'intel',  table: 'signals',   filter: orgFilter, event: 'INSERT', onChange: () => this._liveTick() },
     ]);
     this.startLivePoll(60000, () => this._liveTick());
   }
