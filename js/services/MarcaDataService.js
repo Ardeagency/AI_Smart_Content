@@ -221,13 +221,20 @@
     return error && (error.code === '42501' || error.code === 'PGRST301');
   }
 
-  /** Lo que la galería sabe de cada archivo de la marca: file_id → url_galeria. Sin borde = {}. */
-  async function urlsDeGaleria(orgId) {
+  /**
+   * file_id → url de galería de ESOS archivos. Se pide por `ids` (1–100 por petición): sin
+   * ids el borde devuelve solo los 50 más recientes de la marca y los assets más viejos se
+   * pintaban sin URL (backend archivos.js lo documenta). Sin borde = {}.
+   */
+  async function urlsDeGaleria(orgId, ids) {
     const a = api();
-    if (!a) return {};
+    const pedidos = [...new Set((ids || []).filter(Boolean))];
+    if (!a || !pedidos.length) return {};
     try {
-      const r = await a.archivos(orgId);
-      const lista = Array.isArray(r?.archivos) ? r.archivos : [];
+      const lotes = [];
+      for (let i = 0; i < pedidos.length; i += 100) lotes.push(pedidos.slice(i, i + 100));
+      const respuestas = await Promise.all(lotes.map((l) => a.archivos(orgId, l)));
+      const lista = respuestas.flatMap((r) => (Array.isArray(r?.archivos) ? r.archivos : []));
       return Object.fromEntries(lista.filter((f) => f?.id && (f.url_publica || f.url_galeria)).map((f) => [f.id, f.url_publica || f.url_galeria]));
     } catch (e) {
       if (e?.codigo !== 'sin_api') console.warn('[marca] archivos del borde:', e?.codigo || e?.message || e);
@@ -236,19 +243,21 @@
     }
   }
 
+  const idsDeAssets = (filas) => (filas || []).map((f) => f?.file_id).filter(Boolean);
+
   /** TODO lo que la página pinta, en una ida por tabla. */
   async function cargar(orgId) {
     const sb = await cliente();
     if (!sb || !orgId) return null;
-    const [org, colores, fuentes, assets, mercados, conexiones, urls] = await Promise.all([
+    const [org, colores, fuentes, assets, mercados, conexiones] = await Promise.all([
       sb.from('organizations').select('id, slug, name, legal_name, tagline, logo_url, logo_file_id, mfa_required, logo:files!logo_file_id(public_url)').eq('id', orgId).maybeSingle(),
       sb.from('brand_colors').select('id, organization_id, role, hex, name, position').eq('organization_id', orgId).order('position', { ascending: true }),
       sb.from('brand_fonts').select('id, organization_id, role, family, fallback_stack, weights').eq('organization_id', orgId),
       sb.from('brand_assets').select('id, organization_id, kind, name, storage_path, url, mime_type, bytes, is_primary, file_id, created_at').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(24),
       sb.from('markets').select('id, organization_id, slug, name, countries, languages, core_niche, sub_niches, archetype, value_proposition, mission_vision, keywords, banned_words, strategic_goals, creative_brief, verbal_dna, visual_dna, is_primary, created_at, updated_at').eq('organization_id', orgId).is('archived_at', null).order('is_primary', { ascending: false }).order('created_at', { ascending: true }),
       sb.schema('integrations').from('connections').select('id, organization_id, platform, status, account_name, external_account_id, expires_at, last_refreshed_at, last_used_at, last_error, updated_at').eq('organization_id', orgId).order('platform', { ascending: true }),
-      urlsDeGaleria(orgId),
     ]);
+    const urls = await urlsDeGaleria(orgId, idsDeAssets(assets.data));
     for (const [nombre, r] of [['organizations', org], ['brand_colors', colores], ['brand_fonts', fuentes], ['brand_assets', assets], ['markets', mercados]]) {
       if (r.error && r.error.code !== 'PGRST116') console.warn(`[marca] ${nombre}:`, r.error.code, r.error.message);
     }
@@ -274,11 +283,9 @@
   async function assets(orgId) {
     const sb = await cliente();
     if (!sb || !orgId) return [];
-    const [{ data, error }, urls] = await Promise.all([
-      sb.from('brand_assets').select('id, organization_id, kind, name, storage_path, url, mime_type, bytes, is_primary, file_id, created_at').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(24),
-      urlsDeGaleria(orgId),
-    ]);
+    const { data, error } = await sb.from('brand_assets').select('id, organization_id, kind, name, storage_path, url, mime_type, bytes, is_primary, file_id, created_at').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(24);
     if (error) { console.warn('[marca] brand_assets:', error.code, error.message); return []; }
+    const urls = await urlsDeGaleria(orgId, idsDeAssets(data));
     return (data || []).map((f) => assetAV1(f, urls));
   }
 
@@ -368,7 +375,7 @@
     if (logo) fila.is_primary = true;
     const { data, error } = await sb.from('brand_assets').insert(fila).select('id, organization_id, kind, name, storage_path, url, mime_type, bytes, is_primary, file_id, created_at').single();
     if (error) throw error;
-    const urls = await urlsDeGaleria(orgId);
+    const urls = await urlsDeGaleria(orgId, [data?.file_id]);
     const asset = assetAV1(data, urls);
     if (logo) {
       // Solo logo_file_id (el CHECK rechaza las dos fuentes); la URL pública se devuelve para pintar ya.
