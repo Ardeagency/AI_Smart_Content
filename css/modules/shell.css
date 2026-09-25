@@ -90,6 +90,8 @@ body.has-demo-banner .side-navigation { top: var(--demo-banner-height, 0); }
   transition: border-color var(--duracion-media) var(--curva-estandar);
 }
 .nav-plan-card[hidden], .nav-plan-card-cta[hidden] { display: none; }
+/* Como en el sidebar viejo: la tarjeta no toca los bordes del sidebar. */
+#navPlanCard { margin: var(--space-2) var(--space-2) 0; }
 .side-navigation.is-colapsado .nav-plan-card { display: none; } /* contraído: la tarjeta no cabe; el plan sigue en Planes */
 /* Pantallas bajas: el menú (12 destinos) no cabe con la tarjeta; manda el menú. Planes sigue en el pie. */
 @media (max-height: 860px) { .nav-plan-card { display: none; } }
