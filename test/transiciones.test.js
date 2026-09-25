@@ -186,8 +186,8 @@ describe('CSS', () => {
   });
 
   test('usa los tokens de movimiento y respeta reduced-motion', () => {
-    expect(CSS).toMatch(/var\(--duration-route/);
-    expect(CSS).toMatch(/var\(--ease-route/);
+    expect(CSS).toMatch(/var\(--duracion-media\)/);
+    expect(CSS).toMatch(/var\(--curva-estandar\)/);
     expect(CSS).toMatch(/prefers-reduced-motion:\s*reduce/);
   });
 

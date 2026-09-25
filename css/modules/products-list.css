@@ -3,7 +3,7 @@
    ============================================================ */
 
 .products-list-page {
-  padding: 2rem;
+  padding: var(--space-8);
   max-width: 1320px;
   margin: 0 auto;
 }
@@ -12,8 +12,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  margin-bottom: 1.75rem;
-  gap: 1rem;
+  margin-bottom: var(--space-6);
+  gap: var(--space-4);
 }
 
 .products-list-title {
@@ -27,7 +27,7 @@
 .products-list-header-actions {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-shrink: 0;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -38,8 +38,8 @@
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.45rem 0.85rem;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
@@ -47,7 +47,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar);
 }
 
 .products-list-add-btn:hover:not(:disabled) {
@@ -61,7 +61,7 @@
 }
 
 .products-list-section {
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-8);
 }
 
 .products-list-section-head {
@@ -69,14 +69,14 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.65rem 1rem;
-  margin-bottom: 0.9rem;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .products-list-section-head-main {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
@@ -115,10 +115,10 @@
   top: 0.55rem;
   right: 0.55rem;
   display: inline-flex;
-  gap: 0.4rem;
+  gap: var(--space-2);
   opacity: 0;
   transform: translateY(-2px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: opacity var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
   z-index: 2;
   pointer-events: none;
 }
@@ -160,7 +160,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: var(--space-8);
   text-align: center;
   color: var(--text-muted);
   font-size: var(--font-size-3xl);
@@ -179,7 +179,7 @@
 
 @media (max-width: 640px) {
   .products-list-page {
-    padding: 1rem;
+    padding: var(--space-4);
   }
 }
 
@@ -202,7 +202,7 @@
 
 /* Step appearance animation cada vez que se hace visible. */
 .attach-product-step:not([hidden]) {
-  animation: attachStepIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: attachStepIn var(--duracion-lenta) var(--curva-entrada) both;
 }
 
 @keyframes attachStepIn {
@@ -217,7 +217,7 @@
 }
 
 .attach-product-intro {
-  margin: 0 0 1.5rem;
+  margin: 0 0 var(--space-6);
   color: rgba(255, 255, 255, 0.55);
   font-size: var(--font-size-base);
   line-height: var(--leading-normal);
@@ -227,7 +227,7 @@
 .attach-product-options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.1rem;
+  gap: var(--space-4);
 }
 
 @media (max-width: 720px) {
@@ -241,8 +241,8 @@ button.attach-product-option {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1.6rem;
+  gap: var(--space-4);
+  padding: var(--space-6);
   background:
     linear-gradient(180deg, rgba(255,255,255,0.028) 0%, rgba(255,255,255,0.005) 100%);
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -257,10 +257,10 @@ button.attach-product-option {
   overflow: hidden;
   isolation: isolate;
   transition:
-    border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-    background 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    border-color var(--duracion-lenta) var(--curva-entrada),
+    transform var(--duracion-lenta) var(--curva-entrada),
+    box-shadow var(--duracion-lenta) var(--curva-entrada),
+    background var(--duracion-lenta) var(--curva-entrada);
 }
 
 /* Sheen radial que aparece en hover — "spotlight" desde arriba. */
@@ -273,7 +273,7 @@ button.attach-product-option::before {
   opacity: 0;
   pointer-events: none;
   z-index: -1;
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity var(--duracion-lenta) var(--curva-entrada);
 }
 
 button.attach-product-option:hover,
@@ -296,13 +296,13 @@ button.attach-product-option:focus-visible::before {
 
 button.attach-product-option:active {
   transform: translateY(-1px) scale(0.995);
-  transition-duration: 0.15s;
+  transition-duration: var(--duracion-base);
 }
 
 .attach-product-option-head {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: var(--space-3);
 }
 
 /* Icon container con gradiente + sheen + glow leve en hover. */
@@ -323,9 +323,9 @@ button.attach-product-option:active {
   color: rgba(255, 255, 255, 0.92);
   font-size: var(--font-size-md);
   transition:
-    background 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    background var(--duracion-lenta) var(--curva-entrada),
+    box-shadow var(--duracion-lenta) var(--curva-entrada),
+    transform var(--duracion-lenta) var(--curva-entrada);
 }
 
 button.attach-product-option:hover .attach-product-option-icon,
@@ -357,20 +357,20 @@ button.attach-product-option:focus-visible .attach-product-option-icon {
 
 /* CTA "Continuar →" con flecha animada y eyebrow uppercase. */
 .attach-product-option-cta {
-  margin-top: 0.4rem;
+  margin-top: var(--space-2);
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: var(--space-2);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: rgba(255, 255, 255, 0.4);
   letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
-  transition: color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color var(--duracion-lenta) var(--curva-entrada);
 }
 
 .attach-product-option-cta i {
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform var(--duracion-lenta) var(--curva-entrada);
   font-size: var(--font-size-base);
 }
 
@@ -388,7 +388,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 .attach-product-step--form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5);
   max-width: 580px;
   margin: 0 auto;
   /* sin background, sin border, sin shadow — solo el contenido */
@@ -399,7 +399,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 .attach-product-modal .modal-header h3 {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 
 .attach-product-header-icon {
@@ -414,18 +414,18 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 .attach-product-field {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 /* Grupo de upload dentro del paso "attach" (fotos + archivos en una sola pantalla) */
 .attach-product-field-group {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 
 .attach-product-field-group + .attach-product-field-group {
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
 }
 
 .attach-product-field-label {
@@ -438,7 +438,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 
 .attach-product-url-input {
   width: 100%;
-  padding: 0.85rem 1rem;
+  padding: var(--space-3) var(--space-4);
   font-size: var(--font-size-md);
   font-family: inherit;
   color: rgba(255, 255, 255, 0.98);
@@ -448,9 +448,9 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   outline: none;
   box-sizing: border-box;
   transition:
-    border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    background 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-color var(--duracion-media) var(--curva-entrada),
+    background var(--duracion-media) var(--curva-entrada),
+    box-shadow var(--duracion-media) var(--curva-entrada);
 }
 
 .attach-product-url-input::placeholder {
@@ -468,8 +468,8 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
-  padding: 2rem 1rem;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-4);
   text-align: center;
   background: rgba(0, 0, 0, 0.35);
   border: 1px dashed rgba(255, 255, 255, 0.12);
@@ -478,9 +478,9 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   color: rgba(255, 255, 255, 0.5);
   font-size: var(--font-size-base);
   transition:
-    border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-    background 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    border-color var(--duracion-lenta) var(--curva-entrada),
+    background var(--duracion-lenta) var(--curva-entrada),
+    transform var(--duracion-lenta) var(--curva-entrada);
 }
 
 .attach-product-dropzone:hover,
@@ -499,7 +499,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 .attach-product-dropzone > i {
   font-size: var(--font-size-2xl);
   color: rgba(255, 255, 255, 0.55);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform var(--duracion-lenta) var(--curva-entrada);
 }
 
 .attach-product-dropzone:hover > i {
@@ -525,7 +525,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
   max-height: 160px;
   overflow-y: auto;
 }
@@ -533,14 +533,14 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 .attach-product-file-list li {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.55rem 0.7rem;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   font-size: var(--font-size-base);
   color: rgba(255, 255, 255, 0.92);
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-sm);
-  animation: attachFileItemIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: attachFileItemIn var(--duracion-lenta) var(--curva-entrada);
 }
 
 @keyframes attachFileItemIn {
@@ -583,10 +583,10 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   cursor: pointer;
   opacity: 0.6;
   transition:
-    opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    background 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity var(--duracion-base) var(--curva-entrada),
+    color var(--duracion-base) var(--curva-entrada),
+    background var(--duracion-base) var(--curva-entrada),
+    border-color var(--duracion-base) var(--curva-entrada);
 }
 
 .attach-product-file-list li:hover .attach-product-file-remove {
@@ -609,12 +609,12 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 /* CTA Submit: pill blanca con sheen + lift (Linear/Vercel style). */
 .attach-product-submit {
   position: relative;
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.55rem;
-  padding: 0.9rem 1.25rem;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   font-family: inherit;
@@ -631,9 +631,9 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
     0 6px 16px -4px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   transition:
-    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    background 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transform var(--duracion-lenta) var(--curva-entrada),
+    box-shadow var(--duracion-lenta) var(--curva-entrada),
+    background var(--duracion-lenta) var(--curva-entrada);
 }
 
 .attach-product-submit:hover {
@@ -648,7 +648,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
 
 .attach-product-submit:active {
   transform: translateY(0);
-  transition-duration: 0.1s;
+  transition-duration: var(--duracion-rapida);
 }
 
 .attach-product-submit:disabled {
@@ -668,7 +668,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1.5rem;
+  padding: var(--space-12) var(--space-6);
   min-height: 320px;
 }
 
@@ -676,7 +676,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
+  gap: var(--space-5);
   text-align: center;
   max-width: 420px;
 }
@@ -693,7 +693,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
       rgba(255, 255, 255, 0.95) 100%);
   -webkit-mask: radial-gradient(circle, transparent 56%, var(--bg-base) 58%);
   mask: radial-gradient(circle, transparent 56%, var(--bg-base) 58%);
-  animation: attachSpin 0.95s cubic-bezier(0.65, 0.05, 0.36, 1) infinite;
+  animation: attachSpin 0.95s var(--curva-estandar) infinite;
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.08));
 }
 
@@ -707,7 +707,7 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   font-weight: var(--font-weight-medium);
   color: rgba(255, 255, 255, 0.98);
   letter-spacing: var(--tracking-tight);
-  animation: attachPulseText 2.4s ease-in-out infinite;
+  animation: attachPulseText 2.4s var(--curva-estandar) infinite;
 }
 
 @keyframes attachPulseText {

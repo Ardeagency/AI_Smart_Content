@@ -21,14 +21,14 @@
 .tablero-lista p { margin: var(--space-1) 0 0; font-size: var(--font-size-sm); line-height: var(--leading-normal); color: var(--text-secondary); }
 .tablero-senal.vera-sev--threat .tablero-senal-kind { color: var(--color-error); }
 .tablero-senal.vera-sev--warn .tablero-senal-kind { color: var(--color-warning); }
-.tablero-senal-kind { display: block; margin-bottom: 2px; font-family: var(--font-mono); font-size: var(--font-size-xs); letter-spacing: var(--tracking-mono); text-transform: uppercase; color: var(--text-muted); }
+.tablero-senal-kind { display: block; margin-bottom: var(--space-half); font-family: var(--font-mono); font-size: var(--font-size-xs); letter-spacing: var(--tracking-mono); text-transform: uppercase; color: var(--text-muted); }
 .tablero-hueco-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
 .tablero-score { font-family: var(--font-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); font-variant-numeric: tabular-nums; color: var(--color-success); }
 .tablero-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-2); }
 .tablero-enlace { display: inline-block; margin: var(--space-2) var(--space-3) 0 0; font-size: var(--font-size-xs); color: var(--text-primary); text-decoration: none; }
 .tablero-enlace:hover { text-decoration: underline; text-underline-offset: 0.2em; }
 .tablero-enlace:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; border-radius: var(--radius-xs); }
-.tablero-tendencia { display: flex; flex-direction: column; gap: 2px; }
+.tablero-tendencia { display: flex; flex-direction: column; gap: var(--space-half); }
 .tablero-tendencia-kw { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--text-primary); }
 .tablero-tendencia-meta { font-size: var(--font-size-xs); color: var(--text-muted); }
 .tablero-atendidas > summary { margin: var(--space-2) 0 var(--space-3); font-size: var(--font-size-sm); color: var(--text-muted); cursor: pointer; }

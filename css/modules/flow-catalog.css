@@ -7,7 +7,7 @@
 .flow-catalog {
   min-height: 100vh;
   width: 100%;
-  padding-bottom: 3rem;
+  padding-bottom: var(--space-12);
   background: var(--bg-base);
 }
 
@@ -17,7 +17,7 @@
   align-items: center;
   justify-content: center;
   min-height: 50vh;
-  gap: 1rem;
+  gap: var(--space-4);
   color: var(--text-muted);
 }
 .flow-catalog-loading .fa-spin { font-size: var(--font-size-3xl); color: var(--icon-button); }
@@ -29,7 +29,7 @@
   align-items: center;
   justify-content: center;
   min-height: 40vh;
-  padding: 3rem 2rem;
+  padding: var(--space-12) var(--space-8);
   text-align: center;
 }
 .flow-catalog-empty-text {
@@ -42,7 +42,7 @@
 }
 .flow-catalog-empty--in-section {
   min-height: 24vh;
-  padding: 2rem 1.5rem;
+  padding: var(--space-8) var(--space-6);
 }
 
 /* ---------- CATEGORY HEADER (vista categoría/subcategoría) ----------
@@ -78,14 +78,14 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.85rem;
+  gap: var(--space-3);
   padding-top: clamp(2.25rem, 4vw, 3.25rem);
 }
 .flow-catalog-subnav-item {
   position: relative;
   flex: 0 0 auto;
   width: auto;
-  padding: 0 0 0.3rem;
+  padding: 0 0 var(--space-1);
   background: none;
   border: none;
   font-family: inherit;
@@ -95,7 +95,7 @@
   text-align: right;
   color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  transition: color 0.18s ease;
+  transition: color var(--duracion-base) var(--curva-estandar);
 }
 .flow-catalog-subnav-item:hover { color: rgba(255, 255, 255, 0.88); }
 .flow-catalog-subnav-item.active { color: var(--color-white); }
@@ -121,8 +121,8 @@
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
-    gap: 0.75rem 1.25rem;
-    padding: 0 clamp(2rem, 5vw, 4rem) 1.25rem;
+    gap: var(--space-3) var(--space-5);
+    padding: 0 clamp(2rem, 5vw, 4rem) var(--space-5);
     order: -1;
   }
   .flow-catalog-subnav-item { text-align: left; }
@@ -147,12 +147,12 @@
   max-width: min(680px, 70%);
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 .flow-catalog-category-header-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-mono);
@@ -189,7 +189,7 @@
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-mono);
   color: var(--icon-button);
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
 }
 
 /* Strip variant: sólo chips, sin padding bottom extra del row-section */
@@ -243,7 +243,7 @@
   100% { transform: scale(1.08) translate3d(-1.5%, 0.8%, 0); }
 }
 .flow-hero-slide.is-active .flow-hero-slide-bg-media {
-  animation: flowHeroKenBurns 18s ease-out forwards;
+  animation: flowHeroKenBurns 18s var(--curva-entrada) forwards;
 }
 .flow-hero-slide-bg {
   position: absolute;
@@ -292,12 +292,12 @@
   color: var(--color-white);
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 .flow-hero-slide-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: var(--space-3);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-mono);
@@ -344,9 +344,9 @@
 .flow-hero-slide-cta {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  margin-top: 0.5rem;
-  padding: 0.65rem 1.25rem;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-5);
   align-self: flex-start;
   background: rgba(255, 255, 255, 0.95);
   color: var(--bg-base);
@@ -355,7 +355,7 @@
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-mono);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar), box-shadow var(--duracion-base) var(--curva-estandar);
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
 }
 .flow-hero-slide-cta i {
@@ -374,7 +374,7 @@
   bottom: clamp(1rem, 2.5vw, 1.75rem);
   right: clamp(2rem, 5vw, 4rem);
   display: flex;
-  gap: 0.4rem;
+  gap: var(--space-2);
   z-index: 4;
 }
 .flow-catalog-hero-dot {
@@ -387,7 +387,7 @@
   border-radius: var(--radius-pill);
   cursor: pointer;
   overflow: hidden;
-  transition: background 0.2s ease, width 0.3s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), width var(--duracion-media) var(--curva-estandar);
 }
 .flow-catalog-hero-dot:hover {
   background: rgba(255, 255, 255, 0.4);
@@ -426,10 +426,10 @@
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-tight);
   color: var(--text-primary);
-  margin: 0 0 1rem 0;
+  margin: 0 0 var(--space-4) 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 .flow-catalog-row-title::after {
   content: '';
@@ -438,16 +438,16 @@
   height: 1px;
   background: linear-gradient(to right, var(--icon-button), transparent);
   opacity: 0.55;
-  margin-left: 0.2rem;
+  margin-left: var(--space-1);
 }
 .flow-catalog-row-scroll {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   overflow-x: auto;
   overflow-y: hidden;
   /* padding vertical extra: deja aire para el hover-expand (scale 1.06) sin que
      overflow-y:hidden recorte la card crecida arriba/abajo. */
-  padding: 0.9rem 0 1.1rem;
+  padding: var(--space-4) 0 var(--space-4);
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
@@ -475,7 +475,7 @@
   cursor: pointer;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  transition: opacity var(--duracion-base) var(--curva-estandar), background var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .flow-catalog-row-section:hover .flow-catalog-row-nav,
 .flow-catalog-row-section:focus-within .flow-catalog-row-nav {
@@ -505,13 +505,13 @@
 .flow-catalog-categories-strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding-bottom: 0.25rem;
+  gap: var(--space-2);
+  padding-bottom: var(--space-1);
 }
 .flow-catalog-category-chip {
   display: inline-flex;
   align-items: center;
-  padding: 0.55rem 1.1rem;
+  padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-mono);
@@ -523,8 +523,8 @@
   cursor: pointer;
   white-space: nowrap;
   font-family: inherit;
-  transition: color 0.18s ease, background 0.18s ease,
-              border-color 0.18s ease, transform 0.18s ease;
+  transition: color var(--duracion-base) var(--curva-estandar), background var(--duracion-base) var(--curva-estandar),
+              border-color var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .flow-catalog-category-chip:hover {
   color: var(--color-white);
@@ -559,9 +559,9 @@
   position: relative;
   z-index: 1;
   /* delay en el transform = expand con retardo (firma Netflix) */
-  transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1) 0.14s,
-              box-shadow 0.34s cubic-bezier(0.16, 1, 0.3, 1) 0.14s,
-              border-color 0.2s ease;
+  transition: transform var(--duracion-lenta) var(--curva-entrada) 0.14s,
+              box-shadow var(--duracion-lenta) var(--curva-entrada) 0.14s,
+              border-color var(--duracion-base) var(--curva-estandar);
   display: block;
   text-align: left;
   /* content-visibility: auto + contain-intrinsic-size + isolation: isolate
@@ -593,8 +593,8 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.3s ease;
+  transition: transform var(--duracion-lenta) var(--curva-entrada),
+              filter var(--duracion-media) var(--curva-estandar);
 }
 .flow-card:hover .flow-card-img,
 .flow-card:focus-visible .flow-card-img {
@@ -633,10 +633,10 @@
   right: 3.5rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--space-1);
   pointer-events: none;
   z-index: 3;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity var(--duracion-media) var(--curva-estandar), transform var(--duracion-media) var(--curva-estandar);
 }
 .flow-card:hover .flow-card-badges,
 .flow-card:focus-visible .flow-card-badges {
@@ -644,7 +644,7 @@
   transform: translateY(-4px);
 }
 .flow-card-badge {
-  padding: 0.22rem 0.5rem;
+  padding: var(--space-1) var(--space-2);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-mono);
@@ -678,11 +678,11 @@
   top: 0.625rem;
   right: 0.625rem;
   display: flex;
-  gap: 0.3rem;
+  gap: var(--space-1);
   z-index: 4;
   opacity: 0;
   transform: translateY(-4px);
-  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity var(--duracion-base) var(--curva-estandar), transform var(--duracion-media) var(--curva-entrada);
 }
 .flow-card:hover .flow-card-actions,
 .flow-card:focus-visible .flow-card-actions,
@@ -705,8 +705,8 @@
   color: var(--color-white);
   font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease,
-              border-color 0.18s ease, transform 0.18s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar),
+              border-color var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .flow-card-icon-btn:hover {
   background: rgba(20, 21, 23, 0.9);
@@ -744,7 +744,7 @@
 }
 .flow-card-icon-run i {
   font-size: var(--font-size-xs);
-  margin-left: 1px; /* centrado optico del play */
+  margin-left: var(--space-half); /* centrado optico del play */
 }
 
 /* Info block: anclado al fondo, siempre visible */
@@ -753,7 +753,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 0.85rem 0.9rem 0.9rem;
+  padding: var(--space-3) var(--space-4) var(--space-4);
   color: var(--color-white);
   z-index: 2;
   pointer-events: none;
@@ -775,8 +775,8 @@
 .flow-card-info-meta {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.4rem;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
   font-size: var(--font-size-xs);
   color: rgba(255, 255, 255, 0.78);
 }
@@ -790,7 +790,7 @@
 .flow-card-info-credits {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--space-1);
   margin-left: auto;
   font-weight: var(--font-weight-medium);
   color: var(--icon-button);
@@ -803,23 +803,23 @@
 .flow-card-info-extra {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: var(--space-1);
   margin-top: 0;
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.2s ease,
-              margin-top 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: max-height var(--duracion-media) var(--curva-entrada),
+              opacity var(--duracion-base) var(--curva-estandar),
+              margin-top var(--duracion-media) var(--curva-entrada);
 }
 .flow-card:hover .flow-card-info-extra,
 .flow-card:focus-visible .flow-card-info-extra {
   max-height: 60px;
   opacity: 1;
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
 }
 .flow-card-info-pill {
-  padding: 0.18rem 0.5rem;
+  padding: var(--space-half) var(--space-2);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-mono);
@@ -843,8 +843,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   background: var(--brillo-hover);
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
@@ -861,7 +861,7 @@
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transicion-controles);
 }
 .flow-card-footer-btn:hover {
   background: rgba(255, 255, 255, 0.1);
@@ -881,7 +881,7 @@
    body, subtitle, meta, cost, overlay--hover .flow-card-tags) ya no tienen
    consumidor en HTML — eliminadas. */
 .flow-card-tag {
-  padding: 0.25rem 0.5rem;
+  padding: var(--space-1) var(--space-2);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   color: var(--color-white);
@@ -893,15 +893,15 @@
 
 /* ---------- GALLERY BY SUBCATEGORY (category view) ---------- */
 .flow-catalog-gallery-by-sub {
-  padding: 0 2rem 2rem;
+  padding: 0 var(--space-8) var(--space-8);
 }
 .flow-catalog-sub-row .flow-catalog-row-scroll {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-6);
 }
 
 /* Todos los flujos: por categoría y subcategoría (mismo catálogo) */
 .flow-catalog-gallery-by-category-sub {
-  padding: 0 0 2rem;
+  padding: 0 0 var(--space-8);
 }
 .flow-catalog-category-block {
   margin-bottom: clamp(2.5rem, 4vw, 3.5rem);
@@ -910,12 +910,12 @@
 .flow-catalog-category-block-title {
   display: inline-flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: var(--space-3);
   font-size: clamp(1.4rem, 2vw, 1.75rem);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-tight);
   color: var(--text-primary);
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--space-5);
   padding: 0;
   border-bottom: none;
 }
@@ -934,7 +934,7 @@
 .flow-catalog-category-block .flow-catalog-sub-row.flow-catalog-row-section {
   padding-left: 0;
   padding-right: 0;
-  padding-bottom: 1.5rem;
+  padding-bottom: var(--space-6);
 }
 /* Subcategoría (h4) DENTRO de un category-block: más sutil que el h2 padre.
    Categoría = title bold + accent line; subcategoría = label más pequeño,
@@ -944,7 +944,7 @@
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-mono);
   color: var(--text-secondary, rgba(255, 255, 255, 0.62));
-  margin: 0 0 0.6rem 0;
+  margin: 0 0 var(--space-2) 0;
 }
 .flow-catalog-category-block h4.flow-catalog-row-title::after {
   display: none;
@@ -963,7 +963,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 240px));
   justify-content: start;
-  gap: 1.25rem;
+  gap: var(--space-5);
   overflow: visible;
 }
 .flow-catalog-gallery-by-category-sub .flow-catalog-row-scroll .flow-card {
@@ -981,7 +981,7 @@
   right: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
   z-index: 3;
   pointer-events: none;
 }
@@ -989,8 +989,8 @@
 .flow-card--ficha-preview .flow-card-icon-stat {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.45rem;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   background: rgba(0, 0, 0, 0.55);
   border-radius: var(--radius-pill);
   color: var(--color-white);
@@ -1007,11 +1007,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 1rem 0.75rem;
+  padding: var(--space-4) var(--space-3);
   background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.35) 50%, transparent 100%);
   color: var(--color-white);
   z-index: 1;
-  transition: opacity 0.25s ease;
+  transition: opacity var(--duracion-media) var(--curva-estandar);
 }
 .flow-card--with-footer:hover .flow-card-overlay--default,
 .flow-card--with-footer:focus-visible .flow-card-overlay--default,
@@ -1024,8 +1024,8 @@
 .flow-card--ficha-preview .flow-card-tags--default {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-top: 0.5rem;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
 }
 .flow-card--with-footer .flow-card-overlay--hover,
 .flow-card--ficha-preview .flow-card-overlay--hover {
@@ -1033,12 +1033,12 @@
   inset: 0;
   display: flex;
   align-items: flex-end;
-  padding: 1rem 0.75rem;
+  padding: var(--space-4) var(--space-3);
   background: rgba(0, 0, 0, 0.55);
   color: var(--color-white);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
+  transition: opacity var(--duracion-media) var(--curva-estandar), visibility var(--duracion-media) var(--curva-estandar);
   z-index: 2;
 }
 .flow-card--with-footer:hover .flow-card-overlay--hover,
@@ -1052,7 +1052,7 @@
 .flow-card--ficha-preview .flow-card-hover-content {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
   width: 100%;
 }
 .flow-card--with-footer .flow-card-credits,
@@ -1066,7 +1066,7 @@
 .flow-card--ficha-preview .flow-card-meta-list {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: var(--space-1);
   font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.92);
 }
@@ -1087,7 +1087,7 @@
 .flow-card-info-uses {
   display: inline-flex;
   align-items: center;
-  gap: 0.28rem;
+  gap: var(--space-1);
   font-weight: var(--font-weight-medium);
   color: rgba(255, 255, 255, 0.72);
   white-space: nowrap;
@@ -1108,7 +1108,7 @@
 .flow-catalog-loading {
   display: block;
   min-height: 60vh;
-  padding-bottom: 2rem;
+  padding-bottom: var(--space-8);
   gap: 0;
 }
 @keyframes flowSkeletonShimmer {
@@ -1125,7 +1125,7 @@
     rgba(255, 255, 255, 0.035) 70%
   );
   background-size: 200% 100%;
-  animation: flowSkeletonShimmer 1.4s ease-in-out infinite;
+  animation: flowSkeletonShimmer 1.4s var(--curva-estandar) infinite;
   border-radius: var(--radius-md);
 }
 .flow-skeleton-hero {
@@ -1134,7 +1134,7 @@
   min-height: 360px;
   max-height: 600px;
   border-radius: 0;
-  margin-bottom: 1.75rem;
+  margin-bottom: var(--space-6);
   -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
   mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
 }
@@ -1144,12 +1144,12 @@
 .flow-skeleton-title {
   width: clamp(140px, 18vw, 220px);
   height: 18px;
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--space-5);
   border-radius: var(--radius-sm);
 }
 .flow-skeleton-row {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   overflow: hidden;
 }
 .flow-skeleton-card {
@@ -1166,17 +1166,17 @@
 /* ---------- Estado vacio que enseña (editorial, no "PROXIMAMENTE" pelado) ---------- */
 .flow-catalog-empty--teach {
   flex-direction: column;
-  gap: 0.7rem;
+  gap: var(--space-3);
   min-height: 38vh;
   max-width: 640px;
   margin: 0 auto;
-  padding: clamp(2.5rem, 5vw, 4rem) 2rem;
+  padding: clamp(2.5rem, 5vw, 4rem) var(--space-8);
 }
 .flow-catalog-empty-icon {
   font-size: var(--font-size-3xl);
   color: var(--icon-button);
   opacity: 0.9;
-  margin-bottom: 0.35rem;
+  margin-bottom: var(--space-1);
 }
 .flow-catalog-empty-title {
   margin: 0;
@@ -1224,7 +1224,7 @@
   top: 0;
   right: 0;
   left: 0;
-  padding: 0.7rem;
+  padding: var(--space-3);
   border-bottom: none;
   justify-content: flex-end;
   z-index: 6;
@@ -1294,11 +1294,11 @@
   display: flex;
   flex-direction: column;
 }
-.flow-detail-col--runs { gap: 0.7rem; }
+.flow-detail-col--runs { gap: var(--space-3); }
 .flow-detail-col--info {
-  gap: 0.85rem;
+  gap: var(--space-3);
   justify-content: flex-start;
-  padding-right: 2.5rem; /* deja aire para el boton cerrar */
+  padding-right: var(--space-10); /* deja aire para el boton cerrar */
 }
 .flow-detail-eyebrow {
   display: block;
@@ -1322,28 +1322,28 @@
 .flow-detail-badges-inline {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--space-1);
 }
 
 /* Columna izquierda: ultimos runs */
 .flow-detail-runs {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 .flow-detail-run {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   width: 100%;
-  padding: 0.5rem;
+  padding: var(--space-2);
   text-align: left;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--border-color, #242424);
   border-radius: var(--radius-md);
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .flow-detail-run:hover {
   background: rgba(255, 255, 255, 0.1);
@@ -1376,7 +1376,7 @@
 .flow-detail-run-info {
   display: flex;
   flex-direction: column;
-  gap: 0.28rem;
+  gap: var(--space-1);
   min-width: 0;
 }
 .flow-detail-run-status {
@@ -1401,28 +1401,28 @@
     rgba(255, 255, 255, 0.035) 70%
   );
   background-size: 200% 100%;
-  animation: flowSkeletonShimmer 1.4s ease-in-out infinite;
+  animation: flowSkeletonShimmer 1.4s var(--curva-estandar) infinite;
   cursor: default;
 }
 .flow-detail-runs-empty {
   font-size: var(--font-size-base);
   line-height: var(--leading-normal);
   color: var(--text-secondary, rgba(255, 255, 255, 0.62));
-  padding: 0.4rem 0;
+  padding: var(--space-2) 0;
 }
 
 /* Acciones (columna derecha) */
 .flow-detail-actions {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.15rem;
+  gap: var(--space-2);
+  margin-top: var(--space-half);
 }
 .flow-detail-cta--run {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.7rem 1.3rem;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
   background: var(--color-white);
   color: var(--bg-base);
   border: none;
@@ -1431,7 +1431,7 @@
   font-weight: var(--font-weight-medium);
   font-family: inherit;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  transition: transform var(--duracion-base) var(--curva-estandar), box-shadow var(--duracion-base) var(--curva-estandar), background var(--duracion-base) var(--curva-estandar);
 }
 .flow-detail-cta--run:hover {
   transform: translateY(-1px);
@@ -1441,9 +1441,9 @@
 .flow-detail-cta-cost {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  margin-left: 0.25rem;
-  padding-left: 0.6rem;
+  gap: var(--space-1);
+  margin-left: var(--space-1);
+  padding-left: var(--space-2);
   border-left: 1px solid rgba(0, 0, 0, 0.18);
   font-weight: var(--font-weight-bold);
 }
@@ -1461,7 +1461,7 @@
   color: var(--text-secondary, rgba(255, 255, 255, 0.7));
   cursor: pointer;
   font-size: var(--font-size-md);
-  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .flow-detail-icon-btn:hover {
   background: rgba(255, 255, 255, 0.09);
@@ -1481,12 +1481,12 @@
 .flow-detail-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1rem;
+  gap: var(--space-2) var(--space-4);
 }
 .flow-detail-meta-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.82);
 }
@@ -1503,7 +1503,7 @@
   color: rgba(255, 255, 255, 0.84);
 }
 .flow-detail-section-title {
-  margin: 0 0 0.15rem;
+  margin: 0 0 var(--space-half);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-mono);
@@ -1514,15 +1514,15 @@
 /* Sugerencias: ahora viven DENTRO de la columna de info (no full-width).
    Secundarias: separador sutil arriba + cards pequeñas. */
 .flow-detail-suggest {
-  margin-top: 0.5rem;
-  padding-top: 1rem;
+  margin-top: var(--space-2);
+  padding-top: var(--space-4);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 .flow-detail-suggest .flow-detail-section-title {
-  margin-bottom: 0.7rem;
+  margin-bottom: var(--space-3);
 }
 .flow-detail-related-row {
-  padding-bottom: 0.25rem;
+  padding-bottom: var(--space-1);
 }
 /* Sugerencias pequeñas: secundarias en la jerarquia (no compiten con el
    bloque de info). Cards compactas ~150px en vez de las 240px del catalogo. */
@@ -1545,7 +1545,7 @@
 @media (max-width: 760px) {
   .flow-detail-grid {
     grid-template-columns: 1fr;
-    gap: 1.25rem;
+    gap: var(--space-5);
   }
   .flow-detail-col--info {
     order: 1;
@@ -1563,20 +1563,20 @@
    My Flows (vista de guardados, modo savedView de FlowCatalogView)
    ============================================================ */
 .flow-catalog--saved .flow-catalog-content {
-  padding: calc(var(--app-header-height, 56px) + 2rem) 4rem 0;
+  padding: calc(var(--app-header-height, 56px) + 2rem) var(--space-16) 0;
   max-width: 1600px;
   margin: 0 auto;
 }
 
 .flow-catalog-saved-header {
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-8);
 }
 
 .flow-catalog-saved-title {
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
-  margin: 0 0 0.4rem;
+  margin: 0 0 var(--space-2);
 }
 
 .flow-catalog-saved-sub {
@@ -1589,15 +1589,15 @@
 .flow-catalog-saved-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 @media (max-width: 768px) {
   .flow-catalog--saved .flow-catalog-content {
-    padding: calc(var(--app-header-height, 56px) + 1.5rem) 1.25rem 0;
+    padding: calc(var(--app-header-height, 56px) + 1.5rem) var(--space-5) 0;
   }
   .flow-catalog-saved-grid {
-    gap: 0.85rem;
+    gap: var(--space-3);
     justify-content: center;
   }
 }
@@ -1611,9 +1611,9 @@
 .flow-catalog-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.75rem 1rem;
+  gap: var(--space-3) var(--space-4);
   flex-wrap: wrap;
-  padding: 0.85rem clamp(2rem, 5vw, 4rem);
+  padding: var(--space-3) clamp(2rem, 5vw, 4rem);
   background: var(--bg-base, var(--bg-base));
   border-bottom: 1px solid var(--border-color, #242424);
 }
@@ -1629,10 +1629,10 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
 .flow-toolbar-search {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   flex: 1 1 280px;
   max-width: 460px;
-  padding: 0.55rem 0.9rem;
+  padding: var(--space-2) var(--space-4);
   background: var(--glass-black-bg, rgba(0, 0, 0, 0.55));
   border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-md);
@@ -1667,11 +1667,11 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
 .flow-search-clear:hover { color: var(--text-primary, #ffffff); }
 .flow-toolbar-controls {
   display: flex;
-  gap: 0.6rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 .flow-toolbar-select {
-  padding: 0.55rem 2rem 0.55rem 0.9rem;
+  padding: var(--space-2) var(--space-8) var(--space-2) var(--space-4);
   background-color: var(--glass-black-bg, rgba(0, 0, 0, 0.55));
   border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-md);
@@ -1692,10 +1692,10 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
 
 /* Resultados: grid plana responsiva (la card pierde su ancho fijo de 240px) */
 .flow-catalog-results {
-  padding: 1.5rem clamp(2rem, 5vw, 4rem) 2.5rem;
+  padding: var(--space-6) clamp(2rem, 5vw, 4rem) var(--space-10);
 }
 .flow-catalog-results-head {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-mono);
@@ -1704,7 +1704,7 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
 .flow-catalog-results-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
 }
 .flow-catalog-results-grid .flow-card {
   flex: initial;
@@ -1727,7 +1727,7 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
 }
 .flow-rank-num {
   align-self: flex-end;
-  margin-right: -1.6rem;
+  margin-right: calc(-1 * var(--space-6));
   font-size: clamp(5rem, 9vw, 9rem);
   font-weight: var(--font-weight-bold);
   line-height: var(--leading-none);
@@ -1745,7 +1745,7 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
 }
 
 /* Destacado del dia: feature landscape que rota por fecha */
-.flow-catalog-featured-section { padding-top: 0.25rem; }
+.flow-catalog-featured-section { padding-top: var(--space-1); }
 .flow-featured {
   position: relative;
   display: block;
@@ -1778,7 +1778,7 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 .flow-featured-eyebrow {
   font-size: var(--font-size-xs);
@@ -1803,12 +1803,12 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
   color: rgba(255, 255, 255, 0.84);
   max-width: 48ch;
 }
-.flow-featured-actions { display: flex; gap: 0.6rem; margin-top: 0.4rem; flex-wrap: wrap; }
+.flow-featured-actions { display: flex; gap: var(--space-2); margin-top: var(--space-2); flex-wrap: wrap; }
 .flow-featured-cta {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.1rem;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
@@ -1817,16 +1817,16 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
   font-weight: var(--font-weight-medium);
   background: var(--color-white);
   color: var(--bg-base);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  transition: transform var(--duracion-base) var(--curva-estandar), box-shadow var(--duracion-base) var(--curva-estandar), background var(--duracion-base) var(--curva-estandar);
 }
 .flow-featured-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); }
 .flow-featured-cta i { font-size: var(--font-size-sm); }
 .flow-featured-cost {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  margin-left: 0.2rem;
-  padding-left: 0.55rem;
+  gap: var(--space-1);
+  margin-left: var(--space-1);
+  padding-left: var(--space-2);
   border-left: 1px solid rgba(0, 0, 0, 0.18);
   font-weight: var(--font-weight-bold);
 }
@@ -1848,22 +1848,22 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 .flow-rail-head .flow-catalog-row-title {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 .flow-rail-seeall {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   flex: 0 0 auto;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   color: var(--text-secondary, rgba(255, 255, 255, 0.7));
   text-decoration: none;
   white-space: nowrap;
-  transition: color 0.18s ease;
+  transition: color var(--duracion-base) var(--curva-estandar);
 }
 .flow-rail-seeall:hover { color: var(--color-white); }
 .flow-rail-seeall i { font-size: var(--font-size-xs); }

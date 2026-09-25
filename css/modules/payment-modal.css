@@ -23,7 +23,7 @@
     justify-content: center !important;
     opacity: 0;
     visibility: hidden;
-    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease !important;
+    transition: color var(--duracion-media) var(--curva-estandar), background-color var(--duracion-media) var(--curva-estandar), border-color var(--duracion-media) var(--curva-estandar), opacity var(--duracion-media) var(--curva-estandar), transform var(--duracion-media) var(--curva-estandar), box-shadow var(--duracion-media) var(--curva-estandar) !important;
 }
 
 .payment-overlay.active {
@@ -41,7 +41,7 @@
     overflow-y: auto;
     position: relative;
     transform: scale(0.8) translateY(50px);
-    transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color var(--duracion-lenta) var(--curva-estandar), background-color var(--duracion-lenta) var(--curva-estandar), border-color var(--duracion-lenta) var(--curva-estandar), opacity var(--duracion-lenta) var(--curva-estandar), transform var(--duracion-lenta) var(--curva-estandar), box-shadow var(--duracion-lenta) var(--curva-estandar);
     box-shadow: var(--sombra-modal);
 }
 
@@ -54,7 +54,7 @@
    ======================== */
 
 .payment-header {
-    padding: 2rem 2rem 1rem 2rem;
+    padding: var(--space-8) var(--space-8) var(--space-4) var(--space-8);
     text-align: center;
     position: relative;
     border-bottom: 1px solid var(--border-color);
@@ -75,7 +75,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 
 .payment-close:hover {
@@ -86,14 +86,14 @@
 .plan-selected {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     background: var(--brillo-hover);
     border: 1px solid var(--border-color);
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-lg);
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
 }
 
 .plan-selected i {
@@ -131,7 +131,7 @@
 .payment-title {
     font-size: var(--font-size-3xl);
     font-weight: var(--font-weight-bold);
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
     background: linear-gradient(135deg, var(--text-primary), var(--accent));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -141,22 +141,22 @@
 .payment-subtitle {
     color: var(--text-secondary);
     font-size: var(--font-size-md);
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
 }
 
 .price-display {
     background: var(--brillo-hover);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 1rem;
-    margin-bottom: 1rem;
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
 }
 
 .price-amount {
     font-size: var(--font-size-3xl);
     font-weight: var(--font-weight-bold);
     color: var(--accent);
-    margin-bottom: 0.25rem;
+    margin-bottom: var(--space-1);
 }
 
 .price-period {
@@ -169,15 +169,15 @@
    ======================== */
 
 .payment-body {
-    padding: 1.5rem 2rem;
+    padding: var(--space-6) var(--space-8);
 }
 
 .registration-form {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
 }
 
 .form-section {
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
 }
 
 /* ============================================
@@ -198,7 +198,7 @@
   overflow: hidden;
   border-radius: var(--radius-xs);
   box-shadow: var(--sombra-flotante);
-  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  transition: color var(--duracion-media) var(--curva-estandar), background-color var(--duracion-media) var(--curva-estandar), border-color var(--duracion-media) var(--curva-estandar), opacity var(--duracion-media) var(--curva-estandar), transform var(--duracion-media) var(--curva-estandar), box-shadow var(--duracion-media) var(--curva-estandar);
   background: var(--media-container-bg);
 }
 .featured-card-visual { aspect-ratio: 16 / 10; }
@@ -239,12 +239,12 @@
 .section-title {
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-medium);
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding-bottom: 0.75rem;
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -254,7 +254,7 @@
 }
 
 .payment-modal .form-group {
-    margin-bottom: 1.25rem;
+    margin-bottom: var(--space-5);
 }
 
 .form-label {
@@ -262,7 +262,7 @@
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
 }
 
 /* Estilos de inputs heredan de base.css - sin duplicación */
@@ -281,7 +281,7 @@
 }
 
 .password-input .form-input {
-    padding-right: 3rem;
+    padding-right: var(--space-12);
 }
 
 .password-toggle {
@@ -294,9 +294,9 @@
     color: var(--text-muted);
     cursor: pointer;
     font-size: var(--font-size-base);
-    padding: 8px;
+    padding: var(--space-2);
     border-radius: var(--radius-xs);
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 
 .password-toggle:hover {
@@ -305,10 +305,10 @@
 }
 
 .password-strength {
-    margin-top: 8px;
+    margin-top: var(--space-2);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .strength-bar {
@@ -323,7 +323,7 @@
     height: 100%;
     background: var(--color-error);
     width: 0%;
-    transition: width 0.3s ease, background-color 0.3s ease;
+    transition: width var(--duracion-media) var(--curva-estandar), background-color var(--duracion-media) var(--curva-estandar);
 }
 
 .strength-fill.weak {
@@ -358,7 +358,7 @@
 }
 
 .password-strength {
-    margin-top: 0.5rem;
+    margin-top: var(--space-2);
     font-size: var(--font-size-sm);
 }
 
@@ -388,7 +388,7 @@
 
 .field-error {
     display: none;
-    margin-top: 0.5rem;
+    margin-top: var(--space-2);
     font-size: var(--font-size-base);
     color: var(--color-error);
     font-weight: var(--font-weight-medium);
@@ -412,16 +412,16 @@
     background: var(--brillo-hover);
     border: 2px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 1.5rem;
-    margin-bottom: 1rem;
+    padding: var(--space-6);
+    margin-bottom: var(--space-4);
 }
 
 .wompi-badge {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-    padding-bottom: 1rem;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -433,7 +433,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
+    padding: var(--space-2);
 }
 
 .wompi-logo img {
@@ -450,7 +450,7 @@
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-bold);
     color: var(--text-primary);
-    margin-bottom: 0.25rem;
+    margin-bottom: var(--space-1);
 }
 
 .wompi-description {
@@ -463,7 +463,7 @@
     color: var(--bg-base);
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-bold);
-    padding: 0.375rem 0.75rem;
+    padding: var(--space-1) var(--space-3);
     border-radius: var(--radius-lg);
     text-transform: uppercase;
     letter-spacing: var(--tracking-mono);
@@ -473,8 +473,8 @@
 
 .wompi-features {
     display: grid;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
 }
 
 .feature {
@@ -482,7 +482,7 @@
     font-size: var(--font-size-base);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .feature::before {
@@ -495,10 +495,10 @@
     background: var(--brillo-hover);
     border: 1px solid var(--color-info-border);
     border-radius: var(--radius-sm);
-    padding: 0.875rem 1rem;
+    padding: var(--space-3) var(--space-4);
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--space-3);
     font-size: var(--font-size-base);
     color: var(--text-secondary);
 }
@@ -516,9 +516,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+    padding: var(--space-4);
     background: rgba(167, 141, 120, 0.05);
     border: 1px solid rgba(167, 141, 120, 0.2);
     border-radius: var(--radius-sm);
@@ -527,7 +527,7 @@
 .security-badge {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     color: var(--text-muted);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
@@ -545,18 +545,18 @@
     background: var(--brillo-hover);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 1.25rem;
-    margin-bottom: 1.5rem;
+    padding: var(--space-5);
+    margin-bottom: var(--space-6);
 }
 
 .features-title {
     font-size: var(--font-size-md);
     font-weight: var(--font-weight-medium);
     color: var(--text-primary);
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .features-title i {
@@ -565,13 +565,13 @@
 
 .features-list {
     display: grid;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .feature-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--space-3);
     color: var(--text-secondary);
     font-size: var(--font-size-base);
 }
@@ -594,15 +594,15 @@
     background: var(--brillo-hover);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
 }
 
 .total-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: var(--space-3);
 }
 
 .total-row:last-child {
@@ -632,20 +632,20 @@
 .payment-actions {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
 }
 
 .pay-button {
     background: var(--color-white);
     color: var(--bg-base);
     border: 1px solid rgba(0, 0, 0, 0.12);
-    padding: 1rem 2rem;
+    padding: var(--space-4) var(--space-8);
     border-radius: var(--radius-md);
     font-size: var(--font-size-md);
     font-weight: var(--font-weight-medium);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
     position: relative;
     overflow: hidden;
     display: flex;
@@ -678,7 +678,7 @@
     border-radius: 50%;
     animation: spin 1s linear infinite;
     display: none;
-    margin-right: 0.5rem;
+    margin-right: var(--space-2);
 }
 
 .pay-button.processing .spinner {
@@ -693,12 +693,12 @@
     background: transparent;
     color: var(--text-secondary);
     border: 2px solid var(--border-color);
-    padding: 1rem 2rem;
+    padding: var(--space-4) var(--space-8);
     border-radius: var(--radius-md);
     font-size: var(--font-size-md);
     font-weight: var(--font-weight-medium);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 
 .cancel-button:hover {
@@ -712,13 +712,13 @@
    ======================== */
 
 .payment-disclaimer {
-    margin-top: 1rem;
+    margin-top: var(--space-4);
 }
 
 .payment-modal .checkbox-container {
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: var(--space-3);
     font-size: var(--font-size-base);
     color: var(--text-secondary);
     line-height: var(--leading-normal);
@@ -735,9 +735,9 @@
     border: 2px solid var(--border-color);
     border-radius: var(--radius-xs);
     position: relative;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
     flex-shrink: 0;
-    margin-top: 1px;
+    margin-top: var(--space-half);
 }
 
 .payment-modal .checkbox-container:hover .checkmark {
@@ -778,26 +778,26 @@
 @media (max-width: 768px) {
     .payment-modal {
         width: 95%;
-        margin: 1rem;
+        margin: var(--space-4);
     }
     
     .payment-header {
-        padding: 1.5rem 1.5rem 1rem 1.5rem;
+        padding: var(--space-6) var(--space-6) var(--space-4) var(--space-6);
     }
     
     .payment-body {
-        padding: 1rem 1.5rem;
+        padding: var(--space-4) var(--space-6);
     }
     
     .form-row {
         grid-template-columns: 1fr;
-        gap: 0.75rem;
+        gap: var(--space-3);
     }
     
     .wompi-badge {
         flex-direction: column;
         text-align: center;
-        gap: 0.75rem;
+        gap: var(--space-3);
     }
     
     .wompi-features {
@@ -806,7 +806,7 @@
     
     .security-badges {
         flex-wrap: wrap;
-        gap: 0.75rem;
+        gap: var(--space-3);
     }
     
     .security-badge {
@@ -814,12 +814,12 @@
     }
     
     .payment-actions {
-        gap: 0.75rem;
+        gap: var(--space-3);
     }
     
     .pay-button,
     .cancel-button {
-        padding: 0.875rem 1.5rem;
+        padding: var(--space-3) var(--space-6);
         font-size: var(--font-size-md);
     }
 }
@@ -834,15 +834,15 @@
     }
     
     .payment-header {
-        padding: 1rem 1rem 0.75rem 1rem;
+        padding: var(--space-4) var(--space-4) var(--space-3) var(--space-4);
     }
     
     .payment-body {
-        padding: 0.75rem 1rem;
+        padding: var(--space-3) var(--space-4);
     }
     
     .price-display {
-        margin-bottom: 0.75rem;
+        margin-bottom: var(--space-3);
     }
     
     .price-amount {
@@ -850,25 +850,25 @@
     }
     
     .payment-method-fixed {
-        padding: 1rem;
+        padding: var(--space-4);
 }
 
 .form-section {
-        margin-bottom: 1.5rem;
+        margin-bottom: var(--space-6);
 }
 
 .section-title {
         font-size: var(--font-size-md);
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
 }
 
     .wompi-note {
-        padding: 0.75rem;
+        padding: var(--space-3);
         font-size: var(--font-size-sm);
     }
     
     .payment-total {
-        padding: 1rem;
+        padding: var(--space-4);
     }
 }
 

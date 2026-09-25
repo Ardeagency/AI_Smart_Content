@@ -187,10 +187,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 12px 12px 14px 14px;
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-3);
     /* Sombra alineada con Studio sidebar para que ambas cards "floten" igual */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-    transition: border-color 0.15s;
+    transition: border-color var(--duracion-base) var(--curva-estandar);
     /* Scroll dentro de la card flotante (no en el aside wrapper) */
     flex: 1;
     min-height: 0;
@@ -286,10 +286,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-prompt-footer-card {
     position: relative;
     pointer-events: auto;
-    padding: 1px;
+    padding: var(--space-half);
     border-radius: var(--radius-md);
     background: transparent;
-    transition: box-shadow 0.2s ease, opacity 0.2s ease;
+    transition: box-shadow var(--duracion-base) var(--curva-estandar), opacity var(--duracion-base) var(--curva-estandar);
     min-width: 0;
     box-shadow: none;
 }
@@ -346,7 +346,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     gap: 0;
 }
 .video-director-console .video-cine-label {
-    margin-bottom: 0.2rem;
+    margin-bottom: var(--space-1);
 }
 
 /* Director Console — top-row (+, adjuntos); content = solo textarea. Tokens: spacing, glass, transition. */
@@ -370,7 +370,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: var(--white-8);
     color: var(--glass-black-text);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-director-btn-add:hover {
     background: var(--white-10);
@@ -402,7 +402,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     outline: none;
     resize: vertical;
     box-sizing: border-box;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-director-console-content .video-director-brief-input::placeholder {
     color: var(--text-muted);
@@ -434,7 +434,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 1px solid var(--glass-white-border);
     border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-director-toggle:hover {
     background: var(--white-10);
@@ -445,7 +445,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: var(--white-10);
 }
 .video-director-console .video-director-select {
-    padding: var(--space-1) 1.75rem var(--space-1) var(--space-2);
+    padding: var(--space-1) var(--space-6) var(--space-1) var(--space-2);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     color: var(--text-primary);
@@ -499,7 +499,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 1px solid var(--glass-white-border);
     border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-director-btn-generate:hover {
     background: var(--white-20);
@@ -524,7 +524,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 1px solid var(--white-20);
     border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-director-controls .video-director-btn-regenerate:hover {
     color: var(--glass-black-text);
@@ -622,7 +622,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-radius: 50%;
     color: var(--glass-black-text);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-cine-tag-remove:hover {
     background: var(--white-50);
@@ -736,7 +736,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-radius: var(--radius-xs);
     overflow: hidden;
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
     background: var(--black-40);
 }
 .video-asset-product-item:hover {
@@ -815,7 +815,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-radius: var(--radius-xs);
     color: var(--glass-black-text);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-asset-change-btn:hover {
     background: var(--white-8);
@@ -838,14 +838,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: none;
     border: none;
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-collapse-header:hover {
     color: var(--glass-black-text);
 }
 .video-collapse-icon {
     font-size: var(--font-size-xs);
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-collapse-content {
     padding: var(--space-1) 0 var(--space-2);
@@ -891,7 +891,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: var(--org-brillo);
     border: 1px solid var(--glass-black-border);
     color: var(--glass-black-text);
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-prompt-productions-btn:hover {
     background: var(--org-brillo-strong);
@@ -924,7 +924,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-xs);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-escenas-all-btn:hover {
     background: var(--white-15);
@@ -963,7 +963,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-radius: var(--radius-xs);
     overflow: hidden;
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
     background: var(--black-40);
 }
 .video-escena-item:hover {
@@ -1037,7 +1037,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     inset: 0;
     background: var(--nav-overlay);
     opacity: 0;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-productions-panel[aria-hidden="false"] .video-productions-panel-backdrop {
     opacity: 1;
@@ -1047,7 +1047,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     width: 100%;
     max-width: 900px;
     max-height: 45vh;
-    margin: 0 auto 6rem;
+    margin: 0 auto var(--space-20);
     padding: var(--space-4);
     border-radius: var(--radius-md);
     background: var(--bg-card);
@@ -1058,7 +1058,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     z-index: 1;
     transform: translateY(100%);
     opacity: 0;
-    transition: var(--transition-slow);
+    transition: var(--transicion-controles-lenta);
 }
 .video-productions-panel[aria-hidden="false"] .video-productions-panel-card {
     transform: translateY(0);
@@ -1135,7 +1135,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-radius: var(--radius-sm);
     border: 2px solid transparent;
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-production-item:hover {
     background: var(--white-8);
@@ -1219,7 +1219,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-field-help {
     font-size: var(--font-size-xs);
     color: var(--text-muted);
-    margin: 0.2rem 0 0.35rem 0;
+    margin: var(--space-1) 0 var(--space-1) 0;
     line-height: var(--leading-tight);
 }
 .video-cine-selected-label {
@@ -1248,7 +1248,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 1px solid var(--white-20);
     border-radius: var(--radius-sm);
     overflow: hidden;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-cinematography-panel .video-cine-block:hover {
     border-color: var(--video-accent);
@@ -1270,7 +1270,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: transparent;
     border: none;
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
     font-family: var(--font-mono);
     text-align: left;
 }
@@ -1283,7 +1283,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-sidebar-cine .video-cine-block-header i {
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
-    transition: var(--transition);
+    transition: var(--transicion-controles);
     flex-shrink: 0;
     margin-left: var(--space-2);
 }
@@ -1332,7 +1332,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     margin: 0;
 }
 .video-prompt-center {
-    padding: 0.25rem 1rem 1rem;
+    padding: var(--space-1) var(--space-4) var(--space-4);
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -1340,12 +1340,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-prompt-db-toolbar {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    margin-bottom: 0.5rem;
+    gap: var(--space-1);
+    margin-bottom: var(--space-2);
 }
 .video-prompt-db-select {
     width: 100%;
-    padding: 0.35rem 0.5rem;
+    padding: var(--space-1) var(--space-2);
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
     background: var(--org-brillo);
@@ -1359,15 +1359,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.35rem;
-    padding: 0.4rem 0.5rem;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-2);
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
     background: var(--org-brillo-strong);
     border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: background var(--duracion-base) var(--curva-estandar);
 }
 .video-prompt-ai-prompt-btn:hover {
     background: var(--accent);
@@ -1379,14 +1379,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
     max-height: 140px;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--space-1);
 }
 .video-prompt-db-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.35rem;
-    padding: 0.35rem 0.5rem;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
     background: var(--org-brillo);
@@ -1400,14 +1400,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-prompt-db-item-btn {
     flex-shrink: 0;
-    padding: 0.25rem 0.5rem;
+    padding: var(--space-1) var(--space-2);
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-xs);
     cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .video-prompt-db-item-btn:hover {
     background: var(--accent);
@@ -1418,7 +1418,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: var(--font-size-xs);
     color: var(--white-50);
     margin: 0;
-    padding: 0.5rem 0;
+    padding: var(--space-2) 0;
 }
 @media (max-width: 900px) {
     .video-layout {
@@ -1439,19 +1439,19 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-prompt-inner {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 .video-attachments-list {
     display: none;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: var(--space-2);
     align-items: center;
 }
 .video-attachment-chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.25rem 0.25rem 0.25rem 0.5rem;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-2);
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
     background: var(--org-brillo);
@@ -1468,7 +1468,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-attachment-thumbs {
     display: inline-flex;
-    gap: 0.25rem;
+    gap: var(--space-1);
     align-items: center;
 }
 .video-attachment-thumb-wrap {
@@ -1500,7 +1500,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-radius: 0 var(--radius-xs) 0 0;
     cursor: pointer;
     opacity: 0.85;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-attachment-remove-thumb:hover {
     opacity: 1;
@@ -1528,7 +1528,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-radius: 0 0 0 var(--radius-xs);
     cursor: pointer;
     opacity: 0.85;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-attachment-pin-thumb:hover {
     opacity: 1;
@@ -1540,7 +1540,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     color: var(--icon-button);
 }
 .video-attachment-pin-chip {
-    padding: 0 0.2rem;
+    padding: 0 var(--space-1);
     margin: 0;
     min-width: 20px;
     height: 20px;
@@ -1593,7 +1593,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     width: 1px;
     height: 1px;
     padding: 0;
-    margin: -1px;
+    margin: calc(-1 * var(--space-half));
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     border: 0;
@@ -1601,14 +1601,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-input,
 .video-prompt-wrap .video-prompt-footer-card-inner .video-director-brief-input {
     width: 100%;
-    padding: 0.65rem 0.85rem;
+    padding: var(--space-3) var(--space-3);
     font-size: var(--font-size-base);
     color: var(--glass-black-text);
     background: rgba(0, 0, 0, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: var(--radius-sm);
     outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color var(--duracion-base) var(--curva-estandar), box-shadow var(--duracion-base) var(--curva-estandar);
 }
 .video-director-brief-input {
     min-height: 120px;
@@ -1625,7 +1625,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn {
     display: inline-flex;
@@ -1639,7 +1639,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: var(--org-brillo);
     color: var(--glass-black-text);
     cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn:hover {
     background: var(--org-brillo-strong);
@@ -1694,7 +1694,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     align-items: center;
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-aspect {
-    padding: 0.4rem 1.75rem 0.4rem 0.6rem;
+    padding: var(--space-2) var(--space-6) var(--space-2) var(--space-2);
     font-size: var(--font-size-sm);
     color: var(--glass-black-text);
     background: var(--org-brillo);
@@ -1714,15 +1714,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.35rem 0.6rem;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
     background: var(--org-brillo);
     border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: background var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar);
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-toggle:hover {
     background: var(--org-brillo-strong);
@@ -1816,7 +1816,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-canvas-model-badge {
     display: inline-flex;
     align-items: center;
-    padding: 2px var(--space-1);
+    padding: var(--space-half) var(--space-1);
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-bold);
     letter-spacing: var(--tracking-mono);
@@ -1838,12 +1838,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
     color: var(--text-muted);
     display: flex;
     align-items: center;
-    gap: 0.3em;
+    gap: var(--space-1);
 }
 .video-canvas-topbar-tag i {
     font-size: var(--font-size-xs);
     color: var(--color-success);
-    animation: video-pulse-dot 2s ease-in-out infinite;
+    animation: video-pulse-dot 2s var(--curva-estandar) infinite;
 }
 @keyframes video-pulse-dot {
     0%, 100% { opacity: 1; }
@@ -1866,7 +1866,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.6rem;
+    gap: var(--space-2);
     text-align: center;
     max-width: 460px;
 }
@@ -1928,7 +1928,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-result-output-badge {
     display: inline-flex;
     align-items: center;
-    padding: 2px var(--space-1);
+    padding: var(--space-half) var(--space-1);
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-bold);
     letter-spacing: var(--tracking-mono);
@@ -1988,7 +1988,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-console-header-row {
     display: flex;
     align-items: center;
-    gap: 0.4em;
+    gap: var(--space-2);
     margin-bottom: var(--space-1);
     padding-bottom: var(--space-1);
     border-bottom: 1px solid var(--border-hairline);
@@ -1999,7 +1999,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border-radius: 50%;
     background: var(--color-info);
     flex-shrink: 0;
-    animation: video-pulse-dot 2s ease-in-out infinite;
+    animation: video-pulse-dot 2s var(--curva-estandar) infinite;
 }
 .video-console-label-text {
     font-size: var(--font-size-xs);
@@ -2056,7 +2056,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     inset: 0;
     border-radius: inherit;
     z-index: 0;
-    padding: 1px;
+    padding: var(--space-half);
     background: var(--org-gradient);
     -webkit-mask: linear-gradient(var(--color-white) 0 0) content-box, linear-gradient(var(--color-white) 0 0);
     -webkit-mask-composite: xor;
@@ -2124,19 +2124,19 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .form-org-card .step-subtitle {
   color: var(--text-secondary);
   font-size: var(--font-size-md);
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
 }
 .form-org-card .field-hint {
   display: block;
-  margin-top: 0.35rem;
+  margin-top: var(--space-1);
   color: var(--text-muted);
   font-size: var(--font-size-base);
 }
 .social-input-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 .social-input-grid label {
   display: flex;
@@ -2145,17 +2145,17 @@ body.has-sidebar #app-container:has(.video-view-container) {
   color: var(--text-secondary);
 }
 .social-input-grid label input {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1);
 }
 .form-field-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
 }
 .form-status {
-  margin-top: 1.5rem;
-  padding: 1rem;
+  margin-top: var(--space-6);
+  padding: var(--space-4);
   border-radius: var(--radius-md);
   font-size: var(--font-size-md);
   line-height: var(--leading-normal);
@@ -2185,8 +2185,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 
 .competitor-review {
-  margin-top: 2rem;
-  padding: 1.5rem;
+  margin-top: var(--space-8);
+  padding: var(--space-6);
   background: rgba(20, 20, 20, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
@@ -2194,25 +2194,25 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .competitor-review-header {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 .competitor-list {
-  margin: 1.5rem 0;
+  margin: var(--space-6) 0;
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 .competitor-card {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-md);
-  padding: 1rem;
+  padding: var(--space-4);
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: flex-start;
   background: rgba(255, 255, 255, 0.02);
 }
 .competitor-card input[type="checkbox"] {
-  margin-top: 0.4rem;
+  margin-top: var(--space-2);
 }
 .competitor-card h4 {
   margin: 0;
@@ -2220,33 +2220,33 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .competitor-meta {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
   font-size: var(--font-size-base);
   color: var(--text-secondary);
 }
 .manual-competitor {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 1rem;
+  padding-top: var(--space-4);
 }
 .manual-competitor-fields {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 .manual-competitor-pills {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 .manual-pill {
-  padding: 0.35rem 0.75rem;
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.08);
   font-size: var(--font-size-base);
   display: flex;
-  gap: 0.35rem;
+  gap: var(--space-1);
   align-items: center;
 }
 .manual-pill button {
@@ -2256,9 +2256,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
   cursor: pointer;
 }
 .competitor-actions {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 
@@ -2350,7 +2350,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border-radius: var(--radius-md);
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
   overflow: hidden;
-  transition: transform .26s cubic-bezier(0.33, 0, 0.2, 1), opacity .2s ease;
+  transition: transform var(--duracion-media) var(--curva-estandar), opacity var(--duracion-base) var(--curva-estandar);
 }
 .gpt-layout.history-collapsed .vera-history {
   transform: translateX(calc(100% + 24px));
@@ -2362,13 +2362,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 12px 10px 4px;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2) var(--space-1);
 }
 .vera-history-title {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-mono);
@@ -2391,7 +2391,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   color: var(--text-muted);
   cursor: pointer;
   font-size: var(--font-size-sm);
-  transition: background .15s ease, color .15s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .vera-history-collapse:hover,
 .vera-history-open:hover { background: var(--white-8); color: var(--text-primary); }
@@ -2401,8 +2401,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 10px 12px;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
@@ -2411,7 +2411,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   white-space: nowrap;
-  transition: background .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar);
 }
 .vera-history-new:hover { background: var(--white-8); }
 .vera-history-new:active { transform: scale(0.99); }
@@ -2422,9 +2422,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 11px;
-  margin: 0 10px 4px;
-  padding: 10px 12px;
+  gap: var(--space-3);
+  margin: 0 var(--space-2) var(--space-1);
+  padding: var(--space-2) var(--space-3);
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
@@ -2433,7 +2433,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   white-space: nowrap;
-  transition: background .14s ease, color .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .vera-history-search:hover,
 .vera-history-search.active { background: var(--white-8); }
@@ -2441,8 +2441,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 .vera-history-search-input {
   flex: 0 0 auto;
-  margin: 0 12px 8px;
-  padding: 9px 12px;
+  margin: 0 var(--space-3) var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--glass-black-border, var(--border-color));
   border-radius: var(--radius-md);
   background: var(--white-5);
@@ -2450,7 +2450,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-size: var(--font-size-base);
   font-family: inherit;
   outline: none;
-  transition: border-color .14s ease;
+  transition: border-color var(--duracion-base) var(--curva-estandar);
 }
 .vera-history-search-input[hidden] { display: none; }
 .vera-history-search-input:focus { border-color: var(--white-10); }
@@ -2461,9 +2461,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 0 12px 12px;
-  padding: 10px 14px;
+  gap: var(--space-2);
+  margin: 0 var(--space-3) var(--space-3);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: transparent;
@@ -2472,7 +2472,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   white-space: nowrap;
-  transition: background .16s ease, color .16s ease, border-color .16s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar);
 }
 .vera-history-attach:hover {
   background: var(--white-5);
@@ -2486,7 +2486,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 6px 8px 16px;
+  padding: var(--space-1) var(--space-2) var(--space-4);
   border-top: 1px solid var(--glass-black-border, var(--border-color));
   scrollbar-width: thin;
   scrollbar-color: var(--white-10) transparent;
@@ -2502,10 +2502,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
   letter-spacing: 0;
   text-transform: none;
   color: var(--text-muted);
-  padding: 10px 10px 6px;
+  padding: var(--space-2) var(--space-2) var(--space-1);
   white-space: nowrap;
 }
-.vera-history-group:first-child { padding-top: 4px; }
+.vera-history-group:first-child { padding-top: var(--space-1); }
 
 .vera-history-item {
   position: relative;
@@ -2515,12 +2515,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border: none;
   background: transparent;
   color: var(--text-primary);
-  padding: 10px 10px;
+  padding: var(--space-2) var(--space-2);
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-size-base);
   line-height: var(--leading-tight);
-  transition: background .14s ease, color .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .vera-history-item:hover { background: var(--white-5); }
 .vera-history-item.active {
@@ -2550,7 +2550,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-history-item--from-vera {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .vera-history-item--from-vera .vera-history-item-title { flex: 1 1 auto; min-width: 0; }
 .vera-history-item-badge {
@@ -2559,7 +2559,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
-  padding: 2px 7px;
+  padding: var(--space-half) var(--space-2);
   border-radius: var(--radius-pill);
   color: var(--color-white);
   line-height: var(--leading-normal);
@@ -2569,7 +2569,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   color: var(--text-muted);
   font-size: var(--font-size-base);
   line-height: var(--leading-normal);
-  padding: 32px 16px;
+  padding: var(--space-8) var(--space-4);
   text-align: center;
 }
 
@@ -2603,7 +2603,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: none;
     border-left: 1px solid var(--glass-black-border, var(--border-color));
     z-index: 20;
-    transition: transform .24s ease;
+    transition: transform var(--duracion-media) var(--curva-estandar);
   }
   .gpt-layout.history-collapsed .vera-history {
     transform: translateX(100%);
@@ -2634,7 +2634,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-messages-inner {
   max-width: 768px;
   margin: 0 auto;
-  padding: 24px 20px 12px;
+  padding: var(--space-6) var(--space-5) var(--space-3);
   display: flex;
   flex-direction: column;
 }
@@ -2645,7 +2645,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 64px 20px 40px;
+  padding: var(--space-16) var(--space-5) var(--space-10);
   text-align: center;
   min-height: 50vh;
 }
@@ -2655,14 +2655,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
   letter-spacing: var(--tracking-tight);
-  margin: 0 0 28px;
+  margin: 0 0 var(--space-6);
   line-height: var(--leading-tight);
 }
 
 /* ── Hero de bienvenida (nueva conversación): logo + "Hola, <Nombre>" ── */
 .gpt-welcome--hero {
   min-height: 64vh;
-  padding-bottom: 64px;
+  padding-bottom: var(--space-16);
 }
 .gpt-welcome-mark {
   display: flex;
@@ -2670,10 +2670,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
   justify-content: center;
   width: 76px;
   height: 76px;
-  margin-bottom: 22px;
+  margin-bottom: var(--space-5);
   border-radius: var(--radius-pill);
   background: radial-gradient(120% 120% at 50% 0%, rgba(255,255,255,0.06) 0%, transparent 70%);
-  animation: veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: veraCineIn 760ms var(--curva-entrada) both;
 }
 .gpt-welcome-mark img {
   width: 60px;
@@ -2687,13 +2687,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
   letter-spacing: var(--tracking-tight);
   margin: 0;
   line-height: var(--leading-none);
-  animation: veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) 140ms both;
+  animation: veraCineIn 760ms var(--curva-entrada) 140ms both;
 }
 .gpt-welcome--hero .gpt-welcome-subtitle {
-  margin: 12px 0 0;
+  margin: var(--space-3) 0 0;
   font-size: var(--font-size-md);
   color: var(--text-muted);
-  animation: veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
+  animation: veraCineIn 760ms var(--curva-entrada) 260ms both;
 }
 @keyframes veraWelcomeIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -2714,7 +2714,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   padding: 0;
   border-radius: 0;
   background: none;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 /* Halo tenue de marca detras del logotipo. */
 .gpt-welcome-mark--wordmark::before {
@@ -2750,8 +2750,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   -webkit-text-fill-color: transparent;
   color: transparent;
   animation:
-    veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) 140ms both,
-    veraTitleSheen 6s ease-in-out 1000ms infinite;
+    veraCineIn 760ms var(--curva-entrada) 140ms both,
+    veraTitleSheen 6s var(--curva-estandar) 1000ms infinite;
 }
 @keyframes veraTitleSheen {
   0%   { background-position: 120% 0; }
@@ -2760,7 +2760,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 /* Subtitulo rotatorio: fade + leve translate al intercambiar la frase (JS) */
 .gpt-welcome-subtitle {
-  transition: opacity 0.26s ease, transform 0.26s ease;
+  transition: opacity var(--duracion-media) var(--curva-estandar), transform var(--duracion-media) var(--curva-estandar);
 }
 .gpt-welcome-subtitle.is-swapping {
   opacity: 0;
@@ -2772,11 +2772,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
   max-width: 768px;
-  margin-top: 10px;
-  animation: veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) 420ms both;
+  margin-top: var(--space-2);
+  animation: veraCineIn 760ms var(--curva-entrada) 420ms both;
 }
 .gpt-main:not(.is-welcome) .gpt-quick-suggest { display: none; }
 .gpt-quick-chip {
@@ -2788,11 +2788,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-size: var(--font-size-base);
   font-family: var(--font-mono);
   line-height: var(--leading-tight);
-  padding: 8px 14px;
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-pill);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .gpt-quick-chip:hover {
   background: var(--white-8, rgba(255, 255, 255, 0.08));
@@ -2829,11 +2829,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-main.is-welcome .gpt-welcome,
 .gpt-main.is-welcome .gpt-welcome--hero {
   min-height: 0;
-  padding: 0 20px 6px;
+  padding: 0 var(--space-5) var(--space-1);
 }
 .gpt-main.is-welcome .gpt-composer-wrap {
-  padding-top: 4px;
-  animation: veraCineIn 760ms cubic-bezier(0.22, 1, 0.36, 1) 340ms both;
+  padding-top: var(--space-1);
+  animation: veraCineIn 760ms var(--curva-entrada) 340ms both;
 }
 @media (prefers-reduced-motion: reduce) {
   .gpt-main.is-welcome .gpt-composer-wrap { animation: none; }
@@ -2842,7 +2842,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-quick-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: var(--space-2);
   max-width: 480px;
   width: 100%;
 }
@@ -2850,8 +2850,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-quick-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 13px 16px;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: var(--white-5);
@@ -2861,7 +2861,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   cursor: pointer;
   text-align: left;
   line-height: var(--leading-normal);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar);
 }
 .gpt-quick-btn:hover {
   background: var(--white-10);
@@ -2881,10 +2881,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* === MESSAGES === */
 .gpt-msg {
   display: flex;
-  gap: 12px;
-  padding: 8px 0;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
   width: 100%;
-  animation: gptMsgIn 0.18s ease;
+  animation: gptMsgIn var(--duracion-base) var(--curva-estandar);
 }
 @keyframes gptMsgIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -2898,7 +2898,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg--user .gpt-msg-bubble {
   background: var(--white-8);
   border: 1px solid var(--white-10);
-  padding: 10px 16px;
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-lg) var(--radius-lg) var(--radius-xs) var(--radius-lg);
   max-width: 76%;
   font-size: var(--font-size-md);
@@ -2918,7 +2918,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-top: 4px;
+  margin-top: var(--space-1);
   user-select: none;
 }
 
@@ -2935,20 +2935,20 @@ body.has-sidebar #app-container:has(.video-view-container) {
   line-height: var(--leading-normal);
   color: var(--text-primary);
   word-break: break-word;
-  padding-top: 2px;
+  padding-top: var(--space-half);
 }
 
 /* Markdown styles inside assistant messages */
-.gpt-msg-content p { margin: 0 0 0.75em; }
+.gpt-msg-content p { margin: 0 0 var(--space-3); }
 .gpt-msg-content p:last-child { margin-bottom: 0; }
 .gpt-msg-content ul,
-.gpt-msg-content ol { margin: 0.5em 0 0.85em 0; padding-left: 1.4em; }
-.gpt-msg-content li { margin: 0.35em 0; line-height: var(--leading-normal); }
+.gpt-msg-content ol { margin: var(--space-2) 0 var(--space-3) 0; padding-left: var(--space-6); }
+.gpt-msg-content li { margin: var(--space-1) 0; line-height: var(--leading-normal); }
 /* Custom bullets para UL — pequeños diamantes con accent sutil */
 .gpt-msg-content ul { list-style: none; }
 .gpt-msg-content ul > li {
   position: relative;
-  padding-left: 0.15em;
+  padding-left: var(--space-half);
 }
 .gpt-msg-content ul > li::before {
   content: '';
@@ -2973,7 +2973,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg-content ol > li {
   counter-increment: gpt-li;
   position: relative;
-  padding-left: 0.15em;
+  padding-left: var(--space-half);
 }
 .gpt-msg-content ol > li::before {
   content: counter(gpt-li) ".";
@@ -2991,16 +2991,16 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg-content del { color: var(--text-tertiary, rgba(212, 209, 216, 0.6)); }
 
 /* Task lists (checkboxes) */
-.gpt-msg-content li.gpt-task-item { list-style: none; margin-left: -1.5em; }
+.gpt-msg-content li.gpt-task-item { list-style: none; margin-left: calc(-1 * var(--space-6)); }
 .gpt-task-label {
   display: inline-flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--space-2);
   cursor: pointer;
   user-select: none;
 }
 .gpt-task-checkbox {
-  margin-top: 3px;
+  margin-top: var(--space-half);
   width: 16px;
   height: 16px;
   accent-color: var(--accent);
@@ -3017,7 +3017,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg-content h4,
 .gpt-msg-content h5,
 .gpt-msg-content h6 {
-  margin: 0.9em 0 0.5em;
+  margin: var(--space-4) 0 var(--space-2);
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-tight);
   color: var(--color-white);
@@ -3033,12 +3033,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border: none;
   height: 1px;
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.12) 50%, transparent 100%);
-  margin: 1.4em 0;
+  margin: var(--space-6) 0;
 }
 
 .gpt-msg-content blockquote {
-  margin: 0.85em 0;
-  padding: 0.25em 0 0.25em 0.9em;
+  margin: var(--space-3) 0;
+  padding: var(--space-1) 0 var(--space-1) var(--space-4);
   border-left: 2px solid var(--white-15, rgba(255,255,255,0.15));
   color: var(--text-secondary);
 }
@@ -3050,8 +3050,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   background-repeat: no-repeat;
   background-size: 100% 1px;
   background-position: 0 100%;
-  transition: color 0.18s ease, background-size 0.25s ease;
-  padding-bottom: 1px;
+  transition: color var(--duracion-base) var(--curva-estandar), background-size var(--duracion-media) var(--curva-estandar);
+  padding-bottom: var(--space-half);
 }
 .gpt-msg-content a.gpt-md-link:hover {
   color: color-mix(in srgb, var(--color-info) 35%, var(--color-white));
@@ -3065,13 +3065,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
   width: auto;
   height: auto;
   display: block;
-  margin: 14px 0;
+  margin: var(--space-3) 0;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow:
     0 16px 32px -20px rgba(0, 0, 0, 0.6),
     0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform var(--duracion-media) var(--curva-estandar), box-shadow var(--duracion-media) var(--curva-estandar);
 }
 .gpt-msg-content img.gpt-md-img:hover,
 .gpt-msg-content img:hover {
@@ -3085,7 +3085,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   max-width: 100%;
   width: 100%;
   display: block;
-  margin: 0.75em 0;
+  margin: var(--space-3) 0;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
@@ -3094,8 +3094,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* Vera Charts (```chart ...``` → SVG) — premium card */
 .gpt-viz {
   width: 100%;
-  margin: 18px 0;
-  padding: 20px 18px 16px;
+  margin: var(--space-4) 0;
+  padding: var(--space-5) var(--space-4) var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background:
@@ -3128,38 +3128,38 @@ body.has-sidebar #app-container:has(.video-view-container) {
   background: linear-gradient(180deg, rgba(40, 10, 10, 0.4) 0%, rgba(20, 8, 8, 0.4) 100%);
 }
 .gpt-viz--error pre {
-  margin-top: 10px;
+  margin-top: var(--space-2);
   background: rgba(0, 0, 0, 0.4);
 }
 
 /* Quick replies / action buttons (```buttons``` → UI) */
 .gpt-qr {
   width: 100%;
-  margin: 0.85em 0 0.25em;
+  margin: var(--space-3) 0 var(--space-1);
 }
 .gpt-qr-title {
   font-size: var(--font-size-sm);
   color: var(--text-muted);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 .gpt-qr-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .gpt-qr-btn {
   border: 1px solid var(--border-color);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.015) 100%);
   color: var(--text-primary);
-  padding: 9px 16px;
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-pill);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-mono);
   line-height: var(--leading-none);
   cursor: pointer;
-  transition: background 0.18s ease, transform 0.08s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), transform var(--duracion-rapida) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar), box-shadow var(--duracion-base) var(--curva-estandar);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .gpt-qr-btn:hover:not(:disabled) {
@@ -3189,7 +3189,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   background: var(--white-10);
   border: 1px solid var(--white-15);
   border-radius: var(--radius-xs);
-  padding: 1px 6px;
+  padding: var(--space-half) var(--space-1);
   font-size: 0.85em;
   font-family: var(--font-mono);
   color: var(--text-primary);
@@ -3198,8 +3198,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 14px 18px;
-  margin: 0.75em 0;
+  padding: var(--space-3) var(--space-4);
+  margin: var(--space-3) 0;
   overflow-x: auto;
   font-size: var(--font-size-base);
   font-family: var(--font-mono);
@@ -3221,15 +3221,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 /* Typing / Activity indicator */
 .gpt-msg--typing .gpt-msg-content {
-  padding-top: 6px;
+  padding-top: var(--space-1);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1);
 }
 .gpt-typing-dots {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
 }
 .gpt-typing-dots span {
   display: block;
@@ -3237,7 +3237,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   height: 6px;
   border-radius: 50%;
   background: var(--text-muted);
-  animation: gptTypingPulse 1.4s infinite ease-in-out;
+  animation: gptTypingPulse 1.4s infinite var(--curva-estandar);
 }
 .gpt-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .gpt-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
@@ -3251,8 +3251,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   color: var(--text-muted, rgba(212,209,216,0.55));
   font-style: italic;
   min-height: 14px;
-  transition: opacity 0.3s ease;
-  animation: gptStatusFadeIn 0.4s ease;
+  transition: opacity var(--duracion-media) var(--curva-estandar);
+  animation: gptStatusFadeIn var(--duracion-lenta) var(--curva-estandar);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3267,11 +3267,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* === COMPOSER === */
 .gpt-composer-wrap {
   flex-shrink: 0;
-  padding: 8px 20px 18px;
+  padding: var(--space-2) var(--space-5) var(--space-4);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1);
 }
 
 .gpt-composer {
@@ -3280,11 +3280,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 12px 12px 8px 14px;
+  padding: var(--space-3) var(--space-3) var(--space-2) var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  transition: border-color 0.15s, box-shadow 0.2s;
+  gap: var(--space-1);
+  transition: border-color var(--duracion-base) var(--curva-estandar), box-shadow var(--duracion-base) var(--curva-estandar);
   /* Sombra tenida con el color dinamico de marca (--org-primary-rgb, lo setea
      OrgBrandTheme). Fallback a blanco muy sutil si la org no tiene brand_colors. */
   box-shadow:
@@ -3344,8 +3344,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
    opcion como respuesta del usuario; el composer sigue libre para escribir.
    Estilo sobrio dark, sin acentos morados (alineado al resto de la app). */
 .vera-interactive {
-  margin: 16px 0 4px;
-  padding: 16px 16px 14px;
+  margin: var(--space-4) 0 var(--space-1);
+  padding: var(--space-4) var(--space-4) var(--space-3);
   border: 1px solid var(--white-8);
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.02);
@@ -3383,8 +3383,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 6px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-1);
 }
 .vera-clarify-q,
 .vera-interactive-q {
@@ -3395,16 +3395,16 @@ body.has-sidebar #app-container:has(.video-view-container) {
   letter-spacing: var(--tracking-tight);
   color: var(--text-primary);
 }
-.vera-interactive-q { margin-bottom: 10px; }
+.vera-interactive-q { margin-bottom: var(--space-2); }
 .vera-clarify-tools {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   color: var(--text-muted);
 }
-.vera-clarify-pager { display: inline-flex; align-items: center; gap: 2px; font-size: var(--font-size-base); }
-.vera-clarify-count { color: var(--text-muted); white-space: nowrap; padding: 0 4px; }
+.vera-clarify-pager { display: inline-flex; align-items: center; gap: var(--space-half); font-size: var(--font-size-base); }
+.vera-clarify-count { color: var(--text-muted); white-space: nowrap; padding: 0 var(--space-1); }
 .vera-clarify-prev,
 .vera-clarify-next,
 .vera-clarify-close {
@@ -3413,7 +3413,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border: none; border-radius: var(--radius-sm);
   background: transparent; color: var(--text-muted);
   cursor: pointer; font-size: var(--font-size-sm); font-family: inherit;
-  transition: background .14s ease, color .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .vera-clarify-close { font-size: var(--font-size-base); }
 .vera-clarify-prev:hover,
@@ -3425,17 +3425,17 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-opt {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-3);
   width: 100%;
   text-align: left;
-  padding: 12px;
+  padding: var(--space-3);
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-primary);
   cursor: pointer;
   font-family: inherit;
-  transition: background .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar);
 }
 .vera-opt + .vera-opt { box-shadow: 0 -1px 0 var(--white-5); }
 .vera-opt:hover,
@@ -3463,7 +3463,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .vera-opt-num--pencil { font-size: var(--font-size-sm); color: var(--text-muted); }
 .vera-opt-icon { flex: 0 0 auto; font-size: var(--font-size-lg); line-height: var(--leading-none); }
-.vera-opt-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.vera-opt-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-half); }
 .vera-opt-title { font-size: var(--font-size-md); font-weight: var(--font-weight-medium); line-height: var(--leading-tight); }
 .vera-opt-desc { font-size: var(--font-size-base); color: var(--text-muted); line-height: var(--leading-tight); }
 .vera-opt-arrow {
@@ -3472,7 +3472,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-size: var(--font-size-base);
   opacity: 0;
   transform: translateX(-4px);
-  transition: opacity .14s ease, transform .14s ease;
+  transition: opacity var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .vera-opt:hover .vera-opt-arrow,
 .vera-opt.is-focused .vera-opt-arrow { opacity: .85; transform: translateX(0); }
@@ -3482,18 +3482,18 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 2px;
-  padding-top: 6px;
+  gap: var(--space-3);
+  margin-top: var(--space-half);
+  padding-top: var(--space-1);
   box-shadow: 0 -1px 0 var(--white-5);
 }
 .vera-clarify-morebtn {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-3);
   flex: 1;
   min-width: 0;
-  padding: 12px;
+  padding: var(--space-3);
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
@@ -3501,14 +3501,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
   cursor: pointer;
   font-family: inherit;
   text-align: left;
-  transition: background .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar);
 }
 .vera-clarify-morebtn:hover { background: var(--white-5); }
 .vera-clarify-more-text { font-size: var(--font-size-md); }
-.vera-clarify-actions { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; }
+.vera-clarify-actions { flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--space-2); }
 .vera-clarify-skip {
   flex: 0 0 auto;
-  padding: 8px 18px;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--white-10);
   border-radius: var(--radius-pill);
   background: transparent;
@@ -3516,14 +3516,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-size: var(--font-size-base);
   font-family: inherit;
   cursor: pointer;
-  transition: background .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar);
 }
 .vera-clarify-skip:hover { background: var(--white-8); }
 
 /* Boton Confirmar (modos multi / rank) */
 .vera-clarify-confirm {
   flex: 0 0 auto;
-  padding: 8px 20px;
+  padding: var(--space-2) var(--space-5);
   border: none;
   border-radius: var(--radius-pill);
   background: var(--text-primary);
@@ -3532,7 +3532,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-weight: var(--font-weight-medium);
   font-family: inherit;
   cursor: pointer;
-  transition: opacity .14s ease, transform .14s ease;
+  transition: opacity var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .vera-clarify-confirm:hover:not(:disabled) { opacity: .9; }
 .vera-clarify-confirm:active:not(:disabled) { transform: scale(0.98); }
@@ -3552,7 +3552,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   background: transparent;
   color: transparent;
   font-size: var(--font-size-xs);
-  transition: background .14s ease, border-color .14s ease, color .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .vera-opt--check.checked .vera-opt-check {
   background: var(--text-primary);
@@ -3568,7 +3568,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-opt--rank:hover .vera-opt-grip { opacity: .85; }
 
 .vera-interactive-hint {
-  margin: 10px 2px 0;
+  margin: var(--space-2) var(--space-half) 0;
   font-size: var(--font-size-sm);
   color: var(--text-muted);
 }
@@ -3580,9 +3580,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-interactive.dismissed { display: none; }
 
 /* PILLS — chips seleccionables */
-.vera-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.vera-chip-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .vera-chip {
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-pill);
   border: 1px solid var(--white-10);
   background: transparent;
@@ -3590,40 +3590,40 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-size: var(--font-size-base);
   font-family: inherit;
   cursor: pointer;
-  transition: background .14s ease, border-color .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar);
 }
 .vera-chip:hover { background: var(--white-8); }
 
-.vera-steps-block { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
-.vera-step-item { display: flex; gap: 10px; align-items: flex-start; }
+.vera-steps-block { display: flex; flex-direction: column; gap: var(--space-2); margin: var(--space-2) 0; }
+.vera-step-item { display: flex; gap: var(--space-2); align-items: flex-start; }
 .vera-step-num {
   width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
   background: rgba(139,127,240,0.15); border: 1px solid rgba(139,127,240,0.3);
   color: var(--color-info); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium);
-  display: flex; align-items: center; justify-content: center; margin-top: 2px;
+  display: flex; align-items: center; justify-content: center; margin-top: var(--space-half);
 }
 .vera-step-text { font-size: var(--font-size-base); line-height: var(--leading-normal); opacity: 0.85; }
 
-.vera-metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin: 10px 0; }
+.vera-metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--space-2); margin: var(--space-2) 0; }
 .vera-metric-card {
   background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: var(--radius-md); padding: 10px 12px; text-align: center;
-  display: flex; flex-direction: column; gap: 3px;
+  border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); text-align: center;
+  display: flex; flex-direction: column; gap: var(--space-half);
 }
 .vera-metric-label { font-size: var(--font-size-xs); opacity: 0.4; }
 .vera-metric-value { font-size: var(--font-size-xl); font-weight: var(--font-weight-medium); }
 .vera-metric-sub { font-size: var(--font-size-xs); opacity: 0.35; }
 
 .vera-actions-row {
-  display: flex; flex-wrap: wrap; gap: 6px;
-  margin-top: 12px; padding-top: 12px;
+  display: flex; flex-wrap: wrap; gap: var(--space-1);
+  margin-top: var(--space-3); padding-top: var(--space-3);
   border-top: 1px solid rgba(255,255,255,0.06);
 }
 .vera-action-pill {
-  padding: 5px 12px; border-radius: var(--radius-pill);
+  padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill);
   border: 1px solid rgba(255,255,255,0.1);
   background: transparent; font-size: var(--font-size-sm); opacity: 0.6;
-  cursor: pointer; transition: all 0.15s; color: inherit; font-family: inherit;
+  cursor: pointer; transition: all var(--duracion-base) var(--curva-estandar); color: inherit; font-family: inherit;
 }
 .vera-action-pill:hover { border-color: var(--color-info); color: var(--color-info); opacity: 1; background: rgba(139,127,240,0.08); }
 
@@ -3631,31 +3631,31 @@ body.has-sidebar #app-container:has(.video-view-container) {
    Reemplazan temporalmente el textarea cuando VERA emite opciones.
    Al hacer click en una card, se envia su title como mensaje del usuario. */
 .vera-input-options {
-  padding: 12px 16px 8px;
+  padding: var(--space-3) var(--space-4) var(--space-2);
 }
 .vera-input-options-label {
   font-size: var(--font-size-base);
   color: var(--text-secondary);
-  margin-bottom: 10px;
+  margin-bottom: var(--space-2);
   font-weight: var(--font-weight-medium);
 }
 .vera-input-options-cards {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1);
   max-height: 320px;
   overflow-y: auto;
 }
 .vera-input-option-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 11px 14px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3);
   border-radius: var(--radius-md);
   border: 1px solid rgba(255,255,255,0.07);
   background: rgba(255,255,255,0.02);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color var(--duracion-base) var(--curva-estandar), background var(--duracion-base) var(--curva-estandar);
   user-select: none;
 }
 .vera-input-option-card:hover {
@@ -3675,7 +3675,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-option-body {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-half);
 }
 .vera-option-title {
   font-size: var(--font-size-base);
@@ -3695,49 +3695,49 @@ body.has-sidebar #app-container:has(.video-view-container) {
    supera el confirm_threshold_usd de la org. Tres acciones:
    Autorizar | Simplificar | Cancelar. */
 .vera-confirm-block {
-  margin: 12px 0;
-  padding: 14px 16px;
+  margin: var(--space-3) 0;
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  display: flex; flex-direction: column; gap: 10px;
+  display: flex; flex-direction: column; gap: var(--space-2);
 }
 .vera-confirm-block--dismissed {
   opacity: 0.55;
   pointer-events: none;
 }
 .vera-confirm-header {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: var(--space-2);
   font-size: var(--font-size-base); font-weight: var(--font-weight-medium);
 }
 .vera-confirm-icon { color: var(--color-warning); font-size: var(--font-size-base); }
 .vera-confirm-title { color: rgba(255,255,255,0.85); }
 .vera-confirm-estimate {
   font-size: var(--font-size-base); opacity: 0.85;
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
 }
 .vera-confirm-estimate strong { color: var(--color-warning); font-weight: var(--font-weight-medium); }
 .vera-confirm-sep { opacity: 0.3; }
 .vera-confirm-minutes { opacity: 0.6; }
 .vera-confirm-reasons {
-  list-style: none; padding: 0; margin: 2px 0 0; display: flex; flex-direction: column; gap: 3px;
+  list-style: none; padding: 0; margin: var(--space-half) 0 0; display: flex; flex-direction: column; gap: var(--space-half);
 }
 .vera-confirm-reasons li {
   font-size: var(--font-size-sm); opacity: 0.55; line-height: var(--leading-normal);
-  padding-left: 12px; position: relative;
+  padding-left: var(--space-3); position: relative;
 }
 .vera-confirm-reasons li::before {
   content: "·"; position: absolute; left: 4px; opacity: 0.5;
 }
 .vera-confirm-actions {
-  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;
+  display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-1);
 }
 .vera-confirm-btn {
-  padding: 7px 14px; border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
   border: 1px solid rgba(255,255,255,0.12);
   background: transparent; color: inherit;
   font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); font-family: inherit;
-  cursor: pointer; transition: all 0.15s;
+  cursor: pointer; transition: all var(--duracion-base) var(--curva-estandar);
 }
 .vera-confirm-btn:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.04); }
 .vera-confirm-btn:disabled { cursor: default; opacity: 0.5; }
@@ -3748,7 +3748,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-confirm-btn-cancel { opacity: 0.55; }
 .vera-confirm-btn-cancel:hover { opacity: 1; }
 .vera-confirm-status {
-  font-size: var(--font-size-sm); opacity: 0.6; margin-top: 2px;
+  font-size: var(--font-size-sm); opacity: 0.6; margin-top: var(--space-half);
   font-style: italic;
 }
 
@@ -3756,7 +3756,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
    Iframes sandbox null-origin emitidos por VERA. Altura ajustada
    por VeraView._initWidgetBridge() vía postMessage `vera_resize`. */
 .vera-canvas-block {
-  margin: 14px 0;
+  margin: var(--space-3) 0;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-black-border);
   overflow: hidden;
@@ -3783,12 +3783,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
    así que la conversación quedaba enterrada bajo la pieza. */
 .vera-artifact-card { min-height: 0; }
 .vera-artifact-card-btn {
-  display: flex; align-items: center; gap: 12px;
-  width: 100%; padding: 13px 14px;
+  display: flex; align-items: center; gap: var(--space-3);
+  width: 100%; padding: var(--space-3) var(--space-3);
   background: none; border: 0; cursor: pointer;
   font-family: inherit; text-align: left;
   color: var(--text-primary);
-  transition: background .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar);
 }
 .vera-artifact-card-btn:hover { background: var(--white-4, rgba(255,255,255,0.04)); }
 .vera-artifact-card-icon {
@@ -3806,13 +3806,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .vera-artifact-card-title { font-size: var(--font-size-base); font-weight: var(--font-weight-medium); line-height: var(--leading-tight); }
 .vera-artifact-card-sub {
-  font-size: var(--font-size-sm); color: var(--text-muted); line-height: var(--leading-normal); margin-top: 2px;
+  font-size: var(--font-size-sm); color: var(--text-muted); line-height: var(--leading-normal); margin-top: var(--space-half);
 }
 .vera-artifact-card-cta {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; gap: var(--space-1);
   flex: 0 0 auto;
   background: var(--white-8); border: 1px solid var(--white-10);
-  border-radius: var(--radius-sm); padding: 5px 11px;
+  border-radius: var(--radius-sm); padding: var(--space-1) var(--space-3);
   font-size: var(--font-size-sm); color: var(--text-primary);
 }
 .vera-artifact-card-cta i { font-size: var(--font-size-xs); }
@@ -3823,7 +3823,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-artifact-bar {
   display: flex; align-items: center;
   justify-content: space-between;
-  padding: 9px 12px 9px 14px;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--glass-black-border);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
@@ -3831,13 +3831,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-family: inherit;
 }
 .vera-artifact-open {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; gap: var(--space-1);
   background: var(--white-8);
   border: 1px solid var(--white-10);
   color: var(--text-primary);
   border-radius: var(--radius-sm);
-  padding: 5px 11px; font-size: var(--font-size-sm); font-family: inherit; cursor: pointer;
-  transition: background .14s ease;
+  padding: var(--space-1) var(--space-3); font-size: var(--font-size-sm); font-family: inherit; cursor: pointer;
+  transition: background var(--duracion-base) var(--curva-estandar);
 }
 .vera-artifact-open:hover { background: var(--white-10); }
 .vera-artifact-open i { font-size: var(--font-size-xs); }
@@ -3857,7 +3857,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border-left: 1px solid var(--glass-black-border, var(--border-color));
   overflow: hidden;
   opacity: 0;
-  transition: flex-basis .26s cubic-bezier(0.33,0,0.2,1), width .26s cubic-bezier(0.33,0,0.2,1), opacity .2s ease;
+  transition: flex-basis var(--duracion-media) var(--curva-estandar), width var(--duracion-media) var(--curva-estandar), opacity var(--duracion-base) var(--curva-estandar);
 }
 .vera-artifact-panel[hidden] { display: none; }
 .gpt-layout.artifact-open .vera-artifact-panel {
@@ -3872,21 +3872,21 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 12px 12px 12px 16px;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--glass-black-border, var(--border-color));
 }
 .vera-artifact-panel-title {
   font-size: var(--font-size-base); font-weight: var(--font-weight-medium); color: var(--text-primary);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.vera-artifact-panel-actions { display: inline-flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+.vera-artifact-panel-actions { display: inline-flex; align-items: center; gap: var(--space-half); flex: 0 0 auto; }
 .vera-artifact-act {
   width: 32px; height: 32px;
   display: inline-flex; align-items: center; justify-content: center;
   border: none; border-radius: var(--radius-sm); background: transparent;
   color: var(--text-muted); cursor: pointer; font-size: var(--font-size-base);
-  transition: background .14s ease, color .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .vera-artifact-act:hover { background: var(--white-8); color: var(--text-primary); }
 .vera-artifact-act.active { background: var(--white-10); color: var(--text-primary); }
@@ -3897,7 +3897,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .vera-artifact-code {
   margin: 0; height: 100%; overflow: auto;
-  padding: 16px; background: var(--bg-base);
+  padding: var(--space-4); background: var(--bg-base);
   color: var(--text-primary);
   font-size: var(--font-size-sm); line-height: var(--leading-normal);
   white-space: pre-wrap; word-break: break-word;
@@ -3923,13 +3923,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-gallery-overlay {
   position: fixed; inset: 0; z-index: 60;
   display: flex; align-items: center; justify-content: center;
-  padding: 24px;
+  padding: var(--space-6);
 }
 .vera-gallery-overlay[hidden] { display: none; }
 .vera-gallery-scrim {
   position: absolute; inset: 0;
   background: rgba(0,0,0,.55);
-  opacity: 0; transition: opacity .2s ease;
+  opacity: 0; transition: opacity var(--duracion-base) var(--curva-estandar);
 }
 .vera-gallery-overlay.open .vera-gallery-scrim { opacity: 1; }
 .vera-gallery-modal {
@@ -3942,39 +3942,39 @@ body.has-sidebar #app-container:has(.video-view-container) {
   box-shadow: 0 24px 70px rgba(0,0,0,.5);
   overflow: hidden;
   transform: translateY(8px) scale(.99); opacity: 0;
-  transition: transform .22s cubic-bezier(0.33,0,0.2,1), opacity .22s ease;
+  transition: transform var(--duracion-media) var(--curva-estandar), opacity var(--duracion-media) var(--curva-estandar);
 }
 .vera-gallery-overlay.open .vera-gallery-modal { transform: none; opacity: 1; }
 .vera-gallery-head {
   flex: 0 0 auto;
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 14px 14px 14px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--glass-black-border, var(--border-color));
 }
-.vera-gallery-head-title { display: inline-flex; align-items: center; gap: 10px; font-size: var(--font-size-md); font-weight: var(--font-weight-medium); color: var(--text-primary); }
+.vera-gallery-head-title { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-md); font-weight: var(--font-weight-medium); color: var(--text-primary); }
 .vera-gallery-head-title > i { color: var(--text-muted); }
 .vera-gallery-count {
   font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--text-muted);
-  background: var(--white-8); padding: 2px 8px; border-radius: var(--radius-pill);
+  background: var(--white-8); padding: var(--space-half) var(--space-2); border-radius: var(--radius-pill);
 }
-.vera-gallery-head-actions { display: inline-flex; align-items: center; gap: 2px; }
+.vera-gallery-head-actions { display: inline-flex; align-items: center; gap: var(--space-half); }
 .vera-gallery-body {
   flex: 1; min-height: 0; overflow: auto;
-  padding: 16px;
+  padding: var(--space-4);
   scrollbar-width: thin; scrollbar-color: var(--white-10) transparent;
 }
 .vera-gallery-body::-webkit-scrollbar { width: 8px; }
 .vera-gallery-body::-webkit-scrollbar-thumb { background: var(--white-10); border-radius: var(--radius-xs); }
 .vera-gallery-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: 12px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: var(--space-3);
 }
 .vera-gallery-card {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px; border-radius: var(--radius-md);
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3); border-radius: var(--radius-md);
   background: var(--white-8);
   border: 1px solid var(--white-10);
   text-decoration: none; color: inherit;
-  transition: background .14s ease, border-color .14s ease, transform .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .vera-gallery-card:hover { background: var(--white-10); transform: translateY(-1px); }
 .vera-gallery-card-icon {
@@ -3994,16 +3994,16 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-gallery-card-icon--doc  { background: linear-gradient(135deg, var(--color-info), var(--color-info)); }
 .vera-gallery-card-meta { flex: 1; min-width: 0; }
 .vera-gallery-card-title { font-size: var(--font-size-base); font-weight: var(--font-weight-medium); color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.vera-gallery-card-sub { font-size: var(--font-size-sm); color: var(--text-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.vera-gallery-card-dl { flex: 0 0 auto; color: var(--text-muted); font-size: var(--font-size-base); opacity: 0; transition: opacity .14s ease; }
+.vera-gallery-card-sub { font-size: var(--font-size-sm); color: var(--text-muted); margin-top: var(--space-half); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vera-gallery-card-dl { flex: 0 0 auto; color: var(--text-muted); font-size: var(--font-size-base); opacity: 0; transition: opacity var(--duracion-base) var(--curva-estandar); }
 .vera-gallery-card:hover .vera-gallery-card-dl { opacity: 1; }
 .vera-gallery-card--skel {
   pointer-events: none; height: 68px;
   background: linear-gradient(90deg, var(--white-8) 25%, var(--white-10) 37%, var(--white-8) 63%);
-  background-size: 400% 100%; animation: veraGalShimmer 1.3s ease infinite;
+  background-size: 400% 100%; animation: veraGalShimmer 1.3s var(--curva-estandar) infinite;
 }
 @keyframes veraGalShimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
-.vera-gallery-msg { padding: 40px 16px; text-align: center; color: var(--text-muted); font-size: var(--font-size-base); }
+.vera-gallery-msg { padding: var(--space-10) var(--space-4); text-align: center; color: var(--text-muted); font-size: var(--font-size-base); }
 
 @media (max-width: 880px) {
   .vera-gallery-overlay { padding: 0; }
@@ -4015,14 +4015,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-attach-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  padding: 8px 0 0;
+  gap: var(--space-1);
+  padding: var(--space-2) 0 0;
 }
 .gpt-attach-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px 4px 10px;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-2);
   background: var(--white-8);
   border: 1px solid var(--white-10);
   border-radius: var(--radius-md);
@@ -4042,7 +4042,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 0 2px;
+  padding: 0 var(--space-half);
   display: inline-flex;
   align-items: center;
   font-size: var(--font-size-sm);
@@ -4060,15 +4060,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg-attachments {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
   justify-content: flex-end;
 }
 .gpt-msg-att {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   background: var(--white-8);
   border: 1px solid var(--white-10);
   border-radius: var(--radius-md);
@@ -4103,7 +4103,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border-color: var(--glass-black-border, var(--border-color));
 }
 .gpt-msg-att--lib i { color: var(--text-primary); opacity: .85; }
-.gpt-msg-attachments--lib { margin-top: 2px; }
+.gpt-msg-attachments--lib { margin-top: var(--space-half); }
 
 /* ===========================================================================
    VERA · MODAL "Adjuntar de biblioteca"
@@ -4115,7 +4115,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: var(--space-6);
 }
 .vera-lib-scrim {
   position: absolute;
@@ -4137,7 +4137,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   border-radius: var(--radius-md);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
   overflow: hidden;
-  animation: veraLibIn 220ms cubic-bezier(0.33, 0, 0.2, 1) both;
+  animation: veraLibIn var(--duracion-media) var(--curva-estandar) both;
 }
 @keyframes veraLibIn { from { opacity: 0; transform: translateY(10px) scale(0.99); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .vera-lib-panel { animation: none; } }
@@ -4146,13 +4146,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px;
+  padding: var(--space-4) var(--space-4);
   border-bottom: 1px solid var(--glass-black-border, var(--border-color));
 }
 .vera-lib-title {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--space-2);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
@@ -4163,14 +4163,14 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: inline-flex; align-items: center; justify-content: center;
   border: none; border-radius: var(--radius-sm); background: transparent;
   color: var(--text-muted); cursor: pointer; font-size: var(--font-size-base);
-  transition: background .14s ease, color .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .vera-lib-x:hover { background: var(--white-8); color: var(--text-primary); }
 
 .vera-lib-tabs {
   display: flex;
-  gap: 4px;
-  padding: 12px 14px 0;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-3) 0;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -4179,8 +4179,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 13px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid transparent;
   border-radius: var(--radius-pill);
   background: transparent;
@@ -4189,7 +4189,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: background .14s ease, color .14s ease, border-color .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar);
 }
 .vera-lib-tab:hover { background: var(--white-5); color: var(--text-primary); }
 .vera-lib-tab.active {
@@ -4200,8 +4200,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-lib-tab i { font-size: var(--font-size-sm); }
 
 .vera-lib-search {
-  margin: 12px 16px 8px;
-  padding: 10px 13px;
+  margin: var(--space-3) var(--space-4) var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--glass-black-border, var(--border-color));
   border-radius: var(--radius-md);
   background: var(--white-5);
@@ -4209,7 +4209,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-size: var(--font-size-base);
   font-family: inherit;
   outline: none;
-  transition: border-color .14s ease;
+  transition: border-color var(--duracion-base) var(--curva-estandar);
 }
 .vera-lib-search:focus { border-color: var(--white-10); }
 .vera-lib-search::placeholder { color: var(--text-muted); }
@@ -4218,7 +4218,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   flex: 1;
   min-height: 120px;
   overflow-y: auto;
-  padding: 4px 10px 8px;
+  padding: var(--space-1) var(--space-2) var(--space-2);
   scrollbar-width: thin;
   scrollbar-color: var(--white-10) transparent;
 }
@@ -4228,11 +4228,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .vera-lib-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 10px;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background .12s ease;
+  transition: background var(--duracion-rapida) var(--curva-estandar);
 }
 .vera-lib-item:hover { background: var(--white-5); }
 .vera-lib-item input[type="checkbox"] {
@@ -4241,7 +4241,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   accent-color: var(--text-primary);
   cursor: pointer;
 }
-.vera-lib-item-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.vera-lib-item-body { display: flex; flex-direction: column; gap: var(--space-half); min-width: 0; }
 .vera-lib-item-name {
   font-size: var(--font-size-base);
   color: var(--text-primary);
@@ -4249,7 +4249,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .vera-lib-item-meta { font-size: var(--font-size-sm); color: var(--text-muted); text-transform: capitalize; }
 .vera-lib-loading, .vera-lib-empty {
-  padding: 32px 16px;
+  padding: var(--space-8) var(--space-4);
   text-align: center;
   color: var(--text-muted);
   font-size: var(--font-size-base);
@@ -4259,30 +4259,30 @@ body.has-sidebar #app-container:has(.video-view-container) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-top: 1px solid var(--glass-black-border, var(--border-color));
 }
 .vera-lib-count { font-size: var(--font-size-sm); color: var(--text-muted); }
-.vera-lib-foot-actions { display: inline-flex; gap: 8px; }
+.vera-lib-foot-actions { display: inline-flex; gap: var(--space-2); }
 .vera-lib-cancel {
-  padding: 9px 16px;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--white-10);
   border-radius: var(--radius-pill);
   background: transparent;
   color: var(--text-primary);
   font-size: var(--font-size-base); font-family: inherit; cursor: pointer;
-  transition: background .14s ease;
+  transition: background var(--duracion-base) var(--curva-estandar);
 }
 .vera-lib-cancel:hover { background: var(--white-8); }
 .vera-lib-confirm {
-  padding: 9px 20px;
+  padding: var(--space-2) var(--space-5);
   border: none;
   border-radius: var(--radius-pill);
   background: var(--text-primary);
   color: var(--bg-base);
   font-size: var(--font-size-base); font-weight: var(--font-weight-medium); font-family: inherit; cursor: pointer;
-  transition: opacity .14s ease, transform .14s ease;
+  transition: opacity var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .vera-lib-confirm:hover:not(:disabled) { opacity: .9; }
 .vera-lib-confirm:active:not(:disabled) { transform: scale(0.98); }
@@ -4291,7 +4291,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-composer-btns {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-half);
 }
 
 /* Menú "+" del composer (archivos / biblioteca), popover hacia arriba */
@@ -4307,7 +4307,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   bottom: calc(100% + 8px);
   left: 0; right: 0;
   z-index: 31;
-  padding: 6px;
+  padding: var(--space-1);
   background: var(--bg-card);
   border: 1px solid var(--glass-black-border, var(--border-color));
   border-radius: var(--radius-lg);
@@ -4318,8 +4318,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
   scrollbar-color: var(--white-10) transparent;
 }
 .vera-omni-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px;
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-2);
   border-radius: var(--radius-md);
   cursor: pointer;
   font-size: var(--font-size-base);
@@ -4344,7 +4344,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   left: 0;
   z-index: 30;
   min-width: 232px;
-  padding: 6px;
+  padding: var(--space-1);
   background: var(--bg-card);
   border: 1px solid var(--glass-black-border, var(--border-color));
   border-radius: var(--radius-md);
@@ -4353,20 +4353,20 @@ body.has-sidebar #app-container:has(.video-view-container) {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--white-10) transparent;
-  animation: veraPlusIn 160ms cubic-bezier(0.33, 0, 0.2, 1) both;
+  animation: veraPlusIn var(--duracion-base) var(--curva-estandar) both;
 }
 .vera-plus-menu::-webkit-scrollbar { width: 6px; }
 .vera-plus-menu::-webkit-scrollbar-thumb { background: var(--white-10); border-radius: var(--radius-xs); }
 .vera-plus-menu[hidden] { display: none; }
-.vera-plus-sep { height: 1px; margin: 6px 8px; background: var(--glass-black-border, var(--border-color)); }
+.vera-plus-sep { height: 1px; margin: var(--space-1) var(--space-2); background: var(--glass-black-border, var(--border-color)); }
 @keyframes veraPlusIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .vera-plus-menu { animation: none; } }
 .vera-plus-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   width: 100%;
-  padding: 10px 12px;
+  padding: var(--space-2) var(--space-3);
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
@@ -4375,7 +4375,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-family: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background .12s ease;
+  transition: background var(--duracion-rapida) var(--curva-estandar);
 }
 .vera-plus-item:hover { background: var(--white-8); }
 .vera-plus-item i { width: 18px; text-align: center; color: var(--text-muted); font-size: var(--font-size-base); }
@@ -4392,7 +4392,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   align-items: center;
   justify-content: center;
   font-size: var(--font-size-base);
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .gpt-composer-icon:hover { background: var(--white-8); color: var(--text-primary); }
 
@@ -4409,7 +4409,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   flex-shrink: 0;
   background: var(--text-primary);
   color: var(--bg-base);
-  transition: background 0.15s, transform 0.1s;
+  transition: background var(--duracion-base) var(--curva-estandar), transform var(--duracion-rapida) var(--curva-estandar);
 }
 .gpt-send-btn:hover:not(:disabled) { background: var(--color-white); transform: scale(1.05); }
 .gpt-send-btn:disabled {
@@ -4423,8 +4423,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 @media (max-width: 640px) {
   .gpt-welcome-title { font-size: var(--font-size-2xl); }
   .gpt-quick-grid { grid-template-columns: 1fr; max-width: 320px; }
-  .gpt-messages-inner { padding: 16px 14px 12px; }
-  .gpt-composer-wrap { padding: 8px 12px 14px; }
+  .gpt-messages-inner { padding: var(--space-4) var(--space-3) var(--space-3); }
+  .gpt-composer-wrap { padding: var(--space-2) var(--space-3) var(--space-3); }
 }
 
 /* ============================================================
@@ -4434,7 +4434,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 /* — Tables (premium) ————————————————————————————————————— */
 .gpt-msg-content .gpt-md-table-wrap {
-  margin: 16px 0;
+  margin: var(--space-4) 0;
   overflow-x: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
@@ -4458,7 +4458,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg-content .gpt-md-table th {
   font-weight: var(--font-weight-medium);
   text-align: left;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--color-white);
   white-space: nowrap;
@@ -4467,11 +4467,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
   letter-spacing: var(--tracking-mono);
 }
 .gpt-msg-content .gpt-md-table td {
-  padding: 11px 16px;
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
   vertical-align: top;
-  transition: background 0.15s ease;
+  transition: background var(--duracion-base) var(--curva-estandar);
 }
 .gpt-msg-content .gpt-md-table tbody tr:nth-child(even) td {
   background: rgba(255, 255, 255, 0.015);
@@ -4485,8 +4485,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 /* — Mermaid diagrams (premium card) ——————————————————————— */
 .gpt-msg-content .gpt-md-mermaid {
-  margin: 18px 0;
-  padding: 22px 20px;
+  margin: var(--space-4) 0;
+  padding: var(--space-5) var(--space-5);
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.025) 0%, transparent 60%),
     linear-gradient(180deg, var(--bg-card) 0%, var(--bg-base) 100%);
@@ -4537,7 +4537,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .gpt-msg-content .gpt-md-mermaid svg .node path {
   rx: 8;
   ry: 8;
-  transition: filter 0.2s ease;
+  transition: filter var(--duracion-base) var(--curva-estandar);
 }
 .gpt-msg-content .gpt-md-mermaid svg .node:hover rect,
 .gpt-msg-content .gpt-md-mermaid svg .node:hover polygon,
@@ -4563,8 +4563,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 /* — Code blocks (premium) ——————————————————————————————— */
 .gpt-msg-content pre {
-  margin: 16px 0;
-  padding: 16px 18px;
+  margin: var(--space-4) 0;
+  padding: var(--space-4) var(--space-4);
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
     linear-gradient(180deg, var(--bg-base) 0%, var(--bg-base) 100%);
@@ -4596,7 +4596,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
   font-variant-ligatures: contextual;
 }
 .gpt-msg-content code:not(pre code) {
-  padding: 2px 7px;
+  padding: var(--space-half) var(--space-2);
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-xs);
@@ -4619,8 +4619,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 /* — Blockquotes (premium) —————————————————————————————— */
 .gpt-msg-content blockquote {
-  margin: 14px 0;
-  padding: 12px 16px 12px 18px;
+  margin: var(--space-3) 0;
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-4);
   border-left: none;
   background:
     linear-gradient(90deg, rgba(245, 185, 66, 0.06) 0%, rgba(255, 255, 255, 0.015) 12%, transparent 80%);
@@ -4643,42 +4643,42 @@ body.has-sidebar #app-container:has(.video-view-container) {
   margin: 0;
 }
 .gpt-msg-content blockquote p + p {
-  margin-top: 0.5em;
+  margin-top: var(--space-2);
 }
 
 /* — Headings dentro del chat (premium hierarchy) ————————— */
 .gpt-msg-content h1 {
   font-size: 1.45em;
-  margin: 20px 0 10px;
+  margin: var(--space-5) 0 var(--space-2);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-tight);
   line-height: var(--leading-tight);
 }
 .gpt-msg-content h2 {
   font-size: 1.22em;
-  margin: 22px 0 10px;
+  margin: var(--space-5) 0 var(--space-2);
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-tight);
-  padding-bottom: 6px;
+  padding-bottom: var(--space-1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   line-height: var(--leading-tight);
 }
 .gpt-msg-content h3 {
   font-size: 1.08em;
-  margin: 16px 0 7px;
+  margin: var(--space-4) 0 var(--space-2);
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-tight);
 }
 .gpt-msg-content h4 {
   font-size: 1em;
-  margin: 12px 0 5px;
+  margin: var(--space-3) 0 var(--space-1);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
 }
 .gpt-msg-content h5,
 .gpt-msg-content h6 {
   font-size: 0.92em;
-  margin: 10px 0 4px;
+  margin: var(--space-2) 0 var(--space-1);
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: var(--tracking-mono);
@@ -4687,7 +4687,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 /* — HR ———————————————————————————————————————————————————— */
 .gpt-msg-content hr {
-  margin: 16px 0;
+  margin: var(--space-4) 0;
   border: none;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -4706,7 +4706,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-main-director .video-console-header-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     padding-bottom: var(--space-1);
     border-bottom: 1px solid var(--border-color);
     margin-bottom: var(--space-1);
@@ -4720,7 +4720,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 1px dashed rgba(255,255,255,0.18);
     background: transparent;
     color: var(--text-muted);
-    transition: border-color 0.18s ease, color 0.18s ease;
+    transition: border-color var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .video-view-container .video-director-top-row .video-director-btn-add:hover {
     border-color: var(--color-info);
@@ -4763,13 +4763,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     letter-spacing: var(--tracking-mono);
-    padding: 6px 12px;
+    padding: var(--space-1) var(--space-3);
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    transition: color 0.18s ease, border-color 0.18s ease;
+    transition: color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar);
 }
 .video-view-container .video-main-director .video-director-toggle:hover {
     color: var(--text-primary);
@@ -4785,7 +4785,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* Botón Generate — primary, brand gradient sin glow excesivo */
 .video-view-container .video-main-director .video-director-btn-generate {
     margin-left: auto;
-    padding: 9px 18px;
+    padding: var(--space-2) var(--space-4);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-bold);
     letter-spacing: var(--tracking-mono);
@@ -4796,8 +4796,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 0.55rem;
-    transition: filter 0.15s ease;
+    gap: var(--space-2);
+    transition: filter var(--duracion-base) var(--curva-estandar);
 }
 .video-view-container .video-main-director .video-director-btn-generate:hover {
     filter: brightness(1.08);
@@ -4814,7 +4814,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     width: 1px;
     height: 1px;
     padding: 0 !important;
-    margin: -1px !important;
+    margin: calc(-1 * var(--space-half)) !important;
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
@@ -4824,7 +4824,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-cine-row {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: var(--space-2);
     margin-bottom: var(--space-2);
 }
 
@@ -4839,7 +4839,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-cine-tile-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 6px;
+    gap: var(--space-1);
     width: 100%;
 }
 
@@ -4849,15 +4849,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 10px 6px;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-1);
     background: var(--bg-base);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     color: var(--text-secondary);
     cursor: pointer;
     text-align: center;
-    transition: border-color 0.15s ease, color 0.15s ease;
+    transition: border-color var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
     min-height: 64px;
     font: inherit;
 }
@@ -4882,7 +4882,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     z-index: 10;
     width: max-content;
     max-width: 240px;
-    padding: 8px 10px;
+    padding: var(--space-2) var(--space-2);
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
@@ -4896,7 +4896,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.18s ease, transform 0.18s ease;
+    transition: opacity var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
     white-space: normal;
 }
 
@@ -4924,8 +4924,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* Label de "Avanzado" en el header del bloque Camera */
 .video-cine-advanced-tag {
     display: inline-block;
-    margin-left: 6px;
-    padding: 1px 6px;
+    margin-left: var(--space-1);
+    padding: var(--space-half) var(--space-1);
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
     letter-spacing: var(--tracking-mono);
@@ -4973,7 +4973,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     padding: var(--space-4);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 /* Pestañas del sidebar: Recursos | Cinematografía.
@@ -4983,8 +4983,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     flex-shrink: 0;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    padding: 4px;
+    gap: var(--space-1);
+    padding: var(--space-1);
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -4994,8 +4994,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
-    padding: 8px 10px;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-2);
     border: 1px solid transparent;
     border-radius: var(--radius-sm);
     background: transparent;
@@ -5005,7 +5005,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-weight: var(--font-weight-medium);
     letter-spacing: var(--tracking-mono);
     cursor: pointer;
-    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    transition: color var(--duracion-base) var(--curva-estandar), background var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar);
 }
 
 .video-view-container .video-sidebar-tab i {
@@ -5072,8 +5072,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-sidebar-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 18px 16px;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-4);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -5084,8 +5084,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-sidebar-section-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 2px;
+    gap: var(--space-2);
+    margin-bottom: var(--space-half);
 }
 
 .video-view-container .video-sidebar-section-num {
@@ -5105,7 +5105,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     margin-left: auto;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1);
 }
 
 .video-view-container .video-sidebar-section-icon-btn {
@@ -5120,7 +5120,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     align-items: center;
     justify-content: center;
     font-size: var(--font-size-sm);
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .video-view-container .video-sidebar-section-icon-btn:hover {
     background: rgba(255, 255, 255, 0.06);
@@ -5131,7 +5131,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     margin-bottom: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-1);
 }
 
 .video-view-container .video-sidebar-section .video-prompt-panel-title {
@@ -5170,7 +5170,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 .video-view-container .video-cinematography-panel .video-cine-block-header,
 .video-view-container .video-sidebar-cine .video-cine-block-header {
-    padding: 12px 0;
+    padding: var(--space-3) 0;
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
     letter-spacing: var(--tracking-tight);
@@ -5188,22 +5188,22 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-sidebar-cine .video-cine-block-header i {
     font-size: var(--font-size-xs);
     color: var(--text-muted);
-    transition: transform 0.18s ease;
+    transition: transform var(--duracion-base) var(--curva-estandar);
     margin-left: 0;
 }
 
 .video-view-container .video-cinematography-panel .video-cine-block-content {
-    padding: 4px 0 14px;
+    padding: var(--space-1) 0 var(--space-3);
     border-top: none;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .video-view-container .video-cinematography-panel .video-cine-block-hint {
     font-size: var(--font-size-sm);
     color: var(--text-muted);
-    margin: 0 0 6px 0;
+    margin: 0 0 var(--space-1) 0;
     line-height: var(--leading-normal);
     font-style: normal;
     opacity: 1;
@@ -5219,7 +5219,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     letter-spacing: var(--tracking-mono);
     text-transform: uppercase;
     color: var(--text-muted);
-    margin: 0 0 6px 0;
+    margin: 0 0 var(--space-1) 0;
 }
 
 /* 4) Dropdowns (selects) profesionales pattern CC */
@@ -5228,7 +5228,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-sidebar-console .video-cine-select,
 .video-view-container .video-sidebar-console .video-asset-select {
     width: 100%;
-    padding: 10px 36px 10px 12px;
+    padding: var(--space-2) var(--space-8) var(--space-2) var(--space-3);
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
     line-height: var(--leading-tight);
@@ -5243,7 +5243,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
+    transition: border-color var(--duracion-base) var(--curva-estandar), background-color var(--duracion-base) var(--curva-estandar);
 }
 
 .video-view-container .video-sidebar-console .video-prompt-db-select:hover,
@@ -5277,7 +5277,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 /* "All" chip de Scenes */
 .video-view-container .video-escenas-all-btn {
-    padding: 5px 12px;
+    padding: var(--space-1) var(--space-3);
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
     border-radius: var(--radius-pill);
@@ -5285,7 +5285,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease;
+    transition: border-color var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 .video-view-container .video-escenas-all-btn:hover {
     border-color: rgba(255, 255, 255, 0.22);
@@ -5301,7 +5301,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-sidebar-section-hint {
     font-size: var(--font-size-sm);
     color: var(--text-muted);
-    margin: 0 0 4px 0;
+    margin: 0 0 var(--space-1) 0;
     line-height: var(--leading-normal);
 }
 
@@ -5309,7 +5309,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-cine-row-pair {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .video-view-container .video-cine-row-pair .video-cine-row {
@@ -5320,8 +5320,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-sidebar-tabs {
     display: flex;
     align-items: center;
-    gap: 18px;
-    padding: 14px 16px 12px;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-4) var(--space-3);
     border-bottom: 1px solid var(--border-color);
 }
 .video-view-container .video-sidebar-tab {
@@ -5330,10 +5330,10 @@ body.has-sidebar #app-container:has(.video-view-container) {
     color: var(--text-muted);
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
-    padding: 4px 0;
+    padding: var(--space-1) 0;
     cursor: pointer;
     position: relative;
-    transition: color 0.15s ease;
+    transition: color var(--duracion-base) var(--curva-estandar);
 }
 .video-view-container .video-sidebar-tab:hover {
     color: var(--text-primary);
@@ -5368,7 +5368,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     align-items: center;
     justify-content: center;
     font-size: var(--font-size-md);
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar);
     z-index: 5;
 }
 .video-view-container .video-sidebar-help:hover {
@@ -5386,7 +5386,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 14px 16px;
+    padding: var(--space-3) var(--space-4);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
     z-index: 6;
     display: none;
@@ -5398,13 +5398,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
     color: var(--text-primary);
-    margin: 0 0 8px 0;
+    margin: 0 0 var(--space-2) 0;
 }
 .video-view-container .video-sidebar-help-popover p {
     font-size: var(--font-size-sm);
     color: var(--text-muted);
     line-height: var(--leading-normal);
-    margin: 0 0 6px 0;
+    margin: 0 0 var(--space-1) 0;
 }
 .video-view-container .video-sidebar-help-popover p:last-child {
     margin-bottom: 0;
@@ -5417,12 +5417,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-cine-tabs {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 4px;
-    padding: 4px;
+    gap: var(--space-1);
+    padding: var(--space-1);
     background: var(--bg-base);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
 }
 
 .video-view-container .video-cine-tab {
@@ -5430,8 +5430,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 8px 4px;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-1);
     background: transparent;
     border: none;
     border-radius: var(--radius-sm);
@@ -5440,7 +5440,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font: inherit;
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 
 .video-view-container .video-cine-tab i {
@@ -5476,7 +5476,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-cine-panel {
     display: none;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .video-view-container .video-cine-panel.is-active {
@@ -5504,13 +5504,13 @@ body.has-sidebar #app-container:has(.video-view-container) {
 }
 .video-cine-tile.has-svg {
     min-height: 78px;
-    padding: 12px 6px;
+    padding: var(--space-3) var(--space-1);
 }
 
 /* Animaciones — solo se activan en hover/selected del tile parent */
 .video-cine-tile:hover .cine-anim-pulse,
 .video-cine-tile.is-selected .cine-anim-pulse {
-    animation: cine-pulse 1.6s ease-in-out infinite;
+    animation: cine-pulse 1.6s var(--curva-estandar) infinite;
 }
 @keyframes cine-pulse {
     0%, 100% { transform: scale(1); opacity: 1; }
@@ -5519,7 +5519,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 .video-cine-tile:hover .cine-anim-push-in,
 .video-cine-tile.is-selected .cine-anim-push-in {
-    animation: cine-push-in 1.8s ease-in-out infinite;
+    animation: cine-push-in 1.8s var(--curva-estandar) infinite;
 }
 @keyframes cine-push-in {
     0% { transform: scale(1); }
@@ -5529,7 +5529,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 .video-cine-tile:hover .cine-anim-pull-out,
 .video-cine-tile.is-selected .cine-anim-pull-out {
-    animation: cine-pull-out 1.8s ease-in-out infinite;
+    animation: cine-pull-out 1.8s var(--curva-estandar) infinite;
 }
 @keyframes cine-pull-out {
     0% { transform: scale(1.45); }
@@ -5539,7 +5539,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 .video-cine-tile:hover .cine-anim-dolly-left,
 .video-cine-tile.is-selected .cine-anim-dolly-left {
-    animation: cine-dolly-left 1.8s ease-in-out infinite;
+    animation: cine-dolly-left 1.8s var(--curva-estandar) infinite;
 }
 @keyframes cine-dolly-left {
     0%, 100% { transform: translateX(0); }
@@ -5548,7 +5548,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 .video-cine-tile:hover .cine-anim-dolly-right,
 .video-cine-tile.is-selected .cine-anim-dolly-right {
-    animation: cine-dolly-right 1.8s ease-in-out infinite;
+    animation: cine-dolly-right 1.8s var(--curva-estandar) infinite;
 }
 @keyframes cine-dolly-right {
     0%, 100% { transform: translateX(0); }
@@ -5575,7 +5575,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 .video-cine-tile:hover .cine-anim-handheld,
 .video-cine-tile.is-selected .cine-anim-handheld {
-    animation: cine-handheld 0.55s ease-in-out infinite;
+    animation: cine-handheld 0.55s var(--curva-estandar) infinite;
 }
 @keyframes cine-handheld {
     0%   { transform: translate(0, 0) rotate(0deg); }
@@ -5590,7 +5590,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-cine-tile.is-selected .cine-anim-tracking-cam,
 .video-cine-tile:hover .cine-anim-tracking-subject,
 .video-cine-tile.is-selected .cine-anim-tracking-subject {
-    animation: cine-tracking 2.4s ease-in-out infinite;
+    animation: cine-tracking 2.4s var(--curva-estandar) infinite;
 }
 @keyframes cine-tracking {
     0%, 100% { transform: translateX(0); }
@@ -5599,7 +5599,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 .video-cine-tile:hover .cine-anim-fpv,
 .video-cine-tile.is-selected .cine-anim-fpv {
-    animation: cine-fpv 1.6s ease-in-out infinite;
+    animation: cine-fpv 1.6s var(--curva-estandar) infinite;
     transform-origin: 4px 12px;
 }
 @keyframes cine-fpv {
@@ -5616,7 +5616,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .seedance-frames-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .video-view-container .seedance-frame-slot {
@@ -5624,8 +5624,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 18px 8px;
+    gap: var(--space-1);
+    padding: var(--space-4) var(--space-2);
     background: var(--bg-base);
     border: 1px dashed rgba(255,255,255,0.16);
     border-radius: var(--radius-sm);
@@ -5633,7 +5633,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     cursor: pointer;
     font: inherit;
     font-size: var(--font-size-sm);
-    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    transition: border-color var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar), background var(--duracion-base) var(--curva-estandar);
     min-height: 96px;
 }
 
@@ -5703,7 +5703,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s ease;
+    transition: background var(--duracion-base) var(--curva-estandar);
 }
 
 .video-view-container .seedance-frame-slot-remove:hover {
@@ -5712,7 +5712,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 /* Referencias multimodales */
 .video-view-container .seedance-ref-group {
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
 }
 
 .video-view-container .seedance-ref-group:last-child {
@@ -5723,8 +5723,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 6px;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
 }
 
 .video-view-container .seedance-ref-limit {
@@ -5732,7 +5732,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
     color: var(--text-muted);
-    margin-left: 6px;
+    margin-left: var(--space-1);
 }
 
 .video-view-container .seedance-ref-add-btn {
@@ -5747,7 +5747,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     align-items: center;
     justify-content: center;
     font-size: var(--font-size-xs);
-    transition: border-color 0.15s ease, color 0.15s ease;
+    transition: border-color var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 
 .video-view-container .seedance-ref-add-btn:hover {
@@ -5759,7 +5759,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .seedance-ref-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--space-1);
     min-height: 12px;
 }
 
@@ -5776,9 +5776,9 @@ body.has-sidebar #app-container:has(.video-view-container) {
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-1);
     max-width: 100%;
-    padding: 3px 20px 3px 5px;
+    padding: var(--space-half) var(--space-5) var(--space-half) var(--space-1);
     background: var(--bg-base);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
@@ -5851,7 +5851,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s ease;
+    transition: background var(--duracion-base) var(--curva-estandar);
 }
 
 .video-view-container .seedance-ref-remove:hover {
@@ -5862,8 +5862,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .seedance-toggle-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 0;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
     cursor: pointer;
     user-select: none;
 }
@@ -5881,7 +5881,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     background: var(--border-color);
     border-radius: var(--radius-pill);
     position: relative;
-    transition: background 0.18s ease;
+    transition: background var(--duracion-base) var(--curva-estandar);
     flex-shrink: 0;
 }
 
@@ -5893,7 +5893,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     height: 14px;
     background: var(--text-primary);
     border-radius: 50%;
-    transition: transform 0.18s ease;
+    transition: transform var(--duracion-base) var(--curva-estandar);
 }
 
 /* Encendido con el color MÁS CLARO de la marca, el mismo que PRODUCIR: los
@@ -5916,7 +5916,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .seedance-audio-tiles {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    gap: var(--space-1);
 }
 
 .video-view-container .seedance-audio-tile {
@@ -5924,8 +5924,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 12px 4px;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-1);
     background: var(--bg-base);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
@@ -5933,7 +5933,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     cursor: pointer;
     font: inherit;
     font-size: var(--font-size-xs);
-    transition: border-color 0.15s ease, color 0.15s ease;
+    transition: border-color var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 
 .video-view-container .seedance-audio-tile i {
@@ -5969,7 +5969,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 
 .video-view-container .seedance-duration-input {
     width: 64px;
-    padding-right: 22px;
+    padding-right: var(--space-5);
     text-align: center;
 }
 
@@ -6005,12 +6005,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-md);
     /* Padding ajustado para sentirse compacto, tipo input prompt real */
-    padding: 8px 12px 10px;
+    padding: var(--space-2) var(--space-3) var(--space-2);
     color: var(--glass-black-text);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-    transition: border-color 0.15s;
+    transition: border-color var(--duracion-base) var(--curva-estandar);
 }
 
 /* SIN resaltado al enfocar. El brief se escribe casi todo el tiempo, así que
@@ -6052,7 +6052,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar);
 }
 .video-view-container .video-director-console-zone .video-director-controls .video-director-btn-add:hover {
     background: var(--white-15);
@@ -6066,15 +6066,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-director-console-zone .video-director-attachments-row {
     display: none;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--space-1);
     align-items: center;
     margin: 0;
     padding: 0;
 }
 .video-view-container .video-director-console-zone .video-director-attachments-row:has(*:not(:empty)) {
     display: flex;
-    margin-top: 4px;
-    margin-bottom: 6px;
+    margin-top: var(--space-1);
+    margin-bottom: var(--space-1);
 }
 
 /* Textarea: sin background, sin border. Solo texto sobre la card.
@@ -6096,7 +6096,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     width: 100%;
     min-height: 44px;
     max-height: 180px;
-    padding: 4px 4px;
+    padding: var(--space-1) var(--space-1);
     margin: 0;
     background: transparent;
     border: none;
@@ -6138,7 +6138,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* Content wrapper: padding mínimo — el textarea ya tiene el suyo */
 .video-view-container .video-director-console-zone .video-director-console-content {
     min-height: auto;
-    padding: 2px 0 4px;
+    padding: var(--space-half) 0 var(--space-1);
     border: none;
     background: transparent;
 }
@@ -6148,8 +6148,8 @@ body.has-sidebar #app-container:has(.video-view-container) {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
-    padding-top: 4px;
+    gap: var(--space-2);
+    padding-top: var(--space-1);
 }
 
 /* Toggles + selects unificados visualmente como pills neutrales.
@@ -6158,7 +6158,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-director-console-zone .video-director-toggle,
 .video-view-container .video-director-console-zone .video-director-select {
     height: 32px;
-    padding: 0 12px;
+    padding: 0 var(--space-3);
     font-size: var(--font-size-sm);
     background: var(--white-8);
     border: 1px solid var(--white-10);
@@ -6196,7 +6196,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    padding: 0 26px 0 12px;
+    padding: 0 var(--space-6) 0 var(--space-3);
     background-image: none;
 }
 .video-view-container .video-director-console-zone .video-director-select::-ms-expand {
@@ -6243,7 +6243,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     justify-content: center;
     height: 36px;
     min-width: 116px;
-    padding: 0 18px;
+    padding: 0 var(--space-4);
     border-radius: var(--radius-sm);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
@@ -6269,7 +6269,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
        alto que PROMPT —que si lleva borde— y el par queda desalineado. */
     border: 1px solid var(--org-color-light);
     color: var(--bg-base);
-    transition: filter 0.15s ease, transform 0.15s ease;
+    transition: filter var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .video-view-container .video-director-console-zone .video-director-btn-generate:hover:not(:disabled) {
     filter: brightness(1.08);
@@ -6310,7 +6310,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     border: 1px solid var(--white-15);
     color: var(--text-muted);
     opacity: 1;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar), box-shadow var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .video-view-container .video-director-console-zone
   .video-attachment-pin-chip:hover {
@@ -6422,7 +6422,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: var(--space-1);
 }
 /* Las referencias son el grupo que crece: se lleva el espacio sobrante cuando
    se van llenando de miniaturas. */
@@ -6448,12 +6448,12 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* --- Frames: dos slots pequeños, uno al lado del otro --- */
 .video-view-container .video-director-recursos .seedance-frames-grid {
     grid-template-columns: 84px 84px;
-    gap: 6px;
+    gap: var(--space-1);
 }
 .video-view-container .video-director-recursos .seedance-frame-slot {
     min-height: 54px;
-    padding: 6px 4px;
-    gap: 2px;
+    padding: var(--space-1) var(--space-1);
+    gap: var(--space-half);
     font-size: var(--font-size-xs);
 }
 .video-view-container .video-director-recursos .seedance-frame-slot-hint {
@@ -6476,7 +6476,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
     min-width: 0;
 }
 .video-view-container .video-director-recursos .seedance-ref-group-header {
-    margin-bottom: 4px;
+    margin-bottom: var(--space-1);
 }
 .video-view-container .video-director-recursos .seedance-ref-list:empty {
     display: none; /* el "Sin referencias" de tres grupos vacíos era casi toda la banda */
@@ -6485,11 +6485,11 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* --- Audio: el switch y los cuatro tipos, en una línea --- */
 .video-view-container .video-director-recursos .seedance-audio-tiles {
     grid-template-columns: repeat(4, 58px);
-    gap: 4px;
+    gap: var(--space-1);
 }
 .video-view-container .video-director-recursos .seedance-audio-tile {
-    padding: 6px 2px;
-    gap: 3px;
+    padding: var(--space-1) var(--space-half);
+    gap: var(--space-half);
     font-size: var(--font-size-xs);
 }
 
@@ -6524,15 +6524,15 @@ body.has-sidebar #app-container:has(.video-view-container) {
 .video-view-container .video-elementos-filas {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-top: 8px;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
 }
 
 .video-view-container .video-elementos-fila-label {
     display: flex;
     align-items: center;
-    gap: 5px;
-    margin-bottom: 5px;
+    gap: var(--space-1);
+    margin-bottom: var(--space-1);
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-bold);
     letter-spacing: var(--tracking-mono);
@@ -6574,7 +6574,7 @@ body.has-sidebar #app-container:has(.video-view-container) {
 /* --- La zona que recibe: el grupo de Imágenes del prompt --- */
 .video-view-container .seedance-ref-group.es-zona-drop {
     border-radius: var(--radius-sm);
-    transition: background 0.15s ease, box-shadow 0.15s ease;
+    transition: background var(--duracion-base) var(--curva-estandar), box-shadow var(--duracion-base) var(--curva-estandar);
 }
 /* Mientras se arrastra, la zona se insinúa aunque el cursor no esté encima:
    si no, hay que adivinar dónde soltar. */
@@ -6626,7 +6626,7 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     border: 1px solid var(--color-white);
     background: var(--color-white);
     color: var(--bg-base);
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-view-container .video-director-btn-forge:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.88);
@@ -6693,8 +6693,8 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
 }
 
 .video-view-container .video-elemento-selector {
-    margin-top: 8px;
-    padding: 10px;
+    margin-top: var(--space-2);
+    padding: var(--space-2);
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
     background: var(--bg-card);
@@ -6702,8 +6702,8 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
 .video-view-container .video-elemento-selector-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 2px;
+    gap: var(--space-2);
+    margin-bottom: var(--space-half);
 }
 .video-view-container .video-elemento-selector-titulo {
     flex: 1;
@@ -6736,14 +6736,14 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     font-size: var(--font-size-md);
     line-height: var(--leading-none);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .video-view-container .video-elemento-selector-cerrar:hover {
     background: var(--white-15);
     color: var(--text-primary);
 }
 .video-view-container .video-elemento-selector-hint {
-    margin: 0 0 8px;
+    margin: 0 0 var(--space-2);
     font-size: var(--font-size-xs);
     line-height: var(--leading-tight);
     color: var(--text-tertiary, rgba(255, 255, 255, 0.45));
@@ -6754,7 +6754,7 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
 .video-view-container .video-elemento-selector-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    gap: var(--space-1);
     max-height: 320px;
     overflow-y: auto;
 }
@@ -6768,7 +6768,7 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     overflow: hidden;
     background: var(--bg-base);
     cursor: pointer;
-    transition: border-color 0.15s ease, transform 0.12s ease;
+    transition: border-color var(--duracion-base) var(--curva-estandar), transform var(--duracion-rapida) var(--curva-estandar);
 }
 .video-view-container .video-elemento-foto img {
     width: 100%;
@@ -6820,7 +6820,7 @@ body.video-arrastrando-elemento .video-view-container .seedance-frame-slot {
     position: absolute;
     right: 3px;
     bottom: 3px;
-    padding: 0 4px;
+    padding: 0 var(--space-1);
     border-radius: var(--radius-xs);
     background: rgba(0, 0, 0, 0.72);
     color: var(--text-secondary);

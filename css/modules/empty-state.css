@@ -56,7 +56,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0;
-  padding: 24px;
+  padding: var(--space-6);
   max-width: 520px;
 }
 
@@ -104,7 +104,7 @@
 }
 
 .ple-title {
-  margin: 22px 0 0;
+  margin: var(--space-5) 0 0;
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-medium);
   line-height: var(--leading-tight);
@@ -112,7 +112,7 @@
   letter-spacing: var(--tracking-tight);
 }
 .ple-subtitle {
-  margin: 9px 0 0;
+  margin: var(--space-2) 0 0;
   font-size: var(--font-size-base);
   line-height: var(--leading-normal);
   color: rgba(212, 209, 216, 0.62);
@@ -123,18 +123,18 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
-  margin-top: 22px;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
 }
 .ple-btn {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   line-height: var(--leading-none);
   cursor: pointer;
-  padding: 11px 18px;
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid transparent;
-  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+  transition: background var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 .ple-btn:active { transform: translateY(1px); }
 .ple-btn--primary {
@@ -153,18 +153,18 @@
 }
 
 /* ── Variante COMPACTA — areas pequeñas (columnas kanban, paneles) ── */
-.empty-state--compact { min-height: 0; padding: 6px; }
+.empty-state--compact { min-height: 0; padding: var(--space-1); }
 .empty-state--compact::before { display: none; }
-.empty-state--compact .ple-content { padding: 16px 12px; max-width: none; }
+.empty-state--compact .ple-content { padding: var(--space-4) var(--space-3); max-width: none; }
 .empty-state--compact .ple-medallion {
   width: 48px; height: 48px;
   box-shadow: 0 0 36px 6px rgba(224, 86, 63, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 .empty-state--compact .ple-medallion i { font-size: var(--font-size-lg); }
 .empty-state--compact .ple-medallion-img { width: 20px; height: 20px; }
-.empty-state--compact .ple-title { margin-top: 12px; font-size: var(--font-size-base); }
-.empty-state--compact .ple-subtitle { margin-top: 5px; font-size: var(--font-size-sm); }
-.empty-state--compact .ple-actions { margin-top: 14px; }
+.empty-state--compact .ple-title { margin-top: var(--space-3); font-size: var(--font-size-base); }
+.empty-state--compact .ple-subtitle { margin-top: var(--space-1); font-size: var(--font-size-sm); }
+.empty-state--compact .ple-actions { margin-top: var(--space-3); }
 
 /* ── Empty state inyectado DENTRO de un contenedor de tarjetas (grid/flex) ──
    Varios listados reemplazan el innerHTML del propio grid por el empty state.

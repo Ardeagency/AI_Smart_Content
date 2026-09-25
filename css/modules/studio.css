@@ -118,7 +118,7 @@
   align-items: flex-start;
   align-content: flex-start;
   justify-content: center;
-  gap: 14px;
+  gap: var(--space-3);
   overflow: visible;
 }
 .living-masonry-grid--css-grid .living-masonry-item {
@@ -198,7 +198,7 @@
 .studio-skeleton-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: center;
   width: 100%;
 }
@@ -235,8 +235,8 @@
 
 /* ========== Flujos secuenciales (UGC): etapas + aprobacion ========== */
 .studio-stage { display: flex; flex-direction: column; gap: var(--space-4, 16px); padding: var(--space-6, 24px); width: 100%; }
-.studio-stage-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.stage-step { font-size: var(--font-size-sm); color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; }
+.studio-stage-steps { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.stage-step { font-size: var(--font-size-sm); color: var(--text-muted); display: inline-flex; align-items: center; gap: var(--space-1); }
 .stage-step b { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--border-color, #242424); color: var(--text-muted); font-size: var(--font-size-xs); }
 .stage-step.is-active { color: var(--text-primary); }
 .stage-step.is-active b { background: var(--color-error); color: var(--color-white); }
@@ -247,21 +247,21 @@
 
 .stage-approval { display: flex; flex-direction: column; gap: var(--space-4, 16px); max-width: 760px; }
 .stage-approval-title { margin: 0; font-size: var(--font-size-md); font-weight: var(--font-weight-medium); color: var(--text-primary); }
-.stage-variants { display: grid; gap: 12px; }
-.stage-variant { display: block; cursor: pointer; border: 1px solid var(--border-color, #242424); background: var(--bg-card, #141517); border-radius: var(--radius-md); padding: 14px; transition: var(--transition); }
+.stage-variants { display: grid; gap: var(--space-3); }
+.stage-variant { display: block; cursor: pointer; border: 1px solid var(--border-color, #242424); background: var(--bg-card, #141517); border-radius: var(--radius-md); padding: var(--space-3); transition: var(--transicion-controles); }
 .stage-variant:hover { border-color: var(--text-muted); }
 .stage-variant.is-selected { border-color: var(--color-error); box-shadow: 0 0 0 1px var(--color-error) inset; }
-.stage-variant input[type=radio] { margin-right: 8px; accent-color: var(--color-error); }
+.stage-variant input[type=radio] { margin-right: var(--space-2); accent-color: var(--color-error); }
 .stage-variant-head { font-size: var(--font-size-base); color: var(--text-primary); }
 .stage-variant-head span { color: var(--text-muted); font-weight: var(--font-weight-regular); }
-.stage-variant-hook { font-size: var(--font-size-sm); color: var(--text-secondary); margin: 6px 0; }
-.stage-variant-scenes { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.stage-variant-hook { font-size: var(--font-size-sm); color: var(--text-secondary); margin: var(--space-1) 0; }
+.stage-variant-scenes { margin: var(--space-1) 0 0; padding-left: var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
 .stage-variant-scenes li { font-size: var(--font-size-sm); color: var(--text-secondary); }
 .stage-onscreen { color: var(--text-muted); }
-.stage-ajustes { width: 100%; background: var(--bg-card, #141517); border: 1px solid var(--border-color, #242424); border-radius: var(--radius-sm); color: var(--text-primary); padding: 10px; font: inherit; font-size: var(--font-size-base); resize: vertical; }
+.stage-ajustes { width: 100%; background: var(--bg-card, #141517); border: 1px solid var(--border-color, #242424); border-radius: var(--radius-sm); color: var(--text-primary); padding: var(--space-2); font: inherit; font-size: var(--font-size-base); resize: vertical; }
 .stage-image-wrap { border: 1px solid var(--border-color, #242424); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-card, #141517); max-width: 640px; }
 .stage-image { display: block; width: 100%; height: auto; }
-.stage-actions { display: flex; gap: 10px; align-items: center; }
+.stage-actions { display: flex; gap: var(--space-2); align-items: center; }
 .stage-actions [data-stage-action]:disabled { opacity: 0.5; pointer-events: none; }
 .stage-approval-msg { font-size: var(--font-size-sm); color: var(--text-muted); margin: 0; min-height: 1em; }
 
@@ -339,24 +339,24 @@
   border-radius: var(--radius-md);
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-color, #242424);
-  padding: 24px;
+  padding: var(--space-6);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .studio-summary-body {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-4);
 }
 
 .studio-summary-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 12px;
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -371,7 +371,7 @@
 .studio-summary-section {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .studio-summary-label {
@@ -393,11 +393,11 @@
 .studio-summary-hint {
   font-size: var(--font-size-xs);
   color: rgba(255, 255, 255, 0.45);
-  margin-top: 2px;
+  margin-top: var(--space-half);
 }
 
 .studio-summary-section--cost {
-  padding: 14px 16px;
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -412,8 +412,8 @@
 .studio-summary-footer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-top: 16px;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -432,7 +432,7 @@
   color: var(--text-secondary);
   font-size: var(--font-size-base);
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transicion-controles);
 }
 
 .studio-back-flows--automated:hover {
@@ -463,7 +463,7 @@
 .studio-schedule-grid {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .studio-schedule-card {
@@ -472,8 +472,8 @@
   border: 1px solid var(--border-color, #242424);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  padding: 24px;
-  transition: border-color 0.2s ease;
+  padding: var(--space-6);
+  transition: border-color var(--duracion-base) var(--curva-estandar);
 }
 
 .studio-schedule-card:focus-within {
@@ -503,7 +503,7 @@
 .studio-schedule-card textarea,
 .studio-programacion-select {
   border-color: rgba(255, 255, 255, 0.06) !important;
-  transition: border-color 0.15s ease;
+  transition: border-color var(--duracion-base) var(--curva-estandar);
 }
 .studio-schedule-card input:focus,
 .studio-schedule-card select:focus,
@@ -516,8 +516,8 @@
 .studio-schedule-card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
 }
 
 .studio-schedule-card-title {
@@ -528,8 +528,8 @@
 }
 
 .studio-schedule-card--frequency .studio-programacion-slot {
-  margin-top: 16px;
-  padding: 16px;
+  margin-top: var(--space-4);
+  padding: var(--space-4);
   border-radius: var(--radius-sm);
   border: none;
   background: rgba(255, 255, 255, 0.025);
@@ -553,7 +553,7 @@
   background: transparent;
   border: none;
   color: var(--text-primary);
-  padding: 0.4rem 0.5rem;
+  padding: var(--space-2) var(--space-2);
 }
 
 .studio-schedule-card .input-stepper-btns {
@@ -575,7 +575,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 
 .studio-schedule-card .input-stepper-btn:first-child {
@@ -619,7 +619,7 @@
 
 .studio-schedule-card .input-stepper-unit {
   color: var(--text-muted);
-  margin-left: 6px;
+  margin-left: var(--space-1);
   font-size: var(--font-size-base);
 }
 
@@ -636,7 +636,7 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color, #242424);
   color: var(--text-primary);
-  padding-right: 32px;
+  padding-right: var(--space-8);
 }
 #studio-schedule-programacion-widget > .schedule-panel,
 .schedule-panel {
@@ -645,7 +645,7 @@
   align-items: center;
   gap: var(--space-4);
   margin-top: var(--space-4);
-  padding: 16px;
+  padding: var(--space-4);
   border-radius: var(--radius-sm);
   border: none;
   background: rgba(255, 255, 255, 0.025);
@@ -660,7 +660,7 @@
 .studio-programacion-row .input-stepper-wrap {
   background: rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-sm);
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
   border: none;
   display: inline-flex;
   align-items: center;
@@ -693,8 +693,8 @@
   display: flex;
   flex-direction: column;
   border-left: 1px solid rgba(255, 255, 255, 0.06);
-  margin-left: 4px;
-  padding-left: 4px;
+  margin-left: var(--space-1);
+  padding-left: var(--space-1);
   gap: 0;
 }
 
@@ -711,7 +711,7 @@
   align-items: center;
   justify-content: center;
   font-size: var(--font-size-sm);
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 
 .studio-programacion-row .input-stepper-btn:hover {
@@ -749,7 +749,7 @@
 .studio-automation-summary-inner {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .studio-automation-summary-header {
@@ -766,7 +766,7 @@
 }
 
 .studio-automation-summary-pill {
-  padding: 4px 10px;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   font-size: var(--font-size-xs);
   letter-spacing: var(--tracking-mono);
@@ -778,7 +778,7 @@
 .studio-automation-summary-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .studio-automation-summary-section-label {
@@ -793,7 +793,7 @@
 .studio-automation-summary-pair {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .studio-automation-summary-key {
@@ -810,8 +810,8 @@
 .studio-automation-summary-next-run {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   /* Degradado de marca solo como borde (sin animar background-position: a 200% se leía como “loading”) */
@@ -840,22 +840,22 @@
 .studio-automation-summary-actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
 }
 
 .studio-automation-btn-primary,
 .studio-automation-btn-secondary {
   width: 100%;
   border-radius: var(--radius-md);
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   font-size: var(--font-size-md);
   font-family: inherit;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .studio-automation-btn-primary {
@@ -868,7 +868,7 @@
   color: #0f0f0f;
   font-weight: var(--font-weight-medium);
   box-shadow: none;
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background-color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 
 /* Resplandor bajo el CTA: degradado de marca estático (sin barrido; evita lectura “loading”) */
@@ -914,16 +914,16 @@
 .studio-weekdays {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 .studio-weekday-check {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--space-1);
   font-size: var(--font-size-base);
   cursor: pointer;
   color: var(--text-primary);
-  padding: 0.2rem 0.5rem;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   border: 1px solid var(--white-20);
   background: rgba(0, 0, 0, 0.45);
@@ -938,7 +938,7 @@
   background: var(--org-gradient);
   color: var(--color-white);
   border-radius: var(--radius-pill);
-  padding: 0.2rem 0.7rem;
+  padding: var(--space-1) var(--space-3);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.8);
 }
 
@@ -951,8 +951,8 @@
 .schedule-panel--personalizado .studio-programacion-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 0;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   border-bottom: none;
 }
@@ -974,7 +974,7 @@
   color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
   letter-spacing: var(--tracking-mono);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
 }
 
 /* ========== Footer (créditos + Producir) ========== */
@@ -982,9 +982,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
   height: 52px;  /* misma altura que .nav-brand-footer del sidebar */
-  padding: 0 20px;
+  padding: 0 var(--space-5);
   background: var(--glass-black-bg);
   border-top: 1px solid var(--glass-black-border);
   backdrop-filter: var(--glass-blur);
@@ -1001,7 +1001,7 @@
 .studio-footer-credits {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
@@ -1028,13 +1028,13 @@
 .studio-credits-cost {
   font-size: var(--font-size-sm);
   color: var(--icon-button);
-  margin-left: 0.25rem;
+  margin-left: var(--space-1);
 }
 
 .studio-btn-producir {
   /* Mismo radio que el botón Vera del sidebar (var(--radius-sm) = 8px).
      Forma rectangular más ancha y baja que el pill original. */
-  padding: 6px 28px;
+  padding: var(--space-1) var(--space-6);
   min-width: 140px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(0, 0, 0, 0.14);
@@ -1044,7 +1044,7 @@
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background-color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar), color var(--duracion-base) var(--curva-estandar);
 }
 
 .studio-btn-producir:hover:not(:disabled) {
@@ -1078,7 +1078,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -1101,11 +1101,11 @@
   color: var(--text-primary);
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.4rem 0.75rem;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-pill);
   background: var(--white-10);
-  transition: var(--transition);
+  transition: var(--transicion-controles);
 }
 
 .studio-tab-future:hover {
@@ -1127,7 +1127,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color, #212126);
   border-radius: var(--radius-lg);
-  padding: 14px 16px 18px;
+  padding: var(--space-3) var(--space-4) var(--space-4);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   box-sizing: border-box;
   overflow-y: auto;
@@ -1143,15 +1143,15 @@
 .studio-back-flows {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  margin-bottom: 0.75rem;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
   padding: 0;
   border: none;
   background: none;
   color: var(--text-muted);
   font-size: var(--font-size-sm);
   cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 
 .studio-back-flows:hover {
@@ -1162,7 +1162,7 @@
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
-  margin: 0 0 1rem 0;
+  margin: 0 0 var(--space-4) 0;
 }
 
 .studio-form-empty {
@@ -1174,13 +1174,13 @@
 .studio-flow-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .studio-field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
 }
 
 .studio-field label {
@@ -1192,7 +1192,7 @@
 .studio-field input,
 .studio-field textarea,
 .studio-field select {
-  padding: 0.5rem 0.6rem;
+  padding: var(--space-2) var(--space-2);
   border: 1px solid var(--border-color, #242424);
   border-radius: var(--radius-sm);
   background: var(--bg-card, #141517);
@@ -1225,14 +1225,14 @@
 }
 
 .focus-selector-toggle-wrap {
-  padding: 14px 16px;
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border-color);
 }
 
 .focus-selector-ai-toggle {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
   cursor: pointer;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
@@ -1251,7 +1251,7 @@
 }
 
 .focus-selector-ai-help {
-  margin: 8px 0 0 28px;
+  margin: var(--space-2) 0 0 var(--space-6);
   font-size: var(--font-size-sm);
   color: var(--text-muted);
   line-height: var(--leading-normal);
@@ -1260,7 +1260,7 @@
 .focus-selector-body {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.25s ease;
+  transition: max-height var(--duracion-media) var(--curva-estandar);
 }
 
 .focus-selector-body--open {
@@ -1269,7 +1269,7 @@
 }
 
 .focus-selector-accordion-inner {
-  padding: 14px 16px 18px;
+  padding: var(--space-3) var(--space-4) var(--space-4);
   border-top: 1px solid var(--border-color);
 }
 
@@ -1281,7 +1281,7 @@
 }
 
 .focus-selector-section {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .focus-selector-section:last-child {
@@ -1294,19 +1294,19 @@
   text-transform: uppercase;
   letter-spacing: var(--tracking-mono);
   color: var(--text-secondary);
-  margin: 0 0 10px 0;
+  margin: 0 0 var(--space-2) 0;
 }
 
 .focus-selector-options {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .focus-selector-option {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
   font-size: var(--font-size-base);
   color: var(--text-primary);
   cursor: pointer;

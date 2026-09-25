@@ -137,10 +137,9 @@
     --overlay-blur: blur(6px);
     /* Contenedor de imagen (estilo historial-living) — único punto de verdad */
     --media-container-bg: transparent;
-    /* --transition: sin box-shadow. Animar box-shadow es paint puro (no compositable)
-       y este token se usa en 115+ sitios incluido .card. Quien necesite transicion de
-       sombra al hover la declara explicitamente. */
-    /* Curvas de easing canonicas (antes habia 8 sueltas). Usar estas para coherencia. */
+    /* --transicion-controles: sin box-shadow. Animar box-shadow es paint puro (no
+       compositable) y este token se usa en ~90 sitios incluido .card. Quien necesite
+       transicion de sombra al hover la declara explicitamente. */
     /* ── CAPAS: la ÚNICA escala de z-index (L2, 24/09) ──────────────────────
        Antes había dos grupos --z-* en este :root que se pisaban y ~45 valores
        crudos en los módulos. Esta escala conserva EXACTAMENTE el orden de
@@ -360,7 +359,11 @@
   --tracking-tight: -0.01em;
   --tracking-mono: 0.04em;
 
-  /* ── ESPACIO (escala de 4px) ── */
+  /* ── ESPACIO — escala CERRADA: 0 · 2 · 4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64 · 80 ──
+     padding/margin/gap solo con estos tokens (test/escalas.test.js); negativos como
+     calc(-1 * var(--space-N)). */
+  --space-0: 0;
+  --space-half: 0.125rem;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -368,8 +371,10 @@
   --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
+  --space-10: 2.5rem;
   --space-12: 3rem;
   --space-16: 4rem;
+  --space-20: 5rem;
 
   /* ── RADIO ── */
   --radius-xs: 4px;
@@ -398,17 +403,22 @@
   --control-md: 40px;
   --control-lg: 48px;
 
-  /* ── MOVIMIENTO ── */
-  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-route: cubic-bezier(0.33, 0, 0.2, 1);
-  --duration-fast: 150ms;
-  --duration-base: 200ms;
-  --duration-modal: 250ms;
-  --duration-route: 280ms;
-  --transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease, opacity 200ms ease, transform 200ms ease;
-  --transition-fast: color 150ms ease, background-color 150ms ease, border-color 150ms ease, opacity 150ms ease;
-  --transition-slow: color 500ms ease, background-color 500ms ease, opacity 500ms ease, transform 500ms ease;
+  /* ── MOVIMIENTO — 4 duraciones y 3 curvas (las «productive» de Carbon) ──
+     Toda transition/animation usa estas (test/escalas.test.js). Fuera de la regla:
+     bucles (infinite) y duraciones > 700ms (spinners, shimmer, pulsos), retrasos
+     escalonados y `linear`. Reduced-motion las baja a 0.01ms (ver A11y abajo). */
+  --duracion-rapida: 100ms;
+  --duracion-base: 150ms;
+  --duracion-media: 250ms;
+  --duracion-lenta: 400ms;
+  --curva-estandar: cubic-bezier(0.2, 0, 0.38, 0.9);
+  --curva-entrada: cubic-bezier(0, 0, 0.38, 0.9);
+  --curva-salida: cubic-bezier(0.2, 0, 1, 0.9);
+  /* Transicion de controles (antes --transition / -fast / -slow): los mismos
+     cinco/cuatro atributos, ahora con los tokens de arriba. Sin box-shadow. */
+  --transicion-controles: color var(--duracion-base) var(--curva-estandar), background-color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar), opacity var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
+  --transicion-controles-rapida: color var(--duracion-rapida) var(--curva-estandar), background-color var(--duracion-rapida) var(--curva-estandar), border-color var(--duracion-rapida) var(--curva-estandar), opacity var(--duracion-rapida) var(--curva-estandar);
+  --transicion-controles-lenta: color var(--duracion-lenta) var(--curva-estandar), background-color var(--duracion-lenta) var(--curva-estandar), opacity var(--duracion-lenta) var(--curva-estandar), transform var(--duracion-lenta) var(--curva-estandar);
 }
 /* Puentes v1 → ADN: los nombres que v1 usa en 141k líneas apuntan al token nuevo. */
 :root {
@@ -473,7 +483,7 @@ h1, h2, h3, h4, h5, h6,
     background: transparent;
     color: var(--white-80);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
     -webkit-tap-highlight-color: transparent;
 }
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -531,7 +541,7 @@ h1, h2, h3, h4, h5, h6,
     backdrop-filter: var(--modal-velo-blur);
     -webkit-backdrop-filter: var(--modal-velo-blur);
     z-index: 0;
-    animation: overlayFadeIn 0.45s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
+    animation: overlayFadeIn var(--duracion-lenta) var(--curva-entrada) both;
 }
 @keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -540,7 +550,7 @@ h1, h2, h3, h4, h5, h6,
    La galeria masonry hace ademas opacity:0-hasta-load (ver living.css) para evitar el
    render progresivo "por pedazos"; ese override gana por especificidad. */
 @keyframes imgFadeIn { from { opacity: 0; } to { opacity: 1; } }
-img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
+img.is-loaded { animation: imgFadeIn var(--duracion-lenta) var(--curva-entrada); }
 @media (prefers-reduced-motion: reduce) { img.is-loaded { animation: none; } }
 .modal-content {
     position: relative;
@@ -557,7 +567,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    animation: modalIn 0.55s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+    animation: modalIn var(--duracion-lenta) var(--curva-entrada);
 }
 .modal-content--sm { max-width: min(480px, calc(100vw - 2rem)); }
 .modal-content--md { max-width: min(640px, calc(100vw - 2rem)); }
@@ -567,19 +577,19 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    padding: 1.4rem 1.75rem;
+    padding: var(--space-6) var(--space-6);
     border-bottom: var(--modal-divisor);
 }
 .modal-header-left {
     display: inline-flex;
     align-items: center;
-    gap: 0.85rem;
+    gap: var(--space-3);
     min-width: 0;
 }
 .modal-header h2, .modal-header h3 {
     display: inline-flex;
     align-items: center;
-    gap: 0.55rem;
+    gap: var(--space-2);
     font-size: var(--font-size-xl);
     font-weight: var(--font-weight-medium);
     letter-spacing: var(--tracking-tight);
@@ -590,8 +600,8 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
 .modal-back {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.45rem 0.75rem;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: var(--radius-sm);
@@ -600,21 +610,21 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     font-weight: var(--font-weight-medium);
     letter-spacing: 0;
     cursor: pointer;
-    transition: color 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
-                background 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
-                border-color 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+    transition: color var(--duracion-media) var(--curva-entrada),
+                background var(--duracion-media) var(--curva-entrada),
+                border-color var(--duracion-media) var(--curva-entrada);
 }
-.modal-back i { transition: transform 0.35s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)); }
+.modal-back i { transition: transform var(--duracion-lenta) var(--curva-entrada); }
 .modal-back:hover { color: #fff; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.14); }
 .modal-back:hover i { transform: translateX(-3px); }
 .modal-back[hidden] { display: none; }
 .modal-body {
-    padding: 1.75rem;
+    padding: var(--space-6);
     overflow-y: auto;
     flex: 1;
 }
 .modal-intro {
-    margin: 0 0 1.5rem;
+    margin: 0 0 var(--space-6);
     color: rgba(255, 255, 255, 0.55);
     font-size: var(--font-size-base);
     line-height: var(--leading-normal);
@@ -625,7 +635,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     align-items: center;
     justify-content: flex-end;
     gap: var(--space-2);
-    padding: 1rem 1.75rem;
+    padding: var(--space-4) var(--space-6);
     border-top: var(--modal-divisor);
 }
 .modal-close {
@@ -641,8 +651,8 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     border-radius: var(--radius-md);
     font-size: var(--font-size-xl);
     line-height: var(--leading-none);
-    transition: color 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
-                background 0.25s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+    transition: color var(--duracion-media) var(--curva-entrada),
+                background var(--duracion-media) var(--curva-entrada);
 }
 .modal-close:hover {
     color: rgba(255, 255, 255, 0.95);
@@ -678,14 +688,14 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
         max-height: 92vh;
         border-radius: var(--radius-md) var(--radius-md) 0 0;
         border-bottom: none;
-        animation: sheetUp 0.28s var(--ease-out, ease-out);
+        animation: sheetUp var(--duracion-media) var(--curva-entrada);
     }
-    .modal-header { padding: 1rem 1.15rem; }
-    .modal-body   { padding: 1.15rem; }
+    .modal-header { padding: var(--space-4) var(--space-5); }
+    .modal-body   { padding: var(--space-5); }
     .modal-footer {
         flex-direction: column-reverse;
         align-items: stretch;
-        padding: 0.85rem 1.15rem;
+        padding: var(--space-3) var(--space-5);
         padding-bottom: max(0.85rem, env(safe-area-inset-bottom));
     }
     .modal-footer > .btn,
@@ -707,9 +717,9 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     color: var(--text-muted);
     font-size: var(--font-size-2xl);
     cursor: pointer;
-    padding: 0.25rem;
+    padding: var(--space-1);
     border-radius: var(--radius-xs);
-    transition: var(--transition);
+    transition: var(--transicion-controles);
     width: 32px;
     height: 32px;
     display: flex;
@@ -747,7 +757,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     margin-bottom: var(--space-4);
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: var(--space-1);
 }
 .form-group label {
     color: var(--text-primary);
@@ -762,14 +772,14 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     color: var(--text-secondary);
-    margin-bottom: 0.2rem;
+    margin-bottom: var(--space-1);
 }
 /* Inputs de texto: sin efecto glass (nombre de marca, etc.) */
 /* input de una línea: alto de control; el textarea crece con su contenido */
 .form-input { min-height: var(--control-md); }
 .form-input, .form-textarea {
     width: 100%;
-    padding: 0.6rem 0.75rem;
+    padding: var(--space-2) var(--space-3);
     font-family: var(--font-texto);
     font-size: var(--font-size-base);
     color: var(--text-primary);
@@ -777,7 +787,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     outline: none;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
 }
 .form-input:focus, .form-textarea:focus {
     border-color: var(--accent);
@@ -792,7 +802,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
    macOS). Comparte el lenguaje de .form-input. */
 .form-control {
     width: 100%;
-    padding: 0.6rem 0.75rem;
+    padding: var(--space-2) var(--space-3);
     font-family: var(--font-texto);
     font-size: var(--font-size-base);
     color: var(--text-primary);
@@ -800,7 +810,7 @@ img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     outline: none;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
     min-height: var(--control-md);
 }
 .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
@@ -828,7 +838,7 @@ input[type="search"]::-webkit-search-results-decoration {
 /* Select y contenedores tipo dropdown: efecto glass */
 .form-select {
     width: 100%;
-    padding: 0.6rem 2.5rem 0.6rem 0.75rem;
+    padding: var(--space-2) var(--space-10) var(--space-2) var(--space-3);
     font-family: var(--font-texto);
     font-size: var(--font-size-base);
     color: var(--text-primary);
@@ -838,7 +848,7 @@ input[type="search"]::-webkit-search-results-decoration {
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--radius-md);
     outline: none;
-    transition: var(--transition);
+    transition: var(--transicion-controles);
     appearance: none;
     -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23D4D1D8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
@@ -851,7 +861,7 @@ input[type="search"]::-webkit-search-results-decoration {
     box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .form-select:disabled { opacity: 0.5; cursor: not-allowed; }
-.form-hint { font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 0.2rem; }
+.form-hint { font-size: var(--font-size-xs); color: var(--text-muted); margin-top: var(--space-1); }
 
 /* ========== CARDS — Design glass unificado ========== */
 .card {
@@ -861,13 +871,13 @@ input[type="search"]::-webkit-search-results-decoration {
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--radius-md);
-    padding: 1.25rem;
-    transition: var(--transition);
+    padding: var(--space-5);
+    transition: var(--transicion-controles);
 }
 .card:hover { border-color: var(--border-hairline); }
 .card-interactive { cursor: pointer; }
 /* Micro-lift en hover: transform es compositable (0 layout). Da sensacion premium
-   a las cards clickeables sin reflow. La transicion ya viene de var(--transition). */
+   a las cards clickeables sin reflow. La transicion ya viene de var(--transicion-controles). */
 .card-interactive:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
 .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
 .card-body { flex: 1; }
@@ -913,7 +923,7 @@ input[type="search"]::-webkit-search-results-decoration {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    padding: 9px 18px 9px 14px;
+    padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3);
     border-radius: var(--radius-pill);
     font-family: var(--font-mono);
     font-size: var(--font-size-md);
@@ -927,7 +937,7 @@ input[type="search"]::-webkit-search-results-decoration {
 .badge--advertencia { background: var(--color-warning); }
 .badge--error { background: var(--color-error); }
 .badge--info { background: var(--color-info); }
-.badge--sm { gap: var(--space-1); padding: 3px 10px 3px 8px; font-size: var(--font-size-xs); }
+.badge--sm { gap: var(--space-1); padding: var(--space-half) var(--space-2) var(--space-half) var(--space-2); font-size: var(--font-size-xs); }
 
 /* ========== SUPERFICIES — 5 niveles de elevación (Figma › Componentes › Tarjeta) ==========
    La elevación la decide el ROL: se usa la más baja que se lea. Radio 12 (modal 16), relleno 20 (modal 24).
@@ -938,7 +948,7 @@ input[type="search"]::-webkit-search-results-decoration {
 .superficie--3 { background: var(--white-6); border-color: var(--white-12); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
 .superficie--4 { background: var(--bg-card); border-color: var(--border-hairline); box-shadow: var(--sombra-flotante); }
 .superficie--5 { background: var(--bg-modal); border-color: var(--border-hairline); box-shadow: var(--sombra-modal); border-radius: var(--radius-lg); padding: var(--space-6); }
-.superficie--interactiva { cursor: pointer; transition: background-color var(--duracion-base, 150ms) ease, border-color var(--duracion-base, 150ms) ease; }
+.superficie--interactiva { cursor: pointer; transition: background-color var(--duracion-base) var(--curva-estandar), border-color var(--duracion-base) var(--curva-estandar); }
 .superficie--1.superficie--interactiva:hover, .superficie--2.superficie--interactiva:hover { background: var(--white-5); }
 .superficie--3.superficie--interactiva:hover { background: var(--white-10); }
 .superficie--interactiva:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -972,7 +982,7 @@ input[type="search"]::-webkit-search-results-decoration {
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hidden, .d-none { display: none !important; }
 .invisible { visibility: hidden; }
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: calc(-1 * var(--space-half)); overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
 /* A11Y: focus baseline. El selector universal *:focus-visible queda como
    fallback (specificity 0,0,1,0), pero pierde frente a reglas legacy con
    `outline: none` en .btn / .form-* / etc. Los selectores específicos
@@ -1006,11 +1016,11 @@ textarea:focus-visible,
     max-width: 100%;
     min-height: 100vh;
     background: var(--bg-base);
-    transition: opacity 0.5s ease-out;
+    transition: opacity var(--duracion-lenta) var(--curva-entrada);
     overflow-x: hidden;
     overflow-y: auto;
     box-sizing: border-box;
-    padding-top: 45px; /* Evitar que el contenido quede debajo del header principal */
+    padding-top: var(--space-12); /* Evitar que el contenido quede debajo del header principal */
 }
 
 /* El degradado dinamico de fondo del #app-container (div fixed #brand-bg-overlay
@@ -1063,7 +1073,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.route-fade-in { animation: routeFadeIn 280ms cubic-bezier(0.33, 0, 0.2, 1) both; }
+.route-fade-in { animation: routeFadeIn var(--duracion-media) var(--curva-estandar) both; }
 
 /* prefers-reduced-motion: respetar — solo opacity, sin desplazamiento. */
 @media (prefers-reduced-motion: reduce) {
@@ -1088,10 +1098,10 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     rgba(255, 255, 255, 0.04) 100%
   );
   background-size: 200% 100%;
-  animation: skeletonShimmer 1.4s ease-in-out infinite;
+  animation: skeletonShimmer 1.4s var(--curva-estandar) infinite;
   border-radius: var(--radius-sm);
 }
-.skeleton-text       { display: block; height: 0.9em; margin: 0.45em 0; border-radius: var(--radius-xs); }
+.skeleton-text       { display: block; height: 0.9em; margin: var(--space-2) 0; border-radius: var(--radius-xs); }
 .skeleton-text--lg   { height: 1.4em; }
 .skeleton-text--sm   { height: 0.7em; }
 .skeleton-text--w90  { width: 90%; }
@@ -1104,26 +1114,32 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 .skeleton-circle--sm { width: 28px; height: 28px; flex-basis: 28px; }
 .skeleton-circle--lg { width: 64px; height: 64px; flex-basis: 64px; }
 .skeleton-block      { width: 100%; height: 12px; }
-.skeleton-grid       { display: grid; gap: 1rem; }
+.skeleton-grid       { display: grid; gap: var(--space-4); }
 .skeleton-grid--3    { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .skeleton-grid--4    { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.skeleton-row        { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; }
+.skeleton-row        { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) 0; }
 .skeleton-row > .skeleton-text { flex: 1 1 auto; margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   .skeleton { animation: none; }
 }
 
-/* ========== A11y: reduce-motion global override ==========
-   Patrón canónico (MDN/W3C): cuando el OS reporta prefers-reduced-motion:
-   reduce, aplastar TODAS las animaciones/transitions a duración ínfima.
-   Mantiene los end-states (1 iteration) para que el layout no quede roto,
-   pero el movimiento desaparece. Cubre cualquier transition/animation que
-   los archivos individuales hayan declarado sin respetar la preferencia. */
+/* ========== A11y: reduce-motion global ==========
+   Con prefers-reduced-motion: reduce las 4 duraciones bajan a 0.01ms: como toda
+   transition/animation las usa, el movimiento desaparece y los end-states quedan.
+   Los BUCLES de carga (spinners, shimmer, pulsos: infinite o > 700ms, literales a
+   proposito) siguen girando: detenerlos haria parecer colgada una espera real.
+   Las transiciones nunca son bucles: se aplastan todas, tambien las que aun
+   llevan un literal (retrasos incluidos). */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --duracion-rapida: 0.01ms;
+    --duracion-base: 0.01ms;
+    --duracion-media: 0.01ms;
+    --duracion-lenta: 0.01ms;
+  }
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 }
@@ -1142,7 +1158,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     z-index: var(--z-progress);
     pointer-events: none;
     opacity: 0;
-    transition: opacity 160ms ease;
+    transition: opacity var(--duracion-base) var(--curva-estandar);
     overflow: hidden;
 }
 .route-progress.route-progress--active { opacity: 1; }
@@ -1156,7 +1172,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
     /* animation-play-state pausado por defecto: solo corre cuando --active (abajo).
        Asi la barra no repinta en background cuando esta oculta. */
-    animation: route-progress-slide 1.05s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    animation: route-progress-slide 1.05s var(--curva-estandar) infinite;
     animation-play-state: paused;
 }
 .route-progress.route-progress--active::before { animation-play-state: running; }
@@ -1175,7 +1191,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     justify-content: center;
     background: var(--bg-base);
     pointer-events: auto;
-    transition: opacity 0.35s ease-out;
+    transition: opacity var(--duracion-lenta) var(--curva-entrada);
 }
 .loader-overlay.loader-overlay--hidden { opacity: 0; pointer-events: none; }
 .loader-overlay.loader-overlay--gone { visibility: hidden; }
@@ -1199,7 +1215,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     top: 20px;
     right: 20px;
     z-index: var(--z-notification);
-    padding: 1rem 1.5rem;
+    padding: var(--space-4) var(--space-6);
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
@@ -1207,21 +1223,21 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: var(--space-4);
     min-width: 300px;
     max-width: 500px;
     opacity: 0;
     transform: translateX(100%);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity var(--duracion-media) var(--curva-estandar), transform var(--duracion-media) var(--curva-estandar);
 }
 .app-notification.show { opacity: 1; transform: translateX(0); }
-.app-notification .notification-close { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.25rem; opacity: 0.7; }
+.app-notification .notification-close { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: var(--space-1); opacity: 0.7; }
 .app-notification .notification-close:hover { opacity: 1; }
 .app-notification.success { border-left: 4px solid var(--color-success); }
 .app-notification.error { border-left: 4px solid var(--color-error); }
 .app-notification.warning { border-left: 4px solid var(--color-warning); }
 .app-notification.info { border-left: 4px solid var(--color-info); }
-.app-notification .notification-content { display: flex; align-items: center; gap: 0.75rem; color: var(--text-primary); }
+.app-notification .notification-content { display: flex; align-items: center; gap: var(--space-3); color: var(--text-primary); }
 
 .error-container {
     display: flex;
@@ -1229,12 +1245,12 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     align-items: center;
     justify-content: center;
     min-height: 400px;
-    padding: 2rem;
+    padding: var(--space-8);
     text-align: center;
 }
-.error-container h2 { color: var(--text-primary); margin-bottom: 1rem; }
-.error-container p { color: var(--text-secondary); margin-bottom: 1.5rem; }
-.error-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.error-container h2 { color: var(--text-primary); margin-bottom: var(--space-4); }
+.error-container p { color: var(--text-secondary); margin-bottom: var(--space-6); }
+.error-actions { display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap; }
 
 .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: var(--bg-card); border-radius: var(--radius-xs); }
@@ -1287,34 +1303,34 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
    el css de su vista no sirve de paywall. */
 .subgate-banner {
   position: fixed; top: 0; left: 0; right: 0; z-index: var(--z-drawer-velo);
-  display: flex; align-items: center; justify-content: center; gap: 0.9rem;
-  padding: 0.6rem 1.2rem;
+  display: flex; align-items: center; justify-content: center; gap: var(--space-4);
+  padding: var(--space-2) var(--space-5);
   background: linear-gradient(90deg, #7a2d0a, #b4470f);
   color: #fff; font-size: var(--font-size-base); font-weight: var(--font-weight-medium);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 .subgate-banner-txt { max-width: 70ch; }
 .subgate-banner-cta {
-  flex: 0 0 auto; padding: 0.3rem 0.9rem; border-radius: var(--radius-pill);
+  flex: 0 0 auto; padding: var(--space-1) var(--space-4); border-radius: var(--radius-pill);
   background: #fff; color: #12100d; font-weight: var(--font-weight-bold); font-size: var(--font-size-sm);
   text-decoration: none; white-space: nowrap;
 }
 .subgate-banner-cta:hover { background: rgba(255, 255, 255, 0.88); }
 /* El banner empuja la app hacia abajo en vez de taparle el header. */
-body.has-subgate-banner { padding-top: 42px; }
+body.has-subgate-banner { padding-top: var(--space-10); }
 
 /* El muro. Cubre todo y no se puede rodear con scroll. */
 body.has-subgate-wall { overflow: hidden; }
 .subgate-wall {
   position: fixed; inset: 0; z-index: var(--z-drawer);
-  display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+  display: flex; align-items: center; justify-content: center; padding: var(--space-6);
   background: radial-gradient(120% 120% at 50% 0%, #241206 0%, #0b0b0a 60%);
 }
 .subgate-wall-card {
   width: 100%; max-width: 460px; text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 0.9rem;
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-4);
 }
-.subgate-logo { opacity: 0.9; margin-bottom: 0.5rem; height: auto; }
+.subgate-logo { opacity: 0.9; margin-bottom: var(--space-2); height: auto; }
 .subgate-titulo {
   margin: 0; font-size: clamp(1.5rem, 4vw, 2rem); font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-tight); color: #fff;
@@ -1324,34 +1340,34 @@ body.has-subgate-wall { overflow: hidden; }
   color: rgba(255, 255, 255, 0.72);
 }
 .subgate-datos {
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem;
-  margin: 0.4rem 0 0.6rem; padding: 0.9rem 1.2rem;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-6);
+  margin: var(--space-2) 0 var(--space-2); padding: var(--space-4) var(--space-5);
   border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.03);
 }
 .subgate-datos dt {
   font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: var(--tracking-mono);
-  color: rgba(255, 255, 255, 0.45); margin-bottom: 0.2rem;
+  color: rgba(255, 255, 255, 0.45); margin-bottom: var(--space-1);
 }
 .subgate-datos dd { margin: 0; font-size: var(--font-size-md); font-weight: var(--font-weight-medium); color: #fff; }
 .subgate-btn {
   display: inline-block; width: 100%; max-width: 300px;
-  padding: 0.85rem 1.5rem; border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-6); border-radius: var(--radius-md);
   background: linear-gradient(120deg, #C10801 0%, #E85002 55%, #F16001 100%);
   color: #fff; font-size: var(--font-size-md); font-weight: var(--font-weight-bold); text-decoration: none;
   box-shadow: 0 8px 24px rgba(232, 80, 2, 0.32);
-  transition: transform 0.15s ease;
+  transition: transform var(--duracion-base) var(--curva-estandar);
 }
 .subgate-btn:hover { transform: translateY(-1px); }
 .subgate-salir {
   appearance: none; background: none; border: 0; cursor: pointer;
   font: inherit; font-size: var(--font-size-base); color: rgba(255, 255, 255, 0.55);
-  text-decoration: underline; padding: 0.3rem;
+  text-decoration: underline; padding: var(--space-1);
 }
 .subgate-salir:hover { color: rgba(255, 255, 255, 0.85); }
-.subgate-nota { margin: 0.3rem 0 0; font-size: var(--font-size-sm); color: rgba(255, 255, 255, 0.38); }
+.subgate-nota { margin: var(--space-1) 0 0; font-size: var(--font-size-sm); color: rgba(255, 255, 255, 0.38); }
 
 @media (max-width: 520px) {
-  .subgate-datos { gap: 1rem; padding: 0.75rem 0.9rem; }
-  body.has-subgate-banner { padding-top: 62px; }
+  .subgate-datos { gap: var(--space-4); padding: var(--space-3) var(--space-4); }
+  body.has-subgate-banner { padding-top: var(--space-16); }
 }

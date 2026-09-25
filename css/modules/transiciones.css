@@ -38,17 +38,17 @@ html.vt-contenido #app-container {
 
 @media (prefers-reduced-motion: no-preference) {
   :root::view-transition-old(contenido) {
-    animation: vt-salida var(--duration-route, 280ms) var(--ease-route, ease-out) both;
+    animation: vt-salida var(--duracion-media) var(--curva-estandar) both;
   }
   :root::view-transition-new(contenido) {
-    animation: vt-entrada var(--duration-route, 280ms) var(--ease-route, ease-out) both;
+    animation: vt-entrada var(--duracion-media) var(--curva-estandar) both;
   }
   :root[data-vt-tipo="atras"]::view-transition-new(contenido) {
     animation-name: vt-entrada-atras;
   }
   :root[data-vt-tipo="suave"]::view-transition-old(contenido),
   :root[data-vt-tipo="suave"]::view-transition-new(contenido) {
-    animation-duration: var(--duration-fast, 150ms);
+    animation-duration: var(--duracion-base);
   }
   :root[data-vt-tipo="suave"]::view-transition-new(contenido) {
     animation-name: vt-aparece;
@@ -85,6 +85,6 @@ html.vt-contenido #app-container {
 /* Esqueleto genérico mientras cargan los datos de la vista nueva. */
 .vt-esqueleto {
   display: grid;
-  gap: 1rem;
-  padding: 1.5rem;
+  gap: var(--space-4);
+  padding: var(--space-6);
 }

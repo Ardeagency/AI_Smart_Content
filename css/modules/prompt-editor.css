@@ -57,8 +57,8 @@
 .prompt-chip {
     display: inline-flex;
     align-items: center;
-    margin: 0 2px;
-    padding: 1px 6px;
+    margin: 0 var(--space-half);
+    padding: var(--space-half) var(--space-1);
     border-radius: var(--radius-sm);
     border: 1px solid var(--icon-button);
     background: color-mix(in srgb, var(--icon-button) 12%, transparent);

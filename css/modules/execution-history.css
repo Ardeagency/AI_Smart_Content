@@ -9,20 +9,20 @@
 }
 
 .exec-container {
-  padding: calc(var(--app-header-height, 56px) + 2rem) 4rem 4rem;
+  padding: calc(var(--app-header-height, 56px) + 2rem) var(--space-16) var(--space-16);
   max-width: 1600px;
   margin: 0 auto;
 }
 
 .exec-header {
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-8);
 }
 
 .exec-title {
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
-  margin: 0 0 0.4rem;
+  margin: 0 0 var(--space-2);
 }
 
 .exec-subtitle {
@@ -35,7 +35,7 @@
 .exec-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 /* ── Card de sesion (estilo full-bleed igual que .flow-card) ── */
@@ -52,9 +52,9 @@
   color: inherit;
   font: inherit;
   position: relative;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.2s ease;
+  transition: transform var(--duracion-media) var(--curva-entrada),
+              box-shadow var(--duracion-media) var(--curva-entrada),
+              border-color var(--duracion-base) var(--curva-estandar);
 }
 
 .exec-card:hover {
@@ -96,7 +96,7 @@
   object-fit: cover;
   display: block;
   opacity: 0;
-  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity var(--duracion-lenta) var(--curva-estandar), transform var(--duracion-lenta) var(--curva-entrada);
 }
 
 .exec-card-img.is-visible {
@@ -138,8 +138,8 @@
   z-index: 3;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.22rem 0.55rem;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   background: rgba(20, 21, 23, 0.85);
   backdrop-filter: blur(8px);
@@ -165,9 +165,9 @@
   transform: translateX(-50%);
   z-index: 3;
   display: flex;
-  gap: 0.3rem;
+  gap: var(--space-1);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity var(--duracion-media) var(--curva-estandar);
 }
 
 .exec-card:hover .exec-card-dots {
@@ -179,7 +179,7 @@
   height: 5px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.4);
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background var(--duracion-base) var(--curva-estandar), transform var(--duracion-base) var(--curva-estandar);
 }
 
 .exec-card-dot.is-active {
@@ -196,8 +196,8 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.85rem 0.85rem 0.8rem;
+  gap: var(--space-half);
+  padding: var(--space-3) var(--space-3) var(--space-3);
 }
 
 .exec-card-flow {
@@ -219,8 +219,8 @@
 .exec-card-resume {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.35rem;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--icon-button);
@@ -228,7 +228,7 @@
   opacity: 0;
   overflow: hidden;
   transform: translateY(4px);
-  transition: max-height 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
+  transition: max-height var(--duracion-media) var(--curva-estandar), opacity var(--duracion-media) var(--curva-estandar), transform var(--duracion-media) var(--curva-estandar);
 }
 
 .exec-card:hover .exec-card-resume,
@@ -241,34 +241,34 @@
 /* ── Empty / error ── */
 .exec-empty {
   text-align: center;
-  padding: 5rem 2rem;
+  padding: var(--space-20) var(--space-8);
   color: var(--text-secondary);
 }
 
 .exec-empty-icon {
   font-size: var(--font-size-4xl);
   color: var(--text-tertiary, var(--text-disabled));
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .exec-empty-hint {
   font-size: var(--font-size-base);
   color: var(--text-tertiary, var(--text-muted));
   max-width: 48ch;
-  margin: 0.5rem auto 0;
+  margin: var(--space-2) auto 0;
 }
 
 .exec-error {
   color: var(--text-secondary);
-  padding: 2rem;
+  padding: var(--space-8);
 }
 
 @media (max-width: 768px) {
   .exec-container {
-    padding: calc(var(--app-header-height, 56px) + 1.5rem) 1.25rem 2.5rem;
+    padding: calc(var(--app-header-height, 56px) + 1.5rem) var(--space-5) var(--space-10);
   }
   .exec-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.85rem;
+    gap: var(--space-3);
   }
 }
