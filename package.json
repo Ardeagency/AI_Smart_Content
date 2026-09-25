@@ -11,6 +11,7 @@
     "audit:isolation": "node scripts/audit-org-isolation.mjs",
     "build:minify": "node scripts/build-minify.mjs",
     "verificar:rutas": "node scripts/verificar-rutas.mjs",
+    "release:check": "node scripts/release-check.mjs",
     "test:gate": "vitest run --exclude '**/endpoints.test.js' --exclude '**/rls.test.js' --exclude '**/rpcs.test.js'"
   },
   "dependencies": {

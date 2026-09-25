@@ -46,7 +46,7 @@
  * TOTP real. Tampoco las que piden ids reales (:brandId, :taskId…). Solo lectura: no hace clics.
  */
 import { spawn } from 'node:child_process';
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync, openSync, closeSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -106,7 +106,8 @@ const EXTRA = ['/invitacion/enlace-invalido'];
 
 /** Las rutas de app.js: `register('<ruta>'…`. Las de /org/ usan la marca de la sesión. */
 export function rutasDeApp(fuente, org) {
-  const todas = [...new Set([...fuente.matchAll(/register\('([^']+)'/g)].map((m) => m[1]))];
+  // Comillas simples o dobles: el app.js minificado del build usa dobles (release:check lo recorre).
+  const todas = [...new Set([...fuente.matchAll(/register\(\s*(['"])([^'"]+)\1/g)].map((m) => m[2]))];
   const conOrg = new Set(todas.filter((r) => r.startsWith('/org/')).map((r) => r.replace('/org/:orgIdShort/:orgNameSlug', '')));
   const salida = [];
   for (const r of todas) {
@@ -150,13 +151,38 @@ const ESPIA = `(() => {
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// UN solo verificar-rutas a la vez en toda la máquina (25/09: varios Chrome headless en paralelo
+// subieron la carga a ~555 y falsearon splash y tiempos). El candado guarda el PID; si ese proceso
+// ya no existe, el candado está muerto y se toma.
+// /tmp fijo y no os.tmpdir(): TMPDIR cambia entre sesiones y el candado tiene que ser de la máquina.
+const CANDADO = '/tmp/verificar-rutas.lock';
+const vivo = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } };
+async function tomarCandado() {
+  const limite = Date.now() + (args.includes('--sin-esperar') ? 0 : 20 * 60 * 1000);
+  let avisado = false;
+  for (;;) {
+    try { const fd = openSync(CANDADO, 'wx'); writeFileSync(fd, String(process.pid)); closeSync(fd); return; } catch (e) { if (e.code !== 'EEXIST') throw e; }
+    const otro = Number(readFileSync(CANDADO, 'utf8')) || 0;
+    if (!otro || !vivo(otro)) { try { unlinkSync(CANDADO); } catch { /* otro lo quitó */ } continue; }
+    if (Date.now() >= limite) { console.error(`verificar-rutas: ya corre otro (PID ${otro}); un solo verificador a la vez (${CANDADO}).`); process.exit(2); }
+    if (!avisado) { console.log(`Esperando a que termine el otro verificar-rutas (PID ${otro})…`); avisado = true; }
+    await dormir(5000);
+  }
+}
+function soltarCandado() { try { if (Number(readFileSync(CANDADO, 'utf8')) === process.pid) unlinkSync(CANDADO); } catch { /* ya no está */ } }
+
 async function main() {
   try { await fetch(BASE + '/'); } catch {
     console.error(`No responde ${BASE}. Arranca antes scripts/servir-local.mjs (ver cabecera).`);
     process.exit(2);
   }
+  await tomarCandado();
   const perfil = mkdtempSync(join(tmpdir(), 'verificar-rutas-'));
   const ch = spawn(CHROME, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PUERTO}`, `--user-data-dir=${perfil}`, '--window-size=1440,900', 'about:blank'], { stdio: 'ignore' });
+  // Chrome muere SIEMPRE con el verificador (salida normal, error, Ctrl-C o kill): nada de huérfanos.
+  const cerrar = () => { try { ch.kill('SIGKILL'); } catch { /* ya murió */ } soltarCandado(); };
+  process.on('exit', cerrar);
+  for (const sen of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sen, () => { cerrar(); process.exit(130); });
   let ws; let fallos = 0; let a11yGlobal = false; let fallosGlobales = 0;
   try {
     let lista;
@@ -197,6 +223,8 @@ async function main() {
       console.log('Service Worker activo tras la 1.ª visita: las rutas cargan con él (2.ª visita en adelante)');
     }
     const rutas = rutasDeApp(readFileSync(join(ROOT, 'js/app.js'), 'utf8'), m[0]);
+    // Una lista corta es un verde falso (pasó con el app.js minificado, que usa otras comillas).
+    if (!SOLO && rutas.length < 20) throw new Error(`solo ${rutas.length} rutas leídas de js/app.js: el lector no entiende ese archivo`);
     if (CAPTURA) mkdirSync(CAPTURA, { recursive: true });
     console.log(`verificar-rutas: ${rutas.length} rutas en ${BASE} (marca ${m[0]}), ${ESPERA} ms cada una\n`);
 

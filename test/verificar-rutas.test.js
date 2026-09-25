@@ -25,6 +25,11 @@ describe('verificar-rutas: la lista sale de app.js', () => {
     for (const t of ['general', 'facturacion', 'miembros', 'actividad']) expect(rutas).toContain(`${ORG}/configuracion/${t}`);
   });
 
+  test('lee también el app.js minificado (comillas dobles)', () => {
+    const min = APP.replace(/register\('([^']+)'/g, 'register("$1"');
+    expect(rutasDeApp(min, ORG)).toEqual(rutas);
+  });
+
   test('la versión sin marca de una ruta con marca no se repite', () => {
     expect(rutas).not.toContain('/vera');
   });
