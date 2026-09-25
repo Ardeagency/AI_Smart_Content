@@ -149,12 +149,12 @@
           if (fila) this._elegirDelOmnibox(Number(fila.getAttribute('data-omni-idx')));
         });
       }
-      box.innerHTML = items.map((it, i) => `
+      window.Estado.pintar(box, items.map((it, i) => `
         <div class="vera-omni-item${i === 0 ? ' is-active' : ''}" data-omni-idx="${i}" role="option" aria-selected="${i === 0}">
           <i class="aisc-ico ${escapeHtml((this._libKindIcon(it.kind) || '').replace('aisc-ico ', ''))}"></i>
           <span class="vera-omni-name">${escapeHtml(it.name)}</span>
           <span class="vera-omni-kind">${escapeHtml(this._libKindLabel(it.kind))}${it.meta ? ` · ${escapeHtml(it.meta)}` : ''}</span>
-        </div>`).join('');
+        </div>`).join(''));
     },
 
     _moverOmnibox(paso) {
@@ -229,7 +229,7 @@
       const overlay = document.createElement('div');
       overlay.id = 'veraLibModal';
       overlay.className = 'vera-lib-modal';
-      overlay.innerHTML = `
+      window.Estado.pintar(overlay, `
         <div class="vera-lib-scrim" data-lib-close></div>
         <div class="vera-lib-panel" role="dialog" aria-label="${__('Adjuntar {tipo}', { tipo: escapeHtml(def.label) })}">
           <div class="vera-lib-head">
@@ -245,7 +245,7 @@
               <button class="vera-lib-confirm" id="veraLibConfirm">${__('Adjuntar')}</button>
             </div>
           </div>
-        </div>`;
+        </div>`);
       document.body.appendChild(overlay);
 
       const listEl = overlay.querySelector('#veraLibList');
@@ -261,22 +261,22 @@
         const q = (searchEl.value || '').trim().toLowerCase();
         const filtered = q ? items.filter((it) => it.name.toLowerCase().includes(q)) : items;
         if (!filtered.length) {
-          listEl.innerHTML = `<div class="vera-lib-empty">${items.length ? __('Sin resultados.') : __('No hay {tipo}s disponibles.', { tipo: def.label.toLowerCase() })}</div>`;
+          window.Estado.pintar(listEl, `<div class="vera-lib-empty">${items.length ? __('Sin resultados.') : __('No hay {tipo}s disponibles.', { tipo: def.label.toLowerCase() })}</div>`);
           return;
         }
-        listEl.innerHTML = filtered.map((it) => `
+        window.Estado.pintar(listEl, filtered.map((it) => `
           <label class="vera-lib-item">
             <input type="checkbox" data-lib-id="${escapeHtml(it.id)}"${selected.has(it.id) ? ' checked' : ''} />
             <span class="vera-lib-item-body">
               <span class="vera-lib-item-name">${escapeHtml(it.name)}</span>
               ${it.meta ? `<span class="vera-lib-item-meta">${escapeHtml(it.meta)}</span>` : ''}
             </span>
-          </label>`).join('');
+          </label>`).join(''));
       };
 
       const load = async () => {
         if (!this._libCache[typeKey]) {
-          listEl.innerHTML = `<div class="vera-lib-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Cargando…')}</div>`;
+          window.Estado.pintar(listEl, `<div class="vera-lib-loading"><i class="aisc-ico fa-spin aisc-ico--loader"></i> ${__('Cargando…')}</div>`);
           try { this._libCache[typeKey] = await def.load(); }
           catch (_) { this._libCache[typeKey] = []; }
         }

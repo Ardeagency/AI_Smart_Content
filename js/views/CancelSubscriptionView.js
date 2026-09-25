@@ -70,10 +70,10 @@ class CancelSubscriptionView extends BaseView {
     const host = this.container;
     if (!host) return;
     if (!this.subscription || this.subscription.status === 'cancelled' || this.subscription.status === 'canceled' || (this.subscription.tier || this.subscription.plan_id) === 'free') {
-      host.innerHTML = this._renderEmpty();
+      window.Estado.pintar(host, this._renderEmpty());
       return;
     }
-    host.innerHTML = this._renderActive();
+    window.Estado.pintar(host, this._renderActive());
   }
 
   _renderEmpty() {
@@ -184,7 +184,7 @@ class CancelSubscriptionView extends BaseView {
     try { window.location.href = href; } catch (_) { /* sin cliente de correo */ }
     if (status) {
       status.className = 'cancel-status is-success';
-      status.innerHTML = `<i class="aisc-ico aisc-ico--check"></i> ${__('Se abrió tu correo con la petición. Si no se abrió, escríbenos a {correo}.', { correo: `<a href="${this.escapeHtml(href)}">${this.escapeHtml(CancelSubscriptionView.CORREO)}</a>` })}`;
+      window.Estado.pintar(status, `<i class="aisc-ico aisc-ico--check"></i> ${__('Se abrió tu correo con la petición. Si no se abrió, escríbenos a {correo}.', { correo: `<a href="${this.escapeHtml(href)}">${this.escapeHtml(CancelSubscriptionView.CORREO)}</a>` })}`);
     }
   }
 

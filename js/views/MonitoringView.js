@@ -172,7 +172,7 @@ class MonitoringView extends BaseView {
     this.updateHeaderContext(__('Vigilancia'), null, window.currentOrgName || '');
     const container = document.getElementById('app-container');
     if (!container) return;
-    container.innerHTML = this._buildShell();
+    window.Estado.pintar(container, this._buildShell());
 
     await this._ensureService();
     await this._loadInitial();
@@ -356,14 +356,14 @@ class MonitoringView extends BaseView {
   _renderBody() {
     const body = document.getElementById('monitoringBody');
     if (!body) return;
-    if (!this._data) { body.innerHTML = this._skeleton(); return; }
+    if (!this._data) { window.Estado.pintar(body, this._skeleton()); return; }
 
     this._model = this._computeModel();
-    body.innerHTML = `
+    window.Estado.pintar(body, `
       <div class="mn-page">
         ${this._buildHeader(this._model)}
         <div class="mn-content" id="mnContent"></div>
-      </div>`;
+      </div>`);
     this._renderContent();
     // Bind una sola vez: el listener vive en #monitoringBody (persiste entre re-renders).
     if (!this._bound) { this._bind(body, this._model); this._bound = true; }
@@ -502,11 +502,11 @@ class MonitoringView extends BaseView {
     if (!el || !this._model) return;
     this._stopBubbles();
     if (this._tab === 'suggestions') {
-      el.innerHTML = this._buildSuggestionsTab(this._model);
+      window.Estado.pintar(el, this._buildSuggestionsTab(this._model));
       this._initFloatBubbles(this._model);
     } else {
       const kind = this._tab === 'urls' ? 'page' : 'profile';
-      el.innerHTML = this._buildBoard(this._model, kind);
+      window.Estado.pintar(el, this._buildBoard(this._model, kind));
       this._initBubbles(kind);
     }
   }
@@ -688,12 +688,12 @@ class MonitoringView extends BaseView {
       // Overlay DOM: icono de plataforma (dentro) + nombre completo (debajo).
       const labels = stage.querySelector('.mn-bub-labels');
       if (labels) {
-        labels.innerHTML = '';
+        window.Estado.pintar(labels, '');
         bodies.forEach((b) => {
           const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'aisc-ico aisc-ico--tag';
           const icon = document.createElement('span');
           icon.className = 'mn-bub-icon' + (colId === 'paused' ? ' is-dim' : '');
-          icon.innerHTML = `<i class="${iconCls}"></i>`;
+          window.Estado.pintar(icon, `<i class="${iconCls}"></i>`);
           const name = document.createElement('span');
           name.className = 'mn-bub-name' + (colId === 'paused' ? ' is-dim' : '');
           name.textContent = b.it.title || '';
@@ -1053,7 +1053,7 @@ class MonitoringView extends BaseView {
     g.style.width = g.style.height = d + 'px';
     // Borde con degradado que RESPETA el border-radius (padding-box + border-box).
     g.style.setProperty('--g', this._gradientCss(this._bubbleStops(b.it)));
-    g.innerHTML = `<i class="${iconCls}"></i><span>${this._esc(b.it.title || '')}</span>`;
+    window.Estado.pintar(g, `<i class="${iconCls}"></i><span>${this._esc(b.it.title || '')}</span>`);
     document.body.appendChild(g);
     return g;
   }
@@ -1443,7 +1443,7 @@ class MonitoringView extends BaseView {
 
     const body = document.createElement('div');
     body.className = 'mn-detail';
-    body.innerHTML = `
+    window.Estado.pintar(body, `
       <div class="mn-detail-bg" aria-hidden="true" style="background:${gradCss}"></div>
       <div class="mn-detail-scrim" aria-hidden="true"></div>
       <div class="mn-detail-grid${isProfile ? ' mn-detail-grid--3' : ''}">
@@ -1483,7 +1483,7 @@ class MonitoringView extends BaseView {
             <div class="mn-post mn-post--skel"></div>
           </div>
         </aside>` : ''}
-      </div>`;
+      </div>`);
 
     const { modal, close } = window.Modal.show({ title: '', body, className: isProfile ? 'mn-detail-modal mn-detail-modal--wide' : 'mn-detail-modal' });
 
@@ -1495,11 +1495,11 @@ class MonitoringView extends BaseView {
       ]).then(([postsRes, analysisRes]) => {
         const posts = (postsRes && postsRes.data) || [];
         const host = modal.querySelector('[data-posts]');
-        if (host) host.innerHTML = posts.length
+        if (host) window.Estado.pintar(host, posts.length
           ? posts.map((p) => this._renderPostCard(p)).join('')
-          : `<div class="mn-det-act-empty"><i class="aisc-ico aisc-ico--inbox"></i><span>${__('Aún no hemos capturado contenido de este perfil.')}</span></div>`;
+          : `<div class="mn-det-act-empty"><i class="aisc-ico aisc-ico--inbox"></i><span>${__('Aún no hemos capturado contenido de este perfil.')}</span></div>`);
         const dash = modal.querySelector('[data-dashboard]');
-        if (dash) dash.innerHTML = this._renderEntityDashboard((analysisRes && analysisRes.data) || null, this._recurrenceFromPosts(posts));
+        if (dash) window.Estado.pintar(dash, this._renderEntityDashboard((analysisRes && analysisRes.data) || null, this._recurrenceFromPosts(posts)));
       }).catch(() => {});
     }
 
@@ -1572,7 +1572,7 @@ class MonitoringView extends BaseView {
 
     const pop = document.createElement('div');
     pop.className = 'mn-bubpop';
-    pop.innerHTML = `
+    window.Estado.pintar(pop, `
       <div class="mn-bubpop-head">
         <div class="mn-bubpop-avatar" style="border-image:${this._gradientCss(stops)} 1; box-shadow:0 0 0 3px rgba(255,255,255,0.08)">
           ${this._esc((item.title || '—').charAt(0).toUpperCase())}
@@ -1596,7 +1596,7 @@ class MonitoringView extends BaseView {
         <span class="mn-bubpop-foot-spacer"></span>
         <button class="mn-btn-icon" data-bact="edit" title="${__('Editar')}"><i class="aisc-ico aisc-ico--edit"></i></button>
         <button class="mn-btn-icon mn-btn-icon--danger" data-bact="delete" title="${__('Dejar de seguir')}"><i class="aisc-ico aisc-ico--delete"></i></button>
-      </div>`;
+      </div>`);
     document.body.appendChild(pop);
     this._bubPop = pop;
 
@@ -1730,12 +1730,12 @@ class MonitoringView extends BaseView {
 
     // Etiquetas (icono + nombre + rol dentro), igual que las otras burbujas.
     if (labels) {
-      labels.innerHTML = '';
+      window.Estado.pintar(labels, '');
       bodies.forEach((b) => {
         const iconCls = MonitoringView.PLATFORM_ICON[b.it.platform] || 'aisc-ico aisc-ico--tag';
         const icon = document.createElement('span');
         icon.className = 'mn-bub-icon';
-        icon.innerHTML = `<i class="${iconCls}"></i>`;
+        window.Estado.pintar(icon, `<i class="${iconCls}"></i>`);
         const name = document.createElement('span');
         name.className = 'mn-bub-name';
         name.textContent = b.it.title;
@@ -1873,9 +1873,9 @@ class MonitoringView extends BaseView {
       w.overlay = overlay;
     }
     w._hoverId = b.it.id;
-    overlay.innerHTML = `
+    window.Estado.pintar(overlay, `
       <button type="button" class="mn-btn-primary" data-fact="follow"><i class="aisc-ico aisc-ico--add"></i> ${__('Seguir')}</button>
-      <button type="button" class="mn-btn-secondary" data-fact="dismiss">${__('Descartar')}</button>`;
+      <button type="button" class="mn-btn-secondary" data-fact="dismiss">${__('Descartar')}</button>`);
     overlay.style.left = Math.max(96, Math.min(w.W - 96, b.x)) + 'px';
     overlay.style.top = (b.y + b.r + 12) + 'px';
     overlay.classList.add('show');
@@ -2186,7 +2186,7 @@ class MonitoringView extends BaseView {
       backBtn.className = 'mn-follow-back';
       backBtn.hidden = true;
       backBtn.setAttribute('aria-label', __('Volver'));
-      backBtn.innerHTML = `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${this._esc(__('Volver'))}</span>`;
+      window.Estado.pintar(backBtn, `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${this._esc(__('Volver'))}</span>`);
       backBtn.addEventListener('click', () => {
         const cur = root?.getAttribute('data-step');
         goToStep(stepConfig[cur]?.backTo || 'url');
@@ -2228,12 +2228,12 @@ class MonitoringView extends BaseView {
           : { label: __('Preparando la vigilancia de la página'), result: det.name },
       ];
       if (classifyPromise) steps.push({ label: __('Analizando relevancia para tu marca'), promise: classifyPromise });
-      list.innerHTML = steps.map((s, i) => `
+      window.Estado.pintar(list, steps.map((s, i) => `
         <li class="mn-follow-check" data-check-idx="${i}">
           <span class="mn-follow-check-dot"><span class="mn-follow-check-spinner"></span><i class="aisc-ico aisc-ico--check" aria-hidden="true"></i></span>
           <span class="mn-follow-check-label">${this._esc(s.label)}</span>
           <span class="mn-follow-check-result"></span>
-        </li>`).join('');
+        </li>`).join(''));
       const wait = (ms) => new Promise(r => setTimeout(r, ms));
       let classification = null;
       for (let i = 0; i < steps.length; i++) {
@@ -2279,7 +2279,7 @@ class MonitoringView extends BaseView {
 
       if (det.kind === 'profile') {
         const iconEl = root.querySelector('[data-detected-icon]');
-        if (iconEl) iconEl.innerHTML = `<i class="${MonitoringView.PLATFORM_ICON[det.platform] || 'aisc-ico aisc-ico--globe'}" aria-hidden="true"></i>`;
+        if (iconEl) window.Estado.pintar(iconEl, `<i class="${MonitoringView.PLATFORM_ICON[det.platform] || 'aisc-ico aisc-ico--globe'}" aria-hidden="true"></i>`);
         const platEl = root.querySelector('[data-detected-platform]');
         if (platEl) platEl.textContent = MonitoringView.PLATFORMS.find(p => p.value === det.platform)?.label || det.platform;
         const handleEl = root.querySelector('[data-detected-handle]');

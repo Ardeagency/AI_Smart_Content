@@ -303,7 +303,7 @@ class DateRangePicker {
     for (let n = 1; n <= (remainder ? 7 - remainder : 0); n++) {
       html += cell('other-month', n, ' data-other="1"');
     }
-    this._gridEl.innerHTML = html;
+    window.Estado.pintar(this._gridEl, html);
   }
 
   _onGridClick(e) {

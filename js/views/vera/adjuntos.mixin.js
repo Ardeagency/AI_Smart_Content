@@ -96,9 +96,9 @@
       const wrap = document.getElementById('veraAttachChips');
       if (!wrap) return;
       const list = this.aiState.pendingAttachments;
-      if (!list.length) { wrap.hidden = true; wrap.innerHTML = ''; return; }
+      if (!list.length) { wrap.hidden = true; window.Estado.pintar(wrap, ''); return; }
       wrap.hidden = false;
-      wrap.innerHTML = list.map(a => {
+      window.Estado.pintar(wrap, list.map(a => {
         const icon = a.type === 'library' ? this._libKindIcon(a.kind) : this._attachmentIconClass(a.type);
         const stateClass = a.status === 'error' ? ' gpt-attach-chip--error'
                           : a.status === 'uploading' ? ' gpt-attach-chip--uploading' : '';
@@ -113,7 +113,7 @@
               <i class="aisc-ico aisc-ico--close"></i>
             </button>
           </span>`;
-      }).join('');
+      }).join(''));
 
       if (!wrap.__bound) {
         wrap.__bound = true;

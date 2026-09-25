@@ -190,9 +190,9 @@
       const el = document.createElement('div');
       el.id = 'vera-input-options';
       el.className = 'vera-input-options';
-      el.innerHTML = `
+      window.Estado.pintar(el, `
         ${question ? `<div class="vera-input-options-label">${esc(question)}</div>` : ''}
-        <div class="vera-input-options-cards">${cardsHtml}</div>`;
+        <div class="vera-input-options-cards">${cardsHtml}</div>`);
 
       overlay.prepend(el);
     },
@@ -761,7 +761,7 @@
             try {
               const id = `vera-mmd-${Date.now()}-${i}`;
               const { svg } = await mermaid.render(id, src);
-              node.innerHTML = svg;
+              window.Estado.pintar(node, svg);
             } catch (e) {
               console.warn('Mermaid render error:', e?.message || e);
               _cleanupMermaidOrphans();
@@ -803,7 +803,7 @@
               if (!built) {
                 // Tipo entró a la cola de ECharts pero buildEChartsOption decidió no soportarlo
                 // → mostrar fallback de tabla en el mismo contenedor.
-                node.innerHTML = renderChartAsDataTable(spec);
+                window.Estado.pintar(node, renderChartAsDataTable(spec));
                 node.style.height = 'auto';
                 return;
               }
@@ -819,7 +819,7 @@
               };
             } catch (e) {
               console.warn('ECharts init error:', e?.message || e);
-              node.innerHTML = `<div class="gpt-viz--error gpt-viz--error-caja">${__('Error renderizando chart:')} ${escapeHtml(e?.message || 'unknown')}</div>`;
+              window.Estado.pintar(node, `<div class="gpt-viz--error gpt-viz--error-caja">${__('Error renderizando chart:')} ${escapeHtml(e?.message || 'unknown')}</div>`);
             }
           });
         }).catch((e) => console.warn('ECharts load error:', e?.message || e));

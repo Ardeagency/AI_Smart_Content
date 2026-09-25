@@ -48,7 +48,7 @@ const TOPES = {
   zIndexDistintos: 19,
   hexEnJs: 198,
   styleEnLineaEnJs: 242,
-  innerHtml: 465,
+  innerHtml: 338,
   catchVacios: 104,
   fromEnVistas: 259,
 };

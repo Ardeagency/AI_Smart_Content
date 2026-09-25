@@ -594,10 +594,10 @@ class BrandOrganizationView extends BaseView {
 
     const logoUrl = String(this.brandContainerData?.logo_url || '').trim();
     if (logoUrl) {
-      inner.innerHTML = `<img src="${this.escapeHtml(logoUrl)}" alt="${__('Logo organización')}" class="brand-corner-logo-img" loading="lazy">`;
+      window.Estado.pintar(inner, `<img src="${this.escapeHtml(logoUrl)}" alt="${__('Logo organización')}" class="brand-corner-logo-img" loading="lazy">`);
       btn.classList.add('has-logo');
     } else {
-      inner.innerHTML = '<i class="aisc-ico aisc-ico--add" aria-hidden="true"></i>';
+      window.Estado.pintar(inner, '<i class="aisc-ico aisc-ico--add" aria-hidden="true"></i>');
       btn.classList.remove('has-logo');
     }
 
@@ -761,7 +761,7 @@ class BrandOrganizationView extends BaseView {
       ? `<button type="button" class="color-swatch-add-btn" title="${__('Agregar color')}" aria-label="${__('Agregar color')}"><span>+</span></button>`
       : '';
 
-    container.innerHTML = swatchesHtml + addBtnHtml;
+    window.Estado.pintar(container, swatchesHtml + addBtnHtml);
 
     container.querySelectorAll('.color-swatch').forEach(swatch => {
       const colorId = swatch.getAttribute('data-color-id');
@@ -809,14 +809,14 @@ class BrandOrganizationView extends BaseView {
 
     const identityAssets = this.getIdentityAssets();
     if (!identityAssets.length) {
-      container.innerHTML = '';
+      window.Estado.pintar(container, '');
       container.classList.add('identity-files--empty');
       return;
     }
 
     container.classList.remove('identity-files--empty');
 
-    container.innerHTML = identityAssets.map((asset) => {
+    window.Estado.pintar(container, identityAssets.map((asset) => {
       const fileName = asset.file_name || __('Archivo identidad');
       const fileUrl = String(asset.file_url || '').trim();
       const { icon, variant } = this.getIdentityDocumentIcon(fileName, asset.file_type);
@@ -834,7 +834,7 @@ class BrandOrganizationView extends BaseView {
           </div>
         </div>
       `;
-    }).join('');
+    }).join(''));
 
     container.querySelectorAll('[data-remove-asset-id]').forEach((btn) => {
       if (btn.dataset.assetBound === '1') return;
@@ -867,7 +867,7 @@ class BrandOrganizationView extends BaseView {
     const identityIds = new Set(this.getIdentityAssets().map((a) => a.id));
     const assets = (this.brandAssets || []).filter((a) => !identityIds.has(a.id));
     if (!assets.length) {
-      container.innerHTML = '';
+      window.Estado.pintar(container, '');
       container.classList.add('assets-files--empty');
       return;
     }
@@ -906,7 +906,7 @@ class BrandOrganizationView extends BaseView {
       `;
     }).join('');
 
-    container.innerHTML = `
+    window.Estado.pintar(container, `
       <div class="assets-carousel" data-carousel-root>
         <button type="button" class="assets-carousel-arrow assets-carousel-arrow--prev" aria-label="${__('Anterior')}" data-carousel-prev>
           <i class="aisc-ico aisc-ico--chevron-left" aria-hidden="true"></i>
@@ -918,7 +918,7 @@ class BrandOrganizationView extends BaseView {
           <i class="aisc-ico aisc-ico--chevron-right" aria-hidden="true"></i>
         </button>
       </div>
-    `;
+    `);
 
     container.querySelectorAll('[data-remove-asset-id]').forEach((btn) => {
       if (btn.dataset.assetBound === '1') return;
@@ -1174,7 +1174,7 @@ class BrandOrganizationView extends BaseView {
 
       const removeBtn = document.createElement('span');
       removeBtn.className = 'editable-tag-remove';
-      removeBtn.innerHTML = ' ×';
+      window.Estado.pintar(removeBtn, ' ×');
       removeBtn.setAttribute('aria-label', __('Quitar'));
       removeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1207,7 +1207,7 @@ class BrandOrganizationView extends BaseView {
     });
 
     container.appendChild(input);
-    element.innerHTML = '';
+    window.Estado.pintar(element, '');
     element.appendChild(container);
   }
 

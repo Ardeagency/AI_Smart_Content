@@ -97,7 +97,7 @@
   function renderListFallback(container, distribution) {
     const total = Object.values(distribution).reduce((s, v) => s + (Number(v) || 0), 0);
     if (total === 0) {
-      container.innerHTML = `<div class="cc-map-empty">${__('Sin datos geográficos todavía.')}</div>`;
+      window.Estado.pintar(container, `<div class="cc-map-empty">${__('Sin datos geográficos todavía.')}</div>`);
       return;
     }
     const entries = Object.entries(distribution)
@@ -106,7 +106,7 @@
       .sort((a, b) => b.v - a.v)
       .slice(0, 10);
 
-    container.innerHTML = `
+    window.Estado.pintar(container, `
       <div class="cc-map-fallback" role="list" aria-label="${__('Distribución por país')}">
         ${entries.map(({ cc, v }) => {
           const pct = Math.round((v / total) * 100);
@@ -120,7 +120,7 @@
               <span class="cc-map-fallback-pct">${pct}%</span>
             </div>`;
         }).join('')}
-      </div>`;
+      </div>`);
   }
 
   // ── Color de la marca (preferimos --brand-primary, el color sólido que
@@ -196,7 +196,7 @@
     const [br, bg, bb] = hexToRgb(baseHex);
     const [brandHue, brandSat] = rgbToHsl(br, bg, bb);
 
-    container.innerHTML = `<canvas class="cc-map-canvas" aria-label="${__('Mapa de distribución de audiencia por país')}"></canvas>`;
+    window.Estado.pintar(container, `<canvas class="cc-map-canvas" aria-label="${__('Mapa de distribución de audiencia por país')}"></canvas>`);
     const canvas = container.querySelector('canvas');
     const ctx = canvas.getContext('2d');
 

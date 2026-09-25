@@ -65,7 +65,7 @@
       if (q) convs = convs.filter((c) => this._convTitle(c).toLowerCase().includes(q));
 
       if (!convs.length) {
-        list.innerHTML = `<div class="vera-history-empty">${q ? __('Sin resultados.') : __('Aún no tienes chats.<br>Escribe abajo para empezar.')}</div>`;
+        window.Estado.pintar(list, `<div class="vera-history-empty">${q ? __('Sin resultados.') : __('Aún no tienes chats.<br>Escribe abajo para empezar.')}</div>`);
         return;
       }
       // Lista plana "Recientes" (ya viene ordenada por updated_at desc).
@@ -85,7 +85,7 @@
           : '';
         html += `<button class="${cls}" data-conv-id="${c.id}" title="${attr}"><span class="vera-history-item-title">${safe}</span>${badge}</button>`;
       }
-      list.innerHTML = html;
+      window.Estado.pintar(list, html);
     },
 
     bindHistory() {

@@ -20,6 +20,8 @@ function cargar() {
   const win = { BaseView: class {}, __: (s, p) => (p
     ? String(s).replace(/\{(\w+)\}/g, (m, k) => (k in p ? String(p[k]) : m))
     : String(s)) };
+  // Estado.pintar (js/ui/estado.js) en falso: deja el HTML en el host para que el test lo lea.
+  win.Estado = { pintar: (zona, html) => { if (zona) zona.innerHTML = String(html == null ? '' : html); } };
   globalThis.window = win;
   globalThis.__ = win.__; // en el navegador __ es global (window.__)
   globalThis.BaseView = win.BaseView; // `class VideoView extends BaseView` lo busca global

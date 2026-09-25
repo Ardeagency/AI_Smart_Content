@@ -123,13 +123,13 @@ class CreditsShopView extends BaseView {
     }
 
     const usoHref = this.rutaDeOrg('/organization/usage');
-    el.innerHTML = `
+    window.Estado.pintar(el, `
       ${cifras}
       ${detalle}
       <p class="creditos-pie">
         <a href="${this.escapeHtml(usoHref)}" data-route="${this.escapeHtml(usoHref)}" class="creditos-enlace">${__('Ver el consumo por día y por persona')}</a>
         · ${__('¿Necesitas más créditos? Escríbenos a {correo}.', { correo: '<a class="creditos-enlace" href="mailto:contact@aismartcontent.io">contact@aismartcontent.io</a>' })}
-      </p>`;
+      </p>`);
     const a = el.querySelector('a[data-route]');
     if (a) this.addEventListener(a, 'click', (e) => { e.preventDefault(); window.router?.navigate(usoHref); });
   }

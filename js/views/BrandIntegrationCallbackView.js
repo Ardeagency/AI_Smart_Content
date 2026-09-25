@@ -79,7 +79,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       : platform === 'tiktok' ? 'TikTok'
       : platform === 'linkedin' ? 'LinkedIn'
       : 'Meta';
-    wrap.innerHTML = `
+    window.Estado.pintar(wrap, `
       <div class="bic-success">
         <div class="bic-success-check"><i class="aisc-ico aisc-ico--check"></i></div>
         <h2>${window.__('Integración conectada')}</h2>
@@ -87,7 +87,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
         <button type="button" class="bic-confirm-btn" data-bic-continue="1">
           <i class="aisc-ico aisc-ico--arrow-right"></i> ${window.__('Continuar')}
         </button>
-      </div>`;
+      </div>`);
     wrap.querySelector('[data-bic-continue="1"]')?.addEventListener('click', () => {
       if (this._successTimer) clearTimeout(this._successTimer);
       this._redirect(safe);
@@ -99,7 +99,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
   _showError(msg) {
     const wrap = document.getElementById('bic-container') || document.getElementById('app-container');
     if (!wrap) return;
-    wrap.innerHTML = `
+    window.Estado.pintar(wrap, `
       <div class="bic-error">
         <i class="aisc-ico aisc-ico--alert-warning"></i>
         <h2>${window.__('Error al conectar')}</h2>
@@ -107,7 +107,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
         <button type="button" class="bic-confirm-btn" data-bic-back="1">
           <i class="aisc-ico aisc-ico--arrow-left"></i> ${window.__('Volver a Marcas')}
         </button>
-      </div>`;
+      </div>`);
     wrap.querySelector('[data-bic-back="1"]')?.addEventListener('click', () => this._redirect('/brands'));
   }
 

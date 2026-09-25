@@ -46,7 +46,7 @@
       const fonts = window.BrandSchema ? window.BrandSchema.TYPOGRAPHY_FONTS : [];
       const dropdownId = 'typographyFontDropdown';
       const panelId = 'typographyFontPanel';
-      container.innerHTML = `
+      window.Estado.pintar(container, `
         <label class="typography-label">Tipografía para imágenes</label>
         <div class="typography-dropdown" id="${dropdownId}" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-label="Seleccionar tipografía para imágenes">
           <button type="button" class="typography-dropdown-trigger" aria-controls="${panelId}">
@@ -63,7 +63,7 @@
             `).join('')}
           </div>
         </div>
-      `;
+      `);
       const dropdown = container.querySelector(`#${dropdownId}`);
       const trigger = container.querySelector('.typography-dropdown-trigger');
       const panel = container.querySelector(`#${panelId}`);

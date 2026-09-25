@@ -56,10 +56,10 @@
       const viewBtn = document.getElementById('veraArtifactView');
       const codeBtn = document.getElementById('veraArtifactCode');
       if (this._artifactView === 'code') {
-        body.innerHTML = `<pre class="vera-artifact-code"><code>${escapeHtml(this._artifactSrcdoc || '')}</code></pre>`;
+        window.Estado.pintar(body, `<pre class="vera-artifact-code"><code>${escapeHtml(this._artifactSrcdoc || '')}</code></pre>`);
         this._artifactFrame = null;
       } else {
-        body.innerHTML = '';
+        window.Estado.pintar(body, '');
         const f = document.createElement('iframe');
         f.className = 'vera-artifact-panel-frame';
         // Este SÍ lleva allow-modals, y a propósito: `window.print()` cuenta como
@@ -81,7 +81,7 @@
       const body = document.getElementById('veraArtifactBody');
       const layout = document.getElementById('chatcontainer');
       layout?.classList.remove('artifact-open');
-      if (body) body.innerHTML = '';
+      if (body) window.Estado.pintar(body, '');
       this._artifactFrame = null;
       this._artifactSrcdoc = '';
       // Oculta tras la transición.
@@ -183,21 +183,21 @@
       if (!body) return;
       body.dataset.loaded = '1';
       if (countEl) countEl.textContent = '';
-      body.innerHTML = this._galleryMsg(__('Los archivos que produce Vera se ven en Producción.'));
+      window.Estado.pintar(body, this._galleryMsg(__('Los archivos que produce Vera se ven en Producción.')));
     },
 
     _renderGallery(list) {
       const body = document.getElementById('veraGalleryBody');
       if (!body) return;
       if (!list.length) {
-        body.innerHTML = (window.BaseView && window.BaseView.emptyState)
+        window.Estado.pintar(body, (window.BaseView && window.BaseView.emptyState)
           ? window.BaseView.emptyState({
               icon: 'aisc-ico aisc-ico--folder',
               title: __('Aún no hay archivos'),
               subtitle: __('Pídele a Vera un informe, una presentación o una tabla y aparecerá aquí para descargar.'),
               compact: true,
             })
-          : this._galleryMsg(__('Aún no hay archivos.'));
+          : this._galleryMsg(__('Aún no hay archivos.')));
         return;
       }
       const cards = list.map((a) => {
@@ -217,7 +217,7 @@
             <div class="vera-gallery-card-dl"><i class="aisc-ico aisc-ico--dowload"></i></div>
           </a>`;
       }).join('');
-      body.innerHTML = `<div class="vera-gallery-grid">${cards}</div>`;
+      window.Estado.pintar(body, `<div class="vera-gallery-grid">${cards}</div>`);
     },
 
     _galleryMsg(msg) {

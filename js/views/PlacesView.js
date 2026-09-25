@@ -169,7 +169,7 @@ class PlacesView extends BaseView {
 
     const page = document.getElementById('placesListPage');
     if (!this.places.length) {
-      container.innerHTML = '';
+      window.Estado.pintar(container, '');
       if (section) section.style.display = 'none';
       if (empty) empty.style.display = '';
       if (page) page.classList.add('is-empty');
@@ -180,7 +180,7 @@ class PlacesView extends BaseView {
     if (empty) empty.style.display = 'none';
 
     const itemHtmls = this.places.map((p, i) => this._renderPlaceCard(p, i));
-    container.innerHTML = `<div class="living-masonry-grid products-list-masonry-grid">${itemHtmls.join('')}</div>`;
+    window.Estado.pintar(container, `<div class="living-masonry-grid products-list-masonry-grid">${itemHtmls.join('')}</div>`);
     const grid = container.querySelector('.living-masonry-grid');
     if (grid && window.applyJustifiedLayout) window.applyJustifiedLayout(grid, { targetHeight: 260 });
 
@@ -363,7 +363,7 @@ class PlacesView extends BaseView {
       backBtn.className = 'attach-product-back';
       backBtn.hidden = true;
       backBtn.setAttribute('aria-label', __('Volver'));
-      backBtn.innerHTML = `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${__('Volver')}</span>`;
+      window.Estado.pintar(backBtn, `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${__('Volver')}</span>`);
       backBtn.addEventListener('click', () => {
         const currentStep = wizard?.getAttribute('data-step');
         const target = stepConfig[currentStep]?.backTo || 'picker';
@@ -390,7 +390,7 @@ class PlacesView extends BaseView {
       const cfg = stepConfig[step];
       if (cfg && titleEl) {
         const iconHtml = cfg.icon ? `<i class="fas ${cfg.icon} attach-product-header-icon" aria-hidden="true"></i>` : '';
-        titleEl.innerHTML = `${iconHtml}<span>${this.escapeHtml(cfg.title)}</span>`;
+        window.Estado.pintar(titleEl, `${iconHtml}<span>${this.escapeHtml(cfg.title)}</span>`);
       }
       if (backBtn) backBtn.hidden = !(cfg && cfg.back);
       const visible = root.querySelector(`[data-panel="${step}"]`);
@@ -462,9 +462,9 @@ class PlacesView extends BaseView {
     const list = groupEl.querySelector('.attach-product-file-list');
     const renderList = (files) => {
       if (!list) return;
-      if (!files || !files.length) { list.hidden = true; list.innerHTML = ''; return; }
+      if (!files || !files.length) { list.hidden = true; window.Estado.pintar(list, ''); return; }
       list.hidden = false;
-      list.innerHTML = Array.from(files).map((f, idx) => {
+      window.Estado.pintar(list, Array.from(files).map((f, idx) => {
         const sizeStr = f.size > 1024 * 1024
           ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
           : `${Math.max(1, Math.round(f.size / 1024))} KB`;
@@ -474,7 +474,7 @@ class PlacesView extends BaseView {
           <span class="attach-product-file-size">${sizeStr}</span>
           <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar')}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
         </li>`;
-      }).join('');
+      }).join(''));
     };
     const removeFileAt = (idx) => {
       if (!input || !input.files) return;

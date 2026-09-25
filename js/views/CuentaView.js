@@ -53,7 +53,7 @@ class CuentaView extends BaseView {
     if (!el) return;
     el.removeAttribute('aria-busy');
     const tab = this.pestana === 'preferencias' ? this._preferencias() : this.pestana === 'seguridad' ? this._seguridad() : this._perfil();
-    el.innerHTML = tab.html;
+    window.Estado.pintar(el, tab.html);
     if (tab.enlazar) tab.enlazar(el);
   }
 

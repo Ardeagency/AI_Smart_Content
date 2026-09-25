@@ -180,7 +180,7 @@
         this._guardados = !!guardados;
       }
 
-      this.container.innerHTML = this._html();
+      window.Estado.pintar(this.container, this._html());
       document.body.classList.remove('no-nav', 'has-header-only');
       document.body.classList.add('has-sidebar');
       this._aplicarColapso();
@@ -202,7 +202,7 @@
     _desmontar() {
       this._cerrarPanel();
       this._cerrarDrawer();
-      this.container.innerHTML = '';
+      window.Estado.pintar(this.container, '');
       document.body.classList.remove('has-sidebar', 'sidebar-collapsed', 'has-header-only');
       document.body.classList.add('no-nav');
       this.initialized = false;
@@ -611,7 +611,7 @@
     }
 
     async _panelMarcas(nodo) {
-      nodo.innerHTML = `<p class="shell-panel-titulo">${esc(t('Tus marcas'))}</p><ul class="shell-panel-lista" aria-busy="true"><li class="skeleton skeleton-text"></li><li class="skeleton skeleton-text"></li></ul>`;
+      window.Estado.pintar(nodo, `<p class="shell-panel-titulo">${esc(t('Tus marcas'))}</p><ul class="shell-panel-lista" aria-busy="true"><li class="skeleton skeleton-text"></li><li class="skeleton skeleton-text"></li></ul>`);
       const marcas = window.ShellDatos ? await window.ShellDatos.marcas() : [];
       if (this._panel?.nodo !== nodo) return;
       const seg = segmento(window.location.pathname) || 'dashboard';
@@ -625,7 +625,7 @@
           ${actual ? '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
         </a></li>`;
       }).join('');
-      nodo.innerHTML = `<p class="shell-panel-titulo">${esc(t('Tus marcas'))}</p><ul class="shell-panel-lista">${lista || `<li class="shell-panel-vacio">${esc(t('Aún no perteneces a ninguna marca.'))}</li>`}</ul>`;
+      window.Estado.pintar(nodo, `<p class="shell-panel-titulo">${esc(t('Tus marcas'))}</p><ul class="shell-panel-lista">${lista || `<li class="shell-panel-vacio">${esc(t('Aún no perteneces a ninguna marca.'))}</li>`}</ul>`);
       nodo.querySelector('a')?.focus();
     }
 
@@ -633,7 +633,7 @@
       const u = window.authService?.getCurrentUser?.() || {};
       const nombre = u.full_name || u.user_metadata?.full_name || '';
       const idioma = window.i18n?.getLocale?.() || 'es';
-      nodo.innerHTML = `
+      window.Estado.pintar(nodo, `
         <div class="shell-panel-persona">
           <span class="shell-avatar shell-avatar--grande" aria-hidden="true">${esc(this._inicialesPersona())}</span>
           <span class="shell-panel-opcion-texto"><span>${esc(nombre || u.email || '')}</span>${nombre ? `<small>${esc(u.email || '')}</small>` : ''}</span>
@@ -649,7 +649,7 @@
           <li><a href="${esc(this.getUserSidebarRoute('cuenta/perfil'))}" class="shell-panel-opcion" data-ruta="${esc(this.getUserSidebarRoute('cuenta/perfil'))}">${esc(t('Mi cuenta'))}</a></li>
           <li><a href="${esc(this.getUserSidebarRoute('cuenta/seguridad'))}" class="shell-panel-opcion" data-ruta="${esc(this.getUserSidebarRoute('cuenta/seguridad'))}">${esc(t('Cambiar contraseña'))}</a></li>
           <li><button type="button" class="shell-panel-opcion" data-accion="salir">${esc(t('Cerrar sesión'))}</button></li>
-        </ul>`;
+        </ul>`);
       nodo.querySelector('[aria-checked="true"]')?.focus();
     }
 
@@ -700,10 +700,10 @@
             </div>`}
           </li>`;
       };
-      cuerpo.innerHTML = !lista ? vacio(t('No pudimos leer la actividad de Vera. Intenta en un momento.'))
+      window.Estado.pintar(cuerpo, !lista ? vacio(t('No pudimos leer la actividad de Vera. Intenta en un momento.'))
         : !lista.length ? vacio(t('Vera no tiene nada pendiente contigo.')) : `
         ${pendientes.length ? `<p class="shell-panel-subtitulo">${esc(t('Esperan tu decisión'))} · ${pendientes.length}</p><ul class="shell-panel-lista">${pendientes.map(tarjeta).join('')}</ul>` : ''}
-        ${resto.length ? `<p class="shell-panel-subtitulo">${esc(t('Decididas'))}</p><ul class="shell-panel-lista">${resto.map(tarjeta).join('')}</ul>` : ''}`;
+        ${resto.length ? `<p class="shell-panel-subtitulo">${esc(t('Decididas'))}</p><ul class="shell-panel-lista">${resto.map(tarjeta).join('')}</ul>` : ''}`);
     }
 
     /** Descartar pide el motivo EN la tarjeta (≥ 5 caracteres, lo exige el borde). */

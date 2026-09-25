@@ -163,7 +163,7 @@ class ServicesView extends BaseView {
 
     const page = document.getElementById('servicesPage');
     if (!this.services.length) {
-      grid.innerHTML = '';
+      window.Estado.pintar(grid, '');
       if (section) section.style.display = 'none';
       if (empty) empty.style.display = '';
       if (page) page.classList.add('is-empty');
@@ -173,7 +173,7 @@ class ServicesView extends BaseView {
     if (empty) empty.style.display = 'none';
     if (page) page.classList.remove('is-empty');
 
-    grid.innerHTML = this.services.map((s) => {
+    window.Estado.pintar(grid, this.services.map((s) => {
       const price = s.precio_base != null ? `${s.precio_base} ${s.moneda || 'USD'}` : '';
       const tags = (s.beneficios_principales || []).slice(0, 3);
       const name = this.escapeHtml(s.nombre_servicio || __('Servicio'));
@@ -194,7 +194,7 @@ class ServicesView extends BaseView {
           ${tags.length ? `<div class="service-card-tags">${tags.map((t) => `<span class="service-card-tag">${this.escapeHtml(t)}</span>`).join('')}</div>` : ''}
         </article>
       `;
-    }).join('');
+    }).join(''));
 
     grid.querySelectorAll('.service-card').forEach((card) => {
       const serviceId = card.getAttribute('data-service-id');
@@ -348,7 +348,7 @@ class ServicesView extends BaseView {
       backBtn.className = 'attach-product-back';
       backBtn.hidden = true;
       backBtn.setAttribute('aria-label', __('Volver'));
-      backBtn.innerHTML = `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${__('Volver')}</span>`;
+      window.Estado.pintar(backBtn, `<i class="aisc-ico aisc-ico--arrow-left" aria-hidden="true"></i><span>${__('Volver')}</span>`);
       backBtn.addEventListener('click', () => {
         const currentStep = wizard?.getAttribute('data-step');
         const target = stepConfig[currentStep]?.backTo || 'picker';
@@ -375,7 +375,7 @@ class ServicesView extends BaseView {
       const cfg = stepConfig[step];
       if (cfg && titleEl) {
         const iconHtml = cfg.icon ? `<i class="fas ${cfg.icon} attach-product-header-icon" aria-hidden="true"></i>` : '';
-        titleEl.innerHTML = `${iconHtml}<span>${this.escapeHtml(cfg.title)}</span>`;
+        window.Estado.pintar(titleEl, `${iconHtml}<span>${this.escapeHtml(cfg.title)}</span>`);
       }
       if (backBtn) backBtn.hidden = !(cfg && cfg.back);
       const visible = root.querySelector(`[data-panel="${step}"]`);
@@ -435,9 +435,9 @@ class ServicesView extends BaseView {
     const list = groupEl.querySelector('.attach-product-file-list');
     const renderList = (files) => {
       if (!list) return;
-      if (!files || !files.length) { list.hidden = true; list.innerHTML = ''; return; }
+      if (!files || !files.length) { list.hidden = true; window.Estado.pintar(list, ''); return; }
       list.hidden = false;
-      list.innerHTML = Array.from(files).map((f, idx) => {
+      window.Estado.pintar(list, Array.from(files).map((f, idx) => {
         const sizeStr = f.size > 1024 * 1024
           ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
           : `${Math.max(1, Math.round(f.size / 1024))} KB`;
@@ -447,7 +447,7 @@ class ServicesView extends BaseView {
           <span class="attach-product-file-size">${sizeStr}</span>
           <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar archivo')}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
         </li>`;
-      }).join('');
+      }).join(''));
     };
     const removeFileAt = (idx) => {
       if (!input || !input.files) return;

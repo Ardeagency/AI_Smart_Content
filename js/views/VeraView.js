@@ -532,9 +532,9 @@ class VeraView extends (window.BaseView || class {}) {
       box.id = 'veraQuickSuggest';
       wrap.appendChild(box); // queda debajo del .gpt-composer
     }
-    box.innerHTML = this._quickItems
+    window.Estado.pintar(box, this._quickItems
       .map((it, idx) => `<button type="button" class="gpt-quick-chip" data-idx="${idx}">${escapeHtml(it.label)}</button>`)
-      .join('');
+      .join(''));
     if (!box.__bound) {
       box.__bound = true;
       box.addEventListener('click', (e) => {
@@ -554,14 +554,14 @@ class VeraView extends (window.BaseView || class {}) {
     const name = this._greetingName();
     const salute = this._timeGreeting();
     const greeting = name ? `${salute}, ${escapeHtml(name)}` : salute;
-    list.innerHTML = `
+    window.Estado.pintar(list, `
       <div class="gpt-welcome gpt-welcome--hero">
         <div class="gpt-welcome-mark gpt-welcome-mark--wordmark">
           <img src="${VERA_WORDMARK_SRC}" alt="Vera" height="44" decoding="async" />
         </div>
         <h1 class="gpt-welcome-title gpt-welcome-title--anim">${greeting}</h1>
       </div>
-    `;
+    `);
     this._renderQuickSuggestions();
   }
 
@@ -871,7 +871,7 @@ class VeraView extends (window.BaseView || class {}) {
     }));
 
     this._undockQuestion();
-    list.innerHTML = prepared.map(m => this._msgHTML(m)).join('');
+    window.Estado.pintar(list, prepared.map(m => this._msgHTML(m)).join(''));
     this._bindMediaHover();
     this._bindTaskEvents();
     this._bindQuickReplyButtons();

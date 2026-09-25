@@ -18,6 +18,8 @@ const FUENTE = fs.readFileSync(RUTA, 'utf8');
    evalúa. No toca el DOM hasta que se llama a mount(). */
 function cargar() {
   const win = { __: (s) => s };
+  // Estado.pintar (js/ui/estado.js) en falso: deja el HTML en el host para que el test lo lea.
+  win.Estado = { pintar: (zona, html) => { if (zona) zona.innerHTML = String(html == null ? '' : html); } };
   globalThis.window = win;
   globalThis.document = { addEventListener() {}, removeEventListener() {} };
   new Function(FUENTE)();

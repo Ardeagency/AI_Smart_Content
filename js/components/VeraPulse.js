@@ -237,7 +237,7 @@
       if (!host) return;
       this._desconectar();
       this.host = host;
-      host.innerHTML = this._html({ activa: false });
+      window.Estado.pintar(host, this._html({ activa: false }));
       if (!this.sb || !this.orgId) return; // sin sesión no hay pulso: queda apagado
       this._onVis = () => {
         if (document.visibilityState === 'visible') this._arrancar();
@@ -286,7 +286,7 @@
         this._clave = null;
         this._frase = '';
       }
-      this.host.innerHTML = this._html(pulso);
+      window.Estado.pintar(this.host, this._html(pulso));
     }
 
     _html(pulso) {
@@ -334,16 +334,16 @@
       if (!bodyEl) return;
 
       if (!this.sb || !this.orgId) {
-        bodyEl.innerHTML = this._bitVacia(T('No hay sesión para consultar la bitácora.'));
+        window.Estado.pintar(bodyEl, this._bitVacia(T('No hay sesión para consultar la bitácora.')));
         return;
       }
       try {
         const { data, error } = await this.sb.rpc('get_vera_bitacora', { p_org_id: this.orgId, p_horas: 24 });
         if (error) throw error;
-        bodyEl.innerHTML = this._bitHtml(data || {});
+        window.Estado.pintar(bodyEl, this._bitHtml(data || {}));
       } catch (e) {
         console.warn('[VeraPulse] bitácora:', e && e.message ? e.message : e);
-        bodyEl.innerHTML = this._bitVacia(T('No se pudo leer la bitácora.'));
+        window.Estado.pintar(bodyEl, this._bitVacia(T('No se pudo leer la bitácora.')));
       }
     }
 

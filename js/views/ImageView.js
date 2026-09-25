@@ -1039,7 +1039,7 @@ class ImageView extends BaseView {
     if (countEl) countEl.textContent = `${items.length} / ${ImageView.IMAGE_REF_LIMIT}`;
     const listEl = this.container.querySelector('#imageRefList');
     if (!listEl) return;
-    listEl.innerHTML = items.map((item, idx) => {
+    window.Estado.pintar(listEl, items.map((item, idx) => {
       const nombre = this.escapeHtml(item.name || 'imagen');
       // Una referencia de producto NO es inspiración: es la instrucción de que
       // eso no cambie. Sin distintivo se ve idéntica a una imagen de estilo y
@@ -1049,7 +1049,7 @@ class ImageView extends BaseView {
         : '';
       const titulo = item.lock ? `${nombre} — ${window.__('bloqueo de producto')}` : nombre;
       return `<span class="seedance-ref-item${item.lock ? ' is-lock' : ''}" title="${titulo}"><img class="seedance-ref-thumb" src="${this.escapeHtml(item.url)}" alt="" loading="lazy">${candado}<button type="button" class="seedance-ref-remove" data-ref-index="${idx}" aria-label="${window.__('Quitar {name}', { name: nombre })}">&times;</button></span>`;
-    }).join('');
+    }).join(''));
   }
 
   /** Fila de chips junto al prompt: lo adjunto, a la vista, sin abrir el sidebar. */
@@ -1063,16 +1063,16 @@ class ImageView extends BaseView {
     }));
 
     if (chips.length === 0) {
-      listEl.innerHTML = '';
+      window.Estado.pintar(listEl, '');
       listEl.style.display = 'none';
       this.scheduleResizePromptInput();
       return;
     }
     listEl.style.display = 'flex';
-    listEl.innerHTML = chips.map((c) => {
+    window.Estado.pintar(listEl, chips.map((c) => {
       const etiqueta = this.escapeHtml(c.label);
       return `<span class="video-attachment-chip" title="${etiqueta}"><span class="video-attachment-thumbs"><span class="video-attachment-thumb-wrap"><img class="video-attachment-thumb" src="${this.escapeHtml(c.url)}" alt="" loading="lazy"></span></span><button type="button" class="video-attachment-remove" data-attachment-remove="${c.quitar}" aria-label="${window.__('Quitar {name}', { name: etiqueta })}">&times;</button></span>`;
-    }).join('');
+    }).join(''));
     this.scheduleResizePromptInput();
   }
 
@@ -1106,17 +1106,17 @@ class ImageView extends BaseView {
     const cont = this.container.querySelector(selector);
     if (!cont) return;
     if (this.imageProductions.length === 0) {
-      cont.innerHTML = `<p class="${claseVacio}">${textoVacio}</p>`;
+      window.Estado.pintar(cont, `<p class="${claseVacio}">${textoVacio}</p>`);
       return;
     }
-    cont.innerHTML = this.imageProductions.map((p) => {
+    window.Estado.pintar(cont, this.imageProductions.map((p) => {
       const seleccionada = this.selectedProductionIds.has(p.id);
       const url = this.escapeHtml(p.media_url || '');
       return `
         <div class="${claseItem} ${seleccionada ? 'is-selected' : ''}" data-id="${this.escapeHtml(p.id)}" role="button" tabindex="0" aria-pressed="${seleccionada}" aria-label="${window.__('Seleccionar producción')}">
           <div class="${claseThumb}-wrap"><img class="${claseThumb} ${claseThumb}-img" src="${url}" alt="" loading="lazy" decoding="async"></div>
         </div>`;
-    }).join('');
+    }).join(''));
     cont.querySelectorAll('.' + claseItem).forEach((el) => {
       el.addEventListener('click', () => this.toggleProduccion(el.dataset.id));
     });
@@ -1226,8 +1226,8 @@ class ImageView extends BaseView {
     if (!select) return;
     const items = this.getAssetListByScope();
     const actual = select.value || this.selectedAssetId;
-    select.innerHTML = `<option value="">${window.__('— Ninguno')}</option>`
-      + items.map((i) => `<option value="${this.escapeHtml(i.id)}">${this.escapeHtml((i.name || '').slice(0, 50))}</option>`).join('');
+    window.Estado.pintar(select, `<option value="">${window.__('— Ninguno')}</option>`
+      + items.map((i) => `<option value="${this.escapeHtml(i.id)}">${this.escapeHtml((i.name || '').slice(0, 50))}</option>`).join(''));
     if (actual && items.some((i) => String(i.id) === String(actual))) select.value = actual;
     else this.selectedAssetId = '';
   }
@@ -1238,16 +1238,16 @@ class ImageView extends BaseView {
     if (!carousel) return;
     const products = (this.dbData.products || []).filter((p) => Array.isArray(p.image_urls) && p.image_urls.length > 0);
     if (products.length === 0) {
-      carousel.innerHTML = `<p class="video-asset-products-empty">${window.__('No hay productos con imágenes.')}</p>`;
+      window.Estado.pintar(carousel, `<p class="video-asset-products-empty">${window.__('No hay productos con imágenes.')}</p>`);
       return;
     }
-    carousel.innerHTML = products.map((p) => {
+    window.Estado.pintar(carousel, products.map((p) => {
       const seleccionado = String(this.selectedAssetId) === String(p.id);
       return `
         <div class="video-asset-product-item ${seleccionado ? 'is-selected' : ''}" data-id="${this.escapeHtml(p.id)}" role="button" tabindex="0" aria-pressed="${seleccionado}" aria-label="${window.__('Seleccionar producto')}">
           <div class="video-asset-product-thumb-wrap"><img class="video-asset-product-thumb" src="${this.escapeHtml(p.image_urls[0] || '')}" alt="" loading="lazy"></div>
         </div>`;
-    }).join('');
+    }).join(''));
     carousel.querySelectorAll('.video-asset-product-item').forEach((el) => {
       el.addEventListener('click', () => {
         const id = el.dataset.id;
@@ -1311,8 +1311,8 @@ class ImageView extends BaseView {
     const receta = this.container.querySelector('#imagePhotoReceta');
     if (receta && receta.dataset.boundReceta !== '1') {
       receta.dataset.boundReceta = '1';
-      receta.innerHTML = `<option value="">${window.__('Escribir una receta…')}</option>`
-        + cat.presets.map((r) => `<option value="${this.escapeHtml(r.id)}">${this.escapeHtml(r.label)}</option>`).join('');
+      window.Estado.pintar(receta, `<option value="">${window.__('Escribir una receta…')}</option>`
+        + cat.presets.map((r) => `<option value="${this.escapeHtml(r.id)}">${this.escapeHtml(r.label)}</option>`).join(''));
       receta.addEventListener('change', () => {
         const preset = cat.presets.find((r) => String(r.id) === receta.value);
         // Vuelve a "Escribir una receta…": el desplegable es un disparador, no
@@ -1329,12 +1329,12 @@ class ImageView extends BaseView {
     const panels = this.container.querySelector('#imagePhotoPanels');
     if (!tabs || !panels) return;
 
-    tabs.innerHTML = cat.pestanas.map((p, i) => `
+    window.Estado.pintar(tabs, cat.pestanas.map((p, i) => `
       <button type="button" class="video-cine-tab${i === 0 ? ' is-active' : ''}" role="tab" aria-selected="${i === 0}" data-tab="${this.escapeHtml(p.id)}">
         <i class="aisc-ico aisc-ico--${this.escapeHtml(p.icono)}" aria-hidden="true"></i><span>${this.escapeHtml(p.etiqueta)}</span>
-      </button>`).join('');
+      </button>`).join(''));
 
-    panels.innerHTML = cat.pestanas.map((p, i) => `
+    window.Estado.pintar(panels, cat.pestanas.map((p, i) => `
       <div class="video-cine-panel${i === 0 ? ' is-active' : ''}" data-panel="${this.escapeHtml(p.id)}" role="tabpanel"${i === 0 ? '' : ' hidden'}>
         ${p.bloques.map((b) => `
           <div class="video-cine-row">
@@ -1343,7 +1343,7 @@ class ImageView extends BaseView {
               ${(cat.opciones[b.campo] || []).map((o) => this._tileHTML(b.campo, o)).join('')}
             </div>
           </div>`).join('')}
-      </div>`).join('');
+      </div>`).join(''));
 
     if (tabs.dataset.boundTabs !== '1') {
       tabs.dataset.boundTabs = '1';

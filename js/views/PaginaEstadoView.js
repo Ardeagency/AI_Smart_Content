@@ -12,13 +12,13 @@ class PaginaEstadoView extends BaseView {
     if (!container) return;
     const c = this.contenido();
     const inicio = PaginaEstadoView.rutaInicio();
-    container.innerHTML = `
+    window.Estado.pintar(container, `
       <section class="en-obras" aria-live="polite">
         <span class="en-obras-eyebrow">${this.escapeHtml(c.eyebrow)}</span>
         <h1 class="en-obras-titulo">${this.escapeHtml(c.titulo)}</h1>
         <p class="en-obras-texto">${this.escapeHtml(c.texto)}</p>
         <a class="btn btn-secondary" href="${this.escapeHtml(inicio)}" data-route="${this.escapeHtml(inicio)}">${this.escapeHtml(__('Volver al inicio'))}</a>
-      </section>`;
+      </section>`);
     const a = container.querySelector('a[data-route]');
     if (a) this.addEventListener(a, 'click', (e) => { e.preventDefault(); window.router?.navigate(inicio); });
     if (typeof this.updateHeaderContext === 'function') this.updateHeaderContext(c.titulo, null, window.currentOrgName || null);

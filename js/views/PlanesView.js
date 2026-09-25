@@ -213,7 +213,7 @@ class PlanesView extends BaseView {
     }
 
     host.hidden = false;
-    host.innerHTML = `
+    window.Estado.pintar(host, `
       <div class="planes-org-context-main">
         <div class="planes-org-context-org">
           <span class="planes-org-context-eyebrow">${hasActive ? window.__('Plan actual') : window.__('Sin plan activo para')}</span>
@@ -222,7 +222,7 @@ class PlanesView extends BaseView {
         ${renewLabel ? `<div class="planes-org-context-renew"><i class="aisc-ico aisc-ico--refresh"></i> ${window.__('Renueva el')} ${this.escapeHtml(renewLabel)}</div>` : ''}
       </div>
       ${(creditsBlock || storageBlock) ? `<div class="planes-org-context-usage">${creditsBlock}${storageBlock}</div>` : ''}
-    `;
+    `);
   }
 
   _usageMeter({ icon, label, used, total, formatter }) {
@@ -246,15 +246,15 @@ class PlanesView extends BaseView {
     const container = this.container?.querySelector('#planesList');
     if (!container) return;
     if (!this.plans.length) {
-      container.innerHTML = this.emptyState({
+      window.Estado.pintar(container, this.emptyState({
         iconSrc: '/recursos/icons/Planes.svg',
         icon: 'aisc-ico aisc-ico--zap',
         title: window.__('No hay planes disponibles.'),
         subtitle: window.__('Aún no hay planes para mostrar. Vuelve más tarde o contáctanos si necesitas un plan a medida.'),
-      });
+      }));
       return;
     }
-    container.innerHTML = this.plans.map((plan) => this._planCardHtml(plan)).join('');
+    window.Estado.pintar(container, this.plans.map((plan) => this._planCardHtml(plan)).join(''));
   }
 
   _planCardHtml(plan) {

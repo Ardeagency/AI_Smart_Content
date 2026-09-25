@@ -87,9 +87,9 @@
       const div = document.createElement('div');
       div.className = 'subgate-banner';
       div.id = 'subgateBanner';
-      div.innerHTML = `
+      window.Estado.pintar(div, `
         <span class="subgate-banner-txt">${esc(texto)}</span>
-        <a class="subgate-banner-cta" href="/planes">${esc(T('Renovar'))}</a>`;
+        <a class="subgate-banner-cta" href="/planes">${esc(T('Renovar'))}</a>`);
       document.body.appendChild(div);
       document.body.classList.add('has-subgate-banner');
     }
@@ -108,7 +108,7 @@
       wall.id = 'subgateWall';
       wall.setAttribute('role', 'dialog');
       wall.setAttribute('aria-modal', 'true');
-      wall.innerHTML = `
+      window.Estado.pintar(wall, `
         <div class="subgate-wall-card">
           <img class="subgate-logo" src="/recursos/logos/logo-03.svg" alt="AI Smart Content" width="200" height="21">
           <h1 class="subgate-titulo">${esc(T('Tu plan {plan} venció', { plan: e.plan_nombre || '' }))}</h1>
@@ -121,7 +121,7 @@
           <a class="subgate-btn" href="/planes">${esc(T('Renovar mi plan'))}</a>
           <button type="button" class="subgate-salir" data-subgate-logout>${esc(T('Cerrar sesión'))}</button>
           <p class="subgate-nota">${esc(T('Tus datos y tu historial siguen intactos.'))}</p>
-        </div>`;
+        </div>`);
       document.body.appendChild(wall);
       document.body.classList.add('has-subgate-wall');
 

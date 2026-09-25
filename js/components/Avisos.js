@@ -175,7 +175,7 @@
     if (!contenedor) return;
     const orgId = orgActual();
     estado.orgId = orgId;
-    contenedor.innerHTML = `<div class="avisos">${cabecera(0)}<div class="avisos-lista"><div class="avisos-vacio">${esc(t('Cargando…'))}</div></div></div>`;
+    window.Estado.pintar(contenedor, `<div class="avisos">${cabecera(0)}<div class="avisos-lista"><div class="avisos-vacio">${esc(t('Cargando…'))}</div></div></div>`);
     if (!orgId || !window.AvisosDatos) return;
     estado.cargando = true;
     try {
@@ -184,11 +184,11 @@
       const cuerpo = lista.length
         ? lista.map(tarjeta).join('')
         : `<div class="avisos-vacio"><i class="aisc-ico aisc-ico--check" aria-hidden="true"></i><p>${esc(estado.pestana === 'unread' ? t('Estás al día: nada sin leer.') : t('Sin avisos todavía.'))}</p></div>`;
-      contenedor.innerHTML = `<div class="avisos">${cabecera(c.total)}<div class="avisos-lista">${cuerpo}</div></div>`;
+      window.Estado.pintar(contenedor, `<div class="avisos">${cabecera(c.total)}<div class="avisos-lista">${cuerpo}</div></div>`);
       cablear(contenedor, alCerrar);
     } catch (e) {
       console.warn('[avisos] pintar:', e?.message || e);
-      contenedor.innerHTML = `<div class="avisos">${cabecera(0)}<div class="avisos-lista"><div class="avisos-vacio">${esc(t('No se pudieron cargar los avisos.'))}</div></div></div>`;
+      window.Estado.pintar(contenedor, `<div class="avisos">${cabecera(0)}<div class="avisos-lista"><div class="avisos-vacio">${esc(t('No se pudieron cargar los avisos.'))}</div></div></div>`);
       cablear(contenedor, alCerrar);
     } finally { estado.cargando = false; }
   }

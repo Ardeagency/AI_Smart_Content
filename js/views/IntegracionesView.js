@@ -81,7 +81,7 @@ class IntegracionesView extends BaseView {
   pintar() {
     const el = this.querySelector('#integracionesCuerpo');
     if (!el) return;
-    el.innerHTML = this._html();
+    window.Estado.pintar(el, this._html());
     el.onclick = (e) => {
       const con = e.target.closest('[data-conectar]');
       if (con) { this._conectar(con.dataset.conectar, con); return; }

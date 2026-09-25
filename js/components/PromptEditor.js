@@ -54,7 +54,7 @@
       // variable caería al final en vez de donde estaba el cursor.
       this._rango = null;
 
-      host.innerHTML = '';
+      window.Estado.pintar(host, '');
       host.classList.add('prompt-editor');
 
       this.placeholderEl = document.createElement('span');
@@ -203,7 +203,7 @@
 
     /** Vacía el editor. Es el único caso en que el dueño manda sobre el DOM. */
     limpiar() {
-      this.campo.innerHTML = '';
+      window.Estado.pintar(this.campo, '');
       this._rango = null;
       this._emitir();
     }

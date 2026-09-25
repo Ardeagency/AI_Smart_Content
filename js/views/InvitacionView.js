@@ -52,7 +52,7 @@ class InvitacionView extends BaseView {
   /** Único punto de pintado HTML de la tarjeta. */
   _pintar(html) {
     const el = this._cuerpo();
-    if (el) el.innerHTML = html;
+    if (el) window.Estado.pintar(el, html);
     return el;
   }
 

@@ -171,7 +171,7 @@ class ProductsListView extends BaseView {
 
     const page = document.getElementById('productsListPage');
     if (!this.products.length) {
-      container.innerHTML = '';
+      window.Estado.pintar(container, '');
       if (section) section.style.display = 'none';
       if (empty) empty.style.display = '';
       if (page) page.classList.add('is-empty');
@@ -184,7 +184,7 @@ class ProductsListView extends BaseView {
     const itemHtmls = this.products.map((p, i) => this._renderProductCard(p, i));
 
     // Justified rows layout (mismo patrón que Production via window.applyJustifiedLayout).
-    container.innerHTML = `<div class="living-masonry-grid products-list-masonry-grid">${itemHtmls.join('')}</div>`;
+    window.Estado.pintar(container, `<div class="living-masonry-grid products-list-masonry-grid">${itemHtmls.join('')}</div>`);
 
     const grid = container.querySelector('.living-masonry-grid');
     if (grid && window.applyJustifiedLayout) {
@@ -449,10 +449,10 @@ class ProductsListView extends BaseView {
       const renderList = (files) => {
         if (!list) return;
         if (!files || !files.length) {
-          list.hidden = true; list.innerHTML = ''; return;
+          list.hidden = true; window.Estado.pintar(list, ''); return;
         }
         list.hidden = false;
-        list.innerHTML = Array.from(files).map((f, idx) => {
+        window.Estado.pintar(list, Array.from(files).map((f, idx) => {
           const sizeStr = f.size > 1024 * 1024
             ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
             : `${Math.max(1, Math.round(f.size / 1024))} KB`;
@@ -462,7 +462,7 @@ class ProductsListView extends BaseView {
             <span class="attach-product-file-size">${sizeStr}</span>
             <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="${__('Quitar archivo')}" title="${__('Quitar')}"><i class="aisc-ico aisc-ico--close" aria-hidden="true"></i></button>
           </li>`;
-        }).join('');
+        }).join(''));
       };
       const removeFileAt = (idx) => {
         if (!input || !input.files) return;

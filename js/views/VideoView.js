@@ -1184,19 +1184,19 @@ class VideoView extends BaseView {
         if (!frame) {
           el.classList.remove('has-image');
           el.style.backgroundImage = '';
-          el.innerHTML = `
+          window.Estado.pintar(el, `
             <i class="aisc-ico aisc-ico--image" aria-hidden="true"></i>
             <span class="seedance-frame-slot-label">${label}</span>
             <span class="seedance-frame-slot-hint">${window.__('Click para subir')}</span>
-          `;
+          `);
           return;
         }
         el.classList.add('has-image');
         el.style.backgroundImage = `url("${this.escapeHtml(frame.url)}")`;
-        el.innerHTML = `
+        window.Estado.pintar(el, `
           <span class="seedance-frame-slot-label">${label}</span>
           <button type="button" class="seedance-frame-slot-remove" data-frame-remove="${slot}" aria-label="${window.__('Quitar {label}', { label })}">&times;</button>
-        `;
+        `);
       });
   }
 
@@ -1295,10 +1295,10 @@ class VideoView extends BaseView {
     const cont = this.container.querySelector(selector);
     if (!cont) return;
     if (this.videoProductions.length === 0) {
-      cont.innerHTML = `<p class="${claseVacio}">${textoVacio}</p>`;
+      window.Estado.pintar(cont, `<p class="${claseVacio}">${textoVacio}</p>`);
       return;
     }
-    cont.innerHTML = this.videoProductions.map((p) => {
+    window.Estado.pintar(cont, this.videoProductions.map((p) => {
       const seleccionada = this.selectedProductionIds.has(p.id);
       const url = this.escapeHtml(p.media_url || '');
       const esImagen = p.isImage && !p.isVideo;
@@ -1314,7 +1314,7 @@ class VideoView extends BaseView {
         <div class="${claseItem} ${seleccionada ? 'is-selected' : ''}" data-id="${this.escapeHtml(p.id)}" data-medio="${esImagen ? 'image' : 'video'}" role="button" tabindex="0" draggable="true" aria-pressed="${seleccionada}" aria-label="${window.__('Producción')}" title="${destino}">
           <div class="${claseThumb}-wrap">${thumb}</div>
         </div>`;
-    }).join('');
+    }).join(''));
     cont.querySelectorAll('.' + claseItem).forEach((el) => {
       el.addEventListener('click', () => this.toggleProduccion(el.dataset.id));
       el.addEventListener('dragstart', (e) => {
@@ -1546,7 +1546,7 @@ class VideoView extends BaseView {
         </div>`;
     }).join('');
 
-    cont.innerHTML = filas;
+    window.Estado.pintar(cont, filas);
 
     if (cont.dataset.boundElementos !== '1') {
       cont.dataset.boundElementos = '1';
@@ -1847,7 +1847,7 @@ class VideoView extends BaseView {
       if (countEl) countEl.textContent = `${items.length} / ${VideoView.SEEDANCE_REF_LIMITS[g.kind]}${g.sufijo}`;
       const listEl = this.container.querySelector(g.list);
       if (!listEl) return;
-      listEl.innerHTML = items.map((item, idx) => {
+      window.Estado.pintar(listEl, items.map((item, idx) => {
         const nombre = this.escapeHtml(item.name || g.kind);
         const dur = item.seconds != null ? ` · ${Math.round(item.seconds)}s` : '';
         const cuerpo = g.kind === 'image'
@@ -1863,7 +1863,7 @@ class VideoView extends BaseView {
           ? `${nombre}${dur} — ${window.__('bloqueo de producto')}`
           : `${nombre}${dur}`;
         return `<span class="seedance-ref-item${item.lock ? ' is-lock' : ''}" title="${titulo}">${cuerpo}${candado}<button type="button" class="seedance-ref-remove" data-ref-kind="${g.kind}" data-ref-index="${idx}" aria-label="${window.__('Quitar {name}', { name: nombre })}">&times;</button></span>`;
-      }).join('');
+      }).join(''));
     });
   }
 
@@ -1888,8 +1888,8 @@ class VideoView extends BaseView {
     const receta = this.container.querySelector('#videoCineReceta');
     if (receta && receta.dataset.boundReceta !== '1') {
       receta.dataset.boundReceta = '1';
-      receta.innerHTML = `<option value="">${window.__('Escribir una receta…')}</option>`
-        + cat.presets.map((r) => `<option value="${this.escapeHtml(r.id)}">${this.escapeHtml(r.label)}</option>`).join('');
+      window.Estado.pintar(receta, `<option value="">${window.__('Escribir una receta…')}</option>`
+        + cat.presets.map((r) => `<option value="${this.escapeHtml(r.id)}">${this.escapeHtml(r.label)}</option>`).join(''));
       receta.addEventListener('change', () => {
         const preset = cat.presets.find((r) => String(r.id) === receta.value);
         // Vuelve a "Escribir una receta…": el desplegable es un disparador, no
@@ -1906,12 +1906,12 @@ class VideoView extends BaseView {
     const panels = this.container.querySelector('#videoCinePanels');
     if (!tabs || !panels) return;
 
-    tabs.innerHTML = cat.pestanas.map((p, i) => `
+    window.Estado.pintar(tabs, cat.pestanas.map((p, i) => `
       <button type="button" class="video-cine-tab${i === 0 ? ' is-active' : ''}" role="tab" aria-selected="${i === 0}" data-tab="${this.escapeHtml(p.id)}">
         <i class="aisc-ico aisc-ico--${this.escapeHtml(p.icono)}" aria-hidden="true"></i><span>${this.escapeHtml(p.etiqueta)}</span>
-      </button>`).join('');
+      </button>`).join(''));
 
-    panels.innerHTML = cat.pestanas.map((p, i) => `
+    window.Estado.pintar(panels, cat.pestanas.map((p, i) => `
       <div class="video-cine-panel${i === 0 ? ' is-active' : ''}" data-panel="${this.escapeHtml(p.id)}" role="tabpanel"${i === 0 ? '' : ' hidden'}>
         ${p.bloques.map((b) => `
           <div class="video-cine-row">
@@ -1920,7 +1920,7 @@ class VideoView extends BaseView {
               ${(cat.opciones[b.campo] || []).map((o) => this._tileHTML(b.campo, o)).join('')}
             </div>
           </div>`).join('')}
-      </div>`).join('');
+      </div>`).join(''));
 
     if (tabs.dataset.boundTabs !== '1') {
       tabs.dataset.boundTabs = '1';

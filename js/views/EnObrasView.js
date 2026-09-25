@@ -7,13 +7,13 @@ class EnObrasView extends BaseView {
     const container = document.getElementById('app-container');
     if (!container) return;
     const nombre = this._nombreDeSeccion();
-    container.innerHTML = `
+    window.Estado.pintar(container, `
       <section class="en-obras" aria-live="polite">
         <span class="en-obras-eyebrow">${this.escapeHtml(__('EN OBRAS'))}</span>
         <h1 class="en-obras-titulo">${this.escapeHtml(nombre)}</h1>
         <p class="en-obras-texto">${this.escapeHtml(__('Esta sección se está trayendo a la nueva base de AI Smart Content. Vuelve en unos días; el resto de la consola sigue funcionando.'))}</p>
         <a class="btn btn-secondary" href="${this.escapeHtml(this._rutaInicio())}" data-route="${this.escapeHtml(this._rutaInicio())}">${this.escapeHtml(__('Volver al inicio'))}</a>
-      </section>`;
+      </section>`);
   }
 
   _nombreDeSeccion() {
